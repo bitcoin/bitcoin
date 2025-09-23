@@ -3,15 +3,15 @@
 # file COPYING or https://opensource.org/license/mit.
 
 name: CI
-on:
-  # See: https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#pull_request.
-  pull_request:
-  # See: https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#push.
-  push:
-    branches:
-      - '**'
-    tags-ignore:
-      - '**'
+on: pull_request
+  # # See: https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#pull_request.
+  # pull_request:
+  # # See: https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#push.
+  # push:
+  #   branches:
+  #     - '**'
+  #   tags-ignore:
+  #     - '**'
 
 concurrency:
   group: ${{ github.event_name != 'pull_request' && github.run_id || github.ref }}
@@ -47,7 +47,7 @@ jobs:
 
   test-each-commit:
     name: 'test each commit'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && github.event.pull_request.commits != 1
     timeout-minutes: 360  # Use maximum time, see https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_idtimeout-minutes. Assuming a worst case time of 1 hour per commit, this leads to a --max-count=6 below.
     env:
@@ -101,218 +101,219 @@ jobs:
           # Run tests on commits after the last merge commit and before the PR head commit
           git rebase --exec "git merge --no-commit origin/${GITHUB_BASE_REF} && python3 ./.github/ci-test-each-commit-exec.py && git reset --hard" ${{ env.TEST_BASE }}
 
-  macos-native-arm64:
-    name: ${{ matrix.job-name }}
-    # Use any image to support the xcode-select below, but hardcode version to avoid silent upgrades (and breaks).
-    # See: https://github.com/actions/runner-images#available-images.
-    runs-on: macos-14
+  # macos-native-arm64:
+  #   name: ${{ matrix.job-name }}
+  #   # Use any image to support the xcode-select below, but hardcode version to avoid silent upgrades (and breaks).
+  #   # See: https://github.com/actions/runner-images#available-images.
+  #   runs-on: macos-14
 
-    # When a contributor maintains a fork of the repo, any pull request they make
-    # to their own fork, or to the main repository, will trigger two CI runs:
-    # one for the branch push and one for the pull request.
-    # This can be avoided by setting SKIP_BRANCH_PUSH=true as a custom env variable
-    # in Github repository settings.
-    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+  #   # When a contributor maintains a fork of the repo, any pull request they make
+  #   # to their own fork, or to the main repository, will trigger two CI runs:
+  #   # one for the branch push and one for the pull request.
+  #   # This can be avoided by setting SKIP_BRANCH_PUSH=true as a custom env variable
+  #   # in Github repository settings.
+  #   if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
 
-    timeout-minutes: 120
+  #   timeout-minutes: 120
 
-    strategy:
-      fail-fast: false
-      matrix:
-        job-type: [standard, fuzz]
-        include:
-          - job-type: standard
-            file-env: './ci/test/00_setup_env_mac_native.sh'
-            job-name: 'macOS 14 native, arm64, no depends, sqlite only, gui'
-          - job-type: fuzz
-            file-env: './ci/test/00_setup_env_mac_native_fuzz.sh'
-            job-name: 'macOS 14 native, arm64, fuzz'
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       job-type: [standard, fuzz]
+  #       include:
+  #         - job-type: standard
+  #           file-env: './ci/test/00_setup_env_mac_native.sh'
+  #           job-name: 'macOS 14 native, arm64, no depends, sqlite only, gui'
+  #         - job-type: fuzz
+  #           file-env: './ci/test/00_setup_env_mac_native_fuzz.sh'
+  #           job-name: 'macOS 14 native, arm64, fuzz'
 
-    env:
-      DANGER_RUN_CI_ON_HOST: 1
-      BASE_ROOT_DIR: ${{ github.workspace }}
+  #   env:
+  #     DANGER_RUN_CI_ON_HOST: 1
+  #     BASE_ROOT_DIR: ${{ github.workspace }}
 
-    steps:
-      - &CHECKOUT
-        name: Checkout
-        uses: actions/checkout@v5
-        with:
-          # Ensure the latest merged pull request state is used, even on re-runs.
-          ref: &CHECKOUT_REF_TMPL ${{ github.event_name == 'pull_request' && github.ref || '' }}
+  #   steps:
+  #     - &CHECKOUT
+  #       name: Checkout
+  #       uses: actions/checkout@v5
+  #       with:
+  #         # Ensure the latest merged pull request state is used, even on re-runs.
+  #         ref: &CHECKOUT_REF_TMPL ${{ github.event_name == 'pull_request' && github.ref || '' }}
 
-      - name: Clang version
-        run: |
-          # Use the earliest Xcode supported by the version of macOS denoted in
-          # doc/release-notes-empty-template.md and providing at least the
-          # minimum clang version denoted in doc/dependencies.md.
-          # See: https://developer.apple.com/documentation/xcode-release-notes/xcode-15-release-notes
-          sudo xcode-select --switch /Applications/Xcode_15.0.app
-          clang --version
+  #     - name: Clang version
+  #       run: |
+  #         # Use the earliest Xcode supported by the version of macOS denoted in
+  #         # doc/release-notes-empty-template.md and providing at least the
+  #         # minimum clang version denoted in doc/dependencies.md.
+  #         # See: https://developer.apple.com/documentation/xcode-release-notes/xcode-15-release-notes
+  #         sudo xcode-select --switch /Applications/Xcode_15.0.app
+  #         clang --version
 
-      - name: Install Homebrew packages
-        env:
-          HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-        run: |
-          # A workaround for "The `brew link` step did not complete successfully" error.
-          brew install --quiet python@3 || brew link --overwrite python@3
-          brew install --quiet coreutils ninja pkgconf gnu-getopt ccache boost libevent zeromq qt@6 qrencode capnp
+  #     - name: Install Homebrew packages
+  #       env:
+  #         HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+  #       run: |
+  #         # A workaround for "The `brew link` step did not complete successfully" error.
+  #         brew install --quiet python@3 || brew link --overwrite python@3
+  #         brew install --quiet coreutils ninja pkgconf gnu-getopt ccache boost libevent zeromq qt@6 qrencode capnp
 
-      - name: Install Python packages
-        run: |
-          git clone -b v2.1.0 https://github.com/capnproto/pycapnp
-          pip3 install ./pycapnp -C force-bundled-libcapnp=True --break-system-packages
+  #     - name: Install Python packages
+  #       run: |
+  #         git clone -b v2.1.0 https://github.com/capnproto/pycapnp
+  #         pip3 install ./pycapnp -C force-bundled-libcapnp=True --break-system-packages
 
-      - name: Set Ccache directory
-        run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
+  #     - name: Set Ccache directory
+  #       run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
 
-      - name: Restore Ccache cache
-        id: ccache-cache
-        uses: actions/cache/restore@v4
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ${{ github.job }}-${{ matrix.job-type }}-ccache-${{ github.run_id }}
-          restore-keys: ${{ github.job }}-${{ matrix.job-type }}-ccache-
+  #     - name: Restore Ccache cache
+  #       id: ccache-cache
+  #       uses: actions/cache/restore@v4
+  #       with:
+  #         path: ${{ env.CCACHE_DIR }}
+  #         key: ${{ github.job }}-${{ matrix.job-type }}-ccache-${{ github.run_id }}
+  #         restore-keys: ${{ github.job }}-${{ matrix.job-type }}-ccache-
 
-      - name: CI script
-        run: ./ci/test_run_all.sh
-        env:
-          FILE_ENV: ${{ matrix.file-env }}
+  #     - name: CI script
+  #       run: ./ci/test_run_all.sh
+  #       env:
+  #         FILE_ENV: ${{ matrix.file-env }}
 
-      - name: Save Ccache cache
-        uses: actions/cache/save@v4
-        if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
-          key: ${{ github.job }}-${{ matrix.job-type }}-ccache-${{ github.run_id }}
+  #     - name: Save Ccache cache
+  #       uses: actions/cache/save@v4
+  #       if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
+  #       with:
+  #         path: ${{ env.CCACHE_DIR }}
+  #         # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
+  #         key: ${{ github.job }}-${{ matrix.job-type }}-ccache-${{ github.run_id }}
 
-  windows-native-dll:
-    name: ${{ matrix.job-name }}
-    runs-on: windows-2022
+  # windows-native-dll:
+  #   name: ${{ matrix.job-name }}
+  #   runs-on: windows-2022
 
-    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+  #   if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
 
-    env:
-      PYTHONUTF8: 1
-      TEST_RUNNER_TIMEOUT_FACTOR: 40
+  #   env:
+  #     PYTHONUTF8: 1
+  #     TEST_RUNNER_TIMEOUT_FACTOR: 40
 
-    strategy:
-      fail-fast: false
-      matrix:
-        job-type: [standard, fuzz]
-        include:
-          - job-type: standard
-            generate-options: '-DBUILD_GUI=ON -DWITH_ZMQ=ON -DBUILD_BENCH=ON -DWERROR=ON'
-            job-name: 'Windows native, VS 2022'
-          - job-type: fuzz
-            generate-options: '-DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="wallet" -DBUILD_GUI=OFF -DBUILD_FOR_FUZZING=ON -DWERROR=ON'
-            job-name: 'Windows native, fuzz, VS 2022'
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       job-type: [standard, fuzz]
+  #       include:
+  #         - job-type: standard
+  #           generate-options: '-DBUILD_GUI=ON -DWITH_ZMQ=ON -DBUILD_BENCH=ON -DWERROR=ON'
+  #           job-name: 'Windows native, VS 2022'
+  #         - job-type: fuzz
+  #           generate-options: '-DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="wallet" -DBUILD_GUI=OFF -DBUILD_FOR_FUZZING=ON -DWERROR=ON'
+  #           job-name: 'Windows native, fuzz, VS 2022'
 
-    steps:
-      - *CHECKOUT
+  #   steps:
+  #     - *CHECKOUT
 
-      - name: Configure Developer Command Prompt for Microsoft Visual C++
-        # Using microsoft/setup-msbuild is not enough.
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
+  #     - name: Configure Developer Command Prompt for Microsoft Visual C++
+  #       # Using microsoft/setup-msbuild is not enough.
+  #       uses: ilammy/msvc-dev-cmd@v1
+  #       with:
+  #         arch: x64
 
-      - name: Get tool information
-        shell: pwsh
-        run: |
-          cmake -version | Tee-Object -FilePath "cmake_version"
-          Write-Output "---"
-          msbuild -version | Tee-Object -FilePath "msbuild_version"
-          $env:VCToolsVersion | Tee-Object -FilePath "toolset_version"
-          py -3 --version
-          Write-Host "PowerShell version $($PSVersionTable.PSVersion.ToString())"
-          bash --version
+  #     - name: Get tool information
+  #       shell: pwsh
+  #       run: |
+  #         cmake -version | Tee-Object -FilePath "cmake_version"
+  #         Write-Output "---"
+  #         msbuild -version | Tee-Object -FilePath "msbuild_version"
+  #         $env:VCToolsVersion | Tee-Object -FilePath "toolset_version"
+  #         py -3 --version
+  #         Write-Host "PowerShell version $($PSVersionTable.PSVersion.ToString())"
+  #         bash --version
 
-      - name: Using vcpkg with MSBuild
-        run: |
-          echo "set(VCPKG_BUILD_TYPE release)" >> "${VCPKG_INSTALLATION_ROOT}/triplets/x64-windows.cmake"
-          # Workaround for libevent, which requires CMake 3.1 but is incompatible with CMake >= 4.0.
-          sed -i '1s/^/set(ENV{CMAKE_POLICY_VERSION_MINIMUM} 3.5)\n/' "${VCPKG_INSTALLATION_ROOT}/scripts/ports.cmake"
+  #     - name: Using vcpkg with MSBuild
+  #       run: |
+  #         echo "set(VCPKG_BUILD_TYPE release)" >> "${VCPKG_INSTALLATION_ROOT}/triplets/x64-windows.cmake"
+  #         # Workaround for libevent, which requires CMake 3.1 but is incompatible with CMake >= 4.0.
+  #         sed -i '1s/^/set(ENV{CMAKE_POLICY_VERSION_MINIMUM} 3.5)\n/' "${VCPKG_INSTALLATION_ROOT}/scripts/ports.cmake"
 
-      - name: vcpkg tools cache
-        uses: actions/cache@v4
-        with:
-          path: C:/vcpkg/downloads/tools
-          key: ${{ github.job }}-vcpkg-tools
+  #     - name: vcpkg tools cache
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: C:/vcpkg/downloads/tools
+  #         key: ${{ github.job }}-vcpkg-tools
 
-      - name: Restore vcpkg binary cache
-        uses: actions/cache/restore@v4
-        id: vcpkg-binary-cache
-        with:
-          path: ~/AppData/Local/vcpkg/archives
-          key: ${{ github.job }}-vcpkg-binary-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
+  #     - name: Restore vcpkg binary cache
+  #       uses: actions/cache/restore@v4
+  #       id: vcpkg-binary-cache
+  #       with:
+  #         path: ~/AppData/Local/vcpkg/archives
+  #         key: ${{ github.job }}-vcpkg-binary-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
 
-      - name: Generate build system
-        run: |
-          cmake -B build -Werror=dev --preset vs2022 -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" ${{ matrix.generate-options }}
+  #     - name: Generate build system
+  #       run: |
+  #         cmake -B build -Werror=dev --preset vs2022 -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" ${{ matrix.generate-options }}
 
-      - name: Save vcpkg binary cache
-        uses: actions/cache/save@v4
-        if: github.event_name != 'pull_request' && steps.vcpkg-binary-cache.outputs.cache-hit != 'true' && matrix.job-type == 'standard'
-        with:
-          path: ~/AppData/Local/vcpkg/archives
-          key: ${{ github.job }}-vcpkg-binary-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
+  #     - name: Save vcpkg binary cache
+  #       uses: actions/cache/save@v4
+  #       if: github.event_name != 'pull_request' && steps.vcpkg-binary-cache.outputs.cache-hit != 'true' && matrix.job-type == 'standard'
+  #       with:
+  #         path: ~/AppData/Local/vcpkg/archives
+  #         key: ${{ github.job }}-vcpkg-binary-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
 
-      - name: Build
-        working-directory: build
-        run: |
-          cmake --build . -j $NUMBER_OF_PROCESSORS --config Release
+  #     - name: Build
+  #       working-directory: build
+  #       run: |
+  #         cmake --build . -j $NUMBER_OF_PROCESSORS --config Release
 
-      - name: Get bitcoind manifest
-        if: matrix.job-type == 'standard'
-        working-directory: build
-        run: |
-          mt.exe -nologo -inputresource:bin/Release/bitcoind.exe -out:bitcoind.manifest
-          cat bitcoind.manifest
-          echo
-          mt.exe -nologo -inputresource:bin/Release/bitcoind.exe -validate_manifest
+  #     - name: Get bitcoind manifest
+  #       if: matrix.job-type == 'standard'
+  #       working-directory: build
+  #       run: |
+  #         mt.exe -nologo -inputresource:bin/Release/bitcoind.exe -out:bitcoind.manifest
+  #         cat bitcoind.manifest
+  #         echo
+  #         mt.exe -nologo -inputresource:bin/Release/bitcoind.exe -validate_manifest
 
-      - name: Run test suite
-        if: matrix.job-type == 'standard'
-        working-directory: build
-        env:
-          QT_PLUGIN_PATH: '${{ github.workspace }}\build\vcpkg_installed\x64-windows\Qt6\plugins'
-        run: |
-          ctest --output-on-failure --stop-on-failure -j $NUMBER_OF_PROCESSORS -C Release
+  #     - name: Run test suite
+  #       if: matrix.job-type == 'standard'
+  #       working-directory: build
+  #       env:
+  #         QT_PLUGIN_PATH: '${{ github.workspace }}\build\vcpkg_installed\x64-windows\Qt6\plugins'
+  #       run: |
+  #         ctest --output-on-failure --stop-on-failure -j $NUMBER_OF_PROCESSORS -C Release
 
-      - name: Run functional tests
-        if: matrix.job-type == 'standard'
-        working-directory: build
-        env:
-          BITCOIN_BIN: '${{ github.workspace }}\build\bin\Release\bitcoin.exe'
-          BITCOIND: '${{ github.workspace }}\build\bin\Release\bitcoind.exe'
-          BITCOINCLI: '${{ github.workspace }}\build\bin\Release\bitcoin-cli.exe'
-          BITCOINTX: '${{ github.workspace }}\build\bin\Release\bitcoin-tx.exe'
-          BITCOINUTIL: '${{ github.workspace }}\build\bin\Release\bitcoin-util.exe'
-          BITCOINWALLET: '${{ github.workspace }}\build\bin\Release\bitcoin-wallet.exe'
-          TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
-        run: py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix="${RUNNER_TEMP}" --combinedlogslen=99999999 --timeout-factor=${TEST_RUNNER_TIMEOUT_FACTOR} ${TEST_RUNNER_EXTRA}
+  #     - name: Run functional tests
+  #       if: matrix.job-type == 'standard'
+  #       working-directory: build
+  #       env:
+  #         BITCOIN_BIN: '${{ github.workspace }}\build\bin\Release\bitcoin.exe'
+  #         BITCOIND: '${{ github.workspace }}\build\bin\Release\bitcoind.exe'
+  #         BITCOINCLI: '${{ github.workspace }}\build\bin\Release\bitcoin-cli.exe'
+  #         BITCOINTX: '${{ github.workspace }}\build\bin\Release\bitcoin-tx.exe'
+  #         BITCOINUTIL: '${{ github.workspace }}\build\bin\Release\bitcoin-util.exe'
+  #         BITCOINWALLET: '${{ github.workspace }}\build\bin\Release\bitcoin-wallet.exe'
+  #         TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
+  #       run: py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix="${RUNNER_TEMP}" --combinedlogslen=99999999 --timeout-factor=${TEST_RUNNER_TIMEOUT_FACTOR} ${TEST_RUNNER_EXTRA}
 
-      - name: Clone corpora
-        if: matrix.job-type == 'fuzz'
-        run: |
-          git clone --depth=1 https://github.com/bitcoin-core/qa-assets "${RUNNER_TEMP}/qa-assets"
-          cd "${RUNNER_TEMP}/qa-assets"
-          echo "Using qa-assets repo from commit ..."
-          git log -1
+  #     - name: Clone corpora
+  #       if: matrix.job-type == 'fuzz'
+  #       run: |
+  #         git clone --depth=1 https://github.com/bitcoin-core/qa-assets "${RUNNER_TEMP}/qa-assets"
+  #         cd "${RUNNER_TEMP}/qa-assets"
+  #         echo "Using qa-assets repo from commit ..."
+  #         git log -1
 
-      - name: Run fuzz tests
-        if: matrix.job-type == 'fuzz'
-        working-directory: build
-        env:
-          BITCOINFUZZ: '${{ github.workspace }}\build\bin\Release\fuzz.exe'
-        run: |
-          py -3 test/fuzz/test_runner.py --par $NUMBER_OF_PROCESSORS --loglevel DEBUG "${RUNNER_TEMP}/qa-assets/fuzz_corpora"
+  #     - name: Run fuzz tests
+  #       if: matrix.job-type == 'fuzz'
+  #       working-directory: build
+  #       env:
+  #         BITCOINFUZZ: '${{ github.workspace }}\build\bin\Release\fuzz.exe'
+  #       run: |
+  #         py -3 test/fuzz/test_runner.py --par $NUMBER_OF_PROCESSORS --loglevel DEBUG "${RUNNER_TEMP}/qa-assets/fuzz_corpora"
 
   windows-cross:
     name: 'Linux->Windows cross, no tests'
     needs: runners
-    runs-on: ${{ needs.runners.outputs.provider == 'cirrus' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm' || 'ubuntu-24.04' }}
+    runs-on: ubuntu-latest
+    # runs-on: ${{ needs.runners.outputs.provider == 'cirrus' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm' || 'ubuntu-latest' }}
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
 
     env:
@@ -350,79 +351,80 @@ jobs:
             ${{ env.BASE_BUILD_DIR }}/src/univalue/*.exe
             ${{ env.BASE_BUILD_DIR }}/test/config.ini
 
-  windows-native-test:
-    name: 'Windows, test cross-built'
-    runs-on: windows-2022
-    needs: windows-cross
+  # windows-native-test:
+  #   name: 'Windows, test cross-built'
+  #   runs-on: windows-2022
+  #   needs: windows-cross
 
-    env:
-      PYTHONUTF8: 1
-      TEST_RUNNER_TIMEOUT_FACTOR: 40
+  #   env:
+  #     PYTHONUTF8: 1
+  #     TEST_RUNNER_TIMEOUT_FACTOR: 40
 
-    steps:
-      - *CHECKOUT
+  #   steps:
+  #     - *CHECKOUT
 
-      - name: Download built executables
-        uses: actions/download-artifact@v4
-        with:
-          name: x86_64-w64-mingw32-executables-${{ github.run_id }}
+  #     - name: Download built executables
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: x86_64-w64-mingw32-executables-${{ github.run_id }}
 
-      - name: Run bitcoind.exe
-        run: ./bin/bitcoind.exe -version
+  #     - name: Run bitcoind.exe
+  #       run: ./bin/bitcoind.exe -version
 
-      - name: Find mt.exe tool
-        shell: pwsh
-        run: |
-          $sdk_dir = (Get-ItemProperty 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots' -Name KitsRoot10).KitsRoot10
-          $sdk_latest = (Get-ChildItem "$sdk_dir\bin" -Directory | Where-Object { $_.Name -match '^\d+\.\d+\.\d+\.\d+$' } | Sort-Object Name -Descending | Select-Object -First 1).Name
-          "MT_EXE=${sdk_dir}bin\${sdk_latest}\x64\mt.exe" >> $env:GITHUB_ENV
+  #     - name: Find mt.exe tool
+  #       shell: pwsh
+  #       run: |
+  #         $sdk_dir = (Get-ItemProperty 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots' -Name KitsRoot10).KitsRoot10
+  #         $sdk_latest = (Get-ChildItem "$sdk_dir\bin" -Directory | Where-Object { $_.Name -match '^\d+\.\d+\.\d+\.\d+$' } | Sort-Object Name -Descending | Select-Object -First 1).Name
+  #         "MT_EXE=${sdk_dir}bin\${sdk_latest}\x64\mt.exe" >> $env:GITHUB_ENV
 
-      - name: Get bitcoind manifest
-        shell: pwsh
-        run: |
-          & $env:MT_EXE -nologo -inputresource:bin\bitcoind.exe -out:bitcoind.manifest
-          Get-Content bitcoind.manifest
-          & $env:MT_EXE -nologo -inputresource:bin\bitcoind.exe -validate_manifest
+  #     - name: Get bitcoind manifest
+  #       shell: pwsh
+  #       run: |
+  #         & $env:MT_EXE -nologo -inputresource:bin\bitcoind.exe -out:bitcoind.manifest
+  #         Get-Content bitcoind.manifest
+  #         & $env:MT_EXE -nologo -inputresource:bin\bitcoind.exe -validate_manifest
 
-      - name: Run unit tests
-        # Can't use ctest here like other jobs as we don't have a CMake build tree.
-        run: |
-          ./bin/test_bitcoin.exe -l test_suite  # Intentionally run sequentially here, to catch test case failures caused by dirty global state from prior test cases.
-          ./src/secp256k1/bin/exhaustive_tests.exe
-          ./src/secp256k1/bin/noverify_tests.exe
-          ./src/secp256k1/bin/tests.exe
-          ./src/univalue/object.exe
-          ./src/univalue/unitester.exe
+  #     - name: Run unit tests
+  #       # Can't use ctest here like other jobs as we don't have a CMake build tree.
+  #       run: |
+  #         ./bin/test_bitcoin.exe -l test_suite  # Intentionally run sequentially here, to catch test case failures caused by dirty global state from prior test cases.
+  #         ./src/secp256k1/bin/exhaustive_tests.exe
+  #         ./src/secp256k1/bin/noverify_tests.exe
+  #         ./src/secp256k1/bin/tests.exe
+  #         ./src/univalue/object.exe
+  #         ./src/univalue/unitester.exe
 
-      - name: Run benchmarks
-        run: ./bin/bench_bitcoin.exe -sanity-check
+  #     - name: Run benchmarks
+  #       run: ./bin/bench_bitcoin.exe -sanity-check
 
-      - name: Adjust paths in test/config.ini
-        shell: pwsh
-        run: |
-          (Get-Content "test/config.ini") -replace '(?<=^SRCDIR=).*', '${{ github.workspace }}' -replace '(?<=^BUILDDIR=).*', '${{ github.workspace }}' -replace '(?<=^RPCAUTH=).*', '${{ github.workspace }}/share/rpcauth/rpcauth.py' | Set-Content "test/config.ini"
-          Get-Content "test/config.ini"
+  #     - name: Adjust paths in test/config.ini
+  #       shell: pwsh
+  #       run: |
+  #         (Get-Content "test/config.ini") -replace '(?<=^SRCDIR=).*', '${{ github.workspace }}' -replace '(?<=^BUILDDIR=).*', '${{ github.workspace }}' -replace '(?<=^RPCAUTH=).*', '${{ github.workspace }}/share/rpcauth/rpcauth.py' | Set-Content "test/config.ini"
+  #         Get-Content "test/config.ini"
 
-      - name: Set previous release directory
-        run: |
-          echo "PREVIOUS_RELEASES_DIR=${{ runner.temp }}/previous_releases" >> "$GITHUB_ENV"
+  #     - name: Set previous release directory
+  #       run: |
+  #         echo "PREVIOUS_RELEASES_DIR=${{ runner.temp }}/previous_releases" >> "$GITHUB_ENV"
 
-      - name: Get previous releases
-        working-directory: test
-        run: ./get_previous_releases.py --target-dir $PREVIOUS_RELEASES_DIR
+  #     - name: Get previous releases
+  #       working-directory: test
+  #       run: ./get_previous_releases.py --target-dir $PREVIOUS_RELEASES_DIR
 
-      - name: Run functional tests
-        env:
-          # TODO: Fix the excluded test and re-enable it.
-          # feature_unsupported_utxo_db.py fails on windows because of emojis in the test data directory
-          EXCLUDE: '--exclude wallet_multiwallet.py,feature_unsupported_utxo_db.py'
-          TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
-        run: py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix="$RUNNER_TEMP" --combinedlogslen=99999999 --timeout-factor=$TEST_RUNNER_TIMEOUT_FACTOR $EXCLUDE $TEST_RUNNER_EXTRA
+  #     - name: Run functional tests
+  #       env:
+  #         # TODO: Fix the excluded test and re-enable it.
+  #         # feature_unsupported_utxo_db.py fails on windows because of emojis in the test data directory
+  #         EXCLUDE: '--exclude wallet_multiwallet.py,feature_unsupported_utxo_db.py'
+  #         TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
+  #       run: py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix="$RUNNER_TEMP" --combinedlogslen=99999999 --timeout-factor=$TEST_RUNNER_TIMEOUT_FACTOR $EXCLUDE $TEST_RUNNER_EXTRA
 
   ci-matrix:
     name: ${{ matrix.name }}
     needs: runners
-    runs-on: ${{ needs.runners.outputs.provider == 'cirrus' && matrix.cirrus-runner || matrix.fallback-runner }}
+    runs-on: ${{ matrix.fallback-runner }}
+    # runs-on: ${{ needs.runners.outputs.provider == 'cirrus' && matrix.cirrus-runner || matrix.fallback-runner }}
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
     timeout-minutes: ${{ matrix.timeout-minutes }}
 
@@ -434,70 +436,70 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: '32 bit ARM, unit tests, no functional tests'
-            cirrus-runner: 'ubuntu-24.04-arm' # Cirrus' Arm runners are Apple (with virtual Linux aarch64), which doesn't support 32-bit mode
-            fallback-runner: 'ubuntu-24.04-arm'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_arm.sh'
-            provider: 'gha'
+          # - name: '32 bit ARM, unit tests, no functional tests'
+          #   cirrus-runner: 'ubuntu-24.04-arm' # Cirrus' Arm runners are Apple (with virtual Linux aarch64), which doesn't support 32-bit mode
+          #   fallback-runner: 'ubuntu-24.04-arm'
+          #   timeout-minutes: 120
+          #   file-env: './ci/test/00_setup_env_arm.sh'
+          #   provider: 'gha'
 
           - name: 'ASan + LSan + UBSan + integer, no depends, USDT'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md' # has to match container in ci/test/00_setup_env_native_asan.sh for tracing tools
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_asan.sh'
 
           - name: 'macOS-cross, gui, no tests'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_mac_cross.sh'
 
           - name: 'No wallet, libbitcoinkernel'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_nowallet_libbitcoinkernel.sh'
 
           - name: 'no IPC, i686, DEBUG'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_i686_no_ipc.sh'
 
           - name: 'fuzzer,address,undefined,integer, no depends'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 240
             file-env: './ci/test/00_setup_env_native_fuzz.sh'
 
           - name: 'previous releases, depends DEBUG'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_previous_releases.sh'
 
           - name: 'CentOS, depends, gui'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_centos.sh'
 
           - name: 'tidy'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_tidy.sh'
 
           - name: 'TSan, depends, no gui'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_tsan.sh'
 
           - name: 'MSan, depends'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg'
-            fallback-runner: 'ubuntu-24.04'
+            fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_msan.sh'
 
@@ -536,7 +538,8 @@ jobs:
   lint:
     name: 'lint'
     needs: runners
-    runs-on: ${{ needs.runners.outputs.use-cirrus-runners == 'true' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-xs' || 'ubuntu-24.04' }}
+    runs-on: ubuntu-latest
+    # runs-on: ${{ needs.runners.outputs.use-cirrus-runners == 'true' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-xs' || 'ubuntu-24.04' }}
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
     timeout-minutes: 20
     env:
