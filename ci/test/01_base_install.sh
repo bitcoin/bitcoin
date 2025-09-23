@@ -58,23 +58,6 @@ fi
 if [[ -n "${USE_INSTRUMENTED_LIBCPP}" ]]; then
   ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-21.1.1" /llvm-project
 
-  if [ -n "${APT_LLVM_V}" ]; then
-
-    cmake -G Ninja -B /clang_build/ \
-      -DLLVM_ENABLE_PROJECTS="clang" \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DLLVM_TARGETS_TO_BUILD=Native \
-      -DLLVM_ENABLE_RUNTIMES="compiler-rt;libcxx;libcxxabi;libunwind" \
-      -S /llvm-project/llvm
-
-    ninja -C /clang_build/ "$MAKEJOBS"
-    ninja -C /clang_build/ install-runtimes
-
-    update-alternatives --install /usr/bin/clang++ clang++ /clang_build/bin/clang++ 100
-    update-alternatives --install /usr/bin/clang clang /clang_build/bin/clang 100
-    update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /clang_build/bin/llvm-symbolizer 100
-  fi
-
   cmake -G Ninja -B /cxx_build/ \
     -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" \
     -DCMAKE_BUILD_TYPE=Release \

@@ -35,7 +35,12 @@ class IPCInterfaceTest(BitcoinTestFramework):
             capnp_dir = Path(capnp.__path__[0]).parent
         src_dir = Path(self.config['environment']['SRCDIR']) / "src"
         mp_dir = src_dir / "ipc" / "libmultiprocess" / "include"
-        imports = [str(capnp_dir), str(src_dir), str(mp_dir)]
+        # List of import directories. Note: it is important for mp_dir to be
+        # listed first, in case there are other libmultiprocess installations on
+        # the system, to ensure that `import "/mp/proxy.capnp"` lines load the
+        # same file as capnp.load() loads directly below, and there are not
+        # "failed: Duplicate ID @0xcc316e3f71a040fb" errors.
+        imports = [str(mp_dir), str(capnp_dir), str(src_dir)]
         return {
             "proxy": capnp.load(str(mp_dir / "mp" / "proxy.capnp"), imports=imports),
             "init": capnp.load(str(src_dir / "ipc" / "capnp" / "init.capnp"), imports=imports),

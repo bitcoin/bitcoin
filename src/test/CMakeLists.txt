@@ -25,6 +25,7 @@ add_executable(test_bitcoin
   blockmanager_tests.cpp
   bloom_tests.cpp
   bswap_tests.cpp
+  caches_tests.cpp
   chainstate_write_tests.cpp
   checkqueue_tests.cpp
   cluster_linearize_tests.cpp
@@ -101,6 +102,7 @@ add_executable(test_bitcoin
   span_tests.cpp
   streams_tests.cpp
   sync_tests.cpp
+  system_ram_tests.cpp
   system_tests.cpp
   testnet4_miner_tests.cpp
   timeoffsets_tests.cpp
@@ -196,7 +198,10 @@ function(add_boost_test source_file)
       COMMAND test_bitcoin --run_test=${test_suite_name} --catch_system_error=no --log_level=test_suite -- DEBUG_LOG_OUT
     )
     set_property(TEST ${test_suite_name} PROPERTY
-      SKIP_REGULAR_EXPRESSION "no test cases matching filter" "skipping script_assets_test"
+      SKIP_REGULAR_EXPRESSION
+        "no test cases matching filter"
+        "skipping script_assets_test"
+        "skipping total_ram"
     )
   endforeach()
 endfunction()
