@@ -13,6 +13,7 @@
 #include <evo/simplifiedmns.h>
 #include <evo/smldiff.h>
 #include <llmq/commitment.h>
+#include <rpc/evo_util.h>
 
 #include <univalue.h>
 
@@ -74,7 +75,7 @@
     if (IsServiceDeprecatedRPCEnabled()) {
         ret.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
     }
-    ret.pushKV("addresses", netInfo->ToJson());
+    ret.pushKV("addresses", GetNetInfoWithLegacyFields(*this, nType));
     ret.pushKV("ownerAddress", EncodeDestination(PKHash(keyIDOwner)));
     ret.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
     if (CTxDestination dest; ExtractDestination(scriptPayout, dest)) {
@@ -84,8 +85,8 @@
     ret.pushKV("operatorReward", (double)nOperatorReward / 100);
     if (nType == MnType::Evo) {
         ret.pushKV("platformNodeID", platformNodeID.ToString());
-        ret.pushKV("platformP2PPort", platformP2PPort);
-        ret.pushKV("platformHTTPPort", platformHTTPPort);
+        ret.pushKV("platformP2PPort", GetPlatformPort</*is_p2p=*/true>(*this));
+        ret.pushKV("platformHTTPPort", GetPlatformPort</*is_p2p=*/false>(*this));
     }
     ret.pushKV("inputsHash", inputsHash.ToString());
     return ret;
@@ -124,14 +125,14 @@
     if (IsServiceDeprecatedRPCEnabled()) {
         ret.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
     }
-    ret.pushKV("addresses", netInfo->ToJson());
+    ret.pushKV("addresses", GetNetInfoWithLegacyFields(*this, nType));
     if (CTxDestination dest; ExtractDestination(scriptOperatorPayout, dest)) {
         ret.pushKV("operatorPayoutAddress", EncodeDestination(dest));
     }
     if (nType == MnType::Evo) {
         ret.pushKV("platformNodeID", platformNodeID.ToString());
-        ret.pushKV("platformP2PPort", platformP2PPort);
-        ret.pushKV("platformHTTPPort", platformHTTPPort);
+        ret.pushKV("platformP2PPort", GetPlatformPort</*is_p2p=*/true>(*this));
+        ret.pushKV("platformHTTPPort", GetPlatformPort</*is_p2p=*/false>(*this));
     }
     ret.pushKV("inputsHash", inputsHash.ToString());
     return ret;
@@ -164,12 +165,12 @@
     if (IsServiceDeprecatedRPCEnabled()) {
         obj.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
     }
-    obj.pushKV("addresses", netInfo->ToJson());
+    obj.pushKV("addresses", GetNetInfoWithLegacyFields(*this, nType));
     obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
     obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
     obj.pushKV("isValid", isValid);
     if (nType == MnType::Evo) {
-        obj.pushKV("platformHTTPPort", platformHTTPPort);
+        obj.pushKV("platformHTTPPort", GetPlatformPort</*is_p2p=*/false>(*this));
         obj.pushKV("platformNodeID", platformNodeID.ToString());
     }
 

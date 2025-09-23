@@ -434,12 +434,11 @@ static RPCHelpMan getcoinjoininfo()
                                     {RPCResult::Type::STR_HEX, "protxhash", "The ProTxHash of the masternode"},
                                     {RPCResult::Type::STR_HEX, "outpoint", "The outpoint of the masternode"},
                                     {RPCResult::Type::STR, "service", "The IP address and port of the masternode (DEPRECATED, returned only if config option -deprecatedrpc=service is passed)"},
-                                    {RPCResult::Type::ARR, "addresses", "Network addresses of the masternode",
-                                    {
+                                    {RPCResult::Type::ARR, "addrs_core_p2p", "Network addresses of the masternode used for protocol P2P",
                                         {
                                             {RPCResult::Type::STR, "address", ""},
                                         }
-                                    }},
+                                    },
                                     {RPCResult::Type::NUM, "denomination", "The denomination of the mixing session in " + CURRENCY_UNIT + ""},
                                     {RPCResult::Type::STR_HEX, "state", "Current state of the mixing session"},
                                     {RPCResult::Type::NUM, "entries_count", "The number of entries in the mixing session"},

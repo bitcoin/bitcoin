@@ -257,10 +257,9 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
                 }
             }
 
-            for (const NetInfoEntry& entry : proTx.netInfo->GetEntries()) {
-                if (const auto& service_opt{entry.GetAddrPort()}; service_opt.has_value()) {
-                    const CService& service{service_opt.value()};
-                    if (newList.HasUniqueProperty(service)) {
+            for (const auto& entry : proTx.netInfo->GetEntries()) {
+                if (const auto service_opt{entry.GetAddrPort()}) {
+                    if (newList.HasUniqueProperty(*service_opt)) {
                         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-dup-netinfo-entry");
                     }
                 } else {
@@ -293,11 +292,10 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
             }
 
-            for (const NetInfoEntry& entry : opt_proTx->netInfo->GetEntries()) {
-                if (const auto& service_opt{entry.GetAddrPort()}; service_opt.has_value()) {
-                    const CService& service{service_opt.value()};
-                    if (newList.HasUniqueProperty(service) &&
-                        newList.GetUniquePropertyMN(service)->proTxHash != opt_proTx->proTxHash) {
+            for (const auto& entry : opt_proTx->netInfo->GetEntries()) {
+                if (const auto service_opt{entry.GetAddrPort()}) {
+                    if (newList.HasUniqueProperty(*service_opt) &&
+                        newList.GetUniquePropertyMN(*service_opt)->proTxHash != opt_proTx->proTxHash) {
                         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-dup-netinfo-entry");
                     }
                 } else {
@@ -325,8 +323,10 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
             newState->scriptOperatorPayout = opt_proTx->scriptOperatorPayout;
             if (opt_proTx->nType == MnType::Evo) {
                 newState->platformNodeID = opt_proTx->platformNodeID;
-                newState->platformP2PPort = opt_proTx->platformP2PPort;
-                newState->platformHTTPPort = opt_proTx->platformHTTPPort;
+                if (opt_proTx->nVersion < ProTxVersion::ExtAddr) {
+                    newState->platformP2PPort = opt_proTx->platformP2PPort;
+                    newState->platformHTTPPort = opt_proTx->platformHTTPPort;
+                }
             }
             if (newState->IsBanned()) {
                 // only revive when all keys are set

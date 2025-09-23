@@ -6,6 +6,9 @@
 
 #include <script/standard.h>
 
+#include <evo/netinfo.h>
+#include <rpc/evo_util.h>
+
 #include <univalue.h>
 
 std::string CDeterministicMNState::ToString() const
@@ -22,12 +25,11 @@ std::string CDeterministicMNState::ToString() const
 
     return strprintf("CDeterministicMNState(nVersion=%d, nRegisteredHeight=%d, nLastPaidHeight=%d, nPoSePenalty=%d, "
                      "nPoSeRevivedHeight=%d, nPoSeBanHeight=%d, nRevocationReason=%d, "
-                     "ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, payoutAddress=%s, "
-                     "operatorPayoutAddress=%s)\n"
-                     "  %s",
+                     "ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, netInfo=%s, payoutAddress=%s, "
+                     "operatorPayoutAddress=%s)\n",
                      nVersion, nRegisteredHeight, nLastPaidHeight, nPoSePenalty, nPoSeRevivedHeight, nPoSeBanHeight,
                      nRevocationReason, EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(),
-                     EncodeDestination(PKHash(keyIDVoting)), payoutAddress, operatorPayoutAddress, netInfo->ToString());
+                     EncodeDestination(PKHash(keyIDVoting)), netInfo->ToString(), payoutAddress, operatorPayoutAddress);
 }
 
 UniValue CDeterministicMNState::ToJson(MnType nType) const
@@ -37,7 +39,7 @@ UniValue CDeterministicMNState::ToJson(MnType nType) const
     if (IsServiceDeprecatedRPCEnabled()) {
         obj.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
     }
-    obj.pushKV("addresses", netInfo->ToJson());
+    obj.pushKV("addresses", GetNetInfoWithLegacyFields(*this, nType));
     obj.pushKV("registeredHeight", nRegisteredHeight);
     obj.pushKV("lastPaidHeight", nLastPaidHeight);
     obj.pushKV("consecutivePayments", nConsecutivePayments);
@@ -49,8 +51,8 @@ UniValue CDeterministicMNState::ToJson(MnType nType) const
     obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
     if (nType == MnType::Evo) {
         obj.pushKV("platformNodeID", platformNodeID.ToString());
-        obj.pushKV("platformP2PPort", platformP2PPort);
-        obj.pushKV("platformHTTPPort", platformHTTPPort);
+        obj.pushKV("platformP2PPort", GetPlatformPort</*is_p2p=*/true>(*this));
+        obj.pushKV("platformHTTPPort", GetPlatformPort</*is_p2p=*/false>(*this));
     }
 
     CTxDestination dest;
@@ -74,7 +76,6 @@ UniValue CDeterministicMNStateDiff::ToJson(MnType nType) const
         if (IsServiceDeprecatedRPCEnabled()) {
             obj.pushKV("service", state.netInfo->GetPrimary().ToStringAddrPort());
         }
-        obj.pushKV("addresses", state.netInfo->ToJson());
     }
     if (fields & Field_nRegisteredHeight) {
         obj.pushKV("registeredHeight", state.nRegisteredHeight);
@@ -127,6 +128,38 @@ UniValue CDeterministicMNStateDiff::ToJson(MnType nType) const
         }
         if (fields & Field_platformHTTPPort) {
             obj.pushKV("platformHTTPPort", state.platformHTTPPort);
+        }
+    }
+    {
+        const bool has_netinfo = (fields & Field_netInfo);
+
+        UniValue netInfoObj(UniValue::VOBJ);
+        if (has_netinfo) {
+            netInfoObj = state.netInfo->ToJson();
+        }
+        if (nType == MnType::Evo && (!has_netinfo || !state.netInfo->CanStorePlatform())) {
+            auto unknownAddr = [](uint16_t port) -> UniValue {
+                UniValue obj(UniValue::VARR);
+                // We don't know what the address is because it wasn't changed in the
+                // diff but we still need to report the port number in addr:port format
+                obj.push_back(strprintf("255.255.255.255:%d", port));
+                return obj;
+            };
+            if (fields & Field_platformP2PPort) {
+                netInfoObj.pushKV(PurposeToString(NetInfoPurpose::PLATFORM_P2P).data(),
+                                  (has_netinfo)
+                                      ? ArrFromService(CService(state.netInfo->GetPrimary(), state.platformP2PPort))
+                                      : unknownAddr(state.platformP2PPort));
+            }
+            if (fields & Field_platformHTTPPort) {
+                netInfoObj.pushKV(PurposeToString(NetInfoPurpose::PLATFORM_HTTPS).data(),
+                                  (has_netinfo)
+                                      ? ArrFromService(CService(state.netInfo->GetPrimary(), state.platformHTTPPort))
+                                      : unknownAddr(state.platformHTTPPort));
+            }
+        }
+        if (!netInfoObj.empty()) {
+            obj.pushKV("addresses", netInfoObj);
         }
     }
     return obj;

@@ -32,6 +32,30 @@ template uint16_t GetMaxFromDeployment<CProUpRegTx>(gsl::not_null<const CBlockIn
 template uint16_t GetMaxFromDeployment<CProUpRevTx>(gsl::not_null<const CBlockIndex*> pindexPrev, std::optional<bool> is_basic_override);
 } // namespace ProTxVersion
 
+template <typename ProTx>
+bool IsNetInfoTriviallyValid(const ProTx& proTx, TxValidationState& state)
+{
+    if (!proTx.netInfo->HasEntries(NetInfoPurpose::CORE_P2P)) {
+        // Mandatory for all nodes
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-empty");
+    }
+    if (proTx.nType == MnType::Regular) {
+        // Regular nodes shouldn't populate Platform-specific fields
+        if (proTx.netInfo->HasEntries(NetInfoPurpose::PLATFORM_HTTPS) ||
+            proTx.netInfo->HasEntries(NetInfoPurpose::PLATFORM_P2P)) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-bad");
+        }
+    }
+    if (proTx.netInfo->CanStorePlatform() && proTx.nType == MnType::Evo) {
+        // Platform fields are mandatory for EvoNodes
+        if (!proTx.netInfo->HasEntries(NetInfoPurpose::PLATFORM_HTTPS) ||
+            !proTx.netInfo->HasEntries(NetInfoPurpose::PLATFORM_P2P)) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-empty");
+        }
+    }
+    return true;
+}
+
 bool CProRegTx::IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state) const
 {
     if (nVersion == 0 || nVersion > ProTxVersion::GetMaxFromDeployment<decltype(*this)>(pindexPrev)) {
@@ -59,7 +83,11 @@ bool CProRegTx::IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, T
     if (netInfo->CanStorePlatform() != (nVersion == ProTxVersion::ExtAddr)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-netinfo-version");
     }
-    for (const NetInfoEntry& entry : netInfo->GetEntries()) {
+    if (!netInfo->IsEmpty() && !IsNetInfoTriviallyValid(*this, state)) {
+        // pass the state returned by the function above
+        return false;
+    }
+    for (const auto& entry : netInfo->GetEntries()) {
         if (!entry.IsTriviallyValid()) {
             return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-bad");
         }
@@ -115,14 +143,14 @@ std::string CProRegTx::ToString() const
         payee = EncodeDestination(dest);
     }
 
-    return strprintf("CProRegTx(nVersion=%d, nType=%d, collateralOutpoint=%s, nOperatorReward=%f, "
-                     "ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, scriptPayout=%s, platformNodeID=%s, "
-                     "platformP2PPort=%d, platformHTTPPort=%d)\n"
-                     "  %s",
-                     nVersion, ToUnderlying(nType), collateralOutpoint.ToStringShort(), (double)nOperatorReward / 100,
-                     EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(),
-                     EncodeDestination(PKHash(keyIDVoting)), payee, platformNodeID.ToString(), platformP2PPort,
-                     platformHTTPPort, netInfo->ToString());
+    return strprintf("CProRegTx(nVersion=%d, nType=%d, collateralOutpoint=%s, netInfo=%s, nOperatorReward=%f, "
+                     "ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, scriptPayout=%s, platformNodeID=%s%s)\n",
+                     nVersion, ToUnderlying(nType), collateralOutpoint.ToStringShort(), netInfo->ToString(),
+                     (double)nOperatorReward / 100, EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(),
+                     EncodeDestination(PKHash(keyIDVoting)), payee, platformNodeID.ToString(),
+                     (nVersion >= ProTxVersion::ExtAddr
+                          ? ""
+                          : strprintf(", platformP2PPort=%d, platformHTTPPort=%d", platformP2PPort, platformHTTPPort)));
 }
 
 bool CProUpServTx::IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state) const
@@ -139,7 +167,11 @@ bool CProUpServTx::IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev
     if (netInfo->IsEmpty()) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-empty");
     }
-    for (const NetInfoEntry& entry : netInfo->GetEntries()) {
+    if (!IsNetInfoTriviallyValid(*this, state)) {
+        // pass the state returned by the function above
+        return false;
+    }
+    for (const auto& entry : netInfo->GetEntries()) {
         if (!entry.IsTriviallyValid()) {
             return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-bad");
         }
@@ -156,11 +188,13 @@ std::string CProUpServTx::ToString() const
         payee = EncodeDestination(dest);
     }
 
-    return strprintf("CProUpServTx(nVersion=%d, nType=%d, proTxHash=%s, operatorPayoutAddress=%s, "
-                     "platformNodeID=%s, platformP2PPort=%d, platformHTTPPort=%d)\n"
-                     "  %s",
-                     nVersion, ToUnderlying(nType), proTxHash.ToString(), payee, platformNodeID.ToString(),
-                     platformP2PPort, platformHTTPPort, netInfo->ToString());
+    return strprintf("CProUpServTx(nVersion=%d, nType=%d, proTxHash=%s, netInfo=%s, operatorPayoutAddress=%s, "
+                     "platformNodeID=%s%s)\n",
+                     nVersion, ToUnderlying(nType), proTxHash.ToString(), netInfo->ToString(), payee,
+                     platformNodeID.ToString(),
+                     (nVersion >= ProTxVersion::ExtAddr
+                          ? ""
+                          : strprintf(", platformP2PPort=%d, platformHTTPPort=%d", platformP2PPort, platformHTTPPort)));
 }
 
 bool CProUpRegTx::IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state) const

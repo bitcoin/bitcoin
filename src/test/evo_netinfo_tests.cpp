@@ -15,27 +15,41 @@
 
 BOOST_FIXTURE_TEST_SUITE(evo_netinfo_tests, BasicTestingSetup)
 
-const std::vector<std::pair</*input=*/std::string, /*expected_ret=*/NetInfoStatus>> vals{
+struct TestEntry {
+    std::pair</*purpose=*/NetInfoPurpose, /*addr=*/std::string> input;
+    NetInfoStatus expected_ret_mn;
+    NetInfoStatus expected_ret_ext;
+};
+
+static const std::vector<TestEntry> vals_main{
     // Address and port specified
-    {"1.1.1.1:9999", NetInfoStatus::Success},
-    // Address specified, port should default to default P2P core
-    {"1.1.1.1", NetInfoStatus::Success},
-    // Non-mainnet port on mainnet
-    {"1.1.1.1:9998", NetInfoStatus::BadPort},
+    {{NetInfoPurpose::CORE_P2P, "1.1.1.1:9999"}, NetInfoStatus::Success, NetInfoStatus::Success},
+    // - Port should default to default P2P core with MnNetInfo
+    // - Ports are no longer implied with ExtNetInfo
+    {{NetInfoPurpose::CORE_P2P, "1.1.1.1"}, NetInfoStatus::Success, NetInfoStatus::BadPort},
+    // - Non-mainnet port on mainnet causes failure in MnNetInfo
+    // - ExtNetInfo is indifferent to choice of port unless it's a bad port which 9998 isn't
+    {{NetInfoPurpose::CORE_P2P, "1.1.1.1:9998"}, NetInfoStatus::BadPort, NetInfoStatus::Success},
     // Internal addresses not allowed on mainnet
-    {"127.0.0.1:9999", NetInfoStatus::NotRoutable},
+    {{NetInfoPurpose::CORE_P2P, "127.0.0.1:9999"}, NetInfoStatus::NotRoutable, NetInfoStatus::NotRoutable},
     // Valid IPv4 formatting but invalid IPv4 address
-    {"0.0.0.0:9999", NetInfoStatus::BadAddress},
+    {{NetInfoPurpose::CORE_P2P, "0.0.0.0:9999"}, NetInfoStatus::BadAddress, NetInfoStatus::BadAddress},
     // Port greater than uint16_t max
-    {"1.1.1.1:99999", NetInfoStatus::BadInput},
-    // Only IPv4 allowed
-    {"[2606:4700:4700::1111]:9999", NetInfoStatus::BadInput},
+    {{NetInfoPurpose::CORE_P2P, "1.1.1.1:99999"}, NetInfoStatus::BadInput, NetInfoStatus::BadInput},
+    // - Non-IPv4 addresses are prohibited in MnNetInfo
+    // - Any valid BIP155 address is allowed in ExtNetInfo
+    {{NetInfoPurpose::CORE_P2P, "[2606:4700:4700::1111]:9999"}, NetInfoStatus::BadInput, NetInfoStatus::Success},
     // Domains are not allowed
-    {"example.com:9999", NetInfoStatus::BadInput},
+    {{NetInfoPurpose::CORE_P2P, "example.com:9999"}, NetInfoStatus::BadInput, NetInfoStatus::BadInput},
     // Incorrect IPv4 address
-    {"1.1.1.256:9999", NetInfoStatus::BadInput},
+    {{NetInfoPurpose::CORE_P2P, "1.1.1.256:9999"}, NetInfoStatus::BadInput, NetInfoStatus::BadInput},
     // Missing address
-    {":9999", NetInfoStatus::BadInput},
+    {{NetInfoPurpose::CORE_P2P, ":9999"}, NetInfoStatus::BadInput, NetInfoStatus::BadInput},
+    // Bad purpose code
+    {{static_cast<NetInfoPurpose>(64), "1.1.1.1:9999"}, NetInfoStatus::MaxLimit, NetInfoStatus::MaxLimit},
+    // - MnNetInfo doesn't allow storing anything except a Core P2P address
+    // - ExtNetInfo allows storing Platform P2P addresses
+    {{NetInfoPurpose::PLATFORM_P2P, "1.1.1.1:9999"}, NetInfoStatus::MaxLimit, NetInfoStatus::Success},
 };
 
 void ValidateGetEntries(const NetInfoList& entries, const size_t expected_size)
@@ -46,28 +60,126 @@ void ValidateGetEntries(const NetInfoList& entries, const size_t expected_size)
     }
 }
 
-BOOST_AUTO_TEST_CASE(mnnetinfo_rules)
+void TestMnNetInfo(const std::vector<TestEntry>& vals)
 {
-    // Validate AddEntry() rules enforcement
-    for (const auto& [input, expected_ret] : vals) {
+    for (const auto& [input, expected_ret, _] : vals) {
+        const auto& [purpose, addr] = input;
         MnNetInfo netInfo;
-        BOOST_CHECK_EQUAL(netInfo.AddEntry(input), expected_ret);
+        BOOST_CHECK_EQUAL(netInfo.AddEntry(purpose, addr), expected_ret);
         if (expected_ret != NetInfoStatus::Success) {
             // An empty MnNetInfo is considered malformed
             BOOST_CHECK_EQUAL(netInfo.Validate(), NetInfoStatus::Malformed);
+            BOOST_CHECK(!netInfo.HasEntries(purpose));
             BOOST_CHECK(netInfo.GetEntries().empty());
         } else {
             BOOST_CHECK_EQUAL(netInfo.Validate(), NetInfoStatus::Success);
+            BOOST_CHECK(netInfo.HasEntries(purpose));
             ValidateGetEntries(netInfo.GetEntries(), /*expected_size=*/1);
         }
     }
+}
+
+void TestExtNetInfo(const std::vector<TestEntry>& vals)
+{
+    for (const auto& [input, _, expected_ret] : vals) {
+        const auto& [purpose, addr] = input;
+        ExtNetInfo netInfo;
+        BOOST_CHECK_EQUAL(netInfo.AddEntry(purpose, addr), expected_ret);
+        if (expected_ret != NetInfoStatus::Success) {
+            // An empty ExtNetInfo is considered malformed
+            BOOST_CHECK_EQUAL(netInfo.Validate(), NetInfoStatus::Malformed);
+            BOOST_CHECK(!netInfo.HasEntries(purpose));
+            BOOST_CHECK(netInfo.GetEntries().empty());
+        } else {
+            BOOST_CHECK_EQUAL(netInfo.Validate(), NetInfoStatus::Success);
+            BOOST_CHECK(netInfo.HasEntries(purpose));
+            ValidateGetEntries(netInfo.GetEntries(), /*expected_size=*/1);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(mnnetinfo_rules_main)
+{
+    TestMnNetInfo(vals_main);
 
     {
         // MnNetInfo only stores one value, overwriting prohibited
         MnNetInfo netInfo;
-        BOOST_CHECK_EQUAL(netInfo.AddEntry("1.1.1.1:9999"), NetInfoStatus::Success);
-        BOOST_CHECK_EQUAL(netInfo.AddEntry("1.1.1.2:9999"), NetInfoStatus::MaxLimit);
+        BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.1:9999"), NetInfoStatus::Success);
+        BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.2:9999"), NetInfoStatus::MaxLimit);
+        BOOST_CHECK(netInfo.HasEntries(NetInfoPurpose::CORE_P2P));
         ValidateGetEntries(netInfo.GetEntries(), /*expected_size=*/1);
+    }
+
+    {
+        // MnNetInfo only allows storing a Core P2P address
+        MnNetInfo netInfo;
+        for (const auto purpose : {NetInfoPurpose::PLATFORM_HTTPS, NetInfoPurpose::PLATFORM_P2P}) {
+            BOOST_CHECK_EQUAL(netInfo.AddEntry(purpose, "1.1.1.1:9999"), NetInfoStatus::MaxLimit);
+            BOOST_CHECK(!netInfo.HasEntries(purpose));
+        }
+        BOOST_CHECK(netInfo.GetEntries().empty());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(extnetinfo_rules_main) { TestExtNetInfo(vals_main); }
+
+static const std::vector<TestEntry> vals_reg{
+    // - MnNetInfo doesn't mind using port 0
+    // - ExtNetInfo requires non-zero ports
+    {{NetInfoPurpose::CORE_P2P, "1.1.1.1:0"}, NetInfoStatus::Success, NetInfoStatus::BadPort},
+    // - Mainnet P2P port on non-mainnet cause failure in MnNetInfo
+    // - ExtNetInfo is indifferent to choice of port unless it's a bad port which 9999 isn't
+    {{NetInfoPurpose::CORE_P2P, "1.1.1.1:9999"}, NetInfoStatus::BadPort, NetInfoStatus::Success},
+    // - Non-mainnet P2P port is allowed in MnNetInfo regardless of bad port status
+    // - Port 22 (SSH) is below the privileged ports threshold (1023) and is therefore a bad port, disallowed in ExtNetInfo
+    {{NetInfoPurpose::CORE_P2P, "1.1.1.1:22"}, NetInfoStatus::Success, NetInfoStatus::BadPort},
+};
+
+BOOST_FIXTURE_TEST_CASE(mnnetinfo_rules_reg, RegTestingSetup) { TestMnNetInfo(vals_reg); }
+
+BOOST_FIXTURE_TEST_CASE(extnetinfo_rules_reg, RegTestingSetup)
+{
+    TestExtNetInfo(vals_reg);
+
+    {
+        // ExtNetInfo can store up to 4 entries per purpose code, check limit enforcement
+        ExtNetInfo netInfo;
+        for (size_t idx{1}; idx <= MAX_ENTRIES_EXTNETINFO; idx++) {
+            BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::CORE_P2P, strprintf("1.1.1.%d:9998", idx)),
+                              NetInfoStatus::Success);
+        }
+        BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.5:9998"), NetInfoStatus::MaxLimit);
+        BOOST_CHECK(netInfo.HasEntries(NetInfoPurpose::CORE_P2P));
+        // The limit applies *per purpose code* and therefore wouldn't error if the address was for a different purpose
+        BOOST_CHECK(!netInfo.HasEntries(NetInfoPurpose::PLATFORM_P2P));
+        BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::PLATFORM_P2P, "1.1.1.5:9998"), NetInfoStatus::Success);
+        BOOST_CHECK(netInfo.HasEntries(NetInfoPurpose::PLATFORM_P2P));
+        BOOST_CHECK_EQUAL(netInfo.Validate(), NetInfoStatus::Success);
+        // GetEntries() is a tally of all entries across all purpose codes
+        ValidateGetEntries(netInfo.GetEntries(), /*expected_size=*/MAX_ENTRIES_EXTNETINFO + 1);
+    }
+
+    {
+        // ExtNetInfo has restrictions on duplicates
+        ExtNetInfo netInfo;
+        BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.1:9998"), NetInfoStatus::Success);
+
+        // Exact (i.e. addr:port) duplicates are prohibited *within* a list
+        BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.1:9998"), NetInfoStatus::Duplicate);
+        // Partial (i.e. different port) duplicates are prohibited *within* a list
+        BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.1:9997"), NetInfoStatus::Duplicate);
+
+        // Exact (i.e. addr:port) duplicates are prohibited *across* lists
+        BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::PLATFORM_P2P, "1.1.1.1:9998"), NetInfoStatus::Duplicate);
+        // Partial (i.e. different port) duplicates are allowed *across* a list
+        BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::PLATFORM_P2P, "1.1.1.1:9997"), NetInfoStatus::Success);
+
+        BOOST_CHECK_EQUAL(netInfo.Validate(), NetInfoStatus::Success);
+        BOOST_CHECK(netInfo.HasEntries(NetInfoPurpose::CORE_P2P));
+        BOOST_CHECK(netInfo.HasEntries(NetInfoPurpose::PLATFORM_P2P));
+        BOOST_CHECK(!netInfo.HasEntries(NetInfoPurpose::PLATFORM_HTTPS));
+        ValidateGetEntries(netInfo.GetEntries(), /*expected_size=*/2);
     }
 }
 
@@ -193,31 +305,31 @@ BOOST_AUTO_TEST_CASE(cservice_compatible)
     // Valid IPv4 address, valid port
     service = LookupNumeric("1.1.1.1", 9999);
     netInfo.Clear();
-    BOOST_CHECK_EQUAL(netInfo.AddEntry("1.1.1.1:9999"), NetInfoStatus::Success);
+    BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.1:9999"), NetInfoStatus::Success);
     BOOST_CHECK(CheckIfSerSame(service, netInfo));
 
     // Valid IPv4 address, default P2P port implied
     service = LookupNumeric("1.1.1.1", Params().GetDefaultPort());
     netInfo.Clear();
-    BOOST_CHECK_EQUAL(netInfo.AddEntry("1.1.1.1"), NetInfoStatus::Success);
+    BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.1"), NetInfoStatus::Success);
     BOOST_CHECK(CheckIfSerSame(service, netInfo));
 
     // Lookup() failure (domains not allowed), MnNetInfo should remain empty if Lookup() failed
     service = CService();
     netInfo.Clear();
-    BOOST_CHECK_EQUAL(netInfo.AddEntry("example.com"), NetInfoStatus::BadInput);
+    BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::CORE_P2P, "example.com"), NetInfoStatus::BadInput);
     BOOST_CHECK(CheckIfSerSame(service, netInfo));
 
     // Validation failure (non-IPv4 not allowed), MnNetInfo should remain empty if ValidateService() failed
     service = CService();
     netInfo.Clear();
-    BOOST_CHECK_EQUAL(netInfo.AddEntry("[2606:4700:4700::1111]:9999"), NetInfoStatus::BadInput);
+    BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::CORE_P2P, "[2606:4700:4700::1111]:9999"), NetInfoStatus::BadInput);
     BOOST_CHECK(CheckIfSerSame(service, netInfo));
 }
 
 BOOST_AUTO_TEST_CASE(interface_equality)
 {
-    // We also check for symmetry as NetInfoInterface, MnNetInfo and NetInfoEntry
+    // We also check for symmetry as NetInfoInterface, ExtNetInfo, MnNetInfo and NetInfoEntry
     // define their operator!= as the inverse of operator==
     std::shared_ptr<NetInfoInterface> ptr_lhs{nullptr}, ptr_rhs{nullptr};
 
@@ -234,7 +346,21 @@ BOOST_AUTO_TEST_CASE(interface_equality)
     BOOST_CHECK(util::shared_ptr_equal(ptr_lhs, ptr_rhs) && !util::shared_ptr_not_equal(ptr_lhs, ptr_rhs));
 
     // Equal initialization state, same type, differing values
-    BOOST_CHECK_EQUAL(ptr_rhs->AddEntry("1.1.1.1:9999"), NetInfoStatus::Success);
+    BOOST_CHECK_EQUAL(ptr_rhs->AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.1:9999"), NetInfoStatus::Success);
+    BOOST_CHECK(!util::shared_ptr_equal(ptr_lhs, ptr_rhs) && util::shared_ptr_not_equal(ptr_lhs, ptr_rhs));
+
+    // Equal initialization state, different type, same values
+    ptr_rhs = std::make_shared<ExtNetInfo>();
+    BOOST_CHECK(ptr_lhs->IsEmpty() && ptr_rhs->IsEmpty());
+    BOOST_CHECK(!util::shared_ptr_equal(ptr_lhs, ptr_rhs) && util::shared_ptr_not_equal(ptr_lhs, ptr_rhs));
+
+    // Equal initialization state, same type, same values
+    ptr_lhs = std::make_shared<ExtNetInfo>();
+    BOOST_CHECK(ptr_lhs->IsEmpty() && ptr_rhs->IsEmpty());
+    BOOST_CHECK(util::shared_ptr_equal(ptr_lhs, ptr_rhs) && !util::shared_ptr_not_equal(ptr_lhs, ptr_rhs));
+
+    // Equal initialization state, same type, differing values
+    BOOST_CHECK_EQUAL(ptr_rhs->AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.1:9999"), NetInfoStatus::Success);
     BOOST_CHECK(!util::shared_ptr_equal(ptr_lhs, ptr_rhs) && util::shared_ptr_not_equal(ptr_lhs, ptr_rhs));
 }
 

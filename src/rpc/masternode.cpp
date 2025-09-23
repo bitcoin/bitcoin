@@ -6,14 +6,15 @@
 #include <evo/assetlocktx.h>
 #include <evo/chainhelper.h>
 #include <evo/deterministicmns.h>
-#include <index/txindex.h>
-#include <node/blockstorage.h>
-#include <node/context.h>
 #include <governance/governance.h>
+#include <index/txindex.h>
 #include <masternode/node.h>
 #include <masternode/payments.h>
 #include <net.h>
 #include <netbase.h>
+#include <node/blockstorage.h>
+#include <node/context.h>
+#include <rpc/evo_util.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
@@ -566,7 +567,7 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
         std::string strAddress{};
         if (strMode == "addr" || strMode == "full" || strMode == "info" || strMode == "json" || strMode == "recent" ||
             strMode == "evo") {
-            for (const NetInfoEntry& entry : dmn.pdmnState->netInfo->GetEntries()) {
+            for (const auto& entry : dmn.pdmnState->netInfo->GetEntries()) {
                 strAddress += entry.ToStringAddrPort() + " ";
             }
             if (!strAddress.empty()) strAddress.pop_back(); // Remove trailing space
@@ -616,14 +617,14 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
             if (IsDeprecatedRPCEnabled("service")) {
                 objMN.pushKV("address", dmn.pdmnState->netInfo->GetPrimary().ToStringAddrPort());
             }
-            objMN.pushKV("addresses", dmn.pdmnState->netInfo->ToJson());
+            objMN.pushKV("addresses", GetNetInfoWithLegacyFields(*dmn.pdmnState, dmn.nType));
             objMN.pushKV("payee", payeeStr);
             objMN.pushKV("status", dmnToStatus(dmn));
             objMN.pushKV("type", std::string(GetMnType(dmn.nType).description));
             if (dmn.nType == MnType::Evo) {
                 objMN.pushKV("platformNodeID", dmn.pdmnState->platformNodeID.ToString());
-                objMN.pushKV("platformP2PPort", dmn.pdmnState->platformP2PPort);
-                objMN.pushKV("platformHTTPPort", dmn.pdmnState->platformHTTPPort);
+                objMN.pushKV("platformP2PPort", GetPlatformPort</*is_p2p=*/true>(*dmn.pdmnState));
+                objMN.pushKV("platformHTTPPort", GetPlatformPort</*is_p2p=*/false>(*dmn.pdmnState));
             }
             objMN.pushKV("pospenaltyscore", dmn.pdmnState->nPoSePenalty);
             objMN.pushKV("consecutivePayments", dmn.pdmnState->nConsecutivePayments);
