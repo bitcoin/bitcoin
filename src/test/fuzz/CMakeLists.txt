@@ -20,6 +20,7 @@ add_executable(fuzz
   block_header.cpp
   block_index.cpp
   blockfilter.cpp
+  blocktemplatecache.cpp
   bloom_filter.cpp
   buffered_file.cpp
   chain.cpp
