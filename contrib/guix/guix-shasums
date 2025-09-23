@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+
+# Help message
+help_msg() {
+    cat << 'EOF'
+Usage: guix-build-output [OPTIONS]
+
+Options:
+    -m, --markdown [FILE]  Output in markdown format (optionally to FILE)
+    -c, --commit HASH      Use specific git commit hash instead of HEAD
+    -h, --help             Show this help message
+EOF
+}
+
+# Parse arguments
+output_file=""
+mode=""
+commit_hash="$(git rev-parse --short=12 HEAD)"
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -m|--markdown)
+            mode="markdown"
+            shift
+            if [[ $# -gt 0 && $1 != -* ]]; then
+                output_file="$1"
+                shift
+            fi
+            ;;
+        -c|--commit)
+            shift
+            if [[ $# -eq 0 ]]; then
+                echo "Error: -c/--commit requires a hash argument" >&2
+                exit 1
+            fi
+            commit_hash="$(git rev-parse --short=12 "$1")"
+            shift
+            ;;
+        -h|--help)
+            help_msg
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            help_msg >&2
+            exit 1
+            ;;
+    esac
+done
+
+# Get build directory
+build_dir="guix-build-$commit_hash"
+if [[ ! -d "$build_dir" ]]; then
+    echo "Error: Directory $build_dir not found" >&2
+    exit 1
+fi
+
+# Get output directory
+output_dir="$build_dir/output"
+if [[ ! -d "$output_dir" ]]; then
+    echo "Error: Output directory $output_dir not found" >&2
+    exit 1
+fi
+
+generate_markdown() {
+    echo "## Guix Build Output"
+    echo ""
+    echo "**Host architecture:** \`$(uname -m)\`"
+    echo "**Commit:** \`$commit_hash\`"
+    echo ""
+    echo "### File Checksums"
+    echo ""
+    echo "|                             SHA256                                 |     FILE    |"
+    echo "|--------------------------------------------------------------------|-------------|"
+
+    find "$output_dir" -type f -print0 | env LC_ALL=C sort -z | \
+    xargs -r0 sha256sum | while IFS=' *' read -r checksum file; do
+        echo "| \`$checksum\` | \`$file\` |"
+    done
+}
+
+if [[ $mode == "markdown" ]]; then
+    if [[ -n "$output_file" ]]; then
+        generate_markdown > "$output_file"
+        echo "Markdown output written to: $output_file"
+    else
+        generate_markdown
+    fi
+else
+    guix describe
+    uname -m
+    find "$output_dir" -type f -print0 | env LC_ALL=C sort -z | xargs -r0 sha256sum
+fi

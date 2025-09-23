@@ -90,6 +90,26 @@ An invocation with all default options would look like:
 env DETACHED_SIGS_REPO=<path/to/bitcoin-detached-sigs> ./contrib/guix/guix-codesign
 ```
 
+## Gathering shasums of build outputs
+
+After a successful build, the shasums of the build outputs are gathered
+into a file named `SHA256SUMS`. These files are located
+in each of the architecture-specific output directories.
+
+To gather all shasums and output them in a (markdown-friendly) formatted way,
+for e.g. inclusion in a Guix pull request comment, run:
+
+``` sh
+./contrib/guix/guix-shasums
+```
+
+or in a markdown-friendly format:
+
+``` sh
+./contrib/guix/guix-shasums --markdown
+```
+
+
 ## Cleaning intermediate work directories
 
 By default, `guix-build` leaves all intermediate files or "work directories"
