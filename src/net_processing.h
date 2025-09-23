@@ -54,6 +54,8 @@ struct CNodeStateStats {
     std::chrono::microseconds m_ping_wait;
     std::vector<int> vHeightInFlight;
     bool m_relay_txs;
+    int m_inv_to_send = 0;
+    uint64_t m_last_inv_seq{0};
     CAmount m_fee_filter_received;
     uint64_t m_addr_processed = 0;
     uint64_t m_addr_rate_limited = 0;

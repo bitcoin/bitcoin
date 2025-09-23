@@ -312,7 +312,7 @@ struct Peer {
         std::chrono::microseconds m_next_inv_send_time GUARDED_BY(m_tx_inventory_mutex){0};
         /** The mempool sequence num at which we sent the last `inv` message to this peer.
          *  Can relay txs with lower sequence numbers than this (see CTxMempool::info_for_relay). */
-        uint64_t m_last_inv_sequence GUARDED_BY(NetEventsInterface::g_msgproc_mutex){1};
+        uint64_t m_last_inv_sequence GUARDED_BY(m_tx_inventory_mutex){1};
 
         /** Minimum fee rate with which to filter transaction announcements to this node. See BIP133. */
         std::atomic<CAmount> m_fee_filter_received{0};
@@ -942,7 +942,7 @@ private:
 
     /** Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed). */
     CTransactionRef FindTxForGetData(const Peer::TxRelay& tx_relay, const GenTxid& gtxid)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex, NetEventsInterface::g_msgproc_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex, !tx_relay.m_tx_inventory_mutex);
 
     void ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic<bool>& interruptMsgProc)
         EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex, peer.m_getdata_requests_mutex, NetEventsInterface::g_msgproc_mutex)
@@ -1728,9 +1728,13 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
     if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
         stats.m_relay_txs = WITH_LOCK(tx_relay->m_bloom_filter_mutex, return tx_relay->m_relay_txs);
         stats.m_fee_filter_received = tx_relay->m_fee_filter_received.load();
+        LOCK(tx_relay->m_tx_inventory_mutex);
+        stats.m_last_inv_seq = tx_relay->m_last_inv_sequence;
+        stats.m_inv_to_send = tx_relay->m_tx_inventory_to_send.size();
     } else {
         stats.m_relay_txs = false;
         stats.m_fee_filter_received = 0;
+        stats.m_inv_to_send = 0;
     }
 
     stats.m_ping_wait = ping_wait;
@@ -2362,8 +2366,8 @@ CTransactionRef PeerManagerImpl::FindTxForGetData(const Peer::TxRelay& tx_relay,
 {
     // If a tx was in the mempool prior to the last INV for this peer, permit the request.
     auto txinfo{std::visit(
-        [&](const auto& id) EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex) {
-            return m_mempool.info_for_relay(id, tx_relay.m_last_inv_sequence);
+        [&](const auto& id) {
+            return m_mempool.info_for_relay(id, WITH_LOCK(tx_relay.m_tx_inventory_mutex, return tx_relay.m_last_inv_sequence));
         },
         gtxid)};
     if (txinfo.tx) {
