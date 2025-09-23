@@ -3314,7 +3314,21 @@ void PeerManagerImpl::ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const Bl
         }
 
         PartiallyDownloadedBlock& partialBlock = *range_flight.first->second.second->partialBlock;
-        ReadStatus status = partialBlock.FillBlock(*pblock, block_transactions.txn);
+
+        if (partialBlock.header.IsNull()) {
+            // It is possible for the header to be empty if a previous call to FillBlock wiped the header, but left
+            // the PartiallyDownloadedBlock pointer around (i.e. did not call RemoveBlockRequest). In this case, we
+            // should not call LookupBlockIndex below.
+            RemoveBlockRequest(block_transactions.blockhash, pfrom.GetId());
+            Misbehaving(peer, "previous compact block reconstruction attempt failed");
+            LogDebug(BCLog::NET, "Peer %d sent compact block transactions multiple times", pfrom.GetId());
+            return;
+        }
+
+        // We should not have gotten this far in compact block processing unless it's attached to a known header
+        const CBlockIndex* prev_block{Assume(m_chainman.m_blockman.LookupBlockIndex(partialBlock.header.hashPrevBlock))};
+        ReadStatus status = partialBlock.FillBlock(*pblock, block_transactions.txn,
+                                                   /*segwit_active=*/DeploymentActiveAfter(prev_block, m_chainman, Consensus::DEPLOYMENT_SEGWIT));
         if (status == READ_STATUS_INVALID) {
             RemoveBlockRequest(block_transactions.blockhash, pfrom.GetId()); // Reset in-flight state in case Misbehaving does not result in a disconnect
             Misbehaving(peer, "invalid compact block/non-matching block transactions");
@@ -3322,6 +3336,9 @@ void PeerManagerImpl::ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const Bl
         } else if (status == READ_STATUS_FAILED) {
             if (first_in_flight) {
                 // Might have collided, fall back to getdata now :(
+                // We keep the failed partialBlock to disallow processing another compact block announcement from the same
+                // peer for the same block. We let the full block download below continue under the same m_downloading_since
+                // timer.
                 std::vector<CInv> invs;
                 invs.emplace_back(MSG_BLOCK | GetFetchFlags(peer), block_transactions.blockhash);
                 MakeAndPushMessage(pfrom, NetMsgType::GETDATA, invs);
@@ -3331,23 +3348,7 @@ void PeerManagerImpl::ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const Bl
                 return;
             }
         } else {
-            // Block is either okay, or possibly we received
-            // READ_STATUS_CHECKBLOCK_FAILED.
-            // Note that CheckBlock can only fail for one of a few reasons:
-            // 1. bad-proof-of-work (impossible here, because we've already
-            //    accepted the header)
-            // 2. merkleroot doesn't match the transactions given (already
-            //    caught in FillBlock with READ_STATUS_FAILED, so
-            //    impossible here)
-            // 3. the block is otherwise invalid (eg invalid coinbase,
-            //    block is too big, too many legacy sigops, etc).
-            // So if CheckBlock failed, #3 is the only possibility.
-            // Under BIP 152, we don't discourage the peer unless proof of work is
-            // invalid (we don't require all the stateless checks to have
-            // been run).  This is handled below, so just treat this as
-            // though the block was successfully read, and rely on the
-            // handling in ProcessNewBlock to ensure the block index is
-            // updated, etc.
+            // Block is okay for further processing
             RemoveBlockRequest(block_transactions.blockhash, pfrom.GetId()); // it is now an empty pointer
             fBlockRead = true;
             // mapBlockSource is used for potentially punishing peers and
@@ -4462,7 +4463,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     return;
                 }
                 std::vector<CTransactionRef> dummy;
-                status = tempBlock.FillBlock(*pblock, dummy);
+                const CBlockIndex* prev_block{Assume(m_chainman.m_blockman.LookupBlockIndex(cmpctblock.header.hashPrevBlock))};
+                status = tempBlock.FillBlock(*pblock, dummy,
+                                             /*segwit_active=*/DeploymentActiveAfter(prev_block, m_chainman, Consensus::DEPLOYMENT_SEGWIT));
                 if (status == READ_STATUS_OK) {
                     fBlockReconstructed = true;
                 }

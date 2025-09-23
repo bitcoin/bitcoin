@@ -9,6 +9,10 @@ To Build
 
 ```bash
 cmake -B build
+```
+Run `cmake -B build -LH` to see the full list of available options.
+
+```bash
 cmake --build build    # Append "-j N" for N parallel jobs
 cmake --install build  # Optional
 ```
@@ -178,13 +182,6 @@ be compiled in disable-wallet mode with:
 In this case there is no dependency on SQLite or Berkeley DB.
 
 Mining is also possible in disable-wallet mode using the `getblocktemplate` RPC call.
-
-Additional Configure Flags
---------------------------
-A list of additional configure flags can be displayed with:
-
-    cmake -B build -LH
-
 
 Setup and Build Example: Arch Linux
 -----------------------------------
