@@ -13,10 +13,7 @@
 
 class DebugLogHelper
 {
-    const std::string m_message;
-    bool m_found{false};
-    std::list<std::function<void(const std::string&)>>::iterator m_print_connection;
-
+public:
     //! Custom match checking function.
     //!
     //! Invoked with pointers to lines containing matching strings, and with
@@ -27,13 +24,19 @@ class DebugLogHelper
     //! (2) raising an error in check_found if no match was found
     //! Can return false to do the opposite in either case.
     using MatchFn = std::function<bool(const std::string* line)>;
-    MatchFn m_match;
 
-    void check_found();
-
-public:
     explicit DebugLogHelper(std::string message, MatchFn match = [](const std::string*){ return true; });
-    ~DebugLogHelper() noexcept(false) { check_found(); }
+
+    DebugLogHelper(const DebugLogHelper&) = delete;
+    DebugLogHelper& operator=(const DebugLogHelper&) = delete;
+
+    ~DebugLogHelper();
+
+private:
+    const std::string m_message;
+    bool m_found{false};
+    std::list<std::function<void(const std::string&)>>::iterator m_print_connection;
+    MatchFn m_match;
 };
 
 #define ASSERT_DEBUG_LOG(message) DebugLogHelper UNIQUE_NAME(debugloghelper)(message)
