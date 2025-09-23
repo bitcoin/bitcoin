@@ -233,11 +233,17 @@ public:
     //! Get mempool dynamic usage.
     virtual size_t getMempoolDynamicUsage() = 0;
 
+    //! Get mempool maximum memory usage.
+    virtual size_t getMempoolMaxUsage() = 0;
+
     //! Get header tip height and time.
     virtual bool getHeaderTip(int& height, int64_t& block_time) = 0;
 
     //! Get num blocks.
     virtual int getNumBlocks() = 0;
+
+    //! Get network local addresses.
+    virtual std::map<CNetAddr, LocalServiceInfo> getNetLocalAddresses() = 0;
 
     //! Get best block hash.
     virtual uint256 getBestBlockHash() = 0;

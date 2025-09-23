@@ -163,7 +163,7 @@ void TestAddAddressesToSendBook(interfaces::Node& node)
 
 void AddressBookTests::addressBookTests()
 {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     if (QApplication::platformName() == "minimal") {
         // Disable for mac on "minimal" platform to avoid crashes inside the Qt
         // framework when it tries to look up unimplemented cocoa functions,

@@ -11,6 +11,7 @@
 
 #include <qt/appearancewidget.h>
 #include <qt/bitcoinunits.h>
+#include <qt/clientmodel.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
@@ -21,6 +22,7 @@
 #include <validation.h> // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
 #include <netbase.h>
 #include <txdb.h> // for -dbcache defaults
+#include <util/strencodings.h>
 #include <util/underlying.h>
 
 #include <QButtonGroup>
@@ -52,7 +54,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 
     GUIUtil::disableMacFocusRect(this);
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     /* Hide some options on Mac */
     ui->showTrayIcon->hide();
     ui->minimizeToTray->hide();
@@ -102,7 +104,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     connect(ui->connectSocksTor, &QPushButton::toggled, this, &OptionsDialog::updateProxyValidationState);
 
     /* Window elements init */
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     /* hide launch at startup option on macOS */
     ui->bitcoinAtStartup->setVisible(false);
     ui->verticalLayout_Main->removeWidget(ui->bitcoinAtStartup);
@@ -215,6 +217,11 @@ OptionsDialog::~OptionsDialog()
     delete ui;
 }
 
+void OptionsDialog::setClientModel(ClientModel* client_model)
+{
+    m_client_model = client_model;
+}
+
 void OptionsDialog::setModel(OptionsModel *_model)
 {
     this->model = _model;
@@ -313,7 +320,7 @@ void OptionsDialog::setMapper()
 {
     /* Main */
     mapper->addMapping(ui->bitcoinAtStartup, OptionsModel::StartAtStartup);
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
     if (QSystemTrayIcon::isSystemTrayAvailable()) {
         mapper->addMapping(ui->showTrayIcon, OptionsModel::ShowTrayIcon);
         mapper->addMapping(ui->minimizeToTray, OptionsModel::MinimizeToTray);
@@ -393,14 +400,23 @@ void OptionsDialog::setOkButtonState(bool fState)
 
 void OptionsDialog::on_resetButton_clicked()
 {
-    if(model)
-    {
+    if (model) {
         // confirmation dialog
+        /*: Text explaining that the settings changed will not come into effect
+            until the client is restarted. */
+        QString reset_dialog_text = tr("Client restart required to activate changes.") + "<br><br>";
+        /*: Text explaining to the user that the client's current settings
+            will be backed up at a specific location. %1 is a stand-in
+            argument for the backup location's path. */
+        reset_dialog_text.append(tr("Current settings will be backed up at \"%1\".").arg(m_client_model->dataDir()) + "<br><br>");
+        /*: Text asking the user to confirm if they would like to proceed
+            with a client shutdown. */
+        reset_dialog_text.append(tr("Client will be shut down. Do you want to proceed?"));
+        //: Window title text of pop-up window shown when the user has chosen to reset options.
         QMessageBox::StandardButton btnRetVal = QMessageBox::question(this, tr("Confirm options reset"),
-            tr("Client restart required to activate changes.") + "<br><br>" + tr("Client will be shut down. Do you want to proceed?"),
-            QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
+            reset_dialog_text, QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
 
-        if(btnRetVal == QMessageBox::Cancel)
+        if (btnRetVal == QMessageBox::Cancel)
             return;
 
         /* reset all options and close GUI */
@@ -573,7 +589,10 @@ QValidator(parent)
 QValidator::State ProxyAddressValidator::validate(QString &input, int &pos) const
 {
     Q_UNUSED(pos);
-    // Validate the proxy
+    uint16_t port{0};
+    std::string hostname;
+    if (!SplitHostPort(input.toStdString(), port, hostname) || port != 0) return QValidator::Invalid;
+
     CService serv(LookupNumeric(input.toStdString(), DEFAULT_GUI_PROXY_PORT));
     Proxy addrProxy = Proxy(serv, true);
     if (addrProxy.IsValid())

@@ -4449,10 +4449,17 @@ size_t CConnman::GetNodeCount(ConnectionDirection flags) const
     return nNum;
 }
 
+std::map<CNetAddr, LocalServiceInfo> CConnman::getNetLocalAddresses() const
+{
+    LOCK(g_maplocalhost_mutex);
+    return mapLocalHost;
+}
+
 size_t CConnman::GetMaxOutboundNodeCount()
 {
     return m_max_outbound;
 }
+
 size_t CConnman::GetMaxOutboundOnionNodeCount()
 {
     return m_max_outbound_onion;

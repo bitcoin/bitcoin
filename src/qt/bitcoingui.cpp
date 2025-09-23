@@ -26,7 +26,7 @@
 #include <qt/walletview.h>
 #endif // ENABLE_WALLET
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 #include <qt/macdockiconhandler.h>
 #endif
 
@@ -74,7 +74,7 @@
 
 
 const std::string BitcoinGUI::DEFAULT_UIPLATFORM =
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MACOS)
         "macosx"
 #elif defined(Q_OS_WIN)
         "windows"
@@ -228,7 +228,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
     connect(labelBlocksIcon, &GUIUtil::ClickableLabel::clicked, this, &BitcoinGUI::showModalOverlay);
     connect(progressBar, &GUIUtil::ClickableProgressBar::clicked, this, &BitcoinGUI::showModalOverlay);
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     m_app_nap_inhibitor = new CAppNapInhibitor;
 #endif
 
@@ -261,7 +261,7 @@ BitcoinGUI::~BitcoinGUI()
     settings.setValue("MainWindowGeometry", saveGeometry());
     if(trayIcon) // Hide tray icon, as deleting will let it linger until quit (on Ubuntu)
         trayIcon->hide();
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     delete m_app_nap_inhibitor;
     MacDockIconHandler::cleanup();
 #endif
@@ -643,7 +643,7 @@ void BitcoinGUI::createMenuBar()
         minimize_action->setEnabled(window != nullptr && (window->flags() & Qt::Dialog) != Qt::Dialog && window->windowState() != Qt::WindowMinimized);
     });
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     QAction* zoom_action = window_menu->addAction(tr("Zoom"));
     connect(zoom_action, &QAction::triggered, [] {
         QWindow* window = qApp->focusWindow();
@@ -660,7 +660,7 @@ void BitcoinGUI::createMenuBar()
 #endif
 
     if (walletFrame) {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
         window_menu->addSeparator();
         QAction* main_window_action = window_menu->addAction(tr("Main Window"));
         connect(main_window_action, &QAction::triggered, [this] {
@@ -818,7 +818,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
             trayIcon->setContextMenu(trayIconMenu.get());
             createIconMenu(trayIconMenu.get());
 
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
             // Show main window on tray icon click
             // Note: ignore this on Mac - this is not the way tray should work there
             connect(trayIcon, &QSystemTrayIcon::activated, [this](QSystemTrayIcon::ActivationReason reason) {
@@ -904,7 +904,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
 #endif // ENABLE_WALLET
         unitDisplayControl->setOptionsModel(nullptr);
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
         if(dockIconMenu)
         {
             // Disable context menu on dock icon
@@ -1070,11 +1070,11 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
 {
     // Configuration of the tray icon (or dock icon) icon menu
     QAction* show_hide_action{nullptr};
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
     // Note: On macOS, the Dock icon is used to provide the tray's functionality.
     show_hide_action = pmenu->addAction(QString(), this, &BitcoinGUI::toggleHidden);
     pmenu->addSeparator();
-#endif // Q_OS_MAC
+#endif // Q_OS_MACOS
 
     QAction* send_action{nullptr};
     QAction* cj_send_action{nullptr};
@@ -1107,11 +1107,11 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
         backups_action = pmenu->addAction(showBackupsAction->text(), showBackupsAction, &QAction::trigger);
     }
     QAction* quit_action{nullptr};
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
     // Note: On macOS, the Dock icon's menu already has Quit action.
     pmenu->addSeparator();
     quit_action = pmenu->addAction(quitAction->text(), quitAction, &QAction::trigger);
-#endif // Q_OS_MAC
+#endif // Q_OS_MACOS
 
     connect(
         // Using QSystemTrayIcon::Context is not reliable.
@@ -1416,6 +1416,7 @@ void BitcoinGUI::openOptionsDialogWithTab(OptionsDialog::Tab tab)
     auto dlg = new OptionsDialog(this, enableWallet);
     connect(dlg, &OptionsDialog::quitOnReset, this, &BitcoinGUI::quitRequested);
     dlg->setCurrentTab(tab);
+    dlg->setClientModel(clientModel);
     dlg->setModel(clientModel->getOptionsModel());
     connect(dlg, &OptionsDialog::appearanceChanged, [this]() {
         updateWidth();
@@ -1489,7 +1490,7 @@ void BitcoinGUI::updateWidth()
 
 void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QString& blockHash, double nVerificationProgress, bool header, SynchronizationState sync_state)
 {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     // Disabling macOS App Nap on initial sync, disk, reindex operations and mixing.
     bool disableAppNap = !m_node.masternodeSync().isSynced() || sync_state != SynchronizationState::POST_INIT;
 #ifdef ENABLE_WALLET
@@ -1504,7 +1505,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QStri
     } else {
         m_app_nap_inhibitor->enableAppNap();
     }
-#endif // Q_OS_MAC
+#endif // Q_OS_MACOS
 
     if (modalOverlay)
     {
@@ -1719,7 +1720,7 @@ void BitcoinGUI::message(const QString& title, QString message, unsigned int sty
 void BitcoinGUI::changeEvent(QEvent *e)
 {
     QMainWindow::changeEvent(e);
-#ifndef Q_OS_MAC // Ignored on macOS
+#ifndef Q_OS_MACOS // Ignored on macOS
     if(e->type() == QEvent::WindowStateChange)
     {
         if(clientModel && clientModel->getOptionsModel() && clientModel->getOptionsModel()->getMinimizeToTray())
@@ -1753,7 +1754,7 @@ void BitcoinGUI::changeEvent(QEvent *e)
 
 void BitcoinGUI::closeEvent(QCloseEvent *event)
 {
-#ifndef Q_OS_MAC // Ignored on macOS
+#ifndef Q_OS_MACOS // Ignored on macOS
     if(clientModel && clientModel->getOptionsModel())
     {
         if(!clientModel->getOptionsModel()->getMinimizeOnClose())

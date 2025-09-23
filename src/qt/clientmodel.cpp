@@ -57,7 +57,7 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     connect(timer, &QTimer::timeout, [this] {
         // no locking required at this point
         // the following calls will acquire the required lock
-        Q_EMIT mempoolSizeChanged(m_node.getMempoolSize(), m_node.getMempoolDynamicUsage());
+        Q_EMIT mempoolSizeChanged(m_node.getMempoolSize(), m_node.getMempoolDynamicUsage(), m_node.getMempoolMaxUsage());
         Q_EMIT islockCountChanged(m_node.llmq().getInstantSentLockCount());
     });
     connect(m_thread, &QThread::finished, timer, &QObject::deleteLater);
@@ -155,6 +155,11 @@ int64_t ClientModel::getHeaderTipTime() const
 void ClientModel::getAllGovernanceObjects(std::vector<CGovernanceObject> &obj)
 {
     m_node.gov().getAllNewerThan(obj, 0);
+}
+
+std::map<CNetAddr, LocalServiceInfo> ClientModel::getNetLocalAddresses() const
+{
+    return m_node.getNetLocalAddresses();
 }
 
 int ClientModel::getNumBlocks() const

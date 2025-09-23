@@ -971,7 +971,7 @@ void RPCConsole::clear(bool keep_prompt)
     ui->lineEdit->setFocus();
 
     // Set default style sheet
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     ui->messagesWidget->setFont(GUIUtil::fixedPitchFont(/*use_embedded_font=*/true));
 #else
     ui->messagesWidget->setFont(GUIUtil::fixedPitchFont());
@@ -1045,6 +1045,18 @@ void RPCConsole::updateNetworkState()
     }
 
     ui->numberOfConnections->setText(connections);
+
+    QString local_addresses;
+    std::map<CNetAddr, LocalServiceInfo> hosts = clientModel->getNetLocalAddresses();
+    for (const auto& [addr, info] : hosts) {
+        local_addresses += QString::fromStdString(addr.ToStringAddr());
+        if (!addr.IsI2P()) local_addresses += ":" + QString::number(info.nPort);
+        local_addresses += ", ";
+    }
+    local_addresses.chop(2); // remove last ", "
+    if (local_addresses.isEmpty()) local_addresses = tr("None");
+
+    ui->localAddresses->setText(local_addresses);
 }
 
 void RPCConsole::setNumConnections(int count)
@@ -1095,14 +1107,16 @@ void RPCConsole::updateMasternodeCount()
     ui->evoCount->setText(strEvoCount);
 }
 
-void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)
+void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage, size_t maxUsage)
 {
     ui->mempoolNumberTxs->setText(QString::number(numberOfTxs));
 
-    if (dynUsage < 1000000)
-        ui->mempoolSize->setText(QString::number(dynUsage/1000.0, 'f', 2) + " KB");
-    else
-        ui->mempoolSize->setText(QString::number(dynUsage/1000000.0, 'f', 2) + " MB");
+    const auto cur_usage_str = dynUsage < 1000000 ?
+        QObject::tr("%1 kB").arg(dynUsage / 1000.0, 0, 'f', 2) :
+        QObject::tr("%1 MB").arg(dynUsage / 1000000.0, 0, 'f', 2);
+    const auto max_usage_str = QObject::tr("%1 MB").arg(maxUsage / 1000000.0, 0, 'f', 2);
+
+    ui->mempoolSize->setText(cur_usage_str + " / " + max_usage_str);
 }
 
 void RPCConsole::setInstantSendLockCount(size_t count)

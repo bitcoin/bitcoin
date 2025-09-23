@@ -1492,6 +1492,7 @@ public:
     void AddPendingProbeConnections(const std::set<uint256>& proTxHashes);
 
     size_t GetNodeCount(ConnectionDirection) const;
+    std::map<CNetAddr, LocalServiceInfo> getNetLocalAddresses() const;
     size_t GetMaxOutboundNodeCount();
     size_t GetMaxOutboundOnionNodeCount();
     void GetNodeStats(std::vector<CNodeStats>& vstats) const;

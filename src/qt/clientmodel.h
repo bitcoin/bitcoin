@@ -16,12 +16,15 @@
 #include <memory>
 #include <uint256.h>
 
+#include <netaddress.h>
+
 class BanTableModel;
 class CBlockIndex;
 class OptionsModel;
 class PeerTableModel;
 class PeerTableSortProxy;
 enum class SynchronizationState;
+struct LocalServiceInfo;
 
 namespace interfaces {
 struct BlockTip;
@@ -68,6 +71,7 @@ public:
 
     //! Return number of connections, default is in- and outbound (total)
     int getNumConnections(unsigned int flags = CONNECTIONS_ALL) const;
+    std::map<CNetAddr, LocalServiceInfo> getNetLocalAddresses() const;
     int getNumBlocks() const;
     uint256 getBestBlockHash() EXCLUSIVE_LOCKS_REQUIRED(!m_cached_tip_mutex);
     int getHeaderTipHeight() const;
@@ -129,7 +133,7 @@ Q_SIGNALS:
     void chainLockChanged(const QString& bestChainLockHash, int bestChainLockHeight);
     void numBlocksChanged(int count, const QDateTime& blockDate, const QString& blockHash, double nVerificationProgress, bool header, SynchronizationState sync_state);
     void additionalDataSyncProgressChanged(double nSyncProgress);
-    void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
+    void mempoolSizeChanged(long count, size_t mempoolSizeInBytes, size_t mempoolMaxSizeInBytes);
     void islockCountChanged(size_t count);
     void networkActiveChanged(bool networkActive);
     void alertsChanged(const QString &warnings);
