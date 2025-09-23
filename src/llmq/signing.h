@@ -8,13 +8,14 @@
 #include <bls/bls.h>
 #include <gsl/pointers.h>
 #include <llmq/params.h>
+#include <llmq/signhash.h>
 #include <net_types.h>
 #include <protocol.h>
 #include <random.h>
 #include <saltedhasher.h>
 #include <sync.h>
-#include <util/threadinterrupt.h>
 #include <unordered_lru_cache.h>
+#include <util/threadinterrupt.h>
 
 #include <string_view>
 #include <unordered_map>
@@ -67,7 +68,7 @@ public:
         return msgHash;
     }
 
-    [[nodiscard]] uint256 buildSignHash() const;
+    [[nodiscard]] SignHash buildSignHash() const;
 };
 
 class CRecoveredSig : virtual public CSigBase
@@ -262,8 +263,6 @@ void IterateNodesRandom(NodesContainer& nodeStates, Continue&& cont, Callback&& 
         }
     }
 }
-
-uint256 BuildSignHash(Consensus::LLMQType llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash);
 
 bool IsQuorumActive(Consensus::LLMQType llmqType, const CQuorumManager& qman, const uint256& quorumHash);
 

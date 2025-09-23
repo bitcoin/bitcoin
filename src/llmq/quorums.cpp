@@ -2,12 +2,13 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <llmq/quorums.h>
-#include <llmq/commitment.h>
 #include <llmq/blockprocessor.h>
+#include <llmq/commitment.h>
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/options.h>
 #include <llmq/params.h>
+#include <llmq/quorums.h>
+#include <llmq/signhash.h>
 #include <llmq/utils.h>
 
 #include <bls/bls.h>
@@ -36,8 +37,6 @@ static const std::string DB_QUORUM_QUORUM_VVEC = "q_Qqvvec";
 RecursiveMutex cs_data_requests;
 static std::unordered_map<CQuorumDataRequestKey, CQuorumDataRequest, StaticSaltedHasher> mapQuorumDataRequests GUARDED_BY(cs_data_requests);
 
-// forward declaration to avoid circular dependency
-uint256 BuildSignHash(Consensus::LLMQType llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash);
 
 static uint256 MakeQuorumKey(const CQuorum& q)
 {
@@ -1279,8 +1278,8 @@ VerifyRecSigStatus VerifyRecoveredSig(Consensus::LLMQType llmqType, const CChain
         return VerifyRecSigStatus::NoQuorum;
     }
 
-    uint256 signHash = BuildSignHash(llmqType, quorum->qc->quorumHash, id, msgHash);
-    const bool ret = sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash);
+    SignHash signHash{llmqType, quorum->qc->quorumHash, id, msgHash};
+    const bool ret = sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash.Get());
     return ret ? VerifyRecSigStatus::Valid : VerifyRecSigStatus::Invalid;
 }
 } // namespace llmq

@@ -23,6 +23,7 @@
 #include <llmq/dkgsession.h>
 #include <llmq/options.h>
 #include <llmq/quorums.h>
+#include <llmq/signhash.h>
 #include <llmq/signing.h>
 #include <llmq/signing_shares.h>
 #include <llmq/snapshot.h>
@@ -608,8 +609,8 @@ static RPCHelpMan quorum_verify()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
     }
 
-    uint256 signHash = llmq::BuildSignHash(llmqType, quorum->qc->quorumHash, id, msgHash);
-    return sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash);
+    llmq::SignHash signHash{llmqType, quorum->qc->quorumHash, id, msgHash};
+    return sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash.Get());
 },
     };
 }

@@ -6,6 +6,7 @@
 
 #include <llmq/commitment.h>
 #include <llmq/quorums.h>
+#include <llmq/signhash.h>
 #include <llmq/signing_shares.h>
 
 #include <bls/bls_batchverifier.h>
@@ -161,7 +162,7 @@ void CRecoveredSigsDb::WriteRecoveredSig(const llmq::CRecoveredSig& recSig)
 
     // store by signHash
     auto signHash = recSig.buildSignHash();
-    auto k4 = std::make_tuple(std::string("rs_s"), signHash);
+    auto k4 = std::make_tuple(std::string("rs_s"), signHash.Get());
     batch.Write(k4, (uint8_t)1);
 
     // store by current time. Allows fast cleanup of old recSigs
@@ -173,7 +174,7 @@ void CRecoveredSigsDb::WriteRecoveredSig(const llmq::CRecoveredSig& recSig)
     {
         LOCK(cs_cache);
         hasSigForIdCache.insert(std::make_pair(recSig.getLlmqType(), recSig.getId()), true);
-        hasSigForSessionCache.insert(signHash, true);
+        hasSigForSessionCache.insert(signHash.Get(), true);
         hasSigForHashCache.insert(recSig.GetHash(), true);
     }
 }
@@ -190,7 +191,7 @@ void CRecoveredSigsDb::RemoveRecoveredSig(CDBBatch& batch, Consensus::LLMQType l
     auto k1 = std::make_tuple(std::string("rs_r"), recSig.getLlmqType(), recSig.getId());
     auto k2 = std::make_tuple(std::string("rs_r"), recSig.getLlmqType(), recSig.getId(), recSig.getMsgHash());
     auto k3 = std::make_tuple(std::string("rs_h"), recSig.GetHash());
-    auto k4 = std::make_tuple(std::string("rs_s"), signHash);
+    auto k4 = std::make_tuple(std::string("rs_s"), signHash.Get());
     batch.Erase(k1);
     batch.Erase(k2);
     if (deleteHashKey) {
@@ -211,7 +212,7 @@ void CRecoveredSigsDb::RemoveRecoveredSig(CDBBatch& batch, Consensus::LLMQType l
 
     LOCK(cs_cache);
     hasSigForIdCache.erase(std::make_pair(recSig.getLlmqType(), recSig.getId()));
-    hasSigForSessionCache.erase(signHash);
+    hasSigForSessionCache.erase(signHash.Get());
     if (deleteHashKey) {
         hasSigForHashCache.erase(recSig.GetHash());
     }
@@ -469,7 +470,7 @@ void CSigningManager::CollectPendingRecoveredSigsToVerify(
 
             bool alreadyHave = db.HasRecoveredSigForHash(recSig->GetHash());
             if (!alreadyHave) {
-                uniqueSignHashes.emplace(nodeId, recSig->buildSignHash());
+                uniqueSignHashes.emplace(nodeId, recSig->buildSignHash().Get());
                 retSigShares[nodeId].emplace_back(recSig);
             }
             ns.erase(ns.begin());
@@ -553,7 +554,8 @@ bool CSigningManager::ProcessPendingRecoveredSigs(PeerManager& peerman)
             }
 
             const auto& quorum = quorums.at(std::make_pair(recSig->getLlmqType(), recSig->getQuorumHash()));
-            batchVerifier.PushMessage(nodeId, recSig->GetHash(), recSig->buildSignHash(), recSig->sig.Get(), quorum->qc->quorumPublicKey);
+            batchVerifier.PushMessage(nodeId, recSig->GetHash(), recSig->buildSignHash().Get(), recSig->sig.Get(),
+                                      quorum->qc->quorumPublicKey);
             verifyCount++;
         }
     }
@@ -605,7 +607,7 @@ void CSigningManager::ProcessRecoveredSig(const std::shared_ptr<const CRecovered
         CRecoveredSig otherRecoveredSig;
         if (db.GetRecoveredSigById(llmqType, recoveredSig->getId(), otherRecoveredSig)) {
             auto otherSignHash = otherRecoveredSig.buildSignHash();
-            if (signHash != otherSignHash) {
+            if (signHash.Get() != otherSignHash.Get()) {
                 // this should really not happen, as each masternode is participating in only one vote,
                 // even if it's a member of multiple quorums. so a majority is only possible on one quorum and one msgHash per id
                 LogPrintf("CSigningManager::%s -- conflicting recoveredSig for signHash=%s, id=%s, msgHash=%s, otherSignHash=%s\n", __func__,
@@ -836,20 +838,8 @@ void CSigningManager::WorkThreadMain(PeerManager& peerman)
     }
 }
 
-uint256 CSigBase::buildSignHash() const
-{
-    return BuildSignHash(llmqType, quorumHash, id, msgHash);
-}
+SignHash CSigBase::buildSignHash() const { return SignHash(llmqType, quorumHash, id, msgHash); }
 
-uint256 BuildSignHash(Consensus::LLMQType llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash)
-{
-    CHashWriter h(SER_GETHASH, 0);
-    h << llmqType;
-    h << quorumHash;
-    h << id;
-    h << msgHash;
-    return h.GetHash();
-}
 
 bool IsQuorumActive(Consensus::LLMQType llmqType, const CQuorumManager& qman, const uint256& quorumHash)
 {

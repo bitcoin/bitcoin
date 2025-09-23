@@ -5,6 +5,7 @@
 #include <consensus/consensus.h>
 #include <hash.h>
 #include <instantsend/lock.h>
+#include <llmq/signhash.h>
 #include <llmq/signing.h>
 #include <primitives/transaction.h>
 #include <streams.h>
@@ -80,8 +81,8 @@ BOOST_AUTO_TEST_CASE(deserialize_instantlock_from_realdata2)
     ss >> islock;
 
     // Verify the calculated signHash
-    auto signHash = llmq::BuildSignHash(Consensus::LLMQType::LLMQ_60_75, uint256S(quorumHashStr), islock.GetRequestId(),
-                                        islock.txid);
+    auto signHash =
+        llmq::SignHash(Consensus::LLMQType::LLMQ_60_75, uint256S(quorumHashStr), islock.GetRequestId(), islock.txid).Get();
     BOOST_CHECK_EQUAL(signHash.ToString(), expectedSignHashStr);
 
     // Verify the txid field.
