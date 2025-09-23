@@ -16,6 +16,7 @@
 #include <memory>
 #include <set>
 #include <span>
+#include <unordered_set>
 #include <utility>
 
 namespace {
@@ -99,6 +100,7 @@ struct TrimTxData
 class Cluster
 {
     friend class TxGraphImpl;
+    friend class BlockBuilderImpl;
 
 protected:
     using GraphIndex = TxGraph::GraphIndex;
@@ -802,8 +804,8 @@ class BlockBuilderImpl final : public TxGraph::BlockBuilder
     /** Which TxGraphImpl this object is doing block building for. It will have its
      *  m_main_chunkindex_observers incremented as long as this BlockBuilderImpl exists. */
     TxGraphImpl* const m_graph;
-    /** Clusters which we're not including further transactions from. */
-    std::set<Cluster*> m_excluded_clusters;
+    /** Cluster sequence numbers which we're not including further transactions from. */
+    std::unordered_set<uint64_t> m_excluded_clusters;
     /** Iterator to the current chunk in the chunk index. end() if nothing further remains. */
     TxGraphImpl::ChunkIndex::const_iterator m_cur_iter;
     /** Which cluster the current chunk belongs to, so we can exclude further transactions from it
@@ -3074,7 +3076,7 @@ void BlockBuilderImpl::Next() noexcept
         m_cur_cluster = chunk_end_entry.m_locator[0].cluster;
         m_known_end_of_cluster = false;
         // If we previously skipped a chunk from this cluster we cannot include more from it.
-        if (!m_excluded_clusters.contains(m_cur_cluster)) break;
+        if (!m_excluded_clusters.contains(m_cur_cluster->m_sequence)) break;
     }
 }
 
@@ -3148,7 +3150,7 @@ void BlockBuilderImpl::Skip() noexcept
     // chunk of the cluster. This may significantly reduce the size of m_excluded_clusters,
     // especially when many singleton clusters are ignored.
     if (m_cur_cluster != nullptr && !m_known_end_of_cluster) {
-        m_excluded_clusters.insert(m_cur_cluster);
+        m_excluded_clusters.insert(m_cur_cluster->m_sequence);
     }
     Next();
 }
