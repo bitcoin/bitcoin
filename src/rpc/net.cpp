@@ -130,7 +130,7 @@ static RPCHelpMan getpeerinfo()
                 {
                     {
                     {RPCResult::Type::NUM, "id", "Peer index"},
-                    {RPCResult::Type::STR, "addr", "(host:port) The IP address and port of the peer"},
+                    {RPCResult::Type::STR, "addr", "(host:port) The IP address/hostname optionally followed by :port of the peer"},
                     {RPCResult::Type::STR, "addrbind", /*optional=*/true, "(ip:port) Bind address of the connection to the peer"},
                     {RPCResult::Type::STR, "addrlocal", /*optional=*/true, "(ip:port) Local address as reported by the peer"},
                     {RPCResult::Type::STR, "network", "Network (" + Join(GetNetworkNames(/*append_unroutable=*/true), ", ") + ")"},
@@ -322,7 +322,7 @@ static RPCHelpMan addnode()
                 strprintf("Addnode connections are limited to %u at a time", MAX_ADDNODE_CONNECTIONS) +
                 " and are counted separately from the -maxconnections limit.\n",
                 {
-                    {"node", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the peer to connect to"},
+                    {"node", RPCArg::Type::STR, RPCArg::Optional::NO, "The IP address/hostname optionally followed by :port of the peer to connect to"},
                     {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once"},
                     {"v2transport", RPCArg::Type::BOOL, RPCArg::DefaultHint{"set by -v2transport"}, "Attempt to connect using BIP324 v2 transport protocol (ignored for 'remove' command)"},
                 },
