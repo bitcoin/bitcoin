@@ -11,6 +11,7 @@ $(package)_patches += openbsd_kqueue_headers.patch
 $(package)_patches += cmake_minimum.patch
 $(package)_patches += cacheline_undefined.patch
 $(package)_patches += no_librt.patch
+$(package)_patches += mingw_cmake_files.patch
 
 define $(package)_set_vars
   $(package)_config_opts := -DCMAKE_BUILD_TYPE=None -DWITH_DOCS=OFF -DWITH_LIBSODIUM=OFF
@@ -26,6 +27,7 @@ define $(package)_preprocess_cmds
   patch -p1 < $($(package)_patch_dir)/builtin_sha1.patch && \
   patch -p1 < $($(package)_patch_dir)/cacheline_undefined.patch && \
   patch -p1 < $($(package)_patch_dir)/fix_have_windows.patch && \
+  patch -p1 < $($(package)_patch_dir)/mingw_cmake_files.patch && \
   patch -p1 < $($(package)_patch_dir)/openbsd_kqueue_headers.patch && \
   patch -p1 < $($(package)_patch_dir)/cmake_minimum.patch && \
   patch -p1 < $($(package)_patch_dir)/no_librt.patch

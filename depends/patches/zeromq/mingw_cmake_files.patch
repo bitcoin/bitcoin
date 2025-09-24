@@ -1,0 +1,16 @@
+Fix mingw CMake files install location.
+See https://github.com/zeromq/libzmq/pull/4814.
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 03462271..e63b94b4 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1724,7 +1724,7 @@ if(WITH_DOC)
+   endif()
+ endif()
+ 
+-if(WIN32)
++if(WIN32 AND NOT MINGW)
+   set(ZEROMQ_CMAKECONFIG_INSTALL_DIR
+       "CMake"
+       CACHE STRING "install path for ZeroMQConfig.cmake")
