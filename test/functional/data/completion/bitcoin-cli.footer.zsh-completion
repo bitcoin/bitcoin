@@ -1,0 +1,48 @@
+    # Handle current word completions
+    case "$words[CURRENT]" in
+        -conf=*)
+            local conf_path=${words[CURRENT]#-conf=}
+            _files -W ${conf_path:h} -g "*"
+            return 0
+            ;;
+        -datadir=*)
+            local datadir_path=${words[CURRENT]#-datadir=}
+            _files -/ -W ${datadir_path:h}
+            return 0
+            ;;
+        -*=*)
+            # prevent nonsense completions
+            return 0
+            ;;
+        *)
+            local helpopts commands
+            local -a opts
+
+            # only parse -help if sensible (empty or starts with -)
+            if [[ -z "$words[CURRENT]" || "$words[CURRENT]" == -* ]]; then
+                helpopts="$($bitcoin_cli -help 2>&1 | awk '$1 ~ /^-/ { sub(/=.*/, "="); print $1 }')"
+                opts+=(${(f)helpopts})
+            fi
+
+            # only parse help if sensible (empty or starts with letter)
+            if [[ -z "$words[CURRENT]" || "$words[CURRENT]" == [a-z]* ]]; then
+                commands="$(_bitcoin_rpc help 2>/dev/null | awk '$1 ~ /^[a-z]/ { print $1; }')"
+                opts+=(${(f)commands})
+            fi
+
+            _describe 'bitcoin-cli options and commands' opts
+
+            return 0
+            ;;
+    esac
+}
+
+# Function is now defined and will be called by zsh completion system
+
+# Local variables:
+# mode: shell-script
+# sh-basic-offset: 4
+# sh-indent-comment: t
+# indent-tabs-mode: nil
+# End:
+# ex: ts=4 sw=4 et filetype=sh
