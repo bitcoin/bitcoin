@@ -12,6 +12,7 @@
 #include <logging.h>
 #include <node/context.h>
 #include <node/kernel_notifications.h>
+#include <rpc/request.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <sync.h>
@@ -481,7 +482,7 @@ static bool ExecuteCommands(const std::vector<const CRPCCommand*>& commands, con
     return false;
 }
 
-UniValue CRPCTable::execute(const JSONRPCRequest &request) const
+UniValue CRPCTable::execute(const std::string method, const JSONRPCRequest &request) const
 {
     // Return immediately if in warmup
     {
@@ -491,7 +492,7 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
     }
 
     // Find method
-    auto it = mapCommands.find(request.strMethod);
+    auto it = mapCommands.find(method);
     if (it != mapCommands.end()) {
         UniValue result;
         if (ExecuteCommands(it->second, request, result)) {
@@ -499,6 +500,11 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
         }
     }
     throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found");
+}
+
+UniValue CRPCTable::execute(const JSONRPCRequest &request) const
+{
+    return this->execute(request.strMethod, request);
 }
 
 static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& request, UniValue& result, bool last_handler)
