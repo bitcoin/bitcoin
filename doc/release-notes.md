@@ -1,6 +1,6 @@
-Bitcoin Core version 29.2rc1 is now available from:
+Bitcoin Core version 29.2rc2 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-29.2/test.rc1/>
+  <https://bitcoincore.org/bin/bitcoin-core-29.2/test.rc2/>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -43,6 +43,10 @@ Notable changes
 - #33296 net: check for empty header before calling FillBlock
 - #33395 net: do not apply whitelist permissions to onion inbounds
 
+### RPC
+
+- #33446 rpc: fix getblock(header) returns target for tip
+
 ### CI
 
 - #32999 ci: Use APT_LLVM_V in msan task
@@ -67,6 +71,7 @@ Thanks to everyone who directly contributed to this release:
 - Luke Dashjr
 - MarcoFalke
 - Martin Zumsande
+- Sjors Provoost
 - Vasil Dimov
 
 As well as to everyone that helped with translations on
