@@ -69,7 +69,7 @@ class PossibleArgs():
         return max(pos)
 
     def generate_autocomplete(self, pos):
-        """ Generate the autocomplete file line relevent to the given position pos. """
+        """ Generate the autocomplete file line relevant to the given position pos. """
         if len(self.arguments[pos]) == 0:
             raise AssertionError(f"generating undefined arg id {pos} ({self.arguments})")
 
