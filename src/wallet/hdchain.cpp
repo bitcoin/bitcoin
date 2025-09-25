@@ -203,6 +203,7 @@ size_t CHDChain::CountAccounts()
 
 std::string CHDPubKey::GetKeyPath() const
 {
-    return strprintf("m/%d'/%d'/%d'/%d/%d", BIP32_PURPOSE_STANDARD, Params().ExtCoinType(), nAccountIndex, nChangeIndex, extPubKey.nChild);
+    return strprintf("m/%d'/%d'/%d'/%d/%d", BIP32_PURPOSE_STANDARD, Params().ExtCoinType(), nAccountIndex, nChangeIndex,
+                     extPubKey.nChild);
 }
 } // namespace wallet
