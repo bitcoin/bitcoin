@@ -346,8 +346,11 @@ class NetTest(BitcoinTestFramework):
         assert "unknown command: addpeeraddress" not in node.help("addpeeraddress")
 
         self.log.debug("Test that adding an empty address fails")
-        assert_equal(node.addpeeraddress(address="", port=8333), {"success": False})
+        assert_raises_rpc_error(-30, "Invalid IP address", node.addpeeraddress, address="", port=8333)
         assert_equal(node.getnodeaddresses(count=0), [])
+
+        self.log.debug("Test that adding a non-IP/hostname fails (no DNS lookup allowed)")
+        assert_raises_rpc_error(-30, "Invalid IP address", node.addpeeraddress, address="not_an_ip", port=8333)
 
         self.log.debug("Test that non-bool tried fails")
         assert_raises_rpc_error(-3, "JSON value of type string is not of expected type bool", self.nodes[0].addpeeraddress, address="1.2.3.4", tried="True", port=1234)
