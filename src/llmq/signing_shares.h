@@ -8,6 +8,8 @@
 #include <llmq/signing.h>
 
 #include <bls/bls.h>
+#include <evo/types.h>
+
 #include <random.h>
 #include <saltedhasher.h>
 #include <serialize.h>
@@ -30,8 +32,6 @@ class CConnman;
 class CDeterministicMN;
 class CSporkManager;
 class PeerManager;
-
-using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
 namespace llmq
 {

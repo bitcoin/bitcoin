@@ -7,17 +7,19 @@
 
 #include <evo/dmnstate.h>
 
+#include <evo/dmn_types.h>
+#include <evo/providertx.h>
+#include <evo/types.h>
+
 #include <arith_uint256.h>
 #include <clientversion.h>
 #include <consensus/params.h>
 #include <crypto/common.h>
-#include <evo/dmn_types.h>
-#include <evo/providertx.h>
-#include <gsl/pointers.h>
 #include <saltedhasher.h>
 #include <scheduler.h>
 #include <sync.h>
 
+#include <gsl/pointers.h>
 #include <immer/map.hpp>
 
 #include <atomic>
@@ -85,7 +87,6 @@ public:
     [[nodiscard]] std::string ToString() const;
     [[nodiscard]] UniValue ToJson() const;
 };
-using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
 class CDeterministicMNListDiff;
 

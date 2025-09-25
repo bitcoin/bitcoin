@@ -6,11 +6,14 @@
 #define BITCOIN_LLMQ_UTILS_H
 
 #include <bls/bls.h>
-#include <gsl/pointers.h>
+#include <evo/types.h>
 #include <llmq/params.h>
+
 #include <saltedhasher.h>
 #include <sync.h>
 #include <uint256.h>
+
+#include <gsl/pointers.h>
 
 #include <map>
 #include <set>
@@ -24,8 +27,6 @@ class CDeterministicMNList;
 class CDeterministicMNManager;
 class CMasternodeMetaMan;
 class CSporkManager;
-
-using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
 namespace llmq {
 class CQuorumSnapshotManager;

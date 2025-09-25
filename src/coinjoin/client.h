@@ -5,8 +5,9 @@
 #ifndef BITCOIN_COINJOIN_CLIENT_H
 #define BITCOIN_COINJOIN_CLIENT_H
 
-#include <coinjoin/util.h>
 #include <coinjoin/coinjoin.h>
+#include <coinjoin/util.h>
+#include <evo/types.h>
 
 #include <net_types.h>
 #include <protocol.h>
@@ -21,7 +22,6 @@
 class CCoinJoinClientManager;
 class CCoinJoinClientQueueManager;
 class CConnman;
-class CDeterministicMN;
 class CDeterministicMNManager;
 class ChainstateManager;
 class CMasternodeMetaMan;
@@ -32,8 +32,6 @@ class CTxMemPool;
 class PeerManager;
 
 class UniValue;
-
-using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
 class CPendingDsaRequest
 {

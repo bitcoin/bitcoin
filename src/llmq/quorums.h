@@ -5,17 +5,19 @@
 #ifndef BITCOIN_LLMQ_QUORUMS_H
 #define BITCOIN_LLMQ_QUORUMS_H
 
-#include <llmq/params.h>
-
 #include <bls/bls.h>
 #include <bls/bls_worker.h>
 #include <ctpl_stl.h>
-#include <gsl/pointers.h>
+#include <evo/types.h>
+#include <llmq/params.h>
+#include <unordered_lru_cache.h>
+
 #include <protocol.h>
 #include <saltedhasher.h>
 #include <util/threadinterrupt.h>
-#include <unordered_lru_cache.h>
 #include <util/time.h>
+
+#include <gsl/pointers.h>
 
 #include <atomic>
 #include <map>
@@ -34,8 +36,6 @@ class CEvoDB;
 class CMasternodeSync;
 class CNode;
 class CSporkManager;
-
-using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
 namespace llmq
 {

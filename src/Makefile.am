@@ -204,6 +204,7 @@ BITCOIN_CORE_H = \
   evo/specialtx.h \
   evo/specialtx_filter.h \
   evo/specialtxman.h \
+  evo/types.h \
   dsnotificationinterface.h \
   governance/governance.h \
   governance/classes.h \

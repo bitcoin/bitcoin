@@ -11,6 +11,8 @@
 #include <bls/bls.h>
 #include <bls/bls_ies.h>
 #include <bls/bls_worker.h>
+#include <evo/types.h>
+
 #include <saltedhasher.h>
 #include <sync.h>
 #include <util/underlying.h>
@@ -25,8 +27,6 @@ class CDeterministicMN;
 class CMasternodeMetaMan;
 class CSporkManager;
 class PeerManager;
-
-using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
 namespace llmq
 {
