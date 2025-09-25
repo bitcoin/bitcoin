@@ -6,16 +6,19 @@
 #define BITCOIN_LLMQ_SIGNING_H
 
 #include <bls/bls.h>
-#include <gsl/pointers.h>
 #include <llmq/params.h>
 #include <llmq/signhash.h>
+#include <llmq/types.h>
+#include <unordered_lru_cache.h>
+
 #include <net_types.h>
 #include <protocol.h>
 #include <random.h>
 #include <saltedhasher.h>
 #include <sync.h>
-#include <unordered_lru_cache.h>
 #include <util/threadinterrupt.h>
+
+#include <gsl/pointers.h>
 
 #include <string_view>
 #include <unordered_map>
@@ -29,10 +32,7 @@ class CInv;
 class PeerManager;
 class UniValue;
 
-namespace llmq
-{
-class CQuorum;
-using CQuorumCPtr = std::shared_ptr<const CQuorum>;
+namespace llmq {
 class CQuorumManager;
 class CSigSharesManager;
 

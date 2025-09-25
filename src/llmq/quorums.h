@@ -10,6 +10,7 @@
 #include <ctpl_stl.h>
 #include <evo/types.h>
 #include <llmq/params.h>
+#include <llmq/types.h>
 #include <unordered_lru_cache.h>
 
 #include <protocol.h>
@@ -169,10 +170,6 @@ public:
  * will also contain the secret key share and the quorum verification vector. The quorum vvec is then used to recover
  * the public key shares of individual members, which are needed to verify signature shares of these members.
  */
-
-class CQuorum;
-using CQuorumPtr = std::shared_ptr<CQuorum>;
-using CQuorumCPtr = std::shared_ptr<const CQuorum>;
 
 class CFinalCommitment;
 using CFinalCommitmentPtr = std::unique_ptr<CFinalCommitment>;

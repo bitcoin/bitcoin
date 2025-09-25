@@ -260,6 +260,7 @@ BITCOIN_CORE_H = \
   llmq/signing.h \
   llmq/signing_shares.h \
   llmq/snapshot.h \
+  llmq/types.h \
   llmq/utils.h \
   logging.h \
   logging/timer.h \
