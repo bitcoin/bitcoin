@@ -93,6 +93,7 @@ class TestNode():
 
     run = 0
     debug_runs = None
+    debug_cmd = ""
 
     def __init__(self, i, datadir_path, *, chain, rpchost, timewait, timeout_factor, binaries, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None, v2transport=False, uses_wallet=False, ipcbind=False):
         """
@@ -286,7 +287,7 @@ class TestNode():
         if env is not None:
             subp_env.update(env)
 
-        wait_for_debugger = TestNode.debug_runs is not None and TestNode.run in TestNode.debug_runs
+        wait_for_debugger = TestNode.debug_cmd and ((not TestNode.debug_runs) or TestNode.run in TestNode.debug_runs)
         if wait_for_debugger:
             extra_args.append("-waitfordebugger")
             self.rpc_timeout = max(self.rpc_timeout, 2 * 60 * 60)  # 2h timeout
@@ -295,7 +296,9 @@ class TestNode():
 
         self.running = True
         if wait_for_debugger:
-            self.log.info(f"bitcoind started (run #{TestNode.run}, node #{self.index}), waiting for debugger, PID: {self.process.pid}")
+            self.log.info(f"bitcoind started (run #{TestNode.run}, node #{self.index}), {'attaching debugger' if TestNode.debug_cmd else 'waiting for debugger'}, PID: {self.process.pid}")
+            if TestNode.debug_cmd:
+                subprocess.Popen(shlex.split(TestNode.debug_cmd.replace("$PID$", str(self.process.pid))), cwd=cwd)
         else:
             self.log.debug(f"bitcoind started (run #{TestNode.run}, node #{self.index}), waiting for RPC to come up")
         TestNode.run += 1
