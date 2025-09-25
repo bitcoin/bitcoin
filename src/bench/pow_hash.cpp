@@ -28,7 +28,7 @@ inline void Pow_X11(benchmark::Bench& bench, const size_t bytes)
 {
     uint256 hash{};
     std::vector<uint8_t> in(bytes, 0);
-    bench.batch(in.size()).unit("byte").run([&] {
+    bench.minEpochIterations(20).batch(in.size()).unit("byte").run([&] {
         hash = HashX11(in.begin(), in.end());
     });
 }
@@ -38,7 +38,7 @@ inline void Pow_Blake512(benchmark::Bench& bench, const size_t bytes)
     sph_blake512_context ctx;
     uint8_t hash[OUTPUT_SIZE];
     std::vector<uint8_t> in(bytes, 0);
-    bench.batch(in.size()).unit("byte").run([&] {
+    bench.minEpochIterations(20).batch(in.size()).unit("byte").run([&] {
         sph_blake512_init(&ctx);
         sph_blake512(&ctx, in.data(), in.size());
         sph_blake512_close(&ctx, &hash);
@@ -50,7 +50,7 @@ inline void Pow_Bmw512(benchmark::Bench& bench, const size_t bytes)
     sph_bmw512_context ctx;
     uint8_t hash[OUTPUT_SIZE];
     std::vector<uint8_t> in(bytes, 0);
-    bench.batch(in.size()).unit("byte").run([&] {
+    bench.minEpochIterations(20).batch(in.size()).unit("byte").run([&] {
         sph_bmw512_init(&ctx);
         sph_bmw512(&ctx, in.data(), in.size());
         sph_bmw512_close(&ctx, &hash);
@@ -62,7 +62,7 @@ inline void Pow_Cubehash512(benchmark::Bench& bench, const size_t bytes)
     sph_cubehash512_context ctx;
     uint8_t hash[OUTPUT_SIZE];
     std::vector<uint8_t> in(bytes, 0);
-    bench.batch(in.size()).unit("byte").run([&] {
+    bench.minEpochIterations(20).batch(in.size()).unit("byte").run([&] {
         sph_cubehash512_init(&ctx);
         sph_cubehash512(&ctx, in.data(), in.size());
         sph_cubehash512_close(&ctx, &hash);
@@ -74,7 +74,7 @@ inline void Pow_Echo512(benchmark::Bench& bench, const size_t bytes)
     sph_echo512_context ctx;
     uint8_t hash[OUTPUT_SIZE];
     std::vector<uint8_t> in(bytes, 0);
-    bench.batch(in.size()).unit("byte").run([&] {
+    bench.minEpochIterations(20).batch(in.size()).unit("byte").run([&] {
         sph_echo512_init(&ctx);
         sph_echo512(&ctx, in.data(), in.size());
         sph_echo512_close(&ctx, &hash);
@@ -86,7 +86,7 @@ inline void Pow_Groestl512(benchmark::Bench& bench, const size_t bytes)
     sph_groestl512_context ctx;
     uint8_t hash[OUTPUT_SIZE];
     std::vector<uint8_t> in(bytes, 0);
-    bench.batch(in.size()).unit("byte").run([&] {
+    bench.minEpochIterations(20).batch(in.size()).unit("byte").run([&] {
         sph_groestl512_init(&ctx);
         sph_groestl512(&ctx, in.data(), in.size());
         sph_groestl512_close(&ctx, &hash);
@@ -98,7 +98,7 @@ inline void Pow_Jh512(benchmark::Bench& bench, const size_t bytes)
     sph_jh512_context ctx;
     uint8_t hash[OUTPUT_SIZE];
     std::vector<uint8_t> in(bytes, 0);
-    bench.batch(in.size()).unit("byte").run([&] {
+    bench.minEpochIterations(20).batch(in.size()).unit("byte").run([&] {
         sph_jh512_init(&ctx);
         sph_jh512(&ctx, in.data(), in.size());
         sph_jh512_close(&ctx, &hash);
@@ -110,7 +110,7 @@ inline void Pow_Keccak512(benchmark::Bench& bench, const size_t bytes)
     sph_keccak512_context ctx;
     uint8_t hash[OUTPUT_SIZE];
     std::vector<uint8_t> in(bytes, 0);
-    bench.batch(in.size()).unit("byte").run([&] {
+    bench.minEpochIterations(20).batch(in.size()).unit("byte").run([&] {
         sph_keccak512_init(&ctx);
         sph_keccak512(&ctx, in.data(), in.size());
         sph_keccak512_close(&ctx, &hash);
@@ -122,7 +122,7 @@ inline void Pow_Luffa512(benchmark::Bench& bench, const size_t bytes)
     sph_luffa512_context ctx;
     uint8_t hash[OUTPUT_SIZE];
     std::vector<uint8_t> in(bytes, 0);
-    bench.batch(in.size()).unit("byte").run([&] {
+    bench.minEpochIterations(20).batch(in.size()).unit("byte").run([&] {
         sph_luffa512_init(&ctx);
         sph_luffa512(&ctx, in.data(), in.size());
         sph_luffa512_close(&ctx, &hash);
@@ -134,7 +134,7 @@ inline void Pow_Shavite512(benchmark::Bench& bench, const size_t bytes)
     sph_shavite512_context ctx;
     uint8_t hash[OUTPUT_SIZE];
     std::vector<uint8_t> in(bytes, 0);
-    bench.batch(in.size()).unit("byte").run([&] {
+    bench.minEpochIterations(20).batch(in.size()).unit("byte").run([&] {
         sph_shavite512_init(&ctx);
         sph_shavite512(&ctx, in.data(), in.size());
         sph_shavite512_close(&ctx, &hash);
@@ -146,7 +146,7 @@ inline void Pow_Simd512(benchmark::Bench& bench, const size_t bytes)
     sph_simd512_context ctx;
     uint8_t hash[OUTPUT_SIZE];
     std::vector<uint8_t> in(bytes, 0);
-    bench.batch(in.size()).unit("byte").run([&] {
+    bench.minEpochIterations(20).batch(in.size()).unit("byte").run([&] {
         sph_simd512_init(&ctx);
         sph_simd512(&ctx, in.data(), in.size());
         sph_simd512_close(&ctx, &hash);
@@ -158,7 +158,7 @@ inline void Pow_Skein512(benchmark::Bench& bench, const size_t bytes)
     sph_skein512_context ctx;
     uint8_t hash[OUTPUT_SIZE];
     std::vector<uint8_t> in(bytes, 0);
-    bench.batch(in.size()).unit("byte").run([&] {
+    bench.minEpochIterations(20).batch(in.size()).unit("byte").run([&] {
         sph_skein512_init(&ctx);
         sph_skein512(&ctx, in.data(), in.size());
         sph_skein512_close(&ctx, &hash);

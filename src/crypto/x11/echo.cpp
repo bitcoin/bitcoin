@@ -30,18 +30,15 @@
  * @author   Thomas Pornin <thomas.pornin@cryptolog.com>
  */
 
-#include <stddef.h>
-#include <string.h>
+#include <crypto/x11/aes.h>
+#include <crypto/x11/dispatch.h>
+
+#include <attributes.h>
+
+#include <cstddef>
+#include <cstring>
 
 #include "sph_echo.h"
-
-#ifdef __cplusplus
-extern "C"{
-#endif
-
-#if SPH_SMALL_FOOTPRINT && !defined SPH_SMALL_FOOTPRINT_ECHO
-#define SPH_SMALL_FOOTPRINT_ECHO   1
-#endif
 
 /*
  * We can use a 64-bit implementation only if a 64-bit type is available.
@@ -53,102 +50,34 @@ extern "C"{
 #define T32   SPH_T32
 #define C64   SPH_C64
 
-#include "aes_helper.c"
-
-#define DECL_STATE_BIG   \
-	sph_u64 W[16][2];
-
-#define INPUT_BLOCK_BIG(sc)   do { \
-		unsigned u; \
-		memcpy(W, sc->u.Vb, 16 * sizeof(sph_u64)); \
-		for (u = 0; u < 8; u ++) { \
-			W[u + 8][0] = sph_dec64le_aligned( \
-				sc->buf + 16 * u); \
-			W[u + 8][1] = sph_dec64le_aligned( \
-				sc->buf + 16 * u + 8); \
-		} \
-	} while (0)
-
-#if SPH_SMALL_FOOTPRINT_ECHO
-
-static void
-aes_2rounds_all(sph_u64 W[16][2],
-	sph_u32 *pK0, sph_u32 *pK1, sph_u32 *pK2, sph_u32 *pK3)
+namespace sapphire {
+namespace soft_echo {
+namespace {
+void ALWAYS_INLINE MixColumn(sph_u64 W[16][2], int ia, int ib, int ic, int id)
 {
-	int n;
-	sph_u32 K0 = *pK0;
-	sph_u32 K1 = *pK1;
-	sph_u32 K2 = *pK2;
-	sph_u32 K3 = *pK3;
-
-	for (n = 0; n < 16; n ++) {
-		sph_u64 Wl = W[n][0];
-		sph_u64 Wh = W[n][1];
-		sph_u32 X0 = (sph_u32)Wl;
-		sph_u32 X1 = (sph_u32)(Wl >> 32);
-		sph_u32 X2 = (sph_u32)Wh;
-		sph_u32 X3 = (sph_u32)(Wh >> 32);
-		sph_u32 Y0, Y1, Y2, Y3; \
-		AES_ROUND_LE(X0, X1, X2, X3, K0, K1, K2, K3, Y0, Y1, Y2, Y3);
-		AES_ROUND_NOKEY_LE(Y0, Y1, Y2, Y3, X0, X1, X2, X3);
-		W[n][0] = (sph_u64)X0 | ((sph_u64)X1 << 32);
-		W[n][1] = (sph_u64)X2 | ((sph_u64)X3 << 32);
-		if ((K0 = T32(K0 + 1)) == 0) {
-			if ((K1 = T32(K1 + 1)) == 0)
-				if ((K2 = T32(K2 + 1)) == 0)
-					K3 = T32(K3 + 1);
-		}
+	for (int n = 0; n < 2; n ++) {
+		sph_u64 a = W[ia][n];
+		sph_u64 b = W[ib][n];
+		sph_u64 c = W[ic][n];
+		sph_u64 d = W[id][n];
+		sph_u64 ab = a ^ b;
+		sph_u64 bc = b ^ c;
+		sph_u64 cd = c ^ d;
+		sph_u64 abx = ((ab & C64(0x8080808080808080)) >> 7) * 27U
+			^ ((ab & C64(0x7F7F7F7F7F7F7F7F)) << 1);
+		sph_u64 bcx = ((bc & C64(0x8080808080808080)) >> 7) * 27U
+			^ ((bc & C64(0x7F7F7F7F7F7F7F7F)) << 1);
+		sph_u64 cdx = ((cd & C64(0x8080808080808080)) >> 7) * 27U
+			^ ((cd & C64(0x7F7F7F7F7F7F7F7F)) << 1);
+		W[ia][n] = abx ^ bc ^ d;
+		W[ib][n] = bcx ^ a ^ cd;
+		W[ic][n] = cdx ^ ab ^ d;
+		W[id][n] = abx ^ bcx ^ cdx ^ ab ^ c;
 	}
-	*pK0 = K0;
-	*pK1 = K1;
-	*pK2 = K2;
-	*pK3 = K3;
 }
 
-#define BIG_SUB_WORDS   do { \
-		aes_2rounds_all(W, &K0, &K1, &K2, &K3); \
-	} while (0)
-
-#else
-
-#define AES_2ROUNDS(X)   do { \
-		sph_u32 X0 = (sph_u32)(X[0]); \
-		sph_u32 X1 = (sph_u32)(X[0] >> 32); \
-		sph_u32 X2 = (sph_u32)(X[1]); \
-		sph_u32 X3 = (sph_u32)(X[1] >> 32); \
-		sph_u32 Y0, Y1, Y2, Y3; \
-		AES_ROUND_LE(X0, X1, X2, X3, K0, K1, K2, K3, Y0, Y1, Y2, Y3); \
-		AES_ROUND_NOKEY_LE(Y0, Y1, Y2, Y3, X0, X1, X2, X3); \
-		X[0] = (sph_u64)X0 | ((sph_u64)X1 << 32); \
-		X[1] = (sph_u64)X2 | ((sph_u64)X3 << 32); \
-		if ((K0 = T32(K0 + 1)) == 0) { \
-			if ((K1 = T32(K1 + 1)) == 0) \
-				if ((K2 = T32(K2 + 1)) == 0) \
-					K3 = T32(K3 + 1); \
-		} \
-	} while (0)
-
-#define BIG_SUB_WORDS   do { \
-		AES_2ROUNDS(W[ 0]); \
-		AES_2ROUNDS(W[ 1]); \
-		AES_2ROUNDS(W[ 2]); \
-		AES_2ROUNDS(W[ 3]); \
-		AES_2ROUNDS(W[ 4]); \
-		AES_2ROUNDS(W[ 5]); \
-		AES_2ROUNDS(W[ 6]); \
-		AES_2ROUNDS(W[ 7]); \
-		AES_2ROUNDS(W[ 8]); \
-		AES_2ROUNDS(W[ 9]); \
-		AES_2ROUNDS(W[10]); \
-		AES_2ROUNDS(W[11]); \
-		AES_2ROUNDS(W[12]); \
-		AES_2ROUNDS(W[13]); \
-		AES_2ROUNDS(W[14]); \
-		AES_2ROUNDS(W[15]); \
-	} while (0)
-
-#endif
-
+void ALWAYS_INLINE ShiftRows(uint64_t W[16][2])
+{
 #define SHIFT_ROW1(a, b, c, d)   do { \
 		sph_u64 tmp; \
 		tmp = W[a][0]; \
@@ -181,82 +110,71 @@ aes_2rounds_all(sph_u64 W[16][2],
 
 #define SHIFT_ROW3(a, b, c, d)   SHIFT_ROW1(d, c, b, a)
 
-#define BIG_SHIFT_ROWS   do { \
-		SHIFT_ROW1(1, 5, 9, 13); \
-		SHIFT_ROW2(2, 6, 10, 14); \
-		SHIFT_ROW3(3, 7, 11, 15); \
-	} while (0)
+	SHIFT_ROW1(1, 5, 9, 13);
+	SHIFT_ROW2(2, 6, 10, 14);
+	SHIFT_ROW3(3, 7, 11, 15);
 
-#if SPH_SMALL_FOOTPRINT_ECHO
+#undef SHIFT_ROW1
+#undef SHIFT_ROW2
+#undef SHIFT_ROW3
+}
+} // anonymous namespace
 
-static void
-mix_column(sph_u64 W[16][2], int ia, int ib, int ic, int id)
+void FullStateRound(sph_u64 W[16][2], sph_u32& K0, sph_u32& K1, sph_u32& K2, sph_u32& K3)
 {
-	int n;
-
-	for (n = 0; n < 2; n ++) {
-		sph_u64 a = W[ia][n];
-		sph_u64 b = W[ib][n];
-		sph_u64 c = W[ic][n];
-		sph_u64 d = W[id][n];
-		sph_u64 ab = a ^ b;
-		sph_u64 bc = b ^ c;
-		sph_u64 cd = c ^ d;
-		sph_u64 abx = ((ab & C64(0x8080808080808080)) >> 7) * 27U
-			^ ((ab & C64(0x7F7F7F7F7F7F7F7F)) << 1);
-		sph_u64 bcx = ((bc & C64(0x8080808080808080)) >> 7) * 27U
-			^ ((bc & C64(0x7F7F7F7F7F7F7F7F)) << 1);
-		sph_u64 cdx = ((cd & C64(0x8080808080808080)) >> 7) * 27U
-			^ ((cd & C64(0x7F7F7F7F7F7F7F7F)) << 1);
-		W[ia][n] = abx ^ bc ^ d;
-		W[ib][n] = bcx ^ a ^ cd;
-		W[ic][n] = cdx ^ ab ^ d;
-		W[id][n] = abx ^ bcx ^ cdx ^ ab ^ c;
+	for (int n = 0; n < 16; n ++) {
+		sph_u64 Wl = W[n][0];
+		sph_u64 Wh = W[n][1];
+		sph_u32 X0 = (sph_u32)Wl;
+		sph_u32 X1 = (sph_u32)(Wl >> 32);
+		sph_u32 X2 = (sph_u32)Wh;
+		sph_u32 X3 = (sph_u32)(Wh >> 32);
+		sph_u32 Y0, Y1, Y2, Y3;
+		soft_aes::Round(X0, X1, X2, X3, K0, K1, K2, K3, Y0, Y1, Y2, Y3);
+		soft_aes::RoundKeyless(Y0, Y1, Y2, Y3, X0, X1, X2, X3);
+		W[n][0] = (sph_u64)X0 | ((sph_u64)X1 << 32);
+		W[n][1] = (sph_u64)X2 | ((sph_u64)X3 << 32);
+		if ((K0 = T32(K0 + 1)) == 0) {
+			if ((K1 = T32(K1 + 1)) == 0) {
+				if ((K2 = T32(K2 + 1)) == 0) {
+					K3 = T32(K3 + 1);
+				}
+			}
+		}
 	}
 }
 
-#define MIX_COLUMN(a, b, c, d)   mix_column(W, a, b, c, d)
+void ShiftAndMix(uint64_t W[16][2])
+{
+	ShiftRows(W);
+	MixColumn(W, 0, 1, 2, 3);
+	MixColumn(W, 4, 5, 6, 7);
+	MixColumn(W, 8, 9, 10, 11);
+	MixColumn(W, 12, 13, 14, 15);
+}
+} // namespace soft_echo
+} // namespace sapphire
 
-#else
+sapphire::dispatch::EchoRoundFn echo_round = sapphire::soft_echo::FullStateRound;
+sapphire::dispatch::EchoShiftMix echo_shift_mix = sapphire::soft_echo::ShiftAndMix;
 
-#define MIX_COLUMN1(ia, ib, ic, id, n)   do { \
-		sph_u64 a = W[ia][n]; \
-		sph_u64 b = W[ib][n]; \
-		sph_u64 c = W[ic][n]; \
-		sph_u64 d = W[id][n]; \
-		sph_u64 ab = a ^ b; \
-		sph_u64 bc = b ^ c; \
-		sph_u64 cd = c ^ d; \
-		sph_u64 abx = ((ab & C64(0x8080808080808080)) >> 7) * 27U \
-			^ ((ab & C64(0x7F7F7F7F7F7F7F7F)) << 1); \
-		sph_u64 bcx = ((bc & C64(0x8080808080808080)) >> 7) * 27U \
-			^ ((bc & C64(0x7F7F7F7F7F7F7F7F)) << 1); \
-		sph_u64 cdx = ((cd & C64(0x8080808080808080)) >> 7) * 27U \
-			^ ((cd & C64(0x7F7F7F7F7F7F7F7F)) << 1); \
-		W[ia][n] = abx ^ bc ^ d; \
-		W[ib][n] = bcx ^ a ^ cd; \
-		W[ic][n] = cdx ^ ab ^ d; \
-		W[id][n] = abx ^ bcx ^ cdx ^ ab ^ c; \
-	} while (0)
+#define DECL_STATE_BIG   \
+	alignas(16) sph_u64 W[16][2];
 
-#define MIX_COLUMN(a, b, c, d)   do { \
-		MIX_COLUMN1(a, b, c, d, 0); \
-		MIX_COLUMN1(a, b, c, d, 1); \
-	} while (0)
-
-#endif
-
-#define BIG_MIX_COLUMNS   do { \
-		MIX_COLUMN(0, 1, 2, 3); \
-		MIX_COLUMN(4, 5, 6, 7); \
-		MIX_COLUMN(8, 9, 10, 11); \
-		MIX_COLUMN(12, 13, 14, 15); \
+#define INPUT_BLOCK_BIG(sc)   do { \
+		unsigned u; \
+		memcpy(W, sc->u.Vb, 16 * sizeof(sph_u64)); \
+		for (u = 0; u < 8; u ++) { \
+			W[u + 8][0] = sph_dec64le_aligned( \
+				sc->buf + 16 * u); \
+			W[u + 8][1] = sph_dec64le_aligned( \
+				sc->buf + 16 * u + 8); \
+		} \
 	} while (0)
 
 #define BIG_ROUND   do { \
-		BIG_SUB_WORDS; \
-		BIG_SHIFT_ROWS; \
-		BIG_MIX_COLUMNS; \
+		echo_round(W, K0, K1, K2, K3); \
+		echo_shift_mix(W); \
 	} while (0)
 
 #define FINAL_BIG   do { \
@@ -281,7 +199,6 @@ mix_column(sph_u64 W[16][2], int ia, int ib, int ic, int id)
 		} \
 		FINAL_BIG; \
 	} while (0)
-
 
 #define INCR_COUNTER(sc, val)   do { \
 		sc->C0 = T32(sc->C0 + (sph_u32)(val)); \
@@ -408,31 +325,28 @@ echo_big_close(sph_echo_big_context *sc, unsigned ub, unsigned n,
 
 /* see sph_echo.h */
 void
-sph_echo512_init(void *cc)
+sph_echo512_init(sph_echo512_context *cc)
 {
 	echo_big_init(cc, 512);
 }
 
 /* see sph_echo.h */
 void
-sph_echo512(void *cc, const void *data, size_t len)
+sph_echo512(sph_echo512_context *cc, const void *data, size_t len)
 {
-	echo_big_core(cc, data, len);
+	echo_big_core(cc, static_cast<const unsigned char*>(data), len);
 }
 
 /* see sph_echo.h */
 void
-sph_echo512_close(void *cc, void *dst)
+sph_echo512_close(sph_echo512_context *cc, void *dst)
 {
 	echo_big_close(cc, 0, 0, dst, 16);
 }
 
 /* see sph_echo.h */
 void
-sph_echo512_addbits_and_close(void *cc, unsigned ub, unsigned n, void *dst)
+sph_echo512_addbits_and_close(sph_echo512_context *cc, unsigned ub, unsigned n, void *dst)
 {
 	echo_big_close(cc, ub, n, dst, 16);
 }
-#ifdef __cplusplus
-}
-#endif
