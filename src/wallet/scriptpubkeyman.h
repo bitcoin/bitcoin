@@ -147,11 +147,11 @@ public:
     }
 };
 
-enum class InternalKey
+enum class PathDerivationType
 {
-    External,
-    Internal,
-    CoinJoin,
+    BIP44_External,
+    BIP44_Internal,
+    DIP0009_CoinJoin,
 };
 
 /*
@@ -582,7 +582,7 @@ public:
     bool IsHDEnabled() const override;
 
     //! Setup descriptors based on the given CExtkey
-    bool SetupDescriptorGeneration(const CExtKey& master_key, const SecureString& secure_mnemonic, const SecureString& secure_mnemonic_passphrase, InternalKey internal);
+    bool SetupDescriptorGeneration(const CExtKey& master_key, const SecureString& secure_mnemonic, const SecureString& secure_mnemonic_passphrase, PathDerivationType type);
 
     bool HavePrivateKeys() const override;
 

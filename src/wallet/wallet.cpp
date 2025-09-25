@@ -3787,7 +3787,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans(const SecureString& mnemonic_arg, 
     CExtKey master_key;
     master_key.SetSeed(MakeByteSpan(seed_key));
 
-    for (auto internal : {InternalKey::External, InternalKey::Internal, InternalKey::CoinJoin}) {
+    for (auto type : {PathDerivationType::BIP44_External, PathDerivationType::BIP44_Internal, PathDerivationType::DIP0009_CoinJoin}) {
         { // OUTPUT_TYPE is only one: LEGACY
             auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this));
             if (IsCrypted()) {
@@ -3798,11 +3798,11 @@ void CWallet::SetupDescriptorScriptPubKeyMans(const SecureString& mnemonic_arg, 
                     throw std::runtime_error(std::string(__func__) + ": Could not encrypt new descriptors");
                 }
             }
-            spk_manager->SetupDescriptorGeneration(master_key, mnemonic, mnemonic_passphrase, internal);
+            spk_manager->SetupDescriptorGeneration(master_key, mnemonic, mnemonic_passphrase, type);
             uint256 id = spk_manager->GetID();
             m_spk_managers[id] = std::move(spk_manager);
-            if (internal != InternalKey::CoinJoin) {
-                AddActiveScriptPubKeyMan(id, internal == InternalKey::Internal);
+            if (type != PathDerivationType::DIP0009_CoinJoin) {
+                AddActiveScriptPubKeyMan(id, type == PathDerivationType::BIP44_Internal);
             }
         }
     }
