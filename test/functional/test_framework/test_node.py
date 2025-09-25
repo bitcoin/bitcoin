@@ -546,6 +546,7 @@ class TestNode():
             unexpected_msgs = []
         assert_equal(type(expected_msgs), list)
         assert_equal(type(unexpected_msgs), list)
+        remaining_expected = list(expected_msgs)
 
         time_end = time.time() + timeout * self.timeout_factor
         prev_size = self.debug_log_size(encoding="utf-8")  # Must use same encoding that is used to read() below
@@ -556,7 +557,6 @@ class TestNode():
         yield
 
         while True:
-            found = True
             with open(self.debug_log_path, encoding="utf-8", errors="replace") as dl:
                 dl.seek(prev_size)
                 log = dl.read()
@@ -564,15 +564,15 @@ class TestNode():
                 if unexpected_msg in log:
                     self._raise_assertion_error(f'Unexpected message "{unexpected_msg}" '
                                                 f'found in log:\n\n{join_log(log)}\n\n')
-            for expected_msg in expected_msgs:
-                if expected_msg not in log:
-                    found = False
-            if found:
+            while remaining_expected and remaining_expected[-1] in log:
+                remaining_expected.pop()
+            if not remaining_expected:
                 return
             if time.time() >= time_end:
                 break
             time.sleep(0.05)
-        self._raise_assertion_error(f'Expected message(s) {expected_msgs!s} '
+        remaining_expected = [e for e in remaining_expected if e not in log]
+        self._raise_assertion_error(f'Expected message(s) {remaining_expected!s} '
                                     f'not found in log:\n\n{join_log(log)}\n\n')
 
     @contextlib.contextmanager
@@ -582,20 +582,18 @@ class TestNode():
         """
         time_end = time.time() + timeout * self.timeout_factor
         prev_size = self.debug_log_size(mode="rb")  # Must use same mode that is used to read() below
+        remaining_expected = list(expected_msgs)
 
         yield
 
         while True:
-            found = True
             with open(self.debug_log_path, "rb") as dl:
                 dl.seek(prev_size)
                 log = dl.read()
 
-            for expected_msg in expected_msgs:
-                if expected_msg not in log:
-                    found = False
-
-            if found:
+            while remaining_expected and remaining_expected[-1] in log:
+                remaining_expected.pop()
+            if not remaining_expected:
                 return
 
             if time.time() >= time_end:
@@ -605,7 +603,8 @@ class TestNode():
             # No sleep here because we want to detect the message fragment as fast as
             # possible.
 
-        self._raise_assertion_error(f'Expected message(s) {expected_msgs!s} '
+        remaining_expected = [e for e in remaining_expected if e not in log]
+        self._raise_assertion_error(f'Expected message(s) {remaining_expected!s} '
                                     f'not found in log:\n\n{print_log}\n\n')
 
     @contextlib.contextmanager
