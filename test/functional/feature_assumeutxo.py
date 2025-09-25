@@ -481,7 +481,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         # Use a hash instead of a height
         prev_snap_hash = n0.getblockhash(prev_snap_height)
-        dump_output5 = n0.dumptxoutset('utxos5.dat', rollback=self.convert_to_json_for_cli(prev_snap_hash))
+        dump_output5 = n0.dumptxoutset('utxos5.dat', rollback=prev_snap_hash)
         assert_equal(sha256sum_file(dump_output4['path']), sha256sum_file(dump_output5['path']))
 
         # Ensure n0 is back at the tip

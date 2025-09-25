@@ -8,7 +8,6 @@ import configparser
 from enum import Enum
 import argparse
 from datetime import datetime, timezone
-import json
 import logging
 import os
 import platform
@@ -1106,11 +1105,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def has_blockfile(self, node, filenum: str):
         return (node.blocks_path/ f"blk{filenum}.dat").is_file()
 
-    def convert_to_json_for_cli(self, text):
-        if self.options.usecli:
-            return json.dumps(text)
-        return text
-
     def inspect_sqlite_db(self, path, fn, *args, **kwargs):
         try:
             import sqlite3 # type: ignore[import]
@@ -1121,4 +1115,3 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             return result
         except ImportError:
             self.log.warning("sqlite3 module not available, skipping tests that inspect the database")
-
