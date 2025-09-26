@@ -50,6 +50,28 @@ class WalletLabelsTest(BitcoinTestFramework):
         for rpc_call in rpc_calls:
             assert_raises_rpc_error(-11, "Invalid label name", *rpc_call, label="*")
 
+    def test_label_named_parameter_handling(self):
+        """Test that getnewaddress with labels containing '=' characters is handled correctly in -named mode"""
+        self.log.info("Test getnewaddress label parameter handling")
+        node = self.nodes[0]
+
+        # Test getnewaddress with explicit named parameter containing '='
+        label_with_equals = "wallet=wallet"
+        result = node.cli("-named", "getnewaddress", f"label={label_with_equals}").send_cli()
+        address = result.strip()
+        addr_info = node.getaddressinfo(address)
+        assert_equal(addr_info.get('labels', []), [label_with_equals])
+
+        # Test that unknown parameter with '=' gets treated as positional only if the next
+        # positional parameter is known and accepts a string or valid JSON.
+        unknown_param = "unknown_param=value="
+        result = node.cli("-named", "getnewaddress", unknown_param).send_cli()
+        address = result.strip()
+        addr_info = node.getaddressinfo(address)
+        assert_equal(addr_info.get('labels', []), [unknown_param])
+
+        self.log.info("getnewaddress label parameter handling test completed successfully")
+
     def run_test(self):
         # Check that there's no UTXO on the node
         node = self.nodes[0]
@@ -159,6 +181,7 @@ class WalletLabelsTest(BitcoinTestFramework):
         change_label(node, labels[2].addresses[0], labels[2], labels[2])
 
         self.invalid_label_name_test()
+        self.test_label_named_parameter_handling()
 
         # This is a descriptor wallet test because of segwit v1+ addresses
         self.log.info('Check watchonly labels')
