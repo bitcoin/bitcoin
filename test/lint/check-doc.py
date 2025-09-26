@@ -14,11 +14,12 @@ from subprocess import check_output
 import re
 
 FOLDER_GREP = 'src'
-FOLDER_TEST = 'src/test/'
+EXCLUDE_PATHS = ['src/test/', 'src/common/args.h']
+EXCLUDE_ARGS = ' '.join(f"':(exclude){path}'" for path in EXCLUDE_PATHS)
 REGEX_ARG = r'\b(?:GetArg|GetArgs|GetBoolArg|GetIntArg|GetPathArg|IsArgSet|get_net)\("(-[^"]+)"'
 REGEX_DOC = r'AddArg\("(-[^"=]+?)(?:=|")'
 CMD_ROOT_DIR = '$(git rev-parse --show-toplevel)/{}'.format(FOLDER_GREP)
-CMD_GREP_ARGS = r"git grep --perl-regexp '{}' -- {} ':(exclude){}'".format(REGEX_ARG, CMD_ROOT_DIR, FOLDER_TEST)
+CMD_GREP_ARGS = f"git grep --perl-regexp '{REGEX_ARG}' -- {CMD_ROOT_DIR} {EXCLUDE_ARGS}"
 CMD_GREP_WALLET_ARGS = r"git grep --function-context 'void WalletInit::AddWalletOptions' -- {} | grep AddArg".format(CMD_ROOT_DIR)
 CMD_GREP_WALLET_HIDDEN_ARGS = r"git grep --function-context 'void DummyWalletInit::AddWalletOptions' -- {}".format(CMD_ROOT_DIR)
 CMD_GREP_DOCS = r"git grep --perl-regexp '{}' {}".format(REGEX_DOC, CMD_ROOT_DIR)
