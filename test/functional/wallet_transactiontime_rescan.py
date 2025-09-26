@@ -7,10 +7,13 @@
 
 import time
 
+import threading
+from test_framework.authproxy import AuthServiceProxy, JSONRPCException
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_raises_rpc_error,
     set_node_times,
 )
@@ -154,6 +157,41 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         # check user has 0 balance and no transactions
         assert_equal(restorewo_wallet.getbalance(), 0)
         assert_equal(len(restorewo_wallet.listtransactions()), 0)
+
+        # Test 'abortrescan' when a rescan is in progress
+        self.log.info('testing abortrescan when a rescan is in progress')
+        poll_rpc = AuthServiceProxy(restorenode.url + '/wallet/wo')
+
+        # Launch a full rescan in a worker thread
+        def _rescan_ignore_abort():
+            try:
+                restorewo_wallet.rescanblockchain()
+            except JSONRPCException:
+                # expected when we abort the scan
+                pass
+
+        t = threading.Thread(target=_rescan_ignore_abort)
+        t.start()
+
+        # Wait until we see scanning==True (poll every 0.01 seconds, max 10 seconds)
+        deadline = time.time() + 10
+        while time.time() < deadline:
+            info = poll_rpc.getwalletinfo()
+            if info.get("scanning"):
+                break
+            time.sleep(0.01)
+
+        # Ensure that the rescan started within 10 seconds
+        assert_greater_than(deadline, time.time())
+
+        # Abort and require True
+        result = poll_rpc.abortrescan()
+        assert_equal(result, True)
+
+        # Now block until the rescan threads are joined
+        self.log.info('Joining threads...')
+        t.join()
+        self.log.info('Threads joined')
 
         # proceed to rescan, first with an incomplete one, then with a full rescan
         self.log.info('Rescan last history part')
