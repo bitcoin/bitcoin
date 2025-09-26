@@ -299,9 +299,9 @@ ChainTestingSetup::~ChainTestingSetup()
     m_node.addrman.reset();
     m_node.netgroupman.reset();
     m_node.args = nullptr;
+    m_node.chainman.reset();
     m_node.mempool.reset();
     Assert(!m_node.fee_estimator); // Each test must create a local object, if they wish to use the fee_estimator
-    m_node.chainman.reset();
     m_node.validation_signals.reset();
     m_node.scheduler.reset();
 }
@@ -327,6 +327,20 @@ void ChainTestingSetup::LoadVerifyActivateChainstate()
     if (!chainman.ActiveChainstate().ActivateBestChain(state)) {
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
     }
+}
+
+CTxMemPool& ChainTestingSetup::ReplaceMempool()
+{
+    // Delete the previous mempool to ensure with valgrind that the old
+    // pointer is not accessed, when the new one should be accessed
+    // instead.
+    m_node.mempool.reset();
+    bilingual_str error;
+    m_node.mempool = std::make_unique<CTxMemPool>(MemPoolOptionsForTest(m_node), error);
+    Assert(error.empty());
+    auto& dummy_chainstate{static_cast<DummyChainState&>(m_node.chainman->ActiveChainstate())};
+    dummy_chainstate.SetMempool(m_node.mempool.get());
+    return *m_node.mempool;
 }
 
 TestingSetup::TestingSetup(
