@@ -454,8 +454,8 @@ def main():
         print("Re-compile with the -DBUILD_DAEMON=ON build option")
         sys.exit(1)
 
-    # Build list of tests
-    test_list = []
+    # Build tests
+    test_list = deque()
     if tests:
         # Individual tests have been specified. Run specified tests that exist
         # in the ALL_SCRIPTS list. Accept names with or without a .py extension.
@@ -474,7 +474,7 @@ def main():
             script = script + ".py" if ".py" not in script else script
             matching_scripts = [s for s in ALL_SCRIPTS if s.startswith(script)]
             if matching_scripts:
-                test_list.extend(matching_scripts)
+                test_list += matching_scripts
             else:
                 print("{}WARNING!{} Test '{}' not found in full test list.".format(BOLD[1], BOLD[0], test))
     elif args.extended:
@@ -509,7 +509,7 @@ def main():
                 remove_tests([test for test in test_list if test.split('.py')[0] == exclude_test.split('.py')[0]])
 
     if args.filter:
-        test_list = list(filter(re.compile(args.filter).search, test_list))
+        test_list = deque(filter(re.compile(args.filter).search, test_list))
 
     if not test_list:
         print("No valid test scripts specified. Check that your test is in one "
@@ -726,7 +726,7 @@ class TestHandler:
     def get_next(self):
         while len(self.jobs) < self.num_jobs and self.test_list:
             # Add tests
-            test = self.test_list.pop(0)
+            test = self.test_list.popleft()
             portseed = len(self.test_list)
             portseed_arg = ["--portseed={}".format(portseed)]
             log_stdout = tempfile.SpooledTemporaryFile(max_size=2**16)
@@ -754,8 +754,7 @@ class TestHandler:
             ]
             fut = self.executor.submit(proc_wait, task)
             self.jobs[fut] = test
-        if not self.jobs:
-            raise IndexError('pop from empty list')
+        assert self.jobs  # Must not be empty here
 
         # Print remaining running jobs when all jobs have been started.
         if not self.test_list:
