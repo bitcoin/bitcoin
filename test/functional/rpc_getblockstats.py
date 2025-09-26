@@ -183,7 +183,7 @@ class GetblockstatsTest(BitcoinTestFramework):
         assert_equal(tip_stats["utxo_size_inc_actual"], 300)
 
         self.log.info("Test when only header is known")
-        block = self.generateblock(self.nodes[0], output="raw(55)", transactions=[], submit=False)
+        block = self.generateblock(self.nodes[0], submit=False)
         self.nodes[0].submitheader(block["hex"])
         assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", lambda: self.nodes[0].getblockstats(block['hash']))
 
