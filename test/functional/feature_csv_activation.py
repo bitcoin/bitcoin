@@ -238,7 +238,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.tip = int(inputblockhash, 16)
         self.tipheight += 1
         self.last_block_time += 600
-        assert_equal(len(self.nodes[0].getblock(inputblockhash, True)["tx"]), TESTING_TX_COUNT + 1)
+        assert_equal(len(self.nodes[0].getblock(inputblockhash, 1)["tx"]), TESTING_TX_COUNT + 1)
 
         # 2 more version 4 blocks
         test_blocks = self.generate_blocks(2)

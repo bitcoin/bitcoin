@@ -685,11 +685,9 @@ class BlockchainTest(BitcoinTestFramework):
 
         self.log.info("Test that getblock with verbosity 0 hashes to expected value")
         assert_hexblock_hashes(0)
-        assert_hexblock_hashes(False)
 
         self.log.info("Test that getblock with verbosity 1 doesn't include fee")
         assert_fee_not_in_block(blockhash, 1)
-        assert_fee_not_in_block(blockhash, True)
 
         self.log.info('Test that getblock with verbosity 2 and 3 includes expected fee')
         assert_fee_in_block(blockhash, 2)
