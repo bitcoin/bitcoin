@@ -256,6 +256,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                             help="Explicitly use v1 transport (can be used to overwrite global --v2transport option)")
         parser.add_argument("--test_methods", dest="test_methods", nargs='*',
                             help="Run specified test methods sequentially instead of the full test. Use only for methods that do not depend on any context set up in run_test or other methods.")
+        parser.add_argument("--debug_cmd", dest="debug_cmd",
+                            help="Debugger command to attach to nodes (can be specified using debug_runs).")
+        parser.add_argument("--debug_runs", dest="debug_runs", nargs="*", type=int, default=[],
+                            help="Node executions in the test to stall and wait for a debugger, 0-based.")
 
         self.add_options(parser)
         # Running TestShell in a Jupyter notebook causes an additional -f argument
@@ -275,6 +279,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.options.v2transport=False
 
         PortSeed.n = self.options.port_seed
+
+        TestNode.debug_runs = self.options.debug_runs
+        TestNode.debug_cmd = self.options.debug_cmd
 
     def get_binary_paths(self):
         """Get paths of all binaries from environment variables or their default values"""
