@@ -46,6 +46,8 @@ static const unsigned int MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK = 3;
 /** Number of headers sent in one getheaders result. We rely on the assumption that if a peer sends
  *  less than this number, we reached its tip. Changing this value is a protocol upgrade. */
 static const unsigned int MAX_HEADERS_RESULTS = 2000;
+/** Number of templates to keep around for sharing. */
+static constexpr uint32_t DEFAULT_SHARETMPL_COUNT = 10;
 
 struct CNodeStateStats {
     int nSyncHeight = -1;
@@ -63,6 +65,15 @@ struct CNodeStateStats {
     ServiceFlags their_services;
     int64_t presync_height{-1};
     std::chrono::seconds time_offset{0};
+};
+
+struct TemplateStats {
+    int num_templates{0};
+    int max_templates{0};
+    int num_transactions{0};
+    int latest_template_tx{0};
+    int latest_template_weight{0};
+    NodeClock::time_point next_update{NodeClock::time_point::max()};
 };
 
 struct PeerManagerInfo {
@@ -89,6 +100,8 @@ public:
         //! Number of headers sent in one getheaders message result (this is
         //! a test-only option).
         uint32_t max_headers_result{MAX_HEADERS_RESULTS};
+        //! Number of block templates to keep for sharing.
+        uint32_t share_template_count{DEFAULT_SHARETMPL_COUNT};
     };
 
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,
@@ -112,6 +125,9 @@ public:
     virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const = 0;
 
     virtual std::vector<node::TxOrphanage::OrphanInfo> GetOrphanTransactions() = 0;
+
+    /** Get statistics/info about templates */
+    virtual TemplateStats GetTemplateStats() const = 0;
 
     /** Get peer manager info. */
     virtual PeerManagerInfo GetInfo() const = 0;
