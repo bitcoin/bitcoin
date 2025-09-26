@@ -1,8 +1,8 @@
 package=boost
-$(package)_version = 1.88.0
+$(package)_version = 1.89.0
 $(package)_download_path = https://github.com/boostorg/boost/releases/download/boost-$($(package)_version)
 $(package)_file_name = boost-$($(package)_version)-cmake.tar.gz
-$(package)_sha256_hash = dcea50f40ba1ecfc448fdf886c0165cf3e525fef2c9e3e080b9804e8117b9694
+$(package)_sha256_hash = 954a01219bf818c7fb850fa610c2c8c71a4fa28fa32a1900056bcb6ff58cf908
 $(package)_patches = skip_compiled_targets.patch
 $(package)_build_subdir = build
 
