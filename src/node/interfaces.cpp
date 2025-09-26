@@ -81,7 +81,6 @@ using interfaces::MakeSignalHandler;
 using interfaces::Mining;
 using interfaces::Node;
 using interfaces::WalletLoader;
-using node::BlockAssembler;
 using node::BlockWaitOptions;
 using util::Join;
 
@@ -918,7 +917,7 @@ public:
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
     {
-        auto new_template = WaitAndCreateNewBlock(chainman(), notifications(), m_node.mempool.get(), m_block_template, options, m_assemble_options);
+        auto new_template = WaitAndCreateNewBlock(m_node.block_template_cache.get(), chainman(), notifications(), m_block_template, options, m_assemble_options);
         if (new_template) return std::make_unique<BlockTemplateImpl>(m_assemble_options, std::move(new_template), m_node);
         return nullptr;
     }
@@ -964,7 +963,8 @@ public:
 
         BlockAssembler::Options assemble_options{options};
         ApplyArgsManOptions(*Assert(m_node.args), assemble_options);
-        return std::make_unique<BlockTemplateImpl>(assemble_options, BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options}.CreateNewBlock(), m_node);
+        auto new_template = m_node.block_template_cache->GetBlockTemplate(assemble_options, std::chrono::seconds{0}).first;
+        return std::make_unique<BlockTemplateImpl>(assemble_options, std::make_unique<CBlockTemplate>(*new_template), m_node);
     }
 
     bool checkBlock(const CBlock& block, const node::BlockCheckOptions& options, std::string& reason, std::string& debug) override
