@@ -1608,7 +1608,7 @@ static RPCHelpMan finalizepsbt()
     return RPCHelpMan{"finalizepsbt",
                 "Finalize the inputs of a PSBT. If the transaction is fully signed, it will produce a\n"
                 "network serialized transaction which can be broadcast with sendrawtransaction. Otherwise a PSBT will be\n"
-                "created which has the final_scriptSig and final_scriptWitness fields filled for inputs that are complete.\n"
+                "created which has the final_scriptSig and final_scriptwitness fields filled for inputs that are complete.\n"
                 "Implements the Finalizer and Extractor roles.\n",
                 {
                     {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PSBT"},
