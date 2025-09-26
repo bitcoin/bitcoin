@@ -84,6 +84,8 @@ struct CoinFilterParams {
     // When true, filter unconfirmed coins by whether their
     // version's TRUCness matches what is set by CCoinControl.
     bool check_version_trucness{true};
+    // Skip outputs not eligible for silent payments
+    bool silent_payments{false};
 };
 
 /**
@@ -208,9 +210,12 @@ struct CreatedTransactionResult
     CAmount fee;
     FeeCalculation fee_calc;
     std::optional<unsigned int> change_pos;
+    OutputType change_type;
 
-    CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, std::optional<unsigned int> _change_pos, const FeeCalculation& _fee_calc)
-        : tx(_tx), fee(_fee), fee_calc(_fee_calc), change_pos(_change_pos) {}
+    CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, std::optional<unsigned int> _change_pos, const OutputType change_type, const FeeCalculation& _fee_calc)
+        : tx(_tx), fee(_fee), fee_calc(_fee_calc), change_pos(_change_pos), change_type(change_type) {}
+
+    CreatedTransactionResult() = default;
 };
 
 /**

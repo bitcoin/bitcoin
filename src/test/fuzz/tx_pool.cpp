@@ -67,7 +67,7 @@ struct TransactionsDelta final : public CValidationInterface {
     explicit TransactionsDelta(std::set<CTransactionRef>& r, std::set<CTransactionRef>& a)
         : m_removed{r}, m_added{a} {}
 
-    void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t /* mempool_sequence */) override
+    void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t /* mempool_sequence */, const std::map<COutPoint, Coin>& /* spent_coins */) override
     {
         Assert(m_added.insert(tx.info.m_tx).second);
     }
