@@ -70,7 +70,7 @@ void HeadersSyncSetup::ResetAndInitialize()
 
     for (auto conn_type : conn_types) {
         CAddress addr{};
-        m_connections.push_back(new CNode(id++, nullptr, addr, 0, 0, addr, "", conn_type, false));
+        m_connections.push_back(new CNode(id++, nullptr, addr, 0, 0, addr, "", conn_type, false, 0));
         CNode& p2p_node = *m_connections.back();
 
         connman.Handshake(

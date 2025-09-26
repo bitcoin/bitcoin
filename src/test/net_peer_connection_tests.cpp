@@ -72,7 +72,8 @@ void AddPeer(NodeId& id, std::vector<CNode*>& nodes, PeerManager& peerman, Connm
                                  CAddress{},
                                  /*addrNameIn=*/"",
                                  conn_type,
-                                 /*inbound_onion=*/inbound_onion});
+                                 /*inbound_onion=*/inbound_onion,
+                                 /*network_key=*/0});
     CNode& node = *nodes.back();
     node.SetCommonVersion(PROTOCOL_VERSION);
 

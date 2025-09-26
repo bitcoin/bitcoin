@@ -62,7 +62,8 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
                      CAddress(),
                      /*addrNameIn=*/"",
                      ConnectionType::OUTBOUND_FULL_RELAY,
-                     /*inbound_onion=*/false};
+                     /*inbound_onion=*/false,
+                     /*network_key=*/0};
 
     connman.Handshake(
         /*node=*/dummyNode1,
@@ -128,7 +129,8 @@ void AddRandomOutboundPeer(NodeId& id, std::vector<CNode*>& vNodes, PeerManager&
                                   CAddress(),
                                   /*addrNameIn=*/"",
                                   connType,
-                                  /*inbound_onion=*/false});
+                                  /*inbound_onion=*/false,
+                                  /*network_key=*/0});
     CNode &node = *vNodes.back();
     node.SetCommonVersion(PROTOCOL_VERSION);
 
@@ -327,7 +329,8 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
                          CAddress(),
                          /*addrNameIn=*/"",
                          ConnectionType::INBOUND,
-                         /*inbound_onion=*/false};
+                         /*inbound_onion=*/false,
+                         /*network_key=*/1};
     nodes[0]->SetCommonVersion(PROTOCOL_VERSION);
     peerLogic->InitializeNode(*nodes[0], NODE_NETWORK);
     nodes[0]->fSuccessfullyConnected = true;
@@ -347,7 +350,8 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
                          CAddress(),
                          /*addrNameIn=*/"",
                          ConnectionType::INBOUND,
-                         /*inbound_onion=*/false};
+                         /*inbound_onion=*/false,
+                         /*network_key=*/1};
     nodes[1]->SetCommonVersion(PROTOCOL_VERSION);
     peerLogic->InitializeNode(*nodes[1], NODE_NETWORK);
     nodes[1]->fSuccessfullyConnected = true;
@@ -377,7 +381,8 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
                          CAddress(),
                          /*addrNameIn=*/"",
                          ConnectionType::OUTBOUND_FULL_RELAY,
-                         /*inbound_onion=*/false};
+                         /*inbound_onion=*/false,
+                         /*network_key=*/2};
     nodes[2]->SetCommonVersion(PROTOCOL_VERSION);
     peerLogic->InitializeNode(*nodes[2], NODE_NETWORK);
     nodes[2]->fSuccessfullyConnected = true;
@@ -419,7 +424,8 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
                     CAddress(),
                     /*addrNameIn=*/"",
                     ConnectionType::INBOUND,
-                    /*inbound_onion=*/false};
+                    /*inbound_onion=*/false,
+                    /*network_key=*/1};
     dummyNode.SetCommonVersion(PROTOCOL_VERSION);
     peerLogic->InitializeNode(dummyNode, NODE_NETWORK);
     dummyNode.fSuccessfullyConnected = true;

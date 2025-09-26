@@ -239,6 +239,8 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
     const std::string addr_name = fuzzed_data_provider.ConsumeRandomLengthString(64);
     const ConnectionType conn_type = fuzzed_data_provider.PickValueInArray(ALL_CONNECTION_TYPES);
     const bool inbound_onion{conn_type == ConnectionType::INBOUND ? fuzzed_data_provider.ConsumeBool() : false};
+    const uint64_t network_id = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
+
     NetPermissionFlags permission_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
     if constexpr (ReturnUniquePtr) {
         return std::make_unique<CNode>(node_id,
@@ -250,6 +252,7 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
                                        addr_name,
                                        conn_type,
                                        inbound_onion,
+                                       network_id,
                                        CNodeOptions{ .permission_flags = permission_flags });
     } else {
         return CNode{node_id,
@@ -261,6 +264,7 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
                      addr_name,
                      conn_type,
                      inbound_onion,
+                     network_id,
                      CNodeOptions{ .permission_flags = permission_flags }};
     }
 }
