@@ -100,17 +100,5 @@ class DataCarrierTest(BitcoinTestFramework):
         self.test_null_data_transaction(node=self.nodes[2], data=one_byte, success=True)
         self.test_null_data_transaction(node=self.nodes[3], data=one_byte, success=False)
 
-        # Clean shutdown boilerplate due to deprecation
-        self.expected_stderr = [
-            "",  # node 0 has no deprecated options
-            "Warning: Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated and are expected to be removed in a future version.",
-            "Warning: Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated and are expected to be removed in a future version.",
-            "Warning: Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated and are expected to be removed in a future version.",
-        ]
-
-        for i in range(self.num_nodes):
-            self.stop_node(i, expected_stderr=self.expected_stderr[i])
-
-
 if __name__ == '__main__':
     DataCarrierTest(__file__).main()
