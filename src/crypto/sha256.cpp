@@ -721,6 +721,21 @@ CSHA256& CSHA256::Write(const unsigned char* data, size_t len)
     }
     return *this;
 }
+CSHA256& CSHA256::Write(unsigned char data)
+{
+    size_t bufsize = bytes % 64;
+
+    // Add the single byte to the buffer
+    buf[bufsize] = data;
+    bytes += 1;
+
+    if (bufsize == 63) {
+        // Process the buffer if full
+        Transform(s, buf, 1);
+    }
+
+    return *this;
+}
 
 void CSHA256::Finalize(unsigned char hash[OUTPUT_SIZE])
 {
