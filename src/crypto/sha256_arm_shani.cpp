@@ -13,7 +13,6 @@
 #include <array>
 #include <cstdint>
 #include <cstddef>
-#include <arm_acle.h>
 #include <arm_neon.h>
 
 namespace {
