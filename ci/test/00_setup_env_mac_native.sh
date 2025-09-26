@@ -12,7 +12,7 @@ export CONTAINER_NAME="ci_mac_native"  # macos does not use a container, but the
 export PIP_PACKAGES="--break-system-packages zmq"
 export GOAL="install deploy"
 export CMAKE_GENERATOR="Ninja"
-export BITCOIN_CONFIG="-DBUILD_GUI=ON -DWITH_ZMQ=ON -DREDUCE_EXPORTS=ON -DCMAKE_EXE_LINKER_FLAGS='-Wl,-stack_size -Wl,0x80000'"
+export BITCOIN_CONFIG="-DBUILD_GUI=ON -DWITH_ZMQ=ON -DBUILD_KERNEL_LIB=ON -DBUILD_KERNEL_TEST=ON -DREDUCE_EXPORTS=ON -DCMAKE_EXE_LINKER_FLAGS='-Wl,-stack_size -Wl,0x80000'"
 export CI_OS_NAME="macos"
 export NO_DEPENDS=1
 export OSX_SDK=""
