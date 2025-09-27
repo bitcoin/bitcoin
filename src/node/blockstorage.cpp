@@ -1046,6 +1046,11 @@ bool BlockManager::ReadBlock(CBlock& block, const CBlockIndex& index) const
 
 bool BlockManager::ReadRawBlock(std::vector<std::byte>& block, const FlatFilePos& pos) const
 {
+    return ReadRawBlockPart(block, pos, std::nullopt, std::nullopt);
+}
+
+bool BlockManager::ReadRawBlockPart(std::vector<std::byte>& data, const FlatFilePos& pos, std::optional<size_t> part_offset, std::optional<size_t> part_size) const
+{
     if (pos.nPos < STORAGE_HEADER_BYTES) {
         // If nPos is less than STORAGE_HEADER_BYTES, we can't read the header that precedes the block data
         // This would cause an unsigned integer underflow when trying to position the file cursor
@@ -1077,8 +1082,28 @@ bool BlockManager::ReadRawBlock(std::vector<std::byte>& block, const FlatFilePos
             return false;
         }
 
-        block.resize(blk_size); // Zeroing of memory is intentional here
-        filein.read(block);
+        size_t offset = 0;
+        if (part_offset.has_value()) {
+            if (*part_offset > blk_size) {
+                LogError("Read from block file failed: invalid offset: %u", *part_offset);
+                return false;
+            }
+            offset = *part_offset;
+        }
+
+        size_t size = blk_size - offset;
+        if (part_size.has_value()) {
+            if (*part_size > size || *part_size == 0) {
+                LogError("Read from block file failed: invalid size: %u", *part_size);
+                return false;
+            }
+            size = *part_size;
+        }
+
+
+        data.resize(size); // Zeroing of memory is intentional here
+        filein.seek(offset, SEEK_CUR);
+        filein.read(data);
     } catch (const std::exception& e) {
         LogError("Read from block file failed: %s for %s while reading raw block", e.what(), pos.ToString());
         return false;

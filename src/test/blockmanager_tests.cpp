@@ -137,6 +137,64 @@ BOOST_FIXTURE_TEST_CASE(blockmanager_block_data_availability, TestChain100Setup)
     BOOST_CHECK(!blockman.CheckBlockDataAvailability(tip, *last_pruned_block));
 }
 
+BOOST_FIXTURE_TEST_CASE(blockmanager_block_data_part, TestChain100Setup)
+{
+    LOCK(::cs_main);
+    auto& chainman = m_node.chainman;
+    auto& blockman = chainman->m_blockman;
+    const CBlockIndex& tip = *chainman->ActiveTip();
+
+    std::vector<std::byte> block{};
+    BOOST_CHECK(blockman.ReadRawBlock(block, tip.GetBlockPos()));
+    BOOST_CHECK_GE(block.size(), 200);
+
+    std::vector<std::byte> block_part{};
+
+    BOOST_CHECK(blockman.ReadRawBlockPart(block_part, tip.GetBlockPos(), std::nullopt, std::nullopt));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.begin(), block.end());
+
+    BOOST_CHECK(blockman.ReadRawBlockPart(block_part, tip.GetBlockPos(), 0, std::nullopt));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.begin(), block.end());
+
+    BOOST_CHECK(blockman.ReadRawBlockPart(block_part, tip.GetBlockPos(), 1, std::nullopt));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.begin() + 1, block.end());
+
+    BOOST_CHECK(blockman.ReadRawBlockPart(block_part, tip.GetBlockPos(), 10, std::nullopt));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.begin() + 10, block.end());
+
+    BOOST_CHECK(blockman.ReadRawBlockPart(block_part, tip.GetBlockPos(), std::nullopt, block.size()));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.begin(), block.end());
+
+    BOOST_CHECK(blockman.ReadRawBlockPart(block_part, tip.GetBlockPos(), std::nullopt, block.size() - 1));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.begin(), block.end() - 1);
+
+    BOOST_CHECK(blockman.ReadRawBlockPart(block_part, tip.GetBlockPos(), std::nullopt, block.size() - 10));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.begin(), block.end() - 10);
+
+    BOOST_CHECK(blockman.ReadRawBlockPart(block_part, tip.GetBlockPos(), std::nullopt, 20));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.begin(), block.begin() + 20);
+
+    BOOST_CHECK(blockman.ReadRawBlockPart(block_part, tip.GetBlockPos(), 1, block.size() - 1));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.begin() + 1, block.end());
+
+    BOOST_CHECK(blockman.ReadRawBlockPart(block_part, tip.GetBlockPos(), 10, 20));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.begin() + 10, block.begin() + 30);
+
+    BOOST_CHECK(blockman.ReadRawBlockPart(block_part, tip.GetBlockPos(), 1, block.size() - 1));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.begin() + 1, block.end());
+
+    BOOST_CHECK(blockman.ReadRawBlockPart(block_part, tip.GetBlockPos(), block.size() - 1, 1));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.end() - 1, block.end());
+
+    BOOST_CHECK(!blockman.ReadRawBlockPart(block_part, tip.GetBlockPos(), 0, 0));
+    BOOST_CHECK(!blockman.ReadRawBlockPart(block_part, tip.GetBlockPos(), std::nullopt, 0));
+    BOOST_CHECK(!blockman.ReadRawBlockPart(block_part, tip.GetBlockPos(), block.size(), 0));
+    BOOST_CHECK(!blockman.ReadRawBlockPart(block_part, tip.GetBlockPos(), block.size() + 1, 0));
+    BOOST_CHECK(!blockman.ReadRawBlockPart(block_part, tip.GetBlockPos(), block.size(), 1));
+    BOOST_CHECK(!blockman.ReadRawBlockPart(block_part, tip.GetBlockPos(), block.size() - 1, 2));
+    BOOST_CHECK(!blockman.ReadRawBlockPart(block_part, tip.GetBlockPos(), 1, block.size()));
+}
+
 BOOST_FIXTURE_TEST_CASE(blockmanager_readblock_hash_mismatch, TestingSetup)
 {
     CBlockIndex index;

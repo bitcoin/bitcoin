@@ -392,7 +392,9 @@ static bool rest_spent_txouts(const std::any& context, HTTPRequest* req, const s
 static bool rest_block(const std::any& context,
                        HTTPRequest* req,
                        const std::string& uri_part,
-                       TxVerbosity tx_verbosity)
+                       std::optional<TxVerbosity> tx_verbosity,
+                       std::optional<size_t> part_offset,
+                       std::optional<size_t> part_size)
 {
     if (!CheckWarmup(req))
         return false;
@@ -427,7 +429,7 @@ static bool rest_block(const std::any& context,
     }
 
     std::vector<std::byte> block_data{};
-    if (!chainman.m_blockman.ReadRawBlock(block_data, pos)) {
+    if (!chainman.m_blockman.ReadRawBlockPart(block_data, pos, part_offset, part_size)) {
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
     }
 
@@ -446,10 +448,13 @@ static bool rest_block(const std::any& context,
     }
 
     case RESTResponseFormat::JSON: {
+        if (!tx_verbosity.has_value()) {
+            return RESTERR(req, HTTP_BAD_REQUEST, "JSON output is not supported for this request type");
+        }
         CBlock block{};
         DataStream block_stream{block_data};
         block_stream >> TX_WITH_WITNESS(block);
-        UniValue objBlock = blockToJSON(chainman.m_blockman, block, *tip, *pblockindex, tx_verbosity, chainman.GetConsensus().powLimit);
+        UniValue objBlock = blockToJSON(chainman.m_blockman, block, *tip, *pblockindex, *tx_verbosity, chainman.GetConsensus().powLimit);
         std::string strJSON = objBlock.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
         req->WriteReply(HTTP_OK, strJSON);
@@ -464,12 +469,37 @@ static bool rest_block(const std::any& context,
 
 static bool rest_block_extended(const std::any& context, HTTPRequest* req, const std::string& uri_part)
 {
-    return rest_block(context, req, uri_part, TxVerbosity::SHOW_DETAILS_AND_PREVOUT);
+    return rest_block(context, req, uri_part, TxVerbosity::SHOW_DETAILS_AND_PREVOUT, /*part_offset=*/std::nullopt, /*part_size=*/std::nullopt);
 }
 
 static bool rest_block_notxdetails(const std::any& context, HTTPRequest* req, const std::string& uri_part)
 {
-    return rest_block(context, req, uri_part, TxVerbosity::SHOW_TXID);
+    return rest_block(context, req, uri_part, TxVerbosity::SHOW_TXID, /*part_offset=*/std::nullopt, /*part_size=*/std::nullopt);
+}
+
+static bool rest_block_part(const std::any& context, HTTPRequest* req, const std::string& uri_part)
+{
+    std::optional<size_t> part_offset{};
+    std::optional<size_t> part_size{};
+    try {
+        const auto part_offset_str = req->GetQueryParameter("offset");
+        if (part_offset_str.has_value()) {
+            part_offset = ToIntegral<size_t>(*part_offset_str);
+            if (!part_offset.has_value()) {
+                return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Block part offset is invalid: %s", *part_offset_str));
+            }
+        }
+        const auto part_size_str = req->GetQueryParameter("size");
+        if (part_size_str.has_value()) {
+            part_size = ToIntegral<size_t>(*part_size_str);
+            if (!part_size.has_value()) {
+                return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Block part size is invalid: %s", *part_size_str));
+            }
+        }
+    } catch (const std::runtime_error& e) {
+        return RESTERR(req, HTTP_BAD_REQUEST, e.what());
+    }
+    return rest_block(context, req, uri_part, /*tx_verbosity=*/std::nullopt, part_offset, part_size);
 }
 
 static bool rest_filter_header(const std::any& context, HTTPRequest* req, const std::string& uri_part)
@@ -1120,6 +1150,7 @@ static const struct {
       {"/rest/tx/", rest_tx},
       {"/rest/block/notxdetails/", rest_block_notxdetails},
       {"/rest/block/", rest_block_extended},
+      {"/rest/blockpart/", rest_block_part},
       {"/rest/blockfilter/", rest_block_filter},
       {"/rest/blockfilterheaders/", rest_filter_header},
       {"/rest/chaininfo", rest_chaininfo},

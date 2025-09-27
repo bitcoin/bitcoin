@@ -455,6 +455,38 @@ class RESTTest (BitcoinTestFramework):
                 expected = [(p["scriptPubKey"], p["value"]) for p in prevouts]
                 assert_equal(expected, actual)
 
+        self.log.info("Test the /blockpart URI")
+
+        blockhash = self.nodes[0].getbestblockhash()
+        block_bin = self.test_rest_request(f"/block/{blockhash}", req_type=ReqType.BIN, ret_type=RetType.BYTES)
+        for req_type in (ReqType.BIN, ReqType.HEX):
+            def _get_block_part(status: int = 200, **kwargs):
+                resp = self.test_rest_request(f"/blockpart/{blockhash}", status=status,
+                                              req_type=req_type, ret_type=RetType.BYTES, **kwargs)
+                assert isinstance(resp, bytes)
+                if req_type is ReqType.HEX and status == 200:
+                    resp = bytes.fromhex(resp.decode().strip())
+                return resp
+
+            assert_equal(block_bin, _get_block_part())
+            assert_equal(block_bin, _get_block_part(query_params={"offset": 0}))
+            assert_equal(block_bin, _get_block_part(query_params={"size": len(block_bin)}))
+            assert_equal(block_bin, _get_block_part(query_params={"offset": 0, "size": len(block_bin)}))
+
+            assert len(block_bin) >= 500
+            assert_equal(block_bin[10:], _get_block_part(query_params={"offset": 10}))
+            assert_equal(block_bin[:100], _get_block_part(query_params={"size": 100}))
+            assert_equal(block_bin[20:320], _get_block_part(query_params={"offset": 20, "size": 300}))
+            assert_equal(block_bin[-5:], _get_block_part(query_params={"offset": len(block_bin) - 5, "size": 5}))
+
+            _get_block_part(status=404, query_params={"offset": 0, "size": 0})
+            _get_block_part(status=404, query_params={"offset": len(block_bin), "size": 0})
+            _get_block_part(status=404, query_params={"offset": len(block_bin) + 1, "size": 1})
+            _get_block_part(status=404, query_params={"offset": len(block_bin), "size": 1})
+            _get_block_part(status=404, query_params={"offset": len(block_bin) + 1})
+            _get_block_part(status=404, query_params={"size": len(block_bin) + 1})
+
+        self.test_rest_request(f"/blockpart/{blockhash}", status=400, req_type=ReqType.JSON, ret_type=RetType.OBJ)
 
         self.log.info("Test the /deploymentinfo URI")
 
