@@ -11,7 +11,6 @@
 #include <QMetaType>
 #include <QStyle>
 #include <QSystemTrayIcon>
-#include <QTemporaryFile>
 #include <QVariant>
 #ifdef USE_DBUS
 #include <QDBusMetaType>

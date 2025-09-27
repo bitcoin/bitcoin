@@ -9,7 +9,6 @@
 #include <qt/transactiontablemodel.h>
 
 #include <QModelIndex>
-#include <QSettings>
 #include <QString>
 
 TransactionDescDialog::TransactionDescDialog(const QModelIndex &idx, QWidget *parent) :

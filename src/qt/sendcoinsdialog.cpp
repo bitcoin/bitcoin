@@ -37,10 +37,8 @@ using wallet::DEFAULT_PAY_TX_FEE;
 #include <fstream>
 #include <memory>
 
-#include <QFontMetrics>
 #include <QScrollBar>
 #include <QSettings>
-#include <QTextDocument>
 
 #define SEND_CONFIRM_DELAY   3
 

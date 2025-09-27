@@ -10,9 +10,6 @@
 #include <qt/guiutil.h>
 #include <qt/qrimagewidget.h>
 
-#include <QPainter>
-#include <QPixmap>
-
 #if defined(HAVE_CONFIG_H)
 #include <config/bitcoin-config.h> /* for USE_QRCODE */
 #endif

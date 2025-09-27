@@ -15,11 +15,8 @@
 #include <string>
 #include <vector>
 
-#include <QMessageBox>
 #include <QMutex>
-#include <QProgressDialog>
 #include <QThread>
-#include <QTimer>
 #include <QString>
 
 class ClientModel;

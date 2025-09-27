@@ -25,7 +25,7 @@
 
 #include <QAbstractItemDelegate>
 #include <QApplication>
-#include <QDateTime>
+#include <QMessageBox>
 #include <QPainter>
 #include <QSettings>
 #include <QStatusTipEvent>

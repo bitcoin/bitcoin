@@ -28,7 +28,6 @@
 #include <QPainter>
 #include <QScreen>
 
-
 SplashScreen::SplashScreen(const NetworkStyle *networkStyle) :
     QWidget(), curAlignment(0)
 {

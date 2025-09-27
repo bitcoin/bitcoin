@@ -13,9 +13,9 @@
 
 #include <univalue.h>
 
+#include <QClipboard>
 #include <QMessageBox>
 #include <QTableWidgetItem>
-#include <QtGui/QClipboard>
 
 template <typename T>
 class CMasternodeListWidgetItem : public QTableWidgetItem

@@ -11,7 +11,6 @@
 
 #include <utility>
 
-#include <QList>
 #include <QTimer>
 
 PeerTableModel::PeerTableModel(interfaces::Node& node, QObject* parent) :

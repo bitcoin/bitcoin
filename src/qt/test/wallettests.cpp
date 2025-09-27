@@ -33,12 +33,13 @@
 #include <QAction>
 #include <QApplication>
 #include <QCheckBox>
+#include <QDialogButtonBox>
+#include <QListView>
 #include <QPushButton>
+#include <QTableView>
+#include <QTextEdit>
 #include <QTimer>
 #include <QVBoxLayout>
-#include <QTextEdit>
-#include <QListView>
-#include <QDialogButtonBox>
 
 using wallet::AddWallet;
 using wallet::CWallet;

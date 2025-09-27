@@ -8,7 +8,6 @@
 #include <consensus/amount.h>
 #include <qt/bitcoinunits.h>
 
-#include <QValidator>
 #include <QWidget>
 
 class AmountLineEdit;

@@ -16,7 +16,6 @@
 #include <QObject>
 #include <QProcess>
 #include <QString>
-#include <QThread>
 
 InitExecutor::InitExecutor(interfaces::Node& node)
     : QObject(), m_node(node)

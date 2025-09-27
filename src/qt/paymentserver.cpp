@@ -24,16 +24,14 @@
 #include <cstdlib>
 #include <memory>
 
-#include <QApplication>
 #include <QByteArray>
 #include <QDataStream>
-#include <QDebug>
 #include <QFile>
 #include <QFileOpenEvent>
 #include <QHash>
-#include <QList>
 #include <QLocalServer>
 #include <QLocalSocket>
+#include <QMessageBox>
 #include <QStringList>
 #include <QUrlQuery>
 

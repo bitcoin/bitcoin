@@ -23,12 +23,11 @@
 #include <wallet/coinselection.h>
 #include <wallet/wallet.h>
 
-#include <QApplication>
-#include <QCheckBox>
 #include <QCursor>
 #include <QDialogButtonBox>
 #include <QFlags>
 #include <QIcon>
+#include <QMessageBox>
 #include <QSettings>
 #include <QTreeWidget>
 

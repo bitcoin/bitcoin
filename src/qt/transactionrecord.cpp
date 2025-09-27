@@ -11,9 +11,7 @@
 
 #include <wallet/ismine.h>
 
-#include <stdint.h>
-
-#include <QDateTime>
+#include <cstdint>
 
 using wallet::ISMINE_ALL;
 using wallet::ISMINE_SPENDABLE;

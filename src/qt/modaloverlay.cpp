@@ -9,7 +9,6 @@
 #include <qt/guiutil.h>
 
 #include <QEasingCurve>
-#include <QPropertyAnimation>
 #include <QResizeEvent>
 
 ModalOverlay::ModalOverlay(bool enable_wallet, QWidget *parent) :
