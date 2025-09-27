@@ -2302,7 +2302,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         extra_debug_rotation_info = False
         if extra_debug_rotation_info:
-            # these logs are useful to debug quorum rotation but it is not usefull for all other cases
+            # these logs are useful to debug quorum rotation but it is not useful for all other cases
             self.log.info("quorum_info_0:"+str(quorum_info_0))
             self.log.info("quorum_info_1:"+str(quorum_info_1))
 

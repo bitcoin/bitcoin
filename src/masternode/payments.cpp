@@ -41,7 +41,7 @@ CAmount PlatformShare(const CAmount reward)
     CAmount masternodeReward = GetMasternodePayment(nBlockHeight, blockSubsidy + feeReward, fV20Active);
 
     // Credit Pool doesn't exist before V20. If any part of reward will re-allocated to credit pool before v20
-    // activation these fund will be just permanently lost. Applyable for devnets, regtest, testnet
+    // activation these fund will be just permanently lost. Applicable for devnets, regtest, testnet
     if (fV20Active && DeploymentActiveAfter(pindexPrev, m_consensus_params, Consensus::DEPLOYMENT_MN_RR)) {
         CAmount masternodeSubsidyReward = GetMasternodePayment(nBlockHeight, blockSubsidy, fV20Active);
         const CAmount platformReward = PlatformShare(masternodeSubsidyReward);

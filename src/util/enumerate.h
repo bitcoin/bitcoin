@@ -10,7 +10,7 @@
 /**
  * similar to python's enumerate(iterable).
  * @tparam T type of iterable, automatically deduced
- * @tparam TIter begin of containter
+ * @tparam TIter begin of container
  * @param iterable an iterable object, can be a temporary
  * @return struct containing a size_t index, and it's element in iterable
  */
