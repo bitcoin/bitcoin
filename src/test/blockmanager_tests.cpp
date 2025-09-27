@@ -137,6 +137,68 @@ BOOST_FIXTURE_TEST_CASE(blockmanager_block_data_availability, TestChain100Setup)
     BOOST_CHECK(!blockman.CheckBlockDataAvailability(tip, *last_pruned_block));
 }
 
+BOOST_FIXTURE_TEST_CASE(blockmanager_block_data_part, TestChain100Setup)
+{
+    LOCK(::cs_main);
+    auto& chainman = m_node.chainman;
+    auto& blockman = chainman->m_blockman;
+    const CBlockIndex& tip = *chainman->ActiveTip();
+    const FlatFilePos tip_block_pos = tip.GetBlockPos();
+
+    std::vector<std::byte> block{};
+    BOOST_CHECK(blockman.ReadRawBlock(block, tip_block_pos));
+    BOOST_CHECK_GE(block.size(), 200);
+
+    std::vector<std::byte> block_part{};
+    const auto read_tip_part{[&](auto part_offset, auto part_size) {
+        block_part.clear();
+        return blockman.ReadRawBlockPart(block_part, tip_block_pos, part_offset, part_size);
+    }};
+
+    BOOST_CHECK(!read_tip_part(0, std::nullopt));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.begin(), block.end());
+
+    BOOST_CHECK(!read_tip_part(1, std::nullopt));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.begin() + 1, block.end());
+
+    BOOST_CHECK(!read_tip_part(10, std::nullopt));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.begin() + 10, block.end());
+
+    BOOST_CHECK(!read_tip_part(0, block.size()));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.begin(), block.end());
+
+    BOOST_CHECK(!read_tip_part(0, block.size() - 1));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.begin(), block.end() - 1);
+
+    BOOST_CHECK(!read_tip_part(0, block.size() - 10));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.begin(), block.end() - 10);
+
+    BOOST_CHECK(!read_tip_part(0, 20));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.begin(), block.begin() + 20);
+
+    BOOST_CHECK(!read_tip_part(1, block.size() - 1));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.begin() + 1, block.end());
+
+    BOOST_CHECK(!read_tip_part(10, 20));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.begin() + 10, block.begin() + 30);
+
+    BOOST_CHECK(!read_tip_part(block.size() - 1, 1));
+    BOOST_CHECK_EQUAL_COLLECTIONS(block_part.begin(), block_part.end(), block.end() - 1, block.end());
+
+    // check errors
+    BOOST_CHECK(read_tip_part(0, 0));
+    BOOST_CHECK(read_tip_part(0, block.size() + 1));
+    BOOST_CHECK(read_tip_part(1, block.size()));
+    BOOST_CHECK(read_tip_part(2, block.size() - 1));
+    BOOST_CHECK(read_tip_part(block.size() - 2, 3));
+    BOOST_CHECK(read_tip_part(block.size() - 1, 2));
+    BOOST_CHECK(read_tip_part(block.size(), 0));
+    BOOST_CHECK(read_tip_part(block.size(), 1));
+    BOOST_CHECK(read_tip_part(block.size() + 1, 0));
+    BOOST_CHECK(read_tip_part(block.size() + 1, 1));
+    BOOST_CHECK(read_tip_part(block.size() + 2, 2));
+}
+
 BOOST_FIXTURE_TEST_CASE(blockmanager_readblock_hash_mismatch, TestingSetup)
 {
     CBlockIndex index;
