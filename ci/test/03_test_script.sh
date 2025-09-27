@@ -91,11 +91,18 @@ if [ "$USE_BUSY_BOX" = "true" ]; then
   patch --help
 fi
 
-# Make sure default datadir does not exist and is never read by creating a dummy file
+# Set DATADIR path based on CI_OS_NAME
 if [ "$CI_OS_NAME" == "macos" ]; then
-  echo > "${HOME}/Library/Application Support/Bitcoin"
+  DATADIR="${HOME}/Library/Application Support/Bitcoin"
 else
-  echo > "${HOME}/.bitcoin"
+  DATADIR="${HOME}/.bitcoin"
+fi
+
+# Check if DATADIR exists (file or directory), skip if it does
+if [ -e "$DATADIR" ]; then
+  echo "Skipping creation of $DATADIR; it already exists."
+else
+  echo > "$DATADIR"
 fi
 
 if [ -z "$NO_DEPENDS" ]; then
