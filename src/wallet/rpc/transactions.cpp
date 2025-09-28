@@ -436,7 +436,7 @@ static std::vector<RPCResult> TransactionDescriptionString()
             {RPCResult::Type::NUM_TIME, "time", "The transaction time expressed in " + UNIX_EPOCH_TIME + "."},
             {RPCResult::Type::NUM_TIME, "timereceived", "The time received expressed in " + UNIX_EPOCH_TIME + ". Available \n"
                                                "for 'send' and 'receive' category of transactions."},
-            {RPCResult::Type::STR, "comment", /*optional=*/"If a comment is associated with the transaction."}};
+            {RPCResult::Type::STR, "comment", /*optional=*/true, "If a comment is associated with the transaction."}};
 }
 
 RPCHelpMan listtransactions()
