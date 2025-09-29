@@ -105,7 +105,7 @@ jobs:
     name: ${{ matrix.job-name }}
     # Use any image to support the xcode-select below, but hardcode version to avoid silent upgrades (and breaks).
     # See: https://github.com/actions/runner-images#available-images.
-    runs-on: macos-14
+    runs-on: macos-15
 
     # When a contributor maintains a fork of the repo, any pull request they make
     # to their own fork, or to the main repository, will trigger two CI runs:
@@ -123,10 +123,10 @@ jobs:
         include:
           - job-type: standard
             file-env: './ci/test/00_setup_env_mac_native.sh'
-            job-name: 'macOS 14 native, arm64, no depends, sqlite only, gui'
+            job-name: 'macOS native, no depends, sqlite only, gui'
           - job-type: fuzz
             file-env: './ci/test/00_setup_env_mac_native_fuzz.sh'
-            job-name: 'macOS 14 native, arm64, fuzz'
+            job-name: 'macOS native, fuzz'
 
     env:
       DANGER_RUN_CI_ON_HOST: 1
@@ -145,8 +145,8 @@ jobs:
           # Use the earliest Xcode supported by the version of macOS denoted in
           # doc/release-notes-empty-template.md and providing at least the
           # minimum clang version denoted in doc/dependencies.md.
-          # See: https://developer.apple.com/documentation/xcode-release-notes/xcode-15-release-notes
-          sudo xcode-select --switch /Applications/Xcode_15.0.app
+          # See: https://developer.apple.com/documentation/xcode-release-notes/xcode-16-release-notes
+          sudo xcode-select --switch /Applications/Xcode_16.0.app
           clang --version
 
       - name: Install Homebrew packages
