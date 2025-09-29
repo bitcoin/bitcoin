@@ -295,7 +295,6 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
         std::set<CTransactionRef> added;
         auto txr = std::make_shared<TransactionsDelta>(removed, added);
         node.validation_signals->RegisterSharedValidationInterface(txr);
-        const bool bypass_limits = fuzzed_data_provider.ConsumeBool();
 
         // Make sure ProcessNewPackage on one transaction works.
         // The result is not guaranteed to be the same as what is returned by ATMP.
@@ -310,7 +309,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
                    it->second.m_result_type == MempoolAcceptResult::ResultType::INVALID);
         }
 
-        const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, GetTime(), bypass_limits, /*test_accept=*/false));
+        const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, GetTime(), /*bypass_limits=*/false, /*test_accept=*/false));
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
         node.validation_signals->SyncWithValidationInterfaceQueue();
         node.validation_signals->UnregisterSharedValidationInterface(txr);
@@ -393,6 +392,9 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
 
     chainstate.SetMempool(&tx_pool);
 
+    // If we ever bypass limits, do not do TRUC invariants checks
+    bool ever_bypassed_limits{false};
+
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 300)
     {
         const auto mut_tx = ConsumeTransaction(fuzzed_data_provider, txids);
@@ -411,13 +413,17 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
             tx_pool.PrioritiseTransaction(txid.ToUint256(), delta);
         }
 
+        const bool bypass_limits{fuzzed_data_provider.ConsumeBool()};
+        ever_bypassed_limits |= bypass_limits;
+
         const auto tx = MakeTransactionRef(mut_tx);
-        const bool bypass_limits = fuzzed_data_provider.ConsumeBool();
         const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, GetTime(), bypass_limits, /*test_accept=*/false));
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
         if (accepted) {
             txids.push_back(tx->GetHash());
-            CheckMempoolTRUCInvariants(tx_pool);
+            if (!ever_bypassed_limits) {
+                CheckMempoolTRUCInvariants(tx_pool);
+            }
         }
     }
     Finish(fuzzed_data_provider, tx_pool, chainstate);
