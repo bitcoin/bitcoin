@@ -86,6 +86,16 @@ static void HandleDeploymentArgs(const ArgsManager& args, CChainParams::Deployme
     }
 }
 
+void ReadMainNetArgs(const ArgsManager& args, CChainParams::MainNetOptions& options)
+{
+    HandleDeploymentArgs(args, options.dep_opts);
+}
+
+void ReadTestNetArgs(const ArgsManager& args, CChainParams::TestNetOptions& options)
+{
+    HandleDeploymentArgs(args, options.dep_opts);
+}
+
 void ReadSigNetArgs(const ArgsManager& args, CChainParams::SigNetOptions& options)
 {
     if (!args.GetArgs("-signetseednode").empty()) {
@@ -102,6 +112,7 @@ void ReadSigNetArgs(const ArgsManager& args, CChainParams::SigNetOptions& option
         }
         options.challenge.emplace(*val);
     }
+    HandleDeploymentArgs(args, options.dep_opts);
 }
 
 void ReadRegTestArgs(const ArgsManager& args, CChainParams::RegTestOptions& options)
@@ -122,12 +133,21 @@ const CChainParams &Params() {
 std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, const ChainType chain)
 {
     switch (chain) {
-    case ChainType::MAIN:
-        return CChainParams::Main();
-    case ChainType::TESTNET:
-        return CChainParams::TestNet();
-    case ChainType::TESTNET4:
-        return CChainParams::TestNet4();
+    case ChainType::MAIN: {
+        auto opts = CChainParams::MainNetOptions{};
+        ReadMainNetArgs(args, opts);
+        return CChainParams::Main(opts);
+    }
+    case ChainType::TESTNET: {
+        auto opts = CChainParams::TestNetOptions{};
+        ReadTestNetArgs(args, opts);
+        return CChainParams::TestNet(opts);
+    }
+    case ChainType::TESTNET4: {
+        auto opts = CChainParams::TestNetOptions{};
+        ReadTestNetArgs(args, opts);
+        return CChainParams::TestNet4(opts);
+    }
     case ChainType::SIGNET: {
         auto opts = CChainParams::SigNetOptions{};
         ReadSigNetArgs(args, opts);

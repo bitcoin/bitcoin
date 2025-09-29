@@ -145,6 +145,7 @@ public:
      * SigNetOptions holds configurations for creating a signet CChainParams.
      */
     struct SigNetOptions {
+        DeploymentOptions dep_opts{};
         std::optional<std::vector<uint8_t>> challenge{};
         std::optional<std::vector<std::string>> seeds{};
     };
@@ -158,11 +159,22 @@ public:
         bool enforce_bip94{false};
     };
 
+    struct MainNetOptions {
+        DeploymentOptions dep_opts{};
+    };
+
+    struct TestNetOptions {
+        DeploymentOptions dep_opts{};
+    };
+
     static std::unique_ptr<const CChainParams> RegTest(const RegTestOptions& options);
     static std::unique_ptr<const CChainParams> SigNet(const SigNetOptions& options);
-    static std::unique_ptr<const CChainParams> Main();
-    static std::unique_ptr<const CChainParams> TestNet();
-    static std::unique_ptr<const CChainParams> TestNet4();
+    static std::unique_ptr<const CChainParams> Main(const MainNetOptions& options);
+    static std::unique_ptr<const CChainParams> Main() { const MainNetOptions opts{}; return Main(opts); }
+    static std::unique_ptr<const CChainParams> TestNet(const TestNetOptions& options);
+    static std::unique_ptr<const CChainParams> TestNet() { const TestNetOptions opts{}; return TestNet(opts); }
+    static std::unique_ptr<const CChainParams> TestNet4(const TestNetOptions& options);
+    static std::unique_ptr<const CChainParams> TestNet4() { const TestNetOptions opts{}; return TestNet4(opts); }
 
 protected:
     CChainParams() = default;
