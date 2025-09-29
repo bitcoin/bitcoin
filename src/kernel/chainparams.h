@@ -128,14 +128,6 @@ public:
     const ChainTxData& TxData() const { return chainTxData; }
 
     /**
-     * SigNetOptions holds configurations for creating a signet CChainParams.
-     */
-    struct SigNetOptions {
-        std::optional<std::vector<uint8_t>> challenge{};
-        std::optional<std::vector<std::string>> seeds{};
-    };
-
-    /**
      * VersionBitsParameters holds activation parameters
      */
     struct VersionBitsParameters {
@@ -144,12 +136,24 @@ public:
         int min_activation_height;
     };
 
+    struct DeploymentOptions {
+        std::unordered_map<Consensus::DeploymentPos, VersionBitsParameters> version_bits_parameters{};
+        std::unordered_map<Consensus::BuriedDeployment, int> activation_heights{};
+    };
+
+    /**
+     * SigNetOptions holds configurations for creating a signet CChainParams.
+     */
+    struct SigNetOptions {
+        std::optional<std::vector<uint8_t>> challenge{};
+        std::optional<std::vector<std::string>> seeds{};
+    };
+
     /**
      * RegTestOptions holds configurations for creating a regtest CChainParams.
      */
     struct RegTestOptions {
-        std::unordered_map<Consensus::DeploymentPos, VersionBitsParameters> version_bits_parameters{};
-        std::unordered_map<Consensus::BuriedDeployment, int> activation_heights{};
+        DeploymentOptions dep_opts{};
         bool fastprune{false};
         bool enforce_bip94{false};
     };
@@ -180,6 +184,8 @@ protected:
     std::vector<AssumeutxoData> m_assumeutxo_data;
     ChainTxData chainTxData;
     HeadersSyncParams m_headers_sync_params;
+
+    void ApplyDeploymentOptions(const DeploymentOptions& opts);
 };
 
 std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& pchMessageStart);
