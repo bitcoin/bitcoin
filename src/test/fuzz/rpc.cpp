@@ -167,6 +167,7 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "scantxoutset",
     "sendmsgtopeer", // when no peers are connected, no p2p message is sent
     "sendrawtransaction",
+    "sendrawtransactiontopeer",
     "setmocktime",
     "setnetworkactive",
     "signmessagewithprivkey",
