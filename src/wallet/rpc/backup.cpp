@@ -2039,7 +2039,7 @@ RPCHelpMan listdescriptors()
             spk.pushKV("internal", wallet->GetScriptPubKeyMan(true) == desc_spk_man);
         }
         if (type != std::nullopt) {
-            std::string match = strprintf("/%d'/%s'/0'", BIP32_PURPOSE_FEATURE, Params().ExtCoinType());
+            std::string match = strprintf("/%d'/%s'/4'/0'", BIP32_PURPOSE_FEATURE, Params().ExtCoinType());
             bool is_cj = descriptor.find(match) != std::string::npos;
             if (is_cj) {
                 spk.pushKV("internal", false);

@@ -2100,8 +2100,10 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
 
     // Build descriptor string
     std::string desc_prefix = strprintf("pkh(%s/%d'/%d'", xpub, type == PathDerivationType::DIP0009_CoinJoin ? BIP32_PURPOSE_FEATURE : BIP32_PURPOSE_STANDARD, Params().ExtCoinType());
+    if (type == PathDerivationType::DIP0009_CoinJoin) {
+        desc_prefix += "/4'";
+    }
     std::string desc_suffix = "/*)";
-
     std::string internal_path = (type == PathDerivationType::BIP44_Internal) ? "/1" : "/0";
     std::string desc_str = desc_prefix + "/0'" + internal_path + desc_suffix;
 
