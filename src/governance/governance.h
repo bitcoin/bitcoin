@@ -24,6 +24,7 @@ class CFlatDB;
 class CInv;
 class PeerManager;
 
+class CDeterministicMNList;
 class CDeterministicMNManager;
 class CGovernanceManager;
 class CGovernanceObject;
@@ -35,9 +36,6 @@ class CSporkManager;
 
 static constexpr int RATE_BUFFER_SIZE = 5;
 static constexpr bool DEFAULT_GOVERNANCE_ENABLE{true};
-
-class CDeterministicMNList;
-using CDeterministicMNListPtr = std::shared_ptr<CDeterministicMNList>;
 
 class CRateCheckBuffer
 {
@@ -177,7 +175,7 @@ protected:
     vote_cmm_t cmmapOrphanVotes;
     txout_m_t mapLastMasternodeObject;
     // used to check for changed voting keys
-    CDeterministicMNListPtr lastMNListForVotingKeys;
+    std::shared_ptr<CDeterministicMNList> lastMNListForVotingKeys;
 
 public:
     GovernanceStore();

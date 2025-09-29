@@ -9,6 +9,8 @@
 #include <sync.h>
 #include <util/system.h>
 
+#include <evo/types.h>
+
 #include <QMenu>
 #include <QTimer>
 #include <QWidget>
@@ -20,9 +22,6 @@ namespace Ui
 {
 class MasternodeList;
 }
-
-class CDeterministicMN;
-using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
 class ClientModel;
 class WalletModel;

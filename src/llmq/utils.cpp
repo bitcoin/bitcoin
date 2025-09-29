@@ -4,18 +4,19 @@
 
 #include <llmq/utils.h>
 
+#include <bls/bls.h>
+#include <evo/deterministicmns.h>
 #include <llmq/options.h>
 #include <llmq/snapshot.h>
-
-#include <bls/bls.h>
-#include <chainparams.h>
-#include <deploymentstatus.h>
-#include <evo/deterministicmns.h>
+#include <llmq/types.h>
 #include <masternode/meta.h>
-#include <net.h>
-#include <random.h>
 #include <util/irange.h>
 #include <util/ranges.h>
+
+#include <chainparams.h>
+#include <deploymentstatus.h>
+#include <net.h>
+#include <random.h>
 #include <util/time.h>
 #include <util/underlying.h>
 
@@ -23,11 +24,6 @@
 #include <optional>
 
 class CBLSSignature;
-namespace llmq {
-class CQuorum;
-using CQuorumPtr = std::shared_ptr<CQuorum>;
-using CQuorumCPtr = std::shared_ptr<const CQuorum>;
-} // namespace llmq
 
 /**
  * Forward declarations

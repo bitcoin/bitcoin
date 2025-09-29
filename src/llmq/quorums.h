@@ -5,17 +5,20 @@
 #ifndef BITCOIN_LLMQ_QUORUMS_H
 #define BITCOIN_LLMQ_QUORUMS_H
 
-#include <llmq/params.h>
-
 #include <bls/bls.h>
 #include <bls/bls_worker.h>
 #include <ctpl_stl.h>
-#include <gsl/pointers.h>
+#include <evo/types.h>
+#include <llmq/params.h>
+#include <llmq/types.h>
+#include <unordered_lru_cache.h>
+
 #include <protocol.h>
 #include <saltedhasher.h>
 #include <util/threadinterrupt.h>
-#include <unordered_lru_cache.h>
 #include <util/time.h>
+
+#include <gsl/pointers.h>
 
 #include <atomic>
 #include <map>
@@ -34,8 +37,6 @@ class CEvoDB;
 class CMasternodeSync;
 class CNode;
 class CSporkManager;
-
-using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
 namespace llmq
 {
@@ -169,14 +170,6 @@ public:
  * will also contain the secret key share and the quorum verification vector. The quorum vvec is then used to recover
  * the public key shares of individual members, which are needed to verify signature shares of these members.
  */
-
-class CQuorum;
-using CQuorumPtr = std::shared_ptr<CQuorum>;
-using CQuorumCPtr = std::shared_ptr<const CQuorum>;
-
-class CFinalCommitment;
-using CFinalCommitmentPtr = std::unique_ptr<CFinalCommitment>;
-
 
 class CQuorum
 {
