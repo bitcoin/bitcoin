@@ -9,6 +9,7 @@ from decimal import Decimal
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
     COIN,
+    NODE_REPLACE_BY_FEE,
     SEQUENCE_FINAL,
 )
 from test_framework.test_framework import BitcoinTestFramework
@@ -65,7 +66,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
         self.log.info("Running test service flag")
         def test_service_flag():
-            NODE_REPLACE_BY_FEE = (1 << 26)
             for i in range(3):
                 assert not (int(self.nodes[i].getnetworkinfo()['localservices'], 0x10) & NODE_REPLACE_BY_FEE)
                 assert 'REPLACE_BY_FEE?' not in self.nodes[i].getnetworkinfo()['localservicesnames']
