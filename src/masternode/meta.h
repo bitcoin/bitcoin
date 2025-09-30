@@ -35,7 +35,7 @@ class CMasternodeMetaInfo
     friend class CMasternodeMetaMan;
 
 private:
-    mutable RecursiveMutex cs;
+    mutable Mutex cs;
 
     uint256 proTxHash GUARDED_BY(cs);
 
@@ -127,14 +127,14 @@ class MasternodeMetaStore
 protected:
     static const std::string SERIALIZATION_VERSION_STRING;
 
-    mutable RecursiveMutex cs;
+    mutable Mutex cs;
     std::map<uint256, CMasternodeMetaInfoPtr> metaInfos GUARDED_BY(cs);
     // keep track of dsq count to prevent masternodes from gaming coinjoin queue
     std::atomic<int64_t> nDsqCount{0};
 
 public:
     template<typename Stream>
-    void Serialize(Stream &s) const
+    void Serialize(Stream &s) const LOCKS_EXCLUDED(cs)
     {
         LOCK(cs);
         std::vector<CMasternodeMetaInfo> tmpMetaInfo;
@@ -145,7 +145,7 @@ public:
     }
 
     template<typename Stream>
-    void Unserialize(Stream &s)
+    void Unserialize(Stream &s) LOCKS_EXCLUDED(cs)
     {
         Clear();
 
@@ -163,14 +163,14 @@ public:
         }
     }
 
-    void Clear()
+    void Clear() LOCKS_EXCLUDED(cs)
     {
         LOCK(cs);
 
         metaInfos.clear();
     }
 
-    std::string ToString() const;
+    std::string ToString() const LOCKS_EXCLUDED(cs);
 };
 
 /**
@@ -233,7 +233,7 @@ public:
 
     bool IsValid() const { return is_valid; }
 
-    CMasternodeMetaInfoPtr GetMetaInfo(const uint256& proTxHash, bool fCreate = true);
+    CMasternodeMetaInfoPtr GetMetaInfo(const uint256& proTxHash, bool fCreate = true) LOCKS_EXCLUDED(cs);
 
     int64_t GetDsqCount() const { return nDsqCount; }
     int64_t GetDsqThreshold(const uint256& proTxHash, int nMnCount);
@@ -242,13 +242,13 @@ public:
     void DisallowMixing(const uint256& proTxHash);
 
     bool AddGovernanceVote(const uint256& proTxHash, const uint256& nGovernanceObjectHash);
-    void RemoveGovernanceObject(const uint256& nGovernanceObjectHash);
+    void RemoveGovernanceObject(const uint256& nGovernanceObjectHash) LOCKS_EXCLUDED(cs);
 
-    std::vector<uint256> GetAndClearDirtyGovernanceObjectHashes();
+    std::vector<uint256> GetAndClearDirtyGovernanceObjectHashes() LOCKS_EXCLUDED(cs);
 
-    bool AlreadyHavePlatformBan(const uint256& inv_hash) const;
-    std::optional<PlatformBanMessage> GetPlatformBan(const uint256& inv_hash) const;
-    void RememberPlatformBan(const uint256& inv_hash, PlatformBanMessage&& msg);
+    bool AlreadyHavePlatformBan(const uint256& inv_hash) const LOCKS_EXCLUDED(cs);
+    std::optional<PlatformBanMessage> GetPlatformBan(const uint256& inv_hash) const LOCKS_EXCLUDED(cs);
+    void RememberPlatformBan(const uint256& inv_hash, PlatformBanMessage&& msg) LOCKS_EXCLUDED(cs);
 };
 
 #endif // BITCOIN_MASTERNODE_META_H
