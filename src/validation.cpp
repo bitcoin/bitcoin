@@ -1083,7 +1083,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // Even though just checking direct mempool parents for inheritance would be sufficient, we
     // check using the full ancestor set here because it's more convenient to use what we have
     // already calculated.
-    if (m_pool.m_opts.truc_policy == TRUCPolicy::Enforce) {
+    if (m_pool.m_opts.truc_policy == TRUCPolicy::Enforce && !ignore_rejects.count("truc")) {
     if (const auto err{SingleTRUCChecks(ws.m_ptx, "truc-", reason, ignore_rejects, ws.m_ancestors, ws.m_conflicts, ws.m_vsize)}) {
         // Single transaction contexts only.
         if (args.m_allow_sibling_eviction && err->second != nullptr) {
