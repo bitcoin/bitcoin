@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <random>
 
 namespace {
@@ -86,6 +87,22 @@ util::Result<std::unique_ptr<StatsdClient>> StatsdClient::make(const ArgsManager
         return std::make_unique<StatsdClient>();
     }
 
+    const int64_t batch_size = args.GetIntArg("-statsbatchsize", DEFAULT_STATSD_BATCH_SIZE);
+    if (batch_size < 0) {
+        return util::Error{_("-statsbatchsize cannot be configured with a negative value.")};
+    }
+
+    const int64_t interval_ms = args.GetIntArg("-statsduration", DEFAULT_STATSD_DURATION);
+    if (interval_ms < 0) {
+        return util::Error{_("-statsduration cannot be configured with a negative value.")};
+    }
+
+    const int64_t port = args.GetIntArg("-statsport", DEFAULT_STATSD_PORT);
+    if (port < 1 || port > std::numeric_limits<uint16_t>::max()) {
+        return util::Error{strprintf(_("Port must be between %d and %d, supplied %d"), 1,
+                                       std::numeric_limits<uint16_t>::max(), port)};
+    }
+
     auto sanitize_string = [](std::string string) {
         // Remove key delimiters from the front and back as they're added back in
         // the constructor
@@ -98,9 +115,7 @@ util::Result<std::unique_ptr<StatsdClient>> StatsdClient::make(const ArgsManager
 
     std::optional<bilingual_str> error_opt;
     auto statsd_ptr = std::make_unique<StatsdClientImpl>(
-        host, args.GetIntArg("-statsport", DEFAULT_STATSD_PORT),
-        args.GetIntArg("-statsbatchsize", DEFAULT_STATSD_BATCH_SIZE),
-        args.GetIntArg("-statsduration", DEFAULT_STATSD_DURATION),
+        host, port, batch_size, interval_ms,
         sanitize_string(args.GetArg("-statsprefix", DEFAULT_STATSD_PREFIX)),
         sanitize_string(args.GetArg("-statssuffix", DEFAULT_STATSD_SUFFIX)), error_opt);
     if (error_opt.has_value()) {
