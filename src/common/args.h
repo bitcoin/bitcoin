@@ -162,6 +162,9 @@ private:
      */
     bool UseDefaultSection(const std::string& arg) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
 
+    bool ProcessOptionKey(std::string& key, std::optional<std::string>& val, std::string& error)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
 protected:
     [[nodiscard]] bool ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys = false) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
     [[nodiscard]] bool ReadConfigString(const std::string& str_config) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
