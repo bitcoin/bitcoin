@@ -194,8 +194,11 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
                     (coin.IsSpent() ? added_an_entry : updated_an_entry) = true;
                     coin = newcoin;
                 }
-                bool is_overwrite = !coin.IsSpent() || m_rng.rand32() & 1;
-                stack.back()->AddCoin(COutPoint(txid, 0), std::move(newcoin), is_overwrite);
+                if (COutPoint op(txid, 0); m_rng.randbool()) {
+                    stack.back()->EmplaceCoinInternalDANGER(std::move(op), std::move(newcoin));
+                } else {
+                    stack.back()->AddCoin(std::move(op), std::move(newcoin), /*possible_overwrite=*/!coin.IsSpent() || m_rng.randbool());
+                }
             } else {
                 // Spend the coin.
                 removed_an_entry = true;
