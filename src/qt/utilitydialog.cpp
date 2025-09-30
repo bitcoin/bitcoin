@@ -62,7 +62,8 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, HelpMode helpMode) :
         ui->helpMessage->setVisible(false);
     } else if (helpMode == cmdline) {
         setWindowTitle(tr("Command-line options"));
-        QString header = "Usage:  dash-qt [command-line options]                     \n";
+        QString header = "Usage: dash-qt [command-line options] [URI]\n\n"
+                         "Optional URI is a Dash address in BIP21 URI format.\n";
         QTextCursor cursor(ui->helpMessage->document());
         cursor.insertText(version);
         cursor.insertBlock();
