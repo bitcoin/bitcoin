@@ -90,9 +90,7 @@ bool BanMan::IsBanned(const CNetAddr& net_addr)
 {
     auto current_time = GetTime();
     LOCK(m_banned_mutex);
-    for (const auto& it : m_banned) {
-        CSubNet sub_net = it.first;
-        CBanEntry ban_entry = it.second;
+    for (const auto& [sub_net, ban_entry] : m_banned) {
 
         if (current_time < ban_entry.nBanUntil && sub_net.Match(net_addr)) {
             return true;
@@ -185,12 +183,10 @@ void BanMan::SweepBanned()
 
     int64_t now = GetTime();
     bool notify_ui = false;
-    banmap_t::iterator it = m_banned.begin();
-    while (it != m_banned.end()) {
-        CSubNet sub_net = (*it).first;
-        CBanEntry ban_entry = (*it).second;
+    for (auto it = m_banned.begin(); it != m_banned.end(); ) {
+        const auto& [sub_net, ban_entry] = *it;
         if (!sub_net.IsValid() || now > ban_entry.nBanUntil) {
-            m_banned.erase(it++);
+            it = m_banned.erase(it);
             m_is_dirty = true;
             notify_ui = true;
             LogDebug(BCLog::NET, "Removed banned node address/subnet: %s\n", sub_net.ToString());
