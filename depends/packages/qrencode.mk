@@ -2,7 +2,7 @@ package=qrencode
 $(package)_version=4.1.1
 $(package)_download_path=https://github.com/fukuchi/libqrencode/archive/refs/tags/
 $(package)_download_file=v$($(package)_version).tar.gz
-$(package)_file_name=$(package)-$($(package)_version).tar.gz
+$(package)_file_name=$(package)-$($(package)_version)-github.tar.gz
 $(package)_sha256_hash=5385bc1b8c2f20f3b91d258bf8ccc8cf62023935df2d2676b5b67049f31a049c
 $(package)_patches=cmake_fixups.patch
 
