@@ -19,41 +19,33 @@
     v2 = std::rotl(v2, 32); \
 } while (0)
 
-CSipHasher::CSipHasher(uint64_t k0, uint64_t k1)
-{
-    v[0] = C0 ^ k0;
-    v[1] = C1 ^ k1;
-    v[2] = C2 ^ k0;
-    v[3] = C3 ^ k1;
-    count = 0;
-    tmp = 0;
-}
+CSipHasher::CSipHasher(uint64_t k0, uint64_t k1) : m_state{k0, k1} {}
 
 CSipHasher& CSipHasher::Write(uint64_t data)
 {
-    uint64_t v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
+    uint64_t v0 = m_state.v[0], v1 = m_state.v[1], v2 = m_state.v[2], v3 = m_state.v[3];
 
-    assert(count % 8 == 0);
+    assert(m_count % 8 == 0);
 
     v3 ^= data;
     SIPROUND;
     SIPROUND;
     v0 ^= data;
 
-    v[0] = v0;
-    v[1] = v1;
-    v[2] = v2;
-    v[3] = v3;
+    m_state.v[0] = v0;
+    m_state.v[1] = v1;
+    m_state.v[2] = v2;
+    m_state.v[3] = v3;
 
-    count += 8;
+    m_count += 8;
     return *this;
 }
 
 CSipHasher& CSipHasher::Write(std::span<const unsigned char> data)
 {
-    uint64_t v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
-    uint64_t t = tmp;
-    uint8_t c = count;
+    uint64_t v0 = m_state.v[0], v1 = m_state.v[1], v2 = m_state.v[2], v3 = m_state.v[3];
+    uint64_t t = m_tmp;
+    uint8_t c = m_count;
 
     while (data.size() > 0) {
         t |= uint64_t{data.front()} << (8 * (c % 8));
@@ -68,21 +60,21 @@ CSipHasher& CSipHasher::Write(std::span<const unsigned char> data)
         data = data.subspan(1);
     }
 
-    v[0] = v0;
-    v[1] = v1;
-    v[2] = v2;
-    v[3] = v3;
-    count = c;
-    tmp = t;
+    m_state.v[0] = v0;
+    m_state.v[1] = v1;
+    m_state.v[2] = v2;
+    m_state.v[3] = v3;
+    m_count = c;
+    m_tmp = t;
 
     return *this;
 }
 
 uint64_t CSipHasher::Finalize() const
 {
-    uint64_t v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
+    uint64_t v0 = m_state.v[0], v1 = m_state.v[1], v2 = m_state.v[2], v3 = m_state.v[3];
 
-    uint64_t t = tmp | (((uint64_t)count) << 56);
+    uint64_t t = m_tmp | (((uint64_t)m_count) << 56);
 
     v3 ^= t;
     SIPROUND;
@@ -98,7 +90,7 @@ uint64_t CSipHasher::Finalize() const
 
 uint64_t PresaltedSipHasher::operator()(const uint256& val) const noexcept
 {
-    uint64_t v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
+    uint64_t v0 = m_state.v[0], v1 = m_state.v[1], v2 = m_state.v[2], v3 = m_state.v[3];
     uint64_t d = val.GetUint64(0);
     v3 ^= d;
 
@@ -135,7 +127,7 @@ uint64_t PresaltedSipHasher::operator()(const uint256& val) const noexcept
 /** Specialized implementation for efficiency */
 uint64_t PresaltedSipHasher::operator()(const uint256& val, uint32_t extra) const noexcept
 {
-    uint64_t v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
+    uint64_t v0 = m_state.v[0], v1 = m_state.v[1], v2 = m_state.v[2], v3 = m_state.v[3];
     uint64_t d = val.GetUint64(0);
     v3 ^= d;
     SIPROUND;
