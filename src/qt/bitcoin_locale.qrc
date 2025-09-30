@@ -35,8 +35,6 @@
         <file alias="fil">locale/bitcoin_fil.qm</file>
         <file alias="fo">locale/bitcoin_fo.qm</file>
         <file alias="fr">locale/bitcoin_fr.qm</file>
-        <file alias="fr_CM">locale/bitcoin_fr_CM.qm</file>
-        <file alias="fr_LU">locale/bitcoin_fr_LU.qm</file>
         <file alias="ga">locale/bitcoin_ga.qm</file>
         <file alias="ga_IE">locale/bitcoin_ga_IE.qm</file>
         <file alias="gd">locale/bitcoin_gd.qm</file>

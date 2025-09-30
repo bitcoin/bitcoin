@@ -55,7 +55,7 @@ class P2POutEvict(BitcoinTestFramework):
         self.log.info("Test that the peer gets evicted")
         peer.wait_for_disconnect()
 
-        self.log.info("Create an outbound connection and send header but never catch up")
+        self.log.info("Create an outbound connection and send header but the peer never catches up")
         # Mimic a node that just falls behind for long enough
         # This should also apply for a node doing IBD that does not catch up in time
         # Connect a peer and make it send us headers ending in our tip's parent
@@ -75,7 +75,7 @@ class P2POutEvict(BitcoinTestFramework):
         self.log.info("Create an outbound connection and keep lagging behind, but not too much")
         # Test that if the peer never catches up with our current tip, but it does with the
         # expected work that we set when setting the timer (that is, our tip at the time)
-        # we do not disconnect the peer
+        # the node does not disconnect the peer
         peer = node.add_outbound_p2p_connection(P2PInterface(), p2p_idx=0, connection_type="outbound-full-relay")
 
         self.log.info("Mine a block so our peer starts lagging")
@@ -83,11 +83,12 @@ class P2POutEvict(BitcoinTestFramework):
         best_block_hash = self.generateblock(node, output="raw(42)", transactions=[])["hash"]
         peer.sync_with_ping()
 
-        self.log.info("Keep catching up with the old tip and check that we are not evicted")
+        self.log.info("The peer keeps catching up with the old tip; check that the node does not evict the peer")
         for i in range(10):
             # Generate an additional block so the peers is 2 blocks behind
             prev_header = from_hex(CBlockHeader(), node.getblockheader(best_block_hash, False))
             best_block_hash = self.generateblock(node, output="raw(42)", transactions=[])["hash"]
+            tip_header = from_hex(CBlockHeader(), node.getblockheader(best_block_hash, False))
             peer.sync_with_ping()
 
             # Advance time but not enough to evict the peer
@@ -95,21 +96,21 @@ class P2POutEvict(BitcoinTestFramework):
             node.setmocktime(cur_mock_time)
             peer.sync_with_ping()
 
-            # Wait until we get out last call (by receiving a getheaders)
+            # Make the peer wait until it gets node's last call (by receiving a getheaders)
             peer.wait_for_getheaders(block_hash=prev_prev_hash)
 
-            # Send a header with the previous tip (so we go back to 1 block behind)
+            # The peer sends a header with the previous tip (so the peer goes back to 1 block behind)
             peer.send_and_ping(msg_headers([prev_header]))
-            prev_prev_hash = tip_header.hash
+            prev_prev_hash = tip_header.hashPrevBlock
 
         self.log.info("Create an outbound connection and take some time to catch up, but do it in time")
         # Check that if the peer manages to catch up within time, the timeouts are removed (and the peer is not disconnected)
-        # We are reusing the peer from the previous case which already sent us a valid (but old) block and whose timer is ticking
+        # We are reusing the peer from the previous case which already sent the node a valid (but old) block and whose timer is ticking
 
-        # Send an updated headers message matching our tip
+        # Make the peer send an updated headers message matching our tip
         peer.send_and_ping(msg_headers([from_hex(CBlockHeader(), node.getblockheader(best_block_hash, False))]))
 
-        # Wait for long enough for the timeouts to have triggered and check that we are still connected
+        # Wait for long enough for the timeouts to have triggered and check that the peer is still connected
         cur_mock_time += (CHAIN_SYNC_TIMEOUT + 1)
         node.setmocktime(cur_mock_time)
         peer.sync_with_ping()
@@ -122,8 +123,10 @@ class P2POutEvict(BitcoinTestFramework):
 
     def test_outbound_eviction_protected(self):
         # This tests the eviction logic for **protected** outbound peers (that is, PeerManagerImpl::ConsiderEviction)
-        # Outbound connections are flagged as protected as long as they have sent us a connecting block with at least as
-        # much work as our current tip and we have enough empty protected_peers slots.
+        # Outbound connections are flagged as protected if:
+        #   - The peer sends a connecting block with at least as much work as our current tip.
+        #   - There are still available slots in the node's protected_peers list.
+        # This test ensures that such protected outbound peers are not disconnected even after chain sync and headers timeouts.
         node = self.nodes[0]
         cur_mock_time = node.mocktime
         tip_header = from_hex(CBlockHeader(), node.getblockheader(node.getbestblockhash(), False))
@@ -144,7 +147,7 @@ class P2POutEvict(BitcoinTestFramework):
         peer.wait_for_getheaders(block_hash=tip_header.hashPrevBlock)
         cur_mock_time += (HEADERS_RESPONSE_TIME + 1)
         node.setmocktime(cur_mock_time)
-        self.log.info("Test that the node does not get evicted")
+        self.log.info("Test that the peer does not get evicted")
         peer.sync_with_ping()
 
         node.disconnect_p2ps()
@@ -204,7 +207,7 @@ class P2POutEvict(BitcoinTestFramework):
 
         cur_mock_time += (HEADERS_RESPONSE_TIME + 1)
         node.setmocktime(cur_mock_time)
-        self.log.info("Check how none of the honest nor protected peers was evicted but all the misbehaving unprotected were")
+        self.log.info("Check that none of the honest or protected peers were evicted, but all misbehaving unprotected peers were")
         for peer in protected_peers + honest_unprotected_peers:
             peer.sync_with_ping()
         for peer in misbehaving_unprotected_peers:
@@ -232,7 +235,7 @@ class P2POutEvict(BitcoinTestFramework):
         cur_mock_time += (CHAIN_SYNC_TIMEOUT + 1)
         node.setmocktime(cur_mock_time)
         peer.sync_with_ping()
-        peer.wait_for_getheaders(block_hash=tip_header.hash)
+        peer.wait_for_getheaders(block_hash=tip_header.rehash())
         cur_mock_time += (HEADERS_RESPONSE_TIME + 1)
         node.setmocktime(cur_mock_time)
         self.log.info("Test that the peer gets evicted")

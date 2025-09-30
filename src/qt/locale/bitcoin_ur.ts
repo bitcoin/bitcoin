@@ -747,24 +747,24 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Warning: %1</source>
-        <translation type="unfinished">1%1 انتباہ</translation>
+        <translation type="unfinished">%1 انتباہ</translation>
     </message>
     <message>
         <source>Date: %1
 </source>
-        <translation type="unfinished">1%1' تاریخ۔
+        <translation type="unfinished">%1' تاریخ۔
 </translation>
     </message>
     <message>
         <source>Amount: %1
 </source>
-        <translation type="unfinished">1%1' مقدار
+        <translation type="unfinished">%1' مقدار
 </translation>
     </message>
     <message>
         <source>Wallet: %1
 </source>
-        <translation type="unfinished">1%1' والیٹ
+        <translation type="unfinished">%1' والیٹ
 </translation>
     </message>
     <message>
@@ -776,13 +776,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Label: %1
 </source>
-        <translation type="unfinished">1%1'لیبل
+        <translation type="unfinished">%1'لیبل
 </translation>
     </message>
     <message>
         <source>Address: %1
 </source>
-        <translation type="unfinished">1%1' پتہ
+        <translation type="unfinished">%1' پتہ
 </translation>
     </message>
     <message>

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,7 +15,10 @@ except ImportError:
     pass
 from test_framework.messages import COIN
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    bpf_cflags,
+)
 from test_framework.wallet import MiniWallet
 
 utxocache_changes_program = """
@@ -181,7 +184,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
         ctx = USDT(pid=self.nodes[0].process.pid)
         ctx.enable_probe(probe="utxocache:uncache",
                          fn_name="trace_utxocache_uncache")
-        bpf = BPF(text=utxocache_changes_program, usdt_contexts=[ctx], debug=0, cflags=["-Wno-error=implicit-function-declaration"])
+        bpf = BPF(text=utxocache_changes_program, usdt_contexts=[ctx], debug=0, cflags=bpf_cflags())
 
         # The handle_* function is a ctypes callback function called from C. When
         # we assert in the handle_* function, the AssertError doesn't propagate
@@ -250,7 +253,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
         ctx.enable_probe(probe="utxocache:add", fn_name="trace_utxocache_add")
         ctx.enable_probe(probe="utxocache:spent",
                          fn_name="trace_utxocache_spent")
-        bpf = BPF(text=utxocache_changes_program, usdt_contexts=[ctx], debug=0, cflags=["-Wno-error=implicit-function-declaration"])
+        bpf = BPF(text=utxocache_changes_program, usdt_contexts=[ctx], debug=0, cflags=bpf_cflags())
 
         # The handle_* function is a ctypes callback function called from C. When
         # we assert in the handle_* function, the AssertError doesn't propagate
@@ -339,7 +342,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
         ctx = USDT(pid=self.nodes[0].process.pid)
         ctx.enable_probe(probe="utxocache:flush",
                          fn_name="trace_utxocache_flush")
-        bpf = BPF(text=utxocache_flushes_program, usdt_contexts=[ctx], debug=0, cflags=["-Wno-error=implicit-function-declaration"])
+        bpf = BPF(text=utxocache_flushes_program, usdt_contexts=[ctx], debug=0, cflags=bpf_cflags())
 
         # The handle_* function is a ctypes callback function called from C. When
         # we assert in the handle_* function, the AssertError doesn't propagate
@@ -396,7 +399,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
         ctx = USDT(pid=self.nodes[0].process.pid)
         ctx.enable_probe(probe="utxocache:flush",
                          fn_name="trace_utxocache_flush")
-        bpf = BPF(text=utxocache_flushes_program, usdt_contexts=[ctx], debug=0, cflags=["-Wno-error=implicit-function-declaration"])
+        bpf = BPF(text=utxocache_flushes_program, usdt_contexts=[ctx], debug=0, cflags=bpf_cflags())
         bpf["utxocache_flush"].open_perf_buffer(handle_utxocache_flush)
 
         self.log.info("prune blockchain to trigger a flush for pruning")

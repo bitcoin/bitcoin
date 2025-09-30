@@ -10,6 +10,7 @@
 #include <clientversion.h>
 #include <consensus/amount.h>
 #include <consensus/tx_check.h>
+#include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <kernel/mempool_options.h>
@@ -1051,6 +1052,101 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     CheckIsStandard(t);
     t.vout[0].nValue = 239;
     CheckIsNotStandard(t, "dust");
+}
+
+BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
+{
+    CCoinsView coins_dummy;
+    CCoinsViewCache coins(&coins_dummy);
+    CKey key;
+    key.MakeNewKey(true);
+
+    // Create a pathological P2SH script padded with as many sigops as is standard.
+    CScript max_sigops_redeem_script{CScript() << std::vector<unsigned char>{} << key.GetPubKey()};
+    for (unsigned i{0}; i < MAX_P2SH_SIGOPS - 1; ++i) max_sigops_redeem_script << OP_2DUP << OP_CHECKSIG << OP_DROP;
+    max_sigops_redeem_script << OP_CHECKSIG << OP_NOT;
+    const CScript max_sigops_p2sh{GetScriptForDestination(ScriptHash(max_sigops_redeem_script))};
+
+    // Create a transaction fanning out as many such P2SH outputs as is standard to spend in a
+    // single transaction, and a transaction spending them.
+    CMutableTransaction tx_create, tx_max_sigops;
+    const unsigned p2sh_inputs_count{MAX_TX_LEGACY_SIGOPS / MAX_P2SH_SIGOPS};
+    tx_create.vout.reserve(p2sh_inputs_count);
+    for (unsigned i{0}; i < p2sh_inputs_count; ++i) {
+        tx_create.vout.emplace_back(424242 + i, max_sigops_p2sh);
+    }
+    auto prev_txid{tx_create.GetHash()};
+    tx_max_sigops.vin.reserve(p2sh_inputs_count);
+    for (unsigned i{0}; i < p2sh_inputs_count; ++i) {
+        tx_max_sigops.vin.emplace_back(prev_txid, i, CScript() << ToByteVector(max_sigops_redeem_script));
+    }
+
+    // p2sh_inputs_count is truncated to 166 (from 166.6666..)
+    BOOST_CHECK_LT(p2sh_inputs_count * MAX_P2SH_SIGOPS, MAX_TX_LEGACY_SIGOPS);
+    AddCoins(coins, CTransaction(tx_create), 0, false);
+
+    // 2490 sigops is below the limit.
+    BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(tx_max_sigops), coins), 2490);
+    BOOST_CHECK(::AreInputsStandard(CTransaction(tx_max_sigops), coins));
+
+    // Adding one more input will bump this to 2505, hitting the limit.
+    tx_create.vout.emplace_back(424242, max_sigops_p2sh);
+    prev_txid = tx_create.GetHash();
+    for (unsigned i{0}; i < p2sh_inputs_count; ++i) {
+        tx_max_sigops.vin[i] = CTxIn(COutPoint(prev_txid, i), CScript() << ToByteVector(max_sigops_redeem_script));
+    }
+    tx_max_sigops.vin.emplace_back(prev_txid, p2sh_inputs_count, CScript() << ToByteVector(max_sigops_redeem_script));
+    AddCoins(coins, CTransaction(tx_create), 0, false);
+    BOOST_CHECK_GT((p2sh_inputs_count + 1) * MAX_P2SH_SIGOPS, MAX_TX_LEGACY_SIGOPS);
+    BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(tx_max_sigops), coins), 2505);
+    BOOST_CHECK(!::AreInputsStandard(CTransaction(tx_max_sigops), coins));
+
+    // Now, check the limit can be reached with regular P2PK outputs too. Use a separate
+    // preparation transaction, to demonstrate spending coins from a single tx is irrelevant.
+    CMutableTransaction tx_create_p2pk;
+    const auto p2pk_script{CScript() << key.GetPubKey() << OP_CHECKSIG};
+    unsigned p2pk_inputs_count{10}; // From 2490 to 2500.
+    for (unsigned i{0}; i < p2pk_inputs_count; ++i) {
+        tx_create_p2pk.vout.emplace_back(212121 + i, p2pk_script);
+    }
+    prev_txid = tx_create_p2pk.GetHash();
+    tx_max_sigops.vin.resize(p2sh_inputs_count); // Drop the extra input.
+    for (unsigned i{0}; i < p2pk_inputs_count; ++i) {
+        tx_max_sigops.vin.emplace_back(prev_txid, i);
+    }
+    AddCoins(coins, CTransaction(tx_create_p2pk), 0, false);
+
+    // The transaction now contains exactly 2500 sigops, the check should pass.
+    BOOST_CHECK_EQUAL(p2sh_inputs_count * MAX_P2SH_SIGOPS + p2pk_inputs_count * 1, MAX_TX_LEGACY_SIGOPS);
+    BOOST_CHECK(::AreInputsStandard(CTransaction(tx_max_sigops), coins));
+
+    // Now, add some Segwit inputs. We add one for each defined Segwit output type. The limit
+    // is exclusively on non-witness sigops and therefore those should not be counted.
+    CMutableTransaction tx_create_segwit;
+    const auto witness_script{CScript() << key.GetPubKey() << OP_CHECKSIG};
+    tx_create_segwit.vout.emplace_back(121212, GetScriptForDestination(WitnessV0KeyHash(key.GetPubKey())));
+    tx_create_segwit.vout.emplace_back(131313, GetScriptForDestination(WitnessV0ScriptHash(witness_script)));
+    tx_create_segwit.vout.emplace_back(141414, GetScriptForDestination(WitnessV1Taproot{XOnlyPubKey(key.GetPubKey())}));
+    prev_txid = tx_create_segwit.GetHash();
+    for (unsigned i{0}; i < tx_create_segwit.vout.size(); ++i) {
+        tx_max_sigops.vin.emplace_back(prev_txid, i);
+    }
+
+    // The transaction now still contains exactly 2500 sigops, the check should pass.
+    AddCoins(coins, CTransaction(tx_create_segwit), 0, false);
+    BOOST_REQUIRE(::AreInputsStandard(CTransaction(tx_max_sigops), coins));
+
+    // Add one more P2PK input. We'll reach the limit.
+    tx_create_p2pk.vout.emplace_back(212121, p2pk_script);
+    prev_txid = tx_create_p2pk.GetHash();
+    tx_max_sigops.vin.resize(p2sh_inputs_count);
+    ++p2pk_inputs_count;
+    for (unsigned i{0}; i < p2pk_inputs_count; ++i) {
+        tx_max_sigops.vin.emplace_back(prev_txid, i);
+    }
+    AddCoins(coins, CTransaction(tx_create_p2pk), 0, false);
+    BOOST_CHECK_GT(p2sh_inputs_count * MAX_P2SH_SIGOPS + p2pk_inputs_count * 1, MAX_TX_LEGACY_SIGOPS);
+    BOOST_CHECK(!::AreInputsStandard(CTransaction(tx_max_sigops), coins));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
