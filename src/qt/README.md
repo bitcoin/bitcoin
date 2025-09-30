@@ -120,5 +120,5 @@ sudo apt-get install qtcreator
  - Under `Debuggers`: select `"GDB"` as debugger
 
 8. While in the `Projects` tab, ensure that you have the `bitcoin-qt` executable specified under `Run`
- - If the executable is not specified: click `"Choose..."`, navigate to `src/qt`, and select `bitcoin-qt`
+ - If the executable is not specified: click `"Choose..."`, navigate to `build/bin`, and select `bitcoin-qt`
 9. You're all set! Start developing, building, and debugging the Bitcoin Core GUI

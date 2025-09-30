@@ -572,7 +572,7 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
     </message>
     <message>
         <source>Syncing Headers (%1%)…</source>
-        <translation type="unfinished">Sincronizzazione Intestazioni in corso (1%1%)...</translation>
+        <translation type="unfinished">Sincronizzazione Intestazioni in corso (%1%)...</translation>
     </message>
     <message>
         <source>Synchronizing with network…</source>

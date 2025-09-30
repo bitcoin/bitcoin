@@ -5,7 +5,7 @@ $(package)_download_file=$(native_$(package)_download_file)
 $(package)_file_name=$(native_$(package)_file_name)
 $(package)_sha256_hash=$(native_$(package)_sha256_hash)
 
-define $(package)_set_vars :=
+define $(package)_set_vars
   $(package)_config_opts := -DBUILD_TESTING=OFF
   $(package)_config_opts += -DWITH_OPENSSL=OFF
   $(package)_config_opts += -DWITH_ZLIB=OFF
