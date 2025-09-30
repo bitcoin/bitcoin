@@ -103,7 +103,7 @@ constexpr auto GetRandMillis = GetRandomDuration<std::chrono::milliseconds>;
  * is memoryless and should be used for repeated network events (e.g. sending a
  * certain type of message) to minimize leaking information to observers.
  *
- * The probability of an event occuring before time x is 1 - e^-(x/a) where a
+ * The probability of an event occurring before time x is 1 - e^-(x/a) where a
  * is the average interval between events.
  * */
 std::chrono::microseconds GetExponentialRand(std::chrono::microseconds now, std::chrono::seconds average_interval);

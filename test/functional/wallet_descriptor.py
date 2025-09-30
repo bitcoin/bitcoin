@@ -112,7 +112,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
         send_wrpc.walletlock()
         # Exhaust keypool of 100
         for i in range(0, 100):
-            # keypool should be exhaused by bech32 addresses, but in dash case keypool is not exhausted
+            # keypool should be exhausted by bech32 addresses, but in dash case keypool is not exhausted
             send_wrpc.getnewaddress()
         # This should now error
         # this check is disabled, see comment above above

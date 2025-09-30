@@ -6,7 +6,7 @@
 '''
 feature_llmq_singlenode.py
 
-Checks creating LLMQs signle node quorum creation and signing
+Checks creating LLMQs single node quorum creation and signing
 This functional test is similar to feature_llmq_signing.py but difference are big enough to make implementation common.
 
 '''

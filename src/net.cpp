@@ -1021,7 +1021,7 @@ const std::array<std::string, 40> V2_DASH_IDS = {
 
 /** A complete set of short IDs
  *
- * Bitcoin takes up short IDs upto 128 (lower half) while Dash can take
+ * Bitcoin takes up short IDs up to 128 (lower half) while Dash can take
  * up short IDs between 128 and 256 (upper half) most of the array will
  * have entries that correspond to nothing.
  *

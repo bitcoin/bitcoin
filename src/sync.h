@@ -144,7 +144,7 @@ using RecursiveMutex = AnnotatedMixin<std::recursive_mutex>;
 /** Wrapped mutex: supports waiting but not recursive locking */
 using Mutex = AnnotatedMixin<std::mutex>;
 
-/** Wrapped shared mutex: supports read locking via .shared_lock, exlusive locking via .lock;
+/** Wrapped shared mutex: supports read locking via .shared_lock, exclusive locking via .lock;
  * does not support recursive locking */
 using SharedMutex = SharedAnnotatedMixin<std::shared_mutex>;
 

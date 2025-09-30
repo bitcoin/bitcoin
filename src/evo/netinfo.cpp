@@ -323,7 +323,7 @@ NetInfoStatus ExtNetInfo::ProcessCandidate(const NetInfoPurpose purpose, const N
         assert(status); // We did just check to see if our value already existed, try_emplace shouldn't fail
     }
 
-    // Candidate succesfully added, update cache
+    // Candidate successfully added, update cache
     m_all_entries.push_back(candidate);
     return NetInfoStatus::Success;
 }

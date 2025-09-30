@@ -15,7 +15,7 @@ BOOST_FIXTURE_TEST_SUITE(coinjoin_queue_tests, BasicTestingSetup)
 
 static CBLSSecretKey MakeSecretKey()
 {
-    // Generate a dummy operator keypair for signing
+    // Generate a dummy operator key pair for signing
     CBLSSecretKey sk;
     sk.MakeNewKey();
     return sk;
