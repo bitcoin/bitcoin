@@ -5,6 +5,7 @@
 #ifndef BITCOIN_BLOCKENCODINGS_H
 #define BITCOIN_BLOCKENCODINGS_H
 
+#include <crypto/siphash.h>
 #include <primitives/block.h>
 
 #include <functional>
@@ -87,8 +88,7 @@ typedef enum ReadStatus_t
 } ReadStatus;
 
 class CBlockHeaderAndShortTxIDs {
-private:
-    mutable uint64_t shorttxidk0, shorttxidk1;
+    mutable std::optional<PresaltedSipHasher> m_hasher;
     uint64_t nonce;
 
     void FillShortTxIDSelector() const;
@@ -112,7 +112,7 @@ public:
     /**
      * @param[in]  nonce  This should be randomly generated, and is used for the siphash secret key
      */
-    CBlockHeaderAndShortTxIDs(const CBlock& block, const uint64_t nonce);
+    CBlockHeaderAndShortTxIDs(const CBlock& block, uint64_t nonce);
 
     uint64_t GetShortID(const Wtxid& wtxid) const;
 
