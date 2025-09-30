@@ -41,10 +41,10 @@ python3 --version
 ${CI_RETRY_EXE} pip3 install \
   codespell==2.4.1 \
   lief==0.16.6 \
-  mypy==1.4.1 \
-  pyzmq==25.1.0 \
-  ruff==0.5.5 \
-  vulture==2.6
+  mypy==1.18.2 \
+  pyzmq==27.1.0 \
+  ruff==0.13.2 \
+  vulture==2.14
 
 SHELLCHECK_VERSION=v0.11.0
 curl -sL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | \
