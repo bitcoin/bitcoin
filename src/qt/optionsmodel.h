@@ -45,49 +45,50 @@ public:
     explicit OptionsModel(QObject *parent = nullptr, bool resetSettings = false);
 
     enum OptionID {
-        StartAtStartup,       // bool
-        ShowTrayIcon,         // bool
-        MinimizeToTray,       // bool
-        MapPortUPnP,          // bool
-        MapPortNatpmp,        // bool
-        MinimizeOnClose,      // bool
-        ProxyUse,             // bool
-        ProxyIP,              // QString
-        ProxyPort,            // int
-        ProxyUseTor,          // bool
-        ProxyIPTor,           // QString
-        ProxyPortTor,         // int
-        DisplayUnit,          // BitcoinUnit
-        ThirdPartyTxUrls,     // QString
-        Digits,               // QString
-        Theme,                // QString
-        FontFamily,           // int
-        FontScale,            // int
-        FontWeightNormal,     // int
-        FontWeightBold,       // int
-        Language,             // QString
-        CoinControlFeatures,  // bool
-        SubFeeFromAmount,     // bool
-        KeepChangeAddress,    // bool
-        ThreadsScriptVerif,   // int
-        Prune,                // bool
-        PruneSize,            // int
-        DatabaseCache,        // int
-        SpendZeroConfChange,  // bool
-        ShowMasternodesTab,   // bool
-        ShowGovernanceTab,    // bool
-        CoinJoinEnabled,      // bool
-        ShowAdvancedCJUI,     // bool
-        ShowCoinJoinPopups,   // bool
-        LowKeysWarning,       // bool
-        CoinJoinSessions,     // int
-        CoinJoinRounds,       // int
-        CoinJoinAmount,       // int
-        CoinJoinDenomsGoal,   // int
-        CoinJoinDenomsHardCap,// int
-        CoinJoinMultiSession, // bool
-        Listen,               // bool
-        Server,               // bool
+        StartAtStartup,         // bool
+        ShowTrayIcon,           // bool
+        MinimizeToTray,         // bool
+        MapPortUPnP,            // bool
+        MapPortNatpmp,          // bool
+        MinimizeOnClose,        // bool
+        ProxyUse,               // bool
+        ProxyIP,                // QString
+        ProxyPort,              // int
+        ProxyUseTor,            // bool
+        ProxyIPTor,             // QString
+        ProxyPortTor,           // int
+        DisplayUnit,            // BitcoinUnit
+        ThirdPartyTxUrls,       // QString
+        Digits,                 // QString
+        Theme,                  // QString
+        FontFamily,             // int
+        FontScale,              // int
+        FontWeightNormal,       // int
+        FontWeightBold,         // int
+        Language,               // QString
+        CoinControlFeatures,    // bool
+        SubFeeFromAmount,       // bool
+        KeepChangeAddress,      // bool
+        ThreadsScriptVerif,     // int
+        Prune,                  // bool
+        PruneSize,              // int
+        DatabaseCache,          // int
+        SpendZeroConfChange,    // bool
+        ShowMasternodesTab,     // bool
+        ShowGovernanceTab,      // bool
+        CoinJoinEnabled,        // bool
+        ShowAdvancedCJUI,       // bool
+        ShowCoinJoinPopups,     // bool
+        LowKeysWarning,         // bool
+        CoinJoinSessions,       // int
+        CoinJoinRounds,         // int
+        CoinJoinAmount,         // int
+        CoinJoinDenomsGoal,     // int
+        CoinJoinDenomsHardCap,  // int
+        CoinJoinMultiSession,   // bool
+        Listen,                 // bool
+        Server,                 // bool
+        EnablePSBTControls,     // bool
         OptionIDRowCount,
     };
 
@@ -108,6 +109,7 @@ public:
     QString getThirdPartyTxUrls() const { return strThirdPartyTxUrls; }
     bool getCoinControlFeatures() const { return fCoinControlFeatures; }
     bool getSubFeeFromAmount() const { return m_sub_fee_from_amount; }
+    bool getEnablePSBTControls() const { return m_enable_psbt_controls; }
     bool getKeepChangeAddress() const { return fKeepChangeAddress; }
     bool getShowAdvancedCJUI() { return fShowAdvancedCJUI; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
@@ -136,6 +138,7 @@ private:
     QString strThirdPartyTxUrls;
     bool fCoinControlFeatures;
     bool m_sub_fee_from_amount;
+    bool m_enable_psbt_controls;
     bool fKeepChangeAddress;
     bool fShowAdvancedCJUI;
     /* settings that were overridden by command-line */
