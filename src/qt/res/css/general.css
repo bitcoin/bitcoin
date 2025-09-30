@@ -1727,7 +1727,7 @@ QDialog#SendCoinsDialog QPushButton#sendButton {
 SendCoinsEntry
 ******************************************************/
 
-QStackedWidget#SendCoinsEntry .QFrame#SendCoins > .QLabel { /* Send Coin Entry Labels */
+QWidget#SendCoinsEntry .QFrame#SendCoins > .QLabel { /* Send Coin Entry Labels */
     background-color: #00000000;
     min-width: 50px;
     min-height: 25px;
@@ -1735,29 +1735,29 @@ QStackedWidget#SendCoinsEntry .QFrame#SendCoins > .QLabel { /* Send Coin Entry L
     padding-right: 5px;
 }
 
-QStackedWidget#SendCoinsEntry .QFrame#SendCoins .QLabel#amountLabel {
+QWidget#SendCoinsEntry .QFrame#SendCoins .QLabel#amountLabel {
 }
 
-QStackedWidget#SendCoinsEntry .QValidatedLineEdit#payTo { /* Pay To Input Field */
+QWidget#SendCoinsEntry .QValidatedLineEdit#payTo { /* Pay To Input Field */
 }
 
-QStackedWidget#SendCoinsEntry .QToolButton { /* General Settings for Pay To Icons */
+QWidget#SendCoinsEntry .QToolButton { /* General Settings for Pay To Icons */
     background-color: #00000000;
     margin-left: 5px;
     margin-right: 5px;
     border: 0;
 }
 
-QStackedWidget#SendCoinsEntry .QToolButton#addressBookButton { /* Address Book Button */
+QWidget#SendCoinsEntry .QToolButton#addressBookButton { /* Address Book Button */
     margin-left: 10px;
 }
 
-QStackedWidget#SendCoinsEntry .QToolButton#addressBookButton,
-QStackedWidget#SendCoinsEntry .QToolButton#pasteButton,
-QStackedWidget#SendCoinsEntry .QToolButton#deleteButton {
+QWidget#SendCoinsEntry .QToolButton#addressBookButton,
+QWidget#SendCoinsEntry .QToolButton#pasteButton,
+QWidget#SendCoinsEntry .QToolButton#deleteButton {
 }
 
-QStackedWidget#SendCoinsEntry .QLineEdit#addAsLabel { /* Pay To Input Field */
+QWidget#SendCoinsEntry .QLineEdit#addAsLabel { /* Pay To Input Field */
 }
 
 /******************************************************
