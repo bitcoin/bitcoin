@@ -17,7 +17,7 @@
 
 #include <unordered_map>
 
-CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs(const CBlock& block, const uint64_t nonce) :
+CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs(const CBlock& block, uint64_t nonce) :
         nonce(nonce),
         shorttxids(block.vtx.size() - 1), prefilledtxn(1), header(block) {
     FillShortTxIDSelector();
@@ -36,14 +36,12 @@ void CBlockHeaderAndShortTxIDs::FillShortTxIDSelector() const {
     hasher.Write((unsigned char*)&(*stream.begin()), stream.end() - stream.begin());
     uint256 shorttxidhash;
     hasher.Finalize(shorttxidhash.begin());
-    shorttxidk0 = shorttxidhash.GetUint64(0);
-    shorttxidk1 = shorttxidhash.GetUint64(1);
+    m_hasher.emplace(shorttxidhash.GetUint64(0), shorttxidhash.GetUint64(1));
 }
 
 uint64_t CBlockHeaderAndShortTxIDs::GetShortID(const Wtxid& wtxid) const {
     static_assert(SHORTTXIDS_LENGTH == 6, "shorttxids calculation assumes 6-byte shorttxids");
-    PresaltedSipHasher hasher(shorttxidk0, shorttxidk1); // TODO extract
-    return hasher(wtxid.ToUint256()) & 0xffffffffffffL;
+    return (*Assert(m_hasher))(wtxid.ToUint256()) & 0xffffffffffffL;
 }
 
 /* Reconstructing a compact block is in the hot-path for block relay,
