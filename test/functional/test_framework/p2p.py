@@ -65,6 +65,7 @@ from test_framework.messages import (
     msg_merkleblock,
     msg_notfound,
     msg_ping,
+    msg_platformban,
     msg_pong,
     msg_qdata,
     msg_qgetdata,
@@ -99,8 +100,8 @@ logger = logging.getLogger("TestFramework.p2p")
 # The minimum P2P version that this test framework supports
 MIN_P2P_VERSION_SUPPORTED = 60001
 # The P2P version that this test framework implements and sends in its `version` message
-# Version 70237 switched cycleHash in isdlock message to using quorum's base block
-P2P_VERSION = 70237
+# Version 70238 introduced platform PoSe ban (dip-0031)
+P2P_VERSION = 70238
 # The services that this test framework offers in its `version` message
 P2P_SERVICES = NODE_NETWORK | NODE_HEADERS_COMPRESSED
 # The P2P user agent string that this test framework sends in its `version` message
@@ -165,6 +166,7 @@ MESSAGEMAP = {
     b"mnauth": None,
     b"mnlistdiff": msg_mnlistdiff,
     b"notfound": msg_notfound,
+    b"platformban": msg_platformban,
     b"qbsigs": None,
     b"qcomplaint": None,
     b"qcontrib": None,
@@ -578,7 +580,6 @@ class P2PInterface(P2PConnection):
     def on_cfheaders(self, message): pass
     def on_cfilter(self, message): pass
     def on_cmpctblock(self, message): pass
-    def on_feefilter(self, message): pass
     def on_filteradd(self, message): pass
     def on_filterclear(self, message): pass
     def on_filterload(self, message): pass
@@ -617,6 +618,7 @@ class P2PInterface(P2PConnection):
     def on_islock(self, message): pass
     def on_isdlock(self, message): pass
 
+    def on_platformban(self, message): pass
     def on_qgetdata(self, message): pass
     def on_qdata(self, message): pass
     def on_qwatch(self, message): pass

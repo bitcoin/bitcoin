@@ -8,7 +8,7 @@
 #include <univalue.h>
 #include <util/time.h>
 
-const std::string MasternodeMetaStore::SERIALIZATION_VERSION_STRING = "CMasternodeMetaMan-Version-3";
+const std::string MasternodeMetaStore::SERIALIZATION_VERSION_STRING = "CMasternodeMetaMan-Version-4";
 
 CMasternodeMetaMan::CMasternodeMetaMan() :
     m_db{std::make_unique<db_type>("mncache.dat", "magicMasternodeCache")}
@@ -41,6 +41,11 @@ UniValue CMasternodeMetaInfo::ToJson() const
     ret.pushKV("lastOutboundAttemptElapsed", now - lastOutboundAttempt.load());
     ret.pushKV("lastOutboundSuccess", lastOutboundSuccess.load());
     ret.pushKV("lastOutboundSuccessElapsed", now - lastOutboundSuccess.load());
+    {
+        LOCK(cs);
+        ret.pushKV("is_platform_banned", m_platform_ban);
+        ret.pushKV("platform_ban_height_updated", m_platform_ban_updated);
+    }
 
     return ret;
 }
@@ -125,8 +130,33 @@ std::vector<uint256> CMasternodeMetaMan::GetAndClearDirtyGovernanceObjectHashes(
     return vecTmp;
 }
 
+bool CMasternodeMetaMan::AlreadyHavePlatformBan(const uint256& inv_hash) const
+{
+    LOCK(cs);
+    return m_seen_platform_bans.exists(inv_hash);
+}
+
+std::optional<PlatformBanMessage> CMasternodeMetaMan::GetPlatformBan(const uint256& inv_hash) const
+{
+    LOCK(cs);
+    PlatformBanMessage ret;
+    if (!m_seen_platform_bans.get(inv_hash, ret)) {
+        return std::nullopt;
+    }
+
+    return ret;
+}
+
+void CMasternodeMetaMan::RememberPlatformBan(const uint256& inv_hash, PlatformBanMessage&& msg)
+{
+    LOCK(cs);
+    m_seen_platform_bans.insert(inv_hash, std::move(msg));
+}
+
 std::string MasternodeMetaStore::ToString() const
 {
     LOCK(cs);
     return strprintf("Masternodes: meta infos object count: %d, nDsqCount: %d", metaInfos.size(), nDsqCount);
 }
+
+uint256 PlatformBanMessage::GetHash() const { return ::SerializeHash(*this); }

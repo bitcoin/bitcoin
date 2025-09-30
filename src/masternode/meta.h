@@ -5,14 +5,18 @@
 #ifndef BITCOIN_MASTERNODE_META_H
 #define BITCOIN_MASTERNODE_META_H
 
+#include <bls/bls.h>
+#include <saltedhasher.h>
 #include <serialize.h>
 #include <sync.h>
 #include <threadsafety.h>
 #include <uint256.h>
+#include <unordered_lru_cache.h>
 
 #include <atomic>
 #include <map>
 #include <memory>
+#include <optional>
 #include <vector>
 
 class CConnman;
@@ -46,6 +50,11 @@ private:
     std::atomic<int64_t> lastOutboundAttempt{0};
     std::atomic<int64_t> lastOutboundSuccess{0};
 
+    //! bool flag is node currently under platform ban by p2p message
+    bool m_platform_ban GUARDED_BY(cs){false};
+    //! height at which platform ban has been applied or removed
+    int m_platform_ban_updated GUARDED_BY(cs){0};
+
 public:
     CMasternodeMetaInfo() = default;
     explicit CMasternodeMetaInfo(const uint256& _proTxHash) : proTxHash(_proTxHash) {}
@@ -55,22 +64,18 @@ public:
         nMixingTxCount(ref.nMixingTxCount.load()),
         mapGovernanceObjectsVotedOn(ref.mapGovernanceObjectsVotedOn),
         lastOutboundAttempt(ref.lastOutboundAttempt.load()),
-        lastOutboundSuccess(ref.lastOutboundSuccess.load())
+        lastOutboundSuccess(ref.lastOutboundSuccess.load()),
+        m_platform_ban(ref.m_platform_ban),
+        m_platform_ban_updated(ref.m_platform_ban_updated)
     {
     }
 
     SERIALIZE_METHODS(CMasternodeMetaInfo, obj)
     {
         LOCK(obj.cs);
-        READWRITE(
-                obj.proTxHash,
-                obj.nLastDsq,
-                obj.nMixingTxCount,
-                obj.mapGovernanceObjectsVotedOn,
-                obj.outboundAttemptCount,
-                obj.lastOutboundAttempt,
-                obj.lastOutboundSuccess
-                );
+        READWRITE(obj.proTxHash, obj.nLastDsq, obj.nMixingTxCount, obj.mapGovernanceObjectsVotedOn,
+                  obj.outboundAttemptCount, obj.lastOutboundAttempt, obj.lastOutboundSuccess, obj.m_platform_ban,
+                  obj.m_platform_ban_updated);
     }
 
     UniValue ToJson() const;
@@ -96,6 +101,24 @@ public:
     int64_t GetLastOutboundAttempt() const { return lastOutboundAttempt; }
     void SetLastOutboundSuccess(int64_t t) { lastOutboundSuccess = t; outboundAttemptCount = 0; }
     int64_t GetLastOutboundSuccess() const { return lastOutboundSuccess; }
+    bool SetPlatformBan(bool is_banned, int height)
+    {
+        LOCK(cs);
+        if (height < m_platform_ban_updated) {
+            return false;
+        }
+        if (height == m_platform_ban_updated && !is_banned) {
+            return false;
+        }
+        m_platform_ban = is_banned;
+        m_platform_ban_updated = height;
+        return true;
+    }
+    bool IsPlatformBanned() const
+    {
+        LOCK(cs);
+        return m_platform_ban;
+    }
 };
 using CMasternodeMetaInfoPtr = std::shared_ptr<CMasternodeMetaInfo>;
 
@@ -150,6 +173,41 @@ public:
     std::string ToString() const;
 };
 
+/**
+ * Platform PoSe Ban are result in the node voting against the targeted evonode in all future DKG sessions until that targeted
+ *evonode has been successfully banned. Platform will initiate this ban process by passing relevant information to Core using RPC. See DIP-0031
+ *
+ * We use 2 main classes to manage Platform PoSe Ban
+ *
+ * PlatformBanMessage
+ * CMasternodeMetaInfo - a higher-level construct which store extra (non-deterministic) information about masternodes including platform ban status
+ **/
+
+/**
+ * PlatformBanMessage - low-level constructs which present p2p message PlatformBan containing the protx hash, requested
+ * height to ban, and BLS data: quorum hash and bls signature
+ */
+class PlatformBanMessage
+{
+public:
+    uint256 m_protx_hash;
+    int32_t m_requested_height{0};
+    uint256 m_quorum_hash;
+    CBLSSignature m_signature;
+
+    PlatformBanMessage() = default;
+
+    SERIALIZE_METHODS(PlatformBanMessage, obj)
+    {
+        READWRITE(obj.m_protx_hash, obj.m_requested_height, obj.m_quorum_hash);
+        if (!(s.GetType() & SER_GETHASH)) {
+            READWRITE(CBLSSignatureVersionWrapper(const_cast<CBLSSignature&>(obj.m_signature), false));
+        }
+    }
+
+    uint256 GetHash() const;
+};
+
 class CMasternodeMetaMan : public MasternodeMetaStore
 {
 private:
@@ -160,6 +218,12 @@ private:
     bool is_valid{false};
 
     std::vector<uint256> vecDirtyGovernanceObjectHashes GUARDED_BY(cs);
+
+    // equal to double of expected amount of all evo nodes, see DIP-0028
+    // it consumes no more than 1Mb of RAM but will cover extreme cases
+    static constexpr size_t SeenBanInventorySize = 900;
+    mutable unordered_lru_cache<uint256, PlatformBanMessage, StaticSaltedHasher> m_seen_platform_bans GUARDED_BY(cs){
+        SeenBanInventorySize};
 
 public:
     explicit CMasternodeMetaMan();
@@ -181,6 +245,10 @@ public:
     void RemoveGovernanceObject(const uint256& nGovernanceObjectHash);
 
     std::vector<uint256> GetAndClearDirtyGovernanceObjectHashes();
+
+    bool AlreadyHavePlatformBan(const uint256& inv_hash) const;
+    std::optional<PlatformBanMessage> GetPlatformBan(const uint256& inv_hash) const;
+    void RememberPlatformBan(const uint256& inv_hash, PlatformBanMessage&& msg);
 };
 
 #endif // BITCOIN_MASTERNODE_META_H
