@@ -52,7 +52,6 @@
 #include <QDragEnterEvent>
 #include <QInputDialog>
 #include <QKeySequence>
-#include <QListWidget>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
@@ -60,15 +59,11 @@
 #include <QProgressDialog>
 #include <QScreen>
 #include <QSettings>
-#include <QShortcut>
-#include <QStackedWidget>
 #include <QStatusBar>
-#include <QStyle>
 #include <QSystemTrayIcon>
 #include <QTimer>
 #include <QToolBar>
 #include <QToolButton>
-#include <QUrlQuery>
 #include <QVBoxLayout>
 #include <QWindow>
 

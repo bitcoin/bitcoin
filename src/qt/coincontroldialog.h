@@ -13,7 +13,6 @@
 #include <QList>
 #include <QMenu>
 #include <QPoint>
-#include <QString>
 #include <QTreeWidgetItem>
 
 class WalletModel;

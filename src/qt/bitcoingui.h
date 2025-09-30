@@ -14,12 +14,11 @@
 
 #include <consensus/amount.h>
 
+#include <QAbstractButton>
 #include <QLabel>
 #include <QMainWindow>
-#include <QMap>
 #include <QMenu>
 #include <QPoint>
-#include <QPushButton>
 #include <QSystemTrayIcon>
 
 #include <memory>

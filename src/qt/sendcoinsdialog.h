@@ -9,7 +9,6 @@
 
 #include <QDialog>
 #include <QMessageBox>
-#include <QShowEvent>
 #include <QString>
 #include <QTimer>
 

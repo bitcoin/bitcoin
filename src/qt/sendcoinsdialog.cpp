@@ -37,10 +37,8 @@ using wallet::DEFAULT_PAY_TX_FEE;
 #include <fstream>
 #include <memory>
 
-#include <QFontMetrics>
 #include <QScrollBar>
 #include <QSettings>
-#include <QTextDocument>
 
 static constexpr std::array confTargets{2, 4, 6, 12, 24, 48, 144, 504, 1008};
 int getConfTargetForIndex(int index) {

@@ -12,11 +12,8 @@
 #include <qt/recentrequeststablemodel.h>
 #include <qt/walletmodel.h>
 
-#include <QAction>
 #include <QCursor>
 #include <QMessageBox>
-#include <QScrollBar>
-#include <QTextDocument>
 
 ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget* parent) :
     QDialog(parent, GUIUtil::dialog_flags),

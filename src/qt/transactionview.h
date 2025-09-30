@@ -10,7 +10,6 @@
 #include <uint256.h>
 
 #include <QWidget>
-#include <QKeyEvent>
 
 class TransactionFilterProxy;
 class WalletModel;

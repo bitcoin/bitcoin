@@ -27,6 +27,7 @@
 #include <QMessageBox>
 #include <QMetaObject>
 #include <QMutexLocker>
+#include <QProgressDialog>
 #include <QThread>
 #include <QTimer>
 #include <QWindow>

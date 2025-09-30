@@ -8,8 +8,6 @@
 #include <util/check.h>
 
 #include <QModelIndex>
-#include <QString>
-#include <QVariant>
 
 PeerTableSortProxy::PeerTableSortProxy(QObject* parent)
     : QSortFilterProxyModel(parent)

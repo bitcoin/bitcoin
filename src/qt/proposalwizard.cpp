@@ -19,12 +19,11 @@
 #include <qt/walletmodel.h>
 
 #include <QDateTime>
-#include <QDateTimeEdit>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLabel>
 #include <QLineEdit>
-#include <QPlainTextEdit>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QStackedWidget>
 #include <QTimer>

@@ -29,7 +29,6 @@
 
 #include <QAbstractItemView>
 #include <QDesktopServices>
-#include <QTableWidgetItem>
 #include <QUrl>
 #include <QtGui/QClipboard>
 

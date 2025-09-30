@@ -7,8 +7,6 @@
 #include <qt/bitcoinunits.h>
 #include <qt/guiutil.h>
 
-#include <QApplication>
-#include <QAbstractSpinBox>
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QLineEdit>

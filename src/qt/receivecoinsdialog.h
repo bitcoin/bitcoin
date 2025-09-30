@@ -8,12 +8,9 @@
 #include <qt/guiutil.h>
 
 #include <QDialog>
-#include <QHeaderView>
 #include <QItemSelection>
-#include <QKeyEvent>
 #include <QMenu>
 #include <QPoint>
-#include <QVariant>
 
 class WalletModel;
 

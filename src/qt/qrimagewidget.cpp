@@ -9,7 +9,6 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QDrag>
-#include <QFontDatabase>
 #include <QMenu>
 #include <QMimeData>
 #include <QMouseEvent>

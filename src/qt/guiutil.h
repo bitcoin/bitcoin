@@ -14,15 +14,12 @@
 
 #include <QApplication>
 #include <QEvent>
-#include <QHeaderView>
 #include <QItemDelegate>
 #include <QLabel>
-#include <QMessageBox>
 #include <QMetaObject>
 #include <QObject>
 #include <QProgressBar>
 #include <QString>
-#include <QTableView>
 
 #include <cassert>
 #include <chrono>

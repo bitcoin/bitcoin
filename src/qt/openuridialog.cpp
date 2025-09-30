@@ -11,7 +11,6 @@
 
 #include <QAbstractButton>
 #include <QLineEdit>
-#include <QUrl>
 
 OpenURIDialog::OpenURIDialog(QWidget* parent) : QDialog(parent, GUIUtil::dialog_flags),
                                                 ui(new Ui::OpenURIDialog)

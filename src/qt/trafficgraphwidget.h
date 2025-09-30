@@ -8,7 +8,6 @@
 #include <qt/trafficgraphdata.h>
 
 #include <QWidget>
-#include <QQueue>
 
 class ClientModel;
 

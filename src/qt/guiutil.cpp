@@ -39,21 +39,17 @@
 #include <QButtonGroup>
 #include <QClipboard>
 #include <QDateTime>
-#include <QDebug>
 #include <QDesktopServices>
 #include <QDialog>
 #include <QDialogButtonBox>
-#include <QDoubleValidator>
 #include <QFileDialog>
 #include <QFont>
 #include <QFontDatabase>
 #include <QFontMetrics>
 #include <QGuiApplication>
 #include <QJsonObject>
-#include <QKeyEvent>
 #include <QKeySequence>
 #include <QLatin1String>
-#include <QLineEdit>
 #include <QList>
 #include <QLocale>
 #include <QMenu>
@@ -69,10 +65,8 @@
 #include <QString>
 #include <QTextDocument> // for Qt::mightBeRichText
 #include <QThread>
-#include <QTimer>
 #include <QUrlQuery>
 #include <QVBoxLayout>
-#include <QtGlobal>
 
 #include <chrono>
 #include <exception>
