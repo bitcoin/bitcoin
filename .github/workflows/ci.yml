@@ -350,6 +350,47 @@ jobs:
             ${{ env.BASE_BUILD_DIR }}/src/univalue/*.exe
             ${{ env.BASE_BUILD_DIR }}/test/config.ini
 
+  mac-cross:
+    name: 'Linux->macOS cross, no tests'
+    needs: runners
+    runs-on: ${{ needs.runners.outputs.provider == 'cirrus' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm' || 'ubuntu-24.04' }}
+    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+
+    env:
+      FILE_ENV: './ci/test/00_setup_env_mac_cross.sh'
+      DANGER_CI_ON_HOST_FOLDERS: 1
+
+    steps:
+      - *CHECKOUT
+
+      - name: Configure environment
+        uses: ./.github/actions/configure-environment
+
+      - name: Restore caches
+        id: restore-cache
+        uses: ./.github/actions/restore-caches
+
+      - name: Configure Docker
+        uses: ./.github/actions/configure-docker
+        with:
+          cache-provider: ${{ needs.runners.outputs.provider }}
+
+      - name: CI script
+        run: ./ci/test_run_all.sh
+
+      - name: Save caches
+        uses: ./.github/actions/save-caches
+
+      - name: Upload built executables
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-cross-executables-${{ github.run_id }}
+          path: |
+            ${{ env.BASE_BUILD_DIR }}/bin/*
+            ${{ env.BASE_BUILD_DIR }}/src/secp256k1/bin/*
+            ${{ env.BASE_BUILD_DIR }}/src/univalue/*
+            ${{ env.BASE_BUILD_DIR }}/test/config.ini
+
   windows-native-test:
     name: 'Windows, test cross-built'
     runs-on: windows-2022
@@ -408,8 +449,7 @@ jobs:
           echo "PREVIOUS_RELEASES_DIR=${{ runner.temp }}/previous_releases" >> "$GITHUB_ENV"
 
       - name: Get previous releases
-        working-directory: test
-        run: ./get_previous_releases.py --target-dir $PREVIOUS_RELEASES_DIR
+        run: ./test/get_previous_releases.py --target-dir $PREVIOUS_RELEASES_DIR
 
       - name: Run functional tests
         env:
@@ -418,6 +458,60 @@ jobs:
           EXCLUDE: '--exclude wallet_multiwallet.py,feature_unsupported_utxo_db.py'
           TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
         run: py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix="$RUNNER_TEMP" --combinedlogslen=99999999 --timeout-factor=$TEST_RUNNER_TIMEOUT_FACTOR $EXCLUDE $TEST_RUNNER_EXTRA
+
+  mac-native-test:
+    name: 'macOS, test cross-built'
+    # The minimum supported macos version for releases
+    runs-on: macos-14
+    needs: mac-cross
+
+    env:
+      TEST_RUNNER_TIMEOUT_FACTOR: 40
+
+    steps:
+      - *CHECKOUT
+
+      - name: Download built executables
+        uses: actions/download-artifact@v4
+        with:
+          name: mac-cross-executables-${{ github.run_id }}
+
+      - name: Ensure downloaded binaries are executable
+        run: chmod -R +x ./bin ./src/secp256k1/bin ./src/univalue
+
+      - name: Run bitcoind
+        run: ./bin/bitcoind -version
+
+      - name: Run unit tests
+        run: |
+          ./bin/test_bitcoin -l test_suite
+          ./src/secp256k1/bin/exhaustive_tests
+          ./src/secp256k1/bin/noverify_tests
+          ./src/secp256k1/bin/tests
+          ./src/univalue/object
+          ./src/univalue/unitester
+
+      - name: Run benchmarks
+        run: ./bin/bench_bitcoin -sanity-check
+
+      - name: Adjust paths in test/config.ini
+        run: |
+          sed -i '' "s|^SRCDIR=.*|SRCDIR=${{ github.workspace }}|" test/config.ini
+          sed -i '' "s|^BUILDDIR=.*|BUILDDIR=${{ github.workspace }}|" test/config.ini
+          sed -i '' "s|^RPCAUTH=.*|RPCAUTH=${{ github.workspace }}/share/rpcauth/rpcauth.py|" test/config.ini
+          cat test/config.ini
+
+      - name: Set previous release directory
+        run: |
+          echo "PREVIOUS_RELEASES_DIR=${{ runner.temp }}/previous_releases" >> "$GITHUB_ENV"
+
+      - name: Get previous releases
+        run: ./test/get_previous_releases.py --target-dir $PREVIOUS_RELEASES_DIR
+
+      - name: Run functional tests
+        env:
+          TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
+        run: python3 test/functional/test_runner.py --jobs $(sysctl -n hw.ncpu) --ci --quiet --tmpdirprefix="$RUNNER_TEMP" --combinedlogslen=99999999 --timeout-factor=$TEST_RUNNER_TIMEOUT_FACTOR $TEST_RUNNER_EXTRA
 
   ci-matrix:
     name: ${{ matrix.name }}
@@ -446,12 +540,6 @@ jobs:
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_asan.sh'
-
-          - name: 'macOS-cross, gui, no tests'
-            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm'
-            fallback-runner: 'ubuntu-24.04'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_mac_cross.sh'
 
           - name: 'No wallet, libbitcoinkernel'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm'
