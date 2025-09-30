@@ -75,7 +75,7 @@ auto& FuzzTargets()
 
 void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target, FuzzTargetOptions opts)
 {
-    const auto [it, ins]{FuzzTargets().try_emplace(name, FuzzTarget /* temporary can be dropped after Apple-Clang-16 ? */ {std::move(target), std::move(opts)})};
+    const auto [it, ins]{FuzzTargets().try_emplace(name, std::move(target), std::move(opts))};
     Assert(ins);
 }
 
