@@ -174,7 +174,7 @@ void ArgsManager::SelectConfigNetwork(const std::string& network)
     m_network = network;
 }
 
-bool ArgsManager::ProcessOptionKey(std::string& key, std::optional<std::string>& val, std::string& error) {
+bool ArgsManager::ProcessOptionKey(std::string& key, std::optional<std::string>& val, std::string& error, const bool found_after_non_option) {
 
     std::string original_input = key; // Capture the original key
     if (val) original_input += "=" + *val; // Append =value if it exists
@@ -191,7 +191,16 @@ bool ArgsManager::ProcessOptionKey(std::string& key, std::optional<std::string>&
     // Unknown command line options and command line options with dot characters
     // (which are returned from InterpretKey with nonempty section strings)are not valid.
     if (!flags || !keyinfo.section.empty()) {
-        error = strprintf("Invalid parameter %s", original_input);
+        if (!found_after_non_option) {
+            error = strprintf("Invalid parameter %s", original_input);
+        } else {
+            // if the option is invalid but comes after a non-option (found_after_non_option)
+            // leave it up to the command if it accepts args that begin with "-"
+            LOCK(cs_args);
+            m_command.emplace_back(original_input);
+            // returns true to continue processing the args of the command
+            return true;
+        }        
         return false;
     }
 
@@ -246,7 +255,22 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
             m_command.push_back(key);
             while (++i < argc) {
                 // The remaining args are command args
-                m_command.emplace_back(argv[i]);
+                if (argv[i][0] == '-') {
+                    // except it starts with dash "-" then will check if it's a valid option
+                    // if not it will be passed to the command
+                    key = argv[i];
+                    val.reset();
+                    is_index = key.find('=');
+                    if (is_index != std::string::npos) {
+                        val = key.substr(is_index + 1);
+                        key.erase(is_index);
+                    }
+                    if (!ProcessOptionKey(key, val, error, true)) {
+                        return false;
+                    }
+                } else {
+                    m_command.emplace_back(argv[i]);
+                }
             }
             break;
         }
