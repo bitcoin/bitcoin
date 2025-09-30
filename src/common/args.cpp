@@ -176,6 +176,11 @@ void ArgsManager::SelectConfigNetwork(const std::string& network)
     m_network = network;
 }
 
+bool IsArgNumber(const char* arg) {
+    double dummy{};
+    return ParseDouble(arg, &dummy);
+}
+
 bool ArgsManager::ProcessOptionKey(std::string& key, std::optional<std::string>& val, std::string& error) {
 
     std::string original_input = key; // Capture the original key
@@ -248,7 +253,21 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
             m_command.push_back(key);
             while (++i < argc) {
                 // The remaining args are command args
-                m_command.emplace_back(argv[i]);
+                if (argv[i][0] == '-' && !IsArgNumber(argv[i])) {
+                    // except it starts with dash "-" (and it's not a number) then will check if it's a valid option
+                    key = argv[i];
+                    val.reset();
+                    is_index = key.find('=');
+                    if (is_index != std::string::npos) {
+                        val = key.substr(is_index + 1);
+                        key.erase(is_index);
+                    }
+                    if (!ProcessOptionKey(key, val, error)) {
+                        return false;
+                    }
+                } else {
+                    m_command.emplace_back(argv[i]);
+                }
             }
             break;
         }
