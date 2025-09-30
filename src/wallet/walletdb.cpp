@@ -878,10 +878,10 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
     // Set the active ScriptPubKeyMans
     for (auto spk_man : wss.m_active_external_spks) {
-        pwallet->LoadActiveScriptPubKeyMan(spk_man.second, /* internal */ false);
+        pwallet->LoadActiveScriptPubKeyMan(spk_man.second, /*internal=*/false);
     }
     for (auto spk_man : wss.m_active_internal_spks) {
-        pwallet->LoadActiveScriptPubKeyMan(spk_man.second, /* internal */ true);
+        pwallet->LoadActiveScriptPubKeyMan(spk_man.second, /*internal=*/true);
     }
 
     // Set the descriptor caches

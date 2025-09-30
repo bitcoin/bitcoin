@@ -33,6 +33,7 @@
 #include <shutdown.h>
 #include <streams.h>
 #include <test/util/index.h>
+#include <test/util/net.h>
 #include <txdb.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -203,7 +204,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
                       sem_str, GetSupportedSocketEventsStr()));
     }
 
-    m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman); // Deterministic randomness for tests.
+    m_node.connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman); // Deterministic randomness for tests.
 
     fCheckBlockIndex = true;
     m_node.evodb = std::make_unique<CEvoDB>(1 << 20, true, true);

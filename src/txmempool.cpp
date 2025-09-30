@@ -308,7 +308,7 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry,
         staged_ancestors = it->GetMemPoolParentsConst();
     }
 
-    return CalculateAncestorsAndCheckLimits(entry.GetTxSize(), /* entry_count */ 1,
+    return CalculateAncestorsAndCheckLimits(entry.GetTxSize(), /*entry_count=*/1,
                                             setAncestors, staged_ancestors,
                                             limitAncestorCount, limitAncestorSize,
                                             limitDescendantCount, limitDescendantSize, errString);

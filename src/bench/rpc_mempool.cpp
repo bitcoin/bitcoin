@@ -31,11 +31,11 @@ static void RpcMempool(benchmark::Bench& bench)
         tx.vout[0].scriptPubKey = CScript() << OP_1 << OP_EQUAL;
         tx.vout[0].nValue = i;
         const CTransactionRef tx_r{MakeTransactionRef(tx)};
-        AddTx(tx_r, /* fee */ i, pool);
+        AddTx(tx_r, /*fee=*/i, pool);
     }
 
     bench.minEpochIterations(40).run([&] {
-        (void)MempoolToJSON(pool, nullptr, /*verbose*/ true);
+        (void)MempoolToJSON(pool, nullptr, /*verbose=*/true);
     });
 }
 

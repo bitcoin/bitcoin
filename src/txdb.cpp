@@ -88,7 +88,7 @@ void CCoinsViewDB::ResizeCache(size_t new_cache_size)
         // filesystem lock.
         m_db.reset();
         m_db = std::make_unique<CDBWrapper>(
-            m_ldb_path, new_cache_size, m_is_memory, /*fWipe*/ false, /*obfuscate*/ true);
+            m_ldb_path, new_cache_size, m_is_memory, /*fWipe=*/false, /*obfuscate=*/true);
     }
 }
 

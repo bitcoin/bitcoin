@@ -1527,11 +1527,11 @@ RPCHelpMan importmulti()
                         {RPCResult::Type::OBJ, "", "",
                          {
                                  {RPCResult::Type::BOOL, "success", ""},
-                                 {RPCResult::Type::ARR, "warnings", /* optional */ true, "",
+                                 {RPCResult::Type::ARR, "warnings", /*optional=*/true, "",
                                   {
                                           {RPCResult::Type::STR, "", ""},
                                   }},
-                                 {RPCResult::Type::OBJ, "error", /* optional */ true, "",
+                                 {RPCResult::Type::OBJ, "error", /*optional=*/true, "",
                                   {
                                           {RPCResult::Type::ELISION, "", "JSONRPC error"},
                                   }},
@@ -1834,11 +1834,11 @@ RPCHelpMan importdescriptors() {
                         {RPCResult::Type::OBJ, "", "",
                         {
                             {RPCResult::Type::BOOL, "success", ""},
-                            {RPCResult::Type::ARR, "warnings", /* optional */ true, "",
+                            {RPCResult::Type::ARR, "warnings", /*optional=*/true, "",
                             {
                                 {RPCResult::Type::STR, "", ""},
                             }},
-                            {RPCResult::Type::OBJ, "error", /* optional */ true, "",
+                            {RPCResult::Type::OBJ, "error", /*optional=*/true, "",
                             {
                                 {RPCResult::Type::ELISION, "", "JSONRPC error"},
                             }},

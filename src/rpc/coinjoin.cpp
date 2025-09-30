@@ -444,7 +444,7 @@ static RPCHelpMan getcoinjoininfo()
                                     {RPCResult::Type::NUM, "entries_count", "The number of entries in the mixing session"},
                                 }},
                             }},
-                            {RPCResult::Type::NUM, "keys_left", /* optional */ true, "How many new keys are left since last automatic backup (if applicable)"},
+                            {RPCResult::Type::NUM, "keys_left", /*optional=*/true, "How many new keys are left since last automatic backup (if applicable)"},
                             {RPCResult::Type::STR, "warnings", "Warnings if any"},
                         }},
                     RPCResult{"for masternodes",
