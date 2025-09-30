@@ -9,6 +9,7 @@ Test the following RPCs:
    - createrawtransaction
    - signrawtransactionwithwallet
    - sendrawtransaction
+   - sendrawtransactiontopeer
    - decoderawtransaction
 """
 
@@ -88,6 +89,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.createrawtransaction_tests()
         self.sendrawtransaction_tests()
         self.sendrawtransaction_testmempoolaccept_tests()
+        self.sendrawtransactiontopeer()
         self.decoderawtransaction_tests()
         self.transaction_version_number_tests()
         self.getrawtransaction_verbosity_tests()
@@ -443,6 +445,27 @@ class RawTransactionsTest(BitcoinTestFramework):
             assert_equal(testres['allowed'], False)
             assert_equal(testres['reject-reason'], 'txn-already-known')
             assert_raises_rpc_error(-27, 'Transaction outputs already in utxo set', node.sendrawtransaction, tx['hex'])
+
+    def sendrawtransactiontopeer(self):
+        self.log.info("Test sendrawtransactiontopeer with missing input")
+        inputs = [{'txid': TXID, 'vout': 1}] # won't exist
+        address = getnewdestination()[2]
+        outputs = {address: 4.998}
+        rawtx = self.nodes[2].createrawtransaction(inputs, outputs)
+        assert_raises_rpc_error(-26, "bad-txns-inputs-missingorspent", self.nodes[2].sendrawtransactiontopeer, rawtx, 0)
+
+        self.log.info("Test sendrawtransactiontopeer")
+        rawtx1 = self.wallet.create_self_transfer()['hex']
+        with self.nodes[0].assert_debug_log(expected_msgs=["received: tx"]):
+            self.nodes[2].sendrawtransactiontopeer(hexstring=rawtx1, peer_id=0)
+
+        self.log.info("Test error for sendrawtransactiontopeer to non-existing peer")
+        rawtx2 = self.wallet.create_self_transfer()['hex']
+        assert_raises_rpc_error(-1, "Error: Could not send transaction to peer", self.nodes[2].sendrawtransactiontopeer, hexstring=rawtx2, peer_id=100)
+
+        self.log.info("Test error for sendrawtransactiontopeer of txs already in the mempool")
+        rawtx3 = self.wallet.send_self_transfer(from_node=self.nodes[2])['hex']
+        assert_raises_rpc_error(-26, "txn-already-in-mempool", self.nodes[2].sendrawtransactiontopeer, hexstring=rawtx3, peer_id=0)
 
     def decoderawtransaction_tests(self):
         self.log.info("Test decoderawtransaction")
