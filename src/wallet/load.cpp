@@ -51,6 +51,8 @@ bool VerifyWallets(WalletContext& context)
     }
 
     LogInfo("Using wallet directory %s", fs::PathToString(GetWalletDir()));
+    // Print general DB information
+    LogDBInfo();
 
     chain.initMessage(_("Verifying wallet(s)…"));
 
