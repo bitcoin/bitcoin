@@ -175,7 +175,7 @@ static const std::map<ThemedColor, QColor> themedDarkColors = {
 };
 
 static const std::map<ThemedStyle, QString> themedStyles = {
-    { ThemedStyle::TS_INVALID, "background:#a84832;" },
+    { ThemedStyle::TS_INVALID, "border: 3px solid #a84832;" },
     { ThemedStyle::TS_ERROR, "color:#a84832;" },
     { ThemedStyle::TS_WARNING, "color:#999900;" },
     { ThemedStyle::TS_SUCCESS, "color:#5e8c41;" },
@@ -185,7 +185,7 @@ static const std::map<ThemedStyle, QString> themedStyles = {
 };
 
 static const std::map<ThemedStyle, QString> themedDarkStyles = {
-    { ThemedStyle::TS_INVALID, "background:#a84832;" },
+    { ThemedStyle::TS_INVALID, "border: 3px solid #a84832;" },
     { ThemedStyle::TS_ERROR, "color:#a84832;" },
     { ThemedStyle::TS_WARNING, "color:#999900;" },
     { ThemedStyle::TS_SUCCESS, "color:#5e8c41;" },
