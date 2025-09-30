@@ -7,9 +7,12 @@
 #include <stats/client.h>
 
 #include <logging.h>
+#include <random.h>
 #include <stats/rawsender.h>
+#include <sync.h>
 #include <util/system.h>
 
+#include <algorithm>
 #include <cmath>
 #include <random>
 
@@ -27,11 +30,53 @@ static constexpr char STATSD_METRIC_COUNT[]{"c"};
 static constexpr char STATSD_METRIC_GAUGE[]{"g"};
 /** Characters used to denote Statsd message type as timing */
 static constexpr char STATSD_METRIC_TIMING[]{"ms"};
+
+class StatsdClientImpl final : public StatsdClient
+{
+public:
+    explicit StatsdClientImpl(const std::string& host, uint16_t port, uint64_t batch_size, uint64_t interval_ms,
+                              const std::string& prefix, const std::string& suffix);
+    ~StatsdClientImpl() = default;
+
+public:
+    bool dec(const std::string& key, float sample_rate) override { return count(key, -1, sample_rate); }
+    bool inc(const std::string& key, float sample_rate) override { return count(key, 1, sample_rate); }
+    bool count(const std::string& key, int64_t delta, float sample_rate) override { return _send(key, delta, STATSD_METRIC_COUNT, sample_rate); }
+    bool gauge(const std::string& key, int64_t value, float sample_rate) override { return _send(key, value, STATSD_METRIC_GAUGE, sample_rate); }
+    bool gaugeDouble(const std::string& key, double value, float sample_rate) override { return _send(key, value, STATSD_METRIC_GAUGE, sample_rate); }
+    bool timing(const std::string& key, uint64_t ms, float sample_rate) override { return _send(key, ms, STATSD_METRIC_TIMING, sample_rate); }
+
+    bool send(const std::string& key, double value, const std::string& type, float sample_rate) override { return _send(key, value, type, sample_rate); }
+    bool send(const std::string& key, int32_t value, const std::string& type, float sample_rate) override { return _send(key, value, type, sample_rate); }
+    bool send(const std::string& key, int64_t value, const std::string& type, float sample_rate) override { return _send(key, value, type, sample_rate); }
+    bool send(const std::string& key, uint32_t value, const std::string& type, float sample_rate) override { return _send(key, value, type, sample_rate); }
+    bool send(const std::string& key, uint64_t value, const std::string& type, float sample_rate) override { return _send(key, value, type, sample_rate); }
+
+    bool active() const override { return m_sender != nullptr; }
+
+private:
+    template <typename T1>
+    inline bool _send(const std::string& key, T1 value, const std::string& type, float sample_rate);
+
+private:
+    /* Mutex to protect PRNG */
+    mutable Mutex cs;
+    /* PRNG used to dice-roll messages that are 0 < f < 1 */
+    mutable FastRandomContext insecure_rand GUARDED_BY(cs);
+
+    /* Broadcasts messages crafted by StatsdClient */
+    std::unique_ptr<RawSender> m_sender{nullptr};
+
+    /* Phrase prepended to keys */
+    const std::string m_prefix{};
+    /* Phrase appended to keys */
+    const std::string m_suffix{};
+};
 } // anonymous namespace
 
 std::unique_ptr<StatsdClient> g_stats_client;
 
-std::unique_ptr<StatsdClient> InitStatsClient(const ArgsManager& args)
+std::unique_ptr<StatsdClient> StatsdClient::make(const ArgsManager& args)
 {
     auto sanitize_string = [](std::string string) {
         // Remove key delimiters from the front and back as they're added back in
@@ -43,16 +88,18 @@ std::unique_ptr<StatsdClient> InitStatsClient(const ArgsManager& args)
         return string;
     };
 
-    return std::make_unique<StatsdClient>(args.GetArg("-statshost", DEFAULT_STATSD_HOST),
-                                          args.GetIntArg("-statsport", DEFAULT_STATSD_PORT),
-                                          args.GetIntArg("-statsbatchsize", DEFAULT_STATSD_BATCH_SIZE),
-                                          args.GetIntArg("-statsduration", DEFAULT_STATSD_DURATION),
-                                          sanitize_string(args.GetArg("-statsprefix", DEFAULT_STATSD_PREFIX)),
-                                          sanitize_string(args.GetArg("-statssuffix", DEFAULT_STATSD_SUFFIX)));
+    return std::make_unique<StatsdClientImpl>(
+        args.GetArg("-statshost", DEFAULT_STATSD_HOST),
+        args.GetIntArg("-statsport", DEFAULT_STATSD_PORT),
+        args.GetIntArg("-statsbatchsize", DEFAULT_STATSD_BATCH_SIZE),
+        args.GetIntArg("-statsduration", DEFAULT_STATSD_DURATION),
+        sanitize_string(args.GetArg("-statsprefix", DEFAULT_STATSD_PREFIX)),
+        sanitize_string(args.GetArg("-statssuffix", DEFAULT_STATSD_SUFFIX))
+    );
 }
 
-StatsdClient::StatsdClient(const std::string& host, uint16_t port, uint64_t batch_size, uint64_t interval_ms,
-                           const std::string& prefix, const std::string& suffix) :
+StatsdClientImpl::StatsdClientImpl(const std::string& host, uint16_t port, uint64_t batch_size, uint64_t interval_ms,
+                                   const std::string& prefix, const std::string& suffix) :
     m_prefix{[prefix]() { return !prefix.empty() ? prefix + STATSD_NS_DELIMITER : prefix; }()},
     m_suffix{[suffix]() { return !suffix.empty() ? STATSD_NS_DELIMITER + suffix : suffix; }()}
 {
@@ -74,34 +121,8 @@ StatsdClient::StatsdClient(const std::string& host, uint16_t port, uint64_t batc
     LogPrintf("StatsdClient initialized to transmit stats to %s:%d\n", host, port);
 }
 
-StatsdClient::~StatsdClient() {}
-
-bool StatsdClient::dec(const std::string& key, float sample_rate) { return count(key, -1, sample_rate); }
-
-bool StatsdClient::inc(const std::string& key, float sample_rate) { return count(key, 1, sample_rate); }
-
-bool StatsdClient::count(const std::string& key, int64_t delta, float sample_rate)
-{
-    return send(key, delta, STATSD_METRIC_COUNT, sample_rate);
-}
-
-bool StatsdClient::gauge(const std::string& key, int64_t value, float sample_rate)
-{
-    return send(key, value, STATSD_METRIC_GAUGE, sample_rate);
-}
-
-bool StatsdClient::gaugeDouble(const std::string& key, double value, float sample_rate)
-{
-    return send(key, value, STATSD_METRIC_GAUGE, sample_rate);
-}
-
-bool StatsdClient::timing(const std::string& key, uint64_t ms, float sample_rate)
-{
-    return send(key, ms, STATSD_METRIC_TIMING, sample_rate);
-}
-
 template <typename T1>
-bool StatsdClient::send(const std::string& key, T1 value, const std::string& type, float sample_rate)
+inline bool StatsdClientImpl::_send(const std::string& key, T1 value, const std::string& type, float sample_rate)
 {
     static_assert(std::is_arithmetic<T1>::value, "Must specialize to an arithmetic type");
 
@@ -132,9 +153,3 @@ bool StatsdClient::send(const std::string& key, T1 value, const std::string& typ
 
     return true;
 }
-
-template bool StatsdClient::send(const std::string& key, double value, const std::string& type, float sample_rate);
-template bool StatsdClient::send(const std::string& key, int32_t value, const std::string& type, float sample_rate);
-template bool StatsdClient::send(const std::string& key, int64_t value, const std::string& type, float sample_rate);
-template bool StatsdClient::send(const std::string& key, uint32_t value, const std::string& type, float sample_rate);
-template bool StatsdClient::send(const std::string& key, uint64_t value, const std::string& type, float sample_rate);

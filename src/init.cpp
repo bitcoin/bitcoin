@@ -1587,7 +1587,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // We need to initialize g_stats_client early as currently, g_stats_client is called
     // regardless of whether transmitting stats are desirable or not and if
     // g_stats_client isn't present when that attempt is made, the client will crash.
-    ::g_stats_client = InitStatsClient(args);
+    ::g_stats_client = StatsdClient::make(args);
 
     {
 

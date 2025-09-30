@@ -7,14 +7,11 @@
 #ifndef BITCOIN_STATS_CLIENT_H
 #define BITCOIN_STATS_CLIENT_H
 
-#include <random.h>
-#include <sync.h>
-
+#include <cstdint>
 #include <memory>
 #include <string>
 
 class ArgsManager;
-class RawSender;
 
 /** Default port used to connect to a Statsd server */
 static constexpr uint16_t DEFAULT_STATSD_PORT{8125};
@@ -39,43 +36,27 @@ static constexpr int MAX_STATSD_PERIOD{60 * 60};
 class StatsdClient
 {
 public:
-    explicit StatsdClient(const std::string& host, uint16_t port, uint64_t batch_size, uint64_t interval_ms,
-                          const std::string& prefix, const std::string& suffix);
-    ~StatsdClient();
+    static std::unique_ptr<StatsdClient> make(const ArgsManager& args);
+    virtual ~StatsdClient() = default;
 
-public:
     /* Statsd-defined APIs */
-    bool dec(const std::string& key, float sample_rate = 1.f);
-    bool inc(const std::string& key, float sample_rate = 1.f);
-    bool count(const std::string& key, int64_t delta, float sample_rate = 1.f);
-    bool gauge(const std::string& key, int64_t value, float sample_rate = 1.f);
-    bool gaugeDouble(const std::string& key, double value, float sample_rate = 1.f);
-    bool timing(const std::string& key, uint64_t ms, float sample_rate = 1.f);
+    virtual bool dec(const std::string& key, float sample_rate = 1.f) { return false; }
+    virtual bool inc(const std::string& key, float sample_rate = 1.f) { return false; }
+    virtual bool count(const std::string& key, int64_t delta, float sample_rate = 1.f) { return false; }
+    virtual bool gauge(const std::string& key, int64_t value, float sample_rate = 1.f) { return false; }
+    virtual bool gaugeDouble(const std::string& key, double value, float sample_rate = 1.f) { return false; }
+    virtual bool timing(const std::string& key, uint64_t ms, float sample_rate = 1.f) { return false; }
 
     /* Statsd-compatible APIs */
-    template <typename T1>
-    bool send(const std::string& key, T1 value, const std::string& type, float sample_rate = 1.f);
+    virtual bool send(const std::string& key, double value, const std::string& type, float sample_rate = 1.f) { return false; }
+    virtual bool send(const std::string& key, int32_t value, const std::string& type, float sample_rate = 1.f) { return false; }
+    virtual bool send(const std::string& key, int64_t value, const std::string& type, float sample_rate = 1.f) { return false; }
+    virtual bool send(const std::string& key, uint32_t value, const std::string& type, float sample_rate = 1.f) { return false; }
+    virtual bool send(const std::string& key, uint64_t value, const std::string& type, float sample_rate = 1.f) { return false; }
 
     /* Check if a StatsdClient instance is ready to send messages */
-    bool active() const { return m_sender != nullptr; }
-
-private:
-    /* Mutex to protect PRNG */
-    mutable Mutex cs;
-    /* PRNG used to dice-roll messages that are 0 < f < 1 */
-    mutable FastRandomContext insecure_rand GUARDED_BY(cs);
-
-    /* Broadcasts messages crafted by StatsdClient */
-    std::unique_ptr<RawSender> m_sender{nullptr};
-
-    /* Phrase prepended to keys */
-    const std::string m_prefix{""};
-    /* Phrase appended to keys */
-    const std::string m_suffix{""};
+    virtual bool active() const { return false; }
 };
-
-/** Parses arguments and constructs a StatsdClient instance */
-std::unique_ptr<StatsdClient> InitStatsClient(const ArgsManager& args);
 
 /** Global smart pointer containing StatsdClient instance */
 extern std::unique_ptr<StatsdClient> g_stats_client;

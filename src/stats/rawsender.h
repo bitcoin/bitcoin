@@ -63,14 +63,26 @@ public:
     RawSender& operator=(const RawSender&) = delete;
     RawSender(RawSender&&) = delete;
 
+    //! Request a message to be sent based on configuration (queueing, batching)
     std::optional<std::string> Send(const RawMessage& msg) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+private:
+    //! Send a message directly using ::send{,to}()
     std::optional<std::string> SendDirectly(const RawMessage& msg);
 
+    //! Get target server address as string
     std::string ToStringHostPort() const;
 
+    //! Add message to queue
     void QueueAdd(const RawMessage& msg) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+    //! Send all messages in queue of RawSender entity and flush it
     void QueueFlush() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+    //! Send all messages in given queue and flush it
     void QueueFlush(std::deque<RawMessage>& queue);
+
+    //! Worker thread function if queueing is requested
     void QueueThreadMain() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
 private:

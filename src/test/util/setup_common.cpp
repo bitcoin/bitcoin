@@ -188,7 +188,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     SetupNetworking();
     InitSignatureCache();
     InitScriptExecutionCache();
-    ::g_stats_client = InitStatsClient(*m_node.args);
+    ::g_stats_client = StatsdClient::make(*m_node.args);
     m_node.chain = interfaces::MakeChain(m_node);
 
     m_node.netgroupman = std::make_unique<NetGroupManager>(/*asmap=*/std::vector<bool>());
