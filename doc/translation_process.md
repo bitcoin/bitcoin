@@ -45,23 +45,7 @@ Visit the [Transifex Signup](https://app.transifex.com/signup/) page to create a
 You can find the Dash translation project at <https://explore.transifex.com/dash/dash/>.
 
 ### Installing the Transifex client command-line tool
-The client is used to fetch updated translations. If you are having problems, or need more details, see <https://developers.transifex.com/docs/cli>.
-
-**For Linux and Mac**
-
-`pip install transifex-client`
-
-Setup your Transifex client config as follows. Please *ignore the token field*.
-
-```ini
-nano ~/.transifexrc
-
-[https://www.transifex.com]
-hostname = https://www.transifex.com
-password = PASSWORD
-token =
-username = USERNAME
-```
+The client is used to fetch updated translations. Please check installation instructions and any other details at <https://developers.transifex.com/docs/cli>.
 
 **For Windows**
 
