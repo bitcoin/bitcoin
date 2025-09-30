@@ -162,7 +162,7 @@ private:
      */
     bool UseDefaultSection(const std::string& arg) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
 
-    bool ProcessOptionKey(std::string& key, std::optional<std::string>& val, std::string& error)
+    bool ProcessOptionKey(std::string& key, std::optional<std::string>& val, std::string& error, bool found_after_non_option = false)
         EXCLUSIVE_LOCKS_REQUIRED(cs_args);
 
 protected:
