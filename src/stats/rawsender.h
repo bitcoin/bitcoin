@@ -9,6 +9,7 @@
 #include <compat/compat.h>
 #include <sync.h>
 #include <util/threadinterrupt.h>
+#include <util/translation.h>
 
 #include <deque>
 #include <memory>
@@ -55,8 +56,8 @@ struct RawMessage : public std::vector<uint8_t>
 class RawSender
 {
 public:
-    RawSender(const std::string& host, uint16_t port, std::pair<uint64_t, uint8_t> batching_opts,
-              uint64_t interval_ms, std::optional<std::string>& error);
+    RawSender(const std::string& host, uint16_t port, std::pair<uint64_t, uint8_t> batching_opts, uint64_t interval_ms,
+              std::optional<bilingual_str>& error);
     ~RawSender();
 
     RawSender(const RawSender&) = delete;

@@ -10,7 +10,9 @@
 #include <random.h>
 #include <stats/rawsender.h>
 #include <sync.h>
+#include <util/check.h>
 #include <util/system.h>
+#include <util/translation.h>
 
 #include <algorithm>
 #include <cmath>
@@ -35,7 +37,7 @@ class StatsdClientImpl final : public StatsdClient
 {
 public:
     explicit StatsdClientImpl(const std::string& host, uint16_t port, uint64_t batch_size, uint64_t interval_ms,
-                              const std::string& prefix, const std::string& suffix);
+                              const std::string& prefix, const std::string& suffix, std::optional<bilingual_str>& error);
     ~StatsdClientImpl() = default;
 
 public:
@@ -76,8 +78,14 @@ private:
 
 std::unique_ptr<StatsdClient> g_stats_client;
 
-std::unique_ptr<StatsdClient> StatsdClient::make(const ArgsManager& args)
+util::Result<std::unique_ptr<StatsdClient>> StatsdClient::make(const ArgsManager& args)
 {
+    const auto host = args.GetArg("-statshost", DEFAULT_STATSD_HOST);
+    if (host.empty()) {
+        LogPrintf("Transmitting stats are disabled, will not init Statsd client\n");
+        return std::make_unique<StatsdClient>();
+    }
+
     auto sanitize_string = [](std::string string) {
         // Remove key delimiters from the front and back as they're added back in
         // the constructor
@@ -88,32 +96,30 @@ std::unique_ptr<StatsdClient> StatsdClient::make(const ArgsManager& args)
         return string;
     };
 
-    return std::make_unique<StatsdClientImpl>(
-        args.GetArg("-statshost", DEFAULT_STATSD_HOST),
-        args.GetIntArg("-statsport", DEFAULT_STATSD_PORT),
+    std::optional<bilingual_str> error_opt;
+    auto statsd_ptr = std::make_unique<StatsdClientImpl>(
+        host, args.GetIntArg("-statsport", DEFAULT_STATSD_PORT),
         args.GetIntArg("-statsbatchsize", DEFAULT_STATSD_BATCH_SIZE),
         args.GetIntArg("-statsduration", DEFAULT_STATSD_DURATION),
         sanitize_string(args.GetArg("-statsprefix", DEFAULT_STATSD_PREFIX)),
-        sanitize_string(args.GetArg("-statssuffix", DEFAULT_STATSD_SUFFIX))
-    );
+        sanitize_string(args.GetArg("-statssuffix", DEFAULT_STATSD_SUFFIX)), error_opt);
+    if (error_opt.has_value()) {
+        statsd_ptr.reset();
+        return util::Error{error_opt.value()};
+    }
+    return {std::move(statsd_ptr)};
 }
 
 StatsdClientImpl::StatsdClientImpl(const std::string& host, uint16_t port, uint64_t batch_size, uint64_t interval_ms,
-                                   const std::string& prefix, const std::string& suffix) :
+                                   const std::string& prefix, const std::string& suffix,
+                                   std::optional<bilingual_str>& error) :
     m_prefix{[prefix]() { return !prefix.empty() ? prefix + STATSD_NS_DELIMITER : prefix; }()},
     m_suffix{[suffix]() { return !suffix.empty() ? STATSD_NS_DELIMITER + suffix : suffix; }()}
 {
-    if (host.empty()) {
-        LogPrintf("Transmitting stats are disabled, will not init StatsdClient\n");
-        return;
-    }
-
-    std::optional<std::string> error_opt;
     m_sender = std::make_unique<RawSender>(host, port,
                                            std::make_pair(batch_size, static_cast<uint8_t>(STATSD_MSG_DELIMITER)),
-                                           interval_ms, error_opt);
-    if (error_opt.has_value()) {
-        LogPrintf("ERROR: %s, cannot initialize StatsdClient.\n", error_opt.value());
+                                           interval_ms, error);
+    if (error.has_value()) {
         m_sender.reset();
         return;
     }
@@ -125,10 +131,6 @@ template <typename T1>
 inline bool StatsdClientImpl::_send(std::string_view key, T1 value, std::string_view type, float sample_rate)
 {
     static_assert(std::is_arithmetic<T1>::value, "Must specialize to an arithmetic type");
-
-    if (!m_sender) {
-        return false;
-    }
 
     // Determine if we should send the message at all but claim that we did even if we don't
     sample_rate = std::clamp(sample_rate, 0.f, 1.f);
@@ -146,7 +148,7 @@ inline bool StatsdClientImpl::_send(std::string_view key, T1 value, std::string_
     }
 
     // Send it and report an error if we encounter one
-    if (auto error_opt = m_sender->Send(msg); error_opt.has_value()) {
+    if (auto error_opt = Assert(m_sender)->Send(msg); error_opt.has_value()) {
         LogPrintf("ERROR: %s.\n", error_opt.value());
         return false;
     }

@@ -12,34 +12,34 @@
 #include <util/thread.h>
 
 RawSender::RawSender(const std::string& host, uint16_t port, std::pair<uint64_t, uint8_t> batching_opts,
-                     uint64_t interval_ms, std::optional<std::string>& error) :
+                     uint64_t interval_ms, std::optional<bilingual_str>& error) :
     m_host{host},
     m_port{port},
     m_batching_opts{batching_opts},
     m_interval_ms{interval_ms}
 {
     if (host.empty()) {
-        error = "No host specified";
+        error = _("No host specified");
         return;
     }
 
     if (auto netaddr = LookupHost(m_host, /*fAllowLookup=*/true); netaddr.has_value()) {
         if (!netaddr->IsIPv4()) {
-            error = strprintf("Host %s on unsupported network", m_host);
+            error = strprintf(_("Host %s on unsupported network"), m_host);
             return;
         }
         if (!CService(*netaddr, port).GetSockAddr(reinterpret_cast<struct sockaddr*>(&m_server.first), &m_server.second)) {
-            error = strprintf("Cannot get socket address for %s", m_host);
+            error = strprintf(_("Cannot get socket address for %s"), m_host);
             return;
         }
     } else {
-        error = strprintf("Unable to lookup host %s", m_host);
+        error = strprintf(_("Unable to lookup host %s"), m_host);
         return;
     }
 
     SOCKET hSocket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (hSocket == INVALID_SOCKET) {
-        error = strprintf("Cannot create socket (socket() returned error %s)", NetworkErrorString(WSAGetLastError()));
+        error = strprintf(_("Cannot create socket (socket() returned error %s)"), NetworkErrorString(WSAGetLastError()));
         return;
     }
     m_sock = std::make_unique<Sock>(hSocket);

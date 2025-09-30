@@ -1584,11 +1584,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     fDiscover = args.GetBoolArg("-discover", true);
     const bool ignores_incoming_txs{args.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)};
 
-    // We need to initialize g_stats_client early as currently, g_stats_client is called
-    // regardless of whether transmitting stats are desirable or not and if
-    // g_stats_client isn't present when that attempt is made, the client will crash.
-    ::g_stats_client = StatsdClient::make(args);
-
     {
 
         // Read asmap file if configured
@@ -1629,6 +1624,17 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     ::g_socket_events_mode = SEMFromString(sem_str);
     if (::g_socket_events_mode == SocketEventsMode::Unknown) {
         return InitError(strprintf(_("Invalid -socketevents ('%s') specified. Only these modes are supported: %s"), sem_str, GetSupportedSocketEventsStr()));
+    }
+
+    // We need to initialize g_stats_client early as currently, g_stats_client is called
+    // regardless of whether transmitting stats are desirable or not and if
+    // g_stats_client isn't present when that attempt is made, the client will crash.
+    {
+        auto stats_client = StatsdClient::make(args);
+        if (!stats_client) {
+            return InitError(_("Cannot init Statsd client") + Untranslated(" (") + util::ErrorString(stats_client) + Untranslated(")"));
+        }
+        ::g_stats_client = std::move(*stats_client);
     }
 
     assert(!node.banman);

@@ -7,6 +7,8 @@
 #ifndef BITCOIN_STATS_CLIENT_H
 #define BITCOIN_STATS_CLIENT_H
 
+#include <util/result.h>
+
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -37,7 +39,7 @@ static constexpr int MAX_STATSD_PERIOD{60 * 60};
 class StatsdClient
 {
 public:
-    static std::unique_ptr<StatsdClient> make(const ArgsManager& args);
+    static util::Result<std::unique_ptr<StatsdClient>> make(const ArgsManager& args);
     virtual ~StatsdClient() = default;
 
     /* Statsd-defined APIs */
