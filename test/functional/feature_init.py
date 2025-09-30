@@ -3,13 +3,16 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests related to node initialization."""
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import os
 import platform
 import shutil
 import signal
 import subprocess
+import time
 
+from test_framework.authproxy import JSONRPCException
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import (
     BITCOIN_PID_FILENAME_DEFAULT,
@@ -240,9 +243,62 @@ class InitTest(BitcoinTestFramework):
         self.stop_node(0)
         assert not custom_pidfile_absolute.exists()
 
+    def break_wait_test(self):
+        """Test what happens when a break signal is sent during a
+        waitforblockheight RPC call with a long timeout. Ctrl-Break is sent on
+        Windows and SIGTERM is sent on other platforms, to trigger the same node
+        shutdown sequence that would happen if Ctrl-C were pressed in a
+        terminal. (This can be different than the node shutdown sequence that
+        happens when the stop RPC is sent.)
+
+        Currently when the break signal is sent, it does not interrupt the
+        waitforblockheight RPC call, and the node does not exit until it times
+        out."""
+
+        self.log.info("Testing waitforblockheight RPC call followed by break signal")
+        node = self.nodes[0]
+
+        if platform.system() == 'Windows':
+            # CREATE_NEW_PROCESS_GROUP prevents python test from exiting
+            # with STATUS_CONTROL_C_EXIT (-1073741510) when break is sent.
+            self.start_node(node.index, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+        else:
+            self.start_node(node.index)
+
+        current_height = node.getblock(node.getbestblockhash())['height']
+
+        with ThreadPoolExecutor(max_workers=1) as ex:
+            # Call waitforblockheight with wait timeout longer than RPC timeout,
+            # so it is possible to distinguish whether it times out or returns
+            # early. If it times out it will throw an exception, and if it
+            # returns early it will return the current block height.
+            self.log.debug(f"Calling waitforblockheight with {self.rpc_timeout} sec RPC timeout")
+            fut = ex.submit(node.waitforblockheight, height=current_height+1, timeout=self.rpc_timeout*1000*2)
+            time.sleep(1)
+
+            self.log.debug(f"Sending break signal to pid {node.process.pid}")
+            if platform.system() == 'Windows':
+                # Note: CTRL_C_EVENT should not be sent here because unlike
+                # CTRL_BREAK_EVENT it can not be targeted at a specific process
+                # group and may behave unpredictably.
+                node.process.send_signal(signal.CTRL_BREAK_EVENT)
+            else:
+                # Note: signal.SIGINT would work here as well
+                node.process.send_signal(signal.SIGTERM)
+            node.process.wait()
+
+            try:
+                result = fut.result()
+                raise Exception(f"waitforblockheight returned {result!r}")
+            except JSONRPCException as e:
+                self.log.debug(f"waitforblockheight raised {e!r}")
+                assert_equal(e.error['code'], -344) # -344 is RPC timeout
+            node.wait_until_stopped()
+
     def run_test(self):
         self.init_pid_test()
         self.init_stress_test()
+        self.break_wait_test()
 
 
 if __name__ == '__main__':
