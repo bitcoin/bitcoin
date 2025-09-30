@@ -1977,7 +1977,7 @@ RPCHelpMan listdescriptors()
                     {RPCResult::Type::NUM, "timestamp", "The creation time of the descriptor"},
                     {RPCResult::Type::BOOL, "active", "Whether this descriptor is currently used to generate new addresses"},
                     {RPCResult::Type::BOOL, "internal", /*optional=*/true, "True if this descriptor is used to generate change addresses. False if this descriptor is used to generate receiving addresses; defined only for active descriptors"},
-                    {RPCResult::Type::BOOL, "coinjoin", /*optional=*/true, "True if this descriptor is used to generate CoinJoin addresses. False if this descriptor is used to generate receiving addresses."},
+                    {RPCResult::Type::BOOL, "coinjoin", /*optional=*/true, "True if this descriptor is used to generate CoinJoin addresses; defined only if it is True."},
                     {RPCResult::Type::ARR_FIXED, "range", /*optional=*/true, "Defined only for ranged descriptors", {
                         {RPCResult::Type::NUM, "", "Range start inclusive"},
                         {RPCResult::Type::NUM, "", "Range end inclusive"},
@@ -2041,7 +2041,9 @@ RPCHelpMan listdescriptors()
         if (type != std::nullopt) {
             std::string match = strprintf("/%d'/%s'/4'/0'", BIP32_PURPOSE_FEATURE, Params().ExtCoinType());
             bool is_cj = descriptor.find(match) != std::string::npos;
-            spk.pushKV("coinjoin", is_cj);
+            if (is_cj) {
+                spk.pushKV("coinjoin", is_cj);
+            }
         }
         if (wallet_descriptor.descriptor->IsRange()) {
             UniValue range(UniValue::VARR);

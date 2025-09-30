@@ -49,7 +49,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
         assert_equal(3, len(result['descriptors']))
         assert_equal(2, len([d for d in result['descriptors'] if d['active']]))
         self.log.info(f"result: {result['descriptors']}")
-        assert_equal(1, len([d for d in result['descriptors'] if d['internal']]))
+        assert_equal(1, len([d for d in result['descriptors'] if 'internal' in d and d['internal']]))
         assert_equal(1, len([d for d in result['descriptors'] if 'coinjoin' in d and d['coinjoin']]))
         for item in result['descriptors']:
             assert item['desc'] != ''
