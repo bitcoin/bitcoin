@@ -383,6 +383,7 @@ bool SendCoinsDialog::send(const QList<SendCoinsRecipient>& recipients, QString&
         /*: Text to prompt a user to review the details of the transaction they are attempting to send. */
         question_string.append(tr("Please, review your transaction."));
     }
+    question_string.append("</span>");
     question_string.append("<br /><br />");
     question_string.append(formatted_short.join("<br />"));
     question_string.append("<br />");
