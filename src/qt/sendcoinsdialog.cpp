@@ -362,6 +362,9 @@ bool SendCoinsDialog::send(const QList<SendCoinsRecipient>& recipients, QString&
         formatted_short.erase(formatted_short.begin() + MAX_SEND_POPUP_ENTRIES, formatted_short.end());
     }
 
+    // Wrap the whole text in a global span to control its styling properly
+    question_string.append("<span style='font-weight:normal;'>");
+
     /*: Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify
         that the displayed transaction details represent the transaction the user intends to create. */
     question_string.append(tr("Do you want to create this transaction?"));
@@ -462,6 +465,9 @@ bool SendCoinsDialog::send(const QList<SendCoinsRecipient>& recipients, QString&
         .arg(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount)));
     question_string.append(QString("<br /><span style='font-size:10pt; font-weight:normal;'>(=%1)</span>")
         .arg(alternativeUnits.join(" " + tr("or") + " ")));
+
+    // Close the global span we opened at the very beginning
+    question_string.append("</span>");
 
     if (formatted.size() > 1) {
         informative_text = tr("To review recipient list click \"Show Details…\"");
