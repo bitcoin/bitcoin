@@ -17,46 +17,39 @@
 
 class SaltedUint256Hasher
 {
-private:
-    /** Salt */
-    const uint64_t k0, k1;
+    const PresaltedSipHasher m_hasher;
 
 public:
     SaltedUint256Hasher();
 
     size_t operator()(const uint256& hash) const {
-        return SipHashUint256(k0, k1, hash);
+        return m_hasher(hash);
     }
 };
 
 class SaltedTxidHasher
 {
-private:
-    /** Salt */
-    const uint64_t k0, k1;
+    const PresaltedSipHasher m_hasher;
 
 public:
     SaltedTxidHasher();
 
     size_t operator()(const Txid& txid) const {
-        return SipHashUint256(k0, k1, txid.ToUint256());
+        return m_hasher(txid.ToUint256());
     }
 };
 
 class SaltedWtxidHasher
 {
-private:
-    /** Salt */
-    const uint64_t k0, k1;
+    const PresaltedSipHasher m_hasher;
 
 public:
     SaltedWtxidHasher();
 
     size_t operator()(const Wtxid& wtxid) const {
-        return SipHashUint256(k0, k1, wtxid.ToUint256());
+        return m_hasher(wtxid.ToUint256());
     }
 };
-
 
 class SaltedOutpointHasher
 {

@@ -7,17 +7,20 @@
 #include <span.h>
 #include <util/hasher.h>
 
-SaltedUint256Hasher::SaltedUint256Hasher() :
-    k0{FastRandomContext().rand64()},
-    k1{FastRandomContext().rand64()} {}
+SaltedUint256Hasher::SaltedUint256Hasher() : m_hasher{
+    FastRandomContext().rand64(),
+    FastRandomContext().rand64()}
+{}
 
-SaltedTxidHasher::SaltedTxidHasher() :
-    k0{FastRandomContext().rand64()},
-    k1{FastRandomContext().rand64()} {}
+SaltedTxidHasher::SaltedTxidHasher() : m_hasher{
+    FastRandomContext().rand64(),
+    FastRandomContext().rand64()}
+{}
 
-SaltedWtxidHasher::SaltedWtxidHasher() :
-    k0{FastRandomContext().rand64()},
-    k1{FastRandomContext().rand64()} {}
+SaltedWtxidHasher::SaltedWtxidHasher() : m_hasher{
+    FastRandomContext().rand64(),
+    FastRandomContext().rand64()}
+{}
 
 SaltedOutpointHasher::SaltedOutpointHasher(bool deterministic) : m_hasher{
     deterministic ? 0x8e819f2607a18de6 : FastRandomContext().rand64(),
