@@ -132,7 +132,6 @@ public:
     }
     void appShutdown() override
     {
-        Interrupt(*m_context);
         Shutdown(*m_context);
     }
     void startShutdown() override
@@ -141,12 +140,7 @@ public:
         if (!(Assert(ctx.shutdown_request))()) {
             LogError("Failed to send shutdown signal\n");
         }
-
-        // Stop RPC for clean shutdown if any of waitfor* commands is executed.
-        if (args().GetBoolArg("-server", false)) {
-            InterruptRPC();
-            StopRPC();
-        }
+        Interrupt(*m_context);
     }
     bool shutdownRequested() override { return ShutdownRequested(*Assert(m_context)); };
     bool isSettingIgnored(const std::string& name) override
