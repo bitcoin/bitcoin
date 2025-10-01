@@ -28,6 +28,178 @@ class WalletMuSigTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
+    def setup_musig_scenario(self, num_wallets=3):
+        # Miniscript pattern based on number of wallets
+        placeholders = ",".join(f"${i}/<{i};{i+1}>/*" for i in range(num_wallets))
+        pattern = f"rawtr(musig({placeholders}))"
+
+        wallets = []
+        keys = []
+
+        # Create wallets and extract keys
+        for i in range(num_wallets):
+            wallet_name = f"musig_{self.WALLET_NUM}"
+            self.WALLET_NUM += 1
+            self.nodes[0].createwallet(wallet_name)
+            wallet = self.nodes[0].get_wallet_rpc(wallet_name)
+            wallets.append(wallet)
+
+            for priv_desc in wallet.listdescriptors(True)["descriptors"]:
+                desc = priv_desc["desc"]
+                if not desc.startswith("tr("):
+                    continue
+                privkey = PRIVKEY_RE.search(desc).group(1)
+                break
+            for pub_desc in wallet.listdescriptors()["descriptors"]:
+                desc = pub_desc["desc"]
+                if not desc.startswith("tr("):
+                    continue
+                pubkey = PUBKEY_RE.search(desc).group(1)
+                privkey += ORIGIN_PATH_RE.search(pubkey).group(1)
+                break
+            keys.append((privkey, pubkey))
+
+        # Construct and import descriptors
+        for i, wallet in enumerate(wallets):
+            desc = pattern
+            for j, (priv, pub) in enumerate(keys):
+                if j == i:
+                    desc = desc.replace(f"${j}", priv)
+                else:
+                    desc = desc.replace(f"${j}", pub)
+
+            import_descs = [{
+                "desc": descsum_create(desc),
+                "active": True,
+                "timestamp": "now",
+            }]
+
+            res = wallet.importdescriptors(import_descs)
+            for r in res:
+                assert_equal(r["success"], True)
+
+        # Fund address
+        addr = wallets[0].getnewaddress(address_type="bech32m")
+        for wallet in wallets[1:]:
+            assert_equal(addr, wallet.getnewaddress(address_type="bech32m"))
+
+        self.def_wallet.sendtoaddress(addr, 10)
+        self.generate(self.nodes[0], 1)
+
+        # Create PSBT
+        utxo = wallets[0].listunspent()[0]
+        psbt = wallets[0].walletcreatefundedpsbt(
+            outputs=[{self.def_wallet.getnewaddress(): 5}],
+            inputs=[utxo],
+            change_type="bech32m",
+            changePosition=1
+        )["psbt"]
+
+        return wallets, psbt
+
+    def test_musig_failure_modes(self):
+        """Test various MuSig2 failure scenarios"""
+
+        self.log.info("Testing missing participant nonce")
+        wallets, psbt = self.setup_musig_scenario(num_wallets=3)
+
+        # Only 2 out of 3 participants provide nonces
+        nonce_psbts = []
+        for i in range(2):
+            proc = wallets[i].walletprocesspsbt(psbt=psbt)
+            nonce_psbts.append(proc["psbt"])
+
+        comb_nonce_psbt = self.nodes[0].combinepsbt(nonce_psbts)
+
+        # Attempt to create partial sigs. This should not complete due to the
+        # missing nonce.
+        for wallet in wallets[:2]:
+            proc = wallet.walletprocesspsbt(psbt=comb_nonce_psbt)
+            assert_equal(proc["complete"], False)
+            # No partial sigs are created
+            dec = self.nodes[0].decodepsbt(proc["psbt"])
+            # There are still only two nonces
+            assert_equal(len(dec["inputs"][0].get("musig2_pubnonces", [])), 2)
+
+        self.log.info("Testing insufficient partial signatures")
+        wallets, psbt = self.setup_musig_scenario(num_wallets=3)
+        nonce_psbts = [w.walletprocesspsbt(psbt=psbt)["psbt"] for w in wallets]
+        comb_nonce_psbt = self.nodes[0].combinepsbt(nonce_psbts)
+
+        # Only 2 out of 3 provide partial sigs
+        psig_psbts = []
+        for i in range(2):
+            proc = wallets[i].walletprocesspsbt(psbt=comb_nonce_psbt)
+            psig_psbts.append(proc["psbt"])
+
+        comb_psig_psbt = self.nodes[0].combinepsbt(psig_psbts)
+
+        # Finalization fails due to missing partial sig
+        finalized = self.nodes[0].finalizepsbt(comb_psig_psbt)
+        assert_equal(finalized["complete"], False)
+
+        # Still only two partial sigs in combined PSBT
+        dec = self.nodes[0].decodepsbt(comb_psig_psbt)
+        assert_equal(len(dec["inputs"][0]["musig2_partial_sigs"]), 2)
+
+        self.log.info("Testing mismatched key order")
+        wallets = []
+        keys = []
+        for i in range(2):
+            wallet_name = f"musig_{self.WALLET_NUM}"
+            self.WALLET_NUM += 1
+            self.nodes[0].createwallet(wallet_name)
+            wallet = self.nodes[0].get_wallet_rpc(wallet_name)
+            wallets.append(wallet)
+
+            for priv_desc in wallet.listdescriptors(True)["descriptors"]:
+                desc = priv_desc["desc"]
+                if not desc.startswith("tr("):
+                    continue
+                privkey = PRIVKEY_RE.search(desc).group(1)
+                break
+            for pub_desc in wallet.listdescriptors()["descriptors"]:
+                desc = pub_desc["desc"]
+                if not desc.startswith("tr("):
+                    continue
+                pubkey = PUBKEY_RE.search(desc).group(1)
+                privkey += ORIGIN_PATH_RE.search(pubkey).group(1)
+                break
+            keys.append((privkey, pubkey))
+
+        desc0 = f"rawtr(musig({keys[0][0]},{keys[1][1]}))"
+        wallets[0].importdescriptors([{
+            "desc": descsum_create(desc0),
+            "active": True,
+            "timestamp": "now",
+        }])
+
+        # Reverse order to desc0
+        desc1 = f"rawtr(musig({keys[1][0]},{keys[0][1]}))"
+        wallets[1].importdescriptors([{
+            "desc": descsum_create(desc1),
+            "active": True,
+            "timestamp": "now",
+        }])
+
+        # Addresses should be different due to different key ordering
+        addr0 = wallets[0].getnewaddress(address_type="bech32m")
+        addr1 = wallets[1].getnewaddress(address_type="bech32m")
+        assert addr0 != addr1
+
+        self.log.info("Testing finalize without partial sigs")
+        wallets, psbt = self.setup_musig_scenario(num_wallets=2)
+        nonce_psbts = [w.walletprocesspsbt(psbt=psbt)["psbt"] for w in wallets]
+        comb_nonce_psbt = self.nodes[0].combinepsbt(nonce_psbts)
+
+        finalized = self.nodes[0].finalizepsbt(comb_nonce_psbt)
+        assert_equal(finalized["complete"], False)
+
+        dec = self.nodes[0].decodepsbt(comb_nonce_psbt)
+        assert "musig2_pubnonces" in dec["inputs"][0]
+        assert "musig2_partial_sigs" not in dec["inputs"][0]
+
+
     def do_test(self, comment, pattern, sighash_type=None, scriptpath=False, nosign_wallets=None, only_one_musig_wallet=False):
         self.log.info(f"Testing {comment}")
         has_internal = MULTIPATH_TWO_RE.search(pattern) is not None
@@ -236,6 +408,9 @@ class WalletMuSigTest(BitcoinTestFramework):
         self.do_test("tr(H,{pk(musig/*), pk(same keys different musig/*)})", "tr($H,{pk(musig($0,$1,$2)/<0;1>/*),pk(musig($1,$2)/0/*)})", scriptpath=True)
         self.do_test("tr(musig/*,{pk(partial keys diff musig-1/*),pk(partial keys diff musig-2/*)})}", "tr(musig($0,$1,$2)/<3;4>/*,{pk(musig($0,$1)/<5;6>/*),pk(musig($1,$2)/7/*)})")
         self.do_test("tr(musig/*,{pk(partial keys diff musig-1/*),pk(partial keys diff musig-2/*)})} script-path", "tr(musig($0,$1,$2)/<3;4>/*,{pk(musig($0,$1)/<5;6>/*),pk(musig($1,$2)/7/*)})", scriptpath=True, nosign_wallets=[0])
+
+        # Run failure mode tests after happy path tests to avoid wallet name conflicts
+        self.test_musig_failure_modes()
 
 
 if __name__ == '__main__':
