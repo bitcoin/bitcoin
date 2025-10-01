@@ -17,6 +17,7 @@
 #include <script/signingprovider.h>
 #include <script/solver.h>
 #include <streams.h>
+#include <test/data/bip54_coinbases.json.h>
 #include <test/data/bip54_timestamps.json.h>
 #include <test/util/json.h>
 #include <test/util/setup_common.h>
@@ -1386,6 +1387,50 @@ BOOST_AUTO_TEST_CASE(bip54_timestamps)
             if (!test.valid) {
                 const auto reason{state.GetRejectReason()};
                 BOOST_CHECK_MESSAGE(reason == "time-timewarp-attack" || reason == "time-negative-interval", test.comment);
+            }
+        }
+    }
+}
+
+/** Run AcceptBlock() on this chain of blocks in order. */
+static bool AcceptBlocks(ChainstateManager& chainman, std::vector<CBlock> blocks, BlockValidationState& state)
+{
+    LOCK(chainman.GetMutex());
+    for (auto& block: blocks) {
+        const auto shared_blk{std::make_shared<const CBlock>(std::move(block))};
+        if (!chainman.AcceptBlock(shared_blk, state, /*ppindex=*/nullptr, /*fRequested*/true, /*dbp=*/nullptr, /*fNewBlock=*/nullptr, /*min_pow_checked=*/true)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/** Run the BIP54 test vectors for the new restrictions on coinbase transactions. */
+BOOST_AUTO_TEST_CASE(bip54_coinbase)
+{
+    const auto tests{read_json(json_tests::bip54_coinbases)};
+
+    for (const auto& test: tests.getValues()) {
+        // Get the data for this test case.
+        const auto is_valid{test["valid"].get_bool()};
+        const auto& comment{test["comment"].get_str()};
+        const auto blocks_hex{test["block_chain"].getValues()};
+        std::vector<CBlock> blocks;
+        for (const auto& blk: blocks_hex) {
+            blocks.emplace_back();
+            BOOST_REQUIRE(DecodeHexBlk(blocks.back(), blk.get_str()));
+        }
+
+        // Check the test case by activating the Consensus Cleanup and accepting those blocks. Note how some of the
+        // test vectors demonstrate finality is enforced on coinbase transactions too, which is a rule pre-existing BIP54.
+        {
+            auto test_setup{TestingSetup{ChainType::MAIN, {.extra_args = {"-vbparams=consensuscleanup:-1:-1"}}}};
+            BlockValidationState state;
+            const bool res{AcceptBlocks(*test_setup.m_node.chainman, std::move(blocks), state) == is_valid};
+            BOOST_CHECK_MESSAGE(res, comment);
+            if (!is_valid) {
+                const auto reason{state.GetRejectReason()};
+                BOOST_CHECK_MESSAGE(reason == "bad-cb-locktime" || reason == "bad-cb-sequence" || reason == "bad-txns-nonfinal", comment);
             }
         }
     }
