@@ -331,42 +331,22 @@ bool IsLocal(const CService& addr)
     return mapLocalHost.count(addr) > 0;
 }
 
-CNode* CConnman::FindNode(const CNetAddr& ip)
+bool CConnman::AlreadyConnectedToHost(const std::string& host) const
 {
     LOCK(m_nodes_mutex);
-    for (CNode* pnode : m_nodes) {
-      if (static_cast<CNetAddr>(pnode->addr) == ip) {
-            return pnode;
-        }
-    }
-    return nullptr;
+    return std::ranges::any_of(m_nodes, [&host](CNode* node) { return node->m_addr_name == host; });
 }
 
-CNode* CConnman::FindNode(const std::string& addrName)
+bool CConnman::AlreadyConnectedToAddressPort(const CService& addr_port) const
 {
     LOCK(m_nodes_mutex);
-    for (CNode* pnode : m_nodes) {
-        if (pnode->m_addr_name == addrName) {
-            return pnode;
-        }
-    }
-    return nullptr;
+    return std::ranges::any_of(m_nodes, [&addr_port](CNode* node) { return node->addr == addr_port; });
 }
 
-CNode* CConnman::FindNode(const CService& addr)
+bool CConnman::AlreadyConnectedToAddress(const CNetAddr& addr) const
 {
     LOCK(m_nodes_mutex);
-    for (CNode* pnode : m_nodes) {
-        if (static_cast<CService>(pnode->addr) == addr) {
-            return pnode;
-        }
-    }
-    return nullptr;
-}
-
-bool CConnman::AlreadyConnectedToAddress(const CAddress& addr)
-{
-    return FindNode(static_cast<CNetAddr>(addr));
+    return std::ranges::any_of(m_nodes, [&addr](CNode* node) { return node->addr == addr; });
 }
 
 bool CConnman::CheckIncomingNonce(uint64_t nonce)
@@ -403,10 +383,8 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             return nullptr;
 
         // Look for an existing connection
-        CNode* pnode = FindNode(static_cast<CService>(addrConnect));
-        if (pnode)
-        {
-            LogPrintf("Failed to open new connection, already connected\n");
+        if (AlreadyConnectedToAddressPort(addrConnect)) {
+            LogInfo("Failed to open new connection to %s, already connected", addrConnect.ToStringAddrPort());
             return nullptr;
         }
     }
@@ -436,9 +414,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
                 }
                 // It is possible that we already have a connection to the IP/port pszDest resolved to.
                 // In that case, drop the connection that was just created.
-                LOCK(m_nodes_mutex);
-                CNode* pnode = FindNode(static_cast<CService>(addrConnect));
-                if (pnode) {
+                if (AlreadyConnectedToAddressPort(addrConnect)) {
                     LogPrintf("Not opening a connection to %s, already connected to %s\n", pszDest, addrConnect.ToStringAddrPort());
                     return nullptr;
                 }
@@ -3010,8 +2986,9 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         if (IsLocal(addrConnect) || banned_or_discouraged || AlreadyConnectedToAddress(addrConnect)) {
             return;
         }
-    } else if (FindNode(std::string(pszDest)))
+    } else if (AlreadyConnectedToHost(pszDest)) {
         return;
+    }
 
     CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure, conn_type, use_v2transport);
 
@@ -3651,9 +3628,11 @@ void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats) const
 bool CConnman::DisconnectNode(const std::string& strNode)
 {
     LOCK(m_nodes_mutex);
-    if (CNode* pnode = FindNode(strNode)) {
-        LogDebug(BCLog::NET, "disconnect by address%s match, %s", (fLogIPs ? strprintf("=%s", strNode) : ""), pnode->DisconnectMsg(fLogIPs));
-        pnode->fDisconnect = true;
+    auto it = std::ranges::find_if(m_nodes, [&strNode](CNode* node) { return node->m_addr_name == strNode; });
+    if (it != m_nodes.end()) {
+        CNode* node{*it};
+        LogDebug(BCLog::NET, "disconnect by address%s match, %s", (fLogIPs ? strprintf("=%s", strNode) : ""), node->DisconnectMsg(fLogIPs));
+        node->fDisconnect = true;
         return true;
     }
     return false;

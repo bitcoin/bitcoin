@@ -1370,15 +1370,28 @@ private:
 
     uint64_t CalculateKeyedNetGroup(const CNetAddr& ad) const;
 
-    CNode* FindNode(const CNetAddr& ip);
-    CNode* FindNode(const std::string& addrName);
-    CNode* FindNode(const CService& addr);
+    /**
+     * Determine whether we're already connected to a given "host:port".
+     * Note that for inbound connections, the peer is likely using a random outbound
+     * port on their side, so this will likely not match any inbound connections.
+     * @param[in] host String of the form "host[:port]", e.g. "localhost" or "localhost:8333" or "1.2.3.4:8333".
+     * @return true if connected to `host`.
+     */
+    bool AlreadyConnectedToHost(const std::string& host) const;
 
     /**
-     * Determine whether we're already connected to a given address, in order to
-     * avoid initiating duplicate connections.
+     * Determine whether we're already connected to a given address:port.
+     * Note that for inbound connections, the peer is likely using a random outbound
+     * port on their side, so this will likely not match any inbound connections.
+     * @param[in] addr_port Address and port to check.
+     * @return true if connected to addr_port.
      */
-    bool AlreadyConnectedToAddress(const CAddress& addr);
+    bool AlreadyConnectedToAddressPort(const CService& addr_port) const;
+
+    /**
+     * Determine whether we're already connected to a given address.
+     */
+    bool AlreadyConnectedToAddress(const CNetAddr& addr) const;
 
     bool AttemptToEvictConnection();
     CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, ConnectionType conn_type, bool use_v2transport) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
