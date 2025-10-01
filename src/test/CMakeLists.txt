@@ -26,6 +26,7 @@ add_executable(test_bitcoin
   bloom_tests.cpp
   bswap_tests.cpp
   caches_tests.cpp
+  chain_tests.cpp
   chainstate_write_tests.cpp
   checkqueue_tests.cpp
   cluster_linearize_tests.cpp
