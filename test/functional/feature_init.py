@@ -12,7 +12,6 @@ import signal
 import subprocess
 import time
 
-from test_framework.authproxy import JSONRPCException
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import (
     BITCOIN_PID_FILENAME_DEFAULT,
@@ -251,9 +250,8 @@ class InitTest(BitcoinTestFramework):
         terminal. (This can be different than the node shutdown sequence that
         happens when the stop RPC is sent.)
 
-        Currently when the break signal is sent, it does not interrupt the
-        waitforblockheight RPC call, and the node does not exit until it times
-        out."""
+        The waitforblockheight call should be interrupted and return right away,
+        and not time out."""
 
         self.log.info("Testing waitforblockheight RPC call followed by break signal")
         node = self.nodes[0]
@@ -287,12 +285,9 @@ class InitTest(BitcoinTestFramework):
                 node.process.send_signal(signal.SIGTERM)
             node.process.wait()
 
-            try:
-                result = fut.result()
-                raise Exception(f"waitforblockheight returned {result!r}")
-            except JSONRPCException as e:
-                self.log.debug(f"waitforblockheight raised {e!r}")
-                assert_equal(e.error['code'], -344) # -344 is RPC timeout
+            result = fut.result()
+            self.log.debug(f"waitforblockheight returned {result!r}")
+            assert_equal(result["height"], current_height)
             node.wait_until_stopped()
 
     def run_test(self):
