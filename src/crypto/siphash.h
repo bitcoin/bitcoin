@@ -37,18 +37,7 @@ public:
     uint64_t Finalize() const;
 };
 
-/** Optimized SipHash-2-4 implementation for uint256.
- *
- *  It is identical to:
- *    SipHasher(k0, k1)
- *      .Write(val.GetUint64(0))
- *      .Write(val.GetUint64(1))
- *      .Write(val.GetUint64(2))
- *      .Write(val.GetUint64(3))
- *      .Finalize()
- */
-uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val);
-
+// Optimized SipHash-2-4 implementation for uint256.
 class PresaltedSipHasher
 {
     uint64_t v[4];
@@ -61,6 +50,7 @@ public:
         v[3] = CSipHasher::C3 ^ k1;
     }
 
+    uint64_t operator()(const uint256& val) const noexcept;
     uint64_t operator()(const uint256& val, uint32_t extra) const noexcept;
 };
 
