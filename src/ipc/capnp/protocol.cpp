@@ -30,9 +30,35 @@
 namespace ipc {
 namespace capnp {
 namespace {
+
+BCLog::Level ConvertIPCLogLevel(mp::Log level)
+{
+    switch (level) {
+        case mp::Log::Trace: return BCLog::Level::Trace;
+        case mp::Log::Debug: return BCLog::Level::Debug;
+        case mp::Log::Info: return BCLog::Level::Info;
+        case mp::Log::Warning: return BCLog::Level::Warning;
+        case mp::Log::Error: return BCLog::Level::Error;
+        case mp::Log::Raise: return BCLog::Level::Error;
+    } // no default case, so the compiler can warn about missing cases
+
+    // Be conservative and assume that if MP ever adds a new log level, it
+    // should only be shown at our most verbose level.
+    return BCLog::Level::Trace;
+}
+
+mp::Log GetRequestedIPCLogLevel()
+{
+    if (LogAcceptCategory(BCLog::IPC, BCLog::Level::Trace)) return mp::Log::Trace;
+    if (LogAcceptCategory(BCLog::IPC, BCLog::Level::Debug)) return mp::Log::Debug;
+
+    // Info, Warning, and Error are logged unconditionally
+    return mp::Log::Info;
+}
+
 void IpcLogFn(mp::LogMessage message)
 {
-    LogDebug(BCLog::IPC, "%s\n", message.message);
+    LogPrintLevel(BCLog::IPC, ConvertIPCLogLevel(message.level), "%s\n", message.message);
     if (message.level == mp::Log::Raise) throw Exception(message.message);
 }
 
@@ -64,6 +90,7 @@ public:
         mp::g_thread_context.thread_name = mp::ThreadName(exe_name);
         mp::LogOptions opts = {
             .log_fn = IpcLogFn,
+            .log_level = GetRequestedIPCLogLevel()
         };
         m_loop.emplace(exe_name, std::move(opts), &m_context);
         if (ready_fn) ready_fn();
@@ -95,6 +122,7 @@ public:
             util::ThreadRename("capnp-loop");
             mp::LogOptions opts = {
                 .log_fn = IpcLogFn,
+                .log_level = GetRequestedIPCLogLevel()
             };
             m_loop.emplace(exe_name, std::move(opts), &m_context);
             m_loop_ref.emplace(*m_loop);
