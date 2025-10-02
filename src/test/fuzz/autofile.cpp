@@ -62,5 +62,7 @@ FUZZ_TARGET(autofile)
         if (f != nullptr) {
             fclose(f);
         }
+    } else {
+        (void)auto_file.fclose();
     }
 }
