@@ -14,8 +14,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 from test_framework.wallet import MiniWallet
-from test_framework.script import OP_RETURN, CScript
-from test_framework.messages import CTxOut, COIN
+from test_framework.messages import COIN
 from test_framework.address import address_to_scriptpubkey
 
 class GetblockstatsTest(BitcoinTestFramework):
@@ -58,19 +57,11 @@ class GetblockstatsTest(BitcoinTestFramework):
             if i == 0:
                 self.generate(wallet, 1)
 
-        self._create_op_return_transaction(wallet)
-
         self.sync_all()
         self.generate(wallet, 1)
 
         self.expected_stats = self.get_stats()
 
-    def _create_op_return_transaction(self, wallet):
-        """Create a transaction with OP_RETURN output to test statistics exclusion."""
-        tx = wallet.create_self_transfer()
-        op_return_data = b'\x21'
-        tx["tx"].vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN, op_return_data])))
-        wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=tx["tx"].serialize().hex())
 
     def run_test(self):
         self.generate_test_data()
@@ -147,10 +138,10 @@ class GetblockstatsTest(BitcoinTestFramework):
         assert_equal(genesis_stats["utxo_increase_actual"], 0)
         assert_equal(genesis_stats["utxo_size_inc_actual"], 0)
 
-        self.log.info('Test tip including OP_RETURN')
+        self.log.info('Test tip with transactions and coinbase OP_RETURN')
         tip_stats = self.nodes[0].getblockstats(tip)
-        assert_equal(tip_stats["utxo_increase"], 6)
-        assert_equal(tip_stats["utxo_size_inc"], 450)
+        assert_equal(tip_stats["utxo_increase"], 5)
+        assert_equal(tip_stats["utxo_size_inc"], 397)
         assert_equal(tip_stats["utxo_increase_actual"], 4)
         assert_equal(tip_stats["utxo_size_inc_actual"], 309)
 
