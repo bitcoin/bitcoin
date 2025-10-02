@@ -384,6 +384,7 @@ private:
 
     /** Validate CService candidate address against ruleset */
     static NetInfoStatus ValidateService(const CService& service);
+    static NetInfoStatus ValidateDomainPort(const DomainPort& domain);
 
 private:
     uint8_t m_version{CURRENT_VERSION};
