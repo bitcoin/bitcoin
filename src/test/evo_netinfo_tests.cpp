@@ -10,6 +10,7 @@
 #include <netbase.h>
 #include <streams.h>
 #include <util/pointer.h>
+#include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -21,7 +22,7 @@ struct TestEntry {
     NetInfoStatus expected_ret_ext;
 };
 
-static const std::vector<TestEntry> vals_main{
+static const std::vector<TestEntry> addr_vals_main{
     // Address and port specified
     {{NetInfoPurpose::CORE_P2P, "1.1.1.1:9999"}, NetInfoStatus::Success, NetInfoStatus::Success},
     // - Port should default to default P2P core with MnNetInfo
@@ -100,7 +101,7 @@ void TestExtNetInfo(const std::vector<TestEntry>& vals)
 
 BOOST_AUTO_TEST_CASE(mnnetinfo_rules_main)
 {
-    TestMnNetInfo(vals_main);
+    TestMnNetInfo(addr_vals_main);
 
     {
         // MnNetInfo only stores one value, overwriting prohibited
@@ -122,9 +123,9 @@ BOOST_AUTO_TEST_CASE(mnnetinfo_rules_main)
     }
 }
 
-BOOST_AUTO_TEST_CASE(extnetinfo_rules_main) { TestExtNetInfo(vals_main); }
+BOOST_AUTO_TEST_CASE(extnetinfo_rules_main) { TestExtNetInfo(addr_vals_main); }
 
-static const std::vector<TestEntry> vals_reg{
+static const std::vector<TestEntry> addr_vals_reg{
     // - MnNetInfo doesn't mind using port 0
     // - ExtNetInfo requires non-zero ports
     {{NetInfoPurpose::CORE_P2P, "1.1.1.1:0"}, NetInfoStatus::Success, NetInfoStatus::BadPort},
@@ -136,11 +137,11 @@ static const std::vector<TestEntry> vals_reg{
     {{NetInfoPurpose::CORE_P2P, "1.1.1.1:22"}, NetInfoStatus::Success, NetInfoStatus::BadPort},
 };
 
-BOOST_FIXTURE_TEST_CASE(mnnetinfo_rules_reg, RegTestingSetup) { TestMnNetInfo(vals_reg); }
+BOOST_FIXTURE_TEST_CASE(mnnetinfo_rules_reg, RegTestingSetup) { TestMnNetInfo(addr_vals_reg); }
 
 BOOST_FIXTURE_TEST_CASE(extnetinfo_rules_reg, RegTestingSetup)
 {
-    TestExtNetInfo(vals_reg);
+    TestExtNetInfo(addr_vals_reg);
 
     {
         // ExtNetInfo can store up to 4 entries per purpose code, check limit enforcement
@@ -362,6 +363,65 @@ BOOST_AUTO_TEST_CASE(interface_equality)
     // Equal initialization state, same type, differing values
     BOOST_CHECK_EQUAL(ptr_rhs->AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.1:9999"), NetInfoStatus::Success);
     BOOST_CHECK(!util::shared_ptr_equal(ptr_lhs, ptr_rhs) && util::shared_ptr_not_equal(ptr_lhs, ptr_rhs));
+}
+
+BOOST_AUTO_TEST_CASE(domainport_rules)
+{
+    static const std::vector<std::pair</*addr=*/std::string, /*retval=*/DomainPort::Status>> domain_vals{
+        // Domain name labels can be as small as one character long and remain valid
+        {"r.server-1.ab.cd", DomainPort::Status::Success},
+        // Domain names labels can trail with numbers or consist entirely of numbers due to RFC 1123
+        {"9998.9example7.ab", DomainPort::Status::Success},
+        // dotless domains prohibited
+        {"abcd", DomainPort::Status::BadDotless},
+        // no empty label (trailing delimiter)
+        {"abc.", DomainPort::Status::BadCharPos},
+        // no empty label (leading delimiter)
+        {".abc", DomainPort::Status::BadCharPos},
+        // no empty label (extra delimiters)
+        {"a..dot..b", DomainPort::Status::BadLabelLen},
+        // ' is not a valid character in domains
+        {"somebody's macbook pro.local", DomainPort::Status::BadChar},
+        // spaces are not a valid character in domains
+        {"somebodys macbook pro.local", DomainPort::Status::BadChar},
+        // trailing hyphens are not allowed
+        {"-a-.bc.de", DomainPort::Status::BadLabelCharPos},
+        // 2 (characters in domain) < 3 (minimum length)
+        {"ac", DomainPort::Status::BadLen},
+        // 278 (characters in domain) > 253 (maximum limit)
+        {"Loremipsumdolorsitametconsecteturadipiscingelitseddoeiusmodtempor"
+         "incididuntutlaboreetdoloremagnaaliquaUtenimadminimveniamquisnostrud"
+         "exercitationullamcolaborisnisiutaliquipexeacommodoconsequatDuisaute"
+         "iruredolorinreprehenderitinvoluptatevelitessecillumdoloreeufugiatnullapariat.ur", DomainPort::Status::BadLen},
+        // 64 (characters in label) > 63 (maximum limit)
+        {"loremipsumdolorsitametconsecteturadipiscingelitseddoeiusmodtempo.ri.nc", DomainPort::Status::BadLabelLen},
+    };
+
+    for (const auto& [addr, retval] : domain_vals) {
+        DomainPort domain;
+        BOOST_CHECK_EQUAL(domain.Set(addr, 9999), retval);
+        if (retval != DomainPort::Status::Success) {
+            BOOST_CHECK_EQUAL(domain.Validate(), DomainPort::Status::Malformed); // Empty values report as Malformed
+        } else {
+            BOOST_CHECK_EQUAL(domain.Validate(), DomainPort::Status::Success);
+        }
+    }
+
+    {
+        // DomainPort requires non-zero ports
+        DomainPort domain;
+        BOOST_CHECK_EQUAL(domain.Set("example.com", 0), DomainPort::Status::BadPort);
+        BOOST_CHECK_EQUAL(domain.Validate(), DomainPort::Status::Malformed);
+    }
+
+    {
+        // DomainPort stores the domain in lower-case
+        DomainPort lhs, rhs;
+        BOOST_CHECK_EQUAL(lhs.Set("example.com", 9999), DomainPort::Status::Success);
+        BOOST_CHECK_EQUAL(rhs.Set(ToUpper("example.com"), 9999), DomainPort::Status::Success);
+        BOOST_CHECK_EQUAL(lhs.ToStringAddr(), rhs.ToStringAddr());
+        BOOST_CHECK(lhs == rhs);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

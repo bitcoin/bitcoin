@@ -106,6 +106,77 @@ UniValue ArrFromService(const CService& addr);
 /** Equivalent to Params() if node is running on mainnet */
 const CChainParams& MainParams();
 
+class DomainPort
+{
+public:
+    enum class Status : uint8_t {
+        BadChar,
+        BadCharPos,
+        BadDotless,
+        BadLabelCharPos,
+        BadLabelLen,
+        BadLen,
+        BadPort,
+        Malformed,
+
+        Success
+    };
+
+    static constexpr std::string_view StatusToString(const DomainPort::Status code)
+    {
+        switch (code) {
+        case DomainPort::Status::BadChar:
+            return "invalid character";
+        case DomainPort::Status::BadCharPos:
+            return "bad domain character position";
+        case DomainPort::Status::BadDotless:
+            return "prohibited dotless";
+        case DomainPort::Status::BadLabelCharPos:
+            return "bad label character position";
+        case DomainPort::Status::BadLabelLen:
+            return "bad label length";
+        case DomainPort::Status::BadLen:
+            return "bad domain length";
+        case DomainPort::Status::BadPort:
+            return "bad port";
+        case DomainPort::Status::Malformed:
+            return "malformed";
+        case DomainPort::Status::Success:
+            return "success";
+        } // no default case, so the compiler can warn about missing cases
+        assert(false);
+    }
+
+private:
+    std::string m_addr{};
+    uint16_t m_port{0};
+
+private:
+    static DomainPort::Status ValidateDomain(const std::string& input);
+
+public:
+    DomainPort() = default;
+    ~DomainPort() = default;
+
+    bool operator<(const DomainPort& rhs) const { return std::tie(m_addr, m_port) < std::tie(rhs.m_addr, rhs.m_port); }
+    bool operator==(const DomainPort& rhs) const { return std::tie(m_addr, m_port) == std::tie(rhs.m_addr, rhs.m_port); }
+    bool operator!=(const DomainPort& rhs) const { return !(*this == rhs); }
+
+    SERIALIZE_METHODS(DomainPort, obj)
+    {
+        READWRITE(obj.m_addr);
+        READWRITE(Using<BigEndianFormatter<2>>(obj.m_port));
+    }
+
+    bool IsEmpty() const { return m_addr.empty() && m_port == 0; }
+    bool IsValid() const { return Validate() == DomainPort::Status::Success; }
+    DomainPort::Status Set(const std::string& addr, const uint16_t port);
+    DomainPort::Status Validate() const;
+    uint16_t GetPort() const { return m_port; }
+    std::string ToStringAddr() const { return m_addr; }
+    std::string ToStringAddrPort() const { return strprintf("%s:%d", m_addr, m_port); }
+};
+
 class NetInfoEntry
 {
 public:
