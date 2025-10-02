@@ -7,6 +7,8 @@
 
 #include <cerrno>
 #include <cstdio>
+#include <filesystem>
+#include <iostream>
 #include <kj/common.h>
 #include <kj/string-tree.h>
 #include <pthread.h>
@@ -28,6 +30,8 @@
 #ifdef HAVE_PTHREAD_GETTHREADID_NP
 #include <pthread_np.h>
 #endif // HAVE_PTHREAD_GETTHREADID_NP
+
+namespace fs = std::filesystem;
 
 namespace mp {
 namespace {
@@ -138,6 +142,9 @@ void ExecProcess(const std::vector<std::string>& args)
     argv.push_back(nullptr);
     if (execvp(argv[0], argv.data()) != 0) {
         perror("execvp failed");
+        if (errno == ENOENT && !args.empty()) {
+            std::cerr << "Missing executable: " << fs::weakly_canonical(args.front()) << '\n';
+        }
         _exit(1);
     }
 }

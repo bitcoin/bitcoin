@@ -3,6 +3,7 @@
 , enableLibcxx ? false # Whether to use libc++ toolchain and libraries instead of libstdc++
 , minimal ? false # Whether to create minimal shell without extra tools (faster when cross compiling)
 , capnprotoVersion ? null
+, cmakeVersion ? null
 }:
 
 let
@@ -37,12 +38,23 @@ let
   capnproto = capnprotoBase.override (lib.optionalAttrs enableLibcxx { clangStdenv = llvm.libcxxStdenv; });
   clang = if enableLibcxx then llvm.libcxxClang else llvm.clang;
   clang-tools = llvm.clang-tools.override { inherit enableLibcxx; };
+  cmakeHashes = {
+    "3.12.4" = "sha256-UlVYS/0EPrcXViz/iULUcvHA5GecSUHYS6raqbKOMZQ=";
+  };
+  cmakeBuild = if cmakeVersion == null then pkgs.cmake else (pkgs.cmake.overrideAttrs (old: {
+    version = cmakeVersion;
+    src = pkgs.fetchurl {
+      url = "https://cmake.org/files/v${lib.versions.majorMinor cmakeVersion}/cmake-${cmakeVersion}.tar.gz";
+      hash = lib.attrByPath [cmakeVersion] "" cmakeHashes;
+    };
+    patches = [];
+  })).override { isMinimalBuild = true; };
 in crossPkgs.mkShell {
   buildInputs = [
     capnproto
   ];
   nativeBuildInputs = with pkgs; [
-    cmake
+    cmakeBuild
     include-what-you-use
     ninja
   ] ++ lib.optionals (!minimal) [
