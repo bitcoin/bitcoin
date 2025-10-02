@@ -214,6 +214,8 @@ void InitContext(NodeContext& node)
     node.shutdown_request = [&node] {
         assert(node.shutdown_signal);
         if (!(*node.shutdown_signal)()) return false;
+        // Wake any threads that may be waiting for the tip to change.
+        if (node.notifications) WITH_LOCK(node.notifications->m_tip_block_mutex, node.notifications->m_tip_block_cv.notify_all());
         return true;
     };
 }
