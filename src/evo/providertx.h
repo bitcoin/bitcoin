@@ -37,7 +37,7 @@ enum : uint16_t {
         if (is_extended_addr) {
             // Requires *both* forks to be active to use extended addresses. is_basic_scheme_active could
             // be set to false due to RPC specialization, so we must evaluate is_extended_addr *last* to
-            // avoid accidentally upgrading a legacy BLS node to basic BLS due to v23 activation.
+            // avoid accidentally upgrading a legacy BLS node to basic BLS due to v24 activation.
             return ProTxVersion::ExtAddr;
         }
         return ProTxVersion::BasicBLS;

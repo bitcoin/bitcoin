@@ -3,7 +3,7 @@ Notable Changes
 
 * Dash Core has added support for the ability to register multiple addr:port pairs to a masternode and for specifying
   distinct addresses for platform P2P and platform HTTPS endpoints. The consensus and format changes needed to enable
-  this capability is referred to as "extended addresses" and is enabled by the deployment of the v23 fork, affecting
+  this capability is referred to as "extended addresses" and is enabled by the deployment of the v24 fork, affecting
   new masternode registrations and service updates to basic BLS masternodes.
   * Operators must upgrade from legacy BLS scheme to basic BLS scheme before utilizing extended address capabilities
 
