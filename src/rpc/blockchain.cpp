@@ -287,17 +287,16 @@ static RPCHelpMan waitfornewblock()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     Mining& miner = EnsureMining(node);
 
-    // Abort if RPC came out of warmup too early
-    BlockRef current_block{CHECK_NONFATAL(miner.getTip()).value()};
-    std::optional<BlockRef> block = timeout ? miner.waitTipChanged(current_block.hash, std::chrono::milliseconds(timeout)) :
-                                              miner.waitTipChanged(current_block.hash);
+    auto block{CHECK_NONFATAL(miner.getTip()).value()};
+    std::optional<BlockRef> new_block = timeout ? miner.waitTipChanged(block.hash, std::chrono::milliseconds(timeout)) :
+                                              miner.waitTipChanged(block.hash);
 
     // Return current block upon shutdown
-    if (block) current_block = *block;
+    if (new_block) block = *new_block;
 
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("hash", current_block.hash.GetHex());
-    ret.pushKV("height", current_block.height);
+    ret.pushKV("hash", block.hash.GetHex());
+    ret.pushKV("height", block.height);
     return ret;
 },
     };
@@ -336,28 +335,26 @@ static RPCHelpMan waitforblock()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     Mining& miner = EnsureMining(node);
 
-    // Abort if RPC came out of warmup too early
-    BlockRef current_block{CHECK_NONFATAL(miner.getTip()).value()};
-
+    auto block{CHECK_NONFATAL(miner.getTip()).value()};
     const auto deadline{std::chrono::steady_clock::now() + 1ms * timeout};
-    while (current_block.hash != hash) {
-        std::optional<BlockRef> block;
+    while (block.hash != hash) {
+        std::optional<BlockRef> new_block;
         if (timeout) {
             auto now{std::chrono::steady_clock::now()};
             if (now >= deadline) break;
             const MillisecondsDouble remaining{deadline - now};
-            block = miner.waitTipChanged(current_block.hash, remaining);
+            new_block = miner.waitTipChanged(block.hash, remaining);
         } else {
-            block = miner.waitTipChanged(current_block.hash);
+            new_block = miner.waitTipChanged(block.hash);
         }
         // Return current block upon shutdown
-        if (!block) break;
-        current_block = *block;
+        if (!new_block) break;
+        block = *new_block;
     }
 
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("hash", current_block.hash.GetHex());
-    ret.pushKV("height", current_block.height);
+    ret.pushKV("hash", block.hash.GetHex());
+    ret.pushKV("height", block.height);
     return ret;
 },
     };
@@ -397,29 +394,27 @@ static RPCHelpMan waitforblockheight()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     Mining& miner = EnsureMining(node);
 
-    // Abort if RPC came out of warmup too early
-    BlockRef current_block{CHECK_NONFATAL(miner.getTip()).value()};
-
+    auto block{CHECK_NONFATAL(miner.getTip()).value()};
     const auto deadline{std::chrono::steady_clock::now() + 1ms * timeout};
 
-    while (current_block.height < height) {
-        std::optional<BlockRef> block;
+    while (block.height < height) {
+        std::optional<BlockRef> new_block;
         if (timeout) {
             auto now{std::chrono::steady_clock::now()};
             if (now >= deadline) break;
             const MillisecondsDouble remaining{deadline - now};
-            block = miner.waitTipChanged(current_block.hash, remaining);
+            new_block = miner.waitTipChanged(block.hash, remaining);
         } else {
-            block = miner.waitTipChanged(current_block.hash);
+            new_block = miner.waitTipChanged(block.hash);
         }
         // Return current block on shutdown
-        if (!block) break;
-        current_block = *block;
+        if (!new_block) break;
+        block = *new_block;
     }
 
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("hash", current_block.hash.GetHex());
-    ret.pushKV("height", current_block.height);
+    ret.pushKV("hash", block.hash.GetHex());
+    ret.pushKV("height", block.height);
     return ret;
 },
     };
