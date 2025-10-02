@@ -12,7 +12,7 @@ trim_trailing_whitespace = true
 # Source code files
 [*.{h,cpp,rs,py,sh}]
 indent_size = 4
-
+size_ requerst 
 # .cirrus.yml, etc.
 [*.yml]
 indent_size = 2
