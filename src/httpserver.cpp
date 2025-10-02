@@ -304,8 +304,8 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
         return;
     }
 
-    LogDebug(BCLog::HTTP, "Received a %s request for %s from %s\n",
-             RequestMethodString(hreq->GetRequestMethod()), SanitizeString(hreq->GetURI(), SAFE_CHARS_URI).substr(0, 100), hreq->GetPeer().ToStringAddrPort());
+    LogDebug(BCLog::HTTP, "Received a %s request (%p) for %s from %s",
+             RequestMethodString(hreq->GetRequestMethod()), req, SanitizeString(hreq->GetURI(), SAFE_CHARS_URI).substr(0, 100), hreq->GetPeer().ToStringAddrPort());
 
     // Find registered handler for prefix
     std::string strURI = hreq->GetURI();
@@ -655,6 +655,7 @@ void HTTPRequest::WriteReply(int nStatus, std::span<const std::byte> reply)
 {
     assert(!replySent && req);
     if (m_interrupt) {
+        LogDebug(BCLog::HTTP, "Instructing client to close their TCP connection to us while processing %p", req);
         WriteHeader("Connection", "close");
     }
     // Send event to main http thread to send reply message
@@ -664,6 +665,7 @@ void HTTPRequest::WriteReply(int nStatus, std::span<const std::byte> reply)
     auto req_copy = req;
     HTTPEvent* ev = new HTTPEvent(eventBase, true, [req_copy, nStatus]{
         evhttp_send_reply(req_copy, nStatus, nullptr, nullptr);
+        LogDebug(BCLog::HTTP, "Replied to request %p", req_copy);
         // Re-enable reading from the socket. This is the second part of the libevent
         // workaround above.
         if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02010900) {
