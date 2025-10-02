@@ -1508,7 +1508,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_greater_than_or_equal(len(tx2_inputs), 2)
         for vin in tx2_inputs:
             if vin['txid'] != unconfirmed_txid:
-                assert_greater_than_or_equal(self.nodes[0].gettxout(vin['txid'], vin['vout'])['confirmations'], 2)
+                assert_greater_than_or_equal(self.nodes[0].gettxout([{"txid": vin['txid'], "vout": vin['vout']}])[0]['confirmations'], 2)
 
         final_tx2 = wallet.signrawtransactionwithwallet(funded_tx2)['hex']
         txid2 = self.nodes[0].sendrawtransaction(final_tx2)

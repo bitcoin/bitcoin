@@ -141,7 +141,7 @@ class PSBTTest(BitcoinTestFramework):
         # Make sure we can mine the resulting transaction
         txid = mining_node.sendrawtransaction(signed_psbt["hex"])
         self.generate(mining_node, nblocks=1, sync_fun=lambda: self.sync_all([online_node, mining_node]))
-        assert_equal(online_node.gettxout(txid,0)["confirmations"], 1)
+        assert_equal(online_node.gettxout([{"txid": txid, "vout": 0}])[0]["confirmations"], 1)
 
         wonline.unloadwallet()
 
@@ -194,7 +194,7 @@ class PSBTTest(BitcoinTestFramework):
         assert_greater_than_or_equal(len(tx2_inputs), 2)
         for vin in tx2_inputs:
             if vin['txid'] != unconfirmed_txid:
-                assert_greater_than_or_equal(self.nodes[0].gettxout(vin['txid'], vin['vout'])['confirmations'], 2)
+                assert_greater_than_or_equal(self.nodes[0].gettxout([{"txid": vin['txid'], "vout": vin['vout']}])[0]['confirmations'], 2)
 
         signed_tx2 = wallet.walletprocesspsbt(psbtx2)
         txid2 = self.nodes[0].sendrawtransaction(signed_tx2['hex'])

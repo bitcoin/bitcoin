@@ -431,7 +431,7 @@ class BlockchainTest(BitcoinTestFramework):
         # Get the transaction ID of the coinbase tx and
         # the transaction output.
         txid = block['tx'][0]
-        txout = node.gettxout(txid, 0)
+        txout = node.gettxout([{"txid": txid, "vout": 0}])[0]
 
         # Validate the gettxout response
         assert_equal(txout['bestblock'], best_block_hash)

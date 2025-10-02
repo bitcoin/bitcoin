@@ -1157,25 +1157,37 @@ static RPCHelpMan gettxout()
         "gettxout",
         "Returns details about an unspent transaction output.\n",
         {
-            {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction id"},
-            {"n", RPCArg::Type::NUM, RPCArg::Optional::NO, "vout number"},
+            {"txids", RPCArg::Type::ARR, RPCArg::Optional::NO, "The txids to filter",
+                {
+                    {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                        {
+                            {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction id"},
+                            {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output index"},
+                        },
+                    },
+                },
+            },
             {"include_mempool", RPCArg::Type::BOOL, RPCArg::Default{true}, "Whether to include the mempool. Note that an unspent output that is spent in the mempool won't appear."},
         },
         {
-            RPCResult{"If the UTXO was not found", RPCResult::Type::NONE, "", ""},
-            RPCResult{"Otherwise", RPCResult::Type::OBJ, "", "", {
-                {RPCResult::Type::STR_HEX, "bestblock", "The hash of the block at the tip of the chain"},
-                {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
-                {RPCResult::Type::STR_AMOUNT, "value", "The transaction value in " + CURRENCY_UNIT},
-                {RPCResult::Type::OBJ, "scriptPubKey", "", {
-                    {RPCResult::Type::STR, "asm", "Disassembly of the output script"},
-                    {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
-                    {RPCResult::Type::STR_HEX, "hex", "The raw output script bytes, hex-encoded"},
-                    {RPCResult::Type::STR, "type", "The type, eg pubkeyhash"},
-                    {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
+            RPCResult{"Array of results, aligned with input (null when not found).",
+                RPCResult::Type::ARR, "", "",
+                {
+                    RPCResult{"If the UTXO was not found", RPCResult::Type::ELISION, "", ""},
+                    RPCResult{"Otherwise", RPCResult::Type::OBJ, "", "", {
+                        {RPCResult::Type::STR_HEX, "bestblock", "The hash of the block at the tip of the chain"},
+                        {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
+                        {RPCResult::Type::STR_AMOUNT, "value", "The transaction value in " + CURRENCY_UNIT},
+                        {RPCResult::Type::OBJ, "scriptPubKey", "", {
+                            {RPCResult::Type::STR, "asm", "Disassembly of the output script"},
+                            {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
+                            {RPCResult::Type::STR_HEX, "hex", "The raw output script bytes, hex-encoded"},
+                            {RPCResult::Type::STR, "type", "The type, eg pubkeyhash"},
+                            {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
+                        }},
+                        {RPCResult::Type::BOOL, "coinbase", "Coinbase or not"},
+                    }},
                 }},
-                {RPCResult::Type::BOOL, "coinbase", "Coinbase or not"},
-            }},
         },
         RPCExamples{
             "\nGet unspent transactions\n"
@@ -1191,40 +1203,58 @@ static RPCHelpMan gettxout()
     ChainstateManager& chainman = EnsureChainman(node);
     LOCK(cs_main);
 
-    UniValue ret(UniValue::VOBJ);
-
-    auto hash{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
-    COutPoint out{hash, request.params[1].getInt<uint32_t>()};
-    bool fMempool = true;
-    if (!request.params[2].isNull())
-        fMempool = request.params[2].get_bool();
-
     Chainstate& active_chainstate = chainman.ActiveChainstate();
     CCoinsViewCache* coins_view = &active_chainstate.CoinsTip();
 
-    std::optional<Coin> coin;
-    if (fMempool) {
-        const CTxMemPool& mempool = EnsureMemPool(node);
-        LOCK(mempool.cs);
-        CCoinsViewMemPool view(coins_view, mempool);
-        if (!mempool.isSpent(out)) coin = view.GetCoin(out);
-    } else {
-        coin = coins_view->GetCoin(out);
-    }
-    if (!coin) return UniValue::VNULL;
+    bool fMempool = true;
+    if (!request.params[1].isNull())
+        fMempool = request.params[1].get_bool();
 
-    const CBlockIndex* pindex = active_chainstate.m_blockman.LookupBlockIndex(coins_view->GetBestBlock());
-    ret.pushKV("bestblock", pindex->GetBlockHash().GetHex());
-    if (coin->nHeight == MEMPOOL_HEIGHT) {
-        ret.pushKV("confirmations", 0);
-    } else {
-        ret.pushKV("confirmations", (int64_t)(pindex->nHeight - coin->nHeight + 1));
+    UniValue ret(UniValue::VARR);
+
+    for (const UniValue& outpoint : request.params[0].get_array().getValues()) {
+        const UniValue& txidv = outpoint.find_value("txid");
+        const UniValue& voutv = outpoint.find_value("vout");
+        if (txidv.isNull() || voutv.isNull()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Each element must have txid (string) and vout (number)");
+        }
+
+        auto hash  = Txid::FromUint256(ParseHashV(txidv, "txid"));
+        uint32_t index = (uint32_t)voutv.getInt<int64_t>();
+
+        COutPoint out{hash, index};
+
+        UniValue item(UniValue::VOBJ);
+
+        std::optional<Coin> coin;
+        if (fMempool) {
+            const CTxMemPool& mempool = EnsureMemPool(node);
+            LOCK(mempool.cs);
+            CCoinsViewMemPool view(coins_view, mempool);
+            if (!mempool.isSpent(out)) coin = view.GetCoin(out);
+        } else {
+            coin = coins_view->GetCoin(out);
+        }
+        if (!coin) {
+            ret.push_back(UniValue::VNULL);
+            continue;
+        }
+
+        const CBlockIndex* pindex = active_chainstate.m_blockman.LookupBlockIndex(coins_view->GetBestBlock());
+        item.pushKV("bestblock", pindex->GetBlockHash().GetHex());
+        if (coin->nHeight == MEMPOOL_HEIGHT) {
+            item.pushKV("confirmations", 0);
+        } else {
+            item.pushKV("confirmations", (int64_t)(pindex->nHeight - coin->nHeight + 1));
+        }
+        item.pushKV("value", ValueFromAmount(coin->out.nValue));
+        UniValue o(UniValue::VOBJ);
+        ScriptToUniv(coin->out.scriptPubKey, /*out=*/o, /*include_hex=*/true, /*include_address=*/true);
+        item.pushKV("scriptPubKey", std::move(o));
+        item.pushKV("coinbase", (bool)coin->fCoinBase);
+
+        ret.push_back(item);
     }
-    ret.pushKV("value", ValueFromAmount(coin->out.nValue));
-    UniValue o(UniValue::VOBJ);
-    ScriptToUniv(coin->out.scriptPubKey, /*out=*/o, /*include_hex=*/true, /*include_address=*/true);
-    ret.pushKV("scriptPubKey", std::move(o));
-    ret.pushKV("coinbase", (bool)coin->fCoinBase);
 
     return ret;
 },

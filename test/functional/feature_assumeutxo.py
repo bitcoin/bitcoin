@@ -531,7 +531,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         scan_utxos = [(coin['txid'], coin['vout']) for coin in scan_result['unspents']]
         assert (coinbase_tx['txid'], 0) in scan_utxos
 
-        txout_result = n1.gettxout(coinbase_tx['txid'], 0)
+        txout_result = n1.gettxout([{"txid": coinbase_tx['txid'], "vout": 0}])[0]
         assert_equal(txout_result['scriptPubKey']['desc'], coinbase_output_descriptor)
 
         def check_tx_counts(final: bool) -> None:
@@ -601,10 +601,10 @@ class AssumeutxoTest(BitcoinTestFramework):
         signed_tx = n1.signrawtransactionwithkey(raw_tx, [privkey], [prevout])['hex']
         signed_txid = tx_from_hex(signed_tx).txid_hex
 
-        assert n1.gettxout(prev_tx['txid'], 0) is not None
+        assert n1.gettxout([{"txid": prev_tx['txid'], "vout": 0}])[0] is not None
         n1.sendrawtransaction(signed_tx)
         assert signed_txid in n1.getrawmempool()
-        assert not n1.gettxout(prev_tx['txid'], 0)
+        assert not n1.gettxout([{"txid": prev_tx['txid'], "vout": 0}])[0]
 
         PAUSE_HEIGHT = FINAL_HEIGHT - 40
 
