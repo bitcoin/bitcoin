@@ -1271,6 +1271,7 @@ static std::optional<CService> CheckBindingConflicts(const CConnman::Options& co
 
 static bool ObfuscateBlocks(
     const util::SignalInterrupt& interrupt,
+    kernel::Notifications& notifications,
     std::string_view suffix,
     const fs::path& blocks_dir,
     const fs::path& xor_dat,
@@ -1354,6 +1355,7 @@ static bool ObfuscateBlocks(
     if (const auto delta_obfuscation{create_delta_obfuscation()}; delta_obfuscation) {
         const auto& files{collect_block_files()};
         LogInfo("[obfuscate] Reobfuscating %zu block and undo files", files.size());
+        notifications.progress(_("Reobfuscating blocks…"), 0, false);
         // Migrate undo and block files atomically
         double progress{0};
         for (const auto& file : files | std::views::values) {
@@ -1363,9 +1365,11 @@ static bool ObfuscateBlocks(
             const auto new_progress{progress + 100.0 / files.size()};
             if (auto percentage{int(new_progress)}; percentage > int(progress)) {
                 LogInfo("[obfuscate] Migrating %s - %d%% done", fs::PathToString(file.filename()), percentage);
+                notifications.progress(_("Reobfuscating blocks…"), percentage, false);
             }
             progress = new_progress;
         }
+        notifications.progress(_("Reobfuscating blocks…"), 100, false);
         Assert(Remove(xor_dat));
     }
 
@@ -1456,7 +1460,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
         }
         // reobfuscate if requested or if resuming a previous run
         if (requested_key.size() || fs::exists(xor_new)) {
-            if (!ObfuscateBlocks(*g_shutdown, block_obfuscation_suffix, blocks_dir, xor_dat, xor_new, requested_key)) {
+            if (!ObfuscateBlocks(*g_shutdown, chainman_opts.notifications, block_obfuscation_suffix, blocks_dir, xor_dat, xor_new, requested_key)) {
                 return {ChainstateLoadStatus::FAILURE, _("Block obfuscation failed")};
             }
         }
