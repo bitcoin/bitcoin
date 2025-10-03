@@ -53,4 +53,46 @@ BOOST_AUTO_TEST_CASE(queue_hashes_and_equality)
     BOOST_CHECK(a.GetSignatureHash() == b.GetSignatureHash());
 }
 
+BOOST_AUTO_TEST_CASE(queue_denomination_validation)
+{
+    // Test that valid denominations pass
+    int validDenom = CoinJoin::AmountToDenomination(CoinJoin::GetSmallestDenomination());
+    BOOST_CHECK(CoinJoin::IsValidDenomination(validDenom));
+
+    // Test that invalid denominations fail
+    BOOST_CHECK(!CoinJoin::IsValidDenomination(0));     // Zero
+    BOOST_CHECK(!CoinJoin::IsValidDenomination(-1));    // Negative
+    BOOST_CHECK(!CoinJoin::IsValidDenomination(999));   // Invalid value
+}
+
+BOOST_AUTO_TEST_CASE(queue_timestamp_validation)
+{
+    CCoinJoinQueue q;
+    q.nDenom = CoinJoin::AmountToDenomination(CoinJoin::GetSmallestDenomination());
+    q.masternodeOutpoint = COutPoint(uint256S("cc"), 3);
+    q.m_protxHash = uint256::ONE;
+
+    int64_t current_time = GetAdjustedTime();
+
+    // Test valid timestamp (current time)
+    q.nTime = current_time;
+    BOOST_CHECK(!q.IsTimeOutOfBounds(current_time));
+
+    // Test timestamp slightly in future (within COINJOIN_QUEUE_TIMEOUT = 30)
+    q.nTime = current_time + 15; // 15 seconds in future
+    BOOST_CHECK(!q.IsTimeOutOfBounds(current_time));
+
+    // Test timestamp slightly in past (within COINJOIN_QUEUE_TIMEOUT = 30)
+    q.nTime = current_time - 15; // 15 seconds ago
+    BOOST_CHECK(!q.IsTimeOutOfBounds(current_time));
+
+    // Test timestamp too far in future (outside COINJOIN_QUEUE_TIMEOUT = 30)
+    q.nTime = current_time + 60; // 60 seconds in future
+    BOOST_CHECK(q.IsTimeOutOfBounds(current_time));
+
+    // Test timestamp too far in past (outside COINJOIN_QUEUE_TIMEOUT = 30)
+    q.nTime = current_time - 60; // 60 seconds ago
+    BOOST_CHECK(q.IsTimeOutOfBounds(current_time));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

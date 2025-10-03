@@ -117,6 +117,13 @@ MessageProcessingResult CCoinJoinServer::ProcessDSQUEUE(NodeId from, CDataStream
     MessageProcessingResult ret{};
     ret.m_to_erase = CInv{MSG_DSQ, dsq.GetHash()};
 
+    // Validate denomination first
+    if (!CoinJoin::IsValidDenomination(dsq.nDenom)) {
+        LogPrint(BCLog::COINJOIN, "DSQUEUE -- invalid denomination %d from peer %d\n", dsq.nDenom, from);
+        ret.m_error = MisbehavingError{10};
+        return ret;
+    }
+
     if (dsq.masternodeOutpoint.IsNull() && dsq.m_protxHash.IsNull()) {
         ret.m_error = MisbehavingError{100};
         return ret;
