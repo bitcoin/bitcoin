@@ -187,6 +187,13 @@ std::optional<T> ToIntegral(std::string_view str)
 }
 
 /**
+ * Convert string to double with strict parse error feedback.
+ * @returns true if the entire string could be parsed as valid double,
+ *   false if not the entire string could be parsed or when overflow or underflow occurred.
+ */
+[[nodiscard]] bool ParseDouble(const std::string& str, double *out);
+
+/**
  * Format a paragraph of text to a fixed width, adding spaces for
  * indentation to any added line.
  */

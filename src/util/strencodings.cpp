@@ -17,6 +17,8 @@
 #include <string>
 #include <vector>
 
+using util::ContainsNoNUL;
+
 static const std::string CHARS_ALPHA_NUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 static const std::string SAFE_CHARS[] =
@@ -197,6 +199,31 @@ std::optional<std::vector<unsigned char>> DecodeBase32(std::string_view str)
     if (!valid) return {};
 
     return ret;
+}
+
+[[nodiscard]] static bool ParsePrechecks(const std::string& str)
+{
+    if (str.empty()) // No empty string allowed
+        return false;
+    if (str.size() >= 1 && (IsSpace(str[0]) || IsSpace(str[str.size()-1]))) // No padding allowed
+        return false;
+    if (!ContainsNoNUL(str)) // No embedded NUL characters allowed
+        return false;
+    return true;
+}
+
+bool ParseDouble(const std::string& str, double *out)
+{
+    if (!ParsePrechecks(str))
+        return false;
+    if (str.size() >= 2 && str[0] == '0' && str[1] == 'x') // No hexadecimal floats allowed
+        return false;
+    std::istringstream text(str);
+    text.imbue(std::locale::classic());
+    double result;
+    text >> result;
+    if(out) *out = result;
+    return text.eof() && !text.fail();
 }
 
 std::string FormatParagraph(std::string_view in, size_t width, size_t indent)
