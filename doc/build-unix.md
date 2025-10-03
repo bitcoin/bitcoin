@@ -81,8 +81,6 @@ the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if yo
 
     sudo apt-get install qt6-base-dev qt6-tools-dev qt6-l10n-tools qt6-tools-dev-tools libgl-dev
 
-For Qt 6.5 and later, the `libxcb-cursor0` package must be installed at runtime.
-
 Additionally, to support Wayland protocol for modern desktop environments:
 
     sudo apt install qt6-wayland
@@ -133,8 +131,6 @@ the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if yo
 
     sudo dnf install qt6-qtbase-devel qt6-qttools-devel
 
-For Qt 6.5 and later, the `xcb-util-cursor` package must be installed at runtime.
-
 Additionally, to support Wayland protocol for modern desktop environments:
 
     sudo dnf install qt6-qtwayland
@@ -181,8 +177,6 @@ Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compi
 the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
 
     apk add qt6-qtbase-dev  qt6-qttools-dev
-
-For Qt 6.5 and later, the `xcb-util-cursor` package must be installed at runtime.
 
 The GUI will be able to encode addresses in QR codes unless this feature is explicitly disabled. To install libqrencode, run:
 

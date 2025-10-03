@@ -6,7 +6,7 @@ $(package)_sha256_hash=0e9c5446dc6f3beb8af6ebfcc9e27bcc6da6fe2860f7fc07b99144dfa
 $(package)_dependencies=libxcb libxcb_util_render libxcb_util_image
 
 define $(package)_set_vars
-$(package)_config_opts = --disable-static
+$(package)_config_opts = --disable-shared
 $(package)_config_opts += --disable-dependency-tracking --enable-option-checking
 endef
 
