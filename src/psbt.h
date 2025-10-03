@@ -1050,7 +1050,7 @@ struct PSBTOutput
                         s_tree >> depth;
                         s_tree >> leaf_ver;
                         s_tree >> script;
-                        if (depth > TAPROOT_CONTROL_MAX_NODE_COUNT) {
+                        if (depth > TAPROOT_CONTROL_MAX_NODE_COUNT_REDUCED) {
                             throw std::ios_base::failure("Output Taproot tree has as leaf greater than Taproot maximum depth");
                         }
                         if ((leaf_ver & ~TAPROOT_LEAF_MASK) != 0) {

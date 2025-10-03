@@ -415,7 +415,7 @@ void TaprootBuilder::Insert(TaprootBuilder::NodeInfo&& node, int depth)
         // as what Insert() performs on the m_branch variable. Instead of
         // storing a NodeInfo object, just remember whether or not there is one
         // at that depth.
-        if (depth < 0 || (size_t)depth > TAPROOT_CONTROL_MAX_NODE_COUNT) return false;
+        if (depth < 0 || (size_t)depth > TAPROOT_CONTROL_MAX_NODE_COUNT_REDUCED) return false;
         if ((size_t)depth + 1 < branch.size()) return false;
         while (branch.size() > (size_t)depth && branch[depth]) {
             branch.pop_back();
@@ -528,7 +528,7 @@ std::optional<std::vector<std::tuple<int, std::vector<unsigned char>, int>>> Inf
             // Skip script records with nonsensical leaf version.
             if (leaf_ver < 0 || leaf_ver >= 0x100 || leaf_ver & 1) continue;
             // Skip script records with invalid control block sizes.
-            if (control.size() < TAPROOT_CONTROL_BASE_SIZE || control.size() > TAPROOT_CONTROL_MAX_SIZE ||
+            if (control.size() < TAPROOT_CONTROL_BASE_SIZE || control.size() > TAPROOT_CONTROL_MAX_SIZE_REDUCED ||
                 ((control.size() - TAPROOT_CONTROL_BASE_SIZE) % TAPROOT_CONTROL_NODE_SIZE) != 0) continue;
             // Skip script records that don't match the control block.
             if ((control[0] & TAPROOT_LEAF_MASK) != leaf_ver) continue;

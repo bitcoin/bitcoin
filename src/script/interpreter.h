@@ -244,6 +244,8 @@ static constexpr size_t TAPROOT_CONTROL_BASE_SIZE = 33;
 static constexpr size_t TAPROOT_CONTROL_NODE_SIZE = 32;
 static constexpr size_t TAPROOT_CONTROL_MAX_NODE_COUNT = 128;
 static constexpr size_t TAPROOT_CONTROL_MAX_SIZE = TAPROOT_CONTROL_BASE_SIZE + TAPROOT_CONTROL_NODE_SIZE * TAPROOT_CONTROL_MAX_NODE_COUNT;
+static constexpr size_t TAPROOT_CONTROL_MAX_NODE_COUNT_REDUCED = 7;
+static constexpr size_t TAPROOT_CONTROL_MAX_SIZE_REDUCED = TAPROOT_CONTROL_BASE_SIZE + TAPROOT_CONTROL_NODE_SIZE * TAPROOT_CONTROL_MAX_NODE_COUNT_REDUCED;
 
 extern const HashWriter HASHER_TAPSIGHASH; //!< Hasher with tag "TapSighash" pre-fed to it.
 extern const HashWriter HASHER_TAPLEAF;    //!< Hasher with tag "TapLeaf" pre-fed to it.
