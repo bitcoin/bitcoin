@@ -459,10 +459,16 @@ BOOST_AUTO_TEST_CASE(getaddr_unfiltered)
         addrman->Attempt(addr3, /*fCountFailure=*/true, /*time=*/Now<NodeSeconds>() - 61s);
     }
 
+    // Set time more than 10 minutes in the future (flying DeLorean), so this
+    // addr should be isTerrible = true
+    CAddress addr4 = CAddress(ResolveService("250.252.2.4", 9997), NODE_NONE);
+    addr4.nTime = Now<NodeSeconds>() + 11min;
+    BOOST_CHECK(addrman->Add({addr4}, source));
+
     // GetAddr filtered by quality (i.e. not IsTerrible) should only return addr1
     BOOST_CHECK_EQUAL(addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt).size(), 1U);
     // Unfiltered GetAddr should return all addrs
-    BOOST_CHECK_EQUAL(addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt, /*filtered=*/false).size(), 3U);
+    BOOST_CHECK_EQUAL(addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt, /*filtered=*/false).size(), 4U);
 }
 
 BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket_legacy)
