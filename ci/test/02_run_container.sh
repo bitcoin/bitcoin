@@ -69,6 +69,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   fi
 
   docker network create --ipv6 --subnet 1111:1111::/112 ci-ip6net || true
+  docker network create --subnet 1.1.1.0/24 ci-ip4net || true
 
   if [ -n "${RESTART_CI_DOCKER_BEFORE_RUN}" ] ; then
     echo "Restart docker before run to stop and clear all containers started with --rm"
@@ -96,8 +97,10 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
                   --env-file /tmp/env-$USER-$CONTAINER_NAME \
                   --name "$CONTAINER_NAME" \
                   --network ci-ip6net \
+                  --ip6=1111:1111::5 \
                   --platform="${CI_IMAGE_PLATFORM}" \
                   "$CONTAINER_NAME")
+  docker network connect --ip=1.1.1.5 ci-ip4net "$CI_CONTAINER_ID"
   export CI_CONTAINER_ID
   export CI_EXEC_CMD_PREFIX="docker exec ${CI_CONTAINER_ID}"
 else
