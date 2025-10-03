@@ -619,6 +619,11 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                             if (vch.size() > 1 || (vch.size() == 1 && vch[0] != 1)) {
                                 return set_error(serror, SCRIPT_ERR_TAPSCRIPT_MINIMALIF);
                             }
+                            // REDUCED_DATA bans OP_IF/OP_NOTIF entirely in tapscript;
+                            // reuses MINIMALIF error code as this is a stricter form of the same restriction
+                            if (flags & SCRIPT_VERIFY_REDUCED_DATA) {
+                                return set_error(serror, SCRIPT_ERR_TAPSCRIPT_MINIMALIF);
+                            }
                         }
                         // Under witness v0 rules it is only a policy rule, enabled through SCRIPT_VERIFY_MINIMALIF.
                         if (sigversion == SigVersion::WITNESS_V0 && (flags & SCRIPT_VERIFY_MINIMALIF)) {
