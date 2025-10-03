@@ -18,6 +18,29 @@ class TxValidationState;
 
 /** Transaction validation functions */
 
+class CheckTxInputsRules {
+    using underlying_type = unsigned int;
+    underlying_type m_flags;
+    constexpr explicit CheckTxInputsRules(underlying_type flags) noexcept : m_flags(flags) {}
+
+    enum class Rule {
+        None = 0,
+    };
+
+public:
+    using enum Rule;
+
+    constexpr CheckTxInputsRules(Rule rule) noexcept : m_flags(static_cast<underlying_type>(rule)) {}
+
+    [[nodiscard]] constexpr bool test(CheckTxInputsRules rules) const noexcept {
+        return (m_flags & rules.m_flags) == rules.m_flags;
+    }
+
+    [[nodiscard]] constexpr CheckTxInputsRules operator|(const CheckTxInputsRules other) const noexcept {
+        return CheckTxInputsRules{m_flags | other.m_flags};
+    }
+};
+
 namespace Consensus {
 /**
  * Check whether all inputs of this transaction are valid (no double spends and amounts)
@@ -25,7 +48,7 @@ namespace Consensus {
  * @param[out] txfee Set to the transaction fee if successful.
  * Preconditions: tx.IsCoinBase() is false.
  */
-[[nodiscard]] bool CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee);
+[[nodiscard]] bool CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, CheckTxInputsRules rules);
 } // namespace Consensus
 
 /** Auxiliary functions for transaction validation (ideally should not be exposed) */
