@@ -273,6 +273,57 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
     return ret;
 }
 
+CAmount GetWalletUTXOSetBalance(const CWallet& wallet)
+{
+    // Collect unique scriptPubKeys owned by the wallet, split into mine vs watch-only
+    std::set<CScript> output_scripts_mine;
+    std::set<CScript> output_scripts_watchonly;
+
+    LOCK(wallet.cs_wallet);
+    for (const auto spkm : wallet.GetAllScriptPubKeyMans()) {
+        bool has_privkeys = spkm->HavePrivateKeys();
+        for (const auto& script : spkm->GetScriptPubKeys()) {
+            if (has_privkeys) {
+                output_scripts_mine.emplace(script);
+            } else {
+                output_scripts_watchonly.emplace(script);
+            }
+        }
+    }
+
+    // Query chainstate for coins matching these scripts.
+    std::map<COutPoint, Coin> coins_mine;
+    std::map<COutPoint, Coin> coins_watchonly;
+    if (!output_scripts_mine.empty()) {
+        wallet.chain().findCoinsByScript(output_scripts_mine, coins_mine);
+    }
+    if (!output_scripts_watchonly.empty()) {
+        wallet.chain().findCoinsByScript(output_scripts_watchonly, coins_watchonly);
+    }
+
+    const auto current_height = wallet.chain().getHeight();
+
+    auto TallyCoins = [&](const std::map<COutPoint, Coin>& coins) -> CAmount {
+        CAmount balance_out = 0;
+        for (const auto& it : coins) {
+            const Coin& coin = it.second;
+            // Skip immature coinbase
+            if (coin.IsCoinBase() && coin.nHeight + COINBASE_MATURITY > current_height) {
+                continue;
+            }
+            balance_out += coin.out.nValue;
+        }
+        return balance_out;
+    };
+
+    // Prefer private-key (spendable) scanned balance if present; otherwise return watch-only scanned balance.
+    const CAmount mine_sum = TallyCoins(coins_mine);
+    if (mine_sum > 0 || !coins_mine.empty()) {
+        return mine_sum;
+    }
+    return TallyCoins(coins_watchonly);
+}
+
 std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet)
 {
     std::map<CTxDestination, CAmount> balances;
