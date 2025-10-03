@@ -482,6 +482,7 @@ jobs:
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_centos.sh'
+            freeup-space: ${{ needs.runners.outputs.provider == 'gha' && true || false }} # Only needed on hosted GH runners (forks)
 
           - name: 'tidy'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
@@ -515,6 +516,10 @@ jobs:
         uses: ./.github/actions/configure-docker
         with:
           cache-provider: ${{ matrix.provider || needs.runners.outputs.provider }}
+
+      - name: Clear unnecessary files
+        if: ${{ matrix.freeup-space == true }}
+        uses: ./.github/actions/clear-files
 
       - name: Enable bpfcc script
         if: ${{ env.CONTAINER_NAME == 'ci_native_asan' }}

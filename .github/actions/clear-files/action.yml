@@ -1,0 +1,52 @@
+name: 'Clear unnecessary files'
+description: 'Clear out unnecessary files to make space on the VM'
+runs:
+  using: 'composite'
+  steps:
+    - name: Clear unnecessary files
+      shell: bash
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        set +e
+
+        # Skip slow "updating man-db" dpkg step
+        echo 'set man-db/auto-update false' | sudo debconf-communicate; sudo dpkg-reconfigure man-db
+
+        echo "=== Disk space before cleanup ==="
+        df -h
+        BEFORE_AVAIL=$(df / | awk 'NR==2 {print $4}')
+
+        echo "Cleaning up unnecessary packages..."
+        time sudo apt-get remove --purge -y firefox google-chrome-stable powershell
+        time sudo apt-get autoremove -y
+        time sudo apt-get clean
+
+        echo "Removing large directories..."
+        DIRS_TO_REMOVE=(
+          "/usr/share/dotnet/"
+          "/usr/local/.ghcup/"
+          "/usr/local/share/powershell"
+          "/usr/local/share/chromium"
+          "/usr/local/lib/android"
+          "/usr/local/lib/node_modules"
+        )
+
+        for dir in "${DIRS_TO_REMOVE[@]}"; do
+          if [ -d "$dir" ]; then
+            echo "Removing $dir"
+            time sudo rm -Rf "$dir"
+          fi
+        done
+
+        echo "Disabling swap"
+        sudo swapoff -a
+        sudo rm -f /swapfile
+
+        echo "=== Disk space after cleanup ==="
+        df -h
+
+        AFTER_AVAIL=$(df / | awk 'NR==2 {print $4}')
+        SPACE_SAVED=$((AFTER_AVAIL - BEFORE_AVAIL))
+        SPACE_SAVED_GB=$((SPACE_SAVED / 1024 / 1024))
+        echo "Space freed: ${SPACE_SAVED_GB}GB (${SPACE_SAVED}KB)"
