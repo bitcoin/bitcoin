@@ -21,6 +21,15 @@ See [further](#run-without-sanitizers-for-increased-throughput) for more informa
 There is also a runner script to execute all fuzz targets. Refer to
 `./build_fuzz/test/fuzz/test_runner.py --help` for more details.
 
+If you also want source-based coverage reports, append the instrumentation flags to `cmake --preset=libfuzzer`:
+
+```sh
+$ cmake --preset=libfuzzer \
+-DCMAKE_C_FLAGS="-ftrivial-auto-var-init=pattern -fprofile-instr-generate" \
+-DCMAKE_CXX_FLAGS="-ftrivial-auto-var-init=pattern -fprofile-instr-generate -fcoverage-mapping"
+```
+Then run the fuzzer with `LLVM_PROFILE_FILE=path/to/name.profraw` and process the profile as usual (see clang documentation).
+
 ## Overview of Bitcoin Core fuzzing
 
 [Google](https://github.com/google/fuzzing/) has a good overview of fuzzing in general, with contributions from key architects of some of the most-used fuzzers. [This paper](https://agroce.github.io/bitcoin_report.pdf) includes an external overview of the status of Bitcoin Core fuzzing, as of summer 2021.  [John Regehr](https://blog.regehr.org/archives/1687) provides good advice on writing code that assists fuzzers in finding bugs, which is useful for developers to keep in mind.
