@@ -325,7 +325,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
                                     return ProcessNewPackage(chainstate, tx_pool, txs, /*test_accept=*/single_submit, /*client_maxfeerate=*/{}));
 
         const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, txs.back(), GetTime(),
-                                   /*bypass_limits=*/fuzzed_data_provider.ConsumeBool(), /*test_accept=*/!single_submit));
+                                   /*bypass_limits=*/false, /*test_accept=*/!single_submit));
 
         if (!single_submit && result_package.m_state.GetResult() != PackageValidationResult::PCKG_POLICY) {
             // We don't know anything about the validity since transactions were randomly generated, so
