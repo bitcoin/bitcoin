@@ -109,7 +109,6 @@ ELF_ALLOWED_LIBRARIES = {
 'libxcb-shm.so.0',
 'libxcb-keysyms.so.1',
 'libxcb-randr.so.0',
-'libxcb-render-util.so.0',
 'libxcb-render.so.0',
 'libxcb-shape.so.0',
 'libxcb-sync.so.1',
