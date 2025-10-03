@@ -147,6 +147,7 @@ enum class script_verify_flag_name : uint8_t {
 
     // Enforce MAX_SCRIPT_ELEMENT_SIZE_REDUCED instead of MAX_SCRIPT_ELEMENT_SIZE
     // The P2SH redeemScript push is exempted
+    // Taproot control blocks are limited to TAPROOT_CONTROL_MAX_SIZE_REDUCED
     // Taproot annex is also invalid
     // OP_IF is also forbidden inside Tapscript
     SCRIPT_VERIFY_REDUCED_DATA,

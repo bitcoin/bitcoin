@@ -81,6 +81,7 @@ from test_framework.script import (
     SIGHASH_ANYONECANPAY,
     SegwitV0SignatureMsg,
     TaggedHash,
+    TAPROOT_CONTROL_MAX_NODE_COUNT_REDUCED,
     TaprootSignatureMsg,
     is_op_success,
     taproot_construct,
@@ -897,6 +898,8 @@ def spenders_taproot_active():
         scripts = [scripts, random.choice(PARTNER_MERKLE_FN)]
     tap = taproot_construct(pubs[0], scripts)
     # Test that spends with a depth of 128 work, but 129 doesn't (even with a tree with weird Merkle branches in it).
+    assert 'standard' not in SINGLE_SIG
+    SINGLE_SIG['standard'] = False
     add_spender(spenders, "spendpath/merklelimit", tap=tap, leaf="128deep", **SINGLE_SIG, key=secs[0], failure={"leaf": "129deep"}, **ERR_TAPROOT_WRONG_CONTROL_SIZE)
     # Test that flipping the negation bit invalidates spends.
     add_spender(spenders, "spendpath/negflag", tap=tap, leaf="128deep", **SINGLE_SIG, key=secs[0], failure={"negflag": lambda ctx: 1 - default_negflag(ctx)}, **ERR_WITNESS_PROGRAM_MISMATCH)
@@ -910,6 +913,7 @@ def spenders_taproot_active():
     add_spender(spenders, "spendpath/padlongcontrol", tap=tap, leaf="128deep", **SINGLE_SIG, key=secs[0], failure={"controlblock": lambda ctx: default_controlblock(ctx) + random.randbytes(random.randrange(1, 32))}, **ERR_TAPROOT_WRONG_CONTROL_SIZE)
     # Test that truncating the control block invalidates it.
     add_spender(spenders, "spendpath/trunclongcontrol", tap=tap, leaf="128deep", **SINGLE_SIG, key=secs[0], failure={"controlblock": lambda ctx: default_merklebranch(ctx)[0:random.randrange(1, 32)]}, **ERR_TAPROOT_WRONG_CONTROL_SIZE)
+    del SINGLE_SIG['standard']
 
     scripts = [("s", CScript([pubs[0], OP_CHECKSIG]))]
     tap = taproot_construct(pubs[1], scripts)
@@ -1028,7 +1032,7 @@ def spenders_taproot_active():
         ("t36", CScript([])),
     ]
     # Add many dummies to test huge trees
-    for j in range(100000):
+    for j in range(min(100000, 2**TAPROOT_CONTROL_MAX_NODE_COUNT_REDUCED - len(scripts))):
         scripts.append((None, CScript([OP_RETURN, random.randrange(100000)])))
     random.shuffle(scripts)
     tap = taproot_construct(pubs[0], scripts)
@@ -1146,7 +1150,7 @@ def spenders_taproot_active():
                         scripts = [scripts, random.choice(PARTNER_MERKLE_FN)]
                     tap = taproot_construct(pubs[0], scripts)
                     has_conditional = any(op in (OP_IF, OP_NOTIF) for op, _, _ in script.raw_iter())
-                    standard = annex is None and dummylen <= 80 and len(pubkey) == 32 and not has_conditional
+                    standard = annex is None and dummylen <= 80 and len(pubkey) == 32 and not has_conditional and merkledepth <= TAPROOT_CONTROL_MAX_NODE_COUNT_REDUCED
                     add_spender(spenders, "tapscript/sigopsratio_%i" % fn_num, tap=tap, leaf="s", annex=annex, hashtype=hashtype, key=secs[1], inputs=[getter("sign"), random.randbytes(dummylen)], standard=standard, failure={"inputs": [getter("sign"), random.randbytes(dummylen - 1)]}, **ERR_TAPSCRIPT_VALIDATION_WEIGHT)
 
     # Future leaf versions
