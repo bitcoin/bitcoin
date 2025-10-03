@@ -134,7 +134,7 @@ protected:
 
 public:
     template<typename Stream>
-    void Serialize(Stream &s) const LOCKS_EXCLUDED(cs)
+    void Serialize(Stream &s) const EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
         std::vector<CMasternodeMetaInfo> tmpMetaInfo;
@@ -145,7 +145,7 @@ public:
     }
 
     template<typename Stream>
-    void Unserialize(Stream &s) LOCKS_EXCLUDED(cs)
+    void Unserialize(Stream &s) EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         Clear();
 
@@ -163,14 +163,14 @@ public:
         }
     }
 
-    void Clear() LOCKS_EXCLUDED(cs)
+    void Clear() EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
 
         metaInfos.clear();
     }
 
-    std::string ToString() const LOCKS_EXCLUDED(cs);
+    std::string ToString() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
 
 /**
@@ -233,7 +233,7 @@ public:
 
     bool IsValid() const { return is_valid; }
 
-    CMasternodeMetaInfoPtr GetMetaInfo(const uint256& proTxHash, bool fCreate = true) LOCKS_EXCLUDED(cs);
+    CMasternodeMetaInfoPtr GetMetaInfo(const uint256& proTxHash, bool fCreate = true) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     int64_t GetDsqCount() const { return nDsqCount; }
     int64_t GetDsqThreshold(const uint256& proTxHash, int nMnCount);
@@ -242,13 +242,13 @@ public:
     void DisallowMixing(const uint256& proTxHash);
 
     bool AddGovernanceVote(const uint256& proTxHash, const uint256& nGovernanceObjectHash);
-    void RemoveGovernanceObject(const uint256& nGovernanceObjectHash) LOCKS_EXCLUDED(cs);
+    void RemoveGovernanceObject(const uint256& nGovernanceObjectHash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    std::vector<uint256> GetAndClearDirtyGovernanceObjectHashes() LOCKS_EXCLUDED(cs);
+    std::vector<uint256> GetAndClearDirtyGovernanceObjectHashes() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    bool AlreadyHavePlatformBan(const uint256& inv_hash) const LOCKS_EXCLUDED(cs);
-    std::optional<PlatformBanMessage> GetPlatformBan(const uint256& inv_hash) const LOCKS_EXCLUDED(cs);
-    void RememberPlatformBan(const uint256& inv_hash, PlatformBanMessage&& msg) LOCKS_EXCLUDED(cs);
+    bool AlreadyHavePlatformBan(const uint256& inv_hash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    std::optional<PlatformBanMessage> GetPlatformBan(const uint256& inv_hash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void RememberPlatformBan(const uint256& inv_hash, PlatformBanMessage&& msg) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
 
 #endif // BITCOIN_MASTERNODE_META_H
