@@ -9,6 +9,7 @@
 #include <compat/compat.h>
 #include <sync.h>
 #include <util/threadinterrupt.h>
+#include <util/translation.h>
 
 #include <deque>
 #include <memory>
@@ -55,22 +56,34 @@ struct RawMessage : public std::vector<uint8_t>
 class RawSender
 {
 public:
-    RawSender(const std::string& host, uint16_t port, std::pair<uint64_t, uint8_t> batching_opts,
-              uint64_t interval_ms, std::optional<std::string>& error);
+    RawSender(const std::string& host, uint16_t port, std::pair<uint64_t, uint8_t> batching_opts, uint64_t interval_ms,
+              std::optional<bilingual_str>& error);
     ~RawSender();
 
     RawSender(const RawSender&) = delete;
     RawSender& operator=(const RawSender&) = delete;
     RawSender(RawSender&&) = delete;
 
-    std::optional<std::string> Send(const RawMessage& msg) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    std::optional<std::string> SendDirectly(const RawMessage& msg);
+    //! Request a message to be sent based on configuration (queueing, batching)
+    std::optional<bilingual_str> Send(const RawMessage& msg) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
+private:
+    //! Send a message directly using ::send{,to}()
+    std::optional<bilingual_str> SendDirectly(const RawMessage& msg);
+
+    //! Get target server address as string
     std::string ToStringHostPort() const;
 
+    //! Add message to queue
     void QueueAdd(const RawMessage& msg) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+    //! Send all messages in queue of RawSender entity and flush it
     void QueueFlush() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+    //! Send all messages in given queue and flush it
     void QueueFlush(std::deque<RawMessage>& queue);
+
+    //! Worker thread function if queueing is requested
     void QueueThreadMain() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
 private:

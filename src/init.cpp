@@ -783,7 +783,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-statsbatchsize=<bytes>", strprintf("Specify the size of each batch of stats messages (default: %d)", DEFAULT_STATSD_BATCH_SIZE), ArgsManager::ALLOW_ANY, OptionsCategory::STATSD);
     argsman.AddArg("-statsduration=<ms>", strprintf("Specify the number of milliseconds between stats messages (default: %d)", DEFAULT_STATSD_DURATION), ArgsManager::ALLOW_ANY, OptionsCategory::STATSD);
     argsman.AddArg("-statshost=<ip>", strprintf("Specify statsd host (default: %s)", DEFAULT_STATSD_HOST), ArgsManager::ALLOW_ANY, OptionsCategory::STATSD);
-    argsman.AddArg("-statsport=<port>", strprintf("Specify statsd port (default: %u)", DEFAULT_STATSD_PORT), ArgsManager::ALLOW_ANY, OptionsCategory::STATSD);
+    hidden_args.emplace_back("-statsport");
     argsman.AddArg("-statsperiod=<seconds>", strprintf("Specify the number of seconds between periodic measurements (default: %d)", DEFAULT_STATSD_PERIOD), ArgsManager::ALLOW_ANY, OptionsCategory::STATSD);
     argsman.AddArg("-statsprefix=<string>", strprintf("Specify an optional string prepended to every stats key (default: %s)", DEFAULT_STATSD_PREFIX), ArgsManager::ALLOW_ANY, OptionsCategory::STATSD);
     argsman.AddArg("-statssuffix=<string>", strprintf("Specify an optional string appended to every stats key (default: %s)", DEFAULT_STATSD_SUFFIX), ArgsManager::ALLOW_ANY, OptionsCategory::STATSD);
@@ -1584,11 +1584,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     fDiscover = args.GetBoolArg("-discover", true);
     const bool ignores_incoming_txs{args.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)};
 
-    // We need to initialize g_stats_client early as currently, g_stats_client is called
-    // regardless of whether transmitting stats are desirable or not and if
-    // g_stats_client isn't present when that attempt is made, the client will crash.
-    ::g_stats_client = InitStatsClient(args);
-
     {
 
         // Read asmap file if configured
@@ -1629,6 +1624,17 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     ::g_socket_events_mode = SEMFromString(sem_str);
     if (::g_socket_events_mode == SocketEventsMode::Unknown) {
         return InitError(strprintf(_("Invalid -socketevents ('%s') specified. Only these modes are supported: %s"), sem_str, GetSupportedSocketEventsStr()));
+    }
+
+    // We need to initialize g_stats_client early as currently, g_stats_client is called
+    // regardless of whether transmitting stats are desirable or not and if
+    // g_stats_client isn't present when that attempt is made, the client will crash.
+    {
+        auto stats_client = StatsdClient::make(args);
+        if (!stats_client) {
+            return InitError(_("Cannot init Statsd client") + Untranslated(" (") + util::ErrorString(stats_client) + Untranslated(")"));
+        }
+        ::g_stats_client = std::move(*stats_client);
     }
 
     assert(!node.banman);

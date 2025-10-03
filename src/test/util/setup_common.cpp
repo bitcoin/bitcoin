@@ -188,7 +188,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     SetupNetworking();
     InitSignatureCache();
     InitScriptExecutionCache();
-    ::g_stats_client = InitStatsClient(*m_node.args);
     m_node.chain = interfaces::MakeChain(m_node);
 
     m_node.netgroupman = std::make_unique<NetGroupManager>(/*asmap=*/std::vector<bool>());
@@ -202,6 +201,13 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
         throw std::runtime_error(
             strprintf("Invalid -socketevents ('%s') specified. Only these modes are supported: %s",
                       sem_str, GetSupportedSocketEventsStr()));
+    }
+    {
+        auto stats_client = StatsdClient::make(*m_node.args);
+        if (!stats_client) {
+            throw std::runtime_error{strprintf("Cannot init Statsd client (%s)", util::ErrorString(stats_client).original)};
+        }
+        ::g_stats_client = std::move(*stats_client);
     }
 
     m_node.connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman); // Deterministic randomness for tests.

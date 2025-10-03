@@ -12,34 +12,34 @@
 #include <util/thread.h>
 
 RawSender::RawSender(const std::string& host, uint16_t port, std::pair<uint64_t, uint8_t> batching_opts,
-                     uint64_t interval_ms, std::optional<std::string>& error) :
+                     uint64_t interval_ms, std::optional<bilingual_str>& error) :
     m_host{host},
     m_port{port},
     m_batching_opts{batching_opts},
     m_interval_ms{interval_ms}
 {
     if (host.empty()) {
-        error = "No host specified";
+        error = _("No host specified");
         return;
     }
 
     if (auto netaddr = LookupHost(m_host, /*fAllowLookup=*/true); netaddr.has_value()) {
-        if (!netaddr->IsIPv4()) {
-            error = strprintf("Host %s on unsupported network", m_host);
+        if (!netaddr->IsIPv4() && !netaddr->IsIPv6()) {
+            error = strprintf(_("Host %s on unsupported network"), m_host);
             return;
         }
         if (!CService(*netaddr, port).GetSockAddr(reinterpret_cast<struct sockaddr*>(&m_server.first), &m_server.second)) {
-            error = strprintf("Cannot get socket address for %s", m_host);
+            error = strprintf(_("Cannot get socket address for %s"), m_host);
             return;
         }
     } else {
-        error = strprintf("Unable to lookup host %s", m_host);
+        error = strprintf(_("Unable to lookup host %s"), m_host);
         return;
     }
 
-    SOCKET hSocket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    SOCKET hSocket = ::socket(reinterpret_cast<struct sockaddr*>(&m_server.first)->sa_family, SOCK_DGRAM, IPPROTO_UDP);
     if (hSocket == INVALID_SOCKET) {
-        error = strprintf("Cannot create socket (socket() returned error %s)", NetworkErrorString(WSAGetLastError()));
+        error = strprintf(_("Cannot create socket (socket() returned error %s)"), NetworkErrorString(WSAGetLastError()));
         return;
     }
     m_sock = std::make_unique<Sock>(hSocket);
@@ -68,7 +68,7 @@ RawSender::~RawSender()
               m_host, m_port, m_successes, m_failures);
 }
 
-std::optional<std::string> RawSender::Send(const RawMessage& msg)
+std::optional<bilingual_str> RawSender::Send(const RawMessage& msg)
 {
     // If there is a thread, append to queue
     if (m_thread.joinable()) {
@@ -79,11 +79,11 @@ std::optional<std::string> RawSender::Send(const RawMessage& msg)
     return SendDirectly(msg);
 }
 
-std::optional<std::string> RawSender::SendDirectly(const RawMessage& msg)
+std::optional<bilingual_str> RawSender::SendDirectly(const RawMessage& msg)
 {
     if (!m_sock) {
         m_failures++;
-        return "Socket not initialized, cannot send message";
+        return _("Socket not initialized, cannot send message");
     }
 
     if (::sendto(m_sock->Get(), reinterpret_cast<const char*>(msg.data()),
@@ -94,7 +94,7 @@ std::optional<std::string> RawSender::SendDirectly(const RawMessage& msg)
 #endif // WIN32
                  /*flags=*/0, reinterpret_cast<struct sockaddr*>(&m_server.first), m_server.second) == SOCKET_ERROR) {
         m_failures++;
-        return strprintf("Unable to send message to %s (sendto() returned error %s)", this->ToStringHostPort(),
+        return strprintf(_("Unable to send message to %s (::sendto() returned error %s)"), this->ToStringHostPort(),
                          NetworkErrorString(WSAGetLastError()));
     }
 

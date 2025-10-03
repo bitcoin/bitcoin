@@ -308,6 +308,7 @@ BASE_SCRIPTS = [
     'mining_basic.py',
     'rpc_named_arguments.py',
     'feature_startupnotify.py',
+    'feature_stats.py',
     'wallet_simulaterawtx.py --legacy-wallet',
     'wallet_simulaterawtx.py --descriptors',
     'wallet_listsinceblock.py --legacy-wallet',
