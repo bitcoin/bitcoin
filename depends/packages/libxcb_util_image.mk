@@ -6,7 +6,7 @@ $(package)_sha256_hash=cb2c86190cf6216260b7357a57d9100811bb6f78c24576a3a5bfef6ad
 $(package)_dependencies=libxcb libxcb_util
 
 define $(package)_set_vars
-$(package)_config_opts=--disable-static --disable-devel-docs --without-doxygen
+$(package)_config_opts=--disable-shared --disable-devel-docs --without-doxygen
 $(package)_config_opts+= --disable-dependency-tracking --enable-option-checking
 endef
 
@@ -19,11 +19,11 @@ define $(package)_config_cmds
 endef
 
 define $(package)_build_cmds
-  $(MAKE)
+  $(MAKE) -C image
 endef
 
 define $(package)_stage_cmds
-  $(MAKE) DESTDIR=$($(package)_staging_dir) install
+  $(MAKE) DESTDIR=$($(package)_staging_dir) -C image install
 endef
 
 define $(package)_postprocess_cmds
