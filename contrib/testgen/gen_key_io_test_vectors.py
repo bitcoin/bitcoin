@@ -4,10 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
 Generate valid and invalid base58 address and private key test vectors.
-
-Usage:
-    ./gen_key_io_test_vectors.py valid 50 > ../../src/test/data/key_io_valid.json
-    ./gen_key_io_test_vectors.py invalid 50 > ../../src/test/data/key_io_invalid.json
 '''
 
 from itertools import islice
@@ -76,7 +72,7 @@ def is_valid(v):
 def gen_valid_base58_vector(template):
     '''Generate valid base58 vector'''
     prefix = bytearray(template[0])
-    payload = bytearray(os.urandom(template[1]))
+    payload = rand_bytes(size=template[1])
     suffix = bytearray(template[2])
     dst_prefix = bytearray(template[4])
     dst_suffix = bytearray(template[5])
@@ -108,17 +104,17 @@ def gen_invalid_base58_vector(template):
     corrupt_suffix = randbool(0.2)
 
     if corrupt_prefix:
-        prefix = os.urandom(1)
+        prefix = rand_bytes(size=1)
     else:
         prefix = bytearray(template[0])
 
     if randomize_payload_size:
-        payload = os.urandom(max(int(random.expovariate(0.5)), 50))
+        payload = rand_bytes(size=max(int(random.expovariate(0.5)), 50))
     else:
-        payload = os.urandom(template[1])
+        payload = rand_bytes(size=template[1])
 
     if corrupt_suffix:
-        suffix = os.urandom(len(template[2]))
+        suffix = rand_bytes(size=len(template[2]))
     else:
         suffix = bytearray(template[2])
 
@@ -137,6 +133,9 @@ def randbool(p = 0.5):
     '''Return True with P(p)'''
     return random.random() < p
 
+def rand_bytes(*, size):
+    return bytearray(random.getrandbits(8) for _ in range(size))
+
 def gen_invalid_vectors():
     '''Generate invalid test vectors'''
     # start with some manual edge-cases
@@ -153,6 +152,7 @@ def gen_invalid_vectors():
 if __name__ == '__main__':
     import json
     iters = {'valid':gen_valid_vectors, 'invalid':gen_invalid_vectors}
+    random.seed(42)
     try:
         uiter = iters[sys.argv[1]]
     except IndexError:
