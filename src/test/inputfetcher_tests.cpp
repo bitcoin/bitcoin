@@ -57,7 +57,8 @@ public:
         const auto cores{GetNumCores()};
         const auto num_txs{m_rng.randrange(cores * 10)};
         m_block = std::make_unique<CBlock>(CreateBlock(num_txs));
-        m_fetcher = std::make_unique<InputFetcher>();
+        const auto worker_threads{m_rng.randrange(cores * 2) + 1};
+        m_fetcher = std::make_unique<InputFetcher>(worker_threads);
     }
 
     InputFetcher& getFetcher() { return *m_fetcher; }

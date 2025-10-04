@@ -52,7 +52,9 @@ FUZZ_TARGET(inputfetcher)
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
-    InputFetcher fetcher{};
+    const auto worker_threads{
+        fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(2, 4)};
+    InputFetcher fetcher{static_cast<size_t>(worker_threads)};
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CBlock block;

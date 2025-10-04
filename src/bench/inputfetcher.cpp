@@ -41,7 +41,10 @@ static void InputFetcherBenchmark(benchmark::Bench& bench)
     DelayedCoinsView db(DELAY);
     CCoinsViewCache cache(&db);
 
-    InputFetcher fetcher{};
+    // The main thread should be counted to prevent thread oversubscription, and
+    // to decrease the variance of benchmark results.
+    const auto worker_threads_num{GetNumCores() - 1};
+    InputFetcher fetcher{static_cast<size_t>(worker_threads_num)};
 
     bench.run([&] {
         const auto ok{cache.Flush()};
