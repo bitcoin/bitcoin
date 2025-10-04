@@ -148,7 +148,7 @@ However if this is done, once the release has been tagged in the dash-detached-s
 ### Windows and macOS codesigners only: Commit the detached codesign payloads
 
 ```sh
-pushd ~/dashcore-detached-sigs
+pushd ~/dash-detached-sigs
 # checkout the appropriate branch for this release series
 git checkout "v${VERSION}"
 rm -rf *
