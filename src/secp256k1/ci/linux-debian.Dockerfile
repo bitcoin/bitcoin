@@ -19,7 +19,7 @@ RUN dpkg --add-architecture i386 && \
     dpkg --add-architecture arm64 && \
     dpkg --add-architecture ppc64el
 
-# dkpg-dev: to make pkg-config work in cross-builds
+# dpkg-dev: to make pkg-config work in cross-builds
 # llvm: for llvm-symbolizer, which is used by clang's UBSan for symbolized stack traces
 RUN apt-get update && apt-get install --no-install-recommends -y \
         git ca-certificates \
