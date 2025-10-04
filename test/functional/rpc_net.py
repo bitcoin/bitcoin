@@ -142,6 +142,7 @@ class NetTest(BitcoinTestFramework):
         # The next two fields will vary for v2 connections because we send a rng-based number of decoy messages
         peer_info.pop("bytesrecv")
         peer_info.pop("bytessent")
+        peer_info.pop("cpu_load", None)
         assert_equal(
             peer_info,
             {
