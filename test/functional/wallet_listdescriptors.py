@@ -107,7 +107,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
             'desc': descsum_create('wpkh(' + xpub_acc + ')'),
             'timestamp': TIME_GENESIS_BLOCK,
         }])
-        assert_raises_rpc_error(-4, 'Can\'t get descriptor string', watch_only_wallet.listdescriptors, True)
+        assert_raises_rpc_error(-4, 'Can\'t get private descriptor string for watch-only wallets', watch_only_wallet.listdescriptors, True)
 
         self.log.info('Test non-active non-range combo descriptor')
         node.createwallet(wallet_name='w4', blank=True)
@@ -122,9 +122,32 @@ class ListDescriptorsTest(BitcoinTestFramework):
                 {'active': False,
                  'desc': 'combo(0227d85ba011276cf25b51df6a188b75e604b38770a462b2d0e9fb2fc839ef5d3f)#np574htj',
                  'timestamp': TIME_GENESIS_BLOCK},
-            ]
+            ],
         }
         assert_equal(expected, wallet.listdescriptors())
+
+        self.log.info('Test descriptor with missing private keys')
+        node.createwallet(wallet_name='w5', blank=True, descriptors=True)
+        wallet = node.get_wallet_rpc('w5')
+        tr_desc = descsum_create('tr(' + node.get_deterministic_priv_key().key +
+                                 ',{pk(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204)' +
+                                 ',pk([d34db33f/44h/0h/0h]tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/0)})')
+        miniscript_desc = descsum_create('wsh(and_v(v:ripemd160(095ff41131e5946f3c85f79e44adbcf8e27e080e),multi(1,' + node.get_deterministic_priv_key().key +
+                                            ',tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/0)))')
+        wallet.importdescriptors([
+            {
+                'desc': tr_desc,
+                'timestamp': TIME_GENESIS_BLOCK,
+            },
+            {
+                'desc': miniscript_desc,
+                'timestamp': TIME_GENESIS_BLOCK,
+            }
+        ])
+        result = wallet.listdescriptors(True)
+        expected_descs = [tr_desc, miniscript_desc]
+        actual_descs = [d['desc'] for d in result['descriptors']]
+        assert_equal(actual_descs, expected_descs)
 
 
 if __name__ == '__main__':
