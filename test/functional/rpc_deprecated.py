@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test deprecation of RPC calls."""
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_raises_rpc_error
 
 class DeprecatedRpcTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -27,12 +26,8 @@ class DeprecatedRpcTest(BitcoinTestFramework):
 
         # Please don't delete nor modify this comment
         self.log.info("Tests for deprecated RPC methods (if any)")
+        self.log.info("Currently no tests for deprecated RPC methods")
 
-        if self.is_wallet_compiled():
-            self.log.info("Tests for deprecated wallet-related RPC methods (if any)")
-            self.log.info("Test settxfee RPC deprecation")
-            self.nodes[0].createwallet("settxfeerpc")
-            assert_raises_rpc_error(-32, 'settxfee is deprecated and will be fully removed in v31.0.', self.nodes[0].settxfee, 0.01)
 
 if __name__ == '__main__':
     DeprecatedRpcTest(__file__).main()
