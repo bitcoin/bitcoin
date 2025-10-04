@@ -2074,7 +2074,7 @@ bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const
     }
 }
 
-bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_key, const SecureString& secure_mnemonic, const SecureString& secure_mnemonic_passphrase, bool internal)
+bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_key, const SecureString& secure_mnemonic, const SecureString& secure_mnemonic_passphrase, PathDerivationType type)
 {
     LOCK(cs_desc_man);
     assert(m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
@@ -2099,10 +2099,12 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
     std::string xpub = EncodeExtPubKey(master_key.Neuter());
 
     // Build descriptor string
-    std::string desc_prefix = strprintf("pkh(%s/44'/%d'", xpub, Params().ExtCoinType());
+    std::string desc_prefix = strprintf("pkh(%s/%d'/%d'", xpub, type == PathDerivationType::DIP0009_CoinJoin ? BIP32_PURPOSE_FEATURE : BIP32_PURPOSE_STANDARD, Params().ExtCoinType());
+    if (type == PathDerivationType::DIP0009_CoinJoin) {
+        desc_prefix += "/4'";
+    }
     std::string desc_suffix = "/*)";
-
-    std::string internal_path = internal ? "/1" : "/0";
+    std::string internal_path = (type == PathDerivationType::BIP44_Internal) ? "/1" : "/0";
     std::string desc_str = desc_prefix + "/0'" + internal_path + desc_suffix;
 
     // Make the descriptor

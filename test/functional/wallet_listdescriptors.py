@@ -46,9 +46,11 @@ class ListDescriptorsTest(BitcoinTestFramework):
         node.createwallet(wallet_name='w3', descriptors=True)
         result = node.get_wallet_rpc('w3').listdescriptors()
         assert_equal("w3", result['wallet_name'])
-        assert_equal(2, len(result['descriptors']))
+        assert_equal(3, len(result['descriptors']))
         assert_equal(2, len([d for d in result['descriptors'] if d['active']]))
-        assert_equal(1, len([d for d in result['descriptors'] if d['internal']]))
+        self.log.info(f"result: {result['descriptors']}")
+        assert_equal(1, len([d for d in result['descriptors'] if 'internal' in d and d['internal']]))
+        assert_equal(1, len([d for d in result['descriptors'] if 'coinjoin' in d and d['coinjoin']]))
         for item in result['descriptors']:
             assert item['desc'] != ''
             assert item['next_index'] == 0

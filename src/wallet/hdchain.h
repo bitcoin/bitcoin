@@ -140,6 +140,12 @@ public:
 
     std::string GetKeyPath() const;
 };
+
+/** Purpose code used for DIP9 (feature derivation paths) */
+constexpr uint8_t BIP32_PURPOSE_FEATURE{9};
+/** Purpose code allotted to BIP 44 (standard derivation paths) */
+constexpr uint8_t BIP32_PURPOSE_STANDARD{44};
+
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_HDCHAIN_H
