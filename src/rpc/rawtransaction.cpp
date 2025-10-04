@@ -46,7 +46,9 @@
 #include <validationinterface.h>
 
 #include <chainlock/chainlock.h>
+#include <evo/assetlocktx.h>
 #include <evo/cbtx.h>
+#include <evo/creditpool.h>
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
 #include <instantsend/instantsend.h>
