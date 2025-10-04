@@ -2190,6 +2190,7 @@ const std::map<std::string, script_verify_flag_name>& ScriptFlagNamesToEnum()
         FLAG_NAME(DISCOURAGE_UPGRADABLE_PUBKEYTYPE),
         FLAG_NAME(DISCOURAGE_OP_SUCCESS),
         FLAG_NAME(DISCOURAGE_UPGRADABLE_TAPROOT_VERSION),
+        FLAG_NAME(REDUCED_DATA),
     };
 #undef FLAG_NAME
     return g_names_to_enum;
