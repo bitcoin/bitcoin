@@ -8,7 +8,7 @@ export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_native_centos
 export CI_IMAGE_NAME_TAG="quay.io/centos/centos:stream10"
-export CI_BASE_PACKAGES="gcc-c++ glibc-devel libstdc++-devel ccache make ninja-build git python3 python3-pip which patch xz procps-ng rsync coreutils bison e2fsprogs cmake dash"
+export CI_BASE_PACKAGES="gcc-c++ glibc-devel libstdc++-devel ccache make ninja-build git python3 python3-pip which patch xz procps-ng rsync coreutils bison e2fsprogs cmake dash net-tools tcpdump"
 export PIP_PACKAGES="pyzmq pycapnp"
 export DEP_OPTS="DEBUG=1"
 export GOAL="install"

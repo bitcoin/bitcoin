@@ -16,3 +16,5 @@ export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
 export RUN_FUZZ_TESTS=true
 export GOAL="all"
+# Can't run tcpdump: tcpdump: en0: You don't have permission to capture on that device
+export CI_TCPDUMP_OK_TO_FAIL=1
