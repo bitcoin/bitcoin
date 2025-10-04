@@ -16,6 +16,8 @@ enum class ChainType {
     TESTNET4,
 };
 
+std::string ChainTypeToDisplayString(ChainType chain);
+
 std::string ChainTypeToString(ChainType chain);
 
 std::optional<ChainType> ChainTypeFromString(std::string_view chain);
