@@ -17,11 +17,6 @@ import os.path
 
 settings = {}
 
-def hex_switchEndian(s):
-    """ Switches the endianness of a hex string (in pairs of hex chars) """
-    pairList = [s[i:i+2].encode() for i in range(0, len(s), 2)]
-    return b''.join(pairList[::-1]).decode()
-
 class BitcoinRPC:
     def __init__(self, host, port, username, password):
         authpair = "%s:%s" % (username, password)
@@ -85,7 +80,7 @@ def get_block_hashes(settings, max_blocks_per_call=10000):
                 sys.exit(1)
             assert(resp_obj['id'] == x) # assume replies are in-sequence
             if settings['rev_hash_bytes'] == 'true':
-                resp_obj['result'] = hex_switchEndian(resp_obj['result'])
+                resp_obj['result'] = bytes.fromhex(resp_obj['result'])[::-1].hex()
             print(resp_obj['result'])
 
         height += num_blocks
