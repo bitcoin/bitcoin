@@ -51,7 +51,7 @@ unsigned-integer-overflow:hash.cpp
 unsigned-integer-overflow:policy/fees.cpp
 unsigned-integer-overflow:prevector.h
 unsigned-integer-overflow:pubkey.h
-unsigned-integer-overflow:script/interpreter.cpp
+unsigned-integer-overflow:EvalScript
 unsigned-integer-overflow:txmempool.cpp
 unsigned-integer-overflow:util/strencodings.cpp
 unsigned-integer-overflow:xoroshiro128plusplus.h
