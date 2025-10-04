@@ -40,6 +40,7 @@ from test_framework.script import (
     OP_ELSE,
     OP_ENDIF,
     OP_DROP,
+    OP_DUP,
     OP_FALSE,
     OP_IF,
     OP_INVALIDOPCODE,
@@ -48,7 +49,7 @@ from test_framework.script import (
     sign_input_legacy,
 )
 from test_framework.script_util import (
-    key_to_p2pk_script,
+    key_to_p2pkh_script,
     script_to_p2sh_script,
 )
 from test_framework.test_framework import BitcoinTestFramework
@@ -1167,7 +1168,7 @@ class FullBlockTest(BitcoinTestFramework):
         #    The resurrected transactions must pass the node's mempool policy, so create
         #    and spend standard outputs (P2PK using the coinbase pubkey to keep it simple).
         self.log.info("Test transaction resurrection during a re-org")
-        standard_output_script = key_to_p2pk_script(self.coinbase_pubkey)
+        standard_output_script = key_to_p2pkh_script(self.coinbase_pubkey)
         self.move_tip(76)
         self.next_block(77)
         tx77 = self.create_and_sign_transaction(out[24], 10 * COIN, standard_output_script)
@@ -1347,6 +1348,9 @@ class FullBlockTest(BitcoinTestFramework):
         if (scriptPubKey[0] == OP_TRUE):  # an anyone-can-spend
             tx.vin[0].scriptSig = CScript()
             return
+        # For P2PKH, pre-set the pubkey so sign_input_legacy prepends the signature
+        if scriptPubKey[0] == OP_DUP:  # P2PKH starts with OP_DUP
+            tx.vin[0].scriptSig = CScript([self.coinbase_pubkey])
         sign_input_legacy(tx, 0, spend_tx.vout[0].scriptPubKey, self.coinbase_key)
 
     def create_and_sign_transaction(self, spend_tx, value, output_script=None):

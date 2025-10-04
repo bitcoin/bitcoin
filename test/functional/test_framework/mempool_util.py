@@ -83,6 +83,15 @@ def fill_mempool(test_framework, node, *, tx_sync_fun=None):
     confirmed_utxos = [ephemeral_miniwallet.get_utxo(confirmed_only=True) for _ in range(num_of_batches * tx_batch_size + 1)]
     assert_equal(len(confirmed_utxos), num_of_batches * tx_batch_size + 1)
 
+    # Calibrate dummy tx memory usage, since we rely on filling maxmempool
+    target_tx_usage = 68064
+    tx = ephemeral_miniwallet.create_self_transfer(utxo_to_spend=confirmed_utxos[0])["tx"]
+    tx.vout.extend(txouts)
+    res = node.testmempoolaccept([tx.serialize().hex()])[0]
+    if res['usage'] > target_tx_usage:
+        excess_outputs = len(txouts) - (target_tx_usage * len(txouts) // res['usage'])
+        txouts = txouts[excess_outputs:]
+
     test_framework.log.debug("Create a mempool tx that will be evicted")
     tx_to_be_evicted_id = ephemeral_miniwallet.send_self_transfer(
         from_node=node, utxo_to_spend=confirmed_utxos.pop(0), fee_rate=minrelayfee)["txid"]

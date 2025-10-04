@@ -81,6 +81,9 @@ DEFAULT_CLUSTER_LIMIT = 64     # default max number of transactions in a cluster
 # Default setting for -datacarriersize.
 MAX_OP_RETURN_RELAY = 100_000
 
+# BIP-110: Maximum size of an output script (OP_RETURN or otherwise) when OutputSizeLimit is enforced.
+MAX_OUTPUT_DATA_SIZE = 83
+
 
 DEFAULT_MEMPOOL_EXPIRY_HOURS = 336  # hours
 

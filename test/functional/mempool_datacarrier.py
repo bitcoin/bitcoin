@@ -34,7 +34,7 @@ class DataCarrierTest(BitcoinTestFramework):
             ["-datacarrier=1", "-datacarriersize=2"],
         ]
 
-    def test_null_data_transaction(self, node: TestNode, data, success: bool) -> None:
+    def test_null_data_transaction(self, node: TestNode, data, success: bool, expected_error: str = "scriptpubkey") -> None:
         tx = self.wallet.create_self_transfer(fee_rate=0)["tx"]
         data = [] if data is None else [data]
         tx.vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN] + data)))
@@ -46,7 +46,7 @@ class DataCarrierTest(BitcoinTestFramework):
             self.wallet.sendrawtransaction(from_node=node, tx_hex=tx_hex)
             assert tx.txid_hex in node.getrawmempool(True), f'{tx_hex} not in mempool'
         else:
-            assert_raises_rpc_error(-26, "datacarrier", self.wallet.sendrawtransaction, from_node=node, tx_hex=tx_hex)
+            assert_raises_rpc_error(-26, expected_error, self.wallet.sendrawtransaction, from_node=node, tx_hex=tx_hex)
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
@@ -59,46 +59,45 @@ class DataCarrierTest(BitcoinTestFramework):
         assert_equal(self.nodes[2].getmempoolinfo()["maxdatacarriersize"], CUSTOM_DATACARRIER_ARG)
         assert_equal(self.nodes[3].getmempoolinfo()["maxdatacarriersize"], 2)
 
-        # By default, any size is allowed.
-
-        # If it is custom set to 83, the historical value,
-        # only 80 bytes are used for data (+1 for OP_RETURN, +2 for the pushdata opcodes).
-        custom_size_data = randbytes(CUSTOM_DATACARRIER_ARG - 3)
-        too_long_data = randbytes(CUSTOM_DATACARRIER_ARG - 2)
-        extremely_long_data = randbytes(MAX_OP_RETURN_RELAY - 200)
+        # OutputSizeLimit caps all OP_RETURN outputs to 83 bytes regardless of -datacarriersize.
+        # 80 bytes data + 1 OP_RETURN + 2 pushdata opcodes = 83 bytes script (the maximum).
+        custom_size_data = randbytes(CUSTOM_DATACARRIER_ARG - 3)  # 80 bytes data = 83 bytes script
+        too_long_data = randbytes(CUSTOM_DATACARRIER_ARG - 2)  # 81 bytes data = 84 bytes script (exceeds limit)
         one_byte = randbytes(1)
         zero_bytes = randbytes(0)
 
-        self.log.info("Testing a null data transaction succeeds for default arg regardless of size.")
-        self.test_null_data_transaction(node=self.nodes[0], data=too_long_data, success=True)
-        self.test_null_data_transaction(node=self.nodes[0], data=extremely_long_data, success=True)
+        self.log.info("Testing a null data transaction at the maximum size (83 byte script).")
+        self.test_null_data_transaction(node=self.nodes[0], data=custom_size_data, success=True)
+
+        self.log.info("Testing a null data transaction exceeding OutputSizeLimit (84 byte script).")
+        self.test_null_data_transaction(node=self.nodes[0], data=too_long_data, success=False, expected_error="bad-txns-vout-script-toolarge")
 
         self.log.info("Testing a null data transaction with -datacarrier=false.")
-        self.test_null_data_transaction(node=self.nodes[1], data=custom_size_data, success=False)
+        self.test_null_data_transaction(node=self.nodes[1], data=custom_size_data, success=False, expected_error="datacarrier")
 
         self.log.info("Testing a null data transaction with a size larger than accepted by -datacarriersize.")
-        self.test_null_data_transaction(node=self.nodes[2], data=too_long_data, success=False)
+        self.test_null_data_transaction(node=self.nodes[2], data=too_long_data, success=False, expected_error="datacarrier")
 
         self.log.info("Testing a null data transaction with a size equal to -datacarriersize.")
         self.test_null_data_transaction(node=self.nodes[2], data=custom_size_data, success=True)
 
         self.log.info("Testing a null data transaction with no data.")
         self.test_null_data_transaction(node=self.nodes[0], data=None, success=True)
-        self.test_null_data_transaction(node=self.nodes[1], data=None, success=False)
+        self.test_null_data_transaction(node=self.nodes[1], data=None, success=False, expected_error="datacarrier")
         self.test_null_data_transaction(node=self.nodes[2], data=None, success=True)
         self.test_null_data_transaction(node=self.nodes[3], data=None, success=True)
 
         self.log.info("Testing a null data transaction with zero bytes of data.")
         self.test_null_data_transaction(node=self.nodes[0], data=zero_bytes, success=True)
-        self.test_null_data_transaction(node=self.nodes[1], data=zero_bytes, success=False)
+        self.test_null_data_transaction(node=self.nodes[1], data=zero_bytes, success=False, expected_error="datacarrier")
         self.test_null_data_transaction(node=self.nodes[2], data=zero_bytes, success=True)
         self.test_null_data_transaction(node=self.nodes[3], data=zero_bytes, success=True)
 
         self.log.info("Testing a null data transaction with one byte of data.")
         self.test_null_data_transaction(node=self.nodes[0], data=one_byte, success=True)
-        self.test_null_data_transaction(node=self.nodes[1], data=one_byte, success=False)
+        self.test_null_data_transaction(node=self.nodes[1], data=one_byte, success=False, expected_error="datacarrier")
         self.test_null_data_transaction(node=self.nodes[2], data=one_byte, success=True)
-        self.test_null_data_transaction(node=self.nodes[3], data=one_byte, success=False)
+        self.test_null_data_transaction(node=self.nodes[3], data=one_byte, success=False, expected_error="datacarrier")
 
 if __name__ == '__main__':
     DataCarrierTest(__file__).main()

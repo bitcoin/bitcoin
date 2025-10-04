@@ -19,6 +19,7 @@ from test_framework.p2p import P2PTxInvStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_equal_without_usage,
     assert_fee_amount,
     assert_raises_rpc_error,
 )
@@ -48,7 +49,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         random.shuffle(shuffled_indices)
         shuffled_package = [package_hex[i] for i in shuffled_indices]
         shuffled_testres = [testres_expected[i] for i in shuffled_indices]
-        assert_equal(shuffled_testres, self.nodes[0].testmempoolaccept(shuffled_package))
+        assert_equal_without_usage(self.nodes[0].testmempoolaccept(shuffled_package), shuffled_testres)
 
     def run_test(self):
         node = self.nodes[0]
@@ -120,7 +121,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         # transactions here but empty results in other cases.
         tx_bad_sig_txid = tx_bad_sig.txid_hex
         tx_bad_sig_wtxid = tx_bad_sig.wtxid_hex
-        assert_equal(testres_bad_sig, self.independent_txns_testres + [{
+        assert_equal_without_usage(testres_bad_sig, self.independent_txns_testres + [{
             "txid": tx_bad_sig_txid,
             "wtxid": tx_bad_sig_wtxid, "allowed": False,
             "reject-reason": "mempool-script-verify-flag-failed (Operation not valid with the current stack size)",
@@ -131,12 +132,12 @@ class RPCPackagesTest(BitcoinTestFramework):
         self.log.info("Check testmempoolaccept reports txns in packages that exceed max feerate")
         tx_high_fee = self.wallet.create_self_transfer(fee=Decimal("0.999"))
         testres_high_fee = node.testmempoolaccept([tx_high_fee["hex"]])
-        assert_equal(testres_high_fee, [
+        assert_equal_without_usage(testres_high_fee, [
             {"txid": tx_high_fee["txid"], "wtxid": tx_high_fee["wtxid"], "allowed": False, "reject-reason": "max-fee-exceeded"}
         ])
         package_high_fee = [tx_high_fee["hex"]] + self.independent_txns_hex
         testres_package_high_fee = node.testmempoolaccept(package_high_fee)
-        assert_equal(testres_package_high_fee, testres_high_fee + self.independent_txns_testres_blank)
+        assert_equal_without_usage(testres_package_high_fee, testres_high_fee + self.independent_txns_testres_blank)
 
     def test_chain(self):
         node = self.nodes[0]
@@ -146,7 +147,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         chain_txns = [t["tx"] for t in chain]
 
         self.log.info("Check that testmempoolaccept requires packages to be sorted by dependency")
-        assert_equal(node.testmempoolaccept(rawtxs=chain_hex[::-1]),
+        assert_equal_without_usage(node.testmempoolaccept(rawtxs=chain_hex[::-1]),
                 [{"txid": tx.txid_hex, "wtxid": tx.wtxid_hex, "package-error": "package-not-sorted"} for tx in chain_txns[::-1]])
 
         self.log.info("Testmempoolaccept a chain of 25 transactions")
@@ -159,7 +160,7 @@ class RPCPackagesTest(BitcoinTestFramework):
             testres_single.append(testres[0])
             # Submit the transaction now so its child should have no problem validating
             node.sendrawtransaction(rawtx)
-        assert_equal(testres_single, testres_multiple)
+        assert_equal_without_usage(testres_single, testres_multiple)
 
         # Clean up by clearing the mempool
         self.generate(node, 1)
@@ -236,14 +237,14 @@ class RPCPackagesTest(BitcoinTestFramework):
 
         self.log.info("Test duplicate transactions in the same package")
         testres = node.testmempoolaccept([tx1["hex"], tx1["hex"]])
-        assert_equal(testres, [
+        assert_equal_without_usage(testres, [
             {"txid": tx1["txid"], "wtxid": tx1["wtxid"], "package-error": "package-contains-duplicates"},
             {"txid": tx1["txid"], "wtxid": tx1["wtxid"], "package-error": "package-contains-duplicates"}
         ])
 
         self.log.info("Test conflicting transactions in the same package")
         testres = node.testmempoolaccept([tx1["hex"], tx2["hex"]])
-        assert_equal(testres, [
+        assert_equal_without_usage(testres, [
             {"txid": tx1["txid"], "wtxid": tx1["wtxid"], "package-error": "conflict-in-package"},
             {"txid": tx2["txid"], "wtxid": tx2["wtxid"], "package-error": "conflict-in-package"}
         ])
@@ -256,7 +257,7 @@ class RPCPackagesTest(BitcoinTestFramework):
 
         testres = node.testmempoolaccept([tx1["hex"], tx2["hex"], tx_child["hex"]])
 
-        assert_equal(testres, [
+        assert_equal_without_usage(testres, [
             {"txid": tx1["txid"], "wtxid": tx1["wtxid"], "package-error": "conflict-in-package"},
             {"txid": tx2["txid"], "wtxid": tx2["wtxid"], "package-error": "conflict-in-package"},
             {"txid": tx_child["txid"], "wtxid": tx_child["wtxid"], "package-error": "conflict-in-package"}
@@ -309,7 +310,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         # Replacement transaction is identical except has double the fee
         replacement_tx = self.wallet.create_self_transfer(utxo_to_spend=coin, sequence=MAX_BIP125_RBF_SEQUENCE, fee = 2 * fee)
         testres_rbf_conflicting = node.testmempoolaccept([replaceable_tx["hex"], replacement_tx["hex"]])
-        assert_equal(testres_rbf_conflicting, [
+        assert_equal_without_usage(testres_rbf_conflicting, [
             {"txid": replaceable_tx["txid"], "wtxid": replaceable_tx["wtxid"], "package-error": "conflict-in-package"},
             {"txid": replacement_tx["txid"], "wtxid": replacement_tx["wtxid"], "package-error": "conflict-in-package"}
         ])

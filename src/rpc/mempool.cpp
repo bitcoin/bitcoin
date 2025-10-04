@@ -11,6 +11,7 @@
 #include <common/args.h>
 #include <consensus/validation.h>
 #include <core_io.h>
+#include <core_memusage.h>
 #include <index/txospenderindex.h>
 #include <kernel/mempool_entry.h>
 #include <net_processing.h>
@@ -292,6 +293,7 @@ static RPCHelpMan testmempoolaccept()
                     {RPCResult::Type::BOOL, "allowed", /*optional=*/true, "Whether this tx would be accepted to the mempool and pass client-specified maxfeerate. "
                                                        "If not present, the tx was not fully validated due to a failure in another tx in the list."},
                     {RPCResult::Type::NUM, "vsize", /*optional=*/true, "Virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted (only present when 'allowed' is true)"},
+                    {RPCResult::Type::NUM, "usage", "Memory usage of transaction for this node"},
                     {RPCResult::Type::OBJ, "fees", /*optional=*/true, "Transaction fees (only present if 'allowed' is true)",
                     {
                         {RPCResult::Type::STR_AMOUNT, "base", "transaction fee in " + CURRENCY_UNIT},
@@ -357,6 +359,7 @@ static RPCHelpMan testmempoolaccept()
                 UniValue result_inner(UniValue::VOBJ);
                 result_inner.pushKV("txid", tx->GetHash().GetHex());
                 result_inner.pushKV("wtxid", tx->GetWitnessHash().GetHex());
+                result_inner.pushKV("usage", RecursiveDynamicUsage(tx));
                 if (package_result.m_state.GetResult() == PackageValidationResult::PCKG_POLICY) {
                     result_inner.pushKV("package-error", package_result.m_state.ToString());
                 }

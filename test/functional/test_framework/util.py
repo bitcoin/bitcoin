@@ -87,6 +87,29 @@ def assert_not_equal(thing1, thing2, *, error_message=""):
         raise AssertionError(f"Both values are {thing1}{f', {error_message}' if error_message else ''}")
 
 
+def assert_equal_without_usage(actual, expected):
+    """
+    Assert that testmempoolaccept results match expected values, ignoring the 'usage' field.
+    This helper is for tests that were written before the 'usage' field was added.
+    """
+    if isinstance(actual, list) and isinstance(expected, list):
+        assert_equal(len(actual), len(expected))
+        for act, exp in zip(actual, expected):
+            assert_equal_without_usage(act, exp)
+    elif isinstance(actual, dict) and isinstance(expected, dict):
+        # Check that all expected keys match
+        for key in expected:
+            assert key in actual, f"Expected key '{key}' not in actual result"
+            if key != 'usage':  # Skip usage comparison
+                assert_equal(actual[key], expected[key])
+        # Verify usage exists and is positive if transaction was validated
+        if 'usage' in actual:
+            assert isinstance(actual['usage'], int), "usage should be an integer"
+            assert actual['usage'] > 0, "usage should be positive"
+    else:
+        assert_equal(actual, expected)
+
+
 def assert_greater_than(thing1, thing2):
     if thing1 <= thing2:
         raise AssertionError("%s <= %s" % (str(thing1), str(thing2)))
@@ -681,7 +704,8 @@ def check_node_connections(*, node, num_in, num_out):
 def gen_return_txouts():
     from .messages import CTxOut
     from .script import CScript, OP_RETURN
-    txouts = [CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN, b'\x01'*67437]))]
+    txouts = [CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN, b'\x01'*80]))] * 733
+    txouts.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN, b'\x01'*9])))
     assert_equal(sum([len(txout.serialize()) for txout in txouts]), 67456)
     return txouts
 

@@ -87,29 +87,43 @@ class UtxoToSqliteTest(BitcoinTestFramework):
         wallet = MiniWallet(node)
         key = ECKey()
 
-        self.log.info('Create UTXOs with various output script types')
+        self.log.info('Test that oversized output scripts are rejected')
+        key.generate(compressed=False)
+        uncompressed_pubkey = key.get_pubkey().get_bytes()
+        key.generate(compressed=True)
+        pubkey = key.get_pubkey().get_bytes()
+
+        # Test that scripts exceeding MAX_OUTPUT_SCRIPT_SIZE=34 are rejected
+        invalid_scripts = [
+            (key_to_p2pk_script(pubkey), "P2PK compressed (35 bytes)"),
+            (key_to_p2pk_script(uncompressed_pubkey), "P2PK uncompressed (67 bytes)"),
+            (keys_to_multisig_script([pubkey]), "Bare multisig 1-of-1 (37 bytes)"),
+            (keys_to_multisig_script([uncompressed_pubkey]*2), "Bare multisig 2-of-2 uncompressed"),
+            (CScript([CScriptOp.encode_op_n(1)]*1000), "Large script (1000 bytes)"),
+        ]
+
+        for script, description in invalid_scripts:
+            try:
+                wallet.send_to(from_node=node, scriptPubKey=script, amount=1, fee=20000)
+                raise AssertionError(f"{description} should have been rejected")
+            except Exception as e:
+                assert 'bad-txns-vout-script-toolarge' in str(e), \
+                    f"{description} rejected with wrong error: {e}"
+                self.log.info(f"  ✓ {description} correctly rejected")
+
+        self.log.info('Create UTXOs with valid output script types (≤34 bytes)')
         for i in range(1, 10+1):
-            key.generate(compressed=False)
-            uncompressed_pubkey = key.get_pubkey().get_bytes()
             key.generate(compressed=True)
             pubkey = key.get_pubkey().get_bytes()
 
-            # add output scripts for compressed script type 0 (P2PKH), type 1 (P2SH),
-            # types 2-3 (P2PK compressed), types 4-5 (P2PK uncompressed) and
-            # for uncompressed scripts (bare multisig, segwit, etc.)
+            # Only include output scripts that comply with MAX_OUTPUT_SCRIPT_SIZE=34
             output_scripts = (
-                key_to_p2pkh_script(pubkey),
-                script_to_p2sh_script(key_to_p2pkh_script(pubkey)),
-                key_to_p2pk_script(pubkey),
-                key_to_p2pk_script(uncompressed_pubkey),
-
-                keys_to_multisig_script([pubkey]*i),
-                keys_to_multisig_script([uncompressed_pubkey]*i),
-                key_to_p2wpkh_script(pubkey),
-                script_to_p2wsh_script(key_to_p2pkh_script(pubkey)),
-                output_key_to_p2tr_script(pubkey[1:]),
-                PAY_TO_ANCHOR,
-                CScript([CScriptOp.encode_op_n(i)]*(1000*i)),  # large script (up to 10000 bytes)
+                key_to_p2pkh_script(pubkey),                        # 25 bytes
+                script_to_p2sh_script(key_to_p2pkh_script(pubkey)), # 23 bytes
+                key_to_p2wpkh_script(pubkey),                       # 22 bytes
+                script_to_p2wsh_script(key_to_p2pkh_script(pubkey)),# 34 bytes
+                output_key_to_p2tr_script(pubkey[1:]),              # 34 bytes
+                PAY_TO_ANCHOR,                                      # 4 bytes
             )
 
             # create outputs and mine them in a block

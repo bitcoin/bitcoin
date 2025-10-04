@@ -68,7 +68,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         num_big_parents = 3
         # Need to be large enough to trigger eviction
         # (note that the mempool usage of a tx is about three times its vsize)
-        assert_greater_than(parent_vsize * num_big_parents * 3, current_info["maxmempool"] - current_info["bytes"])
+        assert_greater_than(parent_vsize * num_big_parents * 3, current_info["maxmempool"] - current_info["usage"])
 
         big_parent_txids = []
         big_parent_wtxids = []
@@ -106,7 +106,7 @@ class MempoolLimitTest(BitcoinTestFramework):
             assert_equal(len(package_res["tx-results"][wtxid]["fees"]["effective-includes"]), 1)
 
         # Maximum size must never be exceeded.
-        assert_greater_than(node.getmempoolinfo()["maxmempool"], node.getmempoolinfo()["bytes"])
+        assert_greater_than(node.getmempoolinfo()["maxmempool"], node.getmempoolinfo()["usage"])
 
         # Package found in mempool still
         resulting_mempool_txids = node.getrawmempool()
@@ -182,7 +182,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         assert len([tx_res for _, tx_res in res["tx-results"].items() if "error" in tx_res and tx_res["error"] == "bad-txns-inputs-missingorspent"])
 
         # Maximum size must never be exceeded.
-        assert_greater_than(node.getmempoolinfo()["maxmempool"], node.getmempoolinfo()["bytes"])
+        assert_greater_than(node.getmempoolinfo()["maxmempool"], node.getmempoolinfo()["usage"])
 
         resulting_mempool_txids = node.getrawmempool()
         # The replacement should be successful.
@@ -259,7 +259,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         # Needs to be large enough to trigger eviction
         # (note that the mempool usage of a tx is about three times its vsize)
         target_vsize_each = 50000
-        assert_greater_than(target_vsize_each * 2 * 3, node.getmempoolinfo()["maxmempool"] - node.getmempoolinfo()["bytes"])
+        assert_greater_than(target_vsize_each * 2 * 3, node.getmempoolinfo()["maxmempool"] - node.getmempoolinfo()["usage"])
         # Should be a true CPFP: parent's feerate is just below mempool min feerate
         parent_feerate = mempoolmin_feerate - Decimal("0.0000001")  # 0.01 sats/vbyte below min feerate
         # Parent + child is above mempool minimum feerate

@@ -238,10 +238,14 @@ class TooManySigopsPerBlock(BadTxTemplate):
     block_reject_reason = "bad-blk-sigops, out-of-bounds SigOpCount"
 
     def get_tx(self):
+        # Put OP_CHECKSIGs in scriptSig (input) instead of scriptPubKey (output)
+        # to avoid violating MAX_OUTPUT_SCRIPT_SIZE=34 consensus limit.
+        # Sigops are counted from both input and output scripts.
         lotsa_checksigs = CScript([OP_CHECKSIG] * (MAX_BLOCK_SIGOPS))
         return create_tx_with_script(
             self.spend_tx, 0,
-            output_script=lotsa_checksigs,
+            script_sig=lotsa_checksigs,
+            output_script=basic_p2sh,  # 23-byte P2SH, well under 34-byte limit
             amount=1)
 
 
@@ -250,10 +254,12 @@ class TooManySigopsPerTransaction(BadTxTemplate):
     valid_in_block = True
 
     def get_tx(self):
+        # Put sigops in scriptSig to avoid violating MAX_OUTPUT_SCRIPT_SIZE=34 limit
         lotsa_checksigs = CScript([OP_CHECKSIG] * (MAX_STANDARD_TX_SIGOPS + 1))
         return create_tx_with_script(
             self.spend_tx, 0,
-            output_script=lotsa_checksigs,
+            script_sig=lotsa_checksigs,
+            output_script=basic_p2sh,
             amount=1)
 
 
