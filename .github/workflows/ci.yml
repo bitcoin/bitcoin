@@ -211,11 +211,16 @@ jobs:
     steps:
       - *CHECKOUT
 
-      - name: Configure Developer Command Prompt for Microsoft Visual C++
-        # Using microsoft/setup-msbuild is not enough.
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
+      - &SET_UP_VS
+        name: Set up VS Developer Prompt
+        shell: pwsh -Command "$PSVersionTable; $PSNativeCommandUseErrorActionPreference = $true; $ErrorActionPreference = 'Stop'; & '{0}'"
+        run: |
+          $vswherePath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $installationPath = & $vswherePath -latest -property installationPath
+          & "${env:COMSPEC}" /s /c "`"$installationPath\Common7\Tools\vsdevcmd.bat`" -arch=x64 -no_logo && set" | foreach-object {
+            $name, $value = $_ -split '=', 2
+            echo "$name=$value" >> $env:GITHUB_ENV
+          }
 
       - name: Get tool information
         shell: pwsh
@@ -263,14 +268,26 @@ jobs:
         run: |
           cmake --build . -j $NUMBER_OF_PROCESSORS --config Release
 
-      - name: Get bitcoind manifest
+      - name: Check executable manifests
         if: matrix.job-type == 'standard'
         working-directory: build
+        shell: pwsh -Command "$PSVersionTable; $PSNativeCommandUseErrorActionPreference = $true; $ErrorActionPreference = 'Stop'; & '{0}'"
         run: |
-          mt.exe -nologo -inputresource:bin/Release/bitcoind.exe -out:bitcoind.manifest
-          cat bitcoind.manifest
-          echo
-          mt.exe -nologo -inputresource:bin/Release/bitcoind.exe -validate_manifest
+          mt.exe -nologo -inputresource:bin\Release\bitcoind.exe -out:bitcoind.manifest
+          Get-Content bitcoind.manifest
+
+          Get-ChildItem -Filter "bin\Release\*.exe" | ForEach-Object {
+            $exeName = $_.Name
+
+            # Skip as they currently do not have manifests
+            if ($exeName -eq "fuzz.exe" -or $exeName -eq "bench_bitcoin.exe" -or $exeName -eq "test_bitcoin-qt.exe") {
+              Write-Host "Skipping $exeName (no manifest present)"
+              return
+            }
+
+            Write-Host "Checking $exeName"
+            & mt.exe -nologo -inputresource:$_.FullName -validate_manifest
+          }
 
       - name: Run test suite
         if: matrix.job-type == 'standard'
@@ -370,19 +387,26 @@ jobs:
       - name: Run bitcoind.exe
         run: ./bin/bitcoind.exe -version
 
-      - name: Find mt.exe tool
-        shell: pwsh
-        run: |
-          $sdk_dir = (Get-ItemProperty 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots' -Name KitsRoot10).KitsRoot10
-          $sdk_latest = (Get-ChildItem "$sdk_dir\bin" -Directory | Where-Object { $_.Name -match '^\d+\.\d+\.\d+\.\d+$' } | Sort-Object Name -Descending | Select-Object -First 1).Name
-          "MT_EXE=${sdk_dir}bin\${sdk_latest}\x64\mt.exe" >> $env:GITHUB_ENV
+      - *SET_UP_VS
 
-      - name: Get bitcoind manifest
-        shell: pwsh
+      - name: Check executable manifests
+        shell: pwsh -Command "$PSVersionTable; $PSNativeCommandUseErrorActionPreference = $true; $ErrorActionPreference = 'Stop'; & '{0}'"
         run: |
-          & $env:MT_EXE -nologo -inputresource:bin\bitcoind.exe -out:bitcoind.manifest
+          mt.exe -nologo -inputresource:bin\bitcoind.exe -out:bitcoind.manifest
           Get-Content bitcoind.manifest
-          & $env:MT_EXE -nologo -inputresource:bin\bitcoind.exe -validate_manifest
+
+          Get-ChildItem -Filter "bin\*.exe" | ForEach-Object {
+            $exeName = $_.Name
+
+            # Skip as they currently do not have manifests
+            if ($exeName -eq "fuzz.exe" -or $exeName -eq "bench_bitcoin.exe") {
+              Write-Host "Skipping $exeName (no manifest present)"
+              return
+            }
+
+            Write-Host "Checking $exeName"
+            & mt.exe -nologo -inputresource:$_.FullName -validate_manifest
+          }
 
       - name: Run unit tests
         # Can't use ctest here like other jobs as we don't have a CMake build tree.
