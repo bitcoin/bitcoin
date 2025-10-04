@@ -835,6 +835,32 @@ BOOST_AUTO_TEST_CASE(test_LocaleIndependentAtoi)
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint8_t>("256"), 255U);
 }
 
+BOOST_AUTO_TEST_CASE(test_ParseDouble)
+{
+    double n;
+    // Valid values
+    BOOST_CHECK(ParseDouble("1234", nullptr));
+    BOOST_CHECK(ParseDouble("0", &n) && n == 0.0);
+    BOOST_CHECK(ParseDouble("1234", &n) && n == 1234.0);
+    BOOST_CHECK(ParseDouble("01234", &n) && n == 1234.0); // no octal
+    BOOST_CHECK(ParseDouble("2147483647", &n) && n == 2147483647.0);
+    BOOST_CHECK(ParseDouble("-2147483648", &n) && n == -2147483648.0);
+    BOOST_CHECK(ParseDouble("-1234", &n) && n == -1234.0);
+    BOOST_CHECK(ParseDouble("1e6", &n) && n == 1e6);
+    BOOST_CHECK(ParseDouble("-1e6", &n) && n == -1e6);
+    // Invalid values
+    BOOST_CHECK(!ParseDouble("", &n));
+    BOOST_CHECK(!ParseDouble(" 1", &n)); // no padding inside
+    BOOST_CHECK(!ParseDouble("1 ", &n));
+    BOOST_CHECK(!ParseDouble("1a", &n));
+    BOOST_CHECK(!ParseDouble("aap", &n));
+    BOOST_CHECK(!ParseDouble("0x1", &n)); // no hex
+    BOOST_CHECK(!ParseDouble(STRING_WITH_EMBEDDED_NULL_CHAR, &n));
+    // Overflow and underflow
+    BOOST_CHECK(!ParseDouble("-1e10000", nullptr));
+    BOOST_CHECK(!ParseDouble("1e10000", nullptr));
+}
+
 BOOST_AUTO_TEST_CASE(test_FormatParagraph)
 {
     BOOST_CHECK_EQUAL(FormatParagraph("", 79, 0), "");
