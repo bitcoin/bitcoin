@@ -130,23 +130,7 @@ public:
         return true;
     }
 
-    [[nodiscard]] UniValue ToJson() const
-    {
-        UniValue obj(UniValue::VOBJ);
-        obj.pushKV("version", nVersion);
-        obj.pushKV("llmqType", ToUnderlying(llmqType));
-        obj.pushKV("quorumHash", quorumHash.ToString());
-        obj.pushKV("quorumIndex", quorumIndex);
-        obj.pushKV("signersCount", CountSigners());
-        obj.pushKV("signers", BitsVectorToHexStr(signers));
-        obj.pushKV("validMembersCount", CountValidMembers());
-        obj.pushKV("validMembers", BitsVectorToHexStr(validMembers));
-        obj.pushKV("quorumPublicKey", quorumPublicKey.ToString(nVersion == LEGACY_BLS_NON_INDEXED_QUORUM_VERSION || nVersion == LEGACY_BLS_INDEXED_QUORUM_VERSION));
-        obj.pushKV("quorumVvecHash", quorumVvecHash.ToString());
-        obj.pushKV("quorumSig", quorumSig.ToString(nVersion == LEGACY_BLS_NON_INDEXED_QUORUM_VERSION || nVersion == LEGACY_BLS_INDEXED_QUORUM_VERSION));
-        obj.pushKV("membersSig", membersSig.ToString(nVersion == LEGACY_BLS_NON_INDEXED_QUORUM_VERSION || nVersion == LEGACY_BLS_INDEXED_QUORUM_VERSION));
-        return obj;
-    }
+    [[nodiscard]] UniValue ToJson() const;
 
 private:
     static std::string BitsVectorToHexStr(const std::vector<bool>& vBits)

@@ -106,7 +106,7 @@ public:
         return hash;
     }
 
-    UniValue ToJson() const;
+    [[nodiscard]] UniValue ToJson() const;
 };
 
 class CRecoveredSigsDb

@@ -906,6 +906,7 @@ libbitcoin_common_a_SOURCES = \
   init/common.cpp \
   key.cpp \
   key_io.cpp \
+  llmq/core_write.cpp \
   merkleblock.cpp \
   net_types.cpp \
   netaddress.cpp \

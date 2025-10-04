@@ -22,8 +22,7 @@
 #include <map>
 #include <string>
 
-namespace {
-RPCResult GetRpcResult(const std::string& key, bool optional = false)
+RPCResult GetRpcResult(const std::string& key, bool optional)
 {
 #define RESULT_MAP_ENTRY(type, name, desc) {name, {type, name, optional, desc}}
     const std::map<std::string, RPCResult> result_map{{
@@ -62,7 +61,6 @@ RPCResult GetRpcResult(const std::string& key, bool optional = false)
     throw NonFatalCheckError(strprintf("Requested invalid RPCResult for nonexistent key \"%s\"", key).c_str(),
                              __FILE__, __LINE__, __func__);
 }
-} // anonymous namespace
 
 [[nodiscard]] UniValue CAssetLockPayload::ToJson() const
 {
@@ -263,25 +261,6 @@ RPCResult GetRpcResult(const std::string& key, bool optional = false)
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("version", nVersion);
     ret.pushKV("signal", signal.ToJson());
-    return ret;
-}
-
-[[nodiscard]] RPCResult llmq::CFinalCommitmentTxPayload::GetJsonHelp(const std::string& key, bool optional)
-{
-    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The quorum commitment special transaction",
-    {
-        GetRpcResult("version"),
-        GetRpcResult("height"),
-        // TODO: Add RPCResult for llmq::CFinalCommitment
-    }};
-}
-
-[[nodiscard]] UniValue llmq::CFinalCommitmentTxPayload::ToJson() const
-{
-    UniValue ret(UniValue::VOBJ);
-    ret.pushKV("version", nVersion);
-    ret.pushKV("height", nHeight);
-    ret.pushKV("commitment", commitment.ToJson());
     return ret;
 }
 
