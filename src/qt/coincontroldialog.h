@@ -53,6 +53,8 @@ public:
     static QList<CAmount> payAmounts;
     static bool fSubtractFeeFromAmount;
 
+    void setViewOnly(bool view_only);
+
 protected:
     void changeEvent(QEvent* e) override;
 
@@ -70,6 +72,8 @@ private:
     QAction *unlockAction;
 
     const PlatformStyle *platformStyle;
+
+    bool m_view_only{false};
 
     void sortView(int, Qt::SortOrder);
     void updateView();

@@ -550,6 +550,34 @@ void CoinControlDialog::changeEvent(QEvent* e)
     QDialog::changeEvent(e);
 }
 
+void CoinControlDialog::setViewOnly(bool view_only)
+{
+    m_view_only = view_only;
+
+    ui->pushButtonSelectAll->setVisible(!view_only);
+    ui->treeWidget->setColumnHidden(COLUMN_CHECKBOX, view_only);
+    ui->frame->setVisible(!view_only);
+
+    ui->labelCoinControlQuantity->setVisible(!view_only);
+    ui->labelCoinControlAmount->setVisible(!view_only);
+    ui->labelCoinControlFee->setVisible(!view_only);
+    ui->labelCoinControlAfterFee->setVisible(!view_only);
+    ui->labelCoinControlBytes->setVisible(!view_only);
+    ui->labelCoinControlChange->setVisible(!view_only);
+
+    ui->labelCoinControlQuantityText->setVisible(!view_only);
+    ui->labelCoinControlAmountText->setVisible(!view_only);
+    ui->labelCoinControlFeeText->setVisible(!view_only);
+    ui->labelCoinControlAfterFeeText->setVisible(!view_only);
+    ui->labelCoinControlBytesText->setVisible(!view_only);
+    ui->labelCoinControlChangeText->setVisible(!view_only);
+
+    if (view_only) {
+        lockAction->setVisible(false);
+        unlockAction->setVisible(false);
+    }
+}
+
 void CoinControlDialog::updateView()
 {
     if (!model || !model->getOptionsModel() || !model->getAddressTableModel())
@@ -560,8 +588,14 @@ void CoinControlDialog::updateView()
     ui->treeWidget->clear();
     ui->treeWidget->setEnabled(false); // performance, otherwise updateLabels would be called for every checked checkbox
     ui->treeWidget->setAlternatingRowColors(!treeMode);
-    QFlags<Qt::ItemFlag> flgCheckbox = Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable;
-    QFlags<Qt::ItemFlag> flgTristate = Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsAutoTristate;
+
+    QFlags<Qt::ItemFlag> flgCheckbox = m_view_only ?
+        (Qt::ItemIsSelectable | Qt::ItemIsEnabled) :
+        (Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable);
+
+    QFlags<Qt::ItemFlag> flgTristate = m_view_only ?
+        (Qt::ItemIsSelectable | Qt::ItemIsEnabled) :
+        (Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsAutoTristate);
 
     BitcoinUnit nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
 
@@ -578,7 +612,10 @@ void CoinControlDialog::updateView()
             itemWalletAddress = new CCoinControlWidgetItem(ui->treeWidget);
 
             itemWalletAddress->setFlags(flgTristate);
-            itemWalletAddress->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
+
+            if (!m_view_only) {
+                itemWalletAddress->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
+            }
 
             // label
             itemWalletAddress->setText(COLUMN_LABEL, sWalletLabel);
@@ -599,7 +636,9 @@ void CoinControlDialog::updateView()
             if (treeMode)    itemOutput = new CCoinControlWidgetItem(itemWalletAddress);
             else             itemOutput = new CCoinControlWidgetItem(ui->treeWidget);
             itemOutput->setFlags(flgCheckbox);
-            itemOutput->setCheckState(COLUMN_CHECKBOX,Qt::Unchecked);
+            if (!m_view_only) {
+                itemOutput->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
+            }
 
             // address
             CTxDestination outputAddress;
@@ -649,13 +688,15 @@ void CoinControlDialog::updateView()
              // disable locked coins
             if (model->wallet().isLockedCoin(output))
             {
-                m_coin_control.UnSelect(output); // just to be sure
+                if (!m_view_only) {
+                    m_coin_control.UnSelect(output); // just to be sure
+                }
                 itemOutput->setDisabled(true);
                 itemOutput->setIcon(COLUMN_CHECKBOX, platformStyle->SingleColorIcon(":/icons/lock_closed"));
             }
 
             // set checkbox
-            if (m_coin_control.IsSelected(output))
+            if (!m_view_only && m_coin_control.IsSelected(output))
                 itemOutput->setCheckState(COLUMN_CHECKBOX, Qt::Checked);
         }
 
@@ -669,7 +710,7 @@ void CoinControlDialog::updateView()
     }
 
     // expand all partially selected
-    if (treeMode)
+    if (treeMode && !m_view_only)
     {
         for (int i = 0; i < ui->treeWidget->topLevelItemCount(); i++)
             if (ui->treeWidget->topLevelItem(i)->checkState(COLUMN_CHECKBOX) == Qt::PartiallyChecked)

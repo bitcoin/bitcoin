@@ -277,6 +277,14 @@ void BitcoinGUI::createActions()
     historyAction->setShortcut(QKeySequence(QStringLiteral("Alt+4")));
     tabGroup->addAction(historyAction);
 
+    showCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/coins"), tr("&Coins"), this);
+    showCoinsAction->setStatusTip(tr("View wallet coins (UTXOs)"));
+    showCoinsAction->setToolTip(showCoinsAction->statusTip());
+    showCoinsAction->setCheckable(false);
+    showCoinsAction->setShortcut(QKeySequence(QStringLiteral("Alt+5")));
+    tabGroup->addAction(showCoinsAction);
+    connect(showCoinsAction, &QAction::triggered, this, &BitcoinGUI::showCoins);
+
 #ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
@@ -601,6 +609,7 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
+        toolbar->addAction(showCoinsAction);
         overviewAction->setChecked(true);
 
 #ifdef ENABLE_WALLET
@@ -1468,6 +1477,16 @@ void BitcoinGUI::updateWalletStatus()
 }
 #endif // ENABLE_WALLET
 
+#ifdef ENABLE_WALLET
+void BitcoinGUI::showCoins()
+{
+    if (!walletFrame) return;
+    if (WalletView* wv = walletFrame->currentWalletView()) {
+        wv->showCoinsDialog();
+    }
+}
+#endif // ENABLE_WALLET
+
 void BitcoinGUI::updateProxyIcon()
 {
     std::string ip_port;
@@ -1678,5 +1697,12 @@ void UnitDisplayStatusBarControl::onMenuSelection(QAction* action)
     if (action)
     {
         optionsModel->setDisplayUnit(action->data());
+    }
+}
+
+void UnitDisplayStatusBarControl::showCoins()
+{
+    if (BitcoinGUI* window = qobject_cast<BitcoinGUI*>(parent())) {
+        window->showCoins();
     }
 }

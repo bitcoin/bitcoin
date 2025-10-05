@@ -17,6 +17,9 @@
 #include <qt/transactiontablemodel.h>
 #include <qt/transactionview.h>
 #include <qt/walletmodel.h>
+#include <qt/coincontroldialog.h>
+#include <wallet/coincontrol.h>
+#include <wallet/coincontrol.h>
 
 #include <interfaces/node.h>
 #include <node/interface_ui.h>
@@ -164,6 +167,18 @@ void WalletView::gotoSendCoinsPage(QString addr)
 
     if (!addr.isEmpty())
         sendCoinsPage->setAddress(addr);
+}
+
+void WalletView::showCoinsDialog()
+{
+    if (!walletModel) return;
+
+    wallet::CCoinControl coin_control;
+
+    CoinControlDialog dlg(coin_control, walletModel, platformStyle, this);
+    dlg.setViewOnly(true);
+    dlg.setWindowTitle(tr("Coins (UTXOs)"));
+    dlg.exec();
 }
 
 void WalletView::gotoSignMessageTab(QString addr)
