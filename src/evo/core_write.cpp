@@ -24,56 +24,58 @@
 #include <map>
 #include <string>
 
+namespace {
+#define RESULT_MAP_ENTRY(name, type, desc) {name, {type, name, desc}}
+const std::map<std::string, RPCResult> RPCRESULT_MAP{{
+    {"addresses",
+        {RPCResult::Type::OBJ, "addresses", "Network addresses of the masternode",
+    {
+        {RPCResult::Type::ARR, "core_p2p", /*optional=*/true, "Addresses used for protocol P2P",
+            {{RPCResult::Type::STR, "address", ""}}},
+        {RPCResult::Type::ARR, "platform_p2p", /*optional=*/true, "Addresses used for Platform P2P",
+            {{RPCResult::Type::STR, "address", ""}}},
+        {RPCResult::Type::ARR, "platform_https", /*optional=*/true, "Addresses used for Platform HTTPS API",
+            {{RPCResult::Type::STR, "address", ""}}},
+    }}},
+    RESULT_MAP_ENTRY("collateralHash", RPCResult::Type::STR_HEX, "Collateral transaction hash"),
+    RESULT_MAP_ENTRY("collateralIndex", RPCResult::Type::NUM, "Collateral transaction output index"),
+    RESULT_MAP_ENTRY("consecutivePayments", RPCResult::Type::NUM, "Consecutive payments masternode has received in payment cycle"),
+    RESULT_MAP_ENTRY("height", RPCResult::Type::NUM, "Block height"),
+    RESULT_MAP_ENTRY("inputsHash", RPCResult::Type::STR_HEX, "Hash of all the outpoints of the transaction inputs"),
+    RESULT_MAP_ENTRY("lastPaidHeight", RPCResult::Type::NUM, "Height masternode was last paid"),
+    RESULT_MAP_ENTRY("llmqType", RPCResult::Type::NUM, "Quorum type"),
+    RESULT_MAP_ENTRY("merkleRootMNList", RPCResult::Type::STR_HEX, "Merkle root of the masternode list"),
+    RESULT_MAP_ENTRY("merkleRootQuorums", RPCResult::Type::STR_HEX, "Merkle root of the quorum list"),
+    RESULT_MAP_ENTRY("operatorPayoutAddress", RPCResult::Type::STR, "Dash address used for operator reward payments"),
+    RESULT_MAP_ENTRY("operatorReward", RPCResult::Type::NUM, "Fraction in %% of reward shared with the operator between 0 and 10000"),
+    RESULT_MAP_ENTRY("ownerAddress", RPCResult::Type::STR, "Dash address used for payee updates and proposal voting"),
+    RESULT_MAP_ENTRY("payoutAddress", RPCResult::Type::STR, "Dash address used for masternode reward payments"),
+    RESULT_MAP_ENTRY("platformHTTPPort", RPCResult::Type::NUM, "(DEPRECATED) TCP port of Platform HTTP API"),
+    RESULT_MAP_ENTRY("platformNodeID", RPCResult::Type::STR_HEX, "Node ID derived from P2P public key for Platform P2P"),
+    RESULT_MAP_ENTRY("platformP2PPort", RPCResult::Type::NUM, "(DEPRECATED) TCP port of Platform P2P"),
+    RESULT_MAP_ENTRY("PoSeBanHeight", RPCResult::Type::NUM, "Height masternode was banned for Proof of Service violations"),
+    RESULT_MAP_ENTRY("PoSePenalty", RPCResult::Type::NUM, "Proof of Service penalty score"),
+    RESULT_MAP_ENTRY("PoSeRevivedHeight", RPCResult::Type::NUM, "Height masternode recovered from Proof of Service violations"),
+    RESULT_MAP_ENTRY("proTxHash", RPCResult::Type::STR_HEX, "Hash of the masternode's initial ProRegTx"),
+    RESULT_MAP_ENTRY("pubKeyOperator", RPCResult::Type::STR, "BLS public key used for operator signing"),
+    RESULT_MAP_ENTRY("quorumHash", RPCResult::Type::STR_HEX, "Hash of the quorum"),
+    RESULT_MAP_ENTRY("quorumSig", RPCResult::Type::STR_HEX, "BLS recovered threshold signature of quorum"),
+    RESULT_MAP_ENTRY("registeredHeight", RPCResult::Type::NUM, "Height masternode was registered"),
+    RESULT_MAP_ENTRY("revocationReason", RPCResult::Type::NUM, "Reason for ProUpRegTx revocation"),
+    RESULT_MAP_ENTRY("service", RPCResult::Type::STR, "(DEPRECATED) IP address and port of the masternode"),
+    RESULT_MAP_ENTRY("type", RPCResult::Type::NUM, "Masternode type"),
+    RESULT_MAP_ENTRY("version", RPCResult::Type::NUM, "Special transaction version"),
+    RESULT_MAP_ENTRY("votingAddress", RPCResult::Type::STR, "Dash address used for voting"),
+}};
+#undef RESULT_MAP_ENTRY
+} // anonymous namespace
+
 RPCResult GetRpcResult(const std::string& key, bool optional)
 {
-#define RESULT_MAP_ENTRY(type, name, desc) {name, {type, name, optional, desc}}
-    const std::map<std::string, RPCResult> result_map{{
-        {"addresses",
-            {RPCResult::Type::OBJ, "addresses", optional, "Network addresses of the masternode",
-        {
-            {RPCResult::Type::ARR, "core_p2p", /*optional=*/true, "Addresses used for protocol P2P",
-                {{RPCResult::Type::STR, "address", ""}}},
-            {RPCResult::Type::ARR, "platform_p2p", /*optional=*/true, "Addresses used for Platform P2P",
-                {{RPCResult::Type::STR, "address", ""}}},
-            {RPCResult::Type::ARR, "platform_https", /*optional=*/true, "Addresses used for Platform HTTPS API",
-                {{RPCResult::Type::STR, "address", ""}}},
-        }}},
-        RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "collateralHash", "Collateral transaction hash"),
-        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "collateralIndex", "Collateral transaction output index"),
-        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "consecutivePayments", "Consecutive payments masternode has received in payment cycle"),
-        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "height", "Block height"),
-        RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "inputsHash", "Hash of all the outpoints of the transaction inputs"),
-        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "lastPaidHeight", "Height masternode was last paid"),
-        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "llmqType", "Quorum type"),
-        RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "merkleRootMNList", "Merkle root of the masternode list"),
-        RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "merkleRootQuorums", "Merkle root of the quorum list"),
-        RESULT_MAP_ENTRY(RPCResult::Type::STR, "operatorPayoutAddress", "Dash address used for operator reward payments"),
-        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "operatorReward", "Fraction in %% of reward shared with the operator between 0 and 10000"),
-        RESULT_MAP_ENTRY(RPCResult::Type::STR, "ownerAddress", "Dash address used for payee updates and proposal voting"),
-        RESULT_MAP_ENTRY(RPCResult::Type::STR, "payoutAddress", "Dash address used for masternode reward payments"),
-        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "platformHTTPPort", "(DEPRECATED) TCP port of Platform HTTP API"),
-        RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "platformNodeID", "Node ID derived from P2P public key for Platform P2P"),
-        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "platformP2PPort", "(DEPRECATED) TCP port of Platform P2P"),
-        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "PoSeBanHeight", "Height masternode was banned for Proof of Service violations"),
-        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "PoSePenalty", "Proof of Service penalty score"),
-        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "PoSeRevivedHeight", "Height masternode recovered from Proof of Service violations"),
-        RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "proTxHash", "Hash of the masternode's initial ProRegTx"),
-        RESULT_MAP_ENTRY(RPCResult::Type::STR, "pubKeyOperator", "BLS public key used for operator signing"),
-        RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "quorumHash", "Hash of the quorum"),
-        RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "quorumSig", "BLS recovered threshold signature of quorum"),
-        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "registeredHeight", "Height masternode was registered"),
-        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "revocationReason", "Reason for ProUpRegTx revocation"),
-        RESULT_MAP_ENTRY(RPCResult::Type::STR, "service", "(DEPRECATED) IP address and port of the masternode"),
-        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "type", "Masternode type"),
-        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "version", "Special transaction version"),
-        RESULT_MAP_ENTRY(RPCResult::Type::STR, "votingAddress", "Dash address used for voting"),
-    }};
-#undef  RESULT_MAP_ENTRY
-
-    if (const auto it = result_map.find(key); it != result_map.end()) {
-        return it->second;
+    if (const auto it = RPCRESULT_MAP.find(key); it != RPCRESULT_MAP.end()) {
+        const auto& ret{it->second};
+        return RPCResult{ret.m_type, ret.m_key_name, optional, ret.m_description, ret.m_inner};
     }
-
     throw NonFatalCheckError(strprintf("Requested invalid RPCResult for nonexistent key \"%s\"", key).c_str(),
                              __FILE__, __LINE__, __func__);
 }
