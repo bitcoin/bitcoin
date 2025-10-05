@@ -32,38 +32,6 @@ std::string CDeterministicMNState::ToString() const
                      EncodeDestination(PKHash(keyIDVoting)), netInfo->ToString(), payoutAddress, operatorPayoutAddress);
 }
 
-UniValue CDeterministicMNState::ToJson(MnType nType) const
-{
-    UniValue obj(UniValue::VOBJ);
-    obj.pushKV("version", nVersion);
-    obj.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
-    obj.pushKV("addresses", GetNetInfoWithLegacyFields(*this, nType));
-    obj.pushKV("registeredHeight", nRegisteredHeight);
-    obj.pushKV("lastPaidHeight", nLastPaidHeight);
-    obj.pushKV("consecutivePayments", nConsecutivePayments);
-    obj.pushKV("PoSePenalty", nPoSePenalty);
-    obj.pushKV("PoSeRevivedHeight", nPoSeRevivedHeight);
-    obj.pushKV("PoSeBanHeight", nPoSeBanHeight);
-    obj.pushKV("revocationReason", nRevocationReason);
-    obj.pushKV("ownerAddress", EncodeDestination(PKHash(keyIDOwner)));
-    obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
-    if (nType == MnType::Evo) {
-        obj.pushKV("platformNodeID", platformNodeID.ToString());
-        obj.pushKV("platformP2PPort", GetPlatformPort</*is_p2p=*/true>(*this));
-        obj.pushKV("platformHTTPPort", GetPlatformPort</*is_p2p=*/false>(*this));
-    }
-
-    CTxDestination dest;
-    if (ExtractDestination(scriptPayout, dest)) {
-        obj.pushKV("payoutAddress", EncodeDestination(dest));
-    }
-    obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
-    if (ExtractDestination(scriptOperatorPayout, dest)) {
-        obj.pushKV("operatorPayoutAddress", EncodeDestination(dest));
-    }
-    return obj;
-}
-
 UniValue CDeterministicMNStateDiff::ToJson(MnType nType) const
 {
     UniValue obj(UniValue::VOBJ);

@@ -50,14 +50,7 @@ public:
 
     std::string ToString() const;
 
-    [[nodiscard]] UniValue ToJson() const
-    {
-        UniValue obj(UniValue::VOBJ);
-        obj.pushKV("versionBit", versionBit);
-        obj.pushKV("quorumHash", quorumHash.ToString());
-        obj.pushKV("sig", sig.ToString());
-        return obj;
-    }
+    [[nodiscard]] UniValue ToJson() const;
 };
 
 class MNHFTxPayload

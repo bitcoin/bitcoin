@@ -4,6 +4,7 @@
 
 #include <evo/assetlocktx.h>
 #include <evo/cbtx.h>
+#include <evo/dmnstate.h>
 #include <evo/mnhftx.h>
 #include <evo/netinfo.h>
 #include <evo/providertx.h>
@@ -122,6 +123,38 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
         }
     }
     return ret;
+}
+
+[[nodiscard]] UniValue CDeterministicMNState::ToJson(MnType nType) const
+{
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("version", nVersion);
+    obj.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
+    obj.pushKV("addresses", GetNetInfoWithLegacyFields(*this, nType));
+    obj.pushKV("registeredHeight", nRegisteredHeight);
+    obj.pushKV("lastPaidHeight", nLastPaidHeight);
+    obj.pushKV("consecutivePayments", nConsecutivePayments);
+    obj.pushKV("PoSePenalty", nPoSePenalty);
+    obj.pushKV("PoSeRevivedHeight", nPoSeRevivedHeight);
+    obj.pushKV("PoSeBanHeight", nPoSeBanHeight);
+    obj.pushKV("revocationReason", nRevocationReason);
+    obj.pushKV("ownerAddress", EncodeDestination(PKHash(keyIDOwner)));
+    obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
+    if (nType == MnType::Evo) {
+        obj.pushKV("platformNodeID", platformNodeID.ToString());
+        obj.pushKV("platformP2PPort", GetPlatformPort</*is_p2p=*/true>(*this));
+        obj.pushKV("platformHTTPPort", GetPlatformPort</*is_p2p=*/false>(*this));
+    }
+
+    CTxDestination dest;
+    if (ExtractDestination(scriptPayout, dest)) {
+        obj.pushKV("payoutAddress", EncodeDestination(dest));
+    }
+    obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
+    if (ExtractDestination(scriptOperatorPayout, dest)) {
+        obj.pushKV("operatorPayoutAddress", EncodeDestination(dest));
+    }
+    return obj;
 }
 
 [[nodiscard]] RPCResult CProRegTx::GetJsonHelp(const std::string& key, bool optional)
@@ -256,63 +289,6 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     return ret;
 }
 
-[[nodiscard]] UniValue MNHFTxPayload::ToJson() const
-{
-    UniValue ret(UniValue::VOBJ);
-    ret.pushKV("version", nVersion);
-    ret.pushKV("signal", signal.ToJson());
-    return ret;
-}
-
-[[nodiscard]] RPCResult CSimplifiedMNListEntry::GetJsonHelp(const std::string& key, bool optional)
-{
-    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The simplified masternode list entry",
-    {
-        {RPCResult::Type::NUM, "nVersion", "Version of the entry"},
-        {RPCResult::Type::NUM, "nType", "Masternode type"},
-        {RPCResult::Type::STR_HEX, "proRegTxHash", "Hash of the ProRegTx identifying the masternode"},
-        {RPCResult::Type::STR_HEX, "confirmedHash", "Hash of the block where the masternode was confirmed"},
-        GetRpcResult("service"),
-        GetRpcResult("addresses"),
-        GetRpcResult("pubKeyOperator"),
-        GetRpcResult("votingAddress"),
-        {RPCResult::Type::BOOL, "isValid", "Returns true if the masternode is not Proof-of-Service banned"},
-        GetRpcResult("platformHTTPPort", /*optional=*/true),
-        GetRpcResult("platformNodeID", /*optional=*/true),
-        GetRpcResult("payoutAddress", /*optional=*/true),
-        GetRpcResult("operatorPayoutAddress", /*optional=*/true),
-    }};
-}
-
-[[nodiscard]] UniValue CSimplifiedMNListEntry::ToJson(bool extended) const
-{
-    UniValue obj(UniValue::VOBJ);
-    obj.pushKV("nVersion", nVersion);
-    obj.pushKV("nType", ToUnderlying(nType));
-    obj.pushKV("proRegTxHash", proRegTxHash.ToString());
-    obj.pushKV("confirmedHash", confirmedHash.ToString());
-    obj.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
-    obj.pushKV("addresses", GetNetInfoWithLegacyFields(*this, nType));
-    obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
-    obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
-    obj.pushKV("isValid", isValid);
-    if (nType == MnType::Evo) {
-        obj.pushKV("platformHTTPPort", GetPlatformPort</*is_p2p=*/false>(*this));
-        obj.pushKV("platformNodeID", platformNodeID.ToString());
-    }
-
-    if (extended) {
-        CTxDestination dest;
-        if (ExtractDestination(scriptPayout, dest)) {
-            obj.pushKV("payoutAddress", EncodeDestination(dest));
-        }
-        if (ExtractDestination(scriptOperatorPayout, dest)) {
-            obj.pushKV("operatorPayoutAddress", EncodeDestination(dest));
-        }
-    }
-    return obj;
-}
-
 [[nodiscard]] RPCResult CSimplifiedMNListDiff::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The simplified masternode list diff",
@@ -403,4 +379,70 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     }
     obj.pushKV("quorumsCLSigs", quorumsCLSigsArr);
     return obj;
+}
+
+[[nodiscard]] RPCResult CSimplifiedMNListEntry::GetJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The simplified masternode list entry",
+    {
+        {RPCResult::Type::NUM, "nVersion", "Version of the entry"},
+        {RPCResult::Type::NUM, "nType", "Masternode type"},
+        {RPCResult::Type::STR_HEX, "proRegTxHash", "Hash of the ProRegTx identifying the masternode"},
+        {RPCResult::Type::STR_HEX, "confirmedHash", "Hash of the block where the masternode was confirmed"},
+        GetRpcResult("service"),
+        GetRpcResult("addresses"),
+        GetRpcResult("pubKeyOperator"),
+        GetRpcResult("votingAddress"),
+        {RPCResult::Type::BOOL, "isValid", "Returns true if the masternode is not Proof-of-Service banned"},
+        GetRpcResult("platformHTTPPort", /*optional=*/true),
+        GetRpcResult("platformNodeID", /*optional=*/true),
+        GetRpcResult("payoutAddress", /*optional=*/true),
+        GetRpcResult("operatorPayoutAddress", /*optional=*/true),
+    }};
+}
+
+[[nodiscard]] UniValue CSimplifiedMNListEntry::ToJson(bool extended) const
+{
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("nVersion", nVersion);
+    obj.pushKV("nType", ToUnderlying(nType));
+    obj.pushKV("proRegTxHash", proRegTxHash.ToString());
+    obj.pushKV("confirmedHash", confirmedHash.ToString());
+    obj.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
+    obj.pushKV("addresses", GetNetInfoWithLegacyFields(*this, nType));
+    obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
+    obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
+    obj.pushKV("isValid", isValid);
+    if (nType == MnType::Evo) {
+        obj.pushKV("platformHTTPPort", GetPlatformPort</*is_p2p=*/false>(*this));
+        obj.pushKV("platformNodeID", platformNodeID.ToString());
+    }
+
+    if (extended) {
+        CTxDestination dest;
+        if (ExtractDestination(scriptPayout, dest)) {
+            obj.pushKV("payoutAddress", EncodeDestination(dest));
+        }
+        if (ExtractDestination(scriptOperatorPayout, dest)) {
+            obj.pushKV("operatorPayoutAddress", EncodeDestination(dest));
+        }
+    }
+    return obj;
+}
+
+[[nodiscard]] UniValue MNHFTx::ToJson() const
+{
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("versionBit", versionBit);
+    obj.pushKV("quorumHash", quorumHash.ToString());
+    obj.pushKV("sig", sig.ToString());
+    return obj;
+}
+
+[[nodiscard]] UniValue MNHFTxPayload::ToJson() const
+{
+    UniValue ret(UniValue::VOBJ);
+    ret.pushKV("version", nVersion);
+    ret.pushKV("signal", signal.ToJson());
+    return ret;
 }
