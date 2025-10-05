@@ -23,7 +23,7 @@ template <typename T>
                                                   : DeploymentActiveAfter(pindexPrev, Params().GetConsensus(),
                                                                           Consensus::DEPLOYMENT_V19),
                                 is_extaddr_eligible ? DeploymentActiveAfter(pindexPrev, Params().GetConsensus(),
-                                                                            Consensus::DEPLOYMENT_V23)
+                                                                            Consensus::DEPLOYMENT_V24)
                                                     : false);
 }
 template uint16_t GetMaxFromDeployment<CProRegTx>(gsl::not_null<const CBlockIndex*> pindexPrev, std::optional<bool> is_basic_override);

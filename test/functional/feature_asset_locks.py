@@ -266,7 +266,7 @@ class AssetLocksTest(DashTestFramework):
         self.test_withdrawal_limits(node_wallet, node, pubkey)
         self.test_mn_rr(node_wallet, node, pubkey)
         self.test_withdrawals_fork(node_wallet, node, pubkey)
-        self.test_v23_fork(node_wallet, node, pubkey)
+        self.test_v24_fork(node_wallet, node, pubkey)
 
 
     def test_asset_locks(self, node_wallet, node, pubkey):
@@ -702,10 +702,10 @@ class AssetLocksTest(DashTestFramework):
         self.generate(node, 1)
         self.ensure_tx_is_not_mined(txid_in_block)
 
-    def test_v23_fork(self, node_wallet, node, pubkey):
-        self.log.info("Testing asset unlock after 'v23' activation...")
-        self.activate_by_name('v23', 750)
-        self.log.info(f'post-v23 height: {node.getblockcount()} credit: {self.get_credit_pool_balance()}')
+    def test_v24_fork(self, node_wallet, node, pubkey):
+        self.log.info("Testing asset unlock after 'v24' activation...")
+        self.activate_by_name('v24', 750)
+        self.log.info(f'post-v24 height: {node.getblockcount()} credit: {self.get_credit_pool_balance()}')
 
         index = 601
         while index < 611:

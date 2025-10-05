@@ -1,7 +1,7 @@
 Notable Changes
 ---------------
 
-* Dash Core will no longer permit the registration of new legacy scheme masternodes after the deployment of the v23
+* Dash Core will no longer permit the registration of new legacy scheme masternodes after the deployment of the v24
   fork. Existing basic scheme masternodes will also be prohibited from downgrading to the legacy scheme after the
   deployment is active.
 

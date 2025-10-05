@@ -22,8 +22,8 @@ from _decimal import Decimal
 from random import randint
 from typing import List, Optional
 
-# Height at which BIP9 deployment DEPLOYMENT_V23 is activated
-V23_ACTIVATION_THRESHOLD = 100
+# Height at which BIP9 deployment DEPLOYMENT_V24 is activated
+V24_ACTIVATION_THRESHOLD = 100
 # See CMainParams in src/chainparams.cpp
 DEFAULT_PORT_MAINNET_CORE_P2P = 9999
 # See CRegTestParams in src/chainparams.cpp
@@ -137,18 +137,18 @@ class NetInfoTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [[
-            "-dip3params=2:2", f"-vbparams=v23:{self.mocktime}:999999999999:{V23_ACTIVATION_THRESHOLD}:10:8:6:5:0"
+            "-dip3params=2:2", f"-vbparams=v24:{self.mocktime}:999999999999:{V24_ACTIVATION_THRESHOLD}:10:8:6:5:0"
         ] for _ in range(self.num_nodes)]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
-    def activate_v23(self):
+    def activate_v24(self):
         batch_size: int = 50
-        while not softfork_active(self.nodes[0], "v23"):
+        while not softfork_active(self.nodes[0], "v24"):
             self.bump_mocktime(batch_size)
             self.generate(self.nodes[0], batch_size, sync_fun=lambda: self.sync_blocks())
-        assert softfork_active(self.nodes[0], "v23")
+        assert softfork_active(self.nodes[0], "v24")
 
     def check_netinfo_fields(self, val, core_p2p_port: int, plat_https_port: Optional[int], plat_p2p_port: Optional[int]):
         assert_equal(val['core_p2p'][0], f"127.0.0.1:{core_p2p_port}")
@@ -182,8 +182,8 @@ class NetInfoTest(BitcoinTestFramework):
         self.test_validation_legacy()
         self.log.info("Test output masternode address fields for consistency (pre-fork)")
         self.test_fields()
-        self.log.info("Mine blocks to activate DEPLOYMENT_V23")
-        self.activate_v23()
+        self.log.info("Mine blocks to activate DEPLOYMENT_V24")
+        self.activate_v24()
         self.log.info("Test input validation for masternode address fields (post-fork)")
         self.test_validation_common()
         self.test_validation_extended()
