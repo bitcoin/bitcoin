@@ -78,7 +78,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
                              __FILE__, __LINE__, __func__);
 }
 
-[[nodiscard]] RPCResult CAssetLockPayload::GetJsonHelp(const std::string& key, bool optional)
+RPCResult CAssetLockPayload::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The asset lock special transaction",
     {
@@ -95,7 +95,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     }};
 }
 
-[[nodiscard]] UniValue CAssetLockPayload::ToJson() const
+UniValue CAssetLockPayload::ToJson() const
 {
     UniValue outputs(UniValue::VARR);
     for (const CTxOut& credit_output : creditOutputs) {
@@ -114,7 +114,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     return ret;
 }
 
-[[nodiscard]] RPCResult CAssetUnlockPayload::GetJsonHelp(const std::string& key, bool optional)
+RPCResult CAssetUnlockPayload::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The asset unlock special transaction",
     {
@@ -127,7 +127,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     }};
 }
 
-[[nodiscard]] UniValue CAssetUnlockPayload::ToJson() const
+UniValue CAssetUnlockPayload::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("version", nVersion);
@@ -139,7 +139,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     return ret;
 }
 
-[[nodiscard]] RPCResult CCbTx::GetJsonHelp(const std::string& key, bool optional)
+RPCResult CCbTx::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The coinbase special transaction",
     {
@@ -153,7 +153,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     }};
 }
 
-[[nodiscard]] UniValue CCbTx::ToJson() const
+UniValue CCbTx::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("version", ToUnderlying(nVersion));
@@ -171,7 +171,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
 }
 
 // CDeterministicMN::ToJson() defined in evo/deterministicmns.cpp
-[[nodiscard]] RPCResult CDeterministicMN::GetJsonHelp(const std::string& key, bool optional)
+RPCResult CDeterministicMN::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The masternode's details",
     {
@@ -185,7 +185,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     }};
 }
 
-[[nodiscard]] RPCResult CDeterministicMNState::GetJsonHelp(const std::string& key, bool optional)
+RPCResult CDeterministicMNState::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The masternode state",
     {
@@ -210,7 +210,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     }};
 }
 
-[[nodiscard]] UniValue CDeterministicMNState::ToJson(MnType nType) const
+UniValue CDeterministicMNState::ToJson(MnType nType) const
 {
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("version", nVersion);
@@ -243,7 +243,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
 }
 
 // CDeterministicMNStateDiff::ToJson() defined in evo/dmnstate.cpp
-[[nodiscard]] RPCResult CDeterministicMNStateDiff::GetJsonHelp(const std::string& key, bool optional)
+RPCResult CDeterministicMNStateDiff::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The masternode state diff",
     {
@@ -268,7 +268,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     }};
 }
 
-[[nodiscard]] RPCResult CProRegTx::GetJsonHelp(const std::string& key, bool optional)
+RPCResult CProRegTx::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The masternode registration special transaction",
     {
@@ -290,7 +290,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     }};
 }
 
-[[nodiscard]] UniValue CProRegTx::ToJson() const
+UniValue CProRegTx::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("version", nVersion);
@@ -315,7 +315,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     return ret;
 }
 
-[[nodiscard]] RPCResult CProUpRegTx::GetJsonHelp(const std::string& key, bool optional)
+RPCResult CProUpRegTx::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The masternode update registrar special transaction",
     {
@@ -328,7 +328,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     }};
 }
 
-[[nodiscard]] UniValue CProUpRegTx::ToJson() const
+UniValue CProUpRegTx::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("version", nVersion);
@@ -342,7 +342,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     return ret;
 }
 
-[[nodiscard]] RPCResult CProUpRevTx::GetJsonHelp(const std::string& key, bool optional)
+RPCResult CProUpRevTx::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The masternode operator revocation special transaction",
     {
@@ -353,7 +353,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     }};
 }
 
-[[nodiscard]] UniValue CProUpRevTx::ToJson() const
+UniValue CProUpRevTx::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("version", nVersion);
@@ -363,7 +363,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     return ret;
 }
 
-[[nodiscard]] RPCResult CProUpServTx::GetJsonHelp(const std::string& key, bool optional)
+RPCResult CProUpServTx::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The masternode update service special transaction",
     {
@@ -380,7 +380,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     }};
 }
 
-[[nodiscard]] UniValue CProUpServTx::ToJson() const
+UniValue CProUpServTx::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("version", nVersion);
@@ -400,7 +400,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     return ret;
 }
 
-[[nodiscard]] RPCResult CSimplifiedMNListDiff::GetJsonHelp(const std::string& key, bool optional)
+RPCResult CSimplifiedMNListDiff::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The simplified masternode list diff",
     {
@@ -430,7 +430,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     }};
 }
 
-[[nodiscard]] UniValue CSimplifiedMNListDiff::ToJson(bool extended) const
+UniValue CSimplifiedMNListDiff::ToJson(bool extended) const
 {
     UniValue obj(UniValue::VOBJ);
 
@@ -493,7 +493,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     return obj;
 }
 
-[[nodiscard]] RPCResult CSimplifiedMNListEntry::GetJsonHelp(const std::string& key, bool optional)
+RPCResult CSimplifiedMNListEntry::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The simplified masternode list entry",
     {
@@ -513,7 +513,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     }};
 }
 
-[[nodiscard]] UniValue CSimplifiedMNListEntry::ToJson(bool extended) const
+UniValue CSimplifiedMNListEntry::ToJson(bool extended) const
 {
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("nVersion", nVersion);
@@ -542,7 +542,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     return obj;
 }
 
-[[nodiscard]] RPCResult MNHFTx::GetJsonHelp(const std::string& key, bool optional)
+RPCResult MNHFTx::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The masternode hard fork payload",
     {
@@ -552,7 +552,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     }};
 }
 
-[[nodiscard]] UniValue MNHFTx::ToJson() const
+UniValue MNHFTx::ToJson() const
 {
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("versionBit", versionBit);
@@ -561,7 +561,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     return obj;
 }
 
-[[nodiscard]] RPCResult MNHFTxPayload::GetJsonHelp(const std::string& key, bool optional)
+RPCResult MNHFTxPayload::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The masternode hard fork signal special transaction",
     {
@@ -570,7 +570,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     }};
 }
 
-[[nodiscard]] UniValue MNHFTxPayload::ToJson() const
+UniValue MNHFTxPayload::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("version", nVersion);

@@ -15,7 +15,7 @@
 #include <string>
 
 namespace llmq {
-[[nodiscard]] RPCResult CFinalCommitment::GetJsonHelp(const std::string& key, bool optional)
+RPCResult CFinalCommitment::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The quorum commitment payload",
     {
@@ -34,7 +34,7 @@ namespace llmq {
     }};
 }
 
-[[nodiscard]] UniValue CFinalCommitment::ToJson() const
+UniValue CFinalCommitment::ToJson() const
 {
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("version", nVersion);
@@ -52,7 +52,7 @@ namespace llmq {
     return obj;
 }
 
-[[nodiscard]] RPCResult CFinalCommitmentTxPayload::GetJsonHelp(const std::string& key, bool optional)
+RPCResult CFinalCommitmentTxPayload::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The quorum commitment special transaction",
     {
@@ -62,7 +62,7 @@ namespace llmq {
     }};
 }
 
-[[nodiscard]] UniValue CFinalCommitmentTxPayload::ToJson() const
+UniValue CFinalCommitmentTxPayload::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("version", nVersion);
@@ -71,7 +71,7 @@ namespace llmq {
     return ret;
 }
 
-[[nodiscard]] RPCResult CQuorumRotationInfo::GetJsonHelp(const std::string& key, bool optional)
+RPCResult CQuorumRotationInfo::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The quorum rotation",
     {
@@ -98,7 +98,7 @@ namespace llmq {
     }};
 }
 
-[[nodiscard]] UniValue CQuorumRotationInfo::ToJson() const
+UniValue CQuorumRotationInfo::ToJson() const
 {
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("extraShare", extraShare);
@@ -140,7 +140,7 @@ namespace llmq {
     return obj;
 }
 
-[[nodiscard]] RPCResult CQuorumSnapshot::GetJsonHelp(const std::string& key, bool optional)
+RPCResult CQuorumSnapshot::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The quorum snapshot",
     {
@@ -154,7 +154,7 @@ namespace llmq {
     }};
 }
 
-[[nodiscard]] UniValue CQuorumSnapshot::ToJson() const
+UniValue CQuorumSnapshot::ToJson() const
 {
     UniValue obj(UniValue::VOBJ);
     UniValue activeQ(UniValue::VARR);
@@ -173,7 +173,7 @@ namespace llmq {
     return obj;
 }
 
-[[nodiscard]] RPCResult CRecoveredSig::GetJsonHelp(const std::string& key, bool optional)
+RPCResult CRecoveredSig::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The recovered signature",
     {
@@ -186,7 +186,7 @@ namespace llmq {
     }};
 }
 
-[[nodiscard]] UniValue CRecoveredSig::ToJson() const
+UniValue CRecoveredSig::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("llmqType", ToUnderlying(llmqType));
