@@ -1128,13 +1128,17 @@ void TestNode(const MsCtx script_ctx, const std::optional<Node>& node, FuzzedDat
         SatisfactionToWitness(script_ctx, witness_nonmal, script, builder);
         ScriptError serror;
         bool res = VerifyScript(DUMMY_SCRIPTSIG, script_pubkey, &witness_nonmal, STANDARD_SCRIPT_VERIFY_FLAGS, CHECKER_CTX, &serror);
-        // Non-malleable satisfactions are guaranteed to be valid if ValidSatisfactions().
-        if (node->ValidSatisfactions()) assert(res);
+        // Non-malleable satisfactions are guaranteed to be valid if ValidSatisfactions(), unless REDUCED_DATA rules are violated.
+        if (node->ValidSatisfactions()) {
+            assert(res ||
+                   serror == ScriptError::SCRIPT_ERR_PUSH_SIZE);
+        }
         // More detailed: non-malleable satisfactions must be valid, or could fail with ops count error (if CheckOpsLimit failed),
-        // or with a stack size error (if CheckStackSize check failed).
+        // or with a stack size error (if CheckStackSize check failed), or with REDUCED_DATA-related errors.
         assert(res ||
                (!node->CheckOpsLimit() && serror == ScriptError::SCRIPT_ERR_OP_COUNT) ||
-               (!node->CheckStackSize() && serror == ScriptError::SCRIPT_ERR_STACK_SIZE));
+               (!node->CheckStackSize() && serror == ScriptError::SCRIPT_ERR_STACK_SIZE) ||
+               serror == ScriptError::SCRIPT_ERR_PUSH_SIZE);
     }
 
     if (mal_success && (!nonmal_success || witness_mal.stack != witness_nonmal.stack)) {
@@ -1144,8 +1148,11 @@ void TestNode(const MsCtx script_ctx, const std::optional<Node>& node, FuzzedDat
         ScriptError serror;
         bool res = VerifyScript(DUMMY_SCRIPTSIG, script_pubkey, &witness_mal, STANDARD_SCRIPT_VERIFY_FLAGS, CHECKER_CTX, &serror);
         // Malleable satisfactions are not guaranteed to be valid under any conditions, but they can only
-        // fail due to stack or ops limits.
-        assert(res || serror == ScriptError::SCRIPT_ERR_OP_COUNT || serror == ScriptError::SCRIPT_ERR_STACK_SIZE);
+        // fail due to stack or ops limits, or REDUCED_DATA-related errors.
+        assert(res ||
+               serror == ScriptError::SCRIPT_ERR_OP_COUNT ||
+               serror == ScriptError::SCRIPT_ERR_STACK_SIZE ||
+               serror == ScriptError::SCRIPT_ERR_PUSH_SIZE);
     }
 
     if (node->IsSane()) {

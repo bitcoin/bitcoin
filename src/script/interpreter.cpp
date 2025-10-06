@@ -434,6 +434,8 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
     execdata.m_codeseparator_pos = 0xFFFFFFFFUL;
     execdata.m_codeseparator_pos_init = true;
 
+    const unsigned int max_element_size = (flags & SCRIPT_VERIFY_REDUCED_DATA) ? MAX_SCRIPT_ELEMENT_SIZE_REDUCED : MAX_SCRIPT_ELEMENT_SIZE;
+
     try
     {
         for (; pc < pend; ++opcode_pos) {
@@ -444,7 +446,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
             //
             if (!script.GetOp(pc, opcode, vchPushValue))
                 return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
-            if (vchPushValue.size() > MAX_SCRIPT_ELEMENT_SIZE)
+            if (vchPushValue.size() > max_element_size)
                 return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
 
             if (sigversion == SigVersion::BASE || sigversion == SigVersion::WITNESS_V0) {
@@ -1856,8 +1858,9 @@ static bool ExecuteWitnessScript(const std::span<const valtype>& stack_span, con
     }
 
     // Disallow stack item size > MAX_SCRIPT_ELEMENT_SIZE in witness stack
+    const unsigned int max_element_size = (flags & SCRIPT_VERIFY_REDUCED_DATA) ? MAX_SCRIPT_ELEMENT_SIZE_REDUCED : MAX_SCRIPT_ELEMENT_SIZE;
     for (const valtype& elem : stack) {
-        if (elem.size() > MAX_SCRIPT_ELEMENT_SIZE) return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
+        if (elem.size() > max_element_size) return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
     }
 
     // Run the script interpreter.
@@ -2016,6 +2019,12 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
     // scriptSig and scriptPubKey must be evaluated sequentially on the same stack
     // rather than being simply concatenated (see CVE-2010-5141)
     std::vector<std::vector<unsigned char> > stack, stackCopy;
+    if (scriptPubKey.IsPayToScriptHash()) {
+        // Disable SCRIPT_VERIFY_REDUCED_DATA for pushing the P2SH redeemScript
+        if (!EvalScript(stack, scriptSig, flags & ~SCRIPT_VERIFY_REDUCED_DATA, checker, SigVersion::BASE, serror))
+            // serror is set
+            return false;
+    } else
     if (!EvalScript(stack, scriptSig, flags, checker, SigVersion::BASE, serror))
         // serror is set
         return false;
@@ -2066,6 +2075,15 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         const valtype& pubKeySerialized = stack.back();
         CScript pubKey2(pubKeySerialized.begin(), pubKeySerialized.end());
         popstack(stack);
+
+        if (flags & SCRIPT_VERIFY_REDUCED_DATA) {
+            // We bypassed the reduced data check above to exempt redeemScript
+            // Now enforce it on the rest of the stack items here
+            // This is sufficient because P2SH requires scriptSig to be push-only
+            for (const valtype& elem : stack) {
+                if (elem.size() > MAX_SCRIPT_ELEMENT_SIZE_REDUCED) return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
+            }
+        }
 
         if (!EvalScript(stack, pubKey2, flags, checker, SigVersion::BASE, serror))
             // serror is set
