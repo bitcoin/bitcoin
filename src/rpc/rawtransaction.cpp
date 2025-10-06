@@ -49,6 +49,7 @@
 #include <evo/assetlocktx.h>
 #include <evo/cbtx.h>
 #include <evo/creditpool.h>
+#include <evo/mnhftx.h>
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
 #include <instantsend/instantsend.h>
@@ -177,6 +178,9 @@ static std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc)
         CProUpRevTx::GetJsonHelp(/*key=*/"proUpRevTx", /*optional=*/true),
         CCbTx::GetJsonHelp(/*key=*/"cbTx", /*optional=*/true),
         llmq::CFinalCommitmentTxPayload::GetJsonHelp(/*key=*/"qcTx", /*optional=*/true),
+        MNHFTxPayload::GetJsonHelp(/*key=*/"mnhfTx", /*optional=*/true),
+        CAssetLockPayload::GetJsonHelp(/*key=*/"assetLockTx", /*optional=*/true),
+        CAssetUnlockPayload::GetJsonHelp(/*key=*/"assetUnlockTx", /*optional=*/true),
     };
 }
 

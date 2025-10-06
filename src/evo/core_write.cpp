@@ -48,6 +48,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
         RESULT_MAP_ENTRY(RPCResult::Type::NUM, "platformP2PPort", "(DEPRECATED) TCP port of Platform P2P"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "proTxHash", "Hash of the masternode's initial ProRegTx"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR, "pubKeyOperator", "BLS public key used for operator signing"),
+        RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "quorumHash", "Hash of the quorum"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR, "service", "(DEPRECATED) IP address and port of the masternode"),
         RESULT_MAP_ENTRY(RPCResult::Type::NUM, "type", "Masternode type"),
         RESULT_MAP_ENTRY(RPCResult::Type::NUM, "version", "Special transaction version"),
@@ -61,6 +62,23 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
 
     throw NonFatalCheckError(strprintf("Requested invalid RPCResult for nonexistent key \"%s\"", key).c_str(),
                              __FILE__, __LINE__, __func__);
+}
+
+[[nodiscard]] RPCResult CAssetLockPayload::GetJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The asset lock special transaction",
+    {
+        GetRpcResult("version"),
+        {RPCResult::Type::ARR, "creditOutputs", "", {
+            {RPCResult::Type::OBJ, "", "", {
+                {RPCResult::Type::NUM, "value", "The value in Dash"},
+                {RPCResult::Type::NUM, "valueSat", "The value in duffs"},
+                {RPCResult::Type::OBJ, "scriptPubKey", "", {
+                    {RPCResult::Type::STR, "asm", "The asm"},
+                    {RPCResult::Type::STR_HEX, "hex", "The hex"},
+                    {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
+        }}}}}}
+    }};
 }
 
 [[nodiscard]] UniValue CAssetLockPayload::ToJson() const
@@ -80,6 +98,19 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     ret.pushKV("version", nVersion);
     ret.pushKV("creditOutputs", outputs);
     return ret;
+}
+
+[[nodiscard]] RPCResult CAssetUnlockPayload::GetJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The asset unlock special transaction",
+    {
+        GetRpcResult("version"),
+        {RPCResult::Type::NUM, "index", "Index of the transaction"},
+        {RPCResult::Type::NUM, "fee", "Transaction fee in duffs awarded to the miner"},
+        {RPCResult::Type::NUM, "requestedHeight", "Payment chain block height known by Platform when signing the withdrawal"},
+        GetRpcResult("quorumHash"),
+        {RPCResult::Type::STR_HEX, "quorumSig", "BLS signature by a quorum public key"},
+    }};
 }
 
 [[nodiscard]] UniValue CAssetUnlockPayload::ToJson() const
@@ -305,7 +336,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
         {RPCResult::Type::ARR, "deletedQuorums", "Deleted quorums",
             {{RPCResult::Type::OBJ, "", "", {
                 {RPCResult::Type::NUM, "llmqType", "Quorum type"},
-                {RPCResult::Type::STR_HEX, "quorumHash", "Hash of the quorum"},
+                GetRpcResult("quorumHash"),
         }}}},
         {RPCResult::Type::ARR, "newQuorums", "New quorums"}, // TODO: Add definition for llmq::CFinalCommitment
         GetRpcResult("merkleRootMNList", /*optional=*/true),
@@ -430,6 +461,16 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     return obj;
 }
 
+[[nodiscard]] RPCResult MNHFTx::GetJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The masternode hard fork payload",
+    {
+        {RPCResult::Type::NUM, "versionBit", "Version bit associated with the hard fork"},
+        GetRpcResult("quorumHash"),
+        {RPCResult::Type::STR_HEX, "sig", "BLS signature by a quorum public key"},
+    }};
+}
+
 [[nodiscard]] UniValue MNHFTx::ToJson() const
 {
     UniValue obj(UniValue::VOBJ);
@@ -437,6 +478,15 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     obj.pushKV("quorumHash", quorumHash.ToString());
     obj.pushKV("sig", sig.ToString());
     return obj;
+}
+
+[[nodiscard]] RPCResult MNHFTxPayload::GetJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The masternode hard fork signal special transaction",
+    {
+        GetRpcResult("version"),
+        MNHFTx::GetJsonHelp(/*key=*/"signal", /*optional=*/false),
+    }};
 }
 
 [[nodiscard]] UniValue MNHFTxPayload::ToJson() const
