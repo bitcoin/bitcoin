@@ -37,7 +37,10 @@ RPCResult GetRpcResult(const std::string& key, bool optional = false)
             {RPCResult::Type::ARR, "platform_https", /*optional=*/true, "Addresses used for Platform HTTPS API",
                 {{RPCResult::Type::STR, "address", ""}}},
         }}},
+        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "height", "Block height"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "inputsHash", "Hash of all the outpoints of the transaction inputs"),
+        RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "merkleRootMNList", "Merkle root of the masternode list"),
+        RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "merkleRootQuorums", "Merkle root of the quorum list"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR, "operatorPayoutAddress", "Dash address used for operator reward payments"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR, "payoutAddress", "Dash address used for masternode reward payments"),
         RESULT_MAP_ENTRY(RPCResult::Type::NUM, "platformHTTPPort", "(DEPRECATED) TCP port of Platform HTTP API"),
@@ -90,6 +93,20 @@ RPCResult GetRpcResult(const std::string& key, bool optional = false)
     ret.pushKV("quorumHash", quorumHash.ToString());
     ret.pushKV("quorumSig", quorumSig.ToString());
     return ret;
+}
+
+[[nodiscard]] RPCResult CCbTx::GetJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The coinbase special transaction",
+    {
+        GetRpcResult("version"),
+        GetRpcResult("height"),
+        GetRpcResult("merkleRootMNList"),
+        GetRpcResult("merkleRootQuorums", /*optional=*/true),
+        {RPCResult::Type::NUM, "bestCLHeightDiff", /*optional=*/true, "Blocks between the current block and the last known block with a ChainLock"},
+        {RPCResult::Type::STR_HEX, "bestCLSignature", /*optional=*/true, "Best ChainLock signature known by the miner"},
+        {RPCResult::Type::NUM, "creditPoolBalance", /*optional=*/true, "Balance in the Platform credit pool"},
+    }};
 }
 
 [[nodiscard]] UniValue CCbTx::ToJson() const
@@ -249,6 +266,16 @@ RPCResult GetRpcResult(const std::string& key, bool optional = false)
     return ret;
 }
 
+[[nodiscard]] RPCResult llmq::CFinalCommitmentTxPayload::GetJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The quorum commitment special transaction",
+    {
+        GetRpcResult("version"),
+        GetRpcResult("height"),
+        // TODO: Add RPCResult for llmq::CFinalCommitment
+    }};
+}
+
 [[nodiscard]] UniValue llmq::CFinalCommitmentTxPayload::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
@@ -256,6 +283,26 @@ RPCResult GetRpcResult(const std::string& key, bool optional = false)
     ret.pushKV("height", nHeight);
     ret.pushKV("commitment", commitment.ToJson());
     return ret;
+}
+
+[[nodiscard]] RPCResult CSimplifiedMNListEntry::GetJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The simplified masternode list entry",
+    {
+        {RPCResult::Type::NUM, "nVersion", "Version of the entry"},
+        {RPCResult::Type::NUM, "nType", "Masternode type"},
+        {RPCResult::Type::STR_HEX, "proRegTxHash", "Hash of the ProRegTx identifying the masternode"},
+        {RPCResult::Type::STR_HEX, "confirmedHash", "Hash of the block where the masternode was confirmed"},
+        GetRpcResult("service"),
+        GetRpcResult("addresses"),
+        GetRpcResult("pubKeyOperator"),
+        GetRpcResult("votingAddress"),
+        {RPCResult::Type::BOOL, "isValid", "Returns true if the masternode is not Proof-of-Service banned"},
+        GetRpcResult("platformHTTPPort", /*optional=*/true),
+        GetRpcResult("platformNodeID", /*optional=*/true),
+        GetRpcResult("payoutAddress", /*optional=*/true),
+        GetRpcResult("operatorPayoutAddress", /*optional=*/true),
+    }};
 }
 
 [[nodiscard]] UniValue CSimplifiedMNListEntry::ToJson(bool extended) const
@@ -285,6 +332,35 @@ RPCResult GetRpcResult(const std::string& key, bool optional = false)
         }
     }
     return obj;
+}
+
+[[nodiscard]] RPCResult CSimplifiedMNListDiff::GetJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The simplified masternode list diff",
+    {
+        {RPCResult::Type::NUM, "nVersion", "Version of the diff"},
+        {RPCResult::Type::STR_HEX, "baseBlockHash", "Hash of the base block"},
+        {RPCResult::Type::STR_HEX, "blockHash", "Hash of the ending block"},
+        {RPCResult::Type::STR_HEX, "cbTxMerkleTree", "Coinbase transaction merkle tree"},
+        {RPCResult::Type::STR_HEX, "cbTx", "Coinbase raw transaction"},
+        {RPCResult::Type::ARR, "deletedMNs", "ProRegTx hashes of deleted masternodes",
+            {{RPCResult::Type::STR_HEX, "hash", ""}}},
+        {RPCResult::Type::ARR, "mnList", "Masternode list details",
+            {CSimplifiedMNListEntry::GetJsonHelp(/*key=*/"", /*optional=*/false)}},
+        {RPCResult::Type::ARR, "deletedQuorums", "Deleted quorums",
+            {{RPCResult::Type::OBJ, "", "", {
+                {RPCResult::Type::NUM, "llmqType", "Quorum type"},
+                {RPCResult::Type::STR_HEX, "quorumHash", "Hash of the quorum"},
+        }}}},
+        {RPCResult::Type::ARR, "newQuorums", "New quorums"}, // TODO: Add definition for llmq::CFinalCommitment
+        GetRpcResult("merkleRootMNList", /*optional=*/true),
+        GetRpcResult("merkleRootQuorums", /*optional=*/true),
+        {RPCResult::Type::ARR, "quorumsCLSigs", "ChainLock signature details", {
+            {RPCResult::Type::OBJ, "", "", {
+                {RPCResult::Type::ARR, "<sig_hex>", "Array of quorum indices, keyed by BLS signature", {
+                    {RPCResult::Type::NUM, "", "Quorum index"}
+        }}}}}},
+    }};
 }
 
 [[nodiscard]] UniValue CSimplifiedMNListDiff::ToJson(bool extended) const

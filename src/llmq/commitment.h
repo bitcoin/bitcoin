@@ -5,14 +5,14 @@
 #ifndef BITCOIN_LLMQ_COMMITMENT_H
 #define BITCOIN_LLMQ_COMMITMENT_H
 
-#include <bls/bls.h>
-#include <llmq/params.h>
-#include <llmq/types.h>
-
 #include <primitives/transaction.h>
 #include <util/irange.h>
 #include <util/strencodings.h>
 #include <util/underlying.h>
+
+#include <bls/bls.h>
+#include <llmq/params.h>
+#include <llmq/types.h>
 
 #include <gsl/pointers.h>
 #include <univalue.h>
@@ -29,14 +29,14 @@ class ChainstateManager;
 class TxValidationState;
 template <typename T>
 class CCheckQueueControl;
+struct RPCResult;
 
-namespace llmq
-{
+namespace llmq {
 class CQuorumSnapshotManager;
-
 namespace utils {
 struct BlsCheck;
 } // namespace utils
+
 // This message is an aggregation of all received premature commitments and only valid if
 // enough (>=threshold) premature commitments were aggregated
 // This is mined on-chain as part of TRANSACTION_QUORUM_COMMITMENT
@@ -175,6 +175,7 @@ public:
         READWRITE(obj.nVersion, obj.nHeight, obj.commitment);
     }
 
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     [[nodiscard]] UniValue ToJson() const;
 };
 

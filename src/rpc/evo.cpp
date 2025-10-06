@@ -1586,7 +1586,7 @@ static RPCHelpMan protx_diff()
             {"block", RPCArg::Type::NUM, RPCArg::Optional::NO, "The ending block height."},
             {"extended", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Show additional fields."},
         },
-        RPCResults{},
+        CSimplifiedMNListDiff::GetJsonHelp(/*key=*/"", /*optional=*/false),
         RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {

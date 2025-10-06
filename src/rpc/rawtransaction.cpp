@@ -53,6 +53,7 @@
 #include <evo/specialtx.h>
 #include <instantsend/instantsend.h>
 #include <instantsend/lock.h>
+#include <llmq/commitment.h>
 #include <llmq/context.h>
 #include <rpc/index_util.h>
 #include <util/irange.h>
@@ -174,6 +175,8 @@ static std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc)
         CProUpServTx::GetJsonHelp(/*key=*/"proUpServTx", /*optional=*/true),
         CProUpRegTx::GetJsonHelp(/*key=*/"proUpRegTx", /*optional=*/true),
         CProUpRevTx::GetJsonHelp(/*key=*/"proUpRevTx", /*optional=*/true),
+        CCbTx::GetJsonHelp(/*key=*/"cbTx", /*optional=*/true),
+        llmq::CFinalCommitmentTxPayload::GetJsonHelp(/*key=*/"qcTx", /*optional=*/true),
     };
 }
 

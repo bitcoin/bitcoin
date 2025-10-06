@@ -6,16 +6,20 @@
 #define BITCOIN_EVO_CBTX_H
 
 #include <bls/bls.h>
+
 #include <primitives/transaction.h>
+
 #include <univalue.h>
 
 #include <optional>
+#include <string>
 
 class BlockValidationState;
 class CBlock;
 class CBlockIndex;
 class CDeterministicMNList;
 class TxValidationState;
+struct RPCResult;
 
 namespace llmq {
 class CQuorumBlockProcessor;
@@ -57,6 +61,7 @@ public:
 
     }
 
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     std::string ToString() const;
 
     [[nodiscard]] UniValue ToJson() const;

@@ -5,12 +5,12 @@
 #ifndef BITCOIN_EVO_SMLDIFF_H
 #define BITCOIN_EVO_SMLDIFF_H
 
-#include <evo/simplifiedmns.h>
-
 #include <bls/bls.h>
 #include <evo/dmn_types.h>
 #include <evo/netinfo.h>
 #include <evo/providertx.h>
+#include <evo/simplifiedmns.h>
+
 #include <merkleblock.h>
 #include <netaddress.h>
 #include <pubkey.h>
@@ -21,6 +21,7 @@ class CBlockIndex;
 class CDeterministicMNManager;
 class UniValue;
 class ChainstateManager;
+struct RPCResult;
 
 namespace llmq {
 class CFinalCommitment;
@@ -85,6 +86,7 @@ public:
                           const llmq::CQuorumBlockProcessor& quorum_block_processor);
     bool BuildQuorumChainlockInfo(const llmq::CQuorumManager& qman, const CBlockIndex* blockIndex);
 
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     [[nodiscard]] UniValue ToJson(bool extended = false) const;
 };
 
