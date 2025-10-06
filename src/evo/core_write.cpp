@@ -2,9 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <core_io.h>
-#include <util/underlying.h>
-
 #include <evo/assetlocktx.h>
 #include <evo/cbtx.h>
 #include <evo/mnhftx.h>
@@ -15,7 +12,54 @@
 #include <llmq/commitment.h>
 #include <rpc/evo_util.h>
 
+#include <core_io.h>
+#include <rpc/util.h>
+#include <util/check.h>
+#include <util/underlying.h>
+
 #include <univalue.h>
+
+#include <map>
+#include <string>
+
+namespace {
+RPCResult GetRpcResult(const std::string& key, bool optional = false)
+{
+#define RESULT_MAP_ENTRY(type, name, desc) {name, {type, name, optional, desc}}
+    const std::map<std::string, RPCResult> result_map{{
+        {"addresses",
+            {RPCResult::Type::OBJ, "addresses", optional, "Network addresses of the masternode",
+        {
+            {RPCResult::Type::ARR, "core_p2p", /*optional=*/true, "Addresses used for protocol P2P",
+                {{RPCResult::Type::STR, "address", ""}}},
+            {RPCResult::Type::ARR, "platform_p2p", /*optional=*/true, "Addresses used for Platform P2P",
+                {{RPCResult::Type::STR, "address", ""}}},
+            {RPCResult::Type::ARR, "platform_https", /*optional=*/true, "Addresses used for Platform HTTPS API",
+                {{RPCResult::Type::STR, "address", ""}}},
+        }}},
+        RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "inputsHash", "Hash of all the outpoints of the transaction inputs"),
+        RESULT_MAP_ENTRY(RPCResult::Type::STR, "operatorPayoutAddress", "Dash address used for operator reward payments"),
+        RESULT_MAP_ENTRY(RPCResult::Type::STR, "payoutAddress", "Dash address used for masternode reward payments"),
+        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "platformHTTPPort", "(DEPRECATED) TCP port of Platform HTTP API"),
+        RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "platformNodeID", "Node ID derived from P2P public key for Platform P2P"),
+        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "platformP2PPort", "(DEPRECATED) TCP port of Platform P2P"),
+        RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "proTxHash", "Hash of the masternode's initial ProRegTx"),
+        RESULT_MAP_ENTRY(RPCResult::Type::STR, "pubKeyOperator", "BLS public key used for operator signing"),
+        RESULT_MAP_ENTRY(RPCResult::Type::STR, "service", "(DEPRECATED) IP address and port of the masternode"),
+        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "type", "Masternode type"),
+        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "version", "Special transaction version"),
+        RESULT_MAP_ENTRY(RPCResult::Type::STR, "votingAddress", "Dash address used for voting"),
+    }};
+#undef  RESULT_MAP_ENTRY
+
+    if (const auto it = result_map.find(key); it != result_map.end()) {
+        return it->second;
+    }
+
+    throw NonFatalCheckError(strprintf("Requested invalid RPCResult for nonexistent key \"%s\"", key).c_str(),
+                             __FILE__, __LINE__, __func__);
+}
+} // anonymous namespace
 
 [[nodiscard]] UniValue CAssetLockPayload::ToJson() const
 {
@@ -65,6 +109,28 @@
     return ret;
 }
 
+[[nodiscard]] RPCResult CProRegTx::GetJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The masternode registration special transaction",
+    {
+        GetRpcResult("version"),
+        GetRpcResult("type"),
+        {RPCResult::Type::STR_HEX, "collateralHash", "Collateral transaction hash"},
+        {RPCResult::Type::NUM, "collateralIndex", "Collateral transaction output index"},
+        GetRpcResult("service"),
+        GetRpcResult("addresses"),
+        {RPCResult::Type::STR, "ownerAddress", "Dash address used for payee updates and proposal voting"},
+        GetRpcResult("votingAddress"),
+        GetRpcResult("payoutAddress", /*optional=*/true),
+        GetRpcResult("pubKeyOperator"),
+        {RPCResult::Type::NUM, "operatorReward", "Fraction in %% of reward shared with the operator between 0 and 10000"},
+        GetRpcResult("platformNodeID", /*optional=*/true),
+        GetRpcResult("platformP2PPort", /*optional=*/true),
+        GetRpcResult("platformHTTPPort", /*optional=*/true),
+        GetRpcResult("inputsHash"),
+    }};
+}
+
 [[nodiscard]] UniValue CProRegTx::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
@@ -90,6 +156,19 @@
     return ret;
 }
 
+[[nodiscard]] RPCResult CProUpRegTx::GetJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The masternode update registrar special transaction",
+    {
+        GetRpcResult("version"),
+        GetRpcResult("proTxHash"),
+        GetRpcResult("votingAddress"),
+        GetRpcResult("payoutAddress", /*optional=*/true),
+        GetRpcResult("pubKeyOperator"),
+        GetRpcResult("inputsHash"),
+    }};
+}
+
 [[nodiscard]] UniValue CProUpRegTx::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
@@ -104,6 +183,17 @@
     return ret;
 }
 
+[[nodiscard]] RPCResult CProUpRevTx::GetJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The masternode operator revocation special transaction",
+    {
+        GetRpcResult("version"),
+        GetRpcResult("proTxHash"),
+        {RPCResult::Type::NUM, "reason", "Reason for masternode service revocation"},
+        GetRpcResult("inputsHash", /*optional=*/true),
+    }};
+}
+
 [[nodiscard]] UniValue CProUpRevTx::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
@@ -112,6 +202,23 @@
     ret.pushKV("reason", nReason);
     ret.pushKV("inputsHash", inputsHash.ToString());
     return ret;
+}
+
+[[nodiscard]] RPCResult CProUpServTx::GetJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The masternode update service special transaction",
+    {
+        GetRpcResult("version"),
+        GetRpcResult("type"),
+        GetRpcResult("proTxHash"),
+        GetRpcResult("service"),
+        GetRpcResult("addresses"),
+        GetRpcResult("operatorPayoutAddress", /*optional=*/true),
+        GetRpcResult("platformNodeID", /*optional=*/true),
+        GetRpcResult("platformP2PPort", /*optional=*/true),
+        GetRpcResult("platformHTTPPort", /*optional=*/true),
+        GetRpcResult("inputsHash"),
+    }};
 }
 
 [[nodiscard]] UniValue CProUpServTx::ToJson() const

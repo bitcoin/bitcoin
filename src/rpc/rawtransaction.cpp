@@ -12,7 +12,6 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <core_io.h>
-#include <evo/creditpool.h>
 #include <index/txindex.h>
 #include <init.h>
 #include <key_io.h>
@@ -27,7 +26,6 @@
 #include <primitives/transaction.h>
 #include <psbt.h>
 #include <rpc/blockchain.h>
-#include <rpc/index_util.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
@@ -46,17 +44,19 @@
 #include <util/vector.h>
 #include <validation.h>
 #include <validationinterface.h>
-#include <util/irange.h>
 
 #include <chainlock/chainlock.h>
 #include <evo/cbtx.h>
+#include <evo/providertx.h>
 #include <evo/specialtx.h>
-#include <instantsend/lock.h>
 #include <instantsend/instantsend.h>
+#include <instantsend/lock.h>
 #include <llmq/context.h>
+#include <rpc/index_util.h>
+#include <util/irange.h>
 
+#include <cstdint>
 #include <numeric>
-#include <stdint.h>
 
 #include <univalue.h>
 
@@ -168,6 +168,10 @@ static std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc)
         }},
         {RPCResult::Type::NUM, "extraPayloadSize", /*optional=*/true, "Size of DIP2 extra payload. Only present if it's a special TX"},
         {RPCResult::Type::STR_HEX, "extraPayload", /*optional=*/true, "Hex-encoded DIP2 extra payload data. Only present if it's a special TX"},
+        CProRegTx::GetJsonHelp(/*key=*/"proRegTx", /*optional=*/true),
+        CProUpServTx::GetJsonHelp(/*key=*/"proUpServTx", /*optional=*/true),
+        CProUpRegTx::GetJsonHelp(/*key=*/"proUpRegTx", /*optional=*/true),
+        CProUpRevTx::GetJsonHelp(/*key=*/"proUpRevTx", /*optional=*/true),
     };
 }
 
