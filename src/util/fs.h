@@ -75,11 +75,6 @@ public:
         const std::u8string& utf8_str{std::filesystem::path::u8string()};
         return std::string{utf8_str.begin(), utf8_str.end()};
     }
-
-    // Required for path overloads in <fstream>.
-    // See https://gcc.gnu.org/git/?p=gcc.git;a=commit;h=96e0367ead5d8dcac3bec2865582e76e2fbab190
-    path& make_preferred() { std::filesystem::path::make_preferred(); return *this; }
-    path filename() const { return std::filesystem::path::filename(); }
 };
 
 static inline path u8path(const std::string& utf8_str)

@@ -37,7 +37,7 @@ bool DumpWallet(const ArgsManager& args, WalletDatabase& db, bilingual_str& erro
         return false;
     }
     std::ofstream dump_file;
-    dump_file.open(path);
+    dump_file.open(path.std_path());
     if (dump_file.fail()) {
         error = strprintf(_("Unable to open %s for writing"), fs::PathToString(path));
         return false;
