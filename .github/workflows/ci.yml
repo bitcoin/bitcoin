@@ -408,8 +408,7 @@ jobs:
           echo "PREVIOUS_RELEASES_DIR=${{ runner.temp }}/previous_releases" >> "$GITHUB_ENV"
 
       - name: Get previous releases
-        working-directory: test
-        run: ./get_previous_releases.py --target-dir $PREVIOUS_RELEASES_DIR
+        run: ./test/get_previous_releases.py --target-dir $PREVIOUS_RELEASES_DIR
 
       - name: Run functional tests
         env:
