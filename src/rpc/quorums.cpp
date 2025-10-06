@@ -365,6 +365,7 @@ static RPCHelpMan quorum_dkgstatus()
         std::optional<std::vector<llmq::CFinalCommitment>> vfqc = llmq_ctx.quorum_block_processor->GetMineableCommitments(llmq_params, tipHeight);
         if (vfqc.has_value()) {
             for (const auto& fqc : vfqc.value()) {
+                // TODO: Use CFinalCommitment::GetJsonHelp() for fqc
                 minableCommitments.push_back(fqc.ToJson());
             }
         }
@@ -651,7 +652,7 @@ static RPCHelpMan quorum_getrecsig()
             {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id."},
             {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash."},
         },
-        RPCResults{},
+        llmq::CRecoveredSig::GetJsonHelp(/*key=*/"", /*optional=*/false),
         RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -847,7 +848,7 @@ static RPCHelpMan quorum_rotationinfo()
                 {"baseBlockHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
             }},
         },
-        RPCResults{},
+        llmq::CQuorumRotationInfo::GetJsonHelp(/*key=*/"", /*optional=*/false),
         RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {

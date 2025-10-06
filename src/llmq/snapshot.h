@@ -19,6 +19,8 @@
 
 class CBlockIndex;
 class CEvoDB;
+struct RPCResult;
+
 class UniValue;
 
 namespace llmq {
@@ -82,6 +84,7 @@ public:
         }
     }
 
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     [[nodiscard]] UniValue ToJson() const;
 };
 
@@ -198,6 +201,7 @@ public:
     CQuorumRotationInfo() = default;
     CQuorumRotationInfo(const CQuorumRotationInfo& dmn) {}
 
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     [[nodiscard]] UniValue ToJson() const;
 };
 

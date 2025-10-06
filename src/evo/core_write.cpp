@@ -39,6 +39,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
         }}},
         RESULT_MAP_ENTRY(RPCResult::Type::NUM, "height", "Block height"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "inputsHash", "Hash of all the outpoints of the transaction inputs"),
+        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "llmqType", "Quorum type"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "merkleRootMNList", "Merkle root of the masternode list"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "merkleRootQuorums", "Merkle root of the quorum list"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR, "operatorPayoutAddress", "Dash address used for operator reward payments"),
@@ -49,6 +50,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
         RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "proTxHash", "Hash of the masternode's initial ProRegTx"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR, "pubKeyOperator", "BLS public key used for operator signing"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "quorumHash", "Hash of the quorum"),
+        RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "quorumSig", "BLS recovered threshold signature of quorum"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR, "service", "(DEPRECATED) IP address and port of the masternode"),
         RESULT_MAP_ENTRY(RPCResult::Type::NUM, "type", "Masternode type"),
         RESULT_MAP_ENTRY(RPCResult::Type::NUM, "version", "Special transaction version"),
@@ -109,7 +111,7 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
         {RPCResult::Type::NUM, "fee", "Transaction fee in duffs awarded to the miner"},
         {RPCResult::Type::NUM, "requestedHeight", "Payment chain block height known by Platform when signing the withdrawal"},
         GetRpcResult("quorumHash"),
-        {RPCResult::Type::STR_HEX, "quorumSig", "BLS signature by a quorum public key"},
+        GetRpcResult("quorumSig"),
     }};
 }
 
@@ -335,10 +337,11 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
             {CSimplifiedMNListEntry::GetJsonHelp(/*key=*/"", /*optional=*/false)}},
         {RPCResult::Type::ARR, "deletedQuorums", "Deleted quorums",
             {{RPCResult::Type::OBJ, "", "", {
-                {RPCResult::Type::NUM, "llmqType", "Quorum type"},
+                GetRpcResult("llmqType"),
                 GetRpcResult("quorumHash"),
         }}}},
-        {RPCResult::Type::ARR, "newQuorums", "New quorums"}, // TODO: Add definition for llmq::CFinalCommitment
+        {RPCResult::Type::ARR, "newQuorums", "New quorums",
+            {llmq::CFinalCommitment::GetJsonHelp(/*key=*/"", /*optional=*/false)}},
         GetRpcResult("merkleRootMNList", /*optional=*/true),
         GetRpcResult("merkleRootQuorums", /*optional=*/true),
         {RPCResult::Type::ARR, "quorumsCLSigs", "ChainLock signature details", {
