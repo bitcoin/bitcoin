@@ -262,6 +262,10 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
                     if (newList.HasUniqueProperty(*service_opt)) {
                         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-dup-netinfo-entry");
                     }
+                } else if (const auto domain_opt{entry.GetDomainPort()}) {
+                    if (newList.HasUniqueProperty(*domain_opt)) {
+                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-dup-netinfo-entry");
+                    }
                 } else {
                     return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-netinfo-entry");
                 }
@@ -296,6 +300,11 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
                 if (const auto service_opt{entry.GetAddrPort()}) {
                     if (newList.HasUniqueProperty(*service_opt) &&
                         newList.GetUniquePropertyMN(*service_opt)->proTxHash != opt_proTx->proTxHash) {
+                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-dup-netinfo-entry");
+                    }
+                } else if (const auto domain_opt{entry.GetDomainPort()}) {
+                    if (newList.HasUniqueProperty(*domain_opt) &&
+                        newList.GetUniquePropertyMN(*domain_opt)->proTxHash != opt_proTx->proTxHash) {
                         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-dup-netinfo-entry");
                     }
                 } else {

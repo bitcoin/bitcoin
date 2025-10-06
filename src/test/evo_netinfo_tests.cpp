@@ -10,6 +10,7 @@
 #include <netbase.h>
 #include <streams.h>
 #include <util/pointer.h>
+#include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -21,7 +22,7 @@ struct TestEntry {
     NetInfoStatus expected_ret_ext;
 };
 
-static const std::vector<TestEntry> vals_main{
+static const std::vector<TestEntry> addr_vals_main{
     // Address and port specified
     {{NetInfoPurpose::CORE_P2P, "1.1.1.1:9999"}, NetInfoStatus::Success, NetInfoStatus::Success},
     // - Port should default to default P2P core with MnNetInfo
@@ -39,8 +40,16 @@ static const std::vector<TestEntry> vals_main{
     // - Non-IPv4 addresses are prohibited in MnNetInfo
     // - Any valid BIP155 address is allowed in ExtNetInfo
     {{NetInfoPurpose::CORE_P2P, "[2606:4700:4700::1111]:9999"}, NetInfoStatus::BadInput, NetInfoStatus::Success},
-    // Domains are not allowed
+    // - MnNetInfo doesn't allow storing anything except a Core P2P address
+    // - Privacy network domains are allowed in ExtNetInfo but internet domains are not
     {{NetInfoPurpose::CORE_P2P, "example.com:9999"}, NetInfoStatus::BadInput, NetInfoStatus::BadInput},
+    {{NetInfoPurpose::CORE_P2P, "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion:9999"}, NetInfoStatus::BadInput, NetInfoStatus::Success},
+    {{NetInfoPurpose::PLATFORM_P2P, "example.com:9999"}, NetInfoStatus::MaxLimit, NetInfoStatus::BadInput},
+    {{NetInfoPurpose::PLATFORM_P2P, "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion:9999"}, NetInfoStatus::MaxLimit, NetInfoStatus::Success},
+    // - MnNetInfo doesn't allow storing anything except a Core P2P address
+    // - ExtNetInfo can store Platform HTTPS addresses *as domains* alongside privacy network domains
+    {{NetInfoPurpose::PLATFORM_HTTPS, "example.com:9999"}, NetInfoStatus::MaxLimit, NetInfoStatus::Success},
+    {{NetInfoPurpose::PLATFORM_HTTPS, "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion:9999"}, NetInfoStatus::MaxLimit, NetInfoStatus::Success},
     // Incorrect IPv4 address
     {{NetInfoPurpose::CORE_P2P, "1.1.1.256:9999"}, NetInfoStatus::BadInput, NetInfoStatus::BadInput},
     // Missing address
@@ -100,7 +109,7 @@ void TestExtNetInfo(const std::vector<TestEntry>& vals)
 
 BOOST_AUTO_TEST_CASE(mnnetinfo_rules_main)
 {
-    TestMnNetInfo(vals_main);
+    TestMnNetInfo(addr_vals_main);
 
     {
         // MnNetInfo only stores one value, overwriting prohibited
@@ -122,9 +131,9 @@ BOOST_AUTO_TEST_CASE(mnnetinfo_rules_main)
     }
 }
 
-BOOST_AUTO_TEST_CASE(extnetinfo_rules_main) { TestExtNetInfo(vals_main); }
+BOOST_AUTO_TEST_CASE(extnetinfo_rules_main) { TestExtNetInfo(addr_vals_main); }
 
-static const std::vector<TestEntry> vals_reg{
+static const std::vector<TestEntry> addr_vals_reg{
     // - MnNetInfo doesn't mind using port 0
     // - ExtNetInfo requires non-zero ports
     {{NetInfoPurpose::CORE_P2P, "1.1.1.1:0"}, NetInfoStatus::Success, NetInfoStatus::BadPort},
@@ -136,11 +145,29 @@ static const std::vector<TestEntry> vals_reg{
     {{NetInfoPurpose::CORE_P2P, "1.1.1.1:22"}, NetInfoStatus::Success, NetInfoStatus::BadPort},
 };
 
-BOOST_FIXTURE_TEST_CASE(mnnetinfo_rules_reg, RegTestingSetup) { TestMnNetInfo(vals_reg); }
+enum class ExpectedType : uint8_t {
+    CJDNS,
+    I2P,
+    Tor,
+};
+
+static const std::vector<std::tuple</*type=*/ExpectedType, /*input=*/std::string, /*expected_ret=*/NetInfoStatus>> privacy_addr_vals{
+    {ExpectedType::CJDNS, "[fc00:3344:5566:7788:9900:aabb:ccdd:eeff]:9998", NetInfoStatus::Success},
+    // ExtNetInfo can store I2P addresses as long as it uses port 0
+    {ExpectedType::I2P, "udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p:0", NetInfoStatus::Success},
+    // ExtNetInfo can store onion addresses
+    {ExpectedType::Tor, "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion:9998", NetInfoStatus::Success},
+    // ExtNetInfo can store I2P addresses but non-zero ports are not allowed
+    {ExpectedType::I2P, "udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p:9998", NetInfoStatus::BadPort},
+    // ExtNetInfo can store onion addresses but zero ports are not allowed
+    {ExpectedType::Tor, "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion:0", NetInfoStatus::BadPort},
+};
+
+BOOST_FIXTURE_TEST_CASE(mnnetinfo_rules_reg, RegTestingSetup) { TestMnNetInfo(addr_vals_reg); }
 
 BOOST_FIXTURE_TEST_CASE(extnetinfo_rules_reg, RegTestingSetup)
 {
-    TestExtNetInfo(vals_reg);
+    TestExtNetInfo(addr_vals_reg);
 
     {
         // ExtNetInfo can store up to 4 entries per purpose code, check limit enforcement
@@ -180,6 +207,48 @@ BOOST_FIXTURE_TEST_CASE(extnetinfo_rules_reg, RegTestingSetup)
         BOOST_CHECK(netInfo.HasEntries(NetInfoPurpose::PLATFORM_P2P));
         BOOST_CHECK(!netInfo.HasEntries(NetInfoPurpose::PLATFORM_HTTPS));
         ValidateGetEntries(netInfo.GetEntries(), /*expected_size=*/2);
+    }
+
+    {
+        // ExtNetInfo has additional rules for domains
+        const std::vector<TestEntry> domain_vals{
+            // Port 80 (HTTP) is below the privileged ports threshold (1023), not allowed
+            {{NetInfoPurpose::PLATFORM_HTTPS, "example.com:80"}, NetInfoStatus::MaxLimit, NetInfoStatus::BadPort},
+            // Port 443 (HTTPS) is below the privileged ports threshold (1023) but still allowed
+            {{NetInfoPurpose::PLATFORM_HTTPS, "example.com:443"}, NetInfoStatus::MaxLimit, NetInfoStatus::Success},
+            // TLDs must be alphabetic to avoid ambiguation with IP addresses (per ICANN guidelines)
+            {{NetInfoPurpose::PLATFORM_HTTPS, "example.123:443"}, NetInfoStatus::MaxLimit, NetInfoStatus::BadInput},
+            // .local is a prohibited TLD
+            {{NetInfoPurpose::PLATFORM_HTTPS, "somebodys-macbook-pro.local:9998"}, NetInfoStatus::MaxLimit, NetInfoStatus::BadInput},
+            // DomainPort isn't used for storing privacy network TLDs like .onion
+            {{NetInfoPurpose::PLATFORM_HTTPS, "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd:9998"}, NetInfoStatus::MaxLimit, NetInfoStatus::BadInput},
+        };
+        TestExtNetInfo(domain_vals);
+    }
+
+    // Privacy network entry checks
+    for (const auto& [type, input, expected_ret] : privacy_addr_vals) {
+        const bool expected_success{expected_ret == NetInfoStatus::Success};
+
+        ExtNetInfo netInfo{};
+        BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::CORE_P2P, input), expected_ret);
+        ValidateGetEntries(netInfo.GetEntries(), /*expected_size=*/expected_success ? 1 : 0);
+        if (!expected_success) continue;
+
+        // Type registration check
+        const CService service{netInfo.GetEntries().at(0).GetAddrPort().value()};
+        BOOST_CHECK(service.IsValid());
+        switch (type) {
+        case ExpectedType::CJDNS:
+            BOOST_CHECK(service.IsCJDNS());
+            break;
+        case ExpectedType::I2P:
+            BOOST_CHECK(service.IsI2P());
+            break;
+        case ExpectedType::Tor:
+            BOOST_CHECK(service.IsTor());
+            break;
+        } // no default case, so the compiler can warn about missing cases
     }
 }
 
@@ -362,6 +431,69 @@ BOOST_AUTO_TEST_CASE(interface_equality)
     // Equal initialization state, same type, differing values
     BOOST_CHECK_EQUAL(ptr_rhs->AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.1:9999"), NetInfoStatus::Success);
     BOOST_CHECK(!util::shared_ptr_equal(ptr_lhs, ptr_rhs) && util::shared_ptr_not_equal(ptr_lhs, ptr_rhs));
+}
+
+BOOST_AUTO_TEST_CASE(domainport_rules)
+{
+    static const std::vector<std::pair</*addr=*/std::string, /*retval=*/DomainPort::Status>> domain_vals{
+        // Domain name labels can be as small as one character long and remain valid
+        {"r.server-1.ab.cd", DomainPort::Status::Success},
+        // Domain names labels can trail with numbers or consist entirely of numbers due to RFC 1123
+        {"9998.9example7.ab", DomainPort::Status::Success},
+        // dotless domains prohibited
+        {"abcd", DomainPort::Status::BadDotless},
+        // no empty label (trailing delimiter)
+        {"abc.", DomainPort::Status::BadCharPos},
+        // no empty label (leading delimiter)
+        {".abc", DomainPort::Status::BadCharPos},
+        // no empty label (extra delimiters)
+        {"a..dot..b", DomainPort::Status::BadLabelLen},
+        // ' is not a valid character in domains
+        {"somebody's macbook pro.local", DomainPort::Status::BadChar},
+        // spaces are not a valid character in domains
+        {"somebodys macbook pro.local", DomainPort::Status::BadChar},
+        // trailing hyphens are not allowed
+        {"-a-.bc.de", DomainPort::Status::BadLabelCharPos},
+        // 2 (characters in domain) < 3 (minimum length)
+        {"ac", DomainPort::Status::BadLen},
+        // 278 (characters in domain) > 253 (maximum limit)
+        {"Loremipsumdolorsitametconsecteturadipiscingelitseddoeiusmodtempor"
+         "incididuntutlaboreetdoloremagnaaliquaUtenimadminimveniamquisnostrud"
+         "exercitationullamcolaborisnisiutaliquipexeacommodoconsequatDuisaute"
+         "iruredolorinreprehenderitinvoluptatevelitessecillumdoloreeufugiatnullapariat.ur", DomainPort::Status::BadLen},
+        // 64 (characters in label) > 63 (maximum limit)
+        {"loremipsumdolorsitametconsecteturadipiscingelitseddoeiusmodtempo.ri.nc", DomainPort::Status::BadLabelLen},
+    };
+
+    for (const auto& [addr, retval] : domain_vals) {
+        DomainPort domain;
+        ExtNetInfo netInfo;
+        BOOST_CHECK_EQUAL(domain.Set(addr, 443), retval);
+        if (retval != DomainPort::Status::Success) {
+            BOOST_CHECK_EQUAL(domain.Validate(), DomainPort::Status::Malformed); // Empty values report as Malformed
+            BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::PLATFORM_HTTPS, domain.ToStringAddrPort()),
+                              NetInfoStatus::BadInput);
+        } else {
+            BOOST_CHECK_EQUAL(domain.Validate(), DomainPort::Status::Success);
+            BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::PLATFORM_HTTPS, domain.ToStringAddrPort()), NetInfoStatus::Success);
+        }
+    }
+
+    {
+        // DomainPort requires non-zero ports
+        DomainPort domain;
+        BOOST_CHECK_EQUAL(domain.Set("example.com", 0), DomainPort::Status::BadPort);
+        BOOST_CHECK_EQUAL(domain.Validate(), DomainPort::Status::Malformed);
+    }
+
+    {
+        // DomainPort stores the domain in lower-case
+        DomainPort lhs, rhs;
+        BOOST_CHECK_EQUAL(lhs.Set("example.com", 9999), DomainPort::Status::Success);
+        BOOST_CHECK_EQUAL(rhs.Set(ToUpper("example.com"), 9999), DomainPort::Status::Success);
+        BOOST_CHECK_EQUAL(lhs.ToStringAddr(), rhs.ToStringAddr());
+        BOOST_CHECK(lhs == rhs);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

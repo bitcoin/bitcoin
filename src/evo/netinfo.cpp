@@ -18,12 +18,53 @@ namespace {
 static std::unique_ptr<const CChainParams> g_main_params{nullptr};
 static std::once_flag g_main_params_flag;
 
+/** Maximum length of a label in a domain per RFC 1035 */
+static constexpr uint8_t DOMAIN_LABEL_MAX_LEN{63};
+/** Maximum possible length of a ASCII FQDN */
+static constexpr uint8_t DOMAIN_MAX_LEN{253};
+/** Minimum length of a FQDN */
+static constexpr uint8_t DOMAIN_MIN_LEN{3};
+
+static constexpr std::string_view SAFE_CHARS_ALPHA{"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"};
 static constexpr std::string_view SAFE_CHARS_IPV4{"1234567890."};
 static constexpr std::string_view SAFE_CHARS_IPV4_6{"abcdefABCDEF1234567890.:[]"};
+static constexpr std::string_view SAFE_CHARS_RFC1035{"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-"};
+static constexpr std::array<std::string_view, 13> TLDS_BAD{
+    // ICANN resolution 2018.02.04.12
+    ".mail",
+    // Infrastructure TLD
+    ".arpa",
+    // RFC 6761
+    ".example", ".invalid", ".localhost", ".test",
+    // RFC 6762
+    ".local",
+    // RFC 6762, Appendix G
+    ".corp", ".home", ".internal", ".intranet", ".lan", ".private",
+};
+static constexpr std::array<std::string_view, 2> TLDS_PRIVACY{".i2p", ".onion"};
 
 bool MatchCharsFilter(std::string_view input, std::string_view filter)
 {
     return std::all_of(input.begin(), input.end(), [&filter](char c) { return filter.find(c) != std::string_view::npos; });
+}
+
+bool MatchSuffix(const std::string& str, Span<const std::string_view> list)
+{
+    if (str.empty()) return false;
+    for (const auto& suffix : list) {
+        if (suffix.size() > str.size()) continue;
+        if (std::string_view{str}.ends_with(suffix)) return true;
+    }
+    return false;
+}
+
+bool IsAllowedPlatformHTTPPort(uint16_t port)
+{
+    switch (port) {
+    case 443:
+        return true;
+    }
+    return false;
 }
 } // anonymous namespace
 
@@ -40,6 +81,57 @@ UniValue ArrFromService(const CService& addr)
     UniValue obj(UniValue::VARR);
     obj.push_back(addr.ToStringAddrPort());
     return obj;
+}
+
+DomainPort::Status DomainPort::ValidateDomain(const std::string& addr)
+{
+    if (addr.length() > DOMAIN_MAX_LEN || addr.length() < DOMAIN_MIN_LEN) {
+        return DomainPort::Status::BadLen;
+    }
+    if (!MatchCharsFilter(addr, SAFE_CHARS_RFC1035)) {
+        return DomainPort::Status::BadChar;
+    }
+    if (addr.front() == '.' || addr.back() == '.') {
+        return DomainPort::Status::BadCharPos;
+    }
+    std::vector<std::string> labels{SplitString(addr, '.')};
+    if (labels.size() < 2) {
+        return DomainPort::Status::BadDotless;
+    }
+    for (const auto& label : labels) {
+        if (label.empty() || label.length() > DOMAIN_LABEL_MAX_LEN) {
+            return DomainPort::Status::BadLabelLen;
+        }
+        if (label.front() == '-' || label.back() == '-') {
+            return DomainPort::Status::BadLabelCharPos;
+        }
+    }
+    return DomainPort::Status::Success;
+}
+
+DomainPort::Status DomainPort::Set(const std::string& addr, const uint16_t port)
+{
+    if (port == 0) {
+        return DomainPort::Status::BadPort;
+    }
+    const auto ret{ValidateDomain(addr)};
+    if (ret == DomainPort::Status::Success) {
+        // Convert to lowercase to avoid duplication by changing case (domains are case-insensitive)
+        m_addr = ToLower(addr);
+        m_port = port;
+    }
+    return ret;
+}
+
+DomainPort::Status DomainPort::Validate() const
+{
+    if (m_addr.empty() || m_addr != ToLower(m_addr)) {
+        return DomainPort::Status::Malformed;
+    }
+    if (m_port == 0) {
+        return DomainPort::Status::BadPort;
+    }
+    return ValidateDomain(m_addr);
 }
 
 bool NetInfoEntry::operator==(const NetInfoEntry& rhs) const
@@ -65,6 +157,10 @@ bool NetInfoEntry::operator<(const NetInfoEntry& rhs) const
             if constexpr (std::is_same_v<T1, T2>) {
                 // Both the same type, compare as usual
                 return lhs < rhs;
+            } else if constexpr ((std::is_same_v<T1, CService> || std::is_same_v<T1, DomainPort>) &&
+                                 (std::is_same_v<T2, CService> || std::is_same_v<T2, DomainPort>)) {
+                // Differing types but both implement ToStringAddrPort(), lexicographical compare strings
+                return lhs.ToStringAddrPort() < rhs.ToStringAddrPort();
             }
             // If lhs is monostate, it less than rhs; otherwise rhs is greater
             return std::is_same_v<T1, std::monostate>;
@@ -81,12 +177,21 @@ std::optional<CService> NetInfoEntry::GetAddrPort() const
     return std::nullopt;
 }
 
+std::optional<DomainPort> NetInfoEntry::GetDomainPort() const
+{
+    if (const auto* data_ptr{std::get_if<DomainPort>(&m_data)}; m_type == NetInfoType::Domain && data_ptr) {
+        ASSERT_IF_DEBUG(data_ptr->IsValid());
+        return *data_ptr;
+    }
+    return std::nullopt;
+}
+
 uint16_t NetInfoEntry::GetPort() const
 {
     return std::visit(
         [](auto&& input) -> uint16_t {
             using T1 = std::decay_t<decltype(input)>;
-            if constexpr (std::is_same_v<T1, CService>) {
+            if constexpr (std::is_same_v<T1, CService> || std::is_same_v<T1, DomainPort>) {
                 return input.GetPort();
             }
             return 0;
@@ -103,7 +208,8 @@ bool NetInfoEntry::IsTriviallyValid() const
     return std::visit(
         [this](auto&& input) -> bool {
             using T1 = std::decay_t<decltype(input)>;
-            static_assert(std::is_same_v<T1, std::monostate> || std::is_same_v<T1, CService>, "Unexpected type");
+            static_assert(std::is_same_v<T1, std::monostate> || std::is_same_v<T1, CService> || std::is_same_v<T1, DomainPort>,
+                          "Unexpected type");
             if constexpr (std::is_same_v<T1, std::monostate>) {
                 // Empty underlying data isn't a valid entry
                 return false;
@@ -111,6 +217,11 @@ bool NetInfoEntry::IsTriviallyValid() const
                 // Type code should be truthful as it decides what underlying type is used when (de)serializing
                 if (m_type != NetInfoType::Service) return false;
                 // Underlying data must meet surface-level validity checks for its type
+                if (!input.IsValid()) return false;
+            } else if constexpr (std::is_same_v<T1, DomainPort>) {
+                // Type code should be truthful as it decides what underlying type is used when (de)serializing
+                if (m_type != NetInfoType::Domain) return false;
+                // Underlying data should at least meet surface-level validity checks
                 if (!input.IsValid()) return false;
             }
             return true;
@@ -125,6 +236,8 @@ std::string NetInfoEntry::ToString() const
             using T1 = std::decay_t<decltype(input)>;
             if constexpr (std::is_same_v<T1, CService>) {
                 return strprintf("CService(addr=%s, port=%u)", input.ToStringAddr(), input.GetPort());
+            } else if constexpr (std::is_same_v<T1, DomainPort>) {
+                return strprintf("DomainPort(addr=%s, port=%u)", input.ToStringAddr(), input.GetPort());
             }
             return "[invalid entry]";
         },
@@ -136,7 +249,7 @@ std::string NetInfoEntry::ToStringAddr() const
     return std::visit(
         [](auto&& input) -> std::string {
             using T1 = std::decay_t<decltype(input)>;
-            if constexpr (std::is_same_v<T1, CService>) {
+            if constexpr (std::is_same_v<T1, CService> || std::is_same_v<T1, DomainPort>) {
                 return input.ToStringAddr();
             }
             return "[invalid entry]";
@@ -149,7 +262,7 @@ std::string NetInfoEntry::ToStringAddrPort() const
     return std::visit(
         [](auto&& input) -> std::string {
             using T1 = std::decay_t<decltype(input)>;
-            if constexpr (std::is_same_v<T1, CService>) {
+            if constexpr (std::is_same_v<T1, CService> || std::is_same_v<T1, DomainPort>) {
                 return input.ToStringAddrPort();
             }
             return "[invalid entry]";
@@ -307,6 +420,10 @@ NetInfoStatus ExtNetInfo::ProcessCandidate(const NetInfoPurpose purpose, const N
     if (IsAddrPortDuplicate(candidate)) {
         return NetInfoStatus::Duplicate;
     }
+    if (candidate.GetDomainPort().has_value() && purpose != NetInfoPurpose::PLATFORM_HTTPS) {
+        // Domains only allowed for Platform HTTPS API
+        return NetInfoStatus::BadInput;
+    }
     if (auto it{m_data.find(purpose)}; it != m_data.end()) {
         // Existing entries list found, check limit
         auto& [_, entries] = *it;
@@ -333,14 +450,42 @@ NetInfoStatus ExtNetInfo::ValidateService(const CService& service)
     if (!service.IsValid()) {
         return NetInfoStatus::BadAddress;
     }
-    if (!service.IsIPv4() && !service.IsIPv6()) {
+    if (!service.IsCJDNS() && !service.IsI2P() && !service.IsIPv4() && !service.IsIPv6() && !service.IsTor()) {
         return NetInfoStatus::BadType;
     }
     if (Params().RequireRoutableExternalIP() && !service.IsRoutable()) {
         return NetInfoStatus::NotRoutable;
     }
-    if (IsBadPort(service.GetPort()) || service.GetPort() == 0) {
+    const uint16_t service_port{service.GetPort()};
+    if (service.IsI2P()) {
+        if (service_port != I2P_SAM31_PORT) {
+            // I2P SAM 3.1 and earlier don't support arbitrary ports
+            return NetInfoStatus::BadPort;
+        }
+    } else {
+        if (service_port == 0 || IsBadPort(service_port)) {
+            return NetInfoStatus::BadPort;
+        }
+    }
+
+    return NetInfoStatus::Success;
+}
+
+NetInfoStatus ExtNetInfo::ValidateDomainPort(const DomainPort& domain)
+{
+    if (!domain.IsValid()) {
+        return NetInfoStatus::BadInput;
+    }
+    const uint16_t domain_port{domain.GetPort()};
+    if (domain_port == 0 || (IsBadPort(domain_port) && !IsAllowedPlatformHTTPPort(domain_port))) {
         return NetInfoStatus::BadPort;
+    }
+    const std::string& addr{domain.ToStringAddr()};
+    if (MatchSuffix(addr, TLDS_BAD) || MatchSuffix(addr, TLDS_PRIVACY)) {
+        return NetInfoStatus::BadInput;
+    }
+    if (const auto labels{SplitString(addr, '.')}; !MatchCharsFilter(labels.at(labels.size() - 1), SAFE_CHARS_ALPHA)) {
+        return NetInfoStatus::BadInput;
     }
 
     return NetInfoStatus::Success;
@@ -357,15 +502,42 @@ NetInfoStatus ExtNetInfo::AddEntry(const NetInfoPurpose purpose, const std::stri
     std::string addr;
     uint16_t port{0};
     SplitHostPort(input, port, addr);
-    // Contains invalid characters, unlikely to pass Lookup(), fast-fail
+
     if (!MatchCharsFilter(addr, SAFE_CHARS_IPV4_6)) {
-        return NetInfoStatus::BadInput;
+        if (!MatchCharsFilter(addr, SAFE_CHARS_RFC1035)) {
+            // Neither IP:port safe nor domain-safe, we can safely assume it's bad input
+            return NetInfoStatus::BadInput;
+        }
+
+        // Not IP:port safe but domain safe
+        if (MatchSuffix(addr, TLDS_PRIVACY)) {
+            // Special domain, try storing it as CService
+            CNetAddr netaddr;
+            if (netaddr.SetSpecial(addr)) {
+                const CService service{netaddr, port};
+                const auto ret{ValidateService(service)};
+                if (ret == NetInfoStatus::Success) {
+                    return ProcessCandidate(purpose, NetInfoEntry{service});
+                }
+                return ret; /* ValidateService() failed */
+            }
+        } else if (DomainPort domain; domain.Set(addr, port) == DomainPort::Status::Success) {
+            // Regular domain
+            const auto ret{ValidateDomainPort(domain)};
+            if (ret == NetInfoStatus::Success) {
+                return ProcessCandidate(purpose, NetInfoEntry{domain});
+            }
+            return ret; /* ValidateDomainPort() failed */
+        }
+        return NetInfoStatus::BadInput; /* CNetAddr::SetSpecial() or DomainPort::Set() failed */
     }
 
+    // IP:port safe, try to parse it as IP:port
     if (auto service_opt{Lookup(addr, /*portDefault=*/port, /*fAllowLookup=*/false)}) {
-        const auto ret{ValidateService(*service_opt)};
+        const auto service{MaybeFlipIPv6toCJDNS(*service_opt)};
+        const auto ret{ValidateService(service)};
         if (ret == NetInfoStatus::Success) {
-            return ProcessCandidate(purpose, NetInfoEntry{*service_opt});
+            return ProcessCandidate(purpose, NetInfoEntry{service});
         }
         return ret; /* ValidateService() failed */
     }
@@ -434,6 +606,15 @@ NetInfoStatus ExtNetInfo::Validate() const
             if (const auto& service_opt{entry.GetAddrPort()}) {
                 if (auto ret{ValidateService(*service_opt)}; ret != NetInfoStatus::Success) {
                     // Stores CService underneath but doesn't pass validation rules
+                    return ret;
+                }
+            } else if (const auto domain_opt{entry.GetDomainPort()}) {
+                if (purpose != NetInfoPurpose::PLATFORM_HTTPS) {
+                    // Domains only allowed for Platform HTTPS API
+                    return NetInfoStatus::BadInput;
+                }
+                if (auto ret{ValidateDomainPort(*domain_opt)}; ret != NetInfoStatus::Success) {
+                    // Stores DomainPort underneath but doesn't pass validation rules
                     return ret;
                 }
             } else {

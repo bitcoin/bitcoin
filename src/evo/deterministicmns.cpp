@@ -440,6 +440,12 @@ void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTota
                 throw std::runtime_error(strprintf("%s: Can't add a masternode %s with a duplicate address=%s", __func__,
                                                    dmn->proTxHash.ToString(), service_opt->ToStringAddrPort()));
             }
+        } else if (const auto domain_opt{entry.GetDomainPort()}) {
+            if (!AddUniqueProperty(*dmn, *domain_opt)) {
+                mnUniquePropertyMap = mnUniquePropertyMapSaved;
+                throw std::runtime_error(strprintf("%s: Can't add a masternode %s with a duplicate address=%s",
+                                                   __func__, dmn->proTxHash.ToString(), domain_opt->ToStringAddrPort()));
+            }
         } else {
             mnUniquePropertyMap = mnUniquePropertyMapSaved;
             throw std::runtime_error(
@@ -494,6 +500,10 @@ void CDeterministicMNList::UpdateMN(const CDeterministicMN& oldDmn, const std::s
                     if (!DeleteUniqueProperty(dmn, *service_opt)) {
                         return "internal error"; // This shouldn't be possible
                     }
+                } else if (const auto domain_opt{old_entry.GetDomainPort()}) {
+                    if (!DeleteUniqueProperty(dmn, *domain_opt)) {
+                        return "internal error"; // This shouldn't be possible
+                    }
                 } else {
                     return "invalid address";
                 }
@@ -502,6 +512,10 @@ void CDeterministicMNList::UpdateMN(const CDeterministicMN& oldDmn, const std::s
                 if (const auto service_opt{new_entry.GetAddrPort()}) {
                     if (!AddUniqueProperty(dmn, *service_opt)) {
                         return strprintf("duplicate (%s)", service_opt->ToStringAddrPort());
+                    }
+                } else if (const auto domain_opt{new_entry.GetDomainPort()}) {
+                    if (!AddUniqueProperty(dmn, *domain_opt)) {
+                        return strprintf("duplicate (%s)", domain_opt->ToStringAddrPort());
                     }
                 } else {
                     return "invalid address";
@@ -582,6 +596,12 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
                 mnUniquePropertyMap = mnUniquePropertyMapSaved;
                 throw std::runtime_error(strprintf("%s: Can't delete a masternode %s with an address=%s", __func__,
                                                    proTxHash.ToString(), service_opt->ToStringAddrPort()));
+            }
+        } else if (const auto domain_opt{entry.GetDomainPort()}) {
+            if (!DeleteUniqueProperty(*dmn, *domain_opt)) {
+                mnUniquePropertyMap = mnUniquePropertyMapSaved;
+                throw std::runtime_error(strprintf("%s: Can't delete a masternode %s with an address=%s", __func__,
+                                                   proTxHash.ToString(), domain_opt->ToStringAddrPort()));
             }
         } else {
             mnUniquePropertyMap = mnUniquePropertyMapSaved;
@@ -1142,6 +1162,11 @@ bool CheckProRegTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl:
                     mnList.GetUniquePropertyMN(*service_opt)->collateralOutpoint != collateralOutpoint) {
                     return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-netinfo-entry");
                 }
+            } else if (const auto domain_opt{entry.GetDomainPort()}) {
+                if (mnList.HasUniqueProperty(*domain_opt) &&
+                    mnList.GetUniquePropertyMN(*domain_opt)->collateralOutpoint != collateralOutpoint) {
+                    return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-netinfo-entry");
+                }
             } else {
                 return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-entry");
             }
@@ -1222,6 +1247,10 @@ bool CheckProUpServTx(CDeterministicMNManager& dmnman, const CTransaction& tx, g
         if (const auto service_opt{entry.GetAddrPort()}) {
             if (mnList.HasUniqueProperty(*service_opt) &&
                 mnList.GetUniquePropertyMN(*service_opt)->proTxHash != opt_ptx->proTxHash) {
+                return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-netinfo-entry");
+            }
+        } else if (const auto domain_opt{entry.GetDomainPort()}) {
+            if (mnList.HasUniqueProperty(*domain_opt) && mnList.GetUniquePropertyMN(*domain_opt)->proTxHash != opt_ptx->proTxHash) {
                 return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-netinfo-entry");
             }
         } else {
