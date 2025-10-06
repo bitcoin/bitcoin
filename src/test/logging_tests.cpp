@@ -40,7 +40,7 @@ static void ResetLogger()
 static std::vector<std::string> ReadDebugLogLines()
 {
     std::vector<std::string> lines;
-    std::ifstream ifs{LogInstance().m_file_path};
+    std::ifstream ifs{LogInstance().m_file_path.std_path()};
     for (std::string line; std::getline(ifs, line);) {
         lines.push_back(std::move(line));
     }
@@ -421,7 +421,7 @@ void TestLogFromLocation(Location location, const std::string& message,
     using Status = BCLog::LogRateLimiter::Status;
     if (!suppressions_active) assert(status == Status::UNSUPPRESSED); // developer error
 
-    std::ofstream ofs(LogInstance().m_file_path, std::ios::out | std::ios::trunc); // clear debug log
+    std::ofstream ofs(LogInstance().m_file_path.std_path(), std::ios::out | std::ios::trunc); // clear debug log
     LogFromLocation(location, message);
     auto log_lines{ReadDebugLogLines()};
     BOOST_TEST_INFO_SCOPE(log_lines.size() << " log_lines read: \n" << util::Join(log_lines, "\n"));

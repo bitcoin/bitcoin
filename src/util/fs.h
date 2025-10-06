@@ -34,6 +34,10 @@ class path : public std::filesystem::path
 public:
     using std::filesystem::path::path;
 
+    // Convenience method for accessing standard path type without needing a cast.
+    std::filesystem::path& std_path() { return *this; }
+    const std::filesystem::path& std_path() const { return *this; }
+
     // Allow path objects arguments for compatibility.
     path(std::filesystem::path path) : std::filesystem::path::path(std::move(path)) {}
     path& operator=(std::filesystem::path path) { std::filesystem::path::operator=(std::move(path)); return *this; }
@@ -53,6 +57,12 @@ public:
 
     // Disallow std::string conversion method to avoid locale-dependent encoding on windows.
     std::string string() const = delete;
+
+    // Disallow implicit string conversion to ensure code is portable.
+    // `string_type` may be `string` or `wstring` depending on the platform, so
+    // using this conversion could result in code that compiles on unix but
+    // fails to compile on windows, or vice versa.
+    operator string_type() const = delete;
 
     /**
      * Return a UTF-8 representation of the path as a std::string, for
