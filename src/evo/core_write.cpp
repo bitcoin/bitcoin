@@ -4,6 +4,7 @@
 
 #include <evo/assetlocktx.h>
 #include <evo/cbtx.h>
+#include <evo/deterministicmns.h>
 #include <evo/dmnstate.h>
 #include <evo/mnhftx.h>
 #include <evo/netinfo.h>
@@ -37,20 +38,31 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
             {RPCResult::Type::ARR, "platform_https", /*optional=*/true, "Addresses used for Platform HTTPS API",
                 {{RPCResult::Type::STR, "address", ""}}},
         }}},
+        RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "collateralHash", "Collateral transaction hash"),
+        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "collateralIndex", "Collateral transaction output index"),
+        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "consecutivePayments", "Consecutive payments masternode has received in payment cycle"),
         RESULT_MAP_ENTRY(RPCResult::Type::NUM, "height", "Block height"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "inputsHash", "Hash of all the outpoints of the transaction inputs"),
+        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "lastPaidHeight", "Height masternode was last paid"),
         RESULT_MAP_ENTRY(RPCResult::Type::NUM, "llmqType", "Quorum type"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "merkleRootMNList", "Merkle root of the masternode list"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "merkleRootQuorums", "Merkle root of the quorum list"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR, "operatorPayoutAddress", "Dash address used for operator reward payments"),
+        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "operatorReward", "Fraction in %% of reward shared with the operator between 0 and 10000"),
+        RESULT_MAP_ENTRY(RPCResult::Type::STR, "ownerAddress", "Dash address used for payee updates and proposal voting"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR, "payoutAddress", "Dash address used for masternode reward payments"),
         RESULT_MAP_ENTRY(RPCResult::Type::NUM, "platformHTTPPort", "(DEPRECATED) TCP port of Platform HTTP API"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "platformNodeID", "Node ID derived from P2P public key for Platform P2P"),
         RESULT_MAP_ENTRY(RPCResult::Type::NUM, "platformP2PPort", "(DEPRECATED) TCP port of Platform P2P"),
+        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "PoSeBanHeight", "Height masternode was banned for Proof of Service violations"),
+        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "PoSePenalty", "Proof of Service penalty score"),
+        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "PoSeRevivedHeight", "Height masternode recovered from Proof of Service violations"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "proTxHash", "Hash of the masternode's initial ProRegTx"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR, "pubKeyOperator", "BLS public key used for operator signing"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "quorumHash", "Hash of the quorum"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR_HEX, "quorumSig", "BLS recovered threshold signature of quorum"),
+        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "registeredHeight", "Height masternode was registered"),
+        RESULT_MAP_ENTRY(RPCResult::Type::NUM, "revocationReason", "Reason for ProUpRegTx revocation"),
         RESULT_MAP_ENTRY(RPCResult::Type::STR, "service", "(DEPRECATED) IP address and port of the masternode"),
         RESULT_MAP_ENTRY(RPCResult::Type::NUM, "type", "Masternode type"),
         RESULT_MAP_ENTRY(RPCResult::Type::NUM, "version", "Special transaction version"),
@@ -158,6 +170,46 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     return ret;
 }
 
+// CDeterministicMN::ToJson() defined in evo/deterministicmns.cpp
+[[nodiscard]] RPCResult CDeterministicMN::GetJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The masternode's details",
+    {
+        {RPCResult::Type::STR, "type", "Masternode type"},
+        GetRpcResult("proTxHash"),
+        GetRpcResult("collateralHash"),
+        GetRpcResult("collateralIndex"),
+        {RPCResult::Type::STR, "collateralAddress", /*optional=*/true, "Dash address used for collateral"},
+        GetRpcResult("operatorReward"),
+        CDeterministicMNState::GetJsonHelp(/*key=*/"state", /*optional=*/false),
+    }};
+}
+
+[[nodiscard]] RPCResult CDeterministicMNState::GetJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The masternode state",
+    {
+        {RPCResult::Type::NUM, "version", "Version of the masternode state"},
+        GetRpcResult("service"),
+        GetRpcResult("addresses"),
+        GetRpcResult("registeredHeight"),
+        GetRpcResult("lastPaidHeight"),
+        GetRpcResult("consecutivePayments"),
+        GetRpcResult("PoSePenalty"),
+        GetRpcResult("PoSeRevivedHeight"),
+        GetRpcResult("PoSeBanHeight"),
+        GetRpcResult("revocationReason"),
+        GetRpcResult("ownerAddress"),
+        GetRpcResult("votingAddress"),
+        GetRpcResult("platformNodeID", /*optional=*/true),
+        GetRpcResult("platformP2PPort", /*optional=*/true),
+        GetRpcResult("platformHTTPPort", /*optional=*/true),
+        GetRpcResult("payoutAddress", /*optional=*/true),
+        GetRpcResult("pubKeyOperator"),
+        GetRpcResult("operatorPayoutAddress", /*optional=*/true),
+    }};
+}
+
 [[nodiscard]] UniValue CDeterministicMNState::ToJson(MnType nType) const
 {
     UniValue obj(UniValue::VOBJ);
@@ -190,21 +242,47 @@ RPCResult GetRpcResult(const std::string& key, bool optional)
     return obj;
 }
 
+// CDeterministicMNStateDiff::ToJson() defined in evo/dmnstate.cpp
+[[nodiscard]] RPCResult CDeterministicMNStateDiff::GetJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The masternode state diff",
+    {
+        {RPCResult::Type::NUM, "version", "Version of the masternode state diff"},
+        GetRpcResult("service", /*optional=*/true),
+        GetRpcResult("registeredHeight", /*optional=*/true),
+        GetRpcResult("lastPaidHeight", /*optional=*/true),
+        GetRpcResult("consecutivePayments", /*optional=*/true),
+        GetRpcResult("PoSePenalty", /*optional=*/true),
+        GetRpcResult("PoSeRevivedHeight", /*optional=*/true),
+        GetRpcResult("PoSeBanHeight", /*optional=*/true),
+        GetRpcResult("revocationReason", /*optional=*/true),
+        GetRpcResult("ownerAddress", /*optional=*/true),
+        GetRpcResult("votingAddress", /*optional=*/true),
+        GetRpcResult("payoutAddress", /*optional=*/true),
+        GetRpcResult("operatorPayoutAddress", /*optional=*/true),
+        GetRpcResult("pubKeyOperator", /*optional=*/true),
+        GetRpcResult("platformNodeID", /*optional=*/true),
+        GetRpcResult("platformP2PPort", /*optional=*/true),
+        GetRpcResult("platformHTTPPort", /*optional=*/true),
+        GetRpcResult("addresses", /*optional=*/true),
+    }};
+}
+
 [[nodiscard]] RPCResult CProRegTx::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The masternode registration special transaction",
     {
         GetRpcResult("version"),
         GetRpcResult("type"),
-        {RPCResult::Type::STR_HEX, "collateralHash", "Collateral transaction hash"},
-        {RPCResult::Type::NUM, "collateralIndex", "Collateral transaction output index"},
+        GetRpcResult("collateralHash"),
+        GetRpcResult("collateralIndex"),
         GetRpcResult("service"),
         GetRpcResult("addresses"),
-        {RPCResult::Type::STR, "ownerAddress", "Dash address used for payee updates and proposal voting"},
+        GetRpcResult("ownerAddress"),
         GetRpcResult("votingAddress"),
         GetRpcResult("payoutAddress", /*optional=*/true),
         GetRpcResult("pubKeyOperator"),
-        {RPCResult::Type::NUM, "operatorReward", "Fraction in %% of reward shared with the operator between 0 and 10000"},
+        GetRpcResult("operatorReward"),
         GetRpcResult("platformNodeID", /*optional=*/true),
         GetRpcResult("platformP2PPort", /*optional=*/true),
         GetRpcResult("platformHTTPPort", /*optional=*/true),

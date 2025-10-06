@@ -1679,6 +1679,7 @@ static RPCHelpMan protx_listdiff()
     for(const auto& mn : mnDiff.addedMNs) {
         jaddedMNs.push_back(mn->ToJson());
     }
+    // TODO: Use CDeterministicMN::GetJsonHelp() for mn
     ret.pushKV("addedMNs", jaddedMNs);
 
     UniValue jremovedMNs(UniValue::VARR);
@@ -1701,6 +1702,7 @@ static RPCHelpMan protx_listdiff()
         obj.pushKV(dmn->proTxHash.ToString(), stateDiff.ToJson(dmn->nType));
         jupdatedMNs.push_back(obj);
     }
+    // TODO: Use CDeterministicMNStateDiff::GetJsonHelp() for stateDiff
     ret.pushKV("updatedMNs", jupdatedMNs);
 
     return ret;

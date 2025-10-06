@@ -19,15 +19,14 @@
 #include <boost/hana/for_each.hpp>
 #include <boost/hana/tuple.hpp>
 
-class CProRegTx;
-class UniValue;
-
 class CDeterministicMNState;
-
-namespace llmq
-{
-    class CFinalCommitment;
+class CProRegTx;
+struct RPCResult;
+namespace llmq {
+class CFinalCommitment;
 } // namespace llmq
+
+class UniValue;
 
 class CDeterministicMNState
 {
@@ -150,6 +149,7 @@ public:
 
 public:
     std::string ToString() const;
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     [[nodiscard]] UniValue ToJson(MnType nType) const;
 };
 
@@ -243,6 +243,7 @@ public:
     template <typename Stream>
     CDeterministicMNStateDiff(deserialize_type, Stream& s) { s >> *this; }
 
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     [[nodiscard]] UniValue ToJson(MnType nType) const;
 
     SERIALIZE_METHODS(CDeterministicMNStateDiff, obj)
