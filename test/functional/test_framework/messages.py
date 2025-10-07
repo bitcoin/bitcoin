@@ -25,6 +25,7 @@ from io import BytesIO
 import math
 import random
 import socket
+import struct
 import time
 import unittest
 
@@ -636,6 +637,19 @@ class CTransaction:
         r += ser_vector(self.vout)
         r += self.nLockTime.to_bytes(4, "little")
         return r
+
+    def get_standard_template_hash(self, nIn):
+        r = b""
+        r += self.version.to_bytes(4, "little")
+        r += self.nLockTime.to_bytes(4, "little")
+        if any(inp.scriptSig for inp in self.vin):
+            r += sha256(b"".join(ser_string(inp.scriptSig) for inp in self.vin))
+        r += struct.pack("<I", len(self.vin))
+        r += sha256(b"".join(struct.pack("<I", inp.nSequence) for inp in self.vin))
+        r += struct.pack("<I", len(self.vout))
+        r += sha256(b"".join(out.serialize() for out in self.vout))
+        r += struct.pack("<I", nIn)
+        return sha256(r)
 
     # Only serialize with witness when explicitly called for
     def serialize_with_witness(self):
