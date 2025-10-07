@@ -172,7 +172,8 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
     // NOTE: CheckTransaction is arguably the more logical place to do this, but it's context-independent, so this is probably the next best place for now
     if (rules.test(CheckTxInputsRules::OutputSizeLimit)) {
         for (const auto& txout : tx.vout) {
-            if (txout.scriptPubKey.size() > MAX_OUTPUT_SCRIPT_SIZE) {
+            if (txout.scriptPubKey.empty()) continue;
+            if (txout.scriptPubKey.size() > ((txout.scriptPubKey[0] == OP_RETURN) ? MAX_OUTPUT_DATA_SIZE : MAX_OUTPUT_SCRIPT_SIZE)) {
                 return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-vout-script-toolarge");
             }
         }
