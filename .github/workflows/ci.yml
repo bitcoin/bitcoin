@@ -443,6 +443,85 @@ jobs:
           TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
         run: py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix="$RUNNER_TEMP" --combinedlogslen=99999999 --timeout-factor=$TEST_RUNNER_TIMEOUT_FACTOR $EXCLUDE $TEST_RUNNER_EXTRA
 
+  freebsd-syslibs:
+    name: 'FreeBSD: system libs, no GUI'
+    needs: runners
+    runs-on: ${{ needs.runners.outputs.use-cirrus-runners == 'true' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md' || 'ubuntu-latest' }}
+    defaults:
+      run:
+        shell: freebsd {0}
+
+    steps:
+      - *CHECKOUT
+
+      - name: Setup Ccache directory
+        shell: bash
+        run: |
+          export CCACHE_DIR=${{ github.workspace }}/.ccache
+          echo "CCACHE_DIR=$CCACHE_DIR" >> "$GITHUB_ENV"
+          mkdir -p "$CCACHE_DIR"
+
+      - name: Restore ccache
+        uses: cirruslabs/cache/restore@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ github.job }}-${{ github.run_id }}
+          restore-keys: ccache-${{ github.job }}-
+
+      - name: Speed up VM install
+        shell: bash
+        run: |
+          # Updating man-db can be slow
+          echo "set man-db/auto-update false" | sudo debconf-communicate; sudo dpkg-reconfigure man-db
+
+      - name: Start FreeBSD VM
+        uses: vmactions/freebsd-vm@v1
+        with:
+          envs: 'CCACHE_DIR'
+          prepare: pkg install -y cmake-core ninja git pkgconf boost-libs libevent sqlite3 capnproto libzmq4 python3 net/py-pyzmq databases/py-sqlite3 ccache
+          run: git config --global --add safe.directory ${{ github.workspace }}
+          sync: 'nfs' # nfs is auto-synced and allows ccache save at the end of the run
+
+      - name: Generate buildsystem
+        env:
+          CMAKE_GENERATOR: 'Ninja'
+        run: |
+          cd ${{ github.workspace }}
+          cmake -B build -DWITH_ZMQ=ON -DBUILD_BENCH=ON -DBUILD_FUZZ_BINARY=ON -DWERROR=ON -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+      - name: Build
+        run: |
+          echo "CCACHE_DIR=$CCACHE_DIR"
+          ccache -s
+          ccache -z
+          cmake --build ${{ github.workspace }}/build -j$(nproc)
+          ccache -s
+
+      - name: Check 'bitcoind' executable
+        run: |
+          set -e
+          cd ${{ github.workspace }}
+          ls -l build/bin/bitcoind
+          file build/bin/bitcoind
+          ldd build/bin/bitcoind
+          ./build/bin/bitcoind -version
+
+      - name: Run test suite
+        run: |
+          cmake -E env ctest --test-dir ${{ github.workspace }}/build -j $(nproc) --output-on-failure
+
+      - name: Run functional tests
+        run: |
+          cd ${{ github.workspace }}
+          ./build/test/functional/test_runner.py --ci --extended -j $(nproc) --combinedlogslen=99999999 --quiet --timeout-factor=8 --tmpdirprefix=/tmp --cachedir=/tmp/test_cache
+
+      - name: Save ccache
+        uses: cirruslabs/cache/save@v4
+        if: ${{ (github.event_name == 'push') && (github.ref_name == github.event.repository.default_branch) }}
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ github.job }}-${{ github.run_id }}
+
   ci-matrix:
     name: ${{ matrix.name }}
     needs: runners
