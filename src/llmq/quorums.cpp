@@ -482,10 +482,6 @@ bool CQuorumManager::RequestQuorumData(CNode* pfrom, CConnman& connman, CQuorumC
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Invalid pfrom: nullptr\n", __func__);
         return false;
     }
-    if (pfrom->nVersion < LLMQ_DATA_MESSAGES_VERSION) {
-        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Version must be %d or greater.\n", __func__, LLMQ_DATA_MESSAGES_VERSION);
-        return false;
-    }
     if (pfrom->GetVerifiedProRegTxHash().IsNull()) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- pfrom is not a verified masternode\n", __func__);
         return false;

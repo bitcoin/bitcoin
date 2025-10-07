@@ -22,9 +22,6 @@ static const int MIN_PEER_PROTO_VERSION = 70221;
 //! minimum proto version of masternode to accept in DKGs
 static const int MIN_MASTERNODE_PROTO_VERSION = 70238;
 
-//! introduction of QGETDATA/QDATA messages
-static const int LLMQ_DATA_MESSAGES_VERSION = 70219;
-
 //! introduction of instant send deterministic lock (ISDLOCK)
 static const int ISDLOCK_PROTO_VERSION = 70220;
 
