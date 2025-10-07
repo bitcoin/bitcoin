@@ -22,9 +22,6 @@ static const int MIN_PEER_PROTO_VERSION = 70221;
 //! minimum proto version of masternode to accept in DKGs
 static const int MIN_MASTERNODE_PROTO_VERSION = 70238;
 
-//! protocol version is included in MNAUTH starting with this version
-static const int MNAUTH_NODE_VER_VERSION = 70218;
-
 //! introduction of QGETDATA/QDATA messages
 static const int LLMQ_DATA_MESSAGES_VERSION = 70219;
 
