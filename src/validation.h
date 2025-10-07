@@ -23,6 +23,7 @@
 #include <policy/policy.h>
 #include <script/script_error.h>
 #include <script/sigcache.h>
+#include <script/verify_flags.h>
 #include <sync.h>
 #include <txdb.h>
 #include <txmempool.h>
@@ -336,14 +337,14 @@ private:
     CTxOut m_tx_out;
     const CTransaction *ptxTo;
     unsigned int nIn;
-    unsigned int nFlags;
+    script_verify_flags m_flags;
     bool cacheStore;
     PrecomputedTransactionData *txdata;
     SignatureCache* m_signature_cache;
 
 public:
-    CScriptCheck(const CTxOut& outIn, const CTransaction& txToIn, SignatureCache& signature_cache, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn, PrecomputedTransactionData* txdataIn) :
-        m_tx_out(outIn), ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), txdata(txdataIn), m_signature_cache(&signature_cache) { }
+    CScriptCheck(const CTxOut& outIn, const CTransaction& txToIn, SignatureCache& signature_cache, unsigned int nInIn, script_verify_flags flags, bool cacheIn, PrecomputedTransactionData* txdataIn) :
+        m_tx_out(outIn), ptxTo(&txToIn), nIn(nInIn), m_flags(flags), cacheStore(cacheIn), txdata(txdataIn), m_signature_cache(&signature_cache) { }
 
     CScriptCheck(const CScriptCheck&) = delete;
     CScriptCheck& operator=(const CScriptCheck&) = delete;
@@ -1364,5 +1365,8 @@ bool IsBIP30Repeat(const CBlockIndex& block_index);
 
 /** Identifies blocks which coinbase output was subsequently overwritten in the UTXO set (see BIP30) */
 bool IsBIP30Unspendable(const uint256& block_hash, int block_height);
+
+// Returns the script flags which should be checked for a given block
+script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const ChainstateManager& chainman);
 
 #endif // BITCOIN_VALIDATION_H

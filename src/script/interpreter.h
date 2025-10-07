@@ -10,6 +10,7 @@
 #include <hash.h>
 #include <primitives/transaction.h>
 #include <script/script_error.h> // IWYU pragma: export
+#include <script/verify_flags.h> // IWYU pragma: export
 #include <span.h>
 #include <uint256.h>
 
@@ -42,35 +43,36 @@ enum
  *  All flags are intended to be soft forks: the set of acceptable scripts under
  *  flags (A | B) is a subset of the acceptable scripts under flag (A).
  */
-enum : uint32_t {
-    SCRIPT_VERIFY_NONE      = 0,
 
+static constexpr script_verify_flags SCRIPT_VERIFY_NONE{0};
+
+enum class script_verify_flag_name : uint8_t {
     // Evaluate P2SH subscripts (BIP16).
-    SCRIPT_VERIFY_P2SH      = (1U << 0),
+    SCRIPT_VERIFY_P2SH,
 
     // Passing a non-strict-DER signature or one with undefined hashtype to a checksig operation causes script failure.
     // Evaluating a pubkey that is not (0x04 + 64 bytes) or (0x02 or 0x03 + 32 bytes) by checksig causes script failure.
     // (not used or intended as a consensus rule).
-    SCRIPT_VERIFY_STRICTENC = (1U << 1),
+    SCRIPT_VERIFY_STRICTENC,
 
     // Passing a non-strict-DER signature to a checksig operation causes script failure (BIP62 rule 1)
-    SCRIPT_VERIFY_DERSIG    = (1U << 2),
+    SCRIPT_VERIFY_DERSIG,
 
     // Passing a non-strict-DER signature or one with S > order/2 to a checksig operation causes script failure
     // (BIP62 rule 5).
-    SCRIPT_VERIFY_LOW_S     = (1U << 3),
+    SCRIPT_VERIFY_LOW_S,
 
     // verify dummy stack item consumed by CHECKMULTISIG is of zero-length (BIP62 rule 7).
-    SCRIPT_VERIFY_NULLDUMMY = (1U << 4),
+    SCRIPT_VERIFY_NULLDUMMY,
 
     // Using a non-push operator in the scriptSig causes script failure (BIP62 rule 2).
-    SCRIPT_VERIFY_SIGPUSHONLY = (1U << 5),
+    SCRIPT_VERIFY_SIGPUSHONLY,
 
     // Require minimal encodings for all push operations (OP_0... OP_16, OP_1NEGATE where possible, direct
     // pushes up to 75 bytes, OP_PUSHDATA up to 255 bytes, OP_PUSHDATA2 for anything larger). Evaluating
     // any other push causes the script to fail (BIP62 rule 3).
     // In addition, whenever a stack element is interpreted as a number, it must be of minimal length (BIP62 rule 4).
-    SCRIPT_VERIFY_MINIMALDATA = (1U << 6),
+    SCRIPT_VERIFY_MINIMALDATA,
 
     // Discourage use of NOPs reserved for upgrades (NOP1-10)
     //
@@ -82,7 +84,7 @@ enum : uint32_t {
     // executed, e.g.  within an unexecuted IF ENDIF block, are *not* rejected.
     // NOPs that have associated forks to give them new meaning (CLTV, CSV)
     // are not subject to this rule.
-    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS  = (1U << 7),
+    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS,
 
     // Require that only a single stack element remains after evaluation. This changes the success criterion from
     // "At least one stack element must remain, and when interpreted as a boolean, it must be true" to
@@ -91,64 +93,72 @@ enum : uint32_t {
     // Note: CLEANSTACK should never be used without P2SH or WITNESS.
     // Note: WITNESS_V0 and TAPSCRIPT script execution have behavior similar to CLEANSTACK as part of their
     //       consensus rules. It is automatic there and does not need this flag.
-    SCRIPT_VERIFY_CLEANSTACK = (1U << 8),
+    SCRIPT_VERIFY_CLEANSTACK,
 
     // Verify CHECKLOCKTIMEVERIFY
     //
     // See BIP65 for details.
-    SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9),
+    SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY,
 
     // support CHECKSEQUENCEVERIFY opcode
     //
     // See BIP112 for details
-    SCRIPT_VERIFY_CHECKSEQUENCEVERIFY = (1U << 10),
+    SCRIPT_VERIFY_CHECKSEQUENCEVERIFY,
 
     // Support segregated witness
     //
-    SCRIPT_VERIFY_WITNESS = (1U << 11),
+    SCRIPT_VERIFY_WITNESS,
 
     // Making v1-v16 witness program non-standard
     //
-    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM = (1U << 12),
+    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM,
 
     // Segwit script only: Require the argument of OP_IF/NOTIF to be exactly 0x01 or empty vector
     //
     // Note: TAPSCRIPT script execution has behavior similar to MINIMALIF as part of its consensus
     //       rules. It is automatic there and does not depend on this flag.
-    SCRIPT_VERIFY_MINIMALIF = (1U << 13),
+    SCRIPT_VERIFY_MINIMALIF,
 
     // Signature(s) must be empty vector if a CHECK(MULTI)SIG operation failed
     //
-    SCRIPT_VERIFY_NULLFAIL = (1U << 14),
+    SCRIPT_VERIFY_NULLFAIL,
 
     // Public keys in segregated witness scripts must be compressed
     //
-    SCRIPT_VERIFY_WITNESS_PUBKEYTYPE = (1U << 15),
+    SCRIPT_VERIFY_WITNESS_PUBKEYTYPE,
 
     // Making OP_CODESEPARATOR and FindAndDelete fail any non-segwit scripts
     //
-    SCRIPT_VERIFY_CONST_SCRIPTCODE = (1U << 16),
+    SCRIPT_VERIFY_CONST_SCRIPTCODE,
 
     // Taproot/Tapscript validation (BIPs 341 & 342)
     //
-    SCRIPT_VERIFY_TAPROOT = (1U << 17),
+    SCRIPT_VERIFY_TAPROOT,
 
     // Making unknown Taproot leaf versions non-standard
     //
-    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION = (1U << 18),
+    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION,
 
     // Making unknown OP_SUCCESS non-standard
-    SCRIPT_VERIFY_DISCOURAGE_OP_SUCCESS = (1U << 19),
+    SCRIPT_VERIFY_DISCOURAGE_OP_SUCCESS,
 
     // Making unknown public key versions (in BIP 342 scripts) non-standard
-    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE = (1U << 20),
+    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE,
 
     // Constants to point to the highest flag in use. Add new flags above this line.
     //
     SCRIPT_VERIFY_END_MARKER
 };
+using enum script_verify_flag_name;
 
-bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
+static constexpr int MAX_SCRIPT_VERIFY_FLAGS_BITS = static_cast<int>(SCRIPT_VERIFY_END_MARKER);
+
+// assert there is still a spare bit
+static_assert(0 < MAX_SCRIPT_VERIFY_FLAGS_BITS && MAX_SCRIPT_VERIFY_FLAGS_BITS <= 63);
+
+static constexpr script_verify_flags::value_type MAX_SCRIPT_VERIFY_FLAGS = ((script_verify_flags::value_type{1} << MAX_SCRIPT_VERIFY_FLAGS_BITS) - 1);
+
+bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, script_verify_flags flags, ScriptError* serror);
 
 struct PrecomputedTransactionData
 {
@@ -363,12 +373,16 @@ uint256 ComputeTapbranchHash(std::span<const unsigned char> a, std::span<const u
  *  Requires control block to have valid length (33 + k*32, with k in {0,1,..,128}). */
 uint256 ComputeTaprootMerkleRoot(std::span<const unsigned char> control, const uint256& tapleaf_hash);
 
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* error = nullptr);
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = nullptr);
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror = nullptr);
+bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, script_verify_flags flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* error = nullptr);
+bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, script_verify_flags flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = nullptr);
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, script_verify_flags flags, const BaseSignatureChecker& checker, ScriptError* serror = nullptr);
 
-size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags);
+size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, script_verify_flags flags);
 
 int FindAndDelete(CScript& script, const CScript& b);
+
+extern const std::map<std::string, script_verify_flag_name> g_verify_flag_names;
+
+std::vector<std::string> GetScriptFlagNames(script_verify_flags flags);
 
 #endif // BITCOIN_SCRIPT_INTERPRETER_H

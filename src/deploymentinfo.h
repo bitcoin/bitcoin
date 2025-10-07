@@ -8,8 +8,10 @@
 #include <consensus/params.h>
 
 #include <array>
+#include <cassert>
 #include <optional>
 #include <string>
+#include <string_view>
 
 struct VBDeploymentInfo {
     /** Deployment name */

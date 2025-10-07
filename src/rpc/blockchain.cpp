@@ -1469,6 +1469,9 @@ RPCHelpMan getdeploymentinfo()
             RPCResult::Type::OBJ, "", "", {
                 {RPCResult::Type::STR, "hash", "requested block hash (or tip)"},
                 {RPCResult::Type::NUM, "height", "requested block height (or tip)"},
+                {RPCResult::Type::ARR, "script_flags", "script verify flags for the block", {
+                    {RPCResult::Type::STR, "flag", "a script verify flag"},
+                }},
                 {RPCResult::Type::OBJ_DYN, "deployments", "", {
                     {RPCResult::Type::OBJ, "xxxx", "name of the deployment", RPCHelpForDeployment}
                 }},
@@ -1495,6 +1498,12 @@ RPCHelpMan getdeploymentinfo()
             UniValue deploymentinfo(UniValue::VOBJ);
             deploymentinfo.pushKV("hash", blockindex->GetBlockHash().ToString());
             deploymentinfo.pushKV("height", blockindex->nHeight);
+            {
+                const auto flagnames = GetScriptFlagNames(GetBlockScriptFlags(*blockindex, chainman));
+                UniValue uv_flagnames(UniValue::VARR);
+                uv_flagnames.push_backV(flagnames.begin(), flagnames.end());
+                deploymentinfo.pushKV("script_flags", uv_flagnames);
+            }
             deploymentinfo.pushKV("deployments", DeploymentInfo(blockindex, chainman));
             return deploymentinfo;
         },

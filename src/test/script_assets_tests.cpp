@@ -25,7 +25,7 @@
 
 #include <univalue.h>
 
-unsigned int ParseScriptFlags(std::string strFlags);
+script_verify_flags ParseScriptFlags(std::string strFlags);
 
 BOOST_AUTO_TEST_SUITE(script_assets_tests)
 
@@ -71,12 +71,12 @@ static CScriptWitness ScriptWitnessFromJSON(const UniValue& univalue)
     return scriptwitness;
 }
 
-static std::vector<unsigned int> AllConsensusFlags()
+static std::vector<script_verify_flags> AllConsensusFlags()
 {
-    std::vector<unsigned int> ret;
+    std::vector<script_verify_flags> ret;
 
     for (unsigned int i = 0; i < 128; ++i) {
-        unsigned int flag = 0;
+        script_verify_flags flag = 0;
         if (i & 1) flag |= SCRIPT_VERIFY_P2SH;
         if (i & 2) flag |= SCRIPT_VERIFY_DERSIG;
         if (i & 4) flag |= SCRIPT_VERIFY_NULLDUMMY;
@@ -97,7 +97,7 @@ static std::vector<unsigned int> AllConsensusFlags()
 }
 
 /** Precomputed list of all valid combinations of consensus-relevant script validation flags. */
-static const std::vector<unsigned int> ALL_CONSENSUS_FLAGS = AllConsensusFlags();
+static const std::vector<script_verify_flags> ALL_CONSENSUS_FLAGS = AllConsensusFlags();
 
 static void AssetTest(const UniValue& test, SignatureCache& signature_cache)
 {
@@ -107,7 +107,7 @@ static void AssetTest(const UniValue& test, SignatureCache& signature_cache)
     const std::vector<CTxOut> prevouts = TxOutsFromJSON(test["prevouts"]);
     BOOST_CHECK(prevouts.size() == mtx.vin.size());
     size_t idx = test["index"].getInt<int64_t>();
-    uint32_t test_flags{ParseScriptFlags(test["flags"].get_str())};
+    script_verify_flags test_flags{ParseScriptFlags(test["flags"].get_str())};
     bool fin = test.exists("final") && test["final"].get_bool();
 
     if (test.exists("success")) {

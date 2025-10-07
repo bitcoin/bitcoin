@@ -9,6 +9,7 @@
 #include <core_io.h>
 #include <key.h>
 #include <rpc/util.h>
+#include <script/interpreter.h>
 #include <script/script.h>
 #include <script/script_error.h>
 #include <script/sigcache.h>
@@ -22,6 +23,7 @@
 #include <test/util/transaction_utils.h>
 #include <util/fs.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 
 #include <cstdint>
 #include <fstream>
@@ -38,10 +40,9 @@
 
 using namespace util::hex_literals;
 
-static const unsigned int gFlags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
+static const script_verify_flags gFlags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 
-unsigned int ParseScriptFlags(std::string strFlags);
-std::string FormatScriptFlags(unsigned int flags);
+script_verify_flags ParseScriptFlags(std::string strFlags);
 
 struct ScriptErrorDesc
 {
@@ -95,6 +96,11 @@ static ScriptErrorDesc script_errors[]={
     {SCRIPT_ERR_SIG_FINDANDDELETE, "SIG_FINDANDDELETE"},
 };
 
+static std::string FormatScriptFlags(script_verify_flags flags)
+{
+    return util::Join(GetScriptFlagNames(flags), ",");
+}
+
 static std::string FormatScriptError(ScriptError_t err)
 {
     for (const auto& se : script_errors)
@@ -114,7 +120,7 @@ static ScriptError_t ParseScriptError(const std::string& name)
 }
 
 struct ScriptTest : BasicTestingSetup {
-void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScriptWitness& scriptWitness, uint32_t flags, const std::string& message, int scriptError, CAmount nValue = 0)
+void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScriptWitness& scriptWitness, script_verify_flags flags, const std::string& message, int scriptError, CAmount nValue = 0)
 {
     bool expect = (scriptError == SCRIPT_ERR_OK);
     if (flags & SCRIPT_VERIFY_CLEANSTACK) {
@@ -128,13 +134,13 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
     BOOST_CHECK_MESSAGE(err == scriptError, FormatScriptError(err) + " where " + FormatScriptError((ScriptError_t)scriptError) + " expected: " + message);
 
     // Verify that removing flags from a passing test or adding flags to a failing test does not change the result.
-    for (int i = 0; i < 16; ++i) {
-        uint32_t extra_flags(m_rng.randbits(16));
-        uint32_t combined_flags{expect ? (flags & ~extra_flags) : (flags | extra_flags)};
+    for (int i = 0; i < 256; ++i) {
+        script_verify_flags extra_flags = script_verify_flags::from_int(m_rng.randbits(MAX_SCRIPT_VERIFY_FLAGS_BITS));
+        script_verify_flags combined_flags{expect ? (flags & ~extra_flags) : (flags | extra_flags)};
         // Weed out some invalid flag combinations.
         if (combined_flags & SCRIPT_VERIFY_CLEANSTACK && ~combined_flags & (SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS)) continue;
         if (combined_flags & SCRIPT_VERIFY_WITNESS && ~combined_flags & SCRIPT_VERIFY_P2SH) continue;
-        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, combined_flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err) == expect, message + strprintf(" (with flags %x)", combined_flags));
+        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, combined_flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err) == expect, message + strprintf(" (with flags %x)", combined_flags.as_int()));
     }
 }
 }; // struct ScriptTest
@@ -226,7 +232,7 @@ private:
     bool havePush{false};
     std::vector<unsigned char> push;
     std::string comment;
-    uint32_t flags;
+    script_verify_flags flags;
     int scriptError{SCRIPT_ERR_OK};
     CAmount nValue;
 
@@ -246,7 +252,7 @@ private:
     }
 
 public:
-    TestBuilder(const CScript& script_, const std::string& comment_, uint32_t flags_, bool P2SH = false, WitnessMode wm = WitnessMode::NONE, int witnessversion = 0, CAmount nValue_ = 0) : script(script_), comment(comment_), flags(flags_), nValue(nValue_)
+    TestBuilder(const CScript& script_, const std::string& comment_, script_verify_flags flags_, bool P2SH = false, WitnessMode wm = WitnessMode::NONE, int witnessversion = 0, CAmount nValue_ = 0) : script(script_), comment(comment_), flags(flags_), nValue(nValue_)
     {
         CScript scriptPubKey = script;
         if (wm == WitnessMode::PKH) {
@@ -963,7 +969,7 @@ BOOST_AUTO_TEST_CASE(script_json_test)
         } else {
             scriptPubKey = ParseScript(scriptPubKeyString);
         }
-        unsigned int scriptflags = ParseScriptFlags(test[pos++].get_str());
+        script_verify_flags scriptflags = ParseScriptFlags(test[pos++].get_str());
         int scriptError = ParseScriptError(test[pos++].get_str());
 
         DoTest(scriptPubKey, scriptSig, witness, scriptflags, strTest, scriptError, nValue);
@@ -1704,6 +1710,17 @@ BOOST_AUTO_TEST_CASE(compute_tapleaf)
 
     BOOST_CHECK_EQUAL(ComputeTapleafHash(0xc0, std::span(script)), tlc0);
     BOOST_CHECK_EQUAL(ComputeTapleafHash(0xc2, std::span(script)), tlc2);
+}
+
+BOOST_AUTO_TEST_CASE(formatscriptflags)
+{
+    // quick check that FormatScriptFlags reports any unknown/unexpected bits
+    BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_P2SH), "P2SH");
+    BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_TAPROOT), "P2SH,TAPROOT");
+    BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_P2SH | script_verify_flags::from_int(1u<<31)), "P2SH,0x80000000");
+    BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_TAPROOT | script_verify_flags::from_int(1u<<27)), "TAPROOT,0x08000000");
+    BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_TAPROOT | script_verify_flags::from_int((1u<<28) | (1ull<<58))), "TAPROOT,0x400000010000000");
+    BOOST_CHECK_EQUAL(FormatScriptFlags(script_verify_flags::from_int(1u<<26)), "0x04000000");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
