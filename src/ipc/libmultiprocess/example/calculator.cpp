@@ -9,6 +9,7 @@
 #include <charconv>
 #include <cstring>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <kj/async.h>
 #include <kj/common.h>
@@ -37,6 +38,7 @@ public:
     }
 };
 
+// Exercises deprecated log callback signature
 static void LogPrint(bool raise, const std::string& message)
 {
     if (raise) throw std::runtime_error(message);

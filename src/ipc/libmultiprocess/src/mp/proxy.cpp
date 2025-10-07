@@ -24,6 +24,7 @@
 #include <kj/debug.h>
 #include <kj/function.h>
 #include <kj/memory.h>
+#include <kj/string.h>
 #include <map>
 #include <memory>
 #include <optional>
@@ -42,7 +43,7 @@ thread_local ThreadContext g_thread_context;
 void LoggingErrorHandler::taskFailed(kj::Exception&& exception)
 {
     KJ_LOG(ERROR, "Uncaught exception in daemonized task.", exception);
-    m_loop.log() << "Uncaught exception in daemonized task.";
+    MP_LOG(m_loop, Log::Error) << "Uncaught exception in daemonized task.";
 }
 
 EventLoopRef::EventLoopRef(EventLoop& loop, Lock* lock) : m_loop(&loop), m_lock(lock)
@@ -191,13 +192,13 @@ void EventLoop::addAsyncCleanup(std::function<void()> fn)
     startAsyncThread();
 }
 
-EventLoop::EventLoop(const char* exe_name, LogFn log_fn, void* context)
+EventLoop::EventLoop(const char* exe_name, LogOptions log_opts, void* context)
     : m_exe_name(exe_name),
       m_io_context(kj::setupAsyncIo()),
       m_task_set(new kj::TaskSet(m_error_handler)),
+      m_log_opts(std::move(log_opts)),
       m_context(context)
 {
-    m_log_opts.log_fn = log_fn;
     int fds[2];
     KJ_SYSCALL(socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
     m_wait_fd = fds[0];
@@ -251,9 +252,9 @@ void EventLoop::loop()
             break;
         }
     }
-    log() << "EventLoop::loop done, cancelling event listeners.";
+    MP_LOG(*this, Log::Info) << "EventLoop::loop done, cancelling event listeners.";
     m_task_set.reset();
-    log() << "EventLoop::loop bye.";
+    MP_LOG(*this, Log::Info) << "EventLoop::loop bye.";
     wait_stream = nullptr;
     KJ_SYSCALL(::close(post_fd));
     const Lock lock(m_mutex);
@@ -430,4 +431,16 @@ std::string LongThreadName(const char* exe_name)
     return g_thread_context.thread_name.empty() ? ThreadName(exe_name) : g_thread_context.thread_name;
 }
 
+kj::StringPtr KJ_STRINGIFY(Log v)
+{
+    switch (v) {
+        case Log::Trace:   return "Trace";
+        case Log::Debug:   return "Debug";
+        case Log::Info:    return "Info";
+        case Log::Warning: return "Warning";
+        case Log::Error:   return "Error";
+        case Log::Raise:   return "Raise";
+    }
+    return "<Log?>";
+}
 } // namespace mp
