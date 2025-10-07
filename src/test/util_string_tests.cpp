@@ -37,7 +37,7 @@ void PassFmt(ConstevalFormatString<NumArgs> fmt)
 template <unsigned WrongNumArgs>
 void FailFmtWithError(const char* wrong_fmt, std::string_view error)
 {
-    BOOST_CHECK_EXCEPTION(CheckNumFormatSpecifiers<WrongNumArgs>(wrong_fmt), const char*, HasReason{error});
+    BOOST_CHECK_EXCEPTION(CheckNumFormatSpecifiers<WrongNumArgs>(wrong_fmt), std::string_view, HasReason{error});
 }
 
 BOOST_AUTO_TEST_CASE(ConstevalFormatString_NumSpec)

@@ -305,7 +305,8 @@ class HasReason
 public:
     explicit HasReason(std::string_view reason) : m_reason(reason) {}
     bool operator()(std::string_view s) const { return s.find(m_reason) != std::string_view::npos; }
-    bool operator()(const std::exception& e) const { return (*this)(e.what()); }
+    bool operator()(const std::exception& e) const { return (*this)(std::string_view{e.what()}); }
+    bool operator()(const char* s) const = delete;
 
 private:
     const std::string m_reason;
