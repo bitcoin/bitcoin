@@ -22,9 +22,6 @@ static const int MIN_PEER_PROTO_VERSION = 70221;
 //! minimum proto version of masternode to accept in DKGs
 static const int MIN_MASTERNODE_PROTO_VERSION = 70238;
 
-//! introduction of instant send deterministic lock (ISDLOCK)
-static const int ISDLOCK_PROTO_VERSION = 70220;
-
 //! GOVSCRIPT was activated in this version
 static const int GOVSCRIPT_PROTO_VERSION = 70221;
 
