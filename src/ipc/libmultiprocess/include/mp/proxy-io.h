@@ -66,8 +66,6 @@ struct ProxyClient<Thread> : public ProxyClientBase<Thread, ::capnp::Void>
     ProxyClient(const ProxyClient&) = delete;
     ~ProxyClient();
 
-    void setDisconnectCallback(const std::function<void()>& fn);
-
     //! Reference to callback function that is run if there is a sudden
     //! disconnect and the Connection object is destroyed before this
     //! ProxyClient<Thread> object. The callback will destroy this object and
@@ -100,35 +98,28 @@ public:
     EventLoop& m_loop;
 };
 
-using LogFn = std::function<void(bool raise, std::string message)>;
-
-class Logger
-{
-public:
-    Logger(bool raise, LogFn& fn) : m_raise(raise), m_fn(fn) {}
-    Logger(Logger&& logger) : m_raise(logger.m_raise), m_fn(logger.m_fn), m_buffer(std::move(logger.m_buffer)) {}
-    ~Logger() noexcept(false)
-    {
-        if (m_fn) m_fn(m_raise, m_buffer.str());
-    }
-
-    template <typename T>
-    friend Logger& operator<<(Logger& logger, T&& value)
-    {
-        if (logger.m_fn) logger.m_buffer << std::forward<T>(value);
-        return logger;
-    }
-
-    template <typename T>
-    friend Logger& operator<<(Logger&& logger, T&& value)
-    {
-        return logger << std::forward<T>(value);
-    }
-
-    bool m_raise;
-    LogFn& m_fn;
-    std::ostringstream m_buffer;
+//! Log flags. Update stringify function if changed!
+enum class Log {
+    Trace = 0,
+    Debug,
+    Info,
+    Warning,
+    Error,
+    Raise,
 };
+
+kj::StringPtr KJ_STRINGIFY(Log flags);
+
+struct LogMessage {
+
+    //! Message to be logged
+    std::string message;
+
+    //! The severity level of this message
+    Log level;
+};
+
+using LogFn = std::function<void(LogMessage)>;
 
 struct LogOptions {
 
@@ -138,7 +129,59 @@ struct LogOptions {
     //! Maximum number of characters to use when representing
     //! request and response structs as strings.
     size_t max_chars{200};
+
+    //! Messages with a severity level less than log_level will not be
+    //! reported.
+    Log log_level{Log::Trace};
 };
+
+class Logger
+{
+public:
+    Logger(const LogOptions& options, Log log_level) : m_options(options), m_log_level(log_level) {}
+
+    Logger(Logger&&) = delete;
+    Logger& operator=(Logger&&) = delete;
+    Logger(const Logger&) = delete;
+    Logger& operator=(const Logger&) = delete;
+
+    ~Logger() noexcept(false)
+    {
+        if (enabled()) m_options.log_fn({std::move(m_buffer).str(), m_log_level});
+    }
+
+    template <typename T>
+    friend Logger& operator<<(Logger& logger, T&& value)
+    {
+        if (logger.enabled()) logger.m_buffer << std::forward<T>(value);
+        return logger;
+    }
+
+    template <typename T>
+    friend Logger& operator<<(Logger&& logger, T&& value)
+    {
+        return logger << std::forward<T>(value);
+    }
+
+    explicit operator bool() const
+    {
+        return enabled();
+    }
+
+private:
+    bool enabled() const
+    {
+        return m_options.log_fn && m_log_level >= m_options.log_level;
+    }
+
+    const LogOptions& m_options;
+    Log m_log_level;
+    std::ostringstream m_buffer;
+};
+
+#define MP_LOGPLAIN(loop, ...) if (mp::Logger logger{(loop).m_log_opts, __VA_ARGS__}; logger) logger
+
+#define MP_LOG(loop, ...) MP_LOGPLAIN(loop, __VA_ARGS__) << "{" << LongThreadName((loop).m_exe_name) << "} "
 
 std::string LongThreadName(const char* exe_name);
 
@@ -170,8 +213,19 @@ std::string LongThreadName(const char* exe_name);
 class EventLoop
 {
 public:
-    //! Construct event loop object.
-    EventLoop(const char* exe_name, LogFn log_fn, void* context = nullptr);
+    //! Construct event loop object with default logging options.
+    EventLoop(const char* exe_name, LogFn log_fn, void* context = nullptr)
+        : EventLoop(exe_name, LogOptions{std::move(log_fn)}, context){}
+
+    //! Construct event loop object with specified logging options.
+    EventLoop(const char* exe_name, LogOptions log_opts, void* context = nullptr);
+
+    //! Backwards-compatible constructor for previous (deprecated) logging callback signature
+    EventLoop(const char* exe_name, std::function<void(bool, std::string)> old_callback, void* context = nullptr)
+        : EventLoop(exe_name,
+                LogFn{[old_callback = std::move(old_callback)](LogMessage log_data) {old_callback(log_data.level == Log::Raise, std::move(log_data.message));}},
+                context){}
+
     ~EventLoop();
 
     //! Run event loop. Does not return until shutdown. This should only be
@@ -211,15 +265,6 @@ public:
 
     //! Check if loop should exit.
     bool done() const MP_REQUIRES(m_mutex);
-
-    Logger log()
-    {
-        Logger logger(false, m_log_opts.log_fn);
-        logger << "{" << LongThreadName(m_exe_name) << "} ";
-        return logger;
-    }
-    Logger logPlain() { return {false, m_log_opts.log_fn}; }
-    Logger raise() { return {true, m_log_opts.log_fn}; }
 
     //! Process name included in thread names so combined debug output from
     //! multiple processes is easier to understand.
@@ -283,18 +328,19 @@ struct Waiter
     Waiter() = default;
 
     template <typename Fn>
-    void post(Fn&& fn)
+    bool post(Fn&& fn)
     {
-        const std::unique_lock<std::mutex> lock(m_mutex);
-        assert(!m_fn);
+        const Lock lock(m_mutex);
+        if (m_fn) return false;
         m_fn = std::forward<Fn>(fn);
         m_cv.notify_all();
+        return true;
     }
 
     template <class Predicate>
-    void wait(std::unique_lock<std::mutex>& lock, Predicate pred)
+    void wait(Lock& lock, Predicate pred)
     {
-        m_cv.wait(lock, [&] {
+        m_cv.wait(lock.m_lock, [&]() MP_REQUIRES(m_mutex) {
             // Important for this to be "while (m_fn)", not "if (m_fn)" to avoid
             // a lost-wakeup bug. A new m_fn and m_cv notification might be sent
             // after the fn() call and before the lock.lock() call in this loop
@@ -317,9 +363,9 @@ struct Waiter
     //! mutexes than necessary. This mutex can be held at the same time as
     //! EventLoop::m_mutex as long as Waiter::mutex is locked first and
     //! EventLoop::m_mutex is locked second.
-    std::mutex m_mutex;
+    Mutex m_mutex;
     std::condition_variable m_cv;
-    std::optional<kj::Function<void()>> m_fn;
+    std::optional<kj::Function<void()>> m_fn MP_GUARDED_BY(m_mutex);
 };
 
 //! Object holding network & rpc state associated with either an incoming server
@@ -544,29 +590,73 @@ void ProxyServerBase<Interface, Impl>::invokeDestroy()
     CleanupRun(m_context.cleanup_fns);
 }
 
-using ConnThreads = std::map<Connection*, ProxyClient<Thread>>;
+//! Map from Connection to local or remote thread handle which will be used over
+//! that connection. This map will typically only contain one entry, but can
+//! contain multiple if a single thread makes IPC calls over multiple
+//! connections. A std::optional value type is used to avoid the map needing to
+//! be locked while ProxyClient<Thread> objects are constructed, see
+//! ThreadContext "Synchronization note" below.
+using ConnThreads = std::map<Connection*, std::optional<ProxyClient<Thread>>>;
 using ConnThread = ConnThreads::iterator;
 
 // Retrieve ProxyClient<Thread> object associated with this connection from a
 // map, or create a new one and insert it into the map. Return map iterator and
 // inserted bool.
-std::tuple<ConnThread, bool> SetThread(ConnThreads& threads, std::mutex& mutex, Connection* connection, const std::function<Thread::Client()>& make_thread);
+std::tuple<ConnThread, bool> SetThread(GuardedRef<ConnThreads> threads, Connection* connection, const std::function<Thread::Client()>& make_thread);
 
+//! The thread_local ThreadContext g_thread_context struct provides information
+//! about individual threads and a way of communicating between them. Because
+//! it's a thread local struct, each ThreadContext instance is initialized by
+//! the thread that owns it.
+//!
+//! ThreadContext is used for any client threads created externally which make
+//! IPC calls, and for server threads created by
+//! ProxyServer<ThreadMap>::makeThread() which execute IPC calls for clients.
+//!
+//! In both cases, the struct holds information like the thread name, and a
+//! Waiter object where the EventLoop can post incoming IPC requests to execute
+//! on the thread. The struct also holds ConnThread maps associating the thread
+//! with local and remote ProxyClient<Thread> objects.
 struct ThreadContext
 {
     //! Identifying string for debug.
     std::string thread_name;
 
-    //! Waiter object used to allow client threads blocked waiting for a server
-    //! response to execute callbacks made from the client's corresponding
-    //! server thread.
+    //! Waiter object used to allow remote clients to execute code on this
+    //! thread. For server threads created by
+    //! ProxyServer<ThreadMap>::makeThread(), this is initialized in that
+    //! function. Otherwise, for client threads created externally, this is
+    //! initialized the first time the thread tries to make an IPC call. Having
+    //! a waiter is necessary for threads making IPC calls in case a server they
+    //! are calling expects them to execute a callback during the call, before
+    //! it sends a response.
+    //!
+    //! For IPC client threads, the Waiter pointer is never cleared and the Waiter
+    //! just gets destroyed when the thread does. For server threads created by
+    //! makeThread(), this pointer is set to null in the ~ProxyServer<Thread> as
+    //! a signal for the thread to exit and destroy itself. In both cases, the
+    //! same Waiter object is used across different calls and only created and
+    //! destroyed once for the lifetime of the thread.
     std::unique_ptr<Waiter> waiter = nullptr;
 
     //! When client is making a request to a server, this is the
     //! `callbackThread` argument it passes in the request, used by the server
     //! in case it needs to make callbacks into the client that need to execute
     //! while the client is waiting. This will be set to a local thread object.
-    ConnThreads callback_threads;
+    //!
+    //! Synchronization note: The callback_thread and request_thread maps are
+    //! only ever accessed internally by this thread's destructor and externally
+    //! by Cap'n Proto event loop threads. Since it's possible for IPC client
+    //! threads to make calls over different connections that could have
+    //! different event loops, these maps are guarded by Waiter::m_mutex in case
+    //! different event loop threads add or remove map entries simultaneously.
+    //! However, individual ProxyClient<Thread> objects in the maps will only be
+    //! associated with one event loop and guarded by EventLoop::m_mutex. So
+    //! Waiter::m_mutex does not need to be held while accessing individual
+    //! ProxyClient<Thread> instances, and may even need to be released to
+    //! respect lock order and avoid locking Waiter::m_mutex before
+    //! EventLoop::m_mutex.
+    ConnThreads callback_threads MP_GUARDED_BY(waiter->m_mutex);
 
     //! When client is making a request to a server, this is the `thread`
     //! argument it passes in the request, used to control which thread on
@@ -575,7 +665,9 @@ struct ThreadContext
     //! by makeThread. If a client call is being made from a thread currently
     //! handling a server request, this will be set to the `callbackThread`
     //! request thread argument passed in that request.
-    ConnThreads request_threads;
+    //!
+    //! Synchronization note: \ref callback_threads note applies here as well.
+    ConnThreads request_threads MP_GUARDED_BY(waiter->m_mutex);
 
     //! Whether this thread is a capnp event loop thread. Not really used except
     //! to assert false if there's an attempt to execute a blocking operation
@@ -598,7 +690,7 @@ std::unique_ptr<ProxyClient<InitInterface>> ConnectStream(EventLoop& loop, int f
         init_client = connection->m_rpc_system->bootstrap(ServerVatId().vat_id).castAs<InitInterface>();
         Connection* connection_ptr = connection.get();
         connection->onDisconnect([&loop, connection_ptr] {
-            loop.log() << "IPC client: unexpected network disconnect.";
+            MP_LOG(loop, Log::Warning) << "IPC client: unexpected network disconnect.";
             delete connection_ptr;
         });
     });
@@ -621,7 +713,7 @@ void _Serve(EventLoop& loop, kj::Own<kj::AsyncIoStream>&& stream, InitImpl& init
     });
     auto it = loop.m_incoming_connections.begin();
     it->onDisconnect([&loop, it] {
-        loop.log() << "IPC server: socket disconnected.";
+        MP_LOG(loop, Log::Info) << "IPC server: socket disconnected.";
         loop.m_incoming_connections.erase(it);
     });
 }

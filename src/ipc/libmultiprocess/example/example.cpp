@@ -35,10 +35,10 @@ static auto Spawn(mp::EventLoop& loop, const std::string& process_argv0, const s
     return std::make_tuple(mp::ConnectStream<InitInterface>(loop, fd), pid);
 }
 
-static void LogPrint(bool raise, const std::string& message)
+static void LogPrint(mp::LogMessage log_data)
 {
-    if (raise) throw std::runtime_error(message);
-    std::ofstream("debug.log", std::ios_base::app) << message << std::endl;
+    if (log_data.level == mp::Log::Raise) throw std::runtime_error(log_data.message);
+    std::ofstream("debug.log", std::ios_base::app) << log_data.message << std::endl;
 }
 
 int main(int argc, char** argv)

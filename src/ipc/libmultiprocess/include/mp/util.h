@@ -182,6 +182,17 @@ public:
     std::unique_lock<std::mutex> m_lock;
 };
 
+template<typename T>
+struct GuardedRef
+{
+    Mutex& mutex;
+    T& ref MP_GUARDED_BY(mutex);
+};
+
+// CTAD for Clang 16: GuardedRef{mutex, x} -> GuardedRef<decltype(x)>
+template <class U>
+GuardedRef(Mutex&, U&) -> GuardedRef<U>;
+
 //! Analog to std::lock_guard that unlocks instead of locks.
 template <typename Lock>
 struct UnlockGuard
