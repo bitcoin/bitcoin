@@ -528,6 +528,9 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
                 }
             }
 
+            // Special case for when fee threshold is zero and the mempool is and was empty
+            if (current_fees == 0 && options.fee_threshold == 0 && new_tmpl->vTxFees.empty()) return new_tmpl;
+
             CAmount new_fees = 0;
             for (CAmount fee : new_tmpl->vTxFees) {
                 new_fees += fee;
