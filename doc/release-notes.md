@@ -1,4 +1,4 @@
-Bitcoin Core version 28.3rc1 is now available from:
+Bitcoin Core version 28.3rc2 is now available from:
 
   <https://bitcoincore.org/bin/bitcoin-core-28.3/test.rc1/>
 
@@ -37,7 +37,7 @@ unsupported systems.
 Notable changes
 ===============
 
-### Policy
+### Mempool & Policy
 
  The minimum block feerate (`-blockmintxfee`) has been changed to 1 satoshi per kvB. It can still be changed using the
 configuration option.
@@ -52,6 +52,7 @@ recommended to change both together if you decide to do so.
   before attempting to create transactions with lower feerates using the wallet.
 
 - #33106 policy: lower the default blockmintxfee, incrementalrelayfee, minrelaytxfee
+- #33504 mempool: Do not enforce TRUC checks on reorg
 
 ### P2P
 
