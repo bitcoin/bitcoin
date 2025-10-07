@@ -34,4 +34,6 @@ static constexpr unsigned int LOCKTIME_VERIFY_SEQUENCE = (1 << 0);
  */
 static constexpr int64_t MAX_TIMEWARP = 600;
 
+static constexpr unsigned int MAX_OUTPUT_SCRIPT_SIZE{83};
+
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H

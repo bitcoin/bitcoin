@@ -169,6 +169,15 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
                          strprintf("%s: inputs missing/spent", __func__));
     }
 
+    // NOTE: CheckTransaction is arguably the more logical place to do this, but it's context-independent, so this is probably the next best place for now
+    if (rules.test(CheckTxInputsRules::OutputSizeLimit)) {
+        for (const auto& txout : tx.vout) {
+            if (txout.scriptPubKey.size() > MAX_OUTPUT_SCRIPT_SIZE) {
+                return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-vout-script-toolarge");
+            }
+        }
+    }
+
     CAmount nValueIn = 0;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
         const COutPoint &prevout = tx.vin[i].prevout;
