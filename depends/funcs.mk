@@ -108,7 +108,7 @@ $(1)_prefixbin:=$($($(1)_type)_prefix)/bin/
 $(1)_all_sources=$($(1)_file_name) $($(1)_extra_sources)
 
 #stamps
-$(1)_fetched=$(SOURCES_PATH)/download-stamps/.stamp_fetched-$(1)-$($(1)_version)-$($(1)_sha256_hash).hash
+$(1)_fetched=$(SOURCES_PATH)/download-stamps/.stamp_fetched-$(1)-$($(1)_file_name).hash
 $(1)_extracted=$$($(1)_extract_dir)/.stamp_extracted
 $(1)_preprocessed=$$($(1)_extract_dir)/.stamp_preprocessed
 $(1)_cleaned=$$($(1)_extract_dir)/.stamp_cleaned
