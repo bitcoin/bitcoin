@@ -4179,6 +4179,41 @@ std::optional<std::pair<CNetMessage, bool>> CNode::PollMessage()
     return std::make_pair(std::move(msgs.front()), !m_msg_process_queue.empty());
 }
 
+std::pair<uint32_t, uint32_t> CNode::WindowBytesTotalAndAvailable()
+{
+    uint32_t window_size{0}, bytes_available{0}, bytes_inflight, bytes_inqueue;
+    {
+        LOCK(m_sock_mutex);
+        if (m_sock) {
+            auto tcp_info = TCPInfo{*m_sock};
+            window_size = tcp_info.GetTCPWindowSize();
+            if (window_size == 0) {
+                return {0, 0};
+            }
+            // Bytes sitting in the OS's send queue + un'ACKed bytes on the wire.
+            bytes_inflight = m_sock->GetOSBytesQueued(tcp_info);
+        } else {
+            return {0, 0};
+        }
+    }
+
+    // Bytes sitting in our application layer queue for this CNode.
+    bytes_inqueue = GetSendQueueSize();
+
+    Assume(window_size > 0);
+    // Bytes between the previous and next window boundary that are used.
+    auto bytes_used = (bytes_inflight + bytes_inqueue) % window_size;
+
+    // How many bytes we can use before reaching the next window boundary.
+    bytes_available = window_size - bytes_used;
+
+    LogDebug(BCLog::NET,
+       "WindowBytes: Total: %d bytes, In flight: %d bytes, In send queue: %d, Available: %d",
+       window_size, bytes_inflight, bytes_inqueue, bytes_available);
+
+    return {window_size, bytes_available};
+}
+
 bool CConnman::NodeFullyConnected(const CNode* pnode)
 {
     return pnode && pnode->fSuccessfullyConnected && !pnode->fDisconnect;
