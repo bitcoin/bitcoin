@@ -195,20 +195,20 @@ private:
 
 public:
     NetInfoEntry() = default;
-    NetInfoEntry(const DomainPort& domain)
+    explicit NetInfoEntry(const DomainPort& domain)
     {
         if (!domain.IsValid()) return;
         m_type = NetInfoType::Domain;
         m_data = domain;
     }
-    NetInfoEntry(const CService& service)
+    explicit NetInfoEntry(const CService& service)
     {
         if (!service.IsValid()) return;
         m_type = NetInfoType::Service;
         m_data = service;
     }
     template <typename Stream>
-    NetInfoEntry(deserialize_type, Stream& s) { s >> *this; }
+    explicit NetInfoEntry(deserialize_type, Stream& s) { s >> *this; }
 
     ~NetInfoEntry() = default;
 
@@ -220,12 +220,12 @@ public:
     void Serialize(Stream& s_) const
     {
         OverrideStream<Stream> s(&s_, /*nType=*/0, s_.GetVersion() | ADDRV2_FORMAT);
-        if (const auto* data_ptr{std::get_if<CService>(&m_data)};
-            m_type == NetInfoType::Service && data_ptr && data_ptr->IsValid()) {
-            s << m_type << *data_ptr;
-        } else if (const auto* data_ptr{std::get_if<DomainPort>(&m_data)};
-                   m_type == NetInfoType::Domain && data_ptr && data_ptr->IsValid()) {
-            s << m_type << *data_ptr;
+        if (const auto* data_ptr_service{std::get_if<CService>(&m_data)};
+            m_type == NetInfoType::Service && data_ptr_service && data_ptr_service->IsValid()) {
+            s << m_type << *data_ptr_service;
+        } else if (const auto* data_ptr_domain{std::get_if<DomainPort>(&m_data)};
+                   m_type == NetInfoType::Domain && data_ptr_domain && data_ptr_domain->IsValid()) {
+            s << m_type << *data_ptr_domain;
         } else {
             s << NetInfoType::Invalid;
         }

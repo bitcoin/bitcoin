@@ -428,7 +428,7 @@ std::string GetCrashInfoStrFromSerializedStr(const std::string& ciStr)
 {
     static uint64_t basePtr = GetBaseAddress();
 
-    auto opt_buf = DecodeBase32(ciStr.c_str());
+    auto opt_buf = DecodeBase32(ciStr);
     if (!opt_buf.has_value() || opt_buf->empty()) {
         return "Error while deserializing crash info";
     }
