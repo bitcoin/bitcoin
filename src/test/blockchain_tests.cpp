@@ -124,6 +124,11 @@ BOOST_FIXTURE_TEST_CASE(invalidate_block, TestChain100Setup)
     // Check BlockStatus when doing InvalidateBlock()
     BlockValidationState state;
     auto* orig_tip = active.Tip();
+
+    CBlockIndex* block_100 = active[100];
+    CBlockIndex* block_99 = active[99];
+    CBlockIndex* block_98 = active[98];
+
     int height_to_invalidate = orig_tip->nHeight - 10;
     auto* tip_to_invalidate = active[height_to_invalidate];
     m_node.chainman->ActiveChainstate().InvalidateBlock(state, tip_to_invalidate);
@@ -144,6 +149,26 @@ BOOST_FIXTURE_TEST_CASE(invalidate_block, TestChain100Setup)
     while (pindex && pindex != tip_to_invalidate) {
         WITH_LOCK(::cs_main, assert(pindex->nStatus & BLOCK_FAILED_VALID));
         pindex = pindex->pprev;
+    }
+
+    {
+        // consider the chain of blocks block_98 <- block_99 <- block_100
+        // intentionally mark:
+        //   - block_98: BLOCK_FAILED_VALID (already marked as BLOCK_FAILED_VALID from previous test)
+        //   - block_99: BLOCK_FAILED_CHILD (clear BLOCK_FAILED_VALID from previous test and mark as BLOCK_FAILED_CHILD)
+        //   - block_100: not invalid (clear BLOCK_FAILED_VALID from previous test)
+        LOCK(::cs_main);
+        assert(block_98->nStatus & BLOCK_FAILED_VALID);
+        block_99->nStatus = (block_99->nStatus & ~BLOCK_FAILED_VALID) | BLOCK_FAILED_CHILD;
+        block_100->nStatus = (block_100->nStatus & ~BLOCK_FAILED_VALID);
+
+        // Reload block index to recompute block status validity flags from disk.
+        m_node.chainman->LoadBlockIndex();
+
+        // check block_98, block_99, block_100 is marked as BLOCK_FAILED_VALID after reloading from disk
+        assert(block_98->nStatus & BLOCK_FAILED_VALID);
+        assert(block_99->nStatus & BLOCK_FAILED_VALID);
+        assert(block_100->nStatus & BLOCK_FAILED_VALID);
     }
 }
 
