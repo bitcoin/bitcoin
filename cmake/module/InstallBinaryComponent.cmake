@@ -19,8 +19,9 @@ function(install_binary_component target)
     set(runtime_dest ${CMAKE_INSTALL_BINDIR})
   endif()
   install(TARGETS ${target}
-    RUNTIME DESTINATION ${runtime_dest}
-    COMPONENT ${component}
+    RUNTIME
+      DESTINATION ${runtime_dest}
+      COMPONENT ${component}
   )
   if(INSTALL_MAN AND IC_HAS_MANPAGE)
     install(FILES ${PROJECT_SOURCE_DIR}/doc/man/${target}.1
