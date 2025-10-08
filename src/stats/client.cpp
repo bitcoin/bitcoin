@@ -48,24 +48,63 @@ public:
     ~StatsdClientImpl() = default;
 
 public:
-    bool dec(std::string_view key, float sample_rate) override { return count(key, -1, sample_rate); }
-    bool inc(std::string_view key, float sample_rate) override { return count(key, 1, sample_rate); }
-    bool count(std::string_view key, int64_t delta, float sample_rate) override { return _send(key, delta, STATSD_METRIC_COUNT, sample_rate); }
-    bool gauge(std::string_view key, int64_t value, float sample_rate) override { return _send(key, value, STATSD_METRIC_GAUGE, sample_rate); }
-    bool gaugeDouble(std::string_view key, double value, float sample_rate) override { return _send(key, value, STATSD_METRIC_GAUGE, sample_rate); }
-    bool timing(std::string_view key, uint64_t ms, float sample_rate) override { return _send(key, ms, STATSD_METRIC_TIMING, sample_rate); }
+    bool dec(std::string_view key, float sample_rate) override EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        return count(key, -1, sample_rate);
+    }
+    bool inc(std::string_view key, float sample_rate) override EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        return count(key, 1, sample_rate);
+    }
+    bool count(std::string_view key, int64_t delta, float sample_rate) override EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        return _send(key, delta, STATSD_METRIC_COUNT, sample_rate);
+    }
+    bool gauge(std::string_view key, int64_t value, float sample_rate) override EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        return _send(key, value, STATSD_METRIC_GAUGE, sample_rate);
+    }
+    bool gaugeDouble(std::string_view key, double value, float sample_rate) override EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        return _send(key, value, STATSD_METRIC_GAUGE, sample_rate);
+    }
+    bool timing(std::string_view key, uint64_t ms, float sample_rate) override EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        return _send(key, ms, STATSD_METRIC_TIMING, sample_rate);
+    }
 
-    bool send(std::string_view key, double value, std::string_view type, float sample_rate) override { return _send(key, value, type, sample_rate); }
-    bool send(std::string_view key, int32_t value, std::string_view type, float sample_rate) override { return _send(key, value, type, sample_rate); }
-    bool send(std::string_view key, int64_t value, std::string_view type, float sample_rate) override { return _send(key, value, type, sample_rate); }
-    bool send(std::string_view key, uint32_t value, std::string_view type, float sample_rate) override { return _send(key, value, type, sample_rate); }
-    bool send(std::string_view key, uint64_t value, std::string_view type, float sample_rate) override { return _send(key, value, type, sample_rate); }
+    bool send(std::string_view key, double value, std::string_view type, float sample_rate) override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        return _send(key, value, type, sample_rate);
+    }
+    bool send(std::string_view key, int32_t value, std::string_view type, float sample_rate) override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        return _send(key, value, type, sample_rate);
+    }
+    bool send(std::string_view key, int64_t value, std::string_view type, float sample_rate) override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        return _send(key, value, type, sample_rate);
+    }
+    bool send(std::string_view key, uint32_t value, std::string_view type, float sample_rate) override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        return _send(key, value, type, sample_rate);
+    }
+    bool send(std::string_view key, uint64_t value, std::string_view type, float sample_rate) override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        return _send(key, value, type, sample_rate);
+    }
 
     bool active() const override { return m_sender != nullptr; }
 
 private:
     template <typename T1>
-    inline bool _send(std::string_view key, T1 value, std::string_view type, float sample_rate);
+    inline bool _send(std::string_view key, T1 value, std::string_view type, float sample_rate)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
 private:
     /* Mutex to protect PRNG */

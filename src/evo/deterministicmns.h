@@ -162,7 +162,7 @@ private:
     mutable std::shared_ptr<const CSimplifiedMNList> m_cached_sml GUARDED_BY(m_cached_sml_mutex);
 
     // Private helper method to invalidate SML cache
-    void InvalidateSMLCache()
+    void InvalidateSMLCache() EXCLUSIVE_LOCKS_REQUIRED(!m_cached_sml_mutex)
     {
         LOCK(m_cached_sml_mutex);
         m_cached_sml = nullptr;
@@ -193,6 +193,7 @@ public:
 
     // Assignment operator
     CDeterministicMNList& operator=(const CDeterministicMNList& other)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_cached_sml_mutex, !other.m_cached_sml_mutex)
     {
         if (this != &other) {
             blockHash = other.blockHash;
@@ -229,7 +230,7 @@ public:
     }
 
     template <typename Stream>
-    void Unserialize(Stream& s)
+    void Unserialize(Stream& s) EXCLUSIVE_LOCKS_REQUIRED(!m_cached_sml_mutex)
     {
         Clear();
 
@@ -240,7 +241,7 @@ public:
         }
     }
 
-    void Clear()
+    void Clear() EXCLUSIVE_LOCKS_REQUIRED(!m_cached_sml_mutex)
     {
         blockHash = uint256{};
         nHeight = -1;
@@ -372,7 +373,7 @@ public:
      * Calculates CSimplifiedMNList for current list and cache it
      * Thread safety: Uses internal mutex for thread-safe cache access
      */
-    gsl::not_null<std::shared_ptr<const CSimplifiedMNList>> to_sml() const;
+    gsl::not_null<std::shared_ptr<const CSimplifiedMNList>> to_sml() const EXCLUSIVE_LOCKS_REQUIRED(!m_cached_sml_mutex);
 
     /**
      * Calculates the maximum penalty which is allowed at the height of this MN list. It is dynamic and might change
@@ -393,14 +394,14 @@ public:
      * Penalty scores are only increased when the MN is not already banned, which means that after banning the penalty
      * might appear lower then the current max penalty, while the MN is still banned.
      */
-    void PoSePunish(const uint256& proTxHash, int penalty, bool debugLogs);
+    void PoSePunish(const uint256& proTxHash, int penalty, bool debugLogs) EXCLUSIVE_LOCKS_REQUIRED(!m_cached_sml_mutex);
 
-    void DecreaseScores();
+    void DecreaseScores() EXCLUSIVE_LOCKS_REQUIRED(!m_cached_sml_mutex);
     /**
      * Decrease penalty score of MN by 1.
      * Only allowed on non-banned MNs.
      */
-    void PoSeDecrease(const CDeterministicMN& dmn);
+    void PoSeDecrease(const CDeterministicMN& dmn) EXCLUSIVE_LOCKS_REQUIRED(!m_cached_sml_mutex);
 
     [[nodiscard]] CDeterministicMNListDiff BuildDiff(const CDeterministicMNList& to) const;
     /**
@@ -408,13 +409,17 @@ public:
      * It is more efficient than creating a copy due to heavy copy constructor.
      * Calculating for old block may require up to {DISK_SNAPSHOT_PERIOD} object copy & destroy.
      */
-    void ApplyDiff(gsl::not_null<const CBlockIndex*> pindex, const CDeterministicMNListDiff& diff);
+    void ApplyDiff(gsl::not_null<const CBlockIndex*> pindex, const CDeterministicMNListDiff& diff)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_cached_sml_mutex);
 
-    void AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTotalCount = true);
-    void UpdateMN(const CDeterministicMN& oldDmn, const std::shared_ptr<const CDeterministicMNState>& pdmnState);
-    void UpdateMN(const uint256& proTxHash, const std::shared_ptr<const CDeterministicMNState>& pdmnState);
-    void UpdateMN(const CDeterministicMN& oldDmn, const CDeterministicMNStateDiff& stateDiff);
-    void RemoveMN(const uint256& proTxHash);
+    void AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTotalCount = true) EXCLUSIVE_LOCKS_REQUIRED(!m_cached_sml_mutex);
+    void UpdateMN(const CDeterministicMN& oldDmn, const std::shared_ptr<const CDeterministicMNState>& pdmnState)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_cached_sml_mutex);
+    void UpdateMN(const uint256& proTxHash, const std::shared_ptr<const CDeterministicMNState>& pdmnState)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_cached_sml_mutex);
+    void UpdateMN(const CDeterministicMN& oldDmn, const CDeterministicMNStateDiff& stateDiff)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_cached_sml_mutex);
+    void RemoveMN(const uint256& proTxHash) EXCLUSIVE_LOCKS_REQUIRED(!m_cached_sml_mutex);
 
     template <typename T>
     [[nodiscard]] bool HasUniqueProperty(const T& v) const
@@ -672,7 +677,7 @@ public:
     // Test if given TX is a ProRegTx which also contains the collateral at index n
     static bool IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n);
 
-    void DoMaintenance() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void DoMaintenance() EXCLUSIVE_LOCKS_REQUIRED(!cs, !cs_cleanup);
 
     // Migration support for nVersion-first CDeterministicMNStateDiff format
     [[nodiscard]] bool IsMigrationRequired() const EXCLUSIVE_LOCKS_REQUIRED(!cs, ::cs_main);

@@ -85,7 +85,7 @@ private:
 
 public:
     /** Get the numerical statistics for a given deployment for the signalling period that includes the block after pindexPrev. */
-    BIP9Stats Statistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos);
+    BIP9Stats Statistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     static uint32_t Mask(const Consensus::Params& params, Consensus::DeploymentPos pos);
 

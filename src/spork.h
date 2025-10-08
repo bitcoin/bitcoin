@@ -234,7 +234,7 @@ private:
      * SporkValueIfActive is used to get the value agreed upon by the majority
      * of signed spork messages for a given Spork ID.
      */
-    std::optional<SporkValue> SporkValueIfActive(SporkId nSporkID) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::optional<SporkValue> SporkValueIfActive(SporkId nSporkID) const EXCLUSIVE_LOCKS_REQUIRED(cs, !cs_cache);
 
 public:
     CSporkManager();
@@ -257,7 +257,8 @@ public:
     /**
      * ProcessMessage is used to call ProcessSpork and ProcessGetSporks. See below
      */
-    [[nodiscard]] MessageProcessingResult ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv);
+    [[nodiscard]] MessageProcessingResult ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type,
+                                                         CDataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
 
     /**
      * ProcessSpork is used to handle the 'spork' p2p message.
@@ -265,7 +266,8 @@ public:
      * For 'spork', it validates the spork and adds it to the internal spork storage and
      * performs any necessary processing.
      */
-    [[nodiscard]] MessageProcessingResult ProcessSpork(NodeId from, CDataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    [[nodiscard]] MessageProcessingResult ProcessSpork(NodeId from, CDataStream& vRecv)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs, !cs_cache);
 
     /**
      * ProcessGetSporks is used to handle the 'getsporks' p2p message.
@@ -278,7 +280,7 @@ public:
      * UpdateSpork is used by the spork RPC command to set a new spork value, sign
      * and broadcast the spork message.
      */
-    bool UpdateSpork(PeerManager& peerman, SporkId nSporkID, SporkValue nValue) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool UpdateSpork(PeerManager& peerman, SporkId nSporkID, SporkValue nValue) EXCLUSIVE_LOCKS_REQUIRED(!cs, !cs_cache);
 
     /**
      * IsSporkActive returns a bool for time-based sporks, and should be used
@@ -288,13 +290,13 @@ public:
      * instead, and therefore this method doesn't make sense and should not be
      * used.
      */
-    bool IsSporkActive(SporkId nSporkID) const;
+    bool IsSporkActive(SporkId nSporkID) const EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
 
     /**
      * GetSporkValue returns the spork value given a Spork ID. If no active spork
      * message has yet been received by the node, it returns the default value.
      */
-    SporkValue GetSporkValue(SporkId nSporkID) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    SporkValue GetSporkValue(SporkId nSporkID) const EXCLUSIVE_LOCKS_REQUIRED(!cs, !cs_cache);
 
     /**
      * GetSporkIDByName returns the internal Spork ID given the spork name.
