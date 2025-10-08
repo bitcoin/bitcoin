@@ -55,11 +55,13 @@ External signing is not currently supported when compiling with Boost version 1.
 - #32070 build: use make < 3.82 syntax for define directive
 - #32439 guix: accomodate migration to codeberg
 - #32568 depends: use "mkdir -p" when installing xproto
+- #33563 build: fix depends Qt download link
 
 ### Misc
 
 - #31623 tracing: Rename the MIN macro to TRACEPOINT_TEST_MIN in log_raw_p2p_msgs
 - #32187 refactor: Remove spurious virtual from final ~CZMQNotificationInterface
+- #33561 ci: Fix Qt 5.15 URL
 
 
 Credits
