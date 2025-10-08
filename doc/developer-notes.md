@@ -1119,6 +1119,19 @@ to check a subtree directory for consistency with its upstream repository.
 
 The tool instructions also include a list of the subtrees managed by Bitcoin Core.
 
+To fully verify or update a subtree, add it as a remote:
+
+```sh
+git remote add libmultiprocess https://github.com/bitcoin-core/libmultiprocess.git
+```
+
+To update the subtree:
+
+```sh
+git fetch libmultiprocess
+git subtree pull --prefix=src/ipc/libmultiprocess libmultiprocess master --squash
+```
+
 The ultimate upstream of the few externally managed subtrees are:
 
 - src/leveldb
