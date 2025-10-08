@@ -5,14 +5,14 @@
 #ifndef BITCOIN_LLMQ_COMMITMENT_H
 #define BITCOIN_LLMQ_COMMITMENT_H
 
-#include <bls/bls.h>
-#include <llmq/params.h>
-#include <llmq/types.h>
-
 #include <primitives/transaction.h>
 #include <util/irange.h>
 #include <util/strencodings.h>
 #include <util/underlying.h>
+
+#include <bls/bls.h>
+#include <llmq/params.h>
+#include <llmq/types.h>
 
 #include <gsl/pointers.h>
 #include <univalue.h>
@@ -29,14 +29,14 @@ class ChainstateManager;
 class TxValidationState;
 template <typename T>
 class CCheckQueueControl;
+struct RPCResult;
 
-namespace llmq
-{
+namespace llmq {
 class CQuorumSnapshotManager;
-
 namespace utils {
 struct BlsCheck;
 } // namespace utils
+
 // This message is an aggregation of all received premature commitments and only valid if
 // enough (>=threshold) premature commitments were aggregated
 // This is mined on-chain as part of TRANSACTION_QUORUM_COMMITMENT
@@ -130,23 +130,8 @@ public:
         return true;
     }
 
-    [[nodiscard]] UniValue ToJson() const
-    {
-        UniValue obj(UniValue::VOBJ);
-        obj.pushKV("version", nVersion);
-        obj.pushKV("llmqType", ToUnderlying(llmqType));
-        obj.pushKV("quorumHash", quorumHash.ToString());
-        obj.pushKV("quorumIndex", quorumIndex);
-        obj.pushKV("signersCount", CountSigners());
-        obj.pushKV("signers", BitsVectorToHexStr(signers));
-        obj.pushKV("validMembersCount", CountValidMembers());
-        obj.pushKV("validMembers", BitsVectorToHexStr(validMembers));
-        obj.pushKV("quorumPublicKey", quorumPublicKey.ToString(nVersion == LEGACY_BLS_NON_INDEXED_QUORUM_VERSION || nVersion == LEGACY_BLS_INDEXED_QUORUM_VERSION));
-        obj.pushKV("quorumVvecHash", quorumVvecHash.ToString());
-        obj.pushKV("quorumSig", quorumSig.ToString(nVersion == LEGACY_BLS_NON_INDEXED_QUORUM_VERSION || nVersion == LEGACY_BLS_INDEXED_QUORUM_VERSION));
-        obj.pushKV("membersSig", membersSig.ToString(nVersion == LEGACY_BLS_NON_INDEXED_QUORUM_VERSION || nVersion == LEGACY_BLS_INDEXED_QUORUM_VERSION));
-        return obj;
-    }
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
+    [[nodiscard]] UniValue ToJson() const;
 
 private:
     static std::string BitsVectorToHexStr(const std::vector<bool>& vBits)
@@ -175,6 +160,7 @@ public:
         READWRITE(obj.nVersion, obj.nHeight, obj.commitment);
     }
 
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     [[nodiscard]] UniValue ToJson() const;
 };
 

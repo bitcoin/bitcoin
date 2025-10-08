@@ -30,6 +30,8 @@ class CDBBatch;
 class CDBWrapper;
 class CInv;
 class PeerManager;
+struct RPCResult;
+
 class UniValue;
 
 namespace llmq {
@@ -106,7 +108,8 @@ public:
         return hash;
     }
 
-    UniValue ToJson() const;
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
+    [[nodiscard]] UniValue ToJson() const;
 };
 
 class CRecoveredSigsDb

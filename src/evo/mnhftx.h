@@ -26,6 +26,7 @@ class CEvoDB;
 class CTransaction;
 class ChainstateManager;
 class TxValidationState;
+struct RPCResult;
 namespace llmq {
 class CQuorumManager;
 }
@@ -50,14 +51,8 @@ public:
 
     std::string ToString() const;
 
-    [[nodiscard]] UniValue ToJson() const
-    {
-        UniValue obj(UniValue::VOBJ);
-        obj.pushKV("versionBit", versionBit);
-        obj.pushKV("quorumHash", quorumHash.ToString());
-        obj.pushKV("sig", sig.ToString());
-        return obj;
-    }
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
+    [[nodiscard]] UniValue ToJson() const;
 };
 
 class MNHFTxPayload
@@ -87,6 +82,7 @@ public:
 
     std::string ToString() const;
 
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     [[nodiscard]] UniValue ToJson() const;
 };
 

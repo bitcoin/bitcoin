@@ -17,6 +17,7 @@
 class CBlockIndex;
 class CRangesSet;
 class TxValidationState;
+struct RPCResult;
 namespace llmq {
 class CQuorumManager;
 } // namespace llmq
@@ -51,6 +52,7 @@ public:
 
     std::string ToString() const;
 
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     [[nodiscard]] UniValue ToJson() const;
 
     // getters
@@ -108,6 +110,7 @@ public:
 
     std::string ToString() const;
 
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     [[nodiscard]] UniValue ToJson() const;
 
     bool VerifySig(const llmq::CQuorumManager& qman, const uint256& msgHash, gsl::not_null<const CBlockIndex*> pindexTip, TxValidationState& state) const;

@@ -5,9 +5,8 @@
 #ifndef BITCOIN_EVO_DETERMINISTICMNS_H
 #define BITCOIN_EVO_DETERMINISTICMNS_H
 
-#include <evo/dmnstate.h>
-
 #include <evo/dmn_types.h>
+#include <evo/dmnstate.h>
 #include <evo/providertx.h>
 #include <evo/types.h>
 
@@ -36,6 +35,7 @@ class CSimplifiedMNList;
 class CSimplifiedMNListEntry;
 class CMasternodeMetaMan;
 class TxValidationState;
+struct RPCResult;
 
 extern RecursiveMutex cs_main;
 
@@ -86,6 +86,8 @@ public:
 
     [[nodiscard]] CSimplifiedMNListEntry to_sml_entry() const;
     [[nodiscard]] std::string ToString() const;
+
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     [[nodiscard]] UniValue ToJson() const;
 };
 

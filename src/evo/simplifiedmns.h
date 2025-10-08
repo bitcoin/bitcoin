@@ -9,14 +9,18 @@
 #include <evo/dmn_types.h>
 #include <evo/netinfo.h>
 #include <evo/providertx.h>
-#include <gsl/pointers.h>
+#include <util/pointer.h>
+
 #include <merkleblock.h>
 #include <netaddress.h>
 #include <pubkey.h>
-#include <util/pointer.h>
+
+#include <gsl/pointers.h>
 
 #include <memory>
 #include <vector>
+
+struct RPCResult;
 
 class UniValue;
 
@@ -95,6 +99,7 @@ public:
 
     uint256 CalcHash() const;
 
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     std::string ToString() const;
     [[nodiscard]] UniValue ToJson(bool extended = false) const;
 };

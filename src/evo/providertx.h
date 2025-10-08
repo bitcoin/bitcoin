@@ -6,22 +6,23 @@
 #define BITCOIN_EVO_PROVIDERTX_H
 
 #include <bls/bls.h>
+#include <evo/dmn_types.h>
 #include <evo/netinfo.h>
 #include <evo/specialtx.h>
 #include <primitives/transaction.h>
 
 #include <consensus/validation.h>
-#include <evo/dmn_types.h>
 #include <key_io.h>
 #include <netaddress.h>
 #include <pubkey.h>
-#include <univalue.h>
 #include <util/underlying.h>
 
+#include <univalue.h>
 #include <gsl/pointers.h>
 
 class CBlockIndex;
 class TxValidationState;
+struct RPCResult;
 
 namespace ProTxVersion {
 enum : uint16_t {
@@ -120,6 +121,7 @@ public:
 
     std::string ToString() const;
 
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     [[nodiscard]] UniValue ToJson() const;
 
     bool IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state) const;
@@ -180,6 +182,7 @@ public:
 
     std::string ToString() const;
 
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     [[nodiscard]] UniValue ToJson() const;
 
     bool IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state) const;
@@ -226,6 +229,7 @@ public:
 
     std::string ToString() const;
 
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     [[nodiscard]] UniValue ToJson() const;
 
     bool IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state) const;
@@ -275,6 +279,7 @@ public:
 
     std::string ToString() const;
 
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     [[nodiscard]] UniValue ToJson() const;
 
     bool IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state) const;

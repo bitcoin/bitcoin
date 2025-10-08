@@ -27,19 +27,6 @@
 
 namespace llmq
 {
-UniValue CRecoveredSig::ToJson() const
-{
-    UniValue ret(UniValue::VOBJ);
-    ret.pushKV("llmqType", ToUnderlying(llmqType));
-    ret.pushKV("quorumHash", quorumHash.ToString());
-    ret.pushKV("id", id.ToString());
-    ret.pushKV("msgHash", msgHash.ToString());
-    ret.pushKV("sig", sig.Get().ToString());
-    ret.pushKV("hash", sig.Get().GetHash().ToString());
-    return ret;
-}
-
-
 CRecoveredSigsDb::CRecoveredSigsDb(bool fMemory, bool fWipe) :
         db(std::make_unique<CDBWrapper>(fMemory ? "" : (gArgs.GetDataDirNet() / "llmq/recsigdb"), 8 << 20, fMemory, fWipe))
 {

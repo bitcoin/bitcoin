@@ -177,6 +177,7 @@ static RPCHelpMan masternode_status()
         mnObj.pushKV("type", std::string(GetMnType(dmn->nType).description));
         mnObj.pushKV("collateralHash", dmn->collateralOutpoint.hash.ToString());
         mnObj.pushKV("collateralIndex", dmn->collateralOutpoint.n);
+        // TODO: Use CDeterministicMNState::GetJsonHelp() for dmnState
         mnObj.pushKV("dmnState", dmn->pdmnState->ToJson(dmn->nType));
     }
     mnObj.pushKV("state", node.mn_activeman->GetStateString());
