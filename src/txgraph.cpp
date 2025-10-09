@@ -147,6 +147,10 @@ public:
                m_quality == QualityLevel::NEEDS_SPLIT_ACCEPTABLE;
     }
 
+    /** Get the smallest number of transactions this Cluster is intended for. */
+    virtual DepGraphIndex GetMinIntendedTxCount() const noexcept = 0;
+    /** Get the maximum number of transactions this Cluster supports. */
+    virtual DepGraphIndex GetMaxTxCount() const noexcept = 0;
     /** Total memory usage currently for this Cluster, including all its dynamic memory, plus Cluster
      *  structure itself, and ClusterSet::m_clusters entry. */
     virtual size_t TotalMemoryUsage() const noexcept = 0;
@@ -246,11 +250,18 @@ class GenericClusterImpl final : public Cluster
     std::vector<DepGraphIndex> m_linearization;
 
 public:
+    /** The smallest number of transactions this Cluster implementation is intended for. */
+    static constexpr DepGraphIndex MIN_INTENDED_TX_COUNT{1};
+    /** The largest number of transactions this Cluster implementation supports. */
+    static constexpr DepGraphIndex MAX_TX_COUNT{SetType::Size()};
+
     GenericClusterImpl() noexcept = delete;
     /** Construct an empty GenericClusterImpl. */
     explicit GenericClusterImpl(uint64_t sequence) noexcept;
 
     size_t TotalMemoryUsage() const noexcept final;
+    constexpr DepGraphIndex GetMinIntendedTxCount() const noexcept final { return MIN_INTENDED_TX_COUNT; }
+    constexpr DepGraphIndex GetMaxTxCount() const noexcept final { return MAX_TX_COUNT; }
     DepGraphIndex GetDepGraphIndexRange() const noexcept final { return m_depgraph.PositionRange(); }
     LinearizationIndex GetTxCount() const noexcept final { return m_linearization.size(); }
     uint64_t GetTotalTxSize() const noexcept final;
@@ -587,8 +598,11 @@ public:
      *  count. */
     std::unique_ptr<Cluster> CreateEmptyCluster(DepGraphIndex tx_count) noexcept
     {
-        (void)tx_count;
-        return CreateEmptyGenericCluster();
+        if (tx_count >= GenericClusterImpl::MIN_INTENDED_TX_COUNT && tx_count <= GenericClusterImpl::MAX_TX_COUNT) {
+            return CreateEmptyGenericCluster();
+        }
+        assert(false);
+        return {};
     }
 
     // Functions for handling Refs.
@@ -1135,10 +1149,12 @@ bool GenericClusterImpl::Split(TxGraphImpl& graph, int level) noexcept
         auto component = m_depgraph.FindConnectedComponent(todo);
         auto component_size = component.Count();
         auto split_quality = component_size <= 2 ? QualityLevel::OPTIMAL : new_quality;
-        if (first && component == todo && SetType::Fill(component_size) == component) {
+        if (first && component == todo && SetType::Fill(component_size) == component && component_size >= MIN_INTENDED_TX_COUNT) {
             // The existing Cluster is an entire component, without holes. Leave it be, but update
             // its quality. If there are holes, we continue, so that the Cluster is reconstructed
-            // without holes, reducing memory usage.
+            // without holes, reducing memory usage. If the component's size is below the intended
+            // transaction count for this Cluster implementation, continue so that it can get
+            // converted.
             Assume(todo == m_depgraph.Positions());
             graph.SetClusterQuality(level, m_quality, m_setindex, split_quality);
             // If this made the quality ACCEPTABLE or OPTIMAL, we need to compute and cache its
@@ -1740,9 +1756,11 @@ void TxGraphImpl::Merge(std::span<Cluster*> to_merge, int level) noexcept
     size_t max_size_pos{0};
     DepGraphIndex max_size = to_merge[max_size_pos]->GetTxCount();
     GetClusterSet(level).m_cluster_usage -= to_merge[max_size_pos]->TotalMemoryUsage();
+    DepGraphIndex total_size = max_size;
     for (size_t i = 1; i < to_merge.size(); ++i) {
         GetClusterSet(level).m_cluster_usage -= to_merge[i]->TotalMemoryUsage();
         DepGraphIndex size = to_merge[i]->GetTxCount();
+        total_size += size;
         if (size > max_size) {
             max_size_pos = i;
             max_size = size;
@@ -1750,13 +1768,26 @@ void TxGraphImpl::Merge(std::span<Cluster*> to_merge, int level) noexcept
     }
     if (max_size_pos != 0) std::swap(to_merge[0], to_merge[max_size_pos]);
 
-    // Merge all further Clusters in the group into the first one, and delete them.
-    for (size_t i = 1; i < to_merge.size(); ++i) {
-        to_merge[0]->Merge(*this, level, *to_merge[i]);
+    size_t start_idx = 1;
+    Cluster* into_cluster = to_merge[0];
+    if (total_size > into_cluster->GetMaxTxCount()) {
+        // The into_merge cluster is too small to fit all transactions being merged. Construct a
+        // a new Cluster using an implementation that matches the total size, and merge everything
+        // in there.
+        auto new_cluster = CreateEmptyCluster(total_size);
+        into_cluster = new_cluster.get();
+        InsertCluster(level, std::move(new_cluster), QualityLevel::OPTIMAL);
+        start_idx = 0;
+    }
+
+    // Merge all further Clusters in the group into the result (first one, or new one), and delete
+    // them.
+    for (size_t i = start_idx; i < to_merge.size(); ++i) {
+        into_cluster->Merge(*this, level, *to_merge[i]);
         DeleteCluster(*to_merge[i], level);
     }
-    to_merge[0]->Compact();
-    GetClusterSet(level).m_cluster_usage += to_merge[0]->TotalMemoryUsage();
+    into_cluster->Compact();
+    GetClusterSet(level).m_cluster_usage += into_cluster->TotalMemoryUsage();
 }
 
 void TxGraphImpl::ApplyDependencies(int level) noexcept
@@ -2546,6 +2577,14 @@ void TxGraphImpl::SanityCheck() const
                 assert(cluster.IsOversized() || cluster.GetTotalTxSize() <= m_max_cluster_size);
                 // OVERSIZED clusters are singletons.
                 assert(!cluster.IsOversized() || cluster.GetTxCount() == 1);
+                // Transaction counts cannot exceed the Cluster implementation's maximum
+                // supported transactions count.
+                assert(cluster.GetTxCount() <= cluster.GetMaxTxCount());
+                // Unless a Split is yet to be applied, the number of transactions must not be
+                // below the Cluster implementation's intended transaction count.
+                if (!cluster.NeedsSplitting()) {
+                    assert(cluster.GetTxCount() >= cluster.GetMinIntendedTxCount());
+                }
 
                 // Check the sequence number.
                 assert(cluster.m_sequence < m_next_sequence_counter);
