@@ -317,59 +317,120 @@ class EphemeralDustTest(BitcoinTestFramework):
         self.log.info("Test that reorgs breaking the truc topology doesn't cause issues")
 
         assert_equal(self.nodes[0].getrawmempool(), [])
-
-        # Many shallow re-orgs confuse block gossiping making test less reliable otherwise
+        
+        # Prepare two nodes to create a natural reorg scenario
         self.disconnect_nodes(0, 1)
-
-        # Get dusty tx mined, then check that it makes it back into mempool on reorg
-        # due to bypass_limits allowing 0-fee individually
+        
+        # Create the first chain on node 0
+        initial_height = self.nodes[0].getblockcount()
         dusty_tx, _ = self.create_ephemeral_dust_package(tx_version=3)
         assert_raises_rpc_error(-26, "min relay fee not met", self.nodes[0].sendrawtransaction, dusty_tx["hex"])
-
+        
+        # Mine dusty_tx in a block on the first chain
         block_res = self.generateblock(self.nodes[0], self.wallet.get_address(), [dusty_tx["hex"]], sync_fun=self.no_op)
-        self.nodes[0].invalidateblock(block_res["hash"])
+        first_chain_tip = block_res["hash"]
+        
+        # Create a competing fork chain on node 1 with more work
+        self.generate(self.nodes[1], 2, sync_fun=self.no_op)  # One more block than node 0
+        
+        # Log pre-reorg state
+        self.log.info("Pre-reorg best block hash: %s", self.nodes[0].getbestblockhash())
+        
+        # Reconnect nodes to trigger the reorg
+        self.connect_nodes(0, 1)
+        self.sync_blocks()
+        
+        # Log post-reorg state
+        self.log.info("Post-reorg best block hash: %s", self.nodes[0].getbestblockhash())
+        
+        # Verify reorg happened
+        assert_not_equal(self.nodes[0].getbestblockhash(), first_chain_tip)
+        # Verify dusty_tx got re-added to mempool after reorg
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"]], sync=False)
 
-        # Create a sweep that has dust of its own and leaves dusty_tx's dust unspent
+        # Test sweep transaction with dust of its own
         sweep_tx = self.wallet.create_self_transfer_multi(fee_per_output=0, utxos_to_spend=[dusty_tx["new_utxos"][0]], version=3)
         self.add_output_to_create_multi_result(sweep_tx)
         assert_raises_rpc_error(-26, "min relay fee not met", self.nodes[0].sendrawtransaction, sweep_tx["hex"])
 
-        # Mine the sweep then re-org, the sweep will not make it back in due to spend checks
+        # Mine both transactions in a block on node 0's chain
+        self.disconnect_nodes(0, 1)
         block_res = self.generateblock(self.nodes[0], self.wallet.get_address(), [dusty_tx["hex"], sweep_tx["hex"]], sync_fun=self.no_op)
-        self.nodes[0].invalidateblock(block_res["hash"])
+        
+        # Create competing chain on node 1 with more work
+        self.generate(self.nodes[1], 2, sync_fun=self.no_op)
+        
+        # Trigger reorg
+        self.connect_nodes(0, 1)
+        self.sync_blocks()
+        
+        # Verify dusty_tx got re-added but sweep_tx didn't due to spend checks
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"]], sync=False)
 
-        # Should re-enter if dust is swept
+        # Test with proper dust sweeping
         sweep_tx_2 = self.wallet.create_self_transfer_multi(fee_per_output=0, utxos_to_spend=dusty_tx["new_utxos"], version=3)
         self.add_output_to_create_multi_result(sweep_tx_2)
         assert_raises_rpc_error(-26, "min relay fee not met", self.nodes[0].sendrawtransaction, sweep_tx_2["hex"])
 
-        reconsider_block_res = self.generateblock(self.nodes[0], self.wallet.get_address(), [dusty_tx["hex"], sweep_tx_2["hex"]], sync_fun=self.no_op)
-        self.nodes[0].invalidateblock(reconsider_block_res["hash"])
+        # Mine transactions on a new chain
+        self.disconnect_nodes(0, 1)
+        block_res = self.generateblock(self.nodes[0], self.wallet.get_address(), [dusty_tx["hex"], sweep_tx_2["hex"]], sync_fun=self.no_op)
+        
+        # Create competing chain
+        self.generate(self.nodes[1], 2, sync_fun=self.no_op)
+        
+        # Trigger reorg
+        self.connect_nodes(0, 1)
+        self.sync_blocks()
+        
+        # Both transactions should re-enter mempool since all dust is properly swept
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"], sweep_tx_2["tx"]], sync=False)
 
-        # TRUC transactions restriction for ephemeral dust disallows further spends of ancestor chains
+        # Test TRUC restrictions on ancestor chains
         child_tx = self.wallet.create_self_transfer_multi(utxos_to_spend=sweep_tx_2["new_utxos"], version=3)
         assert_raises_rpc_error(-26, "TRUC-violation", self.nodes[0].sendrawtransaction, child_tx["hex"])
 
-        self.nodes[0].reconsiderblock(reconsider_block_res["hash"])
+        # Mine a block to clear mempool
+        self.generate(self.nodes[0], 1)
         assert_equal(self.nodes[0].getrawmempool(), [])
 
         self.log.info("Test that ephemeral dust tx with fees or multi dust don't enter mempool via reorg")
+        
+        # Test multi-dust transaction
         multi_dusty_tx, _ = self.create_ephemeral_dust_package(tx_version=3, num_dust_outputs=2)
+        
+        # Mine multi_dusty_tx on node 0's chain
+        self.disconnect_nodes(0, 1)
         block_res = self.generateblock(self.nodes[0], self.wallet.get_address(), [multi_dusty_tx["hex"]], sync_fun=self.no_op)
-        self.nodes[0].invalidateblock(block_res["hash"])
-        assert_equal(self.nodes[0].getrawmempool(), [])
-
-        # With fee and one dust
-        dusty_fee_tx, _ = self.create_ephemeral_dust_package(tx_version=3, dust_tx_fee=1)
-        block_res = self.generateblock(self.nodes[0], self.wallet.get_address(), [dusty_fee_tx["hex"]], sync_fun=self.no_op)
-        self.nodes[0].invalidateblock(block_res["hash"])
-        assert_equal(self.nodes[0].getrawmempool(), [])
-
-        # Re-connect and make sure we have same state still
+        
+        # Create competing chain on node 1
+        self.generate(self.nodes[1], 2, sync_fun=self.no_op)
+        
+        # Trigger reorg
         self.connect_nodes(0, 1)
+        self.sync_blocks()
+        
+        # Multi-dust tx should not re-enter mempool
+        assert_equal(self.nodes[0].getrawmempool(), [])
+
+        # Test transaction with fee and dust
+        dusty_fee_tx, _ = self.create_ephemeral_dust_package(tx_version=3, dust_tx_fee=1)
+        
+        # Mine dusty_fee_tx on node 0's chain
+        self.disconnect_nodes(0, 1)
+        block_res = self.generateblock(self.nodes[0], self.wallet.get_address(), [dusty_fee_tx["hex"]], sync_fun=self.no_op)
+        
+        # Create competing chain on node 1
+        self.generate(self.nodes[1], 2, sync_fun=self.no_op)
+        
+        # Trigger reorg
+        self.connect_nodes(0, 1)
+        self.sync_blocks()
+        
+        # Fee-paying dust tx should not re-enter mempool
+        assert_equal(self.nodes[0].getrawmempool(), [])
+
+        # Verify final state by syncing all nodes
         self.sync_all()
 
     # N.B. this extra_args can be removed post cluster mempool
