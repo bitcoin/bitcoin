@@ -16,4 +16,6 @@ The following interfaces are defined here:
 
 * [`Ipc`](ipc.h) — used by multiprocess code to access `Init` interface across processes. Added in [#19160](https://github.com/bitcoin/bitcoin/pull/19160).
 
+* [`Rpc`](rpc.h) — used by `bitcoin-cli` to be able to call RPC methods over a unix socket instead of TCP.
+
 The interfaces above define boundaries between major components of bitcoin code (node, wallet, and gui), making it possible for them to run in [different processes](../../doc/multiprocess.md), and be tested, developed, and understood independently. These interfaces are not currently designed to be stable or to be used externally.
