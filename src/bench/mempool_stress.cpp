@@ -39,15 +39,17 @@ struct Available {
     Available(CTransactionRef& ref, size_t tx_count) : ref(ref), tx_count(tx_count){}
 };
 
-static std::vector<CTransactionRef> CreateOrderedCoins(FastRandomContext& det_rand, int childTxs, int min_ancestors)
+// Create a cluster of transactions, randomly.
+static std::vector<CTransactionRef> CreateCoinCluster(FastRandomContext& det_rand, int childTxs, int min_ancestors)
 {
     std::vector<Available> available_coins;
     std::vector<CTransactionRef> ordered_coins;
     // Create some base transactions
     size_t tx_counter = 1;
-    for (auto x = 0; x < 100; ++x) {
+    for (auto x = 0; x < 10; ++x) {
         CMutableTransaction tx = CMutableTransaction();
         tx.vin.resize(1);
+        tx.vin[0].prevout = COutPoint(Txid::FromUint256(GetRandHash()), 1);
         tx.vin[0].scriptSig = CScript() << CScriptNum(tx_counter);
         tx.vin[0].scriptWitness.stack.push_back(CScriptNum(x).getvch());
         tx.vout.resize(det_rand.randrange(10)+2);
@@ -94,20 +96,44 @@ static std::vector<CTransactionRef> CreateOrderedCoins(FastRandomContext& det_ra
 static void ComplexMemPool(benchmark::Bench& bench)
 {
     FastRandomContext det_rand{true};
-    int childTxs = 800;
+    int childTxs = 50;
     if (bench.complexityN() > 1) {
         childTxs = static_cast<int>(bench.complexityN());
     }
-    std::vector<CTransactionRef> ordered_coins = CreateOrderedCoins(det_rand, childTxs, /*min_ancestors=*/1);
     const auto testing_setup = MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN);
     CTxMemPool& pool = *testing_setup.get()->m_node.mempool;
+
+    std::vector<CTransactionRef> tx_remove_for_block;
+    std::vector<Txid> hashes_remove_for_block;
+
     LOCK2(cs_main, pool.cs);
-    bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
-        for (auto& tx : ordered_coins) {
+
+    for (int i=0; i<1000; i++) {
+        std::vector<CTransactionRef> transactions = CreateCoinCluster(det_rand, childTxs, /*min_ancestors=*/1);
+
+        // Add all transactions to the mempool.
+        // Also store the first 10 transactions from each cluster as the
+        // transactions we'll "mine" in the the benchmark.
+        int tx_count = 0;
+        for (auto& tx : transactions) {
+            if (tx_count < 10) {
+                tx_remove_for_block.push_back(tx);
+                ++tx_count;
+                hashes_remove_for_block.emplace_back(tx->GetHash());
+            }
             AddTx(tx, pool);
         }
-        pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4);
-        pool.TrimToSize(GetVirtualTransactionSize(*ordered_coins.front()));
+    }
+
+    // Since the benchmark will be run repeatedly, we have to leave the mempool
+    // in the same state at the end of the function, so we benchmark both
+    // mining a block and reorging the block's contents back into the mempool.
+    bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
+        pool.removeForBlock(tx_remove_for_block, /*nBlockHeight*/100);
+        for (auto& tx: tx_remove_for_block) {
+            AddTx(tx, pool);
+        }
+        pool.UpdateTransactionsFromBlock(hashes_remove_for_block);
     });
 }
 
