@@ -487,8 +487,57 @@ with open(os.path.join(applicationBundle.resourcesPath, "qt.conf"), "wb") as f:
 
 # ------------------------------------------------
 
+def is_macho_executable(path: str) -> bool:
+    try:
+        result = subprocess.run(["file", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        return "Mach-O" in result.stdout
+    except Exception:
+        return False
+
+def sign_item(path: str, identity: str = "-"):
+    print(f"Signing: {path}")
+    subprocess.run([
+        "codesign",
+        "--force",
+        "--options", "runtime",
+        "--timestamp",
+        "--sign", identity,
+        path
+    ], check=True)
+
+def sign_app_bundle(app_bundle_path: str, identity: str = "-"):
+    print("+ Signing app bundle +")
+    
+    contents_path = os.path.join(app_bundle_path, "Contents")
+
+    frameworks_path = os.path.join(contents_path, "Frameworks")
+    if os.path.exists(frameworks_path):
+        for root, _, files in os.walk(frameworks_path):
+            for f in files:
+                full_path = os.path.join(root, f)
+                if is_macho_executable(full_path):
+                    sign_item(full_path, identity)
+
+    plugins_path = os.path.join(contents_path, "PlugIns")
+    if os.path.exists(plugins_path):
+        for root, _, files in os.walk(plugins_path):
+            for f in files:
+                full_path = os.path.join(root, f)
+                if is_macho_executable(full_path):
+                    sign_item(full_path, identity)
+
+    macos_path = os.path.join(contents_path, "MacOS")
+    if os.path.exists(macos_path):
+        for f in os.listdir(macos_path):
+            full_path = os.path.join(macos_path, f)
+            if os.path.isfile(full_path) and is_macho_executable(full_path):
+                sign_item(full_path, identity)
+
+    sign_item(app_bundle_path, identity)
+
 if platform.system() == "Darwin":
-    subprocess.check_call(f"codesign --deep --force --sign - {target}", shell=True)
+    sign_app_bundle(target, identity="-")
+
 
 # ------------------------------------------------
 
