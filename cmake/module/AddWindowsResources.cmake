@@ -4,12 +4,6 @@
 
 include_guard(GLOBAL)
 
-function(add_windows_resources target rc_file)
-  if(WIN32)
-    target_sources(${target} PRIVATE ${rc_file})
-  endif()
-endfunction()
-
 # Add a fusion manifest to Windows executables.
 # See: https://learn.microsoft.com/en-us/windows/win32/sbscs/application-manifests
 function(add_windows_application_manifest target)

@@ -249,10 +249,10 @@ add_subdirectory(locale)
 
 add_executable(bitcoin-qt WIN32
   main.cpp
+  res/bitcoin-qt-res.rc
   ../init/bitcoin-qt.cpp
 )
 
-add_windows_resources(bitcoin-qt res/bitcoin-qt-res.rc)
 add_windows_application_manifest(bitcoin-qt)
 
 target_link_libraries(bitcoin-qt
