@@ -4,6 +4,36 @@
 
 include_guard(GLOBAL)
 
+set(CPACK_NSIS_COMPRESSOR "/SOLID lzma")
+set(CPACK_NSIS_MUI_ICON "${BitcoinCore_SOURCE_DIR}/share/pixmaps/bitcoin.ico")
+set(CPACK_NSIS_MUI_HEADERIMAGE "${BitcoinCore_SOURCE_DIR}/share/pixmaps/nsis-header.bmp")
+set(CPACK_NSIS_MUI_WELCOMEFINISHPAGE_BITMAP "${BitcoinCore_SOURCE_DIR}/share/pixmaps/nsis-wizard.bmp")
+set(CPACK_NSIS_MUI_UNWELCOMEFINISHPAGE_BITMAP "${BitcoinCore_SOURCE_DIR}/share/pixmaps/nsis-wizard.bmp")
+
+set(CPACK_RESOURCE_FILE_LICENSE "${BitcoinCore_SOURCE_DIR}/COPYING")
+set(CPACK_STRIP_FILES ON)
+
+set(CPACK_SOURCE_IGNORE_FILES
+  "/\\\\.cache/"
+  "/\\\\.git/"
+  "/depends/SDKs/"
+  "/depends/work/"
+  "/depends/built/"
+  "/depends/sources/"
+  "/depends/x86_64.*"
+  "/depends/amd64.*"
+  "/depends/i686.*"
+  "/depends/mips.*"
+  "/depends/arm.*"
+  "/depends/aarch64.*"
+  "/depends/powerpc.*"
+  "/depends/riscv32.*"
+  "/depends/riscv64.*"
+  "/depends/s390x.*"
+)
+
+include(CPack)
+
 function(setup_split_debug_script)
   if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
     set(OBJCOPY ${CMAKE_OBJCOPY})
