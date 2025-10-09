@@ -12,6 +12,7 @@
 
 #include <atomic>
 #include <capnp/capability.h>
+#include <capnp/common.h> // IWYU pragma: keep
 #include <capnp/rpc.h>
 #include <condition_variable>
 #include <functional>
@@ -23,9 +24,9 @@
 #include <kj/debug.h>
 #include <kj/function.h>
 #include <kj/memory.h>
+#include <kj/string.h>
 #include <map>
 #include <memory>
-#include <mutex>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -42,7 +43,7 @@ thread_local ThreadContext g_thread_context;
 void LoggingErrorHandler::taskFailed(kj::Exception&& exception)
 {
     KJ_LOG(ERROR, "Uncaught exception in daemonized task.", exception);
-    m_loop.log() << "Uncaught exception in daemonized task.";
+    MP_LOG(m_loop, Log::Error) << "Uncaught exception in daemonized task.";
 }
 
 EventLoopRef::EventLoopRef(EventLoop& loop, Lock* lock) : m_loop(&loop), m_lock(lock)
@@ -81,6 +82,11 @@ ProxyContext::ProxyContext(Connection* connection) : connection(connection), loo
 
 Connection::~Connection()
 {
+    // Connection destructor is always called on the event loop thread. If this
+    // is a local disconnect, it will trigger I/O, so this needs to run on the
+    // event loop thread, and if there was a remote disconnect, this is called
+    // by an onDisconnect callback directly from the event loop thread.
+    assert(std::this_thread::get_id() == m_loop->m_thread_id);
     // Shut down RPC system first, since this will garbage collect any
     // ProxyServer objects that were not freed before the connection was closed.
     // Typically all ProxyServer objects associated with this connection will be
@@ -156,6 +162,9 @@ CleanupIt Connection::addSyncCleanup(std::function<void()> fn)
 
 void Connection::removeSyncCleanup(CleanupIt it)
 {
+    // Require cleanup functions to be removed on the event loop thread to avoid
+    // needing to deal with them being removed in the middle of a disconnect.
+    assert(std::this_thread::get_id() == m_loop->m_thread_id);
     const Lock lock(m_loop->m_mutex);
     m_sync_cleanup_fns.erase(it);
 }
@@ -183,13 +192,13 @@ void EventLoop::addAsyncCleanup(std::function<void()> fn)
     startAsyncThread();
 }
 
-EventLoop::EventLoop(const char* exe_name, LogFn log_fn, void* context)
+EventLoop::EventLoop(const char* exe_name, LogOptions log_opts, void* context)
     : m_exe_name(exe_name),
       m_io_context(kj::setupAsyncIo()),
       m_task_set(new kj::TaskSet(m_error_handler)),
+      m_log_opts(std::move(log_opts)),
       m_context(context)
 {
-    m_log_opts.log_fn = log_fn;
     int fds[2];
     KJ_SYSCALL(socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
     m_wait_fd = fds[0];
@@ -243,9 +252,9 @@ void EventLoop::loop()
             break;
         }
     }
-    log() << "EventLoop::loop done, cancelling event listeners.";
+    MP_LOG(*this, Log::Info) << "EventLoop::loop done, cancelling event listeners.";
     m_task_set.reset();
-    log() << "EventLoop::loop bye.";
+    MP_LOG(*this, Log::Info) << "EventLoop::loop bye.";
     wait_stream = nullptr;
     KJ_SYSCALL(::close(post_fd));
     const Lock lock(m_mutex);
@@ -305,29 +314,34 @@ bool EventLoop::done() const
     return m_num_clients == 0 && m_async_fns->empty();
 }
 
-std::tuple<ConnThread, bool> SetThread(ConnThreads& threads, std::mutex& mutex, Connection* connection, const std::function<Thread::Client()>& make_thread)
+std::tuple<ConnThread, bool> SetThread(GuardedRef<ConnThreads> threads, Connection* connection, const std::function<Thread::Client()>& make_thread)
 {
-    const std::unique_lock<std::mutex> lock(mutex);
-    auto thread = threads.find(connection);
-    if (thread != threads.end()) return {thread, false};
-    thread = threads.emplace(
-        std::piecewise_construct, std::forward_as_tuple(connection),
-        std::forward_as_tuple(make_thread(), connection, /* destroy_connection= */ false)).first;
-    thread->second.setDisconnectCallback([&threads, &mutex, thread] {
-        // Note: it is safe to use the `thread` iterator in this cleanup
-        // function, because the iterator would only be invalid if the map entry
-        // was removed, and if the map entry is removed the ProxyClient<Thread>
-        // destructor unregisters the cleanup.
+    assert(std::this_thread::get_id() == connection->m_loop->m_thread_id);
+    ConnThread thread;
+    bool inserted;
+    {
+        const Lock lock(threads.mutex);
+        std::tie(thread, inserted) = threads.ref.try_emplace(connection);
+    }
+    if (inserted) {
+        thread->second.emplace(make_thread(), connection, /* destroy_connection= */ false);
+        thread->second->m_disconnect_cb = connection->addSyncCleanup([threads, thread] {
+            // Note: it is safe to use the `thread` iterator in this cleanup
+            // function, because the iterator would only be invalid if the map entry
+            // was removed, and if the map entry is removed the ProxyClient<Thread>
+            // destructor unregisters the cleanup.
 
-        // Connection is being destroyed before thread client is, so reset
-        // thread client m_disconnect_cb member so thread client destructor does not
-        // try to unregister this callback after connection is destroyed.
-        // Remove connection pointer about to be destroyed from the map
-        const std::unique_lock<std::mutex> lock(mutex);
-        thread->second.m_disconnect_cb.reset();
-        threads.erase(thread);
-    });
-    return {thread, true};
+            // Connection is being destroyed before thread client is, so reset
+            // thread client m_disconnect_cb member so thread client destructor does not
+            // try to unregister this callback after connection is destroyed.
+            thread->second->m_disconnect_cb.reset();
+
+            // Remove connection pointer about to be destroyed from the map
+            const Lock lock(threads.mutex);
+            threads.ref.erase(thread);
+        });
+    }
+    return {thread, inserted};
 }
 
 ProxyClient<Thread>::~ProxyClient()
@@ -336,15 +350,16 @@ ProxyClient<Thread>::~ProxyClient()
     // cleanup callback that was registered to handle the connection being
     // destroyed before the thread being destroyed.
     if (m_disconnect_cb) {
-        m_context.connection->removeSyncCleanup(*m_disconnect_cb);
+        // Remove disconnect callback on the event loop thread with
+        // loop->sync(), so if the connection is broken there is not a race
+        // between this thread trying to remove the callback and the disconnect
+        // handler attempting to call it.
+        m_context.loop->sync([&]() {
+            if (m_disconnect_cb) {
+                m_context.connection->removeSyncCleanup(*m_disconnect_cb);
+            }
+        });
     }
-}
-
-void ProxyClient<Thread>::setDisconnectCallback(const std::function<void()>& fn)
-{
-    assert(fn);
-    assert(!m_disconnect_cb);
-    m_disconnect_cb = m_context.connection->addSyncCleanup(fn);
 }
 
 ProxyServer<Thread>::ProxyServer(ThreadContext& thread_context, std::thread&& thread)
@@ -364,7 +379,7 @@ ProxyServer<Thread>::~ProxyServer()
     assert(m_thread_context.waiter.get());
     std::unique_ptr<Waiter> waiter;
     {
-        const std::unique_lock<std::mutex> lock(m_thread_context.waiter->m_mutex);
+        const Lock lock(m_thread_context.waiter->m_mutex);
         //! Reset thread context waiter pointer, as shutdown signal for done
         //! lambda passed as waiter->wait() argument in makeThread code below.
         waiter = std::move(m_thread_context.waiter);
@@ -398,7 +413,7 @@ kj::Promise<void> ProxyServer<ThreadMap>::makeThread(MakeThreadContext context)
         g_thread_context.thread_name = ThreadName(m_connection.m_loop->m_exe_name) + " (from " + from + ")";
         g_thread_context.waiter = std::make_unique<Waiter>();
         thread_context.set_value(&g_thread_context);
-        std::unique_lock<std::mutex> lock(g_thread_context.waiter->m_mutex);
+        Lock lock(g_thread_context.waiter->m_mutex);
         // Wait for shutdown signal from ProxyServer<Thread> destructor (signal
         // is just waiter getting set to null.)
         g_thread_context.waiter->wait(lock, [] { return !g_thread_context.waiter; });
@@ -416,4 +431,16 @@ std::string LongThreadName(const char* exe_name)
     return g_thread_context.thread_name.empty() ? ThreadName(exe_name) : g_thread_context.thread_name;
 }
 
+kj::StringPtr KJ_STRINGIFY(Log v)
+{
+    switch (v) {
+        case Log::Trace:   return "Trace";
+        case Log::Debug:   return "Debug";
+        case Log::Info:    return "Info";
+        case Log::Warning: return "Warning";
+        case Log::Error:   return "Error";
+        case Log::Raise:   return "Raise";
+    }
+    return "<Log?>";
+}
 } // namespace mp
