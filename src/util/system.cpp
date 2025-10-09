@@ -303,7 +303,7 @@ std::list<SectionInfo> ArgsManager::GetUnrecognizedSections() const
     return unrecognized;
 }
 
-const std::map<std::string, std::vector<util::SettingsValue>> ArgsManager::GetCommandLineArgs() const {
+std::map<std::string, std::vector<util::SettingsValue>> ArgsManager::GetCommandLineArgs() const {
     LOCK(cs_args);
     return m_settings.command_line_options;
 }

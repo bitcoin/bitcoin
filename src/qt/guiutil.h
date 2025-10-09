@@ -293,13 +293,13 @@ namespace GUIUtil
     bool isStyleSheetDirectoryCustom();
 
     /** Return a list of all required css files */
-    const std::vector<QString> listStyleSheets();
+    std::vector<QString> listStyleSheets();
 
     /** Return a list of all theme css files */
-    const std::vector<QString> listThemes();
+    std::vector<QString> listThemes();
 
     /** Return the name of the default theme `*/
-    const QString getDefaultTheme();
+    QString getDefaultTheme();
 
     /** Check if the given theme name is valid or not */
     bool isValidTheme(const QString& strTheme);
