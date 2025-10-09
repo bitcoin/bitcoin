@@ -4,6 +4,67 @@
 
 include_guard(GLOBAL)
 
+include(CPackComponent)
+
+# cpack_add_install_type(typename
+#   [DISPLAY_NAME name]
+# )
+
+# cpack_add_component_group(groupname
+#   [DISPLAY_NAME name]
+#   [DESCRIPTION description]
+#   [PARENT_GROUP parent]
+#   [EXPANDED]
+#   [BOLD_TITLE]
+# )
+
+# cpack_add_component(compname
+#   [DISPLAY_NAME name]
+#   [DESCRIPTION description]
+#   [HIDDEN | REQUIRED | DISABLED ]
+#   [GROUP group]
+#   [DEPENDS comp1 comp2 ... ]
+#   [INSTALL_TYPES type1 type2 ... ]
+#   [DOWNLOADED]
+#   [ARCHIVE_FILE filename]
+#   [PLIST filename]
+# )
+
+cpack_add_component(bitcoin
+  DISPLAY_NAME "bitcoin"
+  DESCRIPTION "Bitcoin wrapper executable that can call other executables"
+)
+
+cpack_add_component(bitcoin_cli
+  DISPLAY_NAME "bitcoin-cli"
+  DESCRIPTION "Bitcoin JSON-RPC client"
+)
+
+cpack_add_component(bitcoin_node
+  DISPLAY_NAME "bitcoin-node"
+  # DESCRIPTION ""
+)
+
+cpack_add_component(bitcoin_tx
+  DISPLAY_NAME "bitcoin-tx"
+  DESCRIPTION "CLI Bitcoin transaction editor utility"
+)
+
+cpack_add_component(bitcoin_util
+  DISPLAY_NAME "bitcoin-util"
+  DESCRIPTION "CLI Bitcoin utility"
+)
+
+cpack_add_component(bitcoin_wallet
+  DISPLAY_NAME "bitcoin-wallet"
+  DESCRIPTION "CLI Bitcoin wallet utility"
+)
+
+cpack_add_component(bitcoind
+  DISPLAY_NAME "bitcoind"
+  DESCRIPTION "Bitcoin node with a JSON-RPC server"
+)
+
 set(CPACK_NSIS_COMPRESSOR "/SOLID lzma")
 set(CPACK_NSIS_MUI_ICON "${BitcoinCore_SOURCE_DIR}/share/pixmaps/bitcoin.ico")
 set(CPACK_NSIS_MUI_HEADERIMAGE "${BitcoinCore_SOURCE_DIR}/share/pixmaps/nsis-header.bmp")
