@@ -30,7 +30,7 @@ class TxGraphImpl;
 
 /** Position of a DepGraphIndex within a Cluster::m_linearization. */
 using LinearizationIndex = uint32_t;
-/** Position of a Cluster within Graph::ClusterSet::m_clusters. */
+/** Position of a Cluster within TxGraphImpl::ClusterSet::m_clusters. */
 using ClusterSetIndex = uint32_t;
 
 /** Quality levels for cached cluster linearizations. */
@@ -105,7 +105,7 @@ protected:
     using SetType = BitSet<MAX_CLUSTER_COUNT_LIMIT>;
     /** The quality level of m_linearization. */
     QualityLevel m_quality{QualityLevel::NONE};
-    /** Which position this Cluster has in Graph::ClusterSet::m_clusters[m_quality]. */
+    /** Which position this Cluster has in TxGraphImpl::ClusterSet::m_clusters[m_quality]. */
     ClusterSetIndex m_setindex{ClusterSetIndex(-1)};
     /** Sequence number for this Cluster (for tie-breaking comparison between equal-chunk-feerate
         transactions in distinct clusters). */
@@ -168,7 +168,7 @@ public:
     /** Figure out what level this Cluster exists at in the graph. In most cases this is known by
      *  the caller already (see all "int level" arguments below), but not always. */
     virtual int GetLevel(const TxGraphImpl& graph) const noexcept = 0;
-    /** Only called by Graph::SwapIndexes. */
+    /** Only called by TxGraphImpl::SwapIndexes. */
     virtual void UpdateMapping(DepGraphIndex cluster_idx, GraphIndex graph_idx) noexcept = 0;
     /** Push changes to Cluster and its linearization to the TxGraphImpl Entry objects. */
     virtual void Updated(TxGraphImpl& graph, int level) noexcept = 0;
@@ -553,7 +553,7 @@ public:
     Cluster* FindCluster(GraphIndex idx, int level) const noexcept { return FindClusterAndLevel(idx, level).first; }
     /** Like FindCluster, but also return what level the match was found in (-1 if not found). */
     std::pair<Cluster*, int> FindClusterAndLevel(GraphIndex idx, int level) const noexcept;
-    /** Extract a Cluster from its ClusterSet. */
+    /** Extract a Cluster from its ClusterSet, and set its quality to QualityLevel::NONE. */
     std::unique_ptr<Cluster> ExtractCluster(int level, QualityLevel quality, ClusterSetIndex setindex) noexcept;
     /** Delete a Cluster. */
     void DeleteCluster(Cluster& cluster, int level) noexcept;
