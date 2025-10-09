@@ -13,12 +13,16 @@ endfunction()
 # Add a fusion manifest to Windows executables.
 # See: https://learn.microsoft.com/en-us/windows/win32/sbscs/application-manifests
 function(add_windows_application_manifest target)
-  if(WIN32)
-    configure_file(${PROJECT_SOURCE_DIR}/cmake/windows-app.manifest.in ${target}.manifest USE_SOURCE_PERMISSIONS)
+  configure_file(${PROJECT_SOURCE_DIR}/cmake/windows-app.manifest.in ${target}.manifest)
+  if(MSVC)
+    target_sources(${target} PRIVATE ${target}.manifest)
+  else()
+    # TODO: Remove when upstream issue is fixed:
+    # https://gitlab.kitware.com/cmake/cmake/-/issues/23244
     file(CONFIGURE
       OUTPUT ${target}-manifest.rc
       CONTENT "1 /* CREATEPROCESS_MANIFEST_RESOURCE_ID */ 24 /* RT_MANIFEST */ \"${target}.manifest\""
     )
-    add_windows_resources(${target} ${CMAKE_CURRENT_BINARY_DIR}/${target}-manifest.rc)
+    target_sources(${target} PRIVATE ${target}-manifest.rc)
   endif()
 endfunction()
