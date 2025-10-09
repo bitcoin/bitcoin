@@ -220,11 +220,11 @@ private:
     const std::unique_ptr<db_type> m_db;
     bool is_valid{false};
 
-    mutable Mutex cs_mapSporksCachedActive;
-    mutable std::unordered_map<const SporkId, bool> mapSporksCachedActive GUARDED_BY(cs_mapSporksCachedActive);
-
-    mutable Mutex cs_mapSporksCachedValues;
-    mutable std::unordered_map<SporkId, SporkValue> mapSporksCachedValues GUARDED_BY(cs_mapSporksCachedValues);
+    // TODO: drop mutex cs_cache completely so far as sporks are used on testnet only
+    // and simplify IsSporkActive to avoid any mutex for better mainnet performance
+    mutable Mutex cs_cache;
+    mutable std::unordered_map<const SporkId, bool> mapSporksCachedActive GUARDED_BY(cs_cache);
+    mutable std::unordered_map<SporkId, SporkValue> mapSporksCachedValues GUARDED_BY(cs_cache);
 
     std::set<CKeyID> setSporkPubKeyIDs GUARDED_BY(cs);
     int nMinSporkKeys GUARDED_BY(cs) {std::numeric_limits<int>::max()};

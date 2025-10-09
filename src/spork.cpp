@@ -31,7 +31,7 @@ std::optional<SporkValue> CSporkManager::SporkValueIfActive(SporkId nSporkID) co
     if (!mapSporksActive.count(nSporkID)) return std::nullopt;
 
     {
-        LOCK(cs_mapSporksCachedValues);
+        LOCK(cs_cache);
         if (auto it = mapSporksCachedValues.find(nSporkID); it != mapSporksCachedValues.end()) {
             return {it->second};
         }
@@ -45,7 +45,7 @@ std::optional<SporkValue> CSporkManager::SporkValueIfActive(SporkId nSporkID) co
             // nMinSporkKeys is always more than the half of the max spork keys number,
             // so there is only one such value and we can stop here
             {
-                LOCK(cs_mapSporksCachedValues);
+                LOCK(cs_cache);
                 mapSporksCachedValues[nSporkID] = spork.nValue;
             }
             return {spork.nValue};
@@ -184,8 +184,11 @@ MessageProcessingResult CSporkManager::ProcessSpork(NodeId from, CDataStream& vR
         mapSporksByHash[hash] = spork;
         mapSporksActive[spork.nSporkID][keyIDSigner] = spork;
         // Clear cached values on new spork being processed
-        WITH_LOCK(cs_mapSporksCachedActive, mapSporksCachedActive.erase(spork.nSporkID));
-        WITH_LOCK(cs_mapSporksCachedValues, mapSporksCachedValues.erase(spork.nSporkID));
+        {
+            LOCK(cs_cache);
+            mapSporksCachedActive.erase(spork.nSporkID);
+            mapSporksCachedValues.erase(spork.nSporkID);
+        }
     }
 
     ret.m_inventory.emplace_back(MSG_SPORK, hash);
@@ -226,8 +229,10 @@ bool CSporkManager::UpdateSpork(PeerManager& peerman, SporkId nSporkID, SporkVal
         mapSporksByHash[spork.GetHash()] = spork;
         mapSporksActive[nSporkID][*opt_keyIDSigner] = spork;
         // Clear cached values on new spork being processed
-        WITH_LOCK(cs_mapSporksCachedActive, mapSporksCachedActive.erase(spork.nSporkID));
-        WITH_LOCK(cs_mapSporksCachedValues, mapSporksCachedValues.erase(spork.nSporkID));
+
+        LOCK(cs_cache);
+        mapSporksCachedActive.erase(spork.nSporkID);
+        mapSporksCachedValues.erase(spork.nSporkID);
     }
 
     spork.Relay(peerman);
@@ -238,7 +243,7 @@ bool CSporkManager::IsSporkActive(SporkId nSporkID) const
 {
     // If nSporkID is cached, and the cached value is true, then return early true
     {
-        LOCK(cs_mapSporksCachedActive);
+        LOCK(cs_cache);
         if (auto it = mapSporksCachedActive.find(nSporkID); it != mapSporksCachedActive.end() && it->second) {
             return true;
         }
@@ -249,7 +254,7 @@ bool CSporkManager::IsSporkActive(SporkId nSporkID) const
     bool ret = nSporkValue < GetAdjustedTime();
     // Only cache true values
     if (ret) {
-        LOCK(cs_mapSporksCachedActive);
+        LOCK(cs_cache);
         mapSporksCachedActive[nSporkID] = ret;
     }
     return ret;
