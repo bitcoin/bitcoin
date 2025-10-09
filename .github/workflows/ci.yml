@@ -157,11 +157,6 @@ jobs:
           brew install --quiet python@3 || brew link --overwrite python@3
           brew install --quiet coreutils ninja pkgconf gnu-getopt ccache boost libevent zeromq qt@6 qrencode capnp
 
-      - name: Install Python packages
-        run: |
-          git clone -b v2.1.0 https://github.com/capnproto/pycapnp
-          pip3 install ./pycapnp -C force-bundled-libcapnp=True --break-system-packages
-
       - name: Set Ccache directory
         run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
 
