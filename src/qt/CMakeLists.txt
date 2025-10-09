@@ -255,7 +255,7 @@ endif()
 
 add_subdirectory(locale)
 
-add_executable(bitcoin-qt
+add_executable(bitcoin-qt WIN32
   main.cpp
   ../init/bitcoin-qt.cpp
 )
@@ -271,12 +271,9 @@ target_link_libraries(bitcoin-qt
 
 import_plugins(bitcoin-qt)
 install_binary_component(bitcoin-qt HAS_MANPAGE)
-if(WIN32)
-  set_target_properties(bitcoin-qt PROPERTIES WIN32_EXECUTABLE TRUE)
-endif()
 
 if(ENABLE_IPC)
-  add_executable(bitcoin-gui
+  add_executable(bitcoin-gui WIN32
     main.cpp
     ../init/bitcoin-gui.cpp
   )
@@ -288,9 +285,6 @@ if(ENABLE_IPC)
   )
   import_plugins(bitcoin-gui)
   install_binary_component(bitcoin-gui INTERNAL)
-  if(WIN32)
-    set_target_properties(bitcoin-gui PROPERTIES WIN32_EXECUTABLE TRUE)
-  endif()
 endif()
 
 if(BUILD_GUI_TESTS)
