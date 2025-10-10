@@ -46,6 +46,16 @@ void URITests::uriTests()
     QVERIFY(rv.amount == 10000000000LL);
     QVERIFY(rv.label == QString("Wikipedia Example"));
 
+    uri.setUrl(QString("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=x100x4"));
+    QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
+    QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
+    QVERIFY(rv.amount == 16777216LL);
+
+    uri.setUrl(QString("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=100x2"));
+    QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
+    QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
+    QVERIFY(rv.amount == 10000LL);
+
     uri.setUrl(QString("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?message=Wikipedia Example Address"));
     QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
     QVERIFY(rv.address == QString("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"));
@@ -60,6 +70,9 @@ void URITests::uriTests()
 
     // Commas in amounts are not allowed.
     uri.setUrl(QString("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=1,000&label=Wikipedia Example"));
+    QVERIFY(!GUIUtil::parseBitcoinURI(uri, &rv));
+
+    uri.setUrl(QString("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=x1,0000&label=Wikipedia Example"));
     QVERIFY(!GUIUtil::parseBitcoinURI(uri, &rv));
 
     uri.setUrl(QString("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=1,000.0&label=Wikipedia Example"));

@@ -224,6 +224,39 @@ void AddButtonShortcut(QAbstractButton* button, const QKeySequence& shortcut)
     QObject::connect(new QShortcut(shortcut, button), &QShortcut::activated, [button]() { button->animateClick(); });
 }
 
+qint64 URIParseAmount(std::string amount_str, bool * const ok)
+{
+    bool is_hex = false;
+    if (amount_str[0] == 'x' || amount_str[0] == 'X') {
+        is_hex = true;
+        amount_str = amount_str.substr(1);
+    }
+    size_t exponent_sep_pos = amount_str.find_first_of("Xx", 1);
+    int exponent;
+    if (exponent_sep_pos != std::string::npos) {
+        exponent = QString::fromStdString(amount_str.substr(exponent_sep_pos + 1)).toInt(ok, is_hex ? 0x10 : 10);
+        if (!*ok) return -1;
+    } else {
+        exponent = is_hex ? 4 : 8;
+        exponent_sep_pos = amount_str.size();
+    }
+    size_t fractional_sep_pos = amount_str.find('.');
+    size_t fractional_digits = 0;
+    if (fractional_sep_pos == std::string::npos)
+        fractional_sep_pos = exponent_sep_pos;
+    else
+        fractional_digits = (exponent_sep_pos - fractional_sep_pos) - 1;
+    exponent -= fractional_digits;
+    amount_str = amount_str.substr(0, fractional_sep_pos) + (fractional_digits ? amount_str.substr(fractional_sep_pos + 1, fractional_digits) : "");
+    if (exponent > 0) {
+        amount_str.append(exponent, '0');
+    } else if (exponent < 0) {
+        // Sub-satoshi amount? Truncate
+        amount_str = amount_str.substr(0, amount_str.size() + exponent);
+    }
+    return QString::fromStdString(amount_str).toLongLong(ok, is_hex ? 0x10 : 10);
+}
+
 bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 {
     // return if URI is not valid or is no bitcoin: URI
@@ -263,9 +296,9 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
         {
             if(!i->second.isEmpty())
             {
-                if (!BitcoinUnits::parse(BitcoinUnit::BTC, i->second, &rv.amount)) {
-                    return false;
-                }
+                bool ok;
+                rv.amount = URIParseAmount((i->second).toStdString(), &ok);
+                if (!ok) return false;
             }
             fShouldReturnFalse = false;
         }
