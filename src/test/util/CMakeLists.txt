@@ -27,3 +27,15 @@ target_link_libraries(test_util
   PUBLIC
     univalue
 )
+
+function(make_libbitcoinconsensus_dll_available target)
+  if(TARGET bitcoinconsensus AND WIN32 AND BUILD_SHARED_LIBS)
+    # The DLL must reside either in the same folder where the executable is
+    # or somewhere in PATH. Using the former option.
+    add_custom_command(
+      TARGET ${target} POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:bitcoinconsensus> $<TARGET_FILE_DIR:${target}>
+      VERBATIM
+    )
+  endif()
+endfunction()
