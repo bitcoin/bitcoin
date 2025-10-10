@@ -532,11 +532,13 @@ static RPCHelpMan getblockfrompeer()
         throw JSONRPCError(RPC_MISC_ERROR, "Block header missing");
     }
 
+#if 0
     // Fetching blocks before the node has syncing past their height can prevent block files from
     // being pruned, so we avoid it if the node is in prune mode.
     if (chainman.m_blockman.IsPruneMode() && index->nHeight > WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip()->nHeight)) {
         throw JSONRPCError(RPC_MISC_ERROR, "In prune mode, only blocks that the node has already synced previously can be fetched from a peer");
     }
+#endif
 
     const bool block_has_data = WITH_LOCK(::cs_main, return index->nStatus & BLOCK_HAVE_DATA);
     if (block_has_data) {
