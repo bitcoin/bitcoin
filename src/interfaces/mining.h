@@ -86,12 +86,13 @@ public:
     virtual std::optional<BlockRef> waitTipChanged(uint256 current_tip, MillisecondsDouble timeout = MillisecondsDouble::max()) = 0;
 
    /**
-     * Construct a new block template
+     * Construct a new block template. For the createNewBlock variant, subclass options (if any) are silently lost and overridden by any config args. For createNewBlock2, the options are assumed to be complete.
      *
      * @param[in] options options for creating the block
      * @returns a block template
      */
     virtual std::unique_ptr<BlockTemplate> createNewBlock(const node::BlockCreateOptions& options = {}) = 0;
+    virtual std::unique_ptr<BlockTemplate> createNewBlock2(const node::BlockCreateOptions& assemble_options) = 0;
 
     //! Get internal node context. Useful for RPC and testing,
     //! but not accessible across processes.

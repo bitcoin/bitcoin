@@ -72,12 +72,13 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
     block.hashMerkleRoot = BlockMerkleRoot(block);
 }
 
-static BlockCreateOptions ClampOptions(BlockCreateOptions options)
+BlockCreateOptions BlockCreateOptions::Clamped() const
 {
-    Assert(options.block_reserved_size <= MAX_BLOCK_SERIALIZED_SIZE);
-    Assert(options.block_reserved_weight <= MAX_BLOCK_WEIGHT);
-    Assert(options.block_reserved_weight >= MINIMUM_BLOCK_RESERVED_WEIGHT);
-    Assert(options.coinbase_output_max_additional_sigops <= MAX_BLOCK_SIGOPS_COST);
+    BlockAssembler::Options options = *this;
+    CHECK_NONFATAL(options.block_reserved_size <= MAX_BLOCK_SERIALIZED_SIZE);
+    CHECK_NONFATAL(options.block_reserved_weight <= MAX_BLOCK_WEIGHT);
+    CHECK_NONFATAL(options.block_reserved_weight >= MINIMUM_BLOCK_RESERVED_WEIGHT);
+    CHECK_NONFATAL(options.coinbase_output_max_additional_sigops <= MAX_BLOCK_SIGOPS_COST);
     // Limit size to between block_reserved_size and MAX_BLOCK_SERIALIZED_SIZE-1K for sanity:
     options.nBlockMaxSize = std::clamp<size_t>(options.nBlockMaxSize, options.block_reserved_size, MAX_BLOCK_SERIALIZED_SIZE);
     // Limit weight to between block_reserved_weight and MAX_BLOCK_WEIGHT for sanity:
@@ -90,7 +91,7 @@ BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool
     : chainparams{chainstate.m_chainman.GetParams()},
       m_mempool{options.use_mempool ? mempool : nullptr},
       m_chainstate{chainstate},
-      m_options{ClampOptions(options)}
+      m_options{options.Clamped()}
 {
     // Whether we need to account for byte usage (in addition to weight usage)
     fNeedSizeAccounting = (options.nBlockMaxSize < MAX_BLOCK_SERIALIZED_SIZE);

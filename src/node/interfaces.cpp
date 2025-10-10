@@ -1032,6 +1032,11 @@ public:
 
         BlockAssembler::Options assemble_options{options};
         ApplyArgsManOptions(*Assert(m_node.args), assemble_options);
+        return createNewBlock2(assemble_options);
+    }
+
+    std::unique_ptr<BlockTemplate> createNewBlock2(const BlockCreateOptions& assemble_options) override
+    {
         return std::make_unique<BlockTemplateImpl>(BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options}.CreateNewBlock(), m_node);
     }
 
