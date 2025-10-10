@@ -216,7 +216,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         self.nodes[0].sendrawtransaction(std_tx.serialize().hex())
 
         # Make sure the original, non-standard, transaction can be mined.
-        self.generateblock(self.nodes[0], output="raw(42)", transactions=[nonstd_tx.serialize().hex()])
+        self.generateblock(self.nodes[0], transactions=[nonstd_tx.serialize().hex()])
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
