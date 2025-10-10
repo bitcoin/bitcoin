@@ -182,6 +182,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "createpsbt", 3, "replaceable" },
     { "createpsbt", 4, "version" },
     { "combinepsbt", 0, "txs"},
+    { "combinepsbt", 1, "stripderivs"},
     { "joinpsbts", 0, "txs"},
     { "finalizepsbt", 1, "extract"},
     { "converttopsbt", 1, "permitsigdata"},
