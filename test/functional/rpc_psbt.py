@@ -260,7 +260,8 @@ class PSBTTest(BitcoinTestFramework):
         assert_raises_rpc_error(-22, f"Previous tx has too few outputs for PSBT input {parent_txid}", self.nodes[0].utxoupdatepsbt, psbt=psbtx_bad_child, prevtxs=prev_txs)
 
         # Create and fund a raw tx for sending 10 BTC
-        psbtx1 = self.nodes[0].walletcreatefundedpsbt([], {self.nodes[2].getnewaddress():10})['psbt']
+        assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[0].walletcreatefundedpsbt, inputs=[], outputs={self.nodes[2].getnewaddress():1}, options={'min_conf': 201})
+        psbtx1 = self.nodes[0].walletcreatefundedpsbt(inputs=[], outputs={self.nodes[2].getnewaddress():11}, options={'min_conf': 200})['psbt']
 
         self.log.info("Test for invalid maximum transaction weights")
         dest_arg = [{self.nodes[0].getnewaddress(): 1}]
