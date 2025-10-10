@@ -1124,11 +1124,16 @@ inline void Popen::execute_process() noexcept(false)
   std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
   std::wstring argument;
   std::wstring command_line;
+  bool first_arg = true;
 
   for (auto arg : this->vargs_) {
+    if (!first_arg) {
+      command_line += L" ";
+    } else {
+      first_arg = false;
+    }
     argument = converter.from_bytes(arg);
     util::quote_argument(argument, command_line, false);
-    command_line += L" ";
   }
 
   // CreateProcessW can modify szCmdLine so we allocate needed memory
