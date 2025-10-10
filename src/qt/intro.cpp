@@ -161,6 +161,38 @@ Intro::Intro(QWidget *parent, int64_t blockchain_size_gb, int64_t chain_state_si
         UpdateFreeSpaceLabel();
     });
 
+    bool have_user_assumevalid = false;
+    if (gArgs.IsArgSet("-assumevalid")) {
+        const auto user_assumevalid = gArgs.GetArg("-assumevalid", /* ignored default; determines return type */ "");
+        const auto block_hash{uint256::FromUserHex(user_assumevalid)};
+        if (block_hash && !block_hash->IsNull()) {
+            // -assumevalid=blockhash: initialise with the user-specified value, enabled
+            ui->assumevalid->setChecked(true);
+            ui->assumevalidBlock->setText(QString::fromStdString(user_assumevalid));
+            have_user_assumevalid = true;
+        } else {
+            // -assumevalid=0: default checkbox to off, and initialise with chainparams later
+            ui->assumevalid->setChecked(false);
+        }
+    }
+    if (!have_user_assumevalid) {
+        const auto chainparams = CreateChainParams(gArgs, gArgs.GetChainType());
+        const uint256 default_assumevalid = chainparams ? chainparams->GetConsensus().defaultAssumeValid : uint256();
+        if (default_assumevalid.IsNull()) {
+            // no chainparams assumevalid (nor user-provided), so hide the options entirely
+            ui->groupAssumeValid->setVisible(false);
+        } else {
+            // assumevalid from chainparams only (normal case): disable editing of blockhash
+            ui->assumevalidBlock->setText(QString::fromStdString(default_assumevalid.GetHex()));
+            ui->assumevalidBlock->setReadOnly(true);
+        }
+    }
+    {
+        // TODO: Ideally, we would include actual margins here (instead of extra digits), but this seems non-trivial
+        const int text_width = ui->assumevalidBlock->fontMetrics().horizontalAdvance(QStringLiteral("4")) * (64 + 4);
+        ui->assumevalidBlock->setFixedWidth(text_width);
+    }
+
     startThread();
 }
 
@@ -202,9 +234,17 @@ int64_t Intro::getPruneMiB() const
     }
 }
 
-bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
+QString Intro::getAssumeValid() const
 {
-    did_show_intro = false;
+    if (!ui->assumevalid->isChecked()) {
+        return QStringLiteral("0");
+    }
+    return ui->assumevalidBlock->text();
+}
+
+bool Intro::showIfNeeded(std::unique_ptr<Intro>& intro)
+{
+    intro.reset();
 
     QSettings settings;
     /* If data directory provided on command line, no need to look at settings
@@ -226,19 +266,18 @@ bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
         }
 
         /* If current default data directory does not exist, let the user choose one */
-        Intro intro(nullptr, Params().AssumedBlockchainSize(), Params().AssumedChainStateSize());
-        intro.setDataDirectory(dataDir);
-        intro.setWindowIcon(QIcon(":icons/bitcoin"));
-        did_show_intro = true;
+        intro = std::make_unique<Intro>(nullptr, Params().AssumedBlockchainSize(), Params().AssumedChainStateSize());
+        intro->setDataDirectory(dataDir);
+        intro->setWindowIcon(QIcon(QStringLiteral(":icons/bitcoin")));
 
         while(true)
         {
-            if(!intro.exec())
+            if(!intro->exec())
             {
                 /* Cancel clicked */
                 return false;
             }
-            dataDir = intro.getDataDirectory();
+            dataDir = intro->getDataDirectory();
             try {
                 if (TryCreateDirectories(GUIUtil::QStringToPath(dataDir))) {
                     // If a new data directory has been created, make wallets subdirectory too
@@ -251,9 +290,6 @@ bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
                 /* fall through, back to choosing screen */
             }
         }
-
-        // Additional preferences:
-        prune_MiB = intro.getPruneMiB();
 
         settings.setValue("strDataDir", dataDir);
         settings.setValue("fReset", false);
