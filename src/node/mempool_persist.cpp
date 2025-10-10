@@ -100,7 +100,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             }
             if (nTime > TicksSinceEpoch<std::chrono::seconds>(now - pool.m_opts.expiry)) {
                 LOCK(cs_main);
-                const auto& accepted = AcceptToMemoryPool(active_chainstate, tx, nTime, /*bypass_limits=*/false, /*test_accept=*/false);
+                const auto& accepted = AcceptToMemoryPool(active_chainstate, tx, nTime, empty_ignore_rejects, /*test_accept=*/false);
                 if (accepted.m_result_type == MempoolAcceptResult::ResultType::VALID) {
                     ++count;
                 } else {
