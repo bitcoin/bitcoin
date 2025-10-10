@@ -99,7 +99,7 @@ class MutatedBlocksTest(BitcoinTestFramework):
 
         # Check that unexpected-witness mutation check doesn't trigger on a header that doesn't connect to anything
         assert_equal(len(self.nodes[0].getpeerinfo()), 1)
-        attacker = self.nodes[0].add_p2p_connection(P2PInterface())
+        attacker = self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=1)
         block_missing_prev = copy.deepcopy(block)
         block_missing_prev.hashPrevBlock = 123
         block_missing_prev.solve()

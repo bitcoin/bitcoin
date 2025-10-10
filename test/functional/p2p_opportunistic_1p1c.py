@@ -228,7 +228,7 @@ class PackageRelayTest(BitcoinTestFramework):
         tx_orphan_bad_wit.wit.vtxinwit.append(CTxInWitness())
         tx_orphan_bad_wit.wit.vtxinwit[0].scriptWitness.stack = [b'garbage']
 
-        bad_orphan_sender = node.add_p2p_connection(P2PInterface())
+        bad_orphan_sender = node.add_outbound_p2p_connection(P2PInterface(), p2p_idx=0)
         parent_sender = node.add_p2p_connection(P2PInterface())
 
         # 1. Child is received first. It is missing an input.
@@ -270,7 +270,7 @@ class PackageRelayTest(BitcoinTestFramework):
         tx_parent_bad_wit.wit.vtxinwit[0].scriptWitness.stack = [b'garbage']
 
         package_sender = node.add_p2p_connection(P2PInterface())
-        fake_parent_sender = node.add_p2p_connection(P2PInterface())
+        fake_parent_sender = node.add_outbound_p2p_connection(P2PInterface(), p2p_idx=0)
 
         # 1. Child is received first. It is missing an input.
         child_wtxid_int = int(high_fee_child["tx"].getwtxid(), 16)
