@@ -343,6 +343,8 @@ output directory.
 EOF
 }
 
+guix-prefetch '1h00qp4z5k6lfz310xjwsmqs8fwxi6ngas51169cafz4h9fmc68y' 'https://archives.boost.io/release/1.80.0/source/boost_1_80_0.tar.bz2'
+
 # Deterministically build Bitcoin Core
 # shellcheck disable=SC2153
 for host in $HOSTS; do
