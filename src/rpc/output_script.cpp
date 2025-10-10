@@ -273,6 +273,12 @@ static RPCHelpMan deriveaddresses()
         {
             {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor."},
             {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED, "If a ranged descriptor is used, this specifies the end or the range (in [begin,end] notation) to derive."},
+            {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
+                {
+                    {"require_checksum", RPCArg::Type::BOOL, RPCArg::Default{true}, "Require a checksum. If a checksum is provided it will be verified regardless of this parameter."},
+                },
+                RPCArgOptions{.oneline_description="options"}
+            },
         },
         {
             RPCResult{"for single derivation descriptors",
@@ -294,13 +300,29 @@ static RPCHelpMan deriveaddresses()
             },
         },
         RPCExamples{
-            "First three native segwit receive addresses\n" +
+            "First three native segwit receive addresses:\n" +
             HelpExampleCli("deriveaddresses", "\"" + EXAMPLE_DESCRIPTOR + "\" \"[0,2]\"") +
-            HelpExampleRpc("deriveaddresses", "\"" + EXAMPLE_DESCRIPTOR + "\", \"[0,2]\"")
+            HelpExampleRpc("deriveaddresses", "\"" + EXAMPLE_DESCRIPTOR + "\", \"[0,2]\"") +
+            "Derive the PKH address from a WIF, which has a built-in checksum:\n" +
+            HelpExampleCli("deriveaddresses", "\"pkh(cPsQTSmMZ8e3AEUWGjS73f5R364yJxH6RxcgnwbHjbKbFPUP2Dtu)\" null '{\"require_checksum\": false}'")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
             const std::string desc_str = request.params[0].get_str();
+            bool require_checksum = true;
+
+            if (!request.params[2].isNull()) {
+                const UniValue& options = request.params[2];
+                RPCTypeCheckObj(options,
+                    {
+                        {"require_checksum", UniValueType(UniValue::VBOOL)},
+                    },
+                    true, true);
+
+                if (options.exists("require_checksum")) {
+                    require_checksum = options["require_checksum"].get_bool();
+                }
+            }
 
             int64_t range_begin = 0;
             int64_t range_end = 0;
@@ -311,16 +333,16 @@ static RPCHelpMan deriveaddresses()
 
             FlatSigningProvider key_provider;
             std::string error;
-            auto descs = Parse(desc_str, key_provider, error, /* require_checksum = */ true);
+            auto descs = Parse(desc_str, key_provider, error, require_checksum);
             if (descs.empty()) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
             }
             auto& desc = descs.at(0);
-            if (!desc->IsRange() && request.params.size() > 1) {
+            if (!desc->IsRange() && !request.params[1].isNull()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Range should not be specified for an un-ranged descriptor");
             }
 
-            if (desc->IsRange() && request.params.size() == 1) {
+            if (desc->IsRange() && request.params[1].isNull()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Range must be specified for a ranged descriptor");
             }
 
