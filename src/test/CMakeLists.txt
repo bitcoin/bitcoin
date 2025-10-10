@@ -123,6 +123,7 @@ add_executable(test_bitcoin
   validation_tests.cpp
   validationinterface_tests.cpp
   versionbits_tests.cpp
+  ../stats/test/stats_tests.cpp
 )
 
 include(TargetDataSources)
