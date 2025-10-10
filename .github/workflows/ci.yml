@@ -432,8 +432,7 @@ jobs:
           echo "PREVIOUS_RELEASES_DIR=${{ runner.temp }}/previous_releases" >> "$GITHUB_ENV"
 
       - name: Get previous releases
-        working-directory: test
-        run: ./get_previous_releases.py --target-dir $PREVIOUS_RELEASES_DIR
+        run: ./test/get_previous_releases.py --target-dir $PREVIOUS_RELEASES_DIR
 
       - name: Run functional tests
         env:
@@ -471,11 +470,17 @@ jobs:
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_asan.sh'
 
-          - name: 'macOS-cross, gui, no tests'
+          - name: 'macOS-cross to arm64'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_mac_cross.sh'
+
+          - name: 'macOS-cross to x86_64'
+            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm'
+            fallback-runner: 'ubuntu-24.04'
+            timeout-minutes: 120
+            file-env: './ci/test/00_setup_env_mac_cross_intel.sh'
 
           - name: 'No wallet, libbitcoinkernel'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm'

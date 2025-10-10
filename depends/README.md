@@ -123,7 +123,7 @@ Common `host-platform-triplet`s for cross compilation are:
 - `i686-pc-linux-gnu` for Linux x86 32 bit
 - `x86_64-pc-linux-gnu` for Linux x86 64 bit
 - `x86_64-w64-mingw32` for Win64
-- `x86_64-apple-darwin` for macOS
+- `x86_64-apple-darwin` for Intel macOS
 - `arm64-apple-darwin` for ARM macOS
 - `arm-linux-gnueabihf` for Linux ARM 32 bit
 - `aarch64-linux-gnu` for Linux ARM 64 bit
