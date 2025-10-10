@@ -1034,6 +1034,12 @@ static RPCHelpMan addpeeraddress()
     };
 }
 
+if (gArgs.IsArgSet("-bind") && !IsTorSocketConfigured()) {
+    table.addCell("?");
+} else {
+    table.addCell(strprintf("%d", onion_in));
+}
+
 static RPCHelpMan sendmsgtopeer()
 {
     return RPCHelpMan{

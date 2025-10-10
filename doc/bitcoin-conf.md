@@ -90,3 +90,9 @@ To use the generated configuration file, copy the example file into your data di
 # example copy command for linux user
 cp share/examples/bitcoin.conf ~/.bitcoin
 ```
+### -bind=<addr>[:port]
+
+Bind to the given address and port. When using this option, Bitcoin Core will not automatically create the default Tor socket at 127.0.0.1:8334.
+
+If you rely on automatically configured Tor hidden services, make sure to manually include the Tor bind address:
+
