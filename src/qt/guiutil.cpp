@@ -1126,10 +1126,10 @@ void PrintSlotException(
     PrintExceptionContinue(exception, description);
 }
 
-void ShowModalDialogAsynchronously(QDialog* dialog)
+void ShowModalDialogAsynchronously(QDialog* dialog, const Qt::WindowModality modality)
 {
     dialog->setAttribute(Qt::WA_DeleteOnClose);
-    dialog->setWindowModality(Qt::ApplicationModal);
+    dialog->setWindowModality(modality);
     dialog->show();
 }
 

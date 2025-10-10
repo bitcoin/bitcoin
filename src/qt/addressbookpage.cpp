@@ -181,7 +181,7 @@ void AddressBookPage::onEditAction()
     dlg->setModel(model);
     QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
     dlg->loadRow(origIndex.row());
-    GUIUtil::ShowModalDialogAsynchronously(dlg);
+    GUIUtil::ShowModalDialogAsynchronously(dlg, Qt::WindowModal);
 }
 
 void AddressBookPage::on_newAddress_clicked()
