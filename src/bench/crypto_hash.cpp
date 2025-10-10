@@ -197,7 +197,7 @@ static void SipHash_32b(benchmark::Bench& bench)
     auto val{rng.rand256()};
     auto i{0U};
     bench.run([&] {
-        ankerl::nanobench::doNotOptimizeAway(SipHashUint256(k0, k1, val));
+        ankerl::nanobench::doNotOptimizeAway(PresaltedSipHasher(k0, k1)(val));
         ++k0;
         ++k1;
         ++i;
