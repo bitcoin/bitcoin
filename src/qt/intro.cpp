@@ -111,11 +111,11 @@ void FreespaceChecker::check()
 
 namespace {
 //! Return pruning size that will be used if automatic pruning is enabled.
-int GetPruneTargetGB()
+int GetPruneTargetMiB()
 {
     int64_t prune_target_mib = gArgs.GetIntArg("-prune", 0);
     // >1 means automatic pruning is enabled by config, 1 means manual pruning, 0 means no pruning.
-    return prune_target_mib > 1 ? PruneMiBtoGB(prune_target_mib) : DEFAULT_PRUNE_TARGET_GB;
+    return prune_target_mib > 1 ? prune_target_mib : DEFAULT_PRUNE_TARGET_MiB;
 }
 } // namespace
 
@@ -124,7 +124,7 @@ Intro::Intro(QWidget *parent, int64_t blockchain_size_gb, int64_t chain_state_si
     ui(new Ui::Intro),
     m_blockchain_size_gb(blockchain_size_gb),
     m_chain_state_size_gb(chain_state_size_gb),
-    m_prune_target_gb{GetPruneTargetGB()}
+    m_prune_target_mib{GetPruneTargetMiB()}
 {
     ui->setupUi(this);
     ui->welcomeLabel->setText(ui->welcomeLabel->text().arg(CLIENT_NAME));
@@ -138,26 +138,39 @@ Intro::Intro(QWidget *parent, int64_t blockchain_size_gb, int64_t chain_state_si
     );
     ui->lblExplanation2->setText(ui->lblExplanation2->text().arg(CLIENT_NAME));
 
-    const int min_prune_target_GB = std::ceil(MIN_DISK_SPACE_FOR_BLOCK_FILES / 1e9);
-    ui->pruneGB->setRange(min_prune_target_GB, std::numeric_limits<int>::max());
+    const int min_prune_target_MiB = (MIN_DISK_SPACE_FOR_BLOCK_FILES + MiB_BYTES - 1) / MiB_BYTES;
+    ui->pruneMiB->setRange(min_prune_target_MiB, std::numeric_limits<int>::max());
     if (gArgs.IsArgSet("-prune")) {
         m_prune_checkbox_is_default = false;
-        ui->prune->setChecked(gArgs.GetIntArg("-prune", 0) >= 1);
-        ui->prune->setEnabled(false);
+        switch (gArgs.GetIntArg("-prune", 0)) {
+        case 0:
+            ui->prune->setChecked(false);
+            break;
+        case 1:
+            ui->prune->setTristate();
+            ui->prune->setCheckState(Qt::PartiallyChecked);
+            break;
+        default:
+            ui->prune->setChecked(true);
+        }
     }
-    ui->pruneGB->setValue(m_prune_target_gb);
-    ui->pruneGB->setToolTip(ui->prune->toolTip());
+    ui->pruneMiB->setValue(m_prune_target_mib);
+    ui->pruneMiB->setToolTip(ui->prune->toolTip());
     ui->lblPruneSuffix->setToolTip(ui->prune->toolTip());
-    UpdatePruneLabels(ui->prune->isChecked());
+    UpdatePruneLabels(ui->prune->checkState() == Qt::Checked);
 
-    connect(ui->prune, &QCheckBox::toggled, [this](bool prune_checked) {
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 7, 0))
+    connect(ui->prune, &QCheckBox::checkStateChanged, [this](const Qt::CheckState prune_state) {
+#else
+    connect(ui->prune, &QCheckBox::stateChanged, [this](const int prune_state) {
+#endif
         m_prune_checkbox_is_default = false;
-        UpdatePruneLabels(prune_checked);
+        UpdatePruneLabels(prune_state == Qt::Checked);
         UpdateFreeSpaceLabel();
     });
-    connect(ui->pruneGB, qOverload<int>(&QSpinBox::valueChanged), [this](int prune_GB) {
-        m_prune_target_gb = prune_GB;
-        UpdatePruneLabels(ui->prune->isChecked());
+    connect(ui->pruneMiB, qOverload<int>(&QSpinBox::valueChanged), [this](int prune_MiB) {
+        m_prune_target_mib = prune_MiB;
+        UpdatePruneLabels(ui->prune->checkState() == Qt::Checked);
         UpdateFreeSpaceLabel();
     });
 
@@ -228,7 +241,9 @@ int64_t Intro::getPruneMiB() const
 {
     switch (ui->prune->checkState()) {
     case Qt::Checked:
-        return PruneGBtoMiB(m_prune_target_gb);
+        return m_prune_target_mib;
+    case Qt::PartiallyChecked:
+        return 1;
     case Qt::Unchecked: default:
         return 0;
     }
@@ -339,7 +354,7 @@ void Intro::UpdateFreeSpaceLabel()
         freeString += " " + tr("(of %n GB needed)", "", m_required_space_gb);
         ui->freeSpace->setStyleSheet("QLabel { color: #800000 }");
     } else if (m_bytes_available / GB_BYTES - m_required_space_gb < 10) {
-        freeString += " " + tr("(%n GB needed for full chain)", "", m_required_space_gb);
+        freeString += " " + tr("(%n GB needed)", "", m_required_space_gb);
         ui->freeSpace->setStyleSheet("QLabel { color: #999900 }");
     } else {
         ui->freeSpace->setStyleSheet("");
@@ -412,14 +427,15 @@ void Intro::UpdatePruneLabels(bool prune_checked)
 {
     m_required_space_gb = m_blockchain_size_gb + m_chain_state_size_gb;
     QString storageRequiresMsg = tr("At least %1 GB of data will be stored in this directory, and it will grow over time.");
-    if (prune_checked && m_prune_target_gb <= m_blockchain_size_gb) {
-        m_required_space_gb = m_prune_target_gb + m_chain_state_size_gb;
+    const int64_t prune_target_gb = (m_prune_target_mib * MiB_BYTES + GB_BYTES - 1) / GB_BYTES;
+    if (prune_checked && prune_target_gb <= m_blockchain_size_gb) {
+        m_required_space_gb = prune_target_gb + m_chain_state_size_gb;
         storageRequiresMsg = tr("Approximately %1 GB of data will be stored in this directory.");
     }
-    ui->pruneGB->setEnabled(prune_checked);
+    ui->pruneMiB->setEnabled(prune_checked);
     static constexpr uint64_t nPowTargetSpacing = 10 * 60;  // from chainparams, which we don't have at this stage
     static constexpr uint32_t expected_block_data_size = 2250000;  // includes undo data
-    const uint64_t expected_backup_days = m_prune_target_gb * 1e9 / (uint64_t(expected_block_data_size) * 86400 / nPowTargetSpacing);
+    const uint64_t expected_backup_days = m_prune_target_mib * MiB_BYTES / (uint64_t(expected_block_data_size) * 86400 / nPowTargetSpacing);
     ui->lblPruneSuffix->setText(
         //: Explanatory text on the capability of the current prune target.
         tr("(sufficient to restore backups %n day(s) old)", "", expected_backup_days));

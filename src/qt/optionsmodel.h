@@ -11,11 +11,16 @@
 
 #include <QAbstractListModel>
 #include <QFont>
+#include <QString>
 
 #include <assert.h>
+#include <map>
+#include <utility>
 #include <variant>
 
 struct bilingual_str;
+enum class OutputType;
+
 namespace interfaces {
 class Node;
 }
@@ -23,15 +28,7 @@ class Node;
 extern const char *DEFAULT_GUI_PROXY_HOST;
 static constexpr uint16_t DEFAULT_GUI_PROXY_PORT = 9050;
 
-/**
- * Convert configured prune target MiB to displayed GB. Round up to avoid underestimating max disk usage.
- */
-static inline int PruneMiBtoGB(int64_t mib) { return (mib * 1024 * 1024 + GB_BYTES - 1) / GB_BYTES; }
-
-/**
- * Convert displayed prune target GB to configured MiB. Round down so roundtrip GB -> MiB -> GB conversion is stable.
- */
-static inline int64_t PruneGBtoMiB(int gb) { return gb * GB_BYTES / 1024 / 1024; }
+std::pair<QString, QString> GetOutputTypeDescription(const OutputType type);
 
 /** Interface from Qt to configuration data structure for Bitcoin client.
    To Qt, the options are presented as a list with the different options
@@ -69,15 +66,19 @@ public:
         CoinControlFeatures,    // bool
         SubFeeFromAmount,       // bool
         ThreadsScriptVerif,     // int
-        Prune,                  // bool
-        PruneSize,              // int
+        PruneTristate,          // Qt::CheckState
+        PruneSizeMiB,           // int
         DatabaseCache,          // int
         ExternalSignerPath,     // QString
         SpendZeroConfChange,    // bool
+        addresstype,            // QString
         Listen,                 // bool
         Server,                 // bool
         EnablePSBTControls,     // bool
         MaskValues,             // bool
+        maxuploadtarget,
+        peerbloomfilters,       // bool
+        peerblockfilters,       // bool
         OptionIDRowCount,
     };
 
@@ -118,7 +119,7 @@ public:
     bool hasSigner();
 
     /* Explicit setters */
-    void SetPruneTargetGB(int prune_target_gb);
+    void SetPruneTargetMiB(int prune_target_mib);
 
     /* Restart flag helper */
     void setRestartRequired(bool fRequired);
@@ -145,9 +146,13 @@ private:
 
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
+    bool m_prune_forced_by_gui{false};
 
     static QString FontChoiceToString(const OptionsModel::FontChoice&);
     static FontChoice FontChoiceFromString(const QString&);
+
+    /* rwconf settings that require a restart */
+    bool f_peerbloomfilters;
 
     // Add option to list of GUI options overridden through command line/config file
     void addOverriddenOption(const std::string &option);
@@ -158,6 +163,7 @@ private:
 Q_SIGNALS:
     void displayUnitChanged(BitcoinUnit unit);
     void coinControlFeaturesChanged(bool);
+    void addresstypeChanged(OutputType);
     void showTrayIconChanged(bool);
     void fontForMoneyChanged(const QFont&);
     void fontForQRCodesChanged(const FontChoice&);
