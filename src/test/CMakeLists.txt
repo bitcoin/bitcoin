@@ -57,7 +57,6 @@ add_executable(test_bitcoin
   miner_tests.cpp
   miniminer_tests.cpp
   miniscript_tests.cpp
-  minisketch_tests.cpp
   multisig_tests.cpp
   net_peer_connection_tests.cpp
   net_peer_eviction_tests.cpp
@@ -146,7 +145,6 @@ target_link_libraries(test_bitcoin
   bitcoin_cli
   bitcoin_node
   bitcoin_consensus
-  minisketch
   secp256k1
   Boost::headers
   libevent::extra

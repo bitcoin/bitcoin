@@ -20,7 +20,6 @@ include(../cmake/crc32c.cmake)
 include(../cmake/leveldb.cmake)
 endif()  # WITH_SYSTEM_LEVELDB
 
-include(../cmake/minisketch.cmake)
 add_subdirectory(univalue)
 
 if(NOT WITH_SYSTEM_LIBSECP256K1)
@@ -272,7 +271,6 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   node/mempool_persist_args.cpp
   node/miner.cpp
   node/mini_miner.cpp
-  node/minisketchwrapper.cpp
   node/peerman_args.cpp
   node/psbt.cpp
   node/timeoffsets.cpp
@@ -323,7 +321,6 @@ target_link_libraries(bitcoin_node
     bitcoin_util
     $<TARGET_NAME_IF_EXISTS:bitcoin_zmq>
     leveldb
-    minisketch
     univalue
     Boost::headers
     $<TARGET_NAME_IF_EXISTS:libevent::core>
