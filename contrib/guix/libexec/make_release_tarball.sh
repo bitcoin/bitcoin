@@ -20,6 +20,7 @@ git archive --prefix="${DISTNAME}/" HEAD |
   --exclude '.git*' \
   --exclude ci \
   --exclude '*minisketch*' \
+  --exclude 'doc/release-notes' \
  # end of tar options
 
 # Generate correct build info file from git, before we lose git
