@@ -292,7 +292,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
             for vin in tx["vin"]:
                 if "coinbase" not in vin:
                     prevout_tx = self.nodes[0].getrawtransaction(
-                        vin["txid"], True)
+                        vin["txid"], 1)
                     prevout_tx_block = self.nodes[0].getblockheader(
                         prevout_tx["blockhash"])
                     spends_coinbase = "coinbase" in prevout_tx["vin"][0]

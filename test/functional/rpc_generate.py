@@ -45,7 +45,7 @@ class RPCGenerateTest(BitcoinTestFramework):
 
         self.log.info('Generate an empty block to a descriptor')
         hash = self.generateblock(node, 'addr(' + address + ')', [])['hash']
-        block = node.getblock(blockhash=hash, verbosity=2)
+        block = node.getblock(blockhash=hash, verbose=2)
         assert_equal(len(block['tx']), 1)
         assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['address'], address)
 
@@ -83,7 +83,7 @@ class RPCGenerateTest(BitcoinTestFramework):
         block = node.getblock(hash, 1)
         assert_equal(len(block['tx']), 2)
         txid = block['tx'][1]
-        assert_equal(node.getrawtransaction(txid=txid, verbose=False, blockhash=hash), rawtx)
+        assert_equal(node.getrawtransaction(txid=txid, verbose=0, blockhash=hash), rawtx)
 
         # Ensure that generateblock can be called concurrently by many threads.
         self.log.info('Generate blocks in parallel')
