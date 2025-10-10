@@ -35,6 +35,9 @@ static constexpr int64_t MAX_FUTURE_BLOCK_TIME = 2 * 60 * 60;
  * MAX_FUTURE_BLOCK_TIME.
  */
 static constexpr int64_t TIMESTAMP_WINDOW = MAX_FUTURE_BLOCK_TIME;
+//! Init values for CBlockIndex nSequenceId when loaded from disk
+static constexpr int32_t SEQ_ID_BEST_CHAIN_FROM_DISK = 0;
+static constexpr int32_t SEQ_ID_INIT_FROM_DISK = 1;
 
 /**
  * Maximum gap between node time and block time used
@@ -191,7 +194,9 @@ public:
     uint32_t nNonce{0};
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
-    int32_t nSequenceId{0};
+    //! Initialized to SEQ_ID_INIT_FROM_DISK{1} when loading blocks from disk, except for blocks
+    //! belonging to the best chain which overwrite it to SEQ_ID_BEST_CHAIN_FROM_DISK{0}.
+    int32_t nSequenceId{SEQ_ID_INIT_FROM_DISK};
 
     //! (memory only) Maximum nTime in the chain up to and including this block.
     unsigned int nTimeMax{0};
