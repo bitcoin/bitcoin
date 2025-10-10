@@ -331,7 +331,7 @@ consteval uint8_t ConstevalHexDigit(const char c)
     if (c >= '0' && c <= '9') return c - '0';
     if (c >= 'a' && c <= 'f') return c - 'a' + 0xa;
 
-    throw "Only lowercase hex digits are allowed, for consistency";
+    throw std::string_view("Only lowercase hex digits are allowed, for consistency");
 }
 
 namespace detail {
@@ -342,7 +342,7 @@ struct Hex {
         // 2 hex digits required per byte + implicit null terminator
         requires(N % 2 == 1)
     {
-        if (hex_str[N - 1]) throw "null terminator required";
+        if (hex_str[N - 1]) throw std::string_view("null terminator required");
         for (std::size_t i = 0; i < bytes.size(); ++i) {
             bytes[i] = static_cast<std::byte>(
                 (ConstevalHexDigit(hex_str[2 * i]) << 4) |

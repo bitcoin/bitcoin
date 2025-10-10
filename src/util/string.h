@@ -37,7 +37,7 @@ constexpr static void CheckNumFormatSpecifiers(const char* str)
             if (*it == '$') {
                 ++it;
                 // Positional specifier, like %8$s
-                if (maybe_num == 0) throw "Positional format specifier must have position of at least 1";
+                if (maybe_num == 0) throw std::string_view{"Positional format specifier must have position of at least 1"};
                 count_pos = std::max(count_pos, maybe_num);
             } else {
                 // Non-positional specifier, like %s
@@ -69,14 +69,14 @@ constexpr static void CheckNumFormatSpecifiers(const char* str)
             parse_size();
         }
 
-        if (*it == '\0') throw "Format specifier incorrectly terminated by end of string";
+        if (*it == '\0') throw std::string_view{"Format specifier incorrectly terminated by end of string"};
 
         // Length and type in "[flags][width][.precision][length]type"
         // is not checked. Parsing continues with the next '%'.
     }
-    if (count_normal && count_pos) throw "Format specifiers must be all positional or all non-positional!";
+    if (count_normal && count_pos) throw std::string_view{"Format specifiers must be all positional or all non-positional!"};
     unsigned count{count_normal | count_pos};
-    if (num_params != count) throw "Format specifier count must match the argument count!";
+    if (num_params != count) throw std::string_view{"Format specifier count must match the argument count!"};
 }
 } // namespace detail
 
