@@ -87,13 +87,14 @@ public:
     virtual ~PeerManager() = default;
 
     /**
-     * Attempt to manually fetch block from a given peer. We must already have the header.
+     * Attempt to manually fetch block from a given peer.
      *
      * @param[in]  peer_id      The peer id
      * @param[in]  block_index  The blockindex
      * @returns std::nullopt if a request was successfully made, otherwise an error message
      */
-    virtual std::optional<std::string> FetchBlock(NodeId peer_id, const CBlockIndex& block_index) = 0;
+    std::optional<std::string> FetchBlock(NodeId peer_id, const CBlockIndex& block_index);
+    virtual std::optional<std::string> FetchBlock(NodeId peer_id, const uint256& hash, const CBlockIndex* block_index) = 0;
 
     /** Begin running background tasks, should only be called once */
     virtual void StartScheduledTasks(CScheduler& scheduler) = 0;

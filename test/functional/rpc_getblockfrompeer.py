@@ -8,6 +8,7 @@ from test_framework.authproxy import JSONRPCException
 from test_framework.messages import (
     CBlock,
     from_hex,
+    msg_block,
     msg_headers,
     NODE_WITNESS,
 )
@@ -70,8 +71,8 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         assert_raises_rpc_error(-3, "JSON value of type number is not of expected type string", self.nodes[0].getblockfrompeer, 1234, peer_0_peer_1_id)
         assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", self.nodes[0].getblockfrompeer, short_tip, "0")
 
-        self.log.info("We must already have the header")
-        assert_raises_rpc_error(-1, "Block header missing", self.nodes[0].getblockfrompeer, "00" * 32, 0)
+        self.log.info("We can request blocks for which we do not have the header")
+        self.nodes[0].getblockfrompeer("11" * 32, 0)
 
         self.log.info("Non-existent peer generates error")
         for peer_id in [-1, peer_0_peer_1_id + 1]:
@@ -103,10 +104,31 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         self.log.info("Non-existent peer generates error, even if we already have the block")
         assert_raises_rpc_error(-1, "Block already downloaded", self.nodes[0].getblockfrompeer, short_tip, peer_0_peer_1_id + 1)
 
-        self.log.info("Do fetch blocks even if the node has not synced past it yet")
+        self.log.info("Do fetch blocks even if the node has not seen the header yet")
         # For this test we need node 1 in prune mode and as a side effect this also disconnects
         # the nodes which is also necessary for the rest of the test.
         self.restart_node(1, ["-prune=550"])
+
+        # Generate a block on the disconnected node that the pruning node is not connected to
+        blockhash = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
+        block_hex = self.nodes[0].getblock(blockhash=blockhash, verbosity=0)
+        block = from_hex(CBlock(), block_hex)
+
+        # Connect a P2PInterface to the pruning node
+        p2p_i = P2PInterface()
+        node1_interface = self.nodes[1].add_p2p_connection(p2p_i)
+
+        node1_peers = self.nodes[1].getpeerinfo()
+        assert_equal(len(node1_peers), 1)
+        node1_interface_id = node1_peers[0]["id"]
+        assert_equal(self.nodes[1].getblockfrompeer(blockhash, node1_interface_id), {})
+        block.calc_sha256()
+        p2p_i.wait_for_getdata([block.sha256])
+        p2p_i.send_and_ping(msg_block(block))
+        assert_equal(block_hex, self.nodes[1].getblock(blockhash, 0))
+        self.nodes[1].disconnectnode(nodeid=node1_interface_id)
+
+        self.log.info("Do fetch blocks even if the node has not synced past it yet")
 
         # Generate a block on the disconnected node that the pruning node is not connected to
         blockhash = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
