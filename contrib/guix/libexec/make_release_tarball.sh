@@ -18,6 +18,11 @@ git archive --prefix="${DISTNAME}/" HEAD |
  tar -xp \
   --exclude '*minisketch*' \
  # end of tar options
+
+# Generate correct build info file from git, before we lose git
+GIT_BUILD_INFO="$(cmake -P cmake/script/GenerateBuildInfo.cmake)"
+sed 's/\/\/ No build information available/'"${GIT_BUILD_INFO}"'/' -i "${DISTNAME}/cmake/script/GenerateBuildInfo.cmake"
+
 tar \
   --format=ustar \
   --sort=name \
