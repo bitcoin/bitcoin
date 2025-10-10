@@ -398,6 +398,10 @@ public:
     {
         return MakeSignalHandler(::uiInterface.NotifyNetworkActiveChanged_connect(fn));
     }
+    std::unique_ptr<Handler> handleNotifyNetworkLocalChanged(NotifyNetworkLocalChangedFn fn) override
+    {
+        return MakeSignalHandler(::uiInterface.NotifyNetworkLocalChanged_connect(fn));
+    }
     std::unique_ptr<Handler> handleNotifyAlertChanged(NotifyAlertChangedFn fn) override
     {
         return MakeSignalHandler(::uiInterface.NotifyAlertChanged_connect(fn));
