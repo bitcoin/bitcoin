@@ -32,7 +32,7 @@ Bitcoin Core requires one of the following compilers.
 | ImageMagick (non-macOS gui) | [link](https://imagemagick.org/) | N/A | 6.4.2 | No |
 | [MiniUPnPc](../depends/packages/miniupnpc.mk) (networking) | [link](https://miniupnp.tuxfamily.org/) | [2.2.7](https://github.com/bitcoin/bitcoin/pull/29707) | 2.1 | No |
 | [qrencode](../depends/packages/qrencode.mk) (gui) | [link](https://fukuchi.org/works/qrencode/) | [4.1.1](https://github.com/bitcoin/bitcoin/pull/27312) | N/A | No |
-| [Qt](../depends/packages/qt.mk) (gui) | [link](https://download.qt.io/official_releases/qt/) | 5.15.17 | [5.11.3](https://github.com/bitcoin/bitcoin/pull/24132) | No |
+| [Qt](../depends/packages/qt.mk) (gui) | [link](https://download.qt.io/archive/qt/) | 5.15.17 | [5.11.3](https://github.com/bitcoin/bitcoin/pull/24132) | No |
 | libicns (macOS deploy) | [link](https://icns.sourceforge.io/) | N/A | 0.8.1 | No |
 | librsvg (gui) | [link](https://gitlab.gnome.org/GNOME/librsvg) | N/A | 2.40.21 | No |
 | [ZeroMQ](../depends/packages/zeromq.mk) (notifications) | [link](https://github.com/zeromq/libzmq/releases) | [4.3.4](https://github.com/bitcoin/bitcoin/pull/23956) | 4.0.0 | No |
