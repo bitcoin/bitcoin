@@ -1176,6 +1176,10 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
 
         progressBarLabel->setVisible(true);
         progressBar->setFormat(tr("%1 behind").arg(timeBehindText));
+        const auto min_width = GUIUtil::TextWidth(progressBar->fontMetrics(), progressBar->format() + "00");
+        if (progressBar->minimumWidth() < min_width) {
+            progressBar->setMinimumWidth(min_width);
+        }
         progressBar->setMaximum(1000000000);
         progressBar->setValue(nVerificationProgress * 1000000000.0 + 0.5);
         progressBar->setVisible(true);
