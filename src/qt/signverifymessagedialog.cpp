@@ -15,9 +15,23 @@
 #include <key_io.h>
 #include <wallet/wallet.h>
 
+#include <cassert>
 #include <vector>
 
 #include <QClipboard>
+#include <QColor>
+#include <QEvent>
+#include <QLabel>
+
+static const SignVerifyMessageDialog::ThemeColors LIGHT_THEME_COLORS = {
+    .warning = QColor("#FF0000"),
+    .valid = QColor("#007D32")
+};
+
+static const SignVerifyMessageDialog::ThemeColors DARK_THEME_COLORS = {
+    .warning = QColor("#FF8080"),
+    .valid = QColor("#45DEB5")
+};
 
 SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
     QDialog(parent, GUIUtil::dialog_flags),
@@ -49,6 +63,8 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *_platformS
     ui->signatureIn_VM->setFont(GUIUtil::fixedPitchFont());
 
     GUIUtil::handleCloseWindowShortcut(this);
+
+    updateThemeColors();
 }
 
 SignVerifyMessageDialog::~SignVerifyMessageDialog()
@@ -116,7 +132,7 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
 
     CTxDestination destination = DecodeDestination(ui->addressIn_SM->text().toStdString());
     if (!IsValidDestination(destination)) {
-        ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
+        ui->statusLabel_SM->setStyleSheet(QStringLiteral("QLabel { color: %1; }").arg(m_theme_colors->warning.name()));
         ui->statusLabel_SM->setText(tr("The entered address is invalid.") + QString(" ") + tr("Please check the address and try again."));
         return;
     }
@@ -129,7 +145,7 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
     WalletModel::UnlockContext ctx(model->requestUnlock());
     if (!ctx.isValid())
     {
-        ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
+        ui->statusLabel_SM->setStyleSheet(QStringLiteral("QLabel { color: %1; }").arg(m_theme_colors->warning.name()));
         ui->statusLabel_SM->setText(tr("Wallet unlock was cancelled."));
         return;
     }
@@ -153,12 +169,12 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
     }
 
     if (res != SigningResult::OK) {
-        ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
+        ui->statusLabel_SM->setStyleSheet(QStringLiteral("QLabel { color: %1; }").arg(m_theme_colors->warning.name()));
         ui->statusLabel_SM->setText(QString("<nobr>") + error + QString("</nobr>"));
         return;
     }
 
-    ui->statusLabel_SM->setStyleSheet("QLabel { color: green; }");
+    ui->statusLabel_SM->setStyleSheet(QStringLiteral("QLabel { color: %1; }").arg(m_theme_colors->valid.name()));
     ui->statusLabel_SM->setText(QString("<nobr>") + tr("Message signed.") + QString("</nobr>"));
 
     ui->signatureOut_SM->setText(QString::fromStdString(signature));
@@ -201,9 +217,9 @@ void SignVerifyMessageDialog::on_verifyMessageButton_VM_clicked()
     const auto result = MessageVerify(address, signature, message);
 
     if (result == MessageVerificationResult::OK) {
-        ui->statusLabel_VM->setStyleSheet("QLabel { color: green; }");
+        ui->statusLabel_VM->setStyleSheet(QStringLiteral("QLabel { color: %1; }").arg(m_theme_colors->valid.name()));
     } else {
-        ui->statusLabel_VM->setStyleSheet("QLabel { color: red; }");
+        ui->statusLabel_VM->setStyleSheet(QStringLiteral("QLabel { color: %1; }").arg(m_theme_colors->warning.name()));
     }
 
     switch (result) {
@@ -294,7 +310,51 @@ void SignVerifyMessageDialog::changeEvent(QEvent* e)
         ui->addressBookButton_VM->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/address-book")));
         ui->verifyMessageButton_VM->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/transaction_0")));
         ui->clearButton_VM->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/remove")));
+        updateThemeColors();
     }
 
     QDialog::changeEvent(e);
+}
+
+void SignVerifyMessageDialog::updateThemeColors()
+{
+    // Detect dark mode for color palette selection
+    const bool dark_mode = GUIUtil::isDarkMode(palette().color(backgroundRole()));
+
+    // Set theme colors pointer based on dark mode
+    m_theme_colors = dark_mode ? &DARK_THEME_COLORS : &LIGHT_THEME_COLORS;
+
+    // Update status labels
+    updateStatusLabelColor(ui->statusLabel_SM);
+    updateStatusLabelColor(ui->statusLabel_VM);
+
+    // Re-trigger validation on all input fields to update their styling
+    // including background and text color
+    // Use setText to trigger validation
+    if (ui->addressIn_SM) {
+        ui->addressIn_SM->setText(ui->addressIn_SM->text());
+    }
+    if (ui->addressIn_VM) {
+        ui->addressIn_VM->setText(ui->addressIn_VM->text());
+    }
+    if (ui->signatureIn_VM) {
+        ui->signatureIn_VM->setText(ui->signatureIn_VM->text());
+    }
+}
+
+void SignVerifyMessageDialog::updateStatusLabelColor(QLabel* label)
+{
+    assert(m_theme_colors);
+
+    if (!label->text().isEmpty()) {
+        QString currentStyle = label->styleSheet();
+
+        // Check what color the label actually has and update if needed
+        if (currentStyle.contains(LIGHT_THEME_COLORS.valid.name()) || currentStyle.contains(DARK_THEME_COLORS.valid.name())) {
+            label->setStyleSheet(QStringLiteral("QLabel { color: %1; }").arg(m_theme_colors->valid.name()));
+        } else if (currentStyle.contains(LIGHT_THEME_COLORS.warning.name()) || currentStyle.contains(DARK_THEME_COLORS.warning.name())) {
+            label->setStyleSheet(QStringLiteral("QLabel { color: %1; }").arg(m_theme_colors->warning.name()));
+        }
+        // If neither color is found, do nothing (shouldn't happen in practice)
+    }
 }
