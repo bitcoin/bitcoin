@@ -26,6 +26,10 @@ static constexpr unsigned int DEFAULT_MAX_MEMPOOL_SIZE_MB{300};
 static constexpr unsigned int DEFAULT_BLOCKSONLY_MAX_MEMPOOL_SIZE_MB{5};
 /** Default for -mempoolexpiry, expiration time for mempool transactions in hours */
 static constexpr unsigned int DEFAULT_MEMPOOL_EXPIRY_HOURS{336};
+/** Default for -minrelaycoinblocks */
+static constexpr uint64_t DEFAULT_MINRELAYCOINBLOCKS{0};
+/** Default for -minrelaymaturity */
+static constexpr int DEFAULT_MINRELAYMATURITY{0};
 /** Default for -mempoolreplacement; must update docs in init.cpp manually */
 static constexpr RBFPolicy DEFAULT_MEMPOOL_RBF_POLICY{RBFPolicy::Always};
 /** Default for -mempooltruc; must update docs in init.cpp manually */
@@ -55,6 +59,8 @@ struct MemPoolOptions {
     int check_ratio{0};
     int64_t max_size_bytes{DEFAULT_MAX_MEMPOOL_SIZE_MB * 1'000'000};
     std::chrono::seconds expiry{std::chrono::hours{DEFAULT_MEMPOOL_EXPIRY_HOURS}};
+    uint64_t minrelaycoinblocks{DEFAULT_MINRELAYCOINBLOCKS};
+    int minrelaymaturity{DEFAULT_MINRELAYMATURITY};
     CFeeRate incremental_relay_feerate{DEFAULT_INCREMENTAL_RELAY_FEE};
     /** A fee rate smaller than this is considered zero fee (for relaying, mining and transaction creation) */
     CFeeRate min_relay_feerate{DEFAULT_MIN_RELAY_TX_FEE};
