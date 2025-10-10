@@ -53,6 +53,7 @@
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/hasher.h>
+#include <util/mempressure.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
 #include <util/result.h>
@@ -2863,8 +2864,15 @@ bool Chainstate::FlushStateToDisk(
         const auto nNow{NodeClock::now()};
         // The cache is large and we're within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
         bool fCacheLarge = mode == FlushStateMode::PERIODIC && cache_state >= CoinsCacheSizeState::LARGE;
-        // The cache is over the limit, we have to write now.
-        bool fCacheCritical = mode == FlushStateMode::IF_NEEDED && cache_state >= CoinsCacheSizeState::CRITICAL;
+        bool fCacheCritical = false;
+        if (mode == FlushStateMode::IF_NEEDED) {
+            if (cache_state >= CoinsCacheSizeState::CRITICAL) {
+                // The cache is over the limit, we have to write now.
+                fCacheCritical = true;
+            } else if (SystemNeedsMemoryReleased()) {
+                fCacheCritical = true;
+            }
+        }
         // It's been a while since we wrote the block index and chain state to disk. Do this frequently, so we don't need to redownload or reindex after a crash.
         bool fPeriodicWrite = mode == FlushStateMode::PERIODIC && nNow >= m_next_write;
         // Combine all conditions that result in a write to disk.
