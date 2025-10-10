@@ -271,11 +271,10 @@ struct CoinsViewCacheCursor
     //! This is an optimization compared to erasing all entries as the cursor iterates them when will_erase is set.
     //! Calling CCoinsMap::clear() afterwards is faster because a CoinsCachePair cannot be coerced back into a
     //! CCoinsMap::iterator to be erased, and must therefore be looked up again by key in the CCoinsMap before being erased.
-    CoinsViewCacheCursor(size_t& usage LIFETIMEBOUND,
-                        CoinsCachePair& sentinel LIFETIMEBOUND,
-                        CCoinsMap& map LIFETIMEBOUND,
-                        bool will_erase) noexcept
-        : m_usage(usage), m_sentinel(sentinel), m_map(map), m_will_erase(will_erase) {}
+    CoinsViewCacheCursor(CoinsCachePair& sentinel LIFETIMEBOUND,
+                         CCoinsMap& map LIFETIMEBOUND,
+                         bool will_erase) noexcept
+        : m_sentinel(sentinel), m_map(map), m_will_erase(will_erase) {}
 
     inline CoinsCachePair* Begin() const noexcept { return m_sentinel.second.Next(); }
     inline CoinsCachePair* End() const noexcept { return &m_sentinel; }
@@ -288,7 +287,7 @@ struct CoinsViewCacheCursor
         // Otherwise, clear the state of the entry.
         if (!m_will_erase) {
             if (current.second.coin.IsSpent()) {
-                m_usage -= current.second.coin.DynamicMemoryUsage();
+                assert(current.second.coin.DynamicMemoryUsage() == 0); // scriptPubKey was already cleared in SpendCoin
                 m_map.erase(current.first);
             } else {
                 current.second.SetClean();
@@ -299,7 +298,6 @@ struct CoinsViewCacheCursor
 
     inline bool WillErase(CoinsCachePair& current) const noexcept { return m_will_erase || current.second.coin.IsSpent(); }
 private:
-    size_t& m_usage;
     CoinsCachePair& m_sentinel;
     CCoinsMap& m_map;
     bool m_will_erase;

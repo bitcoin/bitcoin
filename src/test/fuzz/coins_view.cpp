@@ -59,25 +59,19 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
                 if (random_coin.IsSpent()) {
                     return;
                 }
-                Coin coin = random_coin;
-                bool expected_code_path = false;
-                const bool possible_overwrite = fuzzed_data_provider.ConsumeBool();
-                try {
-                    coins_view_cache.AddCoin(random_out_point, std::move(coin), possible_overwrite);
-                    expected_code_path = true;
-                } catch (const std::logic_error& e) {
-                    if (e.what() == std::string{"Attempted to overwrite an unspent coin (when possible_overwrite is false)"}) {
+                COutPoint outpoint{random_out_point};
+                Coin coin{random_coin};
+                if (fuzzed_data_provider.ConsumeBool()) {
+                    const bool possible_overwrite{fuzzed_data_provider.ConsumeBool()};
+                    try {
+                        coins_view_cache.AddCoin(outpoint, std::move(coin), possible_overwrite);
+                    } catch (const std::logic_error& e) {
+                        assert(e.what() == std::string{"Attempted to overwrite an unspent coin (when possible_overwrite is false)"});
                         assert(!possible_overwrite);
-                        expected_code_path = true;
-                        // AddCoin() decreases cachedCoinsUsage by the memory usage of the old coin at the beginning and
-                        // increases it by the value of the new coin at the end. If it throws in the process, the value
-                        // of cachedCoinsUsage would have been incorrectly decreased, leading to an underflow later on.
-                        // To avoid this, use Flush() to reset the value of cachedCoinsUsage in sync with the cacheCoins
-                        // mapping.
-                        (void)coins_view_cache.Flush();
                     }
+                } else {
+                    coins_view_cache.EmplaceCoinInternalDANGER(std::move(outpoint), std::move(coin));
                 }
-                assert(expected_code_path);
             },
             [&] {
                 (void)coins_view_cache.Flush();
@@ -131,7 +125,6 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
             [&] {
                 CoinsCachePair sentinel{};
                 sentinel.second.SelfRef(sentinel);
-                size_t usage{0};
                 CCoinsMapMemoryResource resource;
                 CCoinsMap coins_map{0, SaltedOutpointHasher{/*deterministic=*/true}, CCoinsMap::key_equal{}, &resource};
                 LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 10'000)
@@ -152,11 +145,10 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
                     auto it{coins_map.emplace(random_out_point, std::move(coins_cache_entry)).first};
                     if (dirty) CCoinsCacheEntry::SetDirty(*it, sentinel);
                     if (fresh) CCoinsCacheEntry::SetFresh(*it, sentinel);
-                    usage += it->second.coin.DynamicMemoryUsage();
                 }
                 bool expected_code_path = false;
                 try {
-                    auto cursor{CoinsViewCacheCursor(usage, sentinel, coins_map, /*will_erase=*/true)};
+                    auto cursor{CoinsViewCacheCursor(sentinel, coins_map, /*will_erase=*/true)};
                     uint256 best_block{coins_view_cache.GetBestBlock()};
                     if (fuzzed_data_provider.ConsumeBool()) best_block = ConsumeUInt256(fuzzed_data_provider);
                     // Set best block hash to non-null to satisfy the assertion in CCoinsViewDB::BatchWrite().
