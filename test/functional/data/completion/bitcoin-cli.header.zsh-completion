@@ -1,0 +1,25 @@
+# Copyright (c) 2012-2024 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+# call bitcoin-cli for RPC
+_bitcoin_rpc() {
+    # determine already specified args necessary for RPC
+    local rpcargs=()
+    local -a words_array
+    words_array=(${(z)BUFFER})
+
+    for i in $words_array; do
+        case "$i" in
+            -conf=*|-datadir=*|-regtest|-rpc*|-testnet|-testnet4)
+                rpcargs+=("$i")
+                ;;
+        esac
+    done
+
+    $bitcoin_cli "${rpcargs[@]}" "$@"
+}
+
+_bitcoin-cli() {
+    local context state line
+    local bitcoin_cli="$words[1]"
