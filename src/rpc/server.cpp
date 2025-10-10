@@ -9,6 +9,7 @@
 
 #include <common/args.h>
 #include <common/system.h>
+#include <httprpc.h>
 #include <logging.h>
 #include <node/context.h>
 #include <node/kernel_notifications.h>
@@ -243,9 +244,43 @@ static RPCHelpMan getrpcinfo()
     };
 }
 
+static RPCHelpMan getrpcwhitelist()
+{
+    return RPCHelpMan{"getrpcwhitelist",
+                "\nReturns whitelisted RPCs for the current user.\n",
+                {},
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::OBJ_DYN, "methods", "List of RPCs that the user is allowed to call",
+                        {
+                            {RPCResult::Type::NONE, "rpc", "Key is name of RPC method, value is null"},
+                        }},
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("getrpcwhitelist", "")
+                + HelpExampleRpc("getrpcwhitelist", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    UniValue whitelisted_rpcs(UniValue::VOBJ);
+    const std::set<std::string>& whitelist = GetWhitelistedRpcs(request.authUser);
+    for (const auto& rpc : whitelist) {
+        whitelisted_rpcs.pushKV(rpc, NullUniValue);
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("methods", whitelisted_rpcs);
+
+    return result;
+}
+    };
+}
+
 static const CRPCCommand vRPCCommands[]{
     /* Overall control/query calls */
     {"control", &getrpcinfo},
+    {"control", &getrpcwhitelist},
     {"control", &help},
     {"control", &stop},
     {"control", &uptime},
