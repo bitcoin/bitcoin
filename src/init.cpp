@@ -1985,17 +1985,31 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
+    connOptions.listenonion = args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION);
+
     CService onion_service_target;
     if (!connOptions.onion_binds.empty()) {
         onion_service_target = connOptions.onion_binds.front();
     } else if (!connOptions.vBinds.empty()) {
         onion_service_target = connOptions.vBinds.front();
+        if (connOptions.listenonion) {
+            std::string alternate_connections{"clearnet"}, only_from_localhost;
+            if (onion_service_target.IsBindAny()) {
+                only_from_localhost = " from localhost";
+            } else if (onion_service_target.IsLocal()) {
+                alternate_connections = "local";
+            }
+            InitWarning(strprintf(_("You are using a common listening port (%s) for both Tor and %s connections. All connections to this port%s will be assumed to be Tor connections, and will be denied any whitelist permissions. If this is not your intent, setup a separate -bind=<addr>[:<port>]=onion configuration, or set -listenonion=0."),
+                                  onion_service_target.ToStringAddrPort(),
+                                  alternate_connections,
+                                  only_from_localhost));
+        }
     } else {
         onion_service_target = DefaultOnionServiceTarget(default_bind_port_onion);
         connOptions.onion_binds.push_back(onion_service_target);
     }
 
-    if (args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION)) {
+    if (connOptions.listenonion) {
         if (connOptions.onion_binds.size() > 1) {
             InitWarning(strprintf(_("More than one onion bind address is provided. Using %s "
                                     "for the automatically created Tor onion service."),

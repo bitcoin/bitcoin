@@ -437,7 +437,7 @@ class ProxyTest(BitcoinTestFramework):
 
         self.log.info("Test passing -onlynet=onion without -proxy or -onion but with -listenonion=1 is ok")
         self.start_node(1, extra_args=["-onlynet=onion", "-listenonion=1"])
-        self.stop_node(1)
+        self.stop_node(1, expected_stderr=f'Warning: You are using a common listening port (127.0.0.1:{p2p_port(1)}) for both Tor and local connections. All connections to this port will be assumed to be Tor connections, and will be denied any whitelist permissions. If this is not your intent, setup a separate -bind=<addr>[:<port>]=onion configuration, or set -listenonion=0.')
 
         self.log.info("Test passing unknown network to -onlynet raises expected init error")
         self.nodes[1].extra_args = ["-onlynet=abc"]
