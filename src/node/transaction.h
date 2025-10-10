@@ -9,6 +9,8 @@
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
 
+#include <variant>
+
 class CBlockIndex;
 class CTxMemPool;
 namespace Consensus {
@@ -49,7 +51,7 @@ static const CAmount DEFAULT_MAX_BURN_AMOUNT{0};
  * @param[in]  wait_callback wait until callbacks have been processed to avoid stale result due to a sequentially RPC.
  * return error
  */
-[[nodiscard]] TransactionError BroadcastTransaction(NodeContext& node, CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback);
+[[nodiscard]] TransactionError BroadcastTransaction(NodeContext& node, CTransactionRef tx, std::string& err_string, const std::variant<CAmount, CFeeRate>& max_tx_fee, bool relay, bool wait_callback);
 
 /**
  * Return transaction with a given hash.
