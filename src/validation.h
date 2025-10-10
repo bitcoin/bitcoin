@@ -91,6 +91,13 @@ enum class SynchronizationState {
     POST_INIT
 };
 
+enum SpkReuseModes {
+    SRM_ALLOW,
+    SRM_REJECT,
+};
+
+extern SpkReuseModes SpkReuseMode;
+
 /** Documentation for argument 'checklevel'. */
 extern const std::vector<std::string> CHECKLEVEL_DOC;
 
