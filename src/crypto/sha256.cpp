@@ -62,6 +62,15 @@ void Transform_2way(unsigned char* out, const unsigned char* in);
 }
 #endif // DISABLE_OPTIMIZED_SHA256
 
+#if defined(__linux__) && defined(ENABLE_POWER8)
+#include <sys/auxv.h>
+namespace sha256_power8
+{
+void Transform_4way(unsigned char* out, const unsigned char* in);
+}
+#endif
+
+
 // Internal implementation code.
 namespace
 {
@@ -651,7 +660,13 @@ std::string SHA256AutoDetect(sha256_implementation::UseImplementation use_implem
         ret += ";avx2(8way)";
     }
 #endif
-#endif // defined(HAVE_GETCPUID)
+#elif (defined(__linux__)) && defined(ENABLE_POWER8)
+    if (getauxval(AT_HWCAP2) & 0x02000000) {
+        TransformD64_4way = sha256_power8::Transform_4way;
+        assert(SelfTest());
+        return "power8(4way),C(1way)";
+    }
+#endif
 
 #if defined(ENABLE_ARM_SHANI)
     bool have_arm_shani = false;
