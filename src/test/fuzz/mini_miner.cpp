@@ -187,7 +187,7 @@ FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
     miner_options.test_block_validity = false;
     miner_options.coinbase_output_script = CScript() << OP_0;
 
-    node::BlockAssembler miner{g_setup->m_node.chainman->ActiveChainstate(), &pool, miner_options};
+    node::BlockAssembler miner{g_setup->m_node.chainman->ActiveChainstate(), &pool, miner_options, g_setup->m_node};
     node::MiniMiner mini_miner{pool, outpoints};
     assert(mini_miner.IsReadyToCalculate());
 

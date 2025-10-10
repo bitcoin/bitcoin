@@ -152,7 +152,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     BOOST_CHECK(block.vtx[3]->GetHash() == hashMediumFeeTx);
 
     // Test the inclusion of package feerates in the block template and ensure they are sequential.
-    const auto block_package_feerates = BlockAssembler{m_node.chainman->ActiveChainstate(), &tx_mempool, options}.CreateNewBlock()->m_package_feerates;
+    const auto block_package_feerates = BlockAssembler{m_node.chainman->ActiveChainstate(), &tx_mempool, options, m_node}.CreateNewBlock()->m_package_feerates;
     BOOST_CHECK(block_package_feerates.size() == 2);
 
     // parent_tx and high_fee_tx are added to the block as a package.

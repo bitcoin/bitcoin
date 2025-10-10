@@ -113,7 +113,7 @@ std::shared_ptr<CBlock> PrepareBlock(const NodeContext& node,
                                      const BlockAssembler::Options& assembler_options)
 {
     auto block = std::make_shared<CBlock>(
-        BlockAssembler{Assert(node.chainman)->ActiveChainstate(), Assert(node.mempool.get()), assembler_options}
+        BlockAssembler{Assert(node.chainman)->ActiveChainstate(), Assert(node.mempool.get()), assembler_options, node}
             .CreateNewBlock()
             ->block);
 
