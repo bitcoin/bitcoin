@@ -5093,6 +5093,7 @@ void ChainstateManager::LoadExternalBlockFile(
     int nLoaded = 0;
     try {
         IOPRIO_IDLER(/*lowprio=*/true);
+        file_in.SetIdlePriority();
 
         BufferedFile blkdat{file_in, 2 * MAX_BLOCK_SERIALIZED_SIZE, MAX_BLOCK_SERIALIZED_SIZE + 8};
         // nRewind indicates where to resume scanning in case something goes wrong,

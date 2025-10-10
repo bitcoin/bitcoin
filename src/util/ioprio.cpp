@@ -53,3 +53,27 @@ int ioprio_set_idle() {
 }
 
 #endif
+
+
+#if HAVE_WINDOWS_IOPRIO
+
+#include <windows.h>
+#include <io.h>
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+
+bool ioprio_set_file_idle(FILE * const F) {
+    FILE_IO_PRIORITY_HINT_INFO priorityHint = {
+        .PriorityHint = IoPriorityHintLow,
+    };
+    intptr_t osfhandle = _get_osfhandle(_fileno(F));
+    if (osfhandle == (intptr_t)INVALID_HANDLE_VALUE || osfhandle == (intptr_t)-2) {
+        return false;
+    }
+    HANDLE hFile = (HANDLE)osfhandle;
+
+    return SetFileInformationByHandle(hFile, FileIoPriorityHintInfo, &priorityHint, sizeof(priorityHint));
+}
+
+#endif
