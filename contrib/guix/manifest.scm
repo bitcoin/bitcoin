@@ -9,6 +9,9 @@
              (gnu packages file)
              (gnu packages gawk)
              (gnu packages gcc)
+             (gnu packages gnome)
+             (gnu packages image)
+             (gnu packages imagemagick)
              ((gnu packages installers) #:select (nsis-x86_64))
              ((gnu packages linux) #:select (linux-libre-headers-6.1))
              (gnu packages llvm)
@@ -20,6 +23,7 @@
              ((gnu packages tls) #:select (openssl))
              ((gnu packages version-control) #:select (git-minimal))
              (guix build-system cmake)
+             (guix build-system font)
              (guix build-system gnu)
              (guix build-system python)
              (guix build-system pyproject)
@@ -150,6 +154,25 @@ desirable for building Bitcoin Core release binaries."
 chain for " target " development."))
       (home-page (package-home-page pthreads-xgcc))
       (license (package-license pthreads-xgcc)))))
+
+(define-public font-tuffy
+  (package
+    (name "font-tuffy")
+    (version "20120614")
+    (source
+     (origin
+       (method url-fetch)
+       (uri (string-append "http://tulrich.com/fonts/tuffy-" version ".tar.gz"))
+       (file-name (string-append name "-" version ".tar.gz"))
+       (sha256
+        (base32
+         "02vf72bgrp30vrbfhxjw82s115z27dwfgnmmzfb0n9wfhxxfpyf6"))))
+    (build-system font-build-system)
+    (home-page "http://tulrich.com/fonts/")
+    (synopsis "The Tuffy Truetype Font Family")
+    (description
+     "Thatcher Ulrich's first outline font design. He started with the goal of producing a neutral, readable sans-serif text font. There are lots of \"expressive\" fonts out there, but he wanted to start with something very plain and clean, something he might want to actually use. ")
+    (license license:public-domain)))
 
 ;; While LIEF is packaged in Guix, we maintain our own package,
 ;; to simplify building, and more easily apply updates.
@@ -548,6 +571,9 @@ inspecting signatures in Mach-O binaries.")
         cmake-minimal
         gnu-make
         pkg-config
+        imagemagick
+        libicns
+        librsvg-2.40
         ;; Scripting
         python-minimal ;; (3.10)
         ;; Git
@@ -556,7 +582,7 @@ inspecting signatures in Mach-O binaries.")
         python-lief)
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
-           (list zip
+           (list font-tuffy zip
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
                  nsis-x86_64
                  nss-certs
