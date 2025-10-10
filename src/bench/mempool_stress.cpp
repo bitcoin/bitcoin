@@ -33,7 +33,7 @@ static void AddTx(const CTransactionRef& tx, CTxMemPool& pool) EXCLUSIVE_LOCKS_R
     AddToMempool(pool, CTxMemPoolEntry(tx, 1000, nTime, nHeight, sequence, {
         .inputs_coin_age = coin_age,
         .in_chain_input_value = tx->GetValueOut(),
-    }, spendsCoinbase, sigOpCost, lp));
+    }, spendsCoinbase, /*extra_weight=*/0, sigOpCost, lp));
 }
 
 struct Available {

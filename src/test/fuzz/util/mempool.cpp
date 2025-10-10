@@ -38,9 +38,14 @@ CTxMemPoolEntry ConsumeTxMemPoolEntry(FuzzedDataProvider& fuzzed_data_provider, 
     const double coin_age = fuzzed_data_provider.ConsumeFloatingPoint<double>();
     const unsigned int entry_height = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, std::numeric_limits<unsigned int>::max() - 1);
     const bool spends_coinbase = fuzzed_data_provider.ConsumeBool();
+    const int32_t extra_weight = fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(0, GetTransactionWeight(tx) * 3);
     const unsigned int sig_op_cost = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, MAX_BLOCK_SIGOPS_COST);
     return CTxMemPoolEntry{MakeTransactionRef(tx), fee, time, entry_height, entry_sequence, {
         .inputs_coin_age = coin_age,
         .in_chain_input_value = tx.GetValueOut(),
-    }, spends_coinbase, sig_op_cost, {}};
+    },
+        /*spends_coinbase=*/ spends_coinbase,
+        /*extra_weight=*/ extra_weight,
+        /*sigops_cost=*/ sig_op_cost,
+        /*lp=*/ {}};
 }
