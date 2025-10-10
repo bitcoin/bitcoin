@@ -117,9 +117,9 @@ bool FileLock::TryLock()
 
 std::string get_filesystem_error_message(const fs::filesystem_error& e)
 {
-#ifndef WIN32
+    return e.code().message();
+#if 0
     return e.what();
-#else
     // Convert from Multi Byte to utf-16
     std::string mb_string(e.what());
     int size = MultiByteToWideChar(CP_ACP, 0, mb_string.data(), mb_string.size(), nullptr, 0);
