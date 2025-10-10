@@ -112,7 +112,8 @@ QString dateTimeStr(qint64 nTime)
 QFont fixedPitchFont(bool use_embedded_font)
 {
     if (use_embedded_font) {
-        return {"Roboto Mono"};
+        // If we don't specify a size, various contexts will initialize it differently
+        return {"Embedded variant of Roboto Mono", QFont().pointSize()};
     }
     return QFontDatabase::systemFont(QFontDatabase::FixedFont);
 }

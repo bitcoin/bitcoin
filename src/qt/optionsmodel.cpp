@@ -9,6 +9,7 @@
 #include <qt/bitcoinunits.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
+#include <qt/tonalutils.h>
 
 #include <chainparams.h>
 #include <common/args.h>
@@ -347,7 +348,8 @@ bool OptionsModel::Init(bilingual_str& error)
             m_font_money = FontChoiceAbstract::BestSystemFont;
         }
     }
-    Q_EMIT fontForMoneyChanged(getFontForMoney());
+    m_font_money_supports_tonal = TonalUtils::font_supports_tonal(getFontForMoney(BitcoinUnit::BTC));
+    Q_EMIT fontForMoneyChanged(getFontForMoney(BitcoinUnit::BTC));
 
     if (settings.contains("FontForQRCodes")) {
         m_font_qrcodes = FontChoiceFromString(settings.value("FontForQRCodes").toString());
@@ -633,8 +635,11 @@ QFont OptionsModel::getFontForChoice(const FontChoice& fc)
     return f;
 }
 
-QFont OptionsModel::getFontForMoney() const
+QFont OptionsModel::getFontForMoney(const BitcoinUnit unit) const
 {
+    if (BitcoinUnits::numsys(unit) == BitcoinUnits::Unit::TBC && !m_font_money_supports_tonal) {
+        return getFontForChoice(FontChoiceAbstract::EmbeddedFont);
+    }
     return getFontForChoice(m_font_money);
 }
 
@@ -810,7 +815,8 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         if (m_font_money == new_font) break;
         settings.setValue("FontForMoney", FontChoiceToString(new_font));
         m_font_money = new_font;
-        Q_EMIT fontForMoneyChanged(getFontForMoney());
+        m_font_money_supports_tonal = TonalUtils::font_supports_tonal(getFontForMoney(BitcoinUnit::BTC));
+        Q_EMIT fontForMoneyChanged(getFontForMoney(BitcoinUnit::BTC));
         break;
     }
     case FontForQRCodes:

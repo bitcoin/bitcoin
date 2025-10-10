@@ -99,7 +99,8 @@ QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) cons
     else if (role == Qt::FontRole) {
         const RecentRequestEntry * const rec = &list[index.row()];
         if (index.column() == Amount && rec->recipient.amount) {
-            return walletModel->getOptionsModel()->getFontForMoney();
+            const BitcoinUnit display_unit = walletModel->getOptionsModel()->getDisplayUnit();
+            return walletModel->getOptionsModel()->getFontForMoney(display_unit);
         }
     }
     else if (role == Qt::TextAlignmentRole)

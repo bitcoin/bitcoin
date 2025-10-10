@@ -25,15 +25,13 @@ BitcoinUnits::BitcoinUnits(QObject *parent):
 
 QList<BitcoinUnit> BitcoinUnits::availableUnits()
 {
-    QList<BitcoinUnit> unitlist;
+    static QList<BitcoinUnit> unitlist;
+    if (!unitlist.isEmpty()) return unitlist;
     unitlist.append(Unit::BTC);
     unitlist.append(Unit::mBTC);
     unitlist.append(Unit::uBTC);
     unitlist.append(Unit::SAT);
-    if (TonalUtils::Supported())
-    {
-        unitlist.append(Unit::TBC);
-    }
+    unitlist.append(Unit::TBC);
     return unitlist;
 }
 

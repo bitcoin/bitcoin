@@ -67,7 +67,6 @@ private Q_SLOTS:
     void on_addressBookButton_clicked();
     void on_pasteButton_clicked();
     void updateDisplayUnit();
-    void updateFontForMoney();
 
 protected:
     void changeEvent(QEvent* e) override;

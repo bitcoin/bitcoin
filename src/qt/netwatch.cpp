@@ -469,7 +469,8 @@ QVariant NetWatchLogModel::data(const QModelIndex& index, int role) const
                 return GUIUtil::fixedPitchFont();
             }
             if (header == Header::Value) {
-                return m_client_model->getOptionsModel()->getFontForMoney();
+                const auto display_unit = m_client_model->getOptionsModel()->getDisplayUnit();
+                return m_client_model->getOptionsModel()->getFontForMoney(display_unit);
             }
             return QVariant();
         default:
