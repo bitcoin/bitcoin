@@ -974,24 +974,39 @@ public:
         return BlockRef{tip->GetBlockHash(), tip->nHeight};
     }
 
-    BlockRef waitTipChanged(uint256 current_tip, MillisecondsDouble timeout) override
+    std::optional<BlockRef> waitTipChanged(uint256 current_tip, MillisecondsDouble timeout) override
     {
         if (timeout > std::chrono::years{100}) timeout = std::chrono::years{100}; // Upper bound to avoid UB in std::chrono
+        auto deadline{std::chrono::steady_clock::now() + timeout};
         {
             WAIT_LOCK(notifications().m_tip_block_mutex, lock);
-            notifications().m_tip_block_cv.wait_for(lock, timeout, [&]() EXCLUSIVE_LOCKS_REQUIRED(notifications().m_tip_block_mutex) {
-                // We need to wait for m_tip_block to be set AND for the value
-                // to differ from the current_tip value.
-                return (notifications().TipBlock() && notifications().TipBlock() != current_tip) || chainman().m_interrupt;
+            // For callers convenience, wait longer than the provided timeout
+            // during startup for the tip to be non-null. That way this function
+            // always returns valid tip information when possible and only
+            // returns null when shutting down, not when timing out.
+            notifications().m_tip_block_cv.wait(lock, [&]() EXCLUSIVE_LOCKS_REQUIRED(notifications().m_tip_block_mutex) {
+                return notifications().TipBlock() || chainman().m_interrupt;
+            });
+            if (chainman().m_interrupt) return {};
+            // At this point TipBlock is set, so continue to wait until it is
+            // different then `current_tip` provided by caller.
+            notifications().m_tip_block_cv.wait_until(lock, deadline, [&]() EXCLUSIVE_LOCKS_REQUIRED(notifications().m_tip_block_mutex) {
+                return Assume(notifications().TipBlock()) != current_tip || chainman().m_interrupt;
             });
         }
-        // Must release m_tip_block_mutex before locking cs_main, to avoid deadlocks.
-        LOCK(::cs_main);
-        return BlockRef{chainman().ActiveChain().Tip()->GetBlockHash(), chainman().ActiveChain().Tip()->nHeight};
+
+        if (chainman().m_interrupt) return {};
+
+        // Must release m_tip_block_mutex before getTip() locks cs_main, to
+        // avoid deadlocks.
+        return getTip();
     }
 
     std::unique_ptr<BlockTemplate> createNewBlock(const BlockCreateOptions& options) override
     {
+        // Ensure m_tip_block is set so consumers of BlockTemplate can rely on that.
+        if (!waitTipChanged(uint256::ZERO, MillisecondsDouble::max())) return {};
+
         BlockAssembler::Options assemble_options{options};
         ApplyArgsManOptions(*Assert(m_node.args), assemble_options);
         return std::make_unique<BlockTemplateImpl>(BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options}.CreateNewBlock(), m_node);
