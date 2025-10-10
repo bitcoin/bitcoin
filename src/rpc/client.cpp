@@ -151,6 +151,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "fundrawtransaction", 1, "lockUnspents"},
     { "fundrawtransaction", 1, "fee_rate"},
     { "fundrawtransaction", 1, "feeRate"},
+    { "fundrawtransaction", 1, "segwit_inputs_only"},
     { "fundrawtransaction", 1, "subtractFeeFromOutputs"},
     { "fundrawtransaction", 1, "input_weights"},
     { "fundrawtransaction", 1, "conf_target"},
