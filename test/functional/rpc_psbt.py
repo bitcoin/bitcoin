@@ -210,6 +210,55 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(decoded_psbt["tx"]["vout"][changepos]["scriptPubKey"]["type"], expected_type)
 
     def run_test(self):
+
+        self.log.info("Test that PSBT can have user-provided UTXOs filled and signed")
+
+        # Create 1 parent 1 child chain from same wallet
+        psbtx_parent = self.nodes[0].walletcreatefundedpsbt([], {self.nodes[0].getnewaddress():10})['psbt']
+        processed_parent = self.nodes[0].walletprocesspsbt(psbtx_parent)
+        parent_txinfo = self.nodes[0].decoderawtransaction(processed_parent["hex"])
+        parent_txid = parent_txinfo["txid"]
+        parent_vout = 0 # just take the first output to spend
+
+        psbtx_child = self.nodes[0].createpsbt([{"txid": parent_txid, "vout": parent_vout}], {self.nodes[0].getnewaddress(): parent_txinfo["vout"][0]["value"] - Decimal("0.01")})
+
+        # Can not sign due to lack of utxo
+        res = self.nodes[0].walletprocesspsbt(psbtx_child)
+        assert not res["complete"]
+
+        prev_txs = [processed_parent["hex"]]
+        utxo_updated = self.nodes[0].utxoupdatepsbt(psbt=psbtx_child, prevtxs=prev_txs)
+        res = self.nodes[0].walletprocesspsbt(utxo_updated)
+        assert res["complete"]
+
+        # And descriptorprocesspsbt does the same
+        utxo_updated = self.nodes[0].descriptorprocesspsbt(psbt=psbtx_child, descriptors=[], prevtxs=prev_txs)
+        res = self.nodes[0].walletprocesspsbt(utxo_updated["psbt"])
+        assert res["complete"]
+
+        # Multiple inputs are ok, even if unrelated transactions included
+        prev_txs = [processed_parent["hex"], self.nodes[0].createrawtransaction([], [])]
+        utxo_updated = self.nodes[0].utxoupdatepsbt(psbt=psbtx_child, prevtxs=prev_txs)
+        res = self.nodes[0].walletprocesspsbt(utxo_updated)
+        assert res["complete"]
+
+        # If only irrelevant previous transactions are included, it's a no-op
+        prev_txs = [self.nodes[0].createrawtransaction([], [])]
+        utxo_updated = self.nodes[0].utxoupdatepsbt(psbt=psbtx_child, prevtxs=prev_txs)
+        assert_equal(utxo_updated, psbtx_child)
+        res = self.nodes[0].walletprocesspsbt(utxo_updated)
+        assert not res["complete"]
+
+        # If there's a txid collision, it's rejected
+        prev_txs = [processed_parent["hex"], processed_parent["hex"]]
+        assert_raises_rpc_error(-22, f"Duplicate txids in prev_txs {parent_txid}", self.nodes[0].utxoupdatepsbt, psbt=psbtx_child, prevtxs=prev_txs)
+
+        # Should abort safely if supplied transaction matches txid of prevout, but has insufficient outputs to match with prevout.n
+        psbtx_bad_child = self.nodes[0].createpsbt([{"txid": parent_txid, "vout": len(parent_txinfo["vout"])}], {self.nodes[0].getnewaddress(): parent_txinfo["vout"][0]["value"] - Decimal("0.01")})
+
+        prev_txs = [processed_parent["hex"]]
+        assert_raises_rpc_error(-22, f"Previous tx has too few outputs for PSBT input {parent_txid}", self.nodes[0].utxoupdatepsbt, psbt=psbtx_bad_child, prevtxs=prev_txs)
+
         # Create and fund a raw tx for sending 10 BTC
         psbtx1 = self.nodes[0].walletcreatefundedpsbt([], {self.nodes[2].getnewaddress():10})['psbt']
 
