@@ -168,7 +168,15 @@ class HTTPBasicsTest(BitcoinTestFramework):
                     assert b'"Requested wallet does not exist or is not loaded"' in resp.data
 
     def test_rpccookieperms(self):
-        p = {"owner": 0o600, "group": 0o640, "all": 0o644}
+        p = {
+            "owner": 0o600,
+            "group": 0o640,
+            "all": 0o644,
+            "440": 0o440,
+            "0640": 0o640,
+            "444": 0o444,
+            "1660": 0o1660,
+        }
 
         if platform.system() == 'Windows':
             self.log.info(f"Skip cookie file permissions checks as OS detected as: {platform.system()=}")
@@ -177,7 +185,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
         self.log.info('Check cookie file permissions can be set using -rpccookieperms')
 
         cookie_file_path = self.nodes[1].chain_path / '.cookie'
-        PERM_BITS_UMASK = 0o777
+        PERM_BITS_UMASK = 0o7777
 
         def test_perm(perm: Optional[str]):
             if not perm:
@@ -190,16 +198,37 @@ class HTTPBasicsTest(BitcoinTestFramework):
             actual_perms = file_stat.st_mode & PERM_BITS_UMASK
             expected_perms = p[perm]
             assert_equal(expected_perms, actual_perms)
+            return actual_perms
 
         # Remove any leftover rpc{user|password} config options from previous tests
         self.nodes[1].replace_in_config([("rpcuser", "#rpcuser"), ("rpcpassword", "#rpcpassword")])
 
         self.log.info('Check default cookie permission')
-        test_perm(None)
+        default_perms = test_perm(None)
 
         self.log.info('Check custom cookie permissions')
-        for perm in ["owner", "group", "all"]:
+        for perm in p.keys():
             test_perm(perm)
+
+        self.log.info('Check leaving cookie permissions alone')
+        unassigned_perms = os.stat(self.nodes[1].chain_path / 'debug.log').st_mode & PERM_BITS_UMASK
+        self.restart_node(1, extra_args=["-rpccookieperms=0"])
+        actual_perms = os.stat(cookie_file_path).st_mode & PERM_BITS_UMASK
+        assert_equal(unassigned_perms, actual_perms)
+        self.restart_node(1, extra_args=["-norpccookieperms"])
+        actual_perms = os.stat(cookie_file_path).st_mode & PERM_BITS_UMASK
+        assert_equal(unassigned_perms, actual_perms)
+
+        self.log.info('Check -norpccookieperms -rpccookieperms')
+        self.restart_node(1, extra_args=["-rpccookieperms=0", "-rpccookieperms=1"])
+        actual_perms = os.stat(cookie_file_path).st_mode & PERM_BITS_UMASK
+        assert_equal(default_perms, actual_perms)
+        self.restart_node(1, extra_args=["-norpccookieperms", "-rpccookieperms"])
+        actual_perms = os.stat(cookie_file_path).st_mode & PERM_BITS_UMASK
+        assert_equal(default_perms, actual_perms)
+        self.restart_node(1, extra_args=["-rpccookieperms=1660", "-norpccookieperms", "-rpccookieperms"])
+        actual_perms = os.stat(cookie_file_path).st_mode & PERM_BITS_UMASK
+        assert_equal(default_perms, actual_perms)
 
     def test_norpccookiefile(self, node0_cookie_path):
         assert self.nodes[0].is_node_stopped(), "We expect previous test to stopped the node"
@@ -304,11 +333,26 @@ class HTTPBasicsTest(BitcoinTestFramework):
         cookie_path =     self.nodes[0].chain_path / ".cookie"
         cookie_path_tmp = self.nodes[0].chain_path / ".cookie.tmp"
         cookie_path_tmp.mkdir()
+        cookie_path_tmp_subdir = cookie_path_tmp / "subdir"
+        cookie_path_tmp_subdir.mkdir()
         self.nodes[0].assert_start_raises_init_error(expected_msg=init_error)
+        cookie_path_tmp_subdir.rmdir()
         cookie_path_tmp.rmdir()
         assert not cookie_path.exists()
         self.restart_node(0)
         assert cookie_path.exists()
+        self.stop_node(0)
+
+        cookie_path.mkdir()
+        cookie_path_subdir = cookie_path / "subdir"
+        cookie_path_subdir.mkdir()
+        self.nodes[0].assert_start_raises_init_error(expected_msg=init_error)
+        cookie_path_subdir.rmdir()
+        cookie_path.rmdir()
+
+        self.log.info('Check that a non-writable cookie file will get replaced gracefully')
+        cookie_path.mkdir(mode=1)
+        self.restart_node(0)
         self.stop_node(0)
 
         self.test_rpccookieperms()

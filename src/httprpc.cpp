@@ -294,12 +294,18 @@ static bool InitRPCAuthentication()
         std::optional<fs::perms> cookie_perms{std::nullopt};
         auto cookie_perms_arg{gArgs.GetArg("-rpccookieperms")};
         if (cookie_perms_arg) {
-            auto perm_opt = InterpretPermString(*cookie_perms_arg);
-            if (!perm_opt) {
-                LogError("Invalid -rpccookieperms=%s; must be one of 'owner', 'group', or 'all'.", *cookie_perms_arg);
-                return false;
+            if (*cookie_perms_arg == "0") {
+                cookie_perms = std::nullopt;
+            } else if (cookie_perms_arg->empty() || *cookie_perms_arg == "1") {
+                // leave at default
+            } else {
+                auto perm_opt = InterpretPermString(*cookie_perms_arg);
+                if (!perm_opt) {
+                    LogError("Invalid -rpccookieperms=%s; must be one of 'owner', 'group', or 'all'.", *cookie_perms_arg);
+                    return false;
+                }
+                cookie_perms = *perm_opt;
             }
-            cookie_perms = *perm_opt;
         }
 
         if (!GenerateAuthCookie(&strRPCUserColonPass, std::make_pair(cookie_perms, bool(cookie_perms_arg)))) {
