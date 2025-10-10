@@ -97,6 +97,7 @@ class BumpFeeTest(BitcoinTestFramework):
             test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address)
         self.test_invalid_parameters(rbf_node, peer_node, dest_address)
         test_segwit_bumpfee_succeeds(self, rbf_node, dest_address)
+        test_nonrbf_bumpfee_succeeds(self, peer_node, dest_address)
         test_nonrbf_bumpfee_fails(self, peer_node, dest_address)
         test_notmine_bumpfee(self, rbf_node, peer_node, dest_address)
         test_bumpfee_with_descendant_fails(self, rbf_node, rbf_node_address, dest_address)
@@ -373,6 +374,13 @@ def test_segwit_bumpfee_succeeds(self, rbf_node, dest_address):
     bumped_tx = rbf_node.bumpfee(rbfid)
     assert bumped_tx["txid"] in rbf_node.getrawmempool()
     assert rbfid not in rbf_node.getrawmempool()
+    self.clear_mempool()
+
+
+def test_nonrbf_bumpfee_succeeds(self, peer_node, dest_address):
+    self.log.info("Test that we can replace a non RBF transaction (RPC require_replacable=false)")
+    not_rbfid = peer_node.sendtoaddress(dest_address, Decimal("0.00090000"))
+    peer_node.bumpfee(not_rbfid, require_replacable=False)
     self.clear_mempool()
 
 
