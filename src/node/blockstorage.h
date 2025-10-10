@@ -371,6 +371,7 @@ public:
 
     /** Attempt to stay below this number of bytes of block files. */
     [[nodiscard]] uint64_t GetPruneTarget() const { return m_opts.prune_target; }
+    [[nodiscard]] uint64_t GetPruneTargetForChainstate(const Chainstate& chain, ChainstateManager& chainman) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     static constexpr auto PRUNE_TARGET_MANUAL{std::numeric_limits<uint64_t>::max()};
 
     [[nodiscard]] bool LoadingBlocks() const { return m_importing || !m_blockfiles_indexed; }

@@ -25,6 +25,7 @@ struct BlockManagerOpts {
     const CChainParams& chainparams;
     bool use_xor{DEFAULT_XOR_BLOCKSDIR};
     uint64_t prune_target{0};
+    int64_t prune_target_during_init{-1};
     bool fast_prune{false};
     const fs::path blocks_dir;
     Notifications& notifications;
