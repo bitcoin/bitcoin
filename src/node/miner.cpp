@@ -253,7 +253,7 @@ void BlockAssembler::addChunks()
     chunk_txs.reserve(MAX_CLUSTER_COUNT_LIMIT);
     while (selected_transactions.size() > 0) {
         // Check to see if min fee rate is still respected.
-        if (chunk_feerate.fee < m_options.blockMinFeeRate.GetFee(chunk_feerate_vsize.size)) {
+        if (chunk_feerate_vsize < m_options.blockMinFeeRate.GetFeePerVSize()) {
             // Everything else we might consider has a lower feerate
             return;
         }
