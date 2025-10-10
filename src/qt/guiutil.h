@@ -288,6 +288,7 @@ namespace GUIUtil
     QString formatNiceTimeOffset(qint64 secs);
 
     QString formatBytes(uint64_t bytes);
+    QString formatBytesps(float bytes);
 
     qreal calculateIdealFontSize(int width, const QString& text, QFont font, qreal minPointSize = 4, qreal startPointSize = 14);
 
