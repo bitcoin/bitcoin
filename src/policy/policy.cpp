@@ -170,6 +170,9 @@ bool IsStandardTx(const CTransaction& tx, const kernel::MemPoolOptions& opts, st
             nDataOut++;
             continue;
         }
+        else if ((whichType == TxoutType::PUBKEY) && (!opts.permit_bare_pubkey)) {
+            MaybeReject("bare-pubkey");
+        }
         else if ((whichType == TxoutType::MULTISIG) && (!opts.permit_bare_multisig)) {
             MaybeReject("bare-multisig");
         }
