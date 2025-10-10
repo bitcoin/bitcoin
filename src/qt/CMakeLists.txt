@@ -99,6 +99,7 @@ add_library(bitcoinqt STATIC EXCLUDE_FROM_ALL
   $<$<PLATFORM_ID:Darwin>:macos_appnap.h>
   $<$<PLATFORM_ID:Darwin>:macos_appnap.mm>
   modaloverlay.cpp
+  mempoolstats.cpp
   modaloverlay.h
   networkstyle.cpp
   networkstyle.h
