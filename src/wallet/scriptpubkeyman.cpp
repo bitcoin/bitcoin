@@ -218,6 +218,47 @@ IsMineResult IsMineInner(const LegacyDataSPKM& keystore, const CScript& scriptPu
 
 } // namespace
 
+SigningResult ScriptPubKeyMan::SignMessageBIP322(MessageSignatureFormat format, const SigningProvider* keystore, const std::string& message, const CTxDestination& address, std::string& str_sig) const
+{
+    assert(format != MessageSignatureFormat::LEGACY);
+
+    MessageVerificationResult result; // unused
+    auto txs = BIP322Txs::Create(address, message, result);
+    assert(txs);
+
+    const CTransaction& to_spend = txs->m_to_spend;
+    CMutableTransaction to_sign(txs->m_to_sign);
+
+    // Create the "unspent output" map, consisting of the to_spend output
+    std::map<COutPoint, Coin> coins;
+    coins[to_sign.vin[0].prevout] = Coin(to_spend.vout[0], 1, false);
+
+    // Sign the transaction
+    std::map<int, bilingual_str> errors;
+    if (!::SignTransaction(to_sign, keystore, coins, SIGHASH_ALL, errors)) {
+        // TODO: this may be a multisig which successfully signed but needed additional signatures
+        return SigningResult::SIGNING_FAILED;
+    }
+
+    // We force the format to FULL, if this turned out to be a legacy format (p2pkh) signature
+    if (to_sign.vin[0].scriptSig.size() > 0 || to_sign.vin[0].scriptWitness.IsNull()) {
+        format = MessageSignatureFormat::FULL;
+    }
+
+    DataStream ds;
+    if (format == MessageSignatureFormat::SIMPLE) {
+        // Simple format output
+        ds << to_sign.vin[0].scriptWitness.stack;
+    } else {
+        // Full format output
+        ds << TX_WITH_WITNESS(to_sign);
+    }
+
+    str_sig = EncodeBase64(ds);
+
+    return SigningResult::OK;
+}
+
 isminetype LegacyDataSPKM::IsMine(const CScript& script) const
 {
     switch (IsMineInner(*this, script, IsMineSigVersion::TOP)) {
@@ -625,16 +666,26 @@ bool LegacyScriptPubKeyMan::SignTransaction(CMutableTransaction& tx, const std::
     return ::SignTransaction(tx, this, coins, sighash, input_errors, inputs_amount_sum);
 }
 
-SigningResult LegacyScriptPubKeyMan::SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const
+SigningResult LegacyScriptPubKeyMan::SignMessage(const MessageSignatureFormat format, const std::string& message, const CTxDestination& address, std::string& str_sig) const
 {
+    if (format != MessageSignatureFormat::LEGACY) {
+        return SignMessageBIP322(format, this, message, address, str_sig);
+    }
+
+    const PKHash* pkhash = std::get_if<PKHash>(&address);
+    if (!pkhash) {
+        return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
+    }
+
     CKey key;
-    if (!GetKey(ToKeyID(pkhash), key)) {
+    if (!GetKey(ToKeyID(*pkhash), key)) {
         return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
     }
 
     if (MessageSign(key, message, str_sig)) {
         return SigningResult::OK;
     }
+
     return SigningResult::SIGNING_FAILED;
 }
 
@@ -2547,21 +2598,31 @@ bool DescriptorScriptPubKeyMan::SignTransaction(CMutableTransaction& tx, const s
     return ::SignTransaction(tx, keys.get(), coins, sighash, input_errors, inputs_amount_sum);
 }
 
-SigningResult DescriptorScriptPubKeyMan::SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const
+SigningResult DescriptorScriptPubKeyMan::SignMessage(const MessageSignatureFormat format, const std::string& message, const CTxDestination& address, std::string& str_sig) const
 {
-    std::unique_ptr<FlatSigningProvider> keys = GetSigningProvider(GetScriptForDestination(pkhash), true);
+    std::unique_ptr<FlatSigningProvider> keys = GetSigningProvider(GetScriptForDestination(address), true);
     if (!keys) {
         return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
     }
 
+    if (format != MessageSignatureFormat::LEGACY) {
+        return SignMessageBIP322(format, keys.get(), message, address, str_sig);
+    }
+
+    const PKHash* pkhash = std::get_if<PKHash>(&address);
+    if (!pkhash) {
+        return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
+    }
+
     CKey key;
-    if (!keys->GetKey(ToKeyID(pkhash), key)) {
+    if (!keys->GetKey(ToKeyID(*pkhash), key)) {
         return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
     }
 
     if (!MessageSign(key, message, str_sig)) {
         return SigningResult::SIGNING_FAILED;
     }
+
     return SigningResult::OK;
 }
 
