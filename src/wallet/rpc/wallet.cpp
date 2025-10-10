@@ -1048,6 +1048,7 @@ RPCHelpMan walletdisplayaddress();
 
 // backup
 RPCHelpMan dumpprivkey();
+RPCHelpMan dumpmasterprivkey();
 RPCHelpMan importprivkey();
 RPCHelpMan importaddress();
 RPCHelpMan importpubkey();
@@ -1118,6 +1119,7 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &createwalletdescriptor},
         {"wallet", &restorewallet},
         {"wallet", &dumpprivkey},
+        {"wallet", &dumpmasterprivkey},
         {"wallet", &dumpwallet},
         {"wallet", &encryptwallet},
         {"wallet", &getaddressesbylabel},
@@ -1172,6 +1174,7 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &unloadwallet},
         {"wallet", &upgradewallet},
         {"wallet", &walletcreatefundedpsbt},
+
 #ifdef ENABLE_EXTERNAL_SIGNER
         {"wallet", &walletdisplayaddress},
 #endif // ENABLE_EXTERNAL_SIGNER
