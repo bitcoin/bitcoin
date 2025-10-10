@@ -8,6 +8,7 @@
 #include <qt/forms/ui_debugwindow.h>
 
 #include <chainparams.h>
+#include <clientversion.h>
 #include <common/system.h>
 #include <interfaces/node.h>
 #include <node/connection_types.h>
@@ -30,6 +31,7 @@
 
 #include <univalue.h>
 
+#include <Qt>
 #include <QAbstractButton>
 #include <QAbstractItemModel>
 #include <QColor>
@@ -39,6 +41,7 @@
 #include <QFontMetrics>
 #include <QKeyEvent>
 #include <QKeySequence>
+#include <QLabel>
 #include <QLatin1String>
 #include <QLocale>
 #include <QMenu>
@@ -520,6 +523,29 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
     m_banlist_widget_header_state = settings.value("PeersTabBanlistHeaderState").toByteArray();
     m_alternating_row_colors = settings.value("PeersTabAlternatingRowColors").toBool();
 
+    {
+        // Move everything down a row to make room
+        const int colCount = ui->gridLayout->columnCount();
+        for (int row{ui->gridLayout->rowCount()}; row > 6; --row) {
+            for (int col{0}; col < colCount; ++col) {
+                QLayoutItem* const layout_item = ui->gridLayout->itemAtPosition(row - 1, col);
+                if (!layout_item) continue;
+                const int index = ui->gridLayout->indexOf(layout_item);
+                int row_rb, col_rb, rowspan, colspan;
+                ui->gridLayout->getItemPosition(index, &row_rb, &col_rb, &rowspan, &colspan);
+                if (row_rb != row - 1 || col_rb != col) continue;
+                ui->gridLayout->takeAt(index);
+                ui->gridLayout->addItem(layout_item, row, col, rowspan, colspan);
+            }
+        }
+        ui->gridLayout->addWidget(new QLabel(tr("Expiry time"), this), 6, 0);
+        m_label_softwareexpiry = new QLabel(this);
+        m_label_softwareexpiry->setCursor(Qt::IBeamCursor);
+        m_label_softwareexpiry->setTextFormat(Qt::PlainText);
+        m_label_softwareexpiry->setTextInteractionFlags(Qt::LinksAccessibleByMouse | Qt::TextSelectableByKeyboard | Qt::TextSelectableByMouse);
+        ui->gridLayout->addWidget(m_label_softwareexpiry, 6, 1);
+    }
+
     constexpr QChar nonbreaking_hyphen(8209);
     const std::vector<QString> CONNECTION_TYPE_DOC{
         //: Explanatory text for an inbound peer connection.
@@ -856,6 +882,12 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         ui->dataDir->setText(model->dataDir());
         ui->blocksDir->setText(model->blocksDir());
         ui->startupTime->setText(model->formatClientStartupTime());
+        if (g_software_expiry > 0) {
+            m_label_softwareexpiry->setText(QDateTime::fromSecsSinceEpoch(g_software_expiry).toString());
+        } else {
+            //: Software expiry, if it never expires
+            m_label_softwareexpiry->setText(tr("Never"));
+        }
         ui->networkName->setText(QString::fromStdString(Params().GetChainTypeString()));
 
         //Setup autocomplete and attach it
