@@ -78,7 +78,11 @@ void SendCoinsEntry::setModel(WalletModel *_model)
     }
 
     if (_model && _model->getOptionsModel())
+    {
         connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &SendCoinsEntry::updateDisplayUnit);
+        connect(_model->getOptionsModel(), &OptionsModel::fontForMoneyChanged, this, &SendCoinsEntry::updateFontForMoney);
+        updateFontForMoney();
+    }
 
     clear();
 }
@@ -220,6 +224,13 @@ void SendCoinsEntry::updateDisplayUnit()
 {
     if (model && model->getOptionsModel()) {
         ui->payAmount->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
+    }
+}
+
+void SendCoinsEntry::updateFontForMoney()
+{
+    if (model && model->getOptionsModel()) {
+        ui->payAmount->setFontForMoney(model->getOptionsModel()->getFontForMoney());
     }
 }
 

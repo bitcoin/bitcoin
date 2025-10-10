@@ -468,6 +468,9 @@ QVariant NetWatchLogModel::data(const QModelIndex& index, int role) const
             if (header == Header::Id) {
                 return GUIUtil::fixedPitchFont();
             }
+            if (header == Header::Value) {
+                return m_client_model->getOptionsModel()->getFontForMoney();
+            }
             return QVariant();
         default:
             return QVariant();
@@ -680,10 +683,12 @@ void NetWatchLogModel::setClientModel(ClientModel *model)
         m_validation_interface = nullptr;
 
         disconnect(m_client_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &NetWatchLogModel::updateDisplayUnit);
+        disconnect(m_client_model->getOptionsModel(), &OptionsModel::fontForMoneyChanged, this, &NetWatchLogModel::updateDisplayUnit);
     }
     m_client_model = model;
     if (model) {
         connect(model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &NetWatchLogModel::updateDisplayUnit);
+        connect(model->getOptionsModel(), &OptionsModel::fontForMoneyChanged, this, &NetWatchLogModel::updateDisplayUnit);
 
         Assert(model->node().context()->validation_signals);
         m_validation_interface = new NetWatchValidationInterface(*this);

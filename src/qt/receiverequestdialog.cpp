@@ -34,7 +34,10 @@ void ReceiveRequestDialog::setModel(WalletModel *_model)
     this->model = _model;
 
     if (_model)
+    {
         connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &ReceiveRequestDialog::updateDisplayUnit);
+        connect(_model->getOptionsModel(), &OptionsModel::fontForMoneyChanged, this, &ReceiveRequestDialog::updateDisplayUnit);
+    }
 
     // update the display unit if necessary
     update();
@@ -100,7 +103,7 @@ void ReceiveRequestDialog::setInfo(const SendCoinsRecipient &_info)
 void ReceiveRequestDialog::updateDisplayUnit()
 {
     if (!model) return;
-    ui->amount_content->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), info.amount));
+    ui->amount_content->setText(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getFontForMoney(), model->getOptionsModel()->getDisplayUnit(), info.amount));
 }
 
 void ReceiveRequestDialog::on_btnCopyURI_clicked()

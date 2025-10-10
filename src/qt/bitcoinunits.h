@@ -9,6 +9,7 @@
 
 #include <QAbstractListModel>
 #include <QDataStream>
+#include <QFont>
 #include <QString>
 
 // U+2009 THIN SPACE = UTF-8 E2 80 89
@@ -75,7 +76,7 @@ public:
     //! Format as string (with unit)
     static QString formatWithUnit(Unit unit, const CAmount& amount, bool plussign = false, SeparatorStyle separators = SeparatorStyle::STANDARD);
     //! Format as HTML string (with unit)
-    static QString formatHtmlWithUnit(Unit unit, const CAmount& amount, bool plussign = false, SeparatorStyle separators = SeparatorStyle::STANDARD);
+    static QString formatHtmlWithUnit(const QFont& font, Unit unit, const CAmount& amount, bool plussign = false, SeparatorStyle separators = SeparatorStyle::STANDARD);
     //! Format as string (with unit) of fixed length to preserve privacy, if it is set.
     static QString formatWithPrivacy(Unit unit, const CAmount& amount, SeparatorStyle separators, bool privacy);
     //! Parse string to coin amount
