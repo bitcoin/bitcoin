@@ -10,6 +10,7 @@
 #include <common/signmessage.h>
 #include <common/types.h>
 #include <logging.h>
+#include <musig.h>
 #include <node/types.h>
 #include <psbt.h>
 #include <script/descriptor.h>
@@ -292,6 +293,19 @@ private:
 
     //! Number of pre-generated keys/scripts (part of the look-ahead process, used to detect payments)
     int64_t m_keypool_size GUARDED_BY(cs_desc_man){DEFAULT_KEYPOOL_SIZE};
+
+    /** Map of a session id to MuSig2 secnonce
+     *
+     * Stores MuSig2 secnonces while the MuSig2 signing session is still ongoing.
+     * Note that these secnonces must not be reused. In order to avoid being tricked into
+     * reusing a nonce, this map is held only in memory and must not be written to disk.
+     * The side effect is that signing sessions cannot persist across restarts, but this
+     * must be done in order to prevent nonce reuse.
+     *
+     * The session id is an arbitrary value set by the signer in order for the signing logic
+     * to find ongoing signing sessions. It is the SHA256 of aggregate xonly key, + participant pubkey + sighash.
+     */
+    mutable std::map<uint256, MuSig2SecNonce> m_musig2_secnonces;
 
     bool AddDescriptorKeyWithDB(WalletBatch& batch, const CKey& key, const CPubKey &pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 

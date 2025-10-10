@@ -641,13 +641,7 @@ public:
             // Make our pubkey provider
             if (IsRangedDerivation() || !m_path.empty()) {
                 // Make the synthetic xpub and construct the BIP32PubkeyProvider
-                CExtPubKey extpub;
-                extpub.nDepth = 0;
-                std::memset(extpub.vchFingerprint, 0, 4);
-                extpub.nChild = 0;
-                extpub.chaincode = MUSIG_CHAINCODE;
-                extpub.pubkey = m_aggregate_pubkey.value();
-
+                CExtPubKey extpub = CreateMuSig2SyntheticXpub(m_aggregate_pubkey.value());
                 m_aggregate_provider = std::make_unique<BIP32PubkeyProvider>(m_expr_index, extpub, m_path, m_derive, /*apostrophe=*/false);
             } else {
                 m_aggregate_provider = std::make_unique<ConstPubkeyProvider>(m_expr_index, m_aggregate_pubkey.value(), /*xonly=*/false);
@@ -1647,6 +1641,7 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
  * @param[out] apostrophe only updated if hardened derivation is found
  * @param[out] error parsing error message
  * @param[in] allow_multipath Allows the parsed path to use the multipath specifier
+ * @param[out] has_hardened Records whether the path contains any hardened derivation
  * @returns false if parsing failed
  **/
 [[nodiscard]] bool ParseKeyPath(const std::vector<std::span<const char>>& split, std::vector<KeyPath>& out, bool& apostrophe, std::string& error, bool allow_multipath, bool& has_hardened)
@@ -1843,20 +1838,20 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
         bool any_ranged = false;
         bool all_bip32 = true;
         std::vector<std::vector<std::unique_ptr<PubkeyProvider>>> providers;
-        bool any_key_parsed = true;
+        bool any_key_parsed = false;
         size_t max_multipath_len = 0;
         while (expr.size()) {
-            if (!any_key_parsed && !Const(",", expr)) {
+            if (any_key_parsed && !Const(",", expr)) {
                 error = strprintf("musig(): expected ',', got '%c'", expr[0]);
                 return {};
             }
-            any_key_parsed = false;
             auto arg = Expr(expr);
             auto pk = ParsePubkey(key_exp_index, arg, ParseScriptContext::MUSIG, out, error);
             if (pk.empty()) {
                 error = strprintf("musig(): %s", error);
                 return {};
             }
+            any_key_parsed = true;
 
             any_ranged = any_ranged || pk.at(0)->IsRange();
             all_bip32 = all_bip32 &&  pk.at(0)->IsBIP32();
@@ -1866,7 +1861,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
             providers.emplace_back(std::move(pk));
             key_exp_index++;
         }
-        if (any_key_parsed) {
+        if (!any_key_parsed) {
             error = "musig(): Must contain key expressions";
             return {};
         }

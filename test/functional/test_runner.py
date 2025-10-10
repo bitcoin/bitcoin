@@ -348,6 +348,7 @@ BASE_SCRIPTS = [
     'feature_coinstatsindex.py',
     'feature_coinstatsindex_compatibility.py',
     'wallet_orphanedreward.py',
+    'wallet_musig.py',
     'wallet_timelock.py',
     'p2p_permissions.py',
     'feature_blocksdir.py',
