@@ -198,6 +198,7 @@ public:
     }
 
     bool HasThreads() const { return !m_worker_threads.empty(); }
+    size_t ThreadCount() const { return m_worker_threads.size(); }
 };
 
 /**
