@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <ios>
 #include <string>
+#include <string_view>
 #include <vector>
 
 /**
@@ -151,7 +152,7 @@ public:
      * @returns Whether the operation was successful.
      * @see CNetAddr::IsTor(), CNetAddr::IsI2P()
      */
-    bool SetSpecial(const std::string& addr);
+    bool SetSpecial(std::string_view addr);
 
     bool IsBindAny() const; // INADDR_ANY equivalent
     [[nodiscard]] bool IsIPv4() const { return m_net == NET_IPV4; } // IPv4 mapped address (::FFFF:0:0/96, 0.0.0.0/0)
@@ -279,7 +280,7 @@ private:
      * @returns Whether the operation was successful.
      * @see CNetAddr::IsTor()
      */
-    bool SetTor(const std::string& addr);
+    bool SetTor(std::string_view addr);
 
     /**
      * Parse an I2P address and set this object to it.
@@ -288,7 +289,7 @@ private:
      * @returns Whether the operation was successful.
      * @see CNetAddr::IsI2P()
      */
-    bool SetI2P(const std::string& addr);
+    bool SetI2P(std::string_view addr);
 
     /**
      * Size of CNetAddr when serialized as ADDRv1 (pre-BIP155) (in bytes).
