@@ -1033,11 +1033,14 @@ class PSBTTest(BitcoinTestFramework):
         # are still added to the psbt
         alt_descriptor = descsum_create(f"wpkh({get_generate_key().privkey})")
         alt_psbt = self.nodes[2].descriptorprocesspsbt(psbt=psbt, descriptors=[alt_descriptor], sighashtype="ALL")["psbt"]
+        assert_equal(alt_psbt, self.nodes[2].descriptorprocesspsbt(psbt=psbt, descriptors=[alt_descriptor], options={'sighashtype': "ALL"})["psbt"])
         decoded = self.nodes[2].decodepsbt(alt_psbt)
         test_psbt_input_keys(decoded['inputs'][0], ['witness_utxo', 'non_witness_utxo'])
 
         # Test that the psbt is not finalized and does not have bip32_derivs unless specified
         processed_psbt = self.nodes[2].descriptorprocesspsbt(psbt=psbt, descriptors=[descriptor], sighashtype="ALL", bip32derivs=True, finalize=False)
+        assert_equal(processed_psbt, self.nodes[2].descriptorprocesspsbt(psbt=psbt, descriptors=[descriptor], options={'sighashtype': "ALL", 'bip32derivs': True, 'finalize': False}))
+        assert_equal(processed_psbt, self.nodes[2].descriptorprocesspsbt(psbt, [descriptor], "ALL", True, False))
         decoded = self.nodes[2].decodepsbt(processed_psbt['psbt'])
         test_psbt_input_keys(decoded['inputs'][0], ['witness_utxo', 'non_witness_utxo', 'partial_signatures', 'bip32_derivs'])
 
@@ -1045,6 +1048,7 @@ class PSBTTest(BitcoinTestFramework):
         assert "hex" not in processed_psbt
 
         processed_psbt = self.nodes[2].descriptorprocesspsbt(psbt=psbt, descriptors=[descriptor], sighashtype="ALL", bip32derivs=False, finalize=True)
+        assert_equal(processed_psbt, self.nodes[2].descriptorprocesspsbt(psbt, [descriptor], {'sighashtype': "ALL", 'bip32derivs': False, 'finalize': True}))
         decoded = self.nodes[2].decodepsbt(processed_psbt['psbt'])
         test_psbt_input_keys(decoded['inputs'][0], ['witness_utxo', 'non_witness_utxo', 'final_scriptwitness'])
 
@@ -1056,6 +1060,8 @@ class PSBTTest(BitcoinTestFramework):
 
         self.log.info("Test descriptorprocesspsbt raises if an invalid sighashtype is passed")
         assert_raises_rpc_error(-8, "'all' is not a valid sighash parameter.", self.nodes[2].descriptorprocesspsbt, psbt, [descriptor], sighashtype="all")
+        assert_raises_rpc_error(-8, "'all' is not a valid sighash parameter.", self.nodes[2].descriptorprocesspsbt, psbt, [descriptor], "all")
+        assert_raises_rpc_error(-8, "'all' is not a valid sighash parameter.", self.nodes[2].descriptorprocesspsbt, psbt, [descriptor], {'sighashtype': "all"})
 
 
 if __name__ == '__main__':
