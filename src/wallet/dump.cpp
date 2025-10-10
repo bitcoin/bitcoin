@@ -21,15 +21,8 @@ namespace wallet {
 static const std::string DUMP_MAGIC = "BITCOIN_CORE_WALLET_DUMP";
 uint32_t DUMP_VERSION = 1;
 
-bool DumpWallet(const ArgsManager& args, WalletDatabase& db, bilingual_str& error)
+bool DumpWallet(WalletDatabase& db, bilingual_str& error, const std::string& dump_filename)
 {
-    // Get the dumpfile
-    std::string dump_filename = args.GetArg("-dumpfile", "");
-    if (dump_filename.empty()) {
-        error = _("No dump file provided. To use dump, -dumpfile=<filename> must be provided.");
-        return false;
-    }
-
     fs::path path = fs::PathFromString(dump_filename);
     path = fs::absolute(path);
     if (fs::exists(path)) {
