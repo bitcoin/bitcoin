@@ -38,6 +38,8 @@ class prevector {
     static_assert(std::is_trivially_copyable_v<T>);
 
 public:
+    static constexpr unsigned int STATIC_SIZE{N};
+
     typedef Size size_type;
     typedef Diff difference_type;
     typedef T value_type;
