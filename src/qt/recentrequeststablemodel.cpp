@@ -87,6 +87,8 @@ QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) cons
         case Amount:
             if (rec->recipient.amount == 0 && role == Qt::DisplayRole)
                 return tr("(no amount requested)");
+            else if (rec->recipient.amount == 0 && role == Qt::EditRole)
+                return "";
             else if (role == Qt::EditRole)
                 return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount, false, BitcoinUnits::SeparatorStyle::NEVER);
             else
@@ -97,6 +99,20 @@ QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) cons
     {
         if (index.column() == Amount)
             return (int)(Qt::AlignRight|Qt::AlignVCenter);
+    } else if (role == Qt::UserRole) {
+        const RecentRequestEntry* rec = &list[index.row()];
+        switch (index.column()) {
+        case Date:
+            return rec->date;
+        case Label:
+            return rec->recipient.label;
+        case Message:
+            return rec->recipient.message;
+        case Amount:
+            return QVariant(static_cast<qlonglong>(rec->recipient.amount));
+        default:
+            return QVariant();
+        }
     }
     return QVariant();
 }
@@ -210,12 +226,6 @@ void RecentRequestsTableModel::addNewRequest(RecentRequestEntry &recipient)
     beginInsertRows(QModelIndex(), 0, 0);
     list.prepend(recipient);
     endInsertRows();
-}
-
-void RecentRequestsTableModel::sort(int column, Qt::SortOrder order)
-{
-    std::sort(list.begin(), list.end(), RecentRequestEntryLessThan(column, order));
-    Q_EMIT dataChanged(index(0, 0, QModelIndex()), index(list.size() - 1, NUMBER_OF_COLUMNS - 1, QModelIndex()));
 }
 
 void RecentRequestsTableModel::updateDisplayUnit()
