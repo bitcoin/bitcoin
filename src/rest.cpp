@@ -33,6 +33,7 @@
 #include <validation.h>
 
 #include <any>
+#include <optional>
 #include <vector>
 
 #include <univalue.h>
@@ -653,8 +654,8 @@ static bool rest_mempool(const std::any& context, HTTPRequest* req, const std::s
 
     std::string param;
     const RESTResponseFormat rf = ParseDataFormat(param, str_uri_part);
-    if (param != "contents" && param != "info") {
-        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/mempool/<info|contents>.json");
+    if (param != "contents" && param != "info" && param != "info/with_fee_histogram") {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/mempool/<info|info/with_fee_histogram|contents>.json");
     }
 
     const CTxMemPool* mempool = GetMemPool(context, req);
@@ -688,8 +689,10 @@ static bool rest_mempool(const std::any& context, HTTPRequest* req, const std::s
                 return RESTERR(req, HTTP_BAD_REQUEST, "Verbose results cannot contain mempool sequence values. (hint: set \"verbose=false\")");
             }
             str_json = MempoolToJSON(*mempool, verbose, mempool_sequence).write() + "\n";
+        } else if (param == "info/with_fee_histogram") {
+            str_json = MempoolInfoToJSON(*mempool, MempoolInfoToJSON_const_histogram_floors).write() + "\n";
         } else {
-            str_json = MempoolInfoToJSON(*mempool).write() + "\n";
+            str_json = MempoolInfoToJSON(*mempool, std::nullopt).write() + "\n";
         }
 
         req->WriteHeader("Content-Type", "application/json");
