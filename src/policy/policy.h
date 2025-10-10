@@ -61,6 +61,8 @@ static constexpr unsigned int DEFAULT_BYTES_PER_SIGOP{20};
 static constexpr unsigned int DEFAULT_BYTES_PER_SIGOP_STRICT{20};
 /** Default for -datacarriercost (multiplied by WITNESS_SCALE_FACTOR) */
 static constexpr unsigned int DEFAULT_WEIGHT_PER_DATA_BYTE{1};
+/** Default for -rejecttokens */
+static constexpr bool DEFAULT_REJECT_TOKENS{false};
 
 // NOTE: Changes to these three require manually adjusting doc in init.cpp
 /** Default for -permitephemeral=send */
