@@ -191,12 +191,17 @@ bool OptionsModel::Init(bilingual_str& error)
     if (!settings.contains("DisplayBitcoinUnit")) {
         settings.setValue("DisplayBitcoinUnit", QVariant::fromValue(BitcoinUnit::BTC));
     }
-    QVariant unit = settings.value("DisplayBitcoinUnit");
-    if (unit.canConvert<BitcoinUnit>()) {
-        m_display_bitcoin_unit = unit.value<BitcoinUnit>();
-    } else {
+
+    constexpr auto unit_set_to_variant = [](BitcoinUnit& out, const QVariant& unit_variant){
+        if (unit_variant.isNull()) return false;
+        if (!unit_variant.canConvert<BitcoinUnit>()) return false;
+        const auto unit = unit_variant.value<BitcoinUnit>();
+        if (!BitcoinUnits::availableUnits().contains(unit)) return false;
+        out = unit;
+        return true;
+    };
+    if (!unit_set_to_variant(m_display_bitcoin_unit, settings.value("DisplayBitcoinUnit"))) {
         m_display_bitcoin_unit = BitcoinUnit::BTC;
-        settings.setValue("DisplayBitcoinUnit", QVariant::fromValue(m_display_bitcoin_unit));
     }
 
     if (!settings.contains("strThirdPartyTxUrls"))
