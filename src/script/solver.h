@@ -62,6 +62,6 @@ CScript GetScriptForRawPubKey(const CPubKey& pubkey);
 std::optional<std::pair<int, std::vector<Span<const unsigned char>>>> MatchMultiA(const CScript& script LIFETIMEBOUND);
 
 /** Generate a multisig script. */
-CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
+CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys, bool fSorted=false);
 
 #endif // BITCOIN_SCRIPT_SOLVER_H
