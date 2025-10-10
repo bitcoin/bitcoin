@@ -597,6 +597,11 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-timeout=<n>", strprintf("Specify socket connection timeout in milliseconds. If an initial attempt to connect is unsuccessful after this amount of time, drop it (minimum: 1, default: %d)", DEFAULT_CONNECT_TIMEOUT), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-peertimeout=<n>", strprintf("Specify a p2p connection timeout delay in seconds. After connecting to a peer, wait this amount of time before considering disconnection based on inactivity (minimum: 1, default: %d)", DEFAULT_PEER_CONNECT_TIMEOUT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-torcontrol=<ip>:<port>", strprintf("Tor control host and port to use if onion listening enabled (default: %s). If no port is specified, the default port of %i will be used.", DEFAULT_TOR_CONTROL, DEFAULT_TOR_CONTROL_PORT), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+#ifdef ENABLE_TOR_SUBPROCESS
+    argsman.AddArg("-torexecute=<command>", strprintf("Tor command to use if not already running (default: %s)", DEFAULT_TOR_EXECUTE), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+#else
+    hidden_args.emplace_back("-torexecute=<command>");
+#endif
     argsman.AddArg("-torpassword=<pass>", "Tor control port password (default: empty)", ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE, OptionsCategory::CONNECTION);
     // UPnP support was dropped. We keep `-upnp` as a hidden arg to display a more user friendly error when set. TODO: remove (here and below) for 30.0. NOTE: removing this option may prevent the GUI from starting, see https://github.com/bitcoin-core/gui/issues/843.
     argsman.AddArg("-upnp", "", ArgsManager::ALLOW_ANY, OptionsCategory::HIDDEN);
