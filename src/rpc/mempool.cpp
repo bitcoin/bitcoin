@@ -136,7 +136,7 @@ static RPCHelpMan testmempoolaccept()
             {
                 {RPCResult::Type::OBJ, "", "",
                 {
-                    {RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
+                    {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
                     {RPCResult::Type::STR_HEX, "wtxid", "The transaction witness hash in hex"},
                     {RPCResult::Type::STR, "package-error", /*optional=*/true, "Package validation error, if any (only possible if rawtxs had more than 1 transaction)."},
                     {RPCResult::Type::BOOL, "allowed", /*optional=*/true, "Whether this tx would be accepted to the mempool and pass client-specified maxfeerate. "
@@ -1190,7 +1190,7 @@ static RPCHelpMan submitpackage()
                 {RPCResult::Type::OBJ_DYN, "tx-results", "transaction results keyed by wtxid",
                 {
                     {RPCResult::Type::OBJ, "wtxid", "transaction wtxid", {
-                        {RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
+                        {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
                         {RPCResult::Type::STR_HEX, "other-wtxid", /*optional=*/true, "The wtxid of a different transaction with the same txid but different witness found in the mempool. This means the submitted transaction was ignored."},
                         {RPCResult::Type::NUM, "vsize", /*optional=*/true, "Sigops-adjusted virtual transaction size."},
                         {RPCResult::Type::OBJ, "fees", /*optional=*/true, "Transaction fees", {
