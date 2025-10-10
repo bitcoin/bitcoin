@@ -36,6 +36,7 @@
 #include <util/time.h>
 #include <util/translation.h>
 #include <versionbits.h>
+#include <common/system.h>
 
 #include <algorithm>
 #include <atomic>
@@ -83,7 +84,7 @@ static constexpr int DEFAULT_CHECKLEVEL{3};
 static const uint64_t MIN_DISK_SPACE_FOR_BLOCK_FILES = 550 * 1024 * 1024;
 
 /** Maximum number of dedicated script-checking threads allowed */
-static constexpr int MAX_SCRIPTCHECK_THREADS{15};
+static int MAX_SCRIPTCHECK_THREADS = GetNumCores();
 
 /** Current sync state passed to tip changed callbacks. */
 enum class SynchronizationState {
