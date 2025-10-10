@@ -1114,6 +1114,7 @@ public:
         bool m_i2p_accept_incoming;
         bool whitelist_forcerelay = DEFAULT_WHITELISTFORCERELAY;
         bool whitelist_relay = DEFAULT_WHITELISTRELAY;
+        bool disable_v1conn_clearnet = false;
     };
 
     void Init(const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_total_bytes_sent_mutex)
@@ -1153,6 +1154,7 @@ public:
         m_listenonion = connOptions.listenonion;
         whitelist_forcerelay = connOptions.whitelist_forcerelay;
         whitelist_relay = connOptions.whitelist_relay;
+        disable_v1conn_clearnet = connOptions.disable_v1conn_clearnet;
     }
 
     CConnman(uint64_t seed0, uint64_t seed1, AddrMan& addrman, const NetGroupManager& netgroupman,
@@ -1309,6 +1311,9 @@ public:
     bool ShouldRunInactivityChecks(const CNode& node, std::chrono::seconds now) const;
 
     bool MultipleManualOrFullOutboundConns(Network net) const EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
+
+    /* Returns true if outbound v1 connections need to be disabled on IPV4/IPV6 network. */
+    bool DisableV1OnClearnet(Network net) const;
 
 private:
     struct ListenSocket {
@@ -1638,6 +1643,13 @@ private:
      * and manual peers with default permissions.
      */
     bool whitelist_relay;
+
+    /**
+     * option for disabling outbound v1 connections on IPV4 and IPV6.
+     * outbound connections on IPV4/IPV6 need to be v2 connections.
+     * outbound connections on Tor/I2P/CJDNS can be v1 or v2 connections.
+     */
+    bool disable_v1conn_clearnet;
 
     /**
      * Mutex protecting m_i2p_sam_sessions.
