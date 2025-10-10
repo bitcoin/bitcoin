@@ -70,6 +70,7 @@ struct MemPoolOptions {
     int32_t dust_relay_target{0};
     /** Multiplier for dustdynamic assignments, in thousandths. */
     int dust_relay_multiplier{DEFAULT_DUST_RELAY_MULTIPLIER};
+    unsigned int maxtxlegacysigops{MAX_TX_LEGACY_SIGOPS};
     /**
      * A data carrying output is an unspendable output containing data. The script
      * type is designated as TxoutType::NULL_DATA.
