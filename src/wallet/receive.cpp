@@ -4,6 +4,7 @@
 
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <util/check.h>
 #include <wallet/receive.h>
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
@@ -317,6 +318,90 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
         }
     }
     return ret;
+}
+
+// Calculate total balance in a different way from GetBalance. The biggest
+// difference is that GetBalance sums up all unspent TxOuts paying to the
+// wallet, while this sums up both spent and unspent TxOuts paying to the
+// wallet, and then subtracts the values of TxIns spending from the wallet. This
+// also has fewer restrictions on which unconfirmed transactions are considered
+// trusted.
+CAmount CWallet::GetLegacyBalance(const isminefilter& filter, int minDepth) const
+{
+    LOCK(cs_wallet);
+
+    const auto tip_height = GetLastBlockHeight();
+    const auto tip_blockhash = m_last_block_processed;
+    int64_t tip_mtp = -1;
+    const auto checkFinalTx = [&](const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
+        // cloned from tx_verify:IsFinalTx, but optimised a bit
+        // NOTE: LOCKTIME_THRESHOLD would need to be checked before AD ~11500
+        // NOTE: <= rather than < because we care about the *next* block
+        if ((int64_t)tx.nLockTime <= tip_height) {
+            return true;
+        }
+        for (const auto& txin : tx.vin) {
+            if (!(txin.nSequence == CTxIn::SEQUENCE_FINAL)) {
+                if (tx.nLockTime >= LOCKTIME_THRESHOLD) {
+                    if (tip_mtp == -1) {
+                        CHECK_NONFATAL(this->chain().findBlock(tip_blockhash, interfaces::FoundBlock().mtpTime(tip_mtp)));
+                    }
+                    if (tx.nLockTime < tip_mtp) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+        return true;
+    };
+
+    CAmount balance = 0;
+    for (const auto& entry : mapWallet) {
+        const CWalletTx& wtx = entry.second;
+        const int depth = GetTxDepthInMainChain(wtx);
+        if (depth < 0 || IsTxImmatureCoinBase(wtx)) {
+            continue;
+        }
+
+        if (depth == 0) {
+            bool have_conflicts = false;
+            for (const CTxIn& txin : wtx.tx->vin) {
+                if (mapTxSpends.count(txin.prevout) > 1) {
+                    have_conflicts = true;
+                    break;
+                }
+            }
+            if (have_conflicts && !wtx.InMempool()) {
+                // Rather than include two conflicting unconfirmed transactions in the same balance, only include ones in our mempool (which cannot contain conflicts)
+                continue;
+            }
+
+            if (!checkFinalTx(*wtx.tx)) {
+                continue;
+            }
+        }
+
+        // Loop through tx outputs and add incoming payments. For outgoing txs,
+        // treat change outputs specially, as part of the amount debited.
+        CAmount debit = GetDebit(*wtx.tx, filter);
+        const bool outgoing = debit > 0;
+        for (const CTxOut& out : wtx.tx->vout) {
+            if (outgoing && OutputIsChange(*this, out)) {
+                debit -= out.nValue;
+            } else if (IsMine(out) & filter && depth >= minDepth) {
+                balance += out.nValue;
+            }
+        }
+
+        // For outgoing txs, subtract amount debited.
+        if (outgoing) {
+            balance -= debit;
+        }
+    }
+
+    return balance;
 }
 
 std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet)
