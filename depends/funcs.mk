@@ -208,7 +208,6 @@ endif
 $($(1)_fetched):
 	mkdir -p $$(@D) $(SOURCES_PATH)
 	rm -f $$@
-	touch $$@
 	cd $$(@D); $($(1)_fetch_cmds)
 	cd $($(1)_source_dir); $(foreach source,$($(1)_all_sources),$(build_SHA256SUM) $(source) >> $$(@);)
 	touch $$@
