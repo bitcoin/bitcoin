@@ -311,6 +311,17 @@ BOOST_AUTO_TEST_CASE(rpc_parse_monetary_values)
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("93e+9")), UniValue); //overflow error
 }
 
+BOOST_AUTO_TEST_CASE(rpc_parse_fee_rate_values)
+{
+    // Test ValueFromFeeRate() and CFeeRate()
+    // ...using default CFeeRate constructor
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(AmountFromValue(0.00001234))).get_real(), 1.234);
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(AmountFromValue(0.1234))).get_real(), 12340.000);
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(AmountFromValue(1234))).get_real(), 123400000.000);
+    // ...using CFeeRate constructor with bytes 1000
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(AmountFromValue(0.00001234), 1000)).get_real(), 1.234);
+}
+
 BOOST_AUTO_TEST_CASE(rpc_ban)
 {
     BOOST_CHECK_NO_THROW(CallRPC(std::string("clearbanned")));
