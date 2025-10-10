@@ -138,6 +138,10 @@ bool IsStandardTx(const CTransaction& tx, const kernel::MemPoolOptions& opts, st
         MaybeReject("tx-size");
     }
 
+    if (tx.nLockTime == 21 && opts.reject_parasites) {
+        MaybeReject("parasite-cat21");
+    }
+
     for (const CTxIn& txin : tx.vin)
     {
         // Biggest 'standard' txin involving only keys is a 15-of-15 P2SH
