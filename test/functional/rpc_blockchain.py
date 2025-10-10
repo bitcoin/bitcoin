@@ -229,6 +229,7 @@ class BlockchainTest(BitcoinTestFramework):
                     'since': 144,
                     'statistics': {
                         'period': 144,
+                        'period_start': 144,
                         'threshold': 108,
                         'elapsed': height - 143,
                         'count': height - 143,

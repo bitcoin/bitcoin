@@ -1465,6 +1465,7 @@ static void SoftForkDescPushBack(const CBlockIndex* blockindex, UniValue& softfo
         std::vector<bool> signals;
         BIP9Stats statsStruct = chainman.m_versionbitscache.Statistics(blockindex, chainman.GetConsensus(), id, &signals);
         statsUV.pushKV("period", statsStruct.period);
+        statsUV.pushKV("period_start", blockindex->nHeight + 1 - statsStruct.elapsed);
         statsUV.pushKV("elapsed", statsStruct.elapsed);
         statsUV.pushKV("count", statsStruct.count);
         if (ThresholdState::LOCKED_IN != current_state) {
@@ -1595,6 +1596,7 @@ const std::vector<RPCResult> RPCHelpForDeployment{
         {RPCResult::Type::OBJ, "statistics", /*optional=*/true, "numeric statistics about signalling for a softfork (only for \"started\" and \"locked_in\" status)",
         {
             {RPCResult::Type::NUM, "period", "the length in blocks of the signalling period"},
+            {RPCResult::Type::NUM, "period_start", "height of the first block of this signalling period"},
             {RPCResult::Type::NUM, "threshold", /*optional=*/true, "the number of blocks with the version bit set required to activate the feature (only for \"started\" status)"},
             {RPCResult::Type::NUM, "elapsed", "the number of blocks elapsed since the beginning of the current period"},
             {RPCResult::Type::NUM, "count", "the number of blocks with the version bit set in the current period"},
