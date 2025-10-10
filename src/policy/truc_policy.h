@@ -32,9 +32,8 @@ static constexpr int64_t TRUC_MAX_WEIGHT{TRUC_MAX_VSIZE * WITNESS_SCALE_FACTOR};
 /** Maximum sigop-adjusted virtual size of a tx which spends from an unconfirmed TRUC transaction. */
 static constexpr int64_t TRUC_CHILD_MAX_VSIZE{1000};
 static constexpr int64_t TRUC_CHILD_MAX_WEIGHT{TRUC_CHILD_MAX_VSIZE * WITNESS_SCALE_FACTOR};
-// These limits are within the default ancestor/descendant limits.
-static_assert(TRUC_MAX_VSIZE + TRUC_CHILD_MAX_VSIZE <= DEFAULT_ANCESTOR_SIZE_LIMIT_KVB * 1000);
-static_assert(TRUC_MAX_VSIZE + TRUC_CHILD_MAX_VSIZE <= DEFAULT_DESCENDANT_SIZE_LIMIT_KVB * 1000);
+// These limits are within the default cluster limits.
+static_assert(TRUC_MAX_VSIZE + TRUC_CHILD_MAX_VSIZE <= DEFAULT_CLUSTER_SIZE_LIMIT_KVB * 1000);
 
 /** Must be called for every transaction, even if not TRUC. Not strictly necessary for transactions
  * accepted through AcceptMultipleTransactions.
