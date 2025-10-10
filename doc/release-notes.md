@@ -1,15 +1,8 @@
-*The release notes draft is a temporary file that can be added to by anyone. See
-[/doc/developer-notes.md#release-notes](/doc/developer-notes.md#release-notes)
-for the process.*
+Bitcoin Core version 29.2rc2 is now available from:
 
-*version* Release Notes Draft
-===============================
+  <https://bitcoincore.org/bin/bitcoin-core-29.2/test.rc2/>
 
-Bitcoin Core version *version* is now available from:
-
-  <https://bitcoincore.org/bin/bitcoin-core-*version*/>
-
-This release includes new features, various bug fixes and performance
+This release includes various bug fixes and performance
 improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
@@ -44,56 +37,55 @@ unsupported systems.
 Notable changes
 ===============
 
-P2P and network changes
------------------------
+### P2P
 
-Updated RPCs
-------------
+- #32646 p2p: Add witness mutation check inside FillBlock
+- #33296 net: check for empty header before calling FillBlock
+- #33395 net: do not apply whitelist permissions to onion inbounds
 
+### Mempool
 
-Changes to wallet related RPCs can be found in the Wallet section below.
+- #33504 mempool: Do not enforce TRUC checks on reorg
 
-New RPCs
---------
+### RPC
 
-Build System
-------------
+- #33446 rpc: fix getblock(header) returns target for tip
 
-Updated settings
-----------------
+### CI
 
+- #32989 ci: Migrate CI to hosted Cirrus Runners
+- #32999 ci: Use APT_LLVM_V in msan task
+- #33099 ci: allow for any libc++ intrumentation & use it for TSAN
+- #33258 ci: use LLVM 21
+- #33364 ci: always use tag for LLVM checkout
 
-Changes to GUI or wallet related settings can be found in the GUI or Wallet section below.
+### Doc
 
-New settings
-------------
+- #33484 doc: rpc: fix case typo in `finalizepsbt` help
 
-Tools and Utilities
--------------------
+### Misc
 
-Wallet
-------
-
-GUI changes
------------
-
-Low-level changes
-=================
-
-RPC
----
-
-Tests
------
-
-*version* change log
-====================
+- #33310 trace: Workaround GCC bug compiling with old systemtap
+- #33340 Fix benchmark CSV output
+- #33482 contrib: fix macOS deployment with no translations
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
+- Amisha Chhajed
+- Eugene Siegel
+- fanquake
+- Greg Sanders
+- Hennadii Stepanov
+- Luke Dashjr
+- MarcoFalke
+- Martin Zumsande
+- Sebastian Falbesoner
+- Sjors Provoost
+- Vasil Dimov
+- Will Clark
 
 As well as to everyone that helped with translations on
-[Transifex](https://www.transifex.com/bitcoin/bitcoin/).
+[Transifex](https://explore.transifex.com/bitcoin/bitcoin/).

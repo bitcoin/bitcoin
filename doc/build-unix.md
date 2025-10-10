@@ -9,8 +9,12 @@ To Build
 
 ```bash
 cmake -B build
-cmake --build build    # use "-j N" for N parallel jobs
-cmake --install build  # optional
+```
+Run `cmake -B build -LH` to see the full list of available options.
+
+```bash
+cmake --build build    # Append "-j N" for N parallel jobs
+cmake --install build  # Optional
 ```
 
 See below for instructions on how to [install the dependencies on popular Linux
@@ -60,7 +64,7 @@ executables, which are based on BerkeleyDB 4.8. Otherwise, you can build Berkele
 
 To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
-ZMQ dependencies (provides ZMQ API):
+ZMQ-enabled binaries are compiled with `-DWITH_ZMQ=ON` and require the following dependency:
 
     sudo apt-get install libzmq3-dev
 
@@ -108,7 +112,7 @@ are based on Berkeley DB 4.8. Otherwise, you can build Berkeley DB [yourself](#b
 
 To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
-ZMQ dependencies (provides ZMQ API):
+ZMQ-enabled binaries are compiled with `-DWITH_ZMQ=ON` and require the following dependency:
 
     sudo dnf install zeromq-devel
 
@@ -170,13 +174,6 @@ be compiled in disable-wallet mode with:
 In this case there is no dependency on SQLite or Berkeley DB.
 
 Mining is also possible in disable-wallet mode using the `getblocktemplate` RPC call.
-
-Additional Configure Flags
---------------------------
-A list of additional configure flags can be displayed with:
-
-    cmake -B build -LH
-
 
 Setup and Build Example: Arch Linux
 -----------------------------------

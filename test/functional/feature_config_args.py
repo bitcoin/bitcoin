@@ -24,6 +24,9 @@ class ConfArgsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
+        # Prune to prevent disk space warning on CI systems with limited space,
+        # when using networks other than regtest.
+        self.extra_args = [["-prune=550"]]
         self.supports_cli = False
         self.wallet_names = []
         self.disable_autoconnect = False
@@ -81,7 +84,7 @@ class ConfArgsTest(BitcoinTestFramework):
 
         self.log.debug('Verifying that disabling of the config file means garbage inside of it does ' \
             'not prevent the node from starting, and message about existing config file is logged')
-        ignored_file_message = [f'[InitConfig] Data directory "{self.nodes[0].datadir_path}" contains a "bitcoin.conf" file which is explicitly ignored using -noconf.']
+        ignored_file_message = [f'Data directory "{self.nodes[0].datadir_path}" contains a "bitcoin.conf" file which is explicitly ignored using -noconf.']
         with self.nodes[0].assert_debug_log(timeout=60, expected_msgs=ignored_file_message):
             self.start_node(0, extra_args=settings + ['-noconf'])
         self.stop_node(0)
@@ -471,32 +474,21 @@ class ConfArgsTest(BitcoinTestFramework):
         self.log.info("Test testnet3 deprecation warning")
         t3_warning_log = "Warning: Support for testnet3 is deprecated and will be removed in an upcoming release. Consider switching to testnet4."
 
-        def warning_msg(node, approx_size):
-            return f'Warning: Disk space for "{node.datadir_path / node.chain / "blocks" }" may not accommodate the block files. Approximately {approx_size} GB of data will be stored in this directory.'
-
-        # Testnet3 node will log the warning
+        self.log.debug("Testnet3 node will log the deprecation warning")
         self.nodes[0].chain = 'testnet3'
         self.nodes[0].replace_in_config([('regtest=', 'testnet='), ('[regtest]', '[test]')])
         with self.nodes[0].assert_debug_log([t3_warning_log]):
             self.start_node(0)
-        # Some CI environments will have limited space and some others won't
-        # so we need to handle both cases as a valid result.
-        self.nodes[0].stderr.seek(0)
-        err = self.nodes[0].stdout.read()
-        self.nodes[0].stderr.seek(0)
-        self.nodes[0].stderr.truncate()
-        if err != b'' and err != warning_msg(self.nodes[0], 42):
-            raise AssertionError("Unexpected stderr after shutdown of Testnet3 node")
         self.stop_node(0)
 
-        # Testnet4 node will not log the warning
+        self.log.debug("Testnet4 node will not log the deprecation warning")
         self.nodes[0].chain = 'testnet4'
         self.nodes[0].replace_in_config([('testnet=', 'testnet4='), ('[test]', '[testnet4]')])
         with self.nodes[0].assert_debug_log([], unexpected_msgs=[t3_warning_log]):
             self.start_node(0)
         self.stop_node(0)
 
-        # Reset to regtest
+        self.log.debug("Reset to regtest")
         self.nodes[0].chain = 'regtest'
         self.nodes[0].replace_in_config([('testnet4=', 'regtest='), ('[testnet4]', '[regtest]')])
 

@@ -3,7 +3,6 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Helpful routines for mempool testing."""
-from decimal import Decimal
 
 from .blocktools import (
     COINBASE_MATURITY,
@@ -20,6 +19,10 @@ from .wallet import (
 )
 
 ORPHAN_TX_EXPIRE_TIME = 1200
+# Default for -minrelaytxfee in sat/kvB
+DEFAULT_MIN_RELAY_TX_FEE = 100
+# Default for -incrementalrelayfee in sat/kvB
+DEFAULT_INCREMENTAL_RELAY_FEE = 100
 
 def assert_mempool_contents(test_framework, node, expected=None, sync=True):
     """Assert that all transactions in expected are in the mempool,
@@ -48,9 +51,7 @@ def fill_mempool(test_framework, node, *, tx_sync_fun=None):
     """
     test_framework.log.info("Fill the mempool until eviction is triggered and the mempoolminfee rises")
     txouts = gen_return_txouts()
-    relayfee = node.getnetworkinfo()['relayfee']
-
-    assert_equal(relayfee, Decimal('0.00001000'))
+    minrelayfee = node.getnetworkinfo()['relayfee']
 
     tx_batch_size = 1
     num_of_batches = 75
@@ -70,7 +71,7 @@ def fill_mempool(test_framework, node, *, tx_sync_fun=None):
 
     test_framework.log.debug("Create a mempool tx that will be evicted")
     tx_to_be_evicted_id = ephemeral_miniwallet.send_self_transfer(
-        from_node=node, utxo_to_spend=confirmed_utxos.pop(0), fee_rate=relayfee)["txid"]
+        from_node=node, utxo_to_spend=confirmed_utxos.pop(0), fee_rate=minrelayfee)["txid"]
 
     def send_batch(fee):
         utxos = confirmed_utxos[:tx_batch_size]
@@ -80,14 +81,14 @@ def fill_mempool(test_framework, node, *, tx_sync_fun=None):
     # Increase the tx fee rate to give the subsequent transactions a higher priority in the mempool
     # The tx has an approx. vsize of 65k, i.e. multiplying the previous fee rate (in sats/kvB)
     # by 130 should result in a fee that corresponds to 2x of that fee rate
-    base_fee = relayfee * 130
+    base_fee = minrelayfee * 130
     batch_fees = [(i + 1) * base_fee for i in range(num_of_batches)]
 
     test_framework.log.debug("Fill up the mempool with txs with higher fee rate")
     for fee in batch_fees[:-3]:
         send_batch(fee)
     tx_sync_fun() if tx_sync_fun else test_framework.sync_mempools()  # sync before any eviction
-    assert_equal(node.getmempoolinfo()["mempoolminfee"], Decimal("0.00001000"))
+    assert_equal(node.getmempoolinfo()["mempoolminfee"], minrelayfee)
     for fee in batch_fees[-3:]:
         send_batch(fee)
     tx_sync_fun() if tx_sync_fun else test_framework.sync_mempools()  # sync after all evictions
@@ -99,8 +100,8 @@ def fill_mempool(test_framework, node, *, tx_sync_fun=None):
     assert tx_to_be_evicted_id not in node.getrawmempool()
 
     test_framework.log.debug("Check that mempoolminfee is larger than minrelaytxfee")
-    assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
-    assert_greater_than(node.getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
+    assert_equal(node.getmempoolinfo()['minrelaytxfee'], minrelayfee)
+    assert_greater_than(node.getmempoolinfo()['mempoolminfee'], minrelayfee)
 
 def tx_in_orphanage(node, tx: CTransaction) -> bool:
     """Returns true if the transaction is in the orphanage."""

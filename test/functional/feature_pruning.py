@@ -41,7 +41,7 @@ def mine_large_blocks(node, n):
     # Set the nTime if this is the first time this function has been called.
     # A static variable ensures that time is monotonicly increasing and is therefore
     # different for each block created => blockhash is unique.
-    if "nTimes" not in mine_large_blocks.__dict__:
+    if "nTime" not in mine_large_blocks.__dict__:
         mine_large_blocks.nTime = 0
 
     # Get the block parameters for the first block
@@ -500,11 +500,11 @@ class PruneTest(BitcoinTestFramework):
             "start", [{"desc": f"raw({false_positive_spk.hex()})"}], 0, 0, "basic", {"filter_false_positives": True})
 
     def test_pruneheight_undo_presence(self):
-        node = self.nodes[2]
+        node = self.nodes[5]
         pruneheight = node.getblockchaininfo()["pruneheight"]
         fetch_block = node.getblockhash(pruneheight - 1)
 
-        self.connect_nodes(1, 2)
+        self.connect_nodes(1, 5)
         peers = node.getpeerinfo()
         node.getblockfrompeer(fetch_block, peers[0]["id"])
         self.wait_until(lambda: not try_rpc(-1, "Block not available (pruned data)", node.getblock, fetch_block), timeout=5)

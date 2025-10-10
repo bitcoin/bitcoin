@@ -164,7 +164,7 @@ UniValue blockheaderToJSON(const CBlockIndex& tip, const CBlockIndex& blockindex
     result.pushKV("mediantime", blockindex.GetMedianTimePast());
     result.pushKV("nonce", blockindex.nNonce);
     result.pushKV("bits", strprintf("%08x", blockindex.nBits));
-    result.pushKV("target", GetTarget(tip, pow_limit).GetHex());
+    result.pushKV("target", GetTarget(blockindex, pow_limit).GetHex());
     result.pushKV("difficulty", GetDifficulty(blockindex));
     result.pushKV("chainwork", blockindex.nChainWork.GetHex());
     result.pushKV("nTx", blockindex.nTx);
@@ -838,7 +838,9 @@ std::optional<int> GetPruneHeight(const BlockManager& blockman, const CChain& ch
 
 static RPCHelpMan pruneblockchain()
 {
-    return RPCHelpMan{"pruneblockchain", "",
+    return RPCHelpMan{"pruneblockchain",
+                "Attempts to delete block and undo data up to a specified height or timestamp, if eligible for pruning.\n"
+                "Requires `-prune` to be enabled at startup. While pruned data may be re-fetched in some cases (e.g., via `getblockfrompeer`), local deletion is irreversible.\n",
                 {
                     {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block height to prune up to. May be set to a discrete height, or to a " + UNIX_EPOCH_TIME + "\n"
             "                  to prune blocks whose block time is at least 2 hours older than the provided timestamp."},
@@ -2623,7 +2625,7 @@ static RPCHelpMan getdescriptoractivity()
                         {RPCResult::Type::STR_HEX, "blockhash", /*optional=*/true, "The blockhash this spend appears in (omitted if unconfirmed)"},
                         {RPCResult::Type::NUM, "height", /*optional=*/true, "Height of the spend (omitted if unconfirmed)"},
                         {RPCResult::Type::STR_HEX, "spend_txid", "The txid of the spending transaction"},
-                        {RPCResult::Type::NUM, "spend_vout", "The vout of the spend"},
+                        {RPCResult::Type::NUM, "spend_vin", "The input index of the spend"},
                         {RPCResult::Type::STR_HEX, "prevout_txid", "The txid of the prevout"},
                         {RPCResult::Type::NUM, "prevout_vout", "The vout of the prevout"},
                         {RPCResult::Type::OBJ, "prevout_spk", "", ScriptPubKeyDoc()},

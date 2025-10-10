@@ -33,6 +33,7 @@
 #include <fstream>
 #include <memory>
 
+#include <QDebug>
 #include <QFontMetrics>
 #include <QScrollBar>
 #include <QSettings>
@@ -464,7 +465,7 @@ bool SendCoinsDialog::signWithExternalSigner(PartiallySignedTransaction& psbtx, 
         return false;
     }
     if (err) {
-        tfm::format(std::cerr, "Failed to sign PSBT");
+        qWarning() << "Failed to sign PSBT";
         processSendCoinsReturn(WalletModel::TransactionCreationFailed);
         return false;
     }
@@ -851,6 +852,10 @@ void SendCoinsDialog::updateCoinControlState()
 }
 
 void SendCoinsDialog::updateNumberOfBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, SyncType synctype, SynchronizationState sync_state) {
+    // During shutdown, clientModel will be nullptr. Attempting to update views at this point may cause a crash
+    // due to accessing backend models that might no longer exist.
+    if (!clientModel) return;
+    // Process event
     if (sync_state == SynchronizationState::POST_INIT) {
         updateSmartFeeLabel();
     }

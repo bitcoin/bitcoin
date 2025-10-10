@@ -19,7 +19,7 @@ One can use `--preset=libfuzzer-nosan` to do the same without common sanitizers 
 See [further](#run-without-sanitizers-for-increased-throughput) for more information.
 
 There is also a runner script to execute all fuzz targets. Refer to
-`./test/fuzz/test_runner.py --help` for more details.
+`./build_fuzz/test/fuzz/test_runner.py --help` for more details.
 
 ## Overview of Bitcoin Core fuzzing
 

@@ -287,8 +287,38 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">अनजान</translation>
     </message>
     <message>
+        <source>Embedded "%1"</source>
+        <translation type="unfinished">अंतर्निहित "%1"</translation>
+    </message>
+    <message>
+        <source>Default system font "%1"</source>
+        <translation type="unfinished">डिफ़ॉल्ट सिस्टम फोंट "%1"</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation type="unfinished">पसंद के अनुसार</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation type="unfinished">राशि</translation>
+    </message>
+    <message>
+        <source>Onion</source>
+        <comment>network name</comment>
+        <extracomment>Name of Tor network in peer info</extracomment>
+        <translation type="unfinished">अनियन</translation>
+    </message>
+    <message>
+        <source>I2P</source>
+        <comment>network name</comment>
+        <extracomment>Name of I2P network in peer info</extracomment>
+        <translation type="unfinished">आई२पी </translation>
+    </message>
+    <message>
+        <source>CJDNS</source>
+        <comment>network name</comment>
+        <extracomment>Name of CJDNS network in peer info</extracomment>
+        <translation type="unfinished">सीजेडीएनएस</translation>
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
@@ -675,6 +705,10 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>You are one step away from creating your new wallet!</source>
         <translation type="unfinished">आपके नए बटवे के निर्माण से आप सिर्फ एक कदम दूर है</translation>
     </message>
+    <message>
+        <source>Please provide a name and, if desired, enable any advanced options</source>
+        <translation type="unfinished">कृपया एक नाम प्रदान करें और अगर जरूरत हो तो किसी अन्य उच्च विकल्प को सक्षम करें</translation>
+    </message>
     </context>
 <context>
     <name>Intro</name>
@@ -727,9 +761,17 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
         <translation type="unfinished">%1 संगत स्क्रिप्ट का पूर्ण पथ (उदा. C:\Downloads\hwi.exe या /Users/you/Downloads/hwi.py). सावधान: मैलवेयर आपके सिक्के चुरा सकता है!</translation>
     </message>
+    <message>
+        <source>Font in the Overview tab: </source>
+        <translation type="unfinished">ओवरव्यू टैब का फोंट</translation>
+    </message>
     </context>
 <context>
     <name>PSBTOperationsDialog</name>
+    <message>
+        <source>PSBT Operations</source>
+        <translation type="unfinished">पीएसबीटी संचालन</translation>
+    </message>
     <message>
         <source>Save Transaction Data</source>
         <translation type="unfinished">लेन-देन डेटा सहेजें</translation>
@@ -738,6 +780,10 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
         <translation type="unfinished">आंशिक रूप से हस्ताक्षरित लेनदेन (बाइनरी)</translation>
+    </message>
+    <message>
+        <source>Sends %1 to %2</source>
+        <translation type="unfinished">%1 को %2 के पास भेजता है </translation>
     </message>
     <message>
         <source>own address</source>
@@ -823,6 +869,14 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">कनेक्शन की संख्या</translation>
     </message>
     <message>
+        <source>Local Addresses</source>
+        <translation type="unfinished">स्थानीय पते</translation>
+    </message>
+    <message>
+        <source>Network addresses that your Bitcoin node is currently using to communicate with other nodes.</source>
+        <translation type="unfinished">नेटवर्क पते जो आपका बिटकॉइन नोड वर्तमान में अन्य नोड्स के साथ संचार करने के लिए उपयोग कर रहा है।</translation>
+    </message>
+    <message>
         <source>Block chain</source>
         <translation type="unfinished">ब्लॉक चेन</translation>
     </message>
@@ -869,6 +923,14 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Select a peer to view detailed information.</source>
         <translation type="unfinished">विस्तृत जानकारी देखने के लिए किसी सहकर्मी का चयन करें।</translation>
+    </message>
+    <message>
+        <source>Hide Peers Detail</source>
+        <translation type="unfinished">पियर विवरण छिपाएँ</translation>
+    </message>
+    <message>
+        <source>Transport</source>
+        <translation type="unfinished">परिवहन</translation>
     </message>
     <message>
         <source>Version</source>
@@ -1279,6 +1341,14 @@ For more information on using this console, type %6.
     <message>
         <source>Copy &amp;amount</source>
         <translation type="unfinished">कॉपी &amp;अमाउंट</translation>
+    </message>
+    <message>
+        <source>Not recommended due to higher fees and less protection against typos.</source>
+        <translation type="unfinished">उच्च शुल्क और टाइपिंग त्रुटियों के प्रति कम सुरक्षा के कारण इसकी अनुशंसा नहीं की जाती।</translation>
+    </message>
+    <message>
+        <source>Generates an address compatible with older wallets.</source>
+        <translation type="unfinished">पुराने वॉलेट के साथ संगत पता बनाता है।</translation>
     </message>
     <message>
         <source>Could not generate new %1 address</source>

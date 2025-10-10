@@ -319,7 +319,7 @@ Source: https://logs.guix.gnu.org/guix/2020-11-12.log#232527
 Start by cloning Guix:
 
 ```
-git clone https://git.savannah.gnu.org/git/guix.git
+git clone https://codeberg.org/guix/guix.git
 cd guix
 ```
 
@@ -607,7 +607,7 @@ checklist.
    ```
    Generation 38   Feb 22 2021 16:39:31    (current)
      guix f350df4
-       repository URL: https://git.savannah.gnu.org/git/guix.git
+       repository URL: https://codeberg.org/guix/guix.git
        branch: version-1.2.0
        commit: f350df405fbcd5b9e27e6b6aa500da7f101f41e7
    ```
@@ -760,8 +760,8 @@ Please see the following links for more details:
 
 - An upstream coreutils bug has been filed: [debbugs#47940](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=47940)
 - A Guix bug detailing the underlying problem has been filed: [guix-issues#47935](https://issues.guix.gnu.org/47935), [guix-issues#49985](https://issues.guix.gnu.org/49985#5)
-- A commit to skip this test in Guix has been merged into the core-updates branch:
-[savannah/guix@6ba1058](https://git.savannah.gnu.org/cgit/guix.git/commit/?id=6ba1058df0c4ce5611c2367531ae5c3cdc729ab4)
+- A commit to skip this test is included since Guix 1.4.0:
+[codeberg/guix@6ba1058](https://codeberg.org/guix/guix/commit/6ba1058df0c4ce5611c2367531ae5c3cdc729ab4)
 
 
 [install-script]: #options-1-and-2-using-the-official-shell-installer-script-or-binary-tarball

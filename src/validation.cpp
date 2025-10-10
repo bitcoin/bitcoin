@@ -1025,26 +1025,28 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // Even though just checking direct mempool parents for inheritance would be sufficient, we
     // check using the full ancestor set here because it's more convenient to use what we have
     // already calculated.
-    if (const auto err{SingleTRUCChecks(ws.m_ptx, ws.m_ancestors, ws.m_conflicts, ws.m_vsize)}) {
-        // Single transaction contexts only.
-        if (args.m_allow_sibling_eviction && err->second != nullptr) {
-            // We should only be considering where replacement is considered valid as well.
-            Assume(args.m_allow_replacement);
+    if (!args.m_bypass_limits) {
+        if (const auto err{SingleTRUCChecks(ws.m_ptx, ws.m_ancestors, ws.m_conflicts, ws.m_vsize)}) {
+            // Single transaction contexts only.
+            if (args.m_allow_sibling_eviction && err->second != nullptr) {
+                // We should only be considering where replacement is considered valid as well.
+                Assume(args.m_allow_replacement);
 
-            // Potential sibling eviction. Add the sibling to our list of mempool conflicts to be
-            // included in RBF checks.
-            ws.m_conflicts.insert(err->second->GetHash());
-            // Adding the sibling to m_iters_conflicting here means that it doesn't count towards
-            // RBF Carve Out above. This is correct, since removing to-be-replaced transactions from
-            // the descendant count is done separately in SingleTRUCChecks for TRUC transactions.
-            ws.m_iters_conflicting.insert(m_pool.GetIter(err->second->GetHash()).value());
-            ws.m_sibling_eviction = true;
-            // The sibling will be treated as part of the to-be-replaced set in ReplacementChecks.
-            // Note that we are not checking whether it opts in to replaceability via BIP125 or TRUC
-            // (which is normally done in PreChecks). However, the only way a TRUC transaction can
-            // have a non-TRUC and non-BIP125 descendant is due to a reorg.
-        } else {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "TRUC-violation", err->first);
+                // Potential sibling eviction. Add the sibling to our list of mempool conflicts to be
+                // included in RBF checks.
+                ws.m_conflicts.insert(err->second->GetHash());
+                // Adding the sibling to m_iters_conflicting here means that it doesn't count towards
+                // RBF Carve Out above. This is correct, since removing to-be-replaced transactions from
+                // the descendant count is done separately in SingleTRUCChecks for TRUC transactions.
+                ws.m_iters_conflicting.insert(m_pool.GetIter(err->second->GetHash()).value());
+                ws.m_sibling_eviction = true;
+                // The sibling will be treated as part of the to-be-replaced set in ReplacementChecks.
+                // Note that we are not checking whether it opts in to replaceability via BIP125 or TRUC
+                // (which is normally done in PreChecks). However, the only way a TRUC transaction can
+                // have a non-TRUC and non-BIP125 descendant is due to a reorg.
+            } else {
+                return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "TRUC-violation", err->first);
+            }
         }
     }
 
@@ -2995,15 +2997,17 @@ static void UpdateTipLog(
 {
 
     AssertLockHeld(::cs_main);
-    LogPrintf("%s%s: new best=%s height=%d version=0x%08x log2_work=%f tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s\n",
-        prefix, func_name,
-        tip->GetBlockHash().ToString(), tip->nHeight, tip->nVersion,
-        log(tip->nChainWork.getdouble()) / log(2.0), tip->m_chain_tx_count,
-        FormatISO8601DateTime(tip->GetBlockTime()),
-        chainman.GuessVerificationProgress(tip),
-        coins_tip.DynamicMemoryUsage() * (1.0 / (1 << 20)),
-        coins_tip.GetCacheSize(),
-        !warning_messages.empty() ? strprintf(" warning='%s'", warning_messages) : "");
+
+    // Disable rate limiting in LogPrintLevel_ so this source location may log during IBD.
+    LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, /*should_ratelimit=*/false, "%s%s: new best=%s height=%d version=0x%08x log2_work=%f tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s\n",
+                   prefix, func_name,
+                   tip->GetBlockHash().ToString(), tip->nHeight, tip->nVersion,
+                   log(tip->nChainWork.getdouble()) / log(2.0), tip->m_chain_tx_count,
+                   FormatISO8601DateTime(tip->GetBlockTime()),
+                   chainman.GuessVerificationProgress(tip),
+                   coins_tip.DynamicMemoryUsage() * (1.0 / (1 << 20)),
+                   coins_tip.GetCacheSize(),
+                   !warning_messages.empty() ? strprintf(" warning='%s'", warning_messages) : "");
 }
 
 void Chainstate::UpdateTip(const CBlockIndex* pindexNew)

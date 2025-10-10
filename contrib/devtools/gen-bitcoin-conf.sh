@@ -50,7 +50,8 @@ EOF
 # adding newlines is a bit funky to ensure portability for BSD
 # see here for more details: https://stackoverflow.com/a/24575385
 ${BITCOIND} --help \
-    | sed '1,/Print this help message and exit/d' \
+    | sed '1,/Options:/d' \
+    | sed -E '/^[[:space:]]{2}-help/,/^[[:space:]]*$/d' \
     | sed -E 's/^[[:space:]]{2}\-/#/' \
     | sed -E 's/^[[:space:]]{7}/# /' \
     | sed -E '/[=[:space:]]/!s/#.*$/&=1/' \

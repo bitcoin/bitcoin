@@ -1039,7 +1039,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
         <extracomment>Descriptive text of the create wallet progress window which indicates to the user which wallet is currently being created.</extracomment>
-        <translation type="unfinished">Създаване на уолет 1 1%1 1</translation>
+        <translation type="unfinished">Създаване на уолет &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
     <message>
         <source>Create wallet failed</source>

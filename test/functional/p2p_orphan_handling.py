@@ -788,6 +788,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
 
         # Disconnect peer1. peer2 should become the new candidate for orphan resolution.
         peer1.peer_disconnect()
+        self.wait_until(lambda: node.num_test_p2p_connections() == 1)
         node.bumpmocktime(TXREQUEST_TIME_SKIP)
         self.wait_until(lambda: len(node.getorphantxs(verbosity=2)[0]["from"]) == 1)
         # Both parents should be requested, now that they are both missing.
