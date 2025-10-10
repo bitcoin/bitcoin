@@ -5,6 +5,7 @@
 #include <qt/test/apptests.h>
 
 #include <chainparams.h>
+#include <common/args.h>
 #include <key.h>
 #include <logging.h>
 #include <qt/bitcoin.h>
@@ -65,6 +66,14 @@ void AppTests::appTests()
         return;
     }
 #endif
+
+    {
+        // Need to ensure datadir is setup so resetting settings can delete the non-existent bitcoin_rw.conf
+        std::string error;
+        if (!gArgs.ReadConfigFiles(error, true)) {
+            qWarning() << "Error in readConfigFiles";
+        }
+    }
 
     qRegisterMetaType<interfaces::BlockAndHeaderTipInfo>("interfaces::BlockAndHeaderTipInfo");
     m_app.parameterSetup();
