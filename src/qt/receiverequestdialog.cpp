@@ -47,8 +47,11 @@ void ReceiveRequestDialog::setInfo(const SendCoinsRecipient &_info)
     QString uri = GUIUtil::formatBitcoinURI(info);
 
 #ifdef USE_QRCODE
-    if (ui->qr_code->setQR(uri, info.address)) {
+    if (ui->qr_code->setQR(uri, info.address, model->getOptionsModel()->getFontChoiceForQRCodes())) {
         connect(ui->btnSaveAs, &QPushButton::clicked, ui->qr_code, &QRImageWidget::saveImage);
+        connect(model->getOptionsModel(), &OptionsModel::fontForQRCodesChanged, this, [&](const OptionsModel::FontChoice& fontchoice){
+            ui->qr_code->setQR(uri, info.address, fontchoice);
+        });
     } else {
         ui->btnSaveAs->setEnabled(false);
     }
