@@ -271,7 +271,13 @@ MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTra
                                        int64_t accept_time, const ignore_rejects_type& ignore_rejects, bool test_accept) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 static inline MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTransactionRef& tx, int64_t accept_time, bool bypass_limits, bool test_accept) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
-    static const ignore_rejects_type ignore_rejects_legacy{rejectmsg_lowfee_mempool, rejectmsg_lowfee_relay, rejectmsg_mempoolfull, rejectmsg_zero_mempool_entry_seq};
+    static const ignore_rejects_type ignore_rejects_legacy{
+        rejectmsg_lowfee_mempool,
+        rejectmsg_lowfee_relay,
+        rejectmsg_mempoolfull,
+        rejectmsg_zero_mempool_entry_seq,
+        "truc",
+    };
     return AcceptToMemoryPool(active_chainstate, tx, accept_time, (bypass_limits ? ignore_rejects_legacy : empty_ignore_rejects), test_accept);
 }
 
