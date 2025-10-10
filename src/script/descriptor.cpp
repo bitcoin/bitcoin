@@ -2315,6 +2315,10 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
             error = "Address is not valid";
             return {};
         }
+        if (std::holds_alternative<V0SilentPaymentDestination>(dest)) {
+            error = "silent-payments address is not valid for addr()";
+            return {};
+        }
         ret.emplace_back(std::make_unique<AddressDescriptor>(std::move(dest)));
         return ret;
     } else if (Func("addr", expr)) {
