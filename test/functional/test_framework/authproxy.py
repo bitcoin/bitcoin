@@ -202,7 +202,7 @@ class AuthServiceProxy():
         response = json.loads(responsedata, parse_float=decimal.Decimal)
         elapsed = time.time() - req_start_time
         if "error" in response and response["error"] is None:
-            log.debug("<-%s- [%.6f] %s" % (response["id"], elapsed, self._json_dumps(response["result"])))
+            log.debug("<-%s- [%.6f] %s" % (response.get("id"), elapsed, self._json_dumps(response["result"])))
         else:
             log.debug("<-- [%.6f] %s" % (elapsed, responsedata))
         return response, http_response.status
