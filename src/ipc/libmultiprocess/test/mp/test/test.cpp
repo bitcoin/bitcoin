@@ -5,26 +5,32 @@
 #include <mp/test/foo.capnp.h>
 #include <mp/test/foo.capnp.proxy.h>
 
+#include <atomic>
 #include <capnp/capability.h>
 #include <capnp/rpc.h>
+#include <condition_variable>
 #include <cstring>
 #include <functional>
 #include <future>
-#include <iostream>
 #include <kj/async.h>
 #include <kj/async-io.h>
 #include <kj/common.h>
 #include <kj/debug.h>
+#include <kj/exception.h>
 #include <kj/memory.h>
+#include <kj/string.h>
 #include <kj/test.h>
 #include <memory>
 #include <mp/proxy.h>
+#include <mp/proxy.capnp.h>
 #include <mp/proxy-io.h>
+#include <mp/util.h>
 #include <optional>
 #include <set>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -60,9 +66,10 @@ public:
 
     TestSetup(bool client_owns_connection = true)
         : thread{[&] {
-              EventLoop loop("mptest", [](bool raise, const std::string& log) {
-                  std::cout << "LOG" << raise << ": " << log << "\n";
-                  if (raise) throw std::runtime_error(log);
+              EventLoop loop("mptest", [](mp::LogMessage log) {
+                  // Info logs are not printed by default, but will be shown with `mptest --verbose`
+                  KJ_LOG(INFO, log.level, log.message);
+                  if (log.level == mp::Log::Raise) throw std::runtime_error(log.message);
               });
               auto pipe = loop.m_io_context.provider->newTwoWayPipe();
 
@@ -113,6 +120,11 @@ KJ_TEST("Call FooInterface methods")
     ProxyClient<messages::FooInterface>* foo = setup.client.get();
 
     KJ_EXPECT(foo->add(1, 2) == 3);
+    int ret;
+    foo->addOut(3, 4, ret);
+    KJ_EXPECT(ret == 7);
+    foo->addInOut(3, ret);
+    KJ_EXPECT(ret == 10);
 
     FooStruct in;
     in.name = "name";
@@ -295,6 +307,72 @@ KJ_TEST("Calling IPC method, disconnecting and blocking during the call")
     // *before* the TestSetup variable so is not destroyed while
     // signal.get_future().get() is called.
     signal.set_value();
+}
+
+KJ_TEST("Make simultaneous IPC calls to trigger 'thread busy' error")
+{
+    TestSetup setup;
+    ProxyClient<messages::FooInterface>* foo = setup.client.get();
+    std::promise<void> signal;
+
+    foo->initThreadMap();
+    // Use callFnAsync() to get the client to set up the request_thread
+    // that will be used for the test.
+    setup.server->m_impl->m_fn = [&] {};
+    foo->callFnAsync();
+    ThreadContext& tc{g_thread_context};
+    Thread::Client *callback_thread, *request_thread;
+    foo->m_context.loop->sync([&] {
+        Lock lock(tc.waiter->m_mutex);
+        callback_thread = &tc.callback_threads.at(foo->m_context.connection)->m_client;
+        request_thread = &tc.request_threads.at(foo->m_context.connection)->m_client;
+    });
+
+    setup.server->m_impl->m_fn = [&] {
+        try
+        {
+            signal.get_future().get();
+        }
+        catch (const std::future_error& e)
+        {
+            KJ_EXPECT(e.code() == std::make_error_code(std::future_errc::future_already_retrieved));
+        }
+    };
+
+    auto client{foo->m_client};
+    bool caught_thread_busy = false;
+    // NOTE: '3' was chosen because it was the lowest number
+    // of simultaneous calls required to reliably catch a "thread busy" error
+    std::atomic<size_t> running{3};
+    foo->m_context.loop->sync([&]
+    {
+        for (size_t i = 0; i < running; i++)
+        {
+            auto request{client.callFnAsyncRequest()};
+            auto context{request.initContext()};
+            context.setCallbackThread(*callback_thread);
+            context.setThread(*request_thread);
+            foo->m_context.loop->m_task_set->add(request.send().then(
+                [&](auto&& results) {
+                    running -= 1;
+                    tc.waiter->m_cv.notify_all();
+                },
+                [&](kj::Exception&& e) {
+                    KJ_EXPECT(std::string_view{e.getDescription().cStr()} ==
+                        "remote exception: std::exception: thread busy");
+                    caught_thread_busy = true;
+                    running -= 1;
+                    signal.set_value();
+                    tc.waiter->m_cv.notify_all();
+                }
+            ));
+        }
+    });
+    {
+        Lock lock(tc.waiter->m_mutex);
+        tc.waiter->wait(lock, [&running] { return running == 0; });
+    }
+    KJ_EXPECT(caught_thread_busy);
 }
 
 } // namespace test
