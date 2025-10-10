@@ -11,6 +11,7 @@
 #include <node/interface_ui.h>
 #include <sync.h>
 #include <univalue.h>
+#include <util/string.h>
 #include <util/translation.h>
 
 #include <utility>
@@ -55,7 +56,7 @@ UniValue GetWarningsForRpc(const Warnings& warnings, bool use_deprecated)
 {
     if (use_deprecated) {
         const auto all_messages{warnings.GetMessages()};
-        return all_messages.empty() ? "" : all_messages.back().original;
+        return all_messages.empty() ? "" : util::Join(all_messages, Untranslated("\n")).original;
     }
 
     UniValue messages{UniValue::VARR};
