@@ -19,6 +19,9 @@ from test_framework.test_framework import (
 )
 from test_framework.util import assert_equal, force_finish_mnsync
 
+# See version.h
+MIN_MASTERNODE_PROTO_VERSION = 70238
+
 class LLMQSimplePoSeTest(DashTestFramework):
     def set_test_params(self):
         # rotating quorums add instability for this functional tests
@@ -87,7 +90,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def force_old_mn_proto(self, mn: MasternodeInfo):
         self.stop_node(mn.nodeIdx)
-        self.start_masternode(mn, ["-pushversion=70216"])
+        self.start_masternode(mn, [f"-pushversion={MIN_MASTERNODE_PROTO_VERSION - 1}"])
         self.connect_nodes(mn.nodeIdx, 0)
         self.reset_probe_timeouts()
         return False, True
