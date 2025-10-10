@@ -787,6 +787,16 @@
         </layout>
        </item>
        <item>
+        <widget class="QCheckBox" name="peersTabAlternatingRowColors">
+         <property name="toolTip">
+          <string>Alternate the row colors for the &quot;Peers&quot; and &quot;Banned peers&quot; tables in the Peers tab.</string>
+         </property>
+         <property name="text">
+          <string>Alternate row colors in the Peers tab</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="verticalSpacer_Display">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
