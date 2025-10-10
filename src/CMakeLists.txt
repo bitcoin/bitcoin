@@ -138,6 +138,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   chain.cpp
   chainparams.cpp
   chainparamsbase.cpp
+  codex32.cpp
   coins.cpp
   common/args.cpp
   common/bloom.cpp

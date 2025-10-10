@@ -82,6 +82,16 @@ bool FlatSigningProvider::GetTaprootBuilder(const XOnlyPubKey& output_key, Tapro
     return LookupHelper(tr_trees, output_key, builder);
 }
 
+void FlatSigningProvider::AddMasterKey(const CExtKey& key)
+{
+    CPubKey pubkey = key.Neuter().pubkey;
+    const auto id = pubkey.GetID();
+    KeyOriginInfo origin;
+    std::copy(key.vchFingerprint, key.vchFingerprint + sizeof(key.vchFingerprint), origin.fingerprint);
+    origins[id] = std::make_pair(pubkey, origin);
+    keys[id] = key.key;
+}
+
 FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
 {
     scripts.merge(b.scripts);
