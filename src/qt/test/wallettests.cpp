@@ -15,6 +15,7 @@
 #include <qt/optionsmodel.h>
 #include <qt/overviewpage.h>
 #include <qt/platformstyle.h>
+#include <qt/psbtoperationsdialog.h>
 #include <qt/qvalidatedlineedit.h>
 #include <qt/receivecoinsdialog.h>
 #include <qt/receiverequestdialog.h>
@@ -279,6 +280,7 @@ public:
         AddWallet(context, wallet);
         walletModel = std::make_unique<WalletModel>(interfaces::MakeWallet(context, wallet), *clientModel, platformStyle);
         RemoveWallet(context, wallet, /* load_on_start= */ std::nullopt);
+        sendCoinsDialog.setClientModel(clientModel.get());
         sendCoinsDialog.setModel(walletModel.get());
         transactionView.setModel(walletModel.get());
     }
@@ -461,6 +463,17 @@ void TestGUIWatchOnly(interfaces::Node& node, TestChain100Setup& test)
 
     // Send tx and verify PSBT copied to the clipboard.
     SendCoins(*wallet.get(), sendCoinsDialog, PKHash(), 5 * COIN, /*rbf=*/false, QMessageBox::Save);
+    auto psbt_dlg = []() -> PSBTOperationsDialog * {
+        for (QWidget* widget : QApplication::topLevelWidgets()) {
+            if (widget->inherits("PSBTOperationsDialog")) {
+                return qobject_cast<PSBTOperationsDialog*>(widget);
+            }
+        }
+        return nullptr;
+    }();
+    QVERIFY(psbt_dlg);
+    psbt_dlg->copyToClipboard();
+    psbt_dlg->close();
     const std::string& psbt_string = QApplication::clipboard()->text().toStdString();
     QVERIFY(!psbt_string.empty());
 
