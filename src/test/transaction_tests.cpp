@@ -50,7 +50,7 @@ typedef std::vector<unsigned char> valtype;
 static CFeeRate g_dust{DUST_RELAY_TX_FEE};
 static bool g_bare_multi{DEFAULT_PERMIT_BAREMULTISIG};
 
-static const std::map<std::string, script_verify_flag_name>& mapFlagNames = g_verify_flag_names;
+static const std::map<std::string, script_verify_flag_name>& mapFlagNames = ScriptFlagNamesToEnum();
 
 script_verify_flags ParseScriptFlags(std::string strFlags)
 {
