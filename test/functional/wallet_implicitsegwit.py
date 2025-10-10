@@ -38,6 +38,18 @@ def check_implicit_transactions(implicit_keys, implicit_node):
             b_address = key_to_address(pubkey, b)
             assert ('receive', b_address) in tuple((tx['category'], tx['address']) for tx in txs)
 
+def check_explicit_transactions(explicit_keys, explicit_node):
+    # The explicit segwit node doesn't allow conversion from legacy to segwit
+    txs = explicit_node.listtransactions(None, 99999)
+    for a in address_types:
+        pubkey = explicit_keys[a]
+        for b in address_types:
+            b_address = key_to_address(pubkey, b)
+            if a == 'legacy' and a != b:
+                assert(('receive', b_address) not in tuple((tx['category'], tx['address']) for tx in txs))
+            else:
+                assert(('receive', b_address) in tuple((tx['category'], tx['address']) for tx in txs))
+
 class ImplicitSegwitTest(BitcoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser, descriptors=False)
@@ -45,6 +57,14 @@ class ImplicitSegwitTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.supports_cli = False
+        self.extra_args = [
+            [
+                "-walletimplicitsegwit=1",
+            ],
+            [
+                "-walletimplicitsegwit=0",
+            ],
+        ]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -52,17 +72,20 @@ class ImplicitSegwitTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info("Manipulating addresses and sending transactions to all variations")
         implicit_keys = send_a_to_b(self.nodes[0], self.nodes[1])
+        explicit_keys = send_a_to_b(self.nodes[1], self.nodes[0])
 
         self.sync_all()
 
         self.log.info("Checking that transactions show up correctly without a restart")
         check_implicit_transactions(implicit_keys, self.nodes[0])
+        check_explicit_transactions(explicit_keys, self.nodes[1])
 
         self.log.info("Checking that transactions still show up correctly after a restart")
         self.restart_node(0)
         self.restart_node(1)
 
         check_implicit_transactions(implicit_keys, self.nodes[0])
+        check_explicit_transactions(explicit_keys, self.nodes[1])
 
 if __name__ == '__main__':
     ImplicitSegwitTest(__file__).main()
