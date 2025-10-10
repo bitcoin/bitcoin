@@ -10,7 +10,7 @@ fi
 
 BITCOIND_CONFIGFILE=${BITCOIND_CONFIGFILE:-/etc/bitcoin/bitcoin.conf}
 BITCOIND_PIDDIR=${BITCOIND_PIDDIR:-/var/run/bitcoind}
-BITCOIND_PIDFILE=${BITCOIND_PIDFILE:-${BITCOIND_PIDDIR}/bitcoind.pid}
+BITCOIND_PIDFILE=${BITCOIND_PIDFILE:-${BITCOIND_PIDDIR}/${SVCNAME}.pid}
 BITCOIND_DATADIR=${BITCOIND_DATADIR:-${BITCOIND_DEFAULT_DATADIR}}
 BITCOIND_USER=${BITCOIND_USER:-${BITCOIN_USER:-bitcoin}}
 BITCOIND_GROUP=${BITCOIND_GROUP:-bitcoin}
@@ -18,25 +18,12 @@ BITCOIND_BIN=${BITCOIND_BIN:-/usr/bin/bitcoind}
 BITCOIND_NICE=${BITCOIND_NICE:-${NICELEVEL:-0}}
 BITCOIND_OPTS="${BITCOIND_OPTS:-${BITCOIN_OPTS}}"
 
-name="Bitcoin Core Daemon"
+name="Bitcoin Core daemon"
 description="Bitcoin cryptocurrency P2P network daemon"
 
-command="/usr/bin/bitcoind"
-command_args="-pid=\"${BITCOIND_PIDFILE}\" \
-		-conf=\"${BITCOIND_CONFIGFILE}\" \
-		-datadir=\"${BITCOIND_DATADIR}\" \
-		-daemon \
-		${BITCOIND_OPTS}"
-
 required_files="${BITCOIND_CONFIGFILE}"
-start_stop_daemon_args="-u ${BITCOIND_USER} \
-			-N ${BITCOIND_NICE} -w 2000"
 pidfile="${BITCOIND_PIDFILE}"
-
-# The retry schedule to use when stopping the daemon. Could be either
-# a timeout in seconds or multiple signal/timeout pairs (like
-# "SIGKILL/180 SIGTERM/300")
-retry="${BITCOIND_SIGTERM_TIMEOUT}"
+in_background_fake="start"
 
 depend() {
 	need localmount net
@@ -65,6 +52,37 @@ start_pre() {
 	"${BITCOIND_CONFIGFILE}"
 
 	checkconfig || return 1
+}
+
+start() {
+	ebegin "Starting ${name} in background"
+	mark_service_inactive
+	if start-stop-daemon \
+		--pidfile="${BITCOIND_PIDFILE}" \
+		--chdir="${BITCOIND_DATADIR}" \
+		--user="${BITCOIND_USER}:${BITCOIND_GROUP}" \
+		--nice="${BITCOIND_NICE}" \
+		--exec="${BITCOIND_BIN}" \
+		-- \
+		-pid="${BITCOIND_PIDFILE}" \
+		-conf="${BITCOIND_CONFIGFILE}" \
+		-datadir="${BITCOIND_DATADIR}" \
+		-daemonwait \
+		${BITCOIND_OPTS}
+	then
+		IN_BACKGROUND=yes rc-service "${SVCNAME}" --quiet start
+	else
+		rc-service "${SVCNAME}" --quiet zap
+	fi &
+}
+
+stop() {
+	ebegin "Stopping ${name}"
+	start-stop-daemon --stop \
+		--pidfile="${BITCOIND_PIDFILE}" \
+		--retry="${BITCOIND_SIGTERM_TIMEOUT}" \
+		--exec="${BITCOIND_BIN}"
+	eend $?
 }
 
 checkconfig()
