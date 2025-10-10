@@ -10,6 +10,12 @@
 #include <attributes.h>
 #include <crypto/common.h>
 
+#if defined(__clang__)
+#pragma clang attribute push(__attribute__((__target__("sse4.1"))), apply_to = function)
+#elif defined(__GNUC__)
+#pragma GCC target ("sse4.1")
+#endif
+
 namespace sha256d64_sse41 {
 namespace {
 
@@ -317,5 +323,9 @@ void Transform_4way(unsigned char* out, const unsigned char* in)
 }
 
 }
+
+#if defined(__clang__)
+#pragma clang attribute pop
+#endif
 
 #endif
