@@ -122,9 +122,7 @@ std::unique_ptr<CTxMemPool> MakeMempool(FuzzedDataProvider& fuzzed_data_provider
 
     // ...override specific options for this specific fuzz suite
     mempool_opts.limits.ancestor_count = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 50);
-    mempool_opts.limits.ancestor_size_vbytes = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 202) * 1'000;
     mempool_opts.limits.descendant_count = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 50);
-    mempool_opts.limits.descendant_size_vbytes = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 202) * 1'000;
     mempool_opts.max_size_bytes = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 200) * 1'000'000;
     mempool_opts.expiry = std::chrono::hours{fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 999)};
     // Only interested in 2 cases: sigop cost 0 or when single legacy sigop cost is >> 1KvB
@@ -174,7 +172,7 @@ std::optional<COutPoint> GetChildEvictingPrevout(const CTxMemPool& tx_pool)
         const auto& entry = *Assert(tx_pool.GetEntry(tx_info.tx->GetHash()));
         std::vector<uint32_t> dust_indexes{GetDust(*tx_info.tx, tx_pool.m_opts.dust_relay_feerate)};
         if (!dust_indexes.empty()) {
-            const auto& children = entry.GetMemPoolChildrenConst();
+            const auto& children = tx_pool.GetChildren(entry);
             if (!children.empty()) {
                 Assert(children.size() == 1);
                 // Find an input that doesn't spend from parent's txid

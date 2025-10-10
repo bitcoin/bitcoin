@@ -16,14 +16,14 @@ namespace kernel {
  * Most of the time, this struct should be referenced as CTxMemPool::Limits.
  */
 struct MemPoolLimits {
+    //! The maximum number of transactions in a cluster
+    unsigned cluster_count{DEFAULT_CLUSTER_LIMIT};
+    //! The maximum allowed size in virtual bytes of a cluster.
+    int64_t cluster_size_vbytes{DEFAULT_CLUSTER_SIZE_LIMIT_KVB * 1'000};
     //! The maximum allowed number of transactions in a package including the entry and its ancestors.
     int64_t ancestor_count{DEFAULT_ANCESTOR_LIMIT};
-    //! The maximum allowed size in virtual bytes of an entry and its ancestors within a package.
-    int64_t ancestor_size_vbytes{DEFAULT_ANCESTOR_SIZE_LIMIT_KVB * 1'000};
     //! The maximum allowed number of transactions in a package including the entry and its descendants.
     int64_t descendant_count{DEFAULT_DESCENDANT_LIMIT};
-    //! The maximum allowed size in virtual bytes of an entry and its descendants within a package.
-    int64_t descendant_size_vbytes{DEFAULT_DESCENDANT_SIZE_LIMIT_KVB * 1'000};
 
     /**
      * @return MemPoolLimits with all the limits set to the maximum
@@ -31,7 +31,7 @@ struct MemPoolLimits {
     static constexpr MemPoolLimits NoLimits()
     {
         int64_t no_limit{std::numeric_limits<int64_t>::max()};
-        return {no_limit, no_limit, no_limit, no_limit};
+        return {std::numeric_limits<unsigned>::max(), no_limit, no_limit, no_limit};
     }
 };
 } // namespace kernel
