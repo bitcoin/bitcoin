@@ -992,7 +992,7 @@ class RPCOverloadWrapper():
         if not import_res[0]['success']:
             raise JSONRPCException(import_res[0]['error'])
 
-    def importaddress(self, address, label=None, rescan=None, p2sh=None):
+    def _deleted_importaddress(self, address, label=None, rescan=None, p2sh=None):
         wallet_info = self.getwalletinfo()
         if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
             return self.__getattr__('importaddress')(address, label, rescan, p2sh)
