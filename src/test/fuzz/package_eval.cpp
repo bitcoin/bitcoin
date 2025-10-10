@@ -174,7 +174,7 @@ std::optional<COutPoint> GetChildEvictingPrevout(const CTxMemPool& tx_pool)
         const auto& entry = *Assert(tx_pool.GetEntry(tx_info.tx->GetHash()));
         std::vector<uint32_t> dust_indexes{GetDust(*tx_info.tx, tx_pool.m_opts.dust_relay_feerate)};
         if (!dust_indexes.empty()) {
-            const auto& children = entry.GetMemPoolChildrenConst();
+            const auto& children = tx_pool.GetChildren(entry);
             if (!children.empty()) {
                 Assert(children.size() == 1);
                 // Find an input that doesn't spend from parent's txid
