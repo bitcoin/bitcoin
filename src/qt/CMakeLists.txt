@@ -101,6 +101,7 @@ add_library(bitcoinqt STATIC EXCLUDE_FROM_ALL
   modaloverlay.cpp
   mempoolstats.cpp
   modaloverlay.h
+  netwatch.cpp
   networkstyle.cpp
   networkstyle.h
   notificator.cpp
