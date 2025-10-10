@@ -1,0 +1,52 @@
+name: 'Configure Docker'
+description: 'Set up Docker build driver and configure build cache args'
+inputs:
+  use-cirrus:
+    description: 'Use cirrus cache'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      with:
+        # Use host network to allow access to cirrus gha cache running on the host
+        driver-opts: |
+          network=host
+
+    # This is required to allow buildkit to access the actions cache
+    - name: Expose actions cache variables
+      uses: actions/github-script@v6
+      with:
+        script: |
+          core.exportVariable('ACTIONS_CACHE_URL', process.env['ACTIONS_CACHE_URL'])
+          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env['ACTIONS_RUNTIME_TOKEN'])
+
+    - name: Construct docker build cache args
+      shell: bash
+      run: |
+        # Configure docker build cache backend
+        #
+        # On forks the gha cache will work but will use Github's cache backend.
+        # Docker will check for variables $ACTIONS_CACHE_URL, $ACTIONS_RESULTS_URL and $ACTIONS_RUNTIME_TOKEN
+        # which are set automatically when running on GitHub infra: https://docs.docker.com/build/cache/backends/gha/#synopsis
+
+        # Use cirrus cache host
+        if [[ ${{ inputs.use-cirrus }} == 'true' ]]; then
+          url_args="url=${CIRRUS_CACHE_HOST},url_v2=${CIRRUS_CACHE_HOST}"
+        else
+          url_args=""
+        fi
+
+        # Always optimistically --cache‑from in case a cache blob exists
+        args=(--cache-from "type=gha${url_args:+,${url_args}},scope=${CONTAINER_NAME}")
+
+        # If this is a push to the default branch, also add --cache‑to to save the cache
+        if [[ ${{ github.event_name }} == "push" && ${{ github.ref_name }} == ${{ github.event.repository.default_branch }} ]]; then
+          args+=(--cache-to "type=gha${url_args:+,${url_args}},mode=max,ignore-error=true,scope=${CONTAINER_NAME}")
+        fi
+
+        # Always `--load` into docker images (needed when using the `docker-container` build driver).
+        args+=(--load)
+
+        echo "DOCKER_BUILD_CACHE_ARG=${args[*]}" >> $GITHUB_ENV

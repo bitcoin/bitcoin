@@ -1,0 +1,27 @@
+name: 'Configure environment'
+description: 'Configure CI, cache and container name environment variables'
+runs:
+  using: 'composite'
+  steps:
+    - name: Set CI and cache directories
+      shell: bash
+      run: |
+        echo "BASE_ROOT_DIR=${{ runner.temp }}" >> "$GITHUB_ENV"
+        echo "BASE_BUILD_DIR=${{ runner.temp }}/build" >> "$GITHUB_ENV"
+        echo "CCACHE_DIR=${{ runner.temp }}/ccache_dir" >> $GITHUB_ENV
+        echo "DEPENDS_DIR=${{ runner.temp }}/depends" >> "$GITHUB_ENV"
+        echo "BASE_CACHE=${{ runner.temp }}/depends/built" >> $GITHUB_ENV
+        echo "SOURCES_PATH=${{ runner.temp }}/depends/sources" >> $GITHUB_ENV
+        echo "PREVIOUS_RELEASES_DIR=${{ runner.temp }}/previous_releases" >> $GITHUB_ENV
+
+    - name: Set cache hashes
+      shell: bash
+      run: |
+        echo "DEPENDS_HASH=$(git ls-tree HEAD depends "ci/test/$FILE_ENV" | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
+        echo "PREVIOUS_RELEASES_HASH=$(git ls-tree HEAD test/get_previous_releases.py | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
+
+    - name: Get container name
+      shell: bash
+      run: |
+        source $FILE_ENV
+        echo "CONTAINER_NAME=$CONTAINER_NAME" >> "$GITHUB_ENV"
