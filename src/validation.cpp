@@ -3029,15 +3029,69 @@ void Chainstate::UpdateTip(const CBlockIndex* pindexNew)
             WarningBitsConditionChecker checker(m_chainman, bit);
             ThresholdState state = checker.GetStateFor(pindex, m_chainman.GetConsensus(), m_chainman.m_warningcache.at(bit));
             if (state == ThresholdState::ACTIVE || state == ThresholdState::LOCKED_IN) {
-                const bilingual_str warning = strprintf(_("Unknown new rules activated (versionbit %i)"), bit);
-                if (state == ThresholdState::ACTIVE) {
-                    m_chainman.GetNotifications().warningSet(kernel::Warning::UNKNOWN_NEW_RULES_ACTIVATED, warning);
-                } else {
-                    warning_messages.push_back(warning);
-                }
+                const bilingual_str warning = strprintf(_("WARNING: Unknown new rules activated (versionbit %i) - this software is not secure"), bit);
+                m_chainman.GetNotifications().warningSet(kernel::Warning::UNKNOWN_NEW_RULES_ACTIVATED, warning);
+                warning_messages.push_back(warning);
             }
         }
+
+        // Check the version of the last 100 blocks to see if we need to upgrade:
+        int unexpected_bit_count[VERSIONBITS_NUM_BITS], nonversionbit_count = 0;
+        for (size_t i = 0; i < VERSIONBITS_NUM_BITS; ++i) unexpected_bit_count[i] = 0;
+        // NOTE: The warning_threshold_hit* variables are static to ensure the warnings persist even after the condition changes, until the node is restarted
+        static std::set<uint8_t> warning_threshold_hit_bits;
+        static int32_t warning_threshold_hit_int{-1};
+        for (int i = 0; i < 100 && pindex != nullptr; i++)
+        {
+            int32_t nExpectedVersion = m_chainman.m_versionbitscache.ComputeBlockVersion(pindex->pprev, m_chainman.GetConsensus());
+            if (pindex->nVersion <= VERSIONBITS_LAST_OLD_BLOCK_VERSION) {
+                // We don't care
+            } else if ((pindex->nVersion & VERSIONBITS_TOP_MASK) != VERSIONBITS_TOP_BITS) {
+                // Non-versionbits upgrade
+                static constexpr int WARNING_THRESHOLD = 100/2;
+                if (++nonversionbit_count > WARNING_THRESHOLD) {
+                    if (warning_threshold_hit_int == -1) {
+                        warning_threshold_hit_int = pindex->nVersion;
+                    } else if (warning_threshold_hit_int != pindex->nVersion) {
+                        warning_threshold_hit_int = -2;
+                    }
+                }
+            } else if ((pindex->nVersion & ~nExpectedVersion) != 0) {
+                for (int bit = 0; bit < VERSIONBITS_NUM_BITS; ++bit) {
+                    const int32_t mask = 1 << bit;
+                    if ((pindex->nVersion & mask) && !(nExpectedVersion & mask)) {
+                        const int warning_threshold = (bit > 12 ? 75 : 50);
+                        if (++unexpected_bit_count[bit] > warning_threshold) {
+                            warning_threshold_hit_bits.insert(bit);
+                        }
+                    }
+                }
+            }
+            pindex = pindex->pprev;
+        }
+        if (!warning_threshold_hit_bits.empty()) {
+            const auto warning = strprintf(_("Warning: Miners are attempting to activate unknown new rules (bit %s)! You may or may not need to act to remain secure"), util::Join(warning_threshold_hit_bits, ", ", [](const uint8_t bit){ return util::ToString(int(bit)); }));
+            m_chainman.GetNotifications().warningSet(kernel::Warning::UNKNOWN_NEW_RULES_SIGNAL_VBITS, warning, /*update=*/true);
+            warning_messages.push_back(warning);
+        }
+        if (warning_threshold_hit_int != -1) {
+            bilingual_str warning;
+            if (warning_threshold_hit_int == -2) {
+                warning = _("Warning: Unrecognised block versions are being mined! Unknown rules may or may not be in effect");
+            } else {
+                warning = strprintf(_("Warning: Unrecognised block version (0x%08x) is being mined! Unknown rules may or may not be in effect"), warning_threshold_hit_int);
+            }
+            m_chainman.GetNotifications().warningSet(kernel::Warning::UNKNOWN_NEW_RULES_SIGNAL_INTVER, warning, /*update=*/true);
+            warning_messages.push_back(warning);
+        }
     }
+
+    static constexpr int32_t BIP320_MASK = 0x1fffe000UL;
+    if ((pindexNew->nVersion & BIP320_MASK) && pindexNew->nVersion != m_chainman.m_versionbitscache.ComputeBlockVersion(pindexNew->pprev, m_chainman.GetConsensus())) {
+        const auto warning = _("Miner violated version bit protocol");
+        warning_messages.push_back(warning);
+    }
+
     UpdateTipLog(m_chainman, coins_tip, pindexNew, __func__, "",
                  util::Join(warning_messages, Untranslated(", ")).original);
 }

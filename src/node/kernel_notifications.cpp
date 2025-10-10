@@ -79,9 +79,9 @@ void KernelNotifications::progress(const bilingual_str& title, int progress_perc
     uiInterface.ShowProgress(title.translated, progress_percent, resume_possible);
 }
 
-void KernelNotifications::warningSet(kernel::Warning id, const bilingual_str& message)
+void KernelNotifications::warningSet(kernel::Warning id, const bilingual_str& message, const bool update)
 {
-    if (m_warnings.Set(id, message)) {
+    if (m_warnings.Set(id, message, update)) {
         AlertNotify(message.original);
     }
 }
