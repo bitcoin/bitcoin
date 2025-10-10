@@ -31,6 +31,7 @@
 #include <util/batchpriority.h>
 #include <util/check.h>
 #include <util/fs.h>
+#include <util/obfuscation.h>
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 #include <util/syserror.h>
@@ -1187,7 +1188,7 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
         };
     }
     LogInfo("Using obfuscation key for blocksdir *.dat files (%s): '%s'\n", fs::PathToString(opts.blocks_dir), HexStr(xor_key));
-    return std::vector<std::byte>{xor_key.begin(), xor_key.end()};
+    return Obfuscation{xor_key};
 }
 
 BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)

@@ -12,6 +12,7 @@
 #include <support/allocators/zeroafterfree.h>
 #include <util/check.h>
 #include <util/fs_helpers.h>
+#include <util/obfuscation.h>
 #include <util/overflow.h>
 #include <util/syserror.h>
 
@@ -27,27 +28,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-namespace util {
-inline void Xor(Span<std::byte> write, Span<const std::byte> key, size_t key_offset = 0)
-{
-    if (key.size() == 0) {
-        return;
-    }
-    key_offset %= key.size();
-
-    for (size_t i = 0, j = key_offset; i != write.size(); i++) {
-        write[i] ^= key[j++];
-
-        // This potentially acts on very many bytes of data, so it's
-        // important that we calculate `j`, i.e. the `key` index in this
-        // way instead of doing a %, which would effectively be a division
-        // for each byte Xor'd -- much slower than need be.
-        if (j == key.size())
-            j = 0;
-    }
-}
-} // namespace util
 
 /* Minimal stream for overwriting and/or appending to an existing byte vector
  *
@@ -277,9 +257,9 @@ public:
      *
      * @param[in] key    The key used to XOR the data in this stream.
      */
-    void Xor(const std::vector<unsigned char>& key)
+    void Xor(const Obfuscation& key)
     {
-        util::Xor(MakeWritableByteSpan(*this), MakeByteSpan(key));
+        key(*this);
     }
 
     /** Compute total memory usage of this object (own memory + any dynamic memory). */
@@ -402,12 +382,12 @@ class AutoFile
 {
 protected:
     std::FILE* m_file;
-    std::vector<std::byte> m_xor;
+    Obfuscation m_obfuscation;
     std::optional<int64_t> m_position;
     bool m_was_written{false};
 
 public:
-    explicit AutoFile(std::FILE* file, std::vector<std::byte> data_xor={});
+    explicit AutoFile(std::FILE* file, const Obfuscation& obfuscation = {});
 
     ~AutoFile()
     {
@@ -455,7 +435,7 @@ public:
     bool IsNull() const { return m_file == nullptr; }
 
     /** Continue with a different XOR key */
-    void SetXor(std::vector<std::byte> data_xor) { m_xor = data_xor; }
+    void SetXor(const Obfuscation& obfuscation) { m_obfuscation = obfuscation; }
 
     /** Implementation detail, only used internally. */
     std::size_t detail_fread(Span<std::byte> dst);

@@ -16,6 +16,7 @@
 #include <uint256.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
+#include <util/obfuscation.h>
 #include <util/signalinterrupt.h>
 #include <util/syserror.h>
 #include <util/time.h>
@@ -59,7 +60,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
     try {
         uint64_t version;
         file >> version;
-        std::vector<std::byte> xor_key;
+        Obfuscation xor_key{};
         if (version == MEMPOOL_DUMP_VERSION_NO_XOR_KEY) {
             // Leave XOR-key empty
         } else if (version == MEMPOOL_DUMP_VERSION) {
@@ -178,9 +179,9 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
         const uint64_t version{pool.m_opts.persist_v1_dat ? MEMPOOL_DUMP_VERSION_NO_XOR_KEY : MEMPOOL_DUMP_VERSION};
         file << version;
 
-        std::vector<std::byte> xor_key(8);
+        Obfuscation xor_key{};
         if (!pool.m_opts.persist_v1_dat) {
-            FastRandomContext{}.fillrand(xor_key);
+            xor_key = Obfuscation{FastRandomContext{}.randbytes<Obfuscation::KEY_SIZE>()};
             file << xor_key;
         }
         file.SetXor(xor_key);
