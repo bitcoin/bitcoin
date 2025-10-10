@@ -607,6 +607,7 @@ void CConnman::AddWhitelistPermissionFlags(NetPermissionFlags& flags, std::optio
         if (whitelist_relay) NetPermissions::AddFlag(flags, NetPermissionFlags::Relay);
         NetPermissions::AddFlag(flags, NetPermissionFlags::Mempool);
         NetPermissions::AddFlag(flags, NetPermissionFlags::NoBan);
+        NetPermissions::AddFlag(flags, NetPermissionFlags::Addr);
     }
 }
 
