@@ -1775,7 +1775,26 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
 {
     int nInbound = 0;
 
-    const bool inbound_onion = std::find(m_onion_binds.begin(), m_onion_binds.end(), addr_bind) != m_onion_binds.end();
+    const bool inbound_onion = [this, &addr, &addr_bind]{
+        if (m_onion_binds.empty()) {
+            if (!m_listenonion) {
+                // If -listenonion=0, assume we do not have inbound Tor connections on non-onion listeners
+                return false;
+            }
+            // Tor connections are coming in on the first -bind
+            if ((!m_normal_binds.empty()) && addr_bind == m_normal_binds.front()) {
+                if (addr_bind.IsBindAny()) {
+                    // Tor connections should have a source IP that is local
+                    return addr.IsLocal();
+                }
+                // Otherwise, the source IP is unpredictable, so assume anything could be onion
+                return true;
+            }
+            return false;
+        } else {
+            return std::find(m_onion_binds.begin(), m_onion_binds.end(), addr_bind) != m_onion_binds.end();
+        }
+    }();
 
     // Tor inbound connections do not reveal the peer's actual network address.
     // Therefore do not apply address-based whitelist permissions to them.
