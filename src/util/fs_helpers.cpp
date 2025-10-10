@@ -334,21 +334,37 @@ std::string PermsToSymbolicString(fs::perms p)
 {
     std::string perm_str(9, '-');
 
-    auto set_perm = [&](size_t pos, fs::perms required_perm, char letter) {
+    auto set_perm = [&](size_t pos, fs::perms required_perm, char letter, char else_letter = '\0') {
         if ((p & required_perm) != fs::perms::none) {
             perm_str[pos] = letter;
+        } else if (else_letter) {
+            perm_str[pos] = else_letter;
         }
     };
 
     set_perm(0, fs::perms::owner_read,   'r');
     set_perm(1, fs::perms::owner_write,  'w');
-    set_perm(2, fs::perms::owner_exec,   'x');
+    if ((p & fs::perms::owner_exec) != fs::perms::none) {
+        set_perm(2, fs::perms::set_uid,  's', 'x');
+    } else {
+        set_perm(2, fs::perms::set_uid,  'S');
+    }
+
     set_perm(3, fs::perms::group_read,   'r');
     set_perm(4, fs::perms::group_write,  'w');
-    set_perm(5, fs::perms::group_exec,   'x');
+    if ((p & fs::perms::group_exec) != fs::perms::none) {
+        set_perm(5, fs::perms::set_gid,  's', 'x');
+    } else {
+        set_perm(5, fs::perms::set_gid,  'S');
+    }
+
     set_perm(6, fs::perms::others_read,  'r');
     set_perm(7, fs::perms::others_write, 'w');
-    set_perm(8, fs::perms::others_exec,  'x');
+    if ((p & fs::perms::others_exec)  != fs::perms::none) {
+        set_perm(8, fs::perms::sticky_bit, 't', 'x');
+    } else {
+        set_perm(8, fs::perms::sticky_bit, 'T');
+    }
 
     return perm_str;
 }
