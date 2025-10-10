@@ -266,6 +266,8 @@ void Interrupt(NodeContext& node)
 #if HAVE_SYSTEM
     ShutdownNotify(*node.args);
 #endif
+    // Wake any threads that may be waiting for the tip to change.
+    if (node.notifications) WITH_LOCK(node.notifications->m_tip_block_mutex, node.notifications->m_tip_block_cv.notify_all());
     InterruptHTTPServer();
     InterruptHTTPRPC();
     InterruptRPC();
