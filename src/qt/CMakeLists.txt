@@ -65,7 +65,7 @@ file(GLOB ts_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} locale/*.ts)
 set_source_files_properties(${ts_files} PROPERTIES OUTPUT_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/locale)
 cmake_language(CALL "qt${WITH_QT_VERSION}_add_translation" qm_files ${ts_files})
 
-set(FONT_PATH "res/fonts/RobotoTonalMono-Bold.ttf")
+set(FONT_PATH "res/fonts/OCR-Bitcoin.ttf")
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/res/fonts")
 add_custom_command(
   OUTPUT ${FONT_PATH}
