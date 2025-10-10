@@ -70,18 +70,26 @@ public:
     {
     }
 
-    SERIALIZE_METHODS(CMasternodeMetaInfo, obj)
+    template <typename Stream>
+    void Serialize(Stream& s) const EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
-        LOCK(obj.cs);
-        READWRITE(obj.proTxHash, obj.nLastDsq, obj.nMixingTxCount, obj.mapGovernanceObjectsVotedOn,
-                  obj.outboundAttemptCount, obj.lastOutboundAttempt, obj.lastOutboundSuccess, obj.m_platform_ban,
-                  obj.m_platform_ban_updated);
+        LOCK(cs);
+        s << proTxHash << nLastDsq << nMixingTxCount << mapGovernanceObjectsVotedOn << outboundAttemptCount
+          << lastOutboundAttempt << lastOutboundSuccess << m_platform_ban << m_platform_ban_updated;
     }
 
-    UniValue ToJson() const;
+    template <typename Stream>
+    void Unserialize(Stream& s) EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        LOCK(cs);
+        s >> proTxHash >> nLastDsq >> nMixingTxCount >> mapGovernanceObjectsVotedOn >> outboundAttemptCount >>
+            lastOutboundAttempt >> lastOutboundSuccess >> m_platform_ban >> m_platform_ban_updated;
+    }
+
+    UniValue ToJson() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
 public:
-    const uint256 GetProTxHash() const
+    const uint256 GetProTxHash() const EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
         return proTxHash;
@@ -92,16 +100,16 @@ public:
     bool IsValidForMixingTxes() const { return GetMixingTxCount() <= MASTERNODE_MAX_MIXING_TXES; }
 
     // KEEP TRACK OF EACH GOVERNANCE ITEM IN CASE THIS NODE GOES OFFLINE, SO WE CAN RECALCULATE THEIR STATUS
-    void AddGovernanceVote(const uint256& nGovernanceObjectHash);
+    void AddGovernanceVote(const uint256& nGovernanceObjectHash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    void RemoveGovernanceObject(const uint256& nGovernanceObjectHash);
+    void RemoveGovernanceObject(const uint256& nGovernanceObjectHash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     bool OutboundFailedTooManyTimes() const { return outboundAttemptCount > MASTERNODE_MAX_FAILED_OUTBOUND_ATTEMPTS; }
     void SetLastOutboundAttempt(int64_t t) { lastOutboundAttempt = t; ++outboundAttemptCount; }
     int64_t GetLastOutboundAttempt() const { return lastOutboundAttempt; }
     void SetLastOutboundSuccess(int64_t t) { lastOutboundSuccess = t; outboundAttemptCount = 0; }
     int64_t GetLastOutboundSuccess() const { return lastOutboundSuccess; }
-    bool SetPlatformBan(bool is_banned, int height)
+    bool SetPlatformBan(bool is_banned, int height) EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
         if (height < m_platform_ban_updated) {
@@ -114,7 +122,7 @@ public:
         m_platform_ban_updated = height;
         return true;
     }
-    bool IsPlatformBanned() const
+    bool IsPlatformBanned() const EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
         return m_platform_ban;
