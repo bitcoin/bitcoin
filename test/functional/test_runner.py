@@ -705,7 +705,6 @@ def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, ar
     if not os.listdir(tmpdir):
         os.rmdir(tmpdir)
 
-    all_passed = all_passed and coverage_passed
 
     # Clean up dangling processes if any. This may only happen with --failfast option.
     # Killing the process group will also terminate the current process but that is
