@@ -669,6 +669,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
     AssertLockHeld(cs);
     Assume(!m_have_changeset);
     std::vector<RemovedMempoolTransactionInfo> txs_removed_for_block;
+    if (mapTx.size() || mapNextTx.size() || mapDeltas.size()) {
     txs_removed_for_block.reserve(vtx.size());
     for (const auto& tx : vtx)
     {
@@ -681,6 +682,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
         }
         removeConflicts(*tx);
         ClearPrioritisation(tx->GetHash());
+    }
     }
     if (m_opts.signals) {
         m_opts.signals->MempoolTransactionsRemovedForBlock(txs_removed_for_block, nBlockHeight);
