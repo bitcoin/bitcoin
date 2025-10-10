@@ -245,7 +245,12 @@ bool OptionsModel::Init(bilingual_str& error)
 
     // Display
     if (!settings.contains("DisplayBitcoinUnit")) {
-        settings.setValue("DisplayBitcoinUnit", QVariant::fromValue(BitcoinUnit::BTC));
+        auto init_unit = BitcoinUnit::BTC;
+        if (settings.contains("nDisplayUnit")) {
+            // Migrate to new setting
+            init_unit = BitcoinUnits::FromSetting(settings.value("nDisplayUnit").toString(), init_unit);
+        }
+        settings.setValue("DisplayBitcoinUnit", QVariant::fromValue(init_unit));
     }
 
     constexpr auto unit_set_to_variant = [](BitcoinUnit& out, const QVariant& unit_variant){
@@ -256,8 +261,10 @@ bool OptionsModel::Init(bilingual_str& error)
         out = unit;
         return true;
     };
-    if (!unit_set_to_variant(m_display_bitcoin_unit, settings.value("DisplayBitcoinUnit"))) {
-        m_display_bitcoin_unit = BitcoinUnit::BTC;
+    if (!unit_set_to_variant(m_display_bitcoin_unit, settings.value("DisplayBitcoinUnitKnots"))) {
+        if (!unit_set_to_variant(m_display_bitcoin_unit, settings.value("DisplayBitcoinUnit"))) {
+            m_display_bitcoin_unit = BitcoinUnit::BTC;
+        }
     }
 
     if (!settings.contains("strThirdPartyTxUrls"))
@@ -920,7 +927,21 @@ void OptionsModel::setDisplayUnit(const QVariant& new_unit)
     if (new_unit.isNull() || new_unit.value<BitcoinUnit>() == m_display_bitcoin_unit) return;
     m_display_bitcoin_unit = new_unit.value<BitcoinUnit>();
     QSettings settings;
-    settings.setValue("DisplayBitcoinUnit", QVariant::fromValue(m_display_bitcoin_unit));
+    if (BitcoinUnits::numsys(m_display_bitcoin_unit) == BitcoinUnit::BTC) {
+        settings.setValue("DisplayBitcoinUnit", QVariant::fromValue(m_display_bitcoin_unit));
+        settings.remove("DisplayBitcoinUnitKnots");
+    } else {
+        settings.setValue("DisplayBitcoinUnitKnots", QVariant::fromValue(m_display_bitcoin_unit));
+    }
+    {
+        // For older versions:
+        auto setting_val = BitcoinUnits::ToSetting(m_display_bitcoin_unit);
+        if (const QString* setting_str = std::get_if<QString>(&setting_val)) {
+            settings.setValue("nDisplayUnit", *setting_str);
+        } else {
+            settings.setValue("nDisplayUnit", std::get<qint8>(setting_val));
+        }
+    }
     Q_EMIT displayUnitChanged(m_display_bitcoin_unit);
 }
 
