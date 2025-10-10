@@ -31,6 +31,7 @@
 #include <util/check.h>
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
+#include <util/time.h>
 
 #include <atomic>
 #include <condition_variable>
@@ -222,6 +223,8 @@ public:
     std::string m_session_id;
     /** whether this peer forced its connection by evicting another */
     bool m_forced_inbound;
+    /** CPU time spent processing messages to/from the peer. */
+    std::chrono::nanoseconds m_cpu_time;
 };
 
 
@@ -978,6 +981,9 @@ public:
         m_last_ping_time = ping_time;
         m_min_ping_time = std::min(m_min_ping_time.load(), ping_time);
     }
+
+    /** CPU time spent processing messages to/from the peer. */
+    std::atomic<std::chrono::nanoseconds> m_cpu_time;
 
 private:
     const NodeId id;
