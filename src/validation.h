@@ -65,6 +65,8 @@ namespace util {
 class SignalInterrupt;
 } // namespace util
 
+/** Default for using fee filter */
+static const bool DEFAULT_FEEFILTER = true;
 /** Block files containing a block-height within MIN_BLOCKS_TO_KEEP of ActiveChain().Tip() will not be pruned. */
 static const unsigned int MIN_BLOCKS_TO_KEEP = 288;
 static const signed int DEFAULT_CHECKBLOCKS = 6;
