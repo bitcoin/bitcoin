@@ -5,6 +5,7 @@
 #ifndef BITCOIN_NODE_MEMPOOL_ARGS_H
 #define BITCOIN_NODE_MEMPOOL_ARGS_H
 
+#include <common/settings.h>
 #include <util/result.h>
 
 #include <cstdint>
@@ -19,6 +20,7 @@ struct MemPoolOptions;
 };
 
 [[nodiscard]] util::Result<std::pair<int32_t, int>> ParseDustDynamicOpt(std::string_view optstr, unsigned int max_fee_estimate_blocks);
+void ApplyPermitEphemeralOption(const common::SettingsValue& value, kernel::MemPoolOptions& mempool_opts);
 
 /**
  * Overlay the options set in \p argsman on top of corresponding members in \p mempool_opts.

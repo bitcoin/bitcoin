@@ -87,6 +87,11 @@ std::vector<TxOrphanage::OrphanTxBase> TxDownloadManager::GetOrphanTransactions(
 {
     return m_impl->GetOrphanTransactions();
 }
+void TxDownloadManager::SetMaxOrphanTxs(uint32_t max_orphan_txs)
+{
+    m_impl->m_opts.m_max_orphan_txs = max_orphan_txs;
+    m_impl->m_orphanage.LimitOrphans(max_orphan_txs, m_impl->m_opts.m_rng);
+}
 
 // TxDownloadManagerImpl
 void TxDownloadManagerImpl::ActiveTipChange()
