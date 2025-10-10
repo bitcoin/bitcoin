@@ -451,6 +451,9 @@ public:
         ::AdviseSequential(m_file);
     }
 
+    //! Write a mutable buffer more efficiently than write(), obfuscating the buffer in-place.
+    void write_buffer(std::span<std::byte> src);
+
     //
     // Stream subset
     //
@@ -472,6 +475,8 @@ public:
         return *this;
     }
 };
+
+using DataBuffer = std::vector<std::byte>;
 
 /** Wrapper around an AutoFile& that implements a ring buffer to
  *  deserialize from. It guarantees the ability to rewind a given number of bytes.
@@ -529,7 +534,7 @@ private:
     }
 
 public:
-    BufferedFile(AutoFile& file, uint64_t nBufSize, uint64_t nRewindIn)
+    BufferedFile(AutoFile& file LIFETIMEBOUND, uint64_t nBufSize, uint64_t nRewindIn)
         : m_src{file}, nReadLimit{std::numeric_limits<uint64_t>::max()}, nRewind{nRewindIn}, vchBuf(nBufSize, std::byte{0})
     {
         if (nRewindIn >= nBufSize)
@@ -628,6 +633,89 @@ public:
             buf_offset += inc;
             if (buf_offset >= vchBuf.size()) buf_offset = 0;
         }
+    }
+};
+
+/**
+ * Wrapper that buffers reads from an underlying stream.
+ * Requires underlying stream to support read() and detail_fread() calls
+ * to support fixed-size and variable-sized reads, respectively.
+ */
+template <typename S>
+class BufferedReader
+{
+    S& m_src;
+    DataBuffer m_buf;
+    size_t m_buf_pos;
+
+public:
+    //! Requires stream ownership to prevent leaving the stream at an unexpected position after buffered reads.
+    explicit BufferedReader(S&& stream LIFETIMEBOUND, size_t size = 1 << 16)
+        requires std::is_rvalue_reference_v<S&&>
+        : m_src{stream}, m_buf(size), m_buf_pos{size} {}
+
+    void read(Span<std::byte> dst)
+    {
+        if (const auto available{std::min(dst.size(), m_buf.size() - m_buf_pos)}) {
+            std::copy_n(m_buf.begin() + m_buf_pos, available, dst.begin());
+            m_buf_pos += available;
+            dst = dst.subspan(available);
+        }
+        if (dst.size()) {
+            assert(m_buf_pos == m_buf.size());
+            m_src.read(dst);
+
+            m_buf_pos = 0;
+            m_buf.resize(m_src.detail_fread(m_buf));
+        }
+    }
+
+    template <typename T>
+    BufferedReader& operator>>(T&& obj)
+    {
+        Unserialize(*this, obj);
+        return *this;
+    }
+};
+
+/**
+ * Wrapper that buffers writes to an underlying stream.
+ * Requires underlying stream to support write_buffer() method
+ * for efficient buffer flushing and obfuscation.
+ */
+template <typename S>
+class BufferedWriter
+{
+    S& m_dst;
+    DataBuffer m_buf;
+    size_t m_buf_pos{0};
+
+public:
+    explicit BufferedWriter(S& stream LIFETIMEBOUND, size_t size = 1 << 16) : m_dst{stream}, m_buf(size) {}
+
+    ~BufferedWriter() { flush(); }
+
+    void flush()
+    {
+        if (m_buf_pos) m_dst.write_buffer(std::span{m_buf}.first(m_buf_pos));
+        m_buf_pos = 0;
+    }
+
+    void write(std::span<const std::byte> src)
+    {
+        while (const auto available{std::min(src.size(), m_buf.size() - m_buf_pos)}) {
+            std::copy_n(src.begin(), available, m_buf.begin() + m_buf_pos);
+            m_buf_pos += available;
+            if (m_buf_pos == m_buf.size()) flush();
+            src = src.subspan(available);
+        }
+    }
+
+    template <typename T>
+    BufferedWriter& operator<<(const T& obj)
+    {
+        Serialize(*this, obj);
+        return *this;
     }
 };
 
