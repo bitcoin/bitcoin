@@ -918,6 +918,8 @@ RPCHelpMan signrawtransactionwithwallet()
                     {
                         {RPCResult::Type::STR_HEX, "hex", "The hex-encoded raw transaction with signature(s)"},
                         {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
+                        {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The fee (input amounts minus output amounts), if known"},
+                        {RPCResult::Type::STR_AMOUNT, "feerate", /*optional=*/true, "The fee rate (in " + CURRENCY_UNIT + "/kB), if fee is known"},
                         {RPCResult::Type::ARR, "errors", /*optional=*/true, "Script verification errors (if there are any)",
                         {
                             {RPCResult::Type::OBJ, "", "",
@@ -967,10 +969,11 @@ RPCHelpMan signrawtransactionwithwallet()
 
     // Script verification errors
     std::map<int, bilingual_str> input_errors;
+    std::optional<CAmount> inputs_amount_sum;
 
-    bool complete = pwallet->SignTransaction(mtx, coins, nHashType, input_errors);
+    bool complete = pwallet->SignTransaction(mtx, coins, nHashType, input_errors, &inputs_amount_sum);
     UniValue result(UniValue::VOBJ);
-    SignTransactionResultToJSON(mtx, complete, coins, input_errors, result);
+    SignTransactionResultToJSON(mtx, complete, coins, input_errors, result, inputs_amount_sum);
     return result;
 },
     };

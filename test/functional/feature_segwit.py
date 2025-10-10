@@ -43,6 +43,7 @@ from test_framework.script_util import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_approx,
     assert_equal,
     assert_greater_than_or_equal,
     assert_is_hex_string,
@@ -314,6 +315,32 @@ class SegWitTest(BitcoinTestFramework):
 
         # Mine a block to clear the gbt cache again.
         self.generate(self.nodes[0], 1)
+
+        self.log.info("Signing with all-segwit inputs reveals fee rate")
+        addr = self.nodes[0].getnewaddress(address_type='p2sh-segwit')
+        txid = self.nodes[0].sendtoaddress(addr, 1)
+        tx = self.nodes[0].getrawtransaction(txid, True)
+        n = -1
+        value = -1
+        for o in tx["vout"]:
+            if o["scriptPubKey"]["address"] == addr:
+                n = o["n"]
+                value = Decimal(o["value"])
+                break
+        assert n > -1 # failure means we could not find the address in the outputs despite sending to it
+        assert_equal(value, 1) # failure means we got an unexpected amount of coins, despite trying to send 1
+        fee = Decimal("0.00010000")
+        value_out = value - fee
+        self.generatetoaddress(self.nodes[0], 1, self.nodes[0].getnewaddress())
+        raw = self.nodes[0].createrawtransaction([{"txid" : txid, "vout" : n}], [{self.nodes[0].getnewaddress() : value_out}])
+        signed = self.nodes[0].signrawtransactionwithwallet(raw)
+        assert_equal(signed["complete"], True)
+        txsize = self.nodes[0].decoderawtransaction(signed['hex'])['vsize']
+        exp_feerate = 1000 * fee / Decimal(txsize)
+        assert_approx(signed["feerate"], exp_feerate, Decimal("0.00000010"))
+        # discrepancy = 100000000 * (exp_feerate - signed["feerate"])
+        # assert -10 < discrepancy < 10
+        assert_equal(Decimal(signed["fee"]), fee)
 
         if not self.options.descriptors:
             self.log.info("Verify behaviour of importaddress and listunspent")
