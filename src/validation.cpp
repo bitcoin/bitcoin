@@ -2041,15 +2041,18 @@ void Chainstate::CheckForkWarningConditions()
 }
 
 // Called both upon regular invalid block discovery *and* InvalidateBlock
-void Chainstate::InvalidChainFound(CBlockIndex* pindexNew)
+void Chainstate::InvalidChainFound(CBlockIndex* pindexNew, bool calc_flags_and_header = true)
 {
     AssertLockHeld(cs_main);
     if (!m_chainman.m_best_invalid || pindexNew->nChainWork > m_chainman.m_best_invalid->nChainWork) {
         m_chainman.m_best_invalid = pindexNew;
     }
-    SetBlockFailureFlags(pindexNew);
-    if (m_chainman.m_best_header != nullptr && m_chainman.m_best_header->GetAncestor(pindexNew->nHeight) == pindexNew) {
-        m_chainman.RecalculateBestHeader();
+    // Unnecessary in the invalidateblock case, which has its own accounting for the failure flags and best header.
+    if (calc_flags_and_header) {
+        SetBlockFailureFlags(pindexNew);
+        if (m_chainman.m_best_header != nullptr && m_chainman.m_best_header->GetAncestor(pindexNew->nHeight) == pindexNew) {
+            m_chainman.RecalculateBestHeader();
+        }
     }
 
     LogPrintf("%s: invalid block=%s  height=%d  log2_work=%f  date=%s\n", __func__,
@@ -3729,6 +3732,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
                 // Do not remove candidate from the highpow_outofchain_headers cache, because it might be a descendant of the block being invalidated
                 // which needs to be marked failed later.
             }
+            // Best header updating currently doesn't use CBlockIndexWorkComparator, so nChainWork is used for consistency.
             if (best_header_needs_update &&
                 m_chainman.m_best_header->nChainWork < candidate->nChainWork) {
                 m_chainman.m_best_header = candidate;
@@ -3770,7 +3774,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
             }
         }
 
-        InvalidChainFound(to_mark_failed);
+        InvalidChainFound(to_mark_failed, /*calc_flags_and_header=*/false);
     }
 
     // Only notify about a new block tip if the active chain was modified.
@@ -3832,8 +3836,9 @@ void Chainstate::ResetBlockFailureFlags(CBlockIndex *pindex) {
 void Chainstate::TryAddBlockIndexCandidate(CBlockIndex* pindex)
 {
     AssertLockHeld(cs_main);
-    // The block only is a candidate for the most-work-chain if it has the same
-    // or more work than our current tip.
+    // The block only is a candidate for the most-work-chain if it has more work than
+    // our current tip, or if it has the same work and a better CBlockIndexWorkComparator
+    // tiebreak.
     if (m_chain.Tip() != nullptr && setBlockIndexCandidates.value_comp()(pindex, m_chain.Tip())) {
         return;
     }
@@ -5364,7 +5369,8 @@ void ChainstateManager::CheckBlockIndex() const
             // Two main factors determine whether pindex is a candidate in
             // setBlockIndexCandidates:
             //
-            // - If pindex has less work than the chain tip, it should not be a
+            // - If pindex has less work than the chain tip (or equal work and a worse
+            //   CBlockIndexWorkComparator tiebreak), it should not be a
             //   candidate, and this will be asserted below. Otherwise it is a
             //   potential candidate.
             //
