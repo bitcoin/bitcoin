@@ -866,6 +866,10 @@ static RPCHelpMan pruneblockchain()
     if (heightParam < 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative block height.");
     }
+    if (heightParam == 0) {
+        // Nothing to do here
+        return uint64_t(0);
+    }
 
     // Height value more than a billion is too high to be a block height, and
     // too low to be a block time (corresponds to timestamp from Sep 2001).
