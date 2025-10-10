@@ -29,6 +29,9 @@ static const std::map<uint64_t, std::string> WALLET_FLAG_CAVEATS{
      "You need to rescan the blockchain in order to correctly mark used "
      "destinations in the past. Until this is done, some destinations may "
      "be considered unused, even if the opposite is the case."},
+    {WALLET_FLAG_EXTERNAL_SIGNER,
+     "Wallet must be unloaded and loaded for change to take effect. "
+     "The ability to toggle this flag may be removed in a future update."},
 };
 
 /** Checks if a CKey is in the given CWallet compressed or otherwise*/
@@ -315,6 +318,16 @@ static RPCHelpMan setwalletflag()
     }
 
     auto flag = WALLET_FLAG_MAP.at(flag_str);
+
+    if (flag == WALLET_FLAG_EXTERNAL_SIGNER) {
+#ifdef ENABLE_EXTERNAL_SIGNER
+        if (!pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) || !pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "This flag can only be set on a watch-only descriptor wallet");
+        }
+#else
+        throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without external signing support (required for external signing)");
+#endif
+    }
 
     if (!(flag & MUTABLE_WALLET_FLAGS)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Wallet flag is immutable: %s", flag_str));

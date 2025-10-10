@@ -84,7 +84,14 @@ class WalletSignerTest(BitcoinTestFramework):
         self.nodes[1].createwallet(wallet_name='not_hww', disable_private_keys=True, descriptors=True, external_signer=False)
         not_hww = self.nodes[1].get_wallet_rpc('not_hww')
         assert_equal(not_hww.getwalletinfo()["external_signer"], False)
-        assert_raises_rpc_error(-8, "Wallet flag is immutable: external_signer", not_hww.setwalletflag, "external_signer", True)
+
+        # Flag can be set
+        not_hww.setwalletflag("external_signer", True)
+        assert_equal(not_hww.getwalletinfo()["external_signer"], True)
+
+        # Flag can be unset
+        not_hww.setwalletflag("external_signer", False)
+        assert_equal(not_hww.getwalletinfo()["external_signer"], False)
 
         # assert_raises_rpc_error(-4, "Multiple signers found, please specify which to use", wallet_name='not_hww', disable_private_keys=True, descriptors=True, external_signer=True)
 
