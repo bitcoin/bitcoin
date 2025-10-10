@@ -1742,6 +1742,16 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                     "for the automatically created Tor onion service."),
                                   onion_service_target.ToStringIPPort()));
         }
+        if (onion_service_target.IsBindAny()) {
+            CNetAddr loopback_addr = onion_service_target;
+            // NOTE: GetNetwork is not_publicly_routable here
+            if (onion_service_target.ToStringAddr() == "0.0.0.0") {
+                loopback_addr = LookupHost("127.0.0.1", /*fAllowLookup=*/false).value();
+            } else {
+                loopback_addr = LookupHost("[::1]", /*fAllowLookup=*/false).value();
+            }
+            onion_service_target.SetIP(loopback_addr);
+        }
         StartTorControl(onion_service_target);
     }
 
