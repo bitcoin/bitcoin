@@ -159,6 +159,13 @@ else()
   set(WITH_SQLITE ON CACHE BOOL "")
 endif()
 
+set(upnp_packages @upnp_packages@)
+if("${upnp_packages}" STREQUAL "")
+  set(WITH_MINIUPNPC OFF CACHE BOOL "")
+else()
+  set(WITH_MINIUPNPC ON CACHE BOOL "")
+endif()
+
 set(usdt_packages @usdt_packages@)
 if("${usdt_packages}" STREQUAL "")
   set(WITH_USDT OFF CACHE BOOL "")

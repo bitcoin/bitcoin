@@ -105,6 +105,10 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     connect(ui->prune, &QPushButton::toggled, ui->pruneSize, &QWidget::setEnabled);
 
     /* Network elements init */
+#ifndef USE_UPNP
+    ui->mapPortUpnp->setEnabled(false);
+#endif
+
     ui->proxyIp->setEnabled(false);
     ui->proxyPort->setEnabled(false);
     ui->proxyPort->setValidator(new QIntValidator(1, 65535, this));
@@ -306,6 +310,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->m_enable_psbt_controls, OptionsModel::EnablePSBTControls);
 
     /* Network */
+    mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);
     mapper->addMapping(ui->mapPortNatpmp, OptionsModel::MapPortNatpmp);
     mapper->addMapping(ui->allowIncoming, OptionsModel::Listen);
     mapper->addMapping(ui->enableServer, OptionsModel::Server);

@@ -41,6 +41,7 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::ThreadsScriptVerif: return "par";
     case OptionsModel::SpendZeroConfChange: return "spendzeroconfchange";
     case OptionsModel::ExternalSignerPath: return "signer";
+    case OptionsModel::MapPortUPnP: return "upnp";
     case OptionsModel::MapPortNatpmp: return "natpmp";
     case OptionsModel::Listen: return "listen";
     case OptionsModel::Server: return "server";
@@ -219,7 +220,7 @@ bool OptionsModel::Init(bilingual_str& error)
 
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
-    for (OptionID option : {DatabaseCache, ThreadsScriptVerif, SpendZeroConfChange, ExternalSignerPath,
+    for (OptionID option : {DatabaseCache, ThreadsScriptVerif, SpendZeroConfChange, ExternalSignerPath, MapPortUPnP,
                             MapPortNatpmp, Listen, Server, Prune, ProxyUse, ProxyUseTor, Language}) {
         std::string setting = SettingName(option);
         if (node().isSettingIgnored(setting)) addOverriddenOption("-" + setting);
@@ -427,6 +428,12 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return m_show_tray_icon;
     case MinimizeToTray:
         return fMinimizeToTray;
+    case MapPortUPnP:
+#ifdef USE_UPNP
+        return SettingToBool(setting(), DEFAULT_UPNP);
+#else
+        return false;
+#endif // USE_UPNP
     case MapPortNatpmp:
         return SettingToBool(setting(), DEFAULT_NATPMP);
     case MinimizeOnClose:
@@ -543,10 +550,16 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         fMinimizeToTray = value.toBool();
         settings.setValue("fMinimizeToTray", fMinimizeToTray);
         break;
+    case MapPortUPnP: // core option - can be changed on-the-fly
+        if (changed()) {
+            update(value.toBool());
+            node().mapPort(value.toBool(), getOption(MapPortNatpmp).toBool());
+        }
+        break;
     case MapPortNatpmp: // core option - can be changed on-the-fly
         if (changed()) {
             update(value.toBool());
-            node().mapPort(value.toBool());
+            node().mapPort(getOption(MapPortUPnP).toBool(), value.toBool());
         }
         break;
     case MinimizeOnClose:
@@ -810,6 +823,7 @@ void OptionsModel::checkAndMigrate()
     migrate_setting(SpendZeroConfChange, "bSpendZeroConfChange");
     migrate_setting(ExternalSignerPath, "external_signer_path");
 #endif
+    migrate_setting(MapPortUPnP, "fUseUPnP");
     migrate_setting(MapPortNatpmp, "fUseNatpmp");
     migrate_setting(Listen, "fListen");
     migrate_setting(Server, "server");
@@ -823,7 +837,7 @@ void OptionsModel::checkAndMigrate()
 
     // In case migrating QSettings caused any settings value to change, rerun
     // parameter interaction code to update other settings. This is particularly
-    // important for the -listen setting, which should cause -listenonion
+    // important for the -listen setting, which should cause -listenonion, -upnp,
     // and other settings to default to false if it was set to false.
     // (https://github.com/bitcoin-core/gui/issues/567).
     node().initParameterInteraction();
