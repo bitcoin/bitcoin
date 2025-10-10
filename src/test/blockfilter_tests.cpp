@@ -5,6 +5,7 @@
 #include <test/data/blockfilters.json.h>
 #include <test/util/setup_common.h>
 
+#include <addresstype.h>
 #include <blockfilter.h>
 #include <core_io.h>
 #include <primitives/block.h>
@@ -127,6 +128,74 @@ BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
     BOOST_CHECK(default_ctor_block_filter_1.GetEncodedFilter() == default_ctor_block_filter_2.GetEncodedFilter());
 }
 
+BOOST_AUTO_TEST_CASE(blockfilter_v0_test)
+{
+    CScript included_scripts[4], excluded_scripts[8];
+
+    included_scripts[0] = GetScriptForDestination(WitnessV0KeyHash());  // p2wpkh
+    included_scripts[1] = GetScriptForDestination(WitnessV0KeyHash()); // p2wpkh
+    included_scripts[2] = GetScriptForDestination(WitnessV0ScriptHash()); // p2wsh
+    included_scripts[3] = GetScriptForDestination(WitnessV0ScriptHash()); // p2wsh
+
+    excluded_scripts[0] << std::vector<unsigned char>(0, 65) << OP_CHECKSIG; // p2pk
+    excluded_scripts[1] << OP_0 << OP_HASH160 << std::vector<unsigned char>(1, 20) << OP_EQUALVERIFY << OP_CHECKSIG; // p2pkh
+    excluded_scripts[2] << OP_1 << std::vector<unsigned char>(2, 33) << OP_1 << OP_CHECKMULTISIG; // multisig
+    excluded_scripts[3] << OP_0 << std::vector<unsigned char>(3, 32); // push data
+    excluded_scripts[4] << OP_4 << OP_ADD << OP_8 << OP_EQUAL; // random script
+    excluded_scripts[5] << OP_RETURN << std::vector<unsigned char>(4, 40); // opreturn
+    excluded_scripts[6] << OP_RETURN << OP_4 << OP_ADD << OP_8 << OP_EQUAL; // none standard opreturn
+
+    CMutableTransaction tx_1;
+    tx_1.vout.emplace_back(100, included_scripts[0]);
+    tx_1.vout.emplace_back(100, included_scripts[2]);
+    tx_1.vout.emplace_back(200, excluded_scripts[0]);
+    tx_1.vout.emplace_back(300, excluded_scripts[1]);
+    tx_1.vout.emplace_back(400, excluded_scripts[2]);
+
+    CMutableTransaction tx_2;
+    tx_2.vout.emplace_back(100, included_scripts[3]);
+    tx_2.vout.emplace_back(100, excluded_scripts[3]);
+    tx_2.vout.emplace_back(0, excluded_scripts[4]);
+    tx_2.vout.emplace_back(400, excluded_scripts[7]); // Script is empty
+
+    CBlock block;
+    block.vtx.push_back(MakeTransactionRef(tx_1));
+    block.vtx.push_back(MakeTransactionRef(tx_2));
+
+    CBlockUndo block_undo;
+    block_undo.vtxundo.emplace_back();
+    block_undo.vtxundo.back().vprevout.emplace_back(CTxOut(500, included_scripts[1]), 1000, true);
+    block_undo.vtxundo.back().vprevout.emplace_back(CTxOut(600, excluded_scripts[5]), 10000, false);
+    block_undo.vtxundo.back().vprevout.emplace_back(CTxOut(700, excluded_scripts[6]), 100000, false);
+
+    BlockFilter block_filter(BlockFilterType::V0, block, block_undo);
+    const GCSFilter& filter = block_filter.GetFilter();
+
+    for (const CScript& script : included_scripts) {
+        BOOST_CHECK(filter.Match(GCSFilter::Element(script.begin(), script.end())));
+    }
+    for (const CScript& script : excluded_scripts) {
+        BOOST_CHECK(!filter.Match(GCSFilter::Element(script.begin(), script.end())));
+    }
+
+    // Test serialization/unserialization.
+    BlockFilter block_filter2;
+
+    DataStream stream;
+    stream << block_filter;
+    stream >> block_filter2;
+
+    BOOST_CHECK_EQUAL(block_filter.GetFilterType(), block_filter2.GetFilterType());
+    BOOST_CHECK_EQUAL(block_filter.GetBlockHash(), block_filter2.GetBlockHash());
+    BOOST_CHECK(block_filter.GetEncodedFilter() == block_filter2.GetEncodedFilter());
+
+    BlockFilter default_ctor_block_filter_1;
+    BlockFilter default_ctor_block_filter_2;
+    BOOST_CHECK_EQUAL(default_ctor_block_filter_1.GetFilterType(), default_ctor_block_filter_2.GetFilterType());
+    BOOST_CHECK_EQUAL(default_ctor_block_filter_1.GetBlockHash(), default_ctor_block_filter_2.GetBlockHash());
+    BOOST_CHECK(default_ctor_block_filter_1.GetEncodedFilter() == default_ctor_block_filter_2.GetEncodedFilter());
+}
+
 BOOST_AUTO_TEST_CASE(blockfilters_json_test)
 {
     UniValue json;
@@ -179,11 +248,16 @@ BOOST_AUTO_TEST_CASE(blockfilters_json_test)
 BOOST_AUTO_TEST_CASE(blockfilter_type_names)
 {
     BOOST_CHECK_EQUAL(BlockFilterTypeName(BlockFilterType::BASIC), "basic");
+    BOOST_CHECK_EQUAL(BlockFilterTypeName(BlockFilterType::V0), "v0");
     BOOST_CHECK_EQUAL(BlockFilterTypeName(static_cast<BlockFilterType>(255)), "");
 
     BlockFilterType filter_type;
     BOOST_CHECK(BlockFilterTypeByName("basic", filter_type));
     BOOST_CHECK_EQUAL(filter_type, BlockFilterType::BASIC);
+
+    BlockFilterType filter_type_v0;
+    BOOST_CHECK(BlockFilterTypeByName("v0", filter_type_v0));
+    BOOST_CHECK_EQUAL(filter_type_v0, BlockFilterType::V0);
 
     BOOST_CHECK(!BlockFilterTypeByName("unknown", filter_type));
 }
