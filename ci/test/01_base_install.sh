@@ -32,16 +32,17 @@ if [ -n "${APT_LLVM_V}" ]; then
   )
 fi
 
-if [[ $CI_IMAGE_NAME_TAG == *centos* ]]; then
-  bash -c "dnf -y install epel-release"
-  # The ninja-build package is available in the CRB repository.
-  bash -c "dnf -y --allowerasing --enablerepo crb install $CI_BASE_PACKAGES $PACKAGES"
+if [[ $CI_IMAGE_NAME_TAG == *alpine* ]]; then
+  ${CI_RETRY_EXE} apk update
+  # shellcheck disable=SC2086
+  ${CI_RETRY_EXE} apk add --no-cache $CI_BASE_PACKAGES $PACKAGES
 elif [ "$CI_OS_NAME" != "macos" ]; then
   if [[ -n "${APPEND_APT_SOURCES_LIST}" ]]; then
     echo "${APPEND_APT_SOURCES_LIST}" >> /etc/apt/sources.list
   fi
   ${CI_RETRY_EXE} apt-get update
-  ${CI_RETRY_EXE} bash -c "apt-get install --no-install-recommends --no-upgrade -y $PACKAGES $CI_BASE_PACKAGES"
+  # shellcheck disable=SC2086
+  ${CI_RETRY_EXE} apt-get install --no-install-recommends --no-upgrade -y $PACKAGES $CI_BASE_PACKAGES
 fi
 
 if [ -n "${APT_LLVM_V}" ]; then
