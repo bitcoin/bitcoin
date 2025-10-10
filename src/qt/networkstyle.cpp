@@ -26,6 +26,7 @@ static const struct {
 
 // titleAddText needs to be const char* for tr()
 NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *_titleAddText):
+    m_colour_shift(std::make_pair(iconColorHueShift, iconColorSaturationReduction)),
     appName(_appName),
     titleAddText(qApp->translate("SplashScreen", _titleAddText))
 {
@@ -74,8 +75,30 @@ NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift,
         pixmap.convertFromImage(img);
     }
 
-    appIcon             = QIcon(pixmap);
     trayAndWindowIcon   = QIcon(pixmap.scaled(QSize(256,256)));
+}
+
+QColor NetworkStyle::AdjustColour(QColor colour) const
+{
+    int h, s, l, a;
+
+    // preserve alpha because QColor::getHsl doesn't return the alpha value
+    a = colour.alpha();
+
+    // get hue value
+    colour.getHsl(&h, &s, &l);
+
+    // rotate color on RGB color circle
+    // 70° should end up with the typical "testnet" green
+    h += m_colour_shift.first;
+
+    // change saturation value
+    if (s > m_colour_shift.second) {
+        s -= m_colour_shift.second;
+    }
+    colour.setHsl(h, s, l, a);
+
+    return colour;
 }
 
 const NetworkStyle* NetworkStyle::instantiate(const ChainType networkId)

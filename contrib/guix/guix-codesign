@@ -97,7 +97,7 @@ fi
 ################
 
 # Default to building for all supported HOSTs (overridable by environment)
-export HOSTS="${HOSTS:-x86_64-w64-mingw32 x86_64-apple-darwin arm64-apple-darwin}"
+export HOSTS="${HOSTS:-x86_64-apple-darwin arm64-apple-darwin}"
 
 # Usage: distsrc_for_host HOST
 #

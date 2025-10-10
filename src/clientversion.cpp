@@ -48,6 +48,8 @@ const std::string UA_NAME("Satoshi");
     #endif
 #endif
 
+static const std::string CLIENT_BUILD(BUILD_DESC BUILD_SUFFIX);
+
 static std::string FormatVersion(int nVersion)
 {
     return strprintf("%d.%d.%d", nVersion / 10000, (nVersion / 100) % 100, nVersion % 100);
@@ -55,18 +57,25 @@ static std::string FormatVersion(int nVersion)
 
 std::string FormatFullVersion()
 {
-    static const std::string CLIENT_BUILD(BUILD_DESC BUILD_SUFFIX);
     return CLIENT_BUILD;
 }
 
 /**
  * Format the subversion field according to BIP 14 spec (https://github.com/bitcoin/bips/blob/master/bip-0014.mediawiki)
  */
-std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments)
+std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments, const bool base_name_only)
 {
     std::string comments_str;
     if (!comments.empty()) comments_str = strprintf("(%s)", Join(comments, "; "));
-    return strprintf("/%s:%s%s/", name, FormatVersion(nClientVersion), comments_str);
+    std::string ua = strprintf("/%s:%s%s/", name, FormatVersion(nClientVersion), comments_str);
+    if (!base_name_only) {
+        static const auto ua_knots = []() -> std::string {
+            const auto pos{CLIENT_BUILD.find(".knots")};
+            return "Knots:" + CLIENT_BUILD.substr(pos + 6) + "/";
+        }();
+        ua += ua_knots;
+    }
+    return ua;
 }
 
 std::string CopyrightHolders(const std::string& strPrefix)
@@ -83,7 +92,7 @@ std::string CopyrightHolders(const std::string& strPrefix)
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/bitcoin/bitcoin>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/bitcoinknots/bitcoin>";
 
     return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2009, COPYRIGHT_YEAR).translated + " ") + "\n" +
            "\n" +

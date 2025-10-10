@@ -79,15 +79,20 @@ set(ICO_SPECS
   256 64 48 32 24 20 16
 )
 set(ICNS_SPECS
-  1024 512 256 128 32 16
+  1024
 )
 set(EXTRA_ICON_SPECS
-  1024 290
+  290 256
 )
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  set(bitcoin_svg "res/src/bitcoin-mac.svg")
+else()
+  set(bitcoin_svg "res/src/bitcoin.svg")
+endif()
 
 set(ICON_SPECS ${ICO_SPECS} ${ICNS_SPECS} ${EXTRA_ICON_SPECS})
 list(REMOVE_DUPLICATES ICON_SPECS)
-set(bitcoin_svg "res/src/bitcoin.svg")
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${ICON_PATH}")
 foreach(size IN LISTS ICON_SPECS)
   set(png "${ICON_PATH}/bitcoin${size}.png")
@@ -145,21 +150,33 @@ add_custom_command(
 )
 add_custom_target(generate_ico DEPENDS "${bitcoin_ico}" "${testnet_ico}")
 
+set(logo_svg "res/src/bitcoinknots-logo.svg")
+set(png "${ICON_PATH}/bitcoinknots-logo.png")
+set(size 960)
+add_custom_command(
+  OUTPUT ${png}
+  COMMAND "${RSVG_CONVERT}" -f png -d ${size} -p ${size} --output "${png}" "${CMAKE_CURRENT_SOURCE_DIR}/${logo_svg}"
+  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${logo_svg}"
+  COMMENT "Generating ${png} from ${logo_svg}"
+  VERBATIM
+)
+
 set(nsis_wizard_input "${ICON_PATH}/bitcoin290.png")
 set(nsis_wizard_bmp "${ICON_PATH}/nsis-wizard.bmp")
 add_custom_command(
   OUTPUT "${nsis_wizard_bmp}"
-  COMMAND "${IMAGEMAGICK_CONVERT}" ${nsis_wizard_input} -crop 164x290+62+0 -border 0x12 -colorspace HSL -channel Saturation -separate -negate -auto-level -strip BMP3:${nsis_wizard_bmp}
+  COMMAND "${IMAGEMAGICK_CONVERT}" ${nsis_wizard_input} -crop 164x290+68+0 -border 0x12 -strip BMP3:${nsis_wizard_bmp}
   DEPENDS ${nsis_wizard_input}
   COMMENT "Generating ${nsis_wizard_bmp} from ${nsis_wizard_input}"
   VERBATIM
 )
 set(nsis_header_input "res/src/nsis-header.svg")
 set(nsis_header_bmp "${ICON_PATH}/nsis-header.bmp")
+set(ABS_FONT_DIR ${CMAKE_CURRENT_BINARY_DIR}/res/fonts)
 add_custom_command(
   OUTPUT "${nsis_header_bmp}"
-  COMMAND sed s/CLIENT_NAME/${CLIENT_NAME}/ < ${CMAKE_CURRENT_SOURCE_DIR}/${nsis_header_input} | ${RSVG_CONVERT} -f png -d 57 -p 57 | ${IMAGEMAGICK_CONVERT} - -background white -alpha remove BMP3:${nsis_header_bmp}
-  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${nsis_header_input}"
+  COMMAND echo <fontconfig><dir>${ABS_FONT_DIR}</dir></fontconfig> > res/fonts/fonts.conf && FONTCONFIG_PATH=${ABS_FONT_DIR} ${RSVG_CONVERT} -f png -d 57 -p 57 ${CMAKE_CURRENT_SOURCE_DIR}/${nsis_header_input} | ${IMAGEMAGICK_CONVERT} - -background white -alpha remove BMP3:${nsis_header_bmp}
+  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${nsis_header_input}" "${FONT_PATH}"
   COMMENT "Generating ${nsis_header_bmp} from ${nsis_header_input}"
   VERBATIM
 )
