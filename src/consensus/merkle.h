@@ -12,6 +12,18 @@
 
 uint256 ComputeMerkleRoot(std::vector<uint256> hashes, bool* mutated = nullptr);
 
+template <typename Container, typename Gen>
+std::vector<uint256> ToMerkleLeaves(const Container& txs, Gen&& gen)
+{
+    std::vector<uint256> leaves;
+    leaves.reserve(txs.size() + (txs.size() & 1U)); // preallocate for ComputeMerkleRoot's odd-duplication
+    for (std::size_t i{0}; i < txs.size(); ++i) {
+        const bool first{i == 0};
+        leaves.push_back(gen(first, txs[i]));
+    }
+    return leaves;
+}
+
 /*
  * Compute the Merkle root of the transactions in a block.
  * *mutated is set to true if a duplicated subtree was found.
