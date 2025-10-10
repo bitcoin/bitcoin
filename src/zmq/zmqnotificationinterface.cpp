@@ -134,14 +134,9 @@ namespace {
 template <typename Function>
 void TryForEachAndRemoveFailed(std::list<std::unique_ptr<CZMQAbstractNotifier>>& notifiers, const Function& func)
 {
-    for (auto i = notifiers.begin(); i != notifiers.end(); ) {
+    for (auto i = notifiers.begin(); i != notifiers.end(); ++i) {
         CZMQAbstractNotifier* notifier = i->get();
-        if (func(notifier)) {
-            ++i;
-        } else {
-            notifier->Shutdown();
-            i = notifiers.erase(i);
-        }
+        func(notifier);
     }
 }
 
