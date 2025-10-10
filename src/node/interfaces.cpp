@@ -755,7 +755,7 @@ public:
     {
         if (!m_node.mempool) return {};
         LockPoints lp;
-        CTxMemPoolEntry entry(tx, 0, 0, 0, 0, false, 0, lp);
+        CTxMemPoolEntry entry(tx, 0, 0, 0, 0, COIN_AGE_CACHE_ZERO, false, 0, lp);
         LOCK(m_node.mempool->cs);
         return m_node.mempool->CheckPackageLimits({tx}, entry.GetTxSize());
     }
@@ -926,6 +926,11 @@ public:
     const std::vector<int64_t>& getTxSigops() const override
     {
         return m_block_template->vTxSigOpsCost;
+    }
+
+    const std::vector<double>& getTxCoinAgePriorities() const override
+    {
+        return m_block_template->vTxPriorities;
     }
 
     CTransactionRef getCoinbaseTx() const override

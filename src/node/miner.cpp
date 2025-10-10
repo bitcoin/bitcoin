@@ -137,6 +137,9 @@ void BlockAssembler::resetBlock()
     // These counters do not include coinbase tx
     nBlockTx = 0;
     nFees = 0;
+
+    lastFewTxs = 0;
+    blockFinished = false;
 }
 
 std::shared_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
@@ -152,6 +155,9 @@ std::shared_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     pblock->vtx.emplace_back();
     pblocktemplate->vTxFees.push_back(-1); // updated at end
     pblocktemplate->vTxSigOpsCost.push_back(-1); // updated at end
+    if (m_options.print_modified_fee) {
+        pblocktemplate->vTxPriorities.push_back(-1);  // n/a
+    }
 
     LOCK(::cs_main);
     CBlockIndex* pindexPrev = m_chainstate.m_chain.Tip();
@@ -171,7 +177,9 @@ std::shared_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     int nPackagesSelected = 0;
     int nDescendantsUpdated = 0;
     if (m_mempool) {
-        addPackageTxs(nPackagesSelected, nDescendantsUpdated);
+        LOCK(m_mempool->cs);
+        addPriorityTxs(*m_mempool, nPackagesSelected);
+        addPackageTxs(*m_mempool, nPackagesSelected, nDescendantsUpdated);
     }
 
     const auto time_1{SteadyClock::now()};
@@ -227,7 +235,7 @@ void BlockAssembler::onlyUnconfirmed(CTxMemPool::setEntries& testSet)
 {
     for (CTxMemPool::setEntries::iterator iit = testSet.begin(); iit != testSet.end(); ) {
         // Only test txs not already in the block
-        if (inBlock.count((*iit)->GetSharedTx()->GetHash())) {
+        if (inBlock.count(*iit)) {
             testSet.erase(iit++);
         } else {
             iit++;
@@ -268,7 +276,7 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
     return true;
 }
 
-void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
+void BlockAssembler::AddToBlock(const CTxMemPool& mempool, CTxMemPool::txiter iter)
 {
     pblocktemplate->block.vtx.emplace_back(iter->GetSharedTx());
     pblocktemplate->vTxFees.push_back(iter->GetFee());
@@ -280,12 +288,17 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
     ++nBlockTx;
     nBlockSigOpsCost += iter->GetSigOpCost();
     nFees += iter->GetFee();
-    inBlock.insert(iter->GetSharedTx()->GetHash());
+    inBlock.insert(iter);
 
     if (m_options.print_modified_fee) {
-        LogPrintf("fee rate %s txid %s\n",
+        double dPriority = iter->GetPriority(nHeight);
+        CAmount dummy;
+        mempool.ApplyDeltas(iter->GetTx().GetHash(), dPriority, dummy);
+        LogPrintf("priority %.1f fee rate %s txid %s\n",
+                  dPriority,
                   CFeeRate(iter->GetModifiedFee(), iter->GetTxSize()).ToString(),
                   iter->GetTx().GetHash().ToString());
+        pblocktemplate->vTxPriorities.push_back(dPriority);
     }
 }
 
@@ -340,17 +353,19 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::ve
 // Each time through the loop, we compare the best transaction in
 // mapModifiedTxs with the next transaction in the mempool to decide what
 // transaction package to work on next.
-void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpdated)
+void BlockAssembler::addPackageTxs(const CTxMemPool& mempool, int& nPackagesSelected, int& nDescendantsUpdated)
 {
-    const auto& mempool{*Assert(m_mempool)};
-    LOCK(mempool.cs);
+    AssertLockHeld(mempool.cs);
 
     // mapModifiedTx will store sorted packages after they are modified
     // because some of their txs are already in the block
     indexed_modified_transaction_set mapModifiedTx;
     // Keep track of entries that failed inclusion, to avoid duplicate work
-    std::set<Txid> failedTx;
+    CTxMemPool::setEntries failedTx;
 
+    // Start by adding all descendants of previously added txs to mapModifiedTx
+    // and modifying them for their already included ancestors
+    nDescendantsUpdated += UpdatePackagesForAdded(mempool, inBlock, mapModifiedTx);
     CTxMemPool::indexed_transaction_set::index<ancestor_score>::type::iterator mi = mempool.mapTx.get<ancestor_score>().begin();
     CTxMemPool::txiter iter;
 
@@ -379,7 +394,7 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
         if (mi != mempool.mapTx.get<ancestor_score>().end()) {
             auto it = mempool.mapTx.project<0>(mi);
             assert(it != mempool.mapTx.end());
-            if (mapModifiedTx.count(it) || inBlock.count(it->GetSharedTx()->GetHash()) || failedTx.count(it->GetSharedTx()->GetHash())) {
+            if (mapModifiedTx.count(it) || inBlock.count(it) || failedTx.count(it)) {
                 ++mi;
                 continue;
             }
@@ -413,7 +428,7 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
 
         // We skip mapTx entries that are inBlock, and mapModifiedTx shouldn't
         // contain anything that is inBlock.
-        assert(!inBlock.count(iter->GetSharedTx()->GetHash()));
+        assert(!inBlock.count(iter));
 
         uint64_t packageSize = iter->GetSizeWithAncestors();
         CAmount packageFees = iter->GetModFeesWithAncestors();
@@ -435,7 +450,7 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
                 // we must erase failed entries so that we can consider the
                 // next best entry on the next loop iteration
                 mapModifiedTx.get<ancestor_score>().erase(modit);
-                failedTx.insert(iter->GetSharedTx()->GetHash());
+                failedTx.insert(iter);
             }
 
             ++nConsecutiveFailed;
@@ -457,7 +472,7 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
         if (!TestPackageTransactions(ancestors)) {
             if (fUsingModified) {
                 mapModifiedTx.get<ancestor_score>().erase(modit);
-                failedTx.insert(iter->GetSharedTx()->GetHash());
+                failedTx.insert(iter);
             }
 
             if (fNeedSizeAccounting) {
@@ -479,7 +494,7 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
         SortForBlock(ancestors, sortedEntries);
 
         for (size_t i = 0; i < sortedEntries.size(); ++i) {
-            AddToBlock(sortedEntries[i]);
+            AddToBlock(mempool, sortedEntries[i]);
             // Erase from the modified set, if present
             mapModifiedTx.erase(sortedEntries[i]);
         }
