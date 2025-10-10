@@ -20,6 +20,11 @@ void ApplyArgsManOptions(const ArgsManager& argsman, PeerManager::Options& optio
         options.max_extra_txs = uint32_t((std::clamp<int64_t>(*value, 0, std::numeric_limits<uint32_t>::max())));
     }
 
+    if (auto value{argsman.GetFixedPointArg("-blockreconstructionextratxnsize", /*decimals=*/ 4)}) {
+        // NOTE: GetFixedPointArg only allows values up to 18 digits
+        options.max_extra_txs_size = 100 * (size_t)std::clamp<int64_t>(*value, 0, std::numeric_limits<size_t>::max() / 100);
+    }
+
     if (auto value{argsman.GetBoolArg("-capturemessages")}) options.capture_messages = *value;
 
     if (auto value{argsman.GetBoolArg("-blocksonly")}) options.ignore_incoming_txs = *value;
