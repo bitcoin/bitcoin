@@ -21,7 +21,7 @@ constexpr bool G_FUZZING_BUILD{
     false
 #endif
 };
-constexpr bool G_ABORT_ON_FAILED_ASSUME{
+constexpr bool G_ABORT_ON_FAILED_ASSUME{G_FUZZING_BUILD ||
 #ifdef ABORT_ON_FAILED_ASSUME
     true
 #else
@@ -46,6 +46,12 @@ inline bool EnableFuzzDeterminism()
     }
 }
 
+extern bool g_detail_test_only_CheckFailuresAreExceptionsNotAborts;
+struct test_only_CheckFailuresAreExceptionsNotAborts {
+    test_only_CheckFailuresAreExceptionsNotAborts() { g_detail_test_only_CheckFailuresAreExceptionsNotAborts = true; };
+    ~test_only_CheckFailuresAreExceptionsNotAborts() { g_detail_test_only_CheckFailuresAreExceptionsNotAborts = false; };
+};
+
 std::string StrFormatInternalBug(std::string_view msg, std::string_view file, int line, std::string_view func);
 
 class NonFatalCheckError : public std::runtime_error
@@ -54,11 +60,17 @@ public:
     NonFatalCheckError(std::string_view msg, std::string_view file, int line, std::string_view func);
 };
 
+/** Internal helper */
+void assertion_fail(std::string_view file, int line, std::string_view func, std::string_view assertion);
+
 /** Helper for CHECK_NONFATAL() */
 template <typename T>
 T&& inline_check_non_fatal(LIFETIMEBOUND T&& val, const char* file, int line, const char* func, const char* assertion)
 {
     if (!val) {
+        if constexpr (G_ABORT_ON_FAILED_ASSUME) {
+            assertion_fail(file, line, func, assertion);
+        }
         throw NonFatalCheckError{assertion, file, line, func};
     }
     return std::forward<T>(val);
@@ -68,14 +80,11 @@ T&& inline_check_non_fatal(LIFETIMEBOUND T&& val, const char* file, int line, co
 #error "Cannot compile without assertions!"
 #endif
 
-/** Helper for Assert() */
-void assertion_fail(std::string_view file, int line, std::string_view func, std::string_view assertion);
-
 /** Helper for Assert()/Assume() */
 template <bool IS_ASSERT, typename T>
 constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] const char* file, [[maybe_unused]] int line, [[maybe_unused]] const char* func, [[maybe_unused]] const char* assertion)
 {
-    if (IS_ASSERT || std::is_constant_evaluated() || G_FUZZING_BUILD || G_ABORT_ON_FAILED_ASSUME) {
+    if (IS_ASSERT || std::is_constant_evaluated() || G_ABORT_ON_FAILED_ASSUME) {
         if (!val) {
             assertion_fail(file, line, func, assertion);
         }
