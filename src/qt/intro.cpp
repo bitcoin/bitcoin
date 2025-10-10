@@ -380,7 +380,6 @@ void Intro::UpdatePruneLabels(bool prune_checked)
         m_required_space_gb = m_prune_target_gb + m_chain_state_size_gb;
         storageRequiresMsg = tr("Approximately %1 GB of data will be stored in this directory.");
     }
-    ui->lblExplanation3->setVisible(prune_checked);
     ui->pruneGB->setEnabled(prune_checked);
     static constexpr uint64_t nPowTargetSpacing = 10 * 60;  // from chainparams, which we don't have at this stage
     static constexpr uint32_t expected_block_data_size = 2250000;  // includes undo data
