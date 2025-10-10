@@ -146,22 +146,6 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     transactionView->setTabKeyNavigation(false);
     transactionView->setContextMenuPolicy(Qt::CustomContextMenu);
     transactionView->installEventFilter(this);
-    transactionView->setAlternatingRowColors(true);
-    transactionView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    transactionView->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    transactionView->setSortingEnabled(true);
-    transactionView->verticalHeader()->hide();
-
-    QSettings settings;
-    if (!transactionView->horizontalHeader()->restoreState(settings.value("TransactionViewHeaderState").toByteArray())) {
-        transactionView->setColumnWidth(TransactionTableModel::Status, STATUS_COLUMN_WIDTH);
-        transactionView->setColumnWidth(TransactionTableModel::Watchonly, WATCHONLY_COLUMN_WIDTH);
-        transactionView->setColumnWidth(TransactionTableModel::Date, DATE_COLUMN_WIDTH);
-        transactionView->setColumnWidth(TransactionTableModel::Type, TYPE_COLUMN_WIDTH);
-        transactionView->setColumnWidth(TransactionTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
-        transactionView->horizontalHeader()->setMinimumSectionSize(MINIMUM_COLUMN_WIDTH);
-        transactionView->horizontalHeader()->setStretchLastSection(true);
-    }
 
     contextMenu = new QMenu(this);
     contextMenu->setObjectName("contextMenu");
@@ -215,8 +199,26 @@ void TransactionView::setModel(WalletModel *_model)
         transactionProxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
         transactionProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
         transactionProxyModel->setSortRole(Qt::EditRole);
+        transactionView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         transactionView->setModel(transactionProxyModel);
-        transactionView->sortByColumn(TransactionTableModel::Date, Qt::DescendingOrder);
+
+        transactionView->setAlternatingRowColors(true);
+        transactionView->setSelectionBehavior(QAbstractItemView::SelectRows);
+        transactionView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+        transactionView->horizontalHeader()->setSortIndicator(TransactionTableModel::Date, Qt::DescendingOrder);
+        transactionView->setSortingEnabled(true);
+        transactionView->verticalHeader()->hide();
+
+        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(transactionView, AMOUNT_MINIMUM_COLUMN_WIDTH, MINIMUM_COLUMN_WIDTH, this);
+
+        QSettings settings;
+        if (!transactionView->horizontalHeader()->restoreState(settings.value("TransactionViewHeaderState").toByteArray())) {
+            transactionView->setColumnWidth(TransactionTableModel::Status, STATUS_COLUMN_WIDTH);
+            transactionView->setColumnWidth(TransactionTableModel::Watchonly, WATCHONLY_COLUMN_WIDTH);
+            transactionView->setColumnWidth(TransactionTableModel::Date, DATE_COLUMN_WIDTH);
+            transactionView->setColumnWidth(TransactionTableModel::Type, TYPE_COLUMN_WIDTH);
+            transactionView->setColumnWidth(TransactionTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
+        }
 
         if (_model->getOptionsModel())
         {
@@ -626,6 +628,14 @@ void TransactionView::focusTransaction(const uint256& txid)
         // are ordered by ascending date.
         if (index == results[0]) transactionView->scrollTo(targetIndex);
     }
+}
+
+// We override the virtual resizeEvent of the QWidget to adjust tables column
+// sizes as the tables width is proportional to the dialogs width.
+void TransactionView::resizeEvent(QResizeEvent* event)
+{
+    QWidget::resizeEvent(event);
+    columnResizingFixer->stretchColumnWidth(TransactionTableModel::ToAddress);
 }
 
 // Need to override default Ctrl+C action for amount as default behaviour is just to copy DisplayRole text
