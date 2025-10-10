@@ -719,7 +719,10 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         connect(ui->peerWidget, &QTableView::customContextMenuRequested, this, &RPCConsole::showPeersTableContextMenu);
 
         // peer table signal handling - update peer details when selecting new node
-        connect(ui->peerWidget->selectionModel(), &QItemSelectionModel::selectionChanged, this, &RPCConsole::updateDetailWidget);
+        connect(ui->peerWidget->selectionModel(), &QItemSelectionModel::selectionChanged, [this] {
+            resetDetailWidget();
+            updateDetailWidget();
+        });
         connect(model->getPeerTableModel(), &QAbstractItemModel::dataChanged, [this] { updateDetailWidget(); });
 
         // set up ban table
@@ -1183,6 +1186,15 @@ void RPCConsole::updateTrafficStats(quint64 totalBytesIn, quint64 totalBytesOut)
     ui->lblBytesOut->setText(GUIUtil::formatBytes(totalBytesOut));
 }
 
+void RPCConsole::resetDetailWidget()
+{
+    for (int row = 0; QLayoutItem * const item = ui->peerDetailsGrid->itemAtPosition(row, 1); ++row) {
+        QLabel * const value_label = qobject_cast<QLabel*>(item->widget());
+        if (!value_label) continue;
+        value_label->setText(ts.na);
+    }
+}
+
 void RPCConsole::updateDetailWidget()
 {
     const QList<QModelIndex> selected_peers = GUIUtil::getEntryData(ui->peerWidget, PeerTableModel::NetNodeId);
@@ -1215,8 +1227,6 @@ void RPCConsole::updateDetailWidget()
     ui->peerMinPing->setText(GUIUtil::formatPingTime(stats->nodeStats.m_min_ping_time));
     if (stats->nodeStats.nVersion) {
         ui->peerVersion->setText(QString::number(stats->nodeStats.nVersion));
-    }
-    if (!stats->nodeStats.cleanSubVer.empty()) {
         ui->peerSubversion->setText(QString::fromStdString(stats->nodeStats.cleanSubVer));
     }
     ui->peerConnectionType->setText(GUIUtil::ConnectionTypeToQString(stats->nodeStats.m_conn_type, /*prepend_direction=*/true));
@@ -1231,7 +1241,7 @@ void RPCConsole::updateDetailWidget()
     }
     ui->peerNetwork->setText(GUIUtil::NetworkToQString(stats->nodeStats.m_network));
     if (stats->nodeStats.m_permission_flags == NetPermissionFlags::None) {
-        ui->peerPermissions->setText(ts.na);
+        ui->peerPermissions->setText(ts.no_permissions);
     } else {
         QStringList permissions;
         for (const auto& permission : NetPermissions::ToStrings(stats->nodeStats.m_permission_flags)) {
