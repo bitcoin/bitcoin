@@ -34,7 +34,7 @@
       <enum>Qt::CustomContextMenu</enum>
      </property>
      <property name="toolTip">
-      <string>Right-click to edit address or label</string>
+      <string>Right-click to edit label</string>
      </property>
      <property name="tabKeyNavigation">
       <bool>false</bool>
