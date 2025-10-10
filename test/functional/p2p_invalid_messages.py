@@ -307,6 +307,13 @@ class InvalidMessagesTest(BitcoinTestFramework):
             peer.send_message(msg_headers([blockheader]))
             peer.wait_for_disconnect()
 
+        self.log.info('Test same previous scenario but with a whitelisted (noban) outbound peer. '
+                      'It should log as misbehaving but not cause a disconnection')
+        self.restart_node(0, extra_args=["-whitelist=noban,out@127.0.0.1"])
+        ob_peer = self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=5)
+        with self.nodes[0].assert_debug_log(['Misbehaving', 'header with invalid proof of work']):
+            ob_peer.send_and_ping(msg_headers([blockheader]))
+
     def test_noncontinuous_headers_msg(self):
         self.log.info("Test headers message with non-continuous headers sequence is logged as misbehaving")
         block_hashes = self.generate(self.nodes[0], 10)
