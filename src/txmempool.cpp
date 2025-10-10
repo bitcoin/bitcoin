@@ -14,9 +14,11 @@
 #include <crypto/ripemd160.h>
 #include <logging.h>
 #include <policy/coin_age_priority.h>
+#include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <random.h>
+#include <scheduler.h>
 #include <tinyformat.h>
 #include <script/script.h>
 #include <util/check.h>
@@ -424,6 +426,17 @@ static CTxMemPool::Options&& Flatten(CTxMemPool::Options&& opts, bilingual_str& 
 CTxMemPool::CTxMemPool(Options opts, bilingual_str& error)
     : m_opts{Flatten(std::move(opts), error)}
 {
+    Assert(m_opts.scheduler || !m_opts.dust_relay_target);
+    m_opts.dust_relay_feerate_floor = m_opts.dust_relay_feerate;
+#ifdef BUILDING_FOR_LIBBITCOINKERNEL
+    assert(!m_opts.scheduler);
+#else
+    if (m_opts.scheduler) {
+        m_opts.scheduler->scheduleEvery([this]{
+            UpdateDynamicDustFeerate();
+        }, DYNAMIC_DUST_FEERATE_UPDATE_INTERVAL);
+    }
+#endif
 }
 
 bool CTxMemPool::isSpent(const COutPoint& outpoint) const
@@ -726,6 +739,38 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
     lastRollingFeeUpdate = GetTime();
     blockSinceLastRollingFeeBump = true;
 }
+
+#ifndef BUILDING_FOR_LIBBITCOINKERNEL
+void CTxMemPool::UpdateDynamicDustFeerate()
+{
+    CFeeRate est_feerate{0};
+    if (m_opts.dust_relay_target < 0 && m_opts.estimator) {
+        static constexpr double target_success_threshold{0.8};
+        est_feerate = m_opts.estimator->estimateRawFee(-m_opts.dust_relay_target, target_success_threshold, FeeEstimateHorizon::LONG_HALFLIFE, nullptr);
+    } else if (m_opts.dust_relay_target > 0) {
+        auto bytes_remaining = int64_t{m_opts.dust_relay_target} * 1'000;
+        LOCK(cs);
+        for (auto mi = mapTx.get<ancestor_score>().begin(); mi != mapTx.get<ancestor_score>().end(); ++mi) {
+            bytes_remaining -= mi->GetTxSize();
+            if (bytes_remaining <= 0) {
+                est_feerate = CFeeRate(mi->GetFee(), mi->GetTxSize());
+                break;
+            }
+        }
+    }
+
+    est_feerate = (est_feerate * m_opts.dust_relay_multiplier) / 1'000;
+
+    if (est_feerate < m_opts.dust_relay_feerate_floor) {
+        est_feerate = m_opts.dust_relay_feerate_floor;
+    }
+
+    if (m_opts.dust_relay_feerate != est_feerate) {
+        LogDebug(BCLog::MEMPOOL, "Updating dust feerate to %s\n", est_feerate.ToString(FeeEstimateMode::SAT_VB));
+        m_opts.dust_relay_feerate = est_feerate;
+    }
+}
+#endif
 
 void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendheight) const
 {
