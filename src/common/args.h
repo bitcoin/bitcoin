@@ -327,6 +327,7 @@ protected:
     // Forces an arg setting. Called by SoftSetArg() if the arg hasn't already
     // been set. Also called directly in testing.
     void ForceSetArg(const std::string& arg, const std::string& value);
+    void ForceSetArg(const std::string& arg, int64_t value);
     void ForceSetArgV(const std::string& arg, const common::SettingsValue& value);
 
     /**
