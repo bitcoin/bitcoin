@@ -87,6 +87,8 @@ struct BlockInfo {
     // The maximum time in the chain up to and including this block.
     // A timestamp that can only move forward.
     unsigned int chain_time_max{0};
+    //! Block is from the tip of the chain (always true except when first calling attachChain and reading old blocks).
+    bool chain_tip{true};
 
     BlockInfo(const uint256& hash LIFETIMEBOUND) : hash(hash) {}
 };
@@ -320,6 +322,11 @@ public:
         virtual void chainStateFlushed(ChainstateRole role, const CBlockLocator& locator) {}
     };
 
+    // TODO: attachChain / PrepareSyncFn functions described below are not fully
+    // implemented yet. In particular there is no sync thread yet, so
+    // notifications begin from the current chain tip, not from the start_block
+    // passed to PrepareSyncFn.
+
     //! Options specifying which chain notifications are required.
     struct NotifyOptions
     {
@@ -330,6 +337,25 @@ public:
         //! Include undo data with block disconnected notifications.
         bool disconnect_undo_data = false;
     };
+
+    //! Prepare callback passed to attachChain, allowing the caller to perform
+    //! custom initialization after attachChain determines the starting sync
+    //! block, but before the first blockConnected notification is sent.
+    //!
+    //! @param start_block  Block where chain client is considered to be
+    //!                     currently synced. The first blockConnected or
+    //!                     blockDisconnected notification will begin from this
+    //!                     block. This is derived from the locator passed to
+    //!                     attachChain.
+    //! @return             True for success, or false to abort and not
+    //!                     attach to the chain.
+    using PrepareSyncFn = std::function<bool(const BlockInfo& start_block)>;
+
+    //! Register handler for notifications. This is similar to
+    //! handleNotifications method below, except it starts a sync thread and
+    //! sends block connected and disconnected notifications relative to a
+    //! locator, instead of relative to the current tip of the chain.
+    virtual std::unique_ptr<Handler> attachChain(std::shared_ptr<Notifications> notifications, const CBlockLocator& locator, const NotifyOptions& options, const PrepareSyncFn& prepare_sync) = 0;
 
     //! Register handler for notifications.
     virtual std::unique_ptr<Handler> handleNotifications(std::shared_ptr<Notifications> notifications) = 0;

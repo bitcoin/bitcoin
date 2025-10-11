@@ -7,6 +7,7 @@
 
 #include <dbwrapper.h>
 #include <interfaces/chain.h>
+#include <interfaces/handler.h>
 #include <interfaces/types.h>
 #include <util/string.h>
 #include <util/threadinterrupt.h>
@@ -30,16 +31,16 @@ struct IndexSummary {
 };
 
 /**
- * Base class for indices of blockchain data. This implements
- * CValidationInterface and ensures blocks are indexed sequentially according
- * to their position in the active chain.
+ * Base class for indices of blockchain data. This handles block connected and
+ * disconnected notifications and ensures blocks are indexed sequentially
+ * according to their position in the active chain.
  *
  * In the presence of multiple chainstates (i.e. if a UTXO snapshot is loaded),
  * only the background "IBD" chainstate will be indexed to avoid building the
  * index out of order. When the background chainstate completes validation, the
  * index will be reinitialized and indexing will continue.
  */
-class BaseIndex : public CValidationInterface
+class BaseIndex
 {
 protected:
     /**
@@ -63,8 +64,6 @@ protected:
     };
 
 private:
-    /// Whether the index has been initialized or not.
-    std::atomic<bool> m_init{false};
     /// Whether the index is in sync with the main chain. The flag is flipped
     /// from false to true once, after which point this starts processing
     /// ValidationInterface notifications to stay in sync.
@@ -105,6 +104,16 @@ private:
     std::thread m_thread_sync;
     CThreadInterrupt m_interrupt;
 
+    /// Mutex to let m_notifications and m_handler be accessed from multiple
+    /// threads (the sync thread and the init thread).
+    Mutex m_mutex;
+    friend class BaseIndexNotifications;
+    std::unique_ptr<interfaces::Handler> m_handler GUARDED_BY(m_mutex);
+
+    /// Append new block to index. Will load block and undo data as needed, then
+    /// call CustomAppend.
+    bool Append(const interfaces::BlockInfo& new_block);
+
     /// Write the current index state (eg. chain block locator and subclass-specific items) to disk.
     ///
     /// Recommendations for error handling:
@@ -118,21 +127,24 @@ private:
     /// Loop over disconnected blocks and call CustomRemove.
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
 
-    bool ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data = nullptr);
-
     virtual bool AllowPrune() const = 0;
 
     template <typename... Args>
     void FatalErrorf(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args);
+
+    /// Temporary helper function to convert block hashes to index pointers
+    /// while index code is being migrated to use interfaces::Chain methods
+    /// instead of index pointers.
+    const CBlockIndex& BlockIndex(const uint256& hash);
 
 protected:
     std::unique_ptr<interfaces::Chain> m_chain;
     Chainstate* m_chainstate{nullptr};
     const std::string m_name;
 
-    void BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override;
+    void BlockConnected(ChainstateRole role, const interfaces::BlockInfo& block_info);
 
-    void ChainStateFlushed(ChainstateRole role, const CBlockLocator& locator) override;
+    void ChainStateFlushed(ChainstateRole role, const CBlockLocator& locator);
 
     /// Return custom notification options for index.
     [[nodiscard]] virtual interfaces::Chain::NotifyOptions CustomOptions() { return {}; }
@@ -174,10 +186,10 @@ public:
 
     /// Initializes the sync state and registers the instance to the
     /// validation interface so that it stays in sync with blockchain updates.
-    [[nodiscard]] bool Init();
+    [[nodiscard]] bool Init() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /// Starts the initial sync process on a background thread.
-    [[nodiscard]] bool StartBackgroundSync();
+    [[nodiscard]] bool StartBackgroundSync() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /// Sync the index with the block index starting from the current best block.
     /// Intended to be run in its own thread, m_thread_sync, and can be
@@ -187,7 +199,7 @@ public:
     void Sync();
 
     /// Stops the instance from staying in sync with blockchain updates.
-    void Stop();
+    void Stop() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /// Get a summary of the index and its state.
     IndexSummary GetSummary() const;
