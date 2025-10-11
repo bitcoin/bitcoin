@@ -1,0 +1,16 @@
+Fix unusable memory_resource on macos
+
+See https://bugreports.qt.io/browse/QTBUG-117484
+and https://bugreports.qt.io/browse/QTBUG-114316
+
+--- a/qtbase/src/corelib/tools/qduplicatetracker_p.h
++++ b/qtbase/src/corelib/tools/qduplicatetracker_p.h
+@@ -52,7 +52,7 @@
+ 
+ #include <qglobal.h>
+ 
+-#if QT_HAS_INCLUDE(<memory_resource>) && __cplusplus > 201402L
++#ifdef __cpp_lib_memory_resource
+ #  include <unordered_set>
+ #  include <memory_resource>
+ #else
