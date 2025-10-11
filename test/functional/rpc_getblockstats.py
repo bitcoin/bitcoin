@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2021 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,8 +12,10 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
-    wallet_importprivkey,
 )
+from test_framework.wallet import MiniWallet
+from test_framework.messages import COIN
+from test_framework.address import address_to_scriptpubkey
 import json
 import os
 
@@ -43,24 +45,32 @@ class GetblockstatsTest(BitcoinTestFramework):
     def generate_test_data(self, filename):
         mocktime = 1525107225
         self.nodes[0].setmocktime(mocktime)
-        self.nodes[0].createwallet(wallet_name='test')
-        privkey = self.nodes[0].get_deterministic_priv_key().key
-        wallet_importprivkey(self.nodes[0], privkey, 0)
 
-        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
+        TRANSACTIONS = [
+            (10, "Send 10 BTC"),
+            (10, "Send 10 BTC"),
+            (10, "Send 10 BTC"),
+            (1, "Send 1 BTC"),
+        ]
 
-        address = self.nodes[0].get_deterministic_priv_key().address
-        self.nodes[0].sendtoaddress(address=address, amount=10, subtractfeefromamount=True)
-        self.generate(self.nodes[0], 1)
+        wallet = MiniWallet(self.nodes[0])
+        self.generate(wallet, COINBASE_MATURITY + 1)
 
-        self.nodes[0].sendtoaddress(address=address, amount=10, subtractfeefromamount=True)
-        self.nodes[0].sendtoaddress(address=address, amount=10, subtractfeefromamount=False)
-        self.nodes[0].settxfee(amount=0.003)
-        self.nodes[0].sendtoaddress(address=address, amount=1, subtractfeefromamount=True)
-        # Send to OP_RETURN output to test its exclusion from statistics
-        self.nodes[0].send(outputs={"data": "21"})
+        external_address = self.nodes[0].get_deterministic_priv_key().address
+        external_script = address_to_scriptpubkey(external_address)
+
+        for i, (amount_btc, _) in enumerate(TRANSACTIONS):
+            amount_satoshis = int(amount_btc * COIN)
+            wallet.send_to(
+                from_node=self.nodes[0],
+                scriptPubKey=external_script,
+                amount=amount_satoshis,
+            )
+            if i == 0:
+                self.generate(wallet, 1)
+
         self.sync_all()
-        self.generate(self.nodes[0], 1)
+        self.generate(wallet, 1)
 
         self.expected_stats = self.get_stats()
 
@@ -119,7 +129,7 @@ class GetblockstatsTest(BitcoinTestFramework):
 
             # Check selecting block by hash too
             blockhash = self.expected_stats[i]['blockhash']
-            stats_by_hash = self.nodes[0].getblockstats(hash_or_height=self.convert_to_json_for_cli(blockhash))
+            stats_by_hash = self.nodes[0].getblockstats(hash_or_height=blockhash)
             assert_equal(stats_by_hash, self.expected_stats[i])
 
         # Make sure each stat can be queried on its own
@@ -161,10 +171,10 @@ class GetblockstatsTest(BitcoinTestFramework):
                                 self.nodes[0].getblockstats, hash_or_height=1, stats=['minfee', f'aaa{inv_sel_stat}'])
         # Mainchain's genesis block shouldn't be found on regtest
         assert_raises_rpc_error(-5, 'Block not found', self.nodes[0].getblockstats,
-                                hash_or_height=self.convert_to_json_for_cli('000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f'))
+                                hash_or_height='000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f')
 
         # Invalid number of args
-        assert_raises_rpc_error(-1, 'getblockstats hash_or_height ( stats )', self.nodes[0].getblockstats, self.convert_to_json_for_cli('00'), 1, 2)
+        assert_raises_rpc_error(-1, 'getblockstats hash_or_height ( stats )', self.nodes[0].getblockstats, '00', 1, 2)
         assert_raises_rpc_error(-1, 'getblockstats hash_or_height ( stats )', self.nodes[0].getblockstats)
 
         self.log.info('Test block height 0')
@@ -177,15 +187,16 @@ class GetblockstatsTest(BitcoinTestFramework):
 
         self.log.info('Test tip including OP_RETURN')
         tip_stats = self.nodes[0].getblockstats(tip)
-        assert_equal(tip_stats["utxo_increase"], 6)
-        assert_equal(tip_stats["utxo_size_inc"], 441)
+        assert_equal(tip_stats["utxo_increase"], 5)
+        assert_equal(tip_stats["utxo_size_inc"], 397)
         assert_equal(tip_stats["utxo_increase_actual"], 4)
-        assert_equal(tip_stats["utxo_size_inc_actual"], 300)
+        assert_equal(tip_stats["utxo_size_inc_actual"], 309)
+
 
         self.log.info("Test when only header is known")
         block = self.generateblock(self.nodes[0], output="raw(55)", transactions=[], submit=False)
         self.nodes[0].submitheader(block["hex"])
-        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", lambda: self.nodes[0].getblockstats(self.convert_to_json_for_cli(block['hash'])))
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", lambda: self.nodes[0].getblockstats(block['hash']))
 
         self.log.info('Test when block is missing')
         (self.nodes[0].blocks_path / 'blk00000.dat').rename(self.nodes[0].blocks_path / 'blk00000.dat.backup')
