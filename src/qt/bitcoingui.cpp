@@ -35,8 +35,7 @@
 #include <qt/macdockiconhandler.h>
 #endif
 #ifdef BITCOIN_QT_WIN_TASKBAR
-#include <QWinTaskbarButton>
-#include <QWinTaskbarProgress>
+#include <qt/wintaskbarprogress.h>
 #endif
 
 #include <chain.h>
@@ -232,7 +231,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
     m_app_nap_inhibitor = new CAppNapInhibitor;
 #endif
 #ifdef BITCOIN_QT_WIN_TASKBAR
-    m_taskbar_button = new QWinTaskbarButton(this);
+    m_taskbar_progress = new WinTaskbarProgress();
 #endif
 
     GUIUtil::handleCloseWindowShortcut(this);
@@ -1236,8 +1235,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     tooltip = tr("Processed %n block(s) of transaction history.", "", count);
 
 #ifdef BITCOIN_QT_WIN_TASKBAR
-    m_taskbar_button->setWindow(windowHandle());
-    QWinTaskbarProgress* taskbar_progress = m_taskbar_button->progress();
+    m_taskbar_progress->setWindow(this);
 #endif
 
     // Set icon state: spinning if catching up, tick otherwise
@@ -1256,7 +1254,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
         progressBarLabel->setVisible(false);
         progressBar->setVisible(false);
 #ifdef BITCOIN_QT_WIN_TASKBAR
-        taskbar_progress->setVisible(false);
+        m_taskbar_progress->setVisible(false);
 #endif
     }
     else
@@ -1273,8 +1271,8 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
         progressBar->setValue(nVerificationProgress * 1000000000.0 + 0.5);
         progressBar->setVisible(true);
 #ifdef BITCOIN_QT_WIN_TASKBAR
-        taskbar_progress->setValue(qRound(nVerificationProgress * 100.0));
-        taskbar_progress->setVisible(true);
+        m_taskbar_progress->setValue(qRound(nVerificationProgress * 100.0));
+        m_taskbar_progress->setVisible(true);
 #endif
 
         tooltip = tr("Catching up…") + QString("<br>") + tooltip;

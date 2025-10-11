@@ -239,7 +239,7 @@ if(BUILD_GUI)
     set(USE_DBUS TRUE)
   endif()
   if(WITH_TASKBAR_PROGRESS)
-    list(APPEND qt_components WinExtras)
+    # Using native Windows API (ITaskbarList3), no Qt WinExtras needed
     set(BITCOIN_QT_WIN_TASKBAR TRUE)
   endif()
   if(BUILD_GUI_TESTS)

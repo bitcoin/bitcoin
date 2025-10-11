@@ -257,6 +257,8 @@ add_library(bitcoinqt STATIC EXCLUDE_FROM_ALL
   utilitydialog.h
   $<$<PLATFORM_ID:Windows>:winshutdownmonitor.cpp>
   $<$<PLATFORM_ID:Windows>:winshutdownmonitor.h>
+  $<$<PLATFORM_ID:Windows>:wintaskbarprogress.cpp>
+  $<$<PLATFORM_ID:Windows>:wintaskbarprogress.h>
   bitcoin.qrc
   ${CMAKE_CURRENT_BINARY_DIR}/bitcoin_locale.qrc
   ${CMAKE_CURRENT_BINARY_DIR}/bitcoin_rendered.qrc
@@ -366,8 +368,8 @@ endif()
 if(WITH_TASKBAR_PROGRESS)
   target_link_libraries(bitcoinqt
     PRIVATE
-      "Qt${WITH_QT_VERSION}::WinExtras"
-      $<$<PLATFORM_ID:Windows>:dwmapi>
+      # Using native Windows API (ITaskbarList3), requires ole32 for COM
+      $<$<PLATFORM_ID:Windows>:ole32>
   )
 endif()
 
