@@ -128,7 +128,7 @@ private:
     /// Will skip the commit if no block has been indexed yet or if the index's best block is
     /// ahead of the chainstate's last flushed block. This avoids persisting state an unclean shutdown
     /// could not roll back from. A later call commits when the chainstate has flushed far enough.
-    void Commit();
+    void Commit(const CBlockLocator& locator);
 
     /// Loop over disconnected blocks and call CustomRemove.
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
