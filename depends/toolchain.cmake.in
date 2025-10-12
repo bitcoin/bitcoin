@@ -122,6 +122,8 @@ if("${qt_packages}" STREQUAL "")
   set(BUILD_GUI OFF CACHE BOOL "")
 else()
   set(BUILD_GUI ON CACHE BOOL "")
+  # Set Qt version based on the depends build
+  set(WITH_QT_VERSION "@qt_major_version@" CACHE STRING "")
 endif()
 
 set(qrencode_packages @qrencode_packages@)

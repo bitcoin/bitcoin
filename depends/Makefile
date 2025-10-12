@@ -190,6 +190,10 @@ meta_depends = Makefile config.guess config.sub funcs.mk builders/default.mk hos
 
 include funcs.mk
 
+# Extract Qt major version
+include packages/qt_details.mk
+qt_major_version:=$(firstword $(subst ., ,$(qt_details_version)))
+
 final_build_id_long+=$(shell $(build_SHA256SUM) toolchain.cmake.in)
 final_build_id+=$(shell echo -n "$(final_build_id_long)" | $(build_SHA256SUM) | cut -c-$(HASH_LENGTH))
 $(host_prefix)/.stamp_$(final_build_id): $(native_packages) $(packages)
@@ -235,6 +239,7 @@ $(host_prefix)/toolchain.cmake : toolchain.cmake.in $(host_prefix)/.stamp_$(fina
             -e 's|@LDFLAGS_RELEASE@|$(strip $(host_release_LDFLAGS))|' \
             -e 's|@LDFLAGS_DEBUG@|$(strip $(host_debug_LDFLAGS))|' \
             -e 's|@qt_packages@|$(qt_packages_)|' \
+            -e 's|@qt_major_version@|$(qt_major_version)|' \
             -e 's|@qrencode_packages@|$(qrencode_packages_)|' \
             -e 's|@zmq_packages@|$(zmq_packages_)|' \
             -e 's|@wallet_packages@|$(wallet_packages_)|' \
