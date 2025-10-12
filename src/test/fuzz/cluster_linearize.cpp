@@ -52,9 +52,8 @@
  *   - clusterlin_depgraph_sim
  *   - clusterlin_depgraph_serialization
  *   - clusterlin_components
- * - ChunkLinearization and LinearizationChunking tests:
+ * - ChunkLinearization and ChunkLinearizationInfo tests:
  *   - clusterlin_chunking
- *   - clusterlin_linearization_chunking
  * - PostLinearize tests:
  *   - clusterlin_postlinearize
  *   - clusterlin_postlinearize_tree
@@ -727,8 +726,16 @@ FUZZ_TARGET(clusterlin_chunking)
     // Read a valid linearization for depgraph.
     auto linearization = ReadLinearization(depgraph, reader);
 
-    // Invoke the chunking function.
+    // Invoke the chunking functions.
     auto chunking = ChunkLinearization(depgraph, linearization);
+    auto chunking_info = ChunkLinearizationInfo(depgraph, linearization);
+
+    // Verify consistency between the two functions.
+    assert(chunking.size() == chunking_info.size());
+    for (size_t i = 0; i < chunking.size(); ++i) {
+        assert(chunking[i] == chunking_info[i].feerate);
+        assert(SetInfo(depgraph, chunking_info[i].transactions) == chunking_info[i]);
+    }
 
     // Verify that chunk feerates are monotonically non-increasing.
     for (size_t i = 1; i < chunking.size(); ++i) {
@@ -737,7 +744,7 @@ FUZZ_TARGET(clusterlin_chunking)
 
     // Naively recompute the chunks (each is the highest-feerate prefix of what remains).
     auto todo = depgraph.Positions();
-    for (const auto& chunk_feerate : chunking) {
+    for (const auto& [chunk_set, chunk_feerate] : chunking_info) {
         assert(todo.Any());
         SetInfo<TestBitSet> accumulator, best;
         for (DepGraphIndex idx : linearization) {
@@ -749,6 +756,7 @@ FUZZ_TARGET(clusterlin_chunking)
             }
         }
         assert(chunk_feerate == best.feerate);
+        assert(chunk_set == best.transactions);
         assert(best.transactions.IsSubsetOf(todo));
         todo -= best.transactions;
     }
@@ -833,121 +841,6 @@ FUZZ_TARGET(clusterlin_simple_finder)
 
     assert(smp_finder.AllDone());
     assert(exh_finder.AllDone());
-}
-
-FUZZ_TARGET(clusterlin_linearization_chunking)
-{
-    // Verify the behavior of LinearizationChunking.
-
-    // Retrieve a depgraph from the fuzz input.
-    SpanReader reader(buffer);
-    DepGraph<TestBitSet> depgraph;
-    try {
-        reader >> Using<DepGraphFormatter>(depgraph);
-    } catch (const std::ios_base::failure&) {}
-
-    // Retrieve a topologically-valid subset of depgraph (allowed to be empty, because the argument
-    // to LinearizationChunking::Intersect is allowed to be empty).
-    auto todo = depgraph.Positions();
-    auto subset = SetInfo(depgraph, ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/false));
-
-    // Retrieve a valid linearization for depgraph.
-    auto linearization = ReadLinearization(depgraph, reader);
-
-    // Construct a LinearizationChunking object, initially for the whole linearization.
-    LinearizationChunking chunking(depgraph, linearization);
-
-    // Incrementally remove transactions from the chunking object, and check various properties at
-    // every step.
-    while (todo.Any()) {
-        assert(chunking.NumChunksLeft() > 0);
-
-        // Construct linearization with just todo.
-        std::vector<DepGraphIndex> linearization_left;
-        for (auto i : linearization) {
-            if (todo[i]) linearization_left.push_back(i);
-        }
-
-        // Compute the chunking for linearization_left.
-        auto chunking_left = ChunkLinearization(depgraph, linearization_left);
-
-        // Verify that it matches the feerates of the chunks of chunking.
-        assert(chunking.NumChunksLeft() == chunking_left.size());
-        for (DepGraphIndex i = 0; i < chunking.NumChunksLeft(); ++i) {
-            assert(chunking.GetChunk(i).feerate == chunking_left[i]);
-        }
-
-        // Check consistency of chunking.
-        TestBitSet combined;
-        for (DepGraphIndex i = 0; i < chunking.NumChunksLeft(); ++i) {
-            const auto& chunk_info = chunking.GetChunk(i);
-            // Chunks must be non-empty.
-            assert(chunk_info.transactions.Any());
-            // Chunk feerates must be monotonically non-increasing.
-            if (i > 0) assert(!(chunk_info.feerate >> chunking.GetChunk(i - 1).feerate));
-            // Chunks must be a subset of what is left of the linearization.
-            assert(chunk_info.transactions.IsSubsetOf(todo));
-            // Chunks' claimed feerates must match their transactions' aggregate feerate.
-            assert(depgraph.FeeRate(chunk_info.transactions) == chunk_info.feerate);
-            // Chunks must be the highest-feerate remaining prefix.
-            SetInfo<TestBitSet> accumulator, best;
-            for (auto j : linearization) {
-                if (todo[j] && !combined[j]) {
-                    accumulator.Set(depgraph, j);
-                    if (best.feerate.IsEmpty() || accumulator.feerate > best.feerate) {
-                        best = accumulator;
-                    }
-                }
-            }
-            assert(best.transactions == chunk_info.transactions);
-            assert(best.feerate == chunk_info.feerate);
-            // Chunks cannot overlap.
-            assert(!chunk_info.transactions.Overlaps(combined));
-            combined |= chunk_info.transactions;
-            // Chunks must be topological.
-            for (auto idx : chunk_info.transactions) {
-                assert((depgraph.Ancestors(idx) & todo).IsSubsetOf(combined));
-            }
-        }
-        assert(combined == todo);
-
-        // Verify the expected properties of LinearizationChunking::IntersectPrefixes:
-        auto intersect = chunking.IntersectPrefixes(subset);
-        // - Intersecting again doesn't change the result.
-        assert(chunking.IntersectPrefixes(intersect) == intersect);
-        // - The intersection is topological.
-        TestBitSet intersect_anc;
-        for (auto idx : intersect.transactions) {
-            intersect_anc |= (depgraph.Ancestors(idx) & todo);
-        }
-        assert(intersect.transactions == intersect_anc);
-        // - The claimed intersection feerate matches its transactions.
-        assert(intersect.feerate == depgraph.FeeRate(intersect.transactions));
-        // - The intersection may only be empty if its input is empty.
-        assert(intersect.transactions.Any() == subset.transactions.Any());
-        // - The intersection feerate must be as high as the input.
-        assert(intersect.feerate >= subset.feerate);
-        // - No non-empty intersection between the intersection and a prefix of the chunks of the
-        //   remainder of the linearization may be better than the intersection.
-        TestBitSet prefix;
-        for (DepGraphIndex i = 0; i < chunking.NumChunksLeft(); ++i) {
-            prefix |= chunking.GetChunk(i).transactions;
-            auto reintersect = SetInfo(depgraph, prefix & intersect.transactions);
-            if (!reintersect.feerate.IsEmpty()) {
-                assert(reintersect.feerate <= intersect.feerate);
-            }
-        }
-
-        // Find a non-empty topologically valid subset of transactions to remove from the graph.
-        // Using an empty set would mean the next iteration is identical to the current one, and
-        // could cause an infinite loop.
-        auto done = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
-        todo -= done;
-        chunking.MarkDone(done);
-        subset = SetInfo(depgraph, subset.transactions - done);
-    }
-
-    assert(chunking.NumChunksLeft() == 0);
 }
 
 FUZZ_TARGET(clusterlin_simple_linearize)
@@ -1207,10 +1100,9 @@ FUZZ_TARGET(clusterlin_postlinearize)
     assert(cmp >= 0);
 
     // The chunks that come out of postlinearizing are always connected.
-    LinearizationChunking linchunking(depgraph, post_linearization);
-    while (linchunking.NumChunksLeft()) {
-        assert(depgraph.IsConnected(linchunking.GetChunk(0).transactions));
-        linchunking.MarkDone(linchunking.GetChunk(0).transactions);
+    auto linchunking = ChunkLinearizationInfo(depgraph, post_linearization);
+    for (const auto& [chunk_set, _chunk_feerate] : linchunking) {
+        assert(depgraph.IsConnected(chunk_set));
     }
 }
 

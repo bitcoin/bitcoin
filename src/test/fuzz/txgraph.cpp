@@ -1230,10 +1230,9 @@ FUZZ_TARGET(txgraph)
                     // Construct a chunking object for the simulated graph, using the reported cluster
                     // linearization as ordering, and compare it against the reported chunk feerates.
                     if (sims.size() == 1 || level == TxGraph::Level::MAIN) {
-                        cluster_linearize::LinearizationChunking simlinchunk(sim.graph, simlin);
+                        auto simlinchunk = ChunkLinearizationInfo(sim.graph, simlin);
                         DepGraphIndex idx{0};
-                        for (unsigned chunknum = 0; chunknum < simlinchunk.NumChunksLeft(); ++chunknum) {
-                            auto chunk = simlinchunk.GetChunk(chunknum);
+                        for (auto& chunk : simlinchunk) {
                             // Require that the chunks of cluster linearizations are connected (this must
                             // be the case as all linearizations inside are PostLinearized).
                             assert(sim.graph.IsConnected(chunk.transactions));
