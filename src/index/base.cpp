@@ -93,7 +93,16 @@ void BaseIndexNotifications::chainStateFlushed(ChainstateRole role, const CBlock
     // No need to handle errors in Commit. If it fails, the error will be already be logged. The
     // best way to recover is to continue, as index cannot be corrupted by a missed commit to disk
     // for an advanced index state.
-    m_index.Commit();
+    //
+    // Intentionally call GetLocator() here and do NOT pass the
+    // chainStateFlushed locator argument to Commit(). It is specifically not
+    // safe to use the chainStateFlushed locator here since d96c59cc5cd2 from
+    // #25740, which sends chainStateFlushed and blockConnected notifications
+    // out of order, so the locator sometimes points to a block which hasn't
+    // been indexed yet. In general, calling GetLocator() here is safer than
+    // trusting the locator argument, and this code was changed to stop saving
+    // the locator argument in 4368384f1d26 from #14121.
+    m_index.Commit(GetLocator(*m_index.m_chain, m_index.m_best_block_index.load()->GetBlockHash()));
 }
 
 BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool f_wipe, bool f_obfuscate) :
@@ -301,7 +310,7 @@ void BaseIndex::Sync()
                 // No need to handle errors in Commit. If it fails, the error will be already be
                 // logged. The best way to recover is to continue, as index cannot be corrupted by
                 // a missed commit to disk for an advanced index state.
-                if (should_commit()) Commit();
+                if (should_commit()) Commit(GetLocator(*m_chain, pindex->GetBlockHash()));
                 return;
             }
 
@@ -313,7 +322,7 @@ void BaseIndex::Sync()
             if (!pindex_next) {
                 SetBestBlockIndex(pindex);
                 // No need to handle errors in Commit. See rationale above.
-                if (should_commit()) Commit();
+                if (should_commit()) Commit(GetLocator(*m_chain, pindex->GetBlockHash()));
 
                 // If pindex is still the chain tip after committing, exit the
                 // sync loop. It is important for cs_main to be locked while
@@ -346,7 +355,7 @@ void BaseIndex::Sync()
                 SetBestBlockIndex(pindex);
                 last_locator_write_time = current_time;
                 // No need to handle errors in Commit. See rationale above.
-                if (should_commit()) Commit();
+                if (should_commit()) Commit(GetLocator(*m_chain, pindex->GetBlockHash()));
             }
         }
     }
@@ -358,16 +367,16 @@ void BaseIndex::Sync()
     }
 }
 
-bool BaseIndex::Commit()
+bool BaseIndex::Commit(const CBlockLocator& locator)
 {
     // Don't commit anything if we haven't indexed any block yet
     // (this could happen if init is interrupted).
-    bool ok = m_best_block_index != nullptr;
+    bool ok = !locator.IsNull();
     if (ok) {
         CDBBatch batch(GetDB());
         ok = CustomCommit(batch);
         if (ok) {
-            GetDB().WriteBestBlock(batch, GetLocator(*m_chain, m_best_block_index.load()->GetBlockHash()));
+            GetDB().WriteBestBlock(batch, locator);
             ok = GetDB().WriteBatch(batch);
         }
     }
