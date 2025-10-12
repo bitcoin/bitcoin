@@ -132,7 +132,7 @@ private:
     /// from further behind on reboot. If the new state is not a successor of the previous state (due
     /// to a chain reorganization), the index must halt until Commit succeeds or else it could end up
     /// getting corrupted.
-    bool Commit();
+    bool Commit(const CBlockLocator& locator);
 
     /// Loop over disconnected blocks and call CustomRemove.
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
