@@ -422,7 +422,27 @@ struct SetInfo
     friend bool operator==(const SetInfo&, const SetInfo&) noexcept = default;
 };
 
-/** Compute the feerates of the chunks of linearization. */
+/** Compute the chunks of linearization as SetInfos. */
+template<typename SetType>
+std::vector<SetInfo<SetType>> ChunkLinearizationInfo(const DepGraph<SetType>& depgraph, std::span<const DepGraphIndex> linearization) noexcept
+{
+    std::vector<SetInfo<SetType>> ret;
+    for (DepGraphIndex i : linearization) {
+        /** The new chunk to be added, initially a singleton. */
+        SetInfo<SetType> new_chunk(depgraph, i);
+        // As long as the new chunk has a higher feerate than the last chunk so far, absorb it.
+        while (!ret.empty() && new_chunk.feerate >> ret.back().feerate) {
+            new_chunk |= ret.back();
+            ret.pop_back();
+        }
+        // Actually move that new chunk into the chunking.
+        ret.emplace_back(std::move(new_chunk));
+    }
+    return ret;
+}
+
+/** Compute the feerates of the chunks of linearization. Identical to ChunkLinearizationInfo, but
+ *  only returns the chunk feerates, not the corresponding transaction sets. */
 template<typename SetType>
 std::vector<FeeFrac> ChunkLinearization(const DepGraph<SetType>& depgraph, std::span<const DepGraphIndex> linearization) noexcept
 {
@@ -440,134 +460,6 @@ std::vector<FeeFrac> ChunkLinearization(const DepGraph<SetType>& depgraph, std::
     }
     return ret;
 }
-
-/** Data structure encapsulating the chunking of a linearization, permitting removal of subsets. */
-template<typename SetType>
-class LinearizationChunking
-{
-    /** The depgraph this linearization is for. */
-    const DepGraph<SetType>& m_depgraph;
-
-    /** The linearization we started from, possibly with removed prefix stripped. */
-    std::span<const DepGraphIndex> m_linearization;
-
-    /** Chunk sets and their feerates, of what remains of the linearization. */
-    std::vector<SetInfo<SetType>> m_chunks;
-
-    /** How large a prefix of m_chunks corresponds to removed transactions. */
-    DepGraphIndex m_chunks_skip{0};
-
-    /** Which transactions remain in the linearization. */
-    SetType m_todo;
-
-    /** Fill the m_chunks variable, and remove the done prefix of m_linearization. */
-    void BuildChunks() noexcept
-    {
-        // Caller must clear m_chunks.
-        Assume(m_chunks.empty());
-
-        // Chop off the initial part of m_linearization that is already done.
-        while (!m_linearization.empty() && !m_todo[m_linearization.front()]) {
-            m_linearization = m_linearization.subspan(1);
-        }
-
-        // Iterate over the remaining entries in m_linearization. This is effectively the same
-        // algorithm as ChunkLinearization, but supports skipping parts of the linearization and
-        // keeps track of the sets themselves instead of just their feerates.
-        for (auto idx : m_linearization) {
-            if (!m_todo[idx]) continue;
-            // Start with an initial chunk containing just element idx.
-            SetInfo add(m_depgraph, idx);
-            // Absorb existing final chunks into add while they have lower feerate.
-            while (!m_chunks.empty() && add.feerate >> m_chunks.back().feerate) {
-                add |= m_chunks.back();
-                m_chunks.pop_back();
-            }
-            // Remember new chunk.
-            m_chunks.push_back(std::move(add));
-        }
-    }
-
-public:
-    /** Initialize a LinearizationSubset object for a given length of linearization. */
-    explicit LinearizationChunking(const DepGraph<SetType>& depgraph LIFETIMEBOUND, std::span<const DepGraphIndex> lin LIFETIMEBOUND) noexcept :
-        m_depgraph(depgraph), m_linearization(lin)
-    {
-        // Mark everything in lin as todo still.
-        for (auto i : m_linearization) m_todo.Set(i);
-        // Compute the initial chunking.
-        m_chunks.reserve(depgraph.TxCount());
-        BuildChunks();
-    }
-
-    /** Determine how many chunks remain in the linearization. */
-    DepGraphIndex NumChunksLeft() const noexcept { return m_chunks.size() - m_chunks_skip; }
-
-    /** Access a chunk. Chunk 0 is the highest-feerate prefix of what remains. */
-    const SetInfo<SetType>& GetChunk(DepGraphIndex n) const noexcept
-    {
-        Assume(n + m_chunks_skip < m_chunks.size());
-        return m_chunks[n + m_chunks_skip];
-    }
-
-    /** Remove some subset of transactions from the linearization. */
-    void MarkDone(SetType subset) noexcept
-    {
-        Assume(subset.Any());
-        Assume(subset.IsSubsetOf(m_todo));
-        m_todo -= subset;
-        if (GetChunk(0).transactions == subset) {
-            // If the newly done transactions exactly match the first chunk of the remainder of
-            // the linearization, we do not need to rechunk; just remember to skip one
-            // additional chunk.
-            ++m_chunks_skip;
-            // With subset marked done, some prefix of m_linearization will be done now. How long
-            // that prefix is depends on how many done elements were interspersed with subset,
-            // but at least as many transactions as there are in subset.
-            m_linearization = m_linearization.subspan(subset.Count());
-        } else {
-            // Otherwise rechunk what remains of m_linearization.
-            m_chunks.clear();
-            m_chunks_skip = 0;
-            BuildChunks();
-        }
-    }
-
-    /** Find the shortest intersection between subset and the prefixes of remaining chunks
-     *  of the linearization that has a feerate not below subset's.
-     *
-     * This is a crucial operation in guaranteeing improvements to linearizations. If subset has
-     * a feerate not below GetChunk(0)'s, then moving IntersectPrefixes(subset) to the front of
-     * (what remains of) the linearization is guaranteed not to make it worse at any point.
-     *
-     * See https://delvingbitcoin.org/t/introduction-to-cluster-linearization/1032 for background.
-     */
-    SetInfo<SetType> IntersectPrefixes(const SetInfo<SetType>& subset) const noexcept
-    {
-        Assume(subset.transactions.IsSubsetOf(m_todo));
-        SetInfo<SetType> accumulator;
-        // Iterate over all chunks of the remaining linearization.
-        for (DepGraphIndex i = 0; i < NumChunksLeft(); ++i) {
-            // Find what (if any) intersection the chunk has with subset.
-            const SetType to_add = GetChunk(i).transactions & subset.transactions;
-            if (to_add.Any()) {
-                // If adding that to accumulator makes us hit all of subset, we are done as no
-                // shorter intersection with higher/equal feerate exists.
-                accumulator.transactions |= to_add;
-                if (accumulator.transactions == subset.transactions) break;
-                // Otherwise update the accumulator feerate.
-                accumulator.feerate += m_depgraph.FeeRate(to_add);
-                // If that does result in something better, or something with the same feerate but
-                // smaller, return that. Even if a longer, higher-feerate intersection exists, it
-                // does not hurt to return the shorter one (the remainder of the longer intersection
-                // will generally be found in the next call to Intersect, but even if not, it is not
-                // required for the improvement guarantee this function makes).
-                if (!(accumulator.feerate << subset.feerate)) return accumulator;
-            }
-        }
-        return subset;
-    }
-};
 
 /** Class to represent the internal state of the spanning-forest linearization (SFL) algorithm.
  *
