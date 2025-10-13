@@ -195,13 +195,13 @@ private:
 
 public:
     NetInfoEntry() = default;
-    NetInfoEntry(const DomainPort& domain)
+    explicit NetInfoEntry(const DomainPort& domain)
     {
         if (!domain.IsValid()) return;
         m_type = NetInfoType::Domain;
         m_data = domain;
     }
-    NetInfoEntry(const CService& service)
+    explicit NetInfoEntry(const CService& service)
     {
         if (!service.IsValid()) return;
         m_type = NetInfoType::Service;
