@@ -63,12 +63,17 @@ class BaseIndexNotifications : public interfaces::Chain::Notifications
 public:
     BaseIndexNotifications(BaseIndex& index) : m_index(index) {}
     void blockConnected(ChainstateRole role, const interfaces::BlockInfo& block) override;
+    void blockDisconnected(const interfaces::BlockInfo& block) override;
     void chainStateFlushed(ChainstateRole role, const CBlockLocator& locator) override;
     void processBlock(ChainstateRole role, const interfaces::BlockInfo& block, bool append);
     BaseIndex& m_index;
     interfaces::Chain::NotifyOptions m_options = m_index.CustomOptions();
     NodeClock::time_point m_last_log_time{NodeClock::now()};
     NodeClock::time_point m_last_locator_write_time{m_last_log_time};
+    //! If blocks are disconnected, m_rewind_start is set to track starting
+    //! point of the rewind and m_rewind_error is set to record any errors.
+    const CBlockIndex* m_rewind_start = nullptr;
+    bool m_rewind_error = false;
 };
 
 void BaseIndexNotifications::blockConnected(ChainstateRole role, const interfaces::BlockInfo& block)
@@ -94,10 +99,22 @@ void BaseIndexNotifications::processBlock(ChainstateRole role, const interfaces:
 
     const CBlockIndex* pindex = &m_index.BlockIndex(block.hash);
     const CBlockIndex* best_block_index = m_index.m_best_block_index.load();
-    if (block.chain_tip && best_block_index && best_block_index != pindex->pprev && !m_index.Rewind(best_block_index, pindex->pprev)) {
+    // If a new block is being connected after blocks were rewound, reset the
+    // rewind state and handle any errors that happened while rewinding.
+    if (m_rewind_error) {
         m_index.FatalErrorf("Failed to rewind %s to a previous chain tip",
                    m_index.GetName());
         return;
+    } else if (m_rewind_start) {
+        assert(!best_block_index || best_block_index->GetAncestor(pindex->nHeight - 1) == pindex->pprev);
+        // Don't commit here - the committed index state must never be ahead of the
+        // flushed chainstate, otherwise unclean restarts would lead to index corruption.
+        // Pruning has a minimum of 288 blocks-to-keep and getting the index
+        // out of sync may be possible but a users fault.
+        // In case we reorg beyond the pruned depth, ReadBlock would
+        // throw and lead to a graceful shutdown
+        m_index.SetBestBlockIndex(pindex->pprev);
+        m_rewind_start = nullptr;
     }
 
     // Dispatch block to child class; errors are logged internally and abort the node.
@@ -141,6 +158,53 @@ void BaseIndexNotifications::processBlock(ChainstateRole role, const interfaces:
     // best block index to be updated can rely on the block being fully
     // processed, and the index object being safe to delete.
     m_index.SetBestBlockIndex(pindex);
+}
+
+void BaseIndexNotifications::blockDisconnected(const interfaces::BlockInfo& block_info)
+{
+    // Make a mutable copy of the BlockInfo argument so block data can be
+    // attached below. This is temporary and removed in upcoming commits.
+    interfaces::BlockInfo block{block_info};
+
+    // During initial sync, ignore validation interface notifications, only
+    // process notifications from sync thread.
+    if (!m_index.m_ready && block.chain_tip) return;
+
+    const CBlockIndex* pindex = &m_index.BlockIndex(block.hash);
+    if (!m_rewind_start) m_rewind_start = pindex;
+    if (m_rewind_error) return;
+
+    CBlock block_data;
+    if (m_options.disconnect_data && !block.data) {
+        if (!m_index.m_chainstate->m_blockman.ReadBlock(block_data, *pindex)) {
+            m_index.FatalErrorf("Failed to read block %s from disk",
+                        pindex->GetBlockHash().ToString());
+            m_rewind_error = true;
+            return;
+        } else {
+            block.data = &block_data;
+        }
+    }
+
+    CBlockUndo block_undo;
+    if (m_options.disconnect_undo_data && !block.undo_data && block.height > 0) {
+        if (!m_index.m_chainstate->m_blockman.ReadBlockUndo(block_undo, *pindex)) {
+            // If undo data can't be read, subsequent CustomRemove calls will be
+            // skipped, and will be a fatal error if there an attempt to connect
+            // a another block to the index.
+            m_rewind_error = true;
+            return;
+        }
+        block.undo_data = &block_undo;
+    }
+
+    // If one CustomRemove call fails, subsequent calls will be skipped,
+    // and there will be a fatal error if there an attempt to connect
+    // a another block to the index.
+    if (!m_index.CustomRemove(block)) {
+        m_rewind_error = true;
+        return;
+    }
 }
 
 void BaseIndexNotifications::chainStateFlushed(ChainstateRole role, const CBlockLocator& locator)
@@ -397,9 +461,16 @@ void BaseIndex::Sync()
                     break;
                 }
             }
-            if (pindex_next->pprev != pindex && !Rewind(pindex, pindex_next->pprev)) {
-                FatalErrorf("Failed to rewind %s to a previous chain tip", GetName());
-                return;
+            if (pindex_next->pprev != pindex) {
+                const CBlockIndex* current_tip = pindex;
+                const CBlockIndex* new_tip = pindex_next->pprev;
+                for (const CBlockIndex* iter_tip = current_tip; iter_tip != new_tip; iter_tip = iter_tip->pprev) {
+                    CBlock block;
+                    interfaces::BlockInfo block_info = kernel::MakeBlockInfo(iter_tip);
+                    block_info.chain_tip = false;
+                    notifications->blockDisconnected(block_info);
+                    if (m_interrupt) break;
+                }
             }
             pindex = pindex_next;
             process_block(/*append=*/true);
@@ -425,44 +496,6 @@ bool BaseIndex::Commit(const CBlockLocator& locator)
         LogError("Failed to commit latest %s state", GetName());
         return false;
     }
-    return true;
-}
-
-bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip)
-{
-    assert(current_tip->GetAncestor(new_tip->nHeight) == new_tip);
-
-    CBlock block;
-    CBlockUndo block_undo;
-
-    for (const CBlockIndex* iter_tip = current_tip; iter_tip != new_tip; iter_tip = iter_tip->pprev) {
-        interfaces::BlockInfo block_info = kernel::MakeBlockInfo(iter_tip);
-        if (CustomOptions().disconnect_data) {
-            if (!m_chainstate->m_blockman.ReadBlock(block, *iter_tip)) {
-                LogError("Failed to read block %s from disk",
-                         iter_tip->GetBlockHash().ToString());
-                return false;
-            }
-            block_info.data = &block;
-        }
-        if (CustomOptions().disconnect_undo_data && iter_tip->nHeight > 0) {
-            if (!m_chainstate->m_blockman.ReadBlockUndo(block_undo, *iter_tip)) {
-                return false;
-            }
-            block_info.undo_data = &block_undo;
-        }
-        if (!CustomRemove(block_info)) {
-            return false;
-        }
-    }
-
-    // Don't commit here - the committed index state must never be ahead of the
-    // flushed chainstate, otherwise unclean restarts would lead to index corruption.
-    // Pruning has a minimum of 288 blocks-to-keep and getting the index
-    // out of sync may be possible but a users fault.
-    // In case we reorg beyond the pruned depth, ReadBlock would
-    // throw and lead to a graceful shutdown
-    SetBestBlockIndex(new_tip);
     return true;
 }
 
@@ -496,8 +529,8 @@ bool BaseIndex::IgnoreBlockConnected(ChainstateRole role, const interfaces::Bloc
         // To allow handling reorgs, this only checks that the new block
         // connects to ancestor of the current best block, instead of checking
         // that it connects to directly to the current block. If there is a
-        // reorg, Rewind call below will remove existing blocks from the index
-        // before adding the new one.
+        // reorg, blockDisconnected calls will have removed existing blocks from
+        // the index, but best_block_index will not have been updated yet.
         assert(best_block_index->GetAncestor(pindex->nHeight - 1) == pindex->pprev);
     }
     return false;
