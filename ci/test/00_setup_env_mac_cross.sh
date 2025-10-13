@@ -9,7 +9,7 @@ export LC_ALL=C.UTF-8
 export SDK_URL=${SDK_URL:-https://bitcoincore.org/depends-sources/sdks}
 
 export CONTAINER_NAME=ci_macos_cross
-export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:24.04"
+export CI_IMAGE_NAME_TAG="ci_native_base"
 export HOST=arm64-apple-darwin
 export PACKAGES="clang lld llvm zip"
 export XCODE_VERSION=15.0

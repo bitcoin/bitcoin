@@ -67,6 +67,19 @@ def main():
         # Using buildx is required to properly load the correct driver, for use with registry caching. Neither build, nor BUILDKIT=1 currently do this properly
         cmd_build = ["docker", "buildx", "build"]
         cmd_build += [
+            f"--file={os.getenv('BASE_READ_ONLY_DIR')}/ci/test_imagefile_base",
+            f"--platform=linux",  # Use native architecture
+            f"--label={CI_IMAGE_LABEL}",
+            f"--tag=ci_native_base",
+        ]
+        cmd_build += maybe_cache_arg
+        cmd_build += [os.getenv('BASE_READ_ONLY_DIR')]
+
+        print(f"Building ci_native_base image layer")
+        run(cmd_build)
+
+        cmd_build = ["docker", "buildx", "build"]
+        cmd_build += [
             f"--file={os.getenv('BASE_READ_ONLY_DIR')}/ci/test_imagefile",
             f"--build-arg=CI_IMAGE_NAME_TAG={os.getenv('CI_IMAGE_NAME_TAG')}",
             f"--build-arg=FILE_ENV={os.getenv('FILE_ENV')}",
