@@ -207,7 +207,7 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
         }
 
         // Internal addresses should not have a label either
-        if (internal && data.exists("label")) {
+        if (internal == true && data.exists("label")) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Internal addresses should not have a label");
         }
 

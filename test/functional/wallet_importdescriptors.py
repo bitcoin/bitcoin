@@ -100,6 +100,8 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                      solvable=True,
                      ismine=True,
                      labels=["Descriptor import test"])
+        self.log.info("Test can import a p2pkh descriptor with internal explicitly set to false")
+        self.test_importdesc({**import_request, "internal": False}, success=True)
         assert_equal(w1.getwalletinfo()['keypoolsize'], 0)
 
         self.log.info("Test can import same descriptor with public key twice")
