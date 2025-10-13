@@ -78,6 +78,18 @@ void BaseIndexNotifications::blockConnected(ChainstateRole role, const interface
 
 void BaseIndexNotifications::processBlock(ChainstateRole role, const interfaces::BlockInfo& block, bool append)
 {
+    // processBlock is called an extra time with append=false and with
+    // chain_tip=true as a signal that sync has caught up.
+    if (!append && block.chain_tip) {
+        m_index.m_synced = true;
+        if (block.height >= 0) {
+            LogPrintf("%s is enabled at height %d\n", m_index.GetName(), block.height);
+        } else {
+            LogPrintf("%s is enabled\n", m_index.GetName());
+        }
+        return;
+    }
+
     if (m_index.IgnoreBlockConnected(role, block)) return;
 
     const CBlockIndex* pindex = &m_index.BlockIndex(block.hash);
@@ -381,7 +393,6 @@ void BaseIndex::Sync()
                 LOCK(::cs_main);
                 pindex_next = NextSyncBlock(pindex, m_chainstate->m_chain);
                 if (!pindex_next) {
-                    m_synced = true;
                     m_chain->context()->validation_signals->CallFunctionInValidationInterfaceQueue([this] { m_ready = true; });
                     break;
                 }
@@ -394,12 +405,7 @@ void BaseIndex::Sync()
             process_block(/*append=*/true);
         }
     }
-
-    if (pindex) {
-        LogInfo("%s is enabled at height %d", GetName(), pindex->nHeight);
-    } else {
-        LogInfo("%s is enabled", GetName());
-    }
+    notifications->processBlock(ChainstateRole::NORMAL, kernel::MakeBlockInfo(pindex), /*append=*/false);
 }
 
 bool BaseIndex::Commit(const CBlockLocator& locator)
