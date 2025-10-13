@@ -42,6 +42,10 @@ Notable changes
 
 External signing is not currently supported when compiling with Boost version 1.88.0 or later.
 
+### P2P
+
+- #33395 net: Do not apply whitelist permission to onion inbounds
+
 ### Test
 
 - #31419 test: fix MIN macro redefinition
@@ -50,6 +54,7 @@ External signing is not currently supported when compiling with Boost version 1.
 
 ### Build
 
+- #30198 depends: fix Qt macOS build with Clang 18
 - #31502 depends: Fix CXXFLAGS on NetBSD
 - #31627 depends: Fix spacing issue
 - #32070 build: use make < 3.82 syntax for define directive
@@ -74,7 +79,9 @@ Thanks to everyone who directly contributed to this release:
 - fanquake
 - Hennadii Stepanov
 - MarcoFalke
+- Martin Zumsande
 - Sjors Provoost
+- Vasil Dimov
 
 As well as to everyone that helped with translations on
 [Transifex](https://www.transifex.com/bitcoin/bitcoin/).
