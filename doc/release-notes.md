@@ -1,6 +1,6 @@
-Bitcoin Core version 28.3rc2 is now available from:
+Bitcoin Core version 28.3 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-28.3/test.rc2/>
+  <https://bitcoincore.org/bin/bitcoin-core-28.3/>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -85,6 +85,7 @@ recommended to change both together if you decide to do so.
 
 - #33340 Fix benchmark CSV output
 - #33482 contrib: fix macOS deployment with no translations
+- #33581 ci: Properly include $FILE_ENV in DEPENDS_HASH
 
 Credits
 =======
@@ -92,6 +93,7 @@ Credits
 Thanks to everyone who directly contributed to this release:
 - 0xB10C
 - amisha
+- Ava Chow
 - fanquake
 - glozow
 - Hennadii Stepanov
