@@ -7,13 +7,14 @@
 
 class CBlock;
 class CBlockIndex;
+class Chainstate;
 namespace interfaces {
 struct BlockInfo;
 } // namespace interfaces
 
 namespace node {
 //! Return data from block index.
-interfaces::BlockInfo MakeBlockInfo(const CBlockIndex* block_index, const CBlock* data = nullptr);
+interfaces::BlockInfo MakeBlockInfo(const CBlockIndex* block_index, const CBlock* data = nullptr, const Chainstate* chainstate = nullptr);
 } // namespace node
 
 #endif // BITCOIN_NODE_CHAIN_H
