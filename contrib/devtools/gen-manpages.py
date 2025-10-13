@@ -7,9 +7,10 @@ import subprocess
 import sys
 import tempfile
 import argparse
+import re
+import configparser
 
 BINARIES = [
-'bin/bitcoin',
 'bin/bitcoind',
 'bin/bitcoin-cli',
 'bin/bitcoin-tx',
@@ -28,6 +29,11 @@ parser.add_argument(
     default=False,
     help="skip generation for binaries that are not found in the build path",
 )
+parser.add_argument(
+    '--skip-build-options-check',
+     action='store_true',
+     help='Skip checking required build options'
+)
 args = parser.parse_args()
 
 # Paths to external utilities.
@@ -43,6 +49,57 @@ if not topdir:
 # Get input and output directories.
 builddir = os.getenv('BUILDDIR', os.path.join(topdir, 'build'))
 mandir = os.getenv('MANDIR', os.path.join(topdir, 'doc/man'))
+
+build_options = {
+    # Required options
+    'HAVE_SYSTEM': 'System component',
+    'ENABLE_WALLET': 'Enable wallet',
+    'ENABLE_CLI': 'Build bitcoin-cli executable.',
+    'ENABLE_BITCOIN_UTIL': 'Bitcoin utility',
+    'ENABLE_WALLET_TOOL': 'Build bitcoin-wallet tool',
+    'ENABLE_BITCOIND': 'Build bitcoind executable',
+    'ENABLE_EXTERNAL_SIGNER': 'Enable external signer support',
+    'USE_UPNP': 'Enable UPnP support',
+    # Optional features
+    'ENABLE_ZMQ': 'Enable ZMQ notifications',
+}
+
+def check_build_options():
+    enabled_options = set()
+
+    # Check HAVE_SYSTEM from builddir/src/bitcoin-build-config.h
+    config_h_path = os.path.join(builddir, 'src', 'bitcoin-build-config.h')
+    if os.path.exists(config_h_path):
+        with open(config_h_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        if re.search(r'#define\s+HAVE_SYSTEM\s+1', content):
+            enabled_options.add('HAVE_SYSTEM')
+
+    # Check other options from builddir/test/config.ini
+    config_ini_path = os.path.join(builddir, 'test', 'config.ini')
+    if os.path.exists(config_ini_path):
+        config = configparser.ConfigParser()
+        config.read(config_ini_path)
+        if 'components' in config:
+            for option in build_options.keys():
+                if config['components'].getboolean(option, fallback=False):
+                    enabled_options.add(option)
+        else:
+            print(f"Warning: 'components' section not found in {config_ini_path}", file=sys.stderr)
+
+    disabled = build_options.keys() - enabled_options
+    return disabled
+
+disabled_options = check_build_options()
+if disabled_options and not args.skip_build_options_check:
+    error_msg = (
+        "Aborting generation of manpages...\n"
+        "Missing build components for comprehensive man pages:\n"
+        + "\n".join(f"    - {opt}: ({build_options[opt]})" for opt in disabled_options) + "\n"
+        "Please enable them and try again."
+    )
+    print(error_msg, file=sys.stderr)
+    sys.exit(1)
 
 # Verify that all the required binaries are usable, and extract copyright
 # message in a first pass.
