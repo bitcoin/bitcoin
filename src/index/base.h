@@ -134,9 +134,6 @@ private:
     /// getting corrupted.
     bool Commit(const CBlockLocator& locator);
 
-    /// Loop over disconnected blocks and call CustomRemove.
-    bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
-
     virtual bool AllowPrune() const = 0;
 
     template <typename... Args>
