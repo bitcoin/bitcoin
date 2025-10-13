@@ -10,13 +10,16 @@
 #include <kernel/cs_main.h>
 #include <sync.h>
 #include <uint256.h>
+#include <validation.h>
 
 class CBlock;
 
+using interfaces::BlockInfo;
+
 namespace node {
-interfaces::BlockInfo MakeBlockInfo(const CBlockIndex* index, const CBlock* data)
+BlockInfo MakeBlockInfo(const CBlockIndex* index, const CBlock* data, const Chainstate* chainstate)
 {
-    interfaces::BlockInfo info{index ? *index->phashBlock : uint256::ZERO};
+    BlockInfo info{index ? *index->phashBlock : uint256::ZERO};
     if (index) {
         info.prev_hash = index->pprev ? index->pprev->phashBlock : nullptr;
         info.height = index->nHeight;
@@ -24,6 +27,15 @@ interfaces::BlockInfo MakeBlockInfo(const CBlockIndex* index, const CBlock* data
         LOCK(::cs_main);
         info.file_number = index->nFile;
         info.data_pos = index->nDataPos;
+        if (chainstate) {
+            info.background_sync = true;
+            const CBlockIndex* last_flushed{chainstate->LastFlushedBlock()};
+            if (index == last_flushed) {
+                info.status = BlockInfo::FLUSHED_TIP;
+            } else if (!last_flushed || last_flushed->GetAncestor(index->nHeight) == index) {
+                info.status = BlockInfo::FLUSHED;
+            }
+        }
     }
     info.data = data;
     return info;
