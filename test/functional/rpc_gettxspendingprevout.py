@@ -195,9 +195,9 @@ class GetTxSpendingPrevoutTest(BitcoinTestFramework):
         assert tx1["txid"] not in node0_mempool
         assert tx2["txid"] not in node0_mempool
 
-        # tx2 is not in the mempool anymore, but still in txospender index which has not been rewound yet
+        # tx2 is not in the mempool anymore, and txospenderindex has already been rewound by blockDisconnected
         result = node0.gettxspendingprevout([prevout(tx1['txid'], vout=0)], return_spending_tx=True)
-        assert_equal(result, [spent_out_in_block(tx1['txid'], vout=0, spending_tx_id=tx2["txid"], blockhash=blockhash, spending_tx=tx2['hex'])])
+        assert_equal(result, [unspent_out(tx1['txid'], vout=0)])
 
         txinfo = node0.getrawtransaction(tx2["txid"], verbose = True, blockhash = blockhash)
         assert_equal(txinfo["confirmations"], 0)
