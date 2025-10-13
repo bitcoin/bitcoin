@@ -453,6 +453,15 @@ if test "$enable_werror" = "yes"; then
   fi
   ERROR_CXXFLAGS=$CXXFLAG_WERROR
 
+  dnl -Wdeprecated-literal-operator cause problems with clang 20. Do not treat these warnings as errors.
+  dnl TODO: remove it once we update hana
+  AX_CHECK_COMPILE_FLAG([-Wdeprecated-literal-operator], [NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-error=deprecated-literal-operator"], [], [$CXXFLAG_WERROR], [AC_LANG_SOURCE([
+    #if !defined(__clang__) || defined(__INTEL_COMPILER)
+      #error Non-clang compiler detected, not setting flag
+    #endif
+    int main(void) { return 0; }
+  ])])
+
   dnl -Wattributes cause problems with some versions of GCC. Do not treat these warnings as errors.
   AX_CHECK_COMPILE_FLAG([-Wattributes], [NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-error=attributes"], [], [$CXXFLAG_WERROR], [AC_LANG_SOURCE([
     #if defined(__clang__) || defined(__INTEL_COMPILER) || !defined(__GNUC__)
