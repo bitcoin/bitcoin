@@ -650,13 +650,13 @@ private:
     void AskPeersForTransaction(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     /** Relay inventories to peers that find it relevant */
-    void RelayInvFiltered(const CInv& inv, const CTransaction& relatedTx, const int minProtoVersion) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayInvFiltered(const CInv& inv, const CTransaction& relatedTx) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     /**
      * This overload will not update node filters, use it only for the cases
      * when other messages will update related transaction data in filters
      */
-    void RelayInvFiltered(const CInv& inv, const uint256& relatedTxHash, const int minProtoVersion) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayInvFiltered(const CInv& inv, const uint256& relatedTxHash) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     void EraseObjectRequest(NodeId nodeid, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
@@ -2402,7 +2402,7 @@ void PeerManagerImpl::RelayDSQ(const CCoinJoinQueue& queue)
     }
 }
 
-void PeerManagerImpl::RelayInvFiltered(const CInv& inv, const CTransaction& relatedTx, const int minProtoVersion)
+void PeerManagerImpl::RelayInvFiltered(const CInv& inv, const CTransaction& relatedTx)
 {
     // TODO: Migrate to iteration through m_peer_map
     m_connman.ForEachNode([&](CNode* pnode) {
@@ -2410,7 +2410,7 @@ void PeerManagerImpl::RelayInvFiltered(const CInv& inv, const CTransaction& rela
         if (peer == nullptr) return;
 
         auto tx_relay = peer->GetTxRelay();
-        if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || tx_relay == nullptr) {
+        if (!pnode->CanRelay() || tx_relay == nullptr) {
             return;
         }
 
@@ -2427,7 +2427,7 @@ void PeerManagerImpl::RelayInvFiltered(const CInv& inv, const CTransaction& rela
     });
 }
 
-void PeerManagerImpl::RelayInvFiltered(const CInv& inv, const uint256& relatedTxHash, const int minProtoVersion)
+void PeerManagerImpl::RelayInvFiltered(const CInv& inv, const uint256& relatedTxHash)
 {
     // TODO: Migrate to iteration through m_peer_map
     m_connman.ForEachNode([&](CNode* pnode) {
@@ -2435,7 +2435,7 @@ void PeerManagerImpl::RelayInvFiltered(const CInv& inv, const uint256& relatedTx
         if (peer == nullptr) return;
 
         auto tx_relay = peer->GetTxRelay();
-        if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || tx_relay == nullptr) {
+        if (!pnode->CanRelay() || tx_relay == nullptr) {
             return;
         }
 
@@ -3525,9 +3525,9 @@ void PeerManagerImpl::PostProcessMessage(MessageProcessingResult&& result, NodeI
     if (result.m_inv_filter) {
         const auto& [inv, filter] = result.m_inv_filter.value();
         if (std::holds_alternative<CTransactionRef>(filter)) {
-            RelayInvFiltered(inv, *std::get<CTransactionRef>(filter), ISDLOCK_PROTO_VERSION);
+            RelayInvFiltered(inv, *std::get<CTransactionRef>(filter));
         } else if (std::holds_alternative<uint256>(filter)) {
-            RelayInvFiltered(inv, std::get<uint256>(filter), ISDLOCK_PROTO_VERSION);
+            RelayInvFiltered(inv, std::get<uint256>(filter));
         } else {
             assert(false);
         }
@@ -6211,7 +6211,6 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
                     const auto islock = m_llmq_ctx->isman->GetInstantSendLockByTxid(hash);
                     if (islock == nullptr) continue;
-                    if (pto->nVersion < ISDLOCK_PROTO_VERSION) continue;
                     uint256 isLockHash{::SerializeHash(*islock)};
                     tx_relay->m_tx_inventory_known_filter.insert(isLockHash);
                     queueAndMaybePushInv(CInv(MSG_ISDLOCK, isLockHash));

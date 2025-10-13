@@ -111,6 +111,4 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
 
-std::optional<bilingual_str> CheckLegacyTxindex(CBlockTreeDB& block_tree_db);
-
 #endif // BITCOIN_TXDB_H

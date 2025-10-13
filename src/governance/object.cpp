@@ -602,21 +602,8 @@ void CGovernanceObject::Relay(PeerManager& peerman, const CMasternodeSync& mn_sy
         return;
     }
 
-    int minProtoVersion = MIN_PEER_PROTO_VERSION;
-    if (m_obj.type == GovernanceObject::PROPOSAL) {
-        // We know this proposal is valid locally, otherwise we would not get to the point we should relay it.
-        // But we don't want to relay it to pre-GOVSCRIPT_PROTO_VERSION peers if payment_address is p2sh
-        // because they won't accept it anyway and will simply ban us eventually.
-        CProposalValidator validator(GetDataAsHexString(), false /* no script */);
-        if (!validator.Validate(false /* ignore expiration */)) {
-            // The only way we could get here is when proposal is valid but payment_address is actually p2sh.
-            LogPrint(BCLog::GOBJECT, "CGovernanceObject::Relay -- won't relay %s to older peers\n", GetHash().ToString());
-            minProtoVersion = GOVSCRIPT_PROTO_VERSION;
-        }
-    }
-
     CInv inv(MSG_GOVERNANCE_OBJECT, GetHash());
-    peerman.RelayInv(inv, minProtoVersion);
+    peerman.RelayInv(inv);
 }
 
 void CGovernanceObject::UpdateSentinelVariables(const CDeterministicMNList& tip_mn_list)
