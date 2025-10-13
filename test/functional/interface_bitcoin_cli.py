@@ -420,6 +420,11 @@ class TestBitcoinCli(BitcoinTestFramework):
             self.nodes[0].cli('-regtest', 'createwallet', '-regtest', '-xyz', '-regtest').send_cli()
             wallet_name_begin_with_dash = self.nodes[0].get_wallet_rpc('-xyz').getwalletinfo()["walletname"]
             assert_equal(wallet_name_begin_with_dash, '-xyz')
+
+            self.log.info("Test double dash option is treated as RPC named parameter")
+            self.nodes[0].cli('createwallet', 'someWalletName', '--load_on_startup=true').send_cli()
+            self.restart_node(0)
+            assert_equal("someWalletName" in self.nodes[0].listwallets(), True)
         else:
             self.log.info("*** Wallet not compiled; cli getwalletinfo and -getinfo wallet tests skipped")
             self.generate(self.nodes[0], 30)  # maintain block parity with the wallet_compiled conditional branch
