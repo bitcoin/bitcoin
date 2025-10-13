@@ -153,6 +153,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
             self.log.debug("Wait for a new template")
             waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
             waitoptions.timeout = timeout
+            waitoptions.feeThreshold = 1
             waitnext = template.result.waitNext(ctx, waitoptions)
             self.generate(self.nodes[0], 1)
             template2 = await waitnext
@@ -168,6 +169,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
             block3 = await self.parse_and_deserialize_block(template4, ctx)
             assert_equal(len(block3.vtx), 2)
             self.log.debug("Wait again, this should return the same template, since the fee threshold is zero")
+            waitoptions.feeThreshold = 0
             template5 = await template4.result.waitNext(ctx, waitoptions)
             block4 = await self.parse_and_deserialize_block(template5, ctx)
             assert_equal(len(block4.vtx), 2)
