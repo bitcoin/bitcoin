@@ -78,7 +78,14 @@ elif [ "$RUN_UNIT_TESTS" = "true" ]; then
   export DIR_UNIT_TEST_DATA=${DIR_QA_ASSETS}/unit_test_data/
   if [ ! -d "$DIR_UNIT_TEST_DATA" ]; then
     mkdir -p "$DIR_UNIT_TEST_DATA"
-    ${CI_RETRY_EXE} curl --location --fail https://github.com/bitcoin-core/qa-assets/raw/main/unit_test_data/script_assets_test.json -o "${DIR_UNIT_TEST_DATA}/script_assets_test.json"
+    # Fetch the single JSON file via a filtered clone instead of a simple curl
+    # to work around https://github.com/bitcoin/bitcoin/issues/33599
+    ${CI_RETRY_EXE} git clone --no-checkout --depth=1 --filter=blob:none https://github.com/bitcoin-core/qa-assets /tmp/qa-assets-json-only
+    (
+      cd /tmp/qa-assets-json-only
+      git checkout HEAD -- unit_test_data/script_assets_test.json
+      mv unit_test_data/script_assets_test.json "${DIR_UNIT_TEST_DATA}/script_assets_test.json"
+    )
   fi
 fi
 
