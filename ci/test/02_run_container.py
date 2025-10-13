@@ -94,6 +94,7 @@ def main():
             f"--build-arg=CI_IMAGE_NAME_TAG={os.getenv('CI_IMAGE_NAME_TAG')}",
             f"--build-arg=FILE_ENV={os.getenv('FILE_ENV')}",
             f"--build-arg=BASE_ROOT_DIR={os.getenv('BASE_ROOT_DIR')}",
+            f"--build-context=ci_native_base=docker-image://ci_native_base:latest",
             f"--platform={os.getenv('CI_IMAGE_PLATFORM')}",
             f"--label={CI_IMAGE_LABEL}",
             f"--tag={os.getenv('CONTAINER_NAME')}",
