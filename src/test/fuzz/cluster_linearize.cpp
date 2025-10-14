@@ -1086,7 +1086,7 @@ FUZZ_TARGET(clusterlin_sfl)
     //
     // Verify that optimality is reached within an expected amount of work.
     //
-    if (sfl.GetCost() > MaxOptimalLinearizationIters(depgraph.TxCount())) {
+    if (sfl.GetCost() > MaxOptimalLinearizationCost(depgraph.TxCount())) {
         assert(is_optimal);
         assert(is_minimal);
     }
@@ -1142,7 +1142,7 @@ FUZZ_TARGET(clusterlin_linearize)
     }
 
     // If the iteration count is sufficiently high, an optimal linearization must be found.
-    if (iter_count > MaxOptimalLinearizationIters(depgraph.TxCount())) {
+    if (iter_count > MaxOptimalLinearizationCost(depgraph.TxCount())) {
         assert(optimal);
     }
 

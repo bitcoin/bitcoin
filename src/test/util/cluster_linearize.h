@@ -12,6 +12,7 @@
 #include <util/bitset.h>
 #include <util/feefrac.h>
 
+#include <cmath>
 #include <cstdint>
 #include <numeric>
 #include <utility>
@@ -394,26 +395,35 @@ void SanityCheck(const DepGraph<SetType>& depgraph, std::span<const DepGraphInde
     }
 }
 
-inline uint64_t MaxOptimalLinearizationIters(DepGraphIndex cluster_count)
+inline uint64_t MaxOptimalLinearizationCost(DepGraphIndex cluster_count)
 {
-    // These are the largest numbers seen returned as cost by Linearize(), in a large randomized
-    // trial. There exist almost certainly far worse cases, but they are unlikely to be
-    // encountered in randomized tests. The purpose of these numbers is guaranteeing that for
-    // *some* reasonable cost bound, optimal linearizations are always found.
-    static constexpr uint64_t ITERS[65] = {
-        0,
-        0, 2, 4, 7, 11, 21, 22, 29,
-        36, 37, 41, 48, 48, 54, 64, 67,
-        74, 76, 81, 86, 96, 98, 107, 113,
-        120, 120, 122, 146, 134, 140, 161, 174,
-        172, 169, 181, 168, 196, 219, 222, 228,
-        242, 256, 256, 244, 269, 260, 285, 269,
-        289, 276, 326, 331, 325, 341, 355, 321,
-        441, 346, 384, 441, 390, 497, 409, 481
-    };
-    assert(cluster_count < std::size(ITERS));
-    // Multiply the table number by two, to account for the fact that they are not absolutes.
-    return ITERS[cluster_count] * 2;
+    // This computes an upper bound on the total cost for linearizing a cluster optimally, which
+    // we do not expect **randomized** unit/fuzz tests to exceed. It is **not** an absolute upper
+    // bound, as the SFL algorithm is randomized and may in theory make bad decisions indefinitely.
+
+    // Without enforcing a bound like this function, it might be possible for Linearize() to have a
+    // bug that results in it never finding optimal solutions, never claiming to have reached
+    // optimality, and no unit/fuzz tests would fail.
+
+    // This function is constructed as follows:
+    // - A large number of random clusters were generated with 2-64 transactions, and for each
+    //   (num_tx, num_deps) combination, the 10 worst clusters (in terms of optimal linearization
+    //   cost returned by Linearize(), across 3 random rng_seeds) were kept.
+    // - The resulting 200000 clusters were each Linearize()'d with 200000 rng_seeds, resulting in
+    //   the following largest costs (by num_tx in 2..64): {121, 208, 348, 529, 934, 1326, 1826,
+    //   2282, 2864, 3590, 4298, 5299, 6303, 7009, 7942, 9349, 10625, 12803, 13579, 13599, 14697,
+    //   16816, 19178, 21093, 21283, 25429, 28215, 29486, 32210, 31036, 34790, 40985, 45718, 45479,
+    //   45452, 49635, 56512, 56282, 57767, 61348, 78034, 74680, 84126, 91034, 84540, 92009, 90837,
+    //   104643, 110451, 110099, 112449, 142663, 137967, 139735, 138702, 141127, 145016, 153654,
+    //   198332, 183917, 209769, 203528, 221065}.
+    // - To get rid of the random ups & downs, the cubic polynomial with non-negative coefficients
+    //   was fitted that is nowhere below the values above, and has the lowest relative overshoot:
+    //   f(x) = 0.4794252268807*x^3 + 26.3234111222415*x^2 + 11.8709536959882.
+    // - Below, we evaluate this polynomial, round up to the next integer, and then multiply by two
+    //   to account for the fact that random cluster generation won't actually find the worst
+    //   cases.
+    double x = cluster_count;
+    return 2 * uint64_t(std::ceil((0.4794252268807 * x + 26.3234111222415) * x * x + 11.8709536959882));
 }
 
 } // namespace
