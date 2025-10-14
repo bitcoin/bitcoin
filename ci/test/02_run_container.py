@@ -69,18 +69,11 @@ def main():
         buildx_ls = run(
             ["docker", "buildx", "ls", "--format", "{{.DriverEndpoint}} {{.Name}}"],
             check=False,
-            text=True,
-            stdout=subprocess.PIPE,
         )
         if buildx_ls.returncode != 0:
             print("Could not find docker based buildx, assuming podman!")
             print("If you are not using podman, but docker, make sure to create the buildx driver:")
             print("For example, via 'docker buildx create --use --driver docker'")
-        for line in buildx_ls.stdout.splitlines():
-            drv, name = line.split(maxsplit=1)
-            if drv == "docker":
-                print(f"Using existing docker based buildx: {name}")
-                os.environ["BUILDX_BUILDER"] = name
 
         cmd_build = ["docker", "buildx", "build"]
         cmd_build += [
