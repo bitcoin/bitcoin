@@ -447,7 +447,10 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
 util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, CAmount change_target, int max_selection_weight);
 
 /** Select coins by Single Random Draw. OutputGroups are selected randomly from the eligible
- * outputs until the target is satisfied
+ * outputs until the target is satisfied.  If the maximum weight is exceeded, then the least
+ * valuable outputs are removed from the selection.  In so doing, minimize the number of UTXOs
+ * included in the result by preferring UTXOs with higher value.  Note that this selection
+ * algorithm should always produce a non-dust change output.
  *
  * @param[in]  utxo_pool    The positive effective value OutputGroups eligible for selection
  * @param[in]  target_value The target value to select for
