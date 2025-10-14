@@ -718,7 +718,7 @@ std::optional<const CGovernanceObject> CGovernanceManager::CreateGovernanceTrigg
     }
 
     // Nobody submitted a trigger we'd like to see, so let's do it but only if we are the payee
-    const CBlockIndex *tip = WITH_LOCK(::cs_main, return m_chainman.ActiveChain().Tip());
+    const CBlockIndex* tip = m_chainman.ActiveChain().Tip();
     const auto mnList = Assert(m_dmnman)->GetListForBlock(tip);
     const auto mn_payees = mnList.GetProjectedMNPayees(tip);
 

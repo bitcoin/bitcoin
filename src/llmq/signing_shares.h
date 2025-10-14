@@ -433,7 +433,8 @@ public:
     void ProcessMessage(const CNode& pnode, PeerManager& peerman, const CSporkManager& sporkman,
                         const std::string& msg_type, CDataStream& vRecv);
 
-    void AsyncSign(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash);
+    void AsyncSign(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_pendingSigns);
     std::optional<CSigShare> CreateSigShare(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash) const;
     void ForceReAnnouncement(const CQuorumCPtr& quorum, Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
 
@@ -485,8 +486,8 @@ private:
     void CollectSigSharesToAnnounce(const CConnman& connman,
                                     std::unordered_map<NodeId, Uint256HashMap<CSigSharesInv>>& sigSharesToAnnounce)
         EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void SignPendingSigShares(const CConnman& connman, PeerManager& peerman);
-    void WorkThreadMain(CConnman& connman, PeerManager& peerman);
+    void SignPendingSigShares(const CConnman& connman, PeerManager& peerman) EXCLUSIVE_LOCKS_REQUIRED(!cs_pendingSigns);
+    void WorkThreadMain(CConnman& connman, PeerManager& peerman) EXCLUSIVE_LOCKS_REQUIRED(!cs_pendingSigns);
 };
 } // namespace llmq
 

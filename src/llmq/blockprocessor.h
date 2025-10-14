@@ -58,18 +58,26 @@ public:
                                    CQuorumSnapshotManager& qsnapman);
     ~CQuorumBlockProcessor();
 
-    [[nodiscard]] MessageProcessingResult ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv);
+    [[nodiscard]] MessageProcessingResult ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv)
+        EXCLUSIVE_LOCKS_REQUIRED(!minableCommitmentsCs);
 
-    bool ProcessBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex, BlockValidationState& state, bool fJustCheck, bool fBLSChecks) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    bool UndoBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool ProcessBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex, BlockValidationState& state,
+                      bool fJustCheck, bool fBLSChecks) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, !minableCommitmentsCs);
+    bool UndoBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex)
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main, !minableCommitmentsCs);
 
     //! it returns hash of commitment if it should be relay, otherwise nullopt
-    std::optional<CInv> AddMineableCommitment(const CFinalCommitment& fqc);
-    bool HasMineableCommitment(const uint256& hash) const;
-    bool GetMineableCommitmentByHash(const uint256& commitmentHash, CFinalCommitment& ret) const;
-    std::optional<std::vector<CFinalCommitment>> GetMineableCommitments(const Consensus::LLMQParams& llmqParams, int nHeight) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    bool GetMineableCommitmentsTx(const Consensus::LLMQParams& llmqParams, int nHeight, std::vector<CTransactionRef>& ret) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    bool HasMinedCommitment(Consensus::LLMQType llmqType, const uint256& quorumHash) const;
+    std::optional<CInv> AddMineableCommitment(const CFinalCommitment& fqc) EXCLUSIVE_LOCKS_REQUIRED(!minableCommitmentsCs);
+    bool HasMineableCommitment(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(!minableCommitmentsCs);
+    bool GetMineableCommitmentByHash(const uint256& commitmentHash, CFinalCommitment& ret) const
+        EXCLUSIVE_LOCKS_REQUIRED(!minableCommitmentsCs);
+    std::optional<std::vector<CFinalCommitment>> GetMineableCommitments(const Consensus::LLMQParams& llmqParams,
+                                                                        int nHeight) const
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main, !minableCommitmentsCs);
+    bool GetMineableCommitmentsTx(const Consensus::LLMQParams& llmqParams, int nHeight, std::vector<CTransactionRef>& ret) const
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main, !minableCommitmentsCs);
+    bool HasMinedCommitment(Consensus::LLMQType llmqType, const uint256& quorumHash) const
+        EXCLUSIVE_LOCKS_REQUIRED(!minableCommitmentsCs);
     std::pair<CFinalCommitment, uint256> GetMinedCommitment(Consensus::LLMQType llmqType, const uint256& quorumHash) const;
 
     std::vector<const CBlockIndex*> GetMinedCommitmentsUntilBlock(Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pindex, size_t maxCount) const;
@@ -82,9 +90,10 @@ public:
     std::optional<const CBlockIndex*> GetLastMinedCommitmentsByQuorumIndexUntilBlock(Consensus::LLMQType llmqType, const CBlockIndex* pindex, int quorumIndex, size_t cycle) const;
 private:
     static bool GetCommitmentsFromBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex, std::multimap<Consensus::LLMQType, CFinalCommitment>& ret, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    bool ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc,
-                           BlockValidationState& state, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    size_t GetNumCommitmentsRequired(const Consensus::LLMQParams& llmqParams, int nHeight) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, BlockValidationState& state,
+                           bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, !minableCommitmentsCs);
+    size_t GetNumCommitmentsRequired(const Consensus::LLMQParams& llmqParams, int nHeight) const
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main, !minableCommitmentsCs);
     static uint256 GetQuorumBlockHash(const Consensus::LLMQParams& llmqParams, const CChain& active_chain, int nHeight, int quorumIndex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
 } // namespace llmq

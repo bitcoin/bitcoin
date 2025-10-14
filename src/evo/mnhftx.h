@@ -110,7 +110,8 @@ public:
      * @pre Caller must ensure that LLMQContext has been initialized and the llmq::CQuorumManager pointer has been
      *      set by calling ConnectManagers() for this CMNHFManager instance
      */
-    std::optional<Signals> ProcessBlock(const CBlock& block, const CBlockIndex* const pindex, bool fJustCheck, BlockValidationState& state);
+    std::optional<Signals> ProcessBlock(const CBlock& block, const CBlockIndex* const pindex, bool fJustCheck,
+                                        BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
 
     /**
      * Every undo block should be processed when Tip() is updated by calling of CMNHFManager::UndoBlock
@@ -120,10 +121,10 @@ public:
      * @pre Caller must ensure that LLMQContext has been initialized and the llmq::CQuorumManager pointer has been
      *      set by calling ConnectManagers() for this CMNHFManager instance
      */
-    bool UndoBlock(const CBlock& block, const CBlockIndex* const pindex);
+    bool UndoBlock(const CBlock& block, const CBlockIndex* const pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
 
     // Implements interface
-    Signals GetSignalsStage(const CBlockIndex* const pindexPrev) override;
+    Signals GetSignalsStage(const CBlockIndex* const pindexPrev) override EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
 
     /**
      * Helper that used in Unit Test to forcely setup EHF signal for specific block
@@ -145,10 +146,10 @@ public:
      */
     void DisconnectManagers();
 
-    bool ForceSignalDBUpdate() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool ForceSignalDBUpdate() EXCLUSIVE_LOCKS_REQUIRED(::cs_main, !cs_cache);
 
 private:
-    void AddToCache(const Signals& signals, const CBlockIndex* const pindex);
+    void AddToCache(const Signals& signals, const CBlockIndex* const pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
 
     /**
      * This function returns list of signals available on previous block.
@@ -156,13 +157,13 @@ private:
      * until state won't be recovered.
      * NOTE: that some signals could expired between blocks.
      */
-    Signals GetForBlock(const CBlockIndex* const pindex);
+    Signals GetForBlock(const CBlockIndex* const pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
 
     /**
      * This function access to in-memory cache or to evo db but does not calculate anything
      * NOTE: that some signals could expired between blocks.
      */
-    std::optional<Signals> GetFromCache(const CBlockIndex* const pindex);
+    std::optional<Signals> GetFromCache(const CBlockIndex* const pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
 };
 
 std::optional<uint8_t> extractEHFSignal(const CTransaction& tx);

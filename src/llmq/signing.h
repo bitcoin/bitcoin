@@ -127,15 +127,15 @@ public:
     ~CRecoveredSigsDb();
 
     bool HasRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash) const;
-    bool HasRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id) const;
-    bool HasRecoveredSigForSession(const uint256& signHash) const;
-    bool HasRecoveredSigForHash(const uint256& hash) const;
+    bool HasRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id) const EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
+    bool HasRecoveredSigForSession(const uint256& signHash) const EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
+    bool HasRecoveredSigForHash(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
     bool GetRecoveredSigByHash(const uint256& hash, CRecoveredSig& ret) const;
     bool GetRecoveredSigById(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret) const;
-    void WriteRecoveredSig(const CRecoveredSig& recSig);
-    void TruncateRecoveredSig(Consensus::LLMQType llmqType, const uint256& id);
+    void WriteRecoveredSig(const CRecoveredSig& recSig) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
+    void TruncateRecoveredSig(Consensus::LLMQType llmqType, const uint256& id) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
 
-    void CleanupOldRecoveredSigs(int64_t maxAge);
+    void CleanupOldRecoveredSigs(int64_t maxAge) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
 
     // votes are removed when the recovered sig is written to the db
     bool HasVotedOnId(Consensus::LLMQType llmqType, const uint256& id) const;
@@ -146,7 +146,8 @@ public:
 
 private:
     bool ReadRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret) const;
-    void RemoveRecoveredSig(CDBBatch& batch, Consensus::LLMQType llmqType, const uint256& id, bool deleteHashKey, bool deleteTimeKey);
+    void RemoveRecoveredSig(CDBBatch& batch, Consensus::LLMQType llmqType, const uint256& id, bool deleteHashKey,
+                            bool deleteTimeKey) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
 };
 
 class CRecoveredSigsListener
@@ -182,14 +183,16 @@ public:
     CSigningManager(const CActiveMasternodeManager* const mn_activeman, const CChainState& chainstate,
                     const CQuorumManager& _qman, bool fMemory, bool fWipe);
 
-    bool AlreadyHave(const CInv& inv) const;
+    bool AlreadyHave(const CInv& inv) const EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
     bool GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret) const;
 
-    [[nodiscard]] MessageProcessingResult ProcessMessage(NodeId from, std::string_view msg_type, CDataStream& vRecv);
+    [[nodiscard]] MessageProcessingResult ProcessMessage(NodeId from, std::string_view msg_type, CDataStream& vRecv)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
 
     // This is called when a recovered signature was was reconstructed from another P2P message and is known to be valid
     // This is the case for example when a signature appears as part of InstantSend or ChainLocks
-    void PushReconstructedRecoveredSig(const std::shared_ptr<const CRecoveredSig>& recoveredSig);
+    void PushReconstructedRecoveredSig(const std::shared_ptr<const CRecoveredSig>& recoveredSig)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
 
     // This is called when a recovered signature can be safely removed from the DB. This is only safe when some other
     // mechanism prevents possible conflicts. As an example, ChainLocks prevent conflicts in confirmed TXs InstantSend votes
@@ -198,22 +201,26 @@ public:
     void TruncateRecoveredSig(Consensus::LLMQType llmqType, const uint256& id);
 
 private:
-    void CollectPendingRecoveredSigsToVerify(size_t maxUniqueSessions,
-            std::unordered_map<NodeId, std::list<std::shared_ptr<const CRecoveredSig>>>& retSigShares,
-            std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums);
-    void ProcessPendingReconstructedRecoveredSigs(PeerManager& peerman);
-    bool ProcessPendingRecoveredSigs(PeerManager& peerman); // called from the worker thread of CSigSharesManager
+    void CollectPendingRecoveredSigsToVerify(
+        size_t maxUniqueSessions, std::unordered_map<NodeId, std::list<std::shared_ptr<const CRecoveredSig>>>& retSigShares,
+        std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
+    void ProcessPendingReconstructedRecoveredSigs(PeerManager& peerman)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_pending, !cs_listeners);
+    bool ProcessPendingRecoveredSigs(PeerManager& peerman)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_pending, !cs_listeners); // called from the worker thread of CSigSharesManager
 public:
     // TODO - should not be public!
-    void ProcessRecoveredSig(const std::shared_ptr<const CRecoveredSig>& recoveredSig, PeerManager& peerman);
+    void ProcessRecoveredSig(const std::shared_ptr<const CRecoveredSig>& recoveredSig, PeerManager& peerman)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_pending, !cs_listeners);
 
 private:
     void Cleanup(); // called from the worker thread of CSigSharesManager
 
 public:
     // public interface
-    void RegisterRecoveredSigsListener(CRecoveredSigsListener* l);
-    void UnregisterRecoveredSigsListener(CRecoveredSigsListener* l);
+    void RegisterRecoveredSigsListener(CRecoveredSigsListener* l) EXCLUSIVE_LOCKS_REQUIRED(!cs_listeners);
+    void UnregisterRecoveredSigsListener(CRecoveredSigsListener* l) EXCLUSIVE_LOCKS_REQUIRED(!cs_listeners);
 
     bool AsyncSignIfMember(Consensus::LLMQType llmqType, CSigSharesManager& shareman, const uint256& id,
                            const uint256& msgHash, const uint256& quorumHash = uint256(), bool allowReSign = false,
@@ -229,7 +236,8 @@ public:
 private:
     std::thread workThread;
     CThreadInterrupt workInterrupt;
-    void WorkThreadMain(PeerManager& peerman);
+    void WorkThreadMain(PeerManager& peerman) EXCLUSIVE_LOCKS_REQUIRED(!cs_pending, !cs_listeners);
+    ;
 
 public:
     void StartWorkerThread(PeerManager& peerman);

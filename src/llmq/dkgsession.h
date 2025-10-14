@@ -357,30 +357,31 @@ public:
     void Contribute(CDKGPendingMessages& pendingMessages, PeerManager& peerman);
     void SendContributions(CDKGPendingMessages& pendingMessages, PeerManager& peerman);
     bool PreVerifyMessage(const CDKGContribution& qc, bool& retBan) const;
-    std::optional<CInv> ReceiveMessage(const CDKGContribution& qc);
+    std::optional<CInv> ReceiveMessage(const CDKGContribution& qc) EXCLUSIVE_LOCKS_REQUIRED(!invCs, !cs_pending);
     void VerifyPendingContributions() EXCLUSIVE_LOCKS_REQUIRED(cs_pending);
 
     // Phase 2: complaint
-    void VerifyAndComplain(CConnman& connman, CDKGPendingMessages& pendingMessages, PeerManager& peerman);
+    void VerifyAndComplain(CConnman& connman, CDKGPendingMessages& pendingMessages, PeerManager& peerman)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
     void VerifyConnectionAndMinProtoVersions(CConnman& connman) const;
     void SendComplaint(CDKGPendingMessages& pendingMessages, PeerManager& peerman);
     bool PreVerifyMessage(const CDKGComplaint& qc, bool& retBan) const;
-    std::optional<CInv> ReceiveMessage(const CDKGComplaint& qc);
+    std::optional<CInv> ReceiveMessage(const CDKGComplaint& qc) EXCLUSIVE_LOCKS_REQUIRED(!invCs);
 
     // Phase 3: justification
-    void VerifyAndJustify(CDKGPendingMessages& pendingMessages, PeerManager& peerman);
+    void VerifyAndJustify(CDKGPendingMessages& pendingMessages, PeerManager& peerman) EXCLUSIVE_LOCKS_REQUIRED(!invCs);
     void SendJustification(CDKGPendingMessages& pendingMessages, PeerManager& peerman, const std::set<uint256>& forMembers);
     bool PreVerifyMessage(const CDKGJustification& qj, bool& retBan) const;
-    std::optional<CInv> ReceiveMessage(const CDKGJustification& qj);
+    std::optional<CInv> ReceiveMessage(const CDKGJustification& qj) EXCLUSIVE_LOCKS_REQUIRED(!invCs);
 
     // Phase 4: commit
     void VerifyAndCommit(CDKGPendingMessages& pendingMessages, PeerManager& peerman);
     void SendCommitment(CDKGPendingMessages& pendingMessages, PeerManager& peerman);
     bool PreVerifyMessage(const CDKGPrematureCommitment& qc, bool& retBan) const;
-    std::optional<CInv> ReceiveMessage(const CDKGPrematureCommitment& qc);
+    std::optional<CInv> ReceiveMessage(const CDKGPrematureCommitment& qc) EXCLUSIVE_LOCKS_REQUIRED(!invCs);
 
     // Phase 5: aggregate/finalize
-    std::vector<CFinalCommitment> FinalizeCommitments();
+    std::vector<CFinalCommitment> FinalizeCommitments() EXCLUSIVE_LOCKS_REQUIRED(!invCs);
 
     // All Phases 5-in-1 for single-node-quorum
     CFinalCommitment FinalizeSingleCommitment();

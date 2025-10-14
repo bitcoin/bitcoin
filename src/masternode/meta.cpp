@@ -66,7 +66,7 @@ void CMasternodeMetaInfo::RemoveGovernanceObject(const uint256& nGovernanceObjec
     mapGovernanceObjectsVotedOn.erase(nGovernanceObjectHash);
 }
 
-CMasternodeMetaInfoPtr CMasternodeMetaMan::GetMetaInfo(const uint256& proTxHash, bool fCreate) EXCLUSIVE_LOCKS_REQUIRED(!cs)
+CMasternodeMetaInfoPtr CMasternodeMetaMan::GetMetaInfo(const uint256& proTxHash, bool fCreate)
 {
     LOCK(cs);
     auto it = metaInfos.find(proTxHash);
@@ -115,7 +115,7 @@ bool CMasternodeMetaMan::AddGovernanceVote(const uint256& proTxHash, const uint2
     return true;
 }
 
-void CMasternodeMetaMan::RemoveGovernanceObject(const uint256& nGovernanceObjectHash) EXCLUSIVE_LOCKS_REQUIRED(!cs)
+void CMasternodeMetaMan::RemoveGovernanceObject(const uint256& nGovernanceObjectHash)
 {
     LOCK(cs);
     for(const auto& p : metaInfos) {
@@ -123,20 +123,20 @@ void CMasternodeMetaMan::RemoveGovernanceObject(const uint256& nGovernanceObject
     }
 }
 
-std::vector<uint256> CMasternodeMetaMan::GetAndClearDirtyGovernanceObjectHashes() EXCLUSIVE_LOCKS_REQUIRED(!cs)
+std::vector<uint256> CMasternodeMetaMan::GetAndClearDirtyGovernanceObjectHashes()
 {
     std::vector<uint256> vecTmp;
     WITH_LOCK(cs, vecTmp.swap(vecDirtyGovernanceObjectHashes));
     return vecTmp;
 }
 
-bool CMasternodeMetaMan::AlreadyHavePlatformBan(const uint256& inv_hash) const EXCLUSIVE_LOCKS_REQUIRED(!cs)
+bool CMasternodeMetaMan::AlreadyHavePlatformBan(const uint256& inv_hash) const
 {
     LOCK(cs);
     return m_seen_platform_bans.exists(inv_hash);
 }
 
-std::optional<PlatformBanMessage> CMasternodeMetaMan::GetPlatformBan(const uint256& inv_hash) const EXCLUSIVE_LOCKS_REQUIRED(!cs)
+std::optional<PlatformBanMessage> CMasternodeMetaMan::GetPlatformBan(const uint256& inv_hash) const
 {
     LOCK(cs);
     PlatformBanMessage ret;
@@ -147,13 +147,13 @@ std::optional<PlatformBanMessage> CMasternodeMetaMan::GetPlatformBan(const uint2
     return ret;
 }
 
-void CMasternodeMetaMan::RememberPlatformBan(const uint256& inv_hash, PlatformBanMessage&& msg) EXCLUSIVE_LOCKS_REQUIRED(!cs)
+void CMasternodeMetaMan::RememberPlatformBan(const uint256& inv_hash, PlatformBanMessage&& msg)
 {
     LOCK(cs);
     m_seen_platform_bans.insert(inv_hash, std::move(msg));
 }
 
-std::string MasternodeMetaStore::ToString() const EXCLUSIVE_LOCKS_REQUIRED(!cs)
+std::string MasternodeMetaStore::ToString() const
 {
     LOCK(cs);
     return strprintf("Masternodes: meta infos object count: %d, nDsqCount: %d", metaInfos.size(), nDsqCount);

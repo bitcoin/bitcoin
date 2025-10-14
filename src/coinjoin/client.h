@@ -95,16 +95,16 @@ public:
         }
     }
 
-    void Add(const std::shared_ptr<wallet::CWallet>& wallet);
-    void DoMaintenance(CConnman& connman);
+    void Add(const std::shared_ptr<wallet::CWallet>& wallet) EXCLUSIVE_LOCKS_REQUIRED(!cs_wallet_manager_map);
+    void DoMaintenance(CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(!cs_wallet_manager_map);
 
-    void Remove(const std::string& name);
-    void Flush(const std::string& name);
+    void Remove(const std::string& name) EXCLUSIVE_LOCKS_REQUIRED(!cs_wallet_manager_map);
+    void Flush(const std::string& name) EXCLUSIVE_LOCKS_REQUIRED(!cs_wallet_manager_map);
 
-    CCoinJoinClientManager* Get(const std::string& name) const;
+    CCoinJoinClientManager* Get(const std::string& name) const EXCLUSIVE_LOCKS_REQUIRED(!cs_wallet_manager_map);
 
     template <typename Callable>
-    void ForEachCJClientMan(Callable&& func)
+    void ForEachCJClientMan(Callable&& func) EXCLUSIVE_LOCKS_REQUIRED(!cs_wallet_manager_map)
     {
         LOCK(cs_wallet_manager_map);
         for (auto&& [_, clientman] : m_wallet_manager_map) {
@@ -113,7 +113,7 @@ public:
     };
 
     template <typename Callable>
-    bool ForAnyCJClientMan(Callable&& func)
+    bool ForAnyCJClientMan(Callable&& func) EXCLUSIVE_LOCKS_REQUIRED(!cs_wallet_manager_map)
     {
         LOCK(cs_wallet_manager_map);
         return ranges::any_of(m_wallet_manager_map, [&](auto& pair) { return func(pair.second); });
@@ -251,9 +251,9 @@ public:
         m_mn_sync(mn_sync),
         m_is_masternode{is_masternode} {};
 
-    [[nodiscard]] MessageProcessingResult ProcessMessage(NodeId from, CConnman& connman, PeerManager& peerman, std::string_view msg_type,
-                                                         CDataStream& vRecv)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_vecqueue);
+    [[nodiscard]] MessageProcessingResult ProcessMessage(NodeId from, CConnman& connman, PeerManager& peerman,
+                                                         std::string_view msg_type, CDataStream& vRecv)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_vecqueue, !cs_ProcessDSQueue);
     void DoMaintenance();
 };
 

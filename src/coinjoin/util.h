@@ -117,7 +117,11 @@ public:
     /// Check if an amounts should be considered as dust
     bool IsDust(CAmount nAmount) const;
     /// Get the total number of added outputs
-    int CountOutputs() const { LOCK(cs_outputs); return vecOutputs.size(); }
+    int CountOutputs() const EXCLUSIVE_LOCKS_REQUIRED(!cs_outputs)
+    {
+        LOCK(cs_outputs);
+        return vecOutputs.size();
+    }
     /// Create and Commit the transaction to the wallet
     bool Commit(bilingual_str& strResult) EXCLUSIVE_LOCKS_REQUIRED(!cs_outputs);
     /// Convert to a string
