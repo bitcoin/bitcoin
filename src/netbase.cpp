@@ -951,10 +951,13 @@ CService MaybeFlipIPv6toCJDNS(const CService& service)
 CService GetBindAddress(const Sock& sock)
 {
     CService addr_bind;
-    struct sockaddr_storage sockaddr_bind;
-    socklen_t sockaddr_bind_len = sizeof(sockaddr_bind);
-    if (!sock.GetSockName((struct sockaddr*)&sockaddr_bind, &sockaddr_bind_len)) {
-        addr_bind.SetSockAddr((const struct sockaddr*)&sockaddr_bind, sockaddr_bind_len);
+    sockaddr_storage storage;
+    socklen_t len = sizeof(storage);
+
+    auto sa = reinterpret_cast<sockaddr*>(&storage);
+
+    if (sock.GetSockName(sa, &len) == 0) {
+        addr_bind.SetSockAddr(sa, len);
     } else {
         LogWarning("getsockname failed\n");
     }
