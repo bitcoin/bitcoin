@@ -1342,8 +1342,8 @@ public:
         std::vector<DepGraphIndex> ret;
         ret.reserve(m_transactions.Count());
         /** A heap with all chunks (by representative) that can currently be included, sorted by
-         *  chunk feerate. */
-        std::vector<TxIdx> ready_chunks;
+         *  chunk feerate and a random tie-breaker. */
+        std::vector<std::pair<TxIdx, uint64_t>> ready_chunks;
         /** Information about chunks:
          *  - The first value is only used for chunk representatives, and counts the number of
          *    unmet dependencies this chunk has on other chunks (not including dependencies within
@@ -1353,8 +1353,9 @@ public:
         std::vector<std::pair<TxIdx, TxIdx>> chunk_deps(m_tx_data.size(), {0, 0});
         /** The set of all chunk representatives. */
         SetType chunk_reps;
-        /** A list with all transactions within the current chunk that can be included. */
-        std::vector<TxIdx> ready_tx;
+        /** A heap with all transactions within the current chunk that can be included, sorted by
+         *  random value. */
+        std::vector<std::pair<uint64_t, TxIdx>> ready_tx;
         // Populate chunk_deps[c] with the number of {out-of-chunk dependencies, dependencies} the
         // child has.
         for (TxIdx chl_idx : m_transactions) {
@@ -1369,25 +1370,27 @@ public:
         }
         // Construct a heap with all chunks that have no out-of-chunk dependencies.
         /** Comparison function for the heap. */
-        auto chunk_cmp_fn = [&](TxIdx a, TxIdx b) noexcept {
-            auto& chunk_a = m_tx_data[a];
-            auto& chunk_b = m_tx_data[b];
-            Assume(chunk_a.chunk_rep == a);
-            Assume(chunk_b.chunk_rep == b);
+        auto chunk_cmp_fn = [&](const std::pair<TxIdx, uint64_t>& a, const std::pair<TxIdx, uint64_t>& b) noexcept {
+            auto& chunk_a = m_tx_data[a.first];
+            auto& chunk_b = m_tx_data[b.first];
+            Assume(chunk_a.chunk_rep == a.first);
+            Assume(chunk_b.chunk_rep == b.first);
             // First sort by chunk feerate.
             if (chunk_a.chunk_setinfo.feerate != chunk_b.chunk_setinfo.feerate) {
                 return chunk_a.chunk_setinfo.feerate < chunk_b.chunk_setinfo.feerate;
             }
-            // Tie-break by chunk representative.
-            return a < b;
+            // Tie-break randomly.
+            if (a.second != b.second) return a.second < b.second;
+            // Lastly, tie-break by chunk representative.
+            return a.first < b.first;
         };
         for (TxIdx chunk_rep : chunk_reps) {
-            if (chunk_deps[chunk_rep].first == 0) ready_chunks.push_back(chunk_rep);
+            if (chunk_deps[chunk_rep].first == 0) ready_chunks.emplace_back(chunk_rep, m_rng.rand64());
         }
         std::make_heap(ready_chunks.begin(), ready_chunks.end(), chunk_cmp_fn);
         // Pop chunks off the heap, highest-feerate ones first.
         while (!ready_chunks.empty()) {
-            auto chunk_rep = ready_chunks.front();
+            auto [chunk_rep, _rnd] = ready_chunks.front();
             std::pop_heap(ready_chunks.begin(), ready_chunks.end(), chunk_cmp_fn);
             ready_chunks.pop_back();
             Assume(m_tx_data[chunk_rep].chunk_rep == chunk_rep);
@@ -1396,15 +1399,18 @@ public:
             // Build heap of all includable transactions in chunk.
             for (TxIdx tx_idx : chunk_txn) {
                 if (chunk_deps[tx_idx].second == 0) {
-                    ready_tx.push_back(tx_idx);
+                    ready_tx.emplace_back(m_rng.rand64(), tx_idx);
                 }
             }
             Assume(!ready_tx.empty());
-            // Pick transactions from the ready queue, append them to linearization, and decrement
+            std::make_heap(ready_tx.begin(), ready_tx.end());
+            // Pop transactions from the heap, append them to linearization, and decrement
             // dependency counts.
             while (!ready_tx.empty()) {
-                auto tx_idx = ready_tx.back();
+                // Pop from heap.
+                auto [_rnd2, tx_idx] = ready_tx.front();
                 Assume(chunk_txn[tx_idx]);
+                std::pop_heap(ready_tx.begin(), ready_tx.end());
                 ready_tx.pop_back();
                 // Append to linearization.
                 ret.push_back(tx_idx);
@@ -1415,15 +1421,16 @@ public:
                     // Decrement tx dependency count.
                     Assume(chunk_deps[chl_idx].second > 0);
                     if (--chunk_deps[chl_idx].second == 0 && chunk_txn[chl_idx]) {
-                        // Child tx has no dependencies left, and is in this chunk. Add it to the tx queue.
-                        ready_tx.push_back(chl_idx);
+                        // Child tx has no dependencies left, and is in this chunk. Add it to the tx heap.
+                        ready_tx.emplace_back(m_rng.rand64(), chl_idx);
+                        std::push_heap(ready_tx.begin(), ready_tx.end());
                     }
                     // Decrement chunk dependency count if this is out-of-chunk dependency.
                     if (chl_data.chunk_rep != chunk_rep) {
                         Assume(chunk_deps[chl_data.chunk_rep].first > 0);
                         if (--chunk_deps[chl_data.chunk_rep].first == 0) {
                             // Child chunk has no dependencies left. Add it to the chunk heap.
-                            ready_chunks.push_back(chl_data.chunk_rep);
+                            ready_chunks.emplace_back(chl_data.chunk_rep, m_rng.rand64());
                             std::push_heap(ready_chunks.begin(), ready_chunks.end(), chunk_cmp_fn);
                         }
                     }
