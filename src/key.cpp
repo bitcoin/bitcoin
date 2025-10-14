@@ -13,6 +13,7 @@
 #include <secp256k1.h>
 #include <secp256k1_ellswift.h>
 #include <secp256k1_extrakeys.h>
+#include <secp256k1_musig.h>
 #include <secp256k1_recovery.h>
 #include <secp256k1_schnorrsig.h>
 
@@ -347,6 +348,128 @@ ECDHSecret CKey::ComputeBIP324ECDHSecret(const EllSwiftPubKey& their_ellswift, c
 KeyPair CKey::ComputeKeyPair(const uint256* merkle_root) const
 {
     return KeyPair(*this, merkle_root);
+}
+
+std::vector<uint8_t> CKey::CreateMuSig2Nonce(MuSig2SecNonce& secnonce, const uint256& sighash, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys)
+{
+    // Get the keyagg cache and aggregate pubkey
+    secp256k1_musig_keyagg_cache keyagg_cache;
+    if (!MuSig2AggregatePubkeys(pubkeys, keyagg_cache, aggregate_pubkey)) return {};
+
+    // Parse participant pubkey
+    CPubKey our_pubkey = GetPubKey();
+    secp256k1_pubkey pubkey;
+    if (!secp256k1_ec_pubkey_parse(secp256k1_context_static, &pubkey, our_pubkey.data(), our_pubkey.size())) {
+        return {};
+    }
+
+    // Generate randomness for nonce
+    uint256 rand;
+    GetStrongRandBytes(rand);
+
+    // Generate nonce
+    secp256k1_musig_pubnonce pubnonce;
+    if (!secp256k1_musig_nonce_gen(secp256k1_context_sign, secnonce.Get(), &pubnonce, rand.data(), UCharCast(begin()), &pubkey, sighash.data(), &keyagg_cache, nullptr)) {
+        return {};
+    }
+
+    // Serialize pubnonce
+    std::vector<uint8_t> out;
+    out.resize(MUSIG2_PUBNONCE_SIZE);
+    if (!secp256k1_musig_pubnonce_serialize(secp256k1_context_static, out.data(), &pubnonce)) {
+        return {};
+    }
+
+    return out;
+}
+
+std::optional<uint256> CKey::CreateMuSig2PartialSig(const uint256& sighash, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys, const std::map<CPubKey, std::vector<uint8_t>>& pubnonces, MuSig2SecNonce& secnonce, const std::vector<std::pair<uint256, bool>>& tweaks)
+{
+    secp256k1_keypair keypair;
+    if (!secp256k1_keypair_create(secp256k1_context_sign, &keypair, UCharCast(begin()))) return std::nullopt;
+
+    // Get the keyagg cache and aggregate pubkey
+    secp256k1_musig_keyagg_cache keyagg_cache;
+    if (!MuSig2AggregatePubkeys(pubkeys, keyagg_cache, aggregate_pubkey)) return std::nullopt;
+
+    // Check that there are enough pubnonces
+    if (pubnonces.size() != pubkeys.size()) return std::nullopt;
+
+    // Parse the pubnonces
+    std::vector<std::pair<secp256k1_pubkey, secp256k1_musig_pubnonce>> signers_data;
+    std::vector<const secp256k1_musig_pubnonce*> pubnonce_ptrs;
+    std::optional<size_t> our_pubkey_idx;
+    CPubKey our_pubkey = GetPubKey();
+    for (const CPubKey& part_pk : pubkeys) {
+        const auto& pn_it = pubnonces.find(part_pk);
+        if (pn_it == pubnonces.end()) return std::nullopt;
+        const std::vector<uint8_t> pubnonce = pn_it->second;
+        if (pubnonce.size() != MUSIG2_PUBNONCE_SIZE) return std::nullopt;
+        if (part_pk == our_pubkey) {
+            our_pubkey_idx = signers_data.size();
+        }
+
+        auto& [secp_pk, secp_pn] = signers_data.emplace_back();
+
+        if (!secp256k1_ec_pubkey_parse(secp256k1_context_static, &secp_pk, part_pk.data(), part_pk.size())) {
+            return std::nullopt;
+        }
+
+        if (!secp256k1_musig_pubnonce_parse(secp256k1_context_static, &secp_pn, pubnonce.data())) {
+            return std::nullopt;
+        }
+    }
+    if (our_pubkey_idx == std::nullopt) {
+        return std::nullopt;
+    }
+    pubnonce_ptrs.reserve(signers_data.size());
+    for (auto& [_, pn] : signers_data) {
+        pubnonce_ptrs.push_back(&pn);
+    }
+
+    // Aggregate nonces
+    secp256k1_musig_aggnonce aggnonce;
+    if (!secp256k1_musig_nonce_agg(secp256k1_context_static, &aggnonce, pubnonce_ptrs.data(), pubnonce_ptrs.size())) {
+        return std::nullopt;
+    }
+
+    // Apply tweaks
+    for (const auto& [tweak, xonly] : tweaks) {
+        if (xonly) {
+            if (!secp256k1_musig_pubkey_xonly_tweak_add(secp256k1_context_static, nullptr, &keyagg_cache, tweak.data())) {
+                return std::nullopt;
+            }
+        } else if (!secp256k1_musig_pubkey_ec_tweak_add(secp256k1_context_static, nullptr, &keyagg_cache, tweak.data())) {
+            return std::nullopt;
+        }
+    }
+
+    // Create musig_session
+    secp256k1_musig_session session;
+    if (!secp256k1_musig_nonce_process(secp256k1_context_static, &session, &aggnonce, sighash.data(), &keyagg_cache)) {
+        return std::nullopt;
+    }
+
+    // Create partial signature
+    secp256k1_musig_partial_sig psig;
+    if (!secp256k1_musig_partial_sign(secp256k1_context_static, &psig, secnonce.Get(), &keypair, &keyagg_cache, &session)) {
+        return std::nullopt;
+    }
+    // The secnonce must be deleted after signing to prevent nonce reuse.
+    secnonce.Invalidate();
+
+    // Verify partial signature
+    if (!secp256k1_musig_partial_sig_verify(secp256k1_context_static, &psig, &(signers_data.at(*our_pubkey_idx).second), &(signers_data.at(*our_pubkey_idx).first), &keyagg_cache, &session)) {
+        return std::nullopt;
+    }
+
+    // Serialize
+    uint256 sig;
+    if (!secp256k1_musig_partial_sig_serialize(secp256k1_context_static, sig.data(), &psig)) {
+        return std::nullopt;
+    }
+
+    return sig;
 }
 
 CKey GenerateRandomKey(bool compressed) noexcept

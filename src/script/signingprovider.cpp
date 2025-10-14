@@ -58,6 +58,26 @@ std::vector<CPubKey> HidingSigningProvider::GetMuSig2ParticipantPubkeys(const CP
     return m_provider->GetMuSig2ParticipantPubkeys(pubkey);
 }
 
+std::map<CPubKey, std::vector<CPubKey>> HidingSigningProvider::GetAllMuSig2ParticipantPubkeys() const
+{
+    return m_provider->GetAllMuSig2ParticipantPubkeys();
+}
+
+void HidingSigningProvider::SetMuSig2SecNonce(const uint256& id, MuSig2SecNonce&& nonce) const
+{
+    m_provider->SetMuSig2SecNonce(id, std::move(nonce));
+}
+
+std::optional<std::reference_wrapper<MuSig2SecNonce>> HidingSigningProvider::GetMuSig2SecNonce(const uint256& session_id) const
+{
+    return m_provider->GetMuSig2SecNonce(session_id);
+}
+
+void HidingSigningProvider::DeleteMuSig2Session(const uint256& session_id) const
+{
+    m_provider->DeleteMuSig2Session(session_id);
+}
+
 bool FlatSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const { return LookupHelper(scripts, scriptid, script); }
 bool FlatSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const { return LookupHelper(pubkeys, keyid, pubkey); }
 bool FlatSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const
@@ -94,6 +114,31 @@ std::vector<CPubKey> FlatSigningProvider::GetMuSig2ParticipantPubkeys(const CPub
     return participant_pubkeys;
 }
 
+std::map<CPubKey, std::vector<CPubKey>> FlatSigningProvider::GetAllMuSig2ParticipantPubkeys() const
+{
+    return aggregate_pubkeys;
+}
+
+void FlatSigningProvider::SetMuSig2SecNonce(const uint256& session_id, MuSig2SecNonce&& nonce) const
+{
+    if (!Assume(musig2_secnonces)) return;
+    musig2_secnonces->emplace(session_id, std::move(nonce));
+}
+
+std::optional<std::reference_wrapper<MuSig2SecNonce>> FlatSigningProvider::GetMuSig2SecNonce(const uint256& session_id) const
+{
+    if (!Assume(musig2_secnonces)) return std::nullopt;
+    const auto& it = musig2_secnonces->find(session_id);
+    if (it == musig2_secnonces->end()) return std::nullopt;
+    return it->second;
+}
+
+void FlatSigningProvider::DeleteMuSig2Session(const uint256& session_id) const
+{
+    if (!Assume(musig2_secnonces)) return;
+    musig2_secnonces->erase(session_id);
+}
+
 FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
 {
     scripts.merge(b.scripts);
@@ -102,6 +147,8 @@ FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
     origins.merge(b.origins);
     tr_trees.merge(b.tr_trees);
     aggregate_pubkeys.merge(b.aggregate_pubkeys);
+    // We shouldn't be merging 2 different sessions, just overwrite with b's sessions.
+    if (!musig2_secnonces) musig2_secnonces = b.musig2_secnonces;
     return *this;
 }
 
