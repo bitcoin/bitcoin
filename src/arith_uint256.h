@@ -202,10 +202,9 @@ public:
     friend inline std::strong_ordering operator<=>(const base_uint& a, const base_uint& b) {
         /** Numeric ordering (unlike \ref base_blob::Compare) */
         for (int i{WIDTH - 1}; i >= 0; --i) {
-            if (a.pn[i] < b.pn[i])
-                return std::strong_ordering::less;
-            if (a.pn[i] > b.pn[i])
-                return std::strong_ordering::greater;
+            if (auto cmp{a.pn[i] <=> b.pn[i]}; std::is_neq(cmp)) {
+                return cmp;
+            }
         }
         return std::strong_ordering::equal;
     }
