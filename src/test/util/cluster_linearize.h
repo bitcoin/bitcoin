@@ -402,7 +402,7 @@ inline uint64_t MaxOptimalLinearizationIters(DepGraphIndex cluster_count)
     // *some* reasonable cost bound, optimal linearizations are always found.
     static constexpr uint64_t ITERS[65] = {
         0,
-        0, 1, 3, 6, 11, 21, 22, 29,
+        0, 2, 4, 7, 11, 21, 22, 29,
         36, 37, 41, 48, 48, 54, 64, 67,
         74, 76, 81, 86, 96, 98, 107, 113,
         120, 120, 122, 146, 134, 140, 161, 174,
