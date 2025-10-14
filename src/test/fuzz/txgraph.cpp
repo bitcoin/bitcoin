@@ -747,7 +747,7 @@ FUZZ_TARGET(txgraph)
                     }
                     // Compute how many iterations would be needed to make everything optimal.
                     for (auto component : sims[level].GetComponents()) {
-                        auto iters_opt_this_cluster = MaxOptimalLinearizationIters(component.Count());
+                        auto iters_opt_this_cluster = MaxOptimalLinearizationCost(component.Count());
                         if (iters_opt_this_cluster > acceptable_iters) {
                             // If the number of iterations required to linearize this cluster
                             // optimally exceeds acceptable_iters, DoWork() may process it in two
