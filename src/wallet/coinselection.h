@@ -446,11 +446,16 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
 
 util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, CAmount change_target, int max_selection_weight);
 
-/** Select coins by Single Random Draw. OutputGroups are selected randomly from the eligible
- * outputs until the target is satisfied
+/** Select coins by Single Random Draw (SRD). SRD selects eligible OutputGroups from a shuffled
+ * ordering until the effective value of the input set suffices to create the recipient outputs and a
+ * change output with an amount of at least CHANGE_LOWER. While the maximum selection
+ * weight is exceeded during selection, the OutputGroup with the lowest effective value is dropped
+ * from the selection before additional OutputGroups are selected. Due to this greedy approach,
+ * SRD can fail to discover possible solutions in pathological cases.
  *
  * @param[in]  utxo_pool    The positive effective value OutputGroups eligible for selection
  * @param[in]  target_value The target value to select for
+ * @param[in]  change_fee The cost of adding the change output to the transaction at the transaction’s feerate.
  * @param[in]  rng The randomness source to shuffle coins
  * @param[in]  max_selection_weight The maximum allowed weight for a selection result to be valid
  * @returns If successful, a valid SelectionResult, otherwise, util::Error
