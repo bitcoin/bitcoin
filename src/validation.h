@@ -613,6 +613,9 @@ public:
     //! @see CChain, CBlockIndex.
     CChain m_chain;
 
+    //! Tip of the chain at the last time the chainstate was flushed.
+    const CBlockIndex* m_last_flushed_block GUARDED_BY(::cs_main){nullptr};
+
     /**
      * The blockhash which is the base of the snapshot this chainstate was created from.
      *
@@ -626,6 +629,12 @@ public:
      * nullptr if this chainstate was not created from a snapshot.
      */
     const CBlockIndex* SnapshotBase() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    const CBlockIndex* LastFlushedBlock() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    {
+        AssertLockHeld(::cs_main);
+        return m_last_flushed_block;
+    }
 
     /**
      * The set of all CBlockIndex entries that have as much work as our current
