@@ -240,6 +240,15 @@ void BaseIndex::Sync()
     if (m_state == State::SYNCING) {
         auto last_log_time{NodeClock::now()};
         auto last_locator_write_time{last_log_time};
+        // Last block in the chain syncing to which is known to be flushed.
+        const CBlockIndex *last_flushed{nullptr};
+        // Return whether or not it is safe to call Commit(). It may not safe to
+        // commit the index if the index best block is ahead of the last block
+        // flushed to disk, because if the node process doesn't shut down
+        // cleanly, and then is restarted, the node may not recognize the index
+        // best block, and it may be impossible to rewind the index to a block
+        // that is recognized because no undo data is saved either.
+        auto should_commit = [&]{ return pindex && last_flushed && last_flushed->GetAncestor(pindex->nHeight) == pindex; };
         while (true) {
             if (m_interrupt) {
                 LogInfo("%s: m_interrupt set; exiting ThreadSync", GetName());
@@ -248,17 +257,19 @@ void BaseIndex::Sync()
                 // No need to handle errors in Commit. If it fails, the error will be already be
                 // logged. The best way to recover is to continue, as index cannot be corrupted by
                 // a missed commit to disk for an advanced index state.
-                Commit();
+                if (should_commit()) Commit();
                 return;
             }
 
-            const CBlockIndex* pindex_next = WITH_LOCK(cs_main, return NextSyncBlock(pindex, m_chainstate->m_chain));
+            const CBlockIndex* pindex_next = WITH_LOCK(cs_main,
+                last_flushed = m_chainstate->LastFlushedBlock();
+                return NextSyncBlock(pindex, m_chainstate->m_chain));
             // If pindex_next is null, it means pindex is the chain tip, so
             // commit data indexed so far.
             if (!pindex_next) {
                 SetBestBlockIndex(pindex);
                 // No need to handle errors in Commit. See rationale above.
-                Commit();
+                if (should_commit()) Commit();
 
                 // After committing, if pindex is still the active chain tip,
                 // background sync is finished and we can switch to notification-
@@ -294,11 +305,11 @@ void BaseIndex::Sync()
                 last_log_time = current_time;
             }
 
-            if (current_time - last_locator_write_time >= SYNC_LOCATOR_WRITE_INTERVAL) {
+            if (current_time - last_locator_write_time >= SYNC_LOCATOR_WRITE_INTERVAL || pindex == last_flushed) {
                 SetBestBlockIndex(pindex);
                 last_locator_write_time = current_time;
                 // No need to handle errors in Commit. See rationale above.
-                Commit();
+                if (should_commit()) Commit();
             }
         }
     }

@@ -614,9 +614,19 @@ public:
         return m_coins_views && m_coins_views->m_cacheview;
     }
 
+    //! @returns tip of the chain at the last time the chainstate was flushed.
+    const CBlockIndex* LastFlushedBlock() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    {
+        AssertLockHeld(::cs_main);
+        return m_last_flushed_block;
+    }
+
     //! The current chain of blockheaders we consult and build on.
     //! @see CChain, CBlockIndex.
     CChain m_chain;
+
+    //! Tip of the chain at the last time the chainstate was flushed.
+    const CBlockIndex* m_last_flushed_block GUARDED_BY(::cs_main){nullptr};
 
     //! Assumeutxo state indicating whether all blocks in the chain were
     //! validated, or if the chainstate is based on an assumeutxo snapshot and
