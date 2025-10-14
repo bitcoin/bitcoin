@@ -36,3 +36,8 @@ Bitcoin Core requires one of the following compilers.
 | [SQLite](../depends/packages/sqlite.mk) (wallet) | [link](https://sqlite.org) | [3.38.5](https://github.com/bitcoin/bitcoin/pull/25378) | [3.7.17](https://github.com/bitcoin/bitcoin/pull/19077) | No |
 | Python (scripts, tests) | [link](https://www.python.org) | N/A | [3.10](https://github.com/bitcoin/bitcoin/pull/30527) | No |
 | [systemtap](../depends/packages/systemtap.mk) ([tracing](tracing.md)) | [link](https://sourceware.org/systemtap/) | [4.8](https://github.com/bitcoin/bitcoin/pull/26945)| N/A | No |
+| [capnproto](../depends/packages/capnp.mk) ([multiprocess](multiprocess.md)) | [link](https://capnproto.org/) | [1.2.0](https://github.com/bitcoin/bitcoin/pull/32760)| N/A | No |
+| [libmultiprocess*](../depends/packages/libmultiprocess.mk) ([multiprocess](multiprocess.md)) | [link](https://github.com/bitcoin-core/libmultiprocess) | [5.0](https://github.com/bitcoin-core/libmultiprocess/releases/tag/v5.0)| N/A | No |
+
+\* Note that libmultiprocess v5.0 is the **latest** version that will work with Bitcoin Core v29.x due to numerous updates since [PR#164](https://github.com/bitcoin-core/libmultiprocess/pull/164) which will not be backported to this branch.
+Users providing libmultiprocess themselves (i.e. not via depends) should not build any later version or commit than this.
