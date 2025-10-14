@@ -1020,6 +1020,9 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
 BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
 {
+    TxValidationState state;
+    const int dummy_height{0};
+    CAmount dummy_fee;
     CCoinsViewCache coins{&CoinsViewEmpty::Get()};
     CKey key;
     key.MakeNewKey(true);
@@ -1050,7 +1053,8 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
 
     // 2490 sigops is below the limit.
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(tx_max_sigops), coins), 2490);
-    BOOST_CHECK(::ValidateInputsStandardness(CTransaction(tx_max_sigops), coins).IsValid());
+    BOOST_CHECK(Consensus::CheckTxInputs(CTransaction(tx_max_sigops), state, coins, dummy_height, dummy_fee, /*enforce_bip54=*/true));
+    BOOST_CHECK(state.IsValid());
 
     // Adding one more input will bump this to 2505, hitting the limit.
     tx_create.vout.emplace_back(424242, max_sigops_p2sh);
@@ -1063,15 +1067,13 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
     BOOST_CHECK_GT((p2sh_inputs_count + 1) * MAX_P2SH_SIGOPS, MAX_TX_BIP54_SIGOPS);
     auto legacy_sigops_count = GetP2SHSigOpCount(CTransaction(tx_max_sigops), coins);
     BOOST_CHECK_EQUAL(legacy_sigops_count, 2505);
-    std::string reject_reason("bad-txns-nonstandard-inputs");
-    std::string sigop_limit_reject_debug_message("non-witness sigops exceed bip54 limit");
-    {
-        auto validation_state = ValidateInputsStandardness(CTransaction(tx_max_sigops), coins);
-        BOOST_CHECK(validation_state.IsInvalid());
-        BOOST_CHECK_EQUAL(validation_state.GetRejectReason(), reject_reason);
-        BOOST_CHECK_EQUAL(validation_state.GetDebugMessage(), sigop_limit_reject_debug_message);
-    }
-
+    BOOST_CHECK(!Consensus::CheckTxInputs(CTransaction(tx_max_sigops), state, coins, dummy_height, dummy_fee, /*enforce_bip54=*/true));
+    BOOST_CHECK(state.IsInvalid());
+    std::string reject_reason("bad-txns-legacy-sigops");
+    std::string sigop_limit_reject_debug_message("too many legacy sigops (BIP54)");
+    BOOST_CHECK_EQUAL(state.GetRejectReason(), reject_reason);
+    BOOST_CHECK_EQUAL(state.GetDebugMessage(), sigop_limit_reject_debug_message);
+    state = TxValidationState{};
 
     // Now, check the limit can be reached with regular P2PK outputs too. Use a separate
     // preparation transaction, to demonstrate spending coins from a single tx is irrelevant.
@@ -1090,7 +1092,8 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
 
     // The transaction now contains exactly 2500 sigops, the check should pass.
     BOOST_CHECK_EQUAL(p2sh_inputs_count * MAX_P2SH_SIGOPS + p2pk_inputs_count * 1, MAX_TX_BIP54_SIGOPS);
-    BOOST_CHECK(::ValidateInputsStandardness(CTransaction(tx_max_sigops), coins).IsValid());
+    BOOST_CHECK(Consensus::CheckTxInputs(CTransaction(tx_max_sigops), state, coins, dummy_height, dummy_fee, /*enforce_bip54=*/true));
+    BOOST_CHECK(state.IsValid());
 
     // Now, add some Segwit inputs. We add one for each defined Segwit output type. The limit
     // is exclusively on non-witness sigops and therefore those should not be counted.
@@ -1106,7 +1109,8 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
 
     // The transaction now still contains exactly 2500 sigops, the check should pass.
     AddCoins(coins, CTransaction(tx_create_segwit), 0, false);
-    BOOST_REQUIRE(::ValidateInputsStandardness(CTransaction(tx_max_sigops), coins).IsValid());
+    BOOST_CHECK(Consensus::CheckTxInputs(CTransaction(tx_max_sigops), state, coins, dummy_height, dummy_fee, /*enforce_bip54=*/true));
+    BOOST_CHECK(state.IsValid());
 
     // Add one more P2PK input. We'll reach the limit.
     tx_create_p2pk.vout.emplace_back(212121, p2pk_script);
@@ -1119,12 +1123,10 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
     AddCoins(coins, CTransaction(tx_create_p2pk), 0, false);
     auto legacy_sigop_count_p2pk = p2sh_inputs_count * MAX_P2SH_SIGOPS + p2pk_inputs_count * 1;
     BOOST_CHECK_GT(legacy_sigop_count_p2pk, MAX_TX_BIP54_SIGOPS);
-    {
-        auto validation_state = ValidateInputsStandardness(CTransaction(tx_max_sigops), coins);
-        BOOST_CHECK(validation_state.IsInvalid());
-        BOOST_CHECK_EQUAL(validation_state.GetRejectReason(), reject_reason);
-        BOOST_CHECK_EQUAL(validation_state.GetDebugMessage(), sigop_limit_reject_debug_message);
-    }
+    BOOST_CHECK(!Consensus::CheckTxInputs(CTransaction(tx_max_sigops), state, coins, dummy_height, dummy_fee, /*enforce_bip54=*/true));
+    BOOST_CHECK(state.IsInvalid());
+    BOOST_CHECK_EQUAL(state.GetRejectReason(), reject_reason);
+    BOOST_CHECK_EQUAL(state.GetDebugMessage(), sigop_limit_reject_debug_message);
 }
 
 BOOST_AUTO_TEST_CASE(checktxinputs_invalid_transactions_test)
@@ -1141,7 +1143,7 @@ BOOST_AUTO_TEST_CASE(checktxinputs_invalid_transactions_test)
 
         TxValidationState state;
         CAmount txfee{0};
-        BOOST_CHECK(!Consensus::CheckTxInputs(CTransaction{mtx}, state, inputs, spend_height, txfee));
+        BOOST_CHECK(!Consensus::CheckTxInputs(CTransaction{mtx}, state, inputs, spend_height, txfee, /*enforce_bip54=*/true));
         BOOST_CHECK(state.IsInvalid());
         BOOST_CHECK_EQUAL(state.GetResult(), expected_result);
         BOOST_CHECK_EQUAL(state.GetRejectReason(), expected_reason);

@@ -187,12 +187,16 @@ bool Consensus::CheckSigopsBIP54(const CTransaction& tx, const CCoinsViewCache& 
     return true;
 }
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee)
+bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, bool enforce_bip54)
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
         return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-txns-inputs-missingorspent",
                          strprintf("%s: inputs missing/spent", __func__));
+    }
+
+    if (enforce_bip54 && !Consensus::CheckSigopsBIP54(tx, inputs)) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-legacy-sigops", "too many legacy sigops (BIP54)");
     }
 
     CAmount nValueIn = 0;
