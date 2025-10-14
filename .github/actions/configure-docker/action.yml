@@ -22,8 +22,12 @@ runs:
       uses: actions/github-script@v6
       with:
         script: |
-          core.exportVariable('ACTIONS_CACHE_URL', process.env['ACTIONS_CACHE_URL'])
-          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env['ACTIONS_RUNTIME_TOKEN'])
+          Object.keys(process.env).forEach(function (key) {
+            if (key.startsWith('ACTIONS_')) {
+              core.info(`Exporting ${key}`);
+              core.exportVariable(key, process.env[key]);
+            }
+          });
 
     - name: Construct docker build cache args
       shell: bash
