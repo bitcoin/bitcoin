@@ -451,6 +451,7 @@ util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, c
  *
  * @param[in]  utxo_pool    The positive effective value OutputGroups eligible for selection
  * @param[in]  target_value The target value to select for
+ * @param[in]  change_fee The amount added to CHANGE_LOWER which ensures a non-dust change output will be created.
  * @param[in]  rng The randomness source to shuffle coins
  * @param[in]  max_selection_weight The maximum allowed weight for a selection result to be valid
  * @returns If successful, a valid SelectionResult, otherwise, util::Error
