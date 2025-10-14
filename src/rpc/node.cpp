@@ -19,6 +19,7 @@
 #include <interfaces/ipc.h>
 #include <key_io.h>
 #include <net.h>
+#include <net_processing.h>
 #include <node/context.h>
 #include <rpc/index_util.h>
 #include <rpc/server.h>
@@ -220,14 +221,15 @@ static RPCHelpMan sporkupdate()
     }
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
-    PeerManager& peerman = EnsurePeerman(node);
     CHECK_NONFATAL(node.sporkman);
 
     // SPORK VALUE
     int64_t nValue = request.params[1].getInt<int64_t>();
 
-    // broadcast new spork
-    if (node.sporkman->UpdateSpork(peerman, nSporkID, nValue)) {
+    auto inv{node.sporkman->UpdateSpork(nSporkID, nValue)};
+    if (inv.has_value()) {
+        PeerManager& peerman = EnsurePeerman(node);
+        peerman.RelayInv(inv.value());
         return "success";
     }
 

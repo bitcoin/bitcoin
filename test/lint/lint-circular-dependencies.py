@@ -67,7 +67,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     "llmq/signing_shares -> net_processing -> llmq/signing_shares",
     "masternode/payments -> validation -> masternode/payments",
     "net -> netmessagemaker -> net",
-    "net_processing -> spork -> net_processing",
     "netaddress -> netbase -> netaddress",
     "qt/appearancewidget -> qt/guiutil -> qt/appearancewidget",
     "qt/bitcoinaddressvalidator -> qt/guiutil -> qt/bitcoinaddressvalidator",
