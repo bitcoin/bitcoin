@@ -872,6 +872,9 @@ FUZZ_TARGET(clusterlin_sfl)
     const bool load_linearization = flags & 8;
     /** Whether to load a topological input linearization into SFL state. */
     const bool load_topological = load_linearization && (flags & 16);
+    /** Whether to do any minimization steps to the SFL state (only if state is optimal by
+     *  then). */
+    const bool try_minimize = flags & 32;
 
     //
     // Construct the depgraph and SFL state for it.
@@ -918,6 +921,25 @@ FUZZ_TARGET(clusterlin_sfl)
     }
 
     //
+    // Perform minimization steps, if selected.
+    //
+    bool is_minimal = false;
+    if (is_optimal && try_minimize) {
+        uint32_t minimize_steps{1};
+        try {
+            reader >> VARINT(minimize_steps);
+        } catch (const std::ios_base::failure&) {}
+        sfl.StartMinimizing();
+        while (minimize_steps > 0) {
+            --minimize_steps;
+            if (!sfl.MinimizeStep()) {
+                is_minimal = true;
+                break;
+            }
+        }
+    }
+
+    //
     // Sanity check the result.
     //
     sfl.SanityCheck(depgraph);
@@ -947,6 +969,11 @@ FUZZ_TARGET(clusterlin_sfl)
                 auto cmp_chunks = ChunkLinearization(depgraph, cmp_lin);
                 auto cmp = CompareChunks(chunks, cmp_chunks);
                 assert(cmp >= 0);
+                // If we're minimal, then if the diagrams coincide, the number of chunks cannot be
+                // lower in the computed linearization than the read linearization.
+                if (cmp == 0 && is_minimal) {
+                    assert(chunks.size() >= cmp_chunks.size());
+                }
             }
         }
     }
@@ -958,6 +985,7 @@ FUZZ_TARGET(clusterlin_sfl)
         // This protects against a potential bug that results in optimality never being reached
         // anymore, and thus no quality checks in the conditional above are performed anymore.
         assert(is_optimal);
+        assert(is_minimal);
     }
 }
 
@@ -1022,12 +1050,9 @@ FUZZ_TARGET(clusterlin_linearize)
         // SimpleLinearize is broken).
         if (simple_optimal) assert(cmp == 0);
 
-        // Temporarily disabled, as Linearize() currently does not guarantee minimal chunks, even
-        // when it reports an optimal result. This will be re-introduced in a later commit.
-        //
-        // // If simple_chunking is diagram-optimal, it cannot have more chunks than chunking (as
-        // // chunking is claimed to be optimal, which implies minimal chunks).
-        // if (cmp == 0) assert(chunking.size() >= simple_chunking.size());
+        // If simple_chunking is diagram-optimal, it cannot have more chunks than chunking (as
+        // chunking is claimed to be optimal, which implies minimal chunks).
+        if (cmp == 0) assert(chunking.size() >= simple_chunking.size());
 
         // Compare with a linearization read from the fuzz input.
         auto read = ReadLinearization(depgraph, reader);
