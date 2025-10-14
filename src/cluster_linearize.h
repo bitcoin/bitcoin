@@ -464,11 +464,11 @@ std::vector<FeeFrac> ChunkLinearization(const DepGraph<SetType>& depgraph, std::
 /** Class to represent the internal state of the spanning-forest linearization (SFL) algorithm.
  *
  * At all times, each dependency is marked as either "active" or "inactive". The subset of active
- * dependencies is the state of the SFL algorithm. The implementation maintains several other
- * values to speed up operations, but everything is ultimately a function of what that subset of
- * active dependencies is.
+ * dependencies is the state of the SFL algorithm. The implementation does not actually store
+ * whether a given dependency is active or not, but it is implicit in other data structures. Still,
+ * everything is ultimately a function of what that subset of active dependencies is.
  *
- * Given such a subset, define a chunk as the set of transactions that are connected through active
+ * Given that set, define a chunk as the set of transactions that are connected through active
  * dependencies (ignoring their parent/child direction). Thus, every state implies a particular
  * partitioning of the graph into chunks (including potential singletons). In the extreme, each
  * transaction may be in its own chunk, or in the other extreme all transactions may form a single
@@ -650,8 +650,6 @@ private:
 
     /** Structure with information about a single dependency. */
     struct DepData {
-        /** Whether this dependency is active. */
-        bool active;
         /** What the parent and child transactions are. Immutable after construction. */
         TxIdx parent, child;
         /** Index into the parent's TxData::child_deps where this dependency appears. */
@@ -693,7 +691,6 @@ private:
             for (auto dep_idx : active_child_deps) {
                 auto& dep_entry = m_dep_data[dep_idx];
                 Assume(dep_entry.parent == tx_idx);
-                Assume(dep_entry.active);
                 // If this dependency's top_setinfo contains query, update it to add/remove
                 // dep_change.
                 if (dep_entry.top_setinfo.transactions[query]) {
@@ -720,7 +717,6 @@ private:
     TxIdx Activate(DepIdx dep_idx) noexcept
     {
         auto& dep_data = m_dep_data[dep_idx];
-        Assume(!dep_data.active);
         auto& child_tx_data = m_tx_data[dep_data.child];
         auto& parent_tx_data = m_tx_data[dep_data.parent];
         // Make dep_idx the first inactive dependency in the parent's list of child deps.
@@ -764,7 +760,6 @@ private:
         UpdateChunk<false>(/*chunk=*/bottom_part.transactions, /*query=*/dep_data.child,
                            /*chunk_rep=*/top_rep, /*dep_change=*/top_part);
         // Make active.
-        dep_data.active = true;
         dep_data.top_setinfo = top_part;
         parent_tx_data.child_deps_active += 1;
         Assume(parent_tx_data.child_deps_active <= parent_tx_data.child_deps_total);
@@ -775,12 +770,10 @@ private:
     void Deactivate(DepIdx dep_idx) noexcept
     {
         auto& dep_data = m_dep_data[dep_idx];
-        Assume(dep_data.active);
         auto& parent_tx_data = m_tx_data[dep_data.parent];
         // Make dep_idx the last active dependency in the parent's list of child deps.
         SwapChildDeps(parent_tx_data, dep_data.child_pos, parent_tx_data.child_deps_active - 1);
         // Make inactive.
-        dep_data.active = false;
         parent_tx_data.child_deps_active -= 1;
         // Update representatives.
         auto& chunk_data = m_tx_data[parent_tx_data.chunk_rep];
@@ -933,7 +926,6 @@ private:
     void Improve(DepIdx dep_idx) noexcept
     {
         auto& dep_data = m_dep_data[dep_idx];
-        Assume(dep_data.active);
         // Remember the number of self-merges this chunk underwent so far.
         auto self_merges = m_tx_data[m_tx_data[dep_data.parent].chunk_rep].self_merges;
         // Deactivate the specified dependency, splitting it into two new chunks: a top containing
@@ -987,7 +979,6 @@ public:
                 auto dep_idx = m_dep_data.size();
                 // Construct new dependency.
                 auto& dep = m_dep_data.emplace_back();
-                dep.active = false;
                 dep.parent = par;
                 dep.child = tx;
                 // Add it as parent of the child.
@@ -1116,7 +1107,6 @@ public:
                 const auto active_children = std::span{tx_data.child_deps}.first(tx_data.child_deps_active);
                 for (DepIdx dep_idx : active_children) {
                     const auto& dep_data = m_dep_data[dep_idx];
-                    Assume(dep_data.active);
                     // Define gain(top) = fee(top)*size(chunk) - fee(chunk)*size(top).
                     //                  = (feerate(top) - feerate(chunk)) * size(top) * size(chunk).
                     // Thus:
@@ -1287,12 +1277,11 @@ public:
             const auto& dep_data = m_dep_data[dep_idx];
             all_dependencies.emplace_back(dep_data.parent, dep_data.child, dep_idx);
             // Also add to active_dependencies if it is active.
-            if (m_dep_data[dep_idx].active) {
+            if (dep_data.child_pos < m_tx_data[dep_data.parent].child_deps_active) {
                 active_dependencies.emplace_back(dep_data.parent, dep_data.child, dep_idx);
             }
             // Verify child_pos.
             assert(dep_data.child_pos < m_tx_data[dep_data.parent].child_deps_total);
-            assert((dep_data.child_pos < m_tx_data[dep_data.parent].child_deps_active) == dep_data.active);
             assert(m_tx_data[dep_data.parent].child_deps[dep_data.child_pos] == dep_idx);
         }
         std::sort(expected_dependencies.begin(), expected_dependencies.end());
