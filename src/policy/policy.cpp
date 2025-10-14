@@ -180,19 +180,12 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
  *    as potential new upgrade hooks.
  *
  * Note that only the non-witness portion of the transaction is checked here.
- *
- * We also check the total number of non-witness sigops across the whole transaction, as per BIP54.
  */
 TxValidationState ValidateInputsStandardness(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 {
     TxValidationState state;
     if (tx.IsCoinBase()) {
         return state; // Coinbases don't use vin normally
-    }
-
-    if (!Consensus::CheckSigopsBIP54(tx, mapInputs)) {
-        state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, "bad-txns-nonstandard-inputs", "non-witness sigops exceed bip54 limit");
-        return state;
     }
 
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
