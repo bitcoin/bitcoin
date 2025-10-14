@@ -964,8 +964,9 @@ FUZZ_TARGET(clusterlin_sfl)
     SpanReader reader(buffer);
     DepGraph<TestBitSet> depgraph;
     uint8_t flags{1};
+    uint64_t rng_seed{0};
     try {
-        reader >> flags >> Using<DepGraphFormatter>(depgraph);
+        reader >> flags >> Using<DepGraphFormatter>(depgraph) >> rng_seed;
     } catch (const std::ios_base::failure&) {}
     /** Whether to make the depgraph connected. */
     const bool make_connected = flags & 1;
@@ -984,7 +985,7 @@ FUZZ_TARGET(clusterlin_sfl)
     //
     bool is_topological = false;
     if (make_connected) MakeConnected(depgraph);
-    SpanningForestState sfl(depgraph);
+    SpanningForestState sfl(depgraph, rng_seed);
 
     //
     // Read and load input linearization, if selected.
