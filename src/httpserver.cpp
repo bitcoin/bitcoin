@@ -552,16 +552,25 @@ void StopHTTPServer()
         // Schedule a callback to call evhttp_free in the event base thread, so
         // that evhttp_free does not need to be called again after the handling
         // of unfinished request connections that follows.
-        event_base_once(eventBase, -1, EV_TIMEOUT, [](evutil_socket_t, short, void*) {
+        if (int ret{event_base_once(eventBase, -1, EV_TIMEOUT, [](evutil_socket_t, short, void*) {
             evhttp_free(eventHTTP);
             eventHTTP = nullptr;
-        }, nullptr, nullptr);
+        }, nullptr, nullptr)}; ret != 0) {
+            LogDebug(BCLog::HTTP, "event_base_once() failed: %d", ret);
+        }
     }
     if (eventBase) {
         LogDebug(BCLog::HTTP, "Waiting for HTTP event thread to exit\n");
         if (g_thread_http.joinable()) g_thread_http.join();
+        if (eventHTTP) {
+            LogDebug(BCLog::HTTP, "Freeing eventHTTP-event was not picked up by ThreadHTTP before it exited.");
+            evhttp_free(eventHTTP);
+            eventHTTP = nullptr;
+        }
         event_base_free(eventBase);
         eventBase = nullptr;
+    } else {
+        Assume(!g_thread_http.joinable());
     }
     g_work_queue.reset();
     LogDebug(BCLog::HTTP, "Stopped HTTP server\n");
