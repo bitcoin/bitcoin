@@ -936,8 +936,9 @@ static RPCHelpMan submitpackage()
         ,
         {
             {"package", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of raw transactions.\n"
-                "The package must solely consist of a child transaction and all of its unconfirmed parents, if any. None of the parents may depend on each other.\n"
-                "The package must be topologically sorted, with the child being the last element in the array.",
+                "The package must consist of a transaction with (some, all, or none of) its unconfirmed parents. A single transaction is permitted.\n"
+                "None of the parents may depend on each other. Parents that are already in mempool do not need to be present in the package.\n"
+                "The package must be topologically sorted, with the child being the last element in the array if there are multiple elements.",
                 {
                     {"rawtx", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
                 },
