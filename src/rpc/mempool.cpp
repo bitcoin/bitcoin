@@ -58,7 +58,8 @@ RPCHelpMan sendrawtransaction()
             RPCTypeCheck(request.params, {
                 UniValue::VSTR,
                 UniValueType(), // VNUM or VSTR, checked inside AmountFromValue()
-                UniValue::VBOOL
+                UniValue::VBOOL,
+                UniValue::VBOOL,
             });
 
             CMutableTransaction mtx;
