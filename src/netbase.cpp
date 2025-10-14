@@ -955,10 +955,10 @@ CService MaybeFlipIPv6toCJDNS(const CService& service)
 CService GetBindAddress(const Sock& sock)
 {
     CService addr_bind;
-    struct sockaddr_storage sockaddr_bind;
-    socklen_t sockaddr_bind_len = sizeof(sockaddr_bind);
-    if (!sock.GetSockName((struct sockaddr*)&sockaddr_bind, &sockaddr_bind_len)) {
-        addr_bind.SetSockAddr((const struct sockaddr*)&sockaddr_bind, sockaddr_bind_len);
+    sockaddr_storage storage;
+    socklen_t len{sizeof(storage)};
+    if (!sock.GetSockName(reinterpret_cast<sockaddr*>(&storage), &len)) {
+        addr_bind.SetSockAddr(reinterpret_cast<sockaddr*>(&storage), len);
     } else {
         LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "getsockname failed\n");
     }
