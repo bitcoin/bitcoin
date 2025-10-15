@@ -1,8 +1,8 @@
 package=native_libmultiprocess
-$(package)_version=1954f7f65661d49e700c344eae0fc8092decf975
+$(package)_version=v5.0
 $(package)_download_path=https://github.com/bitcoin-core/libmultiprocess/archive
 $(package)_file_name=$($(package)_version).tar.gz
-$(package)_sha256_hash=fc014bd74727c1d5d30b396813685012c965d079244dd07b53bc1c75c610a2cb
+$(package)_sha256_hash=401984715b271a3446e1910f21adf048ba390d31cc93cc3073742e70d56fa3ea
 $(package)_dependencies=native_capnp
 
 define $(package)_config_cmds
