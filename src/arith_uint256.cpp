@@ -99,18 +99,6 @@ base_uint<BITS>& base_uint<BITS>::operator/=(const base_uint& b)
 }
 
 template <unsigned int BITS>
-int base_uint<BITS>::CompareTo(const base_uint<BITS>& b) const
-{
-    for (int i = WIDTH - 1; i >= 0; i--) {
-        if (pn[i] < b.pn[i])
-            return -1;
-        if (pn[i] > b.pn[i])
-            return 1;
-    }
-    return 0;
-}
-
-template <unsigned int BITS>
 bool base_uint<BITS>::EqualTo(uint64_t b) const
 {
     for (int i = WIDTH - 1; i >= 2; i--) {
