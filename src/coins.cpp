@@ -76,9 +76,6 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
     bool inserted;
     std::tie(it, inserted) = cacheCoins.emplace(std::piecewise_construct, std::forward_as_tuple(outpoint), std::tuple<>());
     bool fresh = false;
-    if (!inserted) {
-        cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
-    }
     if (!possible_overwrite) {
         if (!it->second.coin.IsSpent()) {
             throw std::logic_error("Attempted to overwrite an unspent coin (when possible_overwrite is false)");
@@ -98,6 +95,9 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
         // DIRTY, then it can be marked FRESH.
         fresh = !it->second.IsDirty();
     }
+    if (!inserted) {
+        cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
+    }
     it->second.coin = std::move(coin);
     CCoinsCacheEntry::SetDirty(*it, m_sentinel);
     if (fresh) CCoinsCacheEntry::SetFresh(*it, m_sentinel);
@@ -111,9 +111,12 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
 }
 
 void CCoinsViewCache::EmplaceCoinInternalDANGER(COutPoint&& outpoint, Coin&& coin) {
-    cachedCoinsUsage += coin.DynamicMemoryUsage();
+    const auto mem_usage{coin.DynamicMemoryUsage()};
     auto [it, inserted] = cacheCoins.try_emplace(std::move(outpoint), std::move(coin));
-    if (inserted) CCoinsCacheEntry::SetDirty(*it, m_sentinel);
+    if (inserted) {
+        CCoinsCacheEntry::SetDirty(*it, m_sentinel);
+        cachedCoinsUsage += mem_usage;
+    }
 }
 
 void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check_for_overwrite) {
@@ -195,6 +198,7 @@ bool CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &ha
                 // and mark it as dirty.
                 itUs = cacheCoins.try_emplace(it->first).first;
                 CCoinsCacheEntry& entry{itUs->second};
+                assert(entry.coin.DynamicMemoryUsage() == 0);
                 if (cursor.WillErase(*it)) {
                     // Since this entry will be erased,
                     // we can move the coin into us instead of copying it
@@ -248,19 +252,19 @@ bool CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &ha
 }
 
 bool CCoinsViewCache::Flush() {
-    auto cursor{CoinsViewCacheCursor(cachedCoinsUsage, m_sentinel, cacheCoins, /*will_erase=*/true)};
+    auto cursor{CoinsViewCacheCursor(m_sentinel, cacheCoins, /*will_erase=*/true)};
     bool fOk = base->BatchWrite(cursor, hashBlock);
     if (fOk) {
         cacheCoins.clear();
         ReallocateCache();
+        cachedCoinsUsage = 0;
     }
-    cachedCoinsUsage = 0;
     return fOk;
 }
 
 bool CCoinsViewCache::Sync()
 {
-    auto cursor{CoinsViewCacheCursor(cachedCoinsUsage, m_sentinel, cacheCoins, /*will_erase=*/false)};
+    auto cursor{CoinsViewCacheCursor(m_sentinel, cacheCoins, /*will_erase=*/false)};
     bool fOk = base->BatchWrite(cursor, hashBlock);
     if (fOk) {
         if (m_sentinel.second.Next() != &m_sentinel) {

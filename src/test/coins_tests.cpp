@@ -662,8 +662,8 @@ static void WriteCoinsViewEntry(CCoinsView& view, const MaybeCoin& cache_coin)
     sentinel.second.SelfRef(sentinel);
     CCoinsMapMemoryResource resource;
     CCoinsMap map{0, CCoinsMap::hasher{}, CCoinsMap::key_equal{}, &resource};
-    auto usage{cache_coin ? InsertCoinsMapEntry(map, sentinel, *cache_coin) : 0};
-    auto cursor{CoinsViewCacheCursor(usage, sentinel, map, /*will_erase=*/true)};
+    if (cache_coin) InsertCoinsMapEntry(map, sentinel, *cache_coin);
+    auto cursor{CoinsViewCacheCursor(sentinel, map, /*will_erase=*/true)};
     BOOST_CHECK(view.BatchWrite(cursor, {}));
 }
 
@@ -1083,6 +1083,42 @@ BOOST_AUTO_TEST_CASE(coins_resource_is_used)
     }
 
     PoolResourceTester::CheckAllDataAccountedFor(resource);
+}
+
+BOOST_AUTO_TEST_CASE(ccoins_addcoin_exception_keeps_usage_balanced)
+{
+    CCoinsView root;
+    CCoinsViewCacheTest cache{&root};
+
+    const COutPoint outpoint{Txid::FromUint256(m_rng.rand256()), m_rng.rand32()};
+
+    const Coin coin1{CTxOut{m_rng.randrange(10), CScript{} << m_rng.randbytes(CScriptBase::STATIC_SIZE + 1)}, 1, false};
+    cache.AddCoin(outpoint, Coin{coin1}, /*possible_overwrite=*/false);
+    cache.SelfTest();
+
+    const Coin coin2{CTxOut{m_rng.randrange(20), CScript{} << m_rng.randbytes(CScriptBase::STATIC_SIZE + 2)}, 2, false};
+    BOOST_CHECK_THROW(cache.AddCoin(outpoint, Coin{coin2}, /*possible_overwrite=*/false), std::logic_error);
+    cache.SelfTest();
+
+    BOOST_CHECK(cache.AccessCoin(outpoint) == coin1);
+}
+
+BOOST_AUTO_TEST_CASE(ccoins_emplace_duplicate_keeps_usage_balanced)
+{
+    CCoinsView root;
+    CCoinsViewCacheTest cache{&root};
+
+    const COutPoint outpoint{Txid::FromUint256(m_rng.rand256()), m_rng.rand32()};
+
+    const Coin coin1{CTxOut{m_rng.randrange(10), CScript{} << m_rng.randbytes(CScriptBase::STATIC_SIZE + 1)}, 1, false};
+    cache.EmplaceCoinInternalDANGER(COutPoint{outpoint}, Coin{coin1});
+    cache.SelfTest();
+
+    const Coin coin2{CTxOut{m_rng.randrange(20), CScript{} << m_rng.randbytes(CScriptBase::STATIC_SIZE + 2)}, 2, false};
+    cache.EmplaceCoinInternalDANGER(COutPoint{outpoint}, Coin{coin2});
+    cache.SelfTest();
+
+    BOOST_CHECK(cache.AccessCoin(outpoint) == coin1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
