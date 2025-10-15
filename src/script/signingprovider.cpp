@@ -122,7 +122,9 @@ std::map<CPubKey, std::vector<CPubKey>> FlatSigningProvider::GetAllMuSig2Partici
 void FlatSigningProvider::SetMuSig2SecNonce(const uint256& session_id, MuSig2SecNonce&& nonce) const
 {
     if (!Assume(musig2_secnonces)) return;
-    musig2_secnonces->emplace(session_id, std::move(nonce));
+    auto [it, inserted] = musig2_secnonces->try_emplace(session_id, std::move(nonce));
+    // No secnonce should exist for this session yet.
+    Assert(inserted);
 }
 
 std::optional<std::reference_wrapper<MuSig2SecNonce>> FlatSigningProvider::GetMuSig2SecNonce(const uint256& session_id) const
