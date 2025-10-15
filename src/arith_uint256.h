@@ -186,8 +186,6 @@ public:
         return ret;
     }
 
-    /** Numeric ordering (unlike \ref base_blob::Compare) */
-    int CompareTo(const base_uint& b) const;
     bool EqualTo(uint64_t b) const;
 
     friend inline base_uint operator+(const base_uint& a, const base_uint& b) { return base_uint(a) += b; }
@@ -201,7 +199,16 @@ public:
     friend inline base_uint operator<<(const base_uint& a, int shift) { return base_uint(a) <<= shift; }
     friend inline base_uint operator*(const base_uint& a, uint32_t b) { return base_uint(a) *= b; }
     friend inline bool operator==(const base_uint& a, const base_uint& b) { return memcmp(a.pn, b.pn, sizeof(a.pn)) == 0; }
-    friend inline std::strong_ordering operator<=>(const base_uint& a, const base_uint& b) { return a.CompareTo(b) <=> 0; }
+    friend inline std::strong_ordering operator<=>(const base_uint& a, const base_uint& b) {
+        /** Numeric ordering (unlike \ref base_blob::Compare) */
+        for (int i{WIDTH - 1}; i >= 0; --i) {
+            if (a.pn[i] < b.pn[i])
+                return std::strong_ordering::less;
+            if (a.pn[i] > b.pn[i])
+                return std::strong_ordering::greater;
+        }
+        return std::strong_ordering::equal;
+    }
     friend inline bool operator==(const base_uint& a, uint64_t b) { return a.EqualTo(b); }
 
     /** Hex encoding of the number (with the most significant digits first). */
