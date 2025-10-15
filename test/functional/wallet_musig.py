@@ -21,7 +21,7 @@ MUSIG_RE = re.compile(r"musig\((.*?)\)")
 PLACEHOLDER_RE = re.compile(r"\$\d")
 
 class WalletMuSigTest(BitcoinTestFramework):
-    WALLET_NUM = 0
+    wallet_num = 0
     def set_test_params(self):
         self.num_nodes = 1
 
@@ -38,8 +38,8 @@ class WalletMuSigTest(BitcoinTestFramework):
 
         # Create wallets and extract keys
         for i in range(num_wallets):
-            wallet_name = f"musig_{self.WALLET_NUM}"
-            self.WALLET_NUM += 1
+            wallet_name = f"musig_{self.wallet_num}"
+            self.wallet_num += 1
             self.nodes[0].createwallet(wallet_name)
             wallet = self.nodes[0].get_wallet_rpc(wallet_name)
             wallets.append(wallet)
@@ -146,8 +146,8 @@ class WalletMuSigTest(BitcoinTestFramework):
         wallets = []
         keys = []
         for i in range(2):
-            wallet_name = f"musig_{self.WALLET_NUM}"
-            self.WALLET_NUM += 1
+            wallet_name = f"musig_{self.wallet_num}"
+            self.wallet_num += 1
             self.nodes[0].createwallet(wallet_name)
             wallet = self.nodes[0].get_wallet_rpc(wallet_name)
             wallets.append(wallet)
@@ -224,8 +224,8 @@ class WalletMuSigTest(BitcoinTestFramework):
                     musig_partial_sigs += 1
                 if wallet_index < len(wallets):
                     continue
-                wallet_name = f"musig_{self.WALLET_NUM}"
-                self.WALLET_NUM += 1
+                wallet_name = f"musig_{self.wallet_num}"
+                self.wallet_num += 1
                 self.nodes[0].createwallet(wallet_name)
                 wallet = self.nodes[0].get_wallet_rpc(wallet_name)
                 wallets.append(wallet)
