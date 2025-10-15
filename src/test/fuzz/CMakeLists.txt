@@ -7,6 +7,7 @@ add_subdirectory(util)
 add_executable(fuzz
   addition_overflow.cpp
   addrman.cpp
+  arith_uint256_comparison_equivalence.cpp
   asmap.cpp
   asmap_direct.cpp
   autofile.cpp
@@ -21,6 +22,7 @@ add_executable(fuzz
   block_index.cpp
   block_index_tree.cpp
   block_policy_estimator.cpp
+  block_index_work_comparator.cpp
   blockfilter.cpp
   bloom_filter.cpp
   buffered_file.cpp
