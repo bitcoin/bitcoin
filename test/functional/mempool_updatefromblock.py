@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2022 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mempool descendants/ancestors information update.
@@ -26,6 +26,12 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [['-limitclustersize=1000']]
+
+    def trigger_reorg(self, fork_blocks):
+        """Trigger reorg of the fork blocks."""
+        for block in fork_blocks:
+            self.nodes[0].submitblock(block.serialize().hex())
+        assert_equal(self.nodes[0].getbestblockhash(), fork_blocks[-1].hash_hex)
 
     def transaction_graph_test(self, size, *, n_tx_to_mine, fee=100_000):
         """Create an acyclic tournament (a type of directed graph) of transactions and use it for testing.
@@ -153,8 +159,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
 
         # Reorg back before the first block in the series, should drop something
         # but not all, and any time parent is dropped, child is also removed
-        for block in fork_blocks:
-            self.nodes[0].submitblock(block.serialize().hex())
+        self.trigger_reorg(fork_blocks=fork_blocks)
         mempool = self.nodes[0].getrawmempool()
         expected_parent_count = len(large_std_txs) - 2
         assert_equal(len(mempool), expected_parent_count * 2)
