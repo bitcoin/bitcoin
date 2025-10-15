@@ -706,8 +706,14 @@ private:
         /** (Only if this transaction is the representative for the chunk it is in) the total
          *  chunk set and feerate. */
         SetInfo<SetType> chunk_setinfo;
-        /** Whether this transaction appears in m_suboptimal_chunks. */
-        bool suboptimal{false};
+        /** In what ways this transaction exists in suboptimality lists:
+         *  - 0: not in m_suboptimal_chunks
+         *  - >0: in m_suboptimal_chunks, and:
+         *    - (during optimization) 1: needs processing
+         *    - (during MakeTopological) 1: needs to be merged upwards
+         *    - (during MakeTopological) 2: needs to be merged downwards
+         *    - (during MakeTopological) 3: needs to be merged upwards and downwards */
+        unsigned suboptimal{0};
         /** Number of consecutive self-merges this chunk has experienced. */
         uint32_t self_merges;
     };
@@ -955,7 +961,7 @@ private:
         // Add the chunk to the queue of improvable chunks, if it wasn't already there.
         auto& chunk_data = m_tx_data[chunk_rep];
         if (!chunk_data.suboptimal) {
-            chunk_data.suboptimal = true;
+            chunk_data.suboptimal = 1;
             m_suboptimal_chunks.push_back(chunk_rep);
         }
         return chunk_rep;
@@ -1041,11 +1047,15 @@ public:
     /** Make state topological. Can be called after constructing, or after LoadLinearization. */
     void MakeTopological() noexcept
     {
+        /** What direction to initially mark all chunks for merging in. It suffices to pick one of
+         *  the two directions. Note that when a chunk is merged, it is always marked as needing
+         *  both directions; only the initial set get just one of the two. */
+        bool init_dir = m_rng.randbool();
         for (auto tx : m_transactions) {
             auto& tx_data = m_tx_data[tx];
             if (tx_data.chunk_rep == tx) {
                 m_suboptimal_chunks.emplace_back(tx);
-                tx_data.suboptimal = true;
+                tx_data.suboptimal = 1 + init_dir;
                 // Randomize the initial order of suboptimal chunks in the queue.
                 TxIdx j = m_rng.randrange<TxIdx>(m_suboptimal_chunks.size());
                 if (j != m_suboptimal_chunks.size() - 1) {
@@ -1061,30 +1071,33 @@ public:
             m_suboptimal_chunks.pop_front();
             auto& chunk_data = m_tx_data[chunk];
             Assume(chunk_data.suboptimal);
-            chunk_data.suboptimal = false;
+            auto old_suboptimal = chunk_data.suboptimal;
+            chunk_data.suboptimal = 0;
             // If what was popped is not currently a chunk representative, continue. This may
             // happen when it was merged with something else since being added.
             if (chunk_data.chunk_rep != chunk) continue;
             int flip = m_rng.randbool();
             for (int i = 0; i < 2; ++i) {
                 if (i ^ flip) {
+                    if (!(old_suboptimal & 1)) continue;
                     // Attempt to merge the chunk upwards.
                     auto result_up = MergeStep<false>(chunk);
                     if (result_up != TxIdx(-1)) {
                         if (!m_tx_data[result_up].suboptimal) {
-                            m_tx_data[result_up].suboptimal = true;
                             m_suboptimal_chunks.push_back(result_up);
                         }
+                        m_tx_data[result_up].suboptimal = 3;
                         break;
                     }
                 } else {
+                    if (!(old_suboptimal & 2)) continue;
                     // Attempt to merge the chunk downwards.
                     auto result_down = MergeStep<true>(chunk);
                     if (result_down != TxIdx(-1)) {
                         if (!m_tx_data[result_down].suboptimal) {
-                            m_tx_data[result_down].suboptimal = true;
                             m_suboptimal_chunks.push_back(result_down);
                         }
+                        m_tx_data[result_down].suboptimal = 3;
                         break;
                     }
                 }
@@ -1413,7 +1426,7 @@ public:
         // Verify m_suboptimal_chunks.
         size_t num_suboptimal_chunks = 0;
         for (auto tx_idx : m_transactions) {
-            num_suboptimal_chunks += m_tx_data[tx_idx].suboptimal;
+            num_suboptimal_chunks += (m_tx_data[tx_idx].suboptimal != 0);
         }
         assert(m_suboptimal_chunks.size() == num_suboptimal_chunks);
         for (size_t i = 0; i < m_suboptimal_chunks.size(); ++i) {
