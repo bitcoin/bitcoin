@@ -1071,6 +1071,13 @@ public:
     /** Make state topological. Can be called after constructing, or after LoadLinearization. */
     void MakeTopological() noexcept
     {
+        /** What direction to initially merge chunks in. It suffices to pick one of the two
+         *  directions. After being merged with another chunk, both directions are always tried. */
+        unsigned init_dir = m_rng.randbool();
+        /** Which chunks are the result of merging, and thus need merge attempts in both
+         *  directions. */
+        SetType merged_chunks = m_chunk_idxs;
+        // Mark chunks as suboptimal.
         m_suboptimal_idxs = m_chunk_idxs;
         for (auto chunk_idx : m_chunk_idxs) {
             m_suboptimal_chunks.emplace_back(chunk_idx);
@@ -1089,9 +1096,12 @@ public:
             // If what was popped is not currently a chunk, continue. This may
             // happen when it was merged with something else since being added.
             if (!m_chunk_idxs[chunk_idx]) continue;
+            /** What direction(s) to attempt merging in. 1=up, 2=down, 3=both. */
+            unsigned direction = merged_chunks[chunk_idx] ? 3 : init_dir + 1;
             int flip = m_rng.randbool();
             for (int i = 0; i < 2; ++i) {
                 if (i ^ flip) {
+                    if (!(direction & 1)) continue;
                     // Attempt to merge the chunk upwards.
                     auto result_up = MergeStep<false>(chunk_idx);
                     if (result_up != INVALID_SET_IDX) {
@@ -1099,9 +1109,11 @@ public:
                             m_suboptimal_idxs.Set(result_up);
                             m_suboptimal_chunks.push_back(result_up);
                         }
+                        merged_chunks.Set(result_up);
                         break;
                     }
                 } else {
+                    if (!(direction & 2)) continue;
                     // Attempt to merge the chunk downwards.
                     auto result_down = MergeStep<true>(chunk_idx);
                     if (result_down != INVALID_SET_IDX) {
@@ -1109,6 +1121,7 @@ public:
                             m_suboptimal_idxs.Set(result_down);
                             m_suboptimal_chunks.push_back(result_down);
                         }
+                        merged_chunks.Set(result_down);
                         break;
                     }
                 }
@@ -1138,6 +1151,7 @@ public:
             // Pop an entry from the potentially-suboptimal chunk queue.
             SetIdx chunk_idx = m_suboptimal_chunks.front();
             m_suboptimal_chunks.pop_front();
+            Assume(m_suboptimal_idxs[chunk_idx]);
             m_suboptimal_idxs.Reset(chunk_idx);
             auto& chunk_info = m_set_info[chunk_idx];
             // If what was popped is not currently a chunk, continue. This may
