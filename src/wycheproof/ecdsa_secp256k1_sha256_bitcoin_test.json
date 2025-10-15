@@ -5,7 +5,7 @@
   "numberOfTests" : 463,
   "header" : [
     "Test vectors of type EcdsaBitcoinVerify are meant for the verification",
-    "of a ECDSA variant used for bitcoin, that add signature non-malleability."
+    "of a ECDSA variant used for Bitcoin, that add signature non-malleability."
   ],
   "notes" : {
     "ArithmeticError" : {
@@ -47,7 +47,7 @@
     "InvalidSignature" : {
       "bugType" : "AUTH_BYPASS",
       "description" : "The signature contains special case values such as r=0 and s=0. Buggy implementations may accept such values, if the implementation does not check boundaries and computes s^(-1) == 0.",
-      "effect" : "Accepting such signatures can have the effect that an adversary can forge signatures without even knowning the message to sign.",
+      "effect" : "Accepting such signatures can have the effect that an adversary can forge signatures without even knowing the message to sign.",
       "cves" : [
         "CVE-2022-21449",
         "CVE-2021-43572",
@@ -57,7 +57,7 @@
     "InvalidTypesInSignature" : {
       "bugType" : "AUTH_BYPASS",
       "description" : "The signature contains invalid types. Dynamic typed languages sometime coerce such values of different types into integers. If an implementation is careless and has additional bugs, such as not checking integer boundaries then it may be possible that such signatures are accepted.",
-      "effect" : "Accepting such signatures can have the effect that an adversary can forge signatures without even knowning the message to sign.",
+      "effect" : "Accepting such signatures can have the effect that an adversary can forge signatures without even knowing the message to sign.",
       "cves" : [
         "CVE-2022-21449"
       ]
@@ -95,8 +95,8 @@
     },
     "SignatureMalleabilityBitcoin" : {
       "bugType" : "SIGNATURE_MALLEABILITY",
-      "description" : "\"BitCoins\"-curves are curves where signature malleability can be a serious issue. An implementation should only accept a signature s where s < n/2. If an implementation is not meant for uses cases that require signature malleability then this implementation should be tested with another set of test vectors.",
-      "effect" : "In bitcoin exchanges, it may be used to make a double deposits or double withdrawals",
+      "description" : "Signature malleability can be a serious issue in Bitcoin. An implementation should only accept a signature s where s < n/2. If an implementation is meant for use cases that tolerate signature malleability then this implementation should not be tested with this set of test vectors.",
+      "effect" : "In Bitcoin exchanges, it may be used to make a double deposits or double withdrawals",
       "links" : [
         "https://en.bitcoin.it/wiki/Transaction_malleability",
         "https://en.bitcoinwiki.org/wiki/Transaction_Malleability"

@@ -7,6 +7,7 @@
 #define SECP256K1_MODULE_ELLSWIFT_TESTS_H
 
 #include "../../../include/secp256k1_ellswift.h"
+#include "../../unit_test.h"
 
 struct ellswift_xswiftec_inv_test {
     int enc_bitmap;
@@ -405,32 +406,38 @@ void run_ellswift_tests(void) {
 
     /* Test hash initializers. */
     {
-        secp256k1_sha256 sha, sha_optimized;
+        secp256k1_sha256 sha_optimized;
+        /* "secp256k1_ellswift_encode" */
         static const unsigned char encode_tag[] = {'s', 'e', 'c', 'p', '2', '5', '6', 'k', '1', '_', 'e', 'l', 'l', 's', 'w', 'i', 'f', 't', '_', 'e', 'n', 'c', 'o', 'd', 'e'};
+        /* "secp256k1_ellswift_create" */
         static const unsigned char create_tag[] = {'s', 'e', 'c', 'p', '2', '5', '6', 'k', '1', '_', 'e', 'l', 'l', 's', 'w', 'i', 'f', 't', '_', 'c', 'r', 'e', 'a', 't', 'e'};
+        /* "bip324_ellswift_xonly_ecdh" */
         static const unsigned char bip324_tag[] = {'b', 'i', 'p', '3', '2', '4', '_', 'e', 'l', 'l', 's', 'w', 'i', 'f', 't', '_', 'x', 'o', 'n', 'l', 'y', '_', 'e', 'c', 'd', 'h'};
 
         /* Check that hash initialized by
          * secp256k1_ellswift_sha256_init_encode has the expected
          * state. */
-        secp256k1_sha256_initialize_tagged(&sha, encode_tag, sizeof(encode_tag));
         secp256k1_ellswift_sha256_init_encode(&sha_optimized);
-        test_sha256_eq(&sha, &sha_optimized);
+        test_sha256_tag_midstate(&sha_optimized, encode_tag, sizeof(encode_tag));
 
         /* Check that hash initialized by
          * secp256k1_ellswift_sha256_init_create has the expected
          * state. */
-        secp256k1_sha256_initialize_tagged(&sha, create_tag, sizeof(create_tag));
         secp256k1_ellswift_sha256_init_create(&sha_optimized);
-        test_sha256_eq(&sha, &sha_optimized);
+        test_sha256_tag_midstate(&sha_optimized, create_tag, sizeof(create_tag));
 
         /* Check that hash initialized by
          * secp256k1_ellswift_sha256_init_bip324 has the expected
          * state. */
-        secp256k1_sha256_initialize_tagged(&sha, bip324_tag, sizeof(bip324_tag));
         secp256k1_ellswift_sha256_init_bip324(&sha_optimized);
-        test_sha256_eq(&sha, &sha_optimized);
+        test_sha256_tag_midstate(&sha_optimized, bip324_tag, sizeof(bip324_tag));
     }
 }
+
+/* --- Test registry --- */
+/* TODO: subdivide test in cases */
+static const struct tf_test_entry tests_ellswift[] = {
+    CASE(ellswift_tests),
+};
 
 #endif
