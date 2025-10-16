@@ -25,7 +25,6 @@ template<typename T>
 class CFlatDB;
 class CNode;
 class CDataStream;
-class PeerManager;
 
 class CSporkMessage;
 class CSporkManager;
@@ -151,11 +150,6 @@ public:
      * in order to identify which spork key signed this message.
      */
     std::optional<CKeyID> GetSignerKeyID() const;
-
-    /**
-     * Relay is used to send this spork message to other peers.
-     */
-    void Relay(PeerManager& peerman) const;
 };
 
 class SporkStore
@@ -278,9 +272,10 @@ public:
 
     /**
      * UpdateSpork is used by the spork RPC command to set a new spork value, sign
-     * and broadcast the spork message.
+     * and return the spork message, ready for network relay.
+     * It returns nullopt if nothing to relay
      */
-    bool UpdateSpork(PeerManager& peerman, SporkId nSporkID, SporkValue nValue) EXCLUSIVE_LOCKS_REQUIRED(!cs, !cs_cache);
+    std::optional<CInv> UpdateSpork(SporkId nSporkID, SporkValue nValue) EXCLUSIVE_LOCKS_REQUIRED(!cs, !cs_cache);
 
     /**
      * IsSporkActive returns a bool for time-based sporks, and should be used
