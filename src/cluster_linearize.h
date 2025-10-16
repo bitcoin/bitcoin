@@ -796,6 +796,8 @@ private:
         /** (Only if this transaction is the representative for the chunk it is in) the total
          *  chunk set and feerate. */
         SetInfo<SetType> chunk_setinfo;
+        /** Whether this transaction appears in m_suboptimal_chunks. */
+        bool suboptimal{false};
     };
 
     /** Structure with information about a single dependency. */
@@ -1029,8 +1031,12 @@ private:
             if (merged_rep == TxIdx(-1)) break;
             chunk_rep = merged_rep;
         }
-        // Add the chunk to the queue of improvable chunks.
-        m_suboptimal_chunks.push_back(chunk_rep);
+        // Add the chunk to the queue of improvable chunks, if it wasn't already there.
+        auto& chunk_data = m_tx_data[chunk_rep];
+        if (!chunk_data.suboptimal) {
+            chunk_data.suboptimal = true;
+            m_suboptimal_chunks.push_back(chunk_rep);
+        }
     }
 
     /** Split a chunk, and then merge the resulting two chunks to make the graph topological
@@ -1106,6 +1112,7 @@ public:
             auto& tx_data = m_tx_data[tx];
             if (tx_data.chunk_rep == tx) {
                 m_suboptimal_chunks.emplace_back(tx);
+                tx_data.suboptimal = true;
             }
         }
         while (true) {
@@ -1115,19 +1122,27 @@ public:
             TxIdx chunk = m_suboptimal_chunks.front();
             m_suboptimal_chunks.pop_front();
             auto& chunk_data = m_tx_data[chunk];
+            Assume(chunk_data.suboptimal);
+            chunk_data.suboptimal = false;
             // If what was popped is not currently a chunk representative, continue. This may
             // happen when it was merged with something else since being added.
             if (chunk_data.chunk_rep != chunk) continue;
             // Attempt to merge the chunk upwards.
             auto result_up = MergeStep<false>(chunk);
             if (result_up != TxIdx(-1)) {
-                m_suboptimal_chunks.push_back(result_up);
+                if (!m_tx_data[result_up].suboptimal) {
+                    m_tx_data[result_up].suboptimal = true;
+                    m_suboptimal_chunks.push_back(result_up);
+                }
                 continue;
             }
             // Attempt to merge the chunk downwards.
             auto result_down = MergeStep<true>(chunk);
             if (result_down != TxIdx(-1)) {
-                m_suboptimal_chunks.push_back(result_down);
+                if (!m_tx_data[result_down].suboptimal) {
+                    m_tx_data[result_down].suboptimal = true;
+                    m_suboptimal_chunks.push_back(result_down);
+                }
                 continue;
             }
         }
@@ -1139,7 +1154,9 @@ public:
         // Mark chunks suboptimal.
         for (auto tx : m_transactions) {
             auto& tx_data = m_tx_data[tx];
+            Assume(!tx_data.suboptimal);
             if (tx_data.chunk_rep == tx) {
+                tx_data.suboptimal = true;
                 m_suboptimal_chunks.push_back(tx);
             }
         }
@@ -1155,6 +1172,8 @@ public:
             TxIdx chunk = m_suboptimal_chunks.front();
             m_suboptimal_chunks.pop_front();
             auto& chunk_data = m_tx_data[chunk];
+            Assume(chunk_data.suboptimal);
+            chunk_data.suboptimal = false;
             // If what was popped is not currently a chunk representative, continue. This may
             // happen when a split chunk merges in Improve() with one or more existing chunks that
             // are themselves on the suboptimal queue.
