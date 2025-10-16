@@ -1021,6 +1021,8 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
 
     if (const auto err_string{ImprovesFeerateDiagram(*m_subpackage.m_changeset)}) {
         // If we can't calculate a feerate, it's because the cluster size limits were hit.
+        // We may retry in a package context, because cluster sizes can change
+        // when taking other transactions' conflicts into account.
         return state.Invalid(TxValidationResult::TX_RECONSIDERABLE, "replacement-failed", err_string->second);
     }
 
