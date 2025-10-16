@@ -110,13 +110,12 @@ private:
     void addChunks() EXCLUSIVE_LOCKS_REQUIRED(m_mempool->cs);
 
     // helper functions for addChunks()
-    /** Test if a new package would "fit" in the block */
-    bool TestPackage(FeePerWeight package_feerate, int64_t packageSigOpsCost) const;
-    /** Perform checks on each transaction in a package:
-      * locktime, premature-witness, serialized size (if necessary)
-      * These checks should always succeed, and they're here
-      * only as an extra check in case of suboptimal node configuration */
-    bool TestPackageTransactions(const std::vector<CTxMemPoolEntryRef>& txs) const;
+    /** Test if a new chunk would "fit" in the block */
+    bool TestChunkBlockLimits(FeePerWeight chunk_feerate, int64_t chunk_sigops_cost) const;
+    /** Perform locktime checks on each transaction in a chunk:
+      * This check should always succeed, and is here
+      * only as an extra check in case of a bug */
+    bool TestChunkTransactions(const std::vector<CTxMemPoolEntryRef>& txs) const;
 };
 
 /**
