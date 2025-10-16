@@ -1451,14 +1451,6 @@ void SingletonClusterImpl::Merge(TxGraphImpl&, int, Cluster&) noexcept
 
 void GenericClusterImpl::ApplyDependencies(TxGraphImpl& graph, int level, std::span<std::pair<GraphIndex, GraphIndex>> to_apply) noexcept
 {
-    // This function is invoked by TxGraphImpl::ApplyDependencies after merging groups of Clusters
-    // between which dependencies are added, which simply concatenates their linearizations. Invoke
-    // PostLinearize, which has the effect that the linearization becomes a merge-sort of the
-    // constituent linearizations. Do this here rather than in Cluster::Merge, because this
-    // function is only invoked once per merged Cluster, rather than once per constituent one.
-    // This concatenation + post-linearization could be replaced with an explicit merge-sort.
-    PostLinearize(m_depgraph, m_linearization);
-
     // Sort the list of dependencies to apply by child, so those can be applied in batch.
     std::sort(to_apply.begin(), to_apply.end(), [](auto& a, auto& b) { return a.second < b.second; });
     // Iterate over groups of to-be-added dependencies with the same child.
@@ -1484,9 +1476,8 @@ void GenericClusterImpl::ApplyDependencies(TxGraphImpl& graph, int level, std::s
     }
 
     // Finally fix the linearization, as the new dependencies may have invalidated the
-    // linearization, and post-linearize it to fix up the worst problems with it.
+    // linearization.
     FixLinearization(m_depgraph, m_linearization);
-    PostLinearize(m_depgraph, m_linearization);
     Assume(!NeedsSplitting());
     Assume(!IsOversized());
     if (IsAcceptable()) {
