@@ -402,14 +402,14 @@ inline uint64_t MaxOptimalLinearizationIters(DepGraphIndex cluster_count)
     // *some* reasonable cost bound, optimal linearizations are always found.
     static constexpr uint64_t ITERS[65] = {
         0,
-        0, 1, 3, 6, 11, 19, 28, 32,
-        40, 48, 53, 61, 70, 84, 95, 100,
-        110, 156, 145, 160, 189, 219, 206, 241,
-        273, 264, 288, 338, 300, 429, 369, 403,
-        440, 436, 505, 490, 524, 490, 628, 640,
-        632, 839, 807, 746, 881, 1011, 1048, 905,
-        1010, 1007, 974, 1065, 1062, 1317, 1178, 1535,
-        1298, 1425, 1850, 1453, 1564, 1561, 1575, 1687
+        0, 1, 3, 6, 10, 16, 22, 28,
+        34, 43, 44, 49, 64, 63, 72, 85,
+        94, 98, 109, 128, 133, 149, 153, 175,
+        175, 206, 228, 230, 232, 256, 267, 291,
+        299, 303, 327, 381, 384, 388, 396, 411,
+        426, 463, 572, 581, 555, 603, 624, 652,
+        635, 767, 817, 776, 780, 1085, 876, 954,
+        970, 1099, 1179, 1085, 1455, 1302, 1113, 1248
     };
     assert(cluster_count < std::size(ITERS));
     // Multiply the table number by two, to account for the fact that they are not absolutes.
