@@ -104,6 +104,11 @@ private:
 
     std::any ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data = nullptr);
 
+    /// Processes blocks in the range [start, end]. Calling 'ProcessBlock'.
+    /// If `process_in_order` is true, blocks are returned from `start` to `end`;
+    /// otherwise, they are returned in reverse order (from `end` to `start`).
+    std::vector<std::any> ProcessBlocks(bool process_in_order, const CBlockIndex* start, const CBlockIndex* end);
+
     virtual bool AllowPrune() const = 0;
 
     template <typename... Args>
@@ -197,6 +202,9 @@ public:
 
     /// True if the child class allows concurrent sync.
     virtual bool AllowParallelSync() { return false; }
+
+    /// True if the child class requires CustomProcess to be called in-order
+    virtual bool OrderingRequired() { return true; }
 
     /// Get a summary of the index and its state.
     IndexSummary GetSummary() const;
