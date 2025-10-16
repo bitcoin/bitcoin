@@ -111,7 +111,7 @@ private:
 
     // helper functions for addPackageTxs()
     /** Test if a new package would "fit" in the block */
-    bool TestPackage(FeePerWeight package_feerate, int64_t packageSigOpsCost) const;
+    bool TestPackageBlockLimits(FeePerWeight package_feerate, int64_t packageSigOpsCost) const;
     /** Perform checks on each transaction in a package:
       * locktime, premature-witness, serialized size (if necessary)
       * These checks should always succeed, and they're here

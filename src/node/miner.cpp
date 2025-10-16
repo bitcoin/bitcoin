@@ -192,7 +192,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     return std::move(pblocktemplate);
 }
 
-bool BlockAssembler::TestPackage(FeePerWeight package_feerate, int64_t packageSigOpsCost) const
+bool BlockAssembler::TestPackageBlockLimits(FeePerWeight package_feerate, int64_t packageSigOpsCost) const
 {
     if (nBlockWeight + package_feerate.size >= m_options.nBlockMaxWeight) {
         return false;
@@ -262,7 +262,7 @@ void BlockAssembler::addChunks()
         }
 
         // Check to see if this chunk will fit.
-        if (!TestPackage(chunk_feerate, package_sig_ops) || !TestPackageTransactions(selected_transactions)) {
+        if (!TestPackageBlockLimits(chunk_feerate, package_sig_ops) || !TestPackageTransactions(selected_transactions)) {
             m_mempool->SkipBuilderChunk();
             // This chunk won't fit, so we let it be removed from the heap and
             // we'll try the next best.
