@@ -813,6 +813,8 @@ private:
 
     /** The set of all transactions in the cluster. */
     SetType m_transactions;
+    /** A FIFO of chunk representatives of chunks that may be improved still. */
+    VecDeque<TxIdx> m_suboptimal_chunks;
     /** Information about each transaction (and chunks). Indexed by TxIdx. */
     std::vector<TxData> m_tx_data;
     /** Information about each dependency. Indexed by DepIdx. */
@@ -1027,6 +1029,8 @@ private:
             if (merged_rep == TxIdx(-1)) break;
             chunk_rep = merged_rep;
         }
+        // Add the chunk to the queue of improvable chunks.
+        m_suboptimal_chunks.push_back(chunk_rep);
     }
 
     /** Split a chunk, and then merge the resulting two chunks to make the graph topological
@@ -1098,38 +1102,62 @@ public:
     /** Make state topological. Can be called after constructing, or after LoadLinearization. */
     void MakeTopological() noexcept
     {
-        while (true) {
-            bool done = true;
-            // Iterate over all transactions (only processing those which are chunk representatives).
-            for (auto chunk : m_transactions) {
-                auto& chunk_data = m_tx_data[chunk];
-                // If this is not a chunk representative, skip.
-                if (chunk_data.chunk_rep != chunk) continue;
-                // Attempt to merge the chunk upwards.
-                auto result_up = MergeStep<false>(chunk);
-                if (result_up != TxIdx(-1)) {
-                    done = false;
-                    continue;
-                }
-                // Attempt to merge the chunk downwards.
-                auto result_down = MergeStep<true>(chunk);
-                if (result_down != TxIdx(-1)) {
-                    done = false;
-                    continue;
-                }
+        for (auto tx : m_transactions) {
+            auto& tx_data = m_tx_data[tx];
+            if (tx_data.chunk_rep == tx) {
+                m_suboptimal_chunks.emplace_back(tx);
             }
-            // Stop if no changes were made anymore.
-            if (done) break;
+        }
+        while (true) {
+            // If the queue of potentially-suboptimal chunks is empty, we are done.
+            if (m_suboptimal_chunks.empty()) break;
+            // Pop an entry from the potentially-suboptimal chunk queue.
+            TxIdx chunk = m_suboptimal_chunks.front();
+            m_suboptimal_chunks.pop_front();
+            auto& chunk_data = m_tx_data[chunk];
+            // If what was popped is not currently a chunk representative, continue. This may
+            // happen when it was merged with something else since being added.
+            if (chunk_data.chunk_rep != chunk) continue;
+            // Attempt to merge the chunk upwards.
+            auto result_up = MergeStep<false>(chunk);
+            if (result_up != TxIdx(-1)) {
+                m_suboptimal_chunks.push_back(result_up);
+                continue;
+            }
+            // Attempt to merge the chunk downwards.
+            auto result_down = MergeStep<true>(chunk);
+            if (result_down != TxIdx(-1)) {
+                m_suboptimal_chunks.push_back(result_down);
+                continue;
+            }
+        }
+    }
+
+    /** Initialize the data structure for optimization. It must be topological already. */
+    void StartOptimizing() noexcept
+    {
+        // Mark chunks suboptimal.
+        for (auto tx : m_transactions) {
+            auto& tx_data = m_tx_data[tx];
+            if (tx_data.chunk_rep == tx) {
+                m_suboptimal_chunks.push_back(tx);
+            }
         }
     }
 
     /** Try to improve the forest. Returns false if it is optimal, true otherwise. */
     bool OptimizeStep() noexcept
     {
-        // Iterate over all transactions (only processing those which are chunk representatives).
-        for (auto chunk : m_transactions) {
+        while (true) {
+            // If the queue of potentially-suboptimal chunks is empty, we are done.
+            if (m_suboptimal_chunks.empty()) return false;
+            // Pop an entry from the potentially-suboptimal chunk queue.
+            TxIdx chunk = m_suboptimal_chunks.front();
+            m_suboptimal_chunks.pop_front();
             auto& chunk_data = m_tx_data[chunk];
-            // If this is not a chunk representative, skip.
+            // If what was popped is not currently a chunk representative, continue. This may
+            // happen when a split chunk merges in Improve() with one or more existing chunks that
+            // are themselves on the suboptimal queue.
             if (chunk_data.chunk_rep != chunk) continue;
             // Remember the best dependency seen so far, together with its top feerate.
             DepIdx candidate_dep = DepIdx(-1);
@@ -1168,13 +1196,11 @@ public:
                 }
             }
             // If a candidate with positive gain was found, activate it.
-            if (have_candidate) {
-                Improve(candidate_dep);
-                return true;
-            }
+            if (have_candidate) Improve(candidate_dep);
+            // Stop processing for now, even if nothing was activated, as the loop above may have
+            // had a nontrivial cost.
+            return true;
         }
-        // No improvable chunk was found, we are done.
-        return false;
     }
 
     /** Construct a topologically-valid linearization from the current forest state. Must be
@@ -1694,11 +1720,14 @@ std::tuple<std::vector<DepGraphIndex>, bool, uint64_t> Linearize(const DepGraph<
     // Make improvement steps to it until we hit the max_iterations limit, or an optimal result
     // is found.
     bool optimal = false;
-    while (forest.GetCost() < max_iterations) {
-        if (!forest.OptimizeStep()) {
-            optimal = true;
-            break;
-        }
+    if (forest.GetCost() < max_iterations) {
+        forest.StartOptimizing();
+        do {
+            if (!forest.OptimizeStep()) {
+                optimal = true;
+                break;
+            }
+        } while (forest.GetCost() < max_iterations);
     }
     return {forest.GetLinearization(), optimal, forest.GetCost()};
 }
