@@ -671,14 +671,15 @@ private:
     /** Structure with information about a single transaction. For transactions that are the
      *  representative for the chunk they are in, this also stores chunk information. */
     struct TxData {
-        /** The dependencies to parents of this transaction. Immutable after construction. */
-        std::vector<DepIdx> parent_deps;
         /** The dependencies to children of this transaction. Immutable after construction. */
         std::vector<DepIdx> child_deps;
         /** The set of parent transactions of this transaction. Immutable after construction. */
         SetType parents;
         /** The set of child transactions of this transaction. Immutable after construction. */
         SetType children;
+        /** The set of parent transactions of this transaction reachable through active
+         *  dependencies. */
+        SetType active_parents;
         /** Which transaction holds the chunk_setinfo for the chunk this transaction is in
          *  (the representative for the chunk). */
         TxIdx chunk_rep;
@@ -722,19 +723,10 @@ private:
                 // Mark the transaction as processed, and invoke the visitor for it.
                 auto& tx_data = m_tx_data[tx_idx];
                 done.Set(tx_idx);
-                todo.Reset(tx_idx);
                 visit_tx(tx_data);
-                // Iterate over all its active parent dependencies.
-                auto parent_deps = std::span{tx_data.parent_deps};
-                for (auto dep_idx : parent_deps) {
-                    auto& dep_entry = m_dep_data[dep_idx];
-                    Assume(dep_entry.child == tx_idx);
-                    if (!dep_entry.active) continue;
-                    // Mark the parent as todo if not done already.
-                    if (!done[dep_entry.parent]) {
-                        todo.Set(dep_entry.parent);
-                    }
-                }
+                // Mark all active parents as to be processed.
+                todo |= tx_data.active_parents;
+                todo -= done;
                 // Iterate over all its active child dependencies.
                 auto child_deps = std::span{tx_data.child_deps};
                 for (auto dep_idx : child_deps) {
@@ -784,6 +776,7 @@ private:
         // Make active.
         dep_data.active = true;
         dep_data.top_setinfo = top_part;
+        child_tx_data.active_parents.Set(dep_data.parent);
         ++m_operations;
         return top_rep;
     }
@@ -793,9 +786,11 @@ private:
     {
         auto& dep_data = m_dep_data[dep_idx];
         Assume(dep_data.active);
+        auto& child_tx_data = m_tx_data[dep_data.child];
         auto& parent_tx_data = m_tx_data[dep_data.parent];
         // Make inactive.
         dep_data.active = false;
+        child_tx_data.active_parents.Reset(dep_data.parent);
         // Update representatives.
         auto& chunk_data = m_tx_data[parent_tx_data.chunk_rep];
         auto top_part = dep_data.top_setinfo;
@@ -948,7 +943,6 @@ public:
                 dep.parent = par;
                 dep.child = tx;
                 // Add it as parent of the child.
-                tx_data.parent_deps.push_back(dep_idx);
                 tx_data.parents.Set(par);
                 // Add it as child of the parent.
                 par_tx_data.child_deps.push_back(dep_idx);
@@ -1171,6 +1165,7 @@ public:
         // Iterate over all chunks, reconstructing them from just active and m_transactions.
         SetType todo = m_transactions;
         DepIdx total_parent_deps = 0;
+        DepIdx total_active_parent_deps = 0;
         DepIdx total_child_deps = 0;
         DepIdx total_chunk_deps = 0;
         TxIdx total_chunk_count = 0;
@@ -1200,13 +1195,17 @@ public:
                 assert(tx_data.children == depgraph.GetReducedChildren(tx_idx));
                 // Analyze parent_deps.
                 SetType recomputed_parents;
-                for (auto par_dep : tx_data.parent_deps) {
+                SetType recomputed_active_parents;
+                for (DepIdx par_dep = 0; par_dep < m_dep_data.size(); ++par_dep) {
+                    // Only consider dependencies which have tx_idx as child.
+                    if (m_dep_data[par_dep].child != tx_idx) continue;
                     recomputed_parents.Set(m_dep_data[par_dep].parent);
-                    // Every parent dependency lists this transaction as child.
-                    assert(m_dep_data[par_dep].child == tx_idx);
+                    if (m_dep_data[par_dep].active) recomputed_active_parents.Set(m_dep_data[par_dep].parent);
                 }
                 assert(tx_data.parents == recomputed_parents);
-                total_parent_deps += tx_data.parent_deps.size();
+                assert(tx_data.active_parents == recomputed_active_parents);
+                total_parent_deps += tx_data.parents.Count();
+                total_active_parent_deps += tx_data.active_parents.Count();
                 // Analyze child_deps.
                 SetType recomputed_children;
                 for (auto chl_dep : tx_data.child_deps) {
@@ -1242,6 +1241,7 @@ public:
         assert(total_parent_deps == m_dep_data.size());
         assert(total_child_deps == m_dep_data.size());
         assert(total_chunk_deps == active.size());
+        assert(total_active_parent_deps == active.size());
         assert(total_chunk_count + total_chunk_deps == m_transactions.Count());
     }
 };
