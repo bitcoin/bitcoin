@@ -1015,6 +1015,7 @@ FUZZ_TARGET(clusterlin_sfl)
         try {
             reader >> VARINT(optimize_steps);
         } catch (const std::ios_base::failure&) {}
+        sfl.StartOptimizing();
         while (optimize_steps > 0) {
             --optimize_steps;
             if (!sfl.OptimizeStep()) {
