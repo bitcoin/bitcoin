@@ -1068,6 +1068,8 @@ FUZZ_TARGET(clusterlin_sfl)
     }
 
     // Loop until optimal.
+    test_fn();
+    sfl.StartOptimizing();
     while (true) {
         test_fn();
         if (!sfl.OptimizeStep()) break;
