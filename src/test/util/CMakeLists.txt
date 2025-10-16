@@ -25,6 +25,7 @@ target_link_libraries(test_util
   PRIVATE
     core_interface
     Boost::headers
+    $<TARGET_NAME_IF_EXISTS:libevent::core>
   PUBLIC
     univalue
 )
