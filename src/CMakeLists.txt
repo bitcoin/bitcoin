@@ -144,6 +144,7 @@ target_link_libraries(bitcoin_common
     univalue
     secp256k1
     Boost::headers
+    $<TARGET_NAME_IF_EXISTS:libevent::core>
     $<TARGET_NAME_IF_EXISTS:USDT::headers>
     $<$<PLATFORM_ID:Windows>:ws2_32>
 )
@@ -293,7 +294,14 @@ if(BUILD_BITCOIN_BIN)
   add_executable(bitcoin bitcoin.cpp)
   add_windows_resources(bitcoin bitcoin-res.rc)
   add_windows_application_manifest(bitcoin)
-  target_link_libraries(bitcoin core_interface bitcoin_common bitcoin_util)
+  target_link_libraries(bitcoin
+    core_interface
+    bitcoin_common
+    bitcoin_util
+    $<TARGET_NAME_IF_EXISTS:libevent::core>
+    Boost::headers
+    univalue
+  )
   install_binary_component(bitcoin HAS_MANPAGE)
 endif()
 
@@ -309,6 +317,7 @@ if(BUILD_DAEMON)
     core_interface
     bitcoin_node
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
+    $<TARGET_NAME_IF_EXISTS:libevent::core>
     Boost::headers
     univalue
   )
@@ -324,6 +333,7 @@ if(ENABLE_IPC AND BUILD_DAEMON)
     bitcoin_node
     bitcoin_ipc
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
+    $<TARGET_NAME_IF_EXISTS:libevent::core>
     Boost::headers
     univalue
   )
