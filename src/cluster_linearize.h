@@ -617,9 +617,13 @@ std::vector<FeeFrac> ChunkLinearization(const DepGraph<SetType>& depgraph, std::
  *     is uniformly randomly permuted.
  *
  * - How to decide what dependency to deactivate (when splitting chunks):
- *   - Inside the selected chunk (see above), among the dependencies whose top feerate is strictly
- *     higher than its bottom feerate in the selected chunk, if any, a uniformly random dependency
- *     is deactivated.
+ *   - Define the gain of an active dependency as either:
+ *
+ *         gain = (feerate(top) - feerate(bottom)) * size(top) * size(bottom)
+ *              = fee(top) * size(chunk) - fee(chunk) * size(top)
+ *
+ *   - Inside the selected chunk (see above), among the dependencies whose gain is maximal, if any
+ *     with strictly positive gain exist, a uniformly random one is deactivated.
  *
  * - How to decide the exact output linearization:
  *   - When there are multiple equal-feerate chunks with no dependencies between them, output a
@@ -1085,9 +1089,10 @@ public:
             // happen when a split chunk merges in Improve() with one or more existing chunks that
             // are themselves on the suboptimal queue already.
             if (chunk_data.chunk_rep != chunk) continue;
-            // Remember the best dependency seen so far.
+            // Remember the best dependency seen so far, together with its top feerate.
             DepIdx candidate_dep = DepIdx(-1);
-            uint64_t candidate_tiebreak = 0;
+            FeeFrac candidate_top_feerate;
+            uint64_t candidate_tiebreak = std::numeric_limits<uint64_t>::max();
             // Iterate over all transactions.
             for (auto tx : chunk_data.chunk_setinfo.transactions) {
                 const auto& tx_data = m_tx_data[tx];
@@ -1096,23 +1101,39 @@ public:
                 for (DepIdx dep_idx : children) {
                     const auto& dep_data = m_dep_data[dep_idx];
                     if (!dep_data.active) continue;
-                    // Skip if this dependency is ineligible (the top chunk that would be created
-                    // does not have higher feerate than the chunk it is currently part of).
-                    auto cmp = FeeRateCompare(dep_data.top_setinfo.feerate, chunk_data.chunk_setinfo.feerate);
-                    if (cmp <= 0) continue;
-                    // Generate a random tiebreak for this dependency, and reject it if its tiebreak
-                    // is worse than the best so far. This means that among all eligible
-                    // dependencies, a uniformly random one will be chosen.
-                    uint64_t tiebreak = m_rng.rand64();
-                    if (tiebreak < candidate_tiebreak) continue;
+                    // Define gain(top) = fee(top)*size(chunk) - fee(chunk)*size(top).
+                    //                  = (feerate(top) - feerate(chunk)) * size(top) * size(chunk).
+                    // Thus:
+                    //
+                    //     gain(top1) > gain(top2)
+                    // <=>   fee(top1)*size(chunk) - fee(chunk)*size(top1)
+                    //     > fee(top2)*size(chunk) - fee(chunk)*size(top2)
+                    // <=> (fee(top1)-fee(top2))*size(chunk) > fee(chunk)*(size(top1)-size(top2))
+                    //
+                    // If size(top1)>size(top2), this corresponds to feerate(top1-top2) > feerate(chunk),
+                    // so we can use FeeRateCompare to discover if dep_data.top_setinfo has better
+                    // gain than best_top_feerate. As FeeRateCompare() is actually implemented by
+                    // checking the sign of the cross-product, it even works when
+                    // size(top1) <= size(top2). When no candidate exists so far, this is equal
+                    // to comparing the feerate with the chunk directly (= the sign of gain(top)).
+                    auto cmp = FeeRateCompare(dep_data.top_setinfo.feerate - candidate_top_feerate,
+                                              chunk_data.chunk_setinfo.feerate);
+                    if (cmp < 0) continue;
+                    // Generate a random tiebreak for this dependency, and reject it if its gain is
+                    // equal to the candidate so far, but has worse tiebreak. This means that among
+                    // equal-gain dependencies, a uniformly random one (the one with the highest
+                    // tiebreak) will be chosen.
+                    uint64_t tiebreak = m_rng.rand64() >> 1;
+                    if (cmp == 0 && tiebreak <= candidate_tiebreak) continue;
                     // Remember this as our (new) candidate dependency.
                     candidate_dep = dep_idx;
+                    candidate_top_feerate = dep_data.top_setinfo.feerate;
                     candidate_tiebreak = tiebreak;
                 }
             }
             // If a candidate with positive gain was found, deactivate it and then make the state
             // topological again with a sequence of merges.
-            if (candidate_dep != DepIdx(-1)) Improve(candidate_dep);
+            if (candidate_tiebreak != std::numeric_limits<uint64_t>::max()) Improve(candidate_dep);
             // Stop processing for now, even if nothing was activated, as the loop above may have
             // had a nontrivial cost.
             return !m_suboptimal_chunks.empty();
