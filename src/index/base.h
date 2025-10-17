@@ -23,6 +23,8 @@ class ThreadPool;
 namespace interfaces {
 class Chain;
 } // namespace interfaces
+struct Task;
+struct SyncContext;
 
 /** Maximum number of threads a single thread pool instance can have */
 static constexpr int16_t MAX_INDEX_WORKERS_COUNT = 100;
@@ -101,6 +103,9 @@ private:
 
     /// Loop over disconnected blocks and call CustomRemove.
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
+
+    /// Handles a task, logs progress, and updates the index.
+    void SyncWorker(std::unique_ptr<Task> ptr_task, std::shared_ptr<SyncContext>& ctx, bool process_in_order);
 
     std::any ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data = nullptr);
 
