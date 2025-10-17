@@ -232,6 +232,46 @@ struct SyncContext {
     std::atomic<NodeClock::time_point> next_locator_write_time;
 };
 
+void BaseIndex::RunTask(std::unique_ptr<Task> ptr_task, std::shared_ptr<SyncContext>& ctx, bool process_in_order)
+{
+    // Two-phase processing: first 'ProcessBlock' digests block data on the child class, then
+    // 'CustomPostProcessBlocks' links to previous records (if needed) and batch-dumps to disk.
+    // This will enable parallel data processing while keeping sequentiality when needed.
+    ptr_task->result = ProcessBlocks(process_in_order, ptr_task->start_index, ptr_task->end_index);
+    if (ptr_task->result.empty()) {
+        // Empty result indicates an internal error (logged internally).
+        m_interrupt();
+        return;
+    }
+
+    // Post-Processing helper
+    const auto fn_post_process = [this](auto begin, auto end) {
+        return std::all_of(begin, end, [this](const auto& data) { return CustomPostProcessBlocks(data); });
+    };
+
+    bool complete = process_in_order ?
+                    fn_post_process(ptr_task->result.begin(), ptr_task->result.end()) :
+                    fn_post_process(ptr_task->result.rbegin(), ptr_task->result.rend());
+    if (!complete) {
+        m_interrupt();
+        FatalErrorf("Index %s: Failed to post process blocks", GetName());
+        return;
+    }
+
+    auto now{NodeClock::now()};
+    auto next_log = ctx->next_log_time.load(std::memory_order_relaxed);
+    if (now >= next_log && ctx->next_log_time.compare_exchange_weak(next_log, now + SYNC_LOG_INTERVAL, std::memory_order_relaxed)) {
+        LogInfo("Syncing %s with block chain from height %d",
+                GetName(), m_best_block_index ? m_best_block_index.load()->nHeight : 0);
+    }
+
+    auto next_commit = ctx->next_locator_write_time.load(std::memory_order_relaxed);
+    if (now >= next_commit && ctx->next_locator_write_time.compare_exchange_weak(next_commit, now + SYNC_LOCATOR_WRITE_INTERVAL, std::memory_order_relaxed)) {
+        SetBestBlockIndex(ptr_task->end_index);
+        Commit(); // No need to handle errors in Commit. See rationale above.
+    }
+}
+
 void BaseIndex::Sync()
 {
     const CBlockIndex* pindex = m_best_block_index.load();
@@ -240,11 +280,6 @@ void BaseIndex::Sync()
         ctx->next_log_time.store(NodeClock::now() + SYNC_LOG_INTERVAL);
         ctx->next_locator_write_time.store(NodeClock::now() + SYNC_LOCATOR_WRITE_INTERVAL);
         const bool process_in_order = OrderingRequired();
-
-        // Post-Processing helper
-        const auto fn_post_process = [this](auto begin, auto end) {
-            return std::all_of(begin, end, [this](const auto& data) { return CustomPostProcessBlocks(data); });
-        };
 
         while (true) {
             if (m_interrupt) {
@@ -284,38 +319,9 @@ void BaseIndex::Sync()
             }
             pindex = pindex_next;
 
-            // Two-phase processing: first 'ProcessBlock' digests block data on the child class, then
-            // 'CustomPostProcessBlocks' links to previous records (if needed) and batch-dumps to disk.
-            // This will enable parallel data processing while keeping sequentiality when needed.
-            Task task(/*start=*/pindex, /*end=*/pindex); // for now single block tasks
-            task.result = ProcessBlocks(process_in_order, task.start_index, task.end_index);
-            if (task.result.empty()) {
-                // Empty result indicates an internal error (logged internally).
-                m_interrupt();
-                return;
-            }
-
-            bool complete = process_in_order ?
-                            fn_post_process(task.result.begin(), task.result.end()) :
-                            fn_post_process(task.result.rbegin(), task.result.rend());
-            if (!complete) {
-                m_interrupt();
-                FatalErrorf("Index %s: Failed to post process blocks", GetName());
-                return;
-            }
-
-            auto now{NodeClock::now()};
-            auto next_log = ctx->next_log_time.load(std::memory_order_relaxed);
-            if (now >= next_log && ctx->next_log_time.compare_exchange_weak(next_log, now + SYNC_LOG_INTERVAL, std::memory_order_relaxed)) {
-                LogInfo("Syncing %s with block chain from height %d",
-                        GetName(), m_best_block_index ? m_best_block_index.load()->nHeight : 0);
-            }
-
-            auto next_commit = ctx->next_locator_write_time.load(std::memory_order_relaxed);
-            if (now >= next_commit && ctx->next_locator_write_time.compare_exchange_weak(next_commit, now + SYNC_LOCATOR_WRITE_INTERVAL, std::memory_order_relaxed)) {
-                SetBestBlockIndex(pindex);
-                Commit(); // No need to handle errors in Commit. See rationale above.
-            }
+            // For now only process single block tasks at a time
+            RunTask(std::make_unique<Task>(/*start=*/pindex, /*end=*/pindex), ctx, process_in_order);
+            if (m_interrupt) return;
         }
     }
 
