@@ -2023,15 +2023,12 @@ void Chainstate::CheckForkWarningConditions()
 {
     AssertLockHeld(cs_main);
 
-    // Before we get past initial download, we cannot reliably alert about forks
-    // (we assume we don't get stuck on a fork before finishing our initial sync)
-    // Also not applicable to the background chainstate
-    if (m_chainman.IsInitialBlockDownload() || this->GetRole() == ChainstateRole::BACKGROUND) {
+    if (this->GetRole() == ChainstateRole::BACKGROUND) {
         return;
     }
 
     if (m_chainman.m_best_invalid && m_chainman.m_best_invalid->nChainWork > m_chain.Tip()->nChainWork + (GetBlockProof(*m_chain.Tip()) * 6)) {
-        LogPrintf("%s: Warning: Found invalid chain at least ~6 blocks longer than our best chain.\nChain state database corruption likely.\n", __func__);
+        LogWarning("Found invalid chain at least ~6 blocks longer than our best chain. Chain state database corruption likely.");
         m_chainman.GetNotifications().warningSet(
             kernel::Warning::LARGE_WORK_INVALID_CHAIN,
             _("Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade."));
@@ -4673,6 +4670,8 @@ bool Chainstate::LoadChainTip()
             /*index=*/*pindex,
             /*verification_progress=*/m_chainman.GuessVerificationProgress(tip));
     }
+
+    CheckForkWarningConditions();
 
     return true;
 }

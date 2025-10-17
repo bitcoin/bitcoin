@@ -2956,6 +2956,12 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
                                                            state, &pindexLast)};
     if (!processed) {
         if (state.IsInvalid()) {
+            if (!pfrom.IsInboundConn() && state.GetResult() == BlockValidationResult::BLOCK_CACHED_INVALID) {
+                LogWarning("Header received from peer=%i was previously marked as invalid. "
+                           "If this happens with all peers, database corruption is likely and "
+                           "-reindex may be necessary to recover.",
+                           pfrom.GetId());
+            }
             MaybePunishNodeForBlock(pfrom.GetId(), state, via_compact_block, "invalid header received");
             return;
         }
