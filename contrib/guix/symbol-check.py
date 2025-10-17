@@ -151,11 +151,23 @@ MACHO_ALLOWED_LIBRARIES = {
 }
 
 PE_ALLOWED_LIBRARIES = {
+'api-ms-win-crt-convert-l1-1-0.dll',
+'api-ms-win-crt-environment-l1-1-0.dll',
+'api-ms-win-crt-filesystem-l1-1-0.dll',
+'api-ms-win-crt-heap-l1-1-0.dll',
+'api-ms-win-crt-locale-l1-1-0.dll',
+'api-ms-win-crt-math-l1-1-0.dll',
+'api-ms-win-crt-private-l1-1-0.dll',
+'api-ms-win-crt-process-l1-1-0.dll',
+'api-ms-win-crt-runtime-l1-1-0.dll',
+'api-ms-win-crt-stdio-l1-1-0.dll',
+'api-ms-win-crt-string-l1-1-0.dll',
+'api-ms-win-crt-time-l1-1-0.dll',
+'api-ms-win-crt-utility-l1-1-0.dll',
 'ADVAPI32.dll', # legacy security & registry
 'bcrypt.dll', # newer security and identity API
 'IPHLPAPI.DLL', # IP helper API
 'KERNEL32.dll', # win32 base APIs
-'msvcrt.dll', # C standard library for MSVC
 'SHELL32.dll', # shell API
 'WS2_32.dll', # sockets
 # bitcoin-qt only
