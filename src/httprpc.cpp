@@ -307,7 +307,7 @@ static bool InitRPCAuthentication()
     for (const std::string& strRPCWhitelist : gArgs.GetArgs("-rpcwhitelist")) {
         auto pos = strRPCWhitelist.find(':');
         std::string strUser = strRPCWhitelist.substr(0, pos);
-        bool intersect = g_rpc_whitelist.count(strUser);
+        bool intersect = g_rpc_whitelist.contains(strUser);
         std::set<std::string>& whitelist = g_rpc_whitelist[strUser];
         if (pos != std::string::npos) {
             std::string strWhitelist = strRPCWhitelist.substr(pos + 1);
