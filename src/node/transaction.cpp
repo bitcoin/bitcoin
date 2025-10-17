@@ -117,7 +117,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     }
 
     if (relay) {
-        node.peerman->RelayTransaction(txid, wtxid);
+        node.peerman->InitiateTxBroadcastToAll(txid, wtxid);
     }
 
     return TransactionError::OK;
