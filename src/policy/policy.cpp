@@ -220,11 +220,12 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         return false;
     }
 
-    //TODO: reuse containers across iterations
+    std::vector<std::vector<unsigned char>> vSolutions;
+    std::vector<std::vector<unsigned char>> stack;
     for (const CTxIn& txin : tx.vin) {
         const CTxOut& prev = mapInputs.AccessCoin(txin.prevout).out;
 
-        std::vector<std::vector<unsigned char> > vSolutions;
+        vSolutions.clear();
         TxoutType whichType = Solver(prev.scriptPubKey, vSolutions);
         if (whichType == TxoutType::NONSTANDARD || whichType == TxoutType::WITNESS_UNKNOWN) {
             // WITNESS_UNKNOWN failures are typically also caught with a policy
@@ -233,7 +234,7 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             // validation.
             return false;
         } else if (whichType == TxoutType::SCRIPTHASH) {
-            std::vector<std::vector<unsigned char> > stack;
+            stack.clear();
             // convert the scriptSig into a stack, so we can inspect the redeemScript
             if (!EvalScript(stack, txin.scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SigVersion::BASE))
                 return false;
@@ -254,6 +255,8 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
     if (tx.IsCoinBase())
         return true; // Coinbases are skipped
 
+    std::vector<std::vector<unsigned char>> stack;
+    std::vector<unsigned char> witnessprogram;
     for (const CTxIn& txin : tx.vin)
     {
         // We don't care if witness for this input is empty, since it must not be bloated.
@@ -273,7 +276,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 
         bool p2sh = false;
         if (prevScript.IsPayToScriptHash()) {
-            std::vector <std::vector<unsigned char> > stack;
+            stack.clear();
             // If the scriptPubKey is P2SH, we try to extract the redeemScript casually by converting the scriptSig
             // into a stack. We do not check IsPushOnly nor compare the hash as these will be done later anyway.
             // If the check fails at this stage, we know that this txid must be a bad one.
@@ -285,8 +288,8 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             p2sh = true;
         }
 
+        witnessprogram.clear();
         int witnessversion = 0;
-        std::vector<unsigned char> witnessprogram;
 
         // Non-witness program must not be associated with any witness
         if (!prevScript.IsWitnessProgram(witnessversion, witnessprogram))
@@ -346,6 +349,7 @@ bool SpendsNonAnchorWitnessProg(const CTransaction& tx, const CCoinsViewCache& p
 
     int version;
     std::vector<uint8_t> program;
+    std::vector<std::vector<uint8_t>> stack;
     for (const auto& txin: tx.vin) {
         const auto& prev_spk{prevouts.AccessCoin(txin.prevout).out.scriptPubKey};
 
@@ -359,7 +363,7 @@ bool SpendsNonAnchorWitnessProg(const CTransaction& tx, const CCoinsViewCache& p
         // function is only ever called after IsStandardTx, which checks the scriptsig is pushonly.
         if (prev_spk.IsPayToScriptHash()) {
             // If EvalScript fails or results in an empty stack, the transaction is invalid by consensus.
-            std::vector <std::vector<uint8_t>> stack;
+            stack.clear();
             if (!EvalScript(stack, txin.scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker{}, SigVersion::BASE)
                 || stack.empty()) {
                 continue;
