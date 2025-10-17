@@ -12,27 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#if (defined(_MSC_VER) && _MSC_VER >= 1900)
-#  include <time.h>
-#else
-#  include <sys/time.h>
-#endif
-
-static int64_t gettime_i64(void) {
-#if (defined(_MSC_VER) && _MSC_VER >= 1900)
-    /* C11 way to get wallclock time */
-    struct timespec tv;
-    if (!timespec_get(&tv, TIME_UTC)) {
-        fputs("timespec_get failed!", stderr);
-        exit(EXIT_FAILURE);
-    }
-    return (int64_t)tv.tv_nsec / 1000 + (int64_t)tv.tv_sec * 1000000LL;
-#else
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (int64_t)tv.tv_usec + (int64_t)tv.tv_sec * 1000000LL;
-#endif
-}
+#include "tests_common.h"
 
 #define FP_EXP (6)
 #define FP_MULT (1000000LL)

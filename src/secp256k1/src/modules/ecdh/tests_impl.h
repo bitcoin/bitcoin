@@ -7,6 +7,8 @@
 #ifndef SECP256K1_MODULE_ECDH_TESTS_H
 #define SECP256K1_MODULE_ECDH_TESTS_H
 
+#include "../../unit_test.h"
+
 static int ecdh_hash_function_test_xpassthru(unsigned char *output, const unsigned char *x, const unsigned char *y, void *data) {
     (void)y;
     (void)data;
@@ -90,12 +92,7 @@ static void test_ecdh_generator_basepoint(void) {
 
 static void test_bad_scalar(void) {
     unsigned char s_zero[32] = { 0 };
-    unsigned char s_overflow[32] = {
-        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
-        0xba, 0xae, 0xdc, 0xe6, 0xaf, 0x48, 0xa0, 0x3b,
-        0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41
-    };
+    unsigned char s_overflow[32] = { 0 };
     unsigned char s_rand[32] = { 0 };
     unsigned char output[32];
     secp256k1_scalar rand;
@@ -107,6 +104,7 @@ static void test_bad_scalar(void) {
     CHECK(secp256k1_ec_pubkey_create(CTX, &point, s_rand) == 1);
 
     /* Try to multiply it by bad values */
+    memcpy(s_overflow, secp256k1_group_order_bytes, 32);
     CHECK(secp256k1_ecdh(CTX, output, &point, s_zero, NULL, NULL) == 0);
     CHECK(secp256k1_ecdh(CTX, output, &point, s_overflow, NULL, NULL) == 0);
     /* ...and a good one */
@@ -182,12 +180,13 @@ static void test_ecdh_wycheproof(void) {
     }
 }
 
-static void run_ecdh_tests(void) {
-    test_ecdh_api();
-    test_ecdh_generator_basepoint();
-    test_bad_scalar();
-    test_result_basepoint();
-    test_ecdh_wycheproof();
-}
+/* --- Test registry --- */
+static const struct tf_test_entry tests_ecdh[] = {
+    CASE1(test_ecdh_api),
+    CASE1(test_ecdh_generator_basepoint),
+    CASE1(test_bad_scalar),
+    CASE1(test_result_basepoint),
+    CASE1(test_ecdh_wycheproof),
+};
 
 #endif /* SECP256K1_MODULE_ECDH_TESTS_H */

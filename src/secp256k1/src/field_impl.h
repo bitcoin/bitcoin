@@ -19,7 +19,7 @@
 #endif
 
 SECP256K1_INLINE static void secp256k1_fe_clear(secp256k1_fe *a) {
-    secp256k1_memclear(a, sizeof(secp256k1_fe));
+    secp256k1_memclear_explicit(a, sizeof(secp256k1_fe));
 }
 
 SECP256K1_INLINE static int secp256k1_fe_equal(const secp256k1_fe *a, const secp256k1_fe *b) {

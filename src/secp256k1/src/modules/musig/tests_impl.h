@@ -20,6 +20,7 @@
 #include "../../group.h"
 #include "../../hash.h"
 #include "../../util.h"
+#include "../../unit_test.h"
 
 #include "vectors.h"
 
@@ -36,7 +37,7 @@ static int create_keypair_and_pk(secp256k1_keypair *keypair, secp256k1_pubkey *p
 
 /* Just a simple (non-tweaked) 2-of-2 MuSig aggregate, sign, verify
  * test. */
-static void musig_simple_test(void) {
+static void musig_simple_test_internal(void) {
     unsigned char sk[2][32];
     secp256k1_keypair keypair[2];
     secp256k1_musig_pubnonce pubnonce[2];
@@ -548,40 +549,39 @@ static void musig_nonce_test(void) {
     }
 }
 
-static void sha256_tag_test_internal(secp256k1_sha256 *sha_tagged, unsigned char *tag, size_t taglen) {
-    secp256k1_sha256 sha;
-    secp256k1_sha256_initialize_tagged(&sha, tag, taglen);
-    test_sha256_eq(&sha, sha_tagged);
-}
-
 /* Checks that the initialized tagged hashes have the expected
  * state. */
 static void sha256_tag_test(void) {
     secp256k1_sha256 sha;
     {
-        char tag[] = "KeyAgg list";
+        /* "KeyAgg list" */
+        static const unsigned char tag[] = {'K', 'e', 'y', 'A', 'g', 'g', ' ', 'l', 'i', 's', 't'};
         secp256k1_musig_keyagglist_sha256(&sha);
-        sha256_tag_test_internal(&sha, (unsigned char*)tag, sizeof(tag) - 1);
+        test_sha256_tag_midstate(&sha, tag, sizeof(tag));
     }
     {
-        char tag[] = "KeyAgg coefficient";
+        /* "KeyAgg coefficient" */
+        static const unsigned char tag[] = {'K', 'e', 'y', 'A', 'g', 'g', ' ', 'c', 'o', 'e', 'f', 'f', 'i', 'c', 'i', 'e', 'n', 't'};
         secp256k1_musig_keyaggcoef_sha256(&sha);
-        sha256_tag_test_internal(&sha, (unsigned char*)tag, sizeof(tag) - 1);
+        test_sha256_tag_midstate(&sha, tag, sizeof(tag));
     }
     {
-        unsigned char tag[] = "MuSig/aux";
+        /* "MuSig/aux" */
+        static const unsigned char tag[] = { 'M', 'u', 'S', 'i', 'g', '/', 'a', 'u', 'x' };
         secp256k1_nonce_function_musig_sha256_tagged_aux(&sha);
-        sha256_tag_test_internal(&sha, (unsigned char*)tag, sizeof(tag) - 1);
+        test_sha256_tag_midstate(&sha, tag, sizeof(tag));
     }
     {
-        unsigned char tag[] = "MuSig/nonce";
+        /* "MuSig/nonce" */
+        static const unsigned char tag[] = { 'M', 'u', 'S', 'i', 'g', '/', 'n', 'o', 'n', 'c', 'e' };
         secp256k1_nonce_function_musig_sha256_tagged(&sha);
-        sha256_tag_test_internal(&sha, (unsigned char*)tag, sizeof(tag) - 1);
+        test_sha256_tag_midstate(&sha, tag, sizeof(tag));
     }
     {
-        unsigned char tag[] = "MuSig/noncecoef";
+        /* "MuSig/noncecoef" */
+        static const unsigned char tag[] = { 'M', 'u', 'S', 'i', 'g', '/', 'n', 'o', 'n', 'c', 'e', 'c', 'o', 'e', 'f' };
         secp256k1_musig_compute_noncehash_sha256_tagged(&sha);
-        sha256_tag_test_internal(&sha, (unsigned char*)tag, sizeof(tag) - 1);
+        test_sha256_tag_midstate(&sha, tag, sizeof(tag));
     }
 }
 
@@ -630,7 +630,7 @@ static void musig_tweak_test_helper(const secp256k1_xonly_pubkey* agg_pk, const 
 
 /* Create aggregate public key P[0], tweak multiple times (using xonly and
  * plain tweaking) and test signing. */
-static void musig_tweak_test(void) {
+static void musig_tweak_test_internal(void) {
     unsigned char sk[2][32];
     secp256k1_pubkey pk[2];
     const secp256k1_pubkey *pk_ptr[2];
@@ -1115,28 +1115,24 @@ static void musig_test_static_nonce_gen_counter(void) {
     CHECK(secp256k1_memcmp_var(pubnonce66, expected_pubnonce, sizeof(pubnonce66)) == 0);
 }
 
-static void run_musig_tests(void) {
-    int i;
+/* --- Test registry --- */
+REPEAT_TEST(musig_simple_test)
+/* Run multiple times to ensure that pk and nonce have different y parities */
+REPEAT_TEST(musig_tweak_test)
 
-    for (i = 0; i < COUNT; i++) {
-        musig_simple_test();
-    }
-    musig_api_tests();
-    musig_nonce_test();
-    for (i = 0; i < COUNT; i++) {
-        /* Run multiple times to ensure that pk and nonce have different y
-         * parities */
-        musig_tweak_test();
-    }
-    sha256_tag_test();
-    musig_test_vectors_keyagg();
-    musig_test_vectors_noncegen();
-    musig_test_vectors_nonceagg();
-    musig_test_vectors_signverify();
-    musig_test_vectors_tweak();
-    musig_test_vectors_sigagg();
-
-    musig_test_static_nonce_gen_counter();
-}
+static const struct tf_test_entry tests_musig[] = {
+    CASE1(musig_simple_test),
+    CASE1(musig_api_tests),
+    CASE1(musig_nonce_test),
+    CASE1(musig_tweak_test),
+    CASE1(sha256_tag_test),
+    CASE1(musig_test_vectors_keyagg),
+    CASE1(musig_test_vectors_noncegen),
+    CASE1(musig_test_vectors_nonceagg),
+    CASE1(musig_test_vectors_signverify),
+    CASE1(musig_test_vectors_tweak),
+    CASE1(musig_test_vectors_sigagg),
+    CASE1(musig_test_static_nonce_gen_counter),
+};
 
 #endif

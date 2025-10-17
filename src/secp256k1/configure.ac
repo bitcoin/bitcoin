@@ -144,7 +144,7 @@ AC_ARG_ENABLE(benchmark,
     [SECP_SET_DEFAULT([enable_benchmark], [yes], [yes])])
 
 AC_ARG_ENABLE(coverage,
-    AS_HELP_STRING([--enable-coverage],[enable compiler flags to support kcov coverage analysis [default=no]]), [],
+    AS_HELP_STRING([--enable-coverage],[enable coverage analysis support [default=no]]), [],
     [SECP_SET_DEFAULT([enable_coverage], [no], [no])])
 
 AC_ARG_ENABLE(tests,
@@ -441,6 +441,14 @@ if test x"$enable_experimental" = x"no"; then
   if test x"$set_asm" = x"arm32"; then
     AC_MSG_ERROR([ARM32 assembly is experimental. Use --enable-experimental to allow.])
   fi
+fi
+
+# Check for concurrency support (tests only)
+if test "x$enable_tests" != x"no"; then
+  AC_CHECK_HEADERS([sys/types.h sys/wait.h unistd.h])
+  AS_IF([test "x$ac_cv_header_sys_types_h" = xyes && test "x$ac_cv_header_sys_wait_h" = xyes &&
+         test "x$ac_cv_header_unistd_h" = xyes], [TEST_DEFINES="-DSUPPORTS_CONCURRENCY=1"], TEST_DEFINES="")
+  AC_SUBST(TEST_DEFINES)
 fi
 
 ###
