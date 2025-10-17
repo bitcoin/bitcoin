@@ -310,23 +310,23 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         // - No annexes
         if (witnessversion == 1 && witnessprogram.size() == WITNESS_V1_TAPROOT_SIZE && !p2sh) {
             // Taproot spend (non-P2SH-wrapped, version 1, witness program size 32; see BIP 341)
-            std::span stack{txin.scriptWitness.stack};
-            if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
+            std::span script_stack{txin.scriptWitness.stack};
+            if (script_stack.size() >= 2 && !script_stack.back().empty() && script_stack.back()[0] == ANNEX_TAG) {
                 // Annexes are nonstandard as long as no semantics are defined for them.
                 return false;
             }
-            if (stack.size() >= 2) {
+            if (script_stack.size() >= 2) {
                 // Script path spend (2 or more stack elements after removing optional annex)
-                const auto& control_block = SpanPopBack(stack);
-                SpanPopBack(stack); // Ignore script
+                const auto& control_block = SpanPopBack(script_stack);
+                SpanPopBack(script_stack); // Ignore script
                 if (control_block.empty()) return false; // Empty control block is invalid
                 if ((control_block[0] & TAPROOT_LEAF_MASK) == TAPROOT_LEAF_TAPSCRIPT) {
                     // Leaf version 0xc0 (aka Tapscript, see BIP 342)
-                    for (const auto& item : stack) {
+                    for (const auto& item : script_stack) {
                         if (item.size() > MAX_STANDARD_TAPSCRIPT_STACK_ITEM_SIZE) return false;
                     }
                 }
-            } else if (stack.size() == 1) {
+            } else if (script_stack.size() == 1) {
                 // Key path spend (1 stack element after removing optional annex)
                 // (no policy rules apply)
             } else {
