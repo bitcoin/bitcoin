@@ -22,6 +22,7 @@ Features:
 * Optional module for Schnorr signatures according to [BIP-340](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki).
 * Optional module for ElligatorSwift key exchange according to [BIP-324](https://github.com/bitcoin/bips/blob/master/bip-0324.mediawiki).
 * Optional module for MuSig2 Schnorr multi-signatures according to [BIP-327](https://github.com/bitcoin/bips/blob/master/bip-0327.mediawiki).
+* Optional module for Silent Payments sending and receiving according to [BIP-352](https://github.com/bitcoin/bips/blob/master/bip-0352.mediawiki).
 
 Implementation details
 ----------------------
@@ -152,6 +153,7 @@ Usage examples can be found in the [examples](examples) directory. To compile th
   * [Deriving a shared secret (ECDH) example](examples/ecdh.c)
   * [ElligatorSwift key exchange example](examples/ellswift.c)
   * [MuSig2 Schnorr multi-signatures example](examples/musig.c)
+  * [Silent Payments send and receive example](examples/silentpayments.c)
 
 To compile the examples, make sure the corresponding modules are enabled.
 
