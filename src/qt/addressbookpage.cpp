@@ -21,6 +21,11 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QSortFilterProxyModel>
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+#include <QRegularExpression>
+#else
+#include <QRegExp>
+#endif
 
 class AddressBookSortFilterProxyModel final : public QSortFilterProxyModel
 {
@@ -48,12 +53,13 @@ protected:
 
         auto address = model->index(row, AddressTableModel::Address, parent);
 
-        if (filterRegExp().indexIn(model->data(address).toString()) < 0 &&
-            filterRegExp().indexIn(model->data(label).toString()) < 0) {
-            return false;
-        }
-
-        return true;
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+        const auto pattern = filterRegularExpression();
+#else
+        const auto pattern = filterRegExp();
+#endif
+        return (model->data(address).toString().contains(pattern) ||
+                model->data(label).toString().contains(pattern));
     }
 };
 

@@ -17,16 +17,16 @@
 
 typedef std::vector<unsigned char> valtype;
 
-MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction* tx, unsigned int input_idx, const CAmount& amount, int hash_type)
-    : txTo{tx}, nIn{input_idx}, nHashType{hash_type}, amount{amount}, checker{txTo, nIn, amount, MissingDataBehavior::FAIL},
+MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction& tx, unsigned int input_idx, const CAmount& amount, int hash_type)
+    : m_txto{tx}, nIn{input_idx}, nHashType{hash_type}, amount{amount}, checker{&m_txto, nIn, amount, MissingDataBehavior::FAIL},
       m_txdata(nullptr)
 {
 }
 
-MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction* tx, unsigned int input_idx, const CAmount& amount, const PrecomputedTransactionData* txdata, int hash_type)
-    : txTo{tx}, nIn{input_idx}, nHashType{hash_type}, amount{amount},
-      checker{txdata ? MutableTransactionSignatureChecker{txTo, nIn, amount, *txdata, MissingDataBehavior::FAIL} :
-                       MutableTransactionSignatureChecker{txTo, nIn, amount, MissingDataBehavior::FAIL}},
+MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction& tx, unsigned int input_idx, const CAmount& amount, const PrecomputedTransactionData* txdata, int hash_type)
+    : m_txto{tx}, nIn{input_idx}, nHashType{hash_type}, amount{amount},
+      checker{txdata ? MutableTransactionSignatureChecker{&m_txto, nIn, amount, *txdata, MissingDataBehavior::FAIL} :
+                       MutableTransactionSignatureChecker{&m_txto, nIn, amount, MissingDataBehavior::FAIL}},
       m_txdata(txdata)
 {
 }
@@ -37,7 +37,7 @@ bool MutableTransactionSignatureCreator::CreateSig(const SigningProvider& provid
     if (!provider.GetKey(address, key))
         return false;
 
-    uint256 hash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion, m_txdata);
+    uint256 hash = SignatureHash(scriptCode, m_txto, nIn, nHashType, amount, sigversion, m_txdata);
     if (!key.Sign(hash, vchSig))
         return false;
     vchSig.push_back((unsigned char)nHashType);
@@ -324,7 +324,7 @@ bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, C
 {
     assert(nIn < txTo.vin.size());
 
-    MutableTransactionSignatureCreator creator(&txTo, nIn, amount, nHashType);
+    MutableTransactionSignatureCreator creator(txTo, nIn, amount, nHashType);
 
     SignatureData sigdata;
     bool ret = ProduceSignature(provider, creator, fromPubKey, sigdata);
@@ -437,7 +437,7 @@ bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
         SignatureData sigdata = DataFromTransaction(mtx, i, coin->second.out);
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mtx.vout.size())) {
-            ProduceSignature(*keystore, MutableTransactionSignatureCreator(&mtx, i, amount, &txdata, nHashType), prevPubKey, sigdata);
+            ProduceSignature(*keystore, MutableTransactionSignatureCreator(mtx, i, amount, &txdata, nHashType), prevPubKey, sigdata);
         }
 
         UpdateInput(txin, sigdata);

@@ -62,6 +62,7 @@
 #include <QSettings>
 #include <QShortcut>
 #include <QSize>
+#include <QStandardPaths>
 #include <QString>
 #include <QTextDocument> // for Qt::mightBeRichText
 #include <QThread>
