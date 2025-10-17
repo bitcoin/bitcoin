@@ -534,20 +534,23 @@ BOOST_AUTO_TEST_CASE(check_dup_param_names)
     make_rpc({{"p1", NAMED_ONLY}, {"p2", NAMED}});
     make_rpc({{"p1", NAMED_ONLY}, {"p2", NAMED_ONLY}});
 
-    // Error if parameters names are duplicates, unless one parameter is
-    // positional and the other is named and .also_positional is true.
-    BOOST_CHECK_THROW(make_rpc({{"p1", POSITIONAL}, {"p1", POSITIONAL}}), NonFatalCheckError);
-    make_rpc({{"p1", POSITIONAL}, {"p1", NAMED}});
-    BOOST_CHECK_THROW(make_rpc({{"p1", POSITIONAL}, {"p1", NAMED_ONLY}}), NonFatalCheckError);
-    make_rpc({{"p1", NAMED}, {"p1", POSITIONAL}});
-    BOOST_CHECK_THROW(make_rpc({{"p1", NAMED}, {"p1", NAMED}}), NonFatalCheckError);
-    BOOST_CHECK_THROW(make_rpc({{"p1", NAMED}, {"p1", NAMED_ONLY}}), NonFatalCheckError);
-    BOOST_CHECK_THROW(make_rpc({{"p1", NAMED_ONLY}, {"p1", POSITIONAL}}), NonFatalCheckError);
-    BOOST_CHECK_THROW(make_rpc({{"p1", NAMED_ONLY}, {"p1", NAMED}}), NonFatalCheckError);
-    BOOST_CHECK_THROW(make_rpc({{"p1", NAMED_ONLY}, {"p1", NAMED_ONLY}}), NonFatalCheckError);
+    {
+        test_only_CheckFailuresAreExceptionsNotAborts mock_checks{};
+        // Error if parameter names are duplicates, unless one parameter is
+        // positional and the other is named and .also_positional is true.
+        BOOST_CHECK_THROW(make_rpc({{"p1", POSITIONAL}, {"p1", POSITIONAL}}), NonFatalCheckError);
+        make_rpc({{"p1", POSITIONAL}, {"p1", NAMED}});
+        BOOST_CHECK_THROW(make_rpc({{"p1", POSITIONAL}, {"p1", NAMED_ONLY}}), NonFatalCheckError);
+        make_rpc({{"p1", NAMED}, {"p1", POSITIONAL}});
+        BOOST_CHECK_THROW(make_rpc({{"p1", NAMED}, {"p1", NAMED}}), NonFatalCheckError);
+        BOOST_CHECK_THROW(make_rpc({{"p1", NAMED}, {"p1", NAMED_ONLY}}), NonFatalCheckError);
+        BOOST_CHECK_THROW(make_rpc({{"p1", NAMED_ONLY}, {"p1", POSITIONAL}}), NonFatalCheckError);
+        BOOST_CHECK_THROW(make_rpc({{"p1", NAMED_ONLY}, {"p1", NAMED}}), NonFatalCheckError);
+        BOOST_CHECK_THROW(make_rpc({{"p1", NAMED_ONLY}, {"p1", NAMED_ONLY}}), NonFatalCheckError);
 
-    // Make sure duplicate aliases are detected too.
-    BOOST_CHECK_THROW(make_rpc({{"p1", POSITIONAL}, {"p2|p1", NAMED_ONLY}}), NonFatalCheckError);
+        // Make sure duplicate aliases are detected too.
+        BOOST_CHECK_THROW(make_rpc({{"p1", POSITIONAL}, {"p2|p1", NAMED_ONLY}}), NonFatalCheckError);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(help_example)
