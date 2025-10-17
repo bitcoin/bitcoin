@@ -3904,84 +3904,84 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
     <group restype="x-trolltech-linguist-context" resname="TransactionDesc">
       <trans-unit id="_msg846">
         <source xml:space="preserve">conflicted with a transaction with %1 confirmations</source>
-        <context-group purpose="location"><context context-type="linenumber">39</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">34</context></context-group>
         <note annotates="source" from="developer">Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that conflicts with a confirmed transaction.</note>
       </trans-unit>
       <trans-unit id="_msg847">
         <source xml:space="preserve">0/unconfirmed, in memory pool</source>
-        <context-group purpose="location"><context context-type="linenumber">46</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">41</context></context-group>
         <note annotates="source" from="developer">Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that is in the memory pool.</note>
       </trans-unit>
       <trans-unit id="_msg848">
         <source xml:space="preserve">0/unconfirmed, not in memory pool</source>
-        <context-group purpose="location"><context context-type="linenumber">51</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">46</context></context-group>
         <note annotates="source" from="developer">Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that is not in the memory pool.</note>
       </trans-unit>
       <trans-unit id="_msg849">
         <source xml:space="preserve">abandoned</source>
-        <context-group purpose="location"><context context-type="linenumber">57</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">52</context></context-group>
         <note annotates="source" from="developer">Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an abandoned transaction.</note>
       </trans-unit>
       <trans-unit id="_msg850">
         <source xml:space="preserve">%1/unconfirmed</source>
-        <context-group purpose="location"><context context-type="linenumber">65</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">60</context></context-group>
         <note annotates="source" from="developer">Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in at least one block, but less than 6 blocks.</note>
       </trans-unit>
       <trans-unit id="_msg851">
         <source xml:space="preserve">%1 confirmations</source>
-        <context-group purpose="location"><context context-type="linenumber">70</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">65</context></context-group>
         <note annotates="source" from="developer">Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in 6 or more blocks.</note>
       </trans-unit>
       <trans-unit id="_msg852">
         <source xml:space="preserve">Status</source>
-        <context-group purpose="location"><context context-type="linenumber">120</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">115</context></context-group>
       </trans-unit>
       <trans-unit id="_msg853">
         <source xml:space="preserve">Date</source>
-        <context-group purpose="location"><context context-type="linenumber">123</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">118</context></context-group>
       </trans-unit>
       <trans-unit id="_msg854">
         <source xml:space="preserve">Source</source>
-        <context-group purpose="location"><context context-type="linenumber">130</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">125</context></context-group>
       </trans-unit>
       <trans-unit id="_msg855">
         <source xml:space="preserve">Generated</source>
-        <context-group purpose="location"><context context-type="linenumber">130</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">125</context></context-group>
       </trans-unit>
       <trans-unit id="_msg856">
         <source xml:space="preserve">From</source>
-        <context-group purpose="location"><context context-type="linenumber">135</context></context-group>
-        <context-group purpose="location"><context context-type="linenumber">149</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">130</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">143</context></context-group>
       </trans-unit>
       <trans-unit id="_msg857">
         <source xml:space="preserve">unknown</source>
-        <context-group purpose="location"><context context-type="linenumber">149</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">143</context></context-group>
       </trans-unit>
       <trans-unit id="_msg858">
         <source xml:space="preserve">To</source>
-        <context-group purpose="location"><context context-type="linenumber">150</context></context-group>
-        <context-group purpose="location"><context context-type="linenumber">170</context></context-group>
-        <context-group purpose="location"><context context-type="linenumber">236</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">144</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">164</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">221</context></context-group>
       </trans-unit>
       <trans-unit id="_msg859">
         <source xml:space="preserve">own address</source>
-        <context-group purpose="location"><context context-type="linenumber">152</context></context-group>
-        <context-group purpose="location"><context context-type="linenumber">243</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">146</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">228</context></context-group>
       </trans-unit>
       <trans-unit id="_msg860">
         <source xml:space="preserve">label</source>
-        <context-group purpose="location"><context context-type="linenumber">154</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">148</context></context-group>
       </trans-unit>
       <trans-unit id="_msg861">
         <source xml:space="preserve">Credit</source>
-        <context-group purpose="location"><context context-type="linenumber">190</context></context-group>
-        <context-group purpose="location"><context context-type="linenumber">202</context></context-group>
-        <context-group purpose="location"><context context-type="linenumber">250</context></context-group>
-        <context-group purpose="location"><context context-type="linenumber">280</context></context-group>
-        <context-group purpose="location"><context context-type="linenumber">340</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">184</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">196</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">235</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">265</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">325</context></context-group>
       </trans-unit>
       <group restype="x-gettext-plurals">
-        <context-group purpose="location"><context context-type="linenumber">192</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">186</context></context-group>
         <trans-unit id="_msg862[0]">
           <source xml:space="preserve">matures in %n more block(s)</source>
         </trans-unit>
@@ -3991,90 +3991,90 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
       </group>
       <trans-unit id="_msg863">
         <source xml:space="preserve">not accepted</source>
-        <context-group purpose="location"><context context-type="linenumber">194</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">188</context></context-group>
       </trans-unit>
       <trans-unit id="_msg864">
         <source xml:space="preserve">Debit</source>
-        <context-group purpose="location"><context context-type="linenumber">248</context></context-group>
-        <context-group purpose="location"><context context-type="linenumber">274</context></context-group>
-        <context-group purpose="location"><context context-type="linenumber">337</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">233</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">259</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">322</context></context-group>
       </trans-unit>
       <trans-unit id="_msg865">
         <source xml:space="preserve">Total debit</source>
-        <context-group purpose="location"><context context-type="linenumber">258</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">243</context></context-group>
       </trans-unit>
       <trans-unit id="_msg866">
         <source xml:space="preserve">Total credit</source>
-        <context-group purpose="location"><context context-type="linenumber">259</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">244</context></context-group>
       </trans-unit>
       <trans-unit id="_msg867">
         <source xml:space="preserve">Transaction fee</source>
-        <context-group purpose="location"><context context-type="linenumber">264</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">249</context></context-group>
       </trans-unit>
       <trans-unit id="_msg868">
         <source xml:space="preserve">Net amount</source>
-        <context-group purpose="location"><context context-type="linenumber">286</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">271</context></context-group>
       </trans-unit>
       <trans-unit id="_msg869">
         <source xml:space="preserve">Message</source>
-        <context-group purpose="location"><context context-type="linenumber">292</context></context-group>
-        <context-group purpose="location"><context context-type="linenumber">304</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">277</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">289</context></context-group>
       </trans-unit>
       <trans-unit id="_msg870">
         <source xml:space="preserve">Comment</source>
-        <context-group purpose="location"><context context-type="linenumber">294</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">279</context></context-group>
       </trans-unit>
       <trans-unit id="_msg871">
         <source xml:space="preserve">Transaction ID</source>
-        <context-group purpose="location"><context context-type="linenumber">296</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">281</context></context-group>
       </trans-unit>
       <trans-unit id="_msg872">
         <source xml:space="preserve">Transaction total size</source>
-        <context-group purpose="location"><context context-type="linenumber">297</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">282</context></context-group>
       </trans-unit>
       <trans-unit id="_msg873">
         <source xml:space="preserve">Transaction virtual size</source>
-        <context-group purpose="location"><context context-type="linenumber">298</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">283</context></context-group>
       </trans-unit>
       <trans-unit id="_msg874">
         <source xml:space="preserve">Output index</source>
-        <context-group purpose="location"><context context-type="linenumber">299</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">284</context></context-group>
       </trans-unit>
       <trans-unit id="_msg875">
         <source xml:space="preserve">%1 (Certificate was not verified)</source>
-        <context-group purpose="location"><context context-type="linenumber">315</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">300</context></context-group>
       </trans-unit>
       <trans-unit id="_msg876">
         <source xml:space="preserve">Merchant</source>
-        <context-group purpose="location"><context context-type="linenumber">318</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">303</context></context-group>
       </trans-unit>
       <trans-unit id="_msg877">
         <source xml:space="preserve">Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <context-group purpose="location"><context context-type="linenumber">326</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">311</context></context-group>
       </trans-unit>
       <trans-unit id="_msg878">
         <source xml:space="preserve">Debug information</source>
-        <context-group purpose="location"><context context-type="linenumber">334</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">319</context></context-group>
       </trans-unit>
       <trans-unit id="_msg879">
         <source xml:space="preserve">Transaction</source>
-        <context-group purpose="location"><context context-type="linenumber">342</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">327</context></context-group>
       </trans-unit>
       <trans-unit id="_msg880">
         <source xml:space="preserve">Inputs</source>
-        <context-group purpose="location"><context context-type="linenumber">345</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">330</context></context-group>
       </trans-unit>
       <trans-unit id="_msg881">
         <source xml:space="preserve">Amount</source>
-        <context-group purpose="location"><context context-type="linenumber">364</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">349</context></context-group>
       </trans-unit>
       <trans-unit id="_msg882">
         <source xml:space="preserve">true</source>
-        <context-group purpose="location"><context context-type="linenumber">365</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">350</context></context-group>
       </trans-unit>
       <trans-unit id="_msg883">
         <source xml:space="preserve">false</source>
-        <context-group purpose="location"><context context-type="linenumber">365</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">350</context></context-group>
       </trans-unit>
     </group>
   </body></file>
