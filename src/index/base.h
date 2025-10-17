@@ -27,6 +27,8 @@ class CBlock;
 class CBlockIndex;
 class Chainstate;
 
+struct Task;
+struct SyncContext;
 struct CBlockLocator;
 struct IndexSummary {
     std::string name;
@@ -106,6 +108,9 @@ private:
 
     /// Loop over disconnected blocks and call CustomRemove.
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
+
+    /// Handles a task, logs progress, and updates the index.
+    void RunTask(std::unique_ptr<Task> ptr_task, std::shared_ptr<SyncContext>& ctx, bool process_in_order);
 
     std::any ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data = nullptr);
 
