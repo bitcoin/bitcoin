@@ -143,13 +143,6 @@ CBlock ConsumeBlock(FuzzedDataProvider& fuzzed_data_provider, const uint256& pre
     return block;
 }
 
-void FinalizeHeader(CBlockHeader& header, const ChainstateManager& chainman)
-{
-    while (!CheckProofOfWork(header.GetHash(), header.nBits, chainman.GetParams().GetConsensus())) {
-        ++(header.nNonce);
-    }
-}
-
 // Global setup works for this test as state modification (specifically in the
 // block index) would indicate a bug.
 HeadersSyncSetup* g_testing_setup;
