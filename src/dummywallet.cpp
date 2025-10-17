@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <common/args.h>
+#include <dummywallet_settings.h>
 #include <logging.h>
 #include <walletinitinterface.h>
 
@@ -26,31 +27,29 @@ public:
 
 void DummyWalletInit::AddWalletOptions(ArgsManager& argsman) const
 {
-    argsman.AddHiddenArgs({
-        "-addresstype",
-        "-avoidpartialspends",
-        "-changetype",
-        "-consolidatefeerate=<amt>",
-        "-disablewallet",
-        "-discardfee=<amt>",
-        "-fallbackfee=<amt>",
-        "-keypool=<n>",
-        "-maxapsfee=<n>",
-        "-maxtxfee=<amt>",
-        "-mintxfee=<amt>",
-        "-paytxfee=<amt>",
-        "-signer=<cmd>",
-        "-spendzeroconfchange",
-        "-txconfirmtarget=<n>",
-        "-wallet=<path>",
-        "-walletbroadcast",
-        "-walletdir=<dir>",
-        "-walletnotify=<cmd>",
-        "-walletrbf",
-        "-walletrejectlongchains",
-        "-walletcrosschain",
-        "-unsafesqlitesync",
-    });
+    AddressTypeSettingHidden::Register(argsman);
+    AvoidPartialSpendsSettingHidden::Register(argsman);
+    ChangeTypeSettingHidden::Register(argsman);
+    ConsolidateFeeRateSettingHidden::Register(argsman);
+    DisableWalletSettingHidden::Register(argsman);
+    DiscardFeeSettingHidden::Register(argsman);
+    FallbackFeeSettingHidden::Register(argsman);
+    KeyPoolSettingHidden::Register(argsman);
+    MaxApsFeeSettingHidden::Register(argsman);
+    MaxTxFeeSettingHidden::Register(argsman);
+    MinTxFeeSettingHidden::Register(argsman);
+    PayTxFeeSettingHidden::Register(argsman);
+    SignerSettingHidden::Register(argsman);
+    SpendZeroConfChangeSettingHidden::Register(argsman);
+    TxConfirmTargetSettingHidden::Register(argsman);
+    WalletSettingHidden::Register(argsman);
+    WalletBroadcastSettingHidden::Register(argsman);
+    WalletDirSettingHidden::Register(argsman);
+    WalletNotifySettingHidden::Register(argsman);
+    WalletRbfSettingHidden::Register(argsman);
+    WalletRejectLongChainsSettingHidden::Register(argsman);
+    WalletCrossChainSettingHidden::Register(argsman);
+    UnsafeSqliteSyncSettingHidden::Register(argsman);
 }
 
 const WalletInitInterface& g_wallet_init_interface = DummyWalletInit();
