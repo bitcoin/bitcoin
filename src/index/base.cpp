@@ -226,12 +226,19 @@ struct Task {
     Task(Task&&) noexcept = default;
 };
 
+// Shared state across sync.
+struct SyncContext {
+    std::atomic<NodeClock::time_point> next_log_time;
+    std::atomic<NodeClock::time_point> next_locator_write_time;
+};
+
 void BaseIndex::Sync()
 {
     const CBlockIndex* pindex = m_best_block_index.load();
     if (!m_synced) {
-        auto last_log_time{NodeClock::now()};
-        auto last_locator_write_time{last_log_time};
+        std::shared_ptr<SyncContext> ctx = std::make_shared<SyncContext>();
+        ctx->next_log_time.store(NodeClock::now() + SYNC_LOG_INTERVAL);
+        ctx->next_locator_write_time.store(NodeClock::now() + SYNC_LOCATOR_WRITE_INTERVAL);
         const bool process_in_order = OrderingRequired();
 
         // Post-Processing helper
@@ -297,17 +304,17 @@ void BaseIndex::Sync()
                 return;
             }
 
-            auto current_time{NodeClock::now()};
-            if (current_time - last_log_time >= SYNC_LOG_INTERVAL) {
-                LogInfo("Syncing %s with block chain from height %d", GetName(), pindex->nHeight);
-                last_log_time = current_time;
+            auto now{NodeClock::now()};
+            auto next_log = ctx->next_log_time.load(std::memory_order_relaxed);
+            if (now >= next_log && ctx->next_log_time.compare_exchange_weak(next_log, now + SYNC_LOG_INTERVAL, std::memory_order_relaxed)) {
+                LogInfo("Syncing %s with block chain from height %d",
+                        GetName(), m_best_block_index ? m_best_block_index.load()->nHeight : 0);
             }
 
-            if (current_time - last_locator_write_time >= SYNC_LOCATOR_WRITE_INTERVAL) {
+            auto next_commit = ctx->next_locator_write_time.load(std::memory_order_relaxed);
+            if (now >= next_commit && ctx->next_locator_write_time.compare_exchange_weak(next_commit, now + SYNC_LOCATOR_WRITE_INTERVAL, std::memory_order_relaxed)) {
                 SetBestBlockIndex(pindex);
-                last_locator_write_time = current_time;
-                // No need to handle errors in Commit. See rationale above.
-                Commit();
+                Commit(); // No need to handle errors in Commit. See rationale above.
             }
         }
     }
