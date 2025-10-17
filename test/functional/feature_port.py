@@ -29,23 +29,23 @@ class PortTest(BitcoinTestFramework):
         port2 = p2p_port(self.num_nodes + 5)
 
         self.log.info("When starting with -port, bitcoind binds to it and uses port + 1 for an onion bind")
-        with node.assert_debug_log(expected_msgs=[f'Bound to 0.0.0.0:{port1}', f'Bound to 127.0.0.1:{port1 + 1}']):
+        with node.assert_debug_log(expected_msgs=[f'Bound to and listening on 0.0.0.0:{port1}', f'Bound to and listening on 127.0.0.1:{port1 + 1}']):
             self.restart_node(0, extra_args=["-listen", f"-port={port1}"])
 
         self.log.info("When specifying -port multiple times, only the last one is taken")
-        with node.assert_debug_log(expected_msgs=[f'Bound to 0.0.0.0:{port2}', f'Bound to 127.0.0.1:{port2 + 1}'], unexpected_msgs=[f'Bound to 0.0.0.0:{port1}']):
+        with node.assert_debug_log(expected_msgs=[f'Bound to and listening on 0.0.0.0:{port2}', f'Bound to and listening on 127.0.0.1:{port2 + 1}'], unexpected_msgs=[f'Bound to and listening on 0.0.0.0:{port1}']):
             self.restart_node(0, extra_args=["-listen", f"-port={port1}", f"-port={port2}"])
 
         self.log.info("When specifying ports with both -port and -bind, the one from -port is ignored")
-        with node.assert_debug_log(expected_msgs=[f'Bound to 0.0.0.0:{port2}'], unexpected_msgs=[f'Bound to 0.0.0.0:{port1}']):
+        with node.assert_debug_log(expected_msgs=[f'Bound to and listening on 0.0.0.0:{port2}'], unexpected_msgs=[f'Bound to and listening on 0.0.0.0:{port1}']):
             self.restart_node(0, extra_args=["-listen", f"-port={port1}", f"-bind=0.0.0.0:{port2}"])
 
         self.log.info("When -bind specifies no port, the values from -port and -bind are combined")
-        with self.nodes[0].assert_debug_log(expected_msgs=[f'Bound to 0.0.0.0:{port1}']):
+        with self.nodes[0].assert_debug_log(expected_msgs=[f'Bound to and listening on 0.0.0.0:{port1}']):
             self.restart_node(0, extra_args=["-listen", f"-port={port1}", "-bind=0.0.0.0"])
 
         self.log.info("When an onion bind specifies no port, the value from -port, incremented by 1, is taken")
-        with self.nodes[0].assert_debug_log(expected_msgs=[f'Bound to 127.0.0.1:{port1 + 1}']):
+        with self.nodes[0].assert_debug_log(expected_msgs=[f'Bound to and listening on 127.0.0.1:{port1 + 1}']):
             self.restart_node(0, extra_args=["-listen", f"-port={port1}", "-bind=127.0.0.1=onion"])
 
         self.log.info("Invalid values for -port raise errors")
