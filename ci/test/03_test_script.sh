@@ -92,6 +92,7 @@ if [ "$USE_BUSY_BOX" = "true" ]; then
 fi
 
 # Make sure default datadir does not exist and is never read by creating a dummy file
+# Ensuring that no mainnet datadir access is happening from any of the tests
 if [ "$CI_OS_NAME" == "macos" ]; then
   echo > "${HOME}/Library/Application Support/Bitcoin"
 else
