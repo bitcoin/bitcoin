@@ -7,10 +7,10 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <span>
 
 #include <crypto/chacha20.h>
 #include <crypto/poly1305.h>
-#include <span.h>
 
 /** The AEAD_CHACHA20_POLY1305 authenticated encryption algorithm from RFC8439 section 2.8. */
 class AEADChaCha20Poly1305
