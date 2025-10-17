@@ -15,6 +15,7 @@
 
 #include <consensus/amount.h>
 #include <cstddef>
+#include <cstdint>
 #include <policy/policy.h>
 #include <script/script.h>
 #include <uint256.h>
@@ -97,6 +98,18 @@ struct BlockCheckOptions {
      */
     bool check_pow{true};
 };
+
+/**
+ * How to broadcast a local transaction.
+ * Used to influence `BroadcastTransaction()` and its callers.
+ */
+enum class TxBroadcast : uint8_t {
+    /// Add the transaction to the mempool and broadcast to all peers for which tx relay is enabled.
+    MEMPOOL_AND_BROADCAST_TO_ALL,
+    /// Add the transaction to the mempool, but don't broadcast to anybody.
+    MEMPOOL_NO_BROADCAST,
+};
+
 } // namespace node
 
 #endif // BITCOIN_NODE_TYPES_H
