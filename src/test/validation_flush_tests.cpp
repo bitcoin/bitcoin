@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
     // CRITICAL → OK via Flush
     BOOST_CHECK_EQUAL(chainstate.GetCoinsCacheSizeState(MAX_COINS_BYTES, /*max_mempool_size_bytes=*/0), CoinsCacheSizeState::CRITICAL);
     view.SetBestBlock(m_rng.rand256());
-    BOOST_REQUIRE(view.Flush());
+    BOOST_REQUIRE(view.Flush(/*reallocate_cache=*/true));
     BOOST_CHECK_EQUAL(chainstate.GetCoinsCacheSizeState(MAX_COINS_BYTES, /*max_mempool_size_bytes=*/0), CoinsCacheSizeState::OK);
 }
 
