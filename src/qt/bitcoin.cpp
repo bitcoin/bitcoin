@@ -580,8 +580,14 @@ int GuiMain(int argc, char* argv[])
     // User language is set up: pick a data directory
     bool did_show_intro = false;
     int64_t prune_MiB = 0;  // Intro dialog prune configuration
-    // Gracefully exit if the user cancels
-    if (!Intro::showIfNeeded(did_show_intro, prune_MiB)) return EXIT_SUCCESS;
+    auto initial_datadir_fn = [&](fs::path& datadir, std::string& error, bool* aborted) -> bool {
+        if (!Intro::showIfNeeded(did_show_intro, datadir, prune_MiB)) {
+            error = "Quitting, could not determine datadir.";
+            if (aborted) *aborted = true;
+            return false;
+        }
+        return true;
+    };
 
     /// 6-7. Parse bitcoin.conf, determine network, switch to network specific
     /// options, and create datadir and settings.json.
@@ -589,7 +595,7 @@ int GuiMain(int argc, char* argv[])
     // - Do not call Params() before this step
     // - QSettings() will use the new application name after this, resulting in network-specific settings
     // - Needs to be done before createOptionsModel
-    if (auto error = common::InitConfig(gArgs, ErrorSettingsRead)) {
+    if (auto error = common::InitConfig(gArgs, initial_datadir_fn, ErrorSettingsRead)) {
         InitError(error->message, error->details);
         if (error->status == common::ConfigStatus::FAILED_WRITE) {
             // Show a custom error message to provide more information in the

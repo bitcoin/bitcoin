@@ -29,6 +29,8 @@ BOOST_AUTO_TEST_CASE(util_datadir)
     // Use local args variable instead of m_args to avoid making assumptions about test setup
     ArgsManager args;
     args.ForceSetArg("-datadir", fs::PathToString(m_path_root));
+    std::string error;
+    BOOST_CHECK(args.ReadConfigFiles(error));
 
     const fs::path dd_norm = args.GetDataDirBase();
 
@@ -1025,14 +1027,17 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
 BOOST_AUTO_TEST_CASE(util_ReadWriteSettings)
 {
     // Test writing setting.
+    std::string error;
     TestArgsManager args1;
     args1.ForceSetArg("-datadir", fs::PathToString(m_path_root));
+    BOOST_CHECK(args1.ReadConfigFiles(error));
     args1.LockSettings([&](common::Settings& settings) { settings.rw_settings["name"] = "value"; });
     args1.WriteSettingsFile();
 
     // Test reading setting.
     TestArgsManager args2;
     args2.ForceSetArg("-datadir", fs::PathToString(m_path_root));
+    BOOST_CHECK(args2.ReadConfigFiles(error));
     args2.ReadSettingsFile();
     args2.LockSettings([&](common::Settings& settings) { BOOST_CHECK_EQUAL(settings.rw_settings["name"].get_str(), "value"); });
 

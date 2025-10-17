@@ -30,7 +30,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.skip_if_no_wallet_tool()
 
     def bitcoin_wallet_process(self, *args):
-        default_args = ['-datadir={}'.format(self.nodes[0].datadir_path), '-chain=%s' % self.chain]
+        default_args = ['-datadir={}'.format(self.nodes[0].datadir_path)]
 
         return subprocess.Popen(self.get_binaries().wallet_argv() + default_args + list(args), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
