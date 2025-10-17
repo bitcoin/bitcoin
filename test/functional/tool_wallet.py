@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2022 The Bitcoin Core developers
+# Copyright (c) 2018-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test bitcoin-wallet."""
 
 import os
+import shutil
 import stat
 import subprocess
 import textwrap
@@ -21,13 +22,23 @@ from test_framework.util import (
 
 class ToolWalletTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 1
+        self.num_nodes = 2
         self.setup_clean_chain = True
         self.rpc_timeout = 120
+        self.extra_args = [[], ["-deprecatedrpc=create_bdb"]]
+
+    def setup_nodes(self):
+        self.add_nodes(self.num_nodes, extra_args=self.extra_args, versions=[
+            None,
+            280200,
+        ])
+        self.start_nodes()
+        self.init_wallet(node=0)
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
         self.skip_if_no_wallet_tool()
+        self.skip_if_no_previous_releases()
 
     def bitcoin_wallet_process(self, *args):
         default_args = ['-datadir={}'.format(self.nodes[0].datadir_path), '-chain=%s' % self.chain]
@@ -185,7 +196,7 @@ class ToolWalletTest(BitcoinTestFramework):
         """
         self.start_node(0)
         self.log.info('Generating transaction to mutate wallet')
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.stop_node(0)
 
         self.log.info('Calling wallet tool info after generating a transaction, testing output')
@@ -323,14 +334,14 @@ class ToolWalletTest(BitcoinTestFramework):
     def test_chainless_conflicts(self):
         self.log.info("Test wallet tool when wallet contains conflicting transactions")
         self.restart_node(0)
-        self.generate(self.nodes[0], 101)
+        self.generate(self.nodes[0], 101, sync_fun=self.no_op)
 
         def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
 
         self.nodes[0].createwallet("conflicts")
         wallet = self.nodes[0].get_wallet_rpc("conflicts")
         def_wallet.sendtoaddress(wallet.getnewaddress(), 10)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         # parent tx
         parent_txid = wallet.sendtoaddress(wallet.getnewaddress(), 9)
@@ -355,7 +366,7 @@ class ToolWalletTest(BitcoinTestFramework):
         conflict_unsigned = self.nodes[0].createrawtransaction(inputs=[conflict_utxo], outputs=[{wallet.getnewaddress(): 9.9999}])
         conflict_signed = wallet.signrawtransactionwithwallet(conflict_unsigned)["hex"]
         conflict_txid = self.nodes[0].sendrawtransaction(conflict_signed)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         assert_equal(wallet.gettransaction(txid=parent_txid)["confirmations"], -1)
         assert_equal(wallet.gettransaction(txid=child_txid)["confirmations"], -1)
         assert_equal(wallet.gettransaction(txid=conflict_txid)["confirmations"], 1)
@@ -389,15 +400,15 @@ class ToolWalletTest(BitcoinTestFramework):
         # in one or more overflow pages. We want to make sure that our tooling can dump such
         # records, even when they span multiple pages. To make a large record, we just need
         # to make a very big transaction.
-        self.generate(self.nodes[0], 101)
+        self.generate(self.nodes[0], 101, sync_fun=self.no_op)
         def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
         outputs = {}
         for i in range(500):
             outputs[wallet.getnewaddress(address_type="p2sh-segwit")] = 0.01
         def_wallet.sendmany(amounts=outputs)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         send_res = wallet.sendall([def_wallet.getnewaddress()])
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         assert_equal(send_res["complete"], True)
         tx = wallet.gettransaction(txid=send_res["txid"], verbose=True)
         assert_greater_than(tx["decoded"]["size"], 70000)
@@ -421,6 +432,32 @@ class ToolWalletTest(BitcoinTestFramework):
         self.assert_raises_tool_error("Invalid parameter -descriptors", "-wallet=legacy", "-descriptors=false", "create")
         assert not (self.nodes[0].wallets_path / "legacy").exists()
 
+    def test_legacy_dump_is_no_longer_allowed(self):
+        self.log.info("Test that legacy wallets are no longer dumpable after v30.0")
+        legacy_node = self.nodes[1]
+        wallet_name = "legacy_wallet"
+        legacy_node.createwallet(wallet_name=wallet_name, descriptors=False)
+        legacy_wallet = legacy_node.get_wallet_rpc(wallet_name)
+        legacy_wallet.unloadwallet()
+
+        master_node = self.nodes[0]
+        shutil.copytree(legacy_node.wallets_path / wallet_name, master_node.wallets_path / wallet_name)
+
+        wallet_dump = master_node.datadir_path / (wallet_name + ".dump")
+        self.assert_raises_tool_error(
+            "Failed to open database path '{}'. The wallet appears to be a Legacy wallet, " \
+            "please use the wallet migration tool (migratewallet RPC or the GUI option).".format(master_node.wallets_path / wallet_name),
+            f"-wallet={wallet_name}", f"-dumpfile={wallet_dump}",
+            "dump"
+        )
+        assert not wallet_dump.exists()
+
+        self.log.info("Test that legacy wallets could be dumped in releases prior to v30.0")
+        legacy_node.loadwallet(wallet_name)
+        legacy_wallet = legacy_node.get_wallet_rpc(wallet_name)
+        legacy_wallet.dumpwallet(wallet_dump)
+        assert wallet_dump.exists()
+
     def run_test(self):
         self.wallet_path = self.nodes[0].wallets_path / self.default_wallet_name / self.wallet_data_filename
         self.test_invalid_tool_commands_and_args()
@@ -433,6 +470,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.test_chainless_conflicts()
         self.test_dump_very_large_records()
         self.test_no_create_legacy()
+        self.test_legacy_dump_is_no_longer_allowed()
 
 
 if __name__ == '__main__':
