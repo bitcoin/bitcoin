@@ -4,14 +4,18 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <logging.h>
+
 #include <memusage.h>
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/string.h>
+#include <util/syserror.h>
 #include <util/threadnames.h>
 #include <util/time.h>
 
 #include <array>
+#include <cerrno>
+#include <cstdio>
 #include <cstring>
 #include <map>
 #include <optional>
@@ -22,6 +26,22 @@ using util::RemovePrefixView;
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 constexpr auto MAX_USER_SETABLE_SEVERITY_LEVEL{BCLog::Level::Info};
+
+namespace {
+/**
+ * Close a log file and report failures without re-entering the logger. Write
+ * directly to stderr because the log file may be failing and m_cs may be held.
+ */
+void CloseLogFile(FILE* file, const fs::path& path) noexcept
+{
+    if (fclose(file) != 0) {
+        const int error{errno};
+        const std::string message{strprintf("log: fclose(\"%s\") failed: %s\n", fs::PathToString(path), SysErrorString(error))};
+        fwrite(message.data(), 1, message.size(), stderr);
+        fflush(stderr);
+    }
+}
+} // namespace
 
 BCLog::Logger& LogInstance()
 {
@@ -104,13 +124,13 @@ void BCLog::Logger::DisconnectTestLogger()
 {
     STDLOCK(m_cs);
     m_buffering = true;
-    if (m_fileout != nullptr) fclose(m_fileout);
-    m_fileout = nullptr;
+    FILE* file{std::exchange(m_fileout, nullptr)};
     m_print_callbacks.clear();
     m_max_buffer_memusage = DEFAULT_MAX_LOG_BUFFER;
     m_cur_buffer_memusage = 0;
     m_buffer_lines_discarded = 0;
     m_msgs_before_open.clear();
+    if (file) CloseLogFile(file, m_file_path);
 }
 
 void BCLog::Logger::DisableLogging()
@@ -507,8 +527,9 @@ void BCLog::Logger::LogPrint_(util::log::Entry entry)
             FILE* new_fileout = fsbridge::fopen(m_file_path, "a");
             if (new_fileout) {
                 setbuf(new_fileout, nullptr); // unbuffered
-                fclose(m_fileout);
+                FILE* oldf = m_fileout;
                 m_fileout = new_fileout;
+                CloseLogFile(oldf, m_file_path);
             }
         }
         FileWriteStr(str_prefixed, m_fileout);
@@ -548,21 +569,21 @@ void BCLog::Logger::ShrinkDebugFile()
                 .source_loc = SourceLocation{__func__},
                 .message = "Failed to shrink debug log file: fseek(...) failed",
             });
-            fclose(file);
+            CloseLogFile(file, m_file_path);
             return;
         }
         int nBytes = fread(vch.data(), 1, vch.size(), file);
-        fclose(file);
+        CloseLogFile(file, m_file_path);
 
         file = fsbridge::fopen(m_file_path, "w");
         if (file)
         {
             fwrite(vch.data(), 1, nBytes, file);
-            fclose(file);
+            CloseLogFile(file, m_file_path);
         }
+    } else if (file != nullptr) {
+        CloseLogFile(file, m_file_path);
     }
-    else if (file != nullptr)
-        fclose(file);
 }
 
 void BCLog::LogRateLimiter::Reset()
