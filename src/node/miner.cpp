@@ -29,6 +29,7 @@
 
 #include <algorithm>
 #include <utility>
+#include <numeric>
 
 namespace node {
 
@@ -522,18 +523,13 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
 
             // Calculate the original template total fees if we haven't already
             if (current_fees == -1) {
-                current_fees = 0;
-                for (CAmount fee : block_template->vTxFees) {
-                    current_fees += fee;
-                }
+                current_fees = std::accumulate(block_template->vTxFees.begin(), block_template->vTxFees.end(), CAmount{0});
             }
 
-            CAmount new_fees = 0;
-            for (CAmount fee : new_tmpl->vTxFees) {
-                new_fees += fee;
-                Assume(options.fee_threshold != MAX_MONEY);
-                if (new_fees >= current_fees + options.fee_threshold) return new_tmpl;
-            }
+            // Check if fees increased enough to return the new template
+            const CAmount new_fees = std::accumulate(new_tmpl->vTxFees.begin(), new_tmpl->vTxFees.end(), CAmount{0});
+            Assume(options.fee_threshold != MAX_MONEY);
+            if (new_fees >= current_fees + options.fee_threshold) return new_tmpl;
         }
 
         now = NodeClock::now();
