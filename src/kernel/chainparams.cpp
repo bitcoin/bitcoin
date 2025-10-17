@@ -17,6 +17,7 @@
 #include <script/interpreter.h>
 #include <script/script.h>
 #include <uint256.h>
+#include <util/byte_units.h>
 #include <util/chaintype.h>
 #include <util/strencodings.h>
 
@@ -134,6 +135,7 @@ public:
         nPruneAfterHeight = 100000;
         m_assumed_blockchain_size = 810;
         m_assumed_chain_state_size = 14;
+        m_assumed_header_store_size = 128_MiB;
 
         genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -249,6 +251,7 @@ public:
         nPruneAfterHeight = 1000;
         m_assumed_blockchain_size = 240;
         m_assumed_chain_state_size = 19;
+        m_assumed_header_store_size = 512_MiB;
 
         genesis = CreateGenesisBlock(1296688602, 414098458, 0x1d00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -345,6 +348,7 @@ public:
         nPruneAfterHeight = 1000;
         m_assumed_blockchain_size = 22;
         m_assumed_chain_state_size = 2;
+        m_assumed_header_store_size = 64_MiB;
 
         const char* testnet4_genesis_msg = "03/May/2024 000000000000000000001ebd58c244970b3aa9d783bb001011fbe8ea8e98e00e";
         const CScript testnet4_genesis_script = CScript() << "000000000000000000000000000000000000000000000000000000000000000000"_hex << OP_CHECKSIG;
@@ -417,6 +421,7 @@ public:
             consensus.defaultAssumeValid = uint256{"000000128586e26813922680309f04e1de713c7542fee86ed908f56368aefe2e"}; // 267665
             m_assumed_blockchain_size = 20;
             m_assumed_chain_state_size = 4;
+            m_assumed_header_store_size = 64_MiB;
             chainTxData = ChainTxData{
                 // Data from RPC: getchaintxstats 4096 000000128586e26813922680309f04e1de713c7542fee86ed908f56368aefe2e
                 .nTime    = 1756723017,
@@ -429,6 +434,7 @@ public:
             consensus.defaultAssumeValid = uint256{};
             m_assumed_blockchain_size = 0;
             m_assumed_chain_state_size = 0;
+            m_assumed_header_store_size = 0;
             chainTxData = ChainTxData{
                 0,
                 0,
@@ -561,6 +567,7 @@ public:
         nPruneAfterHeight = opts.fastprune ? 100 : 1000;
         m_assumed_blockchain_size = 0;
         m_assumed_chain_state_size = 0;
+        m_assumed_header_store_size = 0;
 
         for (const auto& [dep, height] : opts.activation_heights) {
             switch (dep) {
