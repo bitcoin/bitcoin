@@ -17,6 +17,7 @@
 #include <kernel/chainparams.h>
 #include <kernel/chainstatemanager_opts.h>
 #include <kernel/cs_main.h> // IWYU pragma: export
+#include <logging.h>
 #include <node/blockstorage.h>
 #include <policy/feerate.h>
 #include <policy/packages.h>
@@ -311,6 +312,7 @@ bool CheckFinalTxAtTip(const CBlockIndex& active_chain_tip, const CTransaction& 
  *          calculation, or std::nullopt if there is an error.
  */
 std::optional<LockPoints> CalculateLockPointsAtTip(
+    BCLog::Logger& logger,
     CBlockIndex* tip,
     const CCoinsView& coins_view,
     const CTransaction& tx);
@@ -373,7 +375,7 @@ public:
     CuckooCache::cache<uint256, SignatureCacheHasher> m_script_execution_cache;
     SignatureCache m_signature_cache;
 
-    ValidationCache(size_t script_execution_cache_bytes, size_t signature_cache_bytes);
+    ValidationCache(BCLog::Logger& logger, size_t script_execution_cache_bytes, size_t signature_cache_bytes);
 
     ValidationCache(const ValidationCache&) = delete;
     ValidationCache& operator=(const ValidationCache&) = delete;
@@ -491,7 +493,7 @@ public:
     //! state to disk, which should not be done until the health of the database is verified.
     //!
     //! All arguments forwarded onto CCoinsViewDB.
-    CoinsViews(DBParams db_params, CoinsViewOptions options);
+    CoinsViews(BCLog::Logger& logger, DBParams db_params, CoinsViewOptions options);
 
     //! Initialize the CCoinsViewCache member.
     void InitCache() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -564,6 +566,7 @@ protected:
     std::atomic_bool m_prev_script_checks_logged{true};
 
 public:
+    const BCLog::Context m_log;
     //! Reference to a BlockManager instance which itself is shared across all
     //! Chainstate instances.
     node::BlockManager& m_blockman;
@@ -998,7 +1001,7 @@ private:
 public:
     using Options = kernel::ChainstateManagerOpts;
 
-    explicit ChainstateManager(const util::SignalInterrupt& interrupt, Options options, node::BlockManager::Options blockman_options);
+    explicit ChainstateManager(BCLog::Logger& logger, const util::SignalInterrupt& interrupt, Options options, node::BlockManager::Options blockman_options);
 
     //! Function to restart active indexes; set dynamically to avoid a circular
     //! dependency on `base/index.cpp`.
@@ -1031,6 +1034,7 @@ public:
      */
     RecursiveMutex& GetMutex() const LOCK_RETURNED(::cs_main) { return ::cs_main; }
 
+    const BCLog::Context m_log;
     const util::SignalInterrupt& m_interrupt;
     const Options m_options;
     //! A single BlockManager instance is shared across each constructed
