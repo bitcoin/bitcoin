@@ -6,7 +6,6 @@
 #define BITCOIN_TEST_FUZZ_UTIL_H
 
 #include <arith_uint256.h>
-#include <attributes.h>
 #include <chainparamsbase.h>
 #include <coins.h>
 #include <compat/compat.h>

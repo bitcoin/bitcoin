@@ -887,7 +887,7 @@ bool isStyleSheetDirectoryCustom()
     return stylesheetDirectory != defaultStylesheetDirectory;
 }
 
-const std::vector<QString> listStyleSheets()
+std::vector<QString> listStyleSheets()
 {
     std::vector<QString> vecStylesheets;
     for (const auto& it : mapThemeToStyle) {
@@ -896,7 +896,7 @@ const std::vector<QString> listStyleSheets()
     return vecStylesheets;
 }
 
-const std::vector<QString> listThemes()
+std::vector<QString> listThemes()
 {
     std::vector<QString> vecThemes;
     for (const auto& it : mapThemeToStyle) {
@@ -906,7 +906,7 @@ const std::vector<QString> listThemes()
     return vecThemes;
 }
 
-const QString getDefaultTheme()
+QString getDefaultTheme()
 {
     return defaultTheme;
 }

@@ -15,7 +15,6 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <attributes.h>
 #include <compat/assumptions.h>
 #include <compat/compat.h>
 #include <consensus/amount.h>
@@ -293,7 +292,7 @@ protected:
     /**
      * Return the map of all the args passed via the command line
      */
-    const std::map<std::string, std::vector<util::SettingsValue>> GetCommandLineArgs() const;
+    std::map<std::string, std::vector<util::SettingsValue>> GetCommandLineArgs() const;
 
     /**
      * Get blocks directory path

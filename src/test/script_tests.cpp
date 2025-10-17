@@ -219,11 +219,11 @@ private:
     CScript scriptPubKey;
     CTransactionRef creditTx;
     CMutableTransaction spendTx;
-    bool havePush;
+    bool havePush{false};
     std::vector<unsigned char> push;
     std::string comment;
     uint32_t flags;
-    int scriptError;
+    int scriptError{SCRIPT_ERR_OK};
 
     void DoPush()
     {
@@ -241,7 +241,7 @@ private:
     }
 
 public:
-    TestBuilder(const CScript& script_, const std::string& comment_, uint32_t flags_, bool P2SH = false) : scriptPubKey(script_), havePush(false), comment(comment_), flags(flags_), scriptError(SCRIPT_ERR_OK)
+    TestBuilder(const CScript& script_, const std::string& comment_, uint32_t flags_, bool P2SH = false) : scriptPubKey(script_), comment(comment_), flags(flags_)
     {
         if (P2SH) {
             creditTx = MakeTransactionRef(BuildCreditingTransaction(CScript() << OP_HASH160 << ToByteVector(CScriptID(script_)) << OP_EQUAL));

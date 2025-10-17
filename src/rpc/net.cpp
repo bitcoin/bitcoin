@@ -1112,31 +1112,26 @@ static RPCHelpMan setmnthreadactive()
 
 void RegisterNetRPCCommands(CRPCTable &t)
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category              actor
-  //  --------------------- -----------------------
-    { "network",             &getconnectioncount,      },
-    { "network",             &ping,                    },
-    { "network",             &getpeerinfo,             },
-    { "network",             &addnode,                 },
-    { "network",             &disconnectnode,          },
-    { "network",             &getaddednodeinfo,        },
-    { "network",             &getnettotals,            },
-    { "network",             &getnetworkinfo,          },
-    { "network",             &setban,                  },
-    { "network",             &listbanned,              },
-    { "network",             &clearbanned,             },
-    { "network",             &setnetworkactive,        },
-    { "network",             &getnodeaddresses,        },
-
-    { "hidden",              &cleardiscouraged,        },
-    { "hidden",              &addconnection,           },
-    { "hidden",              &addpeeraddress,          },
-    { "hidden",              &sendmsgtopeer            },
-    { "hidden",              &setmnthreadactive        },
-};
-// clang-format on
+    static const CRPCCommand commands[]{
+        {"network", &getconnectioncount},
+        {"network", &ping},
+        {"network", &getpeerinfo},
+        {"network", &addnode},
+        {"network", &disconnectnode},
+        {"network", &getaddednodeinfo},
+        {"network", &getnettotals},
+        {"network", &getnetworkinfo},
+        {"network", &setban},
+        {"network", &listbanned},
+        {"network", &clearbanned},
+        {"network", &setnetworkactive},
+        {"network", &getnodeaddresses},
+        {"hidden", &cleardiscouraged},
+        {"hidden", &addconnection},
+        {"hidden", &addpeeraddress},
+        {"hidden", &sendmsgtopeer},
+        {"hidden", &setmnthreadactive},
+    };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
     }

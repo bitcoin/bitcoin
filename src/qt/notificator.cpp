@@ -70,7 +70,7 @@ Notificator::~Notificator()
 class FreedesktopImage
 {
 public:
-    FreedesktopImage() {}
+    FreedesktopImage() = default;
     explicit FreedesktopImage(const QImage &img);
 
     // Image to variant that can be marshalled over DBus

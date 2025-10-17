@@ -503,35 +503,27 @@ static RPCHelpMan getcoinjoininfo()
 #ifdef ENABLE_WALLET
 Span<const CRPCCommand> GetWalletCoinJoinRPCCommands()
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category              actor (function)
-  //  --------------------- -----------------------
-    { "dash",                &coinjoin,               },
-    { "dash",                &coinjoin_reset,         },
-    { "dash",                &coinjoin_start,         },
-    { "dash",                &coinjoin_status,        },
-    { "dash",                &coinjoin_stop,          },
-    { "dash",                &coinjoinsalt,           },
-    { "dash",                &coinjoinsalt_generate,  },
-    { "dash",                &coinjoinsalt_get,       },
-    { "dash",                &coinjoinsalt_set,       },
-    { "dash",                &getcoinjoininfo,        },
-};
-// clang-format on
+    static const CRPCCommand commands[]{
+        {"dash", &coinjoin},
+        {"dash", &coinjoin_reset},
+        {"dash", &coinjoin_start},
+        {"dash", &coinjoin_status},
+        {"dash", &coinjoin_stop},
+        {"dash", &coinjoinsalt},
+        {"dash", &coinjoinsalt_generate},
+        {"dash", &coinjoinsalt_get},
+        {"dash", &coinjoinsalt_set},
+        {"dash", &getcoinjoininfo},
+    };
     return commands;
 }
 #endif // ENABLE_WALLET
 
 void RegisterCoinJoinRPCCommands(CRPCTable& t)
 {
-// clang-format off
-static const CRPCCommand commands_wallet[] =
-{ //  category               actor (function)
-  //  ---------------------  -----------------------
-    { "dash",                &getcoinjoininfo,        },
-};
-// clang-format on
+    static const CRPCCommand commands_wallet[]{
+        {"dash", &getcoinjoininfo},
+    };
     // If we aren't compiling with wallet support, we still need to register RPCs that are
     // capable of working without wallet support. We have to do this even if wallet support
     // is compiled in but is disabled at runtime because runtime disablement prohibits

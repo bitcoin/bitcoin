@@ -199,10 +199,10 @@ static int AppInitRPC(int argc, char* argv[])
 /** Reply structure for request_done to fill in */
 struct HTTPReply
 {
-    HTTPReply(): status(0), error(-1) {}
+    HTTPReply() = default;
 
-    int status;
-    int error;
+    int status{0};
+    int error{-1};
     std::string body;
 };
 
@@ -263,7 +263,7 @@ static void http_error_cb(enum evhttp_request_error err, void *ctx)
 class BaseRequestHandler
 {
 public:
-    virtual ~BaseRequestHandler() {}
+    virtual ~BaseRequestHandler() = default;
     virtual UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) = 0;
     virtual UniValue ProcessReply(const UniValue &batch_in) = 0;
 };

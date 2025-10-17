@@ -264,8 +264,8 @@ static std::optional<util::SettingsValue> InterpretValue(const KeyInfo& key, con
 // Define default constructor and destructor that are not inline, so code instantiating this class doesn't need to
 // #include class definitions for all members.
 // For example, m_settings has an internal dependency on univalue.
-ArgsManager::ArgsManager() {}
-ArgsManager::~ArgsManager() {}
+ArgsManager::ArgsManager() = default;
+ArgsManager::~ArgsManager() = default;
 
 std::set<std::string> ArgsManager::GetUnsuitableSectionOnlyArgs() const
 {
@@ -303,7 +303,7 @@ std::list<SectionInfo> ArgsManager::GetUnrecognizedSections() const
     return unrecognized;
 }
 
-const std::map<std::string, std::vector<util::SettingsValue>> ArgsManager::GetCommandLineArgs() const {
+std::map<std::string, std::vector<util::SettingsValue>> ArgsManager::GetCommandLineArgs() const {
     LOCK(cs_args);
     return m_settings.command_line_options;
 }

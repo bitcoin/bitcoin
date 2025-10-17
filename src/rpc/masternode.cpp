@@ -679,33 +679,25 @@ static RPCHelpMan masternodelist_composite()
 #ifdef ENABLE_WALLET
 Span<const CRPCCommand> GetWalletMasternodeRPCCommands()
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category              actor (function)
-  //  --------------------- -----------------------
-    { "dash",               &masternode_outputs,       },
-};
-// clang-format on
+    static const CRPCCommand commands[]{
+        {"dash", &masternode_outputs},
+    };
     return commands;
 }
 #endif // ENABLE_WALLET
 
 void RegisterMasternodeRPCCommands(CRPCTable &t)
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category              actor (function)
-  //  --------------------- -----------------------
-    { "dash",               &masternode_help,          },
-    { "dash",               &masternodelist_composite, },
-    { "dash",               &masternodelist,           },
-    { "dash",               &masternode_connect,       },
-    { "dash",               &masternode_count,         },
-    { "dash",               &masternode_status,        },
-    { "dash",               &masternode_payments,      },
-    { "dash",               &masternode_winners,       },
-};
-// clang-format on
+    static const CRPCCommand commands[]{
+        {"dash", &masternode_help},
+        {"dash", &masternodelist_composite},
+        {"dash", &masternodelist},
+        {"dash", &masternode_connect},
+        {"dash", &masternode_count},
+        {"dash", &masternode_status},
+        {"dash", &masternode_payments},
+        {"dash", &masternode_winners},
+    };
     for (const auto& command : commands) {
         t.appendCommand(command.name, &command);
     }

@@ -5,7 +5,6 @@
 #ifndef BITCOIN_CORE_IO_H
 #define BITCOIN_CORE_IO_H
 
-#include <attributes.h>
 #include <consensus/amount.h>
 
 #include <string>

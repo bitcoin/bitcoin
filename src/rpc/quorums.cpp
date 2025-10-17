@@ -1155,32 +1155,28 @@ static RPCHelpMan submitchainlock()
 
 void RegisterQuorumsRPCCommands(CRPCTable &tableRPC)
 {
-// clang-format off
-static const CRPCCommand commands[] =
-{ //  category              actor (function)
-  //  --------------------- -----------------------
-    { "evo",                &quorum_help,            },
-    { "evo",                &quorum_list,            },
-    { "evo",                &quorum_list_extended,   },
-    { "evo",                &quorum_info,            },
-    { "evo",                &quorum_dkginfo,         },
-    { "evo",                &quorum_dkgstatus,       },
-    { "evo",                &quorum_memberof,        },
-    { "evo",                &quorum_sign,            },
-    { "evo",                &quorum_platformsign,    },
-    { "evo",                &quorum_verify,          },
-    { "evo",                &quorum_hasrecsig,       },
-    { "evo",                &quorum_getrecsig,       },
-    { "evo",                &quorum_isconflicting,   },
-    { "evo",                &quorum_selectquorum,    },
-    { "evo",                &quorum_dkgsimerror,     },
-    { "evo",                &quorum_getdata,         },
-    { "evo",                &quorum_rotationinfo,    },
-    { "evo",                &submitchainlock,        },
-    { "evo",                &verifychainlock,        },
-    { "evo",                &verifyislock,           },
-};
-// clang-format on
+    static const CRPCCommand commands[]{
+        {"evo", &quorum_help},
+        {"evo", &quorum_list},
+        {"evo", &quorum_list_extended},
+        {"evo", &quorum_info},
+        {"evo", &quorum_dkginfo},
+        {"evo", &quorum_dkgstatus},
+        {"evo", &quorum_memberof},
+        {"evo", &quorum_sign},
+        {"evo", &quorum_platformsign},
+        {"evo", &quorum_verify},
+        {"evo", &quorum_hasrecsig},
+        {"evo", &quorum_getrecsig},
+        {"evo", &quorum_isconflicting},
+        {"evo", &quorum_selectquorum},
+        {"evo", &quorum_dkgsimerror},
+        {"evo", &quorum_getdata},
+        {"evo", &quorum_rotationinfo},
+        {"evo", &submitchainlock},
+        {"evo", &verifychainlock},
+        {"evo", &verifyislock},
+    };
     for (const auto& command : commands) {
         tableRPC.appendCommand(command.name, &command);
     }
