@@ -67,7 +67,7 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
     chainman.DisableNextWrite();
 
     node::Warnings warnings{};
-    NetGroupManager netgroupman{{}};
+    NetGroupManager netgroupman{NetGroupManager::NoAsmap()};
     AddrMan addrman{netgroupman, /*deterministic=*/true, /*consistency_check_ratio=*/0};
     auto peerman = PeerManager::make(connman, addrman,
                                      /*banman=*/nullptr, chainman,
