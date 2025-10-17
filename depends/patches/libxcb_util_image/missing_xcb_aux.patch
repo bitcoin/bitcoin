@@ -1,0 +1,17 @@
+commit 2b10c597ff6ab1946dea307c21976fc3b5be374e
+Author: fanquake <fanquake@gmail.com>
+Date:   Sat Oct 4 00:06:50 2025 +0100
+
+    pkgconfig: xcb-aux
+
+diff --git a/image/xcb-image.pc.in b/image/xcb-image.pc.in
+index 403fdd0..0e4dca5 100644
+--- a/image/xcb-image.pc.in
++++ b/image/xcb-image.pc.in
+@@ -7,5 +7,6 @@ Name: XCB Image library
+ Description: XCB image convenience library
+ Version: @PACKAGE_VERSION@
+ Requires: xcb xcb-shm
++Requires.private: xcb-aux
+ Libs: -L${libdir} -lxcb-image @LIBS@
+ Cflags: -I${includedir}
