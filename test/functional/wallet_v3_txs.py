@@ -119,6 +119,7 @@ class WalletV3Test(BitcoinTestFramework):
         self.sendall_truc_child_weight_limit()
         self.mix_non_truc_versions()
         self.cant_spend_multiple_unconfirmed_truc_outputs()
+        self.test_spend_third_generation()
 
     @cleanup
     def tx_spends_unconfirmed_tx_with_wrong_version(self, version_a, version_b):
@@ -583,6 +584,50 @@ class WalletV3Test(BitcoinTestFramework):
                 self.alice.fundrawtransaction,
                 raw_tx,
                 {'include_unsafe' : True}
+        )
+
+    @cleanup
+    def test_spend_third_generation(self):
+        self.log.info("Test that we can't spend an unconfirmed TRUC output that already has an unconfirmed parent")
+
+        # Generation 1: Consolidate all UTXOs into one output using sendall
+        self.charlie.sendall([self.charlie.getnewaddress()], version=3)
+        outputs1 = self.charlie.listunspent(minconf=0)
+        assert_equal(len(outputs1), 1)
+
+        # Generation 2: to ensure no change address is created, do another sendall
+        self.charlie.sendall([self.charlie.getnewaddress()], version=3)
+        outputs2 = self.charlie.listunspent(minconf=0)
+        assert_equal(len(outputs2), 1)
+        total_amount = sum([utxo['amount'] for utxo in outputs2])
+
+        # Generation 3: try to send half of total amount to Alice
+        outputs = {self.alice.getnewaddress(): total_amount / 2}
+        assert_raises_rpc_error(
+                -4,
+                "Insufficient funds",
+                self.charlie.send,
+                outputs,
+                version=3
+        )
+
+        # Also doesn't work with fundrawtransaction
+        raw_tx = self.charlie.createrawtransaction(inputs=[], outputs=outputs, version=3)
+        assert_raises_rpc_error(
+                -4,
+                "Insufficient funds",
+                self.charlie.fundrawtransaction,
+                raw_tx,
+                {'include_unsafe' : True}
+        )
+
+        # Also doesn't work with sendall
+        assert_raises_rpc_error(
+                -6,
+                "Total value of UTXO pool too low to pay for transaction",
+                self.charlie.sendall,
+                [self.alice.getnewaddress()],
+                version=3
         )
 
 if __name__ == '__main__':
