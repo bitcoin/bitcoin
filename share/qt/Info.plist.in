@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist SYSTEM "file://localhost/System/Library/DTDs/PropertyList.dtd">
-<plist version="0.9">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
 <dict>
   <key>LSMinimumSystemVersion</key>
-  <string>14</string>
+  <string>10.14.0</string>
 
   <key>LSArchitecturePriority</key>
   <array>
@@ -63,7 +63,7 @@
     <string>NSApplication</string>
 
   <key>NSHighResolutionCapable</key>
-    <string>True</string>
+    <true/>
 
   <key>LSApplicationCategoryType</key>
     <string>public.app-category.finance</string>
