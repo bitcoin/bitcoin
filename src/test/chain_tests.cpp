@@ -44,6 +44,59 @@ const CBlockIndex* NaiveLastCommonAncestor(const CBlockIndex* a, const CBlockInd
 
 } // namespace
 
+BOOST_AUTO_TEST_CASE(get_skip_height_test)
+{
+    // Even values: the rightmost set bit is zeroed
+    // Test with various even values with at least 2 bits set
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b00010010),
+                                    0b00010000);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b00100010),
+                                    0b00100000);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b01000010),
+                                    0b01000000);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b00010100),
+                                    0b00010000);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b00011000),
+                                    0b00010000);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b10101010),
+                                    0b10101000);
+    // Odd values: the 2nd and 3rd set bits are zeroed
+    // Test with various odd values with at least 4 bits set
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b10010011),
+                                    0b10000001);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b10100011),
+                                    0b10000001);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b11000011),
+                                    0b10000001);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b10010101),
+                                    0b10000001);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b10011001),
+                                    0b10000001);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b10101011),
+                                    0b10100001);
+    // Some longer random values (even and odd)
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b0001011101101000),
+                                    0b0001011101100000);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b0001011101101001),
+                                    0b0001011101000001);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b0110101101011000),
+                                    0b0110101101010000);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b0110101101011001),
+                                    0b0110101101000001);
+    // All values 0-10
+    BOOST_CHECK_EQUAL(GetSkipHeight(0), 0);
+    BOOST_CHECK_EQUAL(GetSkipHeight(1), 0);
+    BOOST_CHECK_EQUAL(GetSkipHeight(2), 0);
+    BOOST_CHECK_EQUAL(GetSkipHeight(3), 1);
+    BOOST_CHECK_EQUAL(GetSkipHeight(4), 0);
+    BOOST_CHECK_EQUAL(GetSkipHeight(5), 1);
+    BOOST_CHECK_EQUAL(GetSkipHeight(6), 4);
+    BOOST_CHECK_EQUAL(GetSkipHeight(7), 1);
+    BOOST_CHECK_EQUAL(GetSkipHeight(8), 0);
+    BOOST_CHECK_EQUAL(GetSkipHeight(9), 1);
+    BOOST_CHECK_EQUAL(GetSkipHeight(10), 8);
+}
+
 BOOST_AUTO_TEST_CASE(skip_height_analysis)
 {
     // This test case indirectly tests the `GetSkipHeight` function,
