@@ -1465,7 +1465,7 @@ static RPCHelpMan protx_list()
         }
 
         CDeterministicMNList mnList = dmnman.GetListForBlock(chainman.ActiveChain()[height]);
-        mnList.ForEachMN(false, [&](const auto& dmn) {
+        mnList.ForEachMN(/*onlyValid=*/false, [&](const auto& dmn) {
             if (setOutpts.count(dmn.collateralOutpoint) ||
                 CheckWalletOwnsKey(wallet.get(), dmn.pdmnState->keyIDOwner) ||
                 CheckWalletOwnsKey(wallet.get(), dmn.pdmnState->keyIDVoting) ||

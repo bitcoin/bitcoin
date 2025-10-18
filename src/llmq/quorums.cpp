@@ -683,9 +683,8 @@ size_t CQuorumManager::GetQuorumRecoveryStartOffset(const CQuorum& quorum, const
     auto mns = m_dmnman.GetListForBlock(pIndex);
     std::vector<uint256> vecProTxHashes;
     vecProTxHashes.reserve(mns.GetValidMNsCount());
-    mns.ForEachMN(true, [&](auto& pMasternode) {
-        vecProTxHashes.emplace_back(pMasternode.proTxHash);
-    });
+    mns.ForEachMN(/*onlyValid=*/true,
+                  [&](const auto& pMasternode) { vecProTxHashes.emplace_back(pMasternode.proTxHash); });
     std::sort(vecProTxHashes.begin(), vecProTxHashes.end());
     size_t nIndex{0};
     {

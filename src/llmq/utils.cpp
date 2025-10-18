@@ -144,7 +144,7 @@ static std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CalculateScor
     std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> scores;
     scores.reserve(mn_list.GetAllMNsCount());
 
-    mn_list.ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
+    mn_list.ForEachMNShared(/*onlyValid=*/true, [&](const auto& dmn) {
         if (dmn->pdmnState->confirmedHash.IsNull()) {
             // we only take confirmed MNs into account to avoid hash grinding on the ProRegTxHash to sneak MNs into a
             // future quorums
@@ -487,7 +487,7 @@ std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(
     }
 
     std::vector<CDeterministicMNCPtr> MnsNotUsedAtH;
-    allMns.ForEachMNShared(false, [&MnsUsedAtH, &MnsNotUsedAtH](const CDeterministicMNCPtr& dmn) {
+    allMns.ForEachMNShared(/*onlyValid=*/false, [&MnsUsedAtH, &MnsNotUsedAtH](const auto& dmn) {
         if (!MnsUsedAtH.HasMN(dmn->proTxHash)) {
             if (!dmn->pdmnState->IsBanned()) {
                 MnsNotUsedAtH.push_back(dmn);

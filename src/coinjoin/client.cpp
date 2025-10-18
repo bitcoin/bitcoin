@@ -1044,9 +1044,8 @@ CDeterministicMNCPtr CCoinJoinClientManager::GetRandomNotUsedMasternode()
     // fill a vector
     std::vector<CDeterministicMNCPtr> vpMasternodesShuffled;
     vpMasternodesShuffled.reserve(nCountEnabled);
-    mnList.ForEachMNShared(true, [&vpMasternodesShuffled](const CDeterministicMNCPtr& dmn) {
-        vpMasternodesShuffled.emplace_back(dmn);
-    });
+    mnList.ForEachMNShared(/*onlyValid=*/true,
+                           [&vpMasternodesShuffled](const auto& dmn) { vpMasternodesShuffled.emplace_back(dmn); });
 
     // shuffle pointers
     Shuffle(vpMasternodesShuffled.begin(), vpMasternodesShuffled.end(), FastRandomContext());

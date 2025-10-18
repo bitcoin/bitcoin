@@ -2407,7 +2407,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             LOCK(cs_main);
             const auto start{SteadyClock::now()};
             const auto mnList{node.dmnman->GetListAtChainTip()};
-            mnList.ForEachMN(false, [&](auto& dmn) {
+            mnList.ForEachMN(/*onlyValid=*/false, [&](const auto& dmn) {
                 Coin coin;
                 GetUTXOCoin(chainman.ActiveChainstate(), dmn.collateralOutpoint, coin);
             });

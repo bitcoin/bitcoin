@@ -125,7 +125,7 @@ CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& from, cons
     diffRet.baseBlockHash = from.GetBlockHash();
     diffRet.blockHash = to.GetBlockHash();
 
-    to.ForEachMN(false, [&](const auto& toPtr) {
+    to.ForEachMN(/*onlyValid=*/false, [&](const auto& toPtr) {
         auto fromPtr = from.GetMN(toPtr.proTxHash);
         if (fromPtr == nullptr) {
             CSimplifiedMNListEntry sme{toPtr.to_sml_entry()};
@@ -140,7 +140,7 @@ CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& from, cons
         }
     });
 
-    from.ForEachMN(false, [&](auto& fromPtr) {
+    from.ForEachMN(/*onlyValid=*/false, [&](const auto& fromPtr) {
         auto toPtr = to.GetMN(fromPtr.proTxHash);
         if (toPtr == nullptr) {
             diffRet.deletedMNs.emplace_back(fromPtr.proTxHash);

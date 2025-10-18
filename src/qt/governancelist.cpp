@@ -492,7 +492,7 @@ void GovernanceList::updateVotingCapability()
     if (!pindex) return;
 
     votableMasternodes.clear();
-    mn_list.ForEachMN(true, [&](const auto& dmn) {
+    mn_list.ForEachMN(/*onlyValid=*/true, [&](const auto& dmn) {
         // Check if wallet owns the voting key using the same logic as RPC
         const CScript script = GetScriptForDestination(PKHash(dmn.pdmnState->keyIDVoting));
         if (walletModel->wallet().isSpendable(script)) {

@@ -176,7 +176,7 @@ void MasternodeList::updateDIP3List()
     {
         // Get all UTXOs for each MN collateral in one go so that we can reduce locking overhead for cs_main
         // We also do this outside of the below Qt list update loop to reduce cs_main locking time to a minimum
-        mnList.ForEachMN(false, [&](auto& dmn) {
+        mnList.ForEachMN(/*onlyValid=*/false, [&](const auto& dmn) {
             CTxDestination collateralDest;
             Coin coin;
             if (clientModel->node().getUnspentOutput(dmn.collateralOutpoint, coin) && ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
@@ -208,7 +208,7 @@ void MasternodeList::updateDIP3List()
         }
     }
 
-    mnList.ForEachMN(false, [&](auto& dmn) {
+    mnList.ForEachMN(/*onlyValid=*/false, [&](const auto& dmn) {
         if (walletModel && ui->checkBoxMyMasternodesOnly->isChecked()) {
             bool fMyMasternode = setOutpts.count(dmn.collateralOutpoint) ||
                 walletModel->wallet().isSpendable(PKHash(dmn.pdmnState->keyIDOwner)) ||

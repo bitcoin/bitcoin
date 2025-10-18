@@ -195,7 +195,7 @@ CDeterministicMNCPtr CDeterministicMNList::GetMNPayee(gsl::not_null<const CBlock
     // For optimization purposes we also check if v19 active to avoid loop over all masternodes
     CDeterministicMNCPtr best = nullptr;
     if (isv19Active && !isMNRewardReallocation) {
-        ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
+        ForEachMNShared(/*onlyValid=*/true, [&](const auto& dmn) {
             if (dmn->pdmnState->nLastPaidHeight == nHeight) {
                 // We found the last MN Payee.
                 // If the last payee is an EvoNode, we need to check its consecutive payments and pay him again if needed
@@ -211,7 +211,7 @@ CDeterministicMNCPtr CDeterministicMNList::GetMNPayee(gsl::not_null<const CBlock
         // We can proceed with classic MN payee selection
     }
 
-    ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
+    ForEachMNShared(/*onlyValid=*/true, [&](const auto& dmn) {
         if (best == nullptr || CompareByLastPaid(dmn.get(), best.get())) {
             best = dmn;
         }
@@ -236,7 +236,7 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(gsl
     int remaining_evo_payments{0};
     CDeterministicMNCPtr evo_to_be_skipped{nullptr};
     if (!isMNRewardReallocation) {
-        ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
+        ForEachMNShared(/*onlyValid=*/true, [&](const auto& dmn) {
             if (dmn->pdmnState->nLastPaidHeight == nHeight) {
                 // We found the last MN Payee.
                 // If the last payee is an EvoNode, we need to check its consecutive payments and pay him again if needed
@@ -251,7 +251,7 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(gsl
         });
     }
 
-    ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
+    ForEachMNShared(/*onlyValid=*/true, [&](const auto& dmn) {
         if (dmn == evo_to_be_skipped) return;
         for ([[maybe_unused]] auto _ : irange::range(isMNRewardReallocation ? 1 : GetMnType(dmn->nType).voting_weight)) {
             result.emplace_back(dmn);
@@ -281,7 +281,7 @@ gsl::not_null<std::shared_ptr<const CSimplifiedMNList>> CDeterministicMNList::to
         std::vector<std::unique_ptr<CSimplifiedMNListEntry>> sml_entries;
         sml_entries.reserve(mnMap.size());
 
-        ForEachMN(false, [&sml_entries](auto& dmn) {
+        ForEachMN(/*onlyValid=*/false, [&sml_entries](const auto& dmn) {
             sml_entries.emplace_back(std::make_unique<CSimplifiedMNListEntry>(dmn.to_sml_entry()));
         });
         m_cached_sml = std::make_shared<CSimplifiedMNList>(std::move(sml_entries));
@@ -338,7 +338,7 @@ void CDeterministicMNList::DecreaseScores()
     toDecrease.reserve(GetAllMNsCount() / 10);
     // only iterate and decrease for valid ones (not PoSe banned yet)
     // if a MN ever reaches the maximum, it stays in PoSe banned state until revived
-    ForEachMNShared(true /* onlyValid */, [&toDecrease](auto& dmn) {
+    ForEachMNShared(/*onlyValid=*/true, [&toDecrease](const auto& dmn) {
         // There is no reason to check if this MN is banned here since onlyValid=true will only run on non-banned MNs
         if (dmn->pdmnState->nPoSePenalty > 0) {
             toDecrease.emplace_back(dmn);

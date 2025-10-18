@@ -218,7 +218,7 @@ static CDeterministicMNCPtr FindPayoutDmn(CDeterministicMNManager& dmnman, const
 
     for (const auto& txout : block.vtx[0]->vout) {
         CDeterministicMNCPtr found;
-        dmnList.ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
+        dmnList.ForEachMNShared(/*onlyValid=*/true, [&](const auto& dmn) {
             if (found == nullptr && txout.scriptPubKey == dmn->pdmnState->scriptPayout) {
                 found = dmn;
             }
