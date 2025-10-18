@@ -9,6 +9,8 @@
 
 #include <memory>
 
+extern int GetSkipHeight(int height);
+
 BOOST_FIXTURE_TEST_SUITE(chain_tests, BasicTestingSetup)
 
 namespace {
@@ -40,6 +42,27 @@ const CBlockIndex* NaiveLastCommonAncestor(const CBlockIndex* a, const CBlockInd
 }
 
 } // namespace
+
+BOOST_AUTO_TEST_CASE(get_skip_height_test)
+{
+    BOOST_CHECK(GetSkipHeight(0b0001011101101000) == 0b0001011101100000);
+    BOOST_CHECK(GetSkipHeight(0b0001011101101001) == 0b0001011101000001);
+    BOOST_CHECK(GetSkipHeight(0b0110101101011000) == 0b0110101101010000);
+    BOOST_CHECK(GetSkipHeight(0b0110101101011001) == 0b0110101101000001);
+    BOOST_CHECK(GetSkipHeight(0) == 0);
+    BOOST_CHECK(GetSkipHeight(1) == 0);
+    BOOST_CHECK(GetSkipHeight(2) == 0);
+    BOOST_CHECK(GetSkipHeight(3) == 1);
+    BOOST_CHECK(GetSkipHeight(4) == 0);
+    BOOST_CHECK(GetSkipHeight(5) == 1);
+    BOOST_CHECK(GetSkipHeight(7) == 1);
+    BOOST_CHECK(GetSkipHeight(8) == 0);
+    BOOST_CHECK(GetSkipHeight(15) == 9);
+    BOOST_CHECK(GetSkipHeight(16) == 0);
+    BOOST_CHECK(GetSkipHeight(17) == 1);
+    BOOST_CHECK(GetSkipHeight(256) == 0);
+    BOOST_CHECK(GetSkipHeight(65536) == 0);
+}
 
 BOOST_AUTO_TEST_CASE(skip_height_properties_test)
 {
