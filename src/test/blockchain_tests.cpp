@@ -117,6 +117,43 @@ BOOST_AUTO_TEST_CASE(num_chain_tx_max)
     BOOST_CHECK_EQUAL(block_index.m_chain_tx_count, std::numeric_limits<uint64_t>::max());
 }
 
+BOOST_AUTO_TEST_CASE(cblockindex_comparator_equivalence)
+{
+    auto old_comparator{[](const CBlockIndex* pa, const CBlockIndex* pb) -> bool {
+        // First sort by most total work, ...
+        if (pa->nChainWork > pb->nChainWork) return false;
+        if (pa->nChainWork < pb->nChainWork) return true;
+
+        // ... then by earliest time received, ...
+        if (pa->nSequenceId < pb->nSequenceId) return false;
+        if (pa->nSequenceId > pb->nSequenceId) return true;
+
+        // Use pointer address as tie breaker (should only happen with blocks
+        // loaded from disk, as those all have id 0).
+        if (pa < pb) return false;
+        if (pa > pb) return true;
+
+        // Identical blocks.
+        return false;
+    }};
+
+    FastRandomContext rng{/*fDeterministic=*/true};
+
+    for (int test{0}; test < 1'000; ++test) {
+        node::CBlockIndexWorkComparator comparator;
+        CBlockIndex a, b;
+
+        // Generate random chain work and sequence IDs
+        a.nChainWork = UintToArith256(rng.rand256());
+        b.nChainWork = UintToArith256(rng.rand256());
+        a.nSequenceId = int32_t(rng.rand32());
+        b.nSequenceId = int32_t(rng.rand32());
+
+        BOOST_CHECK_EQUAL(old_comparator(&a, &b), comparator(&a, &b));
+        BOOST_CHECK_EQUAL(old_comparator(&b, &a), comparator(&b, &a));
+    }
+}
+
 BOOST_FIXTURE_TEST_CASE(invalidate_block, TestChain100Setup)
 {
     const CChain& active{*WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return &Assert(m_node.chainman)->ActiveChain())};

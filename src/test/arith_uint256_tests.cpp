@@ -275,8 +275,43 @@ BOOST_AUTO_TEST_CASE( comparison ) // <= >= < >
         BOOST_CHECK(! (TmpL < R1L)); BOOST_CHECK(! (R1L > TmpL));
     }
 
-    BOOST_CHECK_LT(ZeroL,
-                   OneL);
+    BOOST_CHECK_LT(ZeroL, OneL);
+}
+
+BOOST_AUTO_TEST_CASE(comparison_equivalence)
+{
+    struct TestableArithUint256 : arith_uint256 {
+        static int compare_original(const TestableArithUint256& a, const TestableArithUint256& b) {
+            constexpr int WIDTH = 8; // 256 / 32
+            for (int i = WIDTH - 1; i >= 0; i--) {
+                if (a.pn[i] < b.pn[i])
+                    return -1;
+                if (a.pn[i] > b.pn[i])
+                    return 1;
+            }
+            return 0;
+        }
+    };
+
+    FastRandomContext rng{/*fDeterministic=*/false};
+
+    for (int test{0}; test < 1'000; ++test)
+    {
+        TestableArithUint256 a{UintToArith256(rng.rand256())}, b{UintToArith256(rng.rand256())};
+
+        int old_result{TestableArithUint256::compare_original(a, b)};
+
+        const auto comparison{a <=> b};
+        BOOST_CHECK_EQUAL(old_result, comparison < 0 ? -1 : (comparison > 0 ? 1 : 0));
+
+        // Verify all comparison operators match old behavior
+        BOOST_CHECK_EQUAL(a < b, old_result < 0);
+        BOOST_CHECK_EQUAL(a > b, old_result > 0);
+        BOOST_CHECK_EQUAL(a <= b, old_result <= 0);
+        BOOST_CHECK_EQUAL(a >= b, old_result >= 0);
+        BOOST_CHECK_EQUAL(a == b, old_result == 0);
+        BOOST_CHECK_EQUAL(a != b, old_result != 0);
+    }
 }
 
 BOOST_AUTO_TEST_CASE( plusMinus )
