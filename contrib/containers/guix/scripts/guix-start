@@ -9,10 +9,12 @@ if [[ ! -d "${WORKSPACE_PATH}" || ! "${WORKSPACE_PATH}" = /* || ! -f "${WORKSPAC
     exit 1
 fi
 
-export SDK_PATH="${SDK_PATH:-${WORKSPACE_PATH}/depends/SDKs}"
-export SDK_SRCS="${SDK_PATH:-${WORKSPACE_PATH}/depends/sdk-sources}"
+if [[ -z "${HOSTS}" || "${HOSTS}" == *"darwin"* ]]; then
+    export SDK_PATH="${SDK_PATH:-${WORKSPACE_PATH}/depends/SDKs}"
+    export SDK_SRCS="${SDK_PATH:-${WORKSPACE_PATH}/depends/sdk-sources}"
 
-./contrib/containers/guix/scripts/setup-sdk
+    ./contrib/containers/guix/scripts/setup-sdk
+fi
 
 # Add safe.directory option only when WORKSPACE_PATH was specified via cmd-line arguments (happens in CI)
 if [[ -n "${1}" ]]; then
