@@ -213,7 +213,7 @@ static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, secp25
                  * but this would simply discard the bits that fall off at the bottom,
                  * and thus, for example, bitdata could still have only two values if we
                  * happen to shift by exactly 31 positions. We use a rotation instead,
-                 * which ensures that bitdata doesn't loose entropy. This relies on the
+                 * which ensures that bitdata doesn't lose entropy. This relies on the
                  * rotation being atomic, i.e., the compiler emitting an actual rot
                  * instruction. */
                 uint32_t bitdata = secp256k1_rotr32(recoded[bit_pos >> 5], bit_pos & 0x1f);
@@ -242,7 +242,7 @@ static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, secp25
              *    (https://cryptojedi.org/peter/data/chesrump-20130822.pdf) and
              *   "Cache Attacks and Countermeasures: the Case of AES", RSA 2006,
              *    by Dag Arne Osvik, Adi Shamir, and Eran Tromer
-             *    (https://www.tau.ac.il/~tromer/papers/cache.pdf)
+             *    (https://eprint.iacr.org/2005/271.pdf)
              */
             for (index = 0; index < COMB_POINTS; ++index) {
                 secp256k1_ge_storage_cmov(&adds, &secp256k1_ecmult_gen_prec_table[block][index], index == abs);
@@ -277,8 +277,8 @@ static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, secp25
     /* Cleanup. */
     secp256k1_fe_clear(&neg);
     secp256k1_ge_clear(&add);
-    secp256k1_memclear(&adds, sizeof(adds));
-    secp256k1_memclear(&recoded, sizeof(recoded));
+    secp256k1_memclear_explicit(&adds, sizeof(adds));
+    secp256k1_memclear_explicit(&recoded, sizeof(recoded));
 }
 
 /* Setup blinding values for secp256k1_ecmult_gen. */
@@ -310,7 +310,7 @@ static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const 
     VERIFY_CHECK(seed32 != NULL);
     memcpy(keydata + 32, seed32, 32);
     secp256k1_rfc6979_hmac_sha256_initialize(&rng, keydata, 64);
-    secp256k1_memclear(keydata, sizeof(keydata));
+    secp256k1_memclear_explicit(keydata, sizeof(keydata));
 
     /* Compute projective blinding factor (cannot be 0). */
     secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);
@@ -331,7 +331,7 @@ static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const 
     secp256k1_ge_set_gej(&ctx->ge_offset, &gb);
 
     /* Clean up. */
-    secp256k1_memclear(nonce32, sizeof(nonce32));
+    secp256k1_memclear_explicit(nonce32, sizeof(nonce32));
     secp256k1_scalar_clear(&b);
     secp256k1_gej_clear(&gb);
     secp256k1_fe_clear(&f);

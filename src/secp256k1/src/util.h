@@ -219,8 +219,8 @@ static SECP256K1_INLINE void secp256k1_memczero(void *s, size_t len, int flag) {
     }
 }
 
-/* Cleanses memory to prevent leaking sensitive info. Won't be optimized out. */
-static SECP256K1_INLINE void secp256k1_memclear(void *ptr, size_t len) {
+/* Zeroes memory to prevent leaking sensitive info. Won't be optimized out. */
+static SECP256K1_INLINE void secp256k1_memzero_explicit(void *ptr, size_t len) {
 #if defined(_MSC_VER)
     /* SecureZeroMemory is guaranteed not to be optimized out by MSVC. */
     SecureZeroMemory(ptr, len);
@@ -242,6 +242,19 @@ static SECP256K1_INLINE void secp256k1_memclear(void *ptr, size_t len) {
     void *(*volatile const volatile_memset)(void *, int, size_t) = memset;
     volatile_memset(ptr, 0, len);
 #endif
+}
+
+/* Cleanses memory to prevent leaking sensitive info. Won't be optimized out.
+ * The state of the memory after this call is unspecified so callers must not
+ * make any assumptions about its contents.
+ *
+ * In VERIFY builds, it has the side effect of marking the memory as undefined.
+ * This helps to detect use-after-clear bugs where code incorrectly reads from
+ * cleansed memory during testing.
+ */
+static SECP256K1_INLINE void secp256k1_memclear_explicit(void *ptr, size_t len) {
+    /* The current implementation zeroes, but callers must not rely on this */
+    secp256k1_memzero_explicit(ptr, len);
 #ifdef VERIFY
     SECP256K1_CHECKMEM_UNDEFINE(ptr, len);
 #endif
@@ -277,7 +290,7 @@ static SECP256K1_INLINE int secp256k1_is_zero_array(const unsigned char *s, size
     }
     ret = (acc == 0);
     /* acc may contain secret values. Try to explicitly clear it. */
-    secp256k1_memclear(&acc, sizeof(acc));
+    secp256k1_memclear_explicit(&acc, sizeof(acc));
     return ret;
 }
 

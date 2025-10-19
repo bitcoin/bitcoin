@@ -337,11 +337,11 @@ static void secp256k1_ge_set_infinity(secp256k1_ge *r) {
 }
 
 static void secp256k1_gej_clear(secp256k1_gej *r) {
-    secp256k1_memclear(r, sizeof(secp256k1_gej));
+    secp256k1_memclear_explicit(r, sizeof(secp256k1_gej));
 }
 
 static void secp256k1_ge_clear(secp256k1_ge *r) {
-    secp256k1_memclear(r, sizeof(secp256k1_ge));
+    secp256k1_memclear_explicit(r, sizeof(secp256k1_ge));
 }
 
 static int secp256k1_ge_set_xo_var(secp256k1_ge *r, const secp256k1_fe *x, int odd) {
