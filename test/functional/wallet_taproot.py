@@ -11,7 +11,7 @@ from decimal import Decimal
 from test_framework.address import output_key_to_p2tr
 from test_framework.key import H_POINT
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.descriptors import descsum_create
 from test_framework.script import (
     CScript,
@@ -393,6 +393,15 @@ class WalletTaprootTest(BitcoinTestFramework):
         self.do_test_sendtoaddress(comment, pattern, privmap, treefn, keys[0:nkeys], keys[nkeys:2*nkeys])
         self.do_test_psbt(comment, pattern, privmap, treefn, keys[2*nkeys:3*nkeys], keys[3*nkeys:4*nkeys])
 
+    def do_test_k_of_n(self,k,n):
+
+        self.do_test(
+         f"tr(XPUB,multi_a({k},XPRV_1,...,XPRV_N)",
+             f"tr($2/*,multi_a({k}" + (",$1/*" * n) + "))",
+               [True, False],
+                lambda k1, k2: (key(k2), [multi_a(k, ([k1] * n))])
+            )
+
     def run_test(self):
         self.nodes[0].createwallet(wallet_name="boring")
         self.boring = self.nodes[0].get_wallet_rpc("boring")
@@ -503,6 +512,17 @@ class WalletTaprootTest(BitcoinTestFramework):
             "rawtr($1/*)",
             [True],
             lambda k1: key(k1)
+        )
+        self.do_test_k_of_n(100,999)
+        # Test that 1-of-0 raises exception
+        assert_raises_rpc_error(
+            -5, "Cannot have 0 keys in multi_a; must have between 1 and 999 keys, inclusive",
+            self.do_test_k_of_n, 1, 0
+        )
+        # Test that 1-of-1000 raises exception
+        assert_raises_rpc_error(
+            -5, "Cannot have 1000 keys in multi_a; must have between 1 and 999 keys, inclusive",
+            self.do_test_k_of_n, 1, 1000
         )
 
 if __name__ == '__main__':
