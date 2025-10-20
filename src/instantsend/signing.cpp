@@ -295,7 +295,7 @@ bool InstantSendSigner::TrySignInputLocks(const CTransaction& tx, bool fRetroact
 
     size_t alreadyVotedCount = 0;
     for (const auto& in : tx.vin) {
-        auto id = GenInputLockRequestId(in);
+        auto id = GenInputLockRequestId(in.prevout);
         ids.emplace_back(id);
 
         uint256 otherTxHash;
@@ -344,7 +344,7 @@ void InstantSendSigner::TrySignInstantSendLock(const CTransaction& tx)
     const auto llmqType = Params().GetConsensus().llmqTypeDIP0024InstantSend;
 
     for (const auto& in : tx.vin) {
-        auto id = GenInputLockRequestId(in);
+        auto id = GenInputLockRequestId(in.prevout);
         if (!m_sigman.HasRecoveredSig(llmqType, id, tx.GetHash())) {
             return;
         }
