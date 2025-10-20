@@ -3527,13 +3527,11 @@ CConnman::~CConnman()
 
 std::vector<CAddress> CConnman::GetAddressesUnsafe(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered) const
 {
-    std::vector<CAddress> addresses = addrman.GetAddr(max_addresses, max_pct, network, filtered);
     if (m_banman) {
-        addresses.erase(std::remove_if(addresses.begin(), addresses.end(),
-                        [this](const CAddress& addr){return m_banman->IsDiscouraged(addr) || m_banman->IsBanned(addr);}),
-                        addresses.end());
+        const AddrMan::AddrPolicy policy = [this](const CAddress& addr) { return m_banman->IsDiscouraged(addr) || m_banman->IsBanned(addr); };
+        return addrman.GetAddr(max_addresses, max_pct, network, filtered, policy);
     }
-    return addresses;
+    return addrman.GetAddr(max_addresses, max_pct, network, filtered);
 }
 
 std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addresses, size_t max_pct)

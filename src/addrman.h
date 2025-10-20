@@ -18,6 +18,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <functional>
 
 class InvalidAddrManVersionError : public std::ios_base::failure
 {
@@ -91,6 +92,12 @@ protected:
     const std::unique_ptr<AddrManImpl> m_impl;
 
 public:
+    /** Predicate used to exclude addresses during selection.
+     *  Return true to skip the given address.
+     *  Must be non-blocking and must not acquire locks that can conflict with AddrMan::cs.
+     */
+    using AddrPolicy = std::function<bool(const CAddress&)>;
+
     explicit AddrMan(const NetGroupManager& netgroupman, bool deterministic, int32_t consistency_check_ratio);
 
     ~AddrMan();
@@ -169,10 +176,11 @@ public:
      * @param[in] max_pct        Maximum percentage of addresses to return (0 = all). Value must be from 0 to 100.
      * @param[in] network        Select only addresses of this network (nullopt = all).
      * @param[in] filtered       Select only addresses that are considered good quality (false = all).
+     * @param[in] policy         Optional predicate to exclude candidates during selection (true = exclude).
      *
      * @return                   A vector of randomly selected addresses from vRandom.
      */
-    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered = true) const;
+    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered = true, const AddrPolicy& policy = {}) const;
 
     /**
      * Returns an information-location pair for all addresses in the selected addrman table.
