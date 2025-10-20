@@ -40,7 +40,7 @@ struct InstantSendLock {
     bool TriviallyValid() const;
 };
 
-uint256 GenInputLockRequestId(const COutPoint& val);
+uint256 GenInputLockRequestId(const COutPoint& outpoint);
 
 using InstantSendLockPtr = std::shared_ptr<InstantSendLock>;
 } // namespace instantsend

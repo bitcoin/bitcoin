@@ -38,8 +38,8 @@ bool InstantSendLock::TriviallyValid() const
     return inputs_set.size() == inputs.size();
 }
 
-uint256 GenInputLockRequestId(const COutPoint& val)
+uint256 GenInputLockRequestId(const COutPoint& outpoint)
 {
-    return ::SerializeHash(std::make_pair(INPUTLOCK_REQUESTID_PREFIX, val));
+    return ::SerializeHash(std::make_pair(INPUTLOCK_REQUESTID_PREFIX, outpoint));
 }
 } // namespace instantsend
