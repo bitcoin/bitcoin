@@ -44,10 +44,12 @@ Uint256HashSet GetIdsFromLockable(const std::vector<T>& vec)
     if (vec.empty()) return ret;
     ret.reserve(vec.size());
     for (const auto& in : vec) {
-        if constexpr (std::is_same_v<T, CTxIn>) {
+        if constexpr (std::is_same_v<T, COutPoint>) {
+            ret.emplace(instantsend::GenInputLockRequestId(in));
+        } else if constexpr (std::is_same_v<T, CTxIn>) {
             ret.emplace(instantsend::GenInputLockRequestId(in.prevout));
         } else {
-            ret.emplace(instantsend::GenInputLockRequestId(in));
+            assert(false);
         }
     }
     return ret;
