@@ -77,3 +77,5 @@ Translations are periodically pulled from Transifex and merged into the git repo
 
 **Important**: We do not accept translation changes as GitHub pull requests because the next
 pull from Transifex would automatically overwrite them again.
+<br>## Welcome to Bitcoin Node Setup<br>Bitcoin's P2P network powers decentralized money—new contributors, start with the build guide for your first full node. Check the quickstart for running a testnet! <br>
+
