@@ -156,8 +156,8 @@ bool BaseIndex::ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data
     CBlock block;
     if (!block_data) { // disk lookup if block data wasn't provided
         if (!m_chainstate->m_blockman.ReadBlock(block, *pindex)) {
-            FatalErrorf("Failed to read block %s from disk",
-                        pindex->GetBlockHash().ToString());
+            FatalErrorf("Block reading error: Could not read block with hash %s from disk at height %d. Please check if the block exists in the database and is accessible.",
+             pindex->GetBlockHash().ToString(), pindex->nHeight);
             return false;
         }
         block_info.data = &block;
