@@ -79,7 +79,7 @@ multisig_desc="[{\"desc\": \"${desc}#${checksum}\", \"active\": true, \"timestam
 
 After creating the descriptor, it is necessary to add the checksum, which is required by the `importdescriptors` RPC.
 
-The checksum for a descriptor without one can be computed using the `getdescriptorinfo` RPC. The response has the `descriptor` field, which is the descriptor with the checksum added.
+The checksum for a descriptor without one can be computed using the `getdescriptorinfo` RPC. The response has the `checksum` field, which is the checksum for the input descriptor, append "#" and this checksum to the input descriptor.
 
 There are other fields that can be added to the descriptor:
 
