@@ -318,16 +318,7 @@ fs::path ArgsManager::GetDataDir(bool net_specific) const
     // Used cached path if available
     if (!path.empty()) return path;
 
-    const fs::path datadir{GetPathArg("-datadir")};
-    if (!datadir.empty()) {
-        path = fs::absolute(datadir);
-        if (!fs::is_directory(path)) {
-            path = "";
-            return path;
-        }
-    } else {
-        path = GetDefaultDataDir();
-    }
+    path = *Assert(m_datadir);
 
     if (net_specific && !BaseParams().DataDir().empty()) {
         path /= fs::PathFromString(BaseParams().DataDir());

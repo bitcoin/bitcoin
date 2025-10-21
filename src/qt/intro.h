@@ -11,6 +11,8 @@
 #include <QMutex>
 #include <QThread>
 
+#include <util/fs.h>
+
 static const bool DEFAULT_CHOOSE_DATADIR = false;
 
 namespace interfaces {
@@ -48,7 +50,7 @@ public:
      * @note do NOT call global gArgs.GetDataDirNet() before calling this function, this
      * will cause the wrong path to be cached.
      */
-    static bool showIfNeeded(bool& did_show_intro, int64_t& prune_MiB);
+    static bool showIfNeeded(bool& did_show_intro, fs::path& initial_datadir, int64_t& prune_MiB);
 
 Q_SIGNALS:
     void requestCheck();

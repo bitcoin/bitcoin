@@ -230,10 +230,6 @@ bool OptionsModel::Init(bilingual_str& error)
 
     // If setting doesn't exist create it with defaults.
 
-    // Main
-    if (!settings.contains("strDataDir"))
-        settings.setValue("strDataDir", GUIUtil::getDefaultDataDirectory());
-
     // Wallet
 #ifdef ENABLE_WALLET
     if (!settings.contains("SubFeeFromAmount")) {
@@ -288,15 +284,8 @@ void OptionsModel::Reset()
     // Backup old settings to chain-specific datadir for troubleshooting
     BackupSettings(gArgs.GetDataDirNet() / "guisettings.ini.bak", settings);
 
-    // Save the strDataDir setting
-    QString dataDir = GUIUtil::getDefaultDataDirectory();
-    dataDir = settings.value("strDataDir", dataDir).toString();
-
     // Remove all entries from our QSettings object
     settings.clear();
-
-    // Set strDataDir
-    settings.setValue("strDataDir", dataDir);
 
     // Set that this was reset
     settings.setValue("fReset", true);

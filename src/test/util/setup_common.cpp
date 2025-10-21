@@ -149,7 +149,8 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
         SetupServerArgs(*m_node.args);
         SetupCommonTestArgs(*m_node.args);
         std::string error;
-        if (!m_node.args->ParseParameters(arguments.size(), arguments.data(), error)) {
+        if (!m_node.args->ParseParameters(arguments.size(), arguments.data(), error) ||
+            !m_node.args->ReadConfigFiles(error)) {
             m_node.args->ClearArgs();
             throw std::runtime_error{error};
         }
@@ -188,6 +189,8 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
         std::cout << "Test directory (will not be deleted): " << m_path_root << std::endl;
     }
     m_args.ForceSetArg("-datadir", fs::PathToString(m_path_root));
+    std::string error;
+    if (!m_args.ReadConfigFiles(error)) throw std::runtime_error(error);
     gArgs.ForceSetArg("-datadir", fs::PathToString(m_path_root));
 
     SelectParams(chainType);

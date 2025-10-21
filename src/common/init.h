@@ -5,6 +5,7 @@
 #ifndef BITCOIN_COMMON_INIT_H
 #define BITCOIN_COMMON_INIT_H
 
+#include <util/fs.h>
 #include <util/translation.h>
 
 #include <functional>
@@ -33,7 +34,8 @@ struct ConfigError {
 using SettingsAbortFn = std::function<bool(const bilingual_str& message, const std::vector<std::string>& details)>;
 
 /* Read config files, and create datadir and settings.json if they don't exist. */
-std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn settings_abort_fn = nullptr);
+std::optional<ConfigError> InitConfig(ArgsManager& args, InitialDataDirFn initial_datadir_fn = nullptr,
+                                      SettingsAbortFn settings_abort_fn = nullptr);
 } // namespace common
 
 #endif // BITCOIN_COMMON_INIT_H
