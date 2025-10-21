@@ -10,13 +10,6 @@ export CI_IMAGE_LABEL="bitcoin-ci-test"
 set -o errexit -o pipefail -o xtrace
 
 if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
-  # Env vars during the build can not be changed. For example, a modified
-  # $MAKEJOBS is ignored in the build process. Use --cpuset-cpus as an
-  # approximation to respect $MAKEJOBS somewhat, if cpuset is available.
-  MAYBE_CPUSET=""
-  if [ "$HAVE_CGROUP_CPUSET" ]; then
-    MAYBE_CPUSET="--cpuset-cpus=$( python3 -c "import random;P=$( nproc );M=min(P,int('$MAKEJOBS'.lstrip('-j')));print(','.join(map(str,sorted(random.sample(range(P),M)))))" )"
-  fi
   echo "Creating $CI_IMAGE_NAME_TAG container to run in"
 
   # Use buildx unconditionally
@@ -27,7 +20,6 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
       --build-arg "CI_IMAGE_NAME_TAG=${CI_IMAGE_NAME_TAG}" \
       --build-arg "FILE_ENV=${FILE_ENV}" \
       --build-arg "BASE_ROOT_DIR=${BASE_ROOT_DIR}" \
-      $MAYBE_CPUSET \
       --platform="${CI_IMAGE_PLATFORM}" \
       --label="${CI_IMAGE_LABEL}" \
       --tag="${CONTAINER_NAME}" \
