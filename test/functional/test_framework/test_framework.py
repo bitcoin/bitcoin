@@ -942,6 +942,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if not self.is_bitcoin_chainstate_compiled():
             raise SkipTest("bitcoin-chainstate has not been compiled")
 
+    def skip_if_no_bitcoin_bench(self):
+        """Skip the running test if bitcoin_bench has not been compiled."""
+        if not self.is_bench_compiled():
+            raise SkipTest("bitcoin_bench has not been compiled")
+
     def skip_if_no_cli(self):
         """Skip the running test if bitcoin-cli has not been compiled."""
         if not self.is_cli_compiled():
@@ -974,6 +979,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Skip the running test if Valgrind is being used."""
         if self.options.valgrind:
             raise SkipTest("This test is not compatible with Valgrind.")
+
+    def is_bench_compiled(self):
+        """Checks whether bitcoin_bench was compiled."""
+        return self.config["components"].getboolean("BUILD_BENCH")
 
     def is_cli_compiled(self):
         """Checks whether bitcoin-cli was compiled."""
