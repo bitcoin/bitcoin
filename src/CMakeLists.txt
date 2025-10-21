@@ -407,6 +407,12 @@ if(BUILD_KERNEL_LIB)
   if (BUILD_KERNEL_TEST)
     add_subdirectory(test/kernel)
   endif()
+  if (BUILD_KERNEL_EXAMPLES)
+    # Build example programs for libbitcoinkernel. These example executables
+    # demonstrate how to use the C API. They are placed under
+    # "build/test/examples" in the build tree.
+    add_subdirectory(kernel/examples)
+  endif()
   if(BUILD_UTIL_CHAINSTATE)
     add_executable(bitcoin-chainstate
       bitcoin-chainstate.cpp
