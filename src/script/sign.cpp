@@ -81,7 +81,7 @@ std::optional<uint256> MutableTransactionSignatureCreator::ComputeSchnorrSignatu
         execdata.m_tapleaf_hash = *leaf_hash;
     }
     uint256 hash;
-    if (!SignatureHashSchnorr(hash, execdata, m_txto, nIn, nHashType, sigversion, *m_txdata, MissingDataBehavior::FAIL)) return std::nullopt;
+    if (!SignatureHashSchnorr(hash, execdata, m_txto, nIn, static_cast<uint8_t>(nHashType), sigversion, *m_txdata, MissingDataBehavior::FAIL)) return std::nullopt;
     return hash;
 }
 
