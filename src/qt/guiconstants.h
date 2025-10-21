@@ -41,7 +41,7 @@ static const bool DEFAULT_SPLASHSCREEN = true;
 /* Tooltips longer than this (in characters) are converted into rich text,
    so that they can be word-wrapped.
  */
-static const int TOOLTIP_WRAP_THRESHOLD = 80;
+static const int TOOLTIP_WRAP_THRESHOLD = 100;
 
 /* Number of frames in spinner animation */
 #define SPINNER_FRAMES 36
