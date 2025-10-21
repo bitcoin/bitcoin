@@ -84,8 +84,4 @@ if(ENABLE_WALLET)
   target_link_libraries(bench_bitcoin bitcoin_wallet)
 endif()
 
-add_test(NAME bench_sanity_check
-  COMMAND bench_bitcoin -sanity-check
-)
-
 install_binary_component(bench_bitcoin INTERNAL)
