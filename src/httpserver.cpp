@@ -7,6 +7,7 @@
 #include <chainparamsbase.h>
 #include <common/args.h>
 #include <common/messages.h>
+#include <common/system.h>
 #include <compat/compat.h>
 #include <logging.h>
 #include <netbase.h>
@@ -501,6 +502,15 @@ static std::vector<std::thread> g_thread_http_workers;
 void StartHTTPServer()
 {
     int rpcThreads = std::max((long)gArgs.GetIntArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
+    const int num_cores = GetNumCores();
+    if (rpcThreads > num_cores) {
+        const int num_workers = std::max(1, num_cores - 1);
+        if (gArgs.IsArgSet("-rpcthreads")) {
+            LogWarning("-rpcthreads (%d) exceeds available CPUs (%d); adjusted to %d\n",
+                       rpcThreads, num_cores, num_workers);
+        }
+        rpcThreads = num_workers;
+    }
     LogInfo("Starting HTTP server with %d worker threads\n", rpcThreads);
     g_thread_http = std::thread(ThreadHTTP, eventBase);
 
