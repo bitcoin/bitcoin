@@ -7,6 +7,7 @@ import os
 import shlex
 import subprocess
 import sys
+import time
 
 
 def run(cmd, **kwargs):
@@ -65,7 +66,10 @@ def main():
         cmd_build += [os.environ["BASE_READ_ONLY_DIR"]]
 
         print(f"Building {os.environ['CONTAINER_NAME']} image tag to run in")
-        run(cmd_build)
+        if run(cmd_build, check=False).returncode != 0:
+            print(f"Retry building {os.environ['CONTAINER_NAME']} image tag after failure")
+            time.sleep(3)
+            run(cmd_build)
 
     run(["./ci/test/02_run_container.sh"])  # run the remainder
 
