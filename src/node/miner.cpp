@@ -453,12 +453,20 @@ void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t 
     block.hashMerkleRoot = BlockMerkleRoot(block);
 }
 
+void InterruptWait(KernelNotifications& kernel_notifications, bool& waiting)
+{
+    LOCK(kernel_notifications.m_tip_block_mutex);
+    waiting = false;
+    kernel_notifications.m_tip_block_cv.notify_all();
+}
+
 std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainman,
                                                       KernelNotifications& kernel_notifications,
                                                       CTxMemPool* mempool,
                                                       const std::unique_ptr<CBlockTemplate>& block_template,
                                                       const BlockWaitOptions& options,
-                                                      const BlockAssembler::Options& assemble_options)
+                                                      const BlockAssembler::Options& assemble_options,
+                                                      bool& waiting)
 {
     // Delay calculating the current template fees, just in case a new block
     // comes in before the next tick.
@@ -475,6 +483,7 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
         bool tip_changed{false};
         {
             WAIT_LOCK(kernel_notifications.m_tip_block_mutex, lock);
+            waiting = true;
             // Note that wait_until() checks the predicate before waiting
             kernel_notifications.m_tip_block_cv.wait_until(lock, std::min(now + tick, deadline), [&]() EXCLUSIVE_LOCKS_REQUIRED(kernel_notifications.m_tip_block_mutex) {
                 AssertLockHeld(kernel_notifications.m_tip_block_mutex);
@@ -483,11 +492,11 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
                 // method on BlockTemplate and no template could have been
                 // generated before a tip exists.
                 tip_changed = Assume(tip_block) && tip_block != block_template->block.hashPrevBlock;
-                return tip_changed || chainman.m_interrupt;
+                return tip_changed || chainman.m_interrupt || !waiting;
             });
         }
 
-        if (chainman.m_interrupt) return nullptr;
+        if (chainman.m_interrupt || !waiting) return nullptr;
         // At this point the tip changed, a full tick went by or we reached
         // the deadline.
 
