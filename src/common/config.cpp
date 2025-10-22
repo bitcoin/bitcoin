@@ -135,7 +135,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             error = strprintf("Config file \"%s\" is a directory.", fs::PathToString(conf_path));
             return false;
         }
-        stream = std::ifstream{conf_path};
+        stream = std::ifstream{conf_path.std_path()};
         // If the file is explicitly specified, it must be readable
         if (IsArgSet("-conf") && !stream.good()) {
             error = strprintf("specified config file \"%s\" could not be opened.", fs::PathToString(conf_path));
@@ -187,7 +187,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
                     error = strprintf("Included config file \"%s\" is a directory.", fs::PathToString(include_conf_path));
                     return false;
                 }
-                std::ifstream conf_file_stream{include_conf_path};
+                std::ifstream conf_file_stream{include_conf_path.std_path()};
                 if (conf_file_stream.good()) {
                     if (!ReadConfigStream(conf_file_stream, conf_file_name, error, ignore_invalid_keys)) {
                         return false;

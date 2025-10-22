@@ -209,7 +209,7 @@ static void ExecCommand(const std::vector<const char*>& args, std::string_view w
 
     // Try to resolve any symlinks and figure out the directory containing the wrapper executable.
     std::error_code ec;
-    fs::path wrapper_dir{fs::weakly_canonical(wrapper_path, ec)};
+    auto wrapper_dir{fs::weakly_canonical(wrapper_path, ec)};
     if (wrapper_dir.empty()) wrapper_dir = wrapper_path; // Restore previous path if weakly_canonical failed.
     wrapper_dir = wrapper_dir.parent_path();
 
@@ -225,7 +225,7 @@ static void ExecCommand(const std::vector<const char*>& args, std::string_view w
 
     // If wrapper is installed in a bin/ directory, look for target executable
     // in libexec/
-    (wrapper_dir.filename() == "bin" && try_exec(fs::path{wrapper_dir.parent_path()} / "libexec" / arg0.filename())) ||
+    (wrapper_dir.filename() == "bin" && try_exec(wrapper_dir.parent_path() / "libexec" / arg0.filename())) ||
 #ifdef WIN32
     // Otherwise check the "daemon" subdirectory in a windows install.
     (!wrapper_dir.empty() && try_exec(wrapper_dir / "daemon" / arg0.filename())) ||

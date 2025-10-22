@@ -45,7 +45,7 @@ inline std::ostream& operator<<(std::ostream& os, const std::pair<std::string, c
 inline void WriteText(const fs::path& path, const std::string& text)
 {
     std::ofstream file;
-    file.open(path);
+    file.open(path.std_path());
     file << text;
 }
 
