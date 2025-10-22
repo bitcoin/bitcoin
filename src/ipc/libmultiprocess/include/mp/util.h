@@ -19,6 +19,10 @@
 #include <variant>
 #include <vector>
 
+#ifdef WIN32
+#include <winsock2.h>
+#endif
+
 namespace mp {
 
 //! Generic utility functions used by capnp code.
@@ -216,22 +220,44 @@ std::string ThreadName(const char* exe_name);
 //! errors in python unit tests.
 std::string LogEscape(const kj::StringTree& string, size_t max_size);
 
-//! Callback type used by SpawnProcess below.
-using FdToArgsFn = std::function<std::vector<std::string>(int fd)>;
+#ifdef WIN32
+using ProcessId = uintptr_t;
+using SocketId = uintptr_t;
+constexpr SocketId SocketError{INVALID_SOCKET};
+#else
+using ProcessId = int;
+using SocketId = int;
+constexpr SocketId SocketError{-1};
+#endif
 
-//! Spawn a new process that communicates with the current process over a socket
-//! pair. Returns pid through an output argument, and file descriptor for the
-//! local side of the socket. Invokes fd_to_args callback with the remote file
-//! descriptor number which returns the command line arguments that should be
-//! used to execute the process, and which should have the remote file
-//! descriptor embedded in whatever format the child process expects.
-int SpawnProcess(int& pid, FdToArgsFn&& fd_to_args);
+//! Information about parent process passed to child process.  On unix this is
+//! just the inherited int file descriptor formatted as a string. On windows,
+//! this is a path to a named path pipe the parent process will write
+//! WSADuplicateSocket info to.
+using ConnectInfo = std::string;
+
+//! Callback type used by SpawnProcess below.
+using ConnectInfoToArgsFn = std::function<std::vector<std::string>(const ConnectInfo&)>;
+
+//! Create a socket pair that can be used to communicate within a process or
+//! between parent and child processes.
+std::array<SocketId, 2> SocketPair();
+
+//! Spawn a new process that communicates with the current process over provided
+//! socket argument. Calls connect_info_to_args callback with a connection
+//! string that needs to be passed to the child process, and executes the
+//! argv command line it returns. Returns child process id.
+ProcessId SpawnProcess(SocketId socket, ConnectInfoToArgsFn&& connect_info_to_args);
+
+//! Initialize spawned child process using the ConnectInfo string passed to it,
+//! returning a socket id for communicating with the parent process.
+SocketId StartSpawned(const ConnectInfo& connect_info);
 
 //! Call execvp with vector args.
 void ExecProcess(const std::vector<std::string>& args);
 
 //! Wait for a process to exit and return its exit code.
-int WaitProcess(int pid);
+int WaitProcess(ProcessId pid);
 
 inline char* CharCast(char* c) { return c; }
 inline char* CharCast(unsigned char* c) { return (char*)c; }
