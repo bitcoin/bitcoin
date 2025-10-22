@@ -253,6 +253,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
     if (tx.IsCoinBase())
         return true; // Coinbases are skipped
 
+    std::vector<unsigned char> witnessprogram;
     for (const CTxIn& txin : tx.vin)
     {
         // We don't care if witness for this input is empty, since it must not be bloated.
@@ -285,7 +286,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         }
 
         int witnessversion = 0;
-        std::vector<unsigned char> witnessprogram;
+        witnessprogram.clear();
 
         // Non-witness program must not be associated with any witness
         if (!prevScript.IsWitnessProgram(witnessversion, witnessprogram))
