@@ -57,10 +57,6 @@
 #include <sys/auxv.h>
 #endif
 
-#ifndef _MSC_VER
-extern char** environ; // NOLINT(readability-redundant-declaration): Necessary on some platforms
-#endif
-
 namespace {
 
 /** Helper to easily feed data into a CSHA512.
