@@ -57,7 +57,7 @@
 #include <sys/auxv.h>
 #endif
 
-#ifndef _MSC_VER
+#ifndef WIN32
 extern char** environ; // NOLINT(readability-redundant-declaration): Necessary on some platforms
 #endif
 
