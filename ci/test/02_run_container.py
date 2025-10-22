@@ -11,8 +11,9 @@ import sys
 
 def run(cmd, **kwargs):
     print("+ " + shlex.join(cmd), flush=True)
+    kwargs.setdefault("check", True)
     try:
-        return subprocess.run(cmd, check=True, **kwargs)
+        return subprocess.run(cmd, **kwargs)
     except Exception as e:
         sys.exit(e)
 
