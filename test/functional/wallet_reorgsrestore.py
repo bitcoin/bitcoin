@@ -118,7 +118,7 @@ class ReorgsRestoreTest(BitcoinTestFramework):
 
         # Restart the node and confirm that it has not persisted the last chain state changes to disk
         # that leads to a rescan by the wallet
-        with self.nodes[0].assert_debug_log(expected_msgs=[f"Rescanning last 1 blocks (from block {tip_height - 1})...\n"]):
+        with self.nodes[0].assert_debug_log(expected_msgs=[f"Rescanning last 1 blocks (from block {tip_height - 1})...\n"], wallet=True):
             self.start_node(0)
         assert_equal(node.getbestblockhash(), tip)
 
