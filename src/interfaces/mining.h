@@ -72,6 +72,11 @@ public:
      * the tip is more than 20 minutes old.
      */
     virtual std::unique_ptr<BlockTemplate> waitNext(const node::BlockWaitOptions options = {}) = 0;
+
+    /**
+     * Interrupts the current wait for the next block template.
+    */
+    virtual void interruptWait() = 0;
 };
 
 //! Interface giving clients (RPC, Stratum v2 Template Provider in the future)
