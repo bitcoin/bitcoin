@@ -182,6 +182,28 @@ class IPCInterfaceTest(BitcoinTestFramework):
             template7 = await template6.result.waitNext(ctx, waitoptions)
             assert_equal(template7.to_dict(), {})
 
+            self.log.debug("interruptWait should abort the current wait")
+            wait_started = asyncio.Event()
+            async def wait_for_block():
+                new_waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
+                new_waitoptions.timeout = waitoptions.timeout * 60 # 1 minute wait
+                new_waitoptions.feeThreshold = 1
+                wait_started.set()
+                return await template6.result.waitNext(ctx, new_waitoptions)
+
+            async def interrupt_wait():
+                await wait_started.wait() # Wait for confirmation wait started
+                await asyncio.sleep(0.1)  # Minimal buffer
+                template6.result.interruptWait()
+                miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
+
+            wait_task = asyncio.create_task(wait_for_block())
+            interrupt_task = asyncio.create_task(interrupt_wait())
+
+            result = await wait_task
+            await interrupt_task
+            assert_equal(result.to_dict(), {})
+
             current_block_height = self.nodes[0].getchaintips()[0]["height"]
             check_opts = self.capnp_modules['mining'].BlockCheckOptions()
             template = await mining.result.createNewBlock(opts)
