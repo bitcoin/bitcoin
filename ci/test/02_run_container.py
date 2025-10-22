@@ -36,8 +36,8 @@ def main():
     # Append $USER to /tmp/env to support multi-user systems and $CONTAINER_NAME
     # to allow support starting multiple runs simultaneously by the same user.
     env_file = "/tmp/env-{u}-{c}".format(
-        u=os.getenv("USER"),
-        c=os.getenv("CONTAINER_NAME"),
+        u=os.environ["USER"],
+        c=os.environ["CONTAINER_NAME"],
     )
     with open(env_file, "w", encoding="utf8") as file:
         for k, v in os.environ.items():
