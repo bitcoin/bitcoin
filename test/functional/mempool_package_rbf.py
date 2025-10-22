@@ -33,6 +33,8 @@ class PackageRBFTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         # Required for fill_mempool()
         self.extra_args = [[
+            "-datacarrier=1",
+            "-datacarriersize=0",
             "-maxmempool=5",
         ]] * self.num_nodes
 

@@ -73,10 +73,7 @@ WITNESS_SCALE_FACTOR = 4
 DEFAULT_ANCESTOR_LIMIT = 25    # default max number of in-mempool ancestors
 DEFAULT_DESCENDANT_LIMIT = 25  # default max number of in-mempool descendants
 
-
-# Default setting for -datacarriersize.
-MAX_OP_RETURN_RELAY = 100_000
-
+MAX_DATACARRIER_RELAY = 100_000
 
 DEFAULT_MEMPOOL_EXPIRY_HOURS = 336  # hours
 

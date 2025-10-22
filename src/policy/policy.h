@@ -74,10 +74,12 @@ static constexpr unsigned int DEFAULT_DESCENDANT_LIMIT{25};
 static constexpr unsigned int DEFAULT_DESCENDANT_SIZE_LIMIT_KVB{101};
 /** Default for -datacarrier */
 static const bool DEFAULT_ACCEPT_DATACARRIER = true;
-/**
- * Default setting for -datacarriersize in vbytes.
- */
-static const unsigned int MAX_OP_RETURN_RELAY = MAX_STANDARD_TX_WEIGHT / WITNESS_SCALE_FACTOR;
+/** Default setting for -datacarriersize. 80 bytes of data, +1 for OP_RETURN, +2 for the pushdata opcodes. 0 = no limit */
+static const unsigned int DEFAULT_OP_RETURN_SIZE_LIMIT = 83;
+/** Default setting for -datacarriercount. 1 max number of OP_RETURN outputs per transaction. 0 = no limit */
+static const unsigned int DEFAULT_OP_RETURN_COUNT_LIMIT = 1;
+/** Maximum total datacarrier bytes cap (100_000) */
+static const unsigned int MAX_DATACARRIER_RELAY = MAX_STANDARD_TX_WEIGHT / WITNESS_SCALE_FACTOR;
 /**
  * An extra transaction can be added to a package, as long as it only has one
  * ancestor and is no larger than this. Not really any reason to make this
@@ -152,7 +154,7 @@ static constexpr decltype(CTransaction::version) TX_MAX_STANDARD_VERSION{3};
 * Check for standard transaction types
 * @return True if all outputs (scriptPubKeys) use only standard transaction forms
 */
-bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_datacarrier_bytes, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason);
+bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_op_return_size, const std::optional<unsigned>& max_op_return_count, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason);
 /**
 * Check for standard transaction types
 * @param[in] mapInputs       Map of previous transactions that have outputs we're spending

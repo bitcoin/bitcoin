@@ -441,6 +441,8 @@ class RPCPackagesTest(BitcoinTestFramework):
         # but child is too high fee
         # Lower mempool limit to make it easier to fill_mempool
         self.restart_node(0, extra_args=[
+            "-datacarrier=1",
+            "-datacarriersize=0",
             "-maxmempool=5",
             "-persistmempool=0",
         ])
@@ -469,7 +471,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert parent["txid"] not in node.getrawmempool()
         assert child["txid"] not in node.getrawmempool()
 
-        # Reset maxmempool, reset dynamic mempool minimum feerate, and empty mempool.
+        # Reset maxmempool, datacarriersize, reset dynamic mempool minimum feerate, and empty mempool.
         self.restart_node(0)
         self.wallet.rescan_utxos()
 

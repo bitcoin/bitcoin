@@ -59,7 +59,7 @@ def cleanup(func):
             self.wait_until(lambda: len(self.nodes[0].getorphantxs()) == 0)
             assert_equal(0, len(self.nodes[0].getrawmempool()))
 
-            self.restart_node(0, extra_args=["-persistmempool=0"])
+            self.restart_node(0, extra_args=["-persistmempool=0", "-datacarrier=1", "-datacarriersize=0"])
             # Allow use of bumpmocktime again
             self.nodes[0].setmocktime(int(time.time()))
             self.wallet.rescan_utxos(include_mempool=True)
