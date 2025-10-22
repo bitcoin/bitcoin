@@ -45,6 +45,27 @@ def main():
                 file.write(f"{k}={v}\n")
     run(["cat", env_file])
 
+    if not os.getenv("DANGER_RUN_CI_ON_HOST"):
+        CI_IMAGE_LABEL = "bitcoin-ci-test"
+
+        # Use buildx unconditionally
+        # Using buildx is required to properly load the correct driver, for use with registry caching. Neither build, nor BUILDKIT=1 currently do this properly
+        cmd_build = ["docker", "buildx", "build"]
+        cmd_build += [
+            f"--file={os.environ['BASE_READ_ONLY_DIR']}/ci/test_imagefile",
+            f"--build-arg=CI_IMAGE_NAME_TAG={os.environ['CI_IMAGE_NAME_TAG']}",
+            f"--build-arg=FILE_ENV={os.environ['FILE_ENV']}",
+            f"--build-arg=BASE_ROOT_DIR={os.environ['BASE_ROOT_DIR']}",
+            f"--platform={os.environ['CI_IMAGE_PLATFORM']}",
+            f"--label={CI_IMAGE_LABEL}",
+            f"--tag={os.environ['CONTAINER_NAME']}",
+        ]
+        cmd_build += shlex.split(os.getenv("DOCKER_BUILD_CACHE_ARG", ""))
+        cmd_build += [os.environ["BASE_READ_ONLY_DIR"]]
+
+        print(f"Building {os.environ['CONTAINER_NAME']} image tag to run in")
+        run(cmd_build)
+
     run(["./ci/test/02_run_container.sh"])  # run the remainder
 
 
