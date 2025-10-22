@@ -86,7 +86,7 @@ static RPCHelpMan gettxoutproof()
             }
 
             if (pblockindex == nullptr) {
-                const CTransactionRef tx = GetTransaction(/*block_index=*/nullptr, /*mempool=*/nullptr, *setTxids.begin(), hashBlock, chainman.m_blockman);
+                const CTransactionRef tx = GetTransaction(/*block_index=*/nullptr, /*mempool=*/nullptr, *setTxids.begin(), chainman.m_blockman, hashBlock);
                 if (!tx || hashBlock.IsNull()) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
                 }

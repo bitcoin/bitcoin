@@ -60,10 +60,11 @@ static const CAmount DEFAULT_MAX_BURN_AMOUNT{0};
  * @param[in]  block_index     The block to read from disk, or nullptr
  * @param[in]  mempool         If provided, check mempool for tx
  * @param[in]  hash            The txid
+ * @param[in]  blockman        Used to access and read blocks from disk
  * @param[out] hashBlock       The block hash, if the tx was found via -txindex or block_index
  * @returns                    The tx if found, otherwise nullptr
  */
-CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const Txid& hash, uint256& hashBlock, const BlockManager& blockman);
+CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const Txid& hash, const BlockManager& blockman, uint256& hashBlock);
 } // namespace node
 
 #endif // BITCOIN_NODE_TRANSACTION_H
