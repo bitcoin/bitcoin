@@ -253,7 +253,7 @@ class TestNode():
             assert self.rpc_connected and self._rpc is not None, self._node_msg("Error: no RPC connection")
             return getattr(self._rpc, name)
 
-    def start(self, extra_args=None, *, cwd=None, stdout=None, stderr=None, env=None, **kwargs):
+    def start(self, extra_args=None, *, cwd=None, stdout=None, stderr=None, env=None, wait_for_debugger=False, **kwargs):
         """Start the node."""
         if extra_args is None:
             extra_args = self.extra_args
@@ -291,7 +291,7 @@ class TestNode():
         if env is not None:
             subp_env.update(env)
 
-        wait_for_debugger = TestNode.run in TestNode.debug_runs
+        wait_for_debugger = wait_for_debugger or TestNode.run in TestNode.debug_runs
         if wait_for_debugger:
             extra_args.append("-waitfordebugger")
             # Allow human to context switch away, take time to attach debugger and/or debug init phase for 2 hours
