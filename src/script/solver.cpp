@@ -36,11 +36,11 @@ std::string GetTxnOutputType(TxoutType t)
 static bool MatchPayToPubkey(const CScript& script, valtype& pubkey)
 {
     if (script.size() == CPubKey::SIZE + 2 && script[0] == CPubKey::SIZE && script.back() == OP_CHECKSIG) {
-        pubkey = valtype(script.begin() + 1, script.begin() + CPubKey::SIZE + 1);
+        pubkey.assign(script.begin() + 1, script.begin() + CPubKey::SIZE + 1);
         return CPubKey::ValidSize(pubkey);
     }
     if (script.size() == CPubKey::COMPRESSED_SIZE + 2 && script[0] == CPubKey::COMPRESSED_SIZE && script.back() == OP_CHECKSIG) {
-        pubkey = valtype(script.begin() + 1, script.begin() + CPubKey::COMPRESSED_SIZE + 1);
+        pubkey.assign(script.begin() + 1, script.begin() + CPubKey::COMPRESSED_SIZE + 1);
         return CPubKey::ValidSize(pubkey);
     }
     return false;
@@ -49,7 +49,7 @@ static bool MatchPayToPubkey(const CScript& script, valtype& pubkey)
 static bool MatchPayToPubkeyHash(const CScript& script, valtype& pubkeyhash)
 {
     if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160 && script[2] == 20 && script[23] == OP_EQUALVERIFY && script[24] == OP_CHECKSIG) {
-        pubkeyhash = valtype(script.begin () + 3, script.begin() + 23);
+        pubkeyhash.assign(script.begin () + 3, script.begin() + 23);
         return true;
     }
     return false;
