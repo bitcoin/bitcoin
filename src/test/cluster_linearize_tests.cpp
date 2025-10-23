@@ -68,7 +68,8 @@ void TestOptimalLinearization(const std::vector<uint8_t>& enc, const std::vector
         for (int iter = 0; iter < 200; ++iter) {
             bool opt;
             uint64_t cost{0};
-            switch (rng.randrange(3)) {
+            bool is_topological{true};
+            switch (rng.randrange(4)) {
             case 0:
                 // Use empty input linearization.
                 lin.clear();
@@ -77,12 +78,17 @@ void TestOptimalLinearization(const std::vector<uint8_t>& enc, const std::vector
                 // Reuse previous optimal linearization as input.
                 break;
             case 2:
-                // Construct random input linearization.
+                // Construct random valid input linearization.
                 std::shuffle(lin.begin(), lin.end(), rng);
-                FixLinearization(depgraph, lin);
+                std::sort(lin.begin(), lin.end(), [&](auto a, auto b) { return depgraph.Ancestors(a).Count() < depgraph.Ancestors(b).Count(); });
+                break;
+            case 3:
+                // Construct random potentially invalid input linearization.
+                std::shuffle(lin.begin(), lin.end(), rng);
+                is_topological = false;
                 break;
             }
-            std::tie(lin, opt, cost) = Linearize(depgraph, 1000000000000, rng.rand64(), lin);
+            std::tie(lin, opt, cost) = Linearize(depgraph, 1000000000000, rng.rand64(), lin, is_topological);
             BOOST_CHECK(opt);
             BOOST_CHECK(cost <= MaxOptimalLinearizationIters(depgraph.TxCount()));
             SanityCheck(depgraph, lin);
