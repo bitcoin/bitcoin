@@ -20,6 +20,14 @@ requires `bash`, `docker`, and `python3` to be installed. To run on different ar
 sudo apt install bash docker.io python3 qemu-user-static
 ```
 
+For some sanitizer builds, the kernel's address-space layout randomization
+(ASLR) entropy can cause sanitizer shadow memory mappings to fail. When running
+the CI locally you may need to reduce that entropy by running:
+
+```
+sudo sysctl -w vm.mmap_rnd_bits=28
+```
+
 It is recommended to run the ci system in a clean env. To run the test stage
 with a specific configuration,
 
