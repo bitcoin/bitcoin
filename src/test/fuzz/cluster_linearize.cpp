@@ -27,21 +27,21 @@
  *   +-----------------------+
  *   | SearchCandidateFinder | <<---------------------\
  *   +-----------------------+                        |
- *     |                                            +-----------+
- *     |                                            | Linearize |
- *     |                                            +-----------+
- *     |        +-------------------------+           |  |
- *     |        | AncestorCandidateFinder | <<--------/  |
- *     |        +-------------------------+              |
- *     |          |                     ^                |        ^^  PRODUCTION CODE
- *     |          |                     |                |        ||
+ *     |                                            +-----------+       +---------------------+
+ *     |                                            | Linearize |       | SpanningForestState |
+ *     |                                            +-----------+       +---------------------+
+ *     |        +-------------------------+           |  |                              |
+ *     |        | AncestorCandidateFinder | <<--------/  |                              |
+ *     |        +-------------------------+              |                              |
+ *     |          |                     ^                |        ^^  PRODUCTION CODE   |
+ *     |          |                     |                |        ||                    |
  *  ==============================================================================================
- *     |          |                     |                |        ||
- *     | clusterlin_ancestor_finder*    |                |        vv  TEST CODE
- *     |                                |                |
- *     |-clusterlin_search_finder*      |                |-clusterlin_linearize*
- *     |                                |                |
- *     v                                |                v
+ *     |          |                     |                |        ||                    |
+ *     | clusterlin_ancestor_finder*    |                |        vv  TEST CODE         |
+ *     |                                |                |                              |
+ *     |-clusterlin_search_finder*      |                |-clusterlin_linearize*        |
+ *     |                                |                |                              |
+ *     v                                |                v              clusterlin_sfl--/
  *   +-----------------------+          |           +-----------------+
  *   | SimpleCandidateFinder | <<-------------------| SimpleLinearize |
  *   +-----------------------+          |           +-----------------+
@@ -328,7 +328,7 @@ SetType ReadTopologicalSet(const DepGraph<SetType>& depgraph, const SetType& tod
 
 /** Given a dependency graph, construct any valid linearization for it, reading from a SpanReader. */
 template<typename BS>
-std::vector<DepGraphIndex> ReadLinearization(const DepGraph<BS>& depgraph, SpanReader& reader)
+std::vector<DepGraphIndex> ReadLinearization(const DepGraph<BS>& depgraph, SpanReader& reader, bool topological=true)
 {
     std::vector<DepGraphIndex> linearization;
     TestBitSet todo = depgraph.Positions();
@@ -336,10 +336,14 @@ std::vector<DepGraphIndex> ReadLinearization(const DepGraph<BS>& depgraph, SpanR
     while (todo.Any()) {
         // Compute the set of transactions with no not-yet-included ancestors.
         TestBitSet potential_next;
-        for (auto j : todo) {
-            if ((depgraph.Ancestors(j) & todo) == TestBitSet::Singleton(j)) {
-                potential_next.Set(j);
+        if (topological) {
+            for (auto j : todo) {
+                if ((depgraph.Ancestors(j) & todo) == TestBitSet::Singleton(j)) {
+                    potential_next.Set(j);
+                }
             }
+        } else {
+            potential_next = todo;
         }
         // There must always be one (otherwise there is a cycle in the graph).
         assert(potential_next.Any());
@@ -1130,6 +1134,103 @@ FUZZ_TARGET(clusterlin_simple_linearize)
     }
 }
 
+FUZZ_TARGET(clusterlin_sfl)
+{
+    // Verify the behavior of SpanningForestState.
+    SpanReader reader(buffer);
+    DepGraph<TestBitSet> depgraph;
+    uint8_t flags{1};
+    try {
+        reader >> flags >> Using<DepGraphFormatter>(depgraph);
+    } catch (const std::ios_base::failure&) {}
+    /** Whether to make the depgraph connected. */
+    const bool make_connected = flags & 1;
+    /** Whether to load an input linearization into SFL state. */
+    const bool load_linearization = flags & 2;
+    /** Whether to load a topological input linearization into SFL state. */
+    const bool load_topological = load_linearization && (flags & 4);
+    /** Whether to make the SFL state topological. */
+    const bool make_topological = flags & 8;
+    /** Whether to do any optimization steps to the SFL state (only if state is topological
+     *  then). */
+    const bool try_optimize = flags & 16;
+
+    //
+    // Construct the depgraph and SFL state for it.
+    //
+    bool is_topological = false;
+    if (make_connected) MakeConnected(depgraph);
+    SpanningForestState sfl(depgraph);
+
+    //
+    // Read and load input linearization, if selected.
+    //
+    std::vector<DepGraphIndex> input_lin;
+    if (load_linearization) {
+        input_lin = ReadLinearization(depgraph, reader, load_topological);
+        sfl.LoadLinearization(input_lin);
+        if (load_topological) is_topological = true;
+    }
+
+    //
+    // Make topological, if selected.
+    //
+    if (make_topological) {
+        sfl.MakeTopological();
+        is_topological = true;
+    }
+
+    //
+    // Perform optimization steps, if selected.
+    //
+    bool is_optimal = false;
+    if (is_topological && try_optimize) {
+        uint32_t optimize_steps{1};
+        try {
+            reader >> VARINT(optimize_steps);
+        } catch (const std::ios_base::failure&) {}
+        while (optimize_steps > 0) {
+            --optimize_steps;
+            if (!sfl.OptimizeStep()) {
+                is_optimal = true;
+                break;
+            }
+        }
+    }
+
+    //
+    // Sanity check the result.
+    //
+    sfl.SanityCheck(depgraph);
+
+    //
+    // If the SFL state is (known to be) topological now, we can get a linearization out.
+    //
+    if (is_topological) {
+        auto lin = sfl.GetLinearization();
+        // Which must be valid.
+        SanityCheck(depgraph, lin);
+        // If we started from a topological input, the resulting feerate diagram cannot be worse.
+        auto chunks = ChunkLinearization(depgraph, lin);
+        if (load_topological) {
+            auto input_chunks = ChunkLinearization(depgraph, input_lin);
+            auto cmp = CompareChunks(chunks, input_chunks);
+            assert(cmp >= 0);
+        }
+
+        // If the SFL state was made optimal, we can compare with any arbitrary linearization, and
+        // the diagram must be at least as good.
+        if (is_optimal) {
+            for (int i = 0; i < 10; ++i) {
+                auto cmp_lin = ReadLinearization(depgraph, reader);
+                auto cmp_chunks = ChunkLinearization(depgraph, cmp_lin);
+                auto cmp = CompareChunks(chunks, cmp_chunks);
+                assert(cmp >= 0);
+            }
+        }
+    }
+}
+
 FUZZ_TARGET(clusterlin_linearize)
 {
     // Verify the behavior of Linearize().
@@ -1404,33 +1505,14 @@ FUZZ_TARGET(clusterlin_fix_linearization)
     } catch (const std::ios_base::failure&) {}
 
     // Construct an arbitrary linearization (not necessarily topological for depgraph).
-    std::vector<DepGraphIndex> linearization;
-    /** Which transactions of depgraph are yet to be included in linearization. */
-    TestBitSet todo = depgraph.Positions();
-    while (todo.Any()) {
-        // Read a number from the fuzz input in range [0, todo.Count()).
-        uint64_t val{0};
-        try {
-            reader >> VARINT(val);
-        } catch (const std::ios_base::failure&) {}
-        val %= todo.Count();
-        // Find the val'th element in todo, remove it from todo, and append it to linearization.
-        for (auto idx : todo) {
-            if (val == 0) {
-                linearization.push_back(idx);
-                todo.Reset(idx);
-                break;
-            }
-            --val;
-        }
-    }
+    std::vector<DepGraphIndex> linearization = ReadLinearization(depgraph, reader, /*topological=*/false);
     assert(linearization.size() == depgraph.TxCount());
 
     // Determine what prefix of linearization is topological, i.e., the position of the first entry
     // in linearization which corresponds to a transaction that is not preceded by all its
     // ancestors.
     size_t topo_prefix = 0;
-    todo = depgraph.Positions();
+    auto todo = depgraph.Positions();
     while (topo_prefix < linearization.size()) {
         DepGraphIndex idx = linearization[topo_prefix];
         todo.Reset(idx);
