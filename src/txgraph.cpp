@@ -2091,9 +2091,9 @@ std::pair<uint64_t, bool> GenericClusterImpl::Relinearize(TxGraphImpl& graph, in
     // Invoke the actual linearization algorithm (passing in the existing one).
     uint64_t rng_seed = graph.m_rng.rand64();
     auto [linearization, optimal, cost] = Linearize(m_depgraph, max_iters, rng_seed, m_linearization);
-    // Postlinearize if the result isn't optimal already. This guarantees (among other things)
-    // that the chunks of the resulting linearization are all connected.
-    if (!optimal) PostLinearize(m_depgraph, linearization);
+    // Postlinearize to guarantee that the chunks of the resulting linearization are all connected.
+    // (SFL currently does not guarantee connected chunks even when optimal).
+    PostLinearize(m_depgraph, linearization);
     // Update the linearization.
     m_linearization = std::move(linearization);
     // Update the Cluster's quality.
