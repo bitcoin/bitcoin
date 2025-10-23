@@ -535,12 +535,18 @@ jobs:
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_fuzz_with_msan.sh'
+            task_adjustments: |
+              sed -i 's/-O1/-O0/g' $FILE_ENV
+              git --no-pager diff
 
           - name: 'MSan, depends'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_msan.sh'
+            task_adjustments: |
+              sed -i 's/-O1/-O0/g' $FILE_ENV
+              git --no-pager diff
 
     steps:
       - *CHECKOUT
@@ -567,6 +573,11 @@ jobs:
         if: ${{ env.CONTAINER_NAME == 'ci_native_tsan' || env.CONTAINER_NAME == 'ci_native_msan' || env.CONTAINER_NAME == 'ci_native_fuzz_msan' }}
         # Prevents crashes due to high ASLR entropy
         run: sudo sysctl -w vm.mmap_rnd_bits=28
+
+      - name: Apply matrix adjustments
+        if: ${{ matrix.task_adjustments != '' }}
+        run: |
+          ${{ matrix.task_adjustments }}
 
       - name: CI script
         run: ./ci/test_run_all.sh
