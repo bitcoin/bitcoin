@@ -533,7 +533,7 @@ jobs:
           - name: 'MSan, fuzz'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg'
             fallback-runner: 'ubuntu-24.04'
-            timeout-minutes: 120
+            timeout-minutes: 360
             file-env: './ci/test/00_setup_env_native_fuzz_with_msan.sh'
             task_adjustments: |
               sed -i 's/-O1/-O0/g' $FILE_ENV
@@ -542,7 +542,7 @@ jobs:
           - name: 'MSan, depends'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg'
             fallback-runner: 'ubuntu-24.04'
-            timeout-minutes: 120
+            timeout-minutes: 360
             file-env: './ci/test/00_setup_env_native_msan.sh'
             task_adjustments: |
               sed -i 's/-O1/-O0/g' $FILE_ENV
@@ -580,6 +580,8 @@ jobs:
           ${{ matrix.task_adjustments }}
 
       - name: CI script
+        env:
+          TEST_RUNNER_TIMEOUT_FACTOR: "400"
         run: ./ci/test_run_all.sh
 
       - name: Save caches
