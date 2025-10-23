@@ -2163,31 +2163,35 @@ size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey,
     return 0;
 }
 
+const std::map<std::string, script_verify_flag_name>& ScriptFlagNamesToEnum()
+{
 #define FLAG_NAME(flag) {std::string(#flag), SCRIPT_VERIFY_##flag}
-const std::map<std::string, script_verify_flag_name> g_verify_flag_names{
-    FLAG_NAME(P2SH),
-    FLAG_NAME(STRICTENC),
-    FLAG_NAME(DERSIG),
-    FLAG_NAME(LOW_S),
-    FLAG_NAME(SIGPUSHONLY),
-    FLAG_NAME(MINIMALDATA),
-    FLAG_NAME(NULLDUMMY),
-    FLAG_NAME(DISCOURAGE_UPGRADABLE_NOPS),
-    FLAG_NAME(CLEANSTACK),
-    FLAG_NAME(MINIMALIF),
-    FLAG_NAME(NULLFAIL),
-    FLAG_NAME(CHECKLOCKTIMEVERIFY),
-    FLAG_NAME(CHECKSEQUENCEVERIFY),
-    FLAG_NAME(WITNESS),
-    FLAG_NAME(DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM),
-    FLAG_NAME(WITNESS_PUBKEYTYPE),
-    FLAG_NAME(CONST_SCRIPTCODE),
-    FLAG_NAME(TAPROOT),
-    FLAG_NAME(DISCOURAGE_UPGRADABLE_PUBKEYTYPE),
-    FLAG_NAME(DISCOURAGE_OP_SUCCESS),
-    FLAG_NAME(DISCOURAGE_UPGRADABLE_TAPROOT_VERSION),
-};
+    static const std::map<std::string, script_verify_flag_name> g_names_to_enum{
+        FLAG_NAME(P2SH),
+        FLAG_NAME(STRICTENC),
+        FLAG_NAME(DERSIG),
+        FLAG_NAME(LOW_S),
+        FLAG_NAME(SIGPUSHONLY),
+        FLAG_NAME(MINIMALDATA),
+        FLAG_NAME(NULLDUMMY),
+        FLAG_NAME(DISCOURAGE_UPGRADABLE_NOPS),
+        FLAG_NAME(CLEANSTACK),
+        FLAG_NAME(MINIMALIF),
+        FLAG_NAME(NULLFAIL),
+        FLAG_NAME(CHECKLOCKTIMEVERIFY),
+        FLAG_NAME(CHECKSEQUENCEVERIFY),
+        FLAG_NAME(WITNESS),
+        FLAG_NAME(DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM),
+        FLAG_NAME(WITNESS_PUBKEYTYPE),
+        FLAG_NAME(CONST_SCRIPTCODE),
+        FLAG_NAME(TAPROOT),
+        FLAG_NAME(DISCOURAGE_UPGRADABLE_PUBKEYTYPE),
+        FLAG_NAME(DISCOURAGE_OP_SUCCESS),
+        FLAG_NAME(DISCOURAGE_UPGRADABLE_TAPROOT_VERSION),
+    };
 #undef FLAG_NAME
+    return g_names_to_enum;
+}
 
 std::vector<std::string> GetScriptFlagNames(script_verify_flags flags)
 {
@@ -2196,7 +2200,7 @@ std::vector<std::string> GetScriptFlagNames(script_verify_flags flags)
         return res;
     }
     script_verify_flags leftover = flags;
-    for (const auto& [name, flag] : g_verify_flag_names) {
+    for (const auto& [name, flag] : ScriptFlagNamesToEnum()) {
         if ((flags & flag) != 0) {
             res.push_back(name);
             leftover &= ~flag;

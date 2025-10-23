@@ -381,7 +381,7 @@ size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey,
 
 int FindAndDelete(CScript& script, const CScript& b);
 
-extern const std::map<std::string, script_verify_flag_name> g_verify_flag_names;
+const std::map<std::string, script_verify_flag_name>& ScriptFlagNamesToEnum();
 
 std::vector<std::string> GetScriptFlagNames(script_verify_flags flags);
 
