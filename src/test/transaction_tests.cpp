@@ -798,14 +798,14 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     CKey key = GenerateRandomKey();
     t.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
 
-    constexpr auto CheckIsStandard = [](const auto& t, const unsigned int max_op_return_relay = MAX_OP_RETURN_RELAY) {
+    constexpr auto CheckIsStandard = [](const auto& t, const unsigned int max_op_return_size = DEFAULT_OP_RETURN_SIZE_LIMIT, const unsigned int max_op_return_count = DEFAULT_OP_RETURN_COUNT_LIMIT) {
         std::string reason;
-        BOOST_CHECK(IsStandardTx(CTransaction{t}, max_op_return_relay, g_bare_multi, g_dust, reason));
+        BOOST_CHECK(IsStandardTx(CTransaction{t}, max_op_return_size, max_op_return_count, g_bare_multi, g_dust, reason));
         BOOST_CHECK(reason.empty());
     };
-    constexpr auto CheckIsNotStandard = [](const auto& t, const std::string& reason_in, const unsigned int max_op_return_relay = MAX_OP_RETURN_RELAY) {
+    constexpr auto CheckIsNotStandard = [](const auto& t, const std::string& reason_in, const unsigned int max_op_return_size = DEFAULT_OP_RETURN_SIZE_LIMIT, const unsigned int max_op_return_count = DEFAULT_OP_RETURN_COUNT_LIMIT) {
         std::string reason;
-        BOOST_CHECK(!IsStandardTx(CTransaction{t}, max_op_return_relay, g_bare_multi, g_dust, reason));
+        BOOST_CHECK(!IsStandardTx(CTransaction{t}, max_op_return_size, max_op_return_count, g_bare_multi, g_dust, reason));
         BOOST_CHECK_EQUAL(reason_in, reason);
     };
 
@@ -859,13 +859,13 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].scriptPubKey = CScript() << OP_1;
     CheckIsNotStandard(t, "scriptpubkey");
 
-    // Custom 83-byte TxoutType::NULL_DATA (standard with max_op_return_relay of 83)
+    // DEFAULT_OP_RETURN_SIZE_LIMIT-byte TxoutType::NULL_DATA (standard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
-    BOOST_CHECK_EQUAL(83, t.vout[0].scriptPubKey.size());
-    CheckIsStandard(t, /*max_op_return_relay=*/83);
+    CheckIsStandard(t);
 
-    // Non-standard if max_op_return_relay datacarrier arg is one less
-    CheckIsNotStandard(t, "datacarrier", /*max_op_return_relay=*/82);
+    // DEFAULT_OP_RETURN_SIZE_LIMIT+1-byte TxoutType::NULL_DATA (non-standard)
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3800"_hex;
+    CheckIsStandard(t);
 
     // Data payload can be encoded in any way...
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ""_hex;
@@ -887,28 +887,39 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
     CheckIsStandard(t);
 
-    // Multiple TxoutType::NULL_DATA are permitted
+    // TODO testing null vs 0
+    // // TxoutType::NULL_DATA with datacarrier = false
+    // // max_op_return_size=null and max_op_return_count=null
+    // CheckIsNotStandard(t, "datacarrier", std::nullopt, std::nullopt);
+
+    // Multiple TxoutType::NULL_DATA
     t.vout.resize(2);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
     t.vout[0].nValue = 0;
     t.vout[1].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
     t.vout[1].nValue = 0;
-    CheckIsStandard(t);
-
+    CheckIsStandard(t, DEFAULT_OP_RETURN_SIZE_LIMIT, t.vout.size() + 1);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
     t.vout[1].scriptPubKey = CScript() << OP_RETURN;
-    CheckIsStandard(t);
-
+    CheckIsStandard(t, DEFAULT_OP_RETURN_SIZE_LIMIT, t.vout.size());
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
     t.vout[1].scriptPubKey = CScript() << OP_RETURN;
-    CheckIsStandard(t);
+    CheckIsStandard(t, DEFAULT_OP_RETURN_SIZE_LIMIT, t.vout.size());
+    CheckIsNotStandard(t, "datacarrier", DEFAULT_OP_RETURN_SIZE_LIMIT, 1);
 
-    t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
-    t.vout[1].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
-    const auto datacarrier_size = t.vout[0].scriptPubKey.size() + t.vout[1].scriptPubKey.size();
-    CheckIsStandard(t); // Default max relay should never trigger
-    CheckIsStandard(t, /*max_op_return_relay=*/datacarrier_size);
-    CheckIsNotStandard(t, "datacarrier", /*max_op_return_relay=*/datacarrier_size-1);
+    // Unlimited (0) max_op_return_size, max_op_return_count
+    t.vout.resize(3);
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
+    t.vout[0].nValue = 0;
+    t.vout[1].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
+    t.vout[1].nValue = 0;
+    t.vout[2].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
+    t.vout[2].nValue = 0;
+    CheckIsStandard(t, 0, 0);
+    CheckIsNotStandard(t, "datacarrier", t.vout[0].scriptPubKey.size() - 1, 0);
+    CheckIsNotStandard(t, "datacarrier", 0, t.vout.size() - 1);
+    CheckIsStandard(t, t.vout[0].scriptPubKey.size(), 0);
+    CheckIsStandard(t, 0, t.vout.size());
 
     // Check large scriptSig (non-standard if size is >1650 bytes)
     t.vout.resize(1);

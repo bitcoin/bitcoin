@@ -91,10 +91,15 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
 
     mempool_opts.permit_bare_multisig = argsman.GetBoolArg("-permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
 
-    if (argsman.GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER)) {
-        mempool_opts.max_datacarrier_bytes = argsman.GetIntArg("-datacarriersize", MAX_OP_RETURN_RELAY);
+    mempool_opts.datacarrier_accept = argsman.GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER);
+    if (mempool_opts.datacarrier_accept) {
+        mempool_opts.max_datacarrier_bytes = MAX_DATACARRIER_RELAY;
+        mempool_opts.datacarrier_sizelimit = argsman.GetIntArg("-datacarriersize", DEFAULT_OP_RETURN_SIZE_LIMIT);
+        mempool_opts.datacarrier_countlimit = DEFAULT_OP_RETURN_COUNT_LIMIT;
     } else {
         mempool_opts.max_datacarrier_bytes = std::nullopt;
+        mempool_opts.datacarrier_sizelimit = std::nullopt;
+        mempool_opts.datacarrier_countlimit = std::nullopt;
     }
 
     mempool_opts.require_standard = !argsman.GetBoolArg("-acceptnonstdtxn", DEFAULT_ACCEPT_NON_STD_TXN);

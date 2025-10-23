@@ -691,6 +691,9 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     ret.pushKV("fullrbf", true);
     ret.pushKV("permitbaremultisig", pool.m_opts.permit_bare_multisig);
     ret.pushKV("maxdatacarriersize", pool.m_opts.max_datacarrier_bytes.value_or(0));
+    ret.pushKV("datacarrieraccept", pool.m_opts.datacarrier_accept);
+    ret.pushKV("datacarriersizelimit", pool.m_opts.datacarrier_sizelimit.value_or(0));
+    ret.pushKV("datacarriercountlimit", pool.m_opts.datacarrier_countlimit.value_or(0));
     return ret;
 }
 
@@ -715,6 +718,9 @@ static RPCHelpMan getmempoolinfo()
                 {RPCResult::Type::BOOL, "fullrbf", "True if the mempool accepts RBF without replaceability signaling inspection (DEPRECATED)"},
                 {RPCResult::Type::BOOL, "permitbaremultisig", "True if the mempool accepts transactions with bare multisig outputs"},
                 {RPCResult::Type::NUM, "maxdatacarriersize", "Maximum number of bytes that can be used by OP_RETURN outputs in the mempool"},
+                {RPCResult::Type::BOOL, "datacarrieraccept", "True if the mempool accepts transactions with OP_RETURN outputs"},
+                {RPCResult::Type::NUM, "datacarriersizelimit", "Maximum number of bytes that can be used by an OP_RETURN output in a transaction (0 = no limit only if datacarrieraccept=true)"},
+                {RPCResult::Type::NUM, "datacarriercountlimit", "Maximum number of OP_RETURN outputs in a transaction (0 = no limit only if datacarrieraccept=true)"},
             }},
         RPCExamples{
             HelpExampleCli("getmempoolinfo", "")

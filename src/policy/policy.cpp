@@ -96,7 +96,7 @@ bool IsStandard(const CScript& scriptPubKey, TxoutType& whichType)
     return true;
 }
 
-bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_datacarrier_bytes, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
+bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_op_return_size, const std::optional<unsigned>& max_op_return_count, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
 {
     if (tx.version > TX_MAX_STANDARD_VERSION || tx.version < TX_MIN_STANDARD_VERSION) {
         reason = "version";
@@ -133,7 +133,9 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
         }
     }
 
-    unsigned int datacarrier_bytes_left = max_datacarrier_bytes.value_or(0);
+    unsigned int nDataOut = 0;
+    // Upper bound check is not needed, as tests prove the 'tx-size' check above will be hit first
+    // unsigned int datacarrier_bytes_left = MAX_DATACARRIER_RELAY;
     TxoutType whichType;
     for (const CTxOut& txout : tx.vout) {
         if (!::IsStandard(txout.scriptPubKey, whichType)) {
@@ -142,12 +144,15 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
         }
 
         if (whichType == TxoutType::NULL_DATA) {
-            unsigned int size = txout.scriptPubKey.size();
-            if (size > datacarrier_bytes_left) {
+            nDataOut++;
+            // null is datacarrier=0, 0 is unlimited datacarriersize=0
+            if (!max_op_return_size.has_value()) { // if null
+                reason = "datacarrier";
+                return false;
+            } else if (max_op_return_size.value() != 0 && txout.scriptPubKey.size() > *max_op_return_size) {
                 reason = "datacarrier";
                 return false;
             }
-            datacarrier_bytes_left -= size;
         } else if ((whichType == TxoutType::MULTISIG) && (!permit_bare_multisig)) {
             reason = "bare-multisig";
             return false;
@@ -157,6 +162,17 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
     // Only MAX_DUST_OUTPUTS_PER_TX dust is permitted(on otherwise valid ephemeral dust)
     if (GetDust(tx, dust_relay_fee).size() > MAX_DUST_OUTPUTS_PER_TX) {
         reason = "dust";
+        return false;
+    }
+
+    // null is datacarrier=0, 0 is unlimited datacarriercount=0
+    if (!max_op_return_count.has_value()) { // if null
+        if (nDataOut > 0) {
+            reason = "datacarrier";
+            return false;
+        }
+    } else if (max_op_return_count.value() != 0 && nDataOut > *max_op_return_count) {
+        reason = "datacarrier";
         return false;
     }
 
