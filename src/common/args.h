@@ -137,6 +137,7 @@ protected:
     std::string m_network GUARDED_BY(cs_args);
     std::set<std::string> m_network_only_args GUARDED_BY(cs_args);
     std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args GUARDED_BY(cs_args);
+    std::optional<unsigned int> m_default_flags GUARDED_BY(cs_args){};
     bool m_accept_any_command GUARDED_BY(cs_args){true};
     std::list<SectionInfo> m_config_sections GUARDED_BY(cs_args);
     std::optional<fs::path> m_config_path GUARDED_BY(cs_args);
@@ -375,9 +376,14 @@ protected:
 
     /**
      * Return Flags for known arg.
-     * Return nullopt for unknown arg.
+     * Return default flags for unknown arg.
      */
     std::optional<unsigned int> GetArgFlags(const std::string& name) const;
+
+    /**
+     * Set default flags to return for an unknown arg.
+     */
+    void SetDefaultFlags(std::optional<unsigned int>);
 
     /**
      * Get settings file path, or return false if read-write settings were
