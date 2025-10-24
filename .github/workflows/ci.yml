@@ -304,6 +304,7 @@ jobs:
           BITCOIN_BIN: '${{ github.workspace }}\build\bin\Release\bitcoin.exe'
           BITCOIND: '${{ github.workspace }}\build\bin\Release\bitcoind.exe'
           BITCOINCLI: '${{ github.workspace }}\build\bin\Release\bitcoin-cli.exe'
+          BITCOIN_BENCH: '${{ github.workspace }}\build\bin\Release\bench_bitcoin.exe'
           BITCOINTX: '${{ github.workspace }}\build\bin\Release\bitcoin-tx.exe'
           BITCOINUTIL: '${{ github.workspace }}\build\bin\Release\bitcoin-util.exe'
           BITCOINWALLET: '${{ github.workspace }}\build\bin\Release\bitcoin-wallet.exe'
@@ -418,9 +419,6 @@ jobs:
           ./src/univalue/object.exe
           ./src/univalue/unitester.exe
 
-      - name: Run benchmarks
-        run: ./bin/bench_bitcoin.exe -sanity-check
-
       - name: Adjust paths in test/config.ini
         shell: pwsh
         run: |
@@ -530,11 +528,23 @@ jobs:
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_tsan.sh'
 
+          - name: 'MSan, fuzz'
+            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg'
+            fallback-runner: 'ubuntu-24.04'
+            timeout-minutes: 360
+            file-env: './ci/test/00_setup_env_native_fuzz_with_msan.sh'
+            task_adjustments: |
+              sed -i 's/-O1/-O0/g' $FILE_ENV
+              git --no-pager diff
+
           - name: 'MSan, depends'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg'
             fallback-runner: 'ubuntu-24.04'
-            timeout-minutes: 120
+            timeout-minutes: 360
             file-env: './ci/test/00_setup_env_native_msan.sh'
+            task_adjustments: |
+              sed -i 's/-O1/-O0/g' $FILE_ENV
+              git --no-pager diff
 
     steps:
       - *CHECKOUT
@@ -558,11 +568,18 @@ jobs:
         run: sed -i "s|\${INSTALL_BCC_TRACING_TOOLS}|true|g" ./ci/test/00_setup_env_native_asan.sh
 
       - name: Set mmap_rnd_bits
-        if: ${{ env.CONTAINER_NAME == 'ci_native_tsan' || env.CONTAINER_NAME == 'ci_native_msan' }}
+        if: ${{ env.CONTAINER_NAME == 'ci_native_tsan' || env.CONTAINER_NAME == 'ci_native_msan' || env.CONTAINER_NAME == 'ci_native_fuzz_msan' }}
         # Prevents crashes due to high ASLR entropy
         run: sudo sysctl -w vm.mmap_rnd_bits=28
 
+      - name: Apply matrix adjustments
+        if: ${{ matrix.task_adjustments != '' }}
+        run: |
+          ${{ matrix.task_adjustments }}
+
       - name: CI script
+        env:
+          TEST_RUNNER_TIMEOUT_FACTOR: "400"
         run: ./ci/test_run_all.sh
 
       - name: Save caches
