@@ -7,6 +7,7 @@
 #include <common/args.h>
 #include <logging.h>
 #include <util/fs.h>
+#include <wallet/init_settings.h>
 #include <wallet/db.h>
 
 #include <algorithm>
@@ -153,7 +154,7 @@ bool IsSQLiteFile(const fs::path& path)
 void ReadDatabaseArgs(const ArgsManager& args, DatabaseOptions& options)
 {
     // Override current options with args values, if any were specified
-    options.use_unsafe_sync = args.GetBoolArg("-unsafesqlitesync", options.use_unsafe_sync);
+    options.use_unsafe_sync = UnsafeSqliteSyncSetting::Get(args, options.use_unsafe_sync);
 }
 
 } // namespace wallet
