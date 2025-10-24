@@ -145,6 +145,15 @@ def main():
         ).stdout.strip()
         os.environ["CI_CONTAINER_ID"] = container_id
 
+    # GNU getopt is required for the CI_RETRY_EXE script
+    if os.getenv("CI_OS_NAME") == "macos":
+        prefix = run(
+            ["brew", "--prefix", "gnu-getopt"],
+            stdout=subprocess.PIPE,
+            text=True,
+        ).stdout.strip()
+        os.environ["IN_GETOPT_BIN"] = f"{prefix}/bin/getopt"
+
     run(["./ci/test/02_run_container.sh"])  # run the remainder
 
 
