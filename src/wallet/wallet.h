@@ -631,7 +631,8 @@ public:
     void blockConnected(ChainstateRole role, const interfaces::BlockInfo& block) override;
     void blockDisconnected(const interfaces::BlockInfo& block) override;
     void updatedBlockTip() override;
-    int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update);
+    int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update, std::optional<int64_t> endTime = std::nullopt);
+
 
     struct ScanResult {
         enum { SUCCESS, FAILURE, USER_ABORT } status = SUCCESS;
