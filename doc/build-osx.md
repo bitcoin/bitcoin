@@ -50,8 +50,6 @@ See [dependencies.md](dependencies.md) for a complete overview.
 brew install automake libtool boost gmp pkg-config libevent
 ```
 
-For macOS 11 (Big Sur) and 12 (Monterey) you need to install a more recent version of llvm.
-
 ``` bash
 brew install llvm
 ```

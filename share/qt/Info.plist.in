@@ -3,7 +3,7 @@
 <plist version="0.9">
 <dict>
   <key>LSMinimumSystemVersion</key>
-  <string>11</string>
+  <string>13</string>
 
   <key>LSArchitecturePriority</key>
   <array>
