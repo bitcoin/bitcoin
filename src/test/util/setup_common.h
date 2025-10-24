@@ -282,6 +282,7 @@ std::ostream& operator<<(std::ostream& os, const uint160& num);
 std::ostream& operator<<(std::ostream& os, const uint256& num);
 std::ostream& operator<<(std::ostream& os, const Txid& txid);
 std::ostream& operator<<(std::ostream& os, const Wtxid& wtxid);
+std::ostream& operator<<(std::ostream& os, const COutPoint& outpoint);
 // @}
 
 /**
