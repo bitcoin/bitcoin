@@ -224,7 +224,7 @@ public:
      *  the closest target where one can be given.  'conservative' estimates are
      *  valid over longer time horizons also.
      */
-    CFeeRate estimateSmartFee(int confTarget, FeeCalculation *feeCalc, bool conservative) const
+    virtual CFeeRate estimateSmartFee(int confTarget, FeeCalculation *feeCalc, bool conservative) const
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Return a specific fee estimate calculation with a given success
@@ -248,7 +248,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Calculation of highest target that estimates are tracked for */
-    unsigned int HighestTargetTracked(FeeEstimateHorizon horizon) const
+    virtual unsigned int HighestTargetTracked(FeeEstimateHorizon horizon) const
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Drop still unconfirmed transactions and record current estimations, if the fee estimation file is present. */

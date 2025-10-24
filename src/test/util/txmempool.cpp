@@ -10,6 +10,7 @@
 #include <policy/rbf.h>
 #include <policy/truc_policy.h>
 #include <txmempool.h>
+#include <test/util/transaction_utils.h>
 #include <util/check.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -217,4 +218,39 @@ void AddToMempool(CTxMemPool& tx_pool, const CTxMemPoolEntry& entry)
             entry.GetTime().count(), entry.GetHeight(), entry.GetSequence(),
             entry.GetSpendsCoinbase(), entry.GetSigOpCost(), entry.GetLockPoints());
     changeset->Apply();
+}
+
+void MockMempoolMinFee(const CFeeRate& target_feerate, CTxMemPool& mempool)
+{
+    LOCK2(cs_main, mempool.cs);
+    // Transactions in the mempool will affect the new minimum feerate.
+    assert(mempool.size() == 0);
+    // The target feerate cannot be too low...
+    // ...otherwise the transaction's feerate will need to be negative.
+    assert(target_feerate > mempool.m_opts.incremental_relay_feerate);
+    // ...otherwise this is not meaningful. The feerate policy uses the maximum of both feerates.
+    assert(target_feerate > mempool.m_opts.min_relay_feerate);
+
+    // Manually create an invalid transaction. Manually set the fee in the CTxMemPoolEntry to
+    // achieve the exact target feerate.
+    CMutableTransaction mtx{};
+    mtx.vin.emplace_back(COutPoint{Txid::FromUint256(uint256{123}), 0});
+    mtx.vout.emplace_back(1 * COIN, GetScriptForDestination(WitnessV0ScriptHash(CScript() << OP_TRUE)));
+    // Set a large size so that the fee evaluated at target_feerate (which is usually in sats/kvB) is an integer.
+    // Otherwise, GetMinFee() may end up slightly different from target_feerate.
+    BulkTransaction(mtx, 4000);
+    const auto tx{MakeTransactionRef(mtx)};
+    LockPoints lp;
+    // The new mempool min feerate is equal to the removed package's feerate + incremental feerate.
+    const auto tx_fee = target_feerate.GetFee(GetVirtualTransactionSize(*tx)) -
+        mempool.m_opts.incremental_relay_feerate.GetFee(GetVirtualTransactionSize(*tx));
+    {
+        auto changeset = mempool.GetChangeSet();
+        changeset->StageAddition(tx, /*fee=*/tx_fee,
+                /*time=*/0, /*entry_height=*/1, /*entry_sequence=*/0,
+                /*spends_coinbase=*/true, /*sigops_cost=*/1, lp);
+        changeset->Apply();
+    }
+    mempool.TrimToSize(0);
+    assert(mempool.GetMinFee() == target_feerate);
 }
