@@ -24,7 +24,13 @@ class Handler
 public:
     virtual ~Handler() = default;
 
-    //! Disconnect the handler.
+    //! Start notification thread, if there is one.
+    virtual void start() {};
+
+    //! Interrupt the handler, set flag for notification threads (if any) to quit.
+    virtual void interrupt() {};
+
+    //! Disconnect the handler, stop receiving notifications.
     virtual void disconnect() = 0;
 };
 
