@@ -36,11 +36,11 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <vector>
 
 using node::NodeContext;
 using util::Join;
-using util::TrimString;
 
 const std::vector<std::string> CONNECTION_TYPE_DOC{
         "outbound-full-relay (default automatic connections)",
@@ -333,7 +333,7 @@ static RPCHelpMan addnode()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const auto command{self.Arg<std::string>("command")};
+    const auto command{self.Arg<std::string_view>("command")};
     if (command != "onetry" && command != "add" && command != "remove") {
         throw std::runtime_error(
             self.ToString());
@@ -342,7 +342,7 @@ static RPCHelpMan addnode()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     CConnman& connman = EnsureConnman(node);
 
-    const auto node_arg{self.Arg<std::string>("node")};
+    const auto node_arg{self.Arg<std::string_view>("node")};
     bool node_v2transport = connman.GetLocalServices() & NODE_P2P_V2;
     bool use_v2transport = self.MaybeArg<bool>("v2transport").value_or(node_v2transport);
 
@@ -353,13 +353,13 @@ static RPCHelpMan addnode()
     if (command == "onetry")
     {
         CAddress addr;
-        connman.OpenNetworkConnection(addr, /*fCountFailure=*/false, /*grant_outbound=*/{}, node_arg.c_str(), ConnectionType::MANUAL, use_v2transport);
+        connman.OpenNetworkConnection(addr, /*fCountFailure=*/false, /*grant_outbound=*/{}, std::string{node_arg}.c_str(), ConnectionType::MANUAL, use_v2transport);
         return UniValue::VNULL;
     }
 
     if (command == "add")
     {
-        if (!connman.AddNode({node_arg, use_v2transport})) {
+        if (!connman.AddNode({std::string{node_arg}, use_v2transport})) {
             throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: Node already added");
         }
     }
@@ -402,7 +402,7 @@ static RPCHelpMan addconnection()
     }
 
     const std::string address = request.params[0].get_str();
-    const std::string conn_type_in{TrimString(request.params[1].get_str())};
+    auto conn_type_in{util::TrimStringView(self.Arg<std::string_view>("connection_type"))};
     ConnectionType conn_type{};
     if (conn_type_in == "outbound-full-relay") {
         conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
@@ -462,16 +462,15 @@ static RPCHelpMan disconnectnode()
     CConnman& connman = EnsureConnman(node);
 
     bool success;
-    const UniValue &address_arg = request.params[0];
-    const UniValue &id_arg = request.params[1];
+    auto address{self.MaybeArg<std::string_view>("address")};
+    auto node_id{self.MaybeArg<int64_t>("nodeid")};
 
-    if (!address_arg.isNull() && id_arg.isNull()) {
+    if (address && !node_id) {
         /* handle disconnect-by-address */
-        success = connman.DisconnectNode(address_arg.get_str());
-    } else if (!id_arg.isNull() && (address_arg.isNull() || (address_arg.isStr() && address_arg.get_str().empty()))) {
+        success = connman.DisconnectNode(*address);
+    } else if (node_id && (!address || address->empty())) {
         /* handle disconnect-by-id */
-        NodeId nodeid = (NodeId) id_arg.getInt<int64_t>();
-        success = connman.DisconnectNode(nodeid);
+        success = connman.DisconnectNode(*node_id);
     } else {
         throw JSONRPCError(RPC_INVALID_PARAMS, "Only one of address and nodeid should be provided.");
     }
@@ -523,10 +522,10 @@ static RPCHelpMan getaddednodeinfo()
 
     std::vector<AddedNodeInfo> vInfo = connman.GetAddedNodeInfo(/*include_connected=*/true);
 
-    if (!request.params[0].isNull()) {
+    if (auto node{self.MaybeArg<std::string_view>("node")}) {
         bool found = false;
         for (const AddedNodeInfo& info : vInfo) {
-            if (info.m_params.m_added_node == request.params[0].get_str()) {
+            if (info.m_params.m_added_node == *node) {
                 vInfo.assign(1, info);
                 found = true;
                 break;
@@ -754,10 +753,8 @@ static RPCHelpMan setban()
                 },
         [&](const RPCHelpMan& help, const JSONRPCRequest& request) -> UniValue
 {
-    std::string strCommand;
-    if (!request.params[1].isNull())
-        strCommand = request.params[1].get_str();
-    if (strCommand != "add" && strCommand != "remove") {
+    auto command{help.Arg<std::string_view>("command")};
+    if (command != "add" && command != "remove") {
         throw std::runtime_error(help.ToString());
     }
     NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -765,25 +762,23 @@ static RPCHelpMan setban()
 
     CSubNet subNet;
     CNetAddr netAddr;
-    bool isSubnet = false;
-
-    if (request.params[0].get_str().find('/') != std::string::npos)
-        isSubnet = true;
+    std::string subnet_arg{help.Arg<std::string_view>("subnet")};
+    const bool isSubnet{subnet_arg.find('/') != subnet_arg.npos};
 
     if (!isSubnet) {
-        const std::optional<CNetAddr> addr{LookupHost(request.params[0].get_str(), false)};
+        const std::optional<CNetAddr> addr{LookupHost(subnet_arg, false)};
         if (addr.has_value()) {
             netAddr = static_cast<CNetAddr>(MaybeFlipIPv6toCJDNS(CService{addr.value(), /*port=*/0}));
         }
+    } else {
+        subNet = LookupSubNet(subnet_arg);
     }
-    else
-        subNet = LookupSubNet(request.params[0].get_str());
 
-    if (! (isSubnet ? subNet.IsValid() : netAddr.IsValid()) )
+    if (! (isSubnet ? subNet.IsValid() : netAddr.IsValid()) ) {
         throw JSONRPCError(RPC_CLIENT_INVALID_IP_OR_SUBNET, "Error: Invalid IP/Subnet");
+    }
 
-    if (strCommand == "add")
-    {
+    if (command == "add") {
         if (isSubnet ? banman.IsBanned(subNet) : banman.IsBanned(netAddr)) {
             throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: IP/Subnet already banned");
         }
@@ -809,9 +804,7 @@ static RPCHelpMan setban()
                 node.connman->DisconnectNode(netAddr);
             }
         }
-    }
-    else if(strCommand == "remove")
-    {
+    } else if(command == "remove") {
         if (!( isSubnet ? banman.Unban(subNet) : banman.Unban(netAddr) )) {
             throw JSONRPCError(RPC_CLIENT_INVALID_IP_OR_SUBNET, "Error: Unban failed. Requested address/subnet was not previously manually banned.");
         }
@@ -1051,11 +1044,11 @@ static RPCHelpMan sendmsgtopeer()
             HelpExampleCli("sendmsgtopeer", "0 \"addr\" \"ffffff\"") + HelpExampleRpc("sendmsgtopeer", "0 \"addr\" \"ffffff\"")},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
             const NodeId peer_id{request.params[0].getInt<int64_t>()};
-            const std::string& msg_type{request.params[1].get_str()};
+            const auto msg_type{self.Arg<std::string_view>("msg_type")};
             if (msg_type.size() > CMessageHeader::MESSAGE_TYPE_SIZE) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Error: msg_type too long, max length is %i", CMessageHeader::MESSAGE_TYPE_SIZE));
             }
-            auto msg{TryParseHex<unsigned char>(request.params[2].get_str())};
+            auto msg{TryParseHex<unsigned char>(self.Arg<std::string_view>("msg"))};
             if (!msg.has_value()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Error parsing input for msg");
             }
