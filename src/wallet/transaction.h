@@ -164,9 +164,6 @@ struct CachableAmount
 };
 
 
-typedef std::map<std::string, std::string> mapValue_t;
-
-
 /** Legacy class used for deserializing vtxPrev for backwards compatibility.
  * vtxPrev was removed in commit 93a18a3650292afbb441a47d1fa1b94aeb0164e3,
  * but old wallet.dat files may still contain vtxPrev vectors of CMerkleTxs.
@@ -194,33 +191,21 @@ public:
 class CWalletTx
 {
 public:
-    /**
-     * Key/value map with information about the transaction.
-     *
-     * The following keys can be read and written through the map and are
-     * serialized in the wallet database:
-     *
-     *     "comment", "to"   - comment strings provided to sendtoaddress,
-     *                         and sendmany wallet RPCs
-     *     "replaces_txid"   - txid (as HexStr) of transaction replaced by
-     *                         bumpfee on transaction created by bumpfee
-     *     "replaced_by_txid" - txid (as HexStr) of transaction created by
-     *                         bumpfee on transaction replaced by bumpfee
-     *     "from", "message" - obsolete fields that could be set in UI prior to
-     *                         2011 (removed in commit 4d9b223)
-     *
-     * The following keys are serialized in the wallet database, but shouldn't
-     * be read or written through the map (they will be temporarily added and
-     * removed from the map during serialization):
-     *
-     *     "fromaccount"     - serialized strFromAccount value
-     *     "n"               - serialized nOrderPos value
-     *     "timesmart"       - serialized nTimeSmart value
-     *     "spent"           - serialized vfSpent value that existed prior to
-     *                         2014 (removed in commit 93a18a3)
-     */
-    mapValue_t mapValue;
-    std::vector<std::pair<std::string, std::string> > vOrderForm;
+    // "from" and "message" are obsolete fields that could be set in
+    // the UI prior to 2011 (removed in commit 4d9b223)
+    // These fields are kept to avoid losing metadata.
+    std::optional<std::string> m_from;
+    std::optional<std::string> m_message;
+    // Comment strings provided by the user
+    std::optional<std::string> m_comment;
+    std::optional<std::string> m_comment_to;
+    std::optional<Txid> m_replaces_txid;
+    std::optional<Txid> m_replaced_by_txid;
+    // BIP 21 URI Messages
+    std::vector<std::string> m_messages;
+    // BIP 70 Payment Request (deprecated, field kept to preserve metadata from old wallets)
+    std::vector<std::string> m_payment_requests;
+    unsigned int fTimeReceivedIsTxTime;
     unsigned int nTimeReceived; //!< time received by this node
     /**
      * Stable timestamp that never changes, and reflects the order a transaction
@@ -257,8 +242,6 @@ public:
 
     void Init()
     {
-        mapValue.clear();
-        vOrderForm.clear();
         nTimeReceived = 0;
         nTimeSmart = 0;
         fChangeCached = false;
@@ -284,14 +267,22 @@ public:
     template<typename Stream>
     void Serialize(Stream& s) const
     {
-        mapValue_t mapValueCopy = mapValue;
+        std::map<std::string, std::string> string_values;
+        if (m_comment) string_values["comment"] = *m_comment;
+        if (m_comment_to) string_values["to"] = *m_comment_to;
+        if (m_replaces_txid) string_values["replaces_txid"] = m_replaces_txid->ToString();
+        if (m_replaced_by_txid) string_values["replaced_by_txid"] = m_replaced_by_txid->ToString();
+        string_values["fromaccount"] = "";
+        if (nOrderPos != -1) string_values["n"] = util::ToString(nOrderPos);
+        if (nTimeSmart) string_values["timesmart"] = strprintf("%u", nTimeSmart);
 
-        mapValueCopy["fromaccount"] = "";
-        if (nOrderPos != -1) {
-            mapValueCopy["n"] = util::ToString(nOrderPos);
+        std::vector<std::pair<std::string, std::string>> msgs_reqs;
+        msgs_reqs.resize(m_messages.size() + m_payment_requests.size());
+        for (const std::string& msg : m_messages) {
+            msgs_reqs.emplace_back("Message", msg);
         }
-        if (nTimeSmart) {
-            mapValueCopy["timesmart"] = strprintf("%u", nTimeSmart);
+        for (const std::string& req : m_payment_requests) {
+            msgs_reqs.emplace_back("PaymentRequest", req);
         }
 
         std::vector<uint8_t> dummy_vector1; //!< Used to be vMerkleBranch
@@ -300,7 +291,7 @@ public:
         uint32_t dummy_int = 0; // Used to be fTimeReceivedIsTxTime
         uint256 serializedHash = TxStateSerializedBlockHash(m_state);
         int serializedIndex = TxStateSerializedIndex(m_state);
-        s << TX_WITH_WITNESS(tx) << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << mapValueCopy << vOrderForm << dummy_int << nTimeReceived << dummy_bool << dummy_bool;
+        s << TX_WITH_WITNESS(tx) << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << string_values << msgs_reqs << dummy_int << nTimeReceived << dummy_bool << dummy_bool;
     }
 
     template<typename Stream>
@@ -314,19 +305,25 @@ public:
         uint32_t dummy_int; // Used to be fTimeReceivedIsTxTime
         uint256 serialized_block_hash;
         int serializedIndex;
-        s >> TX_WITH_WITNESS(tx) >> serialized_block_hash >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> mapValue >> vOrderForm >> dummy_int >> nTimeReceived >> dummy_bool >> dummy_bool;
+        std::map<std::string, std::string> string_values;
+        std::vector<std::pair<std::string, std::string>> msgs_reqs;
+        s >> TX_WITH_WITNESS(tx) >> serialized_block_hash >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> string_values >> msgs_reqs >> dummy_int >> nTimeReceived >> dummy_bool >> dummy_bool;
 
         m_state = TxStateInterpretSerialized({serialized_block_hash, serializedIndex});
 
-        const auto it_op = mapValue.find("n");
-        nOrderPos = (it_op != mapValue.end()) ? LocaleIndependentAtoi<int64_t>(it_op->second) : -1;
-        const auto it_ts = mapValue.find("timesmart");
-        nTimeSmart = (it_ts != mapValue.end()) ? static_cast<unsigned int>(LocaleIndependentAtoi<int64_t>(it_ts->second)) : 0;
+        for (const auto& [key, value] : string_values) {
+            if (key == "n") nOrderPos = LocaleIndependentAtoi<int64_t>(value);
+            else if (key == "timesmart") nTimeSmart = LocaleIndependentAtoi<int64_t>(value);
+            else if (key == "comment") m_comment = value;
+            else if (key == "to") m_comment_to = value;
+            else if (key == "replaces_txid") m_replaces_txid = Txid::FromHex(value);
+            else if (key == "replaced_by_txid") m_replaced_by_txid = Txid::FromHex(value);
+        }
 
-        mapValue.erase("fromaccount");
-        mapValue.erase("spent");
-        mapValue.erase("n");
-        mapValue.erase("timesmart");
+        for (const auto& [type, data] : msgs_reqs) {
+            if (type == "Message") m_messages.emplace_back(data);
+            else if (type == "PaymentRequest") m_payment_requests.emplace_back(data);
+        }
     }
 
     void SetTx(CTransactionRef arg)
