@@ -19,6 +19,11 @@ private:
     uint8_t count; // Only the low 8 bits of the input size matter.
 
 public:
+    static constexpr uint64_t C0{0x736f6d6570736575ULL};
+    static constexpr uint64_t C1{0x646f72616e646f6dULL};
+    static constexpr uint64_t C2{0x6c7967656e657261ULL};
+    static constexpr uint64_t C3{0x7465646279746573ULL};
+
     /** Construct a SipHash calculator initialized with 128-bit key (k0, k1) */
     CSipHasher(uint64_t k0, uint64_t k1);
     /** Hash a 64-bit integer worth of data
@@ -32,17 +37,21 @@ public:
     uint64_t Finalize() const;
 };
 
-/** Optimized SipHash-2-4 implementation for uint256.
- *
- *  It is identical to:
- *    SipHasher(k0, k1)
- *      .Write(val.GetUint64(0))
- *      .Write(val.GetUint64(1))
- *      .Write(val.GetUint64(2))
- *      .Write(val.GetUint64(3))
- *      .Finalize()
- */
-uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val);
-uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint32_t extra);
+// Optimized SipHash-2-4 implementation for uint256.
+class PresaltedSipHasher
+{
+    uint64_t v[4];
+
+public:
+    explicit PresaltedSipHasher(uint64_t k0, uint64_t k1) noexcept {
+        v[0] = CSipHasher::C0 ^ k0;
+        v[1] = CSipHasher::C1 ^ k1;
+        v[2] = CSipHasher::C2 ^ k0;
+        v[3] = CSipHasher::C3 ^ k1;
+    }
+
+    uint64_t operator()(const uint256& val) const noexcept;
+    uint64_t operator()(const uint256& val, uint32_t extra) const noexcept;
+};
 
 #endif // BITCOIN_CRYPTO_SIPHASH_H

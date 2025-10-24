@@ -17,10 +17,10 @@
 
 CSipHasher::CSipHasher(uint64_t k0, uint64_t k1)
 {
-    v[0] = 0x736f6d6570736575ULL ^ k0;
-    v[1] = 0x646f72616e646f6dULL ^ k1;
-    v[2] = 0x6c7967656e657261ULL ^ k0;
-    v[3] = 0x7465646279746573ULL ^ k1;
+    v[0] = C0 ^ k0;
+    v[1] = C1 ^ k1;
+    v[2] = C2 ^ k0;
+    v[3] = C3 ^ k1;
     count = 0;
     tmp = 0;
 }
@@ -92,15 +92,11 @@ uint64_t CSipHasher::Finalize() const
     return v0 ^ v1 ^ v2 ^ v3;
 }
 
-uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val)
+uint64_t PresaltedSipHasher::operator()(const uint256& val) const noexcept
 {
-    /* Specialized implementation for efficiency */
+    uint64_t v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
     uint64_t d = val.GetUint64(0);
-
-    uint64_t v0 = 0x736f6d6570736575ULL ^ k0;
-    uint64_t v1 = 0x646f72616e646f6dULL ^ k1;
-    uint64_t v2 = 0x6c7967656e657261ULL ^ k0;
-    uint64_t v3 = 0x7465646279746573ULL ^ k1 ^ d;
+    v3 ^= d;
 
     SIPROUND;
     SIPROUND;
@@ -132,16 +128,12 @@ uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val)
     return v0 ^ v1 ^ v2 ^ v3;
 }
 
-uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint32_t extra)
+/* Specialized implementation for efficiency */
+uint64_t PresaltedSipHasher::operator()(const uint256& val, uint32_t extra) const noexcept
 {
-    /* Specialized implementation for efficiency */
+    uint64_t v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
     uint64_t d = val.GetUint64(0);
-
-    uint64_t v0 = 0x736f6d6570736575ULL ^ k0;
-    uint64_t v1 = 0x646f72616e646f6dULL ^ k1;
-    uint64_t v2 = 0x6c7967656e657261ULL ^ k0;
-    uint64_t v3 = 0x7465646279746573ULL ^ k1 ^ d;
-
+    v3 ^= d;
     SIPROUND;
     SIPROUND;
     v0 ^= d;
