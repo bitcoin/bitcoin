@@ -9,6 +9,8 @@
 
 #include <memory>
 
+extern int GetSkipHeight(int height);
+
 BOOST_FIXTURE_TEST_SUITE(chain_tests, BasicTestingSetup)
 
 namespace {
@@ -40,6 +42,78 @@ const CBlockIndex* NaiveLastCommonAncestor(const CBlockIndex* a, const CBlockInd
 }
 
 } // namespace
+
+BOOST_AUTO_TEST_CASE(get_skip_height_test)
+{
+    BOOST_CHECK(GetSkipHeight(0b0001011101101000) == 0b0001011101100000);
+    BOOST_CHECK(GetSkipHeight(0b0001011101101001) == 0b0001011101000001);
+    BOOST_CHECK(GetSkipHeight(0b0110101101011000) == 0b0110101101010000);
+    BOOST_CHECK(GetSkipHeight(0b0110101101011001) == 0b0110101101000001);
+    BOOST_CHECK(GetSkipHeight(0) == 0);
+    BOOST_CHECK(GetSkipHeight(1) == 0);
+    BOOST_CHECK(GetSkipHeight(2) == 0);
+    BOOST_CHECK(GetSkipHeight(3) == 1);
+    BOOST_CHECK(GetSkipHeight(4) == 0);
+    BOOST_CHECK(GetSkipHeight(5) == 1);
+    BOOST_CHECK(GetSkipHeight(7) == 1);
+    BOOST_CHECK(GetSkipHeight(8) == 0);
+    BOOST_CHECK(GetSkipHeight(15) == 9);
+    BOOST_CHECK(GetSkipHeight(16) == 0);
+    BOOST_CHECK(GetSkipHeight(17) == 1);
+    BOOST_CHECK(GetSkipHeight(256) == 0);
+    BOOST_CHECK(GetSkipHeight(65536) == 0);
+}
+
+BOOST_AUTO_TEST_CASE(skip_height_properties_test)
+{
+    // The test collects and analyses the distribution of the
+    // skip difference numbers, and checks some properties:
+    // non-uniform distribution with most values small but
+    // with some large values as well.
+
+    FastRandomContext ctx;
+    std::vector<std::unique_ptr<CBlockIndex>> block_index;
+
+    // Create genesis block
+    auto genesis = std::make_unique<CBlockIndex>();
+    genesis->nHeight = 0;
+    block_index.push_back(std::move(genesis));
+
+    // Build a chain
+    const auto n{30000};
+    for(int i = 0; i < n; ++i) {
+        auto new_index = std::make_unique<CBlockIndex>();
+        new_index->pprev = block_index.back().get();
+        BOOST_CHECK(new_index->pprev);
+        new_index->nHeight = new_index->pprev->nHeight + 1;
+        new_index->BuildSkip();
+        block_index.push_back(std::move(new_index));
+    }
+
+    // Analyze the diff (in height) of each element and its pskip
+    int count_diff_smaller_16 = 0;
+    int max_diff = 0;
+    int total_diff = 0;
+    for(int i = 1; i < n; ++i) {
+        BOOST_CHECK(block_index[i]->nHeight == i);
+        auto skip_height = block_index[i]->pskip->nHeight;
+        BOOST_CHECK(skip_height <= i && skip_height >= 0);
+        auto diff = i - skip_height;
+
+        if (diff < 16) {
+            ++count_diff_smaller_16;
+        }
+        max_diff = diff > max_diff ? diff : max_diff;
+        total_diff += diff;
+    }
+
+    // Most skip diffs are small (more than 67% are below 16):
+    BOOST_CHECK(count_diff_smaller_16 > n * 2 / 3);
+    // There are some large skip diffs (more than 75% of n):
+    BOOST_CHECK(max_diff > n * 3 / 4);
+    // The average skip diff is relatively high:
+    BOOST_CHECK(double(total_diff) / double(n) > 50.0);
+}
 
 BOOST_AUTO_TEST_CASE(chain_test)
 {
