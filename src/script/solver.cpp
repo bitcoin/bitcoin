@@ -46,10 +46,10 @@ static bool MatchPayToPubkey(const CScript& script, valtype& pubkey)
     return false;
 }
 
-static bool MatchPayToPubkeyHash(const CScript& script, valtype& pubkeyhash)
+static bool MatchPayToPubkeyHash(const CScript& script, valtype* pubkeyhash = nullptr)
 {
     if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160 && script[2] == 20 && script[23] == OP_EQUALVERIFY && script[24] == OP_CHECKSIG) {
-        pubkeyhash.assign(script.begin () + 3, script.begin() + 23);
+        if (pubkeyhash) pubkeyhash->assign(script.begin () + 3, script.begin() + 23);
         return true;
     }
     return false;
@@ -193,7 +193,7 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
         return TxoutType::PUBKEY;
     }
 
-    if (MatchPayToPubkeyHash(scriptPubKey, data)) {
+    if (MatchPayToPubkeyHash(scriptPubKey, vSolutionsRet ? &data : nullptr)) {
         if (vSolutionsRet) vSolutionsRet->push_back(std::move(data));
         return TxoutType::PUBKEYHASH;
     }
