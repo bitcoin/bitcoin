@@ -845,6 +845,49 @@ static RPCHelpMan createwalletdescriptor()
     };
 }
 
+static RPCHelpMan exportwatchonlywallet()
+{
+    return RPCHelpMan{"exportwatchonlywallet",
+        "Creates a wallet file at the specified destination containing a watchonly version "
+        "of the current wallet. This watchonly wallet contains the wallet's public descriptors, "
+        "its transactions, and address book data. Descriptors that use hardened derivation will "
+        "only have a limited number of derived keys included in the export due to hardened "
+        "derivation requiring private keys. Descriptors with unhardened derivation do not have "
+        "this limitation. The watchonly wallet can be imported into another node using 'restorewallet'.",
+        {
+            {"destination", RPCArg::Type::STR, RPCArg::Optional::NO, "The path to the filename the exported watchonly wallet will be saved to"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "exported_file", "The full path that the file has been exported to"},
+            },
+        },
+        RPCExamples{
+            HelpExampleCli("exportwatchonlywallet", "\"home\\user\\export.dat\"")
+            + HelpExampleRpc("exportwatchonlywallet", "\"home\\user\\export.dat\"")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+            if (!pwallet) return UniValue::VNULL;
+            WalletContext& context = EnsureWalletContext(request.context);
+
+            std::string dest = request.params[0].get_str();
+
+            LOCK(pwallet->cs_wallet);
+            pwallet->TopUpKeyPool();
+            util::Result<std::string> exported = pwallet->ExportWatchOnlyWallet(fs::PathFromString(dest), context);
+            if (!exported) {
+                throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(exported).original);
+            }
+            UniValue out{UniValue::VOBJ};
+            out.pushKV("exported_file", *exported);
+            return out;
+        }
+    };
+}
+
 // addresses
 RPCHelpMan getaddressinfo();
 RPCHelpMan getnewaddress();
@@ -920,6 +963,7 @@ std::span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &createwalletdescriptor},
         {"wallet", &restorewallet},
         {"wallet", &encryptwallet},
+        {"wallet", &exportwatchonlywallet},
         {"wallet", &getaddressesbylabel},
         {"wallet", &getaddressinfo},
         {"wallet", &getbalance},
