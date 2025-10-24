@@ -82,7 +82,7 @@ static std::optional<int> GetScriptNumber(opcodetype opcode, valtype data, int m
     return count;
 }
 
-static bool MatchMultisig(const CScript& script, int& required_sigs, std::vector<valtype>& pubkeys)
+static bool MatchMultisig(const CScript& script, int& required_sigs, std::vector<valtype>* pubkeys = nullptr)
 {
     opcodetype opcode;
     valtype data;
@@ -95,11 +95,11 @@ static bool MatchMultisig(const CScript& script, int& required_sigs, std::vector
     if (!req_sigs) return false;
     required_sigs = *req_sigs;
     while (script.GetOp(it, opcode, data) && CPubKey::ValidSize(data)) {
-        pubkeys.emplace_back(std::move(data));
+        if (pubkeys) pubkeys->emplace_back(std::move(data));
     }
     auto num_keys = GetScriptNumber(opcode, data, required_sigs, MAX_PUBKEYS_PER_MULTISIG);
     if (!num_keys) return false;
-    if (pubkeys.size() != static_cast<unsigned long>(*num_keys)) return false;
+    if (pubkeys && pubkeys->size() != static_cast<unsigned long>(*num_keys)) return false;
 
     return (it + 1 == script.end());
 }
@@ -200,7 +200,7 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
 
     int required;
     std::vector<std::vector<unsigned char>> keys;
-    if (MatchMultisig(scriptPubKey, required, keys)) {
+    if (MatchMultisig(scriptPubKey, required, vSolutionsRet ? &keys : nullptr)) {
         if (vSolutionsRet) {
             vSolutionsRet->emplace_back(1, static_cast<unsigned char>(required)); // safe as required is in range 1..20
             vSolutionsRet->insert(vSolutionsRet->end(), keys.begin(), keys.end());
