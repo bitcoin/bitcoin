@@ -159,7 +159,7 @@ jobs:
 
       - name: Install Python packages
         run: |
-          git clone -b v2.1.0 https://github.com/capnproto/pycapnp
+          git clone -b v2.2.1 https://github.com/capnproto/pycapnp
           pip3 install ./pycapnp -C force-bundled-libcapnp=True --break-system-packages
 
       - name: Set Ccache directory
