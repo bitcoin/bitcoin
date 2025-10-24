@@ -258,6 +258,12 @@ public:
         m_assumed_blockchain_size = 1;
         m_assumed_chain_state_size = 1;
 
+        // Minimal-difficulty header search yields a valid solution at the
+        // original timestamp with nonce 0 (hash
+        // 78a007539d547f74482668fa8adf31be6c437796a0d68dbfe4e5169afee99310).
+        genesis = CreateGenesisBlock(1231006505, 0, 0x207fffff, 1, 50 * COIN);
+        consensus.hashGenesisBlock = genesis.GetHash();
+        assert(consensus.hashGenesisBlock == uint256{"78a007539d547f74482668fa8adf31be6c437796a0d68dbfe4e5169afee99310"});
         genesis = CreateGenesisBlock(1231006505, 0, 0x207fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256{"78a007539d547f74482668fa8adf31be6c437796a0d68dbfe4e5169afee99310"});
