@@ -54,6 +54,7 @@ add_executable(fuzz
   hex.cpp
   http_request.cpp
   i2p.cpp
+  inputfetcher.cpp
   integer.cpp
   key.cpp
   key_io.cpp
