@@ -1158,10 +1158,9 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
 }
 
 /** Return the TxoutType of a script without exposing Solver details. */
-static TxoutType GetTxoutType(const CScript& output_script)
+static TxoutType GetTxoutType(const CScript& output_script) //TODO: remove: redundant
 {
-    std::vector<std::vector<uint8_t>> unused;
-    return Solver(output_script, unused);
+    return Solver(output_script);
 }
 
 #define CHECK_SCRIPT_STATIC_SIZE(script, expected_size)                   \

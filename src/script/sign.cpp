@@ -406,7 +406,7 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
     std::vector<unsigned char> sig;
 
     std::vector<valtype> vSolutions;
-    whichTypeRet = Solver(scriptPubKey, vSolutions);
+    whichTypeRet = Solver(scriptPubKey, &vSolutions);
 
     switch (whichTypeRet) {
     case TxoutType::NONSTANDARD:
@@ -625,7 +625,7 @@ SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nI
 
     // Get scripts
     std::vector<std::vector<unsigned char>> solutions;
-    TxoutType script_type = Solver(txout.scriptPubKey, solutions);
+    TxoutType script_type = Solver(txout.scriptPubKey, &solutions);
     SigVersion sigversion = SigVersion::BASE;
     CScript next_script = txout.scriptPubKey;
 
@@ -636,7 +636,7 @@ SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nI
         next_script = std::move(redeem_script);
 
         // Get redeemScript type
-        script_type = Solver(next_script, solutions);
+        script_type = Solver(next_script, &solutions);
         stack.script.pop_back();
     }
     if (script_type == TxoutType::WITNESS_V0_SCRIPTHASH && !stack.witness.empty() && !stack.witness.back().empty()) {
@@ -646,7 +646,7 @@ SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nI
         next_script = std::move(witness_script);
 
         // Get witnessScript type
-        script_type = Solver(next_script, solutions);
+        script_type = Solver(next_script, &solutions);
         stack.witness.pop_back();
         stack.script = std::move(stack.witness);
         stack.witness.clear();
@@ -750,7 +750,7 @@ bool IsSegWitOutput(const SigningProvider& provider, const CScript& script)
     if (script.IsWitnessProgram(version)) return true;
     if (script.IsPayToScriptHash()) {
         std::vector<valtype> solutions;
-        auto whichtype = Solver(script, solutions);
+        auto whichtype = Solver(script, &solutions);
         if (whichtype == TxoutType::SCRIPTHASH) {
             auto h160 = uint160(solutions[0]);
             CScript subscript;
