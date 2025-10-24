@@ -236,6 +236,7 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
                 return false;
             if (stack.empty())
                 return false;
+            //TODO: avoid the copy
             CScript subscript(stack.back().begin(), stack.back().end());
             if (subscript.GetSigOpCount(true) > MAX_P2SH_SIGOPS) {
                 return false;
@@ -262,6 +263,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         const CTxOut &prev = mapInputs.AccessCoin(txin.prevout).out;
 
         // get the scriptPubKey corresponding to this input:
+        //TODO: avoid the copy
         CScript prevScript = prev.scriptPubKey;
 
         // witness stuffing detected
@@ -279,6 +281,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
                 return false;
             if (stack.empty())
                 return false;
+            //TODO: avoid the copy
             prevScript = CScript(stack.back().begin(), stack.back().end());
             p2sh = true;
         }
@@ -362,6 +365,7 @@ bool SpendsNonAnchorWitnessProg(const CTransaction& tx, const CCoinsViewCache& p
                 || stack.empty()) {
                 continue;
             }
+            //TODO: avoid the copy
             const CScript redeem_script{stack.back().begin(), stack.back().end()};
             if (redeem_script.IsWitnessProgram(version)) {
                 return true;
