@@ -11,7 +11,6 @@
              ((gnu packages installers) #:select (nsis-x86_64))
              ((gnu packages linux) #:select (linux-libre-headers-6.1))
              (gnu packages llvm)
-             (gnu packages mingw)
              (gnu packages ninja)
              (gnu packages pkg-config)
              ((gnu packages python) #:select (python-minimal))
@@ -30,6 +29,7 @@
              (guix gexp)
              (guix git-download)
              ((guix licenses) #:prefix license:)
+             (guix memoization)
              (guix packages)
              ((guix utils) #:select (cc-for-target substitute-keyword-arguments)))
 
@@ -122,6 +122,104 @@ desirable for building Bitcoin Core release binaries."
 (define (winpthreads-patches mingw-w64-x86_64-winpthreads)
   (package-with-extra-patches mingw-w64-x86_64-winpthreads
     (search-our-patches "winpthreads-remap-guix-store.patch")))
+
+
+;; While mingw-w64 is packaged in Guix, we maintain our own package,
+;; to use UCRT runtime.
+(define* (make-mingw-w64/implementation machine
+                                             #:key
+                                             xgcc
+                                             xbinutils
+                                             with-winpthreads?)
+  "Return a mingw-w64 for targeting MACHINE.  If XGCC or XBINUTILS is specified,
+use that gcc or binutils when cross-compiling.  If WITH-WINPTHREADS? is
+specified, recurse and return a mingw-w64 with support for winpthreads."
+  (let* ((triplet (string-append machine "-" "w64-mingw32")))
+    (package
+      (name (string-append "mingw-w64" "-" machine
+                           (if with-winpthreads? "-winpthreads" "")))
+      (version "12.0.0")
+      (source
+       (origin
+         (method url-fetch)
+         (uri (string-append
+               "mirror://sourceforge/mingw-w64/mingw-w64/"
+               "mingw-w64-release/mingw-w64-v" version ".tar.bz2"))
+         (sha256
+          (base32 "0bzdprdrb8jy5dhkl2j2yhnr2nsiv6wk2wzxrzaqsvjbmj58jhfc"))))
+      (native-inputs `(("xgcc-core" ,(if xgcc xgcc (cross-gcc triplet)))
+                       ("xbinutils" ,(if xbinutils xbinutils
+                                         (cross-binutils triplet)))
+                       ,@(if with-winpthreads?
+                             `(("xlibc" ,(make-mingw-w64
+                                          machine
+                                          #:xgcc xgcc
+                                          #:xbinutils xbinutils)))
+                             '())))
+      (build-system gnu-build-system)
+      (search-paths
+       (list (search-path-specification
+              (variable "CROSS_C_INCLUDE_PATH")
+              (files `("include" ,(string-append triplet "/include"))))
+             (search-path-specification
+              (variable "CROSS_LIBRARY_PATH")
+              (files
+               `("lib" "lib64"
+                 ,(string-append triplet "/lib")
+                 ,(string-append triplet "/lib64"))))))
+      (arguments
+       (list #:parallel-build? #f ; parallel builds often fail with empty .a files
+             #:tests? #f ; compiles and includes glibc headers
+             #:strip-binaries? #f
+             #:configure-flags
+             #~(list #$(string-append "--host=" triplet)
+                     #$@(if with-winpthreads?
+                            #~("--with-libraries=winpthreads")
+                            #~())
+                     "--with-default-msvcrt=ucrt")
+             #:make-flags #~'("DEFS=-DHAVE_CONFIG_H -D__MINGW_HAS_DXSDK=1")
+             #:phases
+             #~(modify-phases %standard-phases
+                 (add-before 'configure 'setenv
+                   (lambda _
+                     (let ((xgcc-core #+(this-package-native-input
+                                         "xgcc-core"))
+                           (mingw-headers (string-append
+                                           (getcwd) "/mingw-w64-headers")))
+                       (setenv "CPP"
+                               (string-append
+                                xgcc-core "/bin/" #$triplet "-cpp"))
+                       (setenv "CROSS_C_INCLUDE_PATH"
+                               (string-append
+                                mingw-headers
+                                ":" mingw-headers "/include"
+                                ":" mingw-headers "/crt"
+                                ":" mingw-headers "/defaults/include"
+                                ":" mingw-headers "/direct-x/include"))
+                       #$@(if with-winpthreads?
+                              #~((let ((xlibc #+(this-package-native-input
+                                                 "xlibc")))
+                                   (setenv "CROSS_LIBRARY_PATH"
+                                           (string-append
+                                            xlibc "/lib" ":"
+                                            xlibc "/" #$triplet "/lib"))))
+                              #~())))))))
+      (home-page "https://mingw-w64.org")
+      (synopsis "Minimalist GNU for Windows")
+      (description
+       "Minimalist GNU for Windows (@dfn{MinGW}) is a complete software
+development environment for creating native Microsoft Windows applications.
+
+It includes a set of Windows-specific header files and static import libraries
+which enable the use of the Windows API.  It does not rely on any third-party C
+runtime dynamic-link libraries (@dfn{DLL}s).
+
+Mingw-w64 is an advancement of the original mingw.org project and provides
+several new APIs such as DirectX and DDK, and 64-bit support.")
+      (license license:fdl1.3+))))
+
+(define make-mingw-w64
+  (memoize make-mingw-w64/implementation))
 
 (define (make-mingw-pthreads-cross-toolchain target)
   "Create a cross-compilation toolchain package for TARGET"
