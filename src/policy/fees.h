@@ -20,6 +20,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 
@@ -40,6 +41,9 @@ class TxConfirmStats;
 struct RemovedMempoolTransactionInfo;
 struct NewMempoolTransactionInfo;
 
+namespace node {
+    class MiniMinerMempoolEntry;
+};
 /* Identifier for each of the 3 different TxConfirmStats which will track
  * history over different time horizons. */
 enum class FeeEstimateHorizon {
@@ -53,6 +57,21 @@ static constexpr auto ALL_FEE_ESTIMATE_HORIZONS = std::array{
     FeeEstimateHorizon::MED_HALFLIFE,
     FeeEstimateHorizon::LONG_HALFLIFE,
 };
+
+using TxAncestorsAndDescendants = std::map<Txid, std::pair<std::set<Txid>, std::set<Txid>>>;
+
+/* GetTxAncestorsAndDescendants takes the vector of transactions removed from the mempool after a block is connected.
+ * The function assumes the order the transactions were included in the block was maintained; that is, all transaction
+ * parents was added into the vector first before descendants.
+ *
+ * GetTxAncestorsAndDescendants computes all the ancestors and descendants of the transactions, the transaction is
+ * also included as a descendant and ancestor of itself.
+ */
+TxAncestorsAndDescendants GetTxAncestorsAndDescendants(const std::vector<RemovedMempoolTransactionInfo>& transactions);
+
+using MiniMinerInput = std::pair<std::vector<node::MiniMinerMempoolEntry>, std::map<Txid, std::set<Txid>>>;
+
+MiniMinerInput GetMiniMinerInput(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block);
 
 std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon);
 
@@ -302,6 +321,9 @@ private:
 
     /** Process a transaction confirmed in a block*/
     bool processBlockTx(unsigned int nBlockHeight, const RemovedMempoolTransactionInfo& tx) EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
+
+    /** Remove transactions CPFP'd by some child from fee estimation tracking stats */
+    void removeCPFPdParentTxs(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block) EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
 
     /** Helper for estimateSmartFee */
     double estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon, EstimationResult *result) const EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
