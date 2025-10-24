@@ -262,7 +262,11 @@ target_link_libraries(bitcoin-qt
 )
 
 import_plugins(bitcoin-qt)
-install_binary_component(bitcoin-qt HAS_MANPAGE)
+install(TARGETS bitcoin-qt RUNTIME COMPONENT bitcoin_qt)
+install(FILES ${PROJECT_SOURCE_DIR}/doc/man/bitcoin-qt.1
+  DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
+  COMPONENT bitcoin_qt
+)
 if(WIN32)
   set_target_properties(bitcoin-qt PROPERTIES WIN32_EXECUTABLE TRUE)
 endif()
@@ -279,7 +283,11 @@ if(ENABLE_IPC)
     bitcoin_ipc
   )
   import_plugins(bitcoin-gui)
-  install_binary_component(bitcoin-gui INTERNAL)
+  install(TARGETS bitcoin-gui
+    RUNTIME
+      DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}
+      COMPONENT bitcoin_gui
+  )
   if(WIN32)
     set_target_properties(bitcoin-gui PROPERTIES WIN32_EXECUTABLE TRUE)
   endif()
