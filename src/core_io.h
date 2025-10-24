@@ -21,6 +21,7 @@ class SigningProvider;
 class uint256;
 class UniValue;
 class CTxUndo;
+class CTxOut;
 
 /**
  * Verbose level for block's transaction
@@ -46,6 +47,6 @@ std::string FormatScript(const CScript& script);
 std::string EncodeHexTx(const CTransaction& tx);
 std::string SighashToStr(unsigned char sighash_type);
 void ScriptToUniv(const CScript& script, UniValue& out, bool include_hex = true, bool include_address = false, const SigningProvider* provider = nullptr);
-void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry, bool include_hex = true, const CTxUndo* txundo = nullptr, TxVerbosity verbosity = TxVerbosity::SHOW_DETAILS);
+void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry, bool include_hex = true, const CTxUndo* txundo = nullptr, TxVerbosity verbosity = TxVerbosity::SHOW_DETAILS, std::function<bool(const CTxOut&)> is_change_func = {});
 
 #endif // BITCOIN_CORE_IO_H
