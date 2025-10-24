@@ -146,8 +146,7 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
     // it is always OP_HASH160 20 [20 byte hash] OP_EQUAL
     if (scriptPubKey.IsPayToScriptHash())
     {
-        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
-        vSolutionsRet.push_back(hashBytes);
+        vSolutionsRet.emplace_back(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
         return TxoutType::SCRIPTHASH;
     }
 
@@ -170,7 +169,7 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
             return TxoutType::ANCHOR;
         }
         if (witnessversion != 0) {
-            vSolutionsRet.push_back(std::vector<unsigned char>{(unsigned char)witnessversion});
+            vSolutionsRet.emplace_back(1, static_cast<unsigned char>(witnessversion));
             vSolutionsRet.push_back(std::move(witnessprogram));
             return TxoutType::WITNESS_UNKNOWN;
         }
@@ -200,9 +199,9 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
     int required;
     std::vector<std::vector<unsigned char>> keys;
     if (MatchMultisig(scriptPubKey, required, keys)) {
-        vSolutionsRet.push_back({static_cast<unsigned char>(required)}); // safe as required is in range 1..20
+        vSolutionsRet.emplace_back(1, static_cast<unsigned char>(required)); // safe as required is in range 1..20
         vSolutionsRet.insert(vSolutionsRet.end(), keys.begin(), keys.end());
-        vSolutionsRet.push_back({static_cast<unsigned char>(keys.size())}); // safe as size is in range 1..20
+        vSolutionsRet.emplace_back(1, static_cast<unsigned char>(keys.size())); // safe as size is in range 1..20
         return TxoutType::MULTISIG;
     }
 
