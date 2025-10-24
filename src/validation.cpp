@@ -4660,7 +4660,7 @@ bool Chainstate::LoadChainTip()
     AssertLockHeld(cs_main);
     const CCoinsViewCache& coins_cache = CoinsTip();
     assert(!coins_cache.GetBestBlock().IsNull()); // Never called when the coins view is empty
-    const CBlockIndex* tip = m_chain.Tip();
+    CBlockIndex* tip = m_chain.Tip();
 
     if (tip && tip->GetBlockHash() == coins_cache.GetBestBlock()) {
         return true;
@@ -4672,6 +4672,20 @@ bool Chainstate::LoadChainTip()
         return false;
     }
     m_chain.SetTip(*pindex);
+    tip = m_chain.Tip();
+
+    // Make sure our chain tip before shutting down scores better than any other candidate
+    // to maintain a consistent best tip over reboots in case of a tie.
+    auto target = tip;
+    while (target) {
+        target->nSequenceId = SEQ_ID_BEST_CHAIN_FROM_DISK;
+        target = target->pprev;
+    }
+
+    // Block index candidates are loaded before the chain tip, so we need to replace this entry
+    // Otherwise the scoring will be based on the memory address location instead of the nSequenceId
+    setBlockIndexCandidates.erase(tip);
+    TryAddBlockIndexCandidate(tip);
     PruneBlockIndexCandidates();
 
     tip = m_chain.Tip();
@@ -5323,7 +5337,9 @@ void ChainstateManager::CheckBlockIndex() const
                 }
             }
         }
-        if (!pindex->HaveNumChainTxs()) assert(pindex->nSequenceId <= 0); // nSequenceId can't be set positive for blocks that aren't linked (negative is used for preciousblock)
+        // nSequenceId can't be set higher than SEQ_ID_INIT_FROM_DISK{1} for blocks that aren't linked
+        // (negative is used for preciousblock, SEQ_ID_BEST_CHAIN_FROM_DISK{0} for active chain when loaded from disk)
+        if (!pindex->HaveNumChainTxs()) assert(pindex->nSequenceId <= SEQ_ID_INIT_FROM_DISK);
         // VALID_TRANSACTIONS is equivalent to nTx > 0 for all nodes (whether or not pruning has occurred).
         // HAVE_DATA is only equivalent to nTx > 0 (or VALID_TRANSACTIONS) if no pruning has occurred.
         if (!m_blockman.m_have_pruned) {
