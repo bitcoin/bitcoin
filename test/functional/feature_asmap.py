@@ -8,17 +8,21 @@ Verify node behaviour and debug log when launching bitcoind in these cases:
 
 1. `bitcoind` with no -asmap arg, using /16 prefix for IP bucketing
 
-2. `bitcoind -asmap=<absolute path>`, using the unit test skeleton asmap
+2. `bitcoind -noasmap`, explicitly disabling asmap and using /16 prefix for IP bucketing
 
-3. `bitcoind -asmap=<relative path>`, using the unit test skeleton asmap
+3. `bitcoind -asmap -asmapfile=<absolute path>`, using the unit test skeleton asmap
 
-4. `bitcoind -asmap/-asmap=` with no file specified, using the default asmap
+4. `bitcoind -asmap -asmapfile=<relative path>`, using the unit test skeleton asmap
 
-5. `bitcoind -asmap` restart with an addrman containing new and tried entries
+5. `bitcoind -asmap` with no file specified, using the default asmap
 
-6. `bitcoind -asmap` with no file specified and a missing default asmap file
+6. `bitcoind -asmap` restart with an addrman containing new and tried entries
 
-7. `bitcoind -asmap` with an empty (unparsable) default asmap file
+7. `bitcoind -asmap` with no file specified and a missing default asmap file
+
+8. `bitcoind -asmap` with an empty (unparsable) default asmap file
+
+9. `bitcoind -asmapfile=<path>` without -asmap
 
 The tests are order-independent.
 
@@ -55,33 +59,34 @@ class AsmapTest(BitcoinTestFramework):
             self.start_node(0)
 
     def test_noasmap_arg(self):
-        self.log.info('Test bitcoind with -noasmap arg passed')
-        self.stop_node(0)
-        with self.node.assert_debug_log(['Using /16 prefix for IP bucketing']):
-            self.start_node(0, ["-noasmap"])
+        for arg in ['-noasmap', '-asmap=0']:
+            self.log.info(f"Test bitcoind with {arg} (explicitly disabled)")
+            self.stop_node(0)
+            with self.node.assert_debug_log(['Using /16 prefix for IP bucketing']):
+                self.start_node(0, [arg])
 
     def test_asmap_with_absolute_path(self):
-        self.log.info('Test bitcoind -asmap=<absolute path>')
+        self.log.info('Test bitcoind -asmap -asmapfile=<absolute path>')
         self.stop_node(0)
         filename = os.path.join(self.datadir, 'my-map-file.map')
         shutil.copyfile(self.asmap_raw, filename)
         with self.node.assert_debug_log(expected_messages(filename)):
-            self.start_node(0, [f'-asmap={filename}'])
+            self.start_node(0, ['-asmap', f'-asmapfile={filename}'])
         os.remove(filename)
 
     def test_asmap_with_relative_path(self):
-        self.log.info('Test bitcoind -asmap=<relative path>')
+        self.log.info('Test bitcoind -asmap -asmapfile=<relative path>')
         self.stop_node(0)
         name = 'ASN_map'
         filename = os.path.join(self.datadir, name)
         shutil.copyfile(self.asmap_raw, filename)
         with self.node.assert_debug_log(expected_messages(filename)):
-            self.start_node(0, [f'-asmap={name}'])
+            self.start_node(0, ['-asmap', f'-asmapfile={name}'])
         os.remove(filename)
 
     def test_default_asmap(self):
         shutil.copyfile(self.asmap_raw, self.default_asmap)
-        for arg in ['-asmap', '-asmap=']:
+        for arg in ['-asmap', '-asmap=', '-asmap=1']:
             self.log.info(f'Test bitcoind {arg} (using default map file)')
             self.stop_node(0)
             with self.node.assert_debug_log(expected_messages(self.default_asmap)):
@@ -119,6 +124,15 @@ class AsmapTest(BitcoinTestFramework):
         self.node.assert_start_raises_init_error(extra_args=['-asmap'], expected_msg=msg)
         os.remove(self.default_asmap)
 
+    def test_asmapfile_without_asmap_enabled(self):
+        self.log.info('Test bitcoind -asmapfile without -asmap (should error)')
+        self.stop_node(0)
+        filename = os.path.join(self.datadir, 'test-file.map')
+        shutil.copyfile(self.asmap_raw, filename)
+        msg = "Error: Cannot set -asmapfile without enabling asmap, please use -asmap=1"
+        self.node.assert_start_raises_init_error(extra_args=[f'-asmapfile={filename}'], expected_msg=msg)
+        os.remove(filename)
+
     def test_asmap_health_check(self):
         self.log.info('Test bitcoind -asmap logs ASMap Health Check with basic stats')
         shutil.copyfile(self.asmap_raw, self.default_asmap)
@@ -150,6 +164,7 @@ class AsmapTest(BitcoinTestFramework):
         self.test_asmap_interaction_with_addrman_containing_entries()
         self.test_default_asmap_with_missing_file()
         self.test_empty_asmap()
+        self.test_asmapfile_without_asmap_enabled()
         self.test_asmap_health_check()
 
 
