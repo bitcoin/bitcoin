@@ -51,14 +51,7 @@ struct MinerTestingSetup : public TestingSetup {
     }
     CTxMemPool& MakeMempool()
     {
-        // Delete the previous mempool to ensure with valgrind that the old
-        // pointer is not accessed, when the new one should be accessed
-        // instead.
-        m_node.mempool.reset();
-        bilingual_str error;
-        m_node.mempool = std::make_unique<CTxMemPool>(MemPoolOptionsForTest(m_node), error);
-        Assert(error.empty());
-        return *m_node.mempool;
+        return ReplaceMempool();
     }
     std::unique_ptr<Mining> MakeMining()
     {
