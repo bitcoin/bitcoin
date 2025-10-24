@@ -154,6 +154,11 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
 
         // P2SH sigops are not counted if we don't set the SCRIPT_VERIFY_P2SH flag
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, /*flags=*/0) == 0);
+
+        // The witness of a coinbase transaction is not taken into account.
+        spendingTx.vin[0].prevout.SetNull();
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 0);
+        assert(GetTransactionSigOpCost(CTransaction(creationTx), coins, flags) == 0);
     }
 
     // P2WPKH witness program
@@ -163,7 +168,6 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CScriptWitness scriptWitness;
         scriptWitness.stack.emplace_back(0);
         scriptWitness.stack.emplace_back(0);
-
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, scriptWitness);
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 1);
@@ -182,6 +186,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         // The witness of a coinbase transaction is not taken into account.
         spendingTx.vin[0].prevout.SetNull();
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 0);
+        assert(GetTransactionSigOpCost(CTransaction(creationTx), coins, flags) == 0);
     }
 
     // P2WPKH nested in P2SH
@@ -196,6 +201,11 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, scriptWitness);
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 1);
         assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, flags) == SCRIPT_ERR_EQUALVERIFY);
+
+        // The witness of a coinbase transaction is not taken into account.
+        spendingTx.vin[0].prevout.SetNull();
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 0);
+        assert(GetTransactionSigOpCost(CTransaction(creationTx), coins, flags) == 0);
     }
 
     // P2WSH witness program
@@ -212,6 +222,11 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 2);
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags & ~SCRIPT_VERIFY_WITNESS) == 0);
         assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
+
+        // The witness of a coinbase transaction is not taken into account.
+        spendingTx.vin[0].prevout.SetNull();
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 0);
+        assert(GetTransactionSigOpCost(CTransaction(creationTx), coins, flags) == 0);
     }
 
     // P2WSH nested in P2SH
@@ -228,6 +243,11 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, scriptWitness);
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 2);
         assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
+
+        // The witness of a coinbase transaction is not taken into account.
+        spendingTx.vin[0].prevout.SetNull();
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 0);
+        assert(GetTransactionSigOpCost(CTransaction(creationTx), coins, flags) == 0);
     }
 }
 
