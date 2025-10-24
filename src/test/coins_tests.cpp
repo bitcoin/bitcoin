@@ -237,7 +237,7 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
                 unsigned int flushIndex = m_rng.randrange(stack.size() - 1);
                 if (fake_best_block) stack[flushIndex]->SetBestBlock(m_rng.rand256());
                 bool should_erase = m_rng.randrange(4) < 3;
-                BOOST_CHECK(should_erase ? stack[flushIndex]->Flush() : stack[flushIndex]->Sync());
+                BOOST_CHECK(should_erase ? stack[flushIndex]->Flush(/*reallocate_cache=*/true) : stack[flushIndex]->Sync());
                 flushed_without_erase |= !should_erase;
             }
         }
@@ -247,7 +247,7 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
                 //Remove the top cache
                 if (fake_best_block) stack.back()->SetBestBlock(m_rng.rand256());
                 bool should_erase = m_rng.randrange(4) < 3;
-                BOOST_CHECK(should_erase ? stack.back()->Flush() : stack.back()->Sync());
+                BOOST_CHECK(should_erase ? stack.back()->Flush(/*reallocate_cache=*/true) : stack.back()->Sync());
                 flushed_without_erase |= !should_erase;
                 stack.pop_back();
             }
@@ -496,13 +496,13 @@ BOOST_FIXTURE_TEST_CASE(updatecoins_simulation_test, UpdateTest)
             // Every 100 iterations, flush an intermediate cache
             if (stack.size() > 1 && m_rng.randbool() == 0) {
                 unsigned int flushIndex = m_rng.randrange(stack.size() - 1);
-                BOOST_CHECK(stack[flushIndex]->Flush());
+                BOOST_CHECK(stack[flushIndex]->Flush(/*reallocate_cache=*/true));
             }
         }
         if (m_rng.randrange(100) == 0) {
             // Every 100 iterations, change the cache stack.
             if (stack.size() > 0 && m_rng.randbool() == 0) {
-                BOOST_CHECK(stack.back()->Flush());
+                BOOST_CHECK(stack.back()->Flush(/*reallocate_cache=*/true));
                 stack.pop_back();
             }
             if (stack.size() == 0 || (stack.size() < 4 && m_rng.randbool())) {
@@ -913,7 +913,7 @@ void TestFlushBehavior(
             // hashBlock must be filled before flushing to disk; value is
             // unimportant here. This is normally done during connect/disconnect block.
             cache->SetBestBlock(m_rng.rand256());
-            erase ? cache->Flush() : cache->Sync();
+            erase ? cache->Flush(/*reallocate_cache=*/true) : cache->Sync();
         }
     };
 

@@ -439,9 +439,10 @@ public:
      * Push the modifications applied to this cache to its base and wipe local state.
      * Failure to call this method or Sync() before destruction will cause the changes
      * to be forgotten.
+     * If specified, the cache will be cleared and reallocated for memory efficiency after flushing.
      * If false is returned, the state of this cache (and its backing view) will be undefined.
      */
-    bool Flush();
+    bool Flush(bool reallocate_cache);
 
     /**
      * Push the modifications applied to this cache to its base while retaining
