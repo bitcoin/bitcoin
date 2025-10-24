@@ -33,6 +33,7 @@ const std::string ACENTRY{"acentry"};
 const std::string ACTIVEEXTERNALSPK{"activeexternalspk"};
 const std::string ACTIVEINTERNALSPK{"activeinternalspk"};
 const std::string BESTBLOCK_NOMERKLE{"bestblock_nomerkle"};
+const std::string BIP388_HMAC{"bip388_hmac"};
 const std::string BESTBLOCK{"bestblock"};
 const std::string CRYPTED_KEY{"ckey"};
 const std::string CSCRIPT{"cscript"};
@@ -932,6 +933,31 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
     return desc_res.m_result;
 }
 
+static DBErrors LoadWalletPolicyRecords(CWallet* pwallet, DatabaseBatch& batch, int last_client) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+{
+    AssertLockHeld(pwallet->cs_wallet);
+
+    LoadResult res = LoadRecords(pwallet, batch, DBKeys::BIP388_HMAC,
+        [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+        std::pair<std::string, std::string> key_pair;
+        std::string hmac;
+        key >> key_pair;
+        value >> hmac;
+        std::string policy_name = key_pair.first;
+        std::string fingerprint = key_pair.second;
+        pwallet->LoadHmacBIP388(policy_name, fingerprint, hmac);
+        return DBErrors::LOAD_OK;
+    });
+
+    if (res.m_result <= DBErrors::NONCRITICAL_ERROR) {
+        // Only log if there are no critical errors
+        pwallet->WalletLogPrintf("Loaded BIP388 policy");
+    }
+
+    return res.m_result;
+}
+
+
 static DBErrors LoadAddressBookRecords(CWallet* pwallet, DatabaseBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     AssertLockHeld(pwallet->cs_wallet);
@@ -1146,6 +1172,9 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         // when in reality the wallet is simply too new.
         if (result == DBErrors::UNKNOWN_DESCRIPTOR) return result;
 
+        // Load BIP388 HMAC record
+        result = std::max(LoadWalletPolicyRecords(pwallet, *m_batch, last_client), result);
+
         // Load address book
         result = std::max(LoadAddressBookRecords(pwallet, *m_batch), result);
 
@@ -1261,6 +1290,11 @@ bool WalletBatch::EraseAddressData(const CTxDestination& dest)
 bool WalletBatch::WriteWalletFlags(const uint64_t flags)
 {
     return WriteIC(DBKeys::FLAGS, flags);
+}
+
+bool WalletBatch::WriteHmacBip388(const std::string& policy_name, const std::string& fingerprint, const std::string& hmac)
+{
+    return WriteIC(std::make_pair(DBKeys::BIP388_HMAC, std::make_pair(policy_name, fingerprint)), hmac);
 }
 
 bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
