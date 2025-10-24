@@ -200,9 +200,10 @@ public:
 
 /**
  * Zhaolunet: custom public test network derived from the deprecated testnet3
- * parameters. The network keeps the original 2009 mainnet genesis block but
- * differs in pow spacing, difficulty retarget interval, message start bytes,
- * default port and address encoding.
+ * parameters. The network retains the original 2009 mainnet coinbase script
+ * and timestamp, but re-mines the genesis header at minimal difficulty to
+ * accelerate validation. It also customizes pow spacing, difficulty retarget
+ * interval, message start bytes, default port and address encoding.
  */
 class CTestNetParams : public CChainParams {
 public:
