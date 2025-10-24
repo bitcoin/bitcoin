@@ -260,12 +260,26 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
                 CAmount credit_mine = txo.GetTxOut().nValue;
 
                 // Set the amounts in the return object
-                if (wallet.IsTxImmatureCoinBase(wtx) && wtx.isConfirmed()) {
-                    ret.m_mine_immature += credit_mine;
-                } else if (is_trusted && tx_depth >= min_depth) {
-                    ret.m_mine_trusted += credit_mine;
-                } else if (!is_trusted && wtx.InMempool()) {
-                    ret.m_mine_untrusted_pending += credit_mine;
+                if (wallet.IsTxImmatureCoinBase(wtx)) {
+                    if (wtx.isConfirmed()) {
+                        ret.m_mine_immature += credit_mine;
+                    }
+                    // immature coinbase txs that aren't confirmed are irrelevant
+                } else if (is_trusted) {
+                    if (tx_depth >= min_depth) {
+                        ret.m_mine_trusted += credit_mine;
+                    } else {
+                        ret.m_mine_untrusted_pending += credit_mine;
+                    }
+                } else { // !is_trusted
+                    if (wtx.InMempool()) {
+                        ret.m_mine_untrusted_pending += credit_mine;
+                    } else if (wtx.isAbandoned() || wtx.isBlockConflicted() || wtx.isMempoolConflicted()) {
+                        // ignore abandoned, conflicted txs
+                        // same condition as for IsSpent()
+                    } else {
+                        ret.m_mine_nonmempool += credit_mine;
+                    }
                 }
             }
         }
