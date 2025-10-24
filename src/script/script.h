@@ -552,7 +552,7 @@ public:
 
     bool IsPayToScriptHash() const;
     bool IsPayToWitnessScriptHash() const;
-    bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
+    bool IsWitnessProgram(int& version, std::vector<unsigned char>* program = nullptr) const;
 
     bool IsPayToTaproot() const;
 

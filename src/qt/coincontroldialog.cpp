@@ -410,8 +410,7 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
         // Bytes
         CTxDestination address;
         int witnessversion = 0;
-        std::vector<unsigned char> witnessprogram;
-        if (out.txout.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram))
+        if (out.txout.scriptPubKey.IsWitnessProgram(witnessversion))
         {
             // add input skeleton bytes (outpoint, scriptSig size, nSequence)
             nBytesInputs += (32 + 4 + 1 + 4);

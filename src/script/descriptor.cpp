@@ -2564,7 +2564,7 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
     }
 
     std::vector<std::vector<unsigned char>> data;
-    TxoutType txntype = Solver(script, data);
+    TxoutType txntype = Solver(script, &data);
 
     if (txntype == TxoutType::PUBKEY && (ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH)) {
         CPubKey pubkey(data[0]);

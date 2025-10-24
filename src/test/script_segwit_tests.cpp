@@ -73,7 +73,7 @@ bool IsExpectedWitnessProgram(const CScript& script, const int expectedVersion, 
 {
     int actualVersion;
     std::vector<unsigned char> actualProgram;
-    if (!script.IsWitnessProgram(actualVersion, actualProgram)) {
+    if (!script.IsWitnessProgram(actualVersion, &actualProgram)) {
         return false;
     }
     BOOST_CHECK_EQUAL(actualVersion, expectedVersion);
@@ -85,7 +85,7 @@ bool IsNoWitnessProgram(const CScript& script)
 {
     int dummyVersion;
     std::vector<unsigned char> dummyProgram;
-    return !script.IsWitnessProgram(dummyVersion, dummyProgram);
+    return !script.IsWitnessProgram(dummyVersion, &dummyProgram);
 }
 
 } // anonymous namespace

@@ -52,7 +52,7 @@ constexpr bool IsPushdataOp(opcodetype opcode)
  * @param[out]  vSolutionsRet  Vector of parsed pubkeys and hashes
  * @return                     The script type. TxoutType::NONSTANDARD represents a failed solve.
  */
-TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned char>>& vSolutionsRet);
+TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned char>>* vSolutionsRet = nullptr);
 
 /** Generate a P2PK script for the given pubkey. */
 CScript GetScriptForRawPubKey(const CPubKey& pubkey);

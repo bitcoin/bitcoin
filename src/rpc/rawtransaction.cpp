@@ -534,7 +534,7 @@ static RPCHelpMan decodescript()
     ScriptToUniv(script, /*out=*/r, /*include_hex=*/false, /*include_address=*/true);
 
     std::vector<std::vector<unsigned char>> solutions_data;
-    const TxoutType which_type{Solver(script, solutions_data)};
+    const TxoutType which_type{Solver(script, &solutions_data)};
 
     const bool can_wrap{[&] {
         switch (which_type) {

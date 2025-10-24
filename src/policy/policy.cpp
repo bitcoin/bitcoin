@@ -44,14 +44,13 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
 
     size_t nSize = GetSerializeSize(txout);
     int witnessversion = 0;
-    std::vector<unsigned char> witnessprogram;
 
     // Note this computation is for spending a Segwit v0 P2WPKH output (a 33 bytes
     // public key + an ECDSA signature). For Segwit v1 Taproot outputs the minimum
     // satisfaction is lower (a single BIP340 signature) but this computation was
     // kept to not further reduce the dust level.
     // See discussion in https://github.com/bitcoin/bitcoin/pull/22779 for details.
-    if (txout.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
+    if (txout.scriptPubKey.IsWitnessProgram(witnessversion)) {
         // sum the sizes of the parts of a transaction input
         // with 75% segwit discount applied to the script size.
         nSize += (32 + 4 + 1 + (107 / WITNESS_SCALE_FACTOR) + 4);
@@ -79,7 +78,7 @@ std::vector<uint32_t> GetDust(const CTransaction& tx, CFeeRate dust_relay_rate)
 bool IsStandard(const CScript& scriptPubKey, TxoutType& whichType)
 {
     std::vector<std::vector<unsigned char> > vSolutions;
-    whichType = Solver(scriptPubKey, vSolutions);
+    whichType = Solver(scriptPubKey, &vSolutions);
 
     if (whichType == TxoutType::NONSTANDARD) {
         return false;
@@ -220,11 +219,10 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         return false;
     }
 
-    for (unsigned int i = 0; i < tx.vin.size(); i++) {
-        const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
+    for (const CTxIn& txin : tx.vin) {
+        const CTxOut& prev = mapInputs.AccessCoin(txin.prevout).out;
 
-        std::vector<std::vector<unsigned char> > vSolutions;
-        TxoutType whichType = Solver(prev.scriptPubKey, vSolutions);
+        TxoutType whichType = Solver(prev.scriptPubKey);
         if (whichType == TxoutType::NONSTANDARD || whichType == TxoutType::WITNESS_UNKNOWN) {
             // WITNESS_UNKNOWN failures are typically also caught with a policy
             // flag in the script interpreter, but it can be helpful to catch
@@ -234,10 +232,11 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         } else if (whichType == TxoutType::SCRIPTHASH) {
             std::vector<std::vector<unsigned char> > stack;
             // convert the scriptSig into a stack, so we can inspect the redeemScript
-            if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SigVersion::BASE))
+            if (!EvalScript(stack, txin.scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SigVersion::BASE))
                 return false;
             if (stack.empty())
                 return false;
+            //TODO: avoid the copy
             CScript subscript(stack.back().begin(), stack.back().end());
             if (subscript.GetSigOpCount(true) > MAX_P2SH_SIGOPS) {
                 return false;
@@ -253,16 +252,18 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
     if (tx.IsCoinBase())
         return true; // Coinbases are skipped
 
-    for (unsigned int i = 0; i < tx.vin.size(); i++)
+    std::vector<unsigned char> witnessprogram;
+    for (const CTxIn& txin : tx.vin)
     {
         // We don't care if witness for this input is empty, since it must not be bloated.
         // If the script is invalid without witness, it would be caught sooner or later during validation.
-        if (tx.vin[i].scriptWitness.IsNull())
+        if (txin.scriptWitness.IsNull())
             continue;
 
-        const CTxOut &prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
+        const CTxOut &prev = mapInputs.AccessCoin(txin.prevout).out;
 
         // get the scriptPubKey corresponding to this input:
+        //TODO: avoid the copy
         CScript prevScript = prev.scriptPubKey;
 
         // witness stuffing detected
@@ -276,30 +277,31 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             // If the scriptPubKey is P2SH, we try to extract the redeemScript casually by converting the scriptSig
             // into a stack. We do not check IsPushOnly nor compare the hash as these will be done later anyway.
             // If the check fails at this stage, we know that this txid must be a bad one.
-            if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SigVersion::BASE))
+            if (!EvalScript(stack, txin.scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SigVersion::BASE))
                 return false;
             if (stack.empty())
                 return false;
+            //TODO: avoid the copy
             prevScript = CScript(stack.back().begin(), stack.back().end());
             p2sh = true;
         }
 
         int witnessversion = 0;
-        std::vector<unsigned char> witnessprogram;
+        witnessprogram.clear();
 
         // Non-witness program must not be associated with any witness
-        if (!prevScript.IsWitnessProgram(witnessversion, witnessprogram))
+        if (!prevScript.IsWitnessProgram(witnessversion, &witnessprogram))
             return false;
 
         // Check P2WSH standard limits
         if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
-            if (tx.vin[i].scriptWitness.stack.back().size() > MAX_STANDARD_P2WSH_SCRIPT_SIZE)
+            if (txin.scriptWitness.stack.back().size() > MAX_STANDARD_P2WSH_SCRIPT_SIZE)
                 return false;
-            size_t sizeWitnessStack = tx.vin[i].scriptWitness.stack.size() - 1;
+            size_t sizeWitnessStack = txin.scriptWitness.stack.size() - 1;
             if (sizeWitnessStack > MAX_STANDARD_P2WSH_STACK_ITEMS)
                 return false;
             for (unsigned int j = 0; j < sizeWitnessStack; j++) {
-                if (tx.vin[i].scriptWitness.stack[j].size() > MAX_STANDARD_P2WSH_STACK_ITEM_SIZE)
+                if (txin.scriptWitness.stack[j].size() > MAX_STANDARD_P2WSH_STACK_ITEM_SIZE)
                     return false;
             }
         }
@@ -309,7 +311,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         // - No annexes
         if (witnessversion == 1 && witnessprogram.size() == WITNESS_V1_TAPROOT_SIZE && !p2sh) {
             // Taproot spend (non-P2SH-wrapped, version 1, witness program size 32; see BIP 341)
-            std::span stack{tx.vin[i].scriptWitness.stack};
+            std::span stack{txin.scriptWitness.stack};
             if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
                 // Annexes are nonstandard as long as no semantics are defined for them.
                 return false;
@@ -349,7 +351,7 @@ bool SpendsNonAnchorWitnessProg(const CTransaction& tx, const CCoinsViewCache& p
         const auto& prev_spk{prevouts.AccessCoin(txin.prevout).out.scriptPubKey};
 
         // Note this includes not-yet-defined witness programs.
-        if (prev_spk.IsWitnessProgram(version, program) && !prev_spk.IsPayToAnchor(version, program)) {
+        if (prev_spk.IsWitnessProgram(version) && !prev_spk.IsPayToAnchor()) {
             return true;
         }
 
@@ -363,8 +365,9 @@ bool SpendsNonAnchorWitnessProg(const CTransaction& tx, const CCoinsViewCache& p
                 || stack.empty()) {
                 continue;
             }
+            //TODO: avoid the copy
             const CScript redeem_script{stack.back().begin(), stack.back().end()};
-            if (redeem_script.IsWitnessProgram(version, program)) {
+            if (redeem_script.IsWitnessProgram(version)) {
                 return true;
             }
         }

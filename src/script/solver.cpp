@@ -36,20 +36,20 @@ std::string GetTxnOutputType(TxoutType t)
 static bool MatchPayToPubkey(const CScript& script, valtype& pubkey)
 {
     if (script.size() == CPubKey::SIZE + 2 && script[0] == CPubKey::SIZE && script.back() == OP_CHECKSIG) {
-        pubkey = valtype(script.begin() + 1, script.begin() + CPubKey::SIZE + 1);
+        pubkey.assign(script.begin() + 1, script.begin() + CPubKey::SIZE + 1);
         return CPubKey::ValidSize(pubkey);
     }
     if (script.size() == CPubKey::COMPRESSED_SIZE + 2 && script[0] == CPubKey::COMPRESSED_SIZE && script.back() == OP_CHECKSIG) {
-        pubkey = valtype(script.begin() + 1, script.begin() + CPubKey::COMPRESSED_SIZE + 1);
+        pubkey.assign(script.begin() + 1, script.begin() + CPubKey::COMPRESSED_SIZE + 1);
         return CPubKey::ValidSize(pubkey);
     }
     return false;
 }
 
-static bool MatchPayToPubkeyHash(const CScript& script, valtype& pubkeyhash)
+static bool MatchPayToPubkeyHash(const CScript& script, valtype* pubkeyhash = nullptr)
 {
     if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160 && script[2] == 20 && script[23] == OP_EQUALVERIFY && script[24] == OP_CHECKSIG) {
-        pubkeyhash = valtype(script.begin () + 3, script.begin() + 23);
+        if (pubkeyhash) pubkeyhash->assign(script.begin () + 3, script.begin() + 23);
         return true;
     }
     return false;
@@ -82,7 +82,7 @@ static std::optional<int> GetScriptNumber(opcodetype opcode, valtype data, int m
     return count;
 }
 
-static bool MatchMultisig(const CScript& script, int& required_sigs, std::vector<valtype>& pubkeys)
+static bool MatchMultisig(const CScript& script, int& required_sigs, std::vector<valtype>* pubkeys = nullptr)
 {
     opcodetype opcode;
     valtype data;
@@ -95,11 +95,11 @@ static bool MatchMultisig(const CScript& script, int& required_sigs, std::vector
     if (!req_sigs) return false;
     required_sigs = *req_sigs;
     while (script.GetOp(it, opcode, data) && CPubKey::ValidSize(data)) {
-        pubkeys.emplace_back(std::move(data));
+        if (pubkeys) pubkeys->emplace_back(std::move(data));
     }
     auto num_keys = GetScriptNumber(opcode, data, required_sigs, MAX_PUBKEYS_PER_MULTISIG);
     if (!num_keys) return false;
-    if (pubkeys.size() != static_cast<unsigned long>(*num_keys)) return false;
+    if (pubkeys && pubkeys->size() != static_cast<unsigned long>(*num_keys)) return false;
 
     return (it + 1 == script.end());
 }
@@ -138,40 +138,41 @@ std::optional<std::pair<int, std::vector<std::span<const unsigned char>>>> Match
     return std::pair{*threshold, std::move(keyspans)};
 }
 
-TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned char>>& vSolutionsRet)
+TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned char>>* vSolutionsRet)
 {
-    vSolutionsRet.clear();
+    if (vSolutionsRet) vSolutionsRet->clear();
 
     // Shortcut for pay-to-script-hash, which are more constrained than the other types:
     // it is always OP_HASH160 20 [20 byte hash] OP_EQUAL
     if (scriptPubKey.IsPayToScriptHash())
     {
-        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
-        vSolutionsRet.push_back(hashBytes);
+        if (vSolutionsRet) vSolutionsRet->emplace_back(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
         return TxoutType::SCRIPTHASH;
     }
 
     int witnessversion;
     std::vector<unsigned char> witnessprogram;
-    if (scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
+    if (scriptPubKey.IsWitnessProgram(witnessversion, &witnessprogram)) {
         if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_KEYHASH_SIZE) {
-            vSolutionsRet.push_back(std::move(witnessprogram));
+            if (vSolutionsRet) vSolutionsRet->push_back(std::move(witnessprogram));
             return TxoutType::WITNESS_V0_KEYHASH;
         }
         if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
-            vSolutionsRet.push_back(std::move(witnessprogram));
+            if (vSolutionsRet) vSolutionsRet->push_back(std::move(witnessprogram));
             return TxoutType::WITNESS_V0_SCRIPTHASH;
         }
         if (witnessversion == 1 && witnessprogram.size() == WITNESS_V1_TAPROOT_SIZE) {
-            vSolutionsRet.push_back(std::move(witnessprogram));
+            if (vSolutionsRet) vSolutionsRet->push_back(std::move(witnessprogram));
             return TxoutType::WITNESS_V1_TAPROOT;
         }
         if (scriptPubKey.IsPayToAnchor()) {
             return TxoutType::ANCHOR;
         }
         if (witnessversion != 0) {
-            vSolutionsRet.push_back(std::vector<unsigned char>{(unsigned char)witnessversion});
-            vSolutionsRet.push_back(std::move(witnessprogram));
+            if (vSolutionsRet) {
+                vSolutionsRet->emplace_back(1, static_cast<unsigned char>(witnessversion));
+                vSolutionsRet->push_back(std::move(witnessprogram));
+            }
             return TxoutType::WITNESS_UNKNOWN;
         }
         return TxoutType::NONSTANDARD;
@@ -188,25 +189,27 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
 
     std::vector<unsigned char> data;
     if (MatchPayToPubkey(scriptPubKey, data)) {
-        vSolutionsRet.push_back(std::move(data));
+        if (vSolutionsRet) vSolutionsRet->push_back(std::move(data));
         return TxoutType::PUBKEY;
     }
 
-    if (MatchPayToPubkeyHash(scriptPubKey, data)) {
-        vSolutionsRet.push_back(std::move(data));
+    if (MatchPayToPubkeyHash(scriptPubKey, vSolutionsRet ? &data : nullptr)) {
+        if (vSolutionsRet) vSolutionsRet->push_back(std::move(data));
         return TxoutType::PUBKEYHASH;
     }
 
     int required;
     std::vector<std::vector<unsigned char>> keys;
-    if (MatchMultisig(scriptPubKey, required, keys)) {
-        vSolutionsRet.push_back({static_cast<unsigned char>(required)}); // safe as required is in range 1..20
-        vSolutionsRet.insert(vSolutionsRet.end(), keys.begin(), keys.end());
-        vSolutionsRet.push_back({static_cast<unsigned char>(keys.size())}); // safe as size is in range 1..20
+    if (MatchMultisig(scriptPubKey, required, vSolutionsRet ? &keys : nullptr)) {
+        if (vSolutionsRet) {
+            vSolutionsRet->emplace_back(1, static_cast<unsigned char>(required)); // safe as required is in range 1..20
+            vSolutionsRet->insert(vSolutionsRet->end(), keys.begin(), keys.end());
+            vSolutionsRet->emplace_back(1, static_cast<unsigned char>(keys.size())); // safe as size is in range 1..20
+        }
         return TxoutType::MULTISIG;
     }
 
-    vSolutionsRet.clear();
+    if (vSolutionsRet) vSolutionsRet->clear(); //TODO: remove: redundant
     return TxoutType::NONSTANDARD;
 }
 

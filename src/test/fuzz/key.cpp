@@ -160,13 +160,13 @@ FUZZ_TARGET(key, .init = initialize_key)
         assert(which_type_tx_multisig == TxoutType::MULTISIG);
 
         std::vector<std::vector<unsigned char>> v_solutions_ret_tx_pubkey;
-        const TxoutType outtype_tx_pubkey = Solver(tx_pubkey_script, v_solutions_ret_tx_pubkey);
+        const TxoutType outtype_tx_pubkey = Solver(tx_pubkey_script, &v_solutions_ret_tx_pubkey);
         assert(outtype_tx_pubkey == TxoutType::PUBKEY);
         assert(v_solutions_ret_tx_pubkey.size() == 1);
         assert(v_solutions_ret_tx_pubkey[0].size() == 33);
 
         std::vector<std::vector<unsigned char>> v_solutions_ret_tx_multisig;
-        const TxoutType outtype_tx_multisig = Solver(tx_multisig_script, v_solutions_ret_tx_multisig);
+        const TxoutType outtype_tx_multisig = Solver(tx_multisig_script, &v_solutions_ret_tx_multisig);
         assert(outtype_tx_multisig == TxoutType::MULTISIG);
         assert(v_solutions_ret_tx_multisig.size() == 3);
         assert(v_solutions_ret_tx_multisig[0].size() == 1);
