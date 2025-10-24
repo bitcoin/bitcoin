@@ -62,7 +62,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   docker image prune --force --filter "label=$CI_IMAGE_LABEL"
 
   # shellcheck disable=SC2086
-  CI_CONTAINER_ID=$(docker run --cap-add LINUX_IMMUTABLE $CI_CONTAINER_CAP --rm --interactive --detach --tty \
+  CI_CONTAINER_ID=$(docker run --cap-add LINUX_IMMUTABLE --cap-add NET_RAW $CI_CONTAINER_CAP --rm --interactive --detach --tty \
                   --mount "type=bind,src=$BASE_READ_ONLY_DIR,dst=$BASE_READ_ONLY_DIR,readonly" \
                   --mount "${CI_CCACHE_MOUNT}" \
                   --mount "${CI_DEPENDS_MOUNT}" \
