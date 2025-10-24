@@ -63,6 +63,7 @@
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <protocol.h>
+#include <regex>
 #include <rpc/blockchain.h>
 #include <rpc/register.h>
 #include <rpc/server.h>
@@ -100,6 +101,7 @@
 #include <cstdio>
 #include <fstream>
 #include <functional>
+#include <ranges>
 #include <set>
 #include <string>
 #include <thread>
@@ -520,6 +522,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
             "(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >=%u = automatically prune block files to stay under the specified target size in MiB)", MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-reindex", "If enabled, wipe chain state and block index, and rebuild them from blk*.dat files on disk. Also wipe and rebuild other optional indexes that are active. If an assumeutxo snapshot was loaded, its chainstate will be wiped as well. The snapshot can then be reloaded via RPC.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-reindex-chainstate", "If enabled, wipe chain state, and rebuild it from blk*.dat files on disk. If an assumeutxo snapshot was loaded, its chainstate will be wiped as well. The snapshot can then be reloaded via RPC.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-reobfuscate-blocks", "Reobfuscate existing blk*/rev* files. If a 16 character hexadecimal value is provided, it's used as the new XOR key; otherwise, the value is treated as a boolean and a random key is generated. This operation is resumable.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-settings=<file>", strprintf("Specify path to dynamic settings data file. Can be disabled with -nosettings. File is written at runtime and not meant to be edited by users (use %s instead for custom settings). Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME, BITCOIN_SETTINGS_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #if HAVE_SYSTEM
     argsman.AddArg("-startupnotify=<cmd>", "Execute command on startup.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -1263,6 +1266,126 @@ static std::optional<CService> CheckBindingConflicts(const CConnman::Options& co
     return std::nullopt;
 }
 
+static bool ObfuscateBlocks(
+    const util::SignalInterrupt& interrupt,
+    kernel::Notifications& notifications,
+    std::string_view suffix,
+    const fs::path& blocks_dir,
+    const fs::path& xor_dat,
+    const fs::path& xor_new,
+    const std::span<const std::byte> requested_key
+) {
+    // Read all block and undo file names
+    auto collect_block_files{[&blocks_dir] {
+        std::vector<std::pair<std::string, fs::path>> files;
+        const std::regex dat_filename_pattern{R"(^(?:blk|rev)(\d+)\.dat$)", std::regex::optimize};
+        for (const auto& entry : fs::directory_iterator(blocks_dir)) {
+            const auto name{fs::PathToString(entry.path().filename())};
+            if (std::smatch index; entry.is_regular_file() && std::regex_match(name, index, dat_filename_pattern)) {
+                files.emplace_back(index[1], entry.path());
+            }
+        }
+        std::ranges::sort(files); // sort by index ascending, grouping blk/rev pairs together
+        return files;
+    }};
+
+    auto is_valid_key_file{[&](const fs::path& file) -> bool {
+        return fs::exists(file) && fs::file_size(file) == Obfuscation::KEY_SIZE;
+    }};
+    auto write_key{[&](const fs::path& file, const std::array<std::byte, Obfuscation::KEY_SIZE>& default_bytes) -> bool {
+        AutoFile autofile{fsbridge::fopen(file, "wb")};
+        autofile << default_bytes;
+        return autofile.Commit() && !autofile.fclose();
+    }};
+    auto read_key{[&](const fs::path& file) -> std::optional<Obfuscation> {
+        std::array<std::byte, Obfuscation::KEY_SIZE> obfuscation{};
+        AutoFile{fsbridge::fopen(file, "rb")} >> obfuscation;
+        return Obfuscation{obfuscation};
+    }};
+
+    // Create delta obfuscation key by combining the old ^ new so that we only have to iterate once
+    auto create_delta_obfuscation{[&]() -> std::optional<Obfuscation> {
+        if (is_valid_key_file(xor_new) && !is_valid_key_file(xor_dat)) return std::nullopt; // migration was interrupted
+
+        // Ensure old key exists
+        if (!is_valid_key_file(xor_dat) && !write_key(xor_dat, {})) return std::nullopt;
+        const auto old_obfuscation{read_key(xor_dat)};
+        LogInfo("[obfuscate] old key: %s", old_obfuscation->HexKey());
+
+        // Prepare new key
+        std::array<std::byte, Obfuscation::KEY_SIZE> new_bytes{};
+        if (requested_key.size() == Obfuscation::KEY_SIZE) {
+            std::copy_n(requested_key.begin(), Obfuscation::KEY_SIZE, new_bytes.begin());
+        } else {
+            FastRandomContext{}.fillrand(new_bytes);
+        }
+        if (!is_valid_key_file(xor_new) && !write_key(xor_new, new_bytes)) return std::nullopt;
+
+        const auto new_obfuscation{read_key(xor_new)};
+        LogInfo("[obfuscate] new key: %s", new_obfuscation->HexKey());
+
+        // Combine keys for single pass reobfuscation
+        std::array<std::byte, Obfuscation::KEY_SIZE> delta_bytes{};
+        (*old_obfuscation)(delta_bytes);
+        (*new_obfuscation)(delta_bytes);
+        return Obfuscation{delta_bytes};
+    }};
+
+    auto migrate_single_blockfile{[](const fs::path& file, std::string_view suffix, const Obfuscation& delta_obfuscation) -> bool {
+        AutoFile old_blocks{fsbridge::fopen(file, "rb"), delta_obfuscation}; // deobfuscate & reobfuscate with a single combined key
+        AutoFile new_blocks{fsbridge::fopen(file + suffix, "wb")};
+
+        std::vector<std::byte> chunk{2 * MAX_BLOCK_SERIALIZED_SIZE};
+        for (size_t n{0}; (n = old_blocks.detail_fread(chunk)); ) {
+            new_blocks.write_buffer(std::span{chunk}.first(n));
+        }
+        if (old_blocks.fclose() || !new_blocks.Commit() || new_blocks.fclose()) return false;
+
+        fs::last_write_time(file + suffix, fs::last_write_time(file)); // preserve timestamp
+        Assert(RemoveOver(file));
+        return true;
+    }};
+
+    // Start reobfuscation
+    const auto start{SteadyClock::now()};
+
+    if (const auto delta_obfuscation{create_delta_obfuscation()}; delta_obfuscation) {
+        const auto& files{collect_block_files()};
+        LogInfo("[obfuscate] Reobfuscating %zu block and undo files", files.size());
+        notifications.progress(_("Reobfuscating blocks…"), 0, false);
+        // Migrate undo and block files atomically
+        double progress{0};
+        for (const auto& file : files | std::views::values) {
+            if (interrupt) return false;
+            if (!migrate_single_blockfile(file, suffix, *delta_obfuscation)) return false;
+
+            const auto new_progress{progress + 100.0 / files.size()};
+            if (auto percentage{int(new_progress)}; percentage > int(progress)) {
+                LogInfo("[obfuscate] Migrating %s - %d%% done", fs::PathToString(file.filename()), percentage);
+                notifications.progress(_("Reobfuscating blocks…"), percentage, false);
+            }
+            progress = new_progress;
+        }
+        notifications.progress(_("Reobfuscating blocks…"), 100, false);
+        Assert(RemoveOver(xor_dat));
+    }
+
+    // After migration rename new files to old names and use the new obfuscation key
+    for (const auto& entry : fs::directory_iterator(blocks_dir)) {
+        const auto filename{fs::PathToString(entry.path().filename())};
+        if (entry.path() != xor_new && entry.is_regular_file() && filename.ends_with(suffix)) {
+            const auto destination{entry.path().parent_path() / util::RemoveSuffixView(filename, suffix)};
+            Assert(RenameOver(entry.path(), destination));
+        }
+    }
+    Assert(RenameOver(xor_new, xor_dat)); // last step, signaling completion
+    DirectoryCommit(blocks_dir);
+
+    LogInfo("[obfuscate] Block and Undo file migration finished in %is", Ticks<std::chrono::seconds>(SteadyClock::now() - start));
+
+    return true;
+}
+
 // A GUI user may opt to retry once with do_reindex set if there is a failure during chainstate initialization.
 // The function therefore has to support re-entry.
 static ChainstateLoadResult InitAndLoadChainstate(
@@ -1316,6 +1439,29 @@ static ChainstateLoadResult InitAndLoadChainstate(
         },
     };
     Assert(ApplyArgsManOptions(args, blockman_opts)); // no error can happen, already checked in AppInitParameterInteraction
+
+    {
+        // Has to be run before chainman creation
+        constexpr auto block_obfuscation_suffix{".reobfuscated"};
+        const auto blocks_dir{blockman_opts.blocks_dir};
+        const auto xor_dat{blocks_dir / "xor.dat"};
+        const auto xor_new{xor_dat + block_obfuscation_suffix};
+
+        std::vector<std::byte> requested_key{};
+        if (const auto arg{args.GetArg("-reobfuscate-blocks")}) {
+            if (arg->size() == 2 * Obfuscation::KEY_SIZE) {
+                requested_key = ParseHex<std::byte>(arg.value());
+            } else if (*arg != "0") {
+                requested_key = FastRandomContext{}.randbytes<std::byte>(Obfuscation::KEY_SIZE);
+            }
+        }
+        // reobfuscate if requested or if resuming a previous run
+        if (requested_key.size() || fs::exists(xor_new)) {
+            if (!ObfuscateBlocks(*g_shutdown, chainman_opts.notifications, block_obfuscation_suffix, blocks_dir, xor_dat, xor_new, requested_key)) {
+                return {ChainstateLoadStatus::FAILURE, _("Block obfuscation failed")};
+            }
+        }
+    }
 
     // Creating the chainstate manager internally creates a BlockManager, opens
     // the blocks tree db, and wipes existing block files in case of a reindex.
