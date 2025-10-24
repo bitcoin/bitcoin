@@ -204,6 +204,9 @@ public:
  * and timestamp, but re-mines the genesis header at minimal difficulty to
  * accelerate validation. It also customizes pow spacing, difficulty retarget
  * interval, message start bytes, default port and address encoding.
+ * parameters. The network keeps the original 2009 mainnet genesis block but
+ * differs in pow spacing, difficulty retarget interval, message start bytes,
+ * default port and address encoding.
  */
 class CTestNetParams : public CChainParams {
 public:
@@ -222,6 +225,7 @@ public:
         consensus.SegwitHeight = 834624; // 00000000002b980fcd729daaa248fd9316a5200e9b367f4ff2c42453e84201ca
         consensus.MinBIP9WarningHeight = 836640; // segwit activation height + miner confirmation window
         consensus.powLimit = uint256{"7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
+        consensus.powLimit = uint256{"00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
         consensus.nPowTargetTimespan = 9664; // 302 blocks
         consensus.nPowTargetSpacing = 32; // 32 seconds per block
         consensus.fPowAllowMinDifficultyBlocks = true;
@@ -257,6 +261,9 @@ public:
         genesis = CreateGenesisBlock(1231006505, 0, 0x207fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256{"78a007539d547f74482668fa8adf31be6c437796a0d68dbfe4e5169afee99310"});
+        genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN);
+        consensus.hashGenesisBlock = genesis.GetHash();
+        assert(consensus.hashGenesisBlock == uint256{"000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"});
         assert(genesis.hashMerkleRoot == uint256{"4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"});
 
         vFixedSeeds.clear();
