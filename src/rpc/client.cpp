@@ -37,6 +37,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "generatetoaddress", 2, "maxtries" },
     { "generatetodescriptor", 0, "num_blocks" },
     { "generatetodescriptor", 2, "maxtries" },
+    { "generateblock", 0, "outputs", /*also_string=*/true},
     { "generateblock", 1, "transactions" },
     { "generateblock", 2, "submit" },
     { "getnetworkhashps", 0, "nblocks" },
