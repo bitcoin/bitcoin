@@ -59,7 +59,7 @@ class WalletGroupTest(BitcoinTestFramework):
         #   given address, and leave the rest
         self.log.info("Test sending transactions picks one UTXO group and leaves the rest")
         txid1 = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 0.2)
-        tx1 = self.nodes[1].getrawtransaction(txid1, True)
+        tx1 = self.nodes[1].getrawtransaction(txid1, 1)
         # txid1 should have 1 input and 2 outputs
         assert_equal(1, len(tx1["vin"]))
         assert_equal(2, len(tx1["vout"]))
@@ -70,7 +70,7 @@ class WalletGroupTest(BitcoinTestFramework):
         assert_approx(v[1], vexp=0.3, vspan=0.0001)
 
         txid2 = self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 0.2)
-        tx2 = self.nodes[2].getrawtransaction(txid2, True)
+        tx2 = self.nodes[2].getrawtransaction(txid2, 1)
         # txid2 should have 2 inputs and 2 outputs
         assert_equal(2, len(tx2["vin"]))
         assert_equal(2, len(tx2["vout"]))
@@ -98,7 +98,7 @@ class WalletGroupTest(BitcoinTestFramework):
         # B0 + B1 or C0 + C1, because this avoids partial spends while not being
         # detrimental to transaction cost
         txid3 = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1.4)
-        tx3 = self.nodes[1].getrawtransaction(txid3, True)
+        tx3 = self.nodes[1].getrawtransaction(txid3, 1)
         # tx3 should have 2 inputs and 2 outputs
         assert_equal(2, len(tx3["vin"]))
         assert_equal(2, len(tx3["vout"]))
@@ -126,7 +126,7 @@ class WalletGroupTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1)
         with self.nodes[3].assert_debug_log([f'Fee non-grouped = {tx4_ungrouped_fee}, grouped = {tx4_grouped_fee}, using grouped']):
             txid4 = self.nodes[3].sendtoaddress(self.nodes[0].getnewaddress(), 0.1)
-        tx4 = self.nodes[3].getrawtransaction(txid4, True)
+        tx4 = self.nodes[3].getrawtransaction(txid4, 1)
         # tx4 should have 2 inputs and 2 outputs although one output would
         # have been enough and the transaction caused higher fees
         assert_equal(2, len(tx4["vin"]))
@@ -137,7 +137,7 @@ class WalletGroupTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1)
         with self.nodes[3].assert_debug_log([f'Fee non-grouped = {tx5_6_ungrouped_fee}, grouped = {tx5_6_grouped_fee}, using non-grouped']):
             txid5 = self.nodes[3].sendtoaddress(self.nodes[0].getnewaddress(), 2.95)
-        tx5 = self.nodes[3].getrawtransaction(txid5, True)
+        tx5 = self.nodes[3].getrawtransaction(txid5, 1)
         # tx5 should have 3 inputs (1.0, 1.0, 1.0) and 2 outputs
         assert_equal(3, len(tx5["vin"]))
         assert_equal(2, len(tx5["vout"]))
@@ -150,7 +150,7 @@ class WalletGroupTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1)
         with self.nodes[4].assert_debug_log([f'Fee non-grouped = {tx5_6_ungrouped_fee}, grouped = {tx5_6_grouped_fee}, using grouped']):
             txid6 = self.nodes[4].sendtoaddress(self.nodes[0].getnewaddress(), 2.95)
-        tx6 = self.nodes[4].getrawtransaction(txid6, True)
+        tx6 = self.nodes[4].getrawtransaction(txid6, 1)
         # tx6 should have 5 inputs and 2 outputs
         assert_equal(5, len(tx6["vin"]))
         assert_equal(2, len(tx6["vout"]))
