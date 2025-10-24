@@ -35,6 +35,7 @@ from test_framework.messages import (
     hash256,
 )
 from test_framework.script import (
+    LEAF_VERSION_TAPSCRIPT,
     CScript,
     OP_NOP,
     OP_RETURN,
@@ -436,7 +437,7 @@ def getnewdestination(address_type='bech32m'):
         scriptpubkey = key_to_p2wpkh_script(pubkey)
         address = key_to_p2wpkh(pubkey)
     elif address_type == 'bech32m':
-        tap = taproot_construct(compute_xonly_pubkey(key.get_bytes())[0])
+        tap = taproot_construct(compute_xonly_pubkey(key.get_bytes())[0], LEAF_VERSION_TAPSCRIPT)
         pubkey = tap.output_pubkey
         scriptpubkey = tap.scriptPubKey
         address = output_key_to_p2tr(pubkey)
