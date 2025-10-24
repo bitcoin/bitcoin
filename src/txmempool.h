@@ -630,13 +630,13 @@ public:
     bool exists(const Txid& txid) const
     {
         LOCK(cs);
-        return (mapTx.count(txid) != 0);
+        return mapTx.contains(txid);
     }
 
     bool exists(const Wtxid& wtxid) const
     {
         LOCK(cs);
-        return (mapTx.get<index_by_wtxid>().count(wtxid) != 0);
+        return mapTx.get<index_by_wtxid>().contains(wtxid);
     }
 
     const CTxMemPoolEntry* GetEntry(const Txid& txid) const LIFETIMEBOUND EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -688,7 +688,7 @@ public:
     bool IsUnbroadcastTx(const Txid& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
         AssertLockHeld(cs);
-        return m_unbroadcast_txids.count(txid) != 0;
+        return m_unbroadcast_txids.contains(txid);
     }
 
     /** Guards this internal counter for external reporting */
