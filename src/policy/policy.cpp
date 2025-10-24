@@ -349,7 +349,7 @@ bool SpendsNonAnchorWitnessProg(const CTransaction& tx, const CCoinsViewCache& p
         const auto& prev_spk{prevouts.AccessCoin(txin.prevout).out.scriptPubKey};
 
         // Note this includes not-yet-defined witness programs.
-        if (prev_spk.IsWitnessProgram(version, &program) && !prev_spk.IsPayToAnchor(version, program)) {
+        if (prev_spk.IsWitnessProgram(version) && !prev_spk.IsPayToAnchor()) {
             return true;
         }
 
