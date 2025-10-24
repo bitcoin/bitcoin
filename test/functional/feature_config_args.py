@@ -463,9 +463,14 @@ class ConfArgsTest(BitcoinTestFramework):
     def test_acceptstalefeeestimates_arg_support(self):
         self.log.info("Test -acceptstalefeeestimates option support")
         conf_file = self.nodes[0].datadir_path / "bitcoin.conf"
-        for chain, chain_name in {("main", ""), ("test", "zhaolunet"), ("signet", "signet"), ("testnet4", "testnet4")}:
-            util.write_config(conf_file, n=0, chain=chain_name, extra_config='acceptstalefeeestimates=1\n')
-            self.nodes[0].assert_start_raises_init_error(expected_msg=f'Error: acceptstalefeeestimates is not supported on {chain} chain.')
+        for chain_display, chain_config in [
+            ("main", ""),
+            ("zhaolunet", "zhaolunet"),
+            ("signet", "signet"),
+            ("testnet4", "testnet4"),
+        ]:
+            util.write_config(conf_file, n=0, chain=chain_config, extra_config='acceptstalefeeestimates=1\n')
+            self.nodes[0].assert_start_raises_init_error(expected_msg=f'Error: acceptstalefeeestimates is not supported on {chain_display} chain.')
         util.write_config(conf_file, n=0, chain="regtest")  # Reset to regtest
 
     def test_zhaolunet_info_msg(self):
