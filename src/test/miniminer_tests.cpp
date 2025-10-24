@@ -448,14 +448,25 @@ BOOST_FIXTURE_TEST_CASE(miniminer_overlap, TestChain100Setup)
     BOOST_CHECK(tx2_feerate > tx3_feerate);
     const auto tx3_anc_feerate = CFeeRate(low_fee + med_fee + high_fee + high_fee, tx_vsizes[0] + tx_vsizes[1] + tx_vsizes[2] + tx_vsizes[3]);
     const auto& tx3_entry{*Assert(pool.GetEntry(tx3->GetHash()))};
-    BOOST_CHECK(tx3_anc_feerate == CFeeRate(tx3_entry.GetModFeesWithAncestors(), tx3_entry.GetSizeWithAncestors()));
+
+    // Check that ancestor feerate is calculated correctly.
+    size_t dummy_count{0};
+    CAmount mod_fees{0};
+    size_t ancestor_vsize{0};
+    pool.CalculateAncestorData(tx3_entry, dummy_count, ancestor_vsize, mod_fees);
+    BOOST_CHECK(tx3_anc_feerate == CFeeRate(mod_fees, ancestor_vsize));
+
     const auto tx4_feerate = CFeeRate(high_fee, tx_vsizes[4]);
     const auto tx6_anc_feerate = CFeeRate(high_fee + low_fee + med_fee, tx_vsizes[4] + tx_vsizes[5] + tx_vsizes[6]);
     const auto& tx6_entry{*Assert(pool.GetEntry(tx6->GetHash()))};
-    BOOST_CHECK(tx6_anc_feerate == CFeeRate(tx6_entry.GetModFeesWithAncestors(), tx6_entry.GetSizeWithAncestors()));
+
+    pool.CalculateAncestorData(tx6_entry, dummy_count, ancestor_vsize, mod_fees);
+    BOOST_CHECK(tx6_anc_feerate == CFeeRate(mod_fees, ancestor_vsize));
     const auto tx7_anc_feerate = CFeeRate(high_fee + low_fee + high_fee, tx_vsizes[4] + tx_vsizes[5] + tx_vsizes[7]);
     const auto& tx7_entry{*Assert(pool.GetEntry(tx7->GetHash()))};
-    BOOST_CHECK(tx7_anc_feerate == CFeeRate(tx7_entry.GetModFeesWithAncestors(), tx7_entry.GetSizeWithAncestors()));
+
+    pool.CalculateAncestorData(tx7_entry, dummy_count, ancestor_vsize, mod_fees);
+    BOOST_CHECK(tx7_anc_feerate == CFeeRate(mod_fees, ancestor_vsize));
     BOOST_CHECK(tx4_feerate > tx6_anc_feerate);
     BOOST_CHECK(tx4_feerate > tx7_anc_feerate);
 
@@ -590,17 +601,23 @@ BOOST_FIXTURE_TEST_CASE(calculate_cluster, TestChain100Setup)
     CTxMemPool& pool = *Assert(m_node.mempool);
     LOCK2(cs_main, pool.cs);
 
-    // Add chain of size 500
-    TestMemPoolEntryHelper entry;
+    // Add 500 transactions in 10 clusters
+    std::vector<Txid> last_txs;
     std::vector<Txid> chain_txids;
     auto& lasttx = m_coinbase_txns[0];
-    for (auto i{0}; i < 500; ++i) {
-        const auto tx = make_tx({COutPoint{lasttx->GetHash(), 0}}, /*num_outputs=*/1);
-        AddToMempool(pool, entry.Fee(CENT).FromTx(tx));
-        chain_txids.push_back(tx->GetHash());
-        lasttx = tx;
+    TestMemPoolEntryHelper entry;
+    for (int cluster_count=0; cluster_count < 10; ++cluster_count) {
+        // Add chain of size 50
+        lasttx = m_coinbase_txns[cluster_count];
+        for (auto i{0}; i < 50; ++i) {
+            const auto tx = make_tx({COutPoint{lasttx->GetHash(), 0}}, /*num_outputs=*/1);
+            AddToMempool(pool, entry.Fee(CENT).FromTx(tx));
+            chain_txids.push_back(tx->GetHash());
+            lasttx = tx;
+        }
+        last_txs.emplace_back(lasttx->GetHash());
     }
-    const auto cluster_500tx = pool.GatherClusters({lasttx->GetHash()});
+    const auto cluster_500tx = pool.GatherClusters(last_txs);
     CTxMemPool::setEntries cluster_500tx_set{cluster_500tx.begin(), cluster_500tx.end()};
     BOOST_CHECK_EQUAL(cluster_500tx.size(), cluster_500tx_set.size());
     const auto vec_iters_500 = pool.GetIterVec(chain_txids);
@@ -609,29 +626,29 @@ BOOST_FIXTURE_TEST_CASE(calculate_cluster, TestChain100Setup)
     // GatherClusters stops at 500 transactions.
     const auto tx_501 = make_tx({COutPoint{lasttx->GetHash(), 0}}, /*num_outputs=*/1);
     AddToMempool(pool, entry.Fee(CENT).FromTx(tx_501));
-    const auto cluster_501 = pool.GatherClusters({tx_501->GetHash()});
+    const auto cluster_501 = pool.GatherClusters(last_txs);
     BOOST_CHECK_EQUAL(cluster_501.size(), 0);
 
     /* Zig Zag cluster:
-     * txp0     txp1     txp2    ...  txp48  txp49
+     * txp0     txp1     txp2    ...  txp30  txp31
      *    \    /    \   /   \            \   /
-     *     txc0     txc1    txc2  ...    txc48
+     *     txc0     txc1    txc2  ...    txc30
      * Note that each transaction's ancestor size is 1 or 3, and each descendant size is 1, 2 or 3.
      * However, all of these transactions are in the same cluster. */
     std::vector<Txid> zigzag_txids;
-    for (auto p{0}; p < 50; ++p) {
+    for (auto p{0}; p < 32; ++p) {
         const auto txp = make_tx({COutPoint{Txid::FromUint256(GetRandHash()), 0}}, /*num_outputs=*/2);
         AddToMempool(pool, entry.Fee(CENT).FromTx(txp));
         zigzag_txids.push_back(txp->GetHash());
     }
-    for (auto c{0}; c < 49; ++c) {
+    for (auto c{0}; c < 31; ++c) {
         const auto txc = make_tx({COutPoint{zigzag_txids[c], 1}, COutPoint{zigzag_txids[c+1], 0}}, /*num_outputs=*/1);
         AddToMempool(pool, entry.Fee(CENT).FromTx(txc));
         zigzag_txids.push_back(txc->GetHash());
     }
     const auto vec_iters_zigzag = pool.GetIterVec(zigzag_txids);
     // It doesn't matter which tx we calculate cluster for, everybody is in it.
-    const std::vector<size_t> indices{0, 22, 72, zigzag_txids.size() - 1};
+    const std::vector<size_t> indices{0, 22, 52, zigzag_txids.size() - 1};
     for (const auto index : indices) {
         const auto cluster = pool.GatherClusters({zigzag_txids[index]});
         BOOST_CHECK_EQUAL(cluster.size(), zigzag_txids.size());
