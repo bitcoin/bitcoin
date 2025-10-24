@@ -14,6 +14,7 @@ from test_framework.messages import (
     msg_cmpctblock,
     msg_block,
     msg_blocktxn,
+    msg_headers,
     HeaderAndShortIDs,
 )
 from test_framework.test_framework import BitcoinTestFramework
@@ -56,6 +57,10 @@ class MutatedBlocksTest(BitcoinTestFramework):
         # version on the self-transfer.
         mutated_block = copy.deepcopy(block)
         mutated_block.vtx[1].version = 4
+
+        # Send block header through the honest relayer
+        honest_relayer.send_without_ping(msg_headers([block]))
+        honest_relayer.wait_for_getdata([block.hash_int], timeout=30)
 
         # Announce the new block via a compact block through the honest relayer
         cmpctblock = HeaderAndShortIDs()
