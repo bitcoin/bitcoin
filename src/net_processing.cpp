@@ -1393,17 +1393,16 @@ void PeerManagerImpl::FindNextBlocksToDownload(const Peer& peer, unsigned int co
         return;
     }
 
-    // Bootstrap quickly by guessing a parent of our best tip is the forking point.
-    // Guessing wrong in either direction is not a problem.
-    // Also reset pindexLastCommonBlock after a snapshot was loaded, so that blocks after the snapshot will be prioritised for download.
+    // Determine the forking point between the peer's chain and our chain:
+    // pindexLastCommonBlock is required to be an ancestor of pindexBestKnownBlock, and will be used as a starting point.
+    // It is being set to the fork point between the peer's best known block and the current tip, unless it is already set to
+    // an ancestor with more work than the fork point.
+    auto fork_point = LastCommonAncestor(state->pindexBestKnownBlock, m_chainman.ActiveTip());
     if (state->pindexLastCommonBlock == nullptr ||
-        (snap_base && state->pindexLastCommonBlock->nHeight < snap_base->nHeight)) {
-        state->pindexLastCommonBlock = m_chainman.ActiveChain()[std::min(state->pindexBestKnownBlock->nHeight, m_chainman.ActiveChain().Height())];
+        fork_point->nChainWork > state->pindexLastCommonBlock->nChainWork ||
+        state->pindexBestKnownBlock->GetAncestor(state->pindexLastCommonBlock->nHeight) != state->pindexLastCommonBlock) {
+        state->pindexLastCommonBlock = fork_point;
     }
-
-    // If the peer reorganized, our previous pindexLastCommonBlock may not be an ancestor
-    // of its current tip anymore. Go back enough to fix that.
-    state->pindexLastCommonBlock = LastCommonAncestor(state->pindexLastCommonBlock, state->pindexBestKnownBlock);
     if (state->pindexLastCommonBlock == state->pindexBestKnownBlock)
         return;
 
