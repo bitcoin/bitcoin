@@ -129,13 +129,13 @@ int main(int argc, char* argv[])
     ChainstateManager chainman{interrupt, chainman_opts, blockman_opts};
 
     node::ChainstateLoadOptions options;
-    auto [status, error] = node::LoadChainstate(chainman, cache_sizes, options);
-    if (status != node::ChainstateLoadStatus::SUCCESS) {
+    auto load_result{node::LoadChainstate(chainman, cache_sizes, options)};
+    if (!load_result) {
         std::cerr << "Failed to load Chain state from your datadir." << std::endl;
         goto epilogue;
     } else {
-        std::tie(status, error) = node::VerifyLoadedChainstate(chainman, options);
-        if (status != node::ChainstateLoadStatus::SUCCESS) {
+        auto verify_result{node::VerifyLoadedChainstate(chainman, options)};
+        if (!verify_result) {
             std::cerr << "Failed to verify loaded Chain state from your datadir." << std::endl;
             goto epilogue;
         }
