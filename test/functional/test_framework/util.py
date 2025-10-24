@@ -5,6 +5,7 @@
 """Helpful routines for regression testing."""
 
 from base64 import b64encode
+from datetime import datetime, timezone
 from decimal import Decimal
 from subprocess import CalledProcessError
 import hashlib
@@ -17,6 +18,7 @@ import platform
 import random
 import re
 import shlex
+import sys
 import time
 import types
 
@@ -715,3 +717,58 @@ def wallet_importprivkey(wallet_rpc, privkey, timestamp, *, label=""):
     }]
     import_res = wallet_rpc.importdescriptors(req)
     assert_equal(import_res[0]["success"], True)
+
+def mock_signer_path():
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'mock_external_signer.py')
+    return sys.executable + " " + path
+
+def mock_no_connected_signer_path():
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'mock_no_external_signer.py')
+    return sys.executable + " " + path
+
+def mock_invalid_signer_path():
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'mock_invalid_external_signer.py')
+    return sys.executable + " " + path
+
+def mock_multi_signers_path():
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'mock_multiple_external_signers.py')
+    return sys.executable + " " + path
+
+def mock_signer_psbt_path(node_cwd):
+    return os.path.join(node_cwd, "mock_psbt")
+
+def mock_signer_perform_pre_checks():
+    mock_result_path = os.path.join(os.getcwd(), "mock_result")
+    if os.path.isfile(mock_result_path):
+        with open(mock_result_path, "r", encoding="utf8") as f:
+            mock_result = f.read()
+        if mock_result[0]:
+            sys.stdout.write(mock_result[2:])
+            sys.exit(int(mock_result[0]))
+
+def mock_signer_log(mock_name):
+    """
+    Injects debug logging into test_framework.log. Because stdout can't be used,
+    as it would break the mock signer, the log lines can only be retrieved via
+    combine_logs.py.
+    """
+    fh = logging.FileHandler('test_framework.log', encoding='utf-8')
+    fh.setFormatter(log_formatter())
+    fh.setLevel(logging.DEBUG)
+
+    log = logging.getLogger(f"TestFramework.mock_{mock_name}")
+    log.setLevel(logging.DEBUG)
+    log.addHandler(fh)
+
+    return log
+
+def log_formatter():
+    # Format logs the same as bitcoind's debug.log with microprecision (so log files can be concatenated and sorted)
+    class MicrosecondFormatter(logging.Formatter):
+        def formatTime(self, record, _=None):
+            dt = datetime.fromtimestamp(record.created, timezone.utc)
+            return dt.strftime('%Y-%m-%dT%H:%M:%S.%f')
+
+    return MicrosecondFormatter(
+        fmt='%(asctime)sZ %(name)s (%(levelname)s): %(message)s',
+    )
