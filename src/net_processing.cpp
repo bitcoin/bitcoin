@@ -5431,7 +5431,7 @@ public:
     {
         /* As std::make_heap produces a max-heap, we want the entries with the
          * fewest ancestors/highest fee to sort later. */
-        return m_mempool->CompareDepthAndScore(*b, *a);
+        return m_mempool->CompareMiningScoreWithTopology(*b, *a);
     }
 };
 } // namespace

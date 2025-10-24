@@ -535,22 +535,24 @@ CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(CTransactio
 std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContext& det_rand, size_t num_transactions, bool submit)
 {
     std::vector<CTransactionRef> mempool_transactions;
-    std::deque<std::pair<COutPoint, CAmount>> unspent_prevouts;
+    std::deque<std::pair<COutPoint, CAmount>> unspent_prevouts, undo_info;
     std::transform(m_coinbase_txns.begin(), m_coinbase_txns.end(), std::back_inserter(unspent_prevouts),
         [](const auto& tx){ return std::make_pair(COutPoint(tx->GetHash(), 0), tx->vout[0].nValue); });
     while (num_transactions > 0 && !unspent_prevouts.empty()) {
-        // The number of inputs and outputs are random, between 1 and 24.
+        // The number of inputs and outputs are randomly chosen, between 1-5
+        // and 1-25 respectively.
         CMutableTransaction mtx = CMutableTransaction();
-        const size_t num_inputs = det_rand.randrange(24) + 1;
+        const size_t num_inputs = det_rand.randrange(5) + 1;
         CAmount total_in{0};
         for (size_t n{0}; n < num_inputs; ++n) {
             if (unspent_prevouts.empty()) break;
             const auto& [prevout, amount] = unspent_prevouts.front();
+            undo_info.emplace_back(prevout, amount);
             mtx.vin.emplace_back(prevout, CScript());
             total_in += amount;
             unspent_prevouts.pop_front();
         }
-        const size_t num_outputs = det_rand.randrange(24) + 1;
+        const size_t num_outputs = det_rand.randrange(25) + 1;
         const CAmount fee = 100 * det_rand.randrange(30);
         const CAmount amount_per_output = (total_in - fee) / num_outputs;
         for (size_t n{0}; n < num_outputs; ++n) {
@@ -558,16 +560,7 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
             mtx.vout.emplace_back(amount_per_output, spk);
         }
         CTransactionRef ptx = MakeTransactionRef(mtx);
-        mempool_transactions.push_back(ptx);
-        if (amount_per_output > 3000) {
-            // If the value is high enough to fund another transaction + fees, keep track of it so
-            // it can be used to build a more complex transaction graph. Insert randomly into
-            // unspent_prevouts for extra randomness in the resulting structures.
-            for (size_t n{0}; n < num_outputs; ++n) {
-                unspent_prevouts.emplace_back(COutPoint(ptx->GetHash(), n), amount_per_output);
-                std::swap(unspent_prevouts.back(), unspent_prevouts[det_rand.randrange(unspent_prevouts.size())]);
-            }
-        }
+        bool success{true};
         if (submit) {
             LOCK2(cs_main, m_node.mempool->cs);
             LockPoints lp;
@@ -575,9 +568,31 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
             changeset->StageAddition(ptx, /*fee=*/(total_in - num_outputs * amount_per_output),
                     /*time=*/0, /*entry_height=*/1, /*entry_sequence=*/0,
                     /*spends_coinbase=*/false, /*sigops_cost=*/4, lp);
-            changeset->Apply();
+            if (changeset->CheckMemPoolPolicyLimits()) {
+                changeset->Apply();
+                --num_transactions;
+            } else {
+                success = false;
+                // Add the inputs back to unspent prevouts
+                for (const auto& [prevout, amount] : undo_info) {
+                    unspent_prevouts.emplace_back(prevout, amount);
+                    std::swap(unspent_prevouts.back(), unspent_prevouts[det_rand.randrange(unspent_prevouts.size())]);
+                }
+            }
         }
-        --num_transactions;
+        if (success) {
+            mempool_transactions.push_back(ptx);
+            if (amount_per_output > 3000) {
+                // If the value is high enough to fund another transaction + fees, keep track of it so
+                // it can be used to build a more complex transaction graph. Insert randomly into
+                // unspent_prevouts for extra randomness in the resulting structures.
+                for (size_t n{0}; n < num_outputs; ++n) {
+                    unspent_prevouts.emplace_back(COutPoint(ptx->GetHash(), n), amount_per_output);
+                    std::swap(unspent_prevouts.back(), unspent_prevouts[det_rand.randrange(unspent_prevouts.size())]);
+                }
+            }
+        }
+        undo_info.clear();
     }
     return mempool_transactions;
 }
