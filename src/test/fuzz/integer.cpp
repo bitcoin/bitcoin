@@ -251,9 +251,4 @@ FUZZ_TARGET(integer, .init = initialize_integer)
         } catch (const std::ios_base::failure&) {
         }
     }
-
-    try {
-        CHECK_NONFATAL(b);
-    } catch (const NonFatalCheckError&) {
-    }
 }
