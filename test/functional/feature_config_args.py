@@ -463,26 +463,26 @@ class ConfArgsTest(BitcoinTestFramework):
     def test_acceptstalefeeestimates_arg_support(self):
         self.log.info("Test -acceptstalefeeestimates option support")
         conf_file = self.nodes[0].datadir_path / "bitcoin.conf"
-        for chain, chain_name in {("main", ""), ("test", "testnet3"), ("signet", "signet"), ("testnet4", "testnet4")}:
+        for chain, chain_name in {("main", ""), ("test", "zhaolunet"), ("signet", "signet"), ("testnet4", "testnet4")}:
             util.write_config(conf_file, n=0, chain=chain_name, extra_config='acceptstalefeeestimates=1\n')
             self.nodes[0].assert_start_raises_init_error(expected_msg=f'Error: acceptstalefeeestimates is not supported on {chain} chain.')
         util.write_config(conf_file, n=0, chain="regtest")  # Reset to regtest
 
-    def test_testnet3_deprecation_msg(self):
-        self.log.info("Test testnet3 deprecation warning")
-        t3_warning_log = "Warning: Support for testnet3 is deprecated and will be removed in an upcoming release. Consider switching to testnet4."
+    def test_zhaolunet_info_msg(self):
+        self.log.info("Test zhaolunet informational logging")
+        info_log = "Running on zhaolunet (customized from the legacy testnet3 parameters)."
 
-        self.log.debug("Testnet3 node will log the deprecation warning")
-        self.nodes[0].chain = 'testnet3'
-        self.nodes[0].replace_in_config([('regtest=', 'testnet='), ('[regtest]', '[test]')])
-        with self.nodes[0].assert_debug_log([t3_warning_log]):
+        self.log.debug("Zhaolunet node will log the informational message")
+        self.nodes[0].chain = 'zhaolunet'
+        self.nodes[0].replace_in_config([('regtest=', 'testnet='), ('[regtest]', '[zhaolunet]')])
+        with self.nodes[0].assert_debug_log([info_log]):
             self.start_node(0)
         self.stop_node(0)
 
-        self.log.debug("Testnet4 node will not log the deprecation warning")
+        self.log.debug("Testnet4 node will not log the zhaolunet message")
         self.nodes[0].chain = 'testnet4'
-        self.nodes[0].replace_in_config([('testnet=', 'testnet4='), ('[test]', '[testnet4]')])
-        with self.nodes[0].assert_debug_log([], unexpected_msgs=[t3_warning_log]):
+        self.nodes[0].replace_in_config([('testnet=', 'testnet4='), ('[zhaolunet]', '[testnet4]')])
+        with self.nodes[0].assert_debug_log([], unexpected_msgs=[info_log]):
             self.start_node(0)
         self.stop_node(0)
 
@@ -505,7 +505,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.test_ignored_conf()
         self.test_ignored_default_conf()
         self.test_acceptstalefeeestimates_arg_support()
-        self.test_testnet3_deprecation_msg()
+        self.test_zhaolunet_info_msg()
 
         # Remove the -datadir argument so it doesn't override the config file
         self.nodes[0].args = [arg for arg in self.nodes[0].args if not arg.startswith("-datadir")]
