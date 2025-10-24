@@ -1483,20 +1483,33 @@ class StringMaker {
     const SigningProvider* m_arg;
     //! Keys contained in the Miniscript (a reference to DescriptorImpl::m_pubkey_args).
     const std::vector<std::unique_ptr<PubkeyProvider>>& m_pubkeys;
-    //! Whether to serialize keys as private or public.
-    bool m_private;
+    //! StringType to serialize keys
+    const DescriptorImpl::StringType m_type;
+    const DescriptorCache* m_cache;
 
 public:
-    StringMaker(const SigningProvider* arg LIFETIMEBOUND, const std::vector<std::unique_ptr<PubkeyProvider>>& pubkeys LIFETIMEBOUND, bool priv)
-        : m_arg(arg), m_pubkeys(pubkeys), m_private(priv) {}
+    StringMaker(const SigningProvider* arg LIFETIMEBOUND,
+                const std::vector<std::unique_ptr<PubkeyProvider>>& pubkeys LIFETIMEBOUND,
+                DescriptorImpl::StringType type,
+                const DescriptorCache* cache LIFETIMEBOUND)
+        : m_arg(arg), m_pubkeys(pubkeys), m_type(type), m_cache(cache) {}
 
     std::optional<std::string> ToString(uint32_t key) const
     {
         std::string ret;
-        if (m_private) {
-            if (!m_pubkeys[key]->ToPrivateString(*m_arg, ret)) return {};
-        } else {
+        switch (m_type) {
+        case DescriptorImpl::StringType::PUBLIC:
             ret = m_pubkeys[key]->ToString();
+            break;
+        case DescriptorImpl::StringType::PRIVATE:
+            if (!m_pubkeys[key]->ToPrivateString(*m_arg, ret)) return {};
+            break;
+        case DescriptorImpl::StringType::NORMALIZED:
+            if (!m_pubkeys[key]->ToNormalizedString(*m_arg, ret, m_cache)) return {};
+            break;
+        case DescriptorImpl::StringType::COMPAT:
+            ret = m_pubkeys[key]->ToString(PubkeyProvider::StringType::COMPAT);
+            break;
         }
         return ret;
     }
@@ -1529,7 +1542,7 @@ public:
     bool ToStringHelper(const SigningProvider* arg, std::string& out, const StringType type,
                         const DescriptorCache* cache = nullptr) const override
     {
-        if (const auto res = m_node->ToString(StringMaker(arg, m_pubkey_args, type == StringType::PRIVATE))) {
+        if (const auto res = m_node->ToString(StringMaker(arg, m_pubkey_args, type, cache))) {
             out = *res;
             return true;
         }
