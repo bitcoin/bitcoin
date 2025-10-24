@@ -153,7 +153,7 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
 
     int witnessversion;
     std::vector<unsigned char> witnessprogram;
-    if (scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
+    if (scriptPubKey.IsWitnessProgram(witnessversion, &witnessprogram)) {
         if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_KEYHASH_SIZE) {
             vSolutionsRet.push_back(std::move(witnessprogram));
             return TxoutType::WITNESS_V0_KEYHASH;

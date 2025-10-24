@@ -44,14 +44,13 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
 
     size_t nSize = GetSerializeSize(txout);
     int witnessversion = 0;
-    std::vector<unsigned char> witnessprogram;
 
     // Note this computation is for spending a Segwit v0 P2WPKH output (a 33 bytes
     // public key + an ECDSA signature). For Segwit v1 Taproot outputs the minimum
     // satisfaction is lower (a single BIP340 signature) but this computation was
     // kept to not further reduce the dust level.
     // See discussion in https://github.com/bitcoin/bitcoin/pull/22779 for details.
-    if (txout.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
+    if (txout.scriptPubKey.IsWitnessProgram(witnessversion)) {
         // sum the sizes of the parts of a transaction input
         // with 75% segwit discount applied to the script size.
         nSize += (32 + 4 + 1 + (107 / WITNESS_SCALE_FACTOR) + 4);
@@ -289,7 +288,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         witnessprogram.clear();
 
         // Non-witness program must not be associated with any witness
-        if (!prevScript.IsWitnessProgram(witnessversion, witnessprogram))
+        if (!prevScript.IsWitnessProgram(witnessversion, &witnessprogram))
             return false;
 
         // Check P2WSH standard limits
@@ -350,7 +349,7 @@ bool SpendsNonAnchorWitnessProg(const CTransaction& tx, const CCoinsViewCache& p
         const auto& prev_spk{prevouts.AccessCoin(txin.prevout).out.scriptPubKey};
 
         // Note this includes not-yet-defined witness programs.
-        if (prev_spk.IsWitnessProgram(version, program) && !prev_spk.IsPayToAnchor(version, program)) {
+        if (prev_spk.IsWitnessProgram(version, &program) && !prev_spk.IsPayToAnchor(version, program)) {
             return true;
         }
 
@@ -365,7 +364,7 @@ bool SpendsNonAnchorWitnessProg(const CTransaction& tx, const CCoinsViewCache& p
                 continue;
             }
             const CScript redeem_script{stack.back().begin(), stack.back().end()};
-            if (redeem_script.IsWitnessProgram(version, program)) {
+            if (redeem_script.IsWitnessProgram(version)) {
                 return true;
             }
         }

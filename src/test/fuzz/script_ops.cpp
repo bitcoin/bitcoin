@@ -62,6 +62,7 @@ FUZZ_TARGET(script_ops)
     {
         int version;
         std::vector<uint8_t> program;
-        (void)script.IsWitnessProgram(version, program);
+        (void)script.IsWitnessProgram(version, &program);
+        (void)script.IsWitnessProgram(version, nullptr);
     }
 }

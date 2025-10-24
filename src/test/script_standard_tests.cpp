@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
     int version{-1};
     std::vector<unsigned char> witness_program;
     BOOST_CHECK(s.IsPayToAnchor());
-    BOOST_CHECK(s.IsWitnessProgram(version, witness_program));
+    BOOST_CHECK(s.IsWitnessProgram(version, &witness_program));
     BOOST_CHECK(CScript::IsPayToAnchor(version, witness_program));
 
     // TxoutType::NONSTANDARD
