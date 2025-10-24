@@ -26,7 +26,7 @@
  * A UTXO entry.
  *
  * Serialized format:
- * - VARINT((coinbase ? 1 : 0) | (height << 1))
+ * - VARINT((height << 1) | (coinbase ? 1 : 0))
  * - the non-spent CTxOut (via TxOutCompression)
  */
 class Coin
@@ -36,7 +36,7 @@ public:
     CTxOut out;
 
     //! whether containing transaction was a coinbase
-    unsigned int fCoinBase : 1;
+    bool fCoinBase : 1;
 
     //! at which height this containing transaction was included in the active block chain
     uint32_t nHeight : 31;
@@ -61,7 +61,7 @@ public:
     template<typename Stream>
     void Serialize(Stream &s) const {
         assert(!IsSpent());
-        uint32_t code = nHeight * uint32_t{2} + fCoinBase;
+        uint32_t code{static_cast<uint32_t>(nHeight << 1) | fCoinBase};
         ::Serialize(s, VARINT(code));
         ::Serialize(s, Using<TxOutCompression>(out));
     }
