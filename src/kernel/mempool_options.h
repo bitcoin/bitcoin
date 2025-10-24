@@ -6,6 +6,7 @@
 
 #include <kernel/mempool_limits.h>
 
+#include <logging.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 
@@ -56,6 +57,7 @@ struct MemPoolOptions {
     bool persist_v1_dat{DEFAULT_PERSIST_V1_DAT};
     MemPoolLimits limits{};
 
+    BCLog::Logger* logger{nullptr};
     ValidationSignals* signals{nullptr};
 };
 } // namespace kernel
