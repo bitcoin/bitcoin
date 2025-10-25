@@ -27,7 +27,7 @@ class StartupNotifyTest(BitcoinTestFramework):
         self.log.info("Test -startupnotify is executed once")
 
         def get_count():
-            with open(tmpdir_file, "r", encoding="utf8") as f:
+            with open(tmpdir_file, "r") as f:
                 file_content = f.read()
                 return file_content.count(FILE_NAME)
 

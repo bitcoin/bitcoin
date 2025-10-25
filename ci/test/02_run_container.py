@@ -26,7 +26,6 @@ def main():
         ["bash", "-c", "grep export ./ci/test/00_setup_env*.sh"],
         stdout=subprocess.PIPE,
         text=True,
-        encoding="utf8",
     ).stdout.splitlines()
     settings = set(l.split("=")[0].split("export ")[1] for l in settings)
     # Add "hidden" settings, which are never exported, manually. Otherwise,
@@ -42,7 +41,7 @@ def main():
         u=os.environ["USER"],
         c=os.environ["CONTAINER_NAME"],
     )
-    with open(env_file, "w", encoding="utf8") as file:
+    with open(env_file, "w") as file:
         for k, v in os.environ.items():
             if k in settings:
                 file.write(f"{k}={v}\n")

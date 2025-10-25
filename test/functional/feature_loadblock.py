@@ -41,10 +41,10 @@ class LoadblockTest(BitcoinTestFramework):
         hash_list = tempfile.NamedTemporaryFile(dir=data_dir,
                                                 mode='w',
                                                 delete=False,
-                                                encoding="utf-8")
+        )
 
         self.log.info("Create linearization config file")
-        with open(cfg_file, "a", encoding="utf-8") as cfg:
+        with open(cfg_file, "a") as cfg:
             cfg.write(f"datadir={data_dir}\n")
             cfg.write(f"rpcuser={node_url.username}\n")
             cfg.write(f"rpcpassword={node_url.password}\n")

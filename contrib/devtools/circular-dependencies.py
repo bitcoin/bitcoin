@@ -49,7 +49,7 @@ for arg in sys.argv[1:]:
 # TODO: implement support for multiple include directories
 for arg in sorted(files.keys()):
     module = files[arg]
-    with open(arg, 'r', encoding="utf8") as f:
+    with open(arg, 'r') as f:
         for line in f:
             match = RE.match(line)
             if match:

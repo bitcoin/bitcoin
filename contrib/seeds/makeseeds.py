@@ -211,7 +211,7 @@ def main():
     print('Done.', file=sys.stderr)
 
     print('Loading and parsing DNS seeds…', end='', file=sys.stderr, flush=True)
-    with open(args.seeds, 'r', encoding='utf8') as f:
+    with open(args.seeds, 'r') as f:
         lines = f.readlines()
     ips = [parseline(line) for line in lines]
     random.shuffle(ips)

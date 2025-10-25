@@ -799,7 +799,7 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(unknown_psbt, unknown_out)
 
         # Open the data file
-        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_psbt.json'), encoding='utf-8') as f:
+        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_psbt.json')) as f:
             d = json.load(f)
             invalids = d['invalid']
             invalid_with_msgs = d["invalid_with_msg"]

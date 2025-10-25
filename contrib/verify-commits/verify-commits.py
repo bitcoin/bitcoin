@@ -82,17 +82,17 @@ def main():
     # get directory of this program and read data files
     dirname = os.path.dirname(os.path.abspath(__file__))
     print("Using verify-commits data from " + dirname)
-    with open(dirname + "/trusted-git-root", "r", encoding="utf8") as f:
+    with open(dirname + "/trusted-git-root", "r") as f:
         verified_root = f.read().splitlines()[0]
-    with open(dirname + "/trusted-sha512-root-commit", "r", encoding="utf8") as f:
+    with open(dirname + "/trusted-sha512-root-commit", "r") as f:
         verified_sha512_root = f.read().splitlines()[0]
-    with open(dirname + "/allow-revsig-commits", "r", encoding="utf8") as f:
+    with open(dirname + "/allow-revsig-commits", "r") as f:
         revsig_allowed = f.read().splitlines()
-    with open(dirname + "/allow-unclean-merge-commits", "r", encoding="utf8") as f:
+    with open(dirname + "/allow-unclean-merge-commits", "r") as f:
         unclean_merge_allowed = f.read().splitlines()
-    with open(dirname + "/allow-incorrect-sha512-commits", "r", encoding="utf8") as f:
+    with open(dirname + "/allow-incorrect-sha512-commits", "r") as f:
         incorrect_sha512_allowed = f.read().splitlines()
-    with open(dirname + "/trusted-keys", "r", encoding="utf8") as f:
+    with open(dirname + "/trusted-keys", "r") as f:
         trusted_keys = f.read().splitlines()
 
     # Set commit and variables

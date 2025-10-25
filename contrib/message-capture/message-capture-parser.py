@@ -205,7 +205,7 @@ def main():
 
     jsonrep = json.dumps(messages)
     if output:
-        with open(str(output), 'w+', encoding="utf8") as f_out:
+        with open(str(output), 'w+') as f_out:
             f_out.write(jsonrep)
     else:
         print(jsonrep)

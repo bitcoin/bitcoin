@@ -28,7 +28,7 @@ class ToolUtils(BitcoinTestFramework):
     def run_test(self):
         self.testcase_dir = Path(self.config["environment"]["SRCDIR"]) / "test" / "functional" / "data" / "util"
         self.bins = self.get_binaries()
-        with open(self.testcase_dir / "bitcoin-util-test.json", encoding="utf8") as f:
+        with open(self.testcase_dir / "bitcoin-util-test.json") as f:
             input_data = json.loads(f.read())
 
         for i, test_obj in enumerate(input_data):
@@ -50,7 +50,7 @@ class ToolUtils(BitcoinTestFramework):
         # Read the input data (if there is any)
         inputData = None
         if "input" in testObj:
-            with open(self.testcase_dir / testObj["input"], encoding="utf8") as f:
+            with open(self.testcase_dir / testObj["input"]) as f:
                 inputData = f.read()
 
         # Read the expected output data (if there is any)
@@ -60,7 +60,7 @@ class ToolUtils(BitcoinTestFramework):
         if "output_cmp" in testObj:
             outputFn = testObj['output_cmp']
             outputType = os.path.splitext(outputFn)[1][1:]  # output type from file extension (determines how to compare)
-            with open(self.testcase_dir / outputFn, encoding="utf8") as f:
+            with open(self.testcase_dir / outputFn) as f:
                 outputData = f.read()
             if not outputData:
                 raise Exception(f"Output data missing for {outputFn}")
