@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test-only Elligator Swift implementation
@@ -134,7 +134,7 @@ class TestFrameworkEllSwift(unittest.TestCase):
     def test_elligator_encode_testvectors(self):
         """Implement the BIP324 test vectors for ellswift encoding (read from xswiftec_inv_test_vectors.csv)."""
         vectors_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'xswiftec_inv_test_vectors.csv')
-        with open(vectors_file, newline='', encoding='utf8') as csvfile:
+        with open(vectors_file, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 u = FE.from_bytes(bytes.fromhex(row['u']))
@@ -150,7 +150,7 @@ class TestFrameworkEllSwift(unittest.TestCase):
     def test_elligator_decode_testvectors(self):
         """Implement the BIP324 test vectors for ellswift decoding (read from ellswift_decode_test_vectors.csv)."""
         vectors_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ellswift_decode_test_vectors.csv')
-        with open(vectors_file, newline='', encoding='utf8') as csvfile:
+        with open(vectors_file, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 encoding = bytes.fromhex(row['ellswift'])

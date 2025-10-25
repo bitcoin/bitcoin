@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2022 The Bitcoin Core developers
+# Copyright (c) 2015-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test decoding scripts via decodescript RPC command."""
@@ -266,7 +266,7 @@ class DecodeScriptTest(BitcoinTestFramework):
         assert_equal('OP_RETURN 3011020701010101010101020601010101010101', rpc_result['vin'][0]['scriptSig']['asm'])
 
     def decodescript_datadriven_tests(self):
-        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_decodescript.json'), encoding='utf-8') as f:
+        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_decodescript.json')) as f:
             dd_tests = json.load(f)
 
         for script, result in dd_tests:

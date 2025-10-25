@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the -alertnotify, -blocknotify and -walletnotify options."""
@@ -171,7 +171,7 @@ class NotificationsTest(BitcoinTestFramework):
             fname = os.path.join(self.walletnotify_dir, notify_outputname(self.wallet, tx_id))
             # Wait for the cached writes to hit storage
             self.wait_until(lambda: os.path.getsize(fname) > 0, timeout=10)
-            with open(fname, 'rt', encoding='utf-8') as f:
+            with open(fname, 'rt') as f:
                 text = f.read()
                 # Universal newline ensures '\n' on 'nt'
                 assert_equal(text[-1], '\n')
