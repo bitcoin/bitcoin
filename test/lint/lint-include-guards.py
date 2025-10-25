@@ -31,7 +31,7 @@ def _get_header_file_lst() -> list[str]:
     """
     git_cmd_lst = ['git', 'ls-files', '--', '*.h']
     header_file_lst = check_output(
-        git_cmd_lst).decode('utf-8').splitlines()
+        git_cmd_lst, text=True).splitlines()
 
     header_file_lst = [hf for hf in header_file_lst
                        if not any(ef in hf for ef

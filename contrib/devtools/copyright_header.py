@@ -54,12 +54,12 @@ GIT_LS_CMD = 'git ls-files --full-name'.split(' ')
 GIT_TOPLEVEL_CMD = 'git rev-parse --show-toplevel'.split(' ')
 
 def call_git_ls(base_directory):
-    out = subprocess.check_output([*GIT_LS_CMD, base_directory])
-    return [f for f in out.decode("utf-8").split('\n') if f != '']
+    out = subprocess.check_output([*GIT_LS_CMD, base_directory], text=True)
+    return [f for f in out.split('\n') if f != '']
 
 def call_git_toplevel():
     "Returns the absolute path to the project root"
-    return subprocess.check_output(GIT_TOPLEVEL_CMD).strip().decode("utf-8")
+    return subprocess.check_output(GIT_TOPLEVEL_CMD, text=True).strip()
 
 def get_filenames_to_examine(base_directory):
     "Returns an array of absolute paths to any project files in the base_directory that pass the include/exclude filters"
@@ -298,8 +298,8 @@ def report_cmd(argv):
 GIT_LOG_CMD = "git log --pretty=format:%%ai %s"
 
 def call_git_log(filename):
-    out = subprocess.check_output((GIT_LOG_CMD % filename).split(' '))
-    return out.decode("utf-8").split('\n')
+    out = subprocess.check_output((GIT_LOG_CMD % filename).split(' '), text=True)
+    return out.split('\n')
 
 def get_git_change_years(filename):
     git_log_lines = call_git_log(filename)
