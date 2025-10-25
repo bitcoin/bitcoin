@@ -69,7 +69,7 @@ def netstat(typ='tcp'):
     To get pid of all network process running on system, you must run this script
     as superuser
     '''
-    with open('/proc/net/'+typ,'r',encoding='utf8') as f:
+    with open('/proc/net/'+typ,'r') as f:
         content = f.readlines()
         content.pop(0)
     result = []

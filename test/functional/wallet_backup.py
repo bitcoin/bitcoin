@@ -112,7 +112,7 @@ class WalletBackupTest(BitcoinTestFramework):
     def restore_invalid_wallet(self):
         node = self.nodes[3]
         invalid_wallet_file = self.nodes[0].datadir_path / 'invalid_wallet_file.bak'
-        open(invalid_wallet_file, 'a', encoding="utf8").write('invald wallet')
+        open(invalid_wallet_file, 'a').write('invald wallet')
         wallet_name = "res0"
         not_created_wallet_file = node.wallets_path / wallet_name
         error_message = "Wallet file verification failed. Failed to load database path '{}'. Data is not in recognized format.".format(not_created_wallet_file)

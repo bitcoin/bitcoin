@@ -41,7 +41,7 @@ def main():
         if re.search('src/(secp256k1|minisketch)/', file_path):
             continue
 
-        with open(file_path, 'r', encoding='utf-8') as file_obj:
+        with open(file_path, 'r') as file_obj:
             contents = file_obj.read()
 
         non_comment_pattern = re.compile(r'^\s*((?!#).+)$', re.MULTILINE)

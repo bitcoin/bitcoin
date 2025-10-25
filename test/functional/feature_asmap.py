@@ -113,7 +113,7 @@ class AsmapTest(BitcoinTestFramework):
     def test_empty_asmap(self):
         self.log.info('Test bitcoind -asmap with empty map file')
         self.stop_node(0)
-        with open(self.default_asmap, "w", encoding="utf-8") as f:
+        with open(self.default_asmap, "w") as f:
             f.write("")
         msg = f"Error: Could not parse asmap file \"{self.default_asmap}\""
         self.node.assert_start_raises_init_error(extra_args=['-asmap'], expected_msg=msg)

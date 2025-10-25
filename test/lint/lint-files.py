@@ -185,7 +185,7 @@ def check_shebang_file_permissions(files_meta) -> int:
 
             # *.py files which don't contain an `if __name__ == '__main__'` are not expected to be executed directly
             if file_meta.extension == "py":
-                with open(filename, "r", encoding="utf8") as f:
+                with open(filename, "r") as f:
                     file_data = f.read()
                 if not re.search("""if __name__ == ['"]__main__['"]:""", file_data):
                     continue

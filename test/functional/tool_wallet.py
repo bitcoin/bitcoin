@@ -83,7 +83,7 @@ class ToolWalletTest(BitcoinTestFramework):
 
     def read_dump(self, filename):
         dump = OrderedDict()
-        with open(filename, "r", encoding="utf8") as f:
+        with open(filename, "r") as f:
             for row in f:
                 row = row.strip()
                 key, value = row.split(',')
@@ -98,7 +98,7 @@ class ToolWalletTest(BitcoinTestFramework):
     def write_dump(self, dump, filename, magic=None, skip_checksum=False):
         if magic is None:
             magic = "BITCOIN_CORE_WALLET_DUMP"
-        with open(filename, "w", encoding="utf8") as f:
+        with open(filename, "w") as f:
             row = ",".join([magic, dump[magic]]) + "\n"
             f.write(row)
             for k, v in dump.items():

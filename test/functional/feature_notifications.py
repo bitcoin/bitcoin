@@ -171,7 +171,7 @@ class NotificationsTest(BitcoinTestFramework):
             fname = os.path.join(self.walletnotify_dir, notify_outputname(self.wallet, tx_id))
             # Wait for the cached writes to hit storage
             self.wait_until(lambda: os.path.getsize(fname) > 0, timeout=10)
-            with open(fname, 'rt', encoding='utf-8') as f:
+            with open(fname, 'rt') as f:
                 text = f.read()
                 # Universal newline ensures '\n' on 'nt'
                 assert_equal(text[-1], '\n')

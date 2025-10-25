@@ -71,7 +71,7 @@ def main():
 
         regex_pattern = f'^#(ifndef|define|endif //) {header_id}'
 
-        with open(header_file, 'r', encoding='utf-8') as f:
+        with open(header_file, 'r') as f:
             header_file_contents = f.readlines()
 
         count = 0

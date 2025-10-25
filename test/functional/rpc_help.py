@@ -22,7 +22,7 @@ def process_mapping(fname):
     """Find and parse conversion table in implementation file `fname`."""
     cmds = []
     in_rpcs = False
-    with open(fname, "r", encoding="utf8") as f:
+    with open(fname, "r") as f:
         for line in f:
             line = line.rstrip()
             if not in_rpcs:
@@ -119,7 +119,7 @@ class HelpRpcTest(BitcoinTestFramework):
         os.mkdir(dump_dir)
         calls = [line.split(' ', 1)[0] for line in self.nodes[0].help().splitlines() if line and not line.startswith('==')]
         for call in calls:
-            with open(os.path.join(dump_dir, call), 'w', encoding='utf-8') as f:
+            with open(os.path.join(dump_dir, call), 'w') as f:
                 # Make sure the node can generate the help at runtime without crashing
                 f.write(self.nodes[0].help(call))
 
