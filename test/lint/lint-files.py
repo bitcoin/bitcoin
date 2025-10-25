@@ -76,7 +76,7 @@ def get_git_file_metadata() -> dict[str, FileMeta]:
     '''
     Return a dictionary mapping the name of all files in the repository to git tree metadata.
     '''
-    files_raw = check_output(CMD_ALL_FILES).decode("utf8").rstrip("\0").split("\0")
+    files_raw = check_output(CMD_ALL_FILES, text=True).rstrip("\0").split("\0")
     files = {}
     for file_spec in files_raw:
         meta = FileMeta(file_spec)
@@ -169,7 +169,7 @@ def check_shebang_file_permissions(files_meta) -> int:
     """
     Checks every file that contains a shebang line to ensure it has an executable permission
     """
-    filenames = check_output(CMD_SHEBANG_FILES).decode("utf8").strip().split("\n")
+    filenames = check_output(CMD_SHEBANG_FILES, text=True).strip().split("\n")
 
     # The git grep command we use returns files which contain a shebang on any line within the file
     # so we need to filter the list to only files with the shebang on the first line
@@ -198,7 +198,7 @@ def check_shebang_file_permissions(files_meta) -> int:
 
 
 def main() -> NoReturn:
-    root_dir = check_output(CMD_TOP_LEVEL).decode("utf8").strip()
+    root_dir = check_output(CMD_TOP_LEVEL, text=True).strip()
     os.chdir(root_dir)
 
     files = get_git_file_metadata()
