@@ -21,6 +21,7 @@ void TestChainstateManager::DisableNextWrite()
 void TestChainstateManager::ResetIbd()
 {
     m_cached_finished_ibd = false;
+    m_cached_chaintip_recent = false;
     assert(IsInitialBlockDownload());
 }
 
