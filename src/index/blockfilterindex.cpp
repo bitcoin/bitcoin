@@ -271,15 +271,6 @@ std::optional<uint256> BlockFilterIndex::ReadFilterHeader(int height, const uint
     return read_out.second.header;
 }
 
-bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
-{
-    BlockFilter filter(m_filter_type, *Assert(block.data), *Assert(block.undo_data));
-    const uint256& header = filter.ComputeHeader(m_last_header);
-    bool res = Write(filter, block.height, header);
-    if (res) m_last_header = header; // update last header
-    return res;
-}
-
 bool BlockFilterIndex::Write(const BlockFilter& filter, uint32_t block_height, const uint256& filter_header)
 {
     size_t bytes_written = WriteFilterToDisk(m_next_filter_pos, filter);
@@ -296,6 +287,23 @@ bool BlockFilterIndex::Write(const BlockFilter& filter, uint32_t block_height, c
     }
 
     m_next_filter_pos.nPos += bytes_written;
+    return true;
+}
+
+std::any BlockFilterIndex::CustomProcessBlock(const interfaces::BlockInfo& block_info)
+{
+    return std::make_pair(BlockFilter(m_filter_type, *block_info.data, *block_info.undo_data), block_info.height);
+}
+
+bool BlockFilterIndex::CustomPostProcessBlocks(const std::any& obj)
+{
+    const auto& [filter, height] = std::any_cast<std::pair<BlockFilter, int>>(obj);
+    const uint256& header = filter.ComputeHeader(m_last_header);
+    if (!Write(filter, height, header)) {
+        LogError("Error writing filters, shutting down block filters index\n");
+        return false;
+    }
+    m_last_header = header;
     return true;
 }
 
