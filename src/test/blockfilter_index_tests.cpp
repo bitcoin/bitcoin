@@ -12,6 +12,7 @@
 #include <node/miner.h>
 #include <pow.h>
 #include <test/util/blockfilter.h>
+#include <test/util/index.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
 
@@ -43,10 +44,10 @@ static bool CheckFilterLookups(BlockFilterIndex& filter_index, const CBlockIndex
     std::vector<BlockFilter> filters;
     std::vector<uint256> filter_hashes;
 
-    BOOST_CHECK(filter_index.LookupFilter(block_index, filter));
-    BOOST_CHECK(filter_index.LookupFilterHeader(block_index, filter_header));
-    BOOST_CHECK(filter_index.LookupFilterRange(block_index->nHeight, block_index, filters));
-    BOOST_CHECK(filter_index.LookupFilterHashRange(block_index->nHeight, block_index,
+    BOOST_CHECK(filter_index.LookupFilter({block_index->GetBlockHash(), block_index->nHeight}, filter));
+    BOOST_CHECK(filter_index.LookupFilterHeader({block_index->GetBlockHash(), block_index->nHeight}, filter_header));
+    BOOST_CHECK(filter_index.LookupFilterRange(block_index->nHeight, {block_index->GetBlockHash(), block_index->nHeight}, filters));
+    BOOST_CHECK(filter_index.LookupFilterHashRange(block_index->nHeight, {block_index->GetBlockHash(), block_index->nHeight},
                                                    filter_hashes));
 
     BOOST_CHECK_EQUAL(filters.size(), 1U);
@@ -132,10 +133,10 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
         for (const CBlockIndex* block_index = m_node.chainman->ActiveChain().Genesis();
              block_index != nullptr;
              block_index = m_node.chainman->ActiveChain().Next(block_index)) {
-            BOOST_CHECK(!filter_index.LookupFilter(block_index, filter));
-            BOOST_CHECK(!filter_index.LookupFilterHeader(block_index, filter_header));
-            BOOST_CHECK(!filter_index.LookupFilterRange(block_index->nHeight, block_index, filters));
-            BOOST_CHECK(!filter_index.LookupFilterHashRange(block_index->nHeight, block_index,
+            BOOST_CHECK(!filter_index.LookupFilter({block_index->GetBlockHash(), block_index->nHeight}, filter));
+            BOOST_CHECK(!filter_index.LookupFilterHeader({block_index->GetBlockHash(), block_index->nHeight}, filter_header));
+            BOOST_CHECK(!filter_index.LookupFilterRange(block_index->nHeight, {block_index->GetBlockHash(), block_index->nHeight}, filters));
+            BOOST_CHECK(!filter_index.LookupFilterHashRange(block_index->nHeight, {block_index->GetBlockHash(), block_index->nHeight},
                                                             filter_hashes));
         }
     }
@@ -143,7 +144,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     // BlockUntilSyncedToCurrentChain should return false before index is started.
     BOOST_CHECK(!filter_index.BlockUntilSyncedToCurrentChain());
 
-    filter_index.Sync();
+    IndexTester{filter_index}.Sync();
 
     // Check that filter index has all blocks that were in the chain before it started.
     {
@@ -255,8 +256,8 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
         LOCK(cs_main);
         tip = m_node.chainman->ActiveChain().Tip();
     }
-    BOOST_CHECK(filter_index.LookupFilterRange(0, tip, filters));
-    BOOST_CHECK(filter_index.LookupFilterHashRange(0, tip, filter_hashes));
+    BOOST_CHECK(filter_index.LookupFilterRange(0, {tip->GetBlockHash(), tip->nHeight}, filters));
+    BOOST_CHECK(filter_index.LookupFilterHashRange(0, {tip->GetBlockHash(), tip->nHeight}, filter_hashes));
 
     assert(tip->nHeight >= 0);
     BOOST_CHECK_EQUAL(filters.size(), tip->nHeight + 1U);

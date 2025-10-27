@@ -157,7 +157,6 @@ protected:
      */
     virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {};
     friend class ValidationSignals;
-    friend class ValidationInterfaceTest;
 };
 
 class ValidationSignalsImpl;

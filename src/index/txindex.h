@@ -7,6 +7,10 @@
 
 #include <index/base.h>
 
+namespace node {
+class BlockManager;
+} // namespace node
+
 static constexpr bool DEFAULT_TXINDEX{false};
 
 /**
@@ -21,6 +25,7 @@ protected:
 
 private:
     const std::unique_ptr<DB> m_db;
+    node::BlockManager& m_blockman;
 
     bool AllowPrune() const override { return false; }
 
@@ -31,7 +36,7 @@ protected:
 
 public:
     /// Constructs the index, which becomes available to be queried.
-    explicit TxIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
+    explicit TxIndex(std::unique_ptr<interfaces::Chain> chain, node::BlockManager& blockman, size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
 
     // Destructor is declared because this class contains a unique_ptr to an incomplete type.
     virtual ~TxIndex() override;

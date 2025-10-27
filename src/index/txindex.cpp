@@ -49,8 +49,8 @@ bool TxIndex::DB::WriteTxs(const std::vector<std::pair<Txid, CDiskTxPos>>& v_pos
     return WriteBatch(batch);
 }
 
-TxIndex::TxIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe)
-    : BaseIndex(std::move(chain), "txindex"), m_db(std::make_unique<TxIndex::DB>(n_cache_size, f_memory, f_wipe))
+TxIndex::TxIndex(std::unique_ptr<interfaces::Chain> chain, node::BlockManager& blockman, size_t n_cache_size, bool f_memory, bool f_wipe)
+    : BaseIndex(std::move(chain), "txindex"), m_db(std::make_unique<TxIndex::DB>(n_cache_size, f_memory, f_wipe)), m_blockman(blockman)
 {}
 
 TxIndex::~TxIndex() = default;
@@ -80,7 +80,7 @@ bool TxIndex::FindTx(const Txid& tx_hash, uint256& block_hash, CTransactionRef& 
         return false;
     }
 
-    AutoFile file{m_chainstate->m_blockman.OpenBlockFile(postx, true)};
+    AutoFile file{m_blockman.OpenBlockFile(postx, true)};
     if (file.IsNull()) {
         LogError("OpenBlockFile failed");
         return false;

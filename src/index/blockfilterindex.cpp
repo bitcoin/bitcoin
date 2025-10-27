@@ -15,6 +15,8 @@
 #include <util/fs_helpers.h>
 #include <util/syserror.h>
 
+using interfaces::FoundBlock;
+
 /* The index database stores three items for each block: the disk location of the encoded filter,
  * its dSHA256 hash, and the header. Those belonging to blocks on the active chain are indexed by
  * height, and those belonging to blocks that have been reorganized out of the active chain are
@@ -121,6 +123,7 @@ interfaces::Chain::NotifyOptions BlockFilterIndex::CustomOptions()
 
 bool BlockFilterIndex::CustomInit(const std::optional<interfaces::BlockRef>& block)
 {
+    LOCK(m_filter_mutex);
     if (!m_db->Read(DB_FILTER_POS, m_next_filter_pos)) {
         // Check that the cause of the read failure is that the key does not exist. Any other errors
         // indicate database corruption or a disk failure, and starting the index would cause
@@ -150,6 +153,7 @@ bool BlockFilterIndex::CustomInit(const std::optional<interfaces::BlockRef>& blo
 
 bool BlockFilterIndex::CustomCommit(CDBBatch& batch)
 {
+    LOCK(m_filter_mutex);
     const FlatFilePos& pos = m_next_filter_pos;
 
     // Flush current filter file to disk.
@@ -282,6 +286,7 @@ bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
 
 bool BlockFilterIndex::Write(const BlockFilter& filter, uint32_t block_height, const uint256& filter_header)
 {
+    LOCK(m_filter_mutex);
     size_t bytes_written = WriteFilterToDisk(m_next_filter_pos, filter);
     if (bytes_written == 0) return false;
 
@@ -337,7 +342,7 @@ bool BlockFilterIndex::CustomRemove(const interfaces::BlockInfo& block)
     // The latest filter position gets written in Commit by the call to the BaseIndex::Rewind.
     // But since this creates new references to the filter, the position should get updated here
     // atomically as well in case Commit fails.
-    batch.Write(DB_FILTER_POS, m_next_filter_pos);
+    batch.Write(DB_FILTER_POS, WITH_LOCK(m_filter_mutex, return m_next_filter_pos));
     if (!m_db->WriteBatch(batch)) return false;
 
     // Update cached header to the previous block hash
@@ -345,44 +350,44 @@ bool BlockFilterIndex::CustomRemove(const interfaces::BlockInfo& block)
     return true;
 }
 
-static bool LookupOne(const CDBWrapper& db, const CBlockIndex* block_index, DBVal& result)
+static bool LookupOne(const CDBWrapper& db, const interfaces::BlockRef& block, DBVal& result)
 {
     // First check if the result is stored under the height index and the value there matches the
     // block hash. This should be the case if the block is on the active chain.
     std::pair<uint256, DBVal> read_out;
-    if (!db.Read(DBHeightKey(block_index->nHeight), read_out)) {
+    if (!db.Read(DBHeightKey(block.height), read_out)) {
         return false;
     }
-    if (read_out.first == block_index->GetBlockHash()) {
+    if (read_out.first == block.hash) {
         result = std::move(read_out.second);
         return true;
     }
 
     // If value at the height index corresponds to an different block, the result will be stored in
     // the hash index.
-    return db.Read(DBHashKey(block_index->GetBlockHash()), result);
+    return db.Read(DBHashKey(block.hash), result);
 }
 
-static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start_height,
-                        const CBlockIndex* stop_index, std::vector<DBVal>& results)
+static bool LookupRange(CDBWrapper& db, const std::string& index_name, interfaces::Chain& chain, int start_height,
+                        const interfaces::BlockRef& stop, std::vector<DBVal>& results)
 {
     if (start_height < 0) {
         LogError("start height (%d) is negative", start_height);
         return false;
     }
-    if (start_height > stop_index->nHeight) {
+    if (start_height > stop.height) {
         LogError("start height (%d) is greater than stop height (%d)",
-                 start_height, stop_index->nHeight);
+                 start_height, stop.height);
         return false;
     }
 
-    size_t results_size = static_cast<size_t>(stop_index->nHeight - start_height + 1);
+    size_t results_size = static_cast<size_t>(stop.height - start_height + 1);
     std::vector<std::pair<uint256, DBVal>> values(results_size);
 
     DBHeightKey key(start_height);
     std::unique_ptr<CDBIterator> db_it(db.NewIterator());
     db_it->Seek(DBHeightKey(start_height));
-    for (int height = start_height; height <= stop_index->nHeight; ++height) {
+    for (int height = start_height; height <= stop.height; ++height) {
         if (!db_it->Valid() || !db_it->GetKey(key) || key.height != height) {
             return false;
         }
@@ -401,12 +406,13 @@ static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start
 
     // Iterate backwards through block indexes collecting results in order to access the block hash
     // of each entry in case we need to look it up in the hash index.
-    for (const CBlockIndex* block_index = stop_index;
-         block_index && block_index->nHeight >= start_height;
-         block_index = block_index->pprev) {
-        uint256 block_hash = block_index->GetBlockHash();
-
-        size_t i = static_cast<size_t>(block_index->nHeight - start_height);
+    uint256 block_hash = stop.hash;
+    for (int block_height = stop.height; block_height >= start_height; --block_height) {
+        if (block_height < stop.height) {
+            bool found_hash = chain.findAncestorByHeight(block_hash, block_height, FoundBlock().hash(block_hash));
+            assert(found_hash);
+        }
+        size_t i = static_cast<size_t>(block_height - start_height);
         if (block_hash == values[i].first) {
             results[i] = std::move(values[i].second);
             continue;
@@ -422,25 +428,26 @@ static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start
     return true;
 }
 
-bool BlockFilterIndex::LookupFilter(const CBlockIndex* block_index, BlockFilter& filter_out) const
+bool BlockFilterIndex::LookupFilter(const interfaces::BlockRef& block, BlockFilter& filter_out) const
 {
     DBVal entry;
-    if (!LookupOne(*m_db, block_index, entry)) {
+    if (!LookupOne(*m_db, block, entry)) {
         return false;
     }
 
+    LOCK(m_filter_mutex);
     return ReadFilterFromDisk(entry.pos, entry.hash, filter_out);
 }
 
-bool BlockFilterIndex::LookupFilterHeader(const CBlockIndex* block_index, uint256& header_out)
+bool BlockFilterIndex::LookupFilterHeader(const interfaces::BlockRef& block, uint256& header_out)
 {
     LOCK(m_cs_headers_cache);
 
-    bool is_checkpoint{block_index->nHeight % CFCHECKPT_INTERVAL == 0};
+    bool is_checkpoint{block.height % CFCHECKPT_INTERVAL == 0};
 
     if (is_checkpoint) {
         // Try to find the block in the headers cache if this is a checkpoint height.
-        auto header = m_headers_cache.find(block_index->GetBlockHash());
+        auto header = m_headers_cache.find(block.hash);
         if (header != m_headers_cache.end()) {
             header_out = header->second;
             return true;
@@ -448,30 +455,32 @@ bool BlockFilterIndex::LookupFilterHeader(const CBlockIndex* block_index, uint25
     }
 
     DBVal entry;
-    if (!LookupOne(*m_db, block_index, entry)) {
+    if (!LookupOne(*m_db, block, entry)) {
         return false;
     }
 
     if (is_checkpoint &&
         m_headers_cache.size() < CF_HEADERS_CACHE_MAX_SZ) {
         // Add to the headers cache if this is a checkpoint height.
-        m_headers_cache.emplace(block_index->GetBlockHash(), entry.header);
+        m_headers_cache.emplace(block.hash, entry.header);
     }
 
     header_out = entry.header;
     return true;
 }
 
-bool BlockFilterIndex::LookupFilterRange(int start_height, const CBlockIndex* stop_index,
+bool BlockFilterIndex::LookupFilterRange(int start_height, const interfaces::BlockRef& stop_index,
                                          std::vector<BlockFilter>& filters_out) const
 {
     std::vector<DBVal> entries;
-    if (!LookupRange(*m_db, m_name, start_height, stop_index, entries)) {
+    assert(m_chain);
+    if (!LookupRange(*m_db, m_name, *m_chain, start_height, stop_index, entries)) {
         return false;
     }
 
     filters_out.resize(entries.size());
     auto filter_pos_it = filters_out.begin();
+    LOCK(m_filter_mutex);
     for (const auto& entry : entries) {
         if (!ReadFilterFromDisk(entry.pos, entry.hash, *filter_pos_it)) {
             return false;
@@ -482,12 +491,13 @@ bool BlockFilterIndex::LookupFilterRange(int start_height, const CBlockIndex* st
     return true;
 }
 
-bool BlockFilterIndex::LookupFilterHashRange(int start_height, const CBlockIndex* stop_index,
+bool BlockFilterIndex::LookupFilterHashRange(int start_height, const interfaces::BlockRef& stop_index,
                                              std::vector<uint256>& hashes_out) const
 
 {
     std::vector<DBVal> entries;
-    if (!LookupRange(*m_db, m_name, start_height, stop_index, entries)) {
+    assert(m_chain);
+    if (!LookupRange(*m_db, m_name, *m_chain, start_height, stop_index, entries)) {
         return false;
     }
 

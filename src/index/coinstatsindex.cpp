@@ -146,6 +146,7 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 
         // Add the new utxos created from the block
         assert(block.data);
+        assert(block.undo_data);
         for (size_t i = 0; i < block.data->vtx.size(); ++i) {
             const auto& tx{block.data->vtx.at(i)};
             const bool is_coinbase{tx->IsCoinBase()};
@@ -299,13 +300,13 @@ static bool LookUpOne(const CDBWrapper& db, const interfaces::BlockRef& block, D
     return db.Read(DBHashKey(block.hash), result);
 }
 
-std::optional<CCoinsStats> CoinStatsIndex::LookUpStats(const CBlockIndex& block_index) const
+std::optional<CCoinsStats> CoinStatsIndex::LookUpStats(const interfaces::BlockRef& block) const
 {
-    CCoinsStats stats{block_index.nHeight, block_index.GetBlockHash()};
+    CCoinsStats stats{block.height, block.hash};
     stats.index_used = true;
 
     DBVal entry;
-    if (!LookUpOne(*m_db, {block_index.GetBlockHash(), block_index.nHeight}, entry)) {
+    if (!LookUpOne(*m_db, block, entry)) {
         return std::nullopt;
     }
 
