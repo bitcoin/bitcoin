@@ -79,4 +79,4 @@ darwin_debug_CXXFLAGS=$(darwin_debug_CFLAGS)
 darwin_cmake_system_name=Darwin
 # Darwin version, which corresponds to OSX_MIN_VERSION.
 # See https://en.wikipedia.org/wiki/Darwin_(operating_system)
-darwin_cmake_system_version=20.1
+darwin_cmake_system_version=22.1
