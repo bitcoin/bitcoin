@@ -1034,7 +1034,7 @@ void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
     }
 }
 
-size_t GetSerializeSizeForRecipient(const CRecipient& recipient)
+uint64_t GetSerializeSizeForRecipient(const CRecipient& recipient)
 {
     return ::GetSerializeSize(CTxOut(recipient.nAmount, GetScriptForDestination(recipient.dest)));
 }

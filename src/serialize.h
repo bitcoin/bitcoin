@@ -1051,7 +1051,7 @@ struct ActionUnserialize {
 class SizeComputer
 {
 protected:
-    size_t nSize{0};
+    uint64_t nSize{0};
 
 public:
     SizeComputer() = default;
@@ -1062,7 +1062,7 @@ public:
     }
 
     /** Pretend _nSize bytes are written, without specifying them. */
-    void seek(size_t _nSize)
+    void seek(uint64_t _nSize)
     {
         this->nSize += _nSize;
     }
@@ -1074,7 +1074,7 @@ public:
         return (*this);
     }
 
-    size_t size() const {
+    uint64_t size() const {
         return nSize;
     }
 };
@@ -1091,7 +1091,7 @@ inline void WriteCompactSize(SizeComputer &s, uint64_t nSize)
 }
 
 template <typename T>
-size_t GetSerializeSize(const T& t)
+uint64_t GetSerializeSize(const T& t)
 {
     return (SizeComputer() << t).size();
 }

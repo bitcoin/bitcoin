@@ -349,7 +349,7 @@ void CCoinsViewCache::SanityCheck() const
     assert(recomputed_usage == cachedCoinsUsage);
 }
 
-static const size_t MIN_TRANSACTION_OUTPUT_WEIGHT = WITNESS_SCALE_FACTOR * ::GetSerializeSize(CTxOut());
+static const uint64_t MIN_TRANSACTION_OUTPUT_WEIGHT = WITNESS_SCALE_FACTOR * ::GetSerializeSize(CTxOut());
 static const size_t MAX_OUTPUTS_PER_BLOCK = MAX_BLOCK_WEIGHT / MIN_TRANSACTION_OUTPUT_WEIGHT;
 
 const Coin& AccessByTxid(const CCoinsViewCache& view, const Txid& txid)
