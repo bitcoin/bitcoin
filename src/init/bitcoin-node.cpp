@@ -7,6 +7,7 @@
 #include <interfaces/echo.h>
 #include <interfaces/init.h>
 #include <interfaces/ipc.h>
+#include <interfaces/mining.h>
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
 #include <node/context.h>
