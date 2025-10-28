@@ -17,6 +17,7 @@
 #include <net.h>
 #include <netbase.h>
 #include <netgroup.h>
+#include <node/blockstorage.h>
 #include <node/utxo_snapshot.h>
 #include <primitives/block.h>
 #include <protocol.h>
@@ -34,6 +35,7 @@
 #include <optional>
 #include <stdexcept>
 
+using kernel::CBlockFileInfo;
 using node::SnapshotMetadata;
 
 namespace {

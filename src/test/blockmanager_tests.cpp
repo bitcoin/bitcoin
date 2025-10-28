@@ -17,6 +17,7 @@
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
 
+using kernel::CBlockFileInfo;
 using node::STORAGE_HEADER_BYTES;
 using node::BlockManager;
 using node::KernelNotifications;
