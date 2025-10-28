@@ -358,7 +358,7 @@ jobs:
         uses: ./.github/actions/save-caches
 
       - name: Upload built executables
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: x86_64-w64-mingw32-executables-${{ github.run_id }}
           path: |
