@@ -410,6 +410,7 @@ if(BUILD_UTIL_CHAINSTATE)
   add_executable(bitcoin-chainstate
     bitcoin-chainstate.cpp
   )
+  add_windows_application_manifest(bitcoin-chainstate)
   # TODO: The `SKIP_BUILD_RPATH` property setting can be deleted
   #       in the future after reordering Guix script commands to
   #       perform binary checks after the installation step.
