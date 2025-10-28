@@ -41,7 +41,10 @@ echo "=== BEGIN env ==="
 env
 echo "=== END env ==="
 
-(
+# Don't apply patches in the tidy job, because it relies on the `git diff`
+# command to detect IWYU errors. It is safe to skip this patch in the tidy job
+# because it doesn't run a UB detector.
+if [ "$RUN_TIDY" != "true" ]; then
   # compact->outputs[i].file_size is uninitialized memory, so reading it is UB.
   # The statistic bytes_written is only used for logging, which is disabled in
   # CI, so as a temporary minimal fix to work around UB and CI failures, leave
@@ -62,7 +65,7 @@ echo "=== END env ==="
    mutex_.Lock();
    stats_[compact->compaction->level() + 1].Add(stats);
 EOF
-)
+fi
 
 if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_corpora/
@@ -211,14 +214,30 @@ if [ "${RUN_TIDY}" = "true" ]; then
     false
   fi
 
+  # TODO: Consider enforcing IWYU across the entire codebase.
+  FILES_WITH_ENFORCED_IWYU="/src/(crypto|index)/.*\\.cpp"
+  jq --arg patterns "$FILES_WITH_ENFORCED_IWYU" 'map(select(.file | test($patterns)))' "${BASE_BUILD_DIR}/compile_commands.json" > "${BASE_BUILD_DIR}/compile_commands_iwyu_errors.json"
+  jq --arg patterns "$FILES_WITH_ENFORCED_IWYU" 'map(select(.file | test($patterns) | not))' "${BASE_BUILD_DIR}/compile_commands.json" > "${BASE_BUILD_DIR}/compile_commands_iwyu_warnings.json"
+
   cd "${BASE_ROOT_DIR}"
-  python3 "/include-what-you-use/iwyu_tool.py" \
-           -p "${BASE_BUILD_DIR}" "${MAKEJOBS}" \
-           -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_ROOT_DIR}/contrib/devtools/iwyu/bitcoin.core.imp" \
-           -Xiwyu --max_line_length=160 \
-           2>&1 | tee /tmp/iwyu_ci.out
-  cd "${BASE_ROOT_DIR}/src"
-  python3 "/include-what-you-use/fix_includes.py" --nosafe_headers < /tmp/iwyu_ci.out
+
+  run_iwyu() {
+    mv "${BASE_BUILD_DIR}/$1" "${BASE_BUILD_DIR}/compile_commands.json"
+    python3 "/include-what-you-use/iwyu_tool.py" \
+             -p "${BASE_BUILD_DIR}" "${MAKEJOBS}" \
+             -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_ROOT_DIR}/contrib/devtools/iwyu/bitcoin.core.imp" \
+             -Xiwyu --max_line_length=160 \
+             2>&1 | tee /tmp/iwyu_ci.out
+    python3 "/include-what-you-use/fix_includes.py" --nosafe_headers < /tmp/iwyu_ci.out
+  }
+
+  run_iwyu "compile_commands_iwyu_errors.json"
+  if ! ( git --no-pager diff --exit-code ); then
+    echo "^^^ ⚠️ Failure generated from IWYU"
+    false
+  fi
+
+  run_iwyu "compile_commands_iwyu_warnings.json"
   git --no-pager diff
 fi
 

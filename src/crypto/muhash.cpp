@@ -7,11 +7,12 @@
 #include <crypto/chacha20.h>
 #include <crypto/common.h>
 #include <hash.h>
+#include <span.h>
+#include <uint256.h>
 #include <util/check.h>
 
 #include <bit>
-#include <cassert>
-#include <cstdio>
+#include <cstring>
 #include <limits>
 
 namespace {

@@ -6,13 +6,24 @@
 #define BITCOIN_INDEX_BLOCKFILTERINDEX_H
 
 #include <attributes.h>
-#include <blockfilter.h>
-#include <chain.h>
 #include <flatfile.h>
 #include <index/base.h>
+#include <interfaces/chain.h>
+#include <sync.h>
+#include <uint256.h>
 #include <util/hasher.h>
 
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <optional>
 #include <unordered_map>
+#include <vector>
+
+class BlockFilter;
+class CBlockIndex;
+enum class BlockFilterType : uint8_t;
 
 static const char* const DEFAULT_BLOCKFILTERINDEX = "0";
 
