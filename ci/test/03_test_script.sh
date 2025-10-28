@@ -224,8 +224,10 @@ if [ "${RUN_TIDY}" = "true" ]; then
   run_iwyu() {
     mv "${BASE_BUILD_DIR}/$1" "${BASE_BUILD_DIR}/compile_commands.json"
     python3 "/include-what-you-use/iwyu_tool.py" \
-             -p "${BASE_BUILD_DIR}" "${MAKEJOBS}" \
-             -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_ROOT_DIR}/contrib/devtools/iwyu/bitcoin.core.imp" \
+             -p "${BASE_BUILD_DIR}" "${MAKEJOBS}" -- \
+             -Xiwyu --cxx17ns \
+             -Xiwyu --mapping_file="${BASE_ROOT_DIR}/contrib/devtools/iwyu/bitcoin.core.imp" \
+             -Xiwyu --mapping_file=/include-what-you-use/boost-1.75-all.imp \
              -Xiwyu --max_line_length=160 \
              2>&1 | tee /tmp/iwyu_ci.out
     python3 "/include-what-you-use/fix_includes.py" --nosafe_headers < /tmp/iwyu_ci.out
