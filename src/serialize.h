@@ -1051,31 +1051,32 @@ struct ActionUnserialize {
 class SizeComputer
 {
 protected:
-    size_t nSize{0};
+    uint64_t m_size{0};
 
 public:
     SizeComputer() = default;
 
     void write(std::span<const std::byte> src)
     {
-        this->nSize += src.size();
+        m_size += src.size();
     }
 
-    /** Pretend _nSize bytes are written, without specifying them. */
-    void seek(size_t _nSize)
+    /** Pretend this many bytes are written, without specifying them. */
+    void seek(uint64_t num)
     {
-        this->nSize += _nSize;
+        m_size += num;
     }
 
-    template<typename T>
+    template <typename T>
     SizeComputer& operator<<(const T& obj)
     {
         ::Serialize(*this, obj);
-        return (*this);
+        return *this;
     }
 
-    size_t size() const {
-        return nSize;
+    uint64_t size() const
+    {
+        return m_size;
     }
 };
 
@@ -1091,7 +1092,7 @@ inline void WriteCompactSize(SizeComputer &s, uint64_t nSize)
 }
 
 template <typename T>
-size_t GetSerializeSize(const T& t)
+uint64_t GetSerializeSize(const T& t)
 {
     return (SizeComputer() << t).size();
 }
