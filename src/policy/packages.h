@@ -9,10 +9,9 @@
 #include <consensus/validation.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
-#include <util/hasher.h>
+#include <uint256.h>
 
 #include <cstdint>
-#include <unordered_set>
 #include <vector>
 
 /** Default maximum number of transactions in a package. */

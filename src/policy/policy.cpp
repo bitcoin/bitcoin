@@ -18,6 +18,7 @@
 #include <script/solver.h>
 #include <serialize.h>
 #include <span.h>
+#include <util/check.h>
 
 #include <algorithm>
 #include <cstddef>

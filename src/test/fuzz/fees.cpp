@@ -5,6 +5,7 @@
 #include <common/messages.h>
 #include <consensus/amount.h>
 #include <policy/fees/block_policy_estimator.h>
+#include <random.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>

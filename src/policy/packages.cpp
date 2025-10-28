@@ -3,16 +3,21 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <policy/packages.h>
-#include <policy/policy.h>
+
+#include <consensus/validation.h>
+#include <hash.h>
 #include <primitives/transaction.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/hasher.h>
 
 #include <algorithm>
-#include <cassert>
 #include <iterator>
 #include <memory>
 #include <numeric>
+#include <span>
+#include <string>
+#include <unordered_set>
 
 /** IsTopoSortedPackage where a set of txids has been pre-populated. The set is assumed to be correct and
  * is mutated within this function (even if return value is false). */

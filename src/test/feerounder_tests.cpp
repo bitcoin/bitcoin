@@ -4,6 +4,7 @@
 
 #include <consensus/amount.h>
 #include <policy/fees/block_policy_estimator.h>
+#include <random.h>
 
 #include <boost/test/unit_test.hpp>
 

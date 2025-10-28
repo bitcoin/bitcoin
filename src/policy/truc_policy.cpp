@@ -4,14 +4,16 @@
 
 #include <policy/truc_policy.h>
 
-#include <coins.h>
-#include <consensus/amount.h>
-#include <logging.h>
+#include <policy/packages.h>
+#include <primitives/transaction.h>
 #include <tinyformat.h>
+#include <txmempool.h>
 #include <util/check.h>
 
 #include <algorithm>
-#include <numeric>
+#include <cstddef>
+#include <functional>
+#include <memory>
 #include <vector>
 
 /** Helper for PackageTRUCChecks: Returns a vector containing the indices of transactions (within

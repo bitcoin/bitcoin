@@ -9,8 +9,6 @@
 #include <policy/packages.h>
 #include <primitives/transaction.h>
 
-#include <optional>
-
 class CFeeRate;
 class CTxMemPool;
 class TxValidationState;

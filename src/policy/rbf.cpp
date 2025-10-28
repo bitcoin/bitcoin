@@ -5,21 +5,22 @@
 #include <policy/rbf.h>
 
 #include <consensus/amount.h>
-#include <kernel/mempool_entry.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <txmempool.h>
-#include <uint256.h>
 #include <util/check.h>
+#include <util/feefrac.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
-
-#include <limits>
-#include <vector>
+#include <util/result.h>
+#include <util/translation.h>
 
 #include <compare>
+#include <span>
+#include <vector>
+
 
 RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
 {

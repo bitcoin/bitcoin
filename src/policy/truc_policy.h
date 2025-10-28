@@ -5,15 +5,17 @@
 #ifndef BITCOIN_POLICY_TRUC_POLICY_H
 #define BITCOIN_POLICY_TRUC_POLICY_H
 
-#include <consensus/amount.h>
+#include <consensus/consensus.h>
 #include <policy/packages.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <txmempool.h>
-#include <util/result.h>
 
+#include <cstdint>
+#include <optional>
 #include <set>
 #include <string>
+#include <utility>
 
 // This module enforces rules for BIP 431 TRUC transactions which help make
 // RBF abilities more robust. A transaction with version=3 is treated as TRUC.
