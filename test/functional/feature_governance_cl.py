@@ -99,16 +99,24 @@ class DashGovernanceTest (DashTestFramework):
 
         assert_equal(len(self.nodes[0].gobject("list", "valid", "triggers")), 0)
 
-        self.log.info("Move 1 block into sb maturity window")
+        self.log.info("Move into sb maturity window")
         n = sb_immaturity_window - self.nodes[0].getblockcount() % sb_cycle
         assert n >= 0
-        for _ in range(n + 1):
+        for _ in range(n):
             self.bump_mocktime(156)
             self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks(self.nodes[0:5]))
 
         self.log.info("Wait for new trigger and votes on non-isolated nodes")
         sb_block_height = self.nodes[0].getblockcount() // sb_cycle * sb_cycle + sb_cycle
         assert_equal(sb_block_height % sb_cycle, 0)
+
+        assert_equal(self.mninfo[4].nodeIdx, 5)
+        isolated_lastpaid_height = self.nodes[0].protx("info", self.mninfo[4].proTxHash)["state"]["lastPaidHeight"]
+        if isolated_lastpaid_height == self.nodes[0].getblockcount() - self.mn_count + 1:
+            # Isolated node is the one that should create new trigger at this height,
+            # mine a block to pick another node
+            self.bump_mocktime(156)
+            self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks(self.nodes[0:5]))
         self.wait_until(lambda: have_trigger_for_height(self.nodes[0:5], sb_block_height), timeout=5)
 
         n = sb_cycle - self.nodes[0].getblockcount() % sb_cycle
