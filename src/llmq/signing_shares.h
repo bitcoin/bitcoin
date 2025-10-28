@@ -7,6 +7,7 @@
 
 #include <bls/bls.h>
 #include <evo/types.h>
+#include <llmq/signhash.h>
 #include <llmq/signing.h>
 #include <msg_result.h>
 

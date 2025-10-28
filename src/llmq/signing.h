@@ -7,23 +7,17 @@
 
 #include <bls/bls.h>
 #include <llmq/params.h>
-#include <llmq/signhash.h>
 #include <llmq/types.h>
 #include <msg_result.h>
-#include <unordered_lru_cache.h>
-
 #include <net_types.h>
 #include <random.h>
 #include <saltedhasher.h>
 #include <sync.h>
-#include <util/threadinterrupt.h>
+#include <unordered_lru_cache.h>
 #include <util/time.h>
-
-#include <gsl/pointers.h>
 
 #include <memory>
 #include <string_view>
-#include <thread>
 #include <unordered_map>
 
 class CChainState;
@@ -31,7 +25,6 @@ class CDataStream;
 class CDBBatch;
 class CDBWrapper;
 class CInv;
-class PeerManager;
 struct RPCResult;
 namespace util {
 struct DbWrapperParams;
@@ -42,6 +35,7 @@ class UniValue;
 namespace llmq {
 class CQuorumManager;
 class CSigSharesManager;
+class SignHash;
 
 // Keep recovered signatures for a week. This is a "-maxrecsigsage" option default.
 static constexpr int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE{60 * 60 * 24 * 7};
@@ -59,9 +53,7 @@ protected:
     CSigBase() = default;
 
 public:
-    [[nodiscard]] constexpr auto getLlmqType() const {
-        return llmqType;
-    }
+    [[nodiscard]] constexpr Consensus::LLMQType getLlmqType() const { return llmqType; }
 
     [[nodiscard]] constexpr auto getQuorumHash() const -> const uint256& {
         return quorumHash;
@@ -160,6 +152,7 @@ class CRecoveredSigsListener
 public:
     virtual ~CRecoveredSigsListener() = default;
 
+    // TODO: simplify returned type to std::variant<CInv, CTransaction, std::monostate>
     [[nodiscard]] virtual MessageProcessingResult HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) = 0;
 };
 
@@ -168,7 +161,6 @@ class CSigningManager
 private:
 
     CRecoveredSigsDb db;
-    const CChainState& m_chainstate;
     const CQuorumManager& qman;
 
     mutable Mutex cs_pending;
@@ -187,14 +179,13 @@ public:
     CSigningManager() = delete;
     CSigningManager(const CSigningManager&) = delete;
     CSigningManager& operator=(const CSigningManager&) = delete;
-    explicit CSigningManager(const CChainState& chainstate, const CQuorumManager& _qman,
-                             const util::DbWrapperParams& db_params);
+    explicit CSigningManager(const CQuorumManager& _qman, const util::DbWrapperParams& db_params);
     ~CSigningManager();
 
     bool AlreadyHave(const CInv& inv) const EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
     bool GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret) const;
 
-    [[nodiscard]] MessageProcessingResult ProcessMessage(NodeId from, std::string_view msg_type, CDataStream& vRecv)
+    void ProcessRecoveredSig(NodeId from, std::shared_ptr<CRecoveredSig> recovered_sig)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
 
     // This is called when a recovered signature was was reconstructed from another P2P message and is known to be valid
@@ -208,20 +199,21 @@ public:
     // DB. This allows AlreadyHave/late-share filtering to keep returning true. Cleanup will later remove the remains
     void TruncateRecoveredSig(Consensus::LLMQType llmqType, const uint256& id);
 
-private:
+    // Used by NetSigning:
+    const CQuorumManager& Qman() { return qman; }
+    Uint256HashMap<std::shared_ptr<const CRecoveredSig>> FetchPendingReconstructed() EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
     bool CollectPendingRecoveredSigsToVerify(
         size_t maxUniqueSessions, std::unordered_map<NodeId, std::list<std::shared_ptr<const CRecoveredSig>>>& retSigShares,
         std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
-    void ProcessPendingReconstructedRecoveredSigs(PeerManager& peerman)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_pending, !cs_listeners);
-    bool ProcessPendingRecoveredSigs(PeerManager& peerman)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_pending, !cs_listeners); // called from the worker thread of CSigSharesManager
+    std::vector<CRecoveredSigsListener*> GetListeners() const EXCLUSIVE_LOCKS_REQUIRED(!cs_listeners);
+    // Returns true if recovered sigs should be send to listeners
+    bool ProcessRecoveredSig(const std::shared_ptr<const CRecoveredSig>& recoveredSig)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
 
+private:
     // Used by CSigSharesManager
     CRecoveredSigsDb& GetDb() { return db; }
-    void ProcessRecoveredSig(const std::shared_ptr<const CRecoveredSig>& recoveredSig, PeerManager& peerman, NodeId from)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_pending, !cs_listeners);
 
     // Needed for access to GetDb() and ProcessRecoveredSig()
     friend class CSigSharesManager;
@@ -239,16 +231,8 @@ public:
 
     bool GetVoteForId(Consensus::LLMQType llmqType, const uint256& id, uint256& msgHashRet) const;
 
-private:
-    std::thread workThread;
-    CThreadInterrupt workInterrupt;
-    void Cleanup(); // called from the worker thread of CSigSharesManager
-    void WorkThreadMain(PeerManager& peerman) EXCLUSIVE_LOCKS_REQUIRED(!cs_pending, !cs_listeners);
-
 public:
-    void StartWorkerThread(PeerManager& peerman);
-    void StopWorkerThread();
-    void InterruptWorkerThread();
+    void Cleanup();
 };
 
 template<typename NodesContainer, typename Continue, typename Callback>

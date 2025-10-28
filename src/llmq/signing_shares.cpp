@@ -844,7 +844,16 @@ void CSigSharesManager::TryRecoverSig(const CQuorum& quorum, const uint256& id, 
 
     // Handle single-member quorum case after releasing the lock
     if (singleMemberRecoveredSig) {
-        sigman.ProcessRecoveredSig(singleMemberRecoveredSig, m_peerman, /*from=*/-1);
+        if (sigman.ProcessRecoveredSig(singleMemberRecoveredSig)) {
+            // TODO: remove duplicated code with NetSigning
+            auto listeners = sigman.GetListeners();
+            for (auto& l : listeners) {
+                m_peerman.PostProcessMessage(l->HandleNewRecoveredSig(*singleMemberRecoveredSig));
+            }
+
+            GetMainSignals().NotifyRecoveredSig(singleMemberRecoveredSig,
+                                                singleMemberRecoveredSig->GetHash().ToString(), false);
+        }
         return; // end of single-quorum processing
     }
 
@@ -876,7 +885,18 @@ void CSigSharesManager::TryRecoverSig(const CQuorum& quorum, const uint256& id, 
         }
     }
 
-    sigman.ProcessRecoveredSig(rs, m_peerman, /*from=*/-1);
+    if (sigman.ProcessRecoveredSig(rs)) {
+        // TODO: remove duplicated code with NetSigning
+        auto listeners = sigman.GetListeners();
+        for (auto& l : listeners) {
+            m_peerman.PostProcessMessage(l->HandleNewRecoveredSig(*rs));
+        }
+
+        auto proactive_relay = rs->getLlmqType() != Consensus::LLMQType::LLMQ_100_67 &&
+                               rs->getLlmqType() != Consensus::LLMQType::LLMQ_400_60 &&
+                               rs->getLlmqType() != Consensus::LLMQType::LLMQ_400_85;
+        GetMainSignals().NotifyRecoveredSig(rs, rs->GetHash().ToString(), proactive_relay);
+    }
 }
 
 CDeterministicMNCPtr CSigSharesManager::SelectMemberForRecovery(const CQuorum& quorum, const uint256 &id, int attempt)
