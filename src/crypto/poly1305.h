@@ -10,7 +10,6 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <span>
 
 #define POLY1305_BLOCK_SIZE 16
 
