@@ -30,7 +30,7 @@ public:
     */
     bool SendZmqMessage(const char *command, const void* data, size_t size);
 
-    bool Initialize(void *pcontext) override;
+    util::Result<void> Initialize(void *pcontext) override;
     void Shutdown() override;
 };
 

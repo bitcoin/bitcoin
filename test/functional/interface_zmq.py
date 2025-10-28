@@ -3,8 +3,10 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the ZMQ notification interface."""
+import errno
 import os
 import struct
+import sys
 import tempfile
 from io import BytesIO
 
@@ -27,6 +29,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
     ensure_for,
     p2p_port,
+    rpc_port,
 )
 from test_framework.wallet import (
     MiniWallet,
@@ -184,8 +187,46 @@ class ZMQTest (BitcoinTestFramework):
     def test_basic(self, unix = False):
         self.log.info(f"Running basic test with {'ipc' if unix else 'tcp'} protocol")
 
-        # Invalid zmq arguments don't take down the node, see #17185.
-        self.restart_node(0, ["-zmqpubrawtx=foo", "-zmqpubhashtx=bar"])
+        # Invalid zmq arguments should cause exit with an error naming the notifier and address.
+        # The errno text after the last ":" comes from zmq_strerror: on Windows libzmq
+        # returns its own hardcoded strings, elsewhere it falls through to the platform
+        # strerror, which os.strerror also consults.
+        if sys.platform == "win32":
+            eaddrnotavail = "Address not available"
+            eaddrinuse = "Address in use"
+        else:
+            eaddrnotavail = os.strerror(errno.EADDRNOTAVAIL)
+            eaddrinuse = os.strerror(errno.EADDRINUSE)
+
+        self.stop_node(0)
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=["-zmqpubrawtx=foo", "-zmqpubhashtx=bar"],
+            expected_msg=f"Error: Failed to bind address bar for pubhashtx: {os.strerror(errno.EINVAL)}",
+        )
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=["-zmqpubsequence=baz"],
+            expected_msg=f"Error: Failed to bind address baz for pubsequence: {os.strerror(errno.EINVAL)}",
+        )
+        # A notifier that binds successfully must not mask a later notifier's failure
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=[f"-zmqpubhashblock=tcp://127.0.0.1:{self.zmq_port_base}", "-zmqpubrawblock=foo"],
+            expected_msg=f"Error: Failed to bind address foo for pubrawblock: {os.strerror(errno.EINVAL)}",
+        )
+        # Binding an address this host doesn't own fails with EADDRNOTAVAIL. Use an
+        # unprivileged port so the error cannot be EACCES instead.
+        address = f"tcp://1.2.3.4:{self.zmq_port_base}"
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=[f"-zmqpubrawblock={address}"],
+            expected_msg=f"Error: Failed to bind address {address} for pubrawblock: {eaddrnotavail}",
+        )
+        # Binding the node's own RPC port fails with EADDRINUSE, as the RPC server
+        # binds before the ZMQ notifiers initialize
+        address = f"tcp://127.0.0.1:{rpc_port(self.nodes[0].index)}"
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=[f"-zmqpubrawblock={address}"],
+            expected_msg=f"Error: Failed to bind address {address} for pubrawblock: {eaddrinuse}",
+        )
+        self.start_node(0)
 
         address = f"tcp://127.0.0.1:{self.zmq_port_base}"
 
