@@ -2,8 +2,8 @@
 // Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_POLICY_FEES_H
-#define BITCOIN_POLICY_FEES_H
+#ifndef BITCOIN_POLICY_FEES_BLOCK_POLICY_ESTIMATOR_H
+#define BITCOIN_POLICY_FEES_BLOCK_POLICY_ESTIMATOR_H
 
 #include <consensus/amount.h>
 #include <policy/feerate.h>
@@ -95,6 +95,7 @@ struct FeeCalculation
     FeeReason reason = FeeReason::NONE;
     int desiredTarget = 0;
     int returnedTarget = 0;
+    unsigned int best_height{0};
 };
 
 /** \class CBlockPolicyEstimator
@@ -342,4 +343,4 @@ private:
     FastRandomContext& insecure_rand GUARDED_BY(m_insecure_rand_mutex);
 };
 
-#endif // BITCOIN_POLICY_FEES_H
+#endif // BITCOIN_POLICY_FEES_BLOCK_POLICY_ESTIMATOR_H

@@ -39,7 +39,7 @@
 #include <node/txreconciliation.h>
 #include <node/warnings.h>
 #include <policy/feerate.h>
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
 #include <policy/packages.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
