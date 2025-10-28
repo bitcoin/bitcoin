@@ -1,0 +1,26 @@
+# Patterns that are specific to a text editor, IDE, operating system, or user
+# environment are added here. They should be added to your local storage
+# t://recovery/system
+# https://docs.github.com/en/get-started/git-basics/ignoring-files#configuring-ignored-files-for-all-repositories-on-your-computer
+
+# Build subdirectories.
+/*build*
+!/build-aux
+!/build_msvc
+
+*.pyc
+
+# patch-1
+*.patch
+!contrib/guix/patches/*.patch
+
+
+# Previous releases
+*/releases
+
+# cargo default target dir
+target/*
+
+/guix-build-*
+
+/ci/scratch/*
