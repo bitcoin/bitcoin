@@ -1254,8 +1254,12 @@ private:
     const CScript& scriptCode; //!< output script being consumed
     const unsigned int nIn;    //!< input index of txTo being signed
     const bool fAnyoneCanPay;  //!< whether the hashtype has the SIGHASH_ANYONECANPAY flag set
+    // Temporary workaround for a clang-tidy bug fixed in version 22.
+    // See: https://github.com/llvm/llvm-project/issues/160394.
+    // NOLINTBEGIN(modernize-use-default-member-init)
     const bool fHashSingle;    //!< whether the hashtype is SIGHASH_SINGLE
     const bool fHashNone;      //!< whether the hashtype is SIGHASH_NONE
+    // NOLINTEND(modernize-use-default-member-init)
 
 public:
     CTransactionSignatureSerializer(const T& txToIn, const CScript& scriptCodeIn, unsigned int nInIn, int nHashTypeIn) :
