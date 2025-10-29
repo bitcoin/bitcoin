@@ -49,6 +49,7 @@ struct Args {
     fs::path output_json;
     std::string regex_filter;
     std::vector<std::string> setup_args;
+    bool scale_threads;
 };
 
 class BenchRunner
