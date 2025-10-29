@@ -632,7 +632,9 @@ static RPCHelpMan getnetworkinfo()
 {
     return RPCHelpMan{"getnetworkinfo",
                 "Returns an object containing various state info regarding P2P networking.\n",
-                {},
+                {
+                    {"satvB", RPCArg::Type::BOOL, RPCArg::Default{false}, "If enabled relayfee and incrementalfee will be represented in " + CURRENCY_ATOM + "/vB instead of " + CURRENCY_UNIT + "/kvB"}
+                },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
                     {
@@ -713,8 +715,9 @@ static RPCHelpMan getnetworkinfo()
     obj.pushKV("networks",      GetNetworksInfo());
     if (node.mempool) {
         // Those fields can be deprecated, to be replaced by the getmempoolinfo fields
-        obj.pushKV("relayfee", ValueFromAmount(node.mempool->m_opts.min_relay_feerate.GetFeePerK()));
-        obj.pushKV("incrementalfee", ValueFromAmount(node.mempool->m_opts.incremental_relay_feerate.GetFeePerK()));
+        FeeRateUnit feerate_units = self.Arg<bool>("satvB") ? FeeRateUnit::SAT_VB : FeeRateUnit::BTC_KVB;
+        obj.pushKV("relayfee", ValueFromFeeRate(node.mempool->m_opts.min_relay_feerate, feerate_units));
+        obj.pushKV("incrementalfee", ValueFromFeeRate(node.mempool->m_opts.incremental_relay_feerate, feerate_units));
     }
     UniValue localAddresses(UniValue::VARR);
     {
