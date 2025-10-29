@@ -813,7 +813,7 @@ void InitParameterInteraction(ArgsManager& args)
     if (!onlynets.empty()) {
         bool clearnet_reachable = std::any_of(onlynets.begin(), onlynets.end(), [](const auto& net) {
             const auto n = ParseNetwork(net);
-            return n == NET_IPV4 || n == NET_IPV6;
+            return isClearnet(n);
         });
         if (!clearnet_reachable && args.SoftSetBoolArg("-dnsseed", false)) {
             LogInfo("parameter interaction: -onlynet excludes IPv4 and IPv6 -> setting -dnsseed=0\n");
