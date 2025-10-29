@@ -264,20 +264,37 @@ class CompactBlocksTest(BitcoinTestFramework):
         check_announcement_of_new_block(node, test_node, lambda p: "cmpctblock" not in p.last_message and "headers" in p.last_message)
 
     # This test actually causes bitcoind to (reasonably!) disconnect us, so do this last.
+    # Note, these are not consensus-invalid blocks, but improperly constructed cmpctblock messages.
     def test_invalid_cmpctblock_message(self):
+        # Make a high-bandwidth peer
+        hb_peer = self.nodes[0].add_p2p_connection(TestP2PConn())
+        self.request_cb_announcements(hb_peer)
+        self.make_peer_hb_to_candidate(self.nodes[0], hb_peer)
+        self.assert_highbandwidth_states(self.nodes[0], idx=-1, hb_to=True, hb_from=True)
+
+        # Make a low-bandwidth peer
+        lb_peer = self.nodes[0].add_p2p_connection(TestP2PConn())
+        self.request_cb_announcements(lb_peer)
+        self.assert_highbandwidth_states(self.nodes[0], idx=-1, hb_to=False, hb_from=True)
+
+        # Construct an invalid cmpctblock message
         self.generate(self.nodes[0], COINBASE_MATURITY + 1)
         block = self.build_block_on_tip(self.nodes[0])
-
-        self.segwit_node.send_header_for_blocks([block])
-        self.segwit_node.wait_for_getdata([block.hash_int], timeout=30)
-
         cmpct_block = P2PHeaderAndShortIDs()
         cmpct_block.header = CBlockHeader(block)
         cmpct_block.prefilled_txn_length = 1
         # This index will be too high
         prefilled_txn = PrefilledTransaction(1, block.vtx[0])
         cmpct_block.prefilled_txn = [prefilled_txn]
-        self.segwit_node.send_await_disconnect(msg_cmpctblock(cmpct_block))
+
+        # Test an unsolicited invalid cmpctblock from an HB peer.
+        hb_peer.send_await_disconnect(msg_cmpctblock(cmpct_block))
+        assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.hashPrevBlock)
+
+        # Test a solicited invalid cmpctblock from a non-HB peer.
+        lb_peer.send_header_for_blocks([block])
+        lb_peer.wait_for_getdata([block.hash_int], timeout=30)
+        lb_peer.send_await_disconnect(msg_cmpctblock(cmpct_block))
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.hashPrevBlock)
 
     # Compare the generated shortids to what we expect based on BIP 152, given
