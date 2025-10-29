@@ -56,6 +56,9 @@ def main():
                 os.environ["PREVIOUS_RELEASES_DIR"],
         ]:
             Path(create_dir).mkdir(parents=True, exist_ok=True)
+
+        # Modify PATH to prepend the retry script, needed for CI_RETRY_EXE
+        os.environ["PATH"] = f"{os.environ['BASE_ROOT_DIR']}/ci/retry:{os.environ['PATH']}"
     else:
         CI_IMAGE_LABEL = "bitcoin-ci-test"
 
