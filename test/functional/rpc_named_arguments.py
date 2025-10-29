@@ -50,5 +50,21 @@ class NamedArgumentTest(BitcoinTestFramework):
         assert_raises_rpc_error(-3, "Unexpected key unknown", node.getmempoolinfo, {"unknown": True})
         assert_raises_rpc_error(-8, "Parameter options conflicts with parameter sat_vb", node.getmempoolinfo, options={"sat_vb": False}, sat_vb=True)
 
+        self.log.info("Test getnetworkinfo options")
+        default_relayfee = node.getnetworkinfo()["relayfee"]
+        for options in [None, {}, {"sat_vb": None}, {"sat_vb": False}]:
+            assert_equal(node.getnetworkinfo(options)["relayfee"], default_relayfee)
+        for sat_vb in [None, False, True]:
+            assert_equal(
+                node.getnetworkinfo({"sat_vb": sat_vb})["relayfee"],
+                node.getnetworkinfo(options={"sat_vb": sat_vb})["relayfee"],
+                node.getnetworkinfo(sat_vb=sat_vb)["relayfee"],
+            )
+        assert_raises_rpc_error(-3, "Wrong type passed", node.getnetworkinfo, True)
+        assert_raises_rpc_error(-3, "JSON value of type number for field sat_vb is not of expected type bool", node.getnetworkinfo, {"sat_vb": 1})
+        assert_raises_rpc_error(-3, "JSON value of type number for field sat_vb is not of expected type bool", node.getnetworkinfo, sat_vb=1)
+        assert_raises_rpc_error(-3, "Unexpected key unknown", node.getnetworkinfo, {"unknown": True})
+        assert_raises_rpc_error(-8, "Parameter options conflicts with parameter sat_vb", node.getnetworkinfo, options={"sat_vb": False}, sat_vb=True)
+
 if __name__ == '__main__':
     NamedArgumentTest(__file__).main()
