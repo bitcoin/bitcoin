@@ -179,6 +179,8 @@ enum Network ParseNetwork(const std::string& net);
 std::string GetNetworkName(enum Network net);
 /** Return a vector of publicly routable Network names; optionally append NET_UNROUTABLE. */
 std::vector<std::string> GetNetworkNames(bool append_unroutable = false);
+/** Returns true if the network is IPv4 or IPv6 (as opposed to Tor/I2P/CJDNS). */
+bool IsClearnet(enum Network net);
 bool SetProxy(enum Network net, const Proxy &addrProxy);
 std::optional<Proxy> GetProxy(enum Network net);
 bool IsProxy(const CNetAddr &addr);

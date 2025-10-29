@@ -3083,7 +3083,7 @@ std::optional<Network> CConnman::PrivateBroadcast::PickNetwork(std::optional<Pro
     }
 
     const Network net{nets[FastRandomContext{}.randrange(nets.size())]};
-    if (net == NET_IPV4 || net == NET_IPV6) {
+    if (IsClearnet(net)) {
         proxy = clearnet_proxy;
     }
     return net;
