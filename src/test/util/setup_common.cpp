@@ -101,6 +101,8 @@ void SetupCommonTestArgs(ArgsManager& argsman)
 {
     argsman.AddArg("-testdatadir", strprintf("Custom data directory (default: %s<random_string>)", fs::PathToString(fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / "")),
                    ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+    argsman.AddArg("-worker-threads", "Number of worker threads for script validation (default: 2)",
+                   ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
 }
 
 /** Test setup failure */
@@ -261,14 +263,25 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
 
     m_make_chainman = [this, &chainparams, opts] {
         Assert(!m_node.chainman);
+
+        int worker_threads{2};
+        if (EnableFuzzDeterminism()) {
+            // Use no worker threads while fuzzing to avoid non-determinism
+            worker_threads = 0;
+        } else if (m_node.args->IsArgSet("-worker-threads")) {
+            worker_threads = m_node.args->GetIntArg("-worker-threads", 2);
+            if (worker_threads < 0) {
+                throw std::runtime_error("-worker-threads must be non-negative");
+            }
+        }
+
         ChainstateManager::Options chainman_opts{
             .chainparams = chainparams,
             .datadir = m_args.GetDataDirNet(),
             .check_block_index = 1,
             .notifications = *m_node.notifications,
             .signals = m_node.validation_signals.get(),
-            // Use no worker threads while fuzzing to avoid non-determinism
-            .worker_threads_num = EnableFuzzDeterminism() ? 0 : 2,
+            .worker_threads_num = worker_threads,
         };
         if (opts.min_validation_cache) {
             chainman_opts.script_execution_cache_bytes = 0;
