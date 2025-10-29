@@ -675,9 +675,16 @@ static UniValue GetNetworksInfo()
 
 static RPCMethod getnetworkinfo()
 {
+    static constexpr bool DEFAULT_SAT_VB{false};
     return RPCMethod{"getnetworkinfo",
                 "Returns an object containing various state info regarding P2P networking.\n",
-                {},
+                {
+                    {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
+                        {
+                            {"sat_vb", RPCArg::Type::BOOL, RPCArg::Default{DEFAULT_SAT_VB}, "If enabled relayfee and incrementalfee will be represented in " + CURRENCY_ATOM + "/vB instead of " + CURRENCY_UNIT + "/kvB"},
+                        },
+                    },
+                },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
                     {
@@ -717,8 +724,8 @@ static RPCMethod getnetworkinfo()
                             }},
                         }},
                         {RPCResult::Type::STR_HEX, "asmap_version", /*optional=*/true, "the SHA256 hash of the asmap data used for IP bucketing (only displayed if the -asmap config option is set)"},
-                        {RPCResult::Type::STR_AMOUNT, "relayfee", "minimum relay fee rate for transactions in " + CURRENCY_UNIT + "/kvB"},
-                        {RPCResult::Type::STR_AMOUNT, "incrementalfee", "minimum fee rate increment for mempool limiting or replacement in " + CURRENCY_UNIT + "/kvB"},
+                        {RPCResult::Type::STR_AMOUNT, "relayfee", "minimum relay fee rate for transactions in " + CURRENCY_UNIT + "/kvB, or " + CURRENCY_ATOM + "/vB if sat_vb is true"},
+                        {RPCResult::Type::STR_AMOUNT, "incrementalfee", "minimum fee rate increment for mempool limiting or replacement in " + CURRENCY_UNIT + "/kvB, or " + CURRENCY_ATOM + "/vB if sat_vb is true"},
                         {RPCResult::Type::ARR, "localaddresses", "list of local addresses",
                         {
                             {RPCResult::Type::OBJ, "", "",
@@ -744,6 +751,9 @@ static RPCMethod getnetworkinfo()
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
+    const UniValue options{request.params[0].isNull() ? UniValue::VOBJ : request.params[0]};
+    RPCTypeCheckObj(options, {{"sat_vb", UniValueType(UniValue::VBOOL)}}, /*fAllowNull=*/true, /*fStrict=*/true);
+    const bool sat_vb{options["sat_vb"].isNull() ? DEFAULT_SAT_VB : options["sat_vb"].get_bool()};
     LOCK(cs_main);
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("version",       CLIENT_VERSION);
@@ -780,8 +790,9 @@ static RPCMethod getnetworkinfo()
     }
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
     // Those fields can be deprecated, to be replaced by the getmempoolinfo fields
-    obj.pushKV("relayfee", ValueFromAmount(mempool.m_opts.min_relay_feerate.GetFeePerK()));
-    obj.pushKV("incrementalfee", ValueFromAmount(mempool.m_opts.incremental_relay_feerate.GetFeePerK()));
+    FeeRateFormat feerate_units = sat_vb ? FeeRateFormat::SAT_VB : FeeRateFormat::BTC_KVB;
+    obj.pushKV("relayfee", ValueFromFeeRate(mempool.m_opts.min_relay_feerate, feerate_units));
+    obj.pushKV("incrementalfee", ValueFromFeeRate(mempool.m_opts.incremental_relay_feerate, feerate_units));
     UniValue localAddresses(UniValue::VARR);
     {
         LOCK(g_maplocalhost_mutex);
