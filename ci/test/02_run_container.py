@@ -162,9 +162,28 @@ def main():
             stdout=subprocess.PIPE,
             text=True,
         ).stdout.strip()
-        os.environ["CI_CONTAINER_ID"] = container_id
 
-    run(["./ci/test/02_run_container.sh"])  # run the remainder
+    def ci_exec(cmd_inner, **kwargs):
+        if os.getenv("DANGER_RUN_CI_ON_HOST"):
+            prefix = []
+        else:
+            prefix = ["docker", "exec", container_id]
+
+        return run([*prefix, *cmd_inner], **kwargs)
+
+    # Normalize all folders to BASE_ROOT_DIR
+    ci_exec([
+        "rsync",
+        "--recursive",
+        "--perms",
+        "--stats",
+        "--human-readable",
+        f"{os.environ['BASE_READ_ONLY_DIR']}/",
+        f"{os.environ['BASE_ROOT_DIR']}",
+    ])
+    ci_exec([f"{os.environ['BASE_ROOT_DIR']}/ci/test/01_base_install.sh"])
+    ci_exec([f"{os.environ['BASE_ROOT_DIR']}/ci/test/03_test_script.sh"])
+
     if not os.getenv("DANGER_RUN_CI_ON_HOST"):
         print("Stop and remove CI container by ID")
         run(["docker", "container", "kill", container_id])
