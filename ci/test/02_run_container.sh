@@ -10,11 +10,6 @@ set -o errexit -o pipefail -o xtrace
 
 if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   export CI_EXEC_CMD_PREFIX="docker exec ${CI_CONTAINER_ID}"
-else
-  echo "Running on host system without docker wrapper"
-  echo "Create missing folders"
-  mkdir -p "${CCACHE_DIR}"
-  mkdir -p "${PREVIOUS_RELEASES_DIR}"
 fi
 
 CI_EXEC () {
@@ -26,8 +21,3 @@ export -f CI_EXEC
 CI_EXEC rsync --recursive --perms --stats --human-readable "${BASE_READ_ONLY_DIR}/" "${BASE_ROOT_DIR}" || echo "Nothing to copy from ${BASE_READ_ONLY_DIR}/"
 CI_EXEC "${BASE_ROOT_DIR}/ci/test/01_base_install.sh"
 CI_EXEC "${BASE_ROOT_DIR}/ci/test/03_test_script.sh"
-
-if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
-  echo "Stop and remove CI container by ID"
-  docker container kill "${CI_CONTAINER_ID}"
-fi

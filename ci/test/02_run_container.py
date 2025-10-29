@@ -48,7 +48,15 @@ def main():
                 file.write(f"{k}={v}\n")
     run(["cat", env_file])
 
-    if not os.getenv("DANGER_RUN_CI_ON_HOST"):
+    if os.getenv("DANGER_RUN_CI_ON_HOST"):
+        print("Running on host system without docker wrapper")
+        print("Create missing folders")
+        for create_dir in [
+                os.environ["CCACHE_DIR"],
+                os.environ["PREVIOUS_RELEASES_DIR"],
+        ]:
+            Path(create_dir).mkdir(parents=True, exist_ok=True)
+    else:
         CI_IMAGE_LABEL = "bitcoin-ci-test"
 
         # Use buildx unconditionally
@@ -155,6 +163,9 @@ def main():
         os.environ["IN_GETOPT_BIN"] = f"{prefix}/bin/getopt"
 
     run(["./ci/test/02_run_container.sh"])  # run the remainder
+    if not os.getenv("DANGER_RUN_CI_ON_HOST"):
+        print("Stop and remove CI container by ID")
+        run(["docker", "container", "kill", container_id])
 
 
 if __name__ == "__main__":
