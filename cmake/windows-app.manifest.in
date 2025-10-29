@@ -12,6 +12,7 @@
   </asmv3:application>
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
     <security>
+    nothing to commit 
       <requestedPrivileges>
         <requestedExecutionLevel level="asInvoker" uiAccess="false"></requestedExecutionLevel>
       </requestedPrivileges>
