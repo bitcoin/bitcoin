@@ -698,7 +698,9 @@ static RPCHelpMan getmempoolinfo()
 {
     return RPCHelpMan{"getmempoolinfo",
         "Returns details on the active state of the TX memory pool.",
-        {},
+        {
+            {"satvB", RPCArg::Type::BOOL, RPCArg::Default{false}, "If enabled mempoolminfee, minrelaytxfee and incrementalrelayfee will be represented in " + CURRENCY_ATOM + "/vB instead of " + CURRENCY_UNIT + "/kvB"}
+        },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
@@ -722,7 +724,8 @@ static RPCHelpMan getmempoolinfo()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    return MempoolInfoToJSON(EnsureAnyMemPool(request.context));
+    FeeRateUnit feerate_units = self.Arg<bool>("satvB") ? FeeRateUnit::SAT_VB : FeeRateUnit::BTC_KVB;
+    return MempoolInfoToJSON(EnsureAnyMemPool(request.context), feerate_units);
 },
     };
 }
