@@ -1104,7 +1104,7 @@ static RPCMethod gettxspendingprevout()
     };
 }
 
-UniValue MempoolInfoToJSON(const CTxMemPool& pool)
+UniValue MempoolInfoToJSON(const CTxMemPool& pool, const FeeRateFormat feerate_units)
 {
     // Make sure this call is atomic in the pool.
     LOCK(pool.cs);
@@ -1115,9 +1115,9 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     ret.pushKV("usage", pool.DynamicMemoryUsage());
     ret.pushKV("total_fee", ValueFromAmount(pool.GetTotalFee()));
     ret.pushKV("maxmempool", pool.m_opts.max_size_bytes);
-    ret.pushKV("mempoolminfee", ValueFromAmount(std::max(pool.GetMinFee(), pool.m_opts.min_relay_feerate).GetFeePerK()));
-    ret.pushKV("minrelaytxfee", ValueFromAmount(pool.m_opts.min_relay_feerate.GetFeePerK()));
-    ret.pushKV("incrementalrelayfee", ValueFromAmount(pool.m_opts.incremental_relay_feerate.GetFeePerK()));
+    ret.pushKV("mempoolminfee", ValueFromFeeRate(std::max(pool.GetMinFee(), pool.m_opts.min_relay_feerate), feerate_units));
+    ret.pushKV("minrelaytxfee", ValueFromFeeRate(pool.m_opts.min_relay_feerate, feerate_units));
+    ret.pushKV("incrementalrelayfee", ValueFromFeeRate(pool.m_opts.incremental_relay_feerate, feerate_units));
     ret.pushKV("unbroadcastcount", pool.GetUnbroadcastTxCount());
     ret.pushKV("permitbaremultisig", pool.m_opts.permit_bare_multisig);
     ret.pushKV("maxdatacarriersize", pool.m_opts.max_datacarrier_bytes.value_or(0));
