@@ -13,7 +13,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
 fi
 
 CI_EXEC () {
-  $CI_EXEC_CMD_PREFIX bash -c "export PATH=\"/path_with space:\$PATH\" && cd \"${BASE_ROOT_DIR}\" && $*"
+  $CI_EXEC_CMD_PREFIX "$@"
 }
 export -f CI_EXEC
 
