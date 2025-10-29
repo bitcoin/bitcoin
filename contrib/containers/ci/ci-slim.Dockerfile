@@ -106,7 +106,7 @@ RUN set -ex; \
 ARG USER_ID=1000 \
     GROUP_ID=1000
 RUN set -ex; \
-    groupmod -g ${GROUP_ID} -n dash ubuntu; \
+    getent group ${GROUP_ID} || groupmod -g ${GROUP_ID} -n dash ubuntu; \
     usermod -u ${USER_ID} -md /home/dash -l dash ubuntu; \
     chown ${USER_ID}:${GROUP_ID} -R /home/dash; \
     mkdir -p /src/dash && \
