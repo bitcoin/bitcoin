@@ -34,5 +34,21 @@ class NamedArgumentTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Parameter arg1 specified twice both as positional and named argument", node.echojson, 0, 1, arg1=1)
         assert_raises_rpc_error(-8, "Parameter arg1 specified twice both as positional and named argument", node.echojson, 0, None, 2, arg1=1)
 
+        self.log.info("Test getmempoolinfo options")
+        default_info = node.getmempoolinfo()
+        for options in [None, {}, {"sat_vb": None}, {"sat_vb": False}]:
+            assert_equal(node.getmempoolinfo(options), default_info)
+        for sat_vb in [None, False, True]:
+            assert_equal(
+                node.getmempoolinfo({"sat_vb": sat_vb}),
+                node.getmempoolinfo(options={"sat_vb": sat_vb}),
+                node.getmempoolinfo(sat_vb=sat_vb),
+            )
+        assert_raises_rpc_error(-3, "Wrong type passed", node.getmempoolinfo, True)
+        assert_raises_rpc_error(-3, "JSON value of type number for field sat_vb is not of expected type bool", node.getmempoolinfo, {"sat_vb": 1})
+        assert_raises_rpc_error(-3, "JSON value of type number for field sat_vb is not of expected type bool", node.getmempoolinfo, sat_vb=1)
+        assert_raises_rpc_error(-3, "Unexpected key unknown", node.getmempoolinfo, {"unknown": True})
+        assert_raises_rpc_error(-8, "Parameter options conflicts with parameter sat_vb", node.getmempoolinfo, options={"sat_vb": False}, sat_vb=True)
+
 if __name__ == '__main__':
     NamedArgumentTest(__file__).main()
