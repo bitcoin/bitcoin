@@ -867,33 +867,34 @@ class CompactBlocksTest(BitcoinTestFramework):
         stalling_peer.send_and_ping(msg)
         assert_equal(node.getbestblockhash(), block.hash_hex)
 
+    # assert the RPC getpeerinfo boolean fields `bip152_hb_{to, from}`
+    # match the given parameters for the last peer of a given node
+    @staticmethod
+    def assert_highbandwidth_states(node, hb_to, hb_from):
+        peerinfo = node.getpeerinfo()[-1]
+        assert_equal(peerinfo['bip152_hb_to'], hb_to)
+        assert_equal(peerinfo['bip152_hb_from'], hb_from)
+
     def test_highbandwidth_mode_states_via_getpeerinfo(self):
         # create new p2p connection for a fresh state w/o any prior sendcmpct messages sent
         hb_test_node = self.nodes[0].add_p2p_connection(TestP2PConn())
 
-        # assert the RPC getpeerinfo boolean fields `bip152_hb_{to, from}`
-        # match the given parameters for the last peer of a given node
-        def assert_highbandwidth_states(node, hb_to, hb_from):
-            peerinfo = node.getpeerinfo()[-1]
-            assert_equal(peerinfo['bip152_hb_to'], hb_to)
-            assert_equal(peerinfo['bip152_hb_from'], hb_from)
-
         # initially, neither node has selected the other peer as high-bandwidth yet
-        assert_highbandwidth_states(self.nodes[0], hb_to=False, hb_from=False)
+        self.assert_highbandwidth_states(self.nodes[0], hb_to=False, hb_from=False)
 
         # peer requests high-bandwidth mode by sending sendcmpct(1)
         hb_test_node.send_and_ping(msg_sendcmpct(announce=True, version=2))
-        assert_highbandwidth_states(self.nodes[0], hb_to=False, hb_from=True)
+        self.assert_highbandwidth_states(self.nodes[0], hb_to=False, hb_from=True)
 
         # peer generates a block and sends it to node, which should
         # select the peer as high-bandwidth (up to 3 peers according to BIP 152)
         block = self.build_block_on_tip(self.nodes[0])
         hb_test_node.send_and_ping(msg_block(block))
-        assert_highbandwidth_states(self.nodes[0], hb_to=True, hb_from=True)
+        self.assert_highbandwidth_states(self.nodes[0], hb_to=True, hb_from=True)
 
         # peer requests low-bandwidth mode by sending sendcmpct(0)
         hb_test_node.send_and_ping(msg_sendcmpct(announce=False, version=2))
-        assert_highbandwidth_states(self.nodes[0], hb_to=True, hb_from=False)
+        self.assert_highbandwidth_states(self.nodes[0], hb_to=True, hb_from=False)
 
     def test_compactblock_reconstruction_parallel_reconstruction(self, stalling_peer, delivery_peer, inbound_peer, outbound_peer):
         """ All p2p connections are inbound except outbound_peer. We test that ultimate parallel slot
