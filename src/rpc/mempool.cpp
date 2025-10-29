@@ -1086,7 +1086,9 @@ static RPCMethod getmempoolinfo()
 {
     return RPCMethod{"getmempoolinfo",
         "Returns details on the active state of the TX memory pool.",
-        {},
+        {
+            {"satvB", RPCArg::Type::BOOL, RPCArg::Default{false}, "If enabled mempoolminfee, minrelaytxfee and incrementalrelayfee will be represented in " + CURRENCY_ATOM + "/vB instead of " + CURRENCY_UNIT + "/kvB"}
+        },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             [](){
@@ -1097,9 +1099,9 @@ static RPCMethod getmempoolinfo()
                     {RPCResult::Type::NUM, "usage", "Total memory usage for the mempool"},
                     {RPCResult::Type::STR_AMOUNT, "total_fee", "Total fees for the mempool in " + CURRENCY_UNIT + ", ignoring modified fees through prioritisetransaction"},
                     {RPCResult::Type::NUM, "maxmempool", "Maximum memory usage for the mempool"},
-                    {RPCResult::Type::STR_AMOUNT, "mempoolminfee", "Minimum fee rate in " + CURRENCY_UNIT + "/kvB for tx to be accepted. Is the maximum of minrelaytxfee and minimum mempool fee"},
-                    {RPCResult::Type::STR_AMOUNT, "minrelaytxfee", "Current minimum relay fee for transactions"},
-                    {RPCResult::Type::NUM, "incrementalrelayfee", "minimum fee rate increment for mempool limiting or replacement in " + CURRENCY_UNIT + "/kvB"},
+                    {RPCResult::Type::STR_AMOUNT, "mempoolminfee", "Minimum fee rate in " + CURRENCY_UNIT + "/kvB, or " + CURRENCY_ATOM + "/vB if satvB is true, for tx to be accepted. Is the maximum of minrelaytxfee and minimum mempool fee"},
+                    {RPCResult::Type::STR_AMOUNT, "minrelaytxfee", "Current minimum relay fee for transactions in " + CURRENCY_UNIT + "/kvB, or " + CURRENCY_ATOM + "/vB if satvB is true"},
+                    {RPCResult::Type::NUM, "incrementalrelayfee", "minimum fee rate increment for mempool limiting or replacement in " + CURRENCY_UNIT + "/kvB, or " + CURRENCY_ATOM + "/vB if satvB is true"},
                     {RPCResult::Type::NUM, "unbroadcastcount", "Current number of transactions that haven't passed initial broadcast yet"},
                     {RPCResult::Type::BOOL, "permitbaremultisig", "True if the mempool accepts transactions with bare multisig outputs"},
                     {RPCResult::Type::NUM, "maxdatacarriersize", "Maximum number of bytes that can be used by OP_RETURN outputs in the mempool"},
@@ -1119,7 +1121,8 @@ static RPCMethod getmempoolinfo()
         },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
-    return MempoolInfoToJSON(EnsureAnyMemPool(request.context));
+    FeeRateUnit feerate_units = self.Arg<bool>("satvB") ? FeeRateUnit::SAT_VB : FeeRateUnit::BTC_KVB;
+    return MempoolInfoToJSON(EnsureAnyMemPool(request.context), feerate_units);
 },
     };
 }
