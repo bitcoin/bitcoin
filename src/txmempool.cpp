@@ -425,9 +425,15 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
 
     CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(&active_coins_tip));
 
+    const auto score_with_topo{GetSortedScoreWithTopology()};
+
+    // Number of chunks is bounded by number of transactions.
+    const auto diagram{GetFeerateDiagram()};
+    Assume(diagram.size() <= score_with_topo.size() + 1);
+
     std::optional<Wtxid> last_wtxid = std::nullopt;
 
-    for (const auto& it : GetSortedScoreWithTopology()) {
+    for (const auto& it : score_with_topo) {
         checkTotal += it->GetTxSize();
         check_total_fee += it->GetFee();
         innerUsage += it->DynamicMemoryUsage();
