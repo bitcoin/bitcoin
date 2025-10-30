@@ -255,6 +255,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getrawmempool", 1, "mempool_sequence" },
     { "getmempoolinfo", 0, "satvB"},
     { "getnetworkinfo", 0, "satvB"},
+    { "getwalletinfo", 0, "satvB"},
     { "getorphantxs", 0, "verbosity" },
     { "estimatesmartfee", 0, "conf_target" },
     { "estimaterawfee", 0, "conf_target" },
