@@ -27,7 +27,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
     def load_capnp_modules(self):
         if capnp_bin := shutil.which("capnp"):
             # Add the system cap'nproto path so include/capnp/c++.capnp can be found.
-            capnp_dir = Path(capnp_bin).parent.parent / "include"
+            capnp_dir = Path(capnp_bin).resolve().parent.parent / "include"
         else:
             # If there is no system cap'nproto, the pycapnp module should have its own "bundled"
             # includes at this location. If pycapnp was installed with bundled capnp,
