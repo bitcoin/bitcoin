@@ -1,0 +1,199 @@
+#compdef bitcoin
+
+_bitcoin() {
+    local context state state_descr line
+    typeset -A opt_args
+
+    _arguments -C \
+        '(-h --help)'{-h,--help}'[Show help information]' \
+        '(-v --version)'{-v,--version}'[Show version information]' \
+        '(-m --multiprocess)'{-m,--multiprocess}'[Run multiprocess binaries]' \
+        '(-M --monolithic)'{-M,--monolithic}'[Run monolithic binaries (default)]' \
+        '1: :_bitcoin_commands' \
+        '*::arg:->args' && return 0
+
+    case $state in
+        args)
+            case $words[1] in
+                gui)
+                    _bitcoin_gui
+                    ;;
+                node)
+                    _bitcoin_node
+                    ;;
+                rpc)
+                    _bitcoin_rpc
+                    ;;
+                wallet)
+                    _bitcoin_wallet
+                    ;;
+                tx)
+                    _bitcoin_tx
+                    ;;
+                help)
+                    _bitcoin_help
+                    ;;
+                bench)
+                    _bitcoin_bench
+                    ;;
+                chainstate)
+                    _bitcoin_chainstate
+                    ;;
+                test|test-gui)
+                    _bitcoin_test
+                    ;;
+                *)
+                    _message "no more arguments"
+                    ;;
+            esac
+            ;;
+    esac
+}
+
+_bitcoin_commands() {
+    local -a commands
+    if (( $+commands[bitcoin] )); then
+        commands=(${(f)"$(bitcoin --help 2>/dev/null | sed -n '/^Commands:/,/^$/p' | grep -E '^\s+[a-z]' | awk '{print $1":"$0}' | sed 's/^\s*//')"})
+    fi
+    
+    # fallback if bitcoin command not available
+    if [[ ${#commands} -eq 0 ]]; then
+        commands=(
+            'gui:Start GUI (bitcoin-qt)'
+            'node:Start node (bitcoind)'
+            'rpc:Call RPC method (bitcoin-cli -named)'
+            'wallet:Call wallet command (bitcoin-wallet)'
+            'tx:Manipulate transactions (bitcoin-tx)'
+            'help:Show full help message'
+            'bench:Run bench command'
+            'chainstate:Run chainstate util'
+            'test:Run unit tests'
+            'test-gui:Run GUI unit tests'
+        )
+    fi
+    
+    _describe 'bitcoin commands' commands
+}
+
+_bitcoin_gui() {
+    _arguments \
+        '-help[Show help information]' \
+        '-version[Show version information]' \
+        '-datadir=[Specify data directory]:directory:_directories' \
+        '-conf=[Configuration file path]:file:_files' \
+        '-regtest[Use regression test network]' \
+        '-testnet[Use test network]' \
+        '-signet[Use signet network]'
+}
+
+_bitcoin_node() {
+    _arguments \
+        '-help[Show help information]' \
+        '-version[Show version information]' \
+        '-datadir=[Specify data directory]:directory:_directories' \
+        '-conf=[Configuration file path]:file:_files' \
+        '-pid=[PID file path]:file:_files' \
+        '-daemon[Run in background as daemon]' \
+        '-printtoconsole[Print to console instead of debug.log]' \
+        '-rpcuser=[RPC username]:username:' \
+        '-rpcpassword=[RPC password]:password:' \
+        '-rpcport=[RPC port]:port:' \
+        '-rpcbind=[Bind RPC to address]:address:' \
+        '-rpcallowip=[Allow RPC connections from IP]:ip:' \
+        '-port=[Listen port]:port:' \
+        '-maxconnections=[Maximum connections]:number:' \
+        '-blocksdir=[Blocks directory]:directory:_directories' \
+        '-walletdir=[Wallet directory]:directory:_directories'
+}
+
+_bitcoin_rpc() {
+    local -a rpc_methods
+    if (( $+commands[bitcoin] )); then
+        rpc_methods=(${(f)"$(bitcoin rpc help 2>/dev/null | grep -E '^[a-z]' | awk '{print $1}')"})
+    fi
+    
+    # fallback rpc methods
+    if [[ ${#rpc_methods} -eq 0 ]]; then
+        rpc_methods=(
+            'getblockchaininfo' 'getbestblockhash' 'getblock' 'getblockcount'
+            'getblockhash' 'gettxout' 'getwalletinfo' 'listwallets'
+            'getnewaddress' 'sendtoaddress' 'getbalance' 'listtransactions'
+        )
+    fi
+
+    _arguments \
+        '-help[Show help information]' \
+        '-version[Show version information]' \
+        '-conf=[Configuration file]:file:_files' \
+        '-datadir=[Data directory]:directory:_directories' \
+        '-rpcconnect=[RPC connect to host]:host:' \
+        '-rpcport=[RPC port]:port:' \
+        '-rpcuser=[RPC username]:username:' \
+        '-rpcpassword=[RPC password]:password:' \
+        '-rpcwallet=[RPC wallet]:wallet:_files' \
+        '-stdin[Read RPC from stdin]' \
+        '-timeout=[Timeout]:seconds:' \
+        '-named[Use named arguments (default for bitcoin rpc)]' \
+        '*:rpc method:_values "RPC methods" $rpc_methods'
+}
+
+_bitcoin_tx() {
+    _arguments \
+        '-help[Show help information]' \
+        '-create[Create new transaction]' \
+        '-json[Output in JSON format]' \
+        '-txid[Output only transaction ID]' \
+        '*:transaction command:_values "TX commands" "in=" "out=" "sign=" "load=" "set="'
+}
+
+_bitcoin_help() {
+    local -a help_commands
+    help_commands=(
+        'gui' 'node' 'rpc' 'wallet' 'tx' 'bench' 'chainstate' 'test' 'test-gui'
+    )
+    
+    _arguments \
+        '*:command:_values "commands" $help_commands'
+}
+
+_bitcoin_bench() {
+    _arguments \
+        '-help[Show help information]' \
+        '-list[List available benchmarks]' \
+        '-filter=[Filter benchmarks]:filter:' \
+        '-asymptote=[Asymptote]:asymptote:' \
+        '-plot-plotlyurl=[Plot URL]:url:'
+}
+
+_bitcoin_chainstate() {
+    _arguments \
+        '-help[Show help information]' \
+        '-version[Show version information]' \
+        '-datadir=[Data directory]:directory:_directories'
+}
+
+_bitcoin_test() {
+    _arguments \
+        '-help[Show help information]' \
+        '-list_content[List test content]' \
+        '-run_test=[Run specific test]:test:' \
+        '-log_level=[Log level]:level:'
+}
+
+_bitcoin_wallet() {
+    local -a wallet_commands
+    wallet_commands=(
+        'create:Create new wallet'
+        'info:Show wallet information'
+        'dump:Dump wallet'
+    )
+
+    _arguments \
+        '-help[Show help information]' \
+        '-version[Show version information]' \
+        '-datadir=[Data directory]:directory:_directories' \
+        '-wallet=[Wallet file]:file:_files' \
+        '*:wallet command:_describe "wallet commands" wallet_commands'
+}
+
+_bitcoin "$@"
