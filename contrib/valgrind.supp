@@ -12,8 +12,10 @@
 #       --error-limit=no build/bin/test_bitcoin
 #
 # Note that suppressions may depend on OS and/or library versions.
-# Tested on aarch64 and x86_64 with Ubuntu Noble system libs, using clang-16
+# Tested on aarch64 and x86_64 with Ubuntu Noble system libs, using clang
 # and GCC, without gui.
+# When using clang on aarch64, -O1 may be required to work around
+# https://bugs.kde.org/show_bug.cgi?id=485276
 {
    Suppress uninitialized bytes warning in compat code
    Memcheck:Param
