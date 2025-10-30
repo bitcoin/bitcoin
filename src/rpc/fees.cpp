@@ -41,11 +41,12 @@ static RPCMethod estimatesmartfee()
             {"conf_target", RPCArg::Type::NUM, RPCArg::Optional::NO, "Confirmation target in blocks (1 - 1008)"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"economical"}, "The fee estimate mode.\n"
               + FeeModesDetail(std::string("default mode will be used"))},
+            {"satvB", RPCArg::Type::BOOL, RPCArg::Default{false}, "If enabled feerate will be represented in " + CURRENCY_ATOM + "/vB instead of " + CURRENCY_UNIT + "/kvB"}
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::NUM, "feerate", /*optional=*/true, "estimate fee rate in " + CURRENCY_UNIT + "/kvB (only present if no errors were encountered)"},
+                {RPCResult::Type::NUM, "feerate", /*optional=*/true, "estimate fee rate in " + CURRENCY_UNIT + "/kvB, or " + CURRENCY_ATOM + "/vB if satvB is true (only present if no errors were encountered)"},
                 {RPCResult::Type::ARR, "errors", /*optional=*/true, "Errors encountered during processing (if there are any)",
                     {
                         {RPCResult::Type::STR, "", "error"},
@@ -83,7 +84,7 @@ static RPCMethod estimatesmartfee()
                 CFeeRate min_mempool_feerate{mempool.GetMinFee()};
                 CFeeRate min_relay_feerate{mempool.m_opts.min_relay_feerate};
                 feeRate = std::max({feeRate, min_mempool_feerate, min_relay_feerate});
-                result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
+                result.pushKV("feerate", ValueFromFeeRate(feeRate, self.Arg<bool>("satvB") ? FeeRateUnit::SAT_VB : FeeRateUnit::BTC_KVB ));
             } else {
                 errors.push_back("Insufficient data or no feerate found");
                 result.pushKV("errors", std::move(errors));
