@@ -21,6 +21,7 @@ class uint256;
 class UniValue;
 class CTxUndo;
 class CTxOut;
+class CFeeRate;
 
 /**
  * Verbose level for block's transaction
@@ -29,6 +30,14 @@ enum class TxVerbosity {
     SHOW_TXID,                //!< Only TXID for each block's transaction
     SHOW_DETAILS,             //!< Include TXID, inputs, outputs, and other common block's transaction information
     SHOW_DETAILS_AND_PREVOUT  //!< The same as previous option with information about prevouts if available
+};
+
+/**
+ * Unit used to display a feerate.
+ */
+enum class FeeRateUnit{
+    BTC_KVB,
+    SAT_VB
 };
 
 CScript ParseScript(const std::string& s);
@@ -40,6 +49,7 @@ bool DecodeHexBlockHeader(CBlockHeader&, const std::string& hex_header);
 [[nodiscard]] util::Result<int> SighashFromStr(const std::string& sighash);
 
 UniValue ValueFromAmount(CAmount amount);
+UniValue ValueFromFeeRate(const CFeeRate& feerate, FeeRateUnit unit);
 std::string FormatScript(const CScript& script);
 std::string EncodeHexTx(const CTransaction& tx);
 std::string SighashToStr(unsigned char sighash_type);
