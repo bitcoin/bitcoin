@@ -47,7 +47,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         assert_raises_rpc_error(-3, "Unexpected key block_policy_only", self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', {'block_policy_only': True})
         # extra params
         assert_raises_rpc_error(-1, "estimatesmartfee", self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', {}, True)
-        assert_raises_rpc_error(-1, "estimaterawfee", self.nodes[0].estimaterawfee, 1, 1, 1)
+        assert_raises_rpc_error(-1, "estimaterawfee", self.nodes[0].estimaterawfee, 1, 1, 1, 1)
 
         # max value of 1008 per src/policy/fees/block_policy_estimator.h
         assert_raises_rpc_error(-8, "Invalid conf_target, must be between 1 and 1008", self.nodes[0].estimaterawfee, 1009)
@@ -83,6 +83,23 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.nodes[0].estimaterawfee(1)
         self.nodes[0].estimaterawfee(1, None)
         self.nodes[0].estimaterawfee(1, 1)
+
+        self.log.info("Test estimaterawfee options")
+        default_estimate = node.estimaterawfee(1)
+        for options in [None, {}, {"sat_vb": None}, {"sat_vb": False}]:
+            assert_equal(node.estimaterawfee(1, None, options), default_estimate)
+        for sat_vb in [None, False, True]:
+            assert_equal(
+                node.estimaterawfee(1, None, {"sat_vb": sat_vb}),
+                node.estimaterawfee(conf_target=1, options={"sat_vb": sat_vb}),
+                node.estimaterawfee(conf_target=1, sat_vb=sat_vb),
+                node.estimaterawfee(1, sat_vb=sat_vb),
+            )
+        assert_raises_rpc_error(-3, "Wrong type passed", node.estimaterawfee, 1, None, True)
+        assert_raises_rpc_error(-3, "JSON value of type number for field sat_vb is not of expected type bool", node.estimaterawfee, 1, None, {"sat_vb": 1})
+        assert_raises_rpc_error(-3, "JSON value of type number for field sat_vb is not of expected type bool", node.estimaterawfee, 1, sat_vb=1)
+        assert_raises_rpc_error(-3, "Unexpected key unknown", node.estimaterawfee, 1, None, {"unknown": True})
+        assert_raises_rpc_error(-8, "Parameter options conflicts with parameter sat_vb", node.estimaterawfee, 1, options={"sat_vb": False}, sat_vb=True)
 
 
 if __name__ == '__main__':
