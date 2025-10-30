@@ -42,6 +42,7 @@ static RPCMethod estimatesmartfee()
             {"conf_target", RPCArg::Type::NUM, RPCArg::Optional::NO, "Confirmation target in blocks (1 - 1008)"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"economical"}, "The fee estimate mode.\n"
               + FeeModesDetail(std::string("default mode will be used"))},
+            {"sat_vb", RPCArg::Type::BOOL, RPCArg::Default{false}, "If enabled feerate will be represented in " + CURRENCY_ATOM + "/vB instead of " + CURRENCY_UNIT + "/kvB"},
             {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
                 {
                     {"fee_rate_estimator", RPCArg::Type::STR, RPCArg::Default{"none"},
@@ -60,7 +61,7 @@ static RPCMethod estimatesmartfee()
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::NUM, "feerate", /*optional=*/true, "estimate fee rate in " + CURRENCY_UNIT + "/kvB (only present if no errors were encountered)"},
+                {RPCResult::Type::NUM, "feerate", /*optional=*/true, "estimate fee rate in " + CURRENCY_UNIT + "/kvB, or " + CURRENCY_ATOM + "/vB if sat_vb is true (only present if no errors were encountered)"},
                 {RPCResult::Type::STR, "estimator", /*optional=*/true, "the fee estimator used to produce the result (only present for successful estimates when fee_rate_estimator is \"none\")"},
                 {RPCResult::Type::ARR, "errors", /*optional=*/true, "Errors encountered during processing (if there are any)",
                     {
@@ -97,7 +98,7 @@ static RPCMethod estimatesmartfee()
             if (!FeeModeFromString(self.Arg<std::string_view>("estimate_mode"), fee_mode)) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, InvalidEstimateModeErrorMessage());
             }
-            const UniValue options{request.params[2].isNull() ? UniValue::VOBJ : request.params[2]};
+            const UniValue options{request.params[3].isNull() ? UniValue::VOBJ : request.params[3]};
             RPCTypeCheckObj(options,
                             {
                                 {"fee_rate_estimator", UniValueType(UniValue::VSTR)},
@@ -114,7 +115,7 @@ static RPCMethod estimatesmartfee()
                 const CFeeRate min_mempool_feerate{mempool.GetMinFee()};
                 const CFeeRate min_relay_feerate{mempool.m_opts.min_relay_feerate};
                 const auto fee_rate{std::max({CFeeRate(estimate->feerate), min_mempool_feerate, min_relay_feerate})};
-                result.pushKV("feerate", ValueFromAmount(fee_rate.GetFeePerK()));
+                result.pushKV("feerate", ValueFromFeeRate(fee_rate, self.Arg<bool>("sat_vb") ? FeeRateUnit::SAT_VB : FeeRateUnit::BTC_KVB ));
             } else {
                 errors.push_back(estimate.error().reason);
                 result.pushKV("errors", std::move(errors));
