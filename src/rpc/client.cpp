@@ -261,6 +261,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "estimatesmartfee", 2, "satvB"},
     { "estimaterawfee", 0, "conf_target" },
     { "estimaterawfee", 1, "threshold" },
+    { "estimaterawfee", 2, "satvB"},
     { "prioritisetransaction", 1, "dummy" },
     { "prioritisetransaction", 2, "fee_delta" },
     { "setban", 2, "bantime" },

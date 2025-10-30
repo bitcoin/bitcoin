@@ -112,6 +112,7 @@ static RPCHelpMan estimaterawfee()
             {"threshold", RPCArg::Type::NUM, RPCArg::Default{0.95}, "The proportion of transactions in a given feerate range that must have been\n"
             "confirmed within conf_target in order to consider those feerates as high enough and proceed to check\n"
             "lower buckets."},
+            {"satvB", RPCArg::Type::BOOL, RPCArg::Default{false}, "If enabled feerate will be represented in " + CURRENCY_ATOM + "/vB instead of " + CURRENCY_UNIT + "/kvB"}
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "Results are returned for any horizon which tracks blocks up to the confirmation target",
@@ -196,7 +197,7 @@ static RPCHelpMan estimaterawfee()
 
                 // CFeeRate(0) is used to indicate error as a return value from estimateRawFee
                 if (feeRate != CFeeRate(0)) {
-                    horizon_result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
+                    horizon_result.pushKV("feerate", ValueFromFeeRate(feeRate, self.Arg<bool>("satvB") ? FeeRateUnit::SAT_VB : FeeRateUnit::BTC_KVB ));
                     horizon_result.pushKV("decay", buckets.decay);
                     horizon_result.pushKV("scale", (int)buckets.scale);
                     horizon_result.pushKV("pass", std::move(passbucket));
