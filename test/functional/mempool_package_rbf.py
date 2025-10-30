@@ -93,7 +93,7 @@ class PackageRBFTest(BitcoinTestFramework):
         self.test_child_conflicts_parent_mempool_ancestor()
 
     def test_package_rbf_basic(self):
-        self.log.info("Test that a child can pay to replace its parents' conflicts of cluster size 2")
+        self.log.info("Test that a child can pay to replace its parents' conflicts")
         node = self.nodes[0]
         # Reuse the same coins so that the transactions conflict with one another.
         parent_coin = self.coins.pop()
@@ -195,12 +195,12 @@ class PackageRBFTest(BitcoinTestFramework):
         parent_coins = self.coins[:num_coins]
         del self.coins[:num_coins]
 
-        # Original transactions: 101 transactions with 1 descendants each -> 202 total transactions, 101 clusters
-        size_two_clusters = []
+        # Original transactions: 101 transactions with 2 descendants each -> 303 total transactions, 101 clusters
+        size_three_clusters = []
         for coin in parent_coins:
-            size_two_clusters.append(self.wallet.send_self_transfer_chain(from_node=node, chain_length=2, utxo_to_spend=coin))
-        expected_txns = [txn["tx"] for parent_child_txns in size_two_clusters for txn in parent_child_txns]
-        assert_equal(len(expected_txns), num_coins * 2)
+            size_three_clusters.append(self.wallet.send_self_transfer_chain(from_node=node, chain_length=3, utxo_to_spend=coin))
+        expected_txns = [txn["tx"] for parent_child_txns in size_three_clusters for txn in parent_child_txns]
+        assert_equal(len(expected_txns), num_coins * 3)
         self.assert_mempool_contents(expected=expected_txns)
 
         # parent feeerate needs to be high enough for minrelay
@@ -240,7 +240,7 @@ class PackageRBFTest(BitcoinTestFramework):
         package_child = self.wallet.create_self_transfer(fee_rate=child_feerate, utxo_to_spend=package_parent["new_utxos"][0])
         pkg_results = node.submitpackage([package_parent["hex"], package_child["hex"]], maxfeerate=0)
         assert_equal(pkg_results["package_msg"], "success")
-        self.assert_mempool_contents(expected=[singleton_tx["tx"], size_two_clusters[-1][0]["tx"], size_two_clusters[-1][1]["tx"], package_parent["tx"], package_child["tx"]] )
+        self.assert_mempool_contents(expected=[singleton_tx["tx"], size_three_clusters[-1][0]["tx"], size_three_clusters[-1][1]["tx"], size_three_clusters[-1][2]["tx"], package_parent["tx"], package_child["tx"]] )
 
         self.generate(node, 1)
 
