@@ -22,6 +22,8 @@ class uint256;
 class UniValue;
 class CTxUndo;
 class CTxOut;
+class CFeeRate;
+enum class FeeRateFormat;
 
 /**
  * Verbose level for block's transaction
@@ -41,6 +43,8 @@ bool DecodeHexBlockHeader(CBlockHeader&, const std::string& hex_header);
 [[nodiscard]] util::Result<int> SighashFromStr(const std::string& sighash);
 
 UniValue ValueFromAmount(CAmount amount);
+/// Stringify with an accuracy of sat/kvB. (Rounds down)
+UniValue ValueFromFeeRate(const CFeeRate& feerate, FeeRateFormat unit);
 std::string FormatScript(const CScript& script);
 std::string EncodeHexTx(const CTransaction& tx);
 std::string SighashToStr(int32_t sighash_type);
