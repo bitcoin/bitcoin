@@ -65,16 +65,20 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Test estimatesmartfee options")
         node = self.nodes[0]
         default_estimate = node.estimatesmartfee(1)
-        for options in [None, {}]:
+        for options in [None, {}, {"sat_vb": None}, {"sat_vb": False}]:
             assert_equal(node.estimatesmartfee(1, "economical", options), default_estimate)
-        options = {"fee_rate_estimator": "block_policy", "verbosity": 2}
-        assert_equal(
-            node.estimatesmartfee(1, "economical", options),
-            node.estimatesmartfee(conf_target=1, options=options),
-            node.estimatesmartfee(conf_target=1, **options),
-            node.estimatesmartfee(1, **options),
-        )
+        for sat_vb in [None, False, True]:
+            options = {"fee_rate_estimator": "block_policy", "verbosity": 2, "sat_vb": sat_vb}
+            assert_equal(
+                node.estimatesmartfee(1, "economical", options),
+                node.estimatesmartfee(conf_target=1, options=options),
+                node.estimatesmartfee(conf_target=1, **options),
+                node.estimatesmartfee(1, **options),
+            )
         assert_raises_rpc_error(-3, "Wrong type passed", node.estimatesmartfee, 1, "economical", True)
+        assert_raises_rpc_error(-3, "JSON value of type number for field sat_vb is not of expected type bool", node.estimatesmartfee, 1, "economical", {"sat_vb": 1})
+        assert_raises_rpc_error(-3, "JSON value of type number for field sat_vb is not of expected type bool", node.estimatesmartfee, 1, sat_vb=1)
+        assert_raises_rpc_error(-8, "Parameter options conflicts with parameter sat_vb", node.estimatesmartfee, 1, options={"sat_vb": False}, sat_vb=True)
 
         self.nodes[0].estimaterawfee(1)
         self.nodes[0].estimaterawfee(1, None)

@@ -6,6 +6,7 @@
 #include <util/fees.h>
 
 #include <common/messages.h>
+#include <consensus/amount.h>
 #include <core_io.h>
 #include <node/context.h>
 #include <policy/feerate.h>
@@ -41,6 +42,7 @@ using node::NodeContext;
 
 static RPCMethod estimatesmartfee()
 {
+    static constexpr bool DEFAULT_SAT_VB{false};
     return RPCMethod{
         "estimatesmartfee",
         "Estimates the approximate fee per kilobyte needed for a transaction to begin\n"
@@ -63,13 +65,14 @@ static RPCMethod estimatesmartfee()
                      "\"mempool_policy\" uses only the mempool fee rate estimator."},
                     {"verbosity", RPCArg::Type::NUM, RPCArg::Default{1},
                      "1 returns feerate or errors. 2 also returns \"mempool_health_statistics\"."},
+                    {"sat_vb", RPCArg::Type::BOOL, RPCArg::Default{DEFAULT_SAT_VB}, "If enabled feerate will be represented in " + CURRENCY_ATOM + "/vB instead of " + CURRENCY_UNIT + "/kvB"},
                 },
             },
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::NUM, "feerate", /*optional=*/true, "estimate fee rate in " + CURRENCY_UNIT + "/kvB (only present if no errors were encountered)"},
+                {RPCResult::Type::NUM, "feerate", /*optional=*/true, "estimate fee rate in " + CURRENCY_UNIT + "/kvB, or " + CURRENCY_ATOM + "/vB if sat_vb is true (only present if no errors were encountered)"},
                 {RPCResult::Type::STR, "estimator", /*optional=*/true, "the fee estimator used to produce the result (only present for successful estimates when fee_rate_estimator is \"auto\")"},
                 {RPCResult::Type::ARR, "errors", /*optional=*/true, "Errors encountered during processing (if there are any)",
                     {
@@ -111,6 +114,7 @@ static RPCMethod estimatesmartfee()
                             {
                                 {"fee_rate_estimator", UniValueType(UniValue::VSTR)},
                                 {"verbosity", UniValueType(UniValue::VNUM)},
+                                {"sat_vb", UniValueType(UniValue::VBOOL)},
                             }, /*fAllowNull=*/true, /*fStrict=*/true);
             const auto parsed_fee_rate_estimator{FeeRateEstimatorTypeFromString(
                 options["fee_rate_estimator"].isNull() ? "auto" : options["fee_rate_estimator"].get_str())};
@@ -120,6 +124,7 @@ static RPCMethod estimatesmartfee()
             const FeeRateEstimatorType fee_rate_estimator{*parsed_fee_rate_estimator};
             bool conservative{fee_mode == FeeEstimateMode::CONSERVATIVE};
             int verbosity{ParseVerbosity(options["verbosity"], /*default_verbosity=*/1, /*allow_bool=*/false)};
+            const bool sat_vb{options["sat_vb"].isNull() ? DEFAULT_SAT_VB : options["sat_vb"].get_bool()};
             UniValue result(UniValue::VOBJ);
             UniValue errors(UniValue::VARR);
             const auto estimate{fee_estimator_man.GetFeeRateEstimate(fee_rate_estimator, conf_target, conservative)};
@@ -127,7 +132,7 @@ static RPCMethod estimatesmartfee()
                 const CFeeRate min_mempool_feerate{mempool.GetMinFee()};
                 const CFeeRate min_relay_feerate{mempool.m_opts.min_relay_feerate};
                 const auto fee_rate{std::max({CFeeRate(estimate->feerate), min_mempool_feerate, min_relay_feerate})};
-                result.pushKV("feerate", ValueFromAmount(fee_rate.GetFeePerK()));
+                result.pushKV("feerate", ValueFromFeeRate(fee_rate, sat_vb ? FeeRateFormat::SAT_VB : FeeRateFormat::BTC_KVB ));
             } else {
                 errors.push_back(estimate.error().reason);
                 result.pushKV("errors", std::move(errors));
