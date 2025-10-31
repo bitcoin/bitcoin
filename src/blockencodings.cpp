@@ -203,7 +203,7 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
             if (vtx_missing.size() <= tx_missing_offset)
                 return READ_STATUS_INVALID;
             block.vtx[i] = vtx_missing[tx_missing_offset++];
-            tx_missing_size += block.vtx[i]->GetTotalSize();
+            tx_missing_size += block.vtx[i]->ComputeTotalSize();
         } else
             block.vtx[i] = std::move(txn_available[i]);
     }
