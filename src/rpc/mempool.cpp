@@ -98,7 +98,12 @@ static RPCHelpMan sendrawtransaction()
             std::string err_string;
             AssertLockNotHeld(cs_main);
             NodeContext& node = EnsureAnyNodeContext(request.context);
-            const TransactionError err = BroadcastTransaction(node, tx, err_string, max_raw_tx_fee, /*relay=*/true, /*wait_callback=*/true);
+            const TransactionError err = BroadcastTransaction(node,
+                                                              tx,
+                                                              err_string,
+                                                              max_raw_tx_fee,
+                                                              node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL,
+                                                              /*wait_callback=*/true);
             if (TransactionError::OK != err) {
                 throw JSONRPCTransactionError(err, err_string);
             }
@@ -1068,7 +1073,12 @@ static RPCHelpMan submitpackage()
 
                 // We do not expect an error here; we are only broadcasting things already/still in mempool
                 std::string err_string;
-                const auto err = BroadcastTransaction(node, tx, err_string, /*max_tx_fee=*/0, /*relay=*/true, /*wait_callback=*/true);
+                const auto err = BroadcastTransaction(node,
+                                                      tx,
+                                                      err_string,
+                                                      /*max_tx_fee=*/0,
+                                                      node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL,
+                                                      /*wait_callback=*/true);
                 if (err != TransactionError::OK) {
                     throw JSONRPCTransactionError(err,
                         strprintf("transaction broadcast failed: %s (%d transactions were broadcast successfully)",
