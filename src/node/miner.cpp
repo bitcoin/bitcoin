@@ -452,6 +452,11 @@ void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t 
     block.nTime = timestamp;
     block.nNonce = nonce;
     block.hashMerkleRoot = BlockMerkleRoot(block);
+
+    // Reset cached checks
+    block.m_checked_witness_commitment = false;
+    block.m_checked_merkle_root = false;
+    block.fChecked = false;
 }
 
 std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainman,
