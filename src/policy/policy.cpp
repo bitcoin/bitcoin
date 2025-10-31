@@ -79,7 +79,7 @@ std::vector<uint32_t> GetDust(const CTransaction& tx, CFeeRate dust_relay_rate)
 bool IsStandard(const CScript& scriptPubKey, TxoutType& whichType)
 {
     std::vector<std::vector<unsigned char> > vSolutions;
-    whichType = Solver(scriptPubKey, vSolutions);
+    whichType = Solver(scriptPubKey, &vSolutions);
 
     if (whichType == TxoutType::NONSTANDARD) {
         return false;
@@ -223,8 +223,8 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
         const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
 
-        std::vector<std::vector<unsigned char> > vSolutions;
-        TxoutType whichType = Solver(prev.scriptPubKey, vSolutions);
+        std::vector<std::vector<unsigned char>> vSolutions;
+        TxoutType whichType = Solver(prev.scriptPubKey, &vSolutions);
         if (whichType == TxoutType::NONSTANDARD || whichType == TxoutType::WITNESS_UNKNOWN) {
             // WITNESS_UNKNOWN failures are typically also caught with a policy
             // flag in the script interpreter, but it can be helpful to catch

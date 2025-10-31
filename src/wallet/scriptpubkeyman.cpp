@@ -86,7 +86,7 @@ IsMineResult LegacyWalletIsMineInnerDONOTUSE(const LegacyDataSPKM& keystore, con
     IsMineResult ret = IsMineResult::NO;
 
     std::vector<valtype> vSolutions;
-    TxoutType whichType = Solver(scriptPubKey, vSolutions);
+    TxoutType whichType = Solver(scriptPubKey, &vSolutions);
 
     CKeyID keyID;
     switch (whichType) {
@@ -350,7 +350,7 @@ bool LegacyDataSPKM::LoadWatchOnly(const CScript &dest)
 static bool ExtractPubKey(const CScript &dest, CPubKey& pubKeyOut)
 {
     std::vector<std::vector<unsigned char>> solutions;
-    return Solver(dest, solutions) == TxoutType::PUBKEY &&
+    return Solver(dest, &solutions) == TxoutType::PUBKEY &&
         (pubKeyOut = CPubKey(solutions[0])).IsFullyValid();
 }
 
@@ -1350,7 +1350,7 @@ std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTran
 
             // Taproot output pubkey
             std::vector<std::vector<unsigned char>> sols;
-            if (Solver(script, sols) == TxoutType::WITNESS_V1_TAPROOT) {
+            if (Solver(script, &sols) == TxoutType::WITNESS_V1_TAPROOT) {
                 sols[0].insert(sols[0].begin(), 0x02);
                 pubkeys.emplace_back(sols[0]);
                 sols[0][0] = 0x03;

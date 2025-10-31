@@ -1157,13 +1157,6 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_INVALID_STACK_OPERATION, ScriptErrorString(err));
 }
 
-/** Return the TxoutType of a script without exposing Solver details. */
-static TxoutType GetTxoutType(const CScript& output_script)
-{
-    std::vector<std::vector<uint8_t>> unused;
-    return Solver(output_script, unused);
-}
-
 #define CHECK_SCRIPT_STATIC_SIZE(script, expected_size)                   \
     do {                                                                  \
         BOOST_CHECK_EQUAL((script).size(), (expected_size));              \
@@ -1193,14 +1186,14 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
     // Small OP_RETURN has direct allocation
     {
         const auto script{CScript() << OP_RETURN << std::vector<uint8_t>(10, 0xaa)};
-        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::NULL_DATA);
+        BOOST_CHECK_EQUAL(Solver(script), TxoutType::NULL_DATA);
         CHECK_SCRIPT_STATIC_SIZE(script, 12);
     }
 
     // P2WPKH has direct allocation
     {
         const auto script{GetScriptForDestination(WitnessV0KeyHash{PKHash{dummy_pubkey}})};
-        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::WITNESS_V0_KEYHASH);
+        BOOST_CHECK_EQUAL(Solver(script), TxoutType::WITNESS_V0_KEYHASH);
         CHECK_SCRIPT_STATIC_SIZE(script, 22);
     }
 
@@ -1214,7 +1207,7 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
     // P2PKH has direct allocation
     {
         const auto script{GetScriptForDestination(PKHash{dummy_pubkey})};
-        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::PUBKEYHASH);
+        BOOST_CHECK_EQUAL(Solver(script), TxoutType::PUBKEYHASH);
         CHECK_SCRIPT_STATIC_SIZE(script, 25);
     }
 
@@ -1228,14 +1221,14 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
     // P2TR has direct allocation
     {
         const auto script{GetScriptForDestination(WitnessV1Taproot{XOnlyPubKey{dummy_pubkey}})};
-        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::WITNESS_V1_TAPROOT);
+        BOOST_CHECK_EQUAL(Solver(script), TxoutType::WITNESS_V1_TAPROOT);
         CHECK_SCRIPT_STATIC_SIZE(script, 34);
     }
 
     // Compressed P2PK has direct allocation
     {
         const auto script{GetScriptForRawPubKey(dummy_pubkey)};
-        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::PUBKEY);
+        BOOST_CHECK_EQUAL(Solver(script), TxoutType::PUBKEY);
         CHECK_SCRIPT_STATIC_SIZE(script, 35);
     }
 
@@ -1246,14 +1239,14 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
         const CPubKey uncompressed_pubkey{uncompressed_key.GetPubKey()};
 
         const auto script{GetScriptForRawPubKey(uncompressed_pubkey)};
-        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::PUBKEY);
+        BOOST_CHECK_EQUAL(Solver(script), TxoutType::PUBKEY);
         CHECK_SCRIPT_DYNAMIC_SIZE(script, 67, 67);
     }
 
     // Bare multisig needs extra allocation
     {
         const auto script{GetScriptForMultisig(1, std::vector{2, dummy_pubkey})};
-        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::MULTISIG);
+        BOOST_CHECK_EQUAL(Solver(script), TxoutType::MULTISIG);
         CHECK_SCRIPT_DYNAMIC_SIZE(script, 71, 103);
     }
 }

@@ -91,7 +91,8 @@ FUZZ_TARGET(script, .init = initialize_script)
     (void)RecursiveDynamicUsage(script);
 
     std::vector<std::vector<unsigned char>> solutions;
-    (void)Solver(script, solutions);
+    (void)Solver(script, &solutions);
+    (void)Solver(script);
 
     (void)script.HasValidOps();
     (void)script.IsPayToAnchor();

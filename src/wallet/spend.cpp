@@ -452,7 +452,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 
         // Obtain script type
         std::vector<std::vector<uint8_t>> script_solutions;
-        TxoutType type = Solver(output.scriptPubKey, script_solutions);
+        TxoutType type = Solver(output.scriptPubKey, &script_solutions);
 
         // If the output is P2SH and solvable, we want to know if it is
         // a P2SH (legacy) or one of P2SH-P2WPKH, P2SH-P2WSH (P2SH-Segwit). We can determine
@@ -462,7 +462,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
         if (type == TxoutType::SCRIPTHASH && solvable) {
             CScript script;
             if (!provider->GetCScript(CScriptID(uint160(script_solutions[0])), script)) continue;
-            type = Solver(script, script_solutions);
+            type = Solver(script, &script_solutions);
             is_from_p2sh = true;
         }
 

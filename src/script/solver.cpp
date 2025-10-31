@@ -138,16 +138,15 @@ std::optional<std::pair<int, std::vector<std::span<const unsigned char>>>> Match
     return std::pair{*threshold, std::move(keyspans)};
 }
 
-TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned char>>& vSolutionsRet)
+TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned char>>* vSolutionsRet)
 {
-    vSolutionsRet.clear();
+    if (vSolutionsRet) vSolutionsRet->clear();
 
     // Shortcut for pay-to-script-hash, which are more constrained than the other types:
     // it is always OP_HASH160 20 [20 byte hash] OP_EQUAL
-    if (scriptPubKey.IsPayToScriptHash())
-    {
+    if (scriptPubKey.IsPayToScriptHash()) {
         std::vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
-        vSolutionsRet.push_back(hashBytes);
+        if (vSolutionsRet) vSolutionsRet->push_back(hashBytes);
         return TxoutType::SCRIPTHASH;
     }
 
@@ -155,23 +154,25 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
     std::vector<unsigned char> witnessprogram;
     if (scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
         if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_KEYHASH_SIZE) {
-            vSolutionsRet.push_back(std::move(witnessprogram));
+            if (vSolutionsRet) vSolutionsRet->push_back(std::move(witnessprogram));
             return TxoutType::WITNESS_V0_KEYHASH;
         }
         if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
-            vSolutionsRet.push_back(std::move(witnessprogram));
+            if (vSolutionsRet) vSolutionsRet->push_back(std::move(witnessprogram));
             return TxoutType::WITNESS_V0_SCRIPTHASH;
         }
         if (witnessversion == 1 && witnessprogram.size() == WITNESS_V1_TAPROOT_SIZE) {
-            vSolutionsRet.push_back(std::move(witnessprogram));
+            if (vSolutionsRet) vSolutionsRet->push_back(std::move(witnessprogram));
             return TxoutType::WITNESS_V1_TAPROOT;
         }
         if (scriptPubKey.IsPayToAnchor()) {
             return TxoutType::ANCHOR;
         }
         if (witnessversion != 0) {
-            vSolutionsRet.push_back(std::vector<unsigned char>{(unsigned char)witnessversion});
-            vSolutionsRet.push_back(std::move(witnessprogram));
+            if (vSolutionsRet) {
+                vSolutionsRet->push_back(std::vector<unsigned char>{(unsigned char)witnessversion});
+                vSolutionsRet->push_back(std::move(witnessprogram));
+            }
             return TxoutType::WITNESS_UNKNOWN;
         }
         return TxoutType::NONSTANDARD;
@@ -188,25 +189,27 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
 
     std::vector<unsigned char> data;
     if (MatchPayToPubkey(scriptPubKey, data)) {
-        vSolutionsRet.push_back(std::move(data));
+        if (vSolutionsRet) vSolutionsRet->push_back(std::move(data));
         return TxoutType::PUBKEY;
     }
 
     if (MatchPayToPubkeyHash(scriptPubKey, data)) {
-        vSolutionsRet.push_back(std::move(data));
+        if (vSolutionsRet) vSolutionsRet->push_back(std::move(data));
         return TxoutType::PUBKEYHASH;
     }
 
     int required;
     std::vector<std::vector<unsigned char>> keys;
     if (MatchMultisig(scriptPubKey, required, keys)) {
-        vSolutionsRet.push_back({static_cast<unsigned char>(required)}); // safe as required is in range 1..20
-        vSolutionsRet.insert(vSolutionsRet.end(), keys.begin(), keys.end());
-        vSolutionsRet.push_back({static_cast<unsigned char>(keys.size())}); // safe as size is in range 1..20
+        if (vSolutionsRet) {
+            vSolutionsRet->push_back({static_cast<unsigned char>(required)}); // safe as required is in range 1..20
+            vSolutionsRet->insert(vSolutionsRet->end(), keys.begin(), keys.end());
+            vSolutionsRet->push_back({static_cast<unsigned char>(keys.size())}); // safe as size is in range 1..20
+        }
         return TxoutType::MULTISIG;
     }
 
-    vSolutionsRet.clear();
+    if (vSolutionsRet) vSolutionsRet->clear();
     return TxoutType::NONSTANDARD;
 }
 

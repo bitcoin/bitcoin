@@ -49,7 +49,7 @@ WitnessV0ScriptHash::WitnessV0ScriptHash(const CScript& in)
 bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
 {
     std::vector<valtype> vSolutions;
-    TxoutType whichType = Solver(scriptPubKey, vSolutions);
+    TxoutType whichType = Solver(scriptPubKey, &vSolutions);
 
     switch (whichType) {
     case TxoutType::PUBKEY: {
