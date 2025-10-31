@@ -2577,7 +2577,7 @@ void PeerManagerImpl::SendBlockTransactions(CNode& pfrom, Peer& peer, const CBlo
             return;
         }
         resp.txn[i] = block.vtx[req.indexes[i]];
-        tx_requested_size += resp.txn[i]->GetTotalSize();
+        tx_requested_size += resp.txn[i]->ComputeTotalSize();
     }
 
     LogDebug(BCLog::CMPCTBLOCK, "Peer %d sent us a GETBLOCKTXN for block %s, sending a BLOCKTXN with %u txns. (%u bytes)\n", pfrom.GetId(), block.GetHash().ToString(), resp.txn.size(), tx_requested_size);
