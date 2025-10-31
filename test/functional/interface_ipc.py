@@ -215,10 +215,19 @@ class IPCInterfaceTest(BitcoinTestFramework):
             res = await mining.result.checkBlock(block.serialize(), check_opts)
             assert_equal(res.result, True)
 
+            # The remote template block will be mutated, capture the original:
+            remote_block_before = await self.parse_and_deserialize_block(template, ctx)
+
             self.log.debug("Submitted coinbase must include witness")
             assert_not_equal(coinbase.serialize_without_witness().hex(), coinbase.serialize().hex())
             res = await template.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize_without_witness())
             assert_equal(res.result, False)
+
+            self.log.debug("Even a rejected submitBlock() mutates the template's block")
+            # Can be used by clients to download and inspect the (rejected)
+            # reconstructed block.
+            remote_block_after = await self.parse_and_deserialize_block(template, ctx)
+            assert_not_equal(remote_block_before.serialize().hex(), remote_block_after.serialize().hex())
 
             self.log.debug("Submit again, with the witness")
             res = await template.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
