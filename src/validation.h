@@ -457,12 +457,12 @@ enum DisconnectResult
 class ConnectTrace;
 
 /** @see Chainstate::FlushStateToDisk */
-inline constexpr std::array FlushStateModeNames{"NONE", "IF_NEEDED", "PERIODIC", "ALWAYS"};
+inline constexpr std::array FlushStateModeNames{"NONE", "IF_NEEDED", "PERIODIC", "FORCE_FLUSH"};
 enum class FlushStateMode: uint8_t {
     NONE,
     IF_NEEDED,
     PERIODIC,
-    ALWAYS
+    FORCE_FLUSH,
 };
 
 /**
@@ -735,7 +735,7 @@ public:
         FlushStateMode mode,
         int nManualPruneHeight = 0);
 
-    //! Unconditionally flush all changes to disk.
+    //! Flush all changes to disk.
     void ForceFlushStateToDisk();
 
     //! Prune blockfiles from the disk if necessary and then flush chainstate changes
