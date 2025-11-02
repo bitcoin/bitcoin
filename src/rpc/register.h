@@ -42,7 +42,7 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
 #endif // ENABLE_EXTERNAL_SIGNER
     RegisterTxoutProofRPCCommands(t);
 #ifdef ENABLE_ECAI
-    RegisterECAIRPCCommands(table);
+    RegisterECAIRPCCommands(t);
 #endif
 }
 
