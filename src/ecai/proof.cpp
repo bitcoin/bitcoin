@@ -3,6 +3,10 @@
 #include <hash.h>
 #include <zmq/zmqpublishnotifier.h> // already conditionally compiled in Core
 #include <node/transaction.h>
+#include "ecai/api.h"
+#include <hash.h>
+#include <serialize.h>
+
 
 extern CZMQNotificationInterface* g_zmq_notification_interface;
 
@@ -33,7 +37,24 @@ bool SignAndAssemble(const uint256& txid, const uint256& pid, unsigned char vtag
     memset(out.sig.data(), 0, out.sig.size());
     return true;
 }
-
+bool SignAndAssemble(const Txid& txid, Proof& out)
+{
+    // Convert the strong-typed Txid to a stable 256-bit digest.
+    // SerializeHash works with Core's identifier types.
+    const uint256 h = SerializeHash(txid);
+    return SignAndAssemble(h, out);
+}
+	bool SignAndAssemble(const Txid& txid,
+                     int /*policy_id*/,
+                     unsigned char /*verdict*/,
+                     int /*c_pol*/,
+                     const std::array<unsigned char, 33>& /*p_tx*/,
+                     const Ctx& /*ctx*/,
+                     Proof& out)
+{
+    // For now, ignore the extra metadata and reuse your core implementation.
+    // Later, you can embed these fields into `Proof` if you want.
+    return SignAndAssemble(txid, out);
 void Publish(const Proof& p)
 {
 #ifdef ENABLE_ZMQ

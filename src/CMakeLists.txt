@@ -81,17 +81,7 @@ target_link_libraries(bitcoin_consensus
 if(WITH_ZMQ)
   add_subdirectory(zmq)
 endif()
-if(WITH_ECAI)
-  target_sources(bitcoin_server PRIVATE
-    ecai/state.cpp
-    ecai/h2c.cpp
-    ecai/features.cpp
-    ecai/policy.cpp
-    ecai/proof.cpp
-  )
-  target_include_directories(bitcoin_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-  target_compile_definitions(bitcoin_server PRIVATE ENABLE_ECAI=1)
-endif()
+
 
 
 # Home for common functionality shared by different executables and libraries.
@@ -299,6 +289,22 @@ target_link_libraries(bitcoin_node
     $<TARGET_NAME_IF_EXISTS:USDT::headers>
 )
 
+if (WITH_ECAI)
+  if (TARGET bitcoin_node)
+    message(STATUS "Building with ECAI support enabled")
+    target_sources(bitcoin_node PRIVATE
+      ecai/state.cpp
+      ecai/h2c.cpp
+      ecai/features.cpp
+      ecai/policy.cpp
+      ecai/proof.cpp
+    )
+    target_include_directories(bitcoin_node PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_compile_definitions(bitcoin_node PRIVATE ENABLE_ECAI=1)
+  else()
+    message(WARNING "bitcoin_node target not found — ECAI not linked")
+  endif()
+endif()
 # Bitcoin wrapper executable that can call other executables.
 if(BUILD_BITCOIN_BIN)
   add_executable(bitcoin bitcoin.cpp)

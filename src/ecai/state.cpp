@@ -1,31 +1,19 @@
-#include <ecai/state.h>
-#include <ecai/h2c.h>
-#include <ecai/util.h>
-#include <hash.h>
+#include "ecai/api.h"
+#include "ecai/state.h"  // your real state
 
 namespace ecai {
+  State g_state;
 
-State g_state;
+  bool Enabled() {
+	  return true;
+  }
 
-void Enable(bool on) { g_state.enabled.store(on, std::memory_order_relaxed); }
-bool Enabled() { return g_state.enabled.load(std::memory_order_relaxed); }
+  static void refresh_policy_bytes(Policy& p) {
+    p.bytes = policy::Serialize();   // call your serializer if you have one
+    p.loaded = policy::IsLoaded();   // or set true if always available
+    p.c_pol  = policy::CurrentId();  // or compute/leave 0 if unused
+  }
 
-bool LoadPolicyHex(const std::string& hex, std::string& err)
-{
-    std::vector<unsigned char> bytes;
-    if (!ParseHexStr(hex, bytes)) { err = "invalid hex"; return false; }
-    if (bytes.empty()) { g_state.policy = Policy{}; return true; }
-
-    g_state.policy.bytes = bytes;
-    g_state.policy.id    = Hash(bytes.begin(), bytes.end());
-
-    // Commitment point: H2C(policy_bytes) -> compressed
-    if (!HashToCurve(bytes, g_state.policy.c_pol)) {
-        err = "h2c failed";
-        return false;
-    }
-    g_state.policy.loaded = true;
-    return true;
+  // Call refresh_policy_bytes() from your init hook so it’s ready for validation.cpp
 }
 
-} // namespace ecai

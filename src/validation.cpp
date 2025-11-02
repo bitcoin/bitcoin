@@ -75,6 +75,10 @@
 #include <string>
 #include <tuple>
 #include <utility>
+#ifdef ENABLE_ECAI
+#include "ecai/api.h"
+#endif
+
 
 using kernel::CCoinsStats;
 using kernel::CoinStatsHashType;
@@ -1476,7 +1480,10 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
 		std::array<unsigned char,33> p_tx;
 		auto feats = ecai::EncodeTLVFeatures(*ptx, m_pool);
 		if (!ecai::HashToCurve(feats, p_tx)) {
-			return MempoolAcceptResult::Failure(TxValidationResult::TX_NOT_STANDARD, "ecai-internal");
+			TxValidationState st;
+			st.Invalid(TxValidationResult::TX_NOT_STANDARD, "ecai-internal");
+			return MempoolAcceptResult::Failure(std::move(st));
+
 		}
 
         // 2) Evaluate policy
@@ -1494,9 +1501,13 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
         ecai::Publish(p);
 
         if (v == ecai::Verdict::REJECT) {
-            return MempoolAcceptResult::Failure(TxValidationResult::TX_NOT_STANDARD, "ecai-reject");
+			TxValidationState st;
+			st.Invalid(TxValidationResult::TX_NOT_STANDARD, "ecai-internal");
+			return MempoolAcceptResult::Failure(std::move(st));
         } else if (v == ecai::Verdict::QUEUE) {
-            return MempoolAcceptResult::Failure(TxValidationResult::TX_NOT_STANDARD, "ecai-queue");
+			TxValidationState st;
+			st.Invalid(TxValidationResult::TX_NOT_STANDARD, "ecai-internal");
+			return MempoolAcceptResult::Failure(std::move(st));
         }
         // else ACCEPT → continue to Core's standard policy/feerate/ancestor checks.
     }
