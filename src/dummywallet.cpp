@@ -47,6 +47,7 @@ void DummyWalletInit::AddWalletOptions(ArgsManager& argsman) const
         "-walletdir=<dir>",
         "-walletnotify=<cmd>",
         "-walletrbf",
+        "-walletpar",
         "-walletrejectlongchains",
         "-walletcrosschain",
         "-unsafesqlitesync",
