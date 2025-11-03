@@ -136,6 +136,10 @@ inline constexpr bool DEFAULT_WALLET_RBF = true;
 inline constexpr bool DEFAULT_WALLETBROADCAST = true;
 inline constexpr bool DEFAULT_DISABLE_WALLET = false;
 inline constexpr bool DEFAULT_WALLETCROSSCHAIN = false;
+//! Default for -walletpar
+inline constexpr int DEFAULT_WALLETPAR = 0;
+//! Maximum number of dedicated wallet threads
+inline constexpr int MAX_WALLETPAR = 15;
 //! -maxtxfee default
 inline constexpr CAmount DEFAULT_TRANSACTION_MAXFEE{COIN / 10};
 //! -maxfeerate default
@@ -694,6 +698,8 @@ public:
      * cannot fund the transaction otherwise. */
     bool m_spend_zero_conf_change{DEFAULT_SPEND_ZEROCONF_CHANGE};
     bool m_signal_rbf{DEFAULT_WALLET_RBF};
+    //! Number of threads for wallet operations, including the calling thread (-walletpar)
+    int m_wallet_par{0};
     bool m_allow_fallback_fee{true}; //!< will be false if -fallbackfee=0
     CFeeRate m_min_fee{DEFAULT_TRANSACTION_MINFEE};
     /**
