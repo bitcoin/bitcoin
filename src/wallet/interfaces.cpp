@@ -27,6 +27,7 @@
 #include <wallet/receive.h>
 #include <wallet/rpc/wallet.h>
 #include <wallet/spend.h>
+#include <wallet/scan.h>
 #include <wallet/wallet.h>
 
 #include <memory>
@@ -149,7 +150,7 @@ public:
     {
         return m_wallet->ChangeWalletPassphrase(old_wallet_passphrase, new_wallet_passphrase);
     }
-    void abortRescan() override { m_wallet->AbortRescan(); }
+    void abortRescan() override { m_wallet->Scanner().Abort(); }
     bool backupWallet(const std::string& filename) override { return m_wallet->BackupWallet(filename); }
     std::string getWalletName() override { return m_wallet->GetName(); }
     util::Result<CTxDestination> getNewDestination(const OutputType type, const std::string& label) override
