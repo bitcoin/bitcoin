@@ -896,14 +896,14 @@ RPCHelpMan rescanblockchain()
         CHECK_NONFATAL(pwallet->chain().findAncestorByHeight(pwallet->GetLastBlockHash(), start_height, FoundBlock().hash(start_block)));
     }
 
-    CWallet::ScanResult result =
+    ScanResult result =
         pwallet->ScanForWalletTransactions(start_block, start_height, stop_height, reserver, /*fUpdate=*/true, /*save_progress=*/false);
     switch (result.status) {
-    case CWallet::ScanResult::SUCCESS:
+    case ScanResult::SUCCESS:
         break;
-    case CWallet::ScanResult::FAILURE:
+    case ScanResult::FAILURE:
         throw JSONRPCError(RPC_MISC_ERROR, "Rescan failed. Potentially corrupted data files.");
-    case CWallet::ScanResult::USER_ABORT:
+    case ScanResult::USER_ABORT:
         throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted.");
         // no default case, so the compiler can warn about missing cases
     }

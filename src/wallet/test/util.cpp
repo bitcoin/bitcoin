@@ -42,8 +42,8 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
     }
     WalletRescanReserver reserver(*wallet);
     reserver.reserve();
-    CWallet::ScanResult result = wallet->ScanForWalletTransactions(cchain.Genesis()->GetBlockHash(), /*start_height=*/0, /*max_height=*/{}, reserver, /*fUpdate=*/false, /*save_progress=*/false);
-    assert(result.status == CWallet::ScanResult::SUCCESS);
+    ScanResult result = wallet->ScanForWalletTransactions(cchain.Genesis()->GetBlockHash(), /*start_height=*/0, /*max_height=*/{}, reserver, /*fUpdate=*/false, /*save_progress=*/false);
+    assert(result.status == ScanResult::SUCCESS);
     assert(result.last_scanned_block == cchain.Tip()->GetBlockHash());
     assert(*result.last_scanned_height == cchain.Height());
     assert(result.last_failed_block.IsNull());
