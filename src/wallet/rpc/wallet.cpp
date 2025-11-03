@@ -18,6 +18,7 @@
 #include <wallet/export.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/util.h>
+#include <wallet/scan.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
@@ -100,10 +101,10 @@ static RPCMethod getwalletinfo()
     }
     obj.pushKV("private_keys_enabled", !pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
     obj.pushKV("avoid_reuse", pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE));
-    if (pwallet->IsScanning()) {
+    if (pwallet->Scanner().IsScanning()) {
         UniValue scanning(UniValue::VOBJ);
-        scanning.pushKV("duration", Ticks<std::chrono::seconds>(pwallet->ScanningDuration()));
-        scanning.pushKV("progress", pwallet->ScanningProgress());
+        scanning.pushKV("duration", Ticks<std::chrono::seconds>(pwallet->Scanner().ScanningDuration()));
+        scanning.pushKV("progress", pwallet->Scanner().ScanningProgress());
         obj.pushKV("scanning", std::move(scanning));
     } else {
         obj.pushKV("scanning", false);
