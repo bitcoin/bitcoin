@@ -2,9 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <addresstype.h>
 #include <consensus/validation.h>
 #include <key.h>
 #include <random.h>
+#include <script/interpreter.h>
 #include <script/sigcache.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
@@ -386,6 +388,78 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         // Should get 2 script checks back -- caching is on a whole-transaction basis.
         BOOST_CHECK_EQUAL(scriptchecks.size(), 2U);
     }
+}
+
+BOOST_FIXTURE_TEST_CASE(checkinputs_flags_per_input_cache_safety, Dersig100Setup)
+{
+    // Reproducer for cache poisoning via per-input flag relaxation.
+    //
+    // A 300-byte witness push passes only when SCRIPT_VERIFY_REDUCED_DATA is
+    // relaxed (as it would be for pre-activation UTXOs). The cache key is
+    // computed from the strict global flags, so if the result is cached after
+    // passing with relaxed per-input flags, a subsequent strict-flags lookup
+    // will incorrectly return a cache hit.
+
+    const auto& coinbase_script{m_coinbase_txns[0]->vout[0].scriptPubKey};
+    const script_verify_flags strict_flags{SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_REDUCED_DATA};
+    const script_verify_flags relaxed_flags{SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS};
+
+    // P2WSH witness script: OP_DROP OP_TRUE (accepts any single witness element)
+    const CScript witness_script = CScript() << OP_DROP << OP_TRUE;
+    const std::vector<unsigned char> big_witness_elem(300, 0x42);
+    const CScript p2wsh_script = GetScriptForDestination(WitnessV0ScriptHash(witness_script));
+
+    // Mine a funding tx that pays to the P2WSH output.
+    const auto mine_funding_tx{[&]
+    {
+        CMutableTransaction tx;
+        tx.vin = {CTxIn{m_coinbase_txns[0]->GetHash(), 0}};
+        tx.vout = {CTxOut{11 * CENT, p2wsh_script}};
+
+        std::vector<unsigned char> vchSig;
+        const uint256 hash = SignatureHash(coinbase_script, tx, 0, SIGHASH_ALL, 0, SigVersion::BASE);
+        BOOST_CHECK(coinbaseKey.Sign(hash, vchSig));
+        vchSig.push_back(SIGHASH_ALL);
+        tx.vin[0].scriptSig << vchSig;
+
+        const CBlock block = CreateAndProcessBlock({tx}, coinbase_script);
+        LOCK(cs_main);
+        BOOST_CHECK(m_node.chainman->ActiveChain().Tip()->GetBlockHash() == block.GetHash());
+        return CTransaction{tx};
+    }};
+    const CTransaction funding_tx{mine_funding_tx()};
+
+    // Build spending tx with a 300-byte witness element (violates REDUCED_DATA).
+    CMutableTransaction spend_tx;
+    spend_tx.vin = {CTxIn{funding_tx.GetHash(), 0}};
+    spend_tx.vout = {CTxOut{10 * CENT, GetScriptForDestination(PKHash(coinbaseKey.GetPubKey()))}};
+    spend_tx.vin[0].scriptWitness.stack = {big_witness_elem, {witness_script.begin(), witness_script.end()}};
+    const CTransaction spend{spend_tx};
+    BOOST_CHECK_EQUAL(spend.vin[0].scriptWitness.stack[0].size(), 300U);
+
+    LOCK(cs_main);
+    auto& coins_tip = m_node.chainman->ActiveChainstate().CoinsTip();
+
+    // Use a fresh validation cache to isolate this test.
+    ValidationCache validation_cache{/*script_execution_cache_bytes=*/1 << 20, /*signature_cache_bytes=*/1 << 20};
+
+    const auto run_check{[&](const std::vector<script_verify_flags>& flags_per_input) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        TxValidationState state;
+        PrecomputedTransactionData txdata;
+        return CheckInputScripts(spend, state, &coins_tip, strict_flags,
+                                 /*cacheSigStore=*/true, /*cacheFullScriptStore=*/true,
+                                 txdata, validation_cache, /*pvChecks=*/nullptr, flags_per_input);
+    }};
+
+    // Step 1: strict validation (REDUCED_DATA enforced) must fail.
+    BOOST_CHECK(!run_check({}));
+
+    // Step 2: relaxed per-input flags (no REDUCED_DATA) must pass.
+    BOOST_CHECK(run_check({relaxed_flags}));
+
+    // Step 3: strict validation must STILL fail.
+    // If the cache was poisoned in step 2, this incorrectly passes.
+    BOOST_CHECK(!run_check({}));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
