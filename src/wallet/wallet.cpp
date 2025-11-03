@@ -2850,7 +2850,7 @@ std::shared_ptr<CWallet> CWallet::CreateNew(WalletContext& context, const std::s
     const auto start{SteadyClock::now()};
     // TODO: Can't use std::make_shared because we need a custom deleter but
     // should be possible to use std::allocate_shared.
-    std::shared_ptr<CWallet> walletInstance(new CWallet(chain, name, std::move(database)), FlushAndDeleteWallet);
+    std::shared_ptr<CWallet> walletInstance(new CWallet(chain, name, std::move(database), &context.thread_pool), FlushAndDeleteWallet);
 
     if (!LoadWalletArgs(walletInstance, context, error, warnings)) {
         return nullptr;
@@ -2902,7 +2902,7 @@ std::shared_ptr<CWallet> CWallet::LoadExisting(WalletContext& context, const std
     const std::string& walletFile = database->Filename();
 
     const auto start{SteadyClock::now()};
-    std::shared_ptr<CWallet> walletInstance(new CWallet(chain, name, std::move(database)), FlushAndDeleteWallet);
+    std::shared_ptr<CWallet> walletInstance(new CWallet(chain, name, std::move(database), &context.thread_pool), FlushAndDeleteWallet);
 
     if (!LoadWalletArgs(walletInstance, context, error, warnings)) {
         return nullptr;

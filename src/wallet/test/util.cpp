@@ -9,6 +9,7 @@
 #include <key_io.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
+#include <util/threadpool.h>
 #include <validationinterface.h>
 #include <wallet/context.h>
 #include <wallet/wallet.h>
@@ -19,7 +20,9 @@
 namespace wallet {
 std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cchain, const CKey& key)
 {
-    auto wallet = std::make_unique<CWallet>(&chain, "", CreateMockableWalletDatabase());
+    ThreadPool thread_pool{"wallet_test"};
+    thread_pool.Start(2);
+    auto wallet = std::make_unique<CWallet>(&chain, "", CreateMockableWalletDatabase(), &thread_pool);
     {
         LOCK2(wallet->cs_wallet, ::cs_main);
         wallet->SetLastBlockProcessed(cchain.Height(), cchain.Tip()->GetBlockHash());
