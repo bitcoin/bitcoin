@@ -165,6 +165,13 @@ static_assert(0 < MAX_SCRIPT_VERIFY_FLAGS_BITS && MAX_SCRIPT_VERIFY_FLAGS_BITS <
 
 static constexpr script_verify_flags::value_type MAX_SCRIPT_VERIFY_FLAGS = ((script_verify_flags::value_type{1} << MAX_SCRIPT_VERIFY_FLAGS_BITS) - 1);
 
+static constexpr script_verify_flags REDUCED_DATA_MANDATORY_VERIFY_FLAGS{
+    SCRIPT_VERIFY_REDUCED_DATA
+    | SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM
+    | SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION
+    | SCRIPT_VERIFY_DISCOURAGE_OP_SUCCESS
+};
+
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, script_verify_flags flags, ScriptError* serror);
 
 struct PrecomputedTransactionData
