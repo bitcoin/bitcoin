@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_CONTEXT_H
 
 #include <sync.h>
+#include <util/threadpool.h>
 
 #include <functional>
 #include <list>
@@ -39,6 +40,7 @@ struct WalletContext {
     ArgsManager* args{nullptr}; // Currently a raw pointer because the memory is not managed by this struct
     // It is unsafe to lock this after locking a CWallet::cs_wallet mutex because
     // this could introduce inconsistent lock ordering and cause deadlocks.
+    ThreadPool thread_pool{"wallet"}; //!< Thread pool for wallet operations
     Mutex wallets_mutex;
     std::vector<std::shared_ptr<CWallet>> wallets GUARDED_BY(wallets_mutex);
     std::list<LoadWalletFn> wallet_load_fns GUARDED_BY(wallets_mutex);

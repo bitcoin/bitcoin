@@ -27,6 +27,7 @@
 #include <util/hasher.h>
 #include <util/result.h>
 #include <util/string.h>
+#include <util/threadpool.h>
 #include <util/time.h>
 #include <util/ui_change_type.h>
 #include <wallet/crypter.h>
@@ -135,6 +136,9 @@ static const bool DEFAULT_WALLET_RBF = true;
 static const bool DEFAULT_WALLETBROADCAST = true;
 static const bool DEFAULT_DISABLE_WALLET = false;
 static const bool DEFAULT_WALLETCROSSCHAIN = false;
+//! Default for -walletpar
+static const int DEFAULT_WALLETPAR = 0;
+static const int MAX_WALLETPAR = 16;
 //! -maxtxfee default
 constexpr CAmount DEFAULT_TRANSACTION_MAXFEE{COIN / 10};
 //! Discourage users to set fees higher than this amount (in satoshis) per kB
@@ -400,6 +404,9 @@ private:
     /** Internal database handle. */
     std::unique_ptr<WalletDatabase> m_database;
 
+    /** Thread pool for wallet operations. */
+    [[maybe_unused]] ThreadPool* m_thread_pool;
+
     /**
      * The following is used to keep track of how far behind the wallet is
      * from the chain sync, and to allow clients to block on us being caught up.
@@ -476,10 +483,11 @@ public:
     unsigned int nMasterKeyMaxID = 0;
 
     /** Construct wallet with specified name and database implementation. */
-    CWallet(interfaces::Chain* chain, const std::string& name, std::unique_ptr<WalletDatabase> database)
+    CWallet(interfaces::Chain* chain, const std::string& name, std::unique_ptr<WalletDatabase> database, ThreadPool* thread_pool = nullptr)
         : m_chain(chain),
           m_name(name),
-          m_database(std::move(database))
+          m_database(std::move(database)),
+          m_thread_pool(thread_pool)
     {
     }
 
