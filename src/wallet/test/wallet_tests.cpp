@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <wallet/scan.h>
 #include <wallet/wallet.h>
 
 #include <cstdint>
@@ -104,7 +105,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
     CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     CBlockIndex* newTip = WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return m_node.chainman->ActiveChain().Tip());
 
-    // Verify ScanForWalletTransactions fails to read an unknown start block.
+    // Verify Scan fails to read an unknown start block.
     {
         CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
         {
@@ -116,15 +117,15 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(wallet);
         reserver.reserve();
-        CWallet::ScanResult result = wallet.ScanForWalletTransactions(/*start_block=*/{}, /*start_height=*/0, /*max_height=*/{}, reserver, /*save_progress=*/false);
-        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::FAILURE);
+        ScanResult result = wallet.Scanner().Scan(/*start_block=*/{}, /*start_height=*/0, /*max_height=*/{}, reserver, /*save_progress=*/false);
+        BOOST_CHECK_EQUAL(result.status, ScanResult::FAILURE);
         BOOST_CHECK(result.last_failed_block.IsNull());
         BOOST_CHECK(result.last_scanned_block.IsNull());
         BOOST_CHECK(!result.last_scanned_height);
         BOOST_CHECK_EQUAL(GetBalance(wallet).m_mine_immature, 0);
     }
 
-    // Verify ScanForWalletTransactions picks up transactions in both the old
+    // Verify Scan picks up transactions in both the old
     // and new block files.
     {
         CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
@@ -146,8 +147,8 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
             BOOST_CHECK(!locator.IsNull() && locator.vHave.front() == newTip->GetBlockHash());
         }
 
-        CWallet::ScanResult result = wallet.ScanForWalletTransactions(/*start_block=*/oldTip->GetBlockHash(), /*start_height=*/oldTip->nHeight, /*max_height=*/{}, reserver, /*save_progress=*/true);
-        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
+        ScanResult result = wallet.Scanner().Scan(/*start_block=*/oldTip->GetBlockHash(), /*start_height=*/oldTip->nHeight, /*max_height=*/{}, reserver, /*save_progress=*/true);
+        BOOST_CHECK_EQUAL(result.status, ScanResult::SUCCESS);
         BOOST_CHECK(result.last_failed_block.IsNull());
         BOOST_CHECK_EQUAL(result.last_scanned_block, newTip->GetBlockHash());
         BOOST_CHECK_EQUAL(*result.last_scanned_height, newTip->nHeight);
@@ -169,7 +170,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
     }
     m_node.chainman->m_blockman.UnlinkPrunedFiles({file_number});
 
-    // Verify ScanForWalletTransactions only picks transactions in the new block
+    // Verify Scan only picks transactions in the new block
     // file.
     {
         CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
@@ -182,8 +183,8 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(wallet);
         reserver.reserve();
-        CWallet::ScanResult result = wallet.ScanForWalletTransactions(/*start_block=*/oldTip->GetBlockHash(), /*start_height=*/oldTip->nHeight, /*max_height=*/{}, reserver, /*save_progress=*/false);
-        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::FAILURE);
+        ScanResult result = wallet.Scanner().Scan(/*start_block=*/oldTip->GetBlockHash(), /*start_height=*/oldTip->nHeight, /*max_height=*/{}, reserver, /*save_progress=*/false);
+        BOOST_CHECK_EQUAL(result.status, ScanResult::FAILURE);
         BOOST_CHECK_EQUAL(result.last_failed_block, oldTip->GetBlockHash());
         BOOST_CHECK_EQUAL(result.last_scanned_block, newTip->GetBlockHash());
         BOOST_CHECK_EQUAL(*result.last_scanned_height, newTip->nHeight);
@@ -198,7 +199,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
     }
     m_node.chainman->m_blockman.UnlinkPrunedFiles({file_number});
 
-    // Verify ScanForWalletTransactions scans no blocks.
+    // Verify Scan scans no blocks.
     {
         CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
         {
@@ -210,8 +211,8 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(wallet);
         reserver.reserve();
-        CWallet::ScanResult result = wallet.ScanForWalletTransactions(/*start_block=*/oldTip->GetBlockHash(), /*start_height=*/oldTip->nHeight, /*max_height=*/{}, reserver, /*save_progress=*/false);
-        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::FAILURE);
+        ScanResult result = wallet.Scanner().Scan(/*start_block=*/oldTip->GetBlockHash(), /*start_height=*/oldTip->nHeight, /*max_height=*/{}, reserver, /*save_progress=*/false);
+        BOOST_CHECK_EQUAL(result.status, ScanResult::FAILURE);
         BOOST_CHECK_EQUAL(result.last_failed_block, newTip->GetBlockHash());
         BOOST_CHECK(result.last_scanned_block.IsNull());
         BOOST_CHECK(!result.last_scanned_height);
@@ -260,8 +261,8 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_reorged_block, TestChain100
         }
         WalletRescanReserver reserver(wallet);
         reserver.reserve();
-        CWallet::ScanResult result = wallet.ScanForWalletTransactions(stale_hash, stale_height, /*max_height=*/{}, reserver, /*save_progress=*/false);
-        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
+        ScanResult result = wallet.Scanner().Scan(stale_hash, stale_height, /*max_height=*/{}, reserver, /*save_progress=*/false);
+        BOOST_CHECK_EQUAL(result.status, ScanResult::SUCCESS);
         BOOST_CHECK(result.last_failed_block.IsNull());
         BOOST_CHECK_EQUAL(result.last_scanned_block, stale_hash);
         BOOST_CHECK_EQUAL(*result.last_scanned_height, stale_height);
@@ -279,8 +280,8 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_reorged_block, TestChain100
         AddKey(wallet, coinbaseKey); // the stale block's coinbase pays coinbaseKey
         WalletRescanReserver reserver(wallet);
         reserver.reserve();
-        CWallet::ScanResult result = wallet.ScanForWalletTransactions(stale_hash, stale_height, /*max_height=*/{}, reserver, /*save_progress=*/false);
-        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::FAILURE);
+        ScanResult result = wallet.Scanner().Scan(stale_hash, stale_height, /*max_height=*/{}, reserver, /*save_progress=*/false);
+        BOOST_CHECK_EQUAL(result.status, ScanResult::FAILURE);
         BOOST_CHECK_EQUAL(result.last_failed_block, stale_hash);
         BOOST_CHECK(result.last_scanned_block.IsNull());
         BOOST_CHECK(!result.last_scanned_height);
@@ -304,17 +305,17 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_abort, TestChain100Setup)
 
     // An abort requested while no rescan is held is stale and must
     // not cancel a later scan.
-    wallet.AbortRescan();
+    wallet.Scanner().Abort();
     WalletRescanReserver reserver(wallet);
     BOOST_CHECK(reserver.reserve());
-    BOOST_CHECK(!wallet.IsAbortingRescan());
+    BOOST_CHECK(!wallet.Scanner().IsAborting());
 
     // An abort requested after the reservation but before the scan starts
     // (e.g. while importdescriptors is still deriving keys) must cancel the
     // scan.
-    wallet.AbortRescan();
-    CWallet::ScanResult result = wallet.ScanForWalletTransactions(genesis_hash, /*start_height=*/0, /*max_height=*/{}, reserver, /*save_progress=*/false);
-    BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::USER_ABORT);
+    wallet.Scanner().Abort();
+    ScanResult result = wallet.Scanner().Scan(genesis_hash, /*start_height=*/0, /*max_height=*/{}, reserver, /*save_progress=*/false);
+    BOOST_CHECK_EQUAL(result.status, ScanResult::USER_ABORT);
     BOOST_CHECK(result.last_scanned_block.IsNull());
     BOOST_CHECK(!result.last_scanned_height);
     BOOST_CHECK(result.last_failed_block.IsNull());
@@ -325,17 +326,17 @@ BOOST_FIXTURE_TEST_CASE(wallet_rescan_reserver, TestingSetup)
     CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
 
     // No scan in progress: accessors report idle state.
-    BOOST_CHECK(!wallet.IsScanning());
-    BOOST_CHECK(wallet.ScanningDuration() == SteadyClock::duration{});
-    BOOST_CHECK_EQUAL(wallet.ScanningProgress(), 0.0);
+    BOOST_CHECK(!wallet.Scanner().IsScanning());
+    BOOST_CHECK(wallet.Scanner().ScanningDuration() == SteadyClock::duration{});
+    BOOST_CHECK_EQUAL(wallet.Scanner().ScanningProgress(), 0.0);
 
     {
         WalletRescanReserver first_reserver(wallet);
         BOOST_CHECK(first_reserver.reserve());
         BOOST_CHECK(first_reserver.isReserved());
-        BOOST_CHECK(wallet.IsScanning());
-        BOOST_CHECK(!wallet.IsScanningWithPassphrase());
-        BOOST_CHECK_EQUAL(wallet.ScanningProgress(), 0.0);
+        BOOST_CHECK(wallet.Scanner().IsScanning());
+        BOOST_CHECK(!wallet.Scanner().IsScanningWithPassphrase());
+        BOOST_CHECK_EQUAL(wallet.Scanner().ScanningProgress(), 0.0);
 
         // Only one reservation can be held at a time.
         WalletRescanReserver second_reserver(wallet);
@@ -343,14 +344,14 @@ BOOST_FIXTURE_TEST_CASE(wallet_rescan_reserver, TestingSetup)
         BOOST_CHECK(!second_reserver.isReserved());
     }
     // Destroying the reserver (RAII) clears the scanning state.
-    BOOST_CHECK(!wallet.IsScanning());
+    BOOST_CHECK(!wallet.Scanner().IsScanning());
 
     {
         WalletRescanReserver passphrase_reserver(wallet);
         BOOST_CHECK(passphrase_reserver.reserve(/*with_passphrase=*/true));
-        BOOST_CHECK(wallet.IsScanningWithPassphrase());
+        BOOST_CHECK(wallet.Scanner().IsScanningWithPassphrase());
     }
-    BOOST_CHECK(!wallet.IsScanningWithPassphrase());
+    BOOST_CHECK(!wallet.Scanner().IsScanningWithPassphrase());
 }
 
 BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_bounded, TestChain100Setup)
@@ -378,8 +379,8 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_bounded, TestChain100Setup)
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(wallet);
         reserver.reserve();
-        CWallet::ScanResult result = wallet.ScanForWalletTransactions(genesis_hash, /*start_height=*/0, max_height, reserver, /*save_progress=*/false);
-        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
+        ScanResult result = wallet.Scanner().Scan(genesis_hash, /*start_height=*/0, max_height, reserver, /*save_progress=*/false);
+        BOOST_CHECK_EQUAL(result.status, ScanResult::SUCCESS);
         BOOST_CHECK(result.last_failed_block.IsNull());
         BOOST_CHECK_EQUAL(result.last_scanned_block, max_hash);
         BOOST_CHECK_EQUAL(*result.last_scanned_height, max_height);
@@ -399,8 +400,8 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_bounded, TestChain100Setup)
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(wallet);
         reserver.reserve();
-        CWallet::ScanResult result = wallet.ScanForWalletTransactions(tip_hash, tip_height, tip_height, reserver, /*save_progress=*/false);
-        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
+        ScanResult result = wallet.Scanner().Scan(tip_hash, tip_height, tip_height, reserver, /*save_progress=*/false);
+        BOOST_CHECK_EQUAL(result.status, ScanResult::SUCCESS);
         BOOST_CHECK(result.last_failed_block.IsNull());
         BOOST_CHECK_EQUAL(result.last_scanned_block, tip_hash);
         BOOST_CHECK_EQUAL(*result.last_scanned_height, tip_height);
@@ -442,9 +443,9 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_tip_extension, TestChain100
 
     WalletRescanReserver reserver(wallet);
     reserver.reserve();
-    CWallet::ScanResult result = wallet.ScanForWalletTransactions(genesis_hash, /*start_height=*/0, /*max_height=*/{}, reserver, /*save_progress=*/false);
+    ScanResult result = wallet.Scanner().Scan(genesis_hash, /*start_height=*/0, /*max_height=*/{}, reserver, /*save_progress=*/false);
     handler.disconnect();
-    BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
+    BOOST_CHECK_EQUAL(result.status, ScanResult::SUCCESS);
     BOOST_CHECK_EQUAL(result.last_scanned_block, new_tip_hash);
     BOOST_CHECK_EQUAL(*result.last_scanned_height, start_tip_height + 1);
 }
@@ -472,8 +473,8 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_no_progress_saved, TestChai
     reserver.setNow([&] { fake_time += 60s; return fake_time; });
     reserver.reserve();
 
-    CWallet::ScanResult result = wallet.ScanForWalletTransactions(genesis_hash, /*start_height=*/0, max_height, reserver, /*save_progress=*/false);
-    BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
+    ScanResult result = wallet.Scanner().Scan(genesis_hash, /*start_height=*/0, max_height, reserver, /*save_progress=*/false);
+    BOOST_CHECK_EQUAL(result.status, ScanResult::SUCCESS);
 
     // With save_progress=false the scan must not touch the wallet's best
     // block record: it still points at the tip written when the descriptor
@@ -563,9 +564,9 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_missing_filter, TestChain10
             if (s) fast_scan_logged = true;
             return false;
         }};
-        CWallet::ScanResult result = wallet.ScanForWalletTransactions(genesis_hash, /*start_height=*/0, /*max_height=*/{}, reserver, /*save_progress=*/false);
+        ScanResult result = wallet.Scanner().Scan(genesis_hash, /*start_height=*/0, /*max_height=*/{}, reserver, /*save_progress=*/false);
         BOOST_REQUIRE(fast_scan_logged);
-        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
+        BOOST_CHECK_EQUAL(result.status, ScanResult::SUCCESS);
         BOOST_CHECK(result.last_failed_block.IsNull());
         BOOST_CHECK_EQUAL(result.last_scanned_block, tip_hash);
         BOOST_CHECK_EQUAL(*result.last_scanned_height, tip_height);
