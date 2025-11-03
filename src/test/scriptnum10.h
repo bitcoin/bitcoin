@@ -61,14 +61,12 @@ public:
     }
 
     inline bool operator==(const int64_t& rhs) const    { return m_value == rhs; }
-    inline bool operator!=(const int64_t& rhs) const    { return m_value != rhs; }
     inline bool operator<=(const int64_t& rhs) const    { return m_value <= rhs; }
     inline bool operator< (const int64_t& rhs) const    { return m_value <  rhs; }
     inline bool operator>=(const int64_t& rhs) const    { return m_value >= rhs; }
     inline bool operator> (const int64_t& rhs) const    { return m_value >  rhs; }
 
     inline bool operator==(const CScriptNum10& rhs) const { return operator==(rhs.m_value); }
-    inline bool operator!=(const CScriptNum10& rhs) const { return operator!=(rhs.m_value); }
     inline bool operator<=(const CScriptNum10& rhs) const { return operator<=(rhs.m_value); }
     inline bool operator< (const CScriptNum10& rhs) const { return operator< (rhs.m_value); }
     inline bool operator>=(const CScriptNum10& rhs) const { return operator>=(rhs.m_value); }

@@ -104,7 +104,6 @@ class bitdeque
         friend bool operator<=(const Iterator& x, const Iterator& y) { return std::tie(x.m_it, x.m_bitpos) <= std::tie(y.m_it, y.m_bitpos); }
         friend bool operator>=(const Iterator& x, const Iterator& y) { return std::tie(x.m_it, x.m_bitpos) >= std::tie(y.m_it, y.m_bitpos); }
         friend bool operator==(const Iterator& x, const Iterator& y) { return x.m_it == y.m_it && x.m_bitpos == y.m_bitpos; }
-        friend bool operator!=(const Iterator& x, const Iterator& y) { return x.m_it != y.m_it || x.m_bitpos != y.m_bitpos; }
         reference operator*() const { return (*m_it)[m_bitpos]; }
         reference operator[](difference_type pos) const { return *(*this + pos); }
     };
