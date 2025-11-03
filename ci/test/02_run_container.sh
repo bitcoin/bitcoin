@@ -18,6 +18,6 @@ CI_EXEC () {
 export -f CI_EXEC
 
 # Normalize all folders to BASE_ROOT_DIR
-CI_EXEC rsync --recursive --perms --stats --human-readable "${BASE_READ_ONLY_DIR}/" "${BASE_ROOT_DIR}" || echo "Nothing to copy from ${BASE_READ_ONLY_DIR}/"
+CI_EXEC rsync --recursive --perms --stats --human-readable "${BASE_READ_ONLY_DIR}/" "${BASE_ROOT_DIR}"
 CI_EXEC "${BASE_ROOT_DIR}/ci/test/01_base_install.sh"
 CI_EXEC "${BASE_ROOT_DIR}/ci/test/03_test_script.sh"
