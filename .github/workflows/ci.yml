@@ -35,6 +35,14 @@ jobs:
     outputs:
       provider: ${{ steps.runners.outputs.provider }}
     steps:
+      - name: Annotate with pull request number
+        # This annotation is machine-readable and can be used to assign a check
+        # run to its corresponding pull request. Running in one check run is
+        # sufficient for each check suite.
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "::notice title=debug_pull_request_number_str::${{ github.event.number }}"
+          fi
       - id: runners
         run: |
           if [[ "${REPO_USE_CIRRUS_RUNNERS}" == "${{ github.repository }}" ]]; then
