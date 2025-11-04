@@ -57,8 +57,12 @@
 #include <sys/auxv.h>
 #endif
 
-#ifndef WIN32
-extern char** environ; // NOLINT(readability-redundant-declaration): Necessary on some platforms
+#if defined(__APPLE__) || \
+    defined(__FreeBSD__) || \
+    defined(__NetBSD__) || \
+    defined(__OpenBSD__) || \
+    defined(__illumos__)
+extern char** environ; // NOLINT(readability-redundant-declaration): Necessary on the above platforms
 #endif
 
 namespace {
