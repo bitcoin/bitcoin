@@ -141,13 +141,21 @@ cmake -S "$BASE_ROOT_DIR" -B "$BASE_BUILD_DIR" "${CMAKE_ARGS[@]}" || (
   false
 )
 
-# shellcheck disable=SC2086
-cmake --build "${BASE_BUILD_DIR}" "$MAKEJOBS" --target all $GOAL || (
-  echo "Build failure. Verbose build follows."
+if [ "${RUN_TIDY}" = "true" ]; then
+  cmake --build "${BASE_BUILD_DIR}" "$MAKEJOBS" --target codegen || (
+    echo "Build failure. Verbose build follows."
+    cmake --build "${BASE_BUILD_DIR}" -j1 --target codegen --verbose
+    false
+  )
+else
   # shellcheck disable=SC2086
-  cmake --build "${BASE_BUILD_DIR}" -j1 --target all $GOAL --verbose
-  false
-)
+  cmake --build "${BASE_BUILD_DIR}" "$MAKEJOBS" --target all $GOAL || (
+    echo "Build failure. Verbose build follows."
+    # shellcheck disable=SC2086
+    cmake --build "${BASE_BUILD_DIR}" -j1 --target all $GOAL --verbose
+    false
+  )
+fi
 
 bash -c "${PRINT_CCACHE_STATISTICS}"
 if [ "$CI" = "true" ]; then
