@@ -574,9 +574,8 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             assert ((strType == DBKeys::CRYPTED_HDCHAIN) == chain.IsCrypted());
             // Skip encryption check during loading as MASTER_KEY records may not be loaded yet.
             // Consistency will be validated after all records are loaded.
-            if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadHDChain(chain, /*skip_encryption_check=*/true))
-            {
-                strErr = "Error reading wallet database: SetHDChain failed";
+            if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadHDChain(chain, /*skip_encryption_check=*/true)) {
+                strErr = "Error reading wallet database: LoadHDChain failed";
                 return false;
             }
         } else if (strType == DBKeys::HDPUBKEY) {
