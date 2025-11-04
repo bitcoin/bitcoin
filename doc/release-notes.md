@@ -51,6 +51,8 @@ The compact block filter index format has been updated to include Dash special t
 
 ## Other notable changes
 
+* Performance of block validation in Dash Core has been significantly improvement, index from
+  scratch and reindex are up to 20% faster compare to v22.x.
 * To help prevent fingerprinting transactions created by the Dash Core wallet, change output
   amounts are now randomized. (#6685)
 * Dash Core will no longer migrate EvoDb databases generated in v19 and v20, users upgrading
@@ -88,7 +90,7 @@ The compact block filter index format has been updated to include Dash special t
   They can be re-enabled with the runtime argument `-deprecatedrpc=legacy_mn`.
 
 * The argument `legacy` in `bls generate` has been deprecated in Dash Core v23 and may be ignored in a future version.
-  It can be re-enabled with the runtime argument `deprecatedrpc=legacy_mn`. (#6723)
+  It can be re-enabled with the runtime argument `-deprecatedrpc=legacy_mn`. (#6723)
 
 * A new optional field `submit` has been introduced to the `protx revoke`, `protx update_registrar`, `protx update_service` RPCs. It behaves identically to `submit` in `protx register` or `protx register_fund`. (#6720)
 
