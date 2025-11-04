@@ -78,7 +78,7 @@ The compact block filter index format has been updated to include Dash special t
 - `MIN_PEER_PROTO_VERSION` has been bumped to `70221`. (#6877)
 - `PROTO_VERSION` has been bumped to `70238` with the introduction of the `platformban` p2p message.
   This message allows evonodes to initiate PoSe masternode banning in Dash Core for evonodes which are
-  not providing adequite service on Dash platform.
+  not providing adequate service on Dash Platform.
 - `cycleHash` field in `isdlock` message will now represent a DKG cycle starting block of the signing quorum instead of a DKG cycle starting block corresponding to the current chain height. While this is fully backwards compatible with older versions of Dash Core, other implementations might not be expecting this, so the P2P protocol version was bumped to 70237. (#6608)
 - UNIX domain sockets can now be used for proxy connections. Set `-onion` or `-proxy` to the local socket path with the prefix `unix:` (e.g. `-onion=unix:/home/me/torsocket`). UNIX socket paths are now accepted for `-zmqpubrawblock` and `-zmqpubrawtx` with the format `-zmqpubrawtx=unix:/path/to/file`. (#6634)
 
