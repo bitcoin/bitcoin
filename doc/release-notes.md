@@ -55,9 +55,6 @@ The compact block filter index format has been updated to include Dash special t
 Other notable changes
 ---------------------
 
-* Dash Core will no longer permit the registration of new legacy scheme masternodes after the deployment of the v24
-  fork. Existing basic scheme masternodes will also be prohibited from downgrading to the legacy scheme after the
-  deployment is active. (#6729)
 * To help prevent fingerprinting transactions created by the Dash Core wallet, change output
   amounts are now randomized. (#6685)
 * Dash Core will no longer migrate EvoDb databases generated in v19 and v20, users upgrading
