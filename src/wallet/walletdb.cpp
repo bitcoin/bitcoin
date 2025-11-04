@@ -572,7 +572,9 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             CHDChain chain;
             ssValue >> chain;
             assert ((strType == DBKeys::CRYPTED_HDCHAIN) == chain.IsCrypted());
-            if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadHDChain(chain))
+            // Skip encryption check during loading as MASTER_KEY records may not be loaded yet.
+            // Consistency will be validated after all records are loaded.
+            if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadHDChain(chain, /*skip_encryption_check=*/true))
             {
                 strErr = "Error reading wallet database: SetHDChain failed";
                 return false;
@@ -874,6 +876,23 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         result = DBErrors::CORRUPT;
     }
     m_batch->CloseCursor();
+
+    // Validate HD chain encryption consistency now that all data is loaded
+    if (auto spk_man = pwallet->GetLegacyScriptPubKeyMan()) {
+        CHDChain hdChain;
+        if (spk_man->GetHDChain(hdChain)) {
+            // If HD chain exists, validate encryption consistency
+            bool fHasMasterKeys = pwallet->HasEncryptionKeys();
+            bool fChainCrypted = hdChain.IsCrypted();
+
+            if (fHasMasterKeys != fChainCrypted) {
+                pwallet->WalletLogPrintf("Error: HD chain encryption state (%s) inconsistent with wallet encryption state (%s)\n",
+                    fChainCrypted ? "encrypted" : "not encrypted",
+                    fHasMasterKeys ? "encrypted" : "not encrypted");
+                return DBErrors::CORRUPT;
+            }
+        }
+    }
 
     // Set the active ScriptPubKeyMans
     for (auto spk_man : wss.m_active_external_spks) {

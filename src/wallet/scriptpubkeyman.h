@@ -404,7 +404,7 @@ public:
     /* Set the HD chain model (chain child index counters) and writes it to the database */
     bool AddHDChain(WalletBatch &batch, const CHDChain& chain);
     //! Load a HD chain model (used by LoadWallet)
-    bool LoadHDChain(const CHDChain& chain);
+    bool LoadHDChain(const CHDChain& chain, bool skip_encryption_check = false);
     /**
      * Set the HD chain model (chain child index counters) using temporary wallet db object
      * which causes db flush every time these methods are used
