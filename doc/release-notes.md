@@ -8,7 +8,6 @@ Please report bugs using the issue tracker at GitHub:
 
   <https://github.com/dashpay/dash/issues>
 
-
 # Upgrading and downgrading
 
 ## How to Upgrade
@@ -27,13 +26,11 @@ require a reindex.
 
 # Notable changes
 
-EvoDB migration
----------------
+## EvoDB migration
 
 This release introduces a new internal format for masternode state data to support extended addresses and make future updates of this data seamless. Nodes will automatically migrate to the new format. Downgrading to an earlier version would require a full reindex. #6813
 
-Breaking Change: Block Filter Index Format Update
--------------------------------------------------
+## Breaking Change: Block Filter Index Format Update
 
 The compact block filter index format has been updated to include Dash special transaction data, providing feature parity with bloom filters for SPV client support. This change is incompatible with existing blockfilter indexes. Existing blockfilter indexes will automatically be re-created with the new version.
 
@@ -52,16 +49,14 @@ The compact block filter index format has been updated to include Dash special t
 - Feature parity between bloom filters and compact block filters
 - Protection against serving incorrect filter data to light clients
 
-Other notable changes
----------------------
+## Other notable changes
 
 * To help prevent fingerprinting transactions created by the Dash Core wallet, change output
   amounts are now randomized. (#6685)
 * Dash Core will no longer migrate EvoDb databases generated in v19 and v20, users upgrading
   from these versions are recommended to run `-reindex` to rebuild all databases and indexes. (#6579)
 
-Updated REST APIs
------------------
+## Updated REST APIs
 
 - The `/headers/` and `/blockfilterheaders/` endpoints have been updated to use
   a query parameter instead of a path parameter to specify the result count. The
@@ -76,15 +71,13 @@ Updated REST APIs
   `GET /rest/blockfilterheaders/<FILTERTYPE>/<BLOCK-HASH>.<bin|hex|json>?count=<COUNT=5>` instead of
   `GET /rest/blockfilterheaders/<FILTERTYPE>/<COUNT>/<BLOCK-HASH>.<bin|hex|json>` (deprecated)
 
-P2P and network changes
------------------------
+## P2P and network changes
 
 - `MIN_PEER_PROTO_VERSION` has been bumped to `70221`. (#6877)
 - `cycleHash` field in `isdlock` message will now represent a DKG cycle starting block of the signing quorum instead of a DKG cycle starting block corresponding to the current chain height. While this is fully backwards compatible with older versions of Dash Core, other implementations might not be expecting this, so the P2P protocol version was bumped to 70237. (#6608)
 - UNIX domain sockets can now be used for proxy connections. Set `-onion` or `-proxy` to the local socket path with the prefix `unix:` (e.g. `-onion=unix:/home/me/torsocket`). UNIX socket paths are now accepted for `-zmqpubrawblock` and `-zmqpubrawtx` with the format `-zmqpubrawtx=unix:/path/to/file`. (#6634)
 
-Updated RPCs
-------------
+## Updated RPCs
 
 * The keys `platformP2PPort` and `platformHTTPPort` have been deprecated for the following RPCs, `decoderawtransaction`,
   `decodepsbt`, `getblock`, `getrawtransaction`, `gettransaction`, `masternode status` (only the `dmnState` key),
@@ -182,8 +175,7 @@ Updated RPCs
 
 * The `listdescriptors` RPC now includes an optional coinjoin field to identify CoinJoin descriptors. (#6835)
 
-Updated settings
-----------------
+## Updated settings
 
 - BIP157 compact block filters are now automatically enabled for masternodes. This improves privacy for light clients
   connecting to masternodes and enables better support for pruned nodes. When a node is configured as a masternode
@@ -196,8 +188,7 @@ Updated settings
 
 - Ports specified in `-port` and `-rpcport` options are now validated at startup. Values that previously worked and were considered valid can now result in errors. (#6634)
 
-Statistics
-----------
+## Statistics
 
 - IPv6 hosts are now supported by the StatsD client.
 - `-statshost` now accepts URLs to allow specifying the protocol, host and port in one argument.
@@ -205,20 +196,17 @@ Statistics
 
 - The arguments `-statsenabled`, `-statsns`, `-statshostname` have been removed. They were previously deprecated in v22.0 and will no longer be recognized on runtime. (#6505)
 
-Build System
-------------
+## Build System
 
 GCC 11.1 or later, or Clang 16.0 or later, are now required to compile Dash Core. (#6389)
 
-Command-line Options
---------------------
+## Command-line Options
 
 ### Changes in Existing Command-line Options
 
 - `-platform-user` removed in v23 (deprecated in v22 and never used by platform). (#6482)
 
-Wallet
-------
+## Wallet
 
 - Wallet passphrases and mnemonic passphrases may now contain null characters. (#6780 #6792)
 
@@ -229,14 +217,12 @@ Wallet
 - Fixed an issue where CoinJoin funds mixed in the Dash Android wallet were invisible when importing the mnemonic into Dash Core. Descriptor Wallets now include an additional default descriptor for mobile CoinJoin funds, ensuring seamless wallet migration and complete fund visibility across different Dash wallet implementations.
 - This is a breaking change that increases the default number of descriptors from 2 to 3 on mainnet (internal, external, mobile CoinJoin) for newly created descriptor wallets only - existing wallets are unaffected. (#6835)
 
-GUI changes
------------
+## GUI changes
 
 - Added governance proposal voting functionality to the Qt interface. Users with masternode voting keys can now vote on governance proposals directly from the governance tab via right-click context menu. Added masternode count display to governance tab, showing how many masternodes the wallet can vote with. (#6690)
 - Added a menu item to restore a wallet from a backup file. (#6648)
 
-RPC Wallet
-----------
+## RPC Wallet
 
 - `unloadwallet` now fails if a rescan is in progress. (#6759)
 - `gettransaction`, `listtransactions`, `listsinceblock` now return the `abandoned` field for all transactions. (#25158)
