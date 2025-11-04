@@ -12,9 +12,7 @@
 #include <optional>
 
 TransactionFilterProxy::TransactionFilterProxy(QObject* parent)
-    : QSortFilterProxyModel(parent),
-      m_search_string(),
-      typeFilter(ALL_TYPES)
+    : QSortFilterProxyModel(parent)
 {
 }
 

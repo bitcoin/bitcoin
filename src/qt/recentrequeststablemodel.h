@@ -18,10 +18,10 @@ class WalletModel;
 class RecentRequestEntry
 {
 public:
-    RecentRequestEntry() : nVersion(RecentRequestEntry::CURRENT_VERSION) {}
+    RecentRequestEntry() = default;
 
     static const int CURRENT_VERSION = 1;
-    int nVersion;
+    int nVersion{RecentRequestEntry::CURRENT_VERSION};
     int64_t id{0};
     QDateTime date;
     SendCoinsRecipient recipient;
