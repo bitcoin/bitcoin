@@ -47,4 +47,8 @@ if(WIN32 AND VCPKG_TARGET_TRIPLET)
   )
 endif()
 
-install_binary_component(test_bitcoin-qt INTERNAL)
+install(TARGETS test_bitcoin-qt
+  RUNTIME
+    DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}
+    COMPONENT test_bitcoin_qt
+)

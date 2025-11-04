@@ -4,6 +4,97 @@
 
 include_guard(GLOBAL)
 
+include(CPackComponent)
+
+# cpack_add_install_type(typename
+#   [DISPLAY_NAME name]
+# )
+
+# cpack_add_component_group(groupname
+#   [DISPLAY_NAME name]
+#   [DESCRIPTION description]
+#   [PARENT_GROUP parent]
+#   [EXPANDED]
+#   [BOLD_TITLE]
+# )
+
+# cpack_add_component(compname
+#   [DISPLAY_NAME name]
+#   [DESCRIPTION description]
+#   [HIDDEN | REQUIRED | DISABLED ]
+#   [GROUP group]
+#   [DEPENDS comp1 comp2 ... ]
+#   [INSTALL_TYPES type1 type2 ... ]
+#   [DOWNLOADED]
+#   [ARCHIVE_FILE filename]
+#   [PLIST filename]
+# )
+
+cpack_add_component(bitcoin
+  DISPLAY_NAME "bitcoin"
+  DESCRIPTION "Bitcoin wrapper executable that can call other executables"
+)
+
+cpack_add_component(bitcoin_cli
+  DISPLAY_NAME "bitcoin-cli"
+  DESCRIPTION "Bitcoin JSON-RPC client"
+)
+
+cpack_add_component(bitcoin_node
+  DISPLAY_NAME "bitcoin-node"
+  # DESCRIPTION ""
+)
+
+cpack_add_component(bitcoin_tx
+  DISPLAY_NAME "bitcoin-tx"
+  DESCRIPTION "CLI Bitcoin transaction editor utility"
+)
+
+cpack_add_component(bitcoin_util
+  DISPLAY_NAME "bitcoin-util"
+  DESCRIPTION "CLI Bitcoin utility"
+)
+
+cpack_add_component(bitcoin_wallet
+  DISPLAY_NAME "bitcoin-wallet"
+  DESCRIPTION "CLI Bitcoin wallet utility"
+)
+
+cpack_add_component(bitcoind
+  DISPLAY_NAME "bitcoind"
+  DESCRIPTION "Bitcoin node with a JSON-RPC server"
+)
+
+set(CPACK_NSIS_COMPRESSOR "/SOLID lzma")
+set(CPACK_NSIS_MUI_ICON "${BitcoinCore_SOURCE_DIR}/share/pixmaps/bitcoin.ico")
+set(CPACK_NSIS_MUI_HEADERIMAGE "${BitcoinCore_SOURCE_DIR}/share/pixmaps/nsis-header.bmp")
+set(CPACK_NSIS_MUI_WELCOMEFINISHPAGE_BITMAP "${BitcoinCore_SOURCE_DIR}/share/pixmaps/nsis-wizard.bmp")
+set(CPACK_NSIS_MUI_UNWELCOMEFINISHPAGE_BITMAP "${BitcoinCore_SOURCE_DIR}/share/pixmaps/nsis-wizard.bmp")
+
+set(CPACK_RESOURCE_FILE_LICENSE "${BitcoinCore_SOURCE_DIR}/COPYING")
+set(CPACK_STRIP_FILES ON)
+
+set(CPACK_SOURCE_IGNORE_FILES
+  "/\\\\.cache/"
+  "/\\\\.git/"
+  "/depends/SDKs/"
+  "/depends/work/"
+  "/depends/built/"
+  "/depends/sources/"
+  "/depends/x86_64.*"
+  "/depends/amd64.*"
+  "/depends/i686.*"
+  "/depends/mips.*"
+  "/depends/arm.*"
+  "/depends/aarch64.*"
+  "/depends/powerpc.*"
+  "/depends/riscv32.*"
+  "/depends/riscv64.*"
+  "/depends/s390x.*"
+)
+
+include(CPack)
+
 function(setup_split_debug_script)
   if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
     set(OBJCOPY ${CMAKE_OBJCOPY})
@@ -40,38 +131,6 @@ function(add_maintenance_targets)
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/contrib/guix/security-check.py ${executables}
     VERBATIM
   )
-endfunction()
-
-function(add_windows_deploy_target)
-  if(MINGW AND TARGET bitcoin AND TARGET bitcoin-qt AND TARGET bitcoind AND TARGET bitcoin-cli AND TARGET bitcoin-tx AND TARGET bitcoin-wallet AND TARGET bitcoin-util AND TARGET test_bitcoin)
-    find_program(MAKENSIS_EXECUTABLE makensis)
-    if(NOT MAKENSIS_EXECUTABLE)
-      add_custom_target(deploy
-        COMMAND ${CMAKE_COMMAND} -E echo "Error: NSIS not found"
-      )
-      return()
-    endif()
-
-    # TODO: Consider replacing this code with the CPack NSIS Generator.
-    #       See https://cmake.org/cmake/help/latest/cpack_gen/nsis.html
-    include(GenerateSetupNsi)
-    generate_setup_nsi()
-    add_custom_command(
-      OUTPUT ${PROJECT_BINARY_DIR}/bitcoin-win64-setup.exe
-      COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/release
-      COMMAND ${CMAKE_STRIP} $<TARGET_FILE:bitcoin> -o ${PROJECT_BINARY_DIR}/release/$<TARGET_FILE_NAME:bitcoin>
-      COMMAND ${CMAKE_STRIP} $<TARGET_FILE:bitcoin-qt> -o ${PROJECT_BINARY_DIR}/release/$<TARGET_FILE_NAME:bitcoin-qt>
-      COMMAND ${CMAKE_STRIP} $<TARGET_FILE:bitcoind> -o ${PROJECT_BINARY_DIR}/release/$<TARGET_FILE_NAME:bitcoind>
-      COMMAND ${CMAKE_STRIP} $<TARGET_FILE:bitcoin-cli> -o ${PROJECT_BINARY_DIR}/release/$<TARGET_FILE_NAME:bitcoin-cli>
-      COMMAND ${CMAKE_STRIP} $<TARGET_FILE:bitcoin-tx> -o ${PROJECT_BINARY_DIR}/release/$<TARGET_FILE_NAME:bitcoin-tx>
-      COMMAND ${CMAKE_STRIP} $<TARGET_FILE:bitcoin-wallet> -o ${PROJECT_BINARY_DIR}/release/$<TARGET_FILE_NAME:bitcoin-wallet>
-      COMMAND ${CMAKE_STRIP} $<TARGET_FILE:bitcoin-util> -o ${PROJECT_BINARY_DIR}/release/$<TARGET_FILE_NAME:bitcoin-util>
-      COMMAND ${CMAKE_STRIP} $<TARGET_FILE:test_bitcoin> -o ${PROJECT_BINARY_DIR}/release/$<TARGET_FILE_NAME:test_bitcoin>
-      COMMAND ${MAKENSIS_EXECUTABLE} -V2 ${PROJECT_BINARY_DIR}/bitcoin-win64-setup.nsi
-      VERBATIM
-    )
-    add_custom_target(deploy DEPENDS ${PROJECT_BINARY_DIR}/bitcoin-win64-setup.exe)
-  endif()
 endfunction()
 
 function(add_macos_deploy_target)
