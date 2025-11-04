@@ -544,25 +544,36 @@ bool LegacyScriptPubKeyMan::DecryptHDChain(const CKeyingMaterial& vMasterKeyIn, 
     if (!m_storage.HasEncryptionKeys())
         return true;
 
-    if (m_hd_chain.IsNull())
+    if (m_hd_chain.IsNull()) {
+        WalletLogPrintf("%s: ERROR: no HD chain\n", __func__);
         return false;
+    }
 
-    if (!m_hd_chain.IsCrypted())
+    if (!m_hd_chain.IsCrypted()) {
+        WalletLogPrintf("%s: ERROR: HD chain is not encrypted\n", __func__);
         return false;
+    }
 
     SecureVector vchSecureSeed;
     SecureVector vchSecureCryptedSeed = m_hd_chain.GetSeed();
     std::vector<unsigned char> vchCryptedSeed(vchSecureCryptedSeed.begin(), vchSecureCryptedSeed.end());
-    if (!DecryptSecret(vMasterKeyIn, vchCryptedSeed, m_hd_chain.GetID(), vchSecureSeed))
+    if (!DecryptSecret(vMasterKeyIn, vchCryptedSeed, m_hd_chain.GetID(), vchSecureSeed)) {
+        WalletLogPrintf("%s: ERROR: DecryptSecret failed on seed decryption\n", __func__);
         return false;
+    }
 
     hdChainRet = m_hd_chain;
-    if (!hdChainRet.SetSeed(vchSecureSeed, false))
+    if (!hdChainRet.SetSeed(vchSecureSeed, false)) {
+        WalletLogPrintf("%s: ERROR: SetSeed failed\n", __func__);
         return false;
+    }
 
     // hash of decrypted seed must match chain id
-    if (hdChainRet.GetSeedHash() != m_hd_chain.GetID())
+    if (hdChainRet.GetSeedHash() != m_hd_chain.GetID()) {
+        WalletLogPrintf("%s: ERROR: hash of decrypted seed %s doesn't match chain ID %s\n",
+                        __func__, hdChainRet.GetSeedHash().ToString(), m_hd_chain.GetID().ToString());
         return false;
+    }
 
     SecureVector vchSecureCryptedMnemonic;
     SecureVector vchSecureCryptedMnemonicPassphrase;
@@ -575,13 +586,20 @@ bool LegacyScriptPubKeyMan::DecryptHDChain(const CKeyingMaterial& vMasterKeyIn, 
         std::vector<unsigned char> vchCryptedMnemonic(vchSecureCryptedMnemonic.begin(), vchSecureCryptedMnemonic.end());
         std::vector<unsigned char> vchCryptedMnemonicPassphrase(vchSecureCryptedMnemonicPassphrase.begin(), vchSecureCryptedMnemonicPassphrase.end());
 
-        if (!vchCryptedMnemonic.empty() && !DecryptSecret(vMasterKeyIn, vchCryptedMnemonic, m_hd_chain.GetID(), vchSecureMnemonic))
+        if (!vchCryptedMnemonic.empty() && !DecryptSecret(vMasterKeyIn, vchCryptedMnemonic, m_hd_chain.GetID(), vchSecureMnemonic)) {
+            WalletLogPrintf("%s: ERROR: DecryptSecret failed on mnemonic decryption\n", __func__);
             return false;
-        if (!vchCryptedMnemonicPassphrase.empty() && !DecryptSecret(vMasterKeyIn, vchCryptedMnemonicPassphrase, m_hd_chain.GetID(), vchSecureMnemonicPassphrase))
-            return false;
+        }
 
-        if (!hdChainRet.SetMnemonic(vchSecureMnemonic, vchSecureMnemonicPassphrase, false))
+        if (!vchCryptedMnemonicPassphrase.empty() && !DecryptSecret(vMasterKeyIn, vchCryptedMnemonicPassphrase, m_hd_chain.GetID(), vchSecureMnemonicPassphrase)) {
+            WalletLogPrintf("%s: ERROR: DecryptSecret failed on mnemonic passphrase decryption\n", __func__);
             return false;
+        }
+
+        if (!hdChainRet.SetMnemonic(vchSecureMnemonic, vchSecureMnemonicPassphrase, false)) {
+            WalletLogPrintf("%s: ERROR: SetMnemonic failed\n", __func__);
+            return false;
+        }
     }
 
     hdChainRet.SetCrypted(false);
