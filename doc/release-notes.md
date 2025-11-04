@@ -22,8 +22,8 @@ dashd/dash-qt (on Linux).
 
 ### Downgrade to a version < v23.0.0
 
-Downgrading to a version older than v23.0.0 may not be supported, and will
-likely require a reindex.
+Downgrading to a version older than v23.0.0 is not supported, and will
+require a reindex.
 
 # Notable changes
 
