@@ -247,9 +247,12 @@ See detailed [set of changes][set-of-changes].
 
 Thanks to everyone who directly contributed to this release:
 
--
--
--
+- Kittywhiskers Van Gogh
+- Konstantin Akimov
+- Odysseas Gabrielides
+- PastaPastaPasta
+- thephez
+- UdjinM6
 
 As well as everyone that submitted issues, reviewed pull requests and helped
 debug the release candidates.
