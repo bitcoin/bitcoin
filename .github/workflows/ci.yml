@@ -35,10 +35,12 @@ jobs:
     outputs:
       provider: ${{ steps.runners.outputs.provider }}
     steps:
-      - name: Annotate with pull request number
+      - &ANNOTATION_PR_NUMBER
+        name: Annotate with pull request number
         # This annotation is machine-readable and can be used to assign a check
-        # run to its corresponding pull request. Running in one check run is
-        # sufficient for each check suite.
+        # run to its corresponding pull request. Running in all check runs is
+        # required, because check re-runs discard the annotations of other
+        # tasks in the test suite.
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "::notice title=debug_pull_request_number_str::${{ github.event.number }}"
@@ -63,6 +65,7 @@ jobs:
     steps:
       - name: Determine fetch depth
         run: echo "FETCH_DEPTH=$((${{ github.event.pull_request.commits }} + 2))" >> "$GITHUB_ENV"
+      - *ANNOTATION_PR_NUMBER
       - uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -141,6 +144,8 @@ jobs:
       BASE_ROOT_DIR: ${{ github.workspace }}
 
     steps:
+      - *ANNOTATION_PR_NUMBER
+
       - &CHECKOUT
         name: Checkout
         uses: actions/checkout@v5
@@ -212,6 +217,8 @@ jobs:
             job-name: 'Windows native, fuzz, VS 2022'
 
     steps:
+      - *ANNOTATION_PR_NUMBER
+
       - *CHECKOUT
 
       - &SET_UP_VS
@@ -341,6 +348,8 @@ jobs:
       DANGER_CI_ON_HOST_FOLDERS: 1
 
     steps:
+      - *ANNOTATION_PR_NUMBER
+
       - *CHECKOUT
 
       - name: Configure environment
@@ -381,6 +390,8 @@ jobs:
       TEST_RUNNER_TIMEOUT_FACTOR: 40
 
     steps:
+      - *ANNOTATION_PR_NUMBER
+
       - *CHECKOUT
 
       - name: Download built executables
@@ -547,6 +558,8 @@ jobs:
             file-env: './ci/test/00_setup_env_native_msan.sh'
 
     steps:
+      - *ANNOTATION_PR_NUMBER
+
       - *CHECKOUT
 
       - name: Configure environment
@@ -587,6 +600,8 @@ jobs:
     env:
       CONTAINER_NAME: "bitcoin-linter"
     steps:
+      - *ANNOTATION_PR_NUMBER
+
       - name: Checkout
         uses: actions/checkout@v5
         with:
