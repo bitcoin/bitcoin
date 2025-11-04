@@ -63,7 +63,7 @@ The compact block filter index format has been updated to include Dash special t
 - The `/headers/` and `/blockfilterheaders/` endpoints have been updated to use
   a query parameter instead of a path parameter to specify the result count. The
   count parameter is now optional and defaults to 5 for both endpoints. The old
-  endpoints are still functional, and have no documented behaviour change. (#24098)
+  endpoints are still functional, and have no documented behaviour change. (#6784)
 
   For `/headers`, use
   `GET /rest/headers/<BLOCK-HASH>.<bin|hex|json>?count=<COUNT=5>` instead of
@@ -108,13 +108,13 @@ The compact block filter index format has been updated to include Dash special t
 
 * The RPCs `masternode current` and `masternode winner` were deprecated in Dash Core v0.17 and are now removed. The `getpoolinfo` RPC was deprecated in Dash Core v0.15 and is now removed. (#6567)
 
-* The `-deprecatedrpc=addresses` configuration option has been removed.  RPCs `gettxout`, `getrawtransaction`, `decoderawtransaction`, `decodescript`, `gettransaction verbose=true` and REST endpoints `/rest/tx`, `/rest/getutxos`, `/rest/block` no longer return the `addresses` and `reqSigs` fields, which were previously deprecated in 21.0. (#22650)
+* The `-deprecatedrpc=addresses` configuration option has been removed.  RPCs `gettxout`, `getrawtransaction`, `decoderawtransaction`, `decodescript`, `gettransaction verbose=true` and REST endpoints `/rest/tx`, `/rest/getutxos`, `/rest/block` no longer return the `addresses` and `reqSigs` fields, which were previously deprecated in 21.0. (#6569)
 
-* The `getblock` RPC command now supports verbosity level 3, containing transaction inputs `prevout` information. The existing `/rest/block/` REST endpoint is modified to contain this information too. Every `vin` field will contain an additional `prevout` subfield. (#22918)
+* The `getblock` RPC command now supports verbosity level 3, containing transaction inputs `prevout` information. The existing `/rest/block/` REST endpoint is modified to contain this information too. Every `vin` field will contain an additional `prevout` subfield. (#6577)
 
-* A new RPC `newkeypool` has been added, which will flush (entirely clear and refill) the keypool. (#23093)
+* A new RPC `newkeypool` has been added, which will flush (entirely clear and refill) the keypool. (#6577)
 
-* The return value of the `pruneblockchain` method had an off-by-one bug and now returns the height of the last pruned block as documented. (#24629)
+* The return value of the `pruneblockchain` method had an off-by-one bug and now returns the height of the last pruned block as documented. (#6784)
 
 * The `listdescriptors` RPC now includes an optional coinjoin field to identify CoinJoin descriptors. (#6835)
 
@@ -238,7 +238,7 @@ GCC 11.1 or later, or Clang 16.0 or later, are now required to compile Dash Core
 ## RPC Wallet
 
 - `unloadwallet` now fails if a rescan is in progress. (#6759)
-- `gettransaction`, `listtransactions`, `listsinceblock` now return the `abandoned` field for all transactions. (#25158)
+- `gettransaction`, `listtransactions`, `listsinceblock` now return the `abandoned` field for all transactions. (#6780)
 
 See detailed [set of changes][set-of-changes].
 
