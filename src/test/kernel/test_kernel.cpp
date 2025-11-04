@@ -1240,3 +1240,128 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     fs::remove(test_directory.m_directory / "blocks" / "rev00000.dat");
     BOOST_CHECK_THROW(chainman->ReadBlockSpentOutputs(tip), std::runtime_error);
 }
+
+// -----------------------------------------------------------------------------
+// CheckTransaction tests
+//
+// Transaction hex below is copied from src/test/data/tx_invalid.json (entries
+// marked "BADTX") and tx_valid.json. CheckTransaction performs only basic context-free
+// consensus checks and can only produce two outcomes:
+//   - VALID  (ValidationMode::VALID, TxValidationResult::UNSET)
+//   - INVALID (ValidationMode::INVALID, TxValidationResult::CONSENSUS)
+// Other TxValidationResult values are set by higher-level validation and are
+// not reachable through btck_transaction_check.
+// -----------------------------------------------------------------------------
+BOOST_AUTO_TEST_CASE(btck_transaction_check_tests)
+{
+    using namespace btck;
+
+    constexpr std::string_view valid_tx_hex{
+        "01000000010001000000000000000000000000000000000000000000000000000000000000"
+        "000000006a473044022067288ea50aa799543a536ff9306f8e1cba05b9c6b10951175b92"
+        "4f96732555ed022026d7b5265f38d21541519e4a1e55044d5b9e17e15cdbaf29ae3792e9"
+        "9e883e7a012103ba8c8b86dea131c22ab967e6dd99bdae8eff7a1f75a2c35f1f944109e3"
+        "fe5e22ffffffff010000000000000000015100000000"};
+    constexpr std::string_view no_outputs_tx_hex{
+        "01000000010001000000000000000000000000000000000000000000000000000000000000"
+        "000000006d483045022100f16703104aab4e4088317c862daec83440242411b039d14280e0"
+        "3dd33b487ab802201318a7be236672c5c56083eb7a5a195bc57a40af7923ff8545016cd3b5"
+        "71e2a601232103c40e5d339df3f30bf753e7e04450ae4ef76c9e45587d1d993bdc4cd06f06"
+        "51c7acffffffff0000000000"};
+
+    auto expect_valid = [](std::string_view hex) {
+        Transaction tx{hex_string_to_byte_vec(hex)};
+        auto [ok, st] = CheckTransaction(tx);
+        BOOST_CHECK(ok);
+        BOOST_CHECK(st.GetValidationMode() == ValidationMode::VALID);
+        BOOST_CHECK(st.GetTxValidationResult() == TxValidationResult::UNSET);
+    };
+
+    auto expect_invalid = [](std::string_view hex) {
+        Transaction tx{hex_string_to_byte_vec(hex)};
+        auto [ok, st] = CheckTransaction(tx);
+        BOOST_CHECK(!ok);
+        BOOST_CHECK(st.GetValidationMode() == ValidationMode::INVALID);
+        BOOST_CHECK(st.GetTxValidationResult() == TxValidationResult::CONSENSUS);
+    };
+
+    // Valid: simple 1-in 1-out transaction (from tx_valid.json)
+    expect_valid(valid_tx_hex);
+
+    // Valid coinbase with scriptSig size 2 (from tx_valid.json)
+    expect_valid(
+        "01000000010000000000000000000000000000000000000000000000000000000000000000"
+        "ffffffff025151ffffffff010000000000000000015100000000");
+
+    // No outputs (BADTX from tx_invalid.json)
+    expect_invalid(no_outputs_tx_hex);
+
+    {
+        Transaction valid_tx{hex_string_to_byte_vec(valid_tx_hex)};
+        Transaction invalid_tx{hex_string_to_byte_vec(no_outputs_tx_hex)};
+        TxValidationState state;
+
+        BOOST_CHECK(btck_transaction_check(valid_tx.get(), state.get()) == 1);
+        BOOST_CHECK(state.GetValidationMode() == ValidationMode::VALID);
+        BOOST_CHECK(state.GetTxValidationResult() == TxValidationResult::UNSET);
+
+        BOOST_CHECK(btck_transaction_check(invalid_tx.get(), state.get()) == 0);
+        BOOST_CHECK(state.GetValidationMode() == ValidationMode::INVALID);
+        BOOST_CHECK(state.GetTxValidationResult() == TxValidationResult::CONSENSUS);
+    }
+
+    // Negative output (BADTX)
+    expect_invalid(
+        "01000000010001000000000000000000000000000000000000000000000000000000000000"
+        "000000006d4830450220063222cbb128731fc09de0d7323746539166544d6c1df84d867cce"
+        "a84bcc8903022100bf568e8552844de664cd41648a031554327aa8844af34b4f27397c65b9"
+        "2c04de0123210243ec37dee0e2e053a9c976f43147e79bc7d9dc606ea51010af1ac80db6b0"
+        "69e1acffffffff01ffffffffffffffff015100000000");
+
+    // MAX_MONEY + 1 output (BADTX)
+    expect_invalid(
+        "01000000010001000000000000000000000000000000000000000000000000000000000000"
+        "000000006e493046022100e1eadba00d9296c743cb6ecc703fd9ddc9b3cd12906176a226ae"
+        "4c18d6b00796022100a71aef7d2874deff681ba6080f1b278bac7bb99c61b08a85f4311970"
+        "ffe7f63f012321030c0588dc44d92bdcbf8e72093466766fdc265ead8db64517b0c542275b"
+        "70fffbacffffffff010140075af0750700015100000000");
+
+    // MAX_MONEY output + 1 output: sum exceeds MAX_MONEY (BADTX)
+    expect_invalid(
+        "01000000010001000000000000000000000000000000000000000000000000000000000000"
+        "000000006d483045022027deccc14aa6668e78a8c9da3484fbcd4f9dcc9bb7d1b85146314b"
+        "21b9ae4d86022100d0b43dece8cfb07348de0ca8bc5b86276fa88f7f2138381128b7c36ab2"
+        "e42264012321029bb13463ddd5d2cc05da6e84e37536cb9525703cfd8f43afdb414988987a"
+        "92f6acffffffff020040075af075070001510001000000000000015100000000");
+
+    // Duplicate inputs (BADTX)
+    expect_invalid(
+        "01000000020001000000000000000000000000000000000000000000000000000000000000"
+        "000000006c47304402204bb1197053d0d7799bf1b30cd503c44b58d6240cccbdc85b6fe76d"
+        "087980208f02204beeed78200178ffc6c74237bb74b3f276bbb4098b5605d814304fe128bf"
+        "1431012321039e8815e15952a7c3fada1905f8cf55419837133bd7756c0ef14fc8dfe50c0d"
+        "eaacffffffff0001000000000000000000000000000000000000000000000000000000000000"
+        "000000006c47304402202306489afef52a6f62e90bf750bbcdf40c06f5c6b138286e6b6b8617"
+        "6bb9341802200dba98486ea68380f47ebb19a7df173b99e6bc9c681d6ccf3bde31465d1f16"
+        "b3012321039e8815e15952a7c3fada1905f8cf55419837133bd7756c0ef14fc8dfe50c0dea"
+        "acffffffff010000000000000000015100000000");
+
+    // Coinbase with scriptSig size 1: too small (BADTX)
+    expect_invalid(
+        "01000000010000000000000000000000000000000000000000000000000000000000000000"
+        "ffffffff0151ffffffff010000000000000000015100000000");
+
+    // Coinbase with scriptSig size 101: too large (BADTX)
+    expect_invalid(
+        "01000000010000000000000000000000000000000000000000000000000000000000000000"
+        "ffffffff6551515151515151515151515151515151515151515151515151515151515151515151"
+        "515151515151515151515151515151515151515151515151515151515151515151515151515151"
+        "51515151515151515151515151515151515151515151515151515151ffffffff01000000000000"
+        "0000015100000000");
+
+    // Null prevout in non-coinbase: two inputs, one is null (BADTX)
+    expect_invalid(
+        "01000000020000000000000000000000000000000000000000000000000000000000000000"
+        "ffffffff00ffffffff000100000000000000000000000000000000000000000000000000000000"
+        "00000000000000ffffffff010000000000000000015100000000");
+}
