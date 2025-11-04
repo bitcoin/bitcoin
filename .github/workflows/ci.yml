@@ -601,7 +601,7 @@ jobs:
       - name: CI script
         shell: python
         run: |
-          import os, shlex, subprocess, sys
+          import os, shlex, subprocess, sys, time
 
           def run(cmd, **kwargs):
               print("+ " + shlex.join(cmd), flush=True)
@@ -621,7 +621,10 @@ jobs:
               "."
           ]
 
-          run(build_cmd)
+          if run(build_cmd, check=False).returncode != 0:
+              print("Retry building image tag after failure")
+              time.sleep(3)
+              run(build_cmd)
 
           CIRRUS_PR_FLAG = []
           if '${{ github.event_name }}' == "pull_request":
