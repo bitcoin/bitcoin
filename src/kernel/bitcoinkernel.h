@@ -220,6 +220,9 @@ typedef struct btck_BlockValidationState btck_BlockValidationState;
  */
 typedef struct btck_Chain btck_Chain;
 
+/** Opaque data structure for holding a transaction validation state. */
+typedef struct btck_TxValidationState btck_TxValidationState;
+
 /**
  * Opaque data structure for holding a block's spent outputs.
  *
@@ -345,6 +348,25 @@ typedef uint32_t btck_BlockValidationResult;
 #define btck_BlockValidationResult_HEADER_LOW_WORK ((btck_BlockValidationResult)(8)) //!< the block header may be on a too-little-work chain
 
 /**
+ * A granular "reason" why a transaction was invalid.
+ * Mirrors consensus/validation.h: enum class TxValidationResult.
+ */
+typedef uint32_t btck_TxValidationResult;
+#define btck_TxValidationResult_UNSET               ((btck_TxValidationResult)(0))
+#define btck_TxValidationResult_CONSENSUS           ((btck_TxValidationResult)(1))
+#define btck_TxValidationResult_INPUTS_NOT_STANDARD ((btck_TxValidationResult)(2))
+#define btck_TxValidationResult_NOT_STANDARD        ((btck_TxValidationResult)(3))
+#define btck_TxValidationResult_MISSING_INPUTS      ((btck_TxValidationResult)(4))
+#define btck_TxValidationResult_PREMATURE_SPEND     ((btck_TxValidationResult)(5))
+#define btck_TxValidationResult_WITNESS_MUTATED     ((btck_TxValidationResult)(6))
+#define btck_TxValidationResult_WITNESS_STRIPPED    ((btck_TxValidationResult)(7))
+#define btck_TxValidationResult_CONFLICT            ((btck_TxValidationResult)(8))
+#define btck_TxValidationResult_MEMPOOL_POLICY      ((btck_TxValidationResult)(9))
+#define btck_TxValidationResult_NO_MEMPOOL          ((btck_TxValidationResult)(10))
+#define btck_TxValidationResult_RECONSIDERABLE      ((btck_TxValidationResult)(11))
+#define btck_TxValidationResult_UNKNOWN             ((btck_TxValidationResult)(12))
+
+/**
  * Holds the validation interface callbacks. The user data pointer may be used
  * to point to user-defined structures to make processing the validation
  * callbacks easier. Note that these callbacks block any further validation
@@ -461,6 +483,17 @@ typedef uint8_t btck_ChainType;
 #define btck_ChainType_SIGNET ((btck_ChainType)(3))
 #define btck_ChainType_REGTEST ((btck_ChainType)(4))
 
+/** @name TxValidationState
+ *  Introspection for transaction validation state.
+ */
+BITCOINKERNEL_API btck_ValidationMode btck_tx_validation_state_get_validation_mode(
+        const btck_TxValidationState* state) BITCOINKERNEL_ARG_NONNULL(1);
+
+BITCOINKERNEL_API btck_TxValidationResult btck_tx_validation_state_get_tx_validation_result(
+    const btck_TxValidationState* state) BITCOINKERNEL_ARG_NONNULL(1);
+
+BITCOINKERNEL_API void btck_tx_validation_state_destroy(btck_TxValidationState* state);
+
 /** @name Transaction
  * Functions for working with transactions.
  */
@@ -558,6 +591,19 @@ BITCOINKERNEL_API const btck_Txid* BITCOINKERNEL_WARN_UNUSED_RESULT btck_transac
  */
 BITCOINKERNEL_API void btck_transaction_destroy(btck_Transaction* transaction);
 
+///@}
+
+/** @name Consensus
+ *  Context‑free consensus checks.
+ */
+///@{
+/**
+ * @brief Run consensus/tx_check::CheckTransaction on a tx and return the filled state.
+ * @return 1 if valid, 0 if invalid.
+ */
+BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_check_transaction(
+    const btck_Transaction* tx,
+    btck_TxValidationState** out_state) BITCOINKERNEL_ARG_NONNULL(1, 2);
 ///@}
 
 /** @name ScriptPubkey
