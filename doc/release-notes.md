@@ -51,8 +51,8 @@ The compact block filter index format has been updated to include Dash special t
 
 ## Other notable changes
 
-* Performance of block validation in Dash Core has been significantly improvement, index from
-  scratch and reindex are up to 20% faster compare to v22.x.
+* Performance of block validation in Dash Core has been significantly improved, index from
+  scratch and reindex are up to 20% faster compared to v22.x.
 * To help prevent fingerprinting transactions created by the Dash Core wallet, change output
   amounts are now randomized. (#6685)
 * Dash Core will no longer migrate EvoDb databases generated in v19 and v20, users upgrading
