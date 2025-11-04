@@ -173,7 +173,7 @@ static bool CalcCbTxBestChainlock(const llmq::CChainLocksHandler& chainlock_hand
 
         // Inserting our best CL
         bestCLHeightDiff = pindexPrev->nHeight - best_clsig.getHeight();
-        bestCLSignature = chainlock_handler.GetBestChainLock().getSig();
+        bestCLSignature = best_clsig.getSig();
 
         return true;
     }

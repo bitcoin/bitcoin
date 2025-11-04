@@ -656,8 +656,9 @@ static RPCHelpMan getassetunlockstatuses()
     }
     else {
         const auto pBlockIndexBestCL = [&]() -> const CBlockIndex* {
-            if (!llmq_ctx.clhandler->GetBestChainLock().IsNull()) {
-                return pTipBlockIndex->GetAncestor(llmq_ctx.clhandler->GetBestChainLock().getHeight());
+            const auto best_clsig = llmq_ctx.clhandler->GetBestChainLock();
+            if (!best_clsig.IsNull()) {
+                return pTipBlockIndex->GetAncestor(best_clsig.getHeight());
             }
             // If no CL info is available, try to use CbTx CL information
             if (const auto cbtx_best_cl = GetNonNullCoinbaseChainlock(pTipBlockIndex)) {
