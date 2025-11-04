@@ -67,8 +67,8 @@ Updated REST APIs
 -----------------
 
 - The `/headers/` and `/blockfilterheaders/` endpoints have been updated to use
-  a query parameter instead of path parameter to specify the result count. The
-  count parameter is now optional, and defaults to 5 for both endpoints. The old
+  a query parameter instead of a path parameter to specify the result count. The
+  count parameter is now optional and defaults to 5 for both endpoints. The old
   endpoints are still functional, and have no documented behaviour change. (#24098)
 
   For `/headers`, use
@@ -92,10 +92,10 @@ Updated RPCs
 * The keys `platformP2PPort` and `platformHTTPPort` have been deprecated for the following RPCs, `decoderawtransaction`,
   `decodepsbt`, `getblock`, `getrawtransaction`, `gettransaction`, `masternode status` (only the `dmnState` key),
   `protx diff`, `protx listdiff` and has been replaced with the key `addresses`.
-  * The deprecated key is still available without additional runtime arguments but is liable to be removed in future versions
+  * The deprecated key is still available without additional runtime arguments, but is liable to be removed in future versions
     of Dash Core. (#6811)
 
-* `protx revoke` will now use the legacy scheme version for legacy masternodes instead of the defaulting to the
+* `protx revoke` will now use the legacy scheme version for legacy masternodes instead of defaulting to the
    highest `ProUpRevTx` version. (#6729)
 
 * The RPCs `protx register_legacy`, `protx register_fund_legacy`, `protx register_prepare_legacy` and
@@ -116,7 +116,7 @@ Updated RPCs
   `gettransaction`, `masternode status` (only for the `dmnState` key), `protx diff`, `protx listdiff`) and has been replaced
   with the key `addresses`.
   * This deprecation also extends to the functionally identical key, `address` in `masternode list` (and its alias, `masternodelist`).
-  * The deprecated key is still available without additional runtime arguments but is liable to be removed in future versions
+  * The deprecated key is still available without additional runtime arguments, but is liable to be removed in future versions
     of Dash Core.
   * This change does not affect `masternode status` (except for the `dmnState` key) as `service` does not represent a payload
     value but the external address advertised by the active masternode. (#6665)
@@ -138,7 +138,7 @@ Updated RPCs
     This does not affect `protx listdiff` queries where `netInfo` was updated or diffs relating to masternodes that
     have upgraded to extended addresses.
 
-* If the masternode is eligible for extended addresses, `protx register{,_evo}` and `register_fund{,_evo}` will continue
+* If the masternode is eligible for extended addresses, `protx register{,_evo}` and `protx register_fund{,_evo}` will continue
   allowing `coreP2PAddrs` to be left blank, as long as `platformP2PAddrs` and `platformHTTPSAddrs` are also left blank.
   * Attempting to populate any three address fields will make populating all fields mandatory.
   * This does not affect nodes ineligible for extended addresses (i.e. all nodes before fork activation or legacy BLS nodes)
@@ -163,12 +163,12 @@ Updated RPCs
     changes to `netInfo` will not translate into reporting). This is because `platformP2PPort` or `platformHTTPPort` have
     dedicated diff flags and post-consolidation, all changes are now affected by `netInfo`'s diff flag.
 
-    To avoid the perception of changes to fields that not serialized by extended address payloads, data from `netInfo` will
+    To avoid the perception of changes to fields that are not serialized by extended address payloads, data from `netInfo` will
     not be translated for this RPC call. (#6666)
 
 * `quorum rotationinfo` will now expect the third param to be a JSON array. (#6628)
 
-* `getislocks` will now return request `id` for each InstantSend Lock in results. (#6607)
+* `getislocks` will now return the request `id` for each InstantSend Lock in results. (#6607)
 
 * `coinjoin status` is a new RPC that reports the status message of all running mix sessions. `coinjoin start` will no longer
   report errors from mix sessions; users are recommended to query the status using `coinjoin status` instead. (#6594)
@@ -177,7 +177,7 @@ Updated RPCs
 
 * The `-deprecatedrpc=addresses` configuration option has been removed.  RPCs `gettxout`, `getrawtransaction`, `decoderawtransaction`, `decodescript`, `gettransaction verbose=true` and REST endpoints `/rest/tx`, `/rest/getutxos`, `/rest/block` no longer return the `addresses` and `reqSigs` fields, which were previously deprecated in 21.0. (#22650)
 
-* The `getblock` RPC command now supports verbosity level 3 containing transaction inputs `prevout` information. The existing `/rest/block/` REST endpoint is modified to contain this information too. Every `vin` field will contain an additional `prevout` subfield. (#22918)
+* The `getblock` RPC command now supports verbosity level 3, containing transaction inputs `prevout` information. The existing `/rest/block/` REST endpoint is modified to contain this information too. Every `vin` field will contain an additional `prevout` subfield. (#22918)
 
 * A new RPC `newkeypool` has been added, which will flush (entirely clear and refill) the keypool. (#23093)
 
@@ -204,7 +204,7 @@ Statistics
 
 - IPv6 hosts are now supported by the StatsD client.
 - `-statshost` now accepts URLs to allow specifying the protocol, host and port in one argument.
-- Specifying invalid values will no longer result in silent disablement of the StatsD client and will now cause errors at startup. (#6837)
+- Specifying invalid values will no longer result in the silent disablement of the StatsD client and will now cause errors at startup. (#6837)
 
 - The arguments `-statsenabled`, `-statsns`, `-statshostname` have been removed. They were previously deprecated in v22.0 and will no longer be recognized on runtime. (#6505)
 
@@ -229,13 +229,13 @@ Wallet
 
 ### Mobile CoinJoin Compatibility
 
-- Fixed an issue where CoinJoin funds mixed in Dash Android wallet were invisible when importing the mnemonic into Dash Core. Descriptor Wallets now include an additional default descriptor for mobile CoinJoin funds, ensuring seamless wallet migration and complete fund visibility across different Dash wallet implementations.
+- Fixed an issue where CoinJoin funds mixed in the Dash Android wallet were invisible when importing the mnemonic into Dash Core. Descriptor Wallets now include an additional default descriptor for mobile CoinJoin funds, ensuring seamless wallet migration and complete fund visibility across different Dash wallet implementations.
 - This is a breaking change that increases the default number of descriptors from 2 to 3 on mainnet (internal, external, mobile CoinJoin) for newly created descriptor wallets only - existing wallets are unaffected. (#6835)
 
 GUI changes
 -----------
 
-- Added governance proposal voting functionality to the Qt interface. Users with masternode voting keys can now vote on governance proposals directly from the governance tab via right-click context menu. Added masternode count display to governance tab showing how many masternodes the wallet can vote with. (#6690)
+- Added governance proposal voting functionality to the Qt interface. Users with masternode voting keys can now vote on governance proposals directly from the governance tab via right-click context menu. Added masternode count display to governance tab, showing how many masternodes the wallet can vote with. (#6690)
 - Added a menu item to restore a wallet from a backup file. (#6648)
 
 RPC Wallet
