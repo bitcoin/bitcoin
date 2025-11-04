@@ -158,7 +158,7 @@ enabling more flexible network setups. The following RPC changes implement this 
     dedicated diff flags and post-consolidation, all changes are now affected by `netInfo`'s diff flag.
 
     To avoid the perception of changes to fields that are not serialized by extended address payloads, data from `netInfo` will
-    not be translated for this RPC call. (#6666)  
+    not be translated for this RPC call. (#6666)
 * The field `addresses` will now also report on platform P2P and platform HTTPS endpoints as `addresses['platform_p2p']`
   and `addresses['platform_https']` respectively.
   * On payloads before extended addresses, if a masternode update affects `platformP2PPort` and/or `platformHTTPPort`
