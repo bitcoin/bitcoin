@@ -410,7 +410,7 @@ private:
     std::unique_ptr<WalletDatabase> m_database;
 
     /** Thread pool for wallet operations. */
-    [[maybe_unused]] ThreadPool* m_thread_pool;
+    ThreadPool* m_thread_pool;
 
     /**
      * The following is used to keep track of how far behind the wallet is

@@ -34,8 +34,17 @@ private:
     int m_next_block_height;
     uint256 m_next_block_hash;
 
-    bool ReadBlockHash(std::pair<uint256, int>& out, ScanResult& result);
-    bool FilterBlock(const std::unique_ptr<FastWalletRescanFilter>& filter, const std::pair<uint256, int>& block);
+    /// Queued block hashes and heights to filter and scan
+    std::vector<std::pair<uint256, int>> m_blocks;
+    size_t m_max_blockqueue_size{1000};
+    bool m_continue{true};
+
+    bool ReadBlockHash(ScanResult& result);
+    /**
+     * @return a pair of indexes into the blocks array that specify a range of blocks
+     *         to scan (end index excluded) or std::nullopt if no blocks should be scanned.
+     */
+    std::optional<std::pair<size_t, size_t>> FilterBlocks(const std::unique_ptr<FastWalletRescanFilter>& filter, ScanResult& result);
     bool ScanBlock(const std::pair<uint256, int>& data, bool save_progress);
 
 public:
@@ -47,7 +56,9 @@ public:
         m_start_height(start_height),
         m_max_height(max_height),
         m_fUpdate(fUpdate),
-        m_save_progress(save_progress) {}
+        m_save_progress(save_progress) {
+            m_blocks.reserve(m_max_blockqueue_size);
+        }
 
     ScanResult Scan();
 

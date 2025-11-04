@@ -8,6 +8,9 @@
 #include <wallet/scan.h>
 #include <wallet/wallet.h>
 
+#include <algorithm>
+#include <future>
+
 using interfaces::FoundBlock;
 
 namespace wallet {
@@ -97,14 +100,13 @@ private:
 };
 } // namespace
 
-bool ChainScanner::ReadBlockHash(std::pair<uint256, int>& out, ScanResult& result) {
+bool ChainScanner::ReadBlockHash(ScanResult& result) {
     bool block_still_active = false;
     bool next_block = false;
     int block_height = m_next_block_height;
     uint256 block_hash = m_next_block_hash;
     m_wallet.chain().findBlock(block_hash, FoundBlock().inActiveChain(block_still_active).nextBlock(FoundBlock().inActiveChain(next_block).hash(m_next_block_hash)));
-    out.first = block_hash;
-    out.second = block_height;
+    m_blocks.emplace_back(block_hash, block_height);
     ++m_next_block_height;
     if (!block_still_active) {
         // Abort scan if current block is no longer active, to prevent
@@ -121,22 +123,93 @@ bool ChainScanner::ReadBlockHash(std::pair<uint256, int>& out, ScanResult& resul
     if (block_height >= WITH_LOCK(m_wallet.cs_wallet, return m_wallet.GetLastBlockHeight())) {
         return false;
     }
-    return next_block;
+    if (!next_block) return false;
+    return true;
 }
 
-bool ChainScanner::FilterBlock(const std::unique_ptr<FastWalletRescanFilter>& filter, const std::pair<uint256, int>& block) {
-    auto matches_block{filter->MatchesBlock(block.first)};
-    if (matches_block.has_value()) {
-        if (*matches_block) {
-            LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (filter matched)\n", block.second, block.first.ToString());
-            return true;
-        } else {
-            return false;
-        }
-    } else {
-        LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (WARNING: block filter not found!)\n", block.second, block.first.ToString());
-        return true;
+enum FilterRes {
+    FILTER_NO_MATCH,
+    FILTER_MATCH,
+    FILTER_NO_FILTER
+};
+
+std::optional<std::pair<size_t, size_t>> ChainScanner::FilterBlocks(const std::unique_ptr<FastWalletRescanFilter>& filter, ScanResult& result) {
+    if (!filter) {
+        // Slow scan: no filter, scan all blocks
+        m_continue = ReadBlockHash(result);
+        return std::make_pair<size_t, size_t>(0, m_blocks.size());
     }
+    filter->UpdateIfNeeded();
+    auto* thread_pool = m_wallet.m_thread_pool;
+    // ThreadPool pointer should never be null here
+    // during normal operation because it should
+    // have been passed from the WalletContext to
+    // the CWallet constructor
+    assert(thread_pool != nullptr);
+    std::optional<std::pair<size_t, size_t>> range;
+    size_t workers_count = thread_pool->WorkersCount();
+    size_t i = 0;
+    size_t completed = 0;
+    std::vector<std::future<FilterRes>> futures;
+    futures.reserve(workers_count);
+
+    while ((m_continue && completed < m_max_blockqueue_size) || i < m_blocks.size() || !futures.empty()) {
+        const bool result_ready = futures.size() > 0 && futures[0].wait_for(std::chrono::seconds::zero()) == std::future_status::ready;
+        if (result_ready) {
+            const auto& scan_res{futures[0].get()};
+            completed++;
+            futures.erase(futures.begin());
+            if (scan_res == FILTER_NO_MATCH) {
+                if (range.has_value()) {
+                    break;
+                }
+                continue;
+            }
+            int current_block_index = completed - 1;
+            if (scan_res == FilterRes::FILTER_MATCH) {
+                LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (filter matched)\n", m_blocks[current_block_index].second, m_blocks[current_block_index].first.ToString());
+            } else { // FILTER_NO_FILTER
+                LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (WARNING: block filter not found!)\n", m_blocks[current_block_index].second, m_blocks[current_block_index].first.ToString());
+            }
+
+            if (!range.has_value()) range = std::make_pair(current_block_index, current_block_index + 1);
+            else range->second = current_block_index + 1;
+        }
+
+        const size_t job_gap = workers_count - futures.size();
+        if (job_gap > 0 && i < m_blocks.size()) {
+            for (size_t j = 0; j < job_gap && i < m_blocks.size(); ++j, ++i) {
+                auto block = m_blocks[i];
+                futures.emplace_back(thread_pool->Submit([&filter, block = std::move(block)]() {
+                    const auto matches_block{filter->MatchesBlock(block.first)};
+                    if (matches_block.has_value()) {
+                        if (*matches_block) {
+                            return FilterRes::FILTER_MATCH;
+                        } else {
+                            return FilterRes::FILTER_NO_MATCH;
+                        }
+                    } else {
+                        return FilterRes::FILTER_NO_FILTER;
+                    }
+                }));
+            }
+        }
+
+        // If m_max_blockqueue_size blocks have been filtered,
+        // stop reading more blocks for now, to give the
+        // main scanning loop a chance to update progress
+        // and erase some blocks from the queue.
+        if (m_continue && completed < m_max_blockqueue_size) m_continue = ReadBlockHash(result);
+        else if (!futures.empty()) thread_pool->ProcessTask();
+    }
+
+    for (auto& fut : futures) {
+        // Wait for all remaining futures to complete
+        // to avoid data race on FastWalletRescanFilter::m_filter_set
+        fut.wait();
+    }
+
+    return range;
 }
 
 bool ChainScanner::ScanBlock(const std::pair<uint256, int>& data, bool save_progress) {
@@ -190,40 +263,53 @@ ScanResult ChainScanner::Scan() {
     if (m_max_height) chain.findAncestorByHeight(tip_hash, *m_max_height, FoundBlock().hash(end_hash));
 
     ScanResult result;
+
     double progress_begin = chain.guessVerificationProgress(m_start_block);
     double progress_end = chain.guessVerificationProgress(end_hash);
     double progress_current = progress_begin;
+
+    auto start_block = m_start_block;
+    auto& block_hash = start_block;
     int block_height = m_start_height;
     m_next_block_height = m_start_height;
     m_next_block_hash = m_start_block;
-    std::pair<uint256, int> current_block;
-    while (!m_wallet.fAbortRescan && !chain.shutdownRequested()) {
-        bool fContinue = ReadBlockHash(current_block, result);
-        auto& block_hash = current_block.first;
-        block_height = current_block.second;
-        bool fetch_block{true};
-        if (fast_rescan_filter) {
-            fast_rescan_filter->UpdateIfNeeded();
-            fetch_block = FilterBlock(fast_rescan_filter, current_block);
+
+    size_t start_index = 0;
+    size_t end_index = 0;
+    while((m_continue || !m_blocks.empty()) && !m_wallet.fAbortRescan && !chain.shutdownRequested()) {
+        auto range = FilterBlocks(fast_rescan_filter, result);
+        // If no blocks to scan, mark current batch as scanned
+        start_index = range.has_value() ? range->first : m_blocks.size();
+        end_index = range.has_value() ? range->second : m_blocks.size();
+        if (start_index > 0) {
+            // Some blocks at the start of the batch were skipped.
+            // Update last scanned block to indicate that these
+            // blocks have been scanned.
+            block_hash = m_blocks[start_index - 1].first;
+            block_height = m_blocks[start_index - 1].second;
+            result.last_scanned_block = block_hash;
+            result.last_scanned_height = block_height;
         }
 
-        if (progress_end - progress_begin > 0.0) {
-            m_wallet.m_scanning_progress = (progress_current - progress_begin) / (progress_end - progress_begin);
-        } else { // avoid divide-by-zero for single block scan range (i.e. start and stop hashes are equal)
-            m_wallet.m_scanning_progress = 0;
-        }
-        if (block_height % 100 == 0 && progress_end - progress_begin > 0.0) {
-            m_wallet.ShowProgress(strprintf("[%s] %s", m_wallet.DisplayName(), _("Rescanning…")), std::max(1, std::min(99, (int)(m_wallet.m_scanning_progress * 100))));
-        }
+        for (size_t i = start_index; i < end_index; ++i) {
+            block_hash = m_blocks[i].first;
+            block_height = m_blocks[i].second;
+            if (progress_end - progress_begin > 0.0) {
+                m_wallet.m_scanning_progress = (progress_current - progress_begin) / (progress_end - progress_begin);
+            } else { // avoid divide-by-zero for single block scan range (i.e. start and stop hashes are equal)
+                m_wallet.m_scanning_progress = 0;
+            }
+            if (block_height % 100 == 0 && progress_end - progress_begin > 0.0) {
+                m_wallet.ShowProgress(strprintf("[%s] %s", m_wallet.DisplayName(), _("Rescanning…")), std::max(1, std::min(99, (int)(m_wallet.m_scanning_progress * 100))));
+            }
 
-        bool next_interval = m_reserver.now() >= current_time + INTERVAL_TIME;
-        if (next_interval) {
-            current_time = m_reserver.now();
-            m_wallet.WalletLogPrintf("Still rescanning. At block %d. Progress=%f\n", block_height, progress_current);
-        }
+            bool next_interval = m_reserver.now() >= current_time + INTERVAL_TIME;
+            if (next_interval) {
+                current_time = m_reserver.now();
+                m_wallet.WalletLogPrintf("Still rescanning. At block %d. Progress=%f\n", block_height, progress_current);
+            }
 
-        if (fetch_block) {
-            if (ScanBlock(current_block, m_save_progress && next_interval)) {
+            if (ScanBlock(m_blocks[i], m_save_progress && next_interval)) {
                 result.last_scanned_block = block_hash;
                 result.last_scanned_height = block_height;
             } else {
@@ -231,11 +317,9 @@ ScanResult ChainScanner::Scan() {
                 result.last_failed_block = block_hash;
                 result.status = ScanResult::FAILURE;
             }
-        } else {
-            result.last_scanned_block = block_hash;
-            result.last_scanned_height = block_height;
         }
-        if (!fContinue) break;
+
+        m_blocks.erase(m_blocks.begin(), m_blocks.begin() + end_index);
 
         progress_current = chain.guessVerificationProgress(block_hash);
 
