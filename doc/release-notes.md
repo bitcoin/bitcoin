@@ -79,11 +79,6 @@ The compact block filter index format has been updated to include Dash special t
 
 ## Updated RPCs
 
-* The keys `platformP2PPort` and `platformHTTPPort` have been deprecated for the following RPCs, `decoderawtransaction`,
-  `decodepsbt`, `getblock`, `getrawtransaction`, `gettransaction`, `masternode status` (only the `dmnState` key),
-  `protx diff`, `protx listdiff` and has been replaced with the key `addresses`.
-  * The deprecated key is still available without additional runtime arguments, but is liable to be removed in future versions
-    of Dash Core. (#6811)
 
 * `protx revoke` will now use the legacy scheme version for legacy masternodes instead of defaulting to the
    highest `ProUpRevTx` version. (#6729)
@@ -98,63 +93,6 @@ The compact block filter index format has been updated to include Dash special t
 * A new optional field `submit` has been introduced to the `protx revoke`, `protx update_registrar`, `protx update_service` RPCs. It behaves identically to `submit` in `protx register` or `protx register_fund`. (#6720)
 
 * The `instantsendtoaddress` RPC was deprecated in Dash Core v0.15 and is now removed. (#6686)
-
-* The input field `ipAndPort` has been renamed to `coreP2PAddrs`.
-  * `coreP2PAddrs` can now, in addition to accepting a string, accept an array of strings, subject to validation rules.
-
-* The key `service` has been deprecated for some RPCs (`decoderawtransaction`, `decodepsbt`, `getblock`, `getrawtransaction`,
-  `gettransaction`, `masternode status` (only for the `dmnState` key), `protx diff`, `protx listdiff`) and has been replaced
-  with the key `addresses`.
-  * This deprecation also extends to the functionally identical key, `address` in `masternode list` (and its alias, `masternodelist`).
-  * The deprecated key is still available without additional runtime arguments, but is liable to be removed in future versions
-    of Dash Core.
-  * This change does not affect `masternode status` (except for the `dmnState` key) as `service` does not represent a payload
-    value but the external address advertised by the active masternode. (#6665)
-
-* The input field `platformP2PPort` has been renamed to `platformP2PAddrs`. In addition to numeric inputs (i.e. ports),
-  the field can now accept a string (i.e. an addr:port pair) and arrays of strings (i.e. multiple addr:port pairs),
-  subject to validation rules.
-
-* The input field `platformHTTPPort` has been renamed to `platformHTTPSAddrs`. In addition to numeric inputs (i.e. ports),
-  the field can now accept a string (i.e. an addr:port pair) and arrays of strings (i.e. multiple addr:port pairs),
-  subject to validation rules.
-
-* The field `addresses` will now also report on platform P2P and platform HTTPS endpoints as `addresses['platform_p2p']`
-  and `addresses['platform_https']` respectively.
-  * On payloads before extended addresses, if a masternode update affects `platformP2PPort` and/or `platformHTTPPort`
-    but does not affect `netInfo`, `protx listdiff` does not contain enough information to report on the masternode's
-    address and will report the changed port paired with the dummy address `255.255.255.255`.
-
-    This does not affect `protx listdiff` queries where `netInfo` was updated or diffs relating to masternodes that
-    have upgraded to extended addresses.
-
-* If the masternode is eligible for extended addresses, `protx register{,_evo}` and `protx register_fund{,_evo}` will continue
-  allowing `coreP2PAddrs` to be left blank, as long as `platformP2PAddrs` and `platformHTTPSAddrs` are also left blank.
-  * Attempting to populate any three address fields will make populating all fields mandatory.
-  * This does not affect nodes ineligible for extended addresses (i.e. all nodes before fork activation or legacy BLS nodes)
-    and they will have to continue specifying `platformP2PAddrs` and `platformHTTPSAddrs` even if they wish to keep
-    `coreP2PAddrs` blank.
-
-* If the masternode is eligible for extended addresses, `protx register{,_evo}` and `register_fund{,_evo}` will no longer
-  default to the core P2P port if a port is not specified in the addr:port pair. All ports must be specified explicitly.
-  * This does not affect nodes ineligible for extended addresses, continuing to default to the core P2P port if provided an
-    addr without a port.
-
-* `protx register{,_evo}` and `register_fund{,_evo}` will continue to allow specifying only the port number for `platformP2PAddrs`
-  and `platformHTTPSAddrs`, pairing it with the address from the first `coreP2PAddrs` entry. This mirrors existing behavior.
-  * This method of entry may not be available in future releases of Dash Core and operators are recommended to switch over to
-    explicitly specifying (arrays of) addr:port strings for all address fields. (#6666)
-
-* When reporting on extended address payloads, `platformP2PPort` and `platformHTTPPort` will read the port value from
-  `netInfo[PLATFORM_P2P][0]` and `netInfo[PLATFORM_HTTPS][0]` respectively as both fields are subsumed into `netInfo`.
-  * If `netInfo` is blank (which is allowed by ProRegTx), `platformP2PPort` and `platformHTTPPort` will report `-1` to indicate
-    that the port number cannot be determined.
-  * `protx listdiff` will not report `platformP2PPort` or `platformHTTPPort` if the legacy fields were not updated (i.e.
-    changes to `netInfo` will not translate into reporting). This is because `platformP2PPort` or `platformHTTPPort` have
-    dedicated diff flags and post-consolidation, all changes are now affected by `netInfo`'s diff flag.
-
-    To avoid the perception of changes to fields that are not serialized by extended address payloads, data from `netInfo` will
-    not be translated for this RPC call. (#6666)
 
 * `quorum rotationinfo` will now expect the third param to be a JSON array. (#6628)
 
@@ -174,6 +112,76 @@ The compact block filter index format has been updated to include Dash special t
 * The return value of the `pruneblockchain` method had an off-by-one bug and now returns the height of the last pruned block as documented. (#24629)
 
 * The `listdescriptors` RPC now includes an optional coinjoin field to identify CoinJoin descriptors. (#6835)
+
+### Extended address support
+
+Dash Core v23 introduces support for extended masternode addresses, replacing legacy single-endpoint fields and
+enabling more flexible network setups. The following RPC changes implement this functionality:
+
+#### New and deprecated fields
+
+* The keys `platformP2PPort` and `platformHTTPPort` have been deprecated for the following RPCs, `decoderawtransaction`,
+  `decodepsbt`, `getblock`, `getrawtransaction`, `gettransaction`, `masternode status` (only the `dmnState` key),
+  `protx diff`, `protx listdiff` and has been replaced with the key `addresses`.
+  * The deprecated key is still available without additional runtime arguments, but is liable to be removed in future versions
+    of Dash Core. (#6811)
+* The key `service` has been deprecated for some RPCs (`decoderawtransaction`, `decodepsbt`, `getblock`, `getrawtransaction`,
+  `gettransaction`, `masternode status` (only for the `dmnState` key), `protx diff`, `protx listdiff`) and has been replaced
+  with the key `addresses`.
+  * This deprecation also extends to the functionally identical key, `address` in `masternode list` (and its alias, `masternodelist`).
+  * The deprecated key is still available without additional runtime arguments, but is liable to be removed in future versions
+    of Dash Core.
+  * This change does not affect `masternode status` (except for the `dmnState` key) as `service` does not represent a payload
+    value but the external address advertised by the active masternode. (#6665)
+
+#### Renamed input fields
+
+* The input field `ipAndPort` has been renamed to `coreP2PAddrs`. In addition to accepting a string, `coreP2PAddrs` can
+  now accept an array of strings, subject to validation rules.
+* The input field `platformP2PPort` has been renamed to `platformP2PAddrs`. In addition to numeric inputs (i.e. ports),
+  the field can now accept a string (i.e. an addr:port pair) and arrays of strings (i.e. multiple addr:port pairs),
+  subject to validation rules.
+* The input field `platformHTTPPort` has been renamed to `platformHTTPSAddrs`. In addition to numeric inputs (i.e. ports),
+  the field can now accept a string (i.e. an addr:port pair) and arrays of strings (i.e. multiple addr:port pairs),
+  subject to validation rules.
+
+#### Reporting behavior
+
+* When reporting on extended address payloads, `platformP2PPort` and `platformHTTPPort` will read the port value from
+  `netInfo[PLATFORM_P2P][0]` and `netInfo[PLATFORM_HTTPS][0]` respectively as both fields are subsumed into `netInfo`.
+  * If `netInfo` is blank (which is allowed by ProRegTx), `platformP2PPort` and `platformHTTPPort` will report `-1` to indicate
+    that the port number cannot be determined.
+  * `protx listdiff` will not report `platformP2PPort` or `platformHTTPPort` if the legacy fields were not updated (i.e.
+    changes to `netInfo` will not translate into reporting). This is because `platformP2PPort` or `platformHTTPPort` have
+    dedicated diff flags and post-consolidation, all changes are now affected by `netInfo`'s diff flag.
+
+    To avoid the perception of changes to fields that are not serialized by extended address payloads, data from `netInfo` will
+    not be translated for this RPC call. (#6666)  
+* The field `addresses` will now also report on platform P2P and platform HTTPS endpoints as `addresses['platform_p2p']`
+  and `addresses['platform_https']` respectively.
+  * On payloads before extended addresses, if a masternode update affects `platformP2PPort` and/or `platformHTTPPort`
+    but does not affect `netInfo`, `protx listdiff` does not contain enough information to report on the masternode's
+    address and will report the changed port paired with the dummy address `255.255.255.255`.
+
+    This does not affect `protx listdiff` queries where `netInfo` was updated or diffs relating to masternodes that
+    have upgraded to extended addresses.
+
+#### Masternode rules
+
+* If the masternode is eligible for extended addresses, `protx register{,_evo}` and `protx register_fund{,_evo}` will:
+  * Continue allowing `coreP2PAddrs` to be left blank, as long as `platformP2PAddrs` and `platformHTTPSAddrs` are also left blank.
+    * Attempting to populate any three address fields will make populating all fields mandatory.
+  * Continue to allow specifying only the port number for `platformP2PAddrs` and `platformHTTPSAddrs`, pairing it with the address
+    from the first `coreP2PAddrs` entry. This mirrors existing behavior.
+    * This method of entry may not be available in future releases of Dash Core and operators are recommended to switch over to
+      explicitly specifying (arrays of) addr:port strings for all address fields. (#6666)
+  * No longer default to the core P2P port if a port is not specified in the addr:port pair. All ports must be specified explicitly.
+
+Masternodes ineligible for extended addresses (i.e. all nodes before fork activation or legacy BLS nodes) must follow
+  the legacy rules by continuing to:
+
+* Default to the core P2P port if provided an address without a port.
+* Specify `platformP2PAddrs` and `platformHTTPSAddrs` even if they wish to keep `coreP2PAddrs` blank.
 
 ## Updated settings
 
