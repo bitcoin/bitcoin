@@ -329,12 +329,30 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
         m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown_signal), chainman_opts, blockman_opts);
     };
     m_make_chainman();
+    CreateAndRegisterBlockTemplateCache();
+}
+
+void ChainTestingSetup::UnregisterAndResetBlockTemplateCache()
+{
+    if (m_node.validation_signals && m_node.block_template_cache) {
+        m_node.validation_signals->UnregisterValidationInterface(m_node.block_template_cache.get());
+    }
+    m_node.block_template_cache.reset();
+}
+
+void ChainTestingSetup::CreateAndRegisterBlockTemplateCache()
+{
+    Assert(!m_node.block_template_cache);
+    m_node.block_template_cache = std::make_unique<node::BlockTemplateCache>(*m_node.mempool, *m_node.chainman);
+    if (m_node.validation_signals) m_node.validation_signals->RegisterValidationInterface(m_node.block_template_cache.get());
 }
 
 ChainTestingSetup::~ChainTestingSetup()
 {
     if (m_node.scheduler) m_node.scheduler->stop();
+
     if (m_node.validation_signals) m_node.validation_signals->FlushBackgroundCallbacks();
+    UnregisterAndResetBlockTemplateCache();
     m_node.connman.reset();
     m_node.banman.reset();
     m_node.addrman.reset();

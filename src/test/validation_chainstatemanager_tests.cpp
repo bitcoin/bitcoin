@@ -7,6 +7,7 @@
 #include <kernel/disconnected_transactions.h>
 #include <node/chainstatemanager_args.h>
 #include <node/kernel_notifications.h>
+#include <node/miner.h>
 #include <node/utxo_snapshot.h>
 #include <random.h>
 #include <rpc/blockchain.h>
@@ -443,9 +444,12 @@ struct SnapshotTestSetup : TestChain100Setup {
                 },
             };
             // For robustness, ensure the old manager is destroyed before creating a
-            // new one.
+            // new one. Destroy block_template_cache first since it holds a reference
+            // to ChainstateManager.
+            UnregisterAndResetBlockTemplateCache();
             m_node.chainman.reset();
             m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown_signal), chainman_opts, blockman_opts);
+            CreateAndRegisterBlockTemplateCache();
         }
         return *Assert(m_node.chainman);
     }

@@ -8,6 +8,7 @@
 #include <kernel/chainparams.h>
 #include <net.h>
 #include <net_processing.h>
+#include <node/miner.h>
 #include <node/mining_types.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -41,9 +42,12 @@ TestingSetup* g_setup;
 void ResetChainman(TestingSetup& setup)
 {
     SetMockTime(setup.m_node.chainman->GetParams().GenesisBlock().Time());
+    setup.UnregisterAndResetBlockTemplateCache();
     setup.m_node.chainman.reset();
     setup.m_make_chainman();
     setup.LoadVerifyActivateChainstate();
+    setup.CreateAndRegisterBlockTemplateCache();
+
     node::BlockCreateOptions options;
     for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {
         MineBlock(setup.m_node, options);

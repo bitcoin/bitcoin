@@ -89,6 +89,7 @@ struct BlockCreateOptions {
      * Should only be used for tests / benchmarks.
      */
     bool test_block_validity{true};
+    bool operator==(const BlockCreateOptions&) const = default;
 };
 
 struct BlockWaitOptions {

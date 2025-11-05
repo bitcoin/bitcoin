@@ -72,6 +72,9 @@ struct MinerTestingSetup : public TestingSetup {
         // Delete the previous mempool to ensure with valgrind that the old
         // pointer is not accessed, when the new one should be accessed
         // instead.
+        // Because the validation interface registration takes a bare pointer and we will destroy the
+        // pointed-to object here; unregister the pointer to prevent nullptr access.
+        UnregisterAndResetBlockTemplateCache();
         m_node.mempool.reset();
         bilingual_str error;
         auto opts = MemPoolOptionsForTest(m_node);
@@ -81,6 +84,7 @@ struct MinerTestingSetup : public TestingSetup {
         opts.limits.cluster_size_vbytes = 1'200'000;
         m_node.mempool = std::make_unique<CTxMemPool>(opts, error);
         Assert(error.empty());
+        CreateAndRegisterBlockTemplateCache();
         return *m_node.mempool;
     }
     std::unique_ptr<Mining> MakeMining()

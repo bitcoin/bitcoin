@@ -9,6 +9,7 @@
 #include <consensus/validation.h>
 #include <kernel/coinstats.h>
 #include <node/blockstorage.h>
+#include <node/miner.h>
 #include <node/utxo_snapshot.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -211,9 +212,11 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
         Assert(!dirty_chainman);
     }
     if (dirty_chainman) {
+        setup.UnregisterAndResetBlockTemplateCache();
         setup.m_node.chainman.reset();
         setup.m_make_chainman();
         setup.LoadVerifyActivateChainstate();
+        setup.CreateAndRegisterBlockTemplateCache();
     }
 }
 

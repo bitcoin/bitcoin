@@ -104,6 +104,11 @@ struct ChainTestingSetup : public BasicTestingSetup {
     explicit ChainTestingSetup(ChainType chainType = ChainType::MAIN, TestOpts = {});
     ~ChainTestingSetup();
 
+    // Unregister block_template_cache from validation signals and reset it.
+    void UnregisterAndResetBlockTemplateCache();
+    // Create block_template_cache from current mempool and chainman, registering with validation signals.
+    void CreateAndRegisterBlockTemplateCache();
+
     // Supplies a chainstate, if one is needed
     void LoadVerifyActivateChainstate();
 };

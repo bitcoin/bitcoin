@@ -8,6 +8,7 @@
 #include <kernel/chainparams.h>
 #include <net.h>
 #include <net_processing.h>
+#include <node/miner.h>
 #include <node/mining_types.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -47,9 +48,12 @@ std::string_view LIMIT_TO_MESSAGE_TYPE{};
 void ResetChainman(TestingSetup& setup)
 {
     SetMockTime(setup.m_node.chainman->GetParams().GenesisBlock().Time());
+    setup.UnregisterAndResetBlockTemplateCache();
     setup.m_node.chainman.reset();
     setup.m_make_chainman();
     setup.LoadVerifyActivateChainstate();
+    setup.CreateAndRegisterBlockTemplateCache();
+
     for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {
         node::BlockCreateOptions options;
         MineBlock(setup.m_node, options);
