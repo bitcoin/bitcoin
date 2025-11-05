@@ -386,7 +386,7 @@ typedef struct {
     btck_NotifyWarningSet warning_set;      //!< A warning issued by the kernel library during validation.
     btck_NotifyWarningUnset warning_unset;  //!< A previous condition leading to the issuance of a warning is no longer given.
     btck_NotifyFlushError flush_error;      //!< An error encountered when flushing data to disk.
-    btck_NotifyFatalError fatal_error;      //!< A un-recoverable system error encountered by the library.
+    btck_NotifyFatalError fatal_error;      //!< An unrecoverable system error encountered by the library.
 } btck_NotificationInterfaceCallbacks;
 
 /**
@@ -608,7 +608,7 @@ BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_script_pubkey_verify
     const btck_Transaction* tx_to,
     const btck_TransactionOutput** spent_outputs, size_t spent_outputs_len,
     unsigned int input_index,
-    unsigned int flags,
+    btck_ScriptVerificationFlags flags,
     btck_ScriptVerifyStatus* status) BITCOINKERNEL_ARG_NONNULL(1, 3);
 
 /**
