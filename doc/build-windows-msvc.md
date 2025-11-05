@@ -50,6 +50,8 @@ CMake will put the resulting object files, libraries, and executables into a ded
 
 In the following instructions, the "Debug" configuration can be specified instead of the "Release" one.
 
+Run `cmake -B build -LH` to see the full list of available options.
+
 ### 4. Building with Static Linking with GUI
 
 ```
