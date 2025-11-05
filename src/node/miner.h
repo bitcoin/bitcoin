@@ -60,6 +60,7 @@ struct CBlockTemplate
     /* A vector of package fee rates, ordered by the sequence in which
      * packages are selected for inclusion in the block template.*/
     std::vector<FeeFrac> m_package_feerates;
+    NodeClock::time_point m_creation_time;
 };
 
 // Container for tracking updates to ancestor feerate as we include (parent)
