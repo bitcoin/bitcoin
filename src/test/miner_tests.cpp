@@ -9,9 +9,13 @@
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
 #include <interfaces/mining.h>
+#include <kernel/chain.h>
+#include <kernel/types.h>
 #include <node/miner.h>
 #include <policy/policy.h>
+#include <pow.h>
 #include <test/util/random.h>
+#include <test/util/setup_common.h>
 #include <test/util/transaction_utils.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
@@ -23,14 +27,11 @@
 #include <util/translation.h>
 #include <validation.h>
 #include <versionbits.h>
-#include <pow.h>
 
-#include <test/util/setup_common.h>
+#include <boost/test/unit_test.hpp>
 
 #include <memory>
 #include <vector>
-
-#include <boost/test/unit_test.hpp>
 
 using namespace util::hex_literals;
 using interfaces::BlockTemplate;
@@ -865,6 +866,135 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     SetMockTime(0);
 
     TestPrioritisedMining(scriptPubKey, txFirst);
+}
+
+BOOST_AUTO_TEST_CASE(blocktemplate_cache)
+{
+    auto& template_cache = m_node.block_template_cache;
+    {
+        SeedRandomStateForTest(SeedRand::ZEROS);
+        SetMockTime(WITH_LOCK(m_node.chainman->GetMutex(),
+                              return m_node.chainman->ActiveTip()->Time()));
+        m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    }
+
+    auto current_time = MockableSteadyClock::INITIAL_MOCK_TIME; // In milliseconds
+    BlockAssembler::Options base_options;
+    auto block_template = template_cache->GetBlockTemplate(base_options, MillisecondsDouble{0});
+    auto prev_time = block_template->m_creation_time;
+
+    {
+        // max_template_age of 0 will always create a new block template
+        MockableSteadyClock::SetMockTime(current_time += std::chrono::milliseconds{1});
+        block_template = template_cache->GetBlockTemplate(base_options, MillisecondsDouble{0});
+        BOOST_CHECK(block_template->m_creation_time > prev_time);
+        prev_time = block_template->m_creation_time;
+    }
+
+    auto max_template_age = MillisecondsDouble{2};
+    {
+        // Return recent cached block template when time interval has not elapsed
+        MockableSteadyClock::SetMockTime(current_time += std::chrono::milliseconds{1});
+        BOOST_CHECK(!node::TimeIntervalElapsed(prev_time, max_template_age));
+        BOOST_CHECK(template_cache->GetBlockTemplate(base_options, max_template_age)->m_creation_time == prev_time);
+    }
+
+    {
+        // Return a new template when time interval has elapsed
+        max_template_age = max_template_age - MillisecondsDouble{1}; // Subtract 1 millisecond
+        BOOST_CHECK(node::TimeIntervalElapsed(prev_time, max_template_age));
+        block_template = template_cache->GetBlockTemplate(base_options);
+        BOOST_CHECK(block_template->m_creation_time > prev_time);
+        prev_time = block_template->m_creation_time;
+    }
+
+    {
+        auto chain_tip = WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip());
+        // BlockConnected signal with background chainstate role should not invalidate cache
+        kernel::ChainstateRole role{true, true};
+        m_node.validation_signals->BlockConnected(role, std::make_shared<const CBlock>(block_template->block), chain_tip);
+        m_node.validation_signals->SyncWithValidationInterfaceQueue();
+        MockableSteadyClock::SetMockTime(current_time += std::chrono::milliseconds{1});
+        BOOST_CHECK(template_cache->GetBlockTemplate(base_options, MillisecondsDouble::max())->m_creation_time == prev_time);
+    }
+
+    {
+        // test_block_validity change false make us generate a new template.
+        auto custom_options = base_options;
+        custom_options.test_block_validity = false;
+        MockableSteadyClock::SetMockTime(current_time += std::chrono::milliseconds{1});
+        BOOST_CHECK(template_cache->GetBlockTemplate(custom_options, MillisecondsDouble::max())->m_creation_time > prev_time);
+    }
+
+    {
+        // Different coinbase script does make us generate a new template.
+        auto custom_options = base_options;
+        auto custom_script{CScript() << OP_FALSE};
+        custom_options.coinbase_output_script = custom_script;
+        MockableSteadyClock::SetMockTime(current_time += std::chrono::milliseconds{1});
+        BOOST_CHECK(template_cache->GetBlockTemplate(custom_options, MillisecondsDouble::max())->m_creation_time > prev_time);
+    }
+
+    {
+        // Different nBlockMaxWeight will trigger a new block
+        auto custom_options = base_options;
+        custom_options.nBlockMaxWeight -= 1;
+        MockableSteadyClock::SetMockTime(current_time += std::chrono::milliseconds{1});
+        block_template = template_cache->GetBlockTemplate(custom_options);
+        BOOST_CHECK(block_template->m_creation_time > prev_time);
+        prev_time = block_template->m_creation_time;
+    }
+
+    {
+        // Different use_mempool will trigger a new block
+        auto custom_options = base_options;
+        custom_options.use_mempool = false;
+        MockableSteadyClock::SetMockTime(current_time += std::chrono::milliseconds{1});
+        block_template = template_cache->GetBlockTemplate(custom_options, MillisecondsDouble::max());
+        BOOST_CHECK(block_template->m_creation_time > prev_time);
+        prev_time = block_template->m_creation_time;
+    }
+
+    {
+        // Different coinbase_output_max_additional_sigops will trigger a new block
+        auto custom_options = base_options;
+        custom_options.coinbase_output_max_additional_sigops -= 1;
+        MockableSteadyClock::SetMockTime(current_time += std::chrono::milliseconds{1});
+        block_template = template_cache->GetBlockTemplate(custom_options, MillisecondsDouble::max());
+        BOOST_CHECK(block_template->m_creation_time > prev_time);
+        prev_time = block_template->m_creation_time;
+    }
+
+    {
+        // Different blockMinFeeRate will trigger a new block
+        auto custom_options = base_options;
+        custom_options.blockMinFeeRate += CFeeRate(1);
+        MockableSteadyClock::SetMockTime(current_time += std::chrono::milliseconds{1});
+        block_template = template_cache->GetBlockTemplate(custom_options, MillisecondsDouble::max());
+        BOOST_CHECK(block_template->m_creation_time > prev_time);
+        prev_time = block_template->m_creation_time;
+    }
+
+    {
+        auto chain_tip = WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip());
+        // BlockConnected signal with normal chainstate role should invalidate cache
+        kernel::ChainstateRole role{true, false};
+        m_node.validation_signals->BlockConnected(role, std::make_shared<const CBlock>(block_template->block), chain_tip);
+        m_node.validation_signals->SyncWithValidationInterfaceQueue();
+        MockableSteadyClock::SetMockTime(current_time += std::chrono::milliseconds{1});
+        block_template = template_cache->GetBlockTemplate(base_options, MillisecondsDouble::max());
+        BOOST_CHECK(block_template->m_creation_time > prev_time);
+        prev_time = block_template->m_creation_time;
+    }
+
+    {
+        auto chain_tip = WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip());
+        // BlockDisconnected signal should also invalidate cache
+        m_node.validation_signals->BlockDisconnected(std::make_shared<const CBlock>(block_template->block), chain_tip);
+        m_node.validation_signals->SyncWithValidationInterfaceQueue();
+        MockableSteadyClock::SetMockTime(current_time += std::chrono::milliseconds{1});
+        BOOST_CHECK(template_cache->GetBlockTemplate(base_options, MillisecondsDouble::max())->m_creation_time > prev_time);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
