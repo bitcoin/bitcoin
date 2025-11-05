@@ -12,6 +12,7 @@
 #include <interfaces/mining.h>
 #include <interfaces/types.h>
 #include <kernel/chainparams.h>
+#include <kernel/types.h>
 #include <node/miner.h>
 #include <node/mining_types.h>
 #include <policy/feerate.h>
@@ -25,6 +26,7 @@
 #include <sync.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <test/util/transaction_utils.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
@@ -57,6 +59,7 @@ using node::BlockCreateOptions;
 
 namespace miner_tests {
 struct MinerTestingSetup : public TestingSetup {
+    SteadyClockContext m_steady_clock;
     void TestPackageSelection(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     void TestBasicMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     void TestPrioritisedMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -908,6 +911,96 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     SetMockTime(0);
 
     TestPrioritisedMining(scriptPubKey, txFirst);
+}
+
+BOOST_AUTO_TEST_CASE(blocktemplate_cache)
+{
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    m_steady_clock += 1ms;
+    auto& template_cache = m_node.block_template_cache;
+    BlockCreateOptions default_options;
+    default_options.test_block_validity = false;
+    // Establish baseline template creation time
+    auto block_template = template_cache->GetBlockTemplate(default_options, 0ms);
+    auto prev_time = block_template->m_creation_time;
+    auto check_cache = [&](bool expect_hit,
+                           const BlockCreateOptions& opts,
+                           std::optional<MillisecondsDouble> template_max_age) {
+        m_steady_clock += 1ms;
+        const auto tmpl = template_cache->GetBlockTemplate(opts, template_max_age);
+        BOOST_CHECK(tmpl != nullptr);
+        if (expect_hit) {
+            BOOST_CHECK(tmpl->m_creation_time == prev_time);
+        } else {
+            BOOST_CHECK(tmpl->m_creation_time > prev_time);
+            prev_time = tmpl->m_creation_time;
+        }
+    };
+    // std::nullopt will always create a new block template (bypass cache)
+    check_cache(/*expect_hit=*/false, default_options, std::nullopt);
+    // 0ms max_age creates new template (nothing can be <= 0ms old iff time advances)
+    check_cache(/*expect_hit=*/false, default_options, 0ms);
+    // Hit if age < max_age
+    check_cache(/*expect_hit=*/true, default_options, 2ms);
+    // Miss if age > max_age
+    check_cache(/*expect_hit=*/false, default_options, 1ms);
+    // Hit if age == max_age
+    check_cache(/*expect_hit=*/true, default_options, 1ms);
+    // BlockConnected signal with background chainstate role should not invalidate cache
+    auto chain_tip = WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip());
+    auto block = std::make_shared<const CBlock>(block_template->block);
+    m_node.validation_signals->BlockConnected(ChainstateRole{.historical = true}, block, chain_tip);
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    check_cache(/*expect_hit=*/true, default_options, 2ms);
+    // BlockConnected signal with normal chainstate role should invalidate cache
+    m_node.validation_signals->BlockConnected(ChainstateRole{}, block, chain_tip);
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    check_cache(/*expect_hit=*/false, default_options, 2ms);
+    // BlockDisconnected signal should also invalidate cache
+    m_node.validation_signals->BlockDisconnected(block, chain_tip);
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    check_cache(/*expect_hit=*/false, default_options, 1ms);
+    // test_block_validity change makes us generate a new template
+    auto opts_1 = default_options;
+    opts_1.test_block_validity = true;
+    check_cache(/*expect_hit=*/false, opts_1, 2ms);
+    // Different coinbase script makes us generate a new template
+    auto opts_2 = default_options;
+    opts_2.coinbase_output_script = CScript() << OP_FALSE;
+    check_cache(/*expect_hit=*/false, opts_2, 2ms);
+    // Different block_max_weight triggers a new block
+    auto opts_3 = default_options;
+    opts_3.block_max_weight = DEFAULT_BLOCK_MAX_WEIGHT - 1;
+    check_cache(/*expect_hit=*/false, opts_3, 2ms);
+    // Different coinbase_output_max_additional_sigops triggers a new block
+    auto opts_4 = default_options;
+    opts_4.coinbase_output_max_additional_sigops -= 1;
+    check_cache(/*expect_hit=*/false, opts_4, 2ms);
+    // Different use_mempool triggers a new block
+    auto opts_5 = default_options;
+    opts_5.use_mempool = false;
+    check_cache(/*expect_hit=*/false, opts_5, 2ms);
+    // Different block_min_fee_rate triggers a new block
+    auto opts_6 = default_options;
+    opts_6.block_min_fee_rate = CFeeRate(DEFAULT_BLOCK_MIN_TX_FEE + 1);
+    check_cache(/*expect_hit=*/false, opts_6, 2ms);
+    template_cache->SanityCheck();
+    // Exceeding the cache size limit evicts the oldest template.
+    node::BlockTemplateCache fifo_cache{*m_node.mempool, *m_node.chainman, /*block_template_cache_limit=*/2};
+    const auto max_age{MillisecondsDouble::max()};
+    const auto template_time = [](const node::BlockTemplateRef& block_template) {
+        return block_template->m_creation_time;
+    };
+    m_steady_clock += 1ms;
+    const auto template_1 = fifo_cache.GetBlockTemplate(default_options, max_age);
+    m_steady_clock += 1ms;
+    const auto template_2 = fifo_cache.GetBlockTemplate(opts_3, max_age);
+    m_steady_clock += 1ms;
+    const auto template_3 = fifo_cache.GetBlockTemplate(opts_6, max_age);
+    BOOST_CHECK(template_time(fifo_cache.GetBlockTemplate(opts_3, max_age)) == template_time(template_2));
+    BOOST_CHECK(template_time(fifo_cache.GetBlockTemplate(opts_6, max_age)) == template_time(template_3));
+    m_steady_clock += 1ms;
+    BOOST_CHECK(template_time(fifo_cache.GetBlockTemplate(default_options, max_age)) > template_time(template_1));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
