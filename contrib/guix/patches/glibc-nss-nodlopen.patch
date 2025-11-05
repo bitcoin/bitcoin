@@ -1,0 +1,19 @@
+commit 7ca50abad17c372946c583a20fb0be8122701f61
+Author: fanquake <fanquake@gmail.com>
+Date:   Wed Apr 8 15:27:32 2026 +0800
+
+    nss: don't call dlopen
+
+diff --git a/nss/nss_module.c b/nss/nss_module.c
+index cb8fde38b4..f16aa6b55e 100644
+--- a/nss/nss_module.c
++++ b/nss/nss_module.c
+@@ -184,7 +184,7 @@ module_load (struct nss_module *module)
+          call.  */
+       return false;
+ 
+-    handle = __libc_dlopen (shlib_name);
++    handle = NULL;
+     free (shlib_name);
+   }
+ 
