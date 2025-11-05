@@ -438,6 +438,7 @@ inspecting signatures in Mach-O binaries.")
                   "--enable-standard-branch-protection=yes",
                   "--enable-cet=yes",
                   "--disable-gcov",
+                  "--disable-libsanitizer",
                   building-on)))
         ((#:phases phases)
           `(modify-phases ,phases
