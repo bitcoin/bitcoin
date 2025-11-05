@@ -299,6 +299,7 @@ ChainTestingSetup::~ChainTestingSetup()
 {
     if (m_node.scheduler) m_node.scheduler->stop();
     if (m_node.validation_signals) m_node.validation_signals->FlushBackgroundCallbacks();
+    if (m_node.block_template_cache) m_node.block_template_cache.reset();
     m_node.connman.reset();
     m_node.banman.reset();
     m_node.addrman.reset();
@@ -346,6 +347,8 @@ TestingSetup::TestingSetup(
     RegisterAllCoreRPCCommands(tableRPC);
 
     LoadVerifyActivateChainstate();
+
+    m_node.block_template_cache = std::make_unique<node::BlockTemplateCache>(*m_node.mempool.get(), *m_node.chainman);
 
     if (!opts.setup_net) return;
 
