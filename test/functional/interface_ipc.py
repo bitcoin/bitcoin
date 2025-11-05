@@ -6,6 +6,7 @@
 import asyncio
 
 from contextlib import ExitStack
+import warnings
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.ipc_util import (
@@ -15,7 +16,15 @@ from test_framework.ipc_util import (
 
 # Test may be skipped and not have capnp installed
 try:
-    import capnp  # type: ignore[import] # noqa: F401
+    # TODO: Remove this warning catch once capnp can run safely without the GIL
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message=r"The global interpreter lock \(GIL\) has been enabled to load module \'capnp.lib.capnp\', which has not declared that it can run safely without the GIL. To override this behavior and keep the GIL disabled \(at your own risk\)\, run with PYTHON_GIL\=0 or \-Xgil\=0\.",
+            category=RuntimeWarning,
+            module=r"importlib\._bootstrap",
+        )
+        import capnp  # type: ignore[import] # noqa: F401
 except ModuleNotFoundError:
     pass
 
