@@ -84,17 +84,14 @@ uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated)
     return ComputeMerkleRoot(std::move(leaves), mutated);
 }
 
-/* This implements a constant-space merkle root/path calculator, limited to 2^32 leaves. */
-static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot, bool* pmutated, uint32_t leaf_pos, std::vector<uint256>& path)
+/* This implements a constant-space merkle path calculator, limited to 2^32 leaves. */
+static void MerkleComputation(const std::vector<uint256>& leaves, uint32_t leaf_pos, std::vector<uint256>& path)
 {
     path.clear();
     Assume(leaves.size() <= UINT32_MAX);
     if (leaves.size() == 0) {
-        if (pmutated) *pmutated = false;
-        if (proot) *proot = uint256();
         return;
     }
-    bool mutated = false;
     // count is the number of leaves processed so far.
     uint32_t count = 0;
     // inner is an array of eagerly computed subtree hashes, indexed by tree
@@ -121,7 +118,6 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
                 path.push_back(h);
                 matchh = true;
             }
-            mutated |= (inner[level] == h);
             h = Hash(inner[level], h);
         }
         // Store the resulting hash at inner position level.
@@ -165,14 +161,11 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
             level++;
         }
     }
-    // Return result.
-    if (pmutated) *pmutated = mutated;
-    if (proot) *proot = h;
 }
 
 static std::vector<uint256> ComputeMerklePath(const std::vector<uint256>& leaves, uint32_t position) {
     std::vector<uint256> ret;
-    MerkleComputation(leaves, nullptr, nullptr, position, ret);
+    MerkleComputation(leaves, position, ret);
     return ret;
 }
 
