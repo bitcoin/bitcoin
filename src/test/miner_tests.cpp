@@ -9,9 +9,13 @@
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
 #include <interfaces/mining.h>
+#include <kernel/chain.h>
+#include <kernel/types.h>
 #include <node/miner.h>
 #include <policy/policy.h>
+#include <pow.h>
 #include <test/util/random.h>
+#include <test/util/setup_common.h>
 #include <test/util/transaction_utils.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
@@ -23,14 +27,12 @@
 #include <util/translation.h>
 #include <validation.h>
 #include <versionbits.h>
-#include <pow.h>
-
-#include <test/util/setup_common.h>
-
-#include <memory>
-#include <vector>
 
 #include <boost/test/unit_test.hpp>
+
+#include <memory>
+#include <optional>
+#include <vector>
 
 using namespace util::hex_literals;
 using interfaces::BlockTemplate;
@@ -39,6 +41,7 @@ using node::BlockAssembler;
 
 namespace miner_tests {
 struct MinerTestingSetup : public TestingSetup {
+    MinerTestingSetup() : TestingSetup(ChainType::MAIN, {.mock_steady_clock = true}) {}
     void TestPackageSelection(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     void TestBasicMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     void TestPrioritisedMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -865,6 +868,98 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     SetMockTime(0);
 
     TestPrioritisedMining(scriptPubKey, txFirst);
+}
+
+BOOST_AUTO_TEST_CASE(blocktemplate_cache)
+{
+    {
+        SeedRandomStateForTest(SeedRand::ZEROS);
+        SetMockTime(WITH_LOCK(m_node.chainman->GetMutex(),
+                              return m_node.chainman->ActiveTip()->Time()));
+        m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    }
+    auto& template_cache = m_node.block_template_cache;
+    BlockAssembler::Options default_options;
+    auto now = MockableSteadyClock::INITIAL_MOCK_TIME;
+    MockableSteadyClock::SetMockTime(now += 1ms);
+    // Establish baseline template creation time
+    auto block_template = template_cache->GetBlockTemplate(default_options, MillisecondsDouble{0});
+    auto prev_time = block_template->m_creation_time;
+    auto check_cache = [&](bool expect_hit,
+                           const BlockAssembler::Options& opts,
+                           std::optional<MillisecondsDouble> template_age_limit = std::nullopt,
+                           std::chrono::milliseconds advance = 1ms) {
+        MockableSteadyClock::SetMockTime(now += advance);
+        const auto tmpl = template_cache->GetBlockTemplate(opts, template_age_limit);
+        BOOST_CHECK(tmpl != nullptr);
+        if (expect_hit) {
+            BOOST_CHECK(tmpl->m_creation_time == prev_time);
+        } else {
+            BOOST_CHECK(tmpl->m_creation_time > prev_time);
+            prev_time = tmpl->m_creation_time;
+        }
+    };
+
+    // std::nullopt will always create a new block template (bypass cache)
+    check_cache(/*expect_hit=*/false, default_options);
+
+    // 0ms limit creates new template (nothing can be <= 0ms old iff time advances)
+    check_cache(/*expect_hit=*/false, default_options, MillisecondsDouble{0});
+
+    // Hit if age < limit
+    check_cache(/*expect_hit=*/true, default_options, 2ms);
+
+    // Boundary: age == limit => miss (TimeIntervalElapsed uses >=)
+    check_cache(/*expect_hit=*/false, default_options, MillisecondsDouble{1});
+
+    // BlockConnected signal with background chainstate role should not invalidate cache
+    kernel::ChainstateRole bg_role{true, true};
+    auto chain_tip = WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip());
+    m_node.validation_signals->BlockConnected(bg_role, std::make_shared<const CBlock>(block_template->block), chain_tip);
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    check_cache(/*expect_hit=*/true, default_options, MillisecondsDouble{2});
+
+    // test_block_validity change makes us generate a new template
+    auto opts1 = default_options;
+    opts1.test_block_validity = false;
+    check_cache(/*expect_hit=*/false, opts1, MillisecondsDouble{2});
+
+    // Different coinbase script makes us generate a new template
+    auto opts2 = default_options;
+    opts2.coinbase_output_script = CScript() << OP_FALSE;
+    check_cache(/*expect_hit=*/false, opts2, MillisecondsDouble{2});
+
+    // Different nBlockMaxWeight triggers a new block
+    auto opts3 = default_options;
+    opts3.nBlockMaxWeight -= 1;
+    check_cache(/*expect_hit=*/false, opts3, MillisecondsDouble{2});
+
+    // Different use_mempool triggers a new block
+    auto opts4 = default_options;
+    opts4.use_mempool = false;
+    check_cache(/*expect_hit=*/false, opts4, MillisecondsDouble{2});
+
+    // Different coinbase_output_max_additional_sigops triggers a new block
+    auto opts5 = default_options;
+    opts5.coinbase_output_max_additional_sigops -= 1;
+    check_cache(/*expect_hit=*/false, opts5, MillisecondsDouble{2});
+
+    // Different blockMinFeeRate triggers a new block
+    auto opts6 = default_options;
+    opts6.blockMinFeeRate += CFeeRate(1);
+    check_cache(/*expect_hit=*/false, opts6, MillisecondsDouble{2});
+
+    // BlockConnected signal with normal chainstate role should invalidate cache
+    kernel::ChainstateRole normal_role{true, false};
+    m_node.validation_signals->BlockConnected(normal_role, std::make_shared<const CBlock>(block_template->block), chain_tip);
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    check_cache(/*expect_hit=*/false, default_options, MillisecondsDouble{2});
+
+    // BlockDisconnected signal should also invalidate cache
+    m_node.validation_signals->BlockDisconnected(std::make_shared<const CBlock>(block_template->block), chain_tip);
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    check_cache(/*expect_hit=*/false, default_options, MillisecondsDouble{1});
+    template_cache->SanityCheck();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
