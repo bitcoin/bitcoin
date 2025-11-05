@@ -15,6 +15,7 @@
 #include <util/time.h>
 
 #include <cstdint>
+#include <chrono>
 #include <memory>
 #include <optional>
 
@@ -39,6 +40,14 @@ namespace node {
 class KernelNotifications;
 
 static const bool DEFAULT_PRINT_MODIFIED_FEE = false;
+
+// Return true if current time is greater or equal to `prev_time + time_interval`, or if
+// `prev_time` is greater than the current time (indicating clock moved backward; only possible in test).
+static inline bool TimeIntervalElapsed(const MockableSteadyClock::time_point& prev_time, MillisecondsDouble time_interval)
+{
+    const auto now = MockableSteadyClock::now();
+    return now < prev_time || MillisecondsDouble{now - prev_time} >= time_interval;
+}
 
 struct CBlockTemplate
 {
