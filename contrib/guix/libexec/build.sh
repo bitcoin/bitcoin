@@ -144,11 +144,11 @@ export GUIX_LD_WRAPPER_DISABLE_RPATH=yes
 case "$HOST" in
     x86_64-linux-gnu) ;;
     aarch64-linux-gnu) ;;
+    riscv64-linux-gnu) ;;
     *linux*)
         glibc_dynamic_linker=$(
             case "$HOST" in
                 arm-linux-gnueabihf)   echo /lib/ld-linux-armhf.so.3 ;;
-                riscv64-linux-gnu)     echo /lib/ld-linux-riscv64-lp64d.so.1 ;;
                 powerpc64-linux-gnu)   echo /lib64/ld64.so.1;;
                 powerpc64le-linux-gnu) echo /lib64/ld64.so.2;;
                 *)                     exit 1 ;;
@@ -231,6 +231,7 @@ esac
 
 # EXE FLAGS
 case "$HOST" in
+    riscv64-linux-gnu) CMAKE_EXE_LINKER_FLAGS="-DCMAKE_EXE_LINKER_FLAGS=-static-pie -static-libgcc -Wl,-O2" ;;
     aarch64-linux-gnu) CMAKE_EXE_LINKER_FLAGS="-DCMAKE_EXE_LINKER_FLAGS=-static-pie -static-libgcc -Wl,-O2" ;;
     x86_64-linux-gnu) CMAKE_EXE_LINKER_FLAGS="-DCMAKE_EXE_LINKER_FLAGS=-static-pie -static-libgcc -Wl,-O2" ;;
     *linux*)  CMAKE_EXE_LINKER_FLAGS="-DCMAKE_EXE_LINKER_FLAGS=${HOST_LDFLAGS} -static-libstdc++ -static-libgcc" ;;
