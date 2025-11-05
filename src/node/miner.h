@@ -13,11 +13,15 @@
 #include <txmempool.h>
 #include <util/feefrac.h>
 #include <util/time.h>
+#include <validationinterface.h>
 
 #include <cstdint>
 #include <chrono>
+#include <deque>
 #include <memory>
 #include <optional>
+#include <utility>
+#include <vector>
 
 #include <boost/multi_index/identity.hpp>
 #include <boost/multi_index/indexed_by.hpp>
@@ -40,6 +44,7 @@ namespace node {
 class KernelNotifications;
 
 static const bool DEFAULT_PRINT_MODIFIED_FEE = false;
+static constexpr size_t DEFAULT_BLOCK_TEMPLATE_CACHE_SIZE{10};
 
 // Return true if current time is greater or equal to `prev_time + time_interval`, or if
 // `prev_time` is greater than the current time (indicating clock moved backward).
@@ -62,6 +67,8 @@ struct CBlockTemplate
     std::vector<FeeFrac> m_package_feerates;
     NodeClock::time_point m_creation_time;
 };
+
+using BlockTemplateRef = std::shared_ptr<const CBlockTemplate>;
 
 // Container for tracking updates to ancestor feerate as we include (parent)
 // transactions in a block
@@ -231,6 +238,54 @@ private:
     bool TestPackageTransactions(const CTxMemPool::setEntries& package) const;
     /** Sort the package in an order that is valid to appear in a block */
     void SortForBlock(const CTxMemPool::setEntries& package, std::vector<CTxMemPool::txiter>& sortedEntries);
+};
+
+/**
+ * BlockTemplateCache provides a thread-safe interface for creating and reusing
+ * block templates with configurable cache size.
+ *
+ * The cache stores templates with their respective config options.
+ * When a block template is requested:
+ * - If a template with matching options exists and the interval
+ *   has not elapsed, the cached template is returned.
+ * - If no template exists or the interval has elapsed, a new template is generated,
+ *   stored in the cache, and returned.
+ * - If the interval is 0 we always create a new template and insert into the cache.
+ * - After an insertion to the cache, we evict the oldest template if the cache overflows.
+ *
+ * The cache inherits from CValidationInterface to receive notifications
+ * about connected and disconnected blocks, which triggers cache invalidation,
+ * ensuring stale templates are not returned.
+ */
+class BlockTemplateCache : public CValidationInterface
+{
+private:
+    std::deque<std::pair<BlockAssembler::Options, BlockTemplateRef>> m_block_templates;
+    CTxMemPool& m_mempool;
+    Chainstate& m_chainstate;
+    size_t m_block_template_cache_size;
+    mutable Mutex m_mutex;
+
+    BlockTemplateRef CreateBlockTemplateInternal(const BlockAssembler::Options& options) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
+public:
+    BlockTemplateCache(CTxMemPool& mempool, Chainstate& chainstate, size_t block_template_block_template_cache_size = DEFAULT_BLOCK_TEMPLATE_CACHE_SIZE);
+    virtual ~BlockTemplateCache() = default;
+
+    /**
+     * If a cached template exists with identical options and its age is less than
+     * the specified interval, the cached template is returned.
+     * Otherwise, a new template is created and stored in the cache.
+     *
+     * @param options The block assembly options to use.
+     * @return a BlockTemplateRef.
+     */
+    BlockTemplateRef GetBlockTemplate(const BlockAssembler::Options& options) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Overridden from CValidationInterface. */
+    void BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock>& /*unused*/, const CBlockIndex * /*unused*/)
+        override EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    void BlockDisconnected(const std::shared_ptr<const CBlock> &/*unused*/, const CBlockIndex* /*unused*/)
+        override EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 };
 
 /** Helper to check whether two block assembler options are similar */

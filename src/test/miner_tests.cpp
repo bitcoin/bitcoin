@@ -57,6 +57,9 @@ struct MinerTestingSetup : public TestingSetup {
         m_node.mempool.reset();
         bilingual_str error;
         m_node.mempool = std::make_unique<CTxMemPool>(MemPoolOptionsForTest(m_node), error);
+        m_node.validation_signals->UnregisterValidationInterface(m_node.block_template_cache.get());
+        m_node.block_template_cache = std::make_unique<node::BlockTemplateCache>(*m_node.mempool.get(), m_node.chainman->ActiveChainstate());
+        m_node.validation_signals->RegisterValidationInterface(m_node.block_template_cache.get());
         Assert(error.empty());
         return *m_node.mempool;
     }
