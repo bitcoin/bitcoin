@@ -521,6 +521,39 @@ inspecting signatures in Mach-O binaries.")
                    (("^install-others =.*$")
                     (string-append "install-others = " out "/etc/rpc\n")))))))))))))
 
+;; --enable-static-nss isn't used yet, because it has been broken
+;; since 2.33: https://sourceware.org/bugzilla/show_bug.cgi?id=27959.
+(define-public glibc-2.42
+  (let ((commit "f122d0b4d145814869bf10c56db1d971bcba55c5"))
+  (package
+    (inherit glibc) ;; 2.39
+    (version "2.42")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://sourceware.org/git/glibc.git")
+                    (commit commit)))
+              (file-name (git-file-name "glibc" commit))
+              (sha256
+               (base32
+                "05d4h0zgq6q63xx7izamly3wf5f0ld7hssiv9accsdgg4vk53rp1"))
+              (patches (search-our-patches "glibc-guix-2.42-prefix.patch"))))
+    (arguments
+      (substitute-keyword-arguments (package-arguments glibc)
+        ((#:configure-flags flags)
+          `(append ,flags
+            ;; https://www.gnu.org/software/libc/manual/html_node/Configuring-and-compiling.html
+            (list "--enable-bind-now",
+                  "--enable-cet=yes",
+                  "--enable-fortify-source",
+                  "--enable-stack-protector=all",
+                  "--disable-nscd",
+                  "--disable-profile",
+                  "--disable-pt_chown",
+                  "--disable-timezone-tools",
+                  "--disable-werror",
+                  building-on))))))))
+
 ;; The sponge tool from moreutils.
 (define-public sponge
   (package
