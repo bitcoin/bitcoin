@@ -2,13 +2,6 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
-target_link_libraries(bitcoin_ipc_test
-  PRIVATE
-    core_interface
-    univalue
-    Boost::headers
-)
-
 # Do not use generator expressions in test sources because the
 # SOURCES property is processed to gather test suite macros.
 target_sources(test_bitcoin

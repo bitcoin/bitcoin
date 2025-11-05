@@ -8,10 +8,10 @@ using Cxx = import "/capnp/c++.capnp";
 $Cxx.namespace("gen");
 
 using Proxy = import "/mp/proxy.capnp";
-$Proxy.include("test/ipc_test.h");
-$Proxy.includeTypes("test/ipc_test_types.h");
+$Proxy.include("ipc/test/ipc_test.h");
+$Proxy.includeTypes("ipc/test/ipc_test_types.h");
 
-using Mining = import "../ipc/capnp/mining.capnp";
+using Mining = import "../capnp/mining.capnp";
 
 interface FooInterface $Proxy.wrap("FooImplementation") {
     add @0 (a :Int32, b :Int32) -> (result :Int32);
