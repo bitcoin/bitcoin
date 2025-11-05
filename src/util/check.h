@@ -66,7 +66,7 @@ void assertion_fail(const std::source_location& loc, std::string_view assertion)
 
 /** Helper for CHECK_NONFATAL() */
 template <typename T>
-T&& inline_check_non_fatal(LIFETIMEBOUND T&& val, std::source_location loc, std::string_view assertion)
+T&& inline_check_non_fatal(LIFETIMEBOUND T&& val, const std::source_location& loc, std::string_view assertion)
 {
     if (!val) {
         if constexpr (G_ABORT_ON_FAILED_ASSUME) {
@@ -83,7 +83,7 @@ T&& inline_check_non_fatal(LIFETIMEBOUND T&& val, std::source_location loc, std:
 
 /** Helper for Assert()/Assume() */
 template <bool IS_ASSERT, typename T>
-constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] std::source_location loc, [[maybe_unused]] std::string_view assertion)
+constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] const std::source_location& loc, [[maybe_unused]] std::string_view assertion)
 {
     if (IS_ASSERT || std::is_constant_evaluated() || G_ABORT_ON_FAILED_ASSUME) {
         if (!val) {
