@@ -3,8 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <node/miner.h>
-
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
@@ -15,19 +13,22 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
+#include <kernel/chain.h>
 #include <logging.h>
 #include <node/kernel_notifications.h>
+#include <node/miner.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <sync.h>
 #include <util/moneystr.h>
 #include <util/signalinterrupt.h>
 #include <util/time.h>
 #include <validation.h>
 
 #include <algorithm>
-#include <utility>
 #include <numeric>
 
 namespace node {
@@ -330,6 +331,98 @@ void BlockAssembler::addChunks()
         selected_transactions.clear();
         chunk_feerate = m_mempool->GetBlockBuilderChunk(selected_transactions);
         chunk_feerate_vsize = ToFeePerVSize(chunk_feerate);
+    }
+}
+
+BlockTemplateCache::BlockTemplateCache(CTxMemPool& mempool, ChainstateManager& chainman, size_t block_template_cache_limit)
+    : m_mempool(mempool), m_chainman(chainman), m_block_template_cache_limit(block_template_cache_limit)
+{
+}
+
+void BlockTemplateCache::BlockConnected(
+    const ChainstateRole& role,
+    const std::shared_ptr<const CBlock>& /*unused*/,
+    const CBlockIndex* /*unused*/)
+{
+    // Ignore block being connected to historical chain, not current chain.
+    if (role.historical) return;
+    LOCK(m_mutex);
+    m_block_templates.clear();
+}
+
+void BlockTemplateCache::BlockDisconnected(
+    const std::shared_ptr<const CBlock>& /*unused*/,
+    const CBlockIndex* /*unused*/)
+{
+    LOCK(m_mutex);
+    m_block_templates.clear();
+}
+
+BlockTemplateRef BlockTemplateCache::getCachedTemplate(
+    const BlockAssembler::Options& options,
+    MillisecondsDouble template_max_age)
+{
+    AssertLockHeld(m_mutex);
+    auto it = std::find_if(m_block_templates.begin(), m_block_templates.end(),
+                           [&](const TemplateEntry& entry) { return entry.options == options; });
+    if (it == m_block_templates.end()) {
+        return nullptr;
+    }
+    const auto now = MockableSteadyClock::now();
+    // Erase template if it is too old, or if the clock moved backwards (should never happen except in tests).
+    if (now - it->block_template->m_creation_time > template_max_age || now < it->block_template->m_creation_time) {
+        m_block_templates.erase(it);
+        return nullptr;
+    }
+    return Assert(it->block_template);
+}
+
+BlockTemplateRef BlockTemplateCache::GetBlockTemplate(
+    const BlockAssembler::Options& options,
+    std::optional<MillisecondsDouble> template_max_age)
+{
+    if (!template_max_age.has_value()) {
+        return BlockAssembler{m_chainman.ActiveChainstate(), &m_mempool, options}.CreateNewBlock();
+    }
+
+    // Cache lookup requires an exact match on all block creation options.
+    // While some fields (e.g. test_block_validity, print_modified_fee, coinbase_output_script)
+    // could be ignored for cache reuse, differences in these fields mainly occur in
+    // tests and benchmarks. To keep the logic simple, we treat all fields as part of
+    // the cache key and accept cache misses in those cases.
+    {
+        LOCK(m_mutex);
+        auto cached = getCachedTemplate(options, *template_max_age);
+        if (cached) return cached;
+    }
+
+    LOCK2(::cs_main, m_mutex);
+    // Search again with cs_main held. The search above avoided locking cs_main as an optimization,
+    // but new cached templates may have been created since then.
+    auto cached = getCachedTemplate(options, *template_max_age);
+    if (cached) return cached;
+    BlockTemplateRef block_template = BlockAssembler{m_chainman.ActiveChainstate(), &m_mempool, options}.CreateNewBlock();
+    m_block_templates.emplace_back(options, block_template);
+    if (m_block_templates.size() > m_block_template_cache_limit) {
+        m_block_templates.pop_front();
+    }
+    return block_template;
+}
+
+void BlockTemplateCache::SanityCheck() const
+{
+    LOCK(m_mutex);
+    // Verify cache size does not exceed maximum
+    Assume(m_block_templates.size() <= m_block_template_cache_limit);
+    // Verify no duplicate options exist in cache
+    for (size_t i = 0; i < m_block_templates.size(); ++i) {
+        for (size_t j = i + 1; j < m_block_templates.size(); ++j) {
+            Assume(!(m_block_templates[i].options == m_block_templates[j].options));
+        }
+    }
+    // Verify that we don't have a nullptr in the block template.
+    for (const auto& [options, template_ref] : m_block_templates) {
+        Assume(template_ref != nullptr);
     }
 }
 

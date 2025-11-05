@@ -76,6 +76,7 @@ struct BlockCreateOptions {
      * Whether to include an OP_0 as a dummy extraNonce in the template's coinbase
      */
     bool include_dummy_extranonce{false};
+    bool operator==(const BlockCreateOptions&) const = default;
 };
 
 struct BlockWaitOptions {

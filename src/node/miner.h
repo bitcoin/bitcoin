@@ -7,16 +7,15 @@
 #define BITCOIN_NODE_MINER_H
 
 #include <interfaces/types.h>
+#include <kernel/types.h>
 #include <node/types.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
 #include <txmempool.h>
 #include <util/feefrac.h>
 #include <util/time.h>
-
-#include <cstdint>
-#include <memory>
-#include <optional>
+#include <validation.h>
+#include <validationinterface.h>
 
 #include <boost/multi_index/identity.hpp>
 #include <boost/multi_index/indexed_by.hpp>
@@ -24,21 +23,28 @@
 #include <boost/multi_index/tag.hpp>
 #include <boost/multi_index_container.hpp>
 
+#include <chrono>
+#include <cstdint>
+#include <deque>
+#include <memory>
+#include <optional>
+#include <utility>
+
 class ArgsManager;
 class CBlockIndex;
 class CChainParams;
 class CScript;
-class Chainstate;
-class ChainstateManager;
 
 namespace Consensus { struct Params; };
 
 using interfaces::BlockRef;
+using kernel::ChainstateRole;
 
 namespace node {
 class KernelNotifications;
 
 static const bool DEFAULT_PRINT_MODIFIED_FEE = false;
+static constexpr size_t DEFAULT_BLOCK_TEMPLATE_CACHE_LIMIT{10};
 
 struct CBlockTemplate
 {
@@ -91,6 +97,7 @@ public:
         // Whether to call TestBlockValidity() at the end of CreateNewBlock().
         bool test_block_validity{true};
         bool print_modified_fee{DEFAULT_PRINT_MODIFIED_FEE};
+        bool operator==(const Options&) const = default;
     };
 
     explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options);
@@ -126,6 +133,87 @@ private:
       * This check should always succeed, and is here
       * only as an extra check in case of a bug */
     bool TestChunkTransactions(const std::vector<CTxMemPoolEntryRef>& txs) const;
+};
+
+using BlockTemplateRef = std::shared_ptr<const CBlockTemplate>;
+
+struct TemplateEntry {
+    BlockAssembler::Options options;
+    BlockTemplateRef block_template;
+};
+
+/*
+ * BlockTemplateCache provides a thread-safe cache for block templates.
+ *
+ * Each cached entry is identified by its BlockAssembler::Options. At most one
+ * template is stored per set of options, and the cache has a fixed maximum size.
+ *
+ * When requesting a block template:
+ * - If template_max_age is std::nullopt, a new block template is always
+ *   created and returned, and nothing is cached.
+ *
+ * - Otherwise, the cache is checked for a template with matching options.
+ *   If a cached template exists and its age (elapsed time since creation)
+ *   doesn't exceed template_max_age, it is reused.
+ *
+ * - If a cached template exists but it is too old, it is removed and replaced
+ *   with a newly created template.
+ *
+ * - If no matching template exists, a new template is created and cached.
+ *
+ * When adding a new entry causes the cache to exceed its size limit, the
+ * oldest cached template (by insertion order) is evicted.
+ *
+ * The cache inherits from CValidationInterface to receive notifications
+ * about connected and disconnected blocks, which triggers cache invalidation,
+ * ensuring stale templates are not returned.
+ */
+class BlockTemplateCache : public CValidationInterface
+{
+    CTxMemPool& m_mempool;
+    ChainstateManager& m_chainman;
+    const size_t m_block_template_cache_limit;
+    mutable Mutex m_mutex;
+    // FIFO cache; at most one template per BlockAssembler::Options.
+    std::deque<TemplateEntry> m_block_templates GUARDED_BY(m_mutex);
+    /**
+     * Search for a cached template matching the provided options.
+     *
+     * - If found and not too old, return it.
+     * - If found but too old, evict it and return nullptr.
+     * - If not found, return nullptr.
+     */
+    BlockTemplateRef getCachedTemplate(const BlockAssembler::Options& options,
+                                       MillisecondsDouble template_max_age)
+        EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
+
+public:
+    explicit BlockTemplateCache(CTxMemPool& mempool,
+                                ChainstateManager& chainman,
+                                size_t block_template_cache_limit = DEFAULT_BLOCK_TEMPLATE_CACHE_LIMIT);
+    virtual ~BlockTemplateCache() = default;
+    /**
+     * Get a block template from the cache or create a new one.
+     *
+     * Cache lookup requires an exact match on all block creation options.
+     *
+     * @param options Block assembly options to match
+     * @param template_max_age Maximum age for cached templates in milliseconds.
+     *        If nullopt, bypasses cache entirely (doesn't insert into, read or delete from cache).
+     * @return A shared pointer to the block template
+     */
+    BlockTemplateRef GetBlockTemplate(const BlockAssembler::Options& options,
+                                      std::optional<MillisecondsDouble> template_max_age = MillisecondsDouble::max())
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Test-only: verify cache invariants */
+    void SanityCheck() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Overridden from CValidationInterface. */
+    void BlockConnected(const ChainstateRole& role, const std::shared_ptr<const CBlock>& /*unused*/, const CBlockIndex* /*unused*/)
+        override EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    void BlockDisconnected(const std::shared_ptr<const CBlock>& /*unused*/, const CBlockIndex* /*unused*/)
+        override EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 };
 
 /**
