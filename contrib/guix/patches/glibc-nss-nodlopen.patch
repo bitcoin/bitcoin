@@ -1,0 +1,32 @@
+commit cf2ad49c79f5bf19e0890a34dcd9a660e7158a10
+Author: fanquake <fanquake@gmail.com>
+Date:   Wed Aug 5 08:42:19 2026 +0100
+
+    nss: no dlopen
+
+diff --git a/nss/nss_module.c b/nss/nss_module.c
+index cb8fde38b4..f16aa6b55e 100644
+--- a/nss/nss_module.c
++++ b/nss/nss_module.c
+@@ -184,7 +184,7 @@ module_load (struct nss_module *module)
+          call.  */
+       return false;
+ 
+-    handle = __libc_dlopen (shlib_name);
++    handle = NULL;
+     free (shlib_name);
+   }
+ 
+diff --git a/nss/nsswitch.h b/nss/nsswitch.h
+index e3191df10d..c7bf3f1b2e 100644
+--- a/nss/nsswitch.h
++++ b/nss/nsswitch.h
+@@ -81,7 +81,7 @@ extern bool __nss_database_custom[NSS_DBSIDX_max] attribute_hidden;
+    statically linked program still depends on the shared NSS modules
+    matching the libc it was built against.  Emit the static link
+    warning on the NSS interface functions accordingly.  */
+-#define nss_interface_function(name) static_link_warning (name)
++#define nss_interface_function(name)
+ 
+ 
+ /* Interface functions for NSS.  */
