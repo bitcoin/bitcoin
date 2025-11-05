@@ -62,7 +62,7 @@
     defined(__NetBSD__) || \
     defined(__OpenBSD__) || \
     defined(__illumos__)
-extern char** environ; // NOLINT(readability-redundant-declaration): Necessary on the above platforms
+extern char** environ; // Necessary on the above platforms
 #endif
 
 namespace {
