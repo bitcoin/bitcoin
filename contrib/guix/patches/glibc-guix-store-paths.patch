@@ -1,0 +1,93 @@
+Patch /gnu/store paths out of the library,
+which cause nondeterminism.
+
+--- a/iconv/Makefile
++++ b/iconv/Makefile
+@@ -69,9 +69,9 @@ others		= iconv_prog iconvconfig
+ install-others-programs	= $(inst_bindir)/iconv
+ install-sbin	= iconvconfig
+
+-CFLAGS-gconv_cache.c += -DGCONV_DIR='"$(gconvdir)"'
+-CFLAGS-gconv_conf.c += -DGCONV_PATH='"$(gconvdir)"'
+-CFLAGS-iconvconfig.c += -DGCONV_PATH='"$(gconvdir)"' -DGCONV_DIR='"$(gconvdir)"'
++CFLAGS-gconv_cache.c += -DGCONV_DIR='"/usr/lib/gconv"'
++CFLAGS-gconv_conf.c += -DGCONV_PATH='"/usr/lib/gconv"'
++CFLAGS-iconvconfig.c += -DGCONV_PATH='"/usr/lib/gconv"' -DGCONV_DIR='"/usr/lib/gconv"'
+
+ # Set libof-* for each routine.
+ cpp-srcs-left := $(iconv_prog-modules) $(iconvconfig-modules)
+--- a/intl/Makefile
++++ b/intl/Makefile
+@@ -177,8 +177,8 @@ $(objpfx)tst-gettext5.out: $(objpfx)tst-gettext.out
+ $(objpfx)tst-gettext6.out: $(objpfx)tst-gettext.out
+ $(objpfx)tst-plural-eval.out: $(objpfx)tst-gettext.out
+
+-CPPFLAGS += -D'LOCALEDIR="$(localedir)"' \
+-	    -D'LOCALE_ALIAS_PATH="$(localedir)"' \
++CPPFLAGS += -D'LOCALEDIR="/usr/share/locale"' \
++	    -D'LOCALE_ALIAS_PATH="/usr/share/locale"' \
+ 	    -Wno-unused-but-set-variable \
+ 	    -Wno-implicit-fallthrough
+ BISONFLAGS = --yacc --no-lines --name-prefix=__gettext --output
+--- a/locale/Makefile
++++ b/locale/Makefile
+@@ -172,7 +172,7 @@ localepath = "$(complocaledir):$(i18ndir)"
+ # of the list instead of the tail, where CPPFLAGS-$(lib) gets added.
+ # We need it before the standard -I's to see programs/config.h first.
+ locale-CPPFLAGS = -DCOMPLOCALEDIR='"$(complocaledir)"' \
+-		  -DLOCALE_ALIAS_PATH='"$(localedir)"' \
++		  -DLOCALE_ALIAS_PATH='"/usr/share/locale"' \
+ 		  -Iprograms
+
+ CPPFLAGS-locale-programs = -DLOCALE_PATH='$(localepath)' \
+--- a/posix/Makefile
++++ b/posix/Makefile
+@@ -591,7 +591,7 @@ CFLAGS-wait4.c += -fexceptions -fasynchronous-unwind-tables
+ CFLAGS-getopt.c += -fexceptions
+ CFLAGS-wordexp.c += -fexceptions
+ CFLAGS-wordexp.os = -fomit-frame-pointer
+-CFLAGS-sysconf.c += -fexceptions -DGETCONF_DIR='"$(libexecdir)/getconf"'
++CFLAGS-sysconf.c += -fexceptions -DGETCONF_DIR='"/usr/libexec/getconf"'
+ CFLAGS-pathconf.c += -fexceptions
+ CFLAGS-fpathconf.c += -fexceptions
+ CFLAGS-spawn.c += -fexceptions
+@@ -602,7 +602,7 @@ CFLAGS-spawni.c += -fexceptions
+ CFLAGS-spawni.os = -fomit-frame-pointer
+ CFLAGS-glob.c += $(uses-callbacks) -fexceptions
+ CFLAGS-glob64.c += $(uses-callbacks) -fexceptions
+-CFLAGS-getconf.c += -DGETCONF_DIR='"$(libexecdir)/getconf"'
++CFLAGS-getconf.c += -DGETCONF_DIR='"/usr/libexec/getconf"'
+ CFLAGS-execve.os = -fomit-frame-pointer
+ CFLAGS-fexecve.os = -fomit-frame-pointer
+ CFLAGS-execv.os = -fomit-frame-pointer
+--- a/time/Makefile
++++ b/time/Makefile
+@@ -132,6 +132,6 @@ $(objpfx)tst-clock_gettime-time64: $(librt)
+ $(objpfx)tst-clock_nanosleep: $(librt)
+ $(objpfx)tst-clock_nanosleep-time64: $(librt)
+
+-tz-cflags = -DTZDIR='"$(zonedir)"' \
++tz-cflags = -DTZDIR='"/usr/share/zoneinfo"' \
+ 	    -DTZDEFAULT='"$(localtime-file)"' \
+ 	    -DTZDEFRULES='"$(posixrules-file)"'
+--- a/elf/Makefile
++++ b/elf/Makefile
+@@ -1678,7 +1678,7 @@ endif
+ $(objpfx)trusted-dirs.h: $(objpfx)trusted-dirs.st; @:
+ $(objpfx)trusted-dirs.st: Makefile $(..)Makeconfig
+ 	$(make-target-directory)
+-	echo "$(subst :, ,$(default-rpath) $(user-defined-trusted-dirs))"    \
++	echo "$(subst :, ,/usr/lib $(user-defined-trusted-dirs))"    \
+ 	| $(AWK) -f gen-trusted-dirs.awk > ${@:st=T};
+ 	echo '#define DL_DST_LIB "$(notdir $(slibdir))"' >> ${@:st=T}
+ 	$(move-if-change) ${@:st=T} ${@:st=h}
+@@ -1736,6 +1736,6 @@ $(objpfx)ldconfig: $(ldconfig-modules:%=$(objpfx)%.o)
+
+ SYSCONF-FLAGS := -D'SYSCONFDIR="$(sysconfdir)"'
+-CFLAGS-ldconfig.c += $(SYSCONF-FLAGS) -D'LIBDIR="$(libdir)"' \
+-		    -D'SLIBDIR="$(slibdir)"'
++CFLAGS-ldconfig.c += $(SYSCONF-FLAGS) -D'LIBDIR="/usr/lib"' \
++		    -D'SLIBDIR="/usr/lib"'
+ libof-ldconfig = ldconfig
+ CFLAGS-dl-cache.c += $(SYSCONF-FLAGS)
+

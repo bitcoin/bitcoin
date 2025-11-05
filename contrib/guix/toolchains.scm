@@ -14,6 +14,7 @@
   #:use-module ((guix utils) #:select (substitute-keyword-arguments))
   #:export (building-on
             glibc-2.31
+            glibc-2.44
             make-bitcoin-cross-toolchain
             make-mingw-pthreads-cross-toolchain))
 
@@ -263,3 +264,55 @@ chain for " target " development."))
                     (string-append out "/etc/rpc" suffix "\n"))
                    (("^install-others =.*$")
                     (string-append "install-others = " out "/etc/rpc\n")))))))))))))
+
+(define glibc-2.44
+  (let ((commit "58da792d8a2d8f2fe711318836e853fcddfd7cd8"))
+  (package
+    (inherit glibc) ;; 2.41
+    (version "2.44")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://sourceware.org/git/glibc.git")
+                    (commit commit)))
+              (file-name (git-file-name "glibc" commit))
+              (sha256
+               (base32
+                "1iz66ryd7swhzdgx45aw9l61c3ab632vi82ay44j6pbv4akppj7s"))
+              (patches (search-our-patches "glibc-guix-store-paths.patch"
+                                           "glibc-nss-nodlopen.patch"))))
+    (arguments
+      (substitute-keyword-arguments (package-arguments glibc)
+        ((#:configure-flags flags)
+          `(append ,flags
+            ;; https://www.gnu.org/software/libc/manual/html_node/Configuring-and-compiling.html
+            (list "--enable-bind-now",
+                  "--enable-cet=yes",
+                  "--enable-fortify-source",
+                  "--enable-stack-protector=all",
+                  "--disable-nscd",
+                  "--disable-profile",
+                  "--disable-pt_chown",
+                  "--disable-timezone-tools",
+                  "--disable-werror",
+                  building-on)))
+        ((#:phases phases)
+          `(modify-phases ,phases
+             (add-before 'configure 'remap-guix-store-paths
+               (lambda _
+                 (let ((mapping ,(guix-store-prefix-map-flags)))
+                   (for-each (lambda (var)
+                               (setenv var (string-append "-O2 -g" (or (getenv var) "") mapping)))
+                             '("CFLAGS" "CPPFLAGS")))
+                 #t))
+             (add-after 'pre-configure 'use-portable-shell
+               (lambda _
+                 ;; Revert the shell path changes we inherit from Guix
+                 ;; https://codeberg.org/guix/guix/src/commit/c5eee3336cc1d10a3cc1c97fde2809c3451624d3/gnu/packages/base.scm#L1011
+                 (substitute* "sysdeps/posix/system.c"
+                   (("#define[ \t]+SHELL_PATH.*$")
+                    "#define SHELL_PATH \"/bin/sh\"\n"))
+                 (substitute* (find-files "." "^paths\\.h$")
+                   (("#define[ \t]+_PATH_BSHELL[ \t]+.*$")
+                    "#define _PATH_BSHELL \"/bin/sh\"\n"))
+                 #t)))))))))
