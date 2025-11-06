@@ -982,11 +982,6 @@ public:
         return btck_chain_get_height(get()) + 1;
     }
 
-    BlockTreeEntry Genesis() const
-    {
-        return btck_chain_get_genesis(get());
-    }
-
     BlockTreeEntry GetByHeight(int height) const
     {
         auto index{btck_chain_get_by_height(get(), height)};

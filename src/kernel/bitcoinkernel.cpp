@@ -1242,12 +1242,6 @@ int btck_chain_get_height(const btck_Chain* chain)
     return btck_Chain::get(chain).Height();
 }
 
-const btck_BlockTreeEntry* btck_chain_get_genesis(const btck_Chain* chain)
-{
-    LOCK(::cs_main);
-    return btck_BlockTreeEntry::ref(btck_Chain::get(chain).Genesis());
-}
-
 const btck_BlockTreeEntry* btck_chain_get_by_height(const btck_Chain* chain, int height)
 {
     LOCK(::cs_main);

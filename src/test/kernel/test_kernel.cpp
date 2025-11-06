@@ -664,7 +664,7 @@ void chainman_reindex_test(TestDirectory& test_directory)
     // Sanity check some block retrievals
     auto chain{chainman->GetChain()};
     BOOST_CHECK_THROW(chain.GetByHeight(1000), std::runtime_error);
-    auto genesis_index{chain.Genesis()};
+    auto genesis_index{chain.Entries().front()};
     BOOST_CHECK(!genesis_index.GetPrevious());
     auto genesis_block_raw{chainman->ReadBlock(genesis_index).value().ToBytes()};
     auto first_index{chain.GetByHeight(0)};

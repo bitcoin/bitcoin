@@ -1223,15 +1223,6 @@ BITCOINKERNEL_API int32_t BITCOINKERNEL_WARN_UNUSED_RESULT btck_chain_get_height
     const btck_Chain* chain) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
- * @brief Get the block tree entry of the genesis block.
- *
- * @param[in] chain Non-null.
- * @return          The block tree entry of the genesis block, or null if the chain is empty.
- */
-BITCOINKERNEL_API const btck_BlockTreeEntry* BITCOINKERNEL_WARN_UNUSED_RESULT btck_chain_get_genesis(
-    const btck_Chain* chain) BITCOINKERNEL_ARG_NONNULL(1);
-
-/**
  * @brief Retrieve a block tree entry by its height in the currently active chain.
  * Once retrieved there is no guarantee that it remains in the active chain.
  *
