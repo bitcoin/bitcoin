@@ -93,9 +93,6 @@ constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] con
     return std::forward<T>(val);
 }
 
-// All macros may use __func__ inside a lambda, so put them under nolint.
-// NOLINTBEGIN(bugprone-lambda-function-name)
-
 #define STR_INTERNAL_BUG(msg) StrFormatInternalBug((msg), std::source_location::current())
 
 /**
@@ -130,11 +127,8 @@ constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] con
 /**
  * NONFATAL_UNREACHABLE() is a macro that is used to mark unreachable code. It throws a NonFatalCheckError.
  */
-#define NONFATAL_UNREACHABLE()                                        \
-    throw NonFatalCheckError(                                         \
-        "Unreachable code reached (non-fatal)", std::source_location::current())
-
-// NOLINTEND(bugprone-lambda-function-name)
+#define NONFATAL_UNREACHABLE() \
+    throw NonFatalCheckError { "Unreachable code reached (non-fatal)", std::source_location::current() }
 
 #if defined(__has_feature)
 #    if __has_feature(address_sanitizer)
