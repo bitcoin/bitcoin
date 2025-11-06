@@ -1,0 +1,39 @@
+# Security Policy
+
+## 🔒 Supported Versions
+
+Please refer to the official lifecycle page to identify supported and actively maintained releases:
+- [https://bitcoincore.org/en/lifecycle/#schedule](https://bitcoincore.org/en/lifecycle/#schedule)
+
+Security updates are provided only for the listed maintained versions. Users are **strongly advised to upgrade** to supported versions to receive patches.
+
+---
+
+## 🚨 Reporting a Vulnerability
+
+If you discover a security vulnerability, please **report it responsibly** via encrypted email:
+
+- Email: `security@bitcoincore.org`
+- **This address is for vulnerability disclosure only.** For general support, use [GitHub Issues](https://github.com/bitcoin/bitcoin/issues) or forums.
+
+Please include:
+- A clear description of the issue
+- A proof-of-concept or reproduction steps
+- Affected version(s)
+- Potential impact (if known)
+
+---
+
+## 🔐 Security PGP Keys
+
+Use these **GPG keys** to securely communicate vulnerability details with core developers:
+
+| Name            | GPG Fingerprint                              |
+|-----------------|----------------------------------------------|
+| Pieter Wuille   | `133E AC17 9436 F14A 5CF1  B794 860F EB80 4E66 9320` |
+| Michael Ford    | `E777 299F C265 DD04 7930  70EB 944D 35F9 AC3D B76A` |
+| Ava Chow        | `1528 1230 0785 C964 44D3  334D 1756 5732 E08E 5E41` |
+
+To import a key:
+```bash
+gpg --keyserver hkps://keys.openpgp.org --recv-keys "FINGERPRINT"
