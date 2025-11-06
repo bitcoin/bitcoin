@@ -96,6 +96,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void reply(int category, const QString &command);
+    void noop();
 
 private:
     interfaces::Node& m_node;
@@ -361,6 +362,8 @@ bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strRes
         for (auto i = filter_ranges.rbegin(); i != filter_ranges.rend(); ++i) {
             pstrFilteredOut->replace(i->first, i->second - i->first, "(…)");
         }
+        // Prefix "#" to comment out sensitive commands when recalled from history, preventing re-execution
+        if (filter_ranges.size() > 0  && !pstrFilteredOut->starts_with("#")) pstrFilteredOut->insert(0, "#");
     }
     switch(state) // final state
     {
@@ -405,9 +408,16 @@ void RPCExecutor::request(const QString &command, const QString& wallet_name)
                 "   example:    getblock(getblockhash(0) 1)[tx]\n\n"
 
                 "Results without keys can be queried with an integer in brackets using the parenthesized syntax.\n"
-                "   example:    getblock(getblockhash(0),1)[tx][0]\n\n")));
+                "   example:    getblock(getblockhash(0),1)[tx][0]\n\n"
+
+                "Lines starting with '#' are treated as comments and are not executed.\n"
+                "   example:    # Hello world\n\n")));
+            return;
+        } else if (executableCommand.starts_with("#")) {
+            Q_EMIT noop();
             return;
         }
+
         if (!RPCConsole::RPCExecuteCommandLine(m_node, result, executableCommand, nullptr, wallet_name)) {
             Q_EMIT reply(RPCConsole::CMD_ERROR, QString("Parse error: unbalanced ' or \""));
             return;
@@ -1090,6 +1100,12 @@ void RPCConsole::startExecutor()
         // Remove "Executing…" message.
         ui->messagesWidget->undo();
         message(category, command);
+        scrollToEnd();
+        m_is_executing = false;
+    });
+
+    connect(m_executor, &RPCExecutor::noop, this, [this]() {
+        ui->messagesWidget->undo();
         scrollToEnd();
         m_is_executing = false;
     });
