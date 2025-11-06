@@ -316,10 +316,10 @@ void InterruptWait(KernelNotifications& kernel_notifications, bool& interrupt_wa
  * Return a new block template when fees rise to a certain threshold or after a
  * new tip; return nullopt if timeout is reached.
  */
-std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainman,
+BlockTemplateRef WaitAndCreateNewBlock(BlockTemplateCache* block_template_cache,
+                                                      ChainstateManager& chainman,
                                                       KernelNotifications& kernel_notifications,
-                                                      CTxMemPool* mempool,
-                                                      const std::unique_ptr<CBlockTemplate>& block_template,
+                                                      BlockTemplateRef block_template,
                                                       const BlockWaitOptions& options,
                                                       const BlockAssembler::Options& assemble_options,
                                                       bool& interrupt_wait);

@@ -535,10 +535,10 @@ void InterruptWait(KernelNotifications& kernel_notifications, bool& interrupt_wa
     kernel_notifications.m_tip_block_cv.notify_all();
 }
 
-std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainman,
+BlockTemplateRef WaitAndCreateNewBlock(BlockTemplateCache* block_template_cache,
+                                                      ChainstateManager& chainman,
                                                       KernelNotifications& kernel_notifications,
-                                                      CTxMemPool* mempool,
-                                                      const std::unique_ptr<CBlockTemplate>& block_template,
+                                                      BlockTemplateRef block_template,
                                                       const BlockWaitOptions& options,
                                                       const BlockAssembler::Options& assemble_options,
                                                       bool& interrupt_wait)
@@ -598,11 +598,7 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
          * We'll also create a new template if the tip changed during this iteration.
          */
         if (options.fee_threshold < MAX_MONEY || tip_changed) {
-            auto new_tmpl{BlockAssembler{
-                chainman.ActiveChainstate(),
-                mempool,
-                assemble_options}
-                              .CreateNewBlock()};
+            auto new_tmpl{block_template_cache->GetBlockTemplate(assemble_options)};;
 
             // If the tip changed, return the new template regardless of its fees.
             if (tip_changed) return new_tmpl;
