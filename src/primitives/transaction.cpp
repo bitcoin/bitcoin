@@ -37,15 +37,19 @@ CTxIn::CTxIn(Txid hashPrevTx, uint32_t nOut, CScript scriptSigIn, uint32_t nSequ
     nSequence = nSequenceIn;
 }
 
-std::string CTxIn::ToString() const
+std::string CTxIn::ToString(bool include_witness) const
 {
     std::string str;
     str += "CTxIn(";
     str += prevout.ToString();
     if (prevout.IsNull())
         str += strprintf(", coinbase %s", HexStr(scriptSig));
-    else
+    else {
         str += strprintf(", scriptSig=%s", HexStr(scriptSig).substr(0, 24));
+
+        if (include_witness) 
+            str += strprintf(", scriptWitness=%s", scriptWitness.ToString());
+    }
     if (nSequence != SEQUENCE_FINAL)
         str += strprintf(", nSequence=%u", nSequence);
     str += ")";
@@ -122,7 +126,7 @@ std::string CTransaction::ToString() const
         vout.size(),
         nLockTime);
     for (const auto& tx_in : vin)
-        str += "    " + tx_in.ToString() + "\n";
+        str += "    " + tx_in.ToString(/*include_witness=*/false) + "\n";
     for (const auto& tx_in : vin)
         str += "    " + tx_in.scriptWitness.ToString() + "\n";
     for (const auto& tx_out : vout)
