@@ -30,6 +30,8 @@
 #include <wallet/rpc/wallet.h>
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
+#include <wallet/hdchain.h>
+#include <wallet/scriptpubkeyman.h>
 #include <governance/object.h>
 #include <governance/validators.h>
 #include <evo/deterministicmns.h>
@@ -524,6 +526,49 @@ public:
         RemoveWallet(m_context, m_wallet, false /* load_on_start */);
     }
     bool isLegacy() override { return m_wallet->IsLegacy(); }
+    bool getMnemonic(SecureString& mnemonic_out, SecureString& mnemonic_passphrase_out) override
+    {
+        LOCK(m_wallet->cs_wallet);
+
+        mnemonic_out.clear();
+        mnemonic_passphrase_out.clear();
+
+        if (m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+            return false;
+        }
+
+        if (m_wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+            // Descriptor wallet
+            for (auto spk_man : m_wallet->GetActiveScriptPubKeyMans()) {
+                if (auto desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man)) {
+                    if (desc_spk_man->GetMnemonicString(mnemonic_out, mnemonic_passphrase_out)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        } else {
+            // Legacy wallet
+            auto spk_man = m_wallet->GetLegacyScriptPubKeyMan();
+            if (!spk_man) {
+                return false;
+            }
+
+            CHDChain hdChainCurrent;
+            if (!spk_man->GetHDChain(hdChainCurrent)) {
+                return false;
+            }
+
+            // Get decrypted HD chain if wallet is encrypted
+            if (m_wallet->IsCrypted()) {
+                if (!spk_man->GetDecryptedHDChain(hdChainCurrent)) {
+                    return false;
+                }
+            }
+
+            return hdChainCurrent.GetMnemonic(mnemonic_out, mnemonic_passphrase_out);
+        }
+    }
     std::unique_ptr<Handler> handleUnload(UnloadFn fn) override
     {
         return MakeHandler(m_wallet->NotifyUnload.connect(fn));

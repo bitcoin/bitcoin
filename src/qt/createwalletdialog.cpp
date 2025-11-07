@@ -12,6 +12,7 @@
 #include <qt/guiutil.h>
 
 #include <QPushButton>
+#include <QToolButton>
 
 CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
     QDialog(parent, GUIUtil::dialog_flags),
@@ -21,6 +22,17 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("Create"));
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
     ui->wallet_name_line_edit->setFocus(Qt::ActiveWindowFocusReason);
+
+    // Hide advanced options by default and provide a compact toggle control.
+    ui->groupBox->setVisible(false);
+    ui->groupBox->setTitle(QString());
+    ui->advanced_toggle_button->setChecked(false);
+    ui->advanced_toggle_button->setArrowType(Qt::RightArrow);
+    ui->advanced_toggle_button->setFocusPolicy(Qt::NoFocus);
+    connect(ui->advanced_toggle_button, &QToolButton::toggled, this, [this](bool checked) {
+        ui->groupBox->setVisible(checked);
+        ui->advanced_toggle_button->setArrowType(checked ? Qt::DownArrow : Qt::RightArrow);
+    });
 
     connect(ui->wallet_name_line_edit, &QLineEdit::textEdited, [this](const QString& text) {
         ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(!text.isEmpty());

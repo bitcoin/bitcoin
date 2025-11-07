@@ -7,6 +7,7 @@
 #include <qt/askpassphrasedialog.h>
 #include <qt/clientmodel.h>
 #include <qt/createwalletdialog.h>
+#include <qt/mnemonicverificationdialog.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/walletmodel.h>
@@ -279,7 +280,83 @@ void CreateWalletActivity::finish()
         QMessageBox::warning(m_parent_widget, tr("Create wallet warning"), QString::fromStdString(Join(m_warning_message, Untranslated("\n")).translated));
     }
 
-    if (m_wallet_model) Q_EMIT created(m_wallet_model);
+    if (m_wallet_model) {
+        // Check if wallet is HD-enabled (has mnemonic) and requires verification
+        // Skip verification for blank wallets or wallets with disabled private keys
+        if (!m_wallet_model->wallet().hdEnabled() ||
+            m_wallet_model->wallet().privateKeysDisabled() ||
+            !m_wallet_model->wallet().canGetAddresses()) {
+            // Not an HD wallet - skip verification
+            Q_EMIT created(m_wallet_model);
+            Q_EMIT finished();
+            return;
+        }
+
+        // Unlock wallet if encrypted (needed to retrieve mnemonic)
+        // Note: Newly created wallet can only be locked (if encrypted) or unencrypted.
+        // Mixing-only unlock state is not possible at wallet creation time.
+        const bool was_locked = (m_wallet_model->getEncryptionStatus() == WalletModel::Locked);
+        if (was_locked) {
+            // Unlock to retrieve mnemonic using passphrase from wallet creation
+            if (!m_wallet_model->setWalletLocked(false, m_passphrase, false)) {
+                QMessageBox::warning(m_parent_widget, tr("Unlock failed"),
+                    tr("Failed to unlock wallet for mnemonic verification. Wallet creation completed but verification skipped."));
+                Q_EMIT created(m_wallet_model);
+                Q_EMIT finished();
+                return;
+            }
+        }
+
+        // Check if wallet has a mnemonic and requires verification
+        SecureString mnemonic;
+        SecureString mnemonic_passphrase;
+        bool has_mnemonic = m_wallet_model->wallet().getMnemonic(mnemonic, mnemonic_passphrase);
+
+        if (!has_mnemonic || mnemonic.empty()) {
+            // No mnemonic found - log warning and skip verification
+            if (was_locked) {
+                m_wallet_model->setWalletLocked(true);
+            }
+            // Clear sensitive data before showing message
+            mnemonic.assign(mnemonic.size(), 0);
+            mnemonic_passphrase.assign(mnemonic_passphrase.size(), 0);
+            QMessageBox::warning(m_parent_widget, tr("Mnemonic retrieval failed"),
+                tr("Could not retrieve mnemonic phrase from wallet. Wallet creation completed but verification skipped."));
+            Q_EMIT created(m_wallet_model);
+            Q_EMIT finished();
+            return;
+        }
+
+        // Wallet has mnemonic - show verification dialog
+        MnemonicVerificationDialog verify_dialog(mnemonic, m_parent_widget);
+        verify_dialog.setWindowModality(Qt::ApplicationModal);
+
+        // Clear mnemonic from local variables after dialog has copied it
+        // The dialog will manage its own copy securely
+        const size_t mnemonic_size = mnemonic.size();
+        const size_t passphrase_size = mnemonic_passphrase.size();
+        mnemonic.assign(mnemonic_size, 0);
+        mnemonic_passphrase.assign(passphrase_size, 0);
+
+        if (verify_dialog.exec() == QDialog::Accepted) {
+            // Verification successful
+            if (was_locked) {
+                m_wallet_model->setWalletLocked(true);
+            }
+            Q_EMIT created(m_wallet_model);
+        } else {
+            // User cancelled verification
+            if (was_locked) {
+                m_wallet_model->setWalletLocked(true);
+            }
+            QMessageBox::warning(m_parent_widget, tr("Verification cancelled"),
+                tr("You cancelled mnemonic verification. Please make sure you have saved your mnemonic phrase safely."));
+            Q_EMIT created(m_wallet_model);
+        }
+    } else {
+        // Wallet creation failed - no wallet model
+        // Already showed error message above
+    }
 
     Q_EMIT finished();
 }

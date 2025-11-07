@@ -11,6 +11,7 @@
 #include <qt/askpassphrasedialog.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
+#include <qt/mnemonicverificationdialog.h>
 #include <qt/optionsmodel.h>
 #include <qt/overviewpage.h>
 #include <qt/receivecoinsdialog.h>
@@ -27,6 +28,7 @@
 
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QMessageBox>
 #include <QProgressDialog>
 #include <QPushButton>
 #include <QSettings>
@@ -323,6 +325,54 @@ void WalletView::changePassphrase()
     auto dlg = new AskPassphraseDialog(AskPassphraseDialog::ChangePass, this);
     dlg->setModel(walletModel);
     GUIUtil::ShowModalDialogAsynchronously(dlg);
+}
+
+void WalletView::showMnemonic()
+{
+    // Check if wallet supports mnemonic retrieval
+    if (walletModel->wallet().privateKeysDisabled()) {
+        QMessageBox::warning(this, tr("No Recovery Phrase"),
+            tr("This wallet does not have private keys and therefore has no recovery phrase."));
+        return;
+    }
+
+    if (!walletModel->wallet().hdEnabled()) {
+        QMessageBox::warning(this, tr("No Recovery Phrase"),
+            tr("This wallet was not created with HD (Hierarchical Deterministic) mode and does not have a recovery phrase."));
+        return;
+    }
+
+    // Request unlock if needed - UnlockContext will restore lock state on destruction
+    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
+    if (!ctx.isValid()) {
+        // User cancelled unlock
+        return;
+    }
+
+    // Retrieve mnemonic
+    SecureString mnemonic;
+    SecureString mnemonic_passphrase;
+    bool has_mnemonic = walletModel->wallet().getMnemonic(mnemonic, mnemonic_passphrase);
+
+    if (!has_mnemonic || mnemonic.empty()) {
+        QMessageBox::warning(this, tr("Mnemonic Retrieval Failed"),
+            tr("Could not retrieve the recovery phrase from this wallet."));
+        return;
+    }
+
+    // Show mnemonic verification dialog in view-only mode (no verification required)
+    MnemonicVerificationDialog verify_dialog(mnemonic, this, true);
+    verify_dialog.setWindowModality(Qt::ApplicationModal);
+
+    // Clear mnemonic from local variables after dialog has copied it
+    const size_t mnemonic_size = mnemonic.size();
+    const size_t passphrase_size = mnemonic_passphrase.size();
+    mnemonic.assign(mnemonic_size, 0);
+    mnemonic_passphrase.assign(passphrase_size, 0);
+
+    verify_dialog.exec();
+
+    // UnlockContext destructor will automatically restore the wallet lock state
 }
 
 void WalletView::unlockWallet(bool fForMixingOnly)
