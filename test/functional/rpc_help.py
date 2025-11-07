@@ -32,7 +32,7 @@ def process_mapping(fname):
                 if line.startswith('};'):
                     in_rpcs = False
                 elif '{' in line and '"' in line:
-                    m = re.search(r'{ *("[^"]*"), *([0-9]+) *, *("[^"]*") *},', line)
+                    m = re.search(r'{ *("[^"]*"), *([0-9]+) *, *("[^"]*")(?:, *(true|false))? *},', line)
                     assert m, 'No match to table expression: %s' % line
                     name = parse_string(m.group(1))
                     idx = int(m.group(2))
@@ -59,6 +59,8 @@ class HelpRpcTest(BitcoinTestFramework):
         mapping_client = process_mapping(file_conversion_table)
         # Ignore echojson in client table
         mapping_client = [m for m in mapping_client if m[0] != 'echojson']
+        # Filter out composite commands
+        mapping_client = [m for m in mapping_client if ' ' not in m[0]]
 
         mapping_server = self.nodes[0].help("dump_all_command_conversions")
         # Filter all RPCs whether they need conversion
