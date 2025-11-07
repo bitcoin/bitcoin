@@ -19,7 +19,7 @@ export RUN_CHECK_DEPS=true
 export RUN_TIDY=true
 export GOAL="install"
 export BITCOIN_CONFIG="\
- -DWITH_ZMQ=ON -DBUILD_GUI=ON -DBUILD_BENCH=ON -DWITH_USDT=ON \
+ --preset dev-mode \
  -DCMAKE_C_COMPILER=clang-${TIDY_LLVM_V} \
  -DCMAKE_CXX_COMPILER=clang++-${TIDY_LLVM_V} \
  -DCMAKE_C_FLAGS_RELWITHDEBINFO='-O0 -g0' \
