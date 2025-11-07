@@ -980,7 +980,6 @@ bool CBlockPolicyEstimator::Write(AutoFile& fileout) const
     try {
         LOCK(m_cs_fee_estimator);
         fileout << CURRENT_FEES_FILE_VERSION;
-        fileout << int{0}; // Unused dummy field. Written files may contain any value in [0, 289900]
         fileout << nBestSeenHeight;
         if (BlockSpan() > HistoricalBlockSpan()/2) {
             fileout << firstRecordedHeight << nBestSeenHeight;
@@ -1004,8 +1003,8 @@ bool CBlockPolicyEstimator::Read(AutoFile& filein)
 {
     try {
         LOCK(m_cs_fee_estimator);
-        int nVersionRequired, dummy;
-        filein >> nVersionRequired >> dummy;
+        int nVersionRequired;
+        filein >> nVersionRequired;
         if (nVersionRequired > CURRENT_FEES_FILE_VERSION) {
             throw std::runtime_error{strprintf("File version (%d) too high to be read.", nVersionRequired)};
         }
