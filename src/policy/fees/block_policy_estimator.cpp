@@ -33,8 +33,8 @@
 #include <utility>
 
 // The current format written, and the version required to read. Must be
-// increased to at least 289900+1 on the next breaking change.
-constexpr int CURRENT_FEES_FILE_VERSION{149900};
+// increased to at least 309900+1 on the next breaking change.
+constexpr int CURRENT_FEES_FILE_VERSION{309900};
 
 static constexpr double INF_FEERATE = 1e99;
 
