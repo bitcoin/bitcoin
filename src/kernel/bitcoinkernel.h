@@ -1204,16 +1204,6 @@ BITCOINKERNEL_API btck_BlockValidationResult btck_block_validation_state_get_blo
 ///@{
 
 /**
- * @brief Get the block tree entry of the current chain tip. Once returned,
- * there is no guarantee that it remains in the active chain.
- *
- * @param[in] chain Non-null.
- * @return          The block tree entry of the current tip, or null if the chain is empty.
- */
-BITCOINKERNEL_API const btck_BlockTreeEntry* BITCOINKERNEL_WARN_UNUSED_RESULT btck_chain_get_tip(
-    const btck_Chain* chain) BITCOINKERNEL_ARG_NONNULL(1);
-
-/**
  * @brief Return the height of the tip of the chain.
  *
  * @param[in] chain Non-null.

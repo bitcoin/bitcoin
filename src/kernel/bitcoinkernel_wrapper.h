@@ -967,11 +967,6 @@ class ChainView : public View<btck_Chain>
 public:
     explicit ChainView(const btck_Chain* ptr) : View{ptr} {}
 
-    BlockTreeEntry Tip() const
-    {
-        return btck_chain_get_tip(get());
-    }
-
     int32_t Height() const
     {
         return btck_chain_get_height(get());
