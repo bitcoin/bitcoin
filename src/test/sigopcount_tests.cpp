@@ -138,15 +138,15 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost_Multisig)
     // Legacy counting only includes signature operations in scriptSigs and scriptPubKeys
     // of a transaction and does not take the actual executed sig operations into account.
     // spendingTx in itself does not contain a signature operation.
-    assert(GetTransactionSigOpCost(CTransaction(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS) == 0);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS), 0);
     // creationTx contains two signature operations in its scriptPubKey, but legacy counting
     // is not accurate.
-    assert(GetTransactionSigOpCost(CTransaction(creationTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS) == MAX_PUBKEYS_PER_MULTISIG * WITNESS_SCALE_FACTOR);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(creationTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS), MAX_PUBKEYS_PER_MULTISIG * WITNESS_SCALE_FACTOR);
 
     // Sanity check: script verification fails because of an invalid signature.
-    assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, STANDARD_SCRIPT_VERIFY_FLAGS) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
+    BOOST_CHECK_EQUAL(VerifyWithFlag(CTransaction(creationTx), spendingTx, STANDARD_SCRIPT_VERIFY_FLAGS), SCRIPT_ERR_CHECKMULTISIGVERIFY);
     // Coinbase input sigops are not counted (P2SH included).
-    assert(GetTransactionSigOpCost(MakeCoinBase(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS) == 0);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(MakeCoinBase(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS), 0);
 }
 
 BOOST_AUTO_TEST_CASE(GetTxSigOpCost_MultisigP2SH)
@@ -160,16 +160,16 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost_MultisigP2SH)
     CScript scriptSig = CScript() << OP_0 << OP_0 << ToByteVector(redeemScript);
 
     BuildTxs(spendingTx, test_coins.cache, creationTx, scriptPubKey, scriptSig, CScriptWitness());
-    assert(GetTransactionSigOpCost(CTransaction(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS) == 2 * WITNESS_SCALE_FACTOR);
-    assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, STANDARD_SCRIPT_VERIFY_FLAGS) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS), 2 * WITNESS_SCALE_FACTOR);
+    BOOST_CHECK_EQUAL(VerifyWithFlag(CTransaction(creationTx), spendingTx, STANDARD_SCRIPT_VERIFY_FLAGS), SCRIPT_ERR_CHECKMULTISIGVERIFY);
 
     // P2SH sigops are not counted if we don't set the SCRIPT_VERIFY_P2SH flag
-    assert(GetTransactionSigOpCost(CTransaction(spendingTx), test_coins.cache, /*flags=*/0) == 0);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), test_coins.cache, /*flags=*/0), 0);
 
     // Coinbase tx does not trigger signature operations in the output script
-    assert(GetTransactionSigOpCost(CTransaction(creationTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS) == 0);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(creationTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS), 0);
     // Coinbase input sigops are not counted (P2SH included).
-    assert(GetTransactionSigOpCost(MakeCoinBase(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS) == 0);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(MakeCoinBase(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS), 0);
 }
 
 BOOST_AUTO_TEST_CASE(GetTxSigOpCost_P2WPKH)
@@ -185,24 +185,24 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost_P2WPKH)
     scriptWitness.stack.emplace_back(0);
 
     BuildTxs(spendingTx, test_coins.cache, creationTx, scriptPubKey, scriptSig, scriptWitness);
-    assert(GetTransactionSigOpCost(CTransaction(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS) == 1);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS), 1);
     // No signature operations if we don't verify the witness.
-    assert(GetTransactionSigOpCost(CTransaction(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS & ~SCRIPT_VERIFY_WITNESS) == 0);
-    assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, STANDARD_SCRIPT_VERIFY_FLAGS) == SCRIPT_ERR_EQUALVERIFY);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS & ~SCRIPT_VERIFY_WITNESS), 0);
+    BOOST_CHECK_EQUAL(VerifyWithFlag(CTransaction(creationTx), spendingTx, STANDARD_SCRIPT_VERIFY_FLAGS), SCRIPT_ERR_EQUALVERIFY);
 
     // The sig op cost for witness version != 0 is zero.
-    assert(scriptPubKey[0] == OP_0);
+    BOOST_CHECK_EQUAL(scriptPubKey[0], OP_0);
     scriptPubKey[0] = 0x51;
     BuildTxs(spendingTx, test_coins.cache, creationTx, scriptPubKey, scriptSig, scriptWitness);
-    assert(GetTransactionSigOpCost(CTransaction(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS) == 0);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS), 0);
     scriptPubKey[0] = 0x00;
     BuildTxs(spendingTx, test_coins.cache, creationTx, scriptPubKey, scriptSig, scriptWitness);
 
     // Coinbase tx does not trigger witness program validation
-    assert(GetTransactionSigOpCost(CTransaction(creationTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS) == 0);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(creationTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS), 0);
     // The witness of a coinbase transaction is not taken into account.
     BOOST_REQUIRE(!spendingTx.vin[0].scriptWitness.IsNull());
-    assert(GetTransactionSigOpCost(MakeCoinBase(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS) == 0);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(MakeCoinBase(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS), 0);
 }
 
 BOOST_AUTO_TEST_CASE(GetTxSigOpCost_P2WPKH_P2SH)
@@ -219,14 +219,14 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost_P2WPKH_P2SH)
     scriptWitness.stack.emplace_back(0);
 
     BuildTxs(spendingTx, test_coins.cache, creationTx, scriptPubKey, scriptSig, scriptWitness);
-    assert(GetTransactionSigOpCost(CTransaction(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS) == 1);
-    assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, STANDARD_SCRIPT_VERIFY_FLAGS) == SCRIPT_ERR_EQUALVERIFY);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS), 1);
+    BOOST_CHECK_EQUAL(VerifyWithFlag(CTransaction(creationTx), spendingTx, STANDARD_SCRIPT_VERIFY_FLAGS), SCRIPT_ERR_EQUALVERIFY);
 
     // Coinbase tx does not trigger P2SH witness program validation
-    assert(GetTransactionSigOpCost(CTransaction(creationTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS) == 0);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(creationTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS), 0);
     // The witness of a coinbase transaction is not taken into account.
     BOOST_REQUIRE(!spendingTx.vin[0].scriptWitness.IsNull());
-    assert(GetTransactionSigOpCost(MakeCoinBase(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS) == 0);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(MakeCoinBase(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS), 0);
 }
 
 BOOST_AUTO_TEST_CASE(GetTxSigOpCost_P2WSH)
@@ -244,15 +244,15 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost_P2WSH)
     scriptWitness.stack.emplace_back(witnessScript.begin(), witnessScript.end());
 
     BuildTxs(spendingTx, test_coins.cache, creationTx, scriptPubKey, scriptSig, scriptWitness);
-    assert(GetTransactionSigOpCost(CTransaction(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS) == 2);
-    assert(GetTransactionSigOpCost(CTransaction(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS & ~SCRIPT_VERIFY_WITNESS) == 0);
-    assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, STANDARD_SCRIPT_VERIFY_FLAGS) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS), 2);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS & ~SCRIPT_VERIFY_WITNESS), 0);
+    BOOST_CHECK_EQUAL(VerifyWithFlag(CTransaction(creationTx), spendingTx, STANDARD_SCRIPT_VERIFY_FLAGS), SCRIPT_ERR_CHECKMULTISIGVERIFY);
 
     // Coinbase tx does not trigger witness script validation
-    assert(GetTransactionSigOpCost(CTransaction(creationTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS) == 0);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(creationTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS), 0);
     // The witness of a coinbase transaction is not taken into account.
     BOOST_REQUIRE(!spendingTx.vin[0].scriptWitness.IsNull());
-    assert(GetTransactionSigOpCost(MakeCoinBase(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS) == 0);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(MakeCoinBase(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS), 0);
 }
 
 BOOST_AUTO_TEST_CASE(GetTxSigOpCost_P2WSH_P2SH)
@@ -271,14 +271,14 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost_P2WSH_P2SH)
     scriptWitness.stack.emplace_back(witnessScript.begin(), witnessScript.end());
 
     BuildTxs(spendingTx, test_coins.cache, creationTx, scriptPubKey, scriptSig, scriptWitness);
-    assert(GetTransactionSigOpCost(CTransaction(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS) == 2);
-    assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, STANDARD_SCRIPT_VERIFY_FLAGS) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS), 2);
+    BOOST_CHECK_EQUAL(VerifyWithFlag(CTransaction(creationTx), spendingTx, STANDARD_SCRIPT_VERIFY_FLAGS), SCRIPT_ERR_CHECKMULTISIGVERIFY);
 
     // Coinbase tx does not trigger P2SH witness script validation
-    assert(GetTransactionSigOpCost(CTransaction(creationTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS) == 0);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction(creationTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS), 0);
     // The witness of a coinbase transaction is not taken into account.
     BOOST_REQUIRE(!spendingTx.vin[0].scriptWitness.IsNull());
-    assert(GetTransactionSigOpCost(MakeCoinBase(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS) == 0);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(MakeCoinBase(spendingTx), test_coins.cache, STANDARD_SCRIPT_VERIFY_FLAGS), 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
