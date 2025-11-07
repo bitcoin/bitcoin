@@ -1437,16 +1437,9 @@ bool GenericClusterImpl::Split(TxGraphImpl& graph, int level) noexcept
 bool SingletonClusterImpl::Split(TxGraphImpl& graph, int level) noexcept
 {
     Assume(NeedsSplitting());
-    if (GetTxCount() == 0) {
-        // The cluster is now empty.
-        graph.GetClusterSet(level).m_cluster_usage -= TotalMemoryUsage();
-        return true;
-    } else {
-        // Nothing changed.
-        graph.SetClusterQuality(level, m_quality, m_setindex, QualityLevel::OPTIMAL);
-        Updated(graph, level);
-        return false;
-    }
+    Assume(!GetTxCount());
+    graph.GetClusterSet(level).m_cluster_usage -= TotalMemoryUsage();
+    return true;
 }
 
 void GenericClusterImpl::Merge(TxGraphImpl& graph, int level, Cluster& other) noexcept
@@ -1482,10 +1475,9 @@ void GenericClusterImpl::Merge(TxGraphImpl& graph, int level, Cluster& other) no
     });
 }
 
-void SingletonClusterImpl::Merge(TxGraphImpl& graph, int level, Cluster& other_abstract) noexcept
+void SingletonClusterImpl::Merge(TxGraphImpl&, int, Cluster&) noexcept
 {
-    // Nothing can be merged into a singleton; it should have been converted to GenericClusterImpl
-    // first.
+    // Nothing can be merged into a singleton; it should have been converted to GenericClusterImpl first.
     Assume(false);
 }
 
@@ -1537,13 +1529,10 @@ void GenericClusterImpl::ApplyDependencies(TxGraphImpl& graph, int level, std::s
     Updated(graph, level);
 }
 
-void SingletonClusterImpl::ApplyDependencies(TxGraphImpl& graph, int level, std::span<std::pair<GraphIndex, GraphIndex>> to_apply) noexcept
+void SingletonClusterImpl::ApplyDependencies(TxGraphImpl&, int, std::span<std::pair<GraphIndex, GraphIndex>>) noexcept
 {
     // Nothing can actually be applied.
-    for (auto& [par, chl] : to_apply) {
-        Assume(par == m_graph_index);
-        Assume(chl == m_graph_index);
-    }
+    Assume(false);
 }
 
 TxGraphImpl::~TxGraphImpl() noexcept
