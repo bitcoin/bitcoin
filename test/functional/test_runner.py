@@ -148,6 +148,7 @@ BASE_SCRIPTS = [
     'p2p_feefilter.py',
     'feature_bip9_max_activation_height.py',
     'feature_csv_activation.py',
+    'feature_reduced_data_utxo_height.py',
     'p2p_sendheaders.py',
     'feature_config_args.py',
     'wallet_listtransactions.py',
