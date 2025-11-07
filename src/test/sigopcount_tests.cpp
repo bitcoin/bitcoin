@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,12 +18,29 @@
 
 #include <boost/test/unit_test.hpp>
 
-// Helpers:
-static std::vector<unsigned char>
-Serialize(const CScript& s)
+static constexpr script_verify_flags STANDARD_SCRIPT_VERIFY_FLAGS{SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH};
+
+struct TestCoinsViewCache {
+    CCoinsView dummy;
+    CCoinsViewCache cache{&dummy};
+};
+
+static CPubKey GenerateTestPubKey()
+{
+    return GenerateRandomKey().GetPubKey();
+}
+
+static std::vector<unsigned char> Serialize(const CScript& s)
 {
     std::vector<unsigned char> sSerialized(s.begin(), s.end());
     return sSerialized;
+}
+
+static CTransaction MakeCoinBase(const CMutableTransaction& tx)
+{
+    CMutableTransaction coinbase{tx};
+    coinbase.vin[0].prevout.SetNull();
+    return CTransaction{coinbase};
 }
 
 BOOST_FIXTURE_TEST_SUITE(sigopcount_tests, BasicTestingSetup)
