@@ -17,5 +17,7 @@ export TEST_RUNNER_EXTRA="--exclude rpc_bind,feature_bind_extra"
 export GOAL="install"
 # TODO enable GUI
 export BITCOIN_CONFIG="\
- -DWITH_ZMQ=ON -DBUILD_GUI=OFF \
+  --preset=dev-mode \
+ -DBUILD_GUI=OFF \
+ -DWITH_USDT=OFF \
 "
