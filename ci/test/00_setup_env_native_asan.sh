@@ -26,7 +26,7 @@ export NO_DEPENDS=1
 export GOAL="install"
 export CI_LIMIT_STACK_SIZE=1
 export BITCOIN_CONFIG="\
- -DWITH_USDT=ON -DWITH_ZMQ=ON -DBUILD_GUI=ON \
+ --preset=dev-mode \
  -DSANITIZERS=address,float-divide-by-zero,integer,undefined \
  -DCMAKE_C_COMPILER=clang \
  -DCMAKE_CXX_COMPILER=clang++ \
