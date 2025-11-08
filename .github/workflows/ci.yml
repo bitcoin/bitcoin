@@ -131,7 +131,7 @@ jobs:
         include:
           - job-type: standard
             file-env: './ci/test/00_setup_env_mac_native.sh'
-            job-name: 'macOS native, no depends, sqlite only, gui'
+            job-name: 'macOS native'
           - job-type: fuzz
             file-env: './ci/test/00_setup_env_mac_native_fuzz.sh'
             job-name: 'macOS native, fuzz'
