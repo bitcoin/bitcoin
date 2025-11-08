@@ -37,13 +37,8 @@ def main():
         "-DAPPEND_CFLAGS='-O3 -g2'",
         "-DCMAKE_BUILD_TYPE=Debug",
         "-DWERROR=ON",
-        "-DWITH_ZMQ=ON",
-        "-DBUILD_GUI=ON",
-        "-DBUILD_BENCH=ON",
-        "-DBUILD_FUZZ_BINARY=ON",
-        "-DWITH_USDT=ON",
-        "-DBUILD_KERNEL_LIB=ON",
-        "-DBUILD_KERNEL_TEST=ON",
+        "--preset=dev-mode",
+        # Tolerate unused member functions in intermediate commits in a pull request
         "-DCMAKE_CXX_FLAGS=-Wno-error=unused-member-function",
     ])
     run(["cmake", "--build", "build", "-j", str(num_procs)])
