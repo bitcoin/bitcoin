@@ -16,7 +16,8 @@ export GOAL="install"
 export CI_LIMIT_STACK_SIZE=1
 export DOWNLOAD_PREVIOUS_RELEASES="true"
 export BITCOIN_CONFIG="\
- -DWITH_ZMQ=ON -DBUILD_GUI=ON -DREDUCE_EXPORTS=ON \
+ --preset=dev-mode \
+ -DREDUCE_EXPORTS=ON \
  -DCMAKE_BUILD_TYPE=Debug \
  -DCMAKE_C_FLAGS='-funsigned-char' \
  -DCMAKE_C_FLAGS_DEBUG='-g2 -O2' \
