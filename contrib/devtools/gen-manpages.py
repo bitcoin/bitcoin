@@ -8,6 +8,29 @@ import sys
 import tempfile
 import argparse
 
+
+def _read_cmake_cache(cache_path):
+    options = {}
+    with open(cache_path, encoding="utf-8") as cache:
+        for line in cache:
+            line = line.strip()
+            if not line or line.startswith("#") or line.startswith("//"):
+                continue
+            if "=" not in line or ":" not in line:
+                continue
+            lhs, value = line.split("=", 1)
+            key, _key_type = lhs.split(":", 1)
+            options[key] = value
+    return options
+
+
+def _cmake_truthy(value):
+    return value.upper() in {"ON", "TRUE", "YES"} or value == "1"
+
+def _env_truthy(var_name):
+    value = os.getenv(var_name)
+    return value is not None and _cmake_truthy(value)
+
 BINARIES = [
 'bin/bitcoin',
 'bin/bitcoind',
@@ -43,6 +66,34 @@ if not topdir:
 # Get input and output directories.
 builddir = os.getenv('BUILDDIR', os.path.join(topdir, 'build'))
 mandir = os.getenv('MANDIR', os.path.join(topdir, 'doc/man'))
+
+required_features = [
+    ("HAVE_SYSTEM", "system notifications (e.g. -alertnotify)", "ensure the build environment provides std::system (HAVE_SYSTEM=1)"),
+    ("ENABLE_WALLET", "wallet functionality", "configure CMake with -DENABLE_WALLET=ON"),
+    ("WITH_ZMQ", "ZMQ interface", "configure CMake with -DWITH_ZMQ=ON"),
+]
+
+cmake_cache_path = os.path.join(builddir, 'CMakeCache.txt')
+if not os.path.exists(cmake_cache_path):
+    print(f'ERROR: {cmake_cache_path} not found. Run this script against a CMake build directory.', file=sys.stderr)
+    sys.exit(1)
+
+if _env_truthy("SKIP_BUILD_OPTIONS_CHECK"):
+    print('WARNING: skipping build option checks; generated man pages may be incomplete.', file=sys.stderr)
+else:
+    cmake_options = _read_cmake_cache(cmake_cache_path)
+    missing_features = []
+    for cmake_var, description, hint in required_features:
+        value = cmake_options.get(cmake_var)
+        if value is None or not _cmake_truthy(value):
+            missing_features.append((cmake_var, description, hint))
+
+    if missing_features:
+        print('ERROR: binaries were not built with all interfaces required for generating complete man pages.', file=sys.stderr)
+        for cmake_var, description, hint in missing_features:
+            print(f'  - {cmake_var}: enables {description}; {hint}.', file=sys.stderr)
+        print('Rebuild the project with the options above enabled, then rerun gen-manpages.py, or export SKIP_BUILD_OPTIONS_CHECK=1 to bypass this safeguard.', file=sys.stderr)
+        sys.exit(1)
 
 # Verify that all the required binaries are usable, and extract copyright
 # message in a first pass.
