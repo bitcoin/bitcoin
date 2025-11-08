@@ -57,7 +57,7 @@ Run `cmake -B build -LH` to see the full list of available options.
 ```
 cmake -B build --preset vs2022-static          # It might take a while if the vcpkg binary cache is unpopulated or invalidated.
 cmake --build build --config Release           # Append "-j N" for N parallel jobs.
-ctest --test-dir build --build-config Release  # Append "-j N" for N parallel tests. Some tests are disabled if Python 3 is not available.
+ctest --test-dir build --build-config Release  # Append "-j N" for N parallel tests.
 cmake --install build --config Release         # Optional.
 ```
 
@@ -66,7 +66,7 @@ cmake --install build --config Release         # Optional.
 ```
 cmake -B build --preset vs2022 -DBUILD_GUI=OFF # It might take a while if the vcpkg binary cache is unpopulated or invalidated.
 cmake --build build --config Release           # Append "-j N" for N parallel jobs.
-ctest --test-dir build --build-config Release  # Append "-j N" for N parallel tests. Some tests are disabled if Python 3 is not available.
+ctest --test-dir build --build-config Release  # Append "-j N" for N parallel tests.
 ```
 
 ### 6. vcpkg-specific Issues and Workarounds
