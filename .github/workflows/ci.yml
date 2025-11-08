@@ -528,7 +528,7 @@ jobs:
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_tidy.sh'
 
-          - name: 'TSan, depends, no gui'
+          - name: 'TSan'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
