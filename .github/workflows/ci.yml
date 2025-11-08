@@ -487,11 +487,11 @@ jobs:
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_mac_cross_intel.sh'
 
-          - name: 'No wallet, libbitcoinkernel'
+          - name: 'No wallet'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_native_nowallet_libbitcoinkernel.sh'
+            file-env: './ci/test/00_setup_env_native_nowallet.sh'
 
           - name: 'i686, no IPC'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
