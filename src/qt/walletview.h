@@ -107,6 +107,8 @@ public Q_SLOTS:
     void backupWallet();
     /** Change encrypted wallet passphrase */
     void changePassphrase();
+    /** Show wallet mnemonic/recovery phrase */
+    void showMnemonic();
     /** Ask for passphrase to unlock wallet temporarily */
     void unlockWallet(bool fAnonymizeOnly=false);
     /** Lock wallet */

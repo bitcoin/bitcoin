@@ -110,7 +110,7 @@
              </sizepolicy>
             </property>
            <property name="placeholderText">
-            <string>short-unique-name</string>
+            <string notr="true">short-unique-name</string>
            </property>
             <property name="maximumHeight">
              <number>24</number>
@@ -136,7 +136,7 @@
              </sizepolicy>
             </property>
            <property name="placeholderText">
-            <string>https://example.com/my-proposal</string>
+            <string notr="true">https://example.com/my-proposal</string>
            </property>
             <property name="maximumHeight">
              <number>24</number>
@@ -255,7 +255,7 @@
           <item row="6" column="1">
            <widget class="QLabel" name="labelTotalValue">
             <property name="text">
-             <string>0</string>
+             <string notr="true">0</string>
             </property>
            </widget>
           </item>
@@ -342,7 +342,7 @@
        <item>
         <widget class="QLabel" name="labelValidateStatus">
          <property name="text">
-          <string>-</string>
+          <string notr="true">-</string>
          </property>
         </widget>
        </item>
@@ -427,7 +427,7 @@
          <item>
           <widget class="QLabel" name="labelTxidCaption">
            <property name="text">
-            <string>TxID:</string>
+            <string notr="true">TxID:</string>
            </property>
           </widget>
          </item>
@@ -437,7 +437,7 @@
             <bool>true</bool>
            </property>
            <property name="placeholderText">
-            <string>-</string>
+            <string notr="true">-</string>
            </property>
             <property name="maximumHeight">
              <number>24</number>
@@ -661,7 +661,7 @@
             <bool>true</bool>
            </property>
            <property name="placeholderText">
-            <string>-</string>
+            <string notr="true">-</string>
            </property>
             <property name="maximumHeight">
              <number>24</number>

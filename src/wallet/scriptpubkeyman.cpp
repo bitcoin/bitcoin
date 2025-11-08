@@ -222,7 +222,7 @@ bool LegacyScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key
             return false;
         }
 
-        if(!m_hd_chain.IsNull() && !m_hd_chain.IsCrypted()) {
+        if(!m_hd_chain.IsNull() && m_hd_chain.IsCrypted()) {
             // try to decrypt seed and make sure it matches
             CHDChain hdChainTmp;
             if (!DecryptHDChain(master_key, hdChainTmp) || (m_hd_chain.GetID() != hdChainTmp.GetSeedHash())) {

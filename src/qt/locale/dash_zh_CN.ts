@@ -66,14 +66,6 @@
         <translation>选择(&amp;H)</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation>正在发送地址</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation>正在接收地址</translation>
-    </message>
-    <message>
         <source>These are your Dash addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>这些是您要付款过去的Dash地址。在付款之前，务必要检查金额和收款地址是否正确。</translation>
     </message>
@@ -114,6 +106,14 @@
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
         <translation>尝试保存地址列表至 %1 时发生错误. 请重新执行操作.</translation>
+    </message>
+    <message>
+        <source>Sending addresses - %1</source>
+        <translation>发送地址 - %1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation>接收地址 - %1</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -285,8 +285,20 @@
         <translation>用于解密钱包的密码不正确。</translation>
     </message>
     <message>
+        <source>The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 23.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
+        <translation>用于解密钱包的密码不正确。其中包含空字符（即零字节）。如果密码是使用 23.0 之前版本的软件设置的，请仅使用第一个空字符之前（但不包括）的字符重试。如果成功，请设置新密码以避免将来出现此问题。</translation>
+    </message>
+    <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation>修改钱包密码成功。</translation>
+    </message>
+    <message>
+        <source>Passphrase change failed</source>
+        <translation>密码修改失败</translation>
+    </message>
+    <message>
+        <source>The old passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 23.0, please try again with only the characters up to — but not including — the first null character.</source>
+        <translation>用于解密钱包的旧密码不正确。其中包含空字符（即零字节）。如果密码是使用 23.0 之前版本的软件设置的，请仅使用第一个空字符之前（但不包括）的字符重试。</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -393,10 +405,6 @@
         <translation>&amp;从文件读取 PSBT…</translation>
     </message>
     <message>
-        <source>Load PSBT from clipboard…</source>
-        <translation>从剪切板读取 PSBT...</translation>
-    </message>
-    <message>
         <source>&amp;Sending addresses</source>
         <translation>&amp;发送地址</translation>
     </message>
@@ -427,10 +435,6 @@
     <message>
         <source>&amp;Window</source>
         <translation>&amp;窗口</translation>
-    </message>
-    <message>
-        <source>Minimize</source>
-        <translation>最小化</translation>
     </message>
     <message>
         <source>Zoom</source>
@@ -483,14 +487,6 @@
     <message>
         <source>Modify configuration options for %1</source>
         <translation>修改%1配置选项</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>显示 / 隐藏(&amp;S)</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>显示或隐藏主窗口</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
@@ -557,10 +553,6 @@
         <translation>显示钱包修复选项</translation>
     </message>
     <message>
-        <source>Open Wallet &amp;Configuration File</source>
-        <translation>打开钱包 &amp;配置文件</translation>
-    </message>
-    <message>
         <source>Open configuration file</source>
         <translation>打开配置文件</translation>
     </message>
@@ -615,8 +607,16 @@
         <translation>显示有关%1的相关信息</translation>
     </message>
     <message>
+        <source>Load PSBT from &amp;clipboard…</source>
+        <translation>从剪贴板加载 PSBT…</translation>
+    </message>
+    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>打开调试和诊断控制台</translation>
+    </message>
+    <message>
+        <source>Open &amp;wallet configuration file</source>
+        <translation>打开钱包配置文件(&amp;W)</translation>
     </message>
     <message>
         <source>Open a dash: URI</source>
@@ -625,6 +625,16 @@
     <message>
         <source>Create a new wallet</source>
         <translation>创建一个新钱包</translation>
+    </message>
+    <message>
+        <source>Restore Wallet…</source>
+        <extracomment>Name of the menu item that restores wallet from a backup file.</extracomment>
+        <translation>恢复钱包…</translation>
+    </message>
+    <message>
+        <source>Restore a wallet from a backup file</source>
+        <extracomment>Status tip for Restore Wallet menu item</extracomment>
+        <translation>从备份文件恢复钱包</translation>
     </message>
     <message>
         <source>Close all wallets</source>
@@ -647,8 +657,32 @@
         <translation>遮盖总览选项卡中的数值</translation>
     </message>
     <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation>钱包数据</translation>
+    </message>
+    <message>
+        <source>Load Wallet Backup</source>
+        <extracomment>The title for Restore Wallet File Windows</extracomment>
+        <translation>加载钱包备份</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
+        <translation>恢复钱包</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
+        <translation>钱包名称</translation>
+    </message>
+    <message>
         <source>&amp;Settings</source>
         <translation>设置(&amp;S)</translation>
+    </message>
+    <message>
+        <source>&amp;Minimize</source>
+        <translation>最小化(&amp;M)</translation>
     </message>
     <message>
         <source>&amp;Help</source>
@@ -665,6 +699,14 @@
     <message>
         <source>View Governance Proposals</source>
         <translation>查看治理提案</translation>
+    </message>
+    <message>
+        <source>&amp;Hide</source>
+        <translation>隐藏(&amp;H)</translation>
+    </message>
+    <message>
+        <source>S&amp;how</source>
+        <translation>显示(&amp;H)</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Dash network</source>
@@ -686,6 +728,14 @@
     <message>
         <source>Close Wallet…</source>
         <translation>关闭钱包…</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Blockchain Transaction</source>
+        <translation>读取部分签名的区块链交易</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Blockchain Transaction from clipboard</source>
+        <translation>从剪贴板读取部分签名的区块链交易</translation>
     </message>
     <message>
         <source>Create Wallet…</source>
@@ -738,10 +788,6 @@
     <message>
         <source>Processing blocks on disk…</source>
         <translation>正在处理硬盘中的区块…</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk…</source>
-        <translation>正在为硬盘中的区块重建索引…</translation>
     </message>
     <message>
         <source>Connecting to peers…</source>
@@ -897,10 +943,6 @@
         <translation>选择币</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation>零散金额：</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation>加上交易费用后：</translation>
     </message>
@@ -1001,10 +1043,6 @@
         <translation>复制字节</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation>复制零钱金额</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation>复制零钱</translation>
     </message>
@@ -1015,18 +1053,6 @@
     <message>
         <source>(%1 locked)</source>
         <translation>(%1 锁定)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation>是</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation>否</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation>当任何一个收款金额小于目前的零散金额上限时，文字会变红色。</translation>
     </message>
     <message>
         <source>Can vary +/- %1 duff(s) per input.</source>
@@ -1242,16 +1268,100 @@
         <translation>筛选提案列表</translation>
     </message>
     <message>
+        <source>Masternode Count:</source>
+        <translation>主节点数量：</translation>
+    </message>
+    <message>
+        <source>Number of masternodes this wallet can vote with (masternodes for which this wallet holds the voting key)</source>
+        <translation>此钱包可投票的主节点数量（此钱包持有投票密钥的主节点）</translation>
+    </message>
+    <message>
         <source>Proposal Count:</source>
         <translation>提案数量:</translation>
+    </message>
+    <message>
+        <source>Create Proposal</source>
+        <translation>创建提案</translation>
     </message>
     <message>
         <source>Filter by Title</source>
         <translation>按标题筛选</translation>
     </message>
     <message>
+        <source>Unavailable</source>
+        <translation>不可用</translation>
+    </message>
+    <message>
+        <source>A synced node and an unlocked wallet are required.</source>
+        <translation>需要已同步的节点和已解锁的钱包。</translation>
+    </message>
+    <message>
+        <source>Vote Yes</source>
+        <translation>投赞成票</translation>
+    </message>
+    <message>
+        <source>Vote No</source>
+        <translation>投反对票</translation>
+    </message>
+    <message>
+        <source>Vote Abstain</source>
+        <translation>投弃权票</translation>
+    </message>
+    <message>
         <source>Proposal Info: %1</source>
         <translation>提案信息: %1</translation>
+    </message>
+    <message>
+        <source>Voting Failed</source>
+        <translation>投票失败</translation>
+    </message>
+    <message>
+        <source>No wallet available.</source>
+        <translation>没有可用的钱包。</translation>
+    </message>
+    <message>
+        <source>No masternode voting keys found in wallet.</source>
+        <translation>在钱包中未找到主节点投票密钥。</translation>
+    </message>
+    <message>
+        <source>Please select a proposal to vote on.</source>
+        <translation>请选择要投票的提案。</translation>
+    </message>
+    <message>
+        <source>Unable to unlock wallet.</source>
+        <translation>无法解锁钱包。</translation>
+    </message>
+    <message>
+        <source>Unable to get masternode list. Please try again later.</source>
+        <translation>无法获取主节点列表。请稍后重试。</translation>
+    </message>
+    <message>
+        <source>Masternode %1 not found</source>
+        <translation>未找到主节点 %1</translation>
+    </message>
+    <message>
+        <source>Failed to sign vote for masternode %1</source>
+        <translation>为主节点 %1 签署投票失败</translation>
+    </message>
+    <message>
+        <source>Masternode %1: %2</source>
+        <translation>主节点 %1：%2</translation>
+    </message>
+    <message numerus="yes">
+        <source>Voted successfully %n time(s)</source>
+        <translation><numerusform>成功投票 %n 次</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>Failed to vote %n time(s)</source>
+        <translation><numerusform>投票失败 %n 次</numerusform></translation>
+    </message>
+    <message>
+        <source>Errors:</source>
+        <translation>错误：</translation>
+    </message>
+    <message>
+        <source>Voting Results</source>
+        <translation>投票结果</translation>
     </message>
 </context>
 <context>
@@ -1323,13 +1433,17 @@
         <source>Use a custom data directory:</source>
         <translation>使用自定义的数据目录：</translation>
     </message>
-    <message>
-        <source>(of %1 GB needed)</source>
-        <translation>(需要 %1 GB的空间)</translation>
+    <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation><numerusform>可用空间 %n GB</numerusform></translation>
     </message>
-    <message>
-        <source>(%1 GB needed for full chain)</source>
-        <translation>(完整区块链需要 %1 GB)</translation>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>（需要 %n GB）</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation><numerusform>（完整区块链需要 %n GB）</numerusform></translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -1359,6 +1473,13 @@
     <message>
         <source>Error</source>
         <translation>错误</translation>
+    </message>
+</context>
+<context>
+    <name>LoadWalletsActivity</name>
+    <message>
+        <source>Loading wallets…</source>
+        <translation>正在加载钱包…</translation>
     </message>
 </context>
 <context>
@@ -1553,6 +1674,11 @@
         <source>URI:</source>
         <translation>URI:</translation>
     </message>
+    <message>
+        <source>Paste address from clipboard</source>
+        <extracomment>Tooltip text for button that allows you to paste an address that is in your clipboard.</extracomment>
+        <translation>从剪贴板粘贴地址</translation>
+    </message>
 </context>
 <context>
     <name>OpenWalletActivity</name>
@@ -1662,6 +1788,16 @@
         <source>Subtract &amp;fee from amount by default</source>
         <extracomment>An Options window setting to set subtracting the fee from a sending amount as default.</extracomment>
         <translation>默认从金额中扣除 &amp;手续费</translation>
+    </message>
+    <message>
+        <source>Enable &amp;PSBT controls</source>
+        <extracomment>An options window setting to enable PSBT controls.</extracomment>
+        <translation>启用 PSBT 控件(&amp;P)</translation>
+    </message>
+    <message>
+        <source>Whether to show PSBT controls.</source>
+        <extracomment>Tooltip text for options window setting that enables PSBT controls.</extracomment>
+        <translation>是否显示 PSBT 控件。</translation>
     </message>
     <message>
         <source>Whether to keep the specified custom change address or not.</source>
@@ -1806,20 +1942,20 @@ https://explore.transifex.com/dash/dash/</source>
 https://explore.transifex.com/dash/dash/</translation>
     </message>
     <message>
+        <source>Third-party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items.&lt;br/&gt;%s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation>在交易选项卡中以上下文菜单项出现的第三方 URL（例如区块浏览器）。&lt;br/&gt;URL 中的 %s 将替换为交易哈希。多个 URL 用竖线 | 分隔。</translation>
+    </message>
+    <message>
+        <source>&amp;Third-party transaction URLs</source>
+        <translation>第三方交易 URL(&amp;T)</translation>
+    </message>
+    <message>
         <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
         <translation>此对话框中设置的选项被命令行或配置文件覆盖:</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>窗口被关闭时最小化而不是退出应用程序。当此选项启用时，应用程序只会在菜单中选择退出时退出。</translation>
-    </message>
-    <message>
-        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items.&lt;br/&gt;%s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>出现在交易的选项卡的上下文菜单项的第三方URL（例如，区块链查询网站）。&lt;br/&gt;URL中的 %s被替换为交易哈希。多个URL需用竖线 | 分隔。</translation>
-    </message>
-    <message>
-        <source>&amp;Third party transaction URLs</source>
-        <translation>&amp;第三方交易链接</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1963,14 +2099,22 @@ https://explore.transifex.com/dash/dash/</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
+        <extracomment>Window title text of pop-up window shown when the user has chosen to reset options.</extracomment>
         <translation>确认恢复缺省设置</translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
+        <extracomment>Text explaining that the settings changed will not come into effect until the client is restarted.</extracomment>
         <translation>更改生效需要重启客户端。</translation>
     </message>
     <message>
+        <source>Current settings will be backed up at "%1".</source>
+        <extracomment>Text explaining to the user that the client's current settings will be backed up at a specific location. %1 is a stand-in argument for the backup location's path.</extracomment>
+        <translation>当前设置将备份到"%1"。</translation>
+    </message>
+    <message>
         <source>Client will be shut down. Do you want to proceed?</source>
+        <extracomment>Text asking the user to confirm if they would like to proceed with a client shutdown.</extracomment>
         <translation>客户端即将关闭，您想继续吗？</translation>
     </message>
     <message>
@@ -2244,6 +2388,10 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>无法签名交易: %1</translation>
     </message>
     <message>
+        <source>Cannot sign inputs while wallet is locked.</source>
+        <translation>钱包被锁定时无法签署输入。</translation>
+    </message>
+    <message>
         <source>Could not sign any more inputs.</source>
         <translation>无法签名更多输入.</translation>
     </message>
@@ -2485,6 +2633,181 @@ Due to discontinued support, you should request the merchant to provide you with
     <message>
         <source>Status</source>
         <translation>状态</translation>
+    </message>
+</context>
+<context>
+    <name>ProposalWizard</name>
+    <message>
+        <source>Create Governance Proposal</source>
+        <translation>创建治理提案</translation>
+    </message>
+    <message>
+        <source>Enter proposal details</source>
+        <translation>输入提案详情</translation>
+    </message>
+    <message>
+        <source>A fee will be burned when you prepare the proposal.</source>
+        <translation>准备提案时将销毁一笔费用。</translation>
+    </message>
+    <message>
+        <source>Proposal &amp;name</source>
+        <translation>提案名称(&amp;N)</translation>
+    </message>
+    <message>
+        <source>&amp;Description URL</source>
+        <translation>描述 URL(&amp;D)</translation>
+    </message>
+    <message>
+        <source>Payment &amp;address</source>
+        <translation>支付地址(&amp;A)</translation>
+    </message>
+    <message>
+        <source>Payment &amp;amount</source>
+        <translation>支付金额(&amp;A)</translation>
+    </message>
+    <message>
+        <source>The amount to request in a single payment</source>
+        <translation>单次支付中请求的金额</translation>
+    </message>
+    <message>
+        <source>&amp;First payment</source>
+        <translation>首次支付(&amp;F)</translation>
+    </message>
+    <message>
+        <source>Pa&amp;yments</source>
+        <translation>支付次数(&amp;Y)</translation>
+    </message>
+    <message>
+        <source>To&amp;tal amount</source>
+        <translation>总金额(&amp;T)</translation>
+    </message>
+    <message>
+        <source>Proposal &amp;fee</source>
+        <translation>提案费用(&amp;F)</translation>
+    </message>
+    <message>
+        <source>Next</source>
+        <translation>下一步</translation>
+    </message>
+    <message>
+        <source>Review proposal JSON and validate.</source>
+        <translation>检查提案 JSON 并验证。</translation>
+    </message>
+    <message>
+        <source>Hex-encoded JSON</source>
+        <translation>十六进制编码的 JSON</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>返回</translation>
+    </message>
+    <message>
+        <source>Validate</source>
+        <translation>验证</translation>
+    </message>
+    <message>
+        <source>Prepare (burn fee) and wait for confirmations.</source>
+        <translation>准备（销毁费用）并等待确认。</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation>复制</translation>
+    </message>
+    <message>
+        <source>At 1/6 confirmations: can be relayed and queued. At 6/6: accepted and processed.</source>
+        <translation>1/6 确认时：可以中继和排队。6/6 时：接受并处理。</translation>
+    </message>
+    <message>
+        <source>Confirmations progress</source>
+        <translation>确认进度</translation>
+    </message>
+    <message>
+        <source>Shows progress toward the required number of confirmations for the proposal fee transaction.</source>
+        <translation>显示提案费用交易所需确认数的进度。</translation>
+    </message>
+    <message>
+        <source>Estimated time remaining: -</source>
+        <translation>预计剩余时间：-</translation>
+    </message>
+    <message>
+        <source>Prepare Proposal</source>
+        <translation>准备提案</translation>
+    </message>
+    <message>
+        <source>You can submit after 1 confirmation. At 6 confirmations it is accepted and processed.</source>
+        <translation>1 次确认后即可提交。6 次确认后将被接受并处理。</translation>
+    </message>
+    <message>
+        <source>Proposal ID:</source>
+        <translation>提案 ID：</translation>
+    </message>
+    <message>
+        <source>Submit Proposal</source>
+        <translation>提交提案</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>关闭</translation>
+    </message>
+    <message>
+        <source>Valid</source>
+        <translation>有效</translation>
+    </message>
+    <message>
+        <source>Invalid: %1</source>
+        <translation>无效：%1</translation>
+    </message>
+    <message>
+        <source>Burn %1</source>
+        <translation>销毁 %1</translation>
+    </message>
+    <message>
+        <source>Burn %1 to create the fee transaction?</source>
+        <translation>销毁 %1 以创建费用交易？</translation>
+    </message>
+    <message>
+        <source>Prepare failed</source>
+        <translation>准备失败</translation>
+    </message>
+    <message>
+        <source>Confirmations: %1 / %2 required</source>
+        <translation>确认数：%1 / 需要 %2</translation>
+    </message>
+    <message>
+        <source>Estimated time remaining: Ready</source>
+        <translation>预计剩余时间：就绪</translation>
+    </message>
+    <message numerus="yes">
+        <source>Estimated time remaining: %n minute(s)</source>
+        <translation><numerusform>预计剩余时间：%n 分钟</numerusform></translation>
+    </message>
+    <message>
+        <source>Your proposal was submitted successfully.</source>
+        <translation>您的提案已成功提交。</translation>
+    </message>
+    <message>
+        <source>Already submitted</source>
+        <translation>已提交</translation>
+    </message>
+    <message>
+        <source>This proposal has already been submitted.</source>
+        <translation>此提案已经提交。</translation>
+    </message>
+    <message>
+        <source>Submission failed</source>
+        <translation>提交失败</translation>
+    </message>
+    <message>
+        <source>Proposal submitted</source>
+        <translation>提案已提交</translation>
+    </message>
+    <message>
+        <source>A fee of %1 will be burned when you prepare the proposal.</source>
+        <translation>准备提案时将销毁 %1 的费用。</translation>
+    </message>
+    <message>
+        <source>Prepare (burn %1) and wait for %2 confirmations.</source>
+        <translation>准备（销毁 %1）并等待 %2 次确认。</translation>
     </message>
 </context>
 <context>
@@ -2877,14 +3200,6 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>版本</translation>
     </message>
     <message>
-        <source>Whether the peer requested us to relay transactions.</source>
-        <translation>节点是否要求进行中继交易.</translation>
-    </message>
-    <message>
-        <source>Wants Tx Relay</source>
-        <translation>想要交易中继</translation>
-    </message>
-    <message>
         <source>High bandwidth BIP152 compact block relay: %1</source>
         <translation>高带宽 BIP152 紧凑区块中继: %1</translation>
     </message>
@@ -2990,6 +3305,14 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>要指定的区块目录不是默认路径, 请使用 '%1' 选项.</translation>
     </message>
     <message>
+        <source>Local Addresses</source>
+        <translation>本地地址</translation>
+    </message>
+    <message>
+        <source>Network addresses that your Dash node is currently using to communicate with other nodes.</source>
+        <translation>您的 Dash 节点当前用于与其他节点通信的网络地址。</translation>
+    </message>
+    <message>
         <source>Number of regular Masternodes</source>
         <translation>常规主节点数量</translation>
     </message>
@@ -3080,6 +3403,14 @@ Due to discontinued support, you should request the merchant to provide you with
     <message>
         <source>Services</source>
         <translation>服务</translation>
+    </message>
+    <message>
+        <source>Whether we relay transactions to this peer.</source>
+        <translation>是否向此对等节点中继交易。</translation>
+    </message>
+    <message>
+        <source>Transaction Relay</source>
+        <translation>交易中继</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -3228,6 +3559,10 @@ Due to discontinued support, you should request the merchant to provide you with
     <message>
         <source>Network activity disabled</source>
         <translation>网络活动已禁用</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>无</translation>
     </message>
     <message>
         <source>Total: %1 (Enabled: %2)</source>
@@ -3551,6 +3886,34 @@ For more information on using this console, type %6.
     </message>
 </context>
 <context>
+    <name>RestoreWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation>恢复钱包</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation>正在恢复钱包 &lt;b&gt;%1&lt;/b&gt;…</translation>
+    </message>
+    <message>
+        <source>Restore wallet failed</source>
+        <extracomment>Title of message box which is displayed when the wallet could not be restored.</extracomment>
+        <translation>恢复钱包失败</translation>
+    </message>
+    <message>
+        <source>Restore wallet warning</source>
+        <extracomment>Title of message box which is displayed when the wallet is restored with some warning.</extracomment>
+        <translation>恢复钱包警告</translation>
+    </message>
+    <message>
+        <source>Restore wallet message</source>
+        <extracomment>Title of message box which is displayed when the wallet is successfully restored.</extracomment>
+        <translation>恢复钱包消息</translation>
+    </message>
+</context>
+<context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
@@ -3583,10 +3946,6 @@ For more information on using this console, type %6.
     <message>
         <source>Fee:</source>
         <translation>费用：</translation>
-    </message>
-    <message>
-        <source>Dust:</source>
-        <translation>零散金额：</translation>
     </message>
     <message>
         <source>Inputs…</source>
@@ -3713,10 +4072,6 @@ For more information on using this console, type %6.
         <translation>复制字节</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation>复制零散金额</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation>复制找零金额</translation>
     </message>
@@ -3725,20 +4080,12 @@ For more information on using this console, type %6.
         <translation>%1 (%2 区块)</translation>
     </message>
     <message>
-        <source>This will produce a Partially Signed Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation>它将生成一个部分签名交易 (PSBT), 您可以将其保存或复制, 然后使用例如离线的 %1 钱包, 或兼容 PSBT 的硬件钱包进行签名.</translation>
-    </message>
-    <message>
         <source>using</source>
         <translation>使用</translation>
     </message>
     <message>
         <source>%1 to %2</source>
         <translation>%1 到 %2</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to send?</source>
-        <translation>您确定要发出吗？</translation>
     </message>
     <message>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
@@ -3763,10 +4110,6 @@ For more information on using this console, type %6.
     <message>
         <source>%1 to '%2'</source>
         <translation>%1 到 '%2'</translation>
-    </message>
-    <message>
-        <source>Do you want to draft this transaction?</source>
-        <translation>您想要起草这笔交易吗?</translation>
     </message>
     <message>
         <source>%1 funds only</source>
@@ -3817,14 +4160,6 @@ For more information on using this console, type %6.
         <translation>确认发送货币</translation>
     </message>
     <message>
-        <source>Confirm transaction proposal</source>
-        <translation>确认交易提案</translation>
-    </message>
-    <message>
-        <source>Create Unsigned</source>
-        <translation>创建未签名的</translation>
-    </message>
-    <message>
         <source>Save Transaction Data</source>
         <translation>保存交易数据</translation>
     </message>
@@ -3837,8 +4172,28 @@ For more information on using this console, type %6.
         <translation>仅可见余额:</translation>
     </message>
     <message>
-        <source>Send</source>
-        <translation>发送</translation>
+        <source>Creates a Partially Signed Blockchain Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>创建一个部分签名的区块链交易（PSBT），以与例如离线 %1 钱包或与PSBT兼容的硬件钱包。</translation>
+    </message>
+    <message>
+        <source>Do you want to create this transaction?</source>
+        <extracomment>Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</extracomment>
+        <translation>您想创建这笔交易吗？</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed Blockchain Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can only create a PSBT. This string is displayed when private keys are disabled and an external signer is not available.</extracomment>
+        <translation>请检查您的交易提案。这将生成一个部分签名区块链交易（PSBT），您可以保存或复制它，然后使用例如离线 %1 钱包或兼容 PSBT 的硬件钱包进行签名。</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction. You can create and send this transaction or create a Partially Signed Blockchain Transaction (PSBT), which you can save or copy and then sign with, e.g., an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can send their transaction or create a PSBT. This string is displayed when both private keys and PSBT controls are enabled.</extracomment>
+        <translation>请检查您的交易。您可以创建并发送此交易，或创建一个部分签名区块链交易（PSBT），您可以保存或复制它，然后使用例如离线 %1 钱包或兼容 PSBT 的硬件钱包进行签名。</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction.</source>
+        <extracomment>Text to prompt a user to review the details of the transaction they are attempting to send.</extracomment>
+        <translation>请检查您的交易。</translation>
     </message>
     <message>
         <source>To review recipient list click "Show Details…"</source>
@@ -3968,21 +4323,16 @@ For more information on using this console, type %6.
         <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dash network.</source>
         <translation>附加在Dash付款协议URI中的信息，会和交易内容一并存储，可供您参考。提示：此信息不会发送到Dash网络上。</translation>
     </message>
+</context>
+<context>
+    <name>SendConfirmationDialog</name>
     <message>
-        <source>This is an unauthenticated payment request.</source>
-        <translation>这是一个未经验证的支付请求。</translation>
+        <source>Send</source>
+        <translation>发送</translation>
     </message>
     <message>
-        <source>This is an authenticated payment request.</source>
-        <translation>这是一个已经验证的支付请求。</translation>
-    </message>
-    <message>
-        <source>Pay To:</source>
-        <translation>支付给：</translation>
-    </message>
-    <message>
-        <source>Memo:</source>
-        <translation>便条：</translation>
+        <source>Create Unsigned</source>
+        <translation>创建未签名交易</translation>
     </message>
 </context>
 <context>
@@ -4191,20 +4541,9 @@ For more information on using this console, type %6.
 </context>
 <context>
     <name>TransactionDesc</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>到下%n个区块产生前可修改</numerusform></translation>
-    </message>
-    <message>
-        <source>Open until %1</source>
-        <translation>至 %1 个区块时开启</translation>
-    </message>
-    <message>
-        <source>conflicted</source>
-        <translation>发现冲突</translation>
-    </message>
     <message>
         <source>0/unconfirmed, %1</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that is in the memory pool.</extracomment>
         <translation>0/未确认，%1</translation>
     </message>
     <message>
@@ -4217,22 +4556,32 @@ For more information on using this console, type %6.
     </message>
     <message>
         <source>abandoned</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an abandoned transaction.</extracomment>
         <translation>已丢弃</translation>
     </message>
     <message>
+        <source>conflicted with a transaction with %1 confirmations</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that conflicts with a confirmed transaction.</extracomment>
+        <translation>与有 %1 次确认的交易冲突</translation>
+    </message>
+    <message>
         <source>%1/unconfirmed</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in at least one block, but less than 6 blocks, and still not locked via ChainLocks.</extracomment>
         <translation>%1/未确认</translation>
     </message>
     <message>
         <source>%1 confirmations</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in 6 or more blocks or locked via ChainLocks.</extracomment>
         <translation>确认%1次</translation>
     </message>
     <message>
         <source>locked via ChainLocks</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in at least one block and has been locked by ChainLocks.</extracomment>
         <translation>经链锁锁定</translation>
     </message>
     <message>
         <source>verified via InstantSend</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that has been locked by InstantSend.</extracomment>
         <translation>经即时支付验证</translation>
     </message>
     <message>
@@ -4384,14 +4733,6 @@ For more information on using this console, type %6.
     <message>
         <source>Address / Label</source>
         <translation>地址/标签</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>到下%n个区块产生前可修改</numerusform></translation>
-    </message>
-    <message>
-        <source>Open until %1</source>
-        <translation>至 %1 个区块时开启</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
@@ -4645,6 +4986,11 @@ For more information on using this console, type %6.
         <translation>显示地址 &amp;二维码</translation>
     </message>
     <message>
+        <source>Show in %1</source>
+        <extracomment>Transactions table context menu action to show the selected transaction in a third-party block explorer. %1 is a stand-in argument for the URL of the explorer.</extracomment>
+        <translation>在 %1 中显示</translation>
+    </message>
+    <message>
         <source>Export Transaction History</source>
         <translation>导出交易历史</translation>
     </message>
@@ -4837,10 +5183,6 @@ Go to File &gt; Open Wallet to load a wallet.
 <context>
     <name>dash-core</name>
     <message>
-        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
-        <translation>费用估算失败. 备用费用已禁用. 请等待几个区块或启用-fallbackfee。</translation>
-    </message>
-    <message>
         <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
         <translation>如果此前包未完全关闭并且上次使用较新版本的Berkeley DB的构建加载, 则可能发生此错误. 如果是这样, 请使用上次加载此钱包的软件.</translation>
     </message>
@@ -4913,20 +5255,12 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>监听端口失败。如果想使用此项，可设定-listen=0。</translation>
     </message>
     <message>
-        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation>-maxtxfee 设定了很高的金额！这是您一次交易就有可能付出的手续费。</translation>
-    </message>
-    <message>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
         <translation>未确认的面额化输出，将等待他们确认后继续。</translation>
     </message>
     <message>
         <source>Invalid -socketevents ('%s') specified. Only these modes are supported: %s</source>
         <translation>指定的 -socketevents ('%s') 无效. 仅支持以下模式: %s</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
-        <translation>设定 -maxtxfee=&lt;金额&gt;  的金额无效&lt;amount&gt;：'%s' (必须大于等于最低中继手续费%s 以避免交易无法被确认)</translation>
     </message>
     <message>
         <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
@@ -4937,12 +5271,24 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>管理验证启动后不能禁用交易索引. 可以使用-disablegovernance命令行选项进行关闭, 或者启用交易索引.</translation>
     </message>
     <message>
+        <source>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</source>
+        <translation>未支撑的类别记录级别 -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. 有效的 类别: %s. 有效的记录级别: %s.</translation>
+    </message>
+    <message>
         <source>Can't mix: no compatible inputs found!</source>
         <translation>无法混合：没有找到兼容的输入！</translation>
     </message>
     <message>
         <source>Entry exceeds maximum size.</source>
         <translation>条目超过最大值。</translation>
+    </message>
+    <message>
+        <source>Error upgrading evo database for EHF</source>
+        <translation>升级EHF的 evo 数据库时出错</translation>
+    </message>
+    <message>
+        <source>Failed to commit Evo database</source>
+        <translation>无法提交资料到 Evo 数据库</translation>
     </message>
     <message>
         <source>Found enough users, signing ( waiting %s )</source>
@@ -4969,16 +5315,12 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>余额不足。</translation>
     </message>
     <message>
-        <source>Invalid amount for -discardfee=&lt;amount&gt;: '%s'</source>
-        <translation>设定 -discardfee=&lt;金额&gt; 的金额无效：'%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation>设定 -paytxfee=&lt;金额&gt;  的金额无效：'%s' (至少要有%s)</translation>
-    </message>
-    <message>
         <source>Invalid minimum number of spork signers specified with -minsporkkeys</source>
         <translation>无效的最少数叉勺签名人以  -minsporkkeys 标识</translation>
+    </message>
+    <message>
+        <source>Listening for incoming connections failed (listen returned error %s)</source>
+        <translation>监听外来连接失败（侦听返回错误%s）</translation>
     </message>
     <message>
         <source>Lock is already in place.</source>
@@ -5037,12 +5379,20 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>正在同步治理对象…</translation>
     </message>
     <message>
+        <source>Transaction change output index out of range</source>
+        <translation>交易变更输出索引超出范围</translation>
+    </message>
+    <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation>无法启动HTTP服务，查看日志获取更多信息。</translation>
     </message>
     <message>
         <source>Unknown response.</source>
         <translation>未知响应。</translation>
+    </message>
+    <message>
+        <source>Unsupported global logging level -loglevel=%s. Valid values: %s.</source>
+        <translation>不支持的全局记录级别 -loglevel=%s. 有效值: %s.</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
@@ -5107,10 +5457,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>网络版本字符串的总长度 (%i) 超过最大长度 (%i) 了。请减少 uacomment 参数的数量或大小。</translation>
-    </message>
-    <message>
-        <source>Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.</source>
-        <translation>交易需要一个零钱地址, 但我们无法生成它. 请先联系 keypoolrefill.</translation>
     </message>
     <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
@@ -5189,10 +5535,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>错误: 没有可用地址.</translation>
     </message>
     <message>
-        <source>Exceeded max tries.</source>
-        <translation>超过最大尝试次数.</translation>
-    </message>
-    <message>
         <source>Failed to create backup %s!</source>
         <translation>无法创建备份%s！</translation>
     </message>
@@ -5231,10 +5573,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Invalid P2P permission: '%s'</source>
         <translation>无效的 P2P 权限: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
-        <translation>设定-fallbackfee=&lt;amount&gt;的金额无效：'%s'</translation>
     </message>
     <message>
         <source>Invalid masternodeblsprivkey. Please see documentation.</source>
@@ -5373,20 +5711,12 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>无法打开 %s 来写入</translation>
     </message>
     <message>
-        <source>Unable to parse -maxuploadtarget: '%s' (possible integer overflow?)</source>
-        <translation>无法解析 -maxuploadtarget: '%s' (可能整数溢出?)</translation>
-    </message>
-    <message>
         <source>Unknown -blockfilterindex value %s.</source>
         <translation>未知 -blockfilterindex 值 %s.</translation>
     </message>
     <message>
         <source>Unknown new rules activated (versionbit %i)</source>
         <translation>未知的新规则被激活(versionbit %i)</translation>
-    </message>
-    <message>
-        <source>Upgrading UTXO database</source>
-        <translation>升级UTXO数据库</translation>
     </message>
     <message>
         <source>Verifying blocks…</source>
@@ -5449,10 +5779,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>无法锁定数据目录 %s。%s 可能已经在运行。</translation>
     </message>
     <message>
-        <source>Cannot upgrade a non HD wallet from version %i to version %i which is non-HD wallet. Use upgradetohd RPC</source>
-        <translation>无法将非 HD 钱包从版本 %i 升级到版本 %i, 后者非 HD 钱包. 请使用 upgradetohd RPC</translation>
-    </message>
-    <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
         <translation>在MIT协议下分发，参见附带的 %s 文件或 %s</translation>
     </message>
@@ -5485,6 +5811,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>无法重命名无效的 peers.dat 文件. 请移动或删除它后再尝试.</translation>
     </message>
     <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable %s.</source>
+        <translation>手续费估算失败。备用费用已禁用。请等待几个区块或启用 %s。</translation>
+    </message>
+    <message>
         <source>File %s already exists. If you are sure this is what you want, move it out of the way first.</source>
         <translation>文件 %s 已经存在. 如果您确定这是您想要, 请先将其移走.</translation>
     </message>
@@ -5495,6 +5825,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?</source>
         <translation>devnet的创世区块错误或未找到. devnet的数据目录错误?</translation>
+    </message>
+    <message>
+        <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation>%s=&lt;amount&gt; 的金额无效：'%s'（必须至少为最小中继费用 %s 以防止交易卡住）</translation>
     </message>
     <message>
         <source>Invalid or corrupt peers.dat (%s). If you believe this is a bug, please report it to %s. As a workaround, you can move the file (%s) out of the way (rename, move, or delete) to have a new one created on the next start.</source>
@@ -5513,12 +5847,20 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>没有提供钱包文件格式. 要使用 createfromdump, 必须提供 -format=&lt;format&gt;.</translation>
     </message>
     <message>
+        <source>Outbound connections restricted to CJDNS (-onlynet=cjdns) but -cjdnsreachable is not provided</source>
+        <translation>出站连接限制为 CJDNS (-onlynet=cjdns)，但未提供 -cjdnsreachable</translation>
+    </message>
+    <message>
         <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is explicitly forbidden: -onion=0</source>
         <translation>出站连接限制为 Tor 网络 (-onlynet=onion), 但用于访问 Tor 网络的代理被明确禁用: -onion=0.</translation>
     </message>
     <message>
         <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is not provided: none of -proxy, -onion or -listenonion is given</source>
         <translation>出站连接限制为 Tor 网络 (-onlynet=onion), 但未提供访问 Tor 网络的代理: 没有指定 -proxy, -onion 或 -listenonion 参数</translation>
+    </message>
+    <message>
+        <source>Outbound connections restricted to i2p (-onlynet=i2p) but -i2psam is not provided</source>
+        <translation>出站连接限制为 i2p (-onlynet=i2p)，但未提供 -i2psam</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
@@ -5533,10 +5875,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>修剪模式与 -reindex-chainstate 不兼容. 使用完整的 -reindex.</translation>
     </message>
     <message>
-        <source>The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
-        <translation>区块索引数据库包含一个遗留的 'txindex'. 要清理占用的磁盘空间, 请执行完整的 -reindex, 否则忽略此错误. 此错误信息将不会再显示.</translation>
-    </message>
-    <message>
         <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
         <translation>这是您能支付的最大交易手续费(除正常费用外), 用于避开部分交易优先处理, 而非常规的选择.</translation>
     </message>
@@ -5549,12 +5887,20 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>这是在费用估计不可用时您可能会支付的交易费。</translation>
     </message>
     <message>
+        <source>Transaction requires one destination of non-0 value, a non-0 feerate, or a pre-selected input</source>
+        <translation>交易需要一个非零值的目标地址、非零的费率或预先选定的输入</translation>
+    </message>
+    <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
         <translation>无法重播区块. 您需要使用 -reindex-chainstate命令来重建数据库.</translation>
     </message>
     <message>
         <source>Unknown wallet file format "%s" provided. Please provide one of "bdb" or "sqlite".</source>
         <translation>提供了未知的钱包文件格式 "%s". 请提供  "bdb" 或 "sqlite"中的一个.</translation>
+    </message>
+    <message>
+        <source>Unsupported chainstate database format found. Please restart with -reindex-chainstate. This will rebuild the chainstate database.</source>
+        <translation>发现不支持的链状态数据库格式。请使用 -reindex-chainstate 重启。这将重建链状态数据库。</translation>
     </message>
     <message>
         <source>Warning: Dumpfile wallet format "%s" does not match command line specified format "%s".</source>
@@ -5597,8 +5943,28 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>当 -devnet 和 -server 被指定时, 必须指定 -rpcport</translation>
     </message>
     <message>
+        <source>-statsbatchsize cannot be configured with a negative value.</source>
+        <translation>-statsbatchsize 不能配置为负值。</translation>
+    </message>
+    <message>
+        <source>-statsduration cannot be configured with a negative value.</source>
+        <translation>-statsduration 不能配置为负值。</translation>
+    </message>
+    <message>
         <source>A fatal internal error occurred, see debug.log for details</source>
         <translation>发生了严重的内部错误, 请参阅debug.log了解详细信息</translation>
+    </message>
+    <message>
+        <source>Cannot create socket (socket() returned error %s)</source>
+        <translation>无法创建套接字（socket() 返回错误 %s）</translation>
+    </message>
+    <message>
+        <source>Cannot get socket address for %s</source>
+        <translation>无法获取 %s 的套接字地址</translation>
+    </message>
+    <message>
+        <source>Cannot init Statsd client</source>
+        <translation>无法初始化 Statsd 客户端</translation>
     </message>
     <message>
         <source>Cannot resolve -%s address: '%s'</source>
@@ -5643,10 +6009,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Error reading next record from wallet database</source>
         <translation>从钱包数据库读取下个记录失败</translation>
-    </message>
-    <message>
-        <source>Error upgrading chainstate database</source>
-        <translation>升级链状态数据库出错</translation>
     </message>
     <message>
         <source>Loading P2P addresses…</source>
@@ -5769,8 +6131,68 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>%s 已损坏. 请尝试使用钱包工具 dash-wallet 来挽救或恢复备份.</translation>
     </message>
     <message>
+        <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>%s 设置得非常高！如此高的费用可能会在单笔交易中支付。</translation>
+    </message>
+    <message>
+        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any Dash Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <translation>%s 请求在端口上监听 %u. 该端口被认为是"不良"，因此任何达世币核心程序的对等用户不太可能连接它。有关详细信息和完整列表，请参见 doc/p2p-bad-ports.md.</translation>
+    </message>
+    <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
+        <translation>无法提供特定的连接，并让Addrman同时查找传出连接。</translation>
+    </message>
+    <message>
+        <source>Failed to upgrade Evo database</source>
+        <translation>升级 Evo 数据库失败</translation>
+    </message>
+    <message>
+        <source>Fee needed &gt; fee paid</source>
+        <translation>所需费用 &gt; 已付费用</translation>
+    </message>
+    <message>
+        <source>Host %s on unsupported network</source>
+        <translation>主机 %s 在不支持的网络上</translation>
+    </message>
+    <message>
+        <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least %s)</source>
+        <translation>%s=&lt;amount&gt; 的金额无效：'%s'（必须至少为 %s）</translation>
+    </message>
+    <message>
+        <source>Invalid amount for %s=&lt;amount&gt;: '%s'</source>
+        <translation>%s=&lt;amount&gt; 的金额无效：'%s'</translation>
+    </message>
+    <message>
+        <source>Invalid port specified in %s: '%s'</source>
+        <translation>在 %s 中指定的端口无效：'%s'</translation>
+    </message>
+    <message>
         <source>Last successful action was too recent.</source>
         <translation>上一次成功操作才完成。</translation>
+    </message>
+    <message>
+        <source>Missing solving data for estimating transaction size</source>
+        <translation>缺少用于估算交易大小的解决数据</translation>
+    </message>
+    <message>
+        <source>No host specified</source>
+        <translation>未指定主机</translation>
+    </message>
+    <message>
+        <source>No host specified, malformed URL</source>
+        <translation>未指定主机，格式错误的 URL</translation>
+    </message>
+    <message>
+        <source>No text before the scheme delimiter, malformed URL</source>
+        <translation>方案分隔符之前没有文本，格式错误的 URL</translation>
+    </message>
+    <message>
+        <source>Port must be between %d and %d, supplied %d</source>
+        <translation>端口必须在 %d 和 %d 之间，提供的是 %d</translation>
+    </message>
+    <message>
+        <source>Socket not initialized, cannot send message</source>
+        <translation>套接字未初始化，无法发送消息</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>
@@ -5801,6 +6223,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>交易费用过高。</translation>
     </message>
     <message>
+        <source>Transaction needs a change address, but we can't generate it.</source>
+        <translation>交易需要找零地址，但我们无法生成它。</translation>
+    </message>
+    <message>
         <source>Transaction not valid.</source>
         <translation>交易无效。</translation>
     </message>
@@ -5821,6 +6247,18 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>无法找到足够的未面额化资金来完成本次交易.</translation>
     </message>
     <message>
+        <source>Unable to lookup host %s</source>
+        <translation>无法查找主机 %s</translation>
+    </message>
+    <message>
+        <source>Unable to parse -maxuploadtarget: '%s'</source>
+        <translation>无法解析 -maxuploadtarget：'%s'</translation>
+    </message>
+    <message>
+        <source>Unable to send message to %s (::sendto() returned error %s)</source>
+        <translation>无法向 %s 发送消息（::sendto() 返回错误 %s）</translation>
+    </message>
+    <message>
         <source>Unable to sign spork message, wrong key?</source>
         <translation>无法签署交叉信息，错误的密钥？</translation>
     </message>
@@ -5831,6 +6269,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Unknown state: id = %u</source>
         <translation>未知状态：id = %u</translation>
+    </message>
+    <message>
+        <source>Unsupported URL scheme, must begin with udp://</source>
+        <translation>不支持的 URL 方案，必须以 udp:// 开头</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>

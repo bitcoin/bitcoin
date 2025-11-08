@@ -1088,4 +1088,88 @@ QScrollBar:right-arrow:disabled {
     image: url(':/images/arrow_light_right_hover');
 }
 
+/**
+ * CreateWalletDialog (Dark Theme)
+ */
+
+QDialog#CreateWalletDialog QLabel,
+QDialog#CreateWalletDialog QCheckBox {
+    color: #bbbbbb; /* slightly lighter labels */
+}
+
+QDialog#CreateWalletDialog QToolButton#advanced_toggle_button {
+    color: #bdbdbd !important; /* lighter chevron/text */
+}
+
+QDialog#CreateWalletDialog QToolButton#advanced_toggle_button:hover {
+    color: #e0e0e0 !important; /* lighter on hover for better feedback */
+}
+
+QDialog#CreateWalletDialog QGroupBox#groupBox {
+    background-color: #2a2a2a; /* card background */
+    border: 1px solid #3c3c3c; /* subtle outline */
+    border-radius: 8px;
+    padding: 2px 12px 12px 12px; /* minimal top padding */
+    margin-top: 0px; /* remove extra gap above card */
+}
+
+QDialog#CreateWalletDialog QGroupBox#groupBox::title {
+    padding: 0px; /* ensure no extra space for (empty) title */
+}
+
+QDialog#CreateWalletDialog QLineEdit:focus {
+    border-color: #4da3ff; /* subtle macOS-like blue */
+}
+
+/**
+ * MnemonicVerificationDialog (Dark Theme)
+ */
+
+QDialog#MnemonicVerificationDialog QLabel {
+    color: #c7c7c7; /* light text for dark theme */
+}
+
+QDialog#MnemonicVerificationDialog QCheckBox {
+    color: #c7c7c7; /* light text for checkbox */
+}
+
+QDialog#MnemonicVerificationDialog QCheckBox#writtenDownCheckbox {
+    color: #c7c7c7; /* ensure checkbox text is visible */
+}
+
+QDialog#MnemonicVerificationDialog QScrollArea#mnemonicScroll {
+    background-color: #2d2d2e !important; /* dark background for scroll area */
+    border: 1px solid #3c3c3c !important; /* subtle border */
+    border-radius: 8px;
+}
+
+QDialog#MnemonicVerificationDialog QScrollArea#mnemonicScroll QWidget#mnemonicGridWidget {
+    background-color: #2d2d2e !important; /* dark background matching scroll area */
+}
+
+QDialog#MnemonicVerificationDialog QWidget#mnemonicGridWidget {
+    background-color: #2d2d2e !important; /* dark background matching scroll area */
+}
+
+QDialog#MnemonicVerificationDialog QScrollArea#mnemonicScroll QWidget#mnemonicGridWidget QLabel {
+    color: #c7c7c7 !important; /* ensure grid labels are visible */
+    background-color: transparent !important;
+}
+
+QDialog#MnemonicVerificationDialog QLineEdit {
+    background-color: #2d2d2e; /* dark background for input fields */
+    border-color: #00599a;
+    color: #c7c7c7;
+}
+
+QDialog#MnemonicVerificationDialog QLineEdit:focus {
+    border-color: #4da3ff; /* subtle macOS-like blue */
+}
+
+QDialog#MnemonicVerificationDialog QLabel#word1Status,
+QDialog#MnemonicVerificationDialog QLabel#word2Status,
+QDialog#MnemonicVerificationDialog QLabel#word3Status {
+    color: #c7c7c7; /* ensure status labels are visible */
+}
+
 </os>

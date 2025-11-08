@@ -38,7 +38,7 @@ bool CChainstateHelper::HasChainLock(int nHeight, const uint256& blockHash) cons
     return clhandler.HasChainLock(nHeight, blockHash);
 }
 
-int32_t CChainstateHelper::GetBestChainLockHeight() const { return clhandler.GetBestChainLock().getHeight(); }
+int32_t CChainstateHelper::GetBestChainLockHeight() const { return clhandler.GetBestChainLockHeight(); }
 
 /** Passthrough functions to CInstantSendManager */
 std::optional<std::pair</*islock_hash=*/uint256, /*txid=*/uint256>> CChainstateHelper::ConflictingISLockIfAny(

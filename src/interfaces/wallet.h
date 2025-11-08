@@ -297,6 +297,9 @@ public:
     //! Return whether is a legacy wallet
     virtual bool isLegacy() = 0;
 
+    //! Get mnemonic phrase from wallet.
+    virtual bool getMnemonic(SecureString& mnemonic_out, SecureString& mnemonic_passphrase_out) = 0;
+
     //! Register handler for unload message.
     using UnloadFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleUnload(UnloadFn fn) = 0;

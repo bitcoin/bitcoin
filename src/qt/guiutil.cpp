@@ -71,6 +71,7 @@
 
 #include <chrono>
 #include <exception>
+#include <algorithm>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -958,7 +959,6 @@ void loadStyleSheet(bool fForceUpdate)
 
                 QString strStyle = QLatin1String(qFile.readAll());
                 // Process all <os=...></os> groups in the stylesheet first
-                QRegularExpressionMatch osStyleMatch;
                 QRegularExpression osStyleExp(
                         "^"
                         "(<os=(?:'|\").+(?:'|\")>)" // group 1
@@ -966,29 +966,44 @@ void loadStyleSheet(bool fForceUpdate)
                         "(</os>?)"                  // group 3
                         "$");
                 osStyleExp.setPatternOptions(QRegularExpression::MultilineOption);
-                QRegularExpressionMatchIterator it = osStyleExp.globalMatch(strStyle);
 
-                // For all <os=...></os> sections
-                while (it.hasNext() && (osStyleMatch = it.next()).isValid()) {
-                    QStringList listMatches = osStyleMatch.capturedTexts();
-
-                    // Full match + 3 group matches
-                    if (listMatches.size() % 4) {
-                        throw std::runtime_error(strprintf("%s: Invalid <os=...></os> section in file %s", __func__, file.toStdString()));
-                    }
-
-                    for (int i = 0; i < listMatches.size(); i += 4) {
-                        if (!listMatches[i + 1].contains(QString::fromStdString(platformName))) {
-                            // If os is not supported for this styles
-                            // just remove the full match
-                            strStyle.replace(listMatches[i], "");
-                        } else {
-                            // If its supported remove the <os=...></os> tags
-                            strStyle.replace(listMatches[i + 1], "");
-                            strStyle.replace(listMatches[i + 3], "");
+                // Collect matches first to avoid modifying the string while iterating
+                QList<QRegularExpressionMatch> matches;
+                {
+                    QRegularExpressionMatchIterator it = osStyleExp.globalMatch(strStyle);
+                    while (it.hasNext()) {
+                        QRegularExpressionMatch m = it.next();
+                        if (m.hasMatch()) {
+                            matches.append(m);
                         }
                     }
                 }
+
+                // Build replacement operations using absolute positions
+                struct Replacement { int start; int end; QString replacement; };
+                QVector<Replacement> replacements;
+                for (const auto& m : matches) {
+                    const QString openTag = m.captured(1);
+                    const QString inner = m.captured(2);
+                    Q_UNUSED(inner);
+                    // Remove entire block if OS doesn't match, otherwise drop only the tags
+                    if (!openTag.contains(QString::fromStdString(platformName))) {
+                        replacements.push_back({m.capturedStart(0), m.capturedEnd(0), QString()});
+                    } else {
+                        // Remove opening and closing tags, keep inner content
+                        replacements.push_back({m.capturedStart(1), m.capturedEnd(1), QString()});
+                        replacements.push_back({m.capturedStart(3), m.capturedEnd(3), QString()});
+                    }
+                }
+
+                // Apply replacements from end to start so offsets stay valid
+                std::sort(replacements.begin(), replacements.end(), [](const Replacement& a, const Replacement& b) {
+                    return a.start > b.start;
+                });
+                for (const auto& r : replacements) {
+                    strStyle.replace(r.start, r.end - r.start, r.replacement);
+                }
+
                 stylesheet->append(strStyle);
             }
             return true;

@@ -310,6 +310,13 @@ void WalletFrame::changePassphrase()
         walletView->changePassphrase();
 }
 
+void WalletFrame::showMnemonic()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->showMnemonic();
+}
+
 void WalletFrame::unlockWallet()
 {
     WalletView *walletView = currentWalletView();

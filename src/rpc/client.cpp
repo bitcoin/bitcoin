@@ -8,16 +8,17 @@
 #include <tinyformat.h>
 #include <util/system.h>
 
-#include <set>
+#include <map>
 #include <string>
 #include <string_view>
 
 class CRPCConvertParam
 {
 public:
-    std::string methodName; //!< method whose params want conversion
-    int paramIdx;           //!< 0-based idx of param to convert
-    std::string paramName;  //!< parameter name
+    std::string methodName;   //!< method whose params want conversion
+    int paramIdx;             //!< 0-based idx of param to convert
+    std::string paramName;    //!< parameter name
+    bool preserve_str{false}; //!< only parse if array or object
 };
 
 // clang-format off
@@ -253,14 +254,47 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "verifyislock", 3, "maxHeight" },
     { "submitchainlock", 2, "blockHeight" },
     { "mnauth", 0, "nodeId" },
+    { "protx register", 3, "coreP2PAddrs", true },
+    { "protx register_legacy", 3, "coreP2PAddrs", true },
+    { "protx register_evo", 3, "coreP2PAddrs", true },
+    { "protx register_evo", 10, "platformP2PAddrs", true },
+    { "protx register_evo", 11, "platformHTTPSAddrs", true },
+    { "protx register_fund", 2, "coreP2PAddrs", true },
+    { "protx register_fund_legacy", 2, "coreP2PAddrs", true },
+    { "protx register_fund_evo", 2, "coreP2PAddrs", true },
+    { "protx register_fund_evo", 9, "platformP2PAddrs", true },
+    { "protx register_fund_evo", 10, "platformHTTPSAddrs", true },
+    { "protx register_prepare", 3, "coreP2PAddrs", true },
+    { "protx register_prepare_legacy", 3, "coreP2PAddrs", true },
+    { "protx register_prepare_evo", 3, "coreP2PAddrs", true },
+    { "protx register_prepare_evo", 10, "platformP2PAddrs", true },
+    { "protx register_prepare_evo", 11, "platformHTTPSAddrs", true },
+    { "protx update_service", 2, "coreP2PAddrs", true },
+    { "protx update_service_evo", 2, "coreP2PAddrs", true },
+    { "protx update_service_evo", 5, "platformP2PAddrs", true },
+    { "protx update_service_evo", 6, "platformHTTPSAddrs", true },
 };
 // clang-format on
 
 class CRPCConvertTable
 {
 private:
-    std::set<std::pair<std::string, int>> members;
-    std::set<std::pair<std::string, std::string>> membersByName;
+    std::map<std::pair<std::string, int>, bool> members;
+    std::map<std::pair<std::string, std::string>, bool> membersByName;
+
+    std::string_view MaybeUnquoteString(std::string_view arg_value)
+    {
+        if (arg_value.size() >= 2 && ((arg_value.front() == '\'' && arg_value.back() == '\'') || (arg_value.front() == '\"' && arg_value.back() == '\"'))) {
+            return arg_value.substr(1, arg_value.size() - 2);
+        }
+        return arg_value;
+    }
+
+    bool LikelyJSONType(std::string_view arg_value)
+    {
+        arg_value = MaybeUnquoteString(arg_value);
+        return arg_value.size() >= 2 && ((arg_value.front() == '[' && arg_value.back() == ']') || (arg_value.front() == '{' && arg_value.back() == '}'));
+    }
 
 public:
     CRPCConvertTable();
@@ -268,21 +302,35 @@ public:
     /** Return arg_value as UniValue, and first parse it if it is a non-string parameter */
     UniValue ArgToUniValue(std::string_view arg_value, const std::string& method, int param_idx)
     {
-        return members.count({method, param_idx}) > 0 ? ParseNonRFCJSONValue(arg_value) : arg_value;
+        if (const auto it = members.find({method, param_idx}); it != members.end() && (!it->second || (it->second && LikelyJSONType(arg_value)))) {
+            return ParseNonRFCJSONValue(MaybeUnquoteString(arg_value));
+        }
+        return arg_value;
     }
 
     /** Return arg_value as UniValue, and first parse it if it is a non-string parameter */
     UniValue ArgToUniValue(std::string_view arg_value, const std::string& method, const std::string& param_name)
     {
-        return membersByName.count({method, param_name}) > 0 ? ParseNonRFCJSONValue(arg_value) : arg_value;
+        if (const auto it = membersByName.find({method, param_name}); it != membersByName.end() && (!it->second || (it->second && LikelyJSONType(arg_value)))) {
+            return ParseNonRFCJSONValue(MaybeUnquoteString(arg_value));
+        }
+        return arg_value;
+    }
+
+    /** Check if we have any conversion rules for this method */
+    bool IsDefined(const std::string& method, bool named) const
+    {
+        return named ?
+                  std::find_if(membersByName.begin(), membersByName.end(), [&method](const auto& kv) { return kv.first.first == method; }) != membersByName.end()
+                : std::find_if(members.begin(), members.end(), [&method](const auto& kv) { return kv.first.first == method; }) != members.end();
     }
 };
 
 CRPCConvertTable::CRPCConvertTable()
 {
     for (const auto& cp : vRPCConvertParams) {
-        members.emplace(cp.methodName, cp.paramIdx);
-        membersByName.emplace(cp.methodName, cp.paramName);
+        members.try_emplace({cp.methodName, cp.paramIdx}, cp.preserve_str);
+        membersByName.try_emplace({cp.methodName, cp.paramName}, cp.preserve_str);
     }
 }
 
@@ -298,9 +346,18 @@ UniValue ParseNonRFCJSONValue(std::string_view raw)
     return parsed;
 }
 
-UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::string> &strParams)
+UniValue RPCConvertValues(std::string strMethod, const std::vector<std::string> &strParams)
 {
     UniValue params(UniValue::VARR);
+
+    // If we are using a subcommand that is in the table, update the method name
+    strMethod = [&strMethod, &strParams]() {
+        if (!strParams.empty() && strMethod.find(' ') == std::string::npos) {
+            std::string candidate{strMethod + " " + strParams[0]};
+            return rpcCvtTable.IsDefined(candidate, /*named=*/false) ? candidate : strMethod;
+        }
+        return strMethod;
+    }();
 
     for (unsigned int idx = 0; idx < strParams.size(); idx++) {
         std::string_view value{strParams[idx]};
@@ -310,10 +367,19 @@ UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::s
     return params;
 }
 
-UniValue RPCConvertNamedValues(const std::string &strMethod, const std::vector<std::string> &strParams)
+UniValue RPCConvertNamedValues(std::string strMethod, const std::vector<std::string> &strParams)
 {
     UniValue params(UniValue::VOBJ);
     UniValue positional_args{UniValue::VARR};
+
+    // If we are using a subcommand that is in the table, update the method name
+    strMethod = [&strMethod, &strParams]() {
+        if (strMethod.find(' ') == std::string::npos && !strParams.empty() && strParams[0].find('=') == std::string::npos) {
+            std::string candidate{strMethod + " " + strParams[0]};
+            return rpcCvtTable.IsDefined(candidate, /*named=*/true) ? candidate : strMethod;
+        }
+        return strMethod;
+    }();
 
     for (std::string_view s: strParams) {
         size_t pos = s.find('=');

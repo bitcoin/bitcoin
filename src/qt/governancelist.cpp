@@ -595,18 +595,17 @@ void GovernanceList::voteForProposal(vote_outcome_enum_t outcome)
 
     // Show results
     QString message;
-    if (nSuccessful > 0 && nFailed == 0) {
-        message = tr("Voted successfully %1 time(s).").arg(nSuccessful);
-    } else if (nSuccessful > 0 && nFailed > 0) {
-        message = tr("Voted successfully %1 time(s) and failed %2 time(s).").arg(nSuccessful).arg(nFailed);
-        if (!failedMessages.isEmpty()) {
-            message += tr("\n\nFailed votes:\n%1").arg(failedMessages.join("\n"));
+    if (nSuccessful > 0) {
+        message += tr("Voted successfully %n time(s)", "", nSuccessful);
+    }
+    if (nFailed > 0) {
+        if (nSuccessful > 0) {
+            message += QString("\n");
         }
-    } else {
-        message = tr("Failed to vote %1 time(s).").arg(nFailed);
-        if (!failedMessages.isEmpty()) {
-            message += tr("\n\nErrors:\n%1").arg(failedMessages.join("\n"));
-        }
+        message += tr("Failed to vote %n time(s)", "", nFailed);
+    }
+    if (!failedMessages.isEmpty()) {
+        message += QString("\n\n") + tr("Errors:") + QString("\n") + failedMessages.join("\n");
     }
 
     QMessageBox::information(this, tr("Voting Results"), message);

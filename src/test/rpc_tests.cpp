@@ -596,4 +596,138 @@ BOOST_AUTO_TEST_CASE(rpc_bls)
     BOOST_CHECK_EQUAL(r.get_obj().find_value("public").get_str(), "b379c28e0f50546906fe733f1222c8f7e39574d513790034f1fec1476286eb652a350c8c0e630cd2cc60d10c26d6f6ee");
 }
 
+BOOST_AUTO_TEST_CASE(rpc_convert_composite_commands)
+{
+    UniValue result;
+
+    // Validate that array syntax is not interpreted as string literal
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("protx", {
+        "register_prepare",
+        "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000",
+        "1",
+        "[\"1.1.1.1:19999\",\"1.0.0.1:19999\"]",
+        "yhq7ifNCtTKEpY4Yu5XPCcztQco6Fh6JsZ"
+    }));
+
+    BOOST_CHECK_EQUAL(result[0].get_str(), "register_prepare");
+    BOOST_CHECK_EQUAL(result[1].get_str(), "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000");
+    BOOST_CHECK_EQUAL(result[2].get_str(), "1");
+    BOOST_CHECK(result[3].isArray());
+    BOOST_CHECK_EQUAL(result[3].size(), 2);
+    BOOST_CHECK_EQUAL(result[3][0].get_str(), "1.1.1.1:19999");
+    BOOST_CHECK_EQUAL(result[3][1].get_str(), "1.0.0.1:19999");
+    BOOST_CHECK_EQUAL(result[4].get_str(), "yhq7ifNCtTKEpY4Yu5XPCcztQco6Fh6JsZ");
+
+    // Validate that array syntax is not interpreted as string literal (named parameter)
+    BOOST_CHECK_NO_THROW(result = RPCConvertNamedValues("protx", {
+        "register_prepare",
+        "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000",
+        "1",
+        "coreP2PAddrs=[\"1.1.1.1:19999\",\"1.0.0.1:19999\"]",
+        "ownerAddress=yhq7ifNCtTKEpY4Yu5XPCcztQco6Fh6JsZ"
+    }));
+
+    BOOST_CHECK(result.exists("coreP2PAddrs"));
+    BOOST_CHECK(result["coreP2PAddrs"].isArray());
+    BOOST_CHECK_EQUAL(result["coreP2PAddrs"].size(), 2);
+    BOOST_CHECK_EQUAL(result["coreP2PAddrs"][0].get_str(), "1.1.1.1:19999");
+    BOOST_CHECK_EQUAL(result["coreP2PAddrs"][1].get_str(), "1.0.0.1:19999");
+    BOOST_CHECK_EQUAL(result["ownerAddress"].get_str(), "yhq7ifNCtTKEpY4Yu5XPCcztQco6Fh6JsZ");
+
+    // Validate that array syntax is parsed for all recognized fields
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("protx", {
+        "register_evo",
+        "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000",
+        "1",
+        "[\"1.1.1.1:19999\"]",
+        "yhq7ifNCtTKEpY4Yu5XPCcztQco6Fh6JsZ",
+        "93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4",
+        "yTretFTpoi3oQ3maZk5QadGaDWPiKnmDBc",
+        "0",
+        "yNbNZyCiTYSFtDwEXt7jChV7tZVYX862ua",
+        "f2dbd9b0a1f541a7c44d34a58674d0262f5feca5",
+        "[\"1.1.1.1:22000\"]",
+        "[\"1.1.1.1:22001\"]",
+        "yTG8jLL3MvteKXgbEcHyaN7JvTPCejQpSh"
+    }));
+
+    BOOST_CHECK(result[3].isArray());
+    BOOST_CHECK_EQUAL(result[3][0].get_str(), "1.1.1.1:19999");
+    BOOST_CHECK(result[10].isArray());
+    BOOST_CHECK_EQUAL(result[10][0].get_str(), "1.1.1.1:22000");
+    BOOST_CHECK(result[11].isArray());
+    BOOST_CHECK_EQUAL(result[11][0].get_str(), "1.1.1.1:22001");
+
+    // Validate that extra quotation doesn't cause string literal interpretation
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("protx", {
+        "register_prepare",
+        "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000",
+        "1",
+        "\'[\"1.1.1.1:19999\",\"1.0.0.1:19999\"]\'",
+        "yhq7ifNCtTKEpY4Yu5XPCcztQco6Fh6JsZ"
+    }));
+    BOOST_CHECK(result[3].isArray());
+    BOOST_CHECK_EQUAL(result[3].size(), 2);
+    BOOST_CHECK_EQUAL(result[3][0].get_str(), "1.1.1.1:19999");
+    BOOST_CHECK_EQUAL(result[3][1].get_str(), "1.0.0.1:19999");
+
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("protx", {
+        "register_prepare",
+        "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000",
+        "1",
+        "\"[\"1.1.1.1:19999\",\"1.0.0.1:19999\"]\"",
+        "yhq7ifNCtTKEpY4Yu5XPCcztQco6Fh6JsZ"
+    }));
+    BOOST_CHECK(result[3].isArray());
+    BOOST_CHECK_EQUAL(result[3].size(), 2);
+    BOOST_CHECK_EQUAL(result[3][0].get_str(), "1.1.1.1:19999");
+    BOOST_CHECK_EQUAL(result[3][1].get_str(), "1.0.0.1:19999");
+
+    // Validate parsing as string if *not* using array or object syntax
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("protx", {
+        "register_prepare",
+        "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000",
+        "1",
+        "1.1.1.1:19999",
+        "yhq7ifNCtTKEpY4Yu5XPCcztQco6Fh6JsZ"
+    }));
+
+    BOOST_CHECK(!result[3].isArray());
+    BOOST_CHECK_EQUAL(result[3].get_str(), "1.1.1.1:19999");
+
+    // Empty arrays should be recognized as arrays
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("protx", {
+        "register_prepare",
+        "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000",
+        "1",
+        "[]",
+        "yhq7ifNCtTKEpY4Yu5XPCcztQco6Fh6JsZ"
+    }));
+    BOOST_CHECK(result[3].isArray());
+    BOOST_CHECK(result[3].empty());
+
+    // Incomplete syntax should be interpreted as string
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("protx", {
+        "register_prepare",
+        "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000",
+        "1",
+        "[",
+        "yhq7ifNCtTKEpY4Yu5XPCcztQco6Fh6JsZ"
+    }));
+    BOOST_CHECK(!result[3].isArray());
+    BOOST_CHECK_EQUAL(result[3].get_str(), "[");
+
+    // Sanity check to ensure that regular commands continue to behave as expected
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("getblockstats", {
+        "1000",
+        "[\"minfeerate\",\"avgfeerate\"]"
+    }));
+
+    BOOST_CHECK_EQUAL(result[0].getInt<int>(), 1000);
+    BOOST_CHECK(result[1].isArray());
+    BOOST_CHECK_EQUAL(result[1].size(), 2);
+    BOOST_CHECK_EQUAL(result[1][0].get_str(), "minfeerate");
+    BOOST_CHECK_EQUAL(result[1][1].get_str(), "avgfeerate");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

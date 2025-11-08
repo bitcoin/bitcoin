@@ -232,6 +232,8 @@ GCC 11.1 or later, or Clang 16.0 or later, are now required to compile Dash Core
 
 ## GUI changes
 
+- A mnemonic verification dialog is now shown after creating a new HD wallet, requiring users to verify they have written down their recovery phrase (#6946).
+- A new menu item "Show Recovery Phrase…" has been added to the Settings menu to view the recovery phrase for existing HD wallets (#6946).
 - Added governance proposal voting functionality to the Qt interface. Users with masternode voting keys can now vote on governance proposals directly from the governance tab via right-click context menu. Added masternode count display to governance tab, showing how many masternodes the wallet can vote with. (#6690)
 - Added a menu item to restore a wallet from a backup file. (#6648)
 

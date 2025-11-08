@@ -17,6 +17,9 @@
    <bool>true</bool>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing">
+    <number>8</number>
+   </property>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
@@ -71,11 +74,54 @@
     </spacer>
    </item>
    <item>
+   <widget class="QToolButton" name="advanced_toggle_button">
+    <property name="text">
+     <string>Advanced Options</string>
+    </property>
+    <property name="toolButtonStyle">
+     <enum>Qt::ToolButtonTextBesideIcon</enum>
+    </property>
+    <property name="autoRaise">
+     <bool>true</bool>
+    </property>
+    <property name="focusPolicy">
+     <enum>Qt::NoFocus</enum>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+    <property name="checked">
+     <bool>false</bool>
+    </property>
+    <property name="arrowType">
+     <enum>Qt::RightArrow</enum>
+    </property>
+   </widget>
+  </item>
+  <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Advanced Options</string>
+      <string/>
+     </property>
+     <property name="visible">
+      <bool>false</bool>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_groupbox">
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="leftMargin">
+       <number>8</number>
+      </property>
+      <property name="rightMargin">
+       <number>8</number>
+      </property>
+      <property name="bottomMargin">
+       <number>8</number>
+      </property>
+      <property name="spacing">
+       <number>4</number>
+      </property>
       <item>
        <widget class="QCheckBox" name="disable_privkeys_checkbox">
         <property name="enabled">

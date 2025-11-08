@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MnemonicVerificationDialog</class>
+ <widget class="QDialog" name="MnemonicVerificationDialog">
+  <property name="windowTitle">
+   <string>Save Your Mnemonic</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QStackedWidget" name="stackedWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="step1Page">
+      <layout class="QVBoxLayout" name="verticalLayout_step1">
+       <item>
+        <widget class="QLabel" name="warningLabel">
+         <property name="text">
+          <string>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever.</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::RichText</enum>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="instructionLabel">
+         <property name="text">
+          <string>Please write down these words in order. You will need them to restore your wallet.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QScrollArea" name="mnemonicScroll">
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="widgetResizable">
+          <bool>true</bool>
+         </property>
+         <widget class="QWidget" name="mnemonicGridWidget">
+          <layout class="QGridLayout" name="mnemonicGridLayout"/>
+         </widget>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_buttons">
+         <item>
+          <widget class="QPushButton" name="showMnemonicButton">
+           <property name="text">
+            <string>Show</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="hideMnemonicButton">
+           <property name="text">
+            <string>Hide</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_1">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="writtenDownCheckbox">
+           <property name="text">
+            <string>I have written down my mnemonic</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="step2Page">
+      <layout class="QVBoxLayout" name="verticalLayout_step2">
+       <item>
+        <widget class="QLabel" name="verificationLabel">
+         <property name="text">
+          <string>To verify you've saved your mnemonic, please enter the following words:</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QFormLayout" name="formLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="word1Label">
+           <property name="text">
+            <string>Word #1:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <layout class="QHBoxLayout" name="horizontalLayout_word1">
+           <item>
+            <widget class="QLineEdit" name="word1Edit"/>
+           </item>
+           <item>
+            <widget class="QLabel" name="word1Status"/>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="word2Label">
+           <property name="text">
+            <string>Word #2:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <layout class="QHBoxLayout" name="horizontalLayout_word2">
+           <item>
+            <widget class="QLineEdit" name="word2Edit"/>
+           </item>
+           <item>
+            <widget class="QLabel" name="word2Status"/>
+           </item>
+          </layout>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="word3Label">
+           <property name="text">
+            <string>Word #3:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <layout class="QHBoxLayout" name="horizontalLayout_word3">
+           <item>
+            <widget class="QLineEdit" name="word3Edit"/>
+           </item>
+           <item>
+            <widget class="QLabel" name="word3Status"/>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_actions">
+         <item>
+          <widget class="QPushButton" name="showMnemonicAgainButton">
+           <property name="text">
+            <string>Back</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>MnemonicVerificationDialog</receiver>
+   <slot>accept()</slot>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>MnemonicVerificationDialog</receiver>
+   <slot>reject()</slot>
+  </connection>
+ </connections>
+</ui>
+
