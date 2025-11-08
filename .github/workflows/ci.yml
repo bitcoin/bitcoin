@@ -540,7 +540,7 @@ jobs:
             timeout-minutes: 150
             file-env: './ci/test/00_setup_env_native_fuzz_with_msan.sh'
 
-          - name: 'MSan, depends'
+          - name: 'MSan'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
