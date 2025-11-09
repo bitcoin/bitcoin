@@ -709,7 +709,7 @@ public:
                 // a formerly-oversized main graph while staging exists (to satisfy chunk feerate
                 // queries into main, for example), and such merges could conflict with pulls of
                 // some of their constituents into staging.
-                if (level == GetTopLevel() && clusterset.m_oversized == true) {
+                if (level == GetTopLevel() && clusterset.m_oversized) {
                     clusterset.m_oversized = std::nullopt;
                 }
             }
@@ -2043,14 +2043,14 @@ void TxGraphImpl::ApplyDependencies(int level) noexcept
 {
     auto& clusterset = GetClusterSet(level);
     // Do not bother computing groups if we already know the result will be oversized.
-    if (clusterset.m_oversized == true) return;
+    if (clusterset.m_oversized) return;
     // Compute the groups of to-be-merged Clusters (which also applies all removals, and splits).
     GroupClusters(level);
     Assume(clusterset.m_group_data.has_value());
     // Nothing to do if there are no dependencies to be added.
     if (clusterset.m_deps_to_add.empty()) return;
     // Dependencies cannot be applied if it would result in oversized clusters.
-    if (clusterset.m_oversized == true) return;
+    if (clusterset.m_oversized) return;
 
     // For each group of to-be-merged Clusters.
     for (const auto& group_entry : clusterset.m_group_data->m_groups) {
@@ -2130,7 +2130,7 @@ void TxGraphImpl::MakeAllAcceptable(int level) noexcept
 {
     ApplyDependencies(level);
     auto& clusterset = GetClusterSet(level);
-    if (clusterset.m_oversized == true) return;
+    if (clusterset.m_oversized) return;
     auto& queue = clusterset.m_clusters[int(QualityLevel::NEEDS_RELINEARIZE)];
     while (!queue.empty()) {
         MakeAcceptable(*queue.back().get(), level);
@@ -2190,7 +2190,7 @@ void TxGraphImpl::RemoveTransaction(const Ref& arg) noexcept
     clusterset.m_to_remove.push_back(GetRefIndex(arg));
     // Wipe m_group_data (as it will need to be recomputed).
     clusterset.m_group_data.reset();
-    if (clusterset.m_oversized == true) clusterset.m_oversized = std::nullopt;
+    if (clusterset.m_oversized) clusterset.m_oversized = std::nullopt;
 }
 
 void TxGraphImpl::AddDependency(const Ref& parent, const Ref& child) noexcept
@@ -2214,7 +2214,7 @@ void TxGraphImpl::AddDependency(const Ref& parent, const Ref& child) noexcept
     clusterset.m_deps_to_add.emplace_back(GetRefIndex(parent), GetRefIndex(child));
     // Wipe m_group_data (as it will need to be recomputed).
     clusterset.m_group_data.reset();
-    if (clusterset.m_oversized == false) clusterset.m_oversized = std::nullopt;
+    if (!clusterset.m_oversized) clusterset.m_oversized = std::nullopt;
 }
 
 bool TxGraphImpl::Exists(const Ref& arg, Level level_select) noexcept
@@ -3017,7 +3017,7 @@ bool TxGraphImpl::DoWork(uint64_t iters) noexcept
             ApplyDependencies(level);
             auto& clusterset = GetClusterSet(level);
             // Do not modify oversized levels.
-            if (clusterset.m_oversized == true) continue;
+            if (clusterset.m_oversized) continue;
             auto& queue = clusterset.m_clusters[int(quality)];
             while (!queue.empty()) {
                 if (iters_done >= iters) return false;
@@ -3184,12 +3184,12 @@ std::vector<TxGraph::Ref*> TxGraphImpl::Trim() noexcept
 
     // Compute the groups of to-be-merged Clusters (which also applies all removals, and splits).
     auto& clusterset = GetClusterSet(level);
-    if (clusterset.m_oversized == false) return ret;
+    if (!clusterset.m_oversized) return ret;
     GroupClusters(level);
     Assume(clusterset.m_group_data.has_value());
     // Nothing to do if not oversized.
     Assume(clusterset.m_oversized.has_value());
-    if (clusterset.m_oversized == false) return ret;
+    if (!clusterset.m_oversized) return ret;
 
     // In this function, would-be clusters (as precomputed in m_group_data by GroupClusters) are
     // trimmed by removing transactions in them such that the resulting clusters satisfy the size
