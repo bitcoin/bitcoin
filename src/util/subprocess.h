@@ -181,7 +181,7 @@ namespace util
     // parse quotes properly
     //
 
-    if (force == false && argument.empty() == false &&
+    if (!force && !argument.empty() &&
         argument.find_first_of(L" \t\n\v") == argument.npos) {
       command_line.append(argument);
     }

@@ -378,7 +378,7 @@ void AddrManImpl::Unserialize(Stream& s_)
     // Prune new entries with refcount 0 (as a result of collisions or invalid address).
     int nLostUnk = 0;
     for (auto it = mapInfo.cbegin(); it != mapInfo.cend(); ) {
-        if (it->second.fInTried == false && it->second.nRefCount == 0) {
+        if (!it->second.fInTried && it->second.nRefCount == 0) {
             const auto itCopy = it++;
             Delete(itCopy->first);
             ++nLostUnk;
