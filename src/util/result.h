@@ -8,6 +8,7 @@
 #include <attributes.h>
 #include <util/translation.h>
 
+#include <type_traits>
 #include <variant>
 
 namespace util {
