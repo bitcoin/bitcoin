@@ -597,6 +597,9 @@ struct CScriptWitness
     std::string ToString() const;
 };
 
+/** Empty witness for use when no witness data is available */
+inline const CScriptWitness EMPTY_SCRIPT_WITNESS{};
+
 /** A reference to a CScript: the Hash160 of its serialization */
 class CScriptID : public BaseHash<uint160>
 {

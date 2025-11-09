@@ -60,5 +60,5 @@ FUZZ_TARGET(signature_checker)
     if (!IsValidFlagCombination(flags)) {
         return;
     }
-    (void)VerifyScript(script_1, script_2, nullptr, flags, FuzzedSignatureChecker(fuzzed_data_provider), nullptr);
+    (void)VerifyScript(script_1, script_2, EMPTY_SCRIPT_WITNESS, flags, FuzzedSignatureChecker(fuzzed_data_provider), nullptr);
 }

@@ -644,7 +644,7 @@ int btck_script_pubkey_verify(const btck_ScriptPubkey* script_pubkey,
 
     bool result = VerifyScript(tx.vin[input_index].scriptSig,
                                btck_ScriptPubkey::get(script_pubkey),
-                               &tx.vin[input_index].scriptWitness,
+                               tx.vin[input_index].scriptWitness,
                                script_verify_flags::from_int(flags),
                                TransactionSignatureChecker(&tx, input_index, amount, txdata, MissingDataBehavior::FAIL),
                                nullptr);
