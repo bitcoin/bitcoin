@@ -7,11 +7,17 @@ permissions:
 
 on:
   pull_request_target:
+  pull_request:
+    types: [labeled]
   push:
+    tags:
 
 jobs:
   build-image:
     runs-on: ubuntu-24.04-arm
+    if: |
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) ||
+      contains(github.event.pull_request.labels.*.name, 'guix-build')
     outputs:
       image-tag: ${{ steps.prepare.outputs.image-tag }}
       repo-name: ${{ steps.prepare.outputs.repo-name }}
@@ -19,7 +25,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha != '' && github.event.pull_request.head.sha || github.sha }}
           path: dash
           fetch-depth: 0
 
@@ -65,7 +71,9 @@ jobs:
     needs: build-image
     # runs-on: [ "self-hosted", "linux", "x64", "ubuntu-core" ]
     runs-on: ubuntu-24.04-arm
-#    if: ${{ contains(github.event.pull_request.labels.*.name, 'guix-build') }}
+    if: |
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) ||
+      contains(github.event.pull_request.labels.*.name, 'guix-build')
     strategy:
       matrix:
         build_target: [x86_64-linux-gnu, arm-linux-gnueabihf, aarch64-linux-gnu, riscv64-linux-gnu, powerpc64-linux-gnu, x86_64-w64-mingw32, x86_64-apple-darwin, arm64-apple-darwin]
@@ -79,7 +87,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha != '' && github.event.pull_request.head.sha || github.sha }}
           path: dash
           fetch-depth: 0
 
