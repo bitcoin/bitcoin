@@ -581,6 +581,9 @@ public:
     }
 };
 
+class CTxIn;
+std::pair<CScript, int> GetScriptForTransactionInput(CScript prevScript, const CTxIn& txin);
+
 struct CScriptWitness
 {
     // Note that this encodes the data elements being pushed, rather than
