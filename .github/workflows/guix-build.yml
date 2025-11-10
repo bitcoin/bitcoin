@@ -10,13 +10,12 @@ on:
   pull_request:
     types: [labeled]
   push:
-    tags:
 
 jobs:
   build-image:
     runs-on: ubuntu-24.04-arm
     if: |
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) ||
+      (github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || vars.RUN_GUIX_ON_ALL_PUSH == 'true')) ||
       contains(github.event.pull_request.labels.*.name, 'guix-build')
     outputs:
       image-tag: ${{ steps.prepare.outputs.image-tag }}
@@ -72,7 +71,7 @@ jobs:
     # runs-on: [ "self-hosted", "linux", "x64", "ubuntu-core" ]
     runs-on: ubuntu-24.04-arm
     if: |
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) ||
+      (github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || vars.RUN_GUIX_ON_ALL_PUSH == 'true')) ||
       contains(github.event.pull_request.labels.*.name, 'guix-build')
     strategy:
       matrix:
