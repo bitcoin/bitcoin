@@ -253,7 +253,8 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 
     // Intentionally do not update DB_MUHASH here so it stays in sync with
     // DB_BEST_BLOCK, and the index is not corrupted if there is an unclean shutdown.
-    return m_db->Write(DBHeightKey(block.height), value);
+    m_db->Write(DBHeightKey(block.height), value);
+    return true;
 }
 
 [[nodiscard]] static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
@@ -290,7 +291,7 @@ bool CoinStatsIndex::CustomRemove(const interfaces::BlockInfo& block)
         return false;
     }
 
-    if (!m_db->WriteBatch(batch)) return false;
+    m_db->WriteBatch(batch);
 
     if (!RevertBlock(block)) {
         return false; // failure cause logged internally

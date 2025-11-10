@@ -274,7 +274,7 @@ CDBWrapper::~CDBWrapper()
     DBContext().options.env = nullptr;
 }
 
-bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
+void CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
 {
     const bool log_memory = LogAcceptCategory(BCLog::LEVELDB, BCLog::Level::Debug);
     double mem_before = 0;
@@ -288,7 +288,6 @@ bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
         LogDebug(BCLog::LEVELDB, "WriteBatch memory usage: db=%s, before=%.1fMiB, after=%.1fMiB\n",
                  m_name, mem_before, mem_after);
     }
-    return true;
 }
 
 size_t CDBWrapper::DynamicMemoryUsage() const

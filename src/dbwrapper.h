@@ -230,11 +230,11 @@ public:
     }
 
     template <typename K, typename V>
-    bool Write(const K& key, const V& value, bool fSync = false)
+    void Write(const K& key, const V& value, bool fSync = false)
     {
         CDBBatch batch(*this);
         batch.Write(key, value);
-        return WriteBatch(batch, fSync);
+        WriteBatch(batch, fSync);
     }
 
     //! @returns filesystem path to the on-disk data.
@@ -255,14 +255,14 @@ public:
     }
 
     template <typename K>
-    bool Erase(const K& key, bool fSync = false)
+    void Erase(const K& key, bool fSync = false)
     {
         CDBBatch batch(*this);
         batch.Erase(key);
-        return WriteBatch(batch, fSync);
+        WriteBatch(batch, fSync);
     }
 
-    bool WriteBatch(CDBBatch& batch, bool fSync = false);
+    void WriteBatch(CDBBatch& batch, bool fSync = false);
 
     // Get an estimate of LevelDB memory usage (in bytes).
     size_t DynamicMemoryUsage() const;

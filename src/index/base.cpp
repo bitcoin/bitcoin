@@ -275,7 +275,7 @@ bool BaseIndex::Commit()
         ok = CustomCommit(batch);
         if (ok) {
             GetDB().WriteBestBlock(batch, GetLocator(*m_chain, m_best_block_index.load()->GetBlockHash()));
-            ok = GetDB().WriteBatch(batch);
+            GetDB().WriteBatch(batch);
         }
     }
     if (!ok) {
