@@ -34,7 +34,7 @@ cmake -B build
 SQLite is required for the wallet:
 
 ```bash
-pkgin sqlite3
+pkgin install sqlite3
 ```
 
 To build Bitcoin Core without the wallet, use `-DENABLE_WALLET=OFF`.
@@ -42,7 +42,7 @@ To build Bitcoin Core without the wallet, use `-DENABLE_WALLET=OFF`.
 Cap'n Proto is needed for IPC functionality (see [multiprocess.md](multiprocess.md)):
 
 ```bash
-pkgin capnproto
+pkgin install capnproto
 ```
 
 Compile with `-DENABLE_IPC=OFF` if you do not need IPC functionality.
@@ -84,7 +84,7 @@ Otherwise, if you don't need QR encoding support, use the `-DWITH_QRENCODE=OFF` 
 
 Bitcoin Core can provide notifications via ZeroMQ. If the package is installed, support will be compiled in.
 ```bash
-pkgin zeromq
+pkgin install zeromq
 ```
 
 #### Test Suite Dependencies
