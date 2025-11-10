@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +9,7 @@
 
 #include <atomic>
 #include <cassert> // IWYU pragma: export
+#include <source_location>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -52,26 +53,26 @@ struct test_only_CheckFailuresAreExceptionsNotAborts {
     ~test_only_CheckFailuresAreExceptionsNotAborts() { g_detail_test_only_CheckFailuresAreExceptionsNotAborts = false; };
 };
 
-std::string StrFormatInternalBug(std::string_view msg, std::string_view file, int line, std::string_view func);
+std::string StrFormatInternalBug(std::string_view msg, const std::source_location& loc);
 
 class NonFatalCheckError : public std::runtime_error
 {
 public:
-    NonFatalCheckError(std::string_view msg, std::string_view file, int line, std::string_view func);
+    NonFatalCheckError(std::string_view msg, const std::source_location& loc);
 };
 
 /** Internal helper */
-void assertion_fail(std::string_view file, int line, std::string_view func, std::string_view assertion);
+void assertion_fail(const std::source_location& loc, std::string_view assertion);
 
 /** Helper for CHECK_NONFATAL() */
 template <typename T>
-T&& inline_check_non_fatal(LIFETIMEBOUND T&& val, const char* file, int line, const char* func, const char* assertion)
+T&& inline_check_non_fatal(LIFETIMEBOUND T&& val, const std::source_location& loc, std::string_view assertion)
 {
     if (!val) {
         if constexpr (G_ABORT_ON_FAILED_ASSUME) {
-            assertion_fail(file, line, func, assertion);
+            assertion_fail(loc, assertion);
         }
-        throw NonFatalCheckError{assertion, file, line, func};
+        throw NonFatalCheckError{assertion, loc};
     }
     return std::forward<T>(val);
 }
@@ -82,20 +83,17 @@ T&& inline_check_non_fatal(LIFETIMEBOUND T&& val, const char* file, int line, co
 
 /** Helper for Assert()/Assume() */
 template <bool IS_ASSERT, typename T>
-constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] const char* file, [[maybe_unused]] int line, [[maybe_unused]] const char* func, [[maybe_unused]] const char* assertion)
+constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] const std::source_location& loc, [[maybe_unused]] std::string_view assertion)
 {
     if (IS_ASSERT || std::is_constant_evaluated() || G_ABORT_ON_FAILED_ASSUME) {
         if (!val) {
-            assertion_fail(file, line, func, assertion);
+            assertion_fail(loc, assertion);
         }
     }
     return std::forward<T>(val);
 }
 
-// All macros may use __func__ inside a lambda, so put them under nolint.
-// NOLINTBEGIN(bugprone-lambda-function-name)
-
-#define STR_INTERNAL_BUG(msg) StrFormatInternalBug((msg), __FILE__, __LINE__, __func__)
+#define STR_INTERNAL_BUG(msg) StrFormatInternalBug((msg), std::source_location::current())
 
 /**
  * Identity function. Throw a NonFatalCheckError when the condition evaluates to false
@@ -109,10 +107,10 @@ constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] con
  * caller, which can then report the issue to the developers.
  */
 #define CHECK_NONFATAL(condition) \
-    inline_check_non_fatal(condition, __FILE__, __LINE__, __func__, #condition)
+    inline_check_non_fatal(condition, std::source_location::current(), #condition)
 
 /** Identity function. Abort if the value compares equal to zero */
-#define Assert(val) inline_assertion_check<true>(val, __FILE__, __LINE__, __func__, #val)
+#define Assert(val) inline_assertion_check<true>(val, std::source_location::current(), #val)
 
 /**
  * Assume is the identity function.
@@ -124,16 +122,13 @@ constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] con
  * - For non-fatal errors in interactive sessions (e.g. RPC or command line
  *   interfaces), CHECK_NONFATAL() might be more appropriate.
  */
-#define Assume(val) inline_assertion_check<false>(val, __FILE__, __LINE__, __func__, #val)
+#define Assume(val) inline_assertion_check<false>(val, std::source_location::current(), #val)
 
 /**
  * NONFATAL_UNREACHABLE() is a macro that is used to mark unreachable code. It throws a NonFatalCheckError.
  */
-#define NONFATAL_UNREACHABLE()                                        \
-    throw NonFatalCheckError(                                         \
-        "Unreachable code reached (non-fatal)", __FILE__, __LINE__, __func__)
-
-// NOLINTEND(bugprone-lambda-function-name)
+#define NONFATAL_UNREACHABLE() \
+    throw NonFatalCheckError { "Unreachable code reached (non-fatal)", std::source_location::current() }
 
 #if defined(__has_feature)
 #    if __has_feature(address_sanitizer)
