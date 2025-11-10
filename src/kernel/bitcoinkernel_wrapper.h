@@ -737,38 +737,13 @@ public:
     }
 };
 
-inline void logging_disable()
-{
-    btck_logging_disable();
-}
-
-inline void logging_set_options(const btck_LoggingOptions& logging_options)
-{
-    btck_logging_set_options(logging_options);
-}
-
-inline void logging_set_level_category(LogCategory category, LogLevel level)
-{
-    btck_logging_set_level_category(static_cast<btck_LogCategory>(category), static_cast<btck_LogLevel>(level));
-}
-
-inline void logging_enable_category(LogCategory category)
-{
-    btck_logging_enable_category(static_cast<btck_LogCategory>(category));
-}
-
-inline void logging_disable_category(LogCategory category)
-{
-    btck_logging_disable_category(static_cast<btck_LogCategory>(category));
-}
-
 template <typename T>
 concept Log = requires(T a, std::string_view message) {
     { a.LogMessage(message) } -> std::same_as<void>;
 };
 
 template <Log T>
-class Logger : UniqueHandle<btck_LoggingConnection, btck_logging_connection_destroy>
+class Logger : public UniqueHandle<btck_LoggingConnection, btck_logging_connection_destroy>
 {
 public:
     Logger(std::unique_ptr<T> log)
@@ -779,6 +754,30 @@ public:
     {
     }
 };
+
+template <Log T>
+void logging_set_options(Logger<T>& logger, const btck_LoggingOptions& logging_options)
+{
+    btck_logging_set_options(logger.get(), logging_options);
+}
+
+template <Log T>
+void logging_set_level_category(Logger<T>& logger, LogCategory category, LogLevel level)
+{
+    btck_logging_set_level_category(logger.get(), static_cast<btck_LogCategory>(category), static_cast<btck_LogLevel>(level));
+}
+
+template <Log T>
+void logging_enable_category(Logger<T>& logger, LogCategory category)
+{
+    btck_logging_enable_category(logger.get(), static_cast<btck_LogCategory>(category));
+}
+
+template <Log T>
+void logging_disable_category(Logger<T>& logger, LogCategory category)
+{
+    btck_logging_disable_category(logger.get(), static_cast<btck_LogCategory>(category));
+}
 
 class BlockTreeEntry : public View<btck_BlockTreeEntry>
 {
@@ -880,6 +879,12 @@ class ContextOptions : public UniqueHandle<btck_ContextOptions, btck_context_opt
 {
 public:
     ContextOptions() : UniqueHandle{btck_context_options_create()} {}
+
+    template <Log T>
+    void SetLogger(Logger<T>& logger)
+    {
+        btck_context_options_set_logger(get(), logger.get());
+    }
 
     void SetChainParams(ChainParams& chain_params)
     {

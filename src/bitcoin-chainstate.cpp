@@ -166,12 +166,12 @@ int main(int argc, char* argv[])
         .always_print_category_levels = true,
     };
 
-    logging_set_options(logging_options);
-
     Logger logger{std::make_unique<KernelLog>()};
+    logging_set_options(logger, logging_options);
 
     ContextOptions options{};
     ChainParams params{has_regtest_flag ? ChainType::REGTEST : ChainType::MAINNET};
+    options.SetLogger(logger);
     options.SetChainParams(params);
 
     options.SetNotifications(std::make_shared<TestKernelNotifications>());
