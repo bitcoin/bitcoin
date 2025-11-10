@@ -185,29 +185,6 @@ static inline path PathFromString(const std::string& string)
     return std::filesystem::path(string);
 #endif
 }
-
-/**
- * Create directory (and if necessary its parents), unless the leaf directory
- * already exists or is a symlink to an existing directory.
- * This is a temporary workaround for an issue in libstdc++ that has been fixed
- * upstream [PR101510].
- * https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101510
- */
-static inline bool create_directories(const std::filesystem::path& p)
-{
-    if (std::filesystem::is_symlink(p) && std::filesystem::is_directory(p)) {
-        return false;
-    }
-    return std::filesystem::create_directories(p);
-}
-
-/**
- * This variant is not used. Delete it to prevent it from accidentally working
- * around the workaround. If it is needed, add a workaround in the same pattern
- * as above.
- */
-bool create_directories(const std::filesystem::path& p, std::error_code& ec) = delete;
-
 } // namespace fs
 
 /** Bridge operations to C stdio */
