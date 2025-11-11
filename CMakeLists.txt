@@ -493,8 +493,8 @@ try_append_cxx_flags("-fmacro-prefix-map=A=B" TARGET core_interface SKIP_LINK
   IF_CHECK_PASSED "-fmacro-prefix-map=${PROJECT_SOURCE_DIR}/src=."
 )
 
-# Currently all versions of gcc are subject to a class of bugs, see the
-# gccbug_90348 test case (only reproduces on GCC 11 and earlier) and
+# GCC versions 13.2 (and earlier) are subject to a class of bugs, see
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90348 and the meta bug
 # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111843. To work around that, set
 # -fstack-reuse=none for all gcc builds. (Only gcc understands this flag).
 try_append_cxx_flags("-fstack-reuse=none" TARGET core_interface)
