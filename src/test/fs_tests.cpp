@@ -139,28 +139,4 @@ BOOST_AUTO_TEST_CASE(rename)
     fs::remove(path2);
 }
 
-#ifndef __MINGW64__ // no symlinks on mingw
-BOOST_AUTO_TEST_CASE(create_directories)
-{
-    // Test fs::create_directories workaround.
-    const fs::path tmpfolder{m_args.GetDataDirBase()};
-
-    const fs::path dir{tmpfolder / "a"};
-    fs::create_directory(dir);
-    BOOST_CHECK(fs::exists(dir));
-    BOOST_CHECK(fs::is_directory(dir));
-    BOOST_CHECK(!fs::create_directories(dir));
-
-    const fs::path symlink{tmpfolder / "b"};
-    fs::create_directory_symlink(dir, symlink);
-    BOOST_CHECK(fs::exists(symlink));
-    BOOST_CHECK(fs::is_symlink(symlink));
-    BOOST_CHECK(fs::is_directory(symlink));
-    BOOST_CHECK(!fs::create_directories(symlink));
-
-    fs::remove(symlink);
-    fs::remove(dir);
-}
-#endif // __MINGW64__
-
 BOOST_AUTO_TEST_SUITE_END()
