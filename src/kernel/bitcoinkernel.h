@@ -469,12 +469,12 @@ typedef uint8_t btck_ChainType;
 /**
  * @brief Create a new transaction from the serialized data.
  *
- * @param[in] raw_transaction     Non-null.
+ * @param[in] raw_transaction     Serialized transaction.
  * @param[in] raw_transaction_len Length of the serialized transaction.
  * @return                        The transaction, or null on error.
  */
 BITCOINKERNEL_API btck_Transaction* BITCOINKERNEL_WARN_UNUSED_RESULT btck_transaction_create(
-    const void* raw_transaction, size_t raw_transaction_len) BITCOINKERNEL_ARG_NONNULL(1);
+    const void* raw_transaction, size_t raw_transaction_len);
 
 /**
  * @brief Copy a transaction. Transactions are reference counted, so this just
@@ -567,12 +567,12 @@ BITCOINKERNEL_API void btck_transaction_destroy(btck_Transaction* transaction);
 
 /**
  * @brief Create a script pubkey from serialized data.
- * @param[in] script_pubkey     Non-null.
+ * @param[in] script_pubkey     Serialized script pubkey.
  * @param[in] script_pubkey_len Length of the script pubkey data.
  * @return                      The script pubkey.
  */
 BITCOINKERNEL_API btck_ScriptPubkey* BITCOINKERNEL_WARN_UNUSED_RESULT btck_script_pubkey_create(
-    const void* script_pubkey, size_t script_pubkey_len) BITCOINKERNEL_ARG_NONNULL(1);
+    const void* script_pubkey, size_t script_pubkey_len);
 
 /**
  * @brief Copy a script pubkey.
@@ -1111,12 +1111,12 @@ BITCOINKERNEL_API btck_Block* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_read(
 /**
  * @brief Parse a serialized raw block into a new block object.
  *
- * @param[in] raw_block     Non-null, serialized block.
+ * @param[in] raw_block     Serialized block.
  * @param[in] raw_block_len Length of the serialized block.
  * @return                  The allocated block, or null on error.
  */
 BITCOINKERNEL_API btck_Block* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_create(
-    const void* raw_block, size_t raw_block_len) BITCOINKERNEL_ARG_NONNULL(1);
+    const void* raw_block, size_t raw_block_len);
 
 /**
  * @brief Copy a block. Blocks are reference counted, so this just increments
