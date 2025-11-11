@@ -260,6 +260,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   rpc/txoutproof.cpp
   script/sigcache.cpp
   signet.cpp
+  swiftsync.cpp
   torcontrol.cpp
   txdb.cpp
   txgraph.cpp
