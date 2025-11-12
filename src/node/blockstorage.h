@@ -475,7 +475,10 @@ public:
 };
 
 // Calls ActivateBestChain() even if no blocks are imported.
-void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_paths);
+// When force_activation is `false`, ActivateBestChain will not
+// be called on reindexed blocks if best_header chainwork is below
+// minchainwork.
+void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_paths,  bool force_activation = true);
 } // namespace node
 
 #endif // BITCOIN_NODE_BLOCKSTORAGE_H

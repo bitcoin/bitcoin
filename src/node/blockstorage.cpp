@@ -1241,10 +1241,11 @@ public:
     }
 };
 
-void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_paths)
+void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_paths, bool force_activation)
 {
     ImportingNow imp{chainman.m_blockman.m_importing};
 
+    bool reindexed = false;
     // -reindex
     if (!chainman.m_blockman.m_blockfiles_indexed) {
         int total_files{0};
@@ -1291,6 +1292,7 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
         WITH_LOCK(::cs_main, chainman.m_blockman.m_block_tree_db->WriteReindexing(false));
         chainman.m_blockman.m_blockfiles_indexed = true;
         LogInfo("Reindexing finished");
+        reindexed = true;
     }
 
     // -loadblock=
@@ -1308,9 +1310,17 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
         }
     }
 
+    // If started with -reindex, only connect blocks if there is high enough work chain,
+    // else allow normal node operation to sync headers before connecting blocks.
+    // This prevents unnecessary script verification work if assumevalid is enabled.
+    bool has_enough_work = WITH_LOCK(::cs_main, return chainman.m_best_header &&
+        chainman.m_best_header->nChainWork.CompareTo(chainman.MinimumChainWork()) >= 0);
+    bool activate_chains = !reindexed || force_activation || has_enough_work;
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
-    if (auto result = chainman.ActivateBestChains(); !result) {
-        chainman.GetNotifications().fatalError(util::ErrorString(result));
+    if (activate_chains) {
+        if (auto result = chainman.ActivateBestChains(); !result) {
+            chainman.GetNotifications().fatalError(util::ErrorString(result));
+        }
     }
     // End scope of ImportingNow
 }
