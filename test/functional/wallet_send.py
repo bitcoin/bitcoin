@@ -312,7 +312,7 @@ class WalletSendTest(BitcoinTestFramework):
 
         for target, mode in product([-1, 0, 1009], ["economical", "conservative"]):
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=target, estimate_mode=mode,
-                expect_error=(-8, "Invalid conf_target, must be between 1 and 1008"))  # max value of 1008 per src/policy/fees.h
+                expect_error=(-8, "Invalid conf_target, must be between 1 and 1008"))  # max value of 1008 per src/policy/fees/block_policy_estimator.h
         msg = 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"'
         for target, mode in product([-1, 0], ["btc/kb", "sat/b"]):
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=target, estimate_mode=mode, expect_error=(-8, msg))
