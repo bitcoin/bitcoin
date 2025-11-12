@@ -1251,16 +1251,36 @@ BITCOINKERNEL_API void btck_block_destroy(btck_Block* block);
 ///@{
 
 /**
- * Returns the validation mode from an opaque block validation state pointer.
+ * Create a new btck_BlockValidationState.
+ */
+BITCOINKERNEL_API btck_BlockValidationState* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_validation_state_create();
+
+/**
+ * Returns the validation mode from an opaque btck_BlockValidationState pointer.
  */
 BITCOINKERNEL_API btck_ValidationMode btck_block_validation_state_get_validation_mode(
     const btck_BlockValidationState* block_validation_state) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
- * Returns the validation result from an opaque block validation state pointer.
+ * Returns the validation result from an opaque btck_BlockValidationState pointer.
  */
 BITCOINKERNEL_API btck_BlockValidationResult btck_block_validation_state_get_block_validation_result(
     const btck_BlockValidationState* block_validation_state) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Copies the btck_BlockValidationState.
+ *
+ * @param[in] block_validation_state Non-null.
+ * @return                           The copied btck_BlockValidationState.
+ */
+BITCOINKERNEL_API btck_BlockValidationState* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_validation_state_copy(
+    const btck_BlockValidationState* block_validation_state) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * Destroy the btck_BlockValidationState.
+ */
+BITCOINKERNEL_API void btck_block_validation_state_destroy(
+    btck_BlockValidationState* block_validation_state) BITCOINKERNEL_ARG_NONNULL(1);
 
 ///@}
 

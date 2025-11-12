@@ -885,6 +885,21 @@ const btck_BlockTreeEntry* btck_block_tree_entry_get_previous(const btck_BlockTr
     return btck_BlockTreeEntry::ref(btck_BlockTreeEntry::get(entry).pprev);
 }
 
+btck_BlockValidationState* btck_block_validation_state_create()
+{
+    return btck_BlockValidationState::create();
+}
+
+btck_BlockValidationState* btck_block_validation_state_copy(const btck_BlockValidationState* state)
+{
+    return btck_BlockValidationState::copy(state);
+}
+
+void btck_block_validation_state_destroy(btck_BlockValidationState* state)
+{
+    delete state;
+}
+
 btck_ValidationMode btck_block_validation_state_get_validation_mode(const btck_BlockValidationState* block_validation_state_)
 {
     auto& block_validation_state = btck_BlockValidationState::get(block_validation_state_);
