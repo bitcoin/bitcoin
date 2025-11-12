@@ -461,7 +461,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: '32 bit ARM, unit tests, no functional tests'
+          - name: '32 bit ARM'
             cirrus-runner: 'ubuntu-24.04-arm' # Cirrus' Arm runners are Apple (with virtual Linux aarch64), which doesn't support 32-bit mode
             fallback-runner: 'ubuntu-24.04-arm'
             timeout-minutes: 120
