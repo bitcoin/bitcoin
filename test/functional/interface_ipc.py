@@ -8,7 +8,11 @@ from io import BytesIO
 from pathlib import Path
 import shutil
 from test_framework.messages import (CBlock, CTransaction, ser_uint256, COIN)
-from test_framework.test_framework import (BitcoinTestFramework, assert_equal)
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (
+    assert_equal,
+    assert_not_equal
+)
 from test_framework.wallet import MiniWallet
 
 # Test may be skipped and not have capnp installed
@@ -49,10 +53,10 @@ class IPCInterfaceTest(BitcoinTestFramework):
         }
 
     def set_test_params(self):
-        self.num_nodes = 1
+        self.num_nodes = 2
 
     def setup_nodes(self):
-        self.extra_init = [{"ipcbind": True}]
+        self.extra_init = [{"ipcbind": True}, {}]
         super().setup_nodes()
         # Use this function to also load the capnp modules (we cannot use set_test_params for this,
         # as it is being called before knowing whether capnp is available).
@@ -228,11 +232,35 @@ class IPCInterfaceTest(BitcoinTestFramework):
             self.log.debug("Submit a valid block")
             block.nVersion = original_version
             block.solve()
+
+            self.log.debug("First call checkBlock()")
             res = await mining.result.checkBlock(block.serialize(), check_opts)
             assert_equal(res.result, True)
+
+            # The remote template block will be mutated, capture the original:
+            remote_block_before = await self.parse_and_deserialize_block(template, ctx)
+
+            self.log.debug("Submitted coinbase must include witness")
+            assert_not_equal(coinbase.serialize_without_witness().hex(), coinbase.serialize().hex())
+            res = await template.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize_without_witness())
+            assert_equal(res.result, False)
+
+            self.log.debug("Even a rejected submitBlock() mutates the template's block")
+            # Can be used by clients to download and inspect the (rejected)
+            # reconstructed block.
+            remote_block_after = await self.parse_and_deserialize_block(template, ctx)
+            assert_not_equal(remote_block_before.serialize().hex(), remote_block_after.serialize().hex())
+
+            self.log.debug("Submit again, with the witness")
             res = await template.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
             assert_equal(res.result, True)
-            assert_equal(self.nodes[0].getchaintips()[0]["height"], current_block_height + 1)
+
+            self.log.debug("Block should propagate")
+            assert_equal(self.nodes[1].getchaintips()[0]["height"], current_block_height + 1)
+            # Stalls if a regression causes submitBlock() to accept an invalid block:
+            self.sync_all()
+            assert_equal(self.nodes[0].getchaintips()[0], self.nodes[1].getchaintips()[0])
+
             miniwallet.rescan_utxos()
             assert_equal(miniwallet.get_balance(), balance + 1)
             self.log.debug("Check block should fail now, since it is a duplicate")

@@ -1276,7 +1276,11 @@ public:
     //! ResizeCoinsCaches() as needed.
     void MaybeRebalanceCaches() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    /** Update uncommitted block structures (currently: only the witness reserved value). This is safe for submitted blocks. */
+    /**
+     * Update uncommitted block structures (currently: only the witness reserved
+     * value). This is safe for submitted blocks as long as they honor
+     * default_witness_commitment from the template.
+     */
     void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev) const;
 
     /** Produce the necessary coinbase commitment for a block (modifies the hash, don't call for mined blocks). */

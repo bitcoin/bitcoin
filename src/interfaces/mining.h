@@ -54,9 +54,22 @@ public:
     virtual std::vector<uint256> getCoinbaseMerklePath() = 0;
 
     /**
-     * Construct and broadcast the block.
+     * Construct and broadcast the block. Modifies the template in place,
+     * updating the fields listed below as well as the merkle root.
      *
-     * @returns if the block was processed, independent of block validity
+     * @param[in] version version block header field
+     * @param[in] timestamp time block header field (unix timestamp)
+     * @param[in] nonce nonce block header field
+     * @param[in] coinbase complete coinbase transaction (including witness)
+     *
+     * @note unlike the submitblock RPC, this method does NOT add the
+     *       coinbase witness automatically.
+     *
+     * @returns if the block was processed, does not necessarily indicate validity.
+     *
+     * @note Returns true if the block is already known, which can happen if
+     *       the solved block is constructed and broadcast by multiple nodes
+     *       (e.g. both the miner who constructed the template and the pool).
      */
     virtual bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) = 0;
 
