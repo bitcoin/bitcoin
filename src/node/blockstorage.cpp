@@ -1263,17 +1263,34 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
                 break; // This error is logged in OpenBlockFile
             }
             LogInfo("Reindexing block file blk%05u.dat (%d%% complete)...", (unsigned int)nFile, nFile * 100 / total_files);
+            // LoadExternalBlockFile will immediately call ABC when it finds
+            // the Genesis block
             chainman.LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent);
             if (chainman.m_interrupt) {
                 LogInfo("Interrupt requested. Exit reindexing.");
                 return;
             }
         }
+
+        auto genesisHash{chainman.GetParams().GenesisBlock().GetHash()};
+        if (WITH_LOCK(::cs_main, return !chainman.m_blockman.m_block_index.contains(genesisHash))) {
+            // Genesis Block wasn't added to the index.
+            // This means that no block was added to the index, and
+            // all of the blocks are in `blocks_with_unknown_parent`.
+            // To avoid ending up in a situation without genesis block,
+            // re-try initializing:
+            chainman.ActiveChainstate().LoadGenesisBlock();
+            // Attempt to Activate the Genesis Block
+            if (auto result = chainman.ActivateBestChains(); !result) {
+                chainman.GetNotifications().fatalError(util::ErrorString(result));
+                return;
+            }
+            chainman.LoadOutOfOrderBlocks(genesisHash, &blocks_with_unknown_parent);
+        }
+
         WITH_LOCK(::cs_main, chainman.m_blockman.m_block_tree_db->WriteReindexing(false));
         chainman.m_blockman.m_blockfiles_indexed = true;
         LogInfo("Reindexing finished");
-        // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
-        chainman.ActiveChainstate().LoadGenesisBlock();
     }
 
     // -loadblock=

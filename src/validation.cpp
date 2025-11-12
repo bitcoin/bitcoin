@@ -5017,6 +5017,36 @@ bool Chainstate::LoadGenesisBlock()
     return true;
 }
 
+int ChainstateManager::LoadOutOfOrderBlocks(const uint256& hash, std::multimap<uint256, FlatFilePos>* blocks_with_unknown_parent)
+{
+    int nLoaded = 0;
+    std::deque<uint256> queue;
+    queue.push_back(hash);
+    while (!queue.empty()) {
+        uint256 head = queue.front();
+        queue.pop_front();
+        auto range = blocks_with_unknown_parent->equal_range(head);
+        while (range.first != range.second) {
+            std::multimap<uint256, FlatFilePos>::iterator it = range.first;
+            std::shared_ptr<CBlock> pblockrecursive = std::make_shared<CBlock>();
+            if (m_blockman.ReadBlock(*pblockrecursive, it->second, {})) {
+                const auto& block_hash{pblockrecursive->GetHash()};
+                LogDebug(BCLog::REINDEX, "%s: Processing out of order child %s of %s", __func__, block_hash.ToString(), head.ToString());
+                LOCK(cs_main);
+                BlockValidationState dummy;
+                if (AcceptBlock(pblockrecursive, dummy, nullptr, true, &it->second, nullptr, true)) {
+                    nLoaded++;
+                    queue.push_back(block_hash);
+                }
+            }
+            range.first++;
+            blocks_with_unknown_parent->erase(it);
+            NotifyHeaderTip();
+        }
+    }
+    return nLoaded;
+}
+
 void ChainstateManager::LoadExternalBlockFile(
     AutoFile& file_in,
     FlatFilePos* dbp,
@@ -5140,31 +5170,7 @@ void ChainstateManager::LoadExternalBlockFile(
 
                 if (!blocks_with_unknown_parent) continue;
 
-                // Recursively process earlier encountered successors of this block
-                std::deque<uint256> queue;
-                queue.push_back(hash);
-                while (!queue.empty()) {
-                    uint256 head = queue.front();
-                    queue.pop_front();
-                    auto range = blocks_with_unknown_parent->equal_range(head);
-                    while (range.first != range.second) {
-                        std::multimap<uint256, FlatFilePos>::iterator it = range.first;
-                        std::shared_ptr<CBlock> pblockrecursive = std::make_shared<CBlock>();
-                        if (m_blockman.ReadBlock(*pblockrecursive, it->second, {})) {
-                            const auto& block_hash{pblockrecursive->GetHash()};
-                            LogDebug(BCLog::REINDEX, "%s: Processing out of order child %s of %s", __func__, block_hash.ToString(), head.ToString());
-                            LOCK(cs_main);
-                            BlockValidationState dummy;
-                            if (AcceptBlock(pblockrecursive, dummy, nullptr, true, &it->second, nullptr, true)) {
-                                nLoaded++;
-                                queue.push_back(block_hash);
-                            }
-                        }
-                        range.first++;
-                        blocks_with_unknown_parent->erase(it);
-                        NotifyHeaderTip();
-                    }
-                }
+                nLoaded += LoadOutOfOrderBlocks(hash, blocks_with_unknown_parent);
             } catch (const std::exception& e) {
                 // historical bugs added extra data to the block files that does not deserialize cleanly.
                 // commonly this data is between readable blocks, but it does not really matter. such data is not fatal to the import process.
