@@ -331,7 +331,7 @@ jobs:
           py -3 test/fuzz/test_runner.py --par $NUMBER_OF_PROCESSORS --loglevel DEBUG "${RUNNER_TEMP}/qa-assets/fuzz_corpora"
 
   windows-cross:
-    name: 'Linux->Windows cross, no tests'
+    name: 'Windows-cross to x86_64'
     needs: runners
     runs-on: ${{ needs.runners.outputs.provider == 'cirrus' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm' || 'ubuntu-24.04' }}
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
@@ -366,6 +366,7 @@ jobs:
         with:
           name: x86_64-w64-mingw32-executables-${{ github.run_id }}
           path: |
+            ${{ env.BASE_BUILD_DIR }}/bin/*.dll
             ${{ env.BASE_BUILD_DIR }}/bin/*.exe
             ${{ env.BASE_BUILD_DIR }}/src/secp256k1/bin/*.exe
             ${{ env.BASE_BUILD_DIR }}/src/univalue/*.exe

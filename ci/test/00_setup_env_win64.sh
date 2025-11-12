@@ -13,6 +13,10 @@ export PACKAGES="g++-mingw-w64-x86-64-posix nsis"
 export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
 export GOAL="deploy"
-export BITCOIN_CONFIG="-DREDUCE_EXPORTS=ON -DBUILD_GUI_TESTS=OFF -DBUILD_KERNEL_LIB=ON -DBUILD_KERNEL_TEST=ON \
+export BITCOIN_CONFIG="\
+  --preset=dev-mode \
+  -DENABLE_IPC=OFF \
+  -DWITH_USDT=OFF \
+  -DREDUCE_EXPORTS=ON \
   -DCMAKE_CXX_FLAGS='-Wno-error=maybe-uninitialized' \
 "
