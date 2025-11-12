@@ -121,9 +121,6 @@ protected:
 
     void ChainStateFlushed(ChainstateRole role, const CBlockLocator& locator) override;
 
-    /// Return custom notification options for index.
-    [[nodiscard]] virtual interfaces::Chain::NotifyOptions CustomOptions() { return {}; }
-
     /// Initialize internal state from the database and block index.
     [[nodiscard]] virtual bool CustomInit(const std::optional<interfaces::BlockRef>& block) { return true; }
 
@@ -143,6 +140,9 @@ protected:
     void SetBestBlockIndex(const CBlockIndex* block);
 
 public:
+    /// Return custom notification options for index.
+    [[nodiscard]] virtual interfaces::Chain::NotifyOptions CustomOptions() { return {}; }
+
     BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name);
     /// Destructor interrupts sync thread if running and blocks until it exits.
     virtual ~BaseIndex();
