@@ -356,6 +356,33 @@ public:
         s >> *this;
     }
 
+    // Used for testing only
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << VARINT(fields);
+
+        boost::hana::for_each(legacy_members, [&](auto&& member) {
+            using BaseType = std::decay_t<decltype(member)>;
+            if constexpr (BaseType::mask == LegacyField_pubKeyOperator) {
+                if (fields & member.mask) {
+                    // We serialize it as is, no version wrapper is used here
+                    s << state.pubKeyOperator;
+                }
+            } else if constexpr (BaseType::mask == LegacyField_netInfo) {
+                if (fields & member.mask) {
+                    // Legacy format supports non-extended addresses only
+                    s << NetInfoSerWrapper(const_cast<std::shared_ptr<NetInfoInterface>&>(state.netInfo),
+                                                /*is_extended=*/false);
+                }
+            } else {
+                if (fields & member.mask) {
+                    s << member.get(state);
+                }
+            }
+        });
+    }
+
     // Deserialize using legacy format
     template<typename Stream>
     void Unserialize(Stream& s)
