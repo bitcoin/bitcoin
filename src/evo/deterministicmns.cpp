@@ -1488,9 +1488,9 @@ bool CDeterministicMNManager::MigrateLegacyDiffs(const CBlockIndex* const tip_in
                     stateDiff.fields |= CDeterministicMNStateDiff::Field_nVersion;
                     stateDiff.state.nVersion = dmn->pdmnState->nVersion;
                 }
-                if (stateDiff.fields & CDeterministicMNStateDiff::Field_pubKeyOperator) {
-                    stateDiff.state.pubKeyOperator.SetLegacy(stateDiff.state.nVersion == ProTxVersion::LegacyBLS);
-                }
+            }
+            if (stateDiff.fields & CDeterministicMNStateDiff::Field_pubKeyOperator) {
+                stateDiff.state.pubKeyOperator.SetLegacy(stateDiff.state.nVersion == ProTxVersion::LegacyBLS);
             }
             convertedDiff.updatedMNs.emplace(internalId, stateDiff);
         }
