@@ -1120,7 +1120,7 @@ void TestNode(const MsCtx script_ctx, const NodeRef& node, FuzzedDataProvider& p
         assert(mal_success);
         assert(stack_nonmal == stack_mal);
         // Compute witness size (excluding script push, control block, and witness count encoding).
-        const size_t wit_size = GetSerializeSize(stack_nonmal) - GetSizeOfCompactSize(stack_nonmal.size());
+        const uint64_t wit_size{GetSerializeSize(stack_nonmal) - GetSizeOfCompactSize(stack_nonmal.size())};
         assert(wit_size <= *node->GetWitnessSize());
 
         // Test non-malleable satisfaction.
