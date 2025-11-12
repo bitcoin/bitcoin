@@ -70,7 +70,7 @@ class ReindexTest(BitcoinTestFramework):
         # The reindexing code should detect and accommodate out of order blocks.
         with self.nodes[0].assert_debug_log([
             'LoadExternalBlockFile: Out of order block',
-            'LoadExternalBlockFile: Processing out of order child',
+            'LoadOutOfOrderBlocks: Processing out of order child',
         ]):
             extra_args = [["-reindex"]]
             self.start_nodes(extra_args)
