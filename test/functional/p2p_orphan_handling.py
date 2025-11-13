@@ -814,16 +814,6 @@ class OrphanHandlingTest(BitcoinTestFramework):
         assert orphan["txid"] in final_mempool
         assert tx_replacer_C["txid"] in final_mempool
 
-    @cleanup
-    def test_maxorphantx_option(self):
-        # This test should be removed when -maxorphantx is removed.
-        self.log.info("Test that setting the -maxorphantx option does not error")
-        warning = "Warning: Option '-maxorphantx' is set but no longer has any effect (see release notes). Please remove it from your configuration."
-        self.restart_node(0, extra_args=["-maxorphantx=5"])
-        assert_equal(self.nodes[0].getorphantxs(), [])
-        self.stop_node(0, expected_stderr=warning)
-        self.restart_node(0)
-
     def run_test(self):
         self.nodes[0].setmocktime(int(time.time()))
         self.wallet_nonsegwit = MiniWallet(self.nodes[0], mode=MiniWalletMode.RAW_P2PK)
@@ -844,7 +834,6 @@ class OrphanHandlingTest(BitcoinTestFramework):
         self.test_announcers_before_and_after()
         self.test_parents_change()
         self.test_maximal_package_protected()
-        self.test_maxorphantx_option()
 
 
 if __name__ == '__main__':
