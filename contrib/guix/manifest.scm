@@ -422,6 +422,7 @@ inspecting signatures in Mach-O binaries.")
             (list "--enable-threads=posix",
                   "--enable-default-ssp=yes",
                   "--disable-gcov",
+                  "--disable-libgomp",
                   building-on)))))))
 
 (define-public linux-base-gcc
@@ -438,6 +439,7 @@ inspecting signatures in Mach-O binaries.")
                   "--enable-standard-branch-protection=yes",
                   "--enable-cet=yes",
                   "--disable-gcov",
+                  "--disable-libgomp",
                   "--disable-libsanitizer",
                   building-on)))
         ((#:phases phases)
