@@ -213,7 +213,7 @@ Satoshi gave us the beginning.
 ## 🔗 Learn More & Connect
 
 * [💼 Connect on Site](https://andradepsa.github.io/MATEMATICO10/bitcoin.html)
-* [💼 Connect on doi ](https://doi.org/10.5281/zenodo.17353655)
+* [💼 Connect on Doi ](https://doi.org/10.5281/zenodo.17353655)
 * [💼 Connect on LinkedIn](https://www.linkedin.com/in/geral10/)
 * [💼 Connect on Lattes ](http://lattes.cnpq.br/7286865766488458)
 
