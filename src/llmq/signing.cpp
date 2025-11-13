@@ -8,6 +8,7 @@
 #include <llmq/quorums.h>
 #include <llmq/signhash.h>
 #include <llmq/signing_shares.h>
+#include <llmq/options.h>
 
 #include <bls/bls_batchverifier.h>
 #include <chainparams.h>
@@ -24,8 +25,6 @@
 
 #include <algorithm>
 #include <unordered_set>
-
-#include "options.h"
 
 namespace llmq
 {
