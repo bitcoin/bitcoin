@@ -422,11 +422,11 @@ public:
      * @param lower_block The earliest possible block to return. If null, the
      *                    search can extend to the genesis block.
      *
-     * @return A non-null pointer to the earliest block between `upper_block`
+     * @return A reference to the earliest block between `upper_block`
      *         and `lower_block`, inclusive, such that every block between the
      *         returned block and `upper_block` has `status_mask` flags set.
      */
-    const CBlockIndex* GetFirstBlock(
+    const CBlockIndex& GetFirstBlock(
         const CBlockIndex& upper_block LIFETIMEBOUND,
         uint32_t status_mask,
         const CBlockIndex* lower_block LIFETIMEBOUND = nullptr
