@@ -429,7 +429,7 @@ public:
     const CBlockIndex* GetFirstBlock(
         const CBlockIndex& upper_block LIFETIMEBOUND,
         uint32_t status_mask,
-        const CBlockIndex* lower_block = nullptr
+        const CBlockIndex* lower_block LIFETIMEBOUND = nullptr
     ) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** True if any block files have ever been pruned. */
