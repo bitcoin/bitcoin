@@ -241,10 +241,10 @@ void CZMQNotificationInterface::NotifyInstantSendDoubleSpendAttempt(const CTrans
     });
 }
 
-void CZMQNotificationInterface::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig)
+void CZMQNotificationInterface::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig, bool proactive_relay)
 {
-    TryForEachAndRemoveFailed(notifiers, [&sig](CZMQAbstractNotifier* notifier) {
-        return notifier->NotifyRecoveredSig(sig);
+    TryForEachAndRemoveFailed(notifiers, [&sig, proactive_relay](CZMQAbstractNotifier* notifier) {
+        return notifier->NotifyRecoveredSig(sig, proactive_relay);
     });
 }
 

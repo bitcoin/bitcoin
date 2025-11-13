@@ -844,7 +844,7 @@ void CSigSharesManager::TryRecoverSig(const CQuorum& quorum, const uint256& id, 
 
     // Handle single-member quorum case after releasing the lock
     if (singleMemberRecoveredSig) {
-        sigman.ProcessRecoveredSig(singleMemberRecoveredSig, m_peerman);
+        sigman.ProcessRecoveredSig(singleMemberRecoveredSig, m_peerman, -1);
         return; // end of single-quorum processing
     }
 
@@ -876,7 +876,7 @@ void CSigSharesManager::TryRecoverSig(const CQuorum& quorum, const uint256& id, 
         }
     }
 
-    sigman.ProcessRecoveredSig(rs, m_peerman);
+    sigman.ProcessRecoveredSig(rs, m_peerman, -1);
 }
 
 CDeterministicMNCPtr CSigSharesManager::SelectMemberForRecovery(const CQuorum& quorum, const uint256 &id, int attempt)
@@ -974,9 +974,9 @@ bool CSigSharesManager::AsyncSignIfMember(Consensus::LLMQType llmqType, CSigning
     return true;
 }
 
-void CSigSharesManager::NotifyRecoveredSig(const std::shared_ptr<const CRecoveredSig>& sig) const
+void CSigSharesManager::NotifyRecoveredSig(const std::shared_ptr<const CRecoveredSig>& sig, bool proactive_relay) const
 {
-    m_peerman.RelayRecoveredSig(Assert(sig)->GetHash());
+    m_peerman.RelayRecoveredSig(*Assert(sig), proactive_relay);
 }
 
 void CSigSharesManager::CollectSigSharesToRequest(std::unordered_map<NodeId, Uint256HashMap<CSigSharesInv>>& sigSharesToRequest)

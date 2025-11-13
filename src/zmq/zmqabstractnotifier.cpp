@@ -68,7 +68,7 @@ bool CZMQAbstractNotifier::NotifyInstantSendDoubleSpendAttempt(const CTransactio
     return true;
 }
 
-bool CZMQAbstractNotifier::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig> & /*sig*/)
+bool CZMQAbstractNotifier::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig> & /*sig*/, bool /*proactive_relay*/)
 {
     return true;
 }

@@ -632,7 +632,7 @@ public:
     void RelayInv(const CInv& inv) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayInv(const CInv& inv, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayTransaction(const uint256& txid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void RelayRecoveredSig(const uint256& sigHash) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayRecoveredSig(const llmq::CRecoveredSig& sig, bool proactive_relay) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayDSQ(const CCoinJoinQueue& queue) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SetBestHeight(int height) override { m_best_height = height; };
     void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message = "") override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -2536,9 +2536,20 @@ void PeerManagerImpl::_RelayTransaction(const uint256& txid)
     };
 }
 
-void PeerManagerImpl::RelayRecoveredSig(const uint256& sigHash)
-{
-    const CInv inv{MSG_QUORUM_RECOVERED_SIG, sigHash};
+void PeerManagerImpl::RelayRecoveredSig(const llmq::CRecoveredSig& sig, bool proactive_relay) {
+    if (proactive_relay) {
+        // We were the peer that recovered this; avoid a bunch of `inv` -> `GetData` spam by proactively sending
+        m_connman.ForEachNode([this, &sig](CNode* pnode) -> bool {
+            // Skip nodes that don't want recovered signatures
+            PeerRef peer = GetPeerRef(pnode->GetId());
+            if (peer == nullptr || !peer->m_wants_recsigs) return true;
+            CNetMsgMaker msgMaker(pnode->GetCommonVersion());
+            m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::QSIGREC, sig));
+            return true;
+        });
+        return;
+    }
+    const CInv inv{MSG_QUORUM_RECOVERED_SIG, sig.GetHash()};
     READ_LOCK(m_peer_mutex);
     for (const auto& [_, peer] : m_peer_map) {
         if (peer->m_wants_recsigs) {

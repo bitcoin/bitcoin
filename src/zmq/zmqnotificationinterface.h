@@ -36,7 +36,7 @@ protected:
     void NotifyGovernanceVote(const std::shared_ptr<CDeterministicMNList>& tip_mn_list, const std::shared_ptr<const CGovernanceVote>& vote) override;
     void NotifyGovernanceObject(const std::shared_ptr<const Governance::Object>& object) override;
     void NotifyInstantSendDoubleSpendAttempt(const CTransactionRef& currentTx, const CTransactionRef& previousTx) override;
-    void NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig) override;
+    void NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig, bool proactive_relay) override;
 
 private:
     CZMQNotificationInterface();

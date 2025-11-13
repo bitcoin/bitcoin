@@ -26,7 +26,7 @@ public:
 
 protected:
     // CValidationInterface
-    void NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig) override;
+    void NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig, bool proactive_relay) override;
     void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override;
 
 private:

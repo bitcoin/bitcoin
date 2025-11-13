@@ -29,9 +29,9 @@ void ActiveNotificationInterface::UpdatedBlockTip(const CBlockIndex* pindexNew, 
     m_active_ctx.gov_signer->UpdatedBlockTip(pindexNew);
 }
 
-void ActiveNotificationInterface::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig)
+void ActiveNotificationInterface::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig, bool proactive_relay)
 {
-    m_active_ctx.shareman->NotifyRecoveredSig(sig);
+    m_active_ctx.shareman->NotifyRecoveredSig(sig, proactive_relay);
 }
 
 std::unique_ptr<ActiveNotificationInterface> g_active_notification_interface;

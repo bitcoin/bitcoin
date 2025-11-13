@@ -168,7 +168,7 @@ protected:
     virtual void NotifyGovernanceVote(const std::shared_ptr<CDeterministicMNList>& tip_mn_list, const std::shared_ptr<const CGovernanceVote>& vote) {}
     virtual void NotifyGovernanceObject(const std::shared_ptr<const Governance::Object>& object) {}
     virtual void NotifyInstantSendDoubleSpendAttempt(const CTransactionRef& currentTx, const CTransactionRef& previousTx) {}
-    virtual void NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig) {}
+    virtual void NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig, bool proactive_relay) {}
     virtual void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {}
     /**
      * Notifies listeners of the new active block chain on-disk.
@@ -236,7 +236,7 @@ public:
     void NotifyGovernanceVote(const std::shared_ptr<CDeterministicMNList>& tip_mn_list, const std::shared_ptr<const CGovernanceVote>& vote, const std::string& id);
     void NotifyGovernanceObject(const std::shared_ptr<const Governance::Object>& object, const std::string& id);
     void NotifyInstantSendDoubleSpendAttempt(const CTransactionRef &currentTx, const CTransactionRef &previousTx);
-    void NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig> &sig, const std::string& id);
+    void NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig> &sig, const std::string &id, bool proactive_relay);
     void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff);
     void ChainStateFlushed(const CBlockLocator &);
     void BlockChecked(const CBlock&, const BlockValidationState&);

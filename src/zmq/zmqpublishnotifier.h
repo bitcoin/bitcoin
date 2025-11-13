@@ -81,7 +81,7 @@ public:
 class CZMQPublishHashRecoveredSigNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>&) override;
+    bool NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>&, bool proactive_relay) override;
 };
 
 class CZMQPublishRawBlockNotifier : public CZMQAbstractPublishNotifier
@@ -150,6 +150,6 @@ public:
 class CZMQPublishRawRecoveredSigNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig> &sig) override;
+    bool NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig> &sig, bool proactive_relay) override;
 };
 #endif // BITCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H

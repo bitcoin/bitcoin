@@ -220,7 +220,7 @@ private:
 
     // Used by CSigSharesManager
     CRecoveredSigsDb& GetDb() { return db; }
-    void ProcessRecoveredSig(const std::shared_ptr<const CRecoveredSig>& recoveredSig, PeerManager& peerman)
+    void ProcessRecoveredSig(const std::shared_ptr<const CRecoveredSig>& recoveredSig, PeerManager& peerman, NodeId pFrom)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_pending, !cs_listeners);
 
     // Needed for access to GetDb() and ProcessRecoveredSig()
