@@ -138,7 +138,7 @@ jobs:
 
     env:
       DANGER_RUN_CI_ON_HOST: 1
-      BASE_ROOT_DIR: ${{ github.workspace }}
+      BASE_ROOT_DIR: ${{ github.workspace }}/repo_archive
 
     steps:
       - &CHECKOUT
@@ -176,8 +176,16 @@ jobs:
           key: ${{ github.job }}-${{ matrix.job-type }}-ccache-${{ github.run_id }}
           restore-keys: ${{ github.job }}-${{ matrix.job-type }}-ccache-
 
+      - name: Create git archive
+        run: |
+          git log -1
+          git archive --format=tar --prefix=repo_archive/ --output=repo.tar HEAD
+          tar -xf repo.tar
+
       - name: CI script
-        run: ./ci/test_run_all.sh
+        run: |
+          cd repo_archive
+          ./ci/test_run_all.sh
         env:
           FILE_ENV: ${{ matrix.file-env }}
 
