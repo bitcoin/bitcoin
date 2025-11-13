@@ -421,6 +421,7 @@ inspecting signatures in Mach-O binaries.")
             ;; https://gcc.gnu.org/install/configure.html
             (list "--enable-threads=posix",
                   "--enable-default-ssp=yes",
+                  "--enable-host-bind-now=yes",
                   "--disable-gcov",
                   "--disable-libgomp",
                   building-on)))))))
@@ -436,6 +437,7 @@ inspecting signatures in Mach-O binaries.")
             (list "--enable-initfini-array=yes",
                   "--enable-default-ssp=yes",
                   "--enable-default-pie=yes",
+                  "--enable-host-bind-now=yes",
                   "--enable-standard-branch-protection=yes",
                   "--enable-cet=yes",
                   "--disable-gcov",
