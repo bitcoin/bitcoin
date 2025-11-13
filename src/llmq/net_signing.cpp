@@ -137,7 +137,7 @@ bool NetSigning::ProcessPendingRecoveredSigs()
     batchVerifier.Verify();
     verifyTimer.stop();
 
-    LogPrint(BCLog::LLMQ, "CSigningManager::%s -- verified recovered sig(s). count=%d, vt=%d, nodes=%d\n", __func__,
+    LogPrint(BCLog::LLMQ, "NetSigning::%s -- verified recovered sig(s). count=%d, vt=%d, nodes=%d\n", __func__,
              verifyCount, verifyTimer.count(), recSigsByNode.size());
 
     Uint256HashSet processed;
@@ -146,8 +146,7 @@ bool NetSigning::ProcessPendingRecoveredSigs()
         const auto& v = p.second;
 
         if (batchVerifier.badSources.count(nodeId)) {
-            LogPrint(BCLog::LLMQ, "CSigningManager::%s -- invalid recSig from other node, banning peer=%d\n", __func__,
-                     nodeId);
+            LogPrint(BCLog::LLMQ, "NetSigning::%s -- invalid recSig from other node, banning peer=%d\n", __func__, nodeId);
             m_peer_manager->PeerMisbehaving(nodeId, 100);
             continue;
         }
