@@ -441,6 +441,7 @@ inspecting signatures in Mach-O binaries.")
                   "--enable-cet=yes",
                   "--disable-gcov",
                   "--disable-libgomp",
+                  "--disable-libquadmath",
                   "--disable-libsanitizer",
                   building-on)))
         ((#:phases phases)
