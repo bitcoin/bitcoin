@@ -807,4 +807,41 @@ BOOST_AUTO_TEST_CASE(streams_hashed)
     BOOST_CHECK_EQUAL(hash_writer.GetHash(), hash_verifier.GetHash());
 }
 
+BOOST_AUTO_TEST_CASE(size_preserves_position)
+{
+    const fs::path path = m_args.GetDataDirBase() / "size_pos_test.bin";
+    AutoFile f{fsbridge::fopen(path, "w+b")};
+    for (uint8_t j = 0; j < 10; ++j) {
+        f << j;
+    }
+
+    // Test that usage of size() does not change the current position
+    //
+    // Case: Pos at beginning of the file
+    f.seek(0, SEEK_SET);
+    (void)f.size();
+    uint8_t first{};
+    f >> first;
+    BOOST_CHECK_EQUAL(first, 0);
+
+    // Case: Pos at middle of the file
+    f.seek(0, SEEK_SET);
+    // Move pos to middle
+    f.ignore(4);
+    (void)f.size();
+    uint8_t middle{};
+    f >> middle;
+    // Pos still at 4
+    BOOST_CHECK_EQUAL(middle, 4);
+
+    // Case: Pos at EOF
+    f.seek(0, SEEK_END);
+    (void)f.size();
+    uint8_t end{};
+    BOOST_CHECK_EXCEPTION(f >> end, std::ios_base::failure, HasReason{"AutoFile::read: end of file"});
+
+    BOOST_REQUIRE_EQUAL(f.fclose(), 0);
+    fs::remove(path);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
