@@ -93,7 +93,7 @@ There is an included test suite that is useful for testing code changes when dev
 To run the test suite (recommended), you will need to have Python 3 installed:
 
 ```bash
-pkgin install python310 py310-zmq
+pkgin install python313 py313-zmq
 ```
 
 ## Building Bitcoin Core
