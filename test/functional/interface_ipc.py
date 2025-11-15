@@ -256,9 +256,11 @@ class IPCInterfaceTest(BitcoinTestFramework):
             assert_equal(res.result, True)
 
             self.log.debug("Block should propagate")
-            assert_equal(self.nodes[1].getchaintips()[0]["height"], current_block_height + 1)
+            # Check that the IPC node actually updates its own chain
+            assert_equal(self.nodes[0].getchaintips()[0]["height"], current_block_height + 1)
             # Stalls if a regression causes submitBlock() to accept an invalid block:
             self.sync_all()
+            # Check that the other node accepts the block
             assert_equal(self.nodes[0].getchaintips()[0], self.nodes[1].getchaintips()[0])
 
             miniwallet.rescan_utxos()
