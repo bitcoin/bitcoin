@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2022 The Bitcoin Core developers
+# Copyright (c) 2018-2022 The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test wallet group functionality."""
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.messages import (
     tx_from_hex,
 )
@@ -15,7 +15,7 @@ from test_framework.util import (
 )
 
 
-class WalletGroupTest(BitcoinTestFramework):
+class WalletGroupTest(SnailcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 5

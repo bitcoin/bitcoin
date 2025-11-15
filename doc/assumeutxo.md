@@ -1,6 +1,6 @@
 # Assumeutxo Usage
 
-Assumeutxo is a feature that allows fast bootstrapping of a validating bitcoind
+Assumeutxo is a feature that allows fast bootstrapping of a validating snailcoind
 instance.
 
 For notes on the design of Assumeutxo, please refer to [the design doc](/doc/design/assumeutxo.md).
@@ -17,7 +17,7 @@ Once you've obtained the snapshot, you can use the RPC command `loadtxoutset` to
 load it.
 
 ```
-$ bitcoin-cli -rpcclienttimeout=0 loadtxoutset /path/to/input
+$ snailcoin-cli -rpcclienttimeout=0 loadtxoutset /path/to/input
 ```
 
 After the snapshot has loaded, the syncing process of both the snapshot chain
@@ -69,7 +69,7 @@ comparing the hash.
 Example usage:
 
 ```
-$ bitcoin-cli -rpcclienttimeout=0 dumptxoutset /path/to/output rollback
+$ snailcoin-cli -rpcclienttimeout=0 dumptxoutset /path/to/output rollback
 ```
 
 For most of the duration of `dumptxoutset` running the node is in a temporary

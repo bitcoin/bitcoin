@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022-present The Bitcoin Core developers
+# Copyright (c) 2022-present The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,7 +19,7 @@ except ImportError:
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import COIN, DEFAULT_MEMPOOL_EXPIRY_HOURS
 from test_framework.p2p import P2PDataStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.util import (
     assert_equal,
     bpf_cflags,
@@ -148,14 +148,14 @@ class MempoolReplaced(ctypes.Structure):
     ]
 
 
-class MempoolTracepointTest(BitcoinTestFramework):
+class MempoolTracepointTest(SnailcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
 
     def skip_test_if_missing_module(self):
         self.skip_if_platform_not_linux()
-        self.skip_if_no_bitcoind_tracepoints()
+        self.skip_if_no_snailcoind_tracepoints()
         self.skip_if_no_python_bcc()
         self.skip_if_no_bpf_permissions()
         self.skip_if_running_under_valgrind()

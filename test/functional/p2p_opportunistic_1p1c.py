@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2024-present The Bitcoin Core developers
+# Copyright (c) 2024-present The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -40,7 +40,7 @@ from test_framework.script import (
     OP_NOP,
     OP_RETURN,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -51,7 +51,7 @@ from test_framework.wallet import (
     MiniWalletMode,
 )
 
-# 1sat/vB feerate denominated in BTC/KvB
+# 1sat/vB feerate denominated in SNAIL/KvB
 FEERATE_1SAT_VB = Decimal("0.00001000")
 # Number of seconds to wait to ensure no getdata is received
 GETDATA_WAIT = 60
@@ -72,7 +72,7 @@ def cleanup(func):
             self.nodes[0].setmocktime(0)
     return wrapper
 
-class PackageRelayTest(BitcoinTestFramework):
+class PackageRelayTest(SnailcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

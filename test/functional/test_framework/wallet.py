@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2022 The Bitcoin Core developers
+# Copyright (c) 2020-2022 The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """A limited-functionality wallet, which may replace a real wallet in tests"""
@@ -108,7 +108,7 @@ class MiniWallet:
 
         # When the pre-mined test framework chain is used, it contains coinbase
         # outputs to the MiniWallet's default address in blocks 76-100
-        # (see method BitcoinTestFramework._initialize_chain())
+        # (see method SnailcoinTestFramework._initialize_chain())
         # The MiniWallet needs to rescan_utxos() in order to account
         # for those mature UTXOs, so that all txs spend confirmed coins
         self.rescan_utxos()

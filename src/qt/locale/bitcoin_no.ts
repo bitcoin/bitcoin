@@ -54,13 +54,13 @@
         <translation type="unfinished">&amp;Velg</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Dette er Bitcoin-adressene dine for å sende betalinger. Kontroller alltid beløpet og mottakeradressen før du sender mynter.</translation>
+        <source>These are your Snailcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Dette er Snailcoin-adressene dine for å sende betalinger. Kontroller alltid beløpet og mottakeradressen før du sender mynter.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your Snailcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">Dette er Bitcoin-adressene dine for å motta betalinger. Bruk knappen ‘Opprett ny mottaksadresse’ i mottaksfanen for å opprette nye adresser.Signering er kun mulig med adresser av typen ‘legacy’.</translation>
+        <translation type="unfinished">Dette er Snailcoin-adressene dine for å motta betalinger. Bruk knappen ‘Opprett ny mottaksadresse’ i mottaksfanen for å opprette nye adresser.Signering er kun mulig med adresser av typen ‘legacy’.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -259,7 +259,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
+    <name>SnailcoinApplication</name>
     <message>
         <source>Settings file %1 might be corrupt or invalid.</source>
         <translation type="unfinished">Innstillingsfilen %1 kan være ødelagt eller ugyldig.</translation>
@@ -353,7 +353,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>SnailcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">&amp;Oversikt</translation>
@@ -420,8 +420,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Proxy er aktivert: %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">Send mynter til en Bitcoin-adresse</translation>
+        <source>Send coins to a Snailcoin address</source>
+        <translation type="unfinished">Send mynter til en Snailcoin-adresse</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -460,16 +460,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Signer &amp;melding…</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished">Signer meldinger med Bitcoin-adressene dine for å bevise at du eier dem</translation>
+        <source>Sign messages with your Snailcoin addresses to prove you own them</source>
+        <translation type="unfinished">Signer meldinger med Snailcoin-adressene dine for å bevise at du eier dem</translation>
     </message>
     <message>
         <source>&amp;Verify message…</source>
         <translation type="unfinished">&amp;Verifiser melding…</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">Verifiser meldinger for å sikre at de ble signert med de spesifiserte Bitcoin-adressene</translation>
+        <source>Verify messages to ensure they were signed with specified Snailcoin addresses</source>
+        <translation type="unfinished">Verifiser meldinger for å sikre at de ble signert med de spesifiserte Snailcoin-adressene</translation>
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
@@ -583,16 +583,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Oppdatert</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction</source>
-        <translation type="unfinished">Last inn delvis signert Bitcoin-transaksjon</translation>
+        <source>Load Partially Signed Snailcoin Transaction</source>
+        <translation type="unfinished">Last inn delvis signert Snailcoin-transaksjon</translation>
     </message>
     <message>
         <source>Load PSBT from &amp;clipboard…</source>
         <translation type="unfinished">Last inn PSBT fra &amp;utklippstavle…</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation type="unfinished">Last inn delvis signert Bitcoin-transaksjon fra utklippstavlen</translation>
+        <source>Load Partially Signed Snailcoin Transaction from clipboard</source>
+        <translation type="unfinished">Last inn delvis signert Snailcoin-transaksjon fra utklippstavlen</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -649,8 +649,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Migrer en lommebok</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished">Vis %1 hjelpetekst for å få en liste over mulige Bitcoin kommandolinjealternativer</translation>
+        <source>Show the %1 help message to get a list with possible Snailcoin command-line options</source>
+        <translation type="unfinished">Vis %1 hjelpetekst for å få en liste over mulige Snailcoin kommandolinjealternativer</translation>
     </message>
     <message>
         <source>&amp;Mask values</source>
@@ -706,11 +706,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">V&amp;is</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to Snailcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform>%n aktive tilkoblinger til Bitcoin-nettverket.</numerusform>
-            <numerusform>1%n aktive tilkoblinger til Bitcoin-nettverket.</numerusform>
+            <numerusform>%n aktive tilkoblinger til Snailcoin-nettverket.</numerusform>
+            <numerusform>1%n aktive tilkoblinger til Snailcoin-nettverket.</numerusform>
         </translation>
     </message>
     <message>

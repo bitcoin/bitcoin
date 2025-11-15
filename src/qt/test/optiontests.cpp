@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-2022 The Snailcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -107,8 +107,8 @@ void OptionTests::parametersInteraction()
 {
     // Test that the bug https://github.com/bitcoin-core/gui/issues/567 does not resurface.
     // It was fixed via https://github.com/bitcoin-core/gui/pull/568.
-    // With fListen=false in ~/.config/Bitcoin/Bitcoin-Qt.conf and all else left as default,
-    // bitcoin-qt should set both -listen and -listenonion to false and start successfully.
+    // With fListen=false in ~/.config/Snailcoin/Snailcoin-Qt.conf and all else left as default,
+    // snailcoin-qt should set both -listen and -listenonion to false and start successfully.
     gArgs.LockSettings([&](common::Settings& s) {
         s.forced_settings.erase("listen");
         s.forced_settings.erase("listenonion");

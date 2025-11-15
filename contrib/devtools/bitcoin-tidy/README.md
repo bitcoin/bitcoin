@@ -1,4 +1,4 @@
-# Bitcoin Tidy
+# Snailcoin Tidy
 
 Example Usage:
 

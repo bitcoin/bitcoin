@@ -3,7 +3,7 @@
 ## Scope
 
 libsecp256k1 is a library for elliptic curve cryptography on the curve secp256k1, not a general-purpose cryptography library.
-The library primarily serves the needs of the Bitcoin Core project but provides additional functionality for the benefit of the wider Bitcoin ecosystem.
+The library primarily serves the needs of the Snailcoin Core project but provides additional functionality for the benefit of the wider Snailcoin ecosystem.
 
 ## Adding new functionality or modules
 
@@ -20,7 +20,7 @@ Contributors are recommended to provide the following in addition to the new cod
     In addition to a defining the security goals, it should be argued that the new functionality meets these goals.
     Depending on the nature of the new functionality, a wide range of security arguments are acceptable, ranging from being "obviously secure" to rigorous proofs of security.
 * **Relevance Arguments:**
-    The relevance of the new functionality for the Bitcoin ecosystem should be argued by outlining clear use cases.
+    The relevance of the new functionality for the Snailcoin ecosystem should be argued by outlining clear use cases.
 
 These are not the only factors taken into account when considering to add new functionality.
 The proposed new libsecp256k1 code must be of high quality, including API documentation and tests, as well as featuring a misuse-resistant API design.
@@ -38,7 +38,7 @@ Chat history logs can be found at https://gnusha.org/secp256k1/.
 
 ## Contributor workflow & peer review
 
-The Contributor Workflow & Peer Review in libsecp256k1 are similar to Bitcoin Core's workflow and review processes described in its [CONTRIBUTING.md](https://github.com/bitcoin/bitcoin/blob/master/CONTRIBUTING.md).
+The Contributor Workflow & Peer Review in libsecp256k1 are similar to Snailcoin Core's workflow and review processes described in its [CONTRIBUTING.md](https://github.com/bitcoin/bitcoin/blob/master/CONTRIBUTING.md).
 
 ### Coding conventions
 
@@ -49,7 +49,7 @@ In addition, libsecp256k1 tries to maintain the following coding conventions:
 * Operations involving secret data should be tested for being constant time with respect to the secrets (see [src/ctime_tests.c](src/ctime_tests.c)).
 * Local variables containing secret data should be cleared explicitly to try to delete secrets from memory.
 * Use `secp256k1_memcmp_var` instead of `memcmp` (see [#823](https://github.com/bitcoin-core/secp256k1/issues/823)).
-* As a rule of thumb, the default values for configuration options should target standard desktop machines and align with Bitcoin Core's defaults, and the tests should mostly exercise the default configuration (see [#1549](https://github.com/bitcoin-core/secp256k1/issues/1549#issuecomment-2200559257)).
+* As a rule of thumb, the default values for configuration options should target standard desktop machines and align with Snailcoin Core's defaults, and the tests should mostly exercise the default configuration (see [#1549](https://github.com/bitcoin-core/secp256k1/issues/1549#issuecomment-2200559257)).
 
 #### Style conventions
 

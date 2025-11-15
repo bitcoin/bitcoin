@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2024-present The Bitcoin Core developers
+# Copyright (c) 2024-present The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test utxo-to-sqlite conversion tool"""
@@ -31,7 +31,7 @@ from test_framework.script_util import (
     script_to_p2sh_script,
     script_to_p2wsh_script,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
@@ -52,7 +52,7 @@ def calculate_muhash_from_sqlite_utxos(filename):
     return muhash.digest()[::-1].hex()
 
 
-class UtxoToSqliteTest(BitcoinTestFramework):
+class UtxoToSqliteTest(SnailcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         # we want to create some UTXOs with non-standard output scripts

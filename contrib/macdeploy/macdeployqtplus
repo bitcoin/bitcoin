@@ -145,8 +145,8 @@ class FrameworkInfo(object):
 class ApplicationBundleInfo(object):
     def __init__(self, path: str):
         self.path = path
-        # for backwards compatibility reasons, this must remain as Bitcoin-Qt
-        self.binaryPath = os.path.join(path, "Contents", "MacOS", "Bitcoin-Qt")
+        # for backwards compatibility reasons, this must remain as Snailcoin-Qt
+        self.binaryPath = os.path.join(path, "Contents", "MacOS", "Snailcoin-Qt")
         if not os.path.exists(self.binaryPath):
             raise RuntimeError(f"Could not find bundle binary for {path}")
         self.resourcesPath = os.path.join(path, "Contents", "Resources")
@@ -416,7 +416,7 @@ if os.path.exists("dist"):
 
 # ------------------------------------------------
 
-target = os.path.join("dist", "Bitcoin-Qt.app")
+target = os.path.join("dist", "Snailcoin-Qt.app")
 
 print("+ Copying source bundle +")
 if verbose:
@@ -499,7 +499,7 @@ if config.zip is not None:
         print("+ Removing existing .zip +")
         os.unlink(name + ".zip")
 
-    shutil.make_archive('{}'.format(name), format='zip', root_dir='dist', base_dir='Bitcoin-Qt.app')
+    shutil.make_archive('{}'.format(name), format='zip', root_dir='dist', base_dir='Snailcoin-Qt.app')
 
 # ------------------------------------------------
 

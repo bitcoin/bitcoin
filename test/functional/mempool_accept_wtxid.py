@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2021 The Bitcoin Core developers
+# Copyright (c) 2021 The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -12,14 +12,14 @@ from test_framework.messages import (
 )
 from test_framework.p2p import P2PTxInvStore
 from test_framework.script_util import ValidWitnessMalleatedTx
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
     assert_equal,
 )
 
 
-class MempoolWtxidTest(BitcoinTestFramework):
+class MempoolWtxidTest(SnailcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2022 The Bitcoin Core developers
+# Copyright (c) 2020-2022 The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mempool descendants/ancestors information update.
@@ -15,7 +15,7 @@ from test_framework.blocktools import (
     create_block,
     create_coinbase,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.wallet import MiniWallet
 
@@ -24,7 +24,7 @@ MAX_DISCONNECTED_TX_POOL_BYTES = 20_000_000
 CUSTOM_ANCESTOR_COUNT = 100
 CUSTOM_DESCENDANT_COUNT = CUSTOM_ANCESTOR_COUNT
 
-class MempoolUpdateFromBlockTest(BitcoinTestFramework):
+class MempoolUpdateFromBlockTest(SnailcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         # Ancestor and descendant limits depend on transaction_graph_test requirements

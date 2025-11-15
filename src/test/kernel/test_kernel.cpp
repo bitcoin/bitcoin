@@ -1,11 +1,11 @@
-// Copyright (c) 2024-present The Bitcoin Core developers
+// Copyright (c) 2024-present The Snailcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <kernel/bitcoinkernel.h>
 #include <kernel/bitcoinkernel_wrapper.h>
 
-#define BOOST_TEST_MODULE Bitcoin Kernel Test Suite
+#define BOOST_TEST_MODULE Snailcoin Kernel Test Suite
 #include <boost/test/included/unit_test.hpp>
 
 #include <test/kernel/block_data.h>

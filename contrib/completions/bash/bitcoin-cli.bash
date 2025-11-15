@@ -1,9 +1,9 @@
-# bash programmable completion for bitcoin-cli(1)
-# Copyright (c) 2012-2022 The Bitcoin Core developers
+# bash programmable completion for snailcoin-cli(1)
+# Copyright (c) 2012-2022 The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-# call $bitcoin-cli for RPC
+# call $snailcoin-cli for RPC
 _bitcoin_rpc() {
     # determine already specified args necessary for RPC
     local rpcargs=()
@@ -21,8 +21,8 @@ _bitcoin_cli() {
     local cur prev words=() cword
     local bitcoin_cli
 
-    # save and use original argument to invoke bitcoin-cli for -help, help and RPC
-    # as bitcoin-cli might not be in $PATH
+    # save and use original argument to invoke snailcoin-cli for -help, help and RPC
+    # as snailcoin-cli might not be in $PATH
     bitcoin_cli="$1"
 
     COMPREPLY=()
@@ -127,7 +127,7 @@ _bitcoin_cli() {
             ;;
     esac
 } &&
-complete -F _bitcoin_cli bitcoin-cli
+complete -F _bitcoin_cli snailcoin-cli
 
 # Local variables:
 # mode: shell-script

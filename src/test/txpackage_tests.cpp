@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-2022 The Snailcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -999,7 +999,7 @@ BOOST_AUTO_TEST_CASE(package_cpfp_tests)
     // Package feerate includes the modified fees of the transactions.
     // This means a child with its fee delta from prioritisetransaction can pay for a parent.
     m_node.mempool->PrioritiseTransaction(tx_child_cheap->GetHash(), 1 * COIN);
-    // Now that the child's fees have "increased" by 1 BTC, the cheap package should succeed.
+    // Now that the child's fees have "increased" by 1 SNAIL, the cheap package should succeed.
     {
         const auto submit_prioritised_package = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
                                                                   package_still_too_low, /*test_accept=*/false, /*client_maxfeerate=*/{});
@@ -1046,7 +1046,7 @@ BOOST_AUTO_TEST_CASE(package_cpfp_tests)
     CTransactionRef tx_child_poor = MakeTransactionRef(mtx_child_poor);
     package_rich_parent.push_back(tx_child_poor);
 
-    // Parent pays 1 BTC and child pays none. The parent should be accepted without the child.
+    // Parent pays 1 SNAIL and child pays none. The parent should be accepted without the child.
     {
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
         const auto submit_rich_parent = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,

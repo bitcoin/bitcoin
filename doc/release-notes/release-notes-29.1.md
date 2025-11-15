@@ -1,4 +1,4 @@
-Bitcoin Core version 29.1 is now available from:
+Snailcoin Core version 29.1 is now available from:
 
   <https://bitcoincore.org/bin/bitcoin-core-29.1/>
 
@@ -18,20 +18,20 @@ How to Upgrade
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes in some cases), then run the
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on macOS)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+installer (on Windows) or just copy over `/Applications/Snailcoin-Qt` (on macOS)
+or `snailcoind`/`snailcoin-qt` (on Linux).
 
-Upgrading directly from a version of Bitcoin Core that has reached its EOL is
+Upgrading directly from a version of Snailcoin Core that has reached its EOL is
 possible, but it might take some time if the data directory needs to be migrated. Old
-wallet versions of Bitcoin Core are generally supported.
+wallet versions of Snailcoin Core are generally supported.
 
 Compatibility
 ==============
 
-Bitcoin Core is supported and tested on operating systems using the
-Linux Kernel 3.17+, macOS 13+, and Windows 10+. Bitcoin
+Snailcoin Core is supported and tested on operating systems using the
+Linux Kernel 3.17+, macOS 13+, and Windows 10+. Snailcoin
 Core should also work on most other Unix-like systems but is not as
-frequently tested on them. It is not recommended to use Bitcoin Core on
+frequently tested on them. It is not recommended to use Snailcoin Core on
 unsupported systems.
 
 Notable changes
@@ -152,12 +152,12 @@ function signature instead of just the function name. (#32604)
 - #32353 doc: Fix fuzz test_runner.py path
 - #32389 doc: Fix test_bitcoin path
 - #32607 rpc: Note in fundrawtransaction doc, fee rate is for package
-- #32679 doc: update tor docs to use bitcoind binary from path
+- #32679 doc: update tor docs to use snailcoind binary from path
 - #32693 depends: fix cmake compatibility error for freetype
 - #32696 doc: make -DWITH_ZMQ=ON explicit on build-unix.md
 - #32708 rpc, doc: update listdescriptors RCP help
 - #32711 doc: add missing packages for BSDs (cmake, gmake, curl) to depends/README.md
-- #32719 doc, windows: CompanyName "Bitcoin" => "Bitcoin Core project"
+- #32719 doc, windows: CompanyName "Snailcoin" => "Snailcoin Core project"
 - #32776 doc: taproot became always active in v24.0
 - #32777 doc: fix Transifex 404s
 - #32846 doc: clarify that the "-j N" goes after the "--build build" part

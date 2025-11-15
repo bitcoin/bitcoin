@@ -61,8 +61,8 @@ once_cell = "1.18"</translation>
         <translation type="unfinished">Ô&amp;bier</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Tukej sōm adresy Bitcoin na kere posyłŏsz płaty. Dycki wybaduj wielość i adresã ôdbiyrŏcza przed posłaniym mōnet.</translation>
+        <source>These are your Snailcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Tukej sōm adresy Snailcoin na kere posyłŏsz płaty. Dycki wybaduj wielość i adresã ôdbiyrŏcza przed posłaniym mōnet.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -210,8 +210,8 @@ once_cell = "1.18"</translation>
         <translation type="unfinished">Kwota</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation type="unfinished">Wkludź adresã Bitcoin (bp. %1)</translation>
+        <source>Enter a Snailcoin address (e.g. %1)</source>
+        <translation type="unfinished">Wkludź adresã Snailcoin (bp. %1)</translation>
     </message>
     <message>
         <source>Inbound</source>
@@ -265,7 +265,7 @@ once_cell = "1.18"</translation>
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>SnailcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">&amp;Podsumowanie</translation>
@@ -324,8 +324,8 @@ once_cell = "1.18"</translation>
         <translation type="unfinished">Proxy je &lt;b&gt;zapuszczone&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">Poślij mōnety na adresã Bitcoin</translation>
+        <source>Send coins to a Snailcoin address</source>
+        <translation type="unfinished">Poślij mōnety na adresã Snailcoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -348,12 +348,12 @@ once_cell = "1.18"</translation>
         <translation type="unfinished">Szyfruj klucze prywatne, kere sōm we twojim portmanyju</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <source>Sign messages with your Snailcoin addresses to prove you own them</source>
         <translation type="unfinished">Podpisz wiadōmości swojōm adresōm coby dowiyść jejich posiadanie</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">Zweryfikuj wiadōmość, coby wejzdrzeć sie, iże ôstała podpisanŏ podanōm adresōm Bitcoin.</translation>
+        <source>Verify messages to ensure they were signed with specified Snailcoin addresses</source>
+        <translation type="unfinished">Zweryfikuj wiadōmość, coby wejzdrzeć sie, iże ôstała podpisanŏ podanōm adresōm Snailcoin.</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -426,7 +426,7 @@ once_cell = "1.18"</translation>
         <translation type="unfinished">&amp;Adresy posyłaniŏ</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <source>Show the %1 help message to get a list with possible Snailcoin command-line options</source>
         <translation type="unfinished">Pokŏż pōmoc %1 coby zobŏczyć wykŏz wszyjskich ôpcyji piski nakŏzań.</translation>
     </message>
     <message>
@@ -438,7 +438,7 @@ once_cell = "1.18"</translation>
         <translation type="unfinished">%1 klijynt</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to Snailcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -662,8 +662,8 @@ once_cell = "1.18"</translation>
         <translation type="unfinished">Edytuj adresã posyłaniŏ</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation type="unfinished">Wkludzōnŏ adresa "%1" niyma nŏleżnōm adresōm Bitcoin.</translation>
+        <source>The entered address "%1" is not a valid Snailcoin address.</source>
+        <translation type="unfinished">Wkludzōnŏ adresa "%1" niyma nŏleżnōm adresōm Snailcoin.</translation>
     </message>
     <message>
         <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
@@ -780,8 +780,8 @@ once_cell = "1.18"</translation>
         </translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
-        <translation type="unfinished">%1 sebiere i spamiyntŏ kopijõ kety blokōw Bitcoin.</translation>
+        <source>%1 will download and store a copy of the Snailcoin block chain.</source>
+        <translation type="unfinished">%1 sebiere i spamiyntŏ kopijõ kety blokōw Snailcoin.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -930,8 +930,8 @@ once_cell = "1.18"</translation>
         <translation type="unfinished">Zwōl na skuplowania przichodzōnce</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation type="unfinished">Skupluj sie z necym Bitcoin bez SOCKS5 proxy.</translation>
+        <source>Connect to the Snailcoin network through a SOCKS5 proxy.</source>
+        <translation type="unfinished">Skupluj sie z necym Snailcoin bez SOCKS5 proxy.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -986,7 +986,7 @@ once_cell = "1.18"</translation>
         <translation type="unfinished">Formular</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Snailcoin network after a connection is established, but this process has not completed yet.</source>
         <translation type="unfinished">Wyświytlanŏ informacyjŏ może być niyterŏźnŏ. Twōj portmanyj synchrōnizuje sie autōmatycznie z necym bitcoin zarŏz po tym, jak zrychtowane je skuplowanie, ale proces tyn niy ôstoł jeszcze skōńczōny.</translation>
     </message>
     <message>
@@ -1196,8 +1196,8 @@ once_cell = "1.18"</translation>
         <translation type="unfinished">&amp;Etyketa:</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation type="unfinished">Ôpcyjōnalnŏ wiadōmość do prziwstōniŏ do żōndaniŏ płatu, kerŏ bydzie wyświytlanŏ, kej żōndanie ôstanie ôdewrzōne. Napōmniynie: wiadōmość ta niy ôstanie wysłanŏ z płatym w nec Bitcoin.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Snailcoin network.</source>
+        <translation type="unfinished">Ôpcyjōnalnŏ wiadōmość do prziwstōniŏ do żōndaniŏ płatu, kerŏ bydzie wyświytlanŏ, kej żōndanie ôstanie ôdewrzōne. Napōmniynie: wiadōmość ta niy ôstanie wysłanŏ z płatym w nec Snailcoin.</translation>
     </message>
     <message>
         <source>Clear</source>
@@ -1363,8 +1363,8 @@ once_cell = "1.18"</translation>
         </translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished">Pozōr: niynŏleżnŏ adresa Bitcoin</translation>
+        <source>Warning: Invalid Snailcoin address</source>
+        <translation type="unfinished">Pozōr: niynŏleżnŏ adresa Snailcoin</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -1382,8 +1382,8 @@ once_cell = "1.18"</translation>
         <translation type="unfinished">&amp;Etyketa:</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
-        <translation type="unfinished">Adresa Bitcoin, na kerõ chcesz posłać płat</translation>
+        <source>The Snailcoin address to send the payment to</source>
+        <translation type="unfinished">Adresa Snailcoin, na kerõ chcesz posłać płat</translation>
     </message>
     <message>
         <source>Use available balance</source>
@@ -1394,8 +1394,8 @@ once_cell = "1.18"</translation>
         <translation type="unfinished">Wiadōmość:</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation type="unfinished">Wiadōmość, kerŏ ôstała prziwstōnŏ do URI bitcoin:, kerŏ bydzie przechowowanŏ z transakcyjōm w cylach informacyjnych. Napōmniynie: Ta wiadōmość niy bydzie rozszyrzowanŏ w necu Bitcoin.</translation>
+        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Snailcoin network.</source>
+        <translation type="unfinished">Wiadōmość, kerŏ ôstała prziwstōnŏ do URI bitcoin:, kerŏ bydzie przechowowanŏ z transakcyjōm w cylach informacyjnych. Napōmniynie: Ta wiadōmość niy bydzie rozszyrzowanŏ w necu Snailcoin.</translation>
     </message>
 </context>
 <context>

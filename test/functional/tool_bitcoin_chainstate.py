@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022-present The Bitcoin Core developers
+# Copyright (c) 2022-present The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import subprocess
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 
-class BitcoinChainstateTest(BitcoinTestFramework):
+class SnailcoinChainstateTest(SnailcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_bitcoin_chainstate()
 
@@ -46,4 +46,4 @@ class BitcoinChainstateTest(BitcoinTestFramework):
         self.add_block(datadir, "", "Empty line found")
 
 if __name__ == "__main__":
-    BitcoinChainstateTest(__file__).main()
+    SnailcoinChainstateTest(__file__).main()

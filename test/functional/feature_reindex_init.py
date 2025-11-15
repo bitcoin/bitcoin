@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (c) The Bitcoin Core developers
+# Copyright (c) The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test reindex works on init after a db load failure"""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.util import assert_equal
 import os
 import shutil
 
 
-class ReindexInitTest(BitcoinTestFramework):
+class ReindexInitTest(SnailcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

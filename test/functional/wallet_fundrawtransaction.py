@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-2022 The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the fundrawtransaction RPC."""
@@ -16,7 +16,7 @@ from test_framework.messages import (
     CTransaction,
     CTxOut,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
     assert_approx,
@@ -39,7 +39,7 @@ def get_unspent(listunspent, amount):
             return utx
     raise AssertionError('Could not find unspent with amount={}'.format(amount))
 
-class RawTransactionsTest(BitcoinTestFramework):
+class RawTransactionsTest(SnailcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.extra_args = [[
@@ -578,7 +578,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         import_res = wmulti.importdescriptors([{"desc": mSigObj["descriptor"], "timestamp": "now"}])
         assert_equal(import_res[0]["success"], True)
 
-        # Send 1.2 BTC to msig addr.
+        # Send 1.2 SNAIL to msig addr.
         self.nodes[0].sendtoaddress(mSigObj["address"], 1.2)
         self.generate(self.nodes[0], 1)
 
@@ -802,7 +802,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         wwatch.unloadwallet()
 
     def test_option_feerate(self):
-        self.log.info("Test fundrawtxn with explicit fee rates (fee_rate sat/vB and feeRate BTC/kvB)")
+        self.log.info("Test fundrawtxn with explicit fee rates (fee_rate sat/vB and feeRate SNAIL/kvB)")
         node = self.nodes[3]
         # Make sure there is exactly one input so coin selection can't skew the result.
         assert_equal(len(self.nodes[3].listunspent(1)), 1)
@@ -872,7 +872,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         node.fundrawtransaction(rawtx, feeRate=0.00000999, add_inputs=True)
 
         self.log.info("- raises RPC error if both feeRate and fee_rate are passed")
-        assert_raises_rpc_error(-8, "Cannot specify both fee_rate (sat/vB) and feeRate (BTC/kvB)",
+        assert_raises_rpc_error(-8, "Cannot specify both fee_rate (sat/vB) and feeRate (SNAIL/kvB)",
             node.fundrawtransaction, rawtx, fee_rate=0.1, feeRate=0.1, add_inputs=True)
 
         self.log.info("- raises RPC error if both feeRate and estimate_mode passed")
@@ -915,7 +915,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         outputs = {self.nodes[2].getnewaddress(): 1}
         rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
 
-        # Test subtract fee from outputs with feeRate (BTC/kvB)
+        # Test subtract fee from outputs with feeRate (SNAIL/kvB)
         result = [self.nodes[3].fundrawtransaction(rawtx),  # uses self.min_relay_tx_fee (set by settxfee)
             self.nodes[3].fundrawtransaction(rawtx, subtractFeeFromOutputs=[]),  # empty subtraction list
             self.nodes[3].fundrawtransaction(rawtx, subtractFeeFromOutputs=[0]),  # uses self.min_relay_tx_fee (set by settxfee)
@@ -1013,7 +1013,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         outputs = {}
         rawtx = recipient.createrawtransaction([], {wallet.getnewaddress(): 147.99899260})
 
-        # Make 1500 0.1 BTC outputs. The amount that we target for funding is in
+        # Make 1500 0.1 SNAIL outputs. The amount that we target for funding is in
         # the BnB range when these outputs are used.  However if these outputs
         # are selected, the transaction will end up being too large, so it
         # shouldn't use BnB and instead fall back to Knapsack but that behavior
@@ -1115,7 +1115,7 @@ class RawTransactionsTest(BitcoinTestFramework):
     def test_add_inputs_default_value(self):
         self.log.info("Test 'add_inputs' default value")
 
-        # Create and fund the wallet with 5 BTC
+        # Create and fund the wallet with 5 SNAIL
         self.nodes[2].createwallet("test_preset_inputs")
         wallet = self.nodes[2].get_wallet_rpc("test_preset_inputs")
         addr1 = wallet.getnewaddress(address_type="bech32")
@@ -1146,7 +1146,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Select an input manually, which doesn't cover the entire output amount and
         # verify that the dynamically set 'add_inputs=false' value works.
 
-        # Fund wallet with 2 outputs, 5 BTC each.
+        # Fund wallet with 2 outputs, 5 SNAIL each.
         addr2 = wallet.getnewaddress(address_type="bech32")
         source_tx = self.nodes[0].send(outputs=[{addr1: 5}, {addr2: 5}], change_position=0)
         self.generate(self.nodes[0], 1)
@@ -1239,7 +1239,7 @@ class RawTransactionsTest(BitcoinTestFramework):
     def test_preset_inputs_selection(self):
         self.log.info('Test wallet preset inputs are not double-counted or reused in coin selection')
 
-        # Create and fund the wallet with 4 UTXO of 5 BTC each (20 BTC total)
+        # Create and fund the wallet with 4 UTXO of 5 SNAIL each (20 SNAIL total)
         self.nodes[2].createwallet("test_preset_inputs_selection")
         wallet = self.nodes[2].get_wallet_rpc("test_preset_inputs_selection")
         outputs = {}
@@ -1260,16 +1260,16 @@ class RawTransactionsTest(BitcoinTestFramework):
             "add_to_wallet": False
         }
 
-        # Attempt to send 29 BTC from a wallet that only has 20 BTC. The wallet should exclude
+        # Attempt to send 29 SNAIL from a wallet that only has 20 SNAIL. The wallet should exclude
         # the preset inputs from the pool of available coins, realize that there is not enough
-        # money to fund the 29 BTC payment, and fail with "Insufficient funds".
+        # money to fund the 29 SNAIL payment, and fail with "Insufficient funds".
         #
-        # Even with SFFO, the wallet can only afford to send 20 BTC.
+        # Even with SFFO, the wallet can only afford to send 20 SNAIL.
         # If the wallet does not properly exclude preset inputs from the pool of available coins
         # prior to coin selection, it may create a transaction that does not fund the full payment
         # amount or, through SFFO, incorrectly reduce the recipient's amount by the difference
-        # between the original target and the wrongly counted inputs (in this case 9 BTC)
-        # so that the recipient's amount is no longer equal to the user's selected target of 29 BTC.
+        # between the original target and the wrongly counted inputs (in this case 9 SNAIL)
+        # so that the recipient's amount is no longer equal to the user's selected target of 29 SNAIL.
 
         # First case, use 'subtract_fee_from_outputs = true'
         assert_raises_rpc_error(-4, "Insufficient funds", wallet.send, outputs=[{wallet.getnewaddress(address_type="bech32"): 29}], options=options)
@@ -1381,9 +1381,9 @@ class RawTransactionsTest(BitcoinTestFramework):
         # choose enough value to cover the target amount but not enough to cover the transaction fees.
         # This leads to a transaction whose actual transaction feerate is lower than expected.
         # However at normal feerates, the difference between the effective value and the real value
-        # that this bug is not detected because the transaction fee must be at least 0.01 BTC (the minimum change value).
+        # that this bug is not detected because the transaction fee must be at least 0.01 SNAIL (the minimum change value).
         # Otherwise the targeted minimum change value will be enough to cover the transaction fees that were not
-        # being accounted for. So the minimum relay fee is set to 0.1 BTC/kvB in this test.
+        # being accounted for. So the minimum relay fee is set to 0.1 SNAIL/kvB in this test.
         self.log.info("Test issue 22670 ApproximateBestSubset bug")
         # Make sure the default wallet will not be loaded when restarted with a high minrelaytxfee
         self.nodes[0].unloadwallet(self.default_wallet_name, False)
@@ -1454,7 +1454,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # If rounding up, then the calculated fee will be 126 + 78 = 204.
         # In the former case, the calculated needed fee is higher than the actual fee being paid, so an assertion is reached
         # To test this does not happen, we subtract 202 sats from the input value. If working correctly, this should
-        # fail with insufficient funds rather than bitcoind asserting.
+        # fail with insufficient funds rather than snailcoind asserting.
         rawtx = w.createrawtransaction(inputs=[], outputs=[{self.nodes[0].getnewaddress(address_type="bech32"): 1 - 0.00000202}])
         assert_raises_rpc_error(-4, "Insufficient funds", w.fundrawtransaction, rawtx, fee_rate=1.85)
 
@@ -1488,13 +1488,13 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert txid1 in mempool
 
         self.log.info("Fail to craft a new TX with minconf above highest one")
-        # Create a replacement tx to 'final_tx1' that has 1 BTC target instead of 0.1.
+        # Create a replacement tx to 'final_tx1' that has 1 SNAIL target instead of 0.1.
         raw_tx2 = wallet.createrawtransaction([{'txid': utxo1['txid'], 'vout': utxo1['vout']}], {target_address: 1})
         assert_raises_rpc_error(-4, "Insufficient funds", wallet.fundrawtransaction, raw_tx2, {'add_inputs': True, 'minconf': 3, 'fee_rate': 10})
 
         self.log.info("Fail to broadcast a new TX with maxconf 0 due to BIP125 rules to verify it actually chose unconfirmed outputs")
-        # Now fund 'raw_tx2' to fulfill the total target (1 BTC) by using all the wallet unconfirmed outputs.
-        # As it was created with the first unconfirmed output, 'raw_tx2' only has 0.1 BTC covered (need to fund 0.9 BTC more).
+        # Now fund 'raw_tx2' to fulfill the total target (1 SNAIL) by using all the wallet unconfirmed outputs.
+        # As it was created with the first unconfirmed output, 'raw_tx2' only has 0.1 SNAIL covered (need to fund 0.9 SNAIL more).
         # So, the selection process, to cover the amount, will pick up the 'final_tx1' output as well, which is an output of the tx that this
         # new tx is replacing!. So, once we send it to the mempool, it will return a "bad-txns-spends-conflicting-tx"
         # because the input will no longer exist once the first tx gets replaced by this new one).

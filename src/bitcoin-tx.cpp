@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Snailcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -43,7 +43,7 @@ static const int CONTINUE_EXECUTION=-1;
 
 const TranslateFn G_TRANSLATION_FUN{nullptr};
 
-static void SetupBitcoinTxArgs(ArgsManager &argsman)
+static void SetupSnailcoinTxArgs(ArgsManager &argsman)
 {
     SetupHelpOptions(argsman);
 
@@ -88,7 +88,7 @@ static void SetupBitcoinTxArgs(ArgsManager &argsman)
 //
 static int AppInitRawTx(int argc, char* argv[])
 {
-    SetupBitcoinTxArgs(gArgs);
+    SetupSnailcoinTxArgs(gArgs);
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
         tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);

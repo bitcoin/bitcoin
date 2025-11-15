@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-2022 The Snailcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,7 +17,7 @@ using util::Join;
 
 /**
  * Name of client reported in the 'version' message. Report the same name
- * for both bitcoind and bitcoin-qt, to make it harder for attackers to
+ * for both snailcoind and snailcoin-qt, to make it harder for attackers to
  * target servers or GUI users specifically.
  */
 const std::string UA_NAME("Satoshi");
@@ -74,9 +74,9 @@ std::string CopyrightHolders(const std::string& strPrefix)
     const auto copyright_devs = strprintf(_(COPYRIGHT_HOLDERS), COPYRIGHT_HOLDERS_SUBSTITUTION).translated;
     std::string strCopyrightHolders = strPrefix + copyright_devs;
 
-    // Make sure Bitcoin Core copyright is not removed by accident
-    if (copyright_devs.find("Bitcoin Core") == std::string::npos) {
-        strCopyrightHolders += "\n" + strPrefix + "The Bitcoin Core developers";
+    // Make sure Snailcoin Core copyright is not removed by accident
+    if (copyright_devs.find("Snailcoin Core") == std::string::npos) {
+        strCopyrightHolders += "\n" + strPrefix + "The Snailcoin Core developers";
     }
     return strCopyrightHolders;
 }

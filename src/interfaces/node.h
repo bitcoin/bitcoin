@@ -1,4 +1,4 @@
-// Copyright (c) 2018-present The Bitcoin Core developers
+// Copyright (c) 2018-present The Snailcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -65,7 +65,7 @@ public:
     virtual std::string getName() = 0;
 };
 
-//! Top-level interface for a bitcoin node (bitcoind process).
+//! Top-level interface for a bitcoin node (snailcoind process).
 class Node
 {
 public:
@@ -105,7 +105,7 @@ public:
     //! would be ignored because it is also specified in the command line.
     virtual bool isSettingIgnored(const std::string& name) = 0;
 
-    //! Return setting value from <datadir>/settings.json or bitcoin.conf.
+    //! Return setting value from <datadir>/settings.json or snailcoin.conf.
     virtual common::SettingsValue getPersistentSetting(const std::string& name) = 0;
 
     //! Update a setting in <datadir>/settings.json.

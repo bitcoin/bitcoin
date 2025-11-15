@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2024 The Bitcoin Core developers
+# Copyright (c) 2024 The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,7 @@ import re
 
 from test_framework.descriptors import descsum_create
 from test_framework.key import H_POINT
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -20,7 +20,7 @@ MULTIPATH_TWO_RE = re.compile(r"<(\d+);(\d+)>")
 MUSIG_RE = re.compile(r"musig\((.*?)\)")
 PLACEHOLDER_RE = re.compile(r"\$\d")
 
-class WalletMuSigTest(BitcoinTestFramework):
+class WalletMuSigTest(SnailcoinTestFramework):
     WALLET_NUM = 0
     def set_test_params(self):
         self.num_nodes = 1

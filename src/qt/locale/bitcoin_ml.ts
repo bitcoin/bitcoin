@@ -54,11 +54,11 @@
         <translation type="unfinished">തി&amp;രഞ്ഞെടുക്കുക</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your Snailcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">പൈസ അയയ്ക്കുന്നതിനുള്ള നിങ്ങളുടെ ബിറ്റ് കോയിൻ വിലാസങ്ങളാണ് ഇവ. നാണയങ്ങൾ അയയ്ക്കുന്നതിനുമുമ്പ് എല്ലായ്പ്പോഴും തുകയും സ്വീകരിക്കുന്ന വിലാസവും പരിശോധിക്കുക.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your Snailcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ഇവയാണ് പണം  സ്വീകരിയ്ക്കുന്നതിനായുള്ള താങ്കളുടെ ബിറ്റ്കോയിൻ വിലാസങ്ങൾ. പുതിയ വിലാസങ്ങൾ കൂട്ടിച്ചേർക്കുന്നതിനായി ' പുതിയ വിലാസം സൃഷ്ടിയ്ക്കുക ' എന്ന ബട്ടൺ അമർത്തുക.
 'ലെഗസി' തരത്തിന്റെ വിലാസങ്ങളിൽ മാത്രമേ സൈൻ ചെയ്യാൻ കഴിയൂ.</translation>
@@ -255,7 +255,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
+    <name>SnailcoinApplication</name>
     <message>
         <source>Settings file %1 might be corrupt or invalid.</source>
         <translation type="unfinished">ക്രമീകരണങ്ങൾ ഫയൽ %1 കേടായതോ അസാധുവായതോ ആയിരിക്കാം.</translation>
@@ -303,7 +303,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">തുക </translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <source>Enter a Snailcoin address (e.g. %1)</source>
         <translation type="unfinished">ഒരു ബിറ്റ്കോയിൻ വിലാസം നൽകുക(e.g. %1)</translation>
     </message>
     <message>
@@ -364,7 +364,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>SnailcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">&amp;അവലോകനം</translation>
@@ -431,7 +431,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">പ്രോക്സി ആണ്&lt;b&gt;പ്രവർത്തനക്ഷമമാക്കി&lt;/b&gt;:%1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a Snailcoin address</source>
         <translation type="unfinished">ഒരു ബിറ്റ്‌കോയിൻ വിലാസത്തിലേക് പണം അയക്കുക </translation>
     </message>
     <message>
@@ -475,7 +475,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ഒപ്പിടുക, സന്ദേശം നൽകുക</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <source>Sign messages with your Snailcoin addresses to prove you own them</source>
         <translation type="unfinished">നിങ്ങളുടെ ബിറ്റ്കോയിൻ വിലാസങ്ങൾ സ്വന്തമാണെന്ന് തെളിയിക്കാൻ സന്ദേശങ്ങൾ ഒപ്പിടുക</translation>
     </message>
     <message>
@@ -483,7 +483,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">സന്ദേശം പരിശോധിക്കുക...</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <source>Verify messages to ensure they were signed with specified Snailcoin addresses</source>
         <translation type="unfinished">നിർദ്ദിഷ്ട ബിറ്റ്കോയിൻ വിലാസങ്ങളിൽ സന്ദേശങ്ങൾ ഒപ്പിട്ടിട്ടുണ്ടെന്ന് ഉറപ്പാക്കാൻ സ്ഥിരീകരിക്കുക</translation>
     </message>
     <message>
@@ -578,11 +578,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">കാലികമാണ്</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction</source>
+        <source>Load Partially Signed Snailcoin Transaction</source>
         <translation type="unfinished">ഭാഗികമായി ഒപ്പിട്ട ബിറ്റ്കോയിൻ ഇടപാട് ലോഡുചെയ്യുക</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <source>Load Partially Signed Snailcoin Transaction from clipboard</source>
         <translation type="unfinished">ക്ലിപ്പ്ബോർഡിൽ നിന്ന് ഭാഗികമായി ഒപ്പിട്ട ബിറ്റ്കോയിൻ ഇടപാട് ലോഡുചെയ്യുക</translation>
     </message>
     <message>
@@ -631,7 +631,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">വാലറ്റ് മൈഗ്രേറ്റ് ചെയ്യുക</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <source>Show the %1 help message to get a list with possible Snailcoin command-line options</source>
         <translation type="unfinished">സാധ്യമായ ബിറ്റ്കോയിൻ കമാൻഡ്-ലൈൻ ഓപ്ഷനുകളുള്ള ഒരു ലിസ്റ്റ് ലഭിക്കുന്നതിന് %1 സഹായ സന്ദേശം കാണിക്കുക</translation>
     </message>
     <message>
@@ -683,7 +683,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">%1 ക്ലയന്റ്</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to Snailcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -1046,7 +1046,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">%1 ലേക്ക് സ്വാഗതം.</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
+        <source>Snailcoin</source>
         <translation type="unfinished">ബിറ്റ്കോയിൻ</translation>
     </message>
     <message numerus="yes">
@@ -1202,7 +1202,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">'bitcoin://' എന്നത് ശരിയായ ഒരു URI അല്ല .പകരം 'bitcoin:' ഉപയോഗിക്കൂ </translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <source>URI cannot be parsed! This can be caused by an invalid Snailcoin address or malformed URI parameters.</source>
         <translation type="unfinished">യു‌ആർ‌ഐ പാഴ്‌സുചെയ്യാൻ‌ കഴിയില്ല! അസാധുവായ ബിറ്റ്കോയിൻ വിലാസം അല്ലെങ്കിൽ തെറ്റായ യു‌ആർ‌ഐ പാരാമീറ്ററുകൾ കാരണം ഇത് സംഭവിക്കാം.</translation>
     </message>
     <message>
@@ -1431,7 +1431,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">മുൻപ്‌ ഉപയോഗിച്ച അഡ്രസ് തെരഞ്ഞെടുക്കുക</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
+        <source>The Snailcoin address to send the payment to</source>
         <translation type="unfinished">പേയ്മെന്റ് അയക്കേണ്ട ബിറ്കോയിൻ അഡ്രസ് </translation>
     </message>
     </context>

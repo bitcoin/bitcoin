@@ -279,7 +279,7 @@
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
          <property name="toolTip">
-          <string>Network addresses that your Bitcoin node is currently using to communicate with other nodes.</string>
+          <string>Network addresses that your Snailcoin node is currently using to communicate with other nodes.</string>
          </property>
         </widget>
        </item>

@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-2022 The Snailcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,12 +18,12 @@ using node::NodeContext;
 
 namespace init {
 namespace {
-const char* EXE_NAME = "bitcoind";
+const char* EXE_NAME = "snailcoind";
 
-class BitcoindInit : public interfaces::Init
+class SnailcoindInit : public interfaces::Init
 {
 public:
-    BitcoindInit(NodeContext& node) : m_node(node)
+    SnailcoindInit(NodeContext& node) : m_node(node)
     {
         InitContext(m_node);
         m_node.init = this;
@@ -45,6 +45,6 @@ public:
 namespace interfaces {
 std::unique_ptr<Init> MakeNodeInit(NodeContext& node, int argc, char* argv[], int& exit_status)
 {
-    return std::make_unique<init::BitcoindInit>(node);
+    return std::make_unique<init::SnailcoindInit>(node);
 }
 } // namespace interfaces

@@ -1,4 +1,4 @@
-Bitcoin Core version 0.11.0 is now available from:
+Snailcoin Core version 0.11.0 is now available from:
 
   <https://bitcoin.org/bin/bitcoin-core-0.11.0/>
 
@@ -17,15 +17,15 @@ How to Upgrade
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
-bitcoind/bitcoin-qt (on Linux).
+installer (on Windows) or just copy over /Applications/Snailcoin-Qt (on Mac) or
+snailcoind/snailcoin-qt (on Linux).
 
 Downgrade warning
 ------------------
 
 Because release 0.10.0 and later makes use of headers-first synchronization and
 parallel block download (see further), the block files and databases are not
-backwards-compatible with pre-0.10 versions of Bitcoin Core or other software:
+backwards-compatible with pre-0.10 versions of Snailcoin Core or other software:
 
 * Blocks will be stored on disk out of order (in the order they are
 received, really), which makes it incompatible with some tools or
@@ -58,7 +58,7 @@ possible to change a few configuration options to work around this. The growth
 of the mempool can be monitored with the RPC command `getmempoolinfo`.
 
 One is to increase the minimum transaction relay fee `minrelaytxfee`, which
-defaults to 0.00001. This will cause transactions with fewer BTC/kB fee to be
+defaults to 0.00001. This will cause transactions with fewer SNAIL/kB fee to be
 rejected, and thus fewer transactions entering the mempool.
 
 The other is to restrict the relaying of free transactions with
@@ -67,7 +67,7 @@ free transactions (with enough priority) will be accepted. It defaults to 15.
 Reducing this number reduces the speed at which the mempool can grow due
 to free transactions.
 
-For example, add the following to `bitcoin.conf`:
+For example, add the following to `snailcoin.conf`:
 
     minrelaytxfee=0.00005 
     limitfreerelay=5
@@ -86,7 +86,7 @@ related to the blockchain in the bitcoin system: the raw blocks as received over
 the network (blk???.dat), the undo data (rev???.dat), the block index and the 
 UTXO set (both LevelDB databases). The databases are built from the raw data.
 
-Block pruning allows Bitcoin Core to delete the raw block and undo data once 
+Block pruning allows Snailcoin Core to delete the raw block and undo data once 
 it's been validated and used to build the databases. At that point, the raw data 
 is used only to relay blocks to other nodes, to handle reorganizations, to look 
 up old transactions (if -txindex is enabled or via the RPC/REST interfaces), or 
@@ -95,7 +95,7 @@ all blocks in the blockchain.
 
 The user specifies how much space to allot for block & undo files. The minimum 
 allowed is 550MB. Note that this is in addition to whatever is required for the 
-block index and UTXO databases. The minimum was chosen so that Bitcoin Core will 
+block index and UTXO databases. The minimum was chosen so that Snailcoin Core will 
 be able to maintain at least 288 blocks on disk (two days worth of blocks at 10 
 minutes per block). In rare instances it is possible that the amount of space 
 used will exceed the pruning target in order to keep the required last 288 
@@ -346,7 +346,7 @@ git merge commit are mentioned.
 - #5626 `ab0d798` Fix icon sizes and column width
 - #5683 `c7b22aa` add new osx dmg background picture
 - #5620 `7823598` Payment request expiration bug fix
-- #5729 `9c4a5a5` Allow unit changes for read-only BitcoinAmountField
+- #5729 `9c4a5a5` Allow unit changes for read-only SnailcoinAmountField
 - #5753 `0f44672` Add bitcoin logo to about screen
 - #5629 `a956586` Prevent amount overflow problem with payment requests
 - #5830 `215475a` Don't save geometry for options and about/help window
@@ -392,11 +392,11 @@ git merge commit are mentioned.
 - #5366 `47a79bb` No longer check osx compatibility in RenameThread
 - #5689 `07f4386` openssl: abstract out OPENSSL_cleanse
 - #5708 `8b298ca` Add list of implemented BIPs
-- #5809 `46bfbe7` Add bitcoin-cli man page
+- #5809 `46bfbe7` Add snailcoin-cli man page
 - #5839 `86eb461` keys: remove libsecp256k1 verification until it's actually supported
 - #5749 `d734d87` Help messages correctly formatted (79 chars)
 - #5884 `7077fe6` BUGFIX: Stack around the variable 'rv' was corrupted
-- #5849 `41259ca` contrib/init/bitcoind.openrc: Compatibility with previous OpenRC init script variables
+- #5849 `41259ca` contrib/init/snailcoind.openrc: Compatibility with previous OpenRC init script variables
 - #5950 `41113e3` Fix locale fallback and guard tests against invalid locale settings
 - #5965 `7c6bfb1` Add git-subtree-check.sh script
 - #6033 `1623f6e` FreeBSD, OpenBSD thread renaming
@@ -404,7 +404,7 @@ git merge commit are mentioned.
 - #6104 `3e2559c` Show an init message while activating best chain
 - #6125 `351f73e` Clean up parsing of bool command line args
 - #5964 `b4c219b` Lightweight task scheduler
-- #6116 `30dc3c1` [OSX] rename Bitcoin-Qt.app to Bitcoin-Core.app
+- #6116 `30dc3c1` [OSX] rename Snailcoin-Qt.app to Snailcoin-Core.app
 - #6168 `b3024f0` contrib/linearize: Support linearization of testnet blocks
 - #6098 `7708fcd` Update Windows resource files (and add one for bitcoin-tx)
 - #6159 `e1412d3` Catch errors on datadir lock and pidfile delete
@@ -427,7 +427,7 @@ Thanks to everyone who directly contributed to this release:
 - azeteki
 - Ben Holden-Crowther
 - bikinibabe
-- BitcoinPRReadingGroup
+- SnailcoinPRReadingGroup
 - Blake Jakopovic
 - BtcDrak
 - charlescharles

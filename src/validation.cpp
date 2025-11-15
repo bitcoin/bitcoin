@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-present The Bitcoin Core developers
+// Copyright (c) 2009-present The Snailcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -4144,7 +4144,7 @@ bool IsBlockMutated(const CBlock& block, bool check_witness_root)
 
     if (block.vtx.empty() || !block.vtx[0]->IsCoinBase()) {
         // Consider the block mutated if any transaction is 64 bytes in size (see 3.1
-        // in "Weaknesses in Bitcoin’s Merkle Root Construction":
+        // in "Weaknesses in Snailcoin’s Merkle Root Construction":
         // https://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20190225/a27d8837/attachment-0001.pdf).
         //
         // Note: This is not a consensus change as this only applies to blocks that

@@ -1,7 +1,7 @@
 Benchmarking
 ============
 
-Bitcoin Core has an internal benchmarking framework, with benchmarks
+Snailcoin Core has an internal benchmarking framework, with benchmarks
 for cryptographic algorithms (e.g. SHA1, SHA256, SHA512, RIPEMD160, Poly1305, ChaCha20), rolling bloom filter, coins selection,
 thread queue, wallet balance.
 
@@ -74,4 +74,4 @@ specifically aimed at exploring the possible input space.
 Going Further
 --------------------
 
-To monitor Bitcoin Core performance more in depth (like reindex or IBD): https://github.com/bitcoin-dev-tools/benchcoin
+To monitor Snailcoin Core performance more in depth (like reindex or IBD): https://github.com/bitcoin-dev-tools/benchcoin

@@ -26,7 +26,7 @@
         <translation type="unfinished">حذف</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your Snailcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">هذه هي العناوين الخاصة بها بك. استخدم زر "إنشاء عنوان استقبال جديد" في علامة استلام البريد الإلكتروني عناوين جديدة.التوقيع ممكن فقط مع عناوين نوع "إرث" .</translation>
     </message>
@@ -57,7 +57,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">‫القيمة‬</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <source>Enter a Snailcoin address (e.g. %1)</source>
         <translation type="unfinished">ادخل عنوان محفطة البتكوين (مثال %1)</translation>
     </message>
     <message>
@@ -215,7 +215,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>SnailcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">&amp;نظرة عامة</translation>
@@ -278,7 +278,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">%1 اتصال نشط بشبكة البيتكوين</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a Snailcoin address</source>
         <translation type="unfinished">ارسل عملات الى عنوان بيتكوين</translation>
     </message>
     <message>
@@ -318,16 +318,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">علامة ورسالة...</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished">وقَع الرسائل بواسطة ال: Bitcoin الخاص بك لإثبات امتلاكك لهم</translation>
+        <source>Sign messages with your Snailcoin addresses to prove you own them</source>
+        <translation type="unfinished">وقَع الرسائل بواسطة ال: Snailcoin الخاص بك لإثبات امتلاكك لهم</translation>
     </message>
     <message>
         <source>&amp;Verify message…</source>
         <translation type="unfinished">&amp; تحقق من الرسالة</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">تحقق من الرسائل للتأكد من أنَها وُقعت برسائل Bitcoin محدَدة</translation>
+        <source>Verify messages to ensure they were signed with specified Snailcoin addresses</source>
+        <translation type="unfinished">تحقق من الرسائل للتأكد من أنَها وُقعت برسائل Snailcoin محدَدة</translation>
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
@@ -441,7 +441,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">‫حديث‬</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction</source>
+        <source>Load Partially Signed Snailcoin Transaction</source>
         <translation type="unfinished">‫تحميل معاملة بتكوين موقعة جزئيًا (PSBT)‬</translation>
     </message>
     <message>
@@ -449,7 +449,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">‫تحميل معاملة بتكوين موقعة جزئيا (‫PSBT) من &amp;الحافظة…‬</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <source>Load Partially Signed Snailcoin Transaction from clipboard</source>
         <translation type="unfinished">‫تحميل معاملة بتكوين موقعة جزئيًا ‫(‫PSBT) من الحافظة‬</translation>
     </message>
     <message>
@@ -499,7 +499,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">‫إغلاق جميع المحافظ‬</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <source>Show the %1 help message to get a list with possible Snailcoin command-line options</source>
         <translation type="unfinished">‫اعرض %1 رسالة المساعدة للحصول على قائمة من خيارات سطر أوامر البتكوين المحتملة‬</translation>
     </message>
     <message>
@@ -554,14 +554,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">‫ع&amp;رض‬</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to Snailcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
-            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
-            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
-            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
-            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
+            <numerusform>%n active connection(s) to Snailcoin network.</numerusform>
+            <numerusform>%n active connection(s) to Snailcoin network.</numerusform>
+            <numerusform>%n active connection(s) to Snailcoin network.</numerusform>
+            <numerusform>%n active connection(s) to Snailcoin network.</numerusform>
+            <numerusform>%n active connection(s) to Snailcoin network.</numerusform>
             <numerusform>%n اتصال نشط بشبكة البتكوين.</numerusform>
         </translation>
     </message>
@@ -835,7 +835,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>OptionsDialog</name>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports PCP or NAT-PMP and it is enabled. The external port could be random.</source>
+        <source>Automatically open the Snailcoin client port on the router. This only works when your router supports PCP or NAT-PMP and it is enabled. The external port could be random.</source>
         <translation type="unfinished">افتح تلقائيًا منفذ عميل البتكوين على جهاز التوجيه. يعمل هذا فقط عندما يدعم جهاز التوجيه الخاص بك PCP أو NAT-PMP ويتم تمكينه. يمكن أن يكون المنفذ الخارجي عشوائيًا</translation>
     </message>
     <message>
@@ -939,7 +939,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">‫السماح بالاتصالات الوارد&amp;ة‬</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <source>Connect to the Snailcoin network through a SOCKS5 proxy.</source>
         <translation type="unfinished">الاتصال بشبكة البتكوين عبر وكيل SOCKS5.</translation>
     </message>
     <message>
@@ -1023,7 +1023,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">‫ما اذا أردت إظهار ميزات التحكم في وحدات البتكوين أم لا.‬</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <source>Connect to the Snailcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
         <translation type="unfinished">اتصل بشبكة بتكوين من خلال وكيل SOCKS5 منفصل لخدمات Tor onion.</translation>
     </message>
     <message>
@@ -1116,7 +1116,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">نمودج</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Snailcoin network after a connection is established, but this process has not completed yet.</source>
         <translation type="unfinished">قد تكون المعلومات المعروضة قديمة. تتزامن محفظتك تلقائيًا مع شبكة البتكوين بعد إنشاء الاتصال، ولكن هذه العملية لم تكتمل بعد.</translation>
     </message>
     <message>
@@ -1315,7 +1315,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
 ‬‫‫‫إذا كنت تتلقى هذا الخطأ ، يجب أن تطلب من المستلم تقديم عنوان URI متوافق مع BIP21.‬</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <source>URI cannot be parsed! This can be caused by an invalid Snailcoin address or malformed URI parameters.</source>
         <translation type="unfinished">‫لا يمكن تحليل العنوان (URI)! يمكن أن يحدث هذا بسبب عنوان بتكوين غير صالح أو محددات عنوان غير صحيحة.‬</translation>
     </message>
     <message>
@@ -1373,7 +1373,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">العناوين المحلية</translation>
     </message>
     <message>
-        <source>Network addresses that your Bitcoin node is currently using to communicate with other nodes.</source>
+        <source>Network addresses that your Snailcoin node is currently using to communicate with other nodes.</source>
         <translation type="unfinished">عناوين الشبكة التي تستخدمها عقدةالبتكوين الخاصة بك حاليًا للتواصل مع العقد الأخرى.</translation>
     </message>
     <message>
@@ -1437,7 +1437,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">نسخ التعديل</translation>
     </message>
     <message>
-        <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <source>Creates a Partially Signed Snailcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <translation type="unfinished">‫أنشئ معاملة بتكوين موقعة جزئيا (PSBT) للاستعمال مع محفظة %1 غير متصلة بالشبكة مثلا، أو محفظة خارجية متوافقة مع الـ(PSBT).‬</translation>
     </message>
     <message>

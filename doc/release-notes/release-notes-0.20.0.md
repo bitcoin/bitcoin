@@ -1,7 +1,7 @@
 0.20.0 Release Notes
 ====================
 
-Bitcoin Core version 0.20.0 is now available from:
+Snailcoin Core version 0.20.0 is now available from:
 
   <https://bitcoincore.org/bin/bitcoin-core-0.20.0/>
 
@@ -21,24 +21,24 @@ How to Upgrade
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes in some cases), then run the
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+installer (on Windows) or just copy over `/Applications/Snailcoin-Qt` (on Mac)
+or `snailcoind`/`snailcoin-qt` (on Linux).
 
-Upgrading directly from a version of Bitcoin Core that has reached its EOL is
+Upgrading directly from a version of Snailcoin Core that has reached its EOL is
 possible, but it might take some time if the data directory needs to be migrated. Old
-wallet versions of Bitcoin Core are generally supported.
+wallet versions of Snailcoin Core are generally supported.
 
 Compatibility
 ==============
 
-Bitcoin Core is supported and extensively tested on operating systems
-using the Linux kernel, macOS 10.12+, and Windows 7 and newer.  Bitcoin
+Snailcoin Core is supported and extensively tested on operating systems
+using the Linux kernel, macOS 10.12+, and Windows 7 and newer.  Snailcoin
 Core should also work on most other Unix-like systems but is not as
-frequently tested on them.  It is not recommended to use Bitcoin Core on
+frequently tested on them.  It is not recommended to use Snailcoin Core on
 unsupported systems.
 
-From Bitcoin Core 0.20.0 onwards, macOS versions earlier than 10.12 are no
-longer supported. Additionally, Bitcoin Core does not yet change appearance
+From Snailcoin Core 0.20.0 onwards, macOS versions earlier than 10.12 are no
+longer supported. Additionally, Snailcoin Core does not yet change appearance
 when macOS "dark mode" is activated.
 
 Known Bugs
@@ -61,20 +61,20 @@ Notable changes
 P2P and network changes
 -----------------------
 
-#### Removal of BIP61 reject network messages from Bitcoin Core
+#### Removal of BIP61 reject network messages from Snailcoin Core
 
 The `-enablebip61` command line option to enable BIP61 has been removed.
 (#17004)
 
-This feature has been disabled by default since Bitcoin Core version 0.18.0.
+This feature has been disabled by default since Snailcoin Core version 0.18.0.
 Nodes on the network can not generally be trusted to send valid messages
 (including reject messages), so this should only ever be used when
 connected to a trusted node.  Please use the alternatives recommended
 below if you rely on this removed feature:
 
-- Testing or debugging of implementations of the Bitcoin P2P network protocol
+- Testing or debugging of implementations of the Snailcoin P2P network protocol
   should be done by inspecting the log messages that are produced by a recent
-  version of Bitcoin Core. Bitcoin Core logs debug messages
+  version of Snailcoin Core. Snailcoin Core logs debug messages
   (`-debug=<category>`) to a stream (`-printtoconsole`) or to a file
   (`-debuglogfile=<debug.log>`).
 
@@ -138,9 +138,9 @@ Updated RPCs
 Build System
 ------------
 
-- OpenSSL is no longer used by Bitcoin Core.  (#17265)
+- OpenSSL is no longer used by Snailcoin Core.  (#17265)
 
-- BIP70 support has been fully removed from Bitcoin Core. The
+- BIP70 support has been fully removed from Snailcoin Core. The
   `--enable-bip70` option remains, but it will throw an error during configure.
   (#17165)
 
@@ -165,14 +165,14 @@ New settings
   Numbers (ASNs) and then limiting the number of connections made to any
   single ASN.  See [issue #16599](https://github.com/bitcoin/bitcoin/issues/16599),
   [PR #16702](https://github.com/bitcoin/bitcoin/pull/16702), and the
-  `bitcoind help` for more information.  This option is experimental and
+  `snailcoind help` for more information.  This option is experimental and
   subject to removal or breaking changes in future releases, so the
   legacy /16 prefix mapping of IP addresses remains the default.  (#16702)
 
 Updated settings
 ----------------
 
-- All custom settings configured when Bitcoin Core starts are now
+- All custom settings configured when Snailcoin Core starts are now
   written to the `debug.log` file to assist troubleshooting.  (#16115)
 
 - Importing blocks upon startup via the `bootstrap.dat` file no longer
@@ -198,7 +198,7 @@ Removed settings
 GUI changes
 -----------
 
-- The "Start Bitcoin Core on system login" option has been removed on macOS.
+- The "Start Snailcoin Core on system login" option has been removed on macOS.
   (#17567)
 
 - In the Peers window, the details for a peer now displays a `Mapped AS`
@@ -208,15 +208,15 @@ GUI changes
 
 - A "known bug" [announced](https://bitcoincore.org/en/releases/0.18.0/#wallet-gui)
   in the release notes of version 0.18 has been fixed.  The issue
-  affected anyone who simultaneously used multiple Bitcoin Core wallets
+  affected anyone who simultaneously used multiple Snailcoin Core wallets
   and the GUI coin control feature. (#18894)
 
 - For watch-only wallets, creating a new transaction in the Send screen
   or fee bumping an existing transaction in the Transactions screen will
-  automatically copy a Partially-Signed Bitcoin Transaction (PSBT) to
+  automatically copy a Partially-Signed Snailcoin Transaction (PSBT) to
   the system clipboard.  This can then be pasted into an external
   program such as [HWI](https://github.com/bitcoin-core/HWI) for
-  signing.  Future versions of Bitcoin Core should support a GUI option
+  signing.  Future versions of Snailcoin Core should support a GUI option
   for finalizing and broadcasting PSBTs, but for now the debug console
   may be used with the `finalizepsbt` and `sendrawtransaction` RPCs.
   (#16944, #17492)
@@ -246,8 +246,8 @@ Wallet
 Documentation changes
 ---------------------
 
-- Bitcoin Core's automatically-generated source code documentation is
-  now available at https://doxygen.bitcoincore.org.  (#17596)
+- Snailcoin Core's automatically-generated source code documentation is
+  now available at https://doxygen.snailcoincore.org.  (#17596)
 
 Low-level changes
 =================
@@ -255,7 +255,7 @@ Low-level changes
 Utilities
 ---------
 
-- The `bitcoin-cli` utility used with the `-getinfo` parameter now
+- The `snailcoin-cli` utility used with the `-getinfo` parameter now
   returns a `headers` field with the number of downloaded block headers
   on the best headers chain (similar to the `blocks` field that is also
   returned) and a `verificationprogress` field that estimates how much
@@ -263,7 +263,7 @@ Utilities
   information returned no longer includes the `protocolversion`,
   `walletversion`, and `keypoololdest` fields.  (#17302, #17650)
 
-- The `bitcoin-cli` utility now accepts a `-stdinwalletpassphrase`
+- The `snailcoin-cli` utility now accepts a `-stdinwalletpassphrase`
   parameter that can be used when calling the `walletpassphrase` and
   `walletpassphrasechange` RPCs to read the passphrase from standard
   input without echoing it to the terminal, improving security against
@@ -524,7 +524,7 @@ Build system
 - #17730 Remove Qt networking features (fanquake)
 - #17738 Remove linking librt for backwards compatibility (fanquake)
 - #17740 Remove configure checks for win libraries we don't link against (fanquake)
-- #17741 Included `test_bitcoin-qt` in msvc build (sipsorcery)
+- #17741 Included `test_snailcoin-qt` in msvc build (sipsorcery)
 - #17756 Remove `WINDOWS_BITS` from build system (fanquake)
 - #17769 Set `AC_PREREQ` to 2.69 (fanquake)
 - #17880 Add -Wdate-time to Werror flags (fanquake)
@@ -580,7 +580,7 @@ Build system
 - #18395 scripts: Add pe dylib checking to symbol-check.py (fanquake)
 - #18415 scripts: Add macho tests to test-security-check.py (fanquake)
 - #18425 releases: Update with new Windows code signing certificate (achow101)
-- #18702 Fix ASLR for bitcoin-cli on Windows (fanquake)
+- #18702 Fix ASLR for snailcoin-cli on Windows (fanquake)
 
 ### Tests and QA
 - #12134 Build previous releases and run functional tests (Sjors)
@@ -624,7 +624,7 @@ Build system
 - #17299 add reason checks for non-standard txs in `test_IsStandard` (theStack)
 - #17322 Fix input size assertion in `wallet_bumpfee.py` (instagibbs)
 - #17327 Add `rpc_fundrawtransaction` logging (jonatack)
-- #17330 Add `shrinkdebugfile=0` to regtest bitcoin.conf (sdaftuar)
+- #17330 Add `shrinkdebugfile=0` to regtest snailcoin.conf (sdaftuar)
 - #17340 Speed up fundrawtransaction test (jnewbery)
 - #17345 Do not instantiate CAddrDB for static call CAddrDB::Read() (hebasto)
 - #17362 Speed up `wallet_avoidreuse`, add logging (jonatack)
@@ -747,13 +747,13 @@ Build system
 
 ### Documentation
 - #16947 Doxygen-friendly script/descriptor.h comments (ch4ot1c)
-- #16983 Add detailed info about Bitcoin Core files (hebasto)
+- #16983 Add detailed info about Snailcoin Core files (hebasto)
 - #16986 Doxygen-friendly CuckooCache comments (ch4ot1c)
 - #17022 move-only: Steps for "before major release branch-off" (MarcoFalke)
 - #17026 Update bips.md for default bech32 addresses in 0.20.0 (MarcoFalke)
 - #17081 Fix Makefile target in benchmarking.md (theStack)
 - #17102 Add missing indexes/blockfilter/basic to doc/files.md (MarcoFalke)
-- #17119 Fix broken bitcoin-cli examples (andrewtoth)
+- #17119 Fix broken snailcoin-cli examples (andrewtoth)
 - #17134 Add switch on enum example to developer notes (hebasto)
 - #17142 Update macdeploy README to include all files produced by `make deploy` (za-kk)
 - #17146 github: Add warning for bug reports (laanwj)
@@ -772,10 +772,10 @@ Build system
 - #17370 Update doc/bips.md with recent changes in master (MarcoFalke)
 - #17393 Added regtest config for linearize script (gr0kchain)
 - #17411 Add some better examples for scripted diff (laanwj)
-- #17503 Remove bitness from bitcoin-qt help message and manpage (laanwj)
+- #17503 Remove bitness from snailcoin-qt help message and manpage (laanwj)
 - #17539 Update and improve Developer Notes (hebasto)
 - #17561 Changed MiniUPnPc link to https in dependencies.md (sandakersmann)
-- #17596 Change doxygen URL to doxygen.bitcoincore.org (laanwj)
+- #17596 Change doxygen URL to doxygen.snailcoincore.org (laanwj)
 - #17598 Update release process with latest changes (MarcoFalke)
 - #17617 Unify unix epoch time descriptions (jonatack)
 - #17637 script: Add keyserver to verify-commits readme (emilengler)
@@ -801,7 +801,7 @@ Build system
 - #18278 interfaces: Describe and follow some code conventions (ryanofsky)
 - #18283 Explain rebase policy in CONTRIBUTING.md (MarcoFalke)
 - #18340 Mention MAKE=gmake workaround when building on a BSD (fanquake)
-- #18341 Replace remaining literal BTC with `CURRENCY_UNIT` (domob1812)
+- #18341 Replace remaining literal SNAIL with `CURRENCY_UNIT` (domob1812)
 - #18342 Add fuzzing quickstart guides for libFuzzer and afl-fuzz (practicalswift)
 - #18344 Fix nit in getblockchaininfo (stevenroose)
 - #18379 Comment fix merkle.cpp (4d55397500)
@@ -817,7 +817,7 @@ Build system
 ### Miscellaneous
 - #15600 lockedpool: When possible, use madvise to avoid including sensitive information in core dumps (luke-jr)
 - #15934 Merge settings one place instead of five places (ryanofsky)
-- #16115 On bitcoind startup, write config args to debug.log (LarryRuane)
+- #16115 On snailcoind startup, write config args to debug.log (LarryRuane)
 - #16117 util: Replace boost sleep with std sleep (MarcoFalke)
 - #16161 util: Fix compilation errors in support/lockedpool.cpp (jkczyz)
 - #16802 scripts: In linearize, search for next position of magic bytes rather than fail (takinbo)
@@ -840,7 +840,7 @@ Build system
 - #17507 random: mark RandAddPeriodic and SeedPeriodic as noexcept (fanquake)
 - #17527 Fix CPUID subleaf iteration (sipa)
 - #17604 util: Make schedulebatchpriority advisory only (fanquake)
-- #17650 util: Remove unwanted fields from bitcoin-cli -getinfo (malevolent)
+- #17650 util: Remove unwanted fields from snailcoin-cli -getinfo (malevolent)
 - #17671 script: Fixed wget call in gitian-build.py (willyko)
 - #17699 Make env data logging optional (sipa)
 - #17721 util: Don't allow base58 decoding of non-base58 strings. add base58 tests (practicalswift)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2025 The Bitcoin Core developers
+# Copyright (c) 2025 The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test how the wallet deals with TRUC transactions"""
@@ -19,7 +19,7 @@ from test_framework.script import (
 
 from test_framework.script_util import bulk_vout
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -59,7 +59,7 @@ def cleanup(func):
 
     return wrapper
 
-class WalletV3Test(BitcoinTestFramework):
+class WalletV3Test(SnailcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 

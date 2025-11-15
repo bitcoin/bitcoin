@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2020 The Bitcoin Core developers
+// Copyright (c) 2013-2020 The Snailcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,10 +16,10 @@ bool noui_ThreadSafeQuestion(const bilingual_str& /* ignored interactive message
 /** Non-GUI handler, which only logs a message. */
 void noui_InitMessage(const std::string& message);
 
-/** Connect all bitcoind signal handlers */
+/** Connect all snailcoind signal handlers */
 void noui_connect();
 
-/** Redirect all bitcoind signal handlers to LogInfo. Used to check or suppress output during test runs that produce expected errors */
+/** Redirect all snailcoind signal handlers to LogInfo. Used to check or suppress output during test runs that produce expected errors */
 void noui_test_redirect();
 
 /** Reconnects the regular Non-GUI handlers after having used noui_test_redirect */

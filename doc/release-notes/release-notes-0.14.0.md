@@ -1,4 +1,4 @@
-Bitcoin Core version 0.14.0 is now available from:
+Snailcoin Core version 0.14.0 is now available from:
 
   <https://bitcoin.org/bin/bitcoin-core-0.14.0/>
 
@@ -16,7 +16,7 @@ To receive security and update notifications, please subscribe to:
 Compatibility
 ==============
 
-Bitcoin Core is extensively tested on multiple operating systems using
+Snailcoin Core is extensively tested on multiple operating systems using
 the Linux kernel, macOS 10.8+, and Windows Vista and later.
 
 Microsoft ended support for Windows XP on [April 8th, 2014](https://www.microsoft.com/en-us/WindowsForBusiness/end-of-xp-support),
@@ -24,7 +24,7 @@ No attempt is made to prevent installing or running the software on Windows XP, 
 can still do so at your own risk but be aware that there are known instabilities and issues.
 Please do not report issues about Windows XP to the issue tracker.
 
-Bitcoin Core should also work on most other Unix-like systems but is not
+Snailcoin Core should also work on most other Unix-like systems but is not
 frequently tested on them.
 
 Notable changes
@@ -55,7 +55,7 @@ improved, leading to much shorter sync and initial block download times.
 Manual Pruning
 --------------
 
-Bitcoin Core has supported automatically pruning the blockchain since 0.11. Pruning
+Snailcoin Core has supported automatically pruning the blockchain since 0.11. Pruning
 the blockchain allows for significant storage space savings as the vast majority of
 the downloaded data can be discarded after processing so very little of it remains
 on the disk.
@@ -129,7 +129,7 @@ the same thing as the GUI icon. The command takes one boolean parameter,
 Out-of-sync Modal Info Layer
 ----------------------------
 
-When Bitcoin Core is out-of-sync on startup, a semi-transparent information
+When Snailcoin Core is out-of-sync on startup, a semi-transparent information
 layer will be shown over top of the normal display. This layer contains
 details about the current sync progress and estimates the amount of time
 remaining to finish syncing. This layer can also be hidden and subsequently
@@ -138,19 +138,19 @@ unhidden by clicking on the progress bar at the bottom of the window.
 Support for JSON-RPC Named Arguments
 ------------------------------------
 
-Commands sent over the JSON-RPC interface and through the `bitcoin-cli` binary
+Commands sent over the JSON-RPC interface and through the `snailcoin-cli` binary
 can now use named arguments. This follows the [JSON-RPC specification](http://www.jsonrpc.org/specification)
 for passing parameters by-name with an object.
 
-`bitcoin-cli` has been updated to support this by parsing `name=value` arguments
+`snailcoin-cli` has been updated to support this by parsing `name=value` arguments
 when the `-named` option is given.
 
 Some examples:
 
-    src/bitcoin-cli -named help command="help"
-    src/bitcoin-cli -named getblockhash height=0
-    src/bitcoin-cli -named getblock blockhash=000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f
-    src/bitcoin-cli -named sendtoaddress address="(snip)" amount="1.0" subtractfeefromamount=true
+    src/snailcoin-cli -named help command="help"
+    src/snailcoin-cli -named getblockhash height=0
+    src/snailcoin-cli -named getblock blockhash=000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f
+    src/snailcoin-cli -named sendtoaddress address="(snip)" amount="1.0" subtractfeefromamount=true
 
 The order of arguments doesn't matter in this case. Named arguments are also
 useful to leave out arguments that should stay at their default value. The
@@ -189,7 +189,7 @@ commands such as `prioritisetransaction` so that those changes will not be lost.
 Final Alert
 -----------
 
-The Alert System was [disabled and deprecated](https://bitcoin.org/en/alert/2016-11-01-alert-retirement) in Bitcoin Core 0.12.1 and removed in 0.13.0. 
+The Alert System was [disabled and deprecated](https://bitcoin.org/en/alert/2016-11-01-alert-retirement) in Snailcoin Core 0.12.1 and removed in 0.13.0. 
 The Alert System was retired with a maximum sequence final alert which causes any nodes
 supporting the Alert System to display a static hard-coded "Alert Key Compromised" message which also
 prevents any other alerts from overriding it. This final alert is hard-coded into this release
@@ -241,7 +241,7 @@ Low-level RPC changes
    the mempool or if `txindex` is enabled.
 
  - A new RPC command `getmemoryinfo` has been added which will return information
-   about the memory usage of Bitcoin Core. This was added in conjunction with
+   about the memory usage of Snailcoin Core. This was added in conjunction with
    optimizations to memory management. See [Pull #8753](https://github.com/bitcoin/bitcoin/pull/8753)
    for more information.
 
@@ -367,7 +367,7 @@ and git merge commit are mentioned.
 - #8421 `b77bb95` httpserver: drop boost dependency (theuni)
 - #8638 `f061415` rest.cpp: change `HTTP_INTERNAL_SERVER_ERROR` to `HTTP_BAD_REQUEST` (djpnewton)
 - #8272 `91990ee` Make the dummy argument to getaddednodeinfo optional (sipa)
-- #8722 `bb843ad` bitcoin-cli: More detailed error reporting (laanwj)
+- #8722 `bb843ad` snailcoin-cli: More detailed error reporting (laanwj)
 - #6996 `7f71a3c` Add preciousblock RPC (sipa)
 - #8788 `97c7f73` Give RPC commands more information about the RPC request (jonasschnelli)
 - #7948 `5d2c8e5` Augment getblockchaininfo bip9\_softforks data (mruddy)
@@ -718,14 +718,14 @@ and git merge commit are mentioned.
 - #8291 `5cac8b1` util: CopyrightHolders: Check for untranslated substitution (MarcoFalke)
 - #8557 `44691f3` contrib: Rework verifybinaries (MarcoFalke)
 - #8621 `e8ed6eb` contrib: python: Don't use shell=True (MarcoFalke)
-- #8813 `fb24d7e` bitcoind: Daemonize using daemon(3) (laanwj)
+- #8813 `fb24d7e` snailcoind: Daemonize using daemon(3) (laanwj)
 - #9004 `67728a3` Clarify `listenonion` (unsystemizer)
 - #8674 `bae81b8` tools for analyzing, updating and adding copyright headers in source files (isle2983)
 - #8976 `8c6218a` libconsensus: Add input validation of flags (laanwj)
 - #9112 `46027e8` Avoid ugly exception in log on unknown inv type (laanwj)
 - #8837 `2108911` Allow bitcoin-tx to parse partial transactions (jnewbery)
 - #9204 `74ced54` Clarify CreateTransaction error messages (instagibbs)
-- #9265 `31bcc66` bitcoin-cli: Make error message less confusing (laanwj)
+- #9265 `31bcc66` snailcoin-cli: Make error message less confusing (laanwj)
 - #9303 `72bf1b3` Update comments in ctaes (sipa)
 - #9417 `c4b7d4f` Do not evaluate hidden LogPrint arguments (sipa)
 - #9506 `593a00c` RFC: Improve style for if indentation (sipa)

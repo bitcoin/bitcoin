@@ -54,7 +54,7 @@
         <translation type="unfinished">තෝරන්න</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your Snailcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">මේ ඔබගේ ගෙවීම් යැවීම සඳහා වන බිට්කොයින් ලිපින වේ. කාසි යැවීමට පෙර සෑම විටම මුදල සහ ලැබීමේ ලිපිනය පරීක්‍ෂා කරන්න.</translation>
     </message>
     <message>
@@ -211,7 +211,7 @@
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
+    <name>SnailcoinApplication</name>
     <message>
         <source>Settings file %1 might be corrupt or invalid.</source>
         <translation type="unfinished">සැකසීම් ගොනුව %1 දූෂිත හෝ අවලංගු විය හැක.</translation>
@@ -296,7 +296,7 @@
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>SnailcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">&amp;දළ විශ්ලේෂණය</translation>
@@ -347,7 +347,7 @@
         <translation type="unfinished">ජාලයේ ක්‍රියාකාරකම අබල කර ඇත.</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a Snailcoin address</source>
         <translation type="unfinished">බිට්කොයින් ලිපිනයකට කාසි යවන්න</translation>
     </message>
     <message>
@@ -494,11 +494,11 @@
         <translation type="unfinished">පෙ&amp;න්වන්න</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to Snailcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
-            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
+            <numerusform>%n active connection(s) to Snailcoin network.</numerusform>
+            <numerusform>%n active connection(s) to Snailcoin network.</numerusform>
         </translation>
     </message>
     <message>
@@ -756,7 +756,7 @@
         <translation type="unfinished">පෙරනිමි දත්ත නාමාවලිය භාවිතා කරන්න</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
+        <source>Snailcoin</source>
         <translation type="unfinished">බිට්කොයින්</translation>
     </message>
     <message numerus="yes">

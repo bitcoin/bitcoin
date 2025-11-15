@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2023 The Bitcoin Core developers
+# Copyright (c) 2023 The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,7 +35,7 @@ from test_framework.util import (
     assert_not_equal,
     assert_equal,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.wallet import (
     MiniWallet,
     MiniWalletMode,
@@ -119,7 +119,7 @@ class PeerTxRelayer(P2PTxInvStore):
             for request in getdata.inv:
                 assert_not_equal(request.hash, txhash)
 
-class OrphanHandlingTest(BitcoinTestFramework):
+class OrphanHandlingTest(SnailcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [[]]

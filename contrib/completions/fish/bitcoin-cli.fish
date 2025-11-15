@@ -1,5 +1,5 @@
 # Disable files from being included in completions by default
-complete --command bitcoin-cli --no-files
+complete --command snailcoin-cli --no-files
 
 function __fish_bitcoin_cli_get_commands_helper
     set --local cmd (commandline -oc)
@@ -73,27 +73,27 @@ end
 # Add options with file completion
 # Don't offer after a command is given
 complete \
-    --command bitcoin-cli \
+    --command snailcoin-cli \
     --no-files \
     --condition "not __fish_seen_subcommand_from (__fish_bitcoin_cli_get_commands --commandsonly)" \
     --arguments "(__fish_bitcoin_cli_get_options)"
 # Enable file completions only if the commandline now contains a `*.=` style option
-complete --command bitcoin-cli \
+complete --command snailcoin-cli \
     --condition 'string match --regex -- ".*=" (commandline -pt)' \
     --force-files
 
 # Add options without file completion
 # Don't offer after a command is given
 complete \
-    --command bitcoin-cli \
+    --command snailcoin-cli \
     --no-files \
     --condition "not __fish_seen_subcommand_from (__fish_bitcoin_cli_get_commands --commandsonly)" \
     --arguments "(__fish_bitcoin_cli_get_options --nofiles)"
 
 # Add commands
-# Permit command completions after `bitcoin-cli help` but not after other commands
+# Permit command completions after `snailcoin-cli help` but not after other commands
 complete \
-    --command bitcoin-cli \
+    --command snailcoin-cli \
     --no-files \
     --condition "not __fish_seen_subcommand_from (__fish_bitcoin_cli_get_commands --commandsonly --nohelp)" \
     --arguments "(__fish_bitcoin_cli_get_commands)"

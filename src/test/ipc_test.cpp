@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023 The Snailcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -161,7 +161,7 @@ void IpcSocketTest(const fs::path& datadir)
     // Need to specify explicit socket addresses outside the data directory, because the data
     // directory path is so long that the default socket address and any other
     // addresses in the data directory would fail with errors like:
-    //   Address 'unix' path '"/tmp/test_common_Bitcoin Core/ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff/test_bitcoin.sock"' exceeded maximum socket path length
+    //   Address 'unix' path '"/tmp/test_common_Snailcoin Core/ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff/test_bitcoin.sock"' exceeded maximum socket path length
     std::vector<std::string> addresses{
         strprintf("unix:%s", TempPath("bitcoin_sock0_XXXXXX")),
         strprintf("unix:%s", TempPath("bitcoin_sock1_XXXXXX")),

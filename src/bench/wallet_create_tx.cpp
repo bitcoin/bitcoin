@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022 The Snailcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
@@ -143,7 +143,7 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
 
     CAmount target = 0;
     if (preset_inputs) {
-        // Select inputs, each has 48 BTC
+        // Select inputs, each has 48 SNAIL
         wallet::CoinFilterParams filter_coins;
         filter_coins.max_count = preset_inputs->num_of_internal_inputs;
         const auto& res = WITH_LOCK(wallet.cs_wallet,

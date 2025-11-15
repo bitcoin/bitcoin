@@ -1,7 +1,7 @@
-Bitcoin version 0.7.0 is now available for download at:
-  http://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.7.0/
+Snailcoin version 0.7.0 is now available for download at:
+  http://sourceforge.net/projects/bitcoin/files/Snailcoin/bitcoin-0.7.0/
 
-We recommend that everybody running prior versions of bitcoind/Bitcoin-Qt
+We recommend that everybody running prior versions of snailcoind/Snailcoin-Qt
 upgrade to this release, except for users running Mac OSX 10.5.
 
 Please report bugs using the issue tracker at github:
@@ -17,8 +17,8 @@ maintained by Matt Corallo to automatically keep
 bitcoin up-to-date.  Just type
   sudo apt-add-repository ppa:bitcoin/bitcoin
   sudo apt-get update
-in your terminal, then install the bitcoin-qt package:
-  sudo apt-get install bitcoin-qt
+in your terminal, then install the snailcoin-qt package:
+  sudo apt-get install snailcoin-qt
 
 
 How to Upgrade
@@ -27,10 +27,10 @@ If you are running an older version, shut it down. Wait
 until it has completely shut down (which might take a few minutes for older
 versions), then run the installer (on Windows) or just copy over
 Code:
-/Applications/Bitcoin-Qt
+/Applications/Snailcoin-Qt
 (on Mac) or
 Code:
-bitcoind/bitcoin-qt
+snailcoind/snailcoin-qt
 (on Linux).
 
 If you were running on Linux with a version that might have been compiled
@@ -45,7 +45,7 @@ Incompatible Changes
   and 'getrawmempool' commands.
 * Remove deprecated RPC 'getblocknumber'
 
-Bitcoin Improvement Proposals implemented
+Snailcoin Improvement Proposals implemented
 
 BIP 22 - 'getblocktemplate', 'submitblock' RPCs
 BIP 34 - block version 2, height in coinbase
@@ -119,8 +119,8 @@ Qt GUI
 * Much better translations
 * Override progress bar design on platforms with segmented progress bars to assist with readability
 * Added 'immature balance' display on the overview page
-* (Windows only): enable ASLR and DEP for bitcoin-qt.exe
-* (Windows only): add meta-data to bitcoin-qt.exe (e.g. description)
+* (Windows only): enable ASLR and DEP for snailcoin-qt.exe
+* (Windows only): add meta-data to snailcoin-qt.exe (e.g. description)
 
 Internal codebase
 
@@ -131,7 +131,7 @@ Internal codebase
 Miscellaneous
 
 * Reopen debug.log upon SIGHUP
-* Bash programmable completion for bitcoind(1)
+* Bash programmable completion for snailcoind(1)
 * On supported OS's, each thread is given a useful name
 
 

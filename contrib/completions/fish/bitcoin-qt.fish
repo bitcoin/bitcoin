@@ -1,5 +1,5 @@
 # Disable files from being included in completions by default
-complete --command bitcoin-qt --no-files
+complete --command snailcoin-qt --no-files
 
 # Extract options
 function __fish_bitcoinqt_get_options
@@ -21,15 +21,15 @@ end
 
 # Add options with file completion
 complete \
-    --command bitcoin-qt \
+    --command snailcoin-qt \
     --arguments "(__fish_bitcoinqt_get_options)"
 # Enable file completions only if the commandline now contains a `*.=` style option
-complete -c bitcoin-qt \
+complete -c snailcoin-qt \
     --condition 'string match --regex -- ".*=" (commandline -pt)' \
     --force-files
 
 # Add options without file completion
 complete \
-    --command bitcoin-qt \
+    --command snailcoin-qt \
     --arguments "(__fish_bitcoinqt_get_options --nofiles)"
 

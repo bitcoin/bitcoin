@@ -54,11 +54,11 @@
         <translation type="unfinished">S&amp;eç</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Bunlar ödemeleri gönderdiğiniz Bitcoin adreslerinizdir. Para göndermeden önce her zaman tutarı ve alıcı adresi kontrol ediniz.</translation>
+        <source>These are your Snailcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Bunlar ödemeleri gönderdiğiniz Snailcoin adreslerinizdir. Para göndermeden önce her zaman tutarı ve alıcı adresi kontrol ediniz.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your Snailcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Bunlar ödeme almak için kullanacağınız bitcoin adreslerinizdir. Yeni adres oluşturmak için ödeme alma sekmesindeki 'Yeni alıcı adresi oluşturun' kısmına tıklayın.
 İmzalama sadece 'legacy' tipindeki adreslerle mümkündür.</translation>
@@ -257,7 +257,7 @@ Cüzdan kilidini aç.</translation>
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
+    <name>SnailcoinApplication</name>
     <message>
         <source>Settings file %1 might be corrupt or invalid.</source>
         <translation type="unfinished">%1 ayar dosyası bozuk veya geçersiz olabilir.</translation>
@@ -320,7 +320,7 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Mitar</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <source>Enter a Snailcoin address (e.g. %1)</source>
         <translation type="unfinished">Bir bitcoin adresi giriniz (örneğin %1)</translation>
     </message>
     <message>
@@ -414,7 +414,7 @@ Cüzdan kilidini aç.</translation>
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>SnailcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">Genel durum</translation>
@@ -481,8 +481,8 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Proxy &lt;b&gt;etkinleştirildi&lt;/b&gt;: %1 </translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">Bir Bitcoin adresine Bitcoin yolla</translation>
+        <source>Send coins to a Snailcoin address</source>
+        <translation type="unfinished">Bir Snailcoin adresine Snailcoin yolla</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -525,16 +525,16 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">&amp;Mesajı imzala...</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished">Bitcoin adreslerine sahip olduğunuzu kanıtlamak için mesajlarınızı imzalayın</translation>
+        <source>Sign messages with your Snailcoin addresses to prove you own them</source>
+        <translation type="unfinished">Snailcoin adreslerine sahip olduğunuzu kanıtlamak için mesajlarınızı imzalayın</translation>
     </message>
     <message>
         <source>&amp;Verify message…</source>
         <translation type="unfinished">&amp;Mesajı doğrula...</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">Belirtilen Bitcoin adresleriyle imzalandıklarından emin olmak için mesajları doğrulayın</translation>
+        <source>Verify messages to ensure they were signed with specified Snailcoin addresses</source>
+        <translation type="unfinished">Belirtilen Snailcoin adresleriyle imzalandıklarından emin olmak için mesajları doğrulayın</translation>
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
@@ -635,16 +635,16 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Güncel</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction</source>
-        <translation type="unfinished">Kısmen İmzalanmış Bitcoin İşlemini Yükle </translation>
+        <source>Load Partially Signed Snailcoin Transaction</source>
+        <translation type="unfinished">Kısmen İmzalanmış Snailcoin İşlemini Yükle </translation>
     </message>
     <message>
         <source>Load PSBT from &amp;clipboard…</source>
         <translation type="unfinished">PSBT'yi &amp;panodan yükle...</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation type="unfinished">Kısmen İmzalanmış Bitcoin işlemini panodan yükle</translation>
+        <source>Load Partially Signed Snailcoin Transaction from clipboard</source>
+        <translation type="unfinished">Kısmen İmzalanmış Snailcoin işlemini panodan yükle</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -664,7 +664,7 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI</source>
-        <translation type="unfinished">Bitcoin’i aç.</translation>
+        <translation type="unfinished">Snailcoin’i aç.</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -701,8 +701,8 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Bir Cüzdanı Taşı</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished">Olası Bitcoin komut satırı seçeneklerinin listesini almak için %1 yardım mesajını gösterin</translation>
+        <source>Show the %1 help message to get a list with possible Snailcoin command-line options</source>
+        <translation type="unfinished">Olası Snailcoin komut satırı seçeneklerinin listesini almak için %1 yardım mesajını gösterin</translation>
     </message>
     <message>
         <source>&amp;Mask values</source>
@@ -761,10 +761,10 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">G&amp;öster</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to Snailcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform>Bitcoin ağına %n etkin bağlantı.</numerusform>
+            <numerusform>Snailcoin ağına %n etkin bağlantı.</numerusform>
         </translation>
     </message>
     <message>
@@ -1252,8 +1252,8 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">Gönderme adresini  düzenleyin</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation type="unfinished">Girilen "%1" adresi geçerli bir Bitcoin adresi değildir.</translation>
+        <source>The entered address "%1" is not a valid Snailcoin address.</source>
+        <translation type="unfinished">Girilen "%1" adresi geçerli bir Snailcoin adresi değildir.</translation>
     </message>
     <message>
         <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
@@ -1397,8 +1397,8 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         </translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
-        <translation type="unfinished">%1  Bitcoin blok zincirinin bir kopyasını indirecek ve depolayacak.</translation>
+        <source>%1 will download and store a copy of the Snailcoin block chain.</source>
+        <translation type="unfinished">%1  Snailcoin blok zincirinin bir kopyasını indirecek ve depolayacak.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -1468,7 +1468,7 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
     <name>OpenURIDialog</name>
     <message>
         <source>Open bitcoin URI</source>
-        <translation type="unfinished">Bitcoin URI aç</translation>
+        <translation type="unfinished">Snailcoin URI aç</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
@@ -1508,8 +1508,8 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">Betik &amp;doğrulama iş parçacığı sayısı</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports PCP or NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation type="unfinished">Yönlendiricideki Bitcoin istemcisini otomatik olarak aç. Bu özellik yalnızca yönlendiriciniz PCP veya NAT-PMP desteğine sahipse ve aktif edilmişse çalışır. Harici port rastgele olabilir.</translation>
+        <source>Automatically open the Snailcoin client port on the router. This only works when your router supports PCP or NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation type="unfinished">Yönlendiricideki Snailcoin istemcisini otomatik olarak aç. Bu özellik yalnızca yönlendiriciniz PCP veya NAT-PMP desteğine sahipse ve aktif edilmişse çalışır. Harici port rastgele olabilir.</translation>
     </message>
     <message>
         <source>Map port using PCP or NA&amp;T-PMP</source>
@@ -1631,8 +1631,8 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">Gelen bağlantılara izin ver</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation type="unfinished">Bitcoin ağına bir SOCKS5 vekil sunucusu aracılığıyla bağlan.</translation>
+        <source>Connect to the Snailcoin network through a SOCKS5 proxy.</source>
+        <translation type="unfinished">Snailcoin ağına bir SOCKS5 vekil sunucusu aracılığıyla bağlan.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1684,7 +1684,7 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation type="unfinished">Bitcoin gönderildiğinde arayüzde gösterilecek varsayılan alt birimi seçiniz.</translation>
+        <translation type="unfinished">Snailcoin gönderildiğinde arayüzde gösterilecek varsayılan alt birimi seçiniz.</translation>
     </message>
     <message>
         <source>Third-party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
@@ -1699,8 +1699,8 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">Para kontrol özelliklerinin gösterilip gösterilmeyeceğini ayarlar.</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
-        <translation type="unfinished">Tor Onion hizmetleri için ayrı bir SOCKS5 proxy aracılığıyla Bitcoin ağına bağlanın. </translation>
+        <source>Connect to the Snailcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation type="unfinished">Tor Onion hizmetleri için ayrı bir SOCKS5 proxy aracılığıyla Snailcoin ağına bağlanın. </translation>
     </message>
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
@@ -1787,8 +1787,8 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
 <context>
     <name>OverviewPage</name>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished">Görüntülenen bilgiler güncel olmayabilir. Bağlantı kurulduğunda cüzdanınız otomatik olarak Bitcoin ağı ile senkronize olur ancak bu işlem henüz tamamlanmamıştır.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Snailcoin network after a connection is established, but this process has not completed yet.</source>
+        <translation type="unfinished">Görüntülenen bilgiler güncel olmayabilir. Bağlantı kurulduğunda cüzdanınız otomatik olarak Snailcoin ağı ile senkronize olur ancak bu işlem henüz tamamlanmamıştır.</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1954,7 +1954,7 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
     </message>
     <message>
         <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation type="unfinished">Bitcoin başlatılamadı: tıkla-ve-öde yöneticisi</translation>
+        <translation type="unfinished">Snailcoin başlatılamadı: tıkla-ve-öde yöneticisi</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -1965,8 +1965,8 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">'bitcoin://' geçerli bir URI değil. Onun yerine 'bitcoin:' kullanın.</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished">URI ayrıştırılamıyor! Bunun nedeni geçersiz bir Bitcoin adresi veya hatalı biçimlendirilmiş URI değişkenleri olabilir.</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid Snailcoin address or malformed URI parameters.</source>
+        <translation type="unfinished">URI ayrıştırılamıyor! Bunun nedeni geçersiz bir Snailcoin adresi veya hatalı biçimlendirilmiş URI değişkenleri olabilir.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -2106,8 +2106,8 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">Yerel adresler</translation>
     </message>
     <message>
-        <source>Network addresses that your Bitcoin node is currently using to communicate with other nodes.</source>
-        <translation type="unfinished">Bitcoin düğümünüzün diğer düğümlerle iletişim için kullandığı internet adresleri.</translation>
+        <source>Network addresses that your Snailcoin node is currently using to communicate with other nodes.</source>
+        <translation type="unfinished">Snailcoin düğümünüzün diğer düğümlerle iletişim için kullandığı internet adresleri.</translation>
     </message>
     <message>
         <source>Block chain</source>
@@ -2460,8 +2460,8 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">&amp;Mesaj:</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation type="unfinished">Talep açıldığında gösterilecek, isteğinize dayalı, ödeme talebi ile ilişkilendirilecek bir ileti. Not: Bu ileti ödeme ile birlikte Bitcoin ağı üzerinden gönderilmeyecektir.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Snailcoin network.</source>
+        <translation type="unfinished">Talep açıldığında gösterilecek, isteğinize dayalı, ödeme talebi ile ilişkilendirilecek bir ileti. Not: Bu ileti ödeme ile birlikte Snailcoin ağı üzerinden gönderilmeyecektir.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -2622,7 +2622,7 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation type="unfinished">Bitcoini Gönder</translation>
+        <translation type="unfinished">Snailcoini Gönder</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
@@ -2795,9 +2795,9 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">Bu işlemi oluşturmak ister misiniz?</translation>
     </message>
     <message>
-        <source>Please, review your transaction. You can create and send this transaction or create a Partially Signed Bitcoin Transaction (PSBT), which you can save or copy and then sign with, e.g., an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <source>Please, review your transaction. You can create and send this transaction or create a Partially Signed Snailcoin Transaction (PSBT), which you can save or copy and then sign with, e.g., an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can send their transaction or create a PSBT. This string is displayed when both private keys and PSBT controls are enabled.</extracomment>
-        <translation type="unfinished">Lütfen işleminizi gözden geçirin. Bu işlemi oluşturabilir ve gönderebilir veya örneğin çevrimdışı bir %1 cüzdanı veya PSBT uyumlu bir donanım cüzdanı gibi kaydedebileceğiniz veya kopyalayabileceğiniz ve ardından imzalayabileceğiniz bir Kısmen İmzalı Bitcoin İşlemi (PSBT) oluşturabilirsiniz.</translation>
+        <translation type="unfinished">Lütfen işleminizi gözden geçirin. Bu işlemi oluşturabilir ve gönderebilir veya örneğin çevrimdışı bir %1 cüzdanı veya PSBT uyumlu bir donanım cüzdanı gibi kaydedebileceğiniz veya kopyalayabileceğiniz ve ardından imzalayabileceğiniz bir Kısmen İmzalı Snailcoin İşlemi (PSBT) oluşturabilirsiniz.</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -2824,7 +2824,7 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
     </message>
     <message>
         <source>Confirm send coins</source>
-        <translation type="unfinished">Bitcoin gönderimini onaylayın</translation>
+        <translation type="unfinished">Snailcoin gönderimini onaylayın</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2861,8 +2861,8 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         </translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished">Uyarı: geçersiz Bitcoin adresi</translation>
+        <source>Warning: Invalid Snailcoin address</source>
+        <translation type="unfinished">Uyarı: geçersiz Snailcoin adresi</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2900,8 +2900,8 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">Önceden kullanılmış adres seç</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
-        <translation type="unfinished">Ödemenin yollanacağı Bitcoin adresi</translation>
+        <source>The Snailcoin address to send the payment to</source>
+        <translation type="unfinished">Ödemenin yollanacağı Snailcoin adresi</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
@@ -2932,8 +2932,8 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">Kullanılmış adres listesine eklemek için bu adrese bir etiket girin</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation type="unfinished">Referans için bitcoin: URI'siyle iliştirilmiş işlemle birlikte depolanacak bir ileti. Not: Bu mesaj Bitcoin ağı üzerinden gönderilmeyecektir.</translation>
+        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Snailcoin network.</source>
+        <translation type="unfinished">Referans için bitcoin: URI'siyle iliştirilmiş işlemle birlikte depolanacak bir ileti. Not: Bu mesaj Snailcoin ağı üzerinden gönderilmeyecektir.</translation>
     </message>
 </context>
 <context>
@@ -2959,11 +2959,11 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
     </message>
     <message>
         <source>You can sign messages/agreements with your legacy (P2PKH) addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished">Eski (P2PKH) adreslerinizle mesajları/anlaşmaları imzalayarak bu adreslere gönderilen Bitcoin'leri alabileceğinizi unutmayın. Belirsiz veya rastgele şeyleri imzalamaktan kaçının, çünkü kimlik bilgilerinizi çalmak isteyen oltalama saldırıları sizi kandırmaya çalışabilir. Sadece tamamen ayrıntılı ve onayladığınız beyanları imzalayın.</translation>
+        <translation type="unfinished">Eski (P2PKH) adreslerinizle mesajları/anlaşmaları imzalayarak bu adreslere gönderilen Snailcoin'leri alabileceğinizi unutmayın. Belirsiz veya rastgele şeyleri imzalamaktan kaçının, çünkü kimlik bilgilerinizi çalmak isteyen oltalama saldırıları sizi kandırmaya çalışabilir. Sadece tamamen ayrıntılı ve onayladığınız beyanları imzalayın.</translation>
     </message>
     <message>
-        <source>The Bitcoin address to sign the message with</source>
-        <translation type="unfinished">İletinin imzalanmasında kullanılacak Bitcoin adresi</translation>
+        <source>The Snailcoin address to sign the message with</source>
+        <translation type="unfinished">İletinin imzalanmasında kullanılacak Snailcoin adresi</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2982,8 +2982,8 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">İmza</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation type="unfinished">Bu Bitcoin adresinin sizin olduğunu ispatlamak için iletiyi imzalayın</translation>
+        <source>Sign the message to prove you own this Snailcoin address</source>
+        <translation type="unfinished">Bu Snailcoin adresinin sizin olduğunu ispatlamak için iletiyi imzalayın</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -3006,16 +3006,16 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">Alıcının adresini, iletiyi (satır sonları, boşluklar, sekmeler vs. karakterleri tam olarak kopyaladığınızdan emin olunuz) ve imzayı aşağıya giriniz. Bir ortadaki adam saldırısı tarafından kandırılmaya engel olmak için imzadan, imzalı iletinin içeriğini aşan bir anlam çıkarmamaya dikkat ediniz. Bunun sadece imzalayan tarafın adres ile alım yapabildiğini ispatladığını ve herhangi bir işlemin gönderi tarafını kanıtlayamayacağını unutmayınız!</translation>
     </message>
     <message>
-        <source>The Bitcoin address the message was signed with</source>
-        <translation type="unfinished">İletinin imzalanmasında kullanılan Bitcoin adresi</translation>
+        <source>The Snailcoin address the message was signed with</source>
+        <translation type="unfinished">İletinin imzalanmasında kullanılan Snailcoin adresi</translation>
     </message>
     <message>
         <source>The signed message to verify</source>
         <translation type="unfinished">Doğrulamak için imzalanmış mesaj</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation type="unfinished">Belirtilen Bitcoin adresi ile imzalandığını doğrulamak için iletiyi kontrol et</translation>
+        <source>Verify the message to ensure it was signed with the specified Snailcoin address</source>
+        <translation type="unfinished">Belirtilen Snailcoin adresi ile imzalandığını doğrulamak için iletiyi kontrol et</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -3498,7 +3498,7 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation type="unfinished">Bitcoini Gönder</translation>
+        <translation type="unfinished">Snailcoini Gönder</translation>
     </message>
     <message>
         <source>Fee bump error</source>

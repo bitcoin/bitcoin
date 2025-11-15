@@ -1,13 +1,13 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: Bitcoin
+Upstream-Name: Snailcoin
 Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
  irc://#bitcoin-core-dev@libera.chat
 Source: https://github.com/bitcoin/bitcoin
 
 Files: *
-Copyright: 2009-2025, Bitcoin Core Developers
+Copyright: 2009-2025, Snailcoin Core Developers
 License: Expat
-Comment: The Bitcoin Core Developers encompasses all contributors to the
+Comment: The Snailcoin Core Developers encompasses all contributors to the
          project, listed in the release notes or the git log.
 
 Files: debian/*

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2025-present The Bitcoin Core developers
+# Copyright (c) 2025-present The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
@@ -17,14 +17,14 @@ from test_framework.script_util import (
     ANCHOR_ADDRESS,
     PAY_TO_ANCHOR,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
 from test_framework.wallet import MiniWallet
 
-class WalletAnchorTest(BitcoinTestFramework):
+class WalletAnchorTest(SnailcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

@@ -54,13 +54,13 @@
         <translation type="unfinished">Escol&amp;her</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Estes são os seus endereços Bitcoin para enviar pagamentos. Verifique sempre a quantia e o endereço de receção antes de enviar moedas.</translation>
+        <source>These are your Snailcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Estes são os seus endereços Snailcoin para enviar pagamentos. Verifique sempre a quantia e o endereço de receção antes de enviar moedas.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your Snailcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">Estes são os seus endereços Bitcoin para receber pagamentos. Utilize o botão "Criar novo endereço de receção" no separador "Receber" para criar novos endereços.
+        <translation type="unfinished">Estes são os seus endereços Snailcoin para receber pagamentos. Utilize o botão "Criar novo endereço de receção" no separador "Receber" para criar novos endereços.
 A assinatura só é possível com endereços do tipo "legado".</translation>
     </message>
     <message>
@@ -260,7 +260,7 @@ A assinatura só é possível com endereços do tipo "legado".</translation>
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
+    <name>SnailcoinApplication</name>
     <message>
         <source>Settings file %1 might be corrupt or invalid.</source>
         <translation type="unfinished">O ficheiro de configurações %1 pode estar corrompido ou inválido.</translation>
@@ -323,8 +323,8 @@ A assinatura só é possível com endereços do tipo "legado".</translation>
         <translation type="unfinished">Quantia</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation type="unfinished">Introduza um endereço Bitcoin (ex. %1)</translation>
+        <source>Enter a Snailcoin address (e.g. %1)</source>
+        <translation type="unfinished">Introduza um endereço Snailcoin (ex. %1)</translation>
     </message>
     <message>
         <source>Unroutable</source>
@@ -420,7 +420,7 @@ A assinatura só é possível com endereços do tipo "legado".</translation>
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>SnailcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">&amp;Resumo</translation>
@@ -487,8 +487,8 @@ A assinatura só é possível com endereços do tipo "legado".</translation>
         <translation type="unfinished">O proxy está &lt;b&gt;ativado&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">Enviar moedas para um endereço Bitcoin</translation>
+        <source>Send coins to a Snailcoin address</source>
+        <translation type="unfinished">Enviar moedas para um endereço Snailcoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -531,16 +531,16 @@ A assinatura só é possível com endereços do tipo "legado".</translation>
         <translation type="unfinished">Assinar &amp;mensagem…</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished">Assine as mensagens com os seus endereços Bitcoin para provar que é o proprietário dos mesmos</translation>
+        <source>Sign messages with your Snailcoin addresses to prove you own them</source>
+        <translation type="unfinished">Assine as mensagens com os seus endereços Snailcoin para provar que é o proprietário dos mesmos</translation>
     </message>
     <message>
         <source>&amp;Verify message…</source>
         <translation type="unfinished">&amp;Verificar mensagem…</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">Verifique mensagens para assegurar que foram assinadas com o endereço Bitcoin especificado</translation>
+        <source>Verify messages to ensure they were signed with specified Snailcoin addresses</source>
+        <translation type="unfinished">Verifique mensagens para assegurar que foram assinadas com o endereço Snailcoin especificado</translation>
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
@@ -654,16 +654,16 @@ A assinatura só é possível com endereços do tipo "legado".</translation>
         <translation type="unfinished">Atualizado</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction</source>
-        <translation type="unfinished">Carregar transação de Bitcoin parcialmente assinada</translation>
+        <source>Load Partially Signed Snailcoin Transaction</source>
+        <translation type="unfinished">Carregar transação de Snailcoin parcialmente assinada</translation>
     </message>
     <message>
         <source>Load PSBT from &amp;clipboard…</source>
         <translation type="unfinished">Carregar PSBT da área de transferência...</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation type="unfinished">Carregar transação de Bitcoin parcialmente assinada da área de transferência.</translation>
+        <source>Load Partially Signed Snailcoin Transaction from clipboard</source>
+        <translation type="unfinished">Carregar transação de Snailcoin parcialmente assinada da área de transferência.</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -720,7 +720,7 @@ A assinatura só é possível com endereços do tipo "legado".</translation>
         <translation type="unfinished">Migrar uma carteira</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <source>Show the %1 help message to get a list with possible Snailcoin command-line options</source>
         <translation type="unfinished">Mostrar a mensagem de ajuda %1 para obter uma lista com possíveis opções a usar na linha de comandos.</translation>
     </message>
     <message>
@@ -780,11 +780,11 @@ A assinatura só é possível com endereços do tipo "legado".</translation>
         <translation type="unfinished">Mo&amp;strar</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to Snailcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform>%n conexão ativa na rede Bitcoin.</numerusform>
-            <numerusform>%n conexões ativas na rede Bitcoin.</numerusform>
+            <numerusform>%n conexão ativa na rede Snailcoin.</numerusform>
+            <numerusform>%n conexões ativas na rede Snailcoin.</numerusform>
         </translation>
     </message>
     <message>
@@ -1294,7 +1294,7 @@ O processo de migração criará uma cópia de segurança da carteira antes da m
         <translation type="unfinished">Editar endereço de envio</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <source>The entered address "%1" is not a valid Snailcoin address.</source>
         <translation type="unfinished">O endereço introduzido "%1" não é um endereço bitcoin válido.</translation>
     </message>
     <message>
@@ -1447,8 +1447,8 @@ O processo de migração criará uma cópia de segurança da carteira antes da m
         </translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
-        <translation type="unfinished">%1 irá descarregar e armazenar uma cópia da cadeia de blocos da Bitcoin.</translation>
+        <source>%1 will download and store a copy of the Snailcoin block chain.</source>
+        <translation type="unfinished">%1 irá descarregar e armazenar uma cópia da cadeia de blocos da Snailcoin.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -1571,11 +1571,11 @@ O processo de migração criará uma cópia de segurança da carteira antes da m
     </message>
     <message>
         <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
-        <translation type="unfinished">Caminho completo para um script compatível %1 com Bitcoin Core (exemplo C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Cuidado: um programa malicioso (malware) pode roubar as suas moedas!</translation>
+        <translation type="unfinished">Caminho completo para um script compatível %1 com Snailcoin Core (exemplo C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Cuidado: um programa malicioso (malware) pode roubar as suas moedas!</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports PCP or NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation type="unfinished">Abrir automaticamente a porta do cliente Bitcoin no router. Esta função apenas funciona se o router suportar PCP ou NAT-PMP e essas opções estiverem ativadas. A porta externa pode ser atribuída aleatoriamente.</translation>
+        <source>Automatically open the Snailcoin client port on the router. This only works when your router supports PCP or NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation type="unfinished">Abrir automaticamente a porta do cliente Snailcoin no router. Esta função apenas funciona se o router suportar PCP ou NAT-PMP e essas opções estiverem ativadas. A porta externa pode ser atribuída aleatoriamente.</translation>
     </message>
     <message>
         <source>Map port using PCP or NA&amp;T-PMP</source>
@@ -1705,8 +1705,8 @@ O processo de migração criará uma cópia de segurança da carteira antes da m
         <translation type="unfinished">Permitir cone&amp;xões de entrada</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation type="unfinished">Conectar à rede da Bitcoin através dum proxy SOCLS5.</translation>
+        <source>Connect to the Snailcoin network through a SOCKS5 proxy.</source>
+        <translation type="unfinished">Conectar à rede da Snailcoin através dum proxy SOCLS5.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1785,8 +1785,8 @@ O processo de migração criará uma cópia de segurança da carteira antes da m
         <translation type="unfinished">Escolha se deve mostrar as funcionalidades de controlo de moedas ou não.</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
-        <translation type="unfinished">Conecte-se à rede Bitcoin através de um proxy SOCKS5 separado para serviços Tor Onion</translation>
+        <source>Connect to the Snailcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation type="unfinished">Conecte-se à rede Snailcoin através de um proxy SOCKS5 separado para serviços Tor Onion</translation>
     </message>
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
@@ -1878,8 +1878,8 @@ O processo de migração criará uma cópia de segurança da carteira antes da m
         <translation type="unfinished">Formulário</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished">A informação apresentada pode estar desatualizada. A sua carteira sincroniza-se automaticamente com a rede Bitcoin após o estabelecimento de conexões, mas este processo ainda não está concluído.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Snailcoin network after a connection is established, but this process has not completed yet.</source>
+        <translation type="unfinished">A informação apresentada pode estar desatualizada. A sua carteira sincroniza-se automaticamente com a rede Snailcoin após o estabelecimento de conexões, mas este processo ainda não está concluído.</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -2086,8 +2086,8 @@ Devido a falhas de segurança no BIP70, é recomendado que todas as instruçōes
 Se está a receber este erro, deverá pedir ao comerciante para fornecer um URI compatível com BIP21.</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished">URI não foi lido corretamente! Isto pode ser causado por um endereço Bitcoin inválido ou por parâmetros URI malformados.</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid Snailcoin address or malformed URI parameters.</source>
+        <translation type="unfinished">URI não foi lido corretamente! Isto pode ser causado por um endereço Snailcoin inválido ou por parâmetros URI malformados.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -2239,8 +2239,8 @@ Se está a receber este erro, deverá pedir ao comerciante para fornecer um URI 
         <translation type="unfinished">Endereços locais</translation>
     </message>
     <message>
-        <source>Network addresses that your Bitcoin node is currently using to communicate with other nodes.</source>
-        <translation type="unfinished">Endereços de rede que seu nó Bitcoin está usando atualmente para se comunicar com outros nós.</translation>
+        <source>Network addresses that your Snailcoin node is currently using to communicate with other nodes.</source>
+        <translation type="unfinished">Endereços de rede que seu nó Snailcoin está usando atualmente para se comunicar com outros nós.</translation>
     </message>
     <message>
         <source>Block chain</source>
@@ -2686,8 +2686,8 @@ Para mais informação acerca da utilização desta consola, escreva %6.
         <translation type="unfinished">&amp;Mensagem:</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation type="unfinished">Uma mensagem opcional a anexar ao pedido de pagamento, que será mostrada quando o pedido for aberto. Nota: a mensagem não será enviada com o pagamento através da rede Bitcoin.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Snailcoin network.</source>
+        <translation type="unfinished">Uma mensagem opcional a anexar ao pedido de pagamento, que será mostrada quando o pedido for aberto. Nota: a mensagem não será enviada com o pagamento através da rede Snailcoin.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -3069,8 +3069,8 @@ Nota: como a taxa é calculada por byte, uma taxa de "100 satoshis por kvB" para
         <translation type="unfinished">Criar &amp;não assinado</translation>
     </message>
     <message>
-        <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation type="unfinished">Cria uma transação de Bitcoin parcialmente assinada (PSBT - sigla em inglês) para ser usada por exemplo com uma carteira %1 offline ou uma carteira de hardware compatível com PSBT.</translation>
+        <source>Creates a Partially Signed Snailcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation type="unfinished">Cria uma transação de Snailcoin parcialmente assinada (PSBT - sigla em inglês) para ser usada por exemplo com uma carteira %1 offline ou uma carteira de hardware compatível com PSBT.</translation>
     </message>
     <message>
         <source>%1 to '%2'</source>
@@ -3125,9 +3125,9 @@ Nota: como a taxa é calculada por byte, uma taxa de "100 satoshis por kvB" para
         <translation type="unfinished">Pode aumentar a taxa depois (sinaliza "substituir por taxa", BIP-125).</translation>
     </message>
     <message>
-        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed Snailcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can only create a PSBT. This string is displayed when private keys are disabled and an external signer is not available.</extracomment>
-        <translation type="unfinished">Por favor, reveja sua proposta de transação. Isto irá produzir uma Transação de Bitcoin parcialmente assinada (PSBT, sigla em inglês) a qual pode guardar ou copiar e então assinar com por exemplo uma carteira %1 offine ou uma PSBT compatível com carteira de hardware.</translation>
+        <translation type="unfinished">Por favor, reveja sua proposta de transação. Isto irá produzir uma Transação de Snailcoin parcialmente assinada (PSBT, sigla em inglês) a qual pode guardar ou copiar e então assinar com por exemplo uma carteira %1 offine ou uma PSBT compatível com carteira de hardware.</translation>
     </message>
     <message>
         <source>%1 from wallet '%2'</source>
@@ -3139,9 +3139,9 @@ Nota: como a taxa é calculada por byte, uma taxa de "100 satoshis por kvB" para
         <translation type="unfinished">Deseja criar esta transação?</translation>
     </message>
     <message>
-        <source>Please, review your transaction. You can create and send this transaction or create a Partially Signed Bitcoin Transaction (PSBT), which you can save or copy and then sign with, e.g., an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <source>Please, review your transaction. You can create and send this transaction or create a Partially Signed Snailcoin Transaction (PSBT), which you can save or copy and then sign with, e.g., an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can send their transaction or create a PSBT. This string is displayed when both private keys and PSBT controls are enabled.</extracomment>
-        <translation type="unfinished">Por favor, reveja a sua transação. Pode criar e enviar esta transação ou criar uma transação Bitcoin parcialmente assinada (PSBT), que pode guardar ou copiar e depois assinar com, por exemplo, uma carteira %1 offline, ou uma carteira de hardware compatível com PSBT.</translation>
+        <translation type="unfinished">Por favor, reveja a sua transação. Pode criar e enviar esta transação ou criar uma transação Snailcoin parcialmente assinada (PSBT), que pode guardar ou copiar e depois assinar com, por exemplo, uma carteira %1 offline, ou uma carteira de hardware compatível com PSBT.</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -3214,8 +3214,8 @@ Nota: como a taxa é calculada por byte, uma taxa de "100 satoshis por kvB" para
         </translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished">Aviso: endereço Bitcoin inválido</translation>
+        <source>Warning: Invalid Snailcoin address</source>
+        <translation type="unfinished">Aviso: endereço Snailcoin inválido</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -3253,8 +3253,8 @@ Nota: como a taxa é calculada por byte, uma taxa de "100 satoshis por kvB" para
         <translation type="unfinished">Escolha o endereço utilizado anteriormente</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
-        <translation type="unfinished">O endereço Bitcoin para onde enviar o pagamento</translation>
+        <source>The Snailcoin address to send the payment to</source>
+        <translation type="unfinished">O endereço Snailcoin para onde enviar o pagamento</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
@@ -3289,8 +3289,8 @@ Nota: como a taxa é calculada por byte, uma taxa de "100 satoshis por kvB" para
         <translation type="unfinished">Introduza uma etiqueta para este endereço para o adicionar à sua lista de endereços usados</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation type="unfinished">Uma mensagem que foi anexada ao bitcoin: URI que será armazenada com a transação para sua referência. Nota: esta mensagem não será enviada através da rede Bitcoin.</translation>
+        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Snailcoin network.</source>
+        <translation type="unfinished">Uma mensagem que foi anexada ao bitcoin: URI que será armazenada com a transação para sua referência. Nota: esta mensagem não será enviada através da rede Snailcoin.</translation>
     </message>
 </context>
 <context>
@@ -3319,8 +3319,8 @@ Nota: como a taxa é calculada por byte, uma taxa de "100 satoshis por kvB" para
         <translation type="unfinished">Você pode assinar mensagens com seus endereços legados (P2PKH) para provar que pode receber bitcoins enviados a eles. Tenha cuidado para não assinar nada vago ou aleatório, pois ataques de phishing podem tentar enganá-lo para assinar sua identidade para eles. Assine apenas declarações totalmente detalhadas com as quais você concorda.</translation>
     </message>
     <message>
-        <source>The Bitcoin address to sign the message with</source>
-        <translation type="unfinished">O endereço Bitcoin com o qual assinar a mensagem</translation>
+        <source>The Snailcoin address to sign the message with</source>
+        <translation type="unfinished">O endereço Snailcoin com o qual assinar a mensagem</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -3339,8 +3339,8 @@ Nota: como a taxa é calculada por byte, uma taxa de "100 satoshis por kvB" para
         <translation type="unfinished">Assinatura</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation type="unfinished">Assine a mensagem para provar que é o proprietário deste endereço Bitcoin</translation>
+        <source>Sign the message to prove you own this Snailcoin address</source>
+        <translation type="unfinished">Assine a mensagem para provar que é o proprietário deste endereço Snailcoin</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -3363,8 +3363,8 @@ Nota: como a taxa é calculada por byte, uma taxa de "100 satoshis por kvB" para
         <translation type="unfinished">Introduza o endereço do destinatário, a mensagem (certifique-se que copia com exatidão as quebras de linha, os espaços, tabulações, etc.) e a assinatura abaixo para verificar a mensagem. Tenha cuidado para não ler mais na assinatura do que o que está na própria mensagem assinada, para evitar ser enganado por um ataque de intermediário (man-in-the-middle). Note que isto apenas prova que a parte que assina recebe com este endereço, não podendo provar o remetente de nenhuma transação!</translation>
     </message>
     <message>
-        <source>The Bitcoin address the message was signed with</source>
-        <translation type="unfinished">O endereço Bitcoin com o qual a mensagem foi assinada</translation>
+        <source>The Snailcoin address the message was signed with</source>
+        <translation type="unfinished">O endereço Snailcoin com o qual a mensagem foi assinada</translation>
     </message>
     <message>
         <source>The signed message to verify</source>
@@ -3375,8 +3375,8 @@ Nota: como a taxa é calculada por byte, uma taxa de "100 satoshis por kvB" para
         <translation type="unfinished">A assinatura dada quando a mensagem foi assinada</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation type="unfinished">Verifique a mensagem para assegurar que foi assinada com o endereço Bitcoin especificado</translation>
+        <source>Verify the message to ensure it was signed with the specified Snailcoin address</source>
+        <translation type="unfinished">Verifique a mensagem para assegurar que foi assinada com o endereço Snailcoin especificado</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -3889,7 +3889,7 @@ Vá ao menu Ficheiro &gt; Abrir carteira para carregar uma carteira
     </message>
     <message>
         <source>Unable to decode PSBT from clipboard (invalid base64)</source>
-        <translation type="unfinished">Não foi possível descodificar a transação de Bitcoin parcialmente assinada (PSTB) da área de transferência (base64 inválida)</translation>
+        <translation type="unfinished">Não foi possível descodificar a transação de Snailcoin parcialmente assinada (PSTB) da área de transferência (base64 inválida)</translation>
     </message>
     <message>
         <source>Load Transaction Data</source>
@@ -3905,7 +3905,7 @@ Vá ao menu Ficheiro &gt; Abrir carteira para carregar uma carteira
     </message>
     <message>
         <source>Unable to decode PSBT</source>
-        <translation type="unfinished">Não foi possível descodificar a transação de Bitcoin parcialmente assinada (PSTB)</translation>
+        <translation type="unfinished">Não foi possível descodificar a transação de Snailcoin parcialmente assinada (PSTB)</translation>
     </message>
 </context>
 <context>

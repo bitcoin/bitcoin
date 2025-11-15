@@ -3,7 +3,7 @@ export LC_ALL=C
 set -e -o pipefail
 
 # Source the common prelude, which:
-#   1. Checks if we're at the top directory of the Bitcoin Core repository
+#   1. Checks if we're at the top directory of the Snailcoin Core repository
 #   2. Defines a few common functions and variables
 #
 # shellcheck source=libexec/prelude.bash
@@ -164,7 +164,7 @@ done
 if (( total_required_KiB > avail_KiB )); then
     total_required_GiB=$((total_required_KiB / 1048576))
     avail_GiB=$((avail_KiB / 1048576))
-    echo "Performing a Bitcoin Core Guix build for the selected HOSTS requires ${total_required_GiB} GiB, however, only ${avail_GiB} GiB is available. Please free up some disk space before performing the build."
+    echo "Performing a Snailcoin Core Guix build for the selected HOSTS requires ${total_required_GiB} GiB, however, only ${avail_GiB} GiB is available. Please free up some disk space before performing the build."
     exit 1
 fi
 
@@ -344,7 +344,7 @@ output directory.
 EOF
 }
 
-# Deterministically build Bitcoin Core
+# Deterministically build Snailcoin Core
 # shellcheck disable=SC2153
 for host in $HOSTS; do
 
@@ -424,7 +424,7 @@ EOF
         #
         #   --keep-failed     keep build tree of failed builds
         #
-        #     When builds of the Guix environment itself (not Bitcoin Core)
+        #     When builds of the Guix environment itself (not Snailcoin Core)
         #     fail, it is useful for the build tree to be kept for debugging
         #     purposes.
         #

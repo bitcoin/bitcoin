@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2024-Present The Bitcoin Core developers
+# Copyright (c) 2024-Present The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test getblocktemplate RPC in proposal mode
@@ -17,7 +17,7 @@ from test_framework.blocktools import (
     add_witness_commitment,
 )
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -52,7 +52,7 @@ def assert_template(node, block, expect, *, rehash=True, submit=True, solve=True
             block.solve()
         assert_equal(node.submitblock(block.serialize().hex()), expect_submit)
 
-class MiningTemplateVerificationTest(BitcoinTestFramework):
+class MiningTemplateVerificationTest(SnailcoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 1

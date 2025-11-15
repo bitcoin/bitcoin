@@ -54,13 +54,13 @@
         <translation type="unfinished">&amp;Veldu</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Þetta eru Bitcoin veskin sem senda greiðslur. Skoðið ævinlega vel upphæðina og veskin sem þiggja greiðslur áður en rafmynt er send.</translation>
+        <source>These are your Snailcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Þetta eru Snailcoin veskin sem senda greiðslur. Skoðið ævinlega vel upphæðina og veskin sem þiggja greiðslur áður en rafmynt er send.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your Snailcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">Þetta eru Bitcoin heimilisföngin þín til að taka á móti greiðslum. Notaðu hnappinn „Búa til nýtt móttökuheimilisfang“ á móttökuflipanum til að búa til ný heimilisföng. Undirskrift er aðeins möguleg með heimilisföngum af gerðinni „arfleifð“.</translation>
+        <translation type="unfinished">Þetta eru Snailcoin heimilisföngin þín til að taka á móti greiðslum. Notaðu hnappinn „Búa til nýtt móttökuheimilisfang“ á móttökuflipanum til að búa til ný heimilisföng. Undirskrift er aðeins möguleg með heimilisföngum af gerðinni „arfleifð“.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -246,7 +246,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
+    <name>SnailcoinApplication</name>
     <message>
         <source>Settings file %1 might be corrupt or invalid.</source>
         <translation type="unfinished">Stillingaskrá %1 gæti verið skemmd eða ógild.</translation>
@@ -336,7 +336,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>SnailcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">&amp;Yfirlit</translation>
@@ -403,8 +403,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Umboð er virkt: %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">Senda mynt í Bitcoin færslugildi</translation>
+        <source>Send coins to a Snailcoin address</source>
+        <translation type="unfinished">Senda mynt í Snailcoin færslugildi</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -447,16 +447,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Skrifaðu undir &amp;skilaboð...</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished">Kvitta undir skilaboð með Bitcoin færslugildunum þínum til að sanna að þú eigir þau</translation>
+        <source>Sign messages with your Snailcoin addresses to prove you own them</source>
+        <translation type="unfinished">Kvitta undir skilaboð með Snailcoin færslugildunum þínum til að sanna að þú eigir þau</translation>
     </message>
     <message>
         <source>&amp;Verify message…</source>
         <translation type="unfinished">&amp;Staðfestu skilaboð...</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">Yfirfara skilaboð til að tryggja að kvittað hafi verið fyrir þau með tilteknum Bitcoin færslugildum</translation>
+        <source>Verify messages to ensure they were signed with specified Snailcoin addresses</source>
+        <translation type="unfinished">Yfirfara skilaboð til að tryggja að kvittað hafi verið fyrir þau með tilteknum Snailcoin færslugildum</translation>
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
@@ -566,15 +566,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Uppfært</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished">Sýna %1 hjálparskilaboðin til að fá lista yfir valkosti Bitcoin aðgerðir í skipanalínu</translation>
+        <source>Show the %1 help message to get a list with possible Snailcoin command-line options</source>
+        <translation type="unfinished">Sýna %1 hjálparskilaboðin til að fá lista yfir valkosti Snailcoin aðgerðir í skipanalínu</translation>
     </message>
     <message>
         <source>%1 client</source>
         <translation type="unfinished">%1 biðlarar</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to Snailcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -765,8 +765,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Breyta sendingarfærslugildi</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation type="unfinished">Færslugildið sem slegið var inn "%1" er ekki leyfilegt Bitcoin færslugildi.</translation>
+        <source>The entered address "%1" is not a valid Snailcoin address.</source>
+        <translation type="unfinished">Færslugildið sem slegið var inn "%1" er ekki leyfilegt Snailcoin færslugildi.</translation>
     </message>
     <message>
         <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
@@ -866,8 +866,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;Ytri undirskriftarslóð</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation type="unfinished">Tengstu Bitcoin netinu í gegnum SOCKS5 umboð.</translation>
+        <source>Connect to the Snailcoin network through a SOCKS5 proxy.</source>
+        <translation type="unfinished">Tengstu Snailcoin netinu í gegnum SOCKS5 umboð.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -886,8 +886,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Vefslóðir þriðja aðila (t.d. blokkkönnuður) sem birtast á færsluflipanum sem samhengisvalmyndaratriði. %s í vefslóðinni er skipt út fyrir færsluhash. Margar vefslóðir eru aðskildar með lóðréttri strik |.</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
-        <translation type="unfinished">Tengstu Bitcoin netinu í gegnum sérstakt SOCKS5 umboð fyrir Tor laukþjónustu.</translation>
+        <source>Connect to the Snailcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation type="unfinished">Tengstu Snailcoin netinu í gegnum sérstakt SOCKS5 umboð fyrir Tor laukþjónustu.</translation>
     </message>
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>

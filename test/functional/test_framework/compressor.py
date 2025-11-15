@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2025-present The Bitcoin Core developers
+# Copyright (c) 2025-present The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Routines for compressing transaction output amounts and scripts."""

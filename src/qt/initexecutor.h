@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2021 The Bitcoin Core developers
+// Copyright (c) 2014-2021 The Snailcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,7 +16,7 @@ QT_BEGIN_NAMESPACE
 class QString;
 QT_END_NAMESPACE
 
-/** Class encapsulating Bitcoin Core startup and shutdown.
+/** Class encapsulating Snailcoin Core startup and shutdown.
  * Allows running startup and shutdown in a different thread from the UI thread.
  */
 class InitExecutor : public QObject

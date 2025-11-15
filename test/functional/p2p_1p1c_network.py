@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2024-present The Bitcoin Core developers
+# Copyright (c) 2024-present The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -23,7 +23,7 @@ from test_framework.messages import (
 from test_framework.p2p import (
     P2PInterface,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -33,7 +33,7 @@ from test_framework.wallet import (
     MiniWalletMode,
 )
 
-class PackageRelayTest(BitcoinTestFramework):
+class PackageRelayTest(SnailcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 4

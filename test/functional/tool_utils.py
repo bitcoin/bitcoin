@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # Copyright 2014 BitPay Inc.
-# Copyright 2016-present The Bitcoin Core developers
+# Copyright 2016-present The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit.
 """Exercise the utils via json-defined tests."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 
 import difflib
 import json
@@ -14,7 +14,7 @@ import subprocess
 from pathlib import Path
 
 
-class ToolUtils(BitcoinTestFramework):
+class ToolUtils(SnailcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 0  # No node/datadir needed
 

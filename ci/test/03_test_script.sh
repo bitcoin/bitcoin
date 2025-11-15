@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018-present The Bitcoin Core developers
+# Copyright (c) 2018-present The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -96,9 +96,9 @@ fi
 
 # Make sure default datadir does not exist and is never read by creating a dummy file
 if [ "$CI_OS_NAME" == "macos" ]; then
-  echo > "${HOME}/Library/Application Support/Bitcoin"
+  echo > "${HOME}/Library/Application Support/Snailcoin"
 else
-  echo > "${HOME}/.bitcoin"
+  echo > "${HOME}/.snailcoin"
 fi
 
 if [ -z "$NO_DEPENDS" ]; then

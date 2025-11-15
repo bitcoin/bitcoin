@@ -50,13 +50,13 @@
         <translation type="unfinished">A&amp;lege</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Acestea sunt adresele tale Bitcoin pentru efectuarea plăților. Întotdeauna verifică atent suma de plată și adresa beneficiarului înainte de a trimite monede.</translation>
+        <source>These are your Snailcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Acestea sunt adresele tale Snailcoin pentru efectuarea plăților. Întotdeauna verifică atent suma de plată și adresa beneficiarului înainte de a trimite monede.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your Snailcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">Acestea sunt adresele Bitcoin pentru primirea plăților. Folosiți butonul " Creați o nouă adresă de primire" din fila de primire pentru a crea noi adrese.
+        <translation type="unfinished">Acestea sunt adresele Snailcoin pentru primirea plăților. Folosiți butonul " Creați o nouă adresă de primire" din fila de primire pentru a crea noi adrese.
 Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     </message>
     <message>
@@ -253,7 +253,7 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
+    <name>SnailcoinApplication</name>
     <message>
         <source>Settings file %1 might be corrupt or invalid.</source>
         <translation type="unfinished">Fișierul de configurări %1 poate fi corupt sau invalid.</translation>
@@ -316,8 +316,8 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">Sumă</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation type="unfinished">Introduceţi o adresă Bitcoin (de exemplu %1)</translation>
+        <source>Enter a Snailcoin address (e.g. %1)</source>
+        <translation type="unfinished">Introduceţi o adresă Snailcoin (de exemplu %1)</translation>
     </message>
     <message>
         <source>Unroutable</source>
@@ -407,7 +407,7 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>SnailcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">&amp;Imagine de ansamblu</translation>
@@ -474,8 +474,8 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">Proxy este&lt;b&gt;activat&lt;/b&gt;:%1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">Trimite monede către o adresă Bitcoin</translation>
+        <source>Send coins to a Snailcoin address</source>
+        <translation type="unfinished">Trimite monede către o adresă Snailcoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -518,16 +518,16 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">Semnați și transmiteți un mesaj...</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished">Semnaţi mesaje cu adresa dvs. Bitcoin pentru a dovedi că vă aparţin</translation>
+        <source>Sign messages with your Snailcoin addresses to prove you own them</source>
+        <translation type="unfinished">Semnaţi mesaje cu adresa dvs. Snailcoin pentru a dovedi că vă aparţin</translation>
     </message>
     <message>
         <source>&amp;Verify message…</source>
         <translation type="unfinished">&amp;Verifică mesajul...</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">Verificaţi mesaje pentru a vă asigura că au fost semnate cu adresa Bitcoin specificată</translation>
+        <source>Verify messages to ensure they were signed with specified Snailcoin addresses</source>
+        <translation type="unfinished">Verificaţi mesaje pentru a vă asigura că au fost semnate cu adresa Snailcoin specificată</translation>
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
@@ -646,16 +646,16 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">Ctr+Q</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction</source>
-        <translation type="unfinished">Încărcați Tranzacția Bitcoin Parțial Semnată</translation>
+        <source>Load Partially Signed Snailcoin Transaction</source>
+        <translation type="unfinished">Încărcați Tranzacția Snailcoin Parțial Semnată</translation>
     </message>
     <message>
         <source>Load PSBT from &amp;clipboard…</source>
         <translation type="unfinished">Incarca PSBT din &amp;notite</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation type="unfinished">Încărcați Tranzacția Bitcoin Parțial Semnată din clipboard</translation>
+        <source>Load Partially Signed Snailcoin Transaction from clipboard</source>
+        <translation type="unfinished">Încărcați Tranzacția Snailcoin Parțial Semnată din clipboard</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -712,8 +712,8 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">Transfera un portofel</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished">Arată mesajul de ajutor %1 pentru a obţine o listă cu opţiunile posibile de linii de comandă Bitcoin</translation>
+        <source>Show the %1 help message to get a list with possible Snailcoin command-line options</source>
+        <translation type="unfinished">Arată mesajul de ajutor %1 pentru a obţine o listă cu opţiunile posibile de linii de comandă Snailcoin</translation>
     </message>
     <message>
         <source>&amp;Mask values</source>
@@ -772,12 +772,12 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">A&amp;rata</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to Snailcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform>%n conexiuni active la rețeaua Bitcoin</numerusform>
-            <numerusform>%n conexiuni active către reţeaua Bitcoin</numerusform>
-            <numerusform>%n de conexiuni active către reţeaua Bitcoin</numerusform>
+            <numerusform>%n conexiuni active la rețeaua Snailcoin</numerusform>
+            <numerusform>%n conexiuni active către reţeaua Snailcoin</numerusform>
+            <numerusform>%n de conexiuni active către reţeaua Snailcoin</numerusform>
         </translation>
     </message>
     <message>
@@ -1246,8 +1246,8 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">Editează adresa de trimitere</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation type="unfinished">Adresa introdusă "%1" nu este o adresă Bitcoin validă.</translation>
+        <source>The entered address "%1" is not a valid Snailcoin address.</source>
+        <translation type="unfinished">Adresa introdusă "%1" nu este o adresă Snailcoin validă.</translation>
     </message>
     <message>
         <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
@@ -1403,8 +1403,8 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         </translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
-        <translation type="unfinished">%1 va descarca si stoca o copie a blockchainului Bitcoin</translation>
+        <source>%1 will download and store a copy of the Snailcoin block chain.</source>
+        <translation type="unfinished">%1 va descarca si stoca o copie a blockchainului Snailcoin</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -1423,7 +1423,7 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     <name>ModalOverlay</name>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation type="unfinished">Tranzactiile recente pot sa nu fie inca vizibile, de aceea balanta portofelului poate fi incorecta. Aceasta informatie va fi corecta de indata ce portofelul va fi complet sincronizat cu reteaua Bitcoin, asa cum este detaliat mai jos.</translation>
+        <translation type="unfinished">Tranzactiile recente pot sa nu fie inca vizibile, de aceea balanta portofelului poate fi incorecta. Aceasta informatie va fi corecta de indata ce portofelul va fi complet sincronizat cu reteaua Snailcoin, asa cum este detaliat mai jos.</translation>
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
@@ -1470,7 +1470,7 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     <name>OpenURIDialog</name>
     <message>
         <source>Open bitcoin URI</source>
-        <translation type="unfinished">DeschidețI Bitcoin URI</translation>
+        <translation type="unfinished">DeschidețI Snailcoin URI</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
@@ -1591,8 +1591,8 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">Permite conexiuni de intrar&amp;e</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation type="unfinished">Conectare la reţeaua Bitcoin printr-un proxy SOCKS5.</translation>
+        <source>Connect to the Snailcoin network through a SOCKS5 proxy.</source>
+        <translation type="unfinished">Conectare la reţeaua Snailcoin printr-un proxy SOCKS5.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1651,8 +1651,8 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">Arată controlul caracteristicilor monedei sau nu.</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
-        <translation type="unfinished">Conectați-vă la rețeaua Bitcoin printr-un proxy SOCKS5 separat pentru serviciile Tor onion.</translation>
+        <source>Connect to the Snailcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation type="unfinished">Conectați-vă la rețeaua Snailcoin printr-un proxy SOCKS5 separat pentru serviciile Tor onion.</translation>
     </message>
     <message>
         <source>&amp;Cancel</source>
@@ -1726,8 +1726,8 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
 <context>
     <name>OverviewPage</name>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished">Informaţiile afişate pot fi neactualizate. Portofelul dvs. se sincronizează automat cu reţeaua Bitcoin după ce o conexiune este stabilită, dar acest proces nu a fost finalizat încă.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Snailcoin network after a connection is established, but this process has not completed yet.</source>
+        <translation type="unfinished">Informaţiile afişate pot fi neactualizate. Portofelul dvs. se sincronizează automat cu reţeaua Snailcoin după ce o conexiune este stabilită, dar acest proces nu a fost finalizat încă.</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1858,7 +1858,7 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     </message>
     <message>
         <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation type="unfinished">Bitcoin nu poate porni: click-to-pay handler</translation>
+        <translation type="unfinished">Snailcoin nu poate porni: click-to-pay handler</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -1869,8 +1869,8 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">'bitcoin://' nu este un URI valid. Folositi 'bitcoin:' in loc.</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished">URI nu poate fi analizat! Acest lucru poate fi cauzat de o adresă Bitcoin invalidă sau parametri URI deformaţi.</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid Snailcoin address or malformed URI parameters.</source>
+        <translation type="unfinished">URI nu poate fi analizat! Acest lucru poate fi cauzat de o adresă Snailcoin invalidă sau parametri URI deformaţi.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -2306,8 +2306,8 @@ Pentru mai multe informații privind folosirea consolei, tastează %6.
         <translation type="unfinished">&amp;Mesaj:</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation type="unfinished">Un mesaj opţional de ataşat la cererea de plată, care va fi afişat cînd cererea este deschisă. Notă: Acest mesaj nu va fi trimis cu plata către reţeaua Bitcoin.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Snailcoin network.</source>
+        <translation type="unfinished">Un mesaj opţional de ataşat la cererea de plată, care va fi afişat cînd cererea este deschisă. Notă: Acest mesaj nu va fi trimis cu plata către reţeaua Snailcoin.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -2735,7 +2735,7 @@ Pentru mai multe informații privind folosirea consolei, tastează %6.
         </translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
+        <source>Warning: Invalid Snailcoin address</source>
         <translation type="unfinished">Atenţie: Adresa bitcoin nevalidă!</translation>
     </message>
     <message>
@@ -2774,7 +2774,7 @@ Pentru mai multe informații privind folosirea consolei, tastează %6.
         <translation type="unfinished">Alegeţi adrese folosite anterior</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
+        <source>The Snailcoin address to send the payment to</source>
         <translation type="unfinished">Adresa bitcoin către care se face plata</translation>
     </message>
     <message>
@@ -2810,7 +2810,7 @@ Pentru mai multe informații privind folosirea consolei, tastează %6.
         <translation type="unfinished">Introduceţi eticheta pentru ca această adresa să fie introdusă în lista de adrese folosite</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Snailcoin network.</source>
         <translation type="unfinished">un mesaj a fost ataşat la bitcoin: URI care va fi stocat cu tranzacţia pentru referinţa dvs. Notă: Acest mesaj nu va fi trimis către reţeaua bitcoin.</translation>
     </message>
 </context>
@@ -2832,7 +2832,7 @@ Pentru mai multe informații privind folosirea consolei, tastează %6.
         <translation type="unfinished">&amp;Semnează mesaj</translation>
     </message>
     <message>
-        <source>The Bitcoin address to sign the message with</source>
+        <source>The Snailcoin address to sign the message with</source>
         <translation type="unfinished">Adresa cu care semnaţi mesajul</translation>
     </message>
     <message>
@@ -2852,8 +2852,8 @@ Pentru mai multe informații privind folosirea consolei, tastează %6.
         <translation type="unfinished">Semnătură</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation type="unfinished">Semnează mesajul pentru a dovedi ca deţineţi acestă adresă Bitcoin</translation>
+        <source>Sign the message to prove you own this Snailcoin address</source>
+        <translation type="unfinished">Semnează mesajul pentru a dovedi ca deţineţi acestă adresă Snailcoin</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -2876,8 +2876,8 @@ Pentru mai multe informații privind folosirea consolei, tastează %6.
         <translation type="unfinished">Introduceţi adresa de semnatură, mesajul (asiguraţi-vă că aţi copiat spaţiile, taburile etc. exact) şi semnatura dedesubt pentru a verifica mesajul. Aveţi grijă să nu citiţi mai mult în semnatură decît mesajul în sine, pentru a evita să fiţi păcăliţi de un atac de tip man-in-the-middle. De notat ca aceasta dovedeste doar ca semnatarul primeste odata cu adresa, nu dovedesta insa trimiterea vreunei tranzactii.</translation>
     </message>
     <message>
-        <source>The Bitcoin address the message was signed with</source>
-        <translation type="unfinished">Introduceţi o adresă Bitcoin</translation>
+        <source>The Snailcoin address the message was signed with</source>
+        <translation type="unfinished">Introduceţi o adresă Snailcoin</translation>
     </message>
     <message>
         <source>The signed message to verify</source>
@@ -2888,8 +2888,8 @@ Pentru mai multe informații privind folosirea consolei, tastează %6.
         <translation type="unfinished">Semnătura dată când mesajul a fost semnat</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation type="unfinished">Verificaţi mesajul pentru a vă asigura că a fost semnat cu adresa Bitcoin specificată</translation>
+        <source>Verify the message to ensure it was signed with the specified Snailcoin address</source>
+        <translation type="unfinished">Verificaţi mesajul pentru a vă asigura că a fost semnat cu adresa Snailcoin specificată</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>

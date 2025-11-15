@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-present The Bitcoin Core developers
+// Copyright (c) 2009-present The Snailcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -497,7 +497,7 @@ static RPCHelpMan getmininginfo()
 }
 
 
-// NOTE: Unlike wallet RPC (which use BTC values), mining RPCs follow GBT (BIP 22) in using satoshi amounts
+// NOTE: Unlike wallet RPC (which use SNAIL values), mining RPCs follow GBT (BIP 22) in using satoshi amounts
 static RPCHelpMan prioritisetransaction()
 {
     return RPCHelpMan{"prioritisetransaction",
@@ -790,7 +790,7 @@ static RPCHelpMan getblocktemplate()
          * On mainnet the mempool changes frequently enough that in practice this RPC
          * returns after 60 seconds, or sooner if the best block changes.
          *
-         * getblocktemplate is unlikely to be called by bitcoin-cli, so
+         * getblocktemplate is unlikely to be called by snailcoin-cli, so
          * -rpcclienttimeout is not a concern. BIP22 recommends a long request timeout.
          *
          * The longpollid is assumed to be a tip hash if it has the right format.
@@ -1048,7 +1048,7 @@ static RPCHelpMan submitblock()
     return RPCHelpMan{
         "submitblock",
         "Attempts to submit new block to network.\n"
-        "See https://en.bitcoin.it/wiki/BIP_0022 for full specification.\n",
+        "See https://en.snailcoin.it/wiki/BIP_0022 for full specification.\n",
         {
             {"hexdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hex-encoded block data to submit"},
             {"dummy", RPCArg::Type::STR, RPCArg::DefaultHint{"ignored"}, "dummy value, for compatibility with BIP22. This value is ignored."},

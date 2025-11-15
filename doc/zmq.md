@@ -5,7 +5,7 @@ connections, inter-process communication, and shared-memory,
 providing various message-oriented semantics such as publish/subscribe,
 request/reply, and push/pull.
 
-The Bitcoin Core daemon can be configured to act as a trusted "border
+The Snailcoin Core daemon can be configured to act as a trusted "border
 router", implementing the bitcoin wire protocol and relay, making
 consensus decisions, maintaining the local blockchain database,
 broadcasting locally generated transactions into the network, and
@@ -33,7 +33,7 @@ buffering or reassembly.
 
 ## Prerequisites
 
-The ZeroMQ feature in Bitcoin Core requires the ZeroMQ API >= 4.0.0
+The ZeroMQ feature in Snailcoin Core requires the ZeroMQ API >= 4.0.0
 [libzmq](https://github.com/zeromq/libzmq/releases).
 For version information, see [dependencies.md](dependencies.md).
 Typically, it is packaged by distributions as something like
@@ -81,17 +81,17 @@ The high water mark value must be an integer greater than or equal to 0.
 
 For instance:
 
-    $ bitcoind -zmqpubhashtx=tcp://127.0.0.1:28332 \
+    $ snailcoind -zmqpubhashtx=tcp://127.0.0.1:28332 \
                -zmqpubhashtx=tcp://192.168.1.2:28332 \
                -zmqpubhashblock="tcp://[::1]:28333" \
-               -zmqpubrawtx=unix:/tmp/bitcoind.tx.raw \
+               -zmqpubrawtx=unix:/tmp/snailcoind.tx.raw \
                -zmqpubhashtxhwm=10000
 
-`bitcoin node` or `bitcoin gui` can also be substituted for `bitcoind`.
+`bitcoin node` or `bitcoin gui` can also be substituted for `snailcoind`.
 
 Notification types correspond to message topics (details in next section). For instance,
 for the notification `-zmqpubhashtx` the topic is `hashtx`. These options can also be
-provided in bitcoin.conf.
+provided in snailcoin.conf.
 
 ### Message format
 
@@ -180,9 +180,9 @@ hosts as well. If needed, this option has to be set on the client side too.
 
 ## Remarks
 
-From the perspective of bitcoind, the ZeroMQ socket is write-only; PUB
+From the perspective of snailcoind, the ZeroMQ socket is write-only; PUB
 sockets don't even have a read function. Thus, there is no state
-introduced into bitcoind directly. Furthermore, no information is
+introduced into snailcoind directly. Furthermore, no information is
 broadcast that wasn't already received from the public P2P network.
 
 No authentication or authorization is done on connecting clients; it
@@ -199,7 +199,7 @@ disconnections.
 
 There are several possibilities that ZMQ notification can get lost
 during transmission depending on the communication type you are
-using. Bitcoind appends an up-counting sequence number to each
+using. Snailcoind appends an up-counting sequence number to each
 notification which allows listeners to detect lost notifications.
 
 The `sequence` topic refers specifically to the mempool sequence

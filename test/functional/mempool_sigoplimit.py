@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2023 The Bitcoin Core developers
+# Copyright (c) 2023 The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test sigop limit mempool policy (`-bytespersigop` parameter)"""
@@ -36,7 +36,7 @@ from test_framework.script_util import (
     MAX_STD_LEGACY_SIGOPS,
     MAX_STD_P2SH_SIGOPS,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -49,7 +49,7 @@ from test_framework.wallet_util import generate_keypair
 DEFAULT_BYTES_PER_SIGOP = 20  # default setting
 MAX_PUBKEYS_PER_MULTISIG = 20
 
-class BytesPerSigOpTest(BitcoinTestFramework):
+class BytesPerSigOpTest(SnailcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

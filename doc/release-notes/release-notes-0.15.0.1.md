@@ -1,4 +1,4 @@
-Bitcoin Core version *0.15.0.1* is now available from:
+Snailcoin Core version *0.15.0.1* is now available from:
 
   <https://bitcoin.org/bin/bitcoin-core-0.15.0.1/>
 
@@ -21,8 +21,8 @@ How to Upgrade
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the 
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+installer (on Windows) or just copy over `/Applications/Snailcoin-Qt` (on Mac)
+or `snailcoind`/`snailcoin-qt` (on Linux).
 
 The first time you run version 0.15.0 or higher, your chainstate database will
 be converted to a new format, which will take anywhere from a few minutes to
@@ -51,10 +51,10 @@ processing the entire blockchain.
 Compatibility
 ==============
 
-Bitcoin Core is extensively tested on multiple operating systems using
+Snailcoin Core is extensively tested on multiple operating systems using
 the Linux kernel, macOS 10.8+, and Windows Vista and later. Windows XP is not supported.
 
-Bitcoin Core should also work on most other Unix-like systems but is not
+Snailcoin Core should also work on most other Unix-like systems but is not
 frequently tested on them.
 
 Notable changes

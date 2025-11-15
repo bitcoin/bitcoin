@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2024 The Bitcoin Core developers
+# Copyright (c) 2024 The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that descriptor wallets rescan mempool transactions properly when importing."""
@@ -9,13 +9,13 @@ from test_framework.address import (
     ADDRESS_BCRT1_UNSPENDABLE,
 )
 from test_framework.messages import COIN
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
 from test_framework.wallet_util import test_address
 
 
-class WalletRescanUnconfirmed(BitcoinTestFramework):
+class WalletRescanUnconfirmed(SnailcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

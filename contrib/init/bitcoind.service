@@ -1,16 +1,16 @@
 # It is not recommended to modify this file in-place, because it will
 # be overwritten during package upgrades. If you want to add further
 # options or overwrite existing ones then use
-# $ systemctl edit bitcoind.service
+# $ systemctl edit snailcoind.service
 # See "man systemd.service" for details.
 
 # Note that almost all daemon options could be specified in
-# /etc/bitcoin/bitcoin.conf, but keep in mind those explicitly
+# /etc/bitcoin/snailcoin.conf, but keep in mind those explicitly
 # specified as arguments in ExecStart= will override those in the
 # config file.
 
 [Unit]
-Description=Bitcoin daemon
+Description=Snailcoin daemon
 Documentation=https://github.com/bitcoin/bitcoin/blob/master/doc/init.md
 
 # https://www.freedesktop.org/wiki/Software/systemd/NetworkTarget/
@@ -18,9 +18,9 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=/usr/bin/bitcoind -pid=/run/bitcoind/bitcoind.pid \
-                            -conf=/etc/bitcoin/bitcoin.conf \
-                            -datadir=/var/lib/bitcoind \
+ExecStart=/usr/bin/snailcoind -pid=/run/snailcoind/snailcoind.pid \
+                            -conf=/etc/bitcoin/snailcoin.conf \
+                            -datadir=/var/lib/snailcoind \
                             -startupnotify='systemd-notify --ready' \
                             -shutdownnotify='systemd-notify --stopping'
 
@@ -32,7 +32,7 @@ ExecStartPre=!/bin/chgrp bitcoin /etc/bitcoin
 
 Type=notify
 NotifyAccess=all
-PIDFile=/run/bitcoind/bitcoind.pid
+PIDFile=/run/snailcoind/snailcoind.pid
 
 Restart=on-failure
 TimeoutStartSec=infinity
@@ -44,16 +44,16 @@ TimeoutStopSec=600
 # Run as bitcoin:bitcoin
 User=bitcoin
 
-# /run/bitcoind
-RuntimeDirectory=bitcoind
+# /run/snailcoind
+RuntimeDirectory=snailcoind
 RuntimeDirectoryMode=0710
 
 # /etc/bitcoin
 ConfigurationDirectory=bitcoin
 ConfigurationDirectoryMode=0710
 
-# /var/lib/bitcoind
-StateDirectory=bitcoind
+# /var/lib/snailcoind
+StateDirectory=snailcoind
 StateDirectoryMode=0710
 
 # Hardening measures

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2025-present The Bitcoin Core developers
+# Copyright (c) 2025-present The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -9,14 +9,14 @@ went wrong. We should maintain this bar of only raising one exception as
 long as additional maintenance and complexity is low.
 
 Test relaunches itself into child processes in order to trigger failures
-without the parent process' BitcoinTestFramework also failing.
+without the parent process' SnailcoinTestFramework also failing.
 """
 
 from test_framework.util import (
     assert_raises_message,
     rpc_port,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 
 from hashlib import md5
 from os import linesep
@@ -25,7 +25,7 @@ import subprocess
 import sys
 import time
 
-class FeatureFrameworkStartupFailures(BitcoinTestFramework):
+class FeatureFrameworkStartupFailures(SnailcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
@@ -50,7 +50,7 @@ class FeatureFrameworkStartupFailures(BitcoinTestFramework):
         except subprocess.TimeoutExpired as e:
             print("Unexpected child process timeout!\n"
                   "WARNING: Timeouts like this halt execution of TestNode logic, "
-                  "meaning dangling bitcoind processes are to be expected.\n"
+                  "meaning dangling snailcoind processes are to be expected.\n"
                   f"<CHILD OUTPUT BEGIN>\n{e.output.decode('utf-8')}\n<CHILD OUTPUT END>",
                   file=sys.stderr)
             raise
@@ -86,16 +86,16 @@ class FeatureFrameworkStartupFailures(BitcoinTestFramework):
         self.nodes[0].stop_node()
         self.log.info(f"...measured {node_start_duration:.1f}s.")
 
-        self.log.info("Verifying inability to connect to bitcoind's RPC interface due to wrong port results in one exception containing at least one OSError.")
+        self.log.info("Verifying inability to connect to snailcoind's RPC interface due to wrong port results in one exception containing at least one OSError.")
         self._verify_startup_failure(
             TestWrongRpcPortStartupFailure, [f"--internal_node_start_duration={node_start_duration}"],
-            r"AssertionError: \[node 0\] Unable to connect to bitcoind after \d+s \(ignored errors: {[^}]*'OSError \w+'?: \d+[^}]*}, latest: '[\w ]+'/\w+\([^)]+\)\)"
+            r"AssertionError: \[node 0\] Unable to connect to snailcoind after \d+s \(ignored errors: {[^}]*'OSError \w+'?: \d+[^}]*}, latest: '[\w ]+'/\w+\([^)]+\)\)"
         )
 
         self.log.info("Verifying startup failure due to invalid arg results in only one exception.")
         self._verify_startup_failure(
             TestInitErrorStartupFailure, [],
-            r"FailedToStartError: \[node 0\] bitcoind exited with status 1 during initialization\. Error: Error parsing command line arguments: Invalid parameter -nonexistentarg"
+            r"FailedToStartError: \[node 0\] snailcoind exited with status 1 during initialization\. Error: Error parsing command line arguments: Invalid parameter -nonexistentarg"
         )
 
         self.log.info("Verifying start() then stop_node() on a node without wait_for_rpc_connection() in between raises an assert.")
@@ -109,7 +109,7 @@ class InternalTestMixin:
         # Just here to silence unrecognized argument error, we actually read the value in the if-main at the bottom.
         parser.add_argument("--internal_test", dest="internal_never_read", help="ONLY TO BE USED WHEN TEST RELAUNCHES ITSELF")
 
-class TestWrongRpcPortStartupFailure(InternalTestMixin, BitcoinTestFramework):
+class TestWrongRpcPortStartupFailure(InternalTestMixin, SnailcoinTestFramework):
     def add_options(self, parser):
         parser.add_argument("--internal_node_start_duration", dest="node_start_duration", help="ONLY TO BE USED WHEN TEST RELAUNCHES ITSELF", type=float)
         InternalTestMixin.add_options(self, parser)
@@ -127,7 +127,7 @@ class TestWrongRpcPortStartupFailure(InternalTestMixin, BitcoinTestFramework):
     def run_test(self):
         assert False, "Should have failed earlier during startup."
 
-class TestInitErrorStartupFailure(InternalTestMixin, BitcoinTestFramework):
+class TestInitErrorStartupFailure(InternalTestMixin, SnailcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [["-nonexistentarg"]]
@@ -135,7 +135,7 @@ class TestInitErrorStartupFailure(InternalTestMixin, BitcoinTestFramework):
     def run_test(self):
         assert False, "Should have failed earlier during startup."
 
-class TestStartStopStartupFailure(InternalTestMixin, BitcoinTestFramework):
+class TestStartStopStartupFailure(InternalTestMixin, SnailcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
@@ -148,7 +148,7 @@ class TestStartStopStartupFailure(InternalTestMixin, BitcoinTestFramework):
     def run_test(self):
         assert False, "Should have failed earlier during startup."
 
-class TestSuccess(InternalTestMixin, BitcoinTestFramework):
+class TestSuccess(InternalTestMixin, SnailcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

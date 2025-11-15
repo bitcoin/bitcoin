@@ -1,4 +1,4 @@
-Bitcoin Core version 0.13.0 is now available from:
+Snailcoin Core version 0.13.0 is now available from:
 
   <https://bitcoin.org/bin/bitcoin-core-0.13.0/>
 
@@ -21,7 +21,7 @@ an OS initially released in 2001. This means that not even critical security
 updates will be released anymore. Without security updates, using a bitcoin
 wallet on a XP machine is irresponsible at least.
 
-In addition to that, with 0.12.x there have been varied reports of Bitcoin Core
+In addition to that, with 0.12.x there have been varied reports of Snailcoin Core
 randomly crashing on Windows XP. It is [not clear](https://github.com/bitcoin/bitcoin/issues/7681#issuecomment-217439891)
 what the source of these crashes is, but it is likely that upstream
 libraries such as Qt are no longer being tested on XP.
@@ -48,21 +48,21 @@ For this reason the default was changed to 300 MiB in this release.
 For nodes on low-memory systems, the database cache can be changed back to
 100 MiB (or to another value) by either:
 
-- Adding `dbcache=100` in bitcoin.conf
+- Adding `dbcache=100` in snailcoin.conf
 - Changing it in the GUI under `Options → Size of database cache`
 
 Note that the database cache setting has the most performance impact
 during initial sync of a node, and when catching up after downtime.
 
 
-bitcoin-cli: arguments privacy
+snailcoin-cli: arguments privacy
 ------------------------------
 
 The RPC command line client gained a new argument, `-stdin`
 to read extra arguments from standard input, one per line until EOF/Ctrl-D.
 For example:
 
-    $ src/bitcoin-cli -stdin walletpassphrase
+    $ src/snailcoin-cli -stdin walletpassphrase
     mysecretcode
     120
     ..... press Ctrl-D here to end input
@@ -76,7 +76,7 @@ table by any user on the system.
 C++11 and Python 3
 ------------------
 
-Various code modernizations have been done. The Bitcoin Core code base has
+Various code modernizations have been done. The Snailcoin Core code base has
 started using C++11. This means that a C++11-capable compiler is now needed for
 building. Effectively this means GCC 4.7 or higher, or Clang 3.3 or higher.
 
@@ -156,7 +156,7 @@ You can't disable HD key generation once you have created a HD wallet.
 
 There is no distinction between internal (change) and external keys.
 
-HD wallets are incompatible with older versions of Bitcoin Core.
+HD wallets are incompatible with older versions of Snailcoin Core.
 
 [Pull request](https://github.com/bitcoin/bitcoin/pull/8035/files), [BIP 32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)
 
@@ -172,7 +172,7 @@ The code preparations for Segregated Witness ("segwit"), as described in [BIP
 finished and included in this release.  However, BIP 141 does not yet specify
 activation parameters on mainnet, and so this release does not support segwit
 use on mainnet.  Testnet use is supported, and after BIP 141 is updated with
-proposed parameters, a future release of Bitcoin Core is expected that
+proposed parameters, a future release of Snailcoin Core is expected that
 implements those parameters for mainnet.
 
 Furthermore, because segwit activation is not yet specified for mainnet,
@@ -232,7 +232,7 @@ files on disk. These two have now been split up, so that all blocks are known
 before validation starts. This was necessary to make certain optimizations that
 are available during normal synchronizations also available during reindexing.
 
-The two phases are distinct in the Bitcoin-Qt GUI. During the first one,
+The two phases are distinct in the Snailcoin-Qt GUI. During the first one,
 "Reindexing blocks on disk" is shown. During the second (slower) one,
 "Processing blocks on disk" is shown.
 
@@ -375,7 +375,7 @@ git merge commit are mentioned.
 - #7326 `2cd004b` Fix typo, wrong information in gettxout help text (paveljanik)
 - #7222 `82429d0` Indicate which transactions are signaling opt-in RBF (sdaftuar)
 - #7480 `b49a623` Changed getnetworkhps value to double to avoid overflow (instagibbs)
-- #7550 `8b958ab` Input-from-stdin mode for bitcoin-cli (laanwj)
+- #7550 `8b958ab` Input-from-stdin mode for snailcoin-cli (laanwj)
 - #7670 `c9a1265` Use cached block hash in blockToJSON() (rat4)
 - #7726 `9af69fa` Correct importaddress help reference to importpubkey (CypherGrue)
 - #7766 `16555b6` Register calls where they are defined (laanwj)
@@ -395,7 +395,7 @@ git merge commit are mentioned.
 - #7967 `8c1e49b` Add feerate option to `fundrawtransaction` (jonasschnelli)
 - #8118 `9b6a48c` Reduce unnecessary hashing in `signrawtransaction` (jonasnick)
 - #7957 `79004d4` Add support for transaction sequence number (jonasschnelli)
-- #8153 `75ec320` `fundrawtransaction` feeRate: Use BTC/kB (MarcoFalke)
+- #8153 `75ec320` `fundrawtransaction` feeRate: Use SNAIL/kB (MarcoFalke)
 - #7292 `7ce9ac5` Expose ancestor/descendant information over RPC (sdaftuar)
 - #8171 `62fcf27` Fix createrawtx sequence number unsigned int parsing (jonasschnelli)
 - #7892 `9c3d0fa` Add full UTF-8 support to RPC (laanwj)
@@ -540,7 +540,7 @@ git merge commit are mentioned.
 - #7604 `354b03d` build: Remove spurious dollar sign. Fixes #7189 (dooglus)
 - #7605 `7f001bd` Remove openssl info from init/log and from Qt debug window (jonasschnelli)
 - #7628 `87d6562` Add 'copy full transaction details' option (ericshawlinux)
-- #7613 `3798e5d` Add autocomplete to bitcoin-qt's console window (GamerSg)
+- #7613 `3798e5d` Add autocomplete to snailcoin-qt's console window (GamerSg)
 - #7668 `b24266c` Fix history deletion bug after font size change (achow101)
 - #7680 `41d2dfa` Remove reflection from `about` icon (laanwj)
 - #7686 `f034bce` Remove 0-fee from send dialog (MarcoFalke)
@@ -559,11 +559,11 @@ git merge commit are mentioned.
 - #8129 `ee1533e` Fix RPC console auto completer (UdjinM6)
 - #7636 `fb0ac48` Add bitcoin address label to request payment QR code (makevoid)
 - #8231 `760a6c7` Fix a bug where the SplashScreen will not be hidden during startup (jonasschnelli)
-- #8256 `af2421c` BUG: bitcoin-qt crash (fsb4000)
-- #8257 `ff03c50` Do not ask a UI question from bitcoind (sipa)
+- #8256 `af2421c` BUG: snailcoin-qt crash (fsb4000)
+- #8257 `ff03c50` Do not ask a UI question from snailcoind (sipa)
 - #8288 `91abb77` Network-specific example address (laanwj)
 - #7707 `a914968` UI support for abandoned transactions (jonasschnelli)
-- #8207 `f7a403b` Add a link to the Bitcoin-Core repository and website to the About Dialog (MarcoFalke)
+- #8207 `f7a403b` Add a link to the Snailcoin-Core repository and website to the About Dialog (MarcoFalke)
 - #8281 `6a87eb0` Remove client name from debug window (laanwj)
 - #8407 `45eba4b` Add dbcache migration path (jonasschnelli)
 
@@ -650,7 +650,7 @@ git merge commit are mentioned.
 - #8038 `e2bf830` Various minor fixes (MarcoFalke)
 - #8072 `1b87e5b` Travis: 'make check' in parallel and verbose (theuni)
 - #8056 `8844ef1` Remove hardcoded "4 nodes" from test_framework (MarcoFalke)
-- #8047 `37f9a1f` Test_framework: Set wait-timeout for bitcoind procs (MarcoFalke)
+- #8047 `37f9a1f` Test_framework: Set wait-timeout for snailcoind procs (MarcoFalke)
 - #8095 `6700cc9` Test framework: only cleanup on successful test runs (sdaftuar)
 - #8098 `06bd4f6` Test_framework: Append portseed to tmpdir (MarcoFalke)
 - #8104 `6ff2c8d` Add timeout to sync_blocks() and sync_mempools() (sdaftuar)
@@ -660,7 +660,7 @@ git merge commit are mentioned.
 - #8090 `a2df115` Adding P2SH(p2pkh) script test case (Christewart)
 - #7992 `ec45cc5` Extend #7956 with one more test (TheBlueMatt)
 - #8139 `ae5575b` Fix interrupted HTTP RPC connection workaround for Python 3.5+ (sipa)
-- #8164 `0f24eaf` [Bitcoin-Tx] fix missing test fixtures, fix 32bit atoi issue (jonasschnelli)
+- #8164 `0f24eaf` [Snailcoin-Tx] fix missing test fixtures, fix 32bit atoi issue (jonasschnelli)
 - #8166 `0b5279f` Src/test: Do not shadow local variables (paveljanik)
 - #8141 `44c1b1c` Continuing port of java comparison tool (mrbandrews)
 - #8201 `36b7400` fundrawtransaction: Fix race, assert amounts (MarcoFalke)
@@ -670,7 +670,7 @@ git merge commit are mentioned.
 - #8216 `0d41d70` Assert 'changePosition out of bounds'  (MarcoFalke)
 - #8222 `961893f` Enable mempool consistency checks in unit tests (sipa)
 - #7751 `84370d5` test_framework: python3.4 authproxy compat (laanwj)
-- #7744 `d8e862a` test_framework: detect failure of bitcoind startup (laanwj)
+- #7744 `d8e862a` test_framework: detect failure of snailcoind startup (laanwj)
 - #8280 `115735d` Increase sync_blocks() timeouts in pruning.py (MarcoFalke)
 - #8340 `af9b7a9` Solve trivial merge conflict in p2p-segwit.py (MarcoFalke)
 - #8067 `3e4cf8f` Travis: use slim generic image, and some fixups (theuni)

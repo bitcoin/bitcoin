@@ -1,20 +1,20 @@
-# Support for signing transactions outside of Bitcoin Core
+# Support for signing transactions outside of Snailcoin Core
 
-Bitcoin Core can be launched with `-signer=<cmd>` where `<cmd>` is an external tool which can sign transactions and perform other functions. For example, it can be used to communicate with a hardware wallet.
+Snailcoin Core can be launched with `-signer=<cmd>` where `<cmd>` is an external tool which can sign transactions and perform other functions. For example, it can be used to communicate with a hardware wallet.
 
 ## Example usage
 
-The following example is based on the [HWI](https://github.com/bitcoin-core/HWI) tool. Version 2.0 or newer is required. Although this tool is hosted under the Bitcoin Core GitHub organization and maintained by Bitcoin Core developers, it should be used with caution. It is considered experimental and has far less review than Bitcoin Core itself. Be particularly careful when running tools such as these on a computer with private keys on it.
+The following example is based on the [HWI](https://github.com/bitcoin-core/HWI) tool. Version 2.0 or newer is required. Although this tool is hosted under the Snailcoin Core GitHub organization and maintained by Snailcoin Core developers, it should be used with caution. It is considered experimental and has far less review than Snailcoin Core itself. Be particularly careful when running tools such as these on a computer with private keys on it.
 
-When using a hardware wallet, consult the manufacturer website for (alternative) software they recommend. As long as their software conforms to the standard below, it should be able to work with Bitcoin Core.
+When using a hardware wallet, consult the manufacturer website for (alternative) software they recommend. As long as their software conforms to the standard below, it should be able to work with Snailcoin Core.
 
-Start Bitcoin Core:
+Start Snailcoin Core:
 
 ```sh
-$ bitcoind -signer=../HWI/hwi.py
+$ snailcoind -signer=../HWI/hwi.py
 ```
 
-`bitcoin node` can also be substituted for `bitcoind`.
+`bitcoin node` can also be substituted for `snailcoind`.
 
 ### Device setup
 
@@ -25,7 +25,7 @@ Follow the hardware manufacturers instructions for the initial device setup, as 
 Get a list of signing devices / services:
 
 ```
-$ bitcoin-cli enumeratesigners
+$ snailcoin-cli enumeratesigners
 {
   "signers": [
     {
@@ -39,28 +39,28 @@ The master key fingerprint is used to identify a device.
 Create a wallet, this automatically imports the public keys:
 
 ```sh
-$ bitcoin-cli createwallet "hww" true true "" true true true
+$ snailcoin-cli createwallet "hww" true true "" true true true
 ```
 
-`bitcoin rpc` can also be substituted for `bitcoin-cli`.
+`bitcoin rpc` can also be substituted for `snailcoin-cli`.
 
 ### Verify an address
 
 Display an address on the device:
 
 ```sh
-$ bitcoin-cli -rpcwallet=<wallet> getnewaddress
-$ bitcoin-cli -rpcwallet=<wallet> walletdisplayaddress <address>
+$ snailcoin-cli -rpcwallet=<wallet> getnewaddress
+$ snailcoin-cli -rpcwallet=<wallet> walletdisplayaddress <address>
 ```
 
 Replace `<address>` with the result of `getnewaddress`.
 
 ### Spending
 
-Under the hood this uses a [Partially Signed Bitcoin Transaction](psbt.md).
+Under the hood this uses a [Partially Signed Snailcoin Transaction](psbt.md).
 
 ```sh
-$ bitcoin-cli -rpcwallet=<wallet> sendtoaddress <address> <amount>
+$ snailcoin-cli -rpcwallet=<wallet> sendtoaddress <address> <amount>
 ```
 
 This prompts your hardware wallet to sign, and fail if it's not connected. If successful
@@ -72,11 +72,11 @@ it automatically broadcasts the transaction.
 
 ## Signer API
 
-In order to be compatible with Bitcoin Core any signer command should conform to the specification below. This specification is subject to change. Ideally a BIP should propose a standard so that other wallets can also make use of it.
+In order to be compatible with Snailcoin Core any signer command should conform to the specification below. This specification is subject to change. Ideally a BIP should propose a standard so that other wallets can also make use of it.
 
 Prerequisite knowledge:
 * [Output Descriptors](descriptors.md)
-* Partially Signed Bitcoin Transaction ([PSBT](psbt.md))
+* Partially Signed Snailcoin Transaction ([PSBT](psbt.md))
 
 ### `enumerate` (required)
 
@@ -163,7 +163,7 @@ If <descriptor> contains an xpub, the command MUST fail if it does not match the
 
 The command MAY complain if `--testnet` is set, but the BIP32 coin type is not `1h` (and vice versa).
 
-## How Bitcoin Core uses the Signer API
+## How Snailcoin Core uses the Signer API
 
 The `enumeratesigners` RPC simply calls `<cmd> enumerate`.
 

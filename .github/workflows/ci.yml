@@ -1,4 +1,4 @@
-# Copyright (c) 2023-present The Bitcoin Core developers
+# Copyright (c) 2023-present The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit.
 
@@ -276,14 +276,14 @@ jobs:
         working-directory: build
         shell: pwsh -Command "$PSVersionTable; $PSNativeCommandUseErrorActionPreference = $true; $ErrorActionPreference = 'Stop'; & '{0}'"
         run: |
-          mt.exe -nologo -inputresource:bin\Release\bitcoind.exe -out:bitcoind.manifest
-          Get-Content bitcoind.manifest
+          mt.exe -nologo -inputresource:bin\Release\snailcoind.exe -out:snailcoind.manifest
+          Get-Content snailcoind.manifest
 
           Get-ChildItem -Filter "bin\Release\*.exe" | ForEach-Object {
             $exeName = $_.Name
 
             # Skip as they currently do not have manifests
-            if ($exeName -eq "fuzz.exe" -or $exeName -eq "bench_bitcoin.exe" -or $exeName -eq "test_bitcoin-qt.exe" -or $exeName -eq "test_kernel.exe" -or $exeName -eq "bitcoin-chainstate.exe") {
+            if ($exeName -eq "fuzz.exe" -or $exeName -eq "bench_bitcoin.exe" -or $exeName -eq "test_snailcoin-qt.exe" -or $exeName -eq "test_kernel.exe" -or $exeName -eq "bitcoin-chainstate.exe") {
               Write-Host "Skipping $exeName (no manifest present)"
               return
             }
@@ -305,8 +305,8 @@ jobs:
         working-directory: build
         env:
           BITCOIN_BIN: '${{ github.workspace }}\build\bin\Release\bitcoin.exe'
-          BITCOIND: '${{ github.workspace }}\build\bin\Release\bitcoind.exe'
-          BITCOINCLI: '${{ github.workspace }}\build\bin\Release\bitcoin-cli.exe'
+          BITCOIND: '${{ github.workspace }}\build\bin\Release\snailcoind.exe'
+          BITCOINCLI: '${{ github.workspace }}\build\bin\Release\snailcoin-cli.exe'
           BITCOINTX: '${{ github.workspace }}\build\bin\Release\bitcoin-tx.exe'
           BITCOINUTIL: '${{ github.workspace }}\build\bin\Release\bitcoin-util.exe'
           BITCOINWALLET: '${{ github.workspace }}\build\bin\Release\bitcoin-wallet.exe'
@@ -388,16 +388,16 @@ jobs:
         with:
           name: x86_64-w64-mingw32-executables-${{ github.run_id }}
 
-      - name: Run bitcoind.exe
-        run: ./bin/bitcoind.exe -version
+      - name: Run snailcoind.exe
+        run: ./bin/snailcoind.exe -version
 
       - *SET_UP_VS
 
       - name: Check executable manifests
         shell: pwsh -Command "$PSVersionTable; $PSNativeCommandUseErrorActionPreference = $true; $ErrorActionPreference = 'Stop'; & '{0}'"
         run: |
-          mt.exe -nologo -inputresource:bin\bitcoind.exe -out:bitcoind.manifest
-          Get-Content bitcoind.manifest
+          mt.exe -nologo -inputresource:bin\snailcoind.exe -out:snailcoind.manifest
+          Get-Content snailcoind.manifest
 
           Get-ChildItem -Filter "bin\*.exe" | ForEach-Object {
             $exeName = $_.Name

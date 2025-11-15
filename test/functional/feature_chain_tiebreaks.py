@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) The Bitcoin Core developers
+# Copyright (c) The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that the correct active block is chosen in complex reorgs."""
@@ -7,10 +7,10 @@
 from test_framework.blocktools import create_block
 from test_framework.messages import CBlockHeader
 from test_framework.p2p import P2PDataStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.util import assert_equal
 
-class ChainTiebreaksTest(BitcoinTestFramework):
+class ChainTiebreaksTest(SnailcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
@@ -25,7 +25,7 @@ class ChainTiebreaksTest(BitcoinTestFramework):
 
     def test_chain_split_in_memory(self):
         node = self.nodes[0]
-        # Add P2P connection to bitcoind
+        # Add P2P connection to snailcoind
         peer = node.add_p2p_connection(P2PDataStore())
 
         self.log.info('Precomputing blocks')

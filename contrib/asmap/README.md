@@ -2,7 +2,7 @@
 
 Tool for performing various operations on textual and binary asmap files,
 particularly encoding/compressing the raw data to the binary format that can
-be used in Bitcoin Core with the `-asmap` option.
+be used in Snailcoin Core with the `-asmap` option.
 
 Example usage:
 ```
@@ -18,7 +18,7 @@ Consider using `pypy3` for a faster run time.
 ### Encoding and Decoding
 
 ASmap files are somewhat large in text form, and need to be encoded
-to binary before being used with Bitcoin Core.
+to binary before being used with Snailcoin Core.
 
 The `encode` command takes an ASmap and an output file.
 
@@ -68,14 +68,14 @@ which ignores networks present in the second but not the first.
 `diff_addrs` is intended to provide changes between two ASmaps and
 a node's known peers.
 The command takes two ASmap files, and a file of IP addresses as output by
-the `bitcoin-cli getnodeaddresses` command.
+the `snailcoin-cli getnodeaddresses` command.
 It returns the changes between the two ASmaps for the peer IPs provided in
 the `getnodeaddresses` output.
 The resulting file is in the same format as the `diff` command shown above.
 
 You can output address data to a file:
 ```
-bitcoin-cli getnodeaddresses 0 > addrs.json
+snailcoin-cli getnodeaddresses 0 > addrs.json
 ```
 and pass in the address file as the third argument:
 ```

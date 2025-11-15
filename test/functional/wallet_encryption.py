@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2022 The Bitcoin Core developers
+# Copyright (c) 2016-2022 The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Wallet encryption"""
@@ -8,7 +8,7 @@ import time
 import subprocess
 
 from test_framework.messages import hash256
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.util import (
     assert_raises_rpc_error,
     assert_equal,
@@ -16,7 +16,7 @@ from test_framework.util import (
 from test_framework.wallet_util import WalletUnlock
 
 
-class WalletEncryptionTest(BitcoinTestFramework):
+class WalletEncryptionTest(SnailcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

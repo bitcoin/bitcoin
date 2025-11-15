@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2022 The Bitcoin Core developers
+# Copyright (c) 2019-2022 The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import pathlib
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 
 
 class TestShell:
-    """Wrapper Class for BitcoinTestFramework.
+    """Wrapper Class for SnailcoinTestFramework.
 
-    The TestShell class extends the BitcoinTestFramework
+    The TestShell class extends the SnailcoinTestFramework
     rpc & daemon process management functionality to external
     python environments.
 
     It is a singleton class, which ensures that users only
     start a single TestShell at a time."""
 
-    class __TestShell(BitcoinTestFramework):
+    class __TestShell(SnailcoinTestFramework):
         def set_test_params(self):
             self.uses_wallet = None
 
@@ -30,7 +30,7 @@ class TestShell:
                 return
 
             # Num_nodes parameter must be set
-            # by BitcoinTestFramework child class.
+            # by SnailcoinTestFramework child class.
             self.num_nodes = 1
 
             # User parameters override default values.
@@ -67,7 +67,7 @@ class TestShell:
         # This implementation enforces singleton pattern, and will return the
         # previously initialized instance if available
         if not TestShell.instance:
-            # BitcoinTestFramework instances are supposed to be constructed with the path
+            # SnailcoinTestFramework instances are supposed to be constructed with the path
             # of the calling test in order to find shared data like configuration and the
             # cache. Since TestShell is meant for interactive use, there is no concrete
             # test; passing a dummy name is fine though, as only the containing directory

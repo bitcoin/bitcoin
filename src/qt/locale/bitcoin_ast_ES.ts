@@ -54,13 +54,13 @@
         <translation type="unfinished">&amp;Escoyer</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Estes son les tuyes direcciones de Bitcoin pa mandar pagos. Siempre revisa la cantidá y la dirección de recibimientu antes de mandar los coins.</translation>
+        <source>These are your Snailcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Estes son les tuyes direcciones de Snailcoin pa mandar pagos. Siempre revisa la cantidá y la dirección de recibimientu antes de mandar los coins.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your Snailcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">Estes son les tuyes direcciones de Bitcoin pa recibir pagos. Usa el botón 'Crear nueva dirección de recibimientu' na solapa de recibir pa crear nueves direcciones.
+        <translation type="unfinished">Estes son les tuyes direcciones de Snailcoin pa recibir pagos. Usa el botón 'Crear nueva dirección de recibimientu' na solapa de recibir pa crear nueves direcciones.
 La firma ye possible solamentu con direcciones del tipu 'legacy'.</translation>
     </message>
     <message>
@@ -260,7 +260,7 @@ La firma ye possible solamentu con direcciones del tipu 'legacy'.</translation>
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
+    <name>SnailcoinApplication</name>
     <message>
         <source>Settings file %1 might be corrupt or invalid.</source>
         <translation type="unfinished">El ficheru de configuraciones %1 podría estar corruptu o ser inválidu.</translation>
@@ -336,7 +336,7 @@ La firma ye possible solamentu con direcciones del tipu 'legacy'.</translation>
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>SnailcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">&amp;Visión xeneral</translation>
@@ -399,8 +399,8 @@ La firma ye possible solamentu con direcciones del tipu 'legacy'.</translation>
         <translation type="unfinished">El proxy ta &lt;b&gt;activáu&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">Enviar monedas a una dirección de Bitcoin</translation>
+        <source>Send coins to a Snailcoin address</source>
+        <translation type="unfinished">Enviar monedas a una dirección de Snailcoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -443,16 +443,16 @@ La firma ye possible solamentu con direcciones del tipu 'legacy'.</translation>
         <translation type="unfinished">Firmar &amp;mensaje…</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished">Firmar mensajes con les tuyas direcciones de Bitcoin pa probar que les tienes</translation>
+        <source>Sign messages with your Snailcoin addresses to prove you own them</source>
+        <translation type="unfinished">Firmar mensajes con les tuyas direcciones de Snailcoin pa probar que les tienes</translation>
     </message>
     <message>
         <source>&amp;Verify message…</source>
         <translation type="unfinished">&amp;Verificar mensaje…</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">Verificar los mensajes pa asegurar que fueron firmados con les direcciones de Bitcoin especificaes</translation>
+        <source>Verify messages to ensure they were signed with specified Snailcoin addresses</source>
+        <translation type="unfinished">Verificar los mensajes pa asegurar que fueron firmados con les direcciones de Snailcoin especificaes</translation>
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
@@ -561,16 +561,16 @@ La firma ye possible solamentu con direcciones del tipu 'legacy'.</translation>
         <translation type="unfinished">Actualizáu</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction</source>
-        <translation type="unfinished">Cargar Transacción de Bitcoin Parcialmente Firmada</translation>
+        <source>Load Partially Signed Snailcoin Transaction</source>
+        <translation type="unfinished">Cargar Transacción de Snailcoin Parcialmente Firmada</translation>
     </message>
     <message>
         <source>Load PSBT from &amp;clipboard…</source>
         <translation type="unfinished">Cargar PSBT dende el &amp;portapapeles…</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation type="unfinished">Cargar Transacción de Bitcoin Parcialmente Firmada dende el portapapeles</translation>
+        <source>Load Partially Signed Snailcoin Transaction from clipboard</source>
+        <translation type="unfinished">Cargar Transacción de Snailcoin Parcialmente Firmada dende el portapapeles</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -627,8 +627,8 @@ La firma ye possible solamentu con direcciones del tipu 'legacy'.</translation>
         <translation type="unfinished">Migrar una cartera</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished">Amosar el mensaxe d’ayuda de %1 pa ver una llista de les posibles opciones de la llinia de comandos de Bitcoin</translation>
+        <source>Show the %1 help message to get a list with possible Snailcoin command-line options</source>
+        <translation type="unfinished">Amosar el mensaxe d’ayuda de %1 pa ver una llista de les posibles opciones de la llinia de comandos de Snailcoin</translation>
     </message>
     <message>
         <source>&amp;Mask values</source>
@@ -687,10 +687,10 @@ La firma ye possible solamentu con direcciones del tipu 'legacy'.</translation>
         <translation type="unfinished">&amp;Amosar</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to Snailcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform>%n conexión(es) activa(es) a la rede de Bitcoin</numerusform>
+            <numerusform>%n conexión(es) activa(es) a la rede de Snailcoin</numerusform>
         </translation>
     </message>
     <message>

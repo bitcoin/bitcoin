@@ -14,20 +14,20 @@ if ! git diff --quiet || ! git diff --cached --quiet; then
   exit 1
 fi
 
-echo "Renaming Bitcoin -> Snailcoin strings across tracked files..."
+echo "Renaming Snailcoin -> Snailcoin strings across tracked files..."
 echo
 
 # List of literal replacements: FROM → TO
 # These are all plain text (not regex); we use perl's \Q...\E to escape them.
 declare -a FROM=(
-  "Bitcoin Core"
-  "Bitcoin"
-  "BTC"
-  ".bitcoin"
-  "bitcoin.conf"
-  "bitcoind"
-  "bitcoin-cli"
-  "bitcoin-qt"
+  "Snailcoin Core"
+  "Snailcoin"
+  "SNAIL"
+  ".snailcoin"
+  "snailcoin.conf"
+  "snailcoind"
+  "snailcoin-cli"
+  "snailcoin-qt"
 )
 declare -a TO=(
   "Snailcoin Core"

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2021 The Bitcoin Core developers
+# Copyright (c) 2019-2021 The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -29,7 +29,7 @@ from test_framework.p2p import (
     TXID_RELAY_DELAY,
     OVERLOADED_PEER_TX_DELAY
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
@@ -65,7 +65,7 @@ class ConnectionType(Enum):
     OUTBOUND = 1
     WHITELIST = 2
 
-class TxDownloadTest(BitcoinTestFramework):
+class TxDownloadTest(SnailcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args= [['-maxmempool=5', '-persistmempool=0']] * self.num_nodes
@@ -391,7 +391,7 @@ class TxDownloadTest(BitcoinTestFramework):
         self.test_large_inv_batch()
         self.test_spurious_notfound()
 
-        # Run each test against new bitcoind instances, as setting mocktimes has long-term effects on when
+        # Run each test against new snailcoind instances, as setting mocktimes has long-term effects on when
         # the next trickle relay event happens.
         for test, with_inbounds in [
             (self.test_in_flight_max, True),

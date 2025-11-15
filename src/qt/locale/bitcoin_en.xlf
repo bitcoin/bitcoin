@@ -64,11 +64,11 @@
         <context-group purpose="location"><context context-type="linenumber">81</context></context-group>
       </trans-unit>
       <trans-unit id="_msg15">
-        <source xml:space="preserve">These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source xml:space="preserve">These are your Snailcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <context-group purpose="location"><context context-type="linenumber">87</context></context-group>
       </trans-unit>
       <trans-unit id="_msg16">
-        <source xml:space="preserve">These are your Bitcoin addresses for receiving payments. Use the &apos;Create new receiving address&apos; button in the receive tab to create new addresses.
+        <source xml:space="preserve">These are your Snailcoin addresses for receiving payments. Use the &apos;Create new receiving address&apos; button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">92</context></context-group>
       </trans-unit>
@@ -287,7 +287,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
     </group>
   </body></file>
   <file original="../bitcoin.cpp" datatype="cpp" source-language="en"><body>
-    <group restype="x-trolltech-linguist-context" resname="BitcoinApplication">
+    <group restype="x-trolltech-linguist-context" resname="SnailcoinApplication">
       <trans-unit id="_msg63">
         <source xml:space="preserve">Settings file %1 might be corrupt or invalid.</source>
         <context-group purpose="location"><context context-type="linenumber">251</context></context-group>
@@ -331,7 +331,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
     </group>
   </body></file>
   <file original="../bitcoingui.cpp" datatype="cpp" source-language="en"><body>
-    <group restype="x-trolltech-linguist-context" resname="BitcoinGUI">
+    <group restype="x-trolltech-linguist-context" resname="SnailcoinGUI">
       <trans-unit id="_msg72">
         <source xml:space="preserve">&amp;Overview</source>
         <context-group purpose="location"><context context-type="linenumber">252</context></context-group>
@@ -398,7 +398,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">1480</context></context-group>
       </trans-unit>
       <trans-unit id="_msg88">
-        <source xml:space="preserve">Send coins to a Bitcoin address</source>
+        <source xml:space="preserve">Send coins to a Snailcoin address</source>
         <context-group purpose="location"><context context-type="linenumber">260</context></context-group>
       </trans-unit>
       <trans-unit id="_msg89">
@@ -442,7 +442,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">316</context></context-group>
       </trans-unit>
       <trans-unit id="_msg99">
-        <source xml:space="preserve">Sign messages with your Bitcoin addresses to prove you own them</source>
+        <source xml:space="preserve">Sign messages with your Snailcoin addresses to prove you own them</source>
         <context-group purpose="location"><context context-type="linenumber">317</context></context-group>
       </trans-unit>
       <trans-unit id="_msg100">
@@ -450,7 +450,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">318</context></context-group>
       </trans-unit>
       <trans-unit id="_msg101">
-        <source xml:space="preserve">Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <source xml:space="preserve">Verify messages to ensure they were signed with specified Snailcoin addresses</source>
         <context-group purpose="location"><context context-type="linenumber">319</context></context-group>
       </trans-unit>
       <trans-unit id="_msg102">
@@ -571,7 +571,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">295</context></context-group>
       </trans-unit>
       <trans-unit id="_msg130">
-        <source xml:space="preserve">Load Partially Signed Bitcoin Transaction</source>
+        <source xml:space="preserve">Load Partially Signed Snailcoin Transaction</source>
         <context-group purpose="location"><context context-type="linenumber">321</context></context-group>
       </trans-unit>
       <trans-unit id="_msg131">
@@ -579,7 +579,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">322</context></context-group>
       </trans-unit>
       <trans-unit id="_msg132">
-        <source xml:space="preserve">Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <source xml:space="preserve">Load Partially Signed Snailcoin Transaction from clipboard</source>
         <context-group purpose="location"><context context-type="linenumber">323</context></context-group>
       </trans-unit>
       <trans-unit id="_msg133">
@@ -637,7 +637,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">362</context></context-group>
       </trans-unit>
       <trans-unit id="_msg146">
-        <source xml:space="preserve">Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <source xml:space="preserve">Show the %1 help message to get a list with possible Snailcoin command-line options</source>
         <context-group purpose="location"><context context-type="linenumber">367</context></context-group>
       </trans-unit>
       <trans-unit id="_msg147">
@@ -705,10 +705,10 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">1031</context></context-group>
         <note annotates="source" from="developer">A substring of the tooltip.</note>
         <trans-unit id="_msg161[0]">
-          <source xml:space="preserve">%n active connection(s) to Bitcoin network.</source>
+          <source xml:space="preserve">%n active connection(s) to Snailcoin network.</source>
         </trans-unit>
         <trans-unit id="_msg161[1]">
-          <source xml:space="preserve">%n active connection(s) to Bitcoin network.</source>
+          <source xml:space="preserve">%n active connection(s) to Snailcoin network.</source>
         </trans-unit>
       </group>
       <trans-unit id="_msg162">
@@ -1223,7 +1223,7 @@ The migration process will create a backup of the wallet before migrating. This 
         <context-group purpose="location"><context context-type="linenumber">36</context></context-group>
       </trans-unit>
       <trans-unit id="_msg273">
-        <source xml:space="preserve">The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
+        <source xml:space="preserve">The entered address &quot;%1&quot; is not a valid Snailcoin address.</source>
         <context-group purpose="location"><context context-type="linenumber">113</context></context-group>
       </trans-unit>
       <trans-unit id="_msg274">
@@ -1345,7 +1345,7 @@ The migration process will create a backup of the wallet before migrating. This 
   <file original="../intro.cpp" datatype="cpp" source-language="en"><body>
     <group restype="x-trolltech-linguist-context" resname="Intro">
       <trans-unit id="_msg299">
-        <source xml:space="preserve">Bitcoin</source>
+        <source xml:space="preserve">Snailcoin</source>
         <context-group purpose="location"><context context-type="linenumber">54</context></context-group>
       </trans-unit>
       <group restype="x-gettext-plurals">
@@ -1398,7 +1398,7 @@ The migration process will create a backup of the wallet before migrating. This 
         </trans-unit>
       </group>
       <trans-unit id="_msg307">
-        <source xml:space="preserve">%1 will download and store a copy of the Bitcoin block chain.</source>
+        <source xml:space="preserve">%1 will download and store a copy of the Snailcoin block chain.</source>
         <context-group purpose="location"><context context-type="linenumber">309</context></context-group>
       </trans-unit>
       <trans-unit id="_msg308">
@@ -1549,7 +1549,7 @@ The migration process will create a backup of the wallet before migrating. This 
         <context-group purpose="location"><context context-type="linenumber">289</context></context-group>
       </trans-unit>
       <trans-unit id="_msg339">
-        <source xml:space="preserve">Automatically open the Bitcoin client port on the router. This only works when your router supports PCP or NAT-PMP and it is enabled. The external port could be random.</source>
+        <source xml:space="preserve">Automatically open the Snailcoin client port on the router. This only works when your router supports PCP or NAT-PMP and it is enabled. The external port could be random.</source>
         <context-group purpose="location"><context context-type="linenumber">321</context></context-group>
       </trans-unit>
       <trans-unit id="_msg340">
@@ -1691,7 +1691,7 @@ The migration process will create a backup of the wallet before migrating. This 
         <context-group purpose="location"><context context-type="linenumber">334</context></context-group>
       </trans-unit>
       <trans-unit id="_msg372">
-        <source xml:space="preserve">Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <source xml:space="preserve">Connect to the Snailcoin network through a SOCKS5 proxy.</source>
         <context-group purpose="location"><context context-type="linenumber">341</context></context-group>
       </trans-unit>
       <trans-unit id="_msg373">
@@ -1787,7 +1787,7 @@ The migration process will create a backup of the wallet before migrating. This 
         <context-group purpose="location"><context context-type="linenumber">238</context></context-group>
       </trans-unit>
       <trans-unit id="_msg395">
-        <source xml:space="preserve">Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <source xml:space="preserve">Connect to the Snailcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
         <context-group purpose="location"><context context-type="linenumber">528</context></context-group>
       </trans-unit>
       <trans-unit id="_msg396">
@@ -1905,7 +1905,7 @@ The migration process will create a backup of the wallet before migrating. This 
         <context-group purpose="location"><context context-type="linenumber">14</context></context-group>
       </trans-unit>
       <trans-unit id="_msg419">
-        <source xml:space="preserve">The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <source xml:space="preserve">The displayed information may be out of date. Your wallet automatically synchronizes with the Snailcoin network after a connection is established, but this process has not completed yet.</source>
         <context-group purpose="location"><context context-type="linenumber">76</context></context-group>
         <context-group purpose="location"><context context-type="linenumber">296</context></context-group>
       </trans-unit>
@@ -2129,7 +2129,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <context-group purpose="location"><context context-type="linenumber">234</context></context-group>
       </trans-unit>
       <trans-unit id="_msg469">
-        <source xml:space="preserve">URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <source xml:space="preserve">URI cannot be parsed! This can be caused by an invalid Snailcoin address or malformed URI parameters.</source>
         <context-group purpose="location"><context context-type="linenumber">224</context></context-group>
       </trans-unit>
       <trans-unit id="_msg470">
@@ -2217,7 +2217,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
   <file original="../guiutil.cpp" datatype="cpp" source-language="en"><body>
     <group restype="x-trolltech-linguist-context" resname="QObject">
       <trans-unit id="_msg484">
-        <source xml:space="preserve">Enter a Bitcoin address (e.g. %1)</source>
+        <source xml:space="preserve">Enter a Snailcoin address (e.g. %1)</source>
         <context-group purpose="location"><context context-type="linenumber">138</context></context-group>
       </trans-unit>
       <trans-unit id="_msg485">
@@ -2538,7 +2538,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <context-group purpose="location"><context context-type="linenumber">254</context></context-group>
       </trans-unit>
       <trans-unit id="_msg538">
-        <source xml:space="preserve">Network addresses that your Bitcoin node is currently using to communicate with other nodes.</source>
+        <source xml:space="preserve">Network addresses that your Snailcoin node is currently using to communicate with other nodes.</source>
         <context-group purpose="location"><context context-type="linenumber">282</context></context-group>
       </trans-unit>
       <trans-unit id="_msg539">
@@ -3040,7 +3040,7 @@ For more information on using this console, type %6.
         <context-group purpose="location"><context context-type="linenumber">53</context></context-group>
       </trans-unit>
       <trans-unit id="_msg652">
-        <source xml:space="preserve">An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
+        <source xml:space="preserve">An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Snailcoin network.</source>
         <context-group purpose="location"><context context-type="linenumber">50</context></context-group>
       </trans-unit>
       <trans-unit id="_msg653">
@@ -3454,7 +3454,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">216</context></context-group>
       </trans-unit>
       <trans-unit id="_msg748">
-        <source xml:space="preserve">Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <source xml:space="preserve">Creates a Partially Signed Snailcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <context-group purpose="location"><context context-type="linenumber">217</context></context-group>
       </trans-unit>
       <trans-unit id="_msg749">
@@ -3510,7 +3510,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">370</context></context-group>
       </trans-unit>
       <trans-unit id="_msg761">
-        <source xml:space="preserve">Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <source xml:space="preserve">Please, review your transaction proposal. This will produce a Partially Signed Snailcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <context-group purpose="location"><context context-type="linenumber">339</context></context-group>
         <note annotates="source" from="developer">Text to inform a user attempting to create a transaction of their current options. At this stage, a user can only create a PSBT. This string is displayed when private keys are disabled and an external signer is not available.</note>
       </trans-unit>
@@ -3524,7 +3524,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <note annotates="source" from="developer">Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</note>
       </trans-unit>
       <trans-unit id="_msg764">
-        <source xml:space="preserve">Please, review your transaction. You can create and send this transaction or create a Partially Signed Bitcoin Transaction (PSBT), which you can save or copy and then sign with, e.g., an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <source xml:space="preserve">Please, review your transaction. You can create and send this transaction or create a Partially Signed Snailcoin Transaction (PSBT), which you can save or copy and then sign with, e.g., an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <context-group purpose="location"><context context-type="linenumber">344</context></context-group>
         <note annotates="source" from="developer">Text to inform a user attempting to create a transaction of their current options. At this stage, a user can send their transaction or create a PSBT. This string is displayed when both private keys and PSBT controls are enabled.</note>
       </trans-unit>
@@ -3612,7 +3612,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         </trans-unit>
       </group>
       <trans-unit id="_msg783">
-        <source xml:space="preserve">Warning: Invalid Bitcoin address</source>
+        <source xml:space="preserve">Warning: Invalid Snailcoin address</source>
         <context-group purpose="location"><context context-type="linenumber">982</context></context-group>
       </trans-unit>
       <trans-unit id="_msg784">
@@ -3652,7 +3652,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">60</context></context-group>
       </trans-unit>
       <trans-unit id="_msg792">
-        <source xml:space="preserve">The Bitcoin address to send the payment to</source>
+        <source xml:space="preserve">The Snailcoin address to send the payment to</source>
         <context-group purpose="location"><context context-type="linenumber">53</context></context-group>
       </trans-unit>
       <trans-unit id="_msg793">
@@ -3697,7 +3697,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">144</context></context-group>
       </trans-unit>
       <trans-unit id="_msg803">
-        <source xml:space="preserve">A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source xml:space="preserve">A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Snailcoin network.</source>
         <context-group purpose="location"><context context-type="linenumber">202</context></context-group>
       </trans-unit>
     </group>
@@ -3729,7 +3729,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">33</context></context-group>
       </trans-unit>
       <trans-unit id="_msg809">
-        <source xml:space="preserve">The Bitcoin address to sign the message with</source>
+        <source xml:space="preserve">The Snailcoin address to sign the message with</source>
         <context-group purpose="location"><context context-type="linenumber">51</context></context-group>
       </trans-unit>
       <trans-unit id="_msg810">
@@ -3764,7 +3764,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">140</context></context-group>
       </trans-unit>
       <trans-unit id="_msg817">
-        <source xml:space="preserve">Sign the message to prove you own this Bitcoin address</source>
+        <source xml:space="preserve">Sign the message to prove you own this Snailcoin address</source>
         <context-group purpose="location"><context context-type="linenumber">161</context></context-group>
       </trans-unit>
       <trans-unit id="_msg818">
@@ -3789,7 +3789,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">246</context></context-group>
       </trans-unit>
       <trans-unit id="_msg823">
-        <source xml:space="preserve">The Bitcoin address the message was signed with</source>
+        <source xml:space="preserve">The Snailcoin address the message was signed with</source>
         <context-group purpose="location"><context context-type="linenumber">267</context></context-group>
       </trans-unit>
       <trans-unit id="_msg824">
@@ -3803,7 +3803,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">309</context></context-group>
       </trans-unit>
       <trans-unit id="_msg826">
-        <source xml:space="preserve">Verify the message to ensure it was signed with the specified Bitcoin address</source>
+        <source xml:space="preserve">Verify the message to ensure it was signed with the specified Snailcoin address</source>
         <context-group purpose="location"><context context-type="linenumber">318</context></context-group>
       </trans-unit>
       <trans-unit id="_msg827">

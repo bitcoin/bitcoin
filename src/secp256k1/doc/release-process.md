@@ -12,7 +12,7 @@ It is best if the maintainers are present during the release, so they can help e
 
 This process also assumes that there will be no minor releases for old major releases.
 
-We aim to cut a regular release every 3-4 months, approximately twice as frequent as major Bitcoin Core releases. Every second release should be published one month before the feature freeze of the next major Bitcoin Core release, allowing sufficient time to update the library in Core.
+We aim to cut a regular release every 3-4 months, approximately twice as frequent as major Snailcoin Core releases. Every second release should be published one month before the feature freeze of the next major Snailcoin Core release, allowing sufficient time to update the library in Core.
 
 ## Sanity checks
 Perform these checks when reviewing the release PR (see below):

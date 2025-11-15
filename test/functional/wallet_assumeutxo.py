@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2023-present The Bitcoin Core developers
+# Copyright (c) 2023-present The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test for assumeutxo wallet related behavior.
@@ -12,7 +12,7 @@ See feature_assumeutxo.py for background.
 """
 from test_framework.address import address_to_scriptpubkey
 from test_framework.descriptors import descsum_create
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.messages import COIN
 from test_framework.util import (
     assert_equal,
@@ -27,7 +27,7 @@ SNAPSHOT_BASE_HEIGHT = 299
 FINAL_HEIGHT = 399
 
 
-class AssumeutxoTest(BitcoinTestFramework):
+class AssumeutxoTest(SnailcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 

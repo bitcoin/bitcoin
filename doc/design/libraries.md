@@ -2,18 +2,18 @@
 
 | Name                     | Description |
 |--------------------------|-------------|
-| *libbitcoin_cli*         | RPC client functionality used by *bitcoin-cli* executable |
+| *libbitcoin_cli*         | RPC client functionality used by *snailcoin-cli* executable |
 | *libbitcoin_common*      | Home for common functionality shared by different executables and libraries. Similar to *libbitcoin_util*, but higher-level (see [Dependencies](#dependencies)). |
 | *libbitcoin_consensus*   | Consensus functionality used by *libbitcoin_node* and *libbitcoin_wallet*. |
 | *libbitcoin_crypto*      | Hardware-optimized functions for data encryption, hashing, message authentication, and key derivation. |
 | *libbitcoin_kernel*      | Consensus engine and support library used for validation by *libbitcoin_node*. |
-| *libbitcoinqt*           | GUI functionality used by *bitcoin-qt* and *bitcoin-gui* executables. |
+| *libbitcoinqt*           | GUI functionality used by *snailcoin-qt* and *bitcoin-gui* executables. |
 | *libbitcoin_ipc*         | IPC functionality used by *bitcoin-node* and *bitcoin-gui* executables to communicate when [`-DENABLE_IPC=ON`](multiprocess.md) is used. |
-| *libbitcoin_node*        | P2P and RPC server functionality used by *bitcoind* and *bitcoin-qt* executables. |
+| *libbitcoin_node*        | P2P and RPC server functionality used by *snailcoind* and *snailcoin-qt* executables. |
 | *libbitcoin_util*        | Home for common functionality shared by different executables and libraries. Similar to *libbitcoin_common*, but lower-level (see [Dependencies](#dependencies)). |
-| *libbitcoin_wallet*      | Wallet functionality used by *bitcoind* and *bitcoin-wallet* executables. |
+| *libbitcoin_wallet*      | Wallet functionality used by *snailcoind* and *bitcoin-wallet* executables. |
 | *libbitcoin_wallet_tool* | Lower-level wallet functionality used by *bitcoin-wallet* executable. |
-| *libbitcoin_zmq*         | [ZeroMQ](../zmq.md) functionality used by *bitcoind* and *bitcoin-qt* executables. |
+| *libbitcoin_zmq*         | [ZeroMQ](../zmq.md) functionality used by *snailcoind* and *snailcoin-qt* executables. |
 
 ## Conventions
 
@@ -39,14 +39,14 @@
 
 graph TD;
 
-bitcoin-cli[bitcoin-cli]-->libbitcoin_cli;
+snailcoin-cli[snailcoin-cli]-->libbitcoin_cli;
 
-bitcoind[bitcoind]-->libbitcoin_node;
-bitcoind[bitcoind]-->libbitcoin_wallet;
+snailcoind[snailcoind]-->libbitcoin_node;
+snailcoind[snailcoind]-->libbitcoin_wallet;
 
-bitcoin-qt[bitcoin-qt]-->libbitcoin_node;
-bitcoin-qt[bitcoin-qt]-->libbitcoinqt;
-bitcoin-qt[bitcoin-qt]-->libbitcoin_wallet;
+snailcoin-qt[snailcoin-qt]-->libbitcoin_node;
+snailcoin-qt[snailcoin-qt]-->libbitcoinqt;
+snailcoin-qt[snailcoin-qt]-->libbitcoin_wallet;
 
 bitcoin-wallet[bitcoin-wallet]-->libbitcoin_wallet;
 bitcoin-wallet[bitcoin-wallet]-->libbitcoin_wallet_tool;
@@ -83,7 +83,7 @@ libbitcoin_wallet_tool-->libbitcoin_wallet;
 libbitcoin_wallet_tool-->libbitcoin_util;
 
 classDef bold stroke-width:2px, font-weight:bold, font-size: smaller;
-class bitcoin-qt,bitcoind,bitcoin-cli,bitcoin-wallet bold
+class snailcoin-qt,snailcoind,snailcoin-cli,bitcoin-wallet bold
 ```
 </td></tr><tr><td>
 
@@ -99,7 +99,7 @@ class bitcoin-qt,bitcoind,bitcoin-cli,bitcoin-wallet bold
 
 - *libbitcoin_util* should be a standalone dependency that any library can depend on, and it should not depend on other libraries except *libbitcoin_crypto*. It provides basic utilities that fill in gaps in the C++ standard library and provide lightweight abstractions over platform-specific features. Since the util library is distributed with the kernel and is usable by kernel applications, it shouldn't contain functions that external code shouldn't call, like higher level code targeted at the node or wallet. (*libbitcoin_common* is a better place for higher level code, or code that is meant to be used by internal applications only.)
 
-- *libbitcoin_common* is a home for miscellaneous shared code used by different Bitcoin Core applications. It should not depend on anything other than *libbitcoin_util*, *libbitcoin_consensus*, and *libbitcoin_crypto*.
+- *libbitcoin_common* is a home for miscellaneous shared code used by different Snailcoin Core applications. It should not depend on anything other than *libbitcoin_util*, *libbitcoin_consensus*, and *libbitcoin_crypto*.
 
 - *libbitcoin_kernel* should only depend on *libbitcoin_util*, *libbitcoin_consensus*, and *libbitcoin_crypto*.
 

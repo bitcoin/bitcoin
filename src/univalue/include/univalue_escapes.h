@@ -1,5 +1,5 @@
 // Copyright 2014 BitPay Inc.
-// Copyright (c) 2022-present The Bitcoin Core developers
+// Copyright (c) 2022-present The Snailcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/license/mit.
 

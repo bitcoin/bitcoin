@@ -54,11 +54,11 @@
         <translation type="unfinished">छनौट गर्नुहोस्...</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your Snailcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">यी भुक्तानी गर्नका लागि तपाइका बिट्कोइन ठेगानाहरू हुन्। सिक्काहरू पठाउनुअघि रकम र प्राप्त गर्ने ठेगाना जाँच गर्नुहोस।</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your Snailcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">यी तपाईंका भुक्तानी प्राप्त गर्ने बिटकोईन ठेगानाहरू हुन्। नयाँ ठेगाना बनाउनको लागि, 'प्राप्त' ट्याबमा रहेको 'नयाँ प्राप्त गर्ने ठेगाना सिर्जना गर्नुहोस्' बटनको प्रयोग गर्नुहोस्। 
 हस्ताक्षर केवल 'लेगेसी' प्रकारका ठेगानाहरूमा मात्र सम्भव छ।
@@ -261,7 +261,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
+    <name>SnailcoinApplication</name>
     <message>
         <source>Settings file %1 might be corrupt or invalid.</source>
         <translation type="unfinished">सेटिङ फाइल %1 भ्रष्ट वा अवैध हुन सक्छ।</translation>
@@ -308,7 +308,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">रकम</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <source>Enter a Snailcoin address (e.g. %1)</source>
         <translation type="unfinished">कृपया बिटकोइन ठेगाना प्रवेश गर्नुहोस् (उदाहरण %1)</translation>
     </message>
     <message>
@@ -365,7 +365,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>SnailcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">शारांश</translation>
@@ -428,7 +428,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">नेटवर्क गतिविधि अशक्त</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a Snailcoin address</source>
         <translation type="unfinished">बिटकोइन ठेगानामा सिक्का पठाउनुहोस्</translation>
     </message>
     <message>
@@ -520,7 +520,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">वालेट को नाम</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to Snailcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -603,7 +603,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">स्वागत छ %1 .</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
+        <source>Snailcoin</source>
         <translation type="unfinished">बिटकोइन</translation>
     </message>
     <message numerus="yes">
@@ -705,7 +705,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">फारम</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Snailcoin network after a connection is established, but this process has not completed yet.</source>
         <translation type="unfinished">देखाइएको सूचना पूरानो हुन सक्छ । कनेक्सन स्थापित भएपछि, तपाईंको वालेट बिटकोइन नेटवर्कमा स्वचालित रूपमा समिकरण हुन्छ , तर यो प्रक्रिया अहिले सम्म पूरा भएको छैन ।</translation>
     </message>
     <message>
@@ -767,7 +767,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>PaymentServer</name>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <source>URI cannot be parsed! This can be caused by an invalid Snailcoin address or malformed URI parameters.</source>
         <translation type="unfinished">URI पढ्न सकिएन! यस्तो आमान्य बिटकोइन ठेगाना वा गलत URI प्यारामिटरहरूका कारण हुन सक्छ</translation>
     </message>
     </context>
@@ -889,7 +889,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">यो ठेगानालाई प्रयोग गरिएको ठेगानाको सूचीमा थप्न एउटा लेबल प्रविष्ट गर्नुहोस्</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Snailcoin network.</source>
         <translation type="unfinished">बिटकोइनमा संलग्न गरिएको सन्देश: तपाईंको मध्यस्थको लागि कारोबारको साथमा भण्डारण गरिने URI । नोट: यो सन्देश बिटकोइन नेटवर्क मार्फत पठाइने छैन ।</translation>
     </message>
 </context>

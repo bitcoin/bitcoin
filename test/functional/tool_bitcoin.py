@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) The Bitcoin Core developers
+# Copyright (c) The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the bitcoin wrapper tool."""
 from test_framework.test_framework import (
-    BitcoinTestFramework,
+    SnailcoinTestFramework,
     SkipTest,
 )
 from test_framework.util import (
@@ -16,7 +16,7 @@ import platform
 import re
 
 
-class ToolBitcoinTest(BitcoinTestFramework):
+class ToolSnailcoinTest(SnailcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
@@ -24,7 +24,7 @@ class ToolBitcoinTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         # Skip test on windows because currently when `bitcoin node -version` is
         # run on windows, python doesn't capture output from the child
-        # `bitcoind` and `bitcoin-node` process started with _wexecvp, and
+        # `snailcoind` and `bitcoin-node` process started with _wexecvp, and
         # stdout/stderr are always empty. See
         # https://github.com/bitcoin/bitcoin/pull/33229#issuecomment-3265524908
         if platform.system() == "Windows":
@@ -39,7 +39,7 @@ class ToolBitcoinTest(BitcoinTestFramework):
 
     def set_cmd_args(self, node, args):
         """Set up node so it will be started through bitcoin wrapper command with specified arguments."""
-        node.args = [self.binary_paths.bitcoin_bin] + args + ["node"] + self.node_options[node.index]
+        node.args = [self.binary_paths.snailcoin_bin] + args + ["node"] + self.node_options[node.index]
 
     def test_args(self, cmd_args, node_args, expect_exe=None, expect_error=None):
         node = self.nodes[0]
@@ -60,11 +60,11 @@ class ToolBitcoinTest(BitcoinTestFramework):
     def run_test(self):
         node = self.nodes[0]
 
-        self.log.info("Ensure bitcoin node command invokes bitcoind by default")
-        self.test_args([], [], expect_exe="bitcoind")
+        self.log.info("Ensure bitcoin node command invokes snailcoind by default")
+        self.test_args([], [], expect_exe="snailcoind")
 
-        self.log.info("Ensure bitcoin -M invokes bitcoind")
-        self.test_args(["-M"], [], expect_exe="bitcoind")
+        self.log.info("Ensure bitcoin -M invokes snailcoind")
+        self.test_args(["-M"], [], expect_exe="snailcoind")
 
         self.log.info("Ensure bitcoin -M does not accept -ipcbind")
         self.test_args(["-M"], ["-ipcbind=unix"], expect_error='Error: Error parsing command line arguments: Invalid parameter -ipcbind=unix')
@@ -108,4 +108,4 @@ def get_exe_name(version_str):
 
 
 if __name__ == '__main__':
-    ToolBitcoinTest(__file__).main()
+    ToolSnailcoinTest(__file__).main()

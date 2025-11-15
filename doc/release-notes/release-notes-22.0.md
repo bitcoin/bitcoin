@@ -1,7 +1,7 @@
 22.0 Release Notes
 ==================
 
-Bitcoin Core version 22.0 is now available from:
+Snailcoin Core version 22.0 is now available from:
 
   <https://bitcoincore.org/bin/bitcoin-core-22.0/>
 
@@ -21,36 +21,36 @@ How to Upgrade
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes in some cases), then run the
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+installer (on Windows) or just copy over `/Applications/Snailcoin-Qt` (on Mac)
+or `snailcoind`/`snailcoin-qt` (on Linux).
 
-Upgrading directly from a version of Bitcoin Core that has reached its EOL is
+Upgrading directly from a version of Snailcoin Core that has reached its EOL is
 possible, but it might take some time if the data directory needs to be migrated. Old
-wallet versions of Bitcoin Core are generally supported.
+wallet versions of Snailcoin Core are generally supported.
 
 Compatibility
 ==============
 
-Bitcoin Core is supported and extensively tested on operating systems
-using the Linux kernel, macOS 10.14+, and Windows 7 and newer.  Bitcoin
+Snailcoin Core is supported and extensively tested on operating systems
+using the Linux kernel, macOS 10.14+, and Windows 7 and newer.  Snailcoin
 Core should also work on most other Unix-like systems but is not as
-frequently tested on them.  It is not recommended to use Bitcoin Core on
+frequently tested on them.  It is not recommended to use Snailcoin Core on
 unsupported systems.
 
-From Bitcoin Core 22.0 onwards, macOS versions earlier than 10.14 are no longer supported.
+From Snailcoin Core 22.0 onwards, macOS versions earlier than 10.14 are no longer supported.
 
 Notable changes
 ===============
 
 P2P and network changes
 -----------------------
-- Added support for running Bitcoin Core as an
+- Added support for running Snailcoin Core as an
   [I2P (Invisible Internet Project)](https://en.wikipedia.org/wiki/I2P) service
   and connect to such services. See [i2p.md](https://github.com/bitcoin/bitcoin/blob/22.x/doc/i2p.md) for details. (#20685)
 - This release removes support for Tor version 2 hidden services in favor of Tor
   v3 only, as the Tor network [dropped support for Tor
   v2](https://blog.torproject.org/v2-deprecation-timeline) with the release of
-  Tor version 0.4.6.  Henceforth, Bitcoin Core ignores Tor v2 addresses; it
+  Tor version 0.4.6.  Henceforth, Snailcoin Core ignores Tor v2 addresses; it
   neither rumors them over the network to other peers, nor stores them in memory
   or to `peers.dat`.  (#22050)
 
@@ -137,7 +137,7 @@ Files
 - The list of banned hosts and networks (via `setban` RPC) is now saved on disk
   in JSON format in `banlist.json` instead of `banlist.dat`. `banlist.dat` is
   only read on startup if `banlist.json` is not present. Changes are only written to the new
-  `banlist.json`. A future version of Bitcoin Core may completely ignore
+  `banlist.json`. A future version of Snailcoin Core may completely ignore
   `banlist.dat`. (#20966)
 
 New settings
@@ -152,7 +152,7 @@ Updated settings
 
 Changes to Wallet or GUI related settings can be found in the GUI or Wallet section below.
 
-- Passing an invalid `-rpcauth` argument now cause bitcoind to fail to start.  (#20461)
+- Passing an invalid `-rpcauth` argument now cause snailcoind to fail to start.  (#20461)
 
 Tools and Utilities
 -------------------
@@ -160,12 +160,12 @@ Tools and Utilities
 - A new CLI `-addrinfo` command returns the number of addresses known to the
   node per network type (including Tor v2 versus v3) and total. This can be
   useful to see if the node knows enough addresses in a network to use options
-  like `-onlynet=<network>` or to upgrade to this release of Bitcoin Core 22.0
+  like `-onlynet=<network>` or to upgrade to this release of Snailcoin Core 22.0
   that supports Tor v3 only.  (#21595)
 
-- A new `-rpcwaittimeout` argument to `bitcoin-cli` sets the timeout
+- A new `-rpcwaittimeout` argument to `snailcoin-cli` sets the timeout
   in seconds to use with `-rpcwait`. If the timeout expires,
-  `bitcoin-cli` will report a failure. (#21056)
+  `snailcoin-cli` will report a failure. (#21056)
 
 Wallet
 ------
@@ -316,7 +316,7 @@ A detailed list of changes in this version follows. To keep the list to a manage
 - bitcoin/bitcoin#20965 net, rpc:  return `NET_UNROUTABLE` as `not_publicly_routable`, automate helps (jonatack)
 - bitcoin/bitcoin#20966 banman: save the banlist in a JSON format on disk (vasild)
 - bitcoin/bitcoin#21015 Make all of `net_processing` (and some of net) use std::chrono types (dhruv)
-- bitcoin/bitcoin#21029 bitcoin-cli: Correct docs (no "generatenewaddress" exists) (luke-jr)
+- bitcoin/bitcoin#21029 snailcoin-cli: Correct docs (no "generatenewaddress" exists) (luke-jr)
 - bitcoin/bitcoin#21148 Split orphan handling from `net_processing` into txorphanage (ajtowns)
 - bitcoin/bitcoin#21162 Net Processing: Move RelayTransaction() into PeerManager (jnewbery)
 - bitcoin/bitcoin#21167 make `CNode::m_inbound_onion` public, initialize explicitly (jonatack)
@@ -411,7 +411,7 @@ A detailed list of changes in this version follows. To keep the list to a manage
 - bitcoin/bitcoin#22686 Use GetSelectionAmount in ApproximateBestSubset (achow101)
 
 ### RPC and other APIs
-- bitcoin/bitcoin#18335, bitcoin/bitcoin#21484 cli: Print useful error if bitcoind rpc work queue exceeded (LarryRuane)
+- bitcoin/bitcoin#18335, bitcoin/bitcoin#21484 cli: Print useful error if snailcoind rpc work queue exceeded (LarryRuane)
 - bitcoin/bitcoin#18466 Fix invalid parameter error codes for `{sign,verify}message` RPCs (theStack)
 - bitcoin/bitcoin#18772 Calculate fees in `getblock` using BlockUndo data (robot-visions)
 - bitcoin/bitcoin#19033 http: Release work queue after event base finish (promag)
@@ -458,7 +458,7 @@ A detailed list of changes in this version follows. To keep the list to a manage
 - bitcoin-core/gui#4 UI external signer support (e.g. hardware wallet) (Sjors)
 - bitcoin-core/gui#13 Hide peer detail view if multiple are selected (promag)
 - bitcoin-core/gui#18 Add peertablesortproxy module (hebasto)
-- bitcoin-core/gui#21 Improve pruning tooltip (fluffypony, BitcoinErrorLog)
+- bitcoin-core/gui#21 Improve pruning tooltip (fluffypony, SnailcoinErrorLog)
 - bitcoin-core/gui#72 Log static plugins meta data and used style (hebasto)
 - bitcoin-core/gui#79 Embed monospaced font (hebasto)
 - bitcoin-core/gui#85 Remove unused "What's This" button in dialogs on Windows OS (hebasto)
@@ -637,7 +637,7 @@ A detailed list of changes in this version follows. To keep the list to a manage
 - bitcoin/bitcoin#22182 guix: Overhaul how guix-{attest,verify} works and hierarchy (dongcarl)
 - bitcoin/bitcoin#22186 build, qt: Fix compiling qt package in depends with GCC 11 (hebasto)
 - bitcoin/bitcoin#22199 macdeploy: minor fixups and simplifications (fanquake)
-- bitcoin/bitcoin#22230 Fix MSVC linker /SubSystem option for bitcoin-qt.exe (hebasto)
+- bitcoin/bitcoin#22230 Fix MSVC linker /SubSystem option for snailcoin-qt.exe (hebasto)
 - bitcoin/bitcoin#22234 Mark print-% target as phony (dgoncharov)
 - bitcoin/bitcoin#22238 improve detection of eBPF support (fanquake)
 - bitcoin/bitcoin#22258 Disable deprecated-copy warning only when external warnings are enabled (MarcoFalke)
@@ -896,10 +896,10 @@ A detailed list of changes in this version follows. To keep the list to a manage
 - bitcoin/bitcoin#20715 util: Add argsmanager::getcommand() and use it in bitcoin-wallet (MarcoFalke)
 - bitcoin/bitcoin#20735 script: Remove outdated extract-osx-sdk.sh (hebasto)
 - bitcoin/bitcoin#20817 lint: Update list of spelling linter false positives, bump to codespell 2.0.0 (theStack)
-- bitcoin/bitcoin#20884 script: Improve robustness of bitcoind.service on startup (hebasto)
+- bitcoin/bitcoin#20884 script: Improve robustness of snailcoind.service on startup (hebasto)
 - bitcoin/bitcoin#20906 contrib: Embed c++11 patch in `install_db4.sh` (gruve-p)
 - bitcoin/bitcoin#21004 contrib: Fix docker args conditional in gitian-build (setpill)
-- bitcoin/bitcoin#21007 bitcoind: Add -daemonwait option to wait for initialization (laanwj)
+- bitcoin/bitcoin#21007 snailcoind: Add -daemonwait option to wait for initialization (laanwj)
 - bitcoin/bitcoin#21041 log: Move "Pre-allocating up to position 0x[…] in […].dat" log message to debug category (practicalswift)
 - bitcoin/bitcoin#21059 Drop boost/preprocessor dependencies (hebasto)
 - bitcoin/bitcoin#21087 guix: Passthrough `BASE_CACHE` into container (dongcarl)
@@ -923,7 +923,7 @@ A detailed list of changes in this version follows. To keep the list to a manage
 - bitcoin/bitcoin#21471 bugfix: Fix `bech32_encode` calls in `gen_key_io_test_vectors.py` (sipa)
 - bitcoin/bitcoin#21615 script: Add trusted key for hebasto (hebasto)
 - bitcoin/bitcoin#21664 contrib: Use lief for macos and windows symbol & security checks (fanquake)
-- bitcoin/bitcoin#21695 contrib: Remove no longer used contrib/bitcoin-qt.pro (hebasto)
+- bitcoin/bitcoin#21695 contrib: Remove no longer used contrib/snailcoin-qt.pro (hebasto)
 - bitcoin/bitcoin#21711 guix: Add full installation and usage documentation (dongcarl)
 - bitcoin/bitcoin#21799 guix: Use `gcc-8` across the board (dongcarl)
 - bitcoin/bitcoin#21802 Avoid UB in util/asmap (advance a dereferenceable iterator outside its valid range) (MarcoFalke)
@@ -954,7 +954,7 @@ A detailed list of changes in this version follows. To keep the list to a manage
 - bitcoin/bitcoin#20473 Document current boost dependency as 1.71.0 (laanwj)
 - bitcoin/bitcoin#20512 Add bash as an OpenBSD dependency (emilengler)
 - bitcoin/bitcoin#20568 Use FeeModes doc helper in estimatesmartfee (MarcoFalke)
-- bitcoin/bitcoin#20577 libconsensus: add missing error code description, fix NBitcoin link (theStack)
+- bitcoin/bitcoin#20577 libconsensus: add missing error code description, fix NSnailcoin link (theStack)
 - bitcoin/bitcoin#20587 Tidy up Tor doc (more stringent) (wodry)
 - bitcoin/bitcoin#20592 Update wtxidrelay documentation per BIP339 (jonatack)
 - bitcoin/bitcoin#20601 Update for FreeBSD 12.2, add GUI Build Instructions (jarolrod)
@@ -985,7 +985,7 @@ A detailed list of changes in this version follows. To keep the list to a manage
 - bitcoin/bitcoin#21324 Update build instructions for Fedora (hebasto)
 - bitcoin/bitcoin#21343 Revamp macOS build doc (jarolrod)
 - bitcoin/bitcoin#21346 install qt5 when building on macOS (fanquake)
-- bitcoin/bitcoin#21384 doc: add signet to bitcoin.conf documentation (jonatack)
+- bitcoin/bitcoin#21384 doc: add signet to snailcoin.conf documentation (jonatack)
 - bitcoin/bitcoin#21394 Improve comment about protected peers (amitiuttarwar)
 - bitcoin/bitcoin#21398 Update fuzzing docs for afl-clang-lto (MarcoFalke)
 - bitcoin/bitcoin#21444 net, doc: Doxygen updates and fixes in netbase.{h,cpp} (jonatack)
@@ -994,11 +994,11 @@ A detailed list of changes in this version follows. To keep the list to a manage
 - bitcoin/bitcoin#21661 Fix name of script guix-build (Emzy)
 - bitcoin/bitcoin#21672 Remove boostrap info from `GUIX_COMMON_FLAGS` doc (fanquake)
 - bitcoin/bitcoin#21688 Note on SDK for macOS depends cross-compile (jarolrod)
-- bitcoin/bitcoin#21709 Update reduce-memory.md and bitcoin.conf -maxconnections info (jonatack)
+- bitcoin/bitcoin#21709 Update reduce-memory.md and snailcoin.conf -maxconnections info (jonatack)
 - bitcoin/bitcoin#21710 update helps for addnode rpc and -addnode/-maxconnections config options (jonatack)
 - bitcoin/bitcoin#21752 Clarify that feerates are per virtual size (MarcoFalke)
 - bitcoin/bitcoin#21811 Remove Visual Studio 2017 reference from readme (sipsorcery)
-- bitcoin/bitcoin#21818 Fixup -coinstatsindex help, update bitcoin.conf and files.md (jonatack)
+- bitcoin/bitcoin#21818 Fixup -coinstatsindex help, update snailcoin.conf and files.md (jonatack)
 - bitcoin/bitcoin#21856 add OSS-Fuzz section to fuzzing.md doc (adamjonas)
 - bitcoin/bitcoin#21912 Remove mention of priority estimation (MarcoFalke)
 - bitcoin/bitcoin#21925 Update bips.md for 0.21.1 (MarcoFalke)
@@ -1006,7 +1006,7 @@ A detailed list of changes in this version follows. To keep the list to a manage
 - bitcoin/bitcoin#21947 Fix OSS-Fuzz links (MarcoFalke)
 - bitcoin/bitcoin#21988 note that brew installed qt is not supported (jarolrod)
 - bitcoin/bitcoin#22056 describe in fuzzing.md how to reproduce a CI crash (jonatack)
-- bitcoin/bitcoin#22080 add maxuploadtarget to bitcoin.conf example (jarolrod)
+- bitcoin/bitcoin#22080 add maxuploadtarget to snailcoin.conf example (jarolrod)
 - bitcoin/bitcoin#22088 Improve note on choosing posix mingw32 (jarolrod)
 - bitcoin/bitcoin#22109 Fix external links (IRC, …) (MarcoFalke)
 - bitcoin/bitcoin#22121 Various validation doc fixups (MarcoFalke)
@@ -1020,7 +1020,7 @@ A detailed list of changes in this version follows. To keep the list to a manage
 - bitcoin/bitcoin#22349 Repository IRC updates (jonatack)
 - bitcoin/bitcoin#22360 Remove unused section from release process (MarcoFalke)
 - bitcoin/bitcoin#22369 Add steps for Transifex to release process (jonatack)
-- bitcoin/bitcoin#22393 Added info to bitcoin.conf doc (bliotti)
+- bitcoin/bitcoin#22393 Added info to snailcoin.conf doc (bliotti)
 - bitcoin/bitcoin#22402 Install Rosetta on M1-macOS for qt in depends (hebasto)
 - bitcoin/bitcoin#22432 Fix incorrect `testmempoolaccept` doc (glozow)
 - bitcoin/bitcoin#22648 doc, test: improve i2p/tor docs and i2p reachable unit tests (jonatack)

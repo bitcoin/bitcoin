@@ -52,7 +52,7 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-InstallDir $PROGRAMFILES64\Bitcoin
+InstallDir $PROGRAMFILES64\Snailcoin
 CRCCheck force
 XPStyle on
 BrandingText " "
@@ -76,7 +76,7 @@ Section -Main SEC0000
     File @abs_top_builddir@/release/@BITCOIN_WRAPPER_NAME@@EXEEXT@
     File /oname=COPYING.txt @abs_top_srcdir@/COPYING
     File /oname=readme.txt @abs_top_srcdir@/doc/README_windows.txt
-    File @abs_top_srcdir@/share/examples/bitcoin.conf
+    File @abs_top_srcdir@/share/examples/snailcoin.conf
     SetOutPath $INSTDIR\share\rpcauth
     File @abs_top_srcdir@/share/rpcauth/*.*
     SetOutPath $INSTDIR\daemon
@@ -105,12 +105,12 @@ Section -post SEC0001
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayVersion "@CLIENT_VERSION_STRING@"
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" Publisher "${COMPANY}"
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" URLInfoAbout "${URL}"
-    WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayIcon $INSTDIR\bitcoin-qt.exe
+    WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayIcon $INSTDIR\snailcoin-qt.exe
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" UninstallString $INSTDIR\uninstall.exe
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoModify 1
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoRepair 1
     WriteRegStr HKCR "@CLIENT_TARNAME@" "URL Protocol" ""
-    WriteRegStr HKCR "@CLIENT_TARNAME@" "" "URL:Bitcoin"
+    WriteRegStr HKCR "@CLIENT_TARNAME@" "" "URL:Snailcoin"
     WriteRegStr HKCR "@CLIENT_TARNAME@\DefaultIcon" "" $INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@
     WriteRegStr HKCR "@CLIENT_TARNAME@\shell\open\command" "" '"$INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@" "%1"'
 
@@ -125,7 +125,7 @@ Section -post SEC0001
     DeleteRegKey /IfEmpty HKCU "${REGKEY} (64-bit)"
 
     # Lingering since 77b2923f87131a407f7d4193c54db22375130403
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Bitcoin Core (testnet, 64-bit).lnk"
+    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Snailcoin Core (testnet, 64-bit).lnk"
 SectionEnd
 
 # Macro for selecting uninstaller sections
@@ -147,7 +147,7 @@ Section /o -un.Main UNSEC0000
     Delete /REBOOTOK $INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@
     Delete /REBOOTOK $INSTDIR\COPYING.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
-    Delete /REBOOTOK $INSTDIR\bitcoin.conf
+    Delete /REBOOTOK $INSTDIR\snailcoin.conf
     RMDir /r /REBOOTOK $INSTDIR\share
     RMDir /r /REBOOTOK $INSTDIR\daemon
     DeleteRegValue HKCU "${REGKEY}\Components" Main
@@ -160,7 +160,7 @@ Section -un.post UNSEC0001
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\@CLIENT_NAME@ (testnet).lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\@CLIENT_NAME@ (testnet4).lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\@CLIENT_NAME@ (test signet).lnk"
-    Delete /REBOOTOK "$SMSTARTUP\Bitcoin.lnk"
+    Delete /REBOOTOK "$SMSTARTUP\Snailcoin.lnk"
     Delete /REBOOTOK $INSTDIR\uninstall.exe
     Delete /REBOOTOK $INSTDIR\debug.log
     Delete /REBOOTOK $INSTDIR\db.log

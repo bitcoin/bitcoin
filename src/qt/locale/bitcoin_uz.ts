@@ -50,13 +50,13 @@
         <translation type="unfinished">tanlamoq</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Quyidagilar to'lovlarni yuborish uchun Bitcoin manzillaringizdir. Har doim yuborishdan oldin yuborilayotgan tangalar sonini va qabul qiluvchi manzilni tekshirib ko'ring.</translation>
+        <source>These are your Snailcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Quyidagilar to'lovlarni yuborish uchun Snailcoin manzillaringizdir. Har doim yuborishdan oldin yuborilayotgan tangalar sonini va qabul qiluvchi manzilni tekshirib ko'ring.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your Snailcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">Bular to'lovlarni qabul qilishingiz uchun sizning Bitcoin manzillaringizdir. Yangi qabul qiluvchi manzil yaratish uchun qabul qilish varag'idagi ''Yangi qabul qilish manzilini yaratish'' ustiga bosing. Faqat 'legacy' turdagi manzillar bilan xisobga kirish mumkin.</translation>
+        <translation type="unfinished">Bular to'lovlarni qabul qilishingiz uchun sizning Snailcoin manzillaringizdir. Yangi qabul qiluvchi manzil yaratish uchun qabul qilish varag'idagi ''Yangi qabul qilish manzilini yaratish'' ustiga bosing. Faqat 'legacy' turdagi manzillar bilan xisobga kirish mumkin.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -252,7 +252,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
+    <name>SnailcoinApplication</name>
     <message>
         <source>Runaway exception</source>
         <translation type="unfinished">qo'shimcha istisno</translation>
@@ -311,8 +311,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Miqdor</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation type="unfinished">Bitcoin манзилини киритинг (масалан.  %1)</translation>
+        <source>Enter a Snailcoin address (e.g. %1)</source>
+        <translation type="unfinished">Snailcoin манзилини киритинг (масалан.  %1)</translation>
     </message>
     <message>
         <source>Inbound</source>
@@ -408,7 +408,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>SnailcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">&amp;Umumiy ko'rinish</translation>
@@ -475,7 +475,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Proksi &lt;b&gt;yoqildi&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a Snailcoin address</source>
         <translation type="unfinished">Bitkoin manziliga coinlarni yuborish</translation>
     </message>
     <message>
@@ -519,16 +519,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Xabarni &amp;signlash...</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished">Bitcoin манзилидан унинг эгаси эканлигингизни исботлаш учун хабарлар ёзинг</translation>
+        <source>Sign messages with your Snailcoin addresses to prove you own them</source>
+        <translation type="unfinished">Snailcoin манзилидан унинг эгаси эканлигингизни исботлаш учун хабарлар ёзинг</translation>
     </message>
     <message>
         <source>&amp;Verify message…</source>
         <translation type="unfinished">&amp;Xabarni tasdiqlash...</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">Хабарларни махсус Bitcoin манзилларингиз билан ёзилганлигига ишонч ҳосил қилиш учун уларни тасдиқланг</translation>
+        <source>Verify messages to ensure they were signed with specified Snailcoin addresses</source>
+        <translation type="unfinished">Хабарларни махсус Snailcoin манзилларингиз билан ёзилганлигига ишонч ҳосил қилиш учун уларни тасдиқланг</translation>
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
@@ -646,7 +646,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">formatini olib tashlash(Ctrl+Q)</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction</source>
+        <source>Load Partially Signed Snailcoin Transaction</source>
         <translation type="unfinished">Qisman signlangan Bitkoin tranzaksiyasini yuklash</translation>
     </message>
     <message>
@@ -654,7 +654,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;Nusxalanganlar dan PSBT ni yuklash</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <source>Load Partially Signed Snailcoin Transaction from clipboard</source>
         <translation type="unfinished">Nusxalanganlar qisman signlangan Bitkoin tranzaksiyalarini yuklash</translation>
     </message>
     <message>
@@ -712,7 +712,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Hamyonni koʻchiring</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <source>Show the %1 help message to get a list with possible Snailcoin command-line options</source>
         <translation type="unfinished">Yozilishi mumkin bo'lgan command-line sozlamalar ro'yxatini olish uchun %1 yordam xabarini ko'rsatish</translation>
     </message>
     <message>
@@ -772,7 +772,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Ko'&amp;rsatish</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to Snailcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform>Bitkoin tarmog'iga %n aktiv ulanishlar.</numerusform>
@@ -1290,8 +1290,8 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
         <translation type="unfinished">Жунатилувчи манзилни тахрирлаш</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation type="unfinished">Киритилган "%1" манзили тўғри Bitcoin манзили эмас.</translation>
+        <source>The entered address "%1" is not a valid Snailcoin address.</source>
+        <translation type="unfinished">Киритилган "%1" манзили тўғри Snailcoin манзили эмас.</translation>
     </message>
     <message>
         <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
@@ -1447,8 +1447,8 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
         </translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
-        <translation type="unfinished"> Bitcoin blok zanjirining%1 nusxasini yuklab oladi va saqlaydi</translation>
+        <source>%1 will download and store a copy of the Snailcoin block chain.</source>
+        <translation type="unfinished"> Snailcoin blok zanjirining%1 nusxasini yuklab oladi va saqlaydi</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -1692,8 +1692,8 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
         <translation type="unfinished">Kiruvchi va kirish ulanishlariga ruxsat bering</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation type="unfinished">SOCKS5 proksi-server orqali Bitcoin tarmog'iga ulaning.</translation>
+        <source>Connect to the Snailcoin network through a SOCKS5 proxy.</source>
+        <translation type="unfinished">SOCKS5 proksi-server orqali Snailcoin tarmog'iga ulaning.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1772,8 +1772,8 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
         <translation type="unfinished">Tangani boshqarish xususiyatlarini ko'rsatish yoki ko'rsatmaslik.</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
-        <translation type="unfinished">Tor onion xizmatlari uchun alohida SOCKS5 proksi-server orqali Bitcoin tarmog'iga ulaning.</translation>
+        <source>Connect to the Snailcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation type="unfinished">Tor onion xizmatlari uchun alohida SOCKS5 proksi-server orqali Snailcoin tarmog'iga ulaning.</translation>
     </message>
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
@@ -1865,8 +1865,8 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
         <translation type="unfinished">Шакл</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished">Кўрсатилган маълумот эскирган бўлиши мумкин. Ҳамёнингиз алоқа ўрнатилгандан сўнг Bitcoin тармоқ билан автоматик тарзда синхронланади, аммо жараён ҳалигача тугалланмади.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Snailcoin network after a connection is established, but this process has not completed yet.</source>
+        <translation type="unfinished">Кўрсатилган маълумот эскирган бўлиши мумкин. Ҳамёнингиз алоқа ўрнатилгандан сўнг Snailcoin тармоқ билан автоматик тарзда синхронланади, аммо жараён ҳалигача тугалланмади.</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -2419,8 +2419,8 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
         </translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished">Диққат: Нотўғр Bitcoin манзили</translation>
+        <source>Warning: Invalid Snailcoin address</source>
+        <translation type="unfinished">Диққат: Нотўғр Snailcoin манзили</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>

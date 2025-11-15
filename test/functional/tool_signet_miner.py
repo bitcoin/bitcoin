@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022 The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test signet miner tool"""
@@ -14,7 +14,7 @@ import time
 from test_framework.blocktools import DIFF_1_N_BITS, SIGNET_HEADER
 from test_framework.key import ECKey
 from test_framework.script_util import CScript, key_to_p2wpkh_script
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.util import (
     assert_equal,
     wallet_importprivkey,
@@ -36,7 +36,7 @@ def get_signet_commitment(segwit_commitment):
             return el[4:].hex()
     return None
 
-class SignetMinerTest(BitcoinTestFramework):
+class SignetMinerTest(SnailcoinTestFramework):
     def set_test_params(self):
         self.chain = "signet"
         self.setup_clean_chain = True

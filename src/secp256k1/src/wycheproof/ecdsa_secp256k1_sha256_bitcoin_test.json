@@ -4,8 +4,8 @@
   "generatorVersion" : "0.9rc5",
   "numberOfTests" : 463,
   "header" : [
-    "Test vectors of type EcdsaBitcoinVerify are meant for the verification",
-    "of a ECDSA variant used for Bitcoin, that add signature non-malleability."
+    "Test vectors of type EcdsaSnailcoinVerify are meant for the verification",
+    "of a ECDSA variant used for Snailcoin, that add signature non-malleability."
   ],
   "notes" : {
     "ArithmeticError" : {
@@ -93,13 +93,13 @@
       "description" : "The test vector contains an r and s that has been modified. By adding or subtracting the order of the group (or other values) the test vector checks whether signature verification verifies the range of r and s.",
       "effect" : "Without further analysis it is unclear if the modification can be used to forge signatures."
     },
-    "SignatureMalleabilityBitcoin" : {
+    "SignatureMalleabilitySnailcoin" : {
       "bugType" : "SIGNATURE_MALLEABILITY",
-      "description" : "Signature malleability can be a serious issue in Bitcoin. An implementation should only accept a signature s where s < n/2. If an implementation is meant for use cases that tolerate signature malleability then this implementation should not be tested with this set of test vectors.",
-      "effect" : "In Bitcoin exchanges, it may be used to make a double deposits or double withdrawals",
+      "description" : "Signature malleability can be a serious issue in Snailcoin. An implementation should only accept a signature s where s < n/2. If an implementation is meant for use cases that tolerate signature malleability then this implementation should not be tested with this set of test vectors.",
+      "effect" : "In Snailcoin exchanges, it may be used to make a double deposits or double withdrawals",
       "links" : [
-        "https://en.bitcoin.it/wiki/Transaction_malleability",
-        "https://en.bitcoinwiki.org/wiki/Transaction_Malleability"
+        "https://en.snailcoin.it/wiki/Transaction_malleability",
+        "https://en.snailcoinwiki.org/wiki/Transaction_Malleability"
       ]
     },
     "SmallRandS" : {
@@ -121,7 +121,7 @@
   },
   "testGroups" : [
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -138,7 +138,7 @@
           "tcId" : 1,
           "comment" : "Signature malleability",
           "flags" : [
-            "SignatureMalleabilityBitcoin"
+            "SignatureMalleabilitySnailcoin"
           ],
           "msg" : "313233343030",
           "sig" : "3046022100813ef79ccefa9a56f7ba805f0e478584fe5f0dd5f567bc09b5123ccbc9832365022100900e75ad233fcc908509dbff5922647db37c21f4afd3203ae8dc4ae7794b0f87",
@@ -3587,7 +3587,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -3623,7 +3623,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -3649,7 +3649,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -3675,7 +3675,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -3701,7 +3701,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -3728,7 +3728,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -3755,7 +3755,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -3782,7 +3782,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -3809,7 +3809,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -3836,7 +3836,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -3873,7 +3873,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -3899,7 +3899,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -3925,7 +3925,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -3951,7 +3951,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -3977,7 +3977,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4003,7 +4003,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4029,7 +4029,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4055,7 +4055,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4081,7 +4081,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4107,7 +4107,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4133,7 +4133,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4159,7 +4159,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4195,7 +4195,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4222,7 +4222,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4249,7 +4249,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4276,7 +4276,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4303,7 +4303,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4330,7 +4330,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4357,7 +4357,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4384,7 +4384,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4411,7 +4411,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4438,7 +4438,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4465,7 +4465,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4492,7 +4492,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4519,7 +4519,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4546,7 +4546,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4573,7 +4573,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4600,7 +4600,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4627,7 +4627,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4653,7 +4653,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4679,7 +4679,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4705,7 +4705,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4731,7 +4731,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4757,7 +4757,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4783,7 +4783,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4809,7 +4809,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4835,7 +4835,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4861,7 +4861,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4887,7 +4887,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4913,7 +4913,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4939,7 +4939,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4965,7 +4965,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -4991,7 +4991,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5017,7 +5017,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5043,7 +5043,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5069,7 +5069,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5095,7 +5095,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5121,7 +5121,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5147,7 +5147,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5173,7 +5173,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5199,7 +5199,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5225,7 +5225,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5251,7 +5251,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5277,7 +5277,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5303,7 +5303,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5329,7 +5329,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5355,7 +5355,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5381,7 +5381,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5407,7 +5407,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5433,7 +5433,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5459,7 +5459,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5485,7 +5485,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5511,7 +5511,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5537,7 +5537,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5563,7 +5563,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5589,7 +5589,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5615,7 +5615,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5641,7 +5641,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5667,7 +5667,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5693,7 +5693,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5719,7 +5719,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5745,7 +5745,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5771,7 +5771,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5797,7 +5797,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5823,7 +5823,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5849,7 +5849,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5875,7 +5875,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5901,7 +5901,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5927,7 +5927,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5953,7 +5953,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -5989,7 +5989,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -6025,7 +6025,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -6081,7 +6081,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -6127,7 +6127,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -6173,7 +6173,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -6219,7 +6219,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -6265,7 +6265,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",
@@ -6311,7 +6311,7 @@
       ]
     },
     {
-      "type" : "EcdsaBitcoinVerify",
+      "type" : "EcdsaSnailcoinVerify",
       "publicKey" : {
         "type" : "EcPublicKey",
         "curve" : "secp256k1",

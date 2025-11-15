@@ -1,7 +1,7 @@
 v30.0 Release Notes
 ===================
 
-Bitcoin Core version v30.0 is now available from:
+Snailcoin Core version v30.0 is now available from:
 
   <https://bitcoincore.org/bin/bitcoin-core-30.0/>
 
@@ -21,20 +21,20 @@ How to Upgrade
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes in some cases), then run the
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on macOS)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+installer (on Windows) or just copy over `/Applications/Snailcoin-Qt` (on macOS)
+or `snailcoind`/`snailcoin-qt` (on Linux).
 
-Upgrading directly from a version of Bitcoin Core that has reached its EOL is
+Upgrading directly from a version of Snailcoin Core that has reached its EOL is
 possible, but it might take some time if the data directory needs to be migrated. Old
-wallet versions of Bitcoin Core are generally supported.
+wallet versions of Snailcoin Core are generally supported.
 
 Compatibility
 ==============
 
-Bitcoin Core is supported and tested on operating systems using the
-Linux Kernel 3.17+, macOS 13+, and Windows 10+. Bitcoin
+Snailcoin Core is supported and tested on operating systems using the
+Linux Kernel 3.17+, macOS 13+, and Windows 10+. Snailcoin
 Core should also work on most other Unix-like systems but is not as
-frequently tested on them. It is not recommended to use Bitcoin Core on
+frequently tested on them. It is not recommended to use Snailcoin Core on
 unsupported systems.
 
 Notable changes
@@ -107,8 +107,8 @@ New `bitcoin` command
 - A new `bitcoin` command line tool has been added to make features more discoverable
   and convenient to use. The `bitcoin` tool just calls other executables and does not
   implement any functionality on its own. Specifically `bitcoin node` is a synonym for
-  `bitcoind`, `bitcoin gui` is a synonym for `bitcoin-qt`, and `bitcoin rpc` is a synonym
-  for `bitcoin-cli -named`. Other commands and options can be listed with `bitcoin help`.
+  `snailcoind`, `bitcoin gui` is a synonym for `snailcoin-qt`, and `bitcoin rpc` is a synonym
+  for `snailcoin-cli -named`. Other commands and options can be listed with `bitcoin help`.
   The new `bitcoin` command is an alternative to calling other commands directly, but it
   doesn't replace them, and there are no plans to deprecate existing commands. (#31375)
 
@@ -125,7 +125,7 @@ IPC Mining Interface
   see (#31098). When the node is started with `bitcoin -m node -ipcbind=unix` it will
   listen on a unix socket for IPC client connections, allowing clients to request block
   templates and submit mined blocks. The `-m` option launches a new internal binary
-  (`bitcoin-node` instead of `bitcoind`) and is currently required but will become optional
+  (`bitcoin-node` instead of `snailcoind`) and is currently required but will become optional
   in the future (with [#33229](https://github.com/bitcoin/bitcoin/pull/33229)).
 
 - IPC connectivity introduces new dependencies (see [multiprocess.md](https://github.com/bitcoin/bitcoin/blob/master/doc/multiprocess.md)),
@@ -139,7 +139,7 @@ Install changes
   It can still be executed directly, or accessed through the new `bitcoin` command
   as `bitcoin test`. The `libexec/` directory also contains new `bitcoin-node` and
   `bitcoin-gui` binaries which support IPC features and are called through the
-  `bitcoin` tool. In source builds only, `test_bitcoin-qt`, `bench_bitcoin`, and
+  `bitcoin` tool. In source builds only, `test_snailcoin-qt`, `bench_bitcoin`, and
   `bitcoin-chainstate` are also now installed to `libexec/` instead of `bin/` and
   can be accessed through the new `bitcoin` command. See `bitcoin help` output for
   details. (#31679)
@@ -159,7 +159,7 @@ Indexes
   which was stored at `/indexes/coinstats/`. The old version of the index is not deleted
   by the upgraded node in case the user chooses to downgrade their node in the future.
   If the user does not plan to downgrade it is safe for them to remove `/indexes/coinstats/`
-  from their datadir. A future release of Bitcoin Core may remove the old version of the
+  from their datadir. A future release of Snailcoin Core may remove the old version of the
   index automatically. (#30469)
 
 Logging
@@ -177,7 +177,7 @@ Updated RPCs
 ------------
 
 - The `-paytxfee` startup option and the `settxfee` RPC are now deprecated and
-  will be removed in Bitcoin Core 31.0. They allowed the user to set a static fee
+  will be removed in Snailcoin Core 31.0. They allowed the user to set a static fee
   rate for wallet transactions, which could potentially lead to overpaying or underpaying.
   Users should instead rely on fee estimation or specify a fee rate per transaction
   using the `fee_rate` argument in RPCs such as `fundrawtransaction`, `sendtoaddress`,

@@ -1,11 +1,11 @@
 Sample configuration files for:
 ```
-systemd: bitcoind.service
-Upstart: bitcoind.conf
-OpenRC:  bitcoind.openrc
-         bitcoind.openrcconf
-CentOS:  bitcoind.init
-macOS:   org.bitcoin.bitcoind.plist
+systemd: snailcoind.service
+Upstart: snailcoind.conf
+OpenRC:  snailcoind.openrc
+         snailcoind.openrcconf
+CentOS:  snailcoind.init
+macOS:   org.snailcoin.snailcoind.plist
 ```
 have been made available to assist packagers in creating node packages here.
 

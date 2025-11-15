@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2021 The Bitcoin Core developers
+# Copyright (c) 2021 The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +9,7 @@ from test_framework.messages import (
     COIN,
     MAX_BIP125_RBF_SEQUENCE,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.mempool_util import fill_mempool
 from test_framework.util import (
     assert_greater_than_or_equal,
@@ -27,7 +27,7 @@ MAX_REPLACEMENT_CANDIDATES = 100
 # for typical cases
 DEFAULT_CHILD_FEE = DEFAULT_FEE * 4
 
-class PackageRBFTest(BitcoinTestFramework):
+class PackageRBFTest(SnailcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True

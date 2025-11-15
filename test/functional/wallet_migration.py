@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-present The Bitcoin Core developers
+# Copyright (c) 2020-present The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Migrating a wallet from legacy to descriptor."""
@@ -17,7 +17,7 @@ from test_framework.address import (
 )
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECPubKey
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.messages import COIN, CTransaction, CTxOut, ser_string
 from test_framework.script import hash160
 from test_framework.script_util import key_to_p2pkh_script, key_to_p2pk_script, script_to_p2sh_script, script_to_p2wsh_script
@@ -36,7 +36,7 @@ from test_framework.wallet_util import (
 BTREE_MAGIC = 0x053162
 
 
-class WalletMigrationTest(BitcoinTestFramework):
+class WalletMigrationTest(SnailcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

@@ -2,7 +2,7 @@
 
 **Updated for FreeBSD [14.3](https://www.freebsd.org/releases/14.3R/announce/)**
 
-This guide describes how to build bitcoind, command-line utilities, and GUI on FreeBSD.
+This guide describes how to build snailcoind, command-line utilities, and GUI on FreeBSD.
 
 ## Preparation
 
@@ -19,7 +19,7 @@ SQLite is required for the wallet:
 pkg install sqlite3
 ```
 
-To build Bitcoin Core without the wallet, use `-DENABLE_WALLET=OFF`.
+To build Snailcoin Core without the wallet, use `-DENABLE_WALLET=OFF`.
 
 Cap'n Proto is needed for IPC functionality (see [multiprocess.md](multiprocess.md)):
 
@@ -31,8 +31,8 @@ Compile with `-DENABLE_IPC=OFF` if you do not need IPC functionality.
 
 See [dependencies.md](dependencies.md) for a complete overview.
 
-### 2. Clone Bitcoin Repo
-Now that `git` and all the required dependencies are installed, let's clone the Bitcoin Core repository to a directory. All build scripts and commands will run from this directory.
+### 2. Clone Snailcoin Repo
+Now that `git` and all the required dependencies are installed, let's clone the Snailcoin Core repository to a directory. All build scripts and commands will run from this directory.
 ```bash
 git clone https://github.com/bitcoin/bitcoin.git
 ```
@@ -42,7 +42,7 @@ git clone https://github.com/bitcoin/bitcoin.git
 #### GUI Dependencies
 ###### Qt6
 
-Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
+Snailcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
 the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
 
 ```bash
@@ -64,7 +64,7 @@ Otherwise, if you don't need QR encoding support, use the `-DWITH_QRENCODE=OFF` 
 #### Notifications
 ###### ZeroMQ
 
-Bitcoin Core can provide notifications via ZeroMQ. If the package is installed, support will be compiled in.
+Snailcoin Core can provide notifications via ZeroMQ. If the package is installed, support will be compiled in.
 ```bash
 pkg install libzmq4
 ```
@@ -78,11 +78,11 @@ pkg install python3 databases/py-sqlite3 net/py-pyzmq
 ```
 ---
 
-## Building Bitcoin Core
+## Building Snailcoin Core
 
 ### 1. Configuration
 
-There are many ways to configure Bitcoin Core, here are a few common examples:
+There are many ways to configure Snailcoin Core, here are a few common examples:
 
 ##### Wallet and GUI:
 This enables the GUI, assuming `sqlite` and `qt` are installed.

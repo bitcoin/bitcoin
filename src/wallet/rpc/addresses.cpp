@@ -1,4 +1,4 @@
-// Copyright (c) 2011-present The Bitcoin Core developers
+// Copyright (c) 2011-present The Snailcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,7 +22,7 @@ RPCHelpMan getnewaddress()
 {
     return RPCHelpMan{
         "getnewaddress",
-        "Returns a new Bitcoin address for receiving payments.\n"
+        "Returns a new Snailcoin address for receiving payments.\n"
                 "If 'label' is specified, it is added to the address book \n"
                 "so payments received with the address will be associated with 'label'.\n",
                 {
@@ -73,7 +73,7 @@ RPCHelpMan getrawchangeaddress()
 {
     return RPCHelpMan{
         "getrawchangeaddress",
-        "Returns a new Bitcoin address, for receiving change.\n"
+        "Returns a new Snailcoin address, for receiving change.\n"
                 "This is for use with raw transactions, NOT normal use.\n",
                 {
                     {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The address type to use. Options are " + FormatAllOutputTypes() + "."},
@@ -138,7 +138,7 @@ RPCHelpMan setlabel()
 
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
     if (!IsValidDestination(dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Snailcoin address");
     }
 
     const std::string label{LabelFromValue(request.params[1])};

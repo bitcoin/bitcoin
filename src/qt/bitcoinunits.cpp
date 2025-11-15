@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Snailcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,80 +10,80 @@
 
 #include <cassert>
 
-static constexpr auto MAX_DIGITS_BTC = 16;
+static constexpr auto MAX_DIGITS_SNAIL = 16;
 
-BitcoinUnits::BitcoinUnits(QObject *parent):
+SnailcoinUnits::SnailcoinUnits(QObject *parent):
         QAbstractListModel(parent),
         unitlist(availableUnits())
 {
 }
 
-QList<BitcoinUnit> BitcoinUnits::availableUnits()
+QList<SnailcoinUnit> SnailcoinUnits::availableUnits()
 {
-    QList<BitcoinUnit> unitlist;
-    unitlist.append(Unit::BTC);
-    unitlist.append(Unit::mBTC);
-    unitlist.append(Unit::uBTC);
+    QList<SnailcoinUnit> unitlist;
+    unitlist.append(Unit::SNAIL);
+    unitlist.append(Unit::mSNAIL);
+    unitlist.append(Unit::uSNAIL);
     unitlist.append(Unit::SAT);
     return unitlist;
 }
 
-QString BitcoinUnits::longName(Unit unit)
+QString SnailcoinUnits::longName(Unit unit)
 {
     switch (unit) {
-    case Unit::BTC: return QString("BTC");
-    case Unit::mBTC: return QString("mBTC");
-    case Unit::uBTC: return QString::fromUtf8("µBTC (bits)");
+    case Unit::SNAIL: return QString("SNAIL");
+    case Unit::mSNAIL: return QString("mSNAIL");
+    case Unit::uSNAIL: return QString::fromUtf8("µSNAIL (bits)");
     case Unit::SAT: return QString("Satoshi (sat)");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 
-QString BitcoinUnits::shortName(Unit unit)
+QString SnailcoinUnits::shortName(Unit unit)
 {
     switch (unit) {
-    case Unit::BTC: return longName(unit);
-    case Unit::mBTC: return longName(unit);
-    case Unit::uBTC: return QString("bits");
+    case Unit::SNAIL: return longName(unit);
+    case Unit::mSNAIL: return longName(unit);
+    case Unit::uSNAIL: return QString("bits");
     case Unit::SAT: return QString("sat");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 
-QString BitcoinUnits::description(Unit unit)
+QString SnailcoinUnits::description(Unit unit)
 {
     switch (unit) {
-    case Unit::BTC: return QString("Bitcoins");
-    case Unit::mBTC: return QString("Milli-Bitcoins (1 / 1" THIN_SP_UTF8 "000)");
-    case Unit::uBTC: return QString("Micro-Bitcoins (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case Unit::SNAIL: return QString("Snailcoins");
+    case Unit::mSNAIL: return QString("Milli-Snailcoins (1 / 1" THIN_SP_UTF8 "000)");
+    case Unit::uSNAIL: return QString("Micro-Snailcoins (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     case Unit::SAT: return QString("Satoshi (sat) (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 
-qint64 BitcoinUnits::factor(Unit unit)
+qint64 SnailcoinUnits::factor(Unit unit)
 {
     switch (unit) {
-    case Unit::BTC: return 100'000'000;
-    case Unit::mBTC: return 100'000;
-    case Unit::uBTC: return 100;
+    case Unit::SNAIL: return 100'000'000;
+    case Unit::mSNAIL: return 100'000;
+    case Unit::uSNAIL: return 100;
     case Unit::SAT: return 1;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 
-int BitcoinUnits::decimals(Unit unit)
+int SnailcoinUnits::decimals(Unit unit)
 {
     switch (unit) {
-    case Unit::BTC: return 8;
-    case Unit::mBTC: return 5;
-    case Unit::uBTC: return 2;
+    case Unit::SNAIL: return 8;
+    case Unit::mSNAIL: return 5;
+    case Unit::uSNAIL: return 2;
     case Unit::SAT: return 0;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 
-QString BitcoinUnits::format(Unit unit, const CAmount& nIn, bool fPlus, SeparatorStyle separators, bool justify)
+QString SnailcoinUnits::format(Unit unit, const CAmount& nIn, bool fPlus, SeparatorStyle separators, bool justify)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
@@ -94,7 +94,7 @@ QString BitcoinUnits::format(Unit unit, const CAmount& nIn, bool fPlus, Separato
     qint64 quotient = n_abs / coin;
     QString quotient_str = QString::number(quotient);
     if (justify) {
-        quotient_str = quotient_str.rightJustified(MAX_DIGITS_BTC - num_decimals, ' ');
+        quotient_str = quotient_str.rightJustified(MAX_DIGITS_SNAIL - num_decimals, ' ');
     }
 
     // Use SI-style thin space separators as these are locale independent and can't be
@@ -128,19 +128,19 @@ QString BitcoinUnits::format(Unit unit, const CAmount& nIn, bool fPlus, Separato
 // Please take care to use formatHtmlWithUnit instead, when
 // appropriate.
 
-QString BitcoinUnits::formatWithUnit(Unit unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
+QString SnailcoinUnits::formatWithUnit(Unit unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
 {
     return format(unit, amount, plussign, separators) + QString(" ") + shortName(unit);
 }
 
-QString BitcoinUnits::formatHtmlWithUnit(Unit unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
+QString SnailcoinUnits::formatHtmlWithUnit(Unit unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
 {
     QString str(formatWithUnit(unit, amount, plussign, separators));
     str.replace(QChar(THIN_SP_CP), QString(THIN_SP_HTML));
     return QString("<span style='white-space: nowrap;'>%1</span>").arg(str);
 }
 
-QString BitcoinUnits::formatWithPrivacy(Unit unit, const CAmount& amount, SeparatorStyle separators, bool privacy)
+QString SnailcoinUnits::formatWithPrivacy(Unit unit, const CAmount& amount, SeparatorStyle separators, bool privacy)
 {
     assert(amount >= 0);
     QString value;
@@ -152,7 +152,7 @@ QString BitcoinUnits::formatWithPrivacy(Unit unit, const CAmount& amount, Separa
     return value + QString(" ") + shortName(unit);
 }
 
-bool BitcoinUnits::parse(Unit unit, const QString& value, CAmount* val_out)
+bool SnailcoinUnits::parse(Unit unit, const QString& value, CAmount* val_out)
 {
     if (value.isEmpty()) {
         return false; // Refuse to parse invalid unit or empty string
@@ -192,18 +192,18 @@ bool BitcoinUnits::parse(Unit unit, const QString& value, CAmount* val_out)
     return ok;
 }
 
-QString BitcoinUnits::getAmountColumnTitle(Unit unit)
+QString SnailcoinUnits::getAmountColumnTitle(Unit unit)
 {
     return QObject::tr("Amount") + " (" + shortName(unit) + ")";
 }
 
-int BitcoinUnits::rowCount(const QModelIndex &parent) const
+int SnailcoinUnits::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
     return unitlist.size();
 }
 
-QVariant BitcoinUnits::data(const QModelIndex &index, int role) const
+QVariant SnailcoinUnits::data(const QModelIndex &index, int role) const
 {
     int row = index.row();
     if(row >= 0 && row < unitlist.size())
@@ -223,41 +223,41 @@ QVariant BitcoinUnits::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-CAmount BitcoinUnits::maxMoney()
+CAmount SnailcoinUnits::maxMoney()
 {
     return MAX_MONEY;
 }
 
 namespace {
-qint8 ToQint8(BitcoinUnit unit)
+qint8 ToQint8(SnailcoinUnit unit)
 {
     switch (unit) {
-    case BitcoinUnit::BTC: return 0;
-    case BitcoinUnit::mBTC: return 1;
-    case BitcoinUnit::uBTC: return 2;
-    case BitcoinUnit::SAT: return 3;
+    case SnailcoinUnit::SNAIL: return 0;
+    case SnailcoinUnit::mSNAIL: return 1;
+    case SnailcoinUnit::uSNAIL: return 2;
+    case SnailcoinUnit::SAT: return 3;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 
-BitcoinUnit FromQint8(qint8 num)
+SnailcoinUnit FromQint8(qint8 num)
 {
     switch (num) {
-    case 0: return BitcoinUnit::BTC;
-    case 1: return BitcoinUnit::mBTC;
-    case 2: return BitcoinUnit::uBTC;
-    case 3: return BitcoinUnit::SAT;
+    case 0: return SnailcoinUnit::SNAIL;
+    case 1: return SnailcoinUnit::mSNAIL;
+    case 2: return SnailcoinUnit::uSNAIL;
+    case 3: return SnailcoinUnit::SAT;
     }
     assert(false);
 }
 } // namespace
 
-QDataStream& operator<<(QDataStream& out, const BitcoinUnit& unit)
+QDataStream& operator<<(QDataStream& out, const SnailcoinUnit& unit)
 {
     return out << ToQint8(unit);
 }
 
-QDataStream& operator>>(QDataStream& in, BitcoinUnit& unit)
+QDataStream& operator>>(QDataStream& in, SnailcoinUnit& unit)
 {
     qint8 input;
     in >> input;

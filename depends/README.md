@@ -1,7 +1,7 @@
 # Depends build
 
 This is a system of building and caching dependencies necessary for building
-Bitcoin Core. It supports cross-compilation. For more details see [description.md](description.md),
+Snailcoin Core. It supports cross-compilation. For more details see [description.md](description.md),
 as well as [packages.md](packages.md) for how to add packages.
 
 ## Usage
@@ -69,13 +69,13 @@ To build dependencies for the current arch+OS:
 
     make
 
-## Configuring Bitcoin Core
+## Configuring Snailcoin Core
 
-**When configuring Bitcoin Core, CMake by default will ignore the depends output.** In
+**When configuring Snailcoin Core, CMake by default will ignore the depends output.** In
 order for it to pick up libraries, tools, and settings from the depends build,
 you must specify the toolchain file.
 In the above example for Ubuntu, a file named `depends/x86_64-pc-linux-gnu/toolchain.cmake` will be
-created. To use it during configuring Bitcoin Core:
+created. To use it during configuring Snailcoin Core:
 
     cmake -B build --toolchain depends/x86_64-pc-linux-gnu/toolchain.cmake
 
@@ -106,7 +106,7 @@ The following can be set when running make: `make FOO=bar`
 - `LTO`: Enable options needed for LTO. Does not add `-flto` related options to *FLAGS.
 
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate CMake cache
-variables will be set when generating the Bitcoin Core buildsystem. In this case, `-DENABLE_WALLET=OFF`.
+variables will be set when generating the Snailcoin Core buildsystem. In this case, `-DENABLE_WALLET=OFF`.
 
 ## Cross compilation
 

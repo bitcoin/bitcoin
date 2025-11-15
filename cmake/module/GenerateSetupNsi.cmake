@@ -1,4 +1,4 @@
-# Copyright (c) 2023-present The Bitcoin Core developers
+# Copyright (c) 2023-present The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
@@ -8,9 +8,9 @@ function(generate_setup_nsi)
   set(CLIENT_URL ${PROJECT_HOMEPAGE_URL})
   set(CLIENT_TARNAME "bitcoin")
   set(BITCOIN_WRAPPER_NAME "bitcoin")
-  set(BITCOIN_GUI_NAME "bitcoin-qt")
-  set(BITCOIN_DAEMON_NAME "bitcoind")
-  set(BITCOIN_CLI_NAME "bitcoin-cli")
+  set(BITCOIN_GUI_NAME "snailcoin-qt")
+  set(BITCOIN_DAEMON_NAME "snailcoind")
+  set(BITCOIN_CLI_NAME "snailcoin-cli")
   set(BITCOIN_TX_NAME "bitcoin-tx")
   set(BITCOIN_WALLET_TOOL_NAME "bitcoin-wallet")
   set(BITCOIN_TEST_NAME "test_bitcoin")

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2021 The Bitcoin Core developers
+# Copyright (c) 2019-2021 The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,12 +10,12 @@ import random
 import time
 
 from test_framework.netutil import UNREACHABLE_PROXY_ARG
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 
 ADD_NEXT_SEEDNODE = 10
 
 
-class P2PSeedNodes(BitcoinTestFramework):
+class P2PSeedNodes(SnailcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         # Specify a non-working proxy to make sure no actual connections to random IPs are attempted.

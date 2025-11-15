@@ -1,4 +1,4 @@
-# Copyright (c) The Bitcoin Core developers
+# Copyright (c) The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,7 +19,7 @@ find_package(CapnProto 0.7 QUIET NO_MODULE)
      "Cap'n Proto is required but was not found.\n"
      "To resolve, choose one of the following:\n"
      "  - Install Cap'n Proto (version 1.0+ recommended)\n"
-     "  - For Bitcoin Core compilation build with -DENABLE_IPC=OFF to disable multiprocess support\n"
+     "  - For Snailcoin Core compilation build with -DENABLE_IPC=OFF to disable multiprocess support\n"
    )
  endif()
 
@@ -71,7 +71,7 @@ if(CAPNPROTO_CVE_AFFECTED OR CAPNPROTO_CLANG_INCOMPATIBLE)
     string(APPEND RESOLUTION_OPTIONS "  - Use GCC instead of Clang\n")
   endif()
 
-  string(APPEND RESOLUTION_OPTIONS "  - For Bitcoin Core compilation build with -DENABLE_IPC=OFF to disable multiprocess support\n")
+  string(APPEND RESOLUTION_OPTIONS "  - For Snailcoin Core compilation build with -DENABLE_IPC=OFF to disable multiprocess support\n")
 
   message(FATAL_ERROR
     "The version of Cap'n Proto detected: ${CapnProto_VERSION} has known compatibility issues:\n"

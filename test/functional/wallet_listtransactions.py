@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-present The Bitcoin Core developers
+# Copyright (c) 2014-present The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listtransactions API."""
@@ -15,7 +15,7 @@ from test_framework.messages import (
     COIN,
     tx_from_hex,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
     assert_array_result,
@@ -26,7 +26,7 @@ from test_framework.util import (
 from test_framework.wallet_util import get_generate_key
 
 
-class ListTransactionsTest(BitcoinTestFramework):
+class ListTransactionsTest(SnailcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         # whitelist peers to speed up tx relay / mempool sync

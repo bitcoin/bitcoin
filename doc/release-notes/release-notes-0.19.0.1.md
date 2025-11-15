@@ -1,4 +1,4 @@
-Bitcoin Core version 0.19.0.1 is now available from:
+Snailcoin Core version 0.19.0.1 is now available from:
 
   <https://bitcoincore.org/bin/bitcoin-core-0.19.0.1/>
 
@@ -18,31 +18,31 @@ How to Upgrade
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+installer (on Windows) or just copy over `/Applications/Snailcoin-Qt` (on Mac)
+or `snailcoind`/`snailcoin-qt` (on Linux).
 
-Upgrading directly from a version of Bitcoin Core that has reached its EOL is
+Upgrading directly from a version of Snailcoin Core that has reached its EOL is
 possible, but might take some time if the datadir needs to be migrated.  Old
-wallet versions of Bitcoin Core are generally supported.
+wallet versions of Snailcoin Core are generally supported.
 
 Compatibility
 ==============
 
-Bitcoin Core is supported and extensively tested on operating systems using
+Snailcoin Core is supported and extensively tested on operating systems using
 the Linux kernel, macOS 10.10+, and Windows 7 and newer. It is not recommended
-to use Bitcoin Core on unsupported systems.
+to use Snailcoin Core on unsupported systems.
 
-Bitcoin Core should also work on most other Unix-like systems but is not
+Snailcoin Core should also work on most other Unix-like systems but is not
 as frequently tested on them.
 
 From 0.17.0 onwards, macOS <10.10 is no longer supported. 0.17.0 is
 built using Qt 5.9.x, which doesn't support versions of macOS older than
-10.10. Additionally, Bitcoin Core does not yet change appearance when
+10.10. Additionally, Snailcoin Core does not yet change appearance when
 macOS "dark mode" is activated.
 
 Users running macOS Catalina may need to "right-click" and then choose "Open"
-to open the Bitcoin Core .dmg. This is due to new signing requirements
-imposed by Apple, which the Bitcoin Core project does not yet adhere too.
+to open the Snailcoin Core .dmg. This is due to new signing requirements
+imposed by Apple, which the Snailcoin Core project does not yet adhere too.
 
 Notable changes
 ===============
@@ -51,7 +51,7 @@ New user documentation
 ----------------------
 
 - [Reduce memory](https://github.com/bitcoin/bitcoin/blob/master/doc/reduce-memory.md)
-  suggests configuration tweaks for running Bitcoin Core on systems with
+  suggests configuration tweaks for running Snailcoin Core on systems with
   limited memory. (#16339)
 
 New RPCs
@@ -78,7 +78,7 @@ New settings
 
 - `-blockfilterindex` enables the creation of BIP158 block filters for
   the entire blockchain.  Filters will be created in the background and
-  currently use about 4 GiB of space.  Note: this version of Bitcoin
+  currently use about 4 GiB of space.  Note: this version of Snailcoin
   Core does not serve block filters over the P2P network, although the
   local user may obtain block filters using the `getblockfilter` RPC.
   (#14121)
@@ -90,7 +90,7 @@ Updated settings
   provide peers connecting using the indicated interfaces or IP
   addresses.  If no permissions are specified with an address or CIDR
   network, the implicit default permissions are the same as previous
-  releases.  See the `bitcoind -help` output for these two options for
+  releases.  See the `snailcoind -help` output for these two options for
   details about the available permissions. (#16248)
 
 - Users setting custom `dbcache` values can increase their setting slightly
@@ -197,7 +197,7 @@ GUI changes
   type may be changed with the `-addresstype` configuration option.
   (#15711, #16497)
 
-- In 0.18.0, a `./configure` flag was introduced to allow disabling BIP70 support in the GUI (support was enabled by default). In 0.19.0, this flag is now __disabled__ by default. If you want to compile Bitcoin Core with BIP70 support in the GUI, you can pass `--enable-bip70` to `./configure`. (#15584)
+- In 0.18.0, a `./configure` flag was introduced to allow disabling BIP70 support in the GUI (support was enabled by default). In 0.19.0, this flag is now __disabled__ by default. If you want to compile Snailcoin Core with BIP70 support in the GUI, you can pass `--enable-bip70` to `./configure`. (#15584)
 
 Deprecated or removed configuration options
 -------------------------------------------
@@ -217,7 +217,7 @@ Deprecated or removed RPCs
 
 - `bumpfee` has a new `fee_rate` option as a replacement for the deprecated `totalFee`. (#16727)
 
-- `generate` is now removed after being deprecated in Bitcoin Core 0.18.
+- `generate` is now removed after being deprecated in Snailcoin Core 0.18.
   Use the `generatetoaddress` RPC instead. (#15492)
 
 P2P changes
@@ -226,12 +226,12 @@ P2P changes
 - BIP 61 reject messages were deprecated in v0.18. They are now disabled
   by default, but can be enabled by setting the `-enablebip61` command
   line option.  BIP 61 reject messages will be removed entirely in a
-  future version of Bitcoin Core. (#14054)
+  future version of Snailcoin Core. (#14054)
 
-- To eliminate well-known denial-of-service vectors in Bitcoin Core,
+- To eliminate well-known denial-of-service vectors in Snailcoin Core,
   especially for nodes with spinning disks, the default value for the
   `-peerbloomfilters` configuration option has been changed to false.
-  This prevents Bitcoin Core from sending the BIP111 NODE_BLOOM service
+  This prevents Snailcoin Core from sending the BIP111 NODE_BLOOM service
   flag, accepting BIP37 bloom filters, or serving merkle blocks or
   transactions matching a bloom filter.  Users who still want to provide
   bloom filter support may either set the configuration option to true
@@ -240,17 +240,17 @@ P2P changes
   `-whitebind` configuration options described elsewhere in these
   release notes.  For the near future, lightweight clients using public
   BIP111/BIP37 nodes should still be able to connect to older versions
-  of Bitcoin Core and nodes that have manually enabled BIP37 support,
+  of Snailcoin Core and nodes that have manually enabled BIP37 support,
   but developers of such software should consider migrating to either
   using specific BIP37 nodes or an alternative transaction filtering
   system. (#16152)
 
-- By default, Bitcoin Core will now make two additional outbound connections that are exclusively used for block-relay.  No transactions or addr messages will be processed on these connections. These connections are designed to add little additional memory or bandwidth resource requirements but should make some partitioning attacks more difficult to carry out. (#15759)
+- By default, Snailcoin Core will now make two additional outbound connections that are exclusively used for block-relay.  No transactions or addr messages will be processed on these connections. These connections are designed to add little additional memory or bandwidth resource requirements but should make some partitioning attacks more difficult to carry out. (#15759)
 
 Miscellaneous CLI Changes
 -------------------------
 
-- The `testnet` field in `bitcoin-cli -getinfo` has been renamed to
+- The `testnet` field in `snailcoin-cli -getinfo` has been renamed to
   `chain` and now returns the current network name as defined in BIP70
   (main, test, regtest). (#15566)
 
@@ -262,7 +262,7 @@ RPC
 
 - `getblockchaininfo` no longer returns a `bip9_softforks` object.
   Instead, information has been moved into the `softforks` object and
-  an additional `type` field describes how Bitcoin Core determines
+  an additional `type` field describes how Snailcoin Core determines
   whether that soft fork is active (e.g. BIP9 or BIP90).  See the RPC
   help for details. (#16060)
 
@@ -301,7 +301,7 @@ Network
 -------
 
 - When fetching a transaction announced by multiple peers, previous versions of
-  Bitcoin Core would sequentially attempt to download the transaction from each
+  Snailcoin Core would sequentially attempt to download the transaction from each
   announcing peer until the transaction is received, in the order that those
   peers' announcements were received.  In this release, the download logic has
   changed to randomize the fetch order across peers and to prefer sending
@@ -309,7 +309,7 @@ Network
   where inbound peers could prevent a node from getting a transaction.
   (#14897, #15834)
 
-- If a Tor hidden service is being used, Bitcoin Core will be bound to
+- If a Tor hidden service is being used, Snailcoin Core will be bound to
   the standard port 8333 even if a different port is configured for
   clearnet connections.  This prevents leaking node identity through use
   of identical non-default port numbers. (#15651)
@@ -333,7 +333,7 @@ Mempool and transaction relay
   segwit versions) are now accepted into the mempool, relayed, and
   mined.  Attempting to spend those outputs remains forbidden by policy
   ("non-standard").  When this change has been widely deployed, wallets
-  and services can accept any valid bech32 Bitcoin address without
+  and services can accept any valid bech32 Snailcoin address without
   concern that transactions paying future segwit versions will become
   stuck in an unconfirmed state. (#15846)
 
@@ -352,9 +352,9 @@ Wallet
   failing until the first block is pruned. (#15870)
 
 - When creating a transaction with a fee above `-maxtxfee` (default 0.1
-  BTC), the RPC commands `walletcreatefundedpsbt` and
+  SNAIL), the RPC commands `walletcreatefundedpsbt` and
   `fundrawtransaction` will now fail instead of rounding down the fee.
-  Be aware that the `feeRate` argument is specified in BTC per 1,000
+  Be aware that the `feeRate` argument is specified in SNAIL per 1,000
   vbytes, not satoshi per vbyte. (#16257)
 
 - A new wallet flag `avoid_reuse` has been added (default off). When
@@ -362,7 +362,7 @@ Wallet
   and default to not use the former in coin selection.  When setting
   this flag on an existing wallet, rescanning the blockchain is required
   to correctly mark previously used destinations.  Together with "avoid
-  partial spends" (added in Bitcoin Core v0.17.0), this can eliminate a
+  partial spends" (added in Snailcoin Core v0.17.0), this can eliminate a
   serious privacy issue where a malicious user can track spends by
   sending small payments to a previously-paid address that would then
   be included with unrelated inputs in future payments. (#13756)
@@ -424,7 +424,7 @@ Build system changes
 - #15834 Fix transaction relay bugs introduced in #14897 and expire transactions from peer in-flight map (sdaftuar)
 - #15651 torcontrol: Use the default/standard network port for Tor hidden services, even if the internal port is set differently (luke-jr)
 - #16188 Document what happens to getdata of unknown type (MarcoFalke)
-- #15649 Add ChaCha20Poly1305@Bitcoin AEAD (jonasschnelli)
+- #15649 Add ChaCha20Poly1305@Snailcoin AEAD (jonasschnelli)
 - #16152 Disable bloom filtering by default (TheBlueMatt)
 - #15993 Drop support of the insecure miniUPnPc versions (hebasto)
 - #16197 Use mockable time for tx download (MarcoFalke)
@@ -545,7 +545,7 @@ Build system changes
 - #16251 Improve signrawtransaction error reporting (ajtowns)
 - #16873 fix regression in gettransaction (jonatack)
 - #16512 Shuffle inputs and outputs after joining psbts (achow101)
-- #16521 Use the default maxfeerate value as BTC/kB (Remagpie)
+- #16521 Use the default maxfeerate value as SNAIL/kB (Remagpie)
 - #16817 Fix casing in getblockchaininfo to be inline with other fields (dangershony)
 - #17131 fix -rpcclienttimeout 0 option (fjahr)
 - #17249 Add missing deque include to fix build (jbeich)
@@ -569,7 +569,7 @@ Build system changes
 - #16291 Stop translating PACKAGE_NAME (MarcoFalke)
 - #16380 Remove unused bits from the service flags enum (MarcoFalke)
 - #16379 Fix autostart filenames on Linux for testnet/regtest (hebasto)
-- #16366 init: Use InitError for all errors in bitcoind/qt (MarcoFalke)
+- #16366 init: Use InitError for all errors in snailcoind/qt (MarcoFalke)
 - #16436 Do not create payment server if -disablewallet option provided (hebasto)
 - #16514 Remove unused RPCConsole::tabFocus (promag)
 - #16497 Generate bech32 addresses by default (take 2, fixup) (MarcoFalke)
@@ -630,7 +630,7 @@ Build system changes
 - #16235 Cleaned up and consolidated msbuild files (no code changes) (sipsorcery)
 - #16246 MSVC: Fix error in debug mode (Fix #16245) (NicolasDorier)
 - #16183 xtrans: Configure flags cleanup (dongcarl)
-- #16258 [MSVC]: Create the config.ini as part of bitcoind build (NicolasDorier)
+- #16258 [MSVC]: Create the config.ini as part of snailcoind build (NicolasDorier)
 - #16271 remove -Wall from rapidcheck build flags (fanquake)
 - #16309 [MSVC] allow user level project customization (NicolasDorier)
 - #16308 [MSVC] Copy build output to src/ automatically after build (NicolasDorier)
@@ -688,7 +688,7 @@ Build system changes
 - #15771 Prevent concurrency issues reading .cookie file (promag)
 - #15693 travis: Switch to ubuntu keyserver to avoid timeouts (MarcoFalke)
 - #15629 init: Throw error when network specific config is ignored (MarcoFalke)
-- #15773 Add BitcoinTestFramework::sync_* methods (MarcoFalke)
+- #15773 Add SnailcoinTestFramework::sync_* methods (MarcoFalke)
 - #15797 travis: Bump second timeout to 33 minutes, add rationale (MarcoFalke)
 - #15788 Unify testing setups for fuzz, bench, and unit tests (MarcoFalke)
 - #15352 Reduce noise level in test_bitcoin output (practicalswift)
@@ -697,7 +697,7 @@ Build system changes
 - #15866 Add missing syncwithvalidationinterfacequeue to wallet_import_rescan (MarcoFalke)
 - #15697 Make swap_magic_bytes in p2p_invalid_messages atomic (MarcoFalke)
 - #15895 Avoid re-reading config.ini unnecessarily (luke-jr)
-- #15896 feature_filelock, interface_bitcoin_cli: Use PACKAGE_NAME in messages rather than hardcoding Bitcoin Core (luke-jr)
+- #15896 feature_filelock, interface_bitcoin_cli: Use PACKAGE_NAME in messages rather than hardcoding Snailcoin Core (luke-jr)
 - #15897 QA/mininode: Send all headers upfront in send_blocks_and_test to avoid sending an unconnected one (luke-jr)
 - #15696 test_runner: Move feature_pruning to base tests (MarcoFalke)
 - #15869 Add settings merge test to prevent regresssions (ryanofsky)
@@ -791,7 +791,7 @@ Build system changes
 - #16920 Fix extra_args in wallet_import_rescan.py (MarcoFalke)
 - #16918 Make PORT_MIN in test runner configurable (MarcoFalke)
 - #16941 travis: Disable feature_block in tsan run due to oom (MarcoFalke)
-- #16929 follow-up to rpc: default maxfeerate value as BTC/kB (jonatack)
+- #16929 follow-up to rpc: default maxfeerate value as SNAIL/kB (jonatack)
 - #16959 ci: Set $host before setting fallback values (MarcoFalke)
 - #16961 Remove python dead code linter (laanwj)
 - #16931 add unittests for CheckProofOfWork (soroosh-sdi)
@@ -851,7 +851,7 @@ Build system changes
 - #16556 Fix systemd service file configuration directory setup (setpill)
 - #15615 Add log output during initial header sync (jonasschnelli)
 - #16774 Avoid unnecessary "Synchronizing blockheaders" log messages (jonasschnelli)
-- #16489 log: harmonize bitcoind logging (jonatack)
+- #16489 log: harmonize snailcoind logging (jonatack)
 - #16577 util: Cbufferedfile fixes and unit test (LarryRuane)
 - #16984 util: Make thread names shorter (hebasto)
 - #17038 Don't rename main thread at process level (laanwj)
@@ -863,7 +863,7 @@ Build system changes
 
 ### Documentation
 - #15514 Update Transifex links (fanquake)
-- #15513 add "sections" info to example bitcoin.conf (fanquake)
+- #15513 add "sections" info to example snailcoin.conf (fanquake)
 - #15530 Move wallet lock annotations to header (MarcoFalke)
 - #15562 remove duplicate clone step in build-windows.md (fanquake)
 - #15565 remove release note fragments (fanquake)
@@ -915,7 +915,7 @@ Build system changes
 - #16484 update labels in CONTRIBUTING.md (MarcoFalke)
 - #16483 update Python command in msvc readme (sipsorcery)
 - #16504 Add release note for the deprecated totalFee option of bumpfee (promag)
-- #16448 add note on precedence of options in bitcoin.conf (fanquake)
+- #16448 add note on precedence of options in snailcoin.conf (fanquake)
 - #16536 Update and extend benchmarking.md (ariard)
 - #16530 Fix grammar and punctuation in developer notes (Tech1k)
 - #16574 Add historical release notes for 0.18.1 (laanwj)
@@ -933,7 +933,7 @@ Build system changes
 - #16629 Add documentation for the new whitelist permissions (NicolasDorier)
 - #16723 Update labels in CONTRIBUTING.md (hebasto)
 - #16461 Tidy up shadowing section (promag)
-- #16621 add default bitcoin.conf locations (GChuf)
+- #16621 add default snailcoin.conf locations (GChuf)
 - #16752 Delete stale URL in test README (michaelfolkson)
 - #14862 Declare BLOCK_VALID_HEADER reserved (MarcoFalke)
 - #16806 Add issue templates for bug and feature request (MarcoFalke)
@@ -941,11 +941,11 @@ Build system changes
 - #16863 Add a missing closing parenthesis in the bitcoin-wallet's help (darosior)
 - #16757 CChainState return values (MarcoFalke)
 - #16847 add comments clarifying how local services are advertised (jamesob)
-- #16812 Fix whitespace errs in .md files, bitcoin.conf, and Info.plist.in (ch4ot1c)
+- #16812 Fix whitespace errs in .md files, snailcoin.conf, and Info.plist.in (ch4ot1c)
 - #16885 Update tx-size-small comment with relevant CVE disclosure (instagibbs)
 - #16900 Fix doxygen comment for SignTransaction in rpc/rawtransaction_util (MarcoFalke)
 - #16914 Update homebrew instruction for doxygen (Sjors)
-- #16912 Remove Doxygen intro from src/bitcoind.cpp (ch4ot1c)
+- #16912 Remove Doxygen intro from src/snailcoind.cpp (ch4ot1c)
 - #16960 replace outdated OpenSSL comment in test README (fanquake)
 - #16968 Remove MSVC update step from translation process (laanwj)
 - #16953 Improve test READMEs (fjahr)

@@ -50,7 +50,7 @@
      <item>
       <widget class="QValidatedLineEdit" name="payTo">
        <property name="toolTip">
-        <string>The Bitcoin address to send the payment to</string>
+        <string>The Snailcoin address to send the payment to</string>
        </property>
       </widget>
      </item>
@@ -161,7 +161,7 @@
    <item row="2" column="1">
     <layout class="QHBoxLayout" name="horizontalLayoutAmount" stretch="0,1,0">
      <item>
-      <widget class="BitcoinAmountField" name="payAmount" native="true">
+      <widget class="SnailcoinAmountField" name="payAmount" native="true">
        <property name="toolTip">
         <string>The amount to send in the selected unit</string>
        </property>
@@ -199,7 +199,7 @@
    <item row="3" column="1">
     <widget class="QLabel" name="messageTextLabel">
      <property name="toolTip">
-      <string>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</string>
+      <string>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Snailcoin network.</string>
      </property>
      <property name="textFormat">
       <enum>Qt::PlainText</enum>
@@ -222,7 +222,7 @@
    <header>qt/qvalidatedlineedit.h</header>
   </customwidget>
   <customwidget>
-   <class>BitcoinAmountField</class>
+   <class>SnailcoinAmountField</class>
    <extends>QWidget</extends>
    <header>qt/bitcoinamountfield.h</header>
    <container>1</container>

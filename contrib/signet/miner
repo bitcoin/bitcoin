@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020 The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -529,7 +529,7 @@ def do_calibrate(args):
 
 def bitcoin_cli(basecmd, args, **kwargs):
     cmd = basecmd + ["-signet"] + args
-    logging.debug("Calling bitcoin-cli: %r", cmd)
+    logging.debug("Calling snailcoin-cli: %r", cmd)
     out = subprocess.run(cmd, stdout=subprocess.PIPE, **kwargs, check=True).stdout
     if isinstance(out, bytes):
         out = out.decode('utf8')
@@ -537,7 +537,7 @@ def bitcoin_cli(basecmd, args, **kwargs):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--cli", default="bitcoin-cli", type=str, help="bitcoin-cli command")
+    parser.add_argument("--cli", default="snailcoin-cli", type=str, help="snailcoin-cli command")
     parser.add_argument("--debug", action="store_true", help="Print debugging info")
     parser.add_argument("--quiet", action="store_true", help="Only print warnings/errors")
 

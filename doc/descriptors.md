@@ -1,6 +1,6 @@
-# Support for Output Descriptors in Bitcoin Core
+# Support for Output Descriptors in Snailcoin Core
 
-Since Bitcoin Core v0.17, there is support for Output Descriptors. This is a
+Since Snailcoin Core v0.17, there is support for Output Descriptors. This is a
 simple language which can be used to describe collections of output scripts.
 Supporting RPCs are:
 - `scantxoutset` takes as input descriptors to scan for, and also reports
@@ -25,7 +25,7 @@ Supporting RPCs are:
   by `scanblocks`) and returns rich event data related to spends or receives associated
   with the given descriptors.
 
-Bitcoin Core v24 extended `wsh()` output descriptor with [Miniscript](https://bitcoin.sipa.be/miniscript/) support (initially watch-only). Signing support for Miniscript descriptors was added in v25. And since v26 Miniscript expressions can now be used in Taproot descriptors.
+Snailcoin Core v24 extended `wsh()` output descriptor with [Miniscript](https://bitcoin.sipa.be/miniscript/) support (initially watch-only). Signing support for Miniscript descriptors was added in v25. And since v26 Miniscript expressions can now be used in Taproot descriptors.
 
 This document describes the language. For the specifics on usage, see the RPC
 documentation for the functions mentioned above.
@@ -101,7 +101,7 @@ Descriptors consist of several types of expressions. The top level expression is
   - Hex encoded public keys (either 66 characters starting with `02` or `03` for a compressed pubkey, or 130 characters starting with `04` for an uncompressed pubkey).
     - Inside `wpkh` and `wsh`, only compressed public keys are permitted.
     - Inside `tr` and `rawtr`, x-only pubkeys are also permitted (64 hex characters).
-  - [WIF](https://en.bitcoin.it/wiki/Wallet_import_format) encoded private keys may be specified instead of the corresponding public key, with the same meaning.
+  - [WIF](https://en.snailcoin.it/wiki/Wallet_import_format) encoded private keys may be specified instead of the corresponding public key, with the same meaning.
   - `xpub` encoded extended public key or `xprv` encoded extended private key (as defined in [BIP 32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)).
     - Followed by zero or more `/NUM` unhardened and `/NUM'` hardened BIP32 derivation steps.
       - No more than one of these derivation steps may be of the form `<NUM;NUM;...;NUM>` (including hardened indicators with either or both `NUM`). If such specifiers are included, the descriptor will be parsed as multiple descriptors where the first descriptor uses all of the first `NUM` in the pair, and the second descriptor uses the second `NUM` in the pair for all `KEY` expressions, and so on.
@@ -138,7 +138,7 @@ not contain "p2" for brevity.
 ### Multisig
 
 Several pieces of software use multi-signature (multisig) scripts based
-on Bitcoin's OP_CHECKMULTISIG opcode. To support these, we introduce the
+on Snailcoin's OP_CHECKMULTISIG opcode. To support these, we introduce the
 `multi(k,key_1,key_2,...,key_n)` and `sortedmulti(k,key_1,key_2,...,key_n)`
 functions. They represent a *k-of-n*
 multisig policy, where any *k* out of the *n* provided `KEY` expressions must
@@ -165,7 +165,7 @@ wallets and PSBTs, as well as a signing flow, see [this functional test](/test/f
 Disclaimers: It is important to note that this example serves as a quick-start and is kept basic for readability. A downside of the approach
 outlined here is that each participant must maintain (and backup) two separate wallets: a signer and the corresponding multisig.
 It should also be noted that privacy best-practices are not "by default" here - participants should take care to only use the signer to sign
-transactions related to the multisig. Lastly, it is not recommended to use anything other than a Bitcoin Core descriptor wallet to serve as your
+transactions related to the multisig. Lastly, it is not recommended to use anything other than a Snailcoin Core descriptor wallet to serve as your
 signer(s). Other wallets, whether hardware or software, likely impose additional checks and safeguards to prevent users from signing transactions that
 could lead to loss of funds, or are deemed security hazards. Conforming to various 3rd-party checks and verifications is not in the scope of this example.
 
@@ -299,7 +299,7 @@ first descriptor for receiving addresses and the second descriptor for change ad
 ### Compatibility with old wallets
 
 In order to easily represent the sets of scripts currently supported by
-existing Bitcoin Core wallets, a convenience function `combo` is
+existing Snailcoin Core wallets, a convenience function `combo` is
 provided, which takes as input a public key, and describes a set of P2PK,
 P2PKH, P2WPKH, and P2SH-P2WPKH scripts for that key. In case the key is
 uncompressed, the set only includes P2PK and P2PKH scripts.
@@ -316,7 +316,7 @@ be detected in descriptors up to 501 characters, and up to 3 errors in longer
 ones. For larger numbers of errors, or other types of errors, there is a
 roughly 1 in a trillion chance of not detecting the errors.
 
-All RPCs in Bitcoin Core will include the checksum in their output. Only
+All RPCs in Snailcoin Core will include the checksum in their output. Only
 certain RPCs require checksums on input, including `deriveaddresses` and
 `importdescriptors`. The checksum for a descriptor without one can be computed
 using the `getdescriptorinfo` RPC.

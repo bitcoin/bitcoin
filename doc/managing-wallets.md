@@ -4,26 +4,26 @@
 
 ### 1.1 Creating the Wallet
 
-Since version 0.21, Bitcoin Core no longer has a default wallet.
+Since version 0.21, Snailcoin Core no longer has a default wallet.
 Wallets can be created with the `createwallet` RPC or with the `Create wallet` GUI menu item.
 
 In the GUI, the `Create a new wallet` button is displayed on the main screen when there is no wallet loaded. Alternatively, there is the option `File` ->`Create wallet`.
 
-The following command, for example, creates a descriptor wallet. More information about this command may be found by running `bitcoin-cli help createwallet`.
+The following command, for example, creates a descriptor wallet. More information about this command may be found by running `snailcoin-cli help createwallet`.
 
 ```
-$ bitcoin-cli createwallet "wallet-01"
+$ snailcoin-cli createwallet "wallet-01"
 ```
 
-`bitcoin rpc` can also be substituted for `bitcoin-cli`.
+`bitcoin rpc` can also be substituted for `snailcoin-cli`.
 
 By default, wallets are created in the `wallets` folder of the data directory, which varies by operating system, as shown below. The user can change the default by using the `-datadir` or `-walletdir` initialization parameters.
 
 | Operating System | Default wallet directory                                    |
 | -----------------|:------------------------------------------------------------|
-| Linux            | `/home/<user>/.bitcoin/wallets`                             |
-| Windows          | `C:\Users\<user>\AppData\Local\Bitcoin\wallets`             |
-| macOS            | `/Users/<user>/Library/Application Support/Bitcoin/wallets` |
+| Linux            | `/home/<user>/.snailcoin/wallets`                             |
+| Windows          | `C:\Users\<user>\AppData\Local\Snailcoin\wallets`             |
+| macOS            | `/Users/<user>/Library/Application Support/Snailcoin/wallets` |
 
 ### 1.2 Encrypting the Wallet
 
@@ -38,13 +38,13 @@ After encrypting the wallet or changing the passphrase, a new backup needs to be
 The wallet's private key may be encrypted with the following command:
 
 ```
-$ bitcoin-cli -rpcwallet="wallet-01" encryptwallet "passphrase"
+$ snailcoin-cli -rpcwallet="wallet-01" encryptwallet "passphrase"
 ```
 
 Once encrypted, the passphrase can be changed with the `walletpassphrasechange` command.
 
 ```
-$ bitcoin-cli -rpcwallet="wallet-01" walletpassphrasechange "oldpassphrase" "newpassphrase"
+$ snailcoin-cli -rpcwallet="wallet-01" walletpassphrasechange "oldpassphrase" "newpassphrase"
 ```
 
 The argument passed to `-rpcwallet` is the name of the wallet to be encrypted.
@@ -54,7 +54,7 @@ Only the wallet's private key is encrypted. All other wallet information, such a
 The wallet's private key can also be encrypted in the `createwallet` command via the `passphrase` argument:
 
 ```
-$ bitcoin-cli -named createwallet wallet_name="wallet-01" passphrase="passphrase"
+$ snailcoin-cli -named createwallet wallet_name="wallet-01" passphrase="passphrase"
 ```
 
 Note that if the passphrase is lost, all the coins in the wallet will also be lost forever.
@@ -64,7 +64,7 @@ Note that if the passphrase is lost, all the coins in the wallet will also be lo
 If the wallet is encrypted and the user tries any operation related to private keys, such as sending bitcoins, an error message will be displayed.
 
 ```
-$ bitcoin-cli -rpcwallet="wallet-01" sendtoaddress "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx" 0.01
+$ snailcoin-cli -rpcwallet="wallet-01" sendtoaddress "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx" 0.01
 error code: -13
 error message:
 Error: Please enter the wallet passphrase with walletpassphrase first.
@@ -75,7 +75,7 @@ To unlock the wallet and allow it to run these operations, the `walletpassphrase
 This command takes the passphrase and an argument called `timeout`, which specifies the time in seconds that the wallet decryption key is stored in memory. After this period expires, the user needs to execute this RPC again.
 
 ```
-$ bitcoin-cli -rpcwallet="wallet-01" walletpassphrase "passphrase" 120
+$ snailcoin-cli -rpcwallet="wallet-01" walletpassphrase "passphrase" 120
 ```
 
 In the GUI, there is no specific menu item to unlock the wallet. When the user sends bitcoins, the passphrase will be prompted automatically.
@@ -87,7 +87,7 @@ To backup the wallet, the `backupwallet` RPC or the `Backup Wallet` GUI menu ite
 In the RPC, the destination parameter must include the name of the file. Otherwise, the command will return an error message like "Error: Wallet backup failed!".
 
 ```
-$ bitcoin-cli -rpcwallet="wallet-01" backupwallet /home/node01/Backups/backup-01.dat
+$ snailcoin-cli -rpcwallet="wallet-01" backupwallet /home/node01/Backups/backup-01.dat
 ```
 
 In the GUI, the wallet is selected in the `Wallet` drop-down list in the upper right corner. If this list is not present, the wallet can be loaded in `File` ->`Open Wallet` if necessary. Then, the backup can be done in `File` -> `Backup Wallet…`.
@@ -100,9 +100,9 @@ If both the wallet and all backups are lost for any reason, the bitcoins related
 
 ### 1.5 Backup Frequency
 
-The original Bitcoin Core wallet was a collection of unrelated private keys. If a non-HD wallet had received funds to an address and then was restored from a backup made before the address was generated, then any funds sent to that address would have been lost because there was no deterministic mechanism to derive the address again.
+The original Snailcoin Core wallet was a collection of unrelated private keys. If a non-HD wallet had received funds to an address and then was restored from a backup made before the address was generated, then any funds sent to that address would have been lost because there was no deterministic mechanism to derive the address again.
 
-Bitcoin Core [version 0.13](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.13.0.md) introduced HD wallets with deterministic key derivation. With HD wallets, users no longer lose funds when restoring old backups because all addresses are derived from the HD wallet seed.
+Snailcoin Core [version 0.13](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.13.0.md) introduced HD wallets with deterministic key derivation. With HD wallets, users no longer lose funds when restoring old backups because all addresses are derived from the HD wallet seed.
 
 This means that a single backup is enough to recover the coins at any time. It is still recommended to make regular backups (once a week) or after a significant number of new transactions to maintain the metadata, such as labels. Metadata cannot be retrieved from a blockchain rescan, so if the backup is too old, the metadata will be lost forever.
 
@@ -113,20 +113,20 @@ Wallets created before version 0.13 are not HD and must be backed up every 100 k
 To restore a wallet, the `restorewallet` RPC or the `Restore Wallet` GUI menu item (`File` -> `Restore Wallet…`) must be used.
 
 ```
-$ bitcoin-cli restorewallet "restored-wallet" /home/node01/Backups/backup-01.dat
+$ snailcoin-cli restorewallet "restored-wallet" /home/node01/Backups/backup-01.dat
 ```
 
 After that, `getwalletinfo` can be used to check if the wallet has been fully restored.
 
 ```
-$ bitcoin-cli -rpcwallet="restored-wallet" getwalletinfo
+$ snailcoin-cli -rpcwallet="restored-wallet" getwalletinfo
 ```
 
 The restored wallet can also be loaded in the GUI via `File` ->`Open wallet`.
 
 ## Wallet Passphrase
 
-Understanding wallet security is crucial for safely storing your Bitcoin. A key aspect is the wallet passphrase, used for encryption. Let's explore its nuances, role, encryption process, and limitations.
+Understanding wallet security is crucial for safely storing your Snailcoin. A key aspect is the wallet passphrase, used for encryption. Let's explore its nuances, role, encryption process, and limitations.
 
 - **Not the Seed:**
 The wallet passphrase and the seed are two separate components in wallet security. The seed, or HD seed, functions as a master key for deriving private and public keys in a hierarchical deterministic (HD) wallet. In contrast, the passphrase serves as an additional layer of security specifically designed to secure the private keys within the wallet. The passphrase serves as a safeguard, demanding an additional layer of authentication to access funds in the wallet.

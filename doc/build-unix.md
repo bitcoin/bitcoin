@@ -1,6 +1,6 @@
 UNIX BUILD NOTES
 ====================
-Some notes on how to build Bitcoin Core in Unix.
+Some notes on how to build Snailcoin Core in Unix.
 
 (For BSD specific instructions, see `build-*bsd.md` in this directory.)
 
@@ -24,7 +24,7 @@ distributions](#linux-distribution-specific-instructions), or the
 ## Memory Requirements
 
 C++ compilers are memory-hungry. It is recommended to have at least 1.5 GB of
-memory available when compiling Bitcoin Core. On systems with less, gcc can be
+memory available when compiling Snailcoin Core. On systems with less, gcc can be
 tuned to conserve memory with additional `CMAKE_CXX_FLAGS`:
 
 
@@ -62,7 +62,7 @@ SQLite is required for the wallet:
 
     sudo apt install libsqlite3-dev
 
-To build Bitcoin Core without the wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
+To build Snailcoin Core without the wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
 Cap'n Proto is needed for IPC functionality (see [multiprocess.md](multiprocess.md)):
 
@@ -80,7 +80,7 @@ User-Space, Statically Defined Tracing (USDT) dependencies:
 
 GUI dependencies:
 
-Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
+Snailcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
 the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
 
     sudo apt-get install qt6-base-dev qt6-tools-dev qt6-l10n-tools qt6-tools-dev-tools libgl-dev
@@ -112,7 +112,7 @@ SQLite is required for the wallet:
 
     sudo dnf install sqlite-devel
 
-To build Bitcoin Core without the wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
+To build Snailcoin Core without the wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
 ZMQ-enabled binaries are compiled with `-DWITH_ZMQ=ON` and require the following dependency:
 
@@ -130,7 +130,7 @@ Compile with `-DENABLE_IPC=OFF` if you do not need IPC functionality.
 
 GUI dependencies:
 
-Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
+Snailcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
 the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
 
     sudo dnf install qt6-qtbase-devel qt6-qttools-devel
@@ -161,7 +161,7 @@ SQLite is required for the wallet:
 
     apk add sqlite-dev
 
-To build Bitcoin Core without the wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
+To build Snailcoin Core without the wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
 Cap'n Proto is needed for IPC functionality (see [multiprocess.md](multiprocess.md)):
 
@@ -177,7 +177,7 @@ User-Space, Statically Defined Tracing (USDT) is not supported or tested on Alpi
 
 GUI dependencies:
 
-Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
+Snailcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
 the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
 
     apk add qt6-qtbase-dev  qt6-qttools-dev
@@ -196,7 +196,7 @@ not use the packages of your Linux distribution.
 
 Disable-wallet mode
 --------------------
-When the intention is to only run a P2P node, without a wallet, Bitcoin Core can
+When the intention is to only run a P2P node, without a wallet, Snailcoin Core can
 be compiled in disable-wallet mode with:
 
     cmake -B build -DENABLE_WALLET=OFF
@@ -215,6 +215,6 @@ This example lists the steps necessary to setup and build a command line only di
     cmake -B build
     cmake --build build
     ctest --test-dir build
-    ./build/bin/bitcoind
+    ./build/bin/snailcoind
     ./build/bin/bitcoin help
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2025 The Bitcoin Core developers
+# Copyright (c) 2025 The Snailcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mining on an alternate mainnet
@@ -14,7 +14,7 @@ order to maximally raise the difficulty. Verify this using the getmininginfo RPC
 
 """
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SnailcoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
@@ -39,7 +39,7 @@ import os
 # See data/README.md
 COINBASE_SCRIPT_PUBKEY="76a914eadbac7f36c37e39361168b7aaee3cb24a25312d88ac"
 
-class MiningMainnetTest(BitcoinTestFramework):
+class MiningMainnetTest(SnailcoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 1
