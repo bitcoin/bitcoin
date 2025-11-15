@@ -295,8 +295,6 @@ jobs:
       - name: Run test suite
         if: matrix.job-type == 'standard'
         working-directory: build
-        env:
-          QT_PLUGIN_PATH: '${{ github.workspace }}\build\vcpkg_installed\x64-windows\Qt6\plugins'
         run: |
           ctest --output-on-failure --stop-on-failure -j $NUMBER_OF_PROCESSORS -C Release
 
