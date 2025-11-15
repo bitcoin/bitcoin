@@ -952,14 +952,14 @@ public:
         return btck_chainstate_manager_options_set_wipe_dbs(get(), wipe_block_tree, wipe_chainstate) == 0;
     }
 
-    void UpdateBlockTreeDbInMemory(bool block_tree_db_in_memory)
+    void SetBlockTreeDbInMemory()
     {
-        btck_chainstate_manager_options_update_block_tree_db_in_memory(get(), block_tree_db_in_memory);
+        btck_chainstate_manager_options_set_block_tree_db_in_memory(get());
     }
 
-    void UpdateChainstateDbInMemory(bool chainstate_db_in_memory)
+    void SetChainstateDbInMemory()
     {
-        btck_chainstate_manager_options_update_chainstate_db_in_memory(get(), chainstate_db_in_memory);
+        btck_chainstate_manager_options_set_chainstate_db_in_memory(get());
     }
 };
 

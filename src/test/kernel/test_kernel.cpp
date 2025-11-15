@@ -654,10 +654,10 @@ std::unique_ptr<ChainMan> create_chainman(TestDirectory& test_directory,
         chainman_opts.SetWipeDbs(/*wipe_block_tree=*/false, /*wipe_chainstate=*/wipe_chainstate);
     }
     if (block_tree_db_in_memory) {
-        chainman_opts.UpdateBlockTreeDbInMemory(block_tree_db_in_memory);
+        chainman_opts.SetBlockTreeDbInMemory();
     }
     if (chainstate_db_in_memory) {
-        chainman_opts.UpdateChainstateDbInMemory(chainstate_db_in_memory);
+        chainman_opts.SetChainstateDbInMemory();
     }
 
     auto chainman{std::make_unique<ChainMan>(context, chainman_opts)};

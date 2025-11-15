@@ -461,8 +461,12 @@ struct ChainstateManagerOptions {
               .block_tree_db_params = DBParams{
                   .path = data_dir / "blocks" / "index",
                   .cache_bytes = kernel::CacheSizes{DEFAULT_KERNEL_CACHE}.block_tree_db,
+                  .memory_only = false,
               }}},
-          m_context{context}, m_chainstate_load_options{node::ChainstateLoadOptions{}}
+          m_context{context}, m_chainstate_load_options{node::ChainstateLoadOptions{
+              .coins_db_in_memory = false,
+              .coins_error_cb = {},
+          }}
     {
     }
 };
@@ -932,22 +936,20 @@ int btck_chainstate_manager_options_set_wipe_dbs(btck_ChainstateManagerOptions* 
     return 0;
 }
 
-void btck_chainstate_manager_options_update_block_tree_db_in_memory(
-    btck_ChainstateManagerOptions* chainman_opts,
-    int block_tree_db_in_memory)
+void btck_chainstate_manager_options_set_block_tree_db_in_memory(
+    btck_ChainstateManagerOptions* chainman_opts)
 {
     auto& opts{btck_ChainstateManagerOptions::get(chainman_opts)};
     LOCK(opts.m_mutex);
-    opts.m_blockman_options.block_tree_db_params.memory_only = block_tree_db_in_memory == 1;
+    opts.m_blockman_options.block_tree_db_params.memory_only = true;
 }
 
-void btck_chainstate_manager_options_update_chainstate_db_in_memory(
-    btck_ChainstateManagerOptions* chainman_opts,
-    int chainstate_db_in_memory)
+void btck_chainstate_manager_options_set_chainstate_db_in_memory(
+    btck_ChainstateManagerOptions* chainman_opts)
 {
     auto& opts{btck_ChainstateManagerOptions::get(chainman_opts)};
     LOCK(opts.m_mutex);
-    opts.m_chainstate_load_options.coins_db_in_memory = chainstate_db_in_memory == 1;
+    opts.m_chainstate_load_options.coins_db_in_memory = true;
 }
 
 btck_ChainstateManager* btck_chainstate_manager_create(
