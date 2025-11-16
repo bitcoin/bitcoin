@@ -15,7 +15,7 @@
 
 uint32_t Interpret(std::span<const std::byte> asmap, std::span<const std::byte> ip);
 
-bool SanityCheckASMap(std::span<const std::byte> asmap, int bits);
+bool SanityCheckAsmap(std::span<const std::byte> asmap, int bits);
 /** Check standard asmap data (128 bits for IPv6) */
 bool CheckStandardAsmap(std::span<const std::byte> data);
 
