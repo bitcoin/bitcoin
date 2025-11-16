@@ -236,7 +236,7 @@ public:
 [[nodiscard]] inline NetGroupManager ConsumeNetGroupManager(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     std::vector<std::byte> asmap{ConsumeRandomLengthByteVector<std::byte>(fuzzed_data_provider)};
-    if (!SanityCheckASMap(std::span<std::byte>(asmap), 128)) {
+    if (!SanityCheckAsmap(std::span<std::byte>(asmap), 128)) {
         return NetGroupManager::NoAsmap();
     }
     return NetGroupManager::WithLoadedAsmap(std::move(asmap));

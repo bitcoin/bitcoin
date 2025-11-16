@@ -15,7 +15,7 @@
 
 uint32_t Interpret(std::span<const std::byte> asmap, std::span<const std::byte> ip);
 
-bool SanityCheckASMap(std::span<const std::byte> asmap, int bits);
+bool SanityCheckAsmap(std::span<const std::byte> asmap, int bits);
 
 /** Read and check asmap from provided binary file */
 std::vector<std::byte> DecodeAsmap(fs::path path);

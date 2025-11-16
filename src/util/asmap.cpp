@@ -228,7 +228,7 @@ uint32_t Interpret(const std::span<const std::byte> asmap, const std::span<const
         }
     }
     // Reached EOF without RETURN, or aborted (see any of the breaks above)
-    // - should have been caught by SanityCheckASMap below
+    // - should have been caught by SanityCheckAsmap below
     assert(false);
     return 0; // 0 is not a valid ASN
 }
@@ -237,7 +237,7 @@ uint32_t Interpret(const std::span<const std::byte> asmap, const std::span<const
  * Validates ASMap structure by simulating all possible execution paths.
  * Ensures well-formed bytecode, valid jumps, and proper termination.
  */
-bool SanityCheckASMap(const std::span<const std::byte> asmap, int bits)
+bool SanityCheckAsmap(const std::span<const std::byte> asmap, int bits)
 {
     size_t pos{0};
     const size_t endpos{asmap.size() * 8};
@@ -311,7 +311,7 @@ bool SanityCheckASMap(const std::span<const std::byte> asmap, int bits)
  */
 bool CheckAsmap(const std::span<const std::byte> data)
 {
-    if (!SanityCheckASMap(data, 128)) {
+    if (!SanityCheckAsmap(data, 128)) {
         LogWarning("Sanity check of asmap data failed\n");
         return false;
     }
