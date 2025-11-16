@@ -186,18 +186,16 @@ uint32_t Interpret(const std::span<const std::byte> asmap, const std::span<const
     uint8_t ip_bit{0};
     const uint8_t ip_bits_end = ip.size() * 8;
     uint32_t default_asn = 0;
-    uint32_t jump, match, matchlen;
-    Instruction opcode;
     while (pos < endpos) {
-        opcode = DecodeType(pos, asmap);
+        Instruction opcode = DecodeType(pos, asmap);
         if (opcode == Instruction::RETURN) {
             // Found leaf node - return the ASN
-            default_asn = DecodeASN(pos, asmap);
-            if (default_asn == INVALID) break; // ASN straddles EOF
-            return default_asn;
+            uint32_t asn = DecodeASN(pos, asmap);
+            if (asn == INVALID) break; // ASN straddles EOF
+            return asn;
         } else if (opcode == Instruction::JUMP) {
             // Binary branch: if IP bit is 1, jump forward; else continue
-            jump = DecodeJump(pos, asmap);
+            uint32_t jump = DecodeJump(pos, asmap);
             if (jump == INVALID) break; // Jump offset straddles EOF
             if (ip_bit == ip_bits_end) break; // No input bits left
             if (int64_t{jump} >= static_cast<int64_t>(endpos - pos)) break; // Jumping past EOF
@@ -210,11 +208,11 @@ uint32_t Interpret(const std::span<const std::byte> asmap, const std::span<const
             // The match value encodes both length and pattern:
             // - highest set bit position determines length (bit_width - 1)
             // - lower bits contain the pattern to compare
-            match = DecodeMatch(pos, asmap);
+            uint32_t match = DecodeMatch(pos, asmap);
             if (match == INVALID) break; // Match bits straddle EOF
-            matchlen = std::bit_width(match) - 1;  // An n-bit value matches n-1 input bits
+            int matchlen = std::bit_width(match) - 1;  // An n-bit value matches n-1 input bits
             if ((ip_bits_end - ip_bit) < matchlen) break; // Not enough input bits
-            for (uint32_t bit = 0; bit < matchlen; bit++) {
+            for (int bit = 0; bit < matchlen; bit++) {
                 if (ConsumeBitBE(ip_bit, ip) != ((match >> (matchlen - 1 - bit)) & 1)) {
                     return default_asn;  // Pattern mismatch - use default
                 }
@@ -229,7 +227,7 @@ uint32_t Interpret(const std::span<const std::byte> asmap, const std::span<const
         }
     }
     // Reached EOF without RETURN, or aborted (see any of the breaks above)
-    // - should have been caught by SanityCheckASMap below
+    // - should have been caught by SanityCheckAsmap below
     assert(false);
     return 0; // 0 is not a valid ASN
 }
@@ -238,7 +236,7 @@ uint32_t Interpret(const std::span<const std::byte> asmap, const std::span<const
  * Validates ASMap structure by simulating all possible execution paths.
  * Ensures well-formed bytecode, valid jumps, and proper termination.
  */
-bool SanityCheckASMap(const std::span<const std::byte> asmap, int bits)
+bool SanityCheckAsmap(const std::span<const std::byte> asmap, int bits)
 {
     size_t pos{0};
     const size_t endpos{asmap.size() * 8};
@@ -311,7 +309,7 @@ bool SanityCheckASMap(const std::span<const std::byte> asmap, int bits)
  */
 bool CheckStandardAsmap(const std::span<const std::byte> data)
 {
-    if (!SanityCheckASMap(data, 128)) {
+    if (!SanityCheckAsmap(data, 128)) {
         LogWarning("Sanity check of asmap data failed\n");
         return false;
     }

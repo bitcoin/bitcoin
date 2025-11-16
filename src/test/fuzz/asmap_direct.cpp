@@ -51,7 +51,7 @@ FUZZ_TARGET(asmap_direct)
 
     // Checks on asmap
     auto asmap = BitsToBytes(buffer.first(sep_pos));
-    if (SanityCheckASMap(asmap, ip_len)) {
+    if (SanityCheckAsmap(asmap, ip_len)) {
         // Verify that for valid asmaps, no prefix (except up to 7 zero padding bits) is valid.
         for (size_t prefix_len = sep_pos - 1; prefix_len > 0; --prefix_len) {
             auto prefix = BitsToBytes(buffer.first(prefix_len));
@@ -59,7 +59,7 @@ FUZZ_TARGET(asmap_direct)
             // asmap, since they will contain some zero padding bits in the last
             // byte.
             if (prefix.size() == asmap.size()) continue;
-            assert(!SanityCheckASMap(prefix, ip_len));
+            assert(!SanityCheckAsmap(prefix, ip_len));
         }
 
         // No address input should trigger assertions in interpreter
