@@ -48,7 +48,6 @@ from .util import (
     check_json_precision,
     copy_datadir,
     force_finish_mnsync,
-    get_chain_conf_names,
     get_datadir_path,
     initialize_datadir,
     p2p_port,
@@ -56,7 +55,8 @@ from .util import (
     satoshi_round,
     softfork_active,
     wait_until_helper,
-    get_chain_folder, rpc_port,
+    get_chain_folder,
+    write_config,
 )
 
 
@@ -607,7 +607,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         return t_node
 
     # TODO: move it to DashTestFramework where it belongs
-    def dynamically_initialize_datadir(self, node_p2p_port, node_rpc_port):
+    def dynamically_initialize_datadir(self, mnidx):
         source_data_dir = get_datadir_path(self.options.tmpdir, 0)  # use node0 as a source
         new_data_dir = get_datadir_path(self.options.tmpdir, len(self.nodes))
 
@@ -624,27 +624,13 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             if entry not in ['chainstate', 'blocks', 'indexes', 'evodb']:
                 os.remove(os.path.join(new_data_dir, self.chain, entry))
 
-        (chain_name_conf_arg, chain_name_conf_arg_value, chain_name_conf_section) = get_chain_conf_names(self.chain)
+        write_config(os.path.join(new_data_dir, "dash.conf"),
+                     n=mnidx, chain=self.chain, disable_autoconnect=self.disable_autoconnect)
+        self.append_dip3_config(new_data_dir)
 
-        with open(os.path.join(new_data_dir, "dash.conf"), 'w', encoding='utf8') as f:
-            f.write("{}={}\n".format(chain_name_conf_arg, chain_name_conf_arg_value))
-            f.write("[{}]\n".format(chain_name_conf_section))
-            f.write("port=" + str(node_p2p_port) + "\n")
-            f.write("rpcport=" + str(node_rpc_port) + "\n")
-            f.write("server=1\n")
-            f.write("debug=1\n")
-            f.write("keypool=1\n")
-            f.write("discover=0\n")
-            f.write("listenonion=0\n")
-            f.write("printtoconsole=0\n")
-            f.write("upnp=0\n")
-            f.write("natpmp=0\n")
-            f.write("shrinkdebugfile=0\n")
-            f.write("dip3params=2:2\n")
-            f.write(f"testactivationheight=v20@{self.v20_height}\n")
-            f.write(f"testactivationheight=mn_rr@{self.mn_rr_height}\n")
-            os.makedirs(os.path.join(new_data_dir, 'stderr'), exist_ok=True)
-            os.makedirs(os.path.join(new_data_dir, 'stdout'), exist_ok=True)
+        os.makedirs(os.path.join(new_data_dir, 'stderr'), exist_ok=True)
+        os.makedirs(os.path.join(new_data_dir, 'stdout'), exist_ok=True)
+        return new_data_dir
 
     def start_node(self, i, *args, **kwargs):
         """Start a dashd"""
@@ -1476,11 +1462,7 @@ class DashTestFramework(BitcoinTestFramework):
         old_num_nodes = len(self.nodes)
         super().add_nodes(num_nodes, extra_args, rpchost=rpchost, binary=binary, binary_cli=binary_cli, versions=versions)
         for i in range(old_num_nodes, old_num_nodes + num_nodes):
-            append_config(self.nodes[i].datadir, [
-                "dip3params=2:2",
-                f"testactivationheight=v20@{self.v20_height}",
-                f"testactivationheight=mn_rr@{self.mn_rr_height}",
-            ])
+            self.append_dip3_config(self.nodes[i].datadir)
         if old_num_nodes == 0:
             # controller node is the only node that has an extra option allowing it to submit sporks
             append_config(self.nodes[0].datadir, ["sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"])
@@ -1493,6 +1475,13 @@ class DashTestFramework(BitcoinTestFramework):
         for mn2 in self.mninfo: # type: MasternodeInfo
             if mn2.nodeIdx is not None:
                 mn2.get_node(self).setmnthreadactive(True)
+
+    def append_dip3_config(self, datadir):
+        append_config(datadir, [
+            "dip3params=2:2",
+            f"testactivationheight=v20@{self.v20_height}",
+            f"testactivationheight=mn_rr@{self.mn_rr_height}",
+        ])
 
     def set_dash_test_params(self, num_nodes, masterodes_count, extra_args=None, evo_count=0):
         self.mn_count = masterodes_count
@@ -1593,12 +1582,9 @@ class DashTestFramework(BitcoinTestFramework):
     def dynamically_add_masternode(self, evo=False, rnd=None, should_be_rejected=False) -> Optional[MasternodeInfo]:
         mn_idx = len(self.nodes)
 
-        node_p2p_port = p2p_port(mn_idx)
-        node_rpc_port = rpc_port(mn_idx)
-
         protx_success = False
         try:
-            created_mn_info = self.dynamically_prepare_masternode(mn_idx, node_p2p_port, evo, rnd)
+            created_mn_info = self.dynamically_prepare_masternode(mn_idx, evo, rnd)
             protx_success = True
         except:
             self.log.info("dynamically_prepare_masternode failed")
@@ -1609,7 +1595,7 @@ class DashTestFramework(BitcoinTestFramework):
             # nothing to do
             return None
 
-        self.dynamically_initialize_datadir(node_p2p_port, node_rpc_port)
+        self.dynamically_initialize_datadir(mn_idx)
         node_info = self.add_dynamically_node(self.extra_args[0])
 
         args = ['-masternodeblsprivkey=%s' % created_mn_info.keyOperator] + node_info.extra_args
@@ -1628,10 +1614,11 @@ class DashTestFramework(BitcoinTestFramework):
         self.log.info("Successfully started and synced proTx:"+str(created_mn_info.proTxHash))
         return created_mn_info
 
-    def dynamically_prepare_masternode(self, idx, node_p2p_port, evo=False, rnd=None) -> MasternodeInfo:
+    def dynamically_prepare_masternode(self, idx, evo=False, rnd=None) -> MasternodeInfo:
         mn = MasternodeInfo(evo=evo, legacy=(not softfork_active(self.nodes[0], 'v19')))
         mn.generate_addresses(self.nodes[0])
 
+        node_p2p_port = p2p_port(idx)
         platform_node_id = hash160(b'%d' % rnd).hex() if rnd is not None else hash160(b'%d' % node_p2p_port).hex()
         addrs_platform_p2p = node_p2p_port + 101
         addrs_platform_https = node_p2p_port + 102

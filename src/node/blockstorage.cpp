@@ -589,12 +589,14 @@ void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune)
 
 static FlatFileSeq BlockFileSeq()
 {
-    return FlatFileSeq(gArgs.GetBlocksDirPath(), "blk", gArgs.GetBoolArg("-fastprune", false) ? 0x4000 /* 16kb */ : BLOCKFILE_CHUNK_SIZE);
+    return FlatFileSeq(gArgs.GetBlocksDirPath(), "blk",
+                       gArgs.GetBoolArg("-fastprune", false) ? 0x4000 /* 16kb */ :
+                        (gArgs.GetBoolArg("-tinyblk", false) ? 0x10000 /* 64kb */ : BLOCKFILE_CHUNK_SIZE));
 }
 
 static FlatFileSeq UndoFileSeq()
 {
-    return FlatFileSeq(gArgs.GetBlocksDirPath(), "rev", UNDOFILE_CHUNK_SIZE);
+    return FlatFileSeq(gArgs.GetBlocksDirPath(), "rev", gArgs.GetBoolArg("-tinyblk", false) ? 0x10000 /* 64kb */ : UNDOFILE_CHUNK_SIZE);
 }
 
 FILE* OpenBlockFile(const FlatFilePos& pos, bool fReadOnly)
