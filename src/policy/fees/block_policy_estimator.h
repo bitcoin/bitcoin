@@ -10,6 +10,8 @@
 #include <random.h>
 #include <sync.h>
 #include <uint256.h>
+#include <util/expected.h>
+#include <util/fees.h>
 #include <util/fs.h>
 #include <validationinterface.h>
 
@@ -261,6 +263,14 @@ public:
 
     /** Calculates the age of the file, since last modified */
     std::chrono::hours GetFeeEstimatorFileAge();
+
+    /** Return the highest confirmation target for which an estimate can be provided. */
+    unsigned int MaximumTarget() const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
+
+    /** Estimate the feerate needed to confirm within @p target blocks; wraps estimateSmartFee into a FeeRateEstimation. */
+    util::Expected<FeeRateEstimation, FeeRateEstimationError> EstimateFeeRate(int target, bool conservative) const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
 protected:
     /** Overridden from CValidationInterface. */
