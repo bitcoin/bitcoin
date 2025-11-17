@@ -32,16 +32,29 @@ std::string StringForFeeReason(FeeReason reason)
         {FeeReason::FULL_ESTIMATE, "Target 85% Threshold"},
         {FeeReason::DOUBLE_ESTIMATE, "Double Target 95% Threshold"},
         {FeeReason::CONSERVATIVE, "Conservative Double Target longer horizon"},
-        {FeeReason::MEMPOOL_MIN, "Mempool Min Fee"},
-        {FeeReason::PAYTXFEE, "PayTxFee set"},
-        {FeeReason::FALLBACK, "Fallback fee"},
-        {FeeReason::REQUIRED, "Minimum Required Fee"},
     };
     auto reason_string = fee_reason_strings.find(reason);
 
     if (reason_string == fee_reason_strings.end()) return "Unknown";
 
     return reason_string->second;
+}
+
+std::string StringForFeeSource(FeeSource source)
+{
+    switch (source) {
+    case FeeSource::FEE_RATE_ESTIMATOR:
+        return "Fee Rate Estimator";
+    case FeeSource::MEMPOOL_MIN:
+        return "Mempool Min Fee";
+    case FeeSource::PAYTXFEE:
+        return "PayTxFee set";
+    case FeeSource::FALLBACK:
+        return "Fallback fee";
+    case FeeSource::REQUIRED:
+        return "Minimum Required Fee";
+    default: return "Unknown Fee Source";
+    }
 }
 
 const std::vector<std::pair<std::string, FeeEstimateMode>>& FeeModeMap()

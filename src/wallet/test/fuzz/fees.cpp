@@ -116,10 +116,12 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
         coin_control.m_fee_mode = fuzzed_data_provider.ConsumeBool() ? FeeEstimateMode::CONSERVATIVE : FeeEstimateMode::ECONOMICAL;
     }
 
-    FeeCalculation fee_calculation;
-    FeeCalculation* maybe_fee_calculation{fuzzed_data_provider.ConsumeBool() ? nullptr : &fee_calculation};
-    (void)GetMinimumFeeRate(wallet, coin_control, maybe_fee_calculation);
-    (void)GetMinimumFee(wallet, tx_bytes, coin_control, maybe_fee_calculation);
+    FeeSource fee_source;
+    int returned_target;
+    int* maybe_returned_target{fuzzed_data_provider.ConsumeBool() ? nullptr : &returned_target};
+    FeeSource* maybe_fee_source{fuzzed_data_provider.ConsumeBool() ? nullptr : &fee_source};
+    (void)GetMinimumFeeRate(wallet, coin_control, maybe_fee_source, maybe_returned_target);
+    (void)GetMinimumFee(wallet, tx_bytes, coin_control, maybe_fee_source, maybe_returned_target);
 }
 } // namespace
 } // namespace wallet
