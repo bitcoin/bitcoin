@@ -982,6 +982,28 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
     return CFeeRate(llround(median));
 }
 
+FeeRateEstimatorResult CBlockPolicyEstimator::EstimateFeeRate(int target, bool conservative) const
+{
+    FeeRateEstimatorResult result;
+    result.feerate_estimator = FeeRateEstimatorType::BLOCK_POLICY;
+    FeeCalculation fee_calc;
+    CFeeRate feerate{estimateSmartFee(target, &fee_calc, conservative)};
+    result.returned_target = fee_calc.returnedTarget;
+    if (feerate == CFeeRate(0)) {
+        result.errors.emplace_back("Insufficient data or no feerate found");
+        return result;
+    }
+    // Any positive non-zero size works; fee/size produces the same feerate
+    constexpr int32_t vsize = 1000;
+    result.feerate = FeePerVSize(feerate.GetFee(vsize), vsize);
+    return result;
+}
+
+unsigned int CBlockPolicyEstimator::MaximumTarget() const
+{
+    return HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
+}
+
 void CBlockPolicyEstimator::Flush() {
     FlushUnconfirmed();
     FlushFeeEstimates();
