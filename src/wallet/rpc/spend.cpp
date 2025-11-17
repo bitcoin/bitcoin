@@ -231,7 +231,7 @@ static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const Un
         throw JSONRPCError(RPC_INVALID_PARAMETER, InvalidEstimateModeErrorMessage());
     }
     if (!conf_target.isNull()) {
-        cc.m_confirm_target = ParseConfirmTarget(conf_target, wallet.chain().estimateMaxBlocks());
+        cc.m_confirm_target = ParseConfirmTarget(conf_target, wallet.chain().maximumFeeEstimationTargetBlocks());
     }
 }
 
