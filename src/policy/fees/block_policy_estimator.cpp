@@ -596,21 +596,6 @@ CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath
 
 CBlockPolicyEstimator::~CBlockPolicyEstimator() = default;
 
-void CBlockPolicyEstimator::TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t /*unused*/)
-{
-    processTransaction(tx);
-}
-
-void CBlockPolicyEstimator::TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason /*unused*/, uint64_t /*unused*/)
-{
-    removeTx(tx->GetHash());
-}
-
-void CBlockPolicyEstimator::MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight)
-{
-    processBlock(txs_removed_for_block, nBlockHeight);
-}
-
 void CBlockPolicyEstimator::processTransaction(const NewMempoolTransactionInfo& tx)
 {
     LOCK(m_cs_fee_estimator);
@@ -1005,7 +990,8 @@ unsigned int CBlockPolicyEstimator::MaximumTarget() const
     return HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
 }
 
-void CBlockPolicyEstimator::Flush() {
+void CBlockPolicyEstimator::Flush()
+{
     FlushUnconfirmed();
     FlushFeeEstimates();
 }

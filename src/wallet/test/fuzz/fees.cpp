@@ -2,11 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <policy/fees/estimator_man.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
 #include <test/util/txmempool.h>
+#include <util/fees.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
@@ -16,45 +18,50 @@
 namespace wallet {
 namespace {
 
-struct FeeEstimatorTestingSetup : public TestingSetup {
-    FeeEstimatorTestingSetup(const ChainType chain_type, TestOpts opts) : TestingSetup{chain_type, opts}
+struct FeeEstimatorManTestingSetup : public TestingSetup {
+    FeeEstimatorManTestingSetup(const ChainType chain_type, TestOpts opts) : TestingSetup{chain_type, opts}
     {
     }
 
-    ~FeeEstimatorTestingSetup() {
-        m_node.fee_estimator.reset();
+    ~FeeEstimatorManTestingSetup()
+    {
+        m_node.fee_estimator_man.reset();
     }
 
-    void SetFeeEstimator(std::unique_ptr<CBlockPolicyEstimator> fee_estimator)
+    void SetFeeEstimatorMan(std::unique_ptr<FeeRateEstimatorManager> fee_estimator_man)
     {
-        m_node.fee_estimator = std::move(fee_estimator);
+        m_node.fee_estimator_man = std::move(fee_estimator_man);
     }
 };
 
-FeeEstimatorTestingSetup* g_setup;
+FeeEstimatorManTestingSetup* g_setup;
 
-class FuzzedBlockPolicyEstimator : public CBlockPolicyEstimator
+class FuzzedFeeEstimatorMan : public FeeRateEstimatorManager
 {
     FuzzedDataProvider& fuzzed_data_provider;
 
 public:
-    FuzzedBlockPolicyEstimator(FuzzedDataProvider& provider)
-        : CBlockPolicyEstimator(fs::path{}, false), fuzzed_data_provider(provider) {}
+    FuzzedFeeEstimatorMan(FuzzedDataProvider& provider)
+        : fuzzed_data_provider(provider) {}
 
-    CFeeRate estimateSmartFee(int confTarget, FeeCalculation* feeCalc, bool conservative) const override
+    FeeRateEstimatorResult GetFeeRateEstimate(int confTarget, bool conservative) override
     {
-        return CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/1'000'000)};
+        FeeRateEstimatorResult res;
+        res.feerate_estimator = FeeRateEstimatorType::BLOCK_POLICY;
+        res.current_block_height = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(2, 1000);
+        res.returned_target = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(2, 1004);
+        res.feerate = FeePerVSize(ConsumeMoney(fuzzed_data_provider, /*max=*/1'000'000), fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(1000, 1000000));
+        return res;
     }
-
-    unsigned int HighestTargetTracked(FeeEstimateHorizon horizon) const override
+    unsigned int MaximumTarget() const override
     {
-        return fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(1, 1000);
+        return fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(1, 1004);
     }
 };
 
 void initialize_setup()
 {
-    static const auto testing_setup = MakeNoLogFileContext<FeeEstimatorTestingSetup>();
+    static const auto testing_setup = MakeNoLogFileContext<FeeEstimatorManTestingSetup>();
     g_setup = testing_setup.get();
 }
 
@@ -73,8 +80,8 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
         .dust_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000)}
     };
     node.mempool = std::make_unique<CTxMemPool>(mempool_opts, error);
-    std::unique_ptr<CBlockPolicyEstimator> fee_estimator = std::make_unique<FuzzedBlockPolicyEstimator>(fuzzed_data_provider);
-    g_setup->SetFeeEstimator(std::move(fee_estimator));
+    std::unique_ptr<FeeRateEstimatorManager> fee_estimator_man = std::make_unique<FuzzedFeeEstimatorMan>(fuzzed_data_provider);
+    g_setup->SetFeeEstimatorMan(std::move(fee_estimator_man));
     auto target_feerate{CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/1'000'000)}};
     if (target_feerate > node.mempool->m_opts.incremental_relay_feerate &&
         target_feerate > node.mempool->m_opts.min_relay_feerate) {
