@@ -112,6 +112,18 @@ def assert_raises_message(exc, message, fun, *args, **kwds):
     else:
         raise AssertionError("No exception raised")
 
+async def assert_raises_message_async(exc, message, fun, *args, **kwds):
+    try:
+        await fun(*args, **kwds)
+    except exc as e:
+        if message is not None and message not in str(e):
+            raise AssertionError("Expected substring not found in exception:\n"
+                                 f"substring: '{message}'\nexception: {e!r}.")
+    except Exception as e:
+        raise AssertionError("Unexpected exception raised: " + type(e).__name__)
+    else:
+        raise AssertionError("No exception raised")
+
 
 def assert_raises_process_error(returncode: int, output: str, fun: Callable, *args, **kwds):
     """Execute a process and asserts the process return code and output.

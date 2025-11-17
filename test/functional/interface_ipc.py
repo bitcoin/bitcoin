@@ -18,10 +18,16 @@ from test_framework.messages import (
     ser_uint256,
     COIN,
 )
+from test_framework.script import (
+    CScript,
+    OP_RETURN,
+    OP_TRUE,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_not_equal
+    assert_raises_message_async,
+    assert_not_equal,
 )
 from test_framework.wallet import MiniWallet
 from typing import Optional
@@ -179,6 +185,11 @@ class IPCInterfaceTest(BitcoinTestFramework):
 
         assert_equal(has_witness, found_witness_op_return)
 
+        # Requested outputs should appear after payout dummy
+        assert_equal(coinbase.vout[1].scriptPubKey, CScript([OP_RETURN]))
+        assert_equal(coinbase.vout[2].scriptPubKey, CScript([OP_TRUE]))
+        assert_equal(coinbase.vout[2].nValue, COIN)
+
         coinbase.nLockTime = coinbase_template.lockTime
 
         # Compare to dummy coinbase provided by the deprecated getCoinbaseTx()
@@ -222,12 +233,30 @@ class IPCInterfaceTest(BitcoinTestFramework):
             assert_equal(oldblockref.result.hash, newblockref.result.hash)
             assert_equal(oldblockref.result.height, newblockref.result.height)
 
-            self.log.debug("Create a template")
+            self.log.debug("Can't build template with invalid options")
             opts = self.capnp_modules['mining'].BlockCreateOptions()
+            # Burn more coins than the block generates:
+            opts.requestedOutputs = [CTxOut(100 * COIN, CScript([OP_RETURN])).serialize()]
+            await assert_raises_message_async(capnp.lib.capnp.KjException,
+                                              "output amount exceeds",
+                                              mining.result.createNewBlock, opts)
+            # Request a negative output:
+            opts.requestedOutputs = [CTxOut(-1, CScript([OP_RETURN])).serialize()]
+            await assert_raises_message_async(capnp.lib.capnp.KjException,
+                                              "output with negative amount",
+                                              mining.result.createNewBlock, opts)
+
+            self.log.debug("Create a template")
             opts.useMempool = True
             opts.blockReservedWeight = 4000
             opts.coinbaseOutputMaxAdditionalSigops = 0
-            template = mining.result.createNewBlock(opts)
+            # Add two extra outputs, one OP_RETURN without
+            # amount and a spendable OP_TRUE.
+            opts.requestedOutputs = [
+                CTxOut(0, CScript([OP_RETURN])).serialize(),
+                CTxOut(COIN, CScript([OP_TRUE])).serialize(),
+            ]
+            template = await mining.result.createNewBlock(opts)
             self.log.debug("Test some inspectors of Template")
             header = await template.result.getBlockHeader(ctx)
             assert_equal(len(header.result), block_header_size)

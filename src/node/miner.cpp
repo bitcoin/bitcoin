@@ -166,8 +166,23 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     // Add an output that spends the full coinbase reward.
     // ExtractCoinbaseTemplate relies on this being the first output.
     coinbaseTx.vout.resize(1);
-    coinbaseTx.vout[0].scriptPubKey = m_options.coinbase_output_script;
-    coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
+    CAmount reward_remaining{nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus())};
+
+    // Add requested outputs after dummy and before mandatory commitments:
+    for (const CTxOut& output : m_options.requested_outputs) {
+        if (output.nValue < 0) {
+            throw std::runtime_error(strprintf("Requested output with negative amount"));
+        }
+        if (output.nValue > reward_remaining) {
+            throw std::runtime_error(strprintf("Requested output amount exceeds remaining coinbase reward"));
+        }
+        reward_remaining -= output.nValue;
+        coinbaseTx.vout.push_back(output);
+    }
+
+    // Assign remaining reward to dummy output
+    coinbaseTx.vout[0] = {reward_remaining, m_options.coinbase_output_script};
+
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
     Assert(nHeight > 0);
     coinbaseTx.nLockTime = static_cast<uint32_t>(nHeight - 1);

@@ -52,10 +52,10 @@ struct BlockCreateOptions {
      */
     size_t coinbase_output_max_additional_sigops{400};
     /**
-     * Script to put in the coinbase transaction. The default is an
-     * anyone-can-spend dummy.
+     * Script to use for the coinbase transaction output which spends
+     * value_remaining. The default is an anyone-can-spend dummy.
      *
-     * Should only be used for tests, when the default doesn't suffice.
+     * Should only be needed for tests, when the default doesn't suffice.
      *
      * Note that higher level code like the getblocktemplate RPC may omit the
      * coinbase transaction entirely. It's instead constructed by pool software
@@ -67,6 +67,25 @@ struct BlockCreateOptions {
      * coinbase_max_additional_weight and coinbase_output_max_additional_sigops.
      */
     CScript coinbase_output_script{CScript() << OP_TRUE};
+
+    /**
+     * Requested extra outputs for the coinbase transaction. Typically not
+     * needed. An example use case is adding an OP_RETURN for merged mining.
+     *
+     * Do not pass in a SegWit commitment.
+     *
+     * The outputs will be placed at the start of required_outputs. Non-zero
+     * amounts are subtracted from value_remaining.
+     *
+     * It's possible, but not recommended, to use a non-zero output amount.
+     * Since the amount including fees can't be known ahead of generating
+     * the template, only amounts below the block subsidy are safe. Negative
+     * value_remaining results in an error.
+     *
+     * @note IPC clients that wish to be compatible with v30.x should omit
+     *       this field.
+     */
+    std::vector<CTxOut> requested_outputs{};
 };
 
 struct BlockWaitOptions {
