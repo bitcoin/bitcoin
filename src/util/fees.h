@@ -14,8 +14,8 @@
 /* Used to determine type of fee estimation requested */
 enum class FeeEstimateMode {
     UNSET,        //!< Use default settings based on other criteria
-    ECONOMICAL,   //!< Force FeeRateEstimator to return non-conservative estimates
-    CONSERVATIVE, //!< Force FeeRateEstimator to return conservative estimates
+    ECONOMICAL,   //!< Force FeeRateEstimator to use non-conservative estimates
+    CONSERVATIVE, //!< Force FeeRateEstimator to use conservative estimates
 };
 
 enum class FeeSource {
@@ -30,7 +30,9 @@ enum class FeeSource {
  * @enum FeeRateEstimatorType
  * Identifier for fee rate estimator.
  */
-enum class FeeRateEstimatorType {};
+enum class FeeRateEstimatorType {
+    BLOCK_POLICY,
+};
 
 /**
  * @struct FeeRateEstimatorResult

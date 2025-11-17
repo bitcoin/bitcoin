@@ -559,7 +559,7 @@ bool CBlockPolicyEstimator::_removeTx(const Txid& hash, bool inBlock)
 }
 
 CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath, const bool read_stale_estimates)
-    : m_estimation_filepath{estimation_filepath}
+    : FeeRateEstimator(FeeRateEstimatorType::BLOCK_POLICY), m_estimation_filepath{estimation_filepath}
 {
     static_assert(MIN_BUCKET_FEERATE > 0, "Min feerate must be nonzero");
     size_t bucketIndex = 0;
@@ -977,6 +977,32 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
              temp_fee_calc.est.fail.withinTarget, temp_fee_calc.est.fail.totalConfirmed, temp_fee_calc.est.fail.inMempool, temp_fee_calc.est.fail.leftMempool);
 
     return CFeeRate(llround(median));
+}
+
+FeeRateEstimatorResult CBlockPolicyEstimator::EstimateFeeRate(int target, bool conservative) const
+{
+    FeeRateEstimatorResult result;
+    result.feerate_estimator = GetFeeRateEstimatorType();
+
+    FeeCalculation fee_calc;
+    CFeeRate feerate{estimateSmartFee(target, &fee_calc, conservative)};
+
+    result.current_block_height = fee_calc.best_height;
+    result.returned_target = fee_calc.returnedTarget;
+
+    if (feerate == CFeeRate(0)) {
+        result.errors.emplace_back("Insufficient data or no feerate found");
+        return result;
+    }
+    // Any positive non-zero size works; fee/size produces the same feerate
+    constexpr int32_t vsize = 1000;
+    result.feerate = FeePerVSize(feerate.GetFee(vsize), vsize);
+    return result;
+}
+
+unsigned int CBlockPolicyEstimator::MaximumTarget() const
+{
+    return HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
 }
 
 void CBlockPolicyEstimator::Flush() {
