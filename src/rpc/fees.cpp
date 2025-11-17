@@ -15,6 +15,7 @@
 #include <rpc/util.h>
 #include <txmempool.h>
 #include <univalue.h>
+#include <util/fees.h>
 #include <validationinterface.h>
 
 #include <algorithm>
