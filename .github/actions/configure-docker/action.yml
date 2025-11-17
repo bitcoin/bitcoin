@@ -8,16 +8,11 @@ runs:
   using: 'composite'
   steps:
     - name: Check inputs
-      shell: bash
+      shell: python
       run: |
         # We expect only gha or cirrus as inputs to cache-provider
-        case "${{ inputs.cache-provider }}" in
-          gha|cirrus)
-            ;;
-          *)
-            echo "::warning title=Unknown input to configure docker action::Provided value was ${{ inputs.cache-provider }}"
-            ;;
-        esac
+        if "${{ inputs.cache-provider }}" not in ("gha", "cirrus"):
+          print("::warning title=Unknown input to configure docker action::Provided value was ${{ inputs.cache-provider }}")
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3

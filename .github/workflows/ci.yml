@@ -35,10 +35,12 @@ jobs:
     outputs:
       provider: ${{ steps.runners.outputs.provider }}
     steps:
-      - name: Annotate with pull request number
+      - &ANNOTATION_PR_NUMBER
+        name: Annotate with pull request number
         # This annotation is machine-readable and can be used to assign a check
-        # run to its corresponding pull request. Running in one check run is
-        # sufficient for each check suite.
+        # run to its corresponding pull request. Running in all check runs is
+        # required, because check re-runs discard the annotations of other
+        # tasks in the test suite.
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "::notice title=debug_pull_request_number_str::${{ github.event.number }}"
@@ -63,6 +65,7 @@ jobs:
     steps:
       - name: Determine fetch depth
         run: echo "FETCH_DEPTH=$((${{ github.event.pull_request.commits }} + 2))" >> "$GITHUB_ENV"
+      - *ANNOTATION_PR_NUMBER
       - uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -141,6 +144,8 @@ jobs:
       BASE_ROOT_DIR: ${{ github.workspace }}/repo_archive
 
     steps:
+      - *ANNOTATION_PR_NUMBER
+
       - &CHECKOUT
         name: Checkout
         uses: actions/checkout@v5
@@ -220,6 +225,8 @@ jobs:
             job-name: 'Windows native, fuzz, VS 2022'
 
     steps:
+      - *ANNOTATION_PR_NUMBER
+
       - *CHECKOUT
 
       - &SET_UP_VS
@@ -347,6 +354,8 @@ jobs:
       DANGER_CI_ON_HOST_FOLDERS: 1
 
     steps:
+      - *ANNOTATION_PR_NUMBER
+
       - *CHECKOUT
 
       - name: Configure environment
@@ -387,6 +396,8 @@ jobs:
       TEST_RUNNER_TIMEOUT_FACTOR: 40
 
     steps:
+      - *ANNOTATION_PR_NUMBER
+
       - *CHECKOUT
 
       - name: Download built executables
@@ -553,6 +564,8 @@ jobs:
             file-env: './ci/test/00_setup_env_native_msan.sh'
 
     steps:
+      - *ANNOTATION_PR_NUMBER
+
       - *CHECKOUT
 
       - name: Configure environment
@@ -593,6 +606,8 @@ jobs:
     env:
       CONTAINER_NAME: "bitcoin-linter"
     steps:
+      - *ANNOTATION_PR_NUMBER
+
       - name: Checkout
         uses: actions/checkout@v5
         with:
@@ -605,11 +620,40 @@ jobs:
           cache-provider: ${{ needs.runners.outputs.provider }}
 
       - name: CI script
+        shell: python
         run: |
-          set -o xtrace
-          docker buildx build -t "$CONTAINER_NAME" $DOCKER_BUILD_CACHE_ARG --file "./ci/lint_imagefile" .
-          CIRRUS_PR_FLAG=""
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            CIRRUS_PR_FLAG="-e CIRRUS_PR=1"
-          fi
-          docker run --rm $CIRRUS_PR_FLAG -v "$(pwd)":/bitcoin "$CONTAINER_NAME"
+          import os, shlex, subprocess, sys, time
+
+          def run(cmd, **kwargs):
+              print("+ " + shlex.join(cmd), flush=True)
+              kwargs.setdefault("check", True)
+              try:
+                  return subprocess.run(cmd, **kwargs)
+              except Exception as e:
+                  sys.exit(e)
+
+          CONTAINER_NAME = os.environ["CONTAINER_NAME"]
+
+          build_cmd = [
+              "docker", "buildx", "build",
+              f"--tag={CONTAINER_NAME}",
+              *shlex.split(os.getenv("DOCKER_BUILD_CACHE_ARG", "")),
+              "--file=./ci/lint_imagefile",
+              "."
+          ]
+
+          if run(build_cmd, check=False).returncode != 0:
+              print("Retry building image tag after failure")
+              time.sleep(3)
+              run(build_cmd)
+
+          CIRRUS_PR_FLAG = []
+          if '${{ github.event_name }}' == "pull_request":
+              CIRRUS_PR_FLAG = ["-e", "CIRRUS_PR=1"]
+
+          run([
+              "docker", "run", "--rm",
+              *CIRRUS_PR_FLAG,
+              f"--volume={os.getcwd()}:/bitcoin",
+              CONTAINER_NAME,
+          ])
