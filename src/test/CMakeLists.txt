@@ -23,6 +23,7 @@ add_executable(test_bitcoin
   blockfilter_index_tests.cpp
   blockfilter_tests.cpp
   blockmanager_tests.cpp
+  blockpolicyestimator_tests.cpp
   bloom_tests.cpp
   bswap_tests.cpp
   caches_tests.cpp
@@ -72,7 +73,6 @@ add_executable(test_bitcoin
   pcp_tests.cpp
   peerman_tests.cpp
   pmt_tests.cpp
-  policyestimator_tests.cpp
   pool_tests.cpp
   pow_tests.cpp
   prevector_tests.cpp
