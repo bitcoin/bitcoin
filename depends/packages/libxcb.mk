@@ -7,7 +7,7 @@ $(package)_dependencies=xcb_proto libXau
 $(package)_patches = remove_pthread_stubs.patch
 
 define $(package)_set_vars
-$(package)_config_opts=--disable-static --disable-devel-docs --without-doxygen --without-launchd
+$(package)_config_opts=--disable-shared --disable-devel-docs --without-doxygen --without-launchd
 $(package)_config_opts += --disable-dependency-tracking --enable-option-checking
 # Disable unneeded extensions.
 # More info is available from: https://doc.qt.io/qt-5.15/linux-requirements.html
