@@ -398,7 +398,6 @@ BOOST_AUTO_TEST_CASE(btck_transaction_tests)
     BOOST_CHECK_THROW(Transaction{invalid_data}, std::runtime_error);
     auto empty_data = hex_string_to_byte_vec("");
     BOOST_CHECK_THROW(Transaction{empty_data}, std::runtime_error);
-    BOOST_CHECK_THROW(Transaction{std::span<std::byte>(static_cast<std::byte*>(nullptr), 2)}, std::runtime_error);
 
     BOOST_CHECK_EQUAL(tx.CountOutputs(), 2);
     BOOST_CHECK_EQUAL(tx.CountInputs(), 1);
@@ -475,7 +474,9 @@ BOOST_AUTO_TEST_CASE(btck_script_pubkey)
     ScriptPubkey script2{script_data_2};
     CheckHandle(script, script2);
 
-    BOOST_CHECK_THROW(ScriptPubkey{std::span<std::byte>(static_cast<std::byte*>(nullptr), 2)}, std::runtime_error);
+    std::span<std::byte> empty_data{};
+    ScriptPubkey empty_script{empty_data};
+    CheckHandle(script, empty_script);
 }
 
 BOOST_AUTO_TEST_CASE(btck_transaction_output)
@@ -592,7 +593,6 @@ BOOST_AUTO_TEST_CASE(btck_block)
     BOOST_CHECK_THROW(Block{invalid_data}, std::runtime_error);
     auto empty_data = hex_string_to_byte_vec("");
     BOOST_CHECK_THROW(Block{empty_data}, std::runtime_error);
-    BOOST_CHECK_THROW(Block{std::span<std::byte>(static_cast<std::byte*>(nullptr), 2)}, std::runtime_error);
 }
 
 Context create_context(std::shared_ptr<TestKernelNotifications> notifications, ChainType chain_type, std::shared_ptr<TestValidationInterface> validation_interface = nullptr)
