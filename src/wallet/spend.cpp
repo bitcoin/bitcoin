@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <algorithm>
 #include <common/args.h>
 #include <common/messages.h>
 #include <common/system.h>
@@ -10,7 +9,6 @@
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
 #include <node/types.h>
-#include <numeric>
 #include <policy/policy.h>
 #include <policy/truc_policy.h>
 #include <primitives/transaction.h>
@@ -19,6 +17,7 @@
 #include <script/signingprovider.h>
 #include <script/solver.h>
 #include <util/check.h>
+#include <util/fees.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
 #include <util/trace.h>
@@ -30,7 +29,9 @@
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
 
+#include <algorithm>
 #include <cmath>
+#include <numeric>
 
 using common::StringForFeeReason;
 using common::TransactionErrorString;
@@ -1148,7 +1149,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // Do not, ever, assume that it's fine to change the fee rate if the user has explicitly
     // provided one
     if (coin_control.m_feerate && coin_selection_params.m_effective_feerate > *coin_control.m_feerate) {
-        return util::Error{strprintf(_("Fee rate (%s) is lower than the minimum fee rate setting (%s)"), coin_control.m_feerate->ToString(FeeEstimateMode::SAT_VB), coin_selection_params.m_effective_feerate.ToString(FeeEstimateMode::SAT_VB))};
+        return util::Error{strprintf(_("Fee rate (%s) is lower than the minimum fee rate setting (%s)"), coin_control.m_feerate->ToString(FeeRateFormat::SAT_VB), coin_selection_params.m_effective_feerate.ToString(FeeRateFormat::SAT_VB))};
     }
     if (feeCalc.reason == FeeReason::FALLBACK && !wallet.m_allow_fallback_fee) {
         // eventually allow a fallback fee

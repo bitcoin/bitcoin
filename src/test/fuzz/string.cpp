@@ -22,6 +22,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <util/fees.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/translation.h>
@@ -33,8 +34,6 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-
-enum class FeeEstimateMode;
 
 using common::AmountErrMsg;
 using common::AmountHighWarn;
