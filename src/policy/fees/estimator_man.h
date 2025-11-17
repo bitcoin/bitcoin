@@ -23,6 +23,16 @@ private:
     //! Map of all registered estimators to their unique pointers.
     std::unordered_map<FeeRateEstimatorType, std::unique_ptr<FeeRateEstimator>> estimators;
 
+    /**
+     * Return a pointer to a fee rate estimator given an estimator type.
+     */
+    template <class T>
+    T* GetFeeRateEstimator(FeeRateEstimatorType estimator_type)
+    {
+        FeeRateEstimator* estimator_ptr = estimators.find(estimator_type)->second.get();
+        return dynamic_cast<T*>(estimator_ptr);
+    }
+
 public:
     /**
      * Register a fee rate estimator.
