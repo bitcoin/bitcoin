@@ -13,6 +13,7 @@
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
 #include <index/txindex.h>
+#include <index/txospenderindex.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
 #include <primitives/block.h>
@@ -835,6 +836,137 @@ static bool rest_mempool(const std::any& context, HTTPRequest* req, const std::s
     }
 }
 
+static bool rest_txspendingprevout(const std::any& context, HTTPRequest* req, const std::string& uri_part)
+{
+    if (!CheckWarmup(req))
+        return false;
+
+    std::string param;
+    const RESTResponseFormat rf = ParseDataFormat(param, uri_part);
+
+    std::vector<std::string> uriParts = SplitString(param, '/');
+
+    // Check that we have at least one outpoint
+    if (uriParts.size() == 0 || (uriParts.size() == 1 && uriParts[0].empty()))
+        return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
+
+    std::vector<COutPoint> prevouts;
+
+    // Parse outpoints from URI in the format txid-vout
+    for (size_t i = 0; i < uriParts.size(); i++)
+    {
+        const auto txid_out{util::Split<std::string_view>(uriParts[i], '-')};
+        if (txid_out.size() != 2) {
+            return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
+        }
+        auto txid{Txid::FromHex(txid_out.at(0))};
+        auto output{ToIntegral<uint32_t>(txid_out.at(1))};
+
+        if (!txid || !output.has_value()) {
+            return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
+        }
+
+        prevouts.emplace_back(*txid, *output);
+    }
+
+    switch (rf) {
+    case RESTResponseFormat::JSON: {
+        // Parse optional query parameters
+        std::string raw_mempool_only;
+        try {
+            raw_mempool_only = req->GetQueryParameter("mempool_only").value_or("");
+        } catch (const std::runtime_error& e) {
+            return RESTERR(req, HTTP_BAD_REQUEST, e.what());
+        }
+        if (!raw_mempool_only.empty() && raw_mempool_only != "true" && raw_mempool_only != "false") {
+            return RESTERR(req, HTTP_BAD_REQUEST, "The \"mempool_only\" query parameter must be either \"true\" or \"false\".");
+        }
+        std::string raw_return_spending_tx;
+        try {
+            raw_return_spending_tx = req->GetQueryParameter("return_spending_tx").value_or("false");
+        } catch (const std::runtime_error& e) {
+            return RESTERR(req, HTTP_BAD_REQUEST, e.what());
+        }
+        if (raw_return_spending_tx != "true" && raw_return_spending_tx != "false") {
+            return RESTERR(req, HTTP_BAD_REQUEST, "The \"return_spending_tx\" query parameter must be either \"true\" or \"false\".");
+        }
+        const bool mempool_only{raw_mempool_only.empty() ? !g_txospenderindex : (raw_mempool_only == "true")};
+        const bool return_spending_tx{raw_return_spending_tx == "true"};
+
+        const CTxMemPool* mempool = GetMemPool(context, req);
+        if (!mempool) return false;
+
+        UniValue result{UniValue::VARR};
+
+        // Track which outpoints still need resolving after the mempool scan
+        std::vector<size_t> unresolved;
+
+        {
+            LOCK(mempool->cs);
+            for (size_t i = 0; i < prevouts.size(); i++) {
+                const COutPoint& prevout = prevouts[i];
+                const CTransaction* spendingTx = mempool->GetConflictTx(prevout);
+
+                if (spendingTx != nullptr) {
+                    UniValue o(UniValue::VOBJ);
+                    o.pushKV("txid", prevout.hash.ToString());
+                    o.pushKV("vout", (uint64_t)prevout.n);
+                    o.pushKV("spendingtxid", spendingTx->GetHash().ToString());
+                    if (return_spending_tx) {
+                        o.pushKV("spendingtx", EncodeHexTx(*spendingTx));
+                    }
+                    result.push_back(std::move(o));
+                } else if (mempool_only) {
+                    UniValue o(UniValue::VOBJ);
+                    o.pushKV("txid", prevout.hash.ToString());
+                    o.pushKV("vout", (uint64_t)prevout.n);
+                    result.push_back(std::move(o));
+                } else {
+                    unresolved.push_back(i);
+                }
+            }
+        }
+
+        // If all outpoints were resolved via mempool, return early
+        if (!unresolved.empty()) {
+            if (!g_txospenderindex || !g_txospenderindex->BlockUntilSyncedToCurrentChain()) {
+                return RESTERR(req, HTTP_SERVICE_UNAVAILABLE, "Mempool lacks a relevant spend, and txospenderindex is unavailable.");
+            }
+
+            for (size_t idx : unresolved) {
+                const COutPoint& prevout = prevouts[idx];
+                UniValue o(UniValue::VOBJ);
+                o.pushKV("txid", prevout.hash.ToString());
+                o.pushKV("vout", (uint64_t)prevout.n);
+
+                const auto spender{g_txospenderindex->FindSpender(prevout)};
+                if (!spender) {
+                    return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, spender.error());
+                }
+                if (const auto& spender_opt{spender.value()}) {
+                    o.pushKV("spendingtxid", spender_opt->tx->GetHash().GetHex());
+                    o.pushKV("blockhash", spender_opt->block_hash.GetHex());
+                    if (return_spending_tx) {
+                        o.pushKV("spendingtx", EncodeHexTx(*spender_opt->tx));
+                    }
+                }
+
+                result.push_back(std::move(o));
+            }
+        }
+
+        std::string strJSON = result.write() + "\n";
+        req->WriteHeader("Content-Type", "application/json");
+        req->WriteReply(HTTP_OK, strJSON);
+        return true;
+    }
+
+    default: {
+        return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: json)");
+    }
+    }
+}
+
 static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string& uri_part)
 {
     if (!CheckWarmup(req))
@@ -1156,6 +1288,7 @@ static const struct {
     {"/rest/deploymentinfo", rest_deploymentinfo},
     {"/rest/blockhashbyheight/", rest_blockhash_by_height},
     {"/rest/spenttxouts/", rest_spent_txouts},
+    {"/rest/txspendingprevout/", rest_txspendingprevout},
 };
 
 void StartREST(const std::any& context)

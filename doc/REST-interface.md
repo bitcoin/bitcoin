@@ -155,6 +155,48 @@ Refer to the `getrawmempool` RPC help for details. Defaults to setting
 
 *Query parameters for `verbose` and `mempool_sequence` available in 25.0 and up.*
 
+#### Transaction Spending Previous Outputs
+`GET /rest/txspendingprevout/<TXID>-<N>/<TXID>-<N>/.../<TXID>-<N>.json`
+
+Scans the mempool (and the `txospenderindex`, if available) to find transactions
+spending any of the given outputs.
+Only supports JSON as output format.
+Refer to the `gettxspendingprevout` RPC help for details.
+
+For each queried output, returns an object containing:
+- `txid`: the transaction id of the checked output
+- `vout`: the output number
+- `spendingtxid`: (optional) the transaction id of the transaction spending this output (omitted if unspent)
+- `spendingtx`: (optional) the full hex-encoded spending transaction, if requested and found
+- `blockhash`: (optional) the hash of the block including the spending transaction, if confirmed
+
+The following optional query parameters are supported and mirror the RPC options:
+
+- `mempool_only=<true|false>`: if `true`, limit scans to the mempool, even if
+  `txospenderindex` is available. If omitted, it defaults to `true` if
+  `txospenderindex` is unavailable, otherwise `false`.
+- `return_spending_tx=<true|false>`: if `true`, include the full hex-encoded
+  spending transaction in the `spendingtx` field. Defaults to `false`.
+
+Example:
+```
+$ curl localhost:8332/rest/txspendingprevout/a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0-3.json
+[
+  {
+    "txid": "a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0",
+    "vout": 3,
+    "spendingtxid": "b2cdfd7b89def827ff8af7cd9bff7627ff72e5e8b0f71210f92ea7a4000c5d75",
+    "blockhash": "0000000000000000000exampleblockhash0000000000000000000000000000"
+  }
+]
+```
+
+To also obtain the full spending transaction, use:
+
+```
+$ curl "localhost:8332/rest/txspendingprevout/a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0-3.json?return_spending_tx=true"
+```
+
 
 Risks
 -------------
