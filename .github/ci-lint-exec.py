@@ -38,6 +38,8 @@ def main():
     extra_env = []
     if os.environ["GITHUB_EVENT_NAME"] == "pull_request":
         extra_env = ["--env", "LINT_CI_IS_PR=1"]
+    if os.environ["GITHUB_EVENT_NAME"] != "pull_request" and os.environ["GITHUB_REPOSITORY"] == "bitcoin/bitcoin":
+        extra_env = ["--env", "LINT_CI_SANITY_CHECK_COMMIT_SIG=1"]
 
     run([
         "docker",

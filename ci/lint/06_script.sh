@@ -18,7 +18,7 @@ fi
 
 RUST_BACKTRACE=1 cargo run --manifest-path "./test/lint/test_runner/Cargo.toml"
 
-if [ "$CIRRUS_REPO_FULL_NAME" = "bitcoin/bitcoin" ] && [ "${LINT_CI_IS_PR}" = "" ] ; then
+if [ "${LINT_CI_SANITY_CHECK_COMMIT_SIG}" = "1" ] ; then
     # Sanity check only the last few commits to get notified of missing sigs,
     # missing keys, or expired keys. Usually there is only one new merge commit
     # per push on the master branch and a few commits on release branches, so
