@@ -33,6 +33,7 @@
 #include <cmath>
 #include <numeric>
 
+using common::StringForFeeSource;
 using common::TransactionErrorString;
 using interfaces::FoundBlock;
 using node::TransactionError;
@@ -1397,6 +1398,8 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     reservedest.KeepDestination();
 
     wallet.WalletLogPrintf("Coin Selection: Algorithm:%s, Waste Metric Score:%d\n", GetAlgorithmName(result.GetAlgo()), result.GetWaste());
+    wallet.WalletLogPrintf("Fee Calculation: Fee:%d Bytes:%u Source: %s \n",
+                           current_fee, nBytes, StringForFeeSource(fee_source));
     return CreatedTransactionResult(tx, current_fee, change_pos, fee_source);
 }
 
