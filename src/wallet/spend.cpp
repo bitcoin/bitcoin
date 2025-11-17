@@ -1143,14 +1143,14 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     coin_selection_params.m_discard_feerate = GetDiscardRate(wallet);
 
     // Get the fee rate to use effective values in coin selection
-    FeeCalculation feeCalc;
-    coin_selection_params.m_effective_feerate = GetMinimumFeeRate(wallet, coin_control, &feeCalc);
+    FeeSource fee_source;
+    coin_selection_params.m_effective_feerate = GetMinimumFeeRate(wallet, coin_control, &fee_source, /*returned_target*/ nullptr);
     // Do not, ever, assume that it's fine to change the fee rate if the user has explicitly
     // provided one
     if (coin_control.m_feerate && coin_selection_params.m_effective_feerate > *coin_control.m_feerate) {
         return util::Error{strprintf(_("Fee rate (%s) is lower than the minimum fee rate setting (%s)"), coin_control.m_feerate->ToString(FeeRateFormat::SAT_VB), coin_selection_params.m_effective_feerate.ToString(FeeRateFormat::SAT_VB))};
     }
-    if (feeCalc.reason == FeeReason::FALLBACK && !wallet.m_allow_fallback_fee) {
+    if (fee_source == FeeSource::FALLBACK && !wallet.m_allow_fallback_fee) {
         // eventually allow a fallback fee
         return util::Error{strprintf(_("Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable %s."), "-fallbackfee")};
     }
@@ -1397,7 +1397,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     reservedest.KeepDestination();
 
     wallet.WalletLogPrintf("Coin Selection: Algorithm:%s, Waste Metric Score:%d\n", GetAlgorithmName(result.GetAlgo()), result.GetWaste());
-    return CreatedTransactionResult(tx, current_fee, change_pos, feeCalc);
+    return CreatedTransactionResult(tx, current_fee, change_pos, fee_source);
 }
 
 util::Result<CreatedTransactionResult> CreateTransaction(
