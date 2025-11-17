@@ -35,13 +35,15 @@ def main():
         time.sleep(3)
         run(build_cmd)
 
-    CIRRUS_PR_FLAG = []
-    if os.environ.get("GITHUB_EVENT_NAME") == "pull_request":
-        CIRRUS_PR_FLAG = ["-e", "CIRRUS_PR=1"]
+    extra_env = []
+    if os.environ["GITHUB_EVENT_NAME"] == "pull_request":
+        extra_env = ["--env", "LINT_CI_IS_PR=1"]
 
     run([
-        "docker", "run", "--rm",
-        *CIRRUS_PR_FLAG,
+        "docker",
+        "run",
+        "--rm",
+        *extra_env,
         f"--volume={os.getcwd()}:/bitcoin",
         CONTAINER_NAME,
     ])
