@@ -3539,7 +3539,6 @@ std::vector<CAddress> CConnman::GetAddressesUnsafe(size_t max_addresses, size_t 
 
 std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addresses, size_t max_pct)
 {
-    auto local_socket_bytes = requestor.addrBind.GetAddrBytes();
     uint64_t network_id = requestor.m_network_key;
     const auto current_time = GetTime<std::chrono::microseconds>();
     auto r = m_addr_response_caches.emplace(network_id, CachedAddrResponse{});
