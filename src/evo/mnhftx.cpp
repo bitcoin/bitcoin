@@ -10,7 +10,6 @@
 #include <llmq/commitment.h>
 #include <llmq/quorums.h>
 #include <llmq/signhash.h>
-#include <llmq/signing.h>
 #include <node/blockstorage.h>
 
 #include <chain.h>

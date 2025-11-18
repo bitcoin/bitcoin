@@ -94,7 +94,6 @@
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/options.h>
 #include <llmq/net_signing.h>
-#include <llmq/signing.h>
 #include <masternode/active/context.h>
 #include <masternode/active/notificationinterface.h>
 #include <masternode/meta.h>

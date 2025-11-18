@@ -6,7 +6,6 @@
 #include <hash.h>
 #include <instantsend/lock.h>
 #include <llmq/signhash.h>
-#include <llmq/signing.h>
 #include <primitives/transaction.h>
 #include <streams.h>
 #include <uint256.h>
