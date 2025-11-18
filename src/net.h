@@ -1220,14 +1220,14 @@ public:
      * A trusted caller (e.g. from RPC or a peer with addr permission) can use
      * @ref GetAddressesUnsafe to avoid using the cache.
      *
-     * @param[in] requestor      The requesting peer. Used to key the cache to prevent privacy leaks.
+     * @param[in] network_key    Per peer network key. Used to key the cache to prevent privacy leaks.
      * @param[in] max_addresses  Maximum number of addresses to return (0 = all). Ignored when cache
      *                           already contains an entry for requestor.
      * @param[in] max_pct        Maximum percentage of addresses to return (0 = all). Value must be
      *                           from 0 to 100. Ignored when cache already contains an entry for
      *                           requestor.
      */
-    std::vector<CAddress> GetAddresses(CNode& requestor, size_t max_addresses, size_t max_pct);
+    std::vector<CAddress> GetAddresses(uint64_t network_key, size_t max_addresses, size_t max_pct);
 
     // This allows temporarily exceeding m_max_outbound_full_relay, with the goal of finding
     // a peer that is better than all our current peers.

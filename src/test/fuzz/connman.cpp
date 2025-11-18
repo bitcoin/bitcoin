@@ -140,7 +140,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
             [&] {
                 auto max_addresses = fuzzed_data_provider.ConsumeIntegral<size_t>();
                 auto max_pct = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 100);
-                (void)connman.GetAddresses(/*requestor=*/random_node, max_addresses, max_pct);
+                (void)connman.GetAddresses(/*network_key=*/random_node.m_network_key, max_addresses, max_pct);
             },
             [&] {
                 (void)connman.GetDeterministicRandomizer(fuzzed_data_provider.ConsumeIntegral<uint64_t>());

@@ -4703,7 +4703,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         if (pfrom.HasPermission(NetPermissionFlags::Addr)) {
             vAddr = m_connman.GetAddressesUnsafe(MAX_ADDR_TO_SEND, MAX_PCT_ADDR_TO_SEND, /*network=*/std::nullopt);
         } else {
-            vAddr = m_connman.GetAddresses(pfrom, MAX_ADDR_TO_SEND, MAX_PCT_ADDR_TO_SEND);
+            vAddr = m_connman.GetAddresses(pfrom.m_network_key, MAX_ADDR_TO_SEND, MAX_PCT_ADDR_TO_SEND);
         }
         for (const CAddress &addr : vAddr) {
             PushAddress(*peer, addr);

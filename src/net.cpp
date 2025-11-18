@@ -3537,11 +3537,10 @@ std::vector<CAddress> CConnman::GetAddressesUnsafe(size_t max_addresses, size_t 
     return addresses;
 }
 
-std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addresses, size_t max_pct)
+std::vector<CAddress> CConnman::GetAddresses(uint64_t network_key, size_t max_addresses, size_t max_pct)
 {
-    uint64_t network_id = requestor.m_network_key;
     const auto current_time = GetTime<std::chrono::microseconds>();
-    auto r = m_addr_response_caches.emplace(network_id, CachedAddrResponse{});
+    auto r = m_addr_response_caches.emplace(network_key, CachedAddrResponse{});
     CachedAddrResponse& cache_entry = r.first->second;
     if (cache_entry.m_cache_entry_expiration < current_time) { // If emplace() added new one it has expiration 0.
         cache_entry.m_addrs_response_cache = GetAddressesUnsafe(max_addresses, max_pct, /*network=*/std::nullopt);
