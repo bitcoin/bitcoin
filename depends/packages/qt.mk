@@ -14,6 +14,7 @@ $(package)_patches := dont_hardcode_pwd.patch
 $(package)_patches += qtbase_avoid_qmain.patch
 $(package)_patches += qtbase_platformsupport.patch
 $(package)_patches += qtbase_plugins_cocoa.patch
+$(package)_patches += qtbase_plugins_windows11style.patch
 $(package)_patches += qtbase_skip_tools.patch
 $(package)_patches += rcc_hardcode_timestamp.patch
 $(package)_patches += qttools_skip_dependencies.patch
@@ -258,6 +259,7 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/qtbase_avoid_qmain.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase_platformsupport.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase_plugins_cocoa.patch && \
+  patch -p1 -i $($(package)_patch_dir)/qtbase_plugins_windows11style.patch && \
   patch -p1 -i $($(package)_patch_dir)/static_fixes.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase_skip_tools.patch && \
   patch -p1 -i $($(package)_patch_dir)/rcc_hardcode_timestamp.patch
