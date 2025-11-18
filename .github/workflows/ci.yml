@@ -196,7 +196,7 @@ jobs:
 
       - name: Save Ccache cache
         uses: actions/cache/save@v4
-        if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
+        if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch && steps.ccache-cache.outputs.cache-hit != 'true'
         with:
           path: ${{ env.CCACHE_DIR }}
           # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
@@ -276,7 +276,7 @@ jobs:
 
       - name: Save vcpkg binary cache
         uses: actions/cache/save@v4
-        if: github.event_name != 'pull_request' && steps.vcpkg-binary-cache.outputs.cache-hit != 'true' && matrix.job-type == 'standard'
+        if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch && steps.vcpkg-binary-cache.outputs.cache-hit != 'true' && matrix.job-type == 'standard'
         with:
           path: ~/AppData/Local/vcpkg/archives
           key: ${{ github.job }}-vcpkg-binary-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
