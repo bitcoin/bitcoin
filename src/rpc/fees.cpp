@@ -93,12 +93,12 @@ static RPCMethod estimatesmartfee()
                 CFeeRate min_relay_feerate{mempool.m_opts.min_relay_feerate};
                 fee_rate = std::max({fee_rate, min_mempool_feerate, min_relay_feerate});
                 result.pushKV("feerate", ValueFromAmount(fee_rate.GetFeePerK()));
-            } else {
-                for (auto& error : estimate.errors) {
-                    errors.push_back(error);
-                }
-                result.pushKV("errors", std::move(errors));
             }
+
+            for (auto& error : estimate.errors) {
+                errors.push_back(error);
+            }
+            result.pushKV("errors", std::move(errors));
             if (!block_policy_only) {
                 result.pushKV("estimator", FeeRateEstimatorTypeToString(estimate.feerate_estimator));
             }
