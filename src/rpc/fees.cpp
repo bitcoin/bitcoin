@@ -85,12 +85,12 @@ static RPCHelpMan estimatesmartfee()
                 CFeeRate min_relay_feerate{mempool.m_opts.min_relay_feerate};
                 feeRate = std::max({feeRate, min_mempool_feerate, min_relay_feerate});
                 result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
-            } else {
-                for (auto& error: res.errors) {
-                   errors.push_back(error);
-                }
-                result.pushKV("errors", std::move(errors));
             }
+
+            for (auto& error : res.errors) {
+                errors.push_back(error);
+            }
+            result.pushKV("errors", std::move(errors));
             result.pushKV("blocks", res.returned_target);
             return result;
         },
