@@ -86,7 +86,7 @@ class PackageRelayTest(BitcoinTestFramework):
         # Assemble return results
         packages_to_submit = [package_hex_1, package_hex_2, package_hex_3, package_hex_4]
         # node0: sender
-        # node1: pre-received the children (orphan)
+        # node1: pre-received the children (orphans, will be dropped on peer disconnect)
         # node3: pre-received the parents (too low fee)
         # All nodes receive parent_31 ahead of time.
         txns_to_send = [
@@ -115,10 +115,23 @@ class PackageRelayTest(BitcoinTestFramework):
             for tx in transactions_to_presend[i]:
                 peer.send_and_ping(msg_tx(tx))
 
+        # The fee-having parent should be the only thing in mempools
+        self.sync_mempools()
+        sufficient_parent = transactions_to_presend[2][0].txid_hex
+        for i, node in enumerate(self.nodes):
+            # node1 has non-empty orphanage as well
+            if i == 1:
+                assert_equal(len(self.nodes[i].getorphantxs()), 4)
+            else:
+                assert_equal(self.nodes[i].getorphantxs(), [])
+
+            assert_equal(node.getrawmempool(), [sufficient_parent])
+
         # Disconnect python peers to clear outstanding orphan requests with them, avoiding timeouts.
         # We are only interested in the syncing behavior between real nodes.
         for i in range(self.num_nodes):
             self.nodes[i].disconnect_p2ps()
+            self.wait_until(lambda: len(self.nodes[i].getorphantxs()) == 0)
 
         self.log.info("Submit full packages to node0")
         for package_hex in packages_to_submit:
@@ -126,6 +139,7 @@ class PackageRelayTest(BitcoinTestFramework):
             assert_equal(submitpackage_result["package_msg"], "success")
 
         self.log.info("Wait for mempools to sync")
+        self.wait_until(lambda: len(self.nodes[0].getrawmempool()) == 9)
         self.sync_mempools()
 
 
