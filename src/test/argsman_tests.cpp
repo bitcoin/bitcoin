@@ -640,6 +640,51 @@ BOOST_AUTO_TEST_CASE(util_GetArg)
     BOOST_CHECK_EQUAL(testArgs.GetArg("pritest4", "default"), "b");
 }
 
+BOOST_AUTO_TEST_CASE(util_AddCommand)
+{
+    enum TestFail { SUCCESS, PARSE_FAIL, PARSE_ERROR, NO_COMMAND, COMMAND_OPTS };
+
+    auto testfn = [&](const auto& argv) -> TestFail {
+        TestArgsManager test_args;
+        test_args.AddArg("-opt1=<file name>", "Opt 1", ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::COMMAND_OPTIONS);
+        test_args.AddArg("-opt2=<file name>", "Opt 2", ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::COMMAND_OPTIONS);
+        test_args.AddArg("-opt3=<file name>", "Opt 3", ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
+
+        test_args.AddCommand("cmd1", "No specific options");
+        test_args.AddCommand("cmd2", "Opt 1", {"-opt1"});
+        test_args.AddCommand("cmd3", "Opt 1 or 2", {"-opt1", "-opt2"});
+
+        std::string error;
+        if (!test_args.ParseParameters(argv.size(), argv.data(), error)) return PARSE_FAIL;
+        if (!error.empty()) return PARSE_ERROR;
+        const auto command = test_args.GetCommand();
+        if (!command) return NO_COMMAND;
+        std::vector<std::string> details;
+        if (!test_args.CheckCommandOptions(command->command, &details)) return COMMAND_OPTS;
+        return SUCCESS;
+    };
+
+    BOOST_CHECK_EQUAL(COMMAND_OPTS, testfn(std::array{"x", "-opt1=foo", "cmd1"}));
+    BOOST_CHECK_EQUAL(SUCCESS,      testfn(std::array{"x", "cmd1", "-opt1=foo"})); // things after the command are "args" and left unparsed, not options
+
+    BOOST_CHECK_EQUAL(SUCCESS,      testfn(std::array{"x", "-opt1=foo", "cmd2"}));
+    BOOST_CHECK_EQUAL(SUCCESS,      testfn(std::array{"x", "-opt1=foo", "cmd3"}));
+    BOOST_CHECK_EQUAL(COMMAND_OPTS, testfn(std::array{"x", "-opt2=foo", "cmd1"}));
+    BOOST_CHECK_EQUAL(COMMAND_OPTS, testfn(std::array{"x", "-opt2=foo", "cmd2"}));
+    BOOST_CHECK_EQUAL(SUCCESS,      testfn(std::array{"x", "-opt2=foo", "cmd3"}));
+    BOOST_CHECK_EQUAL(SUCCESS,      testfn(std::array{"x", "-opt3=foo", "cmd1"}));
+    BOOST_CHECK_EQUAL(SUCCESS,      testfn(std::array{"x", "-opt3=foo", "cmd2"}));
+    BOOST_CHECK_EQUAL(SUCCESS,      testfn(std::array{"x", "-opt3=foo", "cmd3"}));
+
+    BOOST_CHECK_EQUAL(COMMAND_OPTS, testfn(std::array{"x", "-opt1=foo", "-opt3=bar", "-opt2=baz", "cmd1"}));
+    BOOST_CHECK_EQUAL(COMMAND_OPTS, testfn(std::array{"x", "-opt1=foo", "-opt3=bar", "-opt2=baz", "cmd2"}));
+    BOOST_CHECK_EQUAL(SUCCESS,      testfn(std::array{"x", "-opt1=foo", "-opt3=bar", "-opt2=baz", "cmd3"}));
+
+    BOOST_CHECK_EQUAL(PARSE_FAIL,   testfn(std::array{"x", "cmd4"}));
+    BOOST_CHECK_EQUAL(NO_COMMAND,   testfn(std::array{"x", "-opt3=foo"}));
+    BOOST_CHECK_EQUAL(PARSE_FAIL,   testfn(std::array{"x", "-opt4=foo"}));
+}
+
 BOOST_AUTO_TEST_CASE(util_GetChainTypeString)
 {
     TestArgsManager test_args;
