@@ -91,9 +91,8 @@ int main(int argc, char* argv[])
             // Since "bitcoin rpc" is a new interface that doesn't need to be
             // backward compatible, enable -named by default so it is convenient
             // for callers to use a mix of named and unnamed parameters. Callers
-            // can override this by specifying -nonamed, but should not need to
-            // unless they are passing string values containing '=' characters
-            // as unnamed parameters.
+            // can override this by specifying -nonamed, but it handles parameters
+            // that contain '=' characters, so -nonamed should rarely be needed.
             args.emplace_back("-named");
         } else if (cmd.command == "wallet") {
             args.emplace_back("bitcoin-wallet");
