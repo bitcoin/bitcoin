@@ -8,6 +8,7 @@
 #include <net_processing.h>
 
 #include <util/threadinterrupt.h>
+#include <util/time.h>
 
 #include <thread>
 
@@ -38,6 +39,7 @@ public:
 private:
     llmq::CSigningManager& m_sig_manager;
 
+    CleanupThrottler<NodeClock> cleanupThrottler;
     std::thread workThread;
     CThreadInterrupt workInterrupt;
 };

@@ -526,11 +526,6 @@ void CSigningManager::TruncateRecoveredSig(Consensus::LLMQType llmqType, const u
 
 void CSigningManager::Cleanup()
 {
-    constexpr auto CLEANUP_INTERVAL{5000ms};
-    if (!cleanupThrottler.TryCleanup(CLEANUP_INTERVAL)) {
-        return;
-    }
-
     int64_t maxAge = gArgs.GetIntArg("-maxrecsigsage", DEFAULT_MAX_RECOVERED_SIGS_AGE);
 
     db.CleanupOldRecoveredSigs(maxAge);

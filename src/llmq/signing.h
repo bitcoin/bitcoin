@@ -14,7 +14,6 @@
 #include <saltedhasher.h>
 #include <sync.h>
 #include <unordered_lru_cache.h>
-#include <util/time.h>
 
 #include <memory>
 #include <string_view>
@@ -169,8 +168,6 @@ private:
     Uint256HashMap<std::shared_ptr<const CRecoveredSig>> pendingReconstructedRecoveredSigs GUARDED_BY(cs_pending);
 
     FastRandomContext rnd GUARDED_BY(cs_pending);
-
-    CleanupThrottler<NodeClock> cleanupThrottler;
 
     mutable Mutex cs_listeners;
     std::vector<CRecoveredSigsListener*> recoveredSigsListeners GUARDED_BY(cs_listeners);

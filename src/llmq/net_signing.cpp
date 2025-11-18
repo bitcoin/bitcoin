@@ -168,7 +168,10 @@ void NetSigning::WorkThreadMain()
     while (!workInterrupt) {
         bool fMoreWork = ProcessPendingRecoveredSigs();
 
-        m_sig_manager.Cleanup();
+        constexpr auto CLEANUP_INTERVAL{5000ms};
+        if (cleanupThrottler.TryCleanup(CLEANUP_INTERVAL)) {
+            m_sig_manager.Cleanup();
+        }
 
         // TODO Wakeup when pending signing is needed?
         if (!fMoreWork && !workInterrupt.sleep_for(std::chrono::milliseconds(100))) {
