@@ -704,6 +704,69 @@ public:
         : Handle{view} {}
 };
 
+template <typename Derived>
+class BlockHeaderApi
+{
+private:
+    auto impl() const
+    {
+        return static_cast<const Derived*>(this)->get();
+    }
+
+    friend Derived;
+    BlockHeaderApi() = default;
+
+public:
+    BlockHash Hash() const
+    {
+        return BlockHash{btck_block_header_get_hash(impl())};
+    }
+
+    BlockHashView PrevHash() const
+    {
+        return BlockHashView{btck_block_header_get_prev_hash(impl())};
+    }
+
+    uint32_t Timestamp() const
+    {
+        return btck_block_header_get_timestamp(impl());
+    }
+
+    uint32_t Bits() const
+    {
+        return btck_block_header_get_bits(impl());
+    }
+
+    int32_t Version() const
+    {
+        return btck_block_header_get_version(impl());
+    }
+
+    uint32_t Nonce() const
+    {
+        return btck_block_header_get_nonce(impl());
+    }
+};
+
+class BlockHeaderView : public View<btck_BlockHeader>, public BlockHeaderApi<BlockHeaderView>
+{
+public:
+    explicit BlockHeaderView(const btck_BlockHeader* ptr) : View{ptr} {}
+};
+
+class BlockHeader : public Handle<btck_BlockHeader, btck_block_header_copy, btck_block_header_destroy>, public BlockHeaderApi<BlockHeader>
+{
+public:
+    explicit BlockHeader(std::span<const std::byte> raw_header)
+        : Handle{btck_block_header_create(reinterpret_cast<const unsigned char*>(raw_header.data()), raw_header.size())} {}
+
+    BlockHeader(const BlockHeaderView& view)
+        : Handle{view} {}
+
+    BlockHeader(btck_BlockHeader* header)
+        : Handle{header} {}
+};
+
 class Block : public Handle<btck_Block, btck_block_copy, btck_block_destroy>
 {
 public:
@@ -729,6 +792,11 @@ public:
     BlockHash GetHash() const
     {
         return BlockHash{btck_block_get_hash(get())};
+    }
+
+    BlockHeader GetHeader() const
+    {
+        return BlockHeader{btck_block_get_header(get())};
     }
 
     std::vector<std::byte> ToBytes() const
@@ -808,6 +876,11 @@ public:
     BlockHashView GetHash() const
     {
         return BlockHashView{btck_block_tree_entry_get_block_hash(get())};
+    }
+
+    BlockHeader GetHeader() const
+    {
+        return BlockHeader{btck_block_tree_entry_get_block_header(get())};
     }
 };
 
@@ -1144,6 +1217,11 @@ public:
         return res == 0;
     }
 
+    bool ProcessBlockHeader(const BlockHeader& header, BlockValidationState& state)
+    {
+        return btck_chainstate_manager_process_block_header(get(), header.get(), state.get()) == 0;
+    }
+
     ChainView GetChain() const
     {
         return ChainView{btck_chainstate_manager_get_active_chain(get())};
@@ -1154,6 +1232,11 @@ public:
         auto entry{btck_chainstate_manager_get_block_tree_entry_by_hash(get(), block_hash.get())};
         if (!entry) return std::nullopt;
         return entry;
+    }
+
+    BlockTreeEntry GetBestEntry() const
+    {
+        return btck_chainstate_manager_get_best_entry(get());
     }
 
     std::optional<Block> ReadBlock(const BlockTreeEntry& entry) const
