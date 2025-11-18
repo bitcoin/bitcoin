@@ -83,6 +83,7 @@ using interfaces::Node;
 using interfaces::WalletLoader;
 using node::BlockAssembler;
 using node::BlockWaitOptions;
+using node::CoinbaseTemplate;
 using util::Join;
 
 namespace node {
@@ -863,6 +864,7 @@ public:
     explicit BlockTemplateImpl(BlockAssembler::Options assemble_options,
                                std::unique_ptr<CBlockTemplate> block_template,
                                NodeContext& node) : m_assemble_options(std::move(assemble_options)),
+                                                    m_coinbase_template(ExtractCoinbaseTemplate(*Assert(block_template))),
                                                     m_block_template(std::move(block_template)),
                                                     m_node(node)
     {
@@ -887,6 +889,11 @@ public:
     std::vector<int64_t> getTxSigops() override
     {
         return m_block_template->vTxSigOpsCost;
+    }
+
+    CoinbaseTemplate getCoinbase() override
+    {
+        return m_coinbase_template;
     }
 
     CTransactionRef getCoinbaseTx() override
@@ -928,6 +935,8 @@ public:
     }
 
     const BlockAssembler::Options m_assemble_options;
+
+    const CoinbaseTemplate m_coinbase_template;
 
     const std::unique_ptr<CBlockTemplate> m_block_template;
 

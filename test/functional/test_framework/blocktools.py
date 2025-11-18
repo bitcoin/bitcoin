@@ -63,6 +63,8 @@ COINBASE_MATURITY = 100
 # From BIP141
 WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
 
+NULL_OUTPOINT = COutPoint(0, 0xffffffff)
+
 NORMAL_GBT_REQUEST_PARAMS = {"rules": ["segwit"]}
 VERSIONBITS_LAST_OLD_BLOCK_VERSION = 4
 MIN_BLOCKS_TO_KEEP = 288
@@ -154,7 +156,7 @@ def create_coinbase(height, pubkey=None, *, script_pubkey=None, extra_output_scr
     script. This is useful to pad block weight/sigops as needed. """
     coinbase = CTransaction()
     coinbase.nLockTime = height - 1
-    coinbase.vin.append(CTxIn(COutPoint(0, 0xffffffff), script_BIP34_coinbase_height(height), MAX_SEQUENCE_NONFINAL))
+    coinbase.vin.append(CTxIn(NULL_OUTPOINT, script_BIP34_coinbase_height(height), MAX_SEQUENCE_NONFINAL))
     coinbaseoutput = CTxOut()
     coinbaseoutput.nValue = nValue * COIN
     if nValue == 50:

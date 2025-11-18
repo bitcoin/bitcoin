@@ -259,6 +259,17 @@ std::optional<BlockRef> GetTip(ChainstateManager& chainman);
 /* Waits for the connected tip to change until timeout has elapsed. During node initialization, this will wait until the tip is connected (regardless of `timeout`).
  * Returns the current tip, or nullopt if the node is shutting down. */
 std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const uint256& current_tip, MillisecondsDouble& timeout);
+
+/*
+ * Extract relevant fields from the dummy coinbase transaction in the template.
+ *
+ * Extracts only OP_RETURN coinbase outputs, i.e. the witness commitment. If
+ * BlockAssembler::CreateNewBlock() is patched to add more OP_RETURN outputs
+ * e.g. for merge mining, those will be included. The dummy output that spends
+ * the full reward is excluded.
+ */
+node::CoinbaseTemplate ExtractCoinbaseTemplate(const node::CBlockTemplate& block_template);
+
 } // namespace node
 
 #endif // BITCOIN_NODE_MINER_H

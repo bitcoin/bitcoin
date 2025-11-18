@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <utility>
 #include <numeric>
+#include <ranges>
 
 namespace node {
 
@@ -162,6 +163,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     coinbaseTx.vin.resize(1);
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vin[0].nSequence = CTxIn::MAX_SEQUENCE_NONFINAL; // Make sure timelock is enforced.
+    // Add an output that spends the full coinbase reward.
+    // ExtractCoinbaseTemplate relies on this being the first output.
     coinbaseTx.vout.resize(1);
     coinbaseTx.vout[0].scriptPubKey = m_options.coinbase_output_script;
     coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
@@ -590,5 +593,45 @@ std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifi
     // Must release m_tip_block_mutex before getTip() locks cs_main, to
     // avoid deadlocks.
     return GetTip(chainman);
+}
+
+node::CoinbaseTemplate ExtractCoinbaseTemplate(const node::CBlockTemplate& block_template)
+{
+    CTransactionRef coinbase_tx{block_template.block.vtx[0]};
+    node::CoinbaseTemplate coinbase{};
+
+    coinbase.version = coinbase_tx->version;
+    Assert(coinbase_tx->vin.size() == 1);
+    coinbase.script_sig_prefix = coinbase_tx->vin[0].scriptSig;
+    // The CoinbaseTemplate interface guarantees a size limit. Raising it (e.g.
+    // if a future softfork needs to commit more than BIP34) is a
+    // (potentially silent) breaking change for clients.
+    if (!Assume(coinbase.script_sig_prefix.size() <= 8)) {
+        LogWarning("Unexpected %d byte scriptSig prefix size.",
+                    coinbase.script_sig_prefix.size());
+    }
+
+    if (coinbase_tx->HasWitness()) {
+        const auto& witness_stack{coinbase_tx->vin[0].scriptWitness.stack};
+        // Consensus requires the coinbase witness stack to have exactly one
+        // element of 32 bytes.
+        Assert(witness_stack.size() == 1 && witness_stack[0].size() == 32);
+        coinbase.witness = uint256(witness_stack[0]);
+    }
+
+    coinbase.sequence = coinbase_tx->vin[0].nSequence;
+
+    // The first output added by BlockAssembler::CreateNewBlock is a dummy
+    // with the full reward. Use it to set value_remaining and exclude it
+    // from required_outputs.
+    Assert(coinbase_tx->vout.size() > 0);
+    coinbase.value_remaining = coinbase_tx->vout[0].nValue;
+    for (const auto& output : coinbase_tx->vout | std::views::drop(1) ) {
+        coinbase.required_outputs.push_back(output);
+    }
+
+    coinbase.lock_time = coinbase_tx->nLockTime;
+
+    return coinbase;
 }
 } // namespace node

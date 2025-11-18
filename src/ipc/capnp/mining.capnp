@@ -27,6 +27,7 @@ interface BlockTemplate $Proxy.wrap("interfaces::BlockTemplate") {
     getBlock @2 (context: Proxy.Context) -> (result: Data);
     getTxFees @3 (context: Proxy.Context) -> (result: List(Int64));
     getTxSigops @4 (context: Proxy.Context) -> (result: List(Int64));
+    getCoinbase @12 (context: Proxy.Context) -> (result: CoinbaseTemplate);
     getCoinbaseTx @5 (context: Proxy.Context) -> (result: Data);
     getCoinbaseCommitment @6 (context: Proxy.Context) -> (result: Data);
     getWitnessCommitmentIndex @7 (context: Proxy.Context) -> (result: Int32);
@@ -50,4 +51,14 @@ struct BlockWaitOptions $Proxy.wrap("node::BlockWaitOptions") {
 struct BlockCheckOptions $Proxy.wrap("node::BlockCheckOptions") {
     checkMerkleRoot @0 :Bool $Proxy.name("check_merkle_root");
     checkPow @1 :Bool $Proxy.name("check_pow");
+}
+
+struct CoinbaseTemplate $Proxy.wrap("node::CoinbaseTemplate") {
+    version @0 :UInt32 $Proxy.name("version");
+    sequence @1 :UInt32 $Proxy.name("sequence");
+    scriptSigPrefix @2 :Data $Proxy.name("script_sig_prefix");
+    witness @3 :Data $Proxy.name("witness");
+    valueRemaining @4 :Int64 $Proxy.name("value_remaining");
+    requiredOutputs @5 :List(Data) $Proxy.name("required_outputs");
+    lockTime @6 :UInt32 $Proxy.name("lock_time");
 }
