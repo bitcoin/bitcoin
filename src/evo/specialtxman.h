@@ -79,6 +79,13 @@ public:
                                const CCoinsViewCache& view, bool debugLogs, BlockValidationState& state,
                                CDeterministicMNList& mnListRet) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+    // Variant that takes an explicit starting list instead of loading from GetListForBlock
+    // Used for rebuilding diffs from trusted snapshots
+    bool RebuildListFromBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindexPrev,
+                               const CDeterministicMNList& prevList, const CCoinsViewCache& view, bool debugLogs,
+                               BlockValidationState& state, CDeterministicMNList& mnListRet)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
 private:
     bool CheckCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindex, const CCbTx& cbTx,
                                      BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);

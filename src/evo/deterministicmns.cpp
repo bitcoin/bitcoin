@@ -25,6 +25,7 @@
 #include <util/irange.h>
 #include <util/pointer.h>
 
+#include <functional>
 #include <optional>
 #include <memory>
 
@@ -1569,4 +1570,337 @@ bool CDeterministicMNManager::MigrateLegacyDiffs(const CBlockIndex* const tip_in
               keys_to_erase.size());
 
     return true;
+}
+
+CDeterministicMNManager::RecalcDiffsResult CDeterministicMNManager::RecalculateAndRepairDiffs(
+    const CBlockIndex* start_index, const CBlockIndex* stop_index, ChainstateManager& chainman,
+    BuildListFromBlockFunc build_list_func, bool repair)
+{
+    AssertLockHeld(::cs_main);
+
+    RecalcDiffsResult result;
+    result.start_height = start_index->nHeight;
+    result.stop_height = stop_index->nHeight;
+
+    const auto& consensus_params = Params().GetConsensus();
+
+    // Clamp start height to DIP0003 activation (no snapshots/diffs exist before this)
+    if (start_index->nHeight < consensus_params.DIP0003Height) {
+        start_index = stop_index->GetAncestor(consensus_params.DIP0003Height);
+        if (!start_index) {
+            result.verification_errors.push_back(strprintf("Stop height %d is below DIP0003 activation height %d",
+                                                           stop_index->nHeight, consensus_params.DIP0003Height));
+            return result;
+        }
+        LogPrintf("CDeterministicMNManager::%s -- Clamped start height from %d to DIP0003 activation height %d\n",
+                  __func__, result.start_height, consensus_params.DIP0003Height);
+        // Update result to reflect the clamped start height
+        result.start_height = start_index->nHeight;
+    }
+
+    // Collect all snapshot blocks in the range
+    std::vector<const CBlockIndex*> snapshot_blocks = CollectSnapshotBlocks(start_index, stop_index, consensus_params);
+
+    if (snapshot_blocks.empty()) {
+        result.verification_errors.push_back("Could not find starting snapshot");
+        return result;
+    }
+
+    if (snapshot_blocks.size() < 2) {
+        result.verification_errors.push_back(strprintf("Need at least 2 snapshots, found %d", snapshot_blocks.size()));
+        return result;
+    }
+
+    LogPrintf("CDeterministicMNManager::%s -- Processing %d snapshot pairs between heights %d and %d\n", __func__,
+              snapshot_blocks.size() - 1, result.start_height, result.stop_height);
+
+    // Storage for recalculated diffs if we plan to repair
+    std::vector<std::pair<uint256, CDeterministicMNListDiff>> recalculated_diffs;
+
+    // Process each pair of consecutive snapshots
+    for (size_t i = 0; i < snapshot_blocks.size() - 1; ++i) {
+        const CBlockIndex* from_index = snapshot_blocks[i];
+        const CBlockIndex* to_index = snapshot_blocks[i + 1];
+
+        // Load the snapshots from disk
+        CDeterministicMNList from_snapshot;
+        CDeterministicMNList to_snapshot;
+
+        bool has_from_snapshot = m_evoDb.Read(std::make_pair(DB_LIST_SNAPSHOT, from_index->GetBlockHash()), from_snapshot);
+        bool has_to_snapshot = m_evoDb.Read(std::make_pair(DB_LIST_SNAPSHOT, to_index->GetBlockHash()), to_snapshot);
+
+        // Handle missing snapshots
+        if (!has_from_snapshot) {
+            // The initial snapshot at DIP0003 activation might not exist in the database on nodes
+            // that synced before the fix to explicitly write it. This is the only acceptable case.
+            if (from_index->nHeight == consensus_params.DIP0003Height) {
+                // Create an empty initial snapshot (matching what GetListForBlockInternal does)
+                from_snapshot = CDeterministicMNList(from_index->GetBlockHash(), from_index->nHeight, 0);
+                LogPrintf("CDeterministicMNManager::%s -- Using empty initial snapshot at DIP0003 height %d\n",
+                          __func__, from_index->nHeight);
+            } else {
+                // Any other missing snapshot is critical corruption beyond our repair capability
+                result.verification_errors.push_back(strprintf("CRITICAL: Snapshot missing at height %d. "
+                    "This cannot be repaired by this tool - full reindex required.", from_index->nHeight));
+                return result;
+            }
+        }
+
+        if (!has_to_snapshot) {
+            // Missing target snapshot is always critical - we cannot repair snapshots, only diffs
+            result.verification_errors.push_back(strprintf("CRITICAL: Snapshot missing at height %d. "
+                "This cannot be repaired by this tool - full reindex required.", to_index->nHeight));
+            return result;
+        }
+
+        // Log progress periodically (every 100 snapshot pairs) to avoid spam
+        if (i % 100 == 0) {
+            LogPrintf("CDeterministicMNManager::%s -- Progress: verifying snapshot pair %d/%d (heights %d-%d)\n",
+                      __func__, i + 1, snapshot_blocks.size() - 1, from_index->nHeight, to_index->nHeight);
+        }
+
+        // Verify this snapshot pair
+        bool is_snapshot_pair_valid = VerifySnapshotPair(from_index, to_index, from_snapshot, to_snapshot, result);
+
+        // If repair mode is enabled and verification failed, recalculate diffs from blockchain
+        if (repair && !is_snapshot_pair_valid) {
+            auto temp_diffs = RepairSnapshotPair(from_index, to_index, from_snapshot, to_snapshot, build_list_func, result);
+            if (temp_diffs.empty()) {
+                // RepairSnapshotPair failed - this is a critical error, cannot continue
+                return result;
+            }
+            // Only commit diffs if recalculation verification passed
+            recalculated_diffs.insert(recalculated_diffs.end(), temp_diffs.begin(), temp_diffs.end());
+            result.diffs_recalculated += temp_diffs.size();
+        }
+    }
+
+    // Write repaired diffs to database
+    if (repair) {
+        WriteRepairedDiffs(recalculated_diffs, result);
+    }
+
+    return result;
+}
+
+std::vector<const CBlockIndex*> CDeterministicMNManager::CollectSnapshotBlocks(
+    const CBlockIndex* start_index, const CBlockIndex* stop_index, const Consensus::Params& consensus_params)
+{
+    AssertLockHeld(::cs_main);
+
+    std::vector<const CBlockIndex*> snapshot_blocks;
+
+    // Add the starting snapshot (find the snapshot at or before start)
+    // Walk backwards to find a snapshot block (divisible by DISK_SNAPSHOT_PERIOD)
+    // or the initial snapshot at DIP0003 activation height
+    const CBlockIndex* snapshot_start_index = start_index;
+    while (snapshot_start_index && snapshot_start_index->nHeight > consensus_params.DIP0003Height &&
+           (snapshot_start_index->nHeight % DISK_SNAPSHOT_PERIOD) != 0) {
+        snapshot_start_index = snapshot_start_index->pprev;
+    }
+
+    if (!snapshot_start_index) {
+        return snapshot_blocks; // Empty vector indicates error
+    }
+
+    // Collect all snapshot blocks up to and including the stop block
+    snapshot_blocks.push_back(snapshot_start_index);
+
+    // Find all subsequent snapshot heights
+    int current_snapshot_height = snapshot_start_index->nHeight;
+    while (true) {
+        // Calculate next snapshot height
+        int next_snapshot_height;
+        if (current_snapshot_height == consensus_params.DIP0003Height) {
+            // If we're at DIP0003 activation (initial snapshot), next is at first regular interval
+            next_snapshot_height = ((consensus_params.DIP0003Height / DISK_SNAPSHOT_PERIOD) + 1) * DISK_SNAPSHOT_PERIOD;
+        } else {
+            // Otherwise, add DISK_SNAPSHOT_PERIOD
+            next_snapshot_height = current_snapshot_height + DISK_SNAPSHOT_PERIOD;
+        }
+
+        if (next_snapshot_height > stop_index->nHeight) {
+            break;
+        }
+
+        const CBlockIndex* next_snapshot_index = stop_index->GetAncestor(next_snapshot_height);
+        if (!next_snapshot_index) {
+            break;
+        }
+
+        snapshot_blocks.push_back(next_snapshot_index);
+        current_snapshot_height = next_snapshot_height;
+    }
+
+    return snapshot_blocks;
+}
+
+bool CDeterministicMNManager::VerifySnapshotPair(
+    const CBlockIndex* from_index, const CBlockIndex* to_index, const CDeterministicMNList& from_snapshot,
+    const CDeterministicMNList& to_snapshot, RecalcDiffsResult& result)
+{
+    AssertLockHeld(::cs_main);
+
+    // Verify this snapshot pair by applying all stored diffs sequentially
+    CDeterministicMNList test_list = from_snapshot;
+
+    try {
+        for (int nHeight = from_index->nHeight + 1; nHeight <= to_index->nHeight; ++nHeight) {
+            const CBlockIndex* pIndex = to_index->GetAncestor(nHeight);
+            if (!pIndex) {
+                result.verification_errors.push_back(strprintf("Failed to get ancestor at height %d", nHeight));
+                return false;
+            }
+
+            CDeterministicMNListDiff diff;
+            if (!m_evoDb.Read(std::make_pair(DB_LIST_DIFF, pIndex->GetBlockHash()), diff)) {
+                result.verification_errors.push_back(strprintf("Failed to read diff at height %d", nHeight));
+                return false;
+            }
+
+            diff.nHeight = nHeight;
+            test_list.ApplyDiff(pIndex, diff);
+        }
+    } catch (const std::exception& e) {
+        result.verification_errors.push_back(strprintf("Exception during verification: %s", e.what()));
+        return false;
+    }
+
+    // Verify that applying all diffs results in the target snapshot
+    bool is_snapshot_pair_valid = test_list.IsEqual(to_snapshot);
+
+    if (is_snapshot_pair_valid) {
+        result.snapshots_verified++;
+    } else {
+        result.verification_errors.push_back(
+            strprintf("Verification failed between snapshots at heights %d and %d: "
+                      "Applied diffs do not match target snapshot",
+                      from_index->nHeight, to_index->nHeight));
+    }
+
+    return is_snapshot_pair_valid;
+}
+
+std::vector<std::pair<uint256, CDeterministicMNListDiff>> CDeterministicMNManager::RepairSnapshotPair(
+    const CBlockIndex* from_index, const CBlockIndex* to_index, const CDeterministicMNList& from_snapshot,
+    const CDeterministicMNList& to_snapshot, BuildListFromBlockFunc build_list_func, RecalcDiffsResult& result)
+{
+    AssertLockHeld(::cs_main);
+
+    CDeterministicMNList current_list = from_snapshot;
+    // Temporary storage for recalculated diffs (one per block in this snapshot interval)
+    std::vector<std::pair<uint256, CDeterministicMNListDiff>> temp_diffs;
+    temp_diffs.reserve(to_index->nHeight - from_index->nHeight);
+
+    LogPrintf("CDeterministicMNManager::%s -- Repairing: recalculating diffs between snapshots at heights %d and %d\n",
+              __func__, from_index->nHeight, to_index->nHeight);
+
+    try {
+        for (int nHeight = from_index->nHeight + 1; nHeight <= to_index->nHeight; ++nHeight) {
+            const CBlockIndex* pIndex = to_index->GetAncestor(nHeight);
+
+            // Read the actual block from disk
+            CBlock block;
+            if (!node::ReadBlockFromDisk(block, pIndex, Params().GetConsensus())) {
+                result.repair_errors.push_back(strprintf("CRITICAL: Failed to read block at height %d. "
+                    "Cannot repair - full reindex required.", nHeight));
+                return {}; // Critical error - cannot continue repair
+            }
+
+            // Use a dummy coins view to avoid UTXO lookups. At chain tip, coins from
+            // historical blocks may already be spent. Since these blocks were fully
+            // validated when originally connected, we don't need to re-verify coin
+            // availability - we only need to extract special transactions.
+            CCoinsView view_dummy;
+            CCoinsViewCache view(&view_dummy);
+
+            // Build the new list by processing this block's special transactions
+            // Starting from current_list (our trusted state), not from corrupted diffs
+            CDeterministicMNList next_list;
+            BlockValidationState state;
+            if (!build_list_func(block, pIndex->pprev, current_list, view, false, state, next_list)) {
+                result.repair_errors.push_back(
+                    strprintf("CRITICAL: Failed to build list for block at height %d: %s. "
+                              "Cannot repair - full reindex required.", nHeight, state.ToString()));
+                return {}; // Critical error - cannot continue repair
+            }
+
+            // Set the correct block hash
+            next_list.SetBlockHash(pIndex->GetBlockHash());
+
+            // Calculate the diff between current and next
+            CDeterministicMNListDiff recalc_diff = current_list.BuildDiff(next_list);
+            recalc_diff.nHeight = nHeight;
+            // Store in temporary vector for this snapshot pair
+            temp_diffs.emplace_back(pIndex->GetBlockHash(), recalc_diff);
+
+            // Move forward
+            current_list = std::move(next_list);
+        }
+
+        // Verify that applying all diffs results in the target snapshot
+        if (current_list.IsEqual(to_snapshot)) {
+            LogPrintf("CDeterministicMNManager::%s -- Successfully recalculated %d diffs between heights %d and %d\n",
+                      __func__, temp_diffs.size(), from_index->nHeight, to_index->nHeight);
+            return temp_diffs; // Success - return recalculated diffs
+        } else {
+            result.repair_errors.push_back(
+                strprintf("CRITICAL: Recalculation failed between snapshots at heights %d and %d: "
+                          "Applied diffs do not match target snapshot. Cannot repair - full reindex required.",
+                          from_index->nHeight, to_index->nHeight));
+            return {}; // Failed verification - return empty vector
+        }
+    } catch (const std::exception& e) {
+        result.repair_errors.push_back(strprintf("CRITICAL: Exception during recalculation: %s. "
+                                                  "Cannot repair - full reindex required.", e.what()));
+        return {}; // Exception - return empty vector
+    }
+}
+
+void CDeterministicMNManager::WriteRepairedDiffs(
+    const std::vector<std::pair<uint256, CDeterministicMNListDiff>>& recalculated_diffs, RecalcDiffsResult& result)
+{
+    AssertLockNotHeld(cs);
+
+    if (recalculated_diffs.empty()) {
+        return;
+    }
+
+    CDBBatch batch(m_evoDb.GetRawDB());
+    const size_t BATCH_SIZE_THRESHOLD = 1 << 24; // 16MB
+    size_t diffs_written = 0;
+
+    LogPrintf("CDeterministicMNManager::%s -- Writing %d repaired diffs to database...\n",
+              __func__, recalculated_diffs.size());
+
+    for (const auto& [block_hash, diff] : recalculated_diffs) {
+        batch.Write(std::make_pair(DB_LIST_DIFF, block_hash), diff);
+        diffs_written++;
+
+        // Write batch when it gets too large
+        if (batch.SizeEstimate() >= BATCH_SIZE_THRESHOLD) {
+            LogPrintf("CDeterministicMNManager::%s -- Flushing batch (%d diffs written so far)...\n",
+                      __func__, diffs_written);
+            m_evoDb.GetRawDB().WriteBatch(batch);
+            batch.Clear();
+        }
+    }
+
+    // Write any remaining diffs in the batch
+    if (batch.SizeEstimate() > 0) {
+        LogPrintf("CDeterministicMNManager::%s -- Writing final batch...\n", __func__);
+        m_evoDb.GetRawDB().WriteBatch(batch);
+        batch.Clear();
+    }
+
+    // Clear caches for repaired diffs so next read gets fresh data from disk
+    // Must clear both diff cache and list cache since lists were built from old diffs
+    LOCK(cs);
+    for (const auto& [block_hash, diff] : recalculated_diffs) {
+        mnListDiffsCache.erase(block_hash);
+        mnListsCache.erase(block_hash);
+    }
+
+    LogPrintf("CDeterministicMNManager::%s -- Successfully repaired %d diffs (caches cleared)\n", __func__,
+              recalculated_diffs.size());
 }
