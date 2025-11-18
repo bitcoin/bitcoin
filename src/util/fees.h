@@ -32,6 +32,7 @@ enum class FeeSource {
  */
 enum class FeeRateEstimatorType {
     BLOCK_POLICY,
+    MEMPOOL_POLICY,
 };
 
 // Block percentiles fee rate (in BTC/vB).
