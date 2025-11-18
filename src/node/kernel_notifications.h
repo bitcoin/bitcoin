@@ -37,7 +37,7 @@ public:
 
     [[nodiscard]] kernel::InterruptResult blockTip(SynchronizationState state, const CBlockIndex& index, double verification_progress) override EXCLUSIVE_LOCKS_REQUIRED(!m_tip_block_mutex);
 
-    void headerTip(SynchronizationState state, int64_t height, int64_t timestamp, bool presync) override;
+    void headerTip(SynchronizationState state, int64_t height, int64_t timestamp, bool presync) override EXCLUSIVE_LOCKS_REQUIRED(!m_header_tip_mutex);
 
     void progress(const bilingual_str& title, int progress_percent, bool resume_possible) override;
 
@@ -53,6 +53,9 @@ public:
     int m_stop_at_height{DEFAULT_STOPATHEIGHT};
     //! Useful for tests, can be set to false to avoid shutdown on fatal error.
     bool m_shutdown_on_fatal_error{true};
+
+    Mutex m_header_tip_mutex;
+    std::condition_variable m_header_tip_cv GUARDED_BY(m_header_tip_mutex);
 
     Mutex m_tip_block_mutex;
     std::condition_variable m_tip_block_cv GUARDED_BY(m_tip_block_mutex);
