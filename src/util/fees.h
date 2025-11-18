@@ -34,6 +34,33 @@ enum class FeeRateEstimatorType {
     BLOCK_POLICY,
 };
 
+// Block percentiles fee rate (in BTC/vB).
+struct Percentiles {
+    FeePerVSize p25;
+    FeePerVSize p50;
+    FeePerVSize p75;
+    FeePerVSize p95;
+
+    Percentiles() = default;
+
+    bool empty() const
+    {
+        return p25.IsEmpty() && p50.IsEmpty() && p75.IsEmpty() && p95.IsEmpty();
+    }
+};
+
+/**
+ * Calculates the percentile fee rates from a given block template chunks.
+ *
+ * This function assumes that the chunk fee rates in the input vector are sorted in descending order
+ * based on mining score priority.
+ *
+ * @param[in] chunk_feerates A vector block_template chunk fee rates.
+ * @param[in] total_weight The total weight units to use for percentile fee rate calculations.
+ * @return Percentiles object containing the calculated percentile fee rates.
+ */
+Percentiles CalculatePercentiles(const std::vector<FeePerVSize>& chunk_feerates, const int32_t total_weight);
+
 /**
  * @struct FeeRateEstimatorResult
  * Represents the response returned by a fee rate estimator.
