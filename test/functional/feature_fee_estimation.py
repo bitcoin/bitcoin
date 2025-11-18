@@ -11,6 +11,9 @@ import time
 
 from test_framework.messages import (
     COIN,
+    DEFAULT_BLOCK_RESERVED_WEIGHT,
+    MAX_BLOCK_WEIGHT,
+    WITNESS_SCALE_FACTOR,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -25,6 +28,8 @@ from test_framework.wallet import MiniWallet
 
 MAX_FILE_AGE = 60
 SECONDS_PER_HOUR = 60 * 60
+MEMPOOL_FEE_ESTIMATOR_CACHE_LIFE = 7 # Seconds
+BLOCK_POLICY_ESTIMATOR_ERROR = "Insufficient data or no feerate found"
 
 def small_txpuzzle_randfee(
     wallet, from_node, conflist, unconflist, amount, min_fee, fee_increment, batch_reqs
@@ -85,7 +90,6 @@ def check_raw_estimates(node, fees_seen):
                     f"Estimated fee ({feerate}) out of range ({min(fees_seen)},{max(fees_seen)})"
                 )
 
-
 def check_smart_estimates(node, fees_seen):
     """Call estimatesmartfee and verify that the estimates meet certain invariants."""
 
@@ -137,6 +141,10 @@ def check_fee_estimates_btw_modes(node, expected_conservative, expected_economic
     assert_equal(fee_est_economical, expected_economical)
     assert_equal(fee_est_default, expected_economical)
 
+def verify_estimate_response(estimate, feerate, errors):
+    if feerate:
+        assert_equal(estimate["feerate"], feerate)
+    assert all(err in estimate["errors"] for err in errors)
 
 class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -320,7 +328,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Start node and ensure the fee_estimates.dat file was not read
         self.start_node(0)
-        assert_equal(self.nodes[0].estimatesmartfee(1)["errors"], ["Insufficient data or no feerate found"])
+        assert_equal(self.nodes[0].estimatesmartfee(1)["errors"], [BLOCK_POLICY_ESTIMATOR_ERROR])
 
 
     def test_estimate_dat_is_flushed_periodically(self):
@@ -400,32 +408,93 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.connect_nodes(0, 1)
         self.connect_nodes(0, 2)
         self.sync_blocks()
-        assert_equal(self.nodes[0].estimatesmartfee(1)["errors"], ["Insufficient data or no feerate found"])
+        assert_equal(self.nodes[0].estimatesmartfee(1)["errors"], [BLOCK_POLICY_ESTIMATOR_ERROR])
 
-    def broadcast_and_mine(self, broadcaster, miner, feerate, count):
-        """Broadcast and mine some number of transactions with a specified fee rate."""
-        for _ in range(count):
-            self.wallet.send_self_transfer(from_node=broadcaster, fee_rate=feerate)
-        self.sync_mempools()
-        self.generate(miner, 1)
+
+    def broadcast_and_mine_blocks(self, fee_rate, blocks, txs):
+        """Helper for broadcasting some number of transactions from node 1 and mining them
+           using node 2 consecutively for some number of blocks.
+        """
+        for _ in range(blocks):
+            for _ in range(txs):
+                self.wallet.send_self_transfer(from_node=self.nodes[1], fee_rate=fee_rate)
+            self.sync_mempools()
+            self.generate(self.nodes[2], 1)
+
+    def send_transactions(self, utxos, fee_rate, target_vsize):
+        for utxo in utxos:
+            self.wallet.send_self_transfer(
+                from_node=self.nodes[0],
+                utxo_to_spend=utxo,
+                fee_rate=fee_rate,
+                target_vsize=target_vsize,
+            )
 
     def test_estimation_modes(self):
         low_feerate = Decimal("0.001")
         high_feerate = Decimal("0.005")
         tx_count = 24
         # Broadcast and mine high fee transactions for the first 12 blocks.
-        for _ in range(12):
-            self.broadcast_and_mine(self.nodes[1], self.nodes[2], high_feerate, tx_count)
+        self.broadcast_and_mine_blocks(high_feerate, blocks=12, txs=tx_count)
         check_fee_estimates_btw_modes(self.nodes[0], high_feerate, high_feerate)
 
         # We now track 12 blocks; short horizon stats will start decaying.
         # Broadcast and mine low fee transactions for the next 4 blocks.
-        for _ in range(4):
-            self.broadcast_and_mine(self.nodes[1], self.nodes[2], low_feerate, tx_count)
+        self.broadcast_and_mine_blocks(low_feerate, blocks=4, txs=tx_count)
         # conservative mode will consider longer time horizons while economical mode does not
         # Check the fee estimates for both modes after mining low fee transactions.
         check_fee_estimates_btw_modes(self.nodes[0], high_feerate, low_feerate)
 
+    def test_estimatesmartfee_return_mempool_estimates(self):
+        node0 = self.nodes[0]
+        self.log.info("Ensure node0's mempool is empty at the start")
+        assert_equal(node0.getmempoolinfo()['size'], 0)
+
+        self.log.info("Test estimatesmartfee after restart with empty mempool and no block policy estimator data")
+        mempool_estimator_error = "Mempool Fee Rate Estimator: Unable to provide a fee rate due to insufficient data"
+        estimate_after_restart = node0.estimatesmartfee(1)
+        verify_estimate_response(estimate_after_restart, None, [BLOCK_POLICY_ESTIMATOR_ERROR])
+
+        self.log.info("Test estimatesmartfee after gathering sufficient block policy estimator data")
+        # Generate high-feerate transactions and mine them over 6 blocks
+        high_feerate, tx_count = Decimal("0.004"), 24
+        self.broadcast_and_mine_blocks(high_feerate, blocks=6, txs=tx_count)
+        estimate_from_block_policy = node0.estimatesmartfee(1)
+        verify_estimate_response(estimate_from_block_policy, high_feerate, [mempool_estimator_error])
+
+        self.log.info("Verify we return block policy estimator estimate when mempool provides higher estimate")
+        # Add 10 large insane-feerate transactions enough to generate a block template
+        num_txs = 10
+        target_vsize = int(((MAX_BLOCK_WEIGHT - DEFAULT_BLOCK_RESERVED_WEIGHT) / WITNESS_SCALE_FACTOR) / num_txs)
+        utxos = [self.wallet.get_utxo(confirmed_only=True) for _ in range(num_txs)]
+        insane_feerate = Decimal("0.01")
+        self.send_transactions(utxos, insane_feerate, target_vsize)
+        estimate_after_spike = node0.estimatesmartfee(1)
+        verify_estimate_response(estimate_after_spike, high_feerate, [])
+
+        self.log.info("Test caching of recent estimates")
+        # Restart node with empty mempool, then broadcast low-feerate transactions
+        # Check that estimate reflects the lower feerate even after higher-feerate transactions were recently broadcasted
+        self.stop_node(0)
+        os.remove(node0.chain_path / "mempool.dat")
+        self.restart_node(0)
+
+        low_feerate = Decimal("0.00004")
+        self.send_transactions(utxos, low_feerate, target_vsize)
+        lower_estimate = node0.estimatesmartfee(1)
+        verify_estimate_response(lower_estimate, low_feerate, [])
+
+        # Verify estimates are cached even after replacing the low-feerate txs with med-feerate
+        med_feerate = Decimal("0.0002")
+        self.send_transactions(utxos, med_feerate, target_vsize)
+        cached_estimate = node0.estimatesmartfee(1)
+        verify_estimate_response(cached_estimate, low_feerate, [])
+
+        self.log.info("Test estimate refresh after cache expiration")
+        current_timestamp = int(time.time())
+        node0.setmocktime(current_timestamp + (MEMPOOL_FEE_ESTIMATOR_CACHE_LIFE + 1))
+        new_estimate = node0.estimatesmartfee(1)
+        verify_estimate_response(new_estimate, med_feerate, [])
 
     def run_test(self):
         self.log.info("This test is time consuming, please be patient")
@@ -473,11 +542,16 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Test estimatesmartfee modes")
         self.test_estimation_modes()
 
+        self.log.info("Test that estimatesmartfee returns mempool estimates when it is lower")
+        self.clear_estimates()
+        self.test_estimatesmartfee_return_mempool_estimates()
+
         self.log.info("Testing that fee estimation is disabled in blocksonly.")
         self.restart_node(0, ["-blocksonly"])
         assert_raises_rpc_error(
             -32603, "Fee estimation disabled", self.nodes[0].estimatesmartfee, 2
         )
+
 
 
 if __name__ == "__main__":
