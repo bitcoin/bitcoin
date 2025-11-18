@@ -156,13 +156,17 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
     }
 
     const std::string test_name{G_TEST_GET_FULL_NAME ? G_TEST_GET_FULL_NAME() : ""};
-    if (!m_node.args->IsArgSet("-testdatadir")) {
+    auto rand_path = [&]() {
         // To avoid colliding with a leftover prior datadir, and to allow
         // tests, such as the fuzz tests to run in several processes at the
         // same time, add a random element to the path. Keep it small enough to
         // avoid a MAX_PATH violation on Windows.
-        const auto rand{HexStr(g_rng_temp_path.randbytes(10))};
-        m_path_root = fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / test_name / rand;
+        const std::string rand{HexStr(g_rng_tmp_path.randbytes(10))};
+        return fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / test_name / rand;
+    };
+
+    if (!m_node.args->IsArgSet("-testdatadir")) {
+        m_path_root = rand_path();
         TryCreateDirectories(m_path_root);
     } else {
         // Custom data directory
