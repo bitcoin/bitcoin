@@ -37,6 +37,7 @@ protected:
     virtual int64_t BeginTime() const =0;
     virtual int64_t EndTime() const =0;
     virtual int MinActivationHeight() const { return 0; }
+    virtual int MaxActivationHeight() const { return std::numeric_limits<int>::max(); }
     virtual int ActiveDuration() const { return std::numeric_limits<int>::max(); }
     virtual int Period() const =0;
     virtual int Threshold() const =0;
@@ -66,6 +67,7 @@ protected:
     int64_t BeginTime() const override { return dep.nStartTime; }
     int64_t EndTime() const override { return dep.nTimeout; }
     int MinActivationHeight() const override { return dep.min_activation_height; }
+    int MaxActivationHeight() const override { return dep.max_activation_height; }
     int ActiveDuration() const override { return dep.active_duration; }
     int Period() const override { return dep.period; }
     int Threshold() const override { return dep.threshold; }

@@ -1322,6 +1322,9 @@ static void SoftForkDescPushBack(const CBlockIndex* blockindex, UniValue& softfo
     bip9.pushKV("start_time", depparams.nStartTime);
     bip9.pushKV("timeout", depparams.nTimeout);
     bip9.pushKV("min_activation_height", depparams.min_activation_height);
+    if (depparams.max_activation_height < std::numeric_limits<int>::max()) {
+        bip9.pushKV("max_activation_height", depparams.max_activation_height);
+    }
 
     // BIP9 status
     bip9.pushKV("status", info.current_state);
@@ -1485,6 +1488,7 @@ const std::vector<RPCResult> RPCHelpForDeployment{
         {RPCResult::Type::NUM_TIME, "start_time", "the minimum median time past of a block at which the bit gains its meaning"},
         {RPCResult::Type::NUM_TIME, "timeout", "the median time past of a block at which the deployment is considered failed if not yet locked in"},
         {RPCResult::Type::NUM, "min_activation_height", "minimum height of blocks for which the rules may be enforced"},
+        {RPCResult::Type::NUM, "max_activation_height", /*optional=*/true, "height at which the deployment will unconditionally activate (absent for miner-vetoable deployments)"},
         {RPCResult::Type::STR, "status", "status of deployment at specified block (one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\", \"expired\")"},
         {RPCResult::Type::NUM, "since", "height of the first block to which the status applies"},
         {RPCResult::Type::STR, "status_next", "status of deployment at the next block"},

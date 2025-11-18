@@ -30,6 +30,7 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
     int nPeriod = Period();
     int nThreshold = Threshold();
     int min_activation_height = MinActivationHeight();
+    int max_activation_height = MaxActivationHeight();
     int active_duration = ActiveDuration();
     int64_t nTimeStart = BeginTime();
     int64_t nTimeTimeout = EndTime();
@@ -111,8 +112,15 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
                     pindexCount = pindexCount->pprev;
                 }
                 if (count >= nThreshold) {
+                    // Normal BIP9 activation via signaling
+                    stateNext = ThresholdState::LOCKED_IN;
+                } else if (max_activation_height < std::numeric_limits<int>::max() && pindexPrev->nHeight + 1 >= max_activation_height - nPeriod) {
+                    // Force LOCKED_IN one period before max_activation_height
+                    // This ensures activation happens AT max_activation_height (not one period later)
+                    // Overrides timeout to guarantee activation
                     stateNext = ThresholdState::LOCKED_IN;
                 } else if (pindexPrev->GetMedianTimePast() >= nTimeTimeout) {
+                    // Timeout without activation
                     stateNext = ThresholdState::FAILED;
                 }
                 break;
