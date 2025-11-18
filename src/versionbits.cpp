@@ -19,15 +19,18 @@ std::string StateName(ThresholdState state)
     case LOCKED_IN: return "locked_in";
     case ACTIVE: return "active";
     case FAILED: return "failed";
+    case EXPIRED: return "expired";
     }
     return "invalid";
 }
 
+// NOLINTBEGIN(misc-no-recursion)
 ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexPrev, ThresholdConditionCache& cache) const
 {
     int nPeriod = Period();
     int nThreshold = Threshold();
     int min_activation_height = MinActivationHeight();
+    int active_duration = ActiveDuration();
     int64_t nTimeStart = BeginTime();
     int64_t nTimeTimeout = EndTime();
 
@@ -67,6 +70,23 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
     assert(cache.contains(pindexPrev));
     ThresholdState state = cache[pindexPrev];
 
+    // Everything is already cached. Return immediately.
+    if (vToCompute.empty()) {
+        return state;
+    }
+
+    // For temporary deployments, we need to know when ACTIVE started to determine the
+    // ACTIVE -> EXPIRED transition. We get this by calling GetStateSinceHeightFor, which
+    // internally calls GetStateFor on earlier periods. Those calls could recurse back here
+    // and call GetStateSinceHeightFor again, but the early return above prevents this:
+    // the walk-back above guarantees all periods before pindexPrev are already cached,
+    // and GetStateSinceHeightFor only walks backwards, so its GetStateFor calls always hit
+    // the cache, have empty vToCompute, and return immediately via the early return.
+    int activation_height = 0;
+    if (state == ThresholdState::ACTIVE && active_duration < std::numeric_limits<int>::max()) {
+        activation_height = GetStateSinceHeightFor(pindexPrev, cache);
+    }
+
     // Now walk forward and compute the state of descendants of pindexPrev
     while (!vToCompute.empty()) {
         ThresholdState stateNext = state;
@@ -101,11 +121,21 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
                 // Progresses into ACTIVE provided activation height will have been reached.
                 if (pindexPrev->nHeight + 1 >= min_activation_height) {
                     stateNext = ThresholdState::ACTIVE;
+                    if (active_duration < std::numeric_limits<int>::max()) {
+                        activation_height = pindexPrev->nHeight + 1;
+                    }
+                }
+                break;
+            }
+            case ThresholdState::ACTIVE: {
+                if (active_duration < std::numeric_limits<int>::max() &&
+                    pindexPrev->nHeight + 1 >= activation_height + active_duration) {
+                    stateNext = ThresholdState::EXPIRED;
                 }
                 break;
             }
             case ThresholdState::FAILED:
-            case ThresholdState::ACTIVE: {
+            case ThresholdState::EXPIRED: {
                 // Nothing happens, these are terminal states.
                 break;
             }
@@ -115,6 +145,7 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
 
     return state;
 }
+// NOLINTEND(misc-no-recursion)
 
 BIP9Stats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockIndex* pindex, std::vector<bool>* signalling_blocks) const
 {
@@ -154,6 +185,13 @@ BIP9Stats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockI
     return stats;
 }
 
+// WARNING: This function is called from GetStateFor and calls GetStateFor in turn.
+// The recursion is safe because this function calls GetStateFor first (which populates
+// the cache), then only walks BACKWARDS through periods that are now cached. GetStateFor
+// returns immediately for cached entries (via the early return when vToCompute is empty).
+// If the backwards walk is ever changed to query uncached periods, infinite recursion
+// will result.
+// NOLINTBEGIN(misc-no-recursion)
 int AbstractThresholdConditionChecker::GetStateSinceHeightFor(const CBlockIndex* pindexPrev, ThresholdConditionCache& cache) const
 {
     int64_t start_time = BeginTime();
@@ -188,6 +226,7 @@ int AbstractThresholdConditionChecker::GetStateSinceHeightFor(const CBlockIndex*
     // Adjust the result because right now we point to the parent block.
     return pindexPrev->nHeight + 1;
 }
+// NOLINTEND(misc-no-recursion)
 
 BIP9Info VersionBitsCache::Info(const CBlockIndex& block_index, const Consensus::Params& params, Consensus::DeploymentPos id)
 {
@@ -240,6 +279,7 @@ BIP9GBTStatus VersionBitsCache::GBTStatus(const CBlockIndex& block_index, const 
         switch (state) {
         case DEFINED:
         case FAILED:
+        case EXPIRED:
             // Not exposed to GBT
             break;
         case STARTED:

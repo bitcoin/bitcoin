@@ -9,6 +9,8 @@
 #include <sync.h>
 #include <versionbits.h>
 
+#include <limits>
+
 /** BIP 9 defines a finite-state-machine to deploy a softfork in multiple stages.
  *  State transitions happen during retarget period if conditions are met
  *  In case of reorg, transitions can go backward. Without transition, state is
@@ -18,8 +20,9 @@ enum class ThresholdState : uint8_t {
     DEFINED,   // First state that each softfork starts out as. The genesis block is by definition in this state for each deployment.
     STARTED,   // For blocks past the starttime.
     LOCKED_IN, // For at least one retarget period after the first retarget period with STARTED blocks of which at least threshold have the associated bit set in nVersion, until min_activation_height is reached.
-    ACTIVE,    // For all blocks after the LOCKED_IN retarget period (final state)
+    ACTIVE,    // For all blocks after the LOCKED_IN retarget period (final state for permanent deployments)
     FAILED,    // For all blocks once the first retarget period after the timeout time is hit, if LOCKED_IN wasn't already reached (final state)
+    EXPIRED,   // For temporary deployments: all blocks after active_duration periods past activation (final state)
 };
 
 /** Get a string with the state name */
@@ -34,6 +37,7 @@ protected:
     virtual int64_t BeginTime() const =0;
     virtual int64_t EndTime() const =0;
     virtual int MinActivationHeight() const { return 0; }
+    virtual int ActiveDuration() const { return std::numeric_limits<int>::max(); }
     virtual int Period() const =0;
     virtual int Threshold() const =0;
 
@@ -62,6 +66,7 @@ protected:
     int64_t BeginTime() const override { return dep.nStartTime; }
     int64_t EndTime() const override { return dep.nTimeout; }
     int MinActivationHeight() const override { return dep.min_activation_height; }
+    int ActiveDuration() const override { return dep.active_duration; }
     int Period() const override { return dep.period; }
     int Threshold() const override { return dep.threshold; }
 

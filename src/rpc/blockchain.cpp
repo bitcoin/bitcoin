@@ -1354,6 +1354,11 @@ static void SoftForkDescPushBack(const CBlockIndex* blockindex, UniValue& softfo
     if (info.active_since.has_value()) {
         rv.pushKV("height", *info.active_since);
         is_active = (*info.active_since <= blockindex->nHeight + 1);
+        // Add height_end for temporary softforks
+        const auto& deployment = chainman.GetConsensus().vDeployments[id];
+        if (deployment.active_duration < std::numeric_limits<int>::max()) {
+            rv.pushKV("height_end", *info.active_since + deployment.active_duration - 1);
+        }
     }
     rv.pushKV("active", is_active);
     rv.pushKV("bip9", bip9);
@@ -1471,7 +1476,8 @@ RPCHelpMan getblockchaininfo()
 namespace {
 const std::vector<RPCResult> RPCHelpForDeployment{
     {RPCResult::Type::STR, "type", "one of \"buried\", \"bip9\""},
-    {RPCResult::Type::NUM, "height", /*optional=*/true, "height of the first block which the rules are or will be enforced (only for \"buried\" type, or \"bip9\" type with \"active\" status)"},
+    {RPCResult::Type::NUM, "height", /*optional=*/true, "height of the first block which enforces the rules (only for \"buried\" type, or \"bip9\" type with \"active\" status)"},
+    {RPCResult::Type::NUM, "height_end", /*optional=*/true, "height of the last block which enforces the rules (only for \"bip9\" type with \"active\" status and temporary deployments)"},
     {RPCResult::Type::BOOL, "active", "true if the rules are enforced for the mempool and the next block"},
     {RPCResult::Type::OBJ, "bip9", /*optional=*/true, "status of bip9 softforks (only for \"bip9\" type)",
     {
@@ -1479,7 +1485,7 @@ const std::vector<RPCResult> RPCHelpForDeployment{
         {RPCResult::Type::NUM_TIME, "start_time", "the minimum median time past of a block at which the bit gains its meaning"},
         {RPCResult::Type::NUM_TIME, "timeout", "the median time past of a block at which the deployment is considered failed if not yet locked in"},
         {RPCResult::Type::NUM, "min_activation_height", "minimum height of blocks for which the rules may be enforced"},
-        {RPCResult::Type::STR, "status", "status of deployment at specified block (one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\")"},
+        {RPCResult::Type::STR, "status", "status of deployment at specified block (one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\", \"expired\")"},
         {RPCResult::Type::NUM, "since", "height of the first block to which the status applies"},
         {RPCResult::Type::STR, "status_next", "status of deployment at the next block"},
         {RPCResult::Type::OBJ, "statistics", /*optional=*/true, "numeric statistics about signalling for a softfork (only for \"started\" and \"locked_in\" status)",
