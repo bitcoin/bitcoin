@@ -57,9 +57,9 @@ class DashGovernanceTest (DashTestFramework):
 
         # Move to the superblock cycle start block
         n = sb_cycle - self.nodes[0].getblockcount() % sb_cycle
-        for _ in range(n):
-            self.bump_mocktime(156)
-            self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks())
+        if n > 0:
+            self.bump_mocktime(156 * n)
+            self.generate(self.nodes[0], n, sync_fun=lambda: self.sync_blocks())
 
         self.log.info("Prepare proposals")
 
@@ -101,9 +101,8 @@ class DashGovernanceTest (DashTestFramework):
         self.log.info("Move into sb maturity window")
         n = sb_immaturity_window - self.nodes[0].getblockcount() % sb_cycle
         assert n >= 0
-        for _ in range(n):
-            self.bump_mocktime(156)
-            self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks(self.nodes[0:5]))
+        self.bump_mocktime(156 * n)
+        self.generate(self.nodes[0], n, sync_fun=lambda: self.sync_blocks(self.nodes[0:5]))
 
         self.log.info("Wait for new trigger and votes on non-isolated nodes")
         sb_block_height = self.nodes[0].getblockcount() // sb_cycle * sb_cycle + sb_cycle
@@ -122,9 +121,8 @@ class DashGovernanceTest (DashTestFramework):
         assert n > 1
 
         self.log.info("Move remaining n blocks until the next Superblock")
-        for _ in range(n - 1):
-            self.bump_mocktime(156)
-            self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks(self.nodes[0:5]))
+        self.bump_mocktime(156 * (n-1))
+        self.generate(self.nodes[0], n-1, sync_fun=lambda: self.sync_blocks(self.nodes[0:5]))
 
         # Confirm all is good
         self.wait_until(lambda: have_trigger_for_height(self.nodes[0:5], sb_block_height), timeout=5)
