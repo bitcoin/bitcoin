@@ -108,6 +108,54 @@ The following can be set when running make: `make FOO=bar`
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate CMake cache
 variables will be set when generating the Bitcoin Core buildsystem. In this case, `-DENABLE_WALLET=OFF`.
 
+## Compiler Configuration
+
+The depends system uses different compiler variables for different purposes:
+
+### Native Tools (build\_\* variables)
+
+These control compilers used to compile tools that run natively on the build machine during compilation:
+
+- `build_CC`: C compiler for native tools (default: `gcc` on Linux, `clang` on macOS/FreeBSD/OpenBSD)
+- `build_CXX`: C++ compiler for native tools (default: `g++` on Linux, `clang++` on macOS/FreeBSD/OpenBSD)
+- `build_AR`, `build_RANLIB`, etc.: Other native build tools
+
+This separation allows cross-compilation where build and target architecture differ. These include Cap'n Proto code generators (`native_capnp`), Qt build tools (`native_qt`), and multiprocess utilities (`native_libmultiprocess`).
+
+You might want to override native tool compilers when your default build compiler (set in `./depends/builders/*.mk`) is not available. For example, when using a Linux host without gcc/g++.
+
+Example using Clang for native build tools on Linux:
+
+```
+make build_CC=clang build_CXX=clang++
+```
+
+### Target Architecture (host\_\* variables)
+
+These control compilers for the target architecture you're building for:
+
+- `host_CC`: C compiler for target architecture
+- `host_CXX`: C++ compiler for target architecture
+- `host_AR`, `host_RANLIB`, etc.: Other target tools
+
+For cross-compilation, these are automatically derived by prefixing tools with the `HOST` triplet (e.g., when `HOST=x86_64-w64-mingw32`, `host_CC` becomes `x86_64-w64-mingw32-gcc`).
+
+Example overriding target compilers:
+
+```
+make HOST=x86_64-pc-linux-gnu host_CC=clang host_CXX=clang++
+```
+
+### Environment Variables (CC, CXX)
+
+Setting `CC` and `CXX` environment variables will override target (`host\_\*`) compilers but **NOT** build (`build\_\*`)  compilers. Native tools will still use the default build compiler unless explicitly overridden with `build\_\*` variables.
+
+To ensure both build and host compilers use Clang:
+
+```
+make build_CC=clang build_CXX=clang++ host_CC=clang host_CXX=clang++
+```
+
 ## Cross compilation
 
 To build for another arch/OS:
