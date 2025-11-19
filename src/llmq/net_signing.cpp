@@ -28,6 +28,7 @@ void NetSigning::ProcessMessage(CNode& pfrom, const std::string& msg_type, CData
 
     if (!Params().GetLLMQ(recoveredSig->getLlmqType()).has_value()) {
         m_peer_manager->PeerMisbehaving(pfrom.GetId(), 100);
+        return;
     }
 
     m_sig_manager.VerifyAndProcessRecoveredSig(pfrom.GetId(), std::move(recoveredSig));
