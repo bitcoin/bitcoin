@@ -363,6 +363,26 @@ private:
      */
     Id GetNewId();
 };
+
+class HTTPRemoteClient
+{
+public:
+    //! ID provided by HTTPServer upon connection and instantiation
+    const HTTPServer::Id m_id;
+
+    //! Remote address of connected client
+    const CService m_addr;
+
+    //! IP:port of connected client, cached for logging purposes
+    const std::string m_origin;
+
+    explicit HTTPRemoteClient(HTTPServer::Id id, const CService& addr)
+        : m_id(id), m_addr(addr), m_origin(addr.ToStringAddrPort()) {};
+
+    // Disable copies (should only be used as shared pointers)
+    HTTPRemoteClient(const HTTPRemoteClient&) = delete;
+    HTTPRemoteClient& operator=(const HTTPRemoteClient&) = delete;
+};
 } // namespace http_bitcoin
 
 #endif // BITCOIN_HTTPSERVER_H
