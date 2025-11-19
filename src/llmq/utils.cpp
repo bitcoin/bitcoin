@@ -858,29 +858,14 @@ bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, CConnman& 
             __func__, isMember, pQuorumBaseBlockIndex->GetBlockHash().ToString());
 
     Uint256HashSet connections;
-    Uint256HashSet relayMembers;
     if (isMember) {
         connections = GetQuorumConnections(llmqParams, dmnman, qsnapman, sporkman, pQuorumBaseBlockIndex, myProTxHash,
                                            true);
-        // If all-members-connected is enabled for this quorum type, leverage the full-mesh
-        // connections for low-latency recovered sig propagation by treating all members as
-        // relay members (instead of the ring-based subset). This ensures peers will send
-        // QSENDRECSIGS to each other across the full mesh and set m_wants_recsigs widely.
-        if (IsAllMembersConnectedEnabled(llmqParams.type, sporkman)) {
-            for (const auto& dmn : members) {
-                if (dmn->proTxHash != myProTxHash) {
-                    relayMembers.emplace(dmn->proTxHash);
-                }
-            }
-        } else {
-            relayMembers = GetQuorumRelayMembers(llmqParams, dmnman, qsnapman, pQuorumBaseBlockIndex, myProTxHash, true);
-        }
     } else {
         auto cindexes = CalcDeterministicWatchConnections(llmqParams.type, pQuorumBaseBlockIndex, members.size(), 1);
         for (auto idx : cindexes) {
             connections.emplace(members[idx]->proTxHash);
         }
-        relayMembers = connections;
     }
     if (!connections.empty()) {
         if (!connman.HasMasternodeQuorumNodes(llmqParams.type, pQuorumBaseBlockIndex->GetBlockHash()) &&
@@ -898,9 +883,7 @@ bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, CConnman& 
             LogPrint(BCLog::NET_NETCONN, debugMsg.c_str()); /* Continued */
         }
         connman.SetMasternodeQuorumNodes(llmqParams.type, pQuorumBaseBlockIndex->GetBlockHash(), connections);
-    }
-    if (!relayMembers.empty()) {
-        connman.SetMasternodeQuorumRelayMembers(llmqParams.type, pQuorumBaseBlockIndex->GetBlockHash(), relayMembers);
+        connman.SetMasternodeQuorumRelayMembers(llmqParams.type, pQuorumBaseBlockIndex->GetBlockHash(), connections);
     }
     return true;
 }
