@@ -27,7 +27,7 @@ public:
     }
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv) override;
 
-    bool ProcessPendingRecoveredSigs();
+    [[nodiscard]] bool ProcessPendingRecoveredSigs();
     void ProcessRecoveredSig(std::shared_ptr<const llmq::CRecoveredSig> recoveredSig, bool consider_proactive_relay);
 
     void Start() override;

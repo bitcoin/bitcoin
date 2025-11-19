@@ -198,14 +198,15 @@ public:
 
     // Used by NetSigning:
     const CQuorumManager& Qman() { return qman; }
-    Uint256HashMap<std::shared_ptr<const CRecoveredSig>> FetchPendingReconstructed() EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
-    bool CollectPendingRecoveredSigsToVerify(
+    [[nodiscard]] Uint256HashMap<std::shared_ptr<const CRecoveredSig>> FetchPendingReconstructed()
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
+    [[nodiscard]] bool CollectPendingRecoveredSigsToVerify(
         size_t maxUniqueSessions, std::unordered_map<NodeId, std::list<std::shared_ptr<const CRecoveredSig>>>& retSigShares,
         std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
-    std::vector<CRecoveredSigsListener*> GetListeners() const EXCLUSIVE_LOCKS_REQUIRED(!cs_listeners);
+    [[nodiscard]] std::vector<CRecoveredSigsListener*> GetListeners() const EXCLUSIVE_LOCKS_REQUIRED(!cs_listeners);
     // Returns true if recovered sigs should be send to listeners
-    bool ProcessRecoveredSig(const std::shared_ptr<const CRecoveredSig>& recoveredSig)
+    [[nodiscard]] bool ProcessRecoveredSig(const std::shared_ptr<const CRecoveredSig>& recoveredSig)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
 
 private:
