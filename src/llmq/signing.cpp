@@ -396,9 +396,8 @@ void CSigningManager::VerifyAndProcessRecoveredSig(NodeId from, std::shared_ptr<
 }
 
 bool CSigningManager::CollectPendingRecoveredSigsToVerify(
-        size_t maxUniqueSessions,
-        std::unordered_map<NodeId, std::list<std::shared_ptr<const CRecoveredSig>>>& retSigShares,
-        std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums)
+    size_t maxUniqueSessions, std::unordered_map<NodeId, std::list<std::shared_ptr<const CRecoveredSig>>>& retSigShares,
+    std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CBLSPublicKey, StaticSaltedHasher>& ret_pubkeys)
 {
     bool more_work{false};
 
@@ -436,16 +435,13 @@ bool CSigningManager::CollectPendingRecoveredSigsToVerify(
                     !pendingReconstructedRecoveredSigs.empty();
     }
 
-    for (auto& p : retSigShares) {
-        NodeId nodeId = p.first;
-        auto& v = p.second;
-
+    for (auto& [nodeId, v] : retSigShares) {
         for (auto it = v.begin(); it != v.end();) {
             const auto& recSig = *it;
 
             auto llmqType = recSig->getLlmqType();
             auto quorumKey = std::make_pair(recSig->getLlmqType(), recSig->getQuorumHash());
-            if (!retQuorums.count(quorumKey)) {
+            if (!ret_pubkeys.count(quorumKey)) {
                 auto quorum = qman.GetQuorum(llmqType, recSig->getQuorumHash());
                 if (!quorum) {
                     LogPrint(BCLog::LLMQ, "CSigningManager::%s -- quorum %s not found, node=%d\n", __func__,
@@ -460,7 +456,7 @@ bool CSigningManager::CollectPendingRecoveredSigsToVerify(
                     continue;
                 }
 
-                retQuorums.emplace(quorumKey, quorum);
+                ret_pubkeys.emplace(quorumKey, quorum->qc->quorumPublicKey);
             }
 
             ++it;

@@ -201,7 +201,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
     [[nodiscard]] bool CollectPendingRecoveredSigsToVerify(
         size_t maxUniqueSessions, std::unordered_map<NodeId, std::list<std::shared_ptr<const CRecoveredSig>>>& retSigShares,
-        std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums)
+        std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CBLSPublicKey, StaticSaltedHasher>& ret_pubkeys)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
     [[nodiscard]] std::vector<CRecoveredSigsListener*> GetListeners() const EXCLUSIVE_LOCKS_REQUIRED(!cs_listeners);
     // Returns true if recovered sigs should be send to listeners

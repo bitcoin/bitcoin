@@ -4,8 +4,6 @@
 
 #include <llmq/net_signing.h>
 
-#include <llmq/commitment.h>
-#include <llmq/quorums.h>
 #include <llmq/signhash.h>
 #include <llmq/signing.h>
 
@@ -82,10 +80,10 @@ bool NetSigning::ProcessPendingRecoveredSigs()
     }
 
     std::unordered_map<NodeId, std::list<std::shared_ptr<const llmq::CRecoveredSig>>> recSigsByNode;
-    std::unordered_map<std::pair<Consensus::LLMQType, uint256>, llmq::CQuorumCPtr, StaticSaltedHasher> quorums;
+    std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CBLSPublicKey, StaticSaltedHasher> pubkeys;
 
     const size_t nMaxBatchSize{32};
-    bool more_work = m_sig_manager.CollectPendingRecoveredSigsToVerify(nMaxBatchSize, recSigsByNode, quorums);
+    bool more_work = m_sig_manager.CollectPendingRecoveredSigsToVerify(nMaxBatchSize, recSigsByNode, pubkeys);
     if (recSigsByNode.empty()) {
         return false;
     }
@@ -95,10 +93,7 @@ bool NetSigning::ProcessPendingRecoveredSigs()
     CBLSBatchVerifier<NodeId, uint256> batchVerifier(false, false);
 
     size_t verifyCount = 0;
-    for (const auto& p : recSigsByNode) {
-        NodeId nodeId = p.first;
-        const auto& v = p.second;
-
+    for (const auto& [nodeId, v] : recSigsByNode) {
         for (const auto& recSig : v) {
             // we didn't verify the lazy signature until now
             if (!recSig->sig.Get().IsValid()) {
@@ -106,9 +101,8 @@ bool NetSigning::ProcessPendingRecoveredSigs()
                 break;
             }
 
-            const auto& quorum = quorums.at(std::make_pair(recSig->getLlmqType(), recSig->getQuorumHash()));
-            batchVerifier.PushMessage(nodeId, recSig->GetHash(), recSig->buildSignHash().Get(), recSig->sig.Get(),
-                                      quorum->qc->quorumPublicKey);
+            const auto& pubkey = pubkeys.at(std::make_pair(recSig->getLlmqType(), recSig->getQuorumHash()));
+            batchVerifier.PushMessage(nodeId, recSig->GetHash(), recSig->buildSignHash().Get(), recSig->sig.Get(), pubkey);
             verifyCount++;
         }
     }
@@ -121,10 +115,7 @@ bool NetSigning::ProcessPendingRecoveredSigs()
              verifyCount, verifyTimer.count(), recSigsByNode.size());
 
     Uint256HashSet processed;
-    for (const auto& p : recSigsByNode) {
-        NodeId nodeId = p.first;
-        const auto& v = p.second;
-
+    for (const auto& [nodeId, v] : recSigsByNode) {
         if (batchVerifier.badSources.count(nodeId)) {
             LogPrint(BCLog::LLMQ, "NetSigning::%s -- invalid recSig from other node, banning peer=%d\n", __func__, nodeId);
             m_peer_manager->PeerMisbehaving(nodeId, 100);
