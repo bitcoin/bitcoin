@@ -230,13 +230,14 @@ void ValidationSignals::BlockConnected(const ChainstateRole& role, std::shared_p
     ENQUEUE_AND_LOG_EVENT(std::move(event), std::move(log_msg));
 }
 
-void ValidationSignals::MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight)
+void ValidationSignals::MempoolTransactionsRemovedForBlock(const std::vector<CTransactionRef>& block_txs, const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight)
 {
-    auto log_msg = LOG_MSG("%s: block height=%s txs removed=%s", __func__,
-                          nBlockHeight,
-                          txs_removed_for_block.size());
-    auto event = [txs_removed_for_block, nBlockHeight, this] {
-        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.MempoolTransactionsRemovedForBlock(txs_removed_for_block, nBlockHeight); });
+    auto log_msg = LOG_MSG("%s: block height=%s txs removed=%s block txs=%s", __func__,
+                           nBlockHeight,
+                           txs_removed_for_block.size(),
+                           block_txs.size());
+    auto event = [block_txs, txs_removed_for_block, nBlockHeight, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.MempoolTransactionsRemovedForBlock(block_txs, txs_removed_for_block, nBlockHeight); });
     };
     ENQUEUE_AND_LOG_EVENT(std::move(event), std::move(log_msg));
 }
