@@ -71,6 +71,12 @@ void FeeRateEstimatorManager::ShutdownFlush()
     }
 }
 
+std::vector<BlockData> FeeRateEstimatorManager::MempoolPolicyEstimatorBlocksStats()
+{
+    Assume(estimators.contains(FeeRateEstimatorType::BLOCK_POLICY));
+    return GetFeeRateEstimator<MemPoolFeeRateEstimator>(FeeRateEstimatorType::MEMPOOL_POLICY)->GetPrevBlockData();
+}
+
 void FeeRateEstimatorManager::TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t /*unused*/)
 {
     if (estimators.contains(FeeRateEstimatorType::BLOCK_POLICY)) {
