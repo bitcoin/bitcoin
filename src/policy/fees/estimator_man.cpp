@@ -84,7 +84,7 @@ void FeeRateEstimatorManager::TransactionRemovedFromMempool(const CTransactionRe
     }
 }
 
-void FeeRateEstimatorManager::MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight)
+void FeeRateEstimatorManager::MempoolTransactionsRemovedForBlock(const std::vector<CTransactionRef>& block_txs, const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight)
 {
     if (estimators.contains(FeeRateEstimatorType::BLOCK_POLICY)) {
         GetFeeRateEstimator<CBlockPolicyEstimator>(FeeRateEstimatorType::BLOCK_POLICY)->processBlock(txs_removed_for_block, nBlockHeight);
