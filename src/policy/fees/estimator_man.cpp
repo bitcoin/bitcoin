@@ -72,9 +72,10 @@ void FeeRateEstimatorManager::TransactionRemovedFromMempool(const CTransactionRe
     m_block_policy_estimator->removeTx(tx->GetHash());
 }
 
-void FeeRateEstimatorManager::MempoolTransactionsRemovedForBlock(const std::shared_ptr<const CBlock>& /*block*/, const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int block_height)
+void FeeRateEstimatorManager::MempoolTransactionsRemovedForBlock(const std::shared_ptr<const CBlock>& block, const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int block_height)
 {
     m_block_policy_estimator->processBlock(txs_removed_for_block, block_height);
+    m_mempool_estimator->MempoolTxsRemovedForBlock(block, txs_removed_for_block, block_height);
 }
 
 CFeeRate FeeRateEstimatorManager::BlockPolicyEstimateRawFee(unsigned int target, double threshold, FeeEstimateHorizon horizon, EstimationResult* buckets) const
