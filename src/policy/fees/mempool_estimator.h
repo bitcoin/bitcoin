@@ -86,6 +86,12 @@ public:
         return MEMPOOL_FEE_ESTIMATOR_MAX_TARGET;
     }
 
+    std::vector<MinedBlockStats> GetPrevBlockData() const EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        LOCK(cs);
+        return {prev_mined_blocks.begin(), prev_mined_blocks.end()};
+    }
+
     void MempoolTxsRemovedForBlock(const std::vector<CTransactionRef>& block_txs, const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
     //! Checks if recent mined blocks indicate a healthy mempool state.

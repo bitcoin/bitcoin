@@ -65,6 +65,11 @@ void FeeRateEstimatorManager::ShutdownFlush()
     m_block_policy_estimator->Flush();
 }
 
+std::vector<MinedBlockStats> FeeRateEstimatorManager::MempoolPolicyEstimatorBlocksStats() const
+{
+    return m_mempool_estimator->GetPrevBlockData();
+}
+
 void FeeRateEstimatorManager::TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t /*unused*/)
 {
     m_block_policy_estimator->processTransaction(tx);

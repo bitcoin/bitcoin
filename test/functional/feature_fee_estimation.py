@@ -492,7 +492,15 @@ class EstimateFeeTest(BitcoinTestFramework):
         utxos = [self.wallet.get_utxo(confirmed_only=True) for _ in range(num_txs)]
         insane_feerate = Decimal("0.01")
         self.send_transactions(utxos, insane_feerate, target_vsize)
-        estimate_after_spike = node0.estimatesmartfee(1, "economical", False)
+        estimate_after_spike = node0.estimatesmartfee(1, "economical", 2, False)
+        assert_equal(len(estimate_after_spike["mempool_health_statistics"]), 6)
+        current_height = node0.getchaintips()[0]['height']
+        for block_stat in estimate_after_spike["mempool_health_statistics"]:
+            assert_equal(block_stat['block_height'], current_height)
+            current_height -= 1
+            assert block_stat['block_weight']
+            assert block_stat['mempool_txs_weight']
+            assert_greater_than_or_equal(Decimal(block_stat["ratio"]), Decimal(0.9))
         verify_estimate_response(estimate_after_spike, high_feerate, [])
         assert_equal(estimate_after_spike["estimator"], "Block Policy Estimator")
         # Check that estimate reflects the lower feerate from mempool
@@ -500,7 +508,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         low_feerate = Decimal("0.00004")
         utxos = [self.wallet.get_utxo(confirmed_only=True) for _ in range(num_txs)]
         self.send_transactions(utxos, low_feerate, target_vsize)
-        lower_estimate = node0.estimatesmartfee(1, "economical", False)
+        lower_estimate = node0.estimatesmartfee(1, "economical", block_policy_only=False)
         verify_estimate_response(lower_estimate, low_feerate, [])
         self.log.info("Test caching of recent estimates")
         # Verify estimates are cached even after replacing the low-feerate txs with med-feerate
