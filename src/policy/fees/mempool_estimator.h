@@ -6,21 +6,31 @@
 #define BITCOIN_POLICY_FEES_MEMPOOL_ESTIMATOR_H
 
 #include <policy/fees/estimator.h>
+#include <primitives/transaction.h>
 #include <sync.h>
 #include <threadsafety.h>
 #include <uint256.h>
 #include <util/time.h>
 
 #include <chrono>
+#include <memory>
+#include <vector>
 
 class ChainstateManager;
 class CTxMemPool;
+
+struct BlockData;
+struct RemovedMempoolTransactionInfo;
 
 // Fee rate estimate for confirmation target above this is not reliable,
 // as mempool conditions is likely going to change.
 constexpr int MEMPOOL_FEE_ESTIMATOR_MAX_TARGET{2};
 
 constexpr std::chrono::seconds CACHE_LIFE{7};
+
+// Constants for mempool sanity checks.
+constexpr size_t NUMBER_OF_BLOCKS = 6;
+constexpr double HEALTHY_BLOCK_PERCENTILE = 0.75;
 
 /**
  * MemPoolFeeRateEstimatorCache holds a cache of recent fee rate estimates.
@@ -69,6 +79,17 @@ public:
     {
         return MEMPOOL_FEE_ESTIMATOR_MAX_TARGET;
     };
+
+    void MempoolTxsRemovedForBlock(const std::vector<CTransactionRef>& block_txs, const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    //! Checks if recent mined blocks indicate a healthy mempool state.
+    bool IsMempoolHealthy() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+private:
+    // !Checks if recent mined blocks indicate a healthy mempool state (internal-only).
+    bool isMempoolHealthy(size_t current_height) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    //! Tracks the statistics of previously mined blocks.
+    std::vector<BlockData> prev_mined_blocks GUARDED_BY(cs);
 
 private:
     const CTxMemPool* m_mempool;

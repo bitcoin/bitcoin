@@ -9,6 +9,7 @@
 #include <policy/fees/block_policy_estimator.h>
 #include <policy/fees/estimator.h>
 #include <policy/fees/estimator_man.h>
+#include <policy/fees/mempool_estimator.h>
 #include <util/fees.h>
 
 
@@ -88,6 +89,9 @@ void FeeRateEstimatorManager::MempoolTransactionsRemovedForBlock(const std::vect
 {
     if (estimators.contains(FeeRateEstimatorType::BLOCK_POLICY)) {
         GetFeeRateEstimator<CBlockPolicyEstimator>(FeeRateEstimatorType::BLOCK_POLICY)->processBlock(txs_removed_for_block, nBlockHeight);
+    }
+    if (estimators.contains(FeeRateEstimatorType::MEMPOOL_POLICY)) {
+        GetFeeRateEstimator<MemPoolFeeRateEstimator>(FeeRateEstimatorType::MEMPOOL_POLICY)->MempoolTxsRemovedForBlock(block_txs, txs_removed_for_block, nBlockHeight);
     }
 }
 
