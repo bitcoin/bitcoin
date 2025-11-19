@@ -33,7 +33,7 @@ struct TestBlockAndIndex {
     {
         DataStream stream{benchmark::data::block413567};
         std::byte a{0};
-        stream.write({&a, 1}); // Prevent compaction
+        stream.write(std::span{&a, 1}); // Prevent compaction
 
         stream >> TX_WITH_WITNESS(block);
 
