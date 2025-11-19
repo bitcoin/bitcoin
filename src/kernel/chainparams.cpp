@@ -590,6 +590,12 @@ public:
             consensus.vDeployments[deployment_pos].nStartTime = version_bits_params.start_time;
             consensus.vDeployments[deployment_pos].nTimeout = version_bits_params.timeout;
             consensus.vDeployments[deployment_pos].min_activation_height = version_bits_params.min_activation_height;
+            consensus.vDeployments[deployment_pos].max_activation_height = version_bits_params.max_activation_height;
+            consensus.vDeployments[deployment_pos].active_duration = version_bits_params.active_duration;
+            // Validated here rather than in src/chainparams.cpp because period is not yet available at parse time
+            if (version_bits_params.active_duration != std::numeric_limits<int>::max() && version_bits_params.active_duration % consensus.vDeployments[deployment_pos].period != 0) {
+                throw std::runtime_error(strprintf("active_duration (%d) must be a multiple of period (%d)", version_bits_params.active_duration, consensus.vDeployments[deployment_pos].period));
+            }
         }
 
         genesis = CreateGenesisBlock(1296688602, 2, 0x207fffff, 1, 50 * COIN);
