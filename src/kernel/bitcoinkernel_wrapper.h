@@ -702,6 +702,39 @@ public:
         : Handle{view} {}
 };
 
+template <typename Derived>
+class BlockValidationStateApi
+{
+private:
+    auto impl() const
+    {
+        return static_cast<const Derived*>(this)->get();
+    }
+    friend Derived;
+public:
+    ValidationMode GetValidationMode() const
+    {
+        return static_cast<ValidationMode>(btck_block_validation_state_get_validation_mode(impl()));
+    }
+
+    BlockValidationResult GetBlockValidationResult() const
+    {
+        return static_cast<BlockValidationResult>(btck_block_validation_state_get_block_validation_result(impl()));
+    }
+};
+
+class BlockValidationStateView : public View<btck_BlockValidationState>, public BlockValidationStateApi<BlockValidationStateView>
+{
+public:
+    explicit BlockValidationStateView(const btck_BlockValidationState* ptr) : View{ptr} {}
+};
+
+class BlockValidationState : public UniqueHandle<btck_BlockValidationState, btck_block_validation_state_destroy>, public BlockValidationStateApi<BlockValidationState>
+{
+public:
+    BlockValidationState() : UniqueHandle{btck_block_validation_state_create()} {}
+};
+
 class ConsensusParamsView : public View<btck_ConsensusParams>
 {
 public:
@@ -830,36 +863,12 @@ public:
     virtual void FatalErrorHandler(std::string_view error) {}
 };
 
-class BlockValidationState
-{
-private:
-    const btck_BlockValidationState* m_state;
-
-public:
-    BlockValidationState(const btck_BlockValidationState* state) : m_state{state} {}
-
-    BlockValidationState(const BlockValidationState&) = delete;
-    BlockValidationState& operator=(const BlockValidationState&) = delete;
-    BlockValidationState(BlockValidationState&&) = delete;
-    BlockValidationState& operator=(BlockValidationState&&) = delete;
-
-    ValidationMode GetValidationMode() const
-    {
-        return static_cast<ValidationMode>(btck_block_validation_state_get_validation_mode(m_state));
-    }
-
-    BlockValidationResult GetBlockValidationResult() const
-    {
-        return static_cast<BlockValidationResult>(btck_block_validation_state_get_block_validation_result(m_state));
-    }
-};
-
 class ValidationInterface
 {
 public:
     virtual ~ValidationInterface() = default;
 
-    virtual void BlockChecked(Block block, const BlockValidationState state) {}
+    virtual void BlockChecked(Block block, const BlockValidationStateView state) {}
 
     virtual void PowValidBlock(BlockTreeEntry entry, Block block) {}
 
@@ -922,7 +931,7 @@ public:
             btck_ValidationInterfaceCallbacks{
                 .user_data = heap_vi.release(),
                 .user_data_destroy = +[](void* user_data) { delete static_cast<user_type>(user_data); },
-                .block_checked = +[](void* user_data, btck_Block* block, const btck_BlockValidationState* state) { (*static_cast<user_type>(user_data))->BlockChecked(Block{block}, BlockValidationState{state}); },
+                .block_checked = +[](void* user_data, btck_Block* block, const btck_BlockValidationState* state) { (*static_cast<user_type>(user_data))->BlockChecked(Block{block}, BlockValidationStateView{state}); },
                 .pow_valid_block = +[](void* user_data, btck_Block* block, const btck_BlockTreeEntry* entry) { (*static_cast<user_type>(user_data))->PowValidBlock(BlockTreeEntry{entry}, Block{block}); },
                 .block_connected = +[](void* user_data, btck_Block* block, const btck_BlockTreeEntry* entry) { (*static_cast<user_type>(user_data))->BlockConnected(Block{block}, BlockTreeEntry{entry}); },
                 .block_disconnected = +[](void* user_data, btck_Block* block, const btck_BlockTreeEntry* entry) { (*static_cast<user_type>(user_data))->BlockDisconnected(Block{block}, BlockTreeEntry{entry}); },

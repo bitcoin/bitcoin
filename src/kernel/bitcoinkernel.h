@@ -1192,6 +1192,17 @@ BITCOINKERNEL_API int btck_block_to_bytes(
  */
 BITCOINKERNEL_API void btck_block_destroy(btck_Block* block);
 
+/**
+ * @brief Create a new block validation state.
+ * @return The block validation state, or null on error.
+ */
+BITCOINKERNEL_API btck_BlockValidationState* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_validation_state_create();
+
+/**
+ * Destroy the block validation state.
+ */
+BITCOINKERNEL_API void btck_block_validation_state_destroy(btck_BlockValidationState* block_validation_state);
+
 ///@}
 
 /** @name BlockValidationState

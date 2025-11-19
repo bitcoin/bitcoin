@@ -145,7 +145,7 @@ class TestValidationInterface : public ValidationInterface
 public:
     std::optional<std::vector<std::byte>> m_expected_valid_block = std::nullopt;
 
-    void BlockChecked(Block block, const BlockValidationState state) override
+    void BlockChecked(Block block, const BlockValidationStateView state) override
     {
         if (m_expected_valid_block.has_value()) {
             auto ser_block{block.ToBytes()};
