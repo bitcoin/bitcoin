@@ -13,6 +13,10 @@ const std::array<VBDeploymentInfo,Consensus::MAX_VERSION_BITS_DEPLOYMENTS> Versi
         .name = "testdummy",
         .gbt_optional_rule = true,
     },
+    {
+        /*.name =*/ "reduced_data",
+        /*.gbt_force =*/ true,
+    },
 };
 
 std::string DeploymentName(Consensus::BuriedDeployment dep)
