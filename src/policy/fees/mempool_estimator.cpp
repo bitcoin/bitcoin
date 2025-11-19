@@ -17,7 +17,43 @@
 #include <validation.h>
 
 #include <algorithm>
+#include <numeric>
+#include <string>
 #include <utility>
+
+namespace {
+void AddMinedBlockStats(std::deque<MinedBlockStats>& mined_blocks, MinedBlockStats stats)
+{
+    const auto stale_begin{std::find_if(mined_blocks.begin(), mined_blocks.end(), [&](const MinedBlockStats& block) {
+        return block.m_height >= stats.m_height;
+    })};
+    const auto stale_count{std::distance(stale_begin, mined_blocks.end())};
+    if (stale_count > 0) {
+        LogDebug(BCLog::ESTIMATEFEE,
+                 "%s: connected block height=%s discards tracked mined-block stats "
+                 "from height=%s to height=%s; stale_stats=%s",
+                 FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY),
+                 stats.m_height,
+                 stale_begin->m_height,
+                 mined_blocks.back().m_height,
+                 stale_count);
+    }
+    mined_blocks.erase(stale_begin, mined_blocks.end());
+    if (!mined_blocks.empty() && mined_blocks.back().m_height + 1 != stats.m_height) {
+        LogDebug(BCLog::ESTIMATEFEE,
+                 "%s: clearing mined-block stats after height gap; tracked_stats=%s "
+                 "expected_height=%s received_height=%s",
+                 FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY),
+                 mined_blocks.size(),
+                 mined_blocks.back().m_height + 1,
+                 stats.m_height);
+        mined_blocks.clear();
+    }
+
+    if (mined_blocks.size() == MEMPOOL_HEALTH_WINDOW_BLOCKS) mined_blocks.pop_front();
+    mined_blocks.push_back(stats);
+}
+} // namespace
 
 MemPoolFeeRateEstimator::Percentiles MemPoolFeeRateEstimator::CalculateMaxWeightPercentiles(const std::vector<FeePerVSize>& chunk_feerates)
 {
@@ -59,10 +95,86 @@ void MemPoolFeeRateEstimatorCache::Update(FeePerVSize conservative, FeePerVSize 
     m_last_updated = NodeClock::now();
 }
 
+void MemPoolFeeRateEstimatorCache::Clear()
+{
+    m_fee_rate_estimation.reset();
+    m_tip_hash.SetNull();
+    m_last_updated = {};
+}
+
 //! Build the error result for a failed mempool fee rate estimation.
 static util::Unexpected<FeeRateEstimationError> EstimationError(std::string error)
 {
     return EstimationError(FeeRateEstimatorType::MEMPOOL_POLICY, MEMPOOL_FEE_ESTIMATOR_MAX_TARGET, std::move(error));
+}
+
+void MemPoolFeeRateEstimator::MempoolTxsRemovedForBlock(
+    const std::vector<CTransactionRef>& block_txs,
+    const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block,
+    unsigned int block_height)
+{
+    // Skip during initial block download or reindex: the mempool is empty, so
+    // these blocks carry no information about mempool representation.
+    if (m_chainman->IsInitialBlockDownload()) return;
+    LOCK(cs);
+    Assert(!block_txs.empty());
+    // Accumulate total block weight and removed mempool tx weight, both excluding the coinbase.
+    const auto get_tx_weight = [](const CTransactionRef& tx) {
+        return static_cast<uint64_t>(GetTransactionWeight(*tx));
+    };
+    // Skip block_txs[0], which is the coinbase.
+    const uint64_t block_weight = std::accumulate(block_txs.begin() + 1, block_txs.end(), uint64_t{0},
+                                                  [&](uint64_t acc, const CTransactionRef& tx) {
+                                                      return acc + get_tx_weight(tx);
+                                                  });
+    const uint64_t removed_weight = std::accumulate(
+        txs_removed_for_block.begin(), txs_removed_for_block.end(), uint64_t{0},
+        [&](uint64_t acc, const RemovedMempoolTransactionInfo& tx) {
+            return acc + get_tx_weight(tx.info.m_tx);
+        });
+    AddMinedBlockStats(m_prev_mined_blocks, {block_height, removed_weight, block_weight});
+    m_cache.Clear();
+}
+
+// Require at least one block worth of activity across the window before using
+// the coverage ratio as a representative mempool health signal.
+static constexpr uint64_t MIN_REPRESENTATIVE_WINDOW_WEIGHT{DEFAULT_BLOCK_MAX_WEIGHT};
+
+bool MemPoolFeeRateEstimator::IsMempoolHealthy() const
+{
+    LOCK(cs);
+    const auto estimator_name{FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY)};
+    if (m_prev_mined_blocks.size() < MEMPOOL_HEALTH_WINDOW_BLOCKS) {
+        LogDebug(BCLog::ESTIMATEFEE, "%s: mempool health check failed; tracked_blocks=%s required_blocks=%s",
+                 estimator_name, m_prev_mined_blocks.size(), MEMPOOL_HEALTH_WINDOW_BLOCKS);
+        return false;
+    }
+    uint64_t total_block_weight{0};
+    uint64_t total_removed_weight{0};
+    uint64_t expected_height{m_prev_mined_blocks.front().m_height};
+    for (const auto& block : m_prev_mined_blocks) {
+        Assume(block.m_height == expected_height);
+        ++expected_height;
+        total_block_weight += block.m_block_weight;
+        total_removed_weight += block.m_removed_block_txs_weight;
+    }
+    // Too little block activity for the coverage ratio to be meaningful; skip it.
+    if (total_block_weight < MIN_REPRESENTATIVE_WINDOW_WEIGHT) {
+        LogDebug(BCLog::ESTIMATEFEE, "%s: mempool health check passed; low activity, total_block_weight=%s minimum=%s",
+                 estimator_name, total_block_weight, MIN_REPRESENTATIVE_WINDOW_WEIGHT);
+        return true;
+    }
+    const double representation_ratio = static_cast<double>(total_removed_weight) / total_block_weight;
+    LogDebug(BCLog::ESTIMATEFEE,
+             "%s: mempool health check %s; removed_weight=%s total_block_weight=%s "
+             "coverage=%.2f required_coverage=%.2f",
+             estimator_name,
+             representation_ratio >= MEMPOOL_REPRESENTATION_THRESHOLD ? "passed" : "failed",
+             total_removed_weight,
+             total_block_weight,
+             representation_ratio,
+             MEMPOOL_REPRESENTATION_THRESHOLD);
+    return representation_ratio >= MEMPOOL_REPRESENTATION_THRESHOLD;
 }
 
 util::Expected<FeeRateEstimation, FeeRateEstimationError> MemPoolFeeRateEstimator::EstimateFeeRate(bool conservative) const
@@ -70,6 +182,10 @@ util::Expected<FeeRateEstimation, FeeRateEstimationError> MemPoolFeeRateEstimato
     constexpr auto estimator_type{FeeRateEstimatorType::MEMPOOL_POLICY};
     if (!m_mempool->GetLoadTried()) {
         return EstimationError(strprintf("%s: Mempool not loaded yet, no fee rate estimate available", FeeRateEstimatorTypeToString(estimator_type)));
+    }
+    if (!IsMempoolHealthy()) {
+        return EstimationError(strprintf("%s: Mempool is unreliable for fee rate estimation",
+                                         FeeRateEstimatorTypeToString(estimator_type)));
     }
     // The estimator lock is not held while building a block template, so
     // in a rare edge case concurrent callers may duplicate work.
