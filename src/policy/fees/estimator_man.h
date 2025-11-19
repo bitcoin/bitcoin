@@ -6,6 +6,7 @@
 #define BITCOIN_POLICY_FEES_ESTIMATOR_MAN_H
 
 #include <policy/fees/block_policy_estimator.h>
+#include <policy/fees/mempool_estimator.h>
 #include <primitives/transaction.h>
 #include <util/expected.h>
 #include <util/fees.h>
@@ -76,6 +77,11 @@ public:
      * @brief Returns the maximum supported confirmation target of block policy estimator.
      */
     unsigned int BlockPolicyHighestTargetTracked(FeeEstimateHorizon horizon);
+
+    /**
+     * Returns per-block weight statistics for the last MEMPOOL_HEALTH_WINDOW_BLOCKS mined blocks.
+     */
+    std::vector<MinedBlockStats> MempoolPolicyEstimatorBlocksStats() const;
 
 protected:
     /** Overridden from CValidationInterface. */

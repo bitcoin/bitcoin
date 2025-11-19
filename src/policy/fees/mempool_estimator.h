@@ -104,9 +104,13 @@ public:
         return MEMPOOL_FEE_ESTIMATOR_MAX_TARGET;
     }
 
-    void MempoolTxsRemovedForBlock(const std::vector<CTransactionRef>& block_txs,
-                                   const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block,
-                                   unsigned int block_height)
+    std::vector<MinedBlockStats> GetPrevBlockData() const EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        LOCK(cs);
+        return {m_prev_mined_blocks.begin(), m_prev_mined_blocks.end()};
+    }
+
+    void MempoolTxsRemovedForBlock(const std::vector<CTransactionRef>& block_txs, const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int block_height)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
     //! Checks if recent mined blocks indicate a healthy mempool state.
     bool IsMempoolHealthy() const EXCLUSIVE_LOCKS_REQUIRED(!cs);

@@ -483,7 +483,14 @@ class EstimateFeeTest(BitcoinTestFramework):
         utxos = [self.wallet.get_utxo(confirmed_only=True) for _ in range(num_txs)]
         insane_feerate = Decimal("0.01")
         self.send_transactions(utxos, insane_feerate, target_vsize)
-        estimate_after_spike = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "none"})
+        estimate_after_spike = node0.estimatesmartfee(1, "economical", {"verbosity": 2, "fee_rate_estimator": "none"})
+        assert_equal(len(estimate_after_spike["mempool_health_statistics"]), 6)
+        current_height = node0.getchaintips()[0]['height']
+        for block_stat in estimate_after_spike["mempool_health_statistics"]:
+            assert_equal(block_stat['block_height'], current_height)
+            current_height -= 1
+            assert block_stat['block_weight']
+            assert block_stat['mempool_txs_weight']
         verify_estimate_response(estimate_after_spike, high_feerate, [])
         assert_equal(estimate_after_spike["estimator"], "Block Policy Fee Rate Estimator")
         # Confirm the spike transactions so they leave the mempool; the mined block

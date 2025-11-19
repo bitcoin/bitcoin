@@ -9,6 +9,7 @@
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
 #include <policy/fees/estimator_man.h>
+#include <policy/fees/mempool_estimator.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <rpc/server.h>
@@ -50,8 +51,12 @@ static RPCMethod estimatesmartfee()
                      "\"none\" and \"block_policy\". Unknown values are treated "
                      "as \"none\". \"none\" uses the fee rate estimator manager "
                      "to select an estimate."},
+                    {"verbosity", RPCArg::Type::NUM, RPCArg::Default{1},
+                     "1 returns feerate and errors. 2 also returns mempool health statistics "
+                     "for recently mined blocks when fee_rate_estimator is \"none\"."},
                 },
             },
+
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -67,6 +72,15 @@ static RPCMethod estimatesmartfee()
                 "fee estimation is able to return based on how long it has been running.\n"
                 "An error is returned if not enough transactions and blocks\n"
                 "have been observed to make an estimate for any number of blocks."},
+                {RPCResult::Type::ARR, "mempool_health_statistics", /*optional=*/true, "Health statistics for the most recently mined blocks (only present when verbosity >= 2 and fee_rate_estimator is \"none\")",
+                    {
+                        {RPCResult::Type::OBJ, "", "",
+                            {
+                                {RPCResult::Type::NUM, "block_height", "Block height"},
+                                {RPCResult::Type::NUM, "block_weight", "Total weight of non-coinbase transactions in the block"},
+                                {RPCResult::Type::NUM, "mempool_txs_weight", "Total weight of transactions removed from the mempool for this block"},
+                            }},
+                    }},
         }},
         RPCExamples{
             HelpExampleCli("estimatesmartfee", "6") +
@@ -89,11 +103,12 @@ static RPCMethod estimatesmartfee()
             RPCTypeCheckObj(options,
                             {
                                 {"fee_rate_estimator", UniValueType(UniValue::VSTR)},
+                                {"verbosity", UniValueType(UniValue::VNUM)},
                             }, /*fAllowNull=*/true, /*fStrict=*/true);
             const auto fee_rate_estimator{FeeRateEstimatorTypeFromString(
                 options["fee_rate_estimator"].isNull() ? "none" : options["fee_rate_estimator"].get_str())};
             bool conservative{fee_mode == FeeEstimateMode::CONSERVATIVE};
-
+            int verbosity{ParseVerbosity(options["verbosity"], /*default_verbosity=*/1, /*allow_bool=*/false)};
             UniValue result(UniValue::VOBJ);
             UniValue errors(UniValue::VARR);
             const auto estimate{fee_estimator_man.GetFeeRateEstimate(fee_rate_estimator, conf_target, conservative)};
@@ -111,6 +126,18 @@ static RPCMethod estimatesmartfee()
             }
             const FeeRateEstimation& estimation{FeeRateEstimationRef(estimate)};
             result.pushKV("blocks", estimation.returned_target);
+            if (verbosity >= 2 && fee_rate_estimator == FeeRateEstimatorType::NONE) {
+                UniValue mempool_health_stats(UniValue::VARR);
+                const auto blocks_data = fee_estimator_man.MempoolPolicyEstimatorBlocksStats();
+                for (auto it = blocks_data.rbegin(); it != blocks_data.rend(); ++it) {
+                    UniValue entry(UniValue::VOBJ);
+                    entry.pushKV("block_height", it->m_height);
+                    entry.pushKV("block_weight", it->m_block_weight);
+                    entry.pushKV("mempool_txs_weight", it->m_removed_block_txs_weight);
+                    mempool_health_stats.push_back(std::move(entry));
+                }
+                result.pushKV("mempool_health_statistics", std::move(mempool_health_stats));
+            }
             return result;
         },
     };
