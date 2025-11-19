@@ -1224,27 +1224,8 @@ BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
     }
 }
 
-class ImportingNow
-{
-    std::atomic<bool>& m_importing;
-
-public:
-    ImportingNow(std::atomic<bool>& importing) : m_importing{importing}
-    {
-        assert(m_importing == false);
-        m_importing = true;
-    }
-    ~ImportingNow()
-    {
-        assert(m_importing == true);
-        m_importing = false;
-    }
-};
-
 void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_paths, bool force_activation)
 {
-    ImportingNow imp{chainman.m_blockman.m_importing};
-
     bool reindexed = false;
     // -reindex
     if (!chainman.m_blockman.m_blockfiles_indexed) {
@@ -1322,7 +1303,6 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
             chainman.GetNotifications().fatalError(util::ErrorString(result));
         }
     }
-    // End scope of ImportingNow
 }
 
 std::ostream& operator<<(std::ostream& os, const BlockfileType& type) {
