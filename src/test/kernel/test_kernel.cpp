@@ -775,6 +775,27 @@ void chainman_mainnet_validation_test(TestDirectory& test_directory)
     BOOST_CHECK(!new_block);
 }
 
+BOOST_AUTO_TEST_CASE(btck_check_block_context_free)
+{
+    // Test with a valid mainnet block
+    ChainParams mainnet_params{ChainType::MAINNET};
+    auto consensus_params = mainnet_params.GetConsensusParams();
+
+    // Mainnet block 1
+    auto raw_block = hex_string_to_byte_vec("010000006fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000982051fd1e4ba744bbbe680e1fee14677ba1a3c3540bf7b1cdb606e857233e0e61bc6649ffff001d01e362990101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0704ffff001d0104ffffffff0100f2052a0100000043410496b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52da7589379515d4e0a604f8141781e62294721166bf621e73a82cbf2342c858eeac00000000");
+    Block block{raw_block};
+
+    BlockValidationState state;
+
+    // Should pass validation with POW and merkle root checks
+    BOOST_CHECK(block.Check(consensus_params, BlockCheckFlags::ALL, state));
+    BOOST_CHECK(state.GetValidationMode() == ValidationMode::VALID);
+
+    // Test with an invalid block (broken)
+    auto broken_block_data = hex_string_to_byte_vec("010000006fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000982051fd1e4ba744bbbe680e1fee14677ba1a3c3540bf7b1cdb606e857233e0e61bc6649ffff001d01e36299");
+    BOOST_CHECK_THROW(Block{broken_block_data}, std::runtime_error);
+}
+
 BOOST_AUTO_TEST_CASE(btck_chainman_mainnet_tests)
 {
     auto test_directory{TestDirectory{"mainnet_test_bitcoin_kernel"}};

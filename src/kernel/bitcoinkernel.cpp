@@ -1077,6 +1077,18 @@ btck_Block* btck_block_copy(const btck_Block* block)
     return btck_Block::copy(block);
 }
 
+int btck_block_check(const btck_Block* block, const btck_ConsensusParams* consensus_params, btck_BlockCheckFlags flags, btck_BlockValidationState* validation_state)
+{
+    auto& state = btck_BlockValidationState::get(validation_state);
+
+    const bool check_pow_again = (flags & btck_BlockCheckFlags_POW) != 0;
+    const bool check_merkle    = (flags & btck_BlockCheckFlags_MERKLE) != 0;
+
+    const bool result = CheckBlock(*btck_Block::get(block), state, btck_ConsensusParams::get(consensus_params), /*fCheckPOW=*/check_pow_again, /*fCheckMerkleRoot=*/check_merkle);
+
+    return result ? 1 : 0;
+}
+
 size_t btck_block_count_transactions(const btck_Block* block)
 {
     return btck_Block::get(block)->vtx.size();

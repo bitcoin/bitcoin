@@ -97,6 +97,13 @@ enum class ScriptVerificationFlags : btck_ScriptVerificationFlags {
     ALL = btck_ScriptVerificationFlags_ALL
 };
 
+enum class BlockCheckFlags : btck_BlockCheckFlags {
+    NONE = btck_BlockCheckFlags_NONE,
+    POW = btck_BlockCheckFlags_POW,
+    MERKLE = btck_BlockCheckFlags_MERKLE,
+    ALL = btck_BlockCheckFlags_ALL
+};
+
 template <typename T>
 struct is_bitmask_enum : std::false_type {
 };
@@ -369,6 +376,7 @@ public:
 
 class Transaction;
 class TransactionOutput;
+class BlockValidationState;
 
 template <typename Derived>
 class ScriptPubkeyApi
@@ -759,6 +767,13 @@ public:
     TransactionView GetTransaction(size_t index) const
     {
         return TransactionView{btck_block_get_transaction_at(get(), index)};
+    }
+
+    bool Check(const ConsensusParamsView& consensus_params,
+        BlockCheckFlags flags,
+        BlockValidationState& state) const
+    {
+        return btck_block_check(get(), consensus_params.get(), static_cast<btck_BlockCheckFlags>(flags), state.get()) == 1;
     }
 
     MAKE_RANGE_METHOD(Transactions, Block, &Block::CountTransactions, &Block::GetTransaction, *this)
