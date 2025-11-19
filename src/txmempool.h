@@ -329,7 +329,7 @@ public:
      *                                        and updates an entry's LockPoints.
      * */
     void removeForReorg(CChain& chain, std::function<bool(txiter)> filter_final_and_mature) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
-    void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::vector<RemovedMempoolTransactionInfo> removeForBlock(const std::vector<CTransactionRef>& vtx) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     bool CompareMiningScoreWithTopology(const Wtxid& hasha, const Wtxid& hashb) const;
     bool isSpent(const COutPoint& outpoint) const;
