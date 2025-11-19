@@ -33,6 +33,60 @@ void MemPoolFeeRateEstimatorCache::Update(const Percentiles& new_estimates, cons
     chain_tip_hash = current_tip_hash;
 }
 
+void MemPoolFeeRateEstimator::MempoolTxsRemovedForBlock(const std::vector<CTransactionRef>& block_txs, const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight)
+{
+    LOCK(cs);
+    BlockData new_block_data;
+    new_block_data.m_height = nBlockHeight;
+    // Calculates total block weight excluding the coinbase transaction
+    Assume(block_txs.size() > 0);
+    new_block_data.m_block_weight = std::accumulate(block_txs.begin() + 1, block_txs.end(), 0u, [](size_t acc, const CTransactionRef& tx) {
+        return acc + static_cast<double>(GetTransactionWeight(*tx));
+    });
+    new_block_data.m_removed_block_txs_weight = std::accumulate(txs_removed_for_block.begin(), txs_removed_for_block.end(), 0u,
+                                                                [](size_t acc, const RemovedMempoolTransactionInfo& tx) { return acc + static_cast<double>(GetTransactionWeight(*(tx.info.m_tx))); });
+    if (prev_mined_blocks.size() == NUMBER_OF_BLOCKS) {
+        prev_mined_blocks.erase(prev_mined_blocks.begin());
+    }
+    prev_mined_blocks.emplace_back(new_block_data);
+}
+
+
+bool MemPoolFeeRateEstimator::IsMempoolHealthy() const
+{
+    LOCK(cs);
+    auto chain_tip = WITH_LOCK(cs_main, return m_chainman->ActiveTip());
+    if (!chain_tip) return false;
+    return isMempoolHealthy(static_cast<size_t>(chain_tip->nHeight));
+}
+
+bool MemPoolFeeRateEstimator::isMempoolHealthy(size_t current_height) const
+{
+    AssertLockHeld(cs);
+    if (prev_mined_blocks.size() < NUMBER_OF_BLOCKS) return false;
+    auto total_block_txs_weight = prev_mined_blocks[0].m_block_weight;
+    auto total_removed_txs_weight = prev_mined_blocks[0].m_removed_block_txs_weight;
+    for (size_t i = 1; i < prev_mined_blocks.size(); ++i) {
+        const auto& current = prev_mined_blocks[i];
+        const auto& previous = prev_mined_blocks[i - 1];
+        // Handle reorg by returning false (Dont clear as blocks are added it will stabilize).
+        if (current.m_height != previous.m_height + 1) return false;
+        total_block_txs_weight += current.m_block_weight;
+        total_removed_txs_weight += current.m_removed_block_txs_weight;
+    }
+    if (prev_mined_blocks.back().m_height != current_height) {
+        LogDebug(BCLog::ESTIMATEFEE, "%s: Most Recent BlockData is not the chain tip", FeeRateEstimatorTypeToString(GetFeeRateEstimatorType()));
+    }
+    if (!total_block_txs_weight) return false;
+    auto average_percentile = total_removed_txs_weight / total_block_txs_weight;
+    LogDebug(BCLog::ESTIMATEFEE, "%s: mempool health avg=%.2f threshold=%.2f (mempool %s)",
+             FeeRateEstimatorTypeToString(GetFeeRateEstimatorType()),
+             average_percentile,
+             HEALTHY_BLOCK_PERCENTILE,
+             average_percentile >= HEALTHY_BLOCK_PERCENTILE ? "healthy" : "unhealthy");
+    return average_percentile >= HEALTHY_BLOCK_PERCENTILE;
+}
+
 FeeRateEstimatorResult MemPoolFeeRateEstimator::EstimateFeeRate(int target, bool conservative) const
 {
     LOCK(cs);
@@ -45,6 +99,11 @@ FeeRateEstimatorResult MemPoolFeeRateEstimator::EstimateFeeRate(int target, bool
     Assume(current_height > -1);
     uint256 tip_hash = WITH_LOCK(::cs_main, return *Assume(chainstate.m_chain.Tip())->phashBlock);
     result.current_block_height = static_cast<unsigned int>(current_height);
+    if (!isMempoolHealthy(static_cast<size_t>(result.current_block_height))) {
+        result.errors.emplace_back(strprintf("%s: Mempool is unreliable for fee rate estimation", FeeRateEstimatorTypeToString(result.feerate_estimator)));
+        return result;
+    }
+
     const auto cached_estimate = cache.GetCachedEstimate();
     const auto known_chain_tip_hash = cache.GetChainTipHash();
     if (cached_estimate && tip_hash == known_chain_tip_hash) {

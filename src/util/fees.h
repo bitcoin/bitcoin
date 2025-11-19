@@ -50,6 +50,13 @@ struct Percentiles {
     }
 };
 
+//! Structure to track the health of mined blocks.
+struct BlockData {
+    size_t m_height;                      //!< Block height.
+    double m_removed_block_txs_weight{0}; //!< Removed mempool transactions weight excluding coinbase (default empty).
+    double m_block_weight{0};             //!< Weight of the block excluding coinbase (default empty).
+};
+
 /**
  * Calculates the percentile fee rates from a given block template chunks.
  *

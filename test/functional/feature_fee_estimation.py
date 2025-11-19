@@ -473,11 +473,21 @@ class EstimateFeeTest(BitcoinTestFramework):
         verify_estimate_response(estimate_after_spike, high_feerate, [])
 
         self.log.info("Test caching of recent estimates")
-        # Restart node with empty mempool, then broadcast low-feerate transactions
+        # Restart nodes with empty mempool, then broadcast low-feerate transactions
         # Check that estimate reflects the lower feerate even after higher-feerate transactions were recently broadcasted
         self.stop_node(0)
+        self.stop_node(1)
+        self.stop_node(2)
         os.remove(node0.chain_path / "mempool.dat")
+        os.remove(self.nodes[1].chain_path / "mempool.dat")
+        os.remove(self.nodes[2].chain_path / "mempool.dat")
         self.restart_node(0)
+        self.restart_node(1)
+        self.restart_node(2)
+        self.connect_nodes(0, 1)
+        self.connect_nodes(0, 2)
+        self.sync_blocks()
+        self.broadcast_and_mine_blocks(high_feerate, blocks=6, txs=tx_count) # mine 6 blocks to ensure mempool health
 
         low_feerate = Decimal("0.00004")
         self.send_transactions(utxos, low_feerate, target_vsize)
