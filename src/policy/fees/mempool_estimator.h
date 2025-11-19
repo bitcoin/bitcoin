@@ -108,6 +108,12 @@ public:
         return MEMPOOL_FEE_ESTIMATOR_MAX_TARGET;
     }
 
+    std::vector<MinedBlockStats> GetPrevBlockData() const EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        LOCK(cs);
+        return m_prev_mined_blocks;
+    }
+
     void MempoolTxsRemovedForBlock(const std::shared_ptr<const CBlock>& block,
                                    const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block,
                                    unsigned int block_height)
