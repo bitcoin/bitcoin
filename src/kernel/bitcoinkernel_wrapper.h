@@ -702,6 +702,12 @@ public:
         : Handle{view} {}
 };
 
+class ConsensusParamsView : public View<btck_ConsensusParams>
+{
+public:
+    explicit ConsensusParamsView(const btck_ConsensusParams* ptr) : View{ptr} {}
+};
+
 class Block : public Handle<btck_Block, btck_block_copy, btck_block_destroy>
 {
 public:
@@ -867,6 +873,11 @@ class ChainParams : public Handle<btck_ChainParameters, btck_chain_parameters_co
 public:
     ChainParams(ChainType chain_type)
         : Handle{btck_chain_parameters_create(static_cast<btck_ChainType>(chain_type))} {}
+
+    ConsensusParamsView GetConsensusParams() const
+    {
+        return ConsensusParamsView{btck_chain_parameters_get_consensus_params(get())};
+    }
 };
 
 class ContextOptions : public UniqueHandle<btck_ContextOptions, btck_context_options_destroy>

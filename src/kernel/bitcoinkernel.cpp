@@ -494,6 +494,7 @@ struct btck_BlockHash : Handle<btck_BlockHash, uint256> {};
 struct btck_TransactionInput : Handle<btck_TransactionInput, CTxIn> {};
 struct btck_TransactionOutPoint: Handle<btck_TransactionOutPoint, COutPoint> {};
 struct btck_Txid: Handle<btck_Txid, Txid> {};
+struct btck_ConsensusParams: Handle<btck_ConsensusParams, Consensus::Params> {};
 
 btck_Transaction* btck_transaction_create(const void* raw_transaction, size_t raw_transaction_len)
 {
@@ -786,6 +787,11 @@ btck_ChainParameters* btck_chain_parameters_create(const btck_ChainType chain_ty
 btck_ChainParameters* btck_chain_parameters_copy(const btck_ChainParameters* chain_parameters)
 {
     return btck_ChainParameters::copy(chain_parameters);
+}
+
+const btck_ConsensusParams* btck_chain_parameters_get_consensus_params(const btck_ChainParameters* chain_parameters)
+{
+    return btck_ConsensusParams::ref(&btck_ChainParameters::get(chain_parameters).GetConsensus());
 }
 
 void btck_chain_parameters_destroy(btck_ChainParameters* chain_parameters)
