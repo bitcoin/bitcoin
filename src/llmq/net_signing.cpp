@@ -18,22 +18,6 @@
 
 #include <unordered_map>
 
-static bool PreVerifyRecoveredSig(Consensus::LLMQType& llmqType, const llmq::CQuorumManager& quorum_manager,
-                                  const llmq::CRecoveredSig& recoveredSig)
-{
-    auto quorum = quorum_manager.GetQuorum(llmqType, recoveredSig.getQuorumHash());
-
-    if (!quorum) {
-        LogPrint(BCLog::LLMQ, "NetSigning::%s -- quorum %s not found\n", __func__, recoveredSig.getQuorumHash().ToString());
-        return false;
-    }
-    if (!llmq::IsQuorumActive(llmqType, quorum_manager, quorum->qc->quorumHash)) {
-        return false;
-    }
-
-    return true;
-}
-
 void NetSigning::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv)
 {
     if (msg_type != NetMsgType::QSIGREC) return;
@@ -44,15 +28,11 @@ void NetSigning::ProcessMessage(CNode& pfrom, const std::string& msg_type, CData
     WITH_LOCK(cs_main, m_peer_manager->PeerEraseObjectRequest(pfrom.GetId(),
                                                               CInv{MSG_QUORUM_RECOVERED_SIG, recoveredSig->GetHash()}));
 
-    auto llmqType = recoveredSig->getLlmqType();
-    if (!Params().GetLLMQ(llmqType).has_value()) {
+    if (!Params().GetLLMQ(recoveredSig->getLlmqType()).has_value()) {
         m_peer_manager->PeerMisbehaving(pfrom.GetId(), 100);
     }
-    if (!PreVerifyRecoveredSig(llmqType, m_sig_manager.Qman(), *recoveredSig)) {
-        return;
-    }
 
-    m_sig_manager.ProcessRecoveredSig(pfrom.GetId(), std::move(recoveredSig));
+    m_sig_manager.VerifyAndProcessRecoveredSig(pfrom.GetId(), std::move(recoveredSig));
 }
 
 void NetSigning::Start()

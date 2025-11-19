@@ -361,8 +361,20 @@ bool CSigningManager::GetRecoveredSigForGetData(const uint256& hash, CRecoveredS
     return true;
 }
 
-void CSigningManager::ProcessRecoveredSig(NodeId from, std::shared_ptr<CRecoveredSig> recoveredSig)
+void CSigningManager::VerifyAndProcessRecoveredSig(NodeId from, std::shared_ptr<CRecoveredSig> recoveredSig)
 {
+    auto llmq_type = recoveredSig->getLlmqType();
+    auto quorum = qman.GetQuorum(llmq_type, recoveredSig->getQuorumHash());
+
+    if (!quorum) {
+        LogPrint(BCLog::LLMQ, "NetSigning::%s -- quorum %s not found\n", __func__,
+                 recoveredSig->getQuorumHash().ToString());
+        return;
+    }
+    if (!IsQuorumActive(llmq_type, qman, quorum->qc->quorumHash)) {
+        return;
+    }
+
     // It's important to only skip seen *valid* sig shares here. See comment for CBatchedSigShare
     // We don't receive recovered sigs in batches, but we do batched verification per node on these
     if (db.HasRecoveredSigForHash(recoveredSig->GetHash())) {

@@ -182,7 +182,7 @@ public:
     bool AlreadyHave(const CInv& inv) const EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
     bool GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret) const;
 
-    void ProcessRecoveredSig(NodeId from, std::shared_ptr<CRecoveredSig> recovered_sig)
+    void VerifyAndProcessRecoveredSig(NodeId from, std::shared_ptr<CRecoveredSig> recovered_sig)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
 
     // This is called when a recovered signature was was reconstructed from another P2P message and is known to be valid
@@ -197,7 +197,6 @@ public:
     void TruncateRecoveredSig(Consensus::LLMQType llmqType, const uint256& id);
 
     // Used by NetSigning:
-    const CQuorumManager& Qman() { return qman; }
     [[nodiscard]] Uint256HashMap<std::shared_ptr<const CRecoveredSig>> FetchPendingReconstructed()
         EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);
     [[nodiscard]] bool CollectPendingRecoveredSigsToVerify(
