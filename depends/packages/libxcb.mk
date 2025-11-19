@@ -1,13 +1,13 @@
 package=libxcb
-$(package)_version=1.15
+$(package)_version=1.17.0
 $(package)_download_path=https://xcb.freedesktop.org/dist
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
-$(package)_sha256_hash=1cb65df8543a69ec0555ac696123ee386321dfac1964a3da39976c9a05ad724d
+$(package)_sha256_hash=2c69287424c9e2128cb47ffe92171e10417041ec2963bceafb65cb3fcf8f0b85
 $(package)_dependencies=xcb_proto libXau
 $(package)_patches = remove_pthread_stubs.patch
 
 define $(package)_set_vars
-$(package)_config_opts=--disable-shared --disable-devel-docs --without-doxygen --without-launchd
+$(package)_config_opts=--disable-shared --disable-devel-docs --without-doxygen
 $(package)_config_opts += --disable-dependency-tracking --enable-option-checking
 # Disable unneeded extensions.
 # More info is available from: https://doc.qt.io/qt-6/linux-requirements.html
