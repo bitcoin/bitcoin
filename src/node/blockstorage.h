@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -480,6 +481,33 @@ public:
     bool ReadBlockUndo(CBlockUndo& blockundo, const CBlockIndex& index) const;
 
     void CleanupBlockRevFiles() const;
+};
+
+class ImportingNow
+{
+    std::atomic<bool>* m_importing;
+
+public:
+    ImportingNow(std::atomic<bool>& importing) : m_importing{&importing}
+    {
+        assert(*m_importing == false);
+        *m_importing = true;
+    }
+
+    ImportingNow() : m_importing{nullptr} {}
+
+    void Set(std::atomic<bool>& importing) {
+        m_importing = &importing;
+        assert(*m_importing == false);
+        *m_importing = true;
+    }
+
+    ~ImportingNow()
+    {
+        if (!m_importing) return;
+        assert(*m_importing == true);
+        *m_importing = false;
+    }
 };
 
 // Calls ActivateBestChain() even if no blocks are imported.
