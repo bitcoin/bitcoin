@@ -467,6 +467,23 @@ public:
     void CleanupBlockRevFiles() const;
 };
 
+class ImportingNow
+{
+    std::atomic<bool>& m_importing;
+
+public:
+    ImportingNow(std::atomic<bool>& importing) : m_importing{importing}
+    {
+        assert(m_importing == false);
+        m_importing = true;
+    }
+    ~ImportingNow()
+    {
+        assert(m_importing == true);
+        m_importing = false;
+    }
+};
+
 // Calls ActivateBestChain() even if no blocks are imported.
 // When force_activation is `false`, ActivateBestChain will not
 // be called on reindexed blocks if best_header chainwork is below
