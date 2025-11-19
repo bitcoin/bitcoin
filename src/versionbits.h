@@ -69,6 +69,7 @@ struct BIP9GBTStatus {
         bool gbt_optional_rule;
     };
     std::map<std::string, const Info, std::less<>> signalling, locked_in, active;
+    uint32_t vbrequired{0};
 };
 
 /** BIP 9 allows multiple softforks to be deployed in parallel. We cache
@@ -85,8 +86,11 @@ public:
 
     BIP9GBTStatus GBTStatus(const CBlockIndex& block_index, const Consensus::Params& params) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
-    /** Get the BIP9 state for a given deployment for the block after pindexPrev. */
+    /** Check if a deployment is active for the block after pindexPrev. */
     bool IsActiveAfter(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Check if mandatory signaling is required for a deployment at the block after pindexPrev. */
+    bool MustSignal(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** Determine what nVersion a new block should use */
     int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);

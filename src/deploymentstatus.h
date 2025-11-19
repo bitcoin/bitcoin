@@ -49,4 +49,5 @@ inline bool DeploymentEnabled(const Consensus::Params& params, Consensus::Deploy
     return params.vDeployments[dep].nStartTime != Consensus::BIP9Deployment::NEVER_ACTIVE;
 }
 
+
 #endif // BITCOIN_DEPLOYMENTSTATUS_H
