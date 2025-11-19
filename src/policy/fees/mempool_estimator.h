@@ -5,6 +5,7 @@
 #ifndef BITCOIN_POLICY_FEES_MEMPOOL_ESTIMATOR_H
 #define BITCOIN_POLICY_FEES_MEMPOOL_ESTIMATOR_H
 
+#include <primitives/transaction.h>
 #include <sync.h>
 #include <threadsafety.h>
 #include <uint256.h>
@@ -12,14 +13,30 @@
 #include <util/time.h>
 
 #include <chrono>
+#include <deque>
+#include <memory>
+#include <vector>
 
 class ChainstateManager;
 class CTxMemPool;
+
+struct RemovedMempoolTransactionInfo;
 
 // Fee rate estimate for confirmation target above this is not reliable,
 // as mempool conditions are likely to change.
 constexpr int MEMPOOL_FEE_ESTIMATOR_MAX_TARGET{2};
 constexpr std::chrono::seconds CACHE_LIFE{7};
+
+// Constants for mempool sanity checks.
+constexpr size_t NUMBER_OF_BLOCKS = 6;
+constexpr double MEMPOOL_REPRESENTATION_THRESHOLD = 0.75;
+
+//! Weight statistics for a recently mined block, used to assess mempool coverage.
+struct MinedBlockStats {
+    uint64_t m_height{0};                   //!< Block height.
+    uint64_t m_removed_block_txs_weight{0}; //!< Weight of mempool transactions removed for this block (excluding coinbase).
+    uint64_t m_block_weight{0};             //!< Total non-coinbase transaction weight in the block.
+};
 
 /**
  * MemPoolFeeRateEstimatorCache holds a cache of recent fee rate estimates.
@@ -69,7 +86,17 @@ public:
         return MEMPOOL_FEE_ESTIMATOR_MAX_TARGET;
     }
 
+    void MempoolTxsRemovedForBlock(const std::vector<CTransactionRef>& block_txs, const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    //! Checks if recent mined blocks indicate a healthy mempool state.
+    bool IsMempoolHealthy() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
 private:
+    //! Checks if recent mined blocks indicate a healthy mempool state (internal-only).
+    bool isMempoolHealthy() const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    //! Tracks weight statistics for the last NUMBER_OF_BLOCKS mined blocks.
+    std::deque<MinedBlockStats> prev_mined_blocks GUARDED_BY(cs);
+
     const CTxMemPool* m_mempool;
     ChainstateManager* m_chainman;
     mutable Mutex cs;
