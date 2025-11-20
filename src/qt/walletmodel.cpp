@@ -147,7 +147,7 @@ bool WalletModel::validateAddress(const QString& address) const
     return IsValidDestinationString(address.toStdString());
 }
 
-WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoinControl& coinControl)
+WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoinControl& coinControl, bool sign)
 {
     CAmount total = 0;
     bool fSubtractFeeFromAmount = false;
@@ -203,7 +203,9 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         int nChangePosRet = -1;
 
         auto& newTx = transaction.getWtx();
-        const auto& res = m_wallet->createTransaction(vecSend, coinControl, /*sign=*/!wallet().privateKeysDisabled(), nChangePosRet, nFeeRequired);
+        // Only sign if explicitly requested via the sign parameter.
+        const bool should_sign = sign && !wallet().privateKeysDisabled();
+        const auto& res = m_wallet->createTransaction(vecSend, coinControl, should_sign, nChangePosRet, nFeeRequired);
         newTx = res ? *res : nullptr;
         transaction.setTransactionFee(nFeeRequired);
         if (fSubtractFeeFromAmount && newTx)

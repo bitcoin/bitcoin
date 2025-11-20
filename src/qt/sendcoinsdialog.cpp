@@ -281,6 +281,8 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
     }
 
     // prepare transaction for getting txFee earlier
+    // Create unsigned transaction to support creating unsigned PSBTs.
+    // Signing is deferred until the user clicks "Send".
     m_current_transaction = std::make_unique<WalletModelTransaction>(recipients);
     WalletModel::SendCoinsReturn prepareStatus;
 
@@ -288,7 +290,7 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
 
     CCoinControl coin_control = *m_coin_control;
     coin_control.m_allow_other_inputs = !coin_control.HasSelected(); // future, could introduce a checkbox to customize this value.
-    prepareStatus = model->prepareTransaction(*m_current_transaction, coin_control);
+    prepareStatus = model->prepareTransaction(*m_current_transaction, coin_control, /*sign=*/false);
 
     // process prepareStatus and on error generate message shown to user
     processSendCoinsReturn(prepareStatus,
@@ -539,6 +541,24 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
                 } else {
                     presentPSBT(psbtx);
                 }
+            }
+        } else {
+            // Sign the transaction now that the user has confirmed they want to send.
+            CMutableTransaction mtx = CMutableTransaction{*(m_current_transaction->getWtx())};
+            PartiallySignedTransaction psbtx(mtx);
+            bool complete = false;
+            // Fill and sign the PSBT
+            const auto err{model->wallet().fillPSBT(std::nullopt, /*sign=*/true, /*bip32derivs=*/false, /*n_signed=*/nullptr, psbtx, complete)};
+            if (err || !complete) {
+                Q_EMIT message(tr("Send Coins"), tr("Failed to sign transaction."),
+                    CClientUIInterface::MSG_ERROR);
+                send_failure = true;
+                broadcast = false;
+            } else {
+                // Extract the signed transaction
+                CHECK_NONFATAL(FinalizeAndExtractPSBT(psbtx, mtx));
+                const CTransactionRef tx = MakeTransactionRef(mtx);
+                m_current_transaction->setWtx(tx);
             }
         }
 

@@ -96,7 +96,7 @@ public:
     };
 
     // prepare transaction for getting txfee before sending coins
-    SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction, const wallet::CCoinControl& coinControl);
+    SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction, const wallet::CCoinControl& coinControl, bool sign = false);
 
     // Send coins to a list of recipients
     void sendCoins(WalletModelTransaction& transaction);
