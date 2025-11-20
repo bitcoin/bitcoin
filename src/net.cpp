@@ -995,7 +995,9 @@ void V2Transport::StartSendingHandshake() noexcept
 }
 
 V2Transport::V2Transport(NodeId nodeid, bool initiating, const CKey& key, std::span<const std::byte> ent32, std::vector<uint8_t> garbage) noexcept
-    : m_cipher{key, ent32}, m_initiating{initiating}, m_nodeid{nodeid},
+    : m_cipher{key, ent32},
+      m_initiating{initiating},
+      m_nodeid{nodeid},
       m_v1_fallback{nodeid},
       m_recv_state{initiating ? RecvState::KEY : RecvState::KEY_MAYBE_V1},
       m_send_garbage{std::move(garbage)},
