@@ -269,11 +269,15 @@ inline std::ostream& operator<<(std::ostream& os, const T& e)
     return os << static_cast<std::underlying_type_t<T>>(e);
 }
 
+inline std::ostream& operator<<(std::ostream& os, const std::nullopt_t)
+{
+    return os << "std::nullopt";
+}
 template <typename T>
-inline std::ostream& operator<<(std::ostream& os, const std::optional<T>& v)
+std::ostream& operator<<(std::ostream& os, const std::optional<T>& v)
 {
     return v ? os << *v
-             : os << "std::nullopt";
+             : os << std::nullopt;
 }
 } // namespace std
 

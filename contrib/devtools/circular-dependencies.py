@@ -3,6 +3,8 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+import collections
+import fnmatch
 import sys
 import re
 
@@ -18,11 +20,26 @@ HEADER_MODULE_PATHS = [
     'interfaces/'
 ]
 
+# Headers whose dependencies are ignored, but will trigger errors if included
+# transitively (from other headers instead of source files). This can be useful
+# for header-only modules whose dependencies should not trigger circular
+# dependency errors between other modules. Specifically it is useful for
+# *_settings.h files which are only meant to be included by .cpp files
+# registering and retrieving settings, and which may include headers in the same
+# modules as those .cpp files for setting types and default values. As long as
+# .cpp files are following IWYU rules and directly including headers they use,
+# this should not cause circular dependencies to go undetected.
+NONTRANSITIVE_HEADERS = [
+    '**_settings.h'
+]
+
 def module_name(path):
     if path in MAPPING:
         path = MAPPING[path]
     if any(path.startswith(dirpath) for dirpath in HEADER_MODULE_PATHS):
         return path
+    if any(fnmatch.fnmatch(path, pat) for pat in NONTRANSITIVE_HEADERS):
+        return False
     if path.endswith(".h"):
         return path[:-2]
     if path.endswith(".c"):
@@ -41,12 +58,13 @@ for arg in sys.argv[1:]:
     module = module_name(arg)
     if module is None:
         print("Ignoring file %s (does not constitute module)\n" % arg)
-    else:
+    elif module is not False:
         files[arg] = module
         deps[module] = set()
 
 # Iterate again, and build list of direct dependencies for each module
 # TODO: implement support for multiple include directories
+included_by = collections.defaultdict(set)
 for arg in sorted(files.keys()):
     module = files[arg]
     with open(arg, 'r', encoding="utf8") as f:
@@ -55,8 +73,19 @@ for arg in sorted(files.keys()):
             if match:
                 include = match.group(1)
                 included_module = module_name(include)
-                if included_module is not None and included_module in deps and included_module != module:
+                if included_module and included_module in deps and included_module != module:
                     deps[module].add(included_module)
+                included_by[include].add(arg)
+
+# Trigger an error if any module listed as being nontransitive is ever included
+# indirectly. The assumption that nontransitive modules do not trigger circular
+# dependencies is only valid when they are included directly.
+for arg in sys.argv[1:]:
+    if module_name(arg) is not False:
+        continue
+    for path in included_by[arg]:
+        if included_by[path]:
+            raise Exception(f"Error: file {arg} which is listed in NONTRANSITIVE_HEADERS is included indirectly, through {path}, by {included_by[path]}. Files listed in NONTRANSITIVE_HEADERS should only be included by .cpp files, not .h files.")
 
 # Loop to find the shortest (remaining) circular dependency
 have_cycle: bool = False

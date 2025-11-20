@@ -6,7 +6,10 @@
 #include <common/args.h>
 
 #include <chainparamsbase.h>
+#include <chainparamsbase_settings.h>
+#include <common/args_settings.h>
 #include <common/settings.h>
+#include <init_settings.h>
 #include <logging.h>
 #include <sync.h>
 #include <tinyformat.h>
@@ -275,9 +278,14 @@ void ArgsManager::SetDefaultFlags(std::optional<unsigned int> flags)
 
 fs::path ArgsManager::GetPathArg(std::string arg, const fs::path& default_value) const
 {
-    if (IsArgNegated(arg)) return fs::path{};
-    std::string path_str = GetArg(arg, "");
-    if (path_str.empty()) return default_value;
+    return SettingToPath(GetSetting(arg)).value_or(default_value);
+}
+
+std::optional<fs::path> SettingToPath(const common::SettingsValue& value)
+{
+    if (value.isFalse()) return fs::path{};
+    std::string path_str = SettingToString(value, "");
+    if (path_str.empty()) return std::nullopt;
     fs::path result = fs::PathFromString(path_str).lexically_normal();
     // Remove trailing slash, if present.
     return result.has_filename() ? result : result.parent_path();
@@ -292,8 +300,8 @@ fs::path ArgsManager::GetBlocksDirPath() const
     // this function
     if (!path.empty()) return path;
 
-    if (IsArgSet("-blocksdir")) {
-        path = fs::absolute(GetPathArg("-blocksdir"));
+    if (!BlocksDirSetting::Value(*this).isNull()) {
+        path = fs::absolute(BlocksDirSettingPath::Get(*this));
         if (!fs::is_directory(path)) {
             path = "";
             return path;
@@ -316,7 +324,7 @@ fs::path ArgsManager::GetDataDir(bool net_specific) const
     // Used cached path if available
     if (!path.empty()) return path;
 
-    const fs::path datadir{GetPathArg("-datadir")};
+    const fs::path datadir{DataDirSettingPath::Get(*this)};
     if (!datadir.empty()) {
         path = fs::absolute(datadir);
         if (!fs::is_directory(path)) {
@@ -379,7 +387,7 @@ bool ArgsManager::IsArgSet(const std::string& strArg) const
 
 bool ArgsManager::GetSettingsPath(fs::path* filepath, bool temp, bool backup) const
 {
-    fs::path settings = GetPathArg("-settings", BITCOIN_SETTINGS_FILENAME);
+    fs::path settings = SettingsSetting::Get(*this);
     if (settings.empty()) {
         return false;
     }
@@ -620,7 +628,7 @@ void ArgsManager::CheckMultipleCLIArgs() const
 
 std::string ArgsManager::GetHelpMessage() const
 {
-    const bool show_debug = GetBoolArg("-help-debug", false);
+    const bool show_debug = HelpDebugSetting::Get(*this);
 
     std::string usage;
     LOCK(cs_args);
@@ -695,13 +703,14 @@ std::string ArgsManager::GetHelpMessage() const
 
 bool HelpRequested(const ArgsManager& args)
 {
-    return args.IsArgSet("-?") || args.IsArgSet("-h") || args.IsArgSet("-help") || args.IsArgSet("-help-debug");
+    return !QSettingHidden::Value(args).isNull() || !HSettingHidden::Value(args).isNull() || !HelpSetting::Value(args).isNull() || !HelpDebugSetting::Value(args).isNull();
 }
 
 void SetupHelpOptions(ArgsManager& args)
 {
-    args.AddArg("-help", "Print this help message and exit (also -h or -?)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    args.AddHiddenArgs({"-h", "-?"});
+    HelpSetting::Register(args);
+    HSettingHidden::Register(args);
+    QSettingHidden::Register(args);
 }
 
 static const int screenWidth = 79;
@@ -727,7 +736,7 @@ const std::vector<std::string> TEST_OPTIONS_DOC{
 
 bool HasTestOption(const ArgsManager& args, const std::string& test_option)
 {
-    const auto options = args.GetArgs("-test");
+    const auto options = TestSetting::Get(args);
     return std::any_of(options.begin(), options.end(), [test_option](const auto& option) {
         return option == test_option;
     });
@@ -767,7 +776,7 @@ fs::path GetDefaultDataDir()
 
 bool CheckDataDirOption(const ArgsManager& args)
 {
-    const fs::path datadir{args.GetPathArg("-datadir")};
+    const fs::path datadir{DataDirSettingPath::Get(args)};
     return datadir.empty() || fs::is_directory(fs::absolute(datadir));
 }
 
@@ -813,7 +822,7 @@ std::variant<ChainType, std::string> ArgsManager::GetChainArg() const
     const bool fSigNet  = get_net("-signet");
     const bool fTestNet = get_net("-testnet");
     const bool fTestNet4 = get_net("-testnet4");
-    const auto chain_arg = GetArg("-chain");
+    const auto chain_arg = ChainSetting::Get(*this);
 
     if ((int)chain_arg.has_value() + (int)fRegTest + (int)fSigNet + (int)fTestNet + (int)fTestNet4 > 1) {
         throw std::runtime_error("Invalid combination of -regtest, -signet, -testnet, -testnet4 and -chain. Can use at most one.");
