@@ -31,7 +31,7 @@ template<typename T>
 class CFlatDB;
 class CInv;
 class CNode;
-class PeerManager;
+class PeerManagerInternal;
 
 class CDeterministicMNList;
 class CDeterministicMNManager;
@@ -312,10 +312,10 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     bool ProcessVoteAndRelay(const CGovernanceVote& vote, CGovernanceException& exception, CConnman& connman) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store, !cs_relay);
-    int RequestGovernanceObjectVotes(CNode& peer, CConnman& connman, const PeerManager& peerman) const
+    int RequestGovernanceObjectVotes(CNode& peer, CConnman& connman, const PeerManagerInternal* peerman) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     int RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman,
-                                     const PeerManager& peerman) const
+                                     const PeerManagerInternal* peerman) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     [[nodiscard]] MessageProcessingResult ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type,
                                                          CDataStream& vRecv)

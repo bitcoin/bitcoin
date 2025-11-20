@@ -10,11 +10,9 @@
 class CConnman;
 class CBlockIndex;
 class CDataStream;
-class CGovernanceManager;
 class CMasternodeSync;
 class CNetFulfilledRequestManager;
 class CNode;
-class PeerManager;
 
 static constexpr int MASTERNODE_SYNC_BLOCKCHAIN      = 1;
 static constexpr int MASTERNODE_SYNC_GOVERNANCE      = 4;
@@ -58,29 +56,27 @@ public:
     explicit CMasternodeSync(CConnman& _connman, CNetFulfilledRequestManager& netfulfilledman);
     ~CMasternodeSync();
 
-    void SendGovernanceSyncRequest(CNode* pnode) const;
-
     bool IsBlockchainSynced() const { return nCurrentAsset > MASTERNODE_SYNC_BLOCKCHAIN; }
     bool IsSynced() const { return nCurrentAsset == MASTERNODE_SYNC_FINISHED; }
 
     int GetAssetID() const { return nCurrentAsset; }
     int GetAttempt() const { return nTriedPeerCount; }
+    void BumpAttempt() { ++nTriedPeerCount; }
     void BumpAssetLastTime(const std::string& strFuncName);
+    int64_t GetLastBump() const { return nTimeLastBumped; }
     int64_t GetAssetStartTime() const { return nTimeAssetSyncStarted; }
     std::string GetAssetName() const;
     std::string GetSyncStatus() const;
+    bool IsReachedBestHeader() const { return fReachedBestHeader; }
 
     void Reset(bool fForce = false, bool fNotifyReset = true);
     void SwitchToNextAsset();
 
     void ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv) const;
-    void ProcessTick(const PeerManager& peerman, const CGovernanceManager& govman);
 
     void AcceptedBlockHeader(const CBlockIndex *pindexNew);
     void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload);
     void UpdatedBlockTip(const CBlockIndex *pindexTip, const CBlockIndex *pindexNew, bool fInitialDownload);
-
-    void DoMaintenance(const PeerManager& peerman, const CGovernanceManager& govman);
 };
 
 #endif // BITCOIN_MASTERNODE_SYNC_H

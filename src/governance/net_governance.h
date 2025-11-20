@@ -9,21 +9,26 @@
 
 class CGovernanceManager;
 class CMasternodeSync;
-
+class CNetFulfilledRequestManager;
 class NetGovernance final : public NetHandler
 {
 public:
-    NetGovernance(PeerManagerInternal* peer_manager, CGovernanceManager& gov_manager, CMasternodeSync& node_sync) :
+    NetGovernance(PeerManagerInternal* peer_manager, CGovernanceManager& gov_manager, CMasternodeSync& node_sync, CNetFulfilledRequestManager& netfulfilledman) :
         NetHandler(peer_manager),
         m_gov_manager(gov_manager),
-        m_node_sync(node_sync)
+        m_node_sync(node_sync),
+        m_netfulfilledman(netfulfilledman)
     {
     }
     void Schedule(CScheduler& scheduler, CConnman& connman) override;
 
 private:
+    void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman) const;
+    void ProcessTick(CConnman& connman);
+
     CGovernanceManager& m_gov_manager;
     CMasternodeSync& m_node_sync;
+    CNetFulfilledRequestManager& m_netfulfilledman;
 };
 
 #endif // BITCOIN_GOVERNANCE_NET_GOVERNANCE_H

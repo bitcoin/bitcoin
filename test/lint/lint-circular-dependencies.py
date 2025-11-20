@@ -48,7 +48,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     "evo/specialtxman -> validation -> evo/specialtxman",
     "governance/classes -> governance/object -> governance/governance -> governance/classes",
     "governance/governance -> governance/signing -> governance/object -> governance/governance",
-    "governance/governance -> masternode/sync -> governance/governance",
+    "masternode/sync -> net -> masternode/sync",
     "governance/governance -> net_processing -> masternode/active/context -> governance/governance",
     "governance/governance -> net_processing -> governance/governance",
     "instantsend/instantsend -> instantsend/signing -> llmq/signing_shares -> net_processing -> instantsend/instantsend",

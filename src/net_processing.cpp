@@ -653,6 +653,7 @@ public:
     void PeerRelayInvFiltered(const CInv& inv, const CTransaction& relatedTx) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void PeerRelayInvFiltered(const CInv& inv, const uint256& relatedTxHash) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void PeerAskPeersForTransaction(const uint256& txid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    size_t PeerGetRequestedObjectCount(NodeId nodeid) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, ::cs_main);
     void PeerPostProcessMessage(MessageProcessingResult&& ret) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
 private:
@@ -6576,6 +6577,11 @@ void PeerManagerImpl::PeerRelayInvFiltered(const CInv& inv, const uint256& relat
 void PeerManagerImpl::PeerAskPeersForTransaction(const uint256& txid)
 {
     AskPeersForTransaction(txid);
+}
+
+size_t PeerManagerImpl::PeerGetRequestedObjectCount(NodeId nodeid) const
+{
+    return GetRequestedObjectCount(nodeid);
 }
 
 void PeerManagerImpl::PeerPostProcessMessage(MessageProcessingResult&& ret)
