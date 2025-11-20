@@ -220,8 +220,9 @@ BITCOIN_CORE_H = \
   dsnotificationinterface.h \
   governance/classes.h \
   governance/common.h \
-  governance/governance.h \
   governance/exceptions.h \
+  governance/governance.h \
+  governance/net_governance.h \
   governance/object.h \
   governance/signing.h \
   governance/validators.h \
@@ -508,6 +509,7 @@ libbitcoin_node_a_SOURCES = \
   governance/classes.cpp \
   governance/exceptions.cpp \
   governance/governance.cpp \
+  governance/net_governance.cpp \
   governance/object.cpp \
   governance/signing.cpp \
   governance/validators.cpp \

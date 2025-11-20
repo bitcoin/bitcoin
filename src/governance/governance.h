@@ -31,7 +31,6 @@ template<typename T>
 class CFlatDB;
 class CInv;
 class CNode;
-class CScheduler;
 class PeerManager;
 
 class CDeterministicMNList;
@@ -290,10 +289,6 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     void Clear()
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
-    void CheckAndRemove()
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
-    void Schedule(CScheduler& scheduler, CConnman& connman, PeerManager& peerman)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_store, !cs_relay);
 
     // CGovernanceObject
     bool AreRateChecksEnabled() const { return fRateChecksEnabled; }
@@ -378,6 +373,12 @@ public:
     std::shared_ptr<const CGovernanceObject> FindConstGovernanceObject(const uint256& nHash) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
 
+    // Used by NetGovernance
+    std::vector<CInv> FetchRelayInventory() EXCLUSIVE_LOCKS_REQUIRED(!cs_relay);
+    void CheckAndRemove() EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+    void RequestOrphanObjects(CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+    void CleanOrphanObjects() EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+
 private:
     // Branches of ProcessMessage
     [[nodiscard]] MessageProcessingResult SyncObjects(CNode& peer, CConnman& connman) const
@@ -448,12 +449,6 @@ private:
 
     void AddCachedTriggers()
         EXCLUSIVE_LOCKS_REQUIRED(cs_store);
-
-    void RequestOrphanObjects(CConnman& connman)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
-
-    void CleanOrphanObjects()
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
 
     void RemoveInvalidVotes()
         EXCLUSIVE_LOCKS_REQUIRED(cs_store);

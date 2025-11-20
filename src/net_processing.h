@@ -79,6 +79,7 @@ public:
     virtual void Start() {}
     virtual void Stop() {}
     virtual void Interrupt() {}
+    virtual void Schedule(CScheduler& scheduler, CConnman& connman) {}
     virtual void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv) {}
 protected:
     PeerManagerInternal* m_peer_manager;
@@ -169,6 +170,7 @@ public:
     virtual void StartHandlers() = 0;
     virtual void StopHandlers() = 0;
     virtual void InterruptHandlers() = 0;
+    virtual void ScheduleHandlers(CScheduler& scheduler) = 0;
 };
 
 #endif // BITCOIN_NET_PROCESSING_H

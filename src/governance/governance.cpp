@@ -85,38 +85,6 @@ CGovernanceManager::~CGovernanceManager()
     m_db->Store(*this);
 }
 
-void CGovernanceManager::Schedule(CScheduler& scheduler, CConnman& connman, PeerManager& peerman)
-{
-    AssertLockNotHeld(cs_store);
-    AssertLockNotHeld(cs_relay);
-
-    assert(IsValid());
-
-    scheduler.scheduleEvery(
-        [this, &connman]() -> void {
-            if (!m_mn_sync.IsSynced()) return;
-
-            // CHECK OBJECTS WE'VE ASKED FOR, REMOVE OLD ENTRIES
-            CleanOrphanObjects();
-            RequestOrphanObjects(connman);
-
-            // CHECK AND REMOVE - REPROCESS GOVERNANCE OBJECTS
-            CheckAndRemove();
-        },
-        std::chrono::minutes{5});
-
-    scheduler.scheduleEvery(
-        [this, &peerman]() -> void {
-            LOCK(cs_relay);
-            for (const auto& inv : m_relay_invs) {
-                peerman.RelayInv(inv);
-            }
-            m_relay_invs.clear();
-        },
-        // Tests need tighter timings to avoid timeouts, use more relaxed pacing otherwise
-        Params().IsMockableChain() ? std::chrono::seconds{1} : std::chrono::seconds{5});
-}
-
 bool CGovernanceManager::LoadCache(bool load_cache)
 {
     AssertLockNotHeld(cs_store);
@@ -574,6 +542,14 @@ void CGovernanceManager::CheckAndRemove()
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdateCachesAndClean -- %s, m_requested_hash_time size=%d\n",
              ToString(), m_requested_hash_time.size());
+}
+
+std::vector<CInv> CGovernanceManager::FetchRelayInventory()
+{
+    std::vector<CInv> ret;
+    LOCK(cs_relay);
+    swap(ret, m_relay_invs);
+    return ret;
 }
 
 std::shared_ptr<const CGovernanceObject> CGovernanceManager::FindConstGovernanceObject(const uint256& nHash) const
