@@ -23,11 +23,15 @@ Verify node behaviour and debug log when launching bitcoind in these cases:
 The tests are order-independent.
 
 """
+import hashlib
 import os
 import shutil
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+)
 
 DEFAULT_ASMAP_FILENAME = 'ip_asn.map' # defined in src/init.cpp
 ASMAP = 'src/test/data/asmap.raw' # path to unit test skeleton asmap
@@ -148,6 +152,25 @@ class AsmapTest(BitcoinTestFramework):
         assert_equal(len(asns), 3)
         os.remove(self.default_asmap)
 
+    def test_export_embedded_asmap(self):
+        self.log.info('Test exportasmap RPC')
+        export_path = os.path.join(self.datadir, "asmap.dat")
+
+        if not self.is_embedded_asmap_compiled():
+            assert_raises_rpc_error(-1, "No embedded ASMap data available", self.node.exportasmap, export_path)
+            return
+
+        self.node.exportasmap(export_path)
+
+        with open(export_path, 'rb') as f:
+            file_hash = hashlib.sha256(f.read()).hexdigest()
+
+        # Added in https://github.com/bitcoin/bitcoin/pull/28792
+        expected_hash = "447d13a870e42e4a61e7933572b700872386e40529a69a7e0880816acf8a9012"
+        assert_equal(file_hash, expected_hash)
+
+        os.remove(export_path)
+
     def run_test(self):
         self.node = self.nodes[0]
         self.datadir = self.node.chain_path
@@ -165,6 +188,7 @@ class AsmapTest(BitcoinTestFramework):
         self.test_asmap_with_missing_file()
         self.test_empty_asmap()
         self.test_asmap_health_check()
+        self.test_export_embedded_asmap()
 
 
 if __name__ == '__main__':

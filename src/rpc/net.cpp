@@ -15,6 +15,9 @@
 #include <net_types.h>
 #include <netbase.h>
 #include <node/context.h>
+#ifdef ENABLE_EMBEDDED_ASMAP
+#include <node/data/ip_asn.dat.h>
+#endif
 #include <node/protocol_version.h>
 #include <node/warnings.h>
 #include <policy/settings.h>
@@ -25,6 +28,7 @@
 #include <rpc/util.h>
 #include <sync.h>
 #include <univalue.h>
+#include <util/asmap.h>
 #include <util/chaintype.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -1114,6 +1118,54 @@ static RPCHelpMan getaddrmaninfo()
     };
 }
 
+static RPCHelpMan exportasmap()
+{
+    return RPCHelpMan{
+        "exportasmap",
+        "Export the embedded ASMap data to a file.\n",
+            {
+                {"filepath", RPCArg::Type::STR, RPCArg::Optional::NO, "The path where the ASMap file is saved"},
+            },
+            RPCResult{RPCResult::Type::NONE, "", ""},
+            RPCExamples{
+                HelpExampleCli("exportasmap", "\"/tmp/asmap.dat\"")
+                + HelpExampleRpc("exportasmap", "\"/tmp/asmap.dat\"")
+            },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+#ifndef ENABLE_EMBEDDED_ASMAP
+    throw JSONRPCError(RPC_MISC_ERROR, "No embedded ASMap data available");
+#else
+    std::span<const std::byte> asmap_data{node::data::ip_asn};
+
+    if (asmap_data.empty() || !CheckAsmap(asmap_data)) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Embedded ASMap data appears to be corrupted");
+    }
+
+    const std::string filepath = request.params[0].get_str();
+    fs::path export_path = fs::PathFromString(filepath);
+    fs::path parent_path = export_path.parent_path();
+    if (!parent_path.empty() && !fs::exists(parent_path)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Directory does not exist: %s", fs::PathToString(parent_path)));
+    }
+
+    AutoFile file{fsbridge::fopen(export_path, "wb")};
+    if (file.IsNull()) {
+        throw JSONRPCError(RPC_MISC_ERROR, strprintf("Failed to open asmap file: %s", fs::PathToString(export_path)));
+    }
+
+    file << asmap_data;
+
+    if (file.fclose() != 0) {
+        throw JSONRPCError(RPC_MISC_ERROR, strprintf("Failed to close asmap file: %s", fs::PathToString(export_path)));
+    }
+
+    return UniValue::VNULL;
+#endif
+        },
+    };
+}
+
 UniValue AddrmanEntryToJSON(const AddrInfo& info, const CConnman& connman)
 {
     UniValue ret(UniValue::VOBJ);
@@ -1208,6 +1260,7 @@ void RegisterNetRPCCommands(CRPCTable& t)
         {"network", &setnetworkactive},
         {"network", &getnodeaddresses},
         {"network", &getaddrmaninfo},
+        {"network", &exportasmap},
         {"hidden", &addconnection},
         {"hidden", &addpeeraddress},
         {"hidden", &sendmsgtopeer},
