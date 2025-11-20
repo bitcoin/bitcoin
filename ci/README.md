@@ -28,8 +28,19 @@ the CI locally you may need to reduce that entropy by running:
 sudo sysctl -w vm.mmap_rnd_bits=28
 ```
 
-It is recommended to run the ci system in a clean env. To run the test stage
-with a specific configuration,
+To run a test that requires emulating a CPU architecture different from the
+host, we may rely on the container environment recognizing foreign executables
+and automatically running them using `qemu`. The following sets us up to do so
+(also works for `podman`):
+
+```
+docker run --rm --privileged docker.io/multiarch/qemu-user-static --reset -p yes
+```
+
+It is recommended to run the CI system in a clean environment. The `env -i`
+command below ensures that *only* specified environment variables are propagated
+into the local CI.
+To run the test stage with a specific configuration:
 
 ```
 env -i HOME="$HOME" PATH="$PATH" USER="$USER" bash -c 'FILE_ENV="./ci/test/00_setup_env_arm.sh" ./ci/test_run_all.sh'
