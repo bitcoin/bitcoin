@@ -869,10 +869,12 @@ private:
 
     // All of the following cache a recent block, and are protected by m_most_recent_block_mutex
     Mutex m_most_recent_block_mutex;
-    std::shared_ptr<const CBlock> m_most_recent_block GUARDED_BY(m_most_recent_block_mutex);
-    std::shared_ptr<const CBlockHeaderAndShortTxIDs> m_most_recent_compact_block GUARDED_BY(m_most_recent_block_mutex);
-    uint256 m_most_recent_block_hash GUARDED_BY(m_most_recent_block_mutex);
-    std::unique_ptr<const std::map<GenTxid, CTransactionRef>> m_most_recent_block_txs GUARDED_BY(m_most_recent_block_mutex);
+    struct {
+        std::shared_ptr<const CBlock> block;
+        std::shared_ptr<const CBlockHeaderAndShortTxIDs> compact_block;
+        uint256 hash;
+        std::unique_ptr<const std::map<GenTxid, CTransactionRef>> txs;
+    } m_most_recent_pow_block GUARDED_BY(m_most_recent_block_mutex);
 
     // Data about the low-work headers synchronization, aggregated from all peers' HeadersSyncStates.
     /** Mutex guarding the other m_headers_presync_* variables. */
@@ -2156,10 +2158,10 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
         }
 
         LOCK(m_most_recent_block_mutex);
-        m_most_recent_block_hash = hashBlock;
-        m_most_recent_block = pblock;
-        m_most_recent_compact_block = pcmpctblock;
-        m_most_recent_block_txs = std::move(most_recent_block_txs);
+        m_most_recent_pow_block.hash = hashBlock;
+        m_most_recent_pow_block.block = pblock;
+        m_most_recent_pow_block.compact_block = pcmpctblock;
+        m_most_recent_pow_block.txs = std::move(most_recent_block_txs);
     }
 
     m_connman.ForEachNode([this, pindex, &lazy_ser, &hashBlock](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
@@ -2369,8 +2371,8 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
     std::shared_ptr<const CBlockHeaderAndShortTxIDs> a_recent_compact_block;
     {
         LOCK(m_most_recent_block_mutex);
-        a_recent_block = m_most_recent_block;
-        a_recent_compact_block = m_most_recent_compact_block;
+        a_recent_block = m_most_recent_pow_block.block;
+        a_recent_compact_block = m_most_recent_pow_block.compact_block;
     }
 
     bool need_activate_chain = false;
@@ -2546,9 +2548,9 @@ CTransactionRef PeerManagerImpl::FindTxForGetData(const Peer::TxRelay& tx_relay,
     // Or it might be from the most recent block
     {
         LOCK(m_most_recent_block_mutex);
-        if (m_most_recent_block_txs != nullptr) {
-            auto it = m_most_recent_block_txs->find(gtxid);
-            if (it != m_most_recent_block_txs->end()) return it->second;
+        if (m_most_recent_pow_block.txs != nullptr) {
+            auto it = m_most_recent_pow_block.txs->find(gtxid);
+            if (it != m_most_recent_pow_block.txs->end()) return it->second;
         }
     }
 
@@ -4295,7 +4297,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             std::shared_ptr<const CBlock> a_recent_block;
             {
                 LOCK(m_most_recent_block_mutex);
-                a_recent_block = m_most_recent_block;
+                a_recent_block = m_most_recent_pow_block.block;
             }
             BlockValidationState state;
             if (!m_chainman.ActiveChainstate().ActivateBestChain(state, a_recent_block)) {
@@ -4351,8 +4353,8 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         std::shared_ptr<const CBlock> recent_block;
         {
             LOCK(m_most_recent_block_mutex);
-            if (m_most_recent_block_hash == req.blockhash)
-                recent_block = m_most_recent_block;
+            if (m_most_recent_pow_block.hash == req.blockhash)
+                recent_block = m_most_recent_pow_block.block;
             // Unlock m_most_recent_block_mutex to avoid cs_main lock inversion
         }
         if (recent_block) {
@@ -6023,8 +6025,8 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                     std::optional<CSerializedNetMsg> cached_cmpctblock_msg;
                     {
                         LOCK(m_most_recent_block_mutex);
-                        if (m_most_recent_block_hash == pBestIndex->GetBlockHash()) {
-                            cached_cmpctblock_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, *m_most_recent_compact_block);
+                        if (m_most_recent_pow_block.hash == pBestIndex->GetBlockHash()) {
+                            cached_cmpctblock_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, *m_most_recent_pow_block.compact_block);
                         }
                     }
                     if (cached_cmpctblock_msg.has_value()) {
