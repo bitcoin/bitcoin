@@ -21,7 +21,6 @@ void NetGovernance::Schedule(CScheduler& scheduler, CConnman& connman)
             if (!m_node_sync.IsSynced()) return;
 
             // CHECK OBJECTS WE'VE ASKED FOR, REMOVE OLD ENTRIES
-            m_gov_manager.CleanOrphanObjects();
             m_gov_manager.RequestOrphanObjects(connman);
 
             // CHECK AND REMOVE - REPROCESS GOVERNANCE OBJECTS

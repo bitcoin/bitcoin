@@ -1352,11 +1352,23 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex* pindex)
 void CGovernanceManager::RequestOrphanObjects(CConnman& connman)
 {
     AssertLockNotHeld(cs_store);
-    const CConnman::NodesSnapshot snap{connman, /* cond = */ CConnman::FullyConnectedOnly};
 
     std::vector<uint256> vecHashesFiltered;
+    int64_t nNow = GetTime<std::chrono::seconds>().count();
     {
         LOCK(cs_store);
+
+        // clean up outdated before requesting
+        const vote_cmm_t::list_t& items = cmmapOrphanVotes.GetItemList();
+        for (auto it = items.begin(); it != items.end();) {
+            auto prevIt = it;
+            ++it;
+            const auto& [_, time] = prevIt->value;
+            if (time < nNow) {
+                cmmapOrphanVotes.Erase(prevIt->key, prevIt->value);
+            }
+        }
+
         std::vector<uint256> vecHashes;
         cmmapOrphanVotes.GetKeys(vecHashes);
         for (const uint256& nHash : vecHashes) {
@@ -1366,6 +1378,7 @@ void CGovernanceManager::RequestOrphanObjects(CConnman& connman)
         }
     }
 
+    const CConnman::NodesSnapshot snap{connman, /* cond = */ CConnman::FullyConnectedOnly};
     LogPrint(BCLog::GOBJECT, "CGovernanceObject::RequestOrphanObjects -- number objects = %d\n", vecHashesFiltered.size());
     for (const uint256& nHash : vecHashesFiltered) {
         for (CNode* pnode : snap.Nodes()) {
@@ -1373,23 +1386,6 @@ void CGovernanceManager::RequestOrphanObjects(CConnman& connman)
                 continue;
             }
             RequestGovernanceObject(pnode, nHash, connman);
-        }
-    }
-}
-
-void CGovernanceManager::CleanOrphanObjects()
-{
-    LOCK(cs_store);
-    const vote_cmm_t::list_t& items = cmmapOrphanVotes.GetItemList();
-
-    int64_t nNow = GetTime<std::chrono::seconds>().count();
-
-    for (auto it = items.begin(); it != items.end();) {
-        auto prevIt = it;
-        ++it;
-        const auto& [vote, time] = prevIt->value;
-        if (time < nNow) {
-            cmmapOrphanVotes.Erase(prevIt->key, prevIt->value);
         }
     }
 }
