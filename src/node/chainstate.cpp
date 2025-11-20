@@ -51,12 +51,9 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      const fs::path& data_dir,
                                                      bool fPruneMode,
                                                      bool is_addrindex_enabled,
-                                                     bool is_governance_enabled,
                                                      bool is_spentindex_enabled,
                                                      bool is_timeindex_enabled,
-                                                     bool is_txindex_enabled,
                                                      const Consensus::Params& consensus_params,
-                                                     const std::string& network_id,
                                                      bool fReindexChainState,
                                                      int64_t nBlockTreeDBCache,
                                                      int64_t nCoinDBCache,
@@ -109,12 +106,6 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
     if (!chainman.LoadBlockIndex()) {
         if (shutdown_requested && shutdown_requested()) return ChainstateLoadingError::SHUTDOWN_PROBED;
         return ChainstateLoadingError::ERROR_LOADING_BLOCK_DB;
-    }
-
-    // TODO: Remove this when pruning is fixed.
-    // See https://github.com/dashpay/dash/pull/1817 and https://github.com/dashpay/dash/pull/1743
-    if (is_governance_enabled && !is_txindex_enabled && network_id != CBaseChainParams::REGTEST) {
-        return ChainstateLoadingError::ERROR_TXINDEX_DISABLED_WHEN_GOV_ENABLED;
     }
 
     if (!chainman.BlockIndex().empty() &&

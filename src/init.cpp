@@ -2016,12 +2016,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                               args.GetDataDirNet(),
                                               fPruneMode,
                                               args.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX),
-                                              is_governance_enabled,
                                               args.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX),
                                               args.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX),
-                                              args.GetBoolArg("-txindex", DEFAULT_TXINDEX),
                                               chainparams.GetConsensus(),
-                                              chainparams.NetworkIDString(),
                                               fReindexChainState,
                                               cache_sizes.block_tree_db,
                                               cache_sizes.coins_db,
@@ -2050,8 +2047,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
             case ChainstateLoadingError::ERROR_BAD_DEVNET_GENESIS_BLOCK:
                 return InitError(_("Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?"));
-            case ChainstateLoadingError::ERROR_TXINDEX_DISABLED_WHEN_GOV_ENABLED:
-                return InitError(_("Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index."));
             case ChainstateLoadingError::ERROR_ADDRIDX_NEEDS_REINDEX:
                 strLoadError = _("You need to rebuild the database using -reindex to enable -addressindex");
                 break;
