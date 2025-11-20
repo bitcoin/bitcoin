@@ -14,4 +14,7 @@ export CI_IMAGE_PLATFORM="linux/s390x"
 export TEST_RUNNER_EXTRA="--exclude rpc_bind,feature_bind_extra"  # Excluded for now, see https://github.com/bitcoin/bitcoin/issues/17765#issuecomment-602068547
 export RUN_FUNCTIONAL_TESTS=true
 export GOAL="install"
-export BITCOIN_CONFIG="-DREDUCE_EXPORTS=ON"
+export BITCOIN_CONFIG="\
+  --preset=dev-mode \
+  -DREDUCE_EXPORTS=ON \
+"
