@@ -625,6 +625,20 @@ BOOST_AUTO_TEST_CASE(btck_chainman_tests)
         ChainstateManagerOptions chainman_opts{context, test_directory.m_directory.string(), (test_directory.m_directory / "blocks").string()};
         ChainMan chainman{context, chainman_opts};
     }
+    { // null or empty data_directory or blocks_directory are not allowed
+        Context context{};
+        auto valid_dir{test_directory.m_directory.string()};
+        std::vector<std::pair<std::string_view, std::string_view>> illegal_cases{
+            {"", valid_dir},
+            {valid_dir, {nullptr, 0}},
+            {"", ""},
+            {{nullptr, 0}, {nullptr, 0}},
+        };
+        for (auto& [data_dir, blocks_dir] : illegal_cases) {
+            BOOST_CHECK_THROW(ChainstateManagerOptions(context, data_dir, blocks_dir),
+                              std::runtime_error);
+        };
+    }
 
     auto notifications{std::make_shared<TestKernelNotifications>()};
     auto context{create_context(notifications, ChainType::MAINNET)};

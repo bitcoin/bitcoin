@@ -896,6 +896,10 @@ btck_BlockValidationResult btck_block_validation_state_get_block_validation_resu
 
 btck_ChainstateManagerOptions* btck_chainstate_manager_options_create(const btck_Context* context, const char* data_dir, size_t data_dir_len, const char* blocks_dir, size_t blocks_dir_len)
 {
+    if (data_dir == nullptr || data_dir_len == 0 || blocks_dir == nullptr || blocks_dir_len == 0) {
+        LogError("Failed to create chainstate manager options: dir must be non-null and non-empty");
+        return nullptr;
+    }
     try {
         fs::path abs_data_dir{fs::absolute(fs::PathFromString({data_dir, data_dir_len}))};
         fs::create_directories(abs_data_dir);

@@ -937,8 +937,9 @@ public:
 class ChainstateManagerOptions : public UniqueHandle<btck_ChainstateManagerOptions, btck_chainstate_manager_options_destroy>
 {
 public:
-    ChainstateManagerOptions(const Context& context, const std::string& data_dir, const std::string& blocks_dir)
-        : UniqueHandle{btck_chainstate_manager_options_create(context.get(), data_dir.c_str(), data_dir.length(), blocks_dir.c_str(), blocks_dir.length())}
+    ChainstateManagerOptions(const Context& context, std::string_view data_dir, std::string_view blocks_dir)
+        : UniqueHandle{btck_chainstate_manager_options_create(
+              context.get(), data_dir.data(), data_dir.length(), blocks_dir.data(), blocks_dir.length())}
     {
     }
 
