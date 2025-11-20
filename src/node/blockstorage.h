@@ -402,7 +402,7 @@ public:
     //! Check if all blocks in the [upper_block, lower_block] range have data available.
     //! The caller is responsible for ensuring that lower_block is an ancestor of upper_block
     //! (part of the same chain).
-    bool CheckBlockDataAvailability(const CBlockIndex& upper_block LIFETIMEBOUND, const CBlockIndex& lower_block LIFETIMEBOUND) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool CheckBlockDataAvailability(const CBlockIndex& upper_block, const CBlockIndex& lower_block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /**
      * @brief Returns the earliest block with specified `status_mask` flags set after
@@ -422,14 +422,14 @@ public:
      * @param lower_block The earliest possible block to return. If null, the
      *                    search can extend to the genesis block.
      *
-     * @return A non-null pointer to the earliest block between `upper_block`
+     * @return A reference to the earliest block between `upper_block`
      *         and `lower_block`, inclusive, such that every block between the
      *         returned block and `upper_block` has `status_mask` flags set.
      */
-    const CBlockIndex* GetFirstBlock(
+    const CBlockIndex& GetFirstBlock(
         const CBlockIndex& upper_block LIFETIMEBOUND,
         uint32_t status_mask,
-        const CBlockIndex* lower_block = nullptr
+        const CBlockIndex* lower_block LIFETIMEBOUND = nullptr
     ) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** True if any block files have ever been pruned. */
