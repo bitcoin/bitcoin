@@ -871,7 +871,7 @@ private:
     Mutex m_most_recent_block_mutex;
     struct {
         std::shared_ptr<const CBlock> block;
-        std::shared_ptr<const CBlockHeaderAndShortTxIDs> compact_block;
+        std::shared_future<CSerializedNetMsg> cmpctblock_msg_fut;
         uint256 hash;
         std::unique_ptr<const std::map<GenTxid, CTransactionRef>> txs;
     } m_most_recent_pow_block GUARDED_BY(m_most_recent_block_mutex);
@@ -2136,8 +2136,6 @@ void PeerManagerImpl::BlockDisconnected(const std::shared_ptr<const CBlock> &blo
  */
 void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock)
 {
-    auto pcmpctblock = std::make_shared<const CBlockHeaderAndShortTxIDs>(*pblock, FastRandomContext().rand64());
-
     LOCK(cs_main);
 
     if (pindex->nHeight <= m_highest_fast_announce)
@@ -2146,10 +2144,14 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
 
     if (!DeploymentActiveAt(*pindex, m_chainman, Consensus::DEPLOYMENT_SEGWIT)) return;
 
-    uint256 hashBlock(pblock->GetHash());
-    const std::shared_future<CSerializedNetMsg> lazy_ser{
-        std::async(std::launch::deferred, [&] { return NetMsg::Make(NetMsgType::CMPCTBLOCK, *pcmpctblock); })};
+    std::shared_future<CSerializedNetMsg> lazy_ser{
+        std::async(std::launch::async, [pblock = pblock]  {
+            const CBlockHeaderAndShortTxIDs cb{*pblock, FastRandomContext().rand64()};
+            return NetMsg::Make(NetMsgType::CMPCTBLOCK, cb);
+        })
+    };
 
+    uint256 hashBlock(pblock->GetHash());
     {
         auto most_recent_block_txs = std::make_unique<std::map<GenTxid, CTransactionRef>>();
         for (const auto& tx : pblock->vtx) {
@@ -2160,7 +2162,7 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
         LOCK(m_most_recent_block_mutex);
         m_most_recent_pow_block.hash = hashBlock;
         m_most_recent_pow_block.block = pblock;
-        m_most_recent_pow_block.compact_block = pcmpctblock;
+        m_most_recent_pow_block.cmpctblock_msg_fut = lazy_ser;
         m_most_recent_pow_block.txs = std::move(most_recent_block_txs);
     }
 
@@ -2368,11 +2370,13 @@ void PeerManagerImpl::RelayAddress(NodeId originator,
 void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& inv)
 {
     std::shared_ptr<const CBlock> a_recent_block;
-    std::shared_ptr<const CBlockHeaderAndShortTxIDs> a_recent_compact_block;
+    std::shared_future<CSerializedNetMsg> a_recent_cmpct_block_msg_fut;
+    uint256 a_recent_block_hash;
     {
         LOCK(m_most_recent_block_mutex);
         a_recent_block = m_most_recent_pow_block.block;
-        a_recent_compact_block = m_most_recent_pow_block.compact_block;
+        a_recent_block_hash = m_most_recent_pow_block.hash;
+        a_recent_cmpct_block_msg_fut = m_most_recent_pow_block.cmpctblock_msg_fut;
     }
 
     bool need_activate_chain = false;
@@ -2441,7 +2445,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
     }
 
     std::shared_ptr<const CBlock> pblock;
-    if (a_recent_block && a_recent_block->GetHash() == inv.hash) {
+    if (a_recent_block && a_recent_block_hash == inv.hash) {
         pblock = a_recent_block;
     } else if (inv.IsMsgWitnessBlk()) {
         // Fast-path: in this case it is possible to serve the block directly from disk,
@@ -2506,8 +2510,8 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
             // and we don't feel like constructing the object for them, so
             // instead we respond with the full, non-compact block.
             if (can_direct_fetch && pindex->nHeight >= tip->nHeight - MAX_CMPCTBLOCK_DEPTH) {
-                if (a_recent_compact_block && a_recent_compact_block->header.GetHash() == inv.hash) {
-                    MakeAndPushMessage(pfrom, NetMsgType::CMPCTBLOCK, *a_recent_compact_block);
+                if (a_recent_block && a_recent_block_hash == inv.hash) {
+                    PushMessage(pfrom, a_recent_cmpct_block_msg_fut.get().Copy());
                 } else {
                     CBlockHeaderAndShortTxIDs cmpctblock{*pblock, m_rng.rand64()};
                     MakeAndPushMessage(pfrom, NetMsgType::CMPCTBLOCK, cmpctblock);
@@ -6026,7 +6030,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                     {
                         LOCK(m_most_recent_block_mutex);
                         if (m_most_recent_pow_block.hash == pBestIndex->GetBlockHash()) {
-                            cached_cmpctblock_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, *m_most_recent_pow_block.compact_block);
+                            cached_cmpctblock_msg = m_most_recent_pow_block.cmpctblock_msg_fut.get().Copy();
                         }
                     }
                     if (cached_cmpctblock_msg.has_value()) {
