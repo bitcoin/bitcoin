@@ -17,7 +17,6 @@
 #include <limits>
 #include <map>
 #include <memory>
-#include <optional>
 #include <set>
 #include <string>
 #include <string_view>
@@ -46,11 +45,9 @@ class CMasternodeSync;
 class CNetFulfilledRequestManager;
 class CSporkManager;
 class CSuperblock;
-class GovernanceSigner;
 
 class UniValue;
 
-using CDeterministicMNListPtr = std::shared_ptr<CDeterministicMNList>;
 using CSuperblock_sptr = std::shared_ptr<CSuperblock>;
 using vote_time_pair_t = std::pair<CGovernanceVote, int64_t>;
 

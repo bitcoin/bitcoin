@@ -5,7 +5,6 @@
 #define BITCOIN_MASTERNODE_SYNC_H
 
 #include <atomic>
-#include <memory>
 #include <string>
 
 class CConnman;
