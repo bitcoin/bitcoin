@@ -552,14 +552,15 @@ public:
         // Destroy the subexpressions iteratively after moving out their
         // subexpressions to avoid a stack-overflow due to recursive calls to
         // the subs' destructors.
-        while (!subs.empty()) {
-            auto node = std::move(subs.back());
-            subs.pop_back();
-            while (!node.subs.empty()) {
-                subs.push_back(std::move(node.subs.back()));
-                node.subs.pop_back();
+        std::vector<std::vector<Node>> queue;
+        queue.push_back(std::move(subs));
+        do {
+            auto flattening{std::move(queue.back())};
+            queue.pop_back();
+            for (Node& n : flattening) {
+                if (!n.subs.empty()) queue.push_back(std::move(n.subs));
             }
-        }
+        } while (!queue.empty());
     }
     // NOLINTEND(misc-no-recursion)
 
