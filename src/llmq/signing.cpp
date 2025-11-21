@@ -183,8 +183,8 @@ void CRecoveredSigsDb::RemoveRecoveredSig(CDBBatch& batch, Consensus::LLMQType l
     batch.Erase(k2);
     if (deleteHashKey) {
         batch.Erase(k3);
+        batch.Erase(k4);
     }
-    batch.Erase(k4);
 
     if (deleteTimeKey) {
         CDataStream writeTimeDs(SER_DISK, CLIENT_VERSION);
@@ -199,8 +199,8 @@ void CRecoveredSigsDb::RemoveRecoveredSig(CDBBatch& batch, Consensus::LLMQType l
 
     LOCK(cs_cache);
     hasSigForIdCache.erase(std::make_pair(recSig.getLlmqType(), recSig.getId()));
-    hasSigForSessionCache.erase(signHash.Get());
     if (deleteHashKey) {
+        hasSigForSessionCache.erase(signHash.Get());
         hasSigForHashCache.erase(recSig.GetHash());
     }
 }

@@ -204,8 +204,8 @@ public:
 
     // This is called when a recovered signature can be safely removed from the DB. This is only safe when some other
     // mechanism prevents possible conflicts. As an example, ChainLocks prevent conflicts in confirmed TXs InstantSend votes
-    // This won't completely remove all traces of the recovered sig but instead leave the hash entry in the DB. This
-    // allows AlreadyHave to keep returning true. Cleanup will later remove the remains
+    // This won't completely remove all traces of the recovered sig but instead leave the hash and signHash entries in the
+    // DB. This allows AlreadyHave/late-share filtering to keep returning true. Cleanup will later remove the remains
     void TruncateRecoveredSig(Consensus::LLMQType llmqType, const uint256& id);
 
 private:
