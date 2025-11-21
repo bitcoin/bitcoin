@@ -30,6 +30,7 @@
 #include <cstdint>
 #include <exception>
 #include <stdexcept>
+#include <system_error>
 #include <utility>
 
 // The current format written, and the version required to read. Must be
@@ -981,6 +982,15 @@ void CBlockPolicyEstimator::Flush() {
 
 void CBlockPolicyEstimator::FlushFeeEstimates()
 {
+    if (!m_estimation_filepath.parent_path().empty()) {
+        std::error_code error;
+        fs::create_directories(m_estimation_filepath.parent_path(), error);
+        if (error) {
+            LogWarning("Failed to create fee estimates directory %s: %s. Continue anyway.", fs::PathToString(m_estimation_filepath.parent_path()), error.message());
+            return;
+        }
+    }
+
     AutoFile est_file{fsbridge::fopen(m_estimation_filepath, "wb")};
     if (est_file.IsNull() || !Write(est_file)) {
         LogWarning("Failed to write fee estimates to %s. Continue anyway.", fs::PathToString(m_estimation_filepath));
