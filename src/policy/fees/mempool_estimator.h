@@ -16,6 +16,7 @@
 #include <memory>
 #include <vector>
 
+class AutoFile;
 class ChainstateManager;
 class CTxMemPool;
 
@@ -68,8 +69,8 @@ private:
 class MemPoolFeeRateEstimator : public FeeRateEstimator
 {
 public:
-    MemPoolFeeRateEstimator(const CTxMemPool* mempool, ChainstateManager* chainman)
-        : FeeRateEstimator(FeeRateEstimatorType::MEMPOOL_POLICY), m_mempool(mempool), m_chainman(chainman) {};
+    MemPoolFeeRateEstimator(fs::path mempool_estimates_file_path, const CTxMemPool* mempool, ChainstateManager* chainman);
+
     ~MemPoolFeeRateEstimator() = default;
 
     /** Overridden from FeeRateEstimator. */
@@ -90,6 +91,9 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
     //! Checks if recent mined blocks indicate a healthy mempool state.
     bool IsMempoolHealthy() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void Flush() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool Read(AutoFile& file) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool Write(AutoFile& file) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
 private:
     // !Checks if recent mined blocks indicate a healthy mempool state (internal-only).
@@ -97,10 +101,10 @@ private:
     //! Tracks the statistics of previously mined blocks.
     std::vector<BlockData> prev_mined_blocks GUARDED_BY(cs);
 
-private:
     const CTxMemPool* m_mempool;
     ChainstateManager* m_chainman;
     mutable Mutex cs;
     mutable MemPoolFeeRateEstimatorCache cache GUARDED_BY(cs);
+    const fs::path m_mempool_estimates_file_path;
 };
 #endif // BITCOIN_POLICY_FEES_MEMPOOL_ESTIMATOR_H
