@@ -8,8 +8,6 @@ To quickly get started fuzzing Bitcoin Core using [libFuzzer](https://llvm.org/d
 $ git clone https://github.com/bitcoin/bitcoin
 $ cd bitcoin/
 $ cmake --preset=libfuzzer
-# macOS users: If you have problem with this step then make sure to read "macOS hints for
-# libFuzzer" on https://github.com/bitcoin/bitcoin/blob/master/doc/fuzzing.md#macos-hints-for-libfuzzer
 $ cmake --build build_fuzz
 $ FUZZ=process_message build_fuzz/bin/fuzz
 # abort fuzzing using ctrl-c
@@ -22,6 +20,9 @@ There is also a runner script to execute all fuzz targets. Refer to
 `./build_fuzz/test/fuzz/test_runner.py --help` for more details.
 
 For source-based coverage reports, see [developer notes](/doc/developer-notes.md#compiling-for-fuzz-coverage).
+
+macOS users: We recommend fuzzing on Linux, see [macOS notes](#macos-notes) for
+more information.
 
 ## Overview of Bitcoin Core fuzzing
 
@@ -183,29 +184,14 @@ There are 3 ways fuzz tests can be built:
    tests would not be useful. This build is only useful for ensuring fuzz tests
    compile and link.
 
-## macOS hints for libFuzzer
+## macOS notes
 
-The default Clang/LLVM version supplied by Apple on macOS does not include
-fuzzing libraries, so macOS users will need to install a full version, for
-example using `brew install llvm`.
+Support for fuzzing on macOS is not officially maintained by this project. If
+you are running into issues on macOS, we recommend fuzzing on Linux instead for
+best results. On macOS this can be done within Docker or a virtual machine.
 
-You may also need to take care of giving the correct path for `clang` and
-`clang++`, like `CC=/path/to/clang CXX=/path/to/clang++` if the non-systems
-`clang` does not come first in your path.
-
-Using `lld` is required due to issues with Apple's `ld` and `LLVM`.
-
-Full configuration step for macOS:
-
-```sh
-$ brew install llvm lld
-$ cmake --preset=libfuzzer \
-   -DCMAKE_C_COMPILER="$(brew --prefix llvm)/bin/clang" \
-   -DCMAKE_CXX_COMPILER="$(brew --prefix llvm)/bin/clang++" \
-   -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld"
-```
-
-Read the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html) for more information. This [libFuzzer tutorial](https://github.com/google/fuzzing/blob/master/tutorial/libFuzzerTutorial.md) might also be of interest.
+Reproducing and debugging fuzz testcases on macOS is supported, by building the
+fuzz binary without support for any specific fuzzing engine.
 
 # Fuzzing Bitcoin Core using afl++
 
@@ -225,10 +211,6 @@ $ cmake -B build_fuzz \
    -DCMAKE_CXX_COMPILER="$(pwd)/AFLplusplus/afl-clang-lto++" \
    -DBUILD_FOR_FUZZING=ON
 $ cmake --build build_fuzz
-# For macOS you may need to ignore x86 compilation checks when running "cmake --build". If so,
-# try compiling using: AFL_NO_X86=1 cmake --build build_fuzz
-# Also, it might be required to run "afl-system-config" to adjust the shared
-# memory parameters.
 $ mkdir -p inputs/ outputs/
 $ echo A > inputs/thin-air-input
 $ FUZZ=bech32 ./AFLplusplus/afl-fuzz -i inputs/ -o outputs/ -- build_fuzz/bin/fuzz
