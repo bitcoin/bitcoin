@@ -88,6 +88,12 @@ class IPCInterfaceTest(BitcoinTestFramework):
         tx.deserialize(coinbase_data)
         return tx
 
+    async def destroy_template(self, template_obj, ctx):
+        """Destroy template if we received one."""
+        if template_obj is None or template_obj.to_dict() == {}:
+            return
+        await template_obj.result.destroy(ctx)
+
     def run_echo_test(self):
         self.log.info("Running echo test")
         async def async_routine():
@@ -212,9 +218,9 @@ class IPCInterfaceTest(BitcoinTestFramework):
 
             current_block_height = self.nodes[0].getchaintips()[0]["height"]
             check_opts = self.capnp_modules['mining'].BlockCheckOptions()
-            template = await mining.result.createNewBlock(opts)
-            block = await self.parse_and_deserialize_block(template, ctx)
-            coinbase = await self.parse_and_deserialize_coinbase_tx(template, ctx)
+            template8 = await mining.result.createNewBlock(opts)
+            block = await self.parse_and_deserialize_block(template8, ctx)
+            coinbase = await self.parse_and_deserialize_coinbase_tx(template8, ctx)
             balance = miniwallet.get_balance()
             coinbase.vout[0].scriptPubKey = miniwallet.get_output_script()
             coinbase.vout[0].nValue = COIN
@@ -227,7 +233,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
             res = await mining.result.checkBlock(block.serialize(), check_opts)
             assert_equal(res.result, False)
             assert_equal(res.reason, "bad-version(0x00000000)")
-            res = await template.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
+            res = await template8.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
             assert_equal(res.result, False)
             self.log.debug("Submit a valid block")
             block.nVersion = original_version
@@ -238,21 +244,21 @@ class IPCInterfaceTest(BitcoinTestFramework):
             assert_equal(res.result, True)
 
             # The remote template block will be mutated, capture the original:
-            remote_block_before = await self.parse_and_deserialize_block(template, ctx)
+            remote_block_before = await self.parse_and_deserialize_block(template8, ctx)
 
             self.log.debug("Submitted coinbase must include witness")
             assert_not_equal(coinbase.serialize_without_witness().hex(), coinbase.serialize().hex())
-            res = await template.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize_without_witness())
+            res = await template8.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize_without_witness())
             assert_equal(res.result, False)
 
             self.log.debug("Even a rejected submitBlock() mutates the template's block")
             # Can be used by clients to download and inspect the (rejected)
             # reconstructed block.
-            remote_block_after = await self.parse_and_deserialize_block(template, ctx)
+            remote_block_after = await self.parse_and_deserialize_block(template8, ctx)
             assert_not_equal(remote_block_before.serialize().hex(), remote_block_after.serialize().hex())
 
             self.log.debug("Submit again, with the witness")
-            res = await template.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
+            res = await template8.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
             assert_equal(res.result, True)
 
             self.log.debug("Block should propagate")
@@ -271,13 +277,15 @@ class IPCInterfaceTest(BitcoinTestFramework):
             assert_equal(res.reason, "inconclusive-not-best-prevblk")
 
             self.log.debug("Destroy template objects")
-            template.result.destroy(ctx)
-            template2.result.destroy(ctx)
-            template3.result.destroy(ctx)
-            template4.result.destroy(ctx)
-            template5.result.destroy(ctx)
-            template6.result.destroy(ctx)
-            template7.result.destroy(ctx)
+            await self.destroy_template(template8, ctx)
+            await self.destroy_template(template7, ctx)
+            await self.destroy_template(template6, ctx)
+            await self.destroy_template(template5, ctx)
+            await self.destroy_template(template4, ctx)
+            await self.destroy_template(template3, ctx)
+            await self.destroy_template(template2, ctx)
+            await self.destroy_template(template, ctx)
+
         asyncio.run(capnp.run(async_routine()))
 
     def run_test(self):
