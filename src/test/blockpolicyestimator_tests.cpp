@@ -3,15 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <policy/fees/block_policy_estimator.h>
-#include <policy/fees/block_policy_estimator_args.h>
+#include <policy/fees/estimator_args.h>
 #include <policy/policy.h>
+#include <test/util/setup_common.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/time.h>
 #include <validationinterface.h>
-
-#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -19,7 +18,7 @@ BOOST_FIXTURE_TEST_SUITE(blockpolicyestimator_tests, ChainTestingSetup)
 
 BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
 {
-    CBlockPolicyEstimator feeEst{FeeestPath(*m_node.args), DEFAULT_ACCEPT_STALE_FEE_ESTIMATES};
+    CBlockPolicyEstimator feeEst{BlockPolicyFeeestPath(*m_node.args), DEFAULT_ACCEPT_STALE_FEE_ESTIMATES};
     TestMemPoolEntryHelper entry;
     CAmount basefee(2000);
     CAmount deltaFee(100);
