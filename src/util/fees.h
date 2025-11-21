@@ -6,6 +6,7 @@
 #define BITCOIN_UTIL_FEES_H
 
 #include <util/feefrac.h>
+#include <util/serfloat.h>
 
 #include <compare>
 #include <string>
@@ -55,6 +56,28 @@ struct BlockData {
     size_t m_height;                      //!< Block height.
     double m_removed_block_txs_weight{0}; //!< Removed mempool transactions weight excluding coinbase (default empty).
     double m_block_weight{0};             //!< Weight of the block excluding coinbase (default empty).
+};
+
+struct EncodedBlockDataFormatter {
+    template <typename Stream>
+    void Ser(Stream& s, const BlockData& b)
+    {
+        s << static_cast<uint64_t>(b.m_height);
+        s << EncodeDouble(b.m_block_weight);
+        s << EncodeDouble(b.m_removed_block_txs_weight);
+    }
+
+    template <typename Stream>
+    void Unser(Stream& s, BlockData& b)
+    {
+        uint64_t block_height, block_txs_weight, mempool_txs_weight;
+        s >> block_height;
+        s >> block_txs_weight;
+        s >> mempool_txs_weight;
+        b.m_height = block_height;
+        b.m_block_weight = DecodeDouble(block_txs_weight);
+        b.m_removed_block_txs_weight = DecodeDouble(mempool_txs_weight);
+    }
 };
 
 /**
