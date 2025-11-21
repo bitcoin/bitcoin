@@ -13,6 +13,7 @@ namespace {
 constexpr const char* FEES_BASE_DIR{"fees"};
 constexpr const char* BLOCK_POLICY_ESTIMATES_FILENAME{"block_policy_estimates.dat"};
 constexpr const char* LEGACY_FEE_ESTIMATES_FILENAME{"fee_estimates.dat"};
+constexpr const char* MEMPOOL_POLICY_ESTIMATOR_FILENAME{"mempool_policy_estimator.dat"};
 
 fs::path LegacyFeeEstPath(const ArgsManager& argsman)
 {
@@ -51,4 +52,9 @@ void MaybeMigrateLegacyFeeEstimates(const ArgsManager& argsman)
 fs::path BlockPolicyFeeEstPath(const ArgsManager& argsman)
 {
     return argsman.GetDataDirNet() / FEES_BASE_DIR / BLOCK_POLICY_ESTIMATES_FILENAME;
+}
+
+fs::path MempoolPolicyEstimatorPath(const ArgsManager& argsman)
+{
+    return argsman.GetDataDirNet() / FEES_BASE_DIR / MEMPOOL_POLICY_ESTIMATOR_FILENAME;
 }

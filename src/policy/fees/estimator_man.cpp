@@ -12,9 +12,13 @@
 
 FeeRateEstimatorManager::~FeeRateEstimatorManager() = default;
 
-FeeRateEstimatorManager::FeeRateEstimatorManager(const fs::path& block_policy_path, bool read_stale_estimates, const CTxMemPool& mempool, ChainstateManager& chainman)
+FeeRateEstimatorManager::FeeRateEstimatorManager(const fs::path& block_policy_path,
+                                                 bool read_stale_estimates,
+                                                 const fs::path& mempool_estimator_path,
+                                                 const CTxMemPool& mempool,
+                                                 ChainstateManager& chainman)
     : m_block_policy_estimator(std::make_unique<CBlockPolicyEstimator>(block_policy_path, read_stale_estimates)),
-      m_mempool_estimator(std::make_unique<MemPoolFeeRateEstimator>(mempool, chainman))
+      m_mempool_estimator(std::make_unique<MemPoolFeeRateEstimator>(mempool_estimator_path, mempool, chainman))
 {
 }
 
@@ -55,11 +59,13 @@ util::Expected<FeeRateEstimation, FeeRateEstimationError> FeeRateEstimatorManage
 void FeeRateEstimatorManager::IntervalFlush()
 {
     m_block_policy_estimator->FlushFeeEstimates();
+    m_mempool_estimator->FlushMinedBlockStats();
 }
 
 void FeeRateEstimatorManager::ShutdownFlush()
 {
     m_block_policy_estimator->Flush();
+    m_mempool_estimator->FlushMinedBlockStats();
 }
 
 std::vector<MinedBlockStats> FeeRateEstimatorManager::MempoolPolicyEstimatorBlocksStats() const
