@@ -10,6 +10,7 @@
 class CGovernanceManager;
 class CMasternodeSync;
 class CNetFulfilledRequestManager;
+
 class NetGovernance final : public NetHandler
 {
 public:

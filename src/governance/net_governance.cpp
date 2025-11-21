@@ -14,7 +14,6 @@
 #include <node/interface_ui.h>
 #include <scheduler.h>
 #include <shutdown.h>
-#include <validation.h> // TODO: remove it; required for DEFAULT_SYNC_MEMPOOL
 
 class CConnman;
 

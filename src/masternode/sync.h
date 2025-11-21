@@ -14,6 +14,9 @@ class CMasternodeSync;
 class CNetFulfilledRequestManager;
 class CNode;
 
+/** Default for -syncmempool */
+static const bool DEFAULT_SYNC_MEMPOOL = true;
+
 static constexpr int MASTERNODE_SYNC_BLOCKCHAIN      = 1;
 static constexpr int MASTERNODE_SYNC_GOVERNANCE      = 4;
 static constexpr int MASTERNODE_SYNC_GOVOBJ          = 10;
