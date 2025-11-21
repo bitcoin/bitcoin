@@ -4,21 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test asmap config argument for ASN-based IP bucketing.
 
-Verify node behaviour and debug log when launching bitcoind in these cases:
-
-1. `bitcoind` with no -asmap arg, using /16 prefix for IP bucketing
-
-2. `bitcoind -asmap=<absolute path>`, using the unit test skeleton asmap
-
-3. `bitcoind -asmap=<relative path>`, using the unit test skeleton asmap
-
-4. `bitcoind -asmap/-asmap=` with no file specified, using the default asmap
-
-5. `bitcoind -asmap` restart with an addrman containing new and tried entries
-
-6. `bitcoind -asmap` with no file specified and a missing default asmap file
-
-7. `bitcoind -asmap` with an empty (unparsable) default asmap file
+Verify node behaviour and debug log when launching bitcoind with different
+`-asmap` and `-noasmap` arg values, including absolute and relative paths, and
+with missing and unparseable files.
 
 The tests are order-independent.
 
@@ -29,7 +17,6 @@ import shutil
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
-DEFAULT_ASMAP_FILENAME = 'ip_asn.map' # defined in src/init.cpp
 ASMAP = 'src/test/data/asmap.raw' # path to unit test skeleton asmap
 VERSION = 'fec61fa21a9f46f3b17bdcd660d7f4cd90b966aad3aec593c99b35f0aca15853'
 
@@ -79,22 +66,19 @@ class AsmapTest(BitcoinTestFramework):
             self.start_node(0, [f'-asmap={name}'])
         os.remove(filename)
 
-    def test_default_asmap(self):
-        shutil.copyfile(self.asmap_raw, self.default_asmap)
+    def test_unspecified_asmap(self):
+        msg = "Error: -asmap requires a file path. Use -asmap=<file>."
         for arg in ['-asmap', '-asmap=']:
-            self.log.info(f'Test bitcoind {arg} (using default map file)')
+            self.log.info(f'Test bitcoind {arg} (and no filename specified)')
             self.stop_node(0)
-            with self.node.assert_debug_log(expected_messages(self.default_asmap)):
-                self.start_node(0, [arg])
-        os.remove(self.default_asmap)
+            self.node.assert_start_raises_init_error(extra_args=[arg], expected_msg=msg)
 
     def test_asmap_interaction_with_addrman_containing_entries(self):
         self.log.info("Test bitcoind -asmap restart with addrman containing new and tried entries")
         self.stop_node(0)
-        shutil.copyfile(self.asmap_raw, self.default_asmap)
-        self.start_node(0, ["-asmap", "-checkaddrman=1", "-test=addrman"])
+        self.start_node(0, [f"-asmap={self.asmap_raw}", "-checkaddrman=1", "-test=addrman"])
         self.fill_addrman(node_id=0)
-        self.restart_node(0, ["-asmap", "-checkaddrman=1", "-test=addrman"])
+        self.restart_node(0, [f"-asmap={self.asmap_raw}", "-checkaddrman=1", "-test=addrman"])
         with self.node.assert_debug_log(
             expected_msgs=[
                 "CheckAddrman: new 2, tried 2, total 4 started",
@@ -102,29 +86,28 @@ class AsmapTest(BitcoinTestFramework):
             ]
         ):
             self.node.getnodeaddresses()  # getnodeaddresses re-runs the addrman checks
-        os.remove(self.default_asmap)
 
-    def test_default_asmap_with_missing_file(self):
-        self.log.info('Test bitcoind -asmap with missing default map file')
+    def test_asmap_with_missing_file(self):
+        self.log.info('Test bitcoind -asmap with missing map file')
         self.stop_node(0)
-        msg = f"Error: Could not find asmap file \"{self.default_asmap}\""
-        self.node.assert_start_raises_init_error(extra_args=['-asmap'], expected_msg=msg)
+        msg = f"Error: Could not find asmap file \"{self.datadir}{os.sep}missing\""
+        self.node.assert_start_raises_init_error(extra_args=['-asmap=missing'], expected_msg=msg)
 
     def test_empty_asmap(self):
         self.log.info('Test bitcoind -asmap with empty map file')
         self.stop_node(0)
-        with open(self.default_asmap, "w", encoding="utf-8") as f:
+        empty_asmap = os.path.join(self.datadir, "ip_asn.map")
+        with open(empty_asmap, "w", encoding="utf-8") as f:
             f.write("")
-        msg = f"Error: Could not parse asmap file \"{self.default_asmap}\""
-        self.node.assert_start_raises_init_error(extra_args=['-asmap'], expected_msg=msg)
-        os.remove(self.default_asmap)
+        msg = f"Error: Could not parse asmap file \"{empty_asmap}\""
+        self.node.assert_start_raises_init_error(extra_args=[f'-asmap={empty_asmap}'], expected_msg=msg)
+        os.remove(empty_asmap)
 
     def test_asmap_health_check(self):
         self.log.info('Test bitcoind -asmap logs ASMap Health Check with basic stats')
-        shutil.copyfile(self.asmap_raw, self.default_asmap)
         msg = "ASMap Health Check: 4 clearnet peers are mapped to 3 ASNs with 0 peers being unmapped"
         with self.node.assert_debug_log(expected_msgs=[msg]):
-            self.start_node(0, extra_args=['-asmap'])
+            self.start_node(0, extra_args=[f'-asmap={self.asmap_raw}'])
         raw_addrman = self.node.getrawaddrman()
         asns = []
         for _, entries in raw_addrman.items():
@@ -133,12 +116,10 @@ class AsmapTest(BitcoinTestFramework):
                 if asn not in asns:
                     asns.append(asn)
         assert_equal(len(asns), 3)
-        os.remove(self.default_asmap)
 
     def run_test(self):
         self.node = self.nodes[0]
         self.datadir = self.node.chain_path
-        self.default_asmap = os.path.join(self.datadir, DEFAULT_ASMAP_FILENAME)
         base_dir = self.config["environment"]["SRCDIR"]
         self.asmap_raw = os.path.join(base_dir, ASMAP)
 
@@ -146,9 +127,9 @@ class AsmapTest(BitcoinTestFramework):
         self.test_noasmap_arg()
         self.test_asmap_with_absolute_path()
         self.test_asmap_with_relative_path()
-        self.test_default_asmap()
+        self.test_unspecified_asmap()
         self.test_asmap_interaction_with_addrman_containing_entries()
-        self.test_default_asmap_with_missing_file()
+        self.test_asmap_with_missing_file()
         self.test_empty_asmap()
         self.test_asmap_health_check()
 
