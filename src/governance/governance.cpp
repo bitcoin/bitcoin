@@ -1055,12 +1055,6 @@ void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nH
     connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, nHash, filter));
 }
 
-int CGovernanceManager::RequestGovernanceObjectVotes(CNode& peer, CConnman& connman, const PeerManagerInternal* peerman) const
-{
-    const std::vector<CNode*> vNodeCopy{&peer};
-    return RequestGovernanceObjectVotes(vNodeCopy, connman, peerman);
-}
-
 int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman,
                                                      const PeerManagerInternal* peerman) const
 {

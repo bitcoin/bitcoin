@@ -216,7 +216,8 @@ void NetGovernance::ProcessTick(CConnman& connman)
         if (!m_netfulfilledman.HasFulfilledRequest(pnode->addr, "governance-sync")) {
             continue; // to early for this node
         }
-        int nObjsLeftToAsk = m_gov_manager.RequestGovernanceObjectVotes(*pnode, connman, m_peer_manager);
+        const std::vector<CNode*> vNodeCopy{pnode};
+        int nObjsLeftToAsk = m_gov_manager.RequestGovernanceObjectVotes(vNodeCopy, connman, m_peer_manager);
         // check for data
         if (nObjsLeftToAsk == 0) {
             static int64_t nTimeNoObjectsLeft = 0;
