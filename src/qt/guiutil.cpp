@@ -405,26 +405,19 @@ bool isObscured(QWidget *w)
 
 void bringToFront(QWidget* w)
 {
-    if (w) {
-        if (QGuiApplication::platformName() == "wayland") {
-            auto flags = w->windowFlags();
-            w->setWindowFlags(flags|Qt::WindowStaysOnTopHint);
-            w->show();
-            w->setWindowFlags(flags);
-            w->show();
-        } else {
 #ifdef Q_OS_MACOS
-            ForceActivation();
+    ForceActivation();
 #endif
-            // activateWindow() (sometimes) helps with keyboard focus on Windows
-            if (w->isMinimized()) {
-                w->showNormal();
-            } else {
-                w->show();
-            }
-            w->activateWindow();
-            w->raise();
+
+    if (w) {
+        // activateWindow() (sometimes) helps with keyboard focus on Windows
+        if (w->isMinimized()) {
+            w->showNormal();
+        } else {
+            w->show();
         }
+        w->activateWindow();
+        w->raise();
     }
 }
 
