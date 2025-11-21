@@ -2168,9 +2168,9 @@ PSBTResult CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& complete, 
     // Fill in information from ScriptPubKeyMans
     for (ScriptPubKeyMan* spk_man : GetAllScriptPubKeyMans()) {
         int n_signed_this_spkm = 0;
-        const auto error{spk_man->FillPSBT(psbtx, txdata, sighash_type, sign, bip32derivs, &n_signed_this_spkm, finalize)};
-        if (error != PSBTResult::OK) {
-            return error;
+        const auto result{spk_man->FillPSBT(psbtx, txdata, sighash_type, sign, bip32derivs, &n_signed_this_spkm, finalize)};
+        if (result!= PSBTResult::OK) {
+            return result;
         }
 
         if (n_signed) {

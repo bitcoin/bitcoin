@@ -337,8 +337,8 @@ bool SignTransaction(CWallet& wallet, CMutableTransaction& mtx) {
         // so external signers are not asked to sign more than once.
         bool complete;
         wallet.FillPSBT(psbtx, complete, std::nullopt, /*sign=*/false, /*bip32derivs=*/true);
-        auto err{wallet.FillPSBT(psbtx, complete, std::nullopt, /*sign=*/true, /*bip32derivs=*/false)};
-        if (err != PSBTResult::OK) return false;
+        auto result{wallet.FillPSBT(psbtx, complete, std::nullopt, /*sign=*/true, /*bip32derivs=*/false)};
+        if (result != PSBTResult::OK) return false;
         complete = FinalizeAndExtractPSBT(psbtx, mtx);
         return complete;
     } else {

@@ -115,9 +115,9 @@ static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const 
     // so external signers are not asked to sign more than once.
     bool complete;
     pwallet->FillPSBT(psbtx, complete, std::nullopt, /*sign=*/false, /*bip32derivs=*/true);
-    const auto err{pwallet->FillPSBT(psbtx, complete, std::nullopt, /*sign=*/true, /*bip32derivs=*/false)};
-    if (err != PSBTResult::OK) {
-        throw JSONRPCPSBTError(err);
+    const auto psbt_result{pwallet->FillPSBT(psbtx, complete, std::nullopt, /*sign=*/true, /*bip32derivs=*/false)};
+    if (psbt_result != PSBTResult::OK) {
+        throw JSONRPCPSBTError(psbt_result);
     }
 
     CMutableTransaction mtx;
@@ -1190,8 +1190,8 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     } else {
         PartiallySignedTransaction psbtx(mtx);
         bool complete = false;
-        const auto err{pwallet->FillPSBT(psbtx, complete, std::nullopt, /*sign=*/false, /*bip32derivs=*/true)};
-        CHECK_NONFATAL(err == PSBTResult::OK);
+        const auto psbt_result{pwallet->FillPSBT(psbtx, complete, std::nullopt, /*sign=*/false, /*bip32derivs=*/true)};
+        CHECK_NONFATAL(psbt_result == PSBTResult::OK);
         CHECK_NONFATAL(!complete);
         DataStream ssTx{};
         ssTx << psbtx;
@@ -1678,9 +1678,9 @@ RPCHelpMan walletprocesspsbt()
 
     if (sign) EnsureWalletIsUnlocked(*pwallet);
 
-    const auto err{wallet.FillPSBT(psbtx, complete, nHashType, sign, bip32derivs, nullptr, finalize)};
-    if (err != PSBTResult::OK) {
-        throw JSONRPCPSBTError(err);
+    const auto psbt_result{wallet.FillPSBT(psbtx, complete, nHashType, sign, bip32derivs, nullptr, finalize)};
+    if (psbt_result != PSBTResult::OK) {
+        throw JSONRPCPSBTError(psbt_result);
     }
 
     UniValue result(UniValue::VOBJ);
@@ -1820,9 +1820,9 @@ RPCHelpMan walletcreatefundedpsbt()
     // Fill transaction with out data but don't sign
     bool bip32derivs = request.params[4].isNull() ? true : request.params[4].get_bool();
     bool complete = true;
-    const auto err{wallet.FillPSBT(psbtx, complete, std::nullopt, /*sign=*/false, /*bip32derivs=*/bip32derivs)};
-    if (err != PSBTResult::OK) {
-        throw JSONRPCPSBTError(err);
+    const auto psbt_result{wallet.FillPSBT(psbtx, complete, std::nullopt, /*sign=*/false, /*bip32derivs=*/bip32derivs)};
+    if (psbt_result != PSBTResult::OK) {
+        throw JSONRPCPSBTError(psbt_result);
     }
 
     // Serialize the PSBT
