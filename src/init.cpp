@@ -61,7 +61,7 @@
 #include <node/peerman_args.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
-#include <policy/fees/block_policy_estimator_args.h>
+#include <policy/fees/estimator_args.h>
 #include <policy/fees/estimator_man.h>
 #include <policy/fees/mempool_estimator.h>
 #include <policy/policy.h>
@@ -1890,7 +1890,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (read_stale_estimates && (chainparams.GetChainType() != ChainType::REGTEST)) {
             return InitError(strprintf(_("acceptstalefeeestimates is not supported on %s chain."), chainparams.GetChainTypeString()));
         }
-        node.fee_estimator_man = std::make_unique<FeeRateEstimatorManager>(FeeestPath(args), read_stale_estimates, node.mempool.get(), node.chainman.get());
+        node.fee_estimator_man = std::make_unique<FeeRateEstimatorManager>(BlockPolicyFeeEstPath(args), read_stale_estimates, node.mempool.get(), node.chainman.get());
 
         // Flush estimates to disk periodically
         FeeRateEstimatorManager* fee_estimator_man = node.fee_estimator_man.get();

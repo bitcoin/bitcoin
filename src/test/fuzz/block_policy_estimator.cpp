@@ -2,9 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <kernel/mempool_entry.h>
 #include <policy/fees/block_policy_estimator.h>
-#include <policy/fees/block_policy_estimator_args.h>
+
+#include <kernel/mempool_entry.h>
+#include <policy/fees/estimator_args.h>
 #include <primitives/transaction.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -32,7 +33,7 @@ FUZZ_TARGET(block_policy_estimator, .init = initialize_block_policy_estimator)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     bool good_data{true};
 
-    CBlockPolicyEstimator block_policy_estimator{FeeestPath(*g_setup->m_node.args), DEFAULT_ACCEPT_STALE_FEE_ESTIMATES};
+    CBlockPolicyEstimator block_policy_estimator{BlockPolicyFeeEstPath(*g_setup->m_node.args), DEFAULT_ACCEPT_STALE_FEE_ESTIMATES};
 
     uint32_t current_height{0};
     const auto advance_height{
