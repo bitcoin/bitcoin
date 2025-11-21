@@ -24,13 +24,13 @@
 #include <vector>
 
 
-/** fee_estimates.dat that are more than 60 hours (2.5 days) old will not be read,
+/** block policy estimates file that are more than 60 hours (2.5 days) old will not be read,
  * as fee estimates are based on historical data and may be inaccurate if
  * network activity has changed.
  */
 static constexpr std::chrono::hours MAX_FILE_AGE{60};
 
-// Whether we allow importing a fee_estimates file older than MAX_FILE_AGE.
+// Whether we allow importing a block_policy_estimates file older than MAX_FILE_AGE.
 static constexpr bool DEFAULT_ACCEPT_STALE_FEE_ESTIMATES{false};
 
 class AutoFile;

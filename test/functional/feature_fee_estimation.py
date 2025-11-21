@@ -318,68 +318,69 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.restart_node(0)
         assert_equal(self.nodes[0].estimatesmartfee(1)["feerate"], fee_rate)
 
-        fee_dat = self.nodes[0].chain_path / "fee_estimates.dat"
+        fee_dat = self.nodes[0].chain_path / "fees/block_policy_estimates.dat"
 
-        # Stop the node and backdate the fee_estimates.dat file more than MAX_FILE_AGE
+        # Stop the node and backdate the block_policy_estimates.dat file more than MAX_FILE_AGE
         self.stop_node(0)
         last_modified_time = time.time() - (MAX_FILE_AGE + 1) * SECONDS_PER_HOUR
         os.utime(fee_dat, (last_modified_time, last_modified_time))
 
-        # Start node and ensure the fee_estimates.dat file was not read
+        # Start node and ensure the block_policy_estimates.dat file was not read
         self.start_node(0)
         assert_equal(self.nodes[0].estimatesmartfee(1)["errors"], ["Insufficient data or no feerate found"])
 
 
     def test_estimate_dat_is_flushed_periodically(self):
-        fee_dat = self.nodes[0].chain_path / "fee_estimates.dat"
-        os.remove(fee_dat) if os.path.exists(fee_dat) else None
+        block_policy_fees_dat = self.nodes[0].chain_path / "fees/block_policy_estimates.dat"
 
-        # Verify that fee_estimates.dat does not exist
-        assert_equal(os.path.isfile(fee_dat), False)
+        os.remove(block_policy_fees_dat) if os.path.exists(block_policy_fees_dat) else None
 
-        # Verify if the string "Flushed fee estimates to fee_estimates.dat." is present in the debug log file.
+        # Verify that fees/block_policy_estimates.dat does not exist
+        assert_equal(os.path.isfile(block_policy_fees_dat), False)
+        # Verify if the string "Flushed fee estimates to block_policy_estimates.dat." is present in the debug log file.
         # If present, it indicates that fee estimates have been successfully flushed to disk.
-        with self.nodes[0].assert_debug_log(expected_msgs=["Flushed fee estimates to fee_estimates.dat."], timeout=1):
-            # Mock the scheduler for an hour to flush fee estimates to fee_estimates.dat
+        with self.nodes[0].assert_debug_log(expected_msgs=["Flushed fee estimates to block_policy_estimates.dat."], timeout=1):
+            # Mock the scheduler for an hour to flush fee estimates to block_policy_estimates.dat
             self.nodes[0].mockscheduler(SECONDS_PER_HOUR)
 
-        # Verify that fee estimates were flushed and fee_estimates.dat file is created
-        assert_equal(os.path.isfile(fee_dat), True)
+        # Verify that fee estimates were flushed and fees/block_policy_estimates.dat file is created
+        assert_equal(os.path.isfile(block_policy_fees_dat), True)
 
         # Verify that the estimates remain the same if there are no blocks in the flush interval
         block_hash_before = self.nodes[0].getbestblockhash()
-        fee_dat_initial_content = open(fee_dat, "rb").read()
-        with self.nodes[0].assert_debug_log(expected_msgs=["Flushed fee estimates to fee_estimates.dat."], timeout=1):
-            # Mock the scheduler for an hour to flush fee estimates to fee_estimates.dat
+        block_policy_dat_initial_content = open(block_policy_fees_dat, "rb").read()
+        with self.nodes[0].assert_debug_log(expected_msgs=["Flushed fee estimates to block_policy_estimates.dat."], timeout=1):
+            # Mock the scheduler for an hour to flush fee estimates to block_policy_estimates.dat
             self.nodes[0].mockscheduler(SECONDS_PER_HOUR)
 
         # Verify that there were no blocks in between the flush interval
         assert_equal(block_hash_before, self.nodes[0].getbestblockhash())
 
-        fee_dat_current_content = open(fee_dat, "rb").read()
-        assert_equal(fee_dat_current_content, fee_dat_initial_content)
+        block_policy_fee_dat_current_content = open(block_policy_fees_dat, "rb").read()
+        assert_equal(block_policy_dat_initial_content, block_policy_fee_dat_current_content)
 
         # Verify that the estimates remain the same after shutdown with no blocks before shutdown
         self.restart_node(0)
-        fee_dat_current_content = open(fee_dat, "rb").read()
-        assert_equal(fee_dat_current_content, fee_dat_initial_content)
+        block_policy_fee_dat_current_content = open(block_policy_fees_dat, "rb").read()
+        assert_equal(block_policy_dat_initial_content, block_policy_fee_dat_current_content)
 
         # Verify that the estimates are not the same if new blocks were produced in the flush interval
-        with self.nodes[0].assert_debug_log(expected_msgs=["Flushed fee estimates to fee_estimates.dat."], timeout=1):
-            # Mock the scheduler for an hour to flush fee estimates to fee_estimates.dat
+        with self.nodes[0].assert_debug_log(expected_msgs=["Flushed fee estimates to block_policy_estimates.dat."], timeout=1):
+            # Mock the scheduler for an hour to flush fee estimates to block_policy_estimates.dat
             self.generate(self.nodes[0], 5, sync_fun=self.no_op)
             self.nodes[0].mockscheduler(SECONDS_PER_HOUR)
 
-        fee_dat_current_content = open(fee_dat, "rb").read()
-        assert_not_equal(fee_dat_current_content, fee_dat_initial_content)
-
-        fee_dat_initial_content = fee_dat_current_content
+        block_policy_fee_dat_current_content = open(block_policy_fees_dat, "rb").read()
+        assert_not_equal(block_policy_fee_dat_current_content, block_policy_dat_initial_content)
+        block_policy_fee_dat_current_content = block_policy_fee_dat_current_content
 
         # Generate blocks before shutdown and verify that the fee estimates are not the same
         self.generate(self.nodes[0], 5, sync_fun=self.no_op)
         self.restart_node(0)
-        fee_dat_current_content = open(fee_dat, "rb").read()
-        assert_not_equal(fee_dat_current_content, fee_dat_initial_content)
+
+        block_policy_fee_dat_current_content = open(block_policy_fees_dat, "rb").read()
+
+        assert_not_equal(block_policy_dat_initial_content, block_policy_fee_dat_current_content)
 
 
     def test_acceptstalefeeestimates_option(self):
@@ -388,20 +389,20 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         self.stop_node(0)
 
-        fee_dat = self.nodes[0].chain_path / "fee_estimates.dat"
+        fee_dat = self.nodes[0].chain_path / "fees/block_policy_estimates.dat"
 
-        # Stop the node and backdate the fee_estimates.dat file more than MAX_FILE_AGE
+        # Stop the node and backdate the fees/block_policy_estimates.dat file more than MAX_FILE_AGE
         last_modified_time = time.time() - (MAX_FILE_AGE + 1) * SECONDS_PER_HOUR
         os.utime(fee_dat, (last_modified_time, last_modified_time))
 
-        # Restart node with -acceptstalefeeestimates option to ensure fee_estimate.dat file is read
+        # Restart node with -acceptstalefeeestimates option to ensure fees/block_policy_estimates.dat file is read
         self.start_node(0,extra_args=["-acceptstalefeeestimates"])
         assert_equal(self.nodes[0].estimatesmartfee(1)["feerate"], fee_rate)
 
     def clear_estimates(self):
         self.log.info("Restarting node with fresh estimation")
         self.stop_node(0)
-        fee_dat = self.nodes[0].chain_path / "fee_estimates.dat"
+        fee_dat = self.nodes[0].chain_path / "fees/block_policy_estimates.dat"
         os.remove(fee_dat)
         self.start_node(0)
         self.connect_nodes(0, 1)
@@ -527,7 +528,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Testing estimates with single transactions.")
         self.sanity_check_estimates_range()
 
-        self.log.info("Test fee_estimates.dat is flushed periodically")
+        self.log.info("Test fees data is flushed periodically")
         self.test_estimate_dat_is_flushed_periodically()
 
         # check that estimatesmartfee feerate is greater than or equal to maximum of mempoolminfee and minrelaytxfee
@@ -539,7 +540,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Test acceptstalefeeestimates option")
         self.test_acceptstalefeeestimates_option()
 
-        self.log.info("Test reading old fee_estimates.dat")
+        self.log.info("Test reading old fees/block_policy_estimates.dat")
         self.test_old_fee_estimate_file()
 
         self.clear_estimates()
