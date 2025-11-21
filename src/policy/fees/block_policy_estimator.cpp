@@ -998,6 +998,10 @@ void CBlockPolicyEstimator::Flush()
 
 void CBlockPolicyEstimator::FlushFeeEstimates()
 {
+    if (!m_estimation_filepath.parent_path().empty()) {
+        fs::create_directories(m_estimation_filepath.parent_path());
+    }
+
     AutoFile est_file{fsbridge::fopen(m_estimation_filepath, "wb")};
     if (est_file.IsNull() || !Write(est_file)) {
         LogWarning("Failed to write fee estimates to %s. Continue anyway.", fs::PathToString(m_estimation_filepath));
