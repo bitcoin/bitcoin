@@ -5,6 +5,8 @@
 #ifndef BITCOIN_NODE_CONTEXT_H
 #define BITCOIN_NODE_CONTEXT_H
 
+#include <node/types.h>
+
 #include <atomic>
 #include <cstdlib>
 #include <functional>
@@ -67,7 +69,11 @@ struct NodeContext {
     std::unique_ptr<AddrMan> addrman;
     std::unique_ptr<CConnman> connman;
     std::unique_ptr<CTxMemPool> mempool;
-    //! Cache latest getblocktemplate result for BIP 22 long polling
+    //! Track how many templates (which we hold on to on behalf of connected IPC
+    //! clients) are referencing each transaction.
+    TxTemplateMap template_tx_refs;
+    //! Cache latest getblocktemplate result for BIP 22 long polling. Must be cleared
+    //! before template_tx_refs.
     std::unique_ptr<interfaces::BlockTemplate> gbt_template;
     std::unique_ptr<const NetGroupManager> netgroupman;
     std::unique_ptr<CBlockPolicyEstimator> fee_estimator;
