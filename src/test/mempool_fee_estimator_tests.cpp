@@ -2,6 +2,8 @@
 // Distributed under the MIT software license. See the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <kernel/mempool_entry.h>
+#include <policy/fees/estimator_args.h>
 #include <policy/fees/mempool_estimator.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
@@ -128,7 +130,7 @@ BOOST_AUTO_TEST_CASE(mempool_fee_rate_estimator_cache)
 
 BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
 {
-    auto mempool_estimator = MemPoolFeeRateEstimator(*m_node.mempool, *m_node.chainman);
+    auto mempool_estimator = MemPoolFeeRateEstimator(MempoolPolicyEstimatorPath(*m_node.args), *m_node.mempool, *m_node.chainman);
     BOOST_CHECK_EQUAL(mempool_estimator.MaximumTarget(), MEMPOOL_FEE_ESTIMATOR_MAX_TARGET);
     // Before the mempool has finished loading, no estimate is available.
     {
@@ -150,7 +152,8 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
         BOOST_CHECK_EQUAL(result.error().reason, insufficient_err);
     }
     {
-        MemPoolFeeRateEstimator custom_mempool_estimator{*m_node.mempool, *m_node.chainman};
+        MemPoolFeeRateEstimator custom_mempool_estimator{
+            MempoolPolicyEstimatorPath(*m_node.args), *m_node.mempool, *m_node.chainman};
         unsigned int custom_height{100};
         for (size_t block_count{1}; block_count < MEMPOOL_HEALTH_WINDOW_BLOCKS; ++block_count) {
             AddRemovedBlock(custom_mempool_estimator,

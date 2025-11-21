@@ -12,6 +12,7 @@
 #include <util/expected.h>
 #include <util/feefrac.h>
 #include <util/fees.h>
+#include <util/fs.h>
 #include <util/time.h>
 
 #include <chrono>
@@ -21,6 +22,7 @@
 #include <vector>
 
 class CBlock;
+class AutoFile;
 class ChainstateManager;
 class CTxMemPool;
 
@@ -91,8 +93,10 @@ public:
         FeePerVSize p75;
     };
 
-    MemPoolFeeRateEstimator(const CTxMemPool& mempool, ChainstateManager& chainman)
-        : m_mempool(mempool), m_chainman(chainman) {}
+    MemPoolFeeRateEstimator(fs::path mempool_estimator_file_path,
+                            const CTxMemPool& mempool,
+                            ChainstateManager& chainman);
+    ~MemPoolFeeRateEstimator() = default;
     /**
      * Calculate the 50th and 75th percentile fee rates from block template chunks,
      * sorted in descending mining-score order. A percentile is left empty when the
@@ -130,15 +134,24 @@ public:
     MempoolHealth GetMempoolHealth() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     //! Checks if recent mined blocks indicate a healthy mempool state.
     bool IsMempoolHealthy() const EXCLUSIVE_LOCKS_REQUIRED(!cs) { return GetMempoolHealth() == MempoolHealth::HEALTHY; }
+    void FlushMinedBlockStats() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    //! Deserialize mined-block stats without taking ownership of file.
+    bool Read(AutoFile& file) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    //! Serialize mined-block stats without taking ownership of file.
+    //! Callers must explicitly close file and check for errors after writing.
+    bool Write(AutoFile& file) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
 private:
+    void ReadFromDisk() EXCLUSIVE_LOCKS_REQUIRED(!cs);
     //! Tracks weight statistics for the last MEMPOOL_HEALTH_WINDOW_BLOCKS mined blocks.
     std::vector<MinedBlockStats> m_prev_mined_blocks GUARDED_BY(cs);
+    uint256 m_mined_blocks_tip_hash GUARDED_BY(cs);
 
     const CTxMemPool& m_mempool;
     ChainstateManager& m_chainman;
     mutable Mutex cs;
     mutable MemPoolFeeRateEstimatorCache m_cache GUARDED_BY(cs);
+    const fs::path m_mempool_estimator_file_path;
 };
 
 #endif // BITCOIN_POLICY_FEES_MEMPOOL_ESTIMATOR_H

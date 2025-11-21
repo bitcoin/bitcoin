@@ -8,12 +8,17 @@
 #include <node/miner.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
+#include <primitives/block.h>
+#include <serialize.h>
+#include <streams.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <txmempool.h>
 #include <util/check.h>
 #include <util/feefrac.h>
 #include <util/fees.h>
+#include <util/fs.h>
+#include <util/syserror.h>
 #include <validation.h>
 
 #include <algorithm>
@@ -22,9 +27,25 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <utility>
 
+constexpr int CURRENT_MEMPOOL_ESTIMATOR_VERSION{1};
+
 namespace {
+struct MinedBlockStatsFormatter {
+    template <typename Stream>
+    void Ser(Stream& s, const MinedBlockStats& v)
+    {
+        s << v.m_height << v.m_removed_block_txs_weight << v.m_block_weight;
+    }
+    template <typename Stream>
+    void Unser(Stream& s, MinedBlockStats& v)
+    {
+        s >> v.m_height >> v.m_removed_block_txs_weight >> v.m_block_weight;
+    }
+};
+
 void AddMinedBlockStats(std::vector<MinedBlockStats>& mined_blocks, MinedBlockStats stats)
 {
     const auto stale_begin{std::find_if(mined_blocks.begin(), mined_blocks.end(), [&](const MinedBlockStats& block) {
@@ -55,6 +76,19 @@ void AddMinedBlockStats(std::vector<MinedBlockStats>& mined_blocks, MinedBlockSt
 
     if (mined_blocks.size() == MEMPOOL_HEALTH_WINDOW_BLOCKS) mined_blocks.erase(mined_blocks.begin());
     mined_blocks.push_back(stats);
+}
+
+struct ActiveTip {
+    int height;
+    uint256 hash;
+};
+
+std::optional<ActiveTip> GetActiveTip(const ChainstateManager& chainman)
+{
+    LOCK(::cs_main);
+    const CBlockIndex* tip{chainman.ActiveTip()};
+    if (!tip) return std::nullopt;
+    return ActiveTip{tip->nHeight, tip->GetBlockHash()};
 }
 } // namespace
 
@@ -125,6 +159,138 @@ static std::optional<std::string_view> MempoolHealthError(MemPoolFeeRateEstimato
     return std::nullopt;
 }
 
+MemPoolFeeRateEstimator::MemPoolFeeRateEstimator(fs::path mempool_estimator_file_path,
+                                                 const CTxMemPool& mempool,
+                                                 ChainstateManager& chainman)
+    : m_mempool(mempool),
+      m_chainman(chainman),
+      m_mempool_estimator_file_path(std::move(mempool_estimator_file_path))
+{
+    ReadFromDisk();
+}
+
+void MemPoolFeeRateEstimator::ReadFromDisk()
+{
+    AutoFile file{fsbridge::fopen(m_mempool_estimator_file_path, "rb")};
+    if (file.IsNull()) {
+        LogDebug(BCLog::ESTIMATEFEE, "%s: %s does not exist. Continuing anyway",
+                 FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY),
+                 fs::PathToString(m_mempool_estimator_file_path));
+        return;
+    }
+    if (Read(file)) {
+        LogDebug(BCLog::ESTIMATEFEE, "%s: mined-block stats successfully read from %s.",
+                 FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY),
+                 fs::PathToString(m_mempool_estimator_file_path));
+    }
+}
+
+bool MemPoolFeeRateEstimator::Read(AutoFile& file)
+{
+    try {
+        int version_required;
+        file >> version_required;
+        if (version_required != CURRENT_MEMPOOL_ESTIMATOR_VERSION) {
+            LogWarning("%s: file version not supported; continuing anyway",
+                       FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY));
+            return false;
+        }
+        // Stage into a local buffer and commit to the member only after validation passes.
+        std::vector<MinedBlockStats> blocks;
+        file >> Using<VectorFormatter<MinedBlockStatsFormatter>>(blocks);
+        uint256 tip_hash;
+        file >> tip_hash;
+        if (blocks.size() > MEMPOOL_HEALTH_WINDOW_BLOCKS) {
+            LogWarning("%s: Number of previously mined blocks read exceeds the maximum of %s; ignoring file",
+                       FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY),
+                       MEMPOOL_HEALTH_WINDOW_BLOCKS);
+            return false;
+        }
+        for (size_t i = 1; i < blocks.size(); ++i) {
+            if (blocks[i].m_height != blocks[i - 1].m_height + 1) {
+                LogWarning("%s: Non-consecutive block heights read, expected height %s but found %s; ignoring file",
+                           FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY),
+                           blocks[i - 1].m_height + 1, blocks[i].m_height);
+                return false;
+            }
+        }
+        if (!blocks.empty()) {
+            const auto& last_block{blocks.back()};
+            const std::optional<ActiveTip> active_tip{GetActiveTip(m_chainman)};
+            if (!active_tip) {
+                LogWarning("%s: Mined-block stats read end at height %s block %s, but there is no active chain tip; ignoring file",
+                           FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY),
+                           last_block.m_height, tip_hash.ToString());
+                return false;
+            }
+            if (last_block.m_height != static_cast<uint64_t>(active_tip->height) || tip_hash != active_tip->hash) {
+                LogWarning("%s: Mined-block stats read end at height %s block %s, but the active chain tip is height %s block %s; ignoring file",
+                           FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY),
+                           last_block.m_height, tip_hash.ToString(),
+                           active_tip->height, active_tip->hash.ToString());
+                return false;
+            }
+        }
+        LOCK(cs);
+        m_prev_mined_blocks = std::move(blocks);
+        m_mined_blocks_tip_hash = tip_hash;
+        m_cache.Clear();
+    } catch (const std::exception&) {
+        LogWarning("%s: Unable to read mined-block stats from stream (non-fatal)",
+                   FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY));
+        return false;
+    }
+    return true;
+}
+
+bool MemPoolFeeRateEstimator::Write(AutoFile& file) const
+{
+    try {
+        LOCK(cs);
+        file << CURRENT_MEMPOOL_ESTIMATOR_VERSION;
+        file << Using<VectorFormatter<MinedBlockStatsFormatter>>(m_prev_mined_blocks);
+        file << m_mined_blocks_tip_hash;
+    } catch (const std::exception&) {
+        return false;
+    }
+    return true;
+}
+
+void MemPoolFeeRateEstimator::FlushMinedBlockStats()
+{
+    if (!m_mempool_estimator_file_path.parent_path().empty()) {
+        std::error_code error;
+        fs::create_directories(m_mempool_estimator_file_path.parent_path(), error);
+        if (error) {
+            LogWarning("%s: failed to create mempool policy estimator directory %s: %s. Continuing anyway",
+                       FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY),
+                       fs::PathToString(m_mempool_estimator_file_path.parent_path()), error.message());
+            return;
+        }
+    }
+    AutoFile file{fsbridge::fopen(m_mempool_estimator_file_path, "wb")};
+    if (file.IsNull()) {
+        LogWarning("%s: unable to open %s for writing. Continuing anyway",
+                   FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY),
+                   fs::PathToString(m_mempool_estimator_file_path));
+        return;
+    }
+    if (!Write(file)) {
+        LogWarning("%s: Unable to write mined-block stats to %s (non-fatal)",
+                   FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY),
+                   fs::PathToString(m_mempool_estimator_file_path));
+    }
+    if (file.fclose() != 0) {
+        LogWarning("Failed to close mempool policy estimator file %s: %s. Continuing anyway.",
+                   fs::PathToString(m_mempool_estimator_file_path), SysErrorString(errno));
+        return;
+    }
+    LogDebug(BCLog::ESTIMATEFEE, "%s: mined-block stats flushed to %s.",
+             FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY),
+             fs::PathToString(m_mempool_estimator_file_path));
+}
+
+
 void MemPoolFeeRateEstimator::MempoolTxsRemovedForBlock(const std::shared_ptr<const CBlock>& block,
                                                         const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block,
                                                         unsigned int block_height)
@@ -146,6 +312,7 @@ void MemPoolFeeRateEstimator::MempoolTxsRemovedForBlock(const std::shared_ptr<co
             return acc + get_tx_weight(tx.info.m_tx);
         });
     AddMinedBlockStats(m_prev_mined_blocks, {block_height, removed_weight, block_weight});
+    m_mined_blocks_tip_hash = block->GetHash();
     m_cache.Clear();
 }
 
