@@ -374,6 +374,9 @@ public:
     std::vector<CInv> FetchRelayInventory() EXCLUSIVE_LOCKS_REQUIRED(!cs_relay);
     void CheckAndRemove() EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     void RequestOrphanObjects(CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+    std::pair<std::vector<uint256>, std::vector<uint256>> FetchGovernanceObjectVotes(
+        size_t peers_per_hash_max, int64_t now, std::map<uint256, std::map<CService, int64_t>>& map_asked_recently) const
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
 
 private:
     // Branches of ProcessMessage

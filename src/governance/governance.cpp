@@ -1055,45 +1055,13 @@ void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nH
     connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, nHash, filter));
 }
 
-int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman,
-                                                     const PeerManagerInternal* peerman) const
+std::pair<std::vector<uint256>, std::vector<uint256>> CGovernanceManager::FetchGovernanceObjectVotes(
+    size_t nPeersPerHashMax, int64_t nNow, std::map<uint256, std::map<CService, int64_t>>& mapAskedRecently) const
 {
-    AssertLockNotHeld(cs_store);
-
-    static std::map<uint256, std::map<CService, int64_t> > mapAskedRecently;
-    // Maximum number of nodes to request votes from for the same object hash on real networks
-    // (mainnet, testnet, devnets). Keep this low to avoid unnecessary bandwidth usage.
-    static constexpr size_t REALNET_PEERS_PER_HASH{3};
-    // Maximum number of nodes to request votes from for the same object hash on regtest.
-    // During testing, nodes are isolated to create conflicting triggers. Using the real
-    // networks limit of 3 nodes often results in querying only "non-isolated" nodes, missing the
-    // isolated ones we need to test. This high limit ensures all available nodes are queried.
-    static constexpr size_t REGTEST_PEERS_PER_HASH{std::numeric_limits<size_t>::max()};
-
-    if (vNodesCopy.empty()) return -1;
-
-    int64_t nNow = GetTime();
-    int nTimeout = 60 * 60;
-    size_t nPeersPerHashMax = Params().IsMockableChain() ? REGTEST_PEERS_PER_HASH : REALNET_PEERS_PER_HASH;
-
     std::vector<uint256> vTriggerObjHashes;
     std::vector<uint256> vOtherObjHashes;
-
-    // This should help us to get some idea about an impact this can bring once deployed on mainnet.
-    // Testnet is ~40 times smaller in masternode count, but only ~1000 masternodes usually vote,
-    // so 1 obj on mainnet == ~10 objs or ~1000 votes on testnet. However we want to test a higher
-    // number of votes to make sure it's robust enough, so aim at 2000 votes per masternode per request.
-    // On mainnet nMaxObjRequestsPerNode is always set to 1.
-    int nMaxObjRequestsPerNode = 1;
-    size_t nProjectedVotes = 2000;
-    if (Params().NetworkIDString() != CBaseChainParams::MAIN) {
-        nMaxObjRequestsPerNode = std::max(1, int(nProjectedVotes / std::max(1, (int)Assert(m_dmnman)->GetListAtChainTip().GetValidMNsCount())));
-    }
-
     {
         LOCK(cs_store);
-
-        if (mapObjects.empty()) return -2;
 
         for (const auto& [nHash, govobj] : mapObjects) {
             if (Assert(govobj)->IsSetCachedDelete()) continue;
@@ -1115,6 +1083,48 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
             }
         }
     }
+    return {vTriggerObjHashes, vOtherObjHashes};
+}
+
+int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman,
+                                                     const PeerManagerInternal* peerman) const
+{
+    AssertLockNotHeld(cs_store);
+
+    // Maximum number of nodes to request votes from for the same object hash on real networks
+    // (mainnet, testnet, devnets). Keep this low to avoid unnecessary bandwidth usage.
+    static constexpr size_t REALNET_PEERS_PER_HASH{3};
+    // Maximum number of nodes to request votes from for the same object hash on regtest.
+    // During testing, nodes are isolated to create conflicting triggers. Using the real
+    // networks limit of 3 nodes often results in querying only "non-isolated" nodes, missing the
+    // isolated ones we need to test. This high limit ensures all available nodes are queried.
+    static constexpr size_t REGTEST_PEERS_PER_HASH{std::numeric_limits<size_t>::max()};
+
+    if (vNodesCopy.empty()) return -1;
+
+    int64_t nNow = GetTime();
+    int nTimeout = 60 * 60;
+    size_t nPeersPerHashMax = Params().IsMockableChain() ? REGTEST_PEERS_PER_HASH : REALNET_PEERS_PER_HASH;
+
+
+    // This should help us to get some idea about an impact this can bring once deployed on mainnet.
+    // Testnet is ~40 times smaller in masternode count, but only ~1000 masternodes usually vote,
+    // so 1 obj on mainnet == ~10 objs or ~1000 votes on testnet. However we want to test a higher
+    // number of votes to make sure it's robust enough, so aim at 2000 votes per masternode per request.
+    // On mainnet nMaxObjRequestsPerNode is always set to 1.
+    int nMaxObjRequestsPerNode = 1;
+    size_t nProjectedVotes = 2000;
+    if (Params().NetworkIDString() != CBaseChainParams::MAIN) {
+        nMaxObjRequestsPerNode = std::max(1, int(nProjectedVotes / std::max(1, (int)Assert(m_dmnman)->GetListAtChainTip().GetValidMNsCount())));
+    }
+
+    static Mutex cs_recently;
+    static std::map<uint256, std::map<CService, int64_t>> mapAskedRecently GUARDED_BY(cs_recently);
+    LOCK(cs_recently);
+
+    auto [vTriggerObjHashes, vOtherObjHashes] = FetchGovernanceObjectVotes(nMaxObjRequestsPerNode, nNow, mapAskedRecently);
+
+    if (vTriggerObjHashes.empty() && vOtherObjHashes.empty()) return -2;
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::RequestGovernanceObjectVotes -- start: vTriggerObjHashes %d vOtherObjHashes %d mapAskedRecently %d\n",
         vTriggerObjHashes.size(), vOtherObjHashes.size(), mapAskedRecently.size());
