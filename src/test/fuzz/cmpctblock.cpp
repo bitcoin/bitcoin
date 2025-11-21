@@ -316,6 +316,32 @@ FUZZ_TARGET(cmpctblock, .init=initialize_cmpctblock)
                 net_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, base_cmpctblock);
             },
             [&]() {
+                // Send a blocktxn message for an existing block (if one exists).
+                size_t num_blocks = info.size();
+                if (num_blocks == 0) {
+                    set_net_msg = false;
+                    return;
+                }
+
+                // Fetch an existing block and randomly choose transactions to send over.
+                size_t index = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, num_blocks - 1);
+                const BlockInfo& block_info = info[index];
+                BlockTransactions block_txn;
+                block_txn.blockhash = block_info.hash;
+                std::shared_ptr<CBlock> cblock = block_info.block;
+
+                size_t num_txs = cblock->vtx.size();
+                if (num_txs > 1) {
+                    for (size_t i = 1; i < num_txs; i++) {
+                        if (fuzzed_data_provider.ConsumeBool()) continue;
+
+                        block_txn.txn.push_back(cblock->vtx[i]);
+                    }
+                }
+
+                net_msg = NetMsg::Make(NetMsgType::BLOCKTXN, block_txn);
+            },
+            [&]() {
                 // Send a headers message for an existing block (if one exists).
                 size_t num_blocks = info.size();
                 if (num_blocks == 0) {
