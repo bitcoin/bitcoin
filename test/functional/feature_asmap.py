@@ -23,15 +23,19 @@ Verify node behaviour and debug log when launching bitcoind in these cases:
 The tests are order-independent.
 
 """
+import hashlib
 import os
 import shutil
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+)
 
 DEFAULT_ASMAP_FILENAME = 'ip_asn.map' # defined in src/init.cpp
 ASMAP = 'src/test/data/asmap.raw' # path to unit test skeleton asmap
-VERSION = 'fec61fa21a9f46f3b17bdcd660d7f4cd90b966aad3aec593c99b35f0aca15853'
+VERSION = 'bafc9da308f45179443bd1d22325400ac9104f741522d003e3fac86700f68895'
 
 def expected_messages(filename):
     return [f'Opened asmap file "{filename}" (59 bytes) from disk',
@@ -79,7 +83,7 @@ class AsmapTest(BitcoinTestFramework):
             self.start_node(0, [f'-asmap={name}'])
         os.remove(filename)
 
-    def test_default_asmap(self):
+    def test_default_asmap_file(self):
         shutil.copyfile(self.asmap_raw, self.default_asmap)
         for arg in ['-asmap', '-asmap=']:
             self.log.info(f'Test bitcoind {arg} (using default map file)')
@@ -87,6 +91,18 @@ class AsmapTest(BitcoinTestFramework):
             with self.node.assert_debug_log(expected_messages(self.default_asmap)):
                 self.start_node(0, [arg])
         os.remove(self.default_asmap)
+
+    def test_embedded_asmap(self):
+        if self.is_embedded_asmap_compiled():
+            self.log.info('Test bitcoind -asmap (using embedded map data)')
+            self.stop_node(0)
+            with self.node.assert_debug_log(["Opened asmap data", "from embedded byte array"]):
+                self.start_node(0, ['-asmap'])
+        else:
+            self.log.info('Test bitcoind -asmap (compiled without embedded map data)')
+            self.stop_node(0)
+            msg = f"Error: Could not find asmap file in default location \"{self.default_asmap}\""
+            self.node.assert_start_raises_init_error(extra_args=['-asmap'], expected_msg=msg)
 
     def test_asmap_interaction_with_addrman_containing_entries(self):
         self.log.info("Test bitcoind -asmap restart with addrman containing new and tried entries")
@@ -104,18 +120,19 @@ class AsmapTest(BitcoinTestFramework):
             self.node.getnodeaddresses()  # getnodeaddresses re-runs the addrman checks
         os.remove(self.default_asmap)
 
-    def test_default_asmap_with_missing_file(self):
-        self.log.info('Test bitcoind -asmap with missing default map file')
+    def test_asmap_with_missing_file(self):
+        self.log.info('Test bitcoind -asmap= with missing map file')
         self.stop_node(0)
-        msg = f"Error: Could not find asmap file \"{self.default_asmap}\""
-        self.node.assert_start_raises_init_error(extra_args=['-asmap'], expected_msg=msg)
+        bogus_map = os.path.join(self.datadir, "bogus.map")
+        msg = f"Error: Could not find asmap file \"{bogus_map}\""
+        self.node.assert_start_raises_init_error(extra_args=[f"-asmap={bogus_map}"], expected_msg=msg)
 
     def test_empty_asmap(self):
         self.log.info('Test bitcoind -asmap with empty map file')
         self.stop_node(0)
         with open(self.default_asmap, "w", encoding="utf-8") as f:
             f.write("")
-        msg = f"Error: Could not parse asmap file \"{self.default_asmap}\""
+        msg = f"Error: Could not parse asmap file in default location \"{self.default_asmap}\""
         self.node.assert_start_raises_init_error(extra_args=['-asmap'], expected_msg=msg)
         os.remove(self.default_asmap)
 
@@ -135,6 +152,25 @@ class AsmapTest(BitcoinTestFramework):
         assert_equal(len(asns), 3)
         os.remove(self.default_asmap)
 
+    def test_export_embedded_asmap(self):
+        self.log.info('Test exportasmap RPC')
+        export_path = os.path.join(self.datadir, "asmap.dat")
+
+        if not self.is_embedded_asmap_compiled():
+            assert_raises_rpc_error(-1, "No embedded ASMap data available", self.node.exportasmap, export_path)
+            return
+
+        self.node.exportasmap(export_path)
+
+        with open(export_path, 'rb') as f:
+            file_hash = hashlib.sha256(f.read()).hexdigest()
+
+        # Added in https://github.com/bitcoin/bitcoin/pull/28792
+        expected_hash = "447d13a870e42e4a61e7933572b700872386e40529a69a7e0880816acf8a9012"
+        assert_equal(file_hash, expected_hash)
+
+        os.remove(export_path)
+
     def run_test(self):
         self.node = self.nodes[0]
         self.datadir = self.node.chain_path
@@ -146,11 +182,13 @@ class AsmapTest(BitcoinTestFramework):
         self.test_noasmap_arg()
         self.test_asmap_with_absolute_path()
         self.test_asmap_with_relative_path()
-        self.test_default_asmap()
+        self.test_default_asmap_file()
+        self.test_embedded_asmap()
         self.test_asmap_interaction_with_addrman_containing_entries()
-        self.test_default_asmap_with_missing_file()
+        self.test_asmap_with_missing_file()
         self.test_empty_asmap()
         self.test_asmap_health_check()
+        self.test_export_embedded_asmap()
 
 
 if __name__ == '__main__':
