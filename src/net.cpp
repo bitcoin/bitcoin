@@ -2039,18 +2039,27 @@ void CConnman::DisconnectNodes()
     // m_reconnections_mutex while holding m_nodes_mutex.
     decltype(m_reconnections) reconnections_to_add;
 
+    bool has_to_disconnect = false;
     {
-        LOCK(m_nodes_mutex);
+        READ_LOCK(m_nodes_mutex);
 
-        if (!fNetworkActive) {
-            // Disconnect any connected nodes
-            for (CNode* pnode : m_nodes) {
-                if (!pnode->fDisconnect) {
-                    LogPrint(BCLog::NET_NETCONN, "Network not active, dropping peer=%d\n", pnode->GetId());
-                    pnode->fDisconnect = true;
-                }
+        for (CNode* pnode : m_nodes) {
+            // Disconnect any connected nodes, if network is not active
+            if (!fNetworkActive && !pnode->fDisconnect) {
+                LogPrint(BCLog::NET_NETCONN, "Network not active, dropping peer=%d\n", pnode->GetId());
+                pnode->fDisconnect = true;
+            }
+            if (!has_to_disconnect && pnode->fDisconnect) {
+                has_to_disconnect = true;
             }
         }
+    }
+
+    // Avoid taking locks if there's nothing to do
+    if (!has_to_disconnect) return;
+
+    {
+        LOCK(m_nodes_mutex);
 
         // Disconnect unused nodes
         for (auto it = m_nodes.begin(); it != m_nodes.end(); )
