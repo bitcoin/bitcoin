@@ -182,7 +182,14 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
         if (root_dir.empty()) ExitFailure("-testdatadir argument is empty, please specify a path");
 
         root_dir = fs::absolute(root_dir);
-        m_path_lock = root_dir / TEST_DIR_PATH_ELEMENT / fs::PathFromString(test_name);
+        if (EnableFuzzDeterminism()) {
+            // Do not add a random path element when fuzzing. Fuzz iterations need to know the exact path when they
+            // eventually pass this created directory to -fuzzcopydatadir.
+            m_path_lock = root_dir;
+        } else {
+            m_path_lock = root_dir / TEST_DIR_PATH_ELEMENT / fs::PathFromString(test_name);
+        }
+
         m_path_root = m_path_lock / "datadir";
 
         // Try to obtain the lock; if unsuccessful don't disturb the existing test.
@@ -195,8 +202,10 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
         fs::remove_all(m_path_root);
         if (!TryCreateDirectories(m_path_root)) ExitFailure("Cannot create test data directory");
 
-        // Print the test directory name if custom.
-        std::cout << "Test directory (will not be deleted): " << m_path_root << std::endl;
+        // Print the test directory name if custom and not fuzzing.
+        if (!EnableFuzzDeterminism()) {
+            std::cout << "Test directory (will not be deleted): " << m_path_root << std::endl;
+        }
     } else if (m_node.args->IsArgSet("-fuzzcopydatadir")) {
         fs::path cached_dir{m_node.args->GetPathArg("-fuzzcopydatadir")};
         if (cached_dir.empty()) ExitFailure("-fuzzcopydatadir argument is empty, please specify a path");
