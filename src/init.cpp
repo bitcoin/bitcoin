@@ -1840,7 +1840,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     auto& kernel_notifications{*Assert(node.notifications)};
 
     if (node.fee_estimator_man) {
-        node.fee_estimator_man->RegisterFeeRateEstimator(std::make_unique<MemPoolFeeRateEstimator>(node.mempool.get(), &chainman.ActiveChainstate()));
+        node.fee_estimator_man->RegisterFeeRateEstimator(std::make_unique<MemPoolFeeRateEstimator>(MempoolPolicyFeeestPath(args), node.mempool.get(), &chainman.ActiveChainstate()));
     }
 
     assert(!node.peerman);

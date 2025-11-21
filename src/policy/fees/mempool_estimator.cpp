@@ -8,7 +8,10 @@
 #include <policy/fees/mempool_estimator.h>
 #include <policy/policy.h>
 #include <util/fees.h>
+#include <util/fs.h>
 #include <validation.h>
+
+constexpr int CURRENT_MEMPOOL_ESTIMATOR_VERSION{1};
 
 bool MemPoolFeeRateEstimatorCache::IsStale() const
 {
@@ -32,6 +35,68 @@ void MemPoolFeeRateEstimatorCache::Update(const Percentiles& new_estimates, uint
     last_updated = NodeClock::now();
     chain_tip_hash = current_tip_hash;
 }
+
+MemPoolFeeRateEstimator::MemPoolFeeRateEstimator(fs::path mempool_estimates_file_path, const CTxMemPool* mempool, Chainstate* chainstate)
+    : FeeRateEstimator(FeeRateEstimatorType::MEMPOOL_POLICY),
+      m_mempool(mempool),
+      m_chainstate(chainstate),
+      m_mempool_estimates_file_path(mempool_estimates_file_path)
+{
+    ReadStats();
+};
+
+void MemPoolFeeRateEstimator::ReadStats()
+{
+    LOCK(cs);
+    AutoFile file{fsbridge::fopen(m_mempool_estimates_file_path, "rb")};
+    if (file.IsNull()) {
+        LogDebug(BCLog::ESTIMATEFEE, " %s: %s does not exist. Continue anyway", FeeRateEstimatorTypeToString(GetFeeRateEstimatorType()), fs::PathToString(m_mempool_estimates_file_path));
+        return;
+    }
+    try {
+        int version_required;
+        file >> version_required;
+        if (version_required != CURRENT_MEMPOOL_ESTIMATOR_VERSION) {
+            LogWarning("%s: file version not supported; Continue anyway", FeeRateEstimatorTypeToString(GetFeeRateEstimatorType()));
+            return;
+        }
+        file >> Using<VectorFormatter<EncodedBlockDataFormatter>>(prev_mined_blocks);
+    } catch (std::exception&) {
+        LogWarning("%s: Unable to read data to %s (non-fatal)", FeeRateEstimatorTypeToString(GetFeeRateEstimatorType()), fs::PathToString(m_mempool_estimates_file_path));
+    }
+}
+
+void MemPoolFeeRateEstimator::Flush()
+{
+    WriteStats();
+}
+
+void MemPoolFeeRateEstimator::WriteStats()
+{
+    LOCK(cs);
+    if (!m_mempool_estimates_file_path.parent_path().empty()) {
+        fs::create_directories(m_mempool_estimates_file_path.parent_path());
+    }
+
+    AutoFile file{fsbridge::fopen(m_mempool_estimates_file_path, "wb")};
+    if (file.IsNull()) {
+        LogDebug(BCLog::ESTIMATEFEE, " %s: %s does not exist. Continue anyway", FeeRateEstimatorTypeToString(GetFeeRateEstimatorType()), fs::PathToString(m_mempool_estimates_file_path));
+        (void)file.fclose();
+        return;
+    }
+    try {
+        file << CURRENT_MEMPOOL_ESTIMATOR_VERSION;
+        file << Using<VectorFormatter<EncodedBlockDataFormatter>>(prev_mined_blocks);
+        LogDebug(BCLog::ESTIMATEFEE, "%s: estimates flushed to %s.", FeeRateEstimatorTypeToString(GetFeeRateEstimatorType()), fs::PathToString(m_mempool_estimates_file_path));
+    } catch (const std::exception&) {
+        LogWarning("%s: Unable to write data to %s (non-fatal)", FeeRateEstimatorTypeToString(GetFeeRateEstimatorType()), fs::PathToString(m_mempool_estimates_file_path));
+    }
+    if (file.fclose() != 0) {
+        LogError("Failed to close mempool fee estimates file %s: %s. Continuing anyway.", fs::PathToString(m_mempool_estimates_file_path), SysErrorString(errno));
+        return;
+    }
+}
+
 
 void MemPoolFeeRateEstimator::MempoolTxsRemovedForBlock(const std::vector<CTransactionRef>& block_txs, const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight)
 {
@@ -97,7 +162,6 @@ FeeRateEstimatorResult MemPoolFeeRateEstimator::EstimateFeeRate(int target, bool
         result.errors.emplace_back(strprintf("%s: Mempool is unreliable for fee rate estimation", FeeRateEstimatorTypeToString(result.feerate_estimator)));
         return result;
     }
-
     const auto cached_estimate = cache.GetCachedEstimate();
     const auto known_chain_tip_hash = cache.GetChainTipHash();
     if (cached_estimate && *activeTip->phashBlock == known_chain_tip_hash) {

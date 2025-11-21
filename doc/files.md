@@ -54,7 +54,7 @@ Subdirectory       | File(s)               | Description
 `blocks/`          | `revNNNNN.dat`<sup>[\[2\]](#note2)</sup> | Block undo data (custom format)
 `blocks/`          | `xor.dat`             | Rolling XOR pattern for block and undo data files
 `chainstate/`      | LevelDB database      | Blockchain state (a compact representation of all currently unspent transaction outputs (UTXOs) and metadata about the transactions they are from)
-`fees/`            | `block_policy_estimates.dat`   | Stores statistics used to estimate minimum transaction fees required for confirmation
+`fees/`            | `block_policy_estimates.dat`, and `mempool_policy_estimates.dat`   | Stores statistics used to estimate minimum transaction fees required for confirmation
 `indexes/txindex/` | LevelDB database      | Transaction index; *optional*, used if `-txindex=1`
 `indexes/blockfilter/basic/db/` | LevelDB database      | Blockfilter index LevelDB database for the basic filtertype; *optional*, used if `-blockfilterindex=basic`
 `indexes/blockfilter/basic/`    | `fltrNNNNN.dat`<sup>[\[2\]](#note2)</sup> | Blockfilter index filters for the basic filtertype; *optional*, used if `-blockfilterindex=basic`

@@ -12,4 +12,7 @@ class ArgsManager;
 /** @return The block policy fee estimator data file path. */
 fs::path BlockPolicyFeeestPath(const ArgsManager& argsman);
 
+/** @return The mempool policy fee estimator data file path. */
+fs::path MempoolPolicyFeeestPath(const ArgsManager& argsman);
+
 #endif // BITCOIN_POLICY_FEES_ESTIMATOR_ARGS_H

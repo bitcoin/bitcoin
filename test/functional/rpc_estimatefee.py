@@ -33,7 +33,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         assert_raises_rpc_error(-8, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"', self.nodes[0].estimatesmartfee, 1, 'foo')
         # extra params
-        assert_raises_rpc_error(-1, "estimatesmartfee", self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', 1)
+        assert_raises_rpc_error(-1, "estimatesmartfee", self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', 1, 1)
         assert_raises_rpc_error(-1, "estimaterawfee", self.nodes[0].estimaterawfee, 1, 1, 1)
 
         # max value of 1008 per src/policy/fees/block_policy_estimator.h

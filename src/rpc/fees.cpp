@@ -42,6 +42,7 @@ static RPCHelpMan estimatesmartfee()
             {"conf_target", RPCArg::Type::NUM, RPCArg::Optional::NO, "Confirmation target in blocks (1 - 1008)"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"economical"}, "The fee estimate mode.\n"
               + FeeModesDetail(std::string("default mode will be used"))},
+            {"verbosity", RPCArg::Type::NUM, RPCArg::Default{1}, "1 will return the feerate and errors if encountered. 2 will return the mempool health statistics of recently mined blocks."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -56,6 +57,16 @@ static RPCHelpMan estimatesmartfee()
                 "fee estimation is able to return based on how long it has been running.\n"
                 "An error is returned if not enough transactions and blocks\n"
                 "have been observed to make an estimate for any number of blocks."},
+                {RPCResult::Type::ARR, "mempool_health_statistics", /*optional=*/true, "This returns the mempool health of the most recently mined blocks",
+                {
+                    {RPCResult::Type::OBJ, "", "",
+                     {
+                        {RPCResult::Type::NUM, "block_height", ""},
+                        {RPCResult::Type::NUM, "block_weight", "The cumulative weight of the transactions in the mempool excluding coinbase"},
+                        {RPCResult::Type::NUM, "mempool_txs_weight", "The cumulative weight of the transactions evicted from the mempool after the block is confirmed."},
+                        {RPCResult::Type::NUM, "ratio", "mempool_txs_weight / block_weight"},
+                    }},
+                    },},
         }},
         RPCExamples{
             HelpExampleCli("estimatesmartfee", "6") +
@@ -92,6 +103,21 @@ static RPCHelpMan estimatesmartfee()
             }
             result.pushKV("errors", std::move(errors));
             result.pushKV("blocks", res.returned_target);
+            int verbosity{ParseVerbosity(request.params[2], /*default_verbosity=*/1, /*allow_bool=*/true)};
+            if (verbosity > 1) {
+                UniValue mempool_health_stats(UniValue::VARR);
+                std::vector<BlockData> blocks_data = fee_estimator_man.MempoolPolicyEstimatorBlocksStats();
+                for (auto block_it = blocks_data.rbegin(); block_it != blocks_data.rend(); ++block_it) {
+                    UniValue block_stat(UniValue::VOBJ);
+                    block_stat.pushKV("block_height", block_it->m_height);
+                    block_stat.pushKV("block_weight", block_it->m_block_weight);
+                    block_stat.pushKV("mempool_txs_weight", block_it->m_removed_block_txs_weight);
+                    block_stat.pushKV("ratio", block_it->m_removed_block_txs_weight / block_it->m_block_weight);
+                    mempool_health_stats.push_back(block_stat);
+                }
+                result.pushKV("mempool_health_statistics", mempool_health_stats);
+            }
+
             return result;
         },
     };
