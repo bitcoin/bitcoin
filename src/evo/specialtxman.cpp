@@ -184,8 +184,6 @@ bool CSpecialTxProcessor::RebuildListFromBlock(const CBlock& block, gsl::not_nul
                                                 bool debugLogs, BlockValidationState& state,
                                                 CDeterministicMNList& mnListRet)
 {
-    AssertLockHeld(cs_main);
-
     // Verify that prevList either represents an empty/initial state (default-constructed),
     // or it matches the previous block's hash.
     assert(prevList == CDeterministicMNList() || prevList.GetBlockHash() == pindexPrev->GetBlockHash());

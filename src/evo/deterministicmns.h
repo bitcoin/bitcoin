@@ -741,10 +741,10 @@ public:
         BlockValidationState& state,
         CDeterministicMNList& mnListRet)>;
 
-    [[nodiscard]] RecalcDiffsResult RecalculateAndRepairDiffs(
-        const CBlockIndex* start_index, const CBlockIndex* stop_index,
-        ChainstateManager& chainman, BuildListFromBlockFunc build_list_func,
-        bool repair) EXCLUSIVE_LOCKS_REQUIRED(!cs, ::cs_main);
+    [[nodiscard]] RecalcDiffsResult RecalculateAndRepairDiffs(const CBlockIndex* start_index,
+                                                              const CBlockIndex* stop_index, ChainstateManager& chainman,
+                                                              BuildListFromBlockFunc build_list_func, bool repair)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     // Migration support for nVersion-first CDeterministicMNStateDiff format
     [[nodiscard]] bool IsMigrationRequired() const EXCLUSIVE_LOCKS_REQUIRED(!cs, ::cs_main);
@@ -756,14 +756,13 @@ private:
 
     // Helper methods for RecalculateAndRepairDiffs
     std::vector<const CBlockIndex*> CollectSnapshotBlocks(const CBlockIndex* start_index, const CBlockIndex* stop_index,
-                                                           const Consensus::Params& consensus_params) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    bool VerifySnapshotPair(const CBlockIndex* from_index, const CBlockIndex* to_index, const CDeterministicMNList& from_snapshot,
-                            const CDeterministicMNList& to_snapshot, RecalcDiffsResult& result)
-        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+                                                          const Consensus::Params& consensus_params);
+    bool VerifySnapshotPair(const CBlockIndex* from_index, const CBlockIndex* to_index,
+                            const CDeterministicMNList& from_snapshot, const CDeterministicMNList& to_snapshot,
+                            RecalcDiffsResult& result);
     std::vector<std::pair<uint256, CDeterministicMNListDiff>> RepairSnapshotPair(
         const CBlockIndex* from_index, const CBlockIndex* to_index, const CDeterministicMNList& from_snapshot,
-        const CDeterministicMNList& to_snapshot, BuildListFromBlockFunc build_list_func, RecalcDiffsResult& result)
-        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+        const CDeterministicMNList& to_snapshot, BuildListFromBlockFunc build_list_func, RecalcDiffsResult& result);
     void WriteRepairedDiffs(const std::vector<std::pair<uint256, CDeterministicMNListDiff>>& recalculated_diffs,
                             RecalcDiffsResult& result) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
