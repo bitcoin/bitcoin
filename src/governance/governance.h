@@ -315,8 +315,7 @@ public:
     int RequestGovernanceObjectVotes(CNode& peer, CConnman& connman, const PeerManagerInternal* peerman) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     int RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman,
-                                     const PeerManagerInternal* peerman) const
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+                                     const PeerManagerInternal* peerman) const EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     [[nodiscard]] MessageProcessingResult ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type,
                                                          CDataStream& vRecv)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store, !cs_relay);
