@@ -1153,9 +1153,9 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
                 LOCK(::cs_main);
                 size_t nProjectedSize = peerman->PeerGetRequestedObjectCount(pnode->GetId()) + nProjectedVotes;
                 if (nProjectedSize > MAX_INV_SZ) continue;
-                // to early to ask the same node
-                if (mapAskedRecently[nHashGovobj].count(pnode->addr)) continue;
             }
+            // to early to ask the same node
+            if (mapAskedRecently[nHashGovobj].count(pnode->addr)) continue;
 
             RequestGovernanceObject(pnode, nHashGovobj, connman, true);
             mapAskedRecently[nHashGovobj][pnode->addr] = nNow + nTimeout;
