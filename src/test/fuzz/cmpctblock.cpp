@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <blockencodings.h>
 #include <chainparams.h>
 #include <consensus/merkle.h>
 #include <net.h>
@@ -39,6 +40,22 @@ struct BlockInfo {
     std::shared_ptr<CBlock> block;
     uint256 hash;
     uint32_t height;
+};
+//! Used to access prefilledtxn and shorttxids.
+class FuzzedCBlockHeaderAndShortTxIDs : public CBlockHeaderAndShortTxIDs
+{
+    using CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs;
+
+public:
+    void AddPrefilledTx(PrefilledTransaction&& prefilledtx)
+    {
+        prefilledtxn.push_back(std::move(prefilledtx));
+    }
+
+    void EraseShortTxIDs(size_t index)
+    {
+        shorttxids.erase(shorttxids.begin() + index);
+    }
 };
 //! Class to delete the statically-named datadir at the end of a fuzzing run.
 class FuzzedDirectoryWrapper
@@ -254,6 +271,50 @@ FUZZ_TARGET(cmpctblock, .init=initialize_cmpctblock)
 
         CallOneOf(
             fuzzed_data_provider,
+            [&]() {
+                // Send a compact block.
+                std::shared_ptr<CBlock> cblock;
+
+                // Pick an existing block or create a new block.
+                if (fuzzed_data_provider.ConsumeBool() && info.size() != 0) {
+                    size_t index = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, info.size() - 1);
+                    cblock = info[index].block;
+                } else {
+                    BlockInfo block_info = create_block();
+                    cblock = block_info.block;
+                    info.push_back(block_info);
+                }
+
+                uint64_t nonce = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
+                FuzzedCBlockHeaderAndShortTxIDs cmpctblock(*cblock, nonce);
+
+                size_t num_txs = cblock->vtx.size();
+                if (fuzzed_data_provider.ConsumeBool() || num_txs == 1) {
+                    CBlockHeaderAndShortTxIDs base_cmpctblock = cmpctblock;
+                    net_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, base_cmpctblock);
+                    return;
+                }
+
+                int prev_idx = 0;
+                size_t num_erased = 0;
+
+                for (size_t i = 1; i < num_txs; ++i) {
+                    if (fuzzed_data_provider.ConsumeBool()) continue;
+
+                    uint16_t prefill_idx = i - prev_idx - 1;
+                    prev_idx = i;
+                    CTransactionRef txref = cblock->vtx[i];
+                    PrefilledTransaction prefilledtx = {/*index=*/prefill_idx, txref};
+                    cmpctblock.AddPrefilledTx(std::move(prefilledtx));
+
+                    // Remove from shorttxids since we've prefilled. Subtract however many txs have been prefilled.
+                    cmpctblock.EraseShortTxIDs(i - 1 - num_erased);
+                    ++num_erased;
+                }
+
+                CBlockHeaderAndShortTxIDs base_cmpctblock = cmpctblock;
+                net_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, base_cmpctblock);
+            },
             [&]() {
                 // Send a headers message for an existing block (if one exists).
                 size_t num_blocks = info.size();
