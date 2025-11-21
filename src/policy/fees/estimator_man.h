@@ -34,10 +34,11 @@ public:
     /**
      * @param[in] block_policy_path    Path to the block policy fee estimates file.
      * @param[in] read_stale_estimates Whether to load stale estimates from disk.
+     * @param[in] mempool_estimator_path Path to the mempool fee estimates file.
      * @param[in] mempool              The mempool to use for the mempool estimator.
      * @param[in] chainman             The chainstate manager.
      */
-    FeeRateEstimatorManager(const fs::path& block_policy_path, bool read_stale_estimates, const CTxMemPool* mempool, ChainstateManager* chainman);
+    FeeRateEstimatorManager(const fs::path& block_policy_path, bool read_stale_estimates, const fs::path& mempool_estimator_path, const CTxMemPool* mempool, ChainstateManager* chainman);
 
     virtual ~FeeRateEstimatorManager();
 

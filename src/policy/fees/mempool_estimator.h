@@ -10,6 +10,7 @@
 #include <threadsafety.h>
 #include <uint256.h>
 #include <util/fees.h>
+#include <util/fs.h>
 #include <util/time.h>
 
 #include <chrono>
@@ -17,6 +18,7 @@
 #include <memory>
 #include <vector>
 
+class AutoFile;
 class ChainstateManager;
 class CTxMemPool;
 
@@ -73,12 +75,9 @@ private:
 class MemPoolFeeRateEstimator
 {
 public:
-    MemPoolFeeRateEstimator(const CTxMemPool* mempool, ChainstateManager* chainman)
-        : m_mempool(mempool), m_chainman(chainman)
-    {
-        assert(m_mempool);
-        assert(m_chainman);
-    }
+    MemPoolFeeRateEstimator(fs::path mempool_estimates_file_path, const CTxMemPool* mempool, ChainstateManager* chainman);
+    ~MemPoolFeeRateEstimator() = default;
+
     FeeRateEstimatorResult EstimateFeeRate(bool conservative) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     unsigned int MaximumTarget() const
@@ -96,6 +95,9 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
     //! Checks if recent mined blocks indicate a healthy mempool state.
     bool IsMempoolHealthy() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void Flush() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool Read(AutoFile& file) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool Write(AutoFile& file) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
 private:
     //! Checks if recent mined blocks indicate a healthy mempool state (internal-only).
@@ -107,6 +109,7 @@ private:
     ChainstateManager* m_chainman;
     mutable Mutex cs;
     mutable MemPoolFeeRateEstimatorCache cache GUARDED_BY(cs);
+    const fs::path m_mempool_estimates_file_path;
 };
 
 #endif // BITCOIN_POLICY_FEES_MEMPOOL_ESTIMATOR_H
