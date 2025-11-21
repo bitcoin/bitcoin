@@ -10,7 +10,9 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
+#include <test/util/mining.h>
 #include <test/util/net.h>
+#include <test/util/script.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
 #include <util/fs.h>
@@ -22,6 +24,10 @@ using namespace util::hex_literals;
 
 namespace {
 
+//! Fee each created tx will pay.
+const CAmount AMOUNT_FEE{1000};
+//! Cached coinbases that each iteration can copy and use.
+std::vector<COutPoint> g_mature_coinbase;
 //! Cached path to the datadir created during init.
 fs::path g_cached_path;
 //! Class to delete the statically-named datadir at the end of a fuzzing run.
@@ -60,6 +66,16 @@ void initialize_cmpctblock()
 
     SetMockTime(Params().GenesisBlock().Time());
 
+    node::BlockAssembler::Options options;
+    options.coinbase_output_script = P2WSH_OP_TRUE;
+
+    for (int i = 0; i < 2 * COINBASE_MATURITY; ++i) {
+        COutPoint prevout{MineBlock(initial_setup->m_node, options)};
+        if (i < COINBASE_MATURITY) {
+            g_mature_coinbase.push_back(prevout);
+        }
+    }
+
     initial_setup->m_node.chainman->ActiveChainstate().ForceFlushStateToDisk();
 }
 
@@ -97,6 +113,53 @@ FUZZ_TARGET(cmpctblock, .init=initialize_cmpctblock)
         connman.AddTestNode(p2p_node);
     }
 
+    // Coinbase UTXOs for this iteration.
+    std::vector<COutPoint> mature_coinbase = g_mature_coinbase;
+
+    const CCoinsViewMemPool amount_view{WITH_LOCK(::cs_main, return &setup->m_node.chainman->ActiveChainstate().CoinsTip()), *setup->m_node.mempool};
+
+    auto create_tx = [&]() -> CTransactionRef {
+        CMutableTransaction tx_mut;
+        tx_mut.version = CTransaction::CURRENT_VERSION;
+        tx_mut.nLockTime = fuzzed_data_provider.ConsumeBool() ? 0 : fuzzed_data_provider.ConsumeIntegral<uint32_t>();
+
+        // If the mempool is non-empty, choose a mempool outpoint. Otherwise, choose a coinbase.
+        COutPoint outpoint;
+        unsigned long mempool_size = setup->m_node.mempool->size();
+        if (fuzzed_data_provider.ConsumeBool() && mempool_size != 0) {
+            size_t random_idx = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, mempool_size - 1);
+            LOCK(setup->m_node.mempool->cs);
+            outpoint = COutPoint(setup->m_node.mempool->txns_randomized[random_idx].second->GetSharedTx()->GetHash(), 0);
+        } else if (mature_coinbase.size() != 0) {
+            auto pop = mature_coinbase.begin();
+            std::advance(pop, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, mature_coinbase.size() - 1));
+            outpoint = *pop;
+            mature_coinbase.erase(pop);
+        } else {
+            // We have no utxos available to make a transaction.
+            return nullptr;
+        }
+
+        const auto sequence = ConsumeSequence(fuzzed_data_provider);
+        const auto script_sig = CScript{};
+        const auto script_wit_stack = std::vector<std::vector<uint8_t>>{WITNESS_STACK_ELEM_OP_TRUE};
+
+        CTxIn in;
+        in.prevout = outpoint;
+        in.nSequence = sequence;
+        in.scriptSig = script_sig;
+        in.scriptWitness.stack = script_wit_stack;
+        tx_mut.vin.push_back(in);
+
+        const CAmount amount_in = Assert(amount_view.GetCoin(outpoint))->out.nValue;
+        const CAmount amount_out = amount_in - AMOUNT_FEE;
+        tx_mut.vout.emplace_back(amount_out, P2WSH_OP_TRUE);
+
+        auto tx = MakeTransactionRef(tx_mut);
+        return tx;
+    };
+
+
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 1000)
     {
         CSerializedNetMsg net_msg;
@@ -108,6 +171,16 @@ FUZZ_TARGET(cmpctblock, .init=initialize_cmpctblock)
                 // Send a sendcmpct message, optionally setting hb mode.
                 bool hb = fuzzed_data_provider.ConsumeBool();
                 net_msg = NetMsg::Make(NetMsgType::SENDCMPCT, /*high_bandwidth=*/hb, /*version=*/CMPCTBLOCKS_VERSION);
+            },
+            [&]() {
+                // Send a transaction.
+                CTransactionRef tx = create_tx();
+                if (tx == nullptr) {
+                    set_net_msg = false;
+                    return;
+                }
+
+                net_msg = NetMsg::Make(NetMsgType::TX, TX_WITH_WITNESS(*tx));
             },
             [&]() {
                 // Set mock time randomly or to tip's time.
