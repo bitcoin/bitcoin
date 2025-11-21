@@ -276,6 +276,8 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
             m_node.scheduler->scheduleFromNow([&promise] { promise.set_value(); }, 0ms);
             promise.get_future().wait();
         }
+    } else if (opts.setup_validation_interface_no_scheduler) {
+        m_node.validation_signals = std::make_unique<ValidationSignals>(std::make_unique<util::ImmediateTaskRunner>());
     }
 
     bilingual_str error{};

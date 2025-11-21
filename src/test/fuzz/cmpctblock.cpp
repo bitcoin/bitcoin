@@ -121,7 +121,9 @@ FUZZ_TARGET(cmpctblock, .init=initialize_cmpctblock)
         {.extra_args = {copy_datadir_arg.c_str(),
                         strprintf("-mocktime=%d", mock_start_time).c_str()},
          .coins_db_in_memory = false,
-         .block_tree_db_in_memory = false});
+         .block_tree_db_in_memory = false,
+         .setup_validation_interface = false,
+         .setup_validation_interface_no_scheduler = true});
 
     auto setup = testing_setup.get();
 
