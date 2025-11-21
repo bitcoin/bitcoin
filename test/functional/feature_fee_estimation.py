@@ -146,7 +146,7 @@ def check_fee_estimates_btw_modes(node, expected_conservative, expected_economic
     assert_equal(fee_est_default, expected_economical)
 
 def verify_estimate_response(estimate, feerate, errors):
-    if feerate:
+    if feerate is not None:
         assert_equal(estimate["feerate"], feerate)
     assert all(err in estimate["errors"] for err in errors)
 
@@ -327,7 +327,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         # Get the initial fee rate while node is running
         fee_rate = self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})["feerate"]
 
-        # Restart node to ensure fee_estimate.dat file is read
+        # Restart node to ensure block policy estimator file is read
         self.restart_node(0)
         assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})["feerate"], fee_rate)
 
@@ -364,58 +364,69 @@ class EstimateFeeTest(BitcoinTestFramework):
 
     def test_estimate_dat_is_flushed_periodically(self):
         block_policy_fees_dat = self.nodes[0].chain_path / BLOCK_POLICY_ESTIMATOR_FILE_PATH
+        mempool_policy_dat = self.nodes[0].chain_path / "fees/mempool_policy_estimator.dat"
+        mempool_estimator_name_str = "Mempool Fee Rate Estimator"
         os.remove(block_policy_fees_dat) if os.path.exists(block_policy_fees_dat) else None
+        os.remove(mempool_policy_dat) if os.path.exists(mempool_policy_dat) else None
         if os.path.isdir(block_policy_fees_dat.parent):
             os.rmdir(block_policy_fees_dat.parent)
 
-        # Verify that block policy estimator file and its parent directory do not exist
+        # Verify that estimator data files and their parent directory do not exist
         assert_equal(os.path.isfile(block_policy_fees_dat), False)
+        assert_equal(os.path.isfile(mempool_policy_dat), False)
         assert_equal(os.path.isdir(block_policy_fees_dat.parent), False)
         # Verify if the string "Flushed fee estimates to block_policy_estimates.dat." is present in the debug log file.
-        # If present, it indicates that fee estimates have been successfully flushed to disk.
-        expected_messages = [f"Flushed fee estimates to {block_policy_fees_dat}."]
+        # If present, it indicates that fee estimator data has been successfully flushed to disk.
+        block_policy_estimator_message = f"Flushed fee estimates to {block_policy_fees_dat}."
+        mempool_policy_estimator_message = (
+            f"{mempool_estimator_name_str}: mined-block stats flushed to {mempool_policy_dat}."
+        )
+        expected_messages = [block_policy_estimator_message, mempool_policy_estimator_message]
         with self.nodes[0].assert_debug_log(expected_msgs=expected_messages, timeout=1):
-            # Mock the scheduler for an hour to flush fee estimates to block_policy_estimates.dat
+            # Mock the scheduler for an hour to flush estimator data.
             self.nodes[0].mockscheduler(SECONDS_PER_HOUR)
 
-        # Verify that fee estimates were flushed and block policy estimator directory and file are created
+        # Verify that estimator data was flushed and the estimator directory and files are created
         assert_equal(os.path.isdir(block_policy_fees_dat.parent), True)
         assert_equal(os.path.isfile(block_policy_fees_dat), True)
-
-        # Verify that the estimates remain the same if there are no blocks in the flush interval
+        assert_equal(os.path.isfile(mempool_policy_dat), True)
+        # Verify that estimator data remains the same if there are no blocks in the flush interval
         block_hash_before = self.nodes[0].getbestblockhash()
-        block_policy_dat_initial_content = open(block_policy_fees_dat, "rb").read()
+        block_policy_fees_dat_initial_content = open(block_policy_fees_dat, "rb").read()
+        mempool_policy_dat_initial_content = open(mempool_policy_dat, "rb").read()
         with self.nodes[0].assert_debug_log(expected_msgs=expected_messages, timeout=1):
-            # Mock the scheduler for an hour to flush fee estimates to the block policy estimator file
+            # Mock the scheduler for an hour to flush estimator data.
             self.nodes[0].mockscheduler(SECONDS_PER_HOUR)
-
         # Verify that there were no blocks in between the flush interval
         assert_equal(block_hash_before, self.nodes[0].getbestblockhash())
-
-        block_policy_fee_dat_current_content = open(block_policy_fees_dat, "rb").read()
-        assert_equal(block_policy_dat_initial_content, block_policy_fee_dat_current_content)
-
-        # Verify that the estimates remain the same after shutdown with no blocks before shutdown
+        block_policy_fees_dat_current_content = open(block_policy_fees_dat, "rb").read()
+        mempool_policy_dat_current_content = open(mempool_policy_dat, "rb").read()
+        assert_equal(block_policy_fees_dat_initial_content, block_policy_fees_dat_current_content)
+        assert_equal(mempool_policy_dat_initial_content, mempool_policy_dat_current_content)
+        # Verify that estimator data remains the same after shutdown with no blocks before shutdown
         self.restart_node(0)
-        block_policy_fee_dat_current_content = open(block_policy_fees_dat, "rb").read()
-        assert_equal(block_policy_dat_initial_content, block_policy_fee_dat_current_content)
-
-        # Verify that the estimates are not the same if new blocks were produced in the flush interval
+        block_policy_fees_dat_current_content = open(block_policy_fees_dat, "rb").read()
+        mempool_policy_dat_current_content = open(mempool_policy_dat, "rb").read()
+        assert_equal(block_policy_fees_dat_initial_content, block_policy_fees_dat_current_content)
+        assert_equal(mempool_policy_dat_initial_content, mempool_policy_dat_current_content)
+        # Verify that estimator data changes if new blocks were produced in the flush interval
         with self.nodes[0].assert_debug_log(expected_msgs=expected_messages, timeout=1):
-            # Mock the scheduler for an hour to flush fee estimates to block_policy_estimates.dat
+            # Mock the scheduler for an hour to flush estimator data.
             self.generate(self.nodes[0], 5, sync_fun=self.no_op)
             self.nodes[0].mockscheduler(SECONDS_PER_HOUR)
-
-        block_policy_fee_dat_current_content = open(block_policy_fees_dat, "rb").read()
-        assert_not_equal(block_policy_fee_dat_current_content, block_policy_dat_initial_content)
-        block_policy_dat_initial_content = block_policy_fee_dat_current_content
-
-        # Generate blocks before shutdown and verify that the fee estimates are not the same
+        block_policy_fees_dat_current_content = open(block_policy_fees_dat, "rb").read()
+        assert_not_equal(block_policy_fees_dat_current_content, block_policy_fees_dat_initial_content)
+        block_policy_fees_dat_initial_content = block_policy_fees_dat_current_content
+        mempool_policy_dat_current_content = open(mempool_policy_dat, "rb").read()
+        assert_not_equal(mempool_policy_dat_current_content, mempool_policy_dat_initial_content)
+        mempool_policy_dat_initial_content = mempool_policy_dat_current_content
+        # Generate blocks before shutdown and verify that estimator data changes
         self.generate(self.nodes[0], 5, sync_fun=self.no_op)
         self.restart_node(0)
-
-        block_policy_fee_dat_current_content = open(block_policy_fees_dat, "rb").read()
-        assert_not_equal(block_policy_dat_initial_content, block_policy_fee_dat_current_content)
+        block_policy_fees_dat_current_content = open(block_policy_fees_dat, "rb").read()
+        mempool_policy_dat_current_content = open(mempool_policy_dat, "rb").read()
+        assert_not_equal(block_policy_fees_dat_initial_content, block_policy_fees_dat_current_content)
+        assert_not_equal(mempool_policy_dat_initial_content, mempool_policy_dat_current_content)
 
 
     def test_acceptstalefeeestimates_option(self):
@@ -526,6 +537,12 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.send_transactions(low_utxos, low_feerate, target_vsize)
         lower_estimate = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "none"})
         verify_estimate_response(lower_estimate, low_feerate, [])
+        # The mempool block stats are persisted across restarts, so the mempool
+        # stays healthy and the lower mempool estimate is still returned after a
+        # restart (without persistence it would fall back to the block policy).
+        self.restart_node(0)
+        estimate_post_restart = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "none"})
+        verify_estimate_response(estimate_post_restart, low_feerate, [])
 
         self.log.info("Test estimatesmartfee returns the fee rate floor when the mempool is empty but healthy")
         self.generate(node0, 1, sync_fun=lambda: None)
@@ -540,6 +557,49 @@ class EstimateFeeTest(BitcoinTestFramework):
         combined_estimate = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "none"})
         verify_estimate_response(combined_estimate, floor, [])
         assert_equal(combined_estimate["estimator"], "Mempool Fee Rate Estimator")
+
+    def test_stale_mempool_block_stats_are_rejected_on_load(self):
+        # Persisted mempool block stats must be tied to the best block hash,
+        # not just height, because a reorg can replace the tip without
+        # changing the height.
+        node0 = self.nodes[0]
+        miner = self.nodes[1]
+        mempool_policy_dat = node0.chain_path / "fees/mempool_policy_estimator.dat"
+        healthy_feerate = Decimal("0.004")
+        self.connect_nodes(0, 1)
+        self.connect_nodes(0, 2)
+        self.sync_all()
+        # Build a full, healthy window whose tracked heights match the current tip.
+        self.broadcast_and_maybe_mine(node0, healthy_feerate, TXS_COUNT, 6, miner)
+        stale_stats = node0.estimatesmartfee(
+            1,
+            "economical",
+            {"verbosity": 2, "fee_rate_estimator": "none"},
+        )["mempool_health_statistics"]
+        assert_equal(len(stale_stats), 6)
+        stale_height = node0.getblockcount()
+        assert_equal(stale_stats[0]["block_height"], stale_height)
+        stale_tip = node0.getbestblockhash()
+        self.stop_node(0)
+        stale_stats_snapshot = open(mempool_policy_dat, "rb").read()
+        self.start_node(0)
+        node0.invalidateblock(stale_tip)
+        assert_equal(node0.getblockcount(), stale_height - 1)
+        reorged_tip = self.generate(node0, 1, sync_fun=lambda: None)[0]
+        assert_equal(node0.getblockcount(), stale_height)
+        assert_not_equal(reorged_tip, stale_tip)
+        self.stop_node(0)
+        with open(mempool_policy_dat, "wb") as f:
+            f.write(stale_stats_snapshot)
+        self.start_node(0)
+        assert_equal(node0.getblockcount(), stale_height)
+        assert_equal(node0.getbestblockhash(), reorged_tip)
+        stats_after_restart = node0.estimatesmartfee(
+            1,
+            "economical",
+            {"verbosity": 2, "fee_rate_estimator": "none"},
+        )["mempool_health_statistics"]
+        assert_equal(stats_after_restart, [])
 
     def run_test(self):
         self.log.info("This test is time consuming, please be patient")
@@ -563,7 +623,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Testing estimates with single transactions.")
         self.sanity_check_estimates_range()
 
-        self.log.info("Test fees data is flushed periodically")
+        self.log.info("Test fees/block_policy_estimates.dat is flushed periodically")
         self.test_estimate_dat_is_flushed_periodically()
 
         # check that estimatesmartfee feerate is greater than or equal to maximum of mempoolminfee and minrelaytxfee
@@ -594,6 +654,9 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Test that estimatesmartfee returns mempool estimates when lower")
         self.clear_estimates()
         self.test_estimatesmartfee_return_mempool_estimates()
+
+        self.log.info("Test that stale mempool block stats are rejected on load")
+        self.test_stale_mempool_block_stats_are_rejected_on_load()
 
         self.log.info("Testing that fee estimation is disabled in blocksonly.")
         self.restart_node(0, ["-blocksonly"])

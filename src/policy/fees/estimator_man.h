@@ -33,10 +33,15 @@ public:
     /**
      * @param[in] block_policy_path    Path to the block policy fee estimates file.
      * @param[in] read_stale_estimates Whether to load stale estimates from disk.
+     * @param[in] mempool_estimator_path Path to the mempool policy estimator data file.
      * @param[in] mempool              The mempool to use for the mempool fee rate estimator.
      * @param[in] chainman             The chainstate manager.
      */
-    FeeRateEstimatorManager(const fs::path& block_policy_path, bool read_stale_estimates, const CTxMemPool* mempool, ChainstateManager* chainman);
+    FeeRateEstimatorManager(const fs::path& block_policy_path,
+                            bool read_stale_estimates,
+                            const fs::path& mempool_estimator_path,
+                            const CTxMemPool* mempool,
+                            ChainstateManager* chainman);
 
     virtual ~FeeRateEstimatorManager();
 
@@ -87,7 +92,10 @@ protected:
     /** Overridden from CValidationInterface. */
     void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t /*unused*/) override;
     void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason /*unused*/, uint64_t /*unused*/) override;
-    void MempoolTransactionsRemovedForBlock(const std::vector<CTransactionRef>& block_txs, const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int block_height, const uint256& block_hash) override;
+    void MempoolTransactionsRemovedForBlock(const std::vector<CTransactionRef>& block_txs,
+                                            const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block,
+                                            unsigned int block_height,
+                                            const uint256& tip_hash) override;
 
 private:
     std::unique_ptr<CBlockPolicyEstimator> m_block_policy_estimator;
