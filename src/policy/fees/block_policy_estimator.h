@@ -24,7 +24,7 @@
 #include <vector>
 
 
-/** fee_estimates.dat that are more than 60 hours (2.5 days) old will not be read,
+/** Block policy estimate files that are more than 60 hours (2.5 days) old will not be read,
  * as fee estimates are based on historical data and may be inaccurate if
  * network activity has changed.
  */
