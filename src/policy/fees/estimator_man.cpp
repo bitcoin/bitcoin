@@ -62,12 +62,19 @@ void FeeRateEstimatorManager::IntervalFlush()
     if (estimators.contains(FeeRateEstimatorType::BLOCK_POLICY)) {
         GetFeeRateEstimator<CBlockPolicyEstimator>(FeeRateEstimatorType::BLOCK_POLICY)->FlushFeeEstimates();
     }
+
+    if (estimators.contains(FeeRateEstimatorType::MEMPOOL_POLICY)) {
+        GetFeeRateEstimator<MemPoolFeeRateEstimator>(FeeRateEstimatorType::MEMPOOL_POLICY)->Flush();
+    }
 }
 
 void FeeRateEstimatorManager::ShutdownFlush()
 {
     if (estimators.contains(FeeRateEstimatorType::BLOCK_POLICY)) {
         GetFeeRateEstimator<CBlockPolicyEstimator>(FeeRateEstimatorType::BLOCK_POLICY)->Flush();
+    }
+    if (estimators.contains(FeeRateEstimatorType::MEMPOOL_POLICY)) {
+        GetFeeRateEstimator<MemPoolFeeRateEstimator>(FeeRateEstimatorType::MEMPOOL_POLICY)->Flush();
     }
 }
 

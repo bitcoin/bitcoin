@@ -6,6 +6,7 @@
 #include <kernel/mempool_entry.h>
 #include <logging.h>
 #include <policy/fees/estimator.h>
+#include <policy/fees/estimator_args.h>
 #include <policy/fees/mempool_estimator.h>
 #include <policy/policy.h>
 #include <random.h>
@@ -64,9 +65,8 @@ void AddRemovedBlock(MemPoolFeeRateEstimator& fee_est, int32_t removed_txs_weigh
 
 BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
 {
-    auto mempool_estimator = MemPoolFeeRateEstimator(m_node.mempool.get(), m_node.chainman.get());
+    auto mempool_estimator = MemPoolFeeRateEstimator(MempoolPolicyFeeestPath(*m_node.args), m_node.mempool.get(), m_node.chainman.get());
     BOOST_CHECK(!mempool_estimator.IsMempoolHealthy());
-
     {
         const auto result = mempool_estimator.EstimateFeeRate(MEMPOOL_FEE_ESTIMATOR_MAX_TARGET, /*conservative=*/true);
         BOOST_CHECK(result.feerate.IsEmpty());
