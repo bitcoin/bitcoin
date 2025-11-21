@@ -21,6 +21,8 @@
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <uint256.h>
+#include <unordered_map>
+#include <util/hasher.h>
 #include <util/time.h>
 #include <vector>
 
@@ -171,6 +173,11 @@ enum class TxBroadcast : uint8_t {
     /// peers on privacy networks.
     NO_MEMPOOL_PRIVATE_BROADCAST,
 };
+
+/**
+ * Map how many templates refer to each transaction reference.
+ */
+using TxTemplateMap = std::unordered_map<CTransactionRef, size_t, CTransactionRefSaltedHash, CTransactionRefComp>;
 
 } // namespace node
 
