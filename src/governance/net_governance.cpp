@@ -86,19 +86,22 @@ int NetGovernance::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNode
     int nMaxObjRequestsPerNode = 1;
     size_t nProjectedVotes = 2000;
     if (Params().NetworkIDString() != CBaseChainParams::MAIN) {
-        nMaxObjRequestsPerNode = std::max(1, int(nProjectedVotes / std::max(1, (int)m_gov_manager.GetMNManager().GetListAtChainTip().GetValidMNsCount())));
+        nMaxObjRequestsPerNode =
+            std::max(1, int(nProjectedVotes /
+                            std::max(1, (int)m_gov_manager.GetMNManager().GetListAtChainTip().GetValidMNsCount())));
     }
 
     static Mutex cs_recently;
-    static std::map<uint256, std::map<CService, int64_t> > mapAskedRecently GUARDED_BY(cs_recently);
+    static std::map<uint256, std::map<CService, int64_t>> mapAskedRecently GUARDED_BY(cs_recently);
     LOCK(cs_recently);
 
-    auto [vTriggerObjHashes, vOtherObjHashes] = m_gov_manager.FetchGovernanceObjectVotes(nMaxObjRequestsPerNode, nNow, mapAskedRecently);
+    auto [vTriggerObjHashes, vOtherObjHashes] = m_gov_manager.FetchGovernanceObjectVotes(nMaxObjRequestsPerNode, nNow,
+                                                                                         mapAskedRecently);
 
     if (vTriggerObjHashes.empty() && vOtherObjHashes.empty()) return -2;
 
-    LogPrint(BCLog::GOBJECT, "CGovernanceManager::RequestGovernanceObjectVotes -- start: vTriggerObjHashes %d vOtherObjHashes %d mapAskedRecently %d\n",
-        vTriggerObjHashes.size(), vOtherObjHashes.size(), mapAskedRecently.size());
+    LogPrint(BCLog::GOBJECT, "%s -- start: vTriggerObjHashes %d vOtherObjHashes %d mapAskedRecently %d\n", __func__,
+             vTriggerObjHashes.size(), vOtherObjHashes.size(), mapAskedRecently.size());
 
     Shuffle(vTriggerObjHashes.begin(), vTriggerObjHashes.end(), FastRandomContext());
     Shuffle(vOtherObjHashes.begin(), vOtherObjHashes.end(), FastRandomContext());
@@ -142,8 +145,8 @@ int NetGovernance::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNode
         }
         if (!fAsked) i--;
     }
-    LogPrint(BCLog::GOBJECT, "CGovernanceManager::RequestGovernanceObjectVotes -- end: vTriggerObjHashes %d vOtherObjHashes %d mapAskedRecently %d\n",
-        vTriggerObjHashes.size(), vOtherObjHashes.size(), mapAskedRecently.size());
+    LogPrint(BCLog::GOBJECT, "%s -- end: vTriggerObjHashes %d vOtherObjHashes %d mapAskedRecently %d\n", __func__,
+             vTriggerObjHashes.size(), vOtherObjHashes.size(), mapAskedRecently.size());
 
     return int(vTriggerObjHashes.size() + vOtherObjHashes.size());
 }

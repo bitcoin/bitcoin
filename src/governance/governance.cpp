@@ -1054,10 +1054,7 @@ void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nH
     connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, nHash, filter));
 }
 
-CDeterministicMNManager& CGovernanceManager::GetMNManager()
-{
-    return *Assert(m_dmnman);
-}
+CDeterministicMNManager& CGovernanceManager::GetMNManager() { return *Assert(m_dmnman); }
 
 std::pair<std::vector<uint256>, std::vector<uint256>> CGovernanceManager::FetchGovernanceObjectVotes(
     size_t nPeersPerHashMax, int64_t nNow, std::map<uint256, std::map<CService, int64_t>>& mapAskedRecently) const
