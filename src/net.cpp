@@ -2039,29 +2039,42 @@ void CConnman::DisconnectNodes()
     // m_reconnections_mutex while holding m_nodes_mutex.
     decltype(m_reconnections) reconnections_to_add;
 
+    // Quick check without exclusive lock to avoid unnecessary locking
+    // Note: This is a best-effort optimization. If network is active and no nodes
+    // are marked for disconnect, we can skip the expensive exclusive lock.
+    // If network is inactive or nodes need cleanup, we must take the lock.
     bool has_to_disconnect = false;
-    {
-        READ_LOCK(m_nodes_mutex);
-
-        for (CNode* pnode : m_nodes) {
-            // Disconnect any connected nodes, if network is not active
-            if (!fNetworkActive && !pnode->fDisconnect) {
-                LogPrint(BCLog::NET_NETCONN, "Network not active, dropping peer=%d\n", pnode->GetId());
-                pnode->fDisconnect = true;
+    if (fNetworkActive) {
+        {
+            READ_LOCK(m_nodes_mutex);
+            for (CNode* pnode : m_nodes) {
+                if (pnode->fDisconnect) {
+                    has_to_disconnect = true;
+                    break;
+                }
             }
-            if (!has_to_disconnect && pnode->fDisconnect) {
-                has_to_disconnect = true;
-            }
+        }
+        // Only return early if network is active AND no nodes need disconnection
+        // AND no disconnected nodes need cleanup (checked below)
+        if (!has_to_disconnect && m_nodes_disconnected.empty()) {
+            return;
         }
     }
 
-    // Avoid taking locks if there's nothing to do
-    if (!has_to_disconnect) return;
-
-    {
+    if (has_to_disconnect || !fNetworkActive) {
         LOCK(m_nodes_mutex);
 
-        // Disconnect unused nodes
+        if (!fNetworkActive) {
+            // Disconnect any connected nodes
+            for (CNode* pnode : m_nodes) {
+                if (!pnode->fDisconnect) {
+                    LogPrint(BCLog::NET_NETCONN, "Network not active, dropping peer=%d\n", pnode->GetId());
+                    pnode->fDisconnect = true;
+                }
+            }
+        }
+
+        // Disconnect unused nodes, if we have any
         for (auto it = m_nodes.begin(); it != m_nodes.end(); )
         {
             CNode* pnode = *it;
