@@ -14,7 +14,7 @@
 #include <util/thread.h>
 #include <validation.h>
 
-void NetInstantSend::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv)
+void NetInstantSend::ProcessMessage(CNode& pfrom, CConnman&, const std::string& msg_type, CDataStream& vRecv)
 {
     if (msg_type != NetMsgType::ISDLOCK) {
         return;

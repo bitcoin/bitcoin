@@ -81,7 +81,7 @@ public:
     virtual void Stop() {}
     virtual void Interrupt() {}
     virtual void Schedule(CScheduler& scheduler, CConnman& connman) {}
-    virtual void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv) {}
+    virtual void ProcessMessage(CNode& pfrom, CConnman& connman, const std::string& msg_type, CDataStream& vRecv) {}
 protected:
     PeerManagerInternal* m_peer_manager;
 };
