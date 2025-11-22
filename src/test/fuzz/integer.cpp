@@ -80,8 +80,8 @@ FUZZ_TARGET(integer, .init = initialize_integer)
     }
     constexpr uint256 u256_min{"0000000000000000000000000000000000000000000000000000000000000000"};
     constexpr uint256 u256_max{"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
-    const std::vector<uint256> v256{u256, u256_min, u256_max};
-    (void)ComputeMerkleRoot(v256);
+    std::vector v256{u256, u256_min, u256_max};
+    (void)ComputeMerkleRoot(std::move(v256));
     (void)DecompressAmount(u64);
     {
         if (std::optional<CAmount> parsed = ParseMoney(FormatMoney(i64))) {
