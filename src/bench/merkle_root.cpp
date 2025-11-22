@@ -24,9 +24,9 @@ static void MerkleRoot(benchmark::Bench& bench)
     for (bool mutate : {false, true}) {
         bench.name(mutate ? "MerkleRootWithMutation" : "MerkleRoot").batch(hashes.size()).unit("leaf").run([&] {
             std::vector<uint256> leaves;
-            leaves.resize(hashes.size());
+            leaves.reserve((hashes.size() + 1) & ~1ULL); // capacity rounded up to even
             for (size_t s = 0; s < hashes.size(); s++) {
-                leaves[s] = hashes[s];
+                leaves.push_back(hashes[s]);
             }
 
             bool mutated{false};
