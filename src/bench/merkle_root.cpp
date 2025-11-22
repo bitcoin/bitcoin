@@ -23,7 +23,7 @@ static void MerkleRoot(benchmark::Bench& bench)
     constexpr uint256 expected_root{"d8d4dfd014a533bc3941b8663fa6e7f3a8707af124f713164d75b0c3179ecb08"};
     bench.batch(hashes.size()).unit("leaf").run([&] {
         std::vector<uint256> leaves;
-        leaves.reserve(hashes.size());
+        leaves.reserve((hashes.size() + 1) & ~1ULL); // capacity rounded up to even
         for (size_t s = 0; s < hashes.size(); s++) {
             leaves.push_back(hashes[s]);
         }
