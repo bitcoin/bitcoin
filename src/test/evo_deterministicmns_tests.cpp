@@ -1128,10 +1128,18 @@ BOOST_AUTO_TEST_CASE(migration_logic_validation)
 
     // Create sample legacy format state diff
     CDeterministicMNStateDiffLegacy legacyDiff;
-    legacyDiff.fields = 0x40000 | 0x0200 | 0x0800; // Legacy: nVersion, pubKeyOperator, netInfo
+    legacyDiff.fields = 0x40000 | 0x0200 | 0x0800 | 0x0010; // Legacy: nVersion, pubKeyOperator, netInfo, nPoSeBanHeight
     legacyDiff.state.nVersion = ProTxVersion::BasicBLS;
-    legacyDiff.state.pubKeyOperator.Set(CBLSPublicKey{}, false);
+    CBLSSecretKey sk;
+    sk.MakeNewKey();
+    legacyDiff.state.pubKeyOperator.Set(sk.GetPublicKey(), false);
+    BOOST_CHECK(!legacyDiff.state.pubKeyOperator.IsLegacy());
     legacyDiff.state.netInfo = NetInfoInterface::MakeNetInfo(ProTxVersion::BasicBLS);
+    BOOST_CHECK(!legacyDiff.state.IsBanned());
+    legacyDiff.state.BanIfNotBanned(2367316);
+    BOOST_CHECK(legacyDiff.state.IsBanned());
+    BOOST_CHECK_EQUAL(legacyDiff.state.GetBannedHeight(), 2367316);
+
 
     // Test legacy class conversion (this would normally be done by CDeterministicMNListDiff)
     CDataStream ss(SER_DISK, CLIENT_VERSION);
@@ -1139,14 +1147,22 @@ BOOST_AUTO_TEST_CASE(migration_logic_validation)
 
     CDeterministicMNStateDiffLegacy legacyDeserializer(deserialize, ss);
     CDeterministicMNStateDiff convertedDiff = legacyDeserializer.ToNewFormat();
+    BOOST_CHECK(!legacyDiff.state.pubKeyOperator.IsLegacy());
+    BOOST_CHECK(convertedDiff.state.pubKeyOperator.IsLegacy());
+    convertedDiff.state.pubKeyOperator.SetLegacy(false);
+    BOOST_CHECK(!convertedDiff.state.pubKeyOperator.IsLegacy());
 
     // Verify conversion worked correctly
     uint32_t expectedNewFields = CDeterministicMNStateDiff::Field_nVersion |       // 0x0001
+                                 CDeterministicMNStateDiff::Field_nPoSeBanHeight | // 0x0020
                                  CDeterministicMNStateDiff::Field_pubKeyOperator | // 0x0400
                                  CDeterministicMNStateDiff::Field_netInfo;         // 0x1000
 
     BOOST_CHECK_EQUAL(convertedDiff.fields, expectedNewFields);
-    BOOST_CHECK_EQUAL(convertedDiff.state.nVersion, ProTxVersion::BasicBLS);
+    BOOST_CHECK_EQUAL(convertedDiff.state.nVersion, legacyDiff.state.nVersion);
+    BOOST_CHECK_EQUAL(convertedDiff.state.GetBannedHeight(), legacyDiff.state.GetBannedHeight());
+    BOOST_CHECK(convertedDiff.state.pubKeyOperator.Get() == legacyDiff.state.pubKeyOperator.Get());
+    BOOST_CHECK_EQUAL(convertedDiff.state.pubKeyOperator.ToString(), legacyDiff.state.pubKeyOperator.ToString());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

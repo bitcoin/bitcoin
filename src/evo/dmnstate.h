@@ -356,28 +356,54 @@ public:
         s >> *this;
     }
 
-    // Deserialize using legacy format
-    SERIALIZE_METHODS(CDeterministicMNStateDiffLegacy, obj)
+    // Used for testing only
+    template<typename Stream>
+    void Serialize(Stream& s) const
     {
-        READWRITE(VARINT(obj.fields));
+        s << VARINT(fields);
 
         boost::hana::for_each(legacy_members, [&](auto&& member) {
             using BaseType = std::decay_t<decltype(member)>;
             if constexpr (BaseType::mask == LegacyField_pubKeyOperator) {
-                if (obj.fields & member.mask) {
-                    // We'll set proper scheme later in MigrateLegacyDiffs()
-                    READWRITE(CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.state.pubKeyOperator),
-                                                              /*legacy=*/true));
+                if (fields & member.mask) {
+                    // We serialize it as is, no version wrapper is used here
+                    s << state.pubKeyOperator;
                 }
             } else if constexpr (BaseType::mask == LegacyField_netInfo) {
-                if (obj.fields & member.mask) {
+                if (fields & member.mask) {
                     // Legacy format supports non-extended addresses only
-                    READWRITE(NetInfoSerWrapper(const_cast<std::shared_ptr<NetInfoInterface>&>(obj.state.netInfo),
-                                                /*is_extended=*/false));
+                    s << NetInfoSerWrapper(const_cast<std::shared_ptr<NetInfoInterface>&>(state.netInfo),
+                                                /*is_extended=*/false);
                 }
             } else {
-                if (obj.fields & member.mask) {
-                    READWRITE(member.get(obj.state));
+                if (fields & member.mask) {
+                    s << member.get(state);
+                }
+            }
+        });
+    }
+
+    // Deserialize using legacy format
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s >> VARINT(fields);
+
+        boost::hana::for_each(legacy_members, [&](auto&& member) {
+            using BaseType = std::decay_t<decltype(member)>;
+            if constexpr (BaseType::mask == LegacyField_pubKeyOperator) {
+                if (fields & member.mask) {
+                    // We'll set proper scheme later in MigrateLegacyDiffs()
+                    s >> CBLSLazyPublicKeyVersionWrapper(state.pubKeyOperator, /*legacy=*/true);
+                }
+            } else if constexpr (BaseType::mask == LegacyField_netInfo) {
+                if (fields & member.mask) {
+                    // Legacy format supports non-extended addresses only
+                    s >> NetInfoSerWrapper(state.netInfo, /*is_extended=*/false);
+                }
+            } else {
+                if (fields & member.mask) {
+                    s >> member.get(state);
                 }
             }
         });
