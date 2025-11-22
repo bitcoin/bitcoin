@@ -31,7 +31,6 @@ template<typename T>
 class CFlatDB;
 class CInv;
 class CNode;
-class PeerManagerInternal;
 
 class CDeterministicMNList;
 class CDeterministicMNManager;
@@ -312,8 +311,6 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     bool ProcessVoteAndRelay(const CGovernanceVote& vote, CGovernanceException& exception, CConnman& connman) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store, !cs_relay);
-    int RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman,
-                                     const PeerManagerInternal* peerman) const EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     [[nodiscard]] MessageProcessingResult ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type,
                                                          CDataStream& vRecv)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store, !cs_relay);
@@ -377,6 +374,10 @@ public:
     std::pair<std::vector<uint256>, std::vector<uint256>> FetchGovernanceObjectVotes(
         size_t peers_per_hash_max, int64_t now, std::map<uint256, std::map<CService, int64_t>>& map_asked_recently) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+    void RequestGovernanceObject(CNode* pfrom, const uint256& nHash, CConnman& connman, bool fUseFilter = false) const
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+    CDeterministicMNManager& GetMNManager();
+
 
 private:
     // Branches of ProcessMessage
@@ -429,9 +430,6 @@ private:
 
     void ExecuteBestSuperblock(const CDeterministicMNList& tip_mn_list, int nBlockHeight)
         EXCLUSIVE_LOCKS_REQUIRED(cs_store);
-
-    void RequestGovernanceObject(CNode* pfrom, const uint256& nHash, CConnman& connman, bool fUseFilter = false) const
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
 
     bool ProcessVote(CNode* pfrom, const CGovernanceVote& vote, CGovernanceException& exception, CConnman& connman)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
