@@ -1633,16 +1633,9 @@ void CSigSharesManager::BanNode(NodeId nodeId)
 
 void CSigSharesManager::HousekeepingThreadMain()
 {
-    int64_t lastSendTime = 0;
-
     while (!workInterrupt) {
         RemoveBannedNodeStates();
-
-        if (TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - lastSendTime > 100) {
-            SendMessages();
-            lastSendTime = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
-        }
-
+        SendMessages();
         Cleanup();
 
         workInterrupt.sleep_for(std::chrono::milliseconds(100));
@@ -1665,18 +1658,18 @@ void CSigSharesManager::WorkDispatcherThreadMain()
 
 void CSigSharesManager::DispatchPendingSigns()
 {
-    // Pop and dispatch ALL pending signs until queue is empty
-    while (!workInterrupt) {
-        std::optional<PendingSignatureData> work;
-        {
-            LOCK(cs_pendingSigns);
-            if (pendingSigns.empty()) break;
-            // Move the data out of the vector
-            work.emplace(std::move(pendingSigns.back()));
-            pendingSigns.pop_back();
-        }
+    // Swap out entire vector to avoid lock thrashing
+    std::vector<PendingSignatureData> signs;
+    {
+        LOCK(cs_pendingSigns);
+        signs.swap(pendingSigns);
+    }
 
-        workerPool.push([this, work = std::move(*work)](int) {
+    // Dispatch all signs to worker pool
+    for (auto& work : signs) {
+        if (workInterrupt) break;
+
+        workerPool.push([this, work = std::move(work)](int) {
             SignAndProcessSingleShare(std::move(work));
         });
     }
