@@ -27,6 +27,7 @@ add_executable(fuzz
   cluster_linearize.cpp
   coins_view.cpp
   coinscache_sim.cpp
+  coinsviewcacheasync.cpp
   connman.cpp
   crypto.cpp
   crypto_aes256.cpp
