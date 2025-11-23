@@ -32,6 +32,7 @@ add_executable(test_bitcoin
   cluster_linearize_tests.cpp
   coins_tests.cpp
   coinscachepair_tests.cpp
+  coinsviewcacheasync_tests.cpp
   coinstatsindex_tests.cpp
   common_url_tests.cpp
   compress_tests.cpp
