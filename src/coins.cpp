@@ -173,6 +173,12 @@ bool CCoinsViewCache::HaveCoinInCache(const COutPoint &outpoint) const {
     return (it != cacheCoins.end() && !it->second.coin.IsSpent());
 }
 
+std::optional<Coin> CCoinsViewCache::GetPossiblySpentCoinFromCache(const COutPoint& outpoint) const noexcept
+{
+    if (auto it{cacheCoins.find(outpoint)}; it != cacheCoins.end()) return it->second.coin;
+    return std::nullopt;
+}
+
 uint256 CCoinsViewCache::GetBestBlock() const {
     if (hashBlock.IsNull())
         hashBlock = base->GetBestBlock();
