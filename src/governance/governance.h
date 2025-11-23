@@ -311,9 +311,6 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     bool ProcessVoteAndRelay(const CGovernanceVote& vote, CGovernanceException& exception, CConnman& connman) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store, !cs_relay);
-    [[nodiscard]] MessageProcessingResult ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type,
-                                                         CDataStream& vRecv)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_store, !cs_relay);
     void RelayObject(const CGovernanceObject& obj)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_relay);
     void RelayVote(const CGovernanceVote& vote)
@@ -376,17 +373,24 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     void RequestGovernanceObject(CNode* pfrom, const uint256& nHash, CConnman& connman, bool fUseFilter = false) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+    [[nodiscard]] MessageProcessingResult SyncObjects(CNode& peer, CConnman& connman) const
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+    [[nodiscard]] MessageProcessingResult SyncSingleObjVotes(CNode& peer, const uint256& nProp, const CBloomFilter& filter,
+                                                             CConnman& connman)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+    /// Called to indicate a requested object or vote has been received
+    bool AcceptMessage(const uint256& nHash)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+    bool ProcessObject(const CNode& peer, const uint256& hash, CGovernanceObject& govobj)
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main, !cs_store, !cs_relay);
+
     CDeterministicMNManager& GetMNManager();
+    bool ProcessVote(CNode* pfrom, const CGovernanceVote& vote, CGovernanceException& exception, CConnman& connman)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+
 
 
 private:
-    // Branches of ProcessMessage
-    [[nodiscard]] MessageProcessingResult SyncObjects(CNode& peer, CConnman& connman) const
-        EXCLUSIVE_LOCKS_REQUIRED(cs_store);
-    [[nodiscard]] MessageProcessingResult SyncSingleObjVotes(CNode& peer, const uint256& nProp, const CBloomFilter& filter,
-                                                             CConnman& connman)
-        EXCLUSIVE_LOCKS_REQUIRED(cs_store);
-
     // Internal counterparts to "Thread-safe accessors"
     void AddPostponedObjectInternal(const CGovernanceObject& govobj)
         EXCLUSIVE_LOCKS_REQUIRED(cs_store);
@@ -430,13 +434,6 @@ private:
 
     void ExecuteBestSuperblock(const CDeterministicMNList& tip_mn_list, int nBlockHeight)
         EXCLUSIVE_LOCKS_REQUIRED(cs_store);
-
-    bool ProcessVote(CNode* pfrom, const CGovernanceVote& vote, CGovernanceException& exception, CConnman& connman)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
-
-    /// Called to indicate a requested object or vote has been received
-    bool AcceptMessage(const uint256& nHash)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
 
     void CheckOrphanVotes(CGovernanceObject& govobj)
         EXCLUSIVE_LOCKS_REQUIRED(cs_store, !cs_relay);

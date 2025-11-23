@@ -180,151 +180,50 @@ void CGovernanceManager::AddPostponedObjectInternal(const CGovernanceObject& gov
     mapPostponedObjects.emplace(govobj.GetHash(), std::make_shared<CGovernanceObject>(govobj));
 }
 
-MessageProcessingResult CGovernanceManager::ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type,
-                                                           CDataStream& vRecv)
+bool CGovernanceManager::ProcessObject(const CNode& peer, const uint256& nHash, CGovernanceObject& govobj)
 {
-    AssertLockNotHeld(cs_store);
-    AssertLockNotHeld(cs_relay);
-    if (!IsValid()) return {};
-    if (!m_mn_sync.IsBlockchainSynced()) return {};
+    std::string strHash = nHash.ToString();
 
-    const auto tip_mn_list = Assert(m_dmnman)->GetListAtChainTip();
-    // ANOTHER USER IS ASKING US TO HELP THEM SYNC GOVERNANCE OBJECT DATA
-    if (msg_type == NetMsgType::MNGOVERNANCESYNC) {
-        // Ignore such requests until we are fully synced.
-        // We could start processing this after masternode list is synced
-        // but this is a heavy one so it's better to finish sync first.
-        if (!m_mn_sync.IsSynced()) return {};
+    LOCK(cs_store);
 
-        uint256 nProp;
-        CBloomFilter filter;
-        vRecv >> nProp;
-        vRecv >> filter;
+    if (mapObjects.count(nHash) || mapPostponedObjects.count(nHash) || mapErasedGovernanceObjects.count(nHash)) {
+        // TODO - print error code? what if it's GOVOBJ_ERROR_IMMATURE?
+        LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Received already seen object: %s\n", strHash);
+        return true;
+    }
 
-        LogPrint(BCLog::GOBJECT, "MNGOVERNANCESYNC -- syncing governance objects to our peer %s\n", peer.GetLogString());
-        LOCK(cs_store);
-        if (nProp == uint256()) {
-            return SyncObjects(peer, connman);
+    bool fRateCheckBypassed = false;
+    if (!MasternodeRateCheck(govobj, true, false, fRateCheckBypassed)) {
+        LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- masternode rate check failed - %s - (current block height %d) \n", strHash, nCachedBlockHeight);
+        return true;
+    }
+
+    std::string strError;
+    // CHECK OBJECT AGAINST LOCAL BLOCKCHAIN
+
+    const auto tip_mn_list = GetMNManager().GetListAtChainTip();
+    bool fMissingConfirmations = false;
+    bool fIsValid = govobj.IsValidLocally(tip_mn_list, m_chainman, strError, fMissingConfirmations, true);
+
+    bool unused_rcb;
+    if (fRateCheckBypassed && fIsValid && !MasternodeRateCheck(govobj, true, true, unused_rcb)) {
+        LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- masternode rate check failed (after signature verification) - %s - (current block height %d)\n", strHash, nCachedBlockHeight);
+        return true;
+    }
+
+    if (!fIsValid) {
+        if (fMissingConfirmations) {
+            AddPostponedObjectInternal(govobj);
+            LogPrintf("MNGOVERNANCEOBJECT -- Not enough fee confirmations for: %s, strError = %s\n", strHash, strError);
+            return true;
         } else {
-            return SyncSingleObjVotes(peer, nProp, filter, connman);
+            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Governance object is invalid - %s\n", strError);
+            return false;
         }
-
-        return {};
     }
 
-    // A NEW GOVERNANCE OBJECT HAS ARRIVED
-    else if (msg_type == NetMsgType::MNGOVERNANCEOBJECT) {
-        // MAKE SURE WE HAVE A VALID REFERENCE TO THE TIP BEFORE CONTINUING
-
-        CGovernanceObject govobj;
-        vRecv >> govobj;
-
-        uint256 nHash = govobj.GetHash();
-
-        MessageProcessingResult ret{};
-        ret.m_to_erase = CInv{MSG_GOVERNANCE_OBJECT, nHash};
-
-        if (!m_mn_sync.IsBlockchainSynced()) {
-            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- masternode list not synced\n");
-            return ret;
-        }
-
-        std::string strHash = nHash.ToString();
-
-        LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Received object: %s\n", strHash);
-
-        if (!AcceptMessage(nHash)) {
-            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Received unrequested object: %s\n", strHash);
-            return ret;
-        }
-
-        LOCK2(::cs_main, cs_store);
-
-        if (mapObjects.count(nHash) || mapPostponedObjects.count(nHash) || mapErasedGovernanceObjects.count(nHash)) {
-            // TODO - print error code? what if it's GOVOBJ_ERROR_IMMATURE?
-            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Received already seen object: %s\n", strHash);
-            return ret;
-        }
-
-        bool fRateCheckBypassed = false;
-        if (!MasternodeRateCheck(govobj, true, false, fRateCheckBypassed)) {
-            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- masternode rate check failed - %s - (current block height %d) \n", strHash, nCachedBlockHeight);
-            return ret;
-        }
-
-        std::string strError;
-        // CHECK OBJECT AGAINST LOCAL BLOCKCHAIN
-
-        bool fMissingConfirmations = false;
-        bool fIsValid = govobj.IsValidLocally(tip_mn_list, m_chainman, strError, fMissingConfirmations, true);
-
-        bool unused_rcb;
-        if (fRateCheckBypassed && fIsValid && !MasternodeRateCheck(govobj, true, true, unused_rcb)) {
-            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- masternode rate check failed (after signature verification) - %s - (current block height %d)\n", strHash, nCachedBlockHeight);
-            return ret;
-        }
-
-        if (!fIsValid) {
-            if (fMissingConfirmations) {
-                AddPostponedObjectInternal(govobj);
-                LogPrintf("MNGOVERNANCEOBJECT -- Not enough fee confirmations for: %s, strError = %s\n", strHash, strError);
-            } else {
-                LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Governance object is invalid - %s\n", strError);
-                // apply node's ban score
-                ret.m_error = MisbehavingError{20};
-                return ret;
-            }
-
-            return ret;
-        }
-
-        AddGovernanceObjectInternal(govobj, &peer);
-        return ret;
-    }
-
-    // A NEW GOVERNANCE OBJECT VOTE HAS ARRIVED
-    else if (msg_type == NetMsgType::MNGOVERNANCEOBJECTVOTE) {
-        CGovernanceVote vote;
-        vRecv >> vote;
-
-        uint256 nHash = vote.GetHash();
-
-        MessageProcessingResult ret{};
-        ret.m_to_erase = CInv{MSG_GOVERNANCE_OBJECT_VOTE, nHash};
-
-        // Ignore such messages until masternode list is synced
-        if (!m_mn_sync.IsBlockchainSynced()) {
-            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- masternode list not synced\n");
-            return ret;
-        }
-
-        LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- Received vote: %s\n", vote.ToString(tip_mn_list));
-
-        std::string strHash = nHash.ToString();
-
-        if (!AcceptMessage(nHash)) {
-            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- Received unrequested vote object: %s, hash: %s, peer = %d\n",
-                vote.ToString(tip_mn_list), strHash, peer.GetId());
-            return ret;
-        }
-
-        CGovernanceException exception;
-        if (ProcessVote(&peer, vote, exception, connman)) {
-            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- %s new\n", strHash);
-            m_mn_sync.BumpAssetLastTime("MNGOVERNANCEOBJECTVOTE");
-            RelayVote(vote);
-        } else {
-            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- Rejected vote, error = %s\n", exception.what());
-            if ((exception.GetNodePenalty() != 0) && m_mn_sync.IsSynced()) {
-                ret.m_error = MisbehavingError{exception.GetNodePenalty()};
-                return ret;
-            }
-            return ret;
-        }
-        return ret;
-    }
-
-    return {};
+    AddGovernanceObjectInternal(govobj, &peer);
+    return true;
 }
 
 void CGovernanceManager::CheckOrphanVotes(CGovernanceObject& govobj)
@@ -693,7 +592,7 @@ bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
 
 MessageProcessingResult CGovernanceManager::SyncSingleObjVotes(CNode& peer, const uint256& nProp, const CBloomFilter& filter, CConnman& connman)
 {
-    AssertLockHeld(cs_store);
+    LOCK(cs_store);
     // do not provide any data until our node is synced
     if (!m_mn_sync.IsSynced()) return {};
 
@@ -746,7 +645,7 @@ MessageProcessingResult CGovernanceManager::SyncSingleObjVotes(CNode& peer, cons
 
 MessageProcessingResult CGovernanceManager::SyncObjects(CNode& peer, CConnman& connman) const
 {
-    AssertLockHeld(cs_store);
+    LOCK(cs_store);
     assert(m_netfulfilledman.IsValid());
 
     // do not provide any data until our node is synced

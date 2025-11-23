@@ -341,3 +341,108 @@ void NetGovernance::ProcessTick(CConnman& connman)
         }
     }
 }
+
+void NetGovernance::ProcessMessage(CNode& peer, CConnman& connman, const std::string& msg_type, CDataStream& vRecv)
+{
+    if (!m_gov_manager.IsValid()) return;
+    if (!m_node_sync.IsBlockchainSynced()) return;
+
+    // ANOTHER USER IS ASKING US TO HELP THEM SYNC GOVERNANCE OBJECT DATA
+    if (msg_type == NetMsgType::MNGOVERNANCESYNC) {
+        // Ignore such requests until we are fully synced.
+        // We could start processing this after masternode list is synced
+        // but this is a heavy one so it's better to finish sync first.
+        if (!m_node_sync.IsSynced()) return;
+
+        uint256 nProp;
+        CBloomFilter filter;
+        vRecv >> nProp;
+        vRecv >> filter;
+
+        LogPrint(BCLog::GOBJECT, "MNGOVERNANCESYNC -- syncing governance objects to our peer %s\n", peer.GetLogString());
+        if (nProp == uint256()) {
+            m_peer_manager->PeerPostProcessMessage(m_gov_manager.SyncObjects(peer, connman));
+        } else {
+            m_peer_manager->PeerPostProcessMessage(m_gov_manager.SyncSingleObjVotes(peer, nProp, filter, connman));
+        }
+    }
+    // A NEW GOVERNANCE OBJECT HAS ARRIVED
+    else if (msg_type == NetMsgType::MNGOVERNANCEOBJECT) {
+        // MAKE SURE WE HAVE A VALID REFERENCE TO THE TIP BEFORE CONTINUING
+        CGovernanceObject govobj;
+        vRecv >> govobj;
+
+        uint256 nHash = govobj.GetHash();
+
+        WITH_LOCK(::cs_main, m_peer_manager->PeerEraseObjectRequest(peer.GetId(), CInv{MSG_GOVERNANCE_OBJECT, nHash}));
+
+        if (!m_node_sync.IsBlockchainSynced()) {
+            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- masternode list not synced\n");
+            return;
+        }
+
+        std::string strHash = nHash.ToString();
+
+        LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Received object: %s\n", strHash);
+
+        if (!m_gov_manager.AcceptMessage(nHash)) {
+            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Received unrequested object: %s\n", strHash);
+            return;
+        }
+
+        if (!WITH_LOCK(::cs_main, return m_gov_manager.ProcessObject(peer, nHash, govobj))) {
+            // apply node's ban score
+            m_peer_manager->PeerMisbehaving(peer.GetId(), 20);
+        }
+    }
+
+    // A NEW GOVERNANCE OBJECT VOTE HAS ARRIVED
+    else if (msg_type == NetMsgType::MNGOVERNANCEOBJECTVOTE) {
+        CGovernanceVote vote;
+        vRecv >> vote;
+
+        uint256 nHash = vote.GetHash();
+
+        WITH_LOCK(::cs_main, m_peer_manager->PeerEraseObjectRequest(peer.GetId(), CInv{MSG_GOVERNANCE_OBJECT_VOTE, nHash}));
+
+        // Ignore such messages until masternode list is synced
+        if (!m_node_sync.IsBlockchainSynced()) {
+            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- masternode list not synced\n");
+            return;
+        }
+
+        const auto tip_mn_list = m_gov_manager.GetMNManager().GetListAtChainTip();
+        LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- Received vote: %s\n", vote.ToString(tip_mn_list));
+
+        std::string strHash = nHash.ToString();
+
+        if (!m_gov_manager.AcceptMessage(nHash)) {
+            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- Received unrequested vote object: %s, hash: %s, peer = %d\n",
+                vote.ToString(tip_mn_list), strHash, peer.GetId());
+            return;
+        }
+
+        CGovernanceException exception;
+        if (m_gov_manager.ProcessVote(&peer, vote, exception, connman)) {
+            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- %s new\n", strHash);
+            m_node_sync.BumpAssetLastTime("MNGOVERNANCEOBJECTVOTE");
+
+            if (!m_node_sync.IsSynced()) {
+                LogPrint(BCLog::GOBJECT, "%s -- won't relay until fully synced\n", __func__);
+                return;
+            }
+            auto dmn = tip_mn_list.GetMNByCollateral(vote.GetMasternodeOutpoint());
+            if (!dmn) {
+                return;
+            }
+            m_gov_manager.RelayVote(vote);
+            // TODO: figure out why immediate sending of inventory doesn't work here!
+            // m_peer_manager->PeerRelayInv(CInv{MSG_GOVERNANCE_OBJECT_VOTE, nHash});
+        } else {
+            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- Rejected vote, error = %s\n", exception.what());
+            if ((exception.GetNodePenalty() != 0) && m_node_sync.IsSynced()) {
+                m_peer_manager->PeerMisbehaving(peer.GetId(), exception.GetNodePenalty());
+            }
+        }
+    }
+}
