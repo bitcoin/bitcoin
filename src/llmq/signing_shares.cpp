@@ -1684,7 +1684,6 @@ std::optional<CSigShare> CSigSharesManager::CreateSigShareForSingleMember(const 
 
 std::optional<CSigShare> CSigSharesManager::CreateSigShare(const CQuorum& quorum, const uint256& id, const uint256& msgHash) const
 {
-    cxxtimer::Timer t(true);
     auto activeMasterNodeProTxHash = m_mn_activeman.GetProTxHash();
 
     if (!quorum.IsValidMember(activeMasterNodeProTxHash)) {
@@ -1694,6 +1693,7 @@ std::optional<CSigShare> CSigSharesManager::CreateSigShare(const CQuorum& quorum
     if (quorum.params.is_single_member()) {
         return CreateSigShareForSingleMember(quorum, id, msgHash);
     }
+    cxxtimer::Timer t(true);
     const CBLSSecretKey& skShare = quorum.GetSkShare();
     if (!skShare.IsValid()) {
         LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- we don't have our skShare for quorum %s\n", __func__, quorum.qc->quorumHash.ToString());
