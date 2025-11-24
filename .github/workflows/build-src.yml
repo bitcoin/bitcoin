@@ -40,7 +40,7 @@ jobs:
         id: setup
         run: |
           git config --global --add safe.directory "$PWD"
-          git fetch -fu origin develop:develop
+          git fetch --no-tags -fu origin develop:develop
           BUILD_TARGET="${{ inputs.build-target }}"
           source ./ci/dash/matrix.sh
           echo "HOST=${HOST}" >> $GITHUB_OUTPUT

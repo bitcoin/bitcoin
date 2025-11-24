@@ -25,7 +25,7 @@ jobs:
       - name: Initial setup
         run: |
           git config --global --add safe.directory "$PWD"
-          git fetch -fu origin develop:develop
+          git fetch --no-tags -fu origin develop:develop
         shell: bash
 
       - name: Run linters
