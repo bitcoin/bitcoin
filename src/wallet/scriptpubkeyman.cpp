@@ -345,7 +345,7 @@ void LegacyScriptPubKeyMan::UpgradeKeyMetadata()
     if (!GetHDChain(hdChainCurrent))
         throw std::runtime_error(std::string(__func__) + ": GetHDChain failed");
 
-    if (!hdChainCurrent.IsNull() && hdChainCurrent.IsCrypted()) {
+    if (hdChainCurrent.IsCrypted()) {
         if (!m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
                 return DecryptHDChain(encryption_key, hdChainCurrent);
             })) {
@@ -482,7 +482,7 @@ bool LegacyScriptPubKeyMan::GetDecryptedHDChain(CHDChain& hdChainRet) const
         return false;
     }
 
-    if (!hdChainTmp.IsNull() && hdChainTmp.IsCrypted()) {
+    if (hdChainTmp.IsCrypted()) {
         if (!m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
                 return DecryptHDChain(encryption_key, hdChainTmp);
             })) {
@@ -1192,7 +1192,7 @@ bool LegacyScriptPubKeyMan::GetKey(const CKeyID &address, CKey& keyOut) const
         CHDChain hdChainCurrent;
         if (!GetHDChain(hdChainCurrent))
             throw std::runtime_error(std::string(__func__) + ": GetHDChain failed");
-        if (!hdChainCurrent.IsNull() && hdChainCurrent.IsCrypted()) {
+        if (hdChainCurrent.IsCrypted()) {
             if (!m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
                     return DecryptHDChain(encryption_key, hdChainCurrent);
                 })) {
@@ -1309,7 +1309,7 @@ void LegacyScriptPubKeyMan::DeriveNewChildKey(WalletBatch &batch, CKeyMetadata& 
         throw std::runtime_error(std::string(__func__) + ": GetHDChain failed");
     }
 
-    if (!hdChainTmp.IsNull() && hdChainTmp.IsCrypted()) {
+    if (hdChainTmp.IsCrypted()) {
         if (!m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
                 return DecryptHDChain(encryption_key, hdChainTmp);
             })) {
