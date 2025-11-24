@@ -296,7 +296,7 @@ bool CZMQPublishHashInstantSendDoubleSpendNotifier::NotifyInstantSendDoubleSpend
         && SendZmqMessage(MSG_HASHISCON, dataPreviousHash, 32);
 }
 
-bool CZMQPublishHashRecoveredSigNotifier::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig> &sig, bool proactive_relay)
+bool CZMQPublishHashRecoveredSigNotifier::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig> &sig)
 {
     LogPrint(BCLog::ZMQ, "Publish hashrecoveredsig %s to %s\n", sig->getMsgHash().ToString(), this->address);
     char data[32];
@@ -462,7 +462,7 @@ bool CZMQPublishRawInstantSendDoubleSpendNotifier::NotifyInstantSendDoubleSpendA
         && SendZmqMessage(MSG_RAWISCON, &(*ssPrevious.begin()), ssPrevious.size());
 }
 
-bool CZMQPublishRawRecoveredSigNotifier::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig, bool proactive_relay)
+bool CZMQPublishRawRecoveredSigNotifier::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig)
 {
     LogPrint(BCLog::ZMQ, "Publish rawrecoveredsig %s to %s\n", sig->getMsgHash().ToString(), this->address);
 
