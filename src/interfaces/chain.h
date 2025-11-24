@@ -326,6 +326,11 @@ public:
         bool disconnect_undo_data = false;
     };
 
+    //! Register handler for notifications. This is similar to
+    //! handleNotifications method below, but it accepts more options and delays
+    //! sending notifications until connect() is called on the returned handler.
+    virtual std::unique_ptr<Handler> attachChain(std::shared_ptr<Notifications> notifications, const NotifyOptions& options) = 0;
+
     //! Register handler for notifications.
     //! Some notifications are asynchronous and may still execute after the handler is disconnected.
     //! Use waitForNotifications() after the handler is disconnected to ensure all pending notifications
