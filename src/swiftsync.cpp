@@ -7,10 +7,12 @@
 #include <streams.h>
 #include <swiftsync.h>
 #include <uint256.h>
+#include <util/fs.h>
 #include <array>
 #include <cstdint>
 #include <cstdio>
 #include <ios>
+#include <utility>
 #include <vector>
 
 using namespace swiftsync;
@@ -104,4 +106,14 @@ BlockHints HintsfileReader::ReadBlock(uint32_t height)
         block_hints.push_back((curr_byte >> leftover) & 0x01);
     }
     return block_hints;
+}
+
+void Context::ApplyHints(HintsfileReader reader)
+{
+    m_hint_reader.emplace(std::move(reader));
+}
+
+BlockHints Context::ReadBlockHints(int nHeight)
+{
+    return m_hint_reader->ReadBlock(nHeight);
 }

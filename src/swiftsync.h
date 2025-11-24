@@ -11,6 +11,7 @@
 #include <array>
 #include <cstdint>
 #include <unordered_map>
+#include <util/fs.h>
 #include <vector>
 
 namespace swiftsync {
@@ -113,6 +114,44 @@ public:
     BlockHints ReadBlock(uint32_t height);
     /** The height this file encodes up to. */
     uint32_t StopHeight() const noexcept { return m_stop_height; };
+};
+
+/**
+ * Global context for the SwiftSync protocol.
+ */
+class Context
+{
+private:
+    std::optional<HintsfileReader> m_hint_reader{};
+    bool m_is_starting_from_genesis{};
+    bool m_is_complete{};
+
+public:
+    /** Aggregate of block inputs and outputs. */
+    Aggregate m_aggregate{};
+    Context() = default;
+    /** Apply the hints from reader to this context. */
+    void ApplyHints(HintsfileReader reader);
+    /** The entire block history must be aggregated for accelerated IBD. */
+    void StartFromGenesis() {
+        assert(!m_is_starting_from_genesis);
+        m_is_starting_from_genesis = true;
+    };
+    /** Accelerated IBD has completed. */
+    void Complete() {
+        assert(!m_is_complete);
+        m_is_complete = true;
+    };
+    /** Accelerated sync is possible when:
+     *  1. Blocks are being processed from genesis.
+     *  2. A hintfile is present.
+     *  3. It has not already been completed.
+     */
+    bool IsPossible() { return m_is_starting_from_genesis && m_hint_reader.has_value() && !m_is_complete; };
+    /** Read the output spent-ness hints from the file. */
+    BlockHints ReadBlockHints(int nHeight);
+    /** The height to check the aggregate for emptiness. */
+    uint32_t StopHeight() { return m_hint_reader->StopHeight(); };
 };
 } // namespace swiftsync
 #endif // BITCOIN_SWIFTSYNC_H
