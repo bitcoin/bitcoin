@@ -452,6 +452,8 @@ public:
     void NotifyRecoveredSig(const std::shared_ptr<const CRecoveredSig>& sig) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
 private:
+    std::optional<CSigShare> CreateSigShareForSingleMember(const CQuorum& quorum, const uint256& id, const uint256& msgHash) const;
+
     // all of these return false when the currently processed message should be aborted (as each message actually contains multiple messages)
     bool ProcessMessageSigSesAnn(const CNode& pfrom, const CSigSesAnn& ann) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool ProcessMessageSigSharesInv(const CNode& pfrom, const CSigSharesInv& inv) EXCLUSIVE_LOCKS_REQUIRED(!cs);
