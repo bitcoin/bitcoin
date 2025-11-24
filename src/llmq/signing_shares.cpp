@@ -503,14 +503,23 @@ void CSigSharesManager::ProcessMessageSigShare(NodeId fromId, const CSigShare& s
         return;
     }
 
+    const auto signHash = sigShare.GetSignHash();
+    const bool alreadyRecovered = sigman.HasRecoveredSigForId(sigShare.getLlmqType(), sigShare.getId()) ||
+                                  sigman.HasRecoveredSigForSession(signHash);
+
     {
         LOCK(cs);
 
-        if (sigShares.Has(sigShare.GetKey())) {
+        if (alreadyRecovered) {
+            LogPrint(BCLog::LLMQ_SIGS, /* Continued */
+                     "CSigSharesManager::%s -- dropping sigShare for recovered session. signHash=%s, id=%s, "
+                     "msgHash=%s, member=%d, node=%d\n",
+                     __func__, signHash.ToString(), sigShare.getId().ToString(), sigShare.getMsgHash().ToString(),
+                     sigShare.getQuorumMember(), fromId);
             return;
         }
 
-        if (sigman.HasRecoveredSigForId(sigShare.getLlmqType(), sigShare.getId())) {
+        if (sigShares.Has(sigShare.GetKey())) {
             return;
         }
 
@@ -519,7 +528,7 @@ void CSigSharesManager::ProcessMessageSigShare(NodeId fromId, const CSigShare& s
     }
 
     LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- signHash=%s, id=%s, msgHash=%s, member=%d, node=%d\n", __func__,
-             sigShare.GetSignHash().ToString(), sigShare.getId().ToString(), sigShare.getMsgHash().ToString(), sigShare.getQuorumMember(), fromId);
+             signHash.ToString(), sigShare.getId().ToString(), sigShare.getMsgHash().ToString(), sigShare.getQuorumMember(), fromId);
 }
 
 bool CSigSharesManager::PreVerifyBatchedSigShares(const CActiveMasternodeManager& mn_activeman, const CQuorumManager& quorum_manager,

@@ -183,8 +183,8 @@ void CRecoveredSigsDb::RemoveRecoveredSig(CDBBatch& batch, Consensus::LLMQType l
     batch.Erase(k2);
     if (deleteHashKey) {
         batch.Erase(k3);
+        batch.Erase(k4);
     }
-    batch.Erase(k4);
 
     if (deleteTimeKey) {
         CDataStream writeTimeDs(SER_DISK, CLIENT_VERSION);
@@ -199,14 +199,15 @@ void CRecoveredSigsDb::RemoveRecoveredSig(CDBBatch& batch, Consensus::LLMQType l
 
     LOCK(cs_cache);
     hasSigForIdCache.erase(std::make_pair(recSig.getLlmqType(), recSig.getId()));
-    hasSigForSessionCache.erase(signHash.Get());
     if (deleteHashKey) {
+        hasSigForSessionCache.erase(signHash.Get());
         hasSigForHashCache.erase(recSig.GetHash());
     }
 }
 
 // Remove the recovered sig itself and all keys required to get from id -> recSig
-// This will leave the byHash key in-place so that HasRecoveredSigForHash still returns true
+// This will leave the byHash and signHash key in-place so that HasRecoveredSigForHash /
+// late-share filtering still returns true
 void CRecoveredSigsDb::TruncateRecoveredSig(Consensus::LLMQType llmqType, const uint256& id)
 {
     CDBBatch batch(*db);
