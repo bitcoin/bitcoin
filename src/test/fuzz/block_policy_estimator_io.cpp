@@ -16,13 +16,13 @@ namespace {
 const BasicTestingSetup* g_setup;
 } // namespace
 
-void initialize_policy_estimator_io()
+void initialize_block_policy_estimator_io()
 {
     static const auto testing_setup = MakeNoLogFileContext<>();
     g_setup = testing_setup.get();
 }
 
-FUZZ_TARGET(policy_estimator_io, .init = initialize_policy_estimator_io)
+FUZZ_TARGET(block_policy_estimator_io, .init = initialize_block_policy_estimator_io)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     FuzzedFileProvider fuzzed_file_provider{fuzzed_data_provider};
