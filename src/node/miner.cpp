@@ -15,19 +15,24 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
+#include <kernel/chain.h>
 #include <logging.h>
-#include <node/context.h>
 #include <node/kernel_notifications.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
 #include <primitives/transaction.h>
+#include <primitives/block.h>
 #include <util/moneystr.h>
 #include <util/signalinterrupt.h>
 #include <util/time.h>
 #include <validation.h>
+#include <sync.h>
 
 #include <algorithm>
+#include <chrono>
+#include <deque>
+#include <memory>
 #include <utility>
 #include <numeric>
 
@@ -184,6 +189,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
             throw std::runtime_error(strprintf("TestBlockValidity failed: %s", state.ToString()));
         }
     }
+    pblocktemplate->m_creation_time = NodeClock::now();
     const auto time_2{SteadyClock::now()};
 
     LogDebug(BCLog::BENCH, "CreateNewBlock() packages: %.2fms (%d packages, %d updated descendants), validity: %.2fms (total %.2fms)\n",
@@ -441,6 +447,74 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
     }
 }
 
+BlockTemplateCache::BlockTemplateCache(CTxMemPool& mempool, Chainstate& chainstate, size_t block_template_cache_size)
+    : m_mempool(mempool), m_chainstate(chainstate), m_block_template_cache_size(block_template_cache_size)
+{}
+
+void BlockTemplateCache::BlockConnected(
+    ChainstateRole role,
+    const std::shared_ptr<const CBlock>& /*unused*/,
+    const CBlockIndex* /*unused*/)
+{
+    LOCK(m_mutex);
+    if (role == ChainstateRole::BACKGROUND) return;
+    m_block_templates.clear();
+}
+
+void BlockTemplateCache::BlockDisconnected(
+   const std::shared_ptr<const CBlock> &/*unused*/,
+   const CBlockIndex* /*unused*/)
+{
+    LOCK(m_mutex);
+    m_block_templates.clear();
+}
+
+BlockTemplateRef BlockTemplateCache::CreateBlockTemplateInternal(const BlockAssembler::Options& options)
+{
+    BlockAssembler assembler{m_chainstate, &m_mempool, options};
+    auto block_template = std::make_shared<const CBlockTemplate>(*assembler.CreateNewBlock());
+    Assume(m_block_templates.size() <= m_block_template_cache_size);
+    m_block_templates.emplace_back(options, block_template);
+    if (m_block_templates.size() > m_block_template_cache_size) m_block_templates.pop_front();
+    return block_template;
+}
+
+bool SimilarOptions(const BlockAssembler::Options& a, const BlockAssembler::Options& b)
+{
+    // We intentionally do not compare the coinbase output script.
+    // It’s acceptable for them to differ because, as long as the reserved
+    // weight and additional sigops for the coinbase match, we can assume
+    // that the cumulative weight and sigops (even if the coinbase output script differs)
+    // remain within acceptable limits.
+    //
+    // We also don’t compare whether block validity has been checked,
+    // since validity can always be tested again.
+    // Note: we should update this helper when the constraint changes.
+    return a.use_mempool == b.use_mempool &&
+            a.block_reserved_weight == b.block_reserved_weight &&
+            a.blockMinFeeRate == b.blockMinFeeRate &&
+            a.coinbase_output_max_additional_sigops == b.coinbase_output_max_additional_sigops &&
+            a.nBlockMaxWeight == b.nBlockMaxWeight;
+}
+
+BlockTemplateRef BlockTemplateCache::GetBlockTemplate(const BlockAssembler::Options& options)
+{
+    LOCK2(cs_main, m_mutex);
+    for (auto it = m_block_templates.rbegin(); it != m_block_templates.rend(); it++){
+        if (SimilarOptions(it->first, options) && !TimeIntervalElapsed(it->second->m_creation_time, options.max_template_age)) {
+            if (options.test_block_validity && !it->first.test_block_validity) {
+                if (BlockValidationState state{TestBlockValidity(m_chainstate, it->second->block,
+                                    /*check_pow=*/false, /*check_merkle_root=*/false)}; !state.IsValid()) {
+                    throw std::runtime_error(strprintf("TestBlockValidity failed: %s", state.ToString()));
+                }
+                it->first.test_block_validity = true;
+            }
+            return it->second;
+        }
+    }
+    return CreateBlockTemplateInternal(options);
+}
+
 void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t version, uint32_t timestamp, uint32_t nonce)
 {
     if (block.vtx.size() == 0) {
@@ -466,10 +540,10 @@ void InterruptWait(KernelNotifications& kernel_notifications, bool& interrupt_wa
     kernel_notifications.m_tip_block_cv.notify_all();
 }
 
-std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainman,
+BlockTemplateRef WaitAndCreateNewBlock(BlockTemplateCache* block_template_cache,
+                                                      ChainstateManager& chainman,
                                                       KernelNotifications& kernel_notifications,
-                                                      CTxMemPool* mempool,
-                                                      const std::unique_ptr<CBlockTemplate>& block_template,
+                                                      BlockTemplateRef block_template,
                                                       const BlockWaitOptions& options,
                                                       const BlockAssembler::Options& assemble_options,
                                                       bool& interrupt_wait)
@@ -529,11 +603,7 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
          * We'll also create a new template if the tip changed during this iteration.
          */
         if (options.fee_threshold < MAX_MONEY || tip_changed) {
-            auto new_tmpl{BlockAssembler{
-                chainman.ActiveChainstate(),
-                mempool,
-                assemble_options}
-                              .CreateNewBlock()};
+            auto new_tmpl{block_template_cache->GetBlockTemplate(assemble_options)};;
 
             // If the tip changed, return the new template regardless of its fees.
             if (tip_changed) return new_tmpl;
