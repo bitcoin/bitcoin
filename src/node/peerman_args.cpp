@@ -16,6 +16,14 @@ void ApplyArgsManOptions(const ArgsManager& argsman, PeerManager::Options& optio
 {
     if (auto value{argsman.GetBoolArg("-txreconciliation")}) options.reconcile_txs = *value;
 
+    if (auto value{argsman.GetIntArg("-infanout")}) {
+        options.inbound_fanout_destinations_fraction = double((std::clamp<double>(static_cast<double>(*value) / 100.0, 0, std::numeric_limits<double>::max())));
+    }
+
+    if (auto value{argsman.GetIntArg("-outfanout")}) {
+        options.outbound_fanout_threshold = uint32_t((std::clamp<int64_t>(*value, 0, std::numeric_limits<uint32_t>::max())));
+    }
+
     if (auto value{argsman.GetIntArg("-blockreconstructionextratxn")}) {
         options.max_extra_txs = uint32_t((std::clamp<int64_t>(*value, 0, std::numeric_limits<uint32_t>::max())));
     }

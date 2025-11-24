@@ -37,6 +37,7 @@
 #include <node/txdownloadman.h>
 #include <node/txorphanage.h>
 #include <node/txreconciliation.h>
+#include <node/txreconciliation_impl.h>
 #include <node/warnings.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
@@ -536,6 +537,7 @@ public:
     std::vector<node::TxOrphanage::OrphanInfo> GetOrphanTransactions() override EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
     PeerManagerInfo GetInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    std::pair<size_t, size_t> GetFanoutPeersCount() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayTransaction(const Txid& txid, const Wtxid& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SetBestBlock(int height, std::chrono::seconds time) override
     {
@@ -620,7 +622,7 @@ private:
     /**
      * Reconsider orphan transactions after a parent has been accepted to the mempool.
      *
-     * @peer[in]  peer     The peer whose orphan transactions we will reconsider. Generally only
+     * @param[in]  peer    The peer whose orphan transactions we will reconsider. Generally only
      *                     one orphan will be reconsidered on each call of this function. If an
      *                     accepted orphan has orphaned children, those will need to be
      *                     reconsidered, creating more work, possibly for other peers.
@@ -630,6 +632,15 @@ private:
      */
     bool ProcessOrphanTx(Peer& peer)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, !m_tx_download_mutex);
+
+    /** Checks if we should fanout to a given peer or not. Always returns true for non-Erlay peers and for Erlay
+     * outbound peers (further filtering will be performed for the latter before sending out the next INV message to each peer).
+     * For inbound Erlay-peers, returns true as long as the peer has been selected for fanout.
+     * Returns false otherwise.
+     *
+     * @param[in]   peer    The peer we are making the decision on
+    */
+   bool ShouldFanoutTo(const PeerRef peer) EXCLUSIVE_LOCKS_REQUIRED(m_peer_mutex);
 
     /** Process a single headers message from a peer.
      *
@@ -714,6 +725,12 @@ private:
     {
         m_connman.PushMessage(&node, NetMsg::Make(std::move(msg_type), std::forward<Args>(args)...));
     }
+    /** Immediately announce transactions to a given peer via INV message(s). */
+    bool AnnounceTxs(std::vector<Wtxid> remote_missing_wtxids, CNode& pto)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    /** Check whether a transaction should be sent to a given peer over several filters */
+    bool ShouldSendTransaction(PeerRef peer, const TxMempoolInfo& txinfo, Peer::TxRelay* tx_relay, const CFeeRate filterrate)
+        EXCLUSIVE_LOCKS_REQUIRED(tx_relay->m_tx_inventory_mutex, tx_relay->m_bloom_filter_mutex);
 
     /** Send a version message to a peer */
     void PushNodeVersion(CNode& pnode, const Peer& peer);
@@ -765,7 +782,7 @@ private:
     Mutex m_tx_download_mutex ACQUIRED_BEFORE(m_mempool.cs);
     node::TxDownloadManager m_txdownloadman GUARDED_BY(m_tx_download_mutex);
 
-    std::unique_ptr<TxReconciliationTracker> m_txreconciliation;
+    std::unique_ptr<node::TxReconciliationTracker> m_txreconciliation;
 
     /** The height of the best chain */
     std::atomic<int> m_best_height{-1};
@@ -1905,7 +1922,10 @@ PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
     // While Erlay support is incomplete, it must be enabled explicitly via -txreconciliation.
     // This argument can go away after Erlay support is complete.
     if (opts.reconcile_txs) {
-        m_txreconciliation = std::make_unique<TxReconciliationTracker>(TXRECONCILIATION_VERSION);
+        LogDebug(BCLog::NET, "Initializing TxReconciliationTracker with params: inbound_fanout_destinations_fraction(%f), outbound_fanout_threshold(%d)",
+            opts.inbound_fanout_destinations_fraction, opts.outbound_fanout_threshold);
+        m_txreconciliation = std::make_unique<node::TxReconciliationTracker>(node::TXRECONCILIATION_VERSION, opts.inbound_fanout_destinations_fraction, opts.outbound_fanout_threshold);
+        m_txreconciliation->SetNextInboundPeerRotationTime(GetTime<std::chrono::microseconds>() + m_rng.rand_exp_duration(node::INBOUND_FANOUT_ROTATION_INTERVAL));
     }
 }
 
@@ -2123,12 +2143,43 @@ void PeerManagerImpl::SendPings()
     for(auto& it : m_peer_map) it.second->m_ping_queued = true;
 }
 
+std::pair<size_t, size_t> PeerManagerImpl::GetFanoutPeersCount()
+{
+
+    size_t inbounds_fanout_tx_relay = 0, outbounds_fanout_tx_relay = 0;
+
+    if (m_txreconciliation) {
+        LOCK(m_peer_mutex);
+        for(const auto& [peer_id, peer] : m_peer_map) {
+            if (const auto tx_relay = peer->GetTxRelay()) {
+                const bool peer_relays_txs = WITH_LOCK(tx_relay->m_bloom_filter_mutex, return tx_relay->m_relay_txs);
+                if (peer_relays_txs && !m_txreconciliation->IsPeerRegistered(peer_id)) {
+                    peer->m_is_inbound ? ++inbounds_fanout_tx_relay : ++outbounds_fanout_tx_relay;
+                }
+            }
+        }
+    }
+
+    return std::pair(inbounds_fanout_tx_relay, outbounds_fanout_tx_relay);
+}
+
+bool PeerManagerImpl::ShouldFanoutTo(const PeerRef peer)
+{
+    // We consider Erlay peers for fanout if they are within our inbound fanout targets, or if they are outbounds
+    // For the latter group, further filtering will be applied at relay time.
+    // For non-Erlay peers we always fanout (same applies if we do not support Erlay)
+    if (peer->m_is_inbound && m_txreconciliation && m_txreconciliation->IsPeerRegistered(peer->m_id)) {
+        return m_txreconciliation->IsInboundFanoutTarget(peer->m_id);
+    } else {
+        return true;
+    }
+}
+
 void PeerManagerImpl::RelayTransaction(const Txid& txid, const Wtxid& wtxid)
 {
     LOCK(m_peer_mutex);
-    for(auto& it : m_peer_map) {
-        Peer& peer = *it.second;
-        auto tx_relay = peer.GetTxRelay();
+    for(auto& [peer_id, peer] : m_peer_map) {
+        auto tx_relay = peer->GetTxRelay();
         if (!tx_relay) continue;
 
         LOCK(tx_relay->m_tx_inventory_mutex);
@@ -2139,8 +2190,24 @@ void PeerManagerImpl::RelayTransaction(const Txid& txid, const Wtxid& wtxid)
         // in the announcement.
         if (tx_relay->m_next_inv_send_time == 0s) continue;
 
-        const uint256& hash{peer.m_wtxid_relay ? wtxid.ToUint256() : txid.ToUint256()};
-        if (!tx_relay->m_tx_inventory_known_filter.contains(hash)) {
+        const uint256& hash{peer->m_wtxid_relay ? wtxid.ToUint256() : txid.ToUint256()};
+        if (tx_relay->m_tx_inventory_known_filter.contains(hash)) continue;
+        // FIXME: This bit here and the corresponding one in SendMessage are basically identical.
+        //        Check if there is a way to make them into a private function We would have to pass a
+        //        lambda that does the "insert into a collection part", which is what's different from both
+        bool fanout = ShouldFanoutTo(peer);
+        if (!fanout) {
+            Assume(m_txreconciliation);
+            const auto error = m_txreconciliation->AddToSet(peer_id, wtxid);
+            if  (error.has_value()) {
+                fanout = true;
+                if (error.value().m_error == node::ReconciliationError::SHORTID_COLLISION) {
+                    Assume(m_txreconciliation->TryRemovingFromSet(peer_id, error.value().GetCollision()));
+                    tx_relay->m_tx_inventory_to_send.insert(error.value().GetCollision());
+                }
+            }
+        }
+        if (fanout) {
             tx_relay->m_tx_inventory_to_send.insert(wtxid);
         }
     }
@@ -3417,6 +3484,84 @@ void PeerManagerImpl::LogBlockHeader(const CBlockIndex& index, const CNode& peer
     }
 }
 
+namespace {
+class CompareInvMempoolOrder
+{
+    const CTxMemPool* m_mempool;
+public:
+    explicit CompareInvMempoolOrder(CTxMemPool* mempool) : m_mempool{mempool} {}
+
+    bool operator()(const Wtxid& a, const Wtxid& b)
+    {
+        /* As std::make_heap produces a max-heap, we want the entries with the
+         * fewest ancestors/highest fee to sort later. */
+        return m_mempool->CompareDepthAndScore(b, a);
+    }
+};
+} // namespace
+
+bool PeerManagerImpl::AnnounceTxs(std::vector<Wtxid> remote_missing_wtxids, CNode& pto)
+{
+    if (remote_missing_wtxids.size() == 0) return false;
+    PeerRef peer = GetPeerRef(pto.GetId());
+    if (!peer) return false;
+    auto tx_relay = peer->GetTxRelay();
+    if (!tx_relay) return false;
+    LOCK2(tx_relay->m_tx_inventory_mutex, tx_relay->m_bloom_filter_mutex);
+
+    const CFeeRate filterrate{tx_relay->m_fee_filter_received.load()};
+    // Topologically and fee-rate sort the inventory we send for privacy and priority reasons.
+    // A heap is used so that not all items need sorting if only a few are being sent.
+    CompareInvMempoolOrder compareInvMempoolOrder(&m_mempool);
+    std::make_heap(remote_missing_wtxids.begin(), remote_missing_wtxids.end(), compareInvMempoolOrder);
+
+    std::vector<CInv> remote_missing_invs;
+    remote_missing_invs.reserve(std::min<size_t>(remote_missing_wtxids.size(), MAX_INV_SZ));
+    unsigned int nRelayedTransactions = 0;
+    while (!remote_missing_wtxids.empty()) {
+        std::pop_heap(remote_missing_wtxids.begin(), remote_missing_wtxids.end(), compareInvMempoolOrder);
+        auto wtxid = remote_missing_wtxids.back();
+        remote_missing_wtxids.pop_back();
+        auto txinfo = m_mempool.info(wtxid);
+        if (!ShouldSendTransaction(peer, txinfo, tx_relay, filterrate)) {
+            continue;
+        }
+
+        tx_relay->m_tx_inventory_known_filter.insert(wtxid.ToUint256());
+        remote_missing_invs.emplace_back(MSG_WTX, wtxid.ToUint256());
+        nRelayedTransactions++;
+
+        if (remote_missing_invs.size() == MAX_INV_SZ) {
+            MakeAndPushMessage(pto, NetMsgType::INV, remote_missing_invs);
+            remote_missing_invs.clear();
+        }
+    }
+
+    // Send any remaining (due to potential filtering from ShouldSendTransaction)
+    if (!remote_missing_invs.empty()) MakeAndPushMessage(pto, NetMsgType::INV, remote_missing_invs);
+
+    return nRelayedTransactions > 0;
+}
+
+bool PeerManagerImpl::ShouldSendTransaction(PeerRef peer, const TxMempoolInfo& txinfo, Peer::TxRelay* tx_relay, const CFeeRate filterrate)
+{
+    AssertLockHeld(tx_relay->m_tx_inventory_mutex);
+    AssertLockHeld(tx_relay->m_bloom_filter_mutex);
+    // Not in the mempool anymore? don't bother sending it.
+    if (!txinfo.tx) return false;
+
+    // Check if not in the filter already
+    auto hash = peer->m_wtxid_relay ? txinfo.tx->GetWitnessHash().ToUint256() : txinfo.tx->GetHash().ToUint256();
+    if (tx_relay->m_tx_inventory_known_filter.contains(hash)) return false;
+
+    // Peer told you to not send transactions at that feerate? Don't bother sending it.
+    if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) return false;
+
+    if (tx_relay->m_bloom_filter && !tx_relay->m_bloom_filter->IsRelevantAndUpdate(*txinfo.tx)) return false;
+
+    return true;
+}
+
 void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, DataStream& vRecv,
                                      const std::chrono::microseconds time_received,
                                      const std::atomic<bool>& interruptMsgProc)
@@ -3566,7 +3711,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 !pfrom.IsAddrFetchConn() && !m_opts.ignore_incoming_txs) {
                 const uint64_t recon_salt = m_txreconciliation->PreRegisterPeer(pfrom.GetId());
                 MakeAndPushMessage(pfrom, NetMsgType::SENDTXRCNCL,
-                                   TXRECONCILIATION_VERSION, recon_salt);
+                                   node::TXRECONCILIATION_VERSION, recon_salt);
             }
         }
 
@@ -3811,22 +3956,22 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         uint64_t remote_salt;
         vRecv >> peer_txreconcl_version >> remote_salt;
 
-        const ReconciliationRegisterResult result = m_txreconciliation->RegisterPeer(pfrom.GetId(), pfrom.IsInboundConn(),
-                                                                                     peer_txreconcl_version, remote_salt);
-        switch (result) {
-        case ReconciliationRegisterResult::NOT_FOUND:
-            LogDebug(BCLog::NET, "Ignore unexpected txreconciliation signal from peer=%d\n", pfrom.GetId());
-            break;
-        case ReconciliationRegisterResult::SUCCESS:
-            break;
-        case ReconciliationRegisterResult::ALREADY_REGISTERED:
-            LogDebug(BCLog::NET, "txreconciliation protocol violation (sendtxrcncl received from already registered peer), %s\n", pfrom.DisconnectMsg(fLogIPs));
-            pfrom.fDisconnect = true;
-            return;
-        case ReconciliationRegisterResult::PROTOCOL_VIOLATION:
-            LogDebug(BCLog::NET, "txreconciliation protocol violation, %s\n", pfrom.DisconnectMsg(fLogIPs));
-            pfrom.fDisconnect = true;
-            return;
+        const auto error = m_txreconciliation->RegisterPeer(pfrom.GetId(), pfrom.IsInboundConn(), peer_txreconcl_version, remote_salt);
+        if (error.has_value()) {
+            switch (error.value()) {
+                case node::ReconciliationError::NOT_FOUND:
+                    LogDebug(BCLog::NET, "Ignore unexpected txreconciliation signal from peer=%d\n", pfrom.GetId());
+                    break;
+                case node::ReconciliationError::ALREADY_REGISTERED:
+                    LogDebug(BCLog::NET, "txreconciliation protocol violation (sendtxrcncl received from already registered peer), %s\n", pfrom.DisconnectMsg(fLogIPs));
+                    pfrom.fDisconnect = true;
+                    return;
+                case node::ReconciliationError::PROTOCOL_VIOLATION:
+                    LogDebug(BCLog::NET, "txreconciliation protocol violation, %s\n", pfrom.DisconnectMsg(fLogIPs));
+                    pfrom.fDisconnect = true;
+                    return;
+                default: break;
+            }
         }
         return;
     }
@@ -3983,6 +4128,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 }
                 const GenTxid gtxid = ToGenTxid(inv);
                 AddKnownTx(*peer, inv.hash);
+                if (m_txreconciliation && gtxid.IsWtxid()) m_txreconciliation->TryRemovingFromSet(pfrom.GetId(), std::get<Wtxid>(gtxid));
 
                 if (!m_chainman.IsInitialBlockDownload()) {
                     const bool fAlreadyHave{m_txdownloadman.AddTxAnnouncement(pfrom.GetId(), gtxid, current_time)};
@@ -4275,6 +4421,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         const uint256& hash = peer->m_wtxid_relay ? wtxid.ToUint256() : txid.ToUint256();
         AddKnownTx(*peer, hash);
+        if (m_txreconciliation) m_txreconciliation->TryRemovingFromSet(pfrom.GetId(), wtxid);
 
         LOCK2(cs_main, m_tx_download_mutex);
 
@@ -4931,6 +5078,93 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         return;
     }
 
+    if (msg_type == NetMsgType::REQTXRCNCL) {
+        uint16_t peer_recon_set_size, peer_q;
+        vRecv >> peer_recon_set_size >> peer_q;
+        if (auto error = m_txreconciliation->HandleReconciliationRequest(pfrom.GetId(), peer_recon_set_size, peer_q); error.has_value()) {
+            switch(error.value()) {
+                case node::ReconciliationError::NOT_FOUND:
+                    LogInfo("Peer is requesting reconciliation but never registerd, %s\n", pfrom.DisconnectMsg(fLogIPs));
+                    break;
+                case node::ReconciliationError::WRONG_PHASE:
+                    LogInfo("Peer is requesting reconciliation out of order, %s\n", pfrom.DisconnectMsg(fLogIPs));
+                    break;
+                case node::ReconciliationError::WRONG_ROLE:
+                    LogInfo("Peer is requesting reconciliation but we are the initiator, %s\n", pfrom.DisconnectMsg(fLogIPs));
+                    break;
+                default: break; // No other error is returned by HandleReconciliationRequest
+            }
+            pfrom.fDisconnect = true;
+        }
+        return;
+    }
+
+    if (msg_type == NetMsgType::SKETCH) {
+        std::vector<uint8_t> skdata;
+        vRecv >> skdata;
+
+        auto result = m_txreconciliation->HandleSketch(pfrom.GetId(), skdata);
+        if (auto handle_sketch_result = std::get_if<node::HandleSketchResult>(&result)) {
+            if (handle_sketch_result->m_succeeded.has_value()) {
+                // Handles both successful and failed reconciliation (but not the case per which we want to request extension).
+                MakeAndPushMessage(pfrom, NetMsgType::RECONCILDIFF, handle_sketch_result->m_succeeded.value(), handle_sketch_result->m_txs_to_request);
+                AnnounceTxs(handle_sketch_result->m_txs_to_announce, pfrom);
+                m_txreconciliation->TrackRecentlyRequestedTransactions(handle_sketch_result->m_txs_to_request);
+            } else {
+                // No final result means we should request sketch extension to make another
+                // reconciliation attempt without losing the initial data.
+                MakeAndPushMessage(pfrom, NetMsgType::REQSKETCHEXT);
+            }
+        } else {
+            // Disconnect peers that send reconciliation sketch violating the protocol.
+            LogDebug(BCLog::NET, "sketch from peer=%d violates reconciliation protocol; disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+        return;
+    }
+
+    if (msg_type == NetMsgType::REQSKETCHEXT) {
+        if (!m_txreconciliation->HandleExtensionRequest(pfrom.GetId())) {
+            LogInfo("Peer is requesting reconciliation while a previous reconciliation has not finished yet, %s\n", pfrom.DisconnectMsg(fLogIPs));
+            pfrom.fDisconnect = true;
+        }
+        if (auto error = m_txreconciliation->HandleExtensionRequest(pfrom.GetId())) {
+            switch(error.value()) {
+                case node::ReconciliationError::NOT_FOUND:
+                    LogInfo("Peer is requesting a reconciliation extension but never registerd, %s\n", pfrom.DisconnectMsg(fLogIPs));
+                    break;
+                case node::ReconciliationError::WRONG_PHASE:
+                    LogInfo("Peer is requesting a reconciliation extension out of order, %s\n", pfrom.DisconnectMsg(fLogIPs));
+                    break;
+                case node::ReconciliationError::WRONG_ROLE:
+                    LogInfo("Peer is requesting a reconciliation extension but we are the initiator, %s\n", pfrom.DisconnectMsg(fLogIPs));
+                    break;
+                default: break; // No other error is returned by HandleReconciliationRequest
+            }
+        }
+        return;
+    }
+
+    // Among transactions requested by short ID here, we should send only those transactions
+    // sketched (stored in local set snapshot), because otherwise we would leak privacy (mempool content).
+    if (msg_type == NetMsgType::RECONCILDIFF) {
+        bool recon_result;
+        std::vector<uint32_t> ask_shortids;
+        vRecv >> recon_result >> ask_shortids;
+
+        auto result = m_txreconciliation->HandleReconcilDiff(pfrom.GetId(), recon_result, ask_shortids);
+        if (auto remote_missing = std::get_if<std::vector<Wtxid>>(&result)) {
+            AnnounceTxs(*remote_missing, pfrom);
+        } else {
+            // Disconnect peers that send reconciliation finalization violating the protocol.
+            LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "reconcildiff from peer=%d violates reconciliation protocol; disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+        return;
+    }
+
     // Ignore unknown commands for extensibility
     LogDebug(BCLog::NET, "Unknown command \"%s\" from peer=%d\n", SanitizeString(msg_type), pfrom.GetId());
     return;
@@ -5419,22 +5653,6 @@ void PeerManagerImpl::MaybeSendFeefilter(CNode& pto, Peer& peer, std::chrono::mi
     }
 }
 
-namespace {
-class CompareInvMempoolOrder
-{
-    const CTxMemPool* m_mempool;
-public:
-    explicit CompareInvMempoolOrder(CTxMemPool* mempool) : m_mempool{mempool} {}
-
-    bool operator()(std::set<Wtxid>::iterator a, std::set<Wtxid>::iterator b)
-    {
-        /* As std::make_heap produces a max-heap, we want the entries with the
-         * fewest ancestors/highest fee to sort later. */
-        return m_mempool->CompareDepthAndScore(*b, *a);
-    }
-};
-} // namespace
-
 bool PeerManagerImpl::RejectIncomingTxs(const CNode& peer) const
 {
     // block-relay-only peers may never send txs to us
@@ -5501,6 +5719,14 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
     MaybeSendAddr(*pto, *peer, current_time);
 
     MaybeSendSendHeaders(*pto, *peer);
+
+    // We must look into the reconciliation queue first. Since the queue applies to all peers,
+    // this peer might block other reconciliation if we don't make this call regularly and
+    // unconditionally.
+    bool reconcile = false;
+    if (m_txreconciliation && !m_chainman.IsInitialBlockDownload()) {
+        reconcile = m_txreconciliation->IsPeerNextToReconcileWith(pto->GetId(), current_time);
+    }
 
     {
         LOCK(cs_main);
@@ -5714,10 +5940,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             peer->m_blocks_for_inv_relay.clear();
         }
 
+        // Check whether periodic sends should happen
+        bool fSendTrickle = pto->HasPermission(NetPermissionFlags::NoBan);
         if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
+            std::vector<std::pair<CInv, uint16_t>> to_be_announced{};
+            {
                 LOCK(tx_relay->m_tx_inventory_mutex);
-                // Check whether periodic sends should happen
-                bool fSendTrickle = pto->HasPermission(NetPermissionFlags::NoBan);
                 if (tx_relay->m_next_inv_send_time < current_time) {
                     fSendTrickle = true;
                     if (pto->IsInboundConn()) {
@@ -5725,6 +5953,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     } else {
                         tx_relay->m_next_inv_send_time = current_time + m_rng.rand_exp_duration(OUTBOUND_INVENTORY_BROADCAST_INTERVAL);
                     }
+                }
+
+                // Rotate inbound fanout targets if the timer has gone off
+                if (m_txreconciliation && m_txreconciliation->GetNextInboundPeerRotationTime() < current_time) {
+                    m_txreconciliation->SetNextInboundPeerRotationTime(current_time + m_rng.rand_exp_duration(node::INBOUND_FANOUT_ROTATION_INTERVAL));
+                    m_txreconciliation->RotateInboundFanoutTargets();
                 }
 
                 // Time to send but the peer has requested we not relay transactions.
@@ -5768,10 +6002,10 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 // Determine transactions to relay
                 if (fSendTrickle) {
                     // Produce a vector with all candidates for sending
-                    std::vector<std::set<Wtxid>::iterator> vInvTx;
+                    std::vector<Wtxid> vInvTx;
                     vInvTx.reserve(tx_relay->m_tx_inventory_to_send.size());
                     for (std::set<Wtxid>::iterator it = tx_relay->m_tx_inventory_to_send.begin(); it != tx_relay->m_tx_inventory_to_send.end(); it++) {
-                        vInvTx.push_back(it);
+                        vInvTx.push_back(*it);
                     }
                     const CFeeRate filterrate{tx_relay->m_fee_filter_received.load()};
                     // Topologically and fee-rate sort the inventory we send for privacy and priority reasons.
@@ -5787,48 +6021,134 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     while (!vInvTx.empty() && nRelayedTransactions < broadcast_max) {
                         // Fetch the top element from the heap
                         std::pop_heap(vInvTx.begin(), vInvTx.end(), compareInvMempoolOrder);
-                        std::set<Wtxid>::iterator it = vInvTx.back();
+                        Wtxid wtxid = vInvTx.back();
                         vInvTx.pop_back();
-                        auto wtxid = *it;
                         // Remove it from the to-be-sent set
-                        tx_relay->m_tx_inventory_to_send.erase(it);
-                        // Not in the mempool anymore? don't bother sending it.
+                        tx_relay->m_tx_inventory_to_send.erase(wtxid);
+
+                        // Check if the transaction is worth sending. Skipp it otherwiese.
                         auto txinfo = m_mempool.info(wtxid);
-                        if (!txinfo.tx) {
-                            continue;
-                        }
-                        // `TxRelay::m_tx_inventory_known_filter` contains either txids or wtxids
-                        // depending on whether our peer supports wtxid-relay. Therefore, first
-                        // construct the inv and then use its hash for the filter check.
+                        if (!ShouldSendTransaction(peer, txinfo, tx_relay, filterrate)) continue;
+
+                        // Flag to be sent.
+                        // Initialize with the counter at 0. This in only relevant for Erlay nodes and will be updated in the
+                        // following context after releasing m_tx_inventory_mutex
                         const auto inv = peer->m_wtxid_relay ?
                                              CInv{MSG_WTX, wtxid.ToUint256()} :
                                              CInv{MSG_TX, txinfo.tx->GetHash().ToUint256()};
-                        // Check if not in the filter already
-                        if (tx_relay->m_tx_inventory_known_filter.contains(inv.hash)) {
-                            continue;
-                        }
-                        // Peer told you to not send transactions at that feerate? Don't bother sending it.
-                        if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
-                            continue;
-                        }
-                        if (tx_relay->m_bloom_filter && !tx_relay->m_bloom_filter->IsRelevantAndUpdate(*txinfo.tx)) continue;
-                        // Send
-                        vInv.push_back(inv);
+                        to_be_announced.emplace_back(inv, 0);
                         nRelayedTransactions++;
-                        if (vInv.size() == MAX_INV_SZ) {
-                            MakeAndPushMessage(*pto, NetMsgType::INV, vInv);
-                            vInv.clear();
-                        }
-                        tx_relay->m_tx_inventory_known_filter.insert(inv.hash);
                     }
-
-                    // Ensure we'll respond to GETDATA requests for anything we've just announced
-                    LOCK(m_mempool.cs);
-                    tx_relay->m_last_inv_sequence = m_mempool.GetSequence();
                 }
+            } // Unlock the m_tx_inventory_mutex so we can count over m_peer_map
+
+            // Only care about fanout count for outbound Erlay nodes
+            if (!pto->IsInboundConn() && m_txreconciliation && m_txreconciliation->IsPeerRegistered(pto->GetId())) {
+                LOCK(m_peer_mutex);
+                for (auto& [inv, out_fanout_count] : to_be_announced) {
+                    if(inv.IsMsgTx()) continue; // Skip. We do no reconcile by txid
+                    // Shortcut if the transaction was received via reconciliation, we can simply keep reconciling
+                    if (m_txreconciliation->WasTransactionRecentlyRequested(Wtxid::FromUint256(inv.hash))) {
+                        out_fanout_count = m_txreconciliation->GetOutboundFanoutThreshold();
+                        continue;
+                    }
+                    for (const auto& [cur_peer_id, cur_peer] : m_peer_map) {
+                        if (cur_peer->m_is_inbound) continue; // Skip. Inbound peers don't add to the count
+                        if (auto peer_tx_relay = cur_peer->GetTxRelay()) {
+                            LOCK(peer_tx_relay->m_tx_inventory_mutex);
+                            if (peer_tx_relay->m_tx_inventory_known_filter.contains(inv.hash)) {
+                                out_fanout_count+=1;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Re-lock
+            LOCK(tx_relay->m_tx_inventory_mutex);
+            for (auto& [inv, out_fanout_count] : to_be_announced) {
+                // Send
+                bool should_fanout = true;
+                // For non-Erlay and inbound peer simply fanout. Erlay-enabled inbounds have been assigned transaction to reconcile
+                // in RelayTransaction, so everything that was added to m_tx_inventory_to_send is to be fanout
+                if (!pto->IsInboundConn() && m_txreconciliation && m_txreconciliation->IsPeerRegistered(pto->GetId())) {
+                    // For Erlay-enabled outbound peers we fanout based on how we have heard about this transaction
+                    // and how many announcements of this transactions have we sent and received.
+                    // TODO: If we are the transaction source, we should reduce the threshold by 1, since this the only case
+                    // where we are not accounting for at least one reception
+                    should_fanout = out_fanout_count <= m_txreconciliation->GetOutboundFanoutThreshold();
+                }
+
+                auto add_to_inv_vec = [&](const CInv inv) EXCLUSIVE_LOCKS_REQUIRED(tx_relay->m_tx_inventory_mutex) {
+                    vInv.push_back(inv);
+                    if (vInv.size() == MAX_INV_SZ) {
+                        MakeAndPushMessage(*pto, NetMsgType::INV, vInv);
+                        vInv.clear();
+                    }
+                    tx_relay->m_tx_inventory_known_filter.insert(inv.hash);
+                };
+
+                if (!should_fanout) {
+                    // Note we are not handling the case of ancestors being reconciled and descendants being fanout.
+                    // This can propagate descendants faster than ancestors, making them orphans. However, transactions
+                    // are picked for reconciliation if we consider they have been propagated enough, so in this case
+                    // odds are that the peer already knows about the parent (and it's queued to be announced or reconciled to us).
+                    Assume(m_txreconciliation);
+                    Assume(inv.IsMsgWtx());
+                    const auto error = m_txreconciliation->AddToSet(pto->GetId(), Wtxid::FromUint256(inv.hash));
+                    if  (error.has_value()) {
+                        should_fanout = true;
+                        if (error.value().m_error == node::ReconciliationError::SHORTID_COLLISION) {
+                            Assume(m_txreconciliation->TryRemovingFromSet(pto->GetId(), error.value().GetCollision()));
+                            add_to_inv_vec(CInv(MSG_WTX, error.value().GetCollision().ToUint256()));
+                        }
+                    }
+                }
+                if (should_fanout) {
+                    add_to_inv_vec(inv);
+                }
+            }
+
+            if (fSendTrickle) {
+                // Ensure we'll respond to GETDATA requests for anything we've just announced
+                LOCK(m_mempool.cs);
+                tx_relay->m_last_inv_sequence = m_mempool.GetSequence();
+            }
         }
         if (!vInv.empty())
             MakeAndPushMessage(*pto, NetMsgType::INV, vInv);
+
+        //
+        // Message: reconciliation response
+        //
+        if (m_txreconciliation) {
+            // Transaction reconciliation requests are responded at trickle intervals after making all
+            // relevant transactions available up to this point. This applies only to inbound peers, since
+            // they are the only ones allowed to request reconciliation.
+            std::vector<uint8_t> skdata;
+            if (m_txreconciliation->ShouldRespondToReconciliationRequest(pto->GetId(), skdata, fSendTrickle)) {
+                // It's perfectly valid to send an empty sketch, because we use this behavior
+                // to trigger early reconciliation termination when it won't help anyway:
+                // - we have no transactions for the peer
+                // - the peer have no transactions for us
+                MakeAndPushMessage(*pto, NetMsgType::SKETCH, skdata);
+            }
+        }
+
+        //
+        // Message: reconciliation request
+        //
+        {
+            if (!m_chainman.IsInitialBlockDownload()) {
+                if (reconcile) {
+                    const auto result = m_txreconciliation->InitiateReconciliationRequest(pto->GetId());
+                    if (auto* reconciliation_request_params = std::get_if<node::ReconCoefficients>(&result)) {
+                        const auto [local_set_size, local_q_formatted] = *reconciliation_request_params;
+                        MakeAndPushMessage(*pto, NetMsgType::REQTXRCNCL, local_set_size, local_q_formatted);
+                    }
+                }
+            }
+        }
 
         // Detect whether we're stalling
         auto stalling_timeout = m_block_stalling_timeout.load();
