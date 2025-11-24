@@ -138,6 +138,141 @@ static int64_t GetImportTimestamp(const UniValue& data, int64_t now)
     throw JSONRPCError(RPC_TYPE_ERROR, "Missing required timestamp field for key");
 }
 
+static UniValue ValidateDescriptorImport(const CWallet& wallet, const UniValue& data) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+{
+    UniValue warnings(UniValue::VARR);
+    UniValue result(UniValue::VOBJ);
+
+    try {
+        if (!data.exists("desc")) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Descriptor not found.");
+        }
+
+        const std::string& descriptor = data["desc"].get_str();
+        const bool active = data.exists("active") ? data["active"].get_bool() : false;
+        const std::string label{LabelFromValue(data["label"])};
+
+        // Parse descriptor string
+        FlatSigningProvider keys;
+        std::string error;
+        auto parsed_descs = Parse(descriptor, keys, error, /* require_checksum = */ true);
+        if (parsed_descs.empty()) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
+        }
+        std::optional<bool> internal;
+        if (data.exists("internal")) {
+            if (parsed_descs.size() > 1) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Cannot have multipath descriptor while also specifying \'internal\'");
+            }
+            internal = data["internal"].get_bool();
+        }
+
+        // Range check
+        std::optional<bool> is_ranged;
+        int64_t range_start = 0, range_end = 1, next_index = 0;
+        if (!parsed_descs.at(0)->IsRange() && data.exists("range")) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Range should not be specified for an un-ranged descriptor");
+        } else if (parsed_descs.at(0)->IsRange()) {
+            if (data.exists("range")) {
+                auto range = ParseDescriptorRange(data["range"]);
+                range_start = range.first;
+                range_end = range.second + 1; // Specified range end is inclusive, but we need range end as exclusive
+            } else {
+                warnings.push_back("Range not given, using default keypool range");
+                range_start = 0;
+                range_end = wallet.m_keypool_size;
+            }
+            next_index = range_start;
+            is_ranged = true;
+
+            if (data.exists("next_index")) {
+                next_index = data["next_index"].getInt<int64_t>();
+                // bound checks
+                if (next_index < range_start || next_index >= range_end) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "next_index is out of range");
+                }
+            }
+        }
+
+        // Active descriptors must be ranged
+        if (active && !parsed_descs.at(0)->IsRange()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Active descriptors must be ranged");
+        }
+
+        // Multipath descriptors should not have a label
+        if (parsed_descs.size() > 1 && data.exists("label")) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Multipath descriptors should not have a label");
+        }
+
+        // Ranged descriptors should not have a label
+        if (is_ranged.has_value() && is_ranged.value() && data.exists("label")) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Ranged descriptors should not have a label");
+        }
+
+        bool desc_internal = internal.has_value() && internal.value();
+        // Internal addresses should not have a label either
+        if (desc_internal && data.exists("label")) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Internal addresses should not have a label");
+        }
+
+        // Combo descriptor check
+        if (active && !parsed_descs.at(0)->IsSingleType()) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Combo descriptors cannot be set to active");
+        }
+
+        // If the wallet disabled private keys, abort if private keys exist
+        if (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !keys.keys.empty()) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import private keys to a wallet with private keys disabled");
+        }
+
+        for (size_t j = 0; j < parsed_descs.size(); ++j) {
+            auto parsed_desc = parsed_descs[j]->Copy();
+            bool current_internal = desc_internal;
+            if (parsed_descs.size() == 2) {
+                current_internal = j == 1;
+            } else if (parsed_descs.size() > 2) {
+                CHECK_NONFATAL(!current_internal);
+            }
+
+            // Need to ExpandPrivate to check if private keys are available for all pubkeys
+            FlatSigningProvider expand_keys;
+            std::vector<CScript> scripts;
+            if (!parsed_desc->Expand(0, keys, scripts, expand_keys)) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Cannot expand descriptor. Probably because of hardened derivations without private keys provided");
+            }
+            parsed_desc->ExpandPrivate(0, keys, expand_keys);
+
+            // Check if all private keys are provided
+            bool have_all_privkeys = !expand_keys.keys.empty();
+            for (const auto& entry : expand_keys.origins) {
+                const CKeyID& key_id = entry.first;
+                CKey key;
+                if (!expand_keys.GetKey(key_id, key)) {
+                    have_all_privkeys = false;
+                    break;
+                }
+            }
+
+            // If private keys are enabled, check some things.
+            if (!wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+               if (keys.keys.empty()) {
+                    throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import descriptor without private keys to a wallet with private keys enabled");
+               }
+               if (!have_all_privkeys) {
+                   warnings.push_back("Not all private keys provided. Some wallet functionality may return unexpected errors");
+               }
+            }
+        }
+
+        result.pushKV("success", UniValue(true));
+    } catch (const UniValue& e) {
+        result.pushKV("success", UniValue(false));
+        result.pushKV("error", e);
+    }
+    PushWarnings(warnings, result);
+    return result;
+}
+
 static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     UniValue warnings(UniValue::VARR);
@@ -379,6 +514,16 @@ RPCHelpMan importdescriptors()
         EnsureWalletIsUnlocked(*pwallet);
 
         CHECK_NONFATAL(pwallet->chain().findBlock(pwallet->GetLastBlockHash(), FoundBlock().time(lowest_timestamp).mtpTime(now)));
+
+        // Validate all descriptors before processing any of them
+        for (const UniValue& request : requests.getValues()) {
+            const UniValue validation_result = ValidateDescriptorImport(*pwallet, request);
+            if (!validation_result["success"].get_bool()) {
+                response.push_back(validation_result);
+                // Return early if any validation fails
+                return response;
+            }
+        }
 
         // Get all timestamps and extract the lowest timestamp
         for (const UniValue& request : requests.getValues()) {
