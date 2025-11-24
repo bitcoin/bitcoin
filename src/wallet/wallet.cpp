@@ -790,7 +790,8 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         // Need to completely rewrite the wallet file; if we don't, bdb might keep
         // bits of the unencrypted private key in slack space in the database file.
         if (!GetDatabase().Rewrite()) {
-            WalletLogPrintf("WARNING: Rewrite failed - wallet is in dangerous state!\n");
+            WalletLogPrintf("ERROR: Rewrite failed - wallet is in dangerous state!\n");
+            return false;
         }
         // BDB seems to have a bad habit of writing old data into
         // slack space in .dat files; that is bad if the old data is
