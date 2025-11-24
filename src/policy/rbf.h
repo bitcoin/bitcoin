@@ -9,17 +9,16 @@
 #include <primitives/transaction.h>
 #include <threadsafety.h>
 #include <txmempool.h>
-#include <util/feefrac.h>
 
-#include <compare>
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <optional>
 #include <set>
 #include <string>
+#include <utility>
 
 class CFeeRate;
-class uint256;
 
 /** Maximum number of transactions that can be replaced by RBF (Rule #5). This includes all
  * mempool conflicts and their descendants. */

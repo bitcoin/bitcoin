@@ -7,20 +7,21 @@
 
 #include <consensus/amount.h>
 #include <policy/feerate.h>
-#include <random.h>
+#include <primitives/transaction.h>
 #include <sync.h>
-#include <threadsafety.h>
-#include <uint256.h>
 #include <util/fs.h>
 #include <validationinterface.h>
 
 #include <array>
 #include <chrono>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <set>
 #include <string>
 #include <vector>
+
+class FastRandomContext;
 
 
 // How often to flush fee estimates to fee_estimates.dat.

@@ -7,7 +7,7 @@
 
 #include <cassert>
 #include <cstddef>
-#include <span>
+#include <span> // IWYU pragma: export
 #include <type_traits>
 #include <utility>
 

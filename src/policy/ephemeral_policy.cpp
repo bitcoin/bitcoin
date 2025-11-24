@@ -2,12 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <consensus/validation.h>
 #include <policy/ephemeral_policy.h>
+
+#include <consensus/amount.h>
+#include <consensus/validation.h>
 #include <policy/feerate.h>
 #include <policy/packages.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
+#include <tinyformat.h>
 #include <txmempool.h>
 #include <util/check.h>
 #include <util/hasher.h>
@@ -16,6 +19,7 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <string>
 #include <unordered_set>
 #include <utility>
 #include <vector>

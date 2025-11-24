@@ -24,7 +24,7 @@
 #include <util/hasher.h>
 #include <util/result.h>
 
-#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/hashed_index.hpp> // IWYU pragma: export
 #include <boost/multi_index/identity.hpp>
 #include <boost/multi_index/indexed_by.hpp>
 #include <boost/multi_index/ordered_index.hpp>

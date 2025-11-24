@@ -10,6 +10,7 @@
 #include <script/script_error.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
+#include <script/solver.h>
 #include <test/util/setup_common.h>
 #include <test/util/transaction_utils.h>
 #include <validation.h>

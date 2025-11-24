@@ -10,10 +10,10 @@
 #include <serialize.h>
 #include <util/feefrac.h>
 
-
+#include <compare>
+#include <concepts>
 #include <cstdint>
 #include <string>
-#include <type_traits>
 
 const std::string CURRENCY_UNIT = "BTC"; // One formatted unit
 const std::string CURRENCY_ATOM = "sat"; // One indivisible minimum value unit

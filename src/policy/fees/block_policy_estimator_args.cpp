@@ -5,6 +5,7 @@
 #include <policy/fees/block_policy_estimator_args.h>
 
 #include <common/args.h>
+#include <util/fs.h>
 
 namespace {
 const char* FEE_ESTIMATES_FILENAME = "fee_estimates.dat";
