@@ -3476,13 +3476,12 @@ void CConnman::ThreadOpenMasternodeConnections(CDeterministicMNManager& dmnman, 
                 // Check if we should connect to this masternode
                 // We already hold m_nodes_mutex here, so check m_masternode_connection directly
                 if (dmn && !connectedNodes.count(dmn->pdmnState->netInfo->GetPrimary())) {
-                    if (const CNode* pnode = FindNode(dmn->pdmnState->netInfo->GetPrimary())) {
-                        if (!pnode->m_masternode_connection) {
-                            LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- opening pending masternode connection to %s, service=%s\n",
-                                                         _func_, dmn->proTxHash.ToString(),
-                                                         dmn->pdmnState->netInfo->GetPrimary().ToStringAddrPort());
-                            return dmn;
-                        }
+                    const CNode* pnode = FindNode(dmn->pdmnState->netInfo->GetPrimary(), /*fExcludeDisconnecting=*/false);
+                    if (pnode == nullptr || (!pnode->m_masternode_connection && !pnode->fDisconnect)) {
+                        LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- opening pending masternode connection to %s, service=%s\n",
+                                                     _func_, dmn->proTxHash.ToString(),
+                                                     dmn->pdmnState->netInfo->GetPrimary().ToStringAddrPort());
+                        return dmn;
                     }
                 }
             }
