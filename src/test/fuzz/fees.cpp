@@ -14,7 +14,6 @@
 #include <string>
 #include <vector>
 
-using common::StringForFeeReason;
 using common::StringForFeeSource;
 
 FUZZ_TARGET(fees)

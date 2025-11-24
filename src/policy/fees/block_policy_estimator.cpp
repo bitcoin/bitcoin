@@ -48,6 +48,23 @@ std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon)
     assert(false);
 }
 
+
+std::string StringForFeeReason(FeeReason reason)
+{
+    static const std::map<FeeReason, std::string> fee_reason_strings = {
+        {FeeReason::NONE, "None"},
+        {FeeReason::HALF_ESTIMATE, "Half Target 60% Threshold"},
+        {FeeReason::FULL_ESTIMATE, "Target 85% Threshold"},
+        {FeeReason::DOUBLE_ESTIMATE, "Double Target 95% Threshold"},
+        {FeeReason::CONSERVATIVE, "Conservative Double Target longer horizon"},
+    };
+    auto reason_string = fee_reason_strings.find(reason);
+
+    if (reason_string == fee_reason_strings.end()) return "Unknown";
+
+    return reason_string->second;
+}
+
 namespace {
 
 struct EncodedDoubleFormatter
@@ -949,8 +966,8 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
     if (feeCalc) *feeCalc = temp_fee_calc;
     if (median < 0) return CFeeRate(0); // error condition
 
-    LogDebug(BCLog::ESTIMATEFEE, "estimateSmartFee Selected feerate :%g Tgt:%d (requested %d) Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
-             median, temp_fee_calc.returnedTarget, temp_fee_calc.desiredTarget, temp_fee_calc.est.decay,
+    LogDebug(BCLog::ESTIMATEFEE, "estimateSmartFee Selected feerate :%g Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
+             median, temp_fee_calc.returnedTarget, temp_fee_calc.desiredTarget, StringForFeeReason(temp_fee_calc.reason), temp_fee_calc.est.decay,
              temp_fee_calc.est.pass.start, temp_fee_calc.est.pass.end,
              (temp_fee_calc.est.pass.totalConfirmed + temp_fee_calc.est.pass.inMempool + temp_fee_calc.est.pass.leftMempool) > 0.0 ? 100 * temp_fee_calc.est.pass.withinTarget / (temp_fee_calc.est.pass.totalConfirmed + temp_fee_calc.est.pass.inMempool + temp_fee_calc.est.pass.leftMempool) : 0.0,
              temp_fee_calc.est.pass.withinTarget, temp_fee_calc.est.pass.totalConfirmed, temp_fee_calc.est.pass.inMempool, temp_fee_calc.est.pass.leftMempool,
