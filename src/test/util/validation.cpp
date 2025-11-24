@@ -43,14 +43,6 @@ void TestChainstateManager::JumpOutOfIbd()
     Assert(!IsInitialBlockDownload());
 }
 
-void ValidationInterfaceTest::BlockConnected(
-    const ChainstateRole& role,
-    CValidationInterface& obj,
-    const std::shared_ptr<const CBlock>& block,
-    const CBlockIndex* pindex)
-{
-    obj.BlockConnected(role, block, pindex);
-}
 void TestChainstateManager::InvalidBlockFound(CBlockIndex* pindex, const BlockValidationState& state)
 {
     struct TestChainstate : public Chainstate {
