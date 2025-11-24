@@ -22,7 +22,10 @@ class Handler
 public:
     virtual ~Handler() = default;
 
-    //! Disconnect the handler.
+    //! Connect the handler, start receiving notifications.
+    virtual void connect() {};
+
+    //! Disconnect the handler, stop receiving notifications.
     virtual void disconnect() = 0;
 };
 
