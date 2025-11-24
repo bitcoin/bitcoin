@@ -7,11 +7,13 @@
 #include <streams.h>
 #include <swiftsync.h>
 #include <uint256.h>
+#include <util/fs.h>
 #include <array>
 #include <cstdint>
 #include <cstdio>
 #include <ios>
 #include <span>
+#include <utility>
 #include <vector>
 
 using namespace swiftsync;
@@ -105,4 +107,25 @@ std::vector<uint64_t> HintsfileReader::ReadBlock(const uint32_t& height)
         offsets.push_back(ReadCompactSize(m_file));
     }
     return offsets;
+}
+
+BlockHints::BlockHints(const std::vector<uint64_t>& offsets)
+{
+    uint64_t prev{};
+    for (const auto& offset : offsets) {
+        uint64_t next = prev + offset;
+        m_unspent_outputs_index.insert(next);
+        prev = next;
+    }
+}
+
+void Context::ApplyHints(HintsfileReader reader)
+{
+    m_hint_reader.emplace(std::move(reader));
+}
+
+BlockHints Context::ReadBlockHints(const int& nHeight)
+{
+    BlockHints hints{m_hint_reader->ReadBlock(nHeight)};
+    return hints;
 }
