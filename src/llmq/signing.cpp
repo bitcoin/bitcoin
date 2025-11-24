@@ -206,7 +206,8 @@ void CRecoveredSigsDb::RemoveRecoveredSig(CDBBatch& batch, Consensus::LLMQType l
 }
 
 // Remove the recovered sig itself and all keys required to get from id -> recSig
-// This will leave the byHash key in-place so that HasRecoveredSigForHash still returns true
+// This will leave the byHash and signHash key in-place so that HasRecoveredSigForHash /
+// late-share filtering still returns true
 void CRecoveredSigsDb::TruncateRecoveredSig(Consensus::LLMQType llmqType, const uint256& id)
 {
     CDBBatch batch(*db);
