@@ -25,6 +25,7 @@ public:
     void Schedule(CScheduler& scheduler, CConnman& connman) override;
 
     void ProcessMessage(CNode& peer, CConnman& connman, const std::string& msg_type, CDataStream& vRecv) override;
+
 private:
     void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman) const;
     int RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman) const;

@@ -417,8 +417,9 @@ void NetGovernance::ProcessMessage(CNode& peer, CConnman& connman, const std::st
         std::string strHash = nHash.ToString();
 
         if (!m_gov_manager.AcceptMessage(nHash)) {
-            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- Received unrequested vote object: %s, hash: %s, peer = %d\n",
-                vote.ToString(tip_mn_list), strHash, peer.GetId());
+            LogPrint(BCLog::GOBJECT, /* Continued */
+                     "MNGOVERNANCEOBJECTVOTE -- Received unrequested vote object: %s, hash: %s, peer = %d\n",
+                     vote.ToString(tip_mn_list), strHash, peer.GetId());
             return;
         }
 

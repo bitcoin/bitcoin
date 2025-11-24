@@ -376,18 +376,15 @@ public:
     [[nodiscard]] MessageProcessingResult SyncObjects(CNode& peer, CConnman& connman) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     [[nodiscard]] MessageProcessingResult SyncSingleObjVotes(CNode& peer, const uint256& nProp, const CBloomFilter& filter,
-                                                             CConnman& connman)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+                                                             CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     /// Called to indicate a requested object or vote has been received
-    bool AcceptMessage(const uint256& nHash)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+    bool AcceptMessage(const uint256& nHash) EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     bool ProcessObject(const CNode& peer, const uint256& hash, CGovernanceObject& govobj)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main, !cs_store, !cs_relay);
 
     CDeterministicMNManager& GetMNManager();
     bool ProcessVote(CNode* pfrom, const CGovernanceVote& vote, CGovernanceException& exception, CConnman& connman)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
-
 
 
 private:

@@ -194,7 +194,8 @@ bool CGovernanceManager::ProcessObject(const CNode& peer, const uint256& nHash, 
 
     bool fRateCheckBypassed = false;
     if (!MasternodeRateCheck(govobj, true, false, fRateCheckBypassed)) {
-        LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- masternode rate check failed - %s - (current block height %d) \n", strHash, nCachedBlockHeight);
+        LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- masternode rate check failed - %s - (current block height %d) \n",
+                 strHash, nCachedBlockHeight);
         return true;
     }
 
@@ -207,7 +208,10 @@ bool CGovernanceManager::ProcessObject(const CNode& peer, const uint256& nHash, 
 
     bool unused_rcb;
     if (fRateCheckBypassed && fIsValid && !MasternodeRateCheck(govobj, true, true, unused_rcb)) {
-        LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- masternode rate check failed (after signature verification) - %s - (current block height %d)\n", strHash, nCachedBlockHeight);
+        LogPrint(BCLog::GOBJECT, /* Continued */
+                 "MNGOVERNANCEOBJECT -- masternode rate check failed (after signature verification) - %s - (current "
+                 "block height %d)\n",
+                 strHash, nCachedBlockHeight);
         return true;
     }
 
