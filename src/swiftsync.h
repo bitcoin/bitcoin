@@ -11,6 +11,7 @@
 #include <array>
 #include <cstdint>
 #include <unordered_map>
+#include <util/fs.h>
 #include <vector>
 
 namespace swiftsync {
@@ -81,6 +82,50 @@ public:
     std::vector<uint64_t> ReadBlock(const uint32_t& height);
     /** The height this file encodes up to. */
     uint32_t StopHeight() { return m_stop_height; };
+};
+
+/**
+ * Stateful data structure that walks over the outputs of a block, determining the spent-ness.
+ */
+class BlockHints
+{
+private:
+    std::unordered_set<uint64_t> m_unspent_outputs_index;
+    uint64_t m_index{};
+
+public:
+    BlockHints(const std::vector<uint64_t>& unspent_offsets);
+    bool IsCurrOutputUnspent() { return m_unspent_outputs_index.contains(m_index); };
+    void NextOutput() { m_index++; };
+};
+
+class Context
+{
+private:
+    std::optional<HintsfileReader> m_hint_reader{};
+    bool m_is_starting_from_genesis{};
+    bool m_is_complete{};
+
+public:
+    /** Aggregate of block inputs and outputs. */
+    Aggregate m_aggregate{};
+    Context() = default;
+    /** Apply the hints from reader to this context. */
+    void ApplyHints(HintsfileReader reader);
+    /** The entire block history must be aggregated for accelerated IBD. */
+    void StartingFromGenesis() { m_is_starting_from_genesis = true; };
+    /** Accelerated IBD has completed. */
+    void Completed() { m_is_complete = true; };
+    /** Accelerated sync is possible when:
+     *  1. Blocks are being processed from genesis.
+     *  2. A hintfile is present.
+     *  3. It has not already been completed.
+     */
+    bool AcceleratedSyncPossible() { return m_is_starting_from_genesis && m_hint_reader.has_value() && !m_is_complete; };
+    /** Read the output spent-ness hints from the file. */
+    BlockHints ReadBlockHints(const int& nHeight);
+    /** The height to check the aggregate for emptiness. */
+    uint32_t StopHeight() { return m_hint_reader->StopHeight(); };
 };
 } // namespace swiftsync
 #endif // BITCOIN_SWIFTSYNC_H
