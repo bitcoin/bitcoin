@@ -156,7 +156,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
         assert_raises_rpc_error(-25, "Input not found or already spent", node2.combinerawtransaction, [rawtx2['hex'], rawtx3['hex']])
 
-        txinfo = node0.getrawtransaction(tx, True, blk)
+        txinfo = node0.getrawtransaction(tx, 1, blk)
         self.log.info("n/m=%d/%d %s size=%d vsize=%d weight=%d" % (nsigs, nkeys, output_type, txinfo["size"], txinfo["vsize"], txinfo["weight"]))
 
     def test_mixing_uncompressed_and_compressed_keys(self, node):

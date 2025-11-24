@@ -229,7 +229,7 @@ static RPCHelpMan getrawtransaction()
                 "If verbosity is 2, returns a JSON Object with information about the transaction, including fee and prevout information.",
                 {
                     {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
-                    {"verbosity|verbose", RPCArg::Type::NUM, RPCArg::Default{0}, "0 for hex-encoded data, 1 for a JSON object, and 2 for JSON object with fee and prevout",
+                    {"verbosity|verbose", RPCArg::Type::NUM, RPCArg::Default{0}, "0 for hex-encoded data, 1 for a JSON object, and 2 for JSON object with fee and prevout (DEPRECATED: Boolean verbosity is deprecated, use -deprecatedrpc=boolverbose to re-enable)",
                      RPCArgOptions{.skip_type_check = true}},
                     {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The block in which to look for the transaction"},
                 },
@@ -292,7 +292,7 @@ static RPCHelpMan getrawtransaction()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "The genesis block coinbase is not considered an ordinary transaction and cannot be retrieved");
     }
 
-    int verbosity{ParseVerbosity(request.params[1], /*default_verbosity=*/0, /*allow_bool=*/true)};
+    int verbosity{ParseVerbosity(request.params[1], /*default_verbosity=*/0)};
 
     if (!request.params[2].isNull()) {
         LOCK(cs_main);

@@ -48,7 +48,7 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         self.nodes[0].createwallet(wallet_name="w0", load_on_startup=True)
         wallet0 = self.nodes[0].get_wallet_rpc("w0")
         self.generatetoaddress(self.nodes[0], 1, wallet0.getnewaddress(), sync_fun=self.no_op)
-        node0_coinbase_tx_hash = wallet0.getblock(wallet0.getbestblockhash(), verbose=1)['tx'][0]
+        node0_coinbase_tx_hash = wallet0.getblock(wallet0.getbestblockhash(), verbosity=1)['tx'][0]
 
         # Mine 100 blocks on top to mature the coinbase and create a descendant
         self.generate(self.nodes[0], 101, sync_fun=self.no_op)
@@ -110,7 +110,7 @@ class ReorgsRestoreTest(BitcoinTestFramework):
 
         # Tip was disconnected, ensure coinbase has been abandoned
         assert_equal(wallet.getbalances()["mine"]["immature"], 0)
-        coinbase_tx_id = wallet.getblock(tip, verbose=1)["tx"][0]
+        coinbase_tx_id = wallet.getblock(tip, verbosity=1)["tx"][0]
         assert_equal(wallet.gettransaction(coinbase_tx_id)['details'][0]['abandoned'], True)
 
         # Abort process abruptly to mimic an unclean shutdown (no chain state flush to disk)

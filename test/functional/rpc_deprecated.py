@@ -28,6 +28,48 @@ class DeprecatedRpcTest(BitcoinTestFramework):
         # Please don't delete nor modify this comment
         self.log.info("Tests for deprecated RPC methods (if any)")
 
+        self.log.info("Test boolean verbosity deprecation")
+        # Generate a block to have transactions to test with
+        self.generate(self.nodes[0], 1)
+        blockhash = self.nodes[0].getbestblockhash()
+
+        # Test getblock with boolean verbosity - should fail without deprecation flag
+        assert_raises_rpc_error(
+            -3,
+            "Boolean verbosity is deprecated",
+            self.nodes[0].getblock,
+            blockhash,
+            True,
+        )
+        assert_raises_rpc_error(
+            -3,
+            "Boolean verbosity is deprecated",
+            self.nodes[0].getblock,
+            blockhash,
+            False,
+        )
+
+        # Test getrawtransaction with boolean verbosity - should fail without deprecation flag
+        # Get a transaction from the block
+        block = self.nodes[0].getblock(blockhash, 1)
+        txid = block["tx"][0]
+        assert_raises_rpc_error(
+            -3,
+            "Boolean verbosity is deprecated",
+            self.nodes[0].getrawtransaction,
+            txid,
+            True,
+            blockhash,
+        )
+        assert_raises_rpc_error(
+            -3,
+            "Boolean verbosity is deprecated",
+            self.nodes[0].getrawtransaction,
+            txid,
+            False,
+            blockhash,
+        )
+
         if self.is_wallet_compiled():
             self.log.info("Tests for deprecated wallet-related RPC methods (if any)")
             self.log.info("Test settxfee RPC deprecation")

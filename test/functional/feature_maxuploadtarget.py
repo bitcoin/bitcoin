@@ -86,7 +86,7 @@ class MaxUploadTest(BitcoinTestFramework):
 
         # Store the hash; we'll request this later
         big_old_block = self.nodes[0].getbestblockhash()
-        old_block_size = self.nodes[0].getblock(big_old_block, True)['size']
+        old_block_size = self.nodes[0].getblock(big_old_block, 1)['size']
         big_old_block = int(big_old_block, 16)
 
         # Advance to two days ago

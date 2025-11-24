@@ -40,7 +40,7 @@ class MerkleBlockTest(BitcoinTestFramework):
         blockhash = self.nodes[0].getblockhash(chain_height + 1)
 
         txlist = []
-        blocktxn = self.nodes[0].getblock(blockhash, True)["tx"]
+        blocktxn = self.nodes[0].getblock(blockhash, 1)["tx"]
         txlist.append(blocktxn[1])
         txlist.append(blocktxn[2])
 
