@@ -5497,6 +5497,11 @@ void ChainstateManager::CheckBlockIndex() const
     assert(nNodes == forward.size() + best_hdr_chain.Height() + 1);
 }
 
+void Chainstate::ApplyUtxoHints(swiftsync::HintsfileReader reader)
+{
+    m_swiftsync_ctx.ApplyHints(std::move(reader));
+}
+
 std::string Chainstate::ToString()
 {
     AssertLockHeld(::cs_main);

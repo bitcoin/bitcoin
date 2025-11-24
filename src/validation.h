@@ -24,6 +24,7 @@
 #include <script/script_error.h>
 #include <script/sigcache.h>
 #include <script/verify_flags.h>
+#include <swiftsync.h>
 #include <sync.h>
 #include <txdb.h>
 #include <txmempool.h>
@@ -545,6 +546,9 @@ protected:
     //! Manages the UTXO set, which is a reflection of the contents of `m_chain`.
     std::unique_ptr<CoinsViews> m_coins_views;
 
+    //! Manages the state of accelerated IBD with external hints.
+    swiftsync::Context m_swiftsync_ctx{};
+
     //! This toggle exists for use when doing background validation for UTXO
     //! snapshots.
     //!
@@ -797,6 +801,9 @@ public:
     {
         return m_mempool ? &m_mempool->cs : nullptr;
     }
+
+    /** Accelerate initial block download with external hints. */
+    void ApplyUtxoHints(swiftsync::HintsfileReader reader);
 
 protected:
     bool ActivateBestChainStep(BlockValidationState& state, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);
