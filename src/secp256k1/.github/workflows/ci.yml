@@ -109,7 +109,7 @@ jobs:
     steps:
       - &CHECKOUT
         name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - &CI_SCRIPT_IN_DOCKER
         name: CI script

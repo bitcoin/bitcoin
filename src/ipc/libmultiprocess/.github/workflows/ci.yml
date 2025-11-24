@@ -12,7 +12,7 @@ jobs:
       run:
         shell: openbsd {0}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Start OpenBSD VM
         uses: vmactions/openbsd-vm@v1
@@ -41,7 +41,7 @@ jobs:
       run:
         shell: freebsd {0}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Start FreeBSD VM
         uses: vmactions/freebsd-vm@v1
@@ -61,7 +61,7 @@ jobs:
     name: build • macos
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Install dependencies
         env:
@@ -84,7 +84,7 @@ jobs:
     name: build • ${{ matrix.config }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Install Nix
         uses: cachix/install-nix-action@v31       # 2025-05-27, from https://github.com/cachix/install-nix-action/tags
