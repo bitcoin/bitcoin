@@ -453,8 +453,8 @@ bool FillBlock(const CBlockIndex* index, const FoundBlock& block, UniqueLock<Rec
 class NotificationsProxy : public CValidationInterface
 {
 public:
-    explicit NotificationsProxy(std::shared_ptr<Chain::Notifications> notifications)
-        : m_notifications(std::move(notifications)) {}
+    explicit NotificationsProxy(std::shared_ptr<Chain::Notifications> notifications, bool connected)
+        : m_notifications{std::move(notifications)}, m_connected{connected} {}
     virtual ~NotificationsProxy() = default;
     void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t mempool_sequence) override
     {
@@ -481,21 +481,43 @@ public:
         m_notifications->chainStateFlushed(role, locator);
     }
     std::shared_ptr<Chain::Notifications> m_notifications;
+    Mutex m_mutex;
+    bool m_connected GUARDED_BY(m_mutex);
 };
 
 class NotificationsHandlerImpl : public Handler
 {
 public:
-    explicit NotificationsHandlerImpl(ValidationSignals& signals, std::shared_ptr<Chain::Notifications> notifications)
-        : m_signals{signals}, m_proxy{std::make_shared<NotificationsProxy>(std::move(notifications))}
+    explicit NotificationsHandlerImpl(ValidationSignals& signals, std::shared_ptr<Chain::Notifications> notifications, bool connected = true)
+        : m_signals{signals}, m_proxy{std::make_shared<NotificationsProxy>(std::move(notifications), connected)}
     {
-        m_signals.RegisterSharedValidationInterface(m_proxy);
+        if (connected) m_signals.RegisterSharedValidationInterface(m_proxy);
     }
     ~NotificationsHandlerImpl() override { disconnect(); }
+    void connect() override
+    {
+        assert(m_proxy);
+        LOCK(m_proxy->m_mutex);
+        if (!m_proxy->m_connected) {
+            m_proxy->m_connected = true;
+            // Instead of registering for notifications immediately, which could
+            // cause older BlockConnected notifications currently in the queue
+            // to be received, enqueue the registration so only new
+            // notifications from new blocks connected after this call will be
+            // received.
+            //
+            // cs_main should also be held during this call to prevent new
+            // blocks from being connected now and notifications being missed.
+            m_signals.CallFunctionInValidationInterfaceQueue([proxy = m_proxy, signals = &m_signals] {
+                LOCK(proxy->m_mutex);
+                if (proxy->m_connected) signals->RegisterSharedValidationInterface(proxy);
+            });
+        }
+    }
     void disconnect() override
     {
         if (m_proxy) {
-            m_signals.UnregisterSharedValidationInterface(m_proxy);
+            WITH_LOCK(m_proxy->m_mutex, if (m_proxy->m_connected) m_signals.UnregisterSharedValidationInterface(m_proxy));
             m_proxy.reset();
         }
     }
@@ -775,6 +797,11 @@ public:
     void showProgress(const std::string& title, int progress, bool resume_possible) override
     {
         ::uiInterface.ShowProgress(title, progress, resume_possible);
+    }
+    std::unique_ptr<Handler> attachChain(std::shared_ptr<Notifications> notifications, const NotifyOptions& options) override
+    {
+        LOCK(cs_main);
+        return std::make_unique<NotificationsHandlerImpl>(validation_signals(), notifications, /*connected=*/false);
     }
     std::unique_ptr<Handler> handleNotifications(std::shared_ptr<Notifications> notifications) override
     {
