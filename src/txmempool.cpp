@@ -957,6 +957,9 @@ std::vector<CTxMemPool::txiter> CTxMemPool::GatherClusters(const std::vector<Txi
     for (auto txid : txids) {
         auto it = mapTx.find(txid);
         if (it != mapTx.end()) {
+            // Note that TxGraph::GetCluster will return results in graph
+            // order, which is deterministic (as long as we are not modifying
+            // the graph).
             auto cluster = m_txgraph->GetCluster(*it, TxGraph::Level::MAIN);
             if (unique_cluster_representatives.insert(static_cast<const CTxMemPoolEntry*>(&(**cluster.begin()))).second) {
                 for (auto tx : cluster) {
