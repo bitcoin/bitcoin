@@ -4,6 +4,7 @@
 
 #include <kernel/mempool_entry.h>
 #include <kernel/mempool_removal_reason.h>
+#include <logging.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
 #include <policy/fees/estimator.h>
@@ -19,10 +20,40 @@ void FeeRateEstimatorManager::RegisterFeeRateEstimator(std::unique_ptr<FeeRateEs
 
 FeeRateEstimatorResult FeeRateEstimatorManager::GetFeeRateEstimate(int target, bool conservative)
 {
-    Assume(estimators.contains(FeeRateEstimatorType::BLOCK_POLICY));
-    CBlockPolicyEstimator* estimator =
-        GetFeeRateEstimator<CBlockPolicyEstimator>(FeeRateEstimatorType::BLOCK_POLICY);
-    return estimator->EstimateFeeRate(target, conservative);
+    FeeRateEstimatorResult selected_estimate;
+    std::vector<std::string> errors;
+
+    for (const auto& [type, estimate_ptr] : estimators) {
+        auto current_estimate = estimate_ptr->EstimateFeeRate(target, conservative);
+        errors.insert(errors.end(), current_estimate.errors.begin(), current_estimate.errors.end());
+        if (current_estimate.feerate.IsEmpty()) {
+            // Handle case where block policy estimator does not have enough data yet.
+            if (type == FeeRateEstimatorType::BLOCK_POLICY) {
+                return current_estimate;
+            } else {
+                continue;
+            }
+        }
+
+        if (selected_estimate.feerate.IsEmpty()) {
+            // If there's no selected fee rate estimate, choose current_estimate as the fee rate estimate.
+            selected_estimate = current_estimate;
+        } else {
+            // Otherwise, choose the smaller as estimate.
+            selected_estimate = std::min(selected_estimate, current_estimate);
+        }
+    }
+
+    if (!selected_estimate.feerate.IsEmpty()) {
+        LogDebug(BCLog::ESTIMATEFEE, "Fee rate estimated using %s: for target %s, current height %s, fee rate %s %s/kvB.\n",
+                 FeeRateEstimatorTypeToString(selected_estimate.feerate_estimator),
+                 selected_estimate.returned_target,
+                 selected_estimate.current_block_height,
+                 CFeeRate(selected_estimate.feerate.fee, selected_estimate.feerate.size).GetFeePerK(),
+                 CURRENCY_ATOM);
+    }
+    selected_estimate.errors = errors;
+    return selected_estimate;
 }
 
 void FeeRateEstimatorManager::IntervalFlush()
