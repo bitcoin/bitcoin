@@ -2155,7 +2155,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
     m_evoDb.WriteBestBlock(pindex->pprev->GetBlockHash());
 
     if (mnlist_updates_opt.has_value()) {
-        auto mnlu = mnlist_updates_opt.value();
+        auto& mnlu = mnlist_updates_opt.value();
         GetMainSignals().NotifyMasternodeListChanged(true, mnlu.old_list, mnlu.diff);
         uiInterface.NotifyMasternodeListChanged(mnlu.new_list, pindex->pprev);
     }
@@ -2706,7 +2706,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     m_evoDb.WriteBestBlock(pindex->GetBlockHash());
 
     if (mnlist_updates_opt.has_value()) {
-        auto mnlu = mnlist_updates_opt.value();
+        const auto& mnlu = mnlist_updates_opt.value();
         GetMainSignals().NotifyMasternodeListChanged(false, mnlu.old_list, mnlu.diff);
         uiInterface.NotifyMasternodeListChanged(mnlu.new_list, pindex);
     }

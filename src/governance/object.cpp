@@ -270,8 +270,8 @@ UniValue CGovernanceObject::GetJSONObject() const
     if (objResult.isObject()) {
         obj = objResult;
     } else {
-        std::vector<UniValue> arr1 = objResult.getValues();
-        std::vector<UniValue> arr2 = arr1.at(0).getValues();
+        const std::vector<UniValue>& arr1 = objResult.getValues();
+        const std::vector<UniValue>& arr2 = arr1.at(0).getValues();
         obj = arr2.at(1);
     }
 

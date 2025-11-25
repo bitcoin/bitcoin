@@ -191,17 +191,16 @@ bool CSpecialTxProcessor::RebuildListFromBlock(const CBlock& block, gsl::not_nul
 
     int nHeight = pindexPrev->nHeight + 1;
 
-    CDeterministicMNList oldList = prevList;
-    CDeterministicMNList newList = oldList;
+    CDeterministicMNList newList = prevList;
     newList.SetBlockHash(uint256()); // we can't know the final block hash, so better not return a (invalid) block hash
     newList.SetHeight(nHeight);
 
-    auto payee = oldList.GetMNPayee(pindexPrev);
+    auto payee = prevList.GetMNPayee(pindexPrev);
 
-    // we iterate the oldList here and update the newList
+    // we iterate the prevList here and update the newList
     // this is only valid as long these have not diverged at this point, which is the case as long as we don't add
     // code above this loop that modifies newList
-    oldList.ForEachMN(false, [&pindexPrev, &newList, this](auto& dmn) {
+    prevList.ForEachMN(false, [&pindexPrev, &newList, this](auto& dmn) {
         if (!dmn.pdmnState->confirmedHash.IsNull()) {
             // already confirmed
             return;

@@ -398,7 +398,7 @@ void LegacyScriptPubKeyMan::GenerateNewHDChain(const SecureString& secureMnemoni
 
     // Encryption routine if vMasterKey has been supplied
     if (vMasterKeyOpt.has_value()) {
-        auto vMasterKey = vMasterKeyOpt.value();
+        const auto& vMasterKey = vMasterKeyOpt.value();
         if (vMasterKey.size() != WALLET_CRYPTO_KEY_SIZE) {
             throw std::runtime_error(strprintf("%s : invalid vMasterKey size, got %zd (expected %lld)", __func__, vMasterKey.size(), WALLET_CRYPTO_KEY_SIZE));
         }
