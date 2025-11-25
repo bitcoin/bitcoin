@@ -783,7 +783,7 @@ void CTxMemPool::RemoveStaged(setEntries &stage, MemPoolRemovalReason reason) {
 bool CTxMemPool::CheckPolicyLimits(const CTransactionRef& tx)
 {
     LOCK(cs);
-    // Use ChangeSet interface to check whether the chain
+    // Use ChangeSet interface to check whether the cluster count
     // limits would be violated. Note that the changeset will be destroyed
     // when it goes out of scope.
     auto changeset = GetChangeSet();
