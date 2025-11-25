@@ -138,19 +138,18 @@ struct SimTxGraph
     }
 
     /** Add a new transaction to the simulation. */
-    TxGraph::Ref* AddTransaction(const FeePerWeight& feerate)
+    void AddTransaction(TxGraph::Ref&& ref, const FeePerWeight& feerate)
     {
         assert(graph.TxCount() < MAX_TRANSACTIONS);
         auto simpos = graph.AddTransaction(feerate);
         real_is_optimal = false;
         MakeModified(simpos);
         assert(graph.Positions()[simpos]);
-        simmap[simpos] = std::make_shared<TxGraph::Ref>();
+        simmap[simpos] = std::make_shared<TxGraph::Ref>(std::move(ref));
         auto ptr = simmap[simpos].get();
         simrevmap[ptr] = simpos;
         // This may invalidate our cached oversized value.
         if (oversized.has_value() && !*oversized) oversized = std::nullopt;
-        return ptr;
     }
 
     /** Add a dependency between two positions in this graph. */
@@ -459,9 +458,7 @@ FUZZ_TARGET(txgraph)
                 // Create a real TxGraph::Ref.
                 auto ref = real->AddTransaction(feerate);
                 // Create a shared_ptr place in the simulation to put the Ref in.
-                auto ref_loc = top_sim.AddTransaction(feerate);
-                // Move it in place.
-                *ref_loc = std::move(ref);
+                top_sim.AddTransaction(std::move(ref), feerate);
                 break;
             } else if ((block_builders.empty() || sims.size() > 1) && top_sim.GetTransactionCount() + top_sim.removed.size() > 1 && command-- == 0) {
                 // AddDependency.
