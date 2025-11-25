@@ -21,8 +21,8 @@
 class CFeeRate;
 class uint256;
 
-/** Maximum number of transactions that can be replaced by RBF (Rule #5). This includes all
- * mempool conflicts and their descendants. */
+/** Maximum number of unique clusters that can be affected by an RBF (Rule #5);
+ * see GetEntriesForConflicts() */
 static constexpr uint32_t MAX_REPLACEMENT_CANDIDATES{100};
 
 /** The rbf state of unconfirmed transactions */
@@ -57,26 +57,18 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool) E
 RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx);
 
 /** Get all descendants of iters_conflicting. Checks that there are no more than
- * MAX_REPLACEMENT_CANDIDATES potential entries. May overestimate if the entries in
- * iters_conflicting have overlapping descendants.
+ * MAX_REPLACEMENT_CANDIDATES distinct clusters affected.
+ *
  * @param[in]   iters_conflicting   The set of iterators to mempool entries.
  * @param[out]  all_conflicts       Populated with all the mempool entries that would be replaced,
  *                                  which includes iters_conflicting and all entries' descendants.
  *                                  Not cleared at the start; any existing mempool entries will
  *                                  remain in the set.
- * @returns an error message if MAX_REPLACEMENT_CANDIDATES may be exceeded, otherwise a std::nullopt.
+ * @returns an error message if the number of affected clusters would exceed MAX_REPLACEMENT_CANDIDATES, std::nullopt otherwise
  */
 std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx, CTxMemPool& pool,
                                                   const CTxMemPool::setEntries& iters_conflicting,
                                                   CTxMemPool::setEntries& all_conflicts)
-    EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
-
-/** The replacement transaction may only include an unconfirmed input if that input was included in
- * one of the original transactions.
- * @returns error message if tx spends unconfirmed inputs not also spent by iters_conflicting,
- * otherwise std::nullopt. */
-std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx, const CTxMemPool& pool,
-                                               const CTxMemPool::setEntries& iters_conflicting)
     EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
 
 /** Check the intersection between two sets of transactions (a set of mempool entries and a set of
@@ -91,14 +83,6 @@ std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx, const CTx
 std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntries& ancestors,
                                                    const std::set<Txid>& direct_conflicts,
                                                    const Txid& txid);
-
-/** Check that the feerate of the replacement transaction(s) is higher than the feerate of each
- * of the transactions in iters_conflicting.
- * @param[in]   iters_conflicting  The set of mempool entries.
- * @returns error message if fees insufficient, otherwise std::nullopt.
- */
-std::optional<std::string> PaysMoreThanConflicts(const CTxMemPool::setEntries& iters_conflicting,
-                                                 CFeeRate replacement_feerate, const Txid& txid);
 
 /** The replacement transaction must pay more fees than the original transactions. The additional
  * fees must pay for the replacement's bandwidth at or above the incremental relay feerate.

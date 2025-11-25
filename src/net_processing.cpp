@@ -5429,8 +5429,8 @@ public:
     bool operator()(std::set<Wtxid>::iterator a, std::set<Wtxid>::iterator b)
     {
         /* As std::make_heap produces a max-heap, we want the entries with the
-         * fewest ancestors/highest fee to sort later. */
-        return m_mempool->CompareDepthAndScore(*b, *a);
+         * higher mining score to sort later. */
+        return m_mempool->CompareMiningScoreWithTopology(*b, *a);
     }
 };
 } // namespace

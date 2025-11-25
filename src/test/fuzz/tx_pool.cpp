@@ -80,14 +80,10 @@ struct TransactionsDelta final : public CValidationInterface {
 
 void SetMempoolConstraints(ArgsManager& args, FuzzedDataProvider& fuzzed_data_provider)
 {
-    args.ForceSetArg("-limitancestorcount",
-                     ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 50)));
-    args.ForceSetArg("-limitancestorsize",
-                     ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 202)));
-    args.ForceSetArg("-limitdescendantcount",
-                     ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 50)));
-    args.ForceSetArg("-limitdescendantsize",
-                     ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 202)));
+    args.ForceSetArg("-limitclustercount",
+                     ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(1, 64)));
+    args.ForceSetArg("-limitclustersize",
+                     ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(1, 250)));
     args.ForceSetArg("-maxmempool",
                      ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 200)));
     args.ForceSetArg("-mempoolexpiry",
@@ -104,14 +100,41 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Cha
         auto assembler = BlockAssembler{chainstate, &tx_pool, options};
         auto block_template = assembler.CreateNewBlock();
         Assert(block_template->block.vtx.size() >= 1);
+
+        // Try updating the mempool for this block, as though it were mined.
+        LOCK2(::cs_main, tx_pool.cs);
+        tx_pool.removeForBlock(block_template->block.vtx, chainstate.m_chain.Height() + 1);
+
+        // Now try to add those transactions back, as though a reorg happened.
+        std::vector<Txid> hashes_to_update;
+        for (const auto& tx : block_template->block.vtx) {
+            const auto res = AcceptToMemoryPool(chainstate, tx, GetTime(), true, /*test_accept=*/false);
+            if (res.m_result_type == MempoolAcceptResult::ResultType::VALID) {
+                hashes_to_update.push_back(tx->GetHash());
+            } else {
+                tx_pool.removeRecursive(*tx, MemPoolRemovalReason::REORG);
+            }
+        }
+        tx_pool.UpdateTransactionsFromBlock(hashes_to_update);
     }
     const auto info_all = tx_pool.infoAll();
     if (!info_all.empty()) {
         const auto& tx_to_remove = *PickValue(fuzzed_data_provider, info_all).tx;
         WITH_LOCK(tx_pool.cs, tx_pool.removeRecursive(tx_to_remove, MemPoolRemovalReason::BLOCK /* dummy */));
         assert(tx_pool.size() < info_all.size());
-        WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
     }
+
+    if (fuzzed_data_provider.ConsumeBool()) {
+        // Try eviction
+        LOCK2(::cs_main, tx_pool.cs);
+        tx_pool.TrimToSize(fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0U, tx_pool.DynamicMemoryUsage() * 2));
+    }
+    if (fuzzed_data_provider.ConsumeBool()) {
+        // Try expiry
+        LOCK2(::cs_main, tx_pool.cs);
+        tx_pool.Expire(GetMockTime() - std::chrono::seconds(fuzzed_data_provider.ConsumeIntegral<uint32_t>()));
+    }
+    WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
     g_setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
 }
 
@@ -264,11 +287,20 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
 
                 tx_mut.vin.push_back(in);
             }
+
+            // Check sigops in mempool + block template creation
+            bool add_sigops{fuzzed_data_provider.ConsumeBool()};
+
             const auto amount_fee = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-1000, amount_in);
             const auto amount_out = (amount_in - amount_fee) / num_out;
             for (int i = 0; i < num_out; ++i) {
-                tx_mut.vout.emplace_back(amount_out, P2WSH_OP_TRUE);
+                if (i == 0 && add_sigops) {
+                    tx_mut.vout.emplace_back(amount_out, CScript() << std::vector<unsigned char>(33, 0x02) << OP_CHECKSIG);
+                } else {
+                    tx_mut.vout.emplace_back(amount_out, P2WSH_OP_TRUE);
+                }
             }
+
             auto tx = MakeTransactionRef(tx_mut);
             // Restore previously removed outpoints
             for (const auto& in : tx->vin) {

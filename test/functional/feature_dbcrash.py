@@ -53,7 +53,6 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
 
         # Set -maxmempool=0 to turn off mempool memory sharing with dbcache
         self.base_args = [
-            "-limitdescendantsize=0",
             "-maxmempool=0",
             "-dbbatchsize=200000",
         ]
