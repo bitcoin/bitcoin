@@ -213,7 +213,7 @@ void CSigSharesManager::Start()
         [this] { HousekeepingThreadMain(); });
 
     // Start dispatcher thread
-    dispatcherThread = std::thread(&util::TraceThread, "sigsh-dispatch",
+    dispatcherThread = std::thread(&util::TraceThread, "sigsh-dispat",
         [this] { WorkDispatcherThreadMain(); });
 }
 
