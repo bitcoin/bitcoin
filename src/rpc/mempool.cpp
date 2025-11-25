@@ -695,7 +695,7 @@ static RPCHelpMan getmempoolcluster()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    uint256 hash = ParseHashV(request.params[0], "txid");
 
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
     LOCK(mempool.cs);
