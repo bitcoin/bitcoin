@@ -30,6 +30,7 @@ MAX_FILE_AGE = 60
 SECONDS_PER_HOUR = 60 * 60
 MIN_BUCKET_FEERATE = Decimal(100) / Decimal(COIN)
 TXS_COUNT = 24
+MEMPOOL_FEE_ESTIMATOR_CACHE_LIFE = 7  # Seconds
 BLOCK_POLICY_ESTIMATOR_ERROR = "Insufficient data or no feerate found"
 
 def small_txpuzzle_randfee(
@@ -465,6 +466,8 @@ class EstimateFeeTest(BitcoinTestFramework):
     def test_estimatesmartfee_return_mempool_estimates(self):
         node0 = self.nodes[0]
         miner = self.nodes[1]
+        mock_time = int(time.time())
+        node0.setmocktime(mock_time)
         self.log.info("Ensure node0's mempool is empty at the start")
         assert_equal(node0.getmempoolinfo()['size'], 0)
         self.log.info("Test estimatesmartfee with empty mempool and no block policy estimator data")
@@ -480,6 +483,9 @@ class EstimateFeeTest(BitcoinTestFramework):
         verify_estimate_response(estimate_with_sparse_mempool, floor_feerate, [])
         assert_equal(estimate_with_sparse_mempool["estimator"], "Mempool Fee Rate Estimator")
         self.log.info("Test estimatesmartfee returns block policy estimator estimate when mempool is higher")
+        # Use setmocktime so the mempool estimator cache is invalidated.
+        mock_time += MEMPOOL_FEE_ESTIMATOR_CACHE_LIFE + 1
+        node0.setmocktime(mock_time)
         # Add 10 large insane-feerate transactions enough to generate a block template
         num_txs = 10
         target_vsize = int(((MAX_BLOCK_WEIGHT - DEFAULT_BLOCK_RESERVED_WEIGHT) / WITNESS_SCALE_FACTOR) / num_txs)
@@ -489,15 +495,24 @@ class EstimateFeeTest(BitcoinTestFramework):
         estimate_after_spike = node0.estimatesmartfee(1, "economical", False)
         verify_estimate_response(estimate_after_spike, high_feerate, [])
         assert_equal(estimate_after_spike["estimator"], "Block Policy Estimator")
-        # Restart node with empty mempool, then broadcast low-feerate transactions
         # Check that estimate reflects the lower feerate from mempool
-        self.stop_node(0)
-        os.remove(node0.chain_path / "mempool.dat")
-        self.restart_node(0)
+        self.generate(node0, 1)
         low_feerate = Decimal("0.00004")
+        utxos = [self.wallet.get_utxo(confirmed_only=True) for _ in range(num_txs)]
         self.send_transactions(utxos, low_feerate, target_vsize)
         lower_estimate = node0.estimatesmartfee(1, "economical", False)
         verify_estimate_response(lower_estimate, low_feerate, [])
+        self.log.info("Test caching of recent estimates")
+        # Verify estimates are cached even after replacing the low-feerate txs with med-feerate
+        med_feerate = Decimal("0.0002")
+        self.send_transactions(utxos, med_feerate, target_vsize)
+        cached_estimate = node0.estimatesmartfee(1, block_policy_only=False)
+        verify_estimate_response(cached_estimate, low_feerate, [])
+        self.log.info("Test estimate refresh after cache expiration")
+        mock_time += MEMPOOL_FEE_ESTIMATOR_CACHE_LIFE + 1
+        node0.setmocktime(mock_time)
+        new_estimate = node0.estimatesmartfee(1, block_policy_only=False)
+        verify_estimate_response(new_estimate, med_feerate, [])
 
     def run_test(self):
         self.log.info("This test is time consuming, please be patient")
@@ -549,7 +564,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Test that estimatesmartfee returns a sub 1s/vb fee rate estimate")
         self.test_sub_1s_per_vb_estimates()
 
-        self.log.info("Test that estimatesmartfee returns mempool estimates when lower")
+        self.log.info("Test that estimatesmartfee returns mempool estimates when it is lower")
         self.clear_estimates()
         self.test_estimatesmartfee_return_mempool_estimates()
 

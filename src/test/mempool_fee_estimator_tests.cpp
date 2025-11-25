@@ -11,6 +11,7 @@
 #include <uint256.h>
 #include <util/feefrac.h>
 #include <util/fees.h>
+#include <util/time.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -55,7 +56,8 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
     const CAmount low_fee{CENT / 3000};
     const CAmount med_fee{CENT / 100};
     const CAmount high_fee{CENT / 10};
-    // Test when there are not enough mempool transactions to get an accurate estimate
+    // When the mempool has fewer transactions than needed to fill 95% of DEFAULT_BLOCK_MAX_WEIGHT,
+    // CalculatePercentiles returns empty, but a healthy mempool still returns the floor feerate.
     {
         // Add transactions with high_fee fee until mempool transactions weight
         // is more than 25th percent of DEFAULT_BLOCK_MAX_WEIGHT
@@ -66,8 +68,9 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
             }
         }
         const auto result = mempool_estimator.EstimateFeeRate(/*conservative=*/true);
+        // Cache was seeded by the empty-mempool call above, so this is a cache hit — no error re-emitted.
         BOOST_CHECK(!result.feerate.IsEmpty());
-        BOOST_CHECK_EQUAL(result.errors.back(), sparse_err);
+        BOOST_CHECK(result.errors.empty());
         BOOST_CHECK(result.feerate == FeePerVSize(floor_feerate.GetFee(vsize), vsize));
     }
     {
@@ -80,10 +83,13 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
             }
         }
         const auto result = mempool_estimator.EstimateFeeRate(/*conservative=*/true);
+        // Still a cache hit (mempool < 95% of block weight) — floor returned, no error.
         BOOST_CHECK(!result.feerate.IsEmpty());
-        BOOST_CHECK_EQUAL(result.errors.back(), sparse_err);
+        BOOST_CHECK(result.errors.empty());
         BOOST_CHECK(result.feerate == FeePerVSize(floor_feerate.GetFee(vsize), vsize));
     }
+    // Expire the cache by advancing mock time past CACHE_LIFE so the next call recomputes.
+    SetMockTime(GetTime<std::chrono::seconds>() + CACHE_LIFE + std::chrono::seconds{1});
     // Mempool transactions are enough to provide feerate estimate
     {
         // Add low_fee transactions until mempool transactions weight
