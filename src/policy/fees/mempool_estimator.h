@@ -8,6 +8,10 @@
 #include <policy/fees/estimator.h>
 #include <sync.h>
 #include <threadsafety.h>
+#include <uint256.h>
+#include <util/time.h>
+
+#include <chrono>
 
 class ChainstateManager;
 class CTxMemPool;
@@ -15,6 +19,33 @@ class CTxMemPool;
 // Fee rate estimate for confirmation target above this is not reliable,
 // as mempool conditions is likely going to change.
 constexpr int MEMPOOL_FEE_ESTIMATOR_MAX_TARGET{2};
+
+constexpr std::chrono::seconds CACHE_LIFE{7};
+
+/**
+ * MemPoolFeeRateEstimatorCache holds a cache of recent fee rate estimates.
+ * A fresh fee rate is only provided if the cached value is older than CACHE_LIFE.
+ */
+class MemPoolFeeRateEstimatorCache
+{
+public:
+    MemPoolFeeRateEstimatorCache() = default;
+    MemPoolFeeRateEstimatorCache(const MemPoolFeeRateEstimatorCache&) = delete;
+    MemPoolFeeRateEstimatorCache& operator=(const MemPoolFeeRateEstimatorCache&) = delete;
+    /** Returns true if the cache is older than 7 seconds. */
+    bool IsStale() const;
+    /** Returns the cached fee rate if available and not stale. */
+    std::optional<Percentiles> GetCachedEstimate() const;
+    /** Returns the chain tip hash that the cache corresponds to. */
+    uint256 GetChainTipHash() const;
+    /** Update the cache with a new estimates  and chain tip hash. */
+    void Update(const Percentiles& new_estimates, const uint256& current_tip_hash);
+
+private:
+    uint256 chain_tip_hash;
+    Percentiles estimates;
+    NodeClock::time_point last_updated{NodeClock::now() - CACHE_LIFE - std::chrono::seconds(1)};
+};
 
 /** \class MemPoolFeeRateEstimator
  * @brief Estimate the fee rate required for a transaction to be included in the next block.
@@ -43,5 +74,6 @@ private:
     const CTxMemPool* m_mempool;
     ChainstateManager* m_chainman;
     mutable Mutex cs;
+    mutable MemPoolFeeRateEstimatorCache cache GUARDED_BY(cs);
 };
 #endif // BITCOIN_POLICY_FEES_MEMPOOL_ESTIMATOR_H
