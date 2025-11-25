@@ -59,6 +59,7 @@ std::optional<std::string> PackageTRUCChecks(const CTxMemPool& pool, const CTran
                                            const Package& package,
                                            const std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef>& mempool_parents)
 {
+    AssertLockHeld(pool.cs);
     // This function is specialized for these limits, and must be reimplemented if they ever change.
     static_assert(TRUC_ANCESTOR_LIMIT == 2);
     static_assert(TRUC_DESCENDANT_LIMIT == 2);
@@ -173,7 +174,7 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CT
                                           const std::set<Txid>& direct_conflicts,
                                           int64_t vsize)
 {
-    LOCK(pool.cs);
+    AssertLockHeld(pool.cs);
     // Check TRUC and non-TRUC inheritance.
     for (const auto& entry_ref : mempool_parents) {
         const auto& entry = &entry_ref.get();
