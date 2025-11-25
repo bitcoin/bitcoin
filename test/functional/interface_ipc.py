@@ -11,6 +11,7 @@ from test_framework.messages import (CBlock, CTransaction, ser_uint256, COIN)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_not_equal
 )
 from test_framework.wallet import MiniWallet
@@ -194,6 +195,11 @@ class IPCInterfaceTest(BitcoinTestFramework):
             template7 = await template6.result.waitNext(ctx, waitoptions)
             assert_equal(template7.to_dict(), {})
 
+            self.log.debug("Memory load should be zero because there was no mempool churn")
+            with self.nodes[0].assert_debug_log(["Calculate template transaction reference memory footprint"]):
+                memory_load = await mining.result.getMemoryLoad(ctx)
+            assert_equal(memory_load.result.usage, 0)
+
             self.log.debug("interruptWait should abort the current wait")
             wait_started = asyncio.Event()
             async def wait_for_block():
@@ -276,6 +282,13 @@ class IPCInterfaceTest(BitcoinTestFramework):
             assert_equal(res.result, False)
             assert_equal(res.reason, "inconclusive-not-best-prevblk")
 
+            self.log.debug("Reported memory load should be > 0")
+            # Clients are expected to drop references to stale block templates
+            # briefly after the tip updates. In practice we mainly care about
+            # the memory footprint caused by mempool churn, but this scenario
+            # is easier to test.
+            assert_greater_than((await mining.result.getMemoryLoad(ctx)).result.usage, 0)
+
             self.log.debug("Destroy template objects")
             await self.destroy_template(template8, ctx)
             await self.destroy_template(template7, ctx)
@@ -283,6 +296,11 @@ class IPCInterfaceTest(BitcoinTestFramework):
             await self.destroy_template(template5, ctx)
             await self.destroy_template(template4, ctx)
             await self.destroy_template(template3, ctx)
+
+            # All templates with transactions have been released
+            self.log.debug("Reported memory load should be 0")
+            assert_equal((await mining.result.getMemoryLoad(ctx)).result.usage, 0)
+
             await self.destroy_template(template2, ctx)
             await self.destroy_template(template, ctx)
 
