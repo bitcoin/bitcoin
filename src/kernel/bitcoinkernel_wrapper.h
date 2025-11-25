@@ -383,6 +383,10 @@ private:
     ScriptPubkeyApi() = default;
 
 public:
+    /**
+     * @return true if the script is valid, false if the script is invalid.
+     * @throws std::runtime_error if the request is invalid (e.g., input_index out of bounds).
+     */
     bool Verify(int64_t amount,
                 const Transaction& tx_to,
                 std::span<const TransactionOutput> spent_outputs,
@@ -652,6 +656,9 @@ bool ScriptPubkeyApi<Derived>::Verify(int64_t amount,
         input_index,
         static_cast<btck_ScriptVerificationFlags>(flags),
         reinterpret_cast<btck_ScriptVerifyStatus*>(&status));
+    if (result == -1) {
+        throw std::runtime_error("invalid script verification request");
+    }
     return result == 1;
 }
 

@@ -611,7 +611,7 @@ BITCOINKERNEL_API btck_ScriptPubkey* BITCOINKERNEL_WARN_UNUSED_RESULT btck_scrip
  * @param[in] input_index       Index of the input in tx_to spending the script_pubkey.
  * @param[in] flags             Bitfield of btck_ScriptVerificationFlags controlling validation constraints.
  * @param[out] status           Nullable, will be set to an error code if the operation fails, or OK otherwise.
- * @return                      1 if the script is valid, 0 otherwise.
+ * @return                      1 if the script is valid, 0 if the script is invalid, or -1 if the request is invalid
  */
 BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_script_pubkey_verify(
     const btck_ScriptPubkey* script_pubkey,

@@ -530,6 +530,45 @@ BOOST_AUTO_TEST_CASE(btck_script_verify_tests)
         /*amount*/ 88480,
         /*input_index*/ 0,
         /*is_taproot*/ true);
+
+    // Test invalid API usage cases - all should throw std::runtime_error
+    ScriptVerifyStatus status;
+    Transaction taproot_tx{hex_string_to_byte_vec("01000000000101d1f1c1f8cdf6759167b90f52c9ad358a369f95284e841d7a2536cef31c0549580100000000fdffffff020000000000000000316a2f49206c696b65205363686e6f7272207369677320616e6420492063616e6e6f74206c69652e204062697462756734329e06010000000000225120a37c3903c8d0db6512e2b40b0dffa05e5a3ab73603ce8c9c4b7771e5412328f90140a60c383f71bac0ec919b1d7dbc3eb72dd56e7aa99583615564f9f99b8ae4e837b758773a5b2e4c51348854c8389f008e05029db7f464a5ff2e01d5e6e626174affd30a00")};
+
+    // input_index out of bounds
+    BOOST_CHECK_THROW(taproot_spent_script_pubkey.Verify(
+                          88480,
+                          taproot_tx,
+                          spent_outputs,
+                          1, // Invalid: tx only has 1 input
+                          ScriptVerificationFlags::ALL,
+                          status),
+                      std::runtime_error);
+
+    // spent_outputs length mismatch (tx has 1 input, but we pass 2 outputs)
+    std::vector<TransactionOutput> wrong_size_spent_outputs;
+    wrong_size_spent_outputs.emplace_back(taproot_spent_script_pubkey, 88480);
+    wrong_size_spent_outputs.emplace_back(taproot_spent_script_pubkey, 88480);
+    BOOST_CHECK_THROW(taproot_spent_script_pubkey.Verify(
+                          88480,
+                          taproot_tx,
+                          wrong_size_spent_outputs,
+                          0,
+                          ScriptVerificationFlags::ALL,
+                          status),
+                      std::runtime_error);
+
+    // invalid flags (using a flag bit not in btck_ScriptVerificationFlags_ALL)
+    // btck_ScriptVerificationFlags_ALL is a combination of specific flags, so we use a bit outside that set
+    constexpr auto INVALID_FLAG = static_cast<ScriptVerificationFlags>(1U << 20); // Not a valid flag
+    BOOST_CHECK_THROW(taproot_spent_script_pubkey.Verify(
+                          88480,
+                          taproot_tx,
+                          spent_outputs,
+                          0,
+                          INVALID_FLAG,
+                          status),
+                      std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(logging_tests)

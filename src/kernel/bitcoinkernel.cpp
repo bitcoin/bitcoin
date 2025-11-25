@@ -615,17 +615,23 @@ int btck_script_pubkey_verify(const btck_ScriptPubkey* script_pubkey,
                               const btck_ScriptVerificationFlags flags,
                               btck_ScriptVerifyStatus* status)
 {
-    // Assert that all specified flags are part of the interface before continuing
-    assert((flags & ~btck_ScriptVerificationFlags_ALL) == 0);
+    constexpr auto INVALID_REQUEST{-1};
+    constexpr auto INVALID_SCRIPT{0};
+    constexpr auto VALID_SCRIPT{1};
+
+    if ((flags & ~btck_ScriptVerificationFlags_ALL) != 0) {
+        LogError("Specified flag(s) are not part of the interface.");
+        return INVALID_REQUEST;
+    }
 
     if (!is_valid_flag_combination(script_verify_flags::from_int(flags))) {
         if (status) *status = btck_ScriptVerifyStatus_ERROR_INVALID_FLAGS_COMBINATION;
-        return 0;
+        return INVALID_SCRIPT;
     }
 
     if (flags & btck_ScriptVerificationFlags_TAPROOT && spent_outputs_ == nullptr) {
         if (status) *status = btck_ScriptVerifyStatus_ERROR_SPENT_OUTPUTS_REQUIRED;
-        return 0;
+        return INVALID_SCRIPT;
     }
 
     if (status) *status = btck_ScriptVerifyStatus_OK;
@@ -633,7 +639,10 @@ int btck_script_pubkey_verify(const btck_ScriptPubkey* script_pubkey,
     const CTransaction& tx{*btck_Transaction::get(tx_to)};
     std::vector<CTxOut> spent_outputs;
     if (spent_outputs_ != nullptr) {
-        assert(spent_outputs_len == tx.vin.size());
+        if (spent_outputs_len != tx.vin.size()) {
+            LogError("spent_outputs_len must be equal to tx_to's number of inputs.");
+            return INVALID_REQUEST;
+        }
         spent_outputs.reserve(spent_outputs_len);
         for (size_t i = 0; i < spent_outputs_len; i++) {
             const CTxOut& tx_out{btck_TransactionOutput::get(spent_outputs_[i])};
@@ -641,7 +650,10 @@ int btck_script_pubkey_verify(const btck_ScriptPubkey* script_pubkey,
         }
     }
 
-    assert(input_index < tx.vin.size());
+    if (input_index >= tx.vin.size()) {
+        LogError("input_index must be strictly smaller than the tx_to's number of inputs.");
+        return INVALID_REQUEST;
+    }
     PrecomputedTransactionData txdata{tx};
 
     if (spent_outputs_ != nullptr && flags & btck_ScriptVerificationFlags_TAPROOT) {
@@ -654,7 +666,7 @@ int btck_script_pubkey_verify(const btck_ScriptPubkey* script_pubkey,
                                script_verify_flags::from_int(flags),
                                TransactionSignatureChecker(&tx, input_index, amount, txdata, MissingDataBehavior::FAIL),
                                nullptr);
-    return result ? 1 : 0;
+    return result ? VALID_SCRIPT : INVALID_SCRIPT;
 }
 
 btck_TransactionInput* btck_transaction_input_copy(const btck_TransactionInput* input)
