@@ -18,16 +18,13 @@ else
 fi
 
 CI_EXEC () {
-  $CI_EXEC_CMD_PREFIX bash -c "export PATH=\"/path_with space:${BINS_SCRATCH_DIR}:${BASE_ROOT_DIR}/ci/retry:\$PATH\" && cd \"${BASE_ROOT_DIR}\" && $*"
+  $CI_EXEC_CMD_PREFIX bash -c "export PATH=\"/path_with space:${BASE_ROOT_DIR}/ci/retry:\$PATH\" && cd \"${BASE_ROOT_DIR}\" && $*"
 }
 export -f CI_EXEC
 
 # Normalize all folders to BASE_ROOT_DIR
 CI_EXEC rsync --recursive --perms --stats --human-readable "${BASE_READ_ONLY_DIR}/" "${BASE_ROOT_DIR}" || echo "Nothing to copy from ${BASE_READ_ONLY_DIR}/"
 CI_EXEC "${BASE_ROOT_DIR}/ci/test/01_base_install.sh"
-
-CI_EXEC mkdir -p "${BINS_SCRATCH_DIR}"
-
 CI_EXEC "${BASE_ROOT_DIR}/ci/test/03_test_script.sh"
 
 if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then

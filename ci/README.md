@@ -43,7 +43,7 @@ into the local CI.
 To run the test stage with a specific configuration:
 
 ```
-env -i HOME="$HOME" PATH="$PATH" USER="$USER" bash -c 'FILE_ENV="./ci/test/00_setup_env_arm.sh" ./ci/test_run_all.sh'
+env -i HOME="$HOME" PATH="$PATH" USER="$USER" FILE_ENV="./ci/test/00_setup_env_arm.sh" ./ci/test_run_all.sh
 ```
 
 ## Configurations
@@ -62,7 +62,7 @@ It is also possible to force a specific configuration without modifying the
 file. For example,
 
 ```
-env -i HOME="$HOME" PATH="$PATH" USER="$USER" bash -c 'MAKEJOBS="-j1" FILE_ENV="./ci/test/00_setup_env_arm.sh" ./ci/test_run_all.sh'
+env -i HOME="$HOME" PATH="$PATH" USER="$USER" MAKEJOBS="-j1" FILE_ENV="./ci/test/00_setup_env_arm.sh" ./ci/test_run_all.sh
 ```
 
 The files starting with `0n` (`n` greater than 0) are the scripts that are run

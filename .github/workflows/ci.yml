@@ -517,7 +517,7 @@ jobs:
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_i686_no_ipc.sh'
 
-          - name: 'fuzzer,address,undefined,integer, no depends'
+          - name: 'fuzzer,address,undefined,integer'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 240
