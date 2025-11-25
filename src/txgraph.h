@@ -241,8 +241,8 @@ public:
         /** Destroy this Ref. If it is not empty, the corresponding transaction is removed (in both
          *  main and staging, if it exists). */
         virtual ~Ref();
-        // Support moving a Ref.
-        Ref& operator=(Ref&& other) noexcept;
+        // Support move-constructing a Ref.
+        Ref& operator=(Ref&& other) noexcept = delete;
         Ref(Ref&& other) noexcept;
         // Do not permit copy constructing or copy assignment. A TxGraph entry can have at most one
         // Ref pointing to it.

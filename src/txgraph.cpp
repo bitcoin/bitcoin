@@ -3451,20 +3451,6 @@ TxGraph::Ref::~Ref()
     }
 }
 
-TxGraph::Ref& TxGraph::Ref::operator=(Ref&& other) noexcept
-{
-    // Unlink the current graph, if any.
-    if (m_graph) m_graph->UnlinkRef(m_index);
-    // Inform the other's graph about the move, if any.
-    if (other.m_graph) other.m_graph->UpdateRef(other.m_index, *this);
-    // Actually update the contents.
-    m_graph = other.m_graph;
-    m_index = other.m_index;
-    other.m_graph = nullptr;
-    other.m_index = GraphIndex(-1);
-    return *this;
-}
-
 TxGraph::Ref::Ref(Ref&& other) noexcept
 {
     // Inform the TxGraph of other that its Ref is being moved.
