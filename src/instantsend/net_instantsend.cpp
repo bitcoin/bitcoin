@@ -237,11 +237,11 @@ void NetInstantSend::ProcessPendingISLocks(std::vector<std::pair<uint256, instan
         still_pending.reserve(bad_is_locks.size());
         for (auto& p : locks_to_process) {
             if (bad_is_locks.contains(p.first)) {
-                still_pending.push_back(std::move(p));
+                still_pending.emplace_back(std::move(p));
             }
         }
         // Now check against the previous active set and perform banning if this fails
-        ProcessPendingInstantSendLocks(llmq_params, dkgInterval, /*ban=*/true, std::move(still_pending));
+        ProcessPendingInstantSendLocks(llmq_params, dkgInterval, /*ban=*/true, still_pending);
     }
 }
 

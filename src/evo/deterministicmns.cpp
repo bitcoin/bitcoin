@@ -1836,7 +1836,7 @@ std::vector<std::pair<uint256, CDeterministicMNListDiff>> CDeterministicMNManage
             temp_diffs.emplace_back(pIndex->GetBlockHash(), recalc_diff);
 
             // Move forward
-            current_list = std::move(next_list);
+            current_list = next_list; // TODO: make CDeterministicMNList moveable
         }
 
         // Verify that applying all diffs results in the target snapshot
