@@ -933,6 +933,17 @@ BITCOINKERNEL_API int32_t BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_tree_entry
 BITCOINKERNEL_API const btck_BlockHash* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_tree_entry_get_block_hash(
     const btck_BlockTreeEntry* block_tree_entry) BITCOINKERNEL_ARG_NONNULL(1);
 
+/**
+ * @brief Check if two block tree entries are equal. Two block tree entries are equal when they
+ * point to the same block.
+ *
+ * @param[in] entry1 Non-null.
+ * @param[in] entry2 Non-null.
+ * @return           1 if the block tree entries are equal, 0 otherwise.
+ */
+BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_tree_entry_equals(
+    const btck_BlockTreeEntry* entry1, const btck_BlockTreeEntry* entry2) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
 ///@}
 
 /** @name ChainstateManagerOptions

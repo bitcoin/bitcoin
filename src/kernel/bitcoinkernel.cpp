@@ -1117,6 +1117,11 @@ const btck_BlockHash* btck_block_tree_entry_get_block_hash(const btck_BlockTreeE
     return btck_BlockHash::ref(btck_BlockTreeEntry::get(entry).phashBlock);
 }
 
+int btck_block_tree_entry_equals(const btck_BlockTreeEntry* entry1, const btck_BlockTreeEntry* entry2)
+{
+    return &btck_BlockTreeEntry::get(entry1) == &btck_BlockTreeEntry::get(entry2);
+}
+
 btck_BlockHash* btck_block_hash_create(const unsigned char block_hash[32])
 {
     return btck_BlockHash::create(std::span<const unsigned char>{block_hash, 32});

@@ -812,6 +812,48 @@ BOOST_AUTO_TEST_CASE(btck_block_hash_tests)
     CheckHandle(block_hash, block_hash_2);
 }
 
+BOOST_AUTO_TEST_CASE(btck_block_tree_entry_tests)
+{
+    auto test_directory{TestDirectory{"block_tree_entry_test_bitcoin_kernel"}};
+    auto notifications{std::make_shared<TestKernelNotifications>()};
+    auto context{create_context(notifications, ChainType::REGTEST)};
+    auto chainman{create_chainman(
+        test_directory,
+        /*reindex=*/false,
+        /*wipe_chainstate=*/false,
+        /*block_tree_db_in_memory=*/true,
+        /*chainstate_db_in_memory=*/true,
+        context)};
+
+    // Process a couple of blocks
+    for (size_t i{0}; i < 3; i++) {
+        Block block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[i])};
+        bool new_block{false};
+        chainman->ProcessBlock(block, &new_block);
+        BOOST_CHECK(new_block);
+    }
+
+    auto chain{chainman->GetChain()};
+    auto entry_0{chain.GetByHeight(0)};
+    auto entry_1{chain.GetByHeight(1)};
+    auto entry_2{chain.GetByHeight(2)};
+
+    // Test inequality
+    BOOST_CHECK(entry_0 != entry_1);
+    BOOST_CHECK(entry_1 != entry_2);
+    BOOST_CHECK(entry_0 != entry_2);
+
+    // Test equality with same entry
+    BOOST_CHECK(entry_0 == chain.GetByHeight(0));
+    BOOST_CHECK(entry_0 == BlockTreeEntry{entry_0});
+    BOOST_CHECK(entry_1 == entry_1);
+
+    // Test GetPrevious
+    auto prev{entry_1.GetPrevious()};
+    BOOST_CHECK(prev.has_value());
+    BOOST_CHECK(prev.value() == entry_0);
+}
+
 BOOST_AUTO_TEST_CASE(btck_chainman_in_memory_tests)
 {
     auto in_memory_test_directory{TestDirectory{"in-memory_test_bitcoin_kernel"}};
