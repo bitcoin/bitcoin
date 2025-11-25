@@ -5,7 +5,6 @@
 """Tests governance checks can be skipped for blocks covered by the best chainlock."""
 
 import json
-import time
 
 from test_framework.governance import have_trigger_for_height
 from test_framework.messages import uint256_to_string
@@ -58,9 +57,9 @@ class DashGovernanceTest (DashTestFramework):
 
         # Move to the superblock cycle start block
         n = sb_cycle - self.nodes[0].getblockcount() % sb_cycle
-        for _ in range(n):
-            self.bump_mocktime(156)
-            self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks())
+        if n > 0:
+            self.bump_mocktime(156 * n)
+            self.generate(self.nodes[0], n, sync_fun=lambda: self.sync_blocks())
 
         self.log.info("Prepare proposals")
 
@@ -99,25 +98,31 @@ class DashGovernanceTest (DashTestFramework):
 
         assert_equal(len(self.nodes[0].gobject("list", "valid", "triggers")), 0)
 
-        self.log.info("Move 1 block into sb maturity window")
+        self.log.info("Move into sb maturity window")
         n = sb_immaturity_window - self.nodes[0].getblockcount() % sb_cycle
         assert n >= 0
-        for _ in range(n + 1):
-            self.bump_mocktime(156)
-            self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks(self.nodes[0:5]))
+        self.bump_mocktime(156 * n)
+        self.generate(self.nodes[0], n, sync_fun=lambda: self.sync_blocks(self.nodes[0:5]))
 
         self.log.info("Wait for new trigger and votes on non-isolated nodes")
         sb_block_height = self.nodes[0].getblockcount() // sb_cycle * sb_cycle + sb_cycle
         assert_equal(sb_block_height % sb_cycle, 0)
+
+        assert_equal(self.mninfo[4].nodeIdx, 5)
+        isolated_lastpaid_height = self.nodes[0].protx("info", self.mninfo[4].proTxHash)["state"]["lastPaidHeight"]
+        if isolated_lastpaid_height == self.nodes[0].getblockcount() - self.mn_count + 1:
+            # Isolated node is the one that should create new trigger at this height,
+            # mine a block to pick another node
+            self.bump_mocktime(156)
+            self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks(self.nodes[0:5]))
         self.wait_until(lambda: have_trigger_for_height(self.nodes[0:5], sb_block_height), timeout=5)
 
         n = sb_cycle - self.nodes[0].getblockcount() % sb_cycle
         assert n > 1
 
         self.log.info("Move remaining n blocks until the next Superblock")
-        for _ in range(n - 1):
-            self.bump_mocktime(156)
-            self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks(self.nodes[0:5]))
+        self.bump_mocktime(156 * (n-1))
+        self.generate(self.nodes[0], n-1, sync_fun=lambda: self.sync_blocks(self.nodes[0:5]))
 
         # Confirm all is good
         self.wait_until(lambda: have_trigger_for_height(self.nodes[0:5], sb_block_height), timeout=5)
@@ -136,13 +141,21 @@ class DashGovernanceTest (DashTestFramework):
         assert not have_trigger_for_height(self.nodes[0:5], sb_block_height + sb_cycle)
         self.bump_mocktime(156)
         self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks(self.nodes[0:5]))
-        # Trigger scheduler to mark old triggers for deletion
-        self.bump_mocktime(5 * 60)
-        # Let it do the job
-        time.sleep(1)
-        # Move forward to satisfy GOVERNANCE_DELETION_DELAY, should actually remove old triggers now
-        self.bump_mocktime(10 * 60)
-        self.wait_until(lambda: len(self.nodes[0].gobject("list", "valid", "triggers")) == 0, timeout=5)
+
+        self.log.info("Bump mocktime to trigger governance cleanup")
+        for delta, expected in (
+            (5 * 60, ['UpdateCachesAndClean -- Governance Objects:']),  # mark old triggers for deletion
+            (10 * 60, ['UpdateCachesAndClean -- Governance Objects: 0']),  # deletion after delay
+        ):
+            self.mocktime += delta
+            for node in self.nodes:
+                with node.assert_debug_log(expected_msgs=expected):
+                    node.setmocktime(self.mocktime)
+                    node.mockscheduler(delta)
+
+        # Confirm in RPC
+        for node in self.nodes:
+            assert_equal(len(node.gobject("list", "valid", "triggers")), 0)
 
         self.log.info("Reconnect isolated node and confirm the next ChainLock will let it sync")
         self.reconnect_isolated_node(5, 0)
