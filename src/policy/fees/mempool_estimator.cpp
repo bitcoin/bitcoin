@@ -10,6 +10,29 @@
 #include <util/fees.h>
 #include <validation.h>
 
+bool MemPoolFeeRateEstimatorCache::IsStale() const
+{
+    return (last_updated + CACHE_LIFE) < NodeClock::now();
+}
+
+std::optional<Percentiles> MemPoolFeeRateEstimatorCache::GetCachedEstimate() const
+{
+    if (IsStale()) return std::nullopt;
+    return estimates;
+}
+
+uint256 MemPoolFeeRateEstimatorCache::GetChainTipHash() const
+{
+    return chain_tip_hash;
+}
+
+void MemPoolFeeRateEstimatorCache::Update(const Percentiles& new_estimates, uint256 current_tip_hash)
+{
+    estimates = new_estimates;
+    last_updated = NodeClock::now();
+    chain_tip_hash = current_tip_hash;
+}
+
 FeeRateEstimatorResult MemPoolFeeRateEstimator::EstimateFeeRate(int target, bool conservative) const
 {
     LOCK(cs);
@@ -21,6 +44,15 @@ FeeRateEstimatorResult MemPoolFeeRateEstimator::EstimateFeeRate(int target, bool
         return result;
     }
     result.current_block_height = static_cast<unsigned int>(activeTip->nHeight);
+
+    const auto cached_estimate = cache.GetCachedEstimate();
+    const auto known_chain_tip_hash = cache.GetChainTipHash();
+    if (cached_estimate && *activeTip->phashBlock == known_chain_tip_hash) {
+        result.returned_target = MEMPOOL_FEE_ESTIMATOR_MAX_TARGET;
+        result.feerate = conservative ? cached_estimate->p50 : cached_estimate->p75;
+        return result;
+    }
+
     node::BlockAssembler::Options options;
     options.test_block_validity = false;
     node::BlockAssembler assembler(*m_chainstate, m_mempool, options);
@@ -43,6 +75,7 @@ FeeRateEstimatorResult MemPoolFeeRateEstimator::EstimateFeeRate(int target, bool
              CFeeRate(percentiles.p75.fee, percentiles.p75.size).GetFeePerK(), CURRENCY_ATOM,
              CFeeRate(percentiles.p95.fee, percentiles.p95.size).GetFeePerK(), CURRENCY_ATOM);
 
+    cache.Update(percentiles, *activeTip->phashBlock);
     result.feerate = conservative ? percentiles.p50 : percentiles.p75;
     result.returned_target = MEMPOOL_FEE_ESTIMATOR_MAX_TARGET;
     return result;
