@@ -244,9 +244,13 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
         return false;
     }
 
-    // must get current HD chain before EncryptKeys
     CHDChain hdChainCurrent;
     GetHDChain(hdChainCurrent);
+
+    if (!hdChainCurrent.IsNull() && hdChainCurrent.IsCrypted()) {
+        encrypted_batch = nullptr;
+        return false;
+    }
 
     KeyMap keys_to_encrypt;
     keys_to_encrypt.swap(mapKeys); // Clear mapKeys so AddCryptedKeyInner will succeed.
@@ -340,10 +344,13 @@ void LegacyScriptPubKeyMan::UpgradeKeyMetadata()
     CHDChain hdChainCurrent;
     if (!GetHDChain(hdChainCurrent))
         throw std::runtime_error(std::string(__func__) + ": GetHDChain failed");
-    if (!m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
-            return DecryptHDChain(encryption_key, hdChainCurrent);
-        })) {
-        throw std::runtime_error(std::string(__func__) + ": DecryptHDChain failed");
+
+    if (hdChainCurrent.IsCrypted()) {
+        if (!m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
+                return DecryptHDChain(encryption_key, hdChainCurrent);
+            })) {
+            throw std::runtime_error(std::string(__func__) + ": DecryptHDChain failed");
+        }
     }
 
     CExtKey masterKey;
@@ -475,10 +482,12 @@ bool LegacyScriptPubKeyMan::GetDecryptedHDChain(CHDChain& hdChainRet) const
         return false;
     }
 
-    if (!m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
-            return DecryptHDChain(encryption_key, hdChainTmp);
-        })) {
-        return false;
+    if (hdChainTmp.IsCrypted()) {
+        if (!m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
+                return DecryptHDChain(encryption_key, hdChainTmp);
+            })) {
+            return false;
+        }
     }
 
     // make sure seed matches this chain
@@ -493,12 +502,9 @@ bool LegacyScriptPubKeyMan::GetDecryptedHDChain(CHDChain& hdChainRet) const
 bool LegacyScriptPubKeyMan::EncryptHDChain(const CKeyingMaterial& vMasterKeyIn, CHDChain& chain)
 {
     LOCK(cs_KeyStore);
-    // should call EncryptKeys first
-    if (!m_storage.HasEncryptionKeys())
-        return false;
 
     if (chain.IsCrypted())
-        return true;
+        return false;
 
     // make sure seed matches this chain
     if (chain.GetID() != chain.GetSeedHash())
@@ -541,8 +547,6 @@ bool LegacyScriptPubKeyMan::EncryptHDChain(const CKeyingMaterial& vMasterKeyIn, 
 bool LegacyScriptPubKeyMan::DecryptHDChain(const CKeyingMaterial& vMasterKeyIn, CHDChain& hdChainRet) const
 {
     LOCK(cs_KeyStore);
-    if (!m_storage.HasEncryptionKeys())
-        return true;
 
     if (m_hd_chain.IsNull()) {
         WalletLogPrintf("%s: ERROR: no HD chain\n", __func__);
@@ -1188,10 +1192,12 @@ bool LegacyScriptPubKeyMan::GetKey(const CKeyID &address, CKey& keyOut) const
         CHDChain hdChainCurrent;
         if (!GetHDChain(hdChainCurrent))
             throw std::runtime_error(std::string(__func__) + ": GetHDChain failed");
-        if (!m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
-                return DecryptHDChain(encryption_key, hdChainCurrent);
-            })) {
-            throw std::runtime_error(std::string(__func__) + ": DecryptHDChain failed");
+        if (hdChainCurrent.IsCrypted()) {
+            if (!m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
+                    return DecryptHDChain(encryption_key, hdChainCurrent);
+                })) {
+                throw std::runtime_error(std::string(__func__) + ": DecryptHDChain failed");
+            }
         }
         // make sure seed matches this chain
         if (hdChainCurrent.GetID() != hdChainCurrent.GetSeedHash())
@@ -1303,10 +1309,12 @@ void LegacyScriptPubKeyMan::DeriveNewChildKey(WalletBatch &batch, CKeyMetadata& 
         throw std::runtime_error(std::string(__func__) + ": GetHDChain failed");
     }
 
-    if (!m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
-            return DecryptHDChain(encryption_key, hdChainTmp);
-        })) {
-        throw std::runtime_error(std::string(__func__) + ": DecryptHDChain failed");
+    if (hdChainTmp.IsCrypted()) {
+        if (!m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
+                return DecryptHDChain(encryption_key, hdChainTmp);
+            })) {
+            throw std::runtime_error(std::string(__func__) + ": DecryptHDChain failed");
+        }
     }
     // make sure seed matches this chain
     if (hdChainTmp.GetID() != hdChainTmp.GetSeedHash())

@@ -737,6 +737,12 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
     {
         LOCK(cs_wallet);
+
+        if (IsCrypted()) {
+            // verify again now that cs_wallet lock is held
+            return false;
+        }
+
         mapMasterKeys[++nMasterKeyMaxID] = kMasterKey;
         WalletBatch* encrypted_batch = new WalletBatch(GetDatabase());
         if (!encrypted_batch->TxnBegin()) {
@@ -783,6 +789,10 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         } else if (auto spk_man = GetLegacyScriptPubKeyMan()) {
             // if we are not using HD, generate new keypool
             if (spk_man->IsHDEnabled()) {
+                // NOTE: using internal master key which should be populated on Unlock()
+                if (!spk_man->CheckDecryptionKey(vMasterKey)) {
+                    return false;
+                }
                 if (!spk_man->TopUp()) {
                     return false;
                 }
@@ -796,8 +806,10 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
         // Need to completely rewrite the wallet file; if we don't, bdb might keep
         // bits of the unencrypted private key in slack space in the database file.
-        GetDatabase().Rewrite();
-
+        if (!GetDatabase().Rewrite()) {
+            WalletLogPrintf("ERROR: Rewrite failed - wallet is in dangerous state!\n");
+            return false;
+        }
         // BDB seems to have a bad habit of writing old data into
         // slack space in .dat files; that is bad if the old data is
         // unencrypted private keys. So:
