@@ -3404,9 +3404,9 @@ void CConnman::ThreadOpenMasternodeConnections(CDeterministicMNManager& dmnman, 
                         continue;
                     }
                     const auto addr2 = dmn->pdmnState->netInfo->GetPrimary();
-                    CNode* pnode = FindNodeMutable(addr2);
-                    if (pnode && pnode->m_masternode_connection) {
-                        // node is masternode, skip it
+                    CNode* pnode = FindNodeMutable(addr2, /*fExcludeDisconnecting=*/false);
+                    if (pnode && (pnode->m_masternode_connection || pnode->fDisconnect)) {
+                        // node is either a masternode or disconnecting, skip it
                         continue;
                     }
                     if (connectedNodes.count(addr2)) {
