@@ -10,6 +10,7 @@
 #include <uint256.h>
 #include <util/feefrac.h>
 #include <util/fees.h>
+#include <util/time.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -73,6 +74,31 @@ BOOST_AUTO_TEST_CASE(calculate_max_weight_percentiles)
     BOOST_CHECK(ByRatio{percentiles.p50} > ByRatio{percentiles.p75});
 }
 
+BOOST_AUTO_TEST_CASE(mempool_fee_rate_estimator_cache)
+{
+    MemPoolFeeRateEstimatorCache cache;
+    const uint256 tip_hash{uint256::ONE};
+    const uint256 next_tip_hash{uint256{2}};
+    const FeePerVSize conservative{2, 1};
+    const FeePerVSize economical{1, 1};
+
+    BOOST_CHECK(cache.IsStale());
+    BOOST_CHECK(!cache.GetCachedEstimate(tip_hash));
+
+    cache.Update(conservative, economical, tip_hash);
+    BOOST_CHECK(!cache.IsStale());
+    const auto cached{cache.GetCachedEstimate(tip_hash)};
+    BOOST_REQUIRE(cached);
+    BOOST_CHECK(cached->m_conservative == conservative);
+    BOOST_CHECK(cached->m_economical == economical);
+    BOOST_CHECK(!cache.GetCachedEstimate(next_tip_hash));
+
+    SetMockTime(GetTime<std::chrono::seconds>() + CACHE_LIFE + std::chrono::seconds{1});
+    BOOST_CHECK(cache.IsStale());
+    BOOST_CHECK(!cache.GetCachedEstimate(tip_hash));
+    SetMockTime(0);
+}
+
 BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
 {
     auto mempool_estimator = MemPoolFeeRateEstimator(*m_node.mempool, *m_node.chainman);
@@ -100,12 +126,18 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
         BOOST_CHECK(result->feerate == floor);
         BOOST_CHECK(result->feerate_estimator == FeeRateEstimatorType::MEMPOOL_POLICY);
         BOOST_CHECK_EQUAL(result->returned_target, MEMPOOL_FEE_ESTIMATOR_MAX_TARGET);
+
+        // The floor estimate is cached like any other; a second call returns the same value.
+        const auto cached_result = mempool_estimator.EstimateFeeRate(/*conservative=*/true);
+        BOOST_REQUIRE(cached_result.has_value());
+        BOOST_CHECK(cached_result->feerate == floor);
     }
     TestMemPoolEntryHelper entry;
     const auto tx_vsize = entry.FromTx(MakeRandomTx()).GetTxSize();
     const CAmount low_fee{CENT / 3000};
     const CAmount med_fee{CENT / 100};
     const CAmount high_fee{CENT / 10};
+    const CAmount very_high_fee{CENT};
     // A mempool that cannot fill 50% of a block leaves both percentiles empty,
     // so both estimate still fall back to the floor.
     {
@@ -116,6 +148,8 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
                 TryAddToMempool(*m_node.mempool, entry.Fee(high_fee).FromTx(MakeRandomTx()));
             }
         }
+        // Expire the cached floor estimate so the denser mempool is observed.
+        SetMockTime(GetTime<std::chrono::seconds>() + CACHE_LIFE + std::chrono::seconds{1});
         const auto result = mempool_estimator.EstimateFeeRate(/*conservative=*/true);
         BOOST_REQUIRE(result.has_value());
         BOOST_CHECK(result->feerate == floor);
@@ -130,6 +164,7 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
                 TryAddToMempool(*m_node.mempool, entry.Fee(med_fee).FromTx(MakeRandomTx()));
             }
         }
+        SetMockTime(GetTime<std::chrono::seconds>() + CACHE_LIFE + std::chrono::seconds{1});
         const auto conservative = mempool_estimator.EstimateFeeRate(/*conservative=*/true);
         const auto economical = mempool_estimator.EstimateFeeRate(/*conservative=*/false);
         BOOST_REQUIRE(conservative.has_value());
@@ -147,6 +182,8 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
                 TryAddToMempool(*m_node.mempool, entry.Fee(low_fee).FromTx(MakeRandomTx()));
             }
         }
+        // Expire the sparse-result cache before expecting the estimator to observe the denser mempool.
+        SetMockTime(GetTime<std::chrono::seconds>() + CACHE_LIFE + std::chrono::seconds{1});
         const auto result_conservative = mempool_estimator.EstimateFeeRate(/*conservative=*/true);
         const auto result_economical = mempool_estimator.EstimateFeeRate(/*conservative=*/false);
         BOOST_CHECK(result_conservative.has_value());
@@ -158,6 +195,22 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
         BOOST_CHECK(result_economical->feerate_estimator == FeeRateEstimatorType::MEMPOOL_POLICY);
         BOOST_CHECK_EQUAL(result_conservative->returned_target, MEMPOOL_FEE_ESTIMATOR_MAX_TARGET);
         BOOST_CHECK_EQUAL(result_economical->returned_target, MEMPOOL_FEE_ESTIMATOR_MAX_TARGET);
+
+        // Adding another 30% of very-high-fee transactions should change the
+        // estimates after recomputation, but not while the cached estimate is fresh.
+        {
+            LOCK2(cs_main, m_node.mempool->cs);
+            while ((m_node.mempool->GetTotalTxSize() * WITNESS_SCALE_FACTOR) <=
+                   (DEFAULT_BLOCK_MAX_WEIGHT * 105 / 100)) {
+                TryAddToMempool(*m_node.mempool, entry.Fee(very_high_fee).FromTx(MakeRandomTx()));
+            }
+        }
+        BOOST_CHECK(mempool_estimator.EstimateFeeRate(/*conservative=*/false).value().feerate == FeeFrac(low_fee, tx_vsize));
+        BOOST_CHECK(mempool_estimator.EstimateFeeRate(/*conservative=*/true).value().feerate == FeeFrac(med_fee, tx_vsize));
+        // Expire the cache by advancing mock time past CACHE_LIFE so the next call recomputes.
+        SetMockTime(GetTime<std::chrono::seconds>() + CACHE_LIFE + std::chrono::seconds{1});
+        BOOST_CHECK(mempool_estimator.EstimateFeeRate(/*conservative=*/false).value().feerate == FeeFrac(med_fee, tx_vsize));
+        BOOST_CHECK(mempool_estimator.EstimateFeeRate(/*conservative=*/true).value().feerate == FeeFrac(high_fee, tx_vsize));
     }
 }
 
