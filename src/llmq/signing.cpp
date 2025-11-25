@@ -5,10 +5,10 @@
 #include <llmq/signing.h>
 
 #include <llmq/commitment.h>
+#include <llmq/params.h>
 #include <llmq/quorums.h>
 #include <llmq/signhash.h>
 #include <llmq/signing_shares.h>
-#include <llmq/options.h>
 
 #include <bls/bls_batchverifier.h>
 #include <chainparams.h>
