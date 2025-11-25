@@ -267,7 +267,7 @@ static RPCHelpMan testmempoolaccept()
 static std::vector<RPCResult> ClusterDescription()
 {
     return {
-        RPCResult{RPCResult::Type::NUM, "weight", "total sigops-adjusted weight (as defined in BIP 141 and modified by '-bytespersigop'"},
+        RPCResult{RPCResult::Type::NUM, "clusterweight", "total sigops-adjusted weight (as defined in BIP 141 and modified by '-bytespersigop')"},
         RPCResult{RPCResult::Type::NUM, "txcount", "number of transactions"},
         RPCResult{RPCResult::Type::ARR, "chunks", "chunks in this cluster (in mining order)",
             {RPCResult{RPCResult::Type::OBJ, "chunk", "",
@@ -332,7 +332,7 @@ static void clusterToJSON(const CTxMemPool& pool, UniValue& info, std::vector<co
     for (const auto& tx : cluster) {
         total_weight += tx->GetAdjustedWeight();
     }
-    info.pushKV("weight", total_weight);
+    info.pushKV("clusterweight", total_weight);
     info.pushKV("txcount", (int)cluster.size());
 
     // Output the cluster by chunk. This isn't handed to us by the mempool, but
