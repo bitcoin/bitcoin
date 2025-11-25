@@ -425,6 +425,8 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
 
     uint64_t checkTotal = 0;
     CAmount check_total_fee{0};
+    CAmount check_total_modified_fee{0};
+    int64_t check_total_adjusted_weight{0};
     uint64_t innerUsage = 0;
 
     assert(!m_txgraph->IsOversized(TxGraph::Level::MAIN));
@@ -436,13 +438,28 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
 
     // Number of chunks is bounded by number of transactions.
     const auto diagram{GetFeerateDiagram()};
-    Assume(diagram.size() <= score_with_topo.size() + 1);
+    assert(diagram.size() <= score_with_topo.size() + 1);
+    assert(diagram.size() >= 1);
 
     std::optional<Wtxid> last_wtxid = std::nullopt;
+    auto diagram_iter = diagram.cbegin();
 
     for (const auto& it : score_with_topo) {
+        // GetSortedScoreWithTopology() contains the same chunks as the feerate
+        // diagram. We do not know where the chunk boundaries are, but we can
+        // check that there are points at which they match the cumulative fee
+        // and weight.
+        // The feerate diagram should never get behind the current transaction
+        // size totals.
+        assert(diagram_iter->size >= check_total_adjusted_weight);
+        if (diagram_iter->fee == check_total_modified_fee &&
+                diagram_iter->size == check_total_adjusted_weight) {
+            ++diagram_iter;
+        }
         checkTotal += it->GetTxSize();
+        check_total_adjusted_weight += it->GetAdjustedWeight();
         check_total_fee += it->GetFee();
+        check_total_modified_fee += it->GetModifiedFee();
         innerUsage += it->DynamicMemoryUsage();
         const CTransaction& tx = it->GetTx();
 
@@ -509,8 +526,13 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
         assert(it2 != mapTx.end());
     }
 
+    ++diagram_iter;
+    assert(diagram_iter == diagram.cend());
+
     assert(totalTxSize == checkTotal);
     assert(m_total_fee == check_total_fee);
+    assert(diagram.back().fee == check_total_modified_fee);
+    assert(diagram.back().size == check_total_adjusted_weight);
     assert(innerUsage == cachedInnerUsage);
 }
 
