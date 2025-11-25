@@ -15,4 +15,4 @@ export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
 export RUN_FUZZ_TESTS=true
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-zmq --disable-ccache --enable-fuzz --with-sanitizers=fuzzer,address,undefined,integer CC='clang-19 -ftrivial-auto-var-init=pattern' CXX='clang++-19 -ftrivial-auto-var-init=pattern' --with-boost-process"
+export BITCOIN_CONFIG="--enable-zmq --disable-ccache --enable-fuzz --with-sanitizers=fuzzer,address,undefined,integer CC='clang-19 -ftrivial-auto-var-init=pattern' CXX='clang++-19 -ftrivial-auto-var-init=pattern'"

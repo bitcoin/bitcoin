@@ -14,6 +14,7 @@
 #include <evo/deterministicmns.h>
 #include <governance/classes.h>
 #include <governance/exceptions.h>
+#include <external_signer.h>
 #include <governance/governance.h>
 #include <governance/object.h>
 #include <governance/vote.h>
@@ -398,6 +399,17 @@ public:
     }
 };
 
+#ifdef ENABLE_EXTERNAL_SIGNER
+class ExternalSignerImpl : public interfaces::ExternalSigner
+{
+public:
+    ExternalSignerImpl(::ExternalSigner signer) : m_signer(std::move(signer)) {}
+    std::string getName() override { return m_signer.m_name; }
+private:
+    ::ExternalSigner m_signer;
+};
+#endif
+
 class NodeImpl : public Node
 {
 private:
@@ -554,6 +566,28 @@ public:
             return m_context->connman->DisconnectNode(id);
         }
         return false;
+    }
+    std::vector<std::unique_ptr<interfaces::ExternalSigner>> listExternalSigners() override
+    {
+#ifdef ENABLE_EXTERNAL_SIGNER
+        std::vector<ExternalSigner> signers = {};
+        const std::string command = gArgs.GetArg("-signer", "");
+        if (command == "") return {};
+        ExternalSigner::Enumerate(command, signers, Params().NetworkIDString());
+        std::vector<std::unique_ptr<interfaces::ExternalSigner>> result;
+        for (auto& signer : signers) {
+            result.emplace_back(std::make_unique<ExternalSignerImpl>(std::move(signer)));
+        }
+        return result;
+#else
+        // This result is undistinguisable from a succesful call that returns
+        // no signers. For the current GUI this doesn't matter, because the wallet
+        // creation dialog disables the external signer checkbox in both
+        // cases. The return type could be changed to std::optional<std::vector>
+        // (or something that also includes error messages) if this distinction
+        // becomes important.
+        return {};
+#endif // ENABLE_EXTERNAL_SIGNER
     }
     int64_t getTotalBytesRecv() override { return m_context->connman ? m_context->connman->GetTotalBytesRecv() : 0; }
     int64_t getTotalBytesSent() override { return m_context->connman ? m_context->connman->GetTotalBytesSent() : 0; }

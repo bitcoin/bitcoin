@@ -151,6 +151,9 @@ public:
     //! Save or remove receive request.
     virtual bool setAddressReceiveRequest(const CTxDestination& dest, const std::string& id, const std::string& value) = 0;
 
+    //! Display address on external signer
+    virtual bool displayAddress(const CTxDestination& dest) = 0;
+
     //! Lock coin.
     virtual bool lockCoin(const COutPoint& output, const bool write_to_db) = 0;
 
@@ -287,6 +290,9 @@ public:
 
     // Return whether private keys enabled.
     virtual bool privateKeysDisabled() = 0;
+
+    // Return whether wallet uses an external signer.
+    virtual bool hasExternalSigner() = 0;
 
     //! Get max tx fee.
     virtual CAmount getDefaultMaxTxFee() = 0;
