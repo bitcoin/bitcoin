@@ -463,6 +463,9 @@ BOOST_AUTO_TEST_CASE(btck_transaction_tests)
 
     ScriptPubkey script_pubkey_roundtrip{script_pubkey.ToBytes()};
     check_equal(script_pubkey_roundtrip.ToBytes(), script_pubkey.ToBytes());
+
+    BOOST_CHECK_THROW(tx.GetOutput(tx.CountOutputs()), std::out_of_range);
+    BOOST_CHECK_THROW(tx.GetInput(tx.CountInputs()), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(btck_script_pubkey)
@@ -632,6 +635,8 @@ BOOST_AUTO_TEST_CASE(btck_block)
     BOOST_CHECK_THROW(Block{invalid_data}, std::runtime_error);
     auto empty_data = hex_string_to_byte_vec("");
     BOOST_CHECK_THROW(Block{empty_data}, std::runtime_error);
+
+    BOOST_CHECK_THROW(block_tx.GetTransaction(block_tx.CountTransactions()), std::out_of_range);
 }
 
 Context create_context(std::shared_ptr<TestKernelNotifications> notifications, ChainType chain_type, std::shared_ptr<TestValidationInterface> validation_interface = nullptr)
@@ -1032,6 +1037,9 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     BOOST_CHECK_EQUAL(script_pubkey_bytes.size(), 22);
     auto round_trip_script_pubkey{ScriptPubkey(script_pubkey_bytes)};
     BOOST_CHECK_EQUAL(round_trip_script_pubkey.ToBytes().size(), 22);
+
+    BOOST_CHECK_THROW(block_spent_outputs.GetTxSpentOutputs(block_spent_outputs.Count()), std::out_of_range);
+    BOOST_CHECK_THROW(transaction_spent_outputs.GetCoin(transaction_spent_outputs.Count()), std::out_of_range);
 
     for (const auto tx_spent_outputs : block_spent_outputs.TxsSpentOutputs()) {
         for (const auto coins : tx_spent_outputs.Coins()) {

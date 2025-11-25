@@ -591,12 +591,16 @@ public:
 
     TransactionOutputView GetOutput(size_t index) const
     {
-        return TransactionOutputView{btck_transaction_get_output_at(impl(), index)};
+        auto output = btck_transaction_get_output_at(impl(), index);
+        if (!output) throw std::out_of_range("index out of bounds");
+        return TransactionOutputView{output};
     }
 
     TransactionInputView GetInput(size_t index) const
     {
-        return TransactionInputView{btck_transaction_get_input_at(impl(), index)};
+        auto input = btck_transaction_get_input_at(impl(), index);
+        if (!input) throw std::out_of_range("index out of bounds");
+        return TransactionInputView{input};
     }
 
     TxidView Txid() const
@@ -726,7 +730,9 @@ public:
 
     TransactionView GetTransaction(size_t index) const
     {
-        return TransactionView{btck_block_get_transaction_at(get(), index)};
+        auto tx = btck_block_get_transaction_at(get(), index);
+        if (!tx) throw std::out_of_range("index out of bounds");
+        return TransactionView{tx};
     }
 
     MAKE_RANGE_METHOD(Transactions, Block, &Block::CountTransactions, &Block::GetTransaction, *this)
@@ -1063,7 +1069,9 @@ public:
 
     CoinView GetCoin(size_t index) const
     {
-        return CoinView{btck_transaction_spent_outputs_get_coin_at(impl(), index)};
+        auto coin = btck_transaction_spent_outputs_get_coin_at(impl(), index);
+        if (!coin) throw std::out_of_range("index out of bounds");
+        return CoinView{coin};
     }
 
     MAKE_RANGE_METHOD(Coins, Derived, &TransactionSpentOutputsApi<Derived>::Count, &TransactionSpentOutputsApi<Derived>::GetCoin, *static_cast<const Derived*>(this))
@@ -1099,7 +1107,9 @@ public:
 
     TransactionSpentOutputsView GetTxSpentOutputs(size_t tx_undo_index) const
     {
-        return TransactionSpentOutputsView{btck_block_spent_outputs_get_transaction_spent_outputs_at(get(), tx_undo_index)};
+        auto tx_spent_outputs = btck_block_spent_outputs_get_transaction_spent_outputs_at(get(), tx_undo_index);
+        if (!tx_spent_outputs) throw std::out_of_range("index out of bounds");
+        return TransactionSpentOutputsView{tx_spent_outputs};
     }
 
     MAKE_RANGE_METHOD(TxsSpentOutputs, BlockSpentOutputs, &BlockSpentOutputs::Count, &BlockSpentOutputs::GetTxSpentOutputs, *this)
