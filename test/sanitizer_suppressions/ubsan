@@ -52,6 +52,7 @@ unsigned-integer-overflow:DecompressAmount
 unsigned-integer-overflow:crypto/
 unsigned-integer-overflow:MurmurHash3
 unsigned-integer-overflow:TxConfirmStats::EstimateMedianVal
+unsigned-integer-overflow:InsecureRandomContext::InsecureRandomContext
 unsigned-integer-overflow:InsecureRandomContext::rand64
 unsigned-integer-overflow:InsecureRandomContext::SplitMix64
 unsigned-integer-overflow:bitset_detail::PopCount
