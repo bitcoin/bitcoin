@@ -4591,16 +4591,16 @@ void PruneBlockFilesManual(Chainstate& active_chainstate, int nManualPruneHeight
 bool Chainstate::LoadChainTip()
 {
     AssertLockHeld(cs_main);
-    const CCoinsViewCache& coins_cache = CoinsTip();
-    assert(!coins_cache.GetBestBlock().IsNull()); // Never called when the coins view is empty
+    uint256 coins_view_best_block_hash = CoinsTip().GetBestBlock();
+    assert(!coins_view_best_block_hash.IsNull()); // Never called when the coins view is empty
     CBlockIndex* tip = m_chain.Tip();
 
-    if (tip && tip->GetBlockHash() == coins_cache.GetBestBlock()) {
+    if (tip && tip->GetBlockHash() == coins_view_best_block_hash) {
         return true;
     }
 
     // Load pointer to end of best chain
-    CBlockIndex* pindex = m_blockman.LookupBlockIndex(coins_cache.GetBestBlock());
+    CBlockIndex* pindex = m_blockman.LookupBlockIndex(coins_view_best_block_hash);
     if (!pindex) {
         return false;
     }
@@ -4621,7 +4621,6 @@ bool Chainstate::LoadChainTip()
     TryAddBlockIndexCandidate(tip);
     PruneBlockIndexCandidates();
 
-    tip = m_chain.Tip();
     LogInfo("Loaded best chain: hashBestChain=%s height=%d date=%s progress=%f",
               tip->GetBlockHash().ToString(),
               m_chain.Height(),
