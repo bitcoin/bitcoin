@@ -8,7 +8,7 @@
 
 #include <interfaces/types.h>
 #include <node/types.h>
-#include <policy/policy.h>
+#include <node/mining.h>
 #include <primitives/block.h>
 #include <txmempool.h>
 #include <util/feefrac.h>
@@ -36,8 +36,6 @@ using interfaces::BlockRef;
 
 namespace node {
 class KernelNotifications;
-
-static const bool DEFAULT_PRINT_MODIFIED_FEE = false;
 
 struct CBlockTemplate
 {

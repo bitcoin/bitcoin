@@ -10,6 +10,7 @@
 #include <consensus/tx_verify.h>
 #include <interfaces/mining.h>
 #include <node/miner.h>
+#include <node/mining.h>
 #include <policy/policy.h>
 #include <test/util/random.h>
 #include <test/util/transaction_utils.h>
