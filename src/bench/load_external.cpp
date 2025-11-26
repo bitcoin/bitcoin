@@ -28,7 +28,7 @@ static void LoadExternalBlockFile(benchmark::Bench& bench)
     // block data) as a stream object.
     const fs::path blkfile{testing_setup.get()->m_path_root / "blk.dat"};
     CDataStream ss(SER_DISK, 0);
-    auto params{Params()};
+    const auto& params{Params()};
     ss << params.MessageStart();
     ss << static_cast<uint32_t>(benchmark::data::block813851.size());
     // We can't use the streaming serialization (ss << benchmark::data::block813851)

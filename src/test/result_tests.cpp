@@ -63,7 +63,8 @@ void ExpectSuccess(const util::Result<T>& result, const bilingual_str& str, Args
 {
     ExpectResult(result, true, str);
     BOOST_CHECK_EQUAL(result.has_value(), true);
-    BOOST_CHECK_EQUAL(result.value(), T{std::forward<Args>(args)...});
+    T expected{std::forward<Args>(args)...};
+    BOOST_CHECK_EQUAL(result.value(), expected);
     BOOST_CHECK_EQUAL(&result.value(), &*result);
 }
 

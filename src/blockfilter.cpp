@@ -170,7 +170,7 @@ const std::set<BlockFilterType>& AllBlockFilterTypes()
 
     static std::once_flag flag;
     std::call_once(flag, []() {
-            for (auto entry : g_filter_types) {
+            for (const auto& entry : g_filter_types) {
                 types.insert(entry.first);
             }
         });

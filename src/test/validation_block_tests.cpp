@@ -177,12 +177,12 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
             bool ignored;
             FastRandomContext insecure;
             for (int i = 0; i < 1000; i++) {
-                auto block = blocks[insecure.randrange(blocks.size() - 1)];
+                const auto& block = blocks[insecure.randrange(blocks.size() - 1)];
                 Assert(m_node.chainman)->ProcessNewBlock(Params(), block, true, &ignored);
             }
 
             // to make sure that eventually we process the full chain - do it here
-            for (auto block : blocks) {
+            for (const auto& block : blocks) {
                 if (block->vtx.size() == 1) {
                     bool processed = Assert(m_node.chainman)->ProcessNewBlock(Params(), block, true, &ignored);
                     assert(processed);

@@ -15,7 +15,7 @@ template <typename T>
 bool VerifyVectorHelper(Span<T> vec)
 {
     std::set<uint256> set;
-    for (auto item : vec) {
+    for (const auto& item : vec) {
         if (!item.IsValid())
             return false;
         // check duplicates

@@ -761,10 +761,10 @@ static void CheckAddCoinBase(CAmount base_value, CAmount cache_value, CAmount mo
 // while still verifying that the CoinsViewCache::AddCoin implementation
 // ignores base values.
 template <typename... Args>
-static void CheckAddCoin(Args&&... args)
+static void CheckAddCoin(const Args&... args)
 {
     for (const CAmount base_value : {ABSENT, SPENT, VALUE1})
-        CheckAddCoinBase(base_value, std::forward<Args>(args)...);
+        CheckAddCoinBase(base_value, args...);
 }
 
 BOOST_AUTO_TEST_CASE(ccoins_add)

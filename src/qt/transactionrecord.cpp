@@ -13,7 +13,6 @@
 
 #include <cstdint>
 
-using wallet::ISMINE_ALL;
 using wallet::ISMINE_SPENDABLE;
 using wallet::ISMINE_WATCH_ONLY;
 using wallet::isminetype;

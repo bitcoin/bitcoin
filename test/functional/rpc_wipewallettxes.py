@@ -32,9 +32,9 @@ class WipeWalletTxesTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getwalletinfo()["txcount"], 104)
         self.nodes[0].wipewallettxes(True)
         assert_equal(self.nodes[0].getwalletinfo()["txcount"], 103)
-        self.nodes[0].rescanblockchain()
-        assert_equal(self.nodes[0].getwalletinfo()["txcount"], 103)
         assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", self.nodes[0].gettransaction, txid)
+        self.nodes[0].rescanblockchain()
+        assert_equal(self.nodes[0].getwalletinfo()["txcount"], 104)
 
 
 if __name__ == '__main__':

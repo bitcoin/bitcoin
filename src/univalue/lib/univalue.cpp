@@ -101,11 +101,11 @@ void UniValue::setObject()
     typ = VOBJ;
 }
 
-void UniValue::push_back(const UniValue& val_)
+void UniValue::push_back(UniValue val)
 {
     checkType(VARR);
 
-    values.push_back(val_);
+    values.push_back(std::move(val));
 }
 
 void UniValue::push_backV(const std::vector<UniValue>& vec)
@@ -115,32 +115,32 @@ void UniValue::push_backV(const std::vector<UniValue>& vec)
     values.insert(values.end(), vec.begin(), vec.end());
 }
 
-void UniValue::__pushKV(const std::string& key, const UniValue& val_)
+void UniValue::__pushKV(std::string key, UniValue val)
 {
     checkType(VOBJ);
 
-    keys.push_back(key);
-    values.push_back(val_);
+    keys.push_back(std::move(key));
+    values.push_back(std::move(val));
 }
 
-void UniValue::pushKV(const std::string& key, const UniValue& val_)
+void UniValue::pushKV(std::string key, UniValue val)
 {
     checkType(VOBJ);
 
     size_t idx;
     if (findKey(key, idx))
-        values[idx] = val_;
+        values[idx] = std::move(val);
     else
-        __pushKV(key, val_);
+        __pushKV(std::move(key), std::move(val));
 }
 
-void UniValue::pushKVs(const UniValue& obj)
+void UniValue::pushKVs(UniValue obj)
 {
     checkType(VOBJ);
     obj.checkType(VOBJ);
 
     for (size_t i = 0; i < obj.keys.size(); i++)
-        __pushKV(obj.keys[i], obj.values.at(i));
+        __pushKV(std::move(obj.keys.at(i)), std::move(obj.values.at(i)));
 }
 
 void UniValue::getObjMap(std::map<std::string,UniValue>& kv) const

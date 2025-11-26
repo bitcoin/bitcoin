@@ -44,6 +44,7 @@ iwyu_tool.py \
   "src/util/moneystr.cpp" \
   "src/util/serfloat.cpp" \
   "src/util/spanparsing.cpp" \
+  "src/util/string.cpp" \
   "src/util/strencodings.cpp" \
   "src/util/syserror.cpp" \
   "src/util/url.cpp" \

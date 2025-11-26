@@ -891,14 +891,14 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     }
 
     // Set the descriptor caches
-    for (auto desc_cache_pair : wss.m_descriptor_caches) {
+    for (const auto& desc_cache_pair : wss.m_descriptor_caches) {
         auto spk_man = pwallet->GetScriptPubKeyMan(desc_cache_pair.first);
         assert(spk_man);
         ((DescriptorScriptPubKeyMan*)spk_man)->SetCache(desc_cache_pair.second);
     }
 
     // Set the descriptor keys
-    for (auto desc_key_pair : wss.m_descriptor_keys) {
+    for (const auto& desc_key_pair : wss.m_descriptor_keys) {
         auto spk_man = pwallet->GetScriptPubKeyMan(desc_key_pair.first.first);
         auto it = wss.mnemonics.find(desc_key_pair.first);
         if (it == wss.mnemonics.end()) {
@@ -908,7 +908,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         }
     }
 
-    for (auto desc_key_pair : wss.m_descriptor_crypt_keys) {
+    for (const auto& desc_key_pair : wss.m_descriptor_crypt_keys) {
         auto spk_man = pwallet->GetScriptPubKeyMan(desc_key_pair.first.first);
         auto it = wss.crypted_mnemonics.find(desc_key_pair.first);
         if (it == wss.crypted_mnemonics.end()) {

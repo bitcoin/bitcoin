@@ -36,7 +36,6 @@ using node::ReadBlockFromDisk;
 #ifdef ENABLE_WALLET
 using wallet::CCoinControl;
 using wallet::CoinType;
-using wallet::COutput;
 using wallet::CWallet;
 using wallet::GetWalletForJSONRPCRequest;
 #endif // ENABLE_WALLET

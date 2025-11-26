@@ -36,9 +36,7 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CActiveMasternode
     if (Params().NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
         nOurNodeVersion = gArgs.GetIntArg("-pushversion", PROTOCOL_VERSION);
     }
-    auto pk = mn_activeman.GetPubKey();
-    const CBLSPublicKey pubKey(pk);
-    const uint256 signHash{::SerializeHash(std::make_tuple(pubKey, receivedMNAuthChallenge, peer.IsInboundConn(), nOurNodeVersion))};
+    const uint256 signHash{::SerializeHash(std::make_tuple(mn_activeman.GetPubKey(), receivedMNAuthChallenge, peer.IsInboundConn(), nOurNodeVersion))};
 
     mnauth.proRegTxHash = mn_activeman.GetProTxHash();
 

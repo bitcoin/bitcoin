@@ -202,7 +202,7 @@ bool CMasternodeMetaMan::SetPlatformBan(const uint256& inv_hash, PlatformBanMess
 
     bool ret = GetMetaInfo(protx_hash).SetPlatformBan(true, ban_msg.m_requested_height);
     if (ret) {
-        m_seen_platform_bans.insert(inv_hash, std::move(ban_msg));
+        m_seen_platform_bans.emplace(inv_hash, std::move(ban_msg));
     }
     return ret;
 }

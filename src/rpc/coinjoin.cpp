@@ -173,7 +173,7 @@ static RPCHelpMan coinjoin_status()
     }
 
     UniValue ret(UniValue::VARR);
-    for (auto str_status : cj_clientman->getSessionStatuses()) {
+    for (const auto& str_status : cj_clientman->getSessionStatuses()) {
         ret.push_back(str_status);
     }
     return ret;

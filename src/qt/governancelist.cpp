@@ -43,23 +43,23 @@ Proposal::Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj, 
 {
     UniValue prop_data;
     if (prop_data.read(govObj.GetDataAsPlainString())) {
-        if (UniValue titleValue = prop_data.find_value("name"); titleValue.isStr()) {
+        if (const UniValue& titleValue = prop_data.find_value("name"); titleValue.isStr()) {
             m_title = QString::fromStdString(titleValue.get_str());
         }
 
-        if (UniValue paymentStartValue = prop_data.find_value("start_epoch"); paymentStartValue.isNum()) {
+        if (const UniValue& paymentStartValue = prop_data.find_value("start_epoch"); paymentStartValue.isNum()) {
             m_startDate = QDateTime::fromSecsSinceEpoch(paymentStartValue.getInt<int64_t>());
         }
 
-        if (UniValue paymentEndValue = prop_data.find_value("end_epoch"); paymentEndValue.isNum()) {
+        if (const UniValue& paymentEndValue = prop_data.find_value("end_epoch"); paymentEndValue.isNum()) {
             m_endDate = QDateTime::fromSecsSinceEpoch(paymentEndValue.getInt<int64_t>());
         }
 
-        if (UniValue amountValue = prop_data.find_value("payment_amount"); amountValue.isNum()) {
+        if (const UniValue& amountValue = prop_data.find_value("payment_amount"); amountValue.isNum()) {
             m_paymentAmount = amountValue.get_real();
         }
 
-        if (UniValue urlValue = prop_data.find_value("url"); urlValue.isStr()) {
+        if (const UniValue& urlValue = prop_data.find_value("url"); urlValue.isStr()) {
             m_url = QString::fromStdString(urlValue.get_str());
         }
     }

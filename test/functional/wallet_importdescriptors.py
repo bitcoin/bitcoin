@@ -427,7 +427,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(wmulti_priv.getwalletinfo()['keypoolsize'], 1000)
         txid = w0.sendtoaddress(addr, 10)
         self.generate(self.nodes[0], 6)
-        wmulti_priv.sendtoaddress(w0.getnewaddress(), 8) # uses change 1
+        send_txid = wmulti_priv.sendtoaddress(w0.getnewaddress(), 8) # uses change 1
         self.sync_all()
 
         self.nodes[1].createwallet(wallet_name="wmulti_pub", disable_private_keys=True, blank=True, descriptors=True)
@@ -454,7 +454,9 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         addr = wmulti_pub.getnewaddress() # uses receive 1
         assert_equal(addr, '91cA4fLGaDCr6b9W2c5j1ph9PDpq9WbEhk') # Derived at m/84'/0'/0'/1
         change_addr = wmulti_pub.getrawchangeaddress() # uses receive 2
-        assert_equal(change_addr, '91WxMwg2NHD1PwHChhbAkeCN6nQ8ikdLEx')
+        assert_equal(change_addr, '8y2sLiPQnB81bAeiRvwbjozJXnCCNH2nHb')
+        assert(send_txid in self.nodes[0].getrawmempool(True))
+        assert(send_txid in (x['txid'] for x in wmulti_pub.listunspent(0)))
         assert_equal(wmulti_pub.getwalletinfo()['keypoolsize'], 999)
 
         # generate some utxos for next tests

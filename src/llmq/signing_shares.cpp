@@ -1639,13 +1639,13 @@ void CSigSharesManager::SignPendingSigShares()
         auto opt_sigShare = CreateSigShare(*pQuorum, id, msgHash);
 
         if (opt_sigShare.has_value() && opt_sigShare->sigShare.Get().IsValid()) {
-            auto sigShare = *opt_sigShare;
+            auto& sigShare = *opt_sigShare;
             ProcessSigShare(sigShare, pQuorum);
 
             if (IsAllMembersConnectedEnabled(pQuorum->params.type, m_sporkman)) {
                 LOCK(cs);
                 auto& session = signedSessions[sigShare.GetSignHash()];
-                session.sigShare = sigShare;
+                session.sigShare = std::move(sigShare);
                 session.quorum = pQuorum;
                 session.nextAttemptTime = 0;
                 session.attempt = 0;

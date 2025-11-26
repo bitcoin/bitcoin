@@ -209,17 +209,16 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
             response.quorumSnapshotAtHMinus4C = std::move(snapshotHMinus4C.value());
         }
 
-        CSimplifiedMNListDiff mn4c;
         if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
                                        GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHMinus4CIndex,
                                                             use_legacy_construction),
-                                       pWorkBlockHMinus4CIndex->GetBlockHash(), mn4c, errorRet)) {
+                                       pWorkBlockHMinus4CIndex->GetBlockHash(), response.mnListDiffAtHMinus4C, errorRet)) {
+            response.mnListDiffAtHMinus4C = {};
             return false;
         }
         if (!use_legacy_construction) {
             baseBlockIndexes.push_back(pWorkBlockHMinus4CIndex);
         }
-        response.mnListDiffAtHMinus4C = std::move(mn4c);
     } else {
         response.extraShare = false;
     }

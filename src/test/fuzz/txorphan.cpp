@@ -19,7 +19,6 @@
 #include <util/check.h>
 #include <util/time.h>
 
-#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <set>
@@ -66,10 +65,11 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                 }
             }
             // output amount will not affect txorphanage
+            tx_mut.vout.reserve(num_out);
             for (uint32_t i = 0; i < num_out; i++) {
                 tx_mut.vout.emplace_back(CAmount{0}, CScript{});
             }
-            // restore previously poped outpoints
+            // restore previously popped outpoints
             for (auto& in : tx_mut.vin) {
                 outpoints.push_back(in.prevout);
             }
