@@ -11,7 +11,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Fetch git
-        run: git fetch -fu origin develop:develop
+        run: git fetch --no-tags -fu origin develop:develop
       - name: Run Clang-Format-Diff.py
         run: |
           git diff -U0 origin/develop -- $(git ls-files -- $(cat test/util/data/non-backported.txt)) | ./contrib/devtools/clang-format-diff.py -p1 > diff_output.txt
