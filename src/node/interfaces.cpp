@@ -658,7 +658,6 @@ public:
     bool isInMempool(const Txid& txid) override
     {
         if (!m_node.mempool) return false;
-        LOCK(m_node.mempool->cs);
         return m_node.mempool->exists(txid);
     }
     bool hasDescendantsInMempool(const Txid& txid) override
