@@ -238,6 +238,9 @@ void ApplyArgsManOptions(const ArgsManager& gArgs, BlockAssembler::Options& opti
 /* Compute the block's merkle root, insert or replace the coinbase transaction and the merkle root into the block */
 void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t version, uint32_t timestamp, uint32_t nonce);
 
+
+/* Interrupt the current wait for the next block template. */
+void InterruptWait(KernelNotifications& kernel_notifications, bool& interrupt_wait);
 /**
  * Return a new block template when fees rise to a certain threshold or after a
  * new tip; return nullopt if timeout is reached.
@@ -247,7 +250,8 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
                                                       CTxMemPool* mempool,
                                                       const std::unique_ptr<CBlockTemplate>& block_template,
                                                       const BlockWaitOptions& options,
-                                                      const BlockAssembler::Options& assemble_options);
+                                                      const BlockAssembler::Options& assemble_options,
+                                                      bool& interrupt_wait);
 
 /* Locks cs_main and returns the block hash and block height of the active chain if it exists; otherwise, returns nullopt.*/
 std::optional<BlockRef> GetTip(ChainstateManager& chainman);

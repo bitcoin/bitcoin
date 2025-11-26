@@ -29,6 +29,7 @@
 
 #include <algorithm>
 #include <utility>
+#include <numeric>
 
 namespace node {
 
@@ -453,12 +454,20 @@ void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t 
     block.hashMerkleRoot = BlockMerkleRoot(block);
 }
 
+void InterruptWait(KernelNotifications& kernel_notifications, bool& interrupt_wait)
+{
+    LOCK(kernel_notifications.m_tip_block_mutex);
+    interrupt_wait = true;
+    kernel_notifications.m_tip_block_cv.notify_all();
+}
+
 std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainman,
                                                       KernelNotifications& kernel_notifications,
                                                       CTxMemPool* mempool,
                                                       const std::unique_ptr<CBlockTemplate>& block_template,
                                                       const BlockWaitOptions& options,
-                                                      const BlockAssembler::Options& assemble_options)
+                                                      const BlockAssembler::Options& assemble_options,
+                                                      bool& interrupt_wait)
 {
     // Delay calculating the current template fees, just in case a new block
     // comes in before the next tick.
@@ -483,8 +492,12 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
                 // method on BlockTemplate and no template could have been
                 // generated before a tip exists.
                 tip_changed = Assume(tip_block) && tip_block != block_template->block.hashPrevBlock;
-                return tip_changed || chainman.m_interrupt;
+                return tip_changed || chainman.m_interrupt || interrupt_wait;
             });
+            if (interrupt_wait) {
+                interrupt_wait = false;
+                return nullptr;
+            }
         }
 
         if (chainman.m_interrupt) return nullptr;
@@ -522,18 +535,13 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
 
             // Calculate the original template total fees if we haven't already
             if (current_fees == -1) {
-                current_fees = 0;
-                for (CAmount fee : block_template->vTxFees) {
-                    current_fees += fee;
-                }
+                current_fees = std::accumulate(block_template->vTxFees.begin(), block_template->vTxFees.end(), CAmount{0});
             }
 
-            CAmount new_fees = 0;
-            for (CAmount fee : new_tmpl->vTxFees) {
-                new_fees += fee;
-                Assume(options.fee_threshold != MAX_MONEY);
-                if (new_fees >= current_fees + options.fee_threshold) return new_tmpl;
-            }
+            // Check if fees increased enough to return the new template
+            const CAmount new_fees = std::accumulate(new_tmpl->vTxFees.begin(), new_tmpl->vTxFees.end(), CAmount{0});
+            Assume(options.fee_threshold != MAX_MONEY);
+            if (new_fees >= current_fees + options.fee_threshold) return new_tmpl;
         }
 
         now = NodeClock::now();
