@@ -131,6 +131,8 @@ def main():
     if args.subcommand is None:
         parser.print_help()
     elif args.subcommand == "encode":
+        if args.outfile.isatty():
+            sys.exit("Not much use in writing binary to a TTY. Please specify an output file or pipe output to another process.")
         state = load_file(args.infile)
         save_binary(args.outfile, state, fill=args.fill)
     elif args.subcommand == "decode":
