@@ -1262,4 +1262,13 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     CheckUnparsable("tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)", "tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)","tr(): Too many ')' in musig() expression");
 }
 
+BOOST_AUTO_TEST_CASE(descriptor_literal_null_byte)
+{
+    // Trailing '\0' string literal should be ignored.
+    FlatSigningProvider keys;
+    std::string err;
+    auto descs = Parse("pk(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)", keys, err, /*require_checksum=*/false);
+    BOOST_REQUIRE_MESSAGE(!descs.empty(), err);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
