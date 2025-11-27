@@ -19,7 +19,7 @@ from test_framework.script import (
 from test_framework.script_util import bulk_vout
 
 from test_framework.blocktools import (
-    create_empty_fork,
+    ForkGenerator,
 )
 
 from test_framework.test_framework import BitcoinTestFramework
@@ -87,12 +87,6 @@ class WalletV3Test(BitcoinTestFramework):
     def run_test_with_swapped_versions(self, test_func):
         test_func(2, 3)
         test_func(3, 2)
-
-    def trigger_reorg(self, fork_blocks):
-        """Trigger reorg of the fork blocks."""
-        for block in fork_blocks:
-            self.nodes[0].submitblock(block.serialize().hex())
-        assert_equal(self.nodes[0].getbestblockhash(), fork_blocks[-1].hash_hex)
 
     def run_test(self):
         self.nodes[0].createwallet("alice")
@@ -646,7 +640,8 @@ class WalletV3Test(BitcoinTestFramework):
         self.log.info("Test coin availability after reorg with v2 parent and truc child")
 
         # Prep fork blocks
-        fork_blocks = create_empty_fork(self.nodes[0])
+        fork_gen = ForkGenerator(self.nodes[0])
+        fork_gen.prepare_fork()
 
         # Send funds to alice so she can create transactions
         outputs = {self.alice.getnewaddress(): 5.0}
@@ -692,7 +687,7 @@ class WalletV3Test(BitcoinTestFramework):
         assert truc_txid in truc_output_txids
 
         # Trigger the reorg
-        self.trigger_reorg(fork_blocks)
+        fork_gen.trigger_reorg()
         # The TRUC transaction is now in a cluster of size 3, which is only permitted in a reorg.
         assert_equal(self.nodes[0].getmempoolcluster(truc_txid)["txcount"], 3)
 

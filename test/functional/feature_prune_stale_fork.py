@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node restart with a pruned stale-fork block whose parent has no transactions."""
 
-from test_framework.blocktools import create_empty_fork
+from test_framework.blocktools import ForkGenerator
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
@@ -18,7 +18,7 @@ class FeaturePruneStaleForkTest(BitcoinTestFramework):
         node = self.nodes[0]
 
         self.log.info("Create a 2-block stale fork: parent has no transactions, child has transactions")
-        [side_parent, side_child] = create_empty_fork(node, 2)
+        [side_parent, side_child] = ForkGenerator(node).prepare_fork(fork_length=2).get_fork_blocks()
 
         node.submitheader(side_parent.serialize().hex())
         node.submitblock(side_child.serialize().hex())
