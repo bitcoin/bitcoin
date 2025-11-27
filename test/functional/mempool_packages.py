@@ -15,7 +15,7 @@ from test_framework.util import (
     assert_equal,
 )
 from test_framework.wallet import MiniWallet
-from test_framework.blocktools import create_empty_fork
+from test_framework.blocktools import ForkGenerator
 
 # custom limits for node1
 CUSTOM_CLUSTER_LIMIT = 10
@@ -33,12 +33,6 @@ class MempoolPackagesTest(BitcoinTestFramework):
                 "-limitclustercount={}".format(CUSTOM_CLUSTER_LIMIT),
             ],
         ]
-
-    def trigger_reorg(self, fork_blocks, node):
-        """Trigger reorg of the fork blocks."""
-        for block in fork_blocks:
-            node.submitblock(block.serialize().hex())
-        assert_equal(node.getbestblockhash(), fork_blocks[-1].hash_hex)
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
@@ -234,16 +228,18 @@ class MempoolPackagesTest(BitcoinTestFramework):
 
         # Test reorg handling
         # First, the basics:
-        fork_blocks = create_empty_fork(self.nodes[0])
+        fork_gen = ForkGenerator(self.nodes[0])
+        fork_gen.prepare_fork()
         mempool0 = self.nodes[0].getrawmempool(False)
         self.generate(self.nodes[0], 1)
-        self.trigger_reorg(fork_blocks, self.nodes[0])
+        fork_gen.trigger_reorg()
 
         # Check if the txs are returned to the mempool
         assert_equal(self.nodes[0].getrawmempool(), mempool0)
 
-        # Clean-up the mempool
+        # Clean-up the mempool and reset the fork_gen state
         self.generate(self.nodes[0], 1)
+        fork_gen.reset()
 
         # Now test the case where node1 has a transaction T in its mempool that
         # depends on transactions A and B which are in a mined block, and the
@@ -258,8 +254,8 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # Tx1 and Tx7, and add to node1's mempool, then disconnect the
         # last block.
 
-        # Prep for fork
-        fork_blocks = create_empty_fork(self.nodes[0])
+        # Prep for another fork
+        fork_gen.prepare_fork()
 
         # Create tx0 with 2 outputs
         tx0 = self.wallet.send_self_transfer_multi(from_node=self.nodes[0], num_outputs=2)
@@ -278,7 +274,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         self.sync_mempools()
 
         # Now try to disconnect the tip on each node...
-        self.trigger_reorg(fork_blocks, self.nodes[0])
+        fork_gen.trigger_reorg()
         self.sync_blocks()
 
 if __name__ == '__main__':
