@@ -389,6 +389,7 @@ public:
         result.unconfirmed_balance = bal.m_mine_untrusted_pending;
         result.immature_balance = bal.m_mine_immature;
         result.used_balance = bal.m_mine_used;
+        result.nonmempool_balance = bal.m_mine_nonmempool;
         return result;
     }
     bool tryGetBalances(WalletBalances& balances, uint256& block_hash) override

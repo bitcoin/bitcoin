@@ -39,19 +39,19 @@ def cleanup(func):
             func(self, *args)
         finally:
             self.generate(self.nodes[0], 1)
-            try:
-                self.alice.sendall([self.charlie.getnewaddress()])
-            except JSONRPCException as e:
-                assert "Total value of UTXO pool too low to pay for transaction" in e.error['message']
-            try:
-                self.bob.sendall([self.charlie.getnewaddress()])
-            except JSONRPCException as e:
-                assert "Total value of UTXO pool too low to pay for transaction" in e.error['message']
+            for wallet in [self.alice, self.bob]:
+                txs = set(tx["txid"] for tx in wallet.listtransactions("*", 1000) if tx["confirmations"] == 0 and not tx["abandoned"])
+                for tx in txs:
+                    wallet.abandontransaction(tx)
+                try:
+                    wallet.sendall([self.charlie.getnewaddress()])
+                except JSONRPCException as e:
+                    assert "Total value of UTXO pool too low to pay for transaction" in e.error['message']
             self.generate(self.nodes[0], 1)
 
             for wallet in [self.alice, self.bob]:
                 balance = wallet.getbalances()["mine"]
-                for balance_type in ["untrusted_pending", "trusted", "immature"]:
+                for balance_type in ["untrusted_pending", "trusted", "immature", "nonmempool"]:
                     assert_equal(balance[balance_type], 0)
 
             assert_equal(self.alice.getrawmempool(), [])

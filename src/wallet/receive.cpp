@@ -242,7 +242,7 @@ bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx)
     return CachedTxIsTrusted(wallet, wtx, trusted_parents);
 }
 
-Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
+Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse, bool include_nonmempool)
 {
     Balance ret;
     bool allow_used_addresses = !avoid_reuse || !wallet.IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE);
@@ -255,7 +255,17 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
             const bool is_trusted{CachedTxIsTrusted(wallet, wtx, trusted_parents)};
             const int tx_depth{wallet.GetTxDepthInMainChain(wtx)};
 
-            if (!wallet.IsSpent(outpoint)) {
+            bool nonmempool_spent = false;
+            switch (wallet.HowSpent(outpoint)) {
+            case CWallet::SpendType::CONFIRMED:
+            case CWallet::SpendType::MEMPOOL:
+                // treat as spent; ignore
+                break;
+            case CWallet::SpendType::NONMEMPOOL:
+                if (!include_nonmempool) break;
+                nonmempool_spent = true;
+                [[fallthrough]];
+            case CWallet::SpendType::UNSPENT:
                 CAmount* bucket = nullptr;
 
                 // Set the amounts in the return object
@@ -274,6 +284,9 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
                         bucket = &ret.m_mine_used;
                     }
                     *bucket += credit_mine;
+                    if (nonmempool_spent) {
+                        ret.m_mine_nonmempool -= credit_mine;
+                    }
                 }
             }
         }

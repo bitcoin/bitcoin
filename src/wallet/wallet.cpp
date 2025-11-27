@@ -738,6 +738,29 @@ bool CWallet::IsSpent(const COutPoint& outpoint) const
     return false;
 }
 
+CWallet::SpendType CWallet::HowSpent(const COutPoint& outpoint) const
+{
+    SpendType st{SpendType::UNSPENT};
+
+    std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range;
+    range = mapTxSpends.equal_range(outpoint);
+
+    for (TxSpends::const_iterator it = range.first; it != range.second; ++it) {
+        const Txid& txid = it->second;
+        const auto mit = mapWallet.find(txid);
+        if (mit != mapWallet.end()) {
+            const auto& wtx = mit->second;
+            if (wtx.isConfirmed()) return SpendType::CONFIRMED;
+            if (wtx.InMempool()) {
+                st = SpendType::MEMPOOL;
+            } else if (!wtx.isAbandoned() && !wtx.isBlockConflicted() && !wtx.isMempoolConflicted()) {
+                if (st == SpendType::UNSPENT) st = SpendType::NONMEMPOOL;
+            }
+        }
+    }
+    return st;
+}
+
 void CWallet::AddToSpends(const COutPoint& outpoint, const Txid& txid)
 {
     mapTxSpends.insert(std::make_pair(outpoint, txid));
