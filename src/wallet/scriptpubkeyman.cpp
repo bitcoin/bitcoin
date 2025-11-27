@@ -755,7 +755,7 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
 
     // Make sure that we have accounted for all scriptPubKeys
     if (!Assume(spks.empty())) {
-        LogPrintf("%s\n", STR_INTERNAL_BUG("Error: Some output scripts were not migrated.\n"));
+        LogError("%s", STR_INTERNAL_BUG("Error: Some output scripts were not migrated."));
         return std::nullopt;
     }
 

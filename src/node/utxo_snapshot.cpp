@@ -32,14 +32,14 @@ bool WriteSnapshotBaseBlockhash(Chainstate& snapshot_chainstate)
     FILE* file{fsbridge::fopen(write_to, "wb")};
     AutoFile afile{file};
     if (afile.IsNull()) {
-        LogPrintf("[snapshot] failed to open base blockhash file for writing: %s\n",
+        LogError("[snapshot] failed to open base blockhash file for writing: %s",
                   fs::PathToString(write_to));
         return false;
     }
     afile << *snapshot_chainstate.m_from_snapshot_blockhash;
 
     if (afile.fclose() != 0) {
-        LogPrintf("[snapshot] failed to close base blockhash file %s after writing\n",
+        LogError("[snapshot] failed to close base blockhash file %s after writing",
                   fs::PathToString(write_to));
         return false;
     }
