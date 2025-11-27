@@ -1297,13 +1297,16 @@ public:
 
     /** Schedule an encrypted packet with specified message type and payload to be sent to
      *  transport (only after ReceiveKey). */
-    void SendMessage(std::string mtype, std::span<const uint8_t> payload)
+    void SendMessage(std::string_view mtype, std::span<const uint8_t> payload)
     {
-        // Construct contents consisting of 0x00 + 12-byte message type + payload.
+        BOOST_REQUIRE_LE(mtype.size(), CMessageHeader::MESSAGE_TYPE_SIZE);
+
+        // [0x00][12-byte message type, zero padded on right][payload]
         std::vector<uint8_t> contents(1 + CMessageHeader::MESSAGE_TYPE_SIZE + payload.size());
-        std::copy(mtype.begin(), mtype.end(), contents.begin() + 1);
-        std::copy(payload.begin(), payload.end(), contents.begin() + 1 + CMessageHeader::MESSAGE_TYPE_SIZE);
-        // Send a packet with that as contents.
+        contents[0] = 0;
+        std::ranges::copy(mtype, contents.begin() + 1);
+        std::ranges::copy(payload, contents.begin() + 1 + CMessageHeader::MESSAGE_TYPE_SIZE);
+
         SendPacket(contents);
     }
 
