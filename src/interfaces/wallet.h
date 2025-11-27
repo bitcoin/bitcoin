@@ -370,12 +370,13 @@ struct WalletBalances
     CAmount unconfirmed_balance = 0;
     CAmount immature_balance = 0;
     CAmount used_balance = 0;
+    CAmount nonmempool_balance = 0;
 
     bool balanceChanged(const WalletBalances& prev) const
     {
         return balance != prev.balance || unconfirmed_balance != prev.unconfirmed_balance ||
                immature_balance != prev.immature_balance ||
-               used_balance != prev.used_balance;
+               used_balance != prev.used_balance || nonmempool_balance != prev.nonmempool_balance;
     }
 };
 
