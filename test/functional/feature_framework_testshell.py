@@ -4,7 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests for the `TestShell` submodule."""
 
+from contextlib import redirect_stdout
 from decimal import Decimal
+from io import StringIO
 from pathlib import Path
 
 # Note that we need to import from functional test framework modules
@@ -24,8 +26,11 @@ def run_testshell_doc_example(functional_tests_dir):
     test = TestShell().setup(num_nodes=2, setup_clean_chain=True)
     try:
         assert test is not None
-        test2 = TestShell().setup()
-        assert test2 is None  # TODO: check for "TestShell is already running!" output to stdout
+        stdout_buf = StringIO()
+        with redirect_stdout(stdout_buf):
+            test2 = TestShell().setup()
+        assert test2 is None
+        assert_equal(stdout_buf.getvalue().rstrip(), "TestShell is already running!")
         assert_equal(test.nodes[0].getblockchaininfo()["blocks"], 0)
         if test.is_wallet_compiled():
             res = test.nodes[0].createwallet('default')
