@@ -1020,6 +1020,10 @@ private:
     /** Update tracking information about which blocks a peer is assumed to have. */
     void UpdateBlockAvailability(NodeId nodeid, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool CanDirectFetch() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    /** Returns true if either the best block the peer has INV'ed to us or the
+     *  best header we've sent the peer is equal to or a child of pindex.
+     */
+    bool PeerHasHeader(CNodeState *state, const CBlockIndex *pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /**
      * Estimates the distance, in blocks, between the best-known block and the network chain tip.
@@ -1367,8 +1371,14 @@ bool PeerManagerImpl::CanDirectFetch()
     return m_chainman.ActiveChain().Tip()->Time() > NodeClock::now() - m_chainparams.GetConsensus().PowTargetSpacing() * 20;
 }
 
-static bool PeerHasHeader(CNodeState *state, const CBlockIndex *pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool PeerManagerImpl::PeerHasHeader(CNodeState *state, const CBlockIndex *pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
+    // We don't expect this to ever happen in the current code, but future users
+    // of PeerHasHeader() would expect this behavior.
+    if(!Assume(pindex)) {
+        return false;
+    }
+
     if (state->pindexBestKnownBlock && pindex == state->pindexBestKnownBlock->GetAncestor(pindex->nHeight))
         return true;
     if (state->pindexBestHeaderSent && pindex == state->pindexBestHeaderSent->GetAncestor(pindex->nHeight))
