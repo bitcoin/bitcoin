@@ -2667,6 +2667,19 @@
     "OK",
     "TAPSCRIPT Test that DROP operations do not execute inside of a false IF conditional"
 ],
+[
+    [
+        "aa",
+        "#SCRIPT# 0 CHECKSIG",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT",
+    "TAPSCRIPT_EMPTY_PUBKEY",
+    "TAPSCRIPT: OP_CHECKSIG with empty pubkey must fail"
+],
 
 ["NULLFAIL should cover all signatures and signatures only"],
 ["0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", "0x01 0x14 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0x01 0x14 CHECKMULTISIG NOT", "DERSIG", "OK", "BIP66 and NULLFAIL-compliant"],
