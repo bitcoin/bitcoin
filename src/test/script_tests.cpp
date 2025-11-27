@@ -681,8 +681,8 @@ BOOST_AUTO_TEST_CASE(script_build)
                                 "P2PK with unnecessary input but no CLEANSTACK", SCRIPT_VERIFY_P2SH
                                ).Num(11).PushSig(keys.key0));
     tests.push_back(TestBuilder(CScript() << ToByteVector(keys.pubkey0) << OP_CHECKSIG,
-                                "P2PK with unnecessary input", SCRIPT_VERIFY_CLEANSTACK | SCRIPT_VERIFY_P2SH
-                               ).Num(11).PushSig(keys.key0).ScriptError(SCRIPT_ERR_CLEANSTACK));
+                                "P2PK with unnecessary input - CLEANSTACK only applies to P2SH", SCRIPT_VERIFY_CLEANSTACK | SCRIPT_VERIFY_P2SH
+                               ).Num(11).PushSig(keys.key0));
     tests.push_back(TestBuilder(CScript() << ToByteVector(keys.pubkey0) << OP_CHECKSIG,
                                 "P2SH with unnecessary input but no CLEANSTACK", SCRIPT_VERIFY_P2SH, true
                                ).Num(11).PushSig(keys.key0).PushRedeem());

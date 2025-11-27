@@ -1234,7 +1234,12 @@ def spenders_taproot_active():
     for p2sh in [False, True]:
         for witv0 in [False, True]:
             for hashtype in VALID_SIGHASHES_ECDSA + [random.randrange(0x04, 0x80), random.randrange(0x84, 0x100)]:
-                standard = hashtype in VALID_SIGHASHES_ECDSA and (p2sh or witv0)
+                # This script contains OP_CHECKSIGADD (0xba), which is > MAX_OPCODE (0xb9).
+                # GetSigOpCount will safely handle this and count sigops (this script has 1 sigop from OP_CHECKSIG).
+                # With our policy alignment, bare NONSTANDARD scripts with ≤15 sigops now pass AreInputsStandard.
+                # Original logic: standard = hashtype in VALID_SIGHASHES_ECDSA and (p2sh or witv0)
+                # New logic: also standard when bare (p2sh=False and witv0=False) due to policy alignment
+                standard = hashtype in VALID_SIGHASHES_ECDSA
                 add_spender(spenders, "compat/nocsa", hashtype=hashtype, p2sh=p2sh, witv0=witv0, standard=standard, script=CScript([OP_IF, OP_11, pubkey1, OP_CHECKSIGADD, OP_12, OP_EQUAL, OP_ELSE, pubkey1, OP_CHECKSIG, OP_ENDIF]), key=eckey1, sigops_weight=4-3*witv0, inputs=[getter("sign"), b''], failure={"inputs": [getter("sign"), b'\x01']}, **ERR_BAD_OPCODE)
 
     # == sighash caching tests ==

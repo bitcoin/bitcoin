@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
     BOOST_CHECK(s.IsWitnessProgram(version, witness_program));
     BOOST_CHECK(CScript::IsPayToAnchor(version, witness_program));
 
-    // TxoutType::NONSTANDARD
+    // Non-standard well-formed script (should return NONSTANDARD)
     s.clear();
     s << OP_9 << OP_ADD << OP_11 << OP_EQUAL;
     BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::NONSTANDARD);

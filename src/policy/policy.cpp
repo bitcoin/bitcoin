@@ -221,15 +221,22 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
     }
 
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
-        const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
+        const Coin& coin = mapInputs.AccessCoin(tx.vin[i].prevout);
+        if (coin.IsSpent()) {
+            return false; // Can't check sigops on spent/non-existent coin
+        }
+        const CTxOut& prev = coin.out;
 
         std::vector<std::vector<unsigned char> > vSolutions;
         TxoutType whichType = Solver(prev.scriptPubKey, vSolutions);
-        if (whichType == TxoutType::NONSTANDARD || whichType == TxoutType::WITNESS_UNKNOWN) {
-            // WITNESS_UNKNOWN failures are typically also caught with a policy
-            // flag in the script interpreter, but it can be helpful to catch
-            // this type of NONSTANDARD transaction earlier in transaction
-            // validation.
+        if (whichType == TxoutType::WITNESS_UNKNOWN) {
+            return false;
+        } else if (whichType == TxoutType::NONSTANDARD) {
+            int witnessversion;
+            std::vector<unsigned char> witnessprogram;
+            if (prev.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
+                return false;
+            }
             return false;
         } else if (whichType == TxoutType::SCRIPTHASH) {
             std::vector<std::vector<unsigned char> > stack;
@@ -240,6 +247,14 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
                 return false;
             CScript subscript(stack.back().begin(), stack.back().end());
             if (subscript.GetSigOpCount(true) > MAX_P2SH_SIGOPS) {
+                return false;
+            }
+        } else {
+            // For non-P2SH, non-witness scripts (bare scripts), apply same sigop limits as P2SH
+            // This includes standard types (PUBKEY, PUBKEYHASH, MULTISIG) and non-standard well-formed scripts
+            // Use Solver's classification to avoid redoing its work (roconnor's suggestion)
+            unsigned int sigop_count = prev.scriptPubKey.GetSigOpCount(true);
+            if (sigop_count == 0 || sigop_count > MAX_P2SH_SIGOPS) {
                 return false;
             }
         }

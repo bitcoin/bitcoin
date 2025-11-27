@@ -21,6 +21,7 @@ class CPubKey;
 
 enum class TxoutType {
     NONSTANDARD,
+    LEGACY, //!< non-P2SH, non-witness, non-standard legacy script
     // 'standard' transaction types:
     ANCHOR, //!< anyone can spend script
     PUBKEY,

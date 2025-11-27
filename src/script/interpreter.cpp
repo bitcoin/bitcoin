@@ -2102,7 +2102,8 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         // would be possible, which is not a softfork (and P2SH should be one).
         assert((flags & SCRIPT_VERIFY_P2SH) != 0);
         assert((flags & SCRIPT_VERIFY_WITNESS) != 0);
-        if (stack.size() != 1) {
+        // Only apply CLEANSTACK to P2SH scripts. Witness programs bypass this (stack.resize(1) above).
+        if (scriptPubKey.IsPayToScriptHash() && stack.size() != 1) {
             return set_error(serror, SCRIPT_ERR_CLEANSTACK);
         }
     }

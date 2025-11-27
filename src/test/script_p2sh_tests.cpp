@@ -395,4 +395,197 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(txToNonStd2), coins), 20U);
 }
 
+BOOST_AUTO_TEST_CASE(AreInputsStandard_LegacyNonSolvable)
+{
+    // Test that legacy (non-P2SH) scripts align with P2SH policy:
+    // non-solvable scripts are allowed if they have ≥1 sigop and ≤MAX_P2SH_SIGOPS.
+    CCoinsView coinsDummy;
+    CCoinsViewCache coins(&coinsDummy);
+    CKey key;
+    key.MakeNewKey(true);
+    CPubKey pubkey = key.GetPubKey();
+
+    CMutableTransaction txFrom;
+    txFrom.vout.resize(8);
+
+    // Create a non-solvable script with 0 sigops (should be rejected - requires ≥1 sigop)
+    CScript nonSolvableZero;
+    nonSolvableZero << OP_1 << OP_2 << OP_ADD << OP_DROP; // non-solvable, no sigops
+    txFrom.vout[0].scriptPubKey = nonSolvableZero;
+    txFrom.vout[0].nValue = 1000;
+
+    // Create a non-solvable script with acceptable sigop count (14 sigops, just under limit)
+    CScript nonSolvableUnderLimit;
+    nonSolvableUnderLimit << OP_1;
+    for (unsigned i = 0; i < MAX_P2SH_SIGOPS - 1; i++) {
+        nonSolvableUnderLimit << ToByteVector(pubkey);
+    }
+    nonSolvableUnderLimit << OP_14 << OP_CHECKMULTISIG << OP_ADD; // OP_ADD makes it non-solvable
+    txFrom.vout[1].scriptPubKey = nonSolvableUnderLimit;
+    txFrom.vout[1].nValue = 2000;
+
+    // Create a non-solvable script with exactly MAX_P2SH_SIGOPS (15 sigops, at limit)
+    CScript nonSolvableAtLimit;
+    nonSolvableAtLimit << OP_1;
+    for (unsigned i = 0; i < MAX_P2SH_SIGOPS; i++) {
+        nonSolvableAtLimit << ToByteVector(pubkey);
+    }
+    nonSolvableAtLimit << OP_15 << OP_CHECKMULTISIG << OP_ADD; // OP_ADD makes it non-solvable
+    txFrom.vout[2].scriptPubKey = nonSolvableAtLimit;
+    txFrom.vout[2].nValue = 3000;
+
+    // Create a non-solvable script with exactly MAX_P2SH_SIGOPS + 1 (16 sigops, just over limit)
+    CScript nonSolvableOverLimit;
+    nonSolvableOverLimit << OP_1;
+    for (unsigned i = 0; i < MAX_P2SH_SIGOPS + 1; i++) {
+        nonSolvableOverLimit << ToByteVector(pubkey);
+    }
+    nonSolvableOverLimit << OP_16 << OP_CHECKMULTISIG << OP_ADD;
+    txFrom.vout[3].scriptPubKey = nonSolvableOverLimit;
+    txFrom.vout[3].nValue = 4000;
+
+    // Create a non-solvable script with OP_CHECKSIG (not CHECKMULTISIG) - 1 sigop
+    CScript nonSolvableChecksig;
+    nonSolvableChecksig << ToByteVector(pubkey) << OP_CHECKSIG << OP_ADD; // OP_ADD makes it non-solvable
+    txFrom.vout[4].scriptPubKey = nonSolvableChecksig;
+    txFrom.vout[4].nValue = 5000;
+
+    // Create a non-solvable script with mixed sigops (CHECKSIG + CHECKMULTISIG)
+    CScript nonSolvableMixed;
+    nonSolvableMixed << ToByteVector(pubkey) << OP_CHECKSIG;
+    nonSolvableMixed << OP_1 << ToByteVector(pubkey) << OP_1 << OP_CHECKMULTISIG;
+    nonSolvableMixed << OP_ADD; // OP_ADD makes it non-solvable (2 sigops total)
+    txFrom.vout[5].scriptPubKey = nonSolvableMixed;
+    txFrom.vout[5].nValue = 6000;
+
+    // Create a witness unknown script (should still be rejected)
+    CScript witnessUnknown;
+    witnessUnknown << OP_2 << std::vector<unsigned char>(32, 0x01);
+    txFrom.vout[6].scriptPubKey = witnessUnknown;
+    txFrom.vout[6].nValue = 7000;
+
+    // Create a standard P2PKH script (regression test - should still work)
+    CScript standardP2PKH = GetScriptForDestination(PKHash(pubkey));
+    txFrom.vout[7].scriptPubKey = standardP2PKH;
+    txFrom.vout[7].nValue = 8000;
+
+    AddCoins(coins, CTransaction(txFrom), 0);
+
+    // Test 1: Non-solvable script with 0 sigops should be rejected (requires ≥1 sigop)
+    CMutableTransaction txTo1;
+    txTo1.vout.resize(1);
+    txTo1.vout[0].scriptPubKey = GetScriptForDestination(PKHash(pubkey));
+    txTo1.vout[0].nValue = 500;
+    txTo1.vin.resize(1);
+    txTo1.vin[0].prevout.n = 0;
+    txTo1.vin[0].prevout.hash = txFrom.GetHash();
+    txTo1.vin[0].scriptSig << std::vector<unsigned char>(65, 0);
+    BOOST_CHECK(!::AreInputsStandard(CTransaction(txTo1), coins));
+
+    // Test 2: Non-solvable script with 14 sigops (just under limit) should be accepted
+    CMutableTransaction txTo2;
+    txTo2.vout.resize(1);
+    txTo2.vout[0].scriptPubKey = GetScriptForDestination(PKHash(pubkey));
+    txTo2.vout[0].nValue = 1000;
+    txTo2.vin.resize(1);
+    txTo2.vin[0].prevout.n = 1;
+    txTo2.vin[0].prevout.hash = txFrom.GetHash();
+    txTo2.vin[0].scriptSig << std::vector<unsigned char>(65, 0);
+    BOOST_CHECK(::AreInputsStandard(CTransaction(txTo2), coins));
+
+    // Test 3: Non-solvable script with exactly 15 sigops (at limit) should be accepted
+    CMutableTransaction txTo3;
+    txTo3.vout.resize(1);
+    txTo3.vout[0].scriptPubKey = GetScriptForDestination(PKHash(pubkey));
+    txTo3.vout[0].nValue = 1500;
+    txTo3.vin.resize(1);
+    txTo3.vin[0].prevout.n = 2;
+    txTo3.vin[0].prevout.hash = txFrom.GetHash();
+    txTo3.vin[0].scriptSig << std::vector<unsigned char>(65, 0);
+    BOOST_CHECK(::AreInputsStandard(CTransaction(txTo3), coins));
+
+    // Test 4: Non-solvable script with 16 sigops (just over limit) should be rejected
+    CMutableTransaction txTo4;
+    txTo4.vout.resize(1);
+    txTo4.vout[0].scriptPubKey = GetScriptForDestination(PKHash(pubkey));
+    txTo4.vout[0].nValue = 2000;
+    txTo4.vin.resize(1);
+    txTo4.vin[0].prevout.n = 3;
+    txTo4.vin[0].prevout.hash = txFrom.GetHash();
+    txTo4.vin[0].scriptSig << std::vector<unsigned char>(65, 0);
+    BOOST_CHECK(!::AreInputsStandard(CTransaction(txTo4), coins));
+
+    // Test 5: Non-solvable script with OP_CHECKSIG (1 sigop) should be accepted
+    CMutableTransaction txTo5;
+    txTo5.vout.resize(1);
+    txTo5.vout[0].scriptPubKey = GetScriptForDestination(PKHash(pubkey));
+    txTo5.vout[0].nValue = 2500;
+    txTo5.vin.resize(1);
+    txTo5.vin[0].prevout.n = 4;
+    txTo5.vin[0].prevout.hash = txFrom.GetHash();
+    txTo5.vin[0].scriptSig << std::vector<unsigned char>(65, 0);
+    BOOST_CHECK(::AreInputsStandard(CTransaction(txTo5), coins));
+
+    // Test 6: Non-solvable script with mixed sigops (2 sigops) should be accepted
+    CMutableTransaction txTo6;
+    txTo6.vout.resize(1);
+    txTo6.vout[0].scriptPubKey = GetScriptForDestination(PKHash(pubkey));
+    txTo6.vout[0].nValue = 3000;
+    txTo6.vin.resize(1);
+    txTo6.vin[0].prevout.n = 5;
+    txTo6.vin[0].prevout.hash = txFrom.GetHash();
+    txTo6.vin[0].scriptSig << std::vector<unsigned char>(65, 0);
+    BOOST_CHECK(::AreInputsStandard(CTransaction(txTo6), coins));
+
+    // Test 7: WITNESS_UNKNOWN should still be rejected
+    CMutableTransaction txTo7;
+    txTo7.vout.resize(1);
+    txTo7.vout[0].scriptPubKey = GetScriptForDestination(PKHash(pubkey));
+    txTo7.vout[0].nValue = 3500;
+    txTo7.vin.resize(1);
+    txTo7.vin[0].prevout.n = 6;
+    txTo7.vin[0].prevout.hash = txFrom.GetHash();
+    txTo7.vin[0].scriptSig << std::vector<unsigned char>(65, 0);
+    BOOST_CHECK(!::AreInputsStandard(CTransaction(txTo7), coins));
+
+    // Test 8: Standard P2PKH script should still work (regression test)
+    CMutableTransaction txTo8;
+    txTo8.vout.resize(1);
+    txTo8.vout[0].scriptPubKey = GetScriptForDestination(PKHash(pubkey));
+    txTo8.vout[0].nValue = 4000;
+    txTo8.vin.resize(1);
+    txTo8.vin[0].prevout.n = 7;
+    txTo8.vin[0].prevout.hash = txFrom.GetHash();
+    txTo8.vin[0].scriptSig << std::vector<unsigned char>(65, 0) << ToByteVector(pubkey);
+    BOOST_CHECK(::AreInputsStandard(CTransaction(txTo8), coins));
+
+    // Test 9: Transaction with multiple LEGACY inputs (all acceptable)
+    CMutableTransaction txTo9;
+    txTo9.vout.resize(1);
+    txTo9.vout[0].scriptPubKey = GetScriptForDestination(PKHash(pubkey));
+    txTo9.vout[0].nValue = 4500;
+    txTo9.vin.resize(2);
+    txTo9.vin[0].prevout.n = 4; // 1 sigop
+    txTo9.vin[0].prevout.hash = txFrom.GetHash();
+    txTo9.vin[0].scriptSig << std::vector<unsigned char>(65, 0);
+    txTo9.vin[1].prevout.n = 5; // 2 sigops
+    txTo9.vin[1].prevout.hash = txFrom.GetHash();
+    txTo9.vin[1].scriptSig << std::vector<unsigned char>(65, 0);
+    BOOST_CHECK(::AreInputsStandard(CTransaction(txTo9), coins));
+
+    // Test 10: Transaction mixing acceptable LEGACY with standard input
+    CMutableTransaction txTo10;
+    txTo10.vout.resize(1);
+    txTo10.vout[0].scriptPubKey = GetScriptForDestination(PKHash(pubkey));
+    txTo10.vout[0].nValue = 5000;
+    txTo10.vin.resize(2);
+    txTo10.vin[0].prevout.n = 4; // LEGACY with 1 sigop
+    txTo10.vin[0].prevout.hash = txFrom.GetHash();
+    txTo10.vin[0].scriptSig << std::vector<unsigned char>(65, 0);
+    txTo10.vin[1].prevout.n = 7; // Standard P2PKH
+    txTo10.vin[1].prevout.hash = txFrom.GetHash();
+    txTo10.vin[1].scriptSig << std::vector<unsigned char>(65, 0) << ToByteVector(pubkey);
+    BOOST_CHECK(::AreInputsStandard(CTransaction(txTo10), coins));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
