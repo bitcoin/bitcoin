@@ -255,17 +255,25 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
             const bool is_trusted{CachedTxIsTrusted(wallet, wtx, trusted_parents)};
             const int tx_depth{wallet.GetTxDepthInMainChain(wtx)};
 
-            if (!wallet.IsSpent(outpoint) && (allow_used_addresses || !wallet.IsSpentKey(txo.GetTxOut().scriptPubKey))) {
-                // Get the amounts for mine
-                CAmount credit_mine = txo.GetTxOut().nValue;
+            if (!wallet.IsSpent(outpoint)) {
+                CAmount* bucket = nullptr;
 
                 // Set the amounts in the return object
                 if (wallet.IsTxImmatureCoinBase(wtx) && wtx.isConfirmed()) {
-                    ret.m_mine_immature += credit_mine;
+                    bucket = &ret.m_mine_immature;
                 } else if (is_trusted && tx_depth >= min_depth) {
-                    ret.m_mine_trusted += credit_mine;
+                    bucket = &ret.m_mine_trusted;
                 } else if (!is_trusted && wtx.InMempool()) {
-                    ret.m_mine_untrusted_pending += credit_mine;
+                    bucket = &ret.m_mine_untrusted_pending;
+                }
+                if (bucket) {
+                    // Get the amounts for mine
+                    CAmount credit_mine = txo.GetTxOut().nValue;
+
+                    if (!allow_used_addresses && wallet.IsSpentKey(txo.GetTxOut().scriptPubKey)) {
+                        bucket = &ret.m_mine_used;
+                    }
+                    *bucket += credit_mine;
                 }
             }
         }
