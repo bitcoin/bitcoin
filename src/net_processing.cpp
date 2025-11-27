@@ -3719,6 +3719,20 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             LogInfo("%s", new_peer_msg());
         }
 
+        if (auto tx_relay = peer->GetTxRelay()) {
+            // `TxRelay::m_tx_inventory_to_send` must be empty before the
+            // version handshake is completed as
+            // `TxRelay::m_next_inv_send_time` is first initialised in
+            // `SendMessages` after the verack is received. Any transactions
+            // received during the version handshake would otherwise
+            // immediately be advertised without random delay, potentially
+            // leaking the time of arrival to a spy.
+            Assume(WITH_LOCK(
+                tx_relay->m_tx_inventory_mutex,
+                return tx_relay->m_tx_inventory_to_send.empty() &&
+                       tx_relay->m_next_inv_send_time == 0s));
+        }
+
         if (pfrom.GetCommonVersion() >= SHORT_IDS_BLOCKS_VERSION) {
             // Tell our peer we are willing to provide version 2 cmpctblocks.
             // However, we do not request new block announcements using
@@ -3735,20 +3749,6 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // by WTXIDRELAY (since WTXIDRELAY can't be announced later).
                 m_txreconciliation->ForgetPeer(pfrom.GetId());
             }
-        }
-
-        if (auto tx_relay = peer->GetTxRelay()) {
-            // `TxRelay::m_tx_inventory_to_send` must be empty before the
-            // version handshake is completed as
-            // `TxRelay::m_next_inv_send_time` is first initialised in
-            // `SendMessages` after the verack is received. Any transactions
-            // received during the version handshake would otherwise
-            // immediately be advertised without random delay, potentially
-            // leaking the time of arrival to a spy.
-            Assume(WITH_LOCK(
-                tx_relay->m_tx_inventory_mutex,
-                return tx_relay->m_tx_inventory_to_send.empty() &&
-                       tx_relay->m_next_inv_send_time == 0s));
         }
 
         {
