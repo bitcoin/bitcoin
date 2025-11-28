@@ -16,7 +16,9 @@
 #include <consensus/amount.h>
 #include <cstddef>
 #include <cstdint>
+#include <map>
 #include <policy/policy.h>
+#include <primitives/transaction.h>
 #include <script/script.h>
 #include <uint256.h>
 #include <util/time.h>
@@ -109,6 +111,11 @@ enum class TxBroadcast : uint8_t {
     /// Add the transaction to the mempool, but don't broadcast to anybody.
     MEMPOOL_NO_BROADCAST,
 };
+
+/*
+ * Map how many templates refer to each transaction reference.
+ */
+using TxTemplateMap = std::map<CTransactionRef, size_t>;
 
 } // namespace node
 
