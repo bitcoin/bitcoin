@@ -439,9 +439,11 @@ public:
      * Push the modifications applied to this cache to its base and wipe local state.
      * Failure to call this method or Sync() before destruction will cause the changes
      * to be forgotten.
+     * If will_reuse_cache is false, the cache will retain the same memory footprint
+     * after flushing and should be destroyed to deallocate.
      * If false is returned, the state of this cache (and its backing view) will be undefined.
      */
-    bool Flush();
+    bool Flush(bool will_reuse_cache = true);
 
     /**
      * Push the modifications applied to this cache to its base while retaining
