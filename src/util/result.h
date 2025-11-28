@@ -53,7 +53,7 @@ private:
     friend bilingual_str ErrorString(const Result<FT>& result);
 
 public:
-    Result() : m_variant{std::in_place_index_t<1>{}, std::monostate{}} {}  // constructor for void
+    Result() : m_variant{std::in_place_index_t<1>{}, T{}} {}
     Result(T obj) : m_variant{std::in_place_index_t<1>{}, std::move(obj)} {}
     Result(Error error) : m_variant{std::in_place_index_t<0>{}, std::move(error.message)} {}
     Result(Result&&) = default;
