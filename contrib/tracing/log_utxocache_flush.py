@@ -10,7 +10,7 @@ from bcc import BPF, USDT
 """Example logging Bitcoin Core utxo set cache flushes utilizing
     the utxocache:flush tracepoint."""
 
-# USAGE:  ./contrib/tracing/log_utxocache_flush.py path/to/bitcoind
+# USAGE:  ./contrib/tracing/log_utxocache_flush.py <pid of bitcoind>
 
 # BCC: The C program to be compiled to an eBPF program (by BCC) and loaded into
 # a sandboxed Linux kernel VM.
@@ -45,7 +45,8 @@ FLUSH_MODES = [
     'NONE',
     'IF_NEEDED',
     'PERIODIC',
-    'ALWAYS'
+    'FORCE_FLUSH',
+    'FORCE_SYNC',
 ]
 
 
@@ -61,7 +62,7 @@ class Data(ctypes.Structure):
 
 
 def print_event(event):
-    print("%-15d %-10s %-15d %-15s %-8s" % (
+    print("%-15d %-12s %-15d %-15s %-8s" % (
         event.duration,
         FLUSH_MODES[event.mode],
         event.coins_count,
@@ -88,7 +89,7 @@ def main(pid):
 
     b["flush"].open_perf_buffer(handle_flush)
     print("Logging utxocache flushes. Ctrl-C to end...")
-    print("%-15s %-10s %-15s %-15s %-8s" % ("Duration (µs)", "Mode",
+    print("%-15s %-12s %-15s %-15s %-8s" % ("Duration (µs)", "Mode",
                                             "Coins Count", "Memory Usage",
                                             "Flush for Prune"))
 

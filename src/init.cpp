@@ -347,7 +347,7 @@ void Shutdown(NodeContext& node)
         LOCK(cs_main);
         for (Chainstate* chainstate : node.chainman->GetAll()) {
             if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
+                chainstate->ForceFlushStateToDisk(/*wipe_cache=*/true);
             }
         }
     }
@@ -373,7 +373,7 @@ void Shutdown(NodeContext& node)
         LOCK(cs_main);
         for (Chainstate* chainstate : node.chainman->GetAll()) {
             if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
+                chainstate->ForceFlushStateToDisk(/*wipe_cache=*/true);
                 chainstate->ResetCoinsViews();
             }
         }
