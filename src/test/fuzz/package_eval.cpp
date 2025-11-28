@@ -342,6 +342,8 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
 
     node.validation_signals->UnregisterSharedValidationInterface(outpoints_updater);
 
+    chainstate.SetMempool(g_setup->m_node.mempool.get());
+
     WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
 }
 
@@ -536,6 +538,8 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
     }
 
     node.validation_signals->UnregisterSharedValidationInterface(outpoints_updater);
+
+    chainstate.SetMempool(g_setup->m_node.mempool.get());
 
     WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
 }
