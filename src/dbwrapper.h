@@ -254,14 +254,6 @@ public:
         return ExistsImpl(ssKey);
     }
 
-    template <typename K>
-    void Erase(const K& key, bool fSync = false)
-    {
-        CDBBatch batch(*this);
-        batch.Erase(key);
-        WriteBatch(batch, fSync);
-    }
-
     void WriteBatch(CDBBatch& batch, bool fSync = false);
 
     // Get an estimate of LevelDB memory usage (in bytes).
