@@ -60,7 +60,6 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     std::string pszDest;
 
     std::unique_ptr<CNode> pnode1 = std::make_unique<CNode>(id++,
-                                                            /*sock=*/nullptr,
                                                             addr,
                                                             /*nKeyedNetGroupIn=*/0,
                                                             /*nLocalHostNonceIn=*/0,
@@ -79,7 +78,6 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     BOOST_CHECK_EQUAL(pnode1->ConnectedThroughNetwork(), Network::NET_IPV4);
 
     std::unique_ptr<CNode> pnode2 = std::make_unique<CNode>(id++,
-                                                            /*sock=*/nullptr,
                                                             addr,
                                                             /*nKeyedNetGroupIn=*/1,
                                                             /*nLocalHostNonceIn=*/1,
@@ -98,7 +96,6 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     BOOST_CHECK_EQUAL(pnode2->ConnectedThroughNetwork(), Network::NET_IPV4);
 
     std::unique_ptr<CNode> pnode3 = std::make_unique<CNode>(id++,
-                                                            /*sock=*/nullptr,
                                                             addr,
                                                             /*nKeyedNetGroupIn=*/0,
                                                             /*nLocalHostNonceIn=*/0,
@@ -117,7 +114,6 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     BOOST_CHECK_EQUAL(pnode3->ConnectedThroughNetwork(), Network::NET_IPV4);
 
     std::unique_ptr<CNode> pnode4 = std::make_unique<CNode>(id++,
-                                                            /*sock=*/nullptr,
                                                             addr,
                                                             /*nKeyedNetGroupIn=*/1,
                                                             /*nLocalHostNonceIn=*/1,
@@ -610,7 +606,6 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
     ipv4AddrPeer.s_addr = 0xa0b0c001;
     CAddress addr = CAddress(CService(ipv4AddrPeer, 7777), NODE_NETWORK);
     std::unique_ptr<CNode> pnode = std::make_unique<CNode>(/*id=*/0,
-                                                           /*sock=*/nullptr,
                                                            addr,
                                                            /*nKeyedNetGroupIn=*/0,
                                                            /*nLocalHostNonceIn=*/0,
@@ -665,7 +660,6 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
     in_addr peer_out_in_addr;
     peer_out_in_addr.s_addr = htonl(0x01020304);
     CNode peer_out{/*id=*/0,
-                   /*sock=*/nullptr,
                    /*addrIn=*/CAddress{CService{peer_out_in_addr, 8333}, NODE_NETWORK},
                    /*nKeyedNetGroupIn=*/0,
                    /*nLocalHostNonceIn=*/0,
@@ -687,7 +681,6 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
     in_addr peer_in_in_addr;
     peer_in_in_addr.s_addr = htonl(0x05060708);
     CNode peer_in{/*id=*/0,
-                  /*sock=*/nullptr,
                   /*addrIn=*/CAddress{CService{peer_in_in_addr, 8333}, NODE_NETWORK},
                   /*nKeyedNetGroupIn=*/0,
                   /*nLocalHostNonceIn=*/0,
@@ -825,7 +818,6 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     in_addr peer_in_addr;
     peer_in_addr.s_addr = htonl(0x01020304);
     CNode peer{/*id=*/0,
-               /*sock=*/nullptr,
                /*addrIn=*/CAddress{CService{peer_in_addr, 8333}, NODE_NETWORK},
                /*nKeyedNetGroupIn=*/0,
                /*nLocalHostNonceIn=*/0,
@@ -901,7 +893,6 @@ BOOST_AUTO_TEST_CASE(advertise_local_address)
 {
     auto CreatePeer = [](const CAddress& addr) {
         return std::make_unique<CNode>(/*id=*/0,
-                                       /*sock=*/nullptr,
                                        addr,
                                        /*nKeyedNetGroupIn=*/0,
                                        /*nLocalHostNonceIn=*/0,
