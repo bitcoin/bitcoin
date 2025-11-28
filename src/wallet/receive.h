@@ -49,6 +49,7 @@ struct Balance {
     CAmount m_mine_immature{0};          //!< Immature coinbases in the main chain
 };
 Balance GetBalance(const CWallet& wallet, int min_depth = 0, bool avoid_reuse = true);
+CAmount GetWalletUTXOSetBalance(const CWallet& wallet);
 
 std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet);
 std::set<std::set<CTxDestination>> GetAddressGroupings(const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
