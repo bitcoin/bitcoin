@@ -82,6 +82,8 @@ using interfaces::Mining;
 using interfaces::Node;
 using interfaces::WalletLoader;
 using node::BlockAssembler;
+using node::BlockCreateOptions;
+using node::MiningArgs;
 using node::BlockWaitOptions;
 using util::Join;
 
@@ -856,9 +858,9 @@ public:
 class BlockTemplateImpl : public BlockTemplate
 {
 public:
-    explicit BlockTemplateImpl(BlockAssembler::Options assemble_options,
+    explicit BlockTemplateImpl(BlockCreateOptions create_options,
                                std::unique_ptr<CBlockTemplate> block_template,
-                               NodeContext& node) : m_assemble_options(std::move(assemble_options)),
+                               NodeContext& node) : m_create_options(std::move(create_options)),
                                                     m_block_template(std::move(block_template)),
                                                     m_node(node)
     {
@@ -913,8 +915,15 @@ public:
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
     {
-        auto new_template = WaitAndCreateNewBlock(chainman(), notifications(), m_node.mempool.get(), m_block_template, options, m_assemble_options, m_interrupt_wait);
-        if (new_template) return std::make_unique<BlockTemplateImpl>(m_assemble_options, std::move(new_template), m_node);
+        auto new_template = WaitAndCreateNewBlock(chainman(),
+                                                  notifications(),
+                                                  m_node.mempool.get(),
+                                                  m_block_template,
+                                                  options,
+                                                  m_mining_args,
+                                                  m_create_options,
+                                                  m_interrupt_wait);
+        if (new_template) return std::make_unique<BlockTemplateImpl>(m_create_options, std::move(new_template), m_node);
         return nullptr;
     }
 
@@ -923,7 +932,8 @@ public:
         InterruptWait(notifications(), m_interrupt_wait);
     }
 
-    const BlockAssembler::Options m_assemble_options;
+    const MiningArgs m_mining_args;
+    const BlockCreateOptions m_create_options;
 
     const std::unique_ptr<CBlockTemplate> m_block_template;
 
@@ -963,9 +973,14 @@ public:
         // Ensure m_tip_block is set so consumers of BlockTemplate can rely on that.
         if (!waitTipChanged(uint256::ZERO, MillisecondsDouble::max())) return {};
 
-        BlockAssembler::Options assemble_options{options};
-        ApplyArgsManOptions(*Assert(m_node.args), assemble_options);
-        return std::make_unique<BlockTemplateImpl>(assemble_options, BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options}.CreateNewBlock(), m_node);
+        return std::make_unique<BlockTemplateImpl>(options,
+                                                   BlockAssembler{
+                                                       chainman().ActiveChainstate(),
+                                                       context()->mempool.get(),
+                                                       context()->mining_args,
+                                                       options,
+                                                    }.CreateNewBlock(),
+                                                   m_node);
     }
 
     bool checkBlock(const CBlock& block, const node::BlockCheckOptions& options, std::string& reason, std::string& debug) override

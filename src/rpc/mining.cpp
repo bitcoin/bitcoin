@@ -161,11 +161,17 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock&& block, uint64_t&
     return true;
 }
 
-static UniValue generateBlocks(ChainstateManager& chainman, Mining& miner, const CScript& coinbase_output_script, int nGenerate, uint64_t nMaxTries)
+static UniValue generateBlocks(NodeContext& node, Mining& miner, CScript& coinbase_output_script, int nGenerate, uint64_t nMaxTries)
 {
+    ChainstateManager& chainman = EnsureChainman(node);
+
     UniValue blockHashes(UniValue::VARR);
     while (nGenerate > 0 && !chainman.m_interrupt) {
-        std::unique_ptr<BlockTemplate> block_template(miner.createNewBlock({ .coinbase_output_script = coinbase_output_script }));
+        std::unique_ptr<BlockTemplate> block_template(miner.createNewBlock({
+            .block_reserved_weight = node.mining_args.default_block_reserved_weight,
+            .coinbase_output_script = coinbase_output_script
+        })
+    );
         CHECK_NONFATAL(block_template);
 
         std::shared_ptr<const CBlock> block_out;
@@ -247,9 +253,7 @@ static RPCHelpMan generatetodescriptor()
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
     Mining& miner = EnsureMining(node);
-    ChainstateManager& chainman = EnsureChainman(node);
-
-    return generateBlocks(chainman, miner, coinbase_output_script, num_blocks, max_tries);
+    return generateBlocks(node, miner, coinbase_output_script, num_blocks, max_tries);
 },
     };
 }
@@ -293,11 +297,9 @@ static RPCHelpMan generatetoaddress()
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
     Mining& miner = EnsureMining(node);
-    ChainstateManager& chainman = EnsureChainman(node);
 
     CScript coinbase_output_script = GetScriptForDestination(destination);
-
-    return generateBlocks(chainman, miner, coinbase_output_script, num_blocks, max_tries);
+    return generateBlocks(node, miner, coinbase_output_script, num_blocks, max_tries);
 },
     };
 }
@@ -376,7 +378,11 @@ static RPCHelpMan generateblock()
     {
         LOCK(chainman.GetMutex());
         {
-            std::unique_ptr<BlockTemplate> block_template{miner.createNewBlock({.use_mempool = false, .coinbase_output_script = coinbase_output_script})};
+            std::unique_ptr<BlockTemplate> block_template{miner.createNewBlock({
+                .use_mempool = false,
+                .block_reserved_weight = node.mining_args.default_block_reserved_weight,
+                .coinbase_output_script = coinbase_output_script
+            })};
             CHECK_NONFATAL(block_template);
 
             block = block_template->getBlock();
@@ -462,7 +468,7 @@ static RPCHelpMan getmininginfo()
     CBlockIndex& tip{*CHECK_NONFATAL(active_chain.Tip())};
 
     UniValue obj(UniValue::VOBJ);
-    obj.pushKV("blocks",           active_chain.Height());
+    obj.pushKV("blocks", active_chain.Height());
     if (BlockAssembler::m_last_block_weight) obj.pushKV("currentblockweight", *BlockAssembler::m_last_block_weight);
     if (BlockAssembler::m_last_block_num_txs) obj.pushKV("currentblocktx", *BlockAssembler::m_last_block_num_txs);
     obj.pushKV("bits", strprintf("%08x", tip.nBits));
@@ -470,9 +476,7 @@ static RPCHelpMan getmininginfo()
     obj.pushKV("target", GetTarget(tip, chainman.GetConsensus().powLimit).GetHex());
     obj.pushKV("networkhashps",    getnetworkhashps().HandleRequest(request));
     obj.pushKV("pooledtx",         (uint64_t)mempool.size());
-    BlockAssembler::Options assembler_options;
-    ApplyArgsManOptions(*node.args, assembler_options);
-    obj.pushKV("blockmintxfee", ValueFromAmount(assembler_options.blockMinFeeRate.GetFeePerK()));
+    obj.pushKV("blockmintxfee", ValueFromAmount(node.mining_args.blockMinFeeRate.GetFeePerK()));
     obj.pushKV("chain", chainman.GetParams().GetChainTypeString());
 
     UniValue next(UniValue::VOBJ);
@@ -871,7 +875,9 @@ static RPCHelpMan getblocktemplate()
         time_start = GetTime();
 
         // Create new block
-        block_template = miner.createNewBlock();
+        block_template = miner.createNewBlock({
+            .block_reserved_weight = node.mining_args.default_block_reserved_weight
+        });
         CHECK_NONFATAL(block_template);
 
 

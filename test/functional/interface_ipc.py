@@ -7,7 +7,13 @@ import asyncio
 from io import BytesIO
 from pathlib import Path
 import shutil
-from test_framework.messages import (CBlock, CTransaction, ser_uint256, COIN)
+from test_framework.messages import (
+    CBlock,
+    COIN,
+    CTransaction,
+    MAX_BLOCK_WEIGHT,
+    ser_uint256,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -57,6 +63,9 @@ class IPCInterfaceTest(BitcoinTestFramework):
 
     def setup_nodes(self):
         self.extra_init = [{"ipcbind": True}, {}]
+        # The -blockreservedweight startup option has no effect on IPC clients.
+        # Templates generated via RPC will be empty.
+        self.extra_args =[{f"-blockreservedweight={MAX_BLOCK_WEIGHT}"}, {}]
         super().setup_nodes()
         # Use this function to also load the capnp modules (we cannot use set_test_params for this,
         # as it is being called before knowing whether capnp is available).
@@ -170,6 +179,8 @@ class IPCInterfaceTest(BitcoinTestFramework):
             waitnext = template2.result.waitNext(ctx, waitoptions)
             miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
             template4 = await waitnext
+            # Ensure it did not timeout
+            assert_not_equal(template4.to_dict(), {})
             block3 = await self.parse_and_deserialize_block(template4, ctx)
             assert_equal(len(block3.vtx), 2)
             self.log.debug("Wait again, this should return the same template, since the fee threshold is zero")
@@ -209,6 +220,13 @@ class IPCInterfaceTest(BitcoinTestFramework):
             result = await wait_task
             await interrupt_task
             assert_equal(result.to_dict(), {})
+
+            # Use absurdly large reserved weight to force an empty template
+            opts.blockReservedWeight = 4000000
+            empty_template = await mining.result.createNewBlock(opts)
+            block = await self.parse_and_deserialize_block(empty_template, ctx)
+            assert_equal(len(block.vtx), 1)
+            opts.blockReservedWeight = 4000
 
             current_block_height = self.nodes[0].getchaintips()[0]["height"]
             check_opts = self.capnp_modules['mining'].BlockCheckOptions()
