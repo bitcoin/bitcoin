@@ -4583,7 +4583,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+39"/>
+        <location filename="../transactiondesc.cpp" line="+34"/>
         <source>conflicted with a transaction with %1 confirmations</source>
         <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that conflicts with a confirmed transaction.</extracomment>
         <translation type="unfinished"></translation>
@@ -4640,7 +4640,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
     </message>
     <message>
         <location line="+5"/>
-        <location line="+14"/>
+        <location line="+13"/>
         <source>From</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4652,32 +4652,32 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
     <message>
         <location line="+1"/>
         <location line="+20"/>
-        <location line="+66"/>
+        <location line="+57"/>
         <source>To</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-84"/>
-        <location line="+91"/>
+        <location line="-75"/>
+        <location line="+82"/>
         <source>own address</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-89"/>
+        <location line="-80"/>
         <source>label</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+36"/>
         <location line="+12"/>
-        <location line="+48"/>
+        <location line="+39"/>
         <location line="+30"/>
         <location line="+60"/>
         <source>Credit</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="-148"/>
+        <location line="-139"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>matures in %n more block</numerusform>
@@ -4690,7 +4690,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+45"/>
         <location line="+26"/>
         <location line="+63"/>
         <source>Debit</source>
