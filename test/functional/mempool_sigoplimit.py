@@ -105,7 +105,8 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         tx.vout[0].scriptPubKey = CScript([OP_RETURN, b'X'*(256+vsize_to_pad+1)])
         res = self.nodes[0].testmempoolaccept([tx.serialize().hex()])[0]
         assert_equal(res['allowed'], True)
-        assert_equal(res['vsize'], sigop_equivalent_vsize+1)
+        assert_equal(res['vsize'], sigop_equivalent_vsize + 1)
+        assert_equal(res['vsize_bip141'], tx.get_vsize())
 
         # decrease the tx's vsize to be right below the sigop-limit equivalent size
         # => tx's vsize in mempool should stick at the sigop-limit equivalent
@@ -115,6 +116,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         res = self.nodes[0].testmempoolaccept([tx.serialize().hex()])[0]
         assert_equal(res['allowed'], True)
         assert_equal(res['vsize'], sigop_equivalent_vsize)
+        assert_equal(res['vsize_bip141'], tx.get_vsize())
 
         # check that the ancestor and descendant size calculations in the mempool
         # also use the same max(sigop_equivalent_vsize, serialized_vsize) logic
@@ -140,6 +142,15 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         assert_equal(entry_parent['ancestorsize'], parent_tx.get_vsize())
         assert_equal(entry_parent['descendantcount'], 2)
         assert_equal(entry_parent['descendantsize'], parent_tx.get_vsize() + sigop_equivalent_vsize)
+
+        tx_hex = tx.serialize().hex()
+        txid = tx.txid_hex
+        self.log.info(f"Pushing padded tx {txid} into mempool for getrawtransaction sigopsize field check")
+        self.nodes[0].sendrawtransaction(hexstring=tx_hex, maxburnamount='1.0')
+        # Fetch with verbosity=1 and assert sigopsize is present and correct
+        raw = self.nodes[0].getrawtransaction(txid, 1)
+        sigop_equivalent_vsize = ceil(num_sigops * bytes_per_sigop / WITNESS_SCALE_FACTOR)
+        assert_equal(raw['sigopsize'], sigop_equivalent_vsize)
 
     def test_sigops_package(self):
         self.log.info("Test a overly-large sigops-vbyte hits package limits")

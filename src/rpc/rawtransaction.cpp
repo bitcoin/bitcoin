@@ -243,6 +243,7 @@ static RPCHelpMan getrawtransaction()
                          {
                              {RPCResult::Type::BOOL, "in_active_chain", /*optional=*/true, "Whether specified block is in the active chain or not (only present with explicit \"blockhash\" argument)"},
                              {RPCResult::Type::STR_HEX, "blockhash", /*optional=*/true, "the block hash"},
+                             {RPCResult::Type::NUM, "sigopsize", /*optional=*/true, "Sigop-adjusted size in bytes, present for mempool transactions."},
                              {RPCResult::Type::NUM, "confirmations", /*optional=*/true, "The confirmations"},
                              {RPCResult::Type::NUM_TIME, "blocktime", /*optional=*/true, "The block time expressed in " + UNIX_EPOCH_TIME},
                              {RPCResult::Type::NUM, "time", /*optional=*/true, "Same as \"blocktime\""},
@@ -343,6 +344,17 @@ static RPCHelpMan getrawtransaction()
         LOCK(cs_main);
         blockindex = chainman.m_blockman.LookupBlockIndex(hash_block); // May be nullptr for mempool transactions
     }
+
+    // Add sigopsize if the transaction exists in the mempool.
+    if (blockindex == nullptr && hash_block.IsNull() && node.mempool) {
+        LOCK(node.mempool->cs);
+        if (auto entry = node.mempool->GetEntry(tx->GetHash())) {
+            int64_t sigop_weight = entry->GetSigOpCost() * nBytesPerSigOp;
+            int64_t sigop_vbytes = (sigop_weight + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR;
+            result.pushKV("sigopsize", sigop_vbytes);
+        }
+    }
+
     if (verbosity == 1) {
         TxToJSON(*tx, hash_block, result, chainman.ActiveChainstate());
         return result;
