@@ -61,26 +61,12 @@ static inline void popstack(std::vector<valtype>& stack)
     stack.pop_back();
 }
 
-bool static IsCompressedOrUncompressedPubKey(const valtype &vchPubKey) {
-    if (vchPubKey.size() < CPubKey::COMPRESSED_SIZE) {
-        //  Non-canonical public key: too short
-        return false;
+bool static IsEmptyOrHybridPubKey(const valtype &vchPubKey) {
+    if (vchPubKey.size() == 0) return true;
+    if (vchPubKey.size() == CPubKey::SIZE) {
+        if (vchPubKey[0] == 0x06 || vchPubKey[0] == 0x07) return true;
     }
-    if (vchPubKey[0] == 0x04) {
-        if (vchPubKey.size() != CPubKey::SIZE) {
-            //  Non-canonical public key: invalid length for uncompressed key
-            return false;
-        }
-    } else if (vchPubKey[0] == 0x02 || vchPubKey[0] == 0x03) {
-        if (vchPubKey.size() != CPubKey::COMPRESSED_SIZE) {
-            //  Non-canonical public key: invalid length for compressed key
-            return false;
-        }
-    } else {
-        //  Non-canonical public key: neither compressed nor uncompressed
-        return false;
-    }
-    return true;
+    return false;
 }
 
 bool static IsCompressedPubKey(const valtype &vchPubKey) {
@@ -216,7 +202,7 @@ bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, script_ver
 }
 
 bool static CheckPubKeyEncoding(const valtype &vchPubKey, script_verify_flags flags, const SigVersion &sigversion, ScriptError* serror) {
-    if ((flags & SCRIPT_VERIFY_STRICTENC) != 0 && !IsCompressedOrUncompressedPubKey(vchPubKey)) {
+    if ((flags & SCRIPT_VERIFY_STRICTENC) != 0 && IsEmptyOrHybridPubKey(vchPubKey)) {
         return set_error(serror, SCRIPT_ERR_PUBKEYTYPE);
     }
     // Only compressed keys are accepted in segwit
