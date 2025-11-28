@@ -441,6 +441,7 @@ inspecting signatures in Mach-O binaries.")
                   "--enable-host-bind-now=yes",
                   "--enable-standard-branch-protection=yes",
                   "--enable-cet=yes",
+                  "--enable-gprofng=no",
                   "--disable-gcov",
                   "--disable-libgomp",
                   "--disable-libquadmath",
