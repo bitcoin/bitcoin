@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2022 The Bitcoin Core developers
+# Copyright (c) 2019-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 # Test Taproot softfork (BIPs 340-342)
@@ -1396,7 +1396,7 @@ def dump_json_test(tx, input_utxos, idx, success, failure):
     sha1 = hashlib.sha1(dump.encode("utf-8")).hexdigest()
     dirname = os.environ.get("TEST_DUMP_DIR", ".") + ("/%s" % sha1[0])
     os.makedirs(dirname, exist_ok=True)
-    with open(dirname + ("/%s" % sha1), 'w', encoding="utf8") as f:
+    with open(dirname + ("/%s" % sha1), 'w') as f:
         f.write(dump)
 
 # Data type to keep track of UTXOs, where they were created, and how to spend them.

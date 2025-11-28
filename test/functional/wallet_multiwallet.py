@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2022 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test multiwallet.
@@ -180,7 +180,7 @@ class MultiWalletTest(BitcoinTestFramework):
         self.nodes[0].assert_start_raises_init_error(['-walletdir=bad'], 'Error: Specified -walletdir "bad" does not exist')
         # should not initialize if the specified walletdir is not a directory
         not_a_dir = wallet_dir('notadir')
-        open(not_a_dir, 'a', encoding="utf8").close()
+        open(not_a_dir, 'a').close()
         self.nodes[0].assert_start_raises_init_error(['-walletdir=' + not_a_dir], 'Error: Specified -walletdir "' + not_a_dir + '" is not a directory')
 
         # if wallets/ doesn't exist, datadir should be the default wallet dir

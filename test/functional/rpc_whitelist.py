@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2019 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -61,7 +61,7 @@ class RPCWhitelistTest(BitcoinTestFramework):
         ]
         # These commands shouldn't be allowed for any user to test failures
         self.never_allowed = ["getnetworkinfo"]
-        with open(self.nodes[0].datadir_path / "bitcoin.conf", "a", encoding="utf8") as f:
+        with open(self.nodes[0].datadir_path / "bitcoin.conf", "a") as f:
             f.write("\nrpcwhitelistdefault=0\n")
             for user in self.users:
                 f.write("rpcauth=" + user[0] + ":" + user[1] + "\n")
@@ -96,7 +96,7 @@ class RPCWhitelistTest(BitcoinTestFramework):
 
         # Replace file configurations
         self.nodes[0].replace_in_config([("rpcwhitelistdefault=0", "rpcwhitelistdefault=1")])
-        with open(self.nodes[0].datadir_path / "bitcoin.conf", 'a', encoding='utf8') as f:
+        with open(self.nodes[0].datadir_path / "bitcoin.conf", 'a') as f:
             f.write("rpcwhitelist=__cookie__:getblockcount,getblockchaininfo,getmempoolinfo,stop\n")
         self.restart_node(0)
 

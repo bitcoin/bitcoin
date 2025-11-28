@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the -alertnotify, -blocknotify and -walletnotify options."""
@@ -200,7 +200,7 @@ class NotificationsTest(BitcoinTestFramework):
         self.wait_until(lambda: os.path.isfile(self.shutdownnotify_file), timeout=10)
 
     def large_work_invalid_chain_warning_in_alert_file(self):
-        with open(self.alertnotify_file, 'r', encoding='utf8') as f:
+        with open(self.alertnotify_file, 'r') as f:
             alert_text = f.read()
         return LARGE_WORK_INVALID_CHAIN_WARNING in alert_text
 
@@ -213,7 +213,7 @@ class NotificationsTest(BitcoinTestFramework):
             fname = os.path.join(self.walletnotify_dir, notify_outputname(self.wallet, tx_id))
             # Wait for the cached writes to hit storage
             self.wait_until(lambda: os.path.getsize(fname) > 0, timeout=10)
-            with open(fname, 'rt', encoding='utf-8') as f:
+            with open(fname, 'rt') as f:
                 text = f.read()
                 # Universal newline ensures '\n' on 'nt'
                 assert_equal(text[-1], '\n')

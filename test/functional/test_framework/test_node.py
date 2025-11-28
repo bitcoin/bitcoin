@@ -506,13 +506,13 @@ class TestNode():
         The substitutions are passed as a list of search-replace-tuples, e.g.
             [("old", "new"), ("foo", "bar"), ...]
         """
-        with open(self.bitcoinconf, 'r', encoding='utf8') as conf:
+        with open(self.bitcoinconf, 'r') as conf:
             conf_data = conf.read()
         for replacement in replacements:
             assert_equal(len(replacement), 2)
             old, new = replacement[0], replacement[1]
             conf_data = conf_data.replace(old, new)
-        with open(self.bitcoinconf, 'w', encoding='utf8') as conf:
+        with open(self.bitcoinconf, 'w') as conf:
             conf.write(conf_data)
 
     @property
