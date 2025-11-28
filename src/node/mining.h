@@ -53,6 +53,14 @@ struct BlockCreateOptions {
      * Should only be used for tests / benchmarks.
      */
     bool test_block_validity{true};
+
+    /**
+     * Maximum block weight, clamped between block_reserved_weight and
+     * MAX_BLOCK_WEIGHT.
+     *
+     * Should only be set by ClampOptions.
+     */
+    size_t block_max_weight{DEFAULT_BLOCK_MAX_WEIGHT};
 };
 
 struct BlockWaitOptions {
