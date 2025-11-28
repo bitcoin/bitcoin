@@ -41,7 +41,7 @@ python3 --version
 
 ${CI_RETRY_EXE} pip3 install \
   codespell==2.4.1 \
-  lief==0.16.6 \
+  lief==0.17.1 \
   mypy==1.18.2 \
   pyzmq==27.1.0 \
   ruff==0.13.2 \

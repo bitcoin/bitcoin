@@ -161,7 +161,7 @@ chain for " target " development."))
 (define-public python-lief
   (package
     (name "python-lief")
-    (version "0.16.6")
+    (version "0.17.1")
     (source (origin
               (method git-fetch)
               (uri (git-reference
@@ -170,7 +170,7 @@ chain for " target " development."))
               (file-name (git-file-name name version))
               (sha256
                (base32
-                "1pq9nagrnkl1x943bqnpiyxmkd9vk99znfxiwqp6vf012b50bz2a"))
+                "037ffw62yygkn74p51dnia9rhk81byj1xm8xzy3ciz4qv1di3k49"))
               (patches (search-our-patches "lief-scikit-0-9.patch"))))
     (build-system pyproject-build-system)
     (native-inputs (list cmake-minimal
