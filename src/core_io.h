@@ -6,6 +6,7 @@
 #define BITCOIN_CORE_IO_H
 
 #include <consensus/amount.h>
+#include <policy/feerate.h>
 #include <util/result.h>
 
 #include <string>
@@ -32,6 +33,14 @@ enum class TxVerbosity {
     SHOW_DETAILS_AND_PREVOUT  //!< The same as previous option with information about prevouts if available
 };
 
+/**
+ * Unit used to display a feerate.
+ */
+enum class FeeRateUnit{
+    BTC_KVB,
+    SAT_VB
+};
+
 // core_read.cpp
 CScript ParseScript(const std::string& s);
 std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDecode = false);
@@ -43,6 +52,7 @@ bool DecodeHexBlockHeader(CBlockHeader&, const std::string& hex_header);
 
 // core_write.cpp
 UniValue ValueFromAmount(const CAmount amount);
+UniValue ValueFromFeeRate(const CFeeRate& feerate, FeeRateUnit unit);
 std::string FormatScript(const CScript& script);
 std::string EncodeHexTx(const CTransaction& tx);
 std::string SighashToStr(unsigned char sighash_type);

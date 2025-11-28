@@ -35,7 +35,9 @@ static RPCHelpMan getwalletinfo()
 {
     return RPCHelpMan{"getwalletinfo",
                 "Returns an object containing various wallet state info.\n",
-                {},
+                {
+                    {"satvB", RPCArg::Type::BOOL, RPCArg::Default{false}, "If enabled paytxfee will be represented in " + CURRENCY_ATOM + "/vB instead of " + CURRENCY_UNIT + "/kvB"}
+                },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
                     {
@@ -96,7 +98,7 @@ static RPCHelpMan getwalletinfo()
     if (pwallet->IsCrypted()) {
         obj.pushKV("unlocked_until", pwallet->nRelockTime);
     }
-    obj.pushKV("paytxfee", ValueFromAmount(pwallet->m_pay_tx_fee.GetFeePerK()));
+    obj.pushKV("paytxfee", ValueFromFeeRate(pwallet->m_pay_tx_fee, self.Arg<bool>("satvB") ? FeeRateUnit::SAT_VB : FeeRateUnit::BTC_KVB ));
     obj.pushKV("private_keys_enabled", !pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
     obj.pushKV("avoid_reuse", pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE));
     if (pwallet->IsScanning()) {
