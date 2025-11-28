@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2021 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,26 +12,15 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
-    wallet_importprivkey,
 )
-import json
-import os
-
-TESTSDIR = os.path.dirname(os.path.realpath(__file__))
+from test_framework.wallet import MiniWallet
+from test_framework.messages import COIN
+from test_framework.address import address_to_scriptpubkey
 
 class GetblockstatsTest(BitcoinTestFramework):
 
     start_height = 101
     max_stat_pos = 2
-
-    def add_options(self, parser):
-        parser.add_argument('--gen-test-data', dest='gen_test_data',
-                            default=False, action='store_true',
-                            help='Generate test data')
-        parser.add_argument('--test-data', dest='test_data',
-                            default='data/rpc_getblockstats.json',
-                            action='store', metavar='FILE',
-                            help='Test data file')
 
     def set_test_params(self):
         self.num_nodes = 1
@@ -40,102 +29,63 @@ class GetblockstatsTest(BitcoinTestFramework):
     def get_stats(self):
         return [self.nodes[0].getblockstats(hash_or_height=self.start_height + i) for i in range(self.max_stat_pos+1)]
 
-    def generate_test_data(self, filename):
-        mocktime = 1525107225
-        self.nodes[0].setmocktime(mocktime)
-        self.nodes[0].createwallet(wallet_name='test')
-        privkey = self.nodes[0].get_deterministic_priv_key().key
-        wallet_importprivkey(self.nodes[0], privkey, 0)
+    def generate_test_data(self):
+        TRANSACTION_AMOUNTS_BTC = [10, 10, 10, 1]
 
-        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
+        wallet = MiniWallet(self.nodes[0])
 
-        address = self.nodes[0].get_deterministic_priv_key().address
-        self.nodes[0].sendtoaddress(address=address, amount=10, subtractfeefromamount=True)
-        self.generate(self.nodes[0], 1)
+        self.generate(wallet, COINBASE_MATURITY + 1)
 
-        self.nodes[0].sendtoaddress(address=address, amount=10, subtractfeefromamount=True)
-        self.nodes[0].sendtoaddress(address=address, amount=10, subtractfeefromamount=False)
-        self.nodes[0].settxfee(amount=0.003)
-        self.nodes[0].sendtoaddress(address=address, amount=1, subtractfeefromamount=True)
-        # Send to OP_RETURN output to test its exclusion from statistics
-        self.nodes[0].send(outputs={"data": "21"})
+        external_address = self.nodes[0].get_deterministic_priv_key().address
+        external_script = address_to_scriptpubkey(external_address)
+
+        for i, amount_btc in enumerate(TRANSACTION_AMOUNTS_BTC):
+            amount_satoshis = int(amount_btc * COIN)
+            wallet.send_to(
+                from_node=self.nodes[0],
+                scriptPubKey=external_script,
+                amount=amount_satoshis,
+            )
+            if i == 0:
+                self.generate(wallet, 1)
+
         self.sync_all()
-        self.generate(self.nodes[0], 1)
-
-        self.expected_stats = self.get_stats()
-
-        blocks = []
-        tip = self.nodes[0].getbestblockhash()
-        blockhash = None
-        height = 0
-        while tip != blockhash:
-            blockhash = self.nodes[0].getblockhash(height)
-            blocks.append(self.nodes[0].getblock(blockhash, 0))
-            height += 1
-
-        to_dump = {
-            'blocks': blocks,
-            'mocktime': int(mocktime),
-            'stats': self.expected_stats,
-        }
-        with open(filename, 'w', encoding="utf8") as f:
-            json.dump(to_dump, f, sort_keys=True, indent=2)
-
-    def load_test_data(self, filename):
-        with open(filename, 'r', encoding="utf8") as f:
-            d = json.load(f)
-            blocks = d['blocks']
-            mocktime = d['mocktime']
-            self.expected_stats = d['stats']
-
-        # Set the timestamps from the file so that the nodes can get out of Initial Block Download
-        self.nodes[0].setmocktime(mocktime)
-        self.sync_all()
-
-        for b in blocks:
-            self.nodes[0].submitblock(b)
-
+        self.generate(wallet, 1)
 
     def run_test(self):
-        test_data = os.path.join(TESTSDIR, self.options.test_data)
-        if self.options.gen_test_data:
-            self.generate_test_data(test_data)
-        else:
-            self.load_test_data(test_data)
-
+        self.generate_test_data()
         self.sync_all()
         stats = self.get_stats()
 
-        # Make sure all valid statistics are included but nothing else is
-        expected_keys = self.expected_stats[0].keys()
-        assert_equal(set(stats[0].keys()), set(expected_keys))
+        # Make sure all stats have the same set of keys
+        expected_keys = set(stats[0].keys())
+        for stat in stats[1:]:
+            assert_equal(set(stat.keys()), expected_keys)
 
         assert_equal(stats[0]['height'], self.start_height)
         assert_equal(stats[self.max_stat_pos]['height'], self.start_height + self.max_stat_pos)
 
         for i in range(self.max_stat_pos+1):
             self.log.info('Checking block %d' % (i))
-            assert_equal(stats[i], self.expected_stats[i])
 
-            # Check selecting block by hash too
-            blockhash = self.expected_stats[i]['blockhash']
+            blockhash = stats[i]['blockhash']
             stats_by_hash = self.nodes[0].getblockstats(hash_or_height=blockhash)
-            assert_equal(stats_by_hash, self.expected_stats[i])
+            assert_equal(stats_by_hash, stats[i])
 
         # Make sure each stat can be queried on its own
         for stat in expected_keys:
             for i in range(self.max_stat_pos+1):
                 result = self.nodes[0].getblockstats(hash_or_height=self.start_height + i, stats=[stat])
                 assert_equal(list(result.keys()), [stat])
-                if result[stat] != self.expected_stats[i][stat]:
+                if result[stat] != stats[i][stat]:
                     self.log.info('result[%s] (%d) failed, %r != %r' % (
-                        stat, i, result[stat], self.expected_stats[i][stat]))
-                assert_equal(result[stat], self.expected_stats[i][stat])
+                        stat, i, result[stat], stats[i][stat]))
+                assert_equal(result[stat], stats[i][stat])
 
         # Make sure only the selected statistics are included (more than one)
         some_stats = {'minfee', 'maxfee'}
-        stats = self.nodes[0].getblockstats(hash_or_height=1, stats=list(some_stats))
-        assert_equal(set(stats.keys()), some_stats)
+        stats_subset = self.nodes[0].getblockstats(hash_or_height=1, stats=list(some_stats))
+        assert_equal(set(stats_subset.keys()), some_stats)
 
         # Test invalid parameters raise the proper json exceptions
         tip = self.start_height + self.max_stat_pos
@@ -175,12 +125,12 @@ class GetblockstatsTest(BitcoinTestFramework):
         assert_equal(genesis_stats["utxo_increase_actual"], 0)
         assert_equal(genesis_stats["utxo_size_inc_actual"], 0)
 
-        self.log.info('Test tip including OP_RETURN')
+        self.log.info('Test tip with transactions and coinbase OP_RETURN')
         tip_stats = self.nodes[0].getblockstats(tip)
-        assert_equal(tip_stats["utxo_increase"], 6)
-        assert_equal(tip_stats["utxo_size_inc"], 441)
+        assert_equal(tip_stats["utxo_increase"], 5)
+        assert_equal(tip_stats["utxo_size_inc"], 397)
         assert_equal(tip_stats["utxo_increase_actual"], 4)
-        assert_equal(tip_stats["utxo_size_inc_actual"], 300)
+        assert_equal(tip_stats["utxo_size_inc_actual"], 309)
 
         self.log.info("Test when only header is known")
         block = self.generateblock(self.nodes[0], output="raw(55)", transactions=[], submit=False)
@@ -191,6 +141,10 @@ class GetblockstatsTest(BitcoinTestFramework):
         (self.nodes[0].blocks_path / 'blk00000.dat').rename(self.nodes[0].blocks_path / 'blk00000.dat.backup')
         assert_raises_rpc_error(-1, 'Block not found on disk', self.nodes[0].getblockstats, hash_or_height=1)
         (self.nodes[0].blocks_path / 'blk00000.dat.backup').rename(self.nodes[0].blocks_path / 'blk00000.dat')
+
+
+if __name__ == '__main__':
+    GetblockstatsTest(__file__).main()
 
 
 if __name__ == '__main__':
