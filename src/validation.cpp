@@ -6282,7 +6282,7 @@ Chainstate& ChainstateManager::ActivateExistingSnapshot(uint256 base_blockhash)
     LogInfo("[snapshot] switching active chainstate to %s", m_snapshot_chainstate->ToString());
 
     // Mempool is empty at this point because we're still in IBD.
-    Assert(m_active_chainstate->m_mempool->size() == 0);
+    Assert(!m_active_chainstate->m_mempool || m_active_chainstate->m_mempool->size() == 0);
     Assert(!m_snapshot_chainstate->m_mempool);
     m_snapshot_chainstate->m_mempool = m_active_chainstate->m_mempool;
     m_active_chainstate->m_mempool = nullptr;
