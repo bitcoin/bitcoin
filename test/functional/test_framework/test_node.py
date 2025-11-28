@@ -363,10 +363,15 @@ class TestNode():
                 latest_error = suppress_error(f"JSONRPCException {e.error['code']}", e)
             except OSError as e:
                 error_num = e.errno
-                # Work around issue where socket timeouts don't have errno set.
-                # https://github.com/python/cpython/issues/109601
-                if error_num is None and isinstance(e, TimeoutError):
-                    error_num = errno.ETIMEDOUT
+                if error_num is None:
+                    # Work around issue where socket timeouts don't have errno set.
+                    # https://github.com/python/cpython/issues/109601
+                    if isinstance(e, TimeoutError):
+                        error_num = errno.ETIMEDOUT
+                    # http.client.RemoteDisconnected inherits from this type and
+                    # doesn't specify errno.
+                    elif isinstance(e, ConnectionResetError):
+                        error_num = errno.ECONNRESET
 
                 # Suppress similarly to the above JSONRPCException errors.
                 if error_num not in [
