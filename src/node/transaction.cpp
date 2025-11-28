@@ -15,8 +15,6 @@
 #include <validationinterface.h>
 #include <node/transaction.h>
 
-#include <future>
-
 namespace node {
 static TransactionError HandleATMPError(const TxValidationState& state, std::string& err_string_out)
 {
@@ -45,10 +43,8 @@ TransactionError BroadcastTransaction(NodeContext& node,
     assert(node.mempool);
     assert(node.peerman);
 
-    std::promise<void> promise;
     Txid txid = tx->GetHash();
     Wtxid wtxid = tx->GetWitnessHash();
-    bool callback_set = false;
 
     {
         LOCK(cs_main);
@@ -105,28 +101,21 @@ TransactionError BroadcastTransaction(NodeContext& node,
                 }
                 break;
             }
-
-            if (wait_callback && node.validation_signals) {
-                // For transactions broadcast from outside the wallet, make sure
-                // that the wallet has been notified of the transaction before
-                // continuing.
-                //
-                // This prevents a race where a user might call sendrawtransaction
-                // with a transaction to/from their wallet, immediately call some
-                // wallet RPC, and get a stale result because callbacks have not
-                // yet been processed.
-                node.validation_signals->CallFunctionInValidationInterfaceQueue([&promise] {
-                    promise.set_value();
-                });
-                callback_set = true;
-            }
         }
     } // cs_main
 
-    if (callback_set) {
+    if (wait_callback && node.validation_signals) {
+        // For transactions broadcast from outside the wallet, make sure
+        // that the wallet has been notified of the transaction before
+        // continuing.
+        //
+        // This prevents a race where a user might call sendrawtransaction
+        // with a transaction to/from their wallet, immediately call some
+        // wallet RPC, and get a stale result because callbacks have not
+        // yet been processed.
         // Wait until Validation Interface clients have been notified of the
         // transaction entering the mempool.
-        promise.get_future().wait();
+        node.validation_signals->SyncWithValidationInterfaceQueue();
     }
 
     switch (broadcast_method) {
