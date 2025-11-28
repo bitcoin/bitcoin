@@ -1,3 +1,0 @@
-Checks:
-  # See: https://github.com/capnproto/capnproto/pull/2417.
-  - "-clang-analyzer-security.ArrayBound"

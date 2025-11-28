@@ -8,9 +8,9 @@
 #include <ipc/protocol.h>
 #include <logging.h>
 #include <mp/proxy-types.h>
-#include <test/ipc_test.capnp.h>
-#include <test/ipc_test.capnp.proxy.h>
-#include <test/ipc_test.h>
+#include <ipc/test/ipc_test.capnp.h>
+#include <ipc/test/ipc_test.capnp.proxy.h>
+#include <ipc/test/ipc_test.h>
 #include <tinyformat.h>
 #include <validation.h>
 
