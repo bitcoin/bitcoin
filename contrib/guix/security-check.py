@@ -129,7 +129,7 @@ def check_ELF_FORTIFY(binary) -> bool:
 
     chk_funcs = set()
 
-    for sym in binary.imported_symbols:
+    for sym in binary.symbols:
         match = re.search(r'__[a-z]*_chk', sym.name)
         if match:
             chk_funcs.add(match.group(0))

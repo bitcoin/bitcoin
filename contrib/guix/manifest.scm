@@ -94,7 +94,17 @@ chain for " target " development."))
       (home-page (package-home-page xgcc))
       (license (package-license xgcc)))))
 
-(define base-gcc gcc-13) ;; 13.3.0
+(define base-gcc
+  (package
+    (inherit gcc-14) ;; 14.2.0
+    (version "14.3.0")
+    (source (origin
+              (method url-fetch)
+              (uri (string-append "mirror://gnu/gcc/gcc-"
+                                  version "/gcc-" version ".tar.xz"))
+              (sha256
+               (base32
+                "0fna78ly417g69fdm4i5f3ms96g8xzzjza8gwp41lqr5fqlpgp70"))))))
 
 (define base-linux-kernel-headers linux-libre-headers-6.1)
 
@@ -422,7 +432,9 @@ inspecting signatures in Mach-O binaries.")
             ;; https://gcc.gnu.org/install/configure.html
             (list "--enable-threads=posix",
                   "--enable-default-ssp=yes",
+                  "--enable-host-bind-now=yes",
                   "--disable-gcov",
+                  "--disable-libgomp",
                   building-on)))))))
 
 (define-public linux-base-gcc
@@ -436,9 +448,13 @@ inspecting signatures in Mach-O binaries.")
             (list "--enable-initfini-array=yes",
                   "--enable-default-ssp=yes",
                   "--enable-default-pie=yes",
+                  "--enable-host-bind-now=yes",
                   "--enable-standard-branch-protection=yes",
                   "--enable-cet=yes",
+                  "--enable-gprofng=no",
                   "--disable-gcov",
+                  "--disable-libgomp",
+                  "--disable-libquadmath",
                   "--disable-libsanitizer",
                   building-on)))
         ((#:phases phases)
@@ -495,6 +511,39 @@ inspecting signatures in Mach-O binaries.")
                    (("^install-others =.*$")
                     (string-append "install-others = " out "/etc/rpc\n")))))))))))))
 
+;; --enable-static-nss isn't used yet, because it has been broken
+;; since 2.33: https://sourceware.org/bugzilla/show_bug.cgi?id=27959.
+(define-public glibc-2.42
+  (let ((commit "2dbf973fe03f9b8fd5a4740ee0af0d47afdd7bbd"))
+  (package
+    (inherit glibc) ;; 2.39
+    (version "2.42")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://sourceware.org/git/glibc.git")
+                    (commit commit)))
+              (file-name (git-file-name "glibc" commit))
+              (sha256
+               (base32
+                "119d0phan055lqa82khv4zng034afc3zs9m9wfw6axn5csfvgjlh"))
+              (patches (search-our-patches "glibc-guix-2.42-prefix.patch"))))
+    (arguments
+      (substitute-keyword-arguments (package-arguments glibc)
+        ((#:configure-flags flags)
+          `(append ,flags
+            ;; https://www.gnu.org/software/libc/manual/html_node/Configuring-and-compiling.html
+            (list "--enable-bind-now",
+                  "--enable-cet=yes",
+                  "--enable-fortify-source",
+                  "--enable-stack-protector=all",
+                  "--disable-nscd",
+                  "--disable-profile",
+                  "--disable-pt_chown",
+                  "--disable-timezone-tools",
+                  "--disable-werror",
+                  building-on))))))))
+
 ;; The sponge tool from moreutils.
 (define-public sponge
   (package
@@ -545,7 +594,7 @@ inspecting signatures in Mach-O binaries.")
         gzip
         xz
         ;; Build tools
-        gcc-toolchain-13
+        gcc-toolchain-14
         cmake-minimal
         gnu-make
         ninja
@@ -563,10 +612,16 @@ inspecting signatures in Mach-O binaries.")
                  nsis-x86_64
                  nss-certs
                  osslsigncode))
+          ((or (string-contains target "x86_64-linux-")
+               (string-contains target "aarch64-linux-")
+               (string-contains target "riscv64-linux-"))
+           (list (list gcc-toolchain-14 "static")
+                 (make-bitcoin-cross-toolchain target
+                                               #:base-libc glibc-2.42)))
           ((string-contains target "-linux-")
            (list bison
                  pkg-config
-                 (list gcc-toolchain-13 "static")
+                 (list gcc-toolchain-14 "static")
                  (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
            (list clang-toolchain-19
