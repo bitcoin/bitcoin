@@ -102,6 +102,20 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                      labels=["Descriptor import test"])
         assert_equal(w1.getwalletinfo()['keypoolsize'], 0)
 
+        # Test importing of a P2PKH descriptor with timestamp as never
+        key = get_generate_key()
+        self.log.info("Should import a p2pkh descriptor with timestamp as never")
+        import_request = {"desc": descsum_create("pkh(" + key.pubkey + ")"),
+                 "timestamp": "never",
+                 "label": "Descriptor import test with never as timestamp"}
+        self.test_importdesc(import_request, success=True)
+        test_address(w1,
+                     key.p2pkh_addr,
+                     solvable=True,
+                     ismine=True,
+                     labels=["Descriptor import test with never as timestamp"])
+        assert_equal(w1.getwalletinfo()['keypoolsize'], 0)
+
         self.log.info("Test can import same descriptor with public key twice")
         self.test_importdesc(import_request, success=True)
 
