@@ -407,6 +407,27 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
     // Net processing asks for 23% of addresses. 23% of 5 is 1 rounded down.
     BOOST_CHECK_EQUAL(addrman->GetAddr(/*max_addresses=*/2500, /*max_pct=*/23, /*network=*/std::nullopt).size(), 1U);
 
+    // Test AddrMan::GetAddr filtering with various AddrPolicy rules.
+    const size_t addedAddresses = addrman->Size();
+    const AddrMan::AddrPolicy policyNoSkip = [](const CAddress&) { return false; };
+    const AddrMan::AddrPolicy policySkipAll = [](const CAddress&) { return true; };
+    const AddrMan::AddrPolicy policyPortPolicy = [](const CAddress& addr) { return addr.GetPort() != 8333; };
+
+    const std::vector<CAddress> vAddrNoPolicy = addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt, /*filtered=*/false);
+    const std::vector<CAddress> vAddrPolicyNoSkip = addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt, /*filtered=*/false, /*policy=*/policyNoSkip);
+    const std::vector<CAddress> vAddrPolicySkipAll = addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt, /*filtered=*/false, /*policy=*/policySkipAll);
+    const std::vector<CAddress> vAddrPolicyPort = addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt, /*filtered=*/false, /*policy=*/policyPortPolicy);
+    const std::set<CAddress> vExpectedAddresses = {addr1, addr3, addr4, addr5};
+
+    BOOST_CHECK_EQUAL(vAddrNoPolicy.size(), addedAddresses);
+    BOOST_CHECK_EQUAL(vAddrPolicyNoSkip.size(), vAddrNoPolicy.size());
+    BOOST_CHECK_EQUAL(vAddrPolicySkipAll.size(), 0);
+
+    // Check that vAddrPolicyPort contains exactly the same items as vExpectedAddresses
+    BOOST_CHECK_EQUAL(vAddrPolicyPort.size(), vExpectedAddresses.size());
+    BOOST_CHECK(std::all_of(vAddrPolicyPort.begin(), vAddrPolicyPort.end(), [&](const CAddress& a){ return vExpectedAddresses.contains(a); }));
+    BOOST_CHECK(std::none_of(vAddrPolicyPort.begin(), vAddrPolicyPort.end(), policyPortPolicy));
+
     // Test: Ensure GetAddr works with new and tried addresses.
     BOOST_CHECK(addrman->Good(CAddress(addr1, NODE_NONE)));
     BOOST_CHECK(addrman->Good(CAddress(addr2, NODE_NONE)));
