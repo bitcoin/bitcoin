@@ -150,6 +150,30 @@ Refer to the `getrawmempool` RPC help for details. Defaults to setting
 
 *Query parameters for `verbose` and `mempool_sequence` available in 25.0 and up.*
 
+#### Transaction Spending Previous Outputs
+`GET /rest/txspendingprevout/<TXID>-<N>/<TXID>-<N>/.../<TXID>-<N>.json`
+
+Scans the mempool to find transactions spending any of the given outputs.
+Only supports JSON as output format.
+Refer to the `gettxspendingprevout` RPC help for details.
+
+For each queried output, returns an object containing:
+- `txid`: the transaction id of the checked output
+- `vout`: the output number
+- `spendingtxid`: (optional) the transaction id of the mempool transaction spending this output (omitted if unspent)
+
+Example:
+```
+$ curl localhost:8332/rest/txspendingprevout/a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0-3.json
+[
+  {
+    "txid": "a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0",
+    "vout": 3,
+    "spendingtxid": "b2cdfd7b89def827ff8af7cd9bff7627ff72e5e8b0f71210f92ea7a4000c5d75"
+  }
+]
+```
+
 
 Risks
 -------------
