@@ -3877,7 +3877,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans(const SecureString& mnemonic_arg, 
             const UniValue& descriptor_vals = signer_res.find_value(internal ? "internal" : "receive");
             if (!descriptor_vals.isArray()) throw std::runtime_error(std::string(__func__) + ": Unexpected result");
             for (const UniValue& desc_val : descriptor_vals.get_array().getValues()) {
-                std::string desc_str = desc_val.getValStr();
+                const std::string& desc_str = desc_val.getValStr();
                 FlatSigningProvider keys;
                 std::string desc_error;
                 std::unique_ptr<Descriptor> desc = Parse(desc_str, keys, desc_error, false);
