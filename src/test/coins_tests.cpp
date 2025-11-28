@@ -58,7 +58,7 @@ public:
 
     uint256 GetBestBlock() const override { return hashBestBlock_; }
 
-    bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) override
+    void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) override
     {
         for (auto it{cursor.Begin()}; it != cursor.End(); it = cursor.NextAndMaybeErase(*it)){
             if (it->second.IsDirty()) {
@@ -72,7 +72,6 @@ public:
         }
         if (!hashBlock.IsNull())
             hashBestBlock_ = hashBlock;
-        return true;
     }
 };
 
@@ -237,7 +236,7 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
                 unsigned int flushIndex = m_rng.randrange(stack.size() - 1);
                 if (fake_best_block) stack[flushIndex]->SetBestBlock(m_rng.rand256());
                 bool should_erase = m_rng.randrange(4) < 3;
-                BOOST_CHECK(should_erase ? stack[flushIndex]->Flush() : stack[flushIndex]->Sync());
+                should_erase ? stack[flushIndex]->Flush() : stack[flushIndex]->Sync();
                 flushed_without_erase |= !should_erase;
             }
         }
@@ -247,7 +246,7 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
                 //Remove the top cache
                 if (fake_best_block) stack.back()->SetBestBlock(m_rng.rand256());
                 bool should_erase = m_rng.randrange(4) < 3;
-                BOOST_CHECK(should_erase ? stack.back()->Flush() : stack.back()->Sync());
+                should_erase ? stack.back()->Flush() : stack.back()->Sync();
                 flushed_without_erase |= !should_erase;
                 stack.pop_back();
             }
@@ -496,13 +495,13 @@ BOOST_FIXTURE_TEST_CASE(updatecoins_simulation_test, UpdateTest)
             // Every 100 iterations, flush an intermediate cache
             if (stack.size() > 1 && m_rng.randbool() == 0) {
                 unsigned int flushIndex = m_rng.randrange(stack.size() - 1);
-                BOOST_CHECK(stack[flushIndex]->Flush());
+                stack[flushIndex]->Flush();
             }
         }
         if (m_rng.randrange(100) == 0) {
             // Every 100 iterations, change the cache stack.
             if (stack.size() > 0 && m_rng.randbool() == 0) {
-                BOOST_CHECK(stack.back()->Flush());
+                stack.back()->Flush();
                 stack.pop_back();
             }
             if (stack.size() == 0 || (stack.size() < 4 && m_rng.randbool())) {
@@ -664,7 +663,7 @@ static void WriteCoinsViewEntry(CCoinsView& view, const MaybeCoin& cache_coin)
     CCoinsMap map{0, CCoinsMap::hasher{}, CCoinsMap::key_equal{}, &resource};
     if (cache_coin) InsertCoinsMapEntry(map, sentinel, *cache_coin);
     auto cursor{CoinsViewCacheCursor(sentinel, map, /*will_erase=*/true)};
-    BOOST_CHECK(view.BatchWrite(cursor, {}));
+    view.BatchWrite(cursor, {});
 }
 
 class SingleEntryCacheTest
