@@ -28,7 +28,7 @@ bool ExternalSigner::Enumerate(const std::string& command, std::vector<ExternalS
     if (!result.isArray()) {
         throw std::runtime_error(strprintf("'%s' received invalid response, expected array of signers", command));
     }
-    for (UniValue signer : result.getValues()) {
+    for (const UniValue& signer : result.getValues()) {
         // Check for error
         const UniValue& error = signer.find_value("error");
         if (!error.isNull()) {
@@ -42,7 +42,7 @@ bool ExternalSigner::Enumerate(const std::string& command, std::vector<ExternalS
         if (fingerprint.isNull()) {
             throw std::runtime_error(strprintf("'%s' received invalid response, missing signer fingerprint", command));
         }
-        const std::string fingerprintStr = fingerprint.get_str();
+        const std::string& fingerprintStr = fingerprint.get_str();
         // Skip duplicate signer
         bool duplicate = false;
         for (const ExternalSigner& signer : signers) {
