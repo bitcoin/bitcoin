@@ -62,6 +62,7 @@ struct Args {
     std::string regex_filter;
     uint8_t priority;
     std::vector<std::string> setup_args;
+    bool scale_threads;
 };
 
 class BenchRunner
