@@ -304,8 +304,9 @@ class TxConflicts(BitcoinTestFramework):
         bob.sendrawtransaction(tx1_conflict_conflict) # kick tx1_conflict out of the mempool
         bob.sendrawtransaction(raw_tx1) #re-broadcast tx1 because it is no longer conflicted
 
-        # Now bob has no pending funds because tx1 and tx2 are spent by tx3, which hasn't been re-broadcast yet
-        assert_equal(bob.getbalances()["mine"]["untrusted_pending"], 0)
+        # Now bob has pending funds because tx1 and tx2 are spent by tx3, which hasn't been re-broadcast yet
+        bob_bal = bob.getbalances()["mine"]
+        assert_equal(bob_bal["untrusted_pending"], -bob_bal["nonmempool"])
 
         bob.sendrawtransaction(raw_tx3)
         assert_equal(len(bob.getrawmempool()), 4) # The mempool contains: tx1, tx2, tx1_conflict_conflict, tx3
