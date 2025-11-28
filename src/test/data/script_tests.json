@@ -2452,8 +2452,8 @@
     "",
     "0 0x20 0x230828ed48871f0f362ce9432aa52f620f442cc8d9ce7a8b5e798365595a38bb",
     "P2SH,WITNESS,WITNESS_PUBKEYTYPE",
-    "OK",
-    "P2WSH CHECKMULTISIG with second key uncompressed and signing with the first key should pass as the uncompressed key is not used"
+    "WITNESS_PUBKEYTYPE",
+    "P2WSH CHECKMULTISIG with second key uncompressed and signing with the first key"
 ],
 [
     [
@@ -2465,8 +2465,8 @@
     "0x22 0x0020230828ed48871f0f362ce9432aa52f620f442cc8d9ce7a8b5e798365595a38bb",
     "HASH160 0x14 0x3478e7019ce61a68148f87549579b704cbe4c393 EQUAL",
     "P2SH,WITNESS,WITNESS_PUBKEYTYPE",
-    "OK",
-    "P2SH(P2WSH) CHECKMULTISIG with second key uncompressed and signing with the first key should pass as the uncompressed key is not used"
+    "WITNESS_PUBKEYTYPE",
+    "P2SH(P2WSH) CHECKMULTISIG with second key uncompressed and signing with the first key"
 ],
 [
     [
