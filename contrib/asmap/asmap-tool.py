@@ -140,15 +140,19 @@ def main():
         state1 = load_file(args.infile1)
         state2 = load_file(args.infile2)
         ipv4_changed = 0
+        ipv4_entries_changed = 0
         ipv6_changed = 0
+        ipv6_entries_changed = 0
         for prefix, old_asn, new_asn in state1.diff(state2):
             if args.ignore_unassigned and old_asn == 0:
                 continue
             net = asmap.prefix_to_net(prefix)
             if isinstance(net, ipaddress.IPv4Network):
-                ipv4_changed += 1 << (32 - net.prefixlen)
+                ipv4_changed += net.num_addresses
+                ipv4_entries_changed += 1
             elif isinstance(net, ipaddress.IPv6Network):
-                ipv6_changed += 1 << (128 - net.prefixlen)
+                ipv6_changed += net.num_addresses
+                ipv6_entries_changed += 1
             if new_asn == 0:
                 print(f"# {net} was AS{old_asn}")
             elif old_asn == 0:
@@ -159,8 +163,9 @@ def main():
         ipv6_change_str = "" if ipv6_changed == 0 else f" (2^{math.log2(ipv6_changed):.2f})"
 
         print(
-            f"# {ipv4_changed}{ipv4_change_str} IPv4 addresses changed; "
-            f"{ipv6_changed}{ipv6_change_str} IPv6 addresses changed"
+f"""# Summary
+IPv4: {ipv4_entries_changed} entries with {ipv4_changed}{ipv4_change_str} addresses changed
+IPv6: {ipv6_entries_changed} entries with {ipv6_changed}{ipv6_change_str} addresses changed"""
         )
     elif args.subcommand == "diff_addrs":
         state1 = load_file(args.infile1)
