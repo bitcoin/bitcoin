@@ -3,16 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 #include <test/util/setup_common.h>
-#include <util/system.h>
+#include <common/run_command.h>
 #include <univalue.h>
 
 #ifdef ENABLE_EXTERNAL_SIGNER
-#if defined(WIN32) && !defined(__kernel_entry)
-// A workaround for boost 1.71 incompatibility with mingw-w64 compiler.
-// For details see https://github.com/bitcoin/bitcoin/pull/22348.
-#define __kernel_entry
-#endif
-#include <boost/process.hpp>
+#include <util/subprocess.hpp>
 #endif // ENABLE_EXTERNAL_SIGNER
 
 #include <boost/test/unit_test.hpp>
@@ -35,45 +30,30 @@ BOOST_AUTO_TEST_CASE(run_command)
         BOOST_CHECK(result.isNull());
     }
     {
-#ifdef WIN32
-        const UniValue result = RunCommandParseJSON("cmd.exe /c echo {\"success\": true}");
-#else
-        const UniValue result = RunCommandParseJSON("echo \"{\"success\": true}\"");
-#endif
+        const UniValue result = RunCommandParseJSON("echo {\"success\": true}");
         BOOST_CHECK(result.isObject());
         const UniValue& success = result.find_value("success");
         BOOST_CHECK(!success.isNull());
         BOOST_CHECK_EQUAL(success.get_bool(), true);
     }
     {
-        // An invalid command is handled by Boost
-        BOOST_CHECK_EXCEPTION(RunCommandParseJSON("invalid_command"), boost::process::process_error, [&](const boost::process::process_error& e) {
-            BOOST_CHECK(std::string(e.what()).find("RunCommandParseJSON error:") == std::string::npos);
-            BOOST_CHECK_EQUAL(e.code().value(), 2);
-            return true;
-        });
+        // An invalid command is handled by cpp-subprocess
+        const std::string expected{"execve failed: "};
+        BOOST_CHECK_EXCEPTION(RunCommandParseJSON("invalid_command"), subprocess::CalledProcessError, HasReason(expected));
     }
     {
         // Return non-zero exit code, no output to stderr
-#ifdef WIN32
-        const std::string command{"cmd.exe /c call"};
-#else
         const std::string command{"false"};
-#endif
         BOOST_CHECK_EXCEPTION(RunCommandParseJSON(command), std::runtime_error, [&](const std::runtime_error& e) {
-            BOOST_CHECK(std::string(e.what()).find(strprintf("RunCommandParseJSON error: process(%s) returned 1: \n", command)) != std::string::npos);
+            const std::string what{e.what()};
+            BOOST_CHECK(what.find(strprintf("RunCommandParseJSON error: process(%s) returned 1: \n", command)) != std::string::npos);
             return true;
         });
     }
     {
         // Return non-zero exit code, with error message for stderr
-#ifdef WIN32
-        const std::string command{"cmd.exe /c dir nosuchfile"};
-        const std::string expected{"File Not Found"};
-#else
         const std::string command{"ls nosuchfile"};
         const std::string expected{"No such file or directory"};
-#endif
         BOOST_CHECK_EXCEPTION(RunCommandParseJSON(command), std::runtime_error, [&](const std::runtime_error& e) {
             const std::string what(e.what());
             BOOST_CHECK(what.find(strprintf("RunCommandParseJSON error: process(%s) returned", command)) != std::string::npos);
@@ -83,15 +63,10 @@ BOOST_AUTO_TEST_CASE(run_command)
     }
     {
         // Unable to parse JSON
-#ifdef WIN32
-        const std::string command{"cmd.exe /c echo {"};
-#else
         const std::string command{"echo {"};
-#endif
         BOOST_CHECK_EXCEPTION(RunCommandParseJSON(command), std::runtime_error, HasReason("Unable to parse JSON: {"));
     }
-    // Test std::in, except for Windows
-#ifndef WIN32
+    // Test std::in
     {
         const UniValue result = RunCommandParseJSON("cat", "{\"success\": true}");
         BOOST_CHECK(result.isObject());
@@ -99,7 +74,6 @@ BOOST_AUTO_TEST_CASE(run_command)
         BOOST_CHECK(!success.isNull());
         BOOST_CHECK_EQUAL(success.get_bool(), true);
     }
-#endif
 }
 #endif // ENABLE_EXTERNAL_SIGNER
 

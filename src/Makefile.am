@@ -179,6 +179,7 @@ BITCOIN_CORE_H = \
   coinjoin/walletman.h \
   coins.h \
   common/bloom.h \
+  common/run_command.h \
   compat/assumptions.h \
   compat/byteswap.h \
   compat/compat.h \
@@ -404,6 +405,7 @@ BITCOIN_CORE_H = \
   util/sock.h \
   util/string.h \
   util/spanparsing.h \
+  util/subprocess.hpp \
   util/syserror.h \
   util/system.h \
   util/time.h \
@@ -899,6 +901,7 @@ libbitcoin_common_a_SOURCES = \
   chainparams.cpp \
   coins.cpp \
   common/bloom.cpp \
+  common/run_command.cpp \
   compressor.cpp \
   core_read.cpp \
   core_write.cpp \
