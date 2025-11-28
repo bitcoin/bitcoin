@@ -2,7 +2,7 @@ build: set minimum required CMake to 3.12
 
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -97,7 +97,7 @@
+@@ -109,7 +109,7 @@
  # FreeType explicitly marks the API to be exported and relies on the compiler
  # to hide all other symbols. CMake supports a C_VISBILITY_PRESET property
  # starting with 2.8.12.
