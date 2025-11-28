@@ -10,7 +10,9 @@
 #include <util/string.h>
 
 #include <boost/test/unit_test.hpp>
+#include <array>
 
+#include <algorithm>
 #include <cstdlib>
 
 using util::ToString;
@@ -32,11 +34,11 @@ static CBlockIndex* CreateBlockIndexWithNbits(uint32_t nbits)
     return block_index;
 }
 
-static void RejectDifficultyMismatch(double difficulty, double expected_difficulty) {
-     BOOST_CHECK_MESSAGE(
+static void RejectDifficultyMismatch(double difficulty, double expected_difficulty)
+{
+    BOOST_CHECK_MESSAGE(
         DoubleEquals(difficulty, expected_difficulty, 0.00001),
-        "Difficulty was " + ToString(difficulty)
-            + " but was expected to be " + ToString(expected_difficulty));
+        "Difficulty was " + ToString(difficulty) + " but was expected to be " + ToString(expected_difficulty));
 }
 
 /* Given a BlockIndex with the provided nbits,
@@ -115,6 +117,81 @@ BOOST_AUTO_TEST_CASE(num_chain_tx_max)
     CBlockIndex block_index{};
     block_index.m_chain_tx_count = std::numeric_limits<uint64_t>::max();
     BOOST_CHECK_EQUAL(block_index.m_chain_tx_count, std::numeric_limits<uint64_t>::max());
+}
+
+BOOST_AUTO_TEST_CASE(cblockindex_comparator_equivalence)
+{
+    // Old implementation to prove refactor correctness
+    auto old_comparator{[](const CBlockIndex* pa, const CBlockIndex* pb) {
+        // First sort by most total work, ...
+        if (pa->nChainWork > pb->nChainWork)
+            return false;
+        if (pa->nChainWork < pb->nChainWork)
+            return true;
+
+        // ... then by earliest activatable time, ...
+        if (pa->nSequenceId < pb->nSequenceId)
+            return false;
+        if (pa->nSequenceId > pb->nSequenceId)
+            return true;
+
+        // Use pointer address as tie breaker (should only happen with blocks
+        // loaded from disk, as those share the same id: 0 for blocks on the
+        // best chain, 1 for all others).
+        if (pa < pb)
+            return false;
+        if (pa > pb)
+            return true;
+
+        // Identical blocks.
+        return false;
+    }};
+
+    for (int test{0}; test < 100; ++test) {
+        const node::CBlockIndexWorkComparator comparator;
+        std::array<CBlockIndex, 2> ab; // defined pointer ordering
+        CBlockIndex *a{&ab[0]}, *b{&ab[1]};
+
+        // Generate random chain work and sequence IDs
+        a->nChainWork = UintToArith256(m_rng.rand256());
+        a->nSequenceId = int32_t(m_rng.rand32());
+        // Add some duplicates to test self-equality and pointer tie break
+        if (!m_rng.randrange(10)) {
+            b = a;
+        } else {
+            b->nChainWork = m_rng.randbool() ? a->nChainWork : UintToArith256(m_rng.rand256());
+            b->nSequenceId = m_rng.randbool() ? a->nSequenceId : int32_t(m_rng.rand32());
+        }
+
+        BOOST_CHECK_EQUAL(old_comparator(a, b), comparator(a, b));
+        BOOST_CHECK_EQUAL(old_comparator(b, a), comparator(b, a));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(cblockindex_comparator_sorting_simple)
+{
+    constexpr std::array<std::pair<uint64_t, int32_t>, 4> original{{
+        {1, 20},
+        {1, 10},
+        {2, 20},
+        {2, 10},
+    }};
+
+    std::array<CBlockIndex, original.size()> pointer_storage{};
+    std::array<CBlockIndex*, original.size()> indexes{};
+    for (size_t i{0}; i < pointer_storage.size(); ++i) {
+        pointer_storage[i].nChainWork = arith_uint256{original[i].first};
+        pointer_storage[i].nSequenceId = original[i].second;
+        indexes[i] = &pointer_storage[i];
+    }
+
+    std::ranges::shuffle(indexes, m_rng);
+    std::ranges::sort(indexes, node::CBlockIndexWorkComparator{});
+
+    for (size_t i{0}; i < indexes.size(); ++i) {
+        BOOST_CHECK_EQUAL(indexes[i]->nChainWork, original[i].first);
+        BOOST_CHECK_EQUAL(indexes[i]->nSequenceId, original[i].second);
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE(invalidate_block, TestChain100Setup)
