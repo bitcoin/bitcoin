@@ -140,7 +140,7 @@ public:
         return !(a == b);
     }
 
-    std::string ToString() const;
+    std::string ToString(bool shouldPrintWitness = true) const;
 };
 
 /** An output of a transaction.  It contains the public key that the next input
