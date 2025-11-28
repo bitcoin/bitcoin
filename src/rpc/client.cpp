@@ -79,7 +79,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendtoaddress", 8, "avoid_reuse" },
     { "sendtoaddress", 9, "fee_rate"},
     { "sendtoaddress", 10, "verbose"},
-    { "settxfee", 0, "amount" },
     { "getreceivedbyaddress", 1, "minconf" },
     { "getreceivedbyaddress", 2, "include_immature_coinbase" },
     { "getreceivedbylabel", 0, "label", ParamFormat::STRING },
