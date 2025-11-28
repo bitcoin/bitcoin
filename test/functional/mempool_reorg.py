@@ -22,9 +22,7 @@ from test_framework.p2p import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.wallet import MiniWallet
-from test_framework.blocktools import (
-    create_empty_fork,
-)
+from test_framework.blocktools import ForkGenerator
 
 # Number of blocks to create in temporary blockchain branch for reorg testing
 # needs to be long enough to allow MTP to move arbitrarily forward
@@ -39,12 +37,6 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
             ],
             []
         ]
-
-    def trigger_reorg(self, fork_blocks, node):
-        """Trigger reorg of the fork blocks."""
-        for block in fork_blocks:
-            node.submitblock(block.serialize().hex())
-        assert_equal(self.nodes[0].getbestblockhash(), fork_blocks[-1].hash_hex)
 
     def test_reorg_relay(self):
         self.log.info("Test that transactions from disconnected blocks are available for relay immediately")
@@ -180,7 +172,8 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         self.log.info("Generate a block")
 
         # Prep for fork, only go FORK_LENGTH  seconds into the MTP future max
-        fork_blocks = create_empty_fork(self.nodes[0], fork_length=FORK_LENGTH)
+        fork_gen = ForkGenerator(self.nodes[0])
+        fork_gen.prepare_fork(fork_length=FORK_LENGTH)
 
         # Jump node and MTP 300 seconds and generate a slightly weaker chain than reorg one
         self.nodes[0].setmocktime(future)
@@ -200,7 +193,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         assert_equal(set(self.nodes[0].getrawmempool()), {spend_1_id, spend_2_1_id, timelock_tx_id})
         self.sync_all()
 
-        self.trigger_reorg(fork_blocks, self.nodes[0])
+        fork_gen.trigger_reorg()
         self.sync_blocks()
 
         # We went backwards in time to boot timelock_tx_id

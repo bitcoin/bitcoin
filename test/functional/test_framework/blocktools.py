@@ -116,25 +116,111 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
     block.hashMerkleRoot = block.calc_merkle_root()
     return block
 
-def create_empty_fork(node, fork_length=FORK_LENGTH):
-    '''
-        Creates a fork using node's chaintip as the starting point.
-        Returns a list of blocks to submit in order.
-    '''
-    tip = int(node.getbestblockhash(), 16)
-    height = node.getblockcount()
-    block_time = node.getblock(node.getbestblockhash())['time'] + 1
+class ForkGenerator:
+    """
+    Utility class for creating and triggering blockchain reorgs in tests.
 
-    blocks = []
-    for _ in range(fork_length):
-        block = create_block(tip, create_coinbase(height + 1), block_time)
-        block.solve()
-        blocks.append(block)
-        tip = block.hash_int
-        block_time += 1
-        height += 1
+    This class provides a clean interface for reorg testing with proper state management.
+    It ensures that forks are prepared before reorgs are triggered..
 
-    return blocks
+    """
+
+    def __init__(self, node):
+        """Initialize the ForkGenerator with a reference to a node.
+
+        Kwargs:
+            node: The Bitcoin node instance to use for fork creation and submission
+        """
+        self.node = node
+        self.fork_blocks = None
+        self._prepared = False
+        self._triggered = False
+
+    def prepare_fork(self, fork_length=FORK_LENGTH):
+        """Prepare a fork by creating blocks that will later cause a reorg.
+
+        Kwargs:
+            fork_length: Number of blocks to create in the fork (default: FORK_LENGTH)
+        """
+        if self._prepared and not self._triggered:
+            raise RuntimeError("Fork already prepared. Call trigger_reorg() first before preparing a new fork.")
+
+        # Record the starting point
+        self.fork_start_hash = self.node.getbestblockhash()
+        self.fork_start_height = self.node.getblockcount()
+
+        # Create fork blocks
+        tip = int(self.fork_start_hash, 16)
+        height = self.fork_start_height
+        block_time = self.node.getblock(self.fork_start_hash)['time'] + 1
+
+        self.fork_blocks = []
+        for _ in range(fork_length):
+            # Create the block
+            block = create_block(tip, create_coinbase(height + 1), block_time)
+            block.solve()
+            self.fork_blocks.append(block)
+
+            # Update for next iteration
+            tip = block.hash_int
+            block_time += 1
+            height += 1
+
+        self._prepared = True
+        self._triggered = False
+
+        return self
+
+    def trigger_reorg(self):
+        """Trigger a reorg by submitting the prepared fork blocks.
+
+        Submits all fork blocks to the node, causing a chain reorganization
+        if the fork is longer than the current main chain.
+
+        Raises:
+            RuntimeError: If prepare_fork() hasn't been called first, or if
+                        the reorg did not occur as expected
+        """
+        if not self._prepared:
+            raise RuntimeError("Must call prepare_fork() before trigger_reorg()")
+
+        if self._triggered:
+            raise RuntimeError("Fork already triggered. Call prepare_fork() again to create a new fork.")
+
+        # Submit all fork blocks
+        for block in self.fork_blocks:
+            self.node.submitblock(block.serialize().hex())
+
+        # Verify the reorg happened
+        new_best = self.node.getbestblockhash()
+        expected_best = self.fork_blocks[-1].hash_hex
+
+        if new_best != expected_best:
+            current_height = self.node.getblockcount()
+            raise RuntimeError(
+                f"Reorg did not occur as expected. "
+                f"Expected best block {expected_best}, but got {new_best}. "
+                f"Fork length: {len(self.fork_blocks)}, "
+                f"Current height: {current_height}, "
+                f"Fork start height: {self.fork_start_height}"
+            )
+
+        self._triggered = True
+
+        return self
+
+    def get_fork_blocks(self):
+        """Get the list of prepared fork blocks."""
+        return self.fork_blocks
+
+    def reset(self):
+        """Reset the generator state to prepare a new fork."""
+        self.fork_blocks = None
+        self.fork_start_height = None
+        self.fork_start_hash = None
+        self._prepared = False
+        self._triggered = False
+        return self
 
 def get_witness_script(witness_root, witness_nonce):
     witness_commitment = hash256(ser_uint256(witness_root) + ser_uint256(witness_nonce))
