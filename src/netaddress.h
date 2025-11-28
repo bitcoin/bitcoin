@@ -210,7 +210,6 @@ public:
     bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
 
     friend bool operator==(const CNetAddr& a, const CNetAddr& b);
-    friend bool operator!=(const CNetAddr& a, const CNetAddr& b) { return !(a == b); }
     friend bool operator<(const CNetAddr& a, const CNetAddr& b);
 
     /**
@@ -523,7 +522,6 @@ public:
     bool IsValid() const;
 
     friend bool operator==(const CSubNet& a, const CSubNet& b);
-    friend bool operator!=(const CSubNet& a, const CSubNet& b) { return !(a == b); }
     friend bool operator<(const CSubNet& a, const CSubNet& b);
 };
 
@@ -554,7 +552,6 @@ public:
      */
     [[nodiscard]] sa_family_t GetSAFamily() const;
     friend bool operator==(const CService& a, const CService& b);
-    friend bool operator!=(const CService& a, const CService& b) { return !(a == b); }
     friend bool operator<(const CService& a, const CService& b);
     std::vector<unsigned char> GetKey() const;
     std::string ToStringAddrPort() const;
