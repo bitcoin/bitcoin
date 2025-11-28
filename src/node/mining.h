@@ -7,6 +7,7 @@
 
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <policy/feerate.h>
 #include <policy/policy.h>
 #include <script/script.h>
 #include <util/time.h>
@@ -17,6 +18,10 @@ namespace node {
 
 static const bool DEFAULT_PRINT_MODIFIED_FEE = false;
 
+/**
+ * Block template creation options. These override node defaults, but can't
+ * exceed node limits (e.g. block_reserved_weight can't exceed max block weight).
+ */
 struct BlockCreateOptions {
     /**
      * Set false to omit mempool transactions
@@ -61,6 +66,21 @@ struct BlockCreateOptions {
      * Should only be set by ClampOptions.
      */
     size_t block_max_weight{DEFAULT_BLOCK_MAX_WEIGHT};
+};
+
+/**
+ * Block template creation defaults and limits configured for the node.
+ */
+struct MiningArgs {
+    // Configuration parameters for the block size
+    size_t nBlockMaxWeight{DEFAULT_BLOCK_MAX_WEIGHT};
+    CFeeRate blockMinFeeRate{DEFAULT_BLOCK_MIN_TX_FEE};
+    bool print_modified_fee{DEFAULT_PRINT_MODIFIED_FEE};
+    /**
+     * The default reserved weight for the fixed-size block header,
+     * transaction count and coinbase transaction.
+     */
+    size_t default_block_reserved_weight{DEFAULT_BLOCK_RESERVED_WEIGHT};
 };
 
 struct BlockWaitOptions {

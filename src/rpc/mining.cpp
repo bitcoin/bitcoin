@@ -8,7 +8,6 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <chainparamsbase.h>
-#include <common/args.h>
 #include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
@@ -169,7 +168,7 @@ static UniValue generateBlocks(NodeContext& node, Mining& miner, CScript& coinba
     UniValue blockHashes(UniValue::VARR);
     while (nGenerate > 0 && !chainman.m_interrupt) {
         std::unique_ptr<BlockTemplate> block_template(miner.createNewBlock({
-            .block_reserved_weight = size_t(node.args->GetIntArg("-blockreservedweight", DEFAULT_BLOCK_RESERVED_WEIGHT)),
+            .block_reserved_weight = node.mining_args.default_block_reserved_weight,
             .coinbase_output_script = coinbase_output_script
         })
     );
@@ -381,7 +380,7 @@ static RPCHelpMan generateblock()
         {
             std::unique_ptr<BlockTemplate> block_template{miner.createNewBlock({
                 .use_mempool = false,
-                .block_reserved_weight = size_t(node.args->GetIntArg("-blockreservedweight", DEFAULT_BLOCK_RESERVED_WEIGHT)),
+                .block_reserved_weight = node.mining_args.default_block_reserved_weight,
                 .coinbase_output_script = coinbase_output_script
             })};
             CHECK_NONFATAL(block_template);
@@ -469,7 +468,7 @@ static RPCHelpMan getmininginfo()
     CBlockIndex& tip{*CHECK_NONFATAL(active_chain.Tip())};
 
     UniValue obj(UniValue::VOBJ);
-    obj.pushKV("blocks",           active_chain.Height());
+    obj.pushKV("blocks", active_chain.Height());
     if (BlockAssembler::m_last_block_weight) obj.pushKV("currentblockweight", *BlockAssembler::m_last_block_weight);
     if (BlockAssembler::m_last_block_num_txs) obj.pushKV("currentblocktx", *BlockAssembler::m_last_block_num_txs);
     obj.pushKV("bits", strprintf("%08x", tip.nBits));
@@ -477,9 +476,7 @@ static RPCHelpMan getmininginfo()
     obj.pushKV("target", GetTarget(tip, chainman.GetConsensus().powLimit).GetHex());
     obj.pushKV("networkhashps",    getnetworkhashps().HandleRequest(request));
     obj.pushKV("pooledtx",         (uint64_t)mempool.size());
-    BlockAssembler::Options assembler_options;
-    ApplyArgsManOptions(*node.args, assembler_options);
-    obj.pushKV("blockmintxfee", ValueFromAmount(assembler_options.blockMinFeeRate.GetFeePerK()));
+    obj.pushKV("blockmintxfee", ValueFromAmount(node.mining_args.blockMinFeeRate.GetFeePerK()));
     obj.pushKV("chain", chainman.GetParams().GetChainTypeString());
 
     UniValue next(UniValue::VOBJ);
@@ -879,7 +876,7 @@ static RPCHelpMan getblocktemplate()
 
         // Create new block
         block_template = miner.createNewBlock({
-            .block_reserved_weight = size_t(node.args->GetIntArg("-blockreservedweight", DEFAULT_BLOCK_RESERVED_WEIGHT))
+            .block_reserved_weight = node.mining_args.default_block_reserved_weight
         });
         CHECK_NONFATAL(block_template);
 
