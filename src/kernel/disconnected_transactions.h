@@ -8,6 +8,8 @@
 #include <primitives/transaction.h>
 #include <util/hasher.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <list>
 #include <unordered_map>
 #include <vector>

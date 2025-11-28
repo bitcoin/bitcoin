@@ -7,8 +7,6 @@
 
 #include <arith_uint256.h>
 #include <consensus/amount.h>
-#include <crypto/muhash.h>
-#include <streams.h>
 #include <uint256.h>
 
 #include <cstdint>
@@ -19,6 +17,7 @@ class CCoinsView;
 class Coin;
 class COutPoint;
 class CScript;
+class MuHash3072;
 namespace node {
 class BlockManager;
 } // namespace node

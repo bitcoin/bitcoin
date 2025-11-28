@@ -8,7 +8,7 @@
 #include <util/result.h>
 #include <util/translation.h>
 
-#include <memory>
+#include <string>
 
 namespace kernel {
 
