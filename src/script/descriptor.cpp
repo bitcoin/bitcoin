@@ -1518,13 +1518,13 @@ public:
 class MiniscriptDescriptor final : public DescriptorImpl
 {
 private:
-    miniscript::NodeRef<uint32_t> m_node;
+    miniscript::Node<uint32_t> m_node;
 
 protected:
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> scripts,
                                      FlatSigningProvider& provider) const override
     {
-        const auto script_ctx{m_node->GetMsCtx()};
+        const auto script_ctx{m_node.GetMsCtx()};
         for (const auto& key : keys) {
             if (miniscript::IsTapscript(script_ctx)) {
                 provider.pubkeys.emplace(Hash160(XOnlyPubKey{key}), key);
@@ -1532,17 +1532,17 @@ protected:
                 provider.pubkeys.emplace(key.GetID(), key);
             }
         }
-        return Vector(m_node->ToScript(ScriptMaker(keys, script_ctx)));
+        return Vector(m_node.ToScript(ScriptMaker(keys, script_ctx)));
     }
 
 public:
-    MiniscriptDescriptor(std::vector<std::unique_ptr<PubkeyProvider>> providers, miniscript::NodeRef<uint32_t> node)
+    MiniscriptDescriptor(std::vector<std::unique_ptr<PubkeyProvider>> providers, miniscript::Node<uint32_t>&& node)
         : DescriptorImpl(std::move(providers), "?"), m_node(std::move(node)) {}
 
     bool ToStringHelper(const SigningProvider* arg, std::string& out, const StringType type,
                         const DescriptorCache* cache = nullptr) const override
     {
-        if (const auto res = m_node->ToString(StringMaker(arg, m_pubkey_args, type, cache))) {
+        if (const auto res = m_node.ToString(StringMaker(arg, m_pubkey_args, type, cache))) {
             out = *res;
             return true;
         }
@@ -1552,15 +1552,17 @@ public:
     bool IsSolvable() const override { return true; }
     bool IsSingleType() const final { return true; }
 
-    std::optional<int64_t> ScriptSize() const override { return m_node->ScriptSize(); }
+    std::optional<int64_t> ScriptSize() const override { return m_node.ScriptSize(); }
 
-    std::optional<int64_t> MaxSatSize(bool) const override {
+    std::optional<int64_t> MaxSatSize(bool) const override
+    {
         // For Miniscript we always assume high-R ECDSA signatures.
-        return m_node->GetWitnessSize();
+        return m_node.GetWitnessSize();
     }
 
-    std::optional<int64_t> MaxSatisfactionElems() const override {
-        return m_node->GetStackSize();
+    std::optional<int64_t> MaxSatisfactionElems() const override
+    {
+        return m_node.GetStackSize();
     }
 
     std::unique_ptr<DescriptorImpl> Clone() const override
@@ -1570,7 +1572,7 @@ public:
         for (const auto& arg : m_pubkey_args) {
             providers.push_back(arg->Clone());
         }
-        return std::make_unique<MiniscriptDescriptor>(std::move(providers), m_node->Clone());
+        return std::make_unique<MiniscriptDescriptor>(std::move(providers), m_node.Clone());
     }
 };
 
@@ -2479,7 +2481,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
             }
             if (!node->IsSane() || node->IsNotSatisfiable()) {
                 // Try to find the first insane sub for better error reporting.
-                auto insane_node = node.get();
+                const auto* insane_node = &node.value();
                 if (const auto sub = node->FindInsaneSub()) insane_node = sub;
                 if (const auto str = insane_node->ToString(parser)) error = *str;
                 if (!insane_node->IsValid()) {
@@ -2488,7 +2490,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
                     error += " is not sane";
                     if (!insane_node->IsNonMalleable()) {
                         error += ": malleable witnesses exist";
-                    } else if (insane_node == node.get() && !insane_node->NeedsSignature()) {
+                    } else if (insane_node == &node.value() && !insane_node->NeedsSignature()) {
                         error += ": witnesses without signature exist";
                     } else if (!insane_node->CheckTimeLocksMix()) {
                         error += ": contains mixes of timelocks expressed in blocks and seconds";
@@ -2688,7 +2690,7 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
             for (auto& key : parser.m_keys) {
                 keys.emplace_back(std::move(key.at(0)));
             }
-            return std::make_unique<MiniscriptDescriptor>(std::move(keys), std::move(node));
+            return std::make_unique<MiniscriptDescriptor>(std::move(keys), std::move(*node));
         }
     }
 
