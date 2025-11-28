@@ -25,8 +25,7 @@ FILE_CHARS_DISALLOWED = '/\\?%*:|"<>' if platform.system() == 'Windows' else '/'
 UNCONFIRMED_HASH_STRING = 'unconfirmed'
 
 LARGE_WORK_INVALID_CHAIN_WARNING = (
-    "Warning: We do not appear to fully agree with our peers "  # Exclamation mark removed by SanitizeString in AlertNotify
-    "You may need to upgrade, or other nodes may need to upgrade."
+    "Warning: Found invalid chain more than 6 blocks longer than our best chain. This could be due to database corruption or consensus incompatibility with peers."
 )
 
 
