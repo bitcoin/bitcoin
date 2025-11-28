@@ -131,7 +131,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
                 {
                     CCoinsCacheEntry coins_cache_entry;
                     const auto dirty{fuzzed_data_provider.ConsumeBool()};
-                    const auto fresh{fuzzed_data_provider.ConsumeBool()};
+                    const auto fresh{dirty && fuzzed_data_provider.ConsumeBool()};
                     if (fuzzed_data_provider.ConsumeBool()) {
                         coins_cache_entry.coin = random_coin;
                     } else {
@@ -143,8 +143,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
                         coins_cache_entry.coin = *opt_coin;
                     }
                     auto it{coins_map.emplace(random_out_point, std::move(coins_cache_entry)).first};
-                    if (dirty) CCoinsCacheEntry::SetDirty(*it, sentinel);
-                    if (fresh) CCoinsCacheEntry::SetFresh(*it, sentinel);
+                    if (dirty) CCoinsCacheEntry::SetDirty(*it, sentinel, fresh);
                 }
                 bool expected_code_path = false;
                 try {
