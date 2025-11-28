@@ -411,7 +411,7 @@ BOOST_AUTO_TEST_CASE(test_Get)
     t1.vout[0].nValue = 90*CENT;
     t1.vout[0].scriptPubKey << OP_1;
 
-    BOOST_CHECK(AreInputsStandard(CTransaction(t1), coins));
+    BOOST_CHECK(ValidateInputsStandardness(CTransaction(t1), coins).IsValid());
 }
 
 static void CreateCreditAndSpend(const FillableSigningProvider& keystore, const CScript& outscript, CTransactionRef& output, CMutableTransaction& input, bool success = true)
@@ -1052,7 +1052,7 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
 
     // 2490 sigops is below the limit.
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(tx_max_sigops), coins), 2490);
-    BOOST_CHECK(::AreInputsStandard(CTransaction(tx_max_sigops), coins));
+    BOOST_CHECK(::ValidateInputsStandardness(CTransaction(tx_max_sigops), coins).IsValid());
 
     // Adding one more input will bump this to 2505, hitting the limit.
     tx_create.vout.emplace_back(424242, max_sigops_p2sh);
@@ -1063,8 +1063,17 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
     tx_max_sigops.vin.emplace_back(prev_txid, p2sh_inputs_count, CScript() << ToByteVector(max_sigops_redeem_script));
     AddCoins(coins, CTransaction(tx_create), 0, false);
     BOOST_CHECK_GT((p2sh_inputs_count + 1) * MAX_P2SH_SIGOPS, MAX_TX_LEGACY_SIGOPS);
-    BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(tx_max_sigops), coins), 2505);
-    BOOST_CHECK(!::AreInputsStandard(CTransaction(tx_max_sigops), coins));
+    auto legacy_sigops_count = GetP2SHSigOpCount(CTransaction(tx_max_sigops), coins);
+    BOOST_CHECK_EQUAL(legacy_sigops_count, 2505);
+    std::string reject_reason("bad-txns-nonstandard-inputs");
+    std::string sigop_limit_reject_debug_message("non-witness sigops exceed bip54 limit");
+    {
+        auto validation_state = ValidateInputsStandardness(CTransaction(tx_max_sigops), coins);
+        BOOST_CHECK(validation_state.IsInvalid());
+        BOOST_CHECK_EQUAL(validation_state.GetRejectReason(), reject_reason);
+        BOOST_CHECK_EQUAL(validation_state.GetDebugMessage(), sigop_limit_reject_debug_message);
+    }
+
 
     // Now, check the limit can be reached with regular P2PK outputs too. Use a separate
     // preparation transaction, to demonstrate spending coins from a single tx is irrelevant.
@@ -1082,8 +1091,7 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
     AddCoins(coins, CTransaction(tx_create_p2pk), 0, false);
 
     // The transaction now contains exactly 2500 sigops, the check should pass.
-    BOOST_CHECK_EQUAL(p2sh_inputs_count * MAX_P2SH_SIGOPS + p2pk_inputs_count * 1, MAX_TX_LEGACY_SIGOPS);
-    BOOST_CHECK(::AreInputsStandard(CTransaction(tx_max_sigops), coins));
+    BOOST_CHECK(::ValidateInputsStandardness(CTransaction(tx_max_sigops), coins).IsValid());
 
     // Now, add some Segwit inputs. We add one for each defined Segwit output type. The limit
     // is exclusively on non-witness sigops and therefore those should not be counted.
@@ -1099,7 +1107,7 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
 
     // The transaction now still contains exactly 2500 sigops, the check should pass.
     AddCoins(coins, CTransaction(tx_create_segwit), 0, false);
-    BOOST_REQUIRE(::AreInputsStandard(CTransaction(tx_max_sigops), coins));
+    BOOST_REQUIRE(::ValidateInputsStandardness(CTransaction(tx_max_sigops), coins).IsValid());
 
     // Add one more P2PK input. We'll reach the limit.
     tx_create_p2pk.vout.emplace_back(212121, p2pk_script);
@@ -1110,8 +1118,14 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
         tx_max_sigops.vin.emplace_back(prev_txid, i);
     }
     AddCoins(coins, CTransaction(tx_create_p2pk), 0, false);
-    BOOST_CHECK_GT(p2sh_inputs_count * MAX_P2SH_SIGOPS + p2pk_inputs_count * 1, MAX_TX_LEGACY_SIGOPS);
-    BOOST_CHECK(!::AreInputsStandard(CTransaction(tx_max_sigops), coins));
+    auto legacy_sigop_count_p2pk = p2sh_inputs_count * MAX_P2SH_SIGOPS + p2pk_inputs_count * 1;
+    BOOST_CHECK_GT(legacy_sigop_count_p2pk, MAX_TX_LEGACY_SIGOPS);
+    {
+        auto validation_state = ValidateInputsStandardness(CTransaction(tx_max_sigops), coins);
+        BOOST_CHECK(validation_state.IsInvalid());
+        BOOST_CHECK_EQUAL(validation_state.GetRejectReason(), reject_reason);
+        BOOST_CHECK_EQUAL(validation_state.GetDebugMessage(), sigop_limit_reject_debug_message);
+    }
 }
 
 /** Sanity check the return value of SpendsNonAnchorWitnessProg for various output types. */
