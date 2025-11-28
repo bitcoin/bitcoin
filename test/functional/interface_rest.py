@@ -28,7 +28,6 @@ from test_framework.wallet import (
     MiniWallet,
     getnewdestination,
 )
-from typing import Optional
 
 
 INVALID_PARAM = "abc"
@@ -66,13 +65,16 @@ class RESTTest (BitcoinTestFramework):
             body: str = '',
             status: int = 200,
             ret_type: RetType = RetType.JSON,
-            query_params: Optional[dict[str, typing.Any]] = None,
+            query_params: typing.Union[dict[str, typing.Any], str, None] = None,
             ) -> typing.Union[http.client.HTTPResponse, bytes, str, None]:
         rest_uri = '/rest' + uri
         if req_type in ReqType:
             rest_uri += f'.{req_type.name.lower()}'
         if query_params:
-            rest_uri += f'?{urllib.parse.urlencode(query_params)}'
+            if isinstance(query_params, str):
+                rest_uri += f'?{query_params}'
+            else:
+                rest_uri += f'?{urllib.parse.urlencode(query_params)}'
 
         conn = http.client.HTTPConnection(self.url.hostname, self.url.port)
         self.log.debug(f'{http_method} {rest_uri} {body}')
@@ -455,6 +457,43 @@ class RESTTest (BitcoinTestFramework):
                 expected = [(p["scriptPubKey"], p["value"]) for p in prevouts]
                 assert_equal(expected, actual)
 
+        self.log.info("Test the /blockpart URI")
+
+        blockhash = self.nodes[0].getbestblockhash()
+        block_bin = self.test_rest_request(f"/block/{blockhash}", req_type=ReqType.BIN, ret_type=RetType.BYTES)
+        for req_type in (ReqType.BIN, ReqType.HEX):
+            def _get_block_part(status: int = 200, **kwargs):
+                resp = self.test_rest_request(f"/blockpart/{blockhash}", status=status,
+                                              req_type=req_type, ret_type=RetType.BYTES, **kwargs)
+                assert isinstance(resp, bytes)
+                if req_type is ReqType.HEX and status == 200:
+                    resp = bytes.fromhex(resp.decode().strip())
+                return resp
+
+            assert_equal(block_bin, _get_block_part())
+            assert_equal(block_bin, _get_block_part(query_params={"offset": 0}))
+            assert_equal(block_bin, _get_block_part(query_params={"size": len(block_bin)}))
+            assert_equal(block_bin, _get_block_part(query_params={"offset": 0, "size": len(block_bin)}))
+
+            assert len(block_bin) >= 500
+            assert_equal(block_bin[10:], _get_block_part(query_params={"offset": 10}))
+            assert_equal(block_bin[:100], _get_block_part(query_params={"size": 100}))
+            assert_equal(block_bin[20:320], _get_block_part(query_params={"offset": 20, "size": 300}))
+            assert_equal(block_bin[-5:], _get_block_part(query_params={"offset": len(block_bin) - 5, "size": 5}))
+
+            _get_block_part(status=400, query_params={"offset": "x"})
+            _get_block_part(status=400, query_params={"size": "y"})
+            _get_block_part(status=400, query_params={"offset": "x", "size": "y"})
+            assert _get_block_part(status=400, query_params="%XY").decode("utf-8").startswith("URI parsing failed")
+
+            _get_block_part(status=404, query_params={"offset": 0, "size": 0})
+            _get_block_part(status=404, query_params={"offset": len(block_bin), "size": 0})
+            _get_block_part(status=404, query_params={"offset": len(block_bin) + 1, "size": 1})
+            _get_block_part(status=404, query_params={"offset": len(block_bin), "size": 1})
+            _get_block_part(status=404, query_params={"offset": len(block_bin) + 1})
+            _get_block_part(status=404, query_params={"size": len(block_bin) + 1})
+
+        self.test_rest_request(f"/blockpart/{blockhash}", status=400, req_type=ReqType.JSON, ret_type=RetType.OBJ)
 
         self.log.info("Test the /deploymentinfo URI")
 
