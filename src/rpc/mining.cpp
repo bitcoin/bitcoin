@@ -8,6 +8,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <chainparamsbase.h>
+#include <common/args.h>
 #include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
@@ -161,11 +162,17 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock&& block, uint64_t&
     return true;
 }
 
-static UniValue generateBlocks(ChainstateManager& chainman, Mining& miner, const CScript& coinbase_output_script, int nGenerate, uint64_t nMaxTries)
+static UniValue generateBlocks(NodeContext& node, Mining& miner, CScript& coinbase_output_script, int nGenerate, uint64_t nMaxTries)
 {
+    ChainstateManager& chainman = EnsureChainman(node);
+
     UniValue blockHashes(UniValue::VARR);
     while (nGenerate > 0 && !chainman.m_interrupt) {
-        std::unique_ptr<BlockTemplate> block_template(miner.createNewBlock({ .coinbase_output_script = coinbase_output_script }));
+        std::unique_ptr<BlockTemplate> block_template(miner.createNewBlock({
+            .block_reserved_weight = size_t(node.args->GetIntArg("-blockreservedweight", DEFAULT_BLOCK_RESERVED_WEIGHT)),
+            .coinbase_output_script = coinbase_output_script
+        })
+    );
         CHECK_NONFATAL(block_template);
 
         std::shared_ptr<const CBlock> block_out;
@@ -247,9 +254,7 @@ static RPCHelpMan generatetodescriptor()
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
     Mining& miner = EnsureMining(node);
-    ChainstateManager& chainman = EnsureChainman(node);
-
-    return generateBlocks(chainman, miner, coinbase_output_script, num_blocks, max_tries);
+    return generateBlocks(node, miner, coinbase_output_script, num_blocks, max_tries);
 },
     };
 }
@@ -293,11 +298,9 @@ static RPCHelpMan generatetoaddress()
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
     Mining& miner = EnsureMining(node);
-    ChainstateManager& chainman = EnsureChainman(node);
 
     CScript coinbase_output_script = GetScriptForDestination(destination);
-
-    return generateBlocks(chainman, miner, coinbase_output_script, num_blocks, max_tries);
+    return generateBlocks(node, miner, coinbase_output_script, num_blocks, max_tries);
 },
     };
 }
@@ -376,7 +379,11 @@ static RPCHelpMan generateblock()
     {
         LOCK(chainman.GetMutex());
         {
-            std::unique_ptr<BlockTemplate> block_template{miner.createNewBlock({.use_mempool = false, .coinbase_output_script = coinbase_output_script})};
+            std::unique_ptr<BlockTemplate> block_template{miner.createNewBlock({
+                .use_mempool = false,
+                .block_reserved_weight = size_t(node.args->GetIntArg("-blockreservedweight", DEFAULT_BLOCK_RESERVED_WEIGHT)),
+                .coinbase_output_script = coinbase_output_script
+            })};
             CHECK_NONFATAL(block_template);
 
             block = block_template->getBlock();
@@ -871,7 +878,9 @@ static RPCHelpMan getblocktemplate()
         time_start = GetTime();
 
         // Create new block
-        block_template = miner.createNewBlock();
+        block_template = miner.createNewBlock({
+            .block_reserved_weight = size_t(node.args->GetIntArg("-blockreservedweight", DEFAULT_BLOCK_RESERVED_WEIGHT))
+        });
         CHECK_NONFATAL(block_template);
 
 
