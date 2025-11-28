@@ -36,6 +36,6 @@ static std::string FormatException(const std::exception* pex, std::string_view t
 void PrintExceptionContinue(const std::exception* pex, std::string_view thread_name)
 {
     std::string message = FormatException(pex, thread_name);
-    LogPrintf("\n\n************************\n%s\n", message);
+    LogWarning("\n\n************************\n%s", message);
     tfm::format(std::cerr, "\n\n************************\n%s\n", message);
 }

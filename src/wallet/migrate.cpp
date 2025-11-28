@@ -718,7 +718,7 @@ bool BerkeleyRODatabase::Backup(const std::string& dest) const
     }
     try {
         if (fs::exists(dst) && fs::equivalent(src, dst)) {
-            LogPrintf("cannot backup to wallet source file %s\n", fs::PathToString(dst));
+            LogWarning("cannot backup to wallet source file %s", fs::PathToString(dst));
             return false;
         }
 
