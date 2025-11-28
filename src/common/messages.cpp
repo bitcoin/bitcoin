@@ -60,13 +60,9 @@ std::string FeeModeInfo(const std::pair<std::string, FeeEstimateMode>& mode, std
         case FeeEstimateMode::UNSET:
             return strprintf("%s means no mode set (%s). \n", mode.first, default_info);
         case FeeEstimateMode::ECONOMICAL:
-            return strprintf("%s estimates use a shorter time horizon, making them more\n"
-                   "responsive to short-term drops in the prevailing fee market. This mode\n"
-                   "potentially returns a lower fee rate estimate.\n", mode.first);
+            return strprintf("%s mode potentially returns a lower fee rate estimate.\n", mode.first);
         case FeeEstimateMode::CONSERVATIVE:
-            return strprintf("%s estimates use a longer time horizon, making them\n"
-                   "less responsive to short-term drops in the prevailing fee market. This mode\n"
-                   "potentially returns a higher fee rate estimate.\n", mode.first);
+            return strprintf("%s potentially returns a higher fee rate estimate.\n", mode.first);
         default:
             // Other modes apart from the ones handled are fee rate units; they should not be clarified.
             assert(false);
