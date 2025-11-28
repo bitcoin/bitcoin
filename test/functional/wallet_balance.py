@@ -14,6 +14,8 @@ from test_framework.util import (
     assert_equal,
     assert_is_hash_string,
     assert_raises_rpc_error,
+    find_vout_for_address,
+    wallet_importprivkey,
 )
 from test_framework.wallet_util import get_generate_key
 
@@ -300,6 +302,36 @@ class WalletTest(BitcoinTestFramework):
 
         # Don't rescan to make sure that the import updates the wallet txos
         wallet.importdescriptors([{"desc": descsum_create(f"wpkh({import_key2.privkey})"), "timestamp": "now"}])
+        balances = wallet.getbalances()
+        assert_equal(balances["mine"]["trusted"], amount * 2)
+
+        wallet.unloadwallet()
+
+        self.log.info("Test that the balance is unchanged by an import that makes an already spent output in an existing tx \"mine\"")
+        self.nodes[0].createwallet("importalreadyspent")
+        wallet = self.nodes[0].get_wallet_rpc("importalreadyspent")
+
+        import_change_key = get_generate_key()
+        addr1 = wallet.getnewaddress()
+        addr2 = wallet.getnewaddress()
+
+        wallet_importprivkey(default, privkey=import_change_key.privkey, timestamp="now")
+
+        res = default.send(outputs=[{addr1: amount}], options={"change_address": import_change_key.p2wpkh_addr})
+        inputs = [{"txid":res["txid"], "vout": find_vout_for_address(default, res["txid"], import_change_key.p2wpkh_addr)}]
+        default.send(outputs=[{addr2: amount}], options={"inputs": inputs, "add_inputs": True})
+
+        # Mock the time forward by another day so that "now" will exclude the block we just mined
+        self.nodes[0].setmocktime(int(time.time()) + 86400 * 2)
+        # Mine 11 blocks to move the MTP past the block we just mined
+        self.generate(self.nodes[0], 11, sync_fun=self.no_op)
+
+        balances = wallet.getbalances()
+        assert_equal(balances["mine"]["trusted"], amount * 2)
+
+        # Don't rescan to make sure that the import updates the wallet txos
+        # The balance should not change because the output for this key is already spent
+        wallet_importprivkey(wallet, privkey=import_change_key.privkey, timestamp="now")
         balances = wallet.getbalances()
         assert_equal(balances["mine"]["trusted"], amount * 2)
 
