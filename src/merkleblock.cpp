@@ -40,7 +40,7 @@ CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std:
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const Txid& hash{block.vtx[i]->GetHash()};
-        if (txids && txids->count(hash)) {
+        if (txids && txids->contains(hash)) {
             vMatch.push_back(true);
         } else if (filter && filter->IsRelevantAndUpdate(*block.vtx[i])) {
             vMatch.push_back(true);

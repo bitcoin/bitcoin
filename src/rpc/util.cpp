@@ -71,7 +71,7 @@ void RPCTypeCheckObj(const UniValue& o,
     {
         for (const std::string& k : o.getKeys())
         {
-            if (typesExpected.count(k) == 0)
+            if (!typesExpected.contains(k))
             {
                 std::string err = strprintf("Unexpected key %s", k);
                 throw JSONRPCError(RPC_TYPE_ERROR, err);
@@ -1172,7 +1172,7 @@ UniValue RPCResult::MatchesType(const UniValue& result) const
         std::map<std::string, UniValue> result_obj;
         result.getObjMap(result_obj);
         for (const auto& result_entry : result_obj) {
-            if (doc_keys.find(result_entry.first) == doc_keys.end()) {
+            if (!doc_keys.contains(result_entry.first)) {
                 errors.pushKV(result_entry.first, "key returned that was not in doc");
             }
         }

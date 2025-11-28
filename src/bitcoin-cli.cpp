@@ -1129,7 +1129,7 @@ static void ParseGetInfoResult(UniValue& result)
         const std::string proxy = network["proxy"].getValStr();
         if (proxy.empty()) continue;
         // Add proxy to ordered_proxy if has not been processed
-        if (proxy_networks.find(proxy) == proxy_networks.end()) ordered_proxies.push_back(proxy);
+        if (!proxy_networks.contains(proxy)) ordered_proxies.push_back(proxy);
 
         proxy_networks[proxy].push_back(network["name"].getValStr());
     }
