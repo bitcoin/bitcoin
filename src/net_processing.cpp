@@ -1388,7 +1388,7 @@ void PeerManagerImpl::FindNextBlocksToDownload(const Peer& peer, unsigned int co
     // We can't reorg to this chain due to missing undo data until the background sync has finished,
     // so downloading blocks from it would be futile.
     const CBlockIndex* snap_base{m_chainman.GetSnapshotBaseBlock()};
-    if (snap_base && state->pindexBestKnownBlock->GetAncestor(snap_base->nHeight) != snap_base) {
+    if (snap_base && !m_chainman.IsSnapshotValidated() && state->pindexBestKnownBlock->GetAncestor(snap_base->nHeight) != snap_base) {
         LogDebug(BCLog::NET, "Not downloading blocks from peer=%d, which doesn't have the snapshot block in its best chain.\n", peer.m_id);
         return;
     }
