@@ -20,9 +20,8 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated = nullptr);
 
 /*
  * Compute the Merkle root of the witness transactions in a block.
- * *mutated is set to true if a duplicated subtree was found.
  */
-uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated = nullptr);
+uint256 BlockWitnessMerkleRoot(const CBlock& block);
 
 /**
  * Compute merkle path to the specified transaction
