@@ -33,7 +33,7 @@ bool ShutdownRequested(node::NodeContext& node);
 void Interrupt(node::NodeContext& node);
 void Shutdown(node::NodeContext& node);
 //!Initialize the logging infrastructure
-void InitLogging(const ArgsManager& args);
+void InitLogging(const ArgsManager& args, const char* log_suffix);
 //!Parameter interaction: change current parameters depending on various rules
 void InitParameterInteraction(ArgsManager& args);
 
@@ -74,7 +74,7 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
 /**
  * Register all arguments with the ArgsManager
  */
-void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc=false);
+void SetupServerArgs(ArgsManager& argsman, bool can_connect_ipc=false, bool can_listen_ipc=false);
 
 /** Validates requirements to run the indexes and spawns each index initial sync thread */
 bool StartIndexBackgroundSync(node::NodeContext& node);
