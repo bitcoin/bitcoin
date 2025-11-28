@@ -733,7 +733,6 @@ public:
     // next time DisconnectNodes() runs
     std::atomic_bool fDisconnect{false};
     CountingSemaphoreGrant<> grantOutbound;
-    std::atomic<int> nRefCount{0};
 
     const uint64_t nKeyedNetGroup;
     std::atomic_bool fPauseRecv{false};
@@ -907,12 +906,6 @@ public:
         return nLocalHostNonce;
     }
 
-    int GetRefCount() const
-    {
-        assert(nRefCount >= 0);
-        return nRefCount;
-    }
-
     /**
      * Receive bytes from the buffer and deserialize them into messages.
      *
@@ -937,17 +930,6 @@ public:
     CService GetAddrLocal() const EXCLUSIVE_LOCKS_REQUIRED(!m_addr_local_mutex);
     //! May not be called more than once
     void SetAddrLocal(const CService& addrLocalIn) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_local_mutex);
-
-    CNode* AddRef()
-    {
-        nRefCount++;
-        return this;
-    }
-
-    void Release()
-    {
-        nRefCount--;
-    }
 
     void CloseSocketDisconnect() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex);
 
@@ -1138,8 +1120,8 @@ public:
     bool Start(CScheduler& scheduler, const Options& options) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !m_added_nodes_mutex, !m_addr_fetches_mutex, !mutexMsgProc);
 
     void StopThreads();
-    void StopNodes();
-    void Stop()
+    void StopNodes() EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_disconnected_mutex);
+    void Stop() EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_disconnected_mutex)
     {
         StopThreads();
         StopNodes();
@@ -1186,8 +1168,9 @@ public:
     {
         LOCK(m_nodes_mutex);
         for (auto&& node : m_nodes) {
-            if (NodeFullyConnected(node))
-                func(node);
+            if (NodeFullyConnected(*node)) {
+                func(node.get());
+            }
         }
     };
 
@@ -1195,8 +1178,9 @@ public:
     {
         LOCK(m_nodes_mutex);
         for (auto&& node : m_nodes) {
-            if (NodeFullyConnected(node))
-                func(node);
+            if (NodeFullyConnected(*node)) {
+                func(node.get());
+            }
         }
     };
 
@@ -1343,7 +1327,7 @@ private:
     void AddAddrFetch(const std::string& strDest) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex);
     void ProcessAddrFetch() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_unused_i2p_sessions_mutex);
     void ThreadOpenConnections(std::vector<std::string> connect, std::span<const std::string> seed_nodes) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex, !m_unused_i2p_sessions_mutex, !m_reconnections_mutex);
-    void ThreadMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
+    void ThreadMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_disconnected_mutex, !mutexMsgProc);
     void ThreadI2PAcceptIncoming();
     void AcceptConnection(const ListenSocket& hListenSocket);
 
@@ -1360,7 +1344,15 @@ private:
                                       const CService& addr_bind,
                                       const CService& addr);
 
-    void DisconnectNodes() EXCLUSIVE_LOCKS_REQUIRED(!m_reconnections_mutex, !m_nodes_mutex);
+    /**
+     * Flush `m_nodes_disconnected`, for each entry in it:
+     * - remove it from the list
+     * - call `m_msgproc->FinalizeNode()`
+     * - delete it.
+     */
+    void FinalizeAndDeleteDisconnectedNodes() EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_disconnected_mutex);
+
+    void DisconnectNodes() EXCLUSIVE_LOCKS_REQUIRED(!m_reconnections_mutex, !m_nodes_mutex, !m_nodes_disconnected_mutex, !mutexMsgProc);
     void NotifyNumConnectionsChanged();
     /** Return true if the peer is inactive and should be disconnected. */
     bool InactivityCheck(const CNode& node) const;
@@ -1370,7 +1362,7 @@ private:
      * @param[in] nodes Select from these nodes' sockets.
      * @return sockets to check for readiness
      */
-    Sock::EventsPerSock GenerateWaitSockets(std::span<CNode* const> nodes);
+    Sock::EventsPerSock GenerateWaitSockets(std::span<std::shared_ptr<CNode>> nodes);
 
     /**
      * Check connected and listening sockets for IO readiness and process them accordingly.
@@ -1382,7 +1374,7 @@ private:
      * @param[in] nodes Nodes to process. The socket of each node is checked against `what`.
      * @param[in] events_per_sock Sockets that are ready for IO.
      */
-    void SocketHandlerConnected(const std::vector<CNode*>& nodes,
+    void SocketHandlerConnected(const std::vector<std::shared_ptr<CNode>>& nodes,
                                 const Sock::EventsPerSock& events_per_sock)
         EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !mutexMsgProc);
 
@@ -1392,7 +1384,7 @@ private:
      */
     void SocketHandlerListening(const Sock::EventsPerSock& events_per_sock);
 
-    void ThreadSocketHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !mutexMsgProc, !m_nodes_mutex, !m_reconnections_mutex);
+    void ThreadSocketHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !mutexMsgProc, !m_nodes_mutex, !m_nodes_disconnected_mutex, !m_reconnections_mutex);
     void ThreadDNSAddressSeed() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_nodes_mutex);
 
     uint64_t CalculateKeyedNetGroup(const CNetAddr& ad) const;
@@ -1432,17 +1424,15 @@ private:
      * @param[in] proxy_override Optional proxy to use and override normal proxy selection.
      * @return Newly created CNode object or nullptr if the connection failed.
      */
-    CNode* ConnectNode(CAddress addrConnect,
-                       const char* pszDest,
-                       bool fCountFailure,
-                       ConnectionType conn_type,
-                       bool use_v2transport,
-                       const std::optional<Proxy>& proxy_override)
+    std::shared_ptr<CNode> ConnectNode(CAddress addrConnect,
+                                       const char* pszDest,
+                                       bool fCountFailure,
+                                       ConnectionType conn_type,
+                                       bool use_v2transport,
+                                       const std::optional<Proxy>& proxy_override)
         EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
 
     void AddWhitelistPermissionFlags(NetPermissionFlags& flags, std::optional<CNetAddr> addr, const std::vector<NetWhitelistPermissions>& ranges) const;
-
-    void DeleteNode(CNode* pnode);
 
     NodeId GetNewNodeId();
 
@@ -1479,7 +1469,7 @@ private:
     bool MaybePickPreferredNetwork(std::optional<Network>& network);
 
     // Whether the node should be passed out in ForEach* callbacks
-    static bool NodeFullyConnected(const CNode* pnode);
+    static bool NodeFullyConnected(const CNode& node);
 
     uint16_t GetDefaultPort(Network net) const;
     uint16_t GetDefaultPort(const std::string& addr) const;
@@ -1518,8 +1508,10 @@ private:
     std::vector<AddedNodeParams> m_added_node_params GUARDED_BY(m_added_nodes_mutex);
 
     mutable Mutex m_added_nodes_mutex;
-    std::vector<CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
-    std::list<CNode*> m_nodes_disconnected;
+    std::vector<std::shared_ptr<CNode>> m_nodes GUARDED_BY(m_nodes_mutex);
+    Mutex m_nodes_disconnected_mutex;
+    std::list<std::shared_ptr<CNode>> m_nodes_disconnected GUARDED_BY(m_nodes_disconnected_mutex);
+
     mutable RecursiveMutex m_nodes_mutex;
     std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};
@@ -1707,43 +1699,6 @@ private:
      * unexpectedly use too much memory.
      */
     static constexpr size_t MAX_UNUSED_I2P_SESSIONS_SIZE{10};
-
-    /**
-     * RAII helper to atomically create a copy of `m_nodes` and add a reference
-     * to each of the nodes. The nodes are released when this object is destroyed.
-     */
-    class NodesSnapshot
-    {
-    public:
-        explicit NodesSnapshot(const CConnman& connman, bool shuffle)
-        {
-            {
-                LOCK(connman.m_nodes_mutex);
-                m_nodes_copy = connman.m_nodes;
-                for (auto& node : m_nodes_copy) {
-                    node->AddRef();
-                }
-            }
-            if (shuffle) {
-                std::shuffle(m_nodes_copy.begin(), m_nodes_copy.end(), FastRandomContext{});
-            }
-        }
-
-        ~NodesSnapshot()
-        {
-            for (auto& node : m_nodes_copy) {
-                node->Release();
-            }
-        }
-
-        const std::vector<CNode*>& Nodes() const
-        {
-            return m_nodes_copy;
-        }
-
-    private:
-        std::vector<CNode*> m_nodes_copy;
-    };
 
     const CChainParams& m_params;
 
