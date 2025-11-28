@@ -557,6 +557,31 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_loadblockindex, TestChain100Setup)
     BOOST_CHECK_EQUAL(cs2.setBlockIndexCandidates.size(), num_indexes - last_assumed_valid_idx + 1);
 }
 
+BOOST_FIXTURE_TEST_CASE(loadblockindex_invalid_descendants, TestChain100Setup)
+{
+    LOCK(Assert(m_node.chainman)->GetMutex());
+    // consider the chain of blocks grand_parent <- parent <- child
+    // intentionally mark:
+    //   - grand_parent: BLOCK_FAILED_VALID
+    //   - parent: BLOCK_FAILED_CHILD
+    //   - child: not invalid
+    // Test that when the block index is loaded, all blocks are marked as BLOCK_FAILED_VALID
+    auto* child{m_node.chainman->ActiveChain().Tip()};
+    auto* parent{child->pprev};
+    auto* grand_parent{parent->pprev};
+    grand_parent->nStatus = (grand_parent->nStatus | BLOCK_FAILED_VALID);
+    parent->nStatus = (parent->nStatus & ~BLOCK_FAILED_VALID) | BLOCK_FAILED_CHILD;
+    child->nStatus = (child->nStatus & ~BLOCK_FAILED_VALID);
+
+    // Reload block index to recompute block status validity flags.
+    m_node.chainman->LoadBlockIndex();
+
+    // check grand_parent, parent, child is marked as BLOCK_FAILED_VALID after reloading the block index
+    BOOST_CHECK(grand_parent->nStatus & BLOCK_FAILED_VALID);
+    BOOST_CHECK(parent->nStatus & BLOCK_FAILED_VALID);
+    BOOST_CHECK(child->nStatus & BLOCK_FAILED_VALID);
+}
+
 //! Ensure that snapshot chainstates initialize properly when found on disk.
 BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_init, SnapshotTestSetup)
 {
