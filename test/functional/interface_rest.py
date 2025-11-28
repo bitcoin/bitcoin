@@ -304,6 +304,8 @@ class RESTTest (BitcoinTestFramework):
         self.wait_until(lambda: self.nodes[0].getindexinfo() == expected_filter)
         json_obj = self.test_rest_request(f"/headers/{bb_hash}", query_params={"count": 5})
         assert_equal(len(json_obj), 5)  # now we should have 5 header objects
+        json_obj = self.test_rest_request(f"/headers/{bb_hash}", query_params={"count": -204})
+        assert_equal(len(json_obj), 204)  # now we should have 204 header objects
         json_obj = self.test_rest_request(f"/blockfilterheaders/basic/{bb_hash}", query_params={"count": 5})
         first_filter_header = json_obj[0]
         assert_equal(len(json_obj), 5)  # now we should have 5 filter header objects
@@ -321,9 +323,9 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(resp.read().decode('utf-8').rstrip(), f"Invalid hash: {INVALID_PARAM}")
 
         # Test number parsing
-        for num in ['5a', '-5', '0', '2001', '99999999999999999999999999999999999']:
+        for num in ['5a', '0', '2001', '-2001', '99999999999999999999999999999999999']:
             assert_equal(
-                bytes(f'Header count is invalid or out of acceptable range (1-2000): {num}\r\n', 'ascii'),
+                bytes(f'Header count is invalid or out of acceptable range (1 <= |header_count| <= 2000): {num}\r\n', 'ascii'),
                 self.test_rest_request(f"/headers/{bb_hash}", ret_type=RetType.BYTES, status=400, query_params={"count": num}),
             )
 
