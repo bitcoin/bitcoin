@@ -103,6 +103,25 @@ worktree to save disk space:
 ./contrib/guix/guix-clean
 ```
 
+## Gathering shasums of build outputs
+
+After a successful build, the shasums of the build outputs are gathered
+into files named `SHA256SUMS`. These files are located in each of the
+architecture-specific output directories.
+
+To gather all shasums and output them together to console, for e.g.
+inclusion in a Guix pull request comment, run:
+
+For branch- or PR-based checkouts, use:
+``` sh
+uname -m && find guix-build-$(git rev-parse --short=12 HEAD)/output/ -type f -print0 | env LC_ALL=C sort -z | xargs -r0 sha256sum
+```
+
+For tag-based checkouts, use:
+``` sh
+uname -m && find guix-build-$(git describe --tags --exact-match | sed 's/^v//')/output/ -type f -print0 | env LC_ALL=C sort -z | xargs -r0 sha256sum
+```
+
 
 ## Attesting to build outputs
 
