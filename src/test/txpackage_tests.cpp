@@ -908,10 +908,10 @@ BOOST_AUTO_TEST_CASE(package_cpfp_tests)
         } else {
             BOOST_CHECK_EQUAL(submit_cpfp_deprio.m_state.GetResult(), PackageValidationResult::PCKG_TX);
             BOOST_CHECK_EQUAL(submit_cpfp_deprio.m_tx_results.find(tx_parent->GetWitnessHash())->second.m_state.GetResult(),
-                              TxValidationResult::TX_MEMPOOL_POLICY);
+                              TxValidationResult::TX_RECONSIDERABLE);
             BOOST_CHECK_EQUAL(submit_cpfp_deprio.m_tx_results.find(tx_child->GetWitnessHash())->second.m_state.GetResult(),
-                              TxValidationResult::TX_MISSING_INPUTS);
-            BOOST_CHECK(submit_cpfp_deprio.m_tx_results.find(tx_parent->GetWitnessHash())->second.m_state.GetRejectReason() == "min relay fee not met");
+                              TxValidationResult::TX_RECONSIDERABLE);
+            BOOST_CHECK_EQUAL(submit_cpfp_deprio.m_tx_results.find(tx_parent->GetWitnessHash())->second.m_state.GetRejectReason(), "mempool min fee not met");
             BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
         }
     }
@@ -1067,8 +1067,8 @@ BOOST_AUTO_TEST_CASE(package_cpfp_tests)
                     strprintf("rich parent: expected fee %s, got %s", high_parent_fee, it_parent->second.m_base_fees.value()));
             BOOST_CHECK(it_parent->second.m_effective_feerate == CFeeRate(high_parent_fee, GetVirtualTransactionSize(*tx_parent_rich)));
             BOOST_CHECK_EQUAL(it_child->second.m_result_type, MempoolAcceptResult::ResultType::INVALID);
-            BOOST_CHECK_EQUAL(it_child->second.m_state.GetResult(), TxValidationResult::TX_MEMPOOL_POLICY);
-            BOOST_CHECK(it_child->second.m_state.GetRejectReason() == "min relay fee not met");
+            BOOST_CHECK_EQUAL(it_child->second.m_state.GetResult(), TxValidationResult::TX_RECONSIDERABLE);
+            BOOST_CHECK_EQUAL(it_child->second.m_state.GetRejectReason(), "mempool min fee not met");
         }
         expected_pool_size += 1;
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
