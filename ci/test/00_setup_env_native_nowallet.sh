@@ -17,4 +17,5 @@ export BITCOIN_CONFIG="\
   --preset=dev-mode \
   -DREDUCE_EXPORTS=ON \
   -DENABLE_WALLET=OFF \
+  -DWITH_EMBEDDED_ASMAP=OFF \
 "

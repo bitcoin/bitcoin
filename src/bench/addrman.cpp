@@ -24,7 +24,7 @@
 static constexpr size_t NUM_SOURCES = 64;
 static constexpr size_t NUM_ADDRESSES_PER_SOURCE = 256;
 
-static NetGroupManager EMPTY_NETGROUPMAN{std::vector<bool>()};
+static auto EMPTY_NETGROUPMAN{NetGroupManager::NoAsmap()};
 static constexpr uint32_t ADDRMAN_CONSISTENCY_CHECK_RATIO{0};
 
 static std::vector<CAddress> g_sources;
