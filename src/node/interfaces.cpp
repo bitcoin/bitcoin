@@ -83,11 +83,114 @@ using interfaces::GOV;
 using interfaces::Handler;
 using interfaces::LLMQ;
 using interfaces::MakeHandler;
+using interfaces::MnEntry;
+using interfaces::MnEntryCPtr;
+using interfaces::MnList;
+using interfaces::MnListPtr;
 using interfaces::Node;
 using interfaces::WalletLoader;
 
 namespace node {
 namespace {
+class MnEntryImpl : public MnEntry
+{
+private:
+    CDeterministicMNCPtr m_dmn;
+
+public:
+    MnEntryImpl(const CDeterministicMNCPtr& dmn) :
+        MnEntry{dmn},
+        m_dmn{Assert(dmn)}
+    {
+    }
+    ~MnEntryImpl() = default;
+
+    bool isBanned() const override { return m_dmn->pdmnState->IsBanned(); }
+
+    CService getNetInfoPrimary() const override { return m_dmn->pdmnState->netInfo->GetPrimary(); }
+    MnType getType() const override { return m_dmn->nType; }
+    UniValue toJson() const override { return m_dmn->ToJson(); }
+    const CKeyID& getKeyIdOwner() const override { return m_dmn->pdmnState->keyIDOwner; }
+    const CKeyID& getKeyIdVoting() const override { return m_dmn->pdmnState->keyIDVoting; }
+    const COutPoint& getCollateralOutpoint() const override { return m_dmn->collateralOutpoint; }
+    const CScript& getScriptPayout() const override { return m_dmn->pdmnState->scriptPayout; }
+    const CScript& getScriptOperatorPayout() const override { return m_dmn->pdmnState->scriptOperatorPayout; }
+    const int32_t& getLastPaidHeight() const override { return m_dmn->pdmnState->nLastPaidHeight; }
+    const int32_t& getPoSePenalty() const override { return m_dmn->pdmnState->nPoSePenalty; }
+    const int32_t& getRegisteredHeight() const override { return m_dmn->pdmnState->nRegisteredHeight; }
+    const uint16_t& getOperatorReward() const override { return m_dmn->nOperatorReward; }
+    const uint256& getProTxHash() const override { return m_dmn->proTxHash; }
+};
+
+class MnListImpl : public MnList
+{
+private:
+    CDeterministicMNList m_list;
+
+public:
+    MnListImpl(const CDeterministicMNList& mn_list) :
+        MnList{mn_list},
+        m_list{mn_list}
+    {
+    }
+    ~MnListImpl() = default;
+
+    int32_t getHeight() const override { return m_list.GetHeight(); }
+    size_t getAllEvoCount() const override { return m_list.GetAllEvoCount(); }
+    size_t getAllMNsCount() const override { return m_list.GetAllMNsCount(); }
+    size_t getValidEvoCount() const override { return m_list.GetValidEvoCount(); }
+    size_t getValidMNsCount() const override { return m_list.GetValidMNsCount(); }
+    size_t getValidWeightedMNsCount() const override { return m_list.GetValidWeightedMNsCount(); }
+    uint256 getBlockHash() const override { return m_list.GetBlockHash(); }
+
+    void forEachMN(bool only_valid, std::function<void(const MnEntry&)> cb) const override
+    {
+        m_list.ForEachMNShared(only_valid, [&cb](const auto& dmn) {
+            cb(MnEntryImpl{dmn});
+        });
+    }
+    MnEntryCPtr getMN(const uint256& hash) const override
+    {
+        const auto dmn{m_list.GetMN(hash)};
+        return dmn ? std::make_unique<const MnEntryImpl>(dmn) : nullptr;
+    }
+    MnEntryCPtr getMNByService(const CService& service) const override
+    {
+        const auto dmn{m_list.GetMNByService(service)};
+        return dmn ? std::make_unique<const MnEntryImpl>(dmn) : nullptr;
+    }
+    MnEntryCPtr getValidMN(const uint256& hash) const override
+    {
+        const auto dmn{m_list.GetValidMN(hash)};
+        return dmn ? std::make_unique<const MnEntryImpl>(dmn) : nullptr;
+    }
+    std::vector<MnEntryCPtr> getProjectedMNPayees(const CBlockIndex* pindex) const override
+    {
+        std::vector<MnEntryCPtr> ret;
+        for (const auto& payee : m_list.GetProjectedMNPayees(pindex)) {
+            ret.emplace_back(std::make_unique<const MnEntryImpl>(payee));
+        }
+        return ret;
+    }
+
+    void copyContextTo(MnList& mn_list) const override
+    {
+        if (!m_context) return;
+        mn_list.setContext(m_context);
+    }
+    void setContext(NodeContext* context) override
+    {
+        m_context = context;
+    }
+
+private:
+    // Note: Currently we do nothing with m_context but in the future, if we have a hard fork
+    //       that requires checking for deployment information in deterministic masternode logic,
+    //       we will need NodeContext::chainman. This has been kept around to retain those code
+    //       paths.
+    [[maybe_unused]] NodeContext* m_context{nullptr};
+};
+
 class EVOImpl : public EVO
 {
 private:
@@ -95,14 +198,15 @@ private:
     NodeContext& context() { return *Assert(m_context); }
 
 public:
-    std::pair<CDeterministicMNList, const CBlockIndex*> getListAtChainTip() override
+    std::pair<MnListPtr, const CBlockIndex*> getListAtChainTip() override
     {
         const CBlockIndex *tip = WITH_LOCK(::cs_main, return chainman().ActiveChain().Tip());
-        CDeterministicMNList mnList{};
+        MnListImpl mnList{CDeterministicMNList{}};
         if (tip != nullptr && context().dmnman != nullptr) {
             mnList = context().dmnman->GetListForBlock(tip);
         }
-        return {std::move(mnList), tip};
+        mnList.setContext(m_context);
+        return {std::make_shared<MnListImpl>(mnList), tip};
     }
     void setContext(NodeContext* context) override
     {
@@ -1215,4 +1319,5 @@ public:
 namespace interfaces {
 std::unique_ptr<Node> MakeNode(node::NodeContext& context) { return std::make_unique<node::NodeImpl>(context); }
 std::unique_ptr<Chain> MakeChain(node::NodeContext& node) { return std::make_unique<node::ChainImpl>(node); }
+MnListPtr MakeMNList(const CDeterministicMNList& mn_list) { return std::make_shared<node::MnListImpl>(mn_list); }
 } // namespace interfaces

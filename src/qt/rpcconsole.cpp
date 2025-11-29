@@ -1092,10 +1092,10 @@ void RPCConsole::updateMasternodeCount()
         return;
     }
     auto mnList = clientModel->getMasternodeList().first;
-    size_t total_mn_count = mnList.GetAllMNsCount();
-    size_t total_enabled_mn_count = mnList.GetValidMNsCount();
-    size_t total_evo_count = mnList.GetAllEvoCount();
-    size_t total_enabled_evo_count = mnList.GetValidEvoCount();
+    size_t total_mn_count = mnList->getAllMNsCount();
+    size_t total_enabled_mn_count = mnList->getValidMNsCount();
+    size_t total_evo_count = mnList->getAllEvoCount();
+    size_t total_enabled_evo_count = mnList->getValidEvoCount();
     QString strMasternodeCount = tr("Total: %1 (Enabled: %2)")
         .arg(QString::number(total_mn_count - total_evo_count))
         .arg(QString::number(total_enabled_mn_count - total_enabled_evo_count));
@@ -1347,7 +1347,7 @@ void RPCConsole::updateDetailWidget()
         ui->peerPermissions->setText(permissions.join(" & "));
     }
     ui->peerMappedAS->setText(stats->nodeStats.m_mapped_as != 0 ? QString::number(stats->nodeStats.m_mapped_as) : ts.na);
-    auto dmn = clientModel->getMasternodeList().first.GetMNByService(stats->nodeStats.addr);
+    auto dmn = clientModel->getMasternodeList().first->getMNByService(stats->nodeStats.addr);
     if (dmn == nullptr) {
         ui->peerNodeType->setText(tr("Regular"));
         ui->peerPoSeScore->setText(ts.na);
@@ -1357,7 +1357,7 @@ void RPCConsole::updateDetailWidget()
         } else {
             ui->peerNodeType->setText(tr("Verified Masternode"));
         }
-        ui->peerPoSeScore->setText(QString::number(dmn->pdmnState->nPoSePenalty));
+        ui->peerPoSeScore->setText(QString::number(dmn->getPoSePenalty()));
     }
 
     // This check fails for example if the lock was busy and

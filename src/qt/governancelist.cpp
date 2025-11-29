@@ -389,7 +389,7 @@ void GovernanceList::updateProposalList()
         // A proposal is considered passing if (YES votes - NO votes) >= (Total Weight of Masternodes / 10),
         // count total valid (ENABLED) masternodes to determine passing threshold.
         // Need to query number of masternodes here with access to clientModel.
-        const int nWeightedMnCount = clientModel->getMasternodeList().first.GetValidWeightedMNsCount();
+        const int nWeightedMnCount = clientModel->getMasternodeList().first->getValidWeightedMNsCount();
         const int nAbsVoteReq = std::max(Params().GetConsensus().nGovernanceMinQuorum, nWeightedMnCount / 10);
         proposalModel->setVotingParams(nAbsVoteReq);
 
@@ -492,11 +492,11 @@ void GovernanceList::updateVotingCapability()
     if (!pindex) return;
 
     votableMasternodes.clear();
-    mn_list.ForEachMN(/*onlyValid=*/true, [&](const auto& dmn) {
+    mn_list->forEachMN(/*only_valid=*/true, [&](const auto& dmn) {
         // Check if wallet owns the voting key using the same logic as RPC
-        const CScript script = GetScriptForDestination(PKHash(dmn.pdmnState->keyIDVoting));
+        const CScript script = GetScriptForDestination(PKHash(dmn.getKeyIdVoting()));
         if (walletModel->wallet().isSpendable(script)) {
-            votableMasternodes[dmn.proTxHash] = dmn.pdmnState->keyIDVoting;
+            votableMasternodes[dmn.getProTxHash()] = dmn.getKeyIdVoting();
         }
     });
 
@@ -564,7 +564,7 @@ void GovernanceList::voteForProposal(vote_outcome_enum_t outcome)
     // Vote with each masternode
     for (const auto& [proTxHash, votingKeyID] : votableMasternodes) {
         // Find the masternode
-        auto dmn = mnList.GetValidMN(proTxHash);
+        auto dmn = mnList->getValidMN(proTxHash);
         if (!dmn) {
             nFailed++;
             failedMessages.append(tr("Masternode %1 not found").arg(QString::fromStdString(proTxHash.ToString())));
@@ -572,7 +572,7 @@ void GovernanceList::voteForProposal(vote_outcome_enum_t outcome)
         }
 
         // Create vote
-        CGovernanceVote vote(dmn->collateralOutpoint, proposalHash, VOTE_SIGNAL_FUNDING, outcome);
+        CGovernanceVote vote(dmn->getCollateralOutpoint(), proposalHash, VOTE_SIGNAL_FUNDING, outcome);
 
         // Sign vote using CWallet member function
         if (!walletModel->wallet().wallet()->SignGovernanceVote(votingKeyID, vote)) {
