@@ -157,12 +157,12 @@ void TestAddAddressesToSendBook(interfaces::Node& node)
     // Submit a new address which should add successfully - we expect the
     // warning message to be blank.
     EditAddressAndSubmit(
-        &editAddressDialog, QString("io - new A"), new_address_a, QString(""));
+        &editAddressDialog, QString("i0 - new A"), new_address_a, QString(""));
     check_addbook_size(3);
     QCOMPARE(table_view->model()->rowCount(), 2);
 
     EditAddressAndSubmit(
-        &editAddressDialog, QString("io - new B"), new_address_b, QString(""));
+        &editAddressDialog, QString("i0 - new B"), new_address_b, QString(""));
     check_addbook_size(4);
     QCOMPARE(table_view->model()->rowCount(), 3);
 
@@ -174,17 +174,17 @@ void TestAddAddressesToSendBook(interfaces::Node& node)
     search_line->setText(s_label);
     QCOMPARE(table_view->model()->rowCount(), 1);
 
-    search_line->setText("io");
+    search_line->setText("i0");
     QCOMPARE(table_view->model()->rowCount(), 2);
 
     // Check wilcard "?".
-    search_line->setText("io?new");
+    search_line->setText("i0?new");
     QCOMPARE(table_view->model()->rowCount(), 0);
-    search_line->setText("io???new");
+    search_line->setText("i0???new");
     QCOMPARE(table_view->model()->rowCount(), 2);
 
     // Check wilcard "*".
-    search_line->setText("io*new");
+    search_line->setText("i0*new");
     QCOMPARE(table_view->model()->rowCount(), 2);
     search_line->setText("*");
     QCOMPARE(table_view->model()->rowCount(), 3);
