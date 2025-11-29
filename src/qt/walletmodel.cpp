@@ -239,10 +239,6 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             total += rcp.amount;
         }
     }
-    if(setAddress.size() != nAddresses)
-    {
-        return DuplicateAddress;
-    }
 
     CAmount nBalance = m_wallet->getAvailableBalance(coinControl);
 
@@ -277,6 +273,11 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     // m_default_max_tx_fee. This merely a belt-and-suspenders check).
     if (nFeeRequired > m_wallet->getDefaultMaxTxFee()) {
         return AbsurdFee;
+    }
+
+    // Return warning if duplicate addresses detected, but allow transaction to proceed
+    if (setAddress.size() != nAddresses) {
+        return DuplicateAddress;
     }
 
     return SendCoinsReturn(OK);
