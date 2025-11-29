@@ -159,7 +159,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
             wmulti.unloadwallet()
 
         spk = bytes.fromhex(node0.validateaddress(madd)["scriptPubKey"])
-        txid, _ = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=spk, amount=2000)
+        txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=spk, amount=2000)["txid"]
         tx = node0.getrawtransaction(txid, True)
         vout = [v["n"] for v in tx["vout"] if madd == v["scriptPubKey"]["address"]]
         assert len(vout) == 1
