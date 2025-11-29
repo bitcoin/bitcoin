@@ -844,7 +844,7 @@ void CSigSharesManager::TryRecoverSig(const CQuorum& quorum, const uint256& id, 
 
     // Handle single-member quorum case after releasing the lock
     if (singleMemberRecoveredSig) {
-        sigman.ProcessRecoveredSig(singleMemberRecoveredSig, m_peerman, -1);
+        sigman.ProcessRecoveredSig(singleMemberRecoveredSig, m_peerman, /*from=*/-1);
         return; // end of single-quorum processing
     }
 
@@ -876,7 +876,7 @@ void CSigSharesManager::TryRecoverSig(const CQuorum& quorum, const uint256& id, 
         }
     }
 
-    sigman.ProcessRecoveredSig(rs, m_peerman, -1);
+    sigman.ProcessRecoveredSig(rs, m_peerman, /*from=*/-1);
 }
 
 CDeterministicMNCPtr CSigSharesManager::SelectMemberForRecovery(const CQuorum& quorum, const uint256 &id, int attempt)

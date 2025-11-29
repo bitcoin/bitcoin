@@ -236,7 +236,7 @@ public:
     void NotifyGovernanceVote(const std::shared_ptr<CDeterministicMNList>& tip_mn_list, const std::shared_ptr<const CGovernanceVote>& vote, const std::string& id);
     void NotifyGovernanceObject(const std::shared_ptr<const Governance::Object>& object, const std::string& id);
     void NotifyInstantSendDoubleSpendAttempt(const CTransactionRef &currentTx, const CTransactionRef &previousTx);
-    void NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig> &sig, const std::string &id, bool proactive_relay);
+    void NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig> &sig, const std::string& id, bool proactive_relay);
     void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff);
     void ChainStateFlushed(const CBlockLocator &);
     void BlockChecked(const CBlock&, const BlockValidationState&);

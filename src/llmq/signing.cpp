@@ -518,7 +518,7 @@ void CSigningManager::ProcessPendingReconstructedRecoveredSigs(PeerManager& peer
     WITH_LOCK(cs_pending, swap(m, pendingReconstructedRecoveredSigs));
 
     for (const auto& p : m) {
-        ProcessRecoveredSig(p.second, peerman, -1);
+        ProcessRecoveredSig(p.second, peerman, /*from=*/-1);
     }
 }
 
