@@ -25,15 +25,8 @@ static void secp256k1_musig_ge_serialize_ext(unsigned char *out33, secp256k1_ge*
     if (secp256k1_ge_is_infinity(ge)) {
         memset(out33, 0, 33);
     } else {
-        int ret;
-        size_t size = 33;
-        ret = secp256k1_eckey_pubkey_serialize(ge, out33, &size, 1);
-#ifdef VERIFY
         /* Serialize must succeed because the point is not at infinity */
-        VERIFY_CHECK(ret && size == 33);
-#else
-        (void) ret;
-#endif
+        secp256k1_eckey_pubkey_serialize33(ge, out33);
     }
 }
 
@@ -224,15 +217,8 @@ int secp256k1_musig_pubnonce_serialize(const secp256k1_context* ctx, unsigned ch
         return 0;
     }
     for (i = 0; i < 2; i++) {
-        int ret;
-        size_t size = 33;
-        ret = secp256k1_eckey_pubkey_serialize(&ges[i], &out66[33*i], &size, 1);
-#ifdef VERIFY
         /* serialize must succeed because the point was just loaded */
-        VERIFY_CHECK(ret && size == 33);
-#else
-        (void) ret;
-#endif
+        secp256k1_eckey_pubkey_serialize33(&ges[i], &out66[33*i]);
     }
     return 1;
 }
@@ -398,11 +384,9 @@ static int secp256k1_musig_nonce_gen_internal(const secp256k1_context* ctx, secp
     secp256k1_gej nonce_ptj[2];
     int i;
     unsigned char pk_ser[33];
-    size_t pk_ser_len = sizeof(pk_ser);
     unsigned char aggpk_ser[32];
     unsigned char *aggpk_ser_ptr = NULL;
     secp256k1_ge pk;
-    int pk_serialize_success;
     int ret = 1;
 
     ARG_CHECK(pubnonce != NULL);
@@ -429,15 +413,8 @@ static int secp256k1_musig_nonce_gen_internal(const secp256k1_context* ctx, secp
     if (!secp256k1_pubkey_load(ctx, &pk, pubkey)) {
         return 0;
     }
-    pk_serialize_success = secp256k1_eckey_pubkey_serialize(&pk, pk_ser, &pk_ser_len, 1);
-
-#ifdef VERIFY
     /* A pubkey cannot be the point at infinity */
-    VERIFY_CHECK(pk_serialize_success);
-    VERIFY_CHECK(pk_ser_len == sizeof(pk_ser));
-#else
-    (void) pk_serialize_success;
-#endif
+    secp256k1_eckey_pubkey_serialize33(&pk, pk_ser);
 
     secp256k1_nonce_function_musig(k, input_nonce, msg32, seckey, pk_ser, aggpk_ser_ptr, extra_input32);
     VERIFY_CHECK(!secp256k1_scalar_is_zero(&k[0]));
