@@ -124,18 +124,11 @@ static void secp256k1_musig_keyaggcoef_internal(secp256k1_scalar *r, const unsig
     } else {
         secp256k1_sha256 sha;
         unsigned char buf[33];
-        size_t buflen = sizeof(buf);
-        int ret;
         secp256k1_musig_keyaggcoef_sha256(&sha);
         secp256k1_sha256_write(&sha, pks_hash, 32);
-        ret = secp256k1_eckey_pubkey_serialize(pk, buf, &buflen, 1);
-#ifdef VERIFY
         /* Serialization does not fail since the pk is not the point at infinity
          * (according to this function's precondition). */
-        VERIFY_CHECK(ret && buflen == sizeof(buf));
-#else
-        (void) ret;
-#endif
+        secp256k1_eckey_pubkey_serialize33(pk, buf);
         secp256k1_sha256_write(&sha, buf, sizeof(buf));
         secp256k1_sha256_finalize(&sha, buf);
         secp256k1_scalar_set_b32(r, buf, NULL);
