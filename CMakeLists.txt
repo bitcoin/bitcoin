@@ -105,7 +105,7 @@ option(BUILD_UTIL "Build bitcoin-util executable." ${BUILD_TESTS})
 
 option(BUILD_UTIL_CHAINSTATE "Build experimental bitcoin-chainstate executable." OFF)
 option(BUILD_KERNEL_LIB "Build experimental bitcoinkernel library." ${BUILD_UTIL_CHAINSTATE})
-option(BUILD_KERNEL_TEST "Build tests for the experimental bitcoinkernel library." ${BUILD_KERNEL_LIB})
+cmake_dependent_option(BUILD_KERNEL_TEST "Build tests for the experimental bitcoinkernel library." ON "BUILD_KERNEL_LIB" OFF)
 
 option(ENABLE_WALLET "Enable wallet." ON)
 if(ENABLE_WALLET)
