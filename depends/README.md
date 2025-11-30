@@ -8,7 +8,7 @@ as well as [packages.md](packages.md) for how to add packages.
 
 ### Ubuntu & Debian
 
-    apt install cmake curl make patch
+    apt install cmake curl make patch tcl
 
 Skip the following packages if you don't intend to use the GUI and will build with [`NO_QT=1`](#dependency-options):
 
