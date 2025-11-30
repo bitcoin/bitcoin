@@ -102,77 +102,31 @@ option(BUILD_CLI "Build bitcoin-cli executable." ON)
 option(BUILD_TESTS "Build test_bitcoin and other unit test executables." ON)
 option(BUILD_TX "Build bitcoin-tx executable." ${BUILD_TESTS})
 option(BUILD_UTIL "Build bitcoin-util executable." ${BUILD_TESTS})
+cmake_dependent_option(BUILD_GUI_TESTS "Build test_bitcoin-qt executable." ON "BUILD_GUI;BUILD_TESTS" OFF)
 
 option(BUILD_UTIL_CHAINSTATE "Build experimental bitcoin-chainstate executable." OFF)
 option(BUILD_KERNEL_LIB "Build experimental bitcoinkernel library." ${BUILD_UTIL_CHAINSTATE})
 cmake_dependent_option(BUILD_KERNEL_TEST "Build tests for the experimental bitcoinkernel library." ON "BUILD_KERNEL_LIB" OFF)
 
 option(ENABLE_WALLET "Enable wallet." ON)
-if(ENABLE_WALLET)
-  if(VCPKG_TARGET_TRIPLET)
-    # Use of the `unofficial::` namespace is a vcpkg package manager convention.
-    find_package(unofficial-sqlite3 CONFIG REQUIRED)
-  else()
-    find_package(SQLite3 3.7.17 REQUIRED)
-  endif()
-endif()
 cmake_dependent_option(BUILD_WALLET_TOOL "Build bitcoin-wallet tool." ${BUILD_TESTS} "ENABLE_WALLET" OFF)
 
-option(REDUCE_EXPORTS "Attempt to reduce exported symbols in the resulting executables." OFF)
-option(WERROR "Treat compiler warnings as errors." OFF)
-option(WITH_CCACHE "Attempt to use ccache for compiling." ON)
-
-option(WITH_ZMQ "Enable ZMQ notifications." OFF)
-if(WITH_ZMQ)
-  find_package(ZeroMQ 4.0.0 MODULE REQUIRED)
-endif()
-
-option(WITH_USDT "Enable tracepoints for Userspace, Statically Defined Tracing." OFF)
-if(WITH_USDT)
-  find_package(USDT MODULE REQUIRED)
-endif()
-
 option(ENABLE_EXTERNAL_SIGNER "Enable external signer support." ON)
-
-cmake_dependent_option(WITH_QRENCODE "Enable QR code support." ON "BUILD_GUI" OFF)
-if(WITH_QRENCODE)
-  find_package(QRencode MODULE REQUIRED)
-  set(USE_QRCODE TRUE)
-endif()
-
-cmake_dependent_option(WITH_DBUS "Enable DBus support." ON "NOT CMAKE_SYSTEM_NAME MATCHES \"(Windows|Darwin)\" AND BUILD_GUI" OFF)
-
+option(WITH_ZMQ "Enable ZMQ notifications." OFF)
 cmake_dependent_option(ENABLE_IPC "Build multiprocess bitcoin-node and bitcoin-gui executables in addition to monolithic bitcoind and bitcoin-qt executables." ON "NOT WIN32" OFF)
 cmake_dependent_option(WITH_EXTERNAL_LIBMULTIPROCESS "Build with external libmultiprocess library instead of with local git subtree when ENABLE_IPC is enabled. This is not normally recommended, but can be useful for developing libmultiprocess itself." OFF "ENABLE_IPC" OFF)
-if(ENABLE_IPC AND WITH_EXTERNAL_LIBMULTIPROCESS)
-  find_package(Libmultiprocess REQUIRED COMPONENTS Lib)
-  find_package(LibmultiprocessNative REQUIRED COMPONENTS Bin
-    NAMES Libmultiprocess
-  )
-endif()
+option(WITH_USDT "Enable tracepoints for Userspace, Statically Defined Tracing." OFF)
 
-cmake_dependent_option(BUILD_GUI_TESTS "Build test_bitcoin-qt executable." ON "BUILD_GUI;BUILD_TESTS" OFF)
-if(BUILD_GUI)
-  set(qt_components Core Gui Widgets LinguistTools)
-  if(ENABLE_WALLET)
-    list(APPEND qt_components Network)
-  endif()
-  if(WITH_DBUS)
-    list(APPEND qt_components DBus)
-    set(USE_DBUS TRUE)
-  endif()
-  if(BUILD_GUI_TESTS)
-    list(APPEND qt_components Test)
-  endif()
-  find_package(Qt 6.2 MODULE REQUIRED
-    COMPONENTS ${qt_components}
-  )
-  unset(qt_components)
-endif()
+cmake_dependent_option(WITH_QRENCODE "Enable QR code support." ON "BUILD_GUI" OFF)
+cmake_dependent_option(WITH_DBUS "Enable DBus support." ON "NOT CMAKE_SYSTEM_NAME MATCHES \"(Windows|Darwin)\" AND BUILD_GUI" OFF)
 
 option(BUILD_BENCH "Build bench_bitcoin executable." OFF)
 option(BUILD_FUZZ_BINARY "Build fuzz binary." OFF)
 option(BUILD_FOR_FUZZING "Build for fuzzing. Enabling this will disable all other targets and override BUILD_FUZZ_BINARY." OFF)
+
+option(REDUCE_EXPORTS "Attempt to reduce exported symbols in the resulting executables." OFF)
+option(WERROR "Treat compiler warnings as errors." OFF)
+option(WITH_CCACHE "Attempt to use ccache for compiling." ON)
 
 option(INSTALL_MAN "Install man pages." ON)
 
@@ -186,11 +140,9 @@ string(APPEND CMAKE_CXX_COMPILE_OBJECT " ${APPEND_CPPFLAGS} ${APPEND_CXXFLAGS}")
 string(APPEND CMAKE_CXX_CREATE_SHARED_LIBRARY " ${APPEND_LDFLAGS}")
 string(APPEND CMAKE_CXX_LINK_EXECUTABLE " ${APPEND_LDFLAGS}")
 
-set(configure_warnings)
-
-include(CheckLinkerSupportsPIE)
-check_linker_supports_pie(configure_warnings)
-
+#=============================
+# Core interface library
+#=============================
 # The core_interface library aims to encapsulate common build flags.
 # It is a usage requirement for all targets except for secp256k1, which
 # gets its flags by other means.
@@ -202,6 +154,15 @@ target_link_libraries(core_interface INTERFACE
   $<$<CONFIG:Debug>:core_interface_debug>
 )
 
+#=============================
+# Option interaction
+#=============================
+# Compute the final state of build options.
+# This must be done after all options have been initially set,
+# as some options (e.g., BUILD_FOR_FUZZING) may override or adjust others.
+# It must also come before any dependency checks to ensure that the set
+# of dependencies checked is consistent with the final option values,
+# that is, that all required, and only the required, dependencies are tested.
 if(BUILD_FOR_FUZZING)
   message(WARNING "BUILD_FOR_FUZZING=ON will disable all other targets and force BUILD_FUZZ_BINARY=ON.")
   set(BUILD_BITCOIN_BIN OFF)
@@ -225,6 +186,77 @@ if(BUILD_FOR_FUZZING)
   target_compile_definitions(core_interface INTERFACE
     FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
   )
+endif()
+
+#=============================
+# Check and set PIC/PIE
+#=============================
+set(configure_warnings)
+include(CheckLinkerSupportsPIE)
+# Set CMAKE_POSITION_INDEPENDENT_CODE early so it applies to all
+# subsequent checks, including dependency packages and tool flags.
+check_linker_supports_pie(configure_warnings)
+
+#=============================
+# Find dependencies
+#=============================
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(core_interface INTERFACE
+  Threads::Threads
+)
+
+include(AddBoostIfNeeded)
+add_boost_if_needed()
+
+if(BUILD_DAEMON OR BUILD_GUI OR BUILD_CLI OR BUILD_TESTS OR BUILD_BENCH OR BUILD_FUZZ_BINARY)
+  find_package(Libevent 2.1.8 MODULE REQUIRED)
+endif()
+
+if(ENABLE_WALLET)
+  if(VCPKG_TARGET_TRIPLET)
+    # Use of the `unofficial::` namespace is a vcpkg package manager convention.
+    find_package(unofficial-sqlite3 CONFIG REQUIRED)
+  else()
+    find_package(SQLite3 3.7.17 REQUIRED)
+  endif()
+endif()
+
+if(WITH_ZMQ)
+  find_package(ZeroMQ 4.0.0 MODULE REQUIRED)
+endif()
+
+if(ENABLE_IPC AND WITH_EXTERNAL_LIBMULTIPROCESS)
+  find_package(Libmultiprocess REQUIRED COMPONENTS Lib)
+  find_package(LibmultiprocessNative REQUIRED COMPONENTS Bin
+    NAMES Libmultiprocess
+  )
+endif()
+
+if(WITH_USDT)
+  find_package(USDT MODULE REQUIRED)
+endif()
+
+if(BUILD_GUI)
+  set(qt_components Core Gui Widgets LinguistTools)
+  if(ENABLE_WALLET)
+    list(APPEND qt_components Network)
+  endif()
+  if(WITH_DBUS)
+    list(APPEND qt_components DBus)
+    set(USE_DBUS TRUE)
+  endif()
+  if(BUILD_GUI_TESTS)
+    list(APPEND qt_components Test)
+  endif()
+  find_package(Qt 6.2 MODULE REQUIRED
+    COMPONENTS ${qt_components}
+  )
+  unset(qt_components)
+  if(WITH_QRENCODE)
+    find_package(QRencode MODULE REQUIRED)
+    set(USE_QRCODE TRUE)
+  endif()
 endif()
 
 include(TryAppendCXXFlags)
@@ -337,12 +369,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   endif()
 endif()
 
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-target_link_libraries(core_interface INTERFACE
-  Threads::Threads
-)
-
 # Define sanitize_interface with -fsanitize flags intended to apply to all
 # libraries and executables.
 add_library(sanitize_interface INTERFACE)
@@ -410,13 +436,6 @@ if(BUILD_FUZZ_BINARY)
   add_library(fuzzer_interface INTERFACE)
   target_link_options(fuzzer_interface INTERFACE ${fuzz_flag})
   target_link_libraries(fuzzer_interface INTERFACE ${FUZZ_LIBS})
-endif()
-
-include(AddBoostIfNeeded)
-add_boost_if_needed()
-
-if(BUILD_DAEMON OR BUILD_GUI OR BUILD_CLI OR BUILD_TESTS OR BUILD_BENCH OR BUILD_FUZZ_BINARY)
-  find_package(Libevent 2.1.8 MODULE REQUIRED)
 endif()
 
 include(cmake/introspection.cmake)
