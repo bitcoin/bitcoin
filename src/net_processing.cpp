@@ -585,11 +585,19 @@ private:
 
     /** Maybe disconnect a peer and discourage future connections from its address.
      *
-     * @param[in]   pnode     The node to check.
-     * @param[in]   peer      The peer object to check.
-     * @return                True if the peer was marked for disconnection in this function
+     * @param[in]   peer                The peer object to check.
+     * @param[in]   peer_addr           The peer's address.
+     * @param[in]   has_no_ban          Whether the peer has NoBan permission.
+     * @param[in]   is_manual           Whether the peer is manually connected.
+     * @param[in]   is_local_addr       Whether the peer's address is local.
+     * @param[in]   is_inbound_onion    Whether the peer is an inbound onion connection.
+     * @param[out]  should_disconnect   Set to true if the peer should be disconnected.
+     * @return                          True if the peer was marked for disconnection in this function
      */
-    bool MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer);
+    bool MaybeDiscourageAndDisconnect(Peer& peer, const CNetAddr& peer_addr,
+                                       bool has_no_ban, bool is_manual,
+                                       bool is_local_addr, bool is_inbound_onion,
+                                       bool& should_disconnect);
 
     /** Handle a transaction whose result was not MempoolAcceptResult::ResultType::VALID.
      * @param[in]   first_time_failure            Whether we should consider inserting into vExtraTxnForCompact, adding
@@ -4936,7 +4944,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     return;
 }
 
-bool PeerManagerImpl::MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer)
+bool PeerManagerImpl::MaybeDiscourageAndDisconnect(Peer& peer, const CNetAddr& peer_addr,
+                                                    bool has_no_ban, bool is_manual,
+                                                    bool is_local_addr, bool is_inbound_onion,
+                                                    bool& should_disconnect)
 {
     {
         LOCK(peer.m_misbehavior_mutex);
@@ -4947,31 +4958,31 @@ bool PeerManagerImpl::MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer)
         peer.m_should_discourage = false;
     } // peer.m_misbehavior_mutex
 
-    if (pnode.HasPermission(NetPermissionFlags::NoBan)) {
+    if (has_no_ban) {
         // We never disconnect or discourage peers for bad behavior if they have NetPermissionFlags::NoBan permission
         LogPrintf("Warning: not punishing noban peer %d!\n", peer.m_id);
         return false;
     }
 
-    if (pnode.IsManualConn()) {
+    if (is_manual) {
         // We never disconnect or discourage manual peers for bad behavior
         LogPrintf("Warning: not punishing manually connected peer %d!\n", peer.m_id);
         return false;
     }
 
-    if (pnode.addr.IsLocal()) {
+    if (is_local_addr) {
         // We disconnect local peers for bad behavior but don't discourage (since that would discourage
         // all peers on the same local address)
         LogDebug(BCLog::NET, "Warning: disconnecting but not discouraging %s peer %d!\n",
-                 pnode.m_inbound_onion ? "inbound onion" : "local", peer.m_id);
-        pnode.fDisconnect = true;
+                 is_inbound_onion ? "inbound onion" : "local", peer.m_id);
+        should_disconnect = true;
         return true;
     }
 
     // Normal case: Disconnect the peer and discourage all nodes sharing the address
     LogDebug(BCLog::NET, "Disconnecting and discouraging peer %d!\n", peer.m_id);
-    if (m_banman) m_banman->Discourage(pnode.addr);
-    m_connman.DisconnectNode(pnode.addr);
+    if (m_banman) m_banman->Discourage(peer_addr);
+    m_connman.DisconnectNode(peer_addr);
     return true;
 }
 
@@ -5473,7 +5484,18 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
     // We must call MaybeDiscourageAndDisconnect first, to ensure that we'll
     // disconnect misbehaving peers even before the version handshake is complete.
-    if (MaybeDiscourageAndDisconnect(*pto, *peer)) return true;
+    bool should_disconnect = false;
+    if (MaybeDiscourageAndDisconnect(*peer, pto->addr,
+                                      pto->HasPermission(NetPermissionFlags::NoBan),
+                                      pto->IsManualConn(),
+                                      pto->addr.IsLocal(),
+                                      pto->m_inbound_onion,
+                                      should_disconnect)) {
+        if (should_disconnect) {
+            pto->fDisconnect = true;
+        }
+        return true;
+    }
 
     // Initiate version handshake for outbound connections
     if (!pto->IsInboundConn() && !peer->m_outbound_version_message_sent) {
