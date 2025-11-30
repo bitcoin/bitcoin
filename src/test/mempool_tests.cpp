@@ -72,17 +72,17 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
     BOOST_CHECK_EQUAL(testPool.size(), poolSize);
 
     // Just the parent:
-    AddToMempool(testPool, entry.FromTx(txParent));
+    TryAddToMempool(testPool, entry.FromTx(txParent));
     poolSize = testPool.size();
     testPool.removeRecursive(CTransaction(txParent), REMOVAL_REASON_DUMMY);
     BOOST_CHECK_EQUAL(testPool.size(), poolSize - 1);
 
     // Parent, children, grandchildren:
-    AddToMempool(testPool, entry.FromTx(txParent));
+    TryAddToMempool(testPool, entry.FromTx(txParent));
     for (int i = 0; i < 3; i++)
     {
-        AddToMempool(testPool, entry.FromTx(txChild[i]));
-        AddToMempool(testPool, entry.FromTx(txGrandChild[i]));
+        TryAddToMempool(testPool, entry.FromTx(txChild[i]));
+        TryAddToMempool(testPool, entry.FromTx(txGrandChild[i]));
     }
     // Remove Child[0], GrandChild[0] should be removed:
     poolSize = testPool.size();
@@ -104,8 +104,8 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
     // Add children and grandchildren, but NOT the parent (simulate the parent being in a block)
     for (int i = 0; i < 3; i++)
     {
-        AddToMempool(testPool, entry.FromTx(txChild[i]));
-        AddToMempool(testPool, entry.FromTx(txGrandChild[i]));
+        TryAddToMempool(testPool, entry.FromTx(txChild[i]));
+        TryAddToMempool(testPool, entry.FromTx(txGrandChild[i]));
     }
     // Now remove the parent, as might happen if a block-re-org occurs but the parent cannot be
     // put into the mempool (maybe because it is non-standard):
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     tx1.vout.resize(1);
     tx1.vout[0].scriptPubKey = CScript() << OP_1 << OP_EQUAL;
     tx1.vout[0].nValue = 10 * COIN;
-    AddToMempool(pool, entry.Fee(1000LL).FromTx(tx1));
+    TryAddToMempool(pool, entry.Fee(1000LL).FromTx(tx1));
 
     CMutableTransaction tx2 = CMutableTransaction();
     tx2.vin.resize(1);
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     tx2.vout.resize(1);
     tx2.vout[0].scriptPubKey = CScript() << OP_2 << OP_EQUAL;
     tx2.vout[0].nValue = 10 * COIN;
-    AddToMempool(pool, entry.Fee(500LL).FromTx(tx2));
+    TryAddToMempool(pool, entry.Fee(500LL).FromTx(tx2));
 
     pool.TrimToSize(pool.DynamicMemoryUsage()); // should do nothing
     BOOST_CHECK(pool.exists(tx1.GetHash()));
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     BOOST_CHECK(pool.exists(tx1.GetHash()));
     BOOST_CHECK(!pool.exists(tx2.GetHash()));
 
-    AddToMempool(pool, entry.FromTx(tx2));
+    TryAddToMempool(pool, entry.FromTx(tx2));
     CMutableTransaction tx3 = CMutableTransaction();
     tx3.vin.resize(1);
     tx3.vin[0].prevout = COutPoint(tx2.GetHash(), 0);
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     tx3.vout.resize(1);
     tx3.vout[0].scriptPubKey = CScript() << OP_3 << OP_EQUAL;
     tx3.vout[0].nValue = 10 * COIN;
-    AddToMempool(pool, entry.Fee(2000LL).FromTx(tx3));
+    TryAddToMempool(pool, entry.Fee(2000LL).FromTx(tx3));
 
     pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4); // tx3 should pay for tx2 (CPFP)
     BOOST_CHECK(!pool.exists(tx1.GetHash()));
@@ -216,11 +216,11 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     tx7.vout[1].scriptPubKey = CScript() << OP_7 << OP_EQUAL;
     tx7.vout[1].nValue = 10 * COIN;
 
-    AddToMempool(pool, entry.Fee(700LL).FromTx(tx4));
+    TryAddToMempool(pool, entry.Fee(700LL).FromTx(tx4));
     auto usage_with_tx4_only = pool.DynamicMemoryUsage();
-    AddToMempool(pool, entry.Fee(100LL).FromTx(tx5));
-    AddToMempool(pool, entry.Fee(110LL).FromTx(tx6));
-    AddToMempool(pool, entry.Fee(900LL).FromTx(tx7));
+    TryAddToMempool(pool, entry.Fee(100LL).FromTx(tx5));
+    TryAddToMempool(pool, entry.Fee(110LL).FromTx(tx6));
+    TryAddToMempool(pool, entry.Fee(900LL).FromTx(tx7));
 
     // From the topology above, tx7 must be sorted last, so it should
     // definitely evicted first if we must trim. tx4 should definitely remain
@@ -234,10 +234,10 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     // tx7, but this behavior need not be guaranteed.
 
     if (!pool.exists(tx5.GetHash()))
-        AddToMempool(pool, entry.Fee(100LL).FromTx(tx5));
+        TryAddToMempool(pool, entry.Fee(100LL).FromTx(tx5));
     if (!pool.exists(tx6.GetHash()))
-        AddToMempool(pool, entry.Fee(110LL).FromTx(tx6));
-    AddToMempool(pool, entry.Fee(900LL).FromTx(tx7));
+        TryAddToMempool(pool, entry.Fee(110LL).FromTx(tx6));
+    TryAddToMempool(pool, entry.Fee(900LL).FromTx(tx7));
 
     // If we trim sufficiently, everything but tx4 should be removed.
     pool.TrimToSize(usage_with_tx4_only + 1);
@@ -246,9 +246,9 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     BOOST_CHECK(!pool.exists(tx6.GetHash()));
     BOOST_CHECK(!pool.exists(tx7.GetHash()));
 
-    AddToMempool(pool, entry.Fee(100LL).FromTx(tx5));
-    AddToMempool(pool, entry.Fee(110LL).FromTx(tx6));
-    AddToMempool(pool, entry.Fee(900LL).FromTx(tx7));
+    TryAddToMempool(pool, entry.Fee(100LL).FromTx(tx5));
+    TryAddToMempool(pool, entry.Fee(110LL).FromTx(tx6));
+    TryAddToMempool(pool, entry.Fee(900LL).FromTx(tx7));
 
     std::vector<CTransactionRef> vtx;
     SetMockTime(42);
@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestryTests)
     // [tx1]
     //
     CTransactionRef tx1 = make_tx(/*output_values=*/{10 * COIN});
-    AddToMempool(pool, entry.Fee(10000LL).FromTx(tx1));
+    TryAddToMempool(pool, entry.Fee(10000LL).FromTx(tx1));
 
     // Ancestors / clustersize should be 1 / 1 (itself / itself)
     pool.GetTransactionAncestry(tx1->GetHash(), ancestors, clustersize);
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestryTests)
     // [tx1].0 <- [tx2]
     //
     CTransactionRef tx2 = make_tx(/*output_values=*/{495 * CENT, 5 * COIN}, /*inputs=*/{tx1});
-    AddToMempool(pool, entry.Fee(10000LL).FromTx(tx2));
+    TryAddToMempool(pool, entry.Fee(10000LL).FromTx(tx2));
 
     // Ancestors / clustersize should be:
     // transaction  ancestors   clustersize
@@ -338,7 +338,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestryTests)
     // [tx1].0 <- [tx2].0 <- [tx3]
     //
     CTransactionRef tx3 = make_tx(/*output_values=*/{290 * CENT, 200 * CENT}, /*inputs=*/{tx2});
-    AddToMempool(pool, entry.Fee(10000LL).FromTx(tx3));
+    TryAddToMempool(pool, entry.Fee(10000LL).FromTx(tx3));
 
     // Ancestors / clustersize should be:
     // transaction  ancestors   clustersize
@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestryTests)
     //              \---1 <- [tx4]
     //
     CTransactionRef tx4 = make_tx(/*output_values=*/{290 * CENT, 250 * CENT}, /*inputs=*/{tx2}, /*input_indices=*/{1});
-    AddToMempool(pool, entry.Fee(10000LL).FromTx(tx4));
+    TryAddToMempool(pool, entry.Fee(10000LL).FromTx(tx4));
 
     // Ancestors / clustersize should be:
     // transaction  ancestors   clustersize
@@ -400,13 +400,13 @@ BOOST_AUTO_TEST_CASE(MempoolAncestryTests)
         CTransactionRef& tyi = *ty[i];
         tyi = make_tx(/*output_values=*/{v}, /*inputs=*/i > 0 ? std::vector<CTransactionRef>{*ty[i - 1]} : std::vector<CTransactionRef>{});
         v -= 50 * CENT;
-        AddToMempool(pool, entry.Fee(10000LL).FromTx(tyi));
+        TryAddToMempool(pool, entry.Fee(10000LL).FromTx(tyi));
         pool.GetTransactionAncestry(tyi->GetHash(), ancestors, clustersize);
         BOOST_CHECK_EQUAL(ancestors, i+1);
         BOOST_CHECK_EQUAL(clustersize, i+1);
     }
     CTransactionRef ty6 = make_tx(/*output_values=*/{5 * COIN}, /*inputs=*/{tx3, ty5});
-    AddToMempool(pool, entry.Fee(10000LL).FromTx(ty6));
+    TryAddToMempool(pool, entry.Fee(10000LL).FromTx(ty6));
 
     // Ancestors / clustersize should be:
     // transaction  ancestors           clustersize
@@ -472,10 +472,10 @@ BOOST_AUTO_TEST_CASE(MempoolAncestryTestsDiamond)
     tb = make_tx(/*output_values=*/{5 * COIN, 3 * COIN}, /*inputs=*/ {ta});
     tc = make_tx(/*output_values=*/{2 * COIN}, /*inputs=*/{tb}, /*input_indices=*/{1});
     td = make_tx(/*output_values=*/{6 * COIN}, /*inputs=*/{tb, tc}, /*input_indices=*/{0, 0});
-    AddToMempool(pool, entry.Fee(10000LL).FromTx(ta));
-    AddToMempool(pool, entry.Fee(10000LL).FromTx(tb));
-    AddToMempool(pool, entry.Fee(10000LL).FromTx(tc));
-    AddToMempool(pool, entry.Fee(10000LL).FromTx(td));
+    TryAddToMempool(pool, entry.Fee(10000LL).FromTx(ta));
+    TryAddToMempool(pool, entry.Fee(10000LL).FromTx(tb));
+    TryAddToMempool(pool, entry.Fee(10000LL).FromTx(tc));
+    TryAddToMempool(pool, entry.Fee(10000LL).FromTx(td));
 
     // Ancestors / descendants should be:
     // transaction  ancestors           descendants

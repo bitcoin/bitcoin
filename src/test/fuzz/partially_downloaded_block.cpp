@@ -81,7 +81,7 @@ FUZZ_TARGET(partially_downloaded_block, .init = initialize_pdb)
 
         if (add_to_mempool && !pool.exists(tx->GetHash())) {
             LOCK2(cs_main, pool.cs);
-            AddToMempool(pool, ConsumeTxMemPoolEntry(fuzzed_data_provider, *tx));
+            TryAddToMempool(pool, ConsumeTxMemPoolEntry(fuzzed_data_provider, *tx));
             available.insert(i);
         }
     }
