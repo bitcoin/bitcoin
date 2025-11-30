@@ -402,6 +402,14 @@ public:
     bool HaveCoinInCache(const COutPoint &outpoint) const;
 
     /**
+     * Retrieve the coin from the cache even if it is spent, without calling
+     * the backing CCoinsView if no coin exists.
+     * Used in CoinsViewCacheAsync to make sure we do not add a coin from the backing
+     * view when it is spent in the cache but not yet flushed to the parent.
+     */
+    std::optional<Coin> GetPossiblySpentCoinFromCache(const COutPoint& outpoint) const noexcept;
+
+    /**
      * Return a reference to Coin in the cache, or coinEmpty if not found. This is
      * more efficient than GetCoin.
      *
@@ -441,7 +449,7 @@ public:
      * to be forgotten.
      * If false is returned, the state of this cache (and its backing view) will be undefined.
      */
-    bool Flush();
+    virtual bool Flush();
 
     /**
      * Push the modifications applied to this cache to its base while retaining
@@ -482,7 +490,7 @@ private:
      * @note this is marked const, but may actually append to `cacheCoins`, increasing
      * memory usage.
      */
-    CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
+    virtual CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
 };
 
 //! Utility function to add all of a transaction's outputs to a cache.
