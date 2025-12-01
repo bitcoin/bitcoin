@@ -1,34 +1,12 @@
 # Support for Output Descriptors in Bitcoin Core
 
-Since Bitcoin Core v0.17, there is support for Output Descriptors. This is a
-simple language which can be used to describe collections of output scripts.
-Supporting RPCs are:
-- `scantxoutset` takes as input descriptors to scan for, and also reports
-  specialized descriptors for the matching UTXOs.
-- `getdescriptorinfo` analyzes a descriptor, and reports a canonicalized version
-  with checksum added.
-- `deriveaddresses` takes as input a descriptor and computes the corresponding
-  addresses.
-- `listunspent` outputs a specialized descriptor for the reported unspent outputs.
-- `getaddressinfo` outputs a descriptor for solvable addresses (since v0.18).
-- `generatetodescriptor` takes as input a descriptor and generates coins to it
-  (`regtest` only, since v0.19).
-- `utxoupdatepsbt` takes as input descriptors to add information to the psbt
-  (since v0.19).
-- `createmultisig` and `addmultisigaddress` return descriptors as well (since v0.20).
-- `importdescriptors` takes as input descriptors to import into a descriptor wallet
-  (since v0.21).
-- `listdescriptors` outputs descriptors imported into a descriptor wallet (since v22).
-- `scanblocks` takes as input descriptors to scan for in blocks and returns the
-   relevant blockhashes (since v25).
-- `getdescriptoractivity` takes as input descriptors and blockhashes (as output
-  by `scanblocks`) and returns rich event data related to spends or receives associated
-  with the given descriptors.
-
-Bitcoin Core v24 extended `wsh()` output descriptor with [Miniscript](https://bitcoin.sipa.be/miniscript/) support (initially watch-only). Signing support for Miniscript descriptors was added in v25. And since v26 Miniscript expressions can now be used in Taproot descriptors.
+Many Bitcoin Core RPCs support Output Descriptors. This is a simple language
+which can be used to describe collections of output scripts. The wallet code
+internally stores and operates on these descriptors to reason about the sets
+of outputs that belong to the wallet.
 
 This document describes the language. For the specifics on usage, see the RPC
-documentation for the functions mentioned above.
+documentation.
 
 ## Features
 
