@@ -138,6 +138,8 @@ jobs:
       build-target: arm-linux
       container-path: ${{ needs.container.outputs.path }}
       depends-key: ${{ needs.depends-arm-linux.outputs.key }}
+      depends-host: ${{ needs.depends-arm-linux.outputs.host }}
+      depends-dep-opts: ${{ needs.depends-arm-linux.outputs.dep-opts }}
 
   src-linux64:
     name: linux64-build
@@ -148,6 +150,8 @@ jobs:
       build-target: linux64
       container-path: ${{ needs.container.outputs.path }}
       depends-key: ${{ needs.depends-linux64.outputs.key }}
+      depends-host: ${{ needs.depends-linux64.outputs.host }}
+      depends-dep-opts: ${{ needs.depends-linux64.outputs.dep-opts }}
 
   src-linux64_fuzz:
     name: linux64_fuzz-build
@@ -158,6 +162,8 @@ jobs:
       build-target: linux64_fuzz
       container-path: ${{ needs.container.outputs.path }}
       depends-key: ${{ needs.depends-linux64.outputs.key }}
+      depends-host: ${{ needs.depends-linux64.outputs.host }}
+      depends-dep-opts: ${{ needs.depends-linux64.outputs.dep-opts }}
 
   src-linux64_multiprocess:
     name: linux64_multiprocess-build
@@ -168,6 +174,8 @@ jobs:
       build-target: linux64_multiprocess
       container-path: ${{ needs.container.outputs.path }}
       depends-key: ${{ needs.depends-linux64_multiprocess.outputs.key }}
+      depends-host: ${{ needs.depends-linux64_multiprocess.outputs.host }}
+      depends-dep-opts: ${{ needs.depends-linux64_multiprocess.outputs.dep-opts }}
 
   src-linux64_nowallet:
     name: linux64_nowallet-build
@@ -177,6 +185,8 @@ jobs:
       build-target: linux64_nowallet
       container-path: ${{ needs.container.outputs.path }}
       depends-key: ${{ needs.depends-linux64_nowallet.outputs.key }}
+      depends-host: ${{ needs.depends-linux64_nowallet.outputs.host }}
+      depends-dep-opts: ${{ needs.depends-linux64_nowallet.outputs.dep-opts }}
 
   src-linux64_sqlite:
     name: linux64_sqlite-build
@@ -187,6 +197,8 @@ jobs:
       build-target: linux64_sqlite
       container-path: ${{ needs.container.outputs.path }}
       depends-key: ${{ needs.depends-linux64.outputs.key }}
+      depends-host: ${{ needs.depends-linux64.outputs.host }}
+      depends-dep-opts: ${{ needs.depends-linux64.outputs.dep-opts }}
 
   src-linux64_tsan:
     name: linux64_tsan-build
@@ -197,6 +209,8 @@ jobs:
       build-target: linux64_tsan
       container-path: ${{ needs.container.outputs.path }}
       depends-key: ${{ needs.depends-linux64_multiprocess.outputs.key }}
+      depends-host: ${{ needs.depends-linux64_multiprocess.outputs.host }}
+      depends-dep-opts: ${{ needs.depends-linux64_multiprocess.outputs.dep-opts }}
 
   src-linux64_ubsan:
     name: linux64_ubsan-build
@@ -207,6 +221,8 @@ jobs:
       build-target: linux64_ubsan
       container-path: ${{ needs.container.outputs.path }}
       depends-key: ${{ needs.depends-linux64.outputs.key }}
+      depends-host: ${{ needs.depends-linux64.outputs.host }}
+      depends-dep-opts: ${{ needs.depends-linux64.outputs.dep-opts }}
 
   src-mac:
     name: mac-build
@@ -216,6 +232,8 @@ jobs:
       build-target: mac
       container-path: ${{ needs.container.outputs.path }}
       depends-key: ${{ needs.depends-mac.outputs.key }}
+      depends-host: ${{ needs.depends-mac.outputs.host }}
+      depends-dep-opts: ${{ needs.depends-mac.outputs.dep-opts }}
 
   src-win64:
     name: win64-build
@@ -225,6 +243,8 @@ jobs:
       build-target: win64
       container-path: ${{ needs.container.outputs.path }}
       depends-key: ${{ needs.depends-win64.outputs.key }}
+      depends-host: ${{ needs.depends-win64.outputs.host }}
+      depends-dep-opts: ${{ needs.depends-win64.outputs.dep-opts }}
 
   test-linux64:
     name: linux64-test
