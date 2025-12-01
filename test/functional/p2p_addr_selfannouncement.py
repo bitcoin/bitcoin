@@ -5,6 +5,9 @@
 """
 Test that a node sends a self-announcement with its external IP to
 in- and outbound peers after connection open and again sometime later.
+
+Additionally, this checks that the first self-announcement arrives
+in it's own message and that this message is the first we receive.
 """
 
 import time
@@ -42,6 +45,15 @@ class SelfAnnouncementReceiver(P2PInterface):
             self.addresses_received += 1
             if addr == self.expected:
                 self.self_announcements_received += 1
+                # If it's the first self-announcement:
+                if self.self_announcements_received == 1:
+                    # - check that it is in the first addr message we receive
+                    assert_equal(self.addr_messages_received, 1)
+                    # - check that it is the first address we receive
+                    assert_equal(self.addresses_received, 1)
+                    # - check that the message only contains the self-announcement
+                    assert_equal(len(message.addrs), 1)
+
 
     def on_addrv2(self, message):
         assert (self.addrv2_test)
@@ -69,10 +81,10 @@ class AddrSelfAnnouncementTest(BitcoinTestFramework):
         self.self_announcement_test(outbound=True, addrv2=True)
 
     def inbound_connection_open_assertions(self, addr_receiver):
-        # We expect one self-announcement and multiple other addresses in
-        # response to a GETADDR in a single addr / addrv2 message.
+        # We expect the self-announcement in a separate message from
+        # the GETADDR response.
         assert_equal(addr_receiver.self_announcements_received, 1)
-        assert_equal(addr_receiver.addr_messages_received, 1)
+        assert_equal(addr_receiver.addr_messages_received, 2)
         assert_greater_than(addr_receiver.addresses_received, 1)
 
     def outbound_connection_open_assertions(self, addr_receiver):
