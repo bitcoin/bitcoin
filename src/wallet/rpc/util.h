@@ -42,6 +42,7 @@ bool ParseIncludeWatchonly(const UniValue& include_watchonly, const CWallet& wal
 std::string LabelFromValue(const UniValue& value);
 
 void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& status, bilingual_str& error);
+int64_t ParseISO8601DateTime(const std::string& str);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_RPC_UTIL_H

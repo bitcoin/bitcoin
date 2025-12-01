@@ -7,15 +7,18 @@
 
 #include <zmq/zmqabstractnotifier.h>
 
+#include <cstddef>
+#include <cstdint>
+
 class CBlockIndex;
 class CDeterministicMNList;
 class CGovernanceVote;
+class CTransaction;
 
 namespace Governance
 {
     class Object;
 } //namespace Governance
-
 
 class CZMQAbstractPublishNotifier : public CZMQAbstractNotifier
 {

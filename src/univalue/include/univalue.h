@@ -20,6 +20,11 @@ class UniValue {
 public:
     enum VType { VNULL, VOBJ, VARR, VSTR, VNUM, VBOOL, };
 
+    class type_error : public std::runtime_error
+    {
+        using std::runtime_error::runtime_error;
+    };
+
     UniValue() { typ = VNULL; }
     UniValue(UniValue::VType type, std::string str = {}) : typ{type}, val{std::move(str)} {}
     template <typename Ref, typename T = std::remove_cv_t<std::remove_reference_t<Ref>>,

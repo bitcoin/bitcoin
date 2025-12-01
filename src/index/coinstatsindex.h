@@ -11,6 +11,8 @@
 #include <index/base.h>
 #include <kernel/coinstats.h>
 
+static constexpr bool DEFAULT_COINSTATSINDEX{false};
+
 /**
  * CoinStatsIndex maintains statistics on the UTXO set.
  */

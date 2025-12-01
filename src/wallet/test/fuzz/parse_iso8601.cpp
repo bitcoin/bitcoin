@@ -5,6 +5,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <util/time.h>
+#include <wallet/rpc/util.h>
 
 #include <cassert>
 #include <cstdint>
@@ -20,7 +21,7 @@ FUZZ_TARGET(parse_iso8601)
 
     const std::string iso8601_datetime = FormatISO8601DateTime(random_time);
     (void)FormatISO8601Date(random_time);
-    const int64_t parsed_time_1 = ParseISO8601DateTime(iso8601_datetime);
+    const int64_t parsed_time_1 = wallet::ParseISO8601DateTime(iso8601_datetime);
     if (random_time >= 0) {
         assert(parsed_time_1 >= 0);
         if (iso8601_datetime.length() == 20) {
@@ -28,6 +29,6 @@ FUZZ_TARGET(parse_iso8601)
         }
     }
 
-    const int64_t parsed_time_2 = ParseISO8601DateTime(random_string);
+    const int64_t parsed_time_2 = wallet::ParseISO8601DateTime(random_string);
     assert(parsed_time_2 >= 0);
 }

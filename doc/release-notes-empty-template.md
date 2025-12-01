@@ -19,7 +19,7 @@ Please report bugs using the issue tracker at GitHub:
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes in some cases), then run the
-installer (on Windows) or just copy over `/Applications/Dash-Qt` (on Mac) or
+installer (on Windows) or just copy over `/Applications/Dash-Qt` (on macOS) or
 `dashd`/`dash-qt` (on Linux).
 
 ## Downgrade warning

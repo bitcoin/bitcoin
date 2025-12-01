@@ -48,6 +48,7 @@ iwyu_tool.py \
   "src/util/strencodings.cpp" \
   "src/util/syserror.cpp" \
   "src/util/url.cpp" \
+  "src/zmq" \
   -p . "${MAKEJOBS}" \
   -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_ROOT_DIR}/contrib/devtools/iwyu/bitcoin.core.imp" \
   -Xiwyu --max_line_length=160 \
