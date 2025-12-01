@@ -672,7 +672,7 @@ struct CNodeOptions
 };
 
 /** Information about a peer */
-class CNode
+class CNode : public NodeInterface
 {
 public:
     /** Transport serializer/deserializer. The receive side functions are only called under cs_vRecv, while
@@ -953,7 +953,13 @@ public:
 
     void CopyStats(CNodeStats& stats) EXCLUSIVE_LOCKS_REQUIRED(!m_subver_mutex, !m_addr_local_mutex, !cs_vSend, !cs_vRecv);
 
-    std::string ConnectionTypeAsString() const { return ::ConnectionTypeAsString(m_conn_type); }
+    // NodeInterface implementation
+    std::optional<std::pair<CNetMessage, bool>> PollMessage() override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_msg_process_queue_mutex);
+    const CAddress& GetAddress() const override { return addr; }
+    const std::string& GetAddrName() const override { return m_addr_name; }
+    std::string ConnectionTypeAsString() const override { return ::ConnectionTypeAsString(m_conn_type); }
+    void PushMessage(CSerializedNetMsg&& msg) override;
 
     /**
      * Helper function to optionally log the IP address.
@@ -1010,6 +1016,32 @@ private:
 };
 
 /**
+ * Interface for operations on a node that PeerManager needs.
+ * This abstracts away CNode implementation details.
+ */
+class NodeInterface
+{
+public:
+    virtual ~NodeInterface() = default;
+
+    /** Poll the next message from the processing queue of this connection. */
+    virtual std::optional<std::pair<CNetMessage, bool>> PollMessage()
+        EXCLUSIVE_LOCKS_REQUIRED(!m_msg_process_queue_mutex) = 0;
+
+    /** Get the node's address. */
+    virtual const CAddress& GetAddress() const = 0;
+
+    /** Get the node's address name. */
+    virtual const std::string& GetAddrName() const = 0;
+
+    /** Get the connection type as a string. */
+    virtual std::string ConnectionTypeAsString() const = 0;
+
+    /** Send a message to this node. */
+    virtual void PushMessage(CSerializedNetMsg&& msg) = 0;
+};
+
+/**
  * Interface for message handling
  */
 class NetEventsInterface
@@ -1033,19 +1065,19 @@ public:
     /**
     * Process protocol messages received from a given node
     *
-    * @param[in]   pnode           The node which we have received messages from.
+    * @param[in]   node_id         The node id which we have received messages from.
     * @param[in]   interrupt       Interrupt condition for processing threads
     * @return                      True if there is more work to be done
     */
-    virtual bool ProcessMessages(CNode* pnode, std::atomic<bool>& interrupt) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
+    virtual bool ProcessMessages(NodeId node_id, std::atomic<bool>& interrupt) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
 
     /**
     * Send queued protocol messages to a given node.
     *
-    * @param[in]   pnode           The node which we are sending messages to.
+    * @param[in]   node_id         The node id which we are sending messages to.
     * @return                      True if there is more work to be done
     */
-    virtual bool SendMessages(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
+    virtual bool SendMessages(NodeId node_id) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
 
 
 protected:
@@ -1178,6 +1210,8 @@ public:
     RecursiveMutex& GetNodesMutex() const LOCK_RETURNED(m_nodes_mutex);
 
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
+    /** Get CNode pointer from NodeId. Returns nullptr if not found. */
+    CNode* GetNode(NodeId id) const EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 

@@ -546,9 +546,9 @@ public:
     void InitializeNode(const CNode& node, ServiceFlags our_services) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_tx_download_mutex);
     void FinalizeNode(const CNode& node) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_headers_presync_mutex, !m_tx_download_mutex);
     bool HasAllDesirableServiceFlags(ServiceFlags services) const override;
-    bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override
+    bool ProcessMessages(NodeId node_id, std::atomic<bool>& interrupt) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex, !m_tx_download_mutex);
-    bool SendMessages(CNode* pto) override
+    bool SendMessages(NodeId node_id) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_most_recent_block_mutex, g_msgproc_mutex, !m_tx_download_mutex);
 
     /** Implement PeerManager */
@@ -572,6 +572,8 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex, !m_tx_download_mutex);
     void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) override;
     ServiceFlags GetDesirableServiceFlags(ServiceFlags services) const override;
+    bool ProcessAllPeers(std::atomic<bool>& interrupt, std::function<CNode*(NodeId)> get_node_fn) override
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
 private:
     /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
@@ -5010,22 +5012,28 @@ bool PeerManagerImpl::MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer)
     return true;
 }
 
-bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgProc)
+bool PeerManagerImpl::ProcessMessages(NodeId node_id, std::atomic<bool>& interruptMsgProc)
 {
     AssertLockNotHeld(m_tx_download_mutex);
     AssertLockHeld(g_msgproc_mutex);
 
-    PeerRef peer = GetPeerRef(pfrom->GetId());
+    PeerRef peer = GetPeerRef(node_id);
     if (peer == nullptr) return false;
+
+    // Get NodeInterface for this peer
+    LOCK(m_connman.GetNodesMutex());
+    CNode* pnode = m_connman.GetNode(node_id);
+    if (pnode == nullptr) return false;
+    NodeInterface* node = static_cast<NodeInterface*>(pnode);
 
     // For outbound connections, ensure that the initial VERSION message
     // has been sent first before processing any incoming messages
-    if (!pfrom->IsInboundConn() && !peer->m_outbound_version_message_sent) return false;
+    if (!peer->m_is_inbound && !peer->m_outbound_version_message_sent) return false;
 
     {
         LOCK(peer->m_getdata_requests_mutex);
         if (!peer->m_getdata_requests.empty()) {
-            ProcessGetData(*pfrom, *peer, interruptMsgProc);
+            ProcessGetData(*pnode, *peer, interruptMsgProc);
         }
     }
 
@@ -5046,7 +5054,7 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     // Don't bother if send buffer is too full to respond anyway
     if (peer->m_pause_send) return false;
 
-    auto poll_result{pfrom->PollMessage()};
+    auto poll_result{node->PollMessage()};
     if (!poll_result) {
         // No message to process
         return false;
@@ -5056,20 +5064,20 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     bool fMoreWork = poll_result->second;
 
     TRACEPOINT(net, inbound_message,
-        pfrom->GetId(),
-        pfrom->m_addr_name.c_str(),
-        pfrom->ConnectionTypeAsString().c_str(),
+        node_id,
+        node->GetAddrName().c_str(),
+        node->ConnectionTypeAsString().c_str(),
         msg.m_type.c_str(),
         msg.m_recv.size(),
         msg.m_recv.data()
     );
 
     if (m_opts.capture_messages) {
-        CaptureMessage(pfrom->addr, msg.m_type, MakeUCharSpan(msg.m_recv), /*is_incoming=*/true);
+        CaptureMessage(node->GetAddress(), msg.m_type, MakeUCharSpan(msg.m_recv), /*is_incoming=*/true);
     }
 
     try {
-        ProcessMessage(*pfrom, msg.m_type, msg.m_recv, msg.m_time, interruptMsgProc);
+        ProcessMessage(node_id, msg.m_type, msg.m_recv, msg.m_time, interruptMsgProc);
         if (interruptMsgProc) return false;
         {
             LOCK(peer->m_getdata_requests_mutex);
@@ -5086,6 +5094,55 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
         LogDebug(BCLog::NET, "%s(%s, %u bytes): Exception '%s' (%s) caught\n", __func__, SanitizeString(msg.m_type), msg.m_message_size, e.what(), typeid(e).name());
     } catch (...) {
         LogDebug(BCLog::NET, "%s(%s, %u bytes): Unknown exception caught\n", __func__, SanitizeString(msg.m_type), msg.m_message_size);
+    }
+
+    return fMoreWork;
+}
+
+bool PeerManagerImpl::ProcessAllPeers(std::atomic<bool>& interrupt, std::function<NodeInterface*(NodeId)> get_node_fn)
+{
+    AssertLockHeld(g_msgproc_mutex);
+    bool fMoreWork = false;
+
+    // Get a snapshot of all peers, shuffled to prevent ordering attacks
+    std::vector<PeerRef> peers;
+    {
+        LOCK(m_peer_mutex);
+        peers.reserve(m_peer_map.size());
+        for (const auto& [nodeid, peer] : m_peer_map) {
+            peers.push_back(peer);
+        }
+    }
+
+    // Shuffle peers to randomize processing order
+    std::shuffle(peers.begin(), peers.end(), m_rng);
+
+    for (const PeerRef& peer : peers) {
+        if (interrupt) return false;
+
+        if (peer->m_disconnect) {
+            continue;
+        }
+
+        // Get NodeInterface for this peer
+        NodeInterface* node = get_node_fn(peer->m_id);
+        if (node == nullptr) {
+            continue;
+        }
+
+        // Receive messages
+        bool fMoreNodeWork = ProcessMessages(peer->m_id, interrupt);
+        fMoreWork |= (fMoreNodeWork && !peer->m_pause_send);
+        if (interrupt) {
+            return false;
+        }
+
+        // Send messages
+        SendMessages(peer->m_id);
+
+        if (interrupt) {
+            return false;
+        }
     }
 
     return fMoreWork;

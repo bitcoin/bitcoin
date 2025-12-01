@@ -3060,26 +3060,12 @@ void CConnman::ThreadMessageHandler()
         bool fMoreWork = false;
 
         {
-            // Randomize the order in which we process messages from/to our peers.
-            // This prevents attacks in which an attacker exploits having multiple
-            // consecutive connections in the m_nodes list.
-            const NodesSnapshot snap{*this, /*shuffle=*/true};
-
-            for (CNode* pnode : snap.Nodes()) {
-                if (pnode->fDisconnect)
-                    continue;
-
-                // Receive messages
-                bool fMoreNodeWork = m_msgproc->ProcessMessages(pnode, flagInterruptMsgProc);
-                fMoreWork |= (fMoreNodeWork && !pnode->fPauseSend);
-                if (flagInterruptMsgProc)
-                    return;
-                // Send messages
-                m_msgproc->SendMessages(pnode);
-
-                if (flagInterruptMsgProc)
-                    return;
-            }
+            // Delegate message processing to PeerManager, which now iterates over Peers
+            // instead of CNodes. This is Phase 2 of the net split refactoring.
+            fMoreWork = m_msgproc->ProcessAllPeers(flagInterruptMsgProc, [this](NodeId id) -> NodeInterface* {
+                LOCK(m_nodes_mutex);
+                return GetNode(id);
+            });
         }
 
         WAIT_LOCK(mutexMsgProc, lock);
@@ -3939,17 +3925,25 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
     if (nBytesSent) RecordBytesSent(nBytesSent);
 }
 
+CNode* CConnman::GetNode(NodeId id) const
+{
+    for (auto&& pnode : m_nodes) {
+        if (pnode->GetId() == id) {
+            return pnode;
+        }
+    }
+    return nullptr;
+}
+
 bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
 {
     CNode* found = nullptr;
     LOCK(m_nodes_mutex);
-    for (auto&& pnode : m_nodes) {
-        if(pnode->GetId() == id) {
-            found = pnode;
-            break;
-        }
+    found = GetNode(id);
+    if (found && NodeFullyConnected(found)) {
+        return func(found);
     }
-    return found != nullptr && NodeFullyConnected(found) && func(found);
+    return false;
 }
 
 CSipHasher CConnman::GetDeterministicRandomizer(uint64_t id) const

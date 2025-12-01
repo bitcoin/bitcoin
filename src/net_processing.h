@@ -108,6 +108,16 @@ public:
     /** Begin running background tasks, should only be called once */
     virtual void StartScheduledTasks(CScheduler& scheduler) = 0;
 
+    /**
+     * Process messages for all peers. This is the main message handling loop.
+     * Should be called from a dedicated thread.
+     *
+     * @param[in]   interrupt       Interrupt condition for processing threads
+     * @param[in]   get_node_fn     Function to get NodeInterface* from NodeId
+     * @return                      True if there is more work to be done
+     */
+    virtual bool ProcessAllPeers(std::atomic<bool>& interrupt, std::function<NodeInterface*(NodeId)> get_node_fn) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
+
     /** Get statistics from node state */
     virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const = 0;
 
