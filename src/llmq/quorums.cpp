@@ -703,18 +703,9 @@ size_t CQuorumManager::GetQuorumRecoveryStartOffset(const CQuorum& quorum, gsl::
 
 MessageProcessingResult CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
 {
-    auto strFunc = __func__;
-    auto errorHandler = [&](const std::string& strError, int nScore = 10) -> MessageProcessingResult {
-        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- %s: %s, from peer=%d\n", strFunc, msg_type, strError, pfrom.GetId());
-        if (nScore > 0) {
-            return MisbehavingError{nScore};
-        }
-        return {};
-    };
-
     if (msg_type == NetMsgType::QGETDATA) {
         if (m_mn_activeman == nullptr || (pfrom.GetVerifiedProRegTxHash().IsNull() && !pfrom.qwatch)) {
-            return errorHandler("Not a verified masternode or a qwatch connection");
+            return MisbehavingError{10, "not a verified masternode or a qwatch connection"};
         }
 
         CQuorumDataRequest request;
@@ -731,7 +722,7 @@ MessageProcessingResult CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& c
                 case (CQuorumDataRequest::Errors::QUORUM_NOT_FOUND):
                 case (CQuorumDataRequest::Errors::MASTERNODE_IS_NO_MEMBER):
                 case (CQuorumDataRequest::Errors::UNDEFINED):
-                    if (request_limit_exceeded) ret = errorHandler("Request limit exceeded", 25);
+                    if (request_limit_exceeded) ret = MisbehavingError{25, "request limit exceeded"};
                     break;
                 case (CQuorumDataRequest::Errors::QUORUM_VERIFICATION_VECTOR_MISSING):
                 case (CQuorumDataRequest::Errors::ENCRYPTED_CONTRIBUTIONS_MISSING):
@@ -808,7 +799,7 @@ MessageProcessingResult CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& c
 
     if (msg_type == NetMsgType::QDATA) {
         if ((m_mn_activeman == nullptr && !m_quorums_watch) || pfrom.GetVerifiedProRegTxHash().IsNull()) {
-            return errorHandler("Not a verified masternode and -watchquorums is not enabled");
+            return MisbehavingError{10, "not a verified masternode and -watchquorums is not enabled"};
         }
 
         CQuorumDataRequest request;
@@ -819,25 +810,28 @@ MessageProcessingResult CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& c
             const CQuorumDataRequestKey key(pfrom.GetVerifiedProRegTxHash(), true, request.GetQuorumHash(), request.GetLLMQType());
             auto it = mapQuorumDataRequests.find(key);
             if (it == mapQuorumDataRequests.end()) {
-                return errorHandler("Not requested");
+                return MisbehavingError{10, "not requested"};
             }
             if (it->second.IsProcessed()) {
-                return errorHandler("Already received");
+                return MisbehavingError(10, "already received");
             }
             if (request != it->second) {
-                return errorHandler("Not like requested");
+                return MisbehavingError(10, "not like requested");
             }
             it->second.SetProcessed();
         }
 
         if (request.GetError() != CQuorumDataRequest::Errors::NONE) {
-            return errorHandler(strprintf("Error %d (%s)", request.GetError(), request.GetErrorString()), 0);
+            LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- %s: %s, from peer=%d\n", __func__, msg_type, strprintf("Error %d (%s)", request.GetError(), request.GetErrorString()), pfrom.GetId());
+            return {};
         }
 
         CQuorumPtr pQuorum;
         {
             if (LOCK(cs_map_quorums); !mapQuorumsCache[request.GetLLMQType()].get(request.GetQuorumHash(), pQuorum)) {
-                return errorHandler("Quorum not found", 0); // Don't bump score because we asked for it
+                // Don't bump score because we asked for it
+                LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- %s: Quorum not found, from peer=%d\n", __func__, msg_type, pfrom.GetId());
+                return {};
             }
         }
 
@@ -850,7 +844,7 @@ MessageProcessingResult CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& c
             if (pQuorum->SetVerificationVector(verificationVector)) {
                 StartCachePopulatorThread(pQuorum);
             } else {
-                return errorHandler("Invalid quorum verification vector");
+                return MisbehavingError{10, "invalid quorum verification vector"};
             }
         }
 
@@ -859,12 +853,16 @@ MessageProcessingResult CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& c
             assert(m_mn_activeman);
 
             if (WITH_LOCK(pQuorum->cs_vvec_shShare, return pQuorum->quorumVvec->size() != size_t(pQuorum->params.threshold))) {
-                return errorHandler("No valid quorum verification vector available", 0); // Don't bump score because we asked for it
+                // Don't bump score because we asked for it
+                LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- %s: No valid quorum verification vector available, from peer=%d\n", __func__, msg_type, pfrom.GetId());
+                return {};
             }
 
             int memberIdx = pQuorum->GetMemberIndex(request.GetProTxHash());
             if (memberIdx == -1) {
-                return errorHandler("Not a member of the quorum", 0); // Don't bump score because we asked for it
+                // Don't bump score because we asked for it
+                LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- %s: Not a member of the quorum, from peer=%d\n", __func__, msg_type, pfrom.GetId());
+                return {};
             }
 
             std::vector<CBLSIESEncryptedObject<CBLSSecretKey>> vecEncrypted;
@@ -874,13 +872,13 @@ MessageProcessingResult CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& c
             vecSecretKeys.resize(vecEncrypted.size());
             for (const auto i : irange::range(vecEncrypted.size())) {
                 if (!m_mn_activeman->Decrypt(vecEncrypted[i], memberIdx, vecSecretKeys[i], PROTOCOL_VERSION)) {
-                    return errorHandler("Failed to decrypt");
+                    return MisbehavingError{10, "failed to decrypt"};
                 }
             }
 
             CBLSSecretKey secretKeyShare = blsWorker.AggregateSecretKeys(vecSecretKeys);
             if (!pQuorum->SetSecretKeyShare(secretKeyShare, *m_mn_activeman)) {
-                return errorHandler("Invalid secret key share received");
+                return MisbehavingError{10, "invalid secret key share received"};
             }
         }
         WITH_LOCK(cs_db, pQuorum->WriteContributions(*db));
