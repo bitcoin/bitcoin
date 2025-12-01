@@ -86,6 +86,7 @@ class AddrReceiver(P2PInterface):
 class SelfAnnoucementReceiver(P2PInterface):
     self_announcements_received = 0
     addresses_received = 0
+    addr_messages_received = 0
     expected = None
 
     def __init__(self, expected):
@@ -93,9 +94,15 @@ class SelfAnnoucementReceiver(P2PInterface):
         self.expected = expected
 
     def on_addr(self, message):
+        self.addr_messages_received += 1
         for addr in message.addrs:
             self.addresses_received += 1
             if addr == self.expected:
+                # The self-annoucement should be in its own message without
+                # any other addresses AND this message should be the first addr
+                # message we receive.
+                assert_equal(len(message.addrs), 1)
+                assert_equal(self.addr_messages_received, 1)
                 self.self_announcements_received += 1
 
 class AddrTest(BitcoinTestFramework):
