@@ -4,11 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test for assumeutxo wallet related behavior.
 See feature_assumeutxo.py for background.
-
-## Possible test improvements
-
-- TODO: test loading a wallet (backup) on a pruned node
-
 """
 from test_framework.address import address_to_scriptpubkey
 from test_framework.descriptors import descsum_create
@@ -53,6 +48,49 @@ class AssumeutxoTest(BitcoinTestFramework):
                            "label": "Descriptor import test"}]
         wrpc = node.get_wallet_rpc(wallet_name)
         return wrpc.importdescriptors(import_request)
+
+    def test_pruned_wallet_backup(self):
+        """Test loading a wallet backup on a pruned node with assumeutxo."""
+        self.log.info("Test loading wallet backup on a pruned node")
+        n0 = self.nodes[0]
+        n1 = self.nodes[1]
+        
+        # Restart n1 with pruning enabled
+        self.restart_node(1, extra_args=["-prune=1", "-fastprune=1"])
+        
+        # Create a wallet and backup on n1
+        n1.createwallet('pruned_wallet')
+        pruned_wallet = n1.get_wallet_rpc('pruned_wallet')
+        pruned_address = pruned_wallet.getnewaddress()
+        
+        # Connect nodes so n1 can sync
+        self.connect_nodes(0, 1)
+        self.sync_blocks(nodes=(n0, n1))
+        
+        # Generate blocks on n1 and send some coins to the wallet
+        w_skp = address_to_scriptpubkey(pruned_address)
+        for i in range(5):
+            self.mini_wallet.send_to(from_node=n1, scriptPubKey=w_skp, amount=1 * COIN)
+            self.generate(n1, nblocks=1, sync_fun=self.no_op)
+        
+        # Create backup at current height
+        backup_path = n1.datadir_path / 'pruned_wallet_backup.dat'
+        pruned_wallet.backupwallet(str(backup_path))
+        
+        # Generate many more blocks to allow pruning
+        self.generate(n1, nblocks=300, sync_fun=self.no_op)
+        
+        # Prune blocks on n1
+        n1.pruneblockchain(250)
+        
+        # Restore wallet from backup on the pruned node
+        n1.restorewallet('restored_pruned_wallet', str(backup_path))
+        restored_wallet = n1.get_wallet_rpc('restored_pruned_wallet')
+        
+        # Verify the wallet was restored successfully
+        assert_equal(restored_wallet.getbalance(), 5)
+        
+        self.log.info("Successfully loaded wallet backup on pruned node")
 
     def run_test(self):
         """
@@ -228,6 +266,8 @@ class AssumeutxoTest(BitcoinTestFramework):
         n1.loadwallet(wallet_name)
         result = self.import_descriptor(n1, wallet_name, key, timestamp)
         assert_equal(result[0]['success'], True)
+
+        self.test_pruned_wallet_backup()
 
 
 if __name__ == '__main__':
