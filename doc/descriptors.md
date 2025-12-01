@@ -45,6 +45,7 @@ Output descriptors currently support:
 - Any type of supported address through the `addr` function.
 - Raw hex scripts through the `raw` function.
 - Public keys (compressed and uncompressed) in hex notation, or BIP32 extended pubkeys with derivation paths.
+- [MuSig2](https://github.com/bitcoin/bips/blob/master/bip-0327.mediawiki) key aggregation.
 - [Miniscript](https://bitcoin.sipa.be/miniscript/) expressions in `wsh` (P2WSH) and `tr` (P2TR) functions.
 
 ## Examples
@@ -107,6 +108,7 @@ Descriptors consist of several types of expressions. The top level expression is
       - No more than one of these derivation steps may be of the form `<NUM;NUM;...;NUM>` (including hardened indicators with either or both `NUM`). If such specifiers are included, the descriptor will be parsed as multiple descriptors where the first descriptor uses all of the first `NUM` in the pair, and the second descriptor uses the second `NUM` in the pair for all `KEY` expressions, and so on.
     - Optionally followed by a single `/*` or `/*'` final step to denote all (direct) unhardened or hardened children.
     - The usage of hardened derivation steps requires providing the private key.
+  - `musig(KEY,KEY,...)` to represent the MuSig2 key aggregation of the relevant keys, only inside `tr()` expressions. It may be followed by unhardened `/NUM` derivation steps if all `KEY` subexpressions are xpubs or derived thereof, and none use `/*` or `/<NUM;NUM;...>`.
 
 (Anywhere a `'` suffix is permitted to denote hardened derivation, the suffix `h` can be used instead.)
 
