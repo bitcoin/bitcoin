@@ -427,11 +427,11 @@ void LegacyScriptPubKeyMan::GenerateNewHDChain(const SecureString& secureMnemoni
     }
 }
 
-bool LegacyScriptPubKeyMan::LoadHDChain(const CHDChain& chain)
+bool LegacyScriptPubKeyMan::LoadHDChain(const CHDChain& chain, bool skip_encryption_check)
 {
     LOCK(cs_KeyStore);
 
-    if (m_storage.HasEncryptionKeys() != chain.IsCrypted()) return false;
+    if (!skip_encryption_check && m_storage.HasEncryptionKeys() != chain.IsCrypted()) return false;
 
     m_hd_chain = chain;
     return true;
