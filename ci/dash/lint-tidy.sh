@@ -50,6 +50,7 @@ iwyu_tool.py \
   "src/util/url.cpp" \
   -p . "${MAKEJOBS}" \
   -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_ROOT_DIR}/contrib/devtools/iwyu/bitcoin.core.imp" \
+  -Xiwyu --max_line_length=160 \
   2>&1 | tee "/tmp/iwyu_ci.out"
 
 cd "${BASE_ROOT_DIR}/build-ci/dashcore-${BUILD_TARGET}/src"
