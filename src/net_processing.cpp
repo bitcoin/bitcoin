@@ -5328,7 +5328,20 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
         }
         if (std::optional<CService> local_service = GetLocalAddrForPeer(node)) {
             CAddress local_addr{*local_service, peer.m_our_services, Now<NodeSeconds>()};
-            PushAddress(peer, local_addr);
+            if (peer.m_next_local_addr_send == 0us) {
+                // Send the initial self-announcement in its own message. This makes sure
+                // rate-limiting with limited start-tokens doesn't ignore it if the first
+                // message ends up containing multiple addresses.
+                std::vector<CAddress> self_announcement {local_addr};
+                if (peer.m_wants_addrv2) {
+                    MakeAndPushMessage(node, NetMsgType::ADDRV2, CAddress::V2_NETWORK(self_announcement));
+                } else {
+                    MakeAndPushMessage(node, NetMsgType::ADDR, CAddress::V1_NETWORK(self_announcement));
+                }
+            } else {
+                // All later self-announcements are sent together with the other addresses.
+                PushAddress(peer, local_addr);
+            }
         }
         peer.m_next_local_addr_send = current_time + m_rng.rand_exp_duration(AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL);
     }
