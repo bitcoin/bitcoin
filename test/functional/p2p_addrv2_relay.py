@@ -69,13 +69,33 @@ def calc_addrv2_msg_size(addrs):
         size += 2  # port
     return size
 
+class SelfAnnoucementReceiver(P2PInterface):
+    self_announcements_received = 0
+    addresses_received = 0
+    addr_messages_received = 0
+    expected = None
+
+    def __init__(self, expected):
+        super().__init__(support_addrv2 = True)
+        self.expected = expected
+
+    def on_addrv2(self, message):
+        self.addr_messages_received += 1
+        for addr in message.addrs:
+            self.addresses_received += 1
+            if addr == self.expected:
+                self.self_announcements_received += 1
+
 class AddrTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [["-whitelist=addr@127.0.0.1"]]
 
     def run_test(self):
+        self.addrv2_relay_tests()
+        self.self_annoucement_test()
+
+    def addrv2_relay_tests(self):
         self.log.info('Check disconnection when sending sendaddrv2 after verack')
         conn = self.nodes[0].add_p2p_connection(P2PInterface())
         with self.nodes[0].assert_debug_log(['sendaddrv2 received after verack, disconnecting peer=0']):
@@ -107,7 +127,34 @@ class AddrTest(BitcoinTestFramework):
             addr_source.send_without_ping(msg)
             addr_source.wait_for_disconnect()
 
+    def self_annoucement_test(self):
+        IP_TO_ANNOUNCE = "42.42.42.42"
+        self.restart_node(0, [f"-externalip={IP_TO_ANNOUNCE}"])
+        self.log.info('Test that the node does an address self-annoucement')
 
+        # We only self-announce after initial block download is done
+        assert(not self.nodes[0].getblockchaininfo()["initialblockdownload"])
+
+        # Use mocktime to freeze time to make sure we can always match the
+        # timestamp in the self-annoucement.
+        self.mocktime = int(time.time())
+        self.nodes[0].setmocktime(self.mocktime)
+
+        port = self.nodes[0].getnetworkinfo()["localaddresses"][0]["port"]
+        expected = CAddress()
+        expected.nServices = 1033
+        expected.ip = IP_TO_ANNOUNCE
+        expected.port = port
+        expected.time = self.mocktime
+
+        with self.nodes[0].assert_debug_log([f'Advertising address {IP_TO_ANNOUNCE}:{port}']):
+            addr_receiver = self.nodes[0].add_p2p_connection(SelfAnnoucementReceiver(expected=expected))
+            addr_receiver.sync_with_ping()
+
+        # We expect one self-annoucement and multiple other addresses in
+        # response to a GETADDR.
+        assert_equal(addr_receiver.self_announcements_received, 1)
+        assert_greater_than(addr_receiver.addresses_received, 1)
 
 if __name__ == '__main__':
     AddrTest(__file__).main()

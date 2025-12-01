@@ -83,6 +83,20 @@ class AddrReceiver(P2PInterface):
     def getaddr_received(self):
         return self.message_count['getaddr'] > 0
 
+class SelfAnnoucementReceiver(P2PInterface):
+    self_announcements_received = 0
+    addresses_received = 0
+    expected = None
+
+    def __init__(self, expected):
+        super().__init__()
+        self.expected = expected
+
+    def on_addr(self, message):
+        for addr in message.addrs:
+            self.addresses_received += 1
+            if addr == self.expected:
+                self.self_announcements_received += 1
 
 class AddrTest(BitcoinTestFramework):
     counter = 0
@@ -105,6 +119,7 @@ class AddrTest(BitcoinTestFramework):
         self.getaddr_tests()
         self.blocksonly_mode_tests()
         self.rate_limit_tests()
+        self.self_annoucement_test()
 
     def setup_addr_msg(self, num, sequential_ips=True):
         addrs = []
@@ -438,6 +453,35 @@ class AddrTest(BitcoinTestFramework):
         # ADDR_DESTINATIONS_THRESHOLD nodes should have received ADDR.
         assert_greater_than(len(nodes_received_addr), ADDR_DESTINATIONS_THRESHOLD)
         self.nodes[0].disconnect_p2ps()
+
+    def self_annoucement_test(self):
+        IP_TO_ANNOUNCE = "42.42.42.42"
+        self.restart_node(0, [f"-externalip={IP_TO_ANNOUNCE}"])
+        self.log.info('Test that the node does an address self-annoucement')
+
+        # We only self-announce after initial block download is done
+        assert(not self.nodes[0].getblockchaininfo()["initialblockdownload"])
+
+        # Use mocktime to freeze time to make sure we can always match the
+        # timestamp in the self-annoucement.
+        self.mocktime = int(time.time())
+        self.nodes[0].setmocktime(self.mocktime)
+
+        port = self.nodes[0].getnetworkinfo()["localaddresses"][0]["port"]
+        expected = CAddress()
+        expected.nServices = 1033
+        expected.ip = IP_TO_ANNOUNCE
+        expected.port = port
+        expected.time = self.mocktime
+
+        with self.nodes[0].assert_debug_log([f'Advertising address {IP_TO_ANNOUNCE}:{port}']):
+            addr_receiver = self.nodes[0].add_p2p_connection(SelfAnnoucementReceiver(expected=expected))
+            addr_receiver.sync_with_ping()
+
+        # We expect one self-annoucement and multiple other addresses in
+        # response to a GETADDR.
+        assert_equal(addr_receiver.self_announcements_received, 1)
+        assert_greater_than(addr_receiver.addresses_received, 1)
 
 
 if __name__ == '__main__':
