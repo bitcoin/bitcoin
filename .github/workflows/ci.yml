@@ -359,25 +359,13 @@ jobs:
         run: echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
   windows-cross:
-    name: 'Windows-cross to x86_64, ${{ matrix.crt }}'
+    name: 'Windows-cross to x86_64, UCRT'
     needs: [runners, record-frozen-commit]
     runs-on: ${{ needs.runners.outputs.provider == 'cirrus' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm' || 'ubuntu-24.04' }}
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
 
-    strategy:
-      fail-fast: false
-      matrix:
-        crt: [msvcrt, ucrt]
-        include:
-          - crt: msvcrt
-            file-env: './ci/test/00_setup_env_win64_msvcrt.sh'
-            artifact-name: 'x86_64-w64-mingw32-executables'
-          - crt: ucrt
-            file-env: './ci/test/00_setup_env_win64.sh'
-            artifact-name: 'x86_64-w64-mingw32ucrt-executables'
-
     env:
-      FILE_ENV: ${{ matrix.file-env }}
+      FILE_ENV: './ci/test/00_setup_env_win64.sh'
       DANGER_CI_ON_HOST_FOLDERS: 1
 
     steps:
@@ -409,7 +397,7 @@ jobs:
       - name: Upload built executables
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact-name }}-${{ github.run_id }}
+          name: x86_64-w64-mingw32ucrt-executables-${{ github.run_id }}
           path: |
             ${{ env.BASE_BUILD_DIR }}/bin/*.dll
             ${{ env.BASE_BUILD_DIR }}/bin/*.exe
@@ -418,19 +406,9 @@ jobs:
             ${{ env.BASE_BUILD_DIR }}/test/config.ini
 
   windows-native-test:
-    name: 'Windows, ${{ matrix.crt }}, test cross-built'
+    name: 'Windows, UCRT, test cross-built'
     runs-on: windows-2022
     needs: [windows-cross, record-frozen-commit]
-
-    strategy:
-      fail-fast: false
-      matrix:
-        crt: [msvcrt, ucrt]
-        include:
-          - crt: msvcrt
-            artifact-name: 'x86_64-w64-mingw32-executables'
-          - crt: ucrt
-            artifact-name: 'x86_64-w64-mingw32ucrt-executables'
 
     env:
       PYTHONUTF8: 1
@@ -447,7 +425,7 @@ jobs:
       - name: Download built executables
         uses: actions/download-artifact@v5
         with:
-          name: ${{ matrix.artifact-name }}-${{ github.run_id }}
+          name: x86_64-w64-mingw32ucrt-executables-${{ github.run_id }}
 
       - name: Run bitcoind.exe
         run: ./bin/bitcoind.exe -version
