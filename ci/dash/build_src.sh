@@ -13,20 +13,6 @@ source ./ci/dash/matrix.sh
 
 unset CC CXX DISPLAY;
 
-if [ "$PULL_REQUEST" != "false" ]; then test/lint/commit-script-check.sh "$COMMIT_RANGE"; fi
-
-if [ "$CHECK_DOC" = 1 ]; then
-    # TODO: Verify subtrees
-    #test/lint/git-subtree-check.sh src/crypto/ctaes
-    #test/lint/git-subtree-check.sh src/secp256k1
-    #test/lint/git-subtree-check.sh src/univalue
-    #test/lint/git-subtree-check.sh src/leveldb
-    # TODO: Check docs (re-enable after all Bitcoin PRs have been merged and docs fully fixed)
-    #test/lint/check-doc.py
-    # Run all linters
-    test/lint/all-lint.py
-fi
-
 ccache --zero-stats
 
 if [ -n "$CONFIG_SHELL" ]; then

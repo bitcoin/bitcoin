@@ -34,6 +34,7 @@ ENV APT_ARGS="-y --no-install-recommends --no-upgrade"
 # Packages needed for builds and tests
 RUN set -ex; \
     apt-get update && apt-get install ${APT_ARGS} \
+    bsdmainutils \
     build-essential \
     ca-certificates \
     curl \
@@ -45,6 +46,7 @@ RUN set -ex; \
     libsqlite3-dev \
     libssl-dev \
     make \
+    parallel \
     xz-utils \
     zlib1g-dev \
     zstd \

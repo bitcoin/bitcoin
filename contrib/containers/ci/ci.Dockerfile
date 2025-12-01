@@ -15,7 +15,6 @@ RUN set -ex; \
     bc \
     bear \
     bison \
-    bsdmainutils \
     ccache \
     cmake \
     g++-11 \
@@ -26,7 +25,6 @@ RUN set -ex; \
     gettext \
     libtool \
     m4 \
-    parallel \
     pkg-config \
     wine-stable \
     wine64 \

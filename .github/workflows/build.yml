@@ -120,9 +120,9 @@ jobs:
   lint:
     name: Lint
     uses: ./.github/workflows/lint.yml
-    needs: [container]
+    needs: [container-slim]
     with:
-      container-path: ${{ needs.container.outputs.path }}
+      container-path: ${{ needs.container-slim.outputs.path }}
 
   src-arm-linux:
     name: arm-linux-build
