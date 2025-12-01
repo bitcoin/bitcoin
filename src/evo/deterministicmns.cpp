@@ -32,6 +32,7 @@
 static const std::string DB_LIST_SNAPSHOT = "dmn_S3";
 static const std::string DB_LIST_DIFF = "dmn_D4";        // Bumped for nVersion-first format
 static const std::string DB_LIST_DIFF_LEGACY = "dmn_D3"; // Legacy format key
+static const std::string DB_LIST_REPAIRED = "dmn_R1";
 
 uint64_t CDeterministicMN::GetInternalId() const
 {
@@ -1679,6 +1680,20 @@ CDeterministicMNManager::RecalcDiffsResult CDeterministicMNManager::RecalculateA
     }
 
     return result;
+}
+
+bool CDeterministicMNManager::IsRepaired() const { return m_evoDb.Exists(DB_LIST_REPAIRED); }
+
+void CDeterministicMNManager::CompleteRepair()
+{
+    auto dbTx = m_evoDb.BeginTransaction();
+    m_evoDb.Write(DB_LIST_REPAIRED, 1);
+    dbTx->Commit();
+    // flush it to disk
+    if (!m_evoDb.CommitRootTransaction()) {
+        LogPrintf("CDeterministicMNManager::%s -- Failed to commit to evoDB\n", __func__);
+        assert(false);
+    }
 }
 
 std::vector<const CBlockIndex*> CDeterministicMNManager::CollectSnapshotBlocks(

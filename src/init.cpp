@@ -81,9 +81,11 @@
 #include <coinjoin/context.h>
 #include <coinjoin/server.h>
 #include <dsnotificationinterface.h>
+#include <evo/chainhelper.h>
 #include <evo/deterministicmns.h>
 #include <evo/evodb.h>
 #include <evo/mnhftx.h>
+#include <evo/specialtxman.h>
 #include <flat-database.h>
 #include <governance/governance.h>
 #include <instantsend/instantsend.h>
@@ -719,6 +721,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-checkmempool=<n>", strprintf("Run mempool consistency checks every <n> transactions. Use 0 to disable. (default: %u, regtest: %u)", defaultChainParams->DefaultConsistencyChecks(), regtestChainParams->DefaultConsistencyChecks()), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-checkpoints", strprintf("Enable rejection of any forks from the known historical chain until block %s (default: %u)", defaultChainParams->Checkpoints().GetHeight(), DEFAULT_CHECKPOINTS_ENABLED), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-deprecatedrpc=<method>", "Allows deprecated RPC method(s) to be used", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
+    argsman.AddArg("-forceevodbrepair", "Force evodb masternode list diff verification and repair on startup, even if already repaired (default: 0)", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-limitancestorcount=<n>", strprintf("Do not accept transactions if number of in-mempool ancestors is <n> or more (default: %u)", DEFAULT_ANCESTOR_LIMIT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-limitancestorsize=<n>", strprintf("Do not accept transactions whose size with all in-mempool ancestors exceeds <n> kilobytes (default: %u)", DEFAULT_ANCESTOR_SIZE_LIMIT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-limitdescendantcount=<n>", strprintf("Do not accept transactions if any ancestor would have <n> or more in-mempool descendants (default: %u)", DEFAULT_DESCENDANT_LIMIT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
@@ -2346,6 +2349,53 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 GetUTXOCoin(chainman.ActiveChainstate(), dmn.collateralOutpoint, coin);
             });
             LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
+        }
+
+        if (fReindex || fReindexChainState) {
+            LogPrintf("Skipping evodb repair during reindex\n");
+            node.dmnman->CompleteRepair();  // Mark as repaired since we're rebuilding fresh
+        } else if (node.dmnman->IsRepaired() && !args.GetBoolArg("-forceevodbrepair", false)) {
+            LogPrintf("Masternode list diffs are already repaired\n");
+        } else {
+            const CBlockIndex* start_index;
+            const CBlockIndex* stop_index;
+            {
+                LOCK(cs_main);
+                const auto& consensus_params = Params().GetConsensus();
+                start_index = chainman.ActiveChain()[consensus_params.DIP0003Height];
+                stop_index = chainman.ActiveChain().Tip();
+            }
+
+            if (start_index && stop_index && start_index->nHeight < stop_index->nHeight) {
+                LogPrintf("Verifying and repairing masternode list diffs...\n");
+                const auto start{SteadyClock::now()};
+                // Create a callback that wraps CSpecialTxProcessor::BuildNewListFromBlock
+                auto build_list_func = [&node](const CBlock& block, gsl::not_null<const CBlockIndex*> pindexPrev,
+                                                       const CDeterministicMNList& prevList, const CCoinsViewCache& view,
+                                                       bool debugLogs, BlockValidationState& state,
+                                                       CDeterministicMNList& mnListRet) -> bool {
+                    return node.chain_helper->special_tx->RebuildListFromBlock(block, pindexPrev, prevList, view, debugLogs, state, mnListRet);
+                };
+                auto result = node.dmnman->RecalculateAndRepairDiffs(start_index, stop_index, chainman, build_list_func, true);
+
+                if (!result.verification_errors.empty()) {
+                    LogPrintf("WARNING: Verification errors:\n%s\n", Join(result.verification_errors, "\n"));
+                }
+
+                if (!result.repair_errors.empty()) {
+                    // Critical errors occurred - reindex required
+                    LogPrintf("Failed to repair masternode list diffs. Database corruption detected. " /* Continued */
+                              "Please restart with -reindex to rebuild the database.\n"
+                              "Errors:\n%s\n",
+                              Join(result.repair_errors, "\n"));
+                    StartShutdown();
+                    return;
+                }
+                node.dmnman->CompleteRepair();
+                LogPrintf("Successfully repaired %d masternode list diffs, verified %d snapshots in %ds\n",
+                          result.diffs_recalculated, result.snapshots_verified,
+                          Ticks<std::chrono::seconds>(SteadyClock::now() - start));
+            }
         }
 
         if (node.mn_activeman != nullptr) {
