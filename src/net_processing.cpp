@@ -412,6 +412,30 @@ struct Peer {
      * timestamp the peer sent in the version message. */
     std::atomic<std::chrono::seconds> m_time_offset{0s};
 
+    /** Connection time - Unix epoch time at peer connection.
+     *  This is a copy of CNode::m_connected, needed by PeerManager for eviction logic. */
+    std::chrono::seconds m_connected{0s};
+
+    /** UNIX epoch time of the last block received from this peer that we had
+     *  not yet seen (e.g. not already received from another peer), that passed
+     *  preliminary validity checks and was saved to disk, even if we don't
+     *  connect the block or it eventually fails connection. Used as an inbound
+     *  peer eviction criterium. This is a copy of CNode::m_last_block_time. */
+    std::atomic<std::chrono::seconds> m_last_block_time{0s};
+
+    /** Whether this peer should be disconnected.
+     *  Setting this to true will cause the node to be disconnected the
+     *  next time DisconnectNodes() runs. This is a copy of CNode::fDisconnect. */
+    std::atomic_bool m_disconnect{false};
+
+    /** Whether sending to this peer should be paused.
+     *  This is a copy of CNode::fPauseSend, used to prevent sending when buffer is full. */
+    std::atomic_bool m_pause_send{false};
+
+    /** We selected peer as (compact blocks) high-bandwidth peer (BIP152).
+     *  This is a copy of CNode::m_bip152_highbandwidth_to. */
+    std::atomic<bool> m_bip152_highbandwidth_to{false};
+
     explicit Peer(NodeId id, ServiceFlags our_services, bool is_inbound)
         : m_id{id}
         , m_our_services{our_services}
@@ -1298,7 +1322,7 @@ void PeerManagerImpl::MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid)
         }
         MakeAndPushMessage(*pfrom, NetMsgType::SENDCMPCT, /*high_bandwidth=*/true, /*version=*/CMPCTBLOCKS_VERSION);
         // save BIP152 bandwidth state: we select peer to be high-bandwidth
-        pfrom->m_bip152_highbandwidth_to = true;
+        peer->m_bip152_highbandwidth_to = true;
         lNodesAnnouncingHeaderAndIDs.push_back(pfrom->GetId());
         return true;
     });
@@ -1564,6 +1588,12 @@ void PeerManagerImpl::InitializeNode(const CNode& node, ServiceFlags our_service
     }
 
     PeerRef peer = std::make_shared<Peer>(nodeid, our_services, node.IsInboundConn());
+    // Copy connection-related state from CNode to Peer
+    peer->m_connected = node.m_connected;
+    peer->m_last_block_time = node.m_last_block_time.load();
+    peer->m_disconnect = node.fDisconnect.load();
+    peer->m_pause_send = node.fPauseSend.load();
+    peer->m_bip152_highbandwidth_to = node.m_bip152_highbandwidth_to.load();
     {
         LOCK(m_peer_mutex);
         m_peer_map.emplace_hint(m_peer_map.end(), nodeid, peer);
@@ -3293,6 +3323,11 @@ void PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlo
     m_chainman.ProcessNewBlock(block, force_processing, min_pow_checked, &new_block);
     if (new_block) {
         node.m_last_block_time = GetTime<std::chrono::seconds>();
+        // Sync to Peer structure
+        PeerRef peer = GetPeerRef(node.GetId());
+        if (peer != nullptr) {
+            peer->m_last_block_time = node.m_last_block_time.load();
+        }
         // In case this block came from a different peer than we requested
         // from, we can erase the block request now anyway (as we just stored
         // this block to disk).
@@ -4996,7 +5031,7 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
 
     const bool processed_orphan = ProcessOrphanTx(*peer);
 
-    if (pfrom->fDisconnect)
+    if (peer->m_disconnect)
         return false;
 
     if (processed_orphan) return true;
@@ -5009,7 +5044,7 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     }
 
     // Don't bother if send buffer is too full to respond anyway
-    if (pfrom->fPauseSend) return false;
+    if (peer->m_pause_send) return false;
 
     auto poll_result{pfrom->PollMessage()};
     if (!poll_result) {
@@ -5129,10 +5164,12 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
 
         m_connman.ForEachNode([&](CNode* pnode) {
             if (!pnode->IsBlockOnlyConn() || pnode->fDisconnect) return;
+            PeerRef peer = GetPeerRef(pnode->GetId());
+            if (peer == nullptr) return;
             if (pnode->GetId() > youngest_peer.first) {
                 next_youngest_peer = youngest_peer;
                 youngest_peer.first = pnode->GetId();
-                youngest_peer.second = pnode->m_last_block_time;
+                youngest_peer.second = peer->m_last_block_time;
             }
         });
         NodeId to_disconnect = youngest_peer.first;
@@ -5148,16 +5185,19 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
             // at all.
             // Note that we only request blocks from a peer if we learn of a
             // valid headers chain with at least as much work as our tip.
+            PeerRef peer = GetPeerRef(pnode->GetId());
+            if (peer == nullptr) return false;
             CNodeState *node_state = State(pnode->GetId());
             if (node_state == nullptr ||
-                (now - pnode->m_connected >= MINIMUM_CONNECT_TIME && node_state->vBlocksInFlight.empty())) {
-                pnode->fDisconnect = true;
+                (now - peer->m_connected >= MINIMUM_CONNECT_TIME && node_state->vBlocksInFlight.empty())) {
+                peer->m_disconnect = true;
+                pnode->fDisconnect = true; // Keep in sync with Peer
                 LogDebug(BCLog::NET, "disconnecting extra block-relay-only peer=%d (last block received at time %d)\n",
-                         pnode->GetId(), count_seconds(pnode->m_last_block_time));
+                         pnode->GetId(), count_seconds(peer->m_last_block_time));
                 return true;
             } else {
                 LogDebug(BCLog::NET, "keeping block-relay-only peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n",
-                         pnode->GetId(), count_seconds(pnode->m_connected), node_state->vBlocksInFlight.size());
+                         pnode->GetId(), count_seconds(peer->m_connected), node_state->vBlocksInFlight.size());
             }
             return false;
         });
@@ -5179,7 +5219,9 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
 
             // Only consider outbound-full-relay peers that are not already
             // marked for disconnection
-            if (!pnode->IsFullOutboundConn() || pnode->fDisconnect) return;
+            PeerRef peer = GetPeerRef(pnode->GetId());
+            if (peer == nullptr) return;
+            if (!pnode->IsFullOutboundConn() || peer->m_disconnect) return;
             CNodeState *state = State(pnode->GetId());
             if (state == nullptr) return; // shouldn't be possible, but just in case
             // Don't evict our protected peers
@@ -5201,14 +5243,17 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
                 // it time for new information to have arrived.
                 // Also don't disconnect any peer we're trying to download a
                 // block from.
+                PeerRef peer = GetPeerRef(pnode->GetId());
+                if (peer == nullptr) return false;
                 CNodeState &state = *State(pnode->GetId());
-                if (now - pnode->m_connected > MINIMUM_CONNECT_TIME && state.vBlocksInFlight.empty()) {
+                if (now - peer->m_connected > MINIMUM_CONNECT_TIME && state.vBlocksInFlight.empty()) {
                     LogDebug(BCLog::NET, "disconnecting extra outbound peer=%d (last block announcement received at time %d)\n", pnode->GetId(), oldest_block_announcement);
-                    pnode->fDisconnect = true;
+                    peer->m_disconnect = true;
+                    pnode->fDisconnect = true; // Keep in sync with Peer
                     return true;
                 } else {
                     LogDebug(BCLog::NET, "keeping outbound peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n",
-                             pnode->GetId(), count_seconds(pnode->m_connected), state.vBlocksInFlight.size());
+                             pnode->GetId(), count_seconds(peer->m_connected), state.vBlocksInFlight.size());
                     return false;
                 }
             });
