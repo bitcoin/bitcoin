@@ -219,10 +219,10 @@ jobs:
         include:
           - job-type: standard
             generate-options: '-DBUILD_BENCH=ON -DBUILD_KERNEL_LIB=ON -DBUILD_UTIL_CHAINSTATE=ON -DWERROR=ON'
-            job-name: 'Windows native, VS 2022'
+            job-name: 'Windows native, VS'
           - job-type: fuzz
             generate-options: '-DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="wallet" -DBUILD_GUI=OFF -DWITH_ZMQ=OFF -DBUILD_FOR_FUZZING=ON -DWERROR=ON'
-            job-name: 'Windows native, fuzz, VS 2022'
+            job-name: 'Windows native, fuzz, VS'
 
     steps:
       - *ANNOTATION_PR_NUMBER
@@ -272,7 +272,7 @@ jobs:
 
       - name: Generate build system
         run: |
-          cmake -B build -Werror=dev --preset vs2022 -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" ${{ matrix.generate-options }}
+          cmake -B build -Werror=dev --preset vs2026 -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" ${{ matrix.generate-options }}
 
       - name: Save vcpkg binary cache
         uses: actions/cache/save@v4
