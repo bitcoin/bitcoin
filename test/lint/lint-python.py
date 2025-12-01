@@ -126,7 +126,7 @@ def main():
         exit(1)
 
     mypy_files = subprocess.check_output(FILES_ARGS).decode("utf-8").splitlines()
-    mypy_args = ['mypy', '--ignore-missing-imports', '--show-error-codes'] + mypy_files
+    mypy_args = ['mypy', '--show-error-codes'] + mypy_files
 
     try:
         subprocess.check_call(mypy_args)

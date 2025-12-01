@@ -10,7 +10,8 @@ import os
 import sys
 import subprocess
 import hashlib
-from PIL import Image  # pip3 install Pillow
+# pip3 install Pillow
+from PIL import Image # type: ignore[import]
 
 def file_hash(filename):
     '''Return hash of raw file contents'''
