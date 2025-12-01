@@ -208,7 +208,7 @@ public:
         LOCK(cs_vvec_shShare);
         quorumVvec = std::move(vvec_in);
     }
-    bool SetSecretKeyShare(const CBLSSecretKey& secretKeyShare, const CActiveMasternodeManager& mn_activeman)
+    bool SetSecretKeyShare(const CBLSSecretKey& secretKeyShare, const uint256& protx_hash)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_vvec_shShare);
 
     bool HasVerificationVector() const EXCLUSIVE_LOCKS_REQUIRED(!cs_vvec_shShare);
@@ -342,6 +342,7 @@ private:
                                          gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
                                          bool populate_cache) const EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_map_quorums);
     bool BuildQuorumContributions(const CFinalCommitmentPtr& fqc, const std::shared_ptr<CQuorum>& quorum) const;
+    bool SetQuorumSecretKeyShare(CQuorum& quorum, Span<CBLSSecretKey> skContributions) const;
 
     CQuorumCPtr GetQuorum(Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pindex,
                           bool populate_cache = true) const EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_map_quorums);

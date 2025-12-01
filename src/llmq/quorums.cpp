@@ -94,9 +94,9 @@ bool CQuorum::SetVerificationVector(const std::vector<CBLSPublicKey>& quorumVecI
     return true;
 }
 
-bool CQuorum::SetSecretKeyShare(const CBLSSecretKey& secretKeyShare, const CActiveMasternodeManager& mn_activeman)
+bool CQuorum::SetSecretKeyShare(const CBLSSecretKey& secretKeyShare, const uint256& protx_hash)
 {
-    if (!secretKeyShare.IsValid() || (secretKeyShare.GetPublicKey() != GetPubKeyShare(GetMemberIndex(mn_activeman.GetProTxHash())))) {
+    if (!secretKeyShare.IsValid() || (secretKeyShare.GetPublicKey() != GetPubKeyShare(GetMemberIndex(protx_hash)))) {
         return false;
     }
     LOCK(cs_vvec_shShare);
@@ -460,7 +460,7 @@ bool CQuorumManager::BuildQuorumContributions(const CFinalCommitmentPtr& fqc, co
         // allows to use the quorum as a non-member (verification through the quorum pub key)
         return false;
     }
-    if (!quorum->SetSecretKeyShare(blsWorker.AggregateSecretKeys(skContributions), *m_mn_activeman)) {
+    if (m_mn_activeman && !SetQuorumSecretKeyShare(*quorum, skContributions)) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- failed to build skShare\n", __func__);
         // We don't bail out here as this is not a fatal error and still allows us to recover public key shares (as we
         // have a valid quorum vvec at this point)
@@ -470,6 +470,12 @@ bool CQuorumManager::BuildQuorumContributions(const CFinalCommitmentPtr& fqc, co
     LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- built quorum vvec and skShare. time=%d\n", __func__, t2.count());
 
     return true;
+}
+
+bool CQuorumManager::SetQuorumSecretKeyShare(CQuorum& quorum, Span<CBLSSecretKey> skContributions) const
+{
+    assert(m_mn_activeman);
+    return quorum.SetSecretKeyShare(blsWorker.AggregateSecretKeys(skContributions), m_mn_activeman->GetProTxHash());
 }
 
 bool CQuorumManager::HasQuorum(Consensus::LLMQType llmqType, const CQuorumBlockProcessor& quorum_block_processor, const uint256& quorumHash)
@@ -758,8 +764,7 @@ MessageProcessingResult CQuorumManager::ProcessContribQDATA(CNode& pfrom, CDataS
             }
         }
 
-        CBLSSecretKey secretKeyShare = blsWorker.AggregateSecretKeys(vecSecretKeys);
-        if (!quorum.SetSecretKeyShare(secretKeyShare, *m_mn_activeman)) {
+        if (!quorum.SetSecretKeyShare(blsWorker.AggregateSecretKeys(vecSecretKeys), m_mn_activeman->GetProTxHash())) {
             return MisbehavingError{10, "invalid secret key share received"};
         }
     }
