@@ -255,7 +255,7 @@ static void BLS_Verify_Batched(benchmark::Bench& bench)
     std::vector<CBLSSignature> sigs;
     std::vector<uint256> msgHashes;
     std::vector<bool> invalid;
-    BuildTestVectors(bench.output() ? 1000 : 1, 10, pubKeys, secKeys, sigs, msgHashes, invalid);
+    BuildTestVectors(bench.output() ? 1000 : 1, bench.output() ? 10 : 1, pubKeys, secKeys, sigs, msgHashes, invalid);
 
     // Benchmark.
     size_t i = 0;
@@ -311,7 +311,7 @@ static void BLS_Verify_BatchedParallel(benchmark::Bench& bench)
     std::vector<CBLSSignature> sigs;
     std::vector<uint256> msgHashes;
     std::vector<bool> invalid;
-    BuildTestVectors(bench.output() ? 1000 : 1, 10, pubKeys, secKeys, sigs, msgHashes, invalid);
+    BuildTestVectors(bench.output() ? 1000 : 1, bench.output() ? 10 : 1, pubKeys, secKeys, sigs, msgHashes, invalid);
 
     std::list<std::pair<size_t, std::future<bool>>> futures;
 

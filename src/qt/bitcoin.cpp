@@ -49,6 +49,7 @@
 #include <memory>
 
 #include <QApplication>
+#include <QDebug>
 #include <QLatin1String>
 #include <QLibraryInfo>
 #include <QLocale>
