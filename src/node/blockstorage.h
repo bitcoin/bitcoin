@@ -218,8 +218,7 @@ private:
     void FindFilesToPruneManual(
         std::set<int>& setFilesToPrune,
         int nManualPruneHeight,
-        const Chainstate& chain,
-        ChainstateManager& chainman);
+        const Chainstate& chain);
 
     /**
      * Prune block and undo files (blk???.dat and rev???.dat) so that the disk space used is less than a user-defined target.
