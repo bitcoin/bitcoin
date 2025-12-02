@@ -78,6 +78,11 @@ bool WalletBatch::WriteName(const std::string& strAddress, const std::string& st
     return WriteIC(std::make_pair(DBKeys::NAME, strAddress), strName);
 }
 
+bool WalletBatch::ReadName(const std::string& strAddress, std::string& strName)
+{
+    return m_batch->Read(std::make_pair(DBKeys::NAME, strAddress), strName);
+}
+
 bool WalletBatch::EraseName(const std::string& strAddress)
 {
     // This should only be used for sending addresses, never for receiving addresses,
@@ -88,6 +93,11 @@ bool WalletBatch::EraseName(const std::string& strAddress)
 bool WalletBatch::WritePurpose(const std::string& strAddress, const std::string& strPurpose)
 {
     return WriteIC(std::make_pair(DBKeys::PURPOSE, strAddress), strPurpose);
+}
+
+bool WalletBatch::ReadPurpose(const std::string& strAddress, std::string& strPurpose)
+{
+    return m_batch->Read(std::make_pair(DBKeys::PURPOSE, strAddress), strPurpose);
 }
 
 bool WalletBatch::ErasePurpose(const std::string& strAddress)
@@ -1119,6 +1129,9 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
     LOCK(pwallet->cs_wallet);
 
+    // Check if database is read-only
+    bool is_read_only = pwallet->GetDatabase().IsReadOnly();
+
     // Last client version to open this wallet
     int last_client = CLIENT_VERSION;
     bool has_last_client = m_batch->Read(DBKeys::VERSION, last_client);
@@ -1174,33 +1187,36 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     if (result != DBErrors::LOAD_OK)
         return result;
 
-    if (!has_last_client || last_client != CLIENT_VERSION) // Update
-        m_batch->Write(DBKeys::VERSION, CLIENT_VERSION);
+    // Skip write operations in read-only mode
+    if (!is_read_only) {
+        if (!has_last_client || last_client != CLIENT_VERSION) // Update
+            m_batch->Write(DBKeys::VERSION, CLIENT_VERSION);
 
-    if (any_unordered)
-        result = pwallet->ReorderTransactions();
+        if (any_unordered)
+            result = pwallet->ReorderTransactions();
 
-    // Upgrade all of the descriptor caches to cache the last hardened xpub
-    // This operation is not atomic, but if it fails, only new entries are added so it is backwards compatible
-    try {
-        pwallet->UpgradeDescriptorCache();
-    } catch (...) {
-        result = DBErrors::CORRUPT;
-    }
-
-    // Since it was accidentally possible to "encrypt" a wallet with private keys disabled, we should check if this is
-    // such a wallet and remove the encryption key records to avoid any future issues.
-    // Although wallets without private keys should not have *ckey records, we should double check that.
-    // Removing the mkey records is only safe if there are no *ckey records.
-    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && pwallet->HasEncryptionKeys() && !pwallet->HaveCryptedKeys()) {
-        pwallet->WalletLogPrintf("Detected extraneous encryption keys in this wallet without private keys. Removing extraneous encryption keys.\n");
-        for (const auto& [id, _] : pwallet->mapMasterKeys) {
-            if (!EraseMasterKey(id)) {
-                pwallet->WalletLogPrintf("Error: Unable to remove extraneous encryption key '%u'. Wallet corrupt.\n", id);
-                return DBErrors::CORRUPT;
-            }
+        // Upgrade all of the descriptor caches to cache the last hardened xpub
+        // This operation is not atomic, but if it fails, only new entries are added so it is backwards compatible
+        try {
+            pwallet->UpgradeDescriptorCache();
+        } catch (...) {
+            result = DBErrors::CORRUPT;
         }
-        pwallet->mapMasterKeys.clear();
+
+        // Since it was accidentally possible to "encrypt" a wallet with private keys disabled, we should check if this is
+        // such a wallet and remove the encryption key records to avoid any future issues.
+        // Although wallets without private keys should not have *ckey records, we should double check that.
+        // Removing the mkey records is only safe if there are no *ckey records.
+        if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && pwallet->HasEncryptionKeys() && !pwallet->HaveCryptedKeys()) {
+            pwallet->WalletLogPrintf("Detected extraneous encryption keys in this wallet without private keys. Removing extraneous encryption keys.\n");
+            for (const auto& [id, _] : pwallet->mapMasterKeys) {
+                if (!EraseMasterKey(id)) {
+                    pwallet->WalletLogPrintf("Error: Unable to remove extraneous encryption key '%u'. Wallet corrupt.\n", id);
+                    return DBErrors::CORRUPT;
+                }
+            }
+            pwallet->mapMasterKeys.clear();
+        }
     }
 
     return result;
