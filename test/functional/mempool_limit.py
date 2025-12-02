@@ -32,57 +32,6 @@ class MempoolLimitTest(BitcoinTestFramework):
             "-maxmempool=5",
         ]]
 
-    def test_rbf_carveout_disallowed(self):
-        node = self.nodes[0]
-
-        self.log.info("Check that individually-evaluated transactions in a package don't increase package limits for other subpackage parts")
-
-        # We set chain limits to 2 ancestors, 1 descendant, then try to get a parents-and-child chain of 2 in mempool
-        #
-        # A: Solo transaction to be RBF'd (to bump descendant limit for package later)
-        # B: First transaction in package, RBFs A by itself under individual evaluation, which would give it +1 descendant limit
-        # C: Second transaction in package, spends B. If the +1 descendant limit persisted, would make it into mempool
-
-        self.restart_node(0, extra_args=self.extra_args[0] + ["-limitancestorcount=2", "-limitdescendantcount=1"])
-
-        # Generate a confirmed utxo we will double-spend
-        rbf_utxo = self.wallet.send_self_transfer(
-            from_node=node,
-            confirmed_only=True
-        )["new_utxo"]
-        self.generate(node, 1)
-
-        # tx_A needs to be RBF'd, set minfee at set size
-        A_vsize = 250
-        mempoolmin_feerate = node.getmempoolinfo()["mempoolminfee"]
-        tx_A = self.wallet.send_self_transfer(
-            from_node=node,
-            fee_rate=mempoolmin_feerate,
-            target_vsize=A_vsize,
-            utxo_to_spend=rbf_utxo,
-            confirmed_only=True
-        )
-
-        # RBF's tx_A, is not yet submitted
-        tx_B = self.wallet.create_self_transfer(
-            fee=tx_A["fee"] * 4,
-            target_vsize=A_vsize,
-            utxo_to_spend=rbf_utxo,
-            confirmed_only=True
-        )
-
-        # Spends tx_B's output, too big for cpfp carveout (because that would also increase the descendant limit by 1)
-        non_cpfp_carveout_vsize = 10001  # EXTRA_DESCENDANT_TX_SIZE_LIMIT + 1
-        tx_C = self.wallet.create_self_transfer(
-            target_vsize=non_cpfp_carveout_vsize,
-            fee_rate=mempoolmin_feerate,
-            utxo_to_spend=tx_B["new_utxo"],
-            confirmed_only=True
-        )
-        res = node.submitpackage([tx_B["hex"], tx_C["hex"]])
-        assert_equal(res["package_msg"], "transaction failed")
-        assert "too-long-mempool-chain" in res["tx-results"][tx_C["wtxid"]]["error"]
-
     def test_mid_package_eviction_success(self):
         node = self.nodes[0]
         self.log.info("Check a package where each parent passes the current mempoolminfee but a parent could be evicted before getting child's descendant feerate")
@@ -336,7 +285,6 @@ class MempoolLimitTest(BitcoinTestFramework):
 
         self.test_mid_package_eviction_success()
         self.test_mid_package_replacement()
-        self.test_rbf_carveout_disallowed()
 
 
 if __name__ == '__main__':

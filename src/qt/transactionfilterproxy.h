@@ -44,7 +44,7 @@ private:
     std::optional<QDateTime> dateFrom;
     std::optional<QDateTime> dateTo;
     QString m_search_string;
-    quint32 typeFilter;
+    quint32 typeFilter{ALL_TYPES};
     CAmount minAmount{0};
     bool showInactive{true};
 };

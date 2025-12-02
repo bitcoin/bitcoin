@@ -13,16 +13,16 @@
 
 struct FlatFilePos
 {
-    int nFile{-1};
-    unsigned int nPos{0};
+    int32_t nFile{-1};
+    uint32_t nPos{0};
 
     SERIALIZE_METHODS(FlatFilePos, obj) { READWRITE(VARINT_MODE(obj.nFile, VarIntMode::NONNEGATIVE_SIGNED), VARINT(obj.nPos)); }
 
     FlatFilePos() = default;
 
-    FlatFilePos(int nFileIn, unsigned int nPosIn) :
-        nFile(nFileIn),
-        nPos(nPosIn)
+    FlatFilePos(int32_t nFileIn, uint32_t nPosIn)
+        : nFile{nFileIn},
+          nPos{nPosIn}
     {}
 
     friend bool operator==(const FlatFilePos &a, const FlatFilePos &b) {

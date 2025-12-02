@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2022 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mempool descendants/ancestors information update.
@@ -11,13 +11,11 @@ from decimal import Decimal
 from math import ceil
 import time
 
-from test_framework.blocktools import (
-    create_block,
-    create_coinbase,
-)
+from test_framework.blocktools import create_empty_fork
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.wallet import MiniWallet
+from test_framework.mempool_util import DEFAULT_CLUSTER_LIMIT
 
 MAX_DISCONNECTED_TX_POOL_BYTES = 20_000_000
 
@@ -27,28 +25,13 @@ CUSTOM_DESCENDANT_COUNT = CUSTOM_ANCESTOR_COUNT
 class MempoolUpdateFromBlockTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        # Ancestor and descendant limits depend on transaction_graph_test requirements
-        self.extra_args = [['-limitdescendantsize=1000', '-limitancestorsize=1000', f'-limitancestorcount={CUSTOM_ANCESTOR_COUNT}', f'-limitdescendantcount={CUSTOM_DESCENDANT_COUNT}']]
+        self.extra_args = [['-limitclustersize=1000']]
 
-    def create_empty_fork(self, fork_length):
-        '''
-            Creates a fork using first node's chaintip as the starting point.
-            Returns a list of blocks to submit in order.
-        '''
-        tip = int(self.nodes[0].getbestblockhash(), 16)
-        height = self.nodes[0].getblockcount()
-        block_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time'] + 1
-
-        blocks = []
-        for _ in range(fork_length):
-            block = create_block(tip, create_coinbase(height + 1), block_time)
-            block.solve()
-            blocks.append(block)
-            tip = block.hash_int
-            block_time += 1
-            height += 1
-
-        return blocks
+    def trigger_reorg(self, fork_blocks):
+        """Trigger reorg of the fork blocks."""
+        for block in fork_blocks:
+            self.nodes[0].submitblock(block.serialize().hex())
+        assert_equal(self.nodes[0].getbestblockhash(), fork_blocks[-1].hash_hex)
 
     def transaction_graph_test(self, size, *, n_tx_to_mine, fee=100_000):
         """Create an acyclic tournament (a type of directed graph) of transactions and use it for testing.
@@ -69,7 +52,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
 
         # Prep for fork with empty blocks to not use invalidateblock directly
         # for reorg case. The rpc has different codepath
-        fork_blocks = self.create_empty_fork(fork_length=7)
+        fork_blocks = create_empty_fork(self.nodes[0], fork_length=7)
 
         tx_id = []
         tx_size = []
@@ -146,7 +129,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getrawmempool(), [])
 
         # Set up empty fork blocks ahead of time, needs to be longer than full fork made later
-        fork_blocks = self.create_empty_fork(fork_length=60)
+        fork_blocks = create_empty_fork(self.nodes[0], fork_length=60)
 
         large_std_txs = []
         # Add children to ensure they're recursively removed if disconnectpool trimming of parent occurs
@@ -176,8 +159,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
 
         # Reorg back before the first block in the series, should drop something
         # but not all, and any time parent is dropped, child is also removed
-        for block in fork_blocks:
-            self.nodes[0].submitblock(block.serialize().hex())
+        self.trigger_reorg(fork_blocks=fork_blocks)
         mempool = self.nodes[0].getrawmempool()
         expected_parent_count = len(large_std_txs) - 2
         assert_equal(len(mempool), expected_parent_count * 2)
@@ -195,14 +177,14 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getrawmempool(), [])
 
         # Prep fork
-        fork_blocks = self.create_empty_fork(fork_length=10)
+        fork_blocks = create_empty_fork(self.nodes[0])
 
         # Two higher than descendant count
-        chain = wallet.create_self_transfer_chain(chain_length=CUSTOM_DESCENDANT_COUNT + 2)
+        chain = wallet.create_self_transfer_chain(chain_length=DEFAULT_CLUSTER_LIMIT + 2)
         for tx in chain[:-2]:
             self.nodes[0].sendrawtransaction(tx["hex"])
 
-        assert_raises_rpc_error(-26, "too-long-mempool-chain, too many unconfirmed ancestors [limit: 100]", self.nodes[0].sendrawtransaction, chain[-2]["hex"])
+        assert_raises_rpc_error(-26, "too-large-cluster", self.nodes[0].sendrawtransaction, chain[-2]["hex"])
 
         # Mine a block with all but last transaction, non-standardly long chain
         self.generateblock(self.nodes[0], output="raw(42)", transactions=[tx["hex"] for tx in chain[:-1]])
@@ -220,7 +202,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
 
     def run_test(self):
         # Mine in batches of 25 to test multi-block reorg under chain limits
-        self.transaction_graph_test(size=CUSTOM_ANCESTOR_COUNT, n_tx_to_mine=[25, 50, 75])
+        self.transaction_graph_test(size=DEFAULT_CLUSTER_LIMIT, n_tx_to_mine=[25, 50, 75])
 
         self.test_max_disconnect_pool_bytes()
 

@@ -582,7 +582,7 @@ int secp256k1_ellswift_xdh(const secp256k1_context *ctx, unsigned char *output, 
     /* Invoke hasher */
     ret = hashfp(output, sx, ell_a64, ell_b64, data);
 
-    secp256k1_memclear(sx, sizeof(sx));
+    secp256k1_memclear_explicit(sx, sizeof(sx));
     secp256k1_fe_clear(&px);
     secp256k1_scalar_clear(&s);
 

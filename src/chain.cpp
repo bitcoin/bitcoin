@@ -6,12 +6,6 @@
 #include <chain.h>
 #include <tinyformat.h>
 #include <util/check.h>
-#include <util/time.h>
-
-std::string CBlockFileInfo::ToString() const
-{
-    return strprintf("CBlockFileInfo(blocks=%u, size=%u, heights=%u...%u, time=%s...%s)", nBlocks, nSize, nHeightFirst, nHeightLast, FormatISO8601Date(nTimeFirst), FormatISO8601Date(nTimeLast));
-}
 
 std::string CBlockIndex::ToString() const
 {

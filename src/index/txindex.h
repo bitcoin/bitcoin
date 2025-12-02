@@ -6,6 +6,15 @@
 #define BITCOIN_INDEX_TXINDEX_H
 
 #include <index/base.h>
+#include <primitives/transaction.h>
+
+#include <cstddef>
+#include <memory>
+
+class uint256;
+namespace interfaces {
+class Chain;
+}
 
 static constexpr bool DEFAULT_TXINDEX{false};
 

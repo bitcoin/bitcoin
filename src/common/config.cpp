@@ -84,7 +84,7 @@ bool IsConfSupported(KeyInfo& key, std::string& error) {
     if (key.name == "reindex") {
         // reindex can be set in a config file but it is strongly discouraged as this will cause the node to reindex on
         // every restart. Allow the config but throw a warning
-        LogPrintf("Warning: reindex=1 is set in the configuration file, which will significantly slow down startup. Consider removing or commenting out this option for better performance, unless there is currently a condition which makes rebuilding the indexes necessary\n");
+        LogWarning("reindex=1 is set in the configuration file, which will significantly slow down startup. Consider removing or commenting out this option for better performance, unless there is currently a condition which makes rebuilding the indexes necessary");
         return true;
     }
     return true;
@@ -109,7 +109,7 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
             m_settings.ro_config[key.section][key.name].push_back(*value);
         } else {
             if (ignore_invalid_keys) {
-                LogPrintf("Ignoring unknown configuration value %s\n", option.first);
+                LogWarning("Ignoring unknown configuration value %s", option.first);
             } else {
                 error = strprintf("Invalid configuration value %s", option.first);
                 return false;
@@ -135,7 +135,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             error = strprintf("Config file \"%s\" is a directory.", fs::PathToString(conf_path));
             return false;
         }
-        stream = std::ifstream{conf_path};
+        stream = std::ifstream{conf_path.std_path()};
         // If the file is explicitly specified, it must be readable
         if (IsArgSet("-conf") && !stream.good()) {
             error = strprintf("specified config file \"%s\" could not be opened.", fs::PathToString(conf_path));
@@ -187,7 +187,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
                     error = strprintf("Included config file \"%s\" is a directory.", fs::PathToString(include_conf_path));
                     return false;
                 }
-                std::ifstream conf_file_stream{include_conf_path};
+                std::ifstream conf_file_stream{include_conf_path.std_path()};
                 if (conf_file_stream.good()) {
                     if (!ReadConfigStream(conf_file_stream, conf_file_name, error, ignore_invalid_keys)) {
                         return false;

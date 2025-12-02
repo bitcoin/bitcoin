@@ -11,11 +11,11 @@ from test_framework.mempool_util import (
 )
 from test_framework.messages import (
     CInv,
-    CTxInWitness,
     DEFAULT_ANCESTOR_LIMIT,
     MSG_TX,
     MSG_WITNESS_TX,
     MSG_WTX,
+    malleate_tx_to_invalid_witness,
     msg_getdata,
     msg_inv,
     msg_notfound,
@@ -137,22 +137,6 @@ class OrphanHandlingTest(BitcoinTestFramework):
         self.nodes[0].bumpmocktime(TXREQUEST_TIME_SKIP)
         peer.wait_for_getdata([wtxid])
         peer.send_and_ping(msg_tx(tx))
-
-    def create_malleated_version(self, tx):
-        """
-        Create a malleated version of the tx where the witness is replaced with garbage data.
-        Returns a CTransaction object.
-        """
-        tx_bad_wit = tx_from_hex(tx["hex"])
-        tx_bad_wit.wit.vtxinwit = [CTxInWitness()]
-        # Add garbage data to witness 0. We cannot simply strip the witness, as the node would
-        # classify it as a transaction in which the witness was missing rather than wrong.
-        tx_bad_wit.wit.vtxinwit[0].scriptWitness.stack = [b'garbage']
-
-        assert_equal(tx["txid"], tx_bad_wit.txid_hex)
-        assert_not_equal(tx["wtxid"], tx_bad_wit.wtxid_hex)
-
-        return tx_bad_wit
 
     @cleanup
     def test_arrival_timing_orphan(self):
@@ -449,7 +433,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
         tx_child = self.wallet.create_self_transfer(utxo_to_spend=tx_parent["new_utxo"])
 
         # Create a fake version of the child
-        tx_orphan_bad_wit = self.create_malleated_version(tx_child)
+        tx_orphan_bad_wit = malleate_tx_to_invalid_witness(tx_child)
 
         bad_peer = node.add_p2p_connection(P2PInterface())
         honest_peer = node.add_p2p_connection(P2PInterface())
@@ -496,7 +480,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
         tx_middle = self.wallet.create_self_transfer(utxo_to_spend=tx_grandparent["new_utxo"])
 
         # Create a fake version of the middle tx
-        tx_orphan_bad_wit = self.create_malleated_version(tx_middle)
+        tx_orphan_bad_wit = malleate_tx_to_invalid_witness(tx_middle)
 
         # Create grandchild spending from tx_middle (and spending from tx_orphan_bad_wit since they
         # have the same txid).
@@ -550,7 +534,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
 
         # Create the real child and fake version
         tx_child = self.wallet.create_self_transfer(utxo_to_spend=tx_parent["new_utxo"])
-        tx_orphan_bad_wit = self.create_malleated_version(tx_child)
+        tx_orphan_bad_wit = malleate_tx_to_invalid_witness(tx_child)
 
         bad_peer = node.add_p2p_connection(PeerTxRelayer())
         # Must not send wtxidrelay because otherwise the inv(TX) will be ignored later
@@ -830,16 +814,6 @@ class OrphanHandlingTest(BitcoinTestFramework):
         assert orphan["txid"] in final_mempool
         assert tx_replacer_C["txid"] in final_mempool
 
-    @cleanup
-    def test_maxorphantx_option(self):
-        # This test should be removed when -maxorphantx is removed.
-        self.log.info("Test that setting the -maxorphantx option does not error")
-        warning = "Warning: Option '-maxorphantx' is set but no longer has any effect (see release notes). Please remove it from your configuration."
-        self.restart_node(0, extra_args=["-maxorphantx=5"])
-        assert_equal(self.nodes[0].getorphantxs(), [])
-        self.stop_node(0, expected_stderr=warning)
-        self.restart_node(0)
-
     def run_test(self):
         self.nodes[0].setmocktime(int(time.time()))
         self.wallet_nonsegwit = MiniWallet(self.nodes[0], mode=MiniWalletMode.RAW_P2PK)
@@ -860,7 +834,6 @@ class OrphanHandlingTest(BitcoinTestFramework):
         self.test_announcers_before_and_after()
         self.test_parents_change()
         self.test_maximal_package_protected()
-        self.test_maxorphantx_option()
 
 
 if __name__ == '__main__':

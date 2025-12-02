@@ -38,9 +38,7 @@ The following rules are enforced for all packages:
 
    - Packages are 1-parent-1-child, with no in-mempool ancestors of the package.
 
-   - All conflicting clusters (connected components of mempool transactions) must be clusters of up to size 2.
-
-   - No more than MAX_REPLACEMENT_CANDIDATES transactions can be replaced, analogous to
+   - The number of distinct clusters containing conflicting transactions can be no more than 100, analogous to
      regular [replacement rule](./mempool-replacements.md) 5).
 
    - Replacements must pay more total fees at the incremental relay fee (analogous to
@@ -55,18 +53,6 @@ The following rules are enforced for all packages:
      those chains when needed. Combined with TRUC transactions this can
      result in more robust fee bumping. More general package RBF may be
      enabled in the future.
-
-* When packages are evaluated against ancestor/descendant limits, the union of all transactions'
-  descendants and ancestors is considered. (#21800)
-
-   - *Rationale*: This is essentially a "worst case" heuristic intended for packages that are
-     heavily connected, i.e. some transaction in the package is the ancestor or descendant of all
-     the other transactions.
-
-* [CPFP Carve Out](./mempool-limits.md#CPFP-Carve-Out) is disabled in packaged contexts. (#21800)
-
-   - *Rationale*: This carve out cannot be accurately applied when there are multiple transactions'
-     ancestors and descendants being considered at the same time.
 
 The following rules are only enforced for packages to be submitted to the mempool (not
 enforced for test accepts):

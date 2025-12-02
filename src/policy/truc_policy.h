@@ -32,9 +32,8 @@ static constexpr int64_t TRUC_MAX_WEIGHT{TRUC_MAX_VSIZE * WITNESS_SCALE_FACTOR};
 /** Maximum sigop-adjusted virtual size of a tx which spends from an unconfirmed TRUC transaction. */
 static constexpr int64_t TRUC_CHILD_MAX_VSIZE{1000};
 static constexpr int64_t TRUC_CHILD_MAX_WEIGHT{TRUC_CHILD_MAX_VSIZE * WITNESS_SCALE_FACTOR};
-// These limits are within the default ancestor/descendant limits.
-static_assert(TRUC_MAX_VSIZE + TRUC_CHILD_MAX_VSIZE <= DEFAULT_ANCESTOR_SIZE_LIMIT_KVB * 1000);
-static_assert(TRUC_MAX_VSIZE + TRUC_CHILD_MAX_VSIZE <= DEFAULT_DESCENDANT_SIZE_LIMIT_KVB * 1000);
+// These limits are within the default cluster limits.
+static_assert(TRUC_MAX_VSIZE + TRUC_CHILD_MAX_VSIZE <= DEFAULT_CLUSTER_SIZE_LIMIT_KVB * 1000);
 
 /** Must be called for every transaction, even if not TRUC. Not strictly necessary for transactions
  * accepted through AcceptMultipleTransactions.
@@ -49,7 +48,8 @@ static_assert(TRUC_MAX_VSIZE + TRUC_CHILD_MAX_VSIZE <= DEFAULT_DESCENDANT_SIZE_L
  * 6. A TRUC tx must be within TRUC_MAX_VSIZE.
  *
  *
- * @param[in]   mempool_ancestors       The in-mempool ancestors of ptx.
+ * @param[in]   pool                    A reference to the mempool.
+ * @param[in]   mempool_parents         The in-mempool ancestors of ptx.
  * @param[in]   direct_conflicts        In-mempool transactions this tx conflicts with. These conflicts
  *                                      are used to more accurately calculate the resulting descendant
  *                                      count of in-mempool ancestors.
@@ -63,10 +63,10 @@ static_assert(TRUC_MAX_VSIZE + TRUC_CHILD_MAX_VSIZE <= DEFAULT_DESCENDANT_SIZE_L
  * - debug string + nullptr if this transaction violates some TRUC rule and sibling eviction is not
  *   applicable.
  */
-std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CTransactionRef& ptx,
-                                          const CTxMemPool::setEntries& mempool_ancestors,
+std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CTxMemPool& pool, const CTransactionRef& ptx,
+                                          const std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef>& mempool_parents,
                                           const std::set<Txid>& direct_conflicts,
-                                          int64_t vsize);
+                                          int64_t vsize) EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
 
 /** Must be called for every transaction that is submitted within a package, even if not TRUC.
  *
@@ -89,8 +89,8 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CT
  *
  * @returns debug string if an error occurs, std::nullopt otherwise.
  * */
-std::optional<std::string> PackageTRUCChecks(const CTransactionRef& ptx, int64_t vsize,
+std::optional<std::string> PackageTRUCChecks(const CTxMemPool& pool, const CTransactionRef& ptx, int64_t vsize,
                                            const Package& package,
-                                           const CTxMemPool::setEntries& mempool_ancestors);
+                                           const std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef>& mempool_parents) EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
 
 #endif // BITCOIN_POLICY_TRUC_POLICY_H

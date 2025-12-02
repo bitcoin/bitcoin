@@ -2,18 +2,38 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <map>
+#include <index/blockfilterindex.h>
 
-#include <clientversion.h>
+#include <blockfilter.h>
+#include <chain.h>
 #include <common/args.h>
 #include <dbwrapper.h>
+#include <flatfile.h>
 #include <hash.h>
-#include <index/blockfilterindex.h>
+#include <index/base.h>
+#include <interfaces/chain.h>
+#include <interfaces/types.h>
 #include <logging.h>
-#include <node/blockstorage.h>
-#include <undo.h>
-#include <util/fs_helpers.h>
+#include <serialize.h>
+#include <streams.h>
+#include <sync.h>
+#include <uint256.h>
+#include <util/check.h>
+#include <util/fs.h>
+#include <util/hasher.h>
 #include <util/syserror.h>
+
+#include <cerrno>
+#include <exception>
+#include <ios>
+#include <map>
+#include <optional>
+#include <span>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 /* The index database stores three items for each block: the disk location of the encoded filter,
  * its dSHA256 hash, and the header. Those belonging to blocks on the active chain are indexed by
@@ -202,9 +222,9 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
 {
     assert(filter.GetFilterType() == GetFilterType());
 
-    size_t data_size =
+    uint64_t data_size{
         GetSerializeSize(filter.GetBlockHash()) +
-        GetSerializeSize(filter.GetEncodedFilter());
+        GetSerializeSize(filter.GetEncodedFilter())};
 
     // If writing the filter would overflow the file, flush and move to the next one.
     if (pos.nPos + data_size > MAX_FLTR_FILE_SIZE) {
@@ -291,9 +311,7 @@ bool BlockFilterIndex::Write(const BlockFilter& filter, uint32_t block_height, c
     value.second.header = filter_header;
     value.second.pos = m_next_filter_pos;
 
-    if (!m_db->Write(DBHeightKey(block_height), value)) {
-        return false;
-    }
+    m_db->Write(DBHeightKey(block_height), value);
 
     m_next_filter_pos.nPos += bytes_written;
     return true;
@@ -338,7 +356,7 @@ bool BlockFilterIndex::CustomRemove(const interfaces::BlockInfo& block)
     // But since this creates new references to the filter, the position should get updated here
     // atomically as well in case Commit fails.
     batch.Write(DB_FILTER_POS, m_next_filter_pos);
-    if (!m_db->WriteBatch(batch)) return false;
+    m_db->WriteBatch(batch);
 
     // Update cached header to the previous block hash
     m_last_header = *Assert(ReadFilterHeader(block.height - 1, *Assert(block.prev_hash)));

@@ -34,7 +34,6 @@ add_executable(test_bitcoin
   coinscachepair_tests.cpp
   coinstatsindex_tests.cpp
   common_url_tests.cpp
-  compilerbug_tests.cpp
   compress_tests.cpp
   crypto_tests.cpp
   cuckoocache_tests.cpp
@@ -43,6 +42,7 @@ add_executable(test_bitcoin
   descriptor_tests.cpp
   disconnected_transactions.cpp
   feefrac_tests.cpp
+  feerounder_tests.cpp
   flatfile_tests.cpp
   fs_tests.cpp
   getarg_tests.cpp
@@ -72,7 +72,6 @@ add_executable(test_bitcoin
   pcp_tests.cpp
   peerman_tests.cpp
   pmt_tests.cpp
-  policy_fee_tests.cpp
   policyestimator_tests.cpp
   pool_tests.cpp
   pow_tests.cpp
@@ -119,6 +118,7 @@ add_executable(test_bitcoin
   txvalidation_tests.cpp
   txvalidationcache_tests.cpp
   uint256_tests.cpp
+  util_check_tests.cpp
   util_string_tests.cpp
   util_tests.cpp
   util_threadnames_tests.cpp
@@ -179,6 +179,8 @@ if(ENABLE_IPC)
       ipc_tests.cpp
   )
   target_link_libraries(test_bitcoin bitcoin_ipc_test bitcoin_ipc)
+
+  configure_file(.clang-tidy.in .clang-tidy USE_SOURCE_PERMISSIONS COPYONLY)
 endif()
 
 function(add_boost_test source_file)

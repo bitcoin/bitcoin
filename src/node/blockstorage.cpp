@@ -35,6 +35,7 @@
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 #include <util/syserror.h>
+#include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
 
@@ -59,12 +60,12 @@ bool BlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo& info)
     return Read(std::make_pair(DB_BLOCK_FILES, nFile), info);
 }
 
-bool BlockTreeDB::WriteReindexing(bool fReindexing)
+void BlockTreeDB::WriteReindexing(bool fReindexing)
 {
     if (fReindexing) {
-        return Write(DB_REINDEX_FLAG, uint8_t{'1'});
+        Write(DB_REINDEX_FLAG, uint8_t{'1'});
     } else {
-        return Erase(DB_REINDEX_FLAG);
+        Erase(DB_REINDEX_FLAG);
     }
 }
 
@@ -78,7 +79,7 @@ bool BlockTreeDB::ReadLastBlockFile(int& nFile)
     return Read(DB_LAST_BLOCK, nFile);
 }
 
-bool BlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*>>& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo)
+void BlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*>>& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo)
 {
     CDBBatch batch(*this);
     for (const auto& [file, info] : fileInfo) {
@@ -88,12 +89,12 @@ bool BlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFi
     for (const CBlockIndex* bi : blockinfo) {
         batch.Write(std::make_pair(DB_BLOCK_INDEX, bi->GetBlockHash()), CDiskBlockIndex{bi});
     }
-    return WriteBatch(batch, true);
+    WriteBatch(batch, true);
 }
 
-bool BlockTreeDB::WriteFlag(const std::string& name, bool fValue)
+void BlockTreeDB::WriteFlag(const std::string& name, bool fValue)
 {
-    return Write(std::make_pair(DB_FLAG, name), fValue ? uint8_t{'1'} : uint8_t{'0'});
+    Write(std::make_pair(DB_FLAG, name), fValue ? uint8_t{'1'} : uint8_t{'0'});
 }
 
 bool BlockTreeDB::ReadFlag(const std::string& name, bool& fValue)
@@ -151,6 +152,11 @@ bool BlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, s
 
     return true;
 }
+
+std::string CBlockFileInfo::ToString() const
+{
+    return strprintf("CBlockFileInfo(blocks=%u, size=%u, heights=%u...%u, time=%s...%s)", nBlocks, nSize, nHeightFirst, nHeightLast, FormatISO8601Date(nTimeFirst), FormatISO8601Date(nTimeLast));
+}
 } // namespace kernel
 
 namespace node {
@@ -161,12 +167,13 @@ bool CBlockIndexWorkComparator::operator()(const CBlockIndex* pa, const CBlockIn
     if (pa->nChainWork > pb->nChainWork) return false;
     if (pa->nChainWork < pb->nChainWork) return true;
 
-    // ... then by earliest time received, ...
+    // ... then by earliest activatable time, ...
     if (pa->nSequenceId < pb->nSequenceId) return false;
     if (pa->nSequenceId > pb->nSequenceId) return true;
 
     // Use pointer address as tie breaker (should only happen with blocks
-    // loaded from disk, as those all have id 0).
+    // loaded from disk, as those share the same id: 0 for blocks on the
+    // best chain, 1 for all others).
     if (pa < pb) return false;
     if (pa > pb) return true;
 
@@ -217,7 +224,7 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, CBlockInde
     // We assign the sequence id to blocks only when the full data is available,
     // to avoid miners withholding blocks but broadcasting headers, to get a
     // competitive advantage.
-    pindexNew->nSequenceId = 0;
+    pindexNew->nSequenceId = SEQ_ID_INIT_FROM_DISK;
 
     pindexNew->phashBlock = &((*mi).first);
     BlockMap::iterator miPrev = m_block_index.find(block.hashPrevBlock);
@@ -476,7 +483,7 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
     return true;
 }
 
-bool BlockManager::WriteBlockIndexDB()
+void BlockManager::WriteBlockIndexDB()
 {
     AssertLockHeld(::cs_main);
     std::vector<std::pair<int, const CBlockFileInfo*>> vFiles;
@@ -492,10 +499,7 @@ bool BlockManager::WriteBlockIndexDB()
         m_dirty_blockindex.erase(it++);
     }
     int max_blockfile = WITH_LOCK(cs_LastBlockFile, return this->MaxBlockfileNum());
-    if (!m_block_tree_db->WriteBatchSync(vFiles, max_blockfile, vBlocks)) {
-        return false;
-    }
-    return true;
+    m_block_tree_db->WriteBatchSync(vFiles, max_blockfile, vBlocks);
 }
 
 bool BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_blockhash)
@@ -584,7 +588,7 @@ bool BlockManager::IsBlockPruned(const CBlockIndex& block) const
     return m_have_pruned && !(block.nStatus & BLOCK_HAVE_DATA) && (block.nTx > 0);
 }
 
-const CBlockIndex* BlockManager::GetFirstBlock(const CBlockIndex& upper_block, uint32_t status_mask, const CBlockIndex* lower_block) const
+const CBlockIndex& BlockManager::GetFirstBlock(const CBlockIndex& upper_block, uint32_t status_mask, const CBlockIndex* lower_block) const
 {
     AssertLockHeld(::cs_main);
     const CBlockIndex* last_block = &upper_block;
@@ -592,7 +596,7 @@ const CBlockIndex* BlockManager::GetFirstBlock(const CBlockIndex& upper_block, u
     while (last_block->pprev && ((last_block->pprev->nStatus & status_mask) == status_mask)) {
         if (lower_block) {
             // Return if we reached the lower_block
-            if (last_block == lower_block) return lower_block;
+            if (last_block == lower_block) return *lower_block;
             // if range was surpassed, means that 'lower_block' is not part of the 'upper_block' chain
             // and so far this is not allowed.
             assert(last_block->nHeight >= lower_block->nHeight);
@@ -600,13 +604,13 @@ const CBlockIndex* BlockManager::GetFirstBlock(const CBlockIndex& upper_block, u
         last_block = last_block->pprev;
     }
     assert(last_block != nullptr);
-    return last_block;
+    return *last_block;
 }
 
 bool BlockManager::CheckBlockDataAvailability(const CBlockIndex& upper_block, const CBlockIndex& lower_block)
 {
     if (!(upper_block.nStatus & BLOCK_HAVE_DATA)) return false;
-    return GetFirstBlock(upper_block, BLOCK_HAVE_DATA, &lower_block) == &lower_block;
+    return &GetFirstBlock(upper_block, BLOCK_HAVE_DATA, &lower_block) == &lower_block;
 }
 
 // If we're using -prune with -reindex, then delete block files that will be ignored by the
@@ -1259,7 +1263,7 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
                 return;
             }
         } else {
-            LogPrintf("Warning: Could not open blocks file %s\n", fs::PathToString(path));
+            LogWarning("Could not open blocks file %s", fs::PathToString(path));
         }
     }
 

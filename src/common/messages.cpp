@@ -6,7 +6,7 @@
 #include <common/messages.h>
 
 #include <common/types.h>
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
 #include <node/types.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
@@ -16,6 +16,7 @@
 #include <cassert>
 #include <map>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -91,7 +92,7 @@ std::string InvalidEstimateModeErrorMessage()
     return "Invalid estimate_mode parameter, must be one of: \"" + FeeModes("\", \"") + "\"";
 }
 
-bool FeeModeFromString(const std::string& mode_string, FeeEstimateMode& fee_estimate_mode)
+bool FeeModeFromString(std::string_view mode_string, FeeEstimateMode& fee_estimate_mode)
 {
     auto searchkey = ToUpper(mode_string);
     for (const auto& pair : FeeModeMap()) {

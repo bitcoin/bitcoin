@@ -7,6 +7,7 @@
 #include <policy/rbf.h>
 #include <primitives/transaction_identifier.h>
 #include <rpc/util.h>
+#include <rpc/rawtransaction_util.h>
 #include <rpc/blockchain.h>
 #include <util/vector.h>
 #include <wallet/receive.h>
@@ -700,7 +701,7 @@ RPCHelpMan gettransaction()
                         {RPCResult::Type::STR_HEX, "hex", "Raw data for transaction"},
                         {RPCResult::Type::OBJ, "decoded", /*optional=*/true, "The decoded transaction (only present when `verbose` is passed)",
                         {
-                            {RPCResult::Type::ELISION, "", "Equivalent to the RPC decoderawtransaction method, or the RPC getrawtransaction method when `verbose` is passed."},
+                            DecodeTxDoc(/*txid_field_doc=*/"The transaction id", /*wallet=*/true),
                         }},
                         RESULT_LAST_PROCESSED_BLOCK,
                     })
@@ -752,7 +753,16 @@ RPCHelpMan gettransaction()
 
     if (verbose) {
         UniValue decoded(UniValue::VOBJ);
-        TxToUniv(*wtx.tx, /*block_hash=*/uint256(), /*entry=*/decoded, /*include_hex=*/false);
+        TxToUniv(*wtx.tx,
+                /*block_hash=*/uint256(),
+                /*entry=*/decoded,
+                /*include_hex=*/false,
+                /*txundo=*/nullptr,
+                /*verbosity=*/TxVerbosity::SHOW_DETAILS,
+                /*is_change_func=*/[&pwallet](const CTxOut& txout) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+                                        AssertLockHeld(pwallet->cs_wallet);
+                                        return OutputIsChange(*pwallet, txout);
+                                    });
         entry.pushKV("decoded", std::move(decoded));
     }
 

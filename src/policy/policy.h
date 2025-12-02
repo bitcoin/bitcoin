@@ -11,6 +11,7 @@
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
 #include <script/solver.h>
+#include <util/feefrac.h>
 
 #include <cstdint>
 #include <string>
@@ -64,14 +65,14 @@ static constexpr unsigned int MAX_STANDARD_SCRIPTSIG_SIZE{1650};
 static constexpr unsigned int DUST_RELAY_TX_FEE{3000};
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
 static constexpr unsigned int DEFAULT_MIN_RELAY_TX_FEE{100};
+/** Maximum number of transactions per cluster (default) */
+static constexpr unsigned int DEFAULT_CLUSTER_LIMIT{64};
+/** Maximum size of cluster in virtual kilobytes */
+static constexpr unsigned int DEFAULT_CLUSTER_SIZE_LIMIT_KVB{101};
 /** Default for -limitancestorcount, max number of in-mempool ancestors */
 static constexpr unsigned int DEFAULT_ANCESTOR_LIMIT{25};
-/** Default for -limitancestorsize, maximum kilobytes of tx + all in-mempool ancestors */
-static constexpr unsigned int DEFAULT_ANCESTOR_SIZE_LIMIT_KVB{101};
 /** Default for -limitdescendantcount, max number of in-mempool descendants */
 static constexpr unsigned int DEFAULT_DESCENDANT_LIMIT{25};
-/** Default for -limitdescendantsize, maximum kilobytes of in-mempool descendants */
-static constexpr unsigned int DEFAULT_DESCENDANT_SIZE_LIMIT_KVB{101};
 /** Default for -datacarrier */
 static const bool DEFAULT_ACCEPT_DATACARRIER = true;
 /**
@@ -187,5 +188,9 @@ static inline int64_t GetVirtualTransactionInputSize(const CTxIn& tx)
 {
     return GetVirtualTransactionInputSize(tx, 0, 0);
 }
+
+int64_t GetSigOpsAdjustedWeight(int64_t weight, int64_t sigop_cost, unsigned int bytes_per_sigop);
+
+static inline FeePerVSize ToFeePerVSize(FeePerWeight feerate) { return {feerate.fee, (feerate.size + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR}; }
 
 #endif // BITCOIN_POLICY_POLICY_H

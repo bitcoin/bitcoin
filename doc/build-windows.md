@@ -49,6 +49,9 @@ Build using:
 
     gmake -C depends HOST=x86_64-w64-mingw32  # Append "-j N" for N parallel jobs.
     cmake -B build --toolchain depends/x86_64-w64-mingw32/toolchain.cmake
+
+Run `cmake -B build -LH` to see the full list of available options.
+
     cmake --build build     # Append "-j N" for N parallel jobs.
 
 ## Depends system

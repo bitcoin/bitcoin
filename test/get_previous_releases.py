@@ -168,7 +168,13 @@ def download_binary(tag, args) -> int:
         download_from_url(archive_url, archive)
     except Exception as e:
         print(f"\nDownload failed: {e}", file=sys.stderr)
-        return 1
+        print("Retrying download after failure ...", file=sys.stderr)
+        time.sleep(12)
+        try:
+            download_from_url(archive_url, archive)
+        except Exception as e2:
+            print(f"\nDownload failed a second time: {e2}", file=sys.stderr)
+            return 1
 
     hasher = hashlib.sha256()
     with open(archive, "rb") as afile:

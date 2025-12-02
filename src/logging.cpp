@@ -224,6 +224,7 @@ static const std::map<std::string, BCLog::LogFlags, std::less<>> LOG_CATEGORIES_
     {"txreconciliation", BCLog::TXRECONCILIATION},
     {"scan", BCLog::SCAN},
     {"txpackages", BCLog::TXPACKAGES},
+    {"kernel", BCLog::KERNEL},
 };
 
 static const std::unordered_map<BCLog::LogFlags, std::string> LOG_CATEGORIES_BY_FLAG{
@@ -558,10 +559,8 @@ void BCLog::Logger::ShrinkDebugFile()
         // Restart the file with some of the end
         std::vector<char> vch(RECENT_DEBUG_HISTORY_SIZE, 0);
         if (fseek(file, -((long)vch.size()), SEEK_END)) {
-            LogPrintf("Failed to shrink debug log file: fseek(...) failed\n");
-            if (fclose(file) != 0){
-                ReportLogIOError("fclose", m_file_path);
-            }
+            LogWarning("Failed to shrink debug log file: fseek(...) failed");
+            fclose(file);
             return;
         }
         int nBytes = fread(vch.data(), 1, vch.size(), file);

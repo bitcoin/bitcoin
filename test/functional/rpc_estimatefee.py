@@ -36,7 +36,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, "estimatesmartfee", self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', 1)
         assert_raises_rpc_error(-1, "estimaterawfee", self.nodes[0].estimaterawfee, 1, 1, 1)
 
-        # max value of 1008 per src/policy/fees.h
+        # max value of 1008 per src/policy/fees/block_policy_estimator.h
         assert_raises_rpc_error(-8, "Invalid conf_target, must be between 1 and 1008", self.nodes[0].estimaterawfee, 1009)
 
         # valid calls

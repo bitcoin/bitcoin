@@ -468,7 +468,8 @@ struct PSBTInput
         // Read loop
         bool found_sep = false;
         while(!s.empty()) {
-            // Read
+            // Read the key of format "<keylen><keytype><keydata>" after which
+            // "key" will contain "<keytype><keydata>"
             std::vector<unsigned char> key;
             s >> key;
 
@@ -479,11 +480,13 @@ struct PSBTInput
                 break;
             }
 
-            // Type is compact size uint at beginning of key
+            // "skey" is used so that "key" is unchanged after reading keytype below
             SpanReader skey{key};
+            // keytype is of the format compact size uint at the beginning of "key"
             uint64_t type = ReadCompactSize(skey);
 
-            // Do stuff based on type
+            // Do stuff based on keytype "type", i.e., key checks, reading values of the
+            // format "<valuelen><valuedata>" from the stream "s", and value checks
             switch(type) {
                 case PSBT_IN_NON_WITNESS_UTXO:
                 {
@@ -957,7 +960,8 @@ struct PSBTOutput
         // Read loop
         bool found_sep = false;
         while(!s.empty()) {
-            // Read
+            // Read the key of format "<keylen><keytype><keydata>" after which
+            // "key" will contain "<keytype><keydata>"
             std::vector<unsigned char> key;
             s >> key;
 
@@ -968,11 +972,13 @@ struct PSBTOutput
                 break;
             }
 
-            // Type is compact size uint at beginning of key
+            // "skey" is used so that "key" is unchanged after reading keytype below
             SpanReader skey{key};
+            // keytype is of the format compact size uint at the beginning of "key"
             uint64_t type = ReadCompactSize(skey);
 
-            // Do stuff based on type
+            // Do stuff based on keytype "type", i.e., key checks, reading values of the
+            // format "<valuelen><valuedata>" from the stream "s", and value checks
             switch(type) {
                 case PSBT_OUT_REDEEMSCRIPT:
                 {
@@ -1220,7 +1226,8 @@ struct PartiallySignedTransaction
         // Read global data
         bool found_sep = false;
         while(!s.empty()) {
-            // Read
+            // Read the key of format "<keylen><keytype><keydata>" after which
+            // "key" will contain "<keytype><keydata>"
             std::vector<unsigned char> key;
             s >> key;
 
@@ -1231,11 +1238,13 @@ struct PartiallySignedTransaction
                 break;
             }
 
-            // Type is compact size uint at beginning of key
+            // "skey" is used so that "key" is unchanged after reading keytype below
             SpanReader skey{key};
+            // keytype is of the format compact size uint at the beginning of "key"
             uint64_t type = ReadCompactSize(skey);
 
-            // Do stuff based on type
+            // Do stuff based on keytype "type", i.e., key checks, reading values of the
+            // format "<valuelen><valuedata>" from the stream "s", and value checks
             switch(type) {
                 case PSBT_GLOBAL_UNSIGNED_TX:
                 {

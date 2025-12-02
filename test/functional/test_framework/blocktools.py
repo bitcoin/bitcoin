@@ -84,6 +84,9 @@ assert_equal(uint256_from_compact(DIFF_4_N_BITS), DIFF_4_TARGET)
 # From BIP325
 SIGNET_HEADER = b"\xec\xc7\xda\xa2"
 
+# Number of blocks to create in temporary blockchain branch for reorg testing
+FORK_LENGTH = 10
+
 def nbits_str(nbits):
     return f"{nbits:08x}"
 
@@ -112,6 +115,26 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
             block.vtx.append(tx)
     block.hashMerkleRoot = block.calc_merkle_root()
     return block
+
+def create_empty_fork(node, fork_length=FORK_LENGTH):
+    '''
+        Creates a fork using node's chaintip as the starting point.
+        Returns a list of blocks to submit in order.
+    '''
+    tip = int(node.getbestblockhash(), 16)
+    height = node.getblockcount()
+    block_time = node.getblock(node.getbestblockhash())['time'] + 1
+
+    blocks = []
+    for _ in range(fork_length):
+        block = create_block(tip, create_coinbase(height + 1), block_time)
+        block.solve()
+        blocks.append(block)
+        tip = block.hash_int
+        block_time += 1
+        height += 1
+
+    return blocks
 
 def get_witness_script(witness_root, witness_nonce):
     witness_commitment = hash256(ser_uint256(witness_root) + ser_uint256(witness_nonce))

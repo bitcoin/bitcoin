@@ -93,6 +93,9 @@ class FullBlockTest(BitcoinTestFramework):
             '-testactivationheight=bip34@2',
         ]]
 
+    def add_options(self, parser):
+        parser.add_argument("--skipreorg", action='store_true', dest="skip_reorg", help="Skip the large re-org test", default=False)
+
     def run_test(self):
         node = self.nodes[0]  # convenience reference to the node
 
@@ -1274,60 +1277,62 @@ class FullBlockTest(BitcoinTestFramework):
         b89a = self.update_block("89a", [tx])
         self.send_blocks([b89a], success=False, reject_reason='bad-txns-inputs-missingorspent', reconnect=True)
 
-        # Don't use v2transport for the large reorg, which is too slow with the unoptimized python ChaCha20 implementation
-        if self.options.v2transport:
-            self.nodes[0].disconnect_p2ps()
-            self.helper_peer = self.nodes[0].add_p2p_connection(P2PDataStore(), supports_v2_p2p=False)
-        self.log.info("Test a re-org of one week's worth of blocks (1088 blocks)")
-
         self.move_tip(88)
-        LARGE_REORG_SIZE = 1088
-        blocks = []
-        spend = out[32]
-        for i in range(89, LARGE_REORG_SIZE + 89):
-            b = self.next_block(i, spend)
-            tx = CTransaction()
-            script_length = (MAX_BLOCK_WEIGHT - b.get_weight() - 276) // 4
-            script_output = CScript([b'\x00' * script_length])
-            tx.vout.append(CTxOut(0, script_output))
-            tx.vin.append(CTxIn(COutPoint(b.vtx[1].txid_int, 0)))
-            b = self.update_block(i, [tx])
-            assert_equal(b.get_weight(), MAX_BLOCK_WEIGHT)
-            blocks.append(b)
-            self.save_spendable_output()
-            spend = self.get_spendable_output()
-
-        self.send_blocks(blocks, True, timeout=2440)
-        chain1_tip = i
-
-        # now create alt chain of same length
-        self.move_tip(88)
-        blocks2 = []
-        for i in range(89, LARGE_REORG_SIZE + 89):
-            blocks2.append(self.next_block("alt" + str(i)))
-        self.send_blocks(blocks2, False, force_send=False)
-
-        # extend alt chain to trigger re-org
-        block = self.next_block("alt" + str(chain1_tip + 1))
-        self.send_blocks([block], True, timeout=2440)
-
-        # ... and re-org back to the first chain
-        self.move_tip(chain1_tip)
-        block = self.next_block(chain1_tip + 1)
-        self.send_blocks([block], False, force_send=True)
-        block = self.next_block(chain1_tip + 2)
-        self.send_blocks([block], True, timeout=2440)
-
         self.log.info("Reject a block with an invalid block header version")
         b_v1 = self.next_block('b_v1', version=1)
         self.send_blocks([b_v1], success=False, force_send=True, reject_reason='bad-version(0x00000001)', reconnect=True)
 
-        self.move_tip(chain1_tip + 2)
+        self.move_tip(87)
         b_cb34 = self.next_block('b_cb34')
         b_cb34.vtx[0].vin[0].scriptSig = b_cb34.vtx[0].vin[0].scriptSig[:-1]
         b_cb34.hashMerkleRoot = b_cb34.calc_merkle_root()
         b_cb34.solve()
         self.send_blocks([b_cb34], success=False, reject_reason='bad-cb-height', reconnect=True)
+
+        # Don't use v2transport for the large reorg, which is too slow with the unoptimized python ChaCha20 implementation
+        if self.options.v2transport:
+            self.nodes[0].disconnect_p2ps()
+            self.helper_peer = self.nodes[0].add_p2p_connection(P2PDataStore(), supports_v2_p2p=False)
+
+        self.move_tip(88)
+        if not self.options.skip_reorg:
+            self.log.info("Test a re-org of one week's worth of blocks (1088 blocks)")
+            LARGE_REORG_SIZE = 1088
+            blocks = []
+            spend = out[32]
+            for i in range(89, LARGE_REORG_SIZE + 89):
+                b = self.next_block(i, spend)
+                tx = CTransaction()
+                script_length = (MAX_BLOCK_WEIGHT - b.get_weight() - 276) // 4
+                script_output = CScript([b'\x00' * script_length])
+                tx.vout.append(CTxOut(0, script_output))
+                tx.vin.append(CTxIn(COutPoint(b.vtx[1].txid_int, 0)))
+                b = self.update_block(i, [tx])
+                assert_equal(b.get_weight(), MAX_BLOCK_WEIGHT)
+                blocks.append(b)
+                self.save_spendable_output()
+                spend = self.get_spendable_output()
+
+            self.send_blocks(blocks, True, timeout=2440)
+            chain1_tip = i
+
+            # now create alt chain of same length
+            self.move_tip(88)
+            blocks2 = []
+            for i in range(89, LARGE_REORG_SIZE + 89):
+                blocks2.append(self.next_block("alt" + str(i)))
+            self.send_blocks(blocks2, False, force_send=False)
+
+            # extend alt chain to trigger re-org
+            block = self.next_block("alt" + str(chain1_tip + 1))
+            self.send_blocks([block], True, timeout=2440)
+
+            # ... and re-org back to the first chain
+            self.move_tip(chain1_tip)
+            block = self.next_block(chain1_tip + 1)
+            self.send_blocks([block], False, force_send=True)
+            block = self.next_block(chain1_tip + 2)
+            self.send_blocks([block], True, timeout=2440)
 
     # Helper methods
     ################

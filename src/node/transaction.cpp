@@ -31,7 +31,12 @@ static TransactionError HandleATMPError(const TxValidationState& state, std::str
     }
 }
 
-TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback)
+TransactionError BroadcastTransaction(NodeContext& node,
+                                      const CTransactionRef tx,
+                                      std::string& err_string,
+                                      const CAmount& max_tx_fee,
+                                      TxBroadcast broadcast_method,
+                                      bool wait_callback)
 {
     // BroadcastTransaction can be called by RPC or by the wallet.
     // chainman, mempool and peerman are initialized before the RPC server and wallet are started
@@ -62,7 +67,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
             // There's already a transaction in the mempool with this txid. Don't
             // try to submit this transaction to the mempool (since it'll be
             // rejected as a TX_CONFLICT), but do attempt to reannounce the mempool
-            // transaction if relay=true.
+            // transaction if broadcast_method is not TxBroadcast::MEMPOOL_NO_BROADCAST.
             //
             // The mempool transaction may have the same or different witness (and
             // wtxid) as this transaction. Use the mempool's wtxid for reannouncement.
@@ -79,18 +84,26 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
                     return TransactionError::MAX_FEE_EXCEEDED;
                 }
             }
-            // Try to submit the transaction to the mempool.
-            const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, /*test_accept=*/ false);
-            if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
-                return HandleATMPError(result.m_state, err_string);
-            }
 
-            // Transaction was accepted to the mempool.
+            switch (broadcast_method) {
+            case TxBroadcast::MEMPOOL_NO_BROADCAST:
+            case TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL:
+                // Try to submit the transaction to the mempool.
+                {
+                    const MempoolAcceptResult result =
+                        node.chainman->ProcessTransaction(tx, /*test_accept=*/false);
+                    if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
+                        return HandleATMPError(result.m_state, err_string);
+                    }
+                }
+                // Transaction was accepted to the mempool.
 
-            if (relay) {
-                // the mempool tracks locally submitted transactions to make a
-                // best-effort of initial broadcast
-                node.mempool->AddUnbroadcastTx(txid);
+                if (broadcast_method == TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL) {
+                    // the mempool tracks locally submitted transactions to make a
+                    // best-effort of initial broadcast
+                    node.mempool->AddUnbroadcastTx(txid);
+                }
+                break;
             }
 
             if (wait_callback && node.validation_signals) {
@@ -116,14 +129,18 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         promise.get_future().wait();
     }
 
-    if (relay) {
+    switch (broadcast_method) {
+    case TxBroadcast::MEMPOOL_NO_BROADCAST:
+        break;
+    case TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL:
         node.peerman->RelayTransaction(txid, wtxid);
+        break;
     }
 
     return TransactionError::OK;
 }
 
-CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const Txid& hash, uint256& hashBlock, const BlockManager& blockman)
+CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const Txid& hash, const BlockManager& blockman, uint256& hashBlock)
 {
     if (mempool && !block_index) {
         CTransactionRef ptx = mempool->get(hash);

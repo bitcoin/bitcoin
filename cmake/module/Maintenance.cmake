@@ -18,30 +18,6 @@ function(setup_split_debug_script)
   endif()
 endfunction()
 
-function(add_maintenance_targets)
-  if(NOT TARGET Python3::Interpreter)
-    return()
-  endif()
-
-  foreach(target IN ITEMS bitcoin bitcoind bitcoin-node bitcoin-qt bitcoin-gui bitcoin-cli bitcoin-tx bitcoin-util bitcoin-wallet test_bitcoin bench_bitcoin)
-    if(TARGET ${target})
-      list(APPEND executables $<TARGET_FILE:${target}>)
-    endif()
-  endforeach()
-
-  add_custom_target(check-symbols
-    COMMAND ${CMAKE_COMMAND} -E echo "Running symbol and dynamic library checks..."
-    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/contrib/guix/symbol-check.py ${executables}
-    VERBATIM
-  )
-
-  add_custom_target(check-security
-    COMMAND ${CMAKE_COMMAND} -E echo "Checking binary security..."
-    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/contrib/guix/security-check.py ${executables}
-    VERBATIM
-  )
-endfunction()
-
 function(add_windows_deploy_target)
   if(MINGW AND TARGET bitcoin AND TARGET bitcoin-qt AND TARGET bitcoind AND TARGET bitcoin-cli AND TARGET bitcoin-tx AND TARGET bitcoin-wallet AND TARGET bitcoin-util AND TARGET test_bitcoin)
     find_program(MAKENSIS_EXECUTABLE makensis)

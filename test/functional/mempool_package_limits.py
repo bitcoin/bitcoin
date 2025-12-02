@@ -15,7 +15,7 @@ from test_framework.wallet import MiniWallet
 # 2) run the subtest, which may submit some transaction(s) to the mempool and
 #    create a list of hex transactions
 # 3) testmempoolaccept the package hex and check that it fails with the error
-#    "package-mempool-limits" for each tx
+#    "too-large-cluster" for each tx
 # 4) after mining a block, clearing the pre-submitted transactions from mempool,
 #    check that submitting the created package succeeds
 def check_package_limits(func):
@@ -26,7 +26,7 @@ def check_package_limits(func):
         testres_error_expected = node.testmempoolaccept(rawtxs=package_hex)
         assert_equal(len(testres_error_expected), len(package_hex))
         for txres in testres_error_expected:
-            assert "package-mempool-limits" in txres["package-error"]
+            assert "too-large-cluster" in txres["package-error"]
 
         # Clear mempool and check that the package passes now
         self.generate(node, 1)
@@ -39,6 +39,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
+        self.extra_args = [["-limitclustercount=25"]]
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
@@ -48,10 +49,6 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         self.test_chain_limits()
         self.test_desc_count_limits()
         self.test_desc_count_limits_2()
-        self.test_anc_count_limits()
-        self.test_anc_count_limits_2()
-        self.test_anc_count_limits_bushy()
-        self.test_anc_size_limits()
         self.test_desc_size_limits()
 
     @check_package_limits
@@ -161,144 +158,6 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         assert_equal(24, node.getmempoolinfo()["size"])
         assert_equal(2, len(package_hex))
         return package_hex
-
-    @check_package_limits
-    def test_anc_count_limits(self):
-        """Create a 'V' shaped chain with 24 transactions in the mempool and 3 in the package:
-        M1a                    M1b
-         ^                     ^
-          M2a                M2b
-           .                 .
-            .               .
-             .             .
-             M12a        M12b
-               ^         ^
-                Pa     Pb
-                 ^    ^
-                   Pc
-        The lowest descendant, Pc, exceeds ancestor limits, but only if the in-mempool
-        and in-package ancestors are all considered together.
-        """
-        node = self.nodes[0]
-        package_hex = []
-        pc_parent_utxos = []
-
-        self.log.info("Check that in-mempool and in-package ancestors are calculated properly in packages")
-
-        # Two chains of 13 transactions each
-        for _ in range(2):
-            chain_tip_utxo = self.wallet.send_self_transfer_chain(from_node=node, chain_length=12)[-1]["new_utxo"]
-            # Save the 13th transaction for the package
-            tx = self.wallet.create_self_transfer(utxo_to_spend=chain_tip_utxo)
-            package_hex.append(tx["hex"])
-            pc_parent_utxos.append(tx["new_utxo"])
-
-        # Child Pc
-        pc_hex = self.wallet.create_self_transfer_multi(utxos_to_spend=pc_parent_utxos)["hex"]
-        package_hex.append(pc_hex)
-
-        assert_equal(24, node.getmempoolinfo()["size"])
-        assert_equal(3, len(package_hex))
-        return package_hex
-
-    @check_package_limits
-    def test_anc_count_limits_2(self):
-        """Create a 'Y' shaped chain with 24 transactions in the mempool and 2 in the package:
-        M1a                M1b
-         ^                ^
-          M2a            M2b
-           .            .
-            .          .
-             .        .
-            M12a    M12b
-               ^    ^
-                 Pc
-                 ^
-                 Pd
-        The lowest descendant, Pd, exceeds ancestor limits, but only if the in-mempool
-        and in-package ancestors are all considered together.
-        """
-        node = self.nodes[0]
-        pc_parent_utxos = []
-
-        self.log.info("Check that in-mempool and in-package ancestors are calculated properly in packages")
-        # Two chains of 12 transactions each
-        for _ in range(2):
-            chaintip_utxo = self.wallet.send_self_transfer_chain(from_node=node, chain_length=12)[-1]["new_utxo"]
-            # last 2 transactions will be the parents of Pc
-            pc_parent_utxos.append(chaintip_utxo)
-
-        # Child Pc
-        pc_tx = self.wallet.create_self_transfer_multi(utxos_to_spend=pc_parent_utxos)
-
-        # Child Pd
-        pd_tx = self.wallet.create_self_transfer(utxo_to_spend=pc_tx["new_utxos"][0])
-
-        assert_equal(24, node.getmempoolinfo()["size"])
-        return [pc_tx["hex"], pd_tx["hex"]]
-
-    @check_package_limits
-    def test_anc_count_limits_bushy(self):
-        """Create a tree with 20 transactions in the mempool and 6 in the package:
-        M1...M4 M5...M8 M9...M12 M13...M16 M17...M20
-            ^      ^       ^        ^         ^             (each with 4 parents)
-            P0     P1      P2      P3        P4
-             ^     ^       ^       ^         ^              (5 parents)
-                           PC
-        Where M(4i+1)...M+(4i+4) are the parents of Pi and P0, P1, P2, P3, and P4 are the parents of PC.
-        P0... P4 individually only have 4 parents each, and PC has no in-mempool parents. But
-        combined, PC has 25 in-mempool and in-package parents.
-        """
-        node = self.nodes[0]
-        package_hex = []
-        pc_parent_utxos = []
-        for _ in range(5): # Make package transactions P0 ... P4
-            pc_grandparent_utxos = []
-            for _ in range(4): # Make mempool transactions M(4i+1)...M(4i+4)
-                pc_grandparent_utxos.append(self.wallet.send_self_transfer(from_node=node)["new_utxo"])
-            # Package transaction Pi
-            pi_tx = self.wallet.create_self_transfer_multi(utxos_to_spend=pc_grandparent_utxos)
-            package_hex.append(pi_tx["hex"])
-            pc_parent_utxos.append(pi_tx["new_utxos"][0])
-        # Package transaction PC
-        pc_hex = self.wallet.create_self_transfer_multi(utxos_to_spend=pc_parent_utxos)["hex"]
-        package_hex.append(pc_hex)
-
-        assert_equal(20, node.getmempoolinfo()["size"])
-        assert_equal(6, len(package_hex))
-        return package_hex
-
-    @check_package_limits
-    def test_anc_size_limits(self):
-        """Test Case with 2 independent transactions in the mempool and a parent + child in the
-        package, where the package parent is the child of both mempool transactions (30KvB each):
-              A     B
-               ^   ^
-                 C
-                 ^
-                 D
-        The lowest descendant, D, exceeds ancestor size limits, but only if the in-mempool
-        and in-package ancestors are all considered together.
-        """
-        node = self.nodes[0]
-        parent_utxos = []
-        target_vsize = 30_000
-        high_fee = 10 * target_vsize  # 10 sats/vB
-        self.log.info("Check that in-mempool and in-package ancestor size limits are calculated properly in packages")
-        # Mempool transactions A and B
-        for _ in range(2):
-            bulked_tx = self.wallet.create_self_transfer(target_vsize=target_vsize)
-            self.wallet.sendrawtransaction(from_node=node, tx_hex=bulked_tx["hex"])
-            parent_utxos.append(bulked_tx["new_utxo"])
-
-        # Package transaction C
-        pc_tx = self.wallet.create_self_transfer_multi(utxos_to_spend=parent_utxos, fee_per_output=high_fee, target_vsize=target_vsize)
-
-        # Package transaction D
-        pd_tx = self.wallet.create_self_transfer(utxo_to_spend=pc_tx["new_utxos"][0], target_vsize=target_vsize)
-
-        assert_equal(2, node.getmempoolinfo()["size"])
-        return [pc_tx["hex"], pd_tx["hex"]]
 
     @check_package_limits
     def test_desc_size_limits(self):

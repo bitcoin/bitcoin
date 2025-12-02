@@ -16,7 +16,7 @@ define $(package)_set_vars
   $(package)_config_opts+=-DEVENT__DISABLE_SAMPLES=ON -DEVENT__DISABLE_REGRESS=ON
   $(package)_config_opts+=-DEVENT__DISABLE_TESTS=ON -DEVENT__LIBRARY_TYPE=STATIC
   $(package)_cflags += -fdebug-prefix-map=$($(package)_extract_dir)=/usr -fmacro-prefix-map=$($(package)_extract_dir)=/usr
-  $(package)_cppflags += -D_GNU_SOURCE -D_FORTIFY_SOURCE=3
+  $(package)_cppflags += -D_GNU_SOURCE -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3
   $(package)_cppflags_mingw32=-D_WIN32_WINNT=0x0A00
 endef
 

@@ -51,37 +51,37 @@ BOOST_AUTO_TEST_CASE(fsbridge_fstream)
     fs::path tmpfile1 = tmpfolder / fs::u8path("fs_tests_₿_🏃");
     fs::path tmpfile2 = tmpfolder / fs::path(u8"fs_tests_₿_🏃");
     {
-        std::ofstream file{tmpfile1};
+        std::ofstream file{tmpfile1.std_path()};
         file << "bitcoin";
     }
     {
-        std::ifstream file{tmpfile2};
+        std::ifstream file{tmpfile2.std_path()};
         std::string input_buffer;
         file >> input_buffer;
         BOOST_CHECK_EQUAL(input_buffer, "bitcoin");
     }
     {
-        std::ifstream file{tmpfile1, std::ios_base::in | std::ios_base::ate};
+        std::ifstream file{tmpfile1.std_path(), std::ios_base::in | std::ios_base::ate};
         std::string input_buffer;
         file >> input_buffer;
         BOOST_CHECK_EQUAL(input_buffer, "");
     }
     {
-        std::ofstream file{tmpfile2, std::ios_base::out | std::ios_base::app};
+        std::ofstream file{tmpfile2.std_path(), std::ios_base::out | std::ios_base::app};
         file << "tests";
     }
     {
-        std::ifstream file{tmpfile1};
+        std::ifstream file{tmpfile1.std_path()};
         std::string input_buffer;
         file >> input_buffer;
         BOOST_CHECK_EQUAL(input_buffer, "bitcointests");
     }
     {
-        std::ofstream file{tmpfile2, std::ios_base::out | std::ios_base::trunc};
+        std::ofstream file{tmpfile2.std_path(), std::ios_base::out | std::ios_base::trunc};
         file << "bitcoin";
     }
     {
-        std::ifstream file{tmpfile1};
+        std::ifstream file{tmpfile1.std_path()};
         std::string input_buffer;
         file >> input_buffer;
         BOOST_CHECK_EQUAL(input_buffer, "bitcoin");
@@ -116,12 +116,12 @@ BOOST_AUTO_TEST_CASE(rename)
     const std::string path2_contents{"2222"};
 
     {
-        std::ofstream file{path1};
+        std::ofstream file{path1.std_path()};
         file << path1_contents;
     }
 
     {
-        std::ofstream file{path2};
+        std::ofstream file{path2.std_path()};
         file << path2_contents;
     }
 
@@ -131,36 +131,12 @@ BOOST_AUTO_TEST_CASE(rename)
     BOOST_CHECK(!fs::exists(path1));
 
     {
-        std::ifstream file{path2};
+        std::ifstream file{path2.std_path()};
         std::string contents;
         file >> contents;
         BOOST_CHECK_EQUAL(contents, path1_contents);
     }
     fs::remove(path2);
 }
-
-#ifndef __MINGW64__ // no symlinks on mingw
-BOOST_AUTO_TEST_CASE(create_directories)
-{
-    // Test fs::create_directories workaround.
-    const fs::path tmpfolder{m_args.GetDataDirBase()};
-
-    const fs::path dir{tmpfolder / "a"};
-    fs::create_directory(dir);
-    BOOST_CHECK(fs::exists(dir));
-    BOOST_CHECK(fs::is_directory(dir));
-    BOOST_CHECK(!fs::create_directories(dir));
-
-    const fs::path symlink{tmpfolder / "b"};
-    fs::create_directory_symlink(dir, symlink);
-    BOOST_CHECK(fs::exists(symlink));
-    BOOST_CHECK(fs::is_symlink(symlink));
-    BOOST_CHECK(fs::is_directory(symlink));
-    BOOST_CHECK(!fs::create_directories(symlink));
-
-    fs::remove(symlink);
-    fs::remove(dir);
-}
-#endif // __MINGW64__
 
 BOOST_AUTO_TEST_SUITE_END()
