@@ -58,13 +58,12 @@ std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> CTxMemPool::GetChildren(const C
 {
     LOCK(cs);
     std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> ret;
-    setEntries children;
+    WITH_FRESH_EPOCH(m_epoch);
     auto iter = mapNextTx.lower_bound(COutPoint(entry.GetTx().GetHash(), 0));
     for (; iter != mapNextTx.end() && iter->first->hash == entry.GetTx().GetHash(); ++iter) {
-        children.insert(iter->second);
-    }
-    for (const auto& child : children) {
-        ret.emplace_back(*child);
+        if (!visited(iter->second)) {
+            ret.emplace_back(*(iter->second));
+        }
     }
     return ret;
 }
@@ -198,7 +197,7 @@ void CTxMemPool::Apply(ChangeSet* changeset)
     AssertLockHeld(cs);
     m_txgraph->CommitStaging();
 
-    RemoveStaged(changeset->m_to_remove, false, MemPoolRemovalReason::REPLACED);
+    RemoveStaged(changeset->m_to_remove, MemPoolRemovalReason::REPLACED);
 
     for (size_t i=0; i<changeset->m_entry_vec.size(); ++i) {
         auto tx_entry = changeset->m_entry_vec[i];
@@ -308,35 +307,41 @@ CTxMemPool::txiter CTxMemPool::CalculateDescendants(const CTxMemPoolEntry& entry
     return mapTx.iterator_to(entry);
 }
 
+void CTxMemPool::removeRecursive(CTxMemPool::txiter to_remove, MemPoolRemovalReason reason)
+{
+    AssertLockHeld(cs);
+    Assume(!m_have_changeset);
+    auto descendants = m_txgraph->GetDescendants(*to_remove, TxGraph::Level::MAIN);
+    for (auto tx: descendants) {
+        removeUnchecked(mapTx.iterator_to(static_cast<const CTxMemPoolEntry&>(*tx)), reason);
+    }
+}
+
 void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReason reason)
 {
     // Remove transaction from memory pool
     AssertLockHeld(cs);
     Assume(!m_have_changeset);
-        setEntries txToRemove;
-        txiter origit = mapTx.find(origTx.GetHash());
-        if (origit != mapTx.end()) {
-            txToRemove.insert(origit);
-        } else {
-            // When recursively removing but origTx isn't in the mempool
-            // be sure to remove any children that are in the pool. This can
-            // happen during chain re-orgs if origTx isn't re-accepted into
-            // the mempool for any reason.
-            for (unsigned int i = 0; i < origTx.vout.size(); i++) {
-                auto it = mapNextTx.find(COutPoint(origTx.GetHash(), i));
-                if (it == mapNextTx.end())
-                    continue;
-                txiter nextit = it->second;
-                assert(nextit != mapTx.end());
-                txToRemove.insert(nextit);
-            }
+    txiter origit = mapTx.find(origTx.GetHash());
+    if (origit != mapTx.end()) {
+        removeRecursive(origit, reason);
+    } else {
+        // When recursively removing but origTx isn't in the mempool
+        // be sure to remove any descendants that are in the pool. This can
+        // happen during chain re-orgs if origTx isn't re-accepted into
+        // the mempool for any reason.
+        auto iter = mapNextTx.lower_bound(COutPoint(origTx.GetHash(), 0));
+        std::vector<const TxGraph::Ref*> to_remove;
+        while (iter != mapNextTx.end() && iter->first->hash == origTx.GetHash()) {
+            to_remove.emplace_back(&*(iter->second));
+            ++iter;
         }
-        setEntries setAllRemoves;
-        for (txiter it : txToRemove) {
-            CalculateDescendants(it, setAllRemoves);
+        auto all_removes = m_txgraph->GetDescendantsUnion(to_remove, TxGraph::Level::MAIN);
+        for (auto ref : all_removes) {
+            auto tx = mapTx.iterator_to(static_cast<const CTxMemPoolEntry&>(*ref));
+            removeUnchecked(tx, reason);
         }
-
-        RemoveStaged(setAllRemoves, false, reason);
+    }
 }
 
 void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check_final_and_mature)
@@ -346,15 +351,19 @@ void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check
     AssertLockHeld(::cs_main);
     Assume(!m_have_changeset);
 
-    setEntries txToRemove;
-    for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
-        if (check_final_and_mature(it)) txToRemove.insert(it);
+    std::vector<const TxGraph::Ref*> to_remove;
+    for (txiter it = mapTx.begin(); it != mapTx.end(); it++) {
+        if (check_final_and_mature(it)) {
+            to_remove.emplace_back(&*it);
+        }
     }
-    setEntries setAllRemoves;
-    for (txiter it : txToRemove) {
-        CalculateDescendants(it, setAllRemoves);
+
+    auto all_to_remove = m_txgraph->GetDescendantsUnion(to_remove, TxGraph::Level::MAIN);
+
+    for (auto ref : all_to_remove) {
+        auto it = mapTx.iterator_to(static_cast<const CTxMemPoolEntry&>(*ref));
+        removeUnchecked(it, MemPoolRemovalReason::REORG);
     }
-    RemoveStaged(setAllRemoves, false, MemPoolRemovalReason::REORG);
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         assert(TestLockPointValidity(chain, it->GetLockPoints()));
     }
@@ -372,7 +381,7 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
             if (Assume(txConflict.GetHash() != tx.GetHash()))
             {
                 ClearPrioritisation(txConflict.GetHash());
-                removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
+                removeRecursive(it->second, MemPoolRemovalReason::CONFLICT);
             }
         }
     }
@@ -389,10 +398,8 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
         for (const auto& tx : vtx) {
             txiter it = mapTx.find(tx->GetHash());
             if (it != mapTx.end()) {
-                setEntries stage;
-                stage.insert(it);
                 txs_removed_for_block.emplace_back(*it);
-                RemoveStaged(stage, true, MemPoolRemovalReason::BLOCK);
+                removeUnchecked(it, MemPoolRemovalReason::BLOCK);
             }
             removeConflicts(*tx);
             ClearPrioritisation(tx->GetHash());
@@ -418,6 +425,8 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
 
     uint64_t checkTotal = 0;
     CAmount check_total_fee{0};
+    CAmount check_total_modified_fee{0};
+    int64_t check_total_adjusted_weight{0};
     uint64_t innerUsage = 0;
 
     assert(!m_txgraph->IsOversized(TxGraph::Level::MAIN));
@@ -429,13 +438,28 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
 
     // Number of chunks is bounded by number of transactions.
     const auto diagram{GetFeerateDiagram()};
-    Assume(diagram.size() <= score_with_topo.size() + 1);
+    assert(diagram.size() <= score_with_topo.size() + 1);
+    assert(diagram.size() >= 1);
 
     std::optional<Wtxid> last_wtxid = std::nullopt;
+    auto diagram_iter = diagram.cbegin();
 
     for (const auto& it : score_with_topo) {
+        // GetSortedScoreWithTopology() contains the same chunks as the feerate
+        // diagram. We do not know where the chunk boundaries are, but we can
+        // check that there are points at which they match the cumulative fee
+        // and weight.
+        // The feerate diagram should never get behind the current transaction
+        // size totals.
+        assert(diagram_iter->size >= check_total_adjusted_weight);
+        if (diagram_iter->fee == check_total_modified_fee &&
+                diagram_iter->size == check_total_adjusted_weight) {
+            ++diagram_iter;
+        }
         checkTotal += it->GetTxSize();
+        check_total_adjusted_weight += it->GetAdjustedWeight();
         check_total_fee += it->GetFee();
+        check_total_modified_fee += it->GetModifiedFee();
         innerUsage += it->DynamicMemoryUsage();
         const CTransaction& tx = it->GetTx();
 
@@ -502,8 +526,13 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
         assert(it2 != mapTx.end());
     }
 
+    ++diagram_iter;
+    assert(diagram_iter == diagram.cend());
+
     assert(totalTxSize == checkTotal);
     assert(m_total_fee == check_total_fee);
+    assert(diagram.back().fee == check_total_modified_fee);
+    assert(diagram.back().size == check_total_adjusted_weight);
     assert(innerUsage == cachedInnerUsage);
 }
 
@@ -591,7 +620,7 @@ void CTxMemPool::PrioritiseTransaction(const Txid& hash, const CAmount& nFeeDelt
         if (it != mapTx.end()) {
             // PrioritiseTransaction calls stack on previous ones. Set the new
             // transaction fee to be current modified fee + feedelta.
-            mapTx.modify(it, [&nFeeDelta](CTxMemPoolEntry& e) { e.UpdateModifiedFee(nFeeDelta); });
+            it->UpdateModifiedFee(nFeeDelta);
             m_txgraph->SetTransactionFee(*it, it->GetModifiedFee());
             ++nTransactionsUpdated;
         }
@@ -744,7 +773,7 @@ void CTxMemPool::RemoveUnbroadcastTx(const Txid& txid, const bool unchecked) {
     }
 }
 
-void CTxMemPool::RemoveStaged(setEntries &stage, bool updateDescendants, MemPoolRemovalReason reason) {
+void CTxMemPool::RemoveStaged(setEntries &stage, MemPoolRemovalReason reason) {
     AssertLockHeld(cs);
     for (txiter it : stage) {
         removeUnchecked(it, reason);
@@ -754,7 +783,7 @@ void CTxMemPool::RemoveStaged(setEntries &stage, bool updateDescendants, MemPool
 bool CTxMemPool::CheckPolicyLimits(const CTransactionRef& tx)
 {
     LOCK(cs);
-    // Use ChangeSet interface to check whether the chain
+    // Use ChangeSet interface to check whether the cluster count
     // limits would be violated. Note that the changeset will be destroyed
     // when it goes out of scope.
     auto changeset = GetChangeSet();
@@ -776,7 +805,7 @@ int CTxMemPool::Expire(std::chrono::seconds time)
     for (txiter removeit : toremove) {
         CalculateDescendants(removeit, stage);
     }
-    RemoveStaged(stage, false, MemPoolRemovalReason::EXPIRY);
+    RemoveStaged(stage, MemPoolRemovalReason::EXPIRY);
     return stage.size();
 }
 
@@ -928,6 +957,9 @@ std::vector<CTxMemPool::txiter> CTxMemPool::GatherClusters(const std::vector<Txi
     for (auto txid : txids) {
         auto it = mapTx.find(txid);
         if (it != mapTx.end()) {
+            // Note that TxGraph::GetCluster will return results in graph
+            // order, which is deterministic (as long as we are not modifying
+            // the graph).
             auto cluster = m_txgraph->GetCluster(*it, TxGraph::Level::MAIN);
             if (unique_cluster_representatives.insert(static_cast<const CTxMemPoolEntry*>(&(**cluster.begin()))).second) {
                 for (auto tx : cluster) {
@@ -968,7 +1000,7 @@ CTxMemPool::ChangeSet::TxHandle CTxMemPool::ChangeSet::StageAddition(const CTran
     TxGraph::Ref ref(m_pool->m_txgraph->AddTransaction(FeePerWeight(fee, GetSigOpsAdjustedWeight(GetTransactionWeight(*tx), sigops_cost, ::nBytesPerSigOp))));
     auto newit = m_to_add.emplace(std::move(ref), tx, fee, time, entry_height, entry_sequence, spends_coinbase, sigops_cost, lp).first;
     if (delta) {
-        m_to_add.modify(newit, [&delta](CTxMemPoolEntry& e) { e.UpdateModifiedFee(delta); });
+        newit->UpdateModifiedFee(delta);
         m_pool->m_txgraph->SetTransactionFee(*newit, newit->GetModifiedFee());
     }
 

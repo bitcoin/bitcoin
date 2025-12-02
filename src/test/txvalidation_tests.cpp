@@ -225,7 +225,7 @@ BOOST_FIXTURE_TEST_CASE(ephemeral_tests, RegTestingSetup)
     BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
 
     // Add first grandparent to mempool and fetch entry
-    AddToMempool(pool, entry.FromTx(grandparent_tx_1));
+    TryAddToMempool(pool, entry.FromTx(grandparent_tx_1));
 
     // Ignores ancestors that aren't direct parents
     BOOST_CHECK(CheckEphemeralSpends({child_no_dust}, dustrelay, pool, child_state, child_wtxid));
@@ -248,7 +248,7 @@ BOOST_FIXTURE_TEST_CASE(ephemeral_tests, RegTestingSetup)
     BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
 
     // Add second grandparent to mempool
-    AddToMempool(pool, entry.FromTx(grandparent_tx_2));
+    TryAddToMempool(pool, entry.FromTx(grandparent_tx_2));
 
     // Only spends single dust out of two direct parents
     BOOST_CHECK(!CheckEphemeralSpends({dust_non_spend_both_parents}, dustrelay, pool, child_state, child_wtxid));
@@ -263,7 +263,7 @@ BOOST_FIXTURE_TEST_CASE(ephemeral_tests, RegTestingSetup)
     BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
 
     // Now add dusty parent to mempool
-    AddToMempool(pool, entry.FromTx(parent_with_dust));
+    TryAddToMempool(pool, entry.FromTx(parent_with_dust));
 
     // Passes dust checks even with non-parent ancestors
     BOOST_CHECK(CheckEphemeralSpends({child_no_dust}, dustrelay, pool, child_state, child_wtxid));
@@ -281,9 +281,9 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
     std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> empty_parents;
 
     auto mempool_tx_v3 = make_tx(random_outpoints(1), /*version=*/3);
-    AddToMempool(pool, entry.FromTx(mempool_tx_v3));
+    TryAddToMempool(pool, entry.FromTx(mempool_tx_v3));
     auto mempool_tx_v2 = make_tx(random_outpoints(1), /*version=*/2);
-    AddToMempool(pool, entry.FromTx(mempool_tx_v2));
+    TryAddToMempool(pool, entry.FromTx(mempool_tx_v2));
 
     // Cannot spend from an unconfirmed TRUC transaction unless this tx is also TRUC.
     {
@@ -389,7 +389,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         package_multi_parents.emplace_back(mempool_tx_v3);
         for (size_t i{0}; i < 2; ++i) {
             auto mempool_tx = make_tx(random_outpoints(i + 1), /*version=*/3);
-            AddToMempool(pool, entry.FromTx(mempool_tx));
+            TryAddToMempool(pool, entry.FromTx(mempool_tx));
             mempool_outpoints.emplace_back(mempool_tx->GetHash(), 0);
             package_multi_parents.emplace_back(mempool_tx);
         }
@@ -414,7 +414,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         auto last_outpoint{random_outpoints(1)[0]};
         for (size_t i{0}; i < 2; ++i) {
             auto mempool_tx = make_tx({last_outpoint}, /*version=*/3);
-            AddToMempool(pool, entry.FromTx(mempool_tx));
+            TryAddToMempool(pool, entry.FromTx(mempool_tx));
             last_outpoint = COutPoint{mempool_tx->GetHash(), 0};
             package_multi_gen.emplace_back(mempool_tx);
             if (i == 1) middle_tx = mempool_tx;
@@ -501,7 +501,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         BOOST_CHECK(GetTransactionWeight(*tx_mempool_v3_child) <= TRUC_CHILD_MAX_VSIZE * WITNESS_SCALE_FACTOR);
         auto parents{pool.GetParents(entry.FromTx(tx_mempool_v3_child))};
         BOOST_CHECK(SingleTRUCChecks(pool, tx_mempool_v3_child, parents, empty_conflicts_set, GetVirtualTransactionSize(*tx_mempool_v3_child)) == std::nullopt);
-        AddToMempool(pool, entry.FromTx(tx_mempool_v3_child));
+        TryAddToMempool(pool, entry.FromTx(tx_mempool_v3_child));
 
         Package package_v3_1p1c{mempool_tx_v3, tx_mempool_v3_child};
         BOOST_CHECK(PackageTRUCChecks(pool, tx_mempool_v3_child, GetVirtualTransactionSize(*tx_mempool_v3_child), package_v3_1p1c, empty_parents) == std::nullopt);
@@ -528,7 +528,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
                           expected_error_str);
 
         // Configuration where parent already has 2 other children in mempool (no sibling eviction allowed). This may happen as the result of a reorg.
-        AddToMempool(pool, entry.FromTx(tx_v3_child2));
+        TryAddToMempool(pool, entry.FromTx(tx_v3_child2));
         auto tx_v3_child3 = make_tx({COutPoint{mempool_tx_v3->GetHash(), 24}}, /*version=*/3);
         auto entry_mempool_parent = pool.GetIter(mempool_tx_v3->GetHash()).value();
         BOOST_CHECK_EQUAL(pool.GetDescendantCount(entry_mempool_parent), 3);
@@ -547,9 +547,9 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         auto tx_mempool_nibling = make_tx({COutPoint{tx_mempool_sibling->GetHash(), 0}}, /*version=*/3);
         auto tx_to_submit = make_tx({COutPoint{tx_mempool_grandparent->GetHash(), 1}}, /*version=*/3);
 
-        AddToMempool(pool, entry.FromTx(tx_mempool_grandparent));
-        AddToMempool(pool, entry.FromTx(tx_mempool_sibling));
-        AddToMempool(pool, entry.FromTx(tx_mempool_nibling));
+        TryAddToMempool(pool, entry.FromTx(tx_mempool_grandparent));
+        TryAddToMempool(pool, entry.FromTx(tx_mempool_sibling));
+        TryAddToMempool(pool, entry.FromTx(tx_mempool_nibling));
 
         auto parents_3gen{pool.GetParents(entry.FromTx(tx_to_submit))};
         const auto expected_error_str{strprintf("tx %s (wtxid=%s) would exceed descendant count limit",

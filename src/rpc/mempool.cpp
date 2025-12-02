@@ -267,14 +267,15 @@ static RPCHelpMan testmempoolaccept()
 static std::vector<RPCResult> ClusterDescription()
 {
     return {
-        RPCResult{RPCResult::Type::NUM, "weight", "total sigops-adjusted weight (as defined in BIP 141 and modified by '-bytespersigop'"},
+        RPCResult{RPCResult::Type::NUM, "clusterweight", "total sigops-adjusted weight (as defined in BIP 141 and modified by '-bytespersigop')"},
         RPCResult{RPCResult::Type::NUM, "txcount", "number of transactions"},
-        RPCResult{RPCResult::Type::ARR, "txs", "transactions in this cluster in mining order",
-            {RPCResult{RPCResult::Type::OBJ, "txentry", "",
+        RPCResult{RPCResult::Type::ARR, "chunks", "chunks in this cluster (in mining order)",
+            {RPCResult{RPCResult::Type::OBJ, "chunk", "",
                 {
-                    RPCResult{RPCResult::Type::STR_HEX, "txid", "the transaction id"},
-                    RPCResult{RPCResult::Type::NUM, "chunkfee", "fee of the chunk containing this tx"},
-                    RPCResult{RPCResult::Type::NUM, "chunkweight", "sigops-adjusted weight of the chunk containing this transaction"}
+                    RPCResult{RPCResult::Type::NUM, "chunkfee", "fees of the transactions in this chunk"},
+                    RPCResult{RPCResult::Type::NUM, "chunkweight", "sigops-adjusted weight of all transactions in this chunk"},
+                    RPCResult{RPCResult::Type::ARR, "txs", "transactions in this chunk in mining order",
+                        {RPCResult{RPCResult::Type::STR_HEX, "txid", "transaction id"}}},
                 }
             }}
         }
@@ -311,6 +312,19 @@ static std::vector<RPCResult> MempoolEntryDescription()
     };
 }
 
+void AppendChunkInfo(UniValue& all_chunks, FeePerWeight chunk_feerate, std::vector<const CTxMemPoolEntry *> chunk_txs)
+{
+    UniValue chunk(UniValue::VOBJ);
+    chunk.pushKV("chunkfee", ValueFromAmount((int)chunk_feerate.fee));
+    chunk.pushKV("chunkweight", chunk_feerate.size);
+    UniValue chunk_txids(UniValue::VARR);
+    for (const auto& chunk_tx : chunk_txs) {
+        chunk_txids.push_back(chunk_tx->GetTx().GetHash().ToString());
+    }
+    chunk.pushKV("txs", std::move(chunk_txids));
+    all_chunks.push_back(std::move(chunk));
+}
+
 static void clusterToJSON(const CTxMemPool& pool, UniValue& info, std::vector<const CTxMemPoolEntry *> cluster) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
     AssertLockHeld(pool.cs);
@@ -318,18 +332,31 @@ static void clusterToJSON(const CTxMemPool& pool, UniValue& info, std::vector<co
     for (const auto& tx : cluster) {
         total_weight += tx->GetAdjustedWeight();
     }
-    info.pushKV("weight", total_weight);
+    info.pushKV("clusterweight", total_weight);
     info.pushKV("txcount", (int)cluster.size());
-    UniValue txs(UniValue::VARR);
+
+    // Output the cluster by chunk. This isn't handed to us by the mempool, but
+    // we can calculate it by looking at the chunk feerates of each transaction
+    // in the cluster.
+    FeePerWeight current_chunk_feerate = pool.GetMainChunkFeerate(*cluster[0]);
+    std::vector<const CTxMemPoolEntry *> current_chunk;
+    current_chunk.reserve(cluster.size());
+
+    UniValue all_chunks(UniValue::VARR);
     for (const auto& tx : cluster) {
-        UniValue txentry(UniValue::VOBJ);
-        auto feerate = pool.GetMainChunkFeerate(*tx);
-        txentry.pushKV("txid", tx->GetTx().GetHash().ToString());
-        txentry.pushKV("chunkfee", ValueFromAmount((int)feerate.fee));
-        txentry.pushKV("chunkweight", feerate.size);
-        txs.push_back(txentry);
+        if (current_chunk_feerate.size == 0) {
+            // We've iterated all the transactions in the previous chunk; so
+            // append it to the output.
+            AppendChunkInfo(all_chunks, pool.GetMainChunkFeerate(*current_chunk[0]), current_chunk);
+            current_chunk.clear();
+            current_chunk_feerate = pool.GetMainChunkFeerate(*tx);
+        }
+        current_chunk.push_back(tx);
+        current_chunk_feerate.size -= tx->GetAdjustedWeight();
     }
-    info.pushKV("txs", txs);
+    AppendChunkInfo(all_chunks, pool.GetMainChunkFeerate(*current_chunk[0]), current_chunk);
+    current_chunk.clear();
+    info.pushKV("chunks", std::move(all_chunks));
 }
 
 static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPoolEntry& e) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
@@ -668,12 +695,18 @@ static RPCHelpMan getmempoolcluster()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    uint256 hash = ParseHashV(request.params[0], "txid");
 
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
     LOCK(mempool.cs);
 
-    auto cluster = mempool.GetCluster(Txid::FromUint256(hash));
+    auto txid = Txid::FromUint256(hash);
+    const auto entry{mempool.GetEntry(txid)};
+    if (entry == nullptr) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in mempool");
+    }
+
+    auto cluster = mempool.GetCluster(txid);
 
     UniValue info(UniValue::VOBJ);
     clusterToJSON(mempool, info, cluster);
