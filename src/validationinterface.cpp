@@ -312,9 +312,9 @@ void CMainSignals::NotifyInstantSendDoubleSpendAttempt(const CTransactionRef& cu
             previousTx->GetHash().ToString());
 }
 
-void CMainSignals::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig, const std::string& id) {
-    auto event = [sig, this] {
-        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyRecoveredSig(sig); });
+void CMainSignals::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig, const std::string& id, bool proactive_relay) {
+    auto event = [sig, proactive_relay, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyRecoveredSig(sig, proactive_relay); });
     };
     ENQUEUE_AND_LOG_EVENT(event, "%s: notify recoveredsig=%s", __func__,
             id);
