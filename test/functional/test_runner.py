@@ -155,6 +155,7 @@ BASE_SCRIPTS = [
     'wallet_anchor.py',
     'feature_reindex.py',
     'feature_reindex_readonly.py',
+    'feature_txindex_reorg.py',
     'wallet_labels.py',
     'p2p_compactblocks.py',
     'p2p_compactblocks_blocksonly.py',
