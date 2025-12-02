@@ -140,7 +140,7 @@ void NetSigning::WorkThreadMain()
     while (!workInterrupt) {
         bool fMoreWork = ProcessPendingRecoveredSigs();
 
-        constexpr auto CLEANUP_INTERVAL{5000ms};
+        constexpr auto CLEANUP_INTERVAL{5s};
         if (cleanupThrottler.TryCleanup(CLEANUP_INTERVAL)) {
             m_sig_manager.Cleanup();
         }

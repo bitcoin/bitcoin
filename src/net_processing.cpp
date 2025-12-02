@@ -6571,5 +6571,5 @@ void PeerManagerImpl::PeerAskPeersForTransaction(const uint256& txid)
 
 void PeerManagerImpl::PeerPostProcessMessage(MessageProcessingResult&& ret)
 {
-    PostProcessMessage(std::move(ret), -1);
+    PostProcessMessage(std::move(ret), /*node=*/-1);
 }

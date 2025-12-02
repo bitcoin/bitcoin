@@ -367,7 +367,7 @@ void CSigningManager::VerifyAndProcessRecoveredSig(NodeId from, std::shared_ptr<
     auto quorum = qman.GetQuorum(llmq_type, recoveredSig->getQuorumHash());
 
     if (!quorum) {
-        LogPrint(BCLog::LLMQ, "NetSigning::%s -- quorum %s not found\n", __func__,
+        LogPrint(BCLog::LLMQ, "CSigningManager::%s -- quorum %s not found\n", __func__,
                  recoveredSig->getQuorumHash().ToString());
         return;
     }
