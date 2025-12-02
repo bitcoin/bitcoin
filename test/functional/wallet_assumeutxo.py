@@ -54,6 +54,30 @@ class AssumeutxoTest(BitcoinTestFramework):
         wrpc = node.get_wallet_rpc(wallet_name)
         return wrpc.importdescriptors(import_request)
 
+    def validate_snapshot_import(self, node, loaded, base_hash):
+        assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
+        assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
+
+        normal, snapshot = node.getchainstates()["chainstates"]
+        assert_equal(normal['blocks'], START_HEIGHT)
+        assert 'snapshot_blockhash' not in normal
+        assert_equal(normal['validated'], True)
+        assert_equal(snapshot['blocks'], SNAPSHOT_BASE_HEIGHT)
+        assert_equal(snapshot['snapshot_blockhash'], base_hash)
+        assert_equal(snapshot['validated'], False)
+
+        assert_equal(node.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
+
+    def complete_background_validation(self, node):
+        self.connect_nodes(0, node.index)
+
+        # Ensuring snapshot chain syncs to tip
+        self.wait_until(lambda: node.getchainstates()['chainstates'][-1]['blocks'] == FINAL_HEIGHT)
+        self.sync_blocks(nodes=(self.nodes[0], node))
+
+        # Ensuring background validation completes
+        self.wait_until(lambda: len(node.getchainstates()['chainstates']) == 1)
+
     def run_test(self):
         """
         Bring up two (disconnected) nodes, mine some new blocks on the first,
@@ -141,18 +165,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.log.info(
             f"Loading snapshot into second node from {dump_output['path']}")
         loaded = n1.loadtxoutset(dump_output['path'])
-        assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
-        assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
-
-        normal, snapshot = n1.getchainstates()["chainstates"]
-        assert_equal(normal['blocks'], START_HEIGHT)
-        assert_equal(normal.get('snapshot_blockhash'), None)
-        assert_equal(normal['validated'], True)
-        assert_equal(snapshot['blocks'], SNAPSHOT_BASE_HEIGHT)
-        assert_equal(snapshot['snapshot_blockhash'], dump_output['base_hash'])
-        assert_equal(snapshot['validated'], False)
-
-        assert_equal(n1.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
+        self.validate_snapshot_import(n1, loaded, dump_output['base_hash'])
 
         self.log.info("Backup from the snapshot height can be loaded during background sync")
         n1.restorewallet("w", "backup_w.dat")
@@ -196,16 +209,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.restart_node(1, extra_args=self.extra_args[1])
 
         # TODO: inspect state of e.g. the wallet before reconnecting
-        self.connect_nodes(0, 1)
-
-        self.log.info(
-            f"Ensuring snapshot chain syncs to tip. ({FINAL_HEIGHT})")
-        self.wait_until(lambda: n1.getchainstates()[
-                        'chainstates'][-1]['blocks'] == FINAL_HEIGHT)
-        self.sync_blocks(nodes=(n0, n1))
-
-        self.log.info("Ensuring background validation completes")
-        self.wait_until(lambda: len(n1.getchainstates()['chainstates']) == 1)
+        self.complete_background_validation(n1)
 
         self.log.info("Ensuring wallet can be restored from a backup that was created before the snapshot height")
         n1.restorewallet("w2", "backup_w2.dat")
