@@ -45,7 +45,7 @@ jobs:
         shell: bash
 
       - name: Cache depends sources
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: |
             depends/sources
