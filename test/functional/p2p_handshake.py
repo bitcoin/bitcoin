@@ -6,6 +6,7 @@
 Test P2P behaviour during the handshake phase (VERSION, VERACK messages).
 """
 import itertools
+import random
 import time
 
 from test_framework.test_framework import BitcoinTestFramework
@@ -16,9 +17,18 @@ from test_framework.messages import (
     NODE_NONE,
     NODE_P2P_V2,
     NODE_WITNESS,
+    msg_version,
 )
-from test_framework.p2p import P2PInterface
-from test_framework.util import p2p_port
+from test_framework.p2p import (
+    P2PInterface,
+    P2P_SERVICES,
+    P2P_SUBVERSION,
+    P2P_VERSION,
+)
+from test_framework.util import (
+    assert_equal,
+    p2p_port,
+)
 
 
 # Desirable service flags for outbound non-pruned and pruned peers. Note that
@@ -65,6 +75,20 @@ class P2PHandshakeTest(BitcoinTestFramework):
                 assert (services & desirable_service_flags) == desirable_service_flags
                 self.add_outbound_connection(node, conn_type, services, wait_for_disconnect=False)
 
+    def test_startingheight(self, node):
+        for fake_startheight in [-2**31, -1, 0, 1000000, 2**31-1] + [random.randint(-2**31, 2**31) for _ in range(5)]:
+            peer = node.add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False)
+            version = msg_version()
+            version.nVersion = P2P_VERSION
+            version.strSubVer = P2P_SUBVERSION
+            version.nServices = P2P_SERVICES
+            version.nStartingHeight = fake_startheight
+            peer.send_without_ping(version)
+            peer.wait_for_verack()
+            peer_info = node.getpeerinfo()[-1]
+            assert_equal(peer_info['startingheight'], fake_startheight)
+            peer.peer_disconnect()
+
     def generate_at_mocktime(self, time):
         self.nodes[0].setmocktime(time)
         self.generate(self.nodes[0], 1)
@@ -95,6 +119,9 @@ class P2PHandshakeTest(BitcoinTestFramework):
             node_listen_addr = f"127.0.0.1:{p2p_port(0)}"
             node.addconnection(node_listen_addr, "outbound-full-relay", self.options.v2transport)
             self.wait_until(lambda: len(node.getpeerinfo()) == 0)
+
+        self.log.info("Check that peer's announced starting height is remembered")
+        self.test_startingheight(node)
 
 
 if __name__ == '__main__':
