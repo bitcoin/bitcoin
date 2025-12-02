@@ -44,14 +44,11 @@ int main(int argc, char** argv)
         std::cout << "Usage: mpprinter <fd>\n";
         return 1;
     }
-    int fd;
-    if (std::from_chars(argv[1], argv[1] + strlen(argv[1]), fd).ec != std::errc{}) {
-        std::cerr << argv[1] << " is not a number or is larger than an int\n";
-        return 1;
-    }
+    mp::SocketId socket{mp::StartSpawned(argv[1])};
     mp::EventLoop loop("mpprinter", LogPrint);
     std::unique_ptr<Init> init = std::make_unique<InitImpl>();
-    mp::ServeStream<InitInterface>(loop, fd, *init);
+    mp::Stream stream{loop.m_io_context.lowLevelProvider->wrapSocketFd(socket, kj::LowLevelAsyncIoProvider::TAKE_OWNERSHIP)};
+    mp::ServeStream<InitInterface>(loop, std::move(stream), *init);
     loop.loop();
     return 0;
 }
