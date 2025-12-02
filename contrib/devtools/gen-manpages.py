@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -59,10 +60,11 @@ for relpath in BINARIES:
             print(f'{abspath} not found or not an executable', file=sys.stderr)
             sys.exit(1)
     # take first line (which must contain version)
-    verstr = r.stdout.splitlines()[0]
-    # last word of line is the actual version e.g. v22.99.0-5c6b3d5b3508
-    verstr = verstr.split()[-1]
-    assert verstr.startswith('v')
+    output = r.stdout.splitlines()[0]
+    # find the version e.g. v30.99.0-ce771726f3e7
+    search = re.search(r"v[0-9]\S+", output)
+    assert search
+    verstr = search.group(0)
     # remaining lines are copyright
     copyright = r.stdout.split('\n')[1:]
     assert copyright[0].startswith('Copyright (C)')
