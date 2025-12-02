@@ -37,6 +37,12 @@ jobs:
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
 
+  cache-sources:
+    name: Cache depends sources
+    needs: [check-skip]
+    if: ${{ needs.check-skip.outputs.skip == 'false' }}
+    uses: ./.github/workflows/cache-depends-sources.yml
+
   container:
     name: Build container
     needs: [check-skip]
@@ -60,7 +66,7 @@ jobs:
   depends-arm-linux:
     name: arm-linux-gnueabihf
     uses: ./.github/workflows/build-depends.yml
-    needs: [container]
+    needs: [container, cache-sources]
     if: ${{ vars.SKIP_ARM_LINUX == '' }}
     with:
       build-target: arm-linux
@@ -69,7 +75,7 @@ jobs:
   depends-linux64:
     name: x86_64-pc-linux-gnu
     uses: ./.github/workflows/build-depends.yml
-    needs: [container]
+    needs: [container, cache-sources]
     if: |
       vars.SKIP_LINUX64 == '' ||
       vars.SKIP_LINUX64_FUZZ == '' ||
@@ -82,7 +88,7 @@ jobs:
   depends-linux64_multiprocess:
     name: x86_64-pc-linux-gnu_multiprocess
     uses: ./.github/workflows/build-depends.yml
-    needs: [container]
+    needs: [container, cache-sources]
     if: |
       vars.SKIP_LINUX64_MULTIPROCESS == '' ||
       vars.SKIP_LINUX64_TSAN == ''
@@ -93,7 +99,7 @@ jobs:
   depends-linux64_nowallet:
     name: x86_64-pc-linux-gnu_nowallet
     uses: ./.github/workflows/build-depends.yml
-    needs: [container]
+    needs: [container, cache-sources]
     if: ${{ vars.SKIP_LINUX64_NOWALLET == '' }}
     with:
       build-target: linux64_nowallet
@@ -102,7 +108,7 @@ jobs:
   depends-mac:
     name: x86_64-apple-darwin
     uses: ./.github/workflows/build-depends.yml
-    needs: [container]
+    needs: [container, cache-sources]
     if: ${{ vars.SKIP_MAC == '' }}
     with:
       build-target: mac
@@ -111,7 +117,7 @@ jobs:
   depends-win64:
     name: x86_64-w64-mingw32
     uses: ./.github/workflows/build-depends.yml
-    needs: [container]
+    needs: [container, cache-sources]
     if: ${{ vars.SKIP_WIN64 == '' }}
     with:
       build-target: win64

@@ -1,0 +1,30 @@
+name: Cache depends sources
+
+on:
+  workflow_call:
+  schedule:
+    # Run daily at 6 AM UTC on the default branch to keep cache warm
+    - cron: '0 6 * * *'
+
+jobs:
+  cache-sources:
+    name: Cache depends sources
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Check for cached sources
+        id: cache-check
+        uses: actions/cache@v4
+        with:
+          path: depends/sources
+          key: depends-sources-${{ hashFiles('depends/packages/*') }}
+          restore-keys: depends-sources-
+          lookup-only: true
+
+      - name: Download sources
+        if: steps.cache-check.outputs.cache-hit != 'true'
+        run: make -C depends download
