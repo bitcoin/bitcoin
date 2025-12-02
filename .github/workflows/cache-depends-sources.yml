@@ -28,10 +28,3 @@ jobs:
       - name: Download sources
         if: steps.cache-check.outputs.cache-hit != 'true'
         run: make -C depends download
-
-      - name: Save sources cache
-        if: steps.cache-check.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: depends/sources
-          key: depends-sources-${{ hashFiles('depends/packages/*') }}
