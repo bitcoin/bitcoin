@@ -710,8 +710,7 @@ class WalletTest(BitcoinTestFramework):
                                  "vout":     baz["vout"]}
         expected_fields = frozenset({'amount', 'chainlock', 'confirmations', 'details', 'fee',
                                      'instantlock', 'instantlock_internal',
-                                     'hex', 'timereceived', 'time', 'trusted', 'txid', 'walletconflicts'})
-
+                                     'hex', 'lastprocessedblock', 'timereceived', 'time', 'trusted', 'txid', 'walletconflicts'})
         verbose_field = "decoded"
         expected_verbose_fields = expected_fields | {verbose_field}
 
