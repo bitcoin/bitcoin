@@ -15,23 +15,19 @@ on:
         description: "Container name"
         required: true
         type: string
-      runs-on:
-        description: "Runner label to use (e.g., ubuntu-24.04 or ubuntu-24.04-arm)"
-        required: false
-        default: ubuntu-24.04
-        type: string
     outputs:
       path:
         description: "Path to built container"
-        value: ghcr.io/${{ jobs.build.outputs.repo }}/${{ inputs.name }}:${{ jobs.build.outputs.tag }}
+        value: ghcr.io/${{ jobs.build-amd64.outputs.repo }}/${{ inputs.name }}:${{ jobs.build-amd64.outputs.tag }}
 
 jobs:
-  build:
-    name: Build container
-    runs-on: ${{ inputs.runs-on }}
+  build-amd64:
+    name: Build container (amd64)
+    runs-on: ubuntu-24.04
     outputs:
       tag: ${{ steps.prepare.outputs.tag }}
       repo: ${{ steps.prepare.outputs.repo }}
+      digest: ${{ steps.build.outputs.digest }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -49,8 +45,49 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Set up QEMU (for multi-arch emulation)
-        uses: docker/setup-qemu-action@v3
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ inputs.context }}
+          file: ${{ inputs.file }}
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ghcr.io/${{ steps.prepare.outputs.repo }}/${{ inputs.name }}:${{ hashFiles(inputs.file) }}-amd64
+          cache-from: |
+            type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo }}/${{ inputs.name }}:${{ hashFiles(inputs.file) }}-amd64
+            type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo }}/${{ inputs.name }}:${{ steps.prepare.outputs.tag }}
+          cache-to: type=inline
+
+  build-arm64:
+    name: Build container (arm64)
+    runs-on: ubuntu-24.04-arm
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Prepare variables
+        id: prepare
+        run: |
+          BRANCH_NAME=$(echo "${GITHUB_REF##*/}" | tr '[:upper:]' '[:lower:]')
+          REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "tag=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+          echo "repo=${REPO_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
@@ -60,18 +97,55 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: ${{ inputs.context }}
           file: ${{ inputs.file }}
           push: true
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/arm64
           tags: |
-            ghcr.io/${{ steps.prepare.outputs.repo }}/${{ inputs.name }}:${{ hashFiles(inputs.file) }}
-            ghcr.io/${{ steps.prepare.outputs.repo }}/${{ inputs.name }}:${{ steps.prepare.outputs.tag }}
-            ghcr.io/${{ steps.prepare.outputs.repo }}/${{ inputs.name }}:latest
+            ghcr.io/${{ steps.prepare.outputs.repo }}/${{ inputs.name }}:${{ hashFiles(inputs.file) }}-arm64
           cache-from: |
-            type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo }}/${{ inputs.name }}:${{ hashFiles(inputs.file) }}
+            type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo }}/${{ inputs.name }}:${{ hashFiles(inputs.file) }}-arm64
             type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo }}/${{ inputs.name }}:${{ steps.prepare.outputs.tag }}
-            type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo }}/${{ inputs.name }}:latest
           cache-to: type=inline
+
+  create-manifest:
+    name: Create multi-arch manifest
+    runs-on: ubuntu-24.04-arm
+    needs: [build-amd64, build-arm64]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create and push multi-arch manifest
+        run: |
+          REPO="ghcr.io/${{ needs.build-amd64.outputs.repo }}/${{ inputs.name }}"
+          TAG="${{ needs.build-amd64.outputs.tag }}"
+          HASH_TAG="${{ hashFiles(inputs.file) }}"
+
+          # Create manifest from arch-specific images
+          docker buildx imagetools create -t "${REPO}:${HASH_TAG}" \
+            "${REPO}:${HASH_TAG}-amd64" \
+            "${REPO}:${HASH_TAG}-arm64"
+
+          docker buildx imagetools create -t "${REPO}:${TAG}" \
+            "${REPO}:${HASH_TAG}-amd64" \
+            "${REPO}:${HASH_TAG}-arm64"
+
+          docker buildx imagetools create -t "${REPO}:latest" \
+            "${REPO}:${HASH_TAG}-amd64" \
+            "${REPO}:${HASH_TAG}-arm64"
