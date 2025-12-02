@@ -5,6 +5,7 @@
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <clientversion.h>
+#include <common/args.h>
 #include <util/fs.h>
 #include <util/exec.h>
 #include <util/strencodings.h>
@@ -47,7 +48,7 @@ Run '%s help' to see additional commands (e.g. for testing and debugging).
 )";
 
 struct CommandLine {
-    bool use_multiprocess{false};
+    std::optional<bool> use_multiprocess;
     bool show_version{false};
     bool show_help{false};
     std::string_view command;
@@ -55,6 +56,7 @@ struct CommandLine {
 };
 
 CommandLine ParseCommandLine(int argc, char* argv[]);
+bool UseMultiprocess(const CommandLine& cmd);
 static void ExecCommand(const std::vector<const char*>& args, std::string_view argv0);
 
 int main(int argc, char* argv[])
@@ -78,9 +80,9 @@ int main(int argc, char* argv[])
                 return EXIT_FAILURE;
             }
         } else if (cmd.command == "gui") {
-            args.emplace_back(cmd.use_multiprocess ? "bitcoin-gui" : "bitcoin-qt");
+            args.emplace_back(UseMultiprocess(cmd) ? "bitcoin-gui" : "bitcoin-qt");
         } else if (cmd.command == "node") {
-            args.emplace_back(cmd.use_multiprocess ? "bitcoin-node" : "bitcoind");
+            args.emplace_back(UseMultiprocess(cmd) ? "bitcoin-node" : "bitcoind");
         } else if (cmd.command == "rpc") {
             args.emplace_back("bitcoin-cli");
             // Since "bitcoin rpc" is a new interface that doesn't need to be
@@ -141,6 +143,30 @@ CommandLine ParseCommandLine(int argc, char* argv[])
         }
     }
     return cmd;
+}
+
+bool UseMultiprocess(const CommandLine& cmd)
+{
+    // If -m or -M options were explicitly specified, there is no need to
+    // further parse arguments to determine which to use.
+    if (cmd.use_multiprocess) return *cmd.use_multiprocess;
+
+    ArgsManager args;
+    args.SetDefaultFlags(ArgsManager::ALLOW_ANY);
+    std::string error_message;
+    auto argv{cmd.args};
+    argv.insert(argv.begin(), nullptr);
+    if (!args.ParseParameters(argv.size(), argv.data(), error_message)) {
+        tfm::format(std::cerr, "Warning: failed to parse subcommand command line options: %s\n", error_message);
+    }
+    if (!args.ReadConfigFiles(error_message, true)) {
+        tfm::format(std::cerr, "Warning: failed to parse subcommand config: %s\n", error_message);
+    }
+    args.SelectConfigNetwork(args.GetChainTypeString());
+
+    // If any -ipc* options are set these need to be processed by a
+    // multiprocess-capable binary.
+    return args.IsArgSet("-ipcbind") || args.IsArgSet("-ipcconnect") || args.IsArgSet("-ipcfd");
 }
 
 //! Execute the specified bitcoind, bitcoin-qt or other command line in `args`

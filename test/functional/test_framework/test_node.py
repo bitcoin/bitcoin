@@ -161,7 +161,7 @@ class TestNode():
             self.args.append("-logsourcelocations")
         if self.version_is_at_least(239000):
             self.args.append("-loglevel=trace")
-        if self.version_is_at_least(299900):
+        if self.version_is_at_least(290100):
             self.args.append("-nologratelimit")
 
         # Default behavior from global -v2transport flag is added to args to persist it over restarts.

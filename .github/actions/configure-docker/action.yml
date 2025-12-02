@@ -4,12 +4,21 @@ inputs:
   cache-provider:
     description: 'gha or cirrus cache provider'
     required: true
-    options:
-    - gh
-    - cirrus
 runs:
   using: 'composite'
   steps:
+    - name: Check inputs
+      shell: bash
+      run: |
+        # We expect only gha or cirrus as inputs to cache-provider
+        case "${{ inputs.cache-provider }}" in
+          gha|cirrus)
+            ;;
+          *)
+            echo "::warning title=Unknown input to configure docker action::Provided value was ${{ inputs.cache-provider }}"
+            ;;
+        esac
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
       with:
@@ -22,8 +31,12 @@ runs:
       uses: actions/github-script@v6
       with:
         script: |
-          core.exportVariable('ACTIONS_CACHE_URL', process.env['ACTIONS_CACHE_URL'])
-          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env['ACTIONS_RUNTIME_TOKEN'])
+          Object.keys(process.env).forEach(function (key) {
+            if (key.startsWith('ACTIONS_')) {
+              core.info(`Exporting ${key}`);
+              core.exportVariable(key, process.env[key]);
+            }
+          });
 
     - name: Construct docker build cache args
       shell: bash
