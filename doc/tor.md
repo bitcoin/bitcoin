@@ -181,6 +181,10 @@ Add these lines to your `/etc/tor/torrc` (or equivalent config file):
 
     HiddenServiceDir /var/lib/tor/bitcoin-service/
     HiddenServicePort 8333 127.0.0.1:8334
+    # If `tor --list-modules` shows "pow: yes", then enable PoW protection.
+    # It is available in tor-0.4.8.1-alpha and newer when configured with
+    # `./configure --enable-gpl`.
+    HiddenServicePoWDefensesEnabled 1
 
 The directory can be different of course, but virtual port numbers should be equal to
 your bitcoind's P2P listen port (8333 by default), and target addresses and ports

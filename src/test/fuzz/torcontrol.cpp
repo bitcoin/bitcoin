@@ -65,7 +65,10 @@ FUZZ_TARGET(torcontrol, .init = initialize_torcontrol)
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                tor_controller.add_onion_cb(dummy_tor_control_connection, tor_control_reply);
+                tor_controller.add_onion_cb(dummy_tor_control_connection, tor_control_reply, /*pow_was_enabled=*/true);
+            },
+            [&] {
+                tor_controller.add_onion_cb(dummy_tor_control_connection, tor_control_reply, /*pow_was_enabled=*/false);
             },
             [&] {
                 tor_controller.auth_cb(dummy_tor_control_connection, tor_control_reply);
