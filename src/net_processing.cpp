@@ -285,12 +285,7 @@ struct Peer {
 
     struct TxRelay {
         mutable RecursiveMutex m_bloom_filter_mutex;
-        /** Whether the peer wishes to receive transaction announcements.
-         *
-         * This is initially set based on the fRelay flag in the received
-         * `version` message. If initially set to false, it can only be flipped
-         * to true if we have offered the peer NODE_BLOOM services and it sends
-         * us a `filterload` or `filterclear` message. See BIP37. */
+        /** Whether we relay transactions to this peer. */
         bool m_relay_txs GUARDED_BY(m_bloom_filter_mutex){false};
         /** A bloom filter for which transactions to announce to the peer. See BIP37. */
         std::unique_ptr<CBloomFilter> m_bloom_filter PT_GUARDED_BY(m_bloom_filter_mutex) GUARDED_BY(m_bloom_filter_mutex){nullptr};
@@ -3817,11 +3812,12 @@ void PeerManagerImpl::ProcessMessage(
         }
         peer->m_starting_height = starting_height;
 
-        // We only initialize the m_tx_relay data structure if:
-        // - this isn't an outbound block-relay-only connection; and
+        // We only initialize the Peer::TxRelay m_relay_txs data structure if:
+        // - this isn't an outbound block-relay-only connection, and
         // - this isn't an outbound feeler connection, and
-        // - fRelay=true or we're offering NODE_BLOOM to this peer
-        //   (NODE_BLOOM means that the peer may turn on tx relay later)
+        // - fRelay=true (the peer wishes to receive transaction announcements)
+        //   or we're offering NODE_BLOOM to this peer. NODE_BLOOM means that
+        //   the peer may turn on transaction relay later.
         if (!pfrom.IsBlockOnlyConn() &&
             !pfrom.IsFeelerConn() &&
             (fRelay || (peer->m_our_services & NODE_BLOOM))) {

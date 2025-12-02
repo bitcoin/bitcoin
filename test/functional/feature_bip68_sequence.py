@@ -16,6 +16,10 @@ from test_framework.messages import (
     CTxOut,
     tx_from_hex,
 )
+from test_framework.script import (
+    CScript,
+    OP_TRUE,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -23,8 +27,10 @@ from test_framework.util import (
     assert_raises_rpc_error,
     softfork_active,
 )
-from test_framework.script_util import DUMMY_P2SH_SCRIPT
+from test_framework.script_util import script_to_p2sh_script
 from test_framework.wallet import MiniWallet
+
+SCRIPT_SH_OP_TRUE = script_to_p2sh_script(CScript([OP_TRUE]))
 
 SEQUENCE_LOCKTIME_DISABLE_FLAG = (1<<31)
 SEQUENCE_LOCKTIME_TYPE_FLAG = (1<<22) # this means use time (0 means height)
@@ -40,11 +46,9 @@ class BIP68Test(BitcoinTestFramework):
         self.extra_args = [
             [
                 '-testactivationheight=csv@432',
-                "-acceptnonstdtxn=1",
             ],
             [
                 '-testactivationheight=csv@432',
-                "-acceptnonstdtxn=0",
             ],
         ]
 
@@ -90,7 +94,7 @@ class BIP68Test(BitcoinTestFramework):
         # input to mature.
         sequence_value = SEQUENCE_LOCKTIME_DISABLE_FLAG | 1
         tx1.vin = [CTxIn(COutPoint(int(utxo["txid"], 16), utxo["vout"]), nSequence=sequence_value)]
-        tx1.vout = [CTxOut(value, DUMMY_P2SH_SCRIPT)]
+        tx1.vout = [CTxOut(value, SCRIPT_SH_OP_TRUE)]
 
         self.wallet.sign_tx(tx=tx1)
         tx1_id = self.wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=tx1.serialize().hex())
@@ -101,8 +105,8 @@ class BIP68Test(BitcoinTestFramework):
         tx2 = CTransaction()
         tx2.nVersion = 2
         sequence_value = sequence_value & 0x7fffffff
-        tx2.vin = [CTxIn(COutPoint(tx1_id, 0), nSequence=sequence_value)]
-        tx2.vout = [CTxOut(int(value - self.relayfee * COIN), DUMMY_P2SH_SCRIPT)]
+        tx2.vin = [CTxIn(COutPoint(tx1_id, 0), scriptSig=CScript([CScript([OP_TRUE])]), nSequence=sequence_value)]
+        tx2.vout = [CTxOut(int(value - self.relayfee * COIN), SCRIPT_SH_OP_TRUE)]
         tx2.rehash()
 
         assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.wallet.sendrawtransaction, from_node=self.nodes[0], tx_hex=tx2.serialize().hex())
@@ -138,8 +142,10 @@ class BIP68Test(BitcoinTestFramework):
         # between height/time locking). Small random chance of making the locks
         # all pass.
         for _ in range(400):
+            available_utxos = len(utxos)
+
             # Randomly choose up to 10 inputs
-            num_inputs = random.randint(1, 10)
+            num_inputs = random.randint(1, min(10, available_utxos))
             random.shuffle(utxos)
 
             # Track whether any sequence locks used should fail
@@ -190,7 +196,7 @@ class BIP68Test(BitcoinTestFramework):
                 value += utxos[j]["value"]*COIN
             # Overestimate the size of the tx - signatures should be less than 120 bytes, and leave 50 for the output
             tx_size = len(tx.serialize().hex())//2 + 120*num_inputs + 50
-            tx.vout.append(CTxOut(int(value-self.relayfee*tx_size*COIN/1000), DUMMY_P2SH_SCRIPT))
+            tx.vout.append(CTxOut(int(value - self.relayfee * tx_size * COIN / 1000), SCRIPT_SH_OP_TRUE))
             self.wallet.sign_tx(tx=tx)
 
             if (using_sequence_locks and not should_pass):
@@ -220,7 +226,7 @@ class BIP68Test(BitcoinTestFramework):
         tx2 = CTransaction()
         tx2.nVersion = 2
         tx2.vin = [CTxIn(COutPoint(tx1.sha256, 0), nSequence=0)]
-        tx2.vout = [CTxOut(int(tx1.vout[0].nValue - self.relayfee*COIN), DUMMY_P2SH_SCRIPT)]
+        tx2.vout = [CTxOut(int(tx1.vout[0].nValue - self.relayfee * COIN), SCRIPT_SH_OP_TRUE)]
         self.wallet.sign_tx(tx=tx2)
         tx2_raw = tx2.serialize().hex()
         tx2.rehash()
@@ -237,8 +243,8 @@ class BIP68Test(BitcoinTestFramework):
 
             tx = CTransaction()
             tx.nVersion = 2
-            tx.vin = [CTxIn(COutPoint(orig_tx.sha256, 0), nSequence=sequence_value)]
-            tx.vout = [CTxOut(int(orig_tx.vout[0].nValue - relayfee * COIN), DUMMY_P2SH_SCRIPT)]
+            tx.vin = [CTxIn(COutPoint(orig_tx.sha256, 0), scriptSig=CScript([CScript([OP_TRUE])]), nSequence=sequence_value)]
+            tx.vout = [CTxOut(int(orig_tx.vout[0].nValue - relayfee * COIN), SCRIPT_SH_OP_TRUE)]
             tx.rehash()
 
             if (orig_tx.hash in node.getrawmempool()):
@@ -294,10 +300,17 @@ class BIP68Test(BitcoinTestFramework):
         assert tx5.hash not in self.nodes[0].getrawmempool()
 
         utxo = self.wallet.get_utxo()
+        if tx4.hash == utxo['txid']:
+            # get_utxo returns the hash of tx4, but bitcoin's implementation of get_utxo() doesn't do it.
+            # Calling it second time helps to avoid `bad-txns-inputs-duplicate` error
+            # TODO: remove this workaround in the future if this behavior will be changed at some point
+            utxo = self.wallet.get_utxo()
         tx5.vin.append(CTxIn(COutPoint(int(utxo["txid"], 16), utxo["vout"]), nSequence=1))
         tx5.vout[0].nValue += int(utxo["value"]*COIN)
         self.wallet.sign_tx(tx=tx5)
 
+        self.log.info(f"tx5: {tx5}")
+        self.log.info(f"tx5-vin: {tx5.vin}")
         assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.wallet.sendrawtransaction, from_node=self.nodes[0], tx_hex=tx5.serialize().hex())
 
         # Test mempool-BIP68 consistency after reorg
@@ -350,7 +363,7 @@ class BIP68Test(BitcoinTestFramework):
         tx2 = CTransaction()
         tx2.nVersion = 1
         tx2.vin = [CTxIn(COutPoint(tx1.sha256, 0), nSequence=0)]
-        tx2.vout = [CTxOut(int(tx1.vout[0].nValue - self.relayfee*COIN), DUMMY_P2SH_SCRIPT)]
+        tx2.vout = [CTxOut(int(tx1.vout[0].nValue - self.relayfee * COIN), SCRIPT_SH_OP_TRUE)]
 
         # sign tx2
         self.wallet.sign_tx(tx=tx2)
@@ -365,8 +378,8 @@ class BIP68Test(BitcoinTestFramework):
 
         tx3 = CTransaction()
         tx3.nVersion = 2
-        tx3.vin = [CTxIn(COutPoint(tx2.sha256, 0), nSequence=sequence_value)]
-        tx3.vout = [CTxOut(int(tx2.vout[0].nValue - self.relayfee * COIN), DUMMY_P2SH_SCRIPT)]
+        tx3.vin = [CTxIn(COutPoint(tx2.sha256, 0), scriptSig=CScript([CScript([OP_TRUE])]), nSequence=sequence_value)]
+        tx3.vout = [CTxOut(int(tx2.vout[0].nValue - self.relayfee * COIN), SCRIPT_SH_OP_TRUE)]
         tx3.rehash()
 
         assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.wallet.sendrawtransaction, from_node=self.nodes[0], tx_hex=tx3.serialize().hex())

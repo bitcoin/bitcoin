@@ -24,6 +24,7 @@
 #include <util/vector.h>
 
 #include <array>
+#include <cmath>
 #include <fstream>
 #include <deque>
 #include <optional>

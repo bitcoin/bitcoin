@@ -9,14 +9,14 @@
 #include <chainparamsbase.h>
 #include <fs.h>
 #include <key.h>
-#include <util/system.h>
 #include <node/caches.h>
 #include <node/context.h> // IWYU pragma: export
+#include <primitives/transaction.h>
 #include <pubkey.h>
 #include <random.h>
-#include <txmempool.h>
 #include <util/check.h>
 #include <util/string.h>
+#include <util/system.h>
 #include <util/time.h>
 #include <util/vector.h>
 
@@ -29,6 +29,8 @@ class CChainParams;
 namespace Consensus {
 struct Params;
 };
+
+class CChainState;
 
 /** This is connected to the logger. Can be used to redirect logs to any other log */
 extern const std::function<void(const std::string&)> G_TEST_LOG_FUN;
@@ -219,32 +221,6 @@ std::unique_ptr<T> MakeNoLogFileContext(const std::string& chain_name = CBaseCha
 
     return std::make_unique<T>(chain_name, arguments);
 }
-
-class CTxMemPoolEntry;
-
-struct TestMemPoolEntryHelper {
-    // Default values
-    CAmount nFee;
-    NodeSeconds time{};
-    unsigned int nHeight;
-    bool spendsCoinbase;
-    unsigned int sigOpCount;
-    LockPoints lp;
-
-    TestMemPoolEntryHelper() :
-        nFee(0), nHeight(1),
-        spendsCoinbase(false), sigOpCount(1) { }
-
-    CTxMemPoolEntry FromTx(const CMutableTransaction& tx) const;
-    CTxMemPoolEntry FromTx(const CTransactionRef& tx) const;
-
-    // Change the default value
-    TestMemPoolEntryHelper& Fee(CAmount _fee) { nFee = _fee; return *this; }
-    TestMemPoolEntryHelper& Time(NodeSeconds tp) { time = tp; return *this; }
-    TestMemPoolEntryHelper& Height(unsigned int _height) { nHeight = _height; return *this; }
-    TestMemPoolEntryHelper& SpendsCoinbase(bool _flag) { spendsCoinbase = _flag; return *this; }
-    TestMemPoolEntryHelper& SigOps(unsigned int _sigops) { sigOpCount = _sigops; return *this; }
-};
 
 CBlock getBlock13b8a();
 

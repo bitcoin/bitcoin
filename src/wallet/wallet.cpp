@@ -596,8 +596,7 @@ bool CWallet::HasWalletSpend(const CTransactionRef& tx) const
     AssertLockHeld(cs_wallet);
     const uint256& txid = tx->GetHash();
     for (unsigned int i = 0; i < tx->vout.size(); ++i) {
-        auto iter = mapTxSpends.find(COutPoint(txid, i));
-        if (iter != mapTxSpends.end()) {
+        if (IsSpent(COutPoint(txid, i))) {
             return true;
         }
     }
@@ -2416,7 +2415,6 @@ util::Result<CTxDestination> CWallet::GetNewDestination(const std::string label)
         return util::Error{_("Error: No addresses available.")};
     }
 
-    spk_man->TopUp();
     auto op_dest = spk_man->GetNewDestination();
     if (op_dest) {
         SetAddressBook(*op_dest, label, "receive");
@@ -2509,10 +2507,7 @@ util::Result<CTxDestination> ReserveDestination::GetReservedDestination(bool fIn
         return util::Error{_("Error: No addresses available.")};
     }
 
-    if (nIndex == -1)
-    {
-        m_spk_man->TopUp();
-
+    if (nIndex == -1) {
         CKeyPool keypool;
         int64_t index;
         auto op_address = m_spk_man->GetReservedDestination(fInternalIn, index, keypool);

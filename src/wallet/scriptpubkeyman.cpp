@@ -19,6 +19,9 @@
 namespace wallet {
 util::Result<CTxDestination> LegacyScriptPubKeyMan::GetNewDestination()
 {
+    // Fill-up keypool if needed
+    TopUp();
+
     LOCK(cs_KeyStore);
 
     // Generate a new key that is added to wallet
@@ -298,6 +301,9 @@ util::Result<CTxDestination> LegacyScriptPubKeyMan::GetReservedDestination(bool 
     if (!CanGetAddresses(internal)) {
         return util::Error{_("Error: Keypool ran out, please call keypoolrefill first")};
     }
+
+    // Fill-up keypool if needed
+    TopUp();
 
     if (!ReserveKeyFromKeyPool(index, keypool, internal)) {
         return util::Error{_("Error: Keypool ran out, please call keypoolrefill first")};
@@ -1824,13 +1830,9 @@ util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination()
             // We can't generate anymore keys
             return util::Error{_("Error: Keypool ran out, please call keypoolrefill first")};
         }
-        const OutputType type{OutputType::LEGACY};
         CTxDestination dest;
-        std::optional<OutputType> out_script_type = m_wallet_descriptor.descriptor->GetOutputType();
-        if (out_script_type && out_script_type == type) {
-            ExtractDestination(scripts_temp[0], dest);
-        } else {
-            throw std::runtime_error(std::string(__func__) + ": Types are inconsistent. Stored type does not match type of newly generated address");
+        if (!ExtractDestination(scripts_temp[0], dest)) {
+            return util::Error{_("Error: Cannot extract destination from the generated scriptpubkey")}; // shouldn't happen
         }
         m_wallet_descriptor.next_index++;
         WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
