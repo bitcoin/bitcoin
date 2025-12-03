@@ -42,6 +42,7 @@ jobs:
             depends/packages
             depends/hosts
             contrib/containers/ci/ci.Dockerfile
+            contrib/containers/ci/ci-slim.Dockerfile
 
       - name: Compute cache key
         id: setup
@@ -52,7 +53,7 @@ jobs:
           echo "HOST=${HOST}" >> "${GITHUB_OUTPUT}"
           DEP_HASH="$(echo -n "${BUILD_TARGET}" "${DEP_OPTS}" "${HOST}" | sha256sum | head -c 64)"
           echo "DEP_HASH=${DEP_HASH}" >> "${GITHUB_OUTPUT}"
-          DOCKERFILE_HASH="${{ hashFiles('contrib/containers/ci/ci.Dockerfile') }}"
+          DOCKERFILE_HASH="${{ hashFiles('contrib/containers/ci/ci.Dockerfile', 'contrib/containers/ci/ci-slim.Dockerfile') }}"
           PACKAGES_HASH="${{ hashFiles('depends/packages/*') }}"
           CACHE_KEY="depends-${DOCKERFILE_HASH}-${{ inputs.build-target }}-${DEP_HASH}-${PACKAGES_HASH}"
           echo "cache-key=${CACHE_KEY}" >> "${GITHUB_OUTPUT}"
@@ -102,7 +103,7 @@ jobs:
           path: depends/built/${{ needs.check-cache.outputs.host }}
           key: ${{ needs.check-cache.outputs.cache-key }}
           restore-keys: |
-            depends-${{ hashFiles('contrib/containers/ci/ci.Dockerfile') }}-${{ inputs.build-target }}-
+            depends-${{ hashFiles('contrib/containers/ci/ci.Dockerfile', 'contrib/containers/ci/ci-slim.Dockerfile') }}-${{ inputs.build-target }}-
 
       - name: Build depends
         run: |
