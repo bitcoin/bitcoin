@@ -210,7 +210,7 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 
     // Intentionally do not update DB_MUHASH here so it stays in sync with
     // DB_BEST_BLOCK, and the index is not corrupted if there is an unclean shutdown.
-    m_db->Write(DBHeightKey(block.height), value);
+    m_db->Write(index_util::DBHeightKey(block.height), value);
     return true;
 }
 
@@ -221,7 +221,7 @@ bool CoinStatsIndex::CustomRemove(const interfaces::BlockInfo& block)
 
     // During a reorg, copy the block's hash digest from the height index to the hash index,
     // ensuring it's still accessible after the height index entry is overwritten.
-    if (!CopyHeightIndexToHashIndex<DBVal>(*db_it, batch, m_name, block.height)) {
+    if (!index_util::CopyHeightIndexToHashIndex<DBVal>(*db_it, batch, m_name, block.height)) {
         return false;
     }
 
@@ -240,7 +240,7 @@ std::optional<CCoinsStats> CoinStatsIndex::LookUpStats(const CBlockIndex& block_
     stats.index_used = true;
 
     DBVal entry;
-    if (!LookUpOne(*m_db, {block_index.GetBlockHash(), block_index.nHeight}, entry)) {
+    if (!index_util::LookUpOne(*m_db, {block_index.GetBlockHash(), block_index.nHeight}, entry)) {
         return std::nullopt;
     }
 
@@ -275,7 +275,7 @@ bool CoinStatsIndex::CustomInit(const std::optional<interfaces::BlockRef>& block
 
     if (block) {
         DBVal entry;
-        if (!LookUpOne(*m_db, *block, entry)) {
+        if (!index_util::LookUpOne(*m_db, *block, entry)) {
             LogError("Cannot read current %s state; index may be corrupted",
                       GetName());
             return false;
@@ -330,7 +330,7 @@ bool CoinStatsIndex::RevertBlock(const interfaces::BlockInfo& block)
 
     // Ignore genesis block
     if (block.height > 0) {
-        if (!m_db->Read(DBHeightKey(block.height - 1), read_out)) {
+        if (!m_db->Read(index_util::DBHeightKey(block.height - 1), read_out)) {
             return false;
         }
 
@@ -339,7 +339,7 @@ bool CoinStatsIndex::RevertBlock(const interfaces::BlockInfo& block)
             LogWarning("previous block header belongs to unexpected block %s; expected %s",
                       read_out.first.ToString(), expected_block_hash.ToString());
 
-            if (!m_db->Read(DBHashKey(expected_block_hash), read_out)) {
+            if (!m_db->Read(index_util::DBHashKey(expected_block_hash), read_out)) {
                 LogError("previous block header not found; expected %s",
                           expected_block_hash.ToString());
                 return false;

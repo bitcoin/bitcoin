@@ -235,7 +235,7 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
 std::optional<uint256> BlockFilterIndex::ReadFilterHeader(int height, const uint256& expected_block_hash)
 {
     std::pair<uint256, DBVal> read_out;
-    if (!m_db->Read(DBHeightKey(height), read_out)) {
+    if (!m_db->Read(index_util::DBHeightKey(height), read_out)) {
         return std::nullopt;
     }
 
@@ -268,7 +268,7 @@ bool BlockFilterIndex::Write(const BlockFilter& filter, uint32_t block_height, c
     value.second.header = filter_header;
     value.second.pos = m_next_filter_pos;
 
-    m_db->Write(DBHeightKey(block_height), value);
+    m_db->Write(index_util::DBHeightKey(block_height), value);
 
     m_next_filter_pos.nPos += bytes_written;
     return true;
@@ -282,7 +282,7 @@ bool BlockFilterIndex::CustomRemove(const interfaces::BlockInfo& block)
     // During a reorg, we need to copy block filter that is getting disconnected from the
     // height index to the hash index so we can still find it when the height index entry
     // is overwritten.
-    if (!CopyHeightIndexToHashIndex<DBVal>(*db_it, batch, m_name, block.height)) {
+    if (!index_util::CopyHeightIndexToHashIndex<DBVal>(*db_it, batch, m_name, block.height)) {
         return false;
     }
 
@@ -313,9 +313,9 @@ static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start
     size_t results_size = static_cast<size_t>(stop_index->nHeight - start_height + 1);
     std::vector<std::pair<uint256, DBVal>> values(results_size);
 
-    DBHeightKey key(start_height);
+    index_util::DBHeightKey key(start_height);
     std::unique_ptr<CDBIterator> db_it(db.NewIterator());
-    db_it->Seek(DBHeightKey(start_height));
+    db_it->Seek(index_util::DBHeightKey(start_height));
     for (int height = start_height; height <= stop_index->nHeight; ++height) {
         if (!db_it->Valid() || !db_it->GetKey(key) || key.height != height) {
             return false;
@@ -324,7 +324,7 @@ static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start
         size_t i = static_cast<size_t>(height - start_height);
         if (!db_it->GetValue(values[i])) {
             LogError("unable to read value in %s at key (%c, %d)",
-                     index_name, DB_BLOCK_HEIGHT, height);
+                     index_name, index_util::DB_BLOCK_HEIGHT, height);
             return false;
         }
 
@@ -346,9 +346,9 @@ static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start
             continue;
         }
 
-        if (!db.Read(DBHashKey(block_hash), results[i])) {
+        if (!db.Read(index_util::DBHashKey(block_hash), results[i])) {
             LogError("unable to read value in %s at key (%c, %s)",
-                     index_name, DB_BLOCK_HASH, block_hash.ToString());
+                     index_name, index_util::DB_BLOCK_HASH, block_hash.ToString());
             return false;
         }
     }
@@ -359,7 +359,7 @@ static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start
 bool BlockFilterIndex::LookupFilter(const CBlockIndex* block_index, BlockFilter& filter_out) const
 {
     DBVal entry;
-    if (!LookUpOne(*m_db, {block_index->GetBlockHash(), block_index->nHeight}, entry)) {
+    if (!index_util::LookUpOne(*m_db, {block_index->GetBlockHash(), block_index->nHeight}, entry)) {
         return false;
     }
 
@@ -382,7 +382,7 @@ bool BlockFilterIndex::LookupFilterHeader(const CBlockIndex* block_index, uint25
     }
 
     DBVal entry;
-    if (!LookUpOne(*m_db, {block_index->GetBlockHash(), block_index->nHeight}, entry)) {
+    if (!index_util::LookUpOne(*m_db, {block_index->GetBlockHash(), block_index->nHeight}, entry)) {
         return false;
     }
 

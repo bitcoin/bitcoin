@@ -16,6 +16,7 @@
 #include <string>
 #include <utility>
 
+namespace index_util {
 /*
  * This file includes the logic for the db keys used by blockfilterindex and coinstatsindex.
  * Index data is usually indexed by height, but in case of a reorg, entries of blocks no
@@ -110,5 +111,6 @@ static bool LookUpOne(const CDBWrapper& db, const interfaces::BlockRef& block, D
     // result will be stored in the hash index.
     return db.Read(DBHashKey(block.hash), result);
 }
+} // namespace index_util
 
 #endif // BITCOIN_INDEX_DB_KEY_H
