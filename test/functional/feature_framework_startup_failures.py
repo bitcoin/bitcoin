@@ -49,7 +49,7 @@ class FeatureFrameworkStartupFailures(BitcoinTestFramework):
             print("Unexpected child process timeout!\n"
                   "WARNING: Timeouts like this halt execution of TestNode logic, "
                   "meaning dangling bitcoind processes are to be expected.\n"
-                  f"<CHILD OUTPUT BEGIN>\n{e.output}\n<CHILD OUTPUT END>",
+                  f"<CHILD OUTPUT BEGIN>\n{e.output.decode("utf-8")}\n<CHILD OUTPUT END>",
                   file=sys.stderr)
             raise
 
