@@ -416,20 +416,23 @@ static bool rest_block(const std::any& context,
         pos = pblockindex->GetBlockPos();
     }
 
-    std::vector<std::byte> block_data{};
-    if (!chainman.m_blockman.ReadRawBlock(block_data, pos)) {
-        return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
+    const auto block_data{chainman.m_blockman.ReadRawBlock(pos)};
+    if (!block_data) {
+        switch (block_data.error()) {
+        case node::ReadRawError::IO: return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "I/O error reading " + hashStr);
+        }
+        assert(false);
     }
 
     switch (rf) {
     case RESTResponseFormat::BINARY: {
         req->WriteHeader("Content-Type", "application/octet-stream");
-        req->WriteReply(HTTP_OK, block_data);
+        req->WriteReply(HTTP_OK, *block_data);
         return true;
     }
 
     case RESTResponseFormat::HEX: {
-        const std::string strHex{HexStr(block_data) + "\n"};
+        const std::string strHex{HexStr(*block_data) + "\n"};
         req->WriteHeader("Content-Type", "text/plain");
         req->WriteReply(HTTP_OK, strHex);
         return true;
@@ -437,7 +440,7 @@ static bool rest_block(const std::any& context,
 
     case RESTResponseFormat::JSON: {
         CBlock block{};
-        DataStream block_stream{block_data};
+        DataStream block_stream{*block_data};
         block_stream >> TX_WITH_WITNESS(block);
         UniValue objBlock = blockToJSON(chainman.m_blockman, block, *tip, *pblockindex, tx_verbosity, chainman.GetConsensus().powLimit);
         std::string strJSON = objBlock.write() + "\n";
