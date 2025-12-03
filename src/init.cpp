@@ -93,7 +93,7 @@
 #include <llmq/context.h>
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/options.h>
-#include <llmq/signing.h>
+#include <llmq/net_signing.h>
 #include <masternode/active/context.h>
 #include <masternode/active/notificationinterface.h>
 #include <masternode/meta.h>
@@ -2203,6 +2203,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         RegisterValidationInterface(g_active_notification_interface.get());
     }
     node.peerman->AddExtraHandler(std::make_unique<NetInstantSend>(node.peerman.get(), *node.llmq_ctx->isman, *node.llmq_ctx->qman, chainman.ActiveChainstate()));
+    node.peerman->AddExtraHandler(std::make_unique<NetSigning>(node.peerman.get(), *node.llmq_ctx->sigman));
 
     // ********************************************************* Step 7d: Setup other Dash services
 

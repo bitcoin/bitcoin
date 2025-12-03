@@ -7,6 +7,7 @@
 
 #include <bls/bls.h>
 #include <evo/types.h>
+#include <llmq/signhash.h>
 #include <llmq/signing.h>
 #include <msg_result.h>
 
@@ -478,7 +479,8 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void ProcessSigShare(const CSigShare& sigShare, const CQuorumCPtr& quorum) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    void TryRecoverSig(const CQuorum& quorum, const uint256& id, const uint256& msgHash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    std::shared_ptr<CRecoveredSig> TryRecoverSig(const CQuorum& quorum, const uint256& id, const uint256& msgHash)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     bool GetSessionInfoByRecvId(NodeId nodeId, uint32_t sessionId, CSigSharesNodeState::SessionInfo& retInfo)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);

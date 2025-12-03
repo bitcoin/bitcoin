@@ -4,12 +4,9 @@
 
 #include <consensus/consensus.h>
 #include <net.h>
-#include <net_processing.h>
-#include <primitives/transaction.h>
 #include <protocol.h>
 #include <script/script.h>
 #include <serialize.h>
-#include <span.h>
 #include <streams.h>
 #include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -21,12 +18,6 @@
 #include <test/util/validation.h>
 #include <validationinterface.h>
 #include <version.h>
-
-#include <llmq/blockprocessor.h>
-#include <llmq/dkgsessionmgr.h>
-#include <llmq/quorums.h>
-#include <llmq/signing.h>
-#include <llmq/signing_shares.h>
 
 #include <atomic>
 #include <cstdlib>

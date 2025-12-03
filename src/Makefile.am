@@ -273,6 +273,7 @@ BITCOIN_CORE_H = \
   llmq/quorums.h \
   llmq/signhash.h \
   llmq/signing.h \
+  llmq/net_signing.h \
   llmq/signing_shares.h \
   llmq/snapshot.h \
   llmq/types.h \
@@ -535,6 +536,7 @@ libbitcoin_node_a_SOURCES = \
   llmq/dkgsessionhandler.cpp \
   llmq/dkgsessionmgr.cpp \
   llmq/ehf_signals.cpp \
+  llmq/net_signing.cpp \
   llmq/options.cpp \
   llmq/quorums.cpp \
   llmq/signhash.cpp \

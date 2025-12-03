@@ -789,35 +789,50 @@ void CSigSharesManager::ProcessSigShare(const CSigShare& sigShare, const CQuorum
     }
 
     if (canTryRecovery) {
-        TryRecoverSig(*quorum, sigShare.getId(), sigShare.getMsgHash());
+        auto rs = TryRecoverSig(*quorum, sigShare.getId(), sigShare.getMsgHash());
+        if (rs != nullptr) {
+            if (sigman.ProcessRecoveredSig(rs)) {
+                // TODO: remove duplicated code with NetSigning
+                auto listeners = sigman.GetListeners();
+                for (auto& l : listeners) {
+                    m_peerman.PostProcessMessage(l->HandleNewRecoveredSig(*rs));
+                }
+
+                bool proactive_relay = rs->getLlmqType() != Consensus::LLMQType::LLMQ_100_67 &&
+                                       rs->getLlmqType() != Consensus::LLMQType::LLMQ_400_60 &&
+                                       rs->getLlmqType() != Consensus::LLMQType::LLMQ_400_85;
+                GetMainSignals().NotifyRecoveredSig(rs, rs->GetHash().ToString(), proactive_relay);
+            }
+        }
     }
 }
 
-void CSigSharesManager::TryRecoverSig(const CQuorum& quorum, const uint256& id, const uint256& msgHash)
+std::shared_ptr<CRecoveredSig> CSigSharesManager::TryRecoverSig(const CQuorum& quorum, const uint256& id,
+                                                                const uint256& msgHash)
 {
     if (sigman.HasRecoveredSigForId(quorum.params.type, id)) {
-        return;
+        return nullptr;
     }
 
     std::vector<CBLSSignature> sigSharesForRecovery;
     std::vector<CBLSId> idsForRecovery;
-    std::shared_ptr<CRecoveredSig> singleMemberRecoveredSig;
     {
         LOCK(cs);
 
         auto signHash = SignHash(quorum.params.type, quorum.qc->quorumHash, id, msgHash).Get();
         const auto* sigSharesForSignHash = sigShares.GetAllForSignHash(signHash);
         if (sigSharesForSignHash == nullptr) {
-            return;
+            return nullptr;
         }
 
+        std::shared_ptr<CRecoveredSig> singleMemberRecoveredSig;
         if (quorum.params.is_single_member()) {
             if (sigSharesForSignHash->empty()) {
                 LogPrint(BCLog::LLMQ_SIGS, /* Continued */
                          "CSigSharesManager::%s -- impossible to recover single-node signature - no shares yet. id=%s, "
                          "msgHash=%s\n",
                          __func__, id.ToString(), msgHash.ToString());
-                return;
+                return nullptr;
             }
             const auto& sigShare = sigSharesForSignHash->begin()->second;
             CBLSSignature recoveredSig = sigShare.sigShare.Get();
@@ -838,14 +853,11 @@ void CSigSharesManager::TryRecoverSig(const CQuorum& quorum, const uint256& id, 
 
         // check if we can recover the final signature
         if (sigSharesForRecovery.size() < size_t(quorum.params.threshold)) {
-            return;
+            return nullptr;
         }
-    }
-
-    // Handle single-member quorum case after releasing the lock
-    if (singleMemberRecoveredSig) {
-        sigman.ProcessRecoveredSig(singleMemberRecoveredSig, m_peerman, /*from=*/-1);
-        return; // end of single-quorum processing
+        if (quorum.params.is_single_member()) {
+            return singleMemberRecoveredSig; // end of single-quorum processing
+        }
     }
 
     // now recover it
@@ -854,7 +866,7 @@ void CSigSharesManager::TryRecoverSig(const CQuorum& quorum, const uint256& id, 
     if (!recoveredSig.Recover(sigSharesForRecovery, idsForRecovery)) {
         LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- failed to recover signature. id=%s, msgHash=%s, time=%d\n", __func__,
                   id.ToString(), msgHash.ToString(), t.count());
-        return;
+        return nullptr;
     }
 
     LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- recovered signature. id=%s, msgHash=%s, time=%d\n", __func__,
@@ -872,11 +884,10 @@ void CSigSharesManager::TryRecoverSig(const CQuorum& quorum, const uint256& id, 
             // this should really not happen as we have verified all signature shares before
             LogPrintf("CSigSharesManager::%s -- own recovered signature is invalid. id=%s, msgHash=%s\n", __func__,
                       id.ToString(), msgHash.ToString());
-            return;
+            return nullptr;
         }
     }
-
-    sigman.ProcessRecoveredSig(rs, m_peerman, /*from=*/-1);
+    return rs;
 }
 
 CDeterministicMNCPtr CSigSharesManager::SelectMemberForRecovery(const CQuorum& quorum, const uint256 &id, int attempt)
