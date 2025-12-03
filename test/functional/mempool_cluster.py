@@ -128,7 +128,8 @@ class MempoolClusterTest(BitcoinTestFramework):
 
     def test_limit_enforcement_package(self, cluster_submitted):
         node = self.nodes[0]
-        # Create a package from the second to last transaction. This shouldn't work because the effect is 64 + 2 - 1 = 65
+        # Create a package from the second to last transaction.
+        # This shouldn't work because the effect is {max_cluster_count} + 2 - 1 = {max_cluster_count} + 1
         last_utxo = cluster_submitted[-2]["new_utxo"]
         fee_to_beat = cluster_submitted[-1]["fee"]
         # We do not use package RBF here because it has additional restrictions on mempool ancestors.
@@ -141,15 +142,21 @@ class MempoolClusterTest(BitcoinTestFramework):
         assert child_tx_bad["txid"] not in node.getrawmempool()
         assert_equal(result_parent_only["package_msg"], "transaction failed")
         assert_equal(result_parent_only["tx-results"][child_tx_bad["wtxid"]]["error"], "too-large-cluster")
+        assert_equal(result_parent_only["replaced-transactions"], [cluster_submitted[-1]["txid"]])
 
-        # Now, create a package from the second to last transaction. This should work because the effect is 64 + 2 - 2 = 64
+        # Now, create a package from the third to last transaction.
+        # This should work because the effect is {max_cluster_count} + 2 - 2 = {max_cluster_count}
         third_to_last_utxo = cluster_submitted[-3]["new_utxo"]
-        parent_tx_good = self.wallet.create_self_transfer(utxo_to_spend=third_to_last_utxo)
-        child_tx_good = self.wallet.create_self_transfer(utxo_to_spend=parent_tx_good["new_utxo"], fee=fee_to_beat * 5)
+        # Tweak locktime to not recreate same tx as its meant to replace, fee needs to be even higher
+        parent_tx_good = self.wallet.create_self_transfer(utxo_to_spend=third_to_last_utxo, locktime=1, fee=fee_to_beat * 10)
+        child_tx_good = self.wallet.create_self_transfer(utxo_to_spend=parent_tx_good["new_utxo"])
+        assert parent_tx_good["txid"] != cluster_submitted[-2]["txid"]
+        assert child_tx_good["txid"] != parent_tx_bad["txid"]
         result_both_good = node.submitpackage([parent_tx_good["hex"], child_tx_good["hex"]], maxfeerate=0)
         assert_equal(result_both_good["package_msg"], "success")
         assert parent_tx_good["txid"] in node.getrawmempool()
         assert child_tx_good["txid"] in node.getrawmempool()
+        assert_equal(set(result_both_good["replaced-transactions"]), set([parent_tx_bad["txid"], cluster_submitted[-2]["txid"]]))
 
     @cleanup
     def test_cluster_count_limit(self, max_cluster_count):
@@ -292,7 +299,9 @@ class MempoolClusterTest(BitcoinTestFramework):
             utxos_to_replace.append(confirmed_utxo)
 
         tx_replacer = self.wallet.create_self_transfer_multi(utxos_to_spend=utxos_to_replace)
+        assert tx_replacer["txid"] not in node.getrawmempool()
         tx_replacer_sponsor = self.wallet.create_self_transfer(utxo_to_spend=tx_replacer["new_utxos"][0], fee=fee_rbf_decimal * 2)
+
         node.submitpackage([tx_replacer["hex"], tx_replacer_sponsor["hex"]], maxfeerate=0)
         assert tx_replacer["txid"] in node.getrawmempool()
         assert tx_replacer_sponsor["txid"] in node.getrawmempool()
