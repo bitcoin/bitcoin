@@ -27,7 +27,7 @@ interface BlockTemplate $Proxy.wrap("interfaces::BlockTemplate") {
     getBlock @2 (context: Proxy.Context) -> (result: Data);
     getTxFees @3 (context: Proxy.Context) -> (result: List(Int64));
     getTxSigops @4 (context: Proxy.Context) -> (result: List(Int64));
-    getCoinbaseTx @5 (context: Proxy.Context) -> (result: Data);
+    getCoinbaseRawTx @5 (context: Proxy.Context) -> (result: Data);
     getCoinbaseCommitment @6 (context: Proxy.Context) -> (result: Data);
     getWitnessCommitmentIndex @7 (context: Proxy.Context) -> (result: Int32);
     getCoinbaseMerklePath @8 (context: Proxy.Context) -> (result: List(Data));
