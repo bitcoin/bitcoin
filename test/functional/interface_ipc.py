@@ -83,7 +83,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
         return block
 
     async def parse_and_deserialize_coinbase_tx(self, block_template, ctx):
-        coinbase_data = BytesIO((await block_template.result.getCoinbaseTx(ctx)).result)
+        coinbase_data = BytesIO((await block_template.result.getCoinbaseRawTx(ctx)).result)
         tx = CTransaction()
         tx.deserialize(coinbase_data)
         return tx
@@ -150,7 +150,8 @@ class IPCInterfaceTest(BitcoinTestFramework):
             assert_equal(len(txfees.result), 0)
             txsigops = await template.result.getTxSigops(ctx)
             assert_equal(len(txsigops.result), 0)
-            coinbase_data = BytesIO((await template.result.getCoinbaseTx(ctx)).result)
+            # Inspect dummy coinbase returned by getCoinbaseRawTx()
+            coinbase_data = BytesIO((await template.result.getCoinbaseRawTx(ctx)).result)
             coinbase = CTransaction()
             coinbase.deserialize(coinbase_data)
             assert_equal(coinbase.vin[0].prevout.hash, 0)

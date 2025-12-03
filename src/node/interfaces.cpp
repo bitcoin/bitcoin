@@ -885,7 +885,7 @@ public:
         return m_block_template->vTxSigOpsCost;
     }
 
-    CTransactionRef getCoinbaseTx() override
+    CTransactionRef getCoinbaseRawTx() override
     {
         return m_block_template->block.vtx[0];
     }
