@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2021 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test asmap config argument for ASN-based IP bucketing.
@@ -97,7 +97,7 @@ class AsmapTest(BitcoinTestFramework):
         self.log.info('Test bitcoind -asmap with empty map file')
         self.stop_node(0)
         empty_asmap = os.path.join(self.datadir, "ip_asn.map")
-        with open(empty_asmap, "w", encoding="utf-8") as f:
+        with open(empty_asmap, "w") as f:
             f.write("")
         msg = f"Error: Could not parse asmap file \"{empty_asmap}\""
         self.node.assert_start_raises_init_error(extra_args=[f'-asmap={empty_asmap}'], expected_msg=msg)

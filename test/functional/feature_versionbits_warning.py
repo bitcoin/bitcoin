@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2022 The Bitcoin Core developers
+# Copyright (c) 2016-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test version bits warning system.
@@ -32,7 +32,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
     def setup_network(self):
         self.alert_filename = os.path.join(self.options.tmpdir, "alert.txt")
         # Open and close to create zero-length file
-        with open(self.alert_filename, 'w', encoding='utf8'):
+        with open(self.alert_filename, 'w'):
             pass
         self.extra_args = [[f"-alertnotify=echo %s >> \"{self.alert_filename}\""]]
         self.setup_nodes()
@@ -55,7 +55,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
 
     def versionbits_in_alert_file(self):
         """Test that the versionbits warning has been written to the alert file."""
-        with open(self.alert_filename, 'r', encoding='utf8') as f:
+        with open(self.alert_filename, 'r') as f:
             alert_text = f.read()
         return VB_PATTERN.search(alert_text) is not None
 

@@ -43,15 +43,13 @@ class FeatureFrameworkStartupFailures(BitcoinTestFramework):
         args = [sys.executable] + sys.argv + [f"--tmpdir={self.options.tmpdir}/{subdir}", f"--internal_test={test.__name__}"] + internal_args
 
         try:
-            # The subprocess encoding argument gives different results for e.output
-            # on Linux/Windows, so handle decoding by ourselves for consistency.
             output = subprocess.run(args, timeout=60 * self.options.timeout_factor,
-                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout.decode("utf-8")
+                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True).stdout
         except subprocess.TimeoutExpired as e:
             print("Unexpected child process timeout!\n"
                   "WARNING: Timeouts like this halt execution of TestNode logic, "
                   "meaning dangling bitcoind processes are to be expected.\n"
-                  f"<CHILD OUTPUT BEGIN>\n{e.output.decode('utf-8')}\n<CHILD OUTPUT END>",
+                  f"<CHILD OUTPUT BEGIN>\n{e.output}\n<CHILD OUTPUT END>",
                   file=sys.stderr)
             raise
 

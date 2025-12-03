@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2018-2022 The Bitcoin Core developers
+# Copyright (c) 2018-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,7 +31,7 @@ def _get_header_file_lst() -> list[str]:
     """
     git_cmd_lst = ['git', 'ls-files', '--', '*.h']
     header_file_lst = check_output(
-        git_cmd_lst).decode('utf-8').splitlines()
+        git_cmd_lst, text=True).splitlines()
 
     header_file_lst = [hf for hf in header_file_lst
                        if not any(ef in hf for ef
@@ -71,7 +71,7 @@ def main():
 
         regex_pattern = f'^#(ifndef|define|endif //) {header_id}'
 
-        with open(header_file, 'r', encoding='utf-8') as f:
+        with open(header_file, 'r') as f:
             header_file_contents = f.readlines()
 
         count = 0

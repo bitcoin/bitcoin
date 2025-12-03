@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -29,13 +29,13 @@ def check_codespell_install():
 def main():
     check_codespell_install()
 
-    files = check_output(FILES_ARGS).decode("utf-8").splitlines()
+    files = check_output(FILES_ARGS, text=True).splitlines()
     codespell_args = ['codespell', '--check-filenames', '--disable-colors', '--quiet-level=7', '--ignore-words={}'.format(IGNORE_WORDS_FILE)] + files
 
     try:
-        check_output(codespell_args, stderr=STDOUT)
+        check_output(codespell_args, stderr=STDOUT, text=True)
     except CalledProcessError as e:
-        print(e.output.decode("utf-8"), end="")
+        print(e.output, end="")
         print('^ Warning: codespell identified likely spelling errors. Any false positives? Add them to the list of ignored words in {}'.format(IGNORE_WORDS_FILE))
 
 

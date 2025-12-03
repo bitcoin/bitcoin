@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2022 The Bitcoin Core developers
+# Copyright (c) 2015-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 '''
 This checks if all command line args are documented.
 Return value is 0 to indicate no error.
-
-Author: @MarcoFalke
 '''
 
 from subprocess import check_output
@@ -27,8 +25,8 @@ SET_DOC_OPTIONAL = set(['-h', '-?', '-dbcrashratio', '-forcecompactdb', '-ipccon
 
 
 def lint_missing_argument_documentation():
-    used = check_output(CMD_GREP_ARGS, shell=True).decode('utf8').strip()
-    docd = check_output(CMD_GREP_DOCS, shell=True).decode('utf8').strip()
+    used = check_output(CMD_GREP_ARGS, shell=True, text=True).strip()
+    docd = check_output(CMD_GREP_DOCS, shell=True, text=True).strip()
 
     args_used = set(re.findall(re.compile(REGEX_ARG), used))
     args_docd = set(re.findall(re.compile(REGEX_DOC), docd)).union(SET_DOC_OPTIONAL)
@@ -46,8 +44,8 @@ def lint_missing_argument_documentation():
 
 
 def lint_missing_hidden_wallet_args():
-    wallet_args = check_output(CMD_GREP_WALLET_ARGS, shell=True).decode('utf8').strip()
-    wallet_hidden_args = check_output(CMD_GREP_WALLET_HIDDEN_ARGS, shell=True).decode('utf8').strip()
+    wallet_args = check_output(CMD_GREP_WALLET_ARGS, shell=True, text=True).strip()
+    wallet_hidden_args = check_output(CMD_GREP_WALLET_HIDDEN_ARGS, shell=True, text=True).strip()
 
     wallet_args = set(re.findall(re.compile(REGEX_DOC), wallet_args))
     wallet_hidden_args = set(re.findall(re.compile(r'    "([^"=]+)'), wallet_hidden_args))
