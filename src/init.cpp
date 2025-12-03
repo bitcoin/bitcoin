@@ -2371,7 +2371,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 LogPrintf("Verifying and repairing masternode list diffs...\n");
                 const auto start{SteadyClock::now()};
                 // Create a callback that wraps CSpecialTxProcessor::BuildNewListFromBlock
-                auto build_list_func = [&node](const CBlock& block, gsl::not_null<const CBlockIndex*> pindexPrev,
+                auto build_list_func = [&node](const CBlock& block, const CBlockIndex* const pindexPrev,
                                                        const CDeterministicMNList& prevList, const CCoinsViewCache& view,
                                                        bool debugLogs, BlockValidationState& state,
                                                        CDeterministicMNList& mnListRet) -> bool {

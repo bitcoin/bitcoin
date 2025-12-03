@@ -1,4 +1,4 @@
-# Dash Core version v23.0.1
+# Dash Core version v23.0.2
 
 This is a new patch version release, bringing various bugfixes, performance improvements, and new tooling for database maintenance.
 This release is **optional** for all nodes, although recommended.
@@ -46,7 +46,7 @@ Downgrading to a version older than v23.0.0 is not supported, and will
 
 - Updated Qt from 5.15.14 to 5.15.18, which includes security patches for CVE-2025-4211, CVE-2025-5455, and CVE-2025-30348 (dash#6949).
 
-# v23.0.1 Change log
+# v23.0.2 Change log
 
 See detailed [set of changes][set-of-changes].
 
@@ -125,4 +125,4 @@ These releases are considered obsolete. Old release notes can be found here:
 - [v0.10.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.10.0.md) released Sep/25/2014
 - [v0.9.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.9.0.md) released Mar/13/2014
 
-[set-of-changes]: https://github.com/dashpay/dash/compare/v23.0.0...dashpay:v23.0.1
+[set-of-changes]: https://github.com/dashpay/dash/compare/v23.0.0...dashpay:v23.0.2

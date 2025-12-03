@@ -1762,7 +1762,7 @@ static UniValue evodb_verify_or_repair_impl(const JSONRPCRequest& request, bool 
     }
 
     // Create a callback that wraps CSpecialTxProcessor::RebuildListFromBlock
-    auto build_list_func = [&chain_helper](const CBlock& block, gsl::not_null<const CBlockIndex*> pindexPrev,
+    auto build_list_func = [&chain_helper](const CBlock& block, const CBlockIndex* const pindexPrev,
                                            const CDeterministicMNList& prevList, const CCoinsViewCache& view,
                                            bool debugLogs, BlockValidationState& state,
                                            CDeterministicMNList& mnListRet) -> bool {
