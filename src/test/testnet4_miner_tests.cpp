@@ -4,7 +4,6 @@
 
 #include <common/system.h>
 #include <interfaces/mining.h>
-#include <node/miner.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
@@ -15,7 +14,6 @@
 
 using interfaces::BlockTemplate;
 using interfaces::Mining;
-using node::BlockAssembler;
 using node::BlockWaitOptions;
 
 namespace testnet4_miner_tests {
@@ -35,15 +33,13 @@ BOOST_AUTO_TEST_CASE(MiningInterface)
     auto mining{MakeMining()};
     BOOST_REQUIRE(mining);
 
-    BlockAssembler::Options options;
-    options.include_dummy_extranonce = true;
     std::unique_ptr<BlockTemplate> block_template;
 
     // Set node time a few minutes past the testnet4 genesis block
     const auto template_time{3min + WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->Time())};
     NodeClockContext clock_ctx{template_time};
 
-    block_template = mining->createNewBlock(options, /*cooldown=*/false);
+    block_template = mining->createNewBlock({.include_dummy_extranonce = true}, /*cooldown=*/false);
     BOOST_REQUIRE(block_template);
 
     // The template should use the mocked system time

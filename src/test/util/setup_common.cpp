@@ -15,6 +15,7 @@
 #include <init.h>
 #include <init/common.h>
 #include <interfaces/chain.h>
+#include <interfaces/mining.h>
 #include <kernel/mempool_entry.h>
 #include <logging.h>
 #include <net.h>
@@ -67,7 +68,6 @@
 
 using namespace util::hex_literals;
 using node::ApplyArgsManOptions;
-using node::BlockAssembler;
 using node::BlockManager;
 using node::KernelNotifications;
 using node::LoadChainstate;
@@ -331,6 +331,8 @@ void ChainTestingSetup::LoadVerifyActivateChainstate()
     std::tie(status, error) = VerifyLoadedChainstate(chainman, options);
     assert(status == node::ChainstateLoadStatus::SUCCESS);
 
+    m_node.notifications->setChainstateLoaded(true);
+
     BlockValidationState state;
     if (!chainman.ActiveChainstate().ActivateBestChain(state)) {
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
@@ -407,13 +409,16 @@ void TestChain100Setup::mineBlocks(int num_blocks)
 
 CBlock TestChain100Setup::CreateBlock(
     const std::vector<CMutableTransaction>& txns,
-    const CScript& scriptPubKey,
-    Chainstate& chainstate)
+    const CScript& scriptPubKey)
 {
-    BlockAssembler::Options options;
-    options.coinbase_output_script = scriptPubKey;
-    options.include_dummy_extranonce = true;
-    CBlock block = BlockAssembler{chainstate, nullptr, options}.CreateNewBlock()->block;
+    auto mining{interfaces::MakeMining(m_node)};
+    auto block_template{mining->createNewBlock({
+        .use_mempool = false,
+        .coinbase_output_script = scriptPubKey,
+        .include_dummy_extranonce = true,
+    }, /*cooldown=*/false)};
+    Assert(block_template);
+    CBlock block{block_template->getBlock()};
 
     Assert(block.vtx.size() == 1);
     for (const CMutableTransaction& tx : txns) {
@@ -428,14 +433,9 @@ CBlock TestChain100Setup::CreateBlock(
 
 CBlock TestChain100Setup::CreateAndProcessBlock(
     const std::vector<CMutableTransaction>& txns,
-    const CScript& scriptPubKey,
-    Chainstate* chainstate)
+    const CScript& scriptPubKey)
 {
-    if (!chainstate) {
-        chainstate = &Assert(m_node.chainman)->ActiveChainstate();
-    }
-
-    CBlock block = this->CreateBlock(txns, scriptPubKey, *chainstate);
+    CBlock block = this->CreateBlock(txns, scriptPubKey);
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
     Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr);
 

@@ -46,12 +46,11 @@ void initialize_tx_pool()
     g_setup = testing_setup.get();
     SetMockTime(WITH_LOCK(g_setup->m_node.chainman->GetMutex(), return g_setup->m_node.chainman->ActiveTip()->Time()));
 
-    BlockAssembler::Options options;
-    options.coinbase_output_script = P2WSH_OP_TRUE;
-    options.include_dummy_extranonce = true;
-
     for (int i = 0; i < 2 * COINBASE_MATURITY; ++i) {
-        COutPoint prevout{MineBlock(g_setup->m_node, options)};
+        COutPoint prevout{MineBlock(g_setup->m_node, {
+            .coinbase_output_script = P2WSH_OP_TRUE,
+            .include_dummy_extranonce = true,
+        })};
         // Remember the txids to avoid expensive disk access later on
         auto& outpoints = i < COINBASE_MATURITY ?
                               g_outpoints_coinbase_init_mature :
