@@ -131,7 +131,9 @@ def main():
 
     unique_sorted_lines = sorted(set(dependencies_output.stdout.splitlines()))
     for line in unique_sorted_lines:
-        if re.search(enabled_regexp, line) and not re.search(ignored_regexp, line) and re.search(files_regexp, line):
+        if not re.search(files_regexp, line):
+            continue
+        if re.search(enabled_regexp, line) or not re.search(ignored_regexp, line):
             warnings.append(line)
 
     if warnings:
