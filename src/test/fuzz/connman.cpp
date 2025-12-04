@@ -83,13 +83,14 @@ FUZZ_TARGET(connman, .init = initialize_connman)
 
     CNetAddr random_netaddr;
     CAddress random_address;
-    CNode random_node = ConsumeNode(fuzzed_data_provider);
+    CNode& random_node{*ConsumeNodeAsUniquePtr(fuzzed_data_provider, connman.GetNewIdPublic()).release()};
+    connman.AddTestNode(random_node, std::make_unique<FuzzedSock>(fuzzed_data_provider));
     CSubNet random_subnet;
     std::string random_string;
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100) {
-        CNode& p2p_node{*ConsumeNodeAsUniquePtr(fuzzed_data_provider).release()};
-        connman.AddTestNode(p2p_node);
+        CNode& p2p_node{*ConsumeNodeAsUniquePtr(fuzzed_data_provider, connman.GetNewIdPublic()).release()};
+        connman.AddTestNode(p2p_node, std::make_unique<FuzzedSock>(fuzzed_data_provider));
     }
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
@@ -124,6 +125,15 @@ FUZZ_TARGET(connman, .init = initialize_connman)
             },
             [&] {
                 connman.DisconnectNode(random_subnet);
+            },
+            [&] {
+                if (fuzzed_data_provider.ConsumeBool()) {
+                    auto nonexistent_node{ConsumeNodeAsUniquePtr(fuzzed_data_provider, connman.GetNewIdPublic())};
+                    connman.MarkAsDisconnectAndCloseConnection(*nonexistent_node);
+                } else {
+                    CNode& existent_node{*connman.TestNodes().begin()->second};
+                    connman.MarkAsDisconnectAndCloseConnection(existent_node);
+                }
             },
             [&] {
                 connman.ForEachNode([](auto) {});
@@ -184,11 +194,10 @@ FUZZ_TARGET(connman, .init = initialize_connman)
             [&] {
                 connman.SetNetworkActive(fuzzed_data_provider.ConsumeBool());
                 const auto peer = ConsumeAddress(fuzzed_data_provider);
-                connman.CreateNodeFromAcceptedSocketPublic(
-                    /*sock=*/CreateSock(AF_INET, SOCK_STREAM, IPPROTO_TCP),
-                    /*permissions=*/ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS),
-                    /*addr_bind=*/ConsumeAddress(fuzzed_data_provider),
-                    /*addr_peer=*/peer);
+                connman.EventNewConnectionAcceptedPublic(
+                    /*id=*/connman.GetNewIdPublic(),
+                    /*me=*/ConsumeAddress(fuzzed_data_provider),
+                    /*them=*/peer);
             },
             [&] {
                 CConnman::Options options;
@@ -208,9 +217,6 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                                       options.onion_binds.empty();
 
                 connman.InitBindsPublic(options);
-            },
-            [&] {
-                connman.SocketHandlerPublic();
             });
     }
     (void)connman.GetAddedNodeInfo(fuzzed_data_provider.ConsumeBool());

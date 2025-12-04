@@ -9,6 +9,7 @@
 #include <bip324.h>
 #include <chainparams.h>
 #include <common/bloom.h>
+#include <common/sockman.h>
 #include <compat/compat.h>
 #include <consensus/amount.h>
 #include <crypto/siphash.h>
@@ -42,9 +43,9 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <queue>
 #include <string_view>
 #include <thread>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -96,7 +97,7 @@ static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
 static constexpr bool DEFAULT_V2_TRANSPORT{true};
 
-typedef int64_t NodeId;
+using NodeId = SockMan::Id;
 
 struct AddedNodeParams {
     std::string m_added_node;
@@ -665,7 +666,6 @@ public:
 struct CNodeOptions
 {
     NetPermissionFlags permission_flags = NetPermissionFlags::None;
-    std::unique_ptr<i2p::sam::Session> i2p_sam_session = nullptr;
     bool prefer_evict = false;
     size_t recv_flood_size{DEFAULT_MAXRECEIVEBUFFER * 1000};
     bool use_v2transport = false;
@@ -681,16 +681,6 @@ public:
 
     const NetPermissionFlags m_permission_flags;
 
-    /**
-     * Socket used for communication with the node.
-     * May not own a Sock object (after `CloseSocketDisconnect()` or during tests).
-     * `shared_ptr` (instead of `unique_ptr`) is used to avoid premature close of
-     * the underlying file descriptor by one thread while another thread is
-     * poll(2)-ing it for activity.
-     * @see https://github.com/bitcoin/bitcoin/issues/21744 for details.
-     */
-    std::shared_ptr<Sock> m_sock GUARDED_BY(m_sock_mutex);
-
     /** Sum of GetMemoryUsage of all vSendMsg entries. */
     size_t m_send_memusage GUARDED_BY(cs_vSend){0};
     /** Total number of bytes sent on the wire to this peer. */
@@ -698,7 +688,6 @@ public:
     /** Messages still to be fed to m_transport->SetMessageToSend. */
     std::deque<CSerializedNetMsg> vSendMsg GUARDED_BY(cs_vSend);
     Mutex cs_vSend;
-    Mutex m_sock_mutex;
     Mutex cs_vRecv;
 
     uint64_t nRecvBytes GUARDED_BY(cs_vRecv){0};
@@ -886,7 +875,6 @@ public:
     std::atomic<std::chrono::microseconds> m_min_ping_time{std::chrono::microseconds::max()};
 
     CNode(NodeId id,
-          std::shared_ptr<Sock> sock,
           const CAddress& addrIn,
           uint64_t nKeyedNetGroupIn,
           uint64_t nLocalHostNonceIn,
@@ -949,8 +937,6 @@ public:
         nRefCount--;
     }
 
-    void CloseSocketDisconnect() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex);
-
     void CopyStats(CNodeStats& stats) EXCLUSIVE_LOCKS_REQUIRED(!m_subver_mutex, !m_addr_local_mutex, !cs_vSend, !cs_vRecv);
 
     std::string ConnectionTypeAsString() const { return ::ConnectionTypeAsString(m_conn_type); }
@@ -995,18 +981,6 @@ private:
 
     mapMsgTypeSize mapSendBytesPerMsgType GUARDED_BY(cs_vSend);
     mapMsgTypeSize mapRecvBytesPerMsgType GUARDED_BY(cs_vRecv);
-
-    /**
-     * If an I2P session is created per connection (for outbound transient I2P
-     * connections) then it is stored here so that it can be destroyed when the
-     * socket is closed. I2P sessions involve a data/transport socket (in `m_sock`)
-     * and a control socket (in `m_i2p_sam_session`). For transient sessions, once
-     * the data socket is closed, the control socket is not going to be used anymore
-     * and is just taking up resources. So better close it as soon as `m_sock` is
-     * closed.
-     * Otherwise this unique_ptr is empty.
-     */
-    std::unique_ptr<i2p::sam::Session> m_i2p_sam_session GUARDED_BY(m_sock_mutex);
 };
 
 /**
@@ -1056,7 +1030,7 @@ protected:
     ~NetEventsInterface() = default;
 };
 
-class CConnman
+class CConnman : private SockMan
 {
 public:
 
@@ -1168,8 +1142,7 @@ public:
                                const char* pszDest,
                                ConnectionType conn_type,
                                bool use_v2transport,
-                               const std::optional<Proxy>& proxy_override = std::nullopt)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
+                               const std::optional<Proxy>& proxy_override = std::nullopt);
 
     bool CheckIncomingNonce(uint64_t nonce);
     void ASMapHealthCheck();
@@ -1185,7 +1158,7 @@ public:
     void ForEachNode(const NodeFn& func)
     {
         LOCK(m_nodes_mutex);
-        for (auto&& node : m_nodes) {
+        for (auto& [_, node] : m_nodes) {
             if (NodeFullyConnected(node))
                 func(node);
         }
@@ -1194,7 +1167,7 @@ public:
     void ForEachNode(const NodeFn& func) const
     {
         LOCK(m_nodes_mutex);
-        for (auto&& node : m_nodes) {
+        for (auto& [_, node] : m_nodes) {
             if (NodeFullyConnected(node))
                 func(node);
         }
@@ -1266,7 +1239,7 @@ public:
      *                          - Max total outbound connection capacity filled
      *                          - Max connection capacity for type is filled
      */
-    bool AddConnection(const std::string& address, ConnectionType conn_type, bool use_v2transport) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
+    bool AddConnection(const std::string& address, ConnectionType conn_type, bool use_v2transport);
 
     size_t GetNodeCount(ConnectionDirection) const;
     std::map<CNetAddr, LocalServiceInfo> getNetLocalAddresses() const;
@@ -1318,81 +1291,71 @@ public:
     bool MultipleManualOrFullOutboundConns(Network net) const EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
 
 private:
-    struct ListenSocket {
-    public:
-        std::shared_ptr<Sock> sock;
-        inline void AddSocketPermissionFlags(NetPermissionFlags& flags) const { NetPermissions::AddFlag(flags, m_permissions); }
-        ListenSocket(std::shared_ptr<Sock> sock_, NetPermissionFlags permissions_)
-            : sock{sock_}, m_permissions{permissions_}
-        {
-        }
-
-    private:
-        NetPermissionFlags m_permissions;
-    };
-
     //! returns the time left in the current max outbound cycle
     //! in case of no limit, it will always return 0
     std::chrono::seconds GetMaxOutboundTimeLeftInCycle_() const EXCLUSIVE_LOCKS_REQUIRED(m_total_bytes_sent_mutex);
 
-    bool BindListenPort(const CService& bindAddr, bilingual_str& strError, NetPermissionFlags permissions);
     bool Bind(const CService& addr, unsigned int flags, NetPermissionFlags permissions);
     bool InitBinds(const Options& options);
 
-    void ThreadOpenAddedConnections() EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_unused_i2p_sessions_mutex, !m_reconnections_mutex);
+    void ThreadOpenAddedConnections() EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_reconnections_mutex);
     void AddAddrFetch(const std::string& strDest) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex);
-    void ProcessAddrFetch() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_unused_i2p_sessions_mutex);
-    void ThreadOpenConnections(std::vector<std::string> connect, std::span<const std::string> seed_nodes) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex, !m_unused_i2p_sessions_mutex, !m_reconnections_mutex);
+    void ProcessAddrFetch() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex);
+    void ThreadOpenConnections(std::vector<std::string> connect, std::span<const std::string> seed_nodes) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex, !m_reconnections_mutex);
     void ThreadMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
-    void ThreadI2PAcceptIncoming();
-    void AcceptConnection(const ListenSocket& hListenSocket);
+
+    /// Whether we are currently advertising our I2P address (via `AddLocal()`).
+    bool m_i2p_advertising_listen_addr{false};
+
+    virtual void EventI2PStatus(const CService& addr, SockMan::I2PStatus new_status) override;
 
     /**
-     * Create a `CNode` object from a socket that has just been accepted and add the node to
-     * the `m_nodes` member.
-     * @param[in] sock Connected socket to communicate with the peer.
-     * @param[in] permission_flags The peer's permissions.
-     * @param[in] addr_bind The address and port at our side of the connection.
-     * @param[in] addr The address and port at the peer's side of the connection.
+     * Create a `CNode` object and add it to the `m_nodes` member.
+     * @param[in] id Id of the newly accepted connection.
+     * @param[in] me The address and port at our side of the connection.
+     * @param[in] them The address and port at the peer's side of the connection.
+     * @retval true on success
+     * @retval false on failure, meaning that the associated socket and node_id should be discarded
      */
-    void CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
-                                      NetPermissionFlags permission_flags,
-                                      const CService& addr_bind,
-                                      const CService& addr);
+    virtual bool EventNewConnectionAccepted(SockMan::Id id,
+                                            const CService& me,
+                                            const CService& them) override;
+
+    /**
+     * Mark a node as disconnected and close its connection with the peer.
+     * @param[in] node Node to disconnect.
+     */
+    void MarkAsDisconnectAndCloseConnection(CNode& node);
 
     void DisconnectNodes() EXCLUSIVE_LOCKS_REQUIRED(!m_reconnections_mutex, !m_nodes_mutex);
     void NotifyNumConnectionsChanged();
     /** Return true if the peer is inactive and should be disconnected. */
     bool InactivityCheck(const CNode& node) const;
 
-    /**
-     * Generate a collection of sockets to check for IO readiness.
-     * @param[in] nodes Select from these nodes' sockets.
-     * @return sockets to check for readiness
-     */
-    Sock::EventsPerSock GenerateWaitSockets(std::span<CNode* const> nodes);
+    void EventReadyToSend(SockMan::Id id, bool& cancel_recv) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
 
-    /**
-     * Check connected and listening sockets for IO readiness and process them accordingly.
-     */
-    void SocketHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !mutexMsgProc);
+    virtual void EventGotData(SockMan::Id id, std::span<const uint8_t> data) override
+        EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc, !m_nodes_mutex);
 
-    /**
-     * Do the read/write for connected sockets that are ready for IO.
-     * @param[in] nodes Nodes to process. The socket of each node is checked against `what`.
-     * @param[in] events_per_sock Sockets that are ready for IO.
-     */
-    void SocketHandlerConnected(const std::vector<CNode*>& nodes,
-                                const Sock::EventsPerSock& events_per_sock)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !mutexMsgProc);
+    virtual void EventGotEOF(SockMan::Id id) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
 
-    /**
-     * Accept incoming connections, one from each read-ready listening socket.
-     * @param[in] events_per_sock Sockets that are ready for IO.
-     */
-    void SocketHandlerListening(const Sock::EventsPerSock& events_per_sock);
+    virtual void EventGotPermanentReadError(SockMan::Id id, const std::string& errmsg) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
 
-    void ThreadSocketHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !mutexMsgProc, !m_nodes_mutex, !m_reconnections_mutex);
+    virtual bool ShouldTryToSend(SockMan::Id id) const override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
+
+    virtual bool ShouldTryToRecv(SockMan::Id id) const override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
+
+    virtual void EventIOLoopCompletedForOne(SockMan::Id id) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
+
+    virtual void EventIOLoopCompletedForAll() override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex, !m_reconnections_mutex);
+
     void ThreadDNSAddressSeed() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_nodes_mutex);
 
     uint64_t CalculateKeyedNetGroup(const CNetAddr& ad) const;
@@ -1437,17 +1400,15 @@ private:
                        bool fCountFailure,
                        ConnectionType conn_type,
                        bool use_v2transport,
-                       const std::optional<Proxy>& proxy_override)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
+                       const std::optional<Proxy>& proxy_override);
 
     void AddWhitelistPermissionFlags(NetPermissionFlags& flags, std::optional<CNetAddr> addr, const std::vector<NetWhitelistPermissions>& ranges) const;
 
     void DeleteNode(CNode* pnode);
 
-    NodeId GetNewNodeId();
-
     /** (Try to) send data from node's vSendMsg. Returns (bytes_sent, data_left). */
-    std::pair<size_t, bool> SocketSendData(CNode& node) const EXCLUSIVE_LOCKS_REQUIRED(node.cs_vSend);
+    std::pair<size_t, bool> SendMessagesAsBytes(CNode& node) EXCLUSIVE_LOCKS_REQUIRED(node.cs_vSend)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     void DumpAddresses();
 
@@ -1506,7 +1467,11 @@ private:
     unsigned int nSendBufferMaxSize{0};
     unsigned int nReceiveFloodSize{0};
 
-    std::vector<ListenSocket> vhListenSocket;
+    /**
+     * Permissions that incoming peers get based on our listening address they connected to.
+     */
+    std::unordered_map<CService, NetPermissionFlags, CServiceHash> m_listen_permissions;
+
     std::atomic<bool> fNetworkActive{true};
     bool fAddressesInitialized{false};
     AddrMan& addrman;
@@ -1517,11 +1482,12 @@ private:
     // connection string and whether to use v2 p2p
     std::vector<AddedNodeParams> m_added_node_params GUARDED_BY(m_added_nodes_mutex);
 
+    CNode* GetNodeById(NodeId node_id) const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
+
     mutable Mutex m_added_nodes_mutex;
-    std::vector<CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
+    std::unordered_map<NodeId, CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
     std::list<CNode*> m_nodes_disconnected;
     mutable RecursiveMutex m_nodes_mutex;
-    std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};
 
     // Stores number of full-tx connections (outbound and manual) per network
@@ -1616,25 +1582,10 @@ private:
     Mutex mutexMsgProc;
     std::atomic<bool> flagInterruptMsgProc{false};
 
-    /**
-     * This is signaled when network activity should cease.
-     * A copy of this is saved in `m_i2p_sam_session`.
-     */
-    const std::shared_ptr<CThreadInterrupt> m_interrupt_net;
-
-    /**
-     * I2P SAM session.
-     * Used to accept incoming and make outgoing I2P connections from a persistent
-     * address.
-     */
-    std::unique_ptr<i2p::sam::Session> m_i2p_sam_session;
-
     std::thread threadDNSAddressSeed;
-    std::thread threadSocketHandler;
     std::thread threadOpenAddedConnections;
     std::thread threadOpenConnections;
     std::thread threadMessageHandler;
-    std::thread threadI2PAcceptIncoming;
 
     /** flag for deciding to connect to an extra outbound peer,
      *  in excess of m_max_outbound_full_relay
@@ -1666,20 +1617,6 @@ private:
     bool whitelist_relay;
 
     /**
-     * Mutex protecting m_i2p_sam_sessions.
-     */
-    Mutex m_unused_i2p_sessions_mutex;
-
-    /**
-     * A pool of created I2P SAM transient sessions that should be used instead
-     * of creating new ones in order to reduce the load on the I2P network.
-     * Creating a session in I2P is not cheap, thus if this is not empty, then
-     * pick an entry from it instead of creating a new session. If connecting to
-     * a host fails, then the created session is put to this pool for reuse.
-     */
-    std::queue<std::unique_ptr<i2p::sam::Session>> m_unused_i2p_sessions GUARDED_BY(m_unused_i2p_sessions_mutex);
-
-    /**
      * Mutex protecting m_reconnections.
      */
     Mutex m_reconnections_mutex;
@@ -1700,13 +1637,7 @@ private:
     std::list<ReconnectionInfo> m_reconnections GUARDED_BY(m_reconnections_mutex);
 
     /** Attempt reconnections, if m_reconnections non-empty. */
-    void PerformReconnections() EXCLUSIVE_LOCKS_REQUIRED(!m_reconnections_mutex, !m_unused_i2p_sessions_mutex);
-
-    /**
-     * Cap on the size of `m_unused_i2p_sessions`, to ensure it does not
-     * unexpectedly use too much memory.
-     */
-    static constexpr size_t MAX_UNUSED_I2P_SESSIONS_SIZE{10};
+    void PerformReconnections() EXCLUSIVE_LOCKS_REQUIRED(!m_reconnections_mutex);
 
     /**
      * RAII helper to atomically create a copy of `m_nodes` and add a reference
@@ -1719,8 +1650,9 @@ private:
         {
             {
                 LOCK(connman.m_nodes_mutex);
-                m_nodes_copy = connman.m_nodes;
-                for (auto& node : m_nodes_copy) {
+                m_nodes_copy.reserve(connman.m_nodes.size());
+                for (auto& [_, node] : connman.m_nodes) {
+                    m_nodes_copy.push_back(node);
                     node->AddRef();
                 }
             }

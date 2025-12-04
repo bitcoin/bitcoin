@@ -15,6 +15,7 @@
 #include <node/eviction.h>
 #include <span.h>
 #include <sync.h>
+#include <util/check.h>
 #include <util/sock.h>
 
 #include <algorithm>
@@ -34,6 +35,7 @@ class FastRandomContext;
 
 struct ConnmanTestMsg : public CConnman {
     using CConnman::CConnman;
+    using CConnman::MarkAsDisconnectAndCloseConnection;
 
     void SetMsgProc(NetEventsInterface* msgproc)
     {
@@ -48,16 +50,23 @@ struct ConnmanTestMsg : public CConnman {
     void ResetAddrCache();
     void ResetMaxOutboundCycle();
 
-    std::vector<CNode*> TestNodes()
+    auto TestNodes()
     {
         LOCK(m_nodes_mutex);
         return m_nodes;
     }
 
+    void AddTestNode(CNode& node, std::unique_ptr<Sock>&& sock)
+    {
+        TestOnlyAddExistentConnection(node.GetId(), std::move(sock));
+        AddTestNode(node);
+    }
+
     void AddTestNode(CNode& node)
     {
         LOCK(m_nodes_mutex);
-        m_nodes.push_back(&node);
+        auto [_, inserted] = m_nodes.emplace(node.GetId(), &node);
+        Assert(inserted);
 
         if (node.IsManualOrFullOutboundConn()) ++m_network_conn_counts[node.addr.GetNetwork()];
     }
@@ -65,18 +74,17 @@ struct ConnmanTestMsg : public CConnman {
     void ClearTestNodes()
     {
         LOCK(m_nodes_mutex);
-        for (CNode* node : m_nodes) {
+        for (auto& [_, node] : m_nodes) {
             delete node;
         }
         m_nodes.clear();
     }
 
-    void CreateNodeFromAcceptedSocketPublic(std::unique_ptr<Sock> sock,
-                                            NetPermissionFlags permissions,
-                                            const CAddress& addr_bind,
-                                            const CAddress& addr_peer)
+    void EventNewConnectionAcceptedPublic(SockMan::Id id,
+                                          const CAddress& me,
+                                          const CAddress& them)
     {
-        CreateNodeFromAcceptedSocket(std::move(sock), permissions, addr_bind, addr_peer);
+        EventNewConnectionAccepted(id, me, them);
     }
 
     bool InitBindsPublic(const CConnman::Options& options)
@@ -84,9 +92,9 @@ struct ConnmanTestMsg : public CConnman {
         return InitBinds(options);
     }
 
-    void SocketHandlerPublic()
+    Id GetNewIdPublic()
     {
-        SocketHandler();
+        return GetNewId();
     }
 
     void Handshake(CNode& node,
@@ -109,8 +117,7 @@ struct ConnmanTestMsg : public CConnman {
 
     bool AlreadyConnectedToAddressPublic(const CNetAddr& addr) { return AlreadyConnectedToAddress(addr); };
 
-    CNode* ConnectNodePublic(PeerManager& peerman, const char* pszDest, ConnectionType conn_type)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
+    CNode* ConnectNodePublic(PeerManager& peerman, const char* pszDest, ConnectionType conn_type);
 };
 
 constexpr ServiceFlags ALL_SERVICE_FLAGS[]{
