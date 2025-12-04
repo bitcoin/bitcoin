@@ -107,6 +107,7 @@ def main():
         '--language=c++',
         '--std=c++20',
         '--template=gcc',
+        '--check-level=exhaustive',
         '-D__cplusplus',
         '-DENABLE_WALLET',
         '-DCLIENT_VERSION_BUILD',
