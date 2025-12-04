@@ -78,12 +78,12 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
 
 static BlockAssembler::Options ClampOptions(BlockAssembler::Options options)
 {
-    // Apply DEFAULT_BLOCK_RESERVED_WEIGHT when the caller left it unset.
+    // Apply DEFAULT_BLOCK_RESERVED_WEIGHT and DEFAULT_BLOCK_MAX_WEIGHT when the caller left it unset.
     options.block_reserved_weight = std::clamp<size_t>(options.block_reserved_weight.value_or(DEFAULT_BLOCK_RESERVED_WEIGHT), MINIMUM_BLOCK_RESERVED_WEIGHT, MAX_BLOCK_WEIGHT);
     options.coinbase_output_max_additional_sigops = std::clamp<size_t>(options.coinbase_output_max_additional_sigops, 0, MAX_BLOCK_SIGOPS_COST);
     // Limit weight to between block_reserved_weight and MAX_BLOCK_WEIGHT for sanity:
     // block_reserved_weight can safely exceed -blockmaxweight, but the rest of the block template will be empty.
-    options.nBlockMaxWeight = std::clamp<size_t>(options.nBlockMaxWeight, *options.block_reserved_weight, MAX_BLOCK_WEIGHT);
+    options.block_max_weight = std::clamp<size_t>(options.block_max_weight.value_or(DEFAULT_BLOCK_MAX_WEIGHT), *options.block_reserved_weight, MAX_BLOCK_WEIGHT);
     return options;
 }
 
@@ -98,7 +98,9 @@ BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool
 void ApplyArgsManOptions(const ArgsManager& args, BlockAssembler::Options& options)
 {
     // Block resource limits
-    options.nBlockMaxWeight = args.GetIntArg("-blockmaxweight", options.nBlockMaxWeight);
+    if (!options.block_max_weight) {
+        options.block_max_weight = args.GetIntArg("-blockmaxweight");
+    }
     if (const auto blockmintxfee{args.GetArg("-blockmintxfee")}) {
         if (const auto parsed{ParseMoney(*blockmintxfee)}) options.blockMinFeeRate = CFeeRate{*parsed};
     }
@@ -238,7 +240,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
 
 bool BlockAssembler::TestChunkBlockLimits(FeePerWeight chunk_feerate, int64_t chunk_sigops_cost) const
 {
-    if (nBlockWeight + chunk_feerate.size >= m_options.nBlockMaxWeight) {
+    if (nBlockWeight + chunk_feerate.size >= m_options.block_max_weight) {
         return false;
     }
     if (nBlockSigOpsCost + chunk_sigops_cost >= MAX_BLOCK_SIGOPS_COST) {
@@ -312,7 +314,7 @@ void BlockAssembler::addChunks()
             ++nConsecutiveFailed;
 
             if (nConsecutiveFailed > MAX_CONSECUTIVE_FAILURES && nBlockWeight +
-                    BLOCK_FULL_ENOUGH_WEIGHT_DELTA > m_options.nBlockMaxWeight) {
+                    BLOCK_FULL_ENOUGH_WEIGHT_DELTA > m_options.block_max_weight) {
                 // Give up if we're close to full and haven't succeeded in a while
                 return;
             }
