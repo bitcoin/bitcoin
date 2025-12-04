@@ -49,3 +49,9 @@ The multiprocess binaries currently function the same as the monolithic binaries
 
 In the future, after [#10102](https://github.com/bitcoin/bitcoin/pull/10102) they will have other differences. Specifically `bitcoin-gui` will spawn a `bitcoin-node` process to run P2P and RPC code, communicating with it across a socket pair, and `bitcoin-node` will spawn `bitcoin-wallet` to run wallet code, also communicating over a socket pair. This will let node, wallet, and GUI code run in separate address spaces for better isolation, and allow future improvements like being able to start and stop components independently on different machines and environments. [#19460](https://github.com/bitcoin/bitcoin/pull/19460) also adds a new `bitcoin-wallet -ipcconnect` option to allow new wallet processes to connect to an existing node process.
 And [#19461](https://github.com/bitcoin/bitcoin/pull/19461) adds a new `bitcoin-gui -ipcconnect` option to allow new GUI processes to connect to an existing node process.
+
+## Known issues
+
+- Unexpected socket disconnects aren't handled cleanly in many places. Interface calls that used to never throw can now throw exceptions if a socket is disconnected (typically because a process on the other side of the connection has crashed or been killed), leading to errors.
+
+- Internally spawned bitcoin-node and bitcoin-wallet processes don't currently install signal handlers and so won't shut down cleanly if terminated with [CTRL-C](https://github.com/bitcoin/bitcoin/pull/10102#issuecomment-595353238). Shutting down with `bitcoin-cli stop` should still shut down cleanly, and is a suggested alternative.
