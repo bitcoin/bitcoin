@@ -108,6 +108,8 @@ jobs:
         run: |
           export BUILD_TARGET="${{ inputs.build-target }}"
           export BUNDLE_KEY="build-${BUILD_TARGET}-$(git rev-parse --short=8 HEAD)"
+          find "build-ci/dashcore-${BUILD_TARGET}/src/" -name "*.a" -type f -delete
+          find "build-ci/dashcore-${BUILD_TARGET}/src/" -name "*.o" -type f -delete
           ./ci/dash/bundle-artifacts.sh create
           echo "key=${BUNDLE_KEY}" >> "${GITHUB_OUTPUT}"
 
