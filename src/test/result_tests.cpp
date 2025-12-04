@@ -51,6 +51,20 @@ util::Result<NoCopy> NoCopyFn(int i, bool success)
     return util::Error{Untranslated(strprintf("nocopy %i error.", i))};
 }
 
+enum class TestError { A, B };
+
+util::Expected<std::string, TestError> StringEnumFn(std::string s, bool success)
+{
+    if (success) return s;
+    return TestError::A;
+}
+
+util::Expected<void, TestError> VoidEnumFn(bool success)
+{
+    if (success) return util::Result<void, TestError>{}; // success, monostate
+    return TestError::B;
+}
+
 template <typename T>
 void ExpectResult(const util::Result<T>& result, bool success, const bilingual_str& str)
 {
@@ -92,6 +106,24 @@ BOOST_AUTO_TEST_CASE(check_value_or)
     BOOST_CHECK_EQUAL(NoCopyFn(10, false).value_or(20), 20);
     BOOST_CHECK_EQUAL(StrFn(Untranslated("A"), true).value_or(Untranslated("B")), Untranslated("A"));
     BOOST_CHECK_EQUAL(StrFn(Untranslated("A"), false).value_or(Untranslated("B")), Untranslated("B"));
+}
+
+BOOST_AUTO_TEST_CASE(check_typed_error_string)
+{
+    BOOST_CHECK(StringEnumFn("", true));
+    BOOST_CHECK_EQUAL(StringEnumFn("", true).has_value(), true);
+    BOOST_CHECK_EQUAL(StringEnumFn("x", true).value(), "x");
+    BOOST_CHECK_EQUAL(StringEnumFn("x", true)->size(), 1);
+    BOOST_CHECK(!StringEnumFn("", false));
+    BOOST_CHECK_EQUAL(StringEnumFn("", false).has_value(), false);
+    BOOST_CHECK(StringEnumFn("", false).error() == TestError::A);
+}
+
+BOOST_AUTO_TEST_CASE(check_typed_error_void)
+{
+    BOOST_CHECK(VoidEnumFn(true));
+    BOOST_CHECK(!VoidEnumFn(false));
+    BOOST_CHECK(VoidEnumFn(false).error() == TestError::B);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
