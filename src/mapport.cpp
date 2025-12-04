@@ -67,9 +67,9 @@ static void ProcessPCP()
         // IPv4
         std::optional<CNetAddr> gateway4 = QueryDefaultGateway(NET_IPV4);
         if (!gateway4) {
-            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "portmap: Could not determine IPv4 default gateway\n");
+            LogDebug(BCLog::NET, "portmap: Could not determine IPv4 default gateway\n");
         } else {
-            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "portmap: gateway [IPv4]: %s\n", gateway4->ToStringAddr());
+            LogDebug(BCLog::NET, "portmap: gateway [IPv4]: %s\n", gateway4->ToStringAddr());
 
             // Open a port mapping on whatever local address we have toward the gateway.
             struct in_addr inaddr_any;
@@ -77,7 +77,7 @@ static void ProcessPCP()
             auto res = PCPRequestPortMap(pcp_nonce, *gateway4, CNetAddr(inaddr_any), private_port, requested_lifetime, g_mapport_interrupt);
             MappingError* pcp_err = std::get_if<MappingError>(&res);
             if (pcp_err && *pcp_err == MappingError::UNSUPP_VERSION) {
-                LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "portmap: Got unsupported PCP version response, falling back to NAT-PMP\n");
+                LogDebug(BCLog::NET, "portmap: Got unsupported PCP version response, falling back to NAT-PMP\n");
                 res = NATPMPRequestPortMap(*gateway4, private_port, requested_lifetime, g_mapport_interrupt);
             }
             handle_mapping(res);
@@ -86,9 +86,9 @@ static void ProcessPCP()
         // IPv6
         std::optional<CNetAddr> gateway6 = QueryDefaultGateway(NET_IPV6);
         if (!gateway6) {
-            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "portmap: Could not determine IPv6 default gateway\n");
+            LogDebug(BCLog::NET, "portmap: Could not determine IPv6 default gateway\n");
         } else {
-            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "portmap: gateway [IPv6]: %s\n", gateway6->ToStringAddr());
+            LogDebug(BCLog::NET, "portmap: gateway [IPv6]: %s\n", gateway6->ToStringAddr());
 
             // Try to open pinholes for all routable local IPv6 addresses.
             for (const auto &addr: GetLocalAddresses()) {

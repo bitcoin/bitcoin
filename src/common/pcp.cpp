@@ -228,11 +228,11 @@ std::optional<std::vector<uint8_t>> PCPSendRecv(Sock &sock, const std::string &p
     int recvsz = 0;
     for (int ntry = 0; !got_response && ntry < num_tries; ++ntry) {
         if (ntry > 0) {
-            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "%s: Retrying (%d)\n", protocol, ntry);
+            LogDebug(BCLog::NET, "%s: Retrying (%d)\n", protocol, ntry);
         }
         // Dispatch packet to gateway.
         if (sock.Send(request.data(), request.size(), 0) != static_cast<ssize_t>(request.size())) {
-            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "%s: Could not send request: %s\n", protocol, NetworkErrorString(WSAGetLastError()));
+            LogDebug(BCLog::NET, "%s: Could not send request: %s\n", protocol, NetworkErrorString(WSAGetLastError()));
             return std::nullopt; // Network-level error, probably no use retrying.
         }
 
@@ -247,17 +247,17 @@ std::optional<std::vector<uint8_t>> PCPSendRecv(Sock &sock, const std::string &p
                 return std::nullopt; // Network-level error, probably no use retrying.
             }
             if (!occurred) {
-                LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "%s: Timeout\n", protocol);
+                LogDebug(BCLog::NET, "%s: Timeout\n", protocol);
                 break; // Retry.
             }
 
             // Receive response.
             recvsz = sock.Recv(response, sizeof(response), MSG_DONTWAIT);
             if (recvsz < 0) {
-                LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "%s: Could not receive response: %s\n", protocol, NetworkErrorString(WSAGetLastError()));
+                LogDebug(BCLog::NET, "%s: Could not receive response: %s\n", protocol, NetworkErrorString(WSAGetLastError()));
                 return std::nullopt; // Network-level error, probably no use retrying.
             }
-            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "%s: Received response of %d bytes: %s\n", protocol, recvsz, HexStr(std::span(response, recvsz)));
+            LogDebug(BCLog::NET, "%s: Received response of %d bytes: %s\n", protocol, recvsz, HexStr(std::span(response, recvsz)));
 
             if (check_packet(std::span<uint8_t>(response, recvsz))) {
                 got_response = true; // Got expected response, break from receive loop as well as from retry loop.
@@ -266,7 +266,7 @@ std::optional<std::vector<uint8_t>> PCPSendRecv(Sock &sock, const std::string &p
         }
     }
     if (!got_response) {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "%s: Giving up after %d tries\n", protocol, num_tries);
+        LogDebug(BCLog::NET, "%s: Giving up after %d tries\n", protocol, num_tries);
         return std::nullopt;
     }
     return std::vector<uint8_t>(response, response + recvsz);
@@ -279,7 +279,7 @@ std::variant<MappingResult, MappingError> NATPMPRequestPortMap(const CNetAddr &g
     struct sockaddr_storage dest_addr;
     socklen_t dest_addrlen = sizeof(struct sockaddr_storage);
 
-    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "natpmp: Requesting port mapping port %d from gateway %s\n", port, gateway.ToStringAddr());
+    LogDebug(BCLog::NET, "natpmp: Requesting port mapping port %d from gateway %s\n", port, gateway.ToStringAddr());
 
     // Validate gateway, make sure it's IPv4. NAT-PMP does not support IPv6.
     if (!CService(gateway, PCP_SERVER_PORT).GetSockAddr((struct sockaddr*)&dest_addr, &dest_addrlen)) return MappingError::NETWORK_ERROR;
@@ -394,7 +394,7 @@ std::variant<MappingResult, MappingError> PCPRequestPortMap(const PCPMappingNonc
     struct sockaddr_storage dest_addr, bind_addr;
     socklen_t dest_addrlen = sizeof(struct sockaddr_storage), bind_addrlen = sizeof(struct sockaddr_storage);
 
-    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "pcp: Requesting port mapping for addr %s port %d from gateway %s\n", bind.ToStringAddr(), port, gateway.ToStringAddr());
+    LogDebug(BCLog::NET, "pcp: Requesting port mapping for addr %s port %d from gateway %s\n", bind.ToStringAddr(), port, gateway.ToStringAddr());
 
     // Validate addresses, make sure they're the same network family.
     if (!CService(gateway, PCP_SERVER_PORT).GetSockAddr((struct sockaddr*)&dest_addr, &dest_addrlen)) return MappingError::NETWORK_ERROR;
@@ -432,7 +432,7 @@ std::variant<MappingResult, MappingError> PCPRequestPortMap(const PCPMappingNonc
     }
     CService internal;
     if (!internal.SetSockAddr((struct sockaddr*)&internal_addr, internal_addrlen)) return MappingError::NETWORK_ERROR;
-    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "pcp: Internal address after connect: %s\n", internal.ToStringAddr());
+    LogDebug(BCLog::NET, "pcp: Internal address after connect: %s\n", internal.ToStringAddr());
 
     // Build request packet. Make sure the packet is zeroed so that reserved fields are zero
     // as required by the spec (and not potentially leak data).
