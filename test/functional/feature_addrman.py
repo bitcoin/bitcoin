@@ -15,7 +15,7 @@ from test_framework.util import assert_equal
 
 def serialize_addrman(
     *,
-    format=1,
+    format_version=1,
     lowest_compatible=4,
     net_magic="regtest",
     bucket_key=1,
@@ -27,12 +27,12 @@ def serialize_addrman(
     tried = []
     INCOMPATIBILITY_BASE = 32
     r = MAGIC_BYTES[net_magic]
-    r += format.to_bytes(1, "little")
+    r += format_version.to_bytes(1, "little")
     r += (INCOMPATIBILITY_BASE + lowest_compatible).to_bytes(1, "little")
     r += ser_uint256(bucket_key)
     r += (len_new or len(new)).to_bytes(4, "little", signed=True)
     r += (len_tried or len(tried)).to_bytes(4, "little", signed=True)
-    ADDRMAN_NEW_BUCKET_COUNT = 1 << 10
+    # Use the imported constant instead of shadowing it
     r += (ADDRMAN_NEW_BUCKET_COUNT ^ (1 << 30)).to_bytes(4, "little", signed=True)
     for _ in range(ADDRMAN_NEW_BUCKET_COUNT):
         r += (0).to_bytes(4, "little", signed=True)
