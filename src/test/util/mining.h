@@ -5,7 +5,7 @@
 #ifndef BITCOIN_TEST_UTIL_MINING_H
 #define BITCOIN_TEST_UTIL_MINING_H
 
-#include <node/types.h>
+#include <node/mining_types.h>
 
 #include <memory>
 #include <string>
