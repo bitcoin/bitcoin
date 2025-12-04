@@ -22,6 +22,8 @@
 #include <validationinterface.h>
 
 using node::BlockAssembler;
+using node::BlockCreateOptions;
+using node::MiningArgs;
 using node::NodeContext;
 using util::ToString;
 
@@ -94,11 +96,14 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Cha
 {
     WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
     {
-        BlockAssembler::Options options;
-        options.block_max_weight = fuzzed_data_provider.ConsumeIntegralInRange(0U, MAX_BLOCK_WEIGHT);
-        options.blockMinFeeRate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
-        options.include_dummy_extranonce = true;
-        auto assembler = BlockAssembler{chainstate, &tx_pool, options};
+        MiningArgs mining_args{
+            .blockMinFeeRate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)}
+        };
+        BlockCreateOptions options{
+            .include_dummy_extranonce = true,
+            .block_max_weight = fuzzed_data_provider.ConsumeIntegralInRange(0U, MAX_BLOCK_WEIGHT),
+        };
+        auto assembler = BlockAssembler{chainstate, &tx_pool, mining_args, options};
         auto block_template = assembler.CreateNewBlock();
         Assert(block_template->block.vtx.size() >= 1);
 
