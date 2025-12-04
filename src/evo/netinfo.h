@@ -176,7 +176,7 @@ public:
     DomainPort::Status Set(const std::string& addr, const uint16_t port);
     DomainPort::Status Validate() const;
     uint16_t GetPort() const { return m_port; }
-    std::string ToStringAddr() const { return m_addr; }
+    const std::string& ToStringAddr() const { return m_addr; }
     std::string ToStringAddrPort() const { return strprintf("%s:%d", m_addr, m_port); }
 };
 
@@ -312,8 +312,6 @@ public:
     template <typename Stream>
     MnNetInfo(deserialize_type, Stream& s) { s >> *this; }
 
-    ~MnNetInfo() = default;
-
     template <typename Stream>
     void Serialize(Stream& s) const
     {
@@ -397,8 +395,6 @@ public:
     ExtNetInfo() = default;
     template <typename Stream>
     ExtNetInfo(deserialize_type, Stream& s) { s >> *this; }
-
-    ~ExtNetInfo() = default;
 
     template <typename Stream>
     void Serialize(Stream& s) const
