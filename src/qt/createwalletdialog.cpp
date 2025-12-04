@@ -28,11 +28,9 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
     ui->groupBox->setVisible(false);
     ui->groupBox->setTitle(QString());
     ui->advanced_toggle_button->setChecked(false);
-    ui->advanced_toggle_button->setArrowType(Qt::RightArrow);
-    ui->advanced_toggle_button->setFocusPolicy(Qt::NoFocus);
     connect(ui->advanced_toggle_button, &QToolButton::toggled, this, [this](bool checked) {
         ui->groupBox->setVisible(checked);
-        ui->advanced_toggle_button->setArrowType(checked ? Qt::DownArrow : Qt::RightArrow);
+        ui->advanced_toggle_button->setText(checked ? tr("Hide Advanced Options") : tr("Show Advanced Options"));
     });
 
     connect(ui->wallet_name_line_edit, &QLineEdit::textEdited, [this](const QString& text) {

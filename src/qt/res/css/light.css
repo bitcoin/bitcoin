@@ -379,6 +379,7 @@ QWidget#AddressBookPage QPushButton#newAddress,
 QWidget#AddressBookPage QPushButton#copyAddress,
 QWidget#AddressBookPage QPushButton#showAddressQRCode,
 QWidget#AddressBookPage QPushButton#deleteAddress,
+QDialog#CreateWalletDialog QToolButton#advanced_toggle_button,
 QDialog#OpenURIDialog QPushButton#selectFileButton,
 QDialog#OptionsDialog QPushButton#resetButton,
 QDialog#SendCoinsDialog .QPushButton#addButton,
@@ -396,6 +397,7 @@ QWidget#AddressBookPage QPushButton#newAddress:hover,
 QWidget#AddressBookPage QPushButton#copyAddress:hover,
 QWidget#AddressBookPage QPushButton#showAddressQRCode:hover,
 QWidget#AddressBookPage QPushButton#deleteAddress:hover,
+QDialog#CreateWalletDialog QToolButton#advanced_toggle_button:hover,
 QDialog#OpenURIDialog QPushButton#selectFileButton:hover,
 QDialog#OptionsDialog QPushButton#resetButton:hover,
 QDialog#SendCoinsDialog .QPushButton#addButton:hover,
@@ -413,6 +415,7 @@ QWidget#AddressBookPage QPushButton#newAddress:pressed,
 QWidget#AddressBookPage QPushButton#copyAddress:pressed,
 QWidget#AddressBookPage QPushButton#showAddressQRCode:pressed,
 QWidget#AddressBookPage QPushButton#deleteAddress:pressed,
+QDialog#CreateWalletDialog QToolButton#advanced_toggle_button:pressed,
 QDialog#OpenURIDialog QPushButton#selectFileButton:pressed,
 QDialog#OptionsDialog QPushButton#resetButton:pressed,
 QDialog#SendCoinsDialog .QPushButton#addButton:pressed,
@@ -430,6 +433,7 @@ QWidget#AddressBookPage QPushButton#newAddress:disabled,
 QWidget#AddressBookPage QPushButton#copyAddress:disabled,
 QWidget#AddressBookPage QPushButton#showAddressQRCode:disabled,
 QWidget#AddressBookPage QPushButton#deleteAddress:disabled,
+QDialog#CreateWalletDialog QToolButton#advanced_toggle_button:disabled,
 QDialog#OpenURIDialog QPushButton#selectFileButton:disabled,
 QDialog#OptionsDialog QPushButton#resetButton:disabled,
 QDialog#SendCoinsDialog .QPushButton#addButton:disabled,
@@ -1070,39 +1074,6 @@ QScrollBar:right-arrow:pressed {
 }
 QScrollBar:right-arrow:disabled {
     image: url(':/images/arrow_light_right_normal');
-}
-
-/**
- * CreateWalletDialog (Light Theme)
- */
-
-QDialog#CreateWalletDialog QLabel,
-QDialog#CreateWalletDialog QCheckBox {
-    color: #555; /* ensure contrast consistent with labels */
-}
-
-QDialog#CreateWalletDialog QToolButton#advanced_toggle_button {
-    color: #555 !important; /* ensure good contrast in light mode */
-}
-
-QDialog#CreateWalletDialog QToolButton#advanced_toggle_button:hover {
-    color: #333 !important; /* darker on hover for better feedback */
-}
-
-QDialog#CreateWalletDialog QGroupBox#groupBox {
-    background-color: #eaeaec; /* card background */
-    border: 1px solid #dcdcdc; /* subtle outline */
-    border-radius: 8px;
-    padding: 2px 12px 12px 12px; /* minimal top padding */
-    margin-top: 0px; /* remove extra gap above card */
-}
-
-QDialog#CreateWalletDialog QGroupBox#groupBox::title {
-    padding: 0px; /* ensure no extra space for (empty) title */
-}
-
-QDialog#CreateWalletDialog QLineEdit:focus {
-    border-color: #4da3ff; /* macOS-like blue */
 }
 
 /**

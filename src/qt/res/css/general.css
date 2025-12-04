@@ -1181,6 +1181,31 @@ QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::separator {
 }
 
 /******************************************************
+CreateWalletDialog
+******************************************************/
+
+QDialog#CreateWalletDialog QToolButton#advanced_toggle_button {
+    border: 0px;
+    border-radius: 8px;
+    max-height: 26px;
+    min-height: 26px;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+QDialog#CreateWalletDialog QGroupBox#groupBox {
+    border-radius: 8px;
+    padding: 2px 12px 12px 12px;
+    margin-top: 0px;
+}
+
+QDialog#CreateWalletDialog QGroupBox#groupBox::title {
+    padding: 0px;
+}
+
+/******************************************************
 EditAddressDialog
 ******************************************************/
 
@@ -1985,21 +2010,6 @@ QDialog#HelpMessageDialog QScrollBar:horizontal {
 }
 
 </os>
-
-/**
- * CreateWalletDialog (Layout)
- */
-
-QDialog#CreateWalletDialog QGroupBox#groupBox {
-    border-radius: 8px;
-    padding: 2px 12px 12px 12px;
-    margin-top: 0px;
-}
-
-QDialog#CreateWalletDialog QGroupBox#groupBox::title {
-    padding: 0px;
-}
-
 /**
  * MnemonicVerificationDialog (Layout)
  */
