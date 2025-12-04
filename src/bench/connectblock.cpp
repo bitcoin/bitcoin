@@ -39,7 +39,7 @@ CBlock CreateTestBlock(
         {COutPoint(coinbase_to_spend->GetHash(), 0)},
         chainstate.m_chain.Height() + 1, keys, outputs, {}, {})};
     const CScript coinbase_spk{GetScriptForDestination(coinbase_taproot)};
-    test_setup.CreateAndProcessBlock({first_tx}, coinbase_spk, &chainstate);
+    test_setup.CreateAndProcessBlock({first_tx}, coinbase_spk);
 
     std::vector<CMutableTransaction> txs;
     txs.reserve(num_txs);
@@ -59,7 +59,7 @@ CBlock CreateTestBlock(
     }
 
     // Coinbase output can use any output type as it is not spent and will not change the benchmark
-    return test_setup.CreateBlock(txs, coinbase_spk, chainstate);
+    return test_setup.CreateBlock(txs, coinbase_spk);
 }
 
 /*
