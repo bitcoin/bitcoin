@@ -34,25 +34,8 @@ ENABLED_CHECKS = (
 )
 
 IGNORED_WARNINGS = (
-    "src/bls/bls.h:.* Struct 'CBLSIdImplicit' has a constructor with 1 argument that is not explicit.",
-    "src/rpc/masternode.cpp:.*:21: warning: Consider using std::copy algorithm instead of a raw loop.",  # UniValue doesn't support std::copy
-    "src/cachemultimap.h:.*: warning: Variable 'mapIt' can be declared as reference to const",
-    "src/evo/simplifiedmns.cpp:.*:20: warning: Consider using std::copy algorithm instead of a raw loop.",
-    "src/llmq/commitment.cpp.* warning: Consider using std::all_of or std::none_of algorithm instead of a raw loop. [useStlAlgorithm]",
-    "src/rpc/.*cpp:.*: note: Function pointer used here.",
-    "src/masternode/sync.cpp:.*: warning: Variable 'pnode' can be declared as pointer to const [constVariableReference]",
-    "src/wallet/bip39.cpp.*: warning: The scope of the variable 'ssCurrentWord' can be reduced. [variableScope]",
-    "src/.*:.*: warning: Local variable '_' shadows outer function [shadowFunction]",
-
     "src/stacktraces.cpp:.*: .*: Parameter 'info' can be declared as pointer to const",
     "src/stacktraces.cpp:.*: note: You might need to cast the function pointer here",
-
-    "[note|warning]: Return value 'state.Invalid(.*)' is always false",
-    "note: Calling function 'Invalid' returns 0",
-    "note: Shadow variable",
-
-    # General catchall, for some reason any value named 'hash' is viewed as never used.
-    "Variable 'hash' is assigned a value that is never used.",
 
     # The following can be useful to ignore when the catch all is used
     # "Consider performing initialization in initialization list.",
