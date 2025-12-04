@@ -4,8 +4,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
+
 #include <tinyformat.h>
 #include <util/check.h>
+
+#include <algorithm>
+#include <vector>
 
 std::string CBlockIndex::ToString() const
 {
@@ -15,12 +19,23 @@ std::string CBlockIndex::ToString() const
 
 void CChain::SetTip(CBlockIndex& block)
 {
-    CBlockIndex* pindex = &block;
-    vChain.resize(pindex->nHeight + 1);
-    while (pindex && vChain[pindex->nHeight] != pindex) {
-        vChain[pindex->nHeight] = pindex;
-        pindex = pindex->pprev;
+    CBlockIndex* old_tip = Tip();
+    int old_height = old_tip ? old_tip->nHeight : -1;
+    bool is_sequential = (block.nHeight == old_height + 1 && block.pprev == old_tip);
+
+    auto& impl = m_impl.write();
+
+    if (!is_sequential) {
+        HandleReorg(impl, block);
+        return;
     }
+
+    if (impl.tail.size() + 1 >= MAX_TAIL_SIZE) {
+        MergeTailIntoBase(impl, block);
+        return;
+    }
+
+    AppendToTail(impl, block);
 }
 
 std::vector<uint256> LocatorEntries(const CBlockIndex* index)
@@ -47,23 +62,61 @@ CBlockLocator GetLocator(const CBlockIndex* index)
     return CBlockLocator{LocatorEntries(index)};
 }
 
-const CBlockIndex *CChain::FindFork(const CBlockIndex *pindex) const {
-    if (pindex == nullptr) {
+const CBlockIndex* CChain::FindFork(const CBlockIndex* index) const
+{
+    if (index == nullptr) {
         return nullptr;
     }
-    if (pindex->nHeight > Height())
-        pindex = pindex->GetAncestor(Height());
-    while (pindex && !Contains(pindex))
-        pindex = pindex->pprev;
-    return pindex;
+    const auto& impl = m_impl.read();
+    const auto& base = impl.base.read();
+    const auto& tail = impl.tail;
+
+    int height = int(base.size() + tail.size()) - 1;
+
+    if (index->nHeight > height)
+        index = index->GetAncestor(height);
+
+    while (index) {
+        CBlockIndex* chain_block = nullptr;
+        if (index->nHeight < (int)base.size()) {
+            chain_block = base[index->nHeight];
+        } else {
+            size_t tail_idx = index->nHeight - base.size();
+            if (tail_idx < tail.size()) {
+                chain_block = tail[tail_idx];
+            }
+        }
+
+        if (chain_block == index) return index;
+        index = index->pprev;
+    }
+
+    return nullptr;
 }
 
 CBlockIndex* CChain::FindEarliestAtLeast(int64_t nTime, int height) const
 {
     std::pair<int64_t, int> blockparams = std::make_pair(nTime, height);
-    std::vector<CBlockIndex*>::const_iterator lower = std::lower_bound(vChain.begin(), vChain.end(), blockparams,
-        [](CBlockIndex* pBlock, const std::pair<int64_t, int>& blockparams) -> bool { return pBlock->GetBlockTimeMax() < blockparams.first || pBlock->nHeight < blockparams.second; });
-    return (lower == vChain.end() ? nullptr : *lower);
+
+    const auto& impl = m_impl.read();
+    const auto& base = impl.base.read();
+    const auto& tail = impl.tail;
+
+    auto lower_base = std::lower_bound(base.begin(), base.end(), blockparams,
+                                       [](CBlockIndex* block, const std::pair<int64_t, int>& blockparams) -> bool {
+                                           return block->GetBlockTimeMax() < blockparams.first || block->nHeight < blockparams.second;
+                                       });
+
+    if (lower_base != base.end()) {
+        return *lower_base;
+    }
+
+    auto lower_tail = std::lower_bound(tail.begin(), tail.end(), blockparams,
+                                       [](CBlockIndex* block, const std::pair<int64_t, int>& blockparams) -> bool {
+                                           return block->GetBlockTimeMax() < blockparams.first || block->nHeight < blockparams.second;
+                                       });
+
+    return (lower_tail == tail.end() ? nullptr : *lower_tail);
 }
 
 /** Turn the lowest '1' bit in the binary representation of a number into a '0'. */
