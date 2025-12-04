@@ -8,6 +8,7 @@
 
 #include <interfaces/types.h>
 #include <node/types.h>
+#include <node/mining_types.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
 #include <txmempool.h>

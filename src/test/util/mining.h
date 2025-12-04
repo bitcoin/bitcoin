@@ -14,8 +14,8 @@
 class CBlock;
 class CChainParams;
 class COutPoint;
-class CScript;
 namespace node {
+struct BlockCreateOptions;
 struct NodeContext;
 } // namespace node
 
