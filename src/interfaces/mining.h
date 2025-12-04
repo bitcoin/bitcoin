@@ -8,6 +8,7 @@
 #include <consensus/amount.h>
 #include <interfaces/types.h>
 #include <node/types.h>
+#include <node/mining.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <uint256.h>
