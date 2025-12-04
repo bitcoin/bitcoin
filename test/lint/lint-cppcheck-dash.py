@@ -15,7 +15,7 @@ import sys
 
 os.environ['LC_ALL'] = 'C'
 
-ENABLED_CHECKS = (
+ALWAYS_ENABLED_WARNINGS = (
     "Class '.*' has a constructor with 1 argument that is not explicit.",
     "Struct '.*' has a constructor with 1 argument that is not explicit.",
     "Function parameter '.*' should be passed by const reference.",
@@ -33,7 +33,7 @@ ENABLED_CHECKS = (
     # ".*",
 )
 
-IGNORED_WARNINGS = (
+SUPPRESSED_WARNINGS = (
     "src/stacktraces.cpp:.*: .*: Parameter 'info' can be declared as pointer to const",
     "src/stacktraces.cpp:.*: note: You might need to cast the function pointer here",
 
@@ -72,8 +72,8 @@ def main():
     files_output = subprocess.check_output(['git', 'ls-files', '--'] + patterns, universal_newlines=True, encoding="utf8")
     files = [f.strip() for f in files_output.splitlines() if f.strip()]
 
-    enabled_regexp = '|'.join(ENABLED_CHECKS)
-    ignored_regexp = '|'.join(IGNORED_WARNINGS)
+    always_enabled_regexp = '|'.join(ALWAYS_ENABLED_WARNINGS)
+    suppressed_regexp = '|'.join(SUPPRESSED_WARNINGS)
     files_regexp = '|'.join(re.escape(f) for f in files)
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -120,14 +120,14 @@ def main():
     for line in unique_sorted_lines:
         if not re.search(files_regexp, line):
             continue
-        if re.search(enabled_regexp, line) or not re.search(ignored_regexp, line):
+        if re.search(always_enabled_regexp, line) or not re.search(suppressed_regexp, line):
             warnings.append(line)
 
     if warnings:
         print('\n'.join(warnings))
         print()
         print("Advice not applicable in this specific case? Add an exception by updating")
-        print(f"IGNORED_WARNINGS in {__file__}")
+        print(f"SUPPRESSED_WARNINGS in {__file__}")
         # Uncomment to enforce the linter / comment to run locally
         exit_code = 1
 
