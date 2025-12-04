@@ -167,20 +167,7 @@ if(ENABLE_WALLET)
 endif()
 
 if(ENABLE_IPC)
-  target_link_libraries(bitcoin_ipc_test
-    PRIVATE
-      core_interface
-      univalue
-      Boost::headers
-  )
-
-  target_sources(test_bitcoin
-    PRIVATE
-      ipc_tests.cpp
-  )
-  target_link_libraries(test_bitcoin bitcoin_ipc_test bitcoin_ipc)
-
-  configure_file(.clang-tidy.in .clang-tidy USE_SOURCE_PERMISSIONS COPYONLY)
+  add_subdirectory(${PROJECT_SOURCE_DIR}/src/ipc/test ipc)
 endif()
 
 function(add_boost_test source_file)
