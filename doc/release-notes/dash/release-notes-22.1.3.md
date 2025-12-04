@@ -1,11 +1,12 @@
-# Dash Core version v23.0.2
+# Dash Core version v22.1.3
 
-This is a new patch version release, bringing various bugfixes, performance improvements, and new tooling for database maintenance.
+This is a new minor version release, bringing various bugfixes and performance improvements.
 This release is **optional** for all nodes, although recommended.
 
 Please report bugs using the issue tracker at GitHub:
 
   <https://github.com/dashpay/dash/issues>
+
 
 # Upgrading and downgrading
 
@@ -18,35 +19,34 @@ dashd/dash-qt (on Linux).
 
 ## Downgrade warning
 
-### Downgrade to a version < v23.0.0
+### Downgrade to a version < v22.0.0
 
-Downgrading to a version older than v23.0.0 is not supported, and will
- require a reindex.
+Downgrading to a version older than v22.0.0 may not be supported, and will
+likely require a reindex.
 
 # Release Notes
 
-## New Features
+Bug Fixes
+----------
 
-- Added `evodb verify` and `evodb repair` RPC commands for diagnosing and repairing corrupted deterministic masternode list diffs in evodb. See `doc/evodb-verify-repair.md` for full documentation (dash#6969).
-- Added automatic verification and repair of evodb diffs at node startup. This helps detect and fix database corruption without manual intervention. Use `-forceevodbrepair` to force re-verification (dash#6999).
+- Fixed crash when processing invalid masternode payment destinations, replacing unsafe assertion with proper error handling (dash#6740).
 
-## Bug Fixes
+RPC and Logging Improvements
+----------------------------
 
-- Fixed HD chain encryption check ordering issue where `LoadHDChain()` would fail if `CRYPTED_HDCHAIN` records were read before `MASTER_KEY` records during wallet loading (dash#6944).
-- Corrected BLS scheme setting in `MigrateLegacyDiffs()` when `nVersion` is present. The legacy scheme was only being set when the `nVersion` field was missing instead of whenever a `pubKeyOperator` field is present (dash#6961).
-- Fixed BLS benchmarks crash when ran independently without BLS_DKG benchmarks (dash#6977).
-- Fixed build issue on Debian 13 by including `QDebug` directly in Qt code (dash#7009).
-- Fixed `BuildTestVectors` call to adjust batch size based on output flag (dash#7013).
+- Fixed misleading error logs that were triggered by legitimate RPC queries for non-existent transaction data, reducing log noise and preventing false alarms (dash#6744).
 
-## Performance Improvements
+Performance Improvements
+------------------------
 
-- Removed duplicated check of the same key in the InstantSend database (dash#6964).
+- Optimized versionbits calculation to avoid unnecessary computations during block operations, significantly improving performance during blockchain reorganizations (dash#6632).
 
-## Dependencies
+Documentation Updates
+---------------------
 
-- Updated Qt from 5.15.14 to 5.15.18, which includes security patches for CVE-2025-4211, CVE-2025-5455, and CVE-2025-30348 (dash#6949).
+- Updated translation documentation with current Transifex links and fixed typos to help contributors properly access translation resources (dash#6739).
 
-# v23.0.2 Change log
+# v22.1.3 Change log
 
 See detailed [set of changes][set-of-changes].
 
@@ -54,10 +54,9 @@ See detailed [set of changes][set-of-changes].
 
 Thanks to everyone who directly contributed to this release:
 
-- Kittywhiskers Van Gogh
+- Jorge Maldonado Ventura
 - Konstantin Akimov
 - PastaPastaPasta
-- UdjinM6
 
 As well as everyone that submitted issues, reviewed pull requests and helped
 debug the release candidates.
@@ -66,8 +65,6 @@ debug the release candidates.
 
 These releases are considered obsolete. Old release notes can be found here:
 
-- [v23.0.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.0.0.md) released Nov/10/2025
-- [v22.1.3](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-22.1.3.md) released Jul/15/2025
 - [v22.1.2](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-22.1.2.md) released Apr/15/2025
 - [v22.1.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-22.1.1.md) released Feb/17/2025
 - [v22.1.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-22.1.0.md) released Feb/10/2025
@@ -125,4 +122,6 @@ These releases are considered obsolete. Old release notes can be found here:
 - [v0.10.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.10.0.md) released Sep/25/2014
 - [v0.9.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.9.0.md) released Mar/13/2014
 
-[set-of-changes]: https://github.com/dashpay/dash/compare/v23.0.0...dashpay:v23.0.2
+[set-of-changes]: https://github.com/dashpay/dash/compare/v22.1.2...dashpay:v22.1.3
+
+
