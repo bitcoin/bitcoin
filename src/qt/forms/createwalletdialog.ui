@@ -169,9 +169,6 @@
        <property name="autoRaise">
         <bool>true</bool>
        </property>
-       <property name="focusPolicy">
-        <enum>Qt::NoFocus</enum>
-       </property>
        <property name="checkable">
         <bool>true</bool>
        </property>
