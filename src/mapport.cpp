@@ -100,12 +100,12 @@ static void ProcessPCP()
 
         // Log message if we got NO_RESOURCES.
         if (no_resources) {
-            LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "portmap: At least one mapping failed because of a NO_RESOURCES error. This usually indicates that the port is already used on the router. If this is the only instance of bitcoin running on the network, this will resolve itself automatically. Otherwise, you might want to choose a different P2P port to prevent this conflict.\n");
+            LogWarning("portmap: At least one mapping failed because of a NO_RESOURCES error. This usually indicates that the port is already used on the router. If this is the only instance of bitcoin running on the network, this will resolve itself automatically. Otherwise, you might want to choose a different P2P port to prevent this conflict.\n");
         }
 
         // Sanity-check returned lifetime.
         if (actual_lifetime < 30) {
-            LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "portmap: Got impossibly short mapping lifetime of %d seconds\n", actual_lifetime);
+            LogWarning("portmap: Got impossibly short mapping lifetime of %d seconds\n", actual_lifetime);
             return;
         }
         // RFC6887 11.2.1 recommends that clients send their first renewal packet at a time chosen with uniform random
