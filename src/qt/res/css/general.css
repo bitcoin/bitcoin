@@ -385,6 +385,7 @@ QGroupBox
 QGroupBox {
     background-color:red;
     color: red;
+    font-size: 16px;
     padding-top: 20px;
 }
 
