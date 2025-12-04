@@ -19,6 +19,10 @@
 
 namespace node {
 
+/**
+ * Block template creation options. These override node defaults, but can't
+ * exceed node limits (e.g. block_reserved_weight can't exceed max block weight).
+ */
 struct BlockCreateOptions {
     /**
      * Set false to omit mempool transactions

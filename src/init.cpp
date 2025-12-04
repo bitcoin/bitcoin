@@ -1054,7 +1054,8 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         return InitError(Untranslated("peertimeout must be a positive integer."));
     }
 
-    auto mining_result{node::ApplyArgsManOptions(args)};
+    node::MiningArgs mining_args_dummy;
+    auto mining_result{node::ApplyArgsManOptions(args, mining_args_dummy)};
     if (!mining_result) {
         return InitError(util::ErrorString(mining_result));
     }
@@ -1292,6 +1293,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
     if (!mempool_error.empty()) {
         return {ChainstateLoadStatus::FAILURE_FATAL, mempool_error};
     }
+    Assert(ApplyArgsManOptions(args, node.mining_args)); // no error can happen, already checked in AppInitParameterInteraction
     LogInfo("* Using %.1f MiB for in-memory UTXO set (plus up to %.1f MiB of unused mempool space)",
             cache_sizes.coins * (1.0 / 1024 / 1024),
             mempool_opts.max_size_bytes * (1.0 / 1024 / 1024));

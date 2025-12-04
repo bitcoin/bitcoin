@@ -152,7 +152,7 @@ public:
      * @retval BlockTemplate a block template.
      * @retval std::nullptr if the node is shut down.
      */
-    virtual std::unique_ptr<BlockTemplate> createNewBlock(const node::BlockCreateOptions& options = {}) = 0;
+    virtual std::unique_ptr<BlockTemplate> createNewBlock(node::BlockCreateOptions options = {}) = 0;
 
     /**
      * Checks if a given block is valid.
