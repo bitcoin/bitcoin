@@ -36,6 +36,7 @@ using namespace util::hex_literals;
 using interfaces::BlockTemplate;
 using interfaces::Mining;
 using node::BlockAssembler;
+using node::BlockCreateOptions;
 
 namespace miner_tests {
 struct MinerTestingSetup : public TestingSetup {
@@ -114,8 +115,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
 {
     CTxMemPool& tx_mempool{MakeMempool()};
     auto mining{MakeMining()};
-    BlockAssembler::Options options;
-    options.coinbase_output_script = scriptPubKey;
+    BlockCreateOptions options{.coinbase_output_script = scriptPubKey};
 
     LOCK(tx_mempool.cs);
     BOOST_CHECK(tx_mempool.size() == 0);
@@ -174,7 +174,12 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     BOOST_CHECK(block.vtx[3]->GetHash() == hashMediumFeeTx);
 
     // Test the inclusion of package feerates in the block template and ensure they are sequential.
-    const auto block_package_feerates = BlockAssembler{m_node.chainman->ActiveChainstate(), &tx_mempool, options}.CreateNewBlock()->m_package_feerates;
+    // Can't use the Mining interface because it needs access to m_package_feerates.
+    const auto block_package_feerates = BlockAssembler{
+        m_node.chainman->ActiveChainstate(),
+        &tx_mempool,
+        {}
+    }.CreateNewBlock()->m_package_feerates;
     BOOST_CHECK(block_package_feerates.size() == 2);
 
     // parent_tx and high_fee_tx are added to the block as a package.
@@ -332,8 +337,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     auto mining{MakeMining()};
     BOOST_REQUIRE(mining);
 
-    BlockAssembler::Options options;
-    options.coinbase_output_script = scriptPubKey;
+    BlockCreateOptions options{.coinbase_output_script = scriptPubKey};
 
     {
         CTxMemPool& tx_mempool{MakeMempool()};
@@ -658,8 +662,6 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
     auto mining{MakeMining()};
     BOOST_REQUIRE(mining);
 
-    BlockAssembler::Options options;
-    options.coinbase_output_script = scriptPubKey;
 
     CTxMemPool& tx_mempool{MakeMempool()};
     LOCK(tx_mempool.cs);
@@ -722,7 +724,7 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
     Txid hashFreeGrandchild = tx.GetHash();
     TryAddToMempool(tx_mempool, entry.Fee(0).SpendsCoinbase(false).FromTx(tx));
 
-    auto block_template = mining->createNewBlock(options);
+    auto block_template = mining->createNewBlock({.coinbase_output_script = scriptPubKey});
     BOOST_REQUIRE(block_template);
     CBlock block{block_template->getBlock()};
     BOOST_REQUIRE_EQUAL(block.vtx.size(), 6U);
@@ -747,8 +749,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     // Note that by default, these tests run with size accounting enabled.
     CScript scriptPubKey = CScript() << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f"_hex << OP_CHECKSIG;
-    BlockAssembler::Options options;
-    options.coinbase_output_script = scriptPubKey;
+    BlockCreateOptions options{.coinbase_output_script = scriptPubKey};
 
     // Create and check a simple template
     std::unique_ptr<BlockTemplate> block_template = mining->createNewBlock(options);
