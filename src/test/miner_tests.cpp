@@ -183,7 +183,8 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     const auto block_package_feerates = BlockAssembler{
         m_node.chainman->ActiveChainstate(),
         &tx_mempool,
-        {}
+        m_node.mining_args,
+        BlockCreateOptions{}
     }.CreateNewBlock()->m_package_feerates;
     BOOST_CHECK(block_package_feerates.size() == 2);
 
