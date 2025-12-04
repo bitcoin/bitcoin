@@ -3,6 +3,7 @@
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <interfaces/mining.h>
 #include <node/miner.h>
 #include <net_processing.h>
 #include <pow.h>
@@ -16,12 +17,14 @@ BOOST_FIXTURE_TEST_SUITE(peerman_tests, RegTestingSetup)
 /** Window, in blocks, for connecting to NODE_NETWORK_LIMITED peers */
 static constexpr int64_t NODE_NETWORK_LIMITED_ALLOW_CONN_BLOCKS = 144;
 
-static void mineBlock(const node::NodeContext& node, std::chrono::seconds block_time)
+static void mineBlock(node::NodeContext& node, std::chrono::seconds block_time)
 {
     auto curr_time = GetTime<std::chrono::seconds>();
-    node::BlockAssembler::Options options;
     SetMockTime(block_time); // update time so the block is created with it
-    CBlock block = node::BlockAssembler{node.chainman->ActiveChainstate(), nullptr, options}.CreateNewBlock()->block;
+    auto mining{interfaces::MakeMining(node)};
+    auto block_template{mining->createNewBlock({}, /*cooldown=*/false)};
+    BOOST_REQUIRE(block_template);
+    CBlock block{block_template->getBlock()};
     while (!CheckProofOfWork(block.GetHash(), block.nBits, node.chainman->GetConsensus())) ++block.nNonce;
     block.fChecked = true; // little speedup
     SetMockTime(curr_time); // process block at current time

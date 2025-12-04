@@ -15,7 +15,6 @@
 
 using interfaces::BlockTemplate;
 using interfaces::Mining;
-using node::BlockAssembler;
 using node::BlockWaitOptions;
 
 namespace testnet4_miner_tests {
@@ -35,18 +34,18 @@ BOOST_AUTO_TEST_CASE(MiningInterface)
     auto mining{MakeMining()};
     BOOST_REQUIRE(mining);
 
-    BlockAssembler::Options options;
     std::unique_ptr<BlockTemplate> block_template;
 
     // Set node time a few minutes past the testnet4 genesis block
     const auto template_time{3min + WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->Time())};
     NodeClockContext clock_ctx{template_time};
 
-    block_template = mining->createNewBlock(options, /*cooldown=*/false);
+    block_template = mining->createNewBlock({}, /*cooldown=*/false);
     BOOST_REQUIRE(block_template);
 
     // The template should use the mocked system time
-    BOOST_REQUIRE_EQUAL(block_template->getBlockHeader().Time(), template_time);
+    BOOST_REQUIRE_EQUAL(TicksSinceEpoch<std::chrono::seconds>(block_template->getBlockHeader().Time()),
+                        TicksSinceEpoch<std::chrono::seconds>(template_time));
 
     const BlockWaitOptions wait_options{.timeout = MillisecondsDouble{0}, .fee_threshold = 1};
 

@@ -8,6 +8,7 @@
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
 #include <index/blockfilterindex.h>
+#include <interfaces/mining.h>
 #include <interfaces/chain.h>
 #include <node/miner.h>
 #include <pow.h>
@@ -20,9 +21,7 @@
 #include <boost/test/unit_test.hpp>
 #include <future>
 
-using node::BlockAssembler;
 using node::BlockManager;
-using node::CBlockTemplate;
 
 BOOST_AUTO_TEST_SUITE(blockfilter_index_tests)
 
@@ -69,10 +68,12 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
     const std::vector<CMutableTransaction>& txns,
     const CScript& scriptPubKey)
 {
-    BlockAssembler::Options options;
-    options.coinbase_output_script = scriptPubKey;
-    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get(), options}.CreateNewBlock();
-    CBlock& block = pblocktemplate->block;
+    auto mining{interfaces::MakeMining(m_node)};
+    auto block_template{mining->createNewBlock({
+        .coinbase_output_script = scriptPubKey,
+    }, /*cooldown=*/false)};
+    BOOST_REQUIRE(block_template);
+    CBlock block{block_template->getBlock()};
     block.hashPrevBlock = prev->GetBlockHash();
     block.nTime = prev->nTime + 1;
 

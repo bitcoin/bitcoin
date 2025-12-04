@@ -20,7 +20,7 @@
 #include <memory>
 #include <vector>
 
-using node::BlockAssembler;
+using node::BlockCreateOptions;
 
 static void AssembleBlock(benchmark::Bench& bench)
 {
@@ -28,8 +28,9 @@ static void AssembleBlock(benchmark::Bench& bench)
 
     CScriptWitness witness;
     witness.stack.push_back(WITNESS_STACK_ELEM_OP_TRUE);
-    BlockAssembler::Options options;
-    options.coinbase_output_script = P2WSH_OP_TRUE;
+    BlockCreateOptions options{
+        .coinbase_output_script = P2WSH_OP_TRUE,
+    };
 
     // Collect some loose transactions that spend the coinbases of our mined blocks
     constexpr size_t NUM_BLOCKS{200};
@@ -60,12 +61,12 @@ static void BlockAssemblerAddPackageTxns(benchmark::Bench& bench)
     FastRandomContext det_rand{true};
     auto testing_setup{MakeNoLogFileContext<TestChain100Setup>()};
     testing_setup->PopulateMempool(det_rand, /*num_transactions=*/1000, /*submit=*/true);
-    BlockAssembler::Options assembler_options;
-    assembler_options.test_block_validity = false;
-    assembler_options.coinbase_output_script = P2WSH_OP_TRUE;
 
     bench.run([&] {
-        PrepareBlock(testing_setup->m_node, assembler_options);
+        PrepareBlock(testing_setup->m_node, {
+            .coinbase_output_script = P2WSH_OP_TRUE,
+            .test_block_validity = false
+        });
     });
 }
 
