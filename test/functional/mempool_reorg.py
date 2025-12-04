@@ -164,7 +164,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         assert_raises_rpc_error(-26, "non-final", self.nodes[0].sendrawtransaction, timelock_tx)
 
         self.log.info("Broadcast and mine spend_2 and spend_3")
-        wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=spend_2['hex'])
+        spend_2_id = wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=spend_2['hex'])
         wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=spend_3['hex'])
         self.log.info("Generate a block")
         self.generate(self.nodes[0], 1)
@@ -172,7 +172,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         assert_raises_rpc_error(-26, 'non-final', self.nodes[0].sendrawtransaction, timelock_tx)
 
         self.log.info("Create spend_2_1 and spend_3_1")
-        spend_2_1 = wallet.create_self_transfer(utxo_to_spend=spend_2["new_utxo"])
+        spend_2_1 = wallet.create_self_transfer(utxo_to_spend=spend_2["new_utxo"], version=1)
         spend_3_1 = wallet.create_self_transfer(utxo_to_spend=spend_3["new_utxo"])
 
         self.log.info("Broadcast and mine spend_3_1")
@@ -210,6 +210,24 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         self.log.info("The time-locked transaction is now too immature and has been removed from the mempool")
         self.log.info("spend_3_1 has been re-orged out of the chain and is back in the mempool")
         assert_equal(set(self.nodes[0].getrawmempool()), {spend_1_id, spend_2_1_id, spend_3_1_id})
+
+        self.log.info("Reorg out enough blocks to get spend_2 back in the mempool, along with its child")
+
+        while (spend_2_id not in self.nodes[0].getrawmempool()):
+            b = self.nodes[0].getbestblockhash()
+            for node in self.nodes:
+                node.invalidateblock(b)
+
+        assert(spend_2_id in self.nodes[0].getrawmempool())
+        assert(spend_2_1_id in self.nodes[0].getrawmempool())
+
+        # Chain 10 more transactions off of spend_2_1
+        self.log.info("Give spend_2 some more descendants by creating a chain of 10 transactions spending from it")
+        parent_utxo = spend_2_1["new_utxo"]
+        for i in range(10):
+            tx = wallet.create_self_transfer(utxo_to_spend=parent_utxo, version=1)
+            self.nodes[0].sendrawtransaction(tx['hex'])
+            parent_utxo = tx["new_utxo"]
 
         self.log.info("Use invalidateblock to re-org back and make all those coinbase spends immature/invalid")
         b = self.nodes[0].getblockhash(first_block + 100)

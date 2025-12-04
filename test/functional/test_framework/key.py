@@ -316,7 +316,7 @@ class TestFrameworkKey(unittest.TestCase):
         """Implement the BIP340 test vectors (read from bip340_test_vectors.csv)."""
         num_tests = 0
         vectors_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bip340_test_vectors.csv')
-        with open(vectors_file, newline='', encoding='utf8') as csvfile:
+        with open(vectors_file, newline='') as csvfile:
             reader = csv.reader(csvfile)
             next(reader)
             for row in reader:

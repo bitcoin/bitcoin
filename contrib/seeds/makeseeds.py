@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2013-2022 The Bitcoin Core developers
+# Copyright (c) 2013-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -211,7 +211,7 @@ def main():
     print('Done.', file=sys.stderr)
 
     print('Loading and parsing DNS seeds…', end='', file=sys.stderr, flush=True)
-    with open(args.seeds, 'r', encoding='utf8') as f:
+    with open(args.seeds, 'r') as f:
         lines = f.readlines()
     ips = [parseline(line) for line in lines]
     random.shuffle(ips)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2020 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,8 +16,8 @@ pattern = args.pattern
 outfile = args.outfile
 
 in_remove = False
-with open(tracefile, 'r', encoding="utf8") as f:
-    with open(outfile, 'w', encoding="utf8") as wf:
+with open(tracefile, 'r') as f:
+    with open(outfile, 'w') as wf:
         for line in f:
             for p in pattern:
                 if line.startswith("SF:") and p in line:

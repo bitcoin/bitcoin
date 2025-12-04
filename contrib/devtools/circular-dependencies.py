@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Copyright (c) 2018-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -49,7 +49,7 @@ for arg in sys.argv[1:]:
 # TODO: implement support for multiple include directories
 for arg in sorted(files.keys()):
     module = files[arg]
-    with open(arg, 'r', encoding="utf8") as f:
+    with open(arg, 'r') as f:
         for line in f:
             match = RE.match(line)
             if match:

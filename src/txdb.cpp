@@ -137,7 +137,7 @@ bool CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashB
             if (m_options.simulate_crash_ratio) {
                 static FastRandomContext rng;
                 if (rng.randrange(m_options.simulate_crash_ratio) == 0) {
-                    LogPrintf("Simulating a crash. Goodbye.\n");
+                    LogError("Simulating a crash. Goodbye.");
                     _Exit(0);
                 }
             }

@@ -80,7 +80,7 @@ private:
     const unsigned int entryHeight; //!< Chain height when entering the mempool
     const bool spendsCoinbase;      //!< keep track of transactions that spend a coinbase
     const int64_t sigOpCost;        //!< Total sigop cost
-    CAmount m_modified_fee;         //!< Used for determining the priority of the transaction for mining in a block
+    mutable CAmount m_modified_fee; //!< Used for determining the priority of the transaction for mining in a block
     mutable LockPoints lockPoints;  //!< Track the height and time at which tx was final
 
 public:
@@ -124,7 +124,7 @@ public:
     const LockPoints& GetLockPoints() const { return lockPoints; }
 
     // Updates the modified fees with descendants/ancestors.
-    void UpdateModifiedFee(CAmount fee_diff)
+    void UpdateModifiedFee(CAmount fee_diff) const
     {
         m_modified_fee = SaturatingAdd(m_modified_fee, fee_diff);
     }

@@ -198,7 +198,7 @@ static void RemovePidFile(const ArgsManager& args)
     const auto pid_path{GetPidFile(args)};
     if (std::error_code error; !fs::remove(pid_path, error)) {
         std::string msg{error ? error.message() : "File does not exist"};
-        LogPrintf("Unable to remove PID file (%s): %s\n", fs::PathToString(pid_path), msg);
+        LogWarning("Unable to remove PID file (%s): %s", fs::PathToString(pid_path), msg);
     }
 }
 
@@ -633,10 +633,13 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-deprecatedrpc=<method>", "Allows deprecated RPC method(s) to be used", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-stopafterblockimport", strprintf("Stop running after importing blocks from disk (default: %u)", DEFAULT_STOPAFTERBLOCKIMPORT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-stopatheight", strprintf("Stop running after reaching the given height in the main chain (default: %u)", DEFAULT_STOPATHEIGHT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-limitancestorcount=<n>", strprintf("Do not accept transactions if number of in-mempool ancestors is <n> or more (default: %u)", DEFAULT_ANCESTOR_LIMIT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-limitancestorsize=<n>", strprintf("Do not accept transactions whose size with all in-mempool ancestors exceeds <n> kilobytes (default: %u)", DEFAULT_ANCESTOR_SIZE_LIMIT_KVB), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-limitdescendantcount=<n>", strprintf("Do not accept transactions if any ancestor would have <n> or more in-mempool descendants (default: %u)", DEFAULT_DESCENDANT_LIMIT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-limitdescendantsize=<n>", strprintf("Do not accept transactions if any ancestor would have more than <n> kilobytes of in-mempool descendants (default: %u).", DEFAULT_DESCENDANT_SIZE_LIMIT_KVB), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
+    argsman.AddArg("-limitancestorcount=<n>", strprintf("Deprecated setting to not accept transactions if number of in-mempool ancestors is <n> or more (default: %u); replaced by cluster limits (see -limitclustercount) and only used by wallet for coin selection", DEFAULT_ANCESTOR_LIMIT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
+    // Ancestor and descendant size limits were removed. We keep
+    // -limitancestorsize/-limitdescendantsize as hidden args to display a more
+    // user friendly error when set.
+    argsman.AddArg("-limitancestorsize", "", ArgsManager::ALLOW_ANY, OptionsCategory::HIDDEN);
+    argsman.AddArg("-limitdescendantsize", "", ArgsManager::ALLOW_ANY, OptionsCategory::HIDDEN);
+    argsman.AddArg("-limitdescendantcount=<n>", strprintf("Deprecated setting to not accept transactions if any ancestor would have <n> or more in-mempool descendants (default: %u); replaced by cluster limits (see -limitclustercount) and only used by wallet for coin selection", DEFAULT_DESCENDANT_LIMIT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-test=<option>", "Pass a test-only option. Options include : " + Join(TEST_OPTIONS_DOC, ", ") + ".", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-limitclustercount=<n>", strprintf("Do not accept transactions into mempool which are directly or indirectly connected to <n> or more other unconfirmed transactions (default: %u, maximum: %u)", DEFAULT_CLUSTER_LIMIT, MAX_CLUSTER_COUNT_LIMIT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-limitclustersize=<n>", strprintf("Do not accept transactions whose virtual size with all in-mempool connected transactions exceeds <n> kilobytes (default: %u)", DEFAULT_CLUSTER_SIZE_LIMIT_KVB), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
@@ -900,6 +903,12 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // We removed checkpoints but keep the option to warn users who still have it in their config.
     if (args.IsArgSet("-checkpoints")) {
         InitWarning(_("Option '-checkpoints' is set but checkpoints were removed. This option has no effect."));
+    }
+    if (args.IsArgSet("-limitancestorsize")) {
+        InitWarning(_("Option '-limitancestorsize' is given but ancestor size limits have been replaced with cluster size limits (see -limitclustersize). This option has no effect."));
+    }
+    if (args.IsArgSet("-limitdescendantsize")) {
+        InitWarning(_("Option '-limitdescendantsize' is given but descendant size limits have been replaced with cluster size limits (see -limitclustersize). This option has no effect."));
     }
 
     // Error if network-specific options (-addnode, -connect, etc) are
@@ -1342,7 +1351,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
             index->Interrupt();
             index->Stop();
             if (!(index->Init() && index->StartBackgroundSync())) {
-                LogPrintf("[snapshot] WARNING failed to restart index %s on snapshot chain\n", index->GetName());
+                LogWarning("[snapshot] Failed to restart index %s on snapshot chain", index->GetName());
             }
         }
     };
@@ -1406,11 +1415,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // Warn about relative -datadir path.
     if (args.IsArgSet("-datadir") && !args.GetPathArg("-datadir").is_absolute()) {
-        LogPrintf("Warning: relative datadir option '%s' specified, which will be interpreted relative to the "
-                  "current working directory '%s'. This is fragile, because if bitcoin is started in the future "
-                  "from a different location, it will be unable to locate the current data files. There could "
-                  "also be data loss if bitcoin is started while in a temporary directory.\n",
-                  args.GetArg("-datadir", ""), fs::PathToString(fs::current_path()));
+        LogWarning("Relative datadir option '%s' specified, which will be interpreted relative to the "
+                   "current working directory '%s'. This is fragile, because if bitcoin is started in the future "
+                   "from a different location, it will be unable to locate the current data files. There could "
+                   "also be data loss if bitcoin is started while in a temporary directory.",
+                   args.GetArg("-datadir", ""), fs::PathToString(fs::current_path()));
     }
 
     assert(!node.scheduler);
@@ -1872,7 +1881,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     } else {
         // Prior to setting NODE_NETWORK, check if we can provide historical blocks.
         if (!WITH_LOCK(chainman.GetMutex(), return chainman.BackgroundSyncInProgress())) {
-            LogInfo("Setting NODE_NETWORK on non-prune mode");
+            LogInfo("Setting NODE_NETWORK in non-prune mode");
             g_local_services = ServiceFlags(g_local_services | NODE_NETWORK);
         } else {
             LogInfo("Running node in NODE_NETWORK_LIMITED mode until snapshot background sync completes");
