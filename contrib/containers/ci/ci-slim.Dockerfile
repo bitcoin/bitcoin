@@ -1,6 +1,6 @@
 # Builder for cppcheck
 FROM debian:bookworm-slim AS cppcheck-builder
-ARG CPPCHECK_VERSION=2.13.0
+ARG CPPCHECK_VERSION=2.17.1
 RUN set -ex; \
     apt-get update && apt-get install -y --no-install-recommends \
         curl \
