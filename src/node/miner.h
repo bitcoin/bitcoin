@@ -80,8 +80,6 @@ private:
 
 public:
     struct Options : BlockCreateOptions {
-        // Configuration parameters for the block size
-        size_t nBlockMaxWeight{DEFAULT_BLOCK_MAX_WEIGHT};
         CFeeRate blockMinFeeRate{DEFAULT_BLOCK_MIN_TX_FEE};
         bool print_modified_fee{DEFAULT_PRINT_MODIFIED_FEE};
     };

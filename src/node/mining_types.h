@@ -40,7 +40,14 @@ struct BlockCreateOptions {
      * Cap'n Proto IPC clients currently cannot leave this field unset, so they
      * always provide a value.
      */
-    std::optional<size_t> block_reserved_weight{};
+    std::optional<uint64_t> block_reserved_weight{};
+    /**
+     * Maximum block weight, defaults to -maxblockweight
+     *
+     * block_reserved_weight can safely exceed block_max_weight, but the rest of
+     * the block template will be empty.
+     */
+    std::optional<uint64_t> block_max_weight{};
     /**
      * The maximum additional sigops which the pool will add in coinbase
      * transaction outputs.
