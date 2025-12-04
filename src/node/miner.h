@@ -8,7 +8,7 @@
 
 #include <interfaces/types.h>
 #include <node/types.h>
-#include <policy/policy.h>
+#include <node/mining.h>
 #include <primitives/block.h>
 #include <txmempool.h>
 #include <util/feefrac.h>
