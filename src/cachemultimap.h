@@ -150,10 +150,10 @@ public:
         if(mit == mapIndex.end()) {
             return;
         }
-        it_map_t& mapIt = mit->second;
+        const it_map_t& mapIt = mit->second;
 
-        for(it_map_it it = mapIt.begin(); it != mapIt.end(); ++it) {
-            listItems.erase(it->second);
+        for (const auto& it : mapIt) {
+            listItems.erase(it.second);
         }
 
         mapIndex.erase(mit);
