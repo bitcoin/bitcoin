@@ -126,7 +126,8 @@ def main():
         exit(1)
 
     mypy_files = subprocess.check_output(FILES_ARGS).decode("utf-8").splitlines()
-    mypy_args = ['mypy', '--show-error-codes'] + mypy_files
+    # TODO: remove `--namespace-packages` after upgrade to mypy 0.991 or newer
+    mypy_args = ['mypy', '--namespace-packages', '--show-error-codes'] + mypy_files
 
     try:
         subprocess.check_call(mypy_args)
