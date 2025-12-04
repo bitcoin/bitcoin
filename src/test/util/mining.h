@@ -5,7 +5,7 @@
 #ifndef BITCOIN_TEST_UTIL_MINING_H
 #define BITCOIN_TEST_UTIL_MINING_H
 
-#include <node/miner.h>
+#include <node/types.h>
 
 #include <memory>
 #include <string>
@@ -24,7 +24,7 @@ std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const
 
 /** Returns the generated coin */
 COutPoint MineBlock(const node::NodeContext&,
-                    const node::BlockAssembler::Options& assembler_options);
+                    const node::BlockCreateOptions& assembler_options);
 
 /**
  * Returns the generated coin (or Null if the block was invalid).
@@ -38,9 +38,8 @@ COutPoint MineBlock(const node::NodeContext&, std::shared_ptr<CBlock>& block);
 COutPoint ProcessBlock(const node::NodeContext&, const std::shared_ptr<CBlock>& block);
 
 /** Prepare a block to be mined */
-std::shared_ptr<CBlock> PrepareBlock(const node::NodeContext&);
 std::shared_ptr<CBlock> PrepareBlock(const node::NodeContext& node,
-                                     const node::BlockAssembler::Options& assembler_options);
+                                     const node::BlockCreateOptions& assembler_options);
 
 /** RPC-like helper function, returns the generated coin */
 COutPoint generatetoaddress(const node::NodeContext&, const std::string& address);

@@ -7,6 +7,7 @@
 #include <chainparams.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
+#include <interfaces/mining.h>
 #include <key_io.h>
 #include <node/context.h>
 #include <pow.h>
@@ -20,18 +21,16 @@
 #include <algorithm>
 #include <memory>
 
-using node::BlockAssembler;
 using node::NodeContext;
 
 COutPoint generatetoaddress(const NodeContext& node, const std::string& address)
 {
     const auto dest = DecodeDestination(address);
     assert(IsValidDestination(dest));
-    BlockAssembler::Options assembler_options;
-    assembler_options.coinbase_output_script = GetScriptForDestination(dest);
-    assembler_options.include_dummy_extranonce = true;
-
-    return MineBlock(node, assembler_options);
+    return MineBlock(node, {
+        .coinbase_output_script = GetScriptForDestination(dest),
+        .include_dummy_extranonce = true,
+    });
 }
 
 std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const CChainParams& params)
@@ -69,7 +68,7 @@ std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const
     return ret;
 }
 
-COutPoint MineBlock(const NodeContext& node, const node::BlockAssembler::Options& assembler_options)
+COutPoint MineBlock(const NodeContext& node, const node::BlockCreateOptions& assembler_options)
 {
     auto block = PrepareBlock(node, assembler_options);
     auto valid = MineBlock(node, block);
@@ -123,24 +122,15 @@ COutPoint ProcessBlock(const NodeContext& node, const std::shared_ptr<CBlock>& b
 }
 
 std::shared_ptr<CBlock> PrepareBlock(const NodeContext& node,
-                                     const BlockAssembler::Options& assembler_options)
+                                     const node::BlockCreateOptions& assembler_options)
 {
-    auto block = std::make_shared<CBlock>(
-        BlockAssembler{Assert(node.chainman)->ActiveChainstate(), Assert(node.mempool.get()), assembler_options}
-            .CreateNewBlock()
-            ->block);
+    auto mining = interfaces::MakeMining(const_cast<NodeContext&>(node));
+    auto block_template = mining->createNewBlock(assembler_options, /*cooldown=*/false);
+    auto block = std::make_shared<CBlock>(Assert(block_template)->getBlock());
 
     LOCK(cs_main);
     block->nTime = Assert(node.chainman)->ActiveChain().Tip()->GetMedianTimePast() + 1;
     block->hashMerkleRoot = BlockMerkleRoot(*block);
 
     return block;
-}
-std::shared_ptr<CBlock> PrepareBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey)
-{
-    BlockAssembler::Options assembler_options;
-    assembler_options.coinbase_output_script = coinbase_scriptPubKey;
-    assembler_options.include_dummy_extranonce = true;
-    ApplyArgsManOptions(*node.args, assembler_options);
-    return PrepareBlock(node, assembler_options);
 }
