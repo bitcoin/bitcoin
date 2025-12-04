@@ -59,6 +59,13 @@ struct BlockCreateOptions {
      * Should only be used for tests / benchmarks.
      */
     bool test_block_validity{true};
+    /**
+     * Maximum block weight, defaults to -maxblockweight
+     *
+     * block_reserved_weight can safely exceed block_max_weight, but the rest of
+     * the block template will be empty.
+     */
+    std::optional<size_t> block_max_weight{};
 };
 
 struct BlockWaitOptions {
