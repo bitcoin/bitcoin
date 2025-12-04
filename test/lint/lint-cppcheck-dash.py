@@ -37,6 +37,10 @@ IGNORED_WARNINGS = (
     "src/stacktraces.cpp:.*: .*: Parameter 'info' can be declared as pointer to const",
     "src/stacktraces.cpp:.*: note: You might need to cast the function pointer here",
 
+    # current version of cppcheck fails with this error if exhaustive level is used
+    # TODO: remove with a newer version
+    "warning: Internal error: Child process crashed with signal 6",
+
     # The following can be useful to ignore when the catch all is used
     # "Consider performing initialization in initialization list.",
     "Consider using std::transform algorithm instead of a raw loop.",
