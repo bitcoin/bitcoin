@@ -2086,6 +2086,10 @@ RPCHelpMan listdescriptors()
     for (const WalletDescInfo& info : wallet_descriptors) {
         UniValue spk(UniValue::VOBJ);
         spk.pushKV("desc", info.descriptor);
+        if (!info.mnemonic.empty()) {
+            spk.pushKV("mnemonic", info.mnemonic);
+            spk.pushKV("mnemonicpassphrase", info.mnemonic_passphrase);
+        }
         spk.pushKV("timestamp", info.creation_time);
         spk.pushKV("active", info.active);
         if (info.internal.has_value()) {
@@ -2095,16 +2099,12 @@ RPCHelpMan listdescriptors()
             UniValue range(UniValue::VARR);
             range.push_back(info.range->first);
             range.push_back(info.range->second - 1);
-            spk.pushKV("range", range);
-            spk.pushKV("next", info.next_index);
-            spk.pushKV("next_index", info.next_index);
             if (info.is_coinjoin) {
                 spk.pushKV("coinjoin", info.is_coinjoin);
             }
-            if (!info.mnemonic.empty() || !info.mnemonic_passphrase.empty()) {
-                spk.pushKV("mnemonic", info.mnemonic);
-                spk.pushKV("mnemonicpassphrase", info.mnemonic_passphrase);
-            }
+            spk.pushKV("range", range);
+            spk.pushKV("next", info.next_index);
+            spk.pushKV("next_index", info.next_index);
         }
         descriptors.push_back(spk);
     }
