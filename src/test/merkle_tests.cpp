@@ -154,6 +154,11 @@ BOOST_AUTO_TEST_CASE(merkle_test_empty_block)
 
     BOOST_CHECK_EQUAL(root.IsNull(), true);
     BOOST_CHECK_EQUAL(mutated, false);
+
+    // Verify TransactionMerklePath handles empty block correctly
+    // This tests the early-return path in MerkleComputation
+    std::vector<uint256> merkle_path = TransactionMerklePath(block, 0);
+    BOOST_CHECK(merkle_path.empty());
 }
 
 BOOST_AUTO_TEST_CASE(merkle_test_oneTx_block)
