@@ -175,6 +175,19 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     BOOST_CHECK(raw_txs[0]);
     BOOST_CHECK(raw_txs[0]->GetHash() == hashParentTx);
     BOOST_CHECK(!raw_txs[1]);
+
+    // Test getTransactionsByWitnessID()
+    // tx has no witness, so just cast to Wtxid
+    const std::vector<Wtxid> wtx_id_list{
+        Wtxid::FromUint256(hashParentTx.ToUint256()),
+        Wtxid::FromUint256(uint256::ZERO)
+    };
+    raw_txs = mining->getTransactionsByWitnessID(wtx_id_list);
+    BOOST_REQUIRE_EQUAL(raw_txs.size(), tx_id_list.size());
+    BOOST_CHECK(raw_txs[0]);
+    BOOST_CHECK(raw_txs[0]->GetHash() == hashParentTx);
+    BOOST_CHECK(!raw_txs[1]);
+
     block_template = mining->createNewBlock(options);
     BOOST_REQUIRE(block_template);
     block = block_template->getBlock();
