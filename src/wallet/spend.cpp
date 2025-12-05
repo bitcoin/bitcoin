@@ -403,6 +403,11 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                     if (wtx.tx->version != TRUC_VERSION) continue;
                     // this unconfirmed v3 transaction already has a child
                     if (wtx.truc_child_in_mempool.has_value()) continue;
+
+                    // this unconfirmed v3 transaction has a parent: spending would create a third generation
+                    size_t ancestors, descendants;
+                    wallet.chain().getTransactionAncestry(wtx.tx->GetHash(), ancestors, descendants);
+                    if (ancestors > 1) continue;
                 } else {
                     if (wtx.tx->version == TRUC_VERSION) continue;
                     Assume(!wtx.truc_child_in_mempool.has_value());

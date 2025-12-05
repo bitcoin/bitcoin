@@ -2,9 +2,7 @@
 import argparse
 import plistlib
 import pathlib
-import sys
 import tarfile
-import gzip
 import os
 import contextlib
 
@@ -22,12 +20,12 @@ def run():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
 
-    parser.add_argument('xcode_app', metavar='XCODEAPP', nargs=1)
-    parser.add_argument("-o", metavar='OUTSDKTGZ', nargs=1, dest='out_sdktgz', required=False)
+    parser.add_argument('xcode_app', metavar='XCODEAPP', type=pathlib.Path)
+    parser.add_argument("-o", metavar='OUTSDKTAR', dest='out_sdkt', type=pathlib.Path, required=False)
 
     args = parser.parse_args()
 
-    xcode_app = pathlib.Path(args.xcode_app[0]).resolve()
+    xcode_app = args.xcode_app.resolve()
     assert xcode_app.is_dir(), "The supplied Xcode.app path '{}' either does not exist or is not a directory".format(xcode_app)
 
     xcode_app_plist = xcode_app.joinpath("Contents/version.plist")
@@ -47,11 +45,7 @@ def run():
 
     out_name = "Xcode-{xcode_version}-{xcode_build_id}-extracted-SDK-with-libcxx-headers".format(xcode_version=xcode_version, xcode_build_id=xcode_build_id)
 
-    if args.out_sdktgz:
-        out_sdktgz_path = pathlib.Path(args.out_sdktgz_path)
-    else:
-        # Construct our own out_sdktgz if not specified on the command line
-        out_sdktgz_path = pathlib.Path("./{}.tar.gz".format(out_name))
+    out_sdkt_path = args.out_sdkt or pathlib.Path("./{}.tar".format(out_name))
 
     def tarfp_add_with_base_change(tarfp, dir_to_add, alt_base_dir):
         """Add all files in dir_to_add to tarfp, but prepend alt_base_dir to the files'
@@ -68,6 +62,8 @@ def run():
 
         """
         def change_tarinfo_base(tarinfo):
+            if tarinfo.name and tarinfo.name.endswith((".swiftmodule", ".modulemap")):
+                return None
             if tarinfo.name and tarinfo.name.startswith("./"):
                 tarinfo.name = str(pathlib.Path(alt_base_dir, tarinfo.name))
             if tarinfo.linkname and tarinfo.linkname.startswith("./"):
@@ -81,16 +77,17 @@ def run():
             return tarinfo
         with cd(dir_to_add):
             # recursion already adds entries in sorted order
-            tarfp.add(".", recursive=True, filter=change_tarinfo_base)
+            tarfp.add("./usr/include", recursive=True, filter=change_tarinfo_base)
+            tarfp.add("./usr/lib", recursive=True, filter=change_tarinfo_base)
+            tarfp.add("./System/Library/Frameworks", recursive=True, filter=change_tarinfo_base)
 
-    print("Creating output .tar.gz file...")
-    with out_sdktgz_path.open("wb") as fp:
-        with gzip.GzipFile(fileobj=fp, mode='wb', compresslevel=9, mtime=0) as gzf:
-            with tarfile.open(mode="w", fileobj=gzf, format=tarfile.GNU_FORMAT) as tarfp:
-                print("Adding MacOSX SDK {} files...".format(sdk_version))
-                tarfp_add_with_base_change(tarfp, sdk_dir, out_name)
-    print("Done! Find the resulting gzipped tarball at:")
-    print(out_sdktgz_path.resolve())
+    print("Creating output .tar file...")
+    with out_sdkt_path.open("wb") as fp:
+        with tarfile.open(mode="w", fileobj=fp, format=tarfile.PAX_FORMAT) as tarfp:
+            print("Adding MacOSX SDK {} files...".format(sdk_version))
+            tarfp_add_with_base_change(tarfp, sdk_dir, out_name)
+    print("Done! Find the resulting tarball at:")
+    print(out_sdkt_path.resolve())
 
 if __name__ == '__main__':
     run()

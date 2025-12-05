@@ -1,9 +1,9 @@
 v30.x Release Notes
 ===================
 
-Bitcoin Core version v30.x is now available from:
+Bitcoin Core version v30.1rc1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-30.x/>
+  <https://bitcoincore.org/bin/bitcoin-core-30.1/test.rc1/>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
@@ -40,10 +40,15 @@ unsupported systems.
 Notable changes
 ===============
 
+### Wallet
+
+- #33528 wallet: don't consider unconfirmed TRUC coins with ancestors
+
 ### Build
 
 - #33580 depends: Use `$(package)_file_name` when downloading from the fallback
 - #33906 depends: Add patch for Windows11Style plugin
+- #32009 contrib: turn off compression of macOS SDK to fix determinism
 
 ### IPC
 
@@ -52,6 +57,10 @@ Notable changes
 - #33519 Update libmultiprocess subtree in 30.x branch
 - #33566 miner: fix empty mempool case for waitNext()
 - #33676 interfaces: enable cancelling running waitNext calls
+
+### P2P
+
+- #33723 chainparams: remove dnsseed.bitcoin.dashjr-list-of-p2p-nodes.us
 
 ### GUI
 
@@ -74,6 +83,7 @@ Notable changes
 - #33558 ci: Use native platform for win-cross task
 - #33581 ci: Properly include $FILE_ENV in DEPENDS_HASH
 - #33744 ci: Fix lint runner selection (and docker cache)
+- #33996 contrib: fix manpage generation
 
 Credits
 =======
@@ -83,11 +93,13 @@ Thanks to everyone who directly contributed to this release:
 - Ava Chow
 - Cory Fields
 - Eugene Siegel
+- fanquake
 - glozow
 - Hennadii Stepanov
 - ismaelsadeeq
 - MarcoFalke
 - Ryan Ofsky
+- SatsAndSports
 - Sjors Provoost
 - WakeTrainDev
 - willcl-ark
