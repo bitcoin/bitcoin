@@ -277,7 +277,7 @@ static bool SignMuSig2(const BaseSignatureCreator& creator, SignatureData& sigda
     }
 
     for (const auto& [agg_pub, part_pks] : sigdata.musig2_pubkeys) {
-        if (part_pks.empty()) continue;
+        if (!agg_pub.IsFullyValid() || part_pks.empty()) continue;
 
         // Fill participant derivation path info
         for (const auto& part_pk : part_pks) {
