@@ -81,10 +81,14 @@ private:
     /// llmqType members requests data from one llmqType quorum.
     size_t GetQuorumRecoveryStartOffset(const CQuorum& quorum, gsl::not_null<const CBlockIndex*> pIndex) const;
 
-    void CheckQuorumConnections(CConnman& connman, const Consensus::LLMQParams& llmqParams,
-                                gsl::not_null<const CBlockIndex*> pindexNew) const;
     void StartCleanupOldQuorumDataThread(gsl::not_null<const CBlockIndex*> pIndex) const;
     void TriggerQuorumDataRecoveryThreads(CConnman& connman, gsl::not_null<const CBlockIndex*> pIndex) const;
+
+    //! Connection
+    Uint256HashSet GetQuorumsToDelete(CConnman& connman, const Consensus::LLMQParams& llmqParams,
+                                      gsl::not_null<const CBlockIndex*> pindexNew) const;
+    void CheckQuorumConnections(CConnman& connman, const Consensus::LLMQParams& llmqParams,
+                                gsl::not_null<const CBlockIndex*> pindexNew) const;
 
     //! Data recovery
     void DataRecoveryThread(CConnman& connman, gsl::not_null<const CBlockIndex*> block_index, CQuorumCPtr quorum,

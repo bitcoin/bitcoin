@@ -84,13 +84,9 @@ void QuorumParticipant::UpdatedBlockTip(const CBlockIndex* pindexNew, CConnman& 
     StartCleanupOldQuorumDataThread(pindexNew);
 }
 
-void QuorumParticipant::CheckQuorumConnections(CConnman& connman, const Consensus::LLMQParams& llmqParams,
-                                               gsl::not_null<const CBlockIndex*> pindexNew) const
+Uint256HashSet QuorumParticipant::GetQuorumsToDelete(CConnman& connman, const Consensus::LLMQParams& llmqParams,
+                                                     gsl::not_null<const CBlockIndex*> pindexNew) const
 {
-    if (m_mn_activeman == nullptr && !m_quorums_watch) return;
-
-    auto lastQuorums = m_qman.ScanQuorums(llmqParams.type, pindexNew, (size_t)llmqParams.keepOldConnections);
-
     auto connmanQuorumsToDelete = connman.GetMasternodeQuorums(llmqParams.type);
 
     // don't remove connections for the currently in-progress DKG round
@@ -114,6 +110,17 @@ void QuorumParticipant::CheckQuorumConnections(CConnman& connman, const Consensu
         LogPrint(BCLog::LLMQ, "QuorumParticipant::%s -- llmqType[%d] h[%d] keeping mn quorum connections for quorum: [%d:%s]\n", __func__, ToUnderlying(llmqParams.type), pindexNew->nHeight, curDkgHeight, curDkgBlock.ToString());
     }
 
+    return connmanQuorumsToDelete;
+}
+
+void QuorumParticipant::CheckQuorumConnections(CConnman& connman, const Consensus::LLMQParams& llmqParams,
+                                               gsl::not_null<const CBlockIndex*> pindexNew) const
+{
+    if (m_mn_activeman == nullptr && !m_quorums_watch) return;
+
+    auto lastQuorums = m_qman.ScanQuorums(llmqParams.type, pindexNew, (size_t)llmqParams.keepOldConnections);
+    auto deletableQuorums = GetQuorumsToDelete(connman, llmqParams, pindexNew);
+
     const uint256 myProTxHash = m_mn_activeman != nullptr ? m_mn_activeman->GetProTxHash() : uint256();
 
     bool isISType = llmqParams.type == Params().GetConsensus().llmqTypeDIP0024InstantSend;
@@ -126,7 +133,7 @@ void QuorumParticipant::CheckQuorumConnections(CConnman& connman, const Consensu
     for (const auto& quorum : lastQuorums) {
         if (utils::EnsureQuorumConnections(llmqParams, connman, m_sporkman, {m_dmnman, m_qsnapman, m_chainman, quorum->m_quorum_base_block_index},
                                            m_dmnman.GetListAtChainTip(), myProTxHash, /*is_masternode=*/m_mn_activeman != nullptr, m_quorums_watch)) {
-            if (connmanQuorumsToDelete.erase(quorum->qc->quorumHash) > 0) {
+            if (deletableQuorums.erase(quorum->qc->quorumHash) > 0) {
                 LogPrint(BCLog::LLMQ, "QuorumParticipant::%s -- llmqType[%d] h[%d] keeping mn quorum connections for quorum: [%d:%s]\n", __func__, ToUnderlying(llmqParams.type), pindexNew->nHeight, quorum->m_quorum_base_block_index->nHeight, quorum->m_quorum_base_block_index->GetBlockHash().ToString());
             }
         } else if (watchOtherISQuorums && !quorum->IsMember(myProTxHash)) {
@@ -141,13 +148,14 @@ void QuorumParticipant::CheckQuorumConnections(CConnman& connman, const Consensu
                     connman.SetMasternodeQuorumNodes(llmqParams.type, quorum->m_quorum_base_block_index->GetBlockHash(), connections);
                     connman.SetMasternodeQuorumRelayMembers(llmqParams.type, quorum->m_quorum_base_block_index->GetBlockHash(), connections);
                 }
-                if (connmanQuorumsToDelete.erase(quorum->qc->quorumHash) > 0) {
+                if (deletableQuorums.erase(quorum->qc->quorumHash) > 0) {
                     LogPrint(BCLog::LLMQ, "QuorumParticipant::%s -- llmqType[%d] h[%d] keeping mn inter-quorum connections for quorum: [%d:%s]\n", __func__, ToUnderlying(llmqParams.type), pindexNew->nHeight, quorum->m_quorum_base_block_index->nHeight, quorum->m_quorum_base_block_index->GetBlockHash().ToString());
                 }
             }
         }
     }
-    for (const auto& quorumHash : connmanQuorumsToDelete) {
+
+    for (const auto& quorumHash : deletableQuorums) {
         LogPrint(BCLog::LLMQ, "QuorumParticipant::%s -- removing masternodes quorum connections for quorum %s:\n", __func__, quorumHash.ToString());
         connman.RemoveMasternodeQuorumNodes(llmqParams.type, quorumHash);
     }
