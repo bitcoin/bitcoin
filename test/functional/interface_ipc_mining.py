@@ -673,7 +673,7 @@ class IPCMiningTest(BitcoinTestFramework):
         asyncio.run(capnp.run(async_routine()))
 
     def run_transaction_lookup_test(self):
-        """Test getTransactionsByTxID()."""
+        """Test getTransactionsByTxID() and getTransactionsByWitnessID()."""
         self.log.info("Running transaction lookup test")
 
         async def async_routine():
@@ -688,10 +688,19 @@ class IPCMiningTest(BitcoinTestFramework):
             assert_equal(raw_txs_txid.result[1].hex(), tx2["hex"])
             assert_equal(raw_txs_txid.result[2], b'')
 
+            self.log.debug("getTransactionsByWitnessID() returns mempool txs and nulls")
+            raw_txs_wtxid = await mining.getTransactionsByWitnessID(ctx, [tx1["tx"].wtxid, tx2["tx"].wtxid, bytes(32)])
+            assert_equal(len(raw_txs_wtxid.result), 3)
+            assert_equal(raw_txs_wtxid.result[0].hex(), tx1["hex"])
+            assert_equal(raw_txs_wtxid.result[1].hex(), tx2["hex"])
+            assert_equal(raw_txs_wtxid.result[2], b'')
+
             self.log.debug("Mined transactions are not returned")
             self.generate(self.nodes[0], 1)
             self.sync_all()
             raw_txs = await mining.getTransactionsByTxID(ctx, [tx1["tx"].txid])
+            assert_equal(raw_txs.result[0], b'')
+            raw_txs = await mining.getTransactionsByWitnessID(ctx, [tx1["tx"].wtxid])
             assert_equal(raw_txs.result[0], b'')
 
         asyncio.run(capnp.run(async_routine()))
