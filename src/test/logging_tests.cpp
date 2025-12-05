@@ -489,8 +489,8 @@ BOOST_FIXTURE_TEST_CASE(logging_filesize_rate_limit, LogSetup)
         }
     }
 
-    // Check that unconditional logs with a specific category are rate-limited
-    // even when that category (here: http) has debug logging enabled.
+    // Check that unconditional logs with a specific category are NOT rate-limited
+    // when that category (here: http) has debug logging enabled.
     scheduler.MockForwardAndSync(time_window);
     BOOST_REQUIRE(!limiter->SuppressionsActive());
 
@@ -499,7 +499,7 @@ BOOST_FIXTURE_TEST_CASE(logging_filesize_rate_limit, LogSetup)
         TestLogFromLocation(Location::INFO_HTTP, log_message.substr(12), Status::UNSUPPRESSED, /*suppressions_active=*/false);
         TestLogFromLocation(Location::WARNING_NET, log_message.substr(14), Status::UNSUPPRESSED, /*suppressions_active=*/false);
     }
-    TestLogFromLocation(Location::INFO_HTTP, "1", Status::NEWLY_SUPPRESSED, /*suppressions_active=*/true);
+    TestLogFromLocation(Location::INFO_HTTP, "1", Status::UNSUPPRESSED, /*suppressions_active=*/false);
     TestLogFromLocation(Location::WARNING_NET, "1", Status::NEWLY_SUPPRESSED, /*suppressions_active=*/true);
 }
 

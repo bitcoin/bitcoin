@@ -374,16 +374,18 @@ inline void LogPrintFormatInternal(std::source_location&& source_loc, BCLog::Log
 
 // Log by prefixing the output with the passed category name and severity level. This can either
 // log conditionally if the category is allowed or unconditionally if level >= BCLog::Level::Info
-// is passed. If this function logs unconditionally, logging to disk is rate-limited. This is
-// important so that callers don't need to worry about accidentally introducing a disk-fill
-// vulnerability if level >= Info is used. Additionally, users specifying -debug are assumed to be
-// developers or power users who are aware that -debug may cause excessive disk usage due to logging.
-#define LogPrintLevel(category, level, ...)                           \
-    do {                                                              \
-        if (LogAcceptCategory((category), (level))) {                 \
-            bool rate_limit{level >= BCLog::Level::Info};             \
-            LogPrintLevel_(category, level, rate_limit, __VA_ARGS__); \
-        }                                                             \
+// is passed. If this function logs unconditionally, logging to disk is rate-limited unless debug
+// logging is enabled for that category. This is important so that callers don't need to worry
+// about accidentally introducing a disk-fill vulnerability if level >= Info is used.
+// Users specifying -debug are assumed to be developers or power users who are aware that this may
+// cause excessive disk usage due to logging, so rate limiting is disabled for those categories.
+#define LogPrintLevel(category, level, ...)                                                  \
+    do {                                                                                     \
+        if (LogAcceptCategory((category), (level))) {                                        \
+            bool debug_category_enabled{LogAcceptCategory((category), BCLog::Level::Debug)}; \
+            bool rate_limit{level >= BCLog::Level::Info && !debug_category_enabled};         \
+            LogPrintLevel_(category, level, rate_limit, __VA_ARGS__);                        \
+        }                                                                                    \
     } while (0)
 
 // Log conditionally, prefixing the output with the passed category name.
