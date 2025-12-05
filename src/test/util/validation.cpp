@@ -4,10 +4,18 @@
 
 #include <test/util/validation.h>
 
+#include <node/blockstorage.h>
 #include <util/check.h>
 #include <util/time.h>
 #include <validation.h>
 #include <validationinterface.h>
+
+void TestBlockManager::CleanupForFuzzing()
+{
+    m_dirty_blockindex.clear();
+    m_dirty_fileinfo.clear();
+    m_blockfile_info.resize(1);
+}
 
 void TestChainstateManager::DisableNextWrite()
 {
@@ -38,4 +46,44 @@ void ValidationInterfaceTest::BlockConnected(
         const CBlockIndex* pindex)
 {
     obj.BlockConnected(role, block, pindex);
+}
+void TestChainstateManager::InvalidBlockFound(CBlockIndex* pindex, const BlockValidationState& state)
+{
+    struct TestChainstate : public Chainstate {
+        void CallInvalidBlockFound(CBlockIndex* pindex, const BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+        {
+            InvalidBlockFound(pindex, state);
+        }
+    };
+
+    static_cast<TestChainstate*>(&ActiveChainstate())->CallInvalidBlockFound(pindex, state);
+}
+
+void TestChainstateManager::InvalidChainFound(CBlockIndex* pindex)
+{
+    struct TestChainstate : public Chainstate {
+        void CallInvalidChainFound(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+        {
+            InvalidChainFound(pindex);
+        }
+    };
+
+    static_cast<TestChainstate*>(&ActiveChainstate())->CallInvalidChainFound(pindex);
+}
+
+CBlockIndex* TestChainstateManager::FindMostWorkChain()
+{
+    struct TestChainstate : public Chainstate {
+        CBlockIndex* CallFindMostWorkChain() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+        {
+            return FindMostWorkChain();
+        }
+    };
+
+    return static_cast<TestChainstate*>(&ActiveChainstate())->CallFindMostWorkChain();
+}
+
+void TestChainstateManager::ResetBestInvalid()
+{
+    m_best_invalid = nullptr;
 }
