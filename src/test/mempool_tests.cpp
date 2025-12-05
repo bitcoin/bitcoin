@@ -7,11 +7,15 @@
 #include <test/util/txmempool.h>
 #include <txmempool.h>
 #include <util/time.h>
+#include <node/transaction.h>
+#include <validation.h>
 
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 #include <vector>
+
+using node::GetTransaction;
 
 BOOST_FIXTURE_TEST_SUITE(mempool_tests, TestingSetup)
 
@@ -22,6 +26,35 @@ class MemPoolTest final : public CTxMemPool
 public:
     using CTxMemPool::GetMinFee;
 };
+
+BOOST_AUTO_TEST_CASE(MempoolLookupTest)
+{
+    auto& pool = static_cast<MemPoolTest&>(*Assert(m_node.mempool));
+    LOCK2(cs_main, pool.cs);
+    TestMemPoolEntryHelper entry;
+
+    CMutableTransaction tx = CMutableTransaction();
+    tx.vin.resize(1);
+    tx.vin[0].scriptSig = CScript() << OP_1;
+    tx.vout.resize(1);
+    tx.vout[0].scriptPubKey = CScript() << OP_1 << OP_EQUAL;
+    tx.vout[0].nValue = 10 * COIN;
+
+    // Not in the mempool, so can't find it by txid or wtxid
+    uint256 hash_block;
+    BOOST_CHECK(!GetTransaction(/*block_index=*/nullptr, &pool, tx.GetHash(), m_node.chainman->m_blockman, hash_block));
+    BOOST_CHECK(!GetTransaction(pool, CTransaction(tx).GetWitnessHash()));
+
+    TryAddToMempool(pool, entry.Fee(1000LL).FromTx(tx));
+
+    // Lookup by Txid
+    BOOST_CHECK(GetTransaction(/*block_index=*/nullptr, &pool, tx.GetHash(), m_node.chainman->m_blockman, hash_block));
+    BOOST_CHECK(hash_block.IsNull());
+
+    // Lookup by Wtxid
+    BOOST_CHECK(GetTransaction(pool, CTransaction(tx).GetWitnessHash()));
+
+}
 
 BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
 {
