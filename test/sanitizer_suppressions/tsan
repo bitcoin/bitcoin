@@ -23,6 +23,7 @@ deadlock:wallet_tests::CreateWallet
 # with pthread rwlocks that TSAN cannot properly reason about
 deadlock:BerkeleyBatch
 deadlock:DatabaseBatch
+deadlock:__db_pthread_mutex
 
 # deadlock false positive (see: https://github.com/dashpay/dash/pull/4563)
 deadlock:CChainState::ConnectTip
