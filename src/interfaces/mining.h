@@ -156,6 +156,16 @@ public:
      *                    transaction if found, otherwise nullptr
      */
     virtual std::vector<CTransactionRef> getTransactions(const std::vector<Txid>& txids) = 0;
+
+    /**
+     * Fetch raw transactions from the mempool by wtxid.
+     *
+     * @param[in] wtxids   witness transaction ids to look up
+     * @returns            one entry per requested wtxid containing the
+     *                     transaction if found, otherwise nullptr
+     */
+    virtual std::vector<CTransactionRef> getTransactionsByWitnessID(const std::vector<Wtxid>& wtxids) = 0;
+
     //! Get internal node context. Useful for RPC and testing,
     //! but not accessible across processes.
     virtual node::NodeContext* context() { return nullptr; }
