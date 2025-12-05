@@ -39,6 +39,7 @@ jobs:
           sparse-checkout: |
             ci/dash
             ci/test
+            depends/Makefile
             depends/packages
             depends/hosts
             contrib/containers/ci/ci.Dockerfile
