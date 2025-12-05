@@ -1035,6 +1035,19 @@ public:
         return accepted && new_block && reason.empty();
     }
 
+    std::vector<CTransactionRef> getTransactionsByTxID(const std::vector<Txid>& txids) override
+    {
+        if (!m_node.mempool) return {};
+
+        std::vector<CTransactionRef> results;
+        results.reserve(txids.size());
+        LOCK(m_node.mempool->cs);
+        for (const auto& txid : txids) {
+            results.emplace_back(m_node.mempool->get(txid));
+        }
+        return results;
+    }
+
     const NodeContext* context() override { return &m_node; }
     ChainstateManager& chainman() { return *Assert(m_node.chainman); }
     KernelNotifications& notifications() { return *Assert(m_node.notifications); }

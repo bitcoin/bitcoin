@@ -180,6 +180,15 @@ public:
      */
     virtual bool submitBlock(const CBlock& block, std::string& reason, std::string& debug) = 0;
 
+    /**
+     * Fetch raw transactions from the mempool by txid.
+     *
+     * @param[in] txids   transaction ids to look up
+     * @returns           one entry per requested txid containing the
+     *                    transaction if found, otherwise nullptr
+     */
+    virtual std::vector<CTransactionRef> getTransactionsByTxID(const std::vector<Txid>& txids) = 0;
+
     //! Get internal node context. Useful for RPC and testing,
     //! but not accessible across processes.
     virtual const node::NodeContext* context() { return nullptr; }

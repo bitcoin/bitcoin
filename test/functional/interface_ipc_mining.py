@@ -672,6 +672,30 @@ class IPCMiningTest(BitcoinTestFramework):
 
         asyncio.run(capnp.run(async_routine()))
 
+    def run_transaction_lookup_test(self):
+        """Test getTransactionsByTxID()."""
+        self.log.info("Running transaction lookup test")
+
+        async def async_routine():
+            ctx, mining = await make_mining_ctx(self)
+            tx1 = self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
+            tx2 = self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0], utxo_to_spend=tx1["new_utxo"])
+
+            self.log.debug("getTransactionsByTxID() returns mempool txs and nulls")
+            raw_txs_txid = await mining.getTransactionsByTxID(ctx, [tx1["tx"].txid, tx2["tx"].txid, bytes(32)])
+            assert_equal(len(raw_txs_txid.result), 3)
+            assert_equal(raw_txs_txid.result[0].hex(), tx1["hex"])
+            assert_equal(raw_txs_txid.result[1].hex(), tx2["hex"])
+            assert_equal(raw_txs_txid.result[2], b'')
+
+            self.log.debug("Mined transactions are not returned")
+            self.generate(self.nodes[0], 1)
+            self.sync_all()
+            raw_txs = await mining.getTransactionsByTxID(ctx, [tx1["tx"].txid])
+            assert_equal(raw_txs.result[0], b'')
+
+        asyncio.run(capnp.run(async_routine()))
+
     def run_low_height_test(self):
         """Test that IPC createNewBlock() works at low block heights on a
         clean chain, in particular with regard to bad-cb-length.
@@ -727,6 +751,7 @@ class IPCMiningTest(BitcoinTestFramework):
         self.run_waitnext_mining_policy_test()
         self.run_block_max_weight_test()
         self.run_ipc_option_override_test()
+        self.run_transaction_lookup_test()
 
         # Needs to run last because it resets the chain.
         self.run_low_height_test()
