@@ -387,6 +387,8 @@ enum class Location {
     INFO_2,
     DEBUG_LOG,
     INFO_NOLIMIT,
+    INFO_HTTP,
+    WARNING_NET,
 };
 
 void LogFromLocation(Location location, const std::string& message) {
@@ -402,6 +404,12 @@ void LogFromLocation(Location location, const std::string& message) {
         return;
     case Location::INFO_NOLIMIT:
         LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, /*should_ratelimit=*/false, "%s\n", message);
+        return;
+    case Location::INFO_HTTP:
+        LogPrintLevel(BCLog::LogFlags::HTTP, BCLog::Level::Info, "%s\n", message);
+        return;
+    case Location::WARNING_NET:
+        LogPrintLevel(BCLog::LogFlags::NET, BCLog::Level::Warning, "%s\n", message);
         return;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
@@ -480,6 +488,19 @@ BOOST_FIXTURE_TEST_CASE(logging_filesize_rate_limit, LogSetup)
             TestLogFromLocation(location, log_message, Status::UNSUPPRESSED, /*suppressions_active=*/false);
         }
     }
+
+    // Check that unconditional logs with a specific category are rate-limited
+    // even when that category (here: http) has debug logging enabled.
+    scheduler.MockForwardAndSync(time_window);
+    BOOST_REQUIRE(!limiter->SuppressionsActive());
+
+    for (int i = 0; i < num_lines; ++i) {
+        // skip the first few characters to account for the "[category:level] " prefix
+        TestLogFromLocation(Location::INFO_HTTP, log_message.substr(12), Status::UNSUPPRESSED, /*suppressions_active=*/false);
+        TestLogFromLocation(Location::WARNING_NET, log_message.substr(14), Status::UNSUPPRESSED, /*suppressions_active=*/false);
+    }
+    TestLogFromLocation(Location::INFO_HTTP, "1", Status::NEWLY_SUPPRESSED, /*suppressions_active=*/true);
+    TestLogFromLocation(Location::WARNING_NET, "1", Status::NEWLY_SUPPRESSED, /*suppressions_active=*/true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
