@@ -54,7 +54,7 @@ jobs:
           DEP_HASH="$(echo -n "${BUILD_TARGET}" "${DEP_OPTS}" "${HOST}" | sha256sum | head -c 64)"
           echo "DEP_HASH=${DEP_HASH}" >> "${GITHUB_OUTPUT}"
           DOCKERFILE_HASH="${{ hashFiles('contrib/containers/ci/ci.Dockerfile', 'contrib/containers/ci/ci-slim.Dockerfile') }}"
-          PACKAGES_HASH="${{ hashFiles('depends/packages/*') }}"
+          PACKAGES_HASH="${{ hashFiles('depends/packages/*', 'depends/Makefile') }}"
           CACHE_KEY="depends-${DOCKERFILE_HASH}-${{ inputs.build-target }}-${DEP_HASH}-${PACKAGES_HASH}"
           echo "cache-key=${CACHE_KEY}" >> "${GITHUB_OUTPUT}"
           echo "Cache key: ${CACHE_KEY}"
