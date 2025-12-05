@@ -697,14 +697,19 @@ class CTransaction:
         return uint256_from_str(hash256(self.serialize_with_witness()))
 
     @property
+    def txid(self):
+        """Return txid (transaction hash without witness) as little-endian bytes."""
+        return hash256(self.serialize_without_witness())
+
+    @property
     def txid_hex(self):
         """Return txid (transaction hash without witness) as hex string."""
-        return hash256(self.serialize_without_witness())[::-1].hex()
+        return self.txid[::-1].hex()
 
     @property
     def txid_int(self):
         """Return txid (transaction hash without witness) as integer."""
-        return uint256_from_str(hash256(self.serialize_without_witness()))
+        return uint256_from_str(self.txid)
 
     def is_valid(self):
         for tout in self.vout:
