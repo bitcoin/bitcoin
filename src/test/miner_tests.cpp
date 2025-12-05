@@ -165,6 +165,16 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     const auto high_fee_tx{entry.Fee(50000).Time(Now<NodeSeconds>()).SpendsCoinbase(false).FromTx(tx)};
     TryAddToMempool(tx_mempool, high_fee_tx);
 
+    // Test getTransactions()
+    const std::vector<Txid> tx_id_list{
+        hashParentTx,
+        Txid::FromUint256(uint256::ZERO) // non-existing tx
+    };
+    auto raw_txs = mining->getTransactions(tx_id_list);
+    BOOST_REQUIRE_EQUAL(raw_txs.size(), tx_id_list.size());
+    BOOST_CHECK(raw_txs[0]);
+    BOOST_CHECK(raw_txs[0]->GetHash() == hashParentTx);
+    BOOST_CHECK(!raw_txs[1]);
     block_template = mining->createNewBlock(options);
     BOOST_REQUIRE(block_template);
     block = block_template->getBlock();
