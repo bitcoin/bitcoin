@@ -174,75 +174,72 @@ void ArgsManager::SelectConfigNetwork(const std::string& network)
     m_network = network;
 }
 
-bool ArgsManager::ProcessOptionKey(std::string& key, std::optional<std::string>& val, std::string& error, const bool found_after_non_option) {
-
+bool ArgsManager::ProcessOptionKey(std::string& key, std::optional<std::string>& val, std::string& error, const bool found_after_non_option)
+{
     bool double_dash{false};
-    std::optional<std::string> original_val = val; // Capture the original val
-    std::string original_input = key; // Capture the original key
-    if (val) original_input += "=" + *val; // Append =value if it exists
+    std::string original_input{key};
+    if (val) original_input += "=" + *val;
 
-    // Transform --foo to -foo
+    // Normalize leading dashes
     if (key.length() > 1 && key[1] == '-') {
-        key.erase(0, 1);
+        key.erase(0, 1);   // `--foo` -> `-foo`
         double_dash = true;
     }
-
-    // Transform -foo to foo
-    key.erase(0, 1);
+    key.erase(0, 1);       // `-foo`  -> `foo`
 
     KeyInfo keyinfo = InterpretKey(key);
     std::optional<unsigned int> flags = GetArgFlags('-' + keyinfo.name);
-    // Unknown command line options and command line options with dot characters
-    // (which are returned from InterpretKey with nonempty section strings)are not valid.
-    if (!flags || !keyinfo.section.empty()) {
-        // if it's a double dash --, means could be an RPC named param so remove them
-        if (!double_dash) {
-            if (!found_after_non_option) {
-                error = strprintf("Invalid parameter %s", original_input);
-            } else {
-                // if the option is invalid but comes after a non-option (found_after_non_option)
-                // leave it up to the command if it accepts args that begin with "-"
-                LOCK(cs_args);
-                m_command.emplace_back(original_input);
-                return true;
-            }
-            return false;
-        }
-    }
+    const bool known_option = flags.has_value() && keyinfo.section.empty();
 
-    if (double_dash) {
-        // add "-named" option if the call have a double dash param intended for RPC
-        // only if CLI/ bitcoin-cli has the -named arg set (argsman.AddArg("-named", ...)
+    // Handle the special "named RPC" case early ---
+    if (double_dash && found_after_non_option && !known_option) {
+        // Try to map this to `-named`, if supported by the binary.
         val.reset();
-        keyinfo = InterpretKey("named");
-        flags = GetArgFlags('-' + keyinfo.name);
-        if (!flags || !keyinfo.section.empty()) {
-            // no "-named" needed, no bitcoin-cli
-            LOCK(cs_args);
-            keyinfo = InterpretKey(key);
-            flags = GetArgFlags('-' + keyinfo.name);
+        KeyInfo named_keyinfo = InterpretKey("named");
+        std::optional<unsigned int> named_flags = GetArgFlags('-' + named_keyinfo.name);
 
-            std::optional<common::SettingsValue> value = InterpretValue(keyinfo, original_val ? &*original_val : nullptr, *flags, error);
-            if (!value) return false;
+        if (named_flags && named_keyinfo.section.empty()) {
+            // Binary supports -named: enable it and append the stripped parameter.
+            std::optional<common::SettingsValue> named_value =
+                InterpretValue(named_keyinfo, /* val */ nullptr, *named_flags, error);
+            if (!named_value) return false;
 
-            m_settings.command_line_options[keyinfo.name].push_back(*value);
-            // when -named arg doesn't exist, e.g. not using bitcoin-cli
-            // just ignore it (returns true)
+            {
+                LOCK(cs_args);
+                m_settings.command_line_options[named_keyinfo.name].push_back(*named_value);
+                // Strip the leading "--" before passing to the command as a named param
+                m_command.emplace_back(original_input.substr(2));
+            }
             return true;
         }
+
+        // Binary doesn’t support -named: fall back and treat `--foo` as a
+        // normal option (or unknown option handled below).
+        keyinfo = InterpretKey(key);
+        flags = GetArgFlags('-' + keyinfo.name);
     }
 
-    std::optional<common::SettingsValue> value = InterpretValue(keyinfo, val ? &*val : nullptr, *flags, error);
+    // --- Normal option handling ---
+    if (!flags || !keyinfo.section.empty()) {
+        if (!found_after_non_option) {
+            // Unknown global option: keep legacy behaviour (error)
+            error = strprintf("Invalid parameter %s", original_input);
+            return false;
+        }
+
+        // Unknown option after command: pass through to the command as an arg
+        LOCK(cs_args);
+        m_command.emplace_back(original_input);
+        return true;
+    }
+
+    // Known option (including `--datadir`, `--signet`, etc.)
+    std::optional<common::SettingsValue> value =
+        InterpretValue(keyinfo, val ? &*val : nullptr, *flags, error);
     if (!value) return false;
 
-    // Store the option
     LOCK(cs_args);
     m_settings.command_line_options[keyinfo.name].push_back(*value);
-
-    if (double_dash && keyinfo.name =="named") {
-        m_command.emplace_back(original_input.substr(2));
-    }
-
     return true;
 }
 

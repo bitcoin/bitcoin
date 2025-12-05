@@ -545,6 +545,12 @@ class ConfArgsTest(BitcoinTestFramework):
         self.nodes[0].datadir_path = new_data_dir_2
         self.start_node(0, [f'-datadir={new_data_dir_2}', f'-conf={conf_file}'])
         assert (new_data_dir_2 / self.chain / 'blocks').exists()
+        self.nodes[0].stop_node()
+
+        # Check that double dash'ed datadir (or any other option) works fine as well
+        self.nodes[0].datadir_path = new_data_dir_2
+        self.start_node(0, ["--regtest", f'--datadir={new_data_dir_2}', f'-conf={conf_file}'])
+        assert (new_data_dir_2 / self.chain / 'blocks').exists()
 
 
 if __name__ == '__main__':
