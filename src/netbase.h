@@ -362,4 +362,7 @@ bool IsBadPort(uint16_t port);
  */
 CService MaybeFlipIPv6toCJDNS(const CService& service);
 
+/** Get the bind address for a socket as CService. */
+CService GetBindAddress(const Sock& sock);
+
 #endif // BITCOIN_NETBASE_H
