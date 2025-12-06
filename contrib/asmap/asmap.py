@@ -157,7 +157,7 @@ class _Instruction(Enum):
     JUMP = 1
     # A match instruction, encoded as [1,1,0] inspects 1 or more of the next unused bits
     # in the input with its argument. If they all match, execution continues. If they do
-    # not, failure is returned. If a default instruction has been executed before, instead
+    # not, failure (represented by 0) is returned. If a default instruction has been executed before, instead
     # of failure the default instruction's argument is returned. It is followed by an
     # integer in match encoding, and a subprogram. That value is at least 2 bits and at
     # most 9 bits. An n-bit value signifies matching (n-1) bits in the input with the lower
