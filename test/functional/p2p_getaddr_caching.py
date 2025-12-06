@@ -118,6 +118,37 @@ class AddrTest(BitcoinTestFramework):
         assert_not_equal(set(last_response_on_onion_bind1), set(addr_receiver_onion1.get_received_addrs()))
         assert_not_equal(set(last_response_on_onion_bind2), set(addr_receiver_onion2.get_received_addrs()))
 
+        # Test timestamp differences between caches
+        self.test_different_cache_timestamps()
+
+    def test_different_cache_timestamps(self):
+        """
+        Test that different caches have different timestamps
+        """
+        cur_mock_time = int(time.time()) + 4 * 24 * 60 * 60
+        self.nodes[0].setmocktime(cur_mock_time)
+
+        addr_receiver_local = self.nodes[0].add_p2p_connection(AddrReceiver())
+        addr_receiver_onion = self.nodes[0].add_p2p_connection(AddrReceiver(), dstport=self.onion_port1)
+
+        # Trigger addr responses to populate different caches
+        cur_mock_time += 5 * 60
+        self.nodes[0].setmocktime(cur_mock_time)
+        addr_receiver_local.wait_until(addr_receiver_local.addr_received)
+        addr_receiver_onion.wait_until(addr_receiver_onion.addr_received)
+
+        # Get timestamps from each cache
+        local_timestamps = [addr.time for addr in addr_receiver_local.last_message["addr"].addrs]
+        onion_timestamps = [addr.time for addr in addr_receiver_onion.last_message["addr"].addrs]
+
+        # Assert all timestamps within each cache are identical
+        self.log.info("Verifying all addresses in each cache have identical timestamps")
+        assert all(ts == local_timestamps[0] for ts in local_timestamps), f"All addresses in local cache should have same timestamp, got: {set(local_timestamps)}"
+        assert all(ts == onion_timestamps[0] for ts in onion_timestamps), f"All addresses in onion cache should have same timestamp, got: {set(onion_timestamps)}"
+
+        # Verify different caches have different timestamps
+        assert local_timestamps[0] != onion_timestamps[0], f"Different caches should have different timestamps. Local: {local_timestamps[0]}, Onion: {onion_timestamps[0]}"
+
 
 if __name__ == '__main__':
     AddrTest(__file__).main()
