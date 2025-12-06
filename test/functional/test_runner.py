@@ -291,6 +291,7 @@ BASE_SCRIPTS = [
     'p2p_leak.py',
     'wallet_encryption.py',
     'feature_dersig.py',
+    'feature_debugging.py',
     'feature_reindex_init.py',
     'feature_cltv.py',
     'rpc_uptime.py',
