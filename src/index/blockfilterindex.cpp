@@ -11,6 +11,7 @@
 #include <flatfile.h>
 #include <hash.h>
 #include <index/base.h>
+#include <index/db_key.h>
 #include <interfaces/chain.h>
 #include <interfaces/types.h>
 #include <logging.h>
@@ -25,7 +26,6 @@
 
 #include <cerrno>
 #include <exception>
-#include <ios>
 #include <map>
 #include <optional>
 #include <span>
@@ -46,12 +46,8 @@
  * disk location of the next block filter to be written (represented as a FlatFilePos) is stored
  * under the DB_FILTER_POS key.
  *
- * Keys for the height index have the type [DB_BLOCK_HEIGHT, uint32 (BE)]. The height is represented
- * as big-endian so that sequential reads of filters by height are fast.
- * Keys for the hash index have the type [DB_BLOCK_HASH, uint256].
+ * The logic for keys is shared with other indexes, see index/db_key.h.
  */
-constexpr uint8_t DB_BLOCK_HASH{'s'};
-constexpr uint8_t DB_BLOCK_HEIGHT{'t'};
 constexpr uint8_t DB_FILTER_POS{'P'};
 
 constexpr unsigned int MAX_FLTR_FILE_SIZE = 0x1000000; // 16 MiB
@@ -72,45 +68,6 @@ struct DBVal {
     FlatFilePos pos;
 
     SERIALIZE_METHODS(DBVal, obj) { READWRITE(obj.hash, obj.header, obj.pos); }
-};
-
-struct DBHeightKey {
-    int height;
-
-    explicit DBHeightKey(int height_in) : height(height_in) {}
-
-    template<typename Stream>
-    void Serialize(Stream& s) const
-    {
-        ser_writedata8(s, DB_BLOCK_HEIGHT);
-        ser_writedata32be(s, height);
-    }
-
-    template<typename Stream>
-    void Unserialize(Stream& s)
-    {
-        const uint8_t prefix{ser_readdata8(s)};
-        if (prefix != DB_BLOCK_HEIGHT) {
-            throw std::ios_base::failure("Invalid format for block filter index DB height key");
-        }
-        height = ser_readdata32be(s);
-    }
-};
-
-struct DBHashKey {
-    uint256 hash;
-
-    explicit DBHashKey(const uint256& hash_in) : hash(hash_in) {}
-
-    SERIALIZE_METHODS(DBHashKey, obj) {
-        uint8_t prefix{DB_BLOCK_HASH};
-        READWRITE(prefix);
-        if (prefix != DB_BLOCK_HASH) {
-            throw std::ios_base::failure("Invalid format for block filter index DB hash key");
-        }
-
-        READWRITE(obj.hash);
-    }
 };
 
 }; // namespace
@@ -278,7 +235,7 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
 std::optional<uint256> BlockFilterIndex::ReadFilterHeader(int height, const uint256& expected_block_hash)
 {
     std::pair<uint256, DBVal> read_out;
-    if (!m_db->Read(DBHeightKey(height), read_out)) {
+    if (!m_db->Read(index_util::DBHeightKey(height), read_out)) {
         return std::nullopt;
     }
 
@@ -311,32 +268,9 @@ bool BlockFilterIndex::Write(const BlockFilter& filter, uint32_t block_height, c
     value.second.header = filter_header;
     value.second.pos = m_next_filter_pos;
 
-    m_db->Write(DBHeightKey(block_height), value);
+    m_db->Write(index_util::DBHeightKey(block_height), value);
 
     m_next_filter_pos.nPos += bytes_written;
-    return true;
-}
-
-[[nodiscard]] static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
-                                                     const std::string& index_name, int height)
-{
-    DBHeightKey key(height);
-    db_it.Seek(key);
-
-    if (!db_it.GetKey(key) || key.height != height) {
-        LogError("unexpected key in %s: expected (%c, %d)",
-                  index_name, DB_BLOCK_HEIGHT, height);
-        return false;
-    }
-
-    std::pair<uint256, DBVal> value;
-    if (!db_it.GetValue(value)) {
-        LogError("unable to read value in %s at key (%c, %d)",
-                 index_name, DB_BLOCK_HEIGHT, height);
-        return false;
-    }
-
-    batch.Write(DBHashKey(value.first), std::move(value.second));
     return true;
 }
 
@@ -348,7 +282,7 @@ bool BlockFilterIndex::CustomRemove(const interfaces::BlockInfo& block)
     // During a reorg, we need to copy block filter that is getting disconnected from the
     // height index to the hash index so we can still find it when the height index entry
     // is overwritten.
-    if (!CopyHeightIndexToHashIndex(*db_it, batch, m_name, block.height)) {
+    if (!index_util::CopyHeightIndexToHashIndex<DBVal>(*db_it, batch, m_name, block.height)) {
         return false;
     }
 
@@ -361,24 +295,6 @@ bool BlockFilterIndex::CustomRemove(const interfaces::BlockInfo& block)
     // Update cached header to the previous block hash
     m_last_header = *Assert(ReadFilterHeader(block.height - 1, *Assert(block.prev_hash)));
     return true;
-}
-
-static bool LookupOne(const CDBWrapper& db, const CBlockIndex* block_index, DBVal& result)
-{
-    // First check if the result is stored under the height index and the value there matches the
-    // block hash. This should be the case if the block is on the active chain.
-    std::pair<uint256, DBVal> read_out;
-    if (!db.Read(DBHeightKey(block_index->nHeight), read_out)) {
-        return false;
-    }
-    if (read_out.first == block_index->GetBlockHash()) {
-        result = std::move(read_out.second);
-        return true;
-    }
-
-    // If value at the height index corresponds to an different block, the result will be stored in
-    // the hash index.
-    return db.Read(DBHashKey(block_index->GetBlockHash()), result);
 }
 
 static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start_height,
@@ -397,9 +313,9 @@ static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start
     size_t results_size = static_cast<size_t>(stop_index->nHeight - start_height + 1);
     std::vector<std::pair<uint256, DBVal>> values(results_size);
 
-    DBHeightKey key(start_height);
+    index_util::DBHeightKey key(start_height);
     std::unique_ptr<CDBIterator> db_it(db.NewIterator());
-    db_it->Seek(DBHeightKey(start_height));
+    db_it->Seek(index_util::DBHeightKey(start_height));
     for (int height = start_height; height <= stop_index->nHeight; ++height) {
         if (!db_it->Valid() || !db_it->GetKey(key) || key.height != height) {
             return false;
@@ -408,7 +324,7 @@ static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start
         size_t i = static_cast<size_t>(height - start_height);
         if (!db_it->GetValue(values[i])) {
             LogError("unable to read value in %s at key (%c, %d)",
-                     index_name, DB_BLOCK_HEIGHT, height);
+                     index_name, index_util::DB_BLOCK_HEIGHT, height);
             return false;
         }
 
@@ -430,9 +346,9 @@ static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start
             continue;
         }
 
-        if (!db.Read(DBHashKey(block_hash), results[i])) {
+        if (!db.Read(index_util::DBHashKey(block_hash), results[i])) {
             LogError("unable to read value in %s at key (%c, %s)",
-                     index_name, DB_BLOCK_HASH, block_hash.ToString());
+                     index_name, index_util::DB_BLOCK_HASH, block_hash.ToString());
             return false;
         }
     }
@@ -443,7 +359,7 @@ static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start
 bool BlockFilterIndex::LookupFilter(const CBlockIndex* block_index, BlockFilter& filter_out) const
 {
     DBVal entry;
-    if (!LookupOne(*m_db, block_index, entry)) {
+    if (!index_util::LookUpOne(*m_db, {block_index->GetBlockHash(), block_index->nHeight}, entry)) {
         return false;
     }
 
@@ -466,7 +382,7 @@ bool BlockFilterIndex::LookupFilterHeader(const CBlockIndex* block_index, uint25
     }
 
     DBVal entry;
-    if (!LookupOne(*m_db, block_index, entry)) {
+    if (!index_util::LookUpOne(*m_db, {block_index->GetBlockHash(), block_index->nHeight}, entry)) {
         return false;
     }
 
