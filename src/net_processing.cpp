@@ -530,7 +530,7 @@ public:
     /** Implement PeerManager */
     void StartScheduledTasks(CScheduler& scheduler) override;
     void CheckForStaleTipAndEvictPeers() override;
-    std::optional<std::string> FetchBlock(NodeId peer_id, const CBlockIndex& block_index) override
+    util::Expected<void, std::string> FetchBlock(NodeId peer_id, const CBlockIndex& block_index) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     std::vector<node::TxOrphanage::OrphanInfo> GetOrphanTransactions() override EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
@@ -1844,16 +1844,16 @@ bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex)
            (GetBlockProofEquivalentTime(*m_chainman.m_best_header, *pindex, *m_chainman.m_best_header, m_chainparams.GetConsensus()) < STALE_RELAY_AGE_LIMIT);
 }
 
-std::optional<std::string> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBlockIndex& block_index)
+util::Expected<void, std::string> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBlockIndex& block_index)
 {
-    if (m_chainman.m_blockman.LoadingBlocks()) return "Loading blocks ...";
+    if (m_chainman.m_blockman.LoadingBlocks()) return util::Unexpected{"Loading blocks ..."};
 
     // Ensure this peer exists and hasn't been disconnected
     PeerRef peer = GetPeerRef(peer_id);
-    if (peer == nullptr) return "Peer does not exist";
+    if (peer == nullptr) return util::Unexpected{"Peer does not exist"};
 
     // Ignore pre-segwit peers
-    if (!CanServeWitnesses(*peer)) return "Pre-SegWit peer";
+    if (!CanServeWitnesses(*peer)) return util::Unexpected{"Pre-SegWit peer"};
 
     LOCK(cs_main);
 
@@ -1861,7 +1861,7 @@ std::optional<std::string> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBl
     RemoveBlockRequest(block_index.GetBlockHash(), std::nullopt);
 
     // Mark block as in-flight
-    if (!BlockRequested(peer_id, block_index)) return "Already requested from this peer";
+    if (!BlockRequested(peer_id, block_index)) return util::Unexpected{"Already requested from this peer"};
 
     // Construct message to request the block
     const uint256& hash{block_index.GetBlockHash()};
@@ -1873,11 +1873,11 @@ std::optional<std::string> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBl
         return true;
     });
 
-    if (!success) return "Peer not fully connected";
+    if (!success) return util::Unexpected{"Peer not fully connected"};
 
     LogDebug(BCLog::NET, "Requesting block %s from peer=%d\n",
                  hash.ToString(), peer_id);
-    return std::nullopt;
+    return {};
 }
 
 std::unique_ptr<PeerManager> PeerManager::make(CConnman& connman, AddrMan& addrman,
@@ -2276,8 +2276,9 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
     } else if (inv.IsMsgWitnessBlk()) {
         // Fast-path: in this case it is possible to serve the block directly from disk,
         // as the network format matches the format on disk
-        std::vector<std::byte> block_data;
-        if (!m_chainman.m_blockman.ReadRawBlock(block_data, block_pos)) {
+        if (auto block_data{m_chainman.m_blockman.ReadRawBlock(block_pos)}) {
+            MakeAndPushMessage(pfrom, NetMsgType::BLOCK, std::span{*block_data});
+        } else {
             if (WITH_LOCK(m_chainman.GetMutex(), return m_chainman.m_blockman.IsBlockPruned(*pindex))) {
                 LogDebug(BCLog::NET, "Block was pruned before it could be read, %s\n", pfrom.DisconnectMsg(fLogIPs));
             } else {
@@ -2286,7 +2287,6 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
             pfrom.fDisconnect = true;
             return;
         }
-        MakeAndPushMessage(pfrom, NetMsgType::BLOCK, std::span{block_data});
         // Don't set pblock as we've sent the block
     } else {
         // Send block from disk

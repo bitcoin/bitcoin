@@ -536,8 +536,8 @@ static RPCHelpMan getblockfrompeer()
         throw JSONRPCError(RPC_MISC_ERROR, "Block already downloaded");
     }
 
-    if (const auto err{peerman.FetchBlock(peer_id, *index)}) {
-        throw JSONRPCError(RPC_MISC_ERROR, err.value());
+    if (const auto res{peerman.FetchBlock(peer_id, *index)}; !res) {
+        throw JSONRPCError(RPC_MISC_ERROR, res.error());
     }
     return UniValue::VOBJ;
 },
@@ -680,7 +680,6 @@ static CBlock GetBlockChecked(BlockManager& blockman, const CBlockIndex& blockin
 
 static std::vector<std::byte> GetRawBlockChecked(BlockManager& blockman, const CBlockIndex& blockindex)
 {
-    std::vector<std::byte> data{};
     FlatFilePos pos{};
     {
         LOCK(cs_main);
@@ -688,13 +687,10 @@ static std::vector<std::byte> GetRawBlockChecked(BlockManager& blockman, const C
         pos = blockindex.GetBlockPos();
     }
 
-    if (!blockman.ReadRawBlock(data, pos)) {
-        // Block not found on disk. This shouldn't normally happen unless the block was
-        // pruned right after we released the lock above.
-        throw JSONRPCError(RPC_MISC_ERROR, "Block not found on disk");
-    }
-
-    return data;
+    if (auto data{blockman.ReadRawBlock(pos)}) return *data;
+    // Block not found on disk. This shouldn't normally happen unless the block was
+    // pruned right after we released the lock above.
+    throw JSONRPCError(RPC_MISC_ERROR, "Block not found on disk");
 }
 
 static CBlockUndo GetUndoChecked(BlockManager& blockman, const CBlockIndex& blockindex)
