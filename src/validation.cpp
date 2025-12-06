@@ -6252,6 +6252,11 @@ ChainstateManager::ChainstateManager(const util::SignalInterrupt& interrupt, Opt
 ChainstateManager::~ChainstateManager()
 {
     LOCK(::cs_main);
+    for (Chainstate* chainstate : GetAll()) {
+        if (chainstate->CanFlushToDisk()) {
+            chainstate->ForceFlushStateToDisk();
+        }
+    }
 
     m_versionbitscache.Clear();
 }
