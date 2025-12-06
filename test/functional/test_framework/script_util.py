@@ -164,43 +164,35 @@ def check_script(script):
     assert False
 
 
-class ValidWitnessMalleatedTx:
+def valid_witness_malleate_tx(mini_wallet, node, parent_amount, child_amount):
     """
-    Creates a valid witness malleation transaction test case:
+    Creates a valid witness malleation transaction:
     - Parent transaction with a script supporting 2 branches
     - 2 child transactions with the same txid but different wtxids
     """
-    def __init__(self):
-        hashlock = hash160(b'Preimage')
-        self.witness_script = CScript([OP_IF, OP_HASH160, hashlock, OP_EQUAL, OP_ELSE, OP_TRUE, OP_ENDIF])
+    hashlock = hash160(b'Preimage')
+    witness_script = CScript([OP_IF, OP_HASH160, hashlock, OP_EQUAL, OP_ELSE, OP_TRUE, OP_ENDIF])
+    witness_program = sha256(witness_script)
+    script_pubkey = CScript([OP_0, witness_program])
 
-    def build_parent_tx(self, funding_txid, amount):
-        # Create an unsigned parent transaction paying to the witness script.
-        witness_program = sha256(self.witness_script)
-        script_pubkey = CScript([OP_0, witness_program])
+    # Create parent transaction with a script supporting 2 branches
+    parent = mini_wallet.send_to(from_node=node, scriptPubKey=script_pubkey, amount=parent_amount, fee=1000)
 
-        parent = CTransaction()
-        parent.vin.append(CTxIn(COutPoint(int(funding_txid, 16), 0), b""))
-        parent.vout.append(CTxOut(int(amount), script_pubkey))
-        return parent
+    # Create 2 valid children that differ only in witness data.
+    # 1. Create a new transaction with witness solving first branch
+    child_witness_script = CScript([OP_TRUE])
+    child_witness_program = sha256(child_witness_script)
+    child_script_pubkey = CScript([OP_0, child_witness_program])
+    child_one = CTransaction()
 
-    def build_malleated_children(self, signed_parent_txid, amount):
-        # Create 2 valid children that differ only in witness data.
-        # 1. Create a new transaction with witness solving first branch
-        child_witness_script = CScript([OP_TRUE])
-        child_witness_program = sha256(child_witness_script)
-        child_script_pubkey = CScript([OP_0, child_witness_program])
-
-        child_one = CTransaction()
-        child_one.vin.append(CTxIn(COutPoint(int(signed_parent_txid, 16), 0), b""))
-        child_one.vout.append(CTxOut(int(amount), child_script_pubkey))
-        child_one.wit.vtxinwit.append(CTxInWitness())
-        child_one.wit.vtxinwit[0].scriptWitness.stack = [b'Preimage', b'\x01', self.witness_script]
-
-        # 2. Create another identical transaction with witness solving second branch
-        child_two = deepcopy(child_one)
-        child_two.wit.vtxinwit[0].scriptWitness.stack = [b'', self.witness_script]
-        return child_one, child_two
+    child_one.vin.append(CTxIn(COutPoint(int(parent['txid'], 16), parent['sent_vout']), b""))
+    child_one.vout.append(CTxOut(child_amount, child_script_pubkey))
+    child_one.wit.vtxinwit.append(CTxInWitness())
+    child_one.wit.vtxinwit[0].scriptWitness.stack = [b'Preimage', b'\x01', witness_script]
+    # 2. Create another identical transaction with witness solving second branch
+    child_two = deepcopy(child_one)
+    child_two.wit.vtxinwit[0].scriptWitness.stack = [b'', witness_script]
+    return parent, child_one, child_two
 
 
 class TestFrameworkScriptUtil(unittest.TestCase):
