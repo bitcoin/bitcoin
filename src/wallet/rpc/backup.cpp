@@ -195,8 +195,12 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
         }
 
         // Active descriptors must be ranged
-        if (active && !parsed_descs.at(0)->IsRange()) {
+        if (active && !parsed_descs.at(0)->IsRange() && parsed_descs.at(0)->GetOutputType() != OutputType::SILENT_PAYMENTS) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Active descriptors must be ranged");
+        }
+
+        if (parsed_descs.at(0)->GetOutputType() == OutputType::SILENT_PAYMENTS && !wallet.IsWalletFlagSet(WALLET_FLAG_SILENT_PAYMENTS)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import silent payment descriptor into a wallet with silent-payments disabled");
         }
 
         // Multipath descriptors should not have a label

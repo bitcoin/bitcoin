@@ -83,6 +83,10 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
         }
     });
 
+    connect(ui->silent_payments_wallet_checkbox, &QCheckBox::toggled, [this](bool checked) {
+        ui->silent_payments_wallet_checkbox->setEnabled(!checked);
+    });
+
 #ifndef ENABLE_EXTERNAL_SIGNER
         //: "External signing" means using devices such as hardware wallets.
         ui->external_signer_checkbox->setToolTip(tr("Compiled without external signing support (required for external signing)"));
@@ -136,6 +140,11 @@ bool CreateWalletDialog::isDisablePrivateKeysChecked() const
 bool CreateWalletDialog::isMakeBlankWalletChecked() const
 {
     return ui->blank_wallet_checkbox->isChecked();
+}
+
+bool CreateWalletDialog::isSilentPaymentsWalletChecked() const
+{
+    return ui->silent_payments_wallet_checkbox->isChecked();
 }
 
 bool CreateWalletDialog::isExternalSignerChecked() const
