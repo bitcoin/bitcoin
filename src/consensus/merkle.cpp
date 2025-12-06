@@ -73,7 +73,7 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated)
     return ComputeMerkleRoot(std::move(leaves), mutated);
 }
 
-uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated)
+uint256 BlockWitnessMerkleRoot(const CBlock& block)
 {
     std::vector<uint256> leaves;
     leaves.resize(block.vtx.size());
@@ -81,20 +81,17 @@ uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated)
     for (size_t s = 1; s < block.vtx.size(); s++) {
         leaves[s] = block.vtx[s]->GetWitnessHash().ToUint256();
     }
-    return ComputeMerkleRoot(std::move(leaves), mutated);
+    return ComputeMerkleRoot(std::move(leaves));
 }
 
-/* This implements a constant-space merkle root/path calculator, limited to 2^32 leaves. */
-static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot, bool* pmutated, uint32_t leaf_pos, std::vector<uint256>* path)
+/* This implements a constant-space merkle path calculator, limited to 2^32 leaves. */
+static void MerkleComputation(const std::vector<uint256>& leaves, uint32_t leaf_pos, std::vector<uint256>& path)
 {
-    if (path) path->clear();
+    path.clear();
     Assume(leaves.size() <= UINT32_MAX);
     if (leaves.size() == 0) {
-        if (pmutated) *pmutated = false;
-        if (proot) *proot = uint256();
         return;
     }
-    bool mutated = false;
     // count is the number of leaves processed so far.
     uint32_t count = 0;
     // inner is an array of eagerly computed subtree hashes, indexed by tree
@@ -115,15 +112,12 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
         // corresponds to an inner value that existed before processing the
         // current leaf, and each needs a hash to combine it.
         for (level = 0; !(count & ((uint32_t{1}) << level)); level++) {
-            if (path) {
-                if (matchh) {
-                    path->push_back(inner[level]);
-                } else if (matchlevel == level) {
-                    path->push_back(h);
-                    matchh = true;
-                }
+            if (matchh) {
+                path.push_back(inner[level]);
+            } else if (matchlevel == level) {
+                path.push_back(h);
+                matchh = true;
             }
-            mutated |= (inner[level] == h);
             h = Hash(inner[level], h);
         }
         // Store the resulting hash at inner position level.
@@ -147,8 +141,8 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
         // If we reach this point, h is an inner value that is not the top.
         // We combine it with itself (Bitcoin's special rule for odd levels in
         // the tree) to produce a higher level one.
-        if (path && matchh) {
-            path->push_back(h);
+        if (matchh) {
+            path.push_back(h);
         }
         h = Hash(h, h);
         // Increment count to the value it would have if two entries at this
@@ -157,26 +151,21 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
         level++;
         // And propagate the result upwards accordingly.
         while (!(count & ((uint32_t{1}) << level))) {
-            if (path) {
-                if (matchh) {
-                    path->push_back(inner[level]);
-                } else if (matchlevel == level) {
-                    path->push_back(h);
-                    matchh = true;
-                }
+            if (matchh) {
+                path.push_back(inner[level]);
+            } else if (matchlevel == level) {
+                path.push_back(h);
+                matchh = true;
             }
             h = Hash(inner[level], h);
             level++;
         }
     }
-    // Return result.
-    if (pmutated) *pmutated = mutated;
-    if (proot) *proot = h;
 }
 
 static std::vector<uint256> ComputeMerklePath(const std::vector<uint256>& leaves, uint32_t position) {
     std::vector<uint256> ret;
-    MerkleComputation(leaves, nullptr, nullptr, position, &ret);
+    MerkleComputation(leaves, position, ret);
     return ret;
 }
 
