@@ -7,6 +7,7 @@ bugprone-string-constructor,
 bugprone-use-after-move,
 bugprone-lambda-function-name,
 bugprone-unhandled-self-assignment,
+bugprone-unused-return-value,
 misc-unused-using-decls,
 misc-no-recursion,
 modernize-deprecated-headers,
@@ -36,3 +37,5 @@ CheckOptions:
    value: false
  - key: bugprone-unhandled-self-assignment.WarnOnlyIfThisHasSuspiciousField
    value: false
+ - key: bugprone-unused-return-value.CheckedReturnTypes
+   value: '^::std::error_code$;^::std::error_condition$;^::std::errc$;^::std::expected$;^::util::Result$;^::util::Expected$'
