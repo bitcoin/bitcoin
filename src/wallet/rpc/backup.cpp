@@ -498,40 +498,11 @@ RPCHelpMan listdescriptors()
     }
 
     LOCK(wallet->cs_wallet);
-
-    const auto active_spk_mans = wallet->GetActiveScriptPubKeyMans();
-
-    struct WalletDescInfo {
-        std::string descriptor;
-        uint64_t creation_time;
-        bool active;
-        std::optional<bool> internal;
-        std::optional<std::pair<int64_t,int64_t>> range;
-        int64_t next_index;
-    };
-
-    std::vector<WalletDescInfo> wallet_descriptors;
-    for (const auto& spk_man : wallet->GetAllScriptPubKeyMans()) {
-        const auto desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man);
-        if (!desc_spk_man) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Unexpected ScriptPubKey manager type.");
-        }
-        LOCK(desc_spk_man->cs_desc_man);
-        const auto& wallet_descriptor = desc_spk_man->GetWalletDescriptor();
-        std::string descriptor;
-        if (!desc_spk_man->GetDescriptorString(descriptor, priv)) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Can't get descriptor string.");
-        }
-        const bool is_range = wallet_descriptor.descriptor->IsRange();
-        wallet_descriptors.push_back({
-            descriptor,
-            wallet_descriptor.creation_time,
-            active_spk_mans.count(desc_spk_man) != 0,
-            wallet->IsInternalScriptPubKeyMan(desc_spk_man),
-            is_range ? std::optional(std::make_pair(wallet_descriptor.range_start, wallet_descriptor.range_end)) : std::nullopt,
-            wallet_descriptor.next_index
-        });
+    util::Result<std::vector<WalletDescInfo>> exported = wallet->ExportDescriptors(priv);
+    if (!exported) {
+        throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(exported).original);
     }
+    std::vector<WalletDescInfo> wallet_descriptors = *exported;
 
     std::sort(wallet_descriptors.begin(), wallet_descriptors.end(), [](const auto& a, const auto& b) {
         return a.descriptor < b.descriptor;
