@@ -55,6 +55,7 @@ struct TestOpts {
     bool block_tree_db_in_memory{true};
     bool setup_net{true};
     bool setup_validation_interface{true};
+    bool setup_validation_interface_no_scheduler{false};
     bool min_validation_cache{false}; // Equivalent of -maxsigcachebytes=0
 };
 
