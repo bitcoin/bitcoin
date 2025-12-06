@@ -723,7 +723,7 @@ bool BerkeleyRODatabase::Backup(const std::string& dest) const
         }
 
         fs::copy_file(src, dst, fs::copy_options::overwrite_existing);
-        LogPrintf("copied %s to %s\n", fs::PathToString(m_filepath), fs::PathToString(dst));
+        LogInfo("copied %s to %s\n", fs::PathToString(m_filepath), fs::PathToString(dst));
         return true;
     } catch (const fs::filesystem_error& e) {
         LogWarning("error copying %s to %s - %s\n", fs::PathToString(m_filepath), fs::PathToString(dst), e.code().message());

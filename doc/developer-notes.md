@@ -752,8 +752,7 @@ logging messages. They should be used as follows:
   messages or for infrequent and important events such as a new block tip
   being found or a new outbound connection being made. These log messages
   are unconditional, so care must be taken that they can't be used by an
-  attacker to fill up storage. Note that `LogPrintf(fmt, params...)` is
-  a deprecated alias for `LogInfo`.
+  attacker to fill up storage.
 
 - `LogError(fmt, params...)` should be used in place of `LogInfo` for
   severe problems that require the node (or a subsystem) to shut down
