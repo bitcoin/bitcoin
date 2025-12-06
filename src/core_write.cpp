@@ -36,6 +36,31 @@ UniValue ValueFromAmount(const CAmount amount)
             strprintf("%s%d.%08d", amount < 0 ? "-" : "", quotient, remainder));
 }
 
+UniValue ValueFromFeeRate(const CFeeRate& fee_rate, FeeRateUnit fee_rate_unit)
+{
+    const CAmount feerate_per_kvb = fee_rate.GetFeePerK();
+    const bool is_sat_vb = (fee_rate_unit == FeeRateUnit::SAT_VB);
+    const int64_t units  = is_sat_vb ? 1000 : COIN;
+    const int8_t decimals   = is_sat_vb ? 3 : 8;
+
+    int64_t quotient  = feerate_per_kvb / units;
+    int64_t remainder = feerate_per_kvb % units;
+
+    if (feerate_per_kvb < 0) {
+        quotient = -quotient;
+        remainder = -remainder;
+    }
+
+    return UniValue(
+        UniValue::VNUM,
+        strprintf("%s%d.%0*d",
+                  feerate_per_kvb < 0 ? "-" : "",
+                  quotient,
+                  decimals,
+                  remainder)
+    );
+}
+
 std::string FormatScript(const CScript& script)
 {
     std::string ret;
