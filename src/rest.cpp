@@ -420,6 +420,7 @@ static bool rest_block(const std::any& context,
     if (!block_data) {
         switch (block_data.error()) {
         case node::ReadRawError::IO: return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "I/O error reading " + hashStr);
+        case node::ReadRawError::BadPartRange: break; // can happen only when reading a block part
         }
         assert(false);
     }

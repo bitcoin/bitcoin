@@ -1048,7 +1048,7 @@ bool BlockManager::ReadBlock(CBlock& block, const CBlockIndex& index) const
     return ReadBlock(block, block_pos, index.GetBlockHash());
 }
 
-BlockManager::ReadRawBlockResult BlockManager::ReadRawBlock(const FlatFilePos& pos) const
+BlockManager::ReadRawBlockResult BlockManager::ReadRawBlock(const FlatFilePos& pos, std::optional<std::pair<size_t, size_t>> block_part) const
 {
     if (pos.nPos < STORAGE_HEADER_BYTES) {
         // If nPos is less than STORAGE_HEADER_BYTES, we can't read the header that precedes the block data
@@ -1079,6 +1079,15 @@ BlockManager::ReadRawBlockResult BlockManager::ReadRawBlock(const FlatFilePos& p
             LogError("Block data is larger than maximum deserialization size for %s: %s versus %s while reading raw block",
                 pos.ToString(), blk_size, MAX_SIZE);
             return util::Unexpected{ReadRawError::IO};
+        }
+
+        if (block_part) {
+            const auto [offset, size]{*block_part};
+            if (size == 0 || offset >= blk_size || size > blk_size - offset) {
+                return util::Unexpected{ReadRawError::BadPartRange}; // Avoid logging - offset/size come from untrusted REST input
+            }
+            filein.seek(offset, SEEK_CUR);
+            blk_size = size;
         }
 
         std::vector<std::byte> data(blk_size); // Zeroing of memory is intentional here
