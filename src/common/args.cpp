@@ -174,6 +174,78 @@ void ArgsManager::SelectConfigNetwork(const std::string& network)
     m_network = network;
 }
 
+bool ArgsManager::ProcessOptionKey(std::string& key, std::optional<std::string>& val, std::string& error, const bool found_after_non_option) {
+
+    bool double_dash{false};
+    std::optional<std::string> original_val = val; // Capture the original val
+    std::string original_input = key; // Capture the original key
+    if (val) original_input += "=" + *val; // Append =value if it exists
+
+    // Transform --foo to -foo
+    if (key.length() > 1 && key[1] == '-') {
+        key.erase(0, 1);
+        double_dash = true;
+    }
+
+    // Transform -foo to foo
+    key.erase(0, 1);
+
+    KeyInfo keyinfo = InterpretKey(key);
+    std::optional<unsigned int> flags = GetArgFlags('-' + keyinfo.name);
+    // Unknown command line options and command line options with dot characters
+    // (which are returned from InterpretKey with nonempty section strings)are not valid.
+    if (!flags || !keyinfo.section.empty()) {
+        // if it's a double dash --, means could be an RPC named param so remove them
+        if (!double_dash) {
+            if (!found_after_non_option) {
+                error = strprintf("Invalid parameter %s", original_input);
+            } else {
+                // if the option is invalid but comes after a non-option (found_after_non_option)
+                // leave it up to the command if it accepts args that begin with "-"
+                LOCK(cs_args);
+                m_command.emplace_back(original_input);
+                return true;
+            }
+            return false;
+        }
+    }
+
+    if (double_dash) {
+        // add "-named" option if the call have a double dash param intended for RPC
+        // only if CLI/ bitcoin-cli has the -named arg set (argsman.AddArg("-named", ...)
+        val.reset();
+        keyinfo = InterpretKey("named");
+        flags = GetArgFlags('-' + keyinfo.name);
+        if (!flags || !keyinfo.section.empty()) {
+            // no "-named" needed, no bitcoin-cli
+            LOCK(cs_args);
+            keyinfo = InterpretKey(key);
+            flags = GetArgFlags('-' + keyinfo.name);
+
+            std::optional<common::SettingsValue> value = InterpretValue(keyinfo, original_val ? &*original_val : nullptr, *flags, error);
+            if (!value) return false;
+
+            m_settings.command_line_options[keyinfo.name].push_back(*value);
+            // when -named arg doesn't exist, e.g. not using bitcoin-cli
+            // just ignore it (returns true)
+            return true;
+        }
+    }
+
+    std::optional<common::SettingsValue> value = InterpretValue(keyinfo, val ? &*val : nullptr, *flags, error);
+    if (!value) return false;
+
+    // Store the option
+    LOCK(cs_args);
+    m_settings.command_line_options[keyinfo.name].push_back(*value);
+
+    if (double_dash && keyinfo.name =="named") {
+        m_command.emplace_back(original_input.substr(2));
+    }
+
+    return true;
+}
+
 bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::string& error)
 {
     LOCK(cs_args);
@@ -215,32 +287,29 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
             m_command.push_back(key);
             while (++i < argc) {
                 // The remaining args are command args
-                m_command.emplace_back(argv[i]);
+                if (argv[i][0] == '-') {
+                    // except it starts with dash "-" then will check if it's a valid option
+                    // if not it will be passed to the command
+                    key = argv[i];
+                    val.reset();
+                    is_index = key.find('=');
+                    if (is_index != std::string::npos) {
+                        val = key.substr(is_index + 1);
+                        key.erase(is_index);
+                    }
+                    if (!ProcessOptionKey(key, val, error, true)) {
+                        return false;
+                    }
+                } else {
+                    m_command.emplace_back(argv[i]);
+                }
             }
             break;
         }
 
-        // Transform --foo to -foo
-        if (key.length() > 1 && key[1] == '-')
-            key.erase(0, 1);
-
-        // Transform -foo to foo
-        key.erase(0, 1);
-        KeyInfo keyinfo = InterpretKey(key);
-        std::optional<unsigned int> flags = GetArgFlags('-' + keyinfo.name);
-
-        // Unknown command line options and command line options with dot
-        // characters (which are returned from InterpretKey with nonempty
-        // section strings) are not valid.
-        if (!flags || !keyinfo.section.empty()) {
-            error = strprintf("Invalid parameter %s", argv[i]);
+        if (!ProcessOptionKey(key, val, error)) {
             return false;
         }
-
-        std::optional<common::SettingsValue> value = InterpretValue(keyinfo, val ? &*val : nullptr, *flags, error);
-        if (!value) return false;
-
-        m_settings.command_line_options[keyinfo.name].push_back(*value);
     }
 
     // we do not allow -includeconf from command line, only -noincludeconf
