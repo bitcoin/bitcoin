@@ -35,6 +35,7 @@ public:
     std::optional<int64_t> MaxSatisfactionWeight(bool) const override { return {}; }
     std::optional<int64_t> MaxSatisfactionElems() const override { return {}; }
     void GetPubKeys(std::set<CPubKey>& pubkeys, std::set<CExtPubKey>& ext_pubs) const override {}
+    std::vector<std::string> Warnings() const override { return {}; }
 };
 
 BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)
