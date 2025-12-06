@@ -38,8 +38,6 @@ public:
     template <typename Other>
     bool operator==(const Other& other) const { return Compare(other) == 0; }
     template <typename Other>
-    bool operator!=(const Other& other) const { return Compare(other) != 0; }
-    template <typename Other>
     bool operator<(const Other& other) const { return Compare(other) < 0; }
 
     const uint256& ToUint256() const LIFETIMEBOUND { return m_wrapped; }

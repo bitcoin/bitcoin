@@ -50,11 +50,6 @@ public:
         return m_hash == other.m_hash;
     }
 
-    bool operator!=(const BaseHash<HashType>& other) const noexcept
-    {
-        return !(m_hash == other.m_hash);
-    }
-
     bool operator<(const BaseHash<HashType>& other) const noexcept
     {
         return m_hash < other.m_hash;

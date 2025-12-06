@@ -38,11 +38,6 @@ struct zero_after_free_allocator {
     {
         return true;
     }
-    template <typename U>
-    friend bool operator!=(const zero_after_free_allocator&, const zero_after_free_allocator<U>&) noexcept
-    {
-        return false;
-    }
 };
 
 /** Byte-vector that clears its contents before deletion. */

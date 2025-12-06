@@ -29,10 +29,6 @@ struct FlatFilePos
         return (a.nFile == b.nFile && a.nPos == b.nPos);
     }
 
-    friend bool operator!=(const FlatFilePos &a, const FlatFilePos &b) {
-        return !(a == b);
-    }
-
     bool IsNull() const { return (nFile == -1); }
 
     std::string ToString() const;
