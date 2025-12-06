@@ -156,7 +156,7 @@ std::string GetOpName(opcodetype opcode)
     }
 }
 
-unsigned int CScript::GetSigOpCount(bool fAccurate) const
+unsigned int CScript::CountSigOps(bool fAccurate) const
 {
     unsigned int n = 0;
     const_iterator pc = begin();
@@ -180,15 +180,16 @@ unsigned int CScript::GetSigOpCount(bool fAccurate) const
     return n;
 }
 
-unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
+unsigned int CountP2SHSigOps(const CScript& scriptSig, const CScript& scriptPubKey)
 {
-    if (!IsPayToScriptHash())
-        return GetSigOpCount(true);
+    if (!scriptPubKey.IsPayToScriptHash()) {
+        return 0;
+    }
 
     // This is a pay-to-script-hash scriptPubKey;
     // get the last item that the scriptSig
     // pushes onto the stack:
-    const_iterator pc = scriptSig.begin();
+    auto pc = scriptSig.begin();
     std::vector<unsigned char> vData;
     while (pc < scriptSig.end())
     {
@@ -201,16 +202,7 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
 
     /// ... and return its opcount:
     CScript subscript(vData.begin(), vData.end());
-    return subscript.GetSigOpCount(true);
-}
-
-bool CScript::IsPayToAnchor() const
-{
-    return (this->size() == 4 &&
-        (*this)[0] == OP_1 &&
-        (*this)[1] == 0x02 &&
-        (*this)[2] == 0x4e &&
-        (*this)[3] == 0x73);
+    return subscript.CountSigOps(/*fAccurate=*/true);
 }
 
 bool CScript::IsPayToAnchor(int version, const std::vector<unsigned char>& program)
@@ -219,30 +211,6 @@ bool CScript::IsPayToAnchor(int version, const std::vector<unsigned char>& progr
         program.size() == 2 &&
         program[0] == 0x4e &&
         program[1] == 0x73;
-}
-
-bool CScript::IsPayToScriptHash() const
-{
-    // Extra-fast test for pay-to-script-hash CScripts:
-    return (this->size() == 23 &&
-            (*this)[0] == OP_HASH160 &&
-            (*this)[1] == 0x14 &&
-            (*this)[22] == OP_EQUAL);
-}
-
-bool CScript::IsPayToWitnessScriptHash() const
-{
-    // Extra-fast test for pay-to-witness-script-hash CScripts:
-    return (this->size() == 34 &&
-            (*this)[0] == OP_0 &&
-            (*this)[1] == 0x20);
-}
-
-bool CScript::IsPayToTaproot() const
-{
-    return (this->size() == 34 &&
-            (*this)[0] == OP_1 &&
-            (*this)[1] == 0x20);
 }
 
 // A witness program is any valid CScript that consists of a 1-byte push opcode
@@ -297,13 +265,13 @@ std::string CScriptWitness::ToString() const
     return ret + ")";
 }
 
-bool CScript::HasValidOps() const
+bool CScript::HasValidBaseOps() const
 {
     CScript::const_iterator it = begin();
     while (it < end()) {
         opcodetype opcode;
         std::vector<unsigned char> item;
-        if (!GetOp(it, opcode, item) || opcode > MAX_OPCODE || item.size() > MAX_SCRIPT_ELEMENT_SIZE) {
+        if (!GetOp(it, opcode, item) || opcode > MAX_BASE_OPCODE || item.size() > MAX_SCRIPT_ELEMENT_SIZE) {
             return false;
         }
     }
