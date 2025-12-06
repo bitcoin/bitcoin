@@ -8,7 +8,6 @@
 #include <cassert>
 #include <cstring>
 #include <string>
-#include <tuple>
 
 namespace {
 

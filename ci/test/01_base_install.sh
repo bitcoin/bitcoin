@@ -79,8 +79,52 @@ if [[ -n "${USE_INSTRUMENTED_LIBCPP}" ]]; then
   rm -rf /llvm-project
 fi
 
-if [[ "${RUN_TIDY}" == "true" ]]; then
+if [[ "${RUN_IWYU}" == true ]]; then
   ${CI_RETRY_EXE} git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_"${TIDY_LLVM_V}" /include-what-you-use
+  # Prefer angled brackets over quotes for include directives.
+  # See: https://en.cppreference.com/w/cpp/preprocessor/include.html.
+  tee >(cd /include-what-you-use && patch -p1) <<'EOF'
+--- a/iwyu_path_util.cc
++++ b/iwyu_path_util.cc
+@@ -211,7 +211,7 @@ bool IsQuotedInclude(const string& s) {
+ }
+
+ string AddQuotes(string include_name, bool angled) {
+-  if (angled) {
++  if (true) {
+       return "<" + include_name + ">";
+   }
+   return "\"" + include_name + "\"";
+EOF
+  # Prefer C++ headers over C counterparts.
+  # See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/iwyu_include_picker.cc#L587-L629.
+  sed -i "s|\"<assert.h>\", kPublic|\"<assert.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<complex.h>\", kPublic|\"<complex.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<ctype.h>\", kPublic|\"<ctype.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<errno.h>\", kPublic|\"<errno.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<fenv.h>\", kPublic|\"<fenv.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<float.h>\", kPublic|\"<float.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<inttypes.h>\", kPublic|\"<inttypes.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<iso646.h>\", kPublic|\"<iso646.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<limits.h>\", kPublic|\"<limits.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<locale.h>\", kPublic|\"<locale.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<math.h>\", kPublic|\"<math.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<setjmp.h>\", kPublic|\"<setjmp.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<signal.h>\", kPublic|\"<signal.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<stdalign.h>\", kPublic|\"<stdalign.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<stdarg.h>\", kPublic|\"<stdarg.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<stdbool.h>\", kPublic|\"<stdbool.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<stddef.h>\", kPublic|\"<stddef.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<stdint.h>\", kPublic|\"<stdint.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<stdio.h>\", kPublic|\"<stdio.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<stdlib.h>\", kPublic|\"<stdlib.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<string.h>\", kPublic|\"<string.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<tgmath.h>\", kPublic|\"<tgmath.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<time.h>\", kPublic|\"<time.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<uchar.h>\", kPublic|\"<uchar.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<wchar.h>\", kPublic|\"<wchar.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+  sed -i "s|\"<wctype.h>\", kPublic|\"<wctype.h>\", kPrivate|g" /include-what-you-use/iwyu_include_picker.cc
+
   cmake -B /iwyu-build/ -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-"${TIDY_LLVM_V}" -S /include-what-you-use
   make -C /iwyu-build/ install "$MAKEJOBS"
 fi

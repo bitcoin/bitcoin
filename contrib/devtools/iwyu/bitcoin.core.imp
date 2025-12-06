@@ -13,4 +13,8 @@
   { "symbol": ["SEEK_CUR", "private", "<cstdio>", "public"] },
   { "symbol": ["SEEK_END", "private", "<cstdio>", "public"] },
   { "symbol": ["SEEK_SET", "private", "<cstdio>", "public"] },
+
+  # IWYU bug.
+  # See: https://github.com/include-what-you-use/include-what-you-use/issues/1863.
+  { "symbol": ["std::vector", "private", "<vector>", "public"] },
 ]
