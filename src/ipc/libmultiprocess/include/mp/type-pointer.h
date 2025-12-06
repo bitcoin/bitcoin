@@ -52,6 +52,8 @@ decltype(auto) CustomReadField(TypeList<std::shared_ptr<LocalType>>,
     return read_dest.update([&](auto& value) {
         if (!input.has()) {
             value.reset();
+        } else if (input.get().size() == 0) {
+            value.reset();
         } else if (value) {
             ReadField(TypeList<LocalType>(), invoke_context, input, ReadDestUpdate(*value));
         } else {
@@ -73,6 +75,10 @@ decltype(auto) CustomReadField(TypeList<std::shared_ptr<const LocalType>>,
 {
     return read_dest.update([&](auto& value) {
         if (!input.has()) {
+            value.reset();
+            return;
+        }
+        if (input.get().size() == 0) {
             value.reset();
             return;
         }

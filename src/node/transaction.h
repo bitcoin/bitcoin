@@ -71,6 +71,18 @@ static const CAmount DEFAULT_MAX_BURN_AMOUNT{0};
  * @returns                    The tx if found, otherwise nullptr
  */
 CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const Txid& hash, const BlockManager& blockman, uint256& hashBlock);
+
+/**
+ * Return a mempool transaction with a given witness hash.
+ *
+ * @param[in] mempool   mempool reference
+ * @param[in] hash      the wtxid
+ * @returns             the tx if found, otherwise nullptr
+ *
+ * @note -txindex does not support lookups by wtxid. Lookups using a block hash
+ *       are possible, but have not been implemented.
+ */
+CTransactionRef GetTransaction(const CTxMemPool& mempool, const Wtxid& hash);
 } // namespace node
 
 #endif // BITCOIN_NODE_TRANSACTION_H
