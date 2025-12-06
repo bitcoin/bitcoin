@@ -20,6 +20,7 @@
 #include <script/script.h>
 #include <uint256.h>
 #include <util/time.h>
+#include <optional>
 
 namespace node {
 enum class TransactionError {
@@ -41,8 +42,11 @@ struct BlockCreateOptions {
     /**
      * The default reserved weight for the fixed-size block header,
      * transaction count and coinbase transaction.
+     *
+     * Cap'n Proto IPC clients do not currently have a way of leaving this field
+     * unset and will always provide a value.
      */
-    size_t block_reserved_weight{DEFAULT_BLOCK_RESERVED_WEIGHT};
+    std::optional<size_t> block_reserved_weight{};
     /**
      * The maximum additional sigops which the pool will add in coinbase
      * transaction outputs.
