@@ -38,7 +38,8 @@ ADDR_DESTINATIONS_THRESHOLD = 4
 class AddrReceiver(P2PInterface):
     num_ipv4_received = 0
     test_addr_contents = False
-    _tokens = 1
+    # Start with 5 tokens to match "m_addr_token_bucket"
+    _tokens = 5
     send_getaddr = True
 
     def __init__(self, test_addr_contents=False, send_getaddr=True):
