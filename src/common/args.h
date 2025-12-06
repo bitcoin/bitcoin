@@ -482,6 +482,26 @@ private:
         const std::string& prefix,
         const std::string& section,
         const std::map<std::string, std::vector<common::SettingsValue>>& args) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
+    bool HandleUnknownOption(
+        const std::string& original_input,
+        std::string& error,
+        bool found_after_non_option) EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
+    bool HandleKnownOption(
+        const KeyInfo& keyinfo,
+        const std::optional<std::string>& val,
+        unsigned int flags,
+        std::string& error) EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
+    bool TryHandleNamedRPC(
+        const std::string& key,
+        const std::string& original_input,
+        std::string& error,
+        bool double_dash,
+        bool found_after_non_option) EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
+    void NormalizeKey(std::string& key, bool& double_dash);
 };
 
 extern ArgsManager gArgs;
