@@ -142,7 +142,7 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
         jreq.URI = req->GetURI();
 
         UniValue reply;
-        bool user_has_whitelist = g_rpc_whitelist.count(jreq.authUser);
+        bool user_has_whitelist = g_rpc_whitelist.contains(jreq.authUser);
         if (!user_has_whitelist && g_rpc_whitelist_default) {
             LogWarning("RPC User %s not allowed to call any methods", jreq.authUser);
             req->WriteReply(HTTP_FORBIDDEN);
@@ -151,7 +151,7 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
         // singleton request
         } else if (valRequest.isObject()) {
             jreq.parse(valRequest);
-            if (user_has_whitelist && !g_rpc_whitelist[jreq.authUser].count(jreq.strMethod)) {
+            if (user_has_whitelist && !g_rpc_whitelist[jreq.authUser].contains(jreq.strMethod)) {
                 LogWarning("RPC User %s not allowed to call method %s", jreq.authUser, jreq.strMethod);
                 req->WriteReply(HTTP_FORBIDDEN);
                 return false;
@@ -181,7 +181,7 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
                         const UniValue& request = valRequest[reqIdx].get_obj();
                         // Parse method
                         std::string strMethod = request.find_value("method").get_str();
-                        if (!g_rpc_whitelist[jreq.authUser].count(strMethod)) {
+                        if (!g_rpc_whitelist[jreq.authUser].contains(strMethod)) {
                             LogWarning("RPC User %s not allowed to call method %s", jreq.authUser, strMethod);
                             req->WriteReply(HTTP_FORBIDDEN);
                             return false;
@@ -307,7 +307,7 @@ static bool InitRPCAuthentication()
     for (const std::string& strRPCWhitelist : gArgs.GetArgs("-rpcwhitelist")) {
         auto pos = strRPCWhitelist.find(':');
         std::string strUser = strRPCWhitelist.substr(0, pos);
-        bool intersect = g_rpc_whitelist.count(strUser);
+        bool intersect = g_rpc_whitelist.contains(strUser);
         std::set<std::string>& whitelist = g_rpc_whitelist[strUser];
         if (pos != std::string::npos) {
             std::string strWhitelist = strRPCWhitelist.substr(pos + 1);

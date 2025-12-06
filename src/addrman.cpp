@@ -457,7 +457,7 @@ void AddrManImpl::Delete(nid_type nId)
 {
     AssertLockHeld(cs);
 
-    assert(mapInfo.count(nId) != 0);
+    assert(mapInfo.contains(nId));
     AddrInfo& info = mapInfo[nId];
     assert(!info.fInTried);
     assert(info.nRefCount == 0);
@@ -516,7 +516,7 @@ void AddrManImpl::MakeTried(AddrInfo& info, nid_type nId)
     if (vvTried[nKBucket][nKBucketPos] != -1) {
         // find an item to evict
         nid_type nIdEvict = vvTried[nKBucket][nKBucketPos];
-        assert(mapInfo.count(nIdEvict) == 1);
+        assert(mapInfo.contains(nIdEvict));
         AddrInfo& infoOld = mapInfo[nIdEvict];
 
         // Remove the to-be-evicted item from the tried set.
@@ -919,7 +919,7 @@ void AddrManImpl::ResolveCollisions_()
         bool erase_collision = false;
 
         // If id_new not found in mapInfo remove it from m_tried_collisions
-        if (mapInfo.count(id_new) != 1) {
+        if (!mapInfo.contains(id_new)) {
             erase_collision = true;
         } else {
             AddrInfo& info_new = mapInfo[id_new];
@@ -985,7 +985,7 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::SelectTriedCollision_()
     nid_type id_new = *it;
 
     // If id_new not found in mapInfo remove it from m_tried_collisions
-    if (mapInfo.count(id_new) != 1) {
+    if (!mapInfo.contains(id_new)) {
         m_tried_collisions.erase(it);
         return {};
     }
@@ -1115,7 +1115,7 @@ int AddrManImpl::CheckAddrman() const
     for (int n = 0; n < ADDRMAN_TRIED_BUCKET_COUNT; n++) {
         for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
             if (vvTried[n][i] != -1) {
-                if (!setTried.count(vvTried[n][i]))
+                if (!setTried.contains(vvTried[n][i]))
                     return -11;
                 const auto it{mapInfo.find(vvTried[n][i])};
                 if (it == mapInfo.end() || it->second.GetTriedBucket(nKey, m_netgroupman) != n) {
@@ -1132,7 +1132,7 @@ int AddrManImpl::CheckAddrman() const
     for (int n = 0; n < ADDRMAN_NEW_BUCKET_COUNT; n++) {
         for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
             if (vvNew[n][i] != -1) {
-                if (!mapNew.count(vvNew[n][i]))
+                if (!mapNew.contains(vvNew[n][i]))
                     return -12;
                 const auto it{mapInfo.find(vvNew[n][i])};
                 if (it == mapInfo.end() || it->second.GetBucketPosition(nKey, true, n) != i) {

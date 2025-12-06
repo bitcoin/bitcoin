@@ -173,11 +173,11 @@ static void push_lock(MutexType* c, const CLockLocation& locklocation)
         }
 
         const LockPair p1 = std::make_pair(i.first, c);
-        if (lockdata.lockorders.count(p1))
+        if (lockdata.lockorders.contains(p1))
             continue;
 
         const LockPair p2 = std::make_pair(c, i.first);
-        if (lockdata.lockorders.count(p2)) {
+        if (lockdata.lockorders.contains(p2)) {
             auto lock_stack_copy = lock_stack;
             lock_stack.pop_back();
             potential_deadlock_detected(p1, lockdata.lockorders[p2], lock_stack_copy);

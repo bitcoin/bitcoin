@@ -132,7 +132,7 @@ public:
     {
         AssertLockNotHeld(m_mutex);
         LOCK(m_mutex);
-        return m_reachable.count(net) > 0;
+        return m_reachable.contains(net);
     }
 
     [[nodiscard]] bool Contains(const CNetAddr& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
