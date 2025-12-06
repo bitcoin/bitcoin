@@ -1,51 +1,30 @@
 # Support for Output Descriptors in Bitcoin Core
 
-Since Bitcoin Core v0.17, there is support for Output Descriptors. This is a
-simple language which can be used to describe collections of output scripts.
-Supporting RPCs are:
-- `scantxoutset` takes as input descriptors to scan for, and also reports
-  specialized descriptors for the matching UTXOs.
-- `getdescriptorinfo` analyzes a descriptor, and reports a canonicalized version
-  with checksum added.
-- `deriveaddresses` takes as input a descriptor and computes the corresponding
-  addresses.
-- `listunspent` outputs a specialized descriptor for the reported unspent outputs.
-- `getaddressinfo` outputs a descriptor for solvable addresses (since v0.18).
-- `generatetodescriptor` takes as input a descriptor and generates coins to it
-  (`regtest` only, since v0.19).
-- `utxoupdatepsbt` takes as input descriptors to add information to the psbt
-  (since v0.19).
-- `createmultisig` and `addmultisigaddress` return descriptors as well (since v0.20).
-- `importdescriptors` takes as input descriptors to import into a descriptor wallet
-  (since v0.21).
-- `listdescriptors` outputs descriptors imported into a descriptor wallet (since v22).
-- `scanblocks` takes as input descriptors to scan for in blocks and returns the
-   relevant blockhashes (since v25).
-- `getdescriptoractivity` takes as input descriptors and blockhashes (as output
-  by `scanblocks`) and returns rich event data related to spends or receives associated
-  with the given descriptors.
-
-Bitcoin Core v24 extended `wsh()` output descriptor with [Miniscript](https://bitcoin.sipa.be/miniscript/) support (initially watch-only). Signing support for Miniscript descriptors was added in v25. And since v26 Miniscript expressions can now be used in Taproot descriptors.
+Many Bitcoin Core RPCs support Output Descriptors. This is a simple language
+which can be used to describe collections of output scripts. The wallet code
+internally stores and operates on these descriptors to reason about the sets
+of outputs that belong to the wallet.
 
 This document describes the language. For the specifics on usage, see the RPC
-documentation for the functions mentioned above.
+documentation.
 
 ## Features
 
 Output descriptors currently support:
 - Pay-to-pubkey scripts (P2PK), through the `pk` function.
 - Pay-to-pubkey-hash scripts (P2PKH), through the `pkh` function.
-- Pay-to-witness-pubkey-hash scripts (P2WPKH), through the `wpkh` function.
-- Pay-to-script-hash scripts (P2SH), through the `sh` function.
-- Pay-to-witness-script-hash scripts (P2WSH), through the `wsh` function.
-- Pay-to-taproot outputs (P2TR), through the `tr` function.
+- Pay-to-witness-pubkey-hash scripts ([P2WPKH](https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki)), through the `wpkh` function.
+- Pay-to-script-hash scripts ([P2SH](https://github.com/bitcoin/bips/blob/master/bip-0016.mediawiki)), through the `sh` function.
+- Pay-to-witness-script-hash scripts ([P2WSH](https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki)), through the `wsh` function.
+- Pay-to-taproot outputs ([P2TR](https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki)), through the `tr` function.
 - Multisig scripts, through the `multi` function.
 - Multisig scripts where the public keys are sorted lexicographically, through the `sortedmulti` function.
 - Multisig scripts inside taproot script trees, through the `multi_a` (and `sortedmulti_a`) function.
 - Any type of supported address through the `addr` function.
 - Raw hex scripts through the `raw` function.
-- Public keys (compressed and uncompressed) in hex notation, or BIP32 extended pubkeys with derivation paths.
-- [Miniscript](https://bitcoin.sipa.be/miniscript/) expressions in `wsh` (P2WSH) and `tr` (P2TR) functions.
+- Public keys (compressed and uncompressed) in hex notation, or [BIP 32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) extended pubkeys with derivation paths.
+- [MuSig2](https://github.com/bitcoin/bips/blob/master/bip-0327.mediawiki) key aggregation.
+- [Miniscript](https://github.com/bitcoin/bips/blob/master/bip-0379.md) expressions in `wsh` (P2WSH) and `tr` (P2TR) functions.
 
 ## Examples
 
@@ -75,23 +54,23 @@ Output descriptors currently support:
 
 Descriptors consist of several types of expressions. The top level expression is either a `SCRIPT`, or `SCRIPT#CHECKSUM` where `CHECKSUM` is an 8-character alphanumeric descriptor checksum.
 
-`SCRIPT` expressions:
-- `sh(SCRIPT)` (top level only): P2SH embed the argument.
-- `wsh(SCRIPT)` (top level or inside `sh` only): P2WSH embed the argument.
-- `pk(KEY)` (anywhere): P2PK output for the given public key.
-- `pkh(KEY)` (not inside `tr`): P2PKH output for the given public key (use `addr` if you only know the pubkey hash).
-- `wpkh(KEY)` (top level or inside `sh` only): P2WPKH output for the given compressed pubkey.
-- `combo(KEY)` (top level only): an alias for the collection of `pk(KEY)` and `pkh(KEY)`. If the key is compressed, it also includes `wpkh(KEY)` and `sh(wpkh(KEY))`.
-- `multi(k,KEY_1,KEY_2,...,KEY_n)` (not inside `tr`): k-of-n multisig script using OP_CHECKMULTISIG.
-- `sortedmulti(k,KEY_1,KEY_2,...,KEY_n)` (not inside `tr`): k-of-n multisig script with keys sorted lexicographically in the resulting script.
+[`SCRIPT`](https://github.com/bitcoin/bips/blob/master/bip-0380.mediawiki) expressions:
+- [`sh(SCRIPT)`](https://github.com/bitcoin/bips/blob/master/bip-0381.mediawiki) (top level only): P2SH embed the argument.
+- [`wsh(SCRIPT)`](https://github.com/bitcoin/bips/blob/master/bip-0382.mediawiki) (top level or inside `sh` only): P2WSH embed the argument.
+- [`pk(KEY)`](https://github.com/bitcoin/bips/blob/master/bip-0381.mediawiki) (anywhere): P2PK output for the given public key.
+- [`pkh(KEY)`](https://github.com/bitcoin/bips/blob/master/bip-0381.mediawiki) (not inside `tr`): P2PKH output for the given public key (use `addr` if you only know the pubkey hash).
+- [`wpkh(KEY)`](https://github.com/bitcoin/bips/blob/master/bip-0382.mediawiki) (top level or inside `sh` only): P2WPKH output for the given compressed pubkey.
+- [`combo(KEY)`](https://github.com/bitcoin/bips/blob/master/bip-0384.mediawiki) (top level only): an alias for the collection of `pk(KEY)` and `pkh(KEY)`. If the key is compressed, it also includes `wpkh(KEY)` and `sh(wpkh(KEY))`.
+- [`multi(k,KEY_1,KEY_2,...,KEY_n)`](https://github.com/bitcoin/bips/blob/master/bip-0383.mediawiki) (not inside `tr`): k-of-n multisig script using OP_CHECKMULTISIG.
+- [`sortedmulti(k,KEY_1,KEY_2,...,KEY_n)`](https://github.com/bitcoin/bips/blob/master/bip-0383.mediawiki) (not inside `tr`): k-of-n multisig script with keys sorted lexicographically in the resulting script.
 - `multi_a(k,KEY_1,KEY_2,...,KEY_N)` (only inside `tr`): k-of-n multisig script using OP_CHECKSIG, OP_CHECKSIGADD, and OP_NUMEQUAL.
 - `sortedmulti_a(k,KEY_1,KEY_2,...,KEY_N)` (only inside `tr`): similar to `multi_a`, but the (x-only) public keys in it will be sorted lexicographically.
-- `tr(KEY)` or `tr(KEY,TREE)` (top level only): P2TR output with the specified key as internal key, and optionally a tree of script paths.
-- `addr(ADDR)` (top level only): the script which ADDR expands to.
-- `raw(HEX)` (top level only): the script whose hex encoding is HEX.
+- [`tr(KEY)`](https://github.com/bitcoin/bips/blob/master/bip-0387.mediawiki) or [`tr(KEY,TREE)`](https://github.com/bitcoin/bips/blob/master/bip-0387.mediawiki) (top level only): P2TR output with the specified key as internal key, and optionally a tree of script paths.
+- [`addr(ADDR)`](https://github.com/bitcoin/bips/blob/master/bip-0385.mediawiki) (top level only): the script which ADDR expands to.
+- [`raw(HEX)`](https://github.com/bitcoin/bips/blob/master/bip-0385.mediawiki) (top level only): the script whose hex encoding is HEX.
 - `rawtr(KEY)` (top level only): P2TR output with the specified key as output key. NOTE: while it's possible to use this to construct wallets, it has several downsides, like being unable to prove no hidden script path exists. Use at your own risk.
 
-`KEY` expressions:
+[`KEY`](https://github.com/bitcoin/bips/blob/master/bip-0380.mediawiki) expressions:
 - Optionally, key origin information, consisting of:
   - An open bracket `[`
   - Exactly 8 hex characters for the fingerprint of the key where the derivation starts (see BIP32 for details)
@@ -100,17 +79,18 @@ Descriptors consist of several types of expressions. The top level expression is
 - Followed by the actual key, which is either:
   - Hex encoded public keys (either 66 characters starting with `02` or `03` for a compressed pubkey, or 130 characters starting with `04` for an uncompressed pubkey).
     - Inside `wpkh` and `wsh`, only compressed public keys are permitted.
-    - Inside `tr` and `rawtr`, x-only pubkeys are also permitted (64 hex characters).
+    - Inside [`tr`](https://github.com/bitcoin/bips/blob/master/bip-0387.mediawiki) and `rawtr`, x-only pubkeys are also permitted (64 hex characters).
   - [WIF](https://en.bitcoin.it/wiki/Wallet_import_format) encoded private keys may be specified instead of the corresponding public key, with the same meaning.
-  - `xpub` encoded extended public key or `xprv` encoded extended private key (as defined in [BIP 32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)).
+    - `xpub` encoded extended public key or `xprv` encoded extended private key (as defined in [BIP 32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)).
     - Followed by zero or more `/NUM` unhardened and `/NUM'` hardened BIP32 derivation steps.
-      - No more than one of these derivation steps may be of the form `<NUM;NUM;...;NUM>` (including hardened indicators with either or both `NUM`). If such specifiers are included, the descriptor will be parsed as multiple descriptors where the first descriptor uses all of the first `NUM` in the pair, and the second descriptor uses the second `NUM` in the pair for all `KEY` expressions, and so on.
+      - No more than one of these derivation steps may be of the form [`<NUM;NUM;...;NUM>`](https://github.com/bitcoin/bips/blob/master/bip-0389.mediawiki) (including hardened indicators with either or both `NUM`). If such specifiers are included, the descriptor will be parsed as multiple descriptors where the first descriptor uses all of the first `NUM` in the pair, and the second descriptor uses the second `NUM` in the pair for all `KEY` expressions, and so on.
     - Optionally followed by a single `/*` or `/*'` final step to denote all (direct) unhardened or hardened children.
     - The usage of hardened derivation steps requires providing the private key.
+  - [`musig(KEY,KEY,...)`](https://github.com/bitcoin/bips/blob/master/bip-0390.mediawiki) to represent the MuSig2 key aggregation of the relevant keys, only inside `tr()` expressions. It may be followed by unhardened `/NUM` derivation steps if all `KEY` subexpressions are xpubs or derived thereof, and none use `/*` or `/<NUM;NUM;...>`.
 
 (Anywhere a `'` suffix is permitted to denote hardened derivation, the suffix `h` can be used instead.)
 
-`TREE` expressions:
+[`TREE`](https://github.com/bitcoin/bips/blob/master/bip-0386.mediawiki) expressions:
 - any `SCRIPT` expression
 - An open brace `{`, a `TREE` expression, a comma `,`, a `TREE` expression, and a closing brace `}`
 
