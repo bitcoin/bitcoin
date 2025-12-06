@@ -7,17 +7,24 @@ Test that the proper port is used for -externalip=
 """
 
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_node import (
+    FailedToStartError,
+)
 from test_framework.util import assert_equal, p2p_port
 
-# We need to bind to a routable address for this test to exercise the relevant code.
-# To set a routable address on the machine use:
+# We need to bind to a routable address for this test to exercise the relevant
+# code. Those addresses must be on an interface that is UP and is not a loopback
+# interface (IFF_LOOPBACK).
+# To set these routable addresses on the machine, use:
 # Linux:
-# ifconfig lo:0 1.1.1.1/32 up  # to set up
-# ifconfig lo:0 down  # to remove it, after the test
-# FreeBSD:
-# ifconfig lo0 1.1.1.1/32 alias  # to set up
-# ifconfig lo0 1.1.1.1 -alias  # to remove it, after the test
-ADDR = '1.1.1.1'
+# First find your interfaces: ip addr show
+# Then use your actual interface names (replace INTERFACE_NAME with yours):
+# ip addr add 1.1.1.5/32 dev INTERFACE_NAME  # to set up
+# ip addr del 1.1.1.5/32 dev INTERFACE_NAME  # to remove it
+# FreeBSD and MacOS:
+# ifconfig INTERFACE_NAME 1.1.1.5/32 alias  # to set up
+# ifconfig INTERFACE_NAME 1.1.1.5 -alias  # to remove it, after the test
+ADDR = '1.1.1.5'
 
 # array of tuples [arguments, expected port in localaddresses]
 EXPECTED = [
@@ -45,17 +52,36 @@ class BindPortExternalIPTest(BitcoinTestFramework):
         self.num_nodes = len(EXPECTED)
         self.extra_args = list(map(lambda e: e[0], EXPECTED))
 
-    def add_options(self, parser):
-        parser.add_argument(
-            "--ihave1111", action='store_true', dest="ihave1111",
-            help=f"Run the test, assuming {ADDR} is configured on the machine",
-            default=False)
+    def setup_network(self):
+        self.setup_nodes()
 
-    def skip_test_if_missing_module(self):
-        if not self.options.ihave1111:
-            raise SkipTest(
-                f"To run this test make sure that {ADDR} (a routable address) is assigned "
-                "to one of the interfaces on this machine and rerun with --ihave1111")
+    def setup_nodes(self):
+        self.add_nodes(self.num_nodes, self.extra_args)
+        # TestNode.start() will add -bind= to extra_args if has_explicit_bind is
+        # False. We do not want any -bind= thus set has_explicit_bind to True.
+        for node in self.nodes:
+            node.has_explicit_bind = True
+        try:
+            self.start_nodes()
+        except FailedToStartError as e:
+            for node in self.nodes:
+                if node.running:
+                    if node.rpc_connected:
+                        node.stop_node(wait=node.rpc_timeout)
+                    else:
+                        node.process.kill()
+                        node.process.wait(timeout=node.rpc_timeout)
+                        node.process = None
+                        node.stdout.close()
+                        node.stderr.close()
+                        node.running = False
+            if 'Unable to bind to ' in str(e):
+                raise SkipTest(
+                    f'To run this test make sure that {ADDR} '
+                    '(routable address) is assigned to non-loopback '
+                    'interface on this machine')
+            else:
+                raise e
 
     def run_test(self):
         self.log.info("Test the proper port is used for -externalip=")
