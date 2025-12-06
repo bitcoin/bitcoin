@@ -185,8 +185,10 @@ class ZMQTest (BitcoinTestFramework):
     def test_basic(self, unix = False):
         self.log.info(f"Running basic test with {'ipc' if unix else 'tcp'} protocol")
 
-        # Invalid zmq arguments don't take down the node, see #17185.
-        self.restart_node(0, ["-zmqpubrawtx=foo", "-zmqpubhashtx=bar"])
+        # Invalid zmq arguments should cause exit with an error
+        self.stop_node(0)
+        self.nodes[0].assert_start_raises_init_error(extra_args=["-zmqpubrawtx=foo", "-zmqpubhashtx=bar"])
+        self.start_node(0)
 
         address = f"tcp://127.0.0.1:{self.zmq_port_base}"
 
