@@ -1086,6 +1086,7 @@ public:
         bool m_i2p_accept_incoming;
         bool whitelist_forcerelay = DEFAULT_WHITELISTFORCERELAY;
         bool whitelist_relay = DEFAULT_WHITELISTRELAY;
+        bool m_capture_messages = false;
     };
 
     void Init(const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_total_bytes_sent_mutex)
@@ -1123,7 +1124,11 @@ public:
         m_onion_binds = connOptions.onion_binds;
         whitelist_forcerelay = connOptions.whitelist_forcerelay;
         whitelist_relay = connOptions.whitelist_relay;
+        m_capture_messages = connOptions.m_capture_messages;
     }
+
+    // test only
+    void SetCaptureMessages(bool cap) { m_capture_messages = cap; }
 
     CConnman(uint64_t seed0,
              uint64_t seed1,
@@ -1665,6 +1670,11 @@ private:
      * and manual peers with default permissions.
      */
     bool whitelist_relay;
+
+    /**
+     * flag for whether messages are captured
+     */
+    bool m_capture_messages{false};
 
     /**
      * Mutex protecting m_i2p_sam_sessions.
