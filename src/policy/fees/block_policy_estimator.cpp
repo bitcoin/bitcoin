@@ -33,8 +33,8 @@
 #include <utility>
 
 // The current format written, and the version required to read. Must be
-// increased to at least 289900+1 on the next breaking change.
-constexpr int CURRENT_FEES_FILE_VERSION{149900};
+// increased to at least 309900+1 on the next breaking change.
+constexpr int CURRENT_FEES_FILE_VERSION{309900};
 
 static constexpr double INF_FEERATE = 1e99;
 
@@ -980,7 +980,6 @@ bool CBlockPolicyEstimator::Write(AutoFile& fileout) const
     try {
         LOCK(m_cs_fee_estimator);
         fileout << CURRENT_FEES_FILE_VERSION;
-        fileout << int{0}; // Unused dummy field. Written files may contain any value in [0, 289900]
         fileout << nBestSeenHeight;
         if (BlockSpan() > HistoricalBlockSpan()/2) {
             fileout << firstRecordedHeight << nBestSeenHeight;
@@ -1004,8 +1003,8 @@ bool CBlockPolicyEstimator::Read(AutoFile& filein)
 {
     try {
         LOCK(m_cs_fee_estimator);
-        int nVersionRequired, dummy;
-        filein >> nVersionRequired >> dummy;
+        int nVersionRequired;
+        filein >> nVersionRequired;
         if (nVersionRequired > CURRENT_FEES_FILE_VERSION) {
             throw std::runtime_error{strprintf("File version (%d) too high to be read.", nVersionRequired)};
         }
