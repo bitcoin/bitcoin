@@ -36,14 +36,14 @@ static void SetupWalletToolArgs(ArgsManager& argsman)
     argsman.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
     argsman.AddArg("-wallet=<wallet-name>", "Specify wallet name", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-dumpfile=<file name>", "When used with 'dump', writes out the records to this file. When used with 'createfromdump', loads the records into a new wallet.", ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
+    argsman.AddArg("-dumpfile=<file name>", "When used with 'dump', writes out the records to this file. When used with 'createfromdump', loads the records into a new wallet.", ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::COMMAND_OPTIONS);
     argsman.AddArg("-debug=<category>", "Output debugging information (default: 0).", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-printtoconsole", "Send trace/debug info to console (default: 1 when no -debug is true, 0 otherwise).", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
 
     argsman.AddCommand("info", "Get wallet info");
     argsman.AddCommand("create", "Create a new descriptor wallet file");
-    argsman.AddCommand("dump", "Print out all of the wallet key-value records");
-    argsman.AddCommand("createfromdump", "Create new wallet file from dumped records");
+    argsman.AddCommand("dump", "Print out all of the wallet key-value records", {"-dumpfile"});
+    argsman.AddCommand("createfromdump", "Create new wallet file from dumped records", {"-dumpfile"});
 }
 
 static std::optional<int> WalletAppInit(ArgsManager& args, int argc, char* argv[])
