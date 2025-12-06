@@ -365,7 +365,7 @@ static bool EvalChecksigTapscript(const valtype& sig, const valtype& pubkey, Scr
         }
     }
     if (pubkey.size() == 0) {
-        return set_error(serror, SCRIPT_ERR_PUBKEYTYPE);
+        return set_error(serror, SCRIPT_ERR_TAPSCRIPT_EMPTY_PUBKEY);
     } else if (pubkey.size() == 32) {
         if (success && !checker.CheckSchnorrSignature(sig, pubkey, sigversion, execdata, serror)) {
             return false; // serror is set
