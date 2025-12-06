@@ -3661,14 +3661,26 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         // Log successful connections unconditionally for outbound, but not for inbound as those
         // can be triggered by an attacker at high rate.
-        if (!pfrom.IsInboundConn() || LogAcceptCategory(BCLog::NET, BCLog::Level::Debug)) {
+        bool net_logging = LogAcceptCategory(BCLog::NET, BCLog::Level::Debug);
+        if (!pfrom.IsInboundConn() || net_logging) {
             const auto mapped_as{m_connman.GetMappedAS(pfrom.addr)};
-            LogPrintf("New %s %s peer connected: version: %d, blocks=%d, peer=%d%s%s\n",
-                      pfrom.ConnectionTypeAsString(),
-                      TransportTypeAsString(pfrom.m_transport->GetInfo().transport_type),
-                      pfrom.nVersion.load(), peer->m_starting_height,
-                      pfrom.GetId(), pfrom.LogIP(fLogIPs),
-                      (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
+            // With "net" debug logging enabled, log this with LogDebug to not trigger rate-limiting.
+            // Keep the two log messages in sync!
+            if (net_logging) {
+                LogDebug(BCLog::NET, "New %s %s peer connected: version: %d, blocks=%d, peer=%d%s%s\n",
+                        pfrom.ConnectionTypeAsString(),
+                        TransportTypeAsString(pfrom.m_transport->GetInfo().transport_type),
+                        pfrom.nVersion.load(), peer->m_starting_height,
+                        pfrom.GetId(), pfrom.LogIP(fLogIPs),
+                        (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
+            } else {
+                LogPrintf("New %s %s peer connected: version: %d, blocks=%d, peer=%d%s%s\n",
+                        pfrom.ConnectionTypeAsString(),
+                        TransportTypeAsString(pfrom.m_transport->GetInfo().transport_type),
+                        pfrom.nVersion.load(), peer->m_starting_height,
+                        pfrom.GetId(), pfrom.LogIP(fLogIPs),
+                        (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
+            }
         }
 
         if (pfrom.GetCommonVersion() >= SHORT_IDS_BLOCKS_VERSION) {
