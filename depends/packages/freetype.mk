@@ -1,8 +1,8 @@
 package=freetype
-$(package)_version=2.11.0
+$(package)_version=2.11.1
 $(package)_download_path=https://download.savannah.gnu.org/releases/$(package)
-$(package)_file_name=$(package)-$($(package)_version).tar.xz
-$(package)_sha256_hash=8bee39bd3968c4804b70614a0a3ad597299ad0e824bc8aad5ce8aaf48067bde7
+$(package)_file_name=$(package)-$($(package)_version).tar.gz
+$(package)_sha256_hash=f8db94d307e9c54961b39a1cc799a67d46681480696ed72ecf78d4473770f09b
 $(package)_build_subdir=build
 $(package)_patches += cmake_minimum.patch
 
