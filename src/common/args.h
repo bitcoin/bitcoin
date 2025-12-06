@@ -447,7 +447,31 @@ private:
         const std::string& section,
         const std::map<std::string, std::vector<common::SettingsValue>>& args) const;
 
-    bool ProcessOptionKey(std::string& key, std::optional<std::string>& val, std::string& error, const bool found_after_non_option = false);
+    bool ProcessOptionKey(
+        std::string& key,
+        std::optional<std::string>& val,
+        std::string& error,
+        const bool found_after_non_option = false);
+
+    bool HandleUnknownOption(
+        const std::string& original_input,
+        std::string& error,
+        bool found_after_non_option);
+
+    bool HandleKnownOption(
+        const KeyInfo& keyinfo,
+        const std::optional<std::string>& val,
+        const unsigned int flags,
+        std::string& error);
+
+    bool TryHandleNamedRPC(
+        const std::string& key,
+        const std::string& original_input,
+        std::string& error,
+        bool double_dash,
+        bool found_after_non_option);
+
+    void NormalizeKey(std::string& key, bool& double_dash);
 };
 
 extern ArgsManager gArgs;

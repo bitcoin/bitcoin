@@ -174,73 +174,103 @@ void ArgsManager::SelectConfigNetwork(const std::string& network)
     m_network = network;
 }
 
-bool ArgsManager::ProcessOptionKey(std::string& key, std::optional<std::string>& val, std::string& error, const bool found_after_non_option)
+void ArgsManager::NormalizeKey(std::string& key, bool& double_dash)
 {
-    bool double_dash{false};
-    std::string original_input{key};
-    if (val) original_input += "=" + *val;
-
-    // Normalize leading dashes
     if (key.length() > 1 && key[1] == '-') {
-        key.erase(0, 1);   // `--foo` -> `-foo`
+        key.erase(0, 1); // --foo -> -foo
         double_dash = true;
     }
-    key.erase(0, 1);       // `-foo`  -> `foo`
+    key.erase(0, 1); // -foo -> foo
+}
+
+bool ArgsManager::TryHandleNamedRPC(const std::string& key,
+                                    const std::string& original_input,
+                                    std::string& error,
+                                    bool double_dash,
+                                    bool found_after_non_option)
+{
+    if (!double_dash || !found_after_non_option) return false;
 
     KeyInfo keyinfo = InterpretKey(key);
-    std::optional<unsigned int> flags = GetArgFlags('-' + keyinfo.name);
-    const bool known_option = flags.has_value() && keyinfo.section.empty();
+    const auto flags = GetArgFlags('-' + keyinfo.name);
+    const bool known = flags.has_value() && keyinfo.section.empty();
 
-    // Handle the special "named RPC" case early ---
-    if (double_dash && found_after_non_option && !known_option) {
-        // Try to map this to `-named`, if supported by the binary.
-        val.reset();
-        KeyInfo named_keyinfo = InterpretKey("named");
-        std::optional<unsigned int> named_flags = GetArgFlags('-' + named_keyinfo.name);
+    if (known) return false; // normal known option → don't apply special RPC logic
 
-        if (named_flags && named_keyinfo.section.empty()) {
-            // Binary supports -named: enable it and append the stripped parameter.
-            std::optional<common::SettingsValue> named_value =
-                InterpretValue(named_keyinfo, /* val */ nullptr, *named_flags, error);
-            if (!named_value) return false;
+    // Try -named
+    KeyInfo named_info = InterpretKey("named");
+    auto named_flags = GetArgFlags('-' + named_info.name);
 
-            {
-                LOCK(cs_args);
-                m_settings.command_line_options[named_keyinfo.name].push_back(*named_value);
-                // Strip the leading "--" before passing to the command as a named param
-                m_command.emplace_back(original_input.substr(2));
-            }
-            return true;
-        }
-
-        // Binary doesn’t support -named: fall back and treat `--foo` as a
-        // normal option (or unknown option handled below).
-        keyinfo = InterpretKey(key);
-        flags = GetArgFlags('-' + keyinfo.name);
+    if (!named_flags || !named_info.section.empty()) {
+        return false; // binary does NOT support -named
     }
 
-    // --- Normal option handling ---
-    if (!flags || !keyinfo.section.empty()) {
-        if (!found_after_non_option) {
-            // Unknown global option: keep legacy behaviour (error)
-            error = strprintf("Invalid parameter %s", original_input);
-            return false;
-        }
+    // binary supports -named
+    auto named_value = InterpretValue(named_info, nullptr, *named_flags, error);
+    if (!named_value) return true; // error already set ----
 
-        // Unknown option after command: pass through to the command as an arg
+    {
         LOCK(cs_args);
-        m_command.emplace_back(original_input);
-        return true;
+        m_settings.command_line_options[named_info.name].push_back(*named_value);
+        m_command.emplace_back(original_input.substr(2)); // strip '--'
     }
+    return true; // handled
+}
 
-    // Known option (including `--datadir`, `--signet`, etc.)
-    std::optional<common::SettingsValue> value =
-        InterpretValue(keyinfo, val ? &*val : nullptr, *flags, error);
+bool ArgsManager::HandleKnownOption(const KeyInfo& keyinfo,
+                                    const std::optional<std::string>& val,
+                                    const unsigned int flags,
+                                    std::string& error)
+{
+    auto value = InterpretValue(keyinfo, val ? &*val : nullptr, flags, error);
     if (!value) return false;
 
     LOCK(cs_args);
     m_settings.command_line_options[keyinfo.name].push_back(*value);
     return true;
+}
+
+bool ArgsManager::HandleUnknownOption(const std::string& original_input,
+                                      std::string& error,
+                                      bool found_after_non_option)
+{
+    if (!found_after_non_option) {
+        error = strprintf("Invalid parameter %s", original_input);
+        return false;
+    }
+
+    LOCK(cs_args);
+    m_command.emplace_back(original_input); // pass-through
+    return true;
+}
+
+bool ArgsManager::ProcessOptionKey(std::string& key,
+                                   std::optional<std::string>& val,
+                                   std::string& error,
+                                   const bool found_after_non_option)
+{
+    bool double_dash{false};
+    std::string original_input{key};
+    if (val) original_input += "=" + *val;
+
+    NormalizeKey(key, double_dash);
+
+    // ---- 1. special named-RPC handling ----
+    if (TryHandleNamedRPC(key, original_input, error, double_dash, found_after_non_option)) {
+        return error.empty();
+    }
+
+    KeyInfo keyinfo = InterpretKey(key);
+    auto flags = GetArgFlags('-' + keyinfo.name);
+    const bool known_option = flags.has_value() && keyinfo.section.empty();
+
+    // ---- 2. unknown option ----
+    if (!known_option) {
+        return HandleUnknownOption(original_input, error, found_after_non_option);
+    }
+
+    // ---- 3. known option ----
+    return HandleKnownOption(keyinfo, val, *flags, error);
 }
 
 bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::string& error)
