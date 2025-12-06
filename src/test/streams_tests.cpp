@@ -104,13 +104,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
         BOOST_CHECK_EXCEPTION(xor_file.size(), std::ios_base::failure, HasReason{"AutoFile::size: file handle is nullptr"});
     }
     {
-#ifdef __MINGW64__
-        // Temporary workaround for https://github.com/bitcoin/bitcoin/issues/30210
-        const char* mode = "wb";
-#else
-        const char* mode = "wbx";
-#endif
-        AutoFile xor_file{raw_file(mode), obfuscation};
+        AutoFile xor_file{raw_file("wbx"), obfuscation};
         xor_file << test1 << test2;
         BOOST_CHECK_EQUAL(xor_file.size(), 7);
         BOOST_REQUIRE_EQUAL(xor_file.fclose(), 0);
