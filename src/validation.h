@@ -1226,16 +1226,19 @@ public:
     /**
      * Process incoming block headers.
      *
-     * May not be called in a
-     * validationinterface callback.
+     * May not be called in a validationinterface callback.
+     *
+     * Headers are accepted into memory and eventually persisted in the block
+     * tree on successful validation. Callers should grapple with the question
+     * whether the headers are safe to accept or need further validation, such
+     * as pre-checking proof-of-work, in order to avoid resource exhaustion.
      *
      * @param[in]  headers The block headers themselves
-     * @param[in]  min_pow_checked  True if proof-of-work anti-DoS checks have been done by caller for headers chain
      * @param[out] state This may be set to an Error state if any error occurred processing them
      * @param[out] ppindex If set, the pointer will be set to point to the last new block index object for the given headers
      * @returns false if AcceptBlockHeader fails on any of the headers, true otherwise (including if headers were already known)
      */
-    bool ProcessNewBlockHeaders(std::span<const CBlockHeader> headers, bool min_pow_checked, BlockValidationState& state, const CBlockIndex** ppindex = nullptr) LOCKS_EXCLUDED(cs_main);
+    bool ProcessNewBlockHeaders(std::span<const CBlockHeader> headers, BlockValidationState& state, const CBlockIndex** ppindex = nullptr) LOCKS_EXCLUDED(cs_main);
 
     /**
      * Sufficiently validate a block for disk storage (and store on disk).
