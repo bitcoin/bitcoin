@@ -91,6 +91,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.decoderawtransaction_tests()
         self.transaction_version_number_tests()
         self.getrawtransaction_verbosity_tests()
+        self.combinerawtransaction_tests()
 
     def getrawtransaction_tests(self):
         tx = self.wallet.send_self_transfer(from_node=self.nodes[0])
@@ -496,6 +497,20 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtx = tx.serialize().hex()
         decrawtx = self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['version'], 0xffffffff)
+
+    def combinerawtransaction_tests(self):
+        self.log.info("Test combinerawtransaction with distinct transactions")
+        # Create two different transactions
+        tx1 = self.wallet.create_self_transfer()
+        tx2 = self.wallet.create_self_transfer()
+
+        # Combining two distinct transactions should fail
+        assert_raises_rpc_error(
+            -8,
+            "spends different inputs",
+            self.nodes[0].combinerawtransaction,
+            [tx1['hex'], tx2['hex']]
+        )
 
 if __name__ == '__main__':
     RawTransactionsTest(__file__).main()

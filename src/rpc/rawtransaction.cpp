@@ -618,6 +618,28 @@ static RPCHelpMan combinerawtransaction()
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Missing transactions");
     }
 
+    // Validate all transactions have the same base structure
+    const CMutableTransaction& baseTx = txVariants[0];
+    for (size_t idx = 1; idx < txVariants.size(); idx++) {
+        const CMutableTransaction& tx = txVariants[idx];
+        if (tx.vin.size() != baseTx.vin.size() || tx.vout.size() != baseTx.vout.size()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                strprintf("Transaction %d has a different structure. All transactions must have the same inputs and outputs.", idx));
+        }
+        for (size_t i = 0; i < tx.vin.size(); i++) {
+            if (tx.vin[i].prevout != baseTx.vin[i].prevout) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                    strprintf("Transaction %d spends different inputs. All transactions must spend the same inputs.", idx));
+            }
+        }
+        for (size_t i = 0; i < tx.vout.size(); i++) {
+            if (tx.vout[i].scriptPubKey != baseTx.vout[i].scriptPubKey || tx.vout[i].nValue != baseTx.vout[i].nValue) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                    strprintf("Transaction %d has different outputs. All transactions must have the same outputs.", idx));
+            }
+        }
+    }
+
     // mergedTx will end up with all the signatures; it
     // starts as a clone of the rawtx:
     CMutableTransaction mergedTx(txVariants[0]);
