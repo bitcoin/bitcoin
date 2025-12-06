@@ -25,6 +25,7 @@ from test_framework.descriptors import descsum_create
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    assert_greater_than,
 )
 from test_framework.wallet_util import (
     get_generate_key,
@@ -62,6 +63,43 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         if error_code is not None:
             assert_equal(result[0]['error']['code'], error_code)
             assert_equal(result[0]['error']['message'], error_message)
+
+    def test_importdescriptor_never_timestamp(self, node, funding_wallet):
+        self.log.info("Test importing descriptors with timestamp as never")
+        assert_greater_than(funding_wallet.getbalance(), 0)
+
+        key = get_generate_key()
+        funding_amount = 1 # BTC
+        txid = funding_wallet.send(outputs=[{key.p2wpkh_addr: funding_amount}])["txid"]
+        self.generate(node, 1, sync_fun=self.no_op)
+
+        wpkh_desc = descsum_create("wpkh(" + key.pubkey + ")")
+        spare_pkh_desc = descsum_create("pkh(" + key.pubkey + ")")
+
+        node.createwallet(wallet_name='never_wallet', disable_private_keys=True, blank=True)
+        never_wallet = node.get_wallet_rpc('never_wallet')
+        assert_equal(never_wallet.getbalance(), 0)
+        with node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Rescanning last"]):
+            self.test_importdesc({"desc": wpkh_desc, "timestamp": "never"}, success=True, wallet=never_wallet)
+        assert_equal(never_wallet.getbalance(), 0)
+        assert_equal(never_wallet.listtransactions(), [])
+
+        node.createwallet(wallet_name='now_wallet', disable_private_keys=True, blank=True)
+        now_wallet = node.get_wallet_rpc('now_wallet')
+        assert_equal(now_wallet.getbalance(), 0)
+        with node.assert_debug_log(expected_msgs=["Rescanning last"]):
+            self.test_importdesc({"desc": wpkh_desc, "timestamp": "now"}, success=True, wallet=now_wallet)
+        assert_equal(now_wallet.getbalance(), funding_amount)
+        assert_equal(now_wallet.listtransactions()[0]["txid"], txid)
+
+        node.createwallet(wallet_name='never_now_wallet', disable_private_keys=True, blank=True)
+        never_now_wallet = node.get_wallet_rpc('never_now_wallet')
+        assert_equal(never_now_wallet.getbalance(), 0)
+        # passing "now" timestamp for the spare_pkh_desc import causes the rescan that finds the transaction of the wpkh_desc
+        with node.assert_debug_log(expected_msgs=["Rescanning last"]):
+            never_now_wallet.importdescriptors([{"desc": wpkh_desc, "timestamp": "never"}, {"desc": spare_pkh_desc, "timestamp": "now"}])
+        assert_equal(never_now_wallet.getbalance(), funding_amount)
+        assert_equal(never_now_wallet.listtransactions()[0]["txid"], txid)
 
     def run_test(self):
         self.log.info('Setting up wallets')
@@ -782,6 +820,8 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             assert_equal(w_multipath.getnewaddress(address_type="bech32"), w_multisplit.getnewaddress(address_type="bech32"))
             assert_equal(w_multipath.getrawchangeaddress(address_type="bech32"), w_multisplit.getrawchangeaddress(address_type="bech32"))
         assert_equal(sorted(w_multipath.listdescriptors()["descriptors"], key=lambda x: x["desc"]), sorted(w_multisplit.listdescriptors()["descriptors"], key=lambda x: x["desc"]))
+
+        self.test_importdescriptor_never_timestamp(self.nodes[0], w0)
 
 if __name__ == '__main__':
     ImportDescriptorsTest(__file__).main()
