@@ -26,6 +26,7 @@ from test_framework.messages import (
     COutPoint,
     CTransaction,
     CTxIn,
+    CTxInWitness,
     CTxOut,
     MAX_MONEY,
     SEQUENCE_FINAL,
@@ -36,6 +37,7 @@ from test_framework.blocktools import (
     MAX_STANDARD_TX_SIGOPS,
 )
 from test_framework.script import (
+    OP_TRUE,
     CScript,
     OP_0,
     OP_2DIV,
@@ -122,6 +124,20 @@ class SizeTooSmall(BadTxTemplate):
         tx.vout.append(CTxOut(0, CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 2)))))
         assert len(tx.serialize_without_witness()) == 64
         assert MIN_STANDARD_TX_NONWITNESS_SIZE - 1 == 64
+        return tx
+
+# reject a transaction that contains a witness
+# but doesn't spend a segwit output
+class ExtraWitness(BadTxTemplate):
+    reject_reason = "tx-size-small"
+    block_reject_reason = "block-script-verify-flag-failed (Witness provided for non-witness script)"
+
+    def get_tx(self):
+        tx = CTransaction()
+        tx.vin.append(self.valid_txin)
+        tx.vout.append(CTxOut(0, CScript()))
+        tx.wit.vtxinwit = [CTxInWitness()]
+        tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
         return tx
 
 
