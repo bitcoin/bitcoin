@@ -800,6 +800,73 @@ static bool rest_mempool(const std::any& context, HTTPRequest* req, const std::s
     }
 }
 
+static bool rest_txspendingprevout(const std::any& context, HTTPRequest* req, const std::string& uri_part)
+{
+    if (!CheckWarmup(req))
+        return false;
+
+    std::string param;
+    const RESTResponseFormat rf = ParseDataFormat(param, uri_part);
+
+    std::vector<std::string> uriParts = SplitString(param, '/');
+
+    // Check that we have at least one outpoint
+    if (uriParts.size() == 0 || (uriParts.size() == 1 && uriParts[0].empty()))
+        return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
+
+    std::vector<COutPoint> prevouts;
+
+    // Parse outpoints from URI in the format txid-vout
+    for (size_t i = 0; i < uriParts.size(); i++)
+    {
+        const auto txid_out{util::Split<std::string_view>(uriParts[i], '-')};
+        if (txid_out.size() != 2) {
+            return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
+        }
+        auto txid{Txid::FromHex(txid_out.at(0))};
+        auto output{ToIntegral<uint32_t>(txid_out.at(1))};
+
+        if (!txid || !output.has_value()) {
+            return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
+        }
+
+        prevouts.emplace_back(*txid, *output);
+    }
+
+    switch (rf) {
+    case RESTResponseFormat::JSON: {
+        const CTxMemPool* mempool = GetMemPool(context, req);
+        if (!mempool) return false;
+
+        LOCK(mempool->cs);
+
+        UniValue result{UniValue::VARR};
+
+        for (const COutPoint& prevout : prevouts) {
+            UniValue o(UniValue::VOBJ);
+            o.pushKV("txid", prevout.hash.ToString());
+            o.pushKV("vout", (uint64_t)prevout.n);
+
+            const CTransaction* spendingTx = mempool->GetConflictTx(prevout);
+            if (spendingTx != nullptr) {
+                o.pushKV("spendingtxid", spendingTx->GetHash().ToString());
+            }
+
+            result.push_back(std::move(o));
+        }
+
+        std::string strJSON = result.write() + "\n";
+        req->WriteHeader("Content-Type", "application/json");
+        req->WriteReply(HTTP_OK, strJSON);
+        return true;
+    }
+
+    default: {
+        return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: json)");
+    }
+    }
+}
+
 static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string& uri_part)
 {
     if (!CheckWarmup(req))
@@ -1120,6 +1187,7 @@ static const struct {
       {"/rest/deploymentinfo", rest_deploymentinfo},
       {"/rest/blockhashbyheight/", rest_blockhash_by_height},
       {"/rest/spenttxouts/", rest_spent_txouts},
+      {"/rest/txspendingprevout/", rest_txspendingprevout},
 };
 
 void StartREST(const std::any& context)

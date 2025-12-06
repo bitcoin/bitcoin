@@ -412,6 +412,59 @@ class RESTTest (BitcoinTestFramework):
         for tx in txs:
             assert tx in json_obj['tx']
 
+        self.log.info("Test the /txspendingprevout URI")
+
+        # Create two new transactions - one to spend and one spending transaction
+        # First, create a transaction that will have an output to spend
+        utxo_for_new_tx = self.wallet.get_utxo()
+        base_tx = self.wallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_for_new_tx)
+        base_txid = base_tx['txid']
+        base_vout = 0  # The change output
+        self.sync_all()
+
+        # Now create a transaction that spends from base_tx
+        spending_tx = self.wallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=self.wallet.get_utxo(txid=base_txid))
+        spending_txid = spending_tx['txid']
+        self.sync_all()
+
+        # Test with single outpoint - should find the spending transaction
+        json_obj = self.test_rest_request(f"/txspendingprevout/{base_txid}-{base_vout}")
+        assert_equal(len(json_obj), 1)
+        assert_equal(json_obj[0]['txid'], base_txid)
+        assert_equal(json_obj[0]['vout'], base_vout)
+        assert_equal(json_obj[0]['spendingtxid'], spending_txid)
+
+        # Test with unspent output - should not have spendingtxid
+        utxo_unspent = self.wallet.get_utxo()
+        json_obj = self.test_rest_request(f"/txspendingprevout/{utxo_unspent['txid']}-{utxo_unspent['vout']}")
+        assert_equal(len(json_obj), 1)
+        assert_equal(json_obj[0]['txid'], utxo_unspent['txid'])
+        assert_equal(json_obj[0]['vout'], utxo_unspent['vout'])
+        assert 'spendingtxid' not in json_obj[0]
+
+        # Test with multiple outpoints
+        json_obj = self.test_rest_request(f"/txspendingprevout/{base_txid}-{base_vout}/{utxo_unspent['txid']}-{utxo_unspent['vout']}")
+        assert_equal(len(json_obj), 2)
+        # First output is spent
+        assert_equal(json_obj[0]['txid'], base_txid)
+        assert_equal(json_obj[0]['vout'], base_vout)
+        assert_equal(json_obj[0]['spendingtxid'], spending_txid)
+        # Second output is unspent
+        assert_equal(json_obj[1]['txid'], utxo_unspent['txid'])
+        assert_equal(json_obj[1]['vout'], utxo_unspent['vout'])
+        assert 'spendingtxid' not in json_obj[1]
+
+        # Test with invalid outpoint format
+        resp = self.test_rest_request(f"/txspendingprevout/{INVALID_PARAM}", ret_type=RetType.OBJ, status=400)
+        assert_equal(resp.read().decode('utf-8').strip(), 'Parse error')
+
+        # Test with empty request
+        resp = self.test_rest_request("/txspendingprevout/", ret_type=RetType.OBJ, status=400)
+        assert_equal(resp.read().decode('utf-8').strip(), 'Error: empty request')
+
+        # Mine the transactions to clean up mempool
+        self.generate(self.nodes[0], 1)
+
         self.log.info("Test the /chaininfo URI")
 
         bb_hash = self.nodes[0].getbestblockhash()
