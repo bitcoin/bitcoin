@@ -1,0 +1,38 @@
+From 7f8f0478457fb8588331460834d62c14d7726c18 Mon Sep 17 00:00:00 2001
+From: Mara van der Laan <126646+laanwj@users.noreply.github.com>
+Date: Mon, 8 Dec 2025 13:30:42 +0100
+Subject: [PATCH] Revert builtin_unreachable introduced in commit
+ 1d82fc2e6824bf83159389729c31a942f7b91b04.
+
+For some reason, these make the build non-deterministic between
+x86_64 and other platforms for mingw32-w64 target. So revert that part
+of the patch.
+---
+ libstdc++-v3/include/bits/vector.tcc | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/libstdc++-v3/include/bits/vector.tcc b/libstdc++-v3/include/bits/vector.tcc
+index c59c15beacd939d82cc33ac8a2bd9694cb2a2f15..e03d21a0aafa5de2ebb042869ab0d0e577c5641a 100644
+--- a/libstdc++-v3/include/bits/vector.tcc
++++ b/libstdc++-v3/include/bits/vector.tcc
+@@ -459,8 +459,6 @@ _GLIBCXX_BEGIN_NAMESPACE_CONTAINER
+ #endif
+     {
+       const size_type __len = _M_check_len(1u, "vector::_M_realloc_insert");
+-      if (__len <= 0)
+-	__builtin_unreachable ();
+       pointer __old_start = this->_M_impl._M_start;
+       pointer __old_finish = this->_M_impl._M_finish;
+       const size_type __elems_before = __position - begin();
+@@ -588,8 +586,6 @@ _GLIBCXX_BEGIN_NAMESPACE_CONTAINER
+ #endif
+     {
+       const size_type __len = _M_check_len(1u, "vector::_M_realloc_append");
+-      if (__len <= 0)
+-	__builtin_unreachable ();
+       pointer __old_start = this->_M_impl._M_start;
+       pointer __old_finish = this->_M_impl._M_finish;
+       const size_type __elems = end() - begin();
+-- 
+2.47.3
+
