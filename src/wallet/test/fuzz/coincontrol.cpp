@@ -99,6 +99,46 @@ FUZZ_TARGET(coincontrol, .init = initialize_coincontrol)
                 const bool is_selected = coin_control.IsSelected(out_point);
                 assert(!coin_control.GetInputWeight(out_point) || is_selected);
                 assert(!coin_control.GetSequence(out_point) || is_selected);
+            },
+            [&] {
+                const auto scripts = coin_control.GetScripts(out_point);
+                assert(coin_control.IsSelected(out_point) || (!scripts.first && !scripts.second));
+            },
+            [&] {
+                assert(coin_control.HasSelectedOrder() || !coin_control.GetSelectionPos(out_point));
+            },
+            [&] {
+                assert(!coin_control.GetSelectionPos(out_point) || coin_control.IsSelected(out_point));
+            },
+            [&] {
+                auto& input = coin_control.Select(out_point);
+                uint32_t sequence{fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
+                input.SetSequence(sequence);
+                assert(input.GetSequence() == sequence);
+                assert(coin_control.GetSequence(out_point) == sequence);
+            },
+            [&] {
+                auto& input = coin_control.Select(out_point);
+                const CScript script{ConsumeScript(fuzzed_data_provider)};
+                input.SetScriptSig(script);
+                assert(input.HasScripts());
+                assert(input.GetScripts().first == script);
+                assert(coin_control.GetScripts(out_point).first == script);
+            },
+            [&] {
+                auto& input = coin_control.Select(out_point);
+                const CScriptWitness script_wit{ConsumeScriptWitness(fuzzed_data_provider)};
+                input.SetScriptWitness(script_wit);
+                assert(input.HasScripts());
+                assert(input.GetScripts().second->stack == script_wit.stack);
+                assert(coin_control.GetScripts(out_point).second->stack == script_wit.stack);
+            },
+            [&] {
+                auto& input = coin_control.Select(out_point);
+                unsigned int pos{fuzzed_data_provider.ConsumeIntegral<unsigned int>()};
+                input.SetPosition(pos);
+                assert(input.GetPosition() == pos);
+                assert(coin_control.GetSelectionPos(out_point) == pos);
             });
     }
 }
