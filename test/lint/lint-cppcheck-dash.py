@@ -15,7 +15,7 @@ import sys
 
 os.environ['LC_ALL'] = 'C'
 
-ENABLED_CHECKS = (
+ALWAYS_ENABLED_WARNINGS = (
     "Class '.*' has a constructor with 1 argument that is not explicit.",
     "Struct '.*' has a constructor with 1 argument that is not explicit.",
     "Function parameter '.*' should be passed by const reference.",
@@ -33,26 +33,13 @@ ENABLED_CHECKS = (
     # ".*",
 )
 
-IGNORED_WARNINGS = (
-    "src/bls/bls.h:.* Struct 'CBLSIdImplicit' has a constructor with 1 argument that is not explicit.",
-    "src/rpc/masternode.cpp:.*:21: warning: Consider using std::copy algorithm instead of a raw loop.",  # UniValue doesn't support std::copy
-    "src/cachemultimap.h:.*: warning: Variable 'mapIt' can be declared as reference to const",
-    "src/evo/simplifiedmns.cpp:.*:20: warning: Consider using std::copy algorithm instead of a raw loop.",
-    "src/llmq/commitment.cpp.* warning: Consider using std::all_of or std::none_of algorithm instead of a raw loop. [useStlAlgorithm]",
-    "src/rpc/.*cpp:.*: note: Function pointer used here.",
-    "src/masternode/sync.cpp:.*: warning: Variable 'pnode' can be declared as pointer to const [constVariableReference]",
-    "src/wallet/bip39.cpp.*: warning: The scope of the variable 'ssCurrentWord' can be reduced. [variableScope]",
-    "src/.*:.*: warning: Local variable '_' shadows outer function [shadowFunction]",
-
+SUPPRESSED_WARNINGS = (
     "src/stacktraces.cpp:.*: .*: Parameter 'info' can be declared as pointer to const",
     "src/stacktraces.cpp:.*: note: You might need to cast the function pointer here",
 
-    "[note|warning]: Return value 'state.Invalid(.*)' is always false",
-    "note: Calling function 'Invalid' returns 0",
-    "note: Shadow variable",
-
-    # General catchall, for some reason any value named 'hash' is viewed as never used.
-    "Variable 'hash' is assigned a value that is never used.",
+    # current version of cppcheck fails with this error if exhaustive level is used
+    # TODO: remove with a newer version
+    "warning: Internal error: Child process crashed with signal 6",
 
     # The following can be useful to ignore when the catch all is used
     # "Consider performing initialization in initialization list.",
@@ -85,8 +72,8 @@ def main():
     files_output = subprocess.check_output(['git', 'ls-files', '--'] + patterns, universal_newlines=True, encoding="utf8")
     files = [f.strip() for f in files_output.splitlines() if f.strip()]
 
-    enabled_regexp = '|'.join(ENABLED_CHECKS)
-    ignored_regexp = '|'.join(IGNORED_WARNINGS)
+    always_enabled_regexp = '|'.join(ALWAYS_ENABLED_WARNINGS)
+    suppressed_regexp = '|'.join(SUPPRESSED_WARNINGS)
     files_regexp = '|'.join(re.escape(f) for f in files)
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -107,6 +94,7 @@ def main():
         '--language=c++',
         '--std=c++20',
         '--template=gcc',
+        '--check-level=exhaustive',
         '-D__cplusplus',
         '-DENABLE_WALLET',
         '-DCLIENT_VERSION_BUILD',
@@ -130,14 +118,16 @@ def main():
 
     unique_sorted_lines = sorted(set(dependencies_output.stdout.splitlines()))
     for line in unique_sorted_lines:
-        if re.search(enabled_regexp, line) and not re.search(ignored_regexp, line) and re.search(files_regexp, line):
+        if not re.search(files_regexp, line):
+            continue
+        if re.search(always_enabled_regexp, line) or not re.search(suppressed_regexp, line):
             warnings.append(line)
 
     if warnings:
         print('\n'.join(warnings))
         print()
         print("Advice not applicable in this specific case? Add an exception by updating")
-        print(f"IGNORED_WARNINGS in {__file__}")
+        print(f"SUPPRESSED_WARNINGS in {__file__}")
         # Uncomment to enforce the linter / comment to run locally
         exit_code = 1
 
