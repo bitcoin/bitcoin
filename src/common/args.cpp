@@ -273,82 +273,144 @@ bool ArgsManager::ProcessOptionKey(std::string& key,
     return HandleKnownOption(keyinfo, val, *flags, error);
 }
 
-bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::string& error)
+bool ArgsManager::ShouldSkipApplePlatformArg(const std::string& key)
+{
+#ifdef __APPLE__
+    // At the first time when a user gets the "App downloaded from the
+    // internet" warning, and clicks the Open button, macOS passes
+    // a unique process serial number (PSN) as -psn_... command-line
+    // argument, which we filter out.
+    if (key.starts_with("-psn_")) return true;
+#endif
+    return false;
+}
+
+void ArgsManager::SplitKeyValue(std::string& key, std::optional<std::string>& val)
+{
+    size_t eq = key.find('=');
+    if (eq == std::string::npos) return;
+
+    val = key.substr(eq + 1);
+    key.erase(eq);
+}
+
+bool ArgsManager::HandleGlobalOption(std::string& key,
+                                     std::optional<std::string>& val,
+                                     std::string& error)
+{
+    return ProcessOptionKey(key, val, error, /*found_after_non_option=*/false);
+}
+
+// ---------------- command handling ------------------
+
+bool ArgsManager::HandleCommandOption(const char* const arg, std::string& error)
+{
+    std::string key(arg);
+    std::optional<std::string> val;
+
+    SplitKeyValue(key, val);
+
+    return ProcessOptionKey(key, val, error, /*found_after_non_option=*/true);
+}
+
+bool ArgsManager::HandleCommand(const char* const argv[], int& i, int argc, std::string& error)
 {
     LOCK(cs_args);
-    m_settings.command_line_options.clear();
 
-    for (int i = 1; i < argc; i++) {
-        std::string key(argv[i]);
+    // argv[i] is the command
+    std::string command(argv[i]);
 
-#ifdef __APPLE__
-        // At the first time when a user gets the "App downloaded from the
-        // internet" warning, and clicks the Open button, macOS passes
-        // a unique process serial number (PSN) as -psn_... command-line
-        // argument, which we filter out.
-        if (key.starts_with("-psn_")) continue;
-#endif
-
-        if (key == "-") break; //bitcoin-tx using stdin
-        std::optional<std::string> val;
-        size_t is_index = key.find('=');
-        if (is_index != std::string::npos) {
-            val = key.substr(is_index + 1);
-            key.erase(is_index);
-        }
-#ifdef WIN32
-        key = ToLower(key);
-        if (key[0] == '/')
-            key[0] = '-';
-#endif
-
-        if (key[0] != '-') {
-            if (!m_accept_any_command && m_command.empty()) {
-                // The first non-dash arg is a registered command
-                std::optional<unsigned int> flags = GetArgFlags(key);
-                if (!flags || !(*flags & ArgsManager::COMMAND)) {
-                    error = strprintf("Invalid command '%s'", argv[i]);
-                    return false;
-                }
-            }
-            m_command.push_back(key);
-            while (++i < argc) {
-                // The remaining args are command args
-                if (argv[i][0] == '-') {
-                    // except it starts with dash "-" then will check if it's a valid option
-                    // if not it will be passed to the command
-                    key = argv[i];
-                    val.reset();
-                    is_index = key.find('=');
-                    if (is_index != std::string::npos) {
-                        val = key.substr(is_index + 1);
-                        key.erase(is_index);
-                    }
-                    if (!ProcessOptionKey(key, val, error, true)) {
-                        return false;
-                    }
-                } else {
-                    m_command.emplace_back(argv[i]);
-                }
-            }
-            break;
-        }
-
-        if (!ProcessOptionKey(key, val, error)) {
+    // Validate command unless "accept-any" is enabled
+    if (!m_accept_any_command && m_command.empty()) {
+        auto flags = GetArgFlags(command);
+        if (!flags || !(*flags & ArgsManager::COMMAND)) {
+            error = strprintf("Invalid command '%s'", argv[i]);
             return false;
         }
     }
 
-    // we do not allow -includeconf from command line, only -noincludeconf
-    if (auto* includes = common::FindKey(m_settings.command_line_options, "includeconf")) {
-        const common::SettingsSpan values{*includes};
-        // Range may be empty if -noincludeconf was passed
-        if (!values.empty()) {
-            error = "-includeconf cannot be used from commandline; -includeconf=" + values.begin()->write();
-            return false; // pick first value as example
+    m_command.push_back(command);
+
+    // Now consume all remaining items as command arguments or command options
+    while (++i < argc) {
+        const char* arg = argv[i];
+
+        if (arg[0] == '-') {
+            // dash → might be a command option
+            if (!HandleCommandOption(arg, error)) {
+                return false;
+            }
+        } else {
+            // positional arg to the command
+            m_command.emplace_back(arg);
         }
     }
+
     return true;
+}
+
+// ---------------- includeconf validation ------------------
+
+bool ArgsManager::HandleIncludeConfError(std::string& error)
+{
+    LOCK(cs_args);
+
+    // we do not allow -includeconf from command line, only -noincludeconf
+    auto* includes = common::FindKey(m_settings.command_line_options, "includeconf");
+    if (!includes) return true;
+
+    // Range may be empty if -noincludeconf was passed
+    const common::SettingsSpan values{*includes};
+    if (values.empty()) return true;
+
+    error = "-includeconf cannot be used from commandline; -includeconf=" + values.begin()->write();
+    return false;
+}
+
+// ---------------- main ParseParameters ------------------
+
+bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::string& error)
+{
+    LOCK(cs_args);
+    m_settings.command_line_options.clear();
+    m_command.clear();
+
+    for (int i = 1; i < argc; ++i) {
+        std::string key(argv[i]);
+
+        if (ShouldSkipApplePlatformArg(key)) continue;
+
+        if (key == "-") break; // bitcoin-tx stdin special case
+
+        std::optional<std::string> val;
+        SplitKeyValue(key, val);
+
+#ifdef WIN32
+        key = ToLower(key);
+        if (!key.empty() && key[0] == '/')
+            key[0] = '-';
+#endif
+
+        if (key.empty()) continue;
+
+        // -----------------------------------------
+        // Case 1: Found a command (first non-dash)
+        // -----------------------------------------
+        if (key[0] != '-') {
+            return HandleCommand(argv, i, argc, error)
+                       ? HandleIncludeConfError(error)
+                       : false;
+        }
+
+        // -----------------------------------------
+        // Case 2: Global option
+        // -----------------------------------------
+        if (!HandleGlobalOption(key, val, error)) {
+            return false;
+        }
+    }
+
+    return HandleIncludeConfError(error);
 }
 
 std::optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) const

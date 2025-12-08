@@ -472,6 +472,23 @@ private:
         bool found_after_non_option);
 
     void NormalizeKey(std::string& key, bool& double_dash);
+
+    bool ShouldSkipApplePlatformArg(const std::string& key);
+
+    void SplitKeyValue(std::string& key, std::optional<std::string>& val);
+
+    bool HandleGlobalOption(std::string& key,
+                            std::optional<std::string>& val,
+                            std::string& error);
+
+    bool HandleCommandOption(const char* const arg, std::string& error);
+
+    bool HandleCommand(const char* const argv[],
+                       int& i,
+                       int argc,
+                       std::string& error);
+
+    bool HandleIncludeConfError(std::string& error);
 };
 
 extern ArgsManager gArgs;
