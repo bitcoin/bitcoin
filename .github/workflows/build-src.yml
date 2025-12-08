@@ -15,6 +15,15 @@ on:
         description: "Key needed to access cached depends"
         required: true
         type: string
+      depends-host:
+        description: "Host triplet from depends build"
+        required: true
+        type: string
+      depends-dep-opts:
+        description: "DEP_OPTS used to build depends"
+        required: false
+        type: string
+        default: ""
     outputs:
       key:
         description: "Key needed for restoring artifacts bundle"
@@ -59,11 +68,16 @@ jobs:
       - name: Restore depends cache
         uses: actions/cache/restore@v4
         with:
-          path: |
-            depends/built
-            depends/${{ steps.setup.outputs.HOST }}
+          path: depends/built/${{ inputs.depends-host }}
           key: ${{ inputs.depends-key }}
           fail-on-cache-miss: true
+
+      - name: Rebuild depends prefix
+        run: |
+          # Use the HOST and DEP_OPTS from the depends build, not this build-target
+          # This ensures the build_id matches the cached packages
+          make -j$(nproc) -C depends HOST="${{ inputs.depends-host }}" ${{ inputs.depends-dep-opts }}
+        shell: bash
 
       - name: Manage ccache
         uses: actions/cache@v4
