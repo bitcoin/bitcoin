@@ -226,7 +226,7 @@ static bool AppInit(NodeContext& node)
                 if (token) { // Success
                     exit(EXIT_SUCCESS);
                 } else { // fRet = false or token read error (premature exit).
-                    tfm::format(std::cerr, "Error during initialization - check %s for details\n", fs::PathToString(LogInstance().m_file_path.filename()));
+                    tfm::format(std::cerr, "Error during initialization - check %s for details\n", fs::PathToString(LogInstance().GetFilePath().filename()));
                     exit(EXIT_FAILURE);
                 }
             }

@@ -14,6 +14,7 @@
 #include <util/fs_helpers.h>
 #include <util/string.h>
 
+#include <atomic>
 #include <chrono>
 #include <fstream>
 #include <future>
@@ -41,7 +42,7 @@ static void ResetLogger()
 static std::vector<std::string> ReadDebugLogLines()
 {
     std::vector<std::string> lines;
-    std::ifstream ifs{LogInstance().m_file_path.std_path()};
+    std::ifstream ifs{LogInstance().GetFilePath().std_path()};
     for (std::string line; std::getline(ifs, line);) {
         lines.push_back(std::move(line));
     }
@@ -59,7 +60,7 @@ struct LogSetup : public BasicTestingSetup {
     BCLog::CategoryMask prev_category_mask;
     BCLog::CategoryMask prev_category_trace_mask;
 
-    LogSetup() : prev_log_path{LogInstance().m_file_path},
+    LogSetup() : prev_log_path{LogInstance().GetFilePath()},
                  tmp_log_path{m_args.GetDataDirBase() / "tmp_debug.log"},
                  prev_reopen_file{LogInstance().m_reopen_file},
                  prev_print_to_file{LogInstance().m_print_to_file},
@@ -69,7 +70,7 @@ struct LogSetup : public BasicTestingSetup {
                  prev_category_mask{LogInstance().GetCategoryMask()},
                  prev_category_trace_mask{LogInstance().GetCategoryTraceMask()}
     {
-        LogInstance().m_file_path = tmp_log_path;
+        LogInstance().SetFilePath(tmp_log_path);
         LogInstance().m_reopen_file = true;
         LogInstance().m_print_to_file = true;
         LogInstance().m_log_timestamps = false;
@@ -83,7 +84,7 @@ struct LogSetup : public BasicTestingSetup {
 
     ~LogSetup()
     {
-        LogInstance().m_file_path = prev_log_path;
+        LogInstance().SetFilePath(prev_log_path);
         LogInfo("Sentinel log to reopen log file");
         LogInstance().m_print_to_file = prev_print_to_file;
         LogInstance().m_reopen_file = prev_reopen_file;
@@ -382,7 +383,7 @@ void TestLogFromLocation(Location location, const std::string& message,
     using Status = BCLog::LogRateLimiter::Status;
     if (!suppressions_active) assert(status == Status::UNSUPPRESSED); // developer error
 
-    std::ofstream ofs(LogInstance().m_file_path.std_path(), std::ios::out | std::ios::trunc); // clear debug log
+    std::ofstream ofs(LogInstance().GetFilePath().std_path(), std::ios::out | std::ios::trunc); // clear debug log
     LogFromLocation(location, message);
     auto log_lines{ReadDebugLogLines()};
     BOOST_TEST_INFO_SCOPE(log_lines.size() << " log_lines read: \n" << util::Join(log_lines, "\n"));

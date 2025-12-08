@@ -17,6 +17,7 @@
 #include <util/translation.h>
 
 #include <algorithm>
+#include <atomic>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -45,8 +46,8 @@ void AddLoggingArgs(ArgsManager& argsman)
 
 void SetLoggingOptions(const ArgsManager& args)
 {
+    LogInstance().SetFilePath(AbsPathForConfigVal(args, args.GetPathArg("-debuglogfile", DEFAULT_DEBUGLOGFILE)));
     LogInstance().m_print_to_file = !args.IsArgNegated("-debuglogfile");
-    LogInstance().m_file_path = AbsPathForConfigVal(args, args.GetPathArg("-debuglogfile", DEFAULT_DEBUGLOGFILE));
     LogInstance().m_print_to_console = args.GetBoolArg("-printtoconsole", !args.GetBoolArg("-daemon", false));
     LogInstance().m_log_timestamps = args.GetBoolArg("-logtimestamps", DEFAULT_LOGTIMESTAMPS);
     LogInstance().m_log_time_micros = args.GetBoolArg("-logtimemicros", DEFAULT_LOGTIMEMICROS);
@@ -107,7 +108,7 @@ bool StartLogging(const ArgsManager& args)
     }
     if (!LogInstance().StartLogging()) {
             return InitError(Untranslated(strprintf("Could not open debug log file %s",
-                fs::PathToString(LogInstance().m_file_path))));
+                fs::PathToString(LogInstance().GetFilePath()))));
     }
 
     if (!LogInstance().m_log_timestamps) {
