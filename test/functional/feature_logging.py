@@ -90,14 +90,23 @@ class LoggingTest(BitcoinTestFramework):
             '-nodebug'
         ]
 
+        def is_excluded(logging, cat):
+            return cat in logging['excluded'] and cat not in logging['debug'] and cat not in logging['trace']
+        def is_debug(logging, cat):
+            return cat in logging['debug'] and cat not in logging['excluded'] and cat not in logging['trace']
+        def is_trace(logging, cat):
+            return cat in logging['trace'] and cat not in logging['excluded'] and cat not in logging['debug']
+        def is_absent(logging, cat):
+            return cat not in logging['excluded'] and cat not in logging['debug'] and cat not in logging['trace']
+
         for disable_debug_opt in disable_debug_options:
             # Every category before disable_debug_opt will be ignored, including the invalid 'abc'
             self.restart_node(0, ['-trace=0', '-debug=http', '-debug=abc', disable_debug_opt, '-debug=rpc', '-debug=net'])
             logging = self.nodes[0].logging()
-            assert not logging['http']
-            assert 'abc' not in logging
-            assert logging['rpc']
-            assert logging['net']
+            assert is_excluded(logging, 'http')
+            assert is_absent(logging, 'abc')
+            assert is_debug(logging, 'rpc')
+            assert is_debug(logging, 'net')
 
         self.log.info("Test that -notrace,-trace=0,-trace=none clear previously specified trace options")
         disable_trace_options = [
@@ -110,10 +119,17 @@ class LoggingTest(BitcoinTestFramework):
             # Every category before disable_trace_opt will be ignored, including the invalid 'abc'
             self.restart_node(0, ['-debug=0', '-trace=http', '-trace=abc', disable_trace_opt, '-trace=rpc', '-trace=net'])
             logging = self.nodes[0].logging()
-            assert not logging['http']
-            assert 'abc' not in logging
-            assert logging['rpc']
-            assert logging['net']
+            assert is_excluded(logging, 'http')
+            assert is_absent(logging, 'abc')
+            assert is_trace(logging, 'rpc')
+            assert is_trace(logging, 'net')
+
+            # Check that log values can be changed
+            logging = self.nodes[0].logging(["mempool"], ["net"], ["http"])
+            assert is_excluded(logging, 'net')
+            assert is_debug(logging, 'mempool')
+            assert is_trace(logging, 'http')
+            assert is_trace(logging, 'rpc')
 
         self.log.info("Test -logips formatting in net logs")
         self.restart_node(0, ['-debug=net', '-logips=1'])
