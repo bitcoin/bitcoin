@@ -1987,7 +1987,7 @@ RPCHelpMan listdescriptors()
         },
         RPCResult{RPCResult::Type::OBJ, "", "", {
             {RPCResult::Type::STR, "wallet_name", "Name of wallet this operation was performed on"},
-            {RPCResult::Type::ARR, "descriptors", "Array of descriptor objects",
+            {RPCResult::Type::ARR, "descriptors", "Array of descriptor objects (sorted by descriptor string representation)",
             {
                 {RPCResult::Type::OBJ, "", "", {
                     {RPCResult::Type::STR, "desc", "Descriptor string representation"},
@@ -2026,51 +2026,85 @@ RPCHelpMan listdescriptors()
 
     LOCK(wallet->cs_wallet);
 
-    UniValue descriptors(UniValue::VARR);
     const auto active_spk_mans = wallet->GetActiveScriptPubKeyMans();
+
+    struct WalletDescInfo {
+        std::string descriptor;
+        uint64_t creation_time;
+        bool active;
+        std::optional<bool> internal;
+        std::optional<std::pair<int64_t,int64_t>> range;
+        int64_t next_index;
+        bool is_coinjoin;
+        SecureString mnemonic;
+        SecureString mnemonic_passphrase;
+    };
+
+    std::vector<WalletDescInfo> wallet_descriptors;
     for (const auto& spk_man : wallet->GetAllScriptPubKeyMans()) {
         const auto desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man);
         if (!desc_spk_man) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Unexpected ScriptPubKey manager type.");
         }
-        UniValue spk(UniValue::VOBJ);
         LOCK(desc_spk_man->cs_desc_man);
         const auto& wallet_descriptor = desc_spk_man->GetWalletDescriptor();
         std::string descriptor;
-
         if (!desc_spk_man->GetDescriptorString(descriptor, priv)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Can't get descriptor string.");
         }
+        SecureString mnemonic;
+        SecureString mnemonic_passphrase;
         if (priv) {
-            SecureString mnemonic;
-            SecureString mnemonic_passphrase;
-            if (desc_spk_man->GetMnemonicString(mnemonic, mnemonic_passphrase) && !mnemonic.empty()) {
-                spk.pushKV("mnemonic", mnemonic);
-                spk.pushKV("mnemonicpassphrase", mnemonic_passphrase);
+            if (!desc_spk_man->GetMnemonicString(mnemonic, mnemonic_passphrase)) {
+                mnemonic.clear();
+                mnemonic_passphrase.clear();
             }
         }
-        spk.pushKV("desc", descriptor);
-        spk.pushKV("timestamp", wallet_descriptor.creation_time);
-        const bool active = active_spk_mans.count(desc_spk_man) != 0;
-        spk.pushKV("active", active);
         const auto& type = wallet_descriptor.descriptor->GetOutputType();
-        if (active && type != std::nullopt) {
-            spk.pushKV("internal", wallet->GetScriptPubKeyMan(true) == desc_spk_man);
+        std::string match = strprintf("/%d'/%s'/4'/0'", BIP32_PURPOSE_FEATURE, Params().ExtCoinType());
+        bool is_cj = type != std::nullopt && descriptor.find(match) != std::string::npos;
+
+        const bool is_range = wallet_descriptor.descriptor->IsRange();
+        wallet_descriptors.push_back({
+            descriptor,
+            wallet_descriptor.creation_time,
+            active_spk_mans.count(desc_spk_man) != 0,
+            wallet->IsInternalScriptPubKeyMan(desc_spk_man),
+            is_range ? std::optional(std::make_pair(wallet_descriptor.range_start, wallet_descriptor.range_end)) : std::nullopt,
+            wallet_descriptor.next_index,
+            is_cj,
+            mnemonic,
+            mnemonic_passphrase,
+        });
+    }
+
+    std::sort(wallet_descriptors.begin(), wallet_descriptors.end(), [](const auto& a, const auto& b) {
+        return a.descriptor < b.descriptor;
+    });
+
+    UniValue descriptors(UniValue::VARR);
+    for (const WalletDescInfo& info : wallet_descriptors) {
+        UniValue spk(UniValue::VOBJ);
+        spk.pushKV("desc", info.descriptor);
+        if (!info.mnemonic.empty()) {
+            spk.pushKV("mnemonic", info.mnemonic);
+            spk.pushKV("mnemonicpassphrase", info.mnemonic_passphrase);
         }
-        if (type != std::nullopt) {
-            std::string match = strprintf("/%d'/%s'/4'/0'", BIP32_PURPOSE_FEATURE, Params().ExtCoinType());
-            bool is_cj = descriptor.find(match) != std::string::npos;
-            if (is_cj) {
-                spk.pushKV("coinjoin", is_cj);
-            }
+        spk.pushKV("timestamp", info.creation_time);
+        spk.pushKV("active", info.active);
+        if (info.internal.has_value()) {
+            spk.pushKV("internal", info.internal.value());
         }
-        if (wallet_descriptor.descriptor->IsRange()) {
+        if (info.range.has_value()) {
             UniValue range(UniValue::VARR);
-            range.push_back(wallet_descriptor.range_start);
-            range.push_back(wallet_descriptor.range_end - 1);
+            range.push_back(info.range->first);
+            range.push_back(info.range->second - 1);
+            if (info.is_coinjoin) {
+                spk.pushKV("coinjoin", info.is_coinjoin);
+            }
             spk.pushKV("range", range);
-            spk.pushKV("next", wallet_descriptor.next_index);
-            spk.pushKV("next_index", wallet_descriptor.next_index);
+            spk.pushKV("next", info.next_index);
+            spk.pushKV("next_index", info.next_index);
         }
         descriptors.push_back(spk);
     }
