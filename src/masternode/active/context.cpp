@@ -29,9 +29,8 @@ ActiveContext::ActiveContext(CCoinJoinServer& cj_server, CConnman& connman, CDet
     m_cj_server(cj_server),
     gov_signer{std::make_unique<GovernanceSigner>(connman, dmnman, govman, mn_activeman, chainman, mn_sync)},
     dkgdbgman{std::make_unique<llmq::CDKGDebugManager>()},
-    qdkgsman{std::make_unique<llmq::CDKGSessionManager>(*llmq_ctx.bls_worker, dmnman, *dkgdbgman, mn_metaman,
-                                                        *llmq_ctx.quorum_block_processor, *llmq_ctx.qsnapman,
-                                                        &mn_activeman, chainman, sporkman, db_params, quorums_watch)},
+    qdkgsman{std::make_unique<llmq::CDKGSessionManager>(dmnman, *llmq_ctx.qsnapman, chainman, sporkman, db_params,
+                                                        quorums_watch)},
     shareman{std::make_unique<llmq::CSigSharesManager>(connman, chainman.ActiveChainstate(), *llmq_ctx.sigman, peerman,
                                                        mn_activeman, *llmq_ctx.qman, sporkman)},
     ehf_sighandler{
@@ -45,6 +44,13 @@ ActiveContext::ActiveContext(CCoinJoinServer& cj_server, CConnman& connman, CDet
                                                                *llmq_ctx.isman, *llmq_ctx.sigman, *shareman,
                                                                *llmq_ctx.qman, sporkman, mempool, mn_sync)}
 {
+    qdkgsman->InitializeHandlers(
+        [&](const Consensus::LLMQParams& llmq_params, int quorum_idx) -> std::unique_ptr<llmq::CDKGSessionHandler> {
+            return std::make_unique<llmq::CDKGSessionHandler>(*llmq_ctx.bls_worker, dmnman, *dkgdbgman, *qdkgsman,
+                                                              mn_metaman, *llmq_ctx.quorum_block_processor,
+                                                              *llmq_ctx.qsnapman, &mn_activeman, chainman, sporkman,
+                                                              llmq_params, quorums_watch, quorum_idx);
+        });
     m_llmq_ctx.clhandler->ConnectSigner(cl_signer.get());
     m_llmq_ctx.isman->ConnectSigner(is_signer.get());
     m_llmq_ctx.qman->ConnectManagers(qman_handler.get(), qdkgsman.get());

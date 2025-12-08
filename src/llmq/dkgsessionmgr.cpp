@@ -29,33 +29,16 @@ static const std::string DB_VVEC = "qdkg_V";
 static const std::string DB_SKCONTRIB = "qdkg_S";
 static const std::string DB_ENC_CONTRIB = "qdkg_E";
 
-CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman,
-                                       CDKGDebugManager& _dkgDebugManager, CMasternodeMetaMan& mn_metaman,
-                                       CQuorumBlockProcessor& _quorumBlockProcessor, CQuorumSnapshotManager& qsnapman,
-                                       const CActiveMasternodeManager* const mn_activeman,
+CDKGSessionManager::CDKGSessionManager(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
                                        const ChainstateManager& chainman, const CSporkManager& sporkman,
                                        const util::DbWrapperParams& db_params, bool quorums_watch) :
-    blsWorker{_blsWorker},
     m_dmnman{dmnman},
-    dkgDebugManager{_dkgDebugManager},
-    quorumBlockProcessor{_quorumBlockProcessor},
     m_qsnapman{qsnapman},
     m_chainman{chainman},
-    spork_manager{sporkman},
+    m_sporkman{sporkman},
     m_quorums_watch{quorums_watch},
     db{util::MakeDbWrapper({db_params.path / "llmq" / "dkgdb", db_params.memory, db_params.wipe, /*cache_size=*/1 << 20})}
 {
-    const Consensus::Params& consensus_params = Params().GetConsensus();
-    for (const auto& params : consensus_params.llmqs) {
-        auto session_count = (params.useRotation) ? params.signingActiveQuorumCount : 1;
-        for (const auto i : irange::range(session_count)) {
-            dkgSessionHandlers.emplace(std::piecewise_construct, std::forward_as_tuple(params.type, i),
-                                       std::forward_as_tuple(std::make_unique<CDKGSessionHandler>(
-                                           blsWorker, m_dmnman, dkgDebugManager, *this, mn_metaman,
-                                           quorumBlockProcessor, m_qsnapman, mn_activeman, m_chainman, spork_manager,
-                                           params, m_quorums_watch, i)));
-        }
-    }
 }
 
 CDKGSessionManager::~CDKGSessionManager() = default;
@@ -82,7 +65,7 @@ void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
         return;
     if (!DeploymentDIP0003Enforced(pindexNew->nHeight, Params().GetConsensus()))
         return;
-    if (!IsQuorumDKGEnabled(spork_manager))
+    if (!IsQuorumDKGEnabled(m_sporkman))
         return;
 
     for (auto& [_, dkgType] : dkgSessionHandlers) {
@@ -96,7 +79,7 @@ MessageProcessingResult CDKGSessionManager::ProcessMessage(CNode& pfrom, bool is
     static Mutex cs_indexedQuorumsCache;
     static std::map<Consensus::LLMQType, Uint256LruHashMap<int>> indexedQuorumsCache GUARDED_BY(cs_indexedQuorumsCache);
 
-    if (!IsQuorumDKGEnabled(spork_manager))
+    if (!IsQuorumDKGEnabled(m_sporkman))
         return {};
 
     if (msg_type != NetMsgType::QCONTRIB
@@ -187,7 +170,7 @@ MessageProcessingResult CDKGSessionManager::ProcessMessage(CNode& pfrom, bool is
 
 bool CDKGSessionManager::AlreadyHave(const CInv& inv) const
 {
-    if (!IsQuorumDKGEnabled(spork_manager))
+    if (!IsQuorumDKGEnabled(m_sporkman))
         return false;
 
     for (const auto& [_, dkgType] : dkgSessionHandlers) {
@@ -203,7 +186,7 @@ bool CDKGSessionManager::AlreadyHave(const CInv& inv) const
 
 bool CDKGSessionManager::GetContribution(const uint256& hash, CDKGContribution& ret) const
 {
-    if (!IsQuorumDKGEnabled(spork_manager))
+    if (!IsQuorumDKGEnabled(m_sporkman))
         return false;
 
     for (const auto& [_, dkgType] : dkgSessionHandlers) {
@@ -222,7 +205,7 @@ bool CDKGSessionManager::GetContribution(const uint256& hash, CDKGContribution& 
 
 bool CDKGSessionManager::GetComplaint(const uint256& hash, CDKGComplaint& ret) const
 {
-    if (!IsQuorumDKGEnabled(spork_manager))
+    if (!IsQuorumDKGEnabled(m_sporkman))
         return false;
 
     for (const auto& [_, dkgType] : dkgSessionHandlers) {
@@ -241,7 +224,7 @@ bool CDKGSessionManager::GetComplaint(const uint256& hash, CDKGComplaint& ret) c
 
 bool CDKGSessionManager::GetJustification(const uint256& hash, CDKGJustification& ret) const
 {
-    if (!IsQuorumDKGEnabled(spork_manager))
+    if (!IsQuorumDKGEnabled(m_sporkman))
         return false;
 
     for (const auto& [_, dkgType] : dkgSessionHandlers) {
@@ -260,7 +243,7 @@ bool CDKGSessionManager::GetJustification(const uint256& hash, CDKGJustification
 
 bool CDKGSessionManager::GetPrematureCommitment(const uint256& hash, CDKGPrematureCommitment& ret) const
 {
-    if (!IsQuorumDKGEnabled(spork_manager))
+    if (!IsQuorumDKGEnabled(m_sporkman))
         return false;
 
     for (const auto& [_, dkgType] : dkgSessionHandlers) {
