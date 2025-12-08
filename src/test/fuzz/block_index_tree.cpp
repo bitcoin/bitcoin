@@ -50,6 +50,8 @@ FUZZ_TARGET(block_index_tree, .init = initialize_block_index_tree)
     blocks.push_back(genesis);
     bool abort_run{false};
 
+    std::vector<CBlockIndex*> pruned_blocks;
+
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 1000)
     {
         if (abort_run) break;
@@ -171,7 +173,24 @@ FUZZ_TARGET(block_index_tree, .init = initialize_block_index_tree)
                             blockman.m_blocks_unlinked.erase(_it);
                         }
                     }
+                    pruned_blocks.push_back(prune_block);
                 }
+            },
+            [&] {
+                // Download a previously pruned block
+                LOCK(cs_main);
+                size_t num_pruned = pruned_blocks.size();
+                if (num_pruned == 0) return;
+                size_t i = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, num_pruned - 1);
+                CBlockIndex* index = pruned_blocks[i];
+                assert(!(index->nStatus & BLOCK_HAVE_DATA));
+                CBlock block;
+                block.vtx = std::vector<CTransactionRef>(index->nTx); // Set the number of tx to the prior value.
+                FlatFilePos pos(0, fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 1000));
+                chainman.ReceivedBlockTransactions(block, index, pos);
+                assert(index->nStatus & BLOCK_VALID_TRANSACTIONS);
+                assert(index->nStatus & BLOCK_HAVE_DATA);
+                pruned_blocks.erase(pruned_blocks.begin() + i);
             });
     }
     if (!abort_run) {
