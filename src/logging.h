@@ -286,7 +286,6 @@ namespace BCLog {
 
         bool DefaultShrinkDebugFile() const;
     };
-
 } // namespace BCLog
 
 BCLog::Logger& LogInstance();
