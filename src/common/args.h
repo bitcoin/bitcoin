@@ -502,6 +502,23 @@ private:
         bool found_after_non_option) EXCLUSIVE_LOCKS_REQUIRED(cs_args);
 
     void NormalizeKey(std::string& key, bool& double_dash);
+
+    bool ShouldSkipApplePlatformArg(const std::string& key);
+
+    void SplitKeyValue(std::string& key, std::optional<std::string>& val);
+
+    bool HandleGlobalOption(std::string& key,
+                            std::optional<std::string>& val,
+                            std::string& error) EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
+    bool HandleCommandOption(const char* arg, std::string& error) EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
+    bool HandleCommand(const char* const argv[],
+                       int& i,
+                       int argc,
+                       std::string& error) EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
+    bool HandleIncludeConfError(std::string& error) EXCLUSIVE_LOCKS_REQUIRED(cs_args);
 };
 
 extern ArgsManager gArgs;
