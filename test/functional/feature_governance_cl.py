@@ -144,14 +144,16 @@ class DashGovernanceTest (DashTestFramework):
 
         self.log.info("Bump mocktime to trigger governance cleanup")
         for delta, expected in (
-            (5 * 60, ['UpdateCachesAndClean -- Governance Objects:']),  # mark old triggers for deletion
+            (5 * 60, ['CleanAndRemoveTriggers -- Removing trigger object']),  # mark old triggers for deletion
             (10 * 60, ['UpdateCachesAndClean -- Governance Objects: 0']),  # deletion after delay
         ):
             self.mocktime += delta
-            for node in self.nodes:
+            for node in self.nodes[0:5]:
                 with node.assert_debug_log(expected_msgs=expected):
                     node.setmocktime(self.mocktime)
                     node.mockscheduler(delta)
+            self.nodes[5].setmocktime(self.mocktime)
+            self.nodes[5].mockscheduler(delta)
 
         # Confirm in RPC
         for node in self.nodes:
