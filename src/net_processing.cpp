@@ -815,7 +815,7 @@ private:
     const std::unique_ptr<CDeterministicMNManager>& m_dmnman;
     const std::unique_ptr<ActiveContext>& m_active_ctx;
     const std::unique_ptr<LLMQContext>& m_llmq_ctx;
-    [[maybe_unused]] const std::unique_ptr<llmq::ObserverContext>& m_observer_ctx;
+    const std::unique_ptr<llmq::ObserverContext>& m_observer_ctx;
     CMasternodeMetaMan& m_mn_metaman;
     CMasternodeSync& m_mn_sync;
     CGovernanceManager& m_govman;
@@ -2358,7 +2358,8 @@ bool PeerManagerImpl::AlreadyHave(const CInv& inv)
     case MSG_QUORUM_COMPLAINT:
     case MSG_QUORUM_JUSTIFICATION:
     case MSG_QUORUM_PREMATURE_COMMITMENT:
-        return m_llmq_ctx->qdkgsman->AlreadyHave(inv);
+        return (m_observer_ctx && m_observer_ctx->qdkgsman->AlreadyHave(inv))
+               || (m_active_ctx && m_active_ctx->qdkgsman->AlreadyHave(inv));
     case MSG_QUORUM_RECOVERED_SIG:
     // TODO: move it to NetSigning
         return m_llmq_ctx->sigman->AlreadyHave(inv);
@@ -2373,7 +2374,6 @@ bool PeerManagerImpl::AlreadyHave(const CInv& inv)
     // At the end inventories that are handled by NetHandler
     case MSG_DSQ:
         if (m_cj_walletman && m_cj_walletman->hasQueue(inv.hash)) return true;
-
         for (const auto& handler : m_handlers) {
             if (handler->AlreadyHave(inv)) return true;
         }
@@ -2938,7 +2938,8 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
 
         if (!push && (inv.type == MSG_QUORUM_CONTRIB)) {
             llmq::CDKGContribution o;
-            if (m_llmq_ctx->qdkgsman->GetContribution(inv.hash, o)) {
+            if ((m_observer_ctx && m_observer_ctx->qdkgsman->GetContribution(inv.hash, o))
+                || (m_active_ctx && m_active_ctx->qdkgsman->GetContribution(inv.hash, o))) {
                 m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCONTRIB, o));
                 push = true;
             }
@@ -2946,7 +2947,8 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
 
         if (!push && (inv.type == MSG_QUORUM_COMPLAINT)) {
             llmq::CDKGComplaint o;
-            if (m_llmq_ctx->qdkgsman->GetComplaint(inv.hash, o)) {
+            if ((m_observer_ctx && m_observer_ctx->qdkgsman->GetComplaint(inv.hash, o))
+                || (m_active_ctx && m_active_ctx->qdkgsman->GetComplaint(inv.hash, o))) {
                 m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCOMPLAINT, o));
                 push = true;
             }
@@ -2954,7 +2956,8 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
 
         if (!push && (inv.type == MSG_QUORUM_JUSTIFICATION)) {
             llmq::CDKGJustification o;
-            if (m_llmq_ctx->qdkgsman->GetJustification(inv.hash, o)) {
+            if ((m_observer_ctx && m_observer_ctx->qdkgsman->GetJustification(inv.hash, o))
+                || (m_active_ctx && m_active_ctx->qdkgsman->GetJustification(inv.hash, o))) {
                 m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QJUSTIFICATION, o));
                 push = true;
             }
@@ -2962,7 +2965,8 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
 
         if (!push && (inv.type == MSG_QUORUM_PREMATURE_COMMITMENT)) {
             llmq::CDKGPrematureCommitment o;
-            if (m_llmq_ctx->qdkgsman->GetPrematureCommitment(inv.hash, o)) {
+            if ((m_observer_ctx && m_observer_ctx->qdkgsman->GetPrematureCommitment(inv.hash, o))
+                || (m_active_ctx && m_active_ctx->qdkgsman->GetPrematureCommitment(inv.hash, o))) {
                 m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QPCOMMITMENT, o));
                 push = true;
             }
@@ -5456,17 +5460,32 @@ void PeerManagerImpl::ProcessMessage(
 
     if (found)
     {
-        //probably one the extensions
+        // probably one the extensions
         if (m_cj_walletman) {
             PostProcessMessage(m_cj_walletman->processMessage(pfrom, m_chainman.ActiveChainstate(), m_connman, m_mempool, msg_type, vRecv), pfrom.GetId());
         }
         if (m_active_ctx) {
+            assert(is_masternode);
             m_active_ctx->shareman->ProcessMessage(pfrom, msg_type, vRecv);
+            PostProcessMessage(m_active_ctx->qdkgsman->ProcessMessage(pfrom, is_masternode, msg_type, vRecv), pfrom.GetId());
+        }
+        if (m_observer_ctx) {
+            assert(!is_masternode);
+            PostProcessMessage(m_observer_ctx->qdkgsman->ProcessMessage(pfrom, is_masternode, msg_type, vRecv), pfrom.GetId());
+        }
+        if (!m_active_ctx && !m_observer_ctx) {
+            assert(!is_masternode);
+            if (msg_type == NetMsgType::QCONTRIB
+                || msg_type == NetMsgType::QCOMPLAINT
+                || msg_type == NetMsgType::QJUSTIFICATION
+                || msg_type == NetMsgType::QPCOMMITMENT
+                || msg_type == NetMsgType::QWATCH) {
+                Misbehaving(pfrom.GetId(), /*howmuch=*/10);
+            }
         }
         PostProcessMessage(m_sporkman.ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom.GetId());
         PostProcessMessage(CMNAuth::ProcessMessage(pfrom, peer->m_their_services, m_connman, m_mn_metaman, m_mn_activeman, m_mn_sync, m_dmnman->GetListAtChainTip(), msg_type, vRecv), pfrom.GetId());
         PostProcessMessage(m_llmq_ctx->quorum_block_processor->ProcessMessage(pfrom, msg_type, vRecv), pfrom.GetId());
-        PostProcessMessage(m_llmq_ctx->qdkgsman->ProcessMessage(pfrom, is_masternode, msg_type, vRecv), pfrom.GetId());
         PostProcessMessage(m_llmq_ctx->qman->ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom.GetId());
         PostProcessMessage(ProcessPlatformBanMessage(pfrom.GetId(), msg_type, vRecv), pfrom.GetId());
 

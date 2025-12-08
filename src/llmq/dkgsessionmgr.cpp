@@ -45,11 +45,6 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CDeterministicMNM
     spork_manager{sporkman},
     m_quorums_watch{quorums_watch}
 {
-    if (mn_activeman == nullptr && !m_quorums_watch) {
-        // Regular nodes do not care about any DKG internals, bail out
-        return;
-    }
-
     const Consensus::Params& consensus_params = Params().GetConsensus();
     for (const auto& params : consensus_params.llmqs) {
         auto session_count = (params.useRotation) ? params.signingActiveQuorumCount : 1;

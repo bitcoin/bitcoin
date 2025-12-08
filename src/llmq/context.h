@@ -14,9 +14,7 @@ class CBLSWorker;
 class ChainstateManager;
 class CDeterministicMNManager;
 class CEvoDB;
-class CMasternodeMetaMan;
 class CMasternodeSync;
-class CMNHFManager;
 class CSporkManager;
 class CTxMemPool;
 class PeerManager;
@@ -24,7 +22,6 @@ class PeerManager;
 namespace llmq {
 class CChainLocksHandler;
 class CDKGDebugManager;
-class CDKGSessionManager;
 class CInstantSendManager;
 class CQuorumBlockProcessor;
 class CQuorumManager;
@@ -41,11 +38,10 @@ public:
     LLMQContext(const LLMQContext&) = delete;
     LLMQContext& operator=(const LLMQContext&) = delete;
     explicit LLMQContext(ChainstateManager& chainman, CDeterministicMNManager& dmnman, CEvoDB& evo_db,
-                         CMasternodeMetaMan& mn_metaman, CMNHFManager& mnhfman, CSporkManager& sporkman,
-                         CTxMemPool& mempool, const CActiveMasternodeManager* const mn_activeman,
-                         const CMasternodeSync& mn_sync, const llmq::QvvecSyncModeMap& sync_map,
-                         const util::DbWrapperParams& db_params, bool quorums_recovery, bool quorums_watch,
-                         int8_t bls_threads, int64_t max_recsigs_age);
+                         CSporkManager& sporkman, CTxMemPool& mempool,
+                         const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync,
+                         const llmq::QvvecSyncModeMap& sync_map, const util::DbWrapperParams& db_params,
+                         bool quorums_recovery, bool quorums_watch, int8_t bls_threads, int64_t max_recsigs_age);
     ~LLMQContext();
 
     void Start();
@@ -65,7 +61,6 @@ public:
     const std::unique_ptr<llmq::CDKGDebugManager> dkg_debugman;
     const std::unique_ptr<llmq::CQuorumSnapshotManager> qsnapman;
     const std::unique_ptr<llmq::CQuorumBlockProcessor> quorum_block_processor;
-    const std::unique_ptr<llmq::CDKGSessionManager> qdkgsman;
     const std::unique_ptr<llmq::CQuorumManager> qman;
     const std::unique_ptr<llmq::CSigningManager> sigman;
     const std::unique_ptr<llmq::CChainLocksHandler> clhandler;

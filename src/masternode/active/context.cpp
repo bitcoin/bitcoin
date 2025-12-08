@@ -13,17 +13,21 @@
 #include <llmq/context.h>
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/ehf_signals.h>
+#include <llmq/quorums.h>
 #include <llmq/signing_shares.h>
 #include <validation.h>
 
-ActiveContext::ActiveContext(ChainstateManager& chainman, CConnman& connman, CDeterministicMNManager& dmnman,
-                             CGovernanceManager& govman, CMNHFManager& mnhfman, CSporkManager& sporkman,
-                             CTxMemPool& mempool, LLMQContext& llmq_ctx, PeerManager& peerman,
-                             const CActiveMasternodeManager& mn_activeman, const CMasternodeSync& mn_sync,
-                             CCoinJoinServer& cj_server) :
+ActiveContext::ActiveContext(CCoinJoinServer& cj_server, CConnman& connman, CDeterministicMNManager& dmnman,
+                             CGovernanceManager& govman, ChainstateManager& chainman, CMasternodeMetaMan& mn_metaman,
+                             CMNHFManager& mnhfman, CSporkManager& sporkman, CTxMemPool& mempool, LLMQContext& llmq_ctx,
+                             PeerManager& peerman, const CActiveMasternodeManager& mn_activeman,
+                             const CMasternodeSync& mn_sync, const util::DbWrapperParams& db_params, bool quorums_watch) :
     m_llmq_ctx{llmq_ctx},
     m_cj_server(cj_server),
     gov_signer{std::make_unique<GovernanceSigner>(connman, dmnman, govman, mn_activeman, chainman, mn_sync)},
+    qdkgsman{std::make_unique<llmq::CDKGSessionManager>(*llmq_ctx.bls_worker, dmnman, *llmq_ctx.dkg_debugman,
+                                                        mn_metaman, *llmq_ctx.quorum_block_processor, *llmq_ctx.qsnapman,
+                                                        &mn_activeman, chainman, sporkman, db_params, quorums_watch)},
     shareman{std::make_unique<llmq::CSigSharesManager>(connman, chainman.ActiveChainstate(), *llmq_ctx.sigman, peerman,
                                                        mn_activeman, *llmq_ctx.qman, sporkman)},
     ehf_sighandler{
@@ -36,10 +40,12 @@ ActiveContext::ActiveContext(ChainstateManager& chainman, CConnman& connman, CDe
 {
     m_llmq_ctx.clhandler->ConnectSigner(cl_signer.get());
     m_llmq_ctx.isman->ConnectSigner(is_signer.get());
+    m_llmq_ctx.qman->ConnectManager(qdkgsman.get());
 }
 
 ActiveContext::~ActiveContext()
 {
+    m_llmq_ctx.qman->DisconnectManager();
     m_llmq_ctx.isman->DisconnectSigner();
     m_llmq_ctx.clhandler->DisconnectSigner();
 }
@@ -51,7 +57,7 @@ void ActiveContext::Interrupt()
 
 void ActiveContext::Start(CConnman& connman, PeerManager& peerman)
 {
-    m_llmq_ctx.qdkgsman->StartThreads(connman, peerman);
+    qdkgsman->StartThreads(connman, peerman);
     shareman->Start();
     cl_signer->RegisterRecoveryInterface();
     is_signer->RegisterRecoveryInterface();
@@ -64,5 +70,5 @@ void ActiveContext::Stop()
     is_signer->UnregisterRecoveryInterface();
     cl_signer->UnregisterRecoveryInterface();
     shareman->Stop();
-    m_llmq_ctx.qdkgsman->StopThreads();
+    qdkgsman->StopThreads();
 }

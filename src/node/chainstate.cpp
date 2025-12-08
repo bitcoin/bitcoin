@@ -248,8 +248,7 @@ void DashChainstateSetup(ChainstateManager& chainman,
         llmq_ctx->Stop();
     }
     llmq_ctx.reset();
-    llmq_ctx = std::make_unique<LLMQContext>(chainman, *dmnman, *evodb, mn_metaman, *mnhf_manager, sporkman,
-                                             *mempool, mn_activeman.get(), mn_sync, sync_map,
+    llmq_ctx = std::make_unique<LLMQContext>(chainman, *dmnman, *evodb, sporkman, *mempool, mn_activeman.get(), mn_sync, sync_map,
                                              util::DbWrapperParams{.path = data_dir, .memory = llmq_dbs_in_memory, .wipe = llmq_dbs_wipe},
                                              quorums_recovery, quorums_watch, bls_threads, max_recsigs_age);
     mempool->ConnectManagers(dmnman.get(), llmq_ctx->isman.get());
