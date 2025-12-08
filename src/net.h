@@ -112,9 +112,9 @@ static const int64_t DEFAULT_PEER_CONNECT_TIMEOUT = 60;
 /** Number of file descriptors required for message capture **/
 static const int NUM_FDS_MESSAGE_CAPTURE = 1;
 
-static const bool DEFAULT_FORCEDNSSEED = false;
-static const bool DEFAULT_DNSSEED = true;
-static const bool DEFAULT_FIXEDSEEDS = true;
+static constexpr bool DEFAULT_FORCEDNSSEED{false};
+static constexpr bool DEFAULT_DNSSEED{true};
+static constexpr bool DEFAULT_FIXEDSEEDS{true};
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
 static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
@@ -1384,29 +1384,6 @@ public:
     void ForEachNode(const NodeFn& fn) const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex)
     {
         ForEachNode(FullyConnectedOnly, fn);
-    }
-
-    template<typename Callable, typename CallableAfter>
-    void ForEachNodeThen(Callable&& pre, CallableAfter&& post) EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex)
-    {
-        ForEachNodeThen(FullyConnectedOnly, pre, post);
-    }
-
-    template<typename Condition, typename Callable, typename CallableAfter>
-    void ForEachNodeThen(const Condition& cond, Callable&& pre, CallableAfter&& post) const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex)
-    {
-        READ_LOCK(m_nodes_mutex);
-        for (auto&& node : m_nodes) {
-            if (cond(node))
-                pre(node);
-        }
-        post();
-    };
-
-    template<typename Callable, typename CallableAfter>
-    void ForEachNodeThen(Callable&& pre, CallableAfter&& post) const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex)
-    {
-        ForEachNodeThen(FullyConnectedOnly, pre, post);
     }
 
     // Addrman functions

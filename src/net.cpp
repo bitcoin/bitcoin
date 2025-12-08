@@ -2680,7 +2680,7 @@ void CConnman::ThreadDNSAddressSeed()
                     {
                         READ_LOCK(m_nodes_mutex);
                         for (const CNode* pnode : m_nodes) {
-                            if (pnode->fSuccessfullyConnected && !pnode->IsFullOutboundConn() && !pnode->m_masternode_probe_connection) ++nRelevant;
+                            if (pnode->fSuccessfullyConnected && pnode->IsFullOutboundConn() && !pnode->m_masternode_probe_connection) ++nRelevant;
                         }
                     }
                     if (nRelevant >= 2) {

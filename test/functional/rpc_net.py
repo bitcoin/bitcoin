@@ -7,11 +7,12 @@
 Tests correspond to code in rpc/net.cpp.
 """
 
-from test_framework.p2p import P2PInterface
 import test_framework.messages
 from test_framework.messages import (
     MAX_PROTOCOL_MESSAGE_LENGTH,
-    NODE_NETWORK,
+)
+from test_framework.p2p import (
+    P2PInterface,
 )
 
 from itertools import product
@@ -270,7 +271,6 @@ class NetTest(DashTestFramework):
     def test_getnodeaddresses(self):
         self.log.info("Test getnodeaddresses")
         self.nodes[0].add_p2p_connection(P2PInterface())
-        services = NODE_NETWORK
 
         # Add an IPv6 address to the address manager.
         ipv6_addr = "1233:3432:2434:2343:3234:2345:6546:4534"
@@ -298,7 +298,7 @@ class NetTest(DashTestFramework):
         assert_greater_than(10000, len(node_addresses))
         for a in node_addresses:
             assert_equal(a["time"], self.mocktime)
-            assert_equal(a["services"], services)
+            assert_equal(a["services"], 1)
             assert a["address"] in imported_addrs
             assert_equal(a["port"], 8333)
             assert_equal(a["network"], "ipv4")
@@ -309,7 +309,7 @@ class NetTest(DashTestFramework):
         assert_equal(res[0]["address"], ipv6_addr)
         assert_equal(res[0]["network"], "ipv6")
         assert_equal(res[0]["port"], 8333)
-        assert_equal(res[0]["services"], services)
+        assert_equal(res[0]["services"], 1)
 
         # Test for the absence of onion, I2P and CJDNS addresses.
         for network in ["onion", "i2p", "cjdns"]:

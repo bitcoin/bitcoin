@@ -10,20 +10,20 @@ import random
 
 from test_framework.messages import (
     CAddress,
-    NODE_NETWORK,
     msg_addr,
     msg_getaddr,
-    msg_verack
+    msg_verack,
 )
 from test_framework.p2p import (
     P2PInterface,
     p2p_lock,
+    P2P_SERVICES,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
-    assert_greater_than_or_equal
+    assert_greater_than_or_equal,
 )
 
 ONE_MINUTE  = 60
@@ -51,7 +51,7 @@ class AddrReceiver(P2PInterface):
             if(self.test_addr_contents):
                 # relay_tests checks the content of the addr messages match
                 # expectations based on the message creation in setup_addr_msg
-                assert_equal(addr.nServices, 1)
+                assert_equal(addr.nServices, 2049)
                 if not 8333 <= addr.port < 8343:
                     raise AssertionError("Invalid addr.port of {} (8333-8342 expected)".format(addr.port))
                 assert addr.ip.startswith('123.123.')
@@ -109,7 +109,7 @@ class AddrTest(BitcoinTestFramework):
         for i in range(num):
             addr = CAddress()
             addr.time = self.mocktime + random.randrange(-100, 100)
-            addr.nServices = NODE_NETWORK
+            addr.nServices = P2P_SERVICES
             if sequential_ips:
                 assert self.counter < 256 ** 2  # Don't allow the returned ip addresses to wrap.
                 addr.ip = f"123.123.{self.counter // 256}.{self.counter % 256}"

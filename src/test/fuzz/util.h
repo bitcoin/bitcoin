@@ -101,7 +101,7 @@ public:
 }
 
 template <typename... Callables>
-void CallOneOf(FuzzedDataProvider& fuzzed_data_provider, Callables... callables)
+size_t CallOneOf(FuzzedDataProvider& fuzzed_data_provider, Callables... callables)
 {
     constexpr size_t call_size{sizeof...(callables)};
     static_assert(call_size >= 1);
@@ -109,6 +109,7 @@ void CallOneOf(FuzzedDataProvider& fuzzed_data_provider, Callables... callables)
 
     size_t i{0};
     ((i++ == call_index ? callables() : void()), ...);
+    return call_size;
 }
 
 template <typename Collection>
@@ -233,22 +234,7 @@ template <typename WeakEnumType, size_t size>
 
 [[nodiscard]] CTxMemPoolEntry ConsumeTxMemPoolEntry(FuzzedDataProvider& fuzzed_data_provider, const CTransaction& tx) noexcept;
 
-[[nodiscard]] inline CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept
-{
-    CTxDestination tx_destination;
-    CallOneOf(
-        fuzzed_data_provider,
-        [&] {
-            tx_destination = CNoDestination{};
-        },
-        [&] {
-            tx_destination = PKHash{ConsumeUInt160(fuzzed_data_provider)};
-        },
-        [&] {
-            tx_destination = ScriptHash{ConsumeUInt160(fuzzed_data_provider)};
-        });
-    return tx_destination;
-}
+[[nodiscard]] CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
 [[nodiscard]] CKey ConsumePrivateKey(FuzzedDataProvider& fuzzed_data_provider, std::optional<bool> compressed = std::nullopt) noexcept;
 

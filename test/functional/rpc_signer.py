@@ -53,8 +53,12 @@ class RPCSignerTest(BitcoinTestFramework):
         )
 
         # Handle script missing:
-        assert_raises_rpc_error(-1, 'execve failed: No such file or directory',
-            self.nodes[3].enumeratesigners
+        assert_raises_rpc_error(
+            -1,
+            "CreateProcess failed: The system cannot find the file specified."
+            if platform.system() == "Windows"
+            else "execve failed: No such file or directory",
+            self.nodes[3].enumeratesigners,
         )
 
         # Handle error thrown by script

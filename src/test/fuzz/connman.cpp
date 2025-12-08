@@ -88,9 +88,6 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 connman.ForEachNode([](auto) {});
             },
             [&] {
-                connman.ForEachNodeThen([](auto) {}, []() {});
-            },
-            [&] {
                 (void)connman.ForNode(fuzzed_data_provider.ConsumeIntegral<NodeId>(), [&](auto) { return fuzzed_data_provider.ConsumeBool(); });
             },
             [&] {

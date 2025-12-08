@@ -4,8 +4,6 @@
 
 #include <chainparams.h>
 #include <key_io.h>
-#include <rpc/util.h>
-#include <script/standard.h>
 #include <test/fuzz/fuzz.h>
 
 #include <cassert>
@@ -37,12 +35,4 @@ FUZZ_TARGET(key_io, .init = initialize_key_io)
     if (ext_pub_key.pubkey.size() == CPubKey::COMPRESSED_SIZE) {
         assert(ext_pub_key == DecodeExtPubKey(EncodeExtPubKey(ext_pub_key)));
     }
-
-    const CTxDestination tx_destination = DecodeDestination(random_string);
-    (void)DescribeAddress(tx_destination);
-    (void)GetKeyForDestination(/*store=*/{}, tx_destination);
-    (void)GetScriptForDestination(tx_destination);
-    (void)IsValidDestination(tx_destination);
-
-    (void)IsValidDestinationString(random_string);
 }

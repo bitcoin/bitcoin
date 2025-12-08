@@ -260,15 +260,6 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
                 (void)addr_man.SelectTriedCollision();
             },
             [&] {
-                (void)addr_man.Select(fuzzed_data_provider.ConsumeBool());
-            },
-            [&] {
-                (void)addr_man.GetAddr(
-                    /*max_addresses=*/fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
-                    /*max_pct=*/fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
-                    /*network=*/std::nullopt);
-            },
-            [&] {
                 std::vector<CAddress> addresses;
                 LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
                     addresses.push_back(ConsumeAddress(fuzzed_data_provider));
@@ -288,9 +279,15 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
                 addr_man.SetServices(ConsumeService(fuzzed_data_provider), ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS));
             });
     }
-    (void)addr_man.Size();
+    const AddrMan& const_addr_man{addr_man};
+    (void)const_addr_man.GetAddr(
+        /* max_addresses */ fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
+        /* max_pct */ fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
+        /* network */ std::nullopt);
+    (void)const_addr_man.Select(fuzzed_data_provider.ConsumeBool());
+    (void)const_addr_man.Size();
     CDataStream data_stream(SER_NETWORK, PROTOCOL_VERSION);
-    data_stream << addr_man;
+    data_stream << const_addr_man;
 }
 
 // Check that serialize followed by unserialize produces the same addrman.
