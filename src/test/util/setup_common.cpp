@@ -135,8 +135,8 @@ std::unique_ptr<PeerManager> MakePeerManager(CConnman& connman,
                                              bool ignore_incoming_txs)
 {
     return PeerManager::make(chainparams, connman, *node.addrman, banman, *node.dstxman, *node.chainman, *node.mempool, *node.mn_metaman,
-                             *node.mn_sync, *node.govman, *node.sporkman, mn_activeman, node.dmnman, /*active_ctx=*/nullptr,
-                             node.cj_walletman.get(), node.llmq_ctx, ignore_incoming_txs);
+                             *node.mn_sync, *node.govman, *node.sporkman, node.cj_walletman.get(), mn_activeman, node.dmnman,
+                             node.active_ctx, node.llmq_ctx, node.observer_ctx, ignore_incoming_txs);
 }
 
 void DashChainstateSetup(ChainstateManager& chainman,

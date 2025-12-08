@@ -20,6 +20,8 @@ src/instantsend/*.cpp
 src/instantsend/*.h
 src/llmq/*.cpp
 src/llmq/*.h
+src/llmq/observer/*.cpp
+src/llmq/observer/*.h
 src/masternode/*.cpp
 src/masternode/*.h
 src/masternode/active/*.cpp
