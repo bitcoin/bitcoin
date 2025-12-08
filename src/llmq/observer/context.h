@@ -36,8 +36,8 @@ public:
     ObserverContext(const ObserverContext&) = delete;
     ObserverContext& operator=(const ObserverContext&) = delete;
     ObserverContext(CBLSWorker& bls_worker, CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
-                    llmq::CDKGDebugManager& dkg_debugman, llmq::CQuorumBlockProcessor& qblockman,
-                    llmq::CQuorumManager& qman, llmq::CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
+                    llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumManager& qman,
+                    llmq::CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
                     const CSporkManager& sporkman, const util::DbWrapperParams& db_params);
     ~ObserverContext();
 
@@ -46,6 +46,7 @@ protected:
     void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override;
 
 public:
+    const std::unique_ptr<llmq::CDKGDebugManager> dkgdbgman;
     const std::unique_ptr<llmq::CDKGSessionManager> qdkgsman;
 };
 } // namespace llmq

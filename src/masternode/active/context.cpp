@@ -11,6 +11,7 @@
 #include <instantsend/instantsend.h>
 #include <instantsend/signing.h>
 #include <llmq/context.h>
+#include <llmq/debug.h>
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/ehf_signals.h>
 #include <llmq/quorums.h>
@@ -25,8 +26,9 @@ ActiveContext::ActiveContext(CCoinJoinServer& cj_server, CConnman& connman, CDet
     m_llmq_ctx{llmq_ctx},
     m_cj_server(cj_server),
     gov_signer{std::make_unique<GovernanceSigner>(connman, dmnman, govman, mn_activeman, chainman, mn_sync)},
-    qdkgsman{std::make_unique<llmq::CDKGSessionManager>(*llmq_ctx.bls_worker, dmnman, *llmq_ctx.dkg_debugman,
-                                                        mn_metaman, *llmq_ctx.quorum_block_processor, *llmq_ctx.qsnapman,
+    dkgdbgman{std::make_unique<llmq::CDKGDebugManager>()},
+    qdkgsman{std::make_unique<llmq::CDKGSessionManager>(*llmq_ctx.bls_worker, dmnman, *dkgdbgman, mn_metaman,
+                                                        *llmq_ctx.quorum_block_processor, *llmq_ctx.qsnapman,
                                                         &mn_activeman, chainman, sporkman, db_params, quorums_watch)},
     shareman{std::make_unique<llmq::CSigSharesManager>(connman, chainman.ActiveChainstate(), *llmq_ctx.sigman, peerman,
                                                        mn_activeman, *llmq_ctx.qman, sporkman)},

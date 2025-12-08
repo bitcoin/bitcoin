@@ -348,7 +348,9 @@ static RPCHelpMan quorum_dkgstatus()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
-    if (const auto* debugman = llmq_ctx.dkg_debugman.get(); debugman) {
+    if (const auto* debugman = node.active_ctx ? node.active_ctx->dkgdbgman.get()
+                                               : node.observer_ctx ? node.observer_ctx->dkgdbgman.get()
+                                                                   : nullptr; debugman) {
         llmq::CDKGDebugStatus status;
         debugman->GetLocalDebugStatus(status);
         ret = status.ToJson(*CHECK_NONFATAL(node.dmnman), *llmq_ctx.qsnapman, chainman, detailLevel);
@@ -1000,10 +1002,10 @@ static RPCHelpMan quorum_dkginfo()
     if (!node.active_ctx && !node.observer_ctx) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Only available in masternode or watch-only mode.");
     }
+    const auto& dkgdbgman = *(node.active_ctx ? node.active_ctx->dkgdbgman.get() : node.observer_ctx->dkgdbgman.get());
 
-    const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
     llmq::CDKGDebugStatus status;
-    llmq_ctx.dkg_debugman->GetLocalDebugStatus(status);
+    dkgdbgman.GetLocalDebugStatus(status);
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("active_dkgs", status.sessions.size());
 

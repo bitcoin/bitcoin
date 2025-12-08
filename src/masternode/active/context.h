@@ -28,6 +28,7 @@ namespace instantsend {
 class InstantSendSigner;
 } // namespace instantsend
 namespace llmq {
+class CDKGDebugManager;
 class CDKGSessionManager;
 class CEHFSignalsHandler;
 class CSigSharesManager;
@@ -63,6 +64,7 @@ public:
      */
     CCoinJoinServer& m_cj_server;
     const std::unique_ptr<GovernanceSigner> gov_signer;
+    const std::unique_ptr<llmq::CDKGDebugManager> dkgdbgman;
     const std::unique_ptr<llmq::CDKGSessionManager> qdkgsman;
     const std::unique_ptr<llmq::CSigSharesManager> shareman;
     const std::unique_ptr<llmq::CEHFSignalsHandler> ehf_sighandler;
