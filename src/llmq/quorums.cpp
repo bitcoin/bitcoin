@@ -211,7 +211,8 @@ CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CDeterministicMNManager& 
                                CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor,
                                CQuorumSnapshotManager& qsnapman, const CActiveMasternodeManager* const mn_activeman,
                                const ChainstateManager& chainman, const CMasternodeSync& mn_sync,
-                               const CSporkManager& sporkman, const util::DbWrapperParams& db_params, bool quorums_watch) :
+                               const CSporkManager& sporkman, const util::DbWrapperParams& db_params,
+                               bool quorums_recovery, bool quorums_watch) :
     blsWorker{_blsWorker},
     m_dmnman{dmnman},
     dkgManager{_dkgManager},
@@ -221,6 +222,7 @@ CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CDeterministicMNManager& 
     m_chainman{chainman},
     m_mn_sync{mn_sync},
     m_sporkman{sporkman},
+    m_quorums_recovery{quorums_recovery},
     m_quorums_watch{quorums_watch},
     db{util::MakeDbWrapper({db_params.path / "llmq" / "quorumdb", db_params.memory, db_params.wipe, /*cache_size=*/1 << 20})}
 {
@@ -251,7 +253,7 @@ void CQuorumManager::Stop()
 
 void CQuorumManager::TriggerQuorumDataRecoveryThreads(CConnman& connman, const CBlockIndex* pIndex) const
 {
-    if ((m_mn_activeman == nullptr && !m_quorums_watch) || !QuorumDataRecoveryEnabled() || pIndex == nullptr) {
+    if ((m_mn_activeman == nullptr && !m_quorums_watch) || !m_quorums_recovery || pIndex == nullptr) {
         return;
     }
 

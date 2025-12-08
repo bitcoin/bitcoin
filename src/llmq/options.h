@@ -40,9 +40,6 @@ bool IsQuorumPoseEnabled(const Consensus::LLMQType llmqType, const CSporkManager
 
 bool IsQuorumRotationEnabled(const Consensus::LLMQParams& llmqParams, gsl::not_null<const CBlockIndex*> pindex);
 
-/// Returns the state of `-llmq-data-recovery`
-bool QuorumDataRecoveryEnabled();
-
 /// Returns the parsed entries given by `-llmq-qvvec-sync`
 std::map<Consensus::LLMQType, QvvecSyncMode> GetEnabledQuorumVvecSyncEntries();
 
