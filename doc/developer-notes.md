@@ -730,13 +730,12 @@ logging messages. They should be used as follows:
   most of the time, and it should be used for log messages that are
   useful for debugging and can reasonably be enabled on a production
   system (that has sufficient free storage space). They will be logged
-  if the program is started with `-debug=category` or `-debug=1`.
+  if the program is started with `-debug=category` or `-debug=1`, or
+  the category is enabled through the `logging` RPC.
 
 - `LogInfo(fmt, params...)` should only be used rarely, e.g. for startup
   messages or for infrequent and important events such as a new block tip
-  being found or a new outbound connection being made. These log messages
-  are unconditional, so care must be taken that they can't be used by an
-  attacker to fill up storage.
+  being found or a new outbound connection being made.
 
 - `LogError(fmt, params...)` should be used in place of `LogInfo` for
   severe problems that require the node (or a subsystem) to shut down
@@ -757,6 +756,13 @@ logging messages. They should be used as follows:
 Note that the format strings and parameters of `LogDebug` and `LogTrace`
 are only evaluated if the logging category is enabled, so you must be
 careful to avoid side-effects in those expressions.
+
+While `LogInfo`, `LogWarning` and `LogError` messages should be rare,
+in case there are circumstances where they are not, those messages
+are automatically rate-limited to prevent potential disk-filling
+attacks. For the cases where this protection is undesirable,
+rate-limiting can be avoided with the `BCLog::NO_RATE_LIMIT` tag, eg
+`LogInfo(BCLog::NO_RATE_LIMIT, "UpdateTip: new best=%s ...",...)`.
 
 ## General C++
 

@@ -158,6 +158,9 @@ namespace BCLog {
         LogRateLimiter(uint64_t max_bytes, std::chrono::seconds reset_window);
 
     public:
+        //! Structure for tagging not to rate limit
+        struct NoRateLimitTag { explicit NoRateLimitTag() = default; };
+
         using SchedulerFunction = std::function<void(std::function<void()>, std::chrono::milliseconds)>;
         /**
          * @param scheduler_func    Callable object used to schedule resetting the window. The first
@@ -191,6 +194,8 @@ namespace BCLog {
         //! Returns true if any log locations are currently being suppressed.
         bool SuppressionsActive() const { return m_suppression_active; }
     };
+
+    inline constexpr LogRateLimiter::NoRateLimitTag NO_RATE_LIMIT{};
 
     class Logger
     {
@@ -352,8 +357,29 @@ namespace BCLog {
         static std::string LogLevelToStr(BCLog::Level level);
 
         bool DefaultShrinkDebugFile() const;
-    };
 
+        template <bool should_ratelimit=true, typename... Args>
+        inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags flag, BCLog::Level level, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+             EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
+        {
+            if (Enabled()) {
+                std::string log_msg;
+                try {
+                    log_msg = tfm::format(fmt, args...);
+                } catch (tinyformat::format_error& fmterr) {
+                    log_msg = "Error \"" + std::string{fmterr.what()} + "\" while formatting log message: " + fmt.fmt;
+                }
+                LogPrintStr(log_msg, std::move(source_loc), flag, level, should_ratelimit);
+            }
+        }
+
+        template <typename... Args>
+        inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags flag, BCLog::Level level, const LogRateLimiter::NoRateLimitTag&, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+             EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
+        {
+            LogPrintFormatInternal<false>(std::move(source_loc), flag, level, std::move(fmt), args...);
+        }
+    };
 } // namespace BCLog
 
 BCLog::Logger& LogInstance();
@@ -367,31 +393,17 @@ static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level leve
 /** Return true if str parses as a log category and set the flag */
 bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
 
-template <typename... Args>
-inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags flag, BCLog::Level level, bool should_ratelimit, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
-{
-    if (LogInstance().Enabled()) {
-        std::string log_msg;
-        try {
-            log_msg = tfm::format(fmt, args...);
-        } catch (tinyformat::format_error& fmterr) {
-            log_msg = "Error \"" + std::string{fmterr.what()} + "\" while formatting log message: " + fmt.fmt;
-        }
-        LogInstance().LogPrintStr(log_msg, std::move(source_loc), flag, level, should_ratelimit);
-    }
-}
-
 // Allow __func__ to be used in any context without warnings:
 // NOLINTNEXTLINE(bugprone-lambda-function-name)
-#define LogPrintLevel_(category, level, should_ratelimit, ...) LogPrintFormatInternal(SourceLocation{__func__}, category, level, should_ratelimit, __VA_ARGS__)
+#define LogPrintLevel_(category, level, ...) LogInstance().LogPrintFormatInternal(SourceLocation{__func__}, category, level, __VA_ARGS__)
 
 // Log unconditionally. Uses basic rate limiting to mitigate disk filling attacks.
 // Be conservative when using functions that unconditionally log to debug.log!
 // It should not be the case that an inbound peer can fill up a user's storage
 // with debug.log entries.
-#define LogInfo(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, /*should_ratelimit=*/true, __VA_ARGS__)
-#define LogWarning(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Warning, /*should_ratelimit=*/true, __VA_ARGS__)
-#define LogError(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Error, /*should_ratelimit=*/true, __VA_ARGS__)
+#define LogInfo(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, __VA_ARGS__)
+#define LogWarning(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Warning, __VA_ARGS__)
+#define LogError(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Error, __VA_ARGS__)
 
 // Use a macro instead of a function for conditional logging to prevent
 // evaluating arguments when logging for the category is not enabled.
@@ -402,9 +414,8 @@ inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags 
 #define detail_LogIfCategoryAndLevelEnabled(category, level, ...)     \
     do {                                                              \
         if (LogAcceptCategory((category), (level))) {                 \
-            bool rate_limit{level >= BCLog::Level::Info};             \
-            Assume(!rate_limit);/*Only called with the levels below*/ \
-            LogPrintLevel_(category, level, rate_limit, __VA_ARGS__); \
+            Assume(level < BCLog::Level::Info);/*Only called with the levels below*/ \
+            LogPrintLevel_(category, level, BCLog::NO_RATE_LIMIT, __VA_ARGS__); \
         }                                                             \
     } while (0)
 
