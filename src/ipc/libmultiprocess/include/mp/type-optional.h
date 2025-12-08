@@ -30,7 +30,7 @@ decltype(auto) CustomReadField(TypeList<std::optional<LocalType>>,
     ReadDest&& read_dest)
 {
     return read_dest.update([&](auto& value) {
-        if (!input.has()) {
+        if (!CustomHasField(TypeList<LocalType>(), invoke_context, input)) {
             value.reset();
         } else if (value) {
             ReadField(TypeList<LocalType>(), invoke_context, input, ReadDestUpdate(*value));

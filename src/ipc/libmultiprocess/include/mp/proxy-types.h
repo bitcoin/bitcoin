@@ -23,9 +23,10 @@ public:
     ValueField(Value&& value) : m_value(value) {}
     Value& m_value;
 
+    const Value& get() const { return m_value; }
     Value& get() { return m_value; }
     Value& init() { return m_value; }
-    bool has() { return true; }
+    bool has() const { return true; }
 };
 
 template <typename Accessor, typename Struct>
@@ -166,10 +167,52 @@ struct ReadDestUpdate
     Value& m_value;
 };
 
-template <typename... LocalTypes, typename... Args>
-decltype(auto) ReadField(TypeList<LocalTypes...>, Args&&... args)
+//! Return whether to read a C++ value from a Cap'n Proto field. Returning
+//! false can be useful to interpret certain Cap'n Proto field values as null
+//! C++ values when initializing nullable C++ std::optional / std::unique_ptr /
+//! std::shared_ptr types.
+//!
+//! For example, when reading from a `List(Data)` field into a
+//! `std::vector<std::shared_ptr<const CTransaction>>` value, it's useful to be
+//! able to interpret empty `Data` values as null pointers. This is useful
+//! because the Cap'n Proto C++ API does not currently provide a way to
+//! distinguish between null and empty Data values in a List[*], so we need to
+//! choose some Data value to represent null if we want to allow passing null
+//! pointers. Since no CTransaction is ever serialized as empty Data, it's safe
+//! to use empty Data values to represeent null pointers.
+//!
+//! [*] The Cap'n Proto wire format actually does distinguish between null and
+//! empty Data values inside Lists, and the C++ API does allow distinguishing
+//! between null and empty Data values in other contexts, just not the List
+//! context, so this limitation could be removed in the future.
+//!
+//! Design note: CustomHasField() and CustomHasValue() are inverses of each
+//! other.  CustomHasField() allows leaving Cap'n Proto fields unset when C++
+//! types have certain values, and CustomHasValue() allows leaving C++ values
+//! unset when Cap'n Proto fields have certain values. But internally the
+//! functions get called in different ways. This is because in C++, unlike in
+//! Cap'n Proto not every C++ type is default constructible, and it may be
+//! impossible to leave certain C++ values unset. For example if a C++ method
+//! requires function parameters, there's no way to call the function
+//! constructing values for each of the parameters. Similarly there's no way to
+//! add values to C++ vectors or maps without initializing those values.  This
+//! is not the case in Cap'n Proto where all values are optional and it's
+//! possible to skip initializing parameters and list elements.
+//!
+//! Because of this difference, CustomHasValue() works universally and can be
+//! used to disable BuildField() calls in every contexts, while CustomHasField()
+//! can only be used to disable ReadField() calls in certain contexts like
+//! std::optional and pointer contexts.
+template <typename... LocalTypes, typename Input>
+bool CustomHasField(TypeList<LocalTypes...>, InvokeContext& invoke_context, const Input& input)
 {
-    return CustomReadField(TypeList<RemoveCvRef<LocalTypes>...>(), Priority<2>(), std::forward<Args>(args)...);
+    return input.has();
+}
+
+template <typename... LocalTypes, typename Input, typename... Args>
+decltype(auto) ReadField(TypeList<LocalTypes...>, InvokeContext& invoke_context, Input&& input, Args&&... args)
+{
+    return CustomReadField(TypeList<RemoveCvRef<LocalTypes>...>(), Priority<2>(), invoke_context, std::forward<Input>(input), std::forward<Args>(args)...);
 }
 
 template <typename LocalType, typename Input>
@@ -190,6 +233,13 @@ void ThrowField(TypeList<std::exception>, InvokeContext& invoke_context, Input&&
     throw std::runtime_error(std::string(CharCast(data.begin()), data.size()));
 }
 
+//! Return whether to write a C++ value into a Cap'n Proto field. Returning
+//! false can be useful to map certain C++ values to unset Cap'n Proto fields.
+//!
+//! For example the bitcoin `Coin` class asserts false when a spent coin is
+//! serialized. But some C++ methods return these coins, so there needs to be a
+//! way to represent them in Cap'n Proto and a null Data field is a convenient
+//! representation.
 template <typename... Values>
 bool CustomHasValue(InvokeContext& invoke_context, const Values&... value)
 {
@@ -372,7 +422,7 @@ struct ClientException
         void handleField(InvokeContext& invoke_context, Results& results, ParamList)
         {
             StructField<Accessor, Results> input(results);
-            if (input.has()) {
+            if (CustomHasField(TypeList<Exception>(), invoke_context, input)) {
                 ThrowField(TypeList<Exception>(), invoke_context, input);
             }
         }

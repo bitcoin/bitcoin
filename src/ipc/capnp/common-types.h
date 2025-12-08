@@ -127,6 +127,18 @@ decltype(auto) CustomReadField(TypeList<UniValue>, Priority<1>, InvokeContext& i
     });
 }
 
+//! Interpret empty Data fields as null CTransactionRef values. This is safe to
+//! do because no CTransaction is ever serialized as empty Data, and it is
+//! convenient because this allows std::vector<CTransactionRef> to be passed as
+//! List(Data) even if the vector contains null values, and even though Cap'n
+//! Proto does not (currently) allow distinguishing between null and empty Data
+//! values in a List. Interpreting empty Data values as null CTransactionRef
+//! values works well for this purpose.
+template <typename Input>
+bool CustomHasField(TypeList<CTransaction>, InvokeContext& invoke_context, const Input& input)
+{
+    return input.get().size() > 0;
+}
 } // namespace mp
 
 #endif // BITCOIN_IPC_CAPNP_COMMON_TYPES_H
