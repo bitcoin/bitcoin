@@ -290,14 +290,31 @@ static std::optional<BCLog::Level> GetLogLevel(std::string_view level_str)
     }
 }
 
-std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
+std::vector<BCLog::CategoryInfo> BCLog::Logger::LogCategoriesInfo() const
 {
-    std::vector<LogCategory> ret;
+    STDLOCK(m_cs);
+    std::vector<CategoryInfo> ret;
     ret.reserve(LOG_CATEGORIES_BY_STR.size());
+
+    const BCLog::Level base = LogLevel();
     for (const auto& [category, flag] : LOG_CATEGORIES_BY_STR) {
-        ret.push_back(LogCategory{.category = category, .active = WillLogCategory(flag)});
+        BCLog::Level level = base;
+        if (!WillLogCategory(flag)) {
+            level = BCLog::Level::Info;
+        } else {
+            const auto it{m_category_log_levels.find(flag)};
+            if (it != m_category_log_levels.end()) {
+                level = it->second;
+            }
+        }
+        ret.push_back(CategoryInfo{.category = category, .level = level});
     }
     return ret;
+}
+
+std::string BCLog::Logger::LogCategoriesString() const
+{
+    return util::Join(LOG_CATEGORIES_BY_STR, ", ", [&](const auto& i) { return i.first; });
 }
 
 /** Log severity levels that can be selected by the user. */

@@ -75,11 +75,6 @@ struct SourceLocationHasher {
     }
 };
 
-struct LogCategory {
-    std::string category;
-    bool active;
-};
-
 namespace BCLog {
     using CategoryMask = uint64_t;
     enum LogFlags : CategoryMask {
@@ -125,6 +120,11 @@ namespace BCLog {
         Info,      // Default
         Warning,
         Error,
+    };
+
+    struct CategoryInfo {
+        std::string category;
+        Level level;
     };
     constexpr size_t DEFAULT_MAX_LOG_BUFFER{1'000'000}; // buffer up to 1MB of log data prior to StartLogging
     constexpr uint64_t RATELIMIT_MAX_BYTES{1024 * 1024}; // maximum number of bytes per source location that can be logged within the RATELIMIT_WINDOW
@@ -345,12 +345,9 @@ namespace BCLog {
         bool WillLogCategoryLevel(LogFlags category, Level level) const EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         /** Returns a vector of the log categories in alphabetical order. */
-        std::vector<LogCategory> LogCategoriesList() const;
+        std::vector<CategoryInfo> LogCategoriesInfo() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
         /** Returns a string with the log categories in alphabetical order. */
-        std::string LogCategoriesString() const
-        {
-            return util::Join(LogCategoriesList(), ", ", [&](const LogCategory& i) { return i.category; });
-        };
+        std::string LogCategoriesString() const;
 
         //! Returns a string with all user-selectable log levels.
         std::string LogLevelsString() const;

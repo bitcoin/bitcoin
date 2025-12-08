@@ -93,10 +93,10 @@ class LoggingTest(BitcoinTestFramework):
             # Every category before disable_debug_opt will be ignored, including the invalid 'abc'
             self.restart_node(0, ['-trace=0', '-debug=http', '-debug=abc', disable_debug_opt, '-debug=rpc', '-debug=net'])
             logging = self.nodes[0].logging()
-            assert not logging['http']
-            assert 'abc' not in logging
-            assert logging['rpc']
-            assert logging['net']
+            assert 'http' in logging['excluded'] and 'http' not in (logging['debug'] + logging['trace'])
+            assert 'abc' not in (logging['excluded'] + logging['debug'] + logging['trace'])
+            assert 'rpc' in logging['debug'] and 'rpc' not in (logging['excluded'] + logging['trace'])
+            assert 'net' in logging['debug'] and 'net' not in (logging['excluded'] + logging['trace'])
 
         self.log.info("Test that -notrace,-trace=0,-trace=none clear previously specified trace options")
         disable_trace_options = [
@@ -109,10 +109,17 @@ class LoggingTest(BitcoinTestFramework):
             # Every category before disable_trace_opt will be ignored, including the invalid 'abc'
             self.restart_node(0, ['-debug=0', '-trace=http', '-trace=abc', disable_trace_opt, '-trace=rpc', '-trace=net'])
             logging = self.nodes[0].logging()
-            assert not logging['http']
-            assert 'abc' not in logging
-            assert logging['rpc']
-            assert logging['net']
+            assert 'http' in logging['excluded'] and 'http' not in (logging['debug'] + logging['trace'])
+            assert 'abc' not in (logging['excluded'] + logging['debug'] + logging['trace'])
+            assert 'rpc' in logging['trace'] and 'rpc' not in (logging['excluded'] + logging['debug'])
+            assert 'net' in logging['trace'] and 'net' not in (logging['excluded'] + logging['debug'])
+
+            # Check that log values can be changed
+            logging = self.nodes[0].logging(["mempool"], ["net"], ["http"])
+            assert 'net' in logging['excluded'] and 'net' not in (logging['debug'] + logging['trace'])
+            assert 'mempool' in logging['debug'] and 'mempool' not in (logging['excluded'] + logging['trace'])
+            assert 'http' in logging['trace'] and 'http' not in (logging['excluded'] + logging['debug'])
+            assert 'rpc' in logging['trace'] and 'rpc' not in (logging['excluded'] + logging['debug']) # unchanged
 
 if __name__ == '__main__':
     LoggingTest(__file__).main()
