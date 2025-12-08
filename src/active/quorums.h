@@ -32,6 +32,7 @@ class CQuorum;
 class CQuorumDataRequest;
 class CQuorumManager;
 class CQuorumSnapshotManager;
+enum class QvvecSyncMode : int8_t;
 
 class QuorumParticipant
 {
@@ -82,12 +83,21 @@ private:
 
     void CheckQuorumConnections(CConnman& connman, const Consensus::LLMQParams& llmqParams,
                                 gsl::not_null<const CBlockIndex*> pindexNew) const;
+    void StartCleanupOldQuorumDataThread(gsl::not_null<const CBlockIndex*> pIndex) const;
+    void TriggerQuorumDataRecoveryThreads(CConnman& connman, gsl::not_null<const CBlockIndex*> pIndex) const;
+
+    //! Data recovery
     void DataRecoveryThread(CConnman& connman, gsl::not_null<const CBlockIndex*> block_index, CQuorumCPtr quorum,
                             uint16_t data_mask, const uint256& protx_hash, size_t start_offset) const;
-    void StartCleanupOldQuorumDataThread(gsl::not_null<const CBlockIndex*> pIndex) const;
-    void StartDataRecoveryThread(CConnman& connman, CQuorumCPtr pQuorum, gsl::not_null<const CBlockIndex*> pIndex,
-                                 uint16_t nDataMask) const;
-    void TriggerQuorumDataRecoveryThreads(CConnman& connman, gsl::not_null<const CBlockIndex*> pIndex) const;
+
+    void StartDataRecoveryThread(CConnman& connman, gsl::not_null<const CBlockIndex*> pIndex, CQuorumCPtr pQuorum,
+                                 uint16_t nDataMaskIn) const;
+    void TriggerDataRecoveryThreads(CConnman& connman, gsl::not_null<const CBlockIndex*> block_index) const;
+
+    void StartVvecSyncThread(CConnman& connman, gsl::not_null<const CBlockIndex*> block_index, CQuorumCPtr pQuorum) const;
+    void TriggerVvecSyncThreads(CConnman& connman, gsl::not_null<const CBlockIndex*> block_index) const;
+    void TryStartVvecSyncThread(CConnman& connman, gsl::not_null<const CBlockIndex*> block_index, CQuorumCPtr pQuorum,
+                                bool fWeAreQuorumTypeMember) const;
 };
 } // namespace llmq
 
