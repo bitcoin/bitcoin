@@ -56,10 +56,10 @@ bool IsQuorumRotationEnabled(const Consensus::LLMQParams& llmqParams, gsl::not_n
     return DeploymentActiveAfter(pindex->GetAncestor(cycleQuorumBaseHeight - 1), Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024);
 }
 
-std::map<Consensus::LLMQType, QvvecSyncMode> GetEnabledQuorumVvecSyncEntries()
+QvvecSyncModeMap GetEnabledQuorumVvecSyncEntries(const ArgsManager& args)
 {
-    std::map<Consensus::LLMQType, QvvecSyncMode> mapQuorumVvecSyncEntries;
-    for (const auto& strEntry : gArgs.GetArgs("-llmq-qvvec-sync")) {
+    QvvecSyncModeMap mapQuorumVvecSyncEntries;
+    for (const auto& strEntry : args.GetArgs("-llmq-qvvec-sync")) {
         Consensus::LLMQType llmqType = Consensus::LLMQType::LLMQ_NONE;
         QvvecSyncMode mode{QvvecSyncMode::Invalid};
         std::istringstream ssEntry(strEntry);

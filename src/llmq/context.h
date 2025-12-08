@@ -5,6 +5,8 @@
 #ifndef BITCOIN_LLMQ_CONTEXT_H
 #define BITCOIN_LLMQ_CONTEXT_H
 
+#include <llmq/options.h>
+
 #include <memory>
 
 class CActiveMasternodeManager;
@@ -41,8 +43,8 @@ public:
     explicit LLMQContext(ChainstateManager& chainman, CDeterministicMNManager& dmnman, CEvoDB& evo_db,
                          CMasternodeMetaMan& mn_metaman, CMNHFManager& mnhfman, CSporkManager& sporkman,
                          CTxMemPool& mempool, const CActiveMasternodeManager* const mn_activeman,
-                         const CMasternodeSync& mn_sync, const util::DbWrapperParams& db_params, bool quorums_recovery,
-                         bool quorums_watch);
+                         const CMasternodeSync& mn_sync, const llmq::QvvecSyncModeMap& sync_map,
+                         const util::DbWrapperParams& db_params, bool quorums_recovery, bool quorums_watch);
     ~LLMQContext();
 
     void Interrupt();

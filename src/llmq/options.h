@@ -5,20 +5,22 @@
 #ifndef BITCOIN_LLMQ_OPTIONS_H
 #define BITCOIN_LLMQ_OPTIONS_H
 
-#include <llmq/params.h>
 #include <gsl/pointers.h>
 
 #include <map>
 #include <optional>
 #include <vector>
 
+class ArgsManager;
 class CBlockIndex;
 class ChainstateManager;
 class CSporkManager;
+namespace Consensus {
+struct LLMQParams;
+enum class LLMQType : uint8_t;
+} // namespace Consensus
 
-namespace llmq
-{
-
+namespace llmq {
 enum class QvvecSyncMode {
     Invalid = -1,
     Always = 0,
@@ -26,28 +28,26 @@ enum class QvvecSyncMode {
 };
 
 /** Maximum number of dedicated script-checking threads allowed */
-static const int MAX_BLSCHECK_THREADS = 33;
+static const int MAX_BLSCHECK_THREADS{33};
 /** -parbls default (number of bls-checking threads, 0 = auto) */
-static const int DEFAULT_BLSCHECK_THREADS = 0;
-
+static const int DEFAULT_BLSCHECK_THREADS{0};
+/** -llmq-data-recovery default */
 static constexpr bool DEFAULT_ENABLE_QUORUM_DATA_RECOVERY{true};
-
-// If true, we will connect to all new quorums and watch their communication
+/** -watchquorums default, if true, we will connect to all new quorums and watch their communication */
 static constexpr bool DEFAULT_WATCH_QUORUMS{false};
 
 bool IsAllMembersConnectedEnabled(const Consensus::LLMQType llmqType, const CSporkManager& sporkman);
 bool IsQuorumPoseEnabled(const Consensus::LLMQType llmqType, const CSporkManager& sporkman);
-
 bool IsQuorumRotationEnabled(const Consensus::LLMQParams& llmqParams, gsl::not_null<const CBlockIndex*> pindex);
 
 /// Returns the parsed entries given by `-llmq-qvvec-sync`
-std::map<Consensus::LLMQType, QvvecSyncMode> GetEnabledQuorumVvecSyncEntries();
+using QvvecSyncModeMap = std::map<Consensus::LLMQType, QvvecSyncMode>;
+QvvecSyncModeMap GetEnabledQuorumVvecSyncEntries(const ArgsManager& args);
 
 std::vector<Consensus::LLMQType> GetEnabledQuorumTypes(const ChainstateManager& chainman,
                                                        gsl::not_null<const CBlockIndex*> pindex);
 std::vector<std::reference_wrapper<const Consensus::LLMQParams>> GetEnabledQuorumParams(
     const ChainstateManager& chainman, gsl::not_null<const CBlockIndex*> pindex);
-
 } // namespace llmq
 
 #endif // BITCOIN_LLMQ_OPTIONS_H

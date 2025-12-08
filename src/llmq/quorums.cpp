@@ -211,8 +211,8 @@ CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CDeterministicMNManager& 
                                CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor,
                                CQuorumSnapshotManager& qsnapman, const CActiveMasternodeManager* const mn_activeman,
                                const ChainstateManager& chainman, const CMasternodeSync& mn_sync,
-                               const CSporkManager& sporkman, const util::DbWrapperParams& db_params,
-                               bool quorums_recovery, bool quorums_watch) :
+                               const CSporkManager& sporkman, const llmq::QvvecSyncModeMap& sync_map,
+                               const util::DbWrapperParams& db_params, bool quorums_recovery, bool quorums_watch) :
     blsWorker{_blsWorker},
     m_dmnman{dmnman},
     dkgManager{_dkgManager},
@@ -222,6 +222,7 @@ CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CDeterministicMNManager& 
     m_chainman{chainman},
     m_mn_sync{mn_sync},
     m_sporkman{sporkman},
+    m_sync_map{sync_map},
     m_quorums_recovery{quorums_recovery},
     m_quorums_watch{quorums_watch},
     db{util::MakeDbWrapper({db_params.path / "llmq" / "quorumdb", db_params.memory, db_params.wipe, /*cache_size=*/1 << 20})}
@@ -257,8 +258,6 @@ void CQuorumManager::TriggerQuorumDataRecoveryThreads(CConnman& connman, const C
         return;
     }
 
-    const std::map<Consensus::LLMQType, QvvecSyncMode> mapQuorumVvecSync = GetEnabledQuorumVvecSyncEntries();
-
     LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Process block %s\n", __func__, pIndex->GetBlockHash().ToString());
 
     for (const auto& params : Params().GetConsensus().llmqs) {
@@ -279,8 +278,9 @@ void CQuorumManager::TriggerQuorumDataRecoveryThreads(CConnman& connman, const C
 
             uint16_t nDataMask{0};
             const bool fWeAreQuorumMember = pQuorum->IsValidMember(proTxHash);
-            const bool fSyncForTypeEnabled = mapQuorumVvecSync.count(pQuorum->qc->llmqType) > 0;
-            const QvvecSyncMode syncMode = fSyncForTypeEnabled ? mapQuorumVvecSync.at(pQuorum->qc->llmqType) : QvvecSyncMode::Invalid;
+            const bool fSyncForTypeEnabled = m_sync_map.count(pQuorum->qc->llmqType) > 0;
+            const QvvecSyncMode syncMode = fSyncForTypeEnabled ? m_sync_map.at(pQuorum->qc->llmqType)
+                                                               : QvvecSyncMode::Invalid;
             const bool fSyncCurrent = syncMode == QvvecSyncMode::Always || (syncMode == QvvecSyncMode::OnlyIfTypeMember && fWeAreQuorumTypeMember);
 
             if ((fWeAreQuorumMember || (fSyncForTypeEnabled && fSyncCurrent)) && !pQuorum->HasVerificationVector()) {

@@ -5,6 +5,8 @@
 #ifndef BITCOIN_NODE_CHAINSTATE_H
 #define BITCOIN_NODE_CHAINSTATE_H
 
+#include <llmq/options.h>
+
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -98,6 +100,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      bool is_spentindex_enabled,
                                                      bool is_timeindex_enabled,
                                                      const Consensus::Params& consensus_params,
+                                                     const llmq::QvvecSyncModeMap& sync_map,
                                                      bool fReindexChainState,
                                                      int64_t nBlockTreeDBCache,
                                                      int64_t nCoinDBCache,
@@ -125,6 +128,7 @@ void DashChainstateSetup(ChainstateManager& chainman,
                          std::unique_ptr<LLMQContext>& llmq_ctx,
                          CTxMemPool* mempool,
                          const fs::path& data_dir,
+                         const llmq::QvvecSyncModeMap& sync_map,
                          bool llmq_dbs_in_memory,
                          bool llmq_dbs_wipe,
                          bool quorums_recovery,

@@ -1409,7 +1409,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
 
     try {
-        const bool fQuorumVvecRequestsEnabled{llmq::GetEnabledQuorumVvecSyncEntries().size() > 0};
+        const bool fQuorumVvecRequestsEnabled{llmq::GetEnabledQuorumVvecSyncEntries(args).size() > 0};
         if (!args.GetBoolArg("-llmq-data-recovery", llmq::DEFAULT_ENABLE_QUORUM_DATA_RECOVERY) && fQuorumVvecRequestsEnabled) {
             InitWarning(Untranslated("-llmq-qvvec-sync set but recovery is disabled due to -llmq-data-recovery=0"));
         }
@@ -2025,6 +2025,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                               args.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX),
                                               args.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX),
                                               chainparams.GetConsensus(),
+                                              llmq::GetEnabledQuorumVvecSyncEntries(args),
                                               fReindexChainState,
                                               cache_sizes.block_tree_db,
                                               cache_sizes.coins_db,
