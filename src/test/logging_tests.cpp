@@ -382,7 +382,7 @@ void LogFromLocation(Location location, const std::string& message) {
         LogDebug(BCLog::LogFlags::HTTP, "%s\n", message);
         return;
     case Location::INFO_NOLIMIT:
-        LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, /*should_ratelimit=*/false, "%s\n", message);
+        LogInfo(BCLog::NO_RATE_LIMIT, "%s\n", message);
         return;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
