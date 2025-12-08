@@ -1,3 +1,9 @@
+Note: This repository is developer-focused. If you are an end-user looking for installation or client usage instructions, see the official releases and user-focused documentation.
+(I m a student dawg , go check offical stuff lmao)
+
+
+
+
 Contributing to Bitcoin Core
 ============================
 
