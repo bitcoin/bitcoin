@@ -157,20 +157,33 @@ namespace BCLog {
 
         std::string GetLogPrefix(LogFlags category, Level level) const;
 
+        fs::path m_file_path GUARDED_BY(m_cs);
+
     public:
-        bool m_print_to_console = false;
-        bool m_print_to_file = false;
+        std::atomic<bool> m_print_to_console = false;
+        std::atomic<bool> m_print_to_file = false;
 
-        bool m_log_timestamps = DEFAULT_LOGTIMESTAMPS;
-        bool m_log_time_micros = DEFAULT_LOGTIMEMICROS;
-        bool m_log_threadnames = DEFAULT_LOGTHREADNAMES;
-        bool m_log_sourcelocations = DEFAULT_LOGSOURCELOCATIONS;
-        bool m_always_print_category_level = DEFAULT_LOGLEVELALWAYS;
+        std::atomic<bool> m_log_timestamps = DEFAULT_LOGTIMESTAMPS;
+        std::atomic<bool> m_log_time_micros = DEFAULT_LOGTIMEMICROS;
+        std::atomic<bool> m_log_threadnames = DEFAULT_LOGTHREADNAMES;
+        std::atomic<bool> m_log_sourcelocations = DEFAULT_LOGSOURCELOCATIONS;
+        std::atomic<bool> m_always_print_category_level = DEFAULT_LOGLEVELALWAYS;
 
-        fs::path m_file_path;
         std::atomic<bool> m_reopen_file{false};
 
-        /** Send an entry to the log output */
+        fs::path GetFilePath() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
+        {
+            STDLOCK(m_cs);
+            return m_file_path;
+        }
+
+        void SetFilePath(const fs::path& path) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
+        {
+            STDLOCK(m_cs);
+            m_file_path = path;
+        }
+
+        /** Send a string to the log output */
         void LogPrint(util::log::Entry log_entry) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         /** Returns whether logs will be written to any output */
