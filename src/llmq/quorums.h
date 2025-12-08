@@ -292,7 +292,7 @@ public:
     void Start();
     void Stop();
 
-    void TriggerQuorumDataRecoveryThreads(CConnman& connman, const CBlockIndex* pIndex) const
+    void TriggerQuorumDataRecoveryThreads(CConnman& connman, gsl::not_null<const CBlockIndex*> pIndex) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_scan_quorums, !cs_map_quorums);
 
     void UpdatedBlockTip(const CBlockIndex* pindexNew, CConnman& connman, bool fInitialDownload) const
@@ -314,7 +314,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_map_quorums, !cs_scan_quorums);
 
     // this one is cs_main-free
-    std::vector<CQuorumCPtr> ScanQuorums(Consensus::LLMQType llmqType, const CBlockIndex* pindexStart,
+    std::vector<CQuorumCPtr> ScanQuorums(Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pindexStart,
                                          size_t nCountRequested) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_map_quorums, !cs_scan_quorums);
 
@@ -322,7 +322,8 @@ public:
 
 private:
     // all private methods here are cs_main-free
-    void CheckQuorumConnections(CConnman& connman, const Consensus::LLMQParams& llmqParams, const CBlockIndex* pindexNew) const
+    void CheckQuorumConnections(CConnman& connman, const Consensus::LLMQParams& llmqParams,
+                                gsl::not_null<const CBlockIndex*> pindexNew) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_scan_quorums, !cs_map_quorums);
 
     CQuorumPtr BuildQuorumFromCommitment(Consensus::LLMQType llmqType,
@@ -335,13 +336,13 @@ private:
     /// Returns the start offset for the masternode with the given proTxHash. This offset is applied when picking data recovery members of a quorum's
     /// memberlist and is calculated based on a list of all member of all active quorums for the given llmqType in a way that each member
     /// should receive the same number of request if all active llmqType members requests data from one llmqType quorum.
-    size_t GetQuorumRecoveryStartOffset(const CQuorum& quorum, const CBlockIndex* pIndex) const;
+    size_t GetQuorumRecoveryStartOffset(const CQuorum& quorum, gsl::not_null<const CBlockIndex*> pIndex) const;
 
     void StartCachePopulatorThread(CQuorumCPtr pQuorum) const;
-    void StartQuorumDataRecoveryThread(CConnman& connman, CQuorumCPtr pQuorum, const CBlockIndex* pIndex,
+    void StartQuorumDataRecoveryThread(CConnman& connman, CQuorumCPtr pQuorum, gsl::not_null<const CBlockIndex*> pIndex,
                                        uint16_t nDataMask) const;
 
-    void StartCleanupOldQuorumDataThread(const CBlockIndex* pIndex) const;
+    void StartCleanupOldQuorumDataThread(gsl::not_null<const CBlockIndex*> pIndex) const;
     void MigrateOldQuorumDB(CEvoDB& evoDb) const EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
 };
 
