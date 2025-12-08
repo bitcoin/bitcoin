@@ -85,7 +85,13 @@ static inline bool InsecureRandBool() { return g_insecure_rand_ctx.randbool(); }
 
 static constexpr CAmount CENT{1000000};
 
-/** Initialize Dash-specific components during chainstate initialization (NodeContext-friendly aliases) */
+/** Initialize components during initialization (NodeContext-friendly aliases) */
+std::unique_ptr<PeerManager> MakePeerManager(CConnman& connman,
+                                             node::NodeContext& node,
+                                             BanMan* banman,
+                                             CActiveMasternodeManager* mn_activeman,
+                                             const CChainParams& chainparams,
+                                             bool ignore_incoming_txs);
 void DashChainstateSetup(ChainstateManager& chainman,
                          node::NodeContext& node,
                          bool llmq_dbs_in_memory,
