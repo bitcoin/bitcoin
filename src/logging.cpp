@@ -514,6 +514,8 @@ void BCLog::Logger::LogPrint_(util::log::Entry entry)
 
 void BCLog::Logger::ShrinkDebugFile()
 {
+    STDLOCK(m_cs);
+
     // Amount of debug.log to save at end when shrinking (must fit in memory)
     constexpr size_t RECENT_DEBUG_HISTORY_SIZE = 10 * 1000000;
 
@@ -535,7 +537,14 @@ void BCLog::Logger::ShrinkDebugFile()
         // Restart the file with some of the end
         std::vector<char> vch(RECENT_DEBUG_HISTORY_SIZE, 0);
         if (fseek(file, -((long)vch.size()), SEEK_END)) {
-            LogWarning("Failed to shrink debug log file: fseek(...) failed");
+            // LogWarning, except with m_cs held
+            LogPrint_({
+                .category = BCLog::ALL,
+                .level = Level::Warning,
+                .should_ratelimit = true,
+                .source_loc = SourceLocation{__func__},
+                .message = "Failed to shrink debug log file: fseek(...) failed"
+            });
             fclose(file);
             return;
         }
