@@ -434,48 +434,24 @@ public:
         }
     }
 
-    bool operator==(const prevector<N, T, Size, Diff>& other) const {
-        if (other.size() != size()) {
-            return false;
-        }
-        const_iterator b1 = begin();
-        const_iterator b2 = other.begin();
-        const_iterator e1 = end();
-        while (b1 != e1) {
-            if ((*b1) != (*b2)) {
-                return false;
-            }
-            ++b1;
-            ++b2;
-        }
-        return true;
+    constexpr bool operator==(const prevector& other) const {
+        return std::ranges::equal(*this, other);
     }
 
     bool operator!=(const prevector<N, T, Size, Diff>& other) const {
         return !(*this == other);
     }
 
-    bool operator<(const prevector<N, T, Size, Diff>& other) const {
-        if (size() < other.size()) {
-            return true;
+    constexpr auto operator<=>(const prevector& other) const {
+        // return std::lexicographical_compare_three_way(begin(), end(), other.begin(), other.end());
+        auto it1 = begin(), end1 = end();
+        auto it2 = other.begin(), end2 = other.end();
+        for (; it1 != end1 && it2 != end2; ++it1, ++it2) {
+            if (auto cmp = (*it1 <=> *it2); cmp != 0) return cmp;
         }
-        if (size() > other.size()) {
-            return false;
-        }
-        const_iterator b1 = begin();
-        const_iterator b2 = other.begin();
-        const_iterator e1 = end();
-        while (b1 != e1) {
-            if ((*b1) < (*b2)) {
-                return true;
-            }
-            if ((*b2) < (*b1)) {
-                return false;
-            }
-            ++b1;
-            ++b2;
-        }
-        return false;
+        if (it1 != end1) return std::strong_ordering::greater;
+        if (it2 != end2) return std::strong_ordering::less;
+        return std::strong_ordering::equal;
     }
 
     size_t allocated_memory() const {
