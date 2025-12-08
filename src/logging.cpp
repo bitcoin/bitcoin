@@ -107,6 +107,7 @@ void BCLog::Logger::DisconnectTestLogger()
     if (m_fileout != nullptr) fclose(m_fileout);
     m_fileout = nullptr;
     m_print_callbacks.clear();
+    m_any_print_callbacks = false;
     m_max_buffer_memusage = DEFAULT_MAX_LOG_BUFFER;
     m_cur_buffer_memusage = 0;
     m_buffer_lines_discarded = 0;
@@ -119,6 +120,7 @@ void BCLog::Logger::DisableLogging()
         STDLOCK(m_cs);
         assert(m_buffering);
         assert(m_print_callbacks.empty());
+        assert(!m_any_print_callbacks);
     }
     m_print_to_file = false;
     m_print_to_console = false;

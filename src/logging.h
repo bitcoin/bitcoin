@@ -132,7 +132,7 @@ namespace BCLog {
 
         FILE* m_fileout GUARDED_BY(m_cs) = nullptr;
         std::list<util::log::Entry> m_msgs_before_open GUARDED_BY(m_cs);
-        bool m_buffering GUARDED_BY(m_cs) = true; //!< Buffer messages before logging can be started.
+        std::atomic<bool> m_buffering = true; //!< Buffer messages before logging can be started.
         size_t m_max_buffer_memusage GUARDED_BY(m_cs){DEFAULT_MAX_LOG_BUFFER};
         size_t m_cur_buffer_memusage GUARDED_BY(m_cs){0};
         size_t m_buffer_lines_discarded GUARDED_BY(m_cs){0};
@@ -151,6 +151,7 @@ namespace BCLog {
 
         /** Slots that connect to the print signal */
         std::list<std::function<void(const std::string&)>> m_print_callbacks GUARDED_BY(m_cs){};
+        std::atomic<bool> m_any_print_callbacks{false};
 
         /** Send an entry to the log output (internal) */
         void LogPrint_(util::log::Entry log_entry) EXCLUSIVE_LOCKS_REQUIRED(m_cs);
@@ -187,16 +188,19 @@ namespace BCLog {
         void LogPrint(util::log::Entry log_entry) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         /** Returns whether logs will be written to any output */
-        bool Enabled() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
+        bool Enabled() const
         {
-            STDLOCK(m_cs);
-            return m_buffering || m_print_to_console || m_print_to_file || !m_print_callbacks.empty();
+            return m_buffering.load(std::memory_order_relaxed) ||
+                   m_print_to_console.load(std::memory_order_relaxed) ||
+                   m_print_to_file.load(std::memory_order_relaxed) ||
+                   m_any_print_callbacks.load(std::memory_order_relaxed);
         }
 
         /** Connect a slot to the print signal and return the connection */
         std::list<std::function<void(const std::string&)>>::iterator PushBackCallback(std::function<void(const std::string&)> fun) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
             STDLOCK(m_cs);
+            m_any_print_callbacks = true;
             m_print_callbacks.push_back(std::move(fun));
             return --m_print_callbacks.end();
         }
@@ -206,6 +210,7 @@ namespace BCLog {
         {
             STDLOCK(m_cs);
             m_print_callbacks.erase(it);
+            m_any_print_callbacks = !m_print_callbacks.empty();
         }
 
         size_t NumConnections() EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
