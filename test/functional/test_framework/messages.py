@@ -30,7 +30,7 @@ import unittest
 from test_framework.crypto.siphash import siphash256
 from test_framework.util import assert_equal
 
-import dash_hash
+import dash_hash # type: ignore[import]
 
 MAX_LOCATOR_SZ = 101
 MAX_BLOCK_SIZE = 2000000

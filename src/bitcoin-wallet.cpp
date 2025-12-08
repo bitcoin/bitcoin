@@ -9,6 +9,7 @@
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <compat/compat.h>
+#include <interfaces/init.h>
 #include <logging.h>
 #include <util/strencodings.h>
 #include <clientversion.h>
@@ -100,6 +101,13 @@ MAIN_FUNCTION
     util::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();
 #endif
+
+    int exit_status;
+    std::unique_ptr<interfaces::Init> init = interfaces::MakeWalletInit(argc, argv, exit_status);
+    if (!init) {
+        return exit_status;
+    }
+
     SetupEnvironment();
     RandomInit();
     try {

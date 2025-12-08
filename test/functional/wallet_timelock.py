@@ -30,7 +30,7 @@ class WalletLocktimeTest(BitcoinTestFramework):
         )
         self.generate(node, 1)
 
-        self.log.info("Check that clock can not change finality of confirmed txs")
+        self.log.info("Check that clock cannot change finality of confirmed txs")
         amount_before_ad = node.getreceivedbyaddress(address)
         amount_before_lb = node.getreceivedbylabel(label)
         list_before_ad = node.listreceivedbyaddress(address_filter=address)

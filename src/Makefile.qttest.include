@@ -33,7 +33,7 @@ qt_test_test_dash_qt_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_
   $(QT_INCLUDES) $(QT_TEST_INCLUDES) $(BOOST_CPPFLAGS)
 
 qt_test_test_dash_qt_SOURCES = \
-  init/bitcoind.cpp \
+  init/bitcoin-qt.cpp \
   qt/test/apptests.cpp \
   qt/test/optiontests.cpp \
   qt/test/rpcnestedtests.cpp \

@@ -5,7 +5,7 @@
 
 import sys
 import re
-from multiprocess import Pool
+from multiprocess import Pool # type: ignore[import]
 from typing import Dict, List, Set
 
 MAPPING = {
