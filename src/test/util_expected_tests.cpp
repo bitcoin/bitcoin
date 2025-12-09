@@ -7,6 +7,11 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <memory>
+#include <string>
+#include <utility>
+
+
 using namespace util;
 
 BOOST_AUTO_TEST_SUITE(util_expected_tests)
@@ -63,6 +68,19 @@ BOOST_AUTO_TEST_CASE(expected_error)
 
     const auto& read{e};
     BOOST_CHECK_EQUAL(read.error(), "fail1");
+}
+
+BOOST_AUTO_TEST_CASE(unexpected_error_accessors)
+{
+    Unexpected u{std::make_unique<int>(-1)};
+    BOOST_CHECK_EQUAL(*u.error(), -1);
+
+    *u.error() -= 1;
+    const auto& read{u};
+    BOOST_CHECK_EQUAL(*read.error(), -2);
+
+    const auto moved{std::move(u).error()};
+    BOOST_CHECK_EQUAL(*moved, -2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
