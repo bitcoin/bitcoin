@@ -30,7 +30,7 @@ on:
 jobs:
   check-cache:
     name: Check cache
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
     outputs:
       cache-hit: ${{ steps.cache-check.outputs.cache-hit }}
       cache-key: ${{ steps.setup.outputs.cache-key }}
