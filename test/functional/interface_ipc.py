@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the IPC (multiprocess) interface."""
 import asyncio
+import inspect
 from contextlib import asynccontextmanager, AsyncExitStack
 from io import BytesIO
 from pathlib import Path
@@ -37,6 +38,29 @@ async def create_block_template(mining, stack, ctx, opts):
 async def wait_next_template(template, stack, ctx, opts):
     """Call template.waitNext() and return template, then call template.destroy() when stack exits."""
     return await stack.enter_async_context(destroying((await template.waitNext(ctx, opts)).result, ctx))
+
+async def wait_and_do(wait_fn, do_fn):
+    """Call wait_fn, then sleep, then call do_fn in a parallel task. Wait for
+    both tasks to complete."""
+    wait_started = asyncio.Event()
+    result = None
+
+    async def wait():
+        nonlocal result
+        wait_started.set()
+        result = await wait_fn
+
+    async def do():
+        await wait_started.wait()
+        await asyncio.sleep(0.1)
+        # Let do_fn be either a callable or an awaitable object
+        if inspect.isawaitable(do_fn):
+            await do_fn
+        else:
+            do_fn()
+
+    await asyncio.gather(wait(), do())
+    return result
 
 class IPCInterfaceTest(BitcoinTestFramework):
 
@@ -138,8 +162,9 @@ class IPCInterfaceTest(BitcoinTestFramework):
             current_block_height = self.nodes[0].getchaintips()[0]["height"]
             assert blockref.result.height == current_block_height
             self.log.debug("Mine a block")
-            self.generate(self.nodes[0], 1)
-            newblockref = (await mining.waitTipChanged(ctx, blockref.result.hash)).result
+            newblockref = (await wait_and_do(
+                mining.waitTipChanged(ctx, blockref.result.hash, timeout),
+                lambda: self.generate(self.nodes[0], 1))).result
             assert_equal(len(newblockref.hash), block_hash_size)
             assert_equal(newblockref.height, current_block_height + 1)
             self.log.debug("Wait for timeout")
@@ -175,8 +200,9 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
                 waitoptions.timeout = timeout
                 waitoptions.feeThreshold = 1
-                self.generate(self.nodes[0], 1)
-                template2 = await wait_next_template(template, stack, ctx, waitoptions)
+                template2 = await wait_and_do(
+                    wait_next_template(template, stack, ctx, waitoptions),
+                    lambda: self.generate(self.nodes[0], 1))
                 block2 = await self.parse_and_deserialize_block(template2, ctx)
                 assert_equal(len(block2.vtx), 1)
 
@@ -185,8 +211,9 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 assert_equal(template3._has("result"), False)
 
                 self.log.debug("Wait for another, get one after increase in fees in the mempool")
-                miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
-                template4 = await wait_next_template(template2, stack, ctx, waitoptions)
+                template4 = await wait_and_do(
+                    wait_next_template(template2, stack, ctx, waitoptions),
+                    lambda: miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0]))
                 block3 = await self.parse_and_deserialize_block(template4, ctx)
                 assert_equal(len(block3.vtx), 2)
 
@@ -198,8 +225,9 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 waitoptions.feeThreshold = 1
 
                 self.log.debug("Wait for another, get one after increase in fees in the mempool")
-                miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
-                template6 = await wait_next_template(template5, stack, ctx, waitoptions)
+                template6 = await wait_and_do(
+                    wait_next_template(template5, stack, ctx, waitoptions),
+                    lambda: miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0]))
                 block4 = await self.parse_and_deserialize_block(template6, ctx)
                 assert_equal(len(block4.vtx), 3)
 
@@ -208,26 +236,13 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 assert_equal(template7._has("result"), False)
 
                 self.log.debug("interruptWait should abort the current wait")
-                wait_started = asyncio.Event()
                 async def wait_for_block():
                     new_waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
                     new_waitoptions.timeout = waitoptions.timeout * 60 # 1 minute wait
                     new_waitoptions.feeThreshold = 1
-                    wait_started.set()
                     template7 = await template6.waitNext(ctx, new_waitoptions)
                     assert_equal(template7._has("result"), False)
-
-                async def interrupt_wait():
-                    await wait_started.wait() # Wait for confirmation wait started
-                    await asyncio.sleep(0.1)  # Minimal buffer
-                    template6.interruptWait()
-                    miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
-
-                wait_task = asyncio.create_task(wait_for_block())
-                interrupt_task = asyncio.create_task(interrupt_wait())
-
-                result = await wait_task
-                await interrupt_task
+                await wait_and_do(wait_for_block(), template6.interruptWait())
 
             current_block_height = self.nodes[0].getchaintips()[0]["height"]
             check_opts = self.capnp_modules['mining'].BlockCheckOptions()
