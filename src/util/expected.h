@@ -57,20 +57,21 @@ public:
     constexpr bool has_value() const noexcept { return m_data.index() == 0; }
     constexpr explicit operator bool() const noexcept { return has_value(); }
 
-    constexpr const T& value() const LIFETIMEBOUND
+    constexpr const T& value() const& LIFETIMEBOUND
     {
         if (!has_value()) {
             throw BadExpectedAccess{};
         }
         return std::get<0>(m_data);
     }
-    constexpr T& value() LIFETIMEBOUND
+    constexpr T& value() & LIFETIMEBOUND
     {
         if (!has_value()) {
             throw BadExpectedAccess{};
         }
         return std::get<0>(m_data);
     }
+    constexpr T&& value() && LIFETIMEBOUND { return std::move(value()); }
 
     template <class U>
     T value_or(U&& default_value) const&
@@ -83,16 +84,9 @@ public:
         return has_value() ? std::move(value()) : std::forward<U>(default_value);
     }
 
-    constexpr const E& error() const LIFETIMEBOUND
-    {
-        assert(!has_value());
-        return std::get<1>(m_data);
-    }
-    constexpr E& error() LIFETIMEBOUND
-    {
-        assert(!has_value());
-        return std::get<1>(m_data);
-    }
+    constexpr const E& error() const& noexcept LIFETIMEBOUND { return *Assert(std::get_if<1>(&m_data)); }
+    constexpr E& error() & noexcept LIFETIMEBOUND { return *Assert(std::get_if<1>(&m_data)); }
+    constexpr E&& error() && noexcept LIFETIMEBOUND { return std::move(error()); }
 
     constexpr T& operator*() noexcept LIFETIMEBOUND { return value(); }
     constexpr const T& operator*() const noexcept LIFETIMEBOUND { return value(); }

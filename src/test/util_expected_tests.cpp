@@ -43,6 +43,13 @@ BOOST_AUTO_TEST_CASE(expected_value)
     BOOST_CHECK_EQUAL(read->x, 45);
 }
 
+BOOST_AUTO_TEST_CASE(expected_value_rvalue)
+{
+    Expected<std::unique_ptr<int>, int> no_copy{std::make_unique<int>(5)};
+    const auto moved{std::move(no_copy).value()};
+    BOOST_CHECK_EQUAL(*moved, 5);
+}
+
 BOOST_AUTO_TEST_CASE(expected_value_or)
 {
     Expected<std::unique_ptr<int>, int> no_copy{std::make_unique<int>(1)};
@@ -79,6 +86,20 @@ BOOST_AUTO_TEST_CASE(expected_error)
 
     const auto& read{e};
     BOOST_CHECK_EQUAL(read.error(), "fail1");
+}
+
+BOOST_AUTO_TEST_CASE(expected_error_rvalue)
+{
+    {
+        Expected<int, std::unique_ptr<int>> nocopy_err{Unexpected{std::make_unique<int>(7)}};
+        const auto moved{std::move(nocopy_err).error()};
+        BOOST_CHECK_EQUAL(*moved, 7);
+    }
+    {
+        Expected<void, std::unique_ptr<int>> void_nocopy_err{Unexpected{std::make_unique<int>(9)}};
+        const auto moved{std::move(void_nocopy_err).error()};
+        BOOST_CHECK_EQUAL(*moved, 9);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(unexpected_error_accessors)
