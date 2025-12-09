@@ -224,18 +224,17 @@ void CSigSharesManager::Stop()
         assert(false);
     }
 
-    // Stop worker pool
-    workerPool.clear_queue();
-    workerPool.stop(true);
-
-    // Join threads
+    // Join threads FIRST to stop any pending push() calls
     if (housekeepingThread.joinable()) {
         housekeepingThread.join();
     }
-
     if (dispatcherThread.joinable()) {
         dispatcherThread.join();
     }
+
+    // Then stop worker pool (now safe, no more push() calls)
+    workerPool.clear_queue();
+    workerPool.stop(true);
 }
 
 void CSigSharesManager::RegisterAsRecoveredSigsListener()
