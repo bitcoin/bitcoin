@@ -164,9 +164,12 @@ class FullBlockTest(BitcoinTestFramework):
                 self.sign_tx(badtx, attempt_spend_tx)
             badtx.rehash()
             badblock = self.update_block(blockname, [badtx])
+            reject_reason = (template.block_reject_reason or template.reject_reason)
+            if reject_reason and reject_reason.startswith("mempool-script-verify-flag-failed"):
+                reject_reason = "mandatory-script-verify-flag-failed" + reject_reason[33:]
             self.send_blocks(
                 [badblock], success=False,
-                reject_reason=(template.block_reject_reason or template.reject_reason),
+                reject_reason=reject_reason,
                 reconnect=True, timeout=2)
 
             self.move_tip(2)
