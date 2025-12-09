@@ -6229,9 +6229,10 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
             LOCK(tx_relay->m_tx_inventory_mutex);
             // Check whether periodic sends should happen
-            // Note: If this node is running in a Masternode mode, it makes no sense to delay outgoing txes
-            // because we never produce any txes ourselves i.e. no privacy is lost in this case.
-            bool fSendTrickle = pto->HasPermission(NetPermissionFlags::NoBan) || is_masternode;
+            // Note: If this node is a Masternode sending to another Masternode, skip trickling for fast
+            // MN-to-MN propagation. However, MN-to-non-MN should still trickle to minimize information leakage
+            const bool peer_is_mn = !pto->GetVerifiedProRegTxHash().IsNull();
+            bool fSendTrickle = pto->HasPermission(NetPermissionFlags::NoBan) || (is_masternode && peer_is_mn);
             if (tx_relay->m_next_inv_send_time < current_time) {
                 fSendTrickle = true;
                 if (pto->IsInboundConn()) {
