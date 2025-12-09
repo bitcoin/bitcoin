@@ -142,6 +142,20 @@ class DashGovernanceTest (DashTestFramework):
         self.bump_mocktime(156)
         self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks(self.nodes[0:5]))
 
+        self.log.info("Wait for governance module to catch up with block updates")
+        tip_height = self.nodes[0].getblockcount()
+        expected_msg = f'CGovernanceManager::UpdatedBlockTip -- nCachedBlockHeight: {tip_height}'
+
+        def governance_tip_updated(node):
+            with open(node.debug_log_path, encoding='utf-8') as dl:
+                seek_pos = node.debug_log_bytes() - 100 * 1024  # read the last 100 KiB only
+                dl.seek(seek_pos if seek_pos > 0 else 0)
+                debug_log_part = dl.read()
+            return expected_msg in debug_log_part
+
+        for node in self.nodes[0:5]:
+            self.wait_until(lambda node=node: governance_tip_updated(node), sleep=0.5, timeout=15)
+
         self.log.info("Bump mocktime to trigger governance cleanup")
         for delta, expected in (
             (5 * 60, ['CleanAndRemoveTriggers -- Removing trigger object']),  # mark old triggers for deletion
