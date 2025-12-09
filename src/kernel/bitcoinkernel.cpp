@@ -767,9 +767,6 @@ btck_ChainParameters* btck_chain_parameters_create(const btck_ChainType chain_ty
     case btck_ChainType_MAINNET: {
         return btck_ChainParameters::ref(const_cast<CChainParams*>(CChainParams::Main().release()));
     }
-    case btck_ChainType_TESTNET: {
-        return btck_ChainParameters::ref(const_cast<CChainParams*>(CChainParams::TestNet().release()));
-    }
     case btck_ChainType_TESTNET_4: {
         return btck_ChainParameters::ref(const_cast<CChainParams*>(CChainParams::TestNet4().release()));
     }
