@@ -334,9 +334,26 @@ bool SendCoinsDialog::send(const QList<SendCoinsRecipient>& recipients, QString&
     processSendCoinsReturn(prepareStatus,
         BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), m_current_transaction->getTransactionFee()));
 
-    if(prepareStatus.status != WalletModel::OK) {
+    // Handle DuplicateAddress as a warning that requires user confirmation
+    if (prepareStatus.status == WalletModel::DuplicateAddress) {
+        QMessageBox::StandardButton reply = QMessageBox::question(
+            this,
+            tr("Confirm duplicate recipients"),
+            tr("You are sending to the same address multiple times in a single transaction. "
+               "This is unusual and may not be what you intended. "
+               "Are you sure you want to proceed?"),
+            QMessageBox::Yes | QMessageBox::Cancel,
+            QMessageBox::Cancel
+        );
+
+        if (reply != QMessageBox::Yes) {
+            fNewRecipientAllowed = true;
+            return false;
+        }
+        // User confirmed, continue
+    } else if (prepareStatus.status != WalletModel::OK) {
         fNewRecipientAllowed = true;
-          return false;
+        return false;
     }
 
     QStringList formatted;
@@ -812,9 +829,6 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
     case WalletModel::AmountWithFeeExceedsBalance:
         msgParams.first = tr("The total exceeds your balance when the %1 transaction fee is included.").arg(msgArg);
         break;
-    case WalletModel::DuplicateAddress:
-        msgParams.first = tr("Duplicate address found: addresses should only be used once each.");
-        break;
     case WalletModel::TransactionCreationFailed:
         msgParams.first = tr("Transaction creation failed!");
         msgParams.second = CClientUIInterface::MSG_ERROR;
@@ -823,6 +837,7 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
         msgParams.first = tr("A fee higher than %1 is considered an absurdly high fee.").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), model->wallet().getDefaultMaxTxFee()));
         break;
     // included to prevent a compiler warning.
+    case WalletModel::DuplicateAddress:
     case WalletModel::OK:
     default:
         return;
