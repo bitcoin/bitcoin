@@ -88,8 +88,9 @@ public:
     constexpr E& error() & noexcept LIFETIMEBOUND { return *Assert(std::get_if<1>(&m_data)); }
     constexpr E&& error() && noexcept LIFETIMEBOUND { return std::move(error()); }
 
-    constexpr T& operator*() noexcept LIFETIMEBOUND { return value(); }
-    constexpr const T& operator*() const noexcept LIFETIMEBOUND { return value(); }
+    constexpr T& operator*() & noexcept LIFETIMEBOUND { return value(); }
+    constexpr const T& operator*() const& noexcept LIFETIMEBOUND { return value(); }
+    constexpr T&& operator*() && noexcept LIFETIMEBOUND { return std::move(value()); }
 
     constexpr T* operator->() noexcept LIFETIMEBOUND { return &value(); }
     constexpr const T* operator->() const noexcept LIFETIMEBOUND { return &value(); }

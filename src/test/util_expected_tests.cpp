@@ -50,6 +50,13 @@ BOOST_AUTO_TEST_CASE(expected_value_rvalue)
     BOOST_CHECK_EQUAL(*moved, 5);
 }
 
+BOOST_AUTO_TEST_CASE(expected_deref_rvalue)
+{
+    Expected<std::unique_ptr<int>, int> no_copy{std::make_unique<int>(5)};
+    const auto moved{*std::move(no_copy)};
+    BOOST_CHECK_EQUAL(*moved, 5);
+}
+
 BOOST_AUTO_TEST_CASE(expected_value_or)
 {
     Expected<std::unique_ptr<int>, int> no_copy{std::make_unique<int>(1)};
