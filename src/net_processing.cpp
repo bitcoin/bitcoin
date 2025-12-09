@@ -587,10 +587,10 @@ public:
                     CDSTXManager& dstxman, ChainstateManager& chainman, CTxMemPool& pool,
                     CMasternodeMetaMan& mn_metaman, CMasternodeSync& mn_sync, CGovernanceManager& govman,
                     CSporkManager& sporkman,
-                    CJWalletManager* const cj_walletman,
                     const CActiveMasternodeManager* const mn_activeman,
-                    const std::unique_ptr<CDeterministicMNManager>& dmnman,
                     const std::unique_ptr<ActiveContext>& active_ctx,
+                    const std::unique_ptr<CDeterministicMNManager>& dmnman,
+                    const std::unique_ptr<CJWalletManager>& cj_walletman,
                     const std::unique_ptr<LLMQContext>& llmq_ctx,
                     const std::unique_ptr<llmq::ObserverContext>& observer_ctx, bool ignore_incoming_txs);
 
@@ -812,16 +812,15 @@ private:
     ChainstateManager& m_chainman;
     CTxMemPool& m_mempool;
     std::unique_ptr<TxReconciliationTracker> m_txreconciliation;
-    const std::unique_ptr<CDeterministicMNManager>& m_dmnman;
     const std::unique_ptr<ActiveContext>& m_active_ctx;
+    const std::unique_ptr<CDeterministicMNManager>& m_dmnman;
+    const std::unique_ptr<CJWalletManager>& m_cj_walletman;
     const std::unique_ptr<LLMQContext>& m_llmq_ctx;
     const std::unique_ptr<llmq::ObserverContext>& m_observer_ctx;
     CMasternodeMetaMan& m_mn_metaman;
     CMasternodeSync& m_mn_sync;
     CGovernanceManager& m_govman;
     CSporkManager& m_sporkman;
-    /** Pointer to this node's CJWalletManager. May be nullptr - check existence before dereferencing. */
-    CJWalletManager* const m_cj_walletman;
     /** Pointer to this node's CActiveMasternodeManager. May be nullptr - check existence before dereferencing. */
     const CActiveMasternodeManager* const m_mn_activeman;
 
@@ -2047,24 +2046,24 @@ std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, 
                                                CTxMemPool& pool, CMasternodeMetaMan& mn_metaman,
                                                CMasternodeSync& mn_sync, CGovernanceManager& govman,
                                                CSporkManager& sporkman,
-                                               CJWalletManager* const cj_walletman,
                                                const CActiveMasternodeManager* const mn_activeman,
-                                               const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                                const std::unique_ptr<ActiveContext>& active_ctx,
+                                               const std::unique_ptr<CDeterministicMNManager>& dmnman,
+                                               const std::unique_ptr<CJWalletManager>& cj_walletman,
                                                const std::unique_ptr<LLMQContext>& llmq_ctx,
                                                const std::unique_ptr<llmq::ObserverContext>& observer_ctx, bool ignore_incoming_txs)
 {
-    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, dstxman, chainman, pool, mn_metaman, mn_sync, govman, sporkman, cj_walletman, mn_activeman, dmnman, active_ctx, llmq_ctx, observer_ctx, ignore_incoming_txs);
+    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, dstxman, chainman, pool, mn_metaman, mn_sync, govman, sporkman, mn_activeman, active_ctx, dmnman, cj_walletman, llmq_ctx, observer_ctx, ignore_incoming_txs);
 }
 
 PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, AddrMan& addrman, BanMan* banman,
                                  CDSTXManager& dstxman, ChainstateManager& chainman, CTxMemPool& pool,
                                  CMasternodeMetaMan& mn_metaman, CMasternodeSync& mn_sync, CGovernanceManager& govman,
                                  CSporkManager& sporkman,
-                                 CJWalletManager* const cj_walletman,
                                  const CActiveMasternodeManager* const mn_activeman,
-                                 const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                  const std::unique_ptr<ActiveContext>& active_ctx,
+                                 const std::unique_ptr<CDeterministicMNManager>& dmnman,
+                                 const std::unique_ptr<CJWalletManager>& cj_walletman,
                                  const std::unique_ptr<LLMQContext>& llmq_ctx,
                                  const std::unique_ptr<llmq::ObserverContext>& observer_ctx, bool ignore_incoming_txs)
     : m_chainparams(chainparams),
@@ -2074,15 +2073,15 @@ PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& conn
       m_dstxman(dstxman),
       m_chainman(chainman),
       m_mempool(pool),
-      m_dmnman(dmnman),
       m_active_ctx(active_ctx),
+      m_dmnman(dmnman),
+      m_cj_walletman(cj_walletman),
       m_llmq_ctx(llmq_ctx),
       m_observer_ctx(observer_ctx),
       m_mn_metaman(mn_metaman),
       m_mn_sync(mn_sync),
       m_govman(govman),
       m_sporkman(sporkman),
-      m_cj_walletman(cj_walletman),
       m_mn_activeman(mn_activeman),
       m_ignore_incoming_txs(ignore_incoming_txs)
 {

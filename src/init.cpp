@@ -2194,20 +2194,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.dstxman);
     node.dstxman = std::make_unique<CDSTXManager>();
 
-    assert(!node.cj_walletman);
-    if (!node.mn_activeman) {
-        node.cj_walletman = CJWalletManager::make(chainman, *node.dmnman, *node.mn_metaman, *node.mempool, *node.mn_sync,
-                                                  *node.llmq_ctx->isman, !ignores_incoming_txs);
-    }
-    if (node.cj_walletman) {
-        RegisterValidationInterface(node.cj_walletman.get());
-    }
-
     assert(!node.peerman);
     node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(), *node.dstxman,
                                      chainman, *node.mempool, *node.mn_metaman, *node.mn_sync,
-                                     *node.govman, *node.sporkman, node.cj_walletman.get(), node.mn_activeman.get(), node.dmnman,
-                                     node.active_ctx, node.llmq_ctx, node.observer_ctx, ignores_incoming_txs);
+                                     *node.govman, *node.sporkman, node.mn_activeman.get(), node.active_ctx, node.dmnman,
+                                     node.cj_walletman, node.llmq_ctx, node.observer_ctx, ignores_incoming_txs);
     RegisterValidationInterface(node.peerman.get());
 
     g_ds_notification_interface = std::make_unique<CDSNotificationInterface>(
@@ -2241,6 +2232,17 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     // ********************************************************* Step 7d: Setup other Dash services
+
+    assert(!node.cj_walletman);
+    if (!node.active_ctx) {
+        // Can return nullptr if built without wallet support, must check before use
+        node.cj_walletman = CJWalletManager::make(chainman, *node.dmnman, *node.mn_metaman, *node.mempool, *node.mn_sync,
+                                                  *node.llmq_ctx->isman, !ignores_incoming_txs);
+    }
+
+    if (node.cj_walletman) {
+        RegisterValidationInterface(node.cj_walletman.get());
+    }
 
     bool fLoadCacheFiles = !(fReindex || fReindexChainState) && (chainman.ActiveChain().Tip() != nullptr);
 

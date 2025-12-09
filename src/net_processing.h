@@ -106,10 +106,10 @@ public:
                                              BanMan* banman, CDSTXManager& dstxman, ChainstateManager& chainman,
                                              CTxMemPool& pool, CMasternodeMetaMan& mn_metaman, CMasternodeSync& mn_sync,
                                              CGovernanceManager& govman, CSporkManager& sporkman,
-                                             CJWalletManager* const cj_walletman,
                                              const CActiveMasternodeManager* const mn_activeman,
-                                             const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                              const std::unique_ptr<ActiveContext>& active_ctx,
+                                             const std::unique_ptr<CDeterministicMNManager>& dmnman,
+                                             const std::unique_ptr<CJWalletManager>& cj_walletman,
                                              const std::unique_ptr<LLMQContext>& llmq_ctx,
                                              const std::unique_ptr<llmq::ObserverContext>& observer_ctx, bool ignore_incoming_txs);
     virtual ~PeerManager() { }
