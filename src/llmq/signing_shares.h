@@ -6,6 +6,7 @@
 #define BITCOIN_LLMQ_SIGNING_SHARES_H
 
 #include <bls/bls.h>
+#include <ctpl_stl.h>
 #include <evo/types.h>
 #include <llmq/signhash.h>
 #include <llmq/signing.h>
@@ -361,7 +362,7 @@ public:
     int attempt{0};
 };
 
-class CSigSharesManager : public CRecoveredSigsListener
+class CSigSharesManager : public llmq::CRecoveredSigsListener
 {
 private:
     static constexpr int64_t SESSION_NEW_SHARES_TIMEOUT{60};
@@ -380,7 +381,9 @@ private:
 
     Mutex cs;
 
-    std::thread workThread;
+    mutable ctpl::thread_pool workerPool;
+    std::thread housekeepingThread;
+    std::thread dispatcherThread;
     CThreadInterrupt workInterrupt;
 
     SigShareMap<CSigShare> sigShares GUARDED_BY(cs);
@@ -426,8 +429,8 @@ public:
                                const CQuorumManager& _qman, const CSporkManager& sporkman);
     ~CSigSharesManager() override;
 
-    void StartWorkerThread() EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    void StopWorkerThread() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void Start() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void Stop() EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void RegisterAsRecoveredSigsListener() EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void UnregisterAsRecoveredSigsListener() EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void InterruptWorkerThread() EXCLUSIVE_LOCKS_REQUIRED(!cs);
@@ -500,8 +503,18 @@ private:
     void CollectSigSharesToSendConcentrated(std::unordered_map<NodeId, std::vector<CSigShare>>& sigSharesToSend, const std::vector<CNode*>& vNodes) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void CollectSigSharesToAnnounce(std::unordered_map<NodeId, Uint256HashMap<CSigSharesInv>>& sigSharesToAnnounce)
         EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void SignPendingSigShares() EXCLUSIVE_LOCKS_REQUIRED(!cs_pendingSigns, !cs);
-    void WorkThreadMain() EXCLUSIVE_LOCKS_REQUIRED(!cs_pendingSigns, !cs);
+
+    // Thread main functions
+    void HousekeepingThreadMain() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void WorkDispatcherThreadMain() EXCLUSIVE_LOCKS_REQUIRED(!cs_pendingSigns, !cs);
+
+    // Dispatcher functions
+    void DispatchPendingSigns() EXCLUSIVE_LOCKS_REQUIRED(!cs_pendingSigns);
+    void DispatchPendingProcessing() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+    // Worker pool task functions
+    void ProcessPendingSigSharesLoop() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void SignAndProcessSingleShare(PendingSignatureData work) EXCLUSIVE_LOCKS_REQUIRED(!cs_pendingSigns, !cs);
 };
 } // namespace llmq
 

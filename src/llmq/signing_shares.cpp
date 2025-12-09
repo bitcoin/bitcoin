@@ -196,26 +196,45 @@ CSigSharesManager::CSigSharesManager(CConnman& connman, CChainState& chainstate,
 
 CSigSharesManager::~CSigSharesManager() = default;
 
-void CSigSharesManager::StartWorkerThread()
+void CSigSharesManager::Start()
 {
-    // can't start new thread if we have one running already
-    if (workThread.joinable()) {
+    // can't start if threads are already running
+    if (housekeepingThread.joinable() || dispatcherThread.joinable()) {
         assert(false);
     }
 
-    workThread = std::thread(&util::TraceThread, "sigshares", [this] { WorkThreadMain(); });
+    // Initialize worker pool
+    int workerCount = std::clamp(static_cast<int>(std::thread::hardware_concurrency() / 2), 1, 4);
+    workerPool.resize(workerCount);
+    RenameThreadPool(workerPool, "sigsh-work");
+
+    // Start housekeeping thread
+    housekeepingThread = std::thread(&util::TraceThread, "sigsh-maint",
+        [this] { HousekeepingThreadMain(); });
+
+    // Start dispatcher thread
+    dispatcherThread = std::thread(&util::TraceThread, "sigsh-dispat",
+        [this] { WorkDispatcherThreadMain(); });
 }
 
-void CSigSharesManager::StopWorkerThread()
+void CSigSharesManager::Stop()
 {
     // make sure to call InterruptWorkerThread() first
     if (!workInterrupt) {
         assert(false);
     }
 
-    if (workThread.joinable()) {
-        workThread.join();
+    // Join threads FIRST to stop any pending push() calls
+    if (housekeepingThread.joinable()) {
+        housekeepingThread.join();
     }
+    if (dispatcherThread.joinable()) {
+        dispatcherThread.join();
+    }
+
+    // Then stop worker pool (now safe, no more push() calls)
+    workerPool.clear_queue();
+    workerPool.stop(true);
 }
 
 void CSigSharesManager::RegisterAsRecoveredSigsListener()
@@ -1611,26 +1630,96 @@ void CSigSharesManager::BanNode(NodeId nodeId)
     nodeState.banned = true;
 }
 
-void CSigSharesManager::WorkThreadMain()
+void CSigSharesManager::HousekeepingThreadMain()
 {
-    int64_t lastSendTime = 0;
-
     while (!workInterrupt) {
         RemoveBannedNodeStates();
-
-        bool fMoreWork = ProcessPendingSigShares();
-        SignPendingSigShares();
-
-        if (TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - lastSendTime > 100) {
-            SendMessages();
-            lastSendTime = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
-        }
-
+        SendMessages();
         Cleanup();
 
-        // TODO Wakeup when pending signing is needed?
-        if (!fMoreWork && !workInterrupt.sleep_for(std::chrono::milliseconds(100))) {
-            return;
+        workInterrupt.sleep_for(std::chrono::milliseconds(100));
+    }
+}
+
+void CSigSharesManager::WorkDispatcherThreadMain()
+{
+    while (!workInterrupt) {
+        // Dispatch all pending signs (individual tasks)
+        DispatchPendingSigns();
+
+        // If there's processing work, spawn a helper worker
+        DispatchPendingProcessing();
+
+        // Always sleep briefly between checks
+        workInterrupt.sleep_for(std::chrono::milliseconds(10));
+    }
+}
+
+void CSigSharesManager::DispatchPendingSigns()
+{
+    // Swap out entire vector to avoid lock thrashing
+    std::vector<PendingSignatureData> signs;
+    {
+        LOCK(cs_pendingSigns);
+        signs.swap(pendingSigns);
+    }
+
+    // Dispatch all signs to worker pool
+    for (auto& work : signs) {
+        if (workInterrupt) break;
+
+        workerPool.push([this, work = std::move(work)](int) {
+            SignAndProcessSingleShare(std::move(work));
+        });
+    }
+}
+
+void CSigSharesManager::DispatchPendingProcessing()
+{
+    // Check if there's work, spawn a helper if so
+    bool hasWork = false;
+    {
+        LOCK(cs);
+        hasWork = std::any_of(nodeStates.begin(), nodeStates.end(),
+            [](const auto& entry) {
+                return !entry.second.pendingIncomingSigShares.Empty();
+            });
+    }
+
+    if (hasWork) {
+        // Work exists - spawn a worker to help!
+        workerPool.push([this](int) {
+            ProcessPendingSigSharesLoop();
+        });
+    }
+}
+
+void CSigSharesManager::ProcessPendingSigSharesLoop()
+{
+    while (!workInterrupt) {
+        bool moreWork = ProcessPendingSigShares();
+
+        if (!moreWork) {
+            return;  // No work found, exit immediately
+        }
+    }
+}
+
+void CSigSharesManager::SignAndProcessSingleShare(PendingSignatureData work)
+{
+    auto opt_sigShare = CreateSigShare(*work.quorum, work.id, work.msgHash);
+
+    if (opt_sigShare.has_value() && opt_sigShare->sigShare.Get().IsValid()) {
+        auto& sigShare = *opt_sigShare;
+        ProcessSigShare(sigShare, work.quorum);
+
+        if (IsAllMembersConnectedEnabled(work.quorum->params.type, m_sporkman)) {
+            LOCK(cs);
+            auto& session = signedSessions[sigShare.GetSignHash()];
+            session.sigShare = std::move(sigShare);
+            session.quorum = work.quorum;
+            session.nextAttemptTime = 0;
+            session.attempt = 0;
         }
     }
 }
@@ -1639,30 +1728,6 @@ void CSigSharesManager::AsyncSign(CQuorumCPtr quorum, const uint256& id, const u
 {
     LOCK(cs_pendingSigns);
     pendingSigns.emplace_back(std::move(quorum), id, msgHash);
-}
-
-void CSigSharesManager::SignPendingSigShares()
-{
-    std::vector<PendingSignatureData> v;
-    WITH_LOCK(cs_pendingSigns, v.swap(pendingSigns));
-
-    for (const auto& [pQuorum, id, msgHash] : v) {
-        auto opt_sigShare = CreateSigShare(*pQuorum, id, msgHash);
-
-        if (opt_sigShare.has_value() && opt_sigShare->sigShare.Get().IsValid()) {
-            auto& sigShare = *opt_sigShare;
-            ProcessSigShare(sigShare, pQuorum);
-
-            if (IsAllMembersConnectedEnabled(pQuorum->params.type, m_sporkman)) {
-                LOCK(cs);
-                auto& session = signedSessions[sigShare.GetSignHash()];
-                session.sigShare = std::move(sigShare);
-                session.quorum = pQuorum;
-                session.nextAttemptTime = 0;
-                session.attempt = 0;
-            }
-        }
-    }
 }
 
 std::optional<CSigShare> CSigSharesManager::CreateSigShareForSingleMember(const CQuorum& quorum, const uint256& id, const uint256& msgHash) const

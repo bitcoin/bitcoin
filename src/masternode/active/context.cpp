@@ -55,12 +55,12 @@ void ActiveContext::Start(CConnman& connman, PeerManager& peerman)
 {
     m_llmq_ctx.qdkgsman->StartThreads(connman, peerman);
     shareman->RegisterAsRecoveredSigsListener();
-    shareman->StartWorkerThread();
+    shareman->Start();
 }
 
 void ActiveContext::Stop()
 {
-    shareman->StopWorkerThread();
+    shareman->Stop();
     shareman->UnregisterAsRecoveredSigsListener();
     m_llmq_ctx.qdkgsman->StopThreads();
 }
