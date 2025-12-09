@@ -154,7 +154,7 @@ class DashGovernanceTest (DashTestFramework):
             return expected_msg in debug_log_part
 
         for node in self.nodes[0:5]:
-            self.wait_until(lambda node=node: governance_tip_updated(node), sleep=0.5, timeout=15)
+            self.wait_until(lambda node=node: governance_tip_updated(node))
 
         self.log.info("Bump mocktime to trigger governance cleanup")
         for delta, expected in (
