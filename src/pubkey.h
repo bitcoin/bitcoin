@@ -121,10 +121,6 @@ public:
         return a.vch[0] == b.vch[0] &&
                memcmp(a.vch, b.vch, a.size()) == 0;
     }
-    friend bool operator!=(const CPubKey& a, const CPubKey& b)
-    {
-        return !(a == b);
-    }
     friend bool operator<(const CPubKey& a, const CPubKey& b)
     {
         return a.vch[0] < b.vch[0] ||
@@ -302,7 +298,6 @@ public:
     unsigned char* begin() { return m_keydata.begin(); }
     unsigned char* end() { return m_keydata.end(); }
     bool operator==(const XOnlyPubKey& other) const { return m_keydata == other.m_keydata; }
-    bool operator!=(const XOnlyPubKey& other) const { return m_keydata != other.m_keydata; }
     bool operator<(const XOnlyPubKey& other) const { return m_keydata < other.m_keydata; }
 
     //! Implement serialization without length prefixes since it is a fixed length
@@ -336,11 +331,6 @@ public:
     {
         return a.m_pubkey == b.m_pubkey;
     }
-
-    bool friend operator!=(const EllSwiftPubKey& a, const EllSwiftPubKey& b)
-    {
-        return a.m_pubkey != b.m_pubkey;
-    }
 };
 
 struct CExtPubKey {
@@ -358,11 +348,6 @@ struct CExtPubKey {
             a.nChild == b.nChild &&
             a.chaincode == b.chaincode &&
             a.pubkey == b.pubkey;
-    }
-
-    friend bool operator!=(const CExtPubKey &a, const CExtPubKey &b)
-    {
-        return !(a == b);
     }
 
     friend bool operator<(const CExtPubKey &a, const CExtPubKey &b)

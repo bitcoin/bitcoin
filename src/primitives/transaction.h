@@ -51,11 +51,6 @@ public:
         return (a.hash == b.hash && a.n == b.n);
     }
 
-    friend bool operator!=(const COutPoint& a, const COutPoint& b)
-    {
-        return !(a == b);
-    }
-
     std::string ToString() const;
 };
 
@@ -135,11 +130,6 @@ public:
                 a.nSequence == b.nSequence);
     }
 
-    friend bool operator!=(const CTxIn& a, const CTxIn& b)
-    {
-        return !(a == b);
-    }
-
     std::string ToString() const;
 };
 
@@ -176,11 +166,6 @@ public:
     {
         return (a.nValue       == b.nValue &&
                 a.scriptPubKey == b.scriptPubKey);
-    }
-
-    friend bool operator!=(const CTxOut& a, const CTxOut& b)
-    {
-        return !(a == b);
     }
 
     std::string ToString() const;
@@ -361,11 +346,6 @@ public:
     friend bool operator==(const CTransaction& a, const CTransaction& b)
     {
         return a.GetWitnessHash() == b.GetWitnessHash();
-    }
-
-    friend bool operator!=(const CTransaction& a, const CTransaction& b)
-    {
-        return !operator==(a, b);
     }
 
     std::string ToString() const;

@@ -26,6 +26,13 @@ import lief
 #
 # - libc version 2.34 (https://mirror.stream.centos.org/9-stream/AppStream/x86_64/os/Packages/)
 #
+# bitcoin-qt
+#
+# Ubuntu 22.04 is currently the baseline for ELF_ALLOWED_LIBRARIES:
+#
+# libfontconfig version 2.13.1 (https://packages.ubuntu.com/jammy/libfontconfig1)
+#
+# libfreetype version 2.11.1 (https://packages.ubuntu.com/jammy/libfreetype6)
 
 MAX_VERSIONS = {
 'GLIBC': {
@@ -39,8 +46,7 @@ MAX_VERSIONS = {
 
 # Ignore symbols that are exported as part of every executable
 IGNORE_EXPORTS = {
-'environ', '_environ', '__environ', '_fini', '_init', 'stdin',
-'stdout', 'stderr',
+'stdin', 'stdout', 'stderr',
 }
 
 # Expected linker-loader names can be found here:

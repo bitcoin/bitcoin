@@ -19,7 +19,6 @@
              ((gnu packages python-crypto) #:select (python-asn1crypto))
              ((gnu packages python-science) #:select (python-scikit-build-core))
              ((gnu packages python-xyz) #:select (python-pydantic-2))
-             (gnu packages tcl)
              ((gnu packages tls) #:select (openssl))
              ((gnu packages version-control) #:select (git-minimal))
              (guix build-system cmake)
@@ -549,7 +548,6 @@ inspecting signatures in Mach-O binaries.")
         cmake-minimal
         gnu-make
         ninja
-        tcl
         ;; Scripting
         python-minimal ;; (3.10)
         ;; Git

@@ -899,8 +899,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
             throw CConnectionFailed("uri-encode failed");
         }
     }
-    int r = evhttp_make_request(evcon.get(), req.get(), EVHTTP_REQ_POST, endpoint.c_str());
-    req.release(); // ownership moved to evcon in above call
+    int r = evhttp_make_request(evcon.get(), req.release(), EVHTTP_REQ_POST, endpoint.c_str());
     if (r != 0) {
         throw CConnectionFailed("send http request failed");
     }
