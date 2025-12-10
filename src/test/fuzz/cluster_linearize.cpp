@@ -1152,6 +1152,10 @@ FUZZ_TARGET(clusterlin_sfl)
     /** Whether to do any optimization steps to the SFL state (only if state is topological
      *  then). */
     const bool try_optimize = flags & 4;
+    /** Whether to load an input linearization into SFL state. */
+    const bool load_linearization = flags & 8;
+    /** Whether to load a topological input linearization into SFL state. */
+    const bool load_topological = load_linearization && (flags & 16);
 
     //
     // Construct the depgraph and SFL state for it.
@@ -1159,6 +1163,16 @@ FUZZ_TARGET(clusterlin_sfl)
     bool is_topological = false;
     if (make_connected) MakeConnected(depgraph);
     SpanningForestState sfl(depgraph);
+
+    //
+    // Read and load input linearization, if selected.
+    //
+    std::vector<DepGraphIndex> input_lin;
+    if (load_linearization) {
+        input_lin = ReadLinearization(depgraph, reader, load_topological);
+        sfl.LoadLinearization(input_lin);
+        if (load_topological) is_topological = true;
+    }
 
     //
     // Make topological, if selected.
@@ -1198,10 +1212,19 @@ FUZZ_TARGET(clusterlin_sfl)
         auto lin = sfl.GetLinearization();
         // Which must be valid.
         SanityCheck(depgraph, lin);
+
+        // If we started from a topological input, the resulting feerate diagram must be at least
+        // as good (not worse or incomparable).
+        auto chunks = ChunkLinearization(depgraph, lin);
+        if (load_topological) {
+            auto input_chunks = ChunkLinearization(depgraph, input_lin);
+            auto cmp = CompareChunks(chunks, input_chunks);
+            assert(cmp >= 0);
+        }
+
         // If the SFL state was made optimal, we can compare with any arbitrary linearization, and
         // the diagram must be at least as good.
         if (is_optimal) {
-            auto chunks = ChunkLinearization(depgraph, lin);
             for (int i = 0; i < 10; ++i) {
                 auto cmp_lin = ReadLinearization(depgraph, reader);
                 auto cmp_chunks = ChunkLinearization(depgraph, cmp_lin);
