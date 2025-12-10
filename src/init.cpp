@@ -1683,7 +1683,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             ipv4_proxy = name_proxy = proxy;
         } else if (net_str == "ipv6") {
             ipv6_proxy = name_proxy = proxy;
-        } else if (net_str == "tor" || net_str == "onion") {
+        } else if (net_str == "onion") {
             onion_proxy = proxy;
         } else if (net_str == "cjdns") {
             cjdns_proxy = proxy;

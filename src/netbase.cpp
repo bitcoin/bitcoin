@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -102,10 +102,6 @@ enum Network ParseNetwork(const std::string& net_in) {
     if (net == "ipv4") return NET_IPV4;
     if (net == "ipv6") return NET_IPV6;
     if (net == "onion") return NET_ONION;
-    if (net == "tor") {
-        LogWarning("Net name 'tor' is deprecated and will be removed in the future. You should use 'onion' instead.");
-        return NET_ONION;
-    }
     if (net == "i2p") {
         return NET_I2P;
     }

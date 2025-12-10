@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -348,17 +348,20 @@ BOOST_AUTO_TEST_CASE(netbase_parsenetwork)
     BOOST_CHECK_EQUAL(ParseNetwork("ipv4"), NET_IPV4);
     BOOST_CHECK_EQUAL(ParseNetwork("ipv6"), NET_IPV6);
     BOOST_CHECK_EQUAL(ParseNetwork("onion"), NET_ONION);
-    BOOST_CHECK_EQUAL(ParseNetwork("tor"), NET_ONION);
     BOOST_CHECK_EQUAL(ParseNetwork("cjdns"), NET_CJDNS);
 
     BOOST_CHECK_EQUAL(ParseNetwork("IPv4"), NET_IPV4);
     BOOST_CHECK_EQUAL(ParseNetwork("IPv6"), NET_IPV6);
     BOOST_CHECK_EQUAL(ParseNetwork("ONION"), NET_ONION);
-    BOOST_CHECK_EQUAL(ParseNetwork("TOR"), NET_ONION);
     BOOST_CHECK_EQUAL(ParseNetwork("CJDNS"), NET_CJDNS);
 
+    // "tor" as a network specification was deprecated in 60dc8e4208 in favor of
+    // "onion" and later removed.
+    BOOST_CHECK_EQUAL(ParseNetwork("tor"), NET_UNROUTABLE);
+    BOOST_CHECK_EQUAL(ParseNetwork("TOR"), NET_UNROUTABLE);
+
     BOOST_CHECK_EQUAL(ParseNetwork(":)"), NET_UNROUTABLE);
-    BOOST_CHECK_EQUAL(ParseNetwork("tÖr"), NET_UNROUTABLE);
+    BOOST_CHECK_EQUAL(ParseNetwork("oniÖn"), NET_UNROUTABLE);
     BOOST_CHECK_EQUAL(ParseNetwork("\xfe\xff"), NET_UNROUTABLE);
     BOOST_CHECK_EQUAL(ParseNetwork(""), NET_UNROUTABLE);
 }
