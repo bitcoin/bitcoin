@@ -27,23 +27,23 @@
  *   +-----------------------+
  *   | SearchCandidateFinder | <<---------------------\
  *   +-----------------------+                        |
- *     |                                            +-----------+
- *     |                                            | Linearize |
- *     |                                            +-----------+
- *     |        +-------------------------+           |  |
- *     |        | AncestorCandidateFinder | <<--------/  |
- *     |        +-------------------------+              |
- *     |          |                     ^                |        ^^  PRODUCTION CODE
- *     |          |                     |                |        ||
+ *     |                                            +-----------+       +---------------------+
+ *     |                                            | Linearize |       | SpanningForestState |
+ *     |                                            +-----------+       +---------------------+
+ *     |        +-------------------------+           |  |                              |
+ *     |        | AncestorCandidateFinder | <<--------/  |                              |
+ *     |        +-------------------------+              |                              |
+ *     |          |                     ^                |        ^^  PRODUCTION CODE   |
+ *     |          |                     |                |        ||                    |
  *  ==============================================================================================
- *     |          |                     |                |        ||
- *     | clusterlin_ancestor_finder*    |                |        vv  TEST CODE
- *     |                                |                |
- *     |-clusterlin_search_finder*      |                |-clusterlin_linearize*
- *     |                                |                |
- *     v                                |                v
- *   +-----------------------+          |           +-----------------+
- *   | SimpleCandidateFinder | <<-------------------| SimpleLinearize |
+ *     |          |                     |                |        ||                    |
+ *     | clusterlin_ancestor_finder*    |                |        vv  TEST CODE         |
+ *     |                                |                |                              |
+ *     |-clusterlin_search_finder*      |                |-clusterlin_linearize*        |
+ *     |                                |                |                              |
+ *     v                                |                v              clusterlin_sfl--|
+ *   +-----------------------+          |           +-----------------+                 |
+ *   | SimpleCandidateFinder | <<-------------------| SimpleLinearize |<----------------/
  *   +-----------------------+          |           +-----------------+
  *                  |                   |                |
  *                  +-------------------/                |
@@ -1165,6 +1165,80 @@ FUZZ_TARGET(clusterlin_simple_linearize)
         auto read = ReadLinearization(depgraph, reader);
         auto read_chunking = ChunkLinearization(depgraph, read);
         auto cmp = CompareChunks(simple_chunking, read_chunking);
+        assert(cmp >= 0);
+    }
+}
+
+FUZZ_TARGET(clusterlin_sfl)
+{
+    // Verify the individual steps of the SFL algorithm.
+
+    SpanReader reader(buffer);
+    DepGraph<TestBitSet> depgraph;
+    uint8_t flags{1};
+    uint64_t rng_seed{0};
+    try {
+        reader >> rng_seed >> flags >> Using<DepGraphFormatter>(depgraph);
+    } catch (const std::ios_base::failure&) {}
+    if (depgraph.TxCount() <= 1) return;
+    InsecureRandomContext rng(rng_seed);
+    /** Whether to make the depgraph connected. */
+    const bool make_connected = flags & 1;
+
+    // Initialize SFL state.
+    if (make_connected) MakeConnected(depgraph);
+    SpanningForestState sfl(depgraph);
+
+    // Function to test the state.
+    std::vector<FeeFrac> last_diagram;
+    auto test_fn = [&](bool is_optimal = false) {
+        if (rng.randbits(4) == 0) {
+            // Perform sanity checks from time to time (too computationally expensive to do after
+            // every step).
+            sfl.SanityCheck(depgraph);
+        }
+        auto diagram = sfl.GetDiagram();
+        if (rng.randbits(4) == 0) {
+            // Verify that the diagram of GetLinearization() is at least as good as GetDiagram(),
+            // from time to time.
+            auto lin = sfl.GetLinearization();
+            auto lin_diagram = ChunkLinearization(depgraph, lin);
+            auto cmp_lin = CompareChunks(lin_diagram, diagram);
+            assert(cmp_lin >= 0);
+            // If we're in an allegedly optimal state, they must match.
+            if (is_optimal) assert(cmp_lin == 0);
+        }
+        // Verify that subsequent calls to GetDiagram() never get worse/incomparable.
+        if (!last_diagram.empty()) {
+            auto cmp = CompareChunks(diagram, last_diagram);
+            assert(cmp >= 0);
+        }
+        last_diagram = std::move(diagram);
+    };
+
+    // Make SFL state topological.
+    sfl.MakeTopological();
+
+    // Loop until optimal.
+    while (true) {
+        test_fn();
+        if (!sfl.OptimizeStep()) break;
+    }
+    test_fn(/*is_optimal=*/true);
+
+    // The result must be as good as SimpleLinearize.
+    auto [simple_linearization, simple_optimal] = SimpleLinearize(depgraph, MAX_SIMPLE_ITERATIONS / 10);
+    auto simple_diagram = ChunkLinearization(depgraph, simple_linearization);
+    auto simple_cmp = CompareChunks(last_diagram, simple_diagram);
+    assert(simple_cmp >= 0);
+    if (simple_optimal) assert(simple_cmp == 0);
+
+    // We can compare with any arbitrary linearization, and the diagram must be at least as good as
+    // each.
+    for (int i = 0; i < 10; ++i) {
+        auto read_lin = ReadLinearization(depgraph, reader);
+        auto read_diagram = ChunkLinearization(depgraph, read_lin);
+        auto cmp = CompareChunks(last_diagram, read_diagram);
         assert(cmp >= 0);
     }
 }
