@@ -264,8 +264,8 @@ void CCoinsViewCache::Sync()
     auto cursor{CoinsViewCacheCursor(m_sentinel, cacheCoins, /*will_erase=*/false)};
     base->BatchWrite(cursor, hashBlock);
     if (m_sentinel.second.Next() != &m_sentinel) {
-        /* BatchWrite must clear flags of all entries */
-        throw std::logic_error("Not all unspent flagged entries were cleared");
+        /* BatchWrite must clean all entries */
+        throw std::logic_error("Not all unspent dirty entries were cleared");
     }
 }
 
@@ -327,13 +327,13 @@ void CCoinsViewCache::SanityCheck() const
         // Count the number of entries we expect in the linked list.
         if (entry.IsDirty()) ++count_dirty;
     }
-    // Iterate over the linked list of flagged entries.
+    // Iterate over the linked list of dirty entries.
     size_t count_linked = 0;
     for (auto it = m_sentinel.second.Next(); it != &m_sentinel; it = it->second.Next()) {
         // Verify linked list integrity.
         assert(it->second.Next()->second.Prev() == it);
         assert(it->second.Prev()->second.Next() == it);
-        // Verify they are actually flagged.
+        // Verify they are actually dirty.
         assert(it->second.IsDirty());
         // Count the number of entries actually in the list.
         ++count_linked;
