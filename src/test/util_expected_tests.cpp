@@ -17,15 +17,15 @@ BOOST_AUTO_TEST_CASE(expected_value)
         int x;
     };
     Expected<Obj, int> e{};
-    BOOST_CHECK(e.value().x == 0);
+    BOOST_CHECK_EQUAL(e.value().x, 0);
 
     e = Obj{42};
 
     BOOST_CHECK(e.has_value());
     BOOST_CHECK(static_cast<bool>(e));
-    BOOST_CHECK(e.value().x == 42);
-    BOOST_CHECK((*e).x == 42);
-    BOOST_CHECK(e->x == 42);
+    BOOST_CHECK_EQUAL(e.value().x, 42);
+    BOOST_CHECK_EQUAL((*e).x, 42);
+    BOOST_CHECK_EQUAL(e->x, 42);
 
     // modify value
     e.value().x += 1;
@@ -33,9 +33,9 @@ BOOST_AUTO_TEST_CASE(expected_value)
     e->x += 1;
 
     const auto& read{e};
-    BOOST_CHECK(read.value().x == 45);
-    BOOST_CHECK((*read).x == 45);
-    BOOST_CHECK(read->x == 45);
+    BOOST_CHECK_EQUAL(read.value().x, 45);
+    BOOST_CHECK_EQUAL((*read).x, 45);
+    BOOST_CHECK_EQUAL(read->x, 45);
 }
 
 BOOST_AUTO_TEST_CASE(expected_value_or)
@@ -56,13 +56,13 @@ BOOST_AUTO_TEST_CASE(expected_error)
     e = Unexpected{"fail"};
     BOOST_CHECK(!e.has_value());
     BOOST_CHECK(!static_cast<bool>(e));
-    BOOST_CHECK(e.error() == "fail");
+    BOOST_CHECK_EQUAL(e.error(), "fail");
 
     // modify error
     e.error() += "1";
 
     const auto& read{e};
-    BOOST_CHECK(read.error() == "fail1");
+    BOOST_CHECK_EQUAL(read.error(), "fail1");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
