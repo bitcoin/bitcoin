@@ -3926,7 +3926,7 @@ static bool CheckWitnessMalleation(const CBlock& block, bool expect_witness_comm
             // The malleation check is ignored; as the transaction tree itself
             // already does not permit it, it is impossible to trigger in the
             // witness tree.
-            uint256 hash_witness = BlockWitnessMerkleRoot(block, /*mutated=*/nullptr);
+            uint256 hash_witness = BlockWitnessMerkleRoot(block);
 
             CHash256().Write(hash_witness).Write(witness_stack[0]).Finalize(hash_witness);
             if (memcmp(hash_witness.begin(), &block.vtx[0]->vout[commitpos].scriptPubKey[6], 32)) {
@@ -4039,7 +4039,7 @@ std::vector<unsigned char> ChainstateManager::GenerateCoinbaseCommitment(CBlock&
     int commitpos = GetWitnessCommitmentIndex(block);
     std::vector<unsigned char> ret(32, 0x00);
     if (commitpos == NO_WITNESS_COMMITMENT) {
-        uint256 witnessroot = BlockWitnessMerkleRoot(block, nullptr);
+        uint256 witnessroot = BlockWitnessMerkleRoot(block);
         CHash256().Write(witnessroot).Write(ret).Finalize(witnessroot);
         CTxOut out;
         out.nValue = 0;
