@@ -2065,10 +2065,10 @@ class DashTestFramework(BitcoinTestFramework):
 
         self.wait_until(check_dkg_session, timeout=timeout, sleep=sleep)
 
-    def wait_for_quorum_commitment(self, quorum_hash, nodes, llmq_type=100, timeout=15):
+    def wait_for_quorum_commitment(self, quorum_hash, mninfos, llmq_type=100, timeout=15):
         def check_dkg_comitments():
-            for node in nodes:
-                s = node.quorum("dkgstatus")
+            for mn in mninfos:
+                s = mn.get_node(self).quorum("dkgstatus")
                 if "minableCommitments" not in s:
                     return False
                 commits = s["minableCommitments"]
@@ -2169,7 +2169,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.wait_for_quorum_phase(q, 6, expected_members, None, 0, mninfos_online, llmq_type_name=llmq_type_name)
 
         self.log.info("Waiting final commitment")
-        self.wait_for_quorum_commitment(q, nodes, llmq_type=llmq_type)
+        self.wait_for_quorum_commitment(q, mninfos_online, llmq_type=llmq_type)
 
         self.log.info("Mining final commitment")
         self.bump_mocktime(1)

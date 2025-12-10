@@ -72,8 +72,8 @@ class LLMQQuorumRotationTest(DashTestFramework):
 
         tip = self.nodes[0].getblockcount()
         next_dkg = 24 - (tip % 24)
-        for node in self.nodes:
-            dkg_info = node.quorum("dkginfo")
+        for mn in self.mninfo:
+            dkg_info = mn.get_node(self).quorum("dkginfo")
             assert_equal(dkg_info['active_dkgs'], 0)
             assert_equal(dkg_info['next_dkg'], next_dkg)
 
@@ -94,10 +94,8 @@ class LLMQQuorumRotationTest(DashTestFramework):
         next_dkg = 24 - (tip % 24)
         assert next_dkg < 24
         nonzero_dkgs = 0
-        for i in range(len(self.nodes)):
-            dkg_info = self.nodes[i].quorum("dkginfo")
-            if i == 0:
-                assert_equal(dkg_info['active_dkgs'], 0)
+        for mn in self.mninfo:
+            dkg_info = mn.get_node(self).quorum("dkginfo")
             nonzero_dkgs += dkg_info['active_dkgs']
             assert_equal(dkg_info['next_dkg'], next_dkg)
         assert_equal(nonzero_dkgs, 4) # 1 quorums 4 nodes
