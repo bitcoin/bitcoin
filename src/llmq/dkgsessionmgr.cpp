@@ -34,7 +34,7 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CDeterministicMNM
                                        CQuorumBlockProcessor& _quorumBlockProcessor, CQuorumSnapshotManager& qsnapman,
                                        const CActiveMasternodeManager* const mn_activeman,
                                        const ChainstateManager& chainman, const CSporkManager& sporkman,
-                                       const util::DbWrapperParams& db_params) :
+                                       const util::DbWrapperParams& db_params, bool quorums_watch) :
     db{util::MakeDbWrapper({db_params.path / "llmq" / "dkgdb", db_params.memory, db_params.wipe, /*cache_size=*/1 << 20})},
     blsWorker{_blsWorker},
     m_dmnman{dmnman},
@@ -42,9 +42,10 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CDeterministicMNM
     quorumBlockProcessor{_quorumBlockProcessor},
     m_qsnapman{qsnapman},
     m_chainman{chainman},
-    spork_manager{sporkman}
+    spork_manager{sporkman},
+    m_quorums_watch{quorums_watch}
 {
-    if (mn_activeman == nullptr && !IsWatchQuorumsEnabled()) {
+    if (mn_activeman == nullptr && !m_quorums_watch) {
         // Regular nodes do not care about any DKG internals, bail out
         return;
     }
@@ -56,7 +57,7 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CDeterministicMNM
             dkgSessionHandlers.emplace(std::piecewise_construct, std::forward_as_tuple(params.type, i),
                                        std::forward_as_tuple(blsWorker, m_dmnman, dkgDebugManager, *this, mn_metaman,
                                                              quorumBlockProcessor, m_qsnapman, mn_activeman, m_chainman,
-                                                             spork_manager, params, i));
+                                                             spork_manager, params, m_quorums_watch, i));
         }
     }
 }
@@ -119,7 +120,7 @@ MessageProcessingResult CDKGSessionManager::ProcessMessage(CNode& pfrom, bool is
         return {};
     }
 
-    if ((!is_masternode && !IsWatchQuorumsEnabled())) {
+    if (!is_masternode && !m_quorums_watch) {
         // regular non-watching nodes should never receive any of these
         return MisbehavingError{10};
     }

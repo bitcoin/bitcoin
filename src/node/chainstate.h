@@ -105,6 +105,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      bool block_tree_db_in_memory,
                                                      bool coins_db_in_memory,
                                                      bool dash_dbs_in_memory,
+                                                     bool quorums_watch,
                                                      std::function<bool()> shutdown_requested = nullptr,
                                                      std::function<void()> coins_error_cb = nullptr);
 
@@ -125,6 +126,7 @@ void DashChainstateSetup(ChainstateManager& chainman,
                          const fs::path& data_dir,
                          bool llmq_dbs_in_memory,
                          bool llmq_dbs_wipe,
+                         bool quorums_watch,
                          const Consensus::Params& consensus_params);
 
 void DashChainstateSetupClose(std::unique_ptr<CChainstateHelper>& chain_helper,

@@ -64,6 +64,7 @@
 #include <flat-database.h>
 #include <governance/governance.h>
 #include <llmq/context.h>
+#include <llmq/options.h>
 #include <masternode/active/context.h>
 #include <masternode/meta.h>
 #include <masternode/sync.h>
@@ -134,7 +135,7 @@ void DashChainstateSetup(ChainstateManager& chainman,
     DashChainstateSetup(chainman, *Assert(node.govman.get()), *Assert(node.mn_metaman.get()), *Assert(node.mn_sync.get()),
                         *Assert(node.sporkman.get()), node.mn_activeman, node.chain_helper, node.cpoolman, node.dmnman,
                         node.evodb, node.mnhf_manager, node.llmq_ctx, Assert(node.mempool.get()), node.args->GetDataDirNet(),
-                        llmq_dbs_in_memory, llmq_dbs_wipe, consensus_params);
+                        llmq_dbs_in_memory, llmq_dbs_wipe, /*quorums_watch=*/false, consensus_params);
 }
 
 void DashChainstateSetupClose(NodeContext& node)
@@ -331,7 +332,8 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
                                            m_cache_sizes.coins,
                                            /*block_tree_db_in_memory=*/true,
                                            /*coins_db_in_memory=*/true,
-                                           /*dash_dbs_in_memory=*/true);
+                                           /*dash_dbs_in_memory=*/true,
+                                           m_args.GetBoolArg("-watchquorums", llmq::DEFAULT_WATCH_QUORUMS));
     assert(!maybe_load_error.has_value());
 
     auto maybe_verify_error = VerifyLoadedChainstate(

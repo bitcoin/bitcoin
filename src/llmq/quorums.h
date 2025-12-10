@@ -233,9 +233,6 @@ private:
 class CQuorumManager
 {
 private:
-    mutable Mutex cs_db;
-    std::unique_ptr<CDBWrapper> db GUARDED_BY(cs_db){nullptr};
-
     CBLSWorker& blsWorker;
     CDeterministicMNManager& m_dmnman;
     CDKGSessionManager& dkgManager;
@@ -245,18 +242,25 @@ private:
     const ChainstateManager& m_chainman;
     const CMasternodeSync& m_mn_sync;
     const CSporkManager& m_sporkman;
+    const bool m_quorums_watch{false};
+
+private:
+    mutable Mutex cs_db;
+    std::unique_ptr<CDBWrapper> db GUARDED_BY(cs_db){nullptr};
 
     mutable Mutex cs_map_quorums;
     mutable std::map<Consensus::LLMQType, Uint256LruHashMap<CQuorumPtr>> mapQuorumsCache GUARDED_BY(cs_map_quorums);
+
     mutable Mutex cs_scan_quorums; // TODO: merge cs_map_quorums, cs_scan_quorums mutexes
     mutable std::map<Consensus::LLMQType, Uint256LruHashMap<std::vector<CQuorumCPtr>>> scanQuorumsCache
         GUARDED_BY(cs_scan_quorums);
+
     mutable Mutex cs_cleanup;
     mutable std::map<Consensus::LLMQType, Uint256LruHashMap<uint256>> cleanupQuorumsCache GUARDED_BY(cs_cleanup);
 
-    mutable Mutex cs_quorumBaseBlockIndexCache;
     // On mainnet, we have around 62 quorums active at any point; let's cache a little more than double that to be safe.
     // it maps `quorum_hash` to `pindex`
+    mutable Mutex cs_quorumBaseBlockIndexCache;
     mutable Uint256LruHashMap<const CBlockIndex*, 128 /*max_size*/> quorumBaseBlockIndexCache;
 
     mutable ctpl::thread_pool workerPool;
@@ -270,7 +274,7 @@ public:
                             CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor,
                             CQuorumSnapshotManager& qsnapman, const CActiveMasternodeManager* const mn_activeman,
                             const ChainstateManager& chainman, const CMasternodeSync& mn_sync,
-                            const CSporkManager& sporkman, const util::DbWrapperParams& db_params);
+                            const CSporkManager& sporkman, const util::DbWrapperParams& db_params, bool quorums_watch);
     ~CQuorumManager();
 
     void Start();
@@ -301,6 +305,8 @@ public:
     std::vector<CQuorumCPtr> ScanQuorums(Consensus::LLMQType llmqType, const CBlockIndex* pindexStart,
                                          size_t nCountRequested) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_map_quorums, !cs_scan_quorums);
+
+    bool IsWatching() const { return m_quorums_watch; }
 
 private:
     // all private methods here are cs_main-free

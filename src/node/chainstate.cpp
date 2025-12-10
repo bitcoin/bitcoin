@@ -61,6 +61,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      bool block_tree_db_in_memory,
                                                      bool coins_db_in_memory,
                                                      bool dash_dbs_in_memory,
+                                                     bool quorums_watch,
                                                      std::function<bool()> shutdown_requested,
                                                      std::function<void()> coins_error_cb)
 {
@@ -88,7 +89,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
 
     DashChainstateSetup(chainman, govman, mn_metaman, mn_sync, sporkman, mn_activeman, chain_helper, cpoolman,
                         dmnman, evodb, mnhf_manager, llmq_ctx, mempool, data_dir, dash_dbs_in_memory,
-                        /*llmq_dbs_wipe=*/fReset || fReindexChainState, consensus_params);
+                        /*llmq_dbs_wipe=*/fReset || fReindexChainState, quorums_watch, consensus_params);
 
     if (fReset) {
         pblocktree->WriteReindexing(true);
@@ -224,6 +225,7 @@ void DashChainstateSetup(ChainstateManager& chainman,
                          const fs::path& data_dir,
                          bool llmq_dbs_in_memory,
                          bool llmq_dbs_wipe,
+                         bool quorums_watch,
                          const Consensus::Params& consensus_params)
 {
     // Same logic as pblocktree
@@ -240,7 +242,8 @@ void DashChainstateSetup(ChainstateManager& chainman,
     llmq_ctx.reset();
     llmq_ctx = std::make_unique<LLMQContext>(chainman, *dmnman, *evodb, mn_metaman, *mnhf_manager, sporkman,
                                              *mempool, mn_activeman.get(), mn_sync,
-                                             util::DbWrapperParams{.path = data_dir, .memory = llmq_dbs_in_memory, .wipe = llmq_dbs_wipe});
+                                             util::DbWrapperParams{.path = data_dir, .memory = llmq_dbs_in_memory, .wipe = llmq_dbs_wipe},
+                                             quorums_watch);
     mempool->ConnectManagers(dmnman.get(), llmq_ctx->isman.get());
     // Enable CMNHFManager::{Process, Undo}Block
     mnhf_manager->ConnectManagers(llmq_ctx->qman.get());

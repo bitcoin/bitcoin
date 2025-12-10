@@ -43,9 +43,6 @@ bool IsQuorumRotationEnabled(const Consensus::LLMQParams& llmqParams, gsl::not_n
 /// Returns the state of `-llmq-data-recovery`
 bool QuorumDataRecoveryEnabled();
 
-/// Returns the state of `-watchquorums`
-bool IsWatchQuorumsEnabled();
-
 /// Returns the parsed entries given by `-llmq-qvvec-sync`
 std::map<Consensus::LLMQType, QvvecSyncMode> GetEnabledQuorumVvecSyncEntries();
 

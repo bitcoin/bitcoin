@@ -3999,7 +3999,7 @@ void PeerManagerImpl::ProcessMessage(
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SENDDSQUEUE, true));
             // Tell our peer that he should send us intra-quorum messages
             const auto tip_mn_list = Assert(m_dmnman)->GetListAtChainTip();
-            if (llmq::IsWatchQuorumsEnabled() && m_connman.IsMasternodeQuorumNode(&pfrom, tip_mn_list)) {
+            if (m_llmq_ctx->qman->IsWatching() && m_connman.IsMasternodeQuorumNode(&pfrom, tip_mn_list)) {
                 m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QWATCH));
             }
         }
