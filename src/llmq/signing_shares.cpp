@@ -1668,7 +1668,7 @@ void CSigSharesManager::DispatchPendingSigns()
     for (auto& work : signs) {
         if (workInterrupt) break;
 
-        workerPool.push([this, work = std::move(work)](int) {
+        workerPool.push([this, work = std::move(work)](int) mutable {
             SignAndProcessSingleShare(std::move(work));
         });
     }
