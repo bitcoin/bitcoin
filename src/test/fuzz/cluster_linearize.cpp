@@ -1021,7 +1021,7 @@ FUZZ_TARGET(clusterlin_sfl)
 
     // Initialize SFL state.
     if (make_connected) MakeConnected(depgraph);
-    SpanningForestState sfl(depgraph);
+    SpanningForestState sfl(depgraph, rng.rand64());
 
     // Function to test the state.
     std::vector<FeeFrac> last_diagram;
