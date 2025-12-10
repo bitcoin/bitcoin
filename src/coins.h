@@ -108,9 +108,8 @@ struct CCoinsCacheEntry
 {
 private:
     /**
-     * These are used to create a doubly linked list of flagged entries.
+     * These are used to create a doubly linked list of DIRTY entries.
      * They are set in SetDirty and unset in SetClean.
-     * A flagged entry is any entry that is DIRTY or DIRTY-and-FRESH.
      *
      * DIRTY entries are tracked so that only modified entries can be passed to
      * the parent cache for batch writing. This is a performance optimization
@@ -119,31 +118,10 @@ private:
      */
     CoinsCachePair* m_prev{nullptr};
     CoinsCachePair* m_next{nullptr};
-    uint8_t m_flags{0};
+    bool m_fresh{false};
 
 public:
     Coin coin; // The actual cached data.
-
-    enum Flags {
-        /**
-         * DIRTY means the CCoinsCacheEntry is potentially different from the
-         * version in the parent cache. Failure to mark a coin as DIRTY when
-         * it is potentially different from the parent cache will cause a
-         * consensus failure, since the coin's state won't get written to the
-         * parent when the cache is flushed.
-         */
-        DIRTY = (1 << 0),
-        /**
-         * FRESH means the parent cache does not have this coin or that it is a
-         * spent coin in the parent cache. If a FRESH coin in the cache is
-         * later spent, it can be deleted entirely and doesn't ever need to be
-         * flushed to the parent. This is a performance optimization. Marking a
-         * coin as FRESH when it exists unspent in the parent cache will cause a
-         * consensus failure, since it might not be deleted from the parent
-         * when this cache is flushed.
-         */
-        FRESH = (1 << 1),
-    };
 
     CCoinsCacheEntry() noexcept = default;
     explicit CCoinsCacheEntry(Coin&& coin_) noexcept : coin(std::move(coin_)) {}
@@ -154,7 +132,7 @@ public:
 
     static void SetDirty(CoinsCachePair& pair, CoinsCachePair& sentinel, bool fresh = false) noexcept
     {
-        if (!pair.second.m_flags) {
+        if (!pair.second.m_next) {
             Assume(!pair.second.m_prev && !pair.second.m_next);
             pair.second.m_prev = sentinel.second.m_prev;
             pair.second.m_next = &sentinel;
@@ -162,32 +140,46 @@ public:
             pair.second.m_prev->second.m_next = &pair;
         }
         Assume(pair.second.m_prev && pair.second.m_next);
-        pair.second.m_flags |= DIRTY;
-        if (fresh) pair.second.m_flags |= FRESH;
+        pair.second.m_fresh = fresh || pair.second.m_fresh;
     }
 
     void SetClean() noexcept
     {
-        if (!m_flags) return;
+        if (!IsDirty()) return;
         m_next->second.m_prev = m_prev;
         m_prev->second.m_next = m_next;
-        m_flags = 0;
+        m_fresh = false;
         m_prev = m_next = nullptr;
     }
-    bool IsDirty() const noexcept { return m_flags & DIRTY; }
-    bool IsFresh() const noexcept { return m_flags & FRESH; }
 
-    //! Only call Next when this entry is DIRTY or DIRTY-and-FRESH
+    /**
+     * Dirty entries differ from the corresponding entry in the parent coins view. When flushing or syncing these coins
+     * must be written to the parent.
+     *
+     * @return true if the entry is dirty
+     * @return false if the entry is clean
+     */
+    bool IsDirty() const noexcept { return m_next != nullptr; }
+
+    /**
+     * Fresh entries are dirty entries that do not yet exist in the parent coins view. This state is used solely as a
+     * performance improvement. A child coins view can simply delete a fresh coin when it is spent, since the parent
+     * would just be deleting a non-existent entry.
+     *
+     * @return true if the entry is fresh
+     * @return false if the entry is not fresh
+     */
+    bool IsFresh() const noexcept { return m_fresh; }
+
+    //! Only call Next when this entry is dirty
     CoinsCachePair* Next() const noexcept
     {
-        Assume(m_flags);
         return m_next;
     }
 
-    //! Only call Prev when this entry is DIRTY or DIRTY-and-FRESH
+    //! Only call Prev when this entry is dirty
     CoinsCachePair* Prev() const noexcept
     {
-        Assume(m_flags);
         return m_prev;
     }
 
@@ -197,8 +189,6 @@ public:
         Assume(&pair.second == this);
         m_prev = &pair;
         m_next = &pair;
-        // Set sentinel to DIRTY so we can call Next on it
-        m_flags = DIRTY;
     }
 };
 
