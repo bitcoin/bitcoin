@@ -27,21 +27,21 @@
  *   +-----------------------+
  *   | SearchCandidateFinder | <<---------------------\
  *   +-----------------------+                        |
- *     |                                            +-----------+
- *     |                                            | Linearize |
- *     |                                            +-----------+
- *     |        +-------------------------+           |  |
- *     |        | AncestorCandidateFinder | <<--------/  |
- *     |        +-------------------------+              |
- *     |          |                     ^                |        ^^  PRODUCTION CODE
- *     |          |                     |                |        ||
+ *     |                                            +-----------+       +---------------------+
+ *     |                                            | Linearize |       | SpanningForestState |
+ *     |                                            +-----------+       +---------------------+
+ *     |        +-------------------------+           |  |                              |
+ *     |        | AncestorCandidateFinder | <<--------/  |                              |
+ *     |        +-------------------------+              |                              |
+ *     |          |                     ^                |        ^^  PRODUCTION CODE   |
+ *     |          |                     |                |        ||                    |
  *  ==============================================================================================
- *     |          |                     |                |        ||
- *     | clusterlin_ancestor_finder*    |                |        vv  TEST CODE
- *     |                                |                |
- *     |-clusterlin_search_finder*      |                |-clusterlin_linearize*
- *     |                                |                |
- *     v                                |                v
+ *     |          |                     |                |        ||                    |
+ *     | clusterlin_ancestor_finder*    |                |        vv  TEST CODE         |
+ *     |                                |                |                              |
+ *     |-clusterlin_search_finder*      |                |-clusterlin_linearize*        |
+ *     |                                |                |                              |
+ *     v                                |                v              clusterlin_sfl--/
  *   +-----------------------+          |           +-----------------+
  *   | SimpleCandidateFinder | <<-------------------| SimpleLinearize |
  *   +-----------------------+          |           +-----------------+
@@ -1127,6 +1127,82 @@ FUZZ_TARGET(clusterlin_simple_linearize)
         auto read_chunking = ChunkLinearization(depgraph, read);
         auto cmp = CompareChunks(simple_chunking, read_chunking);
         assert(cmp >= 0);
+    }
+}
+
+FUZZ_TARGET(clusterlin_sfl)
+{
+    // Verify the behavior of SpanningForestState.
+    SpanReader reader(buffer);
+    DepGraph<TestBitSet> depgraph;
+    uint8_t flags{1};
+    try {
+        reader >> flags >> Using<DepGraphFormatter>(depgraph);
+    } catch (const std::ios_base::failure&) {}
+    /** Whether to make the depgraph connected. */
+    const bool make_connected = flags & 1;
+    /** Whether to make the SFL state topological. */
+    const bool make_topological = flags & 2;
+    /** Whether to do any optimization steps to the SFL state (only if state is topological
+     *  then). */
+    const bool try_optimize = flags & 4;
+
+    //
+    // Construct the depgraph and SFL state for it.
+    //
+    bool is_topological = false;
+    if (make_connected) MakeConnected(depgraph);
+    SpanningForestState sfl(depgraph);
+
+    //
+    // Make topological, if selected.
+    //
+    if (make_topological) {
+        sfl.MakeTopological();
+        is_topological = true;
+    }
+
+    //
+    // Perform optimization steps, if selected.
+    //
+    bool is_optimal = false;
+    if (is_topological && try_optimize) {
+        uint32_t optimize_steps{1};
+        try {
+            reader >> VARINT(optimize_steps);
+        } catch (const std::ios_base::failure&) {}
+        while (optimize_steps > 0) {
+            --optimize_steps;
+            if (!sfl.OptimizeStep()) {
+                is_optimal = true;
+                break;
+            }
+        }
+    }
+
+    //
+    // Sanity check the result.
+    //
+    sfl.SanityCheck(depgraph);
+
+    //
+    // If the SFL state is (known to be) topological now, we can get a linearization out.
+    //
+    if (is_topological) {
+        auto lin = sfl.GetLinearization();
+        // Which must be valid.
+        SanityCheck(depgraph, lin);
+        // If the SFL state was made optimal, we can compare with any arbitrary linearization, and
+        // the diagram must be at least as good.
+        if (is_optimal) {
+            auto chunks = ChunkLinearization(depgraph, lin);
+            for (int i = 0; i < 10; ++i) {
+                auto cmp_lin = ReadLinearization(depgraph, reader);
+                auto cmp_chunks = ChunkLinearization(depgraph, cmp_lin);
+                auto cmp = CompareChunks(chunks, cmp_chunks);
+                assert(cmp >= 0);
+            }
+        }
     }
 }
 
