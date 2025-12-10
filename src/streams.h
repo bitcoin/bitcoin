@@ -607,10 +607,10 @@ public:
                 Fill();
             }
             const size_t len{std::min<size_t>(vchBuf.size() - buf_offset, nSrcPos - m_read_pos)};
-            const auto it_start{vchBuf.begin() + buf_offset};
-            const auto it_find{std::find(it_start, it_start + len, byte)};
-            if (it_find != it_start + len) {
-                m_read_pos += std::distance(it_start, it_find);
+            const auto* start{vchBuf.data() + buf_offset};
+            const auto* hit{(std::byte*)memchr(start, int(byte), len)};
+            if (hit != nullptr) {
+                m_read_pos += std::distance(start, hit);
                 return;
             }
             m_read_pos += len;
