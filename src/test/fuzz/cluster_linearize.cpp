@@ -328,18 +328,24 @@ SetType ReadTopologicalSet(const DepGraph<SetType>& depgraph, const SetType& tod
 
 /** Given a dependency graph, construct any valid linearization for it, reading from a SpanReader. */
 template<typename BS>
-std::vector<DepGraphIndex> ReadLinearization(const DepGraph<BS>& depgraph, SpanReader& reader)
+std::vector<DepGraphIndex> ReadLinearization(const DepGraph<BS>& depgraph, SpanReader& reader, bool topological=true)
 {
     std::vector<DepGraphIndex> linearization;
     TestBitSet todo = depgraph.Positions();
-    // In every iteration one topologically-valid transaction is appended to linearization.
+    // In every iteration one transaction is appended to linearization.
     while (todo.Any()) {
-        // Compute the set of transactions with no not-yet-included ancestors.
+        // Compute the set of transactions to select from.
         TestBitSet potential_next;
-        for (auto j : todo) {
-            if ((depgraph.Ancestors(j) & todo) == TestBitSet::Singleton(j)) {
-                potential_next.Set(j);
+        if (topological) {
+            // Find all transactions with no not-yet-included ancestors.
+            for (auto j : todo) {
+                if ((depgraph.Ancestors(j) & todo) == TestBitSet::Singleton(j)) {
+                    potential_next.Set(j);
+                }
             }
+        } else {
+            // Allow any element to be selected next, regardless of topology.
+            potential_next = todo;
         }
         // There must always be one (otherwise there is a cycle in the graph).
         assert(potential_next.Any());
@@ -1489,33 +1495,14 @@ FUZZ_TARGET(clusterlin_fix_linearization)
     } catch (const std::ios_base::failure&) {}
 
     // Construct an arbitrary linearization (not necessarily topological for depgraph).
-    std::vector<DepGraphIndex> linearization;
-    /** Which transactions of depgraph are yet to be included in linearization. */
-    TestBitSet todo = depgraph.Positions();
-    while (todo.Any()) {
-        // Read a number from the fuzz input in range [0, todo.Count()).
-        uint64_t val{0};
-        try {
-            reader >> VARINT(val);
-        } catch (const std::ios_base::failure&) {}
-        val %= todo.Count();
-        // Find the val'th element in todo, remove it from todo, and append it to linearization.
-        for (auto idx : todo) {
-            if (val == 0) {
-                linearization.push_back(idx);
-                todo.Reset(idx);
-                break;
-            }
-            --val;
-        }
-    }
+    std::vector<DepGraphIndex> linearization = ReadLinearization(depgraph, reader, /*topological=*/false);
     assert(linearization.size() == depgraph.TxCount());
 
     // Determine what prefix of linearization is topological, i.e., the position of the first entry
     // in linearization which corresponds to a transaction that is not preceded by all its
     // ancestors.
     size_t topo_prefix = 0;
-    todo = depgraph.Positions();
+    auto todo = depgraph.Positions();
     while (topo_prefix < linearization.size()) {
         DepGraphIndex idx = linearization[topo_prefix];
         todo.Reset(idx);
