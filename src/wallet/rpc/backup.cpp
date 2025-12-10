@@ -130,6 +130,9 @@ static std::optional<int64_t> GetImportTimestamp(const UniValue& data, int64_t n
         const UniValue& timestamp = data["timestamp"];
         if (timestamp.isNum()) {
             int64_t required_timestamp = timestamp.getInt<int64_t>();
+            if (required_timestamp < 0) {
+                throw JSONRPCError(RPC_TYPE_ERROR, "timestamp should be greater than zero");
+            }
             return required_timestamp;
         } else if (timestamp.isStr() && timestamp.get_str() == "now") {
             return now;
