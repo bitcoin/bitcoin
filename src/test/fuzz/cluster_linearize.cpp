@@ -1190,6 +1190,10 @@ FUZZ_TARGET(clusterlin_sfl)
     InsecureRandomContext rng(rng_seed);
     /** Whether to make the depgraph connected. */
     const bool make_connected = flags & 1;
+    /** Whether to load some input linearization into the state. */
+    const bool load_linearization = flags & 2;
+    /** Whether that input linearization is topological. */
+    const bool load_topological = load_linearization && (flags & 4);
 
     // Initialize SFL state.
     if (make_connected) MakeConnected(depgraph);
@@ -1222,8 +1226,22 @@ FUZZ_TARGET(clusterlin_sfl)
         last_diagram = std::move(diagram);
     };
 
-    // Make SFL state topological.
-    sfl.MakeTopological();
+    if (load_linearization) {
+        auto input_lin = ReadLinearization(depgraph, reader, load_topological);
+        sfl.LoadLinearization(input_lin);
+        if (load_topological) {
+            // The diagram of the loaded linearization forms an initial lower bound on future
+            // diagrams.
+            last_diagram = ChunkLinearization(depgraph, input_lin);
+        } else {
+            // The input linearization may have been non-topological, so invoke MakeTopological to
+            // fix it still.
+            sfl.MakeTopological();
+        }
+    } else {
+        // Invoke MakeTopological to create an initial from-scratch topological state.
+        sfl.MakeTopological();
+    }
 
     // Loop until optimal.
     while (true) {

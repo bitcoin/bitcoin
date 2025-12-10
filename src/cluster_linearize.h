@@ -777,6 +777,15 @@ public:
  *   - Do a downwards merge of B, if possible. If so, repeat the same with the merged result.
  * - Output the chunks from high to low feerate, each internally sorted topologically.
  *
+ * Instead of performing merges arbitrarily to make the initial state topological, it is possible
+ * to do so guided by an existing linearization. This has the advantage that the state's would-be
+ * output linearization is immediately as good as the existing linearization it was based on:
+ * - Start with all dependencies inactive.
+ * - For each transaction t in the existing linearization:
+ *   - Find the chunk C that transaction is in (which will be singleton).
+ *   - Do an upwards merge of C, if possible. If so, repeat the same with the merged result.
+ * No downwards merges are needed in this case.
+ *
  * What remains to be specified are a number of heuristics:
  *
  * - How to decide which chunks to merge:
@@ -1124,7 +1133,23 @@ public:
         }
     }
 
-    /** Make state topological. Can be called after constructing. */
+    /** Load an existing linearization. Must be called immediately after constructor. The result is
+     *  topological if the linearization is valid. Otherwise, MakeTopological still needs to be
+     *  called. */
+    void LoadLinearization(std::span<const DepGraphIndex> old_linearization) noexcept
+    {
+        // Add transactions one by one, in order of existing linearization.
+        for (DepGraphIndex tx : old_linearization) {
+            auto chunk_rep = m_tx_data[tx].chunk_rep;
+            // Merge the chunk upwards, as long as merging succeeds.
+            while (true) {
+                chunk_rep = MergeStep<false>(chunk_rep);
+                if (chunk_rep == TxIdx(-1)) break;
+            }
+        }
+    }
+
+    /** Make state topological. Can be called after constructing, or after LoadLinearization. */
     void MakeTopological() noexcept
     {
         while (true) {
