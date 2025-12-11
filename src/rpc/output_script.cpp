@@ -55,7 +55,7 @@ static RPCMethod validateaddress()
             HelpExampleCli("validateaddress", "\"" + EXAMPLE_ADDRESS[0] + "\"") +
             HelpExampleRpc("validateaddress", "\"" + EXAMPLE_ADDRESS[0] + "\"")
         },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             std::string error_msg;
             std::vector<int> error_locations;
@@ -118,7 +118,7 @@ static RPCMethod createmultisig()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("createmultisig", "2, [\"03789ed0bb717d88f7d321a368d905e7430207ebbd82bd342cf11ae157a7ace5fd\",\"03dbc6764b8884a92e871274b87583e6d5c2a58819473e17e107ef3f6aa5a61626\"]")
                 },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             int required = request.params[0].getInt<int>();
 
@@ -192,7 +192,7 @@ static RPCMethod getdescriptorinfo()
             HelpExampleCli("getdescriptorinfo", "\"" + EXAMPLE_DESCRIPTOR + "\"") +
             HelpExampleRpc("getdescriptorinfo", "\"" + EXAMPLE_DESCRIPTOR + "\"")
         },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             FlatSigningProvider provider;
             std::string error;
@@ -299,7 +299,7 @@ static RPCMethod deriveaddresses()
             HelpExampleCli("deriveaddresses", "\"" + EXAMPLE_DESCRIPTOR + "\" \"[0,2]\"") +
             HelpExampleRpc("deriveaddresses", "\"" + EXAMPLE_DESCRIPTOR + "\", \"[0,2]\"")
         },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             auto desc_str{self.Arg<std::string_view>("descriptor")};
 

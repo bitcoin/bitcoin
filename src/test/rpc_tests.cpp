@@ -620,7 +620,7 @@ BOOST_AUTO_TEST_CASE(rpc_arg_helper)
     };
 
     //! Check that `self.Arg` returns the same value as the `request.params` accessors
-    RPCMethod::RPCMethodImpl check_positional = [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
+    RPCMethod::RPCMethodImpl check_positional = [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
             BOOST_CHECK_EQUAL(self.Arg<int>("req_int"), request.params[0].getInt<int>());
             BOOST_CHECK_EQUAL(self.Arg<std::string_view>("req_str"), request.params[1].get_str());
             BOOST_CHECK_EQUAL(self.Arg<uint64_t>("def_uint64_t"), request.params[2].isNull() ? DEFAULT_UINT64_T : request.params[2].getInt<uint64_t>());

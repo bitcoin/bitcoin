@@ -28,7 +28,7 @@ static RPCMethod rpcNestedTest_rpc()
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{""},
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
             return request.params.write(0, 0);
         },
     };

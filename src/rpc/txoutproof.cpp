@@ -41,7 +41,7 @@ static RPCMethod gettxoutproof()
             RPCResult::Type::STR, "data", "A string that is a serialized, hex-encoded data for the proof."
         },
         RPCExamples{""},
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             std::set<Txid> setTxids;
             UniValue txids = request.params[0].get_array();
@@ -142,7 +142,7 @@ static RPCMethod verifytxoutproof()
             }
         },
         RPCExamples{""},
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             DataStream ssMB{ParseHexV(request.params[0], "proof")};
             CMerkleBlock merkleBlock;

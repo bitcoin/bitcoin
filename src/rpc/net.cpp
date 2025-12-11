@@ -70,7 +70,7 @@ static RPCMethod getconnectioncount()
                     HelpExampleCli("getconnectioncount", "")
             + HelpExampleRpc("getconnectioncount", "")
                 },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
@@ -93,7 +93,7 @@ static RPCMethod ping()
                     HelpExampleCli("ping", "")
             + HelpExampleRpc("ping", "")
                 },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     PeerManager& peerman = EnsurePeerman(node);
@@ -201,7 +201,7 @@ static RPCMethod getpeerinfo()
             HelpExampleCli("getpeerinfo", "")
             + HelpExampleRpc("getpeerinfo", "")
         },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
@@ -331,7 +331,7 @@ static RPCMethod addnode()
                     HelpExampleCli("addnode", "\"192.168.0.6:8333\" \"onetry\" true")
             + HelpExampleRpc("addnode", "\"192.168.0.6:8333\", \"onetry\" true")
                 },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const auto command{self.Arg<std::string_view>("command")};
     if (command != "onetry" && command != "add" && command != "remove") {
@@ -395,7 +395,7 @@ static RPCMethod addconnection()
             HelpExampleCli("addconnection", "\"192.168.0.6:8333\" \"outbound-full-relay\" true")
             + HelpExampleRpc("addconnection", "\"192.168.0.6:8333\" \"outbound-full-relay\" true")
         },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     if (Params().GetChainType() != ChainType::REGTEST) {
         throw std::runtime_error("addconnection is for regression testing (-regtest mode) only.");
@@ -456,7 +456,7 @@ static RPCMethod disconnectnode()
             + HelpExampleRpc("disconnectnode", "\"192.168.0.6:8333\"")
             + HelpExampleRpc("disconnectnode", "\"\", 1")
                 },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     CConnman& connman = EnsureConnman(node);
@@ -515,7 +515,7 @@ static RPCMethod getaddednodeinfo()
                     HelpExampleCli("getaddednodeinfo", "\"192.168.0.201\"")
             + HelpExampleRpc("getaddednodeinfo", "\"192.168.0.201\"")
                 },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
@@ -585,7 +585,7 @@ static RPCMethod getnettotals()
                     HelpExampleCli("getnettotals", "")
             + HelpExampleRpc("getnettotals", "")
                 },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
@@ -685,7 +685,7 @@ static RPCMethod getnetworkinfo()
                     HelpExampleCli("getnetworkinfo", "")
             + HelpExampleRpc("getnetworkinfo", "")
                 },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     LOCK(cs_main);
     UniValue obj(UniValue::VOBJ);
@@ -751,7 +751,7 @@ static RPCMethod setban()
                             + HelpExampleCli("setban", "\"192.168.0.0/24\" \"add\"")
                             + HelpExampleRpc("setban", "\"192.168.0.6\", \"add\", 86400")
                 },
-        [&](const RPCMethod& help, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& help, const JSONRPCRequest& request) -> UniValue
 {
     auto command{help.Arg<std::string_view>("command")};
     if (command != "add" && command != "remove") {
@@ -835,7 +835,7 @@ static RPCMethod listbanned()
                     HelpExampleCli("listbanned", "")
                             + HelpExampleRpc("listbanned", "")
                 },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     BanMan& banman = EnsureAnyBanman(request.context);
 
@@ -873,7 +873,7 @@ static RPCMethod clearbanned()
                     HelpExampleCli("clearbanned", "")
                             + HelpExampleRpc("clearbanned", "")
                 },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     BanMan& banman = EnsureAnyBanman(request.context);
 
@@ -894,7 +894,7 @@ static RPCMethod setnetworkactive()
                 },
                 RPCResult{RPCResult::Type::BOOL, "", "The value that was passed in"},
                 RPCExamples{""},
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     CConnman& connman = EnsureConnman(node);
@@ -936,7 +936,7 @@ static RPCMethod getnodeaddresses()
                     + HelpExampleRpc("getnodeaddresses", "8")
                     + HelpExampleRpc("getnodeaddresses", "4, \"i2p\"")
                 },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
@@ -987,7 +987,7 @@ static RPCMethod addpeeraddress()
             HelpExampleCli("addpeeraddress", "\"1.2.3.4\" 8333 true")
     + HelpExampleRpc("addpeeraddress", "\"1.2.3.4\", 8333, true")
         },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     AddrMan& addrman = EnsureAnyAddrman(request.context);
 
@@ -1042,7 +1042,7 @@ static RPCMethod sendmsgtopeer()
         RPCResult{RPCResult::Type::OBJ, "", "", std::vector<RPCResult>{}},
         RPCExamples{
             HelpExampleCli("sendmsgtopeer", "0 \"addr\" \"ffffff\"") + HelpExampleRpc("sendmsgtopeer", "0 \"addr\" \"ffffff\"")},
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
             const NodeId peer_id{request.params[0].getInt<int64_t>()};
             const auto msg_type{self.Arg<std::string_view>("msg_type")};
             if (msg_type.size() > CMessageHeader::MESSAGE_TYPE_SIZE) {
@@ -1091,7 +1091,7 @@ static RPCMethod getaddrmaninfo()
             }},
         }},
         RPCExamples{HelpExampleCli("getaddrmaninfo", "") + HelpExampleRpc("getaddrmaninfo", "")},
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
             AddrMan& addrman = EnsureAnyAddrman(request.context);
 
             UniValue ret(UniValue::VOBJ);
@@ -1178,7 +1178,7 @@ static RPCMethod getrawaddrman()
             HelpExampleCli("getrawaddrman", "")
             + HelpExampleRpc("getrawaddrman", "")
         },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
             AddrMan& addrman = EnsureAnyAddrman(request.context);
             NodeContext& node_context = EnsureAnyNodeContext(request.context);
             CConnman& connman = EnsureConnman(node_context);
