@@ -64,7 +64,11 @@ function(try_append_cxx_flags flags)
   set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
   set(CMAKE_REQUIRED_FLAGS "${flags_as_string} ${working_compiler_werror_flag}")
   set(compiler_result CXX_SUPPORTS_${id_string})
-  check_cxx_source_compiles("${source}" ${compiler_result})
+  check_cxx_source_compiles("${source}" ${compiler_result}
+    # Ensure that a user-provided -Wno-error=unknown-warning-option
+    # does not lead to a false positive result.
+    FAIL_REGEX [=[\\[-Wunknown-warning-option\\]]=]
+  )
 
   if(${compiler_result})
     if(DEFINED TACXXF_IF_CHECK_PASSED)
