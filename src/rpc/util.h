@@ -417,10 +417,30 @@ struct RPCExamples {
 
 class RPCMethod
 {
+private:
+    template<typename D, typename Fn>
+    auto LambdaWithData(D&& data, Fn&& fun)
+    {
+        return [f = std::forward<Fn>(fun), d = std::forward<D>(data)](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
+            return f(d, self, request);
+        };
+    }
+
 public:
     RPCMethod(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples);
     using RPCMethodImpl = std::function<UniValue(const RPCMethod&, const JSONRPCRequest&)>;
     RPCMethod(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples, RPCMethodImpl fun);
+
+    template<typename D, typename Fn>
+    RPCMethod(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples, D&& data, Fn&& fun)
+    : RPCMethod(std::move(name),
+                 std::move(description),
+                 std::move(args),
+                 std::move(results),
+                 std::move(examples),
+                 LambdaWithData(std::forward<D>(data), std::forward<Fn>(fun)))
+    {
+    }
 
     UniValue HandleRequest(const JSONRPCRequest& request) const;
     /**

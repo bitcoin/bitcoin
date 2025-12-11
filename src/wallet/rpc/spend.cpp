@@ -1075,7 +1075,8 @@ static RPCMethod bumpfee_helper(std::string method_name)
     "\nBump the fee, get the new transaction\'s " + std::string(want_psbt ? "psbt" : "txid") + "\n" +
             HelpExampleCli(method_name, "<txid>")
         },
-        [want_psbt](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        (want_psbt),
+        [](const bool& want_psbt, const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
