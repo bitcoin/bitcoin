@@ -46,9 +46,7 @@ BOOST_AUTO_TEST_CASE(get_next_work)
     BOOST_CHECK_EQUAL(GetNextWorkRequired(blockIndexLast, &blockHeader, chainParams->GetConsensus()), 0x1b1441deU); // Block #123457 has 0x1b1441de
 
     // test special rules for slow blocks on devnet/testnet
-    gArgs.SoftSetBoolArg("-devnet", true);
     const auto chainParamsDev = CreateChainParams(*m_node.args, CBaseChainParams::DEVNET);
-    gArgs.ForceRemoveArg("devnet");
 
     // make sure normal rules apply
     blockHeader.nTime = 1408732505; // Block #123457
