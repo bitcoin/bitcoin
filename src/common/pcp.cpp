@@ -228,11 +228,11 @@ std::optional<std::vector<uint8_t>> PCPSendRecv(Sock &sock, const std::string &p
     int recvsz = 0;
     for (int ntry = 0; !got_response && ntry < num_tries; ++ntry) {
         if (ntry > 0) {
-            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "%s: Retrying (%d)\n", protocol, ntry);
+            LogDebug(BCLog::NET, "%s: Retrying (%d)\n", protocol, ntry);
         }
         // Dispatch packet to gateway.
         if (sock.Send(request.data(), request.size(), 0) != static_cast<ssize_t>(request.size())) {
-            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "%s: Could not send request: %s\n", protocol, NetworkErrorString(WSAGetLastError()));
+            LogDebug(BCLog::NET, "%s: Could not send request: %s\n", protocol, NetworkErrorString(WSAGetLastError()));
             return std::nullopt; // Network-level error, probably no use retrying.
         }
 
@@ -243,21 +243,21 @@ std::optional<std::vector<uint8_t>> PCPSendRecv(Sock &sock, const std::string &p
             if (interrupt) return std::nullopt;
             Sock::Event occurred = 0;
             if (!sock.Wait(deadline - cur_time, Sock::RECV, &occurred)) {
-                LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "%s: Could not wait on socket: %s\n", protocol, NetworkErrorString(WSAGetLastError()));
+                LogWarning("%s: Could not wait on socket: %s\n", protocol, NetworkErrorString(WSAGetLastError()));
                 return std::nullopt; // Network-level error, probably no use retrying.
             }
             if (!occurred) {
-                LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "%s: Timeout\n", protocol);
+                LogDebug(BCLog::NET, "%s: Timeout\n", protocol);
                 break; // Retry.
             }
 
             // Receive response.
             recvsz = sock.Recv(response, sizeof(response), MSG_DONTWAIT);
             if (recvsz < 0) {
-                LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "%s: Could not receive response: %s\n", protocol, NetworkErrorString(WSAGetLastError()));
+                LogDebug(BCLog::NET, "%s: Could not receive response: %s\n", protocol, NetworkErrorString(WSAGetLastError()));
                 return std::nullopt; // Network-level error, probably no use retrying.
             }
-            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "%s: Received response of %d bytes: %s\n", protocol, recvsz, HexStr(std::span(response, recvsz)));
+            LogDebug(BCLog::NET, "%s: Received response of %d bytes: %s\n", protocol, recvsz, HexStr(std::span(response, recvsz)));
 
             if (check_packet(std::span<uint8_t>(response, recvsz))) {
                 got_response = true; // Got expected response, break from receive loop as well as from retry loop.
@@ -266,7 +266,7 @@ std::optional<std::vector<uint8_t>> PCPSendRecv(Sock &sock, const std::string &p
         }
     }
     if (!got_response) {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "%s: Giving up after %d tries\n", protocol, num_tries);
+        LogDebug(BCLog::NET, "%s: Giving up after %d tries\n", protocol, num_tries);
         return std::nullopt;
     }
     return std::vector<uint8_t>(response, response + recvsz);
@@ -279,7 +279,7 @@ std::variant<MappingResult, MappingError> NATPMPRequestPortMap(const CNetAddr &g
     struct sockaddr_storage dest_addr;
     socklen_t dest_addrlen = sizeof(struct sockaddr_storage);
 
-    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "natpmp: Requesting port mapping port %d from gateway %s\n", port, gateway.ToStringAddr());
+    LogDebug(BCLog::NET, "natpmp: Requesting port mapping port %d from gateway %s\n", port, gateway.ToStringAddr());
 
     // Validate gateway, make sure it's IPv4. NAT-PMP does not support IPv6.
     if (!CService(gateway, PCP_SERVER_PORT).GetSockAddr((struct sockaddr*)&dest_addr, &dest_addrlen)) return MappingError::NETWORK_ERROR;
@@ -288,13 +288,13 @@ std::variant<MappingResult, MappingError> NATPMPRequestPortMap(const CNetAddr &g
     // Create IPv4 UDP socket
     auto sock{CreateSock(AF_INET, SOCK_DGRAM, IPPROTO_UDP)};
     if (!sock) {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "natpmp: Could not create UDP socket: %s\n", NetworkErrorString(WSAGetLastError()));
+        LogWarning("natpmp: Could not create UDP socket: %s\n", NetworkErrorString(WSAGetLastError()));
         return MappingError::NETWORK_ERROR;
     }
 
     // Associate UDP socket to gateway.
     if (sock->Connect((struct sockaddr*)&dest_addr, dest_addrlen) != 0) {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "natpmp: Could not connect to gateway: %s\n", NetworkErrorString(WSAGetLastError()));
+        LogWarning("natpmp: Could not connect to gateway: %s\n", NetworkErrorString(WSAGetLastError()));
         return MappingError::NETWORK_ERROR;
     }
 
@@ -302,7 +302,7 @@ std::variant<MappingResult, MappingError> NATPMPRequestPortMap(const CNetAddr &g
     struct sockaddr_in internal;
     socklen_t internal_addrlen = sizeof(struct sockaddr_in);
     if (sock->GetSockName((struct sockaddr*)&internal, &internal_addrlen) != 0) {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "natpmp: Could not get sock name: %s\n", NetworkErrorString(WSAGetLastError()));
+        LogWarning("natpmp: Could not get sock name: %s\n", NetworkErrorString(WSAGetLastError()));
         return MappingError::NETWORK_ERROR;
     }
 
@@ -314,11 +314,11 @@ std::variant<MappingResult, MappingError> NATPMPRequestPortMap(const CNetAddr &g
     auto recv_res = PCPSendRecv(*sock, "natpmp", request, num_tries, timeout_per_try,
         [&](const std::span<const uint8_t> response) -> bool {
             if (response.size() < NATPMP_GETEXTERNAL_RESPONSE_SIZE) {
-                LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "natpmp: Response too small\n");
+                LogWarning("natpmp: Response too small\n");
                 return false; // Wasn't response to what we expected, try receiving next packet.
             }
             if (response[NATPMP_HDR_VERSION_OFS] != NATPMP_VERSION || response[NATPMP_HDR_OP_OFS] != (NATPMP_RESPONSE | NATPMP_OP_GETEXTERNAL)) {
-                LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "natpmp: Response to wrong command\n");
+                LogWarning("natpmp: Response to wrong command\n");
                 return false; // Wasn't response to what we expected, try receiving next packet.
             }
             return true;
@@ -332,7 +332,7 @@ std::variant<MappingResult, MappingError> NATPMPRequestPortMap(const CNetAddr &g
         Assume(response.size() >= NATPMP_GETEXTERNAL_RESPONSE_SIZE);
         uint16_t result_code = ReadBE16(response.data() + NATPMP_RESPONSE_HDR_RESULT_OFS);
         if (result_code != NATPMP_RESULT_SUCCESS) {
-            LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "natpmp: Getting external address failed with result %s\n", NATPMPResultString(result_code));
+            LogWarning("natpmp: Getting external address failed with result %s\n", NATPMPResultString(result_code));
             return MappingError::PROTOCOL_ERROR;
         }
 
@@ -352,16 +352,16 @@ std::variant<MappingResult, MappingError> NATPMPRequestPortMap(const CNetAddr &g
     recv_res = PCPSendRecv(*sock, "natpmp", request, num_tries, timeout_per_try,
         [&](const std::span<const uint8_t> response) -> bool {
             if (response.size() < NATPMP_MAP_RESPONSE_SIZE) {
-                LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "natpmp: Response too small\n");
+                LogWarning("natpmp: Response too small\n");
                 return false; // Wasn't response to what we expected, try receiving next packet.
             }
             if (response[0] != NATPMP_VERSION || response[1] != (NATPMP_RESPONSE | NATPMP_OP_MAP_TCP)) {
-                LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "natpmp: Response to wrong command\n");
+                LogWarning("natpmp: Response to wrong command\n");
                 return false; // Wasn't response to what we expected, try receiving next packet.
             }
             uint16_t internal_port = ReadBE16(response.data() + NATPMP_MAP_RESPONSE_INTERNAL_PORT_OFS);
             if (internal_port != port) {
-                LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "natpmp: Response port doesn't match request\n");
+                LogWarning("natpmp: Response port doesn't match request\n");
                 return false; // Wasn't response to what we expected, try receiving next packet.
             }
             return true;
@@ -374,7 +374,7 @@ std::variant<MappingResult, MappingError> NATPMPRequestPortMap(const CNetAddr &g
         Assume(response.size() >= NATPMP_MAP_RESPONSE_SIZE);
         uint16_t result_code = ReadBE16(response.data() + NATPMP_RESPONSE_HDR_RESULT_OFS);
         if (result_code != NATPMP_RESULT_SUCCESS) {
-            LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "natpmp: Port mapping failed with result %s\n", NATPMPResultString(result_code));
+            LogWarning("natpmp: Port mapping failed with result %s\n", NATPMPResultString(result_code));
             if (result_code == NATPMP_RESULT_NO_RESOURCES) {
                 return MappingError::NO_RESOURCES;
             }
@@ -394,7 +394,7 @@ std::variant<MappingResult, MappingError> PCPRequestPortMap(const PCPMappingNonc
     struct sockaddr_storage dest_addr, bind_addr;
     socklen_t dest_addrlen = sizeof(struct sockaddr_storage), bind_addrlen = sizeof(struct sockaddr_storage);
 
-    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "pcp: Requesting port mapping for addr %s port %d from gateway %s\n", bind.ToStringAddr(), port, gateway.ToStringAddr());
+    LogDebug(BCLog::NET, "pcp: Requesting port mapping for addr %s port %d from gateway %s\n", bind.ToStringAddr(), port, gateway.ToStringAddr());
 
     // Validate addresses, make sure they're the same network family.
     if (!CService(gateway, PCP_SERVER_PORT).GetSockAddr((struct sockaddr*)&dest_addr, &dest_addrlen)) return MappingError::NETWORK_ERROR;
@@ -404,20 +404,20 @@ std::variant<MappingResult, MappingError> PCPRequestPortMap(const PCPMappingNonc
     // Create UDP socket (IPv4 or IPv6 based on provided gateway).
     auto sock{CreateSock(dest_addr.ss_family, SOCK_DGRAM, IPPROTO_UDP)};
     if (!sock) {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "pcp: Could not create UDP socket: %s\n", NetworkErrorString(WSAGetLastError()));
+        LogWarning("pcp: Could not create UDP socket: %s\n", NetworkErrorString(WSAGetLastError()));
         return MappingError::NETWORK_ERROR;
     }
 
     // Make sure that we send from requested destination address, anything else will be
     // rejected by a security-conscious router.
     if (sock->Bind((struct sockaddr*)&bind_addr, bind_addrlen) != 0) {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "pcp: Could not bind to address: %s\n", NetworkErrorString(WSAGetLastError()));
+        LogWarning("pcp: Could not bind to address: %s\n", NetworkErrorString(WSAGetLastError()));
         return MappingError::NETWORK_ERROR;
     }
 
     // Associate UDP socket to gateway.
     if (sock->Connect((struct sockaddr*)&dest_addr, dest_addrlen) != 0) {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "pcp: Could not connect to gateway: %s\n", NetworkErrorString(WSAGetLastError()));
+        LogWarning("pcp: Could not connect to gateway: %s\n", NetworkErrorString(WSAGetLastError()));
         return MappingError::NETWORK_ERROR;
     }
 
@@ -427,12 +427,12 @@ std::variant<MappingResult, MappingError> PCPRequestPortMap(const PCPMappingNonc
     struct sockaddr_storage internal_addr;
     socklen_t internal_addrlen = sizeof(struct sockaddr_storage);
     if (sock->GetSockName((struct sockaddr*)&internal_addr, &internal_addrlen) != 0) {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "pcp: Could not get sock name: %s\n", NetworkErrorString(WSAGetLastError()));
+        LogWarning("pcp: Could not get sock name: %s\n", NetworkErrorString(WSAGetLastError()));
         return MappingError::NETWORK_ERROR;
     }
     CService internal;
     if (!internal.SetSockAddr((struct sockaddr*)&internal_addr, internal_addrlen)) return MappingError::NETWORK_ERROR;
-    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "pcp: Internal address after connect: %s\n", internal.ToStringAddr());
+    LogDebug(BCLog::NET, "pcp: Internal address after connect: %s\n", internal.ToStringAddr());
 
     // Build request packet. Make sure the packet is zeroed so that reserved fields are zero
     // as required by the spec (and not potentially leak data).
@@ -469,23 +469,23 @@ std::variant<MappingResult, MappingError> PCPRequestPortMap(const PCPMappingNonc
                 return true; // Let it through to caller.
             }
             if (response.size() < (PCP_HDR_SIZE + PCP_MAP_SIZE)) {
-                LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "pcp: Response too small\n");
+                LogWarning("pcp: Response too small\n");
                 return false; // Wasn't response to what we expected, try receiving next packet.
             }
             if (response[PCP_HDR_VERSION_OFS] != PCP_VERSION || response[PCP_HDR_OP_OFS] != (PCP_RESPONSE | PCP_OP_MAP)) {
-                LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "pcp: Response to wrong command\n");
+                LogWarning("pcp: Response to wrong command\n");
                 return false; // Wasn't response to what we expected, try receiving next packet.
             }
             // Handle MAP opcode response. See RFC6887 Figure 10.
             // Check that returned mapping nonce matches our request.
             if (!std::ranges::equal(response.subspan(PCP_HDR_SIZE + PCP_MAP_NONCE_OFS, PCP_MAP_NONCE_SIZE), nonce)) {
-                LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "pcp: Mapping nonce mismatch\n");
+                LogWarning("pcp: Mapping nonce mismatch\n");
                 return false; // Wasn't response to what we expected, try receiving next packet.
             }
             uint8_t protocol = response[PCP_HDR_SIZE + 12];
             uint16_t internal_port = ReadBE16(response.data() + PCP_HDR_SIZE + 16);
             if (protocol != PCP_PROTOCOL_TCP || internal_port != port) {
-                LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "pcp: Response protocol or port doesn't match request\n");
+                LogWarning("pcp: Response protocol or port doesn't match request\n");
                 return false; // Wasn't response to what we expected, try receiving next packet.
             }
             return true;
@@ -508,7 +508,7 @@ std::variant<MappingResult, MappingError> PCPRequestPortMap(const PCPMappingNonc
     uint16_t external_port = ReadBE16(response.data() + PCP_HDR_SIZE + PCP_MAP_EXTERNAL_PORT_OFS);
     CNetAddr external_addr{PCPUnwrapAddress(response.subspan(PCP_HDR_SIZE + PCP_MAP_EXTERNAL_IP_OFS, ADDR_IPV6_SIZE))};
     if (result_code != PCP_RESULT_SUCCESS) {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "pcp: Mapping failed with result %s\n", PCPResultString(result_code));
+        LogWarning("pcp: Mapping failed with result %s\n", PCPResultString(result_code));
         if (result_code == PCP_RESULT_NO_RESOURCES) {
             return MappingError::NO_RESOURCES;
         }

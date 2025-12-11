@@ -476,7 +476,7 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
         }
         if (pchRet2[1] != SOCKS5Reply::SUCCEEDED) {
             // Failures to connect to a peer that are not proxy errors
-            LogPrintLevel(BCLog::NET, BCLog::Level::Debug,
+            LogDebug(BCLog::NET,
                           "Socks5() connect to %s:%d failed: %s\n", strDest, port, Socks5ErrorString(pchRet2[1]));
             return false;
         }
@@ -606,7 +606,7 @@ static bool ConnectToSocket(const Sock& sock, struct sockaddr* sockaddr, socklen
                           NetworkErrorString(WSAGetLastError()));
                 return false;
             } else if (occurred == 0) {
-                LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "connection attempt to %s timed out\n", dest_str);
+                LogDebug(BCLog::NET, "connection attempt to %s timed out\n", dest_str);
                 return false;
             }
 
@@ -646,7 +646,7 @@ std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connecti
 {
     auto sock = CreateSock(dest.GetSAFamily(), SOCK_STREAM, IPPROTO_TCP);
     if (!sock) {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Error, "Cannot create a socket for connecting to %s\n", dest.ToStringAddrPort());
+        LogError("Cannot create a socket for connecting to %s\n", dest.ToStringAddrPort());
         return {};
     }
 
@@ -674,7 +674,7 @@ std::unique_ptr<Sock> Proxy::Connect() const
 #ifdef HAVE_SOCKADDR_UN
     auto sock = CreateSock(AF_UNIX, SOCK_STREAM, 0);
     if (!sock) {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Error, "Cannot create a socket for connecting to %s\n", m_unix_socket_path);
+        LogError("Cannot create a socket for connecting to %s\n", m_unix_socket_path);
         return {};
     }
 

@@ -149,7 +149,7 @@ bool Session::Listen(Connection& conn)
         conn.sock = StreamAccept();
         return true;
     } catch (const std::runtime_error& e) {
-        LogPrintLevel(BCLog::I2P, BCLog::Level::Error, "Couldn't listen: %s\n", e.what());
+        LogError("Couldn't listen: %s\n", e.what());
         CheckControlSock();
     }
     return false;
@@ -206,9 +206,9 @@ bool Session::Accept(Connection& conn)
     }
 
     if (m_interrupt->interrupted()) {
-        LogPrintLevel(BCLog::I2P, BCLog::Level::Debug, "Accept was interrupted\n");
+        LogDebug(BCLog::I2P, "Accept was interrupted\n");
     } else {
-        LogPrintLevel(BCLog::I2P, BCLog::Level::Debug, "Error accepting%s: %s\n", disconnect ? " (will close the session)" : "", errmsg);
+        LogDebug(BCLog::I2P, "Error accepting%s: %s\n", disconnect ? " (will close the session)" : "", errmsg);
     }
     if (disconnect) {
         LOCK(m_mutex);
@@ -224,7 +224,7 @@ bool Session::Connect(const CService& to, Connection& conn, bool& proxy_error)
     // Refuse connecting to arbitrary ports. We don't specify any destination port to the SAM proxy
     // when connecting (SAM 3.1 does not use ports) and it forces/defaults it to I2P_SAM31_PORT.
     if (to.GetPort() != I2P_SAM31_PORT) {
-        LogPrintLevel(BCLog::I2P, BCLog::Level::Debug, "Error connecting to %s, connection refused due to arbitrary port %s\n", to.ToStringAddrPort(), to.GetPort());
+        LogDebug(BCLog::I2P, "Error connecting to %s, connection refused due to arbitrary port %s\n", to.ToStringAddrPort(), to.GetPort());
         proxy_error = false;
         return false;
     }
@@ -272,7 +272,7 @@ bool Session::Connect(const CService& to, Connection& conn, bool& proxy_error)
 
         throw std::runtime_error(strprintf("\"%s\"", connect_reply.full));
     } catch (const std::runtime_error& e) {
-        LogPrintLevel(BCLog::I2P, BCLog::Level::Debug, "Error connecting to %s: %s\n", to.ToStringAddrPort(), e.what());
+        LogDebug(BCLog::I2P, "Error connecting to %s: %s\n", to.ToStringAddrPort(), e.what());
         CheckControlSock();
         return false;
     }
@@ -345,7 +345,7 @@ void Session::CheckControlSock()
 
     std::string errmsg;
     if (m_control_sock && !m_control_sock->IsConnected(errmsg)) {
-        LogPrintLevel(BCLog::I2P, BCLog::Level::Debug, "Control socket error: %s\n", errmsg);
+        LogDebug(BCLog::I2P, "Control socket error: %s\n", errmsg);
         Disconnect();
     }
 }
@@ -415,7 +415,7 @@ void Session::CreateIfNotCreatedAlready()
     const auto session_type = m_transient ? "transient" : "persistent";
     const auto session_id = GetRandHash().GetHex().substr(0, 10); // full is overkill, too verbose in the logs
 
-    LogPrintLevel(BCLog::I2P, BCLog::Level::Debug, "Creating %s SAM session %s with %s\n", session_type, session_id, m_control_host.ToString());
+    LogDebug(BCLog::I2P, "Creating %s SAM session %s with %s\n", session_type, session_id, m_control_host.ToString());
 
     auto sock = Hello();
 

@@ -2795,7 +2795,7 @@ bool Chainstate::FlushStateToDisk(
                 // TODO: Handle return error, or add detailed comment why it is
                 // safe to not return an error upon failure.
                 if (!m_blockman.FlushChainstateBlockFile(m_chain.Height())) {
-                    LogPrintLevel(BCLog::VALIDATION, BCLog::Level::Warning, "%s: Failed to flush block file.\n", __func__);
+                    LogWarning("%s: Failed to flush block file.\n", __func__);
                 }
             }
 
