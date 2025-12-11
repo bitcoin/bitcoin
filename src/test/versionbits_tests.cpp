@@ -424,7 +424,7 @@ BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
 {
     // check that any deployment on any chain can conceivably reach both
     // ACTIVE and FAILED states in roughly the way we expect
-    for (const auto& chain_name : {CBaseChainParams::MAIN, CBaseChainParams::TESTNET, /*CBaseChainParams::SIGNET,=*/CBaseChainParams::DEVNET, CBaseChainParams::REGTEST}) {
+    for (const auto& chain_name : {CBaseChainParams::MAIN, CBaseChainParams::TESTNET, /*CBaseChainParams::DEVNET,=*/CBaseChainParams::DEVNET, CBaseChainParams::REGTEST}) {
         const auto chainParams = CreateChainParams(*m_node.args, chain_name);
 
         uint32_t chain_all_vbits{0};
