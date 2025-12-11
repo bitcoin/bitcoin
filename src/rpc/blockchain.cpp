@@ -222,9 +222,9 @@ UniValue blockToJSON(BlockManager& blockman, const CBlock& block, const CBlockIn
     return result;
 }
 
-static RPCHelpMan getblockcount()
+static RPCMethod getblockcount()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getblockcount",
         "Returns the height of the most-work fully-validated chain.\n"
                 "The genesis block has height 0.\n",
@@ -235,7 +235,7 @@ static RPCHelpMan getblockcount()
                     HelpExampleCli("getblockcount", "")
             + HelpExampleRpc("getblockcount", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
@@ -244,9 +244,9 @@ static RPCHelpMan getblockcount()
     };
 }
 
-static RPCHelpMan getbestblockhash()
+static RPCMethod getbestblockhash()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getbestblockhash",
         "Returns the hash of the best (tip) block in the most-work fully-validated chain.\n",
                 {},
@@ -256,7 +256,7 @@ static RPCHelpMan getbestblockhash()
                     HelpExampleCli("getbestblockhash", "")
             + HelpExampleRpc("getbestblockhash", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
@@ -265,9 +265,9 @@ static RPCHelpMan getbestblockhash()
     };
 }
 
-static RPCHelpMan waitfornewblock()
+static RPCMethod waitfornewblock()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "waitfornewblock",
         "Waits for any new block and returns useful info about it.\n"
                 "\nReturns the current block on timeout or exit.\n"
@@ -286,7 +286,7 @@ static RPCHelpMan waitfornewblock()
                     HelpExampleCli("waitfornewblock", "1000")
             + HelpExampleRpc("waitfornewblock", "1000")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     int timeout = 0;
     if (!request.params[0].isNull())
@@ -324,9 +324,9 @@ static RPCHelpMan waitfornewblock()
     };
 }
 
-static RPCHelpMan waitforblock()
+static RPCMethod waitforblock()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "waitforblock",
         "Waits for a specific new block and returns useful info about it.\n"
                 "\nReturns the current block on timeout or exit.\n"
@@ -345,7 +345,7 @@ static RPCHelpMan waitforblock()
                     HelpExampleCli("waitforblock", "\"0000000000079f8ef3d2c688c244eb7a4570b24c9ed7b4a8c619eb02596f8862\" 1000")
             + HelpExampleRpc("waitforblock", "\"0000000000079f8ef3d2c688c244eb7a4570b24c9ed7b4a8c619eb02596f8862\", 1000")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     int timeout = 0;
 
@@ -385,9 +385,9 @@ static RPCHelpMan waitforblock()
     };
 }
 
-static RPCHelpMan waitforblockheight()
+static RPCMethod waitforblockheight()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "waitforblockheight",
         "Waits for (at least) block height and returns the height and hash\n"
                 "of the current tip.\n"
@@ -407,7 +407,7 @@ static RPCHelpMan waitforblockheight()
                     HelpExampleCli("waitforblockheight", "100 1000")
             + HelpExampleRpc("waitforblockheight", "100, 1000")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     int timeout = 0;
 
@@ -448,9 +448,9 @@ static RPCHelpMan waitforblockheight()
     };
 }
 
-static RPCHelpMan syncwithvalidationinterfacequeue()
+static RPCMethod syncwithvalidationinterfacequeue()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "syncwithvalidationinterfacequeue",
         "Waits for the validation interface queue to catch up on everything that was there when we entered this function.\n",
                 {},
@@ -459,7 +459,7 @@ static RPCHelpMan syncwithvalidationinterfacequeue()
                     HelpExampleCli("syncwithvalidationinterfacequeue","")
             + HelpExampleRpc("syncwithvalidationinterfacequeue","")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     CHECK_NONFATAL(node.validation_signals)->SyncWithValidationInterfaceQueue();
@@ -468,9 +468,9 @@ static RPCHelpMan syncwithvalidationinterfacequeue()
     };
 }
 
-static RPCHelpMan getdifficulty()
+static RPCMethod getdifficulty()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getdifficulty",
         "Returns the proof-of-work difficulty as a multiple of the minimum difficulty.\n",
                 {},
@@ -480,7 +480,7 @@ static RPCHelpMan getdifficulty()
                     HelpExampleCli("getdifficulty", "")
             + HelpExampleRpc("getdifficulty", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
@@ -489,9 +489,9 @@ static RPCHelpMan getdifficulty()
     };
 }
 
-static RPCHelpMan getblockfrompeer()
+static RPCMethod getblockfrompeer()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getblockfrompeer",
         "Attempt to fetch block from a given peer.\n\n"
         "We must have the header for this block, e.g. using submitheader.\n"
@@ -510,7 +510,7 @@ static RPCHelpMan getblockfrompeer()
             HelpExampleCli("getblockfrompeer", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 0")
             + HelpExampleRpc("getblockfrompeer", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 0")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
@@ -544,9 +544,9 @@ static RPCHelpMan getblockfrompeer()
     };
 }
 
-static RPCHelpMan getblockhash()
+static RPCMethod getblockhash()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getblockhash",
         "Returns hash of block in best-block-chain at height provided.\n",
                 {
@@ -558,7 +558,7 @@ static RPCHelpMan getblockhash()
                     HelpExampleCli("getblockhash", "1000")
             + HelpExampleRpc("getblockhash", "1000")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
@@ -574,9 +574,9 @@ static RPCHelpMan getblockhash()
     };
 }
 
-static RPCHelpMan getblockheader()
+static RPCMethod getblockheader()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getblockheader",
         "If verbose is false, returns a string that is serialized, hex-encoded data for blockheader 'hash'.\n"
                 "If verbose is true, returns an Object with information about blockheader <hash>.\n",
@@ -612,7 +612,7 @@ static RPCHelpMan getblockheader()
                     HelpExampleCli("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
             + HelpExampleRpc("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     uint256 hash(ParseHashV(request.params[0], "hash"));
 
@@ -740,9 +740,9 @@ const RPCResult getblock_vin{
     }
 };
 
-static RPCHelpMan getblock()
+static RPCMethod getblock()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getblock",
         "If verbosity is 0, returns a string that is serialized, hex-encoded data for block 'hash'.\n"
                 "If verbosity is 1, returns an Object with information about block <hash>.\n"
@@ -811,7 +811,7 @@ static RPCHelpMan getblock()
                     HelpExampleCli("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
             + HelpExampleRpc("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
 
@@ -880,9 +880,9 @@ std::optional<int> GetPruneHeight(const BlockManager& blockman, const CChain& ch
     return CHECK_NONFATAL(first_unpruned.pprev)->nHeight;
 }
 
-static RPCHelpMan pruneblockchain()
+static RPCMethod pruneblockchain()
 {
-    return RPCHelpMan{"pruneblockchain",
+    return RPCMethod{"pruneblockchain",
                 "Attempts to delete block and undo data up to a specified height or timestamp, if eligible for pruning.\n"
                 "Requires `-prune` to be enabled at startup. While pruned data may be re-fetched in some cases (e.g., via `getblockfrompeer`), local deletion is irreversible.\n",
                 {
@@ -895,7 +895,7 @@ static RPCHelpMan pruneblockchain()
                     HelpExampleCli("pruneblockchain", "1000")
             + HelpExampleRpc("pruneblockchain", "1000")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     if (!chainman.m_blockman.IsPruneMode()) {
@@ -982,9 +982,9 @@ static std::optional<kernel::CCoinsStats> GetUTXOStats(CCoinsView* view, node::B
     return kernel::ComputeUTXOStats(hash_type, view, blockman, interruption_point);
 }
 
-static RPCHelpMan gettxoutsetinfo()
+static RPCMethod gettxoutsetinfo()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "gettxoutsetinfo",
         "Returns statistics about the unspent transaction output set.\n"
                 "Note this call may take some time if you are not using coinstatsindex.\n",
@@ -1036,7 +1036,7 @@ static RPCHelpMan gettxoutsetinfo()
                     HelpExampleRpc("gettxoutsetinfo", R"("none", 1000)") +
                     HelpExampleRpc("gettxoutsetinfo", R"("none", "00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09")")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue ret(UniValue::VOBJ);
 
@@ -1154,9 +1154,9 @@ static RPCHelpMan gettxoutsetinfo()
     };
 }
 
-static RPCHelpMan gettxout()
+static RPCMethod gettxout()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "gettxout",
         "Returns details about an unspent transaction output.\n",
         {
@@ -1188,7 +1188,7 @@ static RPCHelpMan gettxout()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("gettxout", "\"txid\", 1")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
@@ -1234,9 +1234,9 @@ static RPCHelpMan gettxout()
     };
 }
 
-static RPCHelpMan verifychain()
+static RPCMethod verifychain()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "verifychain",
         "Verifies blockchain database.\n",
                 {
@@ -1250,7 +1250,7 @@ static RPCHelpMan verifychain()
                     HelpExampleCli("verifychain", "")
             + HelpExampleRpc("verifychain", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const int check_level{request.params[0].isNull() ? DEFAULT_CHECKLEVEL : request.params[0].getInt<int>()};
     const int check_depth{request.params[1].isNull() ? DEFAULT_CHECKBLOCKS : request.params[1].getInt<int>()};
@@ -1336,9 +1336,9 @@ static void SoftForkDescPushBack(const CBlockIndex* blockindex, UniValue& softfo
 }
 
 // used by rest.cpp:rest_chaininfo, so cannot be static
-RPCHelpMan getblockchaininfo()
+RPCMethod getblockchaininfo()
 {
-    return RPCHelpMan{"getblockchaininfo",
+    return RPCMethod{"getblockchaininfo",
         "Returns an object containing various state info regarding blockchain processing.\n",
         {},
         RPCResult{
@@ -1375,7 +1375,7 @@ RPCHelpMan getblockchaininfo()
             HelpExampleCli("getblockchaininfo", "")
             + HelpExampleRpc("getblockchaininfo", "")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
@@ -1461,9 +1461,9 @@ UniValue DeploymentInfo(const CBlockIndex* blockindex, const ChainstateManager& 
 }
 } // anon namespace
 
-RPCHelpMan getdeploymentinfo()
+RPCMethod getdeploymentinfo()
 {
-    return RPCHelpMan{"getdeploymentinfo",
+    return RPCMethod{"getdeploymentinfo",
         "Returns an object containing various state info regarding deployments of consensus changes.",
         {
             {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Default{"hash of current chain tip"}, "The block hash at which to query deployment state"},
@@ -1481,7 +1481,7 @@ RPCHelpMan getdeploymentinfo()
             }
         },
         RPCExamples{ HelpExampleCli("getdeploymentinfo", "") + HelpExampleRpc("getdeploymentinfo", "") },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             const ChainstateManager& chainman = EnsureAnyChainman(request.context);
             LOCK(cs_main);
@@ -1528,9 +1528,9 @@ struct CompareBlocksByHeight
     }
 };
 
-static RPCHelpMan getchaintips()
+static RPCMethod getchaintips()
 {
-    return RPCHelpMan{"getchaintips",
+    return RPCMethod{"getchaintips",
                 "Return information about all known tips in the block tree,"
                 " including the main chain as well as orphaned branches.\n",
                 {},
@@ -1553,7 +1553,7 @@ static RPCHelpMan getchaintips()
                     HelpExampleCli("getchaintips", "")
             + HelpExampleRpc("getchaintips", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
@@ -1626,9 +1626,9 @@ static RPCHelpMan getchaintips()
     };
 }
 
-static RPCHelpMan preciousblock()
+static RPCMethod preciousblock()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "preciousblock",
         "Treats a block as if it were received before others with the same work.\n"
                 "\nA later preciousblock call can override the effect of an earlier one.\n"
@@ -1641,7 +1641,7 @@ static RPCHelpMan preciousblock()
                     HelpExampleCli("preciousblock", "\"blockhash\"")
             + HelpExampleRpc("preciousblock", "\"blockhash\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
     CBlockIndex* pblockindex;
@@ -1688,9 +1688,9 @@ void InvalidateBlock(ChainstateManager& chainman, const uint256 block_hash) {
     }
 }
 
-static RPCHelpMan invalidateblock()
+static RPCMethod invalidateblock()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "invalidateblock",
         "Permanently marks a block as invalid, as if it violated a consensus rule.\n",
                 {
@@ -1701,7 +1701,7 @@ static RPCHelpMan invalidateblock()
                     HelpExampleCli("invalidateblock", "\"blockhash\"")
             + HelpExampleRpc("invalidateblock", "\"blockhash\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
@@ -1733,9 +1733,9 @@ void ReconsiderBlock(ChainstateManager& chainman, uint256 block_hash) {
     }
 }
 
-static RPCHelpMan reconsiderblock()
+static RPCMethod reconsiderblock()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "reconsiderblock",
         "Removes invalidity status of a block, its ancestors and its descendants, reconsider them for activation.\n"
                 "This can be used to undo the effects of invalidateblock.\n",
@@ -1747,7 +1747,7 @@ static RPCHelpMan reconsiderblock()
                     HelpExampleCli("reconsiderblock", "\"blockhash\"")
             + HelpExampleRpc("reconsiderblock", "\"blockhash\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
@@ -1759,9 +1759,9 @@ static RPCHelpMan reconsiderblock()
     };
 }
 
-static RPCHelpMan getchaintxstats()
+static RPCMethod getchaintxstats()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getchaintxstats",
         "Compute statistics about the total number and rate of transactions in the chain.\n",
                 {
@@ -1790,7 +1790,7 @@ static RPCHelpMan getchaintxstats()
                     HelpExampleCli("getchaintxstats", "")
             + HelpExampleRpc("getchaintxstats", "2016")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     const CBlockIndex* pindex;
@@ -1906,9 +1906,9 @@ static inline bool SetHasKeys(const std::set<T>& set, const Tk& key, const Args&
 // outpoint (needed for the utxo index) + nHeight + fCoinBase
 static constexpr size_t PER_UTXO_OVERHEAD = sizeof(COutPoint) + sizeof(uint32_t) + sizeof(bool);
 
-static RPCHelpMan getblockstats()
+static RPCMethod getblockstats()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getblockstats",
         "Compute per block statistics for a given window. All amounts are in satoshis.\n"
                 "It won't work for some heights with pruning.\n",
@@ -1973,7 +1973,7 @@ static RPCHelpMan getblockstats()
                     HelpExampleRpc("getblockstats", R"("00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09", ["minfeerate","avgfeerate"])") +
                     HelpExampleRpc("getblockstats", R"(1000, ["minfeerate","avgfeerate"])")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     const CBlockIndex& pindex{*CHECK_NONFATAL(ParseHashOrHeight(request.params[0], chainman))};
@@ -2266,12 +2266,12 @@ static const auto scan_result_status_some = RPCResult{
 };
 
 
-static RPCHelpMan scantxoutset()
+static RPCMethod scantxoutset()
 {
     // raw() descriptor corresponding to mainnet address 12cbQLTFMXRnSzktFkuoG3eHoMeFtpTu3S
     const std::string EXAMPLE_DESCRIPTOR_RAW = "raw(76a91411b366edfc0a8b66feebae5c2e25a7b6a5d1cf3188ac)#fm24fxxy";
 
-    return RPCHelpMan{
+    return RPCMethod{
         "scantxoutset",
         "Scans the unspent transaction output set for entries that match certain output descriptors.\n"
         "Examples of output descriptors are:\n"
@@ -2328,7 +2328,7 @@ static RPCHelpMan scantxoutset()
             HelpExampleRpc("scantxoutset", "\"status\"") +
             HelpExampleRpc("scantxoutset", "\"abort\"")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue result(UniValue::VOBJ);
     const auto action{self.Arg<std::string_view>("action")};
@@ -2481,9 +2481,9 @@ static bool CheckBlockFilterMatches(BlockManager& blockman, const CBlockIndex& b
     return false;
 }
 
-static RPCHelpMan scanblocks()
+static RPCMethod scanblocks()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "scanblocks",
         "Return relevant blockhashes for given descriptors (requires blockfilterindex).\n"
         "This call may take several minutes. Make sure to use no RPC timeout (bitcoin-cli -rpcclienttimeout=0)",
@@ -2524,7 +2524,7 @@ static RPCHelpMan scanblocks()
             HelpExampleRpc("scanblocks", "\"start\", [\"addr(bcrt1q4u4nsgk6ug0sqz7r3rj9tykjxrsl0yy4d0wwte)\"], 100, 150, \"basic\"") +
             HelpExampleRpc("scanblocks", "\"status\"")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue ret(UniValue::VOBJ);
     auto action{self.Arg<std::string_view>("action")};
@@ -2670,9 +2670,9 @@ static RPCHelpMan scanblocks()
     };
 }
 
-static RPCHelpMan getdescriptoractivity()
+static RPCMethod getdescriptoractivity()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getdescriptoractivity",
         "Get spend and receive activity associated with a set of descriptors for a set of blocks. "
         "This command pairs well with the `relevant_blocks` output of `scanblocks()`.\n"
@@ -2720,7 +2720,7 @@ static RPCHelpMan getdescriptoractivity()
         RPCExamples{
             HelpExampleCli("getdescriptoractivity", "'[\"000000000000000000001347062c12fded7c528943c8ce133987e2e2f5a840ee\"]' '[\"addr(bc1qzl6nsgqzu89a66l50cvwapnkw5shh23zarqkw9)\"]'")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue ret(UniValue::VOBJ);
     UniValue activity(UniValue::VARR);
@@ -2906,9 +2906,9 @@ static RPCHelpMan getdescriptoractivity()
     };
 }
 
-static RPCHelpMan getblockfilter()
+static RPCMethod getblockfilter()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getblockfilter",
         "Retrieve a BIP 157 content filter for a particular block.\n",
                 {
@@ -2925,7 +2925,7 @@ static RPCHelpMan getblockfilter()
                     HelpExampleCli("getblockfilter", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" \"basic\"") +
                     HelpExampleRpc("getblockfilter", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\", \"basic\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     uint256 block_hash = ParseHashV(request.params[0], "blockhash");
     auto filtertype_name{self.Arg<std::string_view>("filtertype")};
@@ -3024,9 +3024,9 @@ public:
  *
  * @see SnapshotMetadata
  */
-static RPCHelpMan dumptxoutset()
+static RPCMethod dumptxoutset()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "dumptxoutset",
         "Write the serialized UTXO set to a file. This can be used in loadtxoutset afterwards if this snapshot height is supported in the chainparams as well.\n\n"
         "Unless the \"latest\" type is requested, the node will roll back to the requested height and network activity will be suspended during this process. "
@@ -3059,7 +3059,7 @@ static RPCHelpMan dumptxoutset()
             HelpExampleCli("-rpcclienttimeout=0 dumptxoutset", "utxo.dat rollback") +
             HelpExampleCli("-rpcclienttimeout=0 -named dumptxoutset", R"(utxo.dat rollback=853456)")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CBlockIndex* tip{WITH_LOCK(::cs_main, return node.chainman->ActiveChain().Tip())};
@@ -3315,9 +3315,9 @@ UniValue CreateUTXOSnapshot(
                              node.rpc_interruption_point);
 }
 
-static RPCHelpMan loadtxoutset()
+static RPCMethod loadtxoutset()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "loadtxoutset",
         "Load the serialized UTXO set from a file.\n"
         "Once this snapshot is loaded, its contents will be "
@@ -3351,7 +3351,7 @@ static RPCHelpMan loadtxoutset()
         RPCExamples{
             HelpExampleCli("-rpcclienttimeout=0 loadtxoutset", "utxo.dat")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
@@ -3409,9 +3409,9 @@ const std::vector<RPCResult> RPCHelpForChainstate{
     {RPCResult::Type::BOOL, "validated", "whether the chainstate is fully validated. True if all blocks in the chainstate were validated, false if the chain is based on a snapshot and the snapshot has not yet been validated."},
 };
 
-static RPCHelpMan getchainstates()
+static RPCMethod getchainstates()
 {
-return RPCHelpMan{
+return RPCMethod{
         "getchainstates",
         "Return information about chainstates.\n",
         {},
@@ -3425,7 +3425,7 @@ return RPCHelpMan{
             HelpExampleCli("getchainstates", "")
     + HelpExampleRpc("getchainstates", "")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     LOCK(cs_main);
     UniValue obj(UniValue::VOBJ);

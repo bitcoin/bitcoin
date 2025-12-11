@@ -18,9 +18,9 @@
 #include <univalue.h>
 
 namespace wallet {
-RPCHelpMan getnewaddress()
+RPCMethod getnewaddress()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getnewaddress",
         "Returns a new Bitcoin address for receiving payments.\n"
                 "If 'label' is specified, it is added to the address book \n"
@@ -36,7 +36,7 @@ RPCHelpMan getnewaddress()
                     HelpExampleCli("getnewaddress", "")
             + HelpExampleRpc("getnewaddress", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -69,9 +69,9 @@ RPCHelpMan getnewaddress()
     };
 }
 
-RPCHelpMan getrawchangeaddress()
+RPCMethod getrawchangeaddress()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getrawchangeaddress",
         "Returns a new Bitcoin address, for receiving change.\n"
                 "This is for use with raw transactions, NOT normal use.\n",
@@ -85,7 +85,7 @@ RPCHelpMan getrawchangeaddress()
                     HelpExampleCli("getrawchangeaddress", "")
             + HelpExampleRpc("getrawchangeaddress", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -115,9 +115,9 @@ RPCHelpMan getrawchangeaddress()
 }
 
 
-RPCHelpMan setlabel()
+RPCMethod setlabel()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "setlabel",
         "Sets the label associated with the given address.\n",
                 {
@@ -129,7 +129,7 @@ RPCHelpMan setlabel()
                     HelpExampleCli("setlabel", "\"" + EXAMPLE_ADDRESS[0] + "\" \"tabby\"")
             + HelpExampleRpc("setlabel", "\"" + EXAMPLE_ADDRESS[0] + "\", \"tabby\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -154,9 +154,9 @@ RPCHelpMan setlabel()
     };
 }
 
-RPCHelpMan listaddressgroupings()
+RPCMethod listaddressgroupings()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "listaddressgroupings",
         "Lists groups of addresses which have had their common ownership\n"
                 "made public by common use as inputs or as the resulting change\n"
@@ -180,7 +180,7 @@ RPCHelpMan listaddressgroupings()
                     HelpExampleCli("listaddressgroupings", "")
             + HelpExampleRpc("listaddressgroupings", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -215,9 +215,9 @@ RPCHelpMan listaddressgroupings()
     };
 }
 
-RPCHelpMan keypoolrefill()
+RPCMethod keypoolrefill()
 {
-    return RPCHelpMan{"keypoolrefill",
+    return RPCMethod{"keypoolrefill",
                 "Refills each descriptor keypool in the wallet up to the specified number of new keys.\n"
                 "By default, descriptor wallets have 4 active ranged descriptors (" + FormatAllOutputTypes() + "), each with " + util::ToString(DEFAULT_KEYPOOL_SIZE) + " entries.\n" +
         HELP_REQUIRING_PASSPHRASE,
@@ -229,7 +229,7 @@ RPCHelpMan keypoolrefill()
                     HelpExampleCli("keypoolrefill", "")
             + HelpExampleRpc("keypoolrefill", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -365,9 +365,9 @@ static UniValue DescribeWalletAddress(const CWallet& wallet, const CTxDestinatio
     return ret;
 }
 
-RPCHelpMan getaddressinfo()
+RPCMethod getaddressinfo()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getaddressinfo",
         "Return information about the given bitcoin address.\n"
                 "Some of the information will only be present if the address is in the active wallet.\n",
@@ -420,7 +420,7 @@ RPCHelpMan getaddressinfo()
                     HelpExampleCli("getaddressinfo", "\"" + EXAMPLE_ADDRESS[0] + "\"") +
                     HelpExampleRpc("getaddressinfo", "\"" + EXAMPLE_ADDRESS[0] + "\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -512,9 +512,9 @@ RPCHelpMan getaddressinfo()
     };
 }
 
-RPCHelpMan getaddressesbylabel()
+RPCMethod getaddressesbylabel()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getaddressesbylabel",
         "Returns the list of addresses assigned the specified label.\n",
                 {
@@ -533,7 +533,7 @@ RPCHelpMan getaddressesbylabel()
                     HelpExampleCli("getaddressesbylabel", "\"tabby\"")
             + HelpExampleRpc("getaddressesbylabel", "\"tabby\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -573,9 +573,9 @@ RPCHelpMan getaddressesbylabel()
     };
 }
 
-RPCHelpMan listlabels()
+RPCMethod listlabels()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "listlabels",
         "Returns the list of all labels, or labels that are assigned to addresses with a specific purpose.\n",
                 {
@@ -597,7 +597,7 @@ RPCHelpMan listlabels()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("listlabels", "receive")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -630,9 +630,9 @@ RPCHelpMan listlabels()
 
 
 #ifdef ENABLE_EXTERNAL_SIGNER
-RPCHelpMan walletdisplayaddress()
+RPCMethod walletdisplayaddress()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "walletdisplayaddress",
         "Display address on an external signer for verification.",
         {
@@ -645,7 +645,7 @@ RPCHelpMan walletdisplayaddress()
             }
         },
         RPCExamples{""},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
             if (!wallet) return UniValue::VNULL;

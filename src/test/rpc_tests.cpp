@@ -521,7 +521,7 @@ BOOST_AUTO_TEST_CASE(check_dup_param_names)
             }
         }
         push_options();
-        return RPCHelpMan{"method_name", "description", params, RPCResults{}, RPCExamples{""}};
+        return RPCMethod{"method_name", "description", params, RPCResults{}, RPCExamples{""}};
     };
 
     // No errors if parameter names are unique.
@@ -589,10 +589,10 @@ BOOST_AUTO_TEST_CASE(help_example)
     BOOST_CHECK_NE(HelpExampleRpcNamed("foo", {{"arg", true}}), HelpExampleRpcNamed("foo", {{"arg", "true"}}));
 }
 
-static void CheckRpc(const std::vector<RPCArg>& params, const UniValue& args, RPCHelpMan::RPCMethodImpl test_impl)
+static void CheckRpc(const std::vector<RPCArg>& params, const UniValue& args, RPCMethod::RPCMethodImpl test_impl)
 {
     auto null_result{RPCResult{RPCResult::Type::NONE, "", "None"}};
-    const RPCHelpMan rpc{"dummy", "dummy description", params, null_result, RPCExamples{""}, test_impl};
+    const RPCMethod rpc{"dummy", "dummy description", params, null_result, RPCExamples{""}, test_impl};
     JSONRPCRequest req;
     req.params = args;
 
@@ -605,7 +605,7 @@ BOOST_AUTO_TEST_CASE(rpc_arg_helper)
     constexpr auto DEFAULT_STRING = "default";
     constexpr uint64_t DEFAULT_UINT64_T = 3;
 
-    //! Parameters with which the RPCHelpMan is instantiated
+    //! Parameters with which the RPCMethod is instantiated
     const std::vector<RPCArg> params{
         // Required arg
         {"req_int", RPCArg::Type::NUM, RPCArg::Optional::NO, ""},
@@ -620,7 +620,7 @@ BOOST_AUTO_TEST_CASE(rpc_arg_helper)
     };
 
     //! Check that `self.Arg` returns the same value as the `request.params` accessors
-    RPCHelpMan::RPCMethodImpl check_positional = [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+    RPCMethod::RPCMethodImpl check_positional = [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
             BOOST_CHECK_EQUAL(self.Arg<int>("req_int"), request.params[0].getInt<int>());
             BOOST_CHECK_EQUAL(self.Arg<std::string_view>("req_str"), request.params[1].get_str());
             BOOST_CHECK_EQUAL(self.Arg<uint64_t>("def_uint64_t"), request.params[2].isNull() ? DEFAULT_UINT64_T : request.params[2].getInt<uint64_t>());

@@ -116,9 +116,9 @@ std::string CRPCTable::help(std::string_view strCommand, const JSONRPCRequest& h
     return strRet;
 }
 
-static RPCHelpMan help()
+static RPCMethod help()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "help",
         "List all commands, or get help for a specified command.\n",
                 {
@@ -129,7 +129,7 @@ static RPCHelpMan help()
                     RPCResult{RPCResult::Type::ANY, "", ""},
                 },
                 RPCExamples{""},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& jsonRequest) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& jsonRequest) -> UniValue
 {
     auto command{self.MaybeArg<std::string_view>("command")};
     if (command == "dump_all_command_conversions") {
@@ -142,10 +142,10 @@ static RPCHelpMan help()
     };
 }
 
-static RPCHelpMan stop()
+static RPCMethod stop()
 {
     static const std::string RESULT{CLIENT_NAME " stopping"};
-    return RPCHelpMan{
+    return RPCMethod{
         "stop",
     // Also accept the hidden 'wait' integer argument (milliseconds)
     // For instance, 'stop 1000' makes the call wait 1 second before returning
@@ -156,7 +156,7 @@ static RPCHelpMan stop()
                 },
                 RPCResult{RPCResult::Type::STR, "", "A string with the content '" + RESULT + "'"},
                 RPCExamples{""},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& jsonRequest) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& jsonRequest) -> UniValue
 {
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
@@ -169,9 +169,9 @@ static RPCHelpMan stop()
     };
 }
 
-static RPCHelpMan uptime()
+static RPCMethod uptime()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "uptime",
         "Returns the total uptime of the server.\n",
                             {},
@@ -182,16 +182,16 @@ static RPCHelpMan uptime()
                     HelpExampleCli("uptime", "")
                 + HelpExampleRpc("uptime", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     return GetTime() - GetStartupTime();
 }
     };
 }
 
-static RPCHelpMan getrpcinfo()
+static RPCMethod getrpcinfo()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getrpcinfo",
         "Returns details of the RPC server.\n",
                 {},
@@ -212,7 +212,7 @@ static RPCHelpMan getrpcinfo()
                 RPCExamples{
                     HelpExampleCli("getrpcinfo", "")
                 + HelpExampleRpc("getrpcinfo", "")},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     LOCK(g_rpc_server_info.mutex);
     UniValue active_commands(UniValue::VARR);
