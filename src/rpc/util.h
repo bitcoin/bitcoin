@@ -418,8 +418,11 @@ struct RPCExamples {
 class RPCMethod
 {
 private:
+    using RPCMethodImpl = std::function<UniValue(const RPCMethod&, const JSONRPCRequest&)>;
+    RPCMethod(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples, RPCMethodImpl fun);
+
     template<typename D, typename Fn>
-    auto LambdaWithData(D&& data, Fn&& fun)
+    RPCMethodImpl LambdaWithData(D&& data, Fn&& fun)
     {
         return [f = std::forward<Fn>(fun), d = std::forward<D>(data)](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
             return f(d, self, request);
@@ -428,8 +431,20 @@ private:
 
 public:
     RPCMethod(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples);
-    using RPCMethodImpl = std::function<UniValue(const RPCMethod&, const JSONRPCRequest&)>;
-    RPCMethod(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples, RPCMethodImpl fun);
+
+    template<typename Fn>
+    RPCMethod(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples, Fn&& fun)
+    : RPCMethod(std::move(name),
+                 std::move(description),
+                 std::move(args),
+                 std::move(results),
+                 std::move(examples),
+                 RPCMethodImpl{std::forward<Fn>(fun)})
+    {
+        // check fn doesn't capture anything
+        static_assert(std::is_convertible_v<Fn, UniValue(*)(const RPCMethod&, const JSONRPCRequest&)>, "RPC method implementations should not capture");
+        static_assert(std::is_copy_constructible_v<Fn>);
+    }
 
     template<typename D, typename Fn>
     RPCMethod(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples, D&& data, Fn&& fun)
@@ -440,6 +455,8 @@ public:
                  std::move(examples),
                  LambdaWithData(std::forward<D>(data), std::forward<Fn>(fun)))
     {
+        // Supply an explicit struct that will get passed into the function, as an alternative to capturing
+        static_assert(std::is_convertible_v<Fn, UniValue(*)(const D&, const RPCMethod&, const JSONRPCRequest&)>, "RPC method implementations should not capture");
     }
 
     UniValue HandleRequest(const JSONRPCRequest& request) const;
