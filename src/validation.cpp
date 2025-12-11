@@ -3486,14 +3486,24 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
         } // release cs_main
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
 
-        if (exited_ibd) {
-            // If a background chainstate is in use, we may need to rebalance our
-            // allocation of caches once a chainstate exits initial block download.
-            LOCK(::cs_main);
-            m_chainman.MaybeRebalanceCaches();
+        bool disabled{false};
+        {
+            LOCK(m_chainman.GetMutex());
+            if (exited_ibd) {
+                // If a background chainstate is in use, we may need to rebalance our
+                // allocation of caches once a chainstate exits initial block download.
+                m_chainman.MaybeRebalanceCaches();
+            }
+
+            // Write changes periodically to disk, after relay.
+            if (!FlushStateToDisk(state, FlushStateMode::PERIODIC)) {
+                return false;
+            }
+
+            disabled = m_disabled;
         }
 
-        if (WITH_LOCK(::cs_main, return m_disabled)) {
+        if (disabled) {
             // Background chainstate has reached the snapshot base block, so exit.
 
             // Restart indexes to resume indexing for all blocks unique to the snapshot
@@ -3516,11 +3526,6 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
     } while (pindexNewTip != pindexMostWork);
 
     m_chainman.CheckBlockIndex();
-
-    // Write changes periodically to disk, after relay.
-    if (!FlushStateToDisk(state, FlushStateMode::PERIODIC)) {
-        return false;
-    }
 
     return true;
 }
