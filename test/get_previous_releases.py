@@ -122,6 +122,9 @@ def download_from_url(url, archive):
         if response.status != 200:
             raise RuntimeError(f"HTTP request failed with status code: {response.status}")
 
+        sock_info = response.fp.raw._sock.getpeername()
+        print(f"Connected to {sock_info[0]}")
+
         total_size = int(response.getheader("Content-Length"))
         progress_bytes = 0
 
