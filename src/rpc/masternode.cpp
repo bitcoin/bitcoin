@@ -182,8 +182,15 @@ static RPCHelpMan masternode_status()
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                // TODO: implement proper type validator instead ELISION
-                {RPCResult::Type::ELISION, "", ""}
+                GetRpcResult("outpoint"),
+                GetRpcResult("service"),
+                GetRpcResult("proTxHash", /*optional=*/true),
+                {RPCResult::Type::STR, "type", /*optional=*/true, "Masternode type"},
+                GetRpcResult("collateralHash", /*optional=*/true),
+                GetRpcResult("collateralIndex", /*optional=*/true),
+                CDeterministicMNState::GetJsonHelp(/*key=*/"dmnState", /*optional=*/true),
+                {RPCResult::Type::STR, "state", "Masternode state (human-readable string)"},
+                {RPCResult::Type::STR, "status", "Masternode status (human-readable string, based on current state)"},
             }
         },
         RPCExamples{""},
@@ -205,7 +212,6 @@ static RPCHelpMan masternode_status()
         mnObj.pushKV("type", std::string(GetMnType(dmn->nType).description));
         mnObj.pushKV("collateralHash", dmn->collateralOutpoint.hash.ToString());
         mnObj.pushKV("collateralIndex", dmn->collateralOutpoint.n);
-        // TODO: Use CDeterministicMNState::GetJsonHelp() for dmnState
         mnObj.pushKV("dmnState", dmn->pdmnState->ToJson(dmn->nType));
     }
     mnObj.pushKV("state", node.mn_activeman->GetStateString());
