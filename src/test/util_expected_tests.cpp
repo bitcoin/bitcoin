@@ -122,4 +122,13 @@ BOOST_AUTO_TEST_CASE(unexpected_error_accessors)
     BOOST_CHECK_EQUAL(*moved, -2);
 }
 
+BOOST_AUTO_TEST_CASE(expected_swap)
+{
+    Expected<const char*, std::unique_ptr<int>> a{Unexpected{std::make_unique<int>(-1)}};
+    Expected<const char*, std::unique_ptr<int>> b{"good"};
+    a.swap(b);
+    BOOST_CHECK_EQUAL(a.value(), "good");
+    BOOST_CHECK_EQUAL(*b.error(), -1);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
