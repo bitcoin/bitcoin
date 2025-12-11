@@ -609,10 +609,12 @@ public:
             const size_t len{std::min<size_t>(vchBuf.size() - buf_offset, nSrcPos - m_read_pos)};
             const auto it_start{vchBuf.begin() + buf_offset};
             const auto it_find{std::find(it_start, it_start + len, byte)};
-            const size_t inc{size_t(std::distance(it_start, it_find))};
-            m_read_pos += inc;
-            if (inc < len) break;
-            buf_offset += inc;
+            if (it_find != it_start + len) {
+                m_read_pos += std::distance(it_start, it_find);
+                return;
+            }
+            m_read_pos += len;
+            buf_offset += len;
             if (buf_offset >= vchBuf.size()) buf_offset = 0;
         }
     }
