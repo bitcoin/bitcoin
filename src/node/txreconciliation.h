@@ -6,84 +6,70 @@
 #define BITCOIN_NODE_TXRECONCILIATION_H
 
 #include <net.h>
-#include <sync.h>
+#include <util/hasher.h>
 
-#include <memory>
-#include <tuple>
-
-/** Supported transaction reconciliation protocol version */
-static constexpr uint32_t TXRECONCILIATION_VERSION{1};
-
-enum class ReconciliationRegisterResult {
-    NOT_FOUND,
-    SUCCESS,
-    ALREADY_REGISTERED,
-    PROTOCOL_VIOLATION,
-};
+namespace node {
+/** Static salt component used to compute short txids for sketch construction, see BIP-330. */
+const std::string RECON_STATIC_SALT = "Tx Relay Salting";
+const HashWriter RECON_SALT_HASHER = TaggedHash(RECON_STATIC_SALT);
 
 /**
- * Transaction reconciliation is a way for nodes to efficiently announce transactions.
- * This object keeps track of all txreconciliation-related communications with the peers.
- * The high-level protocol is:
- * 0.  Txreconciliation protocol handshake.
- * 1.  Once we receive a new transaction, add it to the set instead of announcing immediately.
- * 2.  At regular intervals, a txreconciliation initiator requests a sketch from a peer, where a
- *     sketch is a compressed representation of short form IDs of the transactions in their set.
- * 3.  Once the initiator received a sketch from the peer, the initiator computes a local sketch,
- *     and combines the two sketches to attempt finding the difference in *sets*.
- * 4a. If the difference was not larger than estimated, see SUCCESS below.
- * 4b. If the difference was larger than estimated, initial txreconciliation fails. The initiator
- *     requests a larger sketch via an extension round (allowed only once).
- *     - If extension succeeds (a larger sketch is sufficient), see SUCCESS below.
- *     - If extension fails (a larger sketch is insufficient), see FAILURE below.
- *
- * SUCCESS. The initiator knows full symmetrical difference and can request what the initiator is
- *          missing and announce to the peer what the peer is missing.
- *
- * FAILURE. The initiator notifies the peer about the failure and announces all transactions from
- *          the corresponding set. Once the peer received the failure notification, the peer
- *          announces all transactions from their set.
-
- * This is a modification of the Erlay protocol (https://arxiv.org/abs/1905.10518) with two
- * changes (sketch extensions instead of bisections, and an extra INV exchange round), both
- * are motivated in BIP-330.
+ * Salt (specified by BIP-330) constructed from contributions from both peers. It is used
+ * to compute transaction short IDs, which are then used to construct a sketch representing a set
+ * of transactions we want to announce to the peer.
  */
-class TxReconciliationTracker
+inline uint256 ComputeSalt(uint64_t salt1, uint64_t salt2)
 {
-private:
-    class Impl;
-    const std::unique_ptr<Impl> m_impl;
+    // According to BIP-330, salts should be combined in ascending order.
+    return (HashWriter(RECON_SALT_HASHER) << std::min(salt1, salt2) << std::max(salt1, salt2)).GetSHA256();
+}
 
+/** Keeps track of txreconciliation-related per-peer state. */
+class TxReconciliationState
+{
 public:
-    explicit TxReconciliationTracker(uint32_t recon_version);
-    ~TxReconciliationTracker();
+    /**
+     * Reconciliation protocol assumes using one role consistently: either a reconciliation
+     * initiator (requesting sketches), or responder (sending sketches). This defines our role,
+     * based on the direction of the p2p connection.
+     */
+    bool m_we_initiate;
 
     /**
-     * Step 0. Generates initial part of the state (salt) required to reconcile txs with the peer.
-     * The salt is used for short ID computation required for txreconciliation.
-     * The function returns the salt.
-     * A peer can't participate in future txreconciliations without this call.
-     * This function must be called only once per peer.
+     * Store all wtxids that we would announce to the peer (policy checks passed, etc.)
+     * in this set instead of announcing them right away. When reconciliation time comes, we will
+     * compute a compressed representation of this set (a "sketch") and use it to efficiently
+     * reconcile this set with a set on the peer's side.
      */
-    uint64_t PreRegisterPeer(NodeId peer_id);
+    std::unordered_set<Wtxid, SaltedWtxidHasher> m_local_set;
 
     /**
-     * Step 0. Once the peer agreed to reconcile txs with us, generate the state required to track
-     * ongoing reconciliations. Must be called only after pre-registering the peer and only once.
+     * Reconciliation sketches are computed over short transaction IDs.
+     * This is a cache of these IDs enabling faster lookups of full wtxids,
+     * useful when the peer asks for missing transactions by short IDs
+     * at the end of a reconciliation round.
+     * We also use this to keep track of short ID collisions. In case of a
+     * collision, both transactions should be fanout.
      */
-    ReconciliationRegisterResult RegisterPeer(NodeId peer_id, bool is_peer_inbound,
-                                              uint32_t peer_recon_version, uint64_t remote_salt);
+    std::map<uint32_t, Wtxid> m_short_id_mapping;
+
+    TxReconciliationState(bool we_initiate, uint64_t k0, uint64_t k1) : m_we_initiate(we_initiate), m_k0(k0), m_k1(k1) {}
 
     /**
-     * Attempts to forget txreconciliation-related state of the peer (if we previously stored any).
-     * After this, we won't be able to reconcile transactions with the peer.
+     * Reconciliation sketches are computed over short transaction IDs.
+     * Short IDs are salted with a link-specific constant value.
      */
-    void ForgetPeer(NodeId peer_id);
+    uint32_t ComputeShortID(const Wtxid& wtxid) const;
 
     /**
-     * Check if a peer is registered to reconcile transactions with us.
-     */
-    bool IsPeerRegistered(NodeId peer_id) const;
+     * Check whether a given wtxid has a short ID collision with an existing transaction in the peer's reconciliation state.
+     * If a collision is found, sets collision to the wtxid of the conflicting transaction.
+    */
+    bool HasCollision(const Wtxid& wtxid, Wtxid& collision, uint32_t &short_id);
+
+private:
+    /** These values are used to salt short IDs, which is necessary for transaction reconciliations. */
+    uint64_t m_k0, m_k1;
 };
-
+} // namespace node
 #endif // BITCOIN_NODE_TXRECONCILIATION_H
