@@ -112,13 +112,11 @@ bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>& prevHeig
 unsigned int GetLegacySigOpCount(const CTransaction& tx)
 {
     unsigned int nSigOps = 0;
-    for (const auto& txin : tx.vin)
-    {
-        nSigOps += txin.scriptSig.GetSigOpCount(false);
+    for (const auto& txin : tx.vin) {
+        nSigOps += txin.scriptSig.CountSigOps(/*fAccurate=*/false);
     }
-    for (const auto& txout : tx.vout)
-    {
-        nSigOps += txout.scriptPubKey.GetSigOpCount(false);
+    for (const auto& txout : tx.vout) {
+        nSigOps += txout.scriptPubKey.CountSigOps(/*fAccurate=*/false);
     }
     return nSigOps;
 }
@@ -133,9 +131,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
     {
         const Coin& coin = inputs.AccessCoin(tx.vin[i].prevout);
         assert(!coin.IsSpent());
-        const CTxOut &prevout = coin.out;
-        if (prevout.scriptPubKey.IsPayToScriptHash())
-            nSigOps += prevout.scriptPubKey.GetSigOpCount(tx.vin[i].scriptSig);
+        nSigOps += CountP2SHSigOps(tx.vin[i].scriptSig, coin.out.scriptPubKey);
     }
     return nSigOps;
 }
