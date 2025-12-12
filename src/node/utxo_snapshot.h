@@ -77,7 +77,7 @@ public:
         // Read the version
         uint16_t version;
         s >> version;
-        if (m_supported_versions.find(version) == m_supported_versions.end()) {
+        if (!m_supported_versions.contains(version)) {
             throw std::ios_base::failure(strprintf("Version of snapshot %s does not match any of the supported versions.", version));
         }
 

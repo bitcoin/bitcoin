@@ -988,7 +988,7 @@ util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::
 CTxMemPool::ChangeSet::TxHandle CTxMemPool::ChangeSet::StageAddition(const CTransactionRef& tx, const CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, bool spends_coinbase, int64_t sigops_cost, LockPoints lp)
 {
     LOCK(m_pool->cs);
-    Assume(m_to_add.find(tx->GetHash()) == m_to_add.end());
+    Assume(!m_to_add.contains(tx->GetHash()));
     Assume(!m_dependencies_processed);
 
     // We need to process dependencies after adding a new transaction.

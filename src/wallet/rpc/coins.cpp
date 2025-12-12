@@ -67,7 +67,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
         }
 
         for (const CTxOut& txout : wtx.tx->vout) {
-            if (output_scripts.count(txout.scriptPubKey) > 0) {
+            if (output_scripts.contains(txout.scriptPubKey)) {
                 amount += txout.nValue;
             }
         }
@@ -612,7 +612,7 @@ RPCHelpMan listunspent()
         bool fValidAddress = ExtractDestination(scriptPubKey, address);
         bool reused = avoid_reuse && pwallet->IsSpentKey(scriptPubKey);
 
-        if (destinations.size() && (!fValidAddress || !destinations.count(address)))
+        if (destinations.size() && (!fValidAddress || !destinations.contains(address)))
             continue;
 
         UniValue entry(UniValue::VOBJ);
