@@ -58,6 +58,6 @@ void ScriptToUniv(const CScript& script, UniValue& out, bool include_hex = true,
 void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry, bool include_hex = true, int serialize_flags = 0, const CTxUndo* txundo = nullptr, TxVerbosity verbosity = TxVerbosity::SHOW_DETAILS, const CSpentIndexTxInfo* ptxSpentInfo = nullptr);
 
 // evo/core_write.cpp
-RPCResult GetRpcResult(const std::string& key, bool optional = false);
+RPCResult GetRpcResult(const std::string& key, bool optional = false, const std::string& override_name = "");
 
 #endif // BITCOIN_CORE_IO_H

@@ -37,6 +37,7 @@ const std::map<std::string, RPCResult> RPCRESULT_MAP{{
         {RPCResult::Type::ARR, "platform_https", /*optional=*/true, "Addresses used for Platform HTTPS API",
             {{RPCResult::Type::STR, "address", ""}}},
     }}},
+    RESULT_MAP_ENTRY("collateralAddress", RPCResult::Type::STR, "Dash address used for collateral"),
     RESULT_MAP_ENTRY("collateralHash", RPCResult::Type::STR_HEX, "Collateral transaction hash"),
     RESULT_MAP_ENTRY("collateralIndex", RPCResult::Type::NUM, "Collateral transaction output index"),
     RESULT_MAP_ENTRY("consecutivePayments", RPCResult::Type::NUM, "Consecutive payments masternode has received in payment cycle"),
@@ -67,17 +68,18 @@ const std::map<std::string, RPCResult> RPCRESULT_MAP{{
     RESULT_MAP_ENTRY("revocationReason", RPCResult::Type::NUM, "Reason for ProUpRegTx revocation"),
     RESULT_MAP_ENTRY("service", RPCResult::Type::STR, "(DEPRECATED) IP address and port of the masternode"),
     RESULT_MAP_ENTRY("type", RPCResult::Type::NUM, "Masternode type"),
+    RESULT_MAP_ENTRY("type_str", RPCResult::Type::STR, "Masternode type (human-readable string)"),
     RESULT_MAP_ENTRY("version", RPCResult::Type::NUM, "Special transaction version"),
     RESULT_MAP_ENTRY("votingAddress", RPCResult::Type::STR, "Dash address used for voting"),
 }};
 #undef RESULT_MAP_ENTRY
 } // anonymous namespace
 
-RPCResult GetRpcResult(const std::string& key, bool optional)
+RPCResult GetRpcResult(const std::string& key, bool optional, const std::string& override_name)
 {
     if (const auto it = RPCRESULT_MAP.find(key); it != RPCRESULT_MAP.end()) {
         const auto& ret{it->second};
-        return RPCResult{ret.m_type, ret.m_key_name, optional, ret.m_description, ret.m_inner};
+        return RPCResult{ret.m_type, override_name.empty() ? ret.m_key_name : override_name, optional, ret.m_description, ret.m_inner};
     }
     throw NonFatalCheckError(strprintf("Requested invalid RPCResult for nonexistent key \"%s\"", key).c_str(),
                              __FILE__, __LINE__, __func__);
@@ -180,11 +182,11 @@ RPCResult CDeterministicMN::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The masternode's details",
     {
-        {RPCResult::Type::STR, "type", "Masternode type"},
+        GetRpcResult("type_str", /*optional=*/false, /*override_name=*/"type"),
         GetRpcResult("proTxHash"),
         GetRpcResult("collateralHash"),
         GetRpcResult("collateralIndex"),
-        {RPCResult::Type::STR, "collateralAddress", /*optional=*/true, "Dash address used for collateral"},
+        GetRpcResult("collateralAddress", /*optional=*/true),
         GetRpcResult("operatorReward"),
         CDeterministicMNState::GetJsonHelp(/*key=*/"state", /*optional=*/false),
     }};
@@ -503,7 +505,7 @@ RPCResult CSimplifiedMNListEntry::GetJsonHelp(const std::string& key, bool optio
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The simplified masternode list entry",
     {
         {RPCResult::Type::NUM, "nVersion", "Version of the entry"},
-        {RPCResult::Type::NUM, "nType", "Masternode type"},
+        GetRpcResult("type", /*optional=*/false, /*override_name=*/"nType"),
         {RPCResult::Type::STR_HEX, "proRegTxHash", "Hash of the ProRegTx identifying the masternode"},
         {RPCResult::Type::STR_HEX, "confirmedHash", "Hash of the block where the masternode was confirmed"},
         GetRpcResult("service"),
