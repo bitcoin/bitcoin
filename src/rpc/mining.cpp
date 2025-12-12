@@ -307,10 +307,19 @@ static RPCHelpMan generateblock()
     return RPCHelpMan{"generateblock",
         "Mine a set of ordered transactions to a specified address or descriptor and return the block hash.",
         {
-            {"output", RPCArg::Type::STR, RPCArg::Optional::NO, "The address or descriptor to send the newly generated bitcoin to."},
-            {"transactions", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of hex strings which are either txids or raw transactions.\n"
+            {"outputs", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "The addresses or descriptors to split, in equal parts, the coinbase reward among.\n"
+                "If no outputs are provided the coinbase transaction will burn the coins into an OP_RETURN output.\n"
+                "If only one output is desired a simple address or descriptor can be provided without using JSON format",
+                {
+                    {"output", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A valid address or descriptor"},
+                },
+                RPCArgOptions{.skip_type_check = true},
+            },
+            {"transactions", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "An array of hex strings which are either txids or raw transactions.\n"
                 "Txids must reference transactions currently in the mempool.\n"
-                "All transactions must be valid and in valid order, otherwise the block will be rejected.",
+                "All transactions must be valid and in valid order, otherwise the block will be rejected.\n"
+                "If no transactions are provided the ones in the mempool will be used.\n"
+                "If an empty array of transactions is provided the block will be empty.",
                 {
                     {"rawtx/txid", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
                 },
@@ -327,20 +336,41 @@ static RPCHelpMan generateblock()
         RPCExamples{
             "\nGenerate a block to myaddress, with txs rawtx and mempool_txid\n"
             + HelpExampleCli("generateblock", R"("myaddress" '["rawtx", "mempool_txid"]')")
+            + HelpExampleCli("generateblock", R"('["myaddress1", "myaddress2"]')")
+            + HelpExampleCli("generateblock", R"("myaddress1" [])")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const auto address_or_descriptor = request.params[0].get_str();
-    CScript coinbase_output_script;
-    std::string error;
-
-    if (!getScriptFromDescriptor(address_or_descriptor, coinbase_output_script, error)) {
-        const auto destination = DecodeDestination(address_or_descriptor);
-        if (!IsValidDestination(destination)) {
+    UniValue address_or_descriptor = UniValue(UniValue::VARR);
+    UniValue parsed;
+    if (!request.params[0].isNull()) {
+        if (request.params[0].isArray()) {
+            address_or_descriptor = request.params[0].get_array();
+        } else if (request.params[0].isStr()){
+            address_or_descriptor.push_back(request.params[0]);
+        } else {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address or descriptor");
         }
+    }
 
-        coinbase_output_script = GetScriptForDestination(destination);
+    CScript coinbase_output_script;
+    std::string error;
+    std::vector<CScript> coinbase_outputs_scripts;
+    if (address_or_descriptor.empty()) {
+        coinbase_outputs_scripts.push_back(CScript() << OP_RETURN);
+    }
+    for (unsigned int i = 0; i < address_or_descriptor.size(); i++) {
+
+        if (!getScriptFromDescriptor(address_or_descriptor[i].get_str(), coinbase_output_script, error)) {
+            const auto destination = DecodeDestination(address_or_descriptor[i].get_str());
+            if (!IsValidDestination(destination)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address or descriptor");
+            }
+
+            coinbase_outputs_scripts.push_back(GetScriptForDestination(destination));
+        } else {
+            coinbase_outputs_scripts.push_back(coinbase_output_script);
+        }
     }
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -348,24 +378,29 @@ static RPCHelpMan generateblock()
     const CTxMemPool& mempool = EnsureMemPool(node);
 
     std::vector<CTransactionRef> txs;
-    const auto raw_txs_or_txids = request.params[1].get_array();
-    for (size_t i = 0; i < raw_txs_or_txids.size(); i++) {
-        const auto& str{raw_txs_or_txids[i].get_str()};
+    bool mine_mempool = true;
+    UniValue raw_txs_or_txids = UniValue(UniValue::VARR);
+    if (!request.params[1].isNull()) {
+        mine_mempool = false;
+        raw_txs_or_txids = request.params[1].get_array();
+    }
+    if (!mine_mempool) {
+        for (size_t i = 0; i < raw_txs_or_txids.size(); i++) {
+            const auto& str{raw_txs_or_txids[i].get_str()};
 
-        CMutableTransaction mtx;
-        if (auto txid{Txid::FromHex(str)}) {
-            const auto tx{mempool.get(*txid)};
-            if (!tx) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Transaction %s not in mempool.", str));
+            CMutableTransaction mtx;
+            if (auto txid{Txid::FromHex(str)}) {
+                const auto tx{mempool.get(*txid)};
+                if (!tx) {
+                    throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("Transaction %s not in mempool.", str));
+                }
+
+                txs.emplace_back(tx);
+            } else if (DecodeHexTx(mtx, str)) {
+                txs.push_back(MakeTransactionRef(std::move(mtx)));
+            } else {
+                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Transaction decode failed for %s. Make sure the tx has at least one input.", str));
             }
-
-            txs.emplace_back(tx);
-
-        } else if (DecodeHexTx(mtx, str)) {
-            txs.push_back(MakeTransactionRef(std::move(mtx)));
-
-        } else {
-            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Transaction decode failed for %s. Make sure the tx has at least one input.", str));
         }
     }
 
@@ -376,16 +411,44 @@ static RPCHelpMan generateblock()
     {
         LOCK(chainman.GetMutex());
         {
-            std::unique_ptr<BlockTemplate> block_template{miner.createNewBlock({.use_mempool = false, .coinbase_output_script = coinbase_output_script})};
+            std::unique_ptr<BlockTemplate> block_template{miner.createNewBlock({.use_mempool = mine_mempool, .coinbase_output_script = coinbase_outputs_scripts.at(0)})};
             CHECK_NONFATAL(block_template);
 
             block = block_template->getBlock();
         }
 
-        CHECK_NONFATAL(block.vtx.size() == 1);
+        // Add transactions if mempool is not used
+        if(!mine_mempool) {
+            CHECK_NONFATAL(block.vtx.size() == 1);
+            block.vtx.insert(block.vtx.end(), txs.begin(), txs.end());
+        }
 
-        // Add transactions
-        block.vtx.insert(block.vtx.end(), txs.begin(), txs.end());
+        const auto num_outputs = coinbase_outputs_scripts.size();
+        CAmount total_reward = block.vtx[0]->vout[0].nValue;
+        CAmount reward_parted = total_reward / num_outputs;
+        CAmount remainder = total_reward % num_outputs;
+
+        CMutableTransaction mutable_coinbase(*block.vtx.at(0));
+        int witness_index = GetWitnessCommitmentIndex(block);
+
+        CTxOut witness_output;
+        bool has_witness_commitment = false;
+        if (witness_index != -1) {
+            witness_output = mutable_coinbase.vout.at(witness_index);
+            has_witness_commitment = true;
+        }
+
+        mutable_coinbase.vout.clear();
+        for (size_t i = 0; i < num_outputs; ++i) {
+            CAmount out_reward = (i < static_cast<size_t>(remainder) ? reward_parted + 1 : reward_parted);
+            CTxOut new_tx_out(out_reward, coinbase_outputs_scripts[i]);
+            mutable_coinbase.vout.push_back(new_tx_out);
+        }
+        if (has_witness_commitment) {
+            mutable_coinbase.vout.push_back(witness_output);
+        }
+
+        block.vtx.at(0) = MakeTransactionRef(mutable_coinbase);
         RegenerateCommitments(block, chainman);
 
         if (BlockValidationState state{TestBlockValidity(chainman.ActiveChainstate(), block, /*check_pow=*/false, /*check_merkle_root=*/false)}; !state.IsValid()) {
