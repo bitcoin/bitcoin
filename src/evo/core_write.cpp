@@ -44,6 +44,7 @@ const std::map<std::string, RPCResult> RPCRESULT_MAP{{
     RESULT_MAP_ENTRY("inputsHash", RPCResult::Type::STR_HEX, "Hash of all the outpoints of the transaction inputs"),
     RESULT_MAP_ENTRY("lastPaidHeight", RPCResult::Type::NUM, "Height masternode was last paid"),
     RESULT_MAP_ENTRY("llmqType", RPCResult::Type::NUM, "Quorum type"),
+    RESULT_MAP_ENTRY("memberIndex", RPCResult::Type::NUM, "Quorum member index"),
     RESULT_MAP_ENTRY("merkleRootMNList", RPCResult::Type::STR_HEX, "Merkle root of the masternode list"),
     RESULT_MAP_ENTRY("merkleRootQuorums", RPCResult::Type::STR_HEX, "Merkle root of the quorum list"),
     RESULT_MAP_ENTRY("operatorPayoutAddress", RPCResult::Type::STR, "Dash address used for operator reward payments"),

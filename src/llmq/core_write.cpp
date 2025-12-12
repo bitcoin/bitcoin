@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <llmq/commitment.h>
+#include <llmq/debug.h>
 #include <llmq/signing.h>
 #include <llmq/snapshot.h>
 
@@ -15,6 +16,84 @@
 #include <string>
 
 namespace llmq {
+// CDKGDebugSessionStatus::ToJson() defined in llmq/debug.cpp
+RPCResult CDKGDebugSessionStatus::GetJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The state of a DKG session",
+    {
+        GetRpcResult("llmqType"),
+        GetRpcResult("quorumHash"),
+        {RPCResult::Type::NUM, "quorumHeight", "Block height of the quorum"},
+        {RPCResult::Type::NUM, "phase", "Active DKG phase"},
+        {RPCResult::Type::BOOL, "sentContributions", "Returns true if contributions sent"},
+        {RPCResult::Type::BOOL, "sentComplaint", "Returns true if complaints sent"},
+        {RPCResult::Type::BOOL, "sentJustification", "Returns true if justifications sent"},
+        {RPCResult::Type::BOOL, "sentPrematureCommitment", "Returns true if premature commitments sent"},
+        {RPCResult::Type::BOOL, "aborted", "Returns true if DKG session aborted"},
+        {RPCResult{"for detail_level = 0", RPCResult::Type::NUM, "badMembers", "Number of bad members"}},
+        {RPCResult{"for detail_level = 0", RPCResult::Type::NUM, "weComplain", "Number of complaints sent"}},
+        {RPCResult{"for detail_level = 0", RPCResult::Type::NUM, "receivedContributions", "Number of contributions received"}},
+        {RPCResult{"for detail_level = 0", RPCResult::Type::NUM, "receivedComplaints", "Number of complaints received"}},
+        {RPCResult{"for detail_level = 0", RPCResult::Type::NUM, "receivedJustifications", "Number of justifications received"}},
+        {RPCResult{"for detail_level = 0", RPCResult::Type::NUM, "receivedPrematureCommitments", "Number of premature commitments received"}},
+        {RPCResult{"for detail_level = 1", RPCResult::Type::ARR, "badMembers", "Array of indexes for each bad member", {
+            {RPCResult::Type::NUM, "", "Quorum member index"}}}},
+        {RPCResult{"for detail_level = 1", RPCResult::Type::ARR, "weComplain", "Array of indexes for each complaint sent", {
+            {RPCResult::Type::NUM, "", "Quorum member index"}}}},
+        {RPCResult{"for detail_level = 1", RPCResult::Type::ARR, "receivedContributions", "Array of indexes for each contribution received", {
+            {RPCResult::Type::NUM, "", "Quorum member index"}}}},
+        {RPCResult{"for detail_level = 1", RPCResult::Type::ARR, "receivedComplaints", "Array of indexes for each complaint received", {
+            {RPCResult::Type::NUM, "", "Quorum member index"}}}},
+        {RPCResult{"for detail_level = 1", RPCResult::Type::ARR, "receivedJustifications", "Array of indexes for each justification received", {
+            {RPCResult::Type::NUM, "", "Quorum member index"}}}},
+        {RPCResult{"for detail_level = 1", RPCResult::Type::ARR, "receivedPrematureCommitments", "Array of indexes for each commitment received", {
+            {RPCResult::Type::NUM, "", "Quorum member index"}}}},
+        {RPCResult{"for detail_level = 2", RPCResult::Type::ARR, "badMembers", "Array of objects for each bad member", {
+            {RPCResult::Type::OBJ, "", "", {
+                GetRpcResult("memberIndex"),
+                GetRpcResult("proTxHash", /*optional=*/true)}}}}},
+        {RPCResult{"for detail_level = 2", RPCResult::Type::ARR, "weComplain", "Array of objects for each complaint sent", {
+            {RPCResult::Type::OBJ, "", "", {
+                GetRpcResult("memberIndex"),
+                GetRpcResult("proTxHash", /*optional=*/true)}}}}},
+        {RPCResult{"for detail_level = 2", RPCResult::Type::ARR, "receivedContributions", "Array of objects for each contribution received", {
+            {RPCResult::Type::OBJ, "", "", {
+                GetRpcResult("memberIndex"),
+                GetRpcResult("proTxHash", /*optional=*/true)}}}}},
+        {RPCResult{"for detail_level = 2", RPCResult::Type::ARR, "receivedComplaints", "Array of objects for each complaint received", {
+            {RPCResult::Type::OBJ, "", "", {
+                GetRpcResult("memberIndex"),
+                GetRpcResult("proTxHash", /*optional=*/true)}}}}},
+        {RPCResult{"for detail_level = 2", RPCResult::Type::ARR, "receivedJustifications", "Array of objects for each justification received", {
+            {RPCResult::Type::OBJ, "", "", {
+                GetRpcResult("memberIndex"),
+                GetRpcResult("proTxHash", /*optional=*/true)}}}}},
+        {RPCResult{"for detail_level = 2", RPCResult::Type::ARR, "receivedPrematureCommitments", "Array of objects for each commitment received", {
+            {RPCResult::Type::OBJ, "", "", {
+                GetRpcResult("memberIndex"),
+                GetRpcResult("proTxHash", /*optional=*/true)}}}}},
+        {RPCResult{"for detail_level = 2", RPCResult::Type::ARR, "allMembers", "Array of provider registration transaction hash for all quorum members", {
+            GetRpcResult("proTxHash")}}},
+    }};
+}
+
+// CDKGDebugStatus::ToJson() defined in llmq/debug.cpp
+RPCResult CDKGDebugStatus::GetJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The state of the node's DKG sessions",
+    {
+        {RPCResult::Type::NUM, "time", "Adjusted time for the last update, timestamp"},
+        {RPCResult::Type::STR, "timeStr", "Adjusted time for the last update, human friendly"},
+        {RPCResult::Type::ARR, "session", "", {
+            {RPCResult::Type::OBJ, "", "", {
+                {RPCResult::Type::NUM, "llmqType", "Name of quorum"},
+                GetRpcResult("quorumIndex"),
+                CDKGDebugSessionStatus::GetJsonHelp(/*key=*/"status", /*optional=*/false)
+            }},
+        }}
+    }};
+}
+
 RPCResult CFinalCommitment::GetJsonHelp(const std::string& key, bool optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The quorum commitment payload",
