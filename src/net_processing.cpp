@@ -5640,7 +5640,6 @@ void PeerManagerImpl::ProcessAddrs(std::string_view msg_type, CNode& pfrom, Peer
 
     // Store the new addresses
     std::vector<CAddress> vAddrOk;
-    const auto current_a_time{Now<NodeSeconds>()};
 
     // Update/increment addr rate limiting bucket.
     const auto current_time{NodeClock::now()};
@@ -5676,8 +5675,8 @@ void PeerManagerImpl::ProcessAddrs(std::string_view msg_type, CNode& pfrom, Peer
         if (!MayHaveUsefulAddressDB(addr.nServices) && !HasAllDesirableServiceFlags(addr.nServices))
             continue;
 
-        if (addr.nTime <= NodeSeconds{100000000s} || addr.nTime > current_a_time + 10min) {
-            addr.nTime = current_a_time - 5 * 24h;
+        if (addr.nTime <= NodeSeconds{100000000s} || addr.nTime > current_time + 10min) {
+            addr.nTime = std::chrono::time_point_cast<std::chrono::seconds>(current_time - 5 * 24h);
         }
         AddAddressKnown(peer, addr);
         if (m_banman && (m_banman->IsDiscouraged(addr) || m_banman->IsBanned(addr))) {
@@ -5686,7 +5685,7 @@ void PeerManagerImpl::ProcessAddrs(std::string_view msg_type, CNode& pfrom, Peer
         }
         ++num_proc;
         const bool reachable{g_reachable_nets.Contains(addr)};
-        if (addr.nTime > current_a_time - 10min && !peer.m_getaddr_sent && vAddr.size() <= 10 && addr.IsRoutable()) {
+        if (addr.nTime > current_time - 10min && !peer.m_getaddr_sent && vAddr.size() <= 10 && addr.IsRoutable()) {
             // Relay to a limited number of other nodes
             RelayAddress(pfrom.GetId(), addr, reachable);
         }
