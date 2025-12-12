@@ -5,6 +5,7 @@
 #ifndef BITCOIN_IPC_CAPNP_INIT_TYPES_H
 #define BITCOIN_IPC_CAPNP_INIT_TYPES_H
 
+#include <ipc/capnp/chain.capnp.proxy-types.h>
 #include <ipc/capnp/echo.capnp.proxy-types.h>
 #include <ipc/capnp/mining.capnp.proxy-types.h>
 
