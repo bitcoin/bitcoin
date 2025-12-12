@@ -39,8 +39,10 @@ Generally, each of the above (excluding Creator and Extractor) will simply
 add more and more data to a particular PSBT, until all inputs are fully signed.
 In a naive workflow, they all have to operate sequentially, passing the PSBT
 from one to the next, until the Extractor can convert it to a real transaction.
-In order to permit parallel operation, **Combiners** can be employed which merge
-metadata from different PSBTs for the same unsigned transaction.
+In order to permit parallel operation, **Combiners** can be employed which
+merge metadata from different PSBTs for the same unsigned transaction. They can
+also optionally remove bip32 derivation information from all inputs and outputs
+to increase privacy.
 
 The names above in bold are the names of the roles defined in BIP174. They're
 useful in understanding the underlying steps, but in practice, software and
