@@ -17,6 +17,7 @@
 #include <streams.h>
 #include <sync.h>
 #include <uint256.h>
+#include <util/expected.h>
 #include <util/fs.h>
 #include <util/hasher.h>
 
@@ -169,6 +170,10 @@ struct BlockfileCursor {
 
 std::ostream& operator<<(std::ostream& os, const BlockfileCursor& cursor);
 
+enum class ReadRawError {
+    IO,
+    BadPartRange,
+};
 
 /**
  * Maintains a tree of blocks (stored in `m_block_index`) which is consulted
@@ -302,6 +307,7 @@ private:
 
 public:
     using Options = kernel::BlockManagerOpts;
+    using ReadRawBlockResult = util::Expected<std::vector<std::byte>, ReadRawError>;
 
     explicit BlockManager(const util::SignalInterrupt& interrupt, Options opts);
 
@@ -455,7 +461,7 @@ public:
     /** Functions for disk access for blocks */
     bool ReadBlock(CBlock& block, const FlatFilePos& pos, const std::optional<uint256>& expected_hash) const;
     bool ReadBlock(CBlock& block, const CBlockIndex& index) const;
-    bool ReadRawBlock(std::vector<std::byte>& block, const FlatFilePos& pos) const;
+    ReadRawBlockResult ReadRawBlock(const FlatFilePos& pos, std::optional<std::pair<size_t, size_t>> block_part = std::nullopt) const;
 
     bool ReadBlockUndo(CBlockUndo& blockundo, const CBlockIndex& index) const;
 

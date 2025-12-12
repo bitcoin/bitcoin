@@ -2276,8 +2276,9 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
     } else if (inv.IsMsgWitnessBlk()) {
         // Fast-path: in this case it is possible to serve the block directly from disk,
         // as the network format matches the format on disk
-        std::vector<std::byte> block_data;
-        if (!m_chainman.m_blockman.ReadRawBlock(block_data, block_pos)) {
+        if (const auto block_data{m_chainman.m_blockman.ReadRawBlock(block_pos)}) {
+            MakeAndPushMessage(pfrom, NetMsgType::BLOCK, std::span{*block_data});
+        } else {
             if (WITH_LOCK(m_chainman.GetMutex(), return m_chainman.m_blockman.IsBlockPruned(*pindex))) {
                 LogDebug(BCLog::NET, "Block was pruned before it could be read, %s\n", pfrom.DisconnectMsg(fLogIPs));
             } else {
@@ -2286,7 +2287,6 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
             pfrom.fDisconnect = true;
             return;
         }
-        MakeAndPushMessage(pfrom, NetMsgType::BLOCK, std::span{block_data});
         // Don't set pblock as we've sent the block
     } else {
         // Send block from disk

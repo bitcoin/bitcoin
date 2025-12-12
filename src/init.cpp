@@ -1759,7 +1759,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     g_zmq_notification_interface = CZMQNotificationInterface::Create(
         [&chainman = node.chainman](std::vector<std::byte>& block, const CBlockIndex& index) {
             assert(chainman);
-            return chainman->m_blockman.ReadRawBlock(block, WITH_LOCK(cs_main, return index.GetBlockPos()));
+            if (auto ret{chainman->m_blockman.ReadRawBlock(WITH_LOCK(cs_main, return index.GetBlockPos()))}) {
+                block = std::move(*ret);
+                return true;
+            }
+            return false;
         });
 
     if (g_zmq_notification_interface) {

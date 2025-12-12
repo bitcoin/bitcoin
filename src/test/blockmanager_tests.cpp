@@ -138,6 +138,68 @@ BOOST_FIXTURE_TEST_CASE(blockmanager_block_data_availability, TestChain100Setup)
     BOOST_CHECK(!blockman.CheckBlockDataAvailability(tip, *last_pruned_block));
 }
 
+BOOST_FIXTURE_TEST_CASE(blockmanager_block_data_part, TestChain100Setup)
+{
+    LOCK(::cs_main);
+    auto& chainman{m_node.chainman};
+    auto& blockman{chainman->m_blockman};
+    const CBlockIndex& tip{*chainman->ActiveTip()};
+    const FlatFilePos tip_block_pos{tip.GetBlockPos()};
+
+    auto block{blockman.ReadRawBlock(tip_block_pos)};
+    BOOST_REQUIRE(block);
+    BOOST_REQUIRE_GE(block->size(), 200);
+
+    const auto expect_part{[&](size_t offset, size_t size) {
+        auto res{blockman.ReadRawBlock(tip_block_pos, std::pair{offset, size})};
+        BOOST_CHECK(res);
+        const auto& part{res.value()};
+        BOOST_CHECK_EQUAL_COLLECTIONS(part.begin(), part.end(), block->begin() + offset, block->begin() + offset + size);
+    }};
+
+    expect_part(0, 20);
+    expect_part(0, block->size() - 1);
+    expect_part(0, block->size() - 10);
+    expect_part(0, block->size());
+    expect_part(1, block->size() - 1);
+    expect_part(10, 20);
+    expect_part(block->size() - 1, 1);
+}
+
+BOOST_FIXTURE_TEST_CASE(blockmanager_block_data_part_error, TestChain100Setup)
+{
+    LOCK(::cs_main);
+    auto& chainman{m_node.chainman};
+    auto& blockman{chainman->m_blockman};
+    const CBlockIndex& tip{*chainman->ActiveTip()};
+    const FlatFilePos tip_block_pos{tip.GetBlockPos()};
+
+    auto block{blockman.ReadRawBlock(tip_block_pos)};
+    BOOST_REQUIRE(block);
+    BOOST_REQUIRE_GE(block->size(), 200);
+
+    const auto expect_part_error{[&](size_t offset, size_t size) {
+        auto res{blockman.ReadRawBlock(tip_block_pos, std::pair{offset, size})};
+        BOOST_CHECK(!res);
+        BOOST_CHECK_EQUAL(res.error(), node::ReadRawError::BadPartRange);
+    }};
+
+    expect_part_error(0, 0);
+    expect_part_error(0, block->size() + 1);
+    expect_part_error(0, std::numeric_limits<size_t>::max());
+    expect_part_error(1, block->size());
+    expect_part_error(2, block->size() - 1);
+    expect_part_error(block->size() - 1, 2);
+    expect_part_error(block->size() - 2, 3);
+    expect_part_error(block->size() + 1, 0);
+    expect_part_error(block->size() + 1, 1);
+    expect_part_error(block->size() + 2, 2);
+    expect_part_error(block->size(), 0);
+    expect_part_error(block->size(), 1);
+    expect_part_error(std::numeric_limits<size_t>::max(), 1);
+    expect_part_error(std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max());
+}
+
 BOOST_FIXTURE_TEST_CASE(blockmanager_readblock_hash_mismatch, TestingSetup)
 {
     CBlockIndex index;
