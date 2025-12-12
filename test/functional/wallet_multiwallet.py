@@ -6,7 +6,6 @@
 
 Verify that a bitcoind node can load multiple wallet files
 """
-from decimal import Decimal
 from threading import Thread
 import os
 import platform
@@ -46,7 +45,7 @@ class MultiWalletTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 2
         self.rpc_timeout = 120
-        self.extra_args = [["-nowallet", "-deprecatedrpc=settxfee"], []]
+        self.extra_args = [["-nowallet"], []]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -249,13 +248,6 @@ class MultiWalletTest(BitcoinTestFramework):
         batch = w1.batch([w1.getblockchaininfo.get_request(), w1.getwalletinfo.get_request()])
         assert_equal(batch[0]["result"]["chain"], self.chain)
         assert_equal(batch[1]["result"]["walletname"], "w1")
-
-        self.log.info('Check for per-wallet settxfee call')
-        assert_equal(w1.getwalletinfo()['paytxfee'], 0)
-        assert_equal(w2.getwalletinfo()['paytxfee'], 0)
-        w2.settxfee(0.001)
-        assert_equal(w1.getwalletinfo()['paytxfee'], 0)
-        assert_equal(w2.getwalletinfo()['paytxfee'], Decimal('0.00100000'))
 
         self.log.info("Test dynamic wallet loading")
 
