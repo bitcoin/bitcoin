@@ -36,7 +36,7 @@ void SetRPCWarmupFinished();
 /* returns the current warmup state.  */
 bool RPCIsInWarmup(std::string *outStatus);
 
-typedef RPCHelpMan (*RpcMethodFnType)();
+typedef RPCMethod (*RpcMethodFnType)();
 
 class CRPCCommand
 {
