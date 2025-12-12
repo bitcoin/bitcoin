@@ -291,4 +291,70 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_big_singletons)
     }
 }
 
+BOOST_AUTO_TEST_CASE(txgraph_get_worst_chunk_chain)
+{
+    /** The maximum cluster count used in this test. */
+    static constexpr int MAX_CLUSTER_COUNT = 50;
+    /** The total number of transactions in the test. */
+    static constexpr int NUM_TOTAL_TX = 4;
+    /** Set a very large cluster size limit so that only the count limit is triggered. */
+    static constexpr int32_t MAX_CLUSTER_SIZE = 100'000 * 100;
+
+    // Create a new graph for the test.
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, NUM_ACCEPTABLE_ITERS);
+
+    auto chunk_check_helper = [&graph](const std::vector<FeePerWeight>& expected_chunk_txs_feerates, FeePerWeight expected_chunk_feerate) {
+        auto chunk = graph->GetWorstMainChunk();
+        BOOST_CHECK_EQUAL(chunk.first.size(), expected_chunk_txs_feerates.size());
+        for (size_t i = 0; i  < expected_chunk_txs_feerates.size(); i++)
+            BOOST_CHECK(graph->GetIndividualFeerate(*chunk.first[i]) == expected_chunk_txs_feerates[i]);
+
+        BOOST_CHECK_EQUAL(chunk.second.fee, expected_chunk_feerate.fee);
+        BOOST_CHECK_EQUAL(chunk.second.size, expected_chunk_feerate.size);
+    };
+
+    std::vector<TxGraph::Ref> refs;
+    refs.reserve(NUM_TOTAL_TX);
+
+    FeePerWeight feerateA{2, 10};
+    FeePerWeight feerateB{1, 10};
+    FeePerWeight feerateC{2, 10};
+    FeePerWeight feerateD{4, 10};
+
+    // everytime adding a transaction, test the chunk status
+    // [A]
+    refs.push_back(graph->AddTransaction(feerateA));
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 1);
+    chunk_check_helper({feerateA}, feerateA);
+    // [A, B]
+    refs.push_back(graph->AddTransaction(feerateB));
+    graph->AddDependency(/*parent=*/refs[0], /*child=*/refs[1]);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 2);
+    chunk_check_helper({feerateB}, feerateB);
+
+    // [A, BC]
+    refs.push_back(graph->AddTransaction(feerateC));
+    graph->AddDependency(/*parent=*/refs[1], /*child=*/refs[2]);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 3);
+    chunk_check_helper({feerateC, feerateB}, FeePerWeight{3, 20});
+
+    // [ABCD]
+    refs.push_back(graph->AddTransaction(feerateD));
+    graph->AddDependency(/*parent=*/refs[2], /*child=*/refs[3]);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 4);
+    chunk_check_helper({feerateD, feerateC, feerateB, feerateA}, FeePerWeight{9, 40});
+
+    graph->SanityCheck();
+
+    // D->C->A
+    graph->RemoveTransaction(refs[1]);
+    // txgraph is not responsible for removing the descendants or ancestors
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 3);
+    // only A remains there
+    graph->RemoveTransaction(refs[2]);
+    graph->RemoveTransaction(refs[3]);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 1);
+    chunk_check_helper({feerateA}, feerateA);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
