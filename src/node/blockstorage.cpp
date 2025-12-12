@@ -12,9 +12,11 @@
 #include <flatfile.h>
 #include <hash.h>
 #include <kernel/blockmanager_opts.h>
+#include <kernel/chain.h>
 #include <kernel/chainparams.h>
 #include <kernel/messagestartchars.h>
 #include <kernel/notifications_interface.h>
+#include <kernel/types.h>
 #include <logging.h>
 #include <pow.h>
 #include <primitives/block.h>
@@ -282,8 +284,7 @@ void BlockManager::PruneOneBlockFile(const int fileNumber)
 void BlockManager::FindFilesToPruneManual(
     std::set<int>& setFilesToPrune,
     int nManualPruneHeight,
-    const Chainstate& chain,
-    ChainstateManager& chainman)
+    const Chainstate& chain)
 {
     assert(IsPruneMode() && nManualPruneHeight > 0);
 
@@ -292,7 +293,7 @@ void BlockManager::FindFilesToPruneManual(
         return;
     }
 
-    const auto [min_block_to_prune, last_block_can_prune] = chainman.GetPruneRange(chain, nManualPruneHeight);
+    const auto [min_block_to_prune, last_block_can_prune] = chain.GetPruneRange(nManualPruneHeight);
 
     int count = 0;
     for (int fileNumber = 0; fileNumber < this->MaxBlockfileNum(); fileNumber++) {
@@ -316,9 +317,16 @@ void BlockManager::FindFilesToPrune(
     ChainstateManager& chainman)
 {
     LOCK2(cs_main, cs_LastBlockFile);
-    // Distribute our -prune budget over all chainstates.
+    // Compute `target` value with maximum size (in bytes) of blocks below the
+    // `last_prune` height which should be preserved and not pruned. The
+    // `target` value will be derived from the -prune preference provided by the
+    // user. If there is a historical chainstate being used to populate indexes
+    // and validate the snapshot, the target is divided by two so half of the
+    // block storage will be reserved for the historical chainstate, and the
+    // other half will be reserved for the most-work chainstate.
+    const int num_chainstates{chainman.HistoricalChainstate() ? 2 : 1};
     const auto target = std::max(
-        MIN_DISK_SPACE_FOR_BLOCK_FILES, GetPruneTarget() / chainman.GetAll().size());
+        MIN_DISK_SPACE_FOR_BLOCK_FILES, GetPruneTarget() / num_chainstates);
     const uint64_t target_sync_height = chainman.m_best_header->nHeight;
 
     if (chain.m_chain.Height() < 0 || target == 0) {
@@ -328,7 +336,7 @@ void BlockManager::FindFilesToPrune(
         return;
     }
 
-    const auto [min_block_to_prune, last_block_can_prune] = chainman.GetPruneRange(chain, last_prune);
+    const auto [min_block_to_prune, last_block_can_prune] = chain.GetPruneRange(last_prune);
 
     uint64_t nCurrentUsage = CalculateCurrentUsage();
     // We don't check to prune until after we've allocated new space for files
@@ -1276,16 +1284,8 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
     }
 
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
-
-    // We can't hold cs_main during ActivateBestChain even though we're accessing
-    // the chainman unique_ptrs since ABC requires us not to be holding cs_main, so retrieve
-    // the relevant pointers before the ABC call.
-    for (Chainstate* chainstate : WITH_LOCK(::cs_main, return chainman.GetAll())) {
-        BlockValidationState state;
-        if (!chainstate->ActivateBestChain(state, nullptr)) {
-            chainman.GetNotifications().fatalError(strprintf(_("Failed to connect best block (%s)."), state.ToString()));
-            return;
-        }
+    if (auto result = chainman.ActivateBestChains(); !result) {
+        chainman.GetNotifications().fatalError(util::ErrorString(result));
     }
     // End scope of ImportingNow
 }
