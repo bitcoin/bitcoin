@@ -40,7 +40,9 @@ std::list<const CZMQAbstractNotifier*> CZMQNotificationInterface::GetActiveNotif
     return result;
 }
 
-std::unique_ptr<CZMQNotificationInterface> CZMQNotificationInterface::Create(std::function<bool(std::vector<std::byte>&, const CBlockIndex&)> get_block_by_index)
+std::list<std::unique_ptr<CZMQAbstractNotifier>> CZMQNotificationInterface::GetNotifiers(
+    const ArgsManager& args,
+    std::function<bool(std::vector<std::byte>&, const CBlockIndex&)> get_block_by_index)
 {
     std::map<std::string, CZMQNotifierFactory> factories;
     factories["pubhashblock"] = CZMQAbstractNotifier::Create<CZMQPublishHashBlockNotifier>;
@@ -56,7 +58,7 @@ std::unique_ptr<CZMQNotificationInterface> CZMQNotificationInterface::Create(std
     {
         std::string arg("-zmq" + entry.first);
         const auto& factory = entry.second;
-        for (std::string& address : gArgs.GetArgs(arg)) {
+        for (std::string& address : args.GetArgs(arg)) {
             // libzmq uses prefix "ipc://" for UNIX domain sockets
             if (address.starts_with(ADDR_PREFIX_UNIX)) {
                 address.replace(0, ADDR_PREFIX_UNIX.length(), ADDR_PREFIX_IPC);
@@ -65,22 +67,26 @@ std::unique_ptr<CZMQNotificationInterface> CZMQNotificationInterface::Create(std
             std::unique_ptr<CZMQAbstractNotifier> notifier = factory();
             notifier->SetType(entry.first);
             notifier->SetAddress(address);
-            notifier->SetOutboundMessageHighWaterMark(static_cast<int>(gArgs.GetIntArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
+            notifier->SetOutboundMessageHighWaterMark(static_cast<int>(args.GetIntArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
             notifiers.push_back(std::move(notifier));
         }
     }
+    return notifiers;
+}
 
-    if (!notifiers.empty())
-    {
-        std::unique_ptr<CZMQNotificationInterface> notificationInterface(new CZMQNotificationInterface());
-        notificationInterface->notifiers = std::move(notifiers);
+std::unique_ptr<CZMQNotificationInterface> CZMQNotificationInterface::Create(
+    std::list<std::unique_ptr<CZMQAbstractNotifier>>&& notifiers)
+{
+    if (notifiers.empty()) return nullptr;
 
-        if (notificationInterface->Initialize()) {
-            return notificationInterface;
-        }
+    std::unique_ptr<CZMQNotificationInterface> notificationInterface(new CZMQNotificationInterface());
+    notificationInterface->notifiers = std::move(notifiers);
+
+    if (notificationInterface->Initialize()) {
+        return notificationInterface;
+    } else {
+        return nullptr;
     }
-
-    return nullptr;
 }
 
 // Called at startup to conditionally set up ZMQ socket(s)
@@ -97,7 +103,7 @@ bool CZMQNotificationInterface::Initialize()
 
     if (!pcontext)
     {
-        zmqError("Unable to initialize context");
+        zmqErrorDebug("Unable to initialize context");
         return false;
     }
 

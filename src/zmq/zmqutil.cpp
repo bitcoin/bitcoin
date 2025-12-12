@@ -10,7 +10,12 @@
 #include <cerrno>
 #include <string>
 
-void zmqError(const std::string& str)
+void zmqError(BCLog::Level level, const std::string& str)
 {
-    LogDebug(BCLog::ZMQ, "Error: %s, msg: %s\n", str, zmq_strerror(errno));
+    LogPrintLevel(BCLog::ZMQ, level, "Error: %s, msg: %s\n", str, zmq_strerror(errno));
+}
+
+void zmqErrorDebug(const std::string& str)
+{
+    zmqError(BCLog::Level::Debug, str);
 }
