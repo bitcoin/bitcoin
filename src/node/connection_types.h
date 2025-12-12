@@ -12,9 +12,11 @@
  * information we have available at the time of opening or accepting the
  * connection. Aside from INBOUND, all types are initiated by us.
  *
- * If adding or removing types, please update CONNECTION_TYPE_DOC in
- * src/rpc/net.cpp and src/qt/rpcconsole.cpp, as well as the descriptions in
- * src/qt/guiutil.cpp and src/bitcoin-cli.cpp::NetinfoRequestHandler. */
+ * If adding or removing types, please update:
+ * - CONNECTION_TYPE_DOC in src/rpc/net.cpp and src/qt/rpcconsole.cpp
+ * - the descriptions in src/qt/guiutil.cpp and src/bitcoin-cli.cpp::NetinfoRequestHandler
+ * - NUM_CONNECTION_TYPES below.
+ */
 enum class ConnectionType {
     /**
      * Inbound connections are those initiated by a peer. This is the only
@@ -76,6 +78,9 @@ enum class ConnectionType {
      */
     ADDR_FETCH,
 };
+
+/** Number of entries in ConnectionType. */
+static constexpr size_t NUM_CONNECTION_TYPES{6};
 
 /** Convert ConnectionType enum to a string value */
 std::string ConnectionTypeAsString(ConnectionType conn_type);
