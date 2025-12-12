@@ -23,13 +23,13 @@ void CustomBuildField(TypeList<LocalType>, Priority<2>, InvokeContext& invoke_co
 //! overloads. Defining a CustomReadMessage overload is simpler than defining a
 //! CustomReadField overload because it only requires defining a normal
 //! function, not a template function, but less flexible.
-template <typename LocalType, typename Reader, typename ReadDest>
-decltype(auto) CustomReadField(TypeList<LocalType>, Priority<2>, InvokeContext& invoke_context, Reader&& reader,
+template <typename LocalType, typename Input, typename ReadDest>
+decltype(auto) CustomReadField(TypeList<LocalType>, Priority<2>, InvokeContext& invoke_context, Input&& input,
                                ReadDest&& read_dest,
-                               decltype(CustomReadMessage(invoke_context, reader.get(),
+                               decltype(CustomReadMessage(invoke_context, input.get(),
                                                           std::declval<LocalType&>()))* enable = nullptr)
 {
-    return read_dest.update([&](auto& value) { if (reader.has()) CustomReadMessage(invoke_context, reader.get(), value); });
+    return read_dest.update([&](auto& value) { if (CustomHasField(TypeList<LocalType>(), invoke_context, input)) CustomReadMessage(invoke_context, input.get(), value); });
 }
 
 //! Helper for CustomPassField below. Call Accessor::init method if it has one,

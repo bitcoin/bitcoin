@@ -99,6 +99,14 @@ void IpcPipeTest()
     CTransactionRef tx2{foo->passTransaction(tx1)};
     BOOST_CHECK(*Assert(tx1) == *Assert(tx2));
 
+    std::vector<CTransactionRef> txs1;
+    txs1.push_back(tx1);
+    txs1.push_back(nullptr);
+    std::vector<CTransactionRef> txs2(foo->passTransactions(txs1));
+    BOOST_CHECK_EQUAL(txs2.size(), 2);
+    BOOST_CHECK(*Assert(txs1[0]) == *Assert(txs2[0]));
+    BOOST_CHECK(!txs2[1]);
+
     std::vector<char> vec1{'H', 'e', 'l', 'l', 'o'};
     std::vector<char> vec2{foo->passVectorChar(vec1)};
     BOOST_CHECK_EQUAL(std::string_view(vec1.begin(), vec1.end()), std::string_view(vec2.begin(), vec2.end()));

@@ -610,6 +610,15 @@ CTransactionRef CTxMemPool::get(const Txid& hash) const
     return i->GetSharedTx();
 }
 
+CTransactionRef CTxMemPool::get(const Wtxid& hash) const
+{
+    LOCK(cs);
+    const auto& wtxid_map{mapTx.get<index_by_wtxid>()};
+    const auto it{wtxid_map.find(hash)};
+    if (it == wtxid_map.end()) return nullptr;
+    return it->GetSharedTx();
+}
+
 void CTxMemPool::PrioritiseTransaction(const Txid& hash, const CAmount& nFeeDelta)
 {
     {

@@ -517,7 +517,21 @@ public:
 
     const CTxMemPoolEntry* GetEntry(const Txid& txid) const LIFETIMEBOUND EXCLUSIVE_LOCKS_REQUIRED(cs);
 
+    /**
+     * Return a mempool transaction with a given hash.
+     *
+     * @param[in] hash      the txid
+     * @returns             the tx if found, otherwise nullptr
+     */
     CTransactionRef get(const Txid& hash) const;
+
+    /**
+     * Return a mempool transaction with a given witness hash.
+     *
+     * @param[in] hash      the wtxid
+     * @returns             the tx if found, otherwise nullptr
+     */
+    CTransactionRef get(const Wtxid& hash) const;
 
     template <TxidOrWtxid T>
     TxMempoolInfo info(const T& id) const
