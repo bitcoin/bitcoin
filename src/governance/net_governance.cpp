@@ -14,17 +14,17 @@
 
 class CConnman;
 
-void NetGovernance::Schedule(CScheduler& scheduler, CConnman& connman)
+void NetGovernance::Schedule(CScheduler& scheduler)
 {
     // Code below is meant to be running only if governance validation is enabled
     //
     if (!m_gov_manager.IsValid()) return;
     scheduler.scheduleEvery(
-        [this, &connman]() -> void {
+        [this]() -> void {
             if (!m_node_sync.IsSynced()) return;
 
             // CHECK OBJECTS WE'VE ASKED FOR, REMOVE OLD ENTRIES
-            m_gov_manager.RequestOrphanObjects(connman);
+            m_gov_manager.RequestOrphanObjects(m_connman);
 
             // CHECK AND REMOVE - REPROCESS GOVERNANCE OBJECTS
             m_gov_manager.CheckAndRemove();
@@ -42,7 +42,7 @@ void NetGovernance::Schedule(CScheduler& scheduler, CConnman& connman)
         Params().IsMockableChain() ? std::chrono::seconds{1} : std::chrono::seconds{5});
 }
 
-void NetGovernance::ProcessMessage(CNode& peer, CConnman& connman, const std::string& msg_type, CDataStream& vRecv)
+void NetGovernance::ProcessMessage(CNode& peer, const std::string& msg_type, CDataStream& vRecv)
 {
     if (!m_gov_manager.IsValid()) return;
     if (!m_node_sync.IsBlockchainSynced()) return;
@@ -61,9 +61,9 @@ void NetGovernance::ProcessMessage(CNode& peer, CConnman& connman, const std::st
 
         LogPrint(BCLog::GOBJECT, "MNGOVERNANCESYNC -- syncing governance objects to our peer %s\n", peer.GetLogString());
         if (nProp == uint256()) {
-            m_peer_manager->PeerPostProcessMessage(m_gov_manager.SyncObjects(peer, connman));
+            m_peer_manager->PeerPostProcessMessage(m_gov_manager.SyncObjects(peer, m_connman));
         } else {
-            m_peer_manager->PeerPostProcessMessage(m_gov_manager.SyncSingleObjVotes(peer, nProp, filter, connman));
+            m_peer_manager->PeerPostProcessMessage(m_gov_manager.SyncSingleObjVotes(peer, nProp, filter, m_connman));
         }
     }
     // A NEW GOVERNANCE OBJECT HAS ARRIVED
@@ -124,7 +124,7 @@ void NetGovernance::ProcessMessage(CNode& peer, CConnman& connman, const std::st
         }
 
         CGovernanceException exception;
-        if (m_gov_manager.ProcessVote(&peer, vote, exception, connman)) {
+        if (m_gov_manager.ProcessVote(&peer, vote, exception, m_connman)) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- %s new\n", strHash);
             m_node_sync.BumpAssetLastTime("MNGOVERNANCEOBJECTVOTE");
 

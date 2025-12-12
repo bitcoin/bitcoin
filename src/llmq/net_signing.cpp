@@ -16,7 +16,7 @@
 
 #include <unordered_map>
 
-void NetSigning::ProcessMessage(CNode& pfrom, CConnman&, const std::string& msg_type, CDataStream& vRecv)
+void NetSigning::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv)
 {
     if (msg_type != NetMsgType::QSIGREC) return;
 

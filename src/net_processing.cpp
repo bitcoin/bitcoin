@@ -1696,7 +1696,7 @@ void PeerManagerImpl::InterruptHandlers()
 void PeerManagerImpl::ScheduleHandlers(CScheduler& scheduler)
 {
     for (auto& handler : m_handlers) {
-        handler->Schedule(scheduler, m_connman);
+        handler->Schedule(scheduler);
     }
 }
 
@@ -5464,7 +5464,7 @@ void PeerManagerImpl::ProcessMessage(
         }
 
         for (const auto& handler : m_handlers) {
-            handler->ProcessMessage(pfrom, m_connman, msg_type, vRecv);
+            handler->ProcessMessage(pfrom, msg_type, vRecv);
         }
         return;
     }

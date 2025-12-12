@@ -15,24 +15,26 @@ class CNetFulfilledRequestManager;
 class SyncManager final : public NetHandler
 {
 public:
-    SyncManager(PeerManagerInternal* peer_manager, CGovernanceManager& gov_manager, CMasternodeSync& node_sync,
+    SyncManager(PeerManagerInternal* peer_manager, CGovernanceManager& gov_manager, CMasternodeSync& node_sync, CConnman& connman,
                   CNetFulfilledRequestManager& netfulfilledman) :
         NetHandler(peer_manager),
         m_gov_manager(gov_manager),
         m_node_sync(node_sync),
+        m_connman(connman),
         m_netfulfilledman(netfulfilledman)
     {
     }
-    void Schedule(CScheduler& scheduler, CConnman& connman) override;
-    void ProcessMessage(CNode& peer, CConnman&, const std::string& msg_type, CDataStream& vRecv) override;
+    void Schedule(CScheduler& scheduler) override;
+    void ProcessMessage(CNode& peer, const std::string& msg_type, CDataStream& vRecv) override;
 
 private:
-    void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman) const;
-    int RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman) const;
-    void ProcessTick(CConnman& connman);
+    void SendGovernanceSyncRequest(CNode* pnode) const;
+    int RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy) const;
+    void ProcessTick();
 
     CGovernanceManager& m_gov_manager;
     CMasternodeSync& m_node_sync;
+    CConnman& m_connman;
     CNetFulfilledRequestManager& m_netfulfilledman;
 };
 

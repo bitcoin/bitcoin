@@ -19,24 +19,24 @@
 
 class CConnman;
 
-void SyncManager::Schedule(CScheduler& scheduler, CConnman& connman)
+void SyncManager::Schedule(CScheduler& scheduler)
 {
     scheduler.scheduleEvery(
-        [this, &connman]() -> void {
+        [this]() -> void {
             if (ShutdownRequested()) return;
-            ProcessTick(connman);
+            ProcessTick();
         },
         std::chrono::seconds{1});
 }
 
-void SyncManager::SendGovernanceSyncRequest(CNode* pnode, CConnman& connman) const
+void SyncManager::SendGovernanceSyncRequest(CNode* pnode) const
 {
     CNetMsgMaker msgMaker(pnode->GetCommonVersion());
     CBloomFilter filter;
-    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, uint256(), filter));
+    m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, uint256(), filter));
 }
 
-int SyncManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman) const
+int SyncManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy) const
 {
     // Maximum number of nodes to request votes from for the same object hash on real networks
     // (mainnet, testnet, devnets). Keep this low to avoid unnecessary bandwidth usage.
@@ -97,7 +97,7 @@ int SyncManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesC
             // Don't try to sync any data from outbound non-relay "masternode" connections.
             // Inbound connection this early is most likely a "masternode" connection
             // initiated from another node, so skip it too.
-            if (!pnode->CanRelay() || (connman.IsActiveMasternode() && pnode->IsInboundConn())) continue;
+            if (!pnode->CanRelay() || (m_connman.IsActiveMasternode() && pnode->IsInboundConn())) continue;
             // stop early to prevent setAskFor overflow
             {
                 LOCK(::cs_main);
@@ -107,7 +107,7 @@ int SyncManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesC
             // to early to ask the same node
             if (mapAskedRecently[nHashGovobj].count(pnode->addr)) continue;
 
-            m_gov_manager.RequestGovernanceObject(pnode, nHashGovobj, connman, true);
+            m_gov_manager.RequestGovernanceObject(pnode, nHashGovobj, m_connman, true);
             mapAskedRecently[nHashGovobj][pnode->addr] = nNow + nTimeout;
             fAsked = true;
             // stop loop if max number of peers per obj was asked
@@ -127,7 +127,7 @@ int SyncManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesC
     return int(vTriggerObjHashes.size() + vOtherObjHashes.size());
 }
 
-void SyncManager::ProcessTick(CConnman& connman)
+void SyncManager::ProcessTick()
 {
     assert(m_netfulfilledman.IsValid());
 
@@ -139,7 +139,7 @@ void SyncManager::ProcessTick(CConnman& connman)
 
     // reset the sync process if the last call to this function was more than 60 minutes ago (client was in sleep mode)
     static int64_t nTimeLastProcess = GetTime();
-    if (!Params().IsMockableChain() && GetTime() - nTimeLastProcess > 60 * 60 && !connman.IsActiveMasternode()) {
+    if (!Params().IsMockableChain() && GetTime() - nTimeLastProcess > 60 * 60 && !m_connman.IsActiveMasternode()) {
         LogPrintf("Sync Tick -- WARNING: no actions for too long, restarting sync...\n");
         m_node_sync.Reset(true);
         nTimeLastProcess = GetTime();
@@ -152,11 +152,11 @@ void SyncManager::ProcessTick(CConnman& connman)
     }
 
     nTimeLastProcess = GetTime();
-    const CConnman::NodesSnapshot snap{connman, /* cond = */ CConnman::FullyConnectedOnly};
+    const CConnman::NodesSnapshot snap{m_connman, /* cond = */ CConnman::FullyConnectedOnly};
 
     // gradually request the rest of the votes after sync finished
     if (m_node_sync.IsSynced()) {
-        RequestGovernanceObjectVotes(snap.Nodes(), connman);
+        RequestGovernanceObjectVotes(snap.Nodes());
         return;
     }
 
@@ -175,7 +175,7 @@ void SyncManager::ProcessTick(CConnman& connman)
         // Don't try to sync any data from outbound non-relay "masternode" connections.
         // Inbound connection this early is most likely a "masternode" connection
         // initiated from another node, so skip it too.
-        if (!pnode->CanRelay() || (connman.IsActiveMasternode() && pnode->IsInboundConn())) continue;
+        if (!pnode->CanRelay() || (m_connman.IsActiveMasternode() && pnode->IsInboundConn())) continue;
 
         {
             if ((pnode->HasPermission(NetPermissionFlags::NoBan) || pnode->IsManualConn()) &&
@@ -199,7 +199,7 @@ void SyncManager::ProcessTick(CConnman& connman)
                 // always get sporks first, only request once from each peer
                 m_netfulfilledman.AddFulfilledRequest(pnode->addr, "spork-sync");
                 // get current network sporks
-                connman.PushMessage(pnode, msgMaker.Make(NetMsgType::GETSPORKS));
+                m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::GETSPORKS));
                 LogPrint(BCLog::MNSYNC, "Sync Tick -- nTick %d asset_id %d -- requesting sporks from peer=%d\n", nTick,
                          asset_id, pnode->GetId());
             }
@@ -227,7 +227,7 @@ void SyncManager::ProcessTick(CConnman& connman)
                                                                                            "mempool-sync");
                             if (!pNodeTmp->IsInboundConn() && !fRequestedEarlier && !pNodeTmp->IsBlockRelayOnly()) {
                                 m_netfulfilledman.AddFulfilledRequest(pNodeTmp->addr, "mempool-sync");
-                                connman.PushMessage(pNodeTmp, msgMaker.Make(NetMsgType::MEMPOOL));
+                                m_connman.PushMessage(pNodeTmp, msgMaker.Make(NetMsgType::MEMPOOL));
                                 LogPrint(BCLog::MNSYNC, /* Continued */
                                          "Sync Tick -- nTick %d asset_id %d -- syncing mempool from peer=%d\n", nTick,
                                          asset_id, pNodeTmp->GetId());
@@ -268,7 +268,7 @@ void SyncManager::ProcessTick(CConnman& connman)
 
                 m_node_sync.BumpAttempt();
 
-                SendGovernanceSyncRequest(pnode, connman);
+                SendGovernanceSyncRequest(pnode);
 
                 break; // this will cause each peer to get one request each six seconds for the various assets we need
             }
@@ -287,7 +287,7 @@ void SyncManager::ProcessTick(CConnman& connman)
             continue; // to early for this node
         }
         const std::vector<CNode*> vNodeCopy{pnode};
-        int nObjsLeftToAsk = RequestGovernanceObjectVotes(vNodeCopy, connman);
+        int nObjsLeftToAsk = RequestGovernanceObjectVotes(vNodeCopy);
         // check for data
         if (nObjsLeftToAsk == 0) {
             static int64_t nTimeNoObjectsLeft = 0;
@@ -319,7 +319,7 @@ void SyncManager::ProcessTick(CConnman& connman)
     }
 }
 
-void SyncManager::ProcessMessage(CNode& peer, CConnman&, const std::string& msg_type, CDataStream& vRecv)
+void SyncManager::ProcessMessage(CNode& peer, const std::string& msg_type, CDataStream& vRecv)
 {
     //Sync status count
     if (msg_type != NetMsgType::SYNCSTATUSCOUNT) return;

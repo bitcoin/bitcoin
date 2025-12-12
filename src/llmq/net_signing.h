@@ -25,7 +25,7 @@ public:
     {
         workInterrupt.reset();
     }
-    void ProcessMessage(CNode& pfrom, CConnman&, const std::string& msg_type, CDataStream& vRecv) override;
+    void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv) override;
 
     [[nodiscard]] bool ProcessPendingRecoveredSigs();
     void ProcessRecoveredSig(std::shared_ptr<const llmq::CRecoveredSig> recoveredSig, bool consider_proactive_relay);

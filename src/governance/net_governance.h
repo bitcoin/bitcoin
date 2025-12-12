@@ -13,19 +13,22 @@ class CMasternodeSync;
 class NetGovernance final : public NetHandler
 {
 public:
-    NetGovernance(PeerManagerInternal* peer_manager, CGovernanceManager& gov_manager, CMasternodeSync& node_sync) :
+    NetGovernance(PeerManagerInternal* peer_manager, CGovernanceManager& gov_manager, CMasternodeSync& node_sync,
+                  CConnman& connman) :
         NetHandler(peer_manager),
         m_gov_manager(gov_manager),
-        m_node_sync(node_sync)
+        m_node_sync(node_sync),
+        m_connman(connman)
     {
     }
-    void Schedule(CScheduler& scheduler, CConnman& connman) override;
+    void Schedule(CScheduler& scheduler) override;
 
-    void ProcessMessage(CNode& peer, CConnman& connman, const std::string& msg_type, CDataStream& vRecv) override;
+    void ProcessMessage(CNode& peer, const std::string& msg_type, CDataStream& vRecv) override;
 
 private:
     CGovernanceManager& m_gov_manager;
     CMasternodeSync& m_node_sync;
+    CConnman& m_connman;
 };
 
 #endif // BITCOIN_GOVERNANCE_NET_GOVERNANCE_H
