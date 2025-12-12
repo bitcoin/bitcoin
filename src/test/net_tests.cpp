@@ -814,7 +814,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     // Pretend that we bound to this port.
     const uint16_t bind_port = 20001;
     m_node.args->ForceSetArg("-bind", strprintf("3.4.5.6:%u", bind_port));
-    m_node.args->ForceSetArg("-capturemessages", "1");
+    m_node.connman->SetCaptureMessages(true);
 
     // Our address:port as seen from the peer - 2.3.4.5:20002 (different from the above).
     in_addr peer_us_addr;
@@ -892,7 +892,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
 
     CaptureMessage = CaptureMessageOrig;
     chainman.ResetIbd();
-    m_node.args->ForceSetArg("-capturemessages", "0");
+    m_node.connman->SetCaptureMessages(false);
     m_node.args->ForceSetArg("-bind", "");
 }
 
