@@ -5,6 +5,7 @@
 """Verify that debugging bitcoind is not allowed
 
 This is important when wallets hold private keys in memory.
+Also verifies that debugging is allowed when using -waitfordebugger.
 """
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
 from test_framework.util import assert_equal
@@ -52,11 +53,22 @@ class DebuggingDisallowedTest(BitcoinTestFramework):
                     raise AssertionError(f"Expected failure but {args} succeeded.")
             self.log.info("...Done")
 
+        # When expecting success we are also running the node with
+        # -waitfordebugger and need to require reaching a breakpoint in
+        # something like SocketHandler as it is repeatedly called once node is
+        # initialized and responding to RPCs.
+        # Had we just detached without continuing to the breakpoint, while
+        # inside WaitForDebugger(), it would result in no TracerPid being
+        # detected, so the node would not leave that function and start
+        # responding to RPCs. This would mean wait_for_rpc_connection() during
+        # the test would not complete.
         if self.gdb:
             verify_attach("GDB", [self.gdb, '-p', str(pid), '--batch'] +
+                                 (['-ex', 'b SocketHandler', '-ex', 'continue'] if expect_success else []) +
                                  ['--ex', 'detach'], expect_success)
         if self.lldb:
             verify_attach("LLDB", [self.lldb, '-p', str(pid), '--batch'] +
+                                  (['-o', 'b SocketHandler', '-o', 'continue'] if expect_success else []) +
                                   ['-o', 'detach -s false'], expect_success)
 
     def run_test(self):
@@ -79,6 +91,22 @@ class DebuggingDisallowedTest(BitcoinTestFramework):
 
         self.attempt_attaching(node_pid, expect_success=False)
         self.stop_node(0)
+
+        if self.is_wait_for_debugger_compiled():
+            self.log.info("Verifying that -waitfordebugger changes process permissions so that we can attach.")
+            # Using TestNode.start() over BitcoinTestFramework.start_node() here
+            # as the former does not block waiting for the RPC connection.
+            # -waitfordebugger means we will not have an RPC connection until
+            # a debugger has been attached.
+            self.nodes[0].start(['-waitfordebugger'])
+            self.attempt_attaching(self.nodes[0].process.pid, expect_success=True)
+            self.log.debug("Ensure node is fully connected before teardown")
+            self.nodes[0].wait_for_rpc_connection()
+        else:
+            self.log.info("Verifying -waitfordebugger support is disabled")
+            self.nodes[0].assert_start_raises_init_error(
+                ['-waitfordebugger'],
+                expected_msg="Error: -waitfordebugger is unavailable in this build. Rebuild with -DENABLE_WAIT_FOR_DEBUGGER=ON.")
 
 
 if __name__ == '__main__':
