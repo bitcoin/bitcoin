@@ -119,8 +119,6 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
     switch (chain) {
     case ChainType::MAIN:
         return CChainParams::Main();
-    case ChainType::TESTNET:
-        return CChainParams::TestNet();
     case ChainType::TESTNET4:
         return CChainParams::TestNet4();
     case ChainType::SIGNET: {
