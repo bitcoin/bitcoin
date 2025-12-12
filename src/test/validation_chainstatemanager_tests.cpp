@@ -375,7 +375,7 @@ struct SnapshotTestSetup : TestChain100Setup {
         {
             for (Chainstate* cs : chainman.GetAll()) {
                 LOCK(::cs_main);
-                cs->ForceFlushStateToDisk();
+                cs->ForceFlushStateToDisk(/*wipe_cache=*/true);
             }
             // Process all callbacks referring to the old manager before wiping it.
             m_node.validation_signals->SyncWithValidationInterfaceQueue();

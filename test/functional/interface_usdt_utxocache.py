@@ -109,7 +109,8 @@ FLUSHMODE_NAME = {
     0: "NONE",
     1: "IF_NEEDED",
     2: "PERIODIC",
-    3: "ALWAYS",
+    3: "FORCE_FLUSH",
+    4: "FORCE_SYNC",
 }
 
 
@@ -385,12 +386,12 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
         bpf["utxocache_flush"].open_perf_buffer(handle_utxocache_flush)
 
         self.log.info("stop the node to flush the UTXO cache")
-        UTXOS_IN_CACHE = 2 # might need to be changed if the earlier tests are modified
+        UTXOS_IN_CACHE = 3 # might need to be changed if the earlier tests are modified
         # A node shutdown causes two flushes. One that flushes UTXOS_IN_CACHE
         # UTXOs and one that flushes 0 UTXOs. Normally the 0-UTXO-flush is the
         # second flush, however it can happen that the order changes.
-        expected_flushes.append({"mode": "ALWAYS", "for_prune": False, "size": UTXOS_IN_CACHE})
-        expected_flushes.append({"mode": "ALWAYS", "for_prune": False, "size": 0})
+        expected_flushes.append({"mode": "FORCE_FLUSH", "for_prune": False, "size": UTXOS_IN_CACHE})
+        expected_flushes.append({"mode": "FORCE_FLUSH", "for_prune": False, "size": 0})
         self.stop_node(0)
 
         bpf.perf_buffer_poll(timeout=200)
@@ -415,7 +416,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
         bpf["utxocache_flush"].open_perf_buffer(handle_utxocache_flush)
 
         self.log.info("prune blockchain to trigger a flush for pruning")
-        expected_flushes.append({"mode": "NONE", "for_prune": True, "size": 0})
+        expected_flushes.append({"mode": "NONE", "for_prune": True, "size": BLOCKS_TO_MINE})
         self.nodes[0].pruneblockchain(315)
 
         bpf.perf_buffer_poll(timeout=500)
