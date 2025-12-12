@@ -35,6 +35,7 @@ public:
     bool isEncryptWalletChecked() const;
     bool isDisablePrivateKeysChecked() const;
     bool isMakeBlankWalletChecked() const;
+    bool isSilentPaymentsWalletChecked() const;
     bool isExternalSignerChecked() const;
 
 private:

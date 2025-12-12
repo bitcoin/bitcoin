@@ -568,6 +568,26 @@ void CheckInferDescriptor(const std::string& script_hex, const std::string& expe
     BOOST_CHECK_EQUAL(desc->ToString(), expected_desc + "#" + checksum);
 }
 
+void CheckSilentPayments(const std::string& desc, const std::string& expected_private_string, const std::string& expected_public_string, const std::string& expected_norm_string, int flags = 0)
+{
+    FlatSigningProvider keys;
+    std::string error;
+    auto parsed_desc = Parse(desc, keys, error, false);
+    BOOST_CHECK_MESSAGE(parsed_desc.at(0), error);
+
+    if (~flags & MISSING_PRIVKEYS) {
+        std::string private_string;
+        BOOST_CHECK(parsed_desc.at(0)->ToPrivateString(keys, private_string));
+        BOOST_CHECK_MESSAGE(EqualDescriptor(private_string, expected_private_string), "Private: " + private_string + " Expected: " + expected_private_string);
+    }
+
+    std::string public_string = parsed_desc.at(0)->ToString();
+    std::string norm_string;
+    BOOST_CHECK(parsed_desc.at(0)->ToNormalizedString(keys, norm_string));
+
+    BOOST_CHECK_MESSAGE(EqualDescriptor(public_string, expected_public_string), "Public: " + public_string + " Expected: " + expected_public_string);
+    BOOST_CHECK_MESSAGE(EqualDescriptor(norm_string, expected_norm_string), "Normalized: " + norm_string + " Expected: " + expected_norm_string);
+}
 }
 
 BOOST_FIXTURE_TEST_SUITE(descriptor_tests, BasicTestingSetup)
@@ -1260,6 +1280,38 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     // Fuzzer crash test cases
     CheckUnparsable("pk(musig(dd}uue/00/)k(", "pk(musig(dd}uue/00/)k(", "Invalid musig() expression");
     CheckUnparsable("tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)", "tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)","tr(): Too many ')' in musig() expression");
+
+    // Silent Payments
+
+    // addr(<silent-payment-address>) is not valid, since a silent payment address is instructions on how to create a scriptPubKey and not simply an encoding of a scriptPubKey
+    CheckUnparsable("addr(sp1qq0x6hdljmnnml0v2pw2hp3harecjuhtyq30f66630v74qu39rhpqgqe8qutscuwc7a0yef8rln58pw2qnh90z2c9r5au4hlhgarl5asecqeww2rq)",
+                    "addr(sp1qq0x6hdljmnnml0v2pw2hp3harecjuhtyq30f66630v74qu39rhpqgqe8qutscuwc7a0yef8rln58pw2qnh90z2c9r5au4hlhgarl5asecqeww2rq)", "silent-payments address is not valid for addr()");
+
+    CheckSilentPayments("sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd,Kx9HCDjGiwFcgVNhTrS5z5NeZdD6veeam61eDxLDCkGWujvL4Gnn)",
+                        "sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd,Kx9HCDjGiwFcgVNhTrS5z5NeZdD6veeam61eDxLDCkGWujvL4Gnn)",
+                        "sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd,032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0)",
+                        "sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd,032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0)");
+    CheckSilentPayments("sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd,032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0)",
+                        "sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd,032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0)",
+                        "sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd,032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0)",
+                        "sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd,032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0)",
+                        MISSING_PRIVKEYS);
+    CheckSilentPayments("sp(xprv9vHkqa6EV4sPZHYqZznhT2NPtPCjKuDKGY38FBWLvgaDx45zo9WQRUT3dKYnjwih2yJD9mkrocEZXo1ex8G81dwSM1fwqWpWkeS3v86pgKt,xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi)",
+                        "sp([5a61ff8e]L2ysLrR6KMSAtx7uPqmYpoTeiRzydXBattRXjXz5GDFPrdfPzKbj,xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi)",
+                        "sp([5a61ff8e]L2ysLrR6KMSAtx7uPqmYpoTeiRzydXBattRXjXz5GDFPrdfPzKbj,xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8)",
+                        "sp([5a61ff8e]L2ysLrR6KMSAtx7uPqmYpoTeiRzydXBattRXjXz5GDFPrdfPzKbj,xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8)");
+    CheckSilentPayments("sp(xprv9vHkqa6EV4sPZHYqZznhT2NPtPCjKuDKGY38FBWLvgaDx45zo9WQRUT3dKYnjwih2yJD9mkrocEZXo1ex8G81dwSM1fwqWpWkeS3v86pgKt/1h,xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi/1h)",
+                        "sp([5a61ff8e/1h]KwLHcb3XEefhvFLXZM779rGXSa59zHDoemxeR78XJST9gX5o9S7P,xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi/1h)",
+                        "sp([5a61ff8e/1h]KwLHcb3XEefhvFLXZM779rGXSa59zHDoemxeR78XJST9gX5o9S7P,xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8/1h)",
+                        "sp([5a61ff8e/1h]KwLHcb3XEefhvFLXZM779rGXSa59zHDoemxeR78XJST9gX5o9S7P,[3442193e/1h]xpub68Gmy5EdvgibUN4mNXdMAcCZh4jpWiebYvh9WkKTkqvGD6tu4ZtXUAwuKSyF5DFZVmotf9UHFTGqSXo9qyDBSn47RkaN6Aedt9JbL7zcgSL)");
+
+    CheckSilentPayments("sp([5a61ff8e/1h]KwLHcb3XEefhvFLXZM779rGXSa59zHDoemxeR78XJST9gX5o9S7P,xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi/1h)",
+                        "sp([5a61ff8e/1h]KwLHcb3XEefhvFLXZM779rGXSa59zHDoemxeR78XJST9gX5o9S7P,xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi/1h)",
+                        "sp([5a61ff8e/1h]KwLHcb3XEefhvFLXZM779rGXSa59zHDoemxeR78XJST9gX5o9S7P,xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8/1h)",
+                        "sp([5a61ff8e/1h]KwLHcb3XEefhvFLXZM779rGXSa59zHDoemxeR78XJST9gX5o9S7P,[3442193e/1h]xpub68Gmy5EdvgibUN4mNXdMAcCZh4jpWiebYvh9WkKTkqvGD6tu4ZtXUAwuKSyF5DFZVmotf9UHFTGqSXo9qyDBSn47RkaN6Aedt9JbL7zcgSL)");
+
+    CheckUnparsable("sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd)", "sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd)", "sp(): expected ',', got ')'");
+    CheckUnparsable("sp(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204,Kx9HCDjGiwFcgVNhTrS5z5NeZdD6veeam61eDxLDCkGWujvL4Gnn)", "sp(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204,Kx9HCDjGiwFcgVNhTrS5z5NeZdD6veeam61eDxLDCkGWujvL4Gnn)", "sp(): key '03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204' is not valid");
 }
 
 BOOST_AUTO_TEST_CASE(descriptor_literal_null_byte)

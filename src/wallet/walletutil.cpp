@@ -8,6 +8,7 @@
 #include <common/args.h>
 #include <key_io.h>
 #include <logging.h>
+#include <script/solver.h>
 
 namespace wallet {
 fs::path GetWalletDir()
@@ -32,13 +33,15 @@ fs::path GetWalletDir()
     return path;
 }
 
-WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& addr_type, bool internal)
+WalletDescriptor GenerateWalletDescriptor(const CExtKey& master_key, const OutputType& addr_type, bool internal)
 {
     int64_t creation_time = GetTime();
 
-    std::string xpub = EncodeExtPubKey(master_key);
+    std::string xpriv = EncodeExtKey(master_key);
+    std::string xpub = EncodeExtPubKey(master_key.Neuter());
 
     // Build descriptor string
+    std::string desc_str;
     std::string desc_prefix;
     std::string desc_suffix = "/*)";
     switch (addr_type) {
@@ -59,23 +62,36 @@ WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const Ou
         desc_prefix = "tr(" + xpub + "/86h";
         break;
     }
+    case OutputType::SILENT_PAYMENTS: {
+        std::string path{"/352h/0h/0h"};
+        if (Params().IsTestChain()) {
+            path = "/352h/1h/0h";
+        }
+        // The actual scan key will be derived from the XPRIV.
+        // The XPRIV will not be retained in the descriptor,
+        // but the scan key will be.
+        desc_str = "sp(" + xpriv + path + "/1h/0," + xpub + path + "/0h/0)";
+        break;
+    }
     case OutputType::UNKNOWN: {
         // We should never have a DescriptorScriptPubKeyMan for an UNKNOWN OutputType,
         // so if we get to this point something is wrong
         assert(false);
     }
     } // no default case, so the compiler can warn about missing cases
-    assert(!desc_prefix.empty());
+    assert(!desc_str.empty() || !desc_prefix.empty());
 
-    // Mainnet derives at 0', testnet and regtest derive at 1'
-    if (Params().IsTestChain()) {
-        desc_prefix += "/1h";
-    } else {
-        desc_prefix += "/0h";
+    if (desc_str.empty()) {
+        // Mainnet derives at 0', testnet and regtest derive at 1'
+        if (Params().IsTestChain()) {
+            desc_prefix += "/1h";
+        } else {
+            desc_prefix += "/0h";
+        }
+
+        std::string internal_path = internal ? "/1" : "/0";
+        desc_str = desc_prefix + "/0h" + internal_path + desc_suffix;
     }
-
-    std::string internal_path = internal ? "/1" : "/0";
-    std::string desc_str = desc_prefix + "/0h" + internal_path + desc_suffix;
 
     // Make the descriptor
     FlatSigningProvider keys;
@@ -83,6 +99,32 @@ WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const Ou
     std::vector<std::unique_ptr<Descriptor>> desc = Parse(desc_str, keys, error, false);
     WalletDescriptor w_desc(std::move(desc.at(0)), creation_time, 0, 0, 0);
     return w_desc;
+}
+
+std::optional<std::pair<std::vector<XOnlyPubKey>, bip352::PrevoutsSummary>> GetSilentPaymentsData(const CTransaction& tx, const std::map<COutPoint, Coin>& spent_coins)
+{
+    std::vector<XOnlyPubKey> output_keys;
+    for (const CTxOut& txout : tx.vout) {
+        std::vector<std::vector<unsigned char>> solutions;
+        TxoutType type = Solver(txout.scriptPubKey, solutions);
+        if (type == TxoutType::WITNESS_V1_TAPROOT) {
+            XOnlyPubKey xonlypubkey{solutions[0]};
+            if (xonlypubkey.IsFullyValid()) {
+                output_keys.emplace_back(std::move(xonlypubkey));
+            }
+        } else if (type == TxoutType::WITNESS_UNKNOWN) {
+            // Cannot have outputs with unknown witness versions
+            return std::nullopt;
+        }
+    }
+
+    // Must have at least one taproot output
+    if (output_keys.size() == 0) return std::nullopt;
+
+    auto prevouts_summary = bip352::GetSilentPaymentsPrevoutsSummary(tx.vin, spent_coins);
+    if (!prevouts_summary.has_value()) return std::nullopt;
+
+    return std::make_pair(output_keys, std::move(prevouts_summary.value()));
 }
 
 } // namespace wallet
