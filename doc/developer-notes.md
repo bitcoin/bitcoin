@@ -305,6 +305,11 @@ If you need to build exclusively for debugging, set the `-DCMAKE_BUILD_TYPE`
 to `Debug` (i.e. `-DCMAKE_BUILD_TYPE=Debug`). You can always check the cmake
 build options of an existing build with `ccmake build`.
 
+If you want to debug C++ code in nodes while executing under a functional test,
+you might want to set `-DENABLE_WAIT_FOR_DEBUGGER=ON`, which enables
+`-waitfordebugger` support in bitcoind and also allows passing
+`--debug_runs 0 2` to tests in order to debug the 1st and 3rd node (re)starts.
+
 ### debug.log
 
 If the code is behaving strangely, take a look in the `debug.log` file in the data directory;

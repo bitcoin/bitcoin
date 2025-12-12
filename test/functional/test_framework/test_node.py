@@ -92,6 +92,9 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
+    run = 0
+    debug_runs = None
+
     def __init__(
         self,
         i,
@@ -299,10 +302,22 @@ class TestNode():
         if env is not None:
             subp_env.update(env)
 
+        wait_for_debugger = TestNode.run in TestNode.debug_runs
+        if wait_for_debugger:
+            extra_args.append("-waitfordebugger")
+            # Allow human to context switch away, take time to attach debugger and/or debug init phase for 2 hours
+            self.rpc_timeout = max(self.rpc_timeout, 2 * 60 * 60)
+
         self.process = subprocess.Popen(self.args + extra_args, env=subp_env, stdout=stdout, stderr=stderr, cwd=cwd, **kwargs)
 
         self.running = True
-        self.log.debug("bitcoind started, waiting for RPC to come up")
+        if wait_for_debugger:
+            # Note that it is the bitcoind process which is waiting, while the functional test
+            # will continue executing, but probably spin at wait_for_rpc_connection().
+            self.log.info(f"bitcoind started (run #{TestNode.run}, node #{self.index}), waiting for debugger, PID: {self.process.pid}")
+        else:
+            self.log.debug(f"bitcoind started (run #{TestNode.run}, node #{self.index}), waiting for RPC to come up")
+        TestNode.run += 1
 
         if self.start_perf:
             self._start_perf()
