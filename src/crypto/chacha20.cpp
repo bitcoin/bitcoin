@@ -157,13 +157,14 @@ inline void ChaCha20Aligned::Keystream(std::span<std::byte> output) noexcept
     }
 }
 
-inline void ChaCha20Aligned::Crypt(std::span<const std::byte> in_bytes, std::span<std::byte> out_bytes) noexcept
+static inline void chacha20_crypt(std::span<const std::byte> in_bytes, std::span<std::byte> out_bytes, uint32_t input[12]) noexcept
 {
     assert(in_bytes.size() == out_bytes.size());
     const std::byte* m = in_bytes.data();
     std::byte* c = out_bytes.data();
-    size_t blocks = out_bytes.size() / BLOCKLEN;
-    assert(blocks * BLOCKLEN == out_bytes.size());
+    size_t blocks = out_bytes.size() / ChaCha20Aligned::BLOCKLEN;
+    assert(blocks * ChaCha20Aligned::BLOCKLEN == out_bytes.size());
+
 
     uint32_t x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
     uint32_t j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15;
@@ -273,9 +274,15 @@ inline void ChaCha20Aligned::Crypt(std::span<const std::byte> in_bytes, std::spa
             return;
         }
         blocks -= 1;
-        c += BLOCKLEN;
-        m += BLOCKLEN;
+        c += ChaCha20Aligned::BLOCKLEN;
+        m += ChaCha20Aligned::BLOCKLEN;
     }
+}
+
+
+inline void ChaCha20Aligned::Crypt(std::span<const std::byte> in_bytes, std::span<std::byte> out_bytes) noexcept
+{
+    chacha20_crypt(in_bytes, out_bytes, input);
 }
 
 void ChaCha20::Keystream(std::span<std::byte> out) noexcept
