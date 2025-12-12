@@ -9,17 +9,14 @@
 
 class CGovernanceManager;
 class CMasternodeSync;
-class CNetFulfilledRequestManager;
 
 class NetGovernance final : public NetHandler
 {
 public:
-    NetGovernance(PeerManagerInternal* peer_manager, CGovernanceManager& gov_manager, CMasternodeSync& node_sync,
-                  CNetFulfilledRequestManager& netfulfilledman) :
+    NetGovernance(PeerManagerInternal* peer_manager, CGovernanceManager& gov_manager, CMasternodeSync& node_sync) :
         NetHandler(peer_manager),
         m_gov_manager(gov_manager),
-        m_node_sync(node_sync),
-        m_netfulfilledman(netfulfilledman)
+        m_node_sync(node_sync)
     {
     }
     void Schedule(CScheduler& scheduler, CConnman& connman) override;
@@ -27,13 +24,8 @@ public:
     void ProcessMessage(CNode& peer, CConnman& connman, const std::string& msg_type, CDataStream& vRecv) override;
 
 private:
-    void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman) const;
-    int RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman) const;
-    void ProcessTick(CConnman& connman);
-
     CGovernanceManager& m_gov_manager;
     CMasternodeSync& m_node_sync;
-    CNetFulfilledRequestManager& m_netfulfilledman;
 };
 
 #endif // BITCOIN_GOVERNANCE_NET_GOVERNANCE_H

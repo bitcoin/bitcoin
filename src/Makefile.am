@@ -312,6 +312,7 @@ BITCOIN_CORE_H = \
   node/miner.h \
   node/minisketchwrapper.h \
   node/psbt.h \
+  node/sync_manager.h \
   node/transaction.h \
   node/txreconciliation.h \
   node/interface_ui.h \
@@ -569,6 +570,7 @@ libbitcoin_node_a_SOURCES = \
   node/miner.cpp \
   node/minisketchwrapper.cpp \
   node/psbt.cpp \
+  node/sync_manager.cpp \
   node/transaction.cpp \
   node/txreconciliation.cpp \
   node/interface_ui.cpp \

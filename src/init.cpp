@@ -44,6 +44,7 @@
 #include <node/chainstate.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
+#include <node/sync_manager.h>
 #include <node/txreconciliation.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
@@ -2234,8 +2235,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             }
             return InitError(strprintf(_("Failed to clear governance cache at %s"), file_path));
         }
+        node.peerman->AddExtraHandler(std::make_unique<NetGovernance>(node.peerman.get(), *node.govman, *node.mn_sync));
     }
-    node.peerman->AddExtraHandler(std::make_unique<NetGovernance>(node.peerman.get(), *node.govman, *node.mn_sync, *node.netfulfilledman));
+    node.peerman->AddExtraHandler(std::make_unique<SyncManager>(node.peerman.get(), *node.govman, *node.mn_sync, *node.netfulfilledman));
 
     // ********************************************************* Step 8: start indexers
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
