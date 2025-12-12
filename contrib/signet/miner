@@ -66,8 +66,8 @@ def signet_txs(block, challenge):
 def decode_challenge_psbt(b64psbt):
     psbt = PSBT.from_base64(b64psbt)
 
-    assert len(psbt.tx.vin) == 1
-    assert len(psbt.tx.vout) == 1
+    assert len(psbt.i) == 1
+    assert len(psbt.i) == 1
     assert PSBT_SIGNET_BLOCK in psbt.g.map
     return psbt
 
