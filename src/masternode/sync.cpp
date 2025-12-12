@@ -5,18 +5,15 @@
 #include <masternode/sync.h>
 
 #include <chain.h>
-#include <net.h>
-#include <netfulfilledman.h>
-#include <node/interface_ui.h>
 #include <util/time.h>
 #include <util/translation.h>
 
-CMasternodeSync::CMasternodeSync(CConnman& _connman, CNetFulfilledRequestManager& netfulfilledman) :
+CMasternodeSync::CMasternodeSync(std::unique_ptr<NodeSyncNotifier>&& sync_notifier) :
     nTimeAssetSyncStarted{GetTime()},
     nTimeLastBumped{GetTime()},
-    connman{_connman},
-    m_netfulfilledman{netfulfilledman}
+    m_sync_notifier{std::move(sync_notifier)}
 {
+    assert(m_sync_notifier != nullptr);
 }
 
 CMasternodeSync::~CMasternodeSync() = default;
@@ -36,7 +33,7 @@ void CMasternodeSync::Reset(bool fForce, bool fNotifyReset)
     nTimeLastUpdateBlockTip = 0;
     fReachedBestHeader = false;
     if (fNotifyReset) {
-        uiInterface.NotifyAdditionalDataSyncProgressChanged(-1);
+        m_sync_notifier->SyncReset();
     }
 }
 
@@ -60,8 +57,6 @@ std::string CMasternodeSync::GetAssetName() const
 
 void CMasternodeSync::SwitchToNextAsset()
 {
-    assert(m_netfulfilledman.IsValid());
-
     switch(nCurrentAsset)
     {
         case(MASTERNODE_SYNC_BLOCKCHAIN):
@@ -72,11 +67,7 @@ void CMasternodeSync::SwitchToNextAsset()
         case(MASTERNODE_SYNC_GOVERNANCE):
             LogPrintf("CMasternodeSync::SwitchToNextAsset -- Completed %s in %llds\n", GetAssetName(), GetTime() - nTimeAssetSyncStarted);
             nCurrentAsset = MASTERNODE_SYNC_FINISHED;
-            uiInterface.NotifyAdditionalDataSyncProgressChanged(1);
-            // TODO: move connman to notifier
-            connman.ForEachNode(CConnman::AllNodes, [this](const CNode* pnode) {
-                m_netfulfilledman.AddFulfilledRequest(pnode->addr, "full-sync");
-            });
+            m_sync_notifier->SyncFinished();
             LogPrintf("CMasternodeSync::SwitchToNextAsset -- Sync has finished\n");
 
             break;

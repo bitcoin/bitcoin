@@ -333,3 +333,18 @@ void SyncManager::ProcessMessage(CNode& peer, CConnman&, const std::string& msg_
 
     LogPrint(BCLog::MNSYNC, "SYNCSTATUSCOUNT -- got inventory count: nItemID=%d  nCount=%d  peer=%d\n", nItemID, nCount, peer.GetId());
 }
+
+void NodeSyncNotifierImpl::SyncReset()
+{
+    uiInterface.NotifyAdditionalDataSyncProgressChanged(-1);
+}
+
+void NodeSyncNotifierImpl::SyncFinished()
+{
+    assert(m_netfulfilledman.IsValid());
+
+    uiInterface.NotifyAdditionalDataSyncProgressChanged(1);
+    m_connman.ForEachNode(CConnman::AllNodes, [this](const CNode* pnode) {
+        m_netfulfilledman.AddFulfilledRequest(pnode->addr, "full-sync");
+    });
+}

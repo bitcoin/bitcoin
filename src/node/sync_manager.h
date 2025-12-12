@@ -5,6 +5,7 @@
 #ifndef BITCOIN_NODE_SYNC_MANAGER_H
 #define BITCOIN_NODE_SYNC_MANAGER_H
 
+#include <masternode/sync.h>
 #include <net_processing.h>
 
 class CGovernanceManager;
@@ -35,4 +36,18 @@ private:
     CNetFulfilledRequestManager& m_netfulfilledman;
 };
 
+class NodeSyncNotifierImpl : public NodeSyncNotifier
+{
+public:
+    NodeSyncNotifierImpl(CConnman& connman, CNetFulfilledRequestManager& netfulfilledman) :
+        m_connman(connman),
+        m_netfulfilledman(netfulfilledman)
+    {}
+
+    void SyncReset() override;
+    void SyncFinished() override;
+private:
+    CConnman& m_connman;
+    CNetFulfilledRequestManager& m_netfulfilledman;
+};
 #endif // BITCOIN_NODE_SYNC_MANAGER_H

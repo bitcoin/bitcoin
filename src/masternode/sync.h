@@ -5,12 +5,10 @@
 #define BITCOIN_MASTERNODE_SYNC_H
 
 #include <atomic>
+#include <memory>
 #include <string>
 
-class CConnman;
 class CBlockIndex;
-class CMasternodeSync;
-class CNetFulfilledRequestManager;
 
 /** Default for -syncmempool */
 static const bool DEFAULT_SYNC_MEMPOOL = true;
@@ -25,10 +23,16 @@ static constexpr int MASTERNODE_SYNC_TICK_SECONDS    = 6;
 static constexpr int MASTERNODE_SYNC_TIMEOUT_SECONDS = 30; // our blocks are 2.5 minutes so 30 seconds should be fine
 static constexpr int MASTERNODE_SYNC_RESET_SECONDS   = 900; // Reset fReachedBestHeader in CMasternodeSync::Reset if UpdateBlockTip hasn't been called for this seconds
 
+class NodeSyncNotifier
+{
+public:
+    virtual void SyncReset() = 0;
+    virtual void SyncFinished() = 0;
+};
+
 //
 // CMasternodeSync : Sync masternode assets in stages
 //
-
 class CMasternodeSync
 {
 private:
@@ -47,14 +51,13 @@ private:
     /// Last time UpdateBlockTip has been called
     std::atomic<int64_t> nTimeLastUpdateBlockTip{0};
 
-    CConnman& connman;
-    CNetFulfilledRequestManager& m_netfulfilledman;
+    std::unique_ptr<NodeSyncNotifier> m_sync_notifier;
 
 public:
     CMasternodeSync() = delete;
     CMasternodeSync(const CMasternodeSync&) = delete;
     CMasternodeSync& operator=(const CMasternodeSync&) = delete;
-    explicit CMasternodeSync(CConnman& _connman, CNetFulfilledRequestManager& netfulfilledman);
+    explicit CMasternodeSync(std::unique_ptr<NodeSyncNotifier>&& sync_notifier);
     ~CMasternodeSync();
 
     bool IsBlockchainSynced() const { return nCurrentAsset > MASTERNODE_SYNC_BLOCKCHAIN; }

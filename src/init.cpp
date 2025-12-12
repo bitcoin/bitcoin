@@ -1990,7 +1990,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
          * need it or not further down and then query if the database is initialized
          * to check if validation is enabled.
          */
-        node.mn_sync = std::make_unique<CMasternodeSync>(*node.connman, *node.netfulfilledman);
+        node.mn_sync = std::make_unique<CMasternodeSync>(std::make_unique<NodeSyncNotifierImpl>(*node.connman, *node.netfulfilledman));
 
         node.govman = std::make_unique<CGovernanceManager>(*node.mn_metaman, *node.netfulfilledman, *node.chainman, node.dmnman, *node.mn_sync);
 
