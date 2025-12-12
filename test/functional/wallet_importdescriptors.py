@@ -25,6 +25,7 @@ from test_framework.descriptors import descsum_create
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    assert_greater_than,
 )
 from test_framework.wallet_util import (
     get_generate_key,
@@ -62,6 +63,76 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         if error_code is not None:
             assert_equal(result[0]['error']['code'], error_code)
             assert_equal(result[0]['error']['message'], error_message)
+
+    def test_importdescriptor_never_timestamp(self, node, funding_wallet):
+        self.log.info("Test importing descriptors with timestamp as never")
+        assert_greater_than(funding_wallet.getbalance(), 0)
+
+        key = get_generate_key()
+        funding_amount = 1 # BTC
+        txid = funding_wallet.send(outputs=[{key.p2wpkh_addr: funding_amount}])["txid"]
+        self.generate(node, 1, sync_fun=self.no_op)
+
+        wpkh_desc = descsum_create("wpkh(" + key.pubkey + ")")
+        spare_pkh_desc = descsum_create("pkh(" + key.pubkey + ")")
+
+        wallet_configs = [
+            {
+                "name": "never_wallet",
+                "timestamp": "never",
+                "expected_balance": 0,
+                "expected_msgs": [],
+                "unexpected_msgs": ["Rescanning last"],
+                "import_data": [{"desc": wpkh_desc, "timestamp": "never"}]
+            },
+            {
+                "name": "now_wallet",
+                "timestamp": "now",
+                "expected_balance": funding_amount,
+                "expected_msgs": ["Rescanning last"],
+                "unexpected_msgs": [],
+                "import_data": [{"desc": wpkh_desc, "timestamp": "now"}]
+            },
+            {
+                "name": "never_now_wallet",
+                "timestamp": None,   # custom case
+                "expected_balance": funding_amount,
+                "expected_msgs": ["Rescanning last"],
+                "unexpected_msgs": [],
+                "import_data": [
+                    {"desc": wpkh_desc, "timestamp": "never"},
+                    {"desc": spare_pkh_desc, "timestamp": "now"},
+                ]
+            }
+        ]
+
+        for config in wallet_configs:
+            # Create and open wallet
+            node.createwallet(wallet_name=config["name"], disable_private_keys=True, blank=True)
+            wallet = node.get_wallet_rpc(config["name"])
+
+            # Initial balance check
+            assert_equal(wallet.getbalance(), 0)
+
+            # Debug log validation and descriptor import
+            with node.assert_debug_log(expected_msgs=config["expected_msgs"],
+                                    unexpected_msgs=config["unexpected_msgs"]):
+                if config["name"] == "never_now_wallet":
+                    wallet.importdescriptors(config["import_data"])
+                else:
+                    self.test_importdesc(config["import_data"][0], success=True, wallet=wallet)
+
+            # Validate resulting balance + transactions
+            assert_equal(wallet.getbalance(), config["expected_balance"])
+
+            if config["expected_balance"] > 0:
+                assert_equal(wallet.listtransactions()[0]["txid"], txid)
+            else:
+                assert_equal(wallet.listtransactions(), [])
+
+            # Unload wallet after processing
+            node.unloadwallet(config["name"])
+
 
     def run_test(self):
         self.log.info('Setting up wallets')
@@ -782,6 +853,8 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             assert_equal(w_multipath.getnewaddress(address_type="bech32"), w_multisplit.getnewaddress(address_type="bech32"))
             assert_equal(w_multipath.getrawchangeaddress(address_type="bech32"), w_multisplit.getrawchangeaddress(address_type="bech32"))
         assert_equal(sorted(w_multipath.listdescriptors()["descriptors"], key=lambda x: x["desc"]), sorted(w_multisplit.listdescriptors()["descriptors"], key=lambda x: x["desc"]))
+
+        self.test_importdescriptor_never_timestamp(self.nodes[0], w0)
 
 if __name__ == '__main__':
     ImportDescriptorsTest(__file__).main()
