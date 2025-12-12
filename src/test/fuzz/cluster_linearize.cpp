@@ -1309,8 +1309,8 @@ FUZZ_TARGET(clusterlin_postlinearize_tree)
     // Verify that post-linearizing again does not change the diagram. The result must be identical
     // as post_linearization ought to be optimal already with a tree-structured graph.
     auto post_post_linearization = post_linearization;
-    PostLinearize(depgraph_tree, post_linearization);
-    SanityCheck(depgraph_tree, post_linearization);
+    PostLinearize(depgraph_tree, post_post_linearization);
+    SanityCheck(depgraph_tree, post_post_linearization);
     auto post_post_chunking = ChunkLinearization(depgraph_tree, post_post_linearization);
     auto cmp_post = CompareChunks(post_post_chunking, post_chunking);
     assert(cmp_post == 0);
