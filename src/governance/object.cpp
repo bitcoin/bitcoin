@@ -341,11 +341,6 @@ std::string CGovernanceObject::GetDataAsPlainString() const
     return m_obj.GetDataAsPlainString();
 }
 
-UniValue CGovernanceObject::ToJson() const
-{
-    return m_obj.ToJson();
-}
-
 void CGovernanceObject::UpdateLocalValidity(const CDeterministicMNList& tip_mn_list, const ChainstateManager& chainman)
 {
     AssertLockHeld(::cs_main);

@@ -920,6 +920,7 @@ libbitcoin_common_a_SOURCES = \
   evo/netinfo.cpp \
   external_signer.cpp \
   governance/common.cpp \
+  governance/core_write.cpp \
   init/common.cpp \
   key.cpp \
   key_io.cpp \
