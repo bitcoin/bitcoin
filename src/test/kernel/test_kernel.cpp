@@ -218,7 +218,7 @@ public:
 void run_verify_test(
     const ScriptPubkey& spent_script_pubkey,
     const Transaction& spending_tx,
-    std::span<TransactionOutput> spent_outputs,
+    const PrecomputedTransactionData* precomputed_txdata,
     int64_t amount,
     unsigned int input_index,
     bool taproot)
@@ -229,7 +229,7 @@ void run_verify_test(
         BOOST_CHECK(spent_script_pubkey.Verify(
             amount,
             spending_tx,
-            spent_outputs,
+            precomputed_txdata,
             input_index,
             ScriptVerificationFlags::ALL,
             status));
@@ -238,7 +238,7 @@ void run_verify_test(
         BOOST_CHECK(!spent_script_pubkey.Verify(
             amount,
             spending_tx,
-            spent_outputs,
+            precomputed_txdata,
             input_index,
             ScriptVerificationFlags::ALL,
             status));
@@ -248,7 +248,7 @@ void run_verify_test(
     BOOST_CHECK(spent_script_pubkey.Verify(
         amount,
         spending_tx,
-        spent_outputs,
+        precomputed_txdata,
         input_index,
         VERIFY_ALL_PRE_TAPROOT,
         status));
@@ -257,7 +257,7 @@ void run_verify_test(
     BOOST_CHECK(spent_script_pubkey.Verify(
         0,
         spending_tx,
-        spent_outputs,
+        precomputed_txdata,
         input_index,
         VERIFY_ALL_PRE_SEGWIT,
         status));
@@ -502,33 +502,94 @@ BOOST_AUTO_TEST_CASE(btck_transaction_input)
 BOOST_AUTO_TEST_CASE(btck_script_verify_tests)
 {
     // Legacy transaction aca326a724eda9a461c10a876534ecd5ae7b27f10f26c3862fb996f80ea2d45d
+    auto legacy_spent_script_pubkey{ScriptPubkey{hex_string_to_byte_vec("76a9144bfbaf6afb76cc5771bc6404810d1cc041a6933988ac")}};
+    auto legacy_spending_tx{Transaction{hex_string_to_byte_vec("02000000013f7cebd65c27431a90bba7f796914fe8cc2ddfc3f2cbd6f7e5f2fc854534da95000000006b483045022100de1ac3bcdfb0332207c4a91f3832bd2c2915840165f876ab47c5f8996b971c3602201c6c053d750fadde599e6f5c4e1963df0f01fc0d97815e8157e3d59fe09ca30d012103699b464d1d8bc9e47d4fb1cdaa89a1c5783d68363c4dbc4b524ed3d857148617feffffff02836d3c01000000001976a914fc25d6d5c94003bf5b0c7b640a248e2c637fcfb088ac7ada8202000000001976a914fbed3d9b11183209a57999d54d59f67c019e756c88ac6acb0700")}};
     run_verify_test(
-        /*spent_script_pubkey*/ ScriptPubkey{hex_string_to_byte_vec("76a9144bfbaf6afb76cc5771bc6404810d1cc041a6933988ac")},
-        /*spending_tx*/ Transaction{hex_string_to_byte_vec("02000000013f7cebd65c27431a90bba7f796914fe8cc2ddfc3f2cbd6f7e5f2fc854534da95000000006b483045022100de1ac3bcdfb0332207c4a91f3832bd2c2915840165f876ab47c5f8996b971c3602201c6c053d750fadde599e6f5c4e1963df0f01fc0d97815e8157e3d59fe09ca30d012103699b464d1d8bc9e47d4fb1cdaa89a1c5783d68363c4dbc4b524ed3d857148617feffffff02836d3c01000000001976a914fc25d6d5c94003bf5b0c7b640a248e2c637fcfb088ac7ada8202000000001976a914fbed3d9b11183209a57999d54d59f67c019e756c88ac6acb0700")},
+        /*spent_script_pubkey*/ legacy_spent_script_pubkey,
+        /*spending_tx*/ legacy_spending_tx,
+        /*precomputed_txdata*/ nullptr,
+        /*amount*/ 0,
+        /*input_index*/ 0,
+        /*is_taproot*/ false);
+
+    // Legacy transaction aca326a724eda9a461c10a876534ecd5ae7b27f10f26c3862fb996f80ea2d45d with precomputed_txdata
+    auto legacy_precomputed_txdata{PrecomputedTransactionData{
+        /*spending_tx*/ legacy_spending_tx,
         /*spent_outputs*/ {},
+    }};
+    run_verify_test(
+        /*spent_script_pubkey*/ legacy_spent_script_pubkey,
+        /*spending_tx*/ legacy_spending_tx,
+        /*precomputed_txdata*/ &legacy_precomputed_txdata,
         /*amount*/ 0,
         /*input_index*/ 0,
         /*is_taproot*/ false);
 
     // Segwit transaction 1a3e89644985fbbb41e0dcfe176739813542b5937003c46a07de1e3ee7a4a7f3
+    auto segwit_spent_script_pubkey{ScriptPubkey{hex_string_to_byte_vec("0020701a8d401c84fb13e6baf169d59684e17abd9fa216c8cc5b9fc63d622ff8c58d")}};
+    auto segwit_spending_tx{Transaction{hex_string_to_byte_vec("010000000001011f97548fbbe7a0db7588a66e18d803d0089315aa7d4cc28360b6ec50ef36718a0100000000ffffffff02df1776000000000017a9146c002a686959067f4866b8fb493ad7970290ab728757d29f0000000000220020701a8d401c84fb13e6baf169d59684e17abd9fa216c8cc5b9fc63d622ff8c58d04004730440220565d170eed95ff95027a69b313758450ba84a01224e1f7f130dda46e94d13f8602207bdd20e307f062594022f12ed5017bbf4a055a06aea91c10110a0e3bb23117fc014730440220647d2dc5b15f60bc37dc42618a370b2a1490293f9e5c8464f53ec4fe1dfe067302203598773895b4b16d37485cbe21b337f4e4b650739880098c592553add7dd4355016952210375e00eb72e29da82b89367947f29ef34afb75e8654f6ea368e0acdfd92976b7c2103a1b26313f430c4b15bb1fdce663207659d8cac749a0e53d70eff01874496feff2103c96d495bfdd5ba4145e3e046fee45e84a8a48ad05bd8dbb395c011a32cf9f88053ae00000000")}};
     run_verify_test(
-        /*spent_script_pubkey*/ ScriptPubkey{hex_string_to_byte_vec("0020701a8d401c84fb13e6baf169d59684e17abd9fa216c8cc5b9fc63d622ff8c58d")},
-        /*spending_tx*/ Transaction{hex_string_to_byte_vec("010000000001011f97548fbbe7a0db7588a66e18d803d0089315aa7d4cc28360b6ec50ef36718a0100000000ffffffff02df1776000000000017a9146c002a686959067f4866b8fb493ad7970290ab728757d29f0000000000220020701a8d401c84fb13e6baf169d59684e17abd9fa216c8cc5b9fc63d622ff8c58d04004730440220565d170eed95ff95027a69b313758450ba84a01224e1f7f130dda46e94d13f8602207bdd20e307f062594022f12ed5017bbf4a055a06aea91c10110a0e3bb23117fc014730440220647d2dc5b15f60bc37dc42618a370b2a1490293f9e5c8464f53ec4fe1dfe067302203598773895b4b16d37485cbe21b337f4e4b650739880098c592553add7dd4355016952210375e00eb72e29da82b89367947f29ef34afb75e8654f6ea368e0acdfd92976b7c2103a1b26313f430c4b15bb1fdce663207659d8cac749a0e53d70eff01874496feff2103c96d495bfdd5ba4145e3e046fee45e84a8a48ad05bd8dbb395c011a32cf9f88053ae00000000")},
+        /*spent_script_pubkey*/ segwit_spent_script_pubkey,
+        /*spending_tx*/ segwit_spending_tx,
+        /*precomputed_txdata*/ nullptr,
+        /*amount*/ 18393430,
+        /*input_index*/ 0,
+        /*is_taproot*/ false);
+
+    // Segwit transaction 1a3e89644985fbbb41e0dcfe176739813542b5937003c46a07de1e3ee7a4a7f3 with precomputed_txdata
+    auto segwit_precomputed_txdata{PrecomputedTransactionData{
+        /*spending_tx*/ segwit_spending_tx,
         /*spent_outputs*/ {},
+    }};
+    run_verify_test(
+        /*spent_script_pubkey*/ segwit_spent_script_pubkey,
+        /*spending_tx*/ segwit_spending_tx,
+        /*precomputed_txdata*/ &segwit_precomputed_txdata,
         /*amount*/ 18393430,
         /*input_index*/ 0,
         /*is_taproot*/ false);
 
     // Taproot transaction 33e794d097969002ee05d336686fc03c9e15a597c1b9827669460fac98799036
     auto taproot_spent_script_pubkey{ScriptPubkey{hex_string_to_byte_vec("5120339ce7e165e67d93adb3fef88a6d4beed33f01fa876f05a225242b82a631abc0")}};
-    std::vector<TransactionOutput> spent_outputs;
-    spent_outputs.emplace_back(taproot_spent_script_pubkey, 88480);
+    auto taproot_spending_tx{Transaction{hex_string_to_byte_vec("01000000000101d1f1c1f8cdf6759167b90f52c9ad358a369f95284e841d7a2536cef31c0549580100000000fdffffff020000000000000000316a2f49206c696b65205363686e6f7272207369677320616e6420492063616e6e6f74206c69652e204062697462756734329e06010000000000225120a37c3903c8d0db6512e2b40b0dffa05e5a3ab73603ce8c9c4b7771e5412328f90140a60c383f71bac0ec919b1d7dbc3eb72dd56e7aa99583615564f9f99b8ae4e837b758773a5b2e4c51348854c8389f008e05029db7f464a5ff2e01d5e6e626174affd30a00")}};
+    std::vector<TransactionOutput> taproot_spent_outputs;
+    taproot_spent_outputs.emplace_back(taproot_spent_script_pubkey, 88480);
+    auto taproot_precomputed_txdata{PrecomputedTransactionData{
+        /*spending_tx*/ taproot_spending_tx,
+        /*spent_outputs*/ taproot_spent_outputs,
+    }};
     run_verify_test(
         /*spent_script_pubkey*/ taproot_spent_script_pubkey,
-        /*spending_tx*/ Transaction{hex_string_to_byte_vec("01000000000101d1f1c1f8cdf6759167b90f52c9ad358a369f95284e841d7a2536cef31c0549580100000000fdffffff020000000000000000316a2f49206c696b65205363686e6f7272207369677320616e6420492063616e6e6f74206c69652e204062697462756734329e06010000000000225120a37c3903c8d0db6512e2b40b0dffa05e5a3ab73603ce8c9c4b7771e5412328f90140a60c383f71bac0ec919b1d7dbc3eb72dd56e7aa99583615564f9f99b8ae4e837b758773a5b2e4c51348854c8389f008e05029db7f464a5ff2e01d5e6e626174affd30a00")},
-        /*spent_outputs*/ spent_outputs,
+        /*spending_tx*/ taproot_spending_tx,
+        /*precomputed_txdata*/ &taproot_precomputed_txdata,
         /*amount*/ 88480,
         /*input_index*/ 0,
+        /*is_taproot*/ true);
+
+    // Two-input taproot transaction e8e8320f40c31ed511570e9cdf1d241f8ec9a5cc392e6105240ac8dbea2098de
+    auto taproot2_spent_script_pubkey0{ScriptPubkey{hex_string_to_byte_vec("5120b7da80f57e36930b0515eb09293e25858d13e6b91fee6184943f5a584cb4248e")}};
+    auto taproot2_spent_script_pubkey1{ScriptPubkey{hex_string_to_byte_vec("5120ab78e077d062e7b8acd7063668b4db5355a1b5d5fd2a46a8e98e62e5e63fab77")}};
+    auto taproot2_spending_tx{Transaction{hex_string_to_byte_vec("02000000000102c0f01ead18750892c84b1d4f595149ad38f16847df1fbf490e235b3b78c1f98a0100000000ffffffff456764a19c2682bf5b1567119f06a421849ad1664cf42b5ef95b69d6e2159e9d0000000000ffffffff022202000000000000225120b6c0c2a8ee25a2ae0322ab7f1a06f01746f81f6b90d179c3c2a51a356e6188f1d70e020000000000225120b7da80f57e36930b0515eb09293e25858d13e6b91fee6184943f5a584cb4248e0141933fdc49eb1af1f08ed1e9cf5559259309a8acd25ff1e6999b6955124438aef4fceaa4e6a5f85286631e24837329563595bc3cf4b31e1c687442abb01c4206818101401c9620faf1e8c84187762ad14d04ae3857f59a2f03f1dcbb99290e16dfc572a63b4ea435780a5787af59beb5742fd71cda8a95381517a1ff14b4c67996c4bf8100000000")}};
+    std::vector<TransactionOutput> taproot2_spent_outputs;
+    taproot2_spent_outputs.emplace_back(taproot2_spent_script_pubkey0, 546);
+    taproot2_spent_outputs.emplace_back(taproot2_spent_script_pubkey1, 135125);
+    auto taproot2_precomputed_txdata{PrecomputedTransactionData{
+        /*spending_tx*/ taproot2_spending_tx,
+        /*spent_outputs*/ taproot2_spent_outputs,
+    }};
+    run_verify_test(
+        /*spent_script_pubkey*/ taproot2_spent_script_pubkey0,
+        /*spending_tx*/ taproot2_spending_tx,
+        /*precomputed_txdata*/ &taproot2_precomputed_txdata,
+        /*amount*/ 546,
+        /*input_index*/ 0,
+        /*is_taproot*/ true);
+    run_verify_test(
+        /*spent_script_pubkey*/ taproot2_spent_script_pubkey1,
+        /*spending_tx*/ taproot2_spending_tx,
+        /*precomputed_txdata*/ &taproot2_precomputed_txdata,
+        /*amount*/ 135125,
+        /*input_index*/ 1,
         /*is_taproot*/ true);
 }
 
@@ -954,8 +1015,9 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
             }
             BOOST_CHECK(inputs.size() == spent_outputs.size());
             ScriptVerifyStatus status = ScriptVerifyStatus::OK;
+            const PrecomputedTransactionData precomputed_txdata{transaction, spent_outputs};
             for (size_t i{0}; i < inputs.size(); ++i) {
-                BOOST_CHECK(spent_outputs[i].GetScriptPubkey().Verify(spent_outputs[i].Amount(), transaction, spent_outputs, i, ScriptVerificationFlags::ALL, status));
+                BOOST_CHECK(spent_outputs[i].GetScriptPubkey().Verify(spent_outputs[i].Amount(), transaction, &precomputed_txdata, i, ScriptVerificationFlags::ALL, status));
             }
         }
     }
