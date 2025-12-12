@@ -203,9 +203,9 @@ static bool rest_headers(const std::any& context,
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/headers/<hash>.<ext>?count=<count>");
     }
 
-    const auto parsed_count{ToIntegral<size_t>(raw_count)};
-    if (!parsed_count.has_value() || *parsed_count < 1 || *parsed_count > MAX_REST_HEADERS_RESULTS) {
-        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count is invalid or out of acceptable range (1-%u): %s", MAX_REST_HEADERS_RESULTS, raw_count));
+    const auto parsed_count{ToIntegral<int>(raw_count)};
+    if (!parsed_count.has_value() || *parsed_count == 0 || *parsed_count > int(MAX_REST_HEADERS_RESULTS) || *parsed_count <  -int(MAX_REST_HEADERS_RESULTS)) {
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Header count is invalid or out of acceptable range (1 <= |header_count| <= %u): %s", MAX_REST_HEADERS_RESULTS, raw_count));
     }
 
     auto hash{uint256::FromHex(hashStr)};
@@ -215,7 +215,7 @@ static bool rest_headers(const std::any& context,
 
     const CBlockIndex* tip = nullptr;
     std::vector<const CBlockIndex*> headers;
-    headers.reserve(*parsed_count);
+    headers.reserve(std::abs(*parsed_count));
     ChainstateManager* maybe_chainman = GetChainman(context, req);
     if (!maybe_chainman) return false;
     ChainstateManager& chainman = *maybe_chainman;
@@ -224,12 +224,19 @@ static bool rest_headers(const std::any& context,
         CChain& active_chain = chainman.ActiveChain();
         tip = active_chain.Tip();
         const CBlockIndex* pindex{chainman.m_blockman.LookupBlockIndex(*hash)};
-        while (pindex != nullptr && active_chain.Contains(pindex)) {
+        if (pindex != nullptr && *parsed_count < 0 && !active_chain.Contains(pindex)) {
+            tip = pindex;
+        }
+        while (pindex != nullptr && (*parsed_count < 0 || active_chain.Contains(pindex))) {
             headers.push_back(pindex);
-            if (headers.size() == *parsed_count) {
+            if (headers.size() == size_t(std::abs(*parsed_count))) {
                 break;
             }
-            pindex = active_chain.Next(pindex);
+            if (*parsed_count >= 0) {
+                pindex = active_chain.Next(pindex);
+            } else {
+                pindex = pindex->pprev;
+            }
         }
     }
 
