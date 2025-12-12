@@ -7,10 +7,17 @@ import asyncio
 from io import BytesIO
 from pathlib import Path
 import shutil
-from test_framework.messages import (CBlock, CTransaction, ser_uint256, COIN)
+from test_framework.messages import (
+    CBlock,
+    COIN,
+    CTransaction,
+    MAX_MONEY,
+    ser_uint256,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_not_equal
 )
 from test_framework.wallet import MiniWallet
@@ -88,6 +95,12 @@ class IPCInterfaceTest(BitcoinTestFramework):
         tx.deserialize(coinbase_data)
         return tx
 
+    async def destroy_template(self, template_obj, ctx):
+        """Destroy template if we received one."""
+        if template_obj is None or template_obj.to_dict() == {}:
+            return
+        await template_obj.result.destroy(ctx)
+
     def run_echo_test(self):
         self.log.info("Running echo test")
         async def async_routine():
@@ -154,39 +167,57 @@ class IPCInterfaceTest(BitcoinTestFramework):
             coinbase = CTransaction()
             coinbase.deserialize(coinbase_data)
             assert_equal(coinbase.vin[0].prevout.hash, 0)
-            self.log.debug("Wait for a new template")
+            self.log.debug("Wait for a new template, get one after the tip updates")
             waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
             waitoptions.timeout = timeout
-            waitoptions.feeThreshold = 1
+            # Ignore fee increases, wait only for the tip update
+            waitoptions.feeThreshold = MAX_MONEY
+            # In order to test ~BlockTemplateImpl reference counting, template2
+            # will contain a transaction that's also included in later templates.
+            # To keep it in the mempool for these later templates, we temporarily
+            # disconnect so node 1 will mine a block without it.
+            self.disconnect_nodes(0, 1)
+            miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
             waitnext = template.result.waitNext(ctx, waitoptions)
-            self.generate(self.nodes[0], 1)
+            template2 = await waitnext
+            assert_equal(template2.to_dict(), {})
+            waitnext = template.result.waitNext(ctx, waitoptions)
+            self.generate(self.nodes[1], 1, sync_fun=self.no_op)
+            self.connect_nodes(0, 1)
+            self.sync_blocks()
             template2 = await waitnext
             block2 = await self.parse_and_deserialize_block(template2, ctx)
-            assert_equal(len(block2.vtx), 1)
+            assert_equal(len(block2.vtx), 2)
             self.log.debug("Wait for another, but time out")
             template3 = await template2.result.waitNext(ctx, waitoptions)
             assert_equal(template3.to_dict(), {})
             self.log.debug("Wait for another, get one after increase in fees in the mempool")
+            waitoptions.feeThreshold = 1
             waitnext = template2.result.waitNext(ctx, waitoptions)
             miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
             template4 = await waitnext
             block3 = await self.parse_and_deserialize_block(template4, ctx)
-            assert_equal(len(block3.vtx), 2)
+            assert_equal(len(block3.vtx), 3)
             self.log.debug("Wait again, this should return the same template, since the fee threshold is zero")
             waitoptions.feeThreshold = 0
             template5 = await template4.result.waitNext(ctx, waitoptions)
             block4 = await self.parse_and_deserialize_block(template5, ctx)
-            assert_equal(len(block4.vtx), 2)
+            assert_equal(len(block4.vtx), 3)
             waitoptions.feeThreshold = 1
             self.log.debug("Wait for another, get one after increase in fees in the mempool")
             waitnext = template5.result.waitNext(ctx, waitoptions)
             miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
             template6 = await waitnext
             block4 = await self.parse_and_deserialize_block(template6, ctx)
-            assert_equal(len(block4.vtx), 3)
+            assert_equal(len(block4.vtx), 4)
             self.log.debug("Wait for another, but time out, since the fee threshold is set now")
             template7 = await template6.result.waitNext(ctx, waitoptions)
             assert_equal(template7.to_dict(), {})
+
+            self.log.debug("Memory load should be zero because there was no mempool churn")
+            with self.nodes[0].assert_debug_log(["Calculate template transaction reference memory footprint"]):
+                memory_load = await mining.result.getMemoryLoad(ctx)
+            assert_equal(memory_load.result.usage, 0)
 
             self.log.debug("interruptWait should abort the current wait")
             wait_started = asyncio.Event()
@@ -212,9 +243,9 @@ class IPCInterfaceTest(BitcoinTestFramework):
 
             current_block_height = self.nodes[0].getchaintips()[0]["height"]
             check_opts = self.capnp_modules['mining'].BlockCheckOptions()
-            template = await mining.result.createNewBlock(opts)
-            block = await self.parse_and_deserialize_block(template, ctx)
-            coinbase = await self.parse_and_deserialize_coinbase_tx(template, ctx)
+            template8 = await mining.result.createNewBlock(opts)
+            block = await self.parse_and_deserialize_block(template8, ctx)
+            coinbase = await self.parse_and_deserialize_coinbase_tx(template8, ctx)
             balance = miniwallet.get_balance()
             coinbase.vout[0].scriptPubKey = miniwallet.get_output_script()
             coinbase.vout[0].nValue = COIN
@@ -227,7 +258,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
             res = await mining.result.checkBlock(block.serialize(), check_opts)
             assert_equal(res.result, False)
             assert_equal(res.reason, "bad-version(0x00000000)")
-            res = await template.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
+            res = await template8.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
             assert_equal(res.result, False)
             self.log.debug("Submit a valid block")
             block.nVersion = original_version
@@ -238,21 +269,21 @@ class IPCInterfaceTest(BitcoinTestFramework):
             assert_equal(res.result, True)
 
             # The remote template block will be mutated, capture the original:
-            remote_block_before = await self.parse_and_deserialize_block(template, ctx)
+            remote_block_before = await self.parse_and_deserialize_block(template8, ctx)
 
             self.log.debug("Submitted coinbase must include witness")
             assert_not_equal(coinbase.serialize_without_witness().hex(), coinbase.serialize().hex())
-            res = await template.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize_without_witness())
+            res = await template8.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize_without_witness())
             assert_equal(res.result, False)
 
             self.log.debug("Even a rejected submitBlock() mutates the template's block")
             # Can be used by clients to download and inspect the (rejected)
             # reconstructed block.
-            remote_block_after = await self.parse_and_deserialize_block(template, ctx)
+            remote_block_after = await self.parse_and_deserialize_block(template8, ctx)
             assert_not_equal(remote_block_before.serialize().hex(), remote_block_after.serialize().hex())
 
             self.log.debug("Submit again, with the witness")
-            res = await template.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
+            res = await template8.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
             assert_equal(res.result, True)
 
             self.log.debug("Block should propagate")
@@ -270,14 +301,28 @@ class IPCInterfaceTest(BitcoinTestFramework):
             assert_equal(res.result, False)
             assert_equal(res.reason, "inconclusive-not-best-prevblk")
 
+            self.log.debug("Reported memory load should be > 0")
+            # Clients are expected to drop references to stale block templates
+            # briefly after the tip updates. In practice we mainly care about
+            # the memory footprint caused by mempool churn, but this scenario
+            # is easier to test.
+            assert_greater_than((await mining.result.getMemoryLoad(ctx)).result.usage, 0)
+
             self.log.debug("Destroy template objects")
-            template.result.destroy(ctx)
-            template2.result.destroy(ctx)
-            template3.result.destroy(ctx)
-            template4.result.destroy(ctx)
-            template5.result.destroy(ctx)
-            template6.result.destroy(ctx)
-            template7.result.destroy(ctx)
+            await self.destroy_template(template8, ctx)
+            await self.destroy_template(template7, ctx)
+            await self.destroy_template(template6, ctx)
+            await self.destroy_template(template5, ctx)
+            await self.destroy_template(template4, ctx)
+            await self.destroy_template(template3, ctx)
+            await self.destroy_template(template2, ctx)
+
+            # All templates with transactions have been released
+            self.log.debug("Reported memory load should be 0")
+            assert_equal((await mining.result.getMemoryLoad(ctx)).result.usage, 0)
+
+            await self.destroy_template(template, ctx)
+
         asyncio.run(capnp.run(async_routine()))
 
     def run_test(self):
