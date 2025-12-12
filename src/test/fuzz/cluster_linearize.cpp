@@ -364,6 +364,45 @@ std::vector<DepGraphIndex> ReadLinearization(const DepGraph<BS>& depgraph, SpanR
     return linearization;
 }
 
+/** Given a dependency graph, construct a tree-structured graph.
+ *
+ * Copies the nodes from the depgraph, but only keeps the first parent (even direction)
+ * or the first child (odd direction) for each transaction.
+ */
+template<typename BS>
+DepGraph<BS> BuildTreeGraph(const DepGraph<BS>& depgraph, uint8_t direction)
+{
+    DepGraph<BS> depgraph_tree;
+    for (DepGraphIndex i = 0; i < depgraph.PositionRange(); ++i) {
+        if (depgraph.Positions()[i]) {
+            depgraph_tree.AddTransaction(depgraph.FeeRate(i));
+        } else {
+            // For holes, add a dummy transaction which is deleted below, so that non-hole
+            // transactions retain their position.
+            depgraph_tree.AddTransaction(FeeFrac{});
+        }
+    }
+    depgraph_tree.RemoveTransactions(BS::Fill(depgraph.PositionRange()) - depgraph.Positions());
+
+    if (direction & 1) {
+        for (DepGraphIndex i : depgraph.Positions()) {
+            auto children = depgraph.GetReducedChildren(i);
+            if (children.Any()) {
+                depgraph_tree.AddDependencies(BS::Singleton(i), children.First());
+            }
+        }
+    } else {
+        for (DepGraphIndex i : depgraph.Positions()) {
+            auto parents = depgraph.GetReducedParents(i);
+            if (parents.Any()) {
+                depgraph_tree.AddDependencies(BS::Singleton(parents.First()), i);
+            }
+        }
+    }
+
+    return depgraph_tree;
+}
+
 } // namespace
 
 FUZZ_TARGET(clusterlin_depgraph_sim)
@@ -1260,35 +1299,7 @@ FUZZ_TARGET(clusterlin_postlinearize_tree)
         reader >> direction >> rng_seed >> Using<DepGraphFormatter>(depgraph_gen);
     } catch (const std::ios_base::failure&) {}
 
-    // Now construct a new graph, copying the nodes, but leaving only the first parent (even
-    // direction) or the first child (odd direction).
-    DepGraph<TestBitSet> depgraph_tree;
-    for (DepGraphIndex i = 0; i < depgraph_gen.PositionRange(); ++i) {
-        if (depgraph_gen.Positions()[i]) {
-            depgraph_tree.AddTransaction(depgraph_gen.FeeRate(i));
-        } else {
-            // For holes, add a dummy transaction which is deleted below, so that non-hole
-            // transactions retain their position.
-            depgraph_tree.AddTransaction(FeeFrac{});
-        }
-    }
-    depgraph_tree.RemoveTransactions(TestBitSet::Fill(depgraph_gen.PositionRange()) - depgraph_gen.Positions());
-
-    if (direction & 1) {
-        for (DepGraphIndex i = 0; i < depgraph_gen.TxCount(); ++i) {
-            auto children = depgraph_gen.GetReducedChildren(i);
-            if (children.Any()) {
-                depgraph_tree.AddDependencies(TestBitSet::Singleton(i), children.First());
-            }
-         }
-    } else {
-        for (DepGraphIndex i = 0; i < depgraph_gen.TxCount(); ++i) {
-            auto parents = depgraph_gen.GetReducedParents(i);
-            if (parents.Any()) {
-                depgraph_tree.AddDependencies(TestBitSet::Singleton(parents.First()), i);
-            }
-        }
-    }
+    auto depgraph_tree = BuildTreeGraph(depgraph_gen, direction);
 
     // Retrieve a linearization from the fuzz input.
     std::vector<DepGraphIndex> linearization;
@@ -1309,8 +1320,8 @@ FUZZ_TARGET(clusterlin_postlinearize_tree)
     // Verify that post-linearizing again does not change the diagram. The result must be identical
     // as post_linearization ought to be optimal already with a tree-structured graph.
     auto post_post_linearization = post_linearization;
-    PostLinearize(depgraph_tree, post_linearization);
-    SanityCheck(depgraph_tree, post_linearization);
+    PostLinearize(depgraph_tree, post_post_linearization);
+    SanityCheck(depgraph_tree, post_post_linearization);
     auto post_post_chunking = ChunkLinearization(depgraph_tree, post_post_linearization);
     auto cmp_post = CompareChunks(post_post_chunking, post_chunking);
     assert(cmp_post == 0);
