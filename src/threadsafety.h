@@ -6,6 +6,8 @@
 #ifndef BITCOIN_THREADSAFETY_H
 #define BITCOIN_THREADSAFETY_H
 
+#include <util/macros.h>
+
 #include <mutex>
 
 #ifdef __clang__
@@ -65,15 +67,18 @@ public:
     //! with the ! operator, to indicate that a mutex should not be held.
     const StdMutex& operator!() const { return *this; }
 #endif // __clang__
+
+    // StdLockGuard provides an annotated version of std::lock_guard for us.
+    class SCOPED_LOCKABLE Guard : public std::lock_guard<StdMutex>
+    {
+    public:
+        explicit Guard(StdMutex& cs) EXCLUSIVE_LOCK_FUNCTION(cs) : std::lock_guard<StdMutex>(cs) {}
+        ~Guard() UNLOCK_FUNCTION() = default;
+    };
 };
 
-// StdLockGuard provides an annotated version of std::lock_guard for us,
-// and should only be used when sync.h Mutex/LOCK/etc are not usable.
-class SCOPED_LOCKABLE StdLockGuard : public std::lock_guard<StdMutex>
-{
-public:
-    explicit StdLockGuard(StdMutex& cs) EXCLUSIVE_LOCK_FUNCTION(cs) : std::lock_guard<StdMutex>(cs) {}
-    ~StdLockGuard() UNLOCK_FUNCTION() = default;
-};
+// Provide STDLOCK(..) wrapper around StdLockGuard that checks the lock is not already held
+inline StdMutex& StdCheckNotHeld(StdMutex& cs) EXCLUSIVE_LOCKS_REQUIRED(!cs) LOCK_RETURNED(cs) { return cs; }
+#define STDLOCK(cs) StdMutex::Guard UNIQUE_NAME(criticalblock){StdCheckNotHeld(cs)}
 
 #endif // BITCOIN_THREADSAFETY_H
