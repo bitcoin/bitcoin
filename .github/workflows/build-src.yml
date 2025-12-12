@@ -83,7 +83,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: |
-            /cache
+            /cache/ccache
           key: ccache-${{ hashFiles('contrib/containers/ci/ci.Dockerfile', 'depends/packages/*') }}-${{ inputs.build-target }}-${{ github.sha }}
           restore-keys: |
             ccache-${{ hashFiles('contrib/containers/ci/ci.Dockerfile', 'depends/packages/*') }}-${{ inputs.build-target }}-
@@ -108,7 +108,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: |
-            /cache
+            /cache/ccache
           key: ccache-${{ hashFiles('contrib/containers/ci/ci.Dockerfile', 'depends/packages/*') }}-${{ inputs.build-target }}-${{ github.sha }}
 
       - name: Run linters
