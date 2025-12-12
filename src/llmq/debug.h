@@ -92,7 +92,7 @@ public:
     //std::map<Consensus::LLMQType, CDKGDebugSessionStatus> sessions;
 
 public:
-    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional, bool inner_optional = false);
     [[nodiscard]] UniValue ToJson(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
                                   const ChainstateManager& chainman, int detailLevel) const;
 };

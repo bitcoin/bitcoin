@@ -78,13 +78,13 @@ RPCResult CDKGDebugSessionStatus::GetJsonHelp(const std::string& key, bool optio
 }
 
 // CDKGDebugStatus::ToJson() defined in llmq/debug.cpp
-RPCResult CDKGDebugStatus::GetJsonHelp(const std::string& key, bool optional)
+RPCResult CDKGDebugStatus::GetJsonHelp(const std::string& key, bool optional, bool inner_optional)
 {
     return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "The state of the node's DKG sessions",
     {
-        {RPCResult::Type::NUM, "time", "Adjusted time for the last update, timestamp"},
-        {RPCResult::Type::STR, "timeStr", "Adjusted time for the last update, human friendly"},
-        {RPCResult::Type::ARR, "session", "", {
+        {RPCResult::Type::NUM, "time", inner_optional, "Adjusted time for the last update, timestamp"},
+        {RPCResult::Type::STR, "timeStr", inner_optional, "Adjusted time for the last update, human friendly"},
+        {RPCResult::Type::ARR, "session", inner_optional, "", {
             {RPCResult::Type::OBJ, "", "", {
                 {RPCResult::Type::NUM, "llmqType", "Name of quorum"},
                 GetRpcResult("quorumIndex"),
