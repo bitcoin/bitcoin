@@ -653,7 +653,16 @@ static UniValue ListObjects(CGovernanceManager& govman, const CDeterministicMNLi
     return objResult;
 }
 
-// USERS CAN QUERY THE SYSTEM FOR A LIST OF VARIOUS GOVERNANCE ITEMS
+static RPCResult ListObjectsHelp()
+{
+    auto ret = CGovernanceObject::GetStateJsonHelp(/*key=*/"", /*optional=*/false, /*local_valid_key=*/"fBlockchainValidity");
+    auto mod_inner = ret.m_inner;
+    for (const auto& result : CGovernanceObject::GetVotesJsonHelp(/*key=*/"", /*optional=*/false).m_inner) {
+        mod_inner.push_back(result);
+    }
+    return RPCResult{ret.m_type, ret.m_key_name, ret.m_description, mod_inner};
+}
+
 static RPCHelpMan gobject_list_helper(const bool make_a_diff)
 {
     const std::string command{make_a_diff ? "gobject diff" : "gobject list"};
@@ -668,11 +677,7 @@ static RPCHelpMan gobject_list_helper(const bool make_a_diff)
         },
         {
             RPCResult{"If request is valid",
-                RPCResult::Type::OBJ, "hash", "Object details",
-                {
-                    // TODO: list fields of output for RPC help instead ELISION
-                    {RPCResult::Type::ELISION, "", ""}
-                },
+                RPCResult::Type::OBJ, "hash", "Object details", {ListObjectsHelp()},
             },
             RPCResult{"If request is invalid",
                 RPCResult::Type::STR, "", "Error string"
@@ -715,7 +720,17 @@ static RPCHelpMan gobject_diff()
     return gobject_list_helper(true);
 }
 
-// GET SPECIFIC GOVERNANCE ENTRY
+static RPCResult gobject_get_help()
+{
+    auto ret = CGovernanceObject::GetStateJsonHelp(/*key=*/"", /*optional=*/false, /*local_valid_key=*/"fLocalValidity");
+    auto mod_inner = ret.m_inner;
+    mod_inner.push_back({RPCResult::Type::OBJ, "FundingResult", "Funding vote details", {CGovernanceObject::GetVotesJsonHelp(/*key=*/"", /*optional=*/false)}});
+    mod_inner.push_back({RPCResult::Type::OBJ, "ValidResult", "Object validity vote details", {CGovernanceObject::GetVotesJsonHelp(/*key=*/"", /*optional=*/false)}});
+    mod_inner.push_back({RPCResult::Type::OBJ, "DeleteResult", "Delete vote details", {CGovernanceObject::GetVotesJsonHelp(/*key=*/"", /*optional=*/false)}});
+    mod_inner.push_back({RPCResult::Type::OBJ, "EndorsedResult", "Endorsed vote details", {CGovernanceObject::GetVotesJsonHelp(/*key=*/"", /*optional=*/false)}});
+    return RPCResult{ret.m_type, ret.m_key_name, ret.m_description, mod_inner};
+}
+
 static RPCHelpMan gobject_get()
 {
     return RPCHelpMan{"gobject get",
@@ -723,15 +738,7 @@ static RPCHelpMan gobject_get()
         {
             {"governance-hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "object id"},
         },
-        {
-            RPCResult{
-                RPCResult::Type::OBJ, "", "",
-                {
-                    // TODO: list fields of output for RPC help instead ELISION
-                    {RPCResult::Type::ELISION, "", ""}
-                }
-            },
-        },
+        gobject_get_help(),
         RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {

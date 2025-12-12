@@ -65,6 +65,38 @@ UniValue CGovernanceObject::GetInnerJson() const
     return m_obj.ToJson();
 }
 
+// CGovernanceObject::GetStateJson() defined in governance/object.cpp
+RPCResult CGovernanceObject::GetStateJsonHelp(const std::string& key, bool optional, const std::string& local_valid_key)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "Object state info",
+    {
+        {RPCResult::Type::STR_HEX, "DataHex", "Governance object (hex)"},
+        {RPCResult::Type::STR, "DataString", "Governance object (string)"},
+        {RPCResult::Type::STR_HEX, "Hash", "Hash of governance object"},
+        GetRpcResult("collateralHash", /*optional=*/false, /*override_name=*/"CollateralHash"),
+        {RPCResult::Type::NUM, "ObjectType", "Object types"},
+        {RPCResult::Type::NUM, "CreationTime", "Object creation timestamp"},
+        {RPCResult::Type::STR_HEX, "SigningMasternode", /*optional=*/true, "Signing masternode’s vin (for triggers only)"},
+        {RPCResult::Type::BOOL, local_valid_key, "Returns true if valid"},
+        {RPCResult::Type::STR, "IsValidReason", strprintf("%s error (human-readable string, empty if %s true)", local_valid_key, local_valid_key)},
+        {RPCResult::Type::BOOL, "fCachedValid", "Returns true if minimum support has been reached flagging object as valid"},
+        {RPCResult::Type::BOOL, "fCachedFunding", "Returns true if minimum support has been reached flagging object as fundable"},
+        {RPCResult::Type::BOOL, "fCachedDelete", "Returns true if minimum support has been reached flagging object as marked for deletion"},
+        {RPCResult::Type::BOOL, "fCachedEndorsed", "Returns true if minimum support has been reached flagging object as endorsed"},
+    }};
+}
+
+RPCResult CGovernanceObject::GetVotesJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "Object vote counts",
+    {
+        {RPCResult::Type::NUM, "AbsoluteYesCount", "Number of Yes votes minus number of No votes"},
+        {RPCResult::Type::NUM, "YesCount", "Number of Yes votes"},
+        {RPCResult::Type::NUM, "NoCount", "Number of No votes"},
+        {RPCResult::Type::NUM, "AbstainCount", "Number of Abstain votes"},
+    }};
+}
+
 UniValue CGovernanceObject::GetVotesJson(const CDeterministicMNList& tip_mn_list, vote_signal_enum_t signal) const
 {
     UniValue obj(UniValue::VOBJ);
