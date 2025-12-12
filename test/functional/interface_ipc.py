@@ -4,6 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the IPC (multiprocess) interface."""
 import asyncio
+import inspect
+from contextlib import asynccontextmanager, AsyncExitStack
 from io import BytesIO
 from pathlib import Path
 import shutil
@@ -21,6 +23,44 @@ try:
 except ImportError:
     pass
 
+@asynccontextmanager
+async def destroying(obj, ctx):
+    """Call obj.destroy(ctx) at end of with: block. Similar to contextlib.closing."""
+    try:
+        yield obj
+    finally:
+        await obj.destroy(ctx)
+
+async def create_block_template(mining, stack, ctx, opts):
+    """Call mining.createNewBlock() and return template, then call template.destroy() when stack exits."""
+    return await stack.enter_async_context(destroying((await mining.createNewBlock(opts)).result, ctx))
+
+async def wait_next_template(template, stack, ctx, opts):
+    """Call template.waitNext() and return template, then call template.destroy() when stack exits."""
+    return await stack.enter_async_context(destroying((await template.waitNext(ctx, opts)).result, ctx))
+
+async def wait_and_do(wait_fn, do_fn):
+    """Call wait_fn, then sleep, then call do_fn in a parallel task. Wait for
+    both tasks to complete."""
+    wait_started = asyncio.Event()
+    result = None
+
+    async def wait():
+        nonlocal result
+        wait_started.set()
+        result = await wait_fn
+
+    async def do():
+        await wait_started.wait()
+        await asyncio.sleep(0.1)
+        # Let do_fn be either a callable or an awaitable object
+        if inspect.isawaitable(do_fn):
+            await do_fn
+        else:
+            do_fn()
+
+    await asyncio.gather(wait(), do())
+    return result
 
 class IPCInterfaceTest(BitcoinTestFramework):
 
@@ -77,13 +117,13 @@ class IPCInterfaceTest(BitcoinTestFramework):
         return ctx, init
 
     async def parse_and_deserialize_block(self, block_template, ctx):
-        block_data = BytesIO((await block_template.result.getBlock(ctx)).result)
+        block_data = BytesIO((await block_template.getBlock(ctx)).result)
         block = CBlock()
         block.deserialize(block_data)
         return block
 
     async def parse_and_deserialize_coinbase_tx(self, block_template, ctx):
-        coinbase_data = BytesIO((await block_template.result.getCoinbaseTx(ctx)).result)
+        coinbase_data = BytesIO((await block_template.getCoinbaseTx(ctx)).result)
         tx = CTransaction()
         tx.deserialize(coinbase_data)
         return tx
@@ -112,148 +152,142 @@ class IPCInterfaceTest(BitcoinTestFramework):
         async def async_routine():
             ctx, init = await self.make_capnp_init_ctx()
             self.log.debug("Create Mining proxy object")
-            mining = init.makeMining(ctx)
+            mining = init.makeMining(ctx).result
             self.log.debug("Test simple inspectors")
-            assert (await mining.result.isTestChain(ctx))
-            assert (await mining.result.isInitialBlockDownload(ctx))
-            blockref = await mining.result.getTip(ctx)
+            assert (await mining.isTestChain(ctx)).result
+            assert not (await mining.isInitialBlockDownload(ctx)).result
+            blockref = await mining.getTip(ctx)
             assert blockref.hasResult
             assert_equal(len(blockref.result.hash), block_hash_size)
             current_block_height = self.nodes[0].getchaintips()[0]["height"]
             assert blockref.result.height == current_block_height
             self.log.debug("Mine a block")
-            wait = mining.result.waitTipChanged(ctx, blockref.result.hash, )
-            self.generate(self.nodes[0], 1)
-            newblockref = await wait
-            assert_equal(len(newblockref.result.hash), block_hash_size)
-            assert_equal(newblockref.result.height, current_block_height + 1)
+            newblockref = (await wait_and_do(
+                mining.waitTipChanged(ctx, blockref.result.hash, timeout),
+                lambda: self.generate(self.nodes[0], 1))).result
+            assert_equal(len(newblockref.hash), block_hash_size)
+            assert_equal(newblockref.height, current_block_height + 1)
             self.log.debug("Wait for timeout")
-            wait = mining.result.waitTipChanged(ctx, newblockref.result.hash, timeout)
-            oldblockref = await wait
-            assert_equal(len(newblockref.result.hash), block_hash_size)
-            assert_equal(oldblockref.result.hash, newblockref.result.hash)
-            assert_equal(oldblockref.result.height, newblockref.result.height)
+            oldblockref = (await mining.waitTipChanged(ctx, newblockref.hash, timeout)).result
+            assert_equal(len(newblockref.hash), block_hash_size)
+            assert_equal(oldblockref.hash, newblockref.hash)
+            assert_equal(oldblockref.height, newblockref.height)
 
-            self.log.debug("Create a template")
-            opts = self.capnp_modules['mining'].BlockCreateOptions()
-            opts.useMempool = True
-            opts.blockReservedWeight = 4000
-            opts.coinbaseOutputMaxAdditionalSigops = 0
-            template = mining.result.createNewBlock(opts)
-            self.log.debug("Test some inspectors of Template")
-            header = await template.result.getBlockHeader(ctx)
-            assert_equal(len(header.result), block_header_size)
-            block = await self.parse_and_deserialize_block(template, ctx)
-            assert_equal(ser_uint256(block.hashPrevBlock), newblockref.result.hash)
-            assert len(block.vtx) >= 1
-            txfees = await template.result.getTxFees(ctx)
-            assert_equal(len(txfees.result), 0)
-            txsigops = await template.result.getTxSigops(ctx)
-            assert_equal(len(txsigops.result), 0)
-            coinbase_data = BytesIO((await template.result.getCoinbaseTx(ctx)).result)
-            coinbase = CTransaction()
-            coinbase.deserialize(coinbase_data)
-            assert_equal(coinbase.vin[0].prevout.hash, 0)
-            self.log.debug("Wait for a new template")
-            waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
-            waitoptions.timeout = timeout
-            waitoptions.feeThreshold = 1
-            waitnext = template.result.waitNext(ctx, waitoptions)
-            self.generate(self.nodes[0], 1)
-            template2 = await waitnext
-            block2 = await self.parse_and_deserialize_block(template2, ctx)
-            assert_equal(len(block2.vtx), 1)
-            self.log.debug("Wait for another, but time out")
-            template3 = await template2.result.waitNext(ctx, waitoptions)
-            assert_equal(template3.to_dict(), {})
-            self.log.debug("Wait for another, get one after increase in fees in the mempool")
-            waitnext = template2.result.waitNext(ctx, waitoptions)
-            miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
-            template4 = await waitnext
-            block3 = await self.parse_and_deserialize_block(template4, ctx)
-            assert_equal(len(block3.vtx), 2)
-            self.log.debug("Wait again, this should return the same template, since the fee threshold is zero")
-            waitoptions.feeThreshold = 0
-            template5 = await template4.result.waitNext(ctx, waitoptions)
-            block4 = await self.parse_and_deserialize_block(template5, ctx)
-            assert_equal(len(block4.vtx), 2)
-            waitoptions.feeThreshold = 1
-            self.log.debug("Wait for another, get one after increase in fees in the mempool")
-            waitnext = template5.result.waitNext(ctx, waitoptions)
-            miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
-            template6 = await waitnext
-            block4 = await self.parse_and_deserialize_block(template6, ctx)
-            assert_equal(len(block4.vtx), 3)
-            self.log.debug("Wait for another, but time out, since the fee threshold is set now")
-            template7 = await template6.result.waitNext(ctx, waitoptions)
-            assert_equal(template7.to_dict(), {})
+            async with AsyncExitStack() as stack:
+                self.log.debug("Create a template")
+                opts = self.capnp_modules['mining'].BlockCreateOptions()
+                opts.useMempool = True
+                opts.blockReservedWeight = 4000
+                opts.coinbaseOutputMaxAdditionalSigops = 0
+                template = await create_block_template(mining, stack, ctx, opts)
 
-            self.log.debug("interruptWait should abort the current wait")
-            wait_started = asyncio.Event()
-            async def wait_for_block():
-                new_waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
-                new_waitoptions.timeout = waitoptions.timeout * 60 # 1 minute wait
-                new_waitoptions.feeThreshold = 1
-                wait_started.set()
-                return await template6.result.waitNext(ctx, new_waitoptions)
+                self.log.debug("Test some inspectors of Template")
+                header = (await template.getBlockHeader(ctx)).result
+                assert_equal(len(header), block_header_size)
+                block = await self.parse_and_deserialize_block(template, ctx)
+                assert_equal(ser_uint256(block.hashPrevBlock), newblockref.hash)
+                assert len(block.vtx) >= 1
+                txfees = await template.getTxFees(ctx)
+                assert_equal(len(txfees.result), 0)
+                txsigops = await template.getTxSigops(ctx)
+                assert_equal(len(txsigops.result), 0)
+                coinbase_data = BytesIO((await template.getCoinbaseTx(ctx)).result)
+                coinbase = CTransaction()
+                coinbase.deserialize(coinbase_data)
+                assert_equal(coinbase.vin[0].prevout.hash, 0)
 
-            async def interrupt_wait():
-                await wait_started.wait() # Wait for confirmation wait started
-                await asyncio.sleep(0.1)  # Minimal buffer
-                template6.result.interruptWait()
-                miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
+                self.log.debug("Wait for a new template")
+                waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
+                waitoptions.timeout = timeout
+                waitoptions.feeThreshold = 1
+                template2 = await wait_and_do(
+                    wait_next_template(template, stack, ctx, waitoptions),
+                    lambda: self.generate(self.nodes[0], 1))
+                block2 = await self.parse_and_deserialize_block(template2, ctx)
+                assert_equal(len(block2.vtx), 1)
 
-            wait_task = asyncio.create_task(wait_for_block())
-            interrupt_task = asyncio.create_task(interrupt_wait())
+                self.log.debug("Wait for another, but time out")
+                template3 = await template2.waitNext(ctx, waitoptions)
+                assert_equal(template3._has("result"), False)
 
-            result = await wait_task
-            await interrupt_task
-            assert_equal(result.to_dict(), {})
+                self.log.debug("Wait for another, get one after increase in fees in the mempool")
+                template4 = await wait_and_do(
+                    wait_next_template(template2, stack, ctx, waitoptions),
+                    lambda: miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0]))
+                block3 = await self.parse_and_deserialize_block(template4, ctx)
+                assert_equal(len(block3.vtx), 2)
+
+                self.log.debug("Wait again, this should return the same template, since the fee threshold is zero")
+                waitoptions.feeThreshold = 0
+                template5 = await wait_next_template(template4, stack, ctx, waitoptions)
+                block4 = await self.parse_and_deserialize_block(template5, ctx)
+                assert_equal(len(block4.vtx), 2)
+                waitoptions.feeThreshold = 1
+
+                self.log.debug("Wait for another, get one after increase in fees in the mempool")
+                template6 = await wait_and_do(
+                    wait_next_template(template5, stack, ctx, waitoptions),
+                    lambda: miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0]))
+                block4 = await self.parse_and_deserialize_block(template6, ctx)
+                assert_equal(len(block4.vtx), 3)
+
+                self.log.debug("Wait for another, but time out, since the fee threshold is set now")
+                template7 = await template6.waitNext(ctx, waitoptions)
+                assert_equal(template7._has("result"), False)
+
+                self.log.debug("interruptWait should abort the current wait")
+                async def wait_for_block():
+                    new_waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
+                    new_waitoptions.timeout = waitoptions.timeout * 60 # 1 minute wait
+                    new_waitoptions.feeThreshold = 1
+                    template7 = await template6.waitNext(ctx, new_waitoptions)
+                    assert_equal(template7._has("result"), False)
+                await wait_and_do(wait_for_block(), template6.interruptWait())
 
             current_block_height = self.nodes[0].getchaintips()[0]["height"]
             check_opts = self.capnp_modules['mining'].BlockCheckOptions()
-            template = await mining.result.createNewBlock(opts)
-            block = await self.parse_and_deserialize_block(template, ctx)
-            coinbase = await self.parse_and_deserialize_coinbase_tx(template, ctx)
-            balance = miniwallet.get_balance()
-            coinbase.vout[0].scriptPubKey = miniwallet.get_output_script()
-            coinbase.vout[0].nValue = COIN
-            block.vtx[0] = coinbase
-            block.hashMerkleRoot = block.calc_merkle_root()
-            original_version = block.nVersion
-            self.log.debug("Submit a block with a bad version")
-            block.nVersion = 0
-            block.solve()
-            res = await mining.result.checkBlock(block.serialize(), check_opts)
-            assert_equal(res.result, False)
-            assert_equal(res.reason, "bad-version(0x00000000)")
-            res = await template.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
-            assert_equal(res.result, False)
-            self.log.debug("Submit a valid block")
-            block.nVersion = original_version
-            block.solve()
+            async with destroying((await mining.createNewBlock(opts)).result, ctx) as template:
+                block = await self.parse_and_deserialize_block(template, ctx)
+                coinbase = await self.parse_and_deserialize_coinbase_tx(template, ctx)
+                balance = miniwallet.get_balance()
+                coinbase.vout[0].scriptPubKey = miniwallet.get_output_script()
+                coinbase.vout[0].nValue = COIN
+                block.vtx[0] = coinbase
+                block.hashMerkleRoot = block.calc_merkle_root()
+                original_version = block.nVersion
+                self.log.debug("Submit a block with a bad version")
+                block.nVersion = 0
+                block.solve()
+                check = await mining.checkBlock(block.serialize(), check_opts)
+                assert_equal(check.result, False)
+                assert_equal(check.reason, "bad-version(0x00000000)")
+                submitted = (await template.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())).result
+                assert_equal(submitted, False)
+                self.log.debug("Submit a valid block")
+                block.nVersion = original_version
+                block.solve()
 
-            self.log.debug("First call checkBlock()")
-            res = await mining.result.checkBlock(block.serialize(), check_opts)
-            assert_equal(res.result, True)
+                self.log.debug("First call checkBlock()")
+                block_valid = (await mining.checkBlock(block.serialize(), check_opts)).result
+                assert_equal(block_valid, True)
 
-            # The remote template block will be mutated, capture the original:
-            remote_block_before = await self.parse_and_deserialize_block(template, ctx)
+                # The remote template block will be mutated, capture the original:
+                remote_block_before = await self.parse_and_deserialize_block(template, ctx)
 
-            self.log.debug("Submitted coinbase must include witness")
-            assert_not_equal(coinbase.serialize_without_witness().hex(), coinbase.serialize().hex())
-            res = await template.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize_without_witness())
-            assert_equal(res.result, False)
+                self.log.debug("Submitted coinbase must include witness")
+                assert_not_equal(coinbase.serialize_without_witness().hex(), coinbase.serialize().hex())
+                submitted = (await template.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize_without_witness())).result
+                assert_equal(submitted, False)
 
-            self.log.debug("Even a rejected submitBlock() mutates the template's block")
-            # Can be used by clients to download and inspect the (rejected)
-            # reconstructed block.
-            remote_block_after = await self.parse_and_deserialize_block(template, ctx)
-            assert_not_equal(remote_block_before.serialize().hex(), remote_block_after.serialize().hex())
+                self.log.debug("Even a rejected submitBlock() mutates the template's block")
+                # Can be used by clients to download and inspect the (rejected)
+                # reconstructed block.
+                remote_block_after = await self.parse_and_deserialize_block(template, ctx)
+                assert_not_equal(remote_block_before.serialize().hex(), remote_block_after.serialize().hex())
 
-            self.log.debug("Submit again, with the witness")
-            res = await template.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
-            assert_equal(res.result, True)
+                self.log.debug("Submit again, with the witness")
+                submitted = (await template.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())).result
+                assert_equal(submitted, True)
 
             self.log.debug("Block should propagate")
             # Check that the IPC node actually updates its own chain
@@ -266,18 +300,10 @@ class IPCInterfaceTest(BitcoinTestFramework):
             miniwallet.rescan_utxos()
             assert_equal(miniwallet.get_balance(), balance + 1)
             self.log.debug("Check block should fail now, since it is a duplicate")
-            res = await mining.result.checkBlock(block.serialize(), check_opts)
-            assert_equal(res.result, False)
-            assert_equal(res.reason, "inconclusive-not-best-prevblk")
+            check = await mining.checkBlock(block.serialize(), check_opts)
+            assert_equal(check.result, False)
+            assert_equal(check.reason, "inconclusive-not-best-prevblk")
 
-            self.log.debug("Destroy template objects")
-            template.result.destroy(ctx)
-            template2.result.destroy(ctx)
-            template3.result.destroy(ctx)
-            template4.result.destroy(ctx)
-            template5.result.destroy(ctx)
-            template6.result.destroy(ctx)
-            template7.result.destroy(ctx)
         asyncio.run(capnp.run(async_routine()))
 
     def run_test(self):
