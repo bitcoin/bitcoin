@@ -7,11 +7,15 @@
 
 #include <crypto/common.h>
 #include <crypto/chacha20.h>
+#include <crypto/chacha20_vec.h>
 #include <support/cleanse.h>
 
 #include <algorithm>
 #include <bit>
 #include <cassert>
+#include <limits>
+
+static_assert(ChaCha20Aligned::BLOCKLEN == CHACHA20_VEC_BLOCKLEN);
 
 #define QUARTERROUND(a,b,c,d) \
   a += b; d = std::rotl(d ^ a, 16); \
@@ -282,7 +286,22 @@ static inline void chacha20_crypt(std::span<const std::byte> in_bytes, std::span
 
 inline void ChaCha20Aligned::Crypt(std::span<const std::byte> in_bytes, std::span<std::byte> out_bytes) noexcept
 {
-    chacha20_crypt(in_bytes, out_bytes, input);
+    assert(in_bytes.size() == out_bytes.size());
+    size_t blocks = out_bytes.size() / ChaCha20Aligned::BLOCKLEN;
+    assert(blocks * ChaCha20Aligned::BLOCKLEN == out_bytes.size());
+#ifdef ENABLE_CHACHA20_VEC
+    // Only use the vectorized implementations if the counter will not overflow.
+    const bool overflow = static_cast<uint64_t>(input[8]) + blocks > std::numeric_limits<uint32_t>::max();
+    if (blocks > 1 && !overflow) {
+        const auto state = std::to_array(input);
+        chacha20_vec_base::chacha20_crypt_vectorized(in_bytes, out_bytes, state);
+        const size_t blocks_written = blocks - (out_bytes.size() / ChaCha20Aligned::BLOCKLEN);
+        input[8] += blocks_written;
+    }
+#endif
+    if (in_bytes.size()) {
+        chacha20_crypt(in_bytes, out_bytes, input);
+    }
 }
 
 void ChaCha20::Keystream(std::span<std::byte> out) noexcept
