@@ -23,6 +23,7 @@ public:
     {
     }
     void Schedule(CScheduler& scheduler, CConnman& connman) override;
+    void ProcessMessage(CNode& peer, CConnman&, const std::string& msg_type, CDataStream& vRecv) override;
 
 private:
     void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman) const;

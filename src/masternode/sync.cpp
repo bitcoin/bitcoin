@@ -73,7 +73,7 @@ void CMasternodeSync::SwitchToNextAsset()
             LogPrintf("CMasternodeSync::SwitchToNextAsset -- Completed %s in %llds\n", GetAssetName(), GetTime() - nTimeAssetSyncStarted);
             nCurrentAsset = MASTERNODE_SYNC_FINISHED;
             uiInterface.NotifyAdditionalDataSyncProgressChanged(1);
-
+            // TODO: move connman to notifier
             connman.ForEachNode(CConnman::AllNodes, [this](const CNode* pnode) {
                 m_netfulfilledman.AddFulfilledRequest(pnode->addr, "full-sync");
             });
@@ -94,21 +94,6 @@ std::string CMasternodeSync::GetSyncStatus() const
         case MASTERNODE_SYNC_FINISHED:      return _("Synchronization finished").translated;
         default:                            return "";
     }
-}
-
-void CMasternodeSync::ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv) const
-{
-    //Sync status count
-    if (msg_type != NetMsgType::SYNCSTATUSCOUNT) return;
-
-    //do not care about stats if sync process finished
-    if (IsSynced()) return;
-
-    int nItemID;
-    int nCount;
-    vRecv >> nItemID >> nCount;
-
-    LogPrint(BCLog::MNSYNC, "SYNCSTATUSCOUNT -- got inventory count: nItemID=%d  nCount=%d  peer=%d\n", nItemID, nCount, peer.GetId());
 }
 
 void CMasternodeSync::AcceptedBlockHeader(const CBlockIndex *pindexNew)

@@ -318,3 +318,18 @@ void SyncManager::ProcessTick(CConnman& connman)
         }
     }
 }
+
+void SyncManager::ProcessMessage(CNode& peer, CConnman&, const std::string& msg_type, CDataStream& vRecv)
+{
+    //Sync status count
+    if (msg_type != NetMsgType::SYNCSTATUSCOUNT) return;
+
+    //do not care about stats if sync process finished
+    if (m_node_sync.IsSynced()) return;
+
+    int nItemID;
+    int nCount;
+    vRecv >> nItemID >> nCount;
+
+    LogPrint(BCLog::MNSYNC, "SYNCSTATUSCOUNT -- got inventory count: nItemID=%d  nCount=%d  peer=%d\n", nItemID, nCount, peer.GetId());
+}

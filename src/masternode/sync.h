@@ -9,10 +9,8 @@
 
 class CConnman;
 class CBlockIndex;
-class CDataStream;
 class CMasternodeSync;
 class CNetFulfilledRequestManager;
-class CNode;
 
 /** Default for -syncmempool */
 static const bool DEFAULT_SYNC_MEMPOOL = true;
@@ -74,8 +72,6 @@ public:
 
     void Reset(bool fForce = false, bool fNotifyReset = true);
     void SwitchToNextAsset();
-
-    void ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv) const;
 
     void AcceptedBlockHeader(const CBlockIndex *pindexNew);
     void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload);
