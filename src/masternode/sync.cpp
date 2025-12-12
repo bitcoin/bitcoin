@@ -5,6 +5,7 @@
 #include <masternode/sync.h>
 
 #include <chain.h>
+#include <logging.h>
 #include <util/time.h>
 #include <util/translation.h>
 

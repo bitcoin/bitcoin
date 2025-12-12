@@ -28,6 +28,8 @@ class NodeSyncNotifier
 public:
     virtual void SyncReset() = 0;
     virtual void SyncFinished() = 0;
+
+    virtual ~NodeSyncNotifier() = default;
 };
 
 //
