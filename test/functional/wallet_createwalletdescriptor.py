@@ -25,6 +25,7 @@ class WalletCreateDescriptorTest(BitcoinTestFramework):
         self.test_basic()
         self.test_imported_other_keys()
         self.test_encrypted()
+        self.test_from_unused_desc()
 
     def test_basic(self):
         def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
@@ -39,7 +40,7 @@ class WalletCreateDescriptorTest(BitcoinTestFramework):
             if desc["desc"].startswith("wpkh("):
                 expected_descs.append(desc["desc"])
 
-        assert_raises_rpc_error(-5, "Unable to determine which HD key to use from active descriptors. Please specify with 'hdkey'", wallet.createwalletdescriptor, "bech32")
+        assert_raises_rpc_error(-5, "No HD key found. Please generate one with 'addhdkey' or import an active descriptor.", wallet.createwalletdescriptor, "bech32")
         assert_raises_rpc_error(-5, f"Private key for {xpub} is not known", wallet.createwalletdescriptor, type="bech32", hdkey=xpub)
 
         self.log.info("Test createwalletdescriptor after importing active descriptor to blank wallet")
@@ -114,6 +115,26 @@ class WalletCreateDescriptorTest(BitcoinTestFramework):
         with WalletUnlock(wallet, "pass"):
             wallet.createwalletdescriptor(type="bech32m")
 
+    def test_from_unused_desc(self):
+        self.log.info("Test createwalletdescriptor from only an unused(KEY) descriptor")
+        self.nodes[0].createwallet("w1", blank=True)
+        w1 = self.nodes[0].get_wallet_rpc("w1")
+
+        # Wallet can't be completely empty
+        assert_raises_rpc_error(-5, "No HD key found. Please generate one with 'addhdkey' or import an active descriptor.", w1.createwalletdescriptor, "bech32")
+
+        # Create unused(KEY) descriptor and try again
+        w1.addhdkey()
+        w1.createwalletdescriptor(type="bech32")
+
+        self.nodes[0].createwallet("w2", blank=True)
+        w2 = self.nodes[0].get_wallet_rpc("w2")
+
+        # Multiple unused(KEY) descriptors require user to choose
+        w2.addhdkey()
+        w2.addhdkey()
+
+        assert_raises_rpc_error(-5, "Unable to determine which HD key to use. Please specify with 'hdkey'", w2.createwalletdescriptor, "bech32")
 
 
 if __name__ == '__main__':
