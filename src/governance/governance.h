@@ -31,6 +31,7 @@ template<typename T>
 class CFlatDB;
 class CInv;
 class CNode;
+struct RPCResult;
 
 class CDeterministicMNList;
 class CDeterministicMNManager;
@@ -282,9 +283,10 @@ public:
     bool IsValid() const override { return is_valid; }
     bool LoadCache(bool load_cache)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     std::string ToString() const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
-    UniValue ToJson() const
+    [[nodiscard]] UniValue ToJson() const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     void Clear()
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);

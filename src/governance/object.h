@@ -22,6 +22,7 @@ class CGovernanceObject;
 class CGovernanceVote;
 class ChainstateManager;
 class CMasternodeMetaMan;
+struct RPCResult;
 
 extern RecursiveMutex cs_main;
 
@@ -260,7 +261,8 @@ public:
         // AFTER DESERIALIZATION OCCURS, CACHED VARIABLES MUST BE CALCULATED MANUALLY
     }
 
-    UniValue ToJson() const;
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
+    [[nodiscard]] UniValue ToJson() const;
 
     // FUNCTIONS FOR DEALING WITH DATA STRING
     void LoadData();

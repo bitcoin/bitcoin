@@ -13,12 +13,14 @@
 #include <string>
 #include <vector>
 
+struct RPCResult;
+
+class UniValue;
+
 /**
  * This module is a public interface of governance module that can be used
  * in other components such as wallet
  */
-
-class UniValue;
 
 enum class GovernanceObject : int {
     UNKNOWN = 0,
@@ -27,8 +29,7 @@ enum class GovernanceObject : int {
 };
 template<> struct is_serializable_enum<GovernanceObject> : std::true_type {};
 
-namespace Governance
-{
+namespace Governance {
 class Object
 {
 public:
@@ -36,7 +37,8 @@ public:
 
     Object(const uint256& nHashParent, int nRevision, int64_t nTime, const uint256& nCollateralHash, const std::string& strDataHex);
 
-    UniValue ToJson() const;
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
+    [[nodiscard]] UniValue ToJson() const;
 
     uint256 GetHash() const;
 

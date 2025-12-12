@@ -5,9 +5,23 @@
 #include <governance/common.h>
 #include <governance/governance.h>
 
+#include <rpc/util.h>
 #include <util/check.h>
 
 #include <univalue.h>
+
+RPCResult CGovernanceManager::GetJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "Count of governance objects and votes",
+    {
+        {RPCResult::Type::NUM, "objects_total", "Total number of all governance objects"},
+        {RPCResult::Type::NUM, "proposals", "Number of governance proposals"},
+        {RPCResult::Type::NUM, "triggers", "Number of triggers"},
+        {RPCResult::Type::NUM, "other", "Total number of unknown governance objects"},
+        {RPCResult::Type::NUM, "erased", "Number of removed (expired) objects"},
+        {RPCResult::Type::NUM, "votes", "Total number of votes"},
+    }};
+}
 
 UniValue CGovernanceManager::ToJson() const
 {
@@ -41,12 +55,43 @@ UniValue CGovernanceManager::ToJson() const
     return jsonObj;
 }
 
+RPCResult CGovernanceObject::GetJsonHelp(const std::string& key, bool optional)
+{
+    return Governance::Object::GetJsonHelp(key, optional);
+}
+
 UniValue CGovernanceObject::ToJson() const
 {
     return m_obj.ToJson();
 }
 
 namespace Governance {
+RPCResult Object::GetJsonHelp(const std::string& key, bool optional)
+{
+    return {RPCResult::Type::OBJ, key, optional, key.empty() ? "" : "Object info",
+    {
+        {RPCResult::Type::STR_HEX, "objectHash", "Hash of proposal object"},
+        {RPCResult::Type::STR_HEX, "parentHash", "Hash of the parent object (root node has a hash of 0)"},
+        GetRpcResult("collateralHash"),
+        {RPCResult::Type::NUM, "createdAt", "Proposal creation timestamp"},
+        {RPCResult::Type::NUM, "revision", "Proposal revision number"},
+        {RPCResult::Type::OBJ, "data", "", {
+            // Fields emitted through GetDataAsPlainString(), read by CProposalValidator
+            {RPCResult::Type::STR, "end_epoch", /*optional=*/true, "Proposal end timestamp"},
+            {RPCResult::Type::STR, "name", /*optional=*/true, "Proposal name"},
+            {RPCResult::Type::STR, "payment_address", /*optional=*/true, "Proposal payment address"},
+            {RPCResult::Type::STR, "payment_amount", /*optional=*/true, "Proposal payment amount"},
+            {RPCResult::Type::STR, "start_epoch", /*optional=*/true, "Proposal start timestamp"},
+            {RPCResult::Type::STR, "type", /*optional=*/true, "Object type"},
+            {RPCResult::Type::STR, "url", /*optional=*/true, "Proposal URL"},
+            // Failure case for GetDataAsPlainString()
+            {RPCResult::Type::STR, "plain", /*optional=*/true, "Governance object data as string"},
+            // Always emitted by ToJson()
+            {RPCResult::Type::STR_HEX, "hex", "Governance object data as hex"},
+        }},
+    }};
+}
+
 UniValue Object::ToJson() const
 {
     UniValue obj(UniValue::VOBJ);

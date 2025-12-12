@@ -38,23 +38,14 @@ using wallet::isminetype;
 
 static RPCHelpMan gobject_count()
 {
+    const auto json_help{CGovernanceManager::GetJsonHelp(/*key=*/"", /*optional=*/false)};
     return RPCHelpMan{"gobject count",
         "Count governance objects and votes\n",
         {
             {"mode", RPCArg::Type::STR, RPCArg::DefaultHint{"json"}, "Output format: json (\"json\") or string in free form (\"all\")"},
         },
         {
-            RPCResult{"for mode = json",
-                RPCResult::Type::OBJ, "", "",
-                {
-                    {RPCResult::Type::NUM, "objects_total", "Total number of all governance objects"},
-                    {RPCResult::Type::NUM, "proposals", "Number of governance proposals"},
-                    {RPCResult::Type::NUM, "triggers", "Number of triggers"},
-                    {RPCResult::Type::NUM, "other", "Total number of unknown governance objects"},
-                    {RPCResult::Type::NUM, "erased", "Number of removed (expired) objects"},
-                    {RPCResult::Type::NUM, "votes", "Total number of votes"},
-                }
-            },
+            RPCResult{"for mode = json", json_help.m_type, json_help.m_key_name, json_help.m_description, json_help.m_inner},
             RPCResult{"for mode = all", RPCResult::Type::STR, "", "Human-friendly summary string for proposals and votes"},
         },
         RPCExamples{""},
@@ -275,11 +266,7 @@ static RPCHelpMan gobject_list_prepared()
         RPCResult{
             RPCResult::Type::ARR, "", "list of governance objects",
             {
-                {RPCResult::Type::OBJ, "", "",
-                {
-                    // TODO: list fields of output for RPC help instead ELISION
-                    {RPCResult::Type::ELISION, "", ""}
-                }},
+                Governance::Object::GetJsonHelp(/*key=*/"", /*optional=*/false)
             }
         },
         RPCExamples{""},
