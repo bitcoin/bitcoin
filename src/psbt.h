@@ -207,6 +207,9 @@ void DeserializeMuSig2ParticipantPubkeys(Stream& s, SpanReader& skey, std::map<C
     std::array<unsigned char, CPubKey::COMPRESSED_SIZE> agg_pubkey_bytes;
     skey >> std::as_writable_bytes(std::span{agg_pubkey_bytes});
     CPubKey agg_pubkey(agg_pubkey_bytes);
+    if (!agg_pubkey.IsFullyValid()) {
+        throw std::ios_base::failure(context + " musig2 aggregate pubkey is invalid");
+    }
 
     std::vector<CPubKey> participants;
     std::vector<unsigned char> val;
@@ -215,7 +218,11 @@ void DeserializeMuSig2ParticipantPubkeys(Stream& s, SpanReader& skey, std::map<C
     while (s_val.size() >= CPubKey::COMPRESSED_SIZE) {
         std::array<unsigned char, CPubKey::COMPRESSED_SIZE> part_pubkey_bytes;
         s_val >> std::as_writable_bytes(std::span{part_pubkey_bytes});
-        participants.emplace_back(std::span{part_pubkey_bytes});
+        CPubKey participant(part_pubkey_bytes);
+        if (!participant.IsFullyValid()) {
+            throw std::ios_base::failure(context + " musig2 participant pubkey is invalid");
+        }
+        participants.push_back(participant);
     }
     if (!s_val.empty()) {
         throw std::ios_base::failure(context + " musig2 participants pubkeys value size is not a multiple of 33");
