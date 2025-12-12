@@ -291,4 +291,115 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_big_singletons)
     }
 }
 
+BOOST_AUTO_TEST_CASE(txgraph_get_worst_chunk_singleton)
+{
+    /** The maximum cluster count used in this test. */
+    static constexpr int MAX_CLUSTER_COUNT = 50;
+    /** The total number of transactions in the test. */
+    static constexpr int NUM_TOTAL_TX = 1;
+    /** Set a very large cluster size limit so that only the count limit is triggered. */
+    static constexpr int32_t MAX_CLUSTER_SIZE = 100'000 * 100;
+
+    // Create a new graph for the test.
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, NUM_ACCEPTABLE_ITERS);
+
+    std::vector<TxGraph::Ref> refs;
+    refs.reserve(NUM_TOTAL_TX);
+
+    refs.push_back(graph->AddTransaction(FeePerWeight{10, 100}));
+
+    graph->SanityCheck();
+
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), NUM_TOTAL_TX);
+    auto chunk = graph->GetWorstMainChunk();
+    BOOST_CHECK_EQUAL(chunk.first.size(), 1);
+    BOOST_CHECK_EQUAL(chunk.second.fee, 10);
+    BOOST_CHECK_EQUAL(chunk.second.size, 100);
+}
+
+BOOST_AUTO_TEST_CASE(txgraph_get_worst_chunk_basic_chain)
+{
+    /** The maximum cluster count used in this test. */
+    static constexpr int MAX_CLUSTER_COUNT = 50;
+    /** The total number of transactions in the test. */
+    static constexpr int NUM_TOTAL_TX = 3;
+    /** Set a very large cluster size limit so that only the count limit is triggered. */
+    static constexpr int32_t MAX_CLUSTER_SIZE = 100'000 * 100;
+
+    // Create a new graph for the test.
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, NUM_ACCEPTABLE_ITERS);
+
+    std::vector<TxGraph::Ref> refs;
+    refs.reserve(NUM_TOTAL_TX);
+
+    // [A, BC]
+    FeePerWeight feerate0{4, 10};
+    FeePerWeight feerate1{1, 10};
+    FeePerWeight feerate2{2, 10};
+
+    refs.push_back(graph->AddTransaction(feerate0));
+    refs.push_back(graph->AddTransaction(feerate1));
+    refs.push_back(graph->AddTransaction(feerate2));
+
+    graph->AddDependency(/*parent=*/refs[0], /*child=*/refs[1]);
+    graph->AddDependency(/*parent=*/refs[1], /*child=*/refs[2]);
+
+    graph->SanityCheck();
+
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), NUM_TOTAL_TX);
+    auto chunk = graph->GetWorstMainChunk();
+    BOOST_CHECK_EQUAL(chunk.first.size(), 2);
+    BOOST_CHECK(graph->GetIndividualFeerate(*chunk.first[0]) == feerate2);
+    BOOST_CHECK(graph->GetIndividualFeerate(*chunk.first[1]) == feerate1);
+    BOOST_CHECK_EQUAL(chunk.second.fee, 3);
+    BOOST_CHECK_EQUAL(chunk.second.size, 20);
+}
+
+BOOST_AUTO_TEST_CASE(txgraph_get_worst_chunk_chain2)
+{
+    /** The maximum cluster count used in this test. */
+    static constexpr int MAX_CLUSTER_COUNT = 50;
+    /** The total number of transactions in the test. */
+    static constexpr int NUM_TOTAL_TX = 4;
+    /** Set a very large cluster size limit so that only the count limit is triggered. */
+    static constexpr int32_t MAX_CLUSTER_SIZE = 100'000 * 100;
+
+    // Create a new graph for the test.
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, NUM_ACCEPTABLE_ITERS);
+
+    std::vector<TxGraph::Ref> refs;
+    refs.reserve(NUM_TOTAL_TX);
+
+    // A -> B -> C -> D
+    // A, B are merged first
+    // then C, D are merged
+    // finally AB, CD should be merged
+    // to form [ABCD]
+    FeePerWeight feerate0{1, 10};
+    FeePerWeight feerate1{2, 10};
+    FeePerWeight feerate2{1, 10};
+    FeePerWeight feerate3{10, 10};
+
+    refs.push_back(graph->AddTransaction(feerate0));
+    refs.push_back(graph->AddTransaction(feerate1));
+    refs.push_back(graph->AddTransaction(feerate2));
+    refs.push_back(graph->AddTransaction(feerate3));
+
+    graph->AddDependency(/*parent=*/refs[0], /*child=*/refs[1]);
+    graph->AddDependency(/*parent=*/refs[1], /*child=*/refs[2]);
+    graph->AddDependency(/*parent=*/refs[2], /*child=*/refs[3]);
+
+    graph->SanityCheck();
+
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), NUM_TOTAL_TX);
+    auto chunk = graph->GetWorstMainChunk();
+    BOOST_CHECK_EQUAL(chunk.first.size(), 4);
+    BOOST_CHECK(graph->GetIndividualFeerate(*chunk.first[0]) == feerate3);
+    BOOST_CHECK(graph->GetIndividualFeerate(*chunk.first[1]) == feerate2);
+    BOOST_CHECK(graph->GetIndividualFeerate(*chunk.first[2]) == feerate1);
+    BOOST_CHECK(graph->GetIndividualFeerate(*chunk.first[3]) == feerate0);
+    BOOST_CHECK_EQUAL(chunk.second.fee, 14);
+    BOOST_CHECK_EQUAL(chunk.second.size, 40);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
