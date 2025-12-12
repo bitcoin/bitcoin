@@ -294,6 +294,30 @@ static RPCHelpMan quorum_info()
     };
 }
 
+static RPCResult quorum_dkgstatus_help()
+{
+    auto ret = llmq::CDKGDebugStatus::GetJsonHelp(/*key=*/"", /*optional=*/false);
+    auto mod_inner = ret.m_inner;
+    mod_inner.push_back({RPCResult::Type::ARR, "quorumConnections", "Array of objects containing quorum connection information", {
+        {RPCResult::Type::OBJ, "", "", {
+            GetRpcResult("llmqType"),
+            GetRpcResult("quorumIndex"),
+            {RPCResult::Type::NUM, "pQuorumBaseBlockIndex", /*optional=*/true, "Height of the quorum’s base block"},
+            GetRpcResult("quorumHash", /*optional=*/true),
+            {RPCResult::Type::NUM, "pindexTip", /*optional=*/true, "Height of the quorum index tip"},
+            {RPCResult::Type::ARR, "quorumConnections", /*optional=*/true, "", {
+                {RPCResult::Type::OBJ, "", "", {
+                    GetRpcResult("proTxHash"),
+                    {RPCResult::Type::BOOL, "connected", "Returns true if connection is active"},
+                    {RPCResult::Type::STR, "address", /*optional=*/true, "IP address and port of the masternode"},
+                    {RPCResult::Type::BOOL, "outbound", /*optional=*/true, "Returns true if outbound connection"},
+            }}}}
+        }}}});
+    mod_inner.push_back({RPCResult::Type::ARR, "minableCommitments", "Array of objects containing minable commitments", {
+        llmq::CFinalCommitment::GetJsonHelp(/*key=*/"", /*optional=*/false)}});
+    return RPCResult{ret.m_type, ret.m_key_name, ret.m_description, mod_inner};
+}
+
 static RPCHelpMan quorum_dkgstatus()
 {
     return RPCHelpMan{"quorum dkgstatus",
@@ -304,35 +328,7 @@ static RPCHelpMan quorum_dkgstatus()
                 "Detail level of output.\n"
                 "0=Only show counts. 1=Show member indexes. 2=Show member's ProTxHashes."},
         },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::NUM, "time", "Adjusted time for the last update, timestamp"},
-                {RPCResult::Type::STR, "timeStr", "Adjusted time for the last update, human friendly"},
-                {RPCResult::Type::ARR, "session", "",
-                    {
-                        {RPCResult::Type::OBJ, "", "",
-                        {
-                            {RPCResult::Type::NUM, "llmqType", "Name of quorum"},
-                            GetRpcResult("quorumIndex"),
-                            {RPCResult::Type::OBJ, "status", "",
-                            {
-                                // TODO: list fields of output for RPC help instead ELISION
-                                {RPCResult::Type::ELISION, "", ""},
-                            }},
-                        }},
-                    },
-                },
-                {RPCResult::Type::ARR, "quorumConnections", "",
-                    // TODO: list fields of output for RPC help instead ELISION
-                    {{RPCResult::Type::ELISION, "", ""}},
-                },
-                {RPCResult::Type::ARR, "minableCommitments", "",
-                    // TODO: list fields of output for RPC help instead ELISION
-                    {{RPCResult::Type::ELISION, "", ""}},
-                },
-            },
-        },
+        quorum_dkgstatus_help(),
         RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -417,7 +413,6 @@ static RPCHelpMan quorum_dkgstatus()
         std::optional<std::vector<llmq::CFinalCommitment>> vfqc = llmq_ctx.quorum_block_processor->GetMineableCommitments(llmq_params, tipHeight);
         if (vfqc.has_value()) {
             for (const auto& fqc : vfqc.value()) {
-                // TODO: Use CFinalCommitment::GetJsonHelp() for fqc
                 minableCommitments.push_back(fqc.ToJson());
             }
         }
