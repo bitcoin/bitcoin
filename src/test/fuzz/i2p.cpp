@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <common/args.h>
+#include <compat/compat.h>
 #include <i2p.h>
 #include <netaddress.h>
 #include <netbase.h>
@@ -34,7 +35,7 @@ FUZZ_TARGET(i2p, .init = initialize_i2p)
     };
 
     const fs::path private_key_path = gArgs.GetDataDirNet() / "fuzzed_i2p_private_key";
-    const CService addr{in6_addr(IN6ADDR_LOOPBACK_INIT), 7656};
+    const CService addr{in6_addr(COMPAT_IN6ADDR_LOOPBACK_INIT), 7656};
     const Proxy sam_proxy{addr, /*tor_stream_isolation=*/false};
     auto interrupt{ConsumeThreadInterrupt(fuzzed_data_provider)};
 
