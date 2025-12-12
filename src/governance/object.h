@@ -261,8 +261,15 @@ public:
         // AFTER DESERIALIZATION OCCURS, CACHED VARIABLES MUST BE CALCULATED MANUALLY
     }
 
-    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
-    [[nodiscard]] UniValue ToJson() const;
+    // JSON emitters/help
+    [[nodiscard]] static RPCResult GetInnerJsonHelp(const std::string& key, bool optional);
+    [[nodiscard]] UniValue GetInnerJson() const;
+
+    [[nodiscard]] UniValue GetStateJson(const ChainstateManager& chainman, const CDeterministicMNList& tip_mn_list, const std::string& local_valid_key) const
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+    [[nodiscard]] UniValue GetVotesJson(const CDeterministicMNList& tip_mn_list, vote_signal_enum_t signal) const
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     // FUNCTIONS FOR DEALING WITH DATA STRING
     void LoadData();

@@ -55,14 +55,24 @@ UniValue CGovernanceManager::ToJson() const
     return jsonObj;
 }
 
-RPCResult CGovernanceObject::GetJsonHelp(const std::string& key, bool optional)
+RPCResult CGovernanceObject::GetInnerJsonHelp(const std::string& key, bool optional)
 {
     return Governance::Object::GetJsonHelp(key, optional);
 }
 
-UniValue CGovernanceObject::ToJson() const
+UniValue CGovernanceObject::GetInnerJson() const
 {
     return m_obj.ToJson();
+}
+
+UniValue CGovernanceObject::GetVotesJson(const CDeterministicMNList& tip_mn_list, vote_signal_enum_t signal) const
+{
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("AbsoluteYesCount", GetAbsoluteYesCount(tip_mn_list, signal));
+    obj.pushKV("YesCount", GetYesCount(tip_mn_list, signal));
+    obj.pushKV("NoCount", GetNoCount(tip_mn_list, signal));
+    obj.pushKV("AbstainCount", GetAbstainCount(tip_mn_list, signal));
+    return obj;
 }
 
 namespace Governance {

@@ -110,7 +110,7 @@ void Proposal::openUrl() const
 
 QString Proposal::toJson() const
 {
-    const auto json = govObj.ToJson();
+    const auto json = govObj.GetInnerJson();
     return QString::fromStdString(json.write(2));
 }
 
