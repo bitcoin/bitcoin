@@ -1275,14 +1275,14 @@ FUZZ_TARGET(clusterlin_postlinearize_tree)
     depgraph_tree.RemoveTransactions(TestBitSet::Fill(depgraph_gen.PositionRange()) - depgraph_gen.Positions());
 
     if (direction & 1) {
-        for (DepGraphIndex i = 0; i < depgraph_gen.TxCount(); ++i) {
+        for (DepGraphIndex i : depgraph_gen.Positions()) {
             auto children = depgraph_gen.GetReducedChildren(i);
             if (children.Any()) {
                 depgraph_tree.AddDependencies(TestBitSet::Singleton(i), children.First());
             }
          }
     } else {
-        for (DepGraphIndex i = 0; i < depgraph_gen.TxCount(); ++i) {
+        for (DepGraphIndex i : depgraph_gen.Positions()) {
             auto parents = depgraph_gen.GetReducedParents(i);
             if (parents.Any()) {
                 depgraph_tree.AddDependencies(TestBitSet::Singleton(parents.First()), i);
