@@ -422,22 +422,20 @@ static void HTTPWorkQueueRun(WorkQueue<HTTPClosure>* queue, int worker_num)
 /** libevent event log callback */
 static void libevent_log_cb(int severity, const char *msg)
 {
-    BCLog::Level level;
     switch (severity) {
     case EVENT_LOG_DEBUG:
-        level = BCLog::Level::Debug;
+        LogDebug(BCLog::LIBEVENT, "%s", msg);
         break;
     case EVENT_LOG_MSG:
-        level = BCLog::Level::Info;
+        LogInfo("libevent: %s", msg);
         break;
     case EVENT_LOG_WARN:
-        level = BCLog::Level::Warning;
+        LogWarning("libevent: %s", msg);
         break;
     default: // EVENT_LOG_ERR and others are mapped to error
-        level = BCLog::Level::Error;
+        LogError("libevent: %s", msg);
         break;
     }
-    LogPrintLevel(BCLog::LIBEVENT, level, "%s\n", msg);
 }
 
 bool InitHTTPServer(const util::SignalInterrupt& interrupt)

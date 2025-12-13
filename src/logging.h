@@ -9,6 +9,7 @@
 #include <crypto/siphash.h>
 #include <threadsafety.h>
 #include <tinyformat.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/string.h>
 #include <util/time.h>
@@ -372,22 +373,20 @@ inline void LogPrintFormatInternal(std::source_location&& source_loc, BCLog::Log
 // Use a macro instead of a function for conditional logging to prevent
 // evaluating arguments when logging for the category is not enabled.
 
-// Log by prefixing the output with the passed category name and severity level. This can either
-// log conditionally if the category is allowed or unconditionally if level >= BCLog::Level::Info
-// is passed. If this function logs unconditionally, logging to disk is rate-limited. This is
-// important so that callers don't need to worry about accidentally introducing a disk-fill
-// vulnerability if level >= Info is used. Additionally, users specifying -debug are assumed to be
+// Log by prefixing the output with the passed category name and severity level. This logs conditionally if
+// the category is allowed. No rate limiting is applied, because users specifying -debug are assumed to be
 // developers or power users who are aware that -debug may cause excessive disk usage due to logging.
-#define LogPrintLevel(category, level, ...)                           \
+#define detail_LogIfCategoryAndLevelEnabled(category, level, ...)     \
     do {                                                              \
         if (LogAcceptCategory((category), (level))) {                 \
             bool rate_limit{level >= BCLog::Level::Info};             \
+            Assume(!rate_limit);/*Only called with the levels below*/ \
             LogPrintLevel_(category, level, rate_limit, __VA_ARGS__); \
         }                                                             \
     } while (0)
 
 // Log conditionally, prefixing the output with the passed category name.
-#define LogDebug(category, ...) LogPrintLevel(category, BCLog::Level::Debug, __VA_ARGS__)
-#define LogTrace(category, ...) LogPrintLevel(category, BCLog::Level::Trace, __VA_ARGS__)
+#define LogDebug(category, ...) detail_LogIfCategoryAndLevelEnabled(category, BCLog::Level::Debug, __VA_ARGS__)
+#define LogTrace(category, ...) detail_LogIfCategoryAndLevelEnabled(category, BCLog::Level::Trace, __VA_ARGS__)
 
 #endif // BITCOIN_LOGGING_H

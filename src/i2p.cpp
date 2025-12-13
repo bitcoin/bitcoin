@@ -415,7 +415,7 @@ void Session::CreateIfNotCreatedAlready()
     const auto session_type = m_transient ? "transient" : "persistent";
     const auto session_id = GetRandHash().GetHex().substr(0, 10); // full is overkill, too verbose in the logs
 
-    LogDebug(BCLog::I2P, "Creating %s SAM session %s with %s\n", session_type, session_id, m_control_host.ToString());
+    LogDebug(BCLog::I2P, "Creating %s I2P SAM session %s with %s\n", session_type, session_id, m_control_host.ToString());
 
     auto sock = Hello();
 
@@ -452,7 +452,7 @@ void Session::CreateIfNotCreatedAlready()
     m_session_id = session_id;
     m_control_sock = std::move(sock);
 
-    LogPrintLevel(BCLog::I2P, BCLog::Level::Info, "%s SAM session %s created, my address=%s\n",
+    LogInfo("%s I2P SAM session %s created, my address=%s",
         Capitalize(session_type),
         m_session_id,
         m_my_addr.ToStringAddrPort());
@@ -483,9 +483,9 @@ void Session::Disconnect()
 {
     if (m_control_sock) {
         if (m_session_id.empty()) {
-            LogPrintLevel(BCLog::I2P, BCLog::Level::Info, "Destroying incomplete SAM session\n");
+            LogInfo("Destroying incomplete I2P SAM session");
         } else {
-            LogPrintLevel(BCLog::I2P, BCLog::Level::Info, "Destroying SAM session %s\n", m_session_id);
+            LogInfo("Destroying I2P SAM session %s", m_session_id);
         }
         m_control_sock.reset();
     }
