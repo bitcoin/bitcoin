@@ -98,7 +98,6 @@
 #include <llmq/options.h>
 #include <llmq/observer/context.h>
 #include <masternode/active/context.h>
-#include <masternode/active/notificationinterface.h>
 #include <masternode/meta.h>
 #include <masternode/node.h>
 #include <masternode/sync.h>
@@ -353,9 +352,8 @@ void PrepareShutdown(NodeContext& node)
         UnregisterValidationInterface(node.observer_ctx.get());
     }
 
-    if (g_active_notification_interface) {
-        UnregisterValidationInterface(g_active_notification_interface.get());
-        g_active_notification_interface.reset();
+    if (node.active_ctx) {
+        UnregisterValidationInterface(node.active_ctx.get());
     }
 
     if (node.cj_walletman) {
@@ -2190,7 +2188,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // ********************************************************* Step 7c: Setup masternode mode or watch-only mode
     assert(!node.active_ctx);
-    assert(!g_active_notification_interface);
     assert(!node.observer_ctx);
 
     const bool quorums_recovery = args.GetBoolArg("-llmq-data-recovery", llmq::DEFAULT_ENABLE_QUORUM_DATA_RECOVERY);
@@ -2203,11 +2200,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
         }
         // Will init later in ThreadImport
-        node.active_ctx = std::make_unique<ActiveContext>(*node.connman, *node.dmnman, *node.govman, chainman, *node.mn_metaman, *node.mnhf_manager,
-                                                          *node.sporkman, *node.mempool, *node.llmq_ctx, *node.peerman, *node.mn_sync, operator_sk,
-                                                          sync_map, dash_db_params, quorums_recovery, quorums_watch);
-        g_active_notification_interface = std::make_unique<ActiveNotificationInterface>(*node.active_ctx);
-        RegisterValidationInterface(g_active_notification_interface.get());
+        node.active_ctx = std::make_unique<ActiveContext>(*node.llmq_ctx->bls_worker, chainman, *node.connman, *node.dmnman, *node.govman, *node.mn_metaman,
+                                                          *node.mnhf_manager, *node.sporkman, *node.mempool, *node.llmq_ctx->clhandler, *node.llmq_ctx->isman,
+                                                          *node.llmq_ctx->quorum_block_processor, *node.llmq_ctx->qman, *node.llmq_ctx->qsnapman, *node.llmq_ctx->sigman,
+                                                          *node.peerman, *node.mn_sync, operator_sk, sync_map, dash_db_params, quorums_recovery, quorums_watch);
+        RegisterValidationInterface(node.active_ctx.get());
     } else if (quorums_watch) {
         node.observer_ctx = std::make_unique<llmq::ObserverContext>(*node.llmq_ctx->bls_worker, *node.connman, *node.dmnman, *node.mn_metaman, *node.mn_sync,
                                                                     *node.llmq_ctx->quorum_block_processor, *node.llmq_ctx->qman, *node.llmq_ctx->qsnapman,
