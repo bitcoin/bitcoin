@@ -17,7 +17,7 @@
 #include <validationinterface.h>
 
 #include <instantsend/instantsend.h>
-#include <llmq/quorums.h>
+#include <llmq/quorumsman.h>
 #include <masternode/sync.h>
 #include <spork.h>
 #include <stats/client.h>

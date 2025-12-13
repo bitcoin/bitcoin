@@ -8,7 +8,7 @@
 #include <evo/mnhftx.h>
 #include <evo/specialtx.h>
 #include <llmq/commitment.h>
-#include <llmq/quorums.h>
+#include <llmq/quorumsman.h>
 #include <llmq/signhash.h>
 #include <node/blockstorage.h>
 

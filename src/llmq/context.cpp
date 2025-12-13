@@ -8,7 +8,7 @@
 #include <chainlock/chainlock.h>
 #include <instantsend/instantsend.h>
 #include <llmq/blockprocessor.h>
-#include <llmq/quorums.h>
+#include <llmq/quorumsman.h>
 #include <llmq/signing.h>
 #include <llmq/snapshot.h>
 #include <validation.h>

@@ -7,7 +7,7 @@
 #include <evo/deterministicmns.h>
 #include <llmq/commitment.h>
 #include <llmq/options.h>
-#include <llmq/quorums.h>
+#include <llmq/quorumsman.h>
 #include <llmq/utils.h>
 #include <masternode/sync.h>
 

@@ -5,7 +5,7 @@
 #ifndef BITCOIN_LLMQ_OBSERVER_QUORUMS_H
 #define BITCOIN_LLMQ_OBSERVER_QUORUMS_H
 
-#include <llmq/quorums.h>
+#include <llmq/quorumsman.h>
 #include <llmq/types.h>
 
 #include <consensus/params.h>

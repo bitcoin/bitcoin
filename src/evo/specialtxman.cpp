@@ -24,7 +24,7 @@
 #include <evo/simplifiedmns.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/commitment.h>
-#include <llmq/quorums.h>
+#include <llmq/quorumsman.h>
 #include <llmq/utils.h>
 
 static bool CheckCbTxBestChainlock(const CCbTx& cbTx, const CBlockIndex* pindex,

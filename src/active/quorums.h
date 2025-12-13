@@ -6,7 +6,7 @@
 #define BITCOIN_ACTIVE_QUORUMS_H
 
 #include <llmq/observer/quorums.h>
-#include <llmq/quorums.h>
+#include <llmq/quorumsman.h>
 #include <llmq/types.h>
 
 #include <consensus/params.h>

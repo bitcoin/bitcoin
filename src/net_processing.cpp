@@ -55,7 +55,7 @@
 #include <llmq/dkgsession.h>
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/options.h>
-#include <llmq/quorums.h>
+#include <llmq/quorumsman.h>
 #include <llmq/signing.h>
 #include <llmq/signing_shares.h>
 #include <llmq/snapshot.h>

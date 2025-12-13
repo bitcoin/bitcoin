@@ -13,7 +13,7 @@
 
 #include <evo/mnhftx.h>
 #include <llmq/commitment.h>
-#include <llmq/quorums.h>
+#include <llmq/quorumsman.h>
 #include <llmq/signing_shares.h>
 
 namespace llmq {

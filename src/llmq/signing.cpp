@@ -6,7 +6,7 @@
 
 #include <llmq/commitment.h>
 #include <llmq/params.h>
-#include <llmq/quorums.h>
+#include <llmq/quorumsman.h>
 #include <llmq/signhash.h>
 
 #include <chainparams.h>

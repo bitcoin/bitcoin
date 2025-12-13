@@ -7,7 +7,7 @@
 #include <llmq/debug.h>
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/observer/quorums.h>
-#include <llmq/quorums.h>
+#include <llmq/quorumsman.h>
 
 namespace llmq {
 ObserverContext::ObserverContext(CBLSWorker& bls_worker, CDeterministicMNManager& dmnman,
