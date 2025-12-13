@@ -91,7 +91,7 @@ void QuorumParticipant::TriggerQuorumDataRecoveryThreads(CConnman& connman, gsl:
             }
 
             // Finally start the thread which triggers the requests for this quorum
-            StartQuorumDataRecoveryThread(connman, std::move(pQuorum), pIndex, nDataMask);
+            StartDataRecoveryThread(connman, std::move(pQuorum), pIndex, nDataMask);
         }
     }
 }
@@ -285,30 +285,21 @@ MessageProcessingResult QuorumParticipant::ProcessContribQDATA(CNode& pfrom, CDa
     return {};
 }
 
-void QuorumParticipant::StartQuorumDataRecoveryThread(CConnman& connman, CQuorumCPtr pQuorum,
-                                                      gsl::not_null<const CBlockIndex*> pIndex, uint16_t nDataMaskIn) const
+void QuorumParticipant::DataRecoveryThread(CConnman& connman, gsl::not_null<const CBlockIndex*> block_index,
+                                           CQuorumCPtr pQuorum, uint16_t data_mask, const uint256& protx_hash,
+                                           size_t start_offset) const
 {
-    assert(m_mn_activeman);
-
-    bool expected = false;
-    if (!pQuorum->fQuorumDataRecoveryThreadRunning.compare_exchange_strong(expected, true)) {
-        LogPrint(BCLog::LLMQ, "QuorumParticipant::%s -- Already running\n", __func__);
-        return;
-    }
-
-    m_qman.workerPool.push([&connman, pQuorum = std::move(pQuorum), pIndex, nDataMaskIn, this](int threadId) {
         size_t nTries{0};
-        uint16_t nDataMask{nDataMaskIn};
+        uint16_t nDataMask{data_mask};
         int64_t nTimeLastSuccess{0};
         uint256* pCurrentMemberHash{nullptr};
         std::vector<uint256> vecMemberHashes;
-        const size_t nMyStartOffset{GetQuorumRecoveryStartOffset(*pQuorum, pIndex)};
         const int64_t nRequestTimeout{10};
 
         auto printLog = [&](const std::string& strMessage) {
             const std::string strMember{pCurrentMemberHash == nullptr ? "nullptr" : pCurrentMemberHash->ToString()};
-            LogPrint(BCLog::LLMQ, "QuorumParticipant::StartQuorumDataRecoveryThread -- %s - for llmqType %d, quorumHash %s, nDataMask (%d/%d), pCurrentMemberHash %s, nTries %d\n",
-                strMessage, ToUnderlying(pQuorum->qc->llmqType), pQuorum->qc->quorumHash.ToString(), nDataMask, nDataMaskIn, strMember, nTries);
+            LogPrint(BCLog::LLMQ, "QuorumParticipant::DataRecoveryThread -- %s - for llmqType %d, quorumHash %s, nDataMask (%d/%d), pCurrentMemberHash %s, nTries %d\n",
+                strMessage, ToUnderlying(pQuorum->qc->llmqType), pQuorum->qc->quorumHash.ToString(), nDataMask, data_mask, strMember, nTries);
         };
         printLog("Start");
 
@@ -323,7 +314,7 @@ void QuorumParticipant::StartQuorumDataRecoveryThread(CConnman& connman, CQuorum
 
         vecMemberHashes.reserve(pQuorum->qc->validMembers.size());
         for (auto& member : pQuorum->members) {
-            if (pQuorum->IsValidMember(member->proTxHash) && member->proTxHash != m_mn_activeman->GetProTxHash()) {
+            if (pQuorum->IsValidMember(member->proTxHash) && member->proTxHash != protx_hash) {
                 vecMemberHashes.push_back(member->proTxHash);
             }
         }
@@ -354,7 +345,7 @@ void QuorumParticipant::StartQuorumDataRecoveryThread(CConnman& connman, CQuorum
                     break;
                 }
                 // Access the member list of the quorum with the calculated offset applied to balance the load equally
-                pCurrentMemberHash = &vecMemberHashes[(nMyStartOffset + nTries++) % vecMemberHashes.size()];
+                pCurrentMemberHash = &vecMemberHashes[(start_offset + nTries++) % vecMemberHashes.size()];
                 {
                     LOCK(m_qman.cs_data_requests);
                     const CQuorumDataRequestKey key(*pCurrentMemberHash, true, pQuorum->qc->quorumHash, pQuorum->qc->llmqType);
@@ -365,20 +356,19 @@ void QuorumParticipant::StartQuorumDataRecoveryThread(CConnman& connman, CQuorum
                     }
                 }
                 // Sleep a bit depending on the start offset to balance out multiple requests to same masternode
-                m_qman.quorumThreadInterrupt.sleep_for(std::chrono::milliseconds(nMyStartOffset * 100));
+                m_qman.quorumThreadInterrupt.sleep_for(std::chrono::milliseconds(start_offset * 100));
                 nTimeLastSuccess = GetTime<std::chrono::seconds>().count();
                 connman.AddPendingMasternode(*pCurrentMemberHash);
                 printLog("Connect");
             }
 
-            auto proTxHash = m_mn_activeman->GetProTxHash();
             connman.ForEachNode([&](CNode* pNode) {
                 auto verifiedProRegTxHash = pNode->GetVerifiedProRegTxHash();
                 if (pCurrentMemberHash == nullptr || verifiedProRegTxHash != *pCurrentMemberHash) {
                     return;
                 }
 
-                if (m_qman.RequestQuorumData(pNode, connman, *pQuorum, nDataMask, proTxHash)) {
+                if (m_qman.RequestQuorumData(pNode, connman, *pQuorum, nDataMask, protx_hash)) {
                     nTimeLastSuccess = GetTime<std::chrono::seconds>().count();
                     printLog("Requested");
                 } else {
@@ -405,6 +395,22 @@ void QuorumParticipant::StartQuorumDataRecoveryThread(CConnman& connman, CQuorum
         }
         pQuorum->fQuorumDataRecoveryThreadRunning = false;
         printLog("Done");
+}
+
+void QuorumParticipant::StartDataRecoveryThread(CConnman& connman, CQuorumCPtr pQuorum,
+                                                gsl::not_null<const CBlockIndex*> pIndex, uint16_t nDataMaskIn) const
+{
+    assert(m_mn_activeman);
+
+    bool expected = false;
+    if (!pQuorum->fQuorumDataRecoveryThreadRunning.compare_exchange_strong(expected, true)) {
+        LogPrint(BCLog::LLMQ, "QuorumParticipant::%s -- Already running\n", __func__);
+        return;
+    }
+
+    m_qman.workerPool.push([&connman, pQuorum = std::move(pQuorum), pIndex, nDataMaskIn, this](int threadId) mutable {
+        const size_t size_offset = GetQuorumRecoveryStartOffset(*pQuorum, pIndex);
+        DataRecoveryThread(connman, pIndex, std::move(pQuorum), nDataMaskIn, m_mn_activeman->GetProTxHash(), size_offset);
     });
 }
 
