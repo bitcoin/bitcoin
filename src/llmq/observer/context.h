@@ -47,6 +47,9 @@ public:
                     const util::DbWrapperParams& db_params, bool quorums_recovery);
     ~ObserverContext();
 
+    void Start();
+    void Stop();
+
 protected:
     // CValidationInterface
     void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override;

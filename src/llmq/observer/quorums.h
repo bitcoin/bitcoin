@@ -5,6 +5,7 @@
 #ifndef BITCOIN_LLMQ_OBSERVER_QUORUMS_H
 #define BITCOIN_LLMQ_OBSERVER_QUORUMS_H
 
+#include <ctpl_stl.h>
 #include <llmq/quorumsman.h>
 #include <llmq/types.h>
 
@@ -39,9 +40,12 @@ protected:
     const bool m_quorums_recovery{false};
     const llmq::QvvecSyncModeMap m_sync_map;
 
-private:
+protected:
     mutable Mutex cs_cleanup;
     mutable std::map<Consensus::LLMQType, Uint256LruHashMap<uint256>> cleanupQuorumsCache GUARDED_BY(cs_cleanup);
+
+    mutable ctpl::thread_pool workerPool;
+    mutable CThreadInterrupt quorumThreadInterrupt;
 
 public:
     QuorumObserver() = delete;
@@ -52,6 +56,9 @@ public:
                             const CMasternodeSync& mn_sync, const CSporkManager& sporkman,
                             const llmq::QvvecSyncModeMap& sync_map, bool quorums_recovery);
     virtual ~QuorumObserver();
+
+    void Start();
+    void Stop();
 
     void UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload) const;
 

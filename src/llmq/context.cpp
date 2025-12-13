@@ -38,12 +38,10 @@ LLMQContext::~LLMQContext()
 
 void LLMQContext::Start()
 {
-    qman->Start();
     clhandler->Start(*isman);
 }
 
 void LLMQContext::Stop()
 {
     clhandler->Stop();
-    qman->Stop();
 }

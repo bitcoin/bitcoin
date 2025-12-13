@@ -292,6 +292,7 @@ void PrepareShutdown(NodeContext& node)
     StopRPC();
     StopHTTPServer();
 
+    if (node.observer_ctx) node.observer_ctx->Stop();
     if (node.active_ctx) node.active_ctx->Stop();
     if (node.peerman) node.peerman->StopHandlers();
     if (node.llmq_ctx) node.llmq_ctx->Stop();
@@ -2337,6 +2338,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     node.llmq_ctx->Start();
     node.peerman->StartHandlers();
     if (node.active_ctx) node.active_ctx->Start(*node.connman, *node.peerman);
+    if (node.observer_ctx) node.observer_ctx->Start();
 
     node.scheduler->scheduleEvery(std::bind(&CNetFulfilledRequestManager::DoMaintenance, std::ref(*node.netfulfilledman)), std::chrono::minutes{1});
     node.scheduler->scheduleEvery(std::bind(&CMasternodeUtils::DoMaintenance, std::ref(*node.connman), std::ref(*node.dmnman), std::ref(*node.mn_sync), node.cj_walletman.get()), std::chrono::minutes{1});

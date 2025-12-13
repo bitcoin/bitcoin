@@ -34,9 +34,28 @@ QuorumObserver::QuorumObserver(CConnman& connman, CDeterministicMNManager& dmnma
     m_quorums_recovery{quorums_recovery},
     m_sync_map{sync_map}
 {
+    quorumThreadInterrupt.reset();
 }
 
-QuorumObserver::~QuorumObserver() = default;
+QuorumObserver::~QuorumObserver()
+{
+    Stop();
+}
+
+void QuorumObserver::Start()
+{
+    int workerCount = std::thread::hardware_concurrency() / 2;
+    workerCount = std::clamp(workerCount, 1, 4);
+    workerPool.resize(workerCount);
+    RenameThreadPool(workerPool, "q-mngr");
+}
+
+void QuorumObserver::Stop()
+{
+    quorumThreadInterrupt();
+    workerPool.clear_queue();
+    workerPool.stop(true);
+}
 
 void QuorumObserver::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload) const
 {
@@ -168,11 +187,11 @@ void QuorumObserver::DataRecoveryThread(gsl::not_null<const CBlockIndex*> block_
         };
         printLog("Start");
 
-        while (!m_mn_sync.IsBlockchainSynced() && !m_qman.quorumThreadInterrupt) {
-            m_qman.quorumThreadInterrupt.sleep_for(std::chrono::seconds(nRequestTimeout));
+        while (!m_mn_sync.IsBlockchainSynced() && !quorumThreadInterrupt) {
+            quorumThreadInterrupt.sleep_for(std::chrono::seconds(nRequestTimeout));
         }
 
-        if (m_qman.quorumThreadInterrupt) {
+        if (quorumThreadInterrupt) {
             printLog("Aborted");
             return;
         }
@@ -187,7 +206,7 @@ void QuorumObserver::DataRecoveryThread(gsl::not_null<const CBlockIndex*> block_
 
         printLog("Try to request");
 
-        while (nDataMask > 0 && !m_qman.quorumThreadInterrupt) {
+        while (nDataMask > 0 && !quorumThreadInterrupt) {
             if (nDataMask & llmq::CQuorumDataRequest::QUORUM_VERIFICATION_VECTOR &&
                 pQuorum->HasVerificationVector()) {
                 nDataMask &= ~llmq::CQuorumDataRequest::QUORUM_VERIFICATION_VECTOR;
@@ -221,7 +240,7 @@ void QuorumObserver::DataRecoveryThread(gsl::not_null<const CBlockIndex*> block_
                     }
                 }
                 // Sleep a bit depending on the start offset to balance out multiple requests to same masternode
-                m_qman.quorumThreadInterrupt.sleep_for(std::chrono::milliseconds(start_offset * 100));
+                quorumThreadInterrupt.sleep_for(std::chrono::milliseconds(start_offset * 100));
                 nTimeLastSuccess = GetTime<std::chrono::seconds>().count();
                 m_connman.AddPendingMasternode(*pCurrentMemberHash);
                 printLog("Connect");
@@ -256,7 +275,7 @@ void QuorumObserver::DataRecoveryThread(gsl::not_null<const CBlockIndex*> block_
                     }
                 }
             });
-            m_qman.quorumThreadInterrupt.sleep_for(std::chrono::seconds(1));
+            quorumThreadInterrupt.sleep_for(std::chrono::seconds(1));
         }
         pQuorum->fQuorumDataRecoveryThreadRunning = false;
         printLog("Done");
@@ -270,7 +289,7 @@ void QuorumObserver::StartVvecSyncThread(gsl::not_null<const CBlockIndex*> block
         return;
     }
 
-    m_qman.workerPool.push([pQuorum = std::move(pQuorum), block_index, this](int threadId) mutable {
+    workerPool.push([pQuorum = std::move(pQuorum), block_index, this](int threadId) mutable {
         DataRecoveryThread(block_index, std::move(pQuorum), CQuorumDataRequest::QUORUM_VERIFICATION_VECTOR,
                            /*protx_hash=*/uint256(), /*start_offset=*/0);
     });
@@ -326,14 +345,14 @@ void QuorumObserver::StartCleanupOldQuorumDataThread(gsl::not_null<const CBlockI
     LogPrint(BCLog::LLMQ, "QuorumObserver::%s -- start\n", __func__);
 
     // do not block the caller thread
-    m_qman.workerPool.push([pIndex, t, this](int threadId) {
+    workerPool.push([pIndex, t, this](int threadId) {
         std::set<uint256> dbKeysToSkip;
 
         if (LOCK(cs_cleanup); cleanupQuorumsCache.empty()) {
             utils::InitQuorumsCache(cleanupQuorumsCache, m_chainman.GetConsensus(), /*limit_by_connections=*/false);
         }
         for (const auto& params : Params().GetConsensus().llmqs) {
-            if (m_qman.quorumThreadInterrupt) {
+            if (quorumThreadInterrupt) {
                 break;
             }
             LOCK(cs_cleanup);
@@ -356,7 +375,7 @@ void QuorumObserver::StartCleanupOldQuorumDataThread(gsl::not_null<const CBlockI
             dbKeysToSkip.merge(quorum_keys);
         }
 
-        if (!m_qman.quorumThreadInterrupt) {
+        if (!quorumThreadInterrupt) {
             WITH_LOCK(m_qman.cs_db, DataCleanupHelper(*m_qman.db, dbKeysToSkip));
         }
 

@@ -191,7 +191,7 @@ void QuorumParticipant::StartDataRecoveryThread(gsl::not_null<const CBlockIndex*
         return;
     }
 
-    m_qman.workerPool.push([pQuorum = std::move(pQuorum), pIndex, nDataMaskIn, this](int threadId) mutable {
+    workerPool.push([pQuorum = std::move(pQuorum), pIndex, nDataMaskIn, this](int threadId) mutable {
         const size_t size_offset = GetQuorumRecoveryStartOffset(*pQuorum, pIndex);
         DataRecoveryThread(pIndex, std::move(pQuorum), nDataMaskIn, m_mn_activeman.GetProTxHash(), size_offset);
     });

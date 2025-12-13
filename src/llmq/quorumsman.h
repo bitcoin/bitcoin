@@ -17,12 +17,13 @@
 #include <util/threadinterrupt.h>
 #include <util/time.h>
 
-#include <ctpl_stl.h>
 #include <gsl/pointers.h>
 
 #include <atomic>
+#include <deque>
 #include <map>
 #include <memory>
+#include <thread>
 #include <utility>
 
 class CBLSSignature;
@@ -94,8 +95,10 @@ private:
     mutable Uint256LruHashMap<const CBlockIndex*, /*max_size=*/128> quorumBaseBlockIndexCache
         GUARDED_BY(cs_quorumBaseBlockIndexCache);
 
-    mutable ctpl::thread_pool workerPool;
-    mutable CThreadInterrupt quorumThreadInterrupt;
+    mutable Mutex m_cache_cs;
+    mutable std::deque<CQuorumCPtr> m_cache_queue GUARDED_BY(m_cache_cs);
+    mutable CThreadInterrupt m_cache_interrupt;
+    mutable std::thread m_cache_thread;
 
 public:
     CQuorumManager() = delete;
@@ -120,12 +123,9 @@ public:
         m_qdkgsman = nullptr;
     }
 
-    void Start();
-    void Stop();
-
     [[nodiscard]] MessageProcessingResult ProcessMessage(CNode& pfrom, CConnman& connman, std::string_view msg_type,
                                                          CDataStream& vRecv)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_data_requests, !cs_map_quorums);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_data_requests, !cs_map_quorums, !m_cache_cs);
 
     static bool HasQuorum(Consensus::LLMQType llmqType, const CQuorumBlockProcessor& quorum_block_processor, const uint256& quorumHash);
 
@@ -134,29 +134,33 @@ public:
 
     // all these methods will lock cs_main for a short period of time
     CQuorumCPtr GetQuorum(Consensus::LLMQType llmqType, const uint256& quorumHash) const
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_map_quorums);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_map_quorums, !m_cache_cs);
     std::vector<CQuorumCPtr> ScanQuorums(Consensus::LLMQType llmqType, size_t nCountRequested) const
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_map_quorums, !cs_scan_quorums);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_map_quorums, !cs_scan_quorums, !m_cache_cs);
 
     // this one is cs_main-free
     std::vector<CQuorumCPtr> ScanQuorums(Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pindexStart,
                                          size_t nCountRequested) const
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_map_quorums, !cs_scan_quorums);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_map_quorums, !cs_scan_quorums, !m_cache_cs);
 
     bool IsMasternode() const;
     bool IsWatching() const;
 
 private:
     // all private methods here are cs_main-free
-    CQuorumPtr BuildQuorumFromCommitment(Consensus::LLMQType llmqType,
-                                         gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
-                                         bool populate_cache) const EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_map_quorums);
     bool BuildQuorumContributions(const CFinalCommitmentPtr& fqc, const std::shared_ptr<CQuorum>& quorum) const;
 
-    CQuorumCPtr GetQuorum(Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pindex,
-                          bool populate_cache = true) const EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_map_quorums);
+    CQuorumPtr BuildQuorumFromCommitment(Consensus::LLMQType llmqType,
+                                         gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
+                                         bool populate_cache) const
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_map_quorums, !m_cache_cs);
 
-    void StartCachePopulatorThread(CQuorumCPtr pQuorum) const;
+    CQuorumCPtr GetQuorum(Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pindex,
+                          bool populate_cache = true) const
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_map_quorums, !m_cache_cs);
+
+    void QueueQuorumForWarming(CQuorumCPtr pQuorum) const EXCLUSIVE_LOCKS_REQUIRED(!m_cache_cs);
+    void CacheWarmingThreadMain() const EXCLUSIVE_LOCKS_REQUIRED(!m_cache_cs);
     void MigrateOldQuorumDB(CEvoDB& evoDb) const EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
 };
 
