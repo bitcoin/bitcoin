@@ -4,6 +4,7 @@
 
 #include <active/dkgsession.h>
 
+#include <active/masternode.h>
 #include <evo/deterministicmns.h>
 #include <llmq/debug.h>
 #include <llmq/dkgsessionhandler.h>
@@ -11,7 +12,6 @@
 #include <llmq/options.h>
 #include <llmq/utils.h>
 #include <masternode/meta.h>
-#include <masternode/node.h>
 
 #include <chain.h>
 #include <deploymentstatus.h>

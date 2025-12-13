@@ -4,13 +4,14 @@
 
 #include <evo/mnauth.h>
 
+#include <active/masternode.h>
 #include <bls/bls.h>
-#include <chainparams.h>
 #include <evo/deterministicmns.h>
 #include <llmq/utils.h>
 #include <masternode/meta.h>
-#include <masternode/node.h>
 #include <masternode/sync.h>
+
+#include <chainparams.h>
 #include <net.h>
 #include <netmessagemaker.h>
 #include <util/time.h>

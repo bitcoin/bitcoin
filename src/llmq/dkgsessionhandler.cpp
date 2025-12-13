@@ -4,22 +4,19 @@
 
 #include <llmq/dkgsessionhandler.h>
 
+#include <evo/deterministicmns.h>
 #include <llmq/commitment.h>
-#include <llmq/dkgsession.h>
-#include <llmq/blockprocessor.h>
 #include <llmq/debug.h>
+#include <llmq/dkgsession.h>
 #include <llmq/options.h>
 #include <llmq/utils.h>
-
-#include <evo/deterministicmns.h>
+#include <util/underlying.h>
 
 #include <deploymentstatus.h>
-#include <masternode/node.h>
 #include <chainparams.h>
 #include <net_processing.h>
 #include <validation.h>
 #include <util/thread.h>
-#include <util/underlying.h>
 
 namespace llmq {
 CDKGSessionHandler::CDKGSessionHandler(CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman,

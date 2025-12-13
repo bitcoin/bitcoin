@@ -20,8 +20,6 @@
 #include <util/time.h>
 #include <validation.h>
 
-#include <masternode/active/context.h>
-
 #include <array>
 #include <stdint.h>
 

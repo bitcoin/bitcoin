@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_MASTERNODE_NODE_H
-#define BITCOIN_MASTERNODE_NODE_H
+#ifndef BITCOIN_ACTIVE_MASTERNODE_H
+#define BITCOIN_ACTIVE_MASTERNODE_H
 
 #include <bls/bls.h>
 
@@ -74,4 +74,4 @@ private:
     bool GetLocalAddress(CService& addrRet) EXCLUSIVE_LOCKS_REQUIRED(cs);
 };
 
-#endif // BITCOIN_MASTERNODE_NODE_H
+#endif // BITCOIN_ACTIVE_MASTERNODE_H

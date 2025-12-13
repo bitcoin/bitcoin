@@ -2,9 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <masternode/active/context.h>
+#include <active/context.h>
 
 #include <active/dkgsessionhandler.h>
+#include <active/masternode.h>
 #include <active/quorums.h>
 #include <chainlock/chainlock.h>
 #include <chainlock/signing.h>
@@ -18,7 +19,6 @@
 #include <llmq/ehf_signals.h>
 #include <llmq/quorumsman.h>
 #include <llmq/signing_shares.h>
-#include <masternode/node.h>
 
 #include <util/check.h>
 #include <validation.h>

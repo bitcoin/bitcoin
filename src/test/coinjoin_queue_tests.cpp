@@ -4,9 +4,10 @@
 
 #include <test/util/setup_common.h>
 
+#include <active/masternode.h>
 #include <bls/bls.h>
 #include <coinjoin/coinjoin.h>
-#include <masternode/node.h>
+
 #include <uint256.h>
 
 #include <boost/test/unit_test.hpp>

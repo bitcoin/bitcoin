@@ -26,8 +26,6 @@ src/llmq/observer/*.cpp
 src/llmq/observer/*.h
 src/masternode/*.cpp
 src/masternode/*.h
-src/masternode/active/*.cpp
-src/masternode/active/*.h
 src/messagesigner.*
 src/netfulfilledman.*
 src/qt/governancelist.*

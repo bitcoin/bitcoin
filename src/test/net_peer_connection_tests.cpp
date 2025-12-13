@@ -18,8 +18,6 @@
 #include <tinyformat.h>
 #include <version.h>
 
-#include <masternode/active/context.h>
-
 #include <algorithm>
 #include <cstdint>
 #include <memory>

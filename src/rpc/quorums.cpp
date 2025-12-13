@@ -2,18 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chainparams.h>
-#include <deploymentstatus.h>
-#include <index/txindex.h>
-#include <net_processing.h>
-#include <node/context.h>
-#include <rpc/evo_util.h>
-#include <rpc/server.h>
-#include <rpc/server_util.h>
-#include <rpc/util.h>
-#include <util/check.h>
-#include <validation.h>
-
+#include <active/context.h>
+#include <active/masternode.h>
 #include <chainlock/chainlock.h>
 #include <evo/deterministicmns.h>
 #include <llmq/blockprocessor.h>
@@ -29,8 +19,18 @@
 #include <llmq/signing_shares.h>
 #include <llmq/snapshot.h>
 #include <llmq/utils.h>
-#include <masternode/active/context.h>
-#include <masternode/node.h>
+#include <rpc/evo_util.h>
+
+#include <chainparams.h>
+#include <deploymentstatus.h>
+#include <index/txindex.h>
+#include <net_processing.h>
+#include <node/context.h>
+#include <rpc/server.h>
+#include <rpc/server_util.h>
+#include <rpc/util.h>
+#include <util/check.h>
+#include <validation.h>
 
 #include <iomanip>
 #include <optional>

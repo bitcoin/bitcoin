@@ -2,24 +2,24 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chainparams.h>
+#include <active/context.h>
+#include <active/masternode.h>
 #include <evo/assetlocktx.h>
 #include <evo/chainhelper.h>
 #include <evo/deterministicmns.h>
 #include <governance/governance.h>
-#include <index/txindex.h>
-#include <masternode/active/context.h>
-#include <masternode/node.h>
 #include <masternode/payments.h>
+#include <rpc/evo_util.h>
+
+#include <chainparams.h>
+#include <index/txindex.h>
 #include <net.h>
 #include <netbase.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
-#include <rpc/evo_util.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
-#include <univalue.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 #include <validation.h>
@@ -30,6 +30,8 @@
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
 #endif // ENABLE_WALLET
+
+#include <univalue.h>
 
 using node::GetTransaction;
 using node::NodeContext;

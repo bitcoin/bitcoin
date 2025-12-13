@@ -2,18 +2,19 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chainparams.h>
-#include <core_io.h>
+#include <active/context.h>
+#include <active/masternode.h>
 #include <evo/deterministicmns.h>
 #include <governance/classes.h>
 #include <governance/common.h>
 #include <governance/governance.h>
 #include <governance/validators.h>
 #include <governance/vote.h>
-#include <index/txindex.h>
-#include <masternode/active/context.h>
-#include <masternode/node.h>
 #include <masternode/sync.h>
+
+#include <chainparams.h>
+#include <core_io.h>
+#include <index/txindex.h>
 #include <node/context.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>

@@ -5,13 +5,13 @@
 #include <active/dkgsessionhandler.h>
 
 #include <active/dkgsession.h>
+#include <active/masternode.h>
 #include <evo/deterministicmns.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/debug.h>
 #include <llmq/dkgsession.h>
 #include <llmq/options.h>
 #include <llmq/utils.h>
-#include <masternode/node.h>
 
 #include <deploymentstatus.h>
 #include <logging.h>

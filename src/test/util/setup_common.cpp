@@ -49,6 +49,7 @@
 #include <validationinterface.h>
 #include <walletinitinterface.h>
 
+#include <active/context.h>
 #include <bls/bls.h>
 #include <coinjoin/coinjoin.h>
 #include <coinjoin/walletman.h>
@@ -65,7 +66,6 @@
 #include <governance/governance.h>
 #include <llmq/context.h>
 #include <llmq/signing.h>
-#include <masternode/active/context.h>
 #include <masternode/meta.h>
 #include <masternode/sync.h>
 #include <netfulfilledman.h>
