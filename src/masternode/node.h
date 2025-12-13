@@ -6,6 +6,7 @@
 #define BITCOIN_MASTERNODE_NODE_H
 
 #include <bls/bls.h>
+
 #include <netaddress.h>
 #include <primitives/transaction.h>
 #include <threadsafety.h>
@@ -14,25 +15,13 @@
 class CConnman;
 class CDeterministicMNManager;
 
-struct CActiveMasternodeInfo {
-    // Keys for the active Masternode
-    const CBLSSecretKey blsKeyOperator;
-    const CBLSPublicKey blsPubKeyOperator;
-
-    // Initialized while registering Masternode
-    uint256 proTxHash;
-    COutPoint outpoint;
-    CService service;
-
-    CActiveMasternodeInfo(const CBLSSecretKey& blsKeyOperator, const CBLSPublicKey& blsPubKeyOperator) :
-        blsKeyOperator(blsKeyOperator), blsPubKeyOperator(blsPubKeyOperator) {};
-};
-
 class CActiveMasternodeManager
 {
 private:
     CConnman& m_connman;
     CDeterministicMNManager& m_dmnman;
+    const CBLSPublicKey m_operator_pk;
+    const CBLSSecretKey m_operator_sk;
 
 private:
     enum class MasternodeState {
@@ -46,9 +35,11 @@ private:
     };
 
     mutable SharedMutex cs;
+    COutPoint m_outpoint GUARDED_BY(cs);
+    CService m_service GUARDED_BY(cs);
     MasternodeState m_state GUARDED_BY(cs){MasternodeState::WAITING_FOR_PROTX};
-    CActiveMasternodeInfo m_info GUARDED_BY(cs);
     std::string m_error GUARDED_BY(cs);
+    uint256 m_protx_hash GUARDED_BY(cs);
 
 public:
     CActiveMasternodeManager() = delete;
@@ -73,10 +64,9 @@ public:
     [[nodiscard]] CBLSSignature Sign(const uint256& hash, const bool is_legacy) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     [[nodiscard]] std::vector<uint8_t> SignBasic(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    /* TODO: Reconsider external locking */
-    [[nodiscard]] COutPoint GetOutPoint() const { READ_LOCK(cs); return m_info.outpoint; }
-    [[nodiscard]] uint256 GetProTxHash() const { READ_LOCK(cs); return m_info.proTxHash; }
-    [[nodiscard]] CService GetService() const { READ_LOCK(cs); return m_info.service; }
+    [[nodiscard]] COutPoint GetOutPoint() const { READ_LOCK(cs); return m_outpoint; }
+    [[nodiscard]] uint256 GetProTxHash() const { READ_LOCK(cs); return m_protx_hash; }
+    [[nodiscard]] CService GetService() const { READ_LOCK(cs); return m_service; }
     [[nodiscard]] CBLSPublicKey GetPubKey() const;
 
 private:

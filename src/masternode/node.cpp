@@ -53,12 +53,13 @@ CActiveMasternodeManager::CActiveMasternodeManager(CConnman& connman, CDetermini
                                                    const CBLSSecretKey& sk) :
     m_connman{connman},
     m_dmnman{dmnman},
-    m_info{sk, sk.GetPublicKey()}
+    m_operator_pk{sk.GetPublicKey()},
+    m_operator_sk{sk}
 {
     assert(sk.IsValid()); /* We can assume pk is valid if sk is valid */
     LogPrintf("MASTERNODE:\n  blsPubKeyOperator legacy: %s\n  blsPubKeyOperator basic: %s\n",
-            m_info.blsPubKeyOperator.ToString(/*specificLegacyScheme=*/ true),
-            m_info.blsPubKeyOperator.ToString(/*specificLegacyScheme=*/ false));
+              m_operator_pk.ToString(/*specificLegacyScheme=*/true),
+              m_operator_pk.ToString(/*specificLegacyScheme=*/false));
 }
 
 CActiveMasternodeManager::~CActiveMasternodeManager() = default;
@@ -123,14 +124,14 @@ void CActiveMasternodeManager::InitInternal(const CBlockIndex* pindex)
         return;
     }
 
-    if (!GetLocalAddress(m_info.service)) {
+    if (!GetLocalAddress(m_service)) {
         m_state = MasternodeState::SOME_ERROR;
         return;
     }
 
     CDeterministicMNList mnList = m_dmnman.GetListForBlock(pindex);
 
-    auto dmn = mnList.GetMNByOperatorKey(m_info.blsPubKeyOperator);
+    auto dmn = mnList.GetMNByOperatorKey(m_operator_pk);
     if (!dmn) {
         // MN not appeared on the chain yet
         return;
@@ -147,7 +148,7 @@ void CActiveMasternodeManager::InitInternal(const CBlockIndex* pindex)
 
     LogPrintf("CActiveMasternodeManager::Init -- proTxHash=%s, proTx=%s\n", dmn->proTxHash.ToString(), dmn->ToString());
 
-    if (m_info.service != dmn->pdmnState->netInfo->GetPrimary()) {
+    if (m_service != dmn->pdmnState->netInfo->GetPrimary()) {
         m_state = MasternodeState::SOME_ERROR;
         m_error = "Local address does not match the address from ProTx";
         LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", m_error);
@@ -155,19 +156,19 @@ void CActiveMasternodeManager::InitInternal(const CBlockIndex* pindex)
     }
 
     // Check socket connectivity
-    LogPrintf("CActiveMasternodeManager::Init -- Checking inbound connection to '%s'\n", m_info.service.ToStringAddrPort());
-    std::unique_ptr<Sock> sock{ConnectDirectly(m_info.service, /*manual_connection=*/true)};
+    LogPrintf("CActiveMasternodeManager::Init -- Checking inbound connection to '%s'\n", m_service.ToStringAddrPort());
+    std::unique_ptr<Sock> sock{ConnectDirectly(m_service, /*manual_connection=*/true)};
     bool fConnected{sock && sock->IsSelectable(/*is_select=*/::g_socket_events_mode == SocketEventsMode::Select)};
     sock = std::make_unique<Sock>(INVALID_SOCKET);
     if (!fConnected && Params().RequireRoutableExternalIP()) {
         m_state = MasternodeState::SOME_ERROR;
-        m_error = "Could not connect to " + m_info.service.ToStringAddrPort();
+        m_error = "Could not connect to " + m_service.ToStringAddrPort();
         LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", m_error);
         return;
     }
 
-    m_info.proTxHash = dmn->proTxHash;
-    m_info.outpoint = dmn->collateralOutpoint;
+    m_protx_hash = dmn->proTxHash;
+    m_outpoint = dmn->collateralOutpoint;
     m_state = MasternodeState::READY;
 }
 
@@ -175,15 +176,15 @@ void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, con
 {
     if (!DeploymentDIP0003Enforced(pindexNew->nHeight, Params().GetConsensus())) return;
 
-    const auto [cur_state, cur_protx_hash] = WITH_READ_LOCK(cs, return std::make_pair(m_state, m_info.proTxHash));
+    const auto [cur_state, cur_protx_hash] = WITH_READ_LOCK(cs, return std::make_pair(m_state, m_protx_hash));
     if (cur_state == MasternodeState::READY) {
         auto oldMNList = m_dmnman.GetListForBlock(pindexNew->pprev);
         auto newMNList = m_dmnman.GetListForBlock(pindexNew);
         auto reset = [this, pindexNew](MasternodeState state) -> void {
             LOCK(cs);
             m_state = state;
-            m_info.proTxHash = uint256();
-            m_info.outpoint.SetNull();
+            m_protx_hash = uint256();
+            m_outpoint.SetNull();
             // MN might have reappeared in same block with a new ProTx
             InitInternal(pindexNew);
         };
@@ -266,7 +267,7 @@ template <template <typename> class EncryptedObj, typename Obj>
                                                      int version) const
 {
     AssertLockNotHeld(cs);
-    return WITH_READ_LOCK(cs, return obj.Decrypt(idx, m_info.blsKeyOperator, ret_obj, version));
+    return WITH_READ_LOCK(cs, return obj.Decrypt(idx, m_operator_sk, ret_obj, version));
 }
 template bool CActiveMasternodeManager::Decrypt(const CBLSIESEncryptedObject<CBLSSecretKey>& obj, size_t idx,
                                                 CBLSSecretKey& ret_obj, int version) const;
@@ -276,7 +277,7 @@ template bool CActiveMasternodeManager::Decrypt(const CBLSIESMultiRecipientObjec
 [[nodiscard]] CBLSSignature CActiveMasternodeManager::Sign(const uint256& hash, const bool is_legacy) const
 {
     AssertLockNotHeld(cs);
-    return WITH_READ_LOCK(cs, return m_info.blsKeyOperator.Sign(hash, is_legacy));
+    return WITH_READ_LOCK(cs, return m_operator_sk.Sign(hash, is_legacy));
 }
 
 [[nodiscard]] std::vector<uint8_t> CActiveMasternodeManager::SignBasic(const uint256& hash) const
@@ -292,5 +293,5 @@ template bool CActiveMasternodeManager::Decrypt(const CBLSIESMultiRecipientObjec
 [[nodiscard]] CBLSPublicKey CActiveMasternodeManager::GetPubKey() const
 {
     READ_LOCK(cs);
-    return m_info.blsPubKeyOperator;
+    return m_operator_pk;
 }

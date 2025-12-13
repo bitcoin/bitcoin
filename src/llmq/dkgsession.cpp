@@ -12,7 +12,6 @@
 #include <llmq/options.h>
 #include <llmq/utils.h>
 #include <masternode/meta.h>
-#include <masternode/node.h>
 #include <util/irange.h>
 
 #include <chainparams.h>

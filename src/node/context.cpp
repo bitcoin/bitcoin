@@ -20,7 +20,6 @@
 #include <llmq/observer/context.h>
 #include <masternode/active/context.h>
 #include <masternode/meta.h>
-#include <masternode/node.h>
 #include <masternode/sync.h>
 #include <net.h>
 #include <netfulfilledman.h>
