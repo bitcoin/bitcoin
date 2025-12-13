@@ -66,26 +66,23 @@ CDKGMember::CDKGMember(const CDeterministicMNCPtr& _dmn, size_t _idx) :
 {
 }
 
-CDKGSession::CDKGSession(const CBlockIndex* pQuorumBaseBlockIndex, const Consensus::LLMQParams& _params,
-                         CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager,
-                         CDKGDebugManager& _dkgDebugManager, CMasternodeMetaMan& mn_metaman,
-                         CQuorumSnapshotManager& qsnapman, const CActiveMasternodeManager* const mn_activeman,
-                         const ChainstateManager& chainman, const CSporkManager& sporkman) :
-    params{_params},
+CDKGSession::CDKGSession(CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman, CDKGDebugManager& _dkgDebugManager,
+                         CDKGSessionManager& _dkgManager, CQuorumSnapshotManager& qsnapman,
+                         const ChainstateManager& chainman, const CBlockIndex* pQuorumBaseBlockIndex,
+                         const Consensus::LLMQParams& _params) :
     blsWorker{_blsWorker},
     cache{_blsWorker},
     m_dmnman{dmnman},
-    dkgManager{_dkgManager},
     dkgDebugManager{_dkgDebugManager},
-    m_mn_metaman{mn_metaman},
+    dkgManager{_dkgManager},
     m_qsnapman{qsnapman},
-    m_mn_activeman{mn_activeman},
     m_chainman{chainman},
-    m_sporkman{sporkman},
-    m_quorum_base_block_index{pQuorumBaseBlockIndex},
-    m_use_legacy_bls{!DeploymentActiveAfter(m_quorum_base_block_index, chainman.GetConsensus(), Consensus::DEPLOYMENT_V19)}
+    params{_params},
+    m_quorum_base_block_index{pQuorumBaseBlockIndex}
 {
 }
+
+CDKGSession::~CDKGSession() = default;
 
 bool CDKGSession::Init(const uint256& _myProTxHash, int _quorumIndex)
 {
@@ -255,7 +252,7 @@ std::optional<CInv> CDKGSession::ReceiveMessage(const CDKGContribution& qc)
 
     bool complain = false;
     CBLSSecretKey skContribution;
-    if (!m_mn_activeman->Decrypt(*qc.contributions, *myIdx, skContribution, PROTOCOL_VERSION)) {
+    if (!MaybeDecrypt(*qc.contributions, *myIdx, skContribution, PROTOCOL_VERSION)) {
         logger.Batch("contribution from %s could not be decrypted", member->dmn->proTxHash.ToString());
         complain = true;
     } else if (member->idx != myIdx && ShouldSimulateError(DKGError::type::COMPLAIN_LIE)) {

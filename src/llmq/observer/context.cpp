@@ -27,9 +27,8 @@ ObserverContext::ObserverContext(CBLSWorker& bls_worker, CConnman& connman, CDet
 {
     qdkgsman->InitializeHandlers([&](const Consensus::LLMQParams& llmq_params,
                                      int quorum_idx) -> std::unique_ptr<llmq::CDKGSessionHandler> {
-        return std::make_unique<llmq::CDKGSessionHandler>(bls_worker, dmnman, *dkgdbgman, *qdkgsman, mn_metaman,
-                                                          qblockman, qsnapman, /*mn_activeman=*/nullptr, chainman,
-                                                          sporkman, llmq_params, /*quorums_watch=*/true, quorum_idx);
+        return std::make_unique<llmq::CDKGSessionHandler>(bls_worker, dmnman, *dkgdbgman, *qdkgsman, qsnapman, chainman,
+                                                          llmq_params, /*quorums_watch=*/true, quorum_idx);
     });
     m_qman.ConnectManagers(qman_handler.get(), qdkgsman.get());
 }
