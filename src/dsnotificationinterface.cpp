@@ -78,7 +78,6 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 
     m_llmq_ctx->isman->UpdatedBlockTip(pindexNew);
     m_llmq_ctx->clhandler->UpdatedBlockTip(*m_llmq_ctx->isman);
-    m_llmq_ctx->qman->UpdatedBlockTip(pindexNew, m_connman, fInitialDownload);
 
     if (m_govman.IsValid()) {
         m_govman.UpdatedBlockTip(pindexNew);

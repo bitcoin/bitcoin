@@ -64,13 +64,6 @@ void CQuorumManager::Stop()
     workerPool.stop(true);
 }
 
-void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, CConnman& connman, bool fInitialDownload) const
-{
-    if (m_handler) {
-        m_handler->UpdatedBlockTip(pindexNew, connman, fInitialDownload);
-    }
-}
-
 CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(const Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, bool populate_cache) const
 {
     const uint256& quorumHash{pQuorumBaseBlockIndex->GetBlockHash()};

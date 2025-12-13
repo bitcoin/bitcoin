@@ -72,6 +72,7 @@ public:
     const std::unique_ptr<llmq::CDKGSessionManager> qdkgsman;
     const std::unique_ptr<llmq::CSigSharesManager> shareman;
     const std::unique_ptr<llmq::CEHFSignalsHandler> ehf_sighandler;
+    const std::unique_ptr<llmq::QuorumParticipant> qman_handler;
 
 private:
     /*
@@ -80,7 +81,6 @@ private:
      */
     const std::unique_ptr<chainlock::ChainLockSigner> cl_signer;
     const std::unique_ptr<instantsend::InstantSendSigner> is_signer;
-    const std::unique_ptr<llmq::QuorumParticipant> qman_handler;
 };
 
 #endif // BITCOIN_MASTERNODE_ACTIVE_CONTEXT_H

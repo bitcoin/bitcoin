@@ -13,6 +13,7 @@
 
 class CBLSWorker;
 class CBlockIndex;
+class CConnman;
 class CDeterministicMNManager;
 class ChainstateManager;
 class CMasternodeMetaMan;
@@ -39,9 +40,9 @@ public:
     ObserverContext() = delete;
     ObserverContext(const ObserverContext&) = delete;
     ObserverContext& operator=(const ObserverContext&) = delete;
-    ObserverContext(CBLSWorker& bls_worker, CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
-                    CMasternodeSync& mn_sync, llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumManager& qman,
-                    llmq::CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
+    ObserverContext(CBLSWorker& bls_worker, CConnman& connman, CDeterministicMNManager& dmnman,
+                    CMasternodeMetaMan& mn_metaman, CMasternodeSync& mn_sync, llmq::CQuorumBlockProcessor& qblockman,
+                    llmq::CQuorumManager& qman, llmq::CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
                     const CSporkManager& sporkman, const llmq::QvvecSyncModeMap& sync_map,
                     const util::DbWrapperParams& db_params, bool quorums_recovery);
     ~ObserverContext();

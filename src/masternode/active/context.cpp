@@ -36,14 +36,14 @@ ActiveContext::ActiveContext(CCoinJoinServer& cj_server, CConnman& connman, CDet
                                                        mn_activeman, *llmq_ctx.qman, sporkman)},
     ehf_sighandler{
         std::make_unique<llmq::CEHFSignalsHandler>(chainman, mnhfman, *llmq_ctx.sigman, *shareman, *llmq_ctx.qman)},
+    qman_handler{std::make_unique<llmq::QuorumParticipant>(*llmq_ctx.bls_worker, connman, dmnman, *llmq_ctx.qman,
+                                                           *llmq_ctx.qsnapman, mn_activeman, chainman, mn_sync,
+                                                           sporkman, sync_map, quorums_recovery, quorums_watch)},
     cl_signer{std::make_unique<chainlock::ChainLockSigner>(chainman.ActiveChainstate(), *llmq_ctx.clhandler,
                                                            *llmq_ctx.sigman, *shareman, sporkman, mn_sync)},
     is_signer{std::make_unique<instantsend::InstantSendSigner>(chainman.ActiveChainstate(), *llmq_ctx.clhandler,
                                                                *llmq_ctx.isman, *llmq_ctx.sigman, *shareman,
-                                                               *llmq_ctx.qman, sporkman, mempool, mn_sync)},
-    qman_handler{std::make_unique<llmq::QuorumParticipant>(*llmq_ctx.bls_worker, dmnman, *llmq_ctx.qman,
-                                                           *llmq_ctx.qsnapman, mn_activeman, chainman, mn_sync,
-                                                           sporkman, sync_map, quorums_recovery, quorums_watch)}
+                                                               *llmq_ctx.qman, sporkman, mempool, mn_sync)}
 {
     m_llmq_ctx.clhandler->ConnectSigner(cl_signer.get());
     m_llmq_ctx.isman->ConnectSigner(is_signer.get());

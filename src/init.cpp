@@ -2219,7 +2219,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         g_active_notification_interface = std::make_unique<ActiveNotificationInterface>(*node.active_ctx, *node.mn_activeman);
         RegisterValidationInterface(g_active_notification_interface.get());
     } else if (quorums_watch) {
-        node.observer_ctx = std::make_unique<llmq::ObserverContext>(*node.llmq_ctx->bls_worker, *node.dmnman, *node.mn_metaman, *node.mn_sync,
+        node.observer_ctx = std::make_unique<llmq::ObserverContext>(*node.llmq_ctx->bls_worker, *node.connman, *node.dmnman, *node.mn_metaman, *node.mn_sync,
                                                                     *node.llmq_ctx->quorum_block_processor, *node.llmq_ctx->qman, *node.llmq_ctx->qsnapman,
                                                                     chainman, *node.sporkman, sync_map, dash_db_params, quorums_recovery);
         RegisterValidationInterface(node.observer_ctx.get());
