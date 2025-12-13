@@ -97,15 +97,16 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
                 // We need to count
                 const CBlockIndex* pindexCount = pindexPrev;
                 int count = 0;
-                for (int i = 0; i < nPeriod; i++) {
+                int nAttempt = (pindexCount->nHeight - nStartHeight) / nPeriod;
+                int threshold = Threshold(params, nAttempt);
+                for (int i = 0; count + (nPeriod - i) >= threshold && i < nPeriod; ++i) {
                     if (Condition(pindexCount, params)) {
                         count++;
                     }
                     pindexCount = pindexCount->pprev;
                 }
                 assert(nStartHeight > 0 && nStartHeight < std::numeric_limits<int>::max());
-                int nAttempt = (pindexCount->nHeight + 1 - nStartHeight) / nPeriod;
-                if (count >= Threshold(params, nAttempt)) {
+                if (count >= threshold) {
                     stateNext = ThresholdState::LOCKED_IN;
                 } else if (pindexPrev->GetMedianTimePast() >= nTimeTimeout) {
                     stateNext = ThresholdState::FAILED;
