@@ -73,6 +73,10 @@ or can be run through the test_runner harness, eg:
 build/test/functional/test_runner.py feature_rbf.py
 ```
 
+> **Note for CMake users:** The configuration file (`config.ini`) is generated in the build directory. When running the test runner directly, you must specify the path:
+>
+>     ./test/functional/test_runner.py --configfile=build/test/config.ini
+
 You can run any combination (incl. duplicates) of tests by calling:
 
 ```
