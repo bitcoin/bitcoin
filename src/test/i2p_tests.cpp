@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(unlimited_recv)
     i2p::sam::Session session(gArgs.GetDataDirNet() / "test_i2p_private_key", sam_proxy, interrupt);
 
     {
-        ASSERT_DEBUG_LOG("Creating persistent SAM session");
+        ASSERT_DEBUG_LOG("Creating persistent I2P SAM session");
         ASSERT_DEBUG_LOG("too many bytes without a terminator");
 
         i2p::Connection conn;
@@ -121,10 +121,10 @@ BOOST_AUTO_TEST_CASE(listen_ok_accept_fail)
 
     i2p::Connection conn;
     for (size_t i = 0; i < 5; ++i) {
-        ASSERT_DEBUG_LOG("Creating persistent SAM session");
-        ASSERT_DEBUG_LOG("Persistent SAM session" /* ... created */);
+        ASSERT_DEBUG_LOG("Creating persistent I2P SAM session");
+        ASSERT_DEBUG_LOG("Persistent I2P SAM session" /* ... created */);
         ASSERT_DEBUG_LOG("Error accepting");
-        ASSERT_DEBUG_LOG("Destroying SAM session");
+        ASSERT_DEBUG_LOG("Destroying I2P SAM session");
         BOOST_REQUIRE(session.Listen(conn));
         BOOST_REQUIRE(!session.Accept(conn));
     }
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(damaged_private_key)
         i2p::sam::Session session(i2p_private_key_file, sam_proxy, interrupt);
 
         {
-            ASSERT_DEBUG_LOG("Creating persistent SAM session");
+            ASSERT_DEBUG_LOG("Creating persistent I2P SAM session");
             ASSERT_DEBUG_LOG(expected_error);
 
             i2p::Connection conn;

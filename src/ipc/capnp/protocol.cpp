@@ -31,22 +31,6 @@ namespace ipc {
 namespace capnp {
 namespace {
 
-BCLog::Level ConvertIPCLogLevel(mp::Log level)
-{
-    switch (level) {
-        case mp::Log::Trace: return BCLog::Level::Trace;
-        case mp::Log::Debug: return BCLog::Level::Debug;
-        case mp::Log::Info: return BCLog::Level::Info;
-        case mp::Log::Warning: return BCLog::Level::Warning;
-        case mp::Log::Error: return BCLog::Level::Error;
-        case mp::Log::Raise: return BCLog::Level::Error;
-    } // no default case, so the compiler can warn about missing cases
-
-    // Be conservative and assume that if MP ever adds a new log level, it
-    // should only be shown at our most verbose level.
-    return BCLog::Level::Trace;
-}
-
 mp::Log GetRequestedIPCLogLevel()
 {
     if (LogAcceptCategory(BCLog::IPC, BCLog::Level::Trace)) return mp::Log::Trace;
@@ -58,8 +42,30 @@ mp::Log GetRequestedIPCLogLevel()
 
 void IpcLogFn(mp::LogMessage message)
 {
-    LogPrintLevel(BCLog::IPC, ConvertIPCLogLevel(message.level), "%s\n", message.message);
-    if (message.level == mp::Log::Raise) throw Exception(message.message);
+    switch (message.level) {
+    case mp::Log::Trace:
+        LogTrace(BCLog::IPC, "%s", message.message);
+        return;
+    case mp::Log::Debug:
+        LogDebug(BCLog::IPC, "%s", message.message);
+        return;
+    case mp::Log::Info:
+        LogInfo("ipc: %s", message.message);
+        return;
+    case mp::Log::Warning:
+        LogWarning("ipc: %s", message.message);
+        return;
+    case mp::Log::Error:
+        LogError("ipc: %s", message.message);
+        return;
+    case mp::Log::Raise:
+        LogError("ipc: %s", message.message);
+        throw Exception(message.message);
+    } // no default case, so the compiler can warn about missing cases
+
+    // Be conservative and assume that if MP ever adds a new log level, it
+    // should only be shown at our most verbose level.
+    LogTrace(BCLog::IPC, "%s", message.message);
 }
 
 class CapnpProtocol : public Protocol
