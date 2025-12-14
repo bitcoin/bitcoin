@@ -485,7 +485,6 @@ class RESTTest (BitcoinTestFramework):
 
             get_block_part(status=400, query_params={"offset": 0, "size": 0})
             get_block_part(status=400, query_params={"offset": len(block_bin), "size": 0})
-            get_block_part(status=400, query_params={"offset": len(block_bin) + 1, "size": 1})
             get_block_part(status=400, query_params={"offset": len(block_bin), "size": 1})
             get_block_part(status=400, query_params={"offset": len(block_bin) + 1, "size": 1})
             get_block_part(status=400, query_params={"offset": 0, "size": len(block_bin) + 1})
