@@ -1142,20 +1142,20 @@ static const struct {
     const char* prefix;
     bool (*handler)(const std::any& context, HTTPRequest* req, const std::string& strReq);
 } uri_prefixes[] = {
-      {"/rest/tx/", rest_tx},
-      {"/rest/block/notxdetails/", rest_block_notxdetails},
-      {"/rest/block/", rest_block_extended},
-      {"/rest/blockpart/", rest_block_part},
-      {"/rest/blockfilter/", rest_block_filter},
-      {"/rest/blockfilterheaders/", rest_filter_header},
-      {"/rest/chaininfo", rest_chaininfo},
-      {"/rest/mempool/", rest_mempool},
-      {"/rest/headers/", rest_headers},
-      {"/rest/getutxos", rest_getutxos},
-      {"/rest/deploymentinfo/", rest_deploymentinfo},
-      {"/rest/deploymentinfo", rest_deploymentinfo},
-      {"/rest/blockhashbyheight/", rest_blockhash_by_height},
-      {"/rest/spenttxouts/", rest_spent_txouts},
+    {"/rest/tx/", rest_tx},
+    {"/rest/block/notxdetails/", rest_block_notxdetails},
+    {"/rest/block/", rest_block_extended},
+    {"/rest/blockpart/", rest_block_part},
+    {"/rest/blockfilter/", rest_block_filter},
+    {"/rest/blockfilterheaders/", rest_filter_header},
+    {"/rest/chaininfo", rest_chaininfo},
+    {"/rest/mempool/", rest_mempool},
+    {"/rest/headers/", rest_headers},
+    {"/rest/getutxos", rest_getutxos},
+    {"/rest/deploymentinfo/", rest_deploymentinfo},
+    {"/rest/deploymentinfo", rest_deploymentinfo},
+    {"/rest/blockhashbyheight/", rest_blockhash_by_height},
+    {"/rest/spenttxouts/", rest_spent_txouts},
 };
 
 void StartREST(const std::any& context)
