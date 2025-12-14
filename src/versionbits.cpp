@@ -61,6 +61,11 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
             cache[pindexPrev] = ThresholdState::DEFINED;
             break;
         }
+        if (pindexPrev->nHeight < params.MinBIP9WarningHeight) {
+            // Optimization: don't compute below MinBIP9WarningHeight, consider it defined.
+            cache[pindexPrev] = ThresholdState::DEFINED;
+            break;
+        }
         if (pindexPrev->GetMedianTimePast() < nTimeStart || pindexPrev->nHeight < masternodeStartHeight) {
             // Optimization: don't recompute down further, as we know every earlier block will be before the start time
             cache[pindexPrev] = ThresholdState::DEFINED;
