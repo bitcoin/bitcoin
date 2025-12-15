@@ -5186,8 +5186,9 @@ bool PeerManagerImpl::ProcessMessages(CNode& node, std::atomic<bool>& interruptM
     AssertLockHeld(g_msgproc_mutex);
 
     CNode* pfrom{&node}; // alias removed in a later commit.
-    PeerRef peer = GetPeerRef(pfrom->GetId());
-    if (peer == nullptr) return false;
+    PeerRef maybe_peer{GetPeerRef(pfrom->GetId())};
+    if (maybe_peer == nullptr) return false;
+    auto& peer{maybe_peer}; // alias cleaned up in later commit.
 
     // For outbound connections, ensure that the initial VERSION message
     // has been sent first before processing any incoming messages
@@ -5689,8 +5690,9 @@ bool PeerManagerImpl::SendMessages(CNode& node)
     AssertLockHeld(g_msgproc_mutex);
 
     CNode* pto{&node}; // alias removed in a later commit
-    PeerRef peer = GetPeerRef(pto->GetId());
-    if (!peer) return false;
+    PeerRef maybe_peer{GetPeerRef(pto->GetId())};
+    if (!maybe_peer) return false;
+    auto& peer{maybe_peer}; // alias cleaned up in later commit
     const Consensus::Params& consensusParams = m_chainparams.GetConsensus();
 
     // We must call MaybeDiscourageAndDisconnect first, to ensure that we'll
