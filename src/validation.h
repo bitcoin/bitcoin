@@ -628,11 +628,13 @@ public:
     const CBlockIndex* SnapshotBase() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /**
-     * The set of all CBlockIndex entries that have as much work as our current
-     * tip or more, and transaction data needed to be validated (with
+     * The set of all CBlockIndex entries that score at least as well as the
+     * tip under CBlockIndexWorkComparator (more work or same work with a tiebreak
+     * at least as good) and have transaction data that can be validated (with
      * BLOCK_VALID_TRANSACTIONS for each block and its parents back to the
-     * genesis block or an assumeutxo snapshot block). Entries may be failed,
-     * though, and pruning nodes may be missing the data for the block.
+     * genesis block or an assumeutxo snapshot block).
+     * The tip is always a member of setBlockIndexCandidates.
+     * Entries may be failed though, and pruning nodes may be missing the data for the block.
      */
     std::set<CBlockIndex*, node::CBlockIndexWorkComparator> setBlockIndexCandidates;
 

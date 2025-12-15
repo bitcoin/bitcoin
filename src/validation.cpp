@@ -3680,6 +3680,8 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
                 // Do not remove candidate from the highpow_outofchain_headers cache, because it might be a descendant of the block being invalidated
                 // which needs to be marked failed later.
             }
+            // Best header updating currently doesn't use CBlockIndexWorkComparator, so only nChainWork is used for consistency.
+            // This means that in case of a tie, it depends on iteration order what index m_best_header points to.
             if (best_header_needs_update &&
                 m_chainman.m_best_header->nChainWork < candidate->nChainWork) {
                 m_chainman.m_best_header = candidate;
@@ -3721,6 +3723,8 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
             }
         }
 
+        // This updates m_best_invalid and logs the invalidated block, but it also repeats some
+        // of the work done above (recalculating m_best_header and failure flags).
         InvalidChainFound(to_mark_failed);
     }
 
@@ -3783,8 +3787,9 @@ void Chainstate::ResetBlockFailureFlags(CBlockIndex *pindex) {
 void Chainstate::TryAddBlockIndexCandidate(CBlockIndex* pindex)
 {
     AssertLockHeld(cs_main);
-    // The block only is a candidate for the most-work-chain if it has the same
-    // or more work than our current tip.
+    // The block only is a candidate for the most-work-chain if it has more work than
+    // our current tip, or if it has the same work and a better CBlockIndexWorkComparator
+    // tiebreak.
     if (m_chain.Tip() != nullptr && setBlockIndexCandidates.value_comp()(pindex, m_chain.Tip())) {
         return;
     }
@@ -5346,7 +5351,8 @@ void ChainstateManager::CheckBlockIndex() const
             // Two main factors determine whether pindex is a candidate in
             // setBlockIndexCandidates:
             //
-            // - If pindex has less work than the chain tip, it should not be a
+            // - If pindex has less work than the chain tip (or equal work and a worse
+            //   CBlockIndexWorkComparator tiebreak), it should not be a
             //   candidate, and this will be asserted below. Otherwise it is a
             //   potential candidate.
             //
