@@ -56,14 +56,14 @@ class IPCInterfaceTest(BitcoinTestFramework):
         self.num_nodes = 2
 
     def setup_nodes(self):
-        self.extra_init = [{"ipcbind": True}, {}]
+        self.extra_init = [{"ipcbind": True}, {"ipcbind": True}]
+        self.extra_args = [[], ["-txindex=1"]]
         super().setup_nodes()
         # Use this function to also load the capnp modules (we cannot use set_test_params for this,
         # as it is being called before knowing whether capnp is available).
         self.capnp_modules = self.load_capnp_modules()
 
-    async def make_capnp_init_ctx(self):
-        node = self.nodes[0]
+    async def make_capnp_init_ctx(self, node):
         # Establish a connection, and create Init proxy object.
         connection = await capnp.AsyncIoStream.create_unix_connection(node.ipc_socket_path)
         client = capnp.TwoPartyClient(connection)
@@ -91,7 +91,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
     def run_echo_test(self):
         self.log.info("Running echo test")
         async def async_routine():
-            ctx, init = await self.make_capnp_init_ctx()
+            ctx, init = await self.make_capnp_init_ctx(self.nodes[0])
             self.log.debug("Create Echo proxy object")
             echo = init.makeEcho(ctx).result
             self.log.debug("Test a few invocations of echo")
@@ -110,7 +110,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
         miniwallet = MiniWallet(self.nodes[0])
 
         async def async_routine():
-            ctx, init = await self.make_capnp_init_ctx()
+            ctx, init = await self.make_capnp_init_ctx(self.nodes[0])
             self.log.debug("Create Mining proxy object")
             mining = init.makeMining(ctx)
             self.log.debug("Test simple inspectors")
@@ -168,7 +168,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
             assert_equal(template3.to_dict(), {})
             self.log.debug("Wait for another, get one after increase in fees in the mempool")
             waitnext = template2.result.waitNext(ctx, waitoptions)
-            miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
+            tx1 = miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
             template4 = await waitnext
             block3 = await self.parse_and_deserialize_block(template4, ctx)
             assert_equal(len(block3.vtx), 2)
@@ -180,10 +180,23 @@ class IPCInterfaceTest(BitcoinTestFramework):
             waitoptions.feeThreshold = 1
             self.log.debug("Wait for another, get one after increase in fees in the mempool")
             waitnext = template5.result.waitNext(ctx, waitoptions)
-            miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
+            tx2 = miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
             template6 = await waitnext
             block4 = await self.parse_and_deserialize_block(template6, ctx)
             assert_equal(len(block4.vtx), 3)
+
+            self.log.debug("Test getTransactions() from mempool")
+            raw_txs_txid = await mining.result.getTransactions(ctx, [tx1["tx"].txid, tx2["tx"].txid, bytes(32)])
+            assert_equal(len(raw_txs_txid.result), 3)
+            assert_equal(raw_txs_txid.result[0].hex(), tx1["hex"])
+            assert_equal(raw_txs_txid.result[1].hex(), tx2["hex"])
+            assert_equal(raw_txs_txid.result[2], b'')
+
+            self.log.debug("Test getTransactionsByWitnessID()")
+            raw_txs = await mining.result.getTransactionsByWitnessID(ctx, [tx1["tx"].wtxid])
+            assert_equal(len(raw_txs.result), 1)
+            assert_equal(raw_txs.result[0].hex(), tx1["hex"])
+
             self.log.debug("Wait for another, but time out, since the fee threshold is set now")
             template7 = await template6.result.waitNext(ctx, waitoptions)
             assert_equal(template7.to_dict(), {})
@@ -262,6 +275,18 @@ class IPCInterfaceTest(BitcoinTestFramework):
             self.sync_all()
             # Check that the other node accepts the block
             assert_equal(self.nodes[0].getchaintips()[0], self.nodes[1].getchaintips()[0])
+
+            self.log.debug("Test -txindex effect on getTransactions()")
+            # Node 0 without -txindex: transaction won't be found once mined
+            #                          and out of the mempool.
+            raw_txs = await mining.result.getTransactions(ctx, [tx1["tx"].txid])
+            assert_equal(raw_txs.result[0], b'')
+
+            # Node 1 with -txindex: mined transaction will be found
+            ctx1, init1 = await self.make_capnp_init_ctx(self.nodes[1])
+            mining1 = init1.makeMining(ctx1)
+            raw_txs = await mining1.result.getTransactions(ctx1, [tx1["tx"].txid])
+            assert_equal(raw_txs.result[0].hex(), tx1["hex"])
 
             miniwallet.rescan_utxos()
             assert_equal(miniwallet.get_balance(), balance + 1)
