@@ -22,7 +22,6 @@
 
 #include <cassert>
 #include <cstdint>
-#include <cstdio>
 #include <exception>
 #include <iterator>
 #include <span>
@@ -107,7 +106,7 @@ bool TxIndex::FindTx(const Txid& tx_hash, uint256& block_hash, CTransactionRef& 
     CBlockHeader header;
     try {
         file >> header;
-        file.seek(postx.nTxOffset, SEEK_CUR);
+        file.seek(postx.nTxOffset, SeekFrom::Curr);
         file >> TX_WITH_WITNESS(tx);
     } catch (const std::exception& e) {
         LogError("Deserialize or I/O error - %s", e.what());

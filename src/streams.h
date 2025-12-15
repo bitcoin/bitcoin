@@ -355,6 +355,18 @@ public:
     }
 };
 
+/**
+ * Relative position to move the file cursor.
+ */
+enum SeekFrom {
+    /* Start of the file. */
+    Set = 0,
+    /* Current position. */
+    Curr,
+    /* End of the file. */
+    End
+};
+
 /** Non-refcounted RAII wrapper for FILE*
  *
  * Will automatically close the file when it goes out of scope if not null.
@@ -430,7 +442,7 @@ public:
     std::size_t detail_fread(std::span<std::byte> dst);
 
     /** Wrapper around fseek(). Will throw if seeking is not possible. */
-    void seek(int64_t offset, int origin);
+    void seek(int64_t offset, SeekFrom origin);
 
     /** Find position within the file. Will throw if unknown. */
     int64_t tell();
