@@ -217,7 +217,7 @@ static const std::unordered_map<BCLog::LogFlags, std::string> LOG_CATEGORIES_BY_
     }(LOG_CATEGORIES_BY_STR)
 };
 
-bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str)
+bool BCLog::Logger::GetLogCategory(BCLog::LogFlags& flag, std::string_view str)
 {
     if (str.empty() || str == "1" || str == "all") {
         flag = BCLog::ALL;

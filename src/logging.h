@@ -379,6 +379,9 @@ namespace BCLog {
         {
             LogPrintFormatInternal<false>(std::move(source_loc), flag, level, std::move(fmt), args...);
         }
+
+        /** Return true if str parses as a log category and set the flag */
+        static bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
     };
 } // namespace BCLog
 
@@ -389,9 +392,6 @@ static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level leve
 {
     return LogInstance().WillLogCategoryLevel(category, level);
 }
-
-/** Return true if str parses as a log category and set the flag */
-bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
 
 // Allow __func__ to be used in any context without warnings:
 // NOLINTNEXTLINE(bugprone-lambda-function-name)
