@@ -847,7 +847,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
 
     m_node.peerman->InitializeNode(peer, NODE_NETWORK);
 
-    m_node.peerman->SendMessages(&peer);
+    m_node.peerman->SendMessages(peer);
     connman.FlushSendBuffer(peer); // Drop sent version message
 
     auto msg_version_receive =
@@ -857,7 +857,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     bool more_work{connman.ProcessMessagesOnce(peer)};
     Assert(!more_work);
 
-    m_node.peerman->SendMessages(&peer);
+    m_node.peerman->SendMessages(peer);
     connman.FlushSendBuffer(peer); // Drop sent verack message
 
     Assert(connman.ReceiveMsgFrom(peer, NetMsg::Make(NetMsgType::VERACK)));
@@ -890,7 +890,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
         }
     };
 
-    m_node.peerman->SendMessages(&peer);
+    m_node.peerman->SendMessages(peer);
 
     BOOST_CHECK(sent);
 
