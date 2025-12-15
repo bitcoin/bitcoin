@@ -166,7 +166,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros_CategoryName, LogSetup)
     for (const auto& category_name : category_names) {
         BCLog::LogFlags category;
         const auto trimmed_category_name = TrimString(category_name);
-        BOOST_REQUIRE(GetLogCategory(category, trimmed_category_name));
+        BOOST_REQUIRE(BCLog::Logger::GetLogCategory(category, trimmed_category_name));
         expected_category_names.emplace_back(category, trimmed_category_name);
     }
 
