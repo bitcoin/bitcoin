@@ -309,6 +309,9 @@ If you want to debug C++ code in nodes while executing under a functional test,
 you might want to set `-DENABLE_WAIT_FOR_DEBUGGER=ON`, which enables
 `-waitfordebugger` support in bitcoind and also allows passing
 `--debug_runs 0 2` to tests in order to debug the 1st and 3rd node (re)starts.
+Furthermore, you can use something like
+`--debug_cmd "tmux split-window -h lldb -p \$PID\$"` to automatically
+attach to the processes.
 
 ### debug.log
 
