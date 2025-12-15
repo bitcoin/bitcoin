@@ -156,7 +156,8 @@ static constexpr uint64_t KNOWN_WALLET_FLAGS =
     |   WALLET_FLAG_LAST_HARDENED_XPUB_CACHED
     |   WALLET_FLAG_DISABLE_PRIVATE_KEYS
     |   WALLET_FLAG_DESCRIPTORS
-    |   WALLET_FLAG_EXTERNAL_SIGNER;
+    |   WALLET_FLAG_EXTERNAL_SIGNER
+    |   WALLET_FLAG_SILENT_PAYMENTS;
 
 static constexpr uint64_t MUTABLE_WALLET_FLAGS =
         WALLET_FLAG_AVOID_REUSE;
@@ -168,7 +169,8 @@ static const std::map<WalletFlags, std::string> WALLET_FLAG_TO_STRING{
     {WALLET_FLAG_LAST_HARDENED_XPUB_CACHED, "last_hardened_xpub_cached"},
     {WALLET_FLAG_DISABLE_PRIVATE_KEYS, "disable_private_keys"},
     {WALLET_FLAG_DESCRIPTORS, "descriptor_wallet"},
-    {WALLET_FLAG_EXTERNAL_SIGNER, "external_signer"}
+    {WALLET_FLAG_EXTERNAL_SIGNER, "external_signer"},
+    {WALLET_FLAG_SILENT_PAYMENTS, "silent_payments"}
 };
 
 static const std::map<std::string, WalletFlags> STRING_TO_WALLET_FLAG{
@@ -178,7 +180,8 @@ static const std::map<std::string, WalletFlags> STRING_TO_WALLET_FLAG{
     {WALLET_FLAG_TO_STRING.at(WALLET_FLAG_LAST_HARDENED_XPUB_CACHED), WALLET_FLAG_LAST_HARDENED_XPUB_CACHED},
     {WALLET_FLAG_TO_STRING.at(WALLET_FLAG_DISABLE_PRIVATE_KEYS), WALLET_FLAG_DISABLE_PRIVATE_KEYS},
     {WALLET_FLAG_TO_STRING.at(WALLET_FLAG_DESCRIPTORS), WALLET_FLAG_DESCRIPTORS},
-    {WALLET_FLAG_TO_STRING.at(WALLET_FLAG_EXTERNAL_SIGNER), WALLET_FLAG_EXTERNAL_SIGNER}
+    {WALLET_FLAG_TO_STRING.at(WALLET_FLAG_EXTERNAL_SIGNER), WALLET_FLAG_EXTERNAL_SIGNER},
+    {WALLET_FLAG_TO_STRING.at(WALLET_FLAG_SILENT_PAYMENTS), WALLET_FLAG_SILENT_PAYMENTS}
 };
 
 /** A wrapper to reserve an address from a wallet
@@ -360,7 +363,7 @@ private:
      * Should be called with rescanning_old_block set to true, if the transaction is
      * not discovered in real time, but during a rescan of old blocks.
      */
-    bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, const SyncTxState& state, bool fUpdate, bool rescanning_old_block) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, const std::map<COutPoint, Coin>& spent_coins, const SyncTxState& state, bool fUpdate, bool rescanning_old_block) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** Mark a transaction (and its in-wallet descendants) as conflicting with a particular block. */
     void MarkConflicted(const uint256& hashBlock, int conflicting_height, const Txid& hashTx);
@@ -378,7 +381,7 @@ private:
 
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    bool SyncTransaction(const CTransactionRef& tx, const SyncTxState& state, bool update_tx = true, bool rescanning_old_block = false) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool SyncTransaction(const CTransactionRef& tx, const SyncTxState& state, const std::map<COutPoint, Coin>& spent_coins = {}, bool update_tx = true, bool rescanning_old_block = false) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** WalletFlags set on this wallet. */
     std::atomic<uint64_t> m_wallet_flags{0};
@@ -628,7 +631,7 @@ public:
      */
     CWalletTx* AddToWallet(CTransactionRef tx, const TxState& state, const UpdateWalletTxFn& update_wtx=nullptr, bool rescanning_old_block = false);
     bool LoadToWallet(const Txid& hash, const UpdateWalletTxFn& fill_wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    void transactionAddedToMempool(const CTransactionRef& tx) override;
+    void transactionAddedToMempool(const CTransactionRef& tx, const std::map<COutPoint, Coin>& spent_coins) override;
     void blockConnected(ChainstateRole role, const interfaces::BlockInfo& block) override;
     void blockDisconnected(const interfaces::BlockInfo& block) override;
     void updatedBlockTip() override;
@@ -657,7 +660,7 @@ public:
     bool ShouldResend() const;
     void ResubmitWalletTransactions(node::TxBroadcast broadcast_method, bool force);
 
-    OutputType TransactionChangeType(const std::optional<OutputType>& change_type, const std::vector<CRecipient>& vecSend) const;
+    OutputType TransactionChangeType(const std::optional<OutputType>& change_type, const std::vector<CRecipient>& vecSend, bool exclude_sp = false) const;
 
     /** Fetch the inputs and sign with SIGHASH_ALL. */
     bool SignTransaction(CMutableTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -793,6 +796,7 @@ public:
     CAmount GetDebit(const CTxIn& txin) const;
     bool IsMine(const CTxOut& txout) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool IsMine(const CTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool IsMine(const CTransaction& tx, const std::map<COutPoint, Coin>& spent_coins) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool IsMine(const COutPoint& outpoint) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     /** should probably be renamed to IsRelevantToMe */
     bool IsFromMe(const CTransaction& tx) const;
@@ -951,6 +955,8 @@ public:
 
     //! Get all the ScriptPubKeyMans for a script
     std::set<ScriptPubKeyMan*> GetScriptPubKeyMans(const CScript& script) const;
+    //! Get all the ScriptPubKeyMans for a destination
+    std::set<ScriptPubKeyMan*> GetScriptPubKeyMans(const CTxDestination& destination) const;
     //! Get the ScriptPubKeyMan by id
     ScriptPubKeyMan* GetScriptPubKeyMan(const uint256& id) const;
 
@@ -1026,6 +1032,7 @@ public:
 
     //! Return the DescriptorScriptPubKeyMan for a WalletDescriptor if it is already in the wallet
     DescriptorScriptPubKeyMan* GetDescriptorScriptPubKeyMan(const WalletDescriptor& desc) const;
+    std::set<SilentPaymentDescriptorScriptPubKeyMan*> GetSilentPaymentsSPKMs() const;
 
     //! Returns whether the provided ScriptPubKeyMan is internal
     //! @param[in] spk_man The ScriptPubKeyMan to test

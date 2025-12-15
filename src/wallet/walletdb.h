@@ -6,6 +6,7 @@
 #ifndef BITCOIN_WALLET_WALLETDB_H
 #define BITCOIN_WALLET_WALLETDB_H
 
+#include <common/bip352.h>
 #include <key.h>
 #include <primitives/transaction_identifier.h>
 #include <script/sign.h>
@@ -78,6 +79,7 @@ extern const std::string ORDERPOSNEXT;
 extern const std::string POOL;
 extern const std::string PURPOSE;
 extern const std::string SETTINGS;
+extern const std::string SPTWEAK;
 extern const std::string TX;
 extern const std::string VERSION;
 extern const std::string WALLETDESCRIPTOR;
@@ -224,6 +226,7 @@ public:
     bool WritePurpose(const std::string& strAddress, const std::string& purpose);
     bool ErasePurpose(const std::string& strAddress);
 
+    bool WriteSilentPaymentsTweak(const uint256& id, const bip352::SilentPaymentOutput& output);
     bool WriteTx(const CWalletTx& wtx);
     bool EraseTx(Txid hash);
 

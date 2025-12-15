@@ -6,6 +6,7 @@
 #ifndef BITCOIN_VALIDATIONINTERFACE_H
 #define BITCOIN_VALIDATIONINTERFACE_H
 
+#include <coins.h> // Coin
 #include <kernel/chain.h>
 #include <kernel/cs_main.h>
 #include <primitives/transaction.h>
@@ -70,7 +71,7 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t mempool_sequence) {}
+    virtual void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t mempool_sequence, const std::map<COutPoint, Coin>& spent_coins) {}
 
     /**
      * Notifies listeners of a transaction leaving mempool.
@@ -218,7 +219,7 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
     void ActiveTipChange(const CBlockIndex&, bool);
-    void TransactionAddedToMempool(const NewMempoolTransactionInfo&, uint64_t mempool_sequence);
+    void TransactionAddedToMempool(const NewMempoolTransactionInfo&, uint64_t mempool_sequence, const std::map<COutPoint, Coin>& spent_coins);
     void TransactionRemovedFromMempool(const CTransactionRef&, MemPoolRemovalReason, uint64_t mempool_sequence);
     void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>&, unsigned int nBlockHeight);
     void BlockConnected(ChainstateRole, const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex);

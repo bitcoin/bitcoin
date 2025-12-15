@@ -17,7 +17,7 @@
 #include <secp256k1_recovery.h>
 #include <secp256k1_schnorrsig.h>
 
-static secp256k1_context* secp256k1_context_sign = nullptr;
+secp256k1_context* secp256k1_context_sign = nullptr;
 
 /** These functions are taken from the libsecp256k1 distribution and are very ugly. */
 
@@ -343,6 +343,15 @@ ECDHSecret CKey::ComputeBIP324ECDHSecret(const EllSwiftPubKey& their_ellswift, c
     // Should always succeed for valid keys (assert above).
     assert(success);
     return output;
+}
+
+std::optional<CKey> CKey::ComputeBIP352Key(const unsigned char* tweak32)
+{
+    assert(keydata);
+    CKey tweaked_key{*this};
+    if (!secp256k1_ec_seckey_tweak_add(secp256k1_context_sign, tweaked_key.keydata->data(), tweak32))
+        return std::nullopt;
+    return tweaked_key;
 }
 
 KeyPair CKey::ComputeKeyPair(const uint256* merkle_root) const
