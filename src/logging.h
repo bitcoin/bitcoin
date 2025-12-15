@@ -395,15 +395,15 @@ bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
 
 // Allow __func__ to be used in any context without warnings:
 // NOLINTNEXTLINE(bugprone-lambda-function-name)
-#define LogPrintLevel_(category, level, ...) LogInstance().LogPrintFormatInternal(SourceLocation{__func__}, category, level, __VA_ARGS__)
+#define detail_LogPrintLevel(category, level, ...) LogInstance().LogPrintFormatInternal(SourceLocation{__func__}, category, level, __VA_ARGS__)
 
 // Log unconditionally. Uses basic rate limiting to mitigate disk filling attacks.
 // Be conservative when using functions that unconditionally log to debug.log!
 // It should not be the case that an inbound peer can fill up a user's storage
 // with debug.log entries.
-#define LogInfo(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, __VA_ARGS__)
-#define LogWarning(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Warning, __VA_ARGS__)
-#define LogError(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Error, __VA_ARGS__)
+#define LogInfo(...) detail_LogPrintLevel(BCLog::LogFlags::ALL, BCLog::Level::Info, __VA_ARGS__)
+#define LogWarning(...) detail_LogPrintLevel(BCLog::LogFlags::ALL, BCLog::Level::Warning, __VA_ARGS__)
+#define LogError(...) detail_LogPrintLevel(BCLog::LogFlags::ALL, BCLog::Level::Error, __VA_ARGS__)
 
 // Use a macro instead of a function for conditional logging to prevent
 // evaluating arguments when logging for the category is not enabled.
@@ -415,7 +415,7 @@ bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
     do {                                                              \
         if (LogAcceptCategory((category), (level))) {                 \
             Assume(level < BCLog::Level::Info);/*Only called with the levels below*/ \
-            LogPrintLevel_(category, level, BCLog::NO_RATE_LIMIT, __VA_ARGS__); \
+            detail_LogPrintLevel(category, level, BCLog::NO_RATE_LIMIT, __VA_ARGS__); \
         }                                                             \
     } while (0)
 
