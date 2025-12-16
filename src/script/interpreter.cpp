@@ -2070,6 +2070,42 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
                 execdata.m_validation_weight_left_init = true;
                 return ExecuteWitnessScript(stack, exec_script, flags, SigVersion::TAPSCRIPT, checker, execdata, serror);
             }
+            if ((flags & SCRIPT_VERIFY_SIMPLICITY) && (script.size() == 32) && (control[0] & TAPROOT_LEAF_MASK) == TAPROOT_LEAF_TAPSIMPLICITY) {
+                if (stack.size() < 2 || 3 < stack.size()) return set_error(serror, SCRIPT_ERR_SIMPLICITY_WRONG_LENGTH);
+                // Tapsimplicity (leaf version 0xbe)
+                const valtype& simplicity_program = SpanPopBack(stack);
+                const valtype& simplicity_witness = SpanPopBack(stack);
+                const int64_t budget = ::GetSerializeSize(witness.stack) + VALIDATION_WEIGHT_OFFSET;
+                int64_t minCost = 0;
+                rawBitcoinTapEnv simplicityRawTap;
+                simplicityRawTap.controlBlock = control.data();
+                simplicityRawTap.pathLen = (control.size() - TAPROOT_CONTROL_BASE_SIZE) / TAPROOT_CONTROL_NODE_SIZE;
+                simplicityRawTap.scriptCMR = script.data();
+                // If a padding stack item exists, we want to make sure it is minimal.
+                if (!stack.empty()) {
+                    const valtype& padding = SpanPopBack(stack);
+                    valtype zero_padding(padding.size());
+
+                    // There should be no more stack items.
+                    assert(stack.empty());
+
+                    // Padding must be all zeros.
+                    if (padding != zero_padding) {
+                        return set_error(serror, SCRIPT_ERR_SIMPLICITY_PADDING_NONZERO);
+                    }
+
+                    // Compute what the budget would have been without the padding.
+                    // budget includes the padding cost, so subtracting this stack item won't underflow.
+                    minCost = budget - ::GetSerializeSize(padding);
+
+                    if (!zero_padding.empty()) {
+                        // Set the minCost to what the budget would have been if the padding were one byte smaller.
+                        zero_padding.pop_back();
+                        minCost += ::GetSerializeSize(zero_padding);
+                    }
+                }
+                return checker.CheckSimplicity(simplicity_program, simplicity_witness, simplicityRawTap, minCost, budget, serror);
+            }
             if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION) {
                 return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION);
             }
@@ -2275,6 +2311,7 @@ const std::map<std::string, script_verify_flag_name>& ScriptFlagNamesToEnum()
         FLAG_NAME(WITNESS_PUBKEYTYPE),
         FLAG_NAME(CONST_SCRIPTCODE),
         FLAG_NAME(TAPROOT),
+        FLAG_NAME(SIMPLICITY),
         FLAG_NAME(DISCOURAGE_UPGRADABLE_PUBKEYTYPE),
         FLAG_NAME(DISCOURAGE_OP_SUCCESS),
         FLAG_NAME(DISCOURAGE_UPGRADABLE_TAPROOT_VERSION),

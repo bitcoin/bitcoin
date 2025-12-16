@@ -2321,6 +2321,10 @@ script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
         flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
     }
 
+    if (DeploymentActiveAt(block_index, chainman, Consensus::DEPLOYMENT_SIMPLICITY)) {
+        flags |= SCRIPT_VERIFY_SIMPLICITY;
+    }
+
     // Enforce BIP147 NULLDUMMY (activated simultaneously with segwit)
     if (DeploymentActiveAt(block_index, chainman, Consensus::DEPLOYMENT_SEGWIT)) {
         flags |= SCRIPT_VERIFY_NULLDUMMY;

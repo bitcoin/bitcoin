@@ -34,6 +34,7 @@ from test_framework.script import (
     CScriptOp,
     hash256,
     LEAF_VERSION_TAPSCRIPT,
+    LEAF_VERSION_TAPSIMPLICITY,
     LegacySignatureMsg,
     LOCKTIME_THRESHOLD,
     MAX_SCRIPT_ELEMENT_SIZE,
@@ -1143,8 +1144,8 @@ def spenders_taproot_active():
 
     # Future leaf versions
     for leafver in range(0, 0x100, 2):
-        if leafver == LEAF_VERSION_TAPSCRIPT or leafver == ANNEX_TAG:
-            # Skip the defined LEAF_VERSION_TAPSCRIPT, and the ANNEX_TAG which is not usable as leaf version
+        if leafver in [LEAF_VERSION_TAPSCRIPT, LEAF_VERSION_TAPSIMPLICITY, ANNEX_TAG]:
+            # Skip the allocated tapleaf versions and the ANNEX_TAG which is not usable as leaf version
             continue
         scripts = [
             ("bare_c0", CScript([OP_NOP])),
