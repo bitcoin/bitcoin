@@ -7,6 +7,7 @@
 #include <chain.h>
 #include <test/util/setup_common.h>
 
+#include <cmath>
 #include <memory>
 
 extern int GetSkipHeight(int height);
@@ -57,7 +58,7 @@ BOOST_AUTO_TEST_CASE(skip_height_analysis)
     // metric than CPU time.
 
     // Build a chain
-    const auto chain_size{200'000};
+    const auto chain_size{1'000'000};
     std::vector<std::unique_ptr<CBlockIndex>> block_index;
     block_index.reserve(chain_size);
     // Create genesis block
@@ -71,11 +72,11 @@ BOOST_AUTO_TEST_CASE(skip_height_analysis)
         block_index.push_back(std::move(new_index));
     }
 
-    const auto min_distance{500};
+    const auto min_distance{100};
     FastRandomContext ctx(/*fDeterministic =*/true);
     for (auto i{0}; i < 1'000; ++i) {
         // pick a height in the second half of the chain
-        const auto start_height{chain_size - 1 - ctx.randrange(chain_size / 2)};
+        const auto start_height{chain_size - 1 - ctx.randrange(chain_size * 9 / 10)};
         // pick a target height, earlier by at least min_distance
         const auto delta{min_distance + ctx.randrange(start_height - min_distance)};
         const auto target_height{start_height - delta};
@@ -108,11 +109,11 @@ BOOST_AUTO_TEST_CASE(skip_height_analysis)
         // End of copied traversal algorithm
 
         // Asserts on the number of iterations:
-        // always less than 100 and less than 5% of the distance
-        BOOST_CHECK_LT(iteration_count, 100);
-        BOOST_REQUIRE_GT(delta, 0);
-        const auto rel_iter_count{double(iteration_count) / double(delta)};
-        BOOST_CHECK_LT(rel_iter_count, 0.05);
+        // Absolute value maximum (derived empirically)
+        BOOST_CHECK_LE(iteration_count, 115);
+        // Dynamic bound, function of distance. Formula derived empirically.
+        const auto bound_log_distance{std::ceil(8*std::log(delta)/std::log(2) - 40)};
+        BOOST_CHECK_LE(double(iteration_count), bound_log_distance);
 
         // Also check that `GetAncestor` gives the same result
         auto p_ancestor{start_p->GetAncestor(target_height)};
