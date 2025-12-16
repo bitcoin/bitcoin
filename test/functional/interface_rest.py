@@ -84,7 +84,7 @@ class RESTTest (BitcoinTestFramework):
             conn.request('POST', rest_uri, body)
         resp = conn.getresponse()
 
-        assert resp.status == status, f"Expected: {status}, Got: {resp.status} - Response: {str(resp.read())}"
+        assert resp.status == status, f"Expected: {status}, Got: {resp.status} ({resp.reason}) - Response: {str(resp.read())}"
 
         if ret_type == RetType.OBJ:
             return resp
