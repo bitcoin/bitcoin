@@ -20,7 +20,7 @@ ActiveContext::ActiveContext(ChainstateManager& chainman, CConnman& connman, CDe
                              CGovernanceManager& govman, CMNHFManager& mnhfman, CSporkManager& sporkman,
                              CTxMemPool& mempool, LLMQContext& llmq_ctx, PeerManager& peerman,
                              const CActiveMasternodeManager& mn_activeman, const CMasternodeSync& mn_sync,
-                             CoinJoinServer& cj_server) :
+                             CCoinJoinServer& cj_server) :
     m_llmq_ctx{llmq_ctx},
     m_cj_server(cj_server),
     gov_signer{std::make_unique<GovernanceSigner>(connman, dmnman, govman, mn_activeman, chainman, mn_sync)},

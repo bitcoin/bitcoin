@@ -10,8 +10,9 @@
 #include <masternode/node.h>
 #include <masternode/sync.h>
 #include <net.h>
-#include <netmessagemaker.h>
 #include <net_processing.h>
+#include <netmessagemaker.h>
+#include <scheduler.h>
 #include <script/interpreter.h>
 #include <shutdown.h>
 #include <streams.h>
@@ -897,14 +898,18 @@ void CCoinJoinServer::SetState(PoolState nStateNew)
     nState = nStateNew;
 }
 
-void CCoinJoinServer::DoMaintenance()
+void CCoinJoinServer::Schedule(CScheduler& scheduler)
 {
-    if (!m_mn_sync.IsBlockchainSynced()) return;
-    if (ShutdownRequested()) return;
+    scheduler.scheduleEvery(
+        [this]() -> void {
+            if (!m_mn_sync.IsBlockchainSynced()) return;
+            if (ShutdownRequested()) return;
 
-    CheckForCompleteQueue();
-    CheckPool();
-    CheckTimeout();
+            CheckForCompleteQueue();
+            CheckPool();
+            CheckTimeout();
+        },
+        std::chrono::seconds{1});
 }
 
 void CCoinJoinServer::GetJsonInfo(UniValue& obj) const

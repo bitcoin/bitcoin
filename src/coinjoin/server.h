@@ -101,12 +101,11 @@ public:
     ~CCoinJoinServer();
 
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv) override;
+    void Schedule(CScheduler& scheduler) override;
 
     bool HasTimedOut() const;
     void CheckTimeout();
     void CheckForCompleteQueue();
-
-    void DoMaintenance();
 
     void GetJsonInfo(UniValue& obj) const;
 };
