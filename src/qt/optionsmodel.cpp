@@ -103,7 +103,6 @@ void OptionsModel::Init(bool resetSettings)
         if (GUIUtil::fontsLoaded()) {
             GUIUtil::g_font_registry.SetFont(GUIUtil::fontFamilyFromString(settings.value("fontFamily").toString()));
             GUIUtil::setApplicationFont();
-            GUIUtil::updateFonts();
         }
     } else {
         addOverriddenOption("-font-family");
@@ -114,7 +113,6 @@ void OptionsModel::Init(bool resetSettings)
     if (gArgs.SoftSetArg("-font-scale", settings.value("fontScale").toString().toStdString())) {
         if (GUIUtil::fontsLoaded()) {
             GUIUtil::g_font_registry.SetFontScale(settings.value("fontScale").toInt());
-            GUIUtil::updateFonts();
         }
     } else {
         addOverriddenOption("-font-scale");
@@ -132,7 +130,6 @@ void OptionsModel::Init(bool resetSettings)
                 settings.setValue("fontWeightNormal", GUIUtil::weightToArg(weight));
             }
             GUIUtil::g_font_registry.SetWeightNormal(weight);
-            GUIUtil::updateFonts();
         }
     } else {
         addOverriddenOption("-font-weight-normal");
@@ -152,11 +149,13 @@ void OptionsModel::Init(bool resetSettings)
                 settings.setValue("fontWeightBold", GUIUtil::weightToArg(weight));
             }
             GUIUtil::g_font_registry.SetWeightBold(weight);
-            GUIUtil::updateFonts();
         }
     } else {
         addOverriddenOption("-font-weight-bold");
     }
+
+    // Apply font changes
+    GUIUtil::updateFonts();
 
 #ifdef ENABLE_WALLET
     if (!settings.contains("fCoinControlFeatures"))

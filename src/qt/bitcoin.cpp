@@ -684,7 +684,6 @@ int GuiMain(int argc, char* argv[])
         }
         GUIUtil::g_font_registry.SetFont(family);
         GUIUtil::setApplicationFont();
-        GUIUtil::updateFonts();
     }
     // Validate/set normal font weight
     if (gArgs.IsArgSet("-font-weight-normal")) {
@@ -695,7 +694,6 @@ int GuiMain(int argc, char* argv[])
             return EXIT_FAILURE;
         }
         GUIUtil::g_font_registry.SetWeightNormal(weight);
-        GUIUtil::updateFonts();
     }
     // Validate/set bold font weight
     if (gArgs.IsArgSet("-font-weight-bold")) {
@@ -706,7 +704,6 @@ int GuiMain(int argc, char* argv[])
             return EXIT_FAILURE;
         }
         GUIUtil::g_font_registry.SetWeightBold(weight);
-        GUIUtil::updateFonts();
     }
     // Validate/set font scale
     if (gArgs.IsArgSet("-font-scale")) {
@@ -718,8 +715,9 @@ int GuiMain(int argc, char* argv[])
             return EXIT_FAILURE;
         }
         GUIUtil::g_font_registry.SetFontScale(nScale);
-        GUIUtil::updateFonts();
     }
+    // Apply font changes
+    GUIUtil::updateFonts();
     // Validate/set custom css directory
     if (gArgs.IsArgSet("-custom-css-dir")) {
         fs::path customDir = gArgs.GetPathArg("-custom-css-dir");

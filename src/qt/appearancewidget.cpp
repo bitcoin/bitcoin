@@ -69,20 +69,17 @@ AppearanceWidget::~AppearanceWidget()
         if (prevFontFamily != GUIUtil::g_font_registry.GetFont()) {
             GUIUtil::g_font_registry.SetFont(prevFontFamily);
             GUIUtil::setApplicationFont();
-            GUIUtil::updateFonts();
         }
         if (prevScale != GUIUtil::g_font_registry.GetFontScale()) {
             GUIUtil::g_font_registry.SetFontScale(prevScale);
-            GUIUtil::updateFonts();
         }
         if (prevWeightNormal != GUIUtil::g_font_registry.GetWeightNormal()) {
             GUIUtil::g_font_registry.SetWeightNormal(prevWeightNormal);
-            GUIUtil::updateFonts();
         }
         if (prevWeightBold != GUIUtil::g_font_registry.GetWeightBold()) {
             GUIUtil::g_font_registry.SetWeightBold(prevWeightBold);
-            GUIUtil::updateFonts();
         }
+        GUIUtil::updateFonts();
     }
     delete ui;
 }
