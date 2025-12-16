@@ -25,7 +25,7 @@ bool WriteSnapshotBaseBlockhash(Chainstate& snapshot_chainstate)
     AssertLockHeld(::cs_main);
     assert(snapshot_chainstate.m_from_snapshot_blockhash);
 
-    const std::optional<fs::path> chaindir = snapshot_chainstate.CoinsDB().StoragePath();
+    const std::optional<fs::path> chaindir = snapshot_chainstate.StoragePath();
     assert(chaindir); // Sanity check that chainstate isn't in-memory.
     const fs::path write_to = *chaindir / node::SNAPSHOT_BLOCKHASH_FILENAME;
 
@@ -81,7 +81,7 @@ std::optional<uint256> ReadSnapshotBaseBlockhash(fs::path chaindir)
     return base_blockhash;
 }
 
-std::optional<fs::path> FindSnapshotChainstateDir(const fs::path& data_dir)
+std::optional<fs::path> FindAssumeutxoChainstateDir(const fs::path& data_dir)
 {
     fs::path possible_dir =
         data_dir / fs::u8path(strprintf("chainstate%s", SNAPSHOT_CHAINSTATE_SUFFIX));

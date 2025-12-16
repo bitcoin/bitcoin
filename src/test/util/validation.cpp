@@ -9,15 +9,19 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+using kernel::ChainstateRole;
+
 void TestChainstateManager::DisableNextWrite()
 {
     struct TestChainstate : public Chainstate {
         void ResetNextWrite() { m_next_write = NodeClock::time_point::max() - 1s; }
     };
-    for (auto* cs : GetAll()) {
-        static_cast<TestChainstate*>(cs)->ResetNextWrite();
+    LOCK(::cs_main);
+    for (const auto& cs : m_chainstates) {
+        static_cast<TestChainstate&>(*cs).ResetNextWrite();
     }
 }
+
 void TestChainstateManager::ResetIbd()
 {
     m_cached_finished_ibd = false;
@@ -32,10 +36,10 @@ void TestChainstateManager::JumpOutOfIbd()
 }
 
 void ValidationInterfaceTest::BlockConnected(
-        ChainstateRole role,
-        CValidationInterface& obj,
-        const std::shared_ptr<const CBlock>& block,
-        const CBlockIndex* pindex)
+    const ChainstateRole& role,
+    CValidationInterface& obj,
+    const std::shared_ptr<const CBlock>& block,
+    const CBlockIndex* pindex)
 {
     obj.BlockConnected(role, block, pindex);
 }

@@ -51,6 +51,7 @@
 #include <utility>
 #include <vector>
 
+using kernel::ChainstateRole;
 using util::ImmediateTaskRunner;
 
 // Define G_TRANSLATION_FUN symbol in libbitcoinkernel library so users of the
@@ -359,7 +360,7 @@ protected:
         }
     }
 
-    void BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override
+    void BlockConnected(const ChainstateRole& role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override
     {
         if (m_cbs.block_connected) {
             m_cbs.block_connected(m_cbs.user_data,
@@ -981,13 +982,9 @@ btck_ChainstateManager* btck_chainstate_manager_create(
             LogError("Failed to verify loaded chain state from your datadir: %s", chainstate_err.original);
             return nullptr;
         }
-
-        for (Chainstate* chainstate : WITH_LOCK(chainman->GetMutex(), return chainman->GetAll())) {
-            BlockValidationState state;
-            if (!chainstate->ActivateBestChain(state, nullptr)) {
-                LogError("Failed to connect best block: %s", state.ToString());
-                return nullptr;
-            }
+        if (auto result = chainman->ActivateBestChains(); !result) {
+            LogError("%s", util::ErrorString(result).original);
+            return nullptr;
         }
     } catch (const std::exception& e) {
         LogError("Failed to load chainstate: %s", e.what());
@@ -1012,7 +1009,7 @@ void btck_chainstate_manager_destroy(btck_ChainstateManager* chainman)
 {
     {
         LOCK(btck_ChainstateManager::get(chainman).m_chainman->GetMutex());
-        for (Chainstate* chainstate : btck_ChainstateManager::get(chainman).m_chainman->GetAll()) {
+        for (const auto& chainstate : btck_ChainstateManager::get(chainman).m_chainman->m_chainstates) {
             if (chainstate->CanFlushToDisk()) {
                 chainstate->ForceFlushStateToDisk();
                 chainstate->ResetCoinsViews();

@@ -6,6 +6,7 @@
 #include <interfaces/chain.h>
 #include <interfaces/wallet.h>
 #include <kernel/chain.h>
+#include <kernel/types.h>
 #include <node/context.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>

@@ -3428,7 +3428,7 @@ return RPCHelpMan{
 
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
 
-    auto make_chain_data = [&](const Chainstate& cs, bool validated) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+    auto make_chain_data = [&](const Chainstate& cs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         AssertLockHeld(::cs_main);
         UniValue data(UniValue::VOBJ);
         if (!cs.m_chain.Tip()) {
@@ -3448,17 +3448,16 @@ return RPCHelpMan{
         if (cs.m_from_snapshot_blockhash) {
             data.pushKV("snapshot_blockhash", cs.m_from_snapshot_blockhash->ToString());
         }
-        data.pushKV("validated", validated);
+        data.pushKV("validated", cs.m_assumeutxo == Assumeutxo::VALIDATED);
         return data;
     };
 
     obj.pushKV("headers", chainman.m_best_header ? chainman.m_best_header->nHeight : -1);
-
-    const auto& chainstates = chainman.GetAll();
     UniValue obj_chainstates{UniValue::VARR};
-    for (Chainstate* cs : chainstates) {
-      obj_chainstates.push_back(make_chain_data(*cs, !cs->m_from_snapshot_blockhash || chainstates.size() == 1));
+    if (const Chainstate * cs{chainman.HistoricalChainstate()}) {
+        obj_chainstates.push_back(make_chain_data(*cs));
     }
+    obj_chainstates.push_back(make_chain_data(chainman.CurrentChainstate()));
     obj.pushKV("chainstates", std::move(obj_chainstates));
     return obj;
 }

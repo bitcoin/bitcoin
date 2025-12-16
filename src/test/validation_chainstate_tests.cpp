@@ -95,7 +95,7 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
         this, NoMalleation, /*reset_chainstate=*/ true));
 
     // Ensure our active chain is the snapshot chainstate.
-    BOOST_CHECK(WITH_LOCK(::cs_main, return chainman.IsSnapshotActive()));
+    BOOST_CHECK(WITH_LOCK(::cs_main, return chainman.CurrentChainstate().m_from_snapshot_blockhash));
 
     curr_tip = get_notify_tip();
 
@@ -107,16 +107,7 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
 
     curr_tip = get_notify_tip();
 
-    BOOST_CHECK_EQUAL(chainman.GetAll().size(), 2);
-
-    Chainstate& background_cs{*Assert([&]() -> Chainstate* {
-        for (Chainstate* cs : chainman.GetAll()) {
-            if (cs != &chainman.ActiveChainstate()) {
-                return cs;
-            }
-        }
-        return nullptr;
-    }())};
+    Chainstate& background_cs{*Assert(WITH_LOCK(::cs_main, return chainman.HistoricalChainstate()))};
 
     // Append the first block to the background chain.
     BlockValidationState state;
