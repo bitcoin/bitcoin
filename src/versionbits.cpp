@@ -61,6 +61,11 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
             cache[pindexPrev] = ThresholdState::DEFINED;
             break;
         }
+        if (pindexPrev->nHeight < params.MinBIP9WarningHeight) {
+            // Optimization: don't compute below MinBIP9WarningHeight, consider it defined.
+            cache[pindexPrev] = ThresholdState::DEFINED;
+            break;
+        }
         if (pindexPrev->GetMedianTimePast() < nTimeStart || pindexPrev->nHeight < masternodeStartHeight) {
             // Optimization: don't recompute down further, as we know every earlier block will be before the start time
             cache[pindexPrev] = ThresholdState::DEFINED;
@@ -97,15 +102,16 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
                 // We need to count
                 const CBlockIndex* pindexCount = pindexPrev;
                 int count = 0;
-                for (int i = 0; i < nPeriod; i++) {
+                int nAttempt = (pindexCount->nHeight - nStartHeight) / nPeriod;
+                int threshold = Threshold(params, nAttempt);
+                for (int i = 0; count + (nPeriod - i) >= threshold && i < nPeriod; ++i) {
                     if (Condition(pindexCount, params)) {
                         count++;
                     }
                     pindexCount = pindexCount->pprev;
                 }
                 assert(nStartHeight > 0 && nStartHeight < std::numeric_limits<int>::max());
-                int nAttempt = (pindexCount->nHeight + 1 - nStartHeight) / nPeriod;
-                if (count >= Threshold(params, nAttempt)) {
+                if (count >= threshold) {
                     stateNext = ThresholdState::LOCKED_IN;
                 } else if (pindexPrev->GetMedianTimePast() >= nTimeTimeout) {
                     stateNext = ThresholdState::FAILED;
