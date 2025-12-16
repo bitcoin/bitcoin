@@ -113,6 +113,16 @@ jobs:
             /cache/ccache
           key: ccache-${{ hashFiles('contrib/containers/ci/ci.Dockerfile', 'depends/packages/*') }}-${{ inputs.build-target }}-${{ github.sha }}
 
+      - name: Restore ctcache cache
+        if: inputs.build-target == 'linux64_multiprocess'
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            /cache/ctcache
+          key: ctcache-${{ hashFiles('contrib/containers/ci/ci.Dockerfile', 'depends/packages/*') }}-${{ inputs.build-target }}-${{ github.sha }}
+          restore-keys: |
+            ctcache-${{ hashFiles('contrib/containers/ci/ci.Dockerfile', 'depends/packages/*') }}-${{ inputs.build-target }}-
+
       - name: Run linters
         if: inputs.build-target == 'linux64_multiprocess'
         run: |
@@ -120,6 +130,17 @@ jobs:
           source ./ci/dash/matrix.sh
           ./ci/dash/lint-tidy.sh
         shell: bash
+
+      - name: Save ctcache cache
+        if: |
+          inputs.build-target == 'linux64_multiprocess' &&
+          github.event_name == 'push' &&
+          github.ref_name == github.event.repository.default_branch
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            /cache/ctcache
+          key: ctcache-${{ hashFiles('contrib/containers/ci/ci.Dockerfile', 'depends/packages/*') }}-${{ inputs.build-target }}-${{ github.sha }}
 
       - name: Run unit tests
         run: |

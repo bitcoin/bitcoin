@@ -11,12 +11,46 @@ set -eo pipefail
 #          only on nor do they set the requisite build parameters. Make sure you do
 #          that *before* running this script.
 
+# Setup ctcache for clang-tidy result caching
+export CTCACHE_DIR="/cache/ctcache"
+export CTCACHE_SAVE_OUTPUT=1
+CTCACHE_CLANG_TIDY=$(which clang-tidy)
+export CTCACHE_CLANG_TIDY
+mkdir -p "${CTCACHE_DIR}"
+
+# Zero stats before run to get accurate statistics for this run only
+python3 /usr/local/bin/src/ctcache/clang_tidy_cache.py --zero-stats 2>&1 || true
+
 cd "${BASE_ROOT_DIR}/build-ci/dashcore-${BUILD_TARGET}/src"
-if ! ( run-clang-tidy -quiet "${MAKEJOBS}" | tee tmp.tidy-out.txt ); then
+
+if ! ( run-clang-tidy -clang-tidy-binary=/usr/local/bin/clang-tidy-cache -quiet "${MAKEJOBS}" | tee tmp.tidy-out.txt ); then
   grep -C5 "error: " tmp.tidy-out.txt
   echo "^^^ ⚠️ Failure generated from clang-tidy"
   false
 fi
+
+# Show ctcache statistics and manage cache size
+echo "=== ctcache statistics ==="
+du -sh "${CTCACHE_DIR}" 2>/dev/null || echo "Cache directory not found"
+python3 /usr/local/bin/src/ctcache/clang_tidy_cache.py --show-stats 2>&1 || true
+
+# Limit cache size (ctcache has no built-in size management)
+CTCACHE_MAXSIZE_MB=50
+CACHE_SIZE_MB=$(du -sm "${CTCACHE_DIR}" 2>/dev/null | cut -f1)
+if [ "${CACHE_SIZE_MB}" -gt "${CTCACHE_MAXSIZE_MB}" ]; then
+  echo "Cache size ${CACHE_SIZE_MB}MB exceeds limit ${CTCACHE_MAXSIZE_MB}MB, cleaning old entries..."
+  # Remove files older than 7 days, or if still too large, oldest 20% of files
+  find "${CTCACHE_DIR}" -type f -mtime +7 -delete 2>/dev/null || true
+  CACHE_SIZE_MB=$(du -sm "${CTCACHE_DIR}" 2>/dev/null | cut -f1)
+  if [ "${CACHE_SIZE_MB}" -gt "${CTCACHE_MAXSIZE_MB}" ]; then
+    FILE_COUNT=$(find "${CTCACHE_DIR}" -type f | wc -l)
+    REMOVE_COUNT=$((FILE_COUNT / 5))
+    find "${CTCACHE_DIR}" -type f -printf '%T+ %p\n' | sort | head -n "${REMOVE_COUNT}" | cut -d' ' -f2- | xargs rm -f 2>/dev/null || true
+    echo "Removed ${REMOVE_COUNT} oldest cache entries"
+  fi
+  echo "Cache size after cleanup: $(du -sh "${CTCACHE_DIR}" 2>/dev/null | cut -f1)"
+fi
+echo "=========================="
 
 cd "${BASE_ROOT_DIR}/build-ci/dashcore-${BUILD_TARGET}"
 iwyu_tool.py \
