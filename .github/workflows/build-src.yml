@@ -79,11 +79,11 @@ jobs:
           make -j$(nproc) -C depends HOST="${{ inputs.depends-host }}" ${{ inputs.depends-dep-opts }}
         shell: bash
 
-      - name: Manage ccache
-        uses: actions/cache@v4
+      - name: Restore ccache cache
+        uses: actions/cache/restore@v4
         with:
           path: |
-            /cache
+            /cache/ccache
           key: ccache-${{ hashFiles('contrib/containers/ci/ci.Dockerfile', 'depends/packages/*') }}-${{ inputs.build-target }}-${{ github.sha }}
           restore-keys: |
             ccache-${{ hashFiles('contrib/containers/ci/ci.Dockerfile', 'depends/packages/*') }}-${{ inputs.build-target }}-
@@ -100,6 +100,16 @@ jobs:
           ccache -X 9
           ccache -c
         shell: bash
+
+      - name: Save ccache cache
+        if: |
+          github.event_name == 'push' &&
+          github.ref_name == github.event.repository.default_branch
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            /cache/ccache
+          key: ccache-${{ hashFiles('contrib/containers/ci/ci.Dockerfile', 'depends/packages/*') }}-${{ inputs.build-target }}-${{ github.sha }}
 
       - name: Run linters
         if: inputs.build-target == 'linux64_multiprocess'
