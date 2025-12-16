@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(skip_height_analysis)
     // metric than CPU time.
 
     // Build a chain
-    const auto chain_size{1'000'000};
+    const int chain_size{1'000'000};
     std::vector<std::unique_ptr<CBlockIndex>> block_index;
     block_index.reserve(chain_size);
     // Create genesis block
@@ -76,37 +76,38 @@ BOOST_AUTO_TEST_CASE(skip_height_analysis)
     FastRandomContext ctx(/*fDeterministic =*/true);
     for (auto i{0}; i < 1'000; ++i) {
         // pick a height in the second half of the chain
-        const auto start_height{chain_size - 1 - ctx.randrange(chain_size * 9 / 10)};
+        const int start_height{chain_size - 1 - ctx.randrange(chain_size * 9 / 10)};
         // pick a target height, earlier by at least min_distance
-        const auto delta{min_distance + ctx.randrange(start_height - min_distance)};
-        const auto target_height{start_height - delta};
+        const int delta{min_distance + ctx.randrange(start_height - min_distance)};
+        const int target_height{start_height - delta};
         BOOST_REQUIRE(start_height > 0 && start_height < chain_size);
         BOOST_REQUIRE(target_height > 0 && target_height < chain_size && target_height < start_height);
 
         // Perform traversal from start to target, skipping, as implemented in `GetAncestor`
-        auto& start_p{block_index[start_height]};
-        // Start of copied traversal algorithm
-        const CBlockIndex* pindexWalk = start_p.get();
-        auto heightWalk = start_height;
+        const auto& start_p{block_index[start_height]};
+        const CBlockIndex* walk_p{start_p.get()};
+        auto walk_height{start_height};
         auto iteration_count{0};
-        while (heightWalk > target_height) {
-            int heightSkip = GetSkipHeight(heightWalk);
-            int heightSkipPrev = GetSkipHeight(heightWalk - 1);
-            if (pindexWalk->pskip != nullptr &&
-                (heightSkip == target_height ||
-                (heightSkip > target_height && !(heightSkipPrev < heightSkip - 2 &&
-                                        heightSkipPrev >= target_height)))) {
-                // Only follow pskip if pprev->pskip isn't better than pskip->pprev.
-                pindexWalk = pindexWalk->pskip;
-                heightWalk = heightSkip;
+        while (walk_height > target_height) {
+            BOOST_REQUIRE(walk_p->pskip);
+            BOOST_REQUIRE(walk_p->pprev);
+            BOOST_REQUIRE(walk_p->pprev->pskip);
+            const int skip_height{walk_p->pskip->nHeight};
+            const int prev_skip_height{walk_p->pprev->pskip->nHeight};
+            // Only follow pskip if pprev->pskip isn't better than pskip->pprev.
+            if (skip_height == target_height ||
+                (skip_height > target_height &&
+                !(prev_skip_height < skip_height - 2 && prev_skip_height >= target_height)
+            )) {
+                BOOST_REQUIRE_LT(skip_height, walk_height);
+                walk_p = walk_p->pskip;
+                walk_height = skip_height;
             } else {
-                BOOST_REQUIRE(pindexWalk->pprev);
-                pindexWalk = pindexWalk->pprev;
-                heightWalk--;
+                walk_p = walk_p->pprev;
+                --walk_height;
             }
             ++iteration_count;
         }
-        // End of copied traversal algorithm
 
         // Asserts on the number of iterations:
         // Absolute value maximum (derived empirically)
