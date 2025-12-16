@@ -220,8 +220,9 @@ BITCOIN_CORE_H = \
   dsnotificationinterface.h \
   governance/classes.h \
   governance/common.h \
-  governance/governance.h \
   governance/exceptions.h \
+  governance/governance.h \
+  governance/net_governance.h \
   governance/object.h \
   governance/signing.h \
   governance/validators.h \
@@ -311,6 +312,7 @@ BITCOIN_CORE_H = \
   node/miner.h \
   node/minisketchwrapper.h \
   node/psbt.h \
+  node/sync_manager.h \
   node/transaction.h \
   node/txreconciliation.h \
   node/interface_ui.h \
@@ -508,6 +510,7 @@ libbitcoin_node_a_SOURCES = \
   governance/classes.cpp \
   governance/exceptions.cpp \
   governance/governance.cpp \
+  governance/net_governance.cpp \
   governance/object.cpp \
   governance/signing.cpp \
   governance/validators.cpp \
@@ -567,6 +570,7 @@ libbitcoin_node_a_SOURCES = \
   node/miner.cpp \
   node/minisketchwrapper.cpp \
   node/psbt.cpp \
+  node/sync_manager.cpp \
   node/transaction.cpp \
   node/txreconciliation.cpp \
   node/interface_ui.cpp \

@@ -44,6 +44,7 @@
 #include <node/chainstate.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
+#include <node/sync_manager.h>
 #include <node/txreconciliation.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
@@ -88,6 +89,7 @@
 #include <evo/specialtxman.h>
 #include <flat-database.h>
 #include <governance/governance.h>
+#include <governance/net_governance.h>
 #include <instantsend/instantsend.h>
 #include <instantsend/net_instantsend.h>
 #include <llmq/context.h>
@@ -1988,7 +1990,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
          * need it or not further down and then query if the database is initialized
          * to check if validation is enabled.
          */
-        node.mn_sync = std::make_unique<CMasternodeSync>(*node.connman, *node.netfulfilledman);
+        node.mn_sync = std::make_unique<CMasternodeSync>(std::make_unique<NodeSyncNotifierImpl>(*node.connman, *node.netfulfilledman));
 
         node.govman = std::make_unique<CGovernanceManager>(*node.mn_metaman, *node.netfulfilledman, *node.chainman, node.dmnman, *node.mn_sync);
 
@@ -2016,12 +2018,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                               args.GetDataDirNet(),
                                               fPruneMode,
                                               args.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX),
-                                              is_governance_enabled,
                                               args.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX),
                                               args.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX),
-                                              args.GetBoolArg("-txindex", DEFAULT_TXINDEX),
                                               chainparams.GetConsensus(),
-                                              chainparams.NetworkIDString(),
                                               fReindexChainState,
                                               cache_sizes.block_tree_db,
                                               cache_sizes.coins_db,
@@ -2050,8 +2049,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
             case ChainstateLoadingError::ERROR_BAD_DEVNET_GENESIS_BLOCK:
                 return InitError(_("Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?"));
-            case ChainstateLoadingError::ERROR_TXINDEX_DISABLED_WHEN_GOV_ENABLED:
-                return InitError(_("Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index."));
             case ChainstateLoadingError::ERROR_ADDRIDX_NEEDS_REINDEX:
                 strLoadError = _("You need to rebuild the database using -reindex to enable -addressindex");
                 break;
@@ -2238,7 +2235,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             }
             return InitError(strprintf(_("Failed to clear governance cache at %s"), file_path));
         }
+        node.peerman->AddExtraHandler(std::make_unique<NetGovernance>(node.peerman.get(), *node.govman, *node.mn_sync, *node.connman));
     }
+    node.peerman->AddExtraHandler(std::make_unique<SyncManager>(node.peerman.get(), *node.govman, *node.mn_sync, *node.connman, *node.netfulfilledman));
 
     // ********************************************************* Step 8: start indexers
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
@@ -2308,13 +2307,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     if (node.active_ctx) node.active_ctx->Start(*node.connman, *node.peerman);
 
     node.scheduler->scheduleEvery(std::bind(&CNetFulfilledRequestManager::DoMaintenance, std::ref(*node.netfulfilledman)), std::chrono::minutes{1});
-    node.scheduler->scheduleEvery(std::bind(&CMasternodeSync::DoMaintenance, std::ref(*node.mn_sync), std::cref(*node.peerman), std::cref(*node.govman)), std::chrono::seconds{1});
     node.scheduler->scheduleEvery(std::bind(&CMasternodeUtils::DoMaintenance, std::ref(*node.connman), std::ref(*node.dmnman), std::ref(*node.mn_sync), node.cj_walletman.get()), std::chrono::minutes{1});
     node.scheduler->scheduleEvery(std::bind(&CDeterministicMNManager::DoMaintenance, std::ref(*node.dmnman)), std::chrono::seconds{10});
-
-    if (node.govman->IsValid()) {
-        node.govman->Schedule(*node.scheduler, *node.connman, *node.peerman);
-    }
+    node.peerman->ScheduleHandlers(*node.scheduler);
 
     if (node.mn_activeman) {
         node.scheduler->scheduleEvery(std::bind(&CCoinJoinServer::DoMaintenance, std::ref(*node.active_ctx->cj_server)), std::chrono::seconds{1});

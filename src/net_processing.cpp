@@ -644,6 +644,7 @@ public:
     void StartHandlers() override;
     void StopHandlers() override;
     void InterruptHandlers() override;
+    void ScheduleHandlers(CScheduler& scheduler) override;
 
     /** Implement PeerManagerInternal */
     void PeerMisbehaving(const NodeId pnode, const int howmuch, const std::string& message = "") override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -652,6 +653,7 @@ public:
     void PeerRelayInvFiltered(const CInv& inv, const CTransaction& relatedTx) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void PeerRelayInvFiltered(const CInv& inv, const uint256& relatedTxHash) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void PeerAskPeersForTransaction(const uint256& txid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    size_t PeerGetRequestedObjectCount(NodeId nodeid) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, ::cs_main);
     void PeerPostProcessMessage(MessageProcessingResult&& ret) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
 private:
@@ -1688,6 +1690,13 @@ void PeerManagerImpl::InterruptHandlers()
 {
     for (auto& handler : m_handlers) {
         handler->Interrupt();
+    }
+}
+
+void PeerManagerImpl::ScheduleHandlers(CScheduler& scheduler)
+{
+    for (auto& handler : m_handlers) {
+        handler->Schedule(scheduler);
     }
 }
 
@@ -5437,8 +5446,6 @@ void PeerManagerImpl::ProcessMessage(
             m_active_ctx->shareman->ProcessMessage(pfrom, msg_type, vRecv);
         }
         PostProcessMessage(m_sporkman.ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom.GetId());
-        m_mn_sync.ProcessMessage(pfrom, msg_type, vRecv);
-        PostProcessMessage(m_govman.ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom.GetId());
         PostProcessMessage(CMNAuth::ProcessMessage(pfrom, peer->m_their_services, m_connman, m_mn_metaman, m_mn_activeman, m_mn_sync, m_dmnman->GetListAtChainTip(), msg_type, vRecv), pfrom.GetId());
         PostProcessMessage(m_llmq_ctx->quorum_block_processor->ProcessMessage(pfrom, msg_type, vRecv), pfrom.GetId());
         PostProcessMessage(m_llmq_ctx->qdkgsman->ProcessMessage(pfrom, is_masternode, msg_type, vRecv), pfrom.GetId());
@@ -6568,6 +6575,11 @@ void PeerManagerImpl::PeerRelayInvFiltered(const CInv& inv, const uint256& relat
 void PeerManagerImpl::PeerAskPeersForTransaction(const uint256& txid)
 {
     AskPeersForTransaction(txid);
+}
+
+size_t PeerManagerImpl::PeerGetRequestedObjectCount(NodeId nodeid) const
+{
+    return GetRequestedObjectCount(nodeid);
 }
 
 void PeerManagerImpl::PeerPostProcessMessage(MessageProcessingResult&& ret)

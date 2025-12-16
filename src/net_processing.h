@@ -64,6 +64,7 @@ public:
     virtual void PeerRelayInvFiltered(const CInv& inv, const CTransaction& relatedTx) = 0;
     virtual void PeerRelayInvFiltered(const CInv& inv, const uint256& relatedTxHash) = 0;
     virtual void PeerAskPeersForTransaction(const uint256& txid) = 0;
+    virtual size_t PeerGetRequestedObjectCount(NodeId nodeid) const = 0;
     virtual void PeerPostProcessMessage(MessageProcessingResult&& ret) = 0;
 };
 
@@ -79,6 +80,7 @@ public:
     virtual void Start() {}
     virtual void Stop() {}
     virtual void Interrupt() {}
+    virtual void Schedule(CScheduler& scheduler) {}
     virtual void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv) {}
 protected:
     PeerManagerInternal* m_peer_manager;
@@ -169,6 +171,7 @@ public:
     virtual void StartHandlers() = 0;
     virtual void StopHandlers() = 0;
     virtual void InterruptHandlers() = 0;
+    virtual void ScheduleHandlers(CScheduler& scheduler) = 0;
 };
 
 #endif // BITCOIN_NET_PROCESSING_H

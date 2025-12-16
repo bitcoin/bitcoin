@@ -81,8 +81,6 @@ static const bool DEFAULT_CHECKPOINTS_ENABLED = true;
 
 /** Default for -persistmempool */
 static const bool DEFAULT_PERSIST_MEMPOOL = true;
-/** Default for -syncmempool */
-static const bool DEFAULT_SYNC_MEMPOOL = true;
 
 /** Default for -stopatheight */
 static const int DEFAULT_STOPATHEIGHT = 0;
