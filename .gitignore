@@ -12,6 +12,7 @@ src/dash-cli
 src/dash-gui
 src/dash-node
 src/dash-tx
+src/dash-util
 src/dash-wallet
 src/test/fuzz/fuzz
 src/test/test_dash

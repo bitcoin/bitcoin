@@ -171,7 +171,9 @@ struct Params {
     int nPowKGWHeight;
     int nPowDGWHeight;
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
+    /** The best chain should have at least this much work */
     uint256 nMinimumChainWork;
+    /** By default assume that the signatures in ancestors of this block are valid */
     uint256 defaultAssumeValid;
 
     /** these parameters are only used on devnet and can be configured from the outside */

@@ -288,9 +288,9 @@ std::list<SectionInfo> ArgsManager::GetUnrecognizedSections() const
     // Section names to be recognized in the config file.
     static const std::set<std::string> available_sections{
         CBaseChainParams::REGTEST,
+        CBaseChainParams::DEVNET,
         CBaseChainParams::TESTNET,
         CBaseChainParams::MAIN,
-        CBaseChainParams::DEVNET
     };
 
     LOCK(cs_args);
@@ -691,14 +691,14 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
     m_settings.forced_settings[SettingName(strArg)] = strValue;
 }
 
-void ArgsManager::AddCommand(const std::string& cmd, const std::string& help, const OptionsCategory& cat)
+void ArgsManager::AddCommand(const std::string& cmd, const std::string& help)
 {
     Assert(cmd.find('=') == std::string::npos);
     Assert(cmd.at(0) != '-');
 
     LOCK(cs_args);
     m_accept_any_command = false; // latch to false
-    std::map<std::string, Arg>& arg_map = m_available_args[cat];
+    std::map<std::string, Arg>& arg_map = m_available_args[OptionsCategory::COMMANDS];
     auto ret = arg_map.emplace(cmd, Arg{"", help, ArgsManager::COMMAND});
     Assert(ret.second); // Fail on duplicate commands
 }
@@ -1113,26 +1113,27 @@ std::string ArgsManager::GetChainName() const
     };
 
     const bool fRegTest = get_net("-regtest");
-    const bool fTestNet = get_net("-testnet");
     const bool fDevNet = get_net("-devnet", false);
+    const bool fTestNet = get_net("-testnet");
     const bool is_chain_arg_set = IsArgSet("-chain");
 
     int nameParamsCount = (fRegTest ? 1 : 0) + (fDevNet ? 1 : 0) + (fTestNet ? 1 : 0) + (is_chain_arg_set ? 1 : 0);
     if (nameParamsCount > 1)
         throw std::runtime_error("Only one of -regtest, -testnet, -devnet or -chain can be used.");
 
-    if (fDevNet)
-        return CBaseChainParams::DEVNET;
     if (fRegTest)
         return CBaseChainParams::REGTEST;
+    if (fDevNet) {
+        return CBaseChainParams::DEVNET;
+    }
     if (fTestNet)
         return CBaseChainParams::TESTNET;
+
     return GetArg("-chain", CBaseChainParams::MAIN);
 }
 
 std::string ArgsManager::GetDevNetName() const
 {
-    assert(IsArgSet("-devnet"));
     std::string devNetName = GetArg("-devnet", "");
     return "devnet" + (devNetName.empty() ? "" : "-" + devNetName);
 }

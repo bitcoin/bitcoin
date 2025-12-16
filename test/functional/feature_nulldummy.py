@@ -45,8 +45,8 @@ def invalidate_nulldummy_tx(tx):
     tx.vin[0].scriptSig = bytes([OP_TRUE]) + tx.vin[0].scriptSig[1:]
     tx.rehash()
 
-class NULLDUMMYTest(BitcoinTestFramework):
 
+class NULLDUMMYTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True

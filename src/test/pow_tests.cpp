@@ -46,9 +46,7 @@ BOOST_AUTO_TEST_CASE(get_next_work)
     BOOST_CHECK_EQUAL(GetNextWorkRequired(blockIndexLast, &blockHeader, chainParams->GetConsensus()), 0x1b1441deU); // Block #123457 has 0x1b1441de
 
     // test special rules for slow blocks on devnet/testnet
-    gArgs.SoftSetBoolArg("-devnet", true);
     const auto chainParamsDev = CreateChainParams(*m_node.args, CBaseChainParams::DEVNET);
-    gArgs.ForceRemoveArg("devnet");
 
     // make sure normal rules apply
     blockHeader.nTime = 1408732505; // Block #123457
@@ -179,6 +177,59 @@ BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
         int64_t tdiff = GetBlockProofEquivalentTime(*p1, *p2, *p3, chainParams->GetConsensus());
         BOOST_CHECK_EQUAL(tdiff, p1->GetBlockTime() - p2->GetBlockTime());
     }
+}
+
+void sanity_check_chainparams(const ArgsManager& args, std::string chainName)
+{
+    const auto chainParams = CreateChainParams(args, chainName);
+    const auto consensus = chainParams->GetConsensus();
+
+    // hash genesis is correct
+    BOOST_CHECK_EQUAL(consensus.hashGenesisBlock, chainParams->GenesisBlock().GetHash());
+
+    // target timespan is an even multiple of spacing
+    BOOST_CHECK_EQUAL(consensus.nPowTargetTimespan % consensus.nPowTargetSpacing, 0);
+
+    // genesis nBits is positive, doesn't overflow and is lower than powLimit
+    arith_uint256 pow_compact;
+    bool neg, over;
+    pow_compact.SetCompact(chainParams->GenesisBlock().nBits, &neg, &over);
+    BOOST_CHECK(!neg && pow_compact != 0);
+    BOOST_CHECK(!over);
+    BOOST_CHECK(UintToArith256(consensus.powLimit) >= pow_compact);
+
+    // check max target * 4*nPowTargetTimespan doesn't overflow -- see pow.cpp:CalculateNextWorkRequired()
+    if (!consensus.fPowNoRetargeting) {
+        arith_uint256 targ_max("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+        targ_max /= consensus.nPowTargetTimespan*4;
+        // for devnets pow-no-retargeting may work as non-expected but it's a breaking change to fix it
+        // TODO: remove this special case for devnet
+        if (chainName != CBaseChainParams::DEVNET) {
+            BOOST_CHECK(UintToArith256(consensus.powLimit) < targ_max);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(ChainParams_MAIN_sanity)
+{
+    sanity_check_chainparams(*m_node.args, CBaseChainParams::MAIN);
+}
+
+BOOST_AUTO_TEST_CASE(ChainParams_REGTEST_sanity)
+{
+    sanity_check_chainparams(*m_node.args, CBaseChainParams::REGTEST);
+}
+
+BOOST_AUTO_TEST_CASE(ChainParams_TESTNET_sanity)
+{
+    sanity_check_chainparams(*m_node.args, CBaseChainParams::TESTNET);
+}
+
+BOOST_AUTO_TEST_CASE(ChainParams_DEVNET_sanity)
+{
+    gArgs.SoftSetBoolArg("-devnet", true);
+    sanity_check_chainparams(*m_node.args, CBaseChainParams::DEVNET);
+    gArgs.ForceRemoveArg("devnet");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

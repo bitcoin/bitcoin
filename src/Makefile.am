@@ -133,13 +133,19 @@ endif
 if BUILD_BITCOIN_CLI
   bin_PROGRAMS += dash-cli
 endif
+
 if BUILD_BITCOIN_TX
   bin_PROGRAMS += dash-tx
 endif
+
 if ENABLE_WALLET
 if BUILD_BITCOIN_WALLET
   bin_PROGRAMS += dash-wallet
 endif
+endif
+
+if BUILD_BITCOIN_UTIL
+  bin_PROGRAMS += dash-util
 endif
 
 .PHONY: FORCE check-symbols check-security
@@ -1117,6 +1123,28 @@ dash_wallet_LDADD = \
 if TARGET_WINDOWS
 dash_wallet_SOURCES += dash-wallet-res.rc
 endif
+#
+
+# dash-util binary #
+dash_util_SOURCES = bitcoin-util.cpp
+dash_util_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+dash_util_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+dash_util_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+
+if TARGET_WINDOWS
+dash_util_SOURCES += bitcoin-util-res.rc
+endif
+
+dash_util_LDADD = \
+  $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBUNIVALUE) \
+  $(LIBBITCOIN_CONSENSUS) \
+  $(LIBBITCOIN_CRYPTO) \
+  $(LIBSECP256K1) \
+  $(BACKTRACE_LIBS)
+
+dash_util_LDADD += $(BOOST_LIBS)
 #
 
 # dashconsensus library #

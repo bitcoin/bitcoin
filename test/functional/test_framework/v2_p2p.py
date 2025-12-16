@@ -106,7 +106,7 @@ class EncryptedP2PState:
             - initiating = True for inbound connections in the test framework   [TestNode <------- P2PConnection]
             - initiating = False for outbound connections in the test framework [TestNode -------> P2PConnection]
 
-        net (string): chain used (regtest, signet etc..)
+        net (string): chain used (regtest, devnet etc..)
 
     Methods:
         perform an advanced form of diffie-hellman handshake to instantiate the encrypted transport. before exchanging

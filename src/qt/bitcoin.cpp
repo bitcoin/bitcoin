@@ -607,7 +607,7 @@ int GuiMain(int argc, char* argv[])
         // - QSettings() will use the new application name after this, resulting in network-specific settings
         // - Needs to be done before createOptionsModel
 
-        // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
+        // Check for chain settings (Params() calls are only valid after this clause)
         SelectParams(gArgs.GetChainName());
     } catch(std::exception &e) {
         InitError(Untranslated(strprintf("%s\n", e.what())));

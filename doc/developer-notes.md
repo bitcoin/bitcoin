@@ -15,7 +15,7 @@ Developer Notes
         - [Show sources in debugging](#show-sources-in-debugging)
         - [Compiling for gprof profiling](#compiling-for-gprof-profiling)
         - [`debug.log`](#debuglog)
-        - [Testnet and Regtest modes](#testnet-and-regtest-modes)
+        - [Devnet, testnet, and regtest modes](#devnet-testnet-and-regtest-modes)
         - [DEBUG_LOCKORDER](#debug_lockorder)
         - [DEBUG_LOCKCONTENTION](#debug_lockcontention)
         - [Valgrind suppressions file](#valgrind-suppressions-file)
@@ -398,14 +398,15 @@ all log categories and `-loglevel=trace` will turn on all log severity levels.
 The Qt code routes `qDebug()` output to `debug.log` under category "qt": run with `-debug=qt`
 to see it.
 
-### Testnet and Regtest modes
+### Devnet, testnet, and regtest modes
 
-Run with the `-testnet` option to run with "play coins" on the test network, if you
-are testing multi-machine code that needs to operate across the internet.
+If you are testing multi-machine code that needs to operate across the internet,
+you can run with `-testnet` config option to test with "play coins" on a test network.
+Or create your own chain using `-devnet` config option.
 
-If you are testing something that can run on one machine, run with the `-regtest` option.
-In regression test mode, blocks can be created on-demand; see [test/functional/](/test/functional) for tests
-that run in `-regtest` mode.
+If you are testing something that can run on one machine, run with the
+`-regtest` option.  In regression test mode, blocks can be created on demand;
+see [test/functional/](/test/functional) for tests that run in `-regtest` mode.
 
 ### DEBUG_LOCKORDER
 

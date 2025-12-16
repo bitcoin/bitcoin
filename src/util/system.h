@@ -424,7 +424,7 @@ protected:
     /**
      * Add subcommand
      */
-    void AddCommand(const std::string& cmd, const std::string& help, const OptionsCategory& cat);
+    void AddCommand(const std::string& cmd, const std::string& help);
 
     /**
      * Add many hidden arguments
