@@ -9,6 +9,7 @@
 #include <QString>
 #include <QWidget>
 
+#include <cmath>
 #include <cstdint>
 #include <vector>
 
@@ -40,6 +41,44 @@ private:
     void CalcSupportedWeights(const QString& font_name);
 };
 
+class FontRegistry {
+public:
+    static constexpr QFont::Weight TARGET_WEIGHT_BOLD{QFont::Medium};
+    static constexpr QFont::Weight TARGET_WEIGHT_NORMAL{
+#ifdef Q_OS_MACOS
+        QFont::ExtraLight
+#else
+        QFont::Light
+#endif // Q_OS_MACOS
+    };
+
+public:
+    void RegisterFont(const FontFamily& font);
+
+    void SetFont(const FontFamily& font);
+    void SetFontScale(int font_scale) { m_font_scale = font_scale; }
+    void SetWeightBold(const QFont::Weight& bold) { m_weights.at(m_font).m_bold = bold; }
+    void SetWeightNormal(const QFont::Weight& normal) { m_weights.at(m_font).m_normal = normal; }
+
+    double GetScaleSteps() const { return m_scale_steps; }
+    double GetScaledFontSize(int size) const { return std::round(size * (1 + (m_font_scale * m_scale_steps)) * 4) / 4.0; }
+    FontFamily GetFont() const { return m_font; }
+    int GetFontScale() const { return m_font_scale; }
+    int GetFontSize() const { return m_font_size; }
+    QFont::Weight GetWeightBold() const { return m_weights.at(m_font).m_bold; }
+    QFont::Weight GetWeightNormal() const { return m_weights.at(m_font).m_normal; }
+    QFont::Weight GetWeightBoldDefault() const { return m_weights.at(m_font).m_bold_default; }
+    QFont::Weight GetWeightNormalDefault() const { return m_weights.at(m_font).m_normal_default; }
+    std::vector<QFont::Weight> GetSupportedWeights() const { return m_weights.at(m_font).m_supported_weights; }
+
+private:
+    double m_scale_steps{0.01};
+    FontFamily m_font{FontFamily::SystemDefault};
+    int m_font_scale{0};
+    int m_font_size{12};
+    std::map<FontFamily, FontInfo> m_weights;
+};
+
 FontFamily fontFamilyFromString(const QString& strFamily);
 QString fontFamilyToString(FontFamily family);
 
@@ -58,12 +97,12 @@ QFont::Weight toQFontWeight(FontWeight weight);
 /** set/get normal font weight: GUIUtil::fontWeightNormal */
 QFont::Weight getFontWeightNormalDefault();
 QFont::Weight getFontWeightNormal();
-void setFontWeightNormal(QFont::Weight weight);
+void setFontWeightNormal(const QFont::Weight& weight);
 
 /** set/get bold font weight: GUIUtil::fontWeightBold */
 QFont::Weight getFontWeightBoldDefault();
 QFont::Weight getFontWeightBold();
-void setFontWeightBold(QFont::Weight weight);
+void setFontWeightBold(const QFont::Weight& weight);
 
 /** set/get font scale: GUIUtil::fontScale */
 int getFontScaleDefault();
