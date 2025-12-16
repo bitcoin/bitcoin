@@ -13,9 +13,31 @@
 #include <vector>
 
 namespace GUIUtil {
-enum class FontFamily {
+enum class FontFamily : uint8_t {
     SystemDefault,
     Montserrat,
+};
+
+enum class FontWeight : uint8_t {
+    Normal,
+    Bold,
+};
+
+struct FontInfo {
+    QFont::Weight m_bold;
+    QFont::Weight m_bold_default;
+    QFont::Weight m_normal;
+    QFont::Weight m_normal_default;
+    std::vector<QFont::Weight> m_supported_weights;
+
+    FontInfo() = delete;
+    explicit FontInfo(const QString& font_name);
+    ~FontInfo();
+
+private:
+    QFont::Weight GetBestMatch(const QString& font_name, QFont::Weight target);
+    void CalcDefaultWeights(const QString& font_name);
+    void CalcSupportedWeights(const QString& font_name);
 };
 
 FontFamily fontFamilyFromString(const QString& strFamily);
@@ -25,11 +47,6 @@ QString fontFamilyToString(FontFamily family);
 FontFamily getFontFamilyDefault();
 FontFamily getFontFamily();
 void setFontFamily(FontFamily family);
-
-enum class FontWeight {
-    Normal, // Font weight for normal text
-    Bold,   // Font weight for bold text
-};
 
 /** Convert weight value from args (0-8) to QFont::Weight */
 bool weightFromArg(int nArg, QFont::Weight& weight);
