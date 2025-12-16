@@ -12,9 +12,7 @@ class ChainstateManager;
 class CCoinJoinServer;
 class CConnman;
 class CDeterministicMNManager;
-class CDSTXManager;
 class CGovernanceManager;
-class CMasternodeMetaMan;
 class CMasternodeSync;
 class CMNHFManager;
 class CSporkManager;
@@ -43,10 +41,9 @@ public:
     ActiveContext(const ActiveContext&) = delete;
     ActiveContext& operator=(const ActiveContext&) = delete;
     explicit ActiveContext(ChainstateManager& chainman, CConnman& connman, CDeterministicMNManager& dmnman,
-                           CDSTXManager& dstxman, CGovernanceManager& govman, CMasternodeMetaMan& mn_metaman,
-                           CMNHFManager& mnhfman, CSporkManager& sporkman, CTxMemPool& mempool, LLMQContext& llmq_ctx,
-                           PeerManager& peerman, const CActiveMasternodeManager& mn_activeman,
-                           const CMasternodeSync& mn_sync);
+                           CGovernanceManager& govman, CMNHFManager& mnhfman, CSporkManager& sporkman, CTxMemPool& mempool,
+                           LLMQContext& llmq_ctx, PeerManager& peerman, const CActiveMasternodeManager& mn_activeman,
+                           const CMasternodeSync& mn_sync, CCoinJoinServer& cj_server);
     ~ActiveContext();
 
     void Interrupt();
@@ -58,7 +55,7 @@ public:
      * and are accessible in their own right
      * TODO: Move CActiveMasternodeManager here when dependents have been migrated
      */
-    const std::unique_ptr<CCoinJoinServer> cj_server;
+    CCoinJoinServer& m_cj_server;
     const std::unique_ptr<GovernanceSigner> gov_signer;
     const std::unique_ptr<llmq::CSigSharesManager> shareman;
     const std::unique_ptr<llmq::CEHFSignalsHandler> ehf_sighandler;

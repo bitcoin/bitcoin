@@ -6,7 +6,6 @@
 
 #include <chainlock/chainlock.h>
 #include <chainlock/signing.h>
-#include <coinjoin/server.h>
 #include <governance/governance.h>
 #include <governance/signing.h>
 #include <instantsend/instantsend.h>
@@ -18,13 +17,12 @@
 #include <validation.h>
 
 ActiveContext::ActiveContext(ChainstateManager& chainman, CConnman& connman, CDeterministicMNManager& dmnman,
-                             CDSTXManager& dstxman, CGovernanceManager& govman, CMasternodeMetaMan& mn_metaman,
-                             CMNHFManager& mnhfman, CSporkManager& sporkman, CTxMemPool& mempool, LLMQContext& llmq_ctx,
-                             PeerManager& peerman, const CActiveMasternodeManager& mn_activeman,
-                             const CMasternodeSync& mn_sync) :
+                             CGovernanceManager& govman, CMNHFManager& mnhfman, CSporkManager& sporkman,
+                             CTxMemPool& mempool, LLMQContext& llmq_ctx, PeerManager& peerman,
+                             const CActiveMasternodeManager& mn_activeman, const CMasternodeSync& mn_sync,
+                             CoinJoinServer& cj_server) :
     m_llmq_ctx{llmq_ctx},
-    cj_server{std::make_unique<CCoinJoinServer>(chainman, connman, dmnman, dstxman, mn_metaman, mempool, peerman,
-                                                mn_activeman, mn_sync, *llmq_ctx.isman)},
+    m_cj_server(cj_server),
     gov_signer{std::make_unique<GovernanceSigner>(connman, dmnman, govman, mn_activeman, chainman, mn_sync)},
     shareman{std::make_unique<llmq::CSigSharesManager>(connman, chainman.ActiveChainstate(), *llmq_ctx.sigman, peerman,
                                                        mn_activeman, *llmq_ctx.qman, sporkman)},
