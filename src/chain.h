@@ -39,14 +39,6 @@ static constexpr int64_t TIMESTAMP_WINDOW = MAX_FUTURE_BLOCK_TIME;
 static constexpr int32_t SEQ_ID_BEST_CHAIN_FROM_DISK = 0;
 static constexpr int32_t SEQ_ID_INIT_FROM_DISK = 1;
 
-/**
- * Maximum gap between node time and block time used
- * for the "Catching up..." mode in GUI.
- *
- * Ref: https://github.com/bitcoin/bitcoin/pull/1026
- */
-static constexpr int64_t MAX_BLOCK_TIME_GAP = 90 * 60;
-
 enum BlockStatus : uint32_t {
     //! Unused.
     BLOCK_VALID_UNKNOWN      =    0,
