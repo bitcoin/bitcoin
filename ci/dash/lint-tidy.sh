@@ -11,6 +11,12 @@ set -eo pipefail
 #          only on nor do they set the requisite build parameters. Make sure you do
 #          that *before* running this script.
 
+# Verify clang-tidy is available
+if ! command -v clang-tidy >/dev/null 2>&1; then
+  echo "Error: clang-tidy not found in PATH"
+  exit 1
+fi
+
 # Setup ctcache for clang-tidy result caching
 export CTCACHE_DIR="/cache/ctcache"
 export CTCACHE_SAVE_OUTPUT=1
@@ -20,6 +26,16 @@ mkdir -p "${CTCACHE_DIR}"
 
 CLANG_TIDY_CACHE="/usr/local/bin/clang-tidy-cache"
 CLANG_TIDY_CACHE_PY="/usr/local/bin/src/ctcache/clang_tidy_cache.py"
+
+# Verify ctcache is installed
+if [ ! -x "${CLANG_TIDY_CACHE}" ]; then
+  echo "Error: ctcache binary not found at ${CLANG_TIDY_CACHE}"
+  exit 1
+fi
+if [ ! -f "${CLANG_TIDY_CACHE_PY}" ]; then
+  echo "Error: ctcache Python script not found at ${CLANG_TIDY_CACHE_PY}"
+  exit 1
+fi
 
 # Zero stats before run to get accurate statistics for this run only
 python3 "${CLANG_TIDY_CACHE_PY}" --zero-stats 2>&1 || true
