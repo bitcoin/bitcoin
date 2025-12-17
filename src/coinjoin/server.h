@@ -101,6 +101,8 @@ public:
     ~CCoinJoinServer();
 
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv) override;
+    bool ProcessGetData(CNode& pfrom, const CInv& inv, CConnman& connman, const CNetMsgMaker& msgMaker) override;
+    bool AlreadyHave(const CInv& inv) override;
     void Schedule(CScheduler& scheduler) override;
 
     bool HasTimedOut() const;

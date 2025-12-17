@@ -42,7 +42,6 @@
 
 #include <chainlock/chainlock.h>
 #include <coinjoin/coinjoin.h>
-#include <coinjoin/server.h>
 #include <coinjoin/walletman.h>
 #include <evo/deterministicmns.h>
 #include <evo/mnauth.h>
@@ -2358,13 +2357,18 @@ bool PeerManagerImpl::AlreadyHave(const CInv& inv)
     // TODO: move it to NetInstantSend
     case MSG_ISDLOCK:
         return m_llmq_ctx->isman->AlreadyHave(inv);
-    // TODO: move it to CoinJoinServer
-    case MSG_DSQ:
-        return (m_cj_walletman && m_cj_walletman->hasQueue(inv.hash)) || (m_active_ctx && m_active_ctx->m_cj_server.HasQueue(inv.hash));
     case MSG_PLATFORM_BAN:
         return m_mn_metaman.AlreadyHavePlatformBan(inv.hash);
-    }
 
+    // At the end inventories that are handled by NetHandler
+    case MSG_DSQ:
+        if (m_cj_walletman && m_cj_walletman->hasQueue(inv.hash)) return true;
+
+        for (const auto& handler : m_handlers) {
+            if (handler->AlreadyHave(inv)) return true;
+        }
+        return false;
+    }
 
     // Don't know what it is, just say we already got one
     return true;
@@ -2978,10 +2982,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
             }
         }
         if (!push && inv.type == MSG_DSQ) {
-            auto opt_dsq = m_active_ctx ? m_active_ctx->m_cj_server.GetQueueFromHash(inv.hash) : std::nullopt;
-            if (m_cj_walletman && !opt_dsq.has_value()) {
-                opt_dsq = m_cj_walletman->getQueueFromHash(inv.hash);
-            }
+            auto opt_dsq = m_cj_walletman ? m_cj_walletman->getQueueFromHash(inv.hash) : std::nullopt;
             if (opt_dsq.has_value()) {
                 m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::DSQUEUE, *opt_dsq));
                 push = true;
@@ -2992,6 +2993,11 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
             if (opt_platform_ban.has_value()) {
                 m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::PLATFORMBAN, *opt_platform_ban));
                 push = true;
+            }
+        }
+        for (auto& handler : m_handlers) {
+            if (!push) {
+                push = handler->ProcessGetData(pfrom, inv, m_connman, msgMaker);
             }
         }
 

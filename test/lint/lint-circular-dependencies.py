@@ -34,7 +34,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     "coinjoin/coinjoin -> instantsend/instantsend -> spork -> msg_result -> coinjoin/coinjoin",
     "coinjoin/coinjoin -> instantsend/instantsend -> instantsend/signing -> llmq/signing_shares -> net_processing -> coinjoin/coinjoin",
     "coinjoin/client -> coinjoin/coinjoin -> instantsend/instantsend -> instantsend/signing -> llmq/signing_shares -> net_processing -> coinjoin/walletman -> coinjoin/client",
-    "coinjoin/server -> net_processing -> coinjoin/server",
     "common/bloom -> evo/assetlocktx -> llmq/commitment -> evo/deterministicmns -> evo/simplifiedmns -> merkleblock -> common/bloom",
     "common/bloom -> evo/assetlocktx -> llmq/quorums -> net -> common/bloom",
     "consensus/tx_verify -> evo/assetlocktx -> llmq/commitment -> validation -> consensus/tx_verify",

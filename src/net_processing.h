@@ -25,6 +25,7 @@ class CInv;
 class CJWalletManager;
 class CMasternodeMetaMan;
 class CMasternodeSync;
+class CNetMsgMaker;
 class CSporkManager;
 class CTransaction;
 class CTxMemPool;
@@ -82,7 +83,14 @@ public:
     virtual void Stop() {}
     virtual void Interrupt() {}
     virtual void Schedule(CScheduler& scheduler) {}
+
     virtual void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv) {}
+
+    // It returns true, if NetHandler has a responsibility about having this type of inventory and has corresponding data.
+    virtual bool AlreadyHave(const CInv& inv) { return false; }
+
+    // It should return true, if there's data has been pushed
+    virtual bool ProcessGetData(CNode& pfrom, const CInv& inv, CConnman& connman, const CNetMsgMaker& msgMaker) { return false; }
 protected:
     PeerManagerInternal* m_peer_manager;
 };

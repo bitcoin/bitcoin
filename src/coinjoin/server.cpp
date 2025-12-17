@@ -921,3 +921,19 @@ void CCoinJoinServer::GetJsonInfo(UniValue& obj) const
     obj.pushKV("state",         GetStateString());
     obj.pushKV("entries_count", GetEntriesCount());
 }
+
+bool CCoinJoinServer::AlreadyHave(const CInv& inv)
+{
+    return (inv.type == MSG_DSQ) ? HasQueue(inv.hash) : false;
+}
+
+bool CCoinJoinServer::ProcessGetData(CNode& pfrom, const CInv& inv, CConnman& connman, const CNetMsgMaker& msgMaker)
+{
+    if (inv.type != MSG_DSQ) return false;
+
+    auto opt_dsq = GetQueueFromHash(inv.hash);
+    if (!opt_dsq.has_value()) return false;
+
+    connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::DSQUEUE, *opt_dsq));
+    return true;
+}
