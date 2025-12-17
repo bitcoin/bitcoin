@@ -79,7 +79,7 @@ of the test. Just make sure to use double-dash to distinguish them from the
 fuzzer's own arguments:
 
 ```sh
-$ FUZZ=address_deserialize_v2 build_fuzz/bin/fuzz -runs=1 fuzz_corpora/address_deserialize_v2 --checkaddrman=5 --printtoconsole=1
+$ FUZZ=address_deserialize build_fuzz/bin/fuzz -runs=1 fuzz_corpora/address_deserialize --checkaddrman=5 --printtoconsole=1
 ```
 
 ## Fuzzing corpora
