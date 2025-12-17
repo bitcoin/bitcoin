@@ -118,21 +118,21 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
         BCLog::LogFlags category;
         BCLog::Level level;
         std::string prefix;
-        std::source_location loc;
+        SourceLocation loc;
     };
 
     std::vector<Case> cases = {
-        {"foo1: bar1", BCLog::NET, BCLog::Level::Debug, "[net] ", std::source_location::current()},
-        {"foo2: bar2", BCLog::NET, BCLog::Level::Info, "[net:info] ", std::source_location::current()},
-        {"foo3: bar3", BCLog::ALL, BCLog::Level::Debug, "[debug] ", std::source_location::current()},
-        {"foo4: bar4", BCLog::ALL, BCLog::Level::Info, "", std::source_location::current()},
-        {"foo5: bar5", BCLog::NONE, BCLog::Level::Debug, "[debug] ", std::source_location::current()},
-        {"foo6: bar6", BCLog::NONE, BCLog::Level::Info, "", std::source_location::current()},
+        {"foo1: bar1", BCLog::NET, BCLog::Level::Debug, "[net] ", SourceLocation{__func__}},
+        {"foo2: bar2", BCLog::NET, BCLog::Level::Info, "[net:info] ", SourceLocation{__func__}},
+        {"foo3: bar3", BCLog::ALL, BCLog::Level::Debug, "[debug] ", SourceLocation{__func__}},
+        {"foo4: bar4", BCLog::ALL, BCLog::Level::Info, "", SourceLocation{__func__}},
+        {"foo5: bar5", BCLog::NONE, BCLog::Level::Debug, "[debug] ", SourceLocation{__func__}},
+        {"foo6: bar6", BCLog::NONE, BCLog::Level::Info, "", SourceLocation{__func__}},
     };
 
     std::vector<std::string> expected;
     for (auto& [msg, category, level, prefix, loc] : cases) {
-        expected.push_back(tfm::format("[%s:%s] [%s] %s%s", util::RemovePrefix(loc.file_name(), "./"), loc.line(), loc.function_name(), prefix, msg));
+        expected.push_back(tfm::format("[%s:%s] [%s] %s%s", util::RemovePrefix(loc.file_name(), "./"), loc.line(), loc.function_name_short(), prefix, msg));
         LogInstance().LogPrintStr(msg, std::move(loc), category, level, /*should_ratelimit=*/false);
     }
     std::vector<std::string> log_lines{ReadDebugLogLines()};
@@ -306,8 +306,8 @@ BOOST_AUTO_TEST_CASE(logging_log_rate_limiter)
     auto& limiter{*Assert(limiter_)};
 
     using Status = BCLog::LogRateLimiter::Status;
-    auto source_loc_1{std::source_location::current()};
-    auto source_loc_2{std::source_location::current()};
+    auto source_loc_1{SourceLocation{__func__}};
+    auto source_loc_2{SourceLocation{__func__}};
 
     // A fresh limiter should not have any suppressions
     BOOST_CHECK(!limiter.SuppressionsActive());
