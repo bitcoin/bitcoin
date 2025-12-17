@@ -18,12 +18,15 @@ CTCACHE_CLANG_TIDY=$(which clang-tidy)
 export CTCACHE_CLANG_TIDY
 mkdir -p "${CTCACHE_DIR}"
 
+CLANG_TIDY_CACHE="/usr/local/bin/clang-tidy-cache"
+CLANG_TIDY_CACHE_PY="/usr/local/bin/src/ctcache/clang_tidy_cache.py"
+
 # Zero stats before run to get accurate statistics for this run only
-python3 /usr/local/bin/src/ctcache/clang_tidy_cache.py --zero-stats 2>&1 || true
+python3 "${CLANG_TIDY_CACHE_PY}" --zero-stats 2>&1 || true
 
 cd "${BASE_ROOT_DIR}/build-ci/dashcore-${BUILD_TARGET}/src"
 
-if ! ( run-clang-tidy -clang-tidy-binary=/usr/local/bin/clang-tidy-cache -quiet "${MAKEJOBS}" | tee tmp.tidy-out.txt ); then
+if ! ( run-clang-tidy -clang-tidy-binary="${CLANG_TIDY_CACHE}" -quiet "${MAKEJOBS}" | tee tmp.tidy-out.txt ); then
   grep -C5 "error: " tmp.tidy-out.txt
   echo "^^^ ⚠️ Failure generated from clang-tidy"
   false
@@ -32,7 +35,7 @@ fi
 # Show ctcache statistics and manage cache size
 echo "=== ctcache statistics ==="
 du -sh "${CTCACHE_DIR}" 2>/dev/null || echo "Cache directory not found"
-python3 /usr/local/bin/src/ctcache/clang_tidy_cache.py --show-stats 2>&1 || true
+python3 "${CLANG_TIDY_CACHE_PY}" --show-stats 2>&1 || true
 
 # Limit cache size (ctcache has no built-in size management)
 CTCACHE_MAXSIZE_MB=50
