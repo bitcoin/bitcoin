@@ -1,9 +1,9 @@
 v30.x Release Notes
 ===================
 
-Bitcoin Core version v30.1rc1 is now available from:
+Bitcoin Core version v30.1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-30.1/test.rc1/>
+  <https://bitcoincore.org/bin/bitcoin-core-30.1/>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
