@@ -10,9 +10,9 @@
 #include <consensus/validation.h>
 #include <kernel/chain.h>
 #include <net.h>
+#include <node/txorphanage.h>
 #include <primitives/transaction.h>
 #include <policy/packages.h>
-#include <txorphanage.h>
 #include <txrequest.h>
 
 class CTxMemPool;
@@ -22,7 +22,7 @@ public:
     TxDownloadOptions m_opts;
 
     /** Manages unvalidated tx data (orphan transactions for which we are downloading ancestors). */
-    TxOrphanage m_orphanage;
+    std::unique_ptr<TxOrphanage> m_orphanage;
     /** Tracks candidates for requesting and downloading transaction data. */
     TxRequestTracker m_txrequest;
 
@@ -128,7 +128,7 @@ public:
         return *m_lazy_recent_confirmed_transactions;
     }
 
-    TxDownloadManagerImpl(const TxDownloadOptions& options) : m_opts{options}, m_txrequest{options.m_deterministic_txrequest} {}
+    TxDownloadManagerImpl(const TxDownloadOptions& options) : m_opts{options}, m_orphanage{MakeTxOrphanage()}, m_txrequest{options.m_deterministic_txrequest} {}
 
     struct PeerInfo {
         /** Information relevant to scheduling tx requests. */
@@ -188,7 +188,7 @@ public:
     void CheckIsEmpty();
     void CheckIsEmpty(NodeId nodeid);
 
-    std::vector<TxOrphanage::OrphanTxBase> GetOrphanTransactions() const;
+    std::vector<TxOrphanage::OrphanInfo> GetOrphanTransactions() const;
 
 protected:
     /** Helper for getting deduplicated vector of Txids in vin. */

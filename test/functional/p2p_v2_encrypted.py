@@ -41,7 +41,7 @@ class P2PEncrypted(BitcoinTestFramework):
             block = create_block(tip, create_coinbase(tipheight + 1), last_block_time + 1)
             block.solve()
             test_blocks.append(block)
-            tip = block.sha256
+            tip = block.hash_int
             tipheight += 1
             last_block_time += 1
         return test_blocks

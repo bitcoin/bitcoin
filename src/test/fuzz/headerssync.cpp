@@ -43,10 +43,11 @@ void MakeHeadersContinuous(
 class FuzzedHeadersSyncState : public HeadersSyncState
 {
 public:
-    FuzzedHeadersSyncState(const unsigned commit_offset, const CBlockIndex* chain_start, const arith_uint256& minimum_required_work)
-        : HeadersSyncState(/*id=*/0, Params().GetConsensus(), chain_start, minimum_required_work)
+    FuzzedHeadersSyncState(const HeadersSyncParams& sync_params, const size_t commit_offset,
+                           const CBlockIndex* chain_start, const arith_uint256& minimum_required_work)
+        : HeadersSyncState(/*id=*/0, Params().GetConsensus(), sync_params, chain_start, minimum_required_work)
     {
-        const_cast<unsigned&>(m_commit_offset) = commit_offset;
+        const_cast<size_t&>(m_commit_offset) = commit_offset;
     }
 };
 
@@ -65,9 +66,14 @@ FUZZ_TARGET(headers_sync_state, .init = initialize_headers_sync_state_fuzz)
     const uint256 genesis_hash = genesis_header.GetHash();
     start_index.phashBlock = &genesis_hash;
 
+    const HeadersSyncParams params{
+        .commitment_period = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, Params().HeadersSync().commitment_period * 2),
+        .redownload_buffer_size = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, Params().HeadersSync().redownload_buffer_size * 2),
+    };
     arith_uint256 min_work{UintToArith256(ConsumeUInt256(fuzzed_data_provider))};
     FuzzedHeadersSyncState headers_sync(
-        /*commit_offset=*/fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(1, 1024),
+        params,
+        /*commit_offset=*/fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, params.commitment_period - 1),
         /*chain_start=*/&start_index,
         /*minimum_required_work=*/min_work);
 

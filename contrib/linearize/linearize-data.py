@@ -2,7 +2,7 @@
 #
 # linearize-data.py: Construct a linear, no-fork version of the chain.
 #
-# Copyright (c) 2013-2022 The Bitcoin Core developers
+# Copyright (c) 2013-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -34,7 +34,7 @@ def get_blk_dt(blk_hdr):
 # When getting the list of block hashes, undo any byte reversals.
 def get_block_hashes(settings):
     blkindex = []
-    with open(settings['hashlist'], "r", encoding="utf8") as f:
+    with open(settings['hashlist'], "r") as f:
         for line in f:
             line = line.rstrip()
             if settings['rev_hash_bytes'] == 'true':
@@ -267,7 +267,7 @@ if __name__ == '__main__':
         print("Usage: linearize-data.py CONFIG-FILE")
         sys.exit(1)
 
-    with open(sys.argv[1], encoding="utf8") as f:
+    with open(sys.argv[1]) as f:
         for line in f:
             # skip comment lines
             m = re.search(r'^\s*#', line)

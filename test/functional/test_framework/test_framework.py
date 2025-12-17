@@ -8,20 +8,17 @@ import configparser
 from enum import Enum
 import argparse
 from datetime import datetime, timezone
-import json
 import logging
 import os
 import platform
 import pdb
 import random
 import re
-import shlex
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
-import types
 
 from .address import create_deterministic_address_bcrt1_p2tr_op_true
 from .authproxy import JSONRPCException
@@ -29,11 +26,14 @@ from . import coverage
 from .p2p import NetworkThread
 from .test_node import TestNode
 from .util import (
+    Binaries,
     MAX_NODES,
     PortSeed,
     assert_equal,
     check_json_precision,
+    export_env_build_path,
     find_vout_for_address,
+    get_binary_paths,
     get_datadir_path,
     initialize_datadir,
     p2p_port,
@@ -59,60 +59,6 @@ class SkipTest(Exception):
 
     def __init__(self, message):
         self.message = message
-
-
-class Binaries:
-    """Helper class to provide information about bitcoin binaries
-
-    Attributes:
-        paths: Object returned from get_binary_paths() containing information
-            which binaries and command lines to use from environment variables and
-            the config file.
-        bin_dir: An optional string containing a directory path to look for
-            binaries, which takes precedence over the paths above, if specified.
-            This is used by tests calling binaries from previous releases.
-    """
-    def __init__(self, paths, bin_dir):
-        self.paths = paths
-        self.bin_dir = bin_dir
-
-    def node_argv(self):
-        "Return argv array that should be used to invoke bitcoind"
-        return self._argv("node", self.paths.bitcoind)
-
-    def rpc_argv(self):
-        "Return argv array that should be used to invoke bitcoin-cli"
-        # Add -nonamed because "bitcoin rpc" enables -named by default, but bitcoin-cli doesn't
-        return self._argv("rpc", self.paths.bitcoincli) + ["-nonamed"]
-
-    def tx_argv(self):
-        "Return argv array that should be used to invoke bitcoin-tx"
-        return self._argv("tx", self.paths.bitcointx)
-
-    def util_argv(self):
-        "Return argv array that should be used to invoke bitcoin-util"
-        return self._argv("util", self.paths.bitcoinutil)
-
-    def wallet_argv(self):
-        "Return argv array that should be used to invoke bitcoin-wallet"
-        return self._argv("wallet", self.paths.bitcoinwallet)
-
-    def chainstate_argv(self):
-        "Return argv array that should be used to invoke bitcoin-chainstate"
-        return self._argv("chainstate", self.paths.bitcoinchainstate)
-
-    def _argv(self, command, bin_path):
-        """Return argv array that should be used to invoke the command. It
-        either uses the bitcoin wrapper executable (if BITCOIN_CMD is set), or
-        the direct binary path (bitcoind, etc). When bin_dir is set (by tests
-        calling binaries from previous releases) it always uses the direct
-        path."""
-        if self.bin_dir is not None:
-            return [os.path.join(self.bin_dir, os.path.basename(bin_path))]
-        elif self.paths.bitcoin_cmd is not None:
-            return self.paths.bitcoin_cmd + [command]
-        else:
-            return [bin_path]
 
 
 class BitcoinTestMetaClass(type):
@@ -158,6 +104,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.noban_tx_relay: bool = False
         self.nodes: list[TestNode] = []
         self.extra_args = None
+        self.extra_init = None
         self.network_thread = None
         self.rpc_timeout = 60  # Wait for up to 60 seconds for the RPC server to respond
         self.supports_cli = True
@@ -194,26 +141,14 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             else:
                 self.run_test()
 
-        except JSONRPCException:
-            self.log.exception("JSONRPC error")
-            self.success = TestStatus.FAILED
         except SkipTest as e:
             self.log.warning("Test Skipped: %s" % e.message)
             self.success = TestStatus.SKIPPED
-        except AssertionError:
-            self.log.exception("Assertion failed")
-            self.success = TestStatus.FAILED
-        except KeyError:
-            self.log.exception("Key error")
-            self.success = TestStatus.FAILED
         except subprocess.CalledProcessError as e:
-            self.log.exception("Called Process failed with '{}'".format(e.output))
+            self.log.exception(f"Called Process failed with stdout='{e.stdout}'; stderr='{e.stderr}';")
             self.success = TestStatus.FAILED
-        except Exception:
-            self.log.exception("Unexpected exception caught during testing")
-            self.success = TestStatus.FAILED
-        except KeyboardInterrupt:
-            self.log.warning("Exiting after keyboard interrupt")
+        except BaseException:
+            self.log.exception("Unexpected exception")
             self.success = TestStatus.FAILED
         finally:
             exit_code = self.shutdown()
@@ -279,35 +214,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         self.config = configparser.ConfigParser()
         self.config.read_file(open(self.options.configfile))
-        self.binary_paths = self.get_binary_paths()
+        self.binary_paths = get_binary_paths(self.config)
         if self.options.v1transport:
             self.options.v2transport=False
 
         PortSeed.n = self.options.port_seed
-
-    def get_binary_paths(self):
-        """Get paths of all binaries from environment variables or their default values"""
-
-        paths = types.SimpleNamespace()
-        binaries = {
-            "bitcoind": "BITCOIND",
-            "bitcoin-cli": "BITCOINCLI",
-            "bitcoin-util": "BITCOINUTIL",
-            "bitcoin-tx": "BITCOINTX",
-            "bitcoin-chainstate": "BITCOINCHAINSTATE",
-            "bitcoin-wallet": "BITCOINWALLET",
-        }
-        for binary, env_variable_name in binaries.items():
-            default_filename = os.path.join(
-                self.config["environment"]["BUILDDIR"],
-                "bin",
-                binary + self.config["environment"]["EXEEXT"],
-            )
-            setattr(paths, env_variable_name.lower(), os.getenv(env_variable_name, default=default_filename))
-        # BITCOIN_CMD environment variable can be specified to invoke bitcoin
-        # wrapper binary instead of other executables.
-        paths.bitcoin_cmd = shlex.split(os.getenv("BITCOIN_CMD", "")) or None
-        return paths
 
     def get_binaries(self, bin_dir=None):
         return Binaries(self.binary_paths, bin_dir)
@@ -316,13 +227,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Call this method to start up the test framework object with options set."""
 
         check_json_precision()
+        export_env_build_path(self.config)
 
         self.options.cachedir = os.path.abspath(self.options.cachedir)
-
-        os.environ['PATH'] = os.pathsep.join([
-            os.path.join(self.config["environment"]["BUILDDIR"], "bin"),
-            os.environ['PATH']
-        ])
 
         # Set up temp directory and start logging
         if self.options.tmpdir:
@@ -351,6 +258,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.log.debug('Setting up network thread')
         self.network_thread = NetworkThread()
         self.network_thread.start()
+        self.wait_until(lambda: self.network_thread.network_event_loop.is_running())
 
         if self.options.usecli:
             if not self.supports_cli:
@@ -562,15 +470,15 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
             bin_dirs.append(bin_dir)
 
+        extra_init = [{}] * num_nodes if self.extra_init is None else self.extra_init # type: ignore[var-annotated]
+        assert_equal(len(extra_init), num_nodes)
         assert_equal(len(extra_confs), num_nodes)
         assert_equal(len(extra_args), num_nodes)
         assert_equal(len(versions), num_nodes)
         assert_equal(len(bin_dirs), num_nodes)
         for i in range(num_nodes):
             args = list(extra_args[i])
-            test_node_i = TestNode(
-                i,
-                get_datadir_path(self.options.tmpdir, i),
+            init = dict(
                 chain=self.chain,
                 rpchost=rpchost,
                 timewait=self.rpc_timeout,
@@ -587,6 +495,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 v2transport=self.options.v2transport,
                 uses_wallet=self.uses_wallet,
             )
+            init.update(extra_init[i])
+            test_node_i = TestNode(
+                i,
+                get_datadir_path(self.options.tmpdir, i),
+                **init)
             self.nodes.append(test_node_i)
             if not test_node_i.version_is_at_least(170000):
                 # adjust conf for pre 17
@@ -839,7 +752,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.log = logging.getLogger('TestFramework')
         self.log.setLevel(logging.DEBUG)
         # Create file handler to log all messages
-        fh = logging.FileHandler(self.options.tmpdir + '/test_framework.log', encoding='utf-8')
+        fh = logging.FileHandler(self.options.tmpdir + '/test_framework.log')
         fh.setLevel(logging.DEBUG)
         # Create console handler to log messages to stderr. By default this logs only error messages, but can be configured with --loglevel.
         ch = logging.StreamHandler(sys.stdout)
@@ -889,7 +802,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     cache_node_dir,
                     chain=self.chain,
                     extra_conf=["bind=127.0.0.1"],
-                    extra_args=['-disablewallet'],
+                    extra_args=[],
                     rpchost=None,
                     timewait=self.rpc_timeout,
                     timeout_factor=self.options.timeout_factor,
@@ -964,6 +877,13 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         except ImportError:
             raise SkipTest("sqlite3 module not available.")
 
+    def skip_if_no_py_capnp(self):
+        """Attempt to import the capnp package and skip the test if the import fails."""
+        try:
+            import capnp  # type: ignore[import] # noqa: F401
+        except ImportError:
+            raise SkipTest("capnp module not available.")
+
     def skip_if_no_python_bcc(self):
         """Attempt to import the bcc package and skip the tests if the import fails."""
         try:
@@ -1028,6 +948,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if not self.is_cli_compiled():
             raise SkipTest("bitcoin-cli has not been compiled.")
 
+    def skip_if_no_ipc(self):
+        """Skip the running test if ipc is not compiled."""
+        if not self.is_ipc_compiled():
+            raise SkipTest("ipc has not been compiled.")
+
     def skip_if_no_previous_releases(self):
         """Skip the running test if previous releases are not available."""
         if not self.has_previous_releases():
@@ -1087,10 +1012,20 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Checks whether the USDT tracepoints were compiled."""
         return self.config["components"].getboolean("ENABLE_USDT_TRACEPOINTS")
 
+    def is_ipc_compiled(self):
+        """Checks whether ipc was compiled."""
+        return self.config["components"].getboolean("ENABLE_IPC")
+
     def has_blockfile(self, node, filenum: str):
         return (node.blocks_path/ f"blk{filenum}.dat").is_file()
 
-    def convert_to_json_for_cli(self, text):
-        if self.options.usecli:
-            return json.dumps(text)
-        return text
+    def inspect_sqlite_db(self, path, fn, *args, **kwargs):
+        try:
+            import sqlite3 # type: ignore[import]
+            conn = sqlite3.connect(path)
+            with conn:
+                result = fn(conn, *args, **kwargs)
+            conn.close()
+            return result
+        except ImportError:
+            self.log.warning("sqlite3 module not available, skipping tests that inspect the database")

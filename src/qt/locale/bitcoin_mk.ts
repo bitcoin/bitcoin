@@ -14,10 +14,6 @@
         <translation type="unfinished">Нова</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Копирај ја избраната адреса на системскиот клипборд</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">Копирај</translation>
     </message>
@@ -952,6 +948,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">верзија</translation>
+    </message>
+    </context>
+<context>
     <name>Intro</name>
     <message>
         <source>Bitcoin</source>
@@ -994,14 +997,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Error</source>
         <translation type="unfinished">Грешка</translation>
     </message>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">верзија</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -1039,10 +1035,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>OverviewPage</name>
-    <message>
-        <source>Watch-only:</source>
-        <translation type="unfinished">Само гледање</translation>
-    </message>
     <message>
         <source>Total:</source>
         <translation type="unfinished">Вкупно:</translation>
@@ -1358,6 +1350,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">Паричник по подразбирање</translation>
+    </message>
     <message>
         <source>Insufficient funds</source>
         <translation type="unfinished">Недоволно средства</translation>

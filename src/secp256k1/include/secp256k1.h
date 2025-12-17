@@ -121,45 +121,57 @@ typedef int (*secp256k1_nonce_function)(
 #endif
 
 /* Symbol visibility. */
-#if defined(_WIN32)
-  /* GCC for Windows (e.g., MinGW) accepts the __declspec syntax
-   * for MSVC compatibility. A __declspec declaration implies (but is not
-   * exactly equivalent to) __attribute__ ((visibility("default"))), and so we
-   * actually want __declspec even on GCC, see "Microsoft Windows Function
-   * Attributes" in the GCC manual and the recommendations in
-   * https://gcc.gnu.org/wiki/Visibility. */
-# if defined(SECP256K1_BUILD)
-#  if defined(DLL_EXPORT) || defined(SECP256K1_DLL_EXPORT)
-    /* Building libsecp256k1 as a DLL.
-     * 1. If using Libtool, it defines DLL_EXPORT automatically.
-     * 2. In other cases, SECP256K1_DLL_EXPORT must be defined. */
-#   define SECP256K1_API extern __declspec (dllexport)
-#  else
-    /* Building libsecp256k1 as a static library on Windows.
-     * No declspec is needed, and so we would want the non-Windows-specific
-     * logic below take care of this case. However, this may result in setting
-     * __attribute__ ((visibility("default"))), which is supposed to be a noop
-     * on Windows but may trigger warnings when compiling with -flto due to a
-     * bug in GCC, see
-     * https://gcc.gnu.org/bugzilla/show_bug.cgi?id=116478 . */
-#   define SECP256K1_API extern
-#  endif
-  /* The user must define SECP256K1_STATIC when consuming libsecp256k1 as a static
-   * library on Windows. */
-# elif !defined(SECP256K1_STATIC)
-   /* Consuming libsecp256k1 as a DLL. */
-#  define SECP256K1_API extern __declspec (dllimport)
-# endif
+#if !defined(SECP256K1_API) && defined(SECP256K1_NO_API_VISIBILITY_ATTRIBUTES)
+     /* The user has requested that we don't specify visibility attributes in
+      * the public API.
+      *
+      * Since all our non-API declarations use the static qualifier, this means
+      * that the user can use -fvisibility=<value> to set the visibility of the
+      * API symbols. For instance, -fvisibility=hidden can be useful *even for
+      * the API symbols*, e.g., when building a static library which is linked
+      * into a shared library, and the latter should not re-export the
+      * libsecp256k1 API.
+      *
+      * While visibility is a concept that applies only to shared libraries,
+      * setting visibility will still make a difference when building a static
+      * library: the visibility settings will be stored in the static library,
+      * solely for the potential case that the static library will be linked into
+      * a shared library. In that case, the stored visibility settings will
+      * resurface and be honored for the shared library. */
+#    define SECP256K1_API extern
 #endif
-#ifndef SECP256K1_API
-/* All cases not captured by the Windows-specific logic. */
-# if defined(__GNUC__) && (__GNUC__ >= 4) && defined(SECP256K1_BUILD)
-   /* Building libsecp256k1 using GCC or compatible. */
-#  define SECP256K1_API extern __attribute__ ((visibility ("default")))
-# else
-   /* Fall back to standard C's extern. */
-#  define SECP256K1_API extern
-# endif
+#if !defined(SECP256K1_API)
+#    if defined(SECP256K1_BUILD)
+         /* On Windows, assume a shared library only if explicitly requested.
+          *   1. If using Libtool, it defines DLL_EXPORT automatically.
+          *   2. In other cases, SECP256K1_DLL_EXPORT must be defined. */
+#        if defined(_WIN32) && (defined(SECP256K1_DLL_EXPORT) || defined(DLL_EXPORT))
+             /* GCC for Windows (e.g., MinGW) accepts the __declspec syntax for
+              * MSVC compatibility. A __declspec declaration implies (but is not
+              * exactly equivalent to) __attribute__ ((visibility("default"))),
+              * and so we actually want __declspec even on GCC, see "Microsoft
+              * Windows Function Attributes" in the GCC manual and the
+              * recommendations in https://gcc.gnu.org/wiki/Visibility . */
+#            define SECP256K1_API extern __declspec(dllexport)
+         /* Avoid __attribute__ ((visibility("default"))) on Windows to get rid
+          * of warnings when compiling with -flto due to a bug in GCC, see
+          * https://gcc.gnu.org/bugzilla/show_bug.cgi?id=116478 . */
+#        elif !defined(_WIN32) && defined (__GNUC__) && (__GNUC__ >= 4)
+#            define SECP256K1_API extern __attribute__ ((visibility("default")))
+#        else
+#            define SECP256K1_API extern
+#        endif
+#    else
+         /* On Windows, SECP256K1_STATIC must be defined when consuming
+          * libsecp256k1 as a static library. Note that SECP256K1_STATIC is a
+          * "consumer-only" macro, and it has no meaning when building
+          * libsecp256k1. */
+#        if defined(_WIN32) && !defined(SECP256K1_STATIC)
+#            define SECP256K1_API extern __declspec(dllimport)
+#        else
+#            define SECP256K1_API extern
+#        endif
+#    endif
 #endif
 
 /* Warning attributes
@@ -249,7 +261,7 @@ SECP256K1_DEPRECATED("Use secp256k1_context_static instead");
  *  secp256k1_context_create (or secp256k1_context_preallocated_create), which will
  *  take care of performing the self tests.
  *
- *  If the tests fail, this function will call the default error handler to abort the
+ *  If the tests fail, this function will call the default error callback to abort the
  *  program (see secp256k1_context_set_error_callback).
  */
 SECP256K1_API void secp256k1_selftest(void);
@@ -322,36 +334,37 @@ SECP256K1_API void secp256k1_context_destroy(
  *  an API call. It will only trigger for violations that are mentioned
  *  explicitly in the header.
  *
- *  The philosophy is that these shouldn't be dealt with through a
- *  specific return value, as calling code should not have branches to deal with
- *  the case that this code itself is broken.
+ *  The philosophy is that these shouldn't be dealt with through a specific
+ *  return value, as calling code should not have branches to deal with the case
+ *  that this code itself is broken.
  *
  *  On the other hand, during debug stage, one would want to be informed about
- *  such mistakes, and the default (crashing) may be inadvisable.
- *  When this callback is triggered, the API function called is guaranteed not
- *  to cause a crash, though its return value and output arguments are
- *  undefined.
+ *  such mistakes, and the default (crashing) may be inadvisable. Should this
+ *  callback return instead of crashing, the return value and output arguments
+ *  of the API function call are undefined. Moreover, the same API call may
+ *  trigger the callback again in this case.
  *
- *  When this function has not been called (or called with fn==NULL), then the
- *  default handler will be used. The library provides a default handler which
- *  writes the message to stderr and calls abort. This default handler can be
+ *  When this function has not been called (or called with fun==NULL), then the
+ *  default callback will be used. The library provides a default callback which
+ *  writes the message to stderr and calls abort. This default callback can be
  *  replaced at link time if the preprocessor macro
  *  USE_EXTERNAL_DEFAULT_CALLBACKS is defined, which is the case if the build
  *  has been configured with --enable-external-default-callbacks. Then the
  *  following two symbols must be provided to link against:
  *   - void secp256k1_default_illegal_callback_fn(const char *message, void *data);
  *   - void secp256k1_default_error_callback_fn(const char *message, void *data);
- *  The library can call these default handlers even before a proper callback data
+ *  The library may call a default callback even before a proper callback data
  *  pointer could have been set using secp256k1_context_set_illegal_callback or
  *  secp256k1_context_set_error_callback, e.g., when the creation of a context
- *  fails. In this case, the corresponding default handler will be called with
+ *  fails. In this case, the corresponding default callback will be called with
  *  the data pointer argument set to NULL.
  *
  *  Args: ctx:  pointer to a context object.
  *  In:   fun:  pointer to a function to call when an illegal argument is
  *              passed to the API, taking a message and an opaque pointer.
- *              (NULL restores the default handler.)
- *        data: the opaque pointer to pass to fun above, must be NULL for the default handler.
+ *              (NULL restores the default callback.)
+ *        data: the opaque pointer to pass to fun above, must be NULL for the
+ *              default callback.
  *
  *  See also secp256k1_context_set_error_callback.
  */
@@ -368,8 +381,8 @@ SECP256K1_API void secp256k1_context_set_illegal_callback(
  *  to abort the program.
  *
  *  This can only trigger in case of a hardware failure, miscompilation,
- *  memory corruption, serious bug in the library, or other error would can
- *  otherwise result in undefined behaviour. It will not trigger due to mere
+ *  memory corruption, serious bug in the library, or other error that would
+ *  result in undefined behaviour. It will not trigger due to mere
  *  incorrect usage of the API (see secp256k1_context_set_illegal_callback
  *  for that). After this callback returns, anything may happen, including
  *  crashing.
@@ -377,9 +390,10 @@ SECP256K1_API void secp256k1_context_set_illegal_callback(
  *  Args: ctx:  pointer to a context object.
  *  In:   fun:  pointer to a function to call when an internal error occurs,
  *              taking a message and an opaque pointer (NULL restores the
- *              default handler, see secp256k1_context_set_illegal_callback
+ *              default callback, see secp256k1_context_set_illegal_callback
  *              for details).
- *        data: the opaque pointer to pass to fun above, must be NULL for the default handler.
+ *        data: the opaque pointer to pass to fun above, must be NULL for the
+ *              default callback.
  *
  *  See also secp256k1_context_set_illegal_callback.
  */

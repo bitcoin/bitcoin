@@ -153,7 +153,7 @@ FUZZ_TARGET(utxo_total_supply)
                 node::RegenerateCommitments(*current_block, chainman);
                 const bool was_valid = !MineBlock(node, current_block).IsNull();
 
-                const auto prev_utxo_stats = utxo_stats;
+                const uint256 prev_hash_serialized{utxo_stats.hashSerialized};
                 if (was_valid) {
                     if (duplicate_coinbase_height == ActiveHeight()) {
                         // we mined the duplicate coinbase
@@ -167,7 +167,7 @@ FUZZ_TARGET(utxo_total_supply)
 
                 if (!was_valid) {
                     // utxo stats must not change
-                    assert(prev_utxo_stats.hashSerialized == utxo_stats.hashSerialized);
+                    assert(prev_hash_serialized == utxo_stats.hashSerialized);
                 }
 
                 current_block = PrepareNextBlock();

@@ -10,6 +10,8 @@
 class CValidationInterface;
 
 struct TestChainstateManager : public ChainstateManager {
+    /** Disable the next write of all chainstates */
+    void DisableNextWrite();
     /** Reset the ibd cache to its initial state */
     void ResetIbd();
     /** Toggle IsInitialBlockDownload from true to false */
@@ -20,7 +22,7 @@ class ValidationInterfaceTest
 {
 public:
     static void BlockConnected(
-        ChainstateRole role,
+        const kernel::ChainstateRole& role,
         CValidationInterface& obj,
         const std::shared_ptr<const CBlock>& block,
         const CBlockIndex* pindex);

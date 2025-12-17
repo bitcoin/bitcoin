@@ -18,11 +18,12 @@ from test_framework.address import (
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECPubKey
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.messages import COIN, CTransaction, CTxOut
+from test_framework.messages import COIN, CTransaction, CTxOut, ser_string
 from test_framework.script import hash160
 from test_framework.script_util import key_to_p2pkh_script, key_to_p2pk_script, script_to_p2sh_script, script_to_p2wsh_script
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_raises_rpc_error,
     find_vout_for_address,
     sha256sum_file,
@@ -52,7 +53,7 @@ class WalletMigrationTest(BitcoinTestFramework):
             extra_args=self.extra_args,
             versions=[
                 None,
-                280000,
+                280200,
             ],
         )
         self.start_nodes()
@@ -64,6 +65,12 @@ class WalletMigrationTest(BitcoinTestFramework):
             file_magic = f.read(16)
             assert_equal(file_magic, b'SQLite format 3\x00')
         assert_equal(self.master_node.get_wallet_rpc(wallet_name).getwalletinfo()["format"], "sqlite")
+
+    def assert_is_bdb(self, wallet_name):
+        with open(self.master_node.wallets_path / wallet_name / self.wallet_data_filename, "rb") as f:
+            data = f.read(16)
+            _, _, magic = struct.unpack("QII", data)
+            assert_equal(magic, BTREE_MAGIC)
 
     def create_legacy_wallet(self, wallet_name, **kwargs):
         self.old_node.createwallet(wallet_name=wallet_name, descriptors=False, **kwargs)
@@ -112,23 +119,62 @@ class WalletMigrationTest(BitcoinTestFramework):
         if wallet_name == "":
             shutil.copyfile(self.old_node.wallets_path / "wallet.dat", self.master_node.wallets_path / "wallet.dat")
         else:
-            shutil.copytree(self.old_node.wallets_path / wallet_name, self.master_node.wallets_path / wallet_name)
+            src = os.path.abspath(self.old_node.wallets_path / wallet_name)
+            dst = os.path.abspath(self.master_node.wallets_path / wallet_name)
+            if src != dst :
+                shutil.copytree(self.old_node.wallets_path / wallet_name, self.master_node.wallets_path / wallet_name, dirs_exist_ok=True)
         # Check that the wallet shows up in listwalletdir with a warning about migration
         wallets = self.master_node.listwalletdir()
         for w in wallets["wallets"]:
             if w["name"] == wallet_name:
                 assert_equal(w["warnings"], ["This wallet is a legacy wallet and will need to be migrated with migratewallet before it can be loaded"])
+
+        # migratewallet uses current time in naming the backup file, set a mock time
+        # to check that this works correctly.
+        mocked_time = int(time.time())
+        self.master_node.setmocktime(mocked_time)
         # Migrate, checking that rescan does not occur
         with self.master_node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Rescanning"]):
             migrate_info = self.master_node.migratewallet(wallet_name=wallet_name, **kwargs)
+        self.master_node.setmocktime(0)
         # Update wallet name in case the initial wallet was completely migrated to a watch-only wallet
         # (in which case the wallet name would be suffixed by the 'watchonly' term)
-        wallet_name = migrate_info['wallet_name']
-        wallet = self.master_node.get_wallet_rpc(wallet_name)
-        assert_equal(wallet.getwalletinfo()["descriptors"], True)
-        self.assert_is_sqlite(wallet_name)
+        migrated_wallet_name = migrate_info['wallet_name']
+        wallet = self.master_node.get_wallet_rpc(migrated_wallet_name)
+        wallet_info = wallet.getwalletinfo()
+        assert_equal(wallet_info["descriptors"], True)
+        self.assert_is_sqlite(migrated_wallet_name)
         # Always verify the backup path exist after migration
         assert os.path.exists(migrate_info['backup_path'])
+        if wallet_name == "":
+            backup_prefix = "default_wallet"
+        else:
+            backup_prefix = os.path.basename(os.path.realpath(self.old_node.wallets_path / wallet_name))
+
+        backup_filename = f"{backup_prefix}_{mocked_time}.legacy.bak"
+        expected_backup_path = self.master_node.wallets_path / backup_filename
+        assert_equal(str(expected_backup_path), migrate_info['backup_path'])
+        assert {"name": backup_filename} not in self.master_node.listwalletdir()["wallets"]
+
+        # Open the wallet with sqlite and verify that the wallet has the last hardened cache flag
+        # set and the last hardened cache entries
+        def check_last_hardened(conn):
+            flags_rec = conn.execute(f"SELECT value FROM main WHERE key = x'{ser_string(b'flags').hex()}'").fetchone()
+            flags = int.from_bytes(flags_rec[0], byteorder="little")
+
+            # All wallets should have the upgrade flag set
+            assert_equal(bool(flags & (1 << 2)), True)
+
+            # Fetch all records with the walletdescriptorlhcache prefix
+            # if the wallet has private keys and is not blank
+            if wallet_info["private_keys_enabled"] and not wallet_info["blank"]:
+                lh_cache_recs = conn.execute(f"SELECT value FROM main where key >= x'{ser_string(b'walletdescriptorlhcache').hex()}' AND key < x'{ser_string(b'walletdescriptorlhcachf').hex()}'").fetchall()
+                assert_greater_than(len(lh_cache_recs), 0)
+
+        inspect_path = os.path.join(self.options.tmpdir, os.path.basename(f"{migrated_wallet_name}_inspect.dat"))
+        wallet.backupwallet(inspect_path)
+        self.inspect_sqlite_db(inspect_path, check_last_hardened)
+
         return migrate_info, wallet
 
     def test_basic(self):
@@ -518,8 +564,8 @@ class WalletMigrationTest(BitcoinTestFramework):
     def test_nonexistent(self):
         self.log.info("Check migratewallet errors for nonexistent wallets")
         default = self.master_node.get_wallet_rpc(self.default_wallet_name)
-        assert_raises_rpc_error(-8, "RPC endpoint wallet and wallet_name parameter specify different wallets", default.migratewallet, "someotherwallet")
-        assert_raises_rpc_error(-8, "Either RPC endpoint wallet or wallet_name parameter must be provided", self.master_node.migratewallet)
+        assert_raises_rpc_error(-8, "The RPC endpoint wallet and the wallet name parameter specify different wallets", default.migratewallet, "someotherwallet")
+        assert_raises_rpc_error(-8, "Either the RPC endpoint wallet or the wallet name parameter must be provided", self.master_node.migratewallet)
         assert_raises_rpc_error(-4, "Error: Wallet does not exist", self.master_node.migratewallet, "notawallet")
 
     def test_unloaded_by_path(self):
@@ -547,16 +593,77 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         assert_equal(bals, wallet.getbalances())
 
+    def test_wallet_with_relative_path(self):
+        self.log.info("Test migration of a wallet that isn't loaded, specified by a relative path")
+
+        # Get the nearest common path of both nodes' wallet paths.
+        common_parent = os.path.commonpath([self.master_node.wallets_path, self.old_node.wallets_path])
+
+        # This test assumes that the relative path from each wallet directory to the common path is identical.
+        assert_equal(os.path.relpath(common_parent, start=self.master_node.wallets_path), os.path.relpath(common_parent, start=self.old_node.wallets_path))
+
+        wallet_name = "relative"
+        absolute_path = os.path.abspath(os.path.join(common_parent, wallet_name))
+        relative_name = os.path.relpath(absolute_path, start=self.master_node.wallets_path)
+
+        wallet = self.create_legacy_wallet(relative_name)
+        # listwalletdirs only returns wallets in the wallet directory
+        assert {"name": relative_name} not in wallet.listwalletdir()["wallets"]
+        assert relative_name in wallet.listwallets()
+
+        default = self.master_node.get_wallet_rpc(self.default_wallet_name)
+        addr = wallet.getnewaddress()
+        txid = default.sendtoaddress(addr, 1)
+        self.generate(self.master_node, 1)
+        bals = wallet.getbalances()
+
+        migrate_res, wallet = self.migrate_and_get_rpc(relative_name)
+
+        # Check that the wallet was migrated, knows the right txid, and has the right balance.
+        assert wallet.gettransaction(txid)
+        assert_equal(bals, wallet.getbalances())
+
+        # The migrated wallet should not be in the wallet dir, but should be in the list of wallets.
+        info = wallet.getwalletinfo()
+
+        walletdirlist = wallet.listwalletdir()
+        assert {"name": info["walletname"]} not in walletdirlist["wallets"]
+
+        walletlist = wallet.listwallets()
+        assert info["walletname"] in walletlist
+
+        # Check that old node can restore from the backup.
+        self.old_node.restorewallet("relative_restored", migrate_res['backup_path'])
+        wallet = self.old_node.get_wallet_rpc("relative_restored")
+        assert wallet.gettransaction(txid)
+        assert_equal(bals, wallet.getbalances())
+
+        info = wallet.getwalletinfo()
+        assert_equal(info["descriptors"], False)
+        assert_equal(info["format"], "bdb")
+
+    def test_wallet_with_path(self, wallet_path):
+        self.log.info("Test migrating a wallet with the following path/name: %s", wallet_path)
+        # the wallet data is actually inside of path/that/ends/
+        wallet = self.create_legacy_wallet(wallet_path)
+        default = self.master_node.get_wallet_rpc(self.default_wallet_name)
+
+        addr = wallet.getnewaddress()
+        txid = default.sendtoaddress(addr, 1)
+        self.generate(self.master_node, 1)
+        bals = wallet.getbalances()
+
+        _, wallet = self.migrate_and_get_rpc(wallet_path)
+
+        assert wallet.gettransaction(txid)
+
+        assert_equal(bals, wallet.getbalances())
+
     def test_default_wallet(self):
         self.log.info("Test migration of the wallet named as the empty string")
         wallet = self.create_legacy_wallet("")
 
-        # Set time to verify backup existence later
-        curr_time = int(time.time())
-        self.master_node.setmocktime(curr_time)
-
         res, wallet = self.migrate_and_get_rpc("")
-        self.master_node.setmocktime(0)
         info = wallet.getwalletinfo()
         assert_equal(info["descriptors"], True)
         assert_equal(info["format"], "sqlite")
@@ -564,14 +671,9 @@ class WalletMigrationTest(BitcoinTestFramework):
         walletdir_list = wallet.listwalletdir()
         assert {"name": info["walletname"]} in [{"name": w["name"]} for w in walletdir_list["wallets"]]
 
-        # Check backup existence and its non-empty wallet filename
-        backup_filename = f"default_wallet_{curr_time}.legacy.bak"
-        backup_path = self.master_node.wallets_path / backup_filename
-        assert backup_path.exists()
-        assert_equal(str(backup_path), res['backup_path'])
-        assert {"name": backup_filename} not in walletdir_list["wallets"]
-
-        self.master_node.setmocktime(0)
+        # Make sure the backup uses a non-empty filename
+        # migrate_and_get_rpc already checks for backup file existence
+        assert os.path.basename(res["backup_path"]).startswith("default_wallet")
 
     def test_direct_file(self):
         self.log.info("Test migration of a wallet that is not in a wallet directory")
@@ -584,7 +686,10 @@ class WalletMigrationTest(BitcoinTestFramework):
         )
         assert (self.master_node.wallets_path / "plainfile").is_file()
 
-        self.master_node.migratewallet("plainfile")
+        mocked_time = int(time.time())
+        self.master_node.setmocktime(mocked_time)
+        migrate_res = self.master_node.migratewallet("plainfile")
+        assert_equal(f"plainfile_{mocked_time}.legacy.bak", os.path.basename(migrate_res["backup_path"]))
         wallet = self.master_node.get_wallet_rpc("plainfile")
         info = wallet.getwalletinfo()
         assert_equal(info["descriptors"], True)
@@ -916,7 +1021,51 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(original_shasum, new_shasum)
 
         # Check the wallet we tried to migrate is still BDB
-        with open(self.master_node.wallets_path / "failed" / "wallet.dat", "rb") as f:
+        self.assert_is_bdb("failed")
+
+    def test_failed_migration_cleanup_relative_path(self):
+        self.log.info("Test that a failed migration with a relative path is cleaned up")
+
+        # Get the nearest common path of both nodes' wallet paths.
+        common_parent = os.path.commonpath([self.master_node.wallets_path, self.old_node.wallets_path])
+
+        # This test assumes that the relative path from each wallet directory to the common path is identical.
+        assert_equal(os.path.relpath(common_parent, start=self.master_node.wallets_path), os.path.relpath(common_parent, start=self.old_node.wallets_path))
+
+        wallet_name = "relativefailure"
+        absolute_path = os.path.abspath(os.path.join(common_parent, wallet_name))
+        relative_name = os.path.relpath(absolute_path, start=self.master_node.wallets_path)
+
+        wallet = self.create_legacy_wallet(relative_name)
+
+        # Make a copy of the wallet with the solvables wallet name so that we are unable
+        # to create the solvables wallet when migrating, thus failing to migrate
+        wallet.unloadwallet()
+        solvables_path = os.path.join(common_parent, f"{wallet_name}_solvables")
+
+        shutil.copytree(self.old_node.wallets_path / relative_name, solvables_path)
+        original_shasum = sha256sum_file(os.path.join(solvables_path, "wallet.dat"))
+
+        self.old_node.loadwallet(relative_name)
+
+        # Add a multisig so that a solvables wallet is created
+        wallet.addmultisigaddress(2, [wallet.getnewaddress(), get_generate_key().pubkey])
+        wallet.importaddress(get_generate_key().p2pkh_addr)
+
+        self.old_node.unloadwallet(relative_name)
+        assert_raises_rpc_error(-4, "Failed to create database", self.master_node.migratewallet, relative_name)
+
+        assert all(wallet not in self.master_node.listwallets() for wallet in [f"{wallet_name}", f"{wallet_name}_watchonly", f"{wallet_name}_solvables"])
+
+        assert not (self.master_node.wallets_path / f"{wallet_name}_watchonly").exists()
+        # Since the file in failed_solvables is one that we put there, migration shouldn't touch it
+        assert os.path.exists(solvables_path)
+        new_shasum = sha256sum_file(os.path.join(solvables_path , "wallet.dat"))
+        assert_equal(original_shasum, new_shasum)
+
+        # Check the wallet we tried to migrate is still BDB
+        datfile = os.path.join(absolute_path, "wallet.dat")
+        with open(datfile, "rb") as f:
             data = f.read(16)
             _, _, magic = struct.unpack("QII", data)
             assert_equal(magic, BTREE_MAGIC)
@@ -1372,6 +1521,27 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(addr_info["solvable"], True)
         assert "hex" in addr_info
 
+    def test_loading_failure_after_migration(self):
+        self.log.info("Test that a failed loading of the wallet at the end of migration restores the backup")
+        self.stop_node(self.old_node.index)
+        self.old_node.chain = "signet"
+        self.old_node.replace_in_config([("regtest=", "signet="), ("[regtest]", "[signet]")])
+        # Disable network sync and prevent disk space warning on small (tmp)fs
+        self.start_node(self.old_node.index, extra_args=self.old_node.extra_args + ["-maxconnections=0", "-prune=550"])
+
+        wallet_name = "failed_load_after_migrate"
+        self.create_legacy_wallet(wallet_name)
+        assert_raises_rpc_error(-4, "Wallet loading failed. Wallet files should not be reused across chains.", lambda: self.migrate_and_get_rpc(wallet_name))
+
+        # Check the wallet we tried to migrate is still BDB
+        self.assert_is_bdb(wallet_name)
+
+        self.stop_node(self.old_node.index)
+        self.old_node.chain = "regtest"
+        self.old_node.replace_in_config([("signet=", "regtest="), ("[signet]", "[regtest]")])
+        self.start_node(self.old_node.index)
+        self.connect_nodes(1, 0)
+
     def run_test(self):
         self.master_node = self.nodes[0]
         self.old_node = self.nodes[1]
@@ -1387,6 +1557,9 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_encrypted()
         self.test_nonexistent()
         self.test_unloaded_by_path()
+        self.test_wallet_with_relative_path()
+        self.test_wallet_with_path("path/to/mywallet/")
+        self.test_wallet_with_path("path/that/ends/in/..")
         self.test_default_wallet()
         self.test_direct_file()
         self.test_addressbook()
@@ -1394,6 +1567,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_conflict_txs()
         self.test_hybrid_pubkey()
         self.test_failed_migration_cleanup()
+        self.test_failed_migration_cleanup_relative_path()
         self.test_avoidreuse()
         self.test_preserve_tx_extra_info()
         self.test_blank()
@@ -1404,6 +1578,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_miniscript()
         self.test_taproot()
         self.test_solvable_no_privs()
+        self.test_loading_failure_after_migration()
 
 if __name__ == '__main__':
     WalletMigrationTest(__file__).main()

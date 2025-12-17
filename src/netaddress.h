@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <ios>
 #include <string>
+#include <string_view>
 #include <vector>
 
 /**
@@ -151,7 +152,7 @@ public:
      * @returns Whether the operation was successful.
      * @see CNetAddr::IsTor(), CNetAddr::IsI2P()
      */
-    bool SetSpecial(const std::string& addr);
+    bool SetSpecial(std::string_view addr);
 
     bool IsBindAny() const; // INADDR_ANY equivalent
     [[nodiscard]] bool IsIPv4() const { return m_net == NET_IPV4; } // IPv4 mapped address (::FFFF:0:0/96, 0.0.0.0/0)
@@ -209,7 +210,6 @@ public:
     bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
 
     friend bool operator==(const CNetAddr& a, const CNetAddr& b);
-    friend bool operator!=(const CNetAddr& a, const CNetAddr& b) { return !(a == b); }
     friend bool operator<(const CNetAddr& a, const CNetAddr& b);
 
     /**
@@ -279,7 +279,7 @@ private:
      * @returns Whether the operation was successful.
      * @see CNetAddr::IsTor()
      */
-    bool SetTor(const std::string& addr);
+    bool SetTor(std::string_view addr);
 
     /**
      * Parse an I2P address and set this object to it.
@@ -288,7 +288,7 @@ private:
      * @returns Whether the operation was successful.
      * @see CNetAddr::IsI2P()
      */
-    bool SetI2P(const std::string& addr);
+    bool SetI2P(std::string_view addr);
 
     /**
      * Size of CNetAddr when serialized as ADDRv1 (pre-BIP155) (in bytes).
@@ -522,7 +522,6 @@ public:
     bool IsValid() const;
 
     friend bool operator==(const CSubNet& a, const CSubNet& b);
-    friend bool operator!=(const CSubNet& a, const CSubNet& b) { return !(a == b); }
     friend bool operator<(const CSubNet& a, const CSubNet& b);
 };
 
@@ -553,7 +552,6 @@ public:
      */
     [[nodiscard]] sa_family_t GetSAFamily() const;
     friend bool operator==(const CService& a, const CService& b);
-    friend bool operator!=(const CService& a, const CService& b) { return !(a == b); }
     friend bool operator<(const CService& a, const CService& b);
     std::vector<unsigned char> GetKey() const;
     std::string ToStringAddrPort() const;

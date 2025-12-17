@@ -9,6 +9,7 @@
 #include <core_io.h>
 #include <key.h>
 #include <rpc/util.h>
+#include <script/interpreter.h>
 #include <script/script.h>
 #include <script/script_error.h>
 #include <script/sigcache.h>
@@ -22,6 +23,7 @@
 #include <test/util/transaction_utils.h>
 #include <util/fs.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 
 #include <cstdint>
 #include <fstream>
@@ -38,10 +40,9 @@
 
 using namespace util::hex_literals;
 
-static const unsigned int gFlags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
+static const script_verify_flags gFlags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 
-unsigned int ParseScriptFlags(std::string strFlags);
-std::string FormatScriptFlags(unsigned int flags);
+script_verify_flags ParseScriptFlags(std::string strFlags);
 
 struct ScriptErrorDesc
 {
@@ -91,9 +92,15 @@ static ScriptErrorDesc script_errors[]={
     {SCRIPT_ERR_WITNESS_MALLEATED_P2SH, "WITNESS_MALLEATED_P2SH"},
     {SCRIPT_ERR_WITNESS_UNEXPECTED, "WITNESS_UNEXPECTED"},
     {SCRIPT_ERR_WITNESS_PUBKEYTYPE, "WITNESS_PUBKEYTYPE"},
+    {SCRIPT_ERR_TAPSCRIPT_EMPTY_PUBKEY, "TAPSCRIPT_EMPTY_PUBKEY"},
     {SCRIPT_ERR_OP_CODESEPARATOR, "OP_CODESEPARATOR"},
     {SCRIPT_ERR_SIG_FINDANDDELETE, "SIG_FINDANDDELETE"},
 };
+
+static std::string FormatScriptFlags(script_verify_flags flags)
+{
+    return util::Join(GetScriptFlagNames(flags), ",");
+}
 
 static std::string FormatScriptError(ScriptError_t err)
 {
@@ -114,7 +121,7 @@ static ScriptError_t ParseScriptError(const std::string& name)
 }
 
 struct ScriptTest : BasicTestingSetup {
-void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScriptWitness& scriptWitness, uint32_t flags, const std::string& message, int scriptError, CAmount nValue = 0)
+void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScriptWitness& scriptWitness, script_verify_flags flags, const std::string& message, int scriptError, CAmount nValue = 0)
 {
     bool expect = (scriptError == SCRIPT_ERR_OK);
     if (flags & SCRIPT_VERIFY_CLEANSTACK) {
@@ -128,13 +135,13 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
     BOOST_CHECK_MESSAGE(err == scriptError, FormatScriptError(err) + " where " + FormatScriptError((ScriptError_t)scriptError) + " expected: " + message);
 
     // Verify that removing flags from a passing test or adding flags to a failing test does not change the result.
-    for (int i = 0; i < 16; ++i) {
-        uint32_t extra_flags(m_rng.randbits(16));
-        uint32_t combined_flags{expect ? (flags & ~extra_flags) : (flags | extra_flags)};
+    for (int i = 0; i < 256; ++i) {
+        script_verify_flags extra_flags = script_verify_flags::from_int(m_rng.randbits(MAX_SCRIPT_VERIFY_FLAGS_BITS));
+        script_verify_flags combined_flags{expect ? (flags & ~extra_flags) : (flags | extra_flags)};
         // Weed out some invalid flag combinations.
         if (combined_flags & SCRIPT_VERIFY_CLEANSTACK && ~combined_flags & (SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS)) continue;
         if (combined_flags & SCRIPT_VERIFY_WITNESS && ~combined_flags & SCRIPT_VERIFY_P2SH) continue;
-        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, combined_flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err) == expect, message + strprintf(" (with flags %x)", combined_flags));
+        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, combined_flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err) == expect, message + strprintf(" (with flags %x)", combined_flags.as_int()));
     }
 }
 }; // struct ScriptTest
@@ -226,7 +233,7 @@ private:
     bool havePush{false};
     std::vector<unsigned char> push;
     std::string comment;
-    uint32_t flags;
+    script_verify_flags flags;
     int scriptError{SCRIPT_ERR_OK};
     CAmount nValue;
 
@@ -246,7 +253,7 @@ private:
     }
 
 public:
-    TestBuilder(const CScript& script_, const std::string& comment_, uint32_t flags_, bool P2SH = false, WitnessMode wm = WitnessMode::NONE, int witnessversion = 0, CAmount nValue_ = 0) : script(script_), comment(comment_), flags(flags_), nValue(nValue_)
+    TestBuilder(const CScript& script_, const std::string& comment_, script_verify_flags flags_, bool P2SH = false, WitnessMode wm = WitnessMode::NONE, int witnessversion = 0, CAmount nValue_ = 0) : script(script_), comment(comment_), flags(flags_), nValue(nValue_)
     {
         CScript scriptPubKey = script;
         if (wm == WitnessMode::PKH) {
@@ -885,7 +892,7 @@ BOOST_AUTO_TEST_CASE(script_build)
 #ifdef UPDATE_JSON_TESTS
         strGen += str + ",\n";
 #else
-        if (tests_set.count(str) == 0) {
+        if (!tests_set.contains(str)) {
             BOOST_CHECK_MESSAGE(false, "Missing auto script_valid test: " + test.GetComment());
         }
 #endif
@@ -963,7 +970,7 @@ BOOST_AUTO_TEST_CASE(script_json_test)
         } else {
             scriptPubKey = ParseScript(scriptPubKeyString);
         }
-        unsigned int scriptflags = ParseScriptFlags(test[pos++].get_str());
+        script_verify_flags scriptflags = ParseScriptFlags(test[pos++].get_str());
         int scriptError = ParseScriptError(test[pos++].get_str());
 
         DoTest(scriptPubKey, scriptSig, witness, scriptflags, strTest, scriptError, nValue);
@@ -1149,6 +1156,107 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
     CScript badsig6 = sign_multisig(scriptPubKey23, keys, CTransaction(txTo23));
     BOOST_CHECK(!VerifyScript(badsig6, scriptPubKey23, nullptr, gFlags, MutableTransactionSignatureChecker(&txTo23, 0, txFrom23.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_INVALID_STACK_OPERATION, ScriptErrorString(err));
+}
+
+/** Return the TxoutType of a script without exposing Solver details. */
+static TxoutType GetTxoutType(const CScript& output_script)
+{
+    std::vector<std::vector<uint8_t>> unused;
+    return Solver(output_script, unused);
+}
+
+#define CHECK_SCRIPT_STATIC_SIZE(script, expected_size)                   \
+    do {                                                                  \
+        BOOST_CHECK_EQUAL((script).size(), (expected_size));              \
+        BOOST_CHECK_EQUAL((script).capacity(), CScriptBase::STATIC_SIZE); \
+        BOOST_CHECK_EQUAL((script).allocated_memory(), 0);                \
+    } while (0)
+
+#define CHECK_SCRIPT_DYNAMIC_SIZE(script, expected_size, expected_extra)                 \
+    do {                                                                 \
+        BOOST_CHECK_EQUAL((script).size(), (expected_size));             \
+        BOOST_CHECK_EQUAL((script).capacity(), (expected_extra));         \
+        BOOST_CHECK_EQUAL((script).allocated_memory(), (expected_extra)); \
+    } while (0)
+
+BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
+{
+    BOOST_CHECK_EQUAL(sizeof(CompressedScript), 40);
+    BOOST_CHECK_EQUAL(sizeof(CScriptBase), 40);
+    BOOST_CHECK_NE(sizeof(CScriptBase), sizeof(prevector<CScriptBase::STATIC_SIZE + 1, uint8_t>)); // CScriptBase size should be set to avoid wasting space in padding
+    BOOST_CHECK_EQUAL(sizeof(CScript), 40);
+    BOOST_CHECK_EQUAL(sizeof(CTxOut), 48);
+
+    CKey dummy_key;
+    dummy_key.MakeNewKey(/*fCompressed=*/true);
+    const CPubKey dummy_pubkey{dummy_key.GetPubKey()};
+
+    // Small OP_RETURN has direct allocation
+    {
+        const auto script{CScript() << OP_RETURN << std::vector<uint8_t>(10, 0xaa)};
+        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::NULL_DATA);
+        CHECK_SCRIPT_STATIC_SIZE(script, 12);
+    }
+
+    // P2WPKH has direct allocation
+    {
+        const auto script{GetScriptForDestination(WitnessV0KeyHash{PKHash{dummy_pubkey}})};
+        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::WITNESS_V0_KEYHASH);
+        CHECK_SCRIPT_STATIC_SIZE(script, 22);
+    }
+
+    // P2SH has direct allocation
+    {
+        const auto script{GetScriptForDestination(ScriptHash{CScript{} << OP_TRUE})};
+        BOOST_CHECK(script.IsPayToScriptHash());
+        CHECK_SCRIPT_STATIC_SIZE(script, 23);
+    }
+
+    // P2PKH has direct allocation
+    {
+        const auto script{GetScriptForDestination(PKHash{dummy_pubkey})};
+        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::PUBKEYHASH);
+        CHECK_SCRIPT_STATIC_SIZE(script, 25);
+    }
+
+    // P2WSH has direct allocation
+    {
+        const auto script{GetScriptForDestination(WitnessV0ScriptHash{CScript{} << OP_TRUE})};
+        BOOST_CHECK(script.IsPayToWitnessScriptHash());
+        CHECK_SCRIPT_STATIC_SIZE(script, 34);
+    }
+
+    // P2TR has direct allocation
+    {
+        const auto script{GetScriptForDestination(WitnessV1Taproot{XOnlyPubKey{dummy_pubkey}})};
+        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::WITNESS_V1_TAPROOT);
+        CHECK_SCRIPT_STATIC_SIZE(script, 34);
+    }
+
+    // Compressed P2PK has direct allocation
+    {
+        const auto script{GetScriptForRawPubKey(dummy_pubkey)};
+        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::PUBKEY);
+        CHECK_SCRIPT_STATIC_SIZE(script, 35);
+    }
+
+    // Uncompressed P2PK needs extra allocation
+    {
+        CKey uncompressed_key;
+        uncompressed_key.MakeNewKey(/*fCompressed=*/false);
+        const CPubKey uncompressed_pubkey{uncompressed_key.GetPubKey()};
+
+        const auto script{GetScriptForRawPubKey(uncompressed_pubkey)};
+        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::PUBKEY);
+        CHECK_SCRIPT_DYNAMIC_SIZE(script, 67, 67);
+    }
+
+    // Bare multisig needs extra allocation
+    {
+        const auto script{GetScriptForMultisig(1, std::vector{2, dummy_pubkey})};
+        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::MULTISIG);
+        CHECK_SCRIPT_DYNAMIC_SIZE(script, 71, 103);
+    }
 }
 
 /* Wrapper around ProduceSignature to combine two scriptsigs */
@@ -1384,11 +1492,6 @@ CScript ToScript(const T& byte_container)
     return {span.begin(), span.end()};
 }
 
-static CScript ScriptFromHex(const std::string& str)
-{
-    return ToScript(*Assert(TryParseHex(str)));
-}
-
 BOOST_AUTO_TEST_CASE(script_byte_array_u8_vector_equivalence)
 {
     const CScript scriptPubKey1 = CScript() << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f"_hex_v_u8 << OP_CHECKSIG;
@@ -1519,141 +1622,6 @@ BOOST_AUTO_TEST_CASE(script_HasValidOps)
     BOOST_CHECK(!script.HasValidOps());
 }
 
-static CMutableTransaction TxFromHex(const std::string& str)
-{
-    CMutableTransaction tx;
-    SpanReader{ParseHex(str)} >> TX_NO_WITNESS(tx);
-    return tx;
-}
-
-static std::vector<CTxOut> TxOutsFromJSON(const UniValue& univalue)
-{
-    assert(univalue.isArray());
-    std::vector<CTxOut> prevouts;
-    for (size_t i = 0; i < univalue.size(); ++i) {
-        CTxOut txout;
-        SpanReader{ParseHex(univalue[i].get_str())} >> txout;
-        prevouts.push_back(std::move(txout));
-    }
-    return prevouts;
-}
-
-static CScriptWitness ScriptWitnessFromJSON(const UniValue& univalue)
-{
-    assert(univalue.isArray());
-    CScriptWitness scriptwitness;
-    for (size_t i = 0; i < univalue.size(); ++i) {
-        auto bytes = ParseHex(univalue[i].get_str());
-        scriptwitness.stack.push_back(std::move(bytes));
-    }
-    return scriptwitness;
-}
-
-static std::vector<unsigned int> AllConsensusFlags()
-{
-    std::vector<unsigned int> ret;
-
-    for (unsigned int i = 0; i < 128; ++i) {
-        unsigned int flag = 0;
-        if (i & 1) flag |= SCRIPT_VERIFY_P2SH;
-        if (i & 2) flag |= SCRIPT_VERIFY_DERSIG;
-        if (i & 4) flag |= SCRIPT_VERIFY_NULLDUMMY;
-        if (i & 8) flag |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
-        if (i & 16) flag |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
-        if (i & 32) flag |= SCRIPT_VERIFY_WITNESS;
-        if (i & 64) flag |= SCRIPT_VERIFY_TAPROOT;
-
-        // SCRIPT_VERIFY_WITNESS requires SCRIPT_VERIFY_P2SH
-        if (flag & SCRIPT_VERIFY_WITNESS && !(flag & SCRIPT_VERIFY_P2SH)) continue;
-        // SCRIPT_VERIFY_TAPROOT requires SCRIPT_VERIFY_WITNESS
-        if (flag & SCRIPT_VERIFY_TAPROOT && !(flag & SCRIPT_VERIFY_WITNESS)) continue;
-
-        ret.push_back(flag);
-    }
-
-    return ret;
-}
-
-/** Precomputed list of all valid combinations of consensus-relevant script validation flags. */
-static const std::vector<unsigned int> ALL_CONSENSUS_FLAGS = AllConsensusFlags();
-
-static void AssetTest(const UniValue& test, SignatureCache& signature_cache)
-{
-    BOOST_CHECK(test.isObject());
-
-    CMutableTransaction mtx = TxFromHex(test["tx"].get_str());
-    const std::vector<CTxOut> prevouts = TxOutsFromJSON(test["prevouts"]);
-    BOOST_CHECK(prevouts.size() == mtx.vin.size());
-    size_t idx = test["index"].getInt<int64_t>();
-    uint32_t test_flags{ParseScriptFlags(test["flags"].get_str())};
-    bool fin = test.exists("final") && test["final"].get_bool();
-
-    if (test.exists("success")) {
-        mtx.vin[idx].scriptSig = ScriptFromHex(test["success"]["scriptSig"].get_str());
-        mtx.vin[idx].scriptWitness = ScriptWitnessFromJSON(test["success"]["witness"]);
-        CTransaction tx(mtx);
-        PrecomputedTransactionData txdata;
-        txdata.Init(tx, std::vector<CTxOut>(prevouts));
-        CachingTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].nValue, true, signature_cache, txdata);
-
-        for (const auto flags : ALL_CONSENSUS_FLAGS) {
-            // "final": true tests are valid for all flags. Others are only valid with flags that are
-            // a subset of test_flags.
-            if (fin || ((flags & test_flags) == flags)) {
-                bool ret = VerifyScript(tx.vin[idx].scriptSig, prevouts[idx].scriptPubKey, &tx.vin[idx].scriptWitness, flags, txcheck, nullptr);
-                BOOST_CHECK(ret);
-            }
-        }
-    }
-
-    if (test.exists("failure")) {
-        mtx.vin[idx].scriptSig = ScriptFromHex(test["failure"]["scriptSig"].get_str());
-        mtx.vin[idx].scriptWitness = ScriptWitnessFromJSON(test["failure"]["witness"]);
-        CTransaction tx(mtx);
-        PrecomputedTransactionData txdata;
-        txdata.Init(tx, std::vector<CTxOut>(prevouts));
-        CachingTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].nValue, true, signature_cache, txdata);
-
-        for (const auto flags : ALL_CONSENSUS_FLAGS) {
-            // If a test is supposed to fail with test_flags, it should also fail with any superset thereof.
-            if ((flags & test_flags) == test_flags) {
-                bool ret = VerifyScript(tx.vin[idx].scriptSig, prevouts[idx].scriptPubKey, &tx.vin[idx].scriptWitness, flags, txcheck, nullptr);
-                BOOST_CHECK(!ret);
-            }
-        }
-    }
-}
-
-BOOST_AUTO_TEST_CASE(script_assets_test)
-{
-    // See src/test/fuzz/script_assets_test_minimizer.cpp for information on how to generate
-    // the script_assets_test.json file used by this test.
-    SignatureCache signature_cache{DEFAULT_SIGNATURE_CACHE_BYTES};
-
-    const char* dir = std::getenv("DIR_UNIT_TEST_DATA");
-    BOOST_WARN_MESSAGE(dir != nullptr, "Variable DIR_UNIT_TEST_DATA unset, skipping script_assets_test");
-    if (dir == nullptr) return;
-    auto path = fs::path(dir) / "script_assets_test.json";
-    bool exists = fs::exists(path);
-    BOOST_WARN_MESSAGE(exists, "File $DIR_UNIT_TEST_DATA/script_assets_test.json not found, skipping script_assets_test");
-    if (!exists) return;
-    std::ifstream file{path};
-    BOOST_CHECK(file.is_open());
-    file.seekg(0, std::ios::end);
-    size_t length = file.tellg();
-    file.seekg(0, std::ios::beg);
-    std::string data(length, '\0');
-    file.read(data.data(), data.size());
-    UniValue tests = read_json(data);
-    BOOST_CHECK(tests.isArray());
-    BOOST_CHECK(tests.size() > 0);
-
-    for (size_t i = 0; i < tests.size(); i++) {
-        AssetTest(tests[i], signature_cache);
-    }
-    file.close();
-}
-
 BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
 {
     UniValue tests;
@@ -1743,6 +1711,17 @@ BOOST_AUTO_TEST_CASE(compute_tapleaf)
 
     BOOST_CHECK_EQUAL(ComputeTapleafHash(0xc0, std::span(script)), tlc0);
     BOOST_CHECK_EQUAL(ComputeTapleafHash(0xc2, std::span(script)), tlc2);
+}
+
+BOOST_AUTO_TEST_CASE(formatscriptflags)
+{
+    // quick check that FormatScriptFlags reports any unknown/unexpected bits
+    BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_P2SH), "P2SH");
+    BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_TAPROOT), "P2SH,TAPROOT");
+    BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_P2SH | script_verify_flags::from_int(1u<<31)), "P2SH,0x80000000");
+    BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_TAPROOT | script_verify_flags::from_int(1u<<27)), "TAPROOT,0x08000000");
+    BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_TAPROOT | script_verify_flags::from_int((1u<<28) | (1ull<<58))), "TAPROOT,0x400000010000000");
+    BOOST_CHECK_EQUAL(FormatScriptFlags(script_verify_flags::from_int(1u<<26)), "0x04000000");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

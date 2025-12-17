@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;Nýtt</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Afrita valið veski í klemmuspjald</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Afrita</translation>
     </message>
@@ -90,6 +86,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Sending addresses - %1</source>
         <translation type="unfinished">heimilisföng - %1 </translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">heimilisföng - %1</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -248,14 +248,26 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>BitcoinApplication</name>
     <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">Stillingaskrá %1 gæti verið skemmd eða ógild.</translation>
+    </message>
+    <message>
         <source>Runaway exception</source>
         <translation type="unfinished">Undantekning á flótta</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation type="unfinished">Banvæn villa kom upp. %1 getur ekki lengur haldið áfram á öruggan hátt og mun hætta.</translation>
     </message>
     <message>
         <source>Internal error</source>
         <translation type="unfinished">Innri villa</translation>
     </message>
-    </context>
+    <message>
+        <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <translation type="unfinished">Innri villa kom upp. %1 mun reyna að halda áfram á öruggan hátt. Þetta er óvænt villa sem hægt er að tilkynna eins og lýst er hér að neðan.</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -271,6 +283,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error: %1</source>
         <translation type="unfinished">Villa: %1</translation>
+    </message>
+    <message>
+        <source>%1 didn't yet exit safely…</source>
+        <translation type="unfinished">%1 fór ekki enn á öruggan hátt…</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -752,9 +768,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>The entered address "%1" is not a valid Bitcoin address.</source>
         <translation type="unfinished">Færslugildið sem slegið var inn "%1" er ekki leyfilegt Bitcoin færslugildi.</translation>
     </message>
+    <message>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation type="unfinished">Heimilisfangið "%1" er nú þegar til sem móttökunetfang með merkimiðanum "%2" og því er ekki hægt að bæta við sem sendanda.</translation>
+    </message>
     </context>
 <context>
     <name>FreespaceChecker</name>
+    <message>
+        <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
+        <translation type="unfinished">Skráin er þegar til. Bættu við %1 ef þú ætlar að búa til nýja möppu hér.</translation>
+    </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
         <translation type="unfinished">Slóð er þegar til og er ekki skrá.</translation>
@@ -762,6 +786,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>Intro</name>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation type="unfinished">Þessi fyrstu samstilling er mjög krefjandi og getur leitt til vélbúnaðarvandamála með tölvunni þinni sem áður hafði farið framhjá. Í hvert skipti sem þú keyrir %1 mun það halda áfram að hlaða niður þar sem frá var horfið.</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
@@ -799,7 +827,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Error</source>
         <translation type="unfinished">Villa</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -885,22 +913,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Mined balance that has not yet matured</source>
         <translation type="unfinished">Námuunnin innistæða sem hefur enn ekki komið fram</translation>
     </message>
-    <message>
-        <source>Your current balance in watch-only addresses</source>
-        <translation type="unfinished">Innistæða færslugilda sem eru einungis til skoðunar</translation>
-    </message>
-    <message>
-        <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation type="unfinished">Óstaðfestar færslur til færslugilda sem eru einungis til skoðunar</translation>
-    </message>
-    <message>
-        <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation type="unfinished">Námuunnin innistæða á færslugildum sem eru einungis til skoðunar og hafa ekki komið fram</translation>
-    </message>
-    <message>
-        <source>Current total balance in watch-only addresses</source>
-        <translation type="unfinished">Innistæða á færslugildum sem eru einungis til skoðunar</translation>
-    </message>
     </context>
 <context>
     <name>PSBTOperationsDialog</name>
@@ -959,6 +971,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Executing command without any wallet</source>
         <translation type="unfinished">Framkvæmir skipun án veskis</translation>
+    </message>
+    <message>
+        <source>Executing command using "%1" wallet</source>
+        <translation type="unfinished">Framkvæmir skipun með "%1" veski</translation>
     </message>
     <message>
         <source>Executing…</source>
@@ -1211,10 +1227,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Prune háttur er ósamrýmanlegur -reindex-chainstate. Notaðu fulla -reindex í staðinn.</translation>
     </message>
     <message>
-        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation type="unfinished">Prune: síðasta samstilling veskis fer út fyrir klippt gögn. Þú þarft að endurtryggja (hala niður öllu blockchain aftur ef um er að ræða klipptan hnút)</translation>
-    </message>
-    <message>
         <source>Rename of '%s' -&gt; '%s' failed. You should resolve this by manually moving or deleting the invalid snapshot directory %s, otherwise you will encounter the same error again on the next startup.</source>
         <translation type="unfinished">Mistókst að endurnefna '%s' -&gt; '%s'. Þú ættir að leysa þetta með því að færa handvirkt eða eyða ógildu skyndimyndamöppunni %s, annars muntu lenda í sömu villu aftur við næstu ræsingu.</translation>
     </message>
@@ -1257,10 +1269,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
         <translation type="unfinished">Villa við að hlaða %s: Ytra undirritaraveski verið hlaðið án þess að utanaðkomandi undirritarastuðningur hafi verið settur saman</translation>
-    </message>
-    <message>
-        <source>Failed to calculate bump fees, because unconfirmed UTXOs depend on enormous cluster of unconfirmed transactions.</source>
-        <translation type="unfinished">Mistókst að reikna út högggjöld vegna þess að óstaðfest UTXO er háð gríðarlegum hópi óstaðfestra viðskipta.</translation>
     </message>
     </context>
 </TS>

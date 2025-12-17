@@ -6,7 +6,7 @@
 #define BITCOIN_WALLET_SPEND_H
 
 #include <consensus/amount.h>
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
 #include <util/result.h>
 #include <wallet/coinselection.h>
 #include <wallet/transaction.h>
@@ -77,12 +77,13 @@ struct CoinFilterParams {
     CAmount min_sum_amount{MAX_MONEY};
     // Maximum number of outputs that can be returned
     uint64_t max_count{0};
-    // By default, return only spendable outputs
-    bool only_spendable{true};
     // By default, do not include immature coinbase outputs
     bool include_immature_coinbase{false};
     // By default, skip locked UTXOs
     bool skip_locked{true};
+    // When true, filter unconfirmed coins by whether their
+    // version's TRUCness matches what is set by CCoinControl.
+    bool check_version_trucness{true};
 };
 
 /**
@@ -92,12 +93,6 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                            const CCoinControl* coinControl = nullptr,
                            std::optional<CFeeRate> feerate = std::nullopt,
                            const CoinFilterParams& params = {}) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
-
-/**
- * Wrapper function for AvailableCoins which skips the `feerate` and `CoinFilterParams::only_spendable` parameters. Use this function
- * to list all available coins (e.g. listunspent RPC) while not intending to fund a transaction.
- */
-CoinsResult AvailableCoinsListUnspent(const CWallet& wallet, const CCoinControl* coinControl = nullptr, CoinFilterParams params = {}) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /**
  * Find non-change parent output.
@@ -128,14 +123,14 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
  * the solution (according to the waste metric) will be chosen. If a valid input cannot be found from any
  * single OutputType, fallback to running `ChooseSelectionResult()` over all available coins.
  *
- * param@[in]  chain                     The chain interface to get information on unconfirmed UTXOs bump fees
- * param@[in]  nTargetValue              The target value
- * param@[in]  groups                    The grouped outputs mapped by coin eligibility filters
- * param@[in]  coin_selection_params     Parameters for the coin selection
- * param@[in]  allow_mixed_output_types  Relax restriction that SelectionResults must be of the same OutputType
+ * @param[in]  chain                     The chain interface to get information on bump fees for unconfirmed UTXOs
+ * @param[in]  nTargetValue              The target value
+ * @param[in]  groups                    The grouped outputs mapped by coin eligibility filters
+ * @param[in]  coin_selection_params     Parameters for the coin selection
+ * @param[in]  allow_mixed_output_types  Relax restriction that SelectionResults must be of the same OutputType
  * returns                               If successful, a SelectionResult containing the input set
  *                                       If failed, returns (1) an empty error message if the target was not reached (general "Insufficient funds")
- *                                                  or (2) an specific error message if there was something particularly wrong (e.g. a selection
+ *                                                  or (2) a specific error message if there was something particularly wrong (e.g. a selection
  *                                                  result that surpassed the tx max weight size).
  */
 util::Result<SelectionResult> AttemptSelection(interfaces::Chain& chain, const CAmount& nTargetValue, OutputGroupTypeMap& groups,
@@ -146,13 +141,13 @@ util::Result<SelectionResult> AttemptSelection(interfaces::Chain& chain, const C
  * Multiple coin selection algorithms will be run and the input set that produces the least waste
  * (according to the waste metric) will be chosen.
  *
- * param@[in]  chain                     The chain interface to get information on unconfirmed UTXOs bump fees
- * param@[in]  nTargetValue              The target value
- * param@[in]  groups                    The struct containing the outputs grouped by script and divided by (1) positive only outputs and (2) all outputs (positive + negative).
- * param@[in]  coin_selection_params     Parameters for the coin selection
+ * @param[in]  chain                     The chain interface to get information on bump fees for unconfirmed UTXOs
+ * @param[in]  nTargetValue              The target value
+ * @param[in]  groups                    The struct containing the outputs grouped by script and divided by (1) positive only outputs and (2) all outputs (positive + negative).
+ * @param[in]  coin_selection_params     Parameters for the coin selection
  * returns                               If successful, a SelectionResult containing the input set
  *                                       If failed, returns (1) an empty error message if the target was not reached (general "Insufficient funds")
- *                                                  or (2) an specific error message if there was something particularly wrong (e.g. a selection
+ *                                                  or (2) a specific error message if there was something particularly wrong (e.g. a selection
  *                                                  result that surpassed the tx max weight size).
  */
 util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, const CAmount& nTargetValue, Groups& groups, const CoinSelectionParams& coin_selection_params);
@@ -186,10 +181,10 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
 
 /**
  * Select a set of coins such that nTargetValue is met; never select unconfirmed coins if they are not ours
- * param@[in]   wallet                 The wallet which provides data necessary to spend the selected coins
- * param@[in]   available_coins        The struct of coins, organized by OutputType, available for selection prior to filtering
- * param@[in]   nTargetValue           The target value
- * param@[in]   coin_selection_params  Parameters for this coin selection such as feerates, whether to avoid partial spends,
+ * @param[in]   wallet                 The wallet which provides data necessary to spend the selected coins
+ * @param[in]   available_coins        The struct of coins, organized by OutputType, available for selection prior to filtering
+ * @param[in]   nTargetValue           The target value
+ * @param[in]   coin_selection_params  Parameters for this coin selection such as feerates, whether to avoid partial spends,
  *                                     and whether to subtract the fee from the outputs.
  * returns                             If successful, a SelectionResult containing the selected coins
  *                                     If failed, returns (1) an empty error message if the target was not reached (general "Insufficient funds")
@@ -217,6 +212,12 @@ struct CreatedTransactionResult
     CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, std::optional<unsigned int> _change_pos, const FeeCalculation& _fee_calc)
         : tx(_tx), fee(_fee), fee_calc(_fee_calc), change_pos(_change_pos) {}
 };
+
+/**
+ * Set a height-based locktime for new transactions (uses the height of the
+ * current chain tip unless we are not synced with the current chain
+ */
+void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, interfaces::Chain& chain, const uint256& block_hash, int block_height);
 
 /**
  * Create a new transaction paying the recipients with a set of coins

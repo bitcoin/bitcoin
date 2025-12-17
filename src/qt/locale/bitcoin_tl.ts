@@ -14,10 +14,6 @@
         <translation type="unfinished">Panibago</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Gayahin ang pinipiling ♦address♦ sa kasalakuyan sa ♦clipboard♦ ng sistem</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">Gayahin</translation>
     </message>
@@ -90,7 +86,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
-        <translation type="unfinished">May mali sa pagsubok na i-save ang listahan ng address  sa 1%1. Pakisubukan ulit.</translation>
+        <translation type="unfinished">May mali sa pagsubok na i-save ang listahan ng address  sa %1. Pakisubukan ulit.</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -242,7 +238,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
-        <translation type="unfinished">Malubhang pagkakamali ay naganap. 1%1 hindi na pwedeng magpatuloy ng ligtas at ihihinto na.</translation>
+        <translation type="unfinished">Malubhang pagkakamali ay naganap. %1 hindi na pwedeng magpatuloy ng ligtas at ihihinto na.</translation>
     </message>
     <message>
         <source>Internal error</source>
@@ -250,7 +246,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
-        <translation type="unfinished">May panloob na pagkakamali ang naganap. 1%1 ay magtatangkang ituloy na ligtas. Ito ay hindi inaasahan na problema na maaaring i-ulat katulad ng pagkalarawan sa ibaba.</translation>
+        <translation type="unfinished">May panloob na pagkakamali ang naganap. %1 ay magtatangkang ituloy na ligtas. Ito ay hindi inaasahan na problema na maaaring i-ulat katulad ng pagkalarawan sa ibaba.</translation>
     </message>
 </context>
 <context>
@@ -267,11 +263,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Error: %1</source>
-        <translation type="unfinished">Pagkakamali: 1%1</translation>
+        <translation type="unfinished">Pagkakamali: %1</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely…</source>
-        <translation type="unfinished">1%1 hindi pa nag-exit ng ligtas...</translation>
+        <translation type="unfinished">%1 hindi pa nag-exit ng ligtas...</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -352,11 +348,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;About %1</source>
-        <translation type="unfinished">&amp;Tungkol sa 1%1</translation>
+        <translation type="unfinished">&amp;Tungkol sa %1</translation>
     </message>
     <message>
         <source>Show information about %1</source>
-        <translation type="unfinished">Ipakita ang impormasyon tungkol sa 1%1</translation>
+        <translation type="unfinished">Ipakita ang impormasyon tungkol sa %1</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -368,7 +364,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
-        <translation type="unfinished">Baguhin ang mga pagpipilian sa ♦configuration♦ para sa 1%1</translation>
+        <translation type="unfinished">Baguhin ang mga pagpipilian sa ♦configuration♦ para sa %1</translation>
     </message>
     <message>
         <source>Create a new wallet</source>
@@ -575,10 +571,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;Pagpapadalhan na mga ♦address♦</translation>
     </message>
     <message>
-        <source>&amp;Receiving addresses</source>
-        <translation type="unfinished">&amp;Pagtatanggapan na mga ♦address♦</translation>
-    </message>
-    <message>
         <source>Open a bitcoin: URI</source>
         <translation type="unfinished">Buksan ang ♦bitcoin: URI♦</translation>
     </message>
@@ -669,7 +661,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Error: %1</source>
-        <translation type="unfinished">Pagkakamali: 1%1</translation>
+        <translation type="unfinished">Pagkakamali: %1</translation>
     </message>
     <message>
         <source>Warning: %1</source>
@@ -1091,7 +1083,25 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">bersyon</translation>
+    </message>
+    </context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">Huwag Patayin ang inyong kompyuter hanggang mawala ang window na ito.</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Maligayang Pagdating</translation>
+    </message>
     <message>
         <source>Bitcoin</source>
         <translation type="unfinished">♦Bitcoin♦</translation>
@@ -1132,24 +1142,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error</source>
         <translation type="unfinished">Nagkamali</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Maligayang Pagdating</translation>
-    </message>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">bersyon</translation>
-    </message>
-    </context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">Huwag Patayin ang inyong kompyuter hanggang mawala ang window na ito.</translation>
     </message>
 </context>
 <context>
@@ -1448,6 +1440,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">pitaka na ♦default♦</translation>
+    </message>
     <message>
         <source>Settings file could not be read</source>
         <translation type="unfinished">Ang mga ♦setting file♦ ay hindi mabasa</translation>

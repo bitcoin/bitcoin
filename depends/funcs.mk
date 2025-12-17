@@ -8,9 +8,11 @@ $(1)_ar=$$($$($(1)_type)_AR)
 $(1)_ranlib=$$($$($(1)_type)_RANLIB)
 $(1)_nm=$$($$($(1)_type)_NM)
 $(1)_cflags=$$($$($(1)_type)_CFLAGS) \
-            $$($$($(1)_type)_$$(release_type)_CFLAGS)
+            $$($$($(1)_type)_$$(release_type)_CFLAGS) \
+            -pipe -std=$(C_STANDARD)
 $(1)_cxxflags=$$($$($(1)_type)_CXXFLAGS) \
-              $$($$($(1)_type)_$$(release_type)_CXXFLAGS)
+              $$($$($(1)_type)_$$(release_type)_CXXFLAGS) \
+              -pipe -std=$(CXX_STANDARD)
 $(1)_ldflags=$$($$($(1)_type)_LDFLAGS) \
              $$($$($(1)_type)_$$(release_type)_LDFLAGS) \
              -L$$($($(1)_type)_prefix)/lib
@@ -34,9 +36,8 @@ define fetch_file_inner
 endef
 
 define fetch_file
-    ( test -f $$($(1)_source_dir)/$(4) || \
     ( $(call fetch_file_inner,$(1),$(2),$(3),$(4),$(5)) || \
-      $(call fetch_file_inner,$(1),$(FALLBACK_DOWNLOAD_PATH),$(3),$(4),$(5))))
+      $(call fetch_file_inner,$(1),$(FALLBACK_DOWNLOAD_PATH),$(4),$(4),$(5)))
 endef
 
 # Shell script to create a source tarball in $(1)_source from local directory
@@ -245,7 +246,6 @@ endif
 $($(1)_fetched):
 	mkdir -p $$(@D) $(SOURCES_PATH)
 	rm -f $$@
-	touch $$@
 	cd $$(@D); $($(1)_fetch_cmds)
 	cd $($(1)_source_dir); $(foreach source,$($(1)_all_sources),$(build_SHA256SUM) $(source) >> $$(@);)
 	touch $$@

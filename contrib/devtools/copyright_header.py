@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2022 The Bitcoin Core developers
+# Copyright (c) 2016-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -54,12 +54,12 @@ GIT_LS_CMD = 'git ls-files --full-name'.split(' ')
 GIT_TOPLEVEL_CMD = 'git rev-parse --show-toplevel'.split(' ')
 
 def call_git_ls(base_directory):
-    out = subprocess.check_output([*GIT_LS_CMD, base_directory])
-    return [f for f in out.decode("utf-8").split('\n') if f != '']
+    out = subprocess.check_output([*GIT_LS_CMD, base_directory], text=True)
+    return [f for f in out.split('\n') if f != '']
 
 def call_git_toplevel():
     "Returns the absolute path to the project root"
-    return subprocess.check_output(GIT_TOPLEVEL_CMD).strip().decode("utf-8")
+    return subprocess.check_output(GIT_TOPLEVEL_CMD, text=True).strip()
 
 def get_filenames_to_examine(base_directory):
     "Returns an array of absolute paths to any project files in the base_directory that pass the include/exclude filters"
@@ -140,7 +140,7 @@ def file_has_without_c_style_copyright_for_holder(contents, holder_name):
 ################################################################################
 
 def read_file(filename):
-    return open(filename, 'r', encoding="utf8").read()
+    return open(filename, 'r').read()
 
 def gather_file_info(filename):
     info = {}
@@ -298,8 +298,8 @@ def report_cmd(argv):
 GIT_LOG_CMD = "git log --pretty=format:%%ai %s"
 
 def call_git_log(filename):
-    out = subprocess.check_output((GIT_LOG_CMD % filename).split(' '))
-    return out.decode("utf-8").split('\n')
+    out = subprocess.check_output((GIT_LOG_CMD % filename).split(' '), text=True)
+    return out.split('\n')
 
 def get_git_change_years(filename):
     git_log_lines = call_git_log(filename)
@@ -316,12 +316,12 @@ def get_most_recent_git_change_year(filename):
 ################################################################################
 
 def read_file_lines(filename):
-    with open(filename, 'r', encoding="utf8") as f:
+    with open(filename, 'r') as f:
         file_lines = f.readlines()
     return file_lines
 
 def write_file_lines(filename, file_lines):
-    with open(filename, 'w', encoding="utf8") as f:
+    with open(filename, 'w') as f:
         f.write(''.join(file_lines))
 
 ################################################################################

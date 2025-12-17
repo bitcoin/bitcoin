@@ -18,7 +18,7 @@
              ((gnu packages python-build) #:select (python-poetry-core))
              ((gnu packages python-crypto) #:select (python-asn1crypto))
              ((gnu packages python-science) #:select (python-scikit-build-core))
-             ((gnu packages python-xyz) #:select (python-pydantic-2 python-pydantic-core))
+             ((gnu packages python-xyz) #:select (python-pydantic-2))
              ((gnu packages tls) #:select (openssl))
              ((gnu packages version-control) #:select (git-minimal))
              (guix build-system cmake)
@@ -99,10 +99,10 @@ chain for " target " development."))
 
 (define* (make-bitcoin-cross-toolchain target
                                        #:key
-                                       (base-gcc-for-libc linux-base-gcc)
+                                       (base-gcc-for-libc (gcc-libgcc-patches linux-base-gcc))
                                        (base-kernel-headers base-linux-kernel-headers)
                                        (base-libc glibc-2.31)
-                                       (base-gcc linux-base-gcc))
+                                       (base-gcc (gcc-libgcc-patches linux-base-gcc)))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
   (make-cross-toolchain target
@@ -111,7 +111,7 @@ desirable for building Bitcoin Core release binaries."
                         base-libc
                         base-gcc))
 
-(define (gcc-mingw-patches gcc)
+(define (gcc-libgcc-patches gcc)
   (package-with-extra-patches gcc
     (search-our-patches "gcc-remap-guix-store.patch")))
 
@@ -128,10 +128,10 @@ desirable for building Bitcoin Core release binaries."
   (let* ((xbinutils (binutils-mingw-patches (cross-binutils target)))
          (machine (substring target 0 (string-index target #\-)))
          (pthreads-xlibc (winpthreads-patches (make-mingw-w64 machine
-                                         #:xgcc (cross-gcc target #:xgcc (gcc-mingw-patches base-gcc))
+                                         #:xgcc (cross-gcc target #:xgcc (gcc-libgcc-patches base-gcc))
                                          #:with-winpthreads? #t)))
          (pthreads-xgcc (cross-gcc target
-                                    #:xgcc (gcc-mingw-patches mingw-w64-base-gcc)
+                                    #:xgcc (gcc-libgcc-patches mingw-w64-base-gcc)
                                     #:xbinutils xbinutils
                                     #:libc pthreads-xlibc)))
     ;; Define a meta-package that propagates the resulting XBINUTILS, XLIBC, and
@@ -175,7 +175,6 @@ chain for " target " development."))
     (native-inputs (list cmake-minimal
                          ninja
                          python-scikit-build-core
-                         python-pydantic-core
                          python-pydantic-2))
     (arguments
      (list
@@ -439,6 +438,7 @@ inspecting signatures in Mach-O binaries.")
                   "--enable-standard-branch-protection=yes",
                   "--enable-cet=yes",
                   "--disable-gcov",
+                  "--disable-libsanitizer",
                   building-on)))
         ((#:phases phases)
           `(modify-phases ,phases
@@ -455,7 +455,7 @@ inspecting signatures in Mach-O binaries.")
 (define-public glibc-2.31
   (let ((commit "7b27c450c34563a28e634cccb399cd415e71ebfe"))
   (package
-    (inherit glibc) ;; 2.35
+    (inherit glibc) ;; 2.39
     (version "2.31")
     (source (origin
               (method git-fetch)
@@ -466,7 +466,8 @@ inspecting signatures in Mach-O binaries.")
               (sha256
                (base32
                 "017qdpr5id7ddb4lpkzj2li1abvw916m3fc6n7nw28z4h5qbv2n0"))
-              (patches (search-our-patches "glibc-guix-prefix.patch"))))
+              (patches (search-our-patches "glibc-guix-prefix.patch"
+                                           "glibc-riscv-jumptarget.patch"))))
     (arguments
       (substitute-keyword-arguments (package-arguments glibc)
         ((#:configure-flags flags)
@@ -566,9 +567,9 @@ inspecting signatures in Mach-O binaries.")
                  (list gcc-toolchain-13 "static")
                  (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
-           (list clang-toolchain-18
-                 lld-18
-                 (make-lld-wrapper lld-18 #:lld-as-ld? #t)
+           (list clang-toolchain-19
+                 lld-19
+                 (make-lld-wrapper lld-19 #:lld-as-ld? #t)
                  python-signapple
                  zip))
           (else '())))))

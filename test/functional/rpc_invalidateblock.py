@@ -103,7 +103,7 @@ class InvalidateTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getblockchaininfo()['headers'], 3)
 
         # Reconsider the header
-        self.nodes[0].reconsiderblock(block.hash)
+        self.nodes[0].reconsiderblock(block.hash_hex)
         # Since header doesn't have block data, it can't be chain tip
         # Check if it's possible for an ancestor (with block data) to be the chain tip
         assert_equal(self.nodes[0].getbestblockhash(), blockhash_6)

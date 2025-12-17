@@ -56,6 +56,7 @@ typedef struct {
 
     /* Benchmark output. */
     secp256k1_gej* output;
+    secp256k1_fe* output_xonly;
 } bench_data;
 
 /* Hashes x into [0, POINTS) twice and store the result in offset1 and offset2. */
@@ -123,6 +124,32 @@ static void bench_ecmult_const_teardown(void* arg, int iters) {
     bench_ecmult_teardown_helper(data, &data->offset1, &data->offset2, NULL, iters);
 }
 
+static void bench_ecmult_const_xonly(void* arg, int iters) {
+    bench_data* data = (bench_data*)arg;
+    int i;
+
+    for (i = 0; i < iters; ++i) {
+        const secp256k1_ge* pubkey = &data->pubkeys[(data->offset1+i) % POINTS];
+        const secp256k1_scalar* scalar = &data->scalars[(data->offset2+i) % POINTS];
+        int known_on_curve = 1;
+        secp256k1_ecmult_const_xonly(&data->output_xonly[i], &pubkey->x, NULL, scalar, known_on_curve);
+    }
+}
+
+static void bench_ecmult_const_xonly_teardown(void* arg, int iters) {
+    bench_data* data = (bench_data*)arg;
+    int i;
+
+    /* verify by comparing with x coordinate of regular ecmult result */
+    for (i = 0; i < iters; ++i) {
+        const secp256k1_gej* pubkey_gej = &data->pubkeys_gej[(data->offset1+i) % POINTS];
+        const secp256k1_scalar* scalar = &data->scalars[(data->offset2+i) % POINTS];
+        secp256k1_gej expected_gej;
+        secp256k1_ecmult(&expected_gej, pubkey_gej, scalar, NULL);
+        CHECK(secp256k1_gej_eq_x_var(&data->output_xonly[i], &expected_gej));
+    }
+}
+
 static void bench_ecmult_1p(void* arg, int iters) {
     bench_data* data = (bench_data*)arg;
     int i;
@@ -171,6 +198,8 @@ static void run_ecmult_bench(bench_data* data, int iters) {
     run_benchmark(str, bench_ecmult_gen, bench_ecmult_setup, bench_ecmult_gen_teardown, data, 10, iters);
     sprintf(str, "ecmult_const");
     run_benchmark(str, bench_ecmult_const, bench_ecmult_setup, bench_ecmult_const_teardown, data, 10, iters);
+    sprintf(str, "ecmult_const_xonly");
+    run_benchmark(str, bench_ecmult_const_xonly, bench_ecmult_setup, bench_ecmult_const_xonly_teardown, data, 10, iters);
     /* ecmult with non generator point */
     sprintf(str, "ecmult_1p");
     run_benchmark(str, bench_ecmult_1p, bench_ecmult_setup, bench_ecmult_1p_teardown, data, 10, iters);
@@ -319,6 +348,7 @@ int main(int argc, char **argv) {
     data.pubkeys_gej = malloc(sizeof(secp256k1_gej) * POINTS);
     data.expected_output = malloc(sizeof(secp256k1_gej) * (iters + 1));
     data.output = malloc(sizeof(secp256k1_gej) * (iters + 1));
+    data.output_xonly = malloc(sizeof(secp256k1_fe) * (iters + 1));
 
     /* Generate a set of scalars, and private/public keypairs. */
     secp256k1_gej_set_ge(&data.pubkeys_gej[0], &secp256k1_ge_const_g);
@@ -361,6 +391,7 @@ int main(int argc, char **argv) {
     free(data.pubkeys);
     free(data.pubkeys_gej);
     free(data.seckeys);
+    free(data.output_xonly);
     free(data.output);
     free(data.expected_output);
 

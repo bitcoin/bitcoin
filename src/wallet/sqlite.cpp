@@ -40,7 +40,7 @@ static void ErrorLogCallback(void* arg, int code, const char* msg)
     // invoked."
     // Assert that this is the case:
     assert(arg == nullptr);
-    LogPrintf("SQLite Error. Code: %d. Message: %s\n", code, msg);
+    LogWarning("SQLite Error. Code: %d. Message: %s", code, msg);
 }
 
 static int TraceSqlCallback(unsigned code, void* context, void* param1, void* param2)
@@ -69,7 +69,7 @@ static bool BindBlobToStatement(sqlite3_stmt* stmt,
     // instead of the empty blob value X'', which would mess up SQL comparisons.
     int res = sqlite3_bind_blob(stmt, index, blob.data() ? static_cast<const void*>(blob.data()) : "", blob.size(), SQLITE_STATIC);
     if (res != SQLITE_OK) {
-        LogPrintf("Unable to bind %s to statement: %s\n", description, sqlite3_errstr(res));
+        LogWarning("Unable to bind %s to statement: %s", description, sqlite3_errstr(res));
         sqlite3_clear_bindings(stmt);
         sqlite3_reset(stmt);
         return false;
@@ -116,9 +116,6 @@ SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_pa
 {
     {
         LOCK(g_sqlite_mutex);
-        LogPrintf("Using SQLite Version %s\n", SQLiteDatabaseVersion());
-        LogPrintf("Using wallet %s\n", fs::PathToString(m_dir_path));
-
         if (++g_sqlite_count == 1) {
             // Setup logging
             int ret = sqlite3_config(SQLITE_CONFIG_LOG, ErrorLogCallback, nullptr);
@@ -182,7 +179,7 @@ void SQLiteDatabase::Cleanup() noexcept
     if (--g_sqlite_count == 0) {
         int ret = sqlite3_shutdown();
         if (ret != SQLITE_OK) {
-            LogPrintf("SQLiteDatabase: Failed to shutdown SQLite: %s\n", sqlite3_errstr(ret));
+            LogWarning("SQLiteDatabase: Failed to shutdown SQLite: %s", sqlite3_errstr(ret));
         }
     }
 }
@@ -272,7 +269,7 @@ void SQLiteDatabase::Open()
         if (LogAcceptCategory(BCLog::WALLETDB, BCLog::Level::Trace)) {
            ret = sqlite3_trace_v2(m_db, SQLITE_TRACE_STMT, TraceSqlCallback, this);
            if (ret != SQLITE_OK) {
-               LogPrintf("Failed to enable SQL tracing for %s\n", Filename());
+               LogWarning("Failed to enable SQL tracing for %s", Filename());
            }
         }
     }
@@ -298,8 +295,8 @@ void SQLiteDatabase::Open()
     SetPragma(m_db, "fullfsync", "true", "Failed to enable fullfsync");
 
     if (m_use_unsafe_sync) {
-        // Use normal synchronous mode for the journal - this doesn't write to the database
-        LogPrintf("WARNING SQLite is configured to not wait for data to be flushed to disk. Data loss and corruption may occur.\n");
+        // Use normal synchronous mode for the journal
+        LogWarning("SQLite is configured to not wait for data to be flushed to disk. Data loss and corruption may occur.");
         SetPragma(m_db, "synchronous", "OFF", "Failed to set synchronous mode to OFF");
     }
 
@@ -347,7 +344,7 @@ void SQLiteDatabase::Open()
     }
 }
 
-bool SQLiteDatabase::Rewrite(const char* skip)
+bool SQLiteDatabase::Rewrite()
 {
     // Rewrite the database using the VACUUM command: https://sqlite.org/lang_vacuum.html
     int ret = sqlite3_exec(m_db, "VACUUM", nullptr, nullptr, nullptr);
@@ -364,14 +361,14 @@ bool SQLiteDatabase::Backup(const std::string& dest) const
     }
     sqlite3_backup* backup = sqlite3_backup_init(db_copy, "main", m_db, "main");
     if (!backup) {
-        LogPrintf("%s: Unable to begin backup: %s\n", __func__, sqlite3_errmsg(m_db));
+        LogWarning("Unable to begin sqlite backup: %s", sqlite3_errmsg(m_db));
         sqlite3_close(db_copy);
         return false;
     }
     // Specifying -1 will copy all of the pages
     res = sqlite3_backup_step(backup, -1);
     if (res != SQLITE_DONE) {
-        LogPrintf("%s: Unable to backup: %s\n", __func__, sqlite3_errstr(res));
+        LogWarning("Unable to continue sqlite backup: %s", sqlite3_errstr(res));
         sqlite3_backup_finish(backup);
         sqlite3_close(db_copy);
         return false;
@@ -423,13 +420,13 @@ void SQLiteBatch::Close()
     // If we began a transaction, and it wasn't committed, abort the transaction in progress
     if (m_txn) {
         if (TxnAbort()) {
-            LogPrintf("SQLiteBatch: Batch closed unexpectedly without the transaction being explicitly committed or aborted\n");
+            LogWarning("SQLiteBatch: Batch closed unexpectedly without the transaction being explicitly committed or aborted");
         } else {
             // If transaction cannot be aborted, it means there is a bug or there has been data corruption. Try to recover in this case
             // by closing and reopening the database. Closing the database should also ensure that any changes made since the transaction
             // was opened will be rolled back and future transactions can succeed without committing old data.
             force_conn_refresh = true;
-            LogPrintf("SQLiteBatch: Batch closed and failed to abort transaction, resetting db connection..\n");
+            LogWarning("SQLiteBatch: Batch closed and failed to abort transaction, resetting db connection..");
         }
     }
 
@@ -445,7 +442,7 @@ void SQLiteBatch::Close()
     for (const auto& [stmt_prepared, stmt_description] : statements) {
         int res = sqlite3_finalize(*stmt_prepared);
         if (res != SQLITE_OK) {
-            LogPrintf("SQLiteBatch: Batch closed but could not finalize %s statement: %s\n",
+            LogWarning("SQLiteBatch: Batch closed but could not finalize %s statement: %s",
                       stmt_description, sqlite3_errstr(res));
         }
         *stmt_prepared = nullptr;
@@ -476,7 +473,7 @@ bool SQLiteBatch::ReadKey(DataStream&& key, DataStream& value)
     if (res != SQLITE_ROW) {
         if (res != SQLITE_DONE) {
             // SQLITE_DONE means "not found", don't log an error in that case.
-            LogPrintf("%s: Unable to execute statement: %s\n", __func__, sqlite3_errstr(res));
+            LogWarning("Unable to execute read statement: %s", sqlite3_errstr(res));
         }
         sqlite3_clear_bindings(m_read_stmt);
         sqlite3_reset(m_read_stmt);
@@ -516,7 +513,7 @@ bool SQLiteBatch::WriteKey(DataStream&& key, DataStream&& value, bool overwrite)
     sqlite3_clear_bindings(stmt);
     sqlite3_reset(stmt);
     if (res != SQLITE_DONE) {
-        LogPrintf("%s: Unable to execute statement: %s\n", __func__, sqlite3_errstr(res));
+        LogWarning("Unable to execute write statement: %s", sqlite3_errstr(res));
     }
 
     if (!m_txn) m_database.m_write_semaphore.release();
@@ -540,7 +537,7 @@ bool SQLiteBatch::ExecStatement(sqlite3_stmt* stmt, std::span<const std::byte> b
     sqlite3_clear_bindings(stmt);
     sqlite3_reset(stmt);
     if (res != SQLITE_DONE) {
-        LogPrintf("%s: Unable to execute statement: %s\n", __func__, sqlite3_errstr(res));
+        LogWarning("Unable to execute exec statement: %s", sqlite3_errstr(res));
     }
 
     if (!m_txn) m_database.m_write_semaphore.release();
@@ -578,7 +575,7 @@ DatabaseCursor::Status SQLiteCursor::Next(DataStream& key, DataStream& value)
         return Status::DONE;
     }
     if (res != SQLITE_ROW) {
-        LogPrintf("%s: Unable to execute cursor step: %s\n", __func__, sqlite3_errstr(res));
+        LogWarning("Unable to execute cursor step: %s", sqlite3_errstr(res));
         return Status::FAIL;
     }
 
@@ -597,8 +594,8 @@ SQLiteCursor::~SQLiteCursor()
     sqlite3_reset(m_cursor_stmt);
     int res = sqlite3_finalize(m_cursor_stmt);
     if (res != SQLITE_OK) {
-        LogPrintf("%s: cursor closed but could not finalize cursor statement: %s\n",
-                  __func__, sqlite3_errstr(res));
+        LogWarning("Cursor closed but could not finalize cursor statement: %s",
+                   sqlite3_errstr(res));
     }
 }
 
@@ -666,7 +663,7 @@ bool SQLiteBatch::TxnBegin()
     Assert(!m_database.HasActiveTxn());
     int res = Assert(m_exec_handler)->Exec(m_database, "BEGIN TRANSACTION");
     if (res != SQLITE_OK) {
-        LogPrintf("SQLiteBatch: Failed to begin the transaction\n");
+        LogWarning("SQLiteBatch: Failed to begin the transaction");
         m_database.m_write_semaphore.release();
     } else {
         m_txn = true;
@@ -680,7 +677,7 @@ bool SQLiteBatch::TxnCommit()
     Assert(m_database.HasActiveTxn());
     int res = Assert(m_exec_handler)->Exec(m_database, "COMMIT TRANSACTION");
     if (res != SQLITE_OK) {
-        LogPrintf("SQLiteBatch: Failed to commit the transaction\n");
+        LogWarning("SQLiteBatch: Failed to commit the transaction");
     } else {
         m_txn = false;
         m_database.m_write_semaphore.release();
@@ -694,7 +691,7 @@ bool SQLiteBatch::TxnAbort()
     Assert(m_database.HasActiveTxn());
     int res = Assert(m_exec_handler)->Exec(m_database, "ROLLBACK TRANSACTION");
     if (res != SQLITE_OK) {
-        LogPrintf("SQLiteBatch: Failed to abort the transaction\n");
+        LogWarning("SQLiteBatch: Failed to abort the transaction");
     } else {
         m_txn = false;
         m_database.m_write_semaphore.release();

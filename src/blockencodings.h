@@ -5,6 +5,7 @@
 #ifndef BITCOIN_BLOCKENCODINGS_H
 #define BITCOIN_BLOCKENCODINGS_H
 
+#include <crypto/siphash.h>
 #include <primitives/block.h>
 
 #include <functional>
@@ -87,8 +88,7 @@ typedef enum ReadStatus_t
 } ReadStatus;
 
 class CBlockHeaderAndShortTxIDs {
-private:
-    mutable uint64_t shorttxidk0, shorttxidk1;
+    mutable std::optional<PresaltedSipHasher> m_hasher;
     uint64_t nonce;
 
     void FillShortTxIDSelector() const;
@@ -112,7 +112,7 @@ public:
     /**
      * @param[in]  nonce  This should be randomly generated, and is used for the siphash secret key
      */
-    CBlockHeaderAndShortTxIDs(const CBlock& block, const uint64_t nonce);
+    CBlockHeaderAndShortTxIDs(const CBlock& block, uint64_t nonce);
 
     uint64_t GetShortID(const Wtxid& wtxid) const;
 
@@ -144,8 +144,8 @@ public:
 
     explicit PartiallyDownloadedBlock(CTxMemPool* poolIn) : pool(poolIn) {}
 
-    // extra_txn is a list of extra orphan/conflicted/etc transactions to look at
-    ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<CTransactionRef>& extra_txn);
+    // extra_txn is a list of extra transactions to look at, in <witness hash, reference> form
+    ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<Wtxid, CTransactionRef>>& extra_txn);
     bool IsTxAvailable(size_t index) const;
     // segwit_active enforces witness mutation checks just before reporting a healthy status
     ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, bool segwit_active);

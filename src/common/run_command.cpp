@@ -24,7 +24,7 @@ UniValue RunCommandParseJSON(const std::string& str_command, const std::string& 
 
     if (str_command.empty()) return UniValue::VNULL;
 
-    auto c = sp::Popen(str_command, sp::input{sp::PIPE}, sp::output{sp::PIPE}, sp::error{sp::PIPE}, sp::close_fds{true});
+    auto c = sp::Popen(str_command, sp::input{sp::PIPE}, sp::output{sp::PIPE}, sp::error{sp::PIPE});
     if (!str_std_in.empty()) {
         c.send(str_std_in);
     }

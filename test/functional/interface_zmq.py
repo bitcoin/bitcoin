@@ -424,7 +424,7 @@ class ZMQTest (BitcoinTestFramework):
         block.solve()
         assert_equal(self.nodes[0].submitblock(block.serialize().hex()), None)
         tip = self.nodes[0].getbestblockhash()
-        assert_equal(int(tip, 16), block.sha256)
+        assert_equal(int(tip, 16), block.hash_int)
         orig_txid_2 = self.wallet.send_self_transfer(from_node=self.nodes[0])['txid']
 
         # Flush old notifications until evicted tx original entry

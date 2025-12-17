@@ -44,15 +44,15 @@ xip -x Xcode_15.xip
 
 ### Step 2: Generating the SDK tarball from `Xcode.app`
 
-To generate the SDK, run the script [`gen-sdk`](./gen-sdk) with the
+To generate the SDK, run the script [`gen-sdk.py`](./gen-sdk.py) with the
 path to `Xcode.app` (extracted in the previous stage) as the first argument.
 
 ```bash
-./contrib/macdeploy/gen-sdk '/path/to/Xcode.app'
+./contrib/macdeploy/gen-sdk.py '/path/to/Xcode.app'
 ```
 
-The generated archive should be: `Xcode-15.0-15A240d-extracted-SDK-with-libcxx-headers.tar.gz`.
-The `sha256sum` should be `c0c2e7bb92c1fee0c4e9f3a485e4530786732d6c6dd9e9f418c282aa6892f55d`.
+The generated archive should be: `Xcode-15.0-15A240d-extracted-SDK-with-libcxx-headers.tar`.
+The `sha256sum` should be `95b00dc41fa090747dc0a7907a5031a2fcb2d7f95c9584ba6bccdb99b6e3d498`.
 
 ## Deterministic macOS App Notes
 

@@ -13,6 +13,7 @@
 #include <secp256k1.h>
 #include <secp256k1_ellswift.h>
 #include <secp256k1_extrakeys.h>
+#include <secp256k1_musig.h>
 #include <secp256k1_recovery.h>
 #include <secp256k1_schnorrsig.h>
 
@@ -155,7 +156,7 @@ int ec_seckey_export_der(const secp256k1_context *ctx, unsigned char *seckey, si
 }
 
 bool CKey::Check(const unsigned char *vch) {
-    return secp256k1_ec_seckey_verify(secp256k1_context_sign, vch);
+    return secp256k1_ec_seckey_verify(secp256k1_context_static, vch);
 }
 
 void CKey::MakeNewKey(bool fCompressedIn) {
@@ -186,7 +187,7 @@ CPubKey CKey::GetPubKey() const {
     CPubKey result;
     int ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pubkey, UCharCast(begin()));
     assert(ret);
-    secp256k1_ec_pubkey_serialize(secp256k1_context_sign, (unsigned char*)result.begin(), &clen, &pubkey, fCompressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
+    secp256k1_ec_pubkey_serialize(secp256k1_context_static, (unsigned char*)result.begin(), &clen, &pubkey, fCompressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
     assert(result.size() == clen);
     assert(result.IsValid());
     return result;
@@ -196,7 +197,7 @@ CPubKey CKey::GetPubKey() const {
 bool SigHasLowR(const secp256k1_ecdsa_signature* sig)
 {
     unsigned char compact_sig[64];
-    secp256k1_ecdsa_signature_serialize_compact(secp256k1_context_sign, compact_sig, sig);
+    secp256k1_ecdsa_signature_serialize_compact(secp256k1_context_static, compact_sig, sig);
 
     // In DER serialization, all values are interpreted as big-endian, signed integers. The highest bit in the integer indicates
     // its signed-ness; 0 is positive, 1 is negative. When the value is interpreted as a negative integer, it must be converted
@@ -222,7 +223,7 @@ bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, bool gr
         ret = secp256k1_ecdsa_sign(secp256k1_context_sign, &sig, hash.begin(), UCharCast(begin()), secp256k1_nonce_function_rfc6979, extra_entropy);
     }
     assert(ret);
-    secp256k1_ecdsa_signature_serialize_der(secp256k1_context_sign, vchSig.data(), &nSigLen, &sig);
+    secp256k1_ecdsa_signature_serialize_der(secp256k1_context_static, vchSig.data(), &nSigLen, &sig);
     vchSig.resize(nSigLen);
     // Additional verification step to prevent using a potentially corrupted signature
     secp256k1_pubkey pk;
@@ -254,7 +255,7 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
     secp256k1_ecdsa_recoverable_signature rsig;
     int ret = secp256k1_ecdsa_sign_recoverable(secp256k1_context_sign, &rsig, hash.begin(), UCharCast(begin()), secp256k1_nonce_function_rfc6979, nullptr);
     assert(ret);
-    ret = secp256k1_ecdsa_recoverable_signature_serialize_compact(secp256k1_context_sign, &vchSig[1], &rec, &rsig);
+    ret = secp256k1_ecdsa_recoverable_signature_serialize_compact(secp256k1_context_static, &vchSig[1], &rec, &rsig);
     assert(ret);
     assert(rec != -1);
     vchSig[0] = 27 + rec + (fCompressed ? 4 : 0);
@@ -277,7 +278,7 @@ bool CKey::SignSchnorr(const uint256& hash, std::span<unsigned char> sig, const 
 
 bool CKey::Load(const CPrivKey &seckey, const CPubKey &vchPubKey, bool fSkipCheck=false) {
     MakeKeyData();
-    if (!ec_seckey_import_der(secp256k1_context_sign, (unsigned char*)begin(), seckey.data(), seckey.size())) {
+    if (!ec_seckey_import_der(secp256k1_context_static, (unsigned char*)begin(), seckey.data(), seckey.size())) {
         ClearKeyData();
         return false;
     }
@@ -303,7 +304,7 @@ bool CKey::Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const
     }
     memcpy(ccChild.begin(), vout.data()+32, 32);
     keyChild.Set(begin(), begin() + 32, true);
-    bool ret = secp256k1_ec_seckey_tweak_add(secp256k1_context_sign, (unsigned char*)keyChild.begin(), vout.data());
+    bool ret = secp256k1_ec_seckey_tweak_add(secp256k1_context_static, (unsigned char*)keyChild.begin(), vout.data());
     if (!ret) keyChild.ClearKeyData();
     return ret;
 }
@@ -331,7 +332,7 @@ ECDHSecret CKey::ComputeBIP324ECDHSecret(const EllSwiftPubKey& their_ellswift, c
     ECDHSecret output;
     // BIP324 uses the initiator as party A, and the responder as party B. Remap the inputs
     // accordingly:
-    bool success = secp256k1_ellswift_xdh(secp256k1_context_sign,
+    bool success = secp256k1_ellswift_xdh(secp256k1_context_static,
                                           UCharCast(output.data()),
                                           UCharCast(initiating ? our_ellswift.data() : their_ellswift.data()),
                                           UCharCast(initiating ? their_ellswift.data() : our_ellswift.data()),
@@ -347,6 +348,128 @@ ECDHSecret CKey::ComputeBIP324ECDHSecret(const EllSwiftPubKey& their_ellswift, c
 KeyPair CKey::ComputeKeyPair(const uint256* merkle_root) const
 {
     return KeyPair(*this, merkle_root);
+}
+
+std::vector<uint8_t> CKey::CreateMuSig2Nonce(MuSig2SecNonce& secnonce, const uint256& sighash, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys)
+{
+    // Get the keyagg cache and aggregate pubkey
+    secp256k1_musig_keyagg_cache keyagg_cache;
+    if (!MuSig2AggregatePubkeys(pubkeys, keyagg_cache, aggregate_pubkey)) return {};
+
+    // Parse participant pubkey
+    CPubKey our_pubkey = GetPubKey();
+    secp256k1_pubkey pubkey;
+    if (!secp256k1_ec_pubkey_parse(secp256k1_context_static, &pubkey, our_pubkey.data(), our_pubkey.size())) {
+        return {};
+    }
+
+    // Generate randomness for nonce
+    uint256 rand;
+    GetStrongRandBytes(rand);
+
+    // Generate nonce
+    secp256k1_musig_pubnonce pubnonce;
+    if (!secp256k1_musig_nonce_gen(secp256k1_context_sign, secnonce.Get(), &pubnonce, rand.data(), UCharCast(begin()), &pubkey, sighash.data(), &keyagg_cache, nullptr)) {
+        return {};
+    }
+
+    // Serialize pubnonce
+    std::vector<uint8_t> out;
+    out.resize(MUSIG2_PUBNONCE_SIZE);
+    if (!secp256k1_musig_pubnonce_serialize(secp256k1_context_static, out.data(), &pubnonce)) {
+        return {};
+    }
+
+    return out;
+}
+
+std::optional<uint256> CKey::CreateMuSig2PartialSig(const uint256& sighash, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys, const std::map<CPubKey, std::vector<uint8_t>>& pubnonces, MuSig2SecNonce& secnonce, const std::vector<std::pair<uint256, bool>>& tweaks)
+{
+    secp256k1_keypair keypair;
+    if (!secp256k1_keypair_create(secp256k1_context_sign, &keypair, UCharCast(begin()))) return std::nullopt;
+
+    // Get the keyagg cache and aggregate pubkey
+    secp256k1_musig_keyagg_cache keyagg_cache;
+    if (!MuSig2AggregatePubkeys(pubkeys, keyagg_cache, aggregate_pubkey)) return std::nullopt;
+
+    // Check that there are enough pubnonces
+    if (pubnonces.size() != pubkeys.size()) return std::nullopt;
+
+    // Parse the pubnonces
+    std::vector<std::pair<secp256k1_pubkey, secp256k1_musig_pubnonce>> signers_data;
+    std::vector<const secp256k1_musig_pubnonce*> pubnonce_ptrs;
+    std::optional<size_t> our_pubkey_idx;
+    CPubKey our_pubkey = GetPubKey();
+    for (const CPubKey& part_pk : pubkeys) {
+        const auto& pn_it = pubnonces.find(part_pk);
+        if (pn_it == pubnonces.end()) return std::nullopt;
+        const std::vector<uint8_t> pubnonce = pn_it->second;
+        if (pubnonce.size() != MUSIG2_PUBNONCE_SIZE) return std::nullopt;
+        if (part_pk == our_pubkey) {
+            our_pubkey_idx = signers_data.size();
+        }
+
+        auto& [secp_pk, secp_pn] = signers_data.emplace_back();
+
+        if (!secp256k1_ec_pubkey_parse(secp256k1_context_static, &secp_pk, part_pk.data(), part_pk.size())) {
+            return std::nullopt;
+        }
+
+        if (!secp256k1_musig_pubnonce_parse(secp256k1_context_static, &secp_pn, pubnonce.data())) {
+            return std::nullopt;
+        }
+    }
+    if (our_pubkey_idx == std::nullopt) {
+        return std::nullopt;
+    }
+    pubnonce_ptrs.reserve(signers_data.size());
+    for (auto& [_, pn] : signers_data) {
+        pubnonce_ptrs.push_back(&pn);
+    }
+
+    // Aggregate nonces
+    secp256k1_musig_aggnonce aggnonce;
+    if (!secp256k1_musig_nonce_agg(secp256k1_context_static, &aggnonce, pubnonce_ptrs.data(), pubnonce_ptrs.size())) {
+        return std::nullopt;
+    }
+
+    // Apply tweaks
+    for (const auto& [tweak, xonly] : tweaks) {
+        if (xonly) {
+            if (!secp256k1_musig_pubkey_xonly_tweak_add(secp256k1_context_static, nullptr, &keyagg_cache, tweak.data())) {
+                return std::nullopt;
+            }
+        } else if (!secp256k1_musig_pubkey_ec_tweak_add(secp256k1_context_static, nullptr, &keyagg_cache, tweak.data())) {
+            return std::nullopt;
+        }
+    }
+
+    // Create musig_session
+    secp256k1_musig_session session;
+    if (!secp256k1_musig_nonce_process(secp256k1_context_static, &session, &aggnonce, sighash.data(), &keyagg_cache)) {
+        return std::nullopt;
+    }
+
+    // Create partial signature
+    secp256k1_musig_partial_sig psig;
+    if (!secp256k1_musig_partial_sign(secp256k1_context_static, &psig, secnonce.Get(), &keypair, &keyagg_cache, &session)) {
+        return std::nullopt;
+    }
+    // The secnonce must be deleted after signing to prevent nonce reuse.
+    secnonce.Invalidate();
+
+    // Verify partial signature
+    if (!secp256k1_musig_partial_sig_verify(secp256k1_context_static, &psig, &(signers_data.at(*our_pubkey_idx).second), &(signers_data.at(*our_pubkey_idx).first), &keyagg_cache, &session)) {
+        return std::nullopt;
+    }
+
+    // Serialize
+    uint256 sig;
+    if (!secp256k1_musig_partial_sig_serialize(secp256k1_context_static, sig.data(), &psig)) {
+        return std::nullopt;
+    }
+
+    return sig;
 }
 
 CKey GenerateRandomKey(bool compressed) noexcept
@@ -415,8 +538,8 @@ KeyPair::KeyPair(const CKey& key, const uint256* merkle_root)
     if (success && merkle_root) {
         secp256k1_xonly_pubkey pubkey;
         unsigned char pubkey_bytes[32];
-        assert(secp256k1_keypair_xonly_pub(secp256k1_context_sign, &pubkey, nullptr, keypair));
-        assert(secp256k1_xonly_pubkey_serialize(secp256k1_context_sign, pubkey_bytes, &pubkey));
+        assert(secp256k1_keypair_xonly_pub(secp256k1_context_static, &pubkey, nullptr, keypair));
+        assert(secp256k1_xonly_pubkey_serialize(secp256k1_context_static, pubkey_bytes, &pubkey));
         uint256 tweak = XOnlyPubKey(pubkey_bytes).ComputeTapTweakHash(merkle_root->IsNull() ? nullptr : merkle_root);
         success = secp256k1_keypair_xonly_tweak_add(secp256k1_context_static, keypair, tweak.data());
     }

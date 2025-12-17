@@ -58,7 +58,7 @@ def mine_large_blocks(node, n):
         # Submit to the node
         node.submitblock(block.serialize().hex())
 
-        previousblockhash = block.sha256
+        previousblockhash = block.hash_int
         height += 1
         mine_large_blocks.nTime += 1
 
@@ -225,7 +225,7 @@ class PruneTest(BitcoinTestFramework):
     def reorg_back(self):
         # Verify that a block on the old main chain fork has been pruned away
         assert_raises_rpc_error(-1, "Block not available (pruned data)", self.nodes[2].getblock, self.forkhash)
-        with self.nodes[2].assert_debug_log(expected_msgs=['block verification stopping at height', '(no data)']):
+        with self.nodes[2].assert_debug_log(expected_msgs=["Block verification stopping at height", "(no data)"]):
             assert not self.nodes[2].verifychain(checklevel=4, nblocks=0)
         self.log.info(f"Will need to redownload block {self.forkheight}")
 

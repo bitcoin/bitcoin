@@ -86,7 +86,7 @@ static RPCHelpMan gettxoutproof()
             }
 
             if (pblockindex == nullptr) {
-                const CTransactionRef tx = GetTransaction(/*block_index=*/nullptr, /*mempool=*/nullptr, *setTxids.begin(), hashBlock, chainman.m_blockman);
+                const CTransactionRef tx = GetTransaction(/*block_index=*/nullptr, /*mempool=*/nullptr, *setTxids.begin(), chainman.m_blockman, hashBlock);
                 if (!tx || hashBlock.IsNull()) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
                 }
@@ -109,7 +109,7 @@ static RPCHelpMan gettxoutproof()
 
             unsigned int ntxFound = 0;
             for (const auto& tx : block.vtx) {
-                if (setTxids.count(tx->GetHash())) {
+                if (setTxids.contains(tx->GetHash())) {
                     ntxFound++;
                 }
             }
@@ -150,7 +150,7 @@ static RPCHelpMan verifytxoutproof()
 
             UniValue res(UniValue::VARR);
 
-            std::vector<uint256> vMatch;
+            std::vector<Txid> vMatch;
             std::vector<unsigned int> vIndex;
             if (merkleBlock.txn.ExtractMatches(vMatch, vIndex) != merkleBlock.header.hashMerkleRoot)
                 return res;
@@ -165,8 +165,8 @@ static RPCHelpMan verifytxoutproof()
 
             // Check if proof is valid, only add results if so
             if (pindex->nTx == merkleBlock.txn.GetNumTransactions()) {
-                for (const uint256& hash : vMatch) {
-                    res.push_back(hash.GetHex());
+                for (const auto& txid : vMatch) {
+                    res.push_back(txid.GetHex());
                 }
             }
 

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,7 +21,7 @@ public:
 };
 
 /** Template base class for unsigned big integers. */
-template<unsigned int BITS>
+template <unsigned int BITS>
 class base_uint
 {
 protected:
@@ -29,30 +29,18 @@ protected:
     static constexpr int WIDTH = BITS / 32;
     /** Big integer represented with 32-bit digits, least-significant first. */
     uint32_t pn[WIDTH];
-public:
 
-    base_uint()
+public:
+    constexpr base_uint()
     {
         for (int i = 0; i < WIDTH; i++)
             pn[i] = 0;
     }
 
-    base_uint(const base_uint& b)
-    {
-        for (int i = 0; i < WIDTH; i++)
-            pn[i] = b.pn[i];
-    }
+    base_uint(const base_uint& b) = default;
+    base_uint& operator=(const base_uint& b) = default;
 
-    base_uint& operator=(const base_uint& b)
-    {
-        if (this != &b) {
-            for (int i = 0; i < WIDTH; i++)
-                pn[i] = b.pn[i];
-        }
-        return *this;
-    }
-
-    base_uint(uint64_t b)
+    constexpr base_uint(uint64_t b)
     {
         pn[0] = (unsigned int)b;
         pn[1] = (unsigned int)(b >> 32);
@@ -239,11 +227,12 @@ public:
 };
 
 /** 256-bit unsigned big integer. */
-class arith_uint256 : public base_uint<256> {
+class arith_uint256 : public base_uint<256>
+{
 public:
-    arith_uint256() = default;
-    arith_uint256(const base_uint<256>& b) : base_uint<256>(b) {}
-    arith_uint256(uint64_t b) : base_uint<256>(b) {}
+    constexpr arith_uint256() = default;
+    constexpr arith_uint256(const base_uint& b) : base_uint(b) {}
+    constexpr arith_uint256(uint64_t b) : base_uint(b) {}
 
     /**
      * The "compact" format is a representation of a whole
@@ -271,6 +260,9 @@ public:
     friend uint256 ArithToUint256(const arith_uint256 &);
     friend arith_uint256 UintToArith256(const uint256 &);
 };
+
+// Keeping the trivially copyable property is beneficial for performance
+static_assert(std::is_trivially_copyable_v<arith_uint256>);
 
 uint256 ArithToUint256(const arith_uint256 &);
 arith_uint256 UintToArith256(const uint256 &);

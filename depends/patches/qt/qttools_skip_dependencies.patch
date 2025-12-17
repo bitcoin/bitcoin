@@ -34,3 +34,12 @@ QtTools: Skip unnecessary dependencies:
  
  # Create a fake module that would emulate the Qt5::LinguistTools CMake Config package
  qt_internal_add_module(Linguist
+--- a/qttools/src/qdbus/CMakeLists.txt
++++ b/qttools/src/qdbus/CMakeLists.txt
+@@ -7,6 +7,3 @@ endif()
+ if(QT_FEATURE_dom)
+     add_subdirectory(qdbus)
+ endif()
+-if(QT_FEATURE_dialogbuttonbox AND QT_FEATURE_inputdialog AND QT_FEATURE_menu AND QT_FEATURE_messagebox AND TARGET Qt::Widgets)
+-    add_subdirectory(qdbusviewer)
+-endif()

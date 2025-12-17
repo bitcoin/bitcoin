@@ -7,9 +7,9 @@
 
 #include <chain.h>
 #include <consensus/validation.h>
-#include <kernel/chain.h>
 #include <kernel/mempool_entry.h>
 #include <kernel/mempool_removal_reason.h>
+#include <kernel/types.h>
 #include <logging.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -17,8 +17,11 @@
 #include <util/task_runner.h>
 
 #include <future>
+#include <memory>
 #include <unordered_map>
 #include <utility>
+
+using kernel::ChainstateRole;
 
 /**
  * ValidationSignalsImpl manages a list of shared_ptr<CValidationInterface> callbacks.
@@ -208,7 +211,8 @@ void ValidationSignals::TransactionRemovedFromMempool(const CTransactionRef& tx,
                           RemovalReasonToString(reason));
 }
 
-void ValidationSignals::BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindex) {
+void ValidationSignals::BlockConnected(const ChainstateRole& role, const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
+{
     auto event = [role, pblock, pindex, this] {
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BlockConnected(role, pblock, pindex); });
     };
@@ -237,7 +241,8 @@ void ValidationSignals::BlockDisconnected(const std::shared_ptr<const CBlock>& p
                           pindex->nHeight);
 }
 
-void ValidationSignals::ChainStateFlushed(ChainstateRole role, const CBlockLocator &locator) {
+void ValidationSignals::ChainStateFlushed(const ChainstateRole& role, const CBlockLocator& locator)
+{
     auto event = [role, locator, this] {
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.ChainStateFlushed(role, locator); });
     };
@@ -245,9 +250,10 @@ void ValidationSignals::ChainStateFlushed(ChainstateRole role, const CBlockLocat
                           locator.IsNull() ? "null" : locator.vHave.front().ToString());
 }
 
-void ValidationSignals::BlockChecked(const CBlock& block, const BlockValidationState& state) {
+void ValidationSignals::BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& state)
+{
     LOG_EVENT("%s: block hash=%s state=%s", __func__,
-              block.GetHash().ToString(), state.ToString());
+              block->GetHash().ToString(), state.ToString());
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BlockChecked(block, state); });
 }
 

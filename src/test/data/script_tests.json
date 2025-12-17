@@ -105,6 +105,7 @@
 ["25 24 23 22 21 20", "2ROT 2DROP 2DROP DROP 23 EQUAL", "P2SH,STRICTENC", "OK"],
 ["25 24 23 22 21 20", "2ROT 2ROT 22 EQUAL", "P2SH,STRICTENC", "OK"],
 ["25 24 23 22 21 20", "2ROT 2ROT 2ROT 20 EQUAL", "P2SH,STRICTENC", "OK"],
+["1 2 3 4 5 6", "2ROT DEPTH 6 EQUAL", "P2SH,STRICTENC", "OK"],
 ["1 0", "SWAP 1 EQUALVERIFY 0 EQUAL", "P2SH,STRICTENC", "OK"],
 ["0 1", "TUCK DEPTH 3 EQUALVERIFY SWAP 2DROP", "P2SH,STRICTENC", "OK"],
 ["13 14", "2DUP ROT EQUALVERIFY EQUAL", "P2SH,STRICTENC", "OK"],
@@ -2665,6 +2666,19 @@
     "P2SH,WITNESS,TAPROOT",
     "OK",
     "TAPSCRIPT Test that DROP operations do not execute inside of a false IF conditional"
+],
+[
+    [
+        "aa",
+        "#SCRIPT# 0 CHECKSIG",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT",
+    "TAPSCRIPT_EMPTY_PUBKEY",
+    "TAPSCRIPT: OP_CHECKSIG with empty pubkey must fail"
 ],
 
 ["NULLFAIL should cover all signatures and signatures only"],

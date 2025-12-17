@@ -9,12 +9,12 @@
 #include <common/signmessage.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
+#include <primitives/transaction_identifier.h>
 #include <pubkey.h>
 #include <script/script.h>
 #include <support/allocators/secure.h>
 #include <util/fs.h>
 #include <util/result.h>
-#include <util/transaction_identifier.h>
 #include <util/ui_change_type.h>
 
 #include <cstdint>
@@ -43,10 +43,8 @@ namespace wallet {
 class CCoinControl;
 class CWallet;
 enum class AddressPurpose;
-enum isminetype : unsigned int;
 struct CRecipient;
 struct WalletContext;
-using isminefilter = std::underlying_type_t<isminetype>;
 } // namespace wallet
 
 namespace interfaces {
@@ -117,7 +115,6 @@ public:
     //! Look up address in wallet, return whether exists.
     virtual bool getAddress(const CTxDestination& dest,
         std::string* name,
-        wallet::isminetype* is_mine,
         wallet::AddressPurpose* purpose) = 0;
 
     //! Get wallet address list.
@@ -225,16 +222,16 @@ public:
     virtual CAmount getAvailableBalance(const wallet::CCoinControl& coin_control) = 0;
 
     //! Return whether transaction input belongs to wallet.
-    virtual wallet::isminetype txinIsMine(const CTxIn& txin) = 0;
+    virtual bool txinIsMine(const CTxIn& txin) = 0;
 
     //! Return whether transaction output belongs to wallet.
-    virtual wallet::isminetype txoutIsMine(const CTxOut& txout) = 0;
+    virtual bool txoutIsMine(const CTxOut& txout) = 0;
 
     //! Return debit amount if transaction input belongs to wallet.
-    virtual CAmount getDebit(const CTxIn& txin, wallet::isminefilter filter) = 0;
+    virtual CAmount getDebit(const CTxIn& txin) = 0;
 
     //! Return credit amount if transaction input belongs to wallet.
-    virtual CAmount getCredit(const CTxOut& txout, wallet::isminefilter filter) = 0;
+    virtual CAmount getCredit(const CTxOut& txout) = 0;
 
     //! Return AvailableCoins + LockedCoins grouped by wallet address.
     //! (put change in one group with wallet address)
@@ -328,7 +325,7 @@ public:
     virtual std::string getWalletDir() = 0;
 
     //! Restore backup wallet
-    virtual util::Result<std::unique_ptr<Wallet>> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, std::vector<bilingual_str>& warnings) = 0;
+    virtual util::Result<std::unique_ptr<Wallet>> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, std::vector<bilingual_str>& warnings, bool load_after_restore) = 0;
 
     //! Migrate a wallet
     virtual util::Result<WalletMigrationResult> migrateWallet(const std::string& name, const SecureString& passphrase) = 0;
@@ -356,11 +353,11 @@ public:
 struct WalletAddress
 {
     CTxDestination dest;
-    wallet::isminetype is_mine;
+    bool is_mine;
     wallet::AddressPurpose purpose;
     std::string name;
 
-    WalletAddress(CTxDestination dest, wallet::isminetype is_mine, wallet::AddressPurpose purpose, std::string name)
+    WalletAddress(CTxDestination dest, bool is_mine, wallet::AddressPurpose purpose, std::string name)
         : dest(std::move(dest)), is_mine(is_mine), purpose(std::move(purpose)), name(std::move(name))
     {
     }
@@ -384,11 +381,11 @@ struct WalletBalances
 struct WalletTx
 {
     CTransactionRef tx;
-    std::vector<wallet::isminetype> txin_is_mine;
-    std::vector<wallet::isminetype> txout_is_mine;
+    std::vector<bool> txin_is_mine;
+    std::vector<bool> txout_is_mine;
     std::vector<bool> txout_is_change;
     std::vector<CTxDestination> txout_address;
-    std::vector<wallet::isminetype> txout_address_is_mine;
+    std::vector<bool> txout_address_is_mine;
     CAmount credit;
     CAmount debit;
     CAmount change;

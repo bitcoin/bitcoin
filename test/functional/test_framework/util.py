@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Helpful routines for regression testing."""
@@ -16,7 +16,9 @@ import pathlib
 import platform
 import random
 import re
+import shlex
 import time
+import types
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
@@ -235,6 +237,98 @@ def check_json_precision():
         raise RuntimeError("JSON encode/decode loses precision")
 
 
+class Binaries:
+    """Helper class to provide information about bitcoin binaries
+
+    Attributes:
+        paths: Object returned from get_binary_paths() containing information
+            which binaries and command lines to use from environment variables and
+            the config file.
+        bin_dir: An optional string containing a directory path to look for
+            binaries, which takes precedence over the paths above, if specified.
+            This is used by tests calling binaries from previous releases.
+    """
+    def __init__(self, paths, bin_dir):
+        self.paths = paths
+        self.bin_dir = bin_dir
+
+    def node_argv(self, **kwargs):
+        "Return argv array that should be used to invoke bitcoind"
+        return self._argv("node", self.paths.bitcoind, **kwargs)
+
+    def rpc_argv(self):
+        "Return argv array that should be used to invoke bitcoin-cli"
+        # Add -nonamed because "bitcoin rpc" enables -named by default, but bitcoin-cli doesn't
+        return self._argv("rpc", self.paths.bitcoincli) + ["-nonamed"]
+
+    def tx_argv(self):
+        "Return argv array that should be used to invoke bitcoin-tx"
+        return self._argv("tx", self.paths.bitcointx)
+
+    def util_argv(self):
+        "Return argv array that should be used to invoke bitcoin-util"
+        return self._argv("util", self.paths.bitcoinutil)
+
+    def wallet_argv(self):
+        "Return argv array that should be used to invoke bitcoin-wallet"
+        return self._argv("wallet", self.paths.bitcoinwallet)
+
+    def chainstate_argv(self):
+        "Return argv array that should be used to invoke bitcoin-chainstate"
+        return self._argv("chainstate", self.paths.bitcoinchainstate)
+
+    def _argv(self, command, bin_path, need_ipc=False):
+        """Return argv array that should be used to invoke the command. It
+        either uses the bitcoin wrapper executable (if BITCOIN_CMD is set or
+        need_ipc is True), or the direct binary path (bitcoind, etc). When
+        bin_dir is set (by tests calling binaries from previous releases) it
+        always uses the direct path."""
+        if self.bin_dir is not None:
+            return [os.path.join(self.bin_dir, os.path.basename(bin_path))]
+        elif self.paths.bitcoin_cmd is not None or need_ipc:
+            # If the current test needs IPC functionality, use the bitcoin
+            # wrapper binary and append -m so it calls multiprocess binaries.
+            bitcoin_cmd = self.paths.bitcoin_cmd or [self.paths.bitcoin_bin]
+            return bitcoin_cmd + (["-m"] if need_ipc else []) + [command]
+        else:
+            return [bin_path]
+
+
+def get_binary_paths(config):
+    """Get paths of all binaries from environment variables or their default values"""
+
+    paths = types.SimpleNamespace()
+    binaries = {
+        "bitcoin": "BITCOIN_BIN",
+        "bitcoind": "BITCOIND",
+        "bitcoin-cli": "BITCOINCLI",
+        "bitcoin-util": "BITCOINUTIL",
+        "bitcoin-tx": "BITCOINTX",
+        "bitcoin-chainstate": "BITCOINCHAINSTATE",
+        "bitcoin-wallet": "BITCOINWALLET",
+    }
+    # Set paths to bitcoin core binaries allowing overrides with environment
+    # variables.
+    for binary, env_variable_name in binaries.items():
+        default_filename = os.path.join(
+            config["environment"]["BUILDDIR"],
+            "bin",
+            binary + config["environment"]["EXEEXT"],
+        )
+        setattr(paths, env_variable_name.lower(), os.getenv(env_variable_name, default=default_filename))
+    # BITCOIN_CMD environment variable can be specified to invoke bitcoin
+    # wrapper binary instead of other executables.
+    paths.bitcoin_cmd = shlex.split(os.getenv("BITCOIN_CMD", "")) or None
+    return paths
+
+
+def export_env_build_path(config):
+    os.environ["PATH"] = os.pathsep.join([
+        os.path.join(config["environment"]["BUILDDIR"], "bin"),
+        os.environ["PATH"],
+    ])
+
+
 def count_bytes(hex_string):
     return len(bytearray.fromhex(hex_string))
 
@@ -434,7 +528,7 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
     else:
         chain_name_conf_arg = chain
         chain_name_conf_section = chain
-    with open(config_path, 'w', encoding='utf8') as f:
+    with open(config_path, 'w') as f:
         if chain_name_conf_arg:
             f.write("{}=1\n".format(chain_name_conf_arg))
         if chain_name_conf_section:
@@ -444,6 +538,7 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
         # Disable server-side timeouts to avoid intermittent issues
         f.write("rpcservertimeout=99000\n")
         f.write("rpcdoccheck=1\n")
+        f.write("rpcthreads=2\n")
         f.write("fallbackfee=0.0002\n")
         f.write("server=1\n")
         f.write("keypool=1\n")
@@ -474,6 +569,7 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
         #  min_required_fds = MIN_CORE_FDS + MAX_ADDNODE_CONNECTIONS + nBind = 151 + 8 + 3 = 162;
         #  nMaxConnections = available_fds - min_required_fds = 256 - 161 = 94;
         f.write("maxconnections=94\n")
+        f.write("par=" + str(min(2, os.cpu_count())) + "\n")
         f.write(extra_config)
 
 
@@ -498,7 +594,7 @@ def get_temp_default_datadir(temp_dir: pathlib.Path) -> tuple[dict, pathlib.Path
 
 
 def append_config(datadir, options):
-    with open(os.path.join(datadir, "bitcoin.conf"), 'a', encoding='utf8') as f:
+    with open(os.path.join(datadir, "bitcoin.conf"), 'a') as f:
         for option in options:
             f.write(option + "\n")
 
@@ -507,7 +603,7 @@ def get_auth_cookie(datadir, chain):
     user = None
     password = None
     if os.path.isfile(os.path.join(datadir, "bitcoin.conf")):
-        with open(os.path.join(datadir, "bitcoin.conf"), 'r', encoding='utf8') as f:
+        with open(os.path.join(datadir, "bitcoin.conf"), 'r') as f:
             for line in f:
                 if line.startswith("rpcuser="):
                     assert user is None  # Ensure that there is only one rpcuser line
@@ -516,7 +612,7 @@ def get_auth_cookie(datadir, chain):
                     assert password is None  # Ensure that there is only one rpcpassword line
                     password = line.split("=")[1].strip("\n")
     try:
-        with open(os.path.join(datadir, chain, ".cookie"), 'r', encoding="ascii") as f:
+        with open(os.path.join(datadir, chain, ".cookie"), 'r') as f:
             userpass = f.read()
             split_userpass = userpass.split(':')
             user = split_userpass[0]

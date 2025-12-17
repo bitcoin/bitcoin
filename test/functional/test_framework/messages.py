@@ -29,7 +29,10 @@ import time
 import unittest
 
 from test_framework.crypto.siphash import siphash256
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_not_equal,
+)
 
 MAX_LOCATOR_SZ = 101
 MAX_BLOCK_WEIGHT = 4000000
@@ -72,6 +75,7 @@ WITNESS_SCALE_FACTOR = 4
 
 DEFAULT_ANCESTOR_LIMIT = 25    # default max number of in-mempool ancestors
 DEFAULT_DESCENDANT_LIMIT = 25  # default max number of in-mempool descendants
+DEFAULT_CLUSTER_LIMIT = 64     # default max number of transactions in a cluster
 
 
 # Default setting for -datacarriersize.
@@ -79,6 +83,9 @@ MAX_OP_RETURN_RELAY = 100_000
 
 
 DEFAULT_MEMPOOL_EXPIRY_HOURS = 336  # hours
+
+TX_MIN_STANDARD_VERSION = 1
+TX_MAX_STANDARD_VERSION = 3
 
 MAGIC_BYTES = {
     "mainnet": b"\xf9\xbe\xb4\xd9",
@@ -248,6 +255,23 @@ def from_hex(obj, hex_string):
 def tx_from_hex(hex_string):
     """Deserialize from hex string to a transaction object"""
     return from_hex(CTransaction(), hex_string)
+
+
+def malleate_tx_to_invalid_witness(tx):
+    """
+    Create a malleated version of the tx where the witness is replaced with garbage data.
+    Returns a CTransaction object.
+    """
+    tx_bad_wit = tx_from_hex(tx["hex"])
+    tx_bad_wit.wit.vtxinwit = [CTxInWitness()]
+    # Add garbage data to witness 0. We cannot simply strip the witness, as the node would
+    # classify it as a transaction in which the witness was missing rather than wrong.
+    tx_bad_wit.wit.vtxinwit[0].scriptWitness.stack = [b'garbage']
+
+    assert_equal(tx["txid"], tx_bad_wit.txid_hex)
+    assert_not_equal(tx["wtxid"], tx_bad_wit.wtxid_hex)
+
+    return tx_bad_wit
 
 
 # like from_hex, but without the hex part
@@ -704,8 +728,8 @@ class CTransaction:
 
 
 class CBlockHeader:
-    __slots__ = ("hash", "hashMerkleRoot", "hashPrevBlock", "nBits", "nNonce",
-                 "nTime", "nVersion", "sha256")
+    __slots__ = ("hashMerkleRoot", "hashPrevBlock", "nBits", "nNonce",
+                 "nTime", "nVersion")
 
     def __init__(self, header=None):
         if header is None:
@@ -717,9 +741,6 @@ class CBlockHeader:
             self.nTime = header.nTime
             self.nBits = header.nBits
             self.nNonce = header.nNonce
-            self.sha256 = header.sha256
-            self.hash = header.hash
-            self.calc_sha256()
 
     def set_null(self):
         self.nVersion = 4
@@ -728,8 +749,6 @@ class CBlockHeader:
         self.nTime = 0
         self.nBits = 0
         self.nNonce = 0
-        self.sha256 = None
-        self.hash = None
 
     def deserialize(self, f):
         self.nVersion = int.from_bytes(f.read(4), "little", signed=True)
@@ -738,10 +757,11 @@ class CBlockHeader:
         self.nTime = int.from_bytes(f.read(4), "little")
         self.nBits = int.from_bytes(f.read(4), "little")
         self.nNonce = int.from_bytes(f.read(4), "little")
-        self.sha256 = None
-        self.hash = None
 
     def serialize(self):
+        return self._serialize_header()
+
+    def _serialize_header(self):
         r = b""
         r += self.nVersion.to_bytes(4, "little", signed=True)
         r += ser_uint256(self.hashPrevBlock)
@@ -751,22 +771,15 @@ class CBlockHeader:
         r += self.nNonce.to_bytes(4, "little")
         return r
 
-    def calc_sha256(self):
-        if self.sha256 is None:
-            r = b""
-            r += self.nVersion.to_bytes(4, "little", signed=True)
-            r += ser_uint256(self.hashPrevBlock)
-            r += ser_uint256(self.hashMerkleRoot)
-            r += self.nTime.to_bytes(4, "little")
-            r += self.nBits.to_bytes(4, "little")
-            r += self.nNonce.to_bytes(4, "little")
-            self.sha256 = uint256_from_str(hash256(r))
-            self.hash = hash256(r)[::-1].hex()
+    @property
+    def hash_hex(self):
+        """Return block header hash as hex string."""
+        return hash256(self._serialize_header())[::-1].hex()
 
-    def rehash(self):
-        self.sha256 = None
-        self.calc_sha256()
-        return self.sha256
+    @property
+    def hash_int(self):
+        """Return block header hash as integer."""
+        return uint256_from_str(hash256(self._serialize_header()))
 
     def __repr__(self):
         return "CBlockHeader(nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nNonce=%08x)" \
@@ -825,9 +838,8 @@ class CBlock(CBlockHeader):
         return self.get_merkle_root(hashes)
 
     def is_valid(self):
-        self.calc_sha256()
         target = uint256_from_compact(self.nBits)
-        if self.sha256 > target:
+        if self.hash_int > target:
             return False
         for tx in self.vtx:
             if not tx.is_valid():
@@ -837,11 +849,9 @@ class CBlock(CBlockHeader):
         return True
 
     def solve(self):
-        self.rehash()
         target = uint256_from_compact(self.nBits)
-        while self.sha256 > target:
+        while self.hash_int > target:
             self.nNonce += 1
-            self.rehash()
 
     # Calculate the block weight using witness and non-witness
     # serialization size (does NOT use sigops).

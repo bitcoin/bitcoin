@@ -14,7 +14,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-const std::vector<CTransactionRef> empty_extra_txn;
+const std::vector<std::pair<Wtxid, CTransactionRef>> empty_extra_txn;
 
 BOOST_FIXTURE_TEST_SUITE(blockencodings_tests, RegTestingSetup)
 
@@ -56,8 +56,8 @@ static CBlock BuildBlockTestCase(FastRandomContext& ctx) {
 }
 
 // Number of shared use_counts we expect for a tx we haven't touched
-// (block + mempool entry + mempool txns_randomized + our copy from the GetSharedTx call)
-constexpr long SHARED_TX_OFFSET{4};
+// (block + mempool entry + our copy from the GetSharedTx call)
+constexpr long SHARED_TX_OFFSET{3};
 
 BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
 {
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
     CBlock block(BuildBlockTestCase(rand_ctx));
 
     LOCK2(cs_main, pool.cs);
-    AddToMempool(pool, entry.FromTx(block.vtx[2]));
+    TryAddToMempool(pool, entry.FromTx(block.vtx[2]));
     BOOST_CHECK_EQUAL(pool.get(block.vtx[2]->GetHash()).use_count(), SHARED_TX_OFFSET + 0);
 
     // Do a simple ShortTxIDs RT
@@ -151,10 +151,10 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
     CBlock block(BuildBlockTestCase(rand_ctx));
 
     LOCK2(cs_main, pool.cs);
-    AddToMempool(pool, entry.FromTx(block.vtx[2]));
+    TryAddToMempool(pool, entry.FromTx(block.vtx[2]));
     BOOST_CHECK_EQUAL(pool.get(block.vtx[2]->GetHash()).use_count(), SHARED_TX_OFFSET + 0);
 
-    uint256 txhash;
+    Txid txhash;
 
     // Test with pre-forwarding tx 1, but not coinbase
     {
@@ -222,10 +222,10 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
     CBlock block(BuildBlockTestCase(rand_ctx));
 
     LOCK2(cs_main, pool.cs);
-    AddToMempool(pool, entry.FromTx(block.vtx[1]));
+    TryAddToMempool(pool, entry.FromTx(block.vtx[1]));
     BOOST_CHECK_EQUAL(pool.get(block.vtx[1]->GetHash()).use_count(), SHARED_TX_OFFSET + 0);
 
-    uint256 txhash;
+    Txid txhash;
 
     // Test with pre-forwarding coinbase + tx 2 with tx 1 in mempool
     {
@@ -318,11 +318,11 @@ BOOST_AUTO_TEST_CASE(ReceiveWithExtraTransactions) {
     const CTransactionRef non_block_tx = MakeTransactionRef(std::move(mtx));
 
     CBlock block(BuildBlockTestCase(rand_ctx));
-    std::vector<CTransactionRef> extra_txn;
+    std::vector<std::pair<Wtxid, CTransactionRef>> extra_txn;
     extra_txn.resize(10);
 
     LOCK2(cs_main, pool.cs);
-    AddToMempool(pool, entry.FromTx(block.vtx[2]));
+    TryAddToMempool(pool, entry.FromTx(block.vtx[2]));
     BOOST_CHECK_EQUAL(pool.get(block.vtx[2]->GetHash()).use_count(), SHARED_TX_OFFSET + 0);
     // Ensure the non_block_tx is actually not in the block
     for (const auto &block_tx : block.vtx) {
@@ -342,9 +342,9 @@ BOOST_AUTO_TEST_CASE(ReceiveWithExtraTransactions) {
         BOOST_CHECK( partial_block.IsTxAvailable(2));
 
         // Add an unrelated tx to extra_txn:
-        extra_txn[0] = non_block_tx;
+        extra_txn[0] = {non_block_tx->GetWitnessHash(), non_block_tx};
         // and a tx from the block that's not in the mempool:
-        extra_txn[1] = block.vtx[1];
+        extra_txn[1] = {block.vtx[1]->GetWitnessHash(), block.vtx[1]};
 
         BOOST_CHECK(partial_block_with_extra.InitData(cmpctblock, extra_txn) == READ_STATUS_OK);
         BOOST_CHECK(partial_block_with_extra.IsTxAvailable(0));

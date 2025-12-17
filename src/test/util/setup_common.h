@@ -238,17 +238,6 @@ struct TestChain100Setup : public TestingSetup {
      */
     std::vector<CTransactionRef> PopulateMempool(FastRandomContext& det_rand, size_t num_transactions, bool submit);
 
-    /** Mock the mempool minimum feerate by adding a transaction and calling TrimToSize(0),
-     * simulating the mempool "reaching capacity" and evicting by descendant feerate.  Note that
-     * this clears the mempool, and the new minimum feerate will depend on the maximum feerate of
-     * transactions removed, so this must be called while the mempool is empty.
-     *
-     * @param target_feerate    The new mempool minimum feerate after this function returns.
-     *                          Must be above max(incremental feerate, min relay feerate),
-     *                          or 1sat/vB with default settings.
-     */
-    void MockMempoolMinFee(const CFeeRate& target_feerate);
-
     std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
 };
@@ -291,6 +280,8 @@ inline std::ostream& operator<<(std::ostream& os, const std::optional<T>& v)
 std::ostream& operator<<(std::ostream& os, const arith_uint256& num);
 std::ostream& operator<<(std::ostream& os, const uint160& num);
 std::ostream& operator<<(std::ostream& os, const uint256& num);
+std::ostream& operator<<(std::ostream& os, const Txid& txid);
+std::ostream& operator<<(std::ostream& os, const Wtxid& wtxid);
 // @}
 
 /**

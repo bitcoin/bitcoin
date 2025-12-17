@@ -394,6 +394,29 @@ void SanityCheck(const DepGraph<SetType>& depgraph, std::span<const DepGraphInde
     }
 }
 
+inline uint64_t MaxOptimalLinearizationIters(DepGraphIndex cluster_count)
+{
+    // We assume sqrt(2^k)+1 candidate-finding iterations per candidate to be found, plus ceil(k/4)
+    // startup cost when up to k unlinearization transactions remain, plus ceil(n^2/64) overall
+    // startup cost in Linearize. Thus, we can compute the upper bound for a whole linearization
+    // (summing for k=1..n) using the Python expression:
+    //
+    //   [sum((k+3)//4 + math.isqrt(2**k) + 1 for k in range(1, n + 1)) + (n**2 + 63) // 64 for n in range(0, 65)]
+    //
+    // Note that these are just assumptions, as the proven upper bound grows with 2^k, not
+    // sqrt(2^k).
+    static constexpr uint64_t MAX_OPTIMAL_ITERS[65] = {
+        0, 4, 8, 12, 18, 26, 37, 51, 70, 97, 133, 182, 251, 346, 480, 666, 927, 1296, 1815, 2545,
+        3576, 5031, 7087, 9991, 14094, 19895, 28096, 39690, 56083, 79263, 112041, 158391, 223936,
+        316629, 447712, 633086, 895241, 1265980, 1790280, 2531747, 3580335, 5063259, 7160424,
+        10126257, 14320575, 20252230, 28640853, 40504150, 57281380, 81007962, 114562410, 162015557,
+        229124437, 324030718, 458248463, 648061011, 916496483, 1296121563, 1832992493, 2592242635,
+        3665984477, 5184484745, 7331968412, 10368968930, 14663936244
+    };
+    assert(cluster_count < sizeof(MAX_OPTIMAL_ITERS) / sizeof(MAX_OPTIMAL_ITERS[0]));
+    return MAX_OPTIMAL_ITERS[cluster_count];
+}
+
 } // namespace
 
 #endif // BITCOIN_TEST_UTIL_CLUSTER_LINEARIZE_H

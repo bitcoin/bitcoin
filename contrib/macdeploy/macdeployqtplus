@@ -390,12 +390,11 @@ Note, that the "dist" folder will be deleted before deploying on each run.
 Optionally, Qt translation files (.qm) can be added to the bundle.""")
 
 ap.add_argument("app_bundle", nargs=1, metavar="app-bundle", help="application bundle to be deployed")
-ap.add_argument("appname", nargs=1, metavar="appname", help="name of the app being deployed")
 ap.add_argument("-verbose", nargs="?", const=True, help="Output additional debugging information")
 ap.add_argument("-no-plugins", dest="plugins", action="store_false", default=True, help="skip plugin deployment")
 ap.add_argument("-no-strip", dest="strip", action="store_false", default=True, help="don't run 'strip' on the binaries")
 ap.add_argument("-translations-dir", nargs=1, metavar="path", default=None, help="Path to Qt's translations. Base translations will automatically be added to the bundle's resources.")
-ap.add_argument("-zip", nargs="?", const="", metavar="zip", help="create a .zip containing the app bundle")
+ap.add_argument("-zip", nargs=1, metavar="zip", help="create a .zip containing the app bundle")
 
 config = ap.parse_args()
 
@@ -404,7 +403,6 @@ verbose = config.verbose
 # ------------------------------------------------
 
 app_bundle = config.app_bundle[0]
-appname = config.appname[0]
 
 if not os.path.exists(app_bundle):
     sys.stderr.write(f"Error: Could not find app bundle \"{app_bundle}\"\n")
@@ -415,10 +413,6 @@ if not os.path.exists(app_bundle):
 if os.path.exists("dist"):
     print("+ Removing existing dist folder +")
     shutil.rmtree("dist")
-
-if os.path.exists(appname + ".zip"):
-    print("+ Removing existing .zip +")
-    os.unlink(appname + ".zip")
 
 # ------------------------------------------------
 
@@ -466,18 +460,18 @@ if config.translations_dir:
         sys.stderr.write(f"Error: Could not find translation dir \"{config.translations_dir[0]}\"\n")
         sys.exit(1)
 
-print("+ Adding Qt translations +")
+    print("+ Adding Qt translations +")
 
-translations = Path(config.translations_dir[0])
+    translations = Path(config.translations_dir[0])
 
-regex = re.compile('qt_[a-z]*(.qm|_[A-Z]*.qm)')
+    regex = re.compile('qt_[a-z]*(.qm|_[A-Z]*.qm)')
 
-lang_files = [x for x in translations.iterdir() if regex.match(x.name)]
+    lang_files = [x for x in translations.iterdir() if regex.match(x.name)]
 
-for file in lang_files:
-    if verbose:
-        print(file.as_posix(), "->", os.path.join(applicationBundle.resourcesPath, file.name))
-    shutil.copy2(file.as_posix(), os.path.join(applicationBundle.resourcesPath, file.name))
+    for file in lang_files:
+        if verbose:
+            print(file.as_posix(), "->", os.path.join(applicationBundle.resourcesPath, file.name))
+        shutil.copy2(file.as_posix(), os.path.join(applicationBundle.resourcesPath, file.name))
 
 # ------------------------------------------------
 
@@ -499,7 +493,13 @@ if platform.system() == "Darwin":
 # ------------------------------------------------
 
 if config.zip is not None:
-    shutil.make_archive('{}'.format(appname), format='zip', root_dir='dist', base_dir='Bitcoin-Qt.app')
+    name = config.zip[0]
+
+    if os.path.exists(name + ".zip"):
+        print("+ Removing existing .zip +")
+        os.unlink(name + ".zip")
+
+    shutil.make_archive('{}'.format(name), format='zip', root_dir='dist', base_dir='Bitcoin-Qt.app')
 
 # ------------------------------------------------
 

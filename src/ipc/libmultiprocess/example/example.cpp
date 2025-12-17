@@ -1,13 +1,18 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <init.capnp.h>
+#include <init.capnp.proxy.h>
+
+#include <cstring> // IWYU pragma: keep
 #include <filesystem>
 #include <fstream>
 #include <future>
-#include <init.capnp.h>
-#include <init.capnp.proxy.h>
 #include <iostream>
+#include <kj/async.h>
+#include <kj/common.h>
+#include <memory>
 #include <mp/proxy-io.h>
 #include <mp/util.h>
 #include <stdexcept>
@@ -30,10 +35,10 @@ static auto Spawn(mp::EventLoop& loop, const std::string& process_argv0, const s
     return std::make_tuple(mp::ConnectStream<InitInterface>(loop, fd), pid);
 }
 
-static void LogPrint(bool raise, const std::string& message)
+static void LogPrint(mp::LogMessage log_data)
 {
-    if (raise) throw std::runtime_error(message);
-    std::ofstream("debug.log", std::ios_base::app) << message << std::endl;
+    if (log_data.level == mp::Log::Raise) throw std::runtime_error(log_data.message);
+    std::ofstream("debug.log", std::ios_base::app) << log_data.message << std::endl;
 }
 
 int main(int argc, char** argv)

@@ -325,7 +325,7 @@ sizes.
 
 Each block is individually compressed before being written to persistent
 storage. Compression is on by default since the default compression method is
-very fast, and is automatically disabled for uncompressible data. In rare cases,
+very fast, and is automatically disabled for incompressible data. In rare cases,
 applications may want to disable compression entirely, but should only do so if
 benchmarks show a performance improvement:
 

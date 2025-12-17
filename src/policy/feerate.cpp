@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,39 +7,30 @@
 #include <policy/feerate.h>
 #include <tinyformat.h>
 
-#include <cmath>
 
-CFeeRate::CFeeRate(const CAmount& nFeePaid, uint32_t num_bytes)
+CFeeRate::CFeeRate(const CAmount& nFeePaid, int32_t virtual_bytes)
 {
-    const int64_t nSize{num_bytes};
-
-    if (nSize > 0) {
-        nSatoshisPerK = nFeePaid * 1000 / nSize;
+    if (virtual_bytes > 0) {
+        m_feerate = FeePerVSize(nFeePaid, virtual_bytes);
     } else {
-        nSatoshisPerK = 0;
+        m_feerate = FeePerVSize();
     }
 }
 
-CAmount CFeeRate::GetFee(uint32_t num_bytes) const
+CAmount CFeeRate::GetFee(int32_t virtual_bytes) const
 {
-    const int64_t nSize{num_bytes};
-
-    // Be explicit that we're converting from a double to int64_t (CAmount) here.
-    // We've previously had issues with the silent double->int64_t conversion.
-    CAmount nFee{static_cast<CAmount>(std::ceil(nSatoshisPerK * nSize / 1000.0))};
-
-    if (nFee == 0 && nSize != 0) {
-        if (nSatoshisPerK > 0) nFee = CAmount(1);
-        if (nSatoshisPerK < 0) nFee = CAmount(-1);
-    }
-
+    Assume(virtual_bytes >= 0);
+    if (m_feerate.IsEmpty()) { return CAmount(0);}
+    CAmount nFee = CAmount(m_feerate.EvaluateFeeUp(virtual_bytes));
+    if (nFee == 0 && virtual_bytes != 0 && m_feerate.fee < 0) return CAmount(-1);
     return nFee;
 }
 
 std::string CFeeRate::ToString(const FeeEstimateMode& fee_estimate_mode) const
 {
+    const CAmount feerate_per_kvb = GetFeePerK();
     switch (fee_estimate_mode) {
-    case FeeEstimateMode::SAT_VB: return strprintf("%d.%03d %s/vB", nSatoshisPerK / 1000, nSatoshisPerK % 1000, CURRENCY_ATOM);
-    default:                      return strprintf("%d.%08d %s/kvB", nSatoshisPerK / COIN, nSatoshisPerK % COIN, CURRENCY_UNIT);
+    case FeeEstimateMode::SAT_VB: return strprintf("%d.%03d %s/vB", feerate_per_kvb / 1000, feerate_per_kvb % 1000, CURRENCY_ATOM);
+    default:                      return strprintf("%d.%08d %s/kvB", feerate_per_kvb / COIN, feerate_per_kvb % COIN, CURRENCY_UNIT);
     }
 }

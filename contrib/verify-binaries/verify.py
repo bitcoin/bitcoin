@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2021 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Script for verifying Bitcoin Core release binaries.
@@ -246,8 +246,8 @@ def files_are_equal(filename1, filename2):
     eq = contents1 == contents2
 
     if not eq:
-        with open(filename1, 'r', encoding='utf-8') as f1, \
-                open(filename2, 'r', encoding='utf-8') as f2:
+        with open(filename1, 'r') as f1, \
+                open(filename2, 'r') as f2:
             f1lines = f1.readlines()
             f2lines = f2.readlines()
 
@@ -426,7 +426,7 @@ def verify_shasums_signature(
 def parse_sums_file(sums_file_path: str, filename_filter: list[str]) -> list[list[str]]:
     # extract hashes/filenames of binaries to verify from hash file;
     # each line has the following format: "<hash> <binary_filename>"
-    with open(sums_file_path, 'r', encoding='utf8') as hash_file:
+    with open(sums_file_path, 'r') as hash_file:
         return [line.split()[:2] for line in hash_file if len(filename_filter) == 0 or any(f in line for f in filename_filter)]
 
 

@@ -625,7 +625,7 @@ class P2PInterface(P2PConnection):
 
     def wait_for_block(self, blockhash, *, timeout=60):
         def test_function():
-            return self.last_message.get("block") and self.last_message["block"].block.rehash() == blockhash
+            return self.last_message.get("block") and self.last_message["block"].block.hash_int == blockhash
 
         self.wait_until(test_function, timeout=timeout)
 
@@ -634,7 +634,7 @@ class P2PInterface(P2PConnection):
             last_headers = self.last_message.get('headers')
             if not last_headers:
                 return False
-            return last_headers.headers[0].rehash() == int(blockhash, 16)
+            return last_headers.headers[0].hash_int == int(blockhash, 16)
 
         self.wait_until(test_function, timeout=timeout)
 
@@ -643,7 +643,7 @@ class P2PInterface(P2PConnection):
             last_filtered_block = self.last_message.get('merkleblock')
             if not last_filtered_block:
                 return False
-            return last_filtered_block.merkleblock.header.rehash() == int(blockhash, 16)
+            return last_filtered_block.merkleblock.header.hash_int == int(blockhash, 16)
 
         self.wait_until(test_function, timeout=timeout)
 
@@ -837,14 +837,14 @@ class P2PDataStore(P2PInterface):
             return
 
         headers_list = [self.block_store[self.last_block_hash]]
-        while headers_list[-1].sha256 not in locator.vHave:
+        while headers_list[-1].hash_int not in locator.vHave:
             # Walk back through the block store, adding headers to headers_list
             # as we go.
             prev_block_hash = headers_list[-1].hashPrevBlock
             if prev_block_hash in self.block_store:
                 prev_block_header = CBlockHeader(self.block_store[prev_block_hash])
                 headers_list.append(prev_block_header)
-                if prev_block_header.sha256 == hash_stop:
+                if prev_block_header.hash_int == hash_stop:
                     # if this is the hashstop header, stop here
                     break
             else:
@@ -866,14 +866,14 @@ class P2PDataStore(P2PInterface):
          - the on_getheaders handler will ensure that any getheaders are responded to
          - if force_send is False: wait for getdata for each of the blocks. The on_getdata handler will
            ensure that any getdata messages are responded to. Otherwise send the full block unsolicited.
-         - if success is True: assert that the node's tip advances to the most recent block
-         - if success is False: assert that the node's tip doesn't advance
+         - if success is True: assert that the node's tip is the last block in blocks at the end of the operation.
+         - if success is False: assert that the node's tip isn't the last block in blocks at the end of the operation
          - if reject_reason is set: assert that the correct reject message is logged"""
 
         with p2p_lock:
             for block in blocks:
-                self.block_store[block.sha256] = block
-                self.last_block_hash = block.sha256
+                self.block_store[block.hash_int] = block
+                self.last_block_hash = block.hash_int
 
         reject_reason = [reject_reason] if reject_reason else []
         with node.assert_debug_log(expected_msgs=reject_reason):
@@ -885,7 +885,7 @@ class P2PDataStore(P2PInterface):
             else:
                 self.send_without_ping(msg_headers([CBlockHeader(block) for block in blocks]))
                 self.wait_until(
-                    lambda: blocks[-1].sha256 in self.getdata_requests,
+                    lambda: blocks[-1].hash_int in self.getdata_requests,
                     timeout=timeout,
                     check_connected=success,
                 )
@@ -896,17 +896,16 @@ class P2PDataStore(P2PInterface):
                 self.sync_with_ping(timeout=timeout)
 
             if success:
-                self.wait_until(lambda: node.getbestblockhash() == blocks[-1].hash, timeout=timeout)
+                self.wait_until(lambda: node.getbestblockhash() == blocks[-1].hash_hex, timeout=timeout)
             else:
-                assert_not_equal(node.getbestblockhash(), blocks[-1].hash)
+                assert_not_equal(node.getbestblockhash(), blocks[-1].hash_hex)
 
-    def send_txs_and_test(self, txs, node, *, success=True, expect_disconnect=False, reject_reason=None):
+    def send_txs_and_test(self, txs, node, *, success=True, reject_reason=None):
         """Send txs to test node and test whether they're accepted to the mempool.
 
          - add all txs to our tx_store
          - send tx messages for all txs
          - if success is True/False: assert that the txs are/are not accepted to the mempool
-         - if expect_disconnect is True: Skip the sync with ping
          - if reject_reason is set: assert that the correct reject message is logged."""
 
         with p2p_lock:
@@ -918,10 +917,7 @@ class P2PDataStore(P2PInterface):
             for tx in txs:
                 self.send_without_ping(msg_tx(tx))
 
-            if expect_disconnect:
-                self.wait_for_disconnect()
-            else:
-                self.sync_with_ping()
+            self.sync_with_ping()
 
             raw_mempool = node.getrawmempool()
             if success:

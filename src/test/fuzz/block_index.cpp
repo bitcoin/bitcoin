@@ -12,6 +12,8 @@
 #include <txdb.h>
 #include <validation.h>
 
+using kernel::CBlockFileInfo;
+
 namespace {
 
 const BasicTestingSetup* g_setup;
@@ -89,7 +91,7 @@ FUZZ_TARGET(block_index, .init = init_block_index)
     }
 
     // Store these files and blocks in the block index. It should not fail.
-    assert(block_index.WriteBatchSync(files_info, files_count - 1, blocks_info));
+    block_index.WriteBatchSync(files_info, files_count - 1, blocks_info);
 
     // We should be able to read every block file info we stored. Its value should correspond to
     // what we stored above.

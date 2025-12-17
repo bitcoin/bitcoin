@@ -58,10 +58,12 @@ add_library(bitcoinkernel
   ../support/lockedpool.cpp
   ../sync.cpp
   ../txdb.cpp
+  ../txgraph.cpp
   ../txmempool.cpp
   ../uint256.cpp
   ../util/chaintype.cpp
   ../util/check.cpp
+  ../util/expected.cpp
   ../util/feefrac.cpp
   ../util/fs.cpp
   ../util/fs_helpers.cpp
@@ -79,60 +81,30 @@ add_library(bitcoinkernel
   ../validation.cpp
   ../validationinterface.cpp
   ../versionbits.cpp
+  $<TARGET_OBJECTS:bitcoin_clientversion>
+  $<TARGET_OBJECTS:bitcoin_crypto>
+  $<TARGET_OBJECTS:leveldb>
+  $<TARGET_OBJECTS:crc32c>
 )
 target_link_libraries(bitcoinkernel
   PRIVATE
     core_interface
-    bitcoin_clientversion
-    bitcoin_crypto
-    leveldb
-    secp256k1
+    secp256k1_objs
     $<$<PLATFORM_ID:Windows>:bcrypt>
     $<TARGET_NAME_IF_EXISTS:USDT::headers>
   PUBLIC
     Boost::headers
 )
 
-# libbitcoinkernel requires default symbol visibility, explicitly
-# specify that here so that things still work even when user
-# configures with -DREDUCE_EXPORTS=ON
-#
-# Note this is a quick hack that will be removed as we
-# incrementally define what to export from the library.
-set_target_properties(bitcoinkernel PROPERTIES
-  CXX_VISIBILITY_PRESET default
-)
+target_include_directories(bitcoinkernel PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/leveldb/include>)
 
 # Add a convenience libbitcoinkernel target as a synonym for bitcoinkernel.
 add_custom_target(libbitcoinkernel)
 add_dependencies(libbitcoinkernel bitcoinkernel)
 
-# When building the static library, install all static libraries the
-# bitcoinkernel depends on.
-if(NOT BUILD_SHARED_LIBS)
-  # Recursively get all the static libraries a target depends on and put them in libs_out
-  function(get_target_static_link_libs target libs_out)
-    get_target_property(linked_libraries ${target} LINK_LIBRARIES)
-    foreach(dep ${linked_libraries})
-      if(TARGET ${dep})
-        add_dependencies(libbitcoinkernel ${dep})
-        get_target_property(dep_type ${dep} TYPE)
-        if(dep_type STREQUAL "STATIC_LIBRARY")
-          list(APPEND ${libs_out} ${dep})
-          get_target_static_link_libs(${dep} ${libs_out})
-        endif()
-      endif()
-    endforeach()
-    set(${libs_out} ${${libs_out}} PARENT_SCOPE)
-  endfunction()
-
-  set(all_kernel_static_link_libs "")
-  get_target_static_link_libs(bitcoinkernel all_kernel_static_link_libs)
-
-  install(TARGETS ${all_kernel_static_link_libs} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libbitcoinkernel)
-  list(TRANSFORM all_kernel_static_link_libs PREPEND "-l")
-  # LIBS_PRIVATE is substituted in the pkg-config file.
-  list(JOIN all_kernel_static_link_libs " " LIBS_PRIVATE)
+get_target_property(bitcoinkernel_type bitcoinkernel TYPE)
+if(bitcoinkernel_type STREQUAL "STATIC_LIBRARY")
+  target_compile_definitions(bitcoinkernel PUBLIC BITCOINKERNEL_STATIC)
 endif()
 
 configure_file(${PROJECT_SOURCE_DIR}/libbitcoinkernel.pc.in ${PROJECT_BINARY_DIR}/libbitcoinkernel.pc @ONLY)
@@ -149,3 +121,5 @@ install(TARGETS bitcoinkernel
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
     COMPONENT libbitcoinkernel
 )
+
+install(FILES bitcoinkernel.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT libbitcoinkernel)

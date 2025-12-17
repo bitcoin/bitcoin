@@ -15,6 +15,7 @@ from test_framework.util import (
     assert_equal,
     assert_fee_amount,
     assert_greater_than,
+    assert_greater_than_or_equal,
     assert_raises_rpc_error,
     count_bytes,
 )
@@ -144,7 +145,14 @@ class WalletSendTest(BitcoinTestFramework):
             return
 
         if locktime:
+            assert_equal(from_wallet.gettransaction(txid=res["txid"], verbose=True)["decoded"]["locktime"], locktime)
             return res
+        else:
+            if add_to_wallet:
+                decoded_tx = from_wallet.gettransaction(txid=res["txid"], verbose=True)["decoded"]
+                # the locktime should be within 100 blocks of the
+                # block height
+                assert_greater_than_or_equal(decoded_tx["locktime"], from_wallet.getblockcount() - 100)
 
         if expect_sign:
             assert_equal(res["complete"], True)
@@ -304,7 +312,7 @@ class WalletSendTest(BitcoinTestFramework):
 
         for target, mode in product([-1, 0, 1009], ["economical", "conservative"]):
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=target, estimate_mode=mode,
-                expect_error=(-8, "Invalid conf_target, must be between 1 and 1008"))  # max value of 1008 per src/policy/fees.h
+                expect_error=(-8, "Invalid conf_target, must be between 1 and 1008"))  # max value of 1008 per src/policy/fees/block_policy_estimator.h
         msg = 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"'
         for target, mode in product([-1, 0], ["btc/kb", "sat/b"]):
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=target, estimate_mode=mode, expect_error=(-8, msg))

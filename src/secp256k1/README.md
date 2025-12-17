@@ -108,8 +108,8 @@ Building with Autotools
 
 To compile optional modules (such as Schnorr signatures), you need to run `./configure` with additional flags (such as `--enable-module-schnorrsig`). Run `./configure --help` to see the full list of available flags.
 
-Building with CMake (experimental)
-----------------------------------
+Building with CMake
+-------------------
 
 To maintain a pristine source tree, CMake encourages to perform an out-of-source build by using a separate dedicated build tree.
 
@@ -135,13 +135,11 @@ To cross compile for Android with [NDK](https://developer.android.com/ndk/guides
 
 ### Building on Windows
 
-To build on Windows with Visual Studio, a proper [generator](https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html#visual-studio-generators) must be specified for a new build tree.
-
-The following example assumes using of Visual Studio 2022 and CMake v3.21+.
+The following example assumes Visual Studio 2022. Using clang-cl is recommended.
 
 In "Developer Command Prompt for VS 2022":
 
-    >cmake -G "Visual Studio 17 2022" -A x64 -B build
+    >cmake -B build -T ClangCL
     >cmake --build build --config RelWithDebInfo
 
 Usage examples
@@ -151,8 +149,9 @@ Usage examples can be found in the [examples](examples) directory. To compile th
   * [Schnorr signatures example](examples/schnorr.c)
   * [Deriving a shared secret (ECDH) example](examples/ecdh.c)
   * [ElligatorSwift key exchange example](examples/ellswift.c)
+  * [MuSig2 Schnorr multi-signatures example](examples/musig.c)
 
-To compile the Schnorr signature and ECDH examples, you also need to configure with `--enable-module-schnorrsig` and `--enable-module-ecdh`.
+To compile the examples, make sure the corresponding modules are enabled.
 
 Benchmark
 ------------

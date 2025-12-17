@@ -5,8 +5,8 @@ ifneq ($(shell $(SHELL) $(.SHELLFLAGS) "command -v $(host)-g++-posix"),)
 mingw32_CXX := $(host)-g++-posix
 endif
 
-mingw32_CFLAGS=-pipe -std=$(C_STANDARD)
-mingw32_CXXFLAGS=-pipe -std=$(CXX_STANDARD)
+mingw32_CFLAGS=
+mingw32_CXXFLAGS=
 
 ifneq ($(LTO),)
 mingw32_AR = $(host_toolchain)gcc-ar

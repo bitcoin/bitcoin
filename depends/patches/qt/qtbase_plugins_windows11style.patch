@@ -1,0 +1,113 @@
+QWindows11Style: Calculate Spinbox size based on CommonStyle size
+Use the calculation from Commonstyle and add the increased padding and
+horizontally layouted buttons to the horizontal size hint.
+
+Fixes: QTBUG-130288
+Change-Id: I7932b782e7873a0178091a51379f17453eb585fd
+
+Upstream commits:
+ - Qt 6.8.1:  9107817eaceaacc968dbc767c24594566d637b8c 
+ - Qt 6.9.0:  96d46cad43517adefa2eb7cb8819a0b2cc9241e6
+
+--- a/qtbase/src/plugins/styles/modernwindows/qwindows11style.cpp
++++ b/qtbase/src/plugins/styles/modernwindows/qwindows11style.cpp
+@@ -2048,39 +2048,22 @@ QSize QWindows11Style::sizeFromContents(ContentsType type, const QStyleOption *o
+         }
+         break;
+ #endif
++#if QT_CONFIG(spinbox)
+     case QStyle::CT_SpinBox: {
+         if (const auto *spinBoxOpt = qstyleoption_cast<const QStyleOptionSpinBox *>(option)) {
+             // Add button + frame widths
+-            int width = 0;
+-
+-            if (const QDateTimeEdit *spinBox = qobject_cast<const QDateTimeEdit *>(widget)) {
+-                const QSize textSizeMin = spinBoxOpt->fontMetrics.size(Qt::TextSingleLine, spinBox->minimumDateTime().toString(spinBox->displayFormat()));
+-                const QSize textSizeMax = spinBoxOpt->fontMetrics.size(Qt::TextSingleLine, spinBox->maximumDateTime().toString(spinBox->displayFormat()));
+-                width = qMax(textSizeMin.width(),textSizeMax.width());
+-            } else if (const QSpinBox *spinBox = qobject_cast<const QSpinBox *>(widget)) {
+-                const QSize textSizeMin = spinBoxOpt->fontMetrics.size(Qt::TextSingleLine, QString::number(spinBox->minimum()));
+-                const QSize textSizeMax = spinBoxOpt->fontMetrics.size(Qt::TextSingleLine, QString::number(spinBox->maximum()));
+-                width = qMax(textSizeMin.width(),textSizeMax.width());
+-                width += spinBoxOpt->fontMetrics.size(Qt::TextSingleLine, spinBox->prefix()).width();
+-                width += spinBoxOpt->fontMetrics.size(Qt::TextSingleLine, spinBox->suffix()).width();
+-
+-            } else if (const QDoubleSpinBox *spinBox = qobject_cast<const QDoubleSpinBox *>(widget)) {
+-                const QSize textSizeMin = spinBoxOpt->fontMetrics.size(Qt::TextSingleLine, QString::number(spinBox->minimum()));
+-                const QSize textSizeMax = spinBoxOpt->fontMetrics.size(Qt::TextSingleLine, QString::number(spinBox->maximum()));
+-                width = qMax(textSizeMin.width(),textSizeMax.width());
+-                width += spinBoxOpt->fontMetrics.size(Qt::TextSingleLine, spinBox->prefix()).width();
+-                width += spinBoxOpt->fontMetrics.size(Qt::TextSingleLine, spinBox->suffix()).width();
+-            }
+             const qreal dpi = QStyleHelper::dpi(option);
+             const bool hasButtons = (spinBoxOpt->buttonSymbols != QAbstractSpinBox::NoButtons);
+-            const int buttonWidth = hasButtons ? 2 * qRound(QStyleHelper::dpiScaled(16, dpi)) : 0;
++            const int margins = 8;
++            const int buttonWidth = hasButtons ? qRound(QStyleHelper::dpiScaled(16, dpi)) : 0;
+             const int frameWidth = spinBoxOpt->frame ? proxy()->pixelMetric(PM_SpinBoxFrameWidth,
+                                                                             spinBoxOpt, widget) : 0;
+-            contentSize.setWidth(2 * 12 + width);
+-            contentSize += QSize(buttonWidth + 2 * frameWidth, 2 * frameWidth);
++
++            contentSize += QSize(2 * buttonWidth + 2 * frameWidth + 2 * margins, 2 * frameWidth);
+         }
+         break;
+     }
++#endif
+     default:
+         contentSize = QWindowsVistaStyle::sizeFromContents(type, option, size, widget);
+         break;
+
+
+Windows11Style: don't set minimum width for QAbstractSpinBox
+
+There is no need to set a minimum width for QAbstractSpinBox in
+QWindows11Style::polish() as this might override the user preferences.
+Also the minimum size handling is now properly done within
+sizeFromContents().
+
+Change-Id: Ibc1fd7a6f862fc85e3739025b9de581aa235d74c
+
+Upstream commits:
+ - Qt 6.8.3:  f86da3d3f853adb1a5b823c1cc7be6db4a0265f3 
+ - Qt 6.9.0:  b93a8dfdfe6900cb542fdc587dd2682007a6ac53
+ - Qt 6.10.0: 2ec4c28470de115c16944653a5d4f6209452d56c
+
+--- a/qtbase/src/plugins/styles/modernwindows/qwindows11style.cpp
++++ b/qtbase/src/plugins/styles/modernwindows/qwindows11style.cpp
+@@ -29,7 +29,6 @@ QT_BEGIN_NAMESPACE
+ 
+ const static int topLevelRoundingRadius    = 8; //Radius for toplevel items like popups for round corners
+ const static int secondLevelRoundingRadius = 4; //Radius for second level items like hovered menu item round corners
+-constexpr QLatin1StringView originalWidthProperty("_q_windows11_style_original_width");
+ 
+ enum WINUI3Color {
+     subtleHighlightColor,             //Subtle highlight based on alpha used for hovered elements
+@@ -2140,13 +2139,6 @@ void QWindows11Style::polish(QWidget* widget)
+         pal.setColor(QPalette::ButtonText, pal.text().color());
+         pal.setColor(QPalette::BrightText, pal.text().color());
+         widget->setPalette(pal);
+-    } else if (widget->inherits("QAbstractSpinBox")) {
+-        const int minWidth = 2 * 24 + 40;
+-        const int originalWidth = widget->size().width();
+-        if (originalWidth < minWidth) {
+-            widget->resize(minWidth, widget->size().height());
+-            widget->setProperty(originalWidthProperty.constData(), originalWidth);
+-        }
+     } else if (widget->inherits("QAbstractButton") || widget->inherits("QToolButton")) {
+         widget->setAutoFillBackground(false);
+         auto pal = widget->palette();
+@@ -2191,13 +2183,6 @@ void QWindows11Style::unpolish(QWidget *widget)
+         scrollarea->viewport()->setPalette(pal);
+         scrollarea->viewport()->setProperty("_q_original_background_palette", QVariant());
+     }
+-    if (widget->inherits("QAbstractSpinBox")) {
+-        const QVariant originalWidth = widget->property(originalWidthProperty.constData());
+-        if (originalWidth.isValid()) {
+-            widget->resize(originalWidth.toInt(), widget->size().height());
+-            widget->setProperty(originalWidthProperty.constData(), QVariant());
+-        }
+-    }
+ }
+ 
+ /*

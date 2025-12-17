@@ -17,11 +17,14 @@
 
 #include <unordered_map>
 
-CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs(const CBlock& block, const uint64_t nonce) :
-        nonce(nonce),
-        shorttxids(block.vtx.size() - 1), prefilledtxn(1), header(block) {
+CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs(const CBlock& block, uint64_t nonce)
+    : nonce(nonce),
+      shorttxids(block.vtx.size() - 1),
+      prefilledtxn(1),
+      header(block)
+{
     FillShortTxIDSelector();
-    //TODO: Use our mempool prior to block acceptance to predictively fill more than just the coinbase
+    // TODO: Use our mempool prior to block acceptance to predictively fill more than just the coinbase
     prefilledtxn[0] = {0, block.vtx[0]};
     for (size_t i = 1; i < block.vtx.size(); i++) {
         const CTransaction& tx = *block.vtx[i];
@@ -29,23 +32,32 @@ CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs(const CBlock& block, const 
     }
 }
 
-void CBlockHeaderAndShortTxIDs::FillShortTxIDSelector() const {
+void CBlockHeaderAndShortTxIDs::FillShortTxIDSelector() const
+{
     DataStream stream{};
     stream << header << nonce;
     CSHA256 hasher;
     hasher.Write((unsigned char*)&(*stream.begin()), stream.end() - stream.begin());
     uint256 shorttxidhash;
     hasher.Finalize(shorttxidhash.begin());
-    shorttxidk0 = shorttxidhash.GetUint64(0);
-    shorttxidk1 = shorttxidhash.GetUint64(1);
+    m_hasher.emplace(shorttxidhash.GetUint64(0), shorttxidhash.GetUint64(1));
 }
 
-uint64_t CBlockHeaderAndShortTxIDs::GetShortID(const Wtxid& wtxid) const {
+uint64_t CBlockHeaderAndShortTxIDs::GetShortID(const Wtxid& wtxid) const
+{
     static_assert(SHORTTXIDS_LENGTH == 6, "shorttxids calculation assumes 6-byte shorttxids");
-    return SipHashUint256(shorttxidk0, shorttxidk1, wtxid) & 0xffffffffffffL;
+    return (*Assert(m_hasher))(wtxid.ToUint256()) & 0xffffffffffffL;
 }
 
-ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<CTransactionRef>& extra_txn) {
+/* Reconstructing a compact block is in the hot-path for block relay,
+ * so we want to do it as quickly as possible. Because this often
+ * involves iterating over the entire mempool, we put all the data we
+ * need (ie the wtxid and a reference to the actual transaction data)
+ * in a vector and iterate over the vector directly. This allows optimal
+ * CPU caching behaviour, at a cost of only 40 bytes per transaction.
+ */
+ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<Wtxid, CTransactionRef>>& extra_txn)
+{
     LogDebug(BCLog::CMPCTBLOCK, "Initializing PartiallyDownloadedBlock for block %s using a cmpctblock of %u bytes\n", cmpctblock.header.GetHash().ToString(), GetSerializeSize(cmpctblock));
     if (cmpctblock.header.IsNull() || (cmpctblock.shorttxids.empty() && cmpctblock.prefilledtxn.empty()))
         return READ_STATUS_INVALID;
@@ -106,12 +118,12 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
     std::vector<bool> have_txn(txn_available.size());
     {
     LOCK(pool->cs);
-    for (const auto& tx : pool->txns_randomized) {
-        uint64_t shortid = cmpctblock.GetShortID(tx->GetWitnessHash());
+    for (const auto& [wtxid, txit] : pool->txns_randomized) {
+        uint64_t shortid = cmpctblock.GetShortID(wtxid);
         std::unordered_map<uint64_t, uint16_t>::iterator idit = shorttxids.find(shortid);
         if (idit != shorttxids.end()) {
             if (!have_txn[idit->second]) {
-                txn_available[idit->second] = tx;
+                txn_available[idit->second] = txit->GetSharedTx();
                 have_txn[idit->second]  = true;
                 mempool_count++;
             } else {
@@ -133,14 +145,11 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
     }
 
     for (size_t i = 0; i < extra_txn.size(); i++) {
-        if (extra_txn[i] == nullptr) {
-            continue;
-        }
-        uint64_t shortid = cmpctblock.GetShortID(extra_txn[i]->GetWitnessHash());
+        uint64_t shortid = cmpctblock.GetShortID(extra_txn[i].first);
         std::unordered_map<uint64_t, uint16_t>::iterator idit = shorttxids.find(shortid);
         if (idit != shorttxids.end()) {
             if (!have_txn[idit->second]) {
-                txn_available[idit->second] = extra_txn[i];
+                txn_available[idit->second] = extra_txn[i].second;
                 have_txn[idit->second]  = true;
                 mempool_count++;
                 extra_count++;
@@ -152,7 +161,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
                 // Note that we don't want duplication between extra_txn and mempool to
                 // trigger this case, so we compare witness hashes first
                 if (txn_available[idit->second] &&
-                        txn_available[idit->second]->GetWitnessHash() != extra_txn[i]->GetWitnessHash()) {
+                        txn_available[idit->second]->GetWitnessHash() != extra_txn[i].second->GetWitnessHash()) {
                     txn_available[idit->second].reset();
                     mempool_count--;
                     extra_count--;

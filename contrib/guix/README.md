@@ -37,7 +37,7 @@ You can then either point to the SDK using the `SDK_PATH` environment variable:
 
 ```sh
 # Extract the SDK tarball to /path/to/parent/dir/of/extracted/SDK/Xcode-<foo>-<bar>-extracted-SDK-with-libcxx-headers
-tar -C /path/to/parent/dir/of/extracted/SDK -xaf /path/to/Xcode-<foo>-<bar>-extracted-SDK-with-libcxx-headers.tar.gz
+tar -C /path/to/parent/dir/of/extracted/SDK -xaf /path/to/Xcode-<foo>-<bar>-extracted-SDK-with-libcxx-headers.tar
 
 # Indicate where to locate the SDK tarball
 export SDK_PATH=/path/to/parent/dir/of/extracted/SDK

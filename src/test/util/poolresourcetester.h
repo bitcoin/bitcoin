@@ -6,6 +6,7 @@
 #define BITCOIN_TEST_UTIL_POOLRESOURCETESTER_H
 
 #include <support/allocators/pool.h>
+#include <util/check.h>
 
 #include <algorithm>
 #include <cassert>
@@ -48,7 +49,10 @@ public:
             size_t size = 0;
             while (ptr != nullptr) {
                 ++size;
+                const auto* ptr_ = ptr;
+                ASAN_UNPOISON_MEMORY_REGION(ptr_, sizeof(typename PoolResource<MAX_BLOCK_SIZE_BYTES, ALIGN_BYTES>::ListNode));
                 ptr = ptr->m_next;
+                ASAN_POISON_MEMORY_REGION(ptr_, sizeof(typename PoolResource<MAX_BLOCK_SIZE_BYTES, ALIGN_BYTES>::ListNode));
             }
             sizes.push_back(size);
         }
@@ -81,7 +85,10 @@ public:
             auto* ptr = resource.m_free_lists[freelist_idx];
             while (ptr != nullptr) {
                 free_blocks.emplace_back(ptr, bytes);
+                const auto* ptr_ = ptr;
+                ASAN_UNPOISON_MEMORY_REGION(ptr_, sizeof(typename PoolResource<MAX_BLOCK_SIZE_BYTES, ALIGN_BYTES>::ListNode));
                 ptr = ptr->m_next;
+                ASAN_POISON_MEMORY_REGION(ptr_, sizeof(typename PoolResource<MAX_BLOCK_SIZE_BYTES, ALIGN_BYTES>::ListNode));
             }
         }
         // also add whatever has not yet been used for blocks

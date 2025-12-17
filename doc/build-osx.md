@@ -48,8 +48,21 @@ See [dependencies.md](dependencies.md) for a complete overview.
 To install, run the following from your terminal:
 
 ``` bash
-brew install cmake boost pkgconf libevent
+brew install cmake boost pkgconf libevent capnp
 ```
+
+#### Wallet Dependencies
+
+If you do not need wallet functionality, you can use `-DENABLE_WALLET=OFF` in
+the `cmake -B` step below.
+
+SQLite is required, but since macOS ships with a useable `sqlite` package, you don't need to
+install anything.
+
+#### IPC Dependencies
+
+If you do not need IPC functionality (see [multiprocess.md](multiprocess.md))
+you can omit `capnp` and use `-DENABLE_IPC=OFF` in the `cmake -B` step below.
 
 ### 4. Clone Bitcoin repository
 
@@ -62,19 +75,6 @@ git clone https://github.com/bitcoin/bitcoin.git
 ```
 
 ### 5. Install Optional Dependencies
-
-#### Wallet Dependencies
-
-It is not necessary to build wallet functionality to run `bitcoind` or  `bitcoin-qt`.
-
-###### Descriptor Wallet Support
-
-`sqlite` is required to support for descriptor wallets.
-
-macOS ships with a useable `sqlite` package, meaning you don't need to
-install anything.
-
----
 
 #### GUI Dependencies
 
@@ -114,19 +114,6 @@ brew install zeromq
 Check out the [further configuration](#further-configuration) section for more information.
 
 For more information on ZMQ, see: [zmq.md](zmq.md)
-
----
-
-### IPC Dependencies
-
-Compiling IPC-enabled binaries with `-DENABLE_IPC=ON` requires the following dependency.
-Skip if you do not need IPC functionality.
-
-```bash
-brew install capnp
-```
-
-For more information on IPC, see: [multiprocess.md](multiprocess.md).
 
 ---
 
@@ -183,7 +170,7 @@ Run the following in your terminal to compile Bitcoin Core:
 
 ``` bash
 cmake --build build     # Append "-j N" here for N parallel jobs.
-ctest --test-dir build  # Append "-j N" for N parallel tests. Some tests are disabled if Python 3 is not available.
+ctest --test-dir build  # Append "-j N" for N parallel tests.
 ```
 
 ### 3. Deploy (optional)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test signet miner tool"""
@@ -102,8 +102,8 @@ class SignetMinerTest(BitcoinTestFramework):
                 'genpsbt',
                 f'--address={node.getnewaddress()}',
                 '--poolnum=98',
-            ], check=True, input=json.dumps(template).encode('utf8'), capture_output=True)
-        psbt = genpsbt.stdout.decode('utf8').strip()
+            ], check=True, text=True, input=json.dumps(template), capture_output=True)
+        psbt = genpsbt.stdout.strip()
         if sign:
             self.log.debug("Sign the PSBT")
             res = node.walletprocesspsbt(psbt=psbt, sign=True, sighashtype='ALL')
@@ -112,8 +112,8 @@ class SignetMinerTest(BitcoinTestFramework):
         solvepsbt = subprocess.run(base_cmd + [
                 'solvepsbt',
                 f'--grind-cmd={shlex.join(util_argv)}',
-            ], check=True, input=psbt.encode('utf8'), capture_output=True)
-        node.submitblock(solvepsbt.stdout.decode('utf8').strip())
+            ], check=True, text=True, input=psbt, capture_output=True)
+        node.submitblock(solvepsbt.stdout.strip())
         assert_equal(node.getblockcount(), n_blocks + 1)
 
     def run_test(self):

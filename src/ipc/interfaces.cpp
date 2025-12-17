@@ -13,6 +13,7 @@
 #include <tinyformat.h>
 #include <util/fs.h>
 
+#include <csignal>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -26,6 +27,28 @@
 
 namespace ipc {
 namespace {
+#ifndef WIN32
+std::string g_ignore_ctrl_c;
+
+void HandleCtrlC(int)
+{
+    // (void)! needed to suppress -Wunused-result warning from GCC
+    (void)!write(STDOUT_FILENO, g_ignore_ctrl_c.data(), g_ignore_ctrl_c.size());
+}
+#endif
+
+void IgnoreCtrlC(std::string message)
+{
+#ifndef WIN32
+    g_ignore_ctrl_c = std::move(message);
+    struct sigaction sa{};
+    sa.sa_handler = HandleCtrlC;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART;
+    sigaction(SIGINT, &sa, nullptr);
+#endif
+}
+
 class IpcImpl : public interfaces::Ipc
 {
 public:
@@ -53,6 +76,7 @@ public:
         if (!m_process->checkSpawned(argc, argv, fd)) {
             return false;
         }
+        IgnoreCtrlC(strprintf("[%s] SIGINT received — waiting for parent to shut down.\n", m_exe_name));
         m_protocol->serve(fd, m_exe_name, m_init);
         exit_status = EXIT_SUCCESS;
         return true;
@@ -85,6 +109,10 @@ public:
     {
         int fd = m_process->bind(gArgs.GetDataDirNet(), m_exe_name, address);
         m_protocol->listen(fd, m_exe_name, m_init);
+    }
+    void disconnectIncoming() override
+    {
+        m_protocol->disconnectIncoming();
     }
     void addCleanup(std::type_index type, void* iface, std::function<void()> cleanup) override
     {

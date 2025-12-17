@@ -11,9 +11,10 @@ The alternate mainnet chain was generated as follows:
 - restart node with a faketime 2 minutes later
 
 ```sh
-for i in {1..2015}
+for i in {1..2016}
 do
- faketime "`date -d @"$(( 1231006505 + $i * 120 ))"  +'%Y-%m-%d %H:%M:%S'`" \
+ t=$(( 1231006505 + $i * 120 ))
+ faketime "`date -d @$t  +'%Y-%m-%d %H:%M:%S'`" \
  bitcoind -connect=0 -nocheckpoints -stopatheight=$i
 done
 ```
@@ -21,7 +22,9 @@ done
 The CPU miner is kept running as follows:
 
 ```sh
-./minerd --coinbase-addr 1NQpH6Nf8QtR2HphLRcvuVqfhXBXsiWn8r --no-stratum --algo sha256d --no-longpoll --scantime 3 --retry-pause 1
+./minerd -u ... -p ... -o http://127.0.0.1:8332 --no-stratum \
+        --coinbase-addr 1NQpH6Nf8QtR2HphLRcvuVqfhXBXsiWn8r \
+        --algo sha256d --no-longpoll --scantime 3 --retry-pause 1
 ```
 
 The payout address is derived from first BIP32 test vector master key:
@@ -40,3 +43,8 @@ The timestamp was not kept constant because at difficulty 1 it's not sufficient
 to only grind the nonce. Grinding the extra_nonce or version field instead
 would have required additional (stratum) software. It would also make it more
 complicated to reconstruct the blocks in this test.
+
+The `getblocktemplate` RPC code needs to be patched to ignore not being connected
+to any peers, and to ignore the IBD status check.
+
+On macOS use `faketime "@$t"` instead.

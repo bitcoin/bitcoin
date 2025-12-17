@@ -17,8 +17,10 @@ BOOST_AUTO_TEST_CASE(reverselock_basics)
     WAIT_LOCK(mutex, lock);
 
     BOOST_CHECK(lock.owns_lock());
+    AssertLockHeld(mutex);
     {
         REVERSE_LOCK(lock, mutex);
+        AssertLockNotHeld(mutex);
         BOOST_CHECK(!lock.owns_lock());
     }
     BOOST_CHECK(lock.owns_lock());

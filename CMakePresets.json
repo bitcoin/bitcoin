@@ -14,7 +14,8 @@
       "toolchainFile": "$env{VCPKG_ROOT}\\scripts\\buildsystems\\vcpkg.cmake",
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "x64-windows",
-        "BUILD_GUI": "ON"
+        "BUILD_GUI": "ON",
+        "WITH_ZMQ": "ON"
       }
     },
     {
@@ -30,7 +31,8 @@
       "toolchainFile": "$env{VCPKG_ROOT}\\scripts\\buildsystems\\vcpkg.cmake",
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "x64-windows-static",
-        "BUILD_GUI": "ON"
+        "BUILD_GUI": "ON",
+        "WITH_ZMQ": "ON"
       }
     },
     {

@@ -22,6 +22,13 @@ from test_framework.p2p import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.wallet import MiniWallet
+from test_framework.blocktools import (
+    create_empty_fork,
+)
+
+# Number of blocks to create in temporary blockchain branch for reorg testing
+# needs to be long enough to allow MTP to move arbitrarily forward
+FORK_LENGTH = 20
 
 class MempoolCoinbaseTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -32,6 +39,12 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
             ],
             []
         ]
+
+    def trigger_reorg(self, fork_blocks, node):
+        """Trigger reorg of the fork blocks."""
+        for block in fork_blocks:
+            node.submitblock(block.serialize().hex())
+        assert_equal(self.nodes[0].getbestblockhash(), fork_blocks[-1].hash_hex)
 
     def test_reorg_relay(self):
         self.log.info("Test that transactions from disconnected blocks are available for relay immediately")
@@ -112,6 +125,10 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         self.wallet = MiniWallet(self.nodes[0])
         wallet = self.wallet
 
+        # Prevent clock from moving blocks further forward in time
+        now = int(time.time())
+        self.nodes[0].setmocktime(now)
+
         # Start with a 200 block chain
         assert_equal(self.nodes[0].getblockcount(), 200)
 
@@ -123,7 +140,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         # 1. Direct coinbase spend  :  spend_1
         # 2. Indirect (coinbase spend in chain, child in mempool) : spend_2 and spend_2_1
         # 3. Indirect (coinbase and child both in chain) : spend_3 and spend_3_1
-        # Use invalidateblock to make all of the above coinbase spends invalid (immature coinbase),
+        # Use re-org to make all of the above coinbase spends invalid (immature coinbase),
         # and make sure the mempool code behaves correctly.
         b = [self.nodes[0].getblockhash(n) for n in range(first_block, first_block+4)]
         coinbase_txids = [self.nodes[0].getblock(h)['tx'][0] for h in b]
@@ -135,18 +152,19 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         spend_2 = wallet.create_self_transfer(utxo_to_spend=utxo_2)
         spend_3 = wallet.create_self_transfer(utxo_to_spend=utxo_3)
 
-        self.log.info("Create another transaction which is time-locked to two blocks in the future")
+        self.log.info("Create another transaction which is time-locked to 300 seconds in the future")
+        future = now + 300
         utxo = wallet.get_utxo(txid=coinbase_txids[0])
         timelock_tx = wallet.create_self_transfer(
             utxo_to_spend=utxo,
-            locktime=self.nodes[0].getblockcount() + 2,
+            locktime=future,
         )['hex']
 
         self.log.info("Check that the time-locked transaction is too immature to spend")
         assert_raises_rpc_error(-26, "non-final", self.nodes[0].sendrawtransaction, timelock_tx)
 
         self.log.info("Broadcast and mine spend_2 and spend_3")
-        wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=spend_2['hex'])
+        spend_2_id = wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=spend_2['hex'])
         wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=spend_3['hex'])
         self.log.info("Generate a block")
         self.generate(self.nodes[0], 1)
@@ -154,16 +172,24 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         assert_raises_rpc_error(-26, 'non-final', self.nodes[0].sendrawtransaction, timelock_tx)
 
         self.log.info("Create spend_2_1 and spend_3_1")
-        spend_2_1 = wallet.create_self_transfer(utxo_to_spend=spend_2["new_utxo"])
+        spend_2_1 = wallet.create_self_transfer(utxo_to_spend=spend_2["new_utxo"], version=1)
         spend_3_1 = wallet.create_self_transfer(utxo_to_spend=spend_3["new_utxo"])
 
         self.log.info("Broadcast and mine spend_3_1")
         spend_3_1_id = self.nodes[0].sendrawtransaction(spend_3_1['hex'])
         self.log.info("Generate a block")
-        last_block = self.generate(self.nodes[0], 1)
+
+        # Prep for fork, only go FORK_LENGTH  seconds into the MTP future max
+        fork_blocks = create_empty_fork(self.nodes[0], fork_length=FORK_LENGTH)
+
+        # Jump node and MTP 300 seconds and generate a slightly weaker chain than reorg one
+        self.nodes[0].setmocktime(future)
+        self.generate(self.nodes[0], FORK_LENGTH - 1)
+        block_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time']
+        assert(block_time >= now + 300)
+
         # generate() implicitly syncs blocks, so that peer 1 gets the block before timelock_tx
         # Otherwise, peer 1 would put the timelock_tx in m_lazy_recent_rejects
-
         self.log.info("The time-locked transaction can now be spent")
         timelock_tx_id = self.nodes[0].sendrawtransaction(timelock_tx)
 
@@ -174,15 +200,40 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         assert_equal(set(self.nodes[0].getrawmempool()), {spend_1_id, spend_2_1_id, timelock_tx_id})
         self.sync_all()
 
-        self.log.info("invalidate the last block")
-        for node in self.nodes:
-            node.invalidateblock(last_block[0])
+        self.trigger_reorg(fork_blocks, self.nodes[0])
+        self.sync_blocks()
+
+        # We went backwards in time to boot timelock_tx_id
+        fork_block_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time']
+        assert fork_block_time < block_time
+
         self.log.info("The time-locked transaction is now too immature and has been removed from the mempool")
         self.log.info("spend_3_1 has been re-orged out of the chain and is back in the mempool")
         assert_equal(set(self.nodes[0].getrawmempool()), {spend_1_id, spend_2_1_id, spend_3_1_id})
 
+        self.log.info("Reorg out enough blocks to get spend_2 back in the mempool, along with its child")
+
+        while (spend_2_id not in self.nodes[0].getrawmempool()):
+            b = self.nodes[0].getbestblockhash()
+            for node in self.nodes:
+                node.invalidateblock(b)
+
+        assert(spend_2_id in self.nodes[0].getrawmempool())
+        assert(spend_2_1_id in self.nodes[0].getrawmempool())
+
+        # Chain 10 more transactions off of spend_2_1
+        self.log.info("Give spend_2 some more descendants by creating a chain of 10 transactions spending from it")
+        parent_utxo = spend_2_1["new_utxo"]
+        for i in range(10):
+            tx = wallet.create_self_transfer(utxo_to_spend=parent_utxo, version=1)
+            self.nodes[0].sendrawtransaction(tx['hex'])
+            parent_utxo = tx["new_utxo"]
+
         self.log.info("Use invalidateblock to re-org back and make all those coinbase spends immature/invalid")
         b = self.nodes[0].getblockhash(first_block + 100)
+
+        # Use invalidateblock to go backwards in MTP time.
+        # invalidateblock actually moves MTP backwards, making timelock_tx_id valid again.
         for node in self.nodes:
             node.invalidateblock(b)
 

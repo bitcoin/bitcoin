@@ -35,7 +35,7 @@ public:
     KernelNotifications(const std::function<bool()>& shutdown_request, std::atomic<int>& exit_status, node::Warnings& warnings)
         : m_shutdown_request(shutdown_request), m_exit_status{exit_status}, m_warnings{warnings} {}
 
-    [[nodiscard]] kernel::InterruptResult blockTip(SynchronizationState state, CBlockIndex& index, double verification_progress) override EXCLUSIVE_LOCKS_REQUIRED(!m_tip_block_mutex);
+    [[nodiscard]] kernel::InterruptResult blockTip(SynchronizationState state, const CBlockIndex& index, double verification_progress) override EXCLUSIVE_LOCKS_REQUIRED(!m_tip_block_mutex);
 
     void headerTip(SynchronizationState state, int64_t height, int64_t timestamp, bool presync) override;
 

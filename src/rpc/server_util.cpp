@@ -9,7 +9,7 @@
 #include <net_processing.h>
 #include <node/context.h>
 #include <node/miner.h>
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
 #include <pow.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>

@@ -118,8 +118,8 @@ FUZZ_TARGET(integer, .init = initialize_integer)
     }
     (void)MillisToTimeval(i64);
     (void)SighashToStr(uch);
-    (void)SipHashUint256(u64, u64, u256);
-    (void)SipHashUint256Extra(u64, u64, u256, u32);
+    (void)PresaltedSipHasher(u64, u64)(u256);
+    (void)PresaltedSipHasher(u64, u64)(u256, u32);
     (void)ToLower(ch);
     (void)ToUpper(ch);
     {
@@ -236,10 +236,6 @@ FUZZ_TARGET(integer, .init = initialize_integer)
         const uint16_t deserialized_u16 = ser_readdata16(stream);
         assert(u16 == deserialized_u16 && stream.empty());
 
-        ser_writedata16be(stream, u16);
-        const uint16_t deserialized_u16be = ser_readdata16be(stream);
-        assert(u16 == deserialized_u16be && stream.empty());
-
         ser_writedata8(stream, u8);
         const uint8_t deserialized_u8 = ser_readdata8(stream);
         assert(u8 == deserialized_u8 && stream.empty());
@@ -254,10 +250,5 @@ FUZZ_TARGET(integer, .init = initialize_integer)
             assert(u64 == deserialized_u64 && stream.empty());
         } catch (const std::ios_base::failure&) {
         }
-    }
-
-    try {
-        CHECK_NONFATAL(b);
-    } catch (const NonFatalCheckError&) {
     }
 }

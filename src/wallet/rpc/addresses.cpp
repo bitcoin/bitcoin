@@ -76,7 +76,7 @@ RPCHelpMan getrawchangeaddress()
         "Returns a new Bitcoin address, for receiving change.\n"
                 "This is for use with raw transactions, NOT normal use.\n",
                 {
-                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", \"bech32\", and \"bech32m\"."},
+                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The address type to use. Options are " + FormatAllOutputTypes() + "."},
                 },
                 RPCResult{
                     RPCResult::Type::STR, "address", "The address"
@@ -448,8 +448,8 @@ RPCHelpMan getaddressinfo()
 
     std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(scriptPubKey);
 
-    isminetype mine = pwallet->IsMine(dest);
-    ret.pushKV("ismine", bool(mine & ISMINE_SPENDABLE));
+    bool mine = pwallet->IsMine(dest);
+    ret.pushKV("ismine", mine);
 
     if (provider) {
         auto inferred = InferDescriptor(scriptPubKey, *provider);

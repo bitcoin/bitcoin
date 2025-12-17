@@ -44,10 +44,10 @@ class RPCPackagesTest(BitcoinTestFramework):
         be used to test packages where the order does not matter. The ordering of transactions in package_hex and
         testres_expected must match.
         """
-        shuffled_indeces = list(range(len(package_hex)))
-        random.shuffle(shuffled_indeces)
-        shuffled_package = [package_hex[i] for i in shuffled_indeces]
-        shuffled_testres = [testres_expected[i] for i in shuffled_indeces]
+        shuffled_indices = list(range(len(package_hex)))
+        random.shuffle(shuffled_indices)
+        shuffled_package = [package_hex[i] for i in shuffled_indices]
+        shuffled_testres = [testres_expected[i] for i in shuffled_indices]
         assert_equal(shuffled_testres, self.nodes[0].testmempoolaccept(shuffled_package))
 
     def run_test(self):
@@ -82,6 +82,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         self.independent_txns_testres_blank = [{
             "txid": res["txid"], "wtxid": res["wtxid"]} for res in self.independent_txns_testres]
 
+        self.test_submitpackage_with_ancestors()
         self.test_independent(coin)
         self.test_chain()
         self.test_multiple_children()
@@ -122,8 +123,8 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert_equal(testres_bad_sig, self.independent_txns_testres + [{
             "txid": tx_bad_sig_txid,
             "wtxid": tx_bad_sig_wtxid, "allowed": False,
-            "reject-reason": "mandatory-script-verify-flag-failed (Operation not valid with the current stack size)",
-            "reject-details": "mandatory-script-verify-flag-failed (Operation not valid with the current stack size), " +
+            "reject-reason": "mempool-script-verify-flag-failed (Operation not valid with the current stack size)",
+            "reject-details": "mempool-script-verify-flag-failed (Operation not valid with the current stack size), " +
                               f"input 0 of {tx_bad_sig_txid} (wtxid {tx_bad_sig_wtxid}), spending {coin['txid']}:{coin['vout']}"
         }])
 
@@ -262,18 +263,30 @@ class RPCPackagesTest(BitcoinTestFramework):
         ])
 
         submitres = node.submitpackage([tx1["hex"], tx2["hex"], tx_child["hex"]])
-        assert_equal(submitres, {'package_msg': 'conflict-in-package', 'tx-results': {}, 'replaced-transactions': []})
+        expected = {
+            tx1["wtxid"]: {"txid": tx1["txid"], "error": "package-not-validated"},
+            tx2["wtxid"]: {"txid": tx2["txid"], "error": "package-not-validated"},
+            tx_child["wtxid"]: {"txid": tx_child["txid"], "error": "package-not-validated"},
+        }
+        assert_equal(submitres, {"package_msg": "conflict-in-package", "tx-results": expected,"replaced-transactions": []})
 
         # Submit tx1 to mempool, then try the same package again
         node.sendrawtransaction(tx1["hex"])
 
         submitres = node.submitpackage([tx1["hex"], tx2["hex"], tx_child["hex"]])
-        assert_equal(submitres, {'package_msg': 'conflict-in-package', 'tx-results': {}, 'replaced-transactions': []})
+        expected = {
+            tx1["wtxid"]: {"txid": tx1["txid"], "error": "package-not-validated"},
+            tx2["wtxid"]: {"txid": tx2["txid"], "error": "package-not-validated"},
+            tx_child["wtxid"]: {"txid": tx_child["txid"], "error": "package-not-validated"},
+        }
+        assert_equal(submitres, {"package_msg": "conflict-in-package", "tx-results": expected,"replaced-transactions": []})
         assert tx_child["txid"] not in node.getrawmempool()
 
-        # ... and without the in-mempool ancestor tx1 included in the call
+        # without the in-mempool ancestor tx1 included in the call, tx2 can be submitted, but
+        # tx_child is missing an input.
         submitres = node.submitpackage([tx2["hex"], tx_child["hex"]])
-        assert_equal(submitres, {'package_msg': 'package-not-child-with-unconfirmed-parents', 'tx-results': {}, 'replaced-transactions': []})
+        assert_equal(submitres["tx-results"][tx_child["wtxid"]], {"txid": tx_child["txid"], "error": "bad-txns-inputs-missingorspent"})
+        assert tx2["txid"] in node.getrawmempool()
 
         # Regardless of error type, the child can never enter the mempool
         assert tx_child["txid"] not in node.getrawmempool()
@@ -498,6 +511,41 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert "error" not in pkg_result["tx-results"][chained_txns_burn[0]["wtxid"]]
         assert_equal(pkg_result["tx-results"][tx.wtxid_hex]["error"], "scriptpubkey")
         assert_equal(node.getrawmempool(), [chained_txns_burn[0]["txid"]])
+
+    def test_submitpackage_with_ancestors(self):
+        self.log.info("Test that submitpackage can send a package that has in-mempool ancestors")
+        node = self.nodes[0]
+        peer = node.add_p2p_connection(P2PTxInvStore())
+
+        parent_tx = self.wallet.create_self_transfer()
+        child_tx = self.wallet.create_self_transfer(utxo_to_spend=parent_tx["new_utxo"])
+        grandchild_tx = self.wallet.create_self_transfer(utxo_to_spend=child_tx["new_utxo"])
+        ggrandchild_tx = self.wallet.create_self_transfer(utxo_to_spend=grandchild_tx["new_utxo"])
+
+        # Submitting them all together doesn't work, as the topology is not child-with-parents
+        assert_raises_rpc_error(-25, "package topology disallowed", node.submitpackage, [parent_tx["hex"], child_tx["hex"], grandchild_tx["hex"], ggrandchild_tx["hex"]])
+
+        # Submit older package and check acceptance
+        result_submit_older = node.submitpackage(package=[parent_tx["hex"], child_tx["hex"]])
+        assert_equal(result_submit_older["package_msg"], "success")
+        mempool = node.getrawmempool()
+        assert parent_tx["txid"] in mempool
+        assert child_tx["txid"] in mempool
+
+        # Submit younger package and check acceptance
+        result_submit_younger = node.submitpackage(package=[grandchild_tx["hex"], ggrandchild_tx["hex"]])
+        assert_equal(result_submit_younger["package_msg"], "success")
+        mempool = node.getrawmempool()
+
+        assert parent_tx["txid"] in mempool
+        assert child_tx["txid"] in mempool
+        assert grandchild_tx["txid"] in mempool
+        assert ggrandchild_tx["txid"] in mempool
+
+        # The node should announce each transaction.
+        peer.wait_for_broadcast([tx["tx"].wtxid_hex for tx in [parent_tx, child_tx, grandchild_tx, ggrandchild_tx]])
+        self.generate(node, 1)
+
 
 if __name__ == "__main__":
     RPCPackagesTest(__file__).main()

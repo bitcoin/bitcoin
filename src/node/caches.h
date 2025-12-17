@@ -27,6 +27,13 @@ struct CacheSizes {
     kernel::CacheSizes kernel;
 };
 CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes = 0);
+constexpr bool ShouldWarnOversizedDbCache(size_t dbcache, size_t total_ram) noexcept
+{
+    const size_t cap{(total_ram < 2048_MiB) ? DEFAULT_DB_CACHE : (total_ram / 100) * 75};
+    return dbcache > cap;
+}
+
+void LogOversizedDbCache(const ArgsManager& args) noexcept;
 } // namespace node
 
 #endif // BITCOIN_NODE_CACHES_H

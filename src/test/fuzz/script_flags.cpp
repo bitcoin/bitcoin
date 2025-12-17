@@ -15,6 +15,15 @@
 #include <utility>
 #include <vector>
 
+static DataStream& operator>>(DataStream& ds, script_verify_flags& f)
+{
+    script_verify_flags::value_type n{0};
+    ds >> n;
+    f = script_verify_flags::from_int(n);
+    assert(n == f.as_int());
+    return ds;
+}
+
 FUZZ_TARGET(script_flags)
 {
     if (buffer.size() > 100'000) return;
@@ -22,12 +31,14 @@ FUZZ_TARGET(script_flags)
     try {
         const CTransaction tx(deserialize, TX_WITH_WITNESS, ds);
 
-        unsigned int verify_flags;
+        script_verify_flags verify_flags;
         ds >> verify_flags;
+
+        assert(verify_flags == script_verify_flags::from_int(verify_flags.as_int()));
 
         if (!IsValidFlagCombination(verify_flags)) return;
 
-        unsigned int fuzzed_flags;
+        script_verify_flags fuzzed_flags;
         ds >> fuzzed_flags;
 
         std::vector<CTxOut> spent_outputs;

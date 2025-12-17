@@ -10,6 +10,10 @@ import math
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.blocktools import MAX_STANDARD_TX_WEIGHT
+from test_framework.mempool_util import (
+    DEFAULT_MIN_RELAY_TX_FEE,
+    DEFAULT_INCREMENTAL_RELAY_FEE,
+)
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
     COIN,
@@ -78,10 +82,17 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         node = self.nodes[0]
         self.wallet = MiniWallet(node)
 
+        assert_equal(node.getmempoolinfo()['permitbaremultisig'], False)
+
         self.log.info('Start with empty mempool, and 200 blocks')
         self.mempool_size = 0
         assert_equal(node.getblockcount(), 200)
         assert_equal(node.getmempoolinfo()['size'], self.mempool_size)
+
+        self.log.info("Check default settings")
+        # Settings are listed in BTC/kvB
+        assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal(DEFAULT_MIN_RELAY_TX_FEE) / COIN)
+        assert_equal(node.getmempoolinfo()['incrementalrelayfee'], Decimal(DEFAULT_INCREMENTAL_RELAY_FEE) / COIN)
 
         self.log.info('Should not accept garbage to testmempoolaccept')
         assert_raises_rpc_error(-3, 'JSON value of type string is not of expected type array', lambda: node.testmempoolaccept(rawtxs='ff00baar'))
@@ -473,7 +484,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         nested_anchor_spend.vout.append(CTxOut(nested_anchor_tx.vout[0].nValue - int(fee*COIN), script_to_p2wsh_script(CScript([OP_TRUE]))))
 
         self.check_mempool_result(
-            result_expected=[{'txid': nested_anchor_spend.txid_hex, 'allowed': False, 'reject-reason': 'non-mandatory-script-verify-flag (Witness version reserved for soft-fork upgrades)'}],
+            result_expected=[{'txid': nested_anchor_spend.txid_hex, 'allowed': False, 'reject-reason': 'mempool-script-verify-flag-failed (Witness version reserved for soft-fork upgrades)'}],
             rawtxs=[nested_anchor_spend.serialize().hex()],
             maxfeerate=0,
         )

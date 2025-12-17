@@ -113,7 +113,7 @@ then
     case "$HOST" in
         *mingw*)
             ls -l .libs
-            python3 ./tools/symbol-check.py .libs/libsecp256k1-5.dll
+            python3 ./tools/symbol-check.py .libs/libsecp256k1-*.dll
             ;;
         *)
             python3 ./tools/symbol-check.py .libs/libsecp256k1.so

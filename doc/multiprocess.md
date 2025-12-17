@@ -4,7 +4,7 @@ _This document describes usage of the multiprocess feature. For design informati
 
 ## Build Option
 
-On Unix systems, the `-DENABLE_IPC=ON` build option can be passed to build the supplemental `bitcoin-node` and `bitcoin-gui` multiprocess executables.
+The `-DENABLE_IPC=ON` build option, supported and enabled by default on Unix systems, can be passed to build the supplemental `bitcoin-node` and `bitcoin-gui` multiprocess executables.
 
 ## Debugging
 
@@ -16,11 +16,11 @@ Specifying `-DENABLE_IPC=ON` requires [Cap'n Proto](https://capnproto.org/) to b
 
 ### Depends installation
 
-Alternately the [depends system](../depends) can be used to avoid need to install local dependencies. A simple way to get started is to pass the `MULTIPROCESS=1` [dependency option](../depends#dependency-options) to make:
+Alternatively the [depends system](../depends) can be used to avoid needing to install local dependencies:
 
 ```
 cd <BITCOIN_SOURCE_DIRECTORY>
-make -C depends NO_QT=1 MULTIPROCESS=1
+make -C depends NO_QT=1
 # Set host platform to output of gcc -dumpmachine or clang -dumpmachine or check the depends/ directory for the generated subdirectory name
 HOST_PLATFORM="x86_64-pc-linux-gnu"
 cmake -B build --toolchain=depends/$HOST_PLATFORM/toolchain.cmake
@@ -29,7 +29,7 @@ build/bin/bitcoin -m node -regtest -printtoconsole -debug=ipc
 BITCOIN_CMD="bitcoin -m" build/test/functional/test_runner.py
 ```
 
-The `cmake` build will pick up settings and library locations from the depends directory, so there is no need to pass `-DENABLE_IPC=ON` as a separate flag when using the depends system (it's controlled by the `MULTIPROCESS=1` option).
+The `cmake` build will pick up settings and library locations from the depends directory, so there is no need to pass `-DENABLE_IPC=ON` as a separate flag when using the depends system (it's controlled by the `NO_IPC=1` option).
 
 ### Cross-compiling
 

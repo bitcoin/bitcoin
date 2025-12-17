@@ -1,7 +1,7 @@
 {
-  "$comment": "The builtin-baseline corresponds to 2025.03.19 Release",
+  "$comment": "The builtin-baseline corresponds to 2025.08.27 Release",
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
-  "builtin-baseline": "b02e341c927f16d991edbd915d8ea43eac52096c",
+  "builtin-baseline": "120deac3062162151622ca4860575a33844ba10b",
   "dependencies": [
     "boost-multi-index",
     "boost-signals2",

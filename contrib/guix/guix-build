@@ -73,19 +73,7 @@ mkdir -p "$VERSION_BASE"
 # SOURCE_DATE_EPOCH should not unintentionally be set
 ################
 
-if [ -n "$SOURCE_DATE_EPOCH" ] && [ -z "$FORCE_SOURCE_DATE_EPOCH" ]; then
-cat << EOF
-ERR: Environment variable SOURCE_DATE_EPOCH is set which may break reproducibility.
-
-     Aborting...
-
-Hint: You may want to:
-      1. Unset this variable: \`unset SOURCE_DATE_EPOCH\` before rebuilding
-      2. Set the 'FORCE_SOURCE_DATE_EPOCH' environment variable if you insist on
-         using your own epoch
-EOF
-exit 1
-fi
+check_source_date_epoch
 
 ################
 # Build directories should not exist

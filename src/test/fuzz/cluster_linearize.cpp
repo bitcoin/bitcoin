@@ -304,7 +304,7 @@ SetType ReadTopologicalSet(const DepGraph<SetType>& depgraph, const SetType& tod
     try {
         reader >> VARINT(mask);
     } catch(const std::ios_base::failure&) {}
-    mask += non_empty;
+    if (mask != uint64_t(-1)) mask += non_empty;
 
     SetType ret;
     for (auto i : todo) {
@@ -362,6 +362,45 @@ std::vector<DepGraphIndex> ReadLinearization(const DepGraph<BS>& depgraph, SpanR
         }
     }
     return linearization;
+}
+
+/** Given a dependency graph, construct a tree-structured graph.
+ *
+ * Copies the nodes from the depgraph, but only keeps the first parent (even direction)
+ * or the first child (odd direction) for each transaction.
+ */
+template<typename BS>
+DepGraph<BS> BuildTreeGraph(const DepGraph<BS>& depgraph, uint8_t direction)
+{
+    DepGraph<BS> depgraph_tree;
+    for (DepGraphIndex i = 0; i < depgraph.PositionRange(); ++i) {
+        if (depgraph.Positions()[i]) {
+            depgraph_tree.AddTransaction(depgraph.FeeRate(i));
+        } else {
+            // For holes, add a dummy transaction which is deleted below, so that non-hole
+            // transactions retain their position.
+            depgraph_tree.AddTransaction(FeeFrac{});
+        }
+    }
+    depgraph_tree.RemoveTransactions(BS::Fill(depgraph.PositionRange()) - depgraph.Positions());
+
+    if (direction & 1) {
+        for (DepGraphIndex i : depgraph.Positions()) {
+            auto children = depgraph.GetReducedChildren(i);
+            if (children.Any()) {
+                depgraph_tree.AddDependencies(BS::Singleton(i), children.First());
+            }
+        }
+    } else {
+        for (DepGraphIndex i : depgraph.Positions()) {
+            auto parents = depgraph.GetReducedParents(i);
+            if (parents.Any()) {
+                depgraph_tree.AddDependencies(BS::Singleton(parents.First()), i);
+            }
+        }
+    }
+
+    return depgraph_tree;
 }
 
 } // namespace
@@ -452,63 +491,72 @@ FUZZ_TARGET(clusterlin_depgraph_sim)
         }
     };
 
+    auto last_compaction_pos{real.PositionRange()};
+
     LIMITED_WHILE(provider.remaining_bytes() > 0, 1000) {
-        uint8_t command = provider.ConsumeIntegral<uint8_t>();
-        if (num_tx_sim == 0 || ((command % 3) <= 0 && num_tx_sim < TestBitSet::Size())) {
-            // AddTransaction.
-            auto fee = provider.ConsumeIntegralInRange<int64_t>(-0x8000000000000, 0x7ffffffffffff);
-            auto size = provider.ConsumeIntegralInRange<int32_t>(1, 0x3fffff);
-            FeeFrac feerate{fee, size};
-            // Apply to DepGraph.
-            auto idx = real.AddTransaction(feerate);
-            // Verify that the returned index is correct.
-            assert(!sim[idx].has_value());
-            for (DepGraphIndex i = 0; i < TestBitSet::Size(); ++i) {
-                if (!sim[i].has_value()) {
-                    assert(idx == i);
-                    break;
-                }
-            }
-            // Update sim.
-            sim[idx] = {feerate, TestBitSet::Singleton(idx)};
-            ++num_tx_sim;
-            continue;
-        }
-        if ((command % 3) <= 1 && num_tx_sim > 0) {
-            // AddDependencies.
-            DepGraphIndex child = idx_fn();
-            auto parents = subset_fn();
-            // Apply to DepGraph.
-            real.AddDependencies(parents, child);
-            // Apply to sim.
-            sim[child]->second |= parents;
-            continue;
-        }
-        if (num_tx_sim > 0) {
-            // Remove transactions.
-            auto del = set_fn();
-            // Propagate all ancestry information before deleting anything in the simulation (as
-            // intermediary transactions may be deleted which impact connectivity).
-            anc_update_fn();
-            // Compare the state of the transactions being deleted.
-            for (auto i : del) check_fn(i);
-            // Apply to DepGraph.
-            real.RemoveTransactions(del);
-            // Apply to sim.
-            for (DepGraphIndex i = 0; i < sim.size(); ++i) {
-                if (sim[i].has_value()) {
-                    if (del[i]) {
-                        --num_tx_sim;
-                        sim[i] = std::nullopt;
-                    } else {
-                        sim[i]->second -= del;
+        int command = provider.ConsumeIntegral<uint8_t>() % 4;
+        while (true) {
+            // Iterate decreasing command until an applicable branch is found.
+            if (num_tx_sim < TestBitSet::Size() && command-- == 0) {
+                // AddTransaction.
+                auto fee = provider.ConsumeIntegralInRange<int64_t>(-0x8000000000000, 0x7ffffffffffff);
+                auto size = provider.ConsumeIntegralInRange<int32_t>(1, 0x3fffff);
+                FeeFrac feerate{fee, size};
+                // Apply to DepGraph.
+                auto idx = real.AddTransaction(feerate);
+                // Verify that the returned index is correct.
+                assert(!sim[idx].has_value());
+                for (DepGraphIndex i = 0; i < TestBitSet::Size(); ++i) {
+                    if (!sim[i].has_value()) {
+                        assert(idx == i);
+                        break;
                     }
                 }
+                // Update sim.
+                sim[idx] = {feerate, TestBitSet::Singleton(idx)};
+                ++num_tx_sim;
+                break;
+            } else if (num_tx_sim > 0 && command-- == 0) {
+                // AddDependencies.
+                DepGraphIndex child = idx_fn();
+                auto parents = subset_fn();
+                // Apply to DepGraph.
+                real.AddDependencies(parents, child);
+                // Apply to sim.
+                sim[child]->second |= parents;
+                break;
+            } else if (num_tx_sim > 0 && command-- == 0) {
+                // Remove transactions.
+                auto del = set_fn();
+                // Propagate all ancestry information before deleting anything in the simulation (as
+                // intermediary transactions may be deleted which impact connectivity).
+                anc_update_fn();
+                // Compare the state of the transactions being deleted.
+                for (auto i : del) check_fn(i);
+                // Apply to DepGraph.
+                real.RemoveTransactions(del);
+                // Apply to sim.
+                for (DepGraphIndex i = 0; i < sim.size(); ++i) {
+                    if (sim[i].has_value()) {
+                        if (del[i]) {
+                            --num_tx_sim;
+                            sim[i] = std::nullopt;
+                        } else {
+                            sim[i]->second -= del;
+                        }
+                    }
+                }
+                break;
+            } else if (command-- == 0) {
+                // Compact.
+                const size_t mem_before{real.DynamicMemoryUsage()};
+                real.Compact();
+                const size_t mem_after{real.DynamicMemoryUsage()};
+                assert(real.PositionRange() < last_compaction_pos ? mem_after < mem_before : mem_after <= mem_before);
+                last_compaction_pos = real.PositionRange();
+                break;
             }
-            continue;
         }
-        // This should be unreachable (one of the 3 above actions should always be possible).
-        assert(false);
     }
 
     // Compare the real obtained depgraph against the simulation.
@@ -1154,7 +1202,8 @@ FUZZ_TARGET(clusterlin_linearize)
 
     // Invoke Linearize().
     iter_count &= 0x7ffff;
-    auto [linearization, optimal] = Linearize(depgraph, iter_count, rng_seed, old_linearization);
+    auto [linearization, optimal, cost] = Linearize(depgraph, iter_count, rng_seed, old_linearization);
+    assert(cost <= iter_count);
     SanityCheck(depgraph, linearization);
     auto chunking = ChunkLinearization(depgraph, linearization);
 
@@ -1166,23 +1215,8 @@ FUZZ_TARGET(clusterlin_linearize)
     }
 
     // If the iteration count is sufficiently high, an optimal linearization must be found.
-    // Each linearization step can use up to 2^(k-1) iterations, with steps k=1..n. That sum is
-    // 2^n - 1.
-    const uint64_t n = depgraph.TxCount();
-    if (n <= 19 && iter_count > (uint64_t{1} << n)) {
+    if (iter_count >= MaxOptimalLinearizationIters(depgraph.TxCount())) {
         assert(optimal);
-    }
-    // Additionally, if the assumption of sqrt(2^k)+1 iterations per step holds, plus ceil(k/4)
-    // start-up cost per step, plus ceil(n^2/64) start-up cost overall, we can compute the upper
-    // bound for a whole linearization (summing for k=1..n) using the Python expression
-    // [sum((k+3)//4 + int(math.sqrt(2**k)) + 1 for k in range(1, n + 1)) + (n**2 + 63) // 64 for n in range(0, 35)]:
-    static constexpr uint64_t MAX_OPTIMAL_ITERS[] = {
-        0, 4, 8, 12, 18, 26, 37, 51, 70, 97, 133, 182, 251, 346, 480, 666, 927, 1296, 1815, 2545,
-        3576, 5031, 7087, 9991, 14094, 19895, 28096, 39690, 56083, 79263, 112041, 158391, 223936,
-        316629, 447712
-    };
-    if (n < std::size(MAX_OPTIMAL_ITERS) && iter_count >= MAX_OPTIMAL_ITERS[n]) {
-        Assume(optimal);
     }
 
     // If Linearize claims optimal result, run quality tests.
@@ -1265,35 +1299,7 @@ FUZZ_TARGET(clusterlin_postlinearize_tree)
         reader >> direction >> rng_seed >> Using<DepGraphFormatter>(depgraph_gen);
     } catch (const std::ios_base::failure&) {}
 
-    // Now construct a new graph, copying the nodes, but leaving only the first parent (even
-    // direction) or the first child (odd direction).
-    DepGraph<TestBitSet> depgraph_tree;
-    for (DepGraphIndex i = 0; i < depgraph_gen.PositionRange(); ++i) {
-        if (depgraph_gen.Positions()[i]) {
-            depgraph_tree.AddTransaction(depgraph_gen.FeeRate(i));
-        } else {
-            // For holes, add a dummy transaction which is deleted below, so that non-hole
-            // transactions retain their position.
-            depgraph_tree.AddTransaction(FeeFrac{});
-        }
-    }
-    depgraph_tree.RemoveTransactions(TestBitSet::Fill(depgraph_gen.PositionRange()) - depgraph_gen.Positions());
-
-    if (direction & 1) {
-        for (DepGraphIndex i = 0; i < depgraph_gen.TxCount(); ++i) {
-            auto children = depgraph_gen.GetReducedChildren(i);
-            if (children.Any()) {
-                depgraph_tree.AddDependencies(TestBitSet::Singleton(i), children.First());
-            }
-         }
-    } else {
-        for (DepGraphIndex i = 0; i < depgraph_gen.TxCount(); ++i) {
-            auto parents = depgraph_gen.GetReducedParents(i);
-            if (parents.Any()) {
-                depgraph_tree.AddDependencies(TestBitSet::Singleton(parents.First()), i);
-            }
-        }
-    }
+    auto depgraph_tree = BuildTreeGraph(depgraph_gen, direction);
 
     // Retrieve a linearization from the fuzz input.
     std::vector<DepGraphIndex> linearization;
@@ -1314,15 +1320,15 @@ FUZZ_TARGET(clusterlin_postlinearize_tree)
     // Verify that post-linearizing again does not change the diagram. The result must be identical
     // as post_linearization ought to be optimal already with a tree-structured graph.
     auto post_post_linearization = post_linearization;
-    PostLinearize(depgraph_tree, post_linearization);
-    SanityCheck(depgraph_tree, post_linearization);
+    PostLinearize(depgraph_tree, post_post_linearization);
+    SanityCheck(depgraph_tree, post_post_linearization);
     auto post_post_chunking = ChunkLinearization(depgraph_tree, post_post_linearization);
     auto cmp_post = CompareChunks(post_post_chunking, post_chunking);
     assert(cmp_post == 0);
 
     // Try to find an even better linearization directly. This must not change the diagram for the
     // same reason.
-    auto [opt_linearization, _optimal] = Linearize(depgraph_tree, 100000, rng_seed, post_linearization);
+    auto [opt_linearization, _optimal, _cost] = Linearize(depgraph_tree, 100000, rng_seed, post_linearization);
     auto opt_chunking = ChunkLinearization(depgraph_tree, opt_linearization);
     auto cmp_opt = CompareChunks(opt_chunking, post_chunking);
     assert(cmp_opt == 0);

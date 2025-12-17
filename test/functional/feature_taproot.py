@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2022 The Bitcoin Core developers
+# Copyright (c) 2019-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 # Test Taproot softfork (BIPs 340-342)
@@ -19,6 +19,7 @@ from test_framework.messages import (
     CTxOut,
     SEQUENCE_FINAL,
     tx_from_hex,
+    TX_MAX_STANDARD_VERSION,
     WITNESS_SCALE_FACTOR,
 )
 from test_framework.script import (
@@ -71,6 +72,7 @@ from test_framework.script import (
     OP_PUSHDATA1,
     OP_RETURN,
     OP_SWAP,
+    OP_TUCK,
     OP_VERIFY,
     SIGHASH_DEFAULT,
     SIGHASH_ALL,
@@ -172,9 +174,9 @@ def get(ctx, name):
         ctx[name] = expr
     return expr.value
 
-def getter(name):
+def getter(name, **kwargs):
     """Return a callable that evaluates name in its passed context."""
-    return lambda ctx: get(ctx, name)
+    return lambda ctx: get({**ctx, **kwargs}, name)
 
 def override(expr, **kwargs):
     """Return a callable that evaluates expr in a modified context."""
@@ -218,6 +220,20 @@ def default_controlblock(ctx):
     """Default expression for "controlblock": combine leafversion, negflag, pubkey_internal, merklebranch."""
     return bytes([get(ctx, "leafversion") + get(ctx, "negflag")]) + get(ctx, "pubkey_internal") + get(ctx, "merklebranch")
 
+def default_scriptcode_suffix(ctx):
+    """Default expression for "scriptcode_suffix", the actually used portion of the scriptcode."""
+    scriptcode = get(ctx, "scriptcode")
+    codesepnum = get(ctx, "codesepnum")
+    if codesepnum == -1:
+        return scriptcode
+    codeseps = 0
+    for (opcode, data, sop_idx) in scriptcode.raw_iter():
+        if opcode == OP_CODESEPARATOR:
+            if codeseps == codesepnum:
+                return CScript(scriptcode[sop_idx+1:])
+            codeseps += 1
+    assert False
+
 def default_sigmsg(ctx):
     """Default expression for "sigmsg": depending on mode, compute BIP341, BIP143, or legacy sigmsg."""
     tx = get(ctx, "tx")
@@ -237,12 +253,12 @@ def default_sigmsg(ctx):
             return TaprootSignatureMsg(tx, utxos, hashtype, idx, scriptpath=False, annex=annex)
     elif mode == "witv0":
         # BIP143 signature hash
-        scriptcode = get(ctx, "scriptcode")
+        scriptcode = get(ctx, "scriptcode_suffix")
         utxos = get(ctx, "utxos")
         return SegwitV0SignatureMsg(scriptcode, tx, idx, hashtype, utxos[idx].nValue)
     else:
         # Pre-segwit signature hash
-        scriptcode = get(ctx, "scriptcode")
+        scriptcode = get(ctx, "scriptcode_suffix")
         return LegacySignatureMsg(scriptcode, tx, idx, hashtype)[0]
 
 def default_sighash(ctx):
@@ -302,7 +318,12 @@ def default_hashtype_actual(ctx):
 
 def default_bytes_hashtype(ctx):
     """Default expression for "bytes_hashtype": bytes([hashtype_actual]) if not 0, b"" otherwise."""
-    return bytes([x for x in [get(ctx, "hashtype_actual")] if x != 0])
+    mode = get(ctx, "mode")
+    hashtype_actual = get(ctx, "hashtype_actual")
+    if mode != "taproot" or hashtype_actual != 0:
+        return bytes([hashtype_actual])
+    else:
+        return bytes()
 
 def default_sign(ctx):
     """Default expression for "sign": concatenation of signature and bytes_hashtype."""
@@ -380,6 +401,8 @@ DEFAULT_CONTEXT = {
     "key_tweaked": default_key_tweaked,
     # The tweak to use (None for script path spends, the actual tweak for key path spends).
     "tweak": default_tweak,
+    # The part of the scriptcode after the last executed OP_CODESEPARATOR.
+    "scriptcode_suffix": default_scriptcode_suffix,
     # The sigmsg value (preimage of sighash)
     "sigmsg": default_sigmsg,
     # The sighash value (32 bytes)
@@ -409,7 +432,9 @@ DEFAULT_CONTEXT = {
     # The annex (only when mode=="taproot").
     "annex": None,
     # The codeseparator position (only when mode=="taproot").
-    "codeseppos": -1,
+    "codeseppos": 0xffffffff,
+    # Which OP_CODESEPARATOR is the last executed one in the script (in legacy/P2SH/P2WSH).
+    "codesepnum": -1,
     # The redeemscript to add to the scriptSig (if P2SH; None implies not P2SH).
     "script_p2sh": None,
     # The script to add to the witness in (if P2WSH; None implies P2WPKH)
@@ -606,7 +631,7 @@ ERR_PUSH_SIZE = {"err_msg": "Push value size limit exceeded"}
 ERR_DISABLED_OPCODE = {"err_msg": "Attempted to use a disabled opcode"}
 ERR_TAPSCRIPT_CHECKMULTISIG = {"err_msg": "OP_CHECKMULTISIG(VERIFY) is not available in tapscript"}
 ERR_TAPSCRIPT_MINIMALIF = {"err_msg": "OP_IF/NOTIF argument must be minimal in tapscript"}
-ERR_PUBKEYTYPE = {"err_msg": "Public key is neither compressed or uncompressed"}
+ERR_TAPSCRIPT_EMPTY_PUBKEY = {"err_msg": "Empty public key in tapscript"}
 ERR_STACK_SIZE = {"err_msg": "Stack size limit exceeded"}
 ERR_CLEANSTACK = {"err_msg": "Stack size must be exactly one after execution"}
 ERR_INVALID_STACK_OPERATION = {"err_msg": "Operation not valid with the current stack size"}
@@ -642,7 +667,6 @@ SIG_ADD_ZERO = {"failure": {"sign": zero_appender(default_sign)}}
 DUST_LIMIT = 600
 MIN_FEE = 50000
 
-TX_MAX_STANDARD_VERSION = 3
 TX_STANDARD_VERSIONS = [1, 2, TX_MAX_STANDARD_VERSION]
 TRUC_MAX_VSIZE = 10000 # test doesn't cover in-mempool spends, so only this limit is hit
 
@@ -755,6 +779,8 @@ def spenders_taproot_active():
         add_spender(spenders, "sighash/codesep_pk", tap=tap, leaf="codesep_pk", key=secs[1], codeseppos=0, **common, **SINGLE_SIG, **SIGHASH_BITFLIP, **ERR_SCHNORR_SIG)
         add_spender(spenders, "sighash/branched_codesep/left", tap=tap, leaf="branched_codesep", key=secs[0], codeseppos=3, **common, inputs=[getter("sign"), b'\x01'], **SIGHASH_BITFLIP, **ERR_SCHNORR_SIG)
         add_spender(spenders, "sighash/branched_codesep/right", tap=tap, leaf="branched_codesep", key=secs[1], codeseppos=6, **common, inputs=[getter("sign"), b''], **SIGHASH_BITFLIP, **ERR_SCHNORR_SIG)
+        add_spender(spenders, "sighash/codesep_pk_wrongpos1", tap=tap, leaf="codesep_pk", key=secs[1], codeseppos=0, **common, **SINGLE_SIG, failure={"codeseppos": 1}, **ERR_SCHNORR_SIG)
+        add_spender(spenders, "sighash/codesep_pk_wrongpos2", tap=tap, leaf="codesep_pk", key=secs[1], codeseppos=0, **common, **SINGLE_SIG, failure={"codeseppos": 0xfffffffe}, **ERR_SCHNORR_SIG)
 
     # Reusing the scripts above, test that various features affect the sighash.
     add_spender(spenders, "sighash/annex", tap=tap, leaf="pk_codesep", key=secs[1], hashtype=hashtype, standard=False, **SINGLE_SIG, annex=bytes([ANNEX_TAG]), failure={"sighash": override(default_sighash, annex=None)}, **ERR_SCHNORR_SIG)
@@ -1021,27 +1047,27 @@ def spenders_taproot_active():
     add_spender(spenders, "tapscript/minimalif", leaf="t5", **common, inputs=[getter("sign"), b'\x01'], failure={"inputs": [getter("sign"), b'\x0001']}, **ERR_TAPSCRIPT_MINIMALIF)
     add_spender(spenders, "tapscript/minimalnotif", leaf="t6", **common, inputs=[getter("sign"), b'\x01'], failure={"inputs": [getter("sign"), b'\x0100']}, **ERR_TAPSCRIPT_MINIMALIF)
     # Test that 1-byte public keys (which are unknown) are acceptable but nonstandard with unrelated signatures, but 0-byte public keys are not valid.
-    add_spender(spenders, "tapscript/unkpk/checksig", leaf="t16", standard=False, **common, **SINGLE_SIG, failure={"leaf": "t7"}, **ERR_PUBKEYTYPE)
-    add_spender(spenders, "tapscript/unkpk/checksigadd", leaf="t17", standard=False, **common, **SINGLE_SIG, failure={"leaf": "t10"}, **ERR_PUBKEYTYPE)
-    add_spender(spenders, "tapscript/unkpk/checksigverify", leaf="t18", standard=False, **common, **SINGLE_SIG, failure={"leaf": "t8"}, **ERR_PUBKEYTYPE)
+    add_spender(spenders, "tapscript/unkpk/checksig", leaf="t16", standard=False, **common, **SINGLE_SIG, failure={"leaf": "t7"}, **ERR_TAPSCRIPT_EMPTY_PUBKEY)
+    add_spender(spenders, "tapscript/unkpk/checksigadd", leaf="t17", standard=False, **common, **SINGLE_SIG, failure={"leaf": "t10"}, **ERR_TAPSCRIPT_EMPTY_PUBKEY)
+    add_spender(spenders, "tapscript/unkpk/checksigverify", leaf="t18", standard=False, **common, **SINGLE_SIG, failure={"leaf": "t8"}, **ERR_TAPSCRIPT_EMPTY_PUBKEY)
     # Test that 33-byte public keys (which are unknown) are acceptable but nonstandard with valid signatures, but normal pubkeys are not valid in that case.
     add_spender(spenders, "tapscript/oldpk/checksig", leaf="t30", standard=False, **common, **SINGLE_SIG, sighash=bitflipper(default_sighash), failure={"leaf": "t1"}, **ERR_SCHNORR_SIG)
     add_spender(spenders, "tapscript/oldpk/checksigadd", leaf="t31", standard=False, **common, **SINGLE_SIG, sighash=bitflipper(default_sighash), failure={"leaf": "t2"}, **ERR_SCHNORR_SIG)
     add_spender(spenders, "tapscript/oldpk/checksigverify", leaf="t32", standard=False, **common, **SINGLE_SIG, sighash=bitflipper(default_sighash), failure={"leaf": "t28"}, **ERR_SCHNORR_SIG)
     # Test that 0-byte public keys are not acceptable.
-    add_spender(spenders, "tapscript/emptypk/checksig", leaf="t1", **SINGLE_SIG, **common, failure={"leaf": "t7"}, **ERR_PUBKEYTYPE)
-    add_spender(spenders, "tapscript/emptypk/checksigverify", leaf="t2", **SINGLE_SIG, **common, failure={"leaf": "t8"}, **ERR_PUBKEYTYPE)
-    add_spender(spenders, "tapscript/emptypk/checksigadd", leaf="t9", **SINGLE_SIG, **common, failure={"leaf": "t10"}, **ERR_PUBKEYTYPE)
-    add_spender(spenders, "tapscript/emptypk/checksigadd", leaf="t35", standard=False, **SINGLE_SIG, **common, failure={"leaf": "t10"}, **ERR_PUBKEYTYPE)
+    add_spender(spenders, "tapscript/emptypk/checksig", leaf="t1", **SINGLE_SIG, **common, failure={"leaf": "t7"}, **ERR_TAPSCRIPT_EMPTY_PUBKEY)
+    add_spender(spenders, "tapscript/emptypk/checksigverify", leaf="t2", **SINGLE_SIG, **common, failure={"leaf": "t8"}, **ERR_TAPSCRIPT_EMPTY_PUBKEY)
+    add_spender(spenders, "tapscript/emptypk/checksigadd", leaf="t9", **SINGLE_SIG, **common, failure={"leaf": "t10"}, **ERR_TAPSCRIPT_EMPTY_PUBKEY)
+    add_spender(spenders, "tapscript/emptypk/checksigadd", leaf="t35", standard=False, **SINGLE_SIG, **common, failure={"leaf": "t10"}, **ERR_TAPSCRIPT_EMPTY_PUBKEY)
     # Test that OP_CHECKSIGADD results are as expected
     add_spender(spenders, "tapscript/checksigaddresults", leaf="t28", **SINGLE_SIG, **common, failure={"leaf": "t27"}, err_msg="unknown error")
     add_spender(spenders, "tapscript/checksigaddoversize", leaf="t29", **SINGLE_SIG, **common, failure={"leaf": "t27"}, err_msg="unknown error")
     # Test that OP_CHECKSIGADD requires 3 stack elements.
     add_spender(spenders, "tapscript/checksigadd3args", leaf="t9", **SINGLE_SIG, **common, failure={"leaf": "t11"}, **ERR_INVALID_STACK_OPERATION)
     # Test that empty signatures do not cause script failure in OP_CHECKSIG and OP_CHECKSIGADD (but do fail with empty pubkey, and do fail OP_CHECKSIGVERIFY)
-    add_spender(spenders, "tapscript/emptysigs/checksig", leaf="t12", **common, inputs=[b'', getter("sign")], failure={"leaf": "t13"}, **ERR_PUBKEYTYPE)
-    add_spender(spenders, "tapscript/emptysigs/nochecksigverify", leaf="t12", **common, inputs=[b'', getter("sign")], failure={"leaf": "t20"}, **ERR_PUBKEYTYPE)
-    add_spender(spenders, "tapscript/emptysigs/checksigadd", leaf="t14", **common, inputs=[b'', getter("sign")], failure={"leaf": "t15"}, **ERR_PUBKEYTYPE)
+    add_spender(spenders, "tapscript/emptysigs/checksig", leaf="t12", **common, inputs=[b'', getter("sign")], failure={"leaf": "t13"}, **ERR_TAPSCRIPT_EMPTY_PUBKEY)
+    add_spender(spenders, "tapscript/emptysigs/nochecksigverify", leaf="t12", **common, inputs=[b'', getter("sign")], failure={"leaf": "t20"}, **ERR_TAPSCRIPT_EMPTY_PUBKEY)
+    add_spender(spenders, "tapscript/emptysigs/checksigadd", leaf="t14", **common, inputs=[b'', getter("sign")], failure={"leaf": "t15"}, **ERR_TAPSCRIPT_EMPTY_PUBKEY)
     # Test that scripts over 10000 bytes (and over 201 non-push ops) are acceptable.
     add_spender(spenders, "tapscript/no10000limit", leaf="t19", **SINGLE_SIG, **common)
     # Test that a stack size of 1000 elements is permitted, but 1001 isn't.
@@ -1211,6 +1237,70 @@ def spenders_taproot_active():
                 standard = hashtype in VALID_SIGHASHES_ECDSA and (p2sh or witv0)
                 add_spender(spenders, "compat/nocsa", hashtype=hashtype, p2sh=p2sh, witv0=witv0, standard=standard, script=CScript([OP_IF, OP_11, pubkey1, OP_CHECKSIGADD, OP_12, OP_EQUAL, OP_ELSE, pubkey1, OP_CHECKSIG, OP_ENDIF]), key=eckey1, sigops_weight=4-3*witv0, inputs=[getter("sign"), b''], failure={"inputs": [getter("sign"), b'\x01']}, **ERR_BAD_OPCODE)
 
+    # == sighash caching tests ==
+
+    # Sighash caching in legacy.
+    for p2sh in [False, True]:
+        for witv0 in [False, True]:
+            eckey1, pubkey1 = generate_keypair(compressed=compressed)
+            for _ in range(10):
+                # Construct a script with 20 checksig operations (10 sighash types, each 2 times),
+                # randomly ordered and interleaved with 4 OP_CODESEPARATORS.
+                ops = [1, 2, 3, 0x21, 0x42, 0x63, 0x81, 0x83, 0xe1, 0xc2, -1, -1] * 2
+                # Make sure no OP_CODESEPARATOR appears last.
+                while True:
+                    random.shuffle(ops)
+                    if ops[-1] != -1:
+                        break
+                script = [pubkey1]
+                inputs = []
+                codeseps = -1
+                for pos, op in enumerate(ops):
+                    if op == -1:
+                        codeseps += 1
+                        script.append(OP_CODESEPARATOR)
+                    elif pos + 1 != len(ops):
+                        script += [OP_TUCK, OP_CHECKSIGVERIFY]
+                        inputs.append(getter("sign", codesepnum=codeseps, hashtype=op))
+                    else:
+                        script += [OP_CHECKSIG]
+                        inputs.append(getter("sign", codesepnum=codeseps, hashtype=op))
+                inputs.reverse()
+                script = CScript(script)
+                add_spender(spenders, "sighashcache/legacy", p2sh=p2sh, witv0=witv0, standard=False, script=script, inputs=inputs, key=eckey1, sigops_weight=12*8*(4-3*witv0), no_fail=True)
+
+    # Sighash caching in tapscript.
+    for _ in range(10):
+        # Construct a script with 700 checksig operations (7 sighash types, each 100 times),
+        # randomly ordered and interleaved with 100 OP_CODESEPARATORS.
+        ops = [0, 1, 2, 3, 0x81, 0x82, 0x83, -1] * 100
+        # Make sure no OP_CODESEPARATOR appears last.
+        while True:
+            random.shuffle(ops)
+            if ops[-1] != -1:
+                 break
+        script = [pubs[1]]
+        inputs = []
+        opcount = 1
+        codeseppos = 0xffffffff
+        for pos, op in enumerate(ops):
+            if op == -1:
+                codeseppos = opcount
+                opcount += 1
+                script.append(OP_CODESEPARATOR)
+            elif pos + 1 != len(ops):
+                opcount += 2
+                script += [OP_TUCK, OP_CHECKSIGVERIFY]
+                inputs.append(getter("sign", codeseppos=codeseppos, hashtype=op))
+            else:
+                opcount += 1
+                script += [OP_CHECKSIG]
+                inputs.append(getter("sign", codeseppos=codeseppos, hashtype=op))
+        inputs.reverse()
+        script = CScript(script)
+        tap = taproot_construct(pubs[0], [("leaf", script)])
+        add_spender(spenders, "sighashcache/taproot", tap=tap, leaf="leaf", inputs=inputs, standard=True, key=secs[1], no_fail=True)
+
     return spenders
 
 
@@ -1306,7 +1396,7 @@ def dump_json_test(tx, input_utxos, idx, success, failure):
     sha1 = hashlib.sha1(dump.encode("utf-8")).hexdigest()
     dirname = os.environ.get("TEST_DUMP_DIR", ".") + ("/%s" % sha1[0])
     os.makedirs(dirname, exist_ok=True)
-    with open(dirname + ("/%s" % sha1), 'w', encoding="utf8") as f:
+    with open(dirname + ("/%s" % sha1), 'w') as f:
         f.write(dump)
 
 # Data type to keep track of UTXOs, where they were created, and how to spend them.
@@ -1341,9 +1431,9 @@ class TaprootTest(BitcoinTestFramework):
         if err_msg is not None:
             assert block_response is not None and err_msg in block_response, "Missing error message '%s' from block response '%s': %s" % (err_msg, "(None)" if block_response is None else block_response, msg)
         if accept:
-            assert node.getbestblockhash() == block.hash, "Failed to accept: %s (response: %s)" % (msg, block_response)
-            self.tip = block.sha256
-            self.lastblockhash = block.hash
+            assert node.getbestblockhash() == block.hash_hex, "Failed to accept: %s (response: %s)" % (msg, block_response)
+            self.tip = block.hash_int
+            self.lastblockhash = block.hash_hex
             self.lastblocktime += 1
             self.lastblockheight += 1
         else:
@@ -1574,7 +1664,6 @@ class TaprootTest(BitcoinTestFramework):
         assert coinbase.txid_hex == "f60c73405d499a956d3162e3483c395526ef78286458a4cb17b125aa92e49b20"
         # Mine it
         block = create_block(hashprev=int(self.nodes[0].getbestblockhash(), 16), coinbase=coinbase)
-        block.rehash()
         block.solve()
         self.nodes[0].submitblock(block.serialize().hex())
         assert_equal(self.nodes[0].getblockcount(), 1)

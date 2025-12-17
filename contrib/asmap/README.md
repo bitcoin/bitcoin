@@ -9,7 +9,7 @@ Example usage:
 python3 asmap-tool.py encode /path/to/input.file /path/to/output.file
 python3 asmap-tool.py decode /path/to/input.file /path/to/output.file
 python3 asmap-tool.py diff /path/to/first.file /path/to/second.file
-python3 asmap-tool.py diff-addrs /path/to/first.file /path/to/second.file addrs.file
+python3 asmap-tool.py diff_addrs /path/to/first.file /path/to/second.file addrs.file
 ```
 These commands may take a few minutes to run with `python3`,
 depending on the amount of data involved and your machine specs.
@@ -43,7 +43,7 @@ increases output size by outputting strictly non-overlapping network ranges.
 ### Comparing ASmaps
 
 AS control of IP networks changes frequently, therefore it can be useful to get
-the changes between to ASmaps via the `diff` and `diff_addrs` commands.
+the changes between two ASmaps via the `diff` and `diff_addrs` commands.
 
 `diff` takes two ASmap files, and returns a file detailing the changes
 in the state of a network's AS assignment between the first and the second file.

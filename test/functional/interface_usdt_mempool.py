@@ -30,7 +30,7 @@ MEMPOOL_TRACEPOINTS_PROGRAM = """
 # include <uapi/linux/ptrace.h>
 
 // The longest rejection reason is 118 chars and is generated in case of SCRIPT_ERR_EVAL_FALSE by
-// strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError()))
+// strprintf("block-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError()))
 #define MAX_REJECT_REASON_LENGTH        118
 // The longest string returned by RemovalReasonToString() is 'sizelimit'
 #define MAX_REMOVAL_REASON_LENGTH       9

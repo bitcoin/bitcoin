@@ -155,7 +155,7 @@ public:
 
     bool HaveCoin(const COutPoint& outpoint) const final
     {
-        return m_data.count(outpoint);
+        return m_data.contains(outpoint);
     }
 
     uint256 GetBestBlock() const final { return {}; }
@@ -392,7 +392,7 @@ FUZZ_TARGET(coinscache_sim)
                 // Apply to simulation data.
                 flush();
                 // Apply to real caches.
-                caches.back()->Flush();
+                caches.back()->Flush(/*will_reuse_cache=*/provider.ConsumeBool());
             },
 
             [&]() { // Sync.
@@ -400,14 +400,6 @@ FUZZ_TARGET(coinscache_sim)
                 flush();
                 // Apply to real caches.
                 caches.back()->Sync();
-            },
-
-            [&]() { // Flush + ReallocateCache.
-                // Apply to simulation data.
-                flush();
-                // Apply to real caches.
-                caches.back()->Flush();
-                caches.back()->ReallocateCache();
             },
 
             [&]() { // GetCacheSize

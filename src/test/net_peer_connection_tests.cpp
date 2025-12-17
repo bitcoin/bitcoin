@@ -72,7 +72,8 @@ void AddPeer(NodeId& id, std::vector<CNode*>& nodes, PeerManager& peerman, Connm
                                  CAddress{},
                                  /*addrNameIn=*/"",
                                  conn_type,
-                                 /*inbound_onion=*/inbound_onion});
+                                 /*inbound_onion=*/inbound_onion,
+                                 /*network_key=*/0});
     CNode& node = *nodes.back();
     node.SetCommonVersion(PROTOCOL_VERSION);
 
@@ -151,15 +152,8 @@ BOOST_FIXTURE_TEST_CASE(test_addnode_getaddednodeinfo_and_connection_detection, 
     }
 
     BOOST_TEST_MESSAGE("\nCheck that all connected peers are correctly detected as connected");
-    for (auto node : connman->TestNodes()) {
-        BOOST_CHECK(connman->AlreadyConnectedPublic(node->addr));
-    }
-
-    BOOST_TEST_MESSAGE("\nCheck that peers with the same addresses as connected peers but different ports are detected as connected.");
-    for (auto node : connman->TestNodes()) {
-        uint16_t changed_port = node->addr.GetPort() + 1;
-        CService address_with_changed_port{node->addr, changed_port};
-        BOOST_CHECK(connman->AlreadyConnectedPublic(CAddress{address_with_changed_port, NODE_NONE}));
+    for (const auto& node : connman->TestNodes()) {
+        BOOST_CHECK(connman->AlreadyConnectedToAddressPublic(node->addr));
     }
 
     // Clean up

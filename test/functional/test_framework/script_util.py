@@ -13,6 +13,7 @@ from test_framework.messages import (
     CTxIn,
     CTxInWitness,
     CTxOut,
+    ser_compact_size,
     sha256,
 )
 from test_framework.script import (
@@ -34,6 +35,14 @@ from test_framework.script import (
     OP_TRUE,
     hash160,
 )
+
+from test_framework.util import assert_equal
+
+# Maximum number of potentially executed legacy signature operations in validating a transaction.
+MAX_STD_LEGACY_SIGOPS = 2_500
+
+# Maximum number of sigops per standard P2SH redeemScript.
+MAX_STD_P2SH_SIGOPS = 15
 
 # To prevent a "tx-size-small" policy rule error, a transaction has to have a
 # non-witness size of at least 65 bytes (MIN_STANDARD_TX_NONWITNESS_SIZE in
@@ -57,6 +66,7 @@ DUMMY_MIN_OP_RETURN_SCRIPT = CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 1)))
 assert len(DUMMY_MIN_OP_RETURN_SCRIPT) == MIN_PADDING
 
 PAY_TO_ANCHOR = CScript([OP_1, bytes.fromhex("4e73")])
+ANCHOR_ADDRESS = "bcrt1pfeesnyr2tx"
 
 def key_to_p2pk_script(key):
     key = check_key(key)
@@ -122,6 +132,16 @@ def script_to_p2sh_p2wsh_script(script):
     p2shscript = CScript([OP_0, sha256(script)])
     return script_to_p2sh_script(p2shscript)
 
+def bulk_vout(tx, target_vsize):
+    if target_vsize < tx.get_vsize():
+        raise RuntimeError(f"target_vsize {target_vsize} is less than transaction virtual size {tx.get_vsize()}")
+    # determine number of needed padding bytes
+    dummy_vbytes = target_vsize - tx.get_vsize()
+    # compensate for the increase of the compact-size encoded script length
+    # (note that the length encoding of the unpadded output script needs one byte)
+    dummy_vbytes -= len(ser_compact_size(dummy_vbytes)) - 1
+    tx.vout[-1].scriptPubKey = CScript([OP_RETURN] + [OP_1] * dummy_vbytes)
+    assert_equal(tx.get_vsize(), target_vsize)
 
 def output_key_to_p2tr_script(key):
     assert len(key) == 32

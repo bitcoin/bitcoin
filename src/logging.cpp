@@ -30,7 +30,7 @@ BCLog::Logger& LogInstance()
  * cleaned up by the OS/libc. Defining a logger as a global object doesn't work
  * since the order of destruction of static/global objects is undefined.
  * Consider if the logger gets destroyed, and then some later destructor calls
- * LogPrintf, maybe indirectly, and you get a core dump at shutdown trying to
+ * LogInfo, maybe indirectly, and you get a core dump at shutdown trying to
  * access the logger. When the shutdown sequence is fully audited and tested,
  * explicit destruction of these objects can be implemented by changing this
  * from a raw pointer to a std::unique_ptr.
@@ -201,6 +201,7 @@ static const std::map<std::string, BCLog::LogFlags, std::less<>> LOG_CATEGORIES_
     {"txreconciliation", BCLog::TXRECONCILIATION},
     {"scan", BCLog::SCAN},
     {"txpackages", BCLog::TXPACKAGES},
+    {"kernel", BCLog::KERNEL},
 };
 
 static const std::unordered_map<BCLog::LogFlags, std::string> LOG_CATEGORIES_BY_FLAG{
@@ -371,12 +372,19 @@ static size_t MemUsage(const BCLog::Logger::BufferedLog& buflog)
            memusage::MallocUsage(sizeof(memusage::list_node<BCLog::Logger::BufferedLog>));
 }
 
-BCLog::LogRateLimiter::LogRateLimiter(
-    SchedulerFunction scheduler_func,
-    uint64_t max_bytes,
-    std::chrono::seconds reset_window) : m_max_bytes{max_bytes}, m_reset_window{reset_window}
+BCLog::LogRateLimiter::LogRateLimiter(uint64_t max_bytes, std::chrono::seconds reset_window)
+    : m_max_bytes{max_bytes}, m_reset_window{reset_window} {}
+
+std::shared_ptr<BCLog::LogRateLimiter> BCLog::LogRateLimiter::Create(
+    SchedulerFunction&& scheduler_func, uint64_t max_bytes, std::chrono::seconds reset_window)
 {
-    scheduler_func([this] { Reset(); }, reset_window);
+    auto limiter{std::shared_ptr<LogRateLimiter>(new LogRateLimiter(max_bytes, reset_window))};
+    std::weak_ptr<LogRateLimiter> weak_limiter{limiter};
+    auto reset = [weak_limiter] {
+        if (auto shared_limiter{weak_limiter.lock()}) shared_limiter->Reset();
+    };
+    scheduler_func(reset, limiter->m_reset_window);
+    return limiter;
 }
 
 BCLog::LogRateLimiter::Status BCLog::LogRateLimiter::Consume(
@@ -384,10 +392,10 @@ BCLog::LogRateLimiter::Status BCLog::LogRateLimiter::Consume(
     const std::string& str)
 {
     StdLockGuard scoped_lock(m_mutex);
-    auto& counter{m_source_locations.try_emplace(source_loc, m_max_bytes).first->second};
-    Status status{counter.GetDroppedBytes() > 0 ? Status::STILL_SUPPRESSED : Status::UNSUPPRESSED};
+    auto& stats{m_source_locations.try_emplace(source_loc, m_max_bytes).first->second};
+    Status status{stats.m_dropped_bytes > 0 ? Status::STILL_SUPPRESSED : Status::UNSUPPRESSED};
 
-    if (!counter.Consume(str.size()) && status == Status::UNSUPPRESSED) {
+    if (!stats.Consume(str.size()) && status == Status::UNSUPPRESSED) {
         status = Status::NEWLY_SUPPRESSED;
         m_suppression_active = true;
     }
@@ -455,24 +463,26 @@ void BCLog::Logger::LogPrintStr_(std::string_view str, std::source_location&& so
     bool ratelimit{false};
     if (should_ratelimit && m_limiter) {
         auto status{m_limiter->Consume(source_loc, str_prefixed)};
-        if (status == BCLog::LogRateLimiter::Status::NEWLY_SUPPRESSED) {
+        if (status == LogRateLimiter::Status::NEWLY_SUPPRESSED) {
             // NOLINTNEXTLINE(misc-no-recursion)
             LogPrintStr_(strprintf(
                              "Excessive logging detected from %s:%d (%s): >%d bytes logged during "
                              "the last time window of %is. Suppressing logging to disk from this "
                              "source location until time window resets. Console logging "
-                             "unaffected. Last log entry.\n",
+                             "unaffected. Last log entry.",
                              source_loc.file_name(), source_loc.line(), source_loc.function_name(),
                              m_limiter->m_max_bytes,
                              Ticks<std::chrono::seconds>(m_limiter->m_reset_window)),
                          std::source_location::current(), LogFlags::ALL, Level::Warning, /*should_ratelimit=*/false); // with should_ratelimit=false, this cannot lead to infinite recursion
+        } else if (status == LogRateLimiter::Status::STILL_SUPPRESSED) {
+            ratelimit = true;
         }
-        ratelimit = status == BCLog::LogRateLimiter::Status::STILL_SUPPRESSED;
-        // To avoid confusion caused by dropped log messages when debugging an issue,
-        // we prefix log lines with "[*]" when there are any suppressed source locations.
-        if (m_limiter->SuppressionsActive()) {
-            str_prefixed.insert(0, "[*] ");
-        }
+    }
+
+    // To avoid confusion caused by dropped log messages when debugging an issue,
+    // we prefix log lines with "[*]" when there are any suppressed source locations.
+    if (m_limiter && m_limiter->SuppressionsActive()) {
+        str_prefixed.insert(0, "[*] ");
     }
 
     if (m_print_to_console) {
@@ -523,7 +533,7 @@ void BCLog::Logger::ShrinkDebugFile()
         // Restart the file with some of the end
         std::vector<char> vch(RECENT_DEBUG_HISTORY_SIZE, 0);
         if (fseek(file, -((long)vch.size()), SEEK_END)) {
-            LogPrintf("Failed to shrink debug log file: fseek(...) failed\n");
+            LogWarning("Failed to shrink debug log file: fseek(...) failed");
             fclose(file);
             return;
         }
@@ -549,18 +559,17 @@ void BCLog::LogRateLimiter::Reset()
         source_locations.swap(m_source_locations);
         m_suppression_active = false;
     }
-    for (const auto& [source_loc, counter] : source_locations) {
-        uint64_t dropped_bytes{counter.GetDroppedBytes()};
-        if (dropped_bytes == 0) continue;
+    for (const auto& [source_loc, stats] : source_locations) {
+        if (stats.m_dropped_bytes == 0) continue;
         LogPrintLevel_(
-            LogFlags::ALL, Level::Info, /*should_ratelimit=*/false,
-            "Restarting logging from %s:%d (%s): %d bytes were dropped during the last %ss.\n",
+            LogFlags::ALL, Level::Warning, /*should_ratelimit=*/false,
+            "Restarting logging from %s:%d (%s): %d bytes were dropped during the last %ss.",
             source_loc.file_name(), source_loc.line(), source_loc.function_name(),
-            dropped_bytes, Ticks<std::chrono::seconds>(m_reset_window));
+            stats.m_dropped_bytes, Ticks<std::chrono::seconds>(m_reset_window));
     }
 }
 
-bool BCLog::LogLimitStats::Consume(uint64_t bytes)
+bool BCLog::LogRateLimiter::Stats::Consume(uint64_t bytes)
 {
     if (bytes > m_available_bytes) {
         m_dropped_bytes += bytes;

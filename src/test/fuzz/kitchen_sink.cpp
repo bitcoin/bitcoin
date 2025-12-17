@@ -5,7 +5,7 @@
 #include <common/messages.h>
 #include <merkleblock.h>
 #include <node/types.h>
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
 #include <rpc/util.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>

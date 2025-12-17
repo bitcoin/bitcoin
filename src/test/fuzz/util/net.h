@@ -139,6 +139,25 @@ public:
     }
 };
 
+class FuzzedNetEvents : public NetEventsInterface
+{
+public:
+    FuzzedNetEvents(FuzzedDataProvider& fdp) : m_fdp(fdp) {}
+
+    virtual void InitializeNode(const CNode&, ServiceFlags) override {}
+
+    virtual void FinalizeNode(const CNode&) override {}
+
+    virtual bool HasAllDesirableServiceFlags(ServiceFlags) const override { return m_fdp.ConsumeBool(); }
+
+    virtual bool ProcessMessages(CNode*, std::atomic<bool>&) override { return m_fdp.ConsumeBool(); }
+
+    virtual bool SendMessages(CNode*) override { return m_fdp.ConsumeBool(); }
+
+private:
+    FuzzedDataProvider& m_fdp;
+};
+
 class FuzzedSock : public Sock
 {
     FuzzedDataProvider& m_fuzzed_data_provider;
@@ -203,6 +222,11 @@ public:
     bool IsConnected(std::string& errmsg) const override;
 };
 
+[[nodiscard]] inline FuzzedNetEvents ConsumeNetEvents(FuzzedDataProvider& fdp) noexcept
+{
+    return FuzzedNetEvents{fdp};
+}
+
 [[nodiscard]] inline FuzzedSock ConsumeSock(FuzzedDataProvider& fuzzed_data_provider)
 {
     return FuzzedSock{fuzzed_data_provider};
@@ -225,6 +249,18 @@ inline CService ConsumeService(FuzzedDataProvider& fuzzed_data_provider) noexcep
     return {ConsumeNetAddr(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<uint16_t>()};
 }
 
+inline std::vector<CService> ConsumeServiceVector(FuzzedDataProvider& fuzzed_data_provider,
+                                                  size_t max_vector_size = 5) noexcept
+{
+    std::vector<CService> ret;
+    const size_t size = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, max_vector_size);
+    ret.reserve(size);
+    for (size_t i = 0; i < size; ++i) {
+        ret.emplace_back(ConsumeService(fuzzed_data_provider));
+    }
+    return ret;
+}
+
 CAddress ConsumeAddress(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
 template <bool ReturnUniquePtr = false>
@@ -239,6 +275,8 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
     const std::string addr_name = fuzzed_data_provider.ConsumeRandomLengthString(64);
     const ConnectionType conn_type = fuzzed_data_provider.PickValueInArray(ALL_CONNECTION_TYPES);
     const bool inbound_onion{conn_type == ConnectionType::INBOUND ? fuzzed_data_provider.ConsumeBool() : false};
+    const uint64_t network_id = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
+
     NetPermissionFlags permission_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
     if constexpr (ReturnUniquePtr) {
         return std::make_unique<CNode>(node_id,
@@ -250,6 +288,7 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
                                        addr_name,
                                        conn_type,
                                        inbound_onion,
+                                       network_id,
                                        CNodeOptions{ .permission_flags = permission_flags });
     } else {
         return CNode{node_id,
@@ -261,6 +300,7 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
                      addr_name,
                      conn_type,
                      inbound_onion,
+                     network_id,
                      CNodeOptions{ .permission_flags = permission_flags }};
     }
 }

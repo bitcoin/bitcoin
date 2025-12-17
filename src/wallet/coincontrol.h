@@ -7,7 +7,7 @@
 
 #include <outputtype.h>
 #include <policy/feerate.h>
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
 #include <primitives/transaction.h>
 #include <script/keyorigin.h>
 #include <script/signingprovider.h>
@@ -20,6 +20,8 @@
 namespace wallet {
 const int DEFAULT_MIN_DEPTH = 0;
 const int DEFAULT_MAX_DEPTH = 9999999;
+
+const int DEFAULT_WALLET_TX_VERSION = CTransaction::CURRENT_VERSION;
 
 //! Default for -avoidpartialspends
 static constexpr bool DEFAULT_AVOIDPARTIALSPENDS = false;
@@ -109,10 +111,10 @@ public:
     int m_max_depth = DEFAULT_MAX_DEPTH;
     //! SigningProvider that has pubkeys and scripts to do spend size estimation for external inputs
     FlatSigningProvider m_external_provider;
+    //! Version
+    uint32_t m_version = DEFAULT_WALLET_TX_VERSION;
     //! Locktime
     std::optional<uint32_t> m_locktime;
-    //! Version
-    std::optional<uint32_t> m_version;
     //! Caps weight of resulting tx
     std::optional<int> m_max_tx_weight{std::nullopt};
 

@@ -10,6 +10,7 @@
 #include <common/signmessage.h>
 #include <common/types.h>
 #include <logging.h>
+#include <musig.h>
 #include <node/types.h>
 #include <psbt.h>
 #include <script/descriptor.h>
@@ -43,12 +44,10 @@ class WalletStorage
 {
 public:
     virtual ~WalletStorage() = default;
-    virtual std::string GetDisplayName() const = 0;
+    virtual std::string LogName() const = 0;
     virtual WalletDatabase& GetDatabase() const = 0;
     virtual bool IsWalletFlagSet(uint64_t) const = 0;
     virtual void UnsetBlankWalletFlag(WalletBatch&) = 0;
-    virtual bool CanSupportFeature(enum WalletFeature) const = 0;
-    virtual void SetMinVersion(enum WalletFeature, WalletBatch* = nullptr) = 0;
     //! Pass the encryption key to cb().
     virtual bool WithEncryptionKey(std::function<bool (const CKeyingMaterial&)> cb) const = 0;
     virtual bool HasEncryptionKeys() const = 0;
@@ -87,7 +86,7 @@ public:
     explicit ScriptPubKeyMan(WalletStorage& storage) : m_storage(storage) {}
     virtual ~ScriptPubKeyMan() = default;
     virtual util::Result<CTxDestination> GetNewDestination(const OutputType type) { return util::Error{Untranslated("Not supported")}; }
-    virtual isminetype IsMine(const CScript& script) const { return ISMINE_NO; }
+    virtual bool IsMine(const CScript& script) const { return false; }
 
     //! Check that the given decryption key is valid for this ScriptPubKeyMan, i.e. it decrypts all of the keys handled by it.
     virtual bool CheckDecryptionKey(const CKeyingMaterial& master_key) { return false; }
@@ -117,9 +116,6 @@ public:
 
     /* Returns true if the wallet can give out new addresses. This means it has keys in the keypool or can generate new keys */
     virtual bool CanGetAddresses(bool internal = false) const { return false; }
-
-    /** Upgrades the wallet to the specified version */
-    virtual bool Upgrade(int prev_version, int new_version, bilingual_str& error) { return true; }
 
     virtual bool HavePrivateKeys() const { return false; }
     virtual bool HaveCryptedKeys() const { return false; }
@@ -156,7 +152,7 @@ public:
     template <typename... Params>
     void WalletLogPrintf(util::ConstevalFormatString<sizeof...(Params)> wallet_fmt, const Params&... params) const
     {
-        LogInfo("%s %s", m_storage.GetDisplayName(), tfm::format(wallet_fmt, params...));
+        LogInfo("[%s] %s", m_storage.LogName(), tfm::format(wallet_fmt, params...));
     };
 
     /** Keypool has new keys */
@@ -202,7 +198,7 @@ private:
     // Used only in migration.
     std::unordered_set<CScript, SaltedSipHasher> GetCandidateScriptPubKeys() const;
 
-    isminetype IsMine(const CScript& script) const override;
+    bool IsMine(const CScript& script) const override;
     bool CanProvide(const CScript& script, SignatureData& sigdata) override;
 public:
     using ScriptPubKeyMan::ScriptPubKeyMan;
@@ -298,6 +294,19 @@ private:
     //! Number of pre-generated keys/scripts (part of the look-ahead process, used to detect payments)
     int64_t m_keypool_size GUARDED_BY(cs_desc_man){DEFAULT_KEYPOOL_SIZE};
 
+    /** Map of a session id to MuSig2 secnonce
+     *
+     * Stores MuSig2 secnonces while the MuSig2 signing session is still ongoing.
+     * Note that these secnonces must not be reused. In order to avoid being tricked into
+     * reusing a nonce, this map is held only in memory and must not be written to disk.
+     * The side effect is that signing sessions cannot persist across restarts, but this
+     * must be done in order to prevent nonce reuse.
+     *
+     * The session id is an arbitrary value set by the signer in order for the signing logic
+     * to find ongoing signing sessions. It is the SHA256 of aggregate xonly key, + participant pubkey + sighash.
+     */
+    mutable std::map<uint256, MuSig2SecNonce> m_musig2_secnonces;
+
     bool AddDescriptorKeyWithDB(WalletBatch& batch, const CKey& key, const CPubKey &pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
     KeyMap GetKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
@@ -329,7 +338,7 @@ public:
     mutable RecursiveMutex cs_desc_man;
 
     util::Result<CTxDestination> GetNewDestination(const OutputType type) override;
-    isminetype IsMine(const CScript& script) const override;
+    bool IsMine(const CScript& script) const override;
 
     bool CheckDecryptionKey(const CKeyingMaterial& master_key) override;
     bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) override;

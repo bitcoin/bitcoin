@@ -46,6 +46,9 @@ void BenchTxGraphTrim(benchmark::Bench& bench)
     static constexpr int NUM_DEPS_PER_BOTTOM_TX = 100;
     /** Set a very large cluster size limit so that only the count limit is triggered. */
     static constexpr int32_t MAX_CLUSTER_SIZE = 100'000 * 100;
+    /** Set a very high number for acceptable iterations, so that we certainly benchmark optimal
+     *  linearization. */
+    static constexpr uint64_t NUM_ACCEPTABLE_ITERS = 100'000'000;
 
     /** Refs to all top transactions. */
     std::vector<TxGraph::Ref> top_refs;
@@ -57,7 +60,7 @@ void BenchTxGraphTrim(benchmark::Bench& bench)
     std::vector<size_t> top_components;
 
     InsecureRandomContext rng(11);
-    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE);
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, NUM_ACCEPTABLE_ITERS);
 
     // Construct the top chains.
     for (int chain = 0; chain < NUM_TOP_CHAINS; ++chain) {
@@ -111,9 +114,9 @@ void BenchTxGraphTrim(benchmark::Bench& bench)
         graph->GetBlockBuilder();
     });
 
-    assert(!graph->IsOversized());
+    assert(!graph->IsOversized(TxGraph::Level::TOP));
     // At least 99% of chains must survive.
-    assert(graph->GetTransactionCount() >= (NUM_TOP_CHAINS * NUM_TX_PER_TOP_CHAIN * 99) / 100);
+    assert(graph->GetTransactionCount(TxGraph::Level::TOP) >= (NUM_TOP_CHAINS * NUM_TX_PER_TOP_CHAIN * 99) / 100);
 }
 
 } // namespace

@@ -156,9 +156,8 @@ class MiningTemplateVerificationTest(BitcoinTestFramework):
         self.log.info("Generate a block")
         target = uint256_from_compact(block.nBits)
         # Ensure that it doesn't meet the target by coincidence
-        while block.sha256 <= target:
+        while block.hash_int <= target:
             block.nNonce += 1
-            block.rehash()
         self.log.debug("Found a nonce")
 
         self.log.info("A block template doesn't need PoW")

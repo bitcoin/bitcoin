@@ -48,7 +48,7 @@ static void AlertNotify(const std::string& strMessage)
 
 namespace node {
 
-kernel::InterruptResult KernelNotifications::blockTip(SynchronizationState state, CBlockIndex& index, double verification_progress)
+kernel::InterruptResult KernelNotifications::blockTip(SynchronizationState state, const CBlockIndex& index, double verification_progress)
 {
     {
         LOCK(m_tip_block_mutex);

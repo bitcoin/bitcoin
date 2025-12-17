@@ -10,8 +10,8 @@
 #include <qt/walletmodeltransaction.h>
 
 #include <interfaces/wallet.h>
+#include <primitives/transaction_identifier.h>
 #include <support/allocators/secure.h>
-#include <util/transaction_identifier.h>
 
 #include <vector>
 

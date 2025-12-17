@@ -57,8 +57,7 @@ class BaseNode(P2PInterface):
         """Override the standard on_block callback
 
         Store the hash of a received block in the dictionary."""
-        message.block.calc_sha256()
-        self.block_receive_map[message.block.sha256] += 1
+        self.block_receive_map[message.block.hash_int] += 1
 
     def on_inv(self, message):
         """Override the standard on_inv callback"""
@@ -182,7 +181,7 @@ class ExampleTest(BitcoinTestFramework):
             block_message = msg_block(block)
             # Send message is used to send a P2P message to the node over our P2PInterface
             peer_messaging.send_without_ping(block_message)
-            self.tip = block.sha256
+            self.tip = block.hash_int
             blocks.append(self.tip)
             self.block_time += 1
             height += 1

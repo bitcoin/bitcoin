@@ -43,7 +43,7 @@ FUZZ_TARGET(merkleblock)
             partial_merkle_tree = merkle_block.txn;
         });
     (void)partial_merkle_tree.GetNumTransactions();
-    std::vector<uint256> matches;
+    std::vector<Txid> matches;
     std::vector<unsigned int> indices;
     (void)partial_merkle_tree.ExtractMatches(matches, indices);
 }

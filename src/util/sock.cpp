@@ -409,7 +409,7 @@ void Sock::Close()
     int ret = close(m_socket);
 #endif
     if (ret) {
-        LogPrintf("Error closing socket %d: %s\n", m_socket, NetworkErrorString(WSAGetLastError()));
+        LogWarning("Error closing socket %d: %s", m_socket, NetworkErrorString(WSAGetLastError()));
     }
     m_socket = INVALID_SOCKET;
 }

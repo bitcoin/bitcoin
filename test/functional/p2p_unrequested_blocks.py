@@ -97,14 +97,14 @@ class AcceptBlockTest(BitcoinTestFramework):
             block_time += 1
         test_node.send_and_ping(msg_block(blocks_h2[0]))
 
-        with self.nodes[1].assert_debug_log(expected_msgs=[f"AcceptBlockHeader: not adding new block header {blocks_h2[1].hash}, missing anti-dos proof-of-work validation"]):
+        with self.nodes[1].assert_debug_log(expected_msgs=[f"AcceptBlockHeader: not adding new block header {blocks_h2[1].hash_hex}, missing anti-dos proof-of-work validation"]):
             min_work_node.send_and_ping(msg_block(blocks_h2[1]))
 
         assert_equal(self.nodes[0].getblockcount(), 2)
         assert_equal(self.nodes[1].getblockcount(), 1)
 
         # Ensure that the header of the second block was also not accepted by node1
-        assert_equal(self.check_hash_in_chaintips(self.nodes[1], blocks_h2[1].hash), False)
+        assert_equal(self.check_hash_in_chaintips(self.nodes[1], blocks_h2[1].hash_hex), False)
         self.log.info("First height 2 block accepted by node0; correctly rejected by node1")
 
         # 3. Send another block that builds on genesis.
@@ -115,14 +115,14 @@ class AcceptBlockTest(BitcoinTestFramework):
 
         tip_entry_found = False
         for x in self.nodes[0].getchaintips():
-            if x['hash'] == block_h1f.hash:
+            if x['hash'] == block_h1f.hash_hex:
                 assert_equal(x['status'], "headers-only")
                 tip_entry_found = True
         assert tip_entry_found
-        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", self.nodes[0].getblock, block_h1f.hash)
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", self.nodes[0].getblock, block_h1f.hash_hex)
 
         # 4. Send another two block that build on the fork.
-        block_h2f = create_block(block_h1f.sha256, create_coinbase(2), block_time)
+        block_h2f = create_block(block_h1f.hash_int, create_coinbase(2), block_time)
         block_time += 1
         block_h2f.solve()
         test_node.send_and_ping(msg_block(block_h2f))
@@ -131,17 +131,17 @@ class AcceptBlockTest(BitcoinTestFramework):
         # can't be fully validated.
         tip_entry_found = False
         for x in self.nodes[0].getchaintips():
-            if x['hash'] == block_h2f.hash:
+            if x['hash'] == block_h2f.hash_hex:
                 assert_equal(x['status'], "headers-only")
                 tip_entry_found = True
         assert tip_entry_found
 
         # But this block should be accepted by node since it has equal work.
-        self.nodes[0].getblock(block_h2f.hash)
+        self.nodes[0].getblock(block_h2f.hash_hex)
         self.log.info("Second height 2 block accepted, but not reorg'ed to")
 
         # 4b. Now send another block that builds on the forking chain.
-        block_h3 = create_block(block_h2f.sha256, create_coinbase(3), block_h2f.nTime+1)
+        block_h3 = create_block(block_h2f.hash_int, create_coinbase(3), block_h2f.nTime+1)
         block_h3.solve()
         test_node.send_and_ping(msg_block(block_h3))
 
@@ -149,14 +149,14 @@ class AcceptBlockTest(BitcoinTestFramework):
         # can't be fully validated.
         tip_entry_found = False
         for x in self.nodes[0].getchaintips():
-            if x['hash'] == block_h3.hash:
+            if x['hash'] == block_h3.hash_hex:
                 assert_equal(x['status'], "headers-only")
                 tip_entry_found = True
         assert tip_entry_found
-        self.nodes[0].getblock(block_h3.hash)
+        self.nodes[0].getblock(block_h3.hash_hex)
 
         # But this block should be accepted by node since it has more work.
-        self.nodes[0].getblock(block_h3.hash)
+        self.nodes[0].getblock(block_h3.hash_hex)
         self.log.info("Unrequested more-work block accepted")
 
         # 4c. Now mine 288 more blocks and deliver; all should be processed but
@@ -164,7 +164,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         tip = block_h3
         all_blocks = []
         for i in range(288):
-            next_block = create_block(tip.sha256, create_coinbase(i + 4), tip.nTime+1)
+            next_block = create_block(tip.hash_int, create_coinbase(i + 4), tip.nTime+1)
             next_block.solve()
             all_blocks.append(next_block)
             tip = next_block
@@ -172,8 +172,8 @@ class AcceptBlockTest(BitcoinTestFramework):
         # Now send the block at height 5 and check that it wasn't accepted (missing header)
         test_node.send_without_ping(msg_block(all_blocks[1]))
         test_node.wait_for_disconnect()
-        assert_raises_rpc_error(-5, "Block not found", self.nodes[0].getblock, all_blocks[1].hash)
-        assert_raises_rpc_error(-5, "Block not found", self.nodes[0].getblockheader, all_blocks[1].hash)
+        assert_raises_rpc_error(-5, "Block not found", self.nodes[0].getblock, all_blocks[1].hash_hex)
+        assert_raises_rpc_error(-5, "Block not found", self.nodes[0].getblockheader, all_blocks[1].hash_hex)
         test_node = self.nodes[0].add_p2p_connection(P2PInterface())
 
         # The block at height 5 should be accepted if we provide the missing header, though
@@ -181,7 +181,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         headers_message.headers.append(CBlockHeader(all_blocks[0]))
         test_node.send_without_ping(headers_message)
         test_node.send_and_ping(msg_block(all_blocks[1]))
-        self.nodes[0].getblock(all_blocks[1].hash)
+        self.nodes[0].getblock(all_blocks[1].hash_hex)
 
         # Now send the blocks in all_blocks
         for i in range(288):
@@ -190,8 +190,8 @@ class AcceptBlockTest(BitcoinTestFramework):
 
         # Blocks 1-287 should be accepted, block 288 should be ignored because it's too far ahead
         for x in all_blocks[:-1]:
-            self.nodes[0].getblock(x.hash)
-        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", self.nodes[0].getblock, all_blocks[-1].hash)
+            self.nodes[0].getblock(x.hash_hex)
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", self.nodes[0].getblock, all_blocks[-1].hash_hex)
 
         # 5. Test handling of unrequested block on the node that didn't process
         # Should still not be processed (even though it has a child that has more
@@ -215,35 +215,35 @@ class AcceptBlockTest(BitcoinTestFramework):
         with p2p_lock:
             # Clear state so we can check the getdata request
             test_node.last_message.pop("getdata", None)
-            test_node.send_without_ping(msg_inv([CInv(MSG_BLOCK, block_h3.sha256)]))
+            test_node.send_without_ping(msg_inv([CInv(MSG_BLOCK, block_h3.hash_int)]))
 
         test_node.sync_with_ping()
         with p2p_lock:
             getdata = test_node.last_message["getdata"]
 
         # Check that the getdata includes the right block
-        assert_equal(getdata.inv[0].hash, block_h1f.sha256)
+        assert_equal(getdata.inv[0].hash, block_h1f.hash_int)
         self.log.info("Inv at tip triggered getdata for unprocessed block")
 
         # 7. Send the missing block for the third time (now it is requested)
         test_node.send_and_ping(msg_block(block_h1f))
         assert_equal(self.nodes[0].getblockcount(), 290)
-        self.nodes[0].getblock(all_blocks[286].hash)
-        assert_equal(self.nodes[0].getbestblockhash(), all_blocks[286].hash)
-        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", self.nodes[0].getblock, all_blocks[287].hash)
+        self.nodes[0].getblock(all_blocks[286].hash_hex)
+        assert_equal(self.nodes[0].getbestblockhash(), all_blocks[286].hash_hex)
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", self.nodes[0].getblock, all_blocks[287].hash_hex)
         self.log.info("Successfully reorged to longer chain")
 
         # 8. Create a chain which is invalid at a height longer than the
         # current chain, but which has more blocks on top of that
-        block_289f = create_block(all_blocks[284].sha256, create_coinbase(289), all_blocks[284].nTime+1)
+        block_289f = create_block(all_blocks[284].hash_int, create_coinbase(289), all_blocks[284].nTime+1)
         block_289f.solve()
-        block_290f = create_block(block_289f.sha256, create_coinbase(290), block_289f.nTime+1)
+        block_290f = create_block(block_289f.hash_int, create_coinbase(290), block_289f.nTime+1)
         block_290f.solve()
         # block_291 spends a coinbase below maturity!
         tx_to_add = create_tx_with_script(block_290f.vtx[0], 0, script_sig=b"42", amount=1)
-        block_291 = create_block(block_290f.sha256, create_coinbase(291), block_290f.nTime+1, txlist=[tx_to_add])
+        block_291 = create_block(block_290f.hash_int, create_coinbase(291), block_290f.nTime+1, txlist=[tx_to_add])
         block_291.solve()
-        block_292 = create_block(block_291.sha256, create_coinbase(292), block_291.nTime+1)
+        block_292 = create_block(block_291.hash_int, create_coinbase(292), block_291.nTime+1)
         block_292.solve()
 
         # Now send all the headers on the chain and enough blocks to trigger reorg
@@ -256,17 +256,17 @@ class AcceptBlockTest(BitcoinTestFramework):
 
         tip_entry_found = False
         for x in self.nodes[0].getchaintips():
-            if x['hash'] == block_292.hash:
+            if x['hash'] == block_292.hash_hex:
                 assert_equal(x['status'], "headers-only")
                 tip_entry_found = True
         assert tip_entry_found
-        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", self.nodes[0].getblock, block_292.hash)
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", self.nodes[0].getblock, block_292.hash_hex)
 
         test_node.send_without_ping(msg_block(block_289f))
         test_node.send_and_ping(msg_block(block_290f))
 
-        self.nodes[0].getblock(block_289f.hash)
-        self.nodes[0].getblock(block_290f.hash)
+        self.nodes[0].getblock(block_289f.hash_hex)
+        self.nodes[0].getblock(block_290f.hash_hex)
 
         test_node.send_without_ping(msg_block(block_291))
 
@@ -279,11 +279,11 @@ class AcceptBlockTest(BitcoinTestFramework):
 
         # We should have failed reorg and switched back to 290 (but have block 291)
         assert_equal(self.nodes[0].getblockcount(), 290)
-        assert_equal(self.nodes[0].getbestblockhash(), all_blocks[286].hash)
-        assert_equal(self.nodes[0].getblock(block_291.hash)["confirmations"], -1)
+        assert_equal(self.nodes[0].getbestblockhash(), all_blocks[286].hash_hex)
+        assert_equal(self.nodes[0].getblock(block_291.hash_hex)["confirmations"], -1)
 
         # Now send a new header on the invalid chain, indicating we're forked off, and expect to get disconnected
-        block_293 = create_block(block_292.sha256, create_coinbase(293), block_292.nTime+1)
+        block_293 = create_block(block_292.hash_int, create_coinbase(293), block_292.nTime+1)
         block_293.solve()
         headers_message = msg_headers()
         headers_message.headers.append(CBlockHeader(block_293))

@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <numeric>
+#include <ranges>
 #include <utility>
 
 namespace node {
@@ -61,12 +62,8 @@ MiniMiner::MiniMiner(const CTxMemPool& mempool, const std::vector<COutPoint>& ou
     if (m_requested_outpoints_by_txid.empty()) return;
 
     // Calculate the cluster and construct the entry map.
-    std::vector<uint256> txids_needed;
-    txids_needed.reserve(m_requested_outpoints_by_txid.size());
-    for (const auto& [txid, _]: m_requested_outpoints_by_txid) {
-        txids_needed.push_back(txid);
-    }
-    const auto cluster = mempool.GatherClusters(txids_needed);
+    auto txids_needed{m_requested_outpoints_by_txid | std::views::keys};
+    const auto cluster = mempool.GatherClusters({txids_needed.begin(), txids_needed.end()});
     if (cluster.empty()) {
         // An empty cluster means that at least one of the transactions is missing from the mempool
         // (should not be possible given processing above) or DoS limit was hit.
@@ -76,13 +73,14 @@ MiniMiner::MiniMiner(const CTxMemPool& mempool, const std::vector<COutPoint>& ou
 
     // Add every entry to m_entries_by_txid and m_entries, except the ones that will be replaced.
     for (const auto& txiter : cluster) {
-        if (!m_to_be_replaced.count(txiter->GetTx().GetHash())) {
+        if (!m_to_be_replaced.contains(txiter->GetTx().GetHash())) {
+            auto [ancestor_count, ancestor_size, ancestor_fee] = mempool.CalculateAncestorData(*txiter);
             auto [mapiter, success] = m_entries_by_txid.emplace(txiter->GetTx().GetHash(),
                 MiniMinerMempoolEntry{/*tx_in=*/txiter->GetSharedTx(),
                                       /*vsize_self=*/txiter->GetTxSize(),
-                                      /*vsize_ancestor=*/txiter->GetSizeWithAncestors(),
+                                      /*vsize_ancestor=*/int64_t(ancestor_size),
                                       /*fee_self=*/txiter->GetModifiedFee(),
-                                      /*fee_ancestor=*/txiter->GetModFeesWithAncestors()});
+                                      /*fee_ancestor=*/ancestor_fee});
             m_entries.push_back(mapiter);
         } else {
             auto outpoints_it = m_requested_outpoints_by_txid.find(txiter->GetTx().GetHash());
@@ -103,13 +101,13 @@ MiniMiner::MiniMiner(const CTxMemPool& mempool, const std::vector<COutPoint>& ou
         // Cache descendants for future use. Unlike the real mempool, a descendant MiniMinerMempoolEntry
         // will not exist without its ancestor MiniMinerMempoolEntry, so these sets won't be invalidated.
         std::vector<MockEntryMap::iterator> cached_descendants;
-        const bool remove{m_to_be_replaced.count(txid) > 0};
+        const bool remove{m_to_be_replaced.contains(txid)};
         CTxMemPool::setEntries descendants;
         mempool.CalculateDescendants(txiter, descendants);
-        Assume(descendants.count(txiter) > 0);
+        Assume(descendants.contains(txiter));
         for (const auto& desc_txiter : descendants) {
             const auto txid_desc = desc_txiter->GetTx().GetHash();
-            const bool remove_desc{m_to_be_replaced.count(txid_desc) > 0};
+            const bool remove_desc{m_to_be_replaced.contains(txid_desc)};
             auto desc_it{m_entries_by_txid.find(txid_desc)};
             Assume((desc_it == m_entries_by_txid.end()) == remove_desc);
             if (remove) Assume(remove_desc);
@@ -138,7 +136,7 @@ MiniMiner::MiniMiner(const std::vector<MiniMinerMempoolEntry>& manual_entries,
     for (const auto& entry : manual_entries) {
         const auto& txid = entry.GetTx().GetHash();
         // We need to know the descendant set of every transaction.
-        if (!Assume(descendant_caches.count(txid) > 0)) {
+        if (!Assume(descendant_caches.contains(txid))) {
             m_ready_to_calculate = false;
             return;
         }
@@ -203,7 +201,7 @@ void MiniMiner::DeleteAncestorPackage(const std::set<MockEntryMap::iterator, Ite
     Assume(ancestors.size() >= 1);
     // "Mine" all transactions in this ancestor set.
     for (auto& anc : ancestors) {
-        Assume(m_in_block.count(anc->first) == 0);
+        Assume(!m_in_block.contains(anc->first));
         m_in_block.insert(anc->first);
         m_total_fees += anc->second.GetModifiedFee();
         m_total_vsize += anc->second.GetTxSize();
@@ -242,7 +240,7 @@ void MiniMiner::SanityCheck() const
                entry->second.GetModFeesWithAncestors() >= entry->second.GetModifiedFee();}));
     // None of the entries should be to-be-replaced transactions
     Assume(std::all_of(m_to_be_replaced.begin(), m_to_be_replaced.end(),
-        [&](const auto& txid){return m_entries_by_txid.find(txid) == m_entries_by_txid.end();}));
+        [&](const auto& txid){ return !m_entries_by_txid.contains(txid); }));
 }
 
 void MiniMiner::BuildMockTemplate(std::optional<CFeeRate> target_feerate)
@@ -276,7 +274,7 @@ void MiniMiner::BuildMockTemplate(std::optional<CFeeRate> target_feerate)
                 ancestors.insert(*iter);
                 for (const auto& input : (*iter)->second.GetTx().vin) {
                     if (auto parent_it{m_entries_by_txid.find(input.prevout.hash)}; parent_it != m_entries_by_txid.end()) {
-                        if (ancestors.count(parent_it) == 0) {
+                        if (!ancestors.contains(parent_it)) {
                             to_process.insert(parent_it);
                         }
                     }
@@ -286,7 +284,7 @@ void MiniMiner::BuildMockTemplate(std::optional<CFeeRate> target_feerate)
         }
         // Track the order in which transactions were selected.
         for (const auto& ancestor : ancestors) {
-            m_inclusion_order.emplace(Txid::FromUint256(ancestor->first), sequence_num);
+            m_inclusion_order.emplace(ancestor->first, sequence_num);
         }
         DeleteAncestorPackage(ancestors);
         SanityCheck();
@@ -402,20 +400,20 @@ std::optional<CAmount> MiniMiner::CalculateTotalBumpFees(const CFeeRate& target_
     for (const auto& [txid, outpoints] : m_requested_outpoints_by_txid) {
         // Skip any ancestors that already have a miner score higher than the target feerate
         // (already "made it" into the block)
-        if (m_in_block.count(txid)) continue;
+        if (m_in_block.contains(txid)) continue;
         auto iter = m_entries_by_txid.find(txid);
         if (iter == m_entries_by_txid.end()) continue;
         to_process.insert(iter);
         ancestors.insert(iter);
     }
 
-    std::set<uint256> has_been_processed;
+    std::set<Txid> has_been_processed;
     while (!to_process.empty()) {
         auto iter = to_process.begin();
         const CTransaction& tx = (*iter)->second.GetTx();
         for (const auto& input : tx.vin) {
             if (auto parent_it{m_entries_by_txid.find(input.prevout.hash)}; parent_it != m_entries_by_txid.end()) {
-                if (!has_been_processed.count(input.prevout.hash)) {
+                if (!has_been_processed.contains(input.prevout.hash)) {
                     to_process.insert(parent_it);
                 }
                 ancestors.insert(parent_it);

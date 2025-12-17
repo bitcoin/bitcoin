@@ -7,8 +7,8 @@
 #define BITCOIN_WALLET_WALLETDB_H
 
 #include <key.h>
+#include <primitives/transaction_identifier.h>
 #include <script/sign.h>
-#include <util/transaction_identifier.h>
 #include <wallet/db.h>
 #include <wallet/walletutil.h>
 
@@ -26,6 +26,9 @@ class CMasterKey;
 class CWallet;
 class CWalletTx;
 struct WalletContext;
+
+// Logs information about the database, including available engines, features, and other capabilities
+void LogDBInfo();
 
 /**
  * Overview of wallet database classes:
@@ -242,8 +245,6 @@ public:
     bool IsEncrypted();
 
     bool WriteOrderPosNext(int64_t nOrderPosNext);
-
-    bool WriteMinVersion(int nVersion);
 
     bool WriteDescriptorKey(const uint256& desc_id, const CPubKey& pubkey, const CPrivKey& privkey);
     bool WriteCryptedDescriptorKey(const uint256& desc_id, const CPubKey& pubkey, const std::vector<unsigned char>& secret);

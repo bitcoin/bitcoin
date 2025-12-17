@@ -223,7 +223,7 @@ fn get_pathspecs_default_excludes() -> Vec<String> {
         .chain(&[
             "doc/release-notes/release-notes-*", // archived notes
         ])
-        .map(|s| format!(":(exclude){}", s))
+        .map(|s| format!(":(exclude){s}"))
         .collect()
 }
 
@@ -280,8 +280,7 @@ fn lint_commit_msg() -> LintResult {
         if let Some(line) = commit_info.lines().nth(1) {
             if !line.is_empty() {
                 println!(
-                        "The subject line of commit hash {} is followed by a non-empty line. Subject lines should always be followed by a blank line.",
-                        hash
+                        "The subject line of commit hash {hash} is followed by a non-empty line. Subject lines should always be followed by a blank line."
                     );
                 good = false;
             }
@@ -351,15 +350,14 @@ fn lint_py_lint() -> LintResult {
 
     match cmd.status() {
         Ok(status) if status.success() => Ok(()),
-        Ok(_) => Err(format!("`{}` found errors!", bin_name)),
+        Ok(_) => Err(format!("`{bin_name}` found errors!")),
         Err(e) if e.kind() == ErrorKind::NotFound => {
             println!(
-                "`{}` was not found in $PATH, skipping those checks.",
-                bin_name
+                "`{bin_name}` was not found in $PATH, skipping those checks."
             );
             Ok(())
         }
-        Err(e) => Err(format!("Error running `{}`: {}", bin_name, e)),
+        Err(e) => Err(format!("Error running `{bin_name}`: {e}")),
     }
 }
 
@@ -373,6 +371,8 @@ fn lint_std_filesystem() -> LintResult {
             "./src/",
             ":(exclude)src/ipc/libmultiprocess/",
             ":(exclude)src/util/fs.h",
+            ":(exclude)src/test/kernel/test_kernel.cpp",
+            ":(exclude)src/bitcoin-chainstate.cpp",
         ])
         .status()
         .expect("command error")
@@ -491,7 +491,7 @@ fn get_pathspecs_exclude_whitespace() -> Vec<String> {
             "test/lint/git-subtree-check.sh",
         ]
         .iter()
-        .map(|s| format!(":(exclude){}", s)),
+        .map(|s| format!(":(exclude){s}")),
     );
     list
 }
@@ -650,14 +650,13 @@ still succeed, but silently be buggy. For example, a slower fallback algorithm c
 even though bitcoin-build-config.h indicates that a faster feature is available and should be used.
 
 If you are unsure which symbol is used, you can find it with this command:
-git grep --perl-regexp '{}' -- file_name
+git grep --perl-regexp '{defines_regex}' -- file_name
 
 Make sure to include it with the IWYU pragma. Otherwise, IWYU may falsely instruct to remove the
 include again.
 
 #include <bitcoin-build-config.h> // IWYU pragma: keep
-            "#,
-            defines_regex
+            "#
         )
         .trim()
         .to_string());
@@ -714,9 +713,8 @@ One or more markdown links are broken.
 Note: relative links are preferred as jump-to-file works natively within Emacs, but they are not required.
 
 Markdown link errors found:
-{}
-                "#,
-                stderr
+{stderr}
+                "#
             )
             .trim()
             .to_string())
@@ -725,7 +723,7 @@ Markdown link errors found:
             println!("`mlc` was not found in $PATH, skipping markdown lint check.");
             Ok(())
         }
-        Err(e) => Err(format!("Error running mlc: {}", e)), // Misc errors
+        Err(e) => Err(format!("Error running mlc: {e}")), // Misc errors
     }
 }
 
@@ -744,7 +742,7 @@ fn run_all_python_linters() -> LintResult {
                 .success()
         {
             good = false;
-            println!("^---- ⚠️ Failure generated from {}", entry_fn);
+            println!("^---- ⚠️ Failure generated from {entry_fn}");
         }
     }
     if good {

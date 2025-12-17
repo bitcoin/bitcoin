@@ -92,7 +92,17 @@ SECP256K1_API int secp256k1_ecdsa_sign_recoverable(
 
 /** Recover an ECDSA public key from a signature.
  *
- *  Returns: 1: public key successfully recovered (which guarantees a correct signature).
+ *  Successful public key recovery guarantees that the signature, after normalization,
+ *  passes `secp256k1_ecdsa_verify`. Thus, explicit verification is not necessary.
+ *
+ *  However, a recoverable signature that successfully passes `secp256k1_ecdsa_recover`,
+ *  when converted to a non-recoverable signature (using
+ *  `secp256k1_ecdsa_recoverable_signature_convert`), is not guaranteed to be
+ *  normalized and thus not guaranteed to pass `secp256k1_ecdsa_verify`. If a
+ *  normalized signature is required, call `secp256k1_ecdsa_signature_normalize`
+ *  after `secp256k1_ecdsa_recoverable_signature_convert`.
+ *
+ *  Returns: 1: public key successfully recovered
  *           0: otherwise.
  *  Args:    ctx:       pointer to a context object.
  *  Out:     pubkey:    pointer to the recovered public key.

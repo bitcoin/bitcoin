@@ -140,7 +140,7 @@ public:
     void Close() override;
 
     /** Rewrite the entire database on disk */
-    bool Rewrite(const char* skip = nullptr) override;
+    bool Rewrite() override;
 
     /** Back up the entire database to a file.
      */
