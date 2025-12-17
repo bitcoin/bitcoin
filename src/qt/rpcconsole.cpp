@@ -574,12 +574,14 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     ui->WalletSelector->setVisible(false);
     ui->WalletSelectorLabel->setVisible(false);
 
-    // Wallet Repair Buttons
+    // Repair Buttons
     // Disable wallet repair options that require a wallet (enable them later when a wallet is added)
     ui->btn_rescan1->setEnabled(false);
     ui->btn_rescan2->setEnabled(false);
+#ifdef ENABLE_WALLET
     connect(ui->btn_rescan1, &QPushButton::clicked, this, &RPCConsole::walletRescan1);
     connect(ui->btn_rescan2, &QPushButton::clicked, this, &RPCConsole::walletRescan2);
+#endif // ENABLE_WALLET
     connect(ui->btn_reindex, &QPushButton::clicked, this, &RPCConsole::walletReindex);
 
     // Register RPC timer interface
@@ -917,17 +919,19 @@ void RPCConsole::setFontSize(int newSize)
     ui->messagesWidget->verticalScrollBar()->setValue(oldPosFactor * ui->messagesWidget->verticalScrollBar()->maximum());
 }
 
-/** Restart wallet with "-rescan=1" */
+#ifdef ENABLE_WALLET
+/** Rescan wallet from wallet creation */
 void RPCConsole::walletRescan1()
 {
     buildParameterlist(RESCAN1);
 }
 
-/** Restart wallet with "-rescan=2" */
+/** Rescan wallet from genesis block */
 void RPCConsole::walletRescan2()
 {
     buildParameterlist(RESCAN2);
 }
+#endif
 
 /** Restart wallet with "-reindex" */
 void RPCConsole::walletReindex()

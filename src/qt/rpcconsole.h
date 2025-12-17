@@ -117,10 +117,12 @@ public Q_SLOTS:
     void fontSmaller();
     void setFontSize(int newSize);
 
-    /** Wallet repair options */
+    /** Repair options */
+    void walletReindex();
+#ifdef ENABLE_WALLET
     void walletRescan1();
     void walletRescan2();
-    void walletReindex();
+#endif // ENABLE_WALLET
 
     /** Append the message to the message widget */
     void message(int category, const QString &msg) { message(category, msg, false); }
