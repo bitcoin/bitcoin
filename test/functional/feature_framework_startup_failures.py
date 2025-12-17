@@ -76,7 +76,7 @@ class FeatureFrameworkStartupFailures(BitcoinTestFramework):
             "NonExistentError",
         )
 
-        self.log.info("Parent process is measuring node startup duration in order to obtain a reasonable timeout value for later test...")
+        self.log.info("Parent process is measuring node startup duration in order to obtain a reasonable timeout value for later tests...")
         node_start_time = time.time()
         self.nodes[0].start()
         self.nodes[0].wait_for_rpc_connection()
@@ -88,6 +88,12 @@ class FeatureFrameworkStartupFailures(BitcoinTestFramework):
         self._verify_startup_failure(
             TestWrongRpcPortStartupFailure, [f"--internal_node_start_duration={node_start_duration}"],
             r"AssertionError: \[node 0\] Unable to connect to bitcoind after \d+s \(ignored errors: {[^}]*'OSError \w+'?: \d+[^}]*}, latest: '[\w ]+'/\w+\([^)]+\)\)"
+        )
+
+        self.log.info("Verifying timeout while waiting for init errors that do not occur results in only one exception.")
+        self._verify_startup_failure(
+            TestMissingInitErrorTimeout, [f"--internal_node_start_duration={node_start_duration}"],
+            r"AssertionError: \[node 0\] bitcoind should have exited within \d+s with an error \(cmd:"
         )
 
         self.log.info("Verifying startup failure due to invalid arg results in only one exception.")
@@ -127,6 +133,21 @@ class TestWrongRpcPortStartupFailure(InternalDurationTestMixin, BitcoinTestFrame
         # Override the timeout to avoid waiting unnecessarily long to realize
         # nothing is on that port.
         self.rpc_timeout = self.get_reasonable_rpc_timeout()
+
+    def run_test(self):
+        assert False, "Should have failed earlier during startup."
+
+class TestMissingInitErrorTimeout(InternalDurationTestMixin, BitcoinTestFramework):
+    def set_test_params(self):
+        self.num_nodes = 1
+        # Override the timeout to avoid waiting unnecessarily long for an init
+        # error which never occurs.
+        self.rpc_timeout = self.get_reasonable_rpc_timeout()
+
+    def setup_network(self):
+        self.add_nodes(self.num_nodes, self.extra_args)
+        self.nodes[0].assert_start_raises_init_error()
+        assert False, "assert_start_raises_init_error() should raise an exception due to timeout since we don't expect an init error."
 
     def run_test(self):
         assert False, "Should have failed earlier during startup."
