@@ -30,7 +30,7 @@ defaults:
 
 jobs:
   runners:
-    name: 'determine runners'
+    name: '[meta] determine runners'
     runs-on: ubuntu-latest
     outputs:
       provider: ${{ steps.runners.outputs.provider }}
@@ -343,9 +343,23 @@ jobs:
         run: |
           py -3 test/fuzz/test_runner.py --par $NUMBER_OF_PROCESSORS --loglevel DEBUG "${RUNNER_TEMP}/qa-assets/fuzz_corpora"
 
+  record-frozen-commit:
+    # Record frozen commit, so that the native tests on cross-builds can run on
+    # the exact same commit id of the build.
+    name: '[meta] record frozen commit'
+    runs-on: ubuntu-latest
+    outputs:
+      commit: ${{ steps.record-commit.outputs.commit }}
+    steps:
+      - *ANNOTATION_PR_NUMBER
+      - *CHECKOUT
+      - name: Record commit
+        id: record-commit
+        run: echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
   windows-cross:
     name: 'Windows-cross to x86_64, ${{ matrix.crt }}'
-    needs: runners
+    needs: [runners, record-frozen-commit]
     runs-on: ${{ needs.runners.outputs.provider == 'cirrus' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm' || 'ubuntu-24.04' }}
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
 
@@ -368,7 +382,10 @@ jobs:
     steps:
       - *ANNOTATION_PR_NUMBER
 
-      - *CHECKOUT
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.record-frozen-commit.outputs.commit }}
 
       - name: Configure environment
         uses: ./.github/actions/configure-environment
@@ -402,7 +419,7 @@ jobs:
   windows-native-test:
     name: 'Windows, ${{ matrix.crt }}, test cross-built'
     runs-on: windows-2022
-    needs: windows-cross
+    needs: [windows-cross, record-frozen-commit]
 
     strategy:
       fail-fast: false
@@ -421,7 +438,10 @@ jobs:
     steps:
       - *ANNOTATION_PR_NUMBER
 
-      - *CHECKOUT
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.record-frozen-commit.outputs.commit }}
 
       - name: Download built executables
         uses: actions/download-artifact@v5
