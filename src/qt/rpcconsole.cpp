@@ -71,8 +71,6 @@ const char fontSizeSettingsKey[] = "consoleFontSize";
 const TrafficGraphData::GraphRange INITIAL_TRAFFIC_GRAPH_SETTING = TrafficGraphData::Range_30m;
 
 // Repair parameters
-const QString RESCAN1("-rescan=1");
-const QString RESCAN2("-rescan=2");
 const QString REINDEX("-reindex");
 
 namespace {
@@ -946,13 +944,13 @@ void RPCConsole::walletRescan(bool from_genesis)
 /** Rescan wallet from wallet creation */
 void RPCConsole::walletRescan1()
 {
-    buildParameterlist(RESCAN1);
+    walletRescan(/*from_genesis=*/false);
 }
 
 /** Rescan wallet from genesis block */
 void RPCConsole::walletRescan2()
 {
-    buildParameterlist(RESCAN2);
+    walletRescan(/*from_genesis=*/true);
 }
 #endif
 
@@ -979,8 +977,6 @@ void RPCConsole::buildParameterlist(QString arg)
     }
 
     // Remove existing repair-options
-    args.removeAll(RESCAN1);
-    args.removeAll(RESCAN2);
     args.removeAll(REINDEX);
 
     // Append repair parameter to command line.
