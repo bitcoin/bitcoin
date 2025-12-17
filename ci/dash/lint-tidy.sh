@@ -64,7 +64,7 @@ if [ "${CACHE_SIZE_MB}" -gt "${CTCACHE_MAXSIZE_MB}" ]; then
   if [ "${CACHE_SIZE_MB}" -gt "${CTCACHE_MAXSIZE_MB}" ]; then
     FILE_COUNT=$(find "${CTCACHE_DIR}" -type f | wc -l)
     REMOVE_COUNT=$((FILE_COUNT / 5))
-    find "${CTCACHE_DIR}" -type f -printf '%T+ %p\n' | sort | head -n "${REMOVE_COUNT}" | cut -d' ' -f2- | xargs rm -f 2>/dev/null || true
+    find "${CTCACHE_DIR}" -type f -printf '%T+ %p\0' | sort -z | head -z -n "${REMOVE_COUNT}" | cut -z -d' ' -f2- | xargs -0 rm -f 2>/dev/null || true
     echo "Removed ${REMOVE_COUNT} oldest cache entries"
   fi
   echo "Cache size after cleanup: $(du -sh "${CTCACHE_DIR}" 2>/dev/null | cut -f1)"
