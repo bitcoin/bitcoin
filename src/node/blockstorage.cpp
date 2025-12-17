@@ -1091,7 +1091,7 @@ BlockManager::ReadRawBlockResult BlockManager::ReadRawBlock(const FlatFilePos& p
 
         if (block_part) {
             const auto [offset, size]{*block_part};
-            if (size == 0 || offset >= blk_size || size > blk_size - offset) {
+            if (size == 0 || SaturatingAdd(offset, size) > blk_size) {
                 return util::Unexpected{ReadRawError::BadPartRange}; // Avoid logging - offset/size come from untrusted REST input
             }
             filein.seek(offset, SEEK_CUR);

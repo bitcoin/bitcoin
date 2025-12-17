@@ -84,7 +84,7 @@ class RESTTest (BitcoinTestFramework):
             conn.request('POST', rest_uri, body)
         resp = conn.getresponse()
 
-        assert resp.status == status, f"Expected: {status}, Got: {resp.status} - Response: {str(resp.read())}"
+        assert resp.status == status, f"Expected: {status}, Got: {resp.status} ({resp.reason}) - Response: {str(resp.read())}"
 
         if ret_type == RetType.OBJ:
             return resp
@@ -485,12 +485,15 @@ class RESTTest (BitcoinTestFramework):
 
             get_block_part(status=400, query_params={"offset": 0, "size": 0})
             get_block_part(status=400, query_params={"offset": len(block_bin), "size": 0})
-            get_block_part(status=400, query_params={"offset": len(block_bin) + 1, "size": 1})
             get_block_part(status=400, query_params={"offset": len(block_bin), "size": 1})
             get_block_part(status=400, query_params={"offset": len(block_bin) + 1, "size": 1})
             get_block_part(status=400, query_params={"offset": 0, "size": len(block_bin) + 1})
 
-        self.test_rest_request(f"/blockpart/{blockhash}", status=400, req_type=ReqType.JSON, ret_type=RetType.OBJ)
+        res = self.test_rest_request(f"/blockpart/{blockhash}", status=400, req_type=ReqType.BIN, ret_type=RetType.OBJ)
+        assert res.read().decode().startswith("Block part offset missing or invalid")
+
+        res = self.test_rest_request(f"/blockpart/{blockhash}", query_params={"offset":0, "size":1}, status=400, req_type=ReqType.JSON, ret_type=RetType.OBJ)
+        assert res.read().decode().startswith("JSON output is not supported for this request type")
 
         self.log.info("Missing block data should cause REST API to fail")
 
