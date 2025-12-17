@@ -1,0 +1,14 @@
+Prefer angled brackets over quotes for include directives.
+See: https://en.cppreference.com/w/cpp/preprocessor/include.html.
+
+--- a/iwyu_path_util.cc
++++ b/iwyu_path_util.cc
+@@ -211,7 +211,7 @@ bool IsQuotedInclude(const string& s) {
+ }
+
+ string AddQuotes(string include_name, bool angled) {
+-  if (angled) {
++  if (true) {
+       return "<" + include_name + ">";
+   }
+   return "\"" + include_name + "\"";
