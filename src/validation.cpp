@@ -1748,9 +1748,9 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
 
     for (const auto& tx : package) {
         const auto& wtxid = tx->GetWitnessHash();
-        if (multi_submission_result.m_tx_results.count(wtxid) > 0) {
+        if (multi_submission_result.m_tx_results.contains(wtxid)) {
             // We shouldn't have re-submitted if the tx result was already in results_final.
-            Assume(results_final.count(wtxid) == 0);
+            Assume(!results_final.contains(wtxid));
             // If it was submitted, check to see if the tx is still in the mempool. It could have
             // been evicted due to LimitMempoolSize() above.
             const auto& txresult = multi_submission_result.m_tx_results.at(wtxid);
@@ -1766,7 +1766,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
             // Already-in-mempool transaction. Check to see if it's still there, as it could have
             // been evicted when LimitMempoolSize() was called.
             Assume(it->second.m_result_type != MempoolAcceptResult::ResultType::INVALID);
-            Assume(individual_results_nonfinal.count(wtxid) == 0);
+            Assume(!individual_results_nonfinal.contains(wtxid));
             // Query by txid to include the same-txid-different-witness ones.
             if (!m_pool.exists(tx->GetHash())) {
                 package_state_final.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
@@ -4874,14 +4874,14 @@ bool Chainstate::ReplayBlocks()
     const CBlockIndex* pindexNew;            // New tip during the interrupted flush.
     const CBlockIndex* pindexFork = nullptr; // Latest block common to both the old and the new tip.
 
-    if (m_blockman.m_block_index.count(hashHeads[0]) == 0) {
+    if (!m_blockman.m_block_index.contains(hashHeads[0])) {
         LogError("ReplayBlocks(): reorganization to unknown block requested\n");
         return false;
     }
     pindexNew = &(m_blockman.m_block_index[hashHeads[0]]);
 
     if (!hashHeads[1].IsNull()) { // The old tip is allowed to be 0, indicating it's the first flush.
-        if (m_blockman.m_block_index.count(hashHeads[1]) == 0) {
+        if (!m_blockman.m_block_index.contains(hashHeads[1])) {
             LogError("ReplayBlocks(): reorganization from unknown block requested\n");
             return false;
         }
@@ -5013,7 +5013,7 @@ bool Chainstate::LoadGenesisBlock()
     // m_blockman.m_block_index. Note that we can't use m_chain here, since it is
     // set based on the coins db, not the block index db, which is the only
     // thing loaded at this point.
-    if (m_blockman.m_block_index.count(params.GenesisBlock().GetHash()))
+    if (m_blockman.m_block_index.contains(params.GenesisBlock().GetHash()))
         return true;
 
     try {

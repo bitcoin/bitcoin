@@ -30,7 +30,7 @@ std::vector<size_t> FindInPackageParents(const Package& package, const CTransact
         // We assume the package is sorted, so that we don't need to continue
         // looking past the transaction itself.
         if (&(*tx) == &(*ptx)) break;
-        if (possible_parents.count(tx->GetHash())) {
+        if (possible_parents.contains(tx->GetHash())) {
             in_package_parents.push_back(i);
         }
     }
@@ -240,7 +240,7 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CT
         // TRUC transaction can only have 1 descendant.
         const bool child_will_be_replaced = !descendants.empty() &&
             std::any_of(descendants.cbegin(), descendants.cend(),
-                [&direct_conflicts](const CTxMemPool::txiter& child){return direct_conflicts.count(child->GetTx().GetHash()) > 0;});
+                [&direct_conflicts](const CTxMemPool::txiter& child){return direct_conflicts.contains(child->GetTx().GetHash());});
         if (pool.GetDescendantCount(parent_entry) + 1 > TRUC_DESCENDANT_LIMIT && !child_will_be_replaced) {
             // Allow sibling eviction for TRUC transaction: if another child already exists, even if
             // we don't conflict inputs with it, consider evicting it under RBF rules. We rely on TRUC rules

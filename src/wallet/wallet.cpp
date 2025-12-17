@@ -266,7 +266,7 @@ void WaitForDeleteWallet(std::shared_ptr<CWallet>&& wallet)
     wallet.reset();
     {
         WAIT_LOCK(g_wallet_release_mutex, lock);
-        while (g_unloading_wallet_set.count(name) == 1) {
+        while (g_unloading_wallet_set.contains(name)) {
             g_wallet_release_cv.wait(lock);
         }
     }
@@ -925,7 +925,7 @@ bool CWallet::MarkReplaced(const Txid& originalHash, const Txid& newHash)
     CWalletTx& wtx = (*mi).second;
 
     // Ensure for now that we're not overwriting data
-    assert(wtx.mapValue.count("replaced_by_txid") == 0);
+    assert(!wtx.mapValue.contains("replaced_by_txid"));
 
     wtx.mapValue["replaced_by_txid"] = newHash.ToString();
 
@@ -1161,7 +1161,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
             }
         }
 
-        bool fExisted = mapWallet.count(tx.GetHash()) != 0;
+        bool fExisted = mapWallet.contains(tx.GetHash());
         if (fExisted && !fUpdate) return false;
         if (fExisted || IsMine(tx) || IsFromMe(tx))
         {
@@ -1337,7 +1337,7 @@ void CWallet::RecursiveUpdateTxState(WalletBatch* batch, const Txid& tx_hash, co
             for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
                 std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(COutPoint(now, i));
                 for (TxSpends::const_iterator iter = range.first; iter != range.second; ++iter) {
-                    if (!done.count(iter->second)) {
+                    if (!done.contains(iter->second)) {
                         todo.insert(iter->second);
                     }
                 }
@@ -1526,7 +1526,7 @@ void CWallet::blockDisconnected(const interfaces::BlockInfo& block)
 
         for (const CTxIn& tx_in : ptx->vin) {
             // No other wallet transactions conflicted with this transaction
-            if (mapTxSpends.count(tx_in.prevout) < 1) continue;
+            if (!mapTxSpends.contains(tx_in.prevout)) continue;
 
             std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(tx_in.prevout);
 
@@ -2535,7 +2535,7 @@ void CWallet::MarkDestinationsDirty(const std::set<CTxDestination>& destinations
         if (wtx.m_is_cache_empty) continue;
         for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
             CTxDestination dst;
-            if (ExtractDestination(wtx.tx->vout[i].scriptPubKey, dst) && destinations.count(dst)) {
+            if (ExtractDestination(wtx.tx->vout[i].scriptPubKey, dst) && destinations.contains(dst)) {
                 wtx.MarkDirty();
                 break;
             }
@@ -2679,7 +2679,7 @@ bool CWallet::UnlockAllCoins()
 bool CWallet::IsLockedCoin(const COutPoint& output) const
 {
     AssertLockHeld(cs_wallet);
-    return m_locked_coins.count(output) > 0;
+    return m_locked_coins.contains(output);
 }
 
 void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
@@ -3398,7 +3398,7 @@ std::set<ScriptPubKeyMan*> CWallet::GetScriptPubKeyMans(const CScript& script) c
 
 ScriptPubKeyMan* CWallet::GetScriptPubKeyMan(const uint256& id) const
 {
-    if (m_spk_managers.count(id) > 0) {
+    if (m_spk_managers.contains(id)) {
         return m_spk_managers.at(id).get();
     }
     return nullptr;
@@ -3683,7 +3683,7 @@ DescriptorScriptPubKeyMan* CWallet::GetDescriptorScriptPubKeyMan(const WalletDes
 std::optional<bool> CWallet::IsInternalScriptPubKeyMan(ScriptPubKeyMan* spk_man) const
 {
     // only active ScriptPubKeyMan can be internal
-    if (!GetActiveScriptPubKeyMans().count(spk_man)) {
+    if (!GetActiveScriptPubKeyMans().contains(spk_man)) {
         return std::nullopt;
     }
 
@@ -3878,7 +3878,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
     if (!data.solvable_descs.empty()) Assume(!data.solvable_wallet->m_cached_spks.empty());
 
     for (auto& desc_spkm : data.desc_spkms) {
-        if (m_spk_managers.count(desc_spkm->GetID()) > 0) {
+        if (m_spk_managers.contains(desc_spkm->GetID())) {
             return util::Error{_("Error: Duplicate descriptors created during migration. Your wallet may be corrupted.")};
         }
         uint256 id = desc_spkm->GetID();
@@ -4026,7 +4026,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         if (require_transfer && !copied) {
 
             // Skip invalid/non-watched scripts that will not be migrated
-            if (not_migrated_dests.count(dest) > 0) {
+            if (not_migrated_dests.contains(dest)) {
                 dests_to_delete.push_back(dest);
                 continue;
             }

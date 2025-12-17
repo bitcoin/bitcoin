@@ -38,7 +38,7 @@ bool PartiallySignedTransaction::Merge(const PartiallySignedTransaction& psbt)
         outputs[i].Merge(psbt.outputs[i]);
     }
     for (auto& xpub_pair : psbt.m_xpubs) {
-        if (m_xpubs.count(xpub_pair.first) == 0) {
+        if (!m_xpubs.contains(xpub_pair.first)) {
             m_xpubs[xpub_pair.first] = xpub_pair.second;
         } else {
             m_xpubs[xpub_pair.first].insert(xpub_pair.second.begin(), xpub_pair.second.end());
