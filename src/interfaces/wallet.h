@@ -40,6 +40,7 @@ namespace wallet {
 class CCoinControl;
 class CWallet;
 enum isminetype : unsigned int;
+enum class RescanStatus : uint8_t;
 struct CRecipient;
 struct WalletContext;
 using isminefilter = std::underlying_type<isminetype>::type;
@@ -92,6 +93,9 @@ public:
     //! Change wallet passphrase.
     virtual bool changeWalletPassphrase(const SecureString& old_wallet_passphrase,
         const SecureString& new_wallet_passphrase) = 0;
+
+    //! Initiate a rescan. Returns status indicating success, failure, abort, or already rescanning.
+    virtual wallet::RescanStatus startRescan(bool from_genesis) = 0;
 
     //! Abort a rescan.
     virtual void abortRescan() = 0;

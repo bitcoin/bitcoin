@@ -4,6 +4,7 @@
 
 #include <interfaces/wallet.h>
 
+#include <chain.h>
 #include <coinjoin/client.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
@@ -172,6 +173,37 @@ public:
         const SecureString& new_wallet_passphrase) override
     {
         return m_wallet->ChangeWalletPassphrase(old_wallet_passphrase, new_wallet_passphrase);
+    }
+    wallet::RescanStatus startRescan(bool from_genesis) override
+    {
+        int rescan_height{0};
+        if (!from_genesis) {
+            std::optional<int64_t> time_first_key;
+            for (auto spk_man : m_wallet->GetAllScriptPubKeyMans()) {
+                int64_t time = spk_man->GetTimeFirstKey();
+                if (!time_first_key || time < *time_first_key) time_first_key = time;
+            }
+            if (time_first_key) {
+                m_wallet->chain().findFirstBlockWithTimeAndHeight(*time_first_key - TIMESTAMP_WINDOW, rescan_height,
+                                                                  FoundBlock().height(rescan_height));
+            }
+        }
+
+        WalletRescanReserver reserver(*m_wallet);
+        if (!reserver.reserve()) {
+            return wallet::RescanStatus::BUSY;
+        }
+        switch (m_wallet->ScanForWalletTransactions(m_wallet->chain().getBlockHash(rescan_height), rescan_height, /*max_height=*/std::nullopt,
+                                                    reserver, /*fUpdate=*/true, /*save_progress=*/false).status) {
+        case CWallet::ScanResult::SUCCESS:
+            return wallet::RescanStatus::SUCCESS;
+        case CWallet::ScanResult::FAILURE:
+            return wallet::RescanStatus::FAILURE;
+        case CWallet::ScanResult::USER_ABORT:
+            return wallet::RescanStatus::USER_ABORT;
+        }
+        Assume(false); // unreachable
+        return wallet::RescanStatus::FAILURE; // fallback for release builds
     }
     void abortRescan() override { m_wallet->AbortRescan(); }
     void autoLockMasternodeCollaterals() override { m_wallet->AutoLockMasternodeCollaterals(); }

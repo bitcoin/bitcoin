@@ -250,6 +250,14 @@ struct WalletTxHasher
     }
 };
 
+/** Status of a wallet rescan operation */
+enum class RescanStatus : uint8_t {
+    BUSY,        //!< Wallet is already rescanning
+    FAILURE,     //!< Rescan failed
+    SUCCESS,     //!< Rescan completed successfully
+    USER_ABORT,  //!< User aborted the rescan
+};
+
 class WalletRescanReserver; //forward declarations for ScanForWalletTransactions/RescanFromTime
 /**
  * A CWallet maintains a set of transactions and balances, and provides the ability to create new transactions.
