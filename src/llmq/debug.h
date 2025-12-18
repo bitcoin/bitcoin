@@ -17,6 +17,7 @@ class CDeterministicMNManager;
 class ChainstateManager;
 class CInv;
 class CScheduler;
+struct RPCResult;
 
 namespace llmq
 {
@@ -77,8 +78,9 @@ public:
 public:
     CDKGDebugSessionStatus() : statusBitset(0) {}
 
-    UniValue ToJson(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
-                    const ChainstateManager& chainman, int quorumIndex, int detailLevel) const;
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
+    [[nodiscard]] UniValue ToJson(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
+                                  const ChainstateManager& chainman, int quorumIndex, int detailLevel) const;
 };
 
 class CDKGDebugStatus
@@ -90,8 +92,9 @@ public:
     //std::map<Consensus::LLMQType, CDKGDebugSessionStatus> sessions;
 
 public:
-    UniValue ToJson(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
-                    const ChainstateManager& chainman, int detailLevel) const;
+    [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
+    [[nodiscard]] UniValue ToJson(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
+                                  const ChainstateManager& chainman, int detailLevel) const;
 };
 
 class CDKGDebugManager

@@ -278,6 +278,28 @@ UniValue CGovernanceObject::GetJSONObject() const
     return obj;
 }
 
+UniValue CGovernanceObject::GetStateJson(const ChainstateManager& chainman, const CDeterministicMNList& tip_mn_list, const std::string& local_valid_key) const
+{
+    UniValue ret(UniValue::VOBJ);
+    ret.pushKV("DataHex", GetDataAsHexString());
+    ret.pushKV("DataString", GetDataAsPlainString());
+    ret.pushKV("Hash", GetHash().ToString());
+    ret.pushKV("CollateralHash", GetCollateralHash().ToString());
+    ret.pushKV("ObjectType", ToUnderlying(GetObjectType()));
+    ret.pushKV("CreationTime", GetCreationTime());
+    if (const COutPoint& outpoint = GetMasternodeOutpoint(); outpoint != COutPoint{}) {
+        ret.pushKV("SigningMasternode", outpoint.ToStringShort());
+    }
+    std::string strError;
+    ret.pushKV(local_valid_key, WITH_LOCK(::cs_main, return IsValidLocally(tip_mn_list, chainman, strError, /*fCheckCollateral=*/false)));
+    ret.pushKV("IsValidReason", strError.c_str());
+    ret.pushKV("fCachedValid", IsSetCachedValid());
+    ret.pushKV("fCachedFunding", IsSetCachedFunding());
+    ret.pushKV("fCachedDelete", IsSetCachedDelete());
+    ret.pushKV("fCachedEndorsed", IsSetCachedEndorsed());
+    return ret;
+}
+
 /**
 *   LoadData
 *   --------------------------------------------------------
@@ -339,11 +361,6 @@ std::string CGovernanceObject::GetDataAsHexString() const
 std::string CGovernanceObject::GetDataAsPlainString() const
 {
     return m_obj.GetDataAsPlainString();
-}
-
-UniValue CGovernanceObject::ToJson() const
-{
-    return m_obj.ToJson();
 }
 
 void CGovernanceObject::UpdateLocalValidity(const CDeterministicMNList& tip_mn_list, const ChainstateManager& chainman)

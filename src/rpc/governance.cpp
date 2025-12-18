@@ -38,23 +38,14 @@ using wallet::isminetype;
 
 static RPCHelpMan gobject_count()
 {
+    const auto json_help{CGovernanceManager::GetJsonHelp(/*key=*/"", /*optional=*/false)};
     return RPCHelpMan{"gobject count",
         "Count governance objects and votes\n",
         {
             {"mode", RPCArg::Type::STR, RPCArg::DefaultHint{"json"}, "Output format: json (\"json\") or string in free form (\"all\")"},
         },
         {
-            RPCResult{"for mode = json",
-                RPCResult::Type::OBJ, "", "",
-                {
-                    {RPCResult::Type::NUM, "objects_total", "Total number of all governance objects"},
-                    {RPCResult::Type::NUM, "proposals", "Number of governance proposals"},
-                    {RPCResult::Type::NUM, "triggers", "Number of triggers"},
-                    {RPCResult::Type::NUM, "other", "Total number of unknown governance objects"},
-                    {RPCResult::Type::NUM, "erased", "Number of removed (expired) objects"},
-                    {RPCResult::Type::NUM, "votes", "Total number of votes"},
-                }
-            },
+            RPCResult{"for mode = json", json_help.m_type, json_help.m_key_name, json_help.m_description, json_help.m_inner},
             RPCResult{"for mode = all", RPCResult::Type::STR, "", "Human-friendly summary string for proposals and votes"},
         },
         RPCExamples{""},
@@ -275,11 +266,7 @@ static RPCHelpMan gobject_list_prepared()
         RPCResult{
             RPCResult::Type::ARR, "", "list of governance objects",
             {
-                {RPCResult::Type::OBJ, "", "",
-                {
-                    // TODO: list fields of output for RPC help instead ELISION
-                    {RPCResult::Type::ELISION, "", ""}
-                }},
+                Governance::Object::GetJsonHelp(/*key=*/"", /*optional=*/false)
             }
         },
         RPCExamples{""},
@@ -636,22 +623,15 @@ static RPCHelpMan gobject_vote_alias()
 static UniValue ListObjects(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, const ChainstateManager& chainman,
                             const std::string& strCachedSignal, const std::string& strType, int nStartTime)
 {
-    UniValue objResult(UniValue::VOBJ);
-
-    // GET MATCHING GOVERNANCE OBJECTS
-
     if (g_txindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    LOCK(cs_main);
-
     std::vector<CGovernanceObject> objs;
     govman.GetAllNewerThan(objs, nStartTime);
-
     govman.UpdateLastDiffTime(GetTime());
-    // CREATE RESULTS FOR USER
 
+    UniValue objResult(UniValue::VOBJ);
     for (const auto& govObj : objs) {
         if (strCachedSignal == "valid" && !govObj.IsSetCachedValid()) continue;
         if (strCachedSignal == "funding" && !govObj.IsSetCachedFunding()) continue;
@@ -661,40 +641,28 @@ static UniValue ListObjects(CGovernanceManager& govman, const CDeterministicMNLi
         if (strType == "proposals" && govObj.GetObjectType() != GovernanceObject::PROPOSAL) continue;
         if (strType == "triggers" && govObj.GetObjectType() != GovernanceObject::TRIGGER) continue;
 
-        UniValue bObj(UniValue::VOBJ);
-        bObj.pushKV("DataHex",  govObj.GetDataAsHexString());
-        bObj.pushKV("DataString",  govObj.GetDataAsPlainString());
-        bObj.pushKV("Hash",  govObj.GetHash().ToString());
-        bObj.pushKV("CollateralHash",  govObj.GetCollateralHash().ToString());
-        bObj.pushKV("ObjectType", ToUnderlying(govObj.GetObjectType()));
-        bObj.pushKV("CreationTime", govObj.GetCreationTime());
-        const COutPoint& masternodeOutpoint = govObj.GetMasternodeOutpoint();
-        if (masternodeOutpoint != COutPoint()) {
-            bObj.pushKV("SigningMasternode", masternodeOutpoint.ToStringShort());
-        }
-
-        // REPORT STATUS FOR FUNDING VOTES SPECIFICALLY
-        bObj.pushKV("AbsoluteYesCount",  govObj.GetAbsoluteYesCount(tip_mn_list, VOTE_SIGNAL_FUNDING));
-        bObj.pushKV("YesCount",  govObj.GetYesCount(tip_mn_list, VOTE_SIGNAL_FUNDING));
-        bObj.pushKV("NoCount",  govObj.GetNoCount(tip_mn_list, VOTE_SIGNAL_FUNDING));
-        bObj.pushKV("AbstainCount",  govObj.GetAbstainCount(tip_mn_list, VOTE_SIGNAL_FUNDING));
-
-        // REPORT VALIDITY AND CACHING FLAGS FOR VARIOUS SETTINGS
-        std::string strError;
-        bObj.pushKV("fBlockchainValidity",  govObj.IsValidLocally(tip_mn_list, chainman, strError, false));
-        bObj.pushKV("IsValidReason",  strError.c_str());
-        bObj.pushKV("fCachedValid",  govObj.IsSetCachedValid());
-        bObj.pushKV("fCachedFunding",  govObj.IsSetCachedFunding());
-        bObj.pushKV("fCachedDelete",  govObj.IsSetCachedDelete());
-        bObj.pushKV("fCachedEndorsed",  govObj.IsSetCachedEndorsed());
-
-        objResult.pushKV(govObj.GetHash().ToString(), bObj);
+        UniValue entry{govObj.GetStateJson(chainman, tip_mn_list, /*local_valid_key=*/"fBlockchainValidity")};
+        UniValue votes_funding{govObj.GetVotesJson(tip_mn_list, VOTE_SIGNAL_FUNDING)};
+        entry.pushKV("AbsoluteYesCount", votes_funding["AbsoluteYesCount"]);
+        entry.pushKV("YesCount", votes_funding["YesCount"]);
+        entry.pushKV("NoCount", votes_funding["NoCount"]);
+        entry.pushKV("AbstainCount", votes_funding["AbstainCount"]);
+        objResult.pushKV(govObj.GetHash().ToString(), entry);
     }
 
     return objResult;
 }
 
-// USERS CAN QUERY THE SYSTEM FOR A LIST OF VARIOUS GOVERNANCE ITEMS
+static RPCResult ListObjectsHelp()
+{
+    auto ret = CGovernanceObject::GetStateJsonHelp(/*key=*/"", /*optional=*/false, /*local_valid_key=*/"fBlockchainValidity");
+    auto mod_inner = ret.m_inner;
+    for (const auto& result : CGovernanceObject::GetVotesJsonHelp(/*key=*/"", /*optional=*/false).m_inner) {
+        mod_inner.push_back(result);
+    }
+    return RPCResult{ret.m_type, ret.m_key_name, ret.m_description, mod_inner};
+}
+
 static RPCHelpMan gobject_list_helper(const bool make_a_diff)
 {
     const std::string command{make_a_diff ? "gobject diff" : "gobject list"};
@@ -709,11 +677,7 @@ static RPCHelpMan gobject_list_helper(const bool make_a_diff)
         },
         {
             RPCResult{"If request is valid",
-                RPCResult::Type::OBJ, "hash", "Object details",
-                {
-                    // TODO: list fields of output for RPC help instead ELISION
-                    {RPCResult::Type::ELISION, "", ""}
-                },
+                RPCResult::Type::OBJ, "hash", "Object details", {ListObjectsHelp()},
             },
             RPCResult{"If request is invalid",
                 RPCResult::Type::STR, "", "Error string"
@@ -756,7 +720,17 @@ static RPCHelpMan gobject_diff()
     return gobject_list_helper(true);
 }
 
-// GET SPECIFIC GOVERNANCE ENTRY
+static RPCResult gobject_get_help()
+{
+    auto ret = CGovernanceObject::GetStateJsonHelp(/*key=*/"", /*optional=*/false, /*local_valid_key=*/"fLocalValidity");
+    auto mod_inner = ret.m_inner;
+    mod_inner.push_back({RPCResult::Type::OBJ, "FundingResult", "Funding vote details", {CGovernanceObject::GetVotesJsonHelp(/*key=*/"", /*optional=*/false)}});
+    mod_inner.push_back({RPCResult::Type::OBJ, "ValidResult", "Object validity vote details", {CGovernanceObject::GetVotesJsonHelp(/*key=*/"", /*optional=*/false)}});
+    mod_inner.push_back({RPCResult::Type::OBJ, "DeleteResult", "Delete vote details", {CGovernanceObject::GetVotesJsonHelp(/*key=*/"", /*optional=*/false)}});
+    mod_inner.push_back({RPCResult::Type::OBJ, "EndorsedResult", "Endorsed vote details", {CGovernanceObject::GetVotesJsonHelp(/*key=*/"", /*optional=*/false)}});
+    return RPCResult{ret.m_type, ret.m_key_name, ret.m_description, mod_inner};
+}
+
 static RPCHelpMan gobject_get()
 {
     return RPCHelpMan{"gobject get",
@@ -764,96 +738,30 @@ static RPCHelpMan gobject_get()
         {
             {"governance-hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "object id"},
         },
-        {
-            RPCResult{
-                RPCResult::Type::OBJ, "", "",
-                {
-                    // TODO: list fields of output for RPC help instead ELISION
-                    {RPCResult::Type::ELISION, "", ""}
-                }
-            },
-        },
+        gobject_get_help(),
         RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    // COLLECT VARIABLES FROM OUR USER
-    uint256 hash(ParseHashV(request.params[0], "GovObj hash"));
-
     if (g_txindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    // FIND THE GOVERNANCE OBJECT THE USER IS LOOKING FOR
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
 
-    CHECK_NONFATAL(node.govman);
-    LOCK(cs_main);
-    auto pGovObj = node.govman->FindConstGovernanceObject(hash);
-
+    uint256 hash(ParseHashV(request.params[0], "GovObj hash"));
+    auto pGovObj = CHECK_NONFATAL(node.govman)->FindConstGovernanceObject(hash);
     if (pGovObj == nullptr) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown governance object");
     }
 
-    // REPORT BASIC OBJECT STATS
-
-    UniValue objResult(UniValue::VOBJ);
-    objResult.pushKV("DataHex",  pGovObj->GetDataAsHexString());
-    objResult.pushKV("DataString",  pGovObj->GetDataAsPlainString());
-    objResult.pushKV("Hash",  pGovObj->GetHash().ToString());
-    objResult.pushKV("CollateralHash",  pGovObj->GetCollateralHash().ToString());
-    objResult.pushKV("ObjectType", ToUnderlying(pGovObj->GetObjectType()));
-    objResult.pushKV("CreationTime", pGovObj->GetCreationTime());
-    const COutPoint& masternodeOutpoint = pGovObj->GetMasternodeOutpoint();
-    if (masternodeOutpoint != COutPoint()) {
-        objResult.pushKV("SigningMasternode", masternodeOutpoint.ToStringShort());
-    }
-
-    // SHOW (MUCH MORE) INFORMATION ABOUT VOTES FOR GOVERNANCE OBJECT (THAN LIST/DIFF ABOVE)
-    // -- FUNDING VOTING RESULTS
-
     auto tip_mn_list = CHECK_NONFATAL(node.dmnman)->GetListAtChainTip();
-
-    UniValue objFundingResult(UniValue::VOBJ);
-    objFundingResult.pushKV("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(tip_mn_list, VOTE_SIGNAL_FUNDING));
-    objFundingResult.pushKV("YesCount",  pGovObj->GetYesCount(tip_mn_list, VOTE_SIGNAL_FUNDING));
-    objFundingResult.pushKV("NoCount",  pGovObj->GetNoCount(tip_mn_list, VOTE_SIGNAL_FUNDING));
-    objFundingResult.pushKV("AbstainCount",  pGovObj->GetAbstainCount(tip_mn_list, VOTE_SIGNAL_FUNDING));
-    objResult.pushKV("FundingResult", objFundingResult);
-
-    // -- VALIDITY VOTING RESULTS
-    UniValue objValid(UniValue::VOBJ);
-    objValid.pushKV("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(tip_mn_list, VOTE_SIGNAL_VALID));
-    objValid.pushKV("YesCount",  pGovObj->GetYesCount(tip_mn_list, VOTE_SIGNAL_VALID));
-    objValid.pushKV("NoCount",  pGovObj->GetNoCount(tip_mn_list, VOTE_SIGNAL_VALID));
-    objValid.pushKV("AbstainCount",  pGovObj->GetAbstainCount(tip_mn_list, VOTE_SIGNAL_VALID));
-    objResult.pushKV("ValidResult", objValid);
-
-    // -- DELETION CRITERION VOTING RESULTS
-    UniValue objDelete(UniValue::VOBJ);
-    objDelete.pushKV("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(tip_mn_list, VOTE_SIGNAL_DELETE));
-    objDelete.pushKV("YesCount",  pGovObj->GetYesCount(tip_mn_list, VOTE_SIGNAL_DELETE));
-    objDelete.pushKV("NoCount",  pGovObj->GetNoCount(tip_mn_list, VOTE_SIGNAL_DELETE));
-    objDelete.pushKV("AbstainCount",  pGovObj->GetAbstainCount(tip_mn_list, VOTE_SIGNAL_DELETE));
-    objResult.pushKV("DeleteResult", objDelete);
-
-    // -- ENDORSED VIA MASTERNODE-ELECTED BOARD
-    UniValue objEndorsed(UniValue::VOBJ);
-    objEndorsed.pushKV("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(tip_mn_list, VOTE_SIGNAL_ENDORSED));
-    objEndorsed.pushKV("YesCount",  pGovObj->GetYesCount(tip_mn_list, VOTE_SIGNAL_ENDORSED));
-    objEndorsed.pushKV("NoCount",  pGovObj->GetNoCount(tip_mn_list, VOTE_SIGNAL_ENDORSED));
-    objEndorsed.pushKV("AbstainCount",  pGovObj->GetAbstainCount(tip_mn_list, VOTE_SIGNAL_ENDORSED));
-    objResult.pushKV("EndorsedResult", objEndorsed);
-
-    // --
-    std::string strError;
-    objResult.pushKV("fLocalValidity",  pGovObj->IsValidLocally(tip_mn_list, chainman, strError, false));
-    objResult.pushKV("IsValidReason",  strError.c_str());
-    objResult.pushKV("fCachedValid",  pGovObj->IsSetCachedValid());
-    objResult.pushKV("fCachedFunding",  pGovObj->IsSetCachedFunding());
-    objResult.pushKV("fCachedDelete",  pGovObj->IsSetCachedDelete());
-    objResult.pushKV("fCachedEndorsed",  pGovObj->IsSetCachedEndorsed());
-    return objResult;
+    UniValue ret{pGovObj->GetStateJson(chainman, tip_mn_list, /*local_valid_key=*/"fLocalValidity")};
+    ret.pushKV("FundingResult", pGovObj->GetVotesJson(tip_mn_list, VOTE_SIGNAL_FUNDING));
+    ret.pushKV("ValidResult", pGovObj->GetVotesJson(tip_mn_list, VOTE_SIGNAL_VALID));
+    ret.pushKV("DeleteResult", pGovObj->GetVotesJson(tip_mn_list, VOTE_SIGNAL_DELETE));
+    ret.pushKV("EndorsedResult", pGovObj->GetVotesJson(tip_mn_list, VOTE_SIGNAL_ENDORSED));
+    return ret;
 },
     };
 }

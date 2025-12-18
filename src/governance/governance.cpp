@@ -1108,38 +1108,6 @@ std::string CGovernanceManager::ToString() const
     return strprintf("%s, Votes: %d", GovernanceStore::ToString(), (int)cmapVoteToObject.GetSize());
 }
 
-UniValue CGovernanceManager::ToJson() const
-{
-    LOCK(cs_store);
-
-    int nProposalCount = 0;
-    int nTriggerCount = 0;
-    int nOtherCount = 0;
-
-    for (const auto& [_, govobj] : mapObjects) {
-        switch (Assert(govobj)->GetObjectType()) {
-        case GovernanceObject::PROPOSAL:
-            nProposalCount++;
-            break;
-        case GovernanceObject::TRIGGER:
-            nTriggerCount++;
-            break;
-        default:
-            nOtherCount++;
-            break;
-        }
-    }
-
-    UniValue jsonObj(UniValue::VOBJ);
-    jsonObj.pushKV("objects_total", mapObjects.size());
-    jsonObj.pushKV("proposals", nProposalCount);
-    jsonObj.pushKV("triggers", nTriggerCount);
-    jsonObj.pushKV("other", nOtherCount);
-    jsonObj.pushKV("erased", mapErasedGovernanceObjects.size());
-    jsonObj.pushKV("votes", cmapVoteToObject.GetSize());
-    return jsonObj;
-}
-
 void CGovernanceManager::UpdatedBlockTip(const CBlockIndex* pindex)
 {
     AssertLockNotHeld(cs_store);

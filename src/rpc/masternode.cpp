@@ -182,8 +182,15 @@ static RPCHelpMan masternode_status()
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                // TODO: implement proper type validator instead ELISION
-                {RPCResult::Type::ELISION, "", ""}
+                GetRpcResult("outpoint"),
+                GetRpcResult("service"),
+                GetRpcResult("proTxHash", /*optional=*/true),
+                GetRpcResult("type_str", /*optional=*/true, /*override_name=*/"type"),
+                GetRpcResult("collateralHash", /*optional=*/true),
+                GetRpcResult("collateralIndex", /*optional=*/true),
+                CDeterministicMNState::GetJsonHelp(/*key=*/"dmnState", /*optional=*/true),
+                {RPCResult::Type::STR, "state", "Masternode state (human-readable string)"},
+                {RPCResult::Type::STR, "status", "Masternode status (human-readable string, based on current state)"},
             }
         },
         RPCExamples{""},
@@ -205,7 +212,6 @@ static RPCHelpMan masternode_status()
         mnObj.pushKV("type", std::string(GetMnType(dmn->nType).description));
         mnObj.pushKV("collateralHash", dmn->collateralOutpoint.hash.ToString());
         mnObj.pushKV("collateralIndex", dmn->collateralOutpoint.n);
-        // TODO: Use CDeterministicMNState::GetJsonHelp() for dmnState
         mnObj.pushKV("dmnState", dmn->pdmnState->ToJson(dmn->nType));
     }
     mnObj.pushKV("state", node.mn_activeman->GetStateString());
@@ -525,10 +531,36 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
             {"filter", RPCArg::Type::STR, RPCArg::Default{""}, "Filter results. Partial match by outpoint by default in all modes, additional matches in some modes are also available"},
         },
         RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                // TODO: implement proper type validator instead ELISION
-                {RPCResult::Type::ELISION, "", ""}
+            RPCResult::Type::OBJ, "<outpoint>", "", {
+                RPCResult{"for mode = addr", RPCResult::Type::STR, "<address>", "Flattened list of all addresses registered to masternode"},
+                RPCResult{"for mode = full", RPCResult::Type::STR, "<info>", "Flattened list of a masternode's status, payee address, last paid block's timestamp, height and service addresses"},
+                RPCResult{"for mode = info", RPCResult::Type::STR, "<info>", "Flattened list of a masternode's status, payee address and service addresses"},
+                RPCResult{"for mode = evo, json or recent", RPCResult::Type::OBJ, "", "", {
+                    GetRpcResult("proTxHash"),
+                    GetRpcResult("service", /*optional=*/false, /*override_name=*/"address"),
+                    GetRpcResult("addresses"),
+                    GetRpcResult("payoutAddress", /*optional=*/false, /*override_name=*/"payee"),
+                    {RPCResult::Type::STR, "status", "Masternode status (human-readable string)"},
+                    GetRpcResult("type_str", /*optional=*/false, /*override_name=*/"type"),
+                    GetRpcResult("platformNodeID", /*optional=*/true),
+                    GetRpcResult("platformP2PPort", /*optional=*/true),
+                    GetRpcResult("platformHTTPPort", /*optional=*/true),
+                    GetRpcResult("PoSePenalty", /*optional=*/false, /*override_name=*/"pospenaltyscore"),
+                    GetRpcResult("consecutivePayments"),
+                    {RPCResult::Type::NUM, "lastpaidtime", "Timestamp of block the masternode was last paid"},
+                    GetRpcResult("lastPaidHeight", /*optional=*/false, /*override_name=*/"lastpaidblock"),
+                    GetRpcResult("ownerAddress", /*optional=*/false, /*override_name=*/"owneraddress"),
+                    GetRpcResult("votingAddress", /*optional=*/false, /*override_name=*/"votingaddress"),
+                    GetRpcResult("collateralAddress", /*optional=*/false, /*override_name=*/"collateraladdress"),
+                    GetRpcResult("pubKeyOperator", /*optional=*/false, /*override_name=*/"pubkeyoperator"),
+                }},
+                RPCResult{"for mode = lastpaidblock", RPCResult::Type::NUM, "<height>", "Height masternode was last paid"},
+                RPCResult{"for mode = lastpaidtime", RPCResult::Type::NUM, "<time>", "Timestamp of block the masternode was last paid"},
+                RPCResult{"for mode = payee", RPCResult::Type::STR, "<addr>", "Dash address used for masternode reward payments"},
+                RPCResult{"for mode = owneraddress", RPCResult::Type::STR, "<addr>", "Dash address used for payee updates and proposal voting"},
+                RPCResult{"for mode = pubkeyoperator", RPCResult::Type::STR, "<addr>", "BLS public key used for operator signing"},
+                RPCResult{"for mode = status", RPCResult::Type::STR, "<status>", "Masternode status (human-readable string)"},
+                RPCResult{"for mode = votingaddress", RPCResult::Type::STR, "<addr>", "Dash address used for voting"},
             }
         },
         RPCExamples{""},

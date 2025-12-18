@@ -8,9 +8,7 @@
 #include <hash.h>
 #include <univalue.h>
 
-namespace Governance
-{
-
+namespace Governance {
 Object::Object(const uint256& nHashParent, int nRevision, int64_t nTime, const uint256& nCollateralHash, const std::string& strDataHex) :
     hashParent{nHashParent},
     revision{nRevision},
@@ -40,25 +38,6 @@ uint256 Object::GetHash() const
     return ss.GetHash();
 }
 
-UniValue Object::ToJson() const
-{
-    UniValue obj(UniValue::VOBJ);
-    obj.pushKV("objectHash", GetHash().ToString());
-    obj.pushKV("parentHash", hashParent.ToString());
-    obj.pushKV("collateralHash", collateralHash.ToString());
-    obj.pushKV("createdAt", time);
-    obj.pushKV("revision", revision);
-    UniValue data;
-    if (!data.read(GetDataAsPlainString())) {
-        data.clear();
-        data.setObject();
-        data.pushKV("plain", GetDataAsPlainString());
-    }
-    data.pushKV("hex", GetDataAsHexString());
-    obj.pushKV("data", data);
-    return obj;
-}
-
 std::string Object::GetDataAsHexString() const
 {
     return HexStr(vchData);
@@ -68,5 +47,4 @@ std::string Object::GetDataAsPlainString() const
 {
     return std::string(vchData.begin(), vchData.end());
 }
-
 } // namespace Governance
