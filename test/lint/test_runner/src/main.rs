@@ -4,6 +4,7 @@
 
 mod lint_cpp;
 mod lint_docs;
+mod lint_repo_hygiene;
 mod lint_text_format;
 mod util;
 
@@ -16,12 +17,13 @@ use lint_cpp::{
     lint_boost_assert, lint_includes_build_config, lint_rpc_assert, lint_std_filesystem,
 };
 use lint_docs::{lint_doc_args, lint_doc_release_note_snippets, lint_markdown};
+use lint_repo_hygiene::{lint_scripted_diff, lint_subtree};
 use lint_text_format::{
     lint_commit_msg, lint_tabs_whitespace, lint_trailing_newline, lint_trailing_whitespace,
 };
 use util::{
-    check_output, commit_range, get_git_root, get_pathspecs_default_excludes, get_subtrees, git,
-    LintFn, LintResult,
+    check_output, commit_range, get_git_root, get_pathspecs_default_excludes, git, LintFn,
+    LintResult,
 };
 
 struct Linter {
@@ -166,37 +168,6 @@ fn parse_lint_args(args: &[String]) -> Vec<&'static Linter> {
     lint_values
 }
 
-fn lint_subtree() -> LintResult {
-    // This only checks that the trees are pure subtrees, it is not doing a full
-    // check with -r to not have to fetch all the remotes.
-    let mut good = true;
-    for subtree in get_subtrees() {
-        good &= Command::new("test/lint/git-subtree-check.sh")
-            .arg(subtree)
-            .status()
-            .expect("command_error")
-            .success();
-    }
-    if good {
-        Ok(())
-    } else {
-        Err("".to_string())
-    }
-}
-
-fn lint_scripted_diff() -> LintResult {
-    if Command::new("test/lint/commit-script-check.sh")
-        .arg(commit_range())
-        .status()
-        .expect("command error")
-        .success()
-    {
-        Ok(())
-    } else {
-        Err("".to_string())
-    }
-}
-
 fn lint_py_lint() -> LintResult {
     let bin_name = "ruff";
     let checks = format!(
@@ -257,9 +228,7 @@ fn lint_py_lint() -> LintResult {
         Ok(status) if status.success() => Ok(()),
         Ok(_) => Err(format!("`{bin_name}` found errors!")),
         Err(e) if e.kind() == ErrorKind::NotFound => {
-            println!(
-                "`{bin_name}` was not found in $PATH, skipping those checks."
-            );
+            println!("`{bin_name}` was not found in $PATH, skipping those checks.");
             Ok(())
         }
         Err(e) => Err(format!("Error running `{bin_name}`: {e}")),
