@@ -29,7 +29,7 @@ function(add_boost_if_needed)
     endif()
   endif()
 
-  find_package(Boost 1.73.0 REQUIRED CONFIG)
+  find_package(Boost 1.74.0 REQUIRED CONFIG)
   mark_as_advanced(Boost_INCLUDE_DIR boost_headers_DIR)
   # Workaround for a bug in NetBSD pkgsrc.
   # See: https://github.com/NetBSD/pkgsrc/issues/167.
