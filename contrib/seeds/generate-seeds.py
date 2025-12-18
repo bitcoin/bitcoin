@@ -160,6 +160,9 @@ def main():
         sys.exit(1)
     g = sys.stdout
     indir = sys.argv[1]
+    g.write('// Copyright (c) The Bitcoin Core developers\n')
+    g.write('// Distributed under the MIT software license, see the accompanying\n')
+    g.write('// file COPYING or https://opensource.org/license/mit.\n\n')
     g.write('#ifndef BITCOIN_CHAINPARAMSSEEDS_H\n')
     g.write('#define BITCOIN_CHAINPARAMSSEEDS_H\n')
     g.write('/**\n')
