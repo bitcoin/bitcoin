@@ -64,6 +64,8 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      bool dash_dbs_in_memory,
                                                      bool quorums_recovery,
                                                      bool quorums_watch,
+                                                     int8_t bls_threads,
+                                                     int64_t max_recsigs_age,
                                                      std::function<bool()> shutdown_requested,
                                                      std::function<void()> coins_error_cb)
 {
@@ -91,7 +93,8 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
 
     DashChainstateSetup(chainman, govman, mn_metaman, mn_sync, sporkman, mn_activeman, chain_helper, cpoolman,
                         dmnman, evodb, mnhf_manager, llmq_ctx, mempool, data_dir, sync_map, dash_dbs_in_memory,
-                        /*llmq_dbs_wipe=*/fReset || fReindexChainState, quorums_recovery, quorums_watch, consensus_params);
+                        /*llmq_dbs_wipe=*/fReset || fReindexChainState, quorums_recovery, quorums_watch,
+                        bls_threads, max_recsigs_age, consensus_params);
 
     if (fReset) {
         pblocktree->WriteReindexing(true);
@@ -230,6 +233,8 @@ void DashChainstateSetup(ChainstateManager& chainman,
                          bool llmq_dbs_wipe,
                          bool quorums_recovery,
                          bool quorums_watch,
+                         int8_t bls_threads,
+                         int64_t max_recsigs_age,
                          const Consensus::Params& consensus_params)
 {
     // Same logic as pblocktree
@@ -247,7 +252,7 @@ void DashChainstateSetup(ChainstateManager& chainman,
     llmq_ctx = std::make_unique<LLMQContext>(chainman, *dmnman, *evodb, mn_metaman, *mnhf_manager, sporkman,
                                              *mempool, mn_activeman.get(), mn_sync, sync_map,
                                              util::DbWrapperParams{.path = data_dir, .memory = llmq_dbs_in_memory, .wipe = llmq_dbs_wipe},
-                                             quorums_recovery, quorums_watch);
+                                             quorums_recovery, quorums_watch, bls_threads, max_recsigs_age);
     mempool->ConnectManagers(dmnman.get(), llmq_ctx->isman.get());
     // Enable CMNHFManager::{Process, Undo}Block
     mnhf_manager->ConnectManagers(llmq_ctx->qman.get());

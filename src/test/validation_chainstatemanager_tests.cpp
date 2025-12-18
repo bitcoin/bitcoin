@@ -4,21 +4,23 @@
 //
 #include <chainparams.h>
 #include <consensus/validation.h>
-#include <evo/evodb.h>
 #include <index/txindex.h>
-#include <llmq/blockprocessor.h>
-#include <llmq/context.h>
 #include <node/chainstate.h>
 #include <node/utxo_snapshot.h>
 #include <random.h>
 #include <rpc/blockchain.h>
-#include <spork.h>
 #include <sync.h>
 #include <test/util/chainstate.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
 #include <validation.h>
 #include <validationinterface.h>
+
+#include <evo/evodb.h>
+#include <llmq/blockprocessor.h>
+#include <llmq/context.h>
+#include <llmq/signing.h>
+#include <spork.h>
 
 #include <tinyformat.h>
 

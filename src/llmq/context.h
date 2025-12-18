@@ -44,7 +44,8 @@ public:
                          CMasternodeMetaMan& mn_metaman, CMNHFManager& mnhfman, CSporkManager& sporkman,
                          CTxMemPool& mempool, const CActiveMasternodeManager* const mn_activeman,
                          const CMasternodeSync& mn_sync, const llmq::QvvecSyncModeMap& sync_map,
-                         const util::DbWrapperParams& db_params, bool quorums_recovery, bool quorums_watch);
+                         const util::DbWrapperParams& db_params, bool quorums_recovery, bool quorums_watch,
+                         int8_t bls_threads, int64_t max_recsigs_age);
     ~LLMQContext();
 
     void Interrupt();

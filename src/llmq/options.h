@@ -28,9 +28,9 @@ enum class QvvecSyncMode {
 };
 
 /** Maximum number of dedicated script-checking threads allowed */
-static const int MAX_BLSCHECK_THREADS{33};
+static const int8_t MAX_BLSCHECK_THREADS{33};
 /** -parbls default (number of bls-checking threads, 0 = auto) */
-static const int DEFAULT_BLSCHECK_THREADS{0};
+static const int8_t DEFAULT_BLSCHECK_THREADS{0};
 /** -llmq-data-recovery default */
 static constexpr bool DEFAULT_ENABLE_QUORUM_DATA_RECOVERY{true};
 /** -watchquorums default, if true, we will connect to all new quorums and watch their communication */

@@ -110,6 +110,8 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      bool dash_dbs_in_memory,
                                                      bool quorums_recovery,
                                                      bool quorums_watch,
+                                                     int8_t bls_threads,
+                                                     int64_t max_recsigs_age,
                                                      std::function<bool()> shutdown_requested = nullptr,
                                                      std::function<void()> coins_error_cb = nullptr);
 
@@ -133,6 +135,8 @@ void DashChainstateSetup(ChainstateManager& chainman,
                          bool llmq_dbs_wipe,
                          bool quorums_recovery,
                          bool quorums_watch,
+                         int8_t bls_threads,
+                         int64_t max_recsigs_age,
                          const Consensus::Params& consensus_params);
 
 void DashChainstateSetupClose(std::unique_ptr<CChainstateHelper>& chain_helper,

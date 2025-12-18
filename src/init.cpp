@@ -2035,6 +2035,17 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                               /*dash_dbs_in_memory=*/false,
                                               quorums_recovery,
                                               quorums_watch,
+                                              /*bls_threads=*/[&args]() -> int8_t {
+                                                  int8_t threads = args.GetIntArg("-parbls", llmq::DEFAULT_BLSCHECK_THREADS);
+                                                  if (threads <= 0) {
+                                                      // -parbls=0 means autodetect (number of cores - 1 validator threads)
+                                                      // -parbls=-n means "leave n cores free" (number of cores - n - 1 validator threads)
+                                                      threads += GetNumCores();
+                                                  }
+                                                  // Subtract 1 because the main thread counts towards the par threads
+                                                  return std::clamp<int8_t>(threads - 1, 0, llmq::MAX_BLSCHECK_THREADS);
+                                              }(),
+                                              args.GetIntArg("-maxrecsigsage", llmq::DEFAULT_MAX_RECOVERED_SIGS_AGE),
                                               /*shutdown_requested=*/ShutdownRequested,
                                               /*coins_error_cb=*/[]() {
                                                   uiInterface.ThreadSafeMessageBox(
