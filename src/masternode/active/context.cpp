@@ -40,8 +40,8 @@ ActiveContext::ActiveContext(ChainstateManager& chainman, CConnman& connman, CDe
 
 ActiveContext::~ActiveContext()
 {
-    m_llmq_ctx.clhandler->DisconnectSigner();
     m_llmq_ctx.isman->DisconnectSigner();
+    m_llmq_ctx.clhandler->DisconnectSigner();
 }
 
 void ActiveContext::Interrupt()
@@ -52,13 +52,17 @@ void ActiveContext::Interrupt()
 void ActiveContext::Start(CConnman& connman, PeerManager& peerman)
 {
     m_llmq_ctx.qdkgsman->StartThreads(connman, peerman);
-    shareman->RegisterAsRecoveredSigsListener();
     shareman->Start();
+    cl_signer->RegisterRecoveryInterface();
+    is_signer->RegisterRecoveryInterface();
+    shareman->RegisterRecoveryInterface();
 }
 
 void ActiveContext::Stop()
 {
+    shareman->UnregisterRecoveryInterface();
+    is_signer->UnregisterRecoveryInterface();
+    cl_signer->UnregisterRecoveryInterface();
     shareman->Stop();
-    shareman->UnregisterAsRecoveredSigsListener();
     m_llmq_ctx.qdkgsman->StopThreads();
 }

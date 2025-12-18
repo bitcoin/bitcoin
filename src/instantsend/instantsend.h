@@ -118,7 +118,7 @@ public:
     }
     void DisconnectSigner() { m_signer.store(nullptr, std::memory_order_release); }
 
-    instantsend::InstantSendSigner* Signer() const { return m_signer.load(); }
+    instantsend::InstantSendSigner* Signer() const { return m_signer.load(std::memory_order_acquire); }
 
 private:
     void AddNonLockedTx(const CTransactionRef& tx, const CBlockIndex* pindexMined)

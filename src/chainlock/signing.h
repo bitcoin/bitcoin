@@ -70,8 +70,8 @@ public:
                              llmq::CSigSharesManager& shareman, CSporkManager& sporkman, const CMasternodeSync& mn_sync);
     ~ChainLockSigner();
 
-    void Start();
-    void Stop();
+    void RegisterRecoveryInterface();
+    void UnregisterRecoveryInterface();
 
     void EraseFromBlockHashTxidMap(const uint256& hash)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);

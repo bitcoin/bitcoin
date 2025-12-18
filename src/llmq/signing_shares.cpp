@@ -237,12 +237,12 @@ void CSigSharesManager::Stop()
     workerPool.stop(true);
 }
 
-void CSigSharesManager::RegisterAsRecoveredSigsListener()
+void CSigSharesManager::RegisterRecoveryInterface()
 {
     sigman.RegisterRecoveredSigsListener(this);
 }
 
-void CSigSharesManager::UnregisterAsRecoveredSigsListener()
+void CSigSharesManager::UnregisterRecoveryInterface()
 {
     sigman.UnregisterRecoveredSigsListener(this);
 }
