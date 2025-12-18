@@ -66,7 +66,7 @@ jobs:
       - name: Determine fetch depth
         run: echo "FETCH_DEPTH=$((${{ github.event.pull_request.commits }} + 2))" >> "$GITHUB_ENV"
       - *ANNOTATION_PR_NUMBER
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: ${{ env.FETCH_DEPTH }}
@@ -148,7 +148,7 @@ jobs:
 
       - &CHECKOUT
         name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           # Ensure the latest merged pull request state is used, even on re-runs.
           ref: &CHECKOUT_REF_TMPL ${{ github.event_name == 'pull_request' && github.ref || '' }}
@@ -383,7 +383,7 @@ jobs:
       - *ANNOTATION_PR_NUMBER
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ needs.record-frozen-commit.outputs.commit }}
 
@@ -439,7 +439,7 @@ jobs:
       - *ANNOTATION_PR_NUMBER
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ needs.record-frozen-commit.outputs.commit }}
 
@@ -657,7 +657,7 @@ jobs:
       - *ANNOTATION_PR_NUMBER
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: *CHECKOUT_REF_TMPL
           fetch-depth: 0
