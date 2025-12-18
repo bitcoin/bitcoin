@@ -181,6 +181,8 @@ private:
 #ifdef ENABLE_WALLET
     /** Initiate a wallet rescan */
     void walletRescan(bool from_genesis);
+    /** Update wallet UI when selected wallet changes */
+    void onWalletChanged();
 #endif // ENABLE_WALLET
 
     enum ColumnWidths

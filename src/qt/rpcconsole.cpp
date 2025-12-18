@@ -580,6 +580,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
 #ifdef ENABLE_WALLET
     connect(ui->btn_rescan1, &QPushButton::clicked, this, &RPCConsole::walletRescan1);
     connect(ui->btn_rescan2, &QPushButton::clicked, this, &RPCConsole::walletRescan2);
+    connect(ui->WalletSelector, qOverload<int>(&QComboBox::currentIndexChanged), this, &RPCConsole::onWalletChanged);
 #endif // ENABLE_WALLET
     connect(ui->btn_reindex, &QPushButton::clicked, this, &RPCConsole::walletReindex);
 
@@ -833,40 +834,29 @@ void RPCConsole::addWallet(WalletModel * const walletModel)
     if (ui->WalletSelector->count() == 2) {
         // First wallet added, set to default to match wallet RPC behavior
         ui->WalletSelector->setCurrentIndex(1);
-        // The only loaded wallet
-        ui->btn_rescan1->setEnabled(true);
-        ui->btn_rescan2->setEnabled(true);
-        QString wallet_path = GUIUtil::PathToQString(GetWalletDir()) + QDir::separator().toLatin1();
-        QString wallet_name = walletModel->getWalletName().isEmpty() ? "wallet.dat" : walletModel->getWalletName();
-        ui->wallet_path->setText(wallet_path + wallet_name);
-    } else {
+    }
+
+    // Update wallet path and button states for currently selected wallet
+    onWalletChanged();
+
+    // Show wallet selector when multiple wallets are loaded
+    if (ui->WalletSelector->count() > 2) {
         ui->WalletSelector->setVisible(true);
         ui->WalletSelectorLabel->setVisible(true);
-        // No wallet recovery for multiple loaded wallets
-        ui->btn_rescan1->setEnabled(false);
-        ui->btn_rescan2->setEnabled(false);
-        ui->wallet_path->clear();
     }
 }
 
 void RPCConsole::removeWallet(WalletModel * const walletModel)
 {
     ui->WalletSelector->removeItem(ui->WalletSelector->findData(QVariant::fromValue(walletModel)));
+
+    // Update wallet path and button states for currently selected wallet (or clear/disable if none)
+    onWalletChanged();
+
+    // Hide wallet selector when back to single wallet
     if (ui->WalletSelector->count() == 2) {
         ui->WalletSelector->setVisible(false);
         ui->WalletSelectorLabel->setVisible(false);
-        // Back to the only loaded wallet
-        ui->btn_rescan1->setEnabled(true);
-        ui->btn_rescan2->setEnabled(true);
-        WalletModel* wallet_model = ui->WalletSelector->itemData(1).value<WalletModel*>();
-        QString wallet_path = GUIUtil::PathToQString(GetWalletDir()) + QDir::separator().toLatin1();
-        QString wallet_name = wallet_model->getWalletName().isEmpty() ? "wallet.dat" : wallet_model->getWalletName();
-        ui->wallet_path->setText(wallet_path + wallet_name);
-    } else {
-        // No wallet recovery for multiple loaded wallets
-        ui->btn_rescan1->setEnabled(false);
-        ui->btn_rescan2->setEnabled(false);
-        ui->wallet_path->clear();
     }
 }
 
@@ -874,6 +864,24 @@ void RPCConsole::setCurrentWallet(WalletModel* const wallet_model)
 {
     QVariant data = QVariant::fromValue(wallet_model);
     ui->WalletSelector->setCurrentIndex(ui->WalletSelector->findData(data));
+}
+
+void RPCConsole::onWalletChanged()
+{
+    WalletModel* wallet_model = ui->WalletSelector->currentData().value<WalletModel*>();
+    if (wallet_model) {
+        QString wallet_path = GUIUtil::PathToQString(GetWalletDir()) + QDir::separator().toLatin1();
+        QString wallet_name = wallet_model->getWalletName().isEmpty() ? "wallet.dat" : wallet_model->getWalletName();
+        ui->wallet_path->setText(wallet_path + wallet_name);
+        // Enable rescan buttons when a valid wallet is selected
+        ui->btn_rescan1->setEnabled(true);
+        ui->btn_rescan2->setEnabled(true);
+    } else {
+        ui->wallet_path->clear();
+        // Disable rescan buttons when no wallet is selected (e.g., "(none)")
+        ui->btn_rescan1->setEnabled(false);
+        ui->btn_rescan2->setEnabled(false);
+    }
 }
 #endif
 
@@ -931,7 +939,7 @@ void RPCConsole::walletRescan(bool from_genesis)
         return;
     }
 
-    WalletModel* wallet_model{ui->WalletSelector->itemData(1).value<WalletModel*>()};
+    WalletModel* wallet_model{ui->WalletSelector->currentData().value<WalletModel*>()};
     if (!wallet_model) {
         QMessageBox::critical(this, PACKAGE_NAME, QObject::tr("Error: Rescan failed. Wallet not loaded."));
         return;
