@@ -936,6 +936,8 @@ void BitcoinGUI::setWalletController(WalletController* wallet_controller)
         m_wallet_controller = nullptr;
     });
 
+    rpcConsole->setWalletController(wallet_controller);
+
     auto activity = new LoadWalletsActivity(m_wallet_controller, this);
     activity->load();
 }

@@ -195,10 +195,10 @@ public:
         }
         switch (m_wallet->ScanForWalletTransactions(m_wallet->chain().getBlockHash(rescan_height), rescan_height, /*max_height=*/std::nullopt,
                                                     reserver, /*fUpdate=*/true, /*save_progress=*/false).status) {
-        case CWallet::ScanResult::SUCCESS:
-            return wallet::RescanStatus::SUCCESS;
         case CWallet::ScanResult::FAILURE:
             return wallet::RescanStatus::FAILURE;
+        case CWallet::ScanResult::SUCCESS:
+            return wallet::RescanStatus::SUCCESS;
         case CWallet::ScanResult::USER_ABORT:
             return wallet::RescanStatus::USER_ABORT;
         }

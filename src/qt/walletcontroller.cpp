@@ -511,3 +511,42 @@ void RestoreWalletActivity::finish()
 
     Q_EMIT finished();
 }
+
+RescanWalletActivity::RescanWalletActivity(WalletController* wallet_controller, QWidget* parent_widget)
+    : WalletControllerActivity(wallet_controller, parent_widget)
+{
+}
+
+void RescanWalletActivity::rescan(WalletModel* wallet_model, bool from_genesis)
+{
+    m_rescan_wallet_model = wallet_model;
+
+    QTimer::singleShot(0, worker(), [this, from_genesis] {
+        // Emits its own progress bar
+        m_rescan_status = m_rescan_wallet_model->wallet().startRescan(from_genesis);
+        QTimer::singleShot(0, this, &RescanWalletActivity::finish);
+    });
+}
+
+void RescanWalletActivity::finish()
+{
+    switch (m_rescan_status) {
+    case wallet::RescanStatus::BUSY:
+        QMessageBox::warning(m_parent_widget, tr("Rescan unavailable"), tr("Wallet is currently rescanning. Abort existing rescan or wait."));
+        Q_EMIT rescanFailed();
+        break;
+    case wallet::RescanStatus::FAILURE:
+        QMessageBox::critical(m_parent_widget, tr("Rescan wallet failed"), tr("Rescan failed. Potentially corrupted data files."));
+        Q_EMIT rescanFailed();
+        break;
+    case wallet::RescanStatus::SUCCESS:
+        Q_EMIT rescanComplete();
+        break;
+    case wallet::RescanStatus::USER_ABORT:
+        QMessageBox::information(m_parent_widget, tr("Rescan aborted"), tr("Wallet rescan was aborted."));
+        Q_EMIT rescanFailed();
+        break;
+    }
+
+    Q_EMIT finished();
+}

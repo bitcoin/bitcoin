@@ -19,6 +19,7 @@
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
 #include <qt/peertablesortproxy.h>
+#include <qt/walletcontroller.h>
 #include <qt/walletmodel.h>
 #include <rpc/client.h>
 #include <rpc/server.h>
@@ -822,6 +823,11 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
 }
 
 #ifdef ENABLE_WALLET
+void RPCConsole::setWalletController(WalletController* wallet_controller)
+{
+    m_wallet_controller = wallet_controller;
+}
+
 void RPCConsole::addWallet(WalletModel * const walletModel)
 {
     // use name for text and wallet model for internal data object (to allow to move to a wallet id later)
@@ -920,6 +926,23 @@ void RPCConsole::setFontSize(int newSize)
 }
 
 #ifdef ENABLE_WALLET
+void RPCConsole::walletRescan(bool from_genesis)
+{
+    if (!m_wallet_controller) {
+        QMessageBox::critical(this, PACKAGE_NAME, QObject::tr("Error: Wallet controller not available."));
+        return;
+    }
+
+    WalletModel* wallet_model{ui->WalletSelector->itemData(1).value<WalletModel*>()};
+    if (!wallet_model) {
+        QMessageBox::critical(this, PACKAGE_NAME, QObject::tr("Error: Rescan failed. Wallet not loaded."));
+        return;
+    }
+
+    auto activity = new RescanWalletActivity(m_wallet_controller, this);
+    activity->rescan(wallet_model, from_genesis);
+}
+
 /** Rescan wallet from wallet creation */
 void RPCConsole::walletRescan1()
 {
