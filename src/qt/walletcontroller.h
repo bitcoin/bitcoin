@@ -17,6 +17,7 @@
 #include <vector>
 
 #include <QMutex>
+#include <QPointer>
 #include <QThread>
 #include <QString>
 
@@ -188,7 +189,7 @@ Q_SIGNALS:
 private:
     void finish();
 
-    WalletModel* m_rescan_wallet_model{nullptr};
+    QPointer<WalletModel> m_rescan_wallet_model;
     wallet::RescanStatus m_rescan_status{};
 };
 

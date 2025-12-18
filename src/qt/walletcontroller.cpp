@@ -522,8 +522,13 @@ void RescanWalletActivity::rescan(WalletModel* wallet_model, bool from_genesis)
     m_rescan_wallet_model = wallet_model;
 
     QTimer::singleShot(0, worker(), [this, from_genesis] {
-        // Emits its own progress bar
-        m_rescan_status = m_rescan_wallet_model->wallet().startRescan(from_genesis);
+        if (m_rescan_wallet_model) {
+            // Emits its own progress bar
+            m_rescan_status = m_rescan_wallet_model->wallet().startRescan(from_genesis);
+        } else {
+            // Wallet was closed before rescan could start
+            m_rescan_status = wallet::RescanStatus::FAILURE;
+        }
         QTimer::singleShot(0, this, &RescanWalletActivity::finish);
     });
 }
