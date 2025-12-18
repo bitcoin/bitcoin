@@ -37,15 +37,35 @@ extern const char * const DEFAULT_DEBUGLOGFILE;
 
 extern bool fLogIPs;
 
+/// Like std::source_location, but allowing to override the function name.
+class SourceLocation
+{
+public:
+    /// The func argument must be constructed from the C++11 __func__ macro.
+    /// Ref: https://en.cppreference.com/w/cpp/language/function.html#func
+    /// Non-static string literals are not supported.
+    SourceLocation(const char* func,
+                   std::source_location loc = std::source_location::current())
+        : m_func{func}, m_loc{loc} {}
+
+    std::string_view file_name() const { return m_loc.file_name(); }
+    std::uint_least32_t line() const { return m_loc.line(); }
+    std::string_view function_name_short() const { return m_func; }
+
+private:
+    std::string_view m_func;
+    std::source_location m_loc;
+};
+
 struct SourceLocationEqual {
-    bool operator()(const std::source_location& lhs, const std::source_location& rhs) const noexcept
+    bool operator()(const SourceLocation& lhs, const SourceLocation& rhs) const noexcept
     {
         return lhs.line() == rhs.line() && std::string_view(lhs.file_name()) == std::string_view(rhs.file_name());
     }
 };
 
 struct SourceLocationHasher {
-    size_t operator()(const std::source_location& s) const noexcept
+    size_t operator()(const SourceLocation& s) const noexcept
     {
         // Use CSipHasher(0, 0) as a simple way to get uniform distribution.
         return size_t(CSipHasher(0, 0)
@@ -131,7 +151,7 @@ namespace BCLog {
         mutable StdMutex m_mutex;
 
         //! Stats for each source location that has attempted to log something.
-        std::unordered_map<std::source_location, Stats, SourceLocationHasher, SourceLocationEqual> m_source_locations GUARDED_BY(m_mutex);
+        std::unordered_map<SourceLocation, Stats, SourceLocationHasher, SourceLocationEqual> m_source_locations GUARDED_BY(m_mutex);
         //! Whether any log locations are suppressed. Cached view on m_source_locations for performance reasons.
         std::atomic<bool> m_suppression_active{false};
         LogRateLimiter(uint64_t max_bytes, std::chrono::seconds reset_window);
@@ -163,7 +183,7 @@ namespace BCLog {
         //! Consumes `source_loc`'s available bytes corresponding to the size of the (formatted)
         //! `str` and returns its status.
         [[nodiscard]] Status Consume(
-            const std::source_location& source_loc,
+            const SourceLocation& source_loc,
             const std::string& str) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
         //! Resets all usage to zero. Called periodically by the scheduler.
         void Reset() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
@@ -178,7 +198,7 @@ namespace BCLog {
             SystemClock::time_point now;
             std::chrono::seconds mocktime;
             std::string str, threadname;
-            std::source_location source_loc;
+            SourceLocation source_loc;
             LogFlags category;
             Level level;
         };
@@ -206,7 +226,7 @@ namespace BCLog {
         /** Log categories bitfield. */
         std::atomic<CategoryMask> m_categories{BCLog::NONE};
 
-        void FormatLogStrInPlace(std::string& str, LogFlags category, Level level, const std::source_location& source_loc, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime) const;
+        void FormatLogStrInPlace(std::string& str, LogFlags category, Level level, const SourceLocation& source_loc, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime) const;
 
         std::string LogTimestampStr(SystemClock::time_point now, std::chrono::seconds mocktime) const;
 
@@ -214,7 +234,7 @@ namespace BCLog {
         std::list<std::function<void(const std::string&)>> m_print_callbacks GUARDED_BY(m_cs) {};
 
         /** Send a string to the log output (internal) */
-        void LogPrintStr_(std::string_view str, std::source_location&& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
+        void LogPrintStr_(std::string_view str, SourceLocation&& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
             EXCLUSIVE_LOCKS_REQUIRED(m_cs);
 
         std::string GetLogPrefix(LogFlags category, Level level) const;
@@ -233,7 +253,7 @@ namespace BCLog {
         std::atomic<bool> m_reopen_file{false};
 
         /** Send a string to the log output */
-        void LogPrintStr(std::string_view str, std::source_location&& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
+        void LogPrintStr(std::string_view str, SourceLocation&& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
             EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         /** Returns whether logs will be written to any output */
@@ -347,7 +367,7 @@ static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level leve
 bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
 
 template <typename... Args>
-inline void LogPrintFormatInternal(std::source_location&& source_loc, BCLog::LogFlags flag, BCLog::Level level, bool should_ratelimit, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags flag, BCLog::Level level, bool should_ratelimit, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
     if (LogInstance().Enabled()) {
         std::string log_msg;
@@ -360,7 +380,9 @@ inline void LogPrintFormatInternal(std::source_location&& source_loc, BCLog::Log
     }
 }
 
-#define LogPrintLevel_(category, level, should_ratelimit, ...) LogPrintFormatInternal(std::source_location::current(), category, level, should_ratelimit, __VA_ARGS__)
+// Allow __func__ to be used in any context without warnings:
+// NOLINTNEXTLINE(bugprone-lambda-function-name)
+#define LogPrintLevel_(category, level, should_ratelimit, ...) LogPrintFormatInternal(SourceLocation{__func__}, category, level, should_ratelimit, __VA_ARGS__)
 
 // Log unconditionally. Uses basic rate limiting to mitigate disk filling attacks.
 // Be conservative when using functions that unconditionally log to debug.log!
