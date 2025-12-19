@@ -1428,8 +1428,8 @@ static RPCHelpMan decodepsbt()
             UniValue tree(UniValue::VARR);
             for (const auto& [depth, leaf_ver, script] : output.m_tap_tree) {
                 UniValue elem(UniValue::VOBJ);
-                elem.pushKV("depth", (int)depth);
-                elem.pushKV("leaf_ver", (int)leaf_ver);
+                elem.pushKV("depth", depth);
+                elem.pushKV("leaf_ver", leaf_ver);
                 elem.pushKV("script", HexStr(script));
                 tree.push_back(std::move(elem));
             }
@@ -1971,7 +1971,7 @@ static RPCHelpMan analyzepsbt()
     if (!inputs_result.empty()) result.pushKV("inputs", std::move(inputs_result));
 
     if (psbta.estimated_vsize != std::nullopt) {
-        result.pushKV("estimated_vsize", (int)*psbta.estimated_vsize);
+        result.pushKV("estimated_vsize", *psbta.estimated_vsize);
     }
     if (psbta.estimated_feerate != std::nullopt) {
         result.pushKV("estimated_feerate", ValueFromAmount(psbta.estimated_feerate->GetFeePerK()));

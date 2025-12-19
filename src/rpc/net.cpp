@@ -956,7 +956,7 @@ static RPCHelpMan getnodeaddresses()
     for (const CAddress& addr : vAddr) {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("time", int64_t{TicksSinceEpoch<std::chrono::seconds>(addr.nTime)});
-        obj.pushKV("services", (uint64_t)addr.nServices);
+        obj.pushKV("services", static_cast<std::underlying_type_t<decltype(addr.nServices)>>(addr.nServices));
         obj.pushKV("address", addr.ToStringAddr());
         obj.pushKV("port", addr.GetPort());
         obj.pushKV("network", GetNetworkName(addr.GetNetClass()));
@@ -1123,7 +1123,7 @@ UniValue AddrmanEntryToJSON(const AddrInfo& info, const CConnman& connman)
         ret.pushKV("mapped_as", mapped_as);
     }
     ret.pushKV("port", info.GetPort());
-    ret.pushKV("services", (uint64_t)info.nServices);
+    ret.pushKV("services", static_cast<std::underlying_type_t<decltype(info.nServices)>>(info.nServices));
     ret.pushKV("time", int64_t{TicksSinceEpoch<std::chrono::seconds>(info.nTime)});
     ret.pushKV("network", GetNetworkName(info.GetNetClass()));
     ret.pushKV("source", info.source.ToStringAddr());

@@ -469,7 +469,7 @@ static RPCHelpMan getmininginfo()
     obj.pushKV("difficulty", GetDifficulty(tip));
     obj.pushKV("target", GetTarget(tip, chainman.GetConsensus().powLimit).GetHex());
     obj.pushKV("networkhashps",    getnetworkhashps().HandleRequest(request));
-    obj.pushKV("pooledtx",         (uint64_t)mempool.size());
+    obj.pushKV("pooledtx", mempool.size());
     BlockAssembler::Options assembler_options;
     ApplyArgsManOptions(*node.args, assembler_options);
     obj.pushKV("blockmintxfee", ValueFromAmount(assembler_options.blockMinFeeRate.GetFeePerK()));
@@ -988,7 +988,7 @@ static RPCHelpMan getblocktemplate()
     result.pushKV("previousblockhash", block.hashPrevBlock.GetHex());
     result.pushKV("transactions", std::move(transactions));
     result.pushKV("coinbaseaux", std::move(aux));
-    result.pushKV("coinbasevalue", (int64_t)block.vtx[0]->vout[0].nValue);
+    result.pushKV("coinbasevalue", block.vtx[0]->vout[0].nValue);
     result.pushKV("longpollid", tip.GetHex() + ToString(nTransactionsUpdatedLast));
     result.pushKV("target", hashTarget.GetHex());
     result.pushKV("mintime", GetMinimumTime(pindexPrev, consensusParams.DifficultyAdjustmentInterval()));
@@ -1005,11 +1005,11 @@ static RPCHelpMan getblocktemplate()
     result.pushKV("sigoplimit", nSigOpLimit);
     result.pushKV("sizelimit", nSizeLimit);
     if (!fPreSegWit) {
-        result.pushKV("weightlimit", (int64_t)MAX_BLOCK_WEIGHT);
+        result.pushKV("weightlimit", MAX_BLOCK_WEIGHT);
     }
     result.pushKV("curtime", block.GetBlockTime());
     result.pushKV("bits", strprintf("%08x", block.nBits));
-    result.pushKV("height", (int64_t)(pindexPrev->nHeight+1));
+    result.pushKV("height", pindexPrev->nHeight + 1);
 
     if (consensusParams.signet_blocks) {
         result.pushKV("signet_challenge", HexStr(consensusParams.signet_challenge));
