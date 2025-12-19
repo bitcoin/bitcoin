@@ -6015,6 +6015,56 @@ bool ChainstateManager::IsSnapshotActive() const
     return m_snapshot_chainstate && m_active_chainstate == m_snapshot_chainstate.get();
 }
 
+bool ChainstateManager::IsQuorumTypeEnabled(const Consensus::LLMQType llmqType,
+                                            gsl::not_null<const CBlockIndex*> pindexPrev,
+                                            std::optional<bool> optDIP0024IsActive,
+                                            std::optional<bool> optHaveDIP0024Quorums) const
+{
+    constexpr int TESTNET_LLMQ_25_67_ACTIVATION_HEIGHT = 847000;
+
+    const bool fDIP0024IsActive{optDIP0024IsActive.value_or(
+        DeploymentActiveAfter(pindexPrev, GetConsensus(), Consensus::DEPLOYMENT_DIP0024))};
+    const bool fHaveDIP0024Quorums{
+        optHaveDIP0024Quorums.value_or(pindexPrev->nHeight >= GetConsensus().DIP0024QuorumsHeight)};
+    switch (llmqType) {
+    case Consensus::LLMQType::LLMQ_DEVNET:
+        return true;
+    case Consensus::LLMQType::LLMQ_50_60:
+        return !fDIP0024IsActive || !fHaveDIP0024Quorums || m_chainparams.NetworkIDString() == CBaseChainParams::TESTNET ||
+               m_chainparams.NetworkIDString() == CBaseChainParams::DEVNET;
+    case Consensus::LLMQType::LLMQ_TEST_INSTANTSEND:
+        return !fDIP0024IsActive || !fHaveDIP0024Quorums ||
+               m_chainparams.GetConsensus().llmqTypeDIP0024InstantSend == Consensus::LLMQType::LLMQ_TEST_INSTANTSEND;
+    case Consensus::LLMQType::LLMQ_TEST:
+    case Consensus::LLMQType::LLMQ_TEST_PLATFORM:
+    case Consensus::LLMQType::LLMQ_400_60:
+    case Consensus::LLMQType::LLMQ_400_85:
+    case Consensus::LLMQType::LLMQ_DEVNET_PLATFORM:
+        return true;
+
+    case Consensus::LLMQType::LLMQ_TEST_V17: {
+        return DeploymentActiveAfter(pindexPrev, /*chainman=*/*this, Consensus::DEPLOYMENT_TESTDUMMY);
+    }
+    case Consensus::LLMQType::LLMQ_100_67:
+        return DeploymentActiveAfter(pindexPrev, GetConsensus(), Consensus::DEPLOYMENT_DIP0020);
+
+    case Consensus::LLMQType::LLMQ_60_75:
+    case Consensus::LLMQType::LLMQ_DEVNET_DIP0024:
+    case Consensus::LLMQType::LLMQ_TEST_DIP0024: {
+        return fDIP0024IsActive;
+    }
+    // TODO: remove it in case of testnet reset
+    case Consensus::LLMQType::LLMQ_25_67:
+        return pindexPrev->nHeight >= TESTNET_LLMQ_25_67_ACTIVATION_HEIGHT;
+
+    default:
+        throw std::runtime_error(strprintf("%s: Unknown LLMQ type %d", __func__, ToUnderlying(llmqType)));
+    }
+
+    // Something wrong with conditions above, they are not consistent
+    assert(false);
+}
+
 void ChainstateManager::MaybeRebalanceCaches()
 {
     AssertLockHeld(::cs_main);

@@ -1072,6 +1072,10 @@ public:
     //! ResizeCoinsCaches() as needed.
     void MaybeRebalanceCaches() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+    bool IsQuorumTypeEnabled(const Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pindexPrev,
+                             std::optional<bool> optDIP0024IsActive = std::nullopt,
+                             std::optional<bool> optHaveDIP0024Quorums = std::nullopt) const;
+
     ~ChainstateManager();
 };
 

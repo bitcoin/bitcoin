@@ -163,7 +163,7 @@ MessageProcessingResult CDKGSessionManager::ProcessMessage(CNode& pfrom, bool is
             return MisbehavingError{10};
         }
 
-        if (!IsQuorumTypeEnabled(llmqType, m_chainman, pQuorumBaseBlockIndex->pprev)) {
+        if (!m_chainman.IsQuorumTypeEnabled(llmqType, pQuorumBaseBlockIndex->pprev)) {
             LogPrintf("CDKGSessionManager -- llmqType [%d] quorums aren't active\n", ToUnderlying(llmqType));
             return MisbehavingError{100};
         }
