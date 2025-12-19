@@ -25,6 +25,7 @@ performance-*,
 -performance-noexcept-move-constructor,
 -performance-unnecessary-value-param,
 readability-const-return-type,
+readability-container-contains,
 readability-redundant-declaration,
 readability-redundant-string-init,
 '
