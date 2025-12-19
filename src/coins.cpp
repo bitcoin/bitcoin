@@ -362,25 +362,3 @@ const Coin& AccessByTxid(const CCoinsViewCache& view, const Txid& txid)
     }
     return coinEmpty;
 }
-
-std::optional<Coin> CCoinsViewErrorCatcher::GetCoin(const COutPoint& outpoint) const
-{
-    try {
-        return CCoinsViewBacked::GetCoin(outpoint);
-    } catch (const std::runtime_error& e) {
-        for (const auto& f : m_err_callbacks) f();
-        LogError("Database error in GetCoin: %s", e.what());
-        std::abort();
-    }
-}
-
-bool CCoinsViewErrorCatcher::HaveCoin(const COutPoint& outpoint) const
-{
-    try {
-        return CCoinsViewBacked::HaveCoin(outpoint);
-    } catch (const std::runtime_error& e) {
-        for (const auto& f : m_err_callbacks) f();
-        LogError("Database error in HaveCoin: %s", e.what());
-        std::abort();
-    }
-}
