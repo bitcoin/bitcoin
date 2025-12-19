@@ -330,7 +330,7 @@ public:
     virtual bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) = 0;
 
     //! Get a cursor to iterate over the whole state
-    virtual std::unique_ptr<CCoinsViewCursor> Cursor() const;
+    virtual std::unique_ptr<CCoinsViewCursor> Cursor() const = 0;
 
     //! Estimate database size
     virtual size_t EstimateSize() const = 0;
