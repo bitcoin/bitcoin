@@ -14,11 +14,6 @@ TRACEPOINT_SEMAPHORE(utxocache, add);
 TRACEPOINT_SEMAPHORE(utxocache, spent);
 TRACEPOINT_SEMAPHORE(utxocache, uncache);
 
-bool CCoinsView::HaveCoin(const COutPoint &outpoint) const
-{
-    return GetCoin(outpoint).has_value();
-}
-
 CCoinsViewBacked::CCoinsViewBacked(CCoinsView* view_in) : base(view_in) {}
 std::optional<Coin> CCoinsViewBacked::GetCoin(const COutPoint& outpoint) const { return base->GetCoin(outpoint); }
 bool CCoinsViewBacked::HaveCoin(const COutPoint &outpoint) const { return base->HaveCoin(outpoint); }

@@ -52,6 +52,7 @@ public:
         return std::nullopt;
     }
 
+    bool HaveCoin(const COutPoint& outpoint) const override { return GetCoin(outpoint).has_value(); }
     uint256 GetBestBlock() const override { return hashBestBlock_; }
     std::vector<uint256> GetHeadBlocks() const override { return {}; }
     std::unique_ptr<CCoinsViewCursor> Cursor() const override { return {}; }
