@@ -366,26 +366,18 @@ const Coin& AccessByTxid(const CCoinsViewCache& view, const Txid& txid)
     return coinEmpty;
 }
 
-template <typename ReturnType, typename Func>
-static ReturnType ExecuteBackedWrapper(Func func, const std::vector<std::function<void()>>& err_callbacks)
+std::optional<Coin> CCoinsViewErrorCatcher::GetCoin(const COutPoint& outpoint) const
 {
     try {
-        return func();
-    } catch(const std::runtime_error& e) {
-        for (const auto& f : err_callbacks) {
-            f();
-        }
-        LogError("Error reading from database: %s\n", e.what());
+        return CCoinsViewBacked::GetCoin(outpoint);
+    } catch (const std::runtime_error& e) {
+        for (const auto& f : m_err_callbacks) f();
+        LogError("Database error in GetCoin: %s", e.what());
         std::abort();
     }
 }
 
-std::optional<Coin> CCoinsViewErrorCatcher::GetCoin(const COutPoint& outpoint) const
-{
-    return ExecuteBackedWrapper<std::optional<Coin>>([&]() { return CCoinsViewBacked::GetCoin(outpoint); }, m_err_callbacks);
-}
-
 bool CCoinsViewErrorCatcher::HaveCoin(const COutPoint& outpoint) const
 {
-    return ExecuteBackedWrapper<bool>([&]() { return CCoinsViewBacked::HaveCoin(outpoint); }, m_err_callbacks);
+    return !!CCoinsViewErrorCatcher::GetCoin(outpoint);
 }
