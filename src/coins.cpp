@@ -13,8 +13,6 @@ TRACEPOINT_SEMAPHORE(utxocache, add);
 TRACEPOINT_SEMAPHORE(utxocache, spent);
 TRACEPOINT_SEMAPHORE(utxocache, uncache);
 
-std::vector<uint256> CCoinsView::GetHeadBlocks() const { return std::vector<uint256>(); }
-
 bool CCoinsView::HaveCoin(const COutPoint &outpoint) const
 {
     return GetCoin(outpoint).has_value();
