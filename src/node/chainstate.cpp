@@ -96,9 +96,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
             return {ChainstateLoadStatus::FAILURE, _("Error opening coins database")};
         }
 
-        if (options.coins_error_cb) {
-            chainstate->CoinsErrorCatcher().AddReadErrCallback(options.coins_error_cb);
-        }
+        chainstate->CoinsErrorCatcher().AddReadErrCallback(chainman.m_options.read_error_cb);
 
         // Refuse to load unsupported database format.
         // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
