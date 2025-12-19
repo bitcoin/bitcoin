@@ -46,10 +46,11 @@ struct CoinEntry {
 
 } // namespace
 
-CCoinsViewDB::CCoinsViewDB(DBParams db_params, CoinsViewOptions options) :
+CCoinsViewDB::CCoinsViewDB(DBParams db_params, CoinsViewOptions options, std::function<void()> read_error_cb) :
     m_db_params{std::move(db_params)},
     m_options{std::move(options)},
-    m_db{std::make_unique<CDBWrapper>(m_db_params)} { }
+    m_db{std::make_unique<CDBWrapper>(m_db_params)},
+    m_read_error_cb{std::move(read_error_cb)} { }
 
 void CCoinsViewDB::ResizeCache(size_t new_cache_size)
 {
