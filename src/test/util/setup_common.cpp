@@ -222,7 +222,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     m_node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
     m_node.sporkman = std::make_unique<CSporkManager>();
     m_node.evodb = std::make_unique<CEvoDB>(util::DbWrapperParams{.path = m_node.args->GetDataDirNet(), .memory = true, .wipe = true});
-    m_node.cpoolman = std::make_unique<CCreditPoolManager>(*m_node.evodb);
     m_node.mnhf_manager = std::make_unique<CMNHFManager>(*m_node.evodb);
 
     static bool noui_connected = false;
@@ -242,7 +241,6 @@ BasicTestingSetup::~BasicTestingSetup()
     gArgs.ClearArgs();
 
     m_node.mnhf_manager.reset();
-    m_node.cpoolman.reset();
     m_node.evodb.reset();
     m_node.sporkman.reset();
     m_node.netfulfilledman.reset();

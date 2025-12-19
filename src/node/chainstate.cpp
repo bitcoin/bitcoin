@@ -231,7 +231,7 @@ void DashChainstateSetup(ChainstateManager& chainman,
     dmnman = std::make_unique<CDeterministicMNManager>(*evodb, mn_metaman);
 
     cpoolman.reset();
-    cpoolman = std::make_unique<CCreditPoolManager>(*evodb);
+    cpoolman = std::make_unique<CCreditPoolManager>(*evodb, chainman);
 
     if (llmq_ctx) {
         llmq_ctx->Interrupt();
