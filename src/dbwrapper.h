@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <exception>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <span>
@@ -53,6 +54,11 @@ struct DBParams {
     bool obfuscate = false;
     //! If true, build a LevelDB bloom filter to accelerate point lookups.
     bool bloom_filter = true;
+    //! Callback executed on fatal read failures.
+    //!
+    //! Called synchronously from database read paths. It must be safe to call
+    //! from any thread, with or without locks held.
+    std::function<void()> read_error_cb{[] {}};
     //! Passed-through options.
     DBOptions options{};
     //! If non-null, use this as the leveldb::Env instead of the default.
@@ -201,6 +207,9 @@ private:
 
     //! optional XOR-obfuscation of the database
     Obfuscation m_obfuscation;
+
+    //! Callback executed on fatal read failures.
+    std::function<void()> m_read_error_cb;
 
     //! obfuscation key storage key, null-prefixed to avoid collisions
     inline static const std::string OBFUSCATION_KEY{"\000obfuscate_key", 14}; // explicit size to avoid truncation at leading \0
