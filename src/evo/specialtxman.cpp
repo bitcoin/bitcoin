@@ -113,13 +113,13 @@ static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, llmq::CQuorumSn
     try {
         switch (tx.nType) {
         case TRANSACTION_PROVIDER_REGISTER:
-            return CheckProRegTx(dmnman, tx, pindexPrev, state, view, check_sigs);
+            return CheckProRegTx(tx, pindexPrev, dmnman, view, chainman, state, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_SERVICE:
-            return CheckProUpServTx(dmnman, tx, pindexPrev, state, check_sigs);
+            return CheckProUpServTx(tx, pindexPrev, dmnman, chainman, state, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_REGISTRAR:
-            return CheckProUpRegTx(dmnman, tx, pindexPrev, state, view, check_sigs);
+            return CheckProUpRegTx(tx, pindexPrev, dmnman, view, chainman, state, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_REVOKE:
-            return CheckProUpRevTx(dmnman, tx, pindexPrev, state, check_sigs);
+            return CheckProUpRevTx(tx, pindexPrev, dmnman, chainman, state, check_sigs);
         case TRANSACTION_COINBASE: {
             if (!tx.IsCoinBase()) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-cbtx-invalid");

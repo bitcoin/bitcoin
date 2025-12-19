@@ -457,10 +457,10 @@ void FuncDIP3Protx(TestChainSetup& setup)
         // Technically, the payload is still valid...
         {
             LOCK(cs_main);
-            BOOST_REQUIRE(CheckProRegTx(dmnman, CTransaction(tx), chainman.ActiveChain().Tip(), dummy_state,
-                                        chainman.ActiveChainstate().CoinsTip(), true));
-            BOOST_REQUIRE(CheckProRegTx(dmnman, CTransaction(tx2), chainman.ActiveChain().Tip(), dummy_state,
-                                        chainman.ActiveChainstate().CoinsTip(), true));
+            BOOST_REQUIRE(CheckProRegTx(CTransaction(tx), chainman.ActiveChain().Tip(), dmnman,
+                                        chainman.ActiveChainstate().CoinsTip(), chainman, dummy_state, true));
+            BOOST_REQUIRE(CheckProRegTx(CTransaction(tx2), chainman.ActiveChain().Tip(), dmnman,
+                                        chainman.ActiveChainstate().CoinsTip(), chainman, dummy_state, true));
         }
         // But the signature should not verify anymore
         BOOST_REQUIRE(CheckTransactionSignature(*(setup.m_node.mempool), tx));
@@ -566,10 +566,10 @@ void FuncDIP3Protx(TestChainSetup& setup)
     TxValidationState dummy_state;
     {
         LOCK(cs_main);
-        BOOST_REQUIRE(CheckProUpRegTx(dmnman, CTransaction(tx), chainman.ActiveChain().Tip(), dummy_state,
-                                      chainman.ActiveChainstate().CoinsTip(), true));
-        BOOST_REQUIRE(!CheckProUpRegTx(dmnman, CTransaction(tx2), chainman.ActiveChain().Tip(), dummy_state,
-                                       chainman.ActiveChainstate().CoinsTip(), true));
+        BOOST_REQUIRE(CheckProUpRegTx(CTransaction(tx), chainman.ActiveChain().Tip(), dmnman,
+                                      chainman.ActiveChainstate().CoinsTip(), chainman, dummy_state, true));
+        BOOST_REQUIRE(!CheckProUpRegTx(CTransaction(tx2), chainman.ActiveChain().Tip(), dmnman,
+                                       chainman.ActiveChainstate().CoinsTip(), chainman, dummy_state, true));
     }
     BOOST_REQUIRE(CheckTransactionSignature(*(setup.m_node.mempool), tx));
     BOOST_REQUIRE(!CheckTransactionSignature(*(setup.m_node.mempool), tx2));

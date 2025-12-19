@@ -21,6 +21,7 @@
 #include <gsl/pointers.h>
 
 class CBlockIndex;
+class ChainstateManager;
 class TxValidationState;
 struct RPCResult;
 
@@ -52,7 +53,7 @@ enum : uint16_t {
  *  TODO: Resolve this oddity. Consider deprecating legacy BLS-only RPCs so we can remove them eventually.
  */
 template <typename T>
-[[nodiscard]] uint16_t GetMaxFromDeployment(gsl::not_null<const CBlockIndex*> pindexPrev,
+[[nodiscard]] uint16_t GetMaxFromDeployment(gsl::not_null<const CBlockIndex*> pindexPrev, const ChainstateManager& chainman,
                                             std::optional<bool> is_basic_override = std::nullopt);
 } // namespace ProTxVersion
 
@@ -124,7 +125,8 @@ public:
     [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     [[nodiscard]] UniValue ToJson() const;
 
-    bool IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state) const;
+    bool IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, const ChainstateManager& chainman,
+                          TxValidationState& state) const;
 };
 
 class CProUpServTx
@@ -185,7 +187,8 @@ public:
     [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     [[nodiscard]] UniValue ToJson() const;
 
-    bool IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state) const;
+    bool IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, const ChainstateManager& chainman,
+                          TxValidationState& state) const;
 };
 
 class CProUpRegTx
@@ -232,7 +235,8 @@ public:
     [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     [[nodiscard]] UniValue ToJson() const;
 
-    bool IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state) const;
+    bool IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, const ChainstateManager& chainman,
+                          TxValidationState& state) const;
 };
 
 class CProUpRevTx
@@ -282,7 +286,8 @@ public:
     [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     [[nodiscard]] UniValue ToJson() const;
 
-    bool IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state) const;
+    bool IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, const ChainstateManager& chainman,
+                          TxValidationState& state) const;
 };
 
 template <typename ProTx>
