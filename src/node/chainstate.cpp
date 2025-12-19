@@ -74,7 +74,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
     evodb = std::make_unique<CEvoDB>(util::DbWrapperParams{.path = data_dir, .memory = dash_dbs_in_memory, .wipe = fReset || fReindexChainState});
 
     mnhf_manager.reset();
-    mnhf_manager = std::make_unique<CMNHFManager>(*evodb);
+    mnhf_manager = std::make_unique<CMNHFManager>(*evodb, chainman);
 
     chainman.InitializeChainstate(mempool, *evodb, chain_helper);
     chainman.m_total_coinstip_cache = nCoinCacheUsage;
@@ -243,7 +243,7 @@ void DashChainstateSetup(ChainstateManager& chainman,
                                              util::DbWrapperParams{.path = data_dir, .memory = llmq_dbs_in_memory, .wipe = llmq_dbs_wipe});
     mempool->ConnectManagers(dmnman.get(), llmq_ctx->isman.get());
     // Enable CMNHFManager::{Process, Undo}Block
-    mnhf_manager->ConnectManagers(&chainman, llmq_ctx->qman.get());
+    mnhf_manager->ConnectManagers(llmq_ctx->qman.get());
 
     chain_helper.reset();
     chain_helper = std::make_unique<CChainstateHelper>(*cpoolman, *dmnman, *mnhf_manager, govman, *(llmq_ctx->isman), *(llmq_ctx->quorum_block_processor),

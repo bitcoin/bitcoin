@@ -222,7 +222,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     m_node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
     m_node.sporkman = std::make_unique<CSporkManager>();
     m_node.evodb = std::make_unique<CEvoDB>(util::DbWrapperParams{.path = m_node.args->GetDataDirNet(), .memory = true, .wipe = true});
-    m_node.mnhf_manager = std::make_unique<CMNHFManager>(*m_node.evodb);
 
     static bool noui_connected = false;
     if (!noui_connected) {
@@ -240,7 +239,6 @@ BasicTestingSetup::~BasicTestingSetup()
     fs::remove_all(m_path_root);
     gArgs.ClearArgs();
 
-    m_node.mnhf_manager.reset();
     m_node.evodb.reset();
     m_node.sporkman.reset();
     m_node.netfulfilledman.reset();
@@ -274,6 +272,7 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     m_node.chainman = std::make_unique<ChainstateManager>(chainparams);
     m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(m_cache_sizes.block_tree_db, true);
 
+    m_node.mnhf_manager = std::make_unique<CMNHFManager>(*m_node.evodb, *m_node.chainman);
     m_node.mn_sync = std::make_unique<CMasternodeSync>(std::make_unique<NodeSyncNotifierImpl>(*m_node.connman, *m_node.netfulfilledman));
     m_node.govman = std::make_unique<CGovernanceManager>(*m_node.mn_metaman, *m_node.netfulfilledman, *m_node.chainman, m_node.dmnman, *m_node.mn_sync);
 
@@ -291,6 +290,7 @@ ChainTestingSetup::~ChainTestingSetup()
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     m_node.govman.reset();
     m_node.mn_sync.reset();
+    m_node.mnhf_manager.reset();
     m_node.chainman.reset();
     m_node.mempool.reset();
     m_node.fee_estimator.reset();
