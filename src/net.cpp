@@ -281,7 +281,11 @@ bool AddLocal(const CService& addr_, int nScore)
     if (!addr.IsRoutable())
         return false;
 
-    if (!fDiscover && nScore < LOCAL_MANUAL)
+    // When discovery is disabled (e.g., -externalip is set), only allow addresses
+    // that are manually specified (LOCAL_MANUAL) or CJDNS addresses. CJDNS addresses
+    // should still be discovered since -externalip is typically for IPv4/IPv6 and
+    // shouldn't prevent advertising our CJDNS address.
+    if (!fDiscover && nScore < LOCAL_MANUAL && !addr.IsCJDNS())
         return false;
 
     if (!g_reachable_nets.Contains(addr))
@@ -3205,10 +3209,13 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
 
 void Discover()
 {
-    if (!fDiscover)
-        return;
-
     for (const CNetAddr &addr: GetLocalAddresses()) {
+        // When discovery is disabled, still process CJDNS addresses since
+        // -externalip typically specifies an IPv4/IPv6 address and shouldn't
+        // prevent CJDNS address discovery.
+        if (!fDiscover && !addr.IsCJDNS())
+            continue;
+
         if (AddLocal(addr, LOCAL_IF))
             LogInfo("%s: %s\n", __func__, addr.ToStringAddr());
     }
