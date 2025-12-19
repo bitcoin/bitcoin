@@ -17,6 +17,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -65,7 +66,8 @@ protected:
     {
     public:
         DB(const fs::path& path, size_t n_cache_size,
-           bool f_memory = false, bool f_wipe = false, bool f_obfuscate = false);
+           bool f_memory = false, bool f_wipe = false, bool f_obfuscate = false,
+           std::function<void()> read_error_cb = [] {});
 
         /// Read block locator of the chain that the index is in sync with.
         /// Note, the returned locator will be empty if no record exists.

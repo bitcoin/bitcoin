@@ -15,6 +15,7 @@
 
 #include <cstddef>
 #include <exception>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -43,6 +44,11 @@ struct DBParams {
     //! If true, store data obfuscated via simple XOR. If false, XOR with a
     //! zero'd byte array.
     bool obfuscate = false;
+    //! Callback executed on fatal read failures.
+    //!
+    //! Called synchronously from database read paths. It must be safe to call
+    //! from any thread, with or without locks held.
+    std::function<void()> read_error_cb{[] {}};
     //! Passed-through options.
     DBOptions options{};
 };
@@ -188,6 +194,12 @@ private:
 
     //! optional XOR-obfuscation of the database
     Obfuscation m_obfuscation;
+
+    //! Callback executed on fatal read failures.
+    //!
+    //! Called synchronously from database read paths. It must be safe to call
+    //! from any thread, with or without locks held.
+    std::function<void()> m_read_error_cb;
 
     //! obfuscation key storage key, null-prefixed to avoid collisions
     inline static const std::string OBFUSCATION_KEY{"\000obfuscate_key", 14}; // explicit size to avoid truncation at leading \0

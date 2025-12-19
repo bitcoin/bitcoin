@@ -1919,6 +1919,7 @@ void Chainstate::InitCoinsDB(
             .memory_only = in_memory,
             .wipe_data = should_wipe,
             .obfuscate = true,
+            .read_error_cb = m_chainman.m_options.read_error_cb,
             .options = m_chainman.m_options.coins_db},
         m_chainman.m_options.coins_view);
 

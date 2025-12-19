@@ -216,7 +216,9 @@ struct LevelDBContext {
 };
 
 CDBWrapper::CDBWrapper(const DBParams& params)
-    : m_db_context{std::make_unique<LevelDBContext>()}, m_name{fs::PathToString(params.path.stem())}
+    : m_db_context{std::make_unique<LevelDBContext>()},
+      m_name{fs::PathToString(params.path.stem())},
+      m_read_error_cb{params.read_error_cb}
 {
     DBContext().penv = nullptr;
     DBContext().readoptions.verify_checksums = true;
