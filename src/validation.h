@@ -496,7 +496,7 @@ public:
     //! state to disk, which should not be done until the health of the database is verified.
     //!
     //! All arguments forwarded onto CCoinsViewDB.
-    CoinsViews(DBParams db_params, CoinsViewOptions options);
+    CoinsViews(DBParams db_params, CoinsViewOptions options, std::function<void()> read_error_cb = [] {});
 
     //! Initialize the CCoinsViewCache member.
     void InitCache() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -602,7 +602,8 @@ public:
     void InitCoinsDB(
         size_t cache_size_bytes,
         bool in_memory,
-        bool should_wipe);
+        bool should_wipe,
+        std::function<void()> read_error_cb = [] {});
 
     //! Initialize the in-memory coins cache (to be done after the health of the on-disk database
     //! is verified).

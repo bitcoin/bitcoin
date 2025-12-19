@@ -38,9 +38,9 @@ protected:
     DBParams m_db_params;
     CoinsViewOptions m_options;
     std::unique_ptr<CDBWrapper> m_db;
-    mutable std::function<void()> m_read_error_cb{[]{}};
+    std::function<void()> m_read_error_cb;
 public:
-    explicit CCoinsViewDB(DBParams db_params, CoinsViewOptions options);
+    explicit CCoinsViewDB(DBParams db_params, CoinsViewOptions options, std::function<void()> read_error_cb = [] {});
 
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const noexcept override;
     bool HaveCoin(const COutPoint &outpoint) const noexcept override;
@@ -48,8 +48,6 @@ public:
     std::vector<uint256> GetHeadBlocks() const override;
     void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override;
-
-    void SetReadErrCallback(std::function<void()> f) { m_read_error_cb = std::move(f); }
 
     //! Whether an unsupported database format is used.
     bool NeedsUpgrade();

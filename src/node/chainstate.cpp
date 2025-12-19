@@ -90,14 +90,11 @@ static ChainstateLoadResult CompleteChainstateInitialization(
             chainstate->InitCoinsDB(
                 /*cache_size_bytes=*/chainman.m_total_coinsdb_cache * init_cache_fraction,
                 /*in_memory=*/options.coins_db_in_memory,
-                /*should_wipe=*/options.wipe_chainstate_db);
+                /*should_wipe=*/options.wipe_chainstate_db,
+                /*read_error_cb=*/options.read_error_cb);
         } catch (dbwrapper_error& err) {
             LogError("%s\n", err.what());
             return {ChainstateLoadStatus::FAILURE, _("Error opening coins database")};
-        }
-
-        if (options.read_error_cb) {
-            chainstate->CoinsDB().SetReadErrCallback(options.read_error_cb);
         }
 
         // Refuse to load unsupported database format.
