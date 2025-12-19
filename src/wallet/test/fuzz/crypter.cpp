@@ -36,11 +36,18 @@ FUZZ_TARGET(crypter, .init = initialize_crypter)
 
         const unsigned int derivation_method = fuzzed_data_provider.ConsumeBool() ? 0 : fuzzed_data_provider.ConsumeIntegral<unsigned int>();
 
-        // Limiting the value of rounds since it is otherwise uselessly expensive and causes a timeout when fuzzing.
-        crypt.SetKeyFromPassphrase(/*key_data=*/secure_string,
-                                   /*salt=*/ConsumeFixedLengthByteVector(fuzzed_data_provider, WALLET_CRYPTO_SALT_SIZE),
-                                   /*rounds=*/fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, CMasterKey::DEFAULT_DERIVE_ITERATIONS),
-                                   /*derivation_method=*/derivation_method);
+        if (fuzzed_data_provider.ConsumeBool()) {
+            // Limiting the value of rounds since it is otherwise uselessly expensive and causes a timeout when fuzzing.
+            crypt.SetKeyFromPassphrase(/*key_data=*/secure_string,
+                                       /*salt=*/ConsumeFixedLengthByteVector(fuzzed_data_provider, WALLET_CRYPTO_SALT_SIZE),
+                                       /*rounds=*/fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, CMasterKey::DEFAULT_DERIVE_ITERATIONS),
+                                       /*derivation_method=*/derivation_method);
+        } else {
+            std::vector<unsigned char> new_iv = ConsumeFixedLengthByteVector(fuzzed_data_provider, WALLET_CRYPTO_IV_SIZE);
+            const std::vector<unsigned char> random_vector = ConsumeFixedLengthByteVector(fuzzed_data_provider, WALLET_CRYPTO_KEY_SIZE);
+            CKeyingMaterial new_key = CKeyingMaterial(random_vector.begin(), random_vector.end());
+            crypt.SetKey(new_key, new_iv);
+        }
     }
 
     CKey random_ckey;
@@ -78,6 +85,11 @@ FUZZ_TARGET(crypter, .init = initialize_crypter)
                          assert(decrypted_secret == plain_text_ed);
                     }
                 }
+            },
+            [&] {
+                 const CKeyingMaterial master_key(random_key.begin(), random_key.end());
+                 CKeyingMaterial decrypted_secret;
+                 (void)DecryptSecret(master_key, cipher_text_ed, pubkey.GetHash(), decrypted_secret);
             },
             [&] {
                 std::optional<CPubKey> random_pub_key{ConsumeDeserializable<CPubKey>(fuzzed_data_provider)};
