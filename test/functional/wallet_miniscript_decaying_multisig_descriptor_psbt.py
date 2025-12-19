@@ -8,6 +8,8 @@ Spending policy: `thresh(4,pk(key_1),pk(key_2),pk(key_3),pk(key_4),after(t1),aft
 This is similar to `test/functional/wallet_multisig_descriptor_psbt.py`.
 """
 
+from test_framework.descriptors import descsum_create
+
 import random
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -28,32 +30,30 @@ class WalletMiniscriptDecayingMultisigDescriptorPSBTTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     @staticmethod
-    def _get_xpub(wallet, internal):
+    def _get_xpub(wallet):
         """Extract the wallet's xpubs using `listdescriptors` and pick the one from the `pkh` descriptor since it's least likely to be accidentally reused (legacy addresses)."""
-        pkh_descriptor = next(filter(lambda d: d["desc"].startswith("pkh(") and d["internal"] == internal, wallet.listdescriptors()["descriptors"]))
+        pkh_descriptor = next(filter(lambda d: d["desc"].startswith("pkh(") and d["internal"] == False, wallet.listdescriptors()["descriptors"]))
         # keep all key origin information (master key fingerprint and all derivation steps) for proper support of hardware devices
         # see section 'Key origin identification' in 'doc/descriptors.md' for more details...
-        return pkh_descriptor["desc"].split("pkh(")[1].split(")")[0]
+        xpub = pkh_descriptor["desc"].split("pkh(")[1].split(")")[0]
+        if xpub.endswith("/*"):
+            xpub = xpub.rsplit("/", 2)[0]
+        return xpub
 
-    def create_multisig(self, external_xpubs, internal_xpubs):
-        """The multisig is created by importing the following descriptors. The resulting wallet is watch-only and every signer can do this."""
+    def create_multisig(self, xpubs):
+        """The multisig is created by importing a single multi-path descriptor. The resulting wallet is watch-only and every signer can do this."""
         self.node.createwallet(wallet_name=f"{self.name}", blank=True, disable_private_keys=True)
         multisig = self.node.get_wallet_rpc(f"{self.name}")
         # spending policy: `thresh(4,pk(key_1),pk(key_2),pk(key_3),pk(key_4),after(t1),after(t2),after(t3))`
         # IMPORTANT: when backing up your descriptor, the order of key_1...key_4 must be correct!
-        external = multisig.getdescriptorinfo(f"wsh(thresh({self.N},pk({'),s:pk('.join(external_xpubs)}),sln:after({'),sln:after('.join(map(str, self.locktimes))})))")
-        internal = multisig.getdescriptorinfo(f"wsh(thresh({self.N},pk({'),s:pk('.join(internal_xpubs)}),sln:after({'),sln:after('.join(map(str, self.locktimes))})))")
+        multipath_xpubs = [f"{xpub}/<0;1>/*" for xpub in xpubs]
+        raw_descriptor = f"wsh(thresh({self.N},pk({'),s:pk('.join(multipath_xpubs)}),sln:after({'),sln:after('.join(map(str, self.locktimes))})))"
+        descriptor_with_checksum = descsum_create(raw_descriptor)
         result = multisig.importdescriptors([
-            {  # receiving addresses (internal: False)
-                "desc": external["descriptor"],
+            {
+                "desc": descriptor_with_checksum,
                 "active": True,
-                "internal": False,
-                "timestamp": "now",
-            },
-            {  # change addresses (internal: True)
-                "desc": internal["descriptor"],
-                "active": True,
-                "internal": True,
+                "range": [0, 1000],
                 "timestamp": "now",
             },
         ])
@@ -73,10 +73,10 @@ class WalletMiniscriptDecayingMultisigDescriptorPSBTTest(BitcoinTestFramework):
 
         self.log.info("Create the signer wallets and get their xpubs...")
         signers = [self.node.get_wallet_rpc(self.node.createwallet(wallet_name=f"signer_{i}")["name"]) for i in range(self.N)]
-        external_xpubs, internal_xpubs = [[self._get_xpub(signer, internal) for signer in signers] for internal in [False, True]]
+        xpubs = [self._get_xpub(signer) for signer in signers]
 
         self.log.info("Create the watch-only decaying multisig using signers' xpubs...")
-        multisig = self.create_multisig(external_xpubs, internal_xpubs)
+        multisig = self.create_multisig(xpubs)
 
         self.log.info("Get a mature utxo to send to the multisig...")
         coordinator_wallet = self.node.get_wallet_rpc(self.node.createwallet(wallet_name="coordinator")["name"])
