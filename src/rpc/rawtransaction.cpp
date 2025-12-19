@@ -623,8 +623,7 @@ static RPCHelpMan combinerawtransaction()
     CMutableTransaction mergedTx(txVariants[0]);
 
     // Fetch previous transactions (inputs):
-    CCoinsView viewDummy;
-    CCoinsViewCache view(&viewDummy);
+    CCoinsViewCache view;
     {
         NodeContext& node = EnsureAnyNodeContext(request.context);
         const CTxMemPool& mempool = EnsureMemPool(node);
@@ -638,7 +637,7 @@ static RPCHelpMan combinerawtransaction()
             view.AccessCoin(txin.prevout); // Load entries from viewChain into view; can fail.
         }
 
-        view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
+        view.SetBackend(CCoinsViewEmpty::Get()); // switch back to avoid locking mempool for too long
     }
 
     // Use CTransaction for the constant parts of the

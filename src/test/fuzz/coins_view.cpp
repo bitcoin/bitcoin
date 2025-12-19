@@ -107,8 +107,8 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView* backend
                 coins_view_cache.Uncache(random_out_point);
             },
             [&] {
-                if (fuzzed_data_provider.ConsumeBool()) {
-                    *backend_coins_view = CCoinsView{};
+                if (!is_db && fuzzed_data_provider.ConsumeBool()) {
+                    backend_coins_view = &CCoinsViewEmpty::Get();
                 }
                 coins_view_cache.SetBackend(*backend_coins_view);
             },
@@ -311,8 +311,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView* backend
 FUZZ_TARGET(coins_view, .init = initialize_coins_view)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    CCoinsView backend_coins_view;
-    TestCoinsView(fuzzed_data_provider, &backend_coins_view, /*is_db=*/false);
+    TestCoinsView(fuzzed_data_provider, &CCoinsViewEmpty::Get(), /*is_db=*/false);
 }
 
 FUZZ_TARGET(coins_view_db, .init = initialize_coins_view)

@@ -330,6 +330,33 @@ public:
     virtual size_t EstimateSize() const { return 0; }
 };
 
+/** Noop coins view. */
+class CCoinsViewEmpty final : public CCoinsView
+{
+private:
+    CCoinsViewEmpty() = default;
+
+public:
+    static CCoinsViewEmpty& Get()
+    {
+        static CCoinsViewEmpty instance;
+        return instance;
+    }
+
+    CCoinsViewEmpty(const CCoinsViewEmpty&) = delete;
+    CCoinsViewEmpty& operator=(const CCoinsViewEmpty&) = delete;
+
+    std::optional<Coin> GetCoin(const COutPoint&) const override { return {}; }
+    bool HaveCoin(const COutPoint&) const override { return false; }
+    uint256 GetBestBlock() const override { return {}; }
+    std::vector<uint256> GetHeadBlocks() const override { return {}; }
+    void BatchWrite(CoinsViewCacheCursor& cursor, const uint256&) override
+    {
+        for (auto it{cursor.Begin()}; it != cursor.End(); it = cursor.NextAndMaybeErase(*it)) { }
+    }
+    std::unique_ptr<CCoinsViewCursor> Cursor() const override { return {}; }
+    size_t EstimateSize() const override { return 0; }
+};
 
 /** CCoinsView backed by another CCoinsView */
 class CCoinsViewBacked : public CCoinsView
@@ -380,6 +407,7 @@ protected:
 
 public:
     CCoinsViewCache(CCoinsView *base_in, bool deterministic = false);
+    CCoinsViewCache() : CCoinsViewCache{&CCoinsViewEmpty::Get()} {}
 
     /**
      * By deleting the copy constructor, we prevent accidentally using it when one intends to create a cache on top of a base cache.
