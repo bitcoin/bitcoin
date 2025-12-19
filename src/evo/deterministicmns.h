@@ -30,6 +30,7 @@
 class CBlock;
 class CBlockIndex;
 class CCoinsViewCache;
+class ChainstateManager;
 class CEvoDB;
 class CSimplifiedMNList;
 class CSimplifiedMNListEntry;
@@ -290,8 +291,7 @@ public:
      * @param onlyValid Run on all masternodes, or only "valid" (not banned) masternodes
      * @param cb callback to execute
      */
-    template <typename Callback>
-    void ForEachMN(bool onlyValid, Callback&& cb) const
+    void ForEachMN(bool onlyValid, std::function<void(const CDeterministicMN&)> cb) const
     {
         for (const auto& p : mnMap) {
             if (!onlyValid || !p.second->pdmnState->IsBanned()) {
@@ -307,8 +307,7 @@ public:
      * @param onlyValid Run on all masternodes, or only "valid" (not banned) masternodes
      * @param cb callback to execute
      */
-    template <typename Callback>
-    void ForEachMNShared(bool onlyValid, Callback&& cb) const
+    void ForEachMNShared(bool onlyValid, std::function<void(const CDeterministicMNCPtr&)> cb) const
     {
         for (const auto& p : mnMap) {
             if (!onlyValid || !p.second->pdmnState->IsBanned()) {
@@ -768,9 +767,15 @@ private:
                             RecalcDiffsResult& result) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
 
-bool CheckProRegTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, const CCoinsViewCache& view, bool check_sigs);
-bool CheckProUpServTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, bool check_sigs);
-bool CheckProUpRegTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, const CCoinsViewCache& view, bool check_sigs);
-bool CheckProUpRevTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, bool check_sigs);
+bool CheckProRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev,
+                   CDeterministicMNManager& dmnman, const CCoinsViewCache& view, const ChainstateManager& chainman,
+                   TxValidationState& state, bool check_sigs);
+bool CheckProUpServTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, CDeterministicMNManager& dmnman,
+                      const ChainstateManager& chainman, TxValidationState& state, bool check_sigs);
+bool CheckProUpRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev,
+                     CDeterministicMNManager& dmnman, const CCoinsViewCache& view, const ChainstateManager& chainman,
+                     TxValidationState& state, bool check_sigs);
+bool CheckProUpRevTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, CDeterministicMNManager& dmnman,
+                     const ChainstateManager& chainman, TxValidationState& state, bool check_sigs);
 
 #endif // BITCOIN_EVO_DETERMINISTICMNS_H

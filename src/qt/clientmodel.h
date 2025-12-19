@@ -47,7 +47,6 @@ enum NumConnections {
     CONNECTIONS_ALL  = (CONNECTIONS_IN | CONNECTIONS_OUT),
 };
 
-class CDeterministicMNList;
 class CGovernanceObject;
 
 /** Model for Dash network client. */
@@ -77,8 +76,8 @@ public:
     int getHeaderTipHeight() const;
     int64_t getHeaderTipTime() const;
 
-    void setMasternodeList(const CDeterministicMNList& mnList, const CBlockIndex* tip);
-    std::pair<CDeterministicMNList, const CBlockIndex*> getMasternodeList() const;
+    void setMasternodeList(interfaces::MnListPtr mnList, const CBlockIndex* tip);
+    std::pair<interfaces::MnListPtr, const CBlockIndex*> getMasternodeList() const;
     void refreshMasternodeList();
 
     void getAllGovernanceObjects(std::vector<CGovernanceObject> &obj);
@@ -120,7 +119,7 @@ private:
     // caches it internally for recent blocks but it's not enough to get consistent
     // representation of the list in UI during initial sync/reindex, so we cache it here too.
     mutable RecursiveMutex cs_mnlist; // protects mnListCached
-    std::unique_ptr<CDeterministicMNList> mnListCached GUARDED_BY(cs_mnlist){};
+    interfaces::MnListPtr mnListCached GUARDED_BY(cs_mnlist){};
     const CBlockIndex* mnListTip{nullptr};
 
     void TipChanged(SynchronizationState sync_state, interfaces::BlockTip tip, double verification_progress, bool header) EXCLUSIVE_LOCKS_REQUIRED(!m_cached_tip_mutex);

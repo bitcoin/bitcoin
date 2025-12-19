@@ -105,21 +105,20 @@ static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, llmq::CQuorumSn
     if (!tx.HasExtraPayloadField())
         return true;
 
-    const auto& consensusParams = Params().GetConsensus();
-    if (!DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_DIP0003)) {
+    if (!DeploymentActiveAfter(pindexPrev, chainman.GetConsensus(), Consensus::DEPLOYMENT_DIP0003)) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-tx-type");
     }
 
     try {
         switch (tx.nType) {
         case TRANSACTION_PROVIDER_REGISTER:
-            return CheckProRegTx(dmnman, tx, pindexPrev, state, view, check_sigs);
+            return CheckProRegTx(tx, pindexPrev, dmnman, view, chainman, state, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_SERVICE:
-            return CheckProUpServTx(dmnman, tx, pindexPrev, state, check_sigs);
+            return CheckProUpServTx(tx, pindexPrev, dmnman, chainman, state, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_REGISTRAR:
-            return CheckProUpRegTx(dmnman, tx, pindexPrev, state, view, check_sigs);
+            return CheckProUpRegTx(tx, pindexPrev, dmnman, view, chainman, state, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_REVOKE:
-            return CheckProUpRevTx(dmnman, tx, pindexPrev, state, check_sigs);
+            return CheckProUpRevTx(tx, pindexPrev, dmnman, chainman, state, check_sigs);
         case TRANSACTION_COINBASE: {
             if (!tx.IsCoinBase()) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-cbtx-invalid");
@@ -200,7 +199,7 @@ bool CSpecialTxProcessor::RebuildListFromBlock(const CBlock& block, gsl::not_nul
     // we iterate the prevList here and update the newList
     // this is only valid as long these have not diverged at this point, which is the case as long as we don't add
     // code above this loop that modifies newList
-    prevList.ForEachMN(false, [&pindexPrev, &newList, this](auto& dmn) {
+    prevList.ForEachMN(/*onlyValid=*/false, [&pindexPrev, &newList, this](const auto& dmn) {
         if (!dmn.pdmnState->confirmedHash.IsNull()) {
             // already confirmed
             return;
@@ -217,8 +216,9 @@ bool CSpecialTxProcessor::RebuildListFromBlock(const CBlock& block, gsl::not_nul
 
     newList.DecreaseScores();
 
-    const bool isMNRewardReallocation{DeploymentActiveAfter(pindexPrev, m_consensus_params, Consensus::DEPLOYMENT_MN_RR)};
-    const bool is_v24_deployed{DeploymentActiveAfter(pindexPrev, m_consensus_params, Consensus::DEPLOYMENT_V24)};
+    const bool isMNRewardReallocation{
+        DeploymentActiveAfter(pindexPrev, m_chainman.GetConsensus(), Consensus::DEPLOYMENT_MN_RR)};
+    const bool is_v24_deployed{DeploymentActiveAfter(pindexPrev, m_chainman, Consensus::DEPLOYMENT_V24)};
 
     // we skip the coinbase
     for (int i = 1; i < (int)block.vtx.size(); i++) {
@@ -443,7 +443,7 @@ bool CSpecialTxProcessor::RebuildListFromBlock(const CBlock& block, gsl::not_nul
                 // The commitment has already been validated at this point, so it's safe to use members of it
 
                 const auto members = llmq::utils::GetAllQuorumMembers(opt_qc->commitment.llmqType, m_dmnman, m_qsnapman,
-                                                                      pQuorumBaseBlockIndex);
+                                                                      m_chainman, pQuorumBaseBlockIndex);
                 HandleQuorumCommitment(opt_qc->commitment, members, debugLogs, newList);
             }
         }
@@ -489,7 +489,7 @@ bool CSpecialTxProcessor::RebuildListFromBlock(const CBlock& block, gsl::not_nul
 
     // reset nConsecutivePayments on non-paid EvoNodes
     auto newList2 = newList;
-    newList2.ForEachMN(false, [&](auto& dmn) {
+    newList2.ForEachMN(/*onlyValid=*/false, [&](const auto& dmn) {
         if (dmn.nType != MnType::Evo) return;
         if (payee != nullptr && dmn.proTxHash == payee->proTxHash && !isMNRewardReallocation) return;
         if (dmn.pdmnState->nConsecutivePayments == 0) return;
@@ -558,7 +558,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
 
         CRangesSet indexes;
         if (DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_V20)) {
-            CCreditPool creditPool{m_cpoolman.GetCreditPool(pindex->pprev, m_consensus_params)};
+            CCreditPool creditPool{m_cpoolman.GetCreditPool(pindex->pprev)};
             LogPrint(BCLog::CREDITPOOL, "CSpecialTxProcessor::%s -- CCreditPool is %s\n", __func__, creditPool.ToString());
             indexes = std::move(creditPool.indexes);
         }

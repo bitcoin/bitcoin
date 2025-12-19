@@ -15,6 +15,8 @@
 #include <util/settings.h>             // For util::SettingsValue
 #include <util/translation.h>
 
+#include <evo/types.h>
+
 #include <functional>
 #include <memory>
 #include <stddef.h>
@@ -29,14 +31,18 @@ class CDeterministicMNList;
 class CFeeRate;
 class CGovernanceObject;
 class CGovernanceVote;
+class CKeyID;
 class CNodeStats;
 class Coin;
+class CScript;
+class CService;
 class RPCTimerInterface;
 class UniValue;
 class Proxy;
 enum class SynchronizationState;
 enum class TransactionError;
 enum vote_signal_enum_t : int;
+enum class MnType : uint16_t;
 struct bilingual_str;
 struct CNodeStateStats;
 namespace node {
@@ -55,12 +61,70 @@ class Loader;
 } // namespace CoinJoin
 struct BlockTip;
 
+//! Interface for a masternode entry
+class MnEntry
+{
+public:
+    MnEntry(const CDeterministicMNCPtr& dmn) {}
+    virtual ~MnEntry() {}
+
+    MnEntry() = delete;
+
+    virtual bool isBanned() const = 0;
+    virtual CService getNetInfoPrimary() const = 0;
+    virtual MnType getType() const = 0;
+    virtual UniValue toJson() const = 0;
+    virtual const CKeyID& getKeyIdOwner() const = 0;
+    virtual const CKeyID& getKeyIdVoting() const = 0;
+    virtual const COutPoint& getCollateralOutpoint() const = 0;
+    virtual const CScript& getScriptPayout() const = 0;
+    virtual const CScript& getScriptOperatorPayout() const = 0;
+    virtual const int32_t& getLastPaidHeight() const = 0;
+    virtual const int32_t& getPoSePenalty() const = 0;
+    virtual const int32_t& getRegisteredHeight() const = 0;
+    virtual const uint16_t& getOperatorReward() const = 0;
+    virtual const uint256& getProTxHash() const = 0;
+};
+
+using MnEntryCPtr = std::unique_ptr<const MnEntry>;
+
+//! Interface for a list of masternode entries
+class MnList
+{
+public:
+    MnList(const CDeterministicMNList& mn_list) {}
+    virtual ~MnList() {}
+
+    MnList() = delete;
+
+    virtual int32_t getHeight() const = 0;
+    virtual size_t getAllEvoCount() const = 0;
+    virtual size_t getAllMNsCount() const = 0;
+    virtual size_t getValidEvoCount() const = 0;
+    virtual size_t getValidMNsCount() const = 0;
+    virtual size_t getValidWeightedMNsCount() const = 0;
+    virtual uint256 getBlockHash() const = 0;
+
+    virtual void forEachMN(bool only_valid, std::function<void(const MnEntry&)> cb) const = 0;
+    virtual MnEntryCPtr getMN(const uint256& hash) const = 0;
+    virtual MnEntryCPtr getMNByService(const CService& service) const = 0;
+    virtual MnEntryCPtr getValidMN(const uint256& hash) const = 0;
+    virtual std::vector<MnEntryCPtr> getProjectedMNPayees(const CBlockIndex* pindex) const = 0;
+
+    virtual void copyContextTo(MnList& mn_list) const = 0;
+    virtual void setContext(node::NodeContext* context) = 0;
+};
+
+using MnListPtr = std::shared_ptr<MnList>;
+
+MnListPtr MakeMNList(const CDeterministicMNList& mn_list);
+
 //! Interface for the src/evo part of a dash node (dashd process).
 class EVO
 {
 public:
     virtual ~EVO() {}
-    virtual std::pair<CDeterministicMNList, const CBlockIndex*> getListAtChainTip() = 0;
+    virtual std::pair<MnListPtr, const CBlockIndex*> getListAtChainTip() = 0;
     virtual void setContext(node::NodeContext* context) {}
 };
 

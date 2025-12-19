@@ -75,9 +75,9 @@ public:
     }
 
     bool VerifySignatureAsync(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
-                              gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
+                              const ChainstateManager& chainman, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
                               CCheckQueueControl<utils::BlsCheck>* queue_control) const;
-    bool Verify(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
+    bool Verify(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
                 gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, bool checkSigs) const;
     bool VerifyNull() const;
     bool VerifySizes(const Consensus::LLMQParams& params) const;

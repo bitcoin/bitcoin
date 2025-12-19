@@ -311,7 +311,7 @@ static RPCHelpMan masternode_winners()
         }
     }
 
-    auto projection = node.dmnman->GetListForBlock(pindexTip).GetProjectedMNPayees(pindexTip, 20);
+    auto projection = node.dmnman->GetListForBlock(pindexTip).GetProjectedMNPayees(pindexTip, /*nCount=*/20);
     for (size_t i = 0; i < projection.size(); i++) {
         int h = nChainTipHeight + 1 + i;
         std::string strPayments = GetRequiredPaymentsString(*node.govman, tip_mn_list, h, projection[i]);
@@ -609,7 +609,7 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
     const bool showRecentMnsOnly = strMode == "recent";
     const bool showEvoOnly = strMode == "evo";
     const int tipHeight = WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()->nHeight);
-    mnList.ForEachMN(false, [&](auto& dmn) {
+    mnList.ForEachMN(/*onlyValid=*/false, [&](const auto& dmn) {
         if (showRecentMnsOnly && dmn.pdmnState->IsBanned()) {
             if (tipHeight - dmn.pdmnState->GetBannedHeight() > Params().GetConsensus().nSuperblockCycle) {
                 return;
@@ -647,7 +647,8 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
 
         if (strMode == "addr") {
             if (!strFilter.empty() && strAddress.find(strFilter) == std::string::npos &&
-                strOutpoint.find(strFilter) == std::string::npos) return;
+                strOutpoint.find(strFilter) == std::string::npos)
+                return;
             obj.pushKV(strOutpoint, strAddress);
         } else if (strMode == "full") {
             std::string strFull = strprintf("%s %d %s %s %s %s",
@@ -658,7 +659,8 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
                                     PadString(ToString(dmn.pdmnState->nLastPaidHeight), 6),
                                     strAddress);
             if (!strFilter.empty() && strFull.find(strFilter) == std::string::npos &&
-                strOutpoint.find(strFilter) == std::string::npos) return;
+                strOutpoint.find(strFilter) == std::string::npos)
+                return;
             obj.pushKV(strOutpoint, strFull);
         } else if (strMode == "info") {
             std::string strInfo = strprintf("%s %d %s %s",
@@ -667,7 +669,8 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
                                     payeeStr,
                                     strAddress);
             if (!strFilter.empty() && strInfo.find(strFilter) == std::string::npos &&
-                strOutpoint.find(strFilter) == std::string::npos) return;
+                strOutpoint.find(strFilter) == std::string::npos)
+                return;
             obj.pushKV(strOutpoint, strInfo);
         } else if (strMode == "json" || strMode == "recent" || strMode == "evo") {
             std::string strInfo = strprintf("%s %s %s %s %d %d %d %s %s %s %s",
@@ -683,7 +686,8 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
                                     collateralAddressStr,
                                     dmn.pdmnState->pubKeyOperator.ToString());
             if (!strFilter.empty() && strInfo.find(strFilter) == std::string::npos &&
-                strOutpoint.find(strFilter) == std::string::npos) return;
+                strOutpoint.find(strFilter) == std::string::npos)
+                return;
             UniValue objMN(UniValue::VOBJ);
             objMN.pushKV("proTxHash", dmn.proTxHash.ToString());
             objMN.pushKV("address", dmn.pdmnState->netInfo->GetPrimary().ToStringAddrPort());
@@ -713,7 +717,8 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
             obj.pushKV(strOutpoint, dmnToLastPaidTime(dmn));
         } else if (strMode == "payee") {
             if (!strFilter.empty() && payeeStr.find(strFilter) == std::string::npos &&
-                strOutpoint.find(strFilter) == std::string::npos) return;
+                strOutpoint.find(strFilter) == std::string::npos)
+                return;
             obj.pushKV(strOutpoint, payeeStr);
         } else if (strMode == "owneraddress") {
             if (!strFilter.empty() && strOutpoint.find(strFilter) == std::string::npos) return;
@@ -724,7 +729,8 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
         } else if (strMode == "status") {
             std::string strStatus = dmnToStatus(dmn);
             if (!strFilter.empty() && strStatus.find(strFilter) == std::string::npos &&
-                strOutpoint.find(strFilter) == std::string::npos) return;
+                strOutpoint.find(strFilter) == std::string::npos)
+                return;
             obj.pushKV(strOutpoint, strStatus);
         } else if (strMode == "votingaddress") {
             if (!strFilter.empty() && strOutpoint.find(strFilter) == std::string::npos) return;

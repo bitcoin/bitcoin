@@ -3,31 +3,34 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <evo/deterministicmns.h>
+
 #include <evo/dmn_types.h>
 #include <evo/dmnstate.h>
 #include <evo/evodb.h>
 #include <evo/providertx.h>
 #include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
+#include <masternode/meta.h>
+#include <messagesigner.h>
+#include <stats/client.h>
+#include <util/irange.h>
+#include <util/pointer.h>
 
 #include <chainparams.h>
 #include <coins.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <index/txindex.h>
-#include <masternode/meta.h>
-#include <messagesigner.h>
 #include <node/blockstorage.h>
 #include <script/standard.h>
-#include <stats/client.h>
 #include <uint256.h>
-#include <univalue.h>
-#include <util/irange.h>
-#include <util/pointer.h>
+#include <validation.h>
 
 #include <functional>
 #include <optional>
 #include <memory>
+
+#include <univalue.h>
 
 static const std::string DB_LIST_SNAPSHOT = "dmn_S3";
 static const std::string DB_LIST_DIFF = "dmn_D4";        // Bumped for nVersion-first format
@@ -192,7 +195,7 @@ CDeterministicMNCPtr CDeterministicMNList::GetMNPayee(gsl::not_null<const CBlock
     // For optimization purposes we also check if v19 active to avoid loop over all masternodes
     CDeterministicMNCPtr best = nullptr;
     if (isv19Active && !isMNRewardReallocation) {
-        ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
+        ForEachMNShared(/*onlyValid=*/true, [&](const auto& dmn) {
             if (dmn->pdmnState->nLastPaidHeight == nHeight) {
                 // We found the last MN Payee.
                 // If the last payee is an EvoNode, we need to check its consecutive payments and pay him again if needed
@@ -208,7 +211,7 @@ CDeterministicMNCPtr CDeterministicMNList::GetMNPayee(gsl::not_null<const CBlock
         // We can proceed with classic MN payee selection
     }
 
-    ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
+    ForEachMNShared(/*onlyValid=*/true, [&](const auto& dmn) {
         if (best == nullptr || CompareByLastPaid(dmn.get(), best.get())) {
             best = dmn;
         }
@@ -233,7 +236,7 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(gsl
     int remaining_evo_payments{0};
     CDeterministicMNCPtr evo_to_be_skipped{nullptr};
     if (!isMNRewardReallocation) {
-        ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
+        ForEachMNShared(/*onlyValid=*/true, [&](const auto& dmn) {
             if (dmn->pdmnState->nLastPaidHeight == nHeight) {
                 // We found the last MN Payee.
                 // If the last payee is an EvoNode, we need to check its consecutive payments and pay him again if needed
@@ -248,7 +251,7 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(gsl
         });
     }
 
-    ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
+    ForEachMNShared(/*onlyValid=*/true, [&](const auto& dmn) {
         if (dmn == evo_to_be_skipped) return;
         for ([[maybe_unused]] auto _ : irange::range(isMNRewardReallocation ? 1 : GetMnType(dmn->nType).voting_weight)) {
             result.emplace_back(dmn);
@@ -278,7 +281,7 @@ gsl::not_null<std::shared_ptr<const CSimplifiedMNList>> CDeterministicMNList::to
         std::vector<std::unique_ptr<CSimplifiedMNListEntry>> sml_entries;
         sml_entries.reserve(mnMap.size());
 
-        ForEachMN(false, [&sml_entries](auto& dmn) {
+        ForEachMN(/*onlyValid=*/false, [&sml_entries](const auto& dmn) {
             sml_entries.emplace_back(std::make_unique<CSimplifiedMNListEntry>(dmn.to_sml_entry()));
         });
         m_cached_sml = std::make_shared<CSimplifiedMNList>(std::move(sml_entries));
@@ -335,7 +338,7 @@ void CDeterministicMNList::DecreaseScores()
     toDecrease.reserve(GetAllMNsCount() / 10);
     // only iterate and decrease for valid ones (not PoSe banned yet)
     // if a MN ever reaches the maximum, it stays in PoSe banned state until revived
-    ForEachMNShared(true /* onlyValid */, [&toDecrease](auto& dmn) {
+    ForEachMNShared(/*onlyValid=*/true, [&toDecrease](const auto& dmn) {
         // There is no reason to check if this MN is banned here since onlyValid=true will only run on non-banned MNs
         if (dmn->pdmnState->nPoSePenalty > 0) {
             toDecrease.emplace_back(dmn);
@@ -1035,8 +1038,9 @@ static bool CheckHashSig(const ProTx& proTx, const CBLSPublicKey& pubKey, TxVali
     return true;
 }
 
-template<typename ProTx>
-static std::optional<ProTx> GetValidatedPayload(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state)
+template <typename ProTx>
+static std::optional<ProTx> GetValidatedPayload(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev,
+                                                const ChainstateManager& chainman, TxValidationState& state)
 {
     if (tx.nType != ProTx::SPECIALTX_TYPE) {
         state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-type");
@@ -1048,7 +1052,7 @@ static std::optional<ProTx> GetValidatedPayload(const CTransaction& tx, gsl::not
         state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-payload");
         return std::nullopt;
     }
-    if (!opt_ptx->IsTriviallyValid(pindexPrev, state)) {
+    if (!opt_ptx->IsTriviallyValid(pindexPrev, chainman, state)) {
         // pass the state returned by the function above
         return std::nullopt;
     }
@@ -1065,9 +1069,10 @@ static std::optional<ProTx> GetValidatedPayload(const CTransaction& tx, gsl::not
  * @returns                  true if version change is valid or DEPLOYMENT_V24 is not active
  */
 bool IsVersionChangeValid(gsl::not_null<const CBlockIndex*> pindexPrev, const uint16_t tx_type,
-                          const uint16_t state_version, const uint16_t tx_version, TxValidationState& state)
+                          const uint16_t state_version, const uint16_t tx_version, const ChainstateManager& chainman,
+                          TxValidationState& state)
 {
-    if (!DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_V24)) {
+    if (!DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_V24)) {
         // New restrictions only apply after v24 deployment
         return true;
     }
@@ -1090,15 +1095,17 @@ bool IsVersionChangeValid(gsl::not_null<const CBlockIndex*> pindexPrev, const ui
     return true;
 }
 
-bool CheckProRegTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, const CCoinsViewCache& view, bool check_sigs)
+bool CheckProRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev,
+                   CDeterministicMNManager& dmnman, const CCoinsViewCache& view, const ChainstateManager& chainman,
+                   TxValidationState& state, bool check_sigs)
 {
-    const auto opt_ptx = GetValidatedPayload<CProRegTx>(tx, pindexPrev, state);
+    const auto opt_ptx = GetValidatedPayload<CProRegTx>(tx, pindexPrev, chainman, state);
     if (!opt_ptx) {
         // pass the state returned by the function above
         return false;
     }
 
-    const bool is_v24_active{DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_V24)};
+    const bool is_v24_active{DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_V24)};
 
     // No longer allow legacy scheme masternode registration
     if (is_v24_active && opt_ptx->nVersion < ProTxVersion::BasicBLS) {
@@ -1223,9 +1230,10 @@ bool CheckProRegTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl:
     return true;
 }
 
-bool CheckProUpServTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, bool check_sigs)
+bool CheckProUpServTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, CDeterministicMNManager& dmnman,
+                      const ChainstateManager& chainman, TxValidationState& state, bool check_sigs)
 {
-    const auto opt_ptx = GetValidatedPayload<CProUpServTx>(tx, pindexPrev, state);
+    const auto opt_ptx = GetValidatedPayload<CProUpServTx>(tx, pindexPrev, chainman, state);
     if (!opt_ptx) {
         // pass the state returned by the function above
         return false;
@@ -1248,7 +1256,7 @@ bool CheckProUpServTx(CDeterministicMNManager& dmnman, const CTransaction& tx, g
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-hash");
     }
 
-    if (!IsVersionChangeValid(pindexPrev, tx.nType, dmn->pdmnState->nVersion, opt_ptx->nVersion, state)) {
+    if (!IsVersionChangeValid(pindexPrev, tx.nType, dmn->pdmnState->nVersion, opt_ptx->nVersion, chainman, state)) {
         // pass the state returned by the function above
         return false;
     }
@@ -1299,9 +1307,11 @@ bool CheckProUpServTx(CDeterministicMNManager& dmnman, const CTransaction& tx, g
     return true;
 }
 
-bool CheckProUpRegTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, const CCoinsViewCache& view, bool check_sigs)
+bool CheckProUpRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev,
+                     CDeterministicMNManager& dmnman, const CCoinsViewCache& view, const ChainstateManager& chainman,
+                     TxValidationState& state, bool check_sigs)
 {
-    const auto opt_ptx = GetValidatedPayload<CProUpRegTx>(tx, pindexPrev, state);
+    const auto opt_ptx = GetValidatedPayload<CProUpRegTx>(tx, pindexPrev, chainman, state);
     if (!opt_ptx) {
         // pass the state returned by the function above
         return false;
@@ -1319,7 +1329,7 @@ bool CheckProUpRegTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gs
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-hash");
     }
 
-    if (!IsVersionChangeValid(pindexPrev, tx.nType, dmn->pdmnState->nVersion, opt_ptx->nVersion, state)) {
+    if (!IsVersionChangeValid(pindexPrev, tx.nType, dmn->pdmnState->nVersion, opt_ptx->nVersion, chainman, state)) {
         // pass the state returned by the function above
         return false;
     }
@@ -1369,9 +1379,10 @@ bool CheckProUpRegTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gs
     return true;
 }
 
-bool CheckProUpRevTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, bool check_sigs)
+bool CheckProUpRevTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, CDeterministicMNManager& dmnman,
+                     const ChainstateManager& chainman, TxValidationState& state, bool check_sigs)
 {
-    const auto opt_ptx = GetValidatedPayload<CProUpRevTx>(tx, pindexPrev, state);
+    const auto opt_ptx = GetValidatedPayload<CProUpRevTx>(tx, pindexPrev, chainman, state);
     if (!opt_ptx) {
         // pass the state returned by the function above
         return false;
@@ -1383,7 +1394,7 @@ bool CheckProUpRevTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gs
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-hash");
     }
 
-    if (!IsVersionChangeValid(pindexPrev, tx.nType, dmn->pdmnState->nVersion, opt_ptx->nVersion, state)) {
+    if (!IsVersionChangeValid(pindexPrev, tx.nType, dmn->pdmnState->nVersion, opt_ptx->nVersion, chainman, state)) {
         // pass the state returned by the function above
         return false;
     }

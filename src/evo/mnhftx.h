@@ -90,7 +90,7 @@ class CMNHFManager : public AbstractEHFManager
 {
 private:
     CEvoDB& m_evoDb;
-    std::atomic<ChainstateManager*> m_chainman{nullptr};
+    const ChainstateManager& m_chainman;
     std::atomic<llmq::CQuorumManager*> m_qman{nullptr};
 
     static constexpr size_t MNHFCacheSize = 1000;
@@ -102,7 +102,7 @@ public:
     CMNHFManager() = delete;
     CMNHFManager(const CMNHFManager&) = delete;
     CMNHFManager& operator=(const CMNHFManager&) = delete;
-    explicit CMNHFManager(CEvoDB& evoDb);
+    explicit CMNHFManager(CEvoDB& evoDb, const ChainstateManager& chainman);
     ~CMNHFManager();
 
     /**
@@ -139,7 +139,7 @@ public:
      * Separated from constructor to allow LLMQContext to use CMNHFManager in read-only capacity.
      * Required to mutate state.
      */
-    void ConnectManagers(gsl::not_null<ChainstateManager*> chainman, gsl::not_null<llmq::CQuorumManager*> qman);
+    void ConnectManagers(gsl::not_null<llmq::CQuorumManager*> qman);
 
     /**
      * Reset llmq::CQuorumManager pointer.

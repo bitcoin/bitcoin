@@ -30,6 +30,10 @@ QT_BEGIN_NAMESPACE
 class QModelIndex;
 QT_END_NAMESPACE
 
+namespace interfaces {
+class MnEntry;
+}
+
 /** Masternode Manager page widget */
 class MasternodeList : public QWidget
 {
@@ -76,7 +80,7 @@ private:
 
     bool mnListChanged{true};
 
-    CDeterministicMNCPtr GetSelectedDIP3MN();
+    std::unique_ptr<const interfaces::MnEntry> GetSelectedDIP3MN();
 
     void updateDIP3List();
 

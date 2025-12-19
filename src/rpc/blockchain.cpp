@@ -1406,29 +1406,29 @@ static RPCHelpMan verifychain()
     };
 }
 
-static void SoftForkDescPushBack(const CBlockIndex* active_chain_tip, UniValue& softforks, const Consensus::Params& params, Consensus::BuriedDeployment dep)
+static void SoftForkDescPushBack(const CBlockIndex* active_chain_tip, UniValue& softforks, const ChainstateManager& chainman, Consensus::BuriedDeployment dep)
 {
     // For buried deployments.
 
-    if (!DeploymentEnabled(params, dep)) return;
+    if (!DeploymentEnabled(chainman, dep)) return;
 
     UniValue rv(UniValue::VOBJ);
     rv.pushKV("type", "buried");
     // getblockchaininfo reports the softfork as active from when the chain height is
     // one below the activation height
-    rv.pushKV("active", DeploymentActiveAfter(active_chain_tip, params, dep));
-    rv.pushKV("height", params.DeploymentHeight(dep));
+    rv.pushKV("active", DeploymentActiveAfter(active_chain_tip, chainman.GetConsensus(), dep));
+    rv.pushKV("height", chainman.GetConsensus().DeploymentHeight(dep));
     softforks.pushKV(DeploymentName(dep), rv);
 }
 
-static void SoftForkDescPushBack(const CBlockIndex* active_chain_tip, const std::unordered_map<uint8_t, int>& signals, UniValue& softforks, const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
+static void SoftForkDescPushBack(const CBlockIndex* active_chain_tip, const std::unordered_map<uint8_t, int>& signals, UniValue& softforks, const ChainstateManager& chainman, Consensus::DeploymentPos id)
 {
     // For BIP9 deployments.
 
-    if (!DeploymentEnabled(consensusParams, id)) return;
+    if (!DeploymentEnabled(chainman, id)) return;
 
     UniValue bip9(UniValue::VOBJ);
-    const ThresholdState thresholdState = g_versionbitscache.State(active_chain_tip, consensusParams, id);
+    const ThresholdState thresholdState = chainman.m_versionbitscache.State(active_chain_tip, chainman.GetConsensus(), id);
     switch (thresholdState) {
     case ThresholdState::DEFINED: bip9.pushKV("status", "defined"); break;
     case ThresholdState::STARTED: bip9.pushKV("status", "started"); break;
@@ -1438,19 +1438,20 @@ static void SoftForkDescPushBack(const CBlockIndex* active_chain_tip, const std:
     }
     const bool has_signal = (ThresholdState::STARTED == thresholdState || ThresholdState::LOCKED_IN == thresholdState);
     if (has_signal) {
-        bip9.pushKV("bit", consensusParams.vDeployments[id].bit);
+        bip9.pushKV("bit", chainman.GetConsensus().vDeployments[id].bit);
     }
-    bip9.pushKV("start_time", consensusParams.vDeployments[id].nStartTime);
-    bip9.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
-    bip9.pushKV("ehf", consensusParams.vDeployments[id].useEHF);
-    if (auto it = signals.find(consensusParams.vDeployments[id].bit); it != signals.end()) {
+    bip9.pushKV("start_time", chainman.GetConsensus().vDeployments[id].nStartTime);
+    bip9.pushKV("timeout", chainman.GetConsensus().vDeployments[id].nTimeout);
+    bip9.pushKV("min_activation_height", chainman.GetConsensus().vDeployments[id].min_activation_height);
+    bip9.pushKV("ehf", chainman.GetConsensus().vDeployments[id].useEHF);
+    if (auto it = signals.find(chainman.GetConsensus().vDeployments[id].bit); it != signals.end()) {
         bip9.pushKV("ehf_height", it->second);
     }
-    int64_t since_height = g_versionbitscache.StateSinceHeight(active_chain_tip, consensusParams, id);
+    int64_t since_height = chainman.m_versionbitscache.StateSinceHeight(active_chain_tip, chainman.GetConsensus(), id);
     bip9.pushKV("since", since_height);
     if (has_signal) {
         UniValue statsUV(UniValue::VOBJ);
-        BIP9Stats statsStruct = g_versionbitscache.Statistics(active_chain_tip, consensusParams, id);
+        BIP9Stats statsStruct = chainman.m_versionbitscache.Statistics(active_chain_tip, chainman.GetConsensus(), id);
         statsUV.pushKV("period", statsStruct.period);
         statsUV.pushKV("elapsed", statsStruct.elapsed);
         statsUV.pushKV("count", statsStruct.count);
@@ -1461,9 +1462,9 @@ static void SoftForkDescPushBack(const CBlockIndex* active_chain_tip, const std:
         bip9.pushKV("statistics", statsUV);
     }
     if (ThresholdState::LOCKED_IN == thresholdState) {
-        bip9.pushKV("activation_height", since_height + static_cast<int>(consensusParams.vDeployments[id].nWindowSize));
+        bip9.pushKV("activation_height", since_height + static_cast<int>(chainman.GetConsensus().vDeployments[id].nWindowSize));
     }
-    bip9.pushKV("min_activation_height", consensusParams.vDeployments[id].min_activation_height);
+    bip9.pushKV("min_activation_height", chainman.GetConsensus().vDeployments[id].min_activation_height);
 
     UniValue rv(UniValue::VOBJ);
     rv.pushKV("type", "bip9");
@@ -1578,7 +1579,6 @@ RPCHelpMan getblockchaininfo()
         }
     }
 
-    const Consensus::Params& consensusParams = Params().GetConsensus();
     UniValue softforks(UniValue::VOBJ);
     for (auto deploy : { /* sorted by activation block */
                          Consensus::DEPLOYMENT_HEIGHTINCB,
@@ -1597,12 +1597,12 @@ RPCHelpMan getblockchaininfo()
                          Consensus::DEPLOYMENT_MN_RR,
                          Consensus::DEPLOYMENT_WITHDRAWALS,
                         }) {
-        SoftForkDescPushBack(&tip, softforks, consensusParams, deploy);
+        SoftForkDescPushBack(&tip, softforks, chainman, deploy);
     }
     for (auto ehf_deploy : { /* sorted by activation block */
                              Consensus::DEPLOYMENT_V24,
                              Consensus::DEPLOYMENT_TESTDUMMY }) {
-        SoftForkDescPushBack(&tip, ehfSignals, softforks, consensusParams, ehf_deploy);
+        SoftForkDescPushBack(&tip, ehfSignals, softforks, chainman, ehf_deploy);
     }
     obj.pushKV("softforks", softforks);
 

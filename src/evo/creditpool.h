@@ -17,12 +17,14 @@
 #include <evo/assetlocktx.h>
 
 #include <gsl/pointers.h>
+
 #include <optional>
 #include <unordered_set>
 
+class BlockValidationState;
 class CBlock;
 class CBlockIndex;
-class BlockValidationState;
+class ChainstateManager;
 class CEvoDB;
 class TxValidationState;
 namespace Consensus {
@@ -114,6 +116,7 @@ private:
     Uint256LruHashMap<CCreditPool> creditPoolCache GUARDED_BY(cache_mutex){CreditPoolCacheSize};
 
     CEvoDB& evoDb;
+    const ChainstateManager& m_chainman;
 
     static constexpr int DISK_SNAPSHOT_PERIOD = 576; // once per day
 
@@ -126,7 +129,7 @@ public:
     CCreditPoolManager() = delete;
     CCreditPoolManager(const CCreditPoolManager&) = delete;
     CCreditPoolManager& operator=(const CCreditPoolManager&) = delete;
-    explicit CCreditPoolManager(CEvoDB& _evoDb);
+    explicit CCreditPoolManager(CEvoDB& _evoDb, const ChainstateManager& chainman);
     ~CCreditPoolManager();
 
     /**
@@ -134,15 +137,14 @@ public:
       * In case if block is invalid the function GetCreditPool throws an exception
       * it can happen if there limits of withdrawal (unlock) exceed
       */
-    CCreditPool GetCreditPool(const CBlockIndex* block, const Consensus::Params& consensusParams)
-        EXCLUSIVE_LOCKS_REQUIRED(!cache_mutex);
+    CCreditPool GetCreditPool(const CBlockIndex* block) EXCLUSIVE_LOCKS_REQUIRED(!cache_mutex);
 
 private:
     std::optional<CCreditPool> GetFromCache(const CBlockIndex& block_index) EXCLUSIVE_LOCKS_REQUIRED(!cache_mutex);
     void AddToCache(const uint256& block_hash, int height, const CCreditPool& pool) EXCLUSIVE_LOCKS_REQUIRED(!cache_mutex);
 
-    CCreditPool ConstructCreditPool(const gsl::not_null<const CBlockIndex*> block_index, CCreditPool prev,
-                                    const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(!cache_mutex);
+    CCreditPool ConstructCreditPool(const gsl::not_null<const CBlockIndex*> block_index, CCreditPool prev)
+        EXCLUSIVE_LOCKS_REQUIRED(!cache_mutex);
 };
 
 std::optional<CCreditPoolDiff> GetCreditPoolDiffForBlock(CCreditPoolManager& cpoolman, const node::BlockManager& blockman, const llmq::CQuorumManager& qman,

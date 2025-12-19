@@ -29,18 +29,19 @@ static const std::string DB_VVEC = "qdkg_V";
 static const std::string DB_SKCONTRIB = "qdkg_S";
 static const std::string DB_ENC_CONTRIB = "qdkg_E";
 
-CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chainstate, CDeterministicMNManager& dmnman,
+CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman,
                                        CDKGDebugManager& _dkgDebugManager, CMasternodeMetaMan& mn_metaman,
                                        CQuorumBlockProcessor& _quorumBlockProcessor, CQuorumSnapshotManager& qsnapman,
                                        const CActiveMasternodeManager* const mn_activeman,
-                                       const CSporkManager& sporkman, const util::DbWrapperParams& db_params) :
+                                       const ChainstateManager& chainman, const CSporkManager& sporkman,
+                                       const util::DbWrapperParams& db_params) :
     db{util::MakeDbWrapper({db_params.path / "llmq" / "dkgdb", db_params.memory, db_params.wipe, /*cache_size=*/1 << 20})},
     blsWorker{_blsWorker},
-    m_chainstate{chainstate},
     m_dmnman{dmnman},
     dkgDebugManager{_dkgDebugManager},
     quorumBlockProcessor{_quorumBlockProcessor},
     m_qsnapman{qsnapman},
+    m_chainman{chainman},
     spork_manager{sporkman}
 {
     if (mn_activeman == nullptr && !IsWatchQuorumsEnabled()) {
@@ -53,8 +54,8 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chai
         auto session_count = (params.useRotation) ? params.signingActiveQuorumCount : 1;
         for (const auto i : irange::range(session_count)) {
             dkgSessionHandlers.emplace(std::piecewise_construct, std::forward_as_tuple(params.type, i),
-                                       std::forward_as_tuple(blsWorker, m_chainstate, dmnman, dkgDebugManager, *this,
-                                                             mn_metaman, quorumBlockProcessor, m_qsnapman, mn_activeman,
+                                       std::forward_as_tuple(blsWorker, m_dmnman, dkgDebugManager, *this, mn_metaman,
+                                                             quorumBlockProcessor, m_qsnapman, mn_activeman, m_chainman,
                                                              spork_manager, params, i));
         }
     }
@@ -154,14 +155,15 @@ MessageProcessingResult CDKGSessionManager::ProcessMessage(CNode& pfrom, bool is
 
     // No luck, try to compute
     if (quorumIndex == -1) {
-        CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(::cs_main, return m_chainstate.m_blockman.LookupBlockIndex(quorumHash));
+        const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(::cs_main,
+                                                             return m_chainman.m_blockman.LookupBlockIndex(quorumHash));
         if (pQuorumBaseBlockIndex == nullptr) {
             LogPrintf("CDKGSessionManager -- unknown quorumHash %s\n", quorumHash.ToString());
             // NOTE: do not insta-ban for this, we might be lagging behind
             return MisbehavingError{10};
         }
 
-        if (!IsQuorumTypeEnabled(llmqType, pQuorumBaseBlockIndex->pprev)) {
+        if (!m_chainman.IsQuorumTypeEnabled(llmqType, pQuorumBaseBlockIndex->pprev)) {
             LogPrintf("CDKGSessionManager -- llmqType [%d] quorums aren't active\n", ToUnderlying(llmqType));
             return MisbehavingError{100};
         }
@@ -297,7 +299,7 @@ void CDKGSessionManager::WriteEncryptedContributions(Consensus::LLMQType llmqTyp
 
 bool CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, std::vector<CBLSSecretKey>& skContributionsRet) const
 {
-    auto members = utils::GetAllQuorumMembers(llmqType, m_dmnman, m_qsnapman, pQuorumBaseBlockIndex);
+    auto members = utils::GetAllQuorumMembers(llmqType, m_dmnman, m_qsnapman, m_chainman, pQuorumBaseBlockIndex);
 
     memberIndexesRet.clear();
     vvecsRet.clear();
@@ -346,7 +348,7 @@ bool CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, 
 
 bool CDKGSessionManager::GetEncryptedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, const uint256& nProTxHash, std::vector<CBLSIESEncryptedObject<CBLSSecretKey>>& vecRet) const
 {
-    auto members = utils::GetAllQuorumMembers(llmqType, m_dmnman, m_qsnapman, pQuorumBaseBlockIndex);
+    auto members = utils::GetAllQuorumMembers(llmqType, m_dmnman, m_qsnapman, m_chainman, pQuorumBaseBlockIndex);
 
     vecRet.clear();
     vecRet.reserve(members.size());
@@ -415,8 +417,9 @@ void CDKGSessionManager::CleanupOldContributions() const
                     break;
                 }
                 cnt_all++;
-                const CBlockIndex* pindexQuorum = m_chainstate.m_blockman.LookupBlockIndex(std::get<2>(k));
-                if (pindexQuorum == nullptr || m_chainstate.m_chain.Tip()->nHeight - pindexQuorum->nHeight > params.max_store_depth()) {
+                const CBlockIndex* pindexQuorum = m_chainman.m_blockman.LookupBlockIndex(std::get<2>(k));
+                if (pindexQuorum == nullptr ||
+                    m_chainman.ActiveHeight() - pindexQuorum->nHeight > params.max_store_depth()) {
                     // not found or too old
                     batch.Erase(k);
                     cnt_old++;

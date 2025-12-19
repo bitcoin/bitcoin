@@ -61,7 +61,7 @@ static std::optional<CreditPoolDataPerBlock> GetCreditDataFromBlock(const gsl::n
                                                                     const Consensus::Params& consensusParams)
 {
     // There's no CbTx before DIP0003 activation
-    if (!DeploymentActiveAt(*block_index, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003)) {
+    if (!DeploymentActiveAt(*block_index, consensusParams, Consensus::DEPLOYMENT_DIP0003)) {
         return std::nullopt;
     }
 
@@ -117,7 +117,7 @@ std::string CCreditPool::ToString() const
 
 std::optional<CCreditPool> CCreditPoolManager::GetFromCache(const CBlockIndex& block_index)
 {
-    if (!DeploymentActiveAt(block_index, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) return CCreditPool{};
+    if (!DeploymentActiveAt(block_index, m_chainman.GetConsensus(), Consensus::DEPLOYMENT_V20)) return CCreditPool{};
 
     const uint256 block_hash = block_index.GetBlockHash();
     CCreditPool pool;
@@ -148,10 +148,9 @@ void CCreditPoolManager::AddToCache(const uint256& block_hash, int height, const
     }
 }
 
-CCreditPool CCreditPoolManager::ConstructCreditPool(const gsl::not_null<const CBlockIndex*> block_index,
-                                                    CCreditPool prev, const Consensus::Params& consensusParams)
+CCreditPool CCreditPoolManager::ConstructCreditPool(const gsl::not_null<const CBlockIndex*> block_index, CCreditPool prev)
 {
-    std::optional<CreditPoolDataPerBlock> opt_block_data = GetCreditDataFromBlock(block_index, consensusParams);
+    std::optional<CreditPoolDataPerBlock> opt_block_data = GetCreditDataFromBlock(block_index, m_chainman.GetConsensus());
     if (!opt_block_data) {
         // If reading of previous block is not successfully, but
         // prev contains credit pool related data, something strange happened
@@ -178,10 +177,11 @@ CCreditPool CCreditPoolManager::ConstructCreditPool(const gsl::not_null<const CB
     }
 
     const CBlockIndex* distant_block_index{
-        block_index->GetAncestor(block_index->nHeight - Params().CreditPoolPeriodBlocks())};
+        block_index->GetAncestor(block_index->nHeight - m_chainman.GetParams().CreditPoolPeriodBlocks())};
     CAmount distantUnlocked{0};
     if (distant_block_index) {
-        if (std::optional<CreditPoolDataPerBlock> distant_block{GetCreditDataFromBlock(distant_block_index, consensusParams)};
+        if (std::optional<CreditPoolDataPerBlock> distant_block{
+                GetCreditDataFromBlock(distant_block_index, m_chainman.GetConsensus())};
             distant_block) {
             distantUnlocked = distant_block->unlocked;
         }
@@ -189,9 +189,9 @@ CCreditPool CCreditPoolManager::ConstructCreditPool(const gsl::not_null<const CB
 
     CAmount currentLimit = blockData.credit_pool;
     const CAmount latelyUnlocked = prev.latelyUnlocked + blockData.unlocked - distantUnlocked;
-    if (DeploymentActiveAt(*block_index, Params().GetConsensus(), Consensus::DEPLOYMENT_V24)) {
+    if (DeploymentActiveAt(*block_index, m_chainman, Consensus::DEPLOYMENT_V24)) {
         currentLimit = std::max(CAmount(0), std::min(currentLimit, LimitAmountV24 - latelyUnlocked));
-    } else if (DeploymentActiveAt(*block_index, Params().GetConsensus(), Consensus::DEPLOYMENT_WITHDRAWALS)) {
+    } else if (DeploymentActiveAt(*block_index, m_chainman.GetConsensus(), Consensus::DEPLOYMENT_WITHDRAWALS)) {
         currentLimit = std::min(currentLimit, LimitAmountV22);
     } else {
         // Unlock limits in pre-v22 are max(100, min(.10 * assetlockpool, 1000)) inside window
@@ -221,7 +221,7 @@ CCreditPool CCreditPoolManager::ConstructCreditPool(const gsl::not_null<const CB
 
 }
 
-CCreditPool CCreditPoolManager::GetCreditPool(const CBlockIndex* block_index, const Consensus::Params& consensusParams)
+CCreditPool CCreditPoolManager::GetCreditPool(const CBlockIndex* block_index)
 {
     std::stack<gsl::not_null<const CBlockIndex*>> to_calculate;
 
@@ -232,14 +232,15 @@ CCreditPool CCreditPoolManager::GetCreditPool(const CBlockIndex* block_index, co
     }
     if (block_index == nullptr) poolTmp = CCreditPool{};
     while (!to_calculate.empty()) {
-        poolTmp = ConstructCreditPool(to_calculate.top(), *poolTmp, consensusParams);
+        poolTmp = ConstructCreditPool(to_calculate.top(), *poolTmp);
         to_calculate.pop();
     }
     return *poolTmp;
 }
 
-CCreditPoolManager::CCreditPoolManager(CEvoDB& _evoDb) :
-    evoDb{_evoDb}
+CCreditPoolManager::CCreditPoolManager(CEvoDB& _evoDb, const ChainstateManager& chainman) :
+    evoDb{_evoDb},
+    m_chainman{chainman}
 {
 }
 
@@ -326,7 +327,7 @@ std::optional<CCreditPoolDiff> GetCreditPoolDiffForBlock(CCreditPoolManager& cpo
                                                          const CAmount blockSubsidy, BlockValidationState& state)
 {
     try {
-        const CCreditPool creditPool = cpoolman.GetCreditPool(pindexPrev, consensusParams);
+        const CCreditPool creditPool = cpoolman.GetCreditPool(pindexPrev);
         LogPrint(BCLog::CREDITPOOL, "%s: CCreditPool is %s\n", __func__, creditPool.ToString());
         CCreditPoolDiff creditPoolDiff(creditPool, pindexPrev, consensusParams, blockSubsidy);
         for (size_t i = 1; i < block.vtx.size(); ++i) {

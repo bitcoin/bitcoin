@@ -549,7 +549,7 @@ static RPCHelpMan gobject_vote_many()
     std::map<uint256, CKeyID> votingKeys;
 
     auto mnList = CHECK_NONFATAL(node.dmnman)->GetListAtChainTip();
-    mnList.ForEachMN(true, [&](auto& dmn) {
+    mnList.ForEachMN(/*onlyValid=*/true, [&](const auto& dmn) {
         const bool is_mine = CheckWalletOwnsKey(*wallet, dmn.pdmnState->keyIDVoting);
         if (is_mine) {
             votingKeys.emplace(dmn.proTxHash, dmn.pdmnState->keyIDVoting);

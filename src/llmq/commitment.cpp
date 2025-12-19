@@ -29,10 +29,11 @@ CFinalCommitment::CFinalCommitment(const Consensus::LLMQParams& params, const ui
 }
 
 bool CFinalCommitment::VerifySignatureAsync(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
+                                            const ChainstateManager& chainman,
                                             gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
                                             CCheckQueueControl<utils::BlsCheck>* queue_control) const
 {
-    auto members = utils::GetAllQuorumMembers(llmqType, dmnman, qsnapman, pQuorumBaseBlockIndex);
+    auto members = utils::GetAllQuorumMembers(llmqType, dmnman, qsnapman, chainman, pQuorumBaseBlockIndex);
     const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     if (!llmq_params_opt.has_value()) {
         LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] invalid llmqType=%d\n", quorumHash.ToString(),
@@ -96,6 +97,7 @@ bool CFinalCommitment::VerifySignatureAsync(CDeterministicMNManager& dmnman, CQu
 
 
 bool CFinalCommitment::Verify(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
+                              const ChainstateManager& chainman,
                               gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, bool checkSigs) const
 {
     const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
@@ -106,7 +108,7 @@ bool CFinalCommitment::Verify(CDeterministicMNManager& dmnman, CQuorumSnapshotMa
     const auto& llmq_params = llmq_params_opt.value();
 
     const uint16_t expected_nversion{CFinalCommitment::GetVersion(IsQuorumRotationEnabled(llmq_params, pQuorumBaseBlockIndex),
-            DeploymentActiveAfter(pQuorumBaseBlockIndex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19))};
+            DeploymentActiveAfter(pQuorumBaseBlockIndex, chainman.GetConsensus(), Consensus::DEPLOYMENT_V19))};
     if (nVersion == 0 || nVersion != expected_nversion) {
         LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] invalid nVersion=%d expected=%d\n", quorumHash.ToString(), nVersion, expected_nversion);
         return false;
@@ -150,7 +152,7 @@ bool CFinalCommitment::Verify(CDeterministicMNManager& dmnman, CQuorumSnapshotMa
         LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] invalid vvecSig\n", quorumHash.ToString());
         return false;
     }
-    auto members = utils::GetAllQuorumMembers(llmqType, dmnman, qsnapman, pQuorumBaseBlockIndex);
+    auto members = utils::GetAllQuorumMembers(llmqType, dmnman, qsnapman, chainman, pQuorumBaseBlockIndex);
     if (LogAcceptDebug(BCLog::LLMQ)) {
         std::stringstream ss;
         std::stringstream ss2;
@@ -174,7 +176,7 @@ bool CFinalCommitment::Verify(CDeterministicMNManager& dmnman, CQuorumSnapshotMa
 
     // sigs are only checked when the block is processed
     if (checkSigs) {
-        if (!VerifySignatureAsync(dmnman, qsnapman, pQuorumBaseBlockIndex, nullptr)) {
+        if (!VerifySignatureAsync(dmnman, qsnapman, chainman, pQuorumBaseBlockIndex, nullptr)) {
             return false;
         }
     }
@@ -268,7 +270,7 @@ bool CheckLLMQCommitment(CDeterministicMNManager& dmnman, CQuorumSnapshotManager
         return true;
     }
 
-    if (!qcTx.commitment.Verify(dmnman, qsnapman, pQuorumBaseBlockIndex, false)) {
+    if (!qcTx.commitment.Verify(dmnman, qsnapman, chainman, pQuorumBaseBlockIndex, false)) {
         LogPrint(BCLog::LLMQ, "CFinalCommitment -- h[%d] invalid qcTx.commitment[%s] Verify failed\n", pindexPrev->nHeight, qcTx.commitment.quorumHash.ToString());
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-qc-invalid");
     }

@@ -163,9 +163,9 @@ void MasternodeList::updateDIP3List()
 
     auto [mnList, pindex] = clientModel->getMasternodeList();
     if (!pindex) return;
-    auto projectedPayees = mnList.GetProjectedMNPayees(pindex);
+    auto projectedPayees = mnList->getProjectedMNPayees(pindex);
 
-    if (projectedPayees.empty() && mnList.GetValidMNsCount() > 0) {
+    if (projectedPayees.empty() && mnList->getValidMNsCount() > 0) {
         // GetProjectedMNPayees failed to provide results for a list with valid mns.
         // Keep current list and let it try again later.
         return;
@@ -176,11 +176,12 @@ void MasternodeList::updateDIP3List()
     {
         // Get all UTXOs for each MN collateral in one go so that we can reduce locking overhead for cs_main
         // We also do this outside of the below Qt list update loop to reduce cs_main locking time to a minimum
-        mnList.ForEachMN(false, [&](auto& dmn) {
+        mnList->forEachMN(/*only_valid=*/false, [&](const auto& dmn) {
             CTxDestination collateralDest;
             Coin coin;
-            if (clientModel->node().getUnspentOutput(dmn.collateralOutpoint, coin) && ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
-                mapCollateralDests.emplace(dmn.proTxHash, collateralDest);
+            if (clientModel->node().getUnspentOutput(dmn.getCollateralOutpoint(), coin) &&
+                ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
+                mapCollateralDests.emplace(dmn.getProTxHash(), collateralDest);
             }
         });
     }
@@ -198,7 +199,7 @@ void MasternodeList::updateDIP3List()
     std::map<uint256, int> nextPayments;
     for (size_t i = 0; i < projectedPayees.size(); i++) {
         const auto& dmn = projectedPayees[i];
-        nextPayments.emplace(dmn->proTxHash, mnList.GetHeight() + (int)i + 1);
+        nextPayments.emplace(dmn->getProTxHash(), mnList->getHeight() + (int)i + 1);
     }
 
     std::set<COutPoint> setOutpts;
@@ -208,49 +209,53 @@ void MasternodeList::updateDIP3List()
         }
     }
 
-    mnList.ForEachMN(false, [&](auto& dmn) {
+    mnList->forEachMN(/*only_valid=*/false, [&](const auto& dmn) {
         if (walletModel && ui->checkBoxMyMasternodesOnly->isChecked()) {
-            bool fMyMasternode = setOutpts.count(dmn.collateralOutpoint) ||
-                walletModel->wallet().isSpendable(PKHash(dmn.pdmnState->keyIDOwner)) ||
-                walletModel->wallet().isSpendable(PKHash(dmn.pdmnState->keyIDVoting)) ||
-                walletModel->wallet().isSpendable(dmn.pdmnState->scriptPayout) ||
-                walletModel->wallet().isSpendable(dmn.pdmnState->scriptOperatorPayout);
+            bool fMyMasternode = setOutpts.count(dmn.getCollateralOutpoint()) ||
+                                 walletModel->wallet().isSpendable(PKHash(dmn.getKeyIdOwner())) ||
+                                 walletModel->wallet().isSpendable(PKHash(dmn.getKeyIdVoting())) ||
+                                 walletModel->wallet().isSpendable(dmn.getScriptPayout()) ||
+                                 walletModel->wallet().isSpendable(dmn.getScriptOperatorPayout());
             if (!fMyMasternode) return;
         }
         // populate list
         // Address, Protocol, Status, Active Seconds, Last Seen, Pub Key
-        auto addr_key = dmn.pdmnState->netInfo->GetPrimary().GetKey();
+        auto addr_key = dmn.getNetInfoPrimary().GetKey();
         QByteArray addr_ba(reinterpret_cast<const char*>(addr_key.data()), addr_key.size());
         QTableWidgetItem* addressItem = new CMasternodeListWidgetItem<QByteArray>(
-            QString::fromStdString(dmn.pdmnState->netInfo->GetPrimary().ToStringAddrPort()), addr_ba);
-        QTableWidgetItem* typeItem = new QTableWidgetItem(QString::fromStdString(std::string(GetMnType(dmn.nType).description)));
-        QTableWidgetItem* statusItem = new QTableWidgetItem(dmn.pdmnState->IsBanned() ? tr("POSE_BANNED") : tr("ENABLED"));
-        QTableWidgetItem* PoSeScoreItem = new CMasternodeListWidgetItem<int>(QString::number(dmn.pdmnState->nPoSePenalty), dmn.pdmnState->nPoSePenalty);
-        QTableWidgetItem* registeredItem = new CMasternodeListWidgetItem<int>(QString::number(dmn.pdmnState->nRegisteredHeight), dmn.pdmnState->nRegisteredHeight);
-        QTableWidgetItem* lastPaidItem = new CMasternodeListWidgetItem<int>(QString::number(dmn.pdmnState->nLastPaidHeight), dmn.pdmnState->nLastPaidHeight);
+            QString::fromStdString(dmn.getNetInfoPrimary().ToStringAddrPort()), addr_ba);
+        QTableWidgetItem* typeItem = new QTableWidgetItem(
+            QString::fromStdString(std::string(GetMnType(dmn.getType()).description)));
+        QTableWidgetItem* statusItem = new QTableWidgetItem(dmn.isBanned() ? tr("POSE_BANNED") : tr("ENABLED"));
+        QTableWidgetItem* PoSeScoreItem = new CMasternodeListWidgetItem<int>(QString::number(dmn.getPoSePenalty()),
+                                                                             dmn.getPoSePenalty());
+        QTableWidgetItem* registeredItem = new CMasternodeListWidgetItem<int>(QString::number(dmn.getRegisteredHeight()),
+                                                                              dmn.getRegisteredHeight());
+        QTableWidgetItem* lastPaidItem = new CMasternodeListWidgetItem<int>(QString::number(dmn.getLastPaidHeight()),
+                                                                            dmn.getLastPaidHeight());
 
         QString strNextPayment = "UNKNOWN";
         int nNextPayment = 0;
-        if (nextPayments.count(dmn.proTxHash)) {
-            nNextPayment = nextPayments[dmn.proTxHash];
+        if (nextPayments.count(dmn.getProTxHash())) {
+            nNextPayment = nextPayments[dmn.getProTxHash()];
             strNextPayment = QString::number(nNextPayment);
         }
         QTableWidgetItem* nextPaymentItem = new CMasternodeListWidgetItem<int>(strNextPayment, nNextPayment);
 
         CTxDestination payeeDest;
         QString payeeStr = tr("UNKNOWN");
-        if (ExtractDestination(dmn.pdmnState->scriptPayout, payeeDest)) {
+        if (ExtractDestination(dmn.getScriptPayout(), payeeDest)) {
             payeeStr = QString::fromStdString(EncodeDestination(payeeDest));
         }
         QTableWidgetItem* payeeItem = new QTableWidgetItem(payeeStr);
 
         QString operatorRewardStr = tr("NONE");
-        if (dmn.nOperatorReward) {
-            operatorRewardStr = QString::number(dmn.nOperatorReward / 100.0, 'f', 2) + "% ";
+        if (dmn.getOperatorReward()) {
+            operatorRewardStr = QString::number(dmn.getOperatorReward() / 100.0, 'f', 2) + "% ";
 
-            if (dmn.pdmnState->scriptOperatorPayout != CScript()) {
+            if (dmn.getScriptOperatorPayout() != CScript()) {
                 CTxDestination operatorDest;
-                if (ExtractDestination(dmn.pdmnState->scriptOperatorPayout, operatorDest)) {
+                if (ExtractDestination(dmn.getScriptOperatorPayout(), operatorDest)) {
                     operatorRewardStr += tr("to %1").arg(QString::fromStdString(EncodeDestination(operatorDest)));
                 } else {
                     operatorRewardStr += tr("to UNKNOWN");
@@ -259,22 +264,23 @@ void MasternodeList::updateDIP3List()
                 operatorRewardStr += tr("but not claimed");
             }
         }
-        QTableWidgetItem* operatorRewardItem = new CMasternodeListWidgetItem<uint16_t>(operatorRewardStr, dmn.nOperatorReward);
+        QTableWidgetItem* operatorRewardItem = new CMasternodeListWidgetItem<uint16_t>(operatorRewardStr,
+                                                                                       dmn.getOperatorReward());
 
         QString collateralStr = tr("UNKNOWN");
-        auto collateralDestIt = mapCollateralDests.find(dmn.proTxHash);
+        auto collateralDestIt = mapCollateralDests.find(dmn.getProTxHash());
         if (collateralDestIt != mapCollateralDests.end()) {
             collateralStr = QString::fromStdString(EncodeDestination(collateralDestIt->second));
         }
         QTableWidgetItem* collateralItem = new QTableWidgetItem(collateralStr);
 
-        QString ownerStr = QString::fromStdString(EncodeDestination(PKHash(dmn.pdmnState->keyIDOwner)));
+        QString ownerStr = QString::fromStdString(EncodeDestination(PKHash(dmn.getKeyIdOwner())));
         QTableWidgetItem* ownerItem = new QTableWidgetItem(ownerStr);
 
-        QString votingStr = QString::fromStdString(EncodeDestination(PKHash(dmn.pdmnState->keyIDVoting)));
+        QString votingStr = QString::fromStdString(EncodeDestination(PKHash(dmn.getKeyIdVoting())));
         QTableWidgetItem* votingItem = new QTableWidgetItem(votingStr);
 
-        QTableWidgetItem* proTxHashItem = new QTableWidgetItem(QString::fromStdString(dmn.proTxHash.ToString()));
+        QTableWidgetItem* proTxHashItem = new QTableWidgetItem(QString::fromStdString(dmn.getProTxHash().ToString()));
 
         if (strCurrentFilterDIP3 != "") {
             strToFilter = addressItem->text() + " " +
@@ -328,7 +334,7 @@ void MasternodeList::on_checkBoxMyMasternodesOnly_stateChanged(int state)
     fFilterUpdatedDIP3 = true;
 }
 
-CDeterministicMNCPtr MasternodeList::GetSelectedDIP3MN()
+std::unique_ptr<const interfaces::MnEntry> MasternodeList::GetSelectedDIP3MN()
 {
     if (!clientModel) {
         return nullptr;
@@ -352,7 +358,7 @@ CDeterministicMNCPtr MasternodeList::GetSelectedDIP3MN()
     proTxHash.SetHex(strProTxHash);
 
     // Caller is responsible for nullptr checking return value
-    return clientModel->getMasternodeList().first.GetMN(proTxHash);
+    return clientModel->getMasternodeList().first->getMN(proTxHash);
 }
 
 void MasternodeList::extraInfoDIP3_clicked()
@@ -362,10 +368,11 @@ void MasternodeList::extraInfoDIP3_clicked()
         return;
     }
 
-    UniValue json = dmn->ToJson();
+    UniValue json = dmn->toJson();
 
     // Title of popup window
-    QString strWindowtitle = tr("Additional information for DIP3 Masternode %1").arg(QString::fromStdString(dmn->proTxHash.ToString()));
+    QString strWindowtitle =
+        tr("Additional information for DIP3 Masternode %1").arg(QString::fromStdString(dmn->getProTxHash().ToString()));
     QString strText = QString::fromStdString(json.write(2));
 
     QMessageBox::information(this, strWindowtitle, strText);
@@ -378,7 +385,7 @@ void MasternodeList::copyProTxHash_clicked()
         return;
     }
 
-    QApplication::clipboard()->setText(QString::fromStdString(dmn->proTxHash.ToString()));
+    QApplication::clipboard()->setText(QString::fromStdString(dmn->getProTxHash().ToString()));
 }
 
 void MasternodeList::copyCollateralOutpoint_clicked()
@@ -388,5 +395,5 @@ void MasternodeList::copyCollateralOutpoint_clicked()
         return;
     }
 
-    QApplication::clipboard()->setText(QString::fromStdString(dmn->collateralOutpoint.ToStringShort()));
+    QApplication::clipboard()->setText(QString::fromStdString(dmn->getCollateralOutpoint().ToStringShort()));
 }

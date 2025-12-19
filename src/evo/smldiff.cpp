@@ -125,7 +125,7 @@ CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& from, cons
     diffRet.baseBlockHash = from.GetBlockHash();
     diffRet.blockHash = to.GetBlockHash();
 
-    to.ForEachMN(false, [&](const auto& toPtr) {
+    to.ForEachMN(/*onlyValid=*/false, [&](const auto& toPtr) {
         auto fromPtr = from.GetMN(toPtr.proTxHash);
         if (fromPtr == nullptr) {
             CSimplifiedMNListEntry sme{toPtr.to_sml_entry()};
@@ -140,7 +140,7 @@ CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& from, cons
         }
     });
 
-    from.ForEachMN(false, [&](auto& fromPtr) {
+    from.ForEachMN(/*onlyValid=*/false, [&](const auto& fromPtr) {
         auto toPtr = to.GetMN(fromPtr.proTxHash);
         if (toPtr == nullptr) {
             diffRet.deletedMNs.emplace_back(fromPtr.proTxHash);
@@ -196,7 +196,7 @@ bool BuildSimplifiedMNListDiff(CDeterministicMNManager& dmnman, const Chainstate
         return false;
     }
 
-    if (DeploymentActiveAfter(blockIndex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) {
+    if (DeploymentActiveAfter(blockIndex, chainman.GetConsensus(), Consensus::DEPLOYMENT_V20)) {
         if (!mnListDiffRet.BuildQuorumChainlockInfo(qman, blockIndex)) {
             errorRet = strprintf("failed to build quorum chainlock info");
             return false;
@@ -205,7 +205,7 @@ bool BuildSimplifiedMNListDiff(CDeterministicMNManager& dmnman, const Chainstate
 
     // TODO store coinbase TX in CBlockIndex
     CBlock block;
-    if (!ReadBlockFromDisk(block, blockIndex, Params().GetConsensus())) {
+    if (!ReadBlockFromDisk(block, blockIndex, chainman.GetConsensus())) {
         errorRet = strprintf("failed to read block %s from disk", blockHash.ToString());
         return false;
     }

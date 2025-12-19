@@ -222,8 +222,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     m_node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
     m_node.sporkman = std::make_unique<CSporkManager>();
     m_node.evodb = std::make_unique<CEvoDB>(util::DbWrapperParams{.path = m_node.args->GetDataDirNet(), .memory = true, .wipe = true});
-    m_node.cpoolman = std::make_unique<CCreditPoolManager>(*m_node.evodb);
-    m_node.mnhf_manager = std::make_unique<CMNHFManager>(*m_node.evodb);
 
     static bool noui_connected = false;
     if (!noui_connected) {
@@ -241,8 +239,6 @@ BasicTestingSetup::~BasicTestingSetup()
     fs::remove_all(m_path_root);
     gArgs.ClearArgs();
 
-    m_node.mnhf_manager.reset();
-    m_node.cpoolman.reset();
     m_node.evodb.reset();
     m_node.sporkman.reset();
     m_node.netfulfilledman.reset();
@@ -260,6 +256,8 @@ BasicTestingSetup::~BasicTestingSetup()
 ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
     : BasicTestingSetup(chainName, extra_args)
 {
+    const CChainParams& chainparams = Params();
+
     // We have to run a scheduler thread to prevent ActivateBestChain
     // from blocking due to queue overrun.
     m_node.scheduler = std::make_unique<CScheduler>();
@@ -271,9 +269,10 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 
     m_cache_sizes = CalculateCacheSizes(m_args);
 
-    m_node.chainman = std::make_unique<ChainstateManager>();
+    m_node.chainman = std::make_unique<ChainstateManager>(chainparams);
     m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(m_cache_sizes.block_tree_db, true);
 
+    m_node.mnhf_manager = std::make_unique<CMNHFManager>(*m_node.evodb, *m_node.chainman);
     m_node.mn_sync = std::make_unique<CMasternodeSync>(std::make_unique<NodeSyncNotifierImpl>(*m_node.connman, *m_node.netfulfilledman));
     m_node.govman = std::make_unique<CGovernanceManager>(*m_node.mn_metaman, *m_node.netfulfilledman, *m_node.chainman, m_node.dmnman, *m_node.mn_sync);
 
@@ -291,6 +290,7 @@ ChainTestingSetup::~ChainTestingSetup()
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     m_node.govman.reset();
     m_node.mn_sync.reset();
+    m_node.mnhf_manager.reset();
     m_node.chainman.reset();
     m_node.mempool.reset();
     m_node.fee_estimator.reset();
@@ -485,11 +485,9 @@ CBlock TestChainSetup::CreateAndProcessBlock(
         chainstate = &Assert(m_node.chainman)->ActiveChainstate();
     }
 
-    const CChainParams& chainparams = Params();
     auto block = this->CreateBlock(txns, scriptPubKey, *chainstate);
-
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    Assert(m_node.chainman)->ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
+    Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, nullptr);
 
     return block;
 }
