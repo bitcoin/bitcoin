@@ -29,6 +29,7 @@ class CBlockIndex;
 class CChain;
 class CChainState;
 class CConnman;
+class ChainstateManager;
 class CDataStream;
 class CDeterministicMN;
 class CDeterministicMNManager;
@@ -236,12 +237,12 @@ private:
     std::unique_ptr<CDBWrapper> db GUARDED_BY(cs_db){nullptr};
 
     CBLSWorker& blsWorker;
-    CChainState& m_chainstate;
     CDeterministicMNManager& m_dmnman;
     CDKGSessionManager& dkgManager;
     CQuorumBlockProcessor& quorumBlockProcessor;
     CQuorumSnapshotManager& m_qsnapman;
     const CActiveMasternodeManager* const m_mn_activeman;
+    const ChainstateManager& m_chainman;
     const CMasternodeSync& m_mn_sync;
     const CSporkManager& m_sporkman;
 
@@ -265,10 +266,10 @@ public:
     CQuorumManager() = delete;
     CQuorumManager(const CQuorumManager&) = delete;
     CQuorumManager& operator=(const CQuorumManager&) = delete;
-    explicit CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, CDeterministicMNManager& dmnman,
-                            CDKGSessionManager& _dkgManager, CEvoDB& _evoDb,
-                            CQuorumBlockProcessor& _quorumBlockProcessor, CQuorumSnapshotManager& qsnapman,
-                            const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync,
+    explicit CQuorumManager(CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager,
+                            CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor,
+                            CQuorumSnapshotManager& qsnapman, const CActiveMasternodeManager* const mn_activeman,
+                            const ChainstateManager& chainman, const CMasternodeSync& mn_sync,
                             const CSporkManager& sporkman, const util::DbWrapperParams& db_params);
     ~CQuorumManager();
 

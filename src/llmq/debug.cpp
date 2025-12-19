@@ -28,7 +28,7 @@ UniValue CDKGDebugSessionStatus::ToJson(CDeterministicMNManager& dmnman, CQuorum
     if (detailLevel == 2) {
         const CBlockIndex* pindex = WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(quorumHash));
         if (pindex != nullptr) {
-            dmnMembers = utils::GetAllQuorumMembers(llmqType, dmnman, qsnapman, pindex);
+            dmnMembers = utils::GetAllQuorumMembers(llmqType, dmnman, qsnapman, chainman, pindex);
         }
     }
 

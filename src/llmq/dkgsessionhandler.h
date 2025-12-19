@@ -24,8 +24,8 @@
 class CActiveMasternodeManager;
 class CBLSWorker;
 class CBlockIndex;
-class CChainState;
 class CConnman;
+class ChainstateManager;
 class CDeterministicMNManager;
 class CMasternodeMetaMan;
 class CSporkManager;
@@ -134,7 +134,6 @@ private:
     std::atomic<bool> stopRequested{false};
 
     CBLSWorker& blsWorker;
-    CChainState& m_chainstate;
     CDeterministicMNManager& m_dmnman;
     CDKGDebugManager& dkgDebugManager;
     CDKGSessionManager& dkgManager;
@@ -142,6 +141,7 @@ private:
     CQuorumBlockProcessor& quorumBlockProcessor;
     CQuorumSnapshotManager& m_qsnapman;
     const CActiveMasternodeManager* const m_mn_activeman;
+    const ChainstateManager& m_chainman;
     const CSporkManager& m_sporkman;
     const Consensus::LLMQParams params;
     const int quorumIndex;
@@ -162,10 +162,10 @@ private:
     CDKGPendingMessages pendingPrematureCommitments;
 
 public:
-    CDKGSessionHandler(CBLSWorker& _blsWorker, CChainState& chainstate, CDeterministicMNManager& dmnman,
-                       CDKGDebugManager& _dkgDebugManager, CDKGSessionManager& _dkgManager,
-                       CMasternodeMetaMan& mn_metaman, CQuorumBlockProcessor& _quorumBlockProcessor,
-                       CQuorumSnapshotManager& qsnapman, const CActiveMasternodeManager* const mn_activeman,
+    CDKGSessionHandler(CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman, CDKGDebugManager& _dkgDebugManager,
+                       CDKGSessionManager& _dkgManager, CMasternodeMetaMan& mn_metaman,
+                       CQuorumBlockProcessor& _quorumBlockProcessor, CQuorumSnapshotManager& qsnapman,
+                       const CActiveMasternodeManager* const mn_activeman, const ChainstateManager& chainman,
                        const CSporkManager& sporkman, const Consensus::LLMQParams& _params, int _quorumIndex);
     ~CDKGSessionHandler();
 

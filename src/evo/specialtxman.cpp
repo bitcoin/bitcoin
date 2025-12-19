@@ -105,8 +105,7 @@ static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, llmq::CQuorumSn
     if (!tx.HasExtraPayloadField())
         return true;
 
-    const auto& consensusParams = Params().GetConsensus();
-    if (!DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_DIP0003)) {
+    if (!DeploymentActiveAfter(pindexPrev, chainman.GetConsensus(), Consensus::DEPLOYMENT_DIP0003)) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-tx-type");
     }
 
@@ -443,7 +442,7 @@ bool CSpecialTxProcessor::RebuildListFromBlock(const CBlock& block, gsl::not_nul
                 // The commitment has already been validated at this point, so it's safe to use members of it
 
                 const auto members = llmq::utils::GetAllQuorumMembers(opt_qc->commitment.llmqType, m_dmnman, m_qsnapman,
-                                                                      pQuorumBaseBlockIndex);
+                                                                      m_chainman, pQuorumBaseBlockIndex);
                 HandleQuorumCommitment(opt_qc->commitment, members, debugLogs, newList);
             }
         }

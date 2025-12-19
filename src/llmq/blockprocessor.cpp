@@ -28,11 +28,11 @@
 #include <map>
 
 static void PreComputeQuorumMembers(CDeterministicMNManager& dmnman, llmq::CQuorumSnapshotManager& qsnapman,
-                                    const CBlockIndex* pindex, bool reset_cache)
+                                    const ChainstateManager& chainman, const CBlockIndex* pindex, bool reset_cache)
 {
-    for (const Consensus::LLMQParams& params : llmq::GetEnabledQuorumParams(pindex->pprev)) {
+    for (const Consensus::LLMQParams& params : llmq::GetEnabledQuorumParams(chainman, pindex->pprev)) {
         if (llmq::IsQuorumRotationEnabled(params, pindex) && (pindex->nHeight % params.dkgInterval == 0)) {
-            llmq::utils::GetAllQuorumMembers(params.type, dmnman, qsnapman, pindex, reset_cache);
+            llmq::utils::GetAllQuorumMembers(params.type, dmnman, qsnapman, chainman, pindex, reset_cache);
         }
     }
 }
@@ -157,7 +157,7 @@ MessageProcessingResult CQuorumBlockProcessor::ProcessMessage(const CNode& peer,
         }
     }
 
-    if (!qc.Verify(m_dmnman, m_qsnapman, pQuorumBaseBlockIndex, /*checkSigs=*/true)) {
+    if (!qc.Verify(m_dmnman, m_qsnapman, m_chainstate.m_chainman, pQuorumBaseBlockIndex, /*checkSigs=*/true)) {
         LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- commitment for quorum %s:%d is not valid quorumIndex[%d] nversion[%d], peer=%d\n",
                  __func__, qc.quorumHash.ToString(),
                  ToUnderlying(qc.llmqType), qc.quorumIndex, qc.nVersion, peer.GetId());
@@ -180,12 +180,12 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, gsl::not_null<cons
 
     const auto blockHash = pindex->GetBlockHash();
 
-    if (!DeploymentActiveAt(*pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003)) {
+    if (!DeploymentActiveAt(*pindex, m_chainstate.m_chainman.GetConsensus(), Consensus::DEPLOYMENT_DIP0003)) {
         m_evoDb.Write(DB_BEST_BLOCK_UPGRADE, blockHash);
         return true;
     }
 
-    PreComputeQuorumMembers(m_dmnman, m_qsnapman, pindex, /*reset_cache=*/false);
+    PreComputeQuorumMembers(m_dmnman, m_qsnapman, m_chainstate.m_chainman, pindex, /*reset_cache=*/false);
 
     std::multimap<Consensus::LLMQType, CFinalCommitment> qcs;
     if (!GetCommitmentsFromBlock(block, pindex, qcs, state)) {
@@ -196,7 +196,7 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, gsl::not_null<cons
     // until the first non-null commitment has been mined. After the non-null commitment, no other commitments are
     // allowed, including null commitments.
     // Note: must only check quorums that were enabled at the _previous_ block height to match mining logic
-    for (const Consensus::LLMQParams& params : GetEnabledQuorumParams(pindex->pprev)) {
+    for (const Consensus::LLMQParams& params : GetEnabledQuorumParams(m_chainstate.m_chainman, pindex->pprev)) {
         // skip these checks when replaying blocks after the crash
         if (m_chainstate.m_chain.Tip() == nullptr) {
             break;
@@ -227,7 +227,7 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, gsl::not_null<cons
                          pindex->nHeight, qc.quorumHash.ToString());
                 return false;
             }
-            qc.VerifySignatureAsync(m_dmnman, m_qsnapman, pQuorumBaseBlockIndex, &queue_control);
+            qc.VerifySignatureAsync(m_dmnman, m_qsnapman, m_chainstate.m_chainman, pQuorumBaseBlockIndex, &queue_control);
         }
 
         if (!queue_control.Wait()) {
@@ -349,7 +349,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
     }
 
     // we don't validate signatures here; they already validated on previous step
-    if (!qc.Verify(m_dmnman, m_qsnapman, pQuorumBaseBlockIndex, /*checksigs=*/false)) {
+    if (!qc.Verify(m_dmnman, m_qsnapman, m_chainstate.m_chainman, pQuorumBaseBlockIndex, /*checksigs=*/false)) {
         LogPrint(BCLog::LLMQ, /* Continued */
                  "%s -- height=%d, type=%d, quorumIndex=%d, quorumHash=%s, signers=%s, validMembers=%d, "
                  "quorumPublicKey=%s qc verify failed.\n",
@@ -396,7 +396,7 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, gsl::not_null<const C
 {
     AssertLockHeld(::cs_main);
 
-    PreComputeQuorumMembers(m_dmnman, m_qsnapman, pindex, /*reset_cache=*/true);
+    PreComputeQuorumMembers(m_dmnman, m_qsnapman, m_chainstate.m_chainman, pindex, /*reset_cache=*/true);
 
     std::multimap<Consensus::LLMQType, CFinalCommitment> qcs;
     if (BlockValidationState dummy; !GetCommitmentsFromBlock(block, pindex, qcs, dummy)) {
@@ -466,7 +466,7 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, gsl::no
         }
     }
 
-    if (pindex->nHeight < consensus.DIP0003Height && !ret.empty()) {
+    if (!DeploymentActiveAt(*pindex, consensus, Consensus::DEPLOYMENT_DIP0003) && !ret.empty()) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-premature");
     }
 
@@ -749,7 +749,7 @@ std::optional<std::vector<CFinalCommitment>> CQuorumBlockProcessor::GetMineableC
     const auto *const pindex = m_chainstate.m_chain.Height() < nHeight ? m_chainstate.m_chain.Tip() : m_chainstate.m_chain.Tip()->GetAncestor(nHeight);
 
     bool rotation_enabled = IsQuorumRotationEnabled(llmqParams, pindex);
-    bool basic_bls_enabled{DeploymentActiveAfter(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
+    bool basic_bls_enabled{DeploymentActiveAfter(pindex, m_chainstate.m_chainman.GetConsensus(), Consensus::DEPLOYMENT_V19)};
     size_t quorums_num = rotation_enabled ? llmqParams.signingActiveQuorumCount : 1;
 
     std::stringstream ss;

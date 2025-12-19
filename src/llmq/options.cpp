@@ -4,13 +4,15 @@
 
 #include <llmq/options.h>
 
+#include <spork.h>
+
 #include <chainparams.h>
 #include <consensus/params.h>
 #include <deploymentstatus.h>
-#include <spork.h>
 #include <util/ranges.h>
 #include <util/system.h>
 #include <util/underlying.h>
+#include <validation.h>
 
 #include <string>
 #include <stdexcept>
@@ -114,28 +116,31 @@ std::map<Consensus::LLMQType, QvvecSyncMode> GetEnabledQuorumVvecSyncEntries()
     return mapQuorumVvecSyncEntries;
 }
 
-bool IsQuorumTypeEnabled(Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pindexPrev)
+bool IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const ChainstateManager& chainman,
+                         gsl::not_null<const CBlockIndex*> pindexPrev)
 {
-    return IsQuorumTypeEnabledInternal(llmqType, pindexPrev, std::nullopt, std::nullopt);
+    return IsQuorumTypeEnabledInternal(llmqType, chainman, pindexPrev, std::nullopt, std::nullopt);
 }
 
-bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pindexPrev,
-                                std::optional<bool> optDIP0024IsActive, std::optional<bool> optHaveDIP0024Quorums)
+bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const ChainstateManager& chainman,
+                                 gsl::not_null<const CBlockIndex*> pindexPrev, std::optional<bool> optDIP0024IsActive,
+                                 std::optional<bool> optHaveDIP0024Quorums)
 {
-    const Consensus::Params& consensusParams = Params().GetConsensus();
-
-    const bool fDIP0024IsActive{optDIP0024IsActive.value_or(DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_DIP0024))};
-    const bool fHaveDIP0024Quorums{optHaveDIP0024Quorums.value_or(pindexPrev->nHeight >= consensusParams.DIP0024QuorumsHeight)};
+    const bool fDIP0024IsActive{
+        optDIP0024IsActive.value_or(DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_DIP0024))};
+    const bool fHaveDIP0024Quorums{
+        optHaveDIP0024Quorums.value_or(pindexPrev->nHeight >= chainman.GetConsensus().DIP0024QuorumsHeight)};
     switch (llmqType)
     {
         case Consensus::LLMQType::LLMQ_DEVNET:
             return true;
         case Consensus::LLMQType::LLMQ_50_60:
-            return !fDIP0024IsActive || !fHaveDIP0024Quorums || Params().NetworkIDString() == CBaseChainParams::TESTNET ||
-                   Params().NetworkIDString() == CBaseChainParams::DEVNET;
+            return !fDIP0024IsActive || !fHaveDIP0024Quorums ||
+                   chainman.GetParams().NetworkIDString() == CBaseChainParams::TESTNET ||
+                   chainman.GetParams().NetworkIDString() == CBaseChainParams::DEVNET;
         case Consensus::LLMQType::LLMQ_TEST_INSTANTSEND:
             return !fDIP0024IsActive || !fHaveDIP0024Quorums ||
-                    consensusParams.llmqTypeDIP0024InstantSend == Consensus::LLMQType::LLMQ_TEST_INSTANTSEND;
+                   chainman.GetConsensus().llmqTypeDIP0024InstantSend == Consensus::LLMQType::LLMQ_TEST_INSTANTSEND;
         case Consensus::LLMQType::LLMQ_TEST:
         case Consensus::LLMQType::LLMQ_TEST_PLATFORM:
         case Consensus::LLMQType::LLMQ_400_60:
@@ -144,10 +149,10 @@ bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, gsl::not_null<con
             return true;
 
         case Consensus::LLMQType::LLMQ_TEST_V17: {
-            return DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
+            return DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_TESTDUMMY);
         }
         case Consensus::LLMQType::LLMQ_100_67:
-            return DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_DIP0020);
+            return DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_DIP0020);
 
         case Consensus::LLMQType::LLMQ_60_75:
         case Consensus::LLMQType::LLMQ_DEVNET_DIP0024:
@@ -166,25 +171,27 @@ bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, gsl::not_null<con
     assert(false);
 }
 
-std::vector<Consensus::LLMQType> GetEnabledQuorumTypes(gsl::not_null<const CBlockIndex*> pindex)
+std::vector<Consensus::LLMQType> GetEnabledQuorumTypes(const ChainstateManager& chainman,
+                                                       gsl::not_null<const CBlockIndex*> pindex)
 {
     std::vector<Consensus::LLMQType> ret;
     ret.reserve(Params().GetConsensus().llmqs.size());
     for (const auto& params : Params().GetConsensus().llmqs) {
-        if (IsQuorumTypeEnabled(params.type, pindex)) {
+        if (IsQuorumTypeEnabled(params.type, chainman, pindex)) {
             ret.push_back(params.type);
         }
     }
     return ret;
 }
 
-std::vector<std::reference_wrapper<const Consensus::LLMQParams>> GetEnabledQuorumParams(gsl::not_null<const CBlockIndex*> pindex)
+std::vector<std::reference_wrapper<const Consensus::LLMQParams>> GetEnabledQuorumParams(
+    const ChainstateManager& chainman, gsl::not_null<const CBlockIndex*> pindex)
 {
     std::vector<std::reference_wrapper<const Consensus::LLMQParams>> ret;
     ret.reserve(Params().GetConsensus().llmqs.size());
 
     std::copy_if(Params().GetConsensus().llmqs.begin(), Params().GetConsensus().llmqs.end(), std::back_inserter(ret),
-                 [&pindex](const auto& params){return IsQuorumTypeEnabled(params.type, pindex);});
+                 [&pindex, &chainman](const auto& params) { return IsQuorumTypeEnabled(params.type, chainman, pindex); });
 
     return ret;
 }

@@ -289,6 +289,7 @@ private:
     CMasternodeMetaMan& m_mn_metaman;
     CQuorumSnapshotManager& m_qsnapman;
     const CActiveMasternodeManager* const m_mn_activeman;
+    const ChainstateManager& m_chainman;
     const CSporkManager& m_sporkman;
 
     const CBlockIndex* const m_quorum_base_block_index;
@@ -333,7 +334,8 @@ public:
     CDKGSession(const CBlockIndex* pQuorumBaseBlockIndex, const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker,
                 CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager, CDKGDebugManager& _dkgDebugManager,
                 CMasternodeMetaMan& mn_metaman, CQuorumSnapshotManager& qsnapman,
-                const CActiveMasternodeManager* const mn_activeman, const CSporkManager& sporkman);
+                const CActiveMasternodeManager* const mn_activeman, const ChainstateManager& chainman,
+                const CSporkManager& sporkman);
 
     // TODO: remove Init completely
     bool Init(const uint256& _myProTxHash, int _quorumIndex);

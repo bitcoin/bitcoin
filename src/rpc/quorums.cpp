@@ -78,7 +78,7 @@ static RPCHelpMan quorum_list()
 
     CBlockIndex* pindexTip = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
 
-    for (const auto& type : llmq::GetEnabledQuorumTypes(pindexTip)) {
+    for (const auto& type : llmq::GetEnabledQuorumTypes(chainman, pindexTip)) {
         const auto llmq_params_opt = Params().GetLLMQ(type);
         CHECK_NONFATAL(llmq_params_opt.has_value());
         UniValue v(UniValue::VARR);
@@ -144,7 +144,7 @@ static RPCHelpMan quorum_list_extended()
 
     CBlockIndex* pblockindex = nHeight != -1 ? WITH_LOCK(cs_main, return chainman.ActiveChain()[nHeight]) : WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
 
-    for (const auto& type : llmq::GetEnabledQuorumTypes(pblockindex)) {
+    for (const auto& type : llmq::GetEnabledQuorumTypes(chainman, pblockindex)) {
         const auto llmq_params_opt = Params().GetLLMQ(type);
         CHECK_NONFATAL(llmq_params_opt.has_value());
         const auto& llmq_params = llmq_params_opt.value();
@@ -357,7 +357,7 @@ static RPCHelpMan quorum_dkgstatus()
 
     UniValue minableCommitments(UniValue::VARR);
     UniValue quorumArrConnections(UniValue::VARR);
-    for (const auto& type : llmq::GetEnabledQuorumTypes(pindexTip)) {
+    for (const auto& type : llmq::GetEnabledQuorumTypes(chainman, pindexTip)) {
         const auto llmq_params_opt = Params().GetLLMQ(type);
         CHECK_NONFATAL(llmq_params_opt.has_value());
         const auto& llmq_params = llmq_params_opt.value();
@@ -378,11 +378,12 @@ static RPCHelpMan quorum_dkgstatus()
                     obj.pushKV("pindexTip", pindexTip->nHeight);
 
                     auto allConnections = llmq::utils::GetQuorumConnections(llmq_params, *node.dmnman,
-                                                                            *llmq_ctx.qsnapman, *node.sporkman,
+                                                                            *llmq_ctx.qsnapman, chainman, *node.sporkman,
                                                                             pQuorumBaseBlockIndex, proTxHash, false);
                     auto outboundConnections = llmq::utils::GetQuorumConnections(llmq_params, *node.dmnman,
-                                                                                 *llmq_ctx.qsnapman, *node.sporkman,
-                                                                                 pQuorumBaseBlockIndex, proTxHash, true);
+                                                                                 *llmq_ctx.qsnapman, chainman,
+                                                                                 *node.sporkman, pQuorumBaseBlockIndex,
+                                                                                 proTxHash, true);
                     std::map<uint256, CAddress> foundConnections;
                     connman.ForEachNode([&](const CNode* pnode) {
                         auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
@@ -470,7 +471,7 @@ static RPCHelpMan quorum_memberof()
     }
 
     UniValue result(UniValue::VARR);
-    for (const auto& type : llmq::GetEnabledQuorumTypes(pindexTip)) {
+    for (const auto& type : llmq::GetEnabledQuorumTypes(chainman, pindexTip)) {
         const auto llmq_params_opt = Params().GetLLMQ(type);
         CHECK_NONFATAL(llmq_params_opt.has_value());
         size_t count = llmq_params_opt->signingActiveQuorumCount;
@@ -1094,7 +1095,7 @@ static RPCHelpMan verifychainlock()
 
     CBLSSignature sig;
     if (pIndex) {
-        const bool use_legacy_signature{!DeploymentActiveAfter(pIndex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
+        const bool use_legacy_signature{!DeploymentActiveAfter(pIndex, chainman.GetConsensus(), Consensus::DEPLOYMENT_V19)};
         if (!sig.SetHexStr(request.params[1].get_str(), use_legacy_signature)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature format");
         }
@@ -1172,7 +1173,7 @@ static RPCHelpMan verifyislock()
     CHECK_NONFATAL(pBlockIndex != nullptr);
 
     CBLSSignature sig;
-    const bool use_bls_legacy{!DeploymentActiveAfter(pBlockIndex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
+    const bool use_bls_legacy{!DeploymentActiveAfter(pBlockIndex, chainman.GetConsensus(), Consensus::DEPLOYMENT_V19)};
     if (!sig.SetHexStr(request.params[2].get_str(), use_bls_legacy)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature format");
     }
