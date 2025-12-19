@@ -326,8 +326,8 @@ public:
     //! Get a cursor to iterate over the whole state
     virtual std::unique_ptr<CCoinsViewCursor> Cursor() const;
 
-    //! Estimate database size (0 if not implemented)
-    virtual size_t EstimateSize() const { return 0; }
+    //! Estimate database size
+    virtual size_t EstimateSize() const = 0;
 };
 
 /** Noop coins view. */
