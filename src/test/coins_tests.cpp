@@ -57,6 +57,7 @@ public:
     }
 
     uint256 GetBestBlock() const override { return hashBestBlock_; }
+    size_t EstimateSize() const override { return map_.size(); }
 
     bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) override
     {

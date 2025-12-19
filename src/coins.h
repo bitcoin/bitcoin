@@ -307,6 +307,9 @@ private:
 class CCoinsView
 {
 public:
+    //! As we use CCoinsViews polymorphically, have a virtual destructor
+    virtual ~CCoinsView() = default;
+
     //! Retrieve the Coin (unspent transaction output) for a given outpoint.
     virtual std::optional<Coin> GetCoin(const COutPoint& outpoint) const = 0;
 
@@ -329,11 +332,8 @@ public:
     //! Get a cursor to iterate over the whole state
     virtual std::unique_ptr<CCoinsViewCursor> Cursor() const;
 
-    //! As we use CCoinsViews polymorphically, have a virtual destructor
-    virtual ~CCoinsView() = default;
-
-    //! Estimate database size (0 if not implemented)
-    virtual size_t EstimateSize() const { return 0; }
+    //! Estimate database size
+    virtual size_t EstimateSize() const = 0;
 };
 
 /** Noop coins view. */
