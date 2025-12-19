@@ -1013,11 +1013,11 @@ void GenericClusterImpl::Updated(TxGraphImpl& graph, int level) noexcept
     // ACCEPTABLE, so it is pointless to compute these if we haven't reached that quality level
     // yet.
     if (level == 0 && IsAcceptable()) {
-        const LinearizationChunking chunking(m_depgraph, m_linearization);
+        auto chunking = ChunkLinearizationInfo(m_depgraph, m_linearization);
         LinearizationIndex lin_idx{0};
         // Iterate over the chunks.
-        for (unsigned chunk_idx = 0; chunk_idx < chunking.NumChunksLeft(); ++chunk_idx) {
-            auto chunk = chunking.GetChunk(chunk_idx);
+        for (unsigned chunk_idx = 0; chunk_idx < chunking.size(); ++chunk_idx) {
+            auto& chunk = chunking[chunk_idx];
             auto chunk_count = chunk.transactions.Count();
             Assume(chunk_count > 0);
             // Iterate over the transactions in the linearization, which must match those in chunk.
@@ -1031,7 +1031,7 @@ void GenericClusterImpl::Updated(TxGraphImpl& graph, int level) noexcept
                 chunk.transactions.Reset(idx);
                 if (chunk.transactions.None()) {
                     // Last transaction in the chunk.
-                    if (chunk_count == 1 && chunk_idx + 1 == chunking.NumChunksLeft()) {
+                    if (chunk_count == 1 && chunk_idx + 1 == chunking.size()) {
                         // If this is the final chunk of the cluster, and it contains just a single
                         // transaction (which will always be true for the very common singleton
                         // clusters), store the special value -1 as chunk count.
@@ -1311,13 +1311,12 @@ void SingletonClusterImpl::AppendChunkFeerates(std::vector<FeeFrac>& ret) const 
 
 uint64_t GenericClusterImpl::AppendTrimData(std::vector<TrimTxData>& ret, std::vector<std::pair<GraphIndex, GraphIndex>>& deps) const noexcept
 {
-    const LinearizationChunking linchunking(m_depgraph, m_linearization);
+    auto linchunking = ChunkLinearizationInfo(m_depgraph, m_linearization);
     LinearizationIndex pos{0};
     uint64_t size{0};
     auto prev_index = GraphIndex(-1);
     // Iterate over the chunks of this cluster's linearization.
-    for (unsigned i = 0; i < linchunking.NumChunksLeft(); ++i) {
-        const auto& [chunk, chunk_feerate] = linchunking.GetChunk(i);
+    for (const auto& [chunk, chunk_feerate] : linchunking) {
         // Iterate over the transactions of that chunk, in linearization order.
         auto chunk_tx_count = chunk.Count();
         for (unsigned j = 0; j < chunk_tx_count; ++j) {
@@ -2091,9 +2090,10 @@ std::pair<uint64_t, bool> GenericClusterImpl::Relinearize(TxGraphImpl& graph, in
     // Invoke the actual linearization algorithm (passing in the existing one).
     uint64_t rng_seed = graph.m_rng.rand64();
     auto [linearization, optimal, cost] = Linearize(m_depgraph, max_iters, rng_seed, m_linearization);
-    // Postlinearize if the result isn't optimal already. This guarantees (among other things)
-    // that the chunks of the resulting linearization are all connected.
-    if (!optimal) PostLinearize(m_depgraph, linearization);
+    // Postlinearize to undo some of the non-determinism caused by randomizing the linearization.
+    // This also guarantees that all chunks are connected (which is not guaranteed by SFL
+    // currently, even when optimal).
+    PostLinearize(m_depgraph, linearization);
     // Update the linearization.
     m_linearization = std::move(linearization);
     // Update the Cluster's quality.
@@ -2758,7 +2758,8 @@ void GenericClusterImpl::SanityCheck(const TxGraphImpl& graph, int level) const
     }
 
     // Compute the chunking of m_linearization.
-    LinearizationChunking linchunking(m_depgraph, m_linearization);
+    auto linchunking = ChunkLinearizationInfo(m_depgraph, m_linearization);
+    unsigned chunk_num{0};
 
     // Verify m_linearization.
     SetType m_done;
@@ -2778,14 +2779,14 @@ void GenericClusterImpl::SanityCheck(const TxGraphImpl& graph, int level) const
         if (level == 0 && IsAcceptable()) {
             assert(entry.m_main_lin_index == linindex);
             ++linindex;
-            if (!linchunking.GetChunk(0).transactions[lin_pos]) {
-                linchunking.MarkDone(linchunking.GetChunk(0).transactions);
+            if (!linchunking[chunk_num].transactions[lin_pos]) {
+                ++chunk_num;
                 chunk_pos = 0;
             }
-            assert(entry.m_main_chunk_feerate == linchunking.GetChunk(0).feerate);
+            assert(entry.m_main_chunk_feerate == linchunking[chunk_num].feerate);
             // Verify that an entry in the chunk index exists for every chunk-ending transaction.
             ++chunk_pos;
-            bool is_chunk_end = (chunk_pos == linchunking.GetChunk(0).transactions.Count());
+            bool is_chunk_end = (chunk_pos == linchunking[chunk_num].transactions.Count());
             assert((entry.m_main_chunkindex_iterator != graph.m_main_chunkindex.end()) == is_chunk_end);
             if (is_chunk_end) {
                 auto& chunk_data = *entry.m_main_chunkindex_iterator;
@@ -2796,7 +2797,7 @@ void GenericClusterImpl::SanityCheck(const TxGraphImpl& graph, int level) const
                 }
             }
             // If this Cluster has an acceptable quality level, its chunks must be connected.
-            assert(m_depgraph.IsConnected(linchunking.GetChunk(0).transactions));
+            assert(m_depgraph.IsConnected(linchunking[chunk_num].transactions));
         }
     }
     // Verify that each element of m_depgraph occurred in m_linearization.
