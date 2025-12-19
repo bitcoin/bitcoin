@@ -158,7 +158,7 @@ FuzzedDataProvider::ConsumeRandomLengthString(size_t max_length) {
   // picking its contents.
   std::string result;
 
-  // Reserve the anticipated capaticity to prevent several reallocations.
+  // Reserve the anticipated capacity to prevent several reallocations.
   result.reserve(std::min(max_length, remaining_bytes_));
   for (size_t i = 0; i < max_length && remaining_bytes_ != 0; ++i) {
     char next = ConvertUnsignedToSigned<char>(data_ptr_[0]);
