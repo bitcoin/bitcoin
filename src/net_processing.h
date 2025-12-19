@@ -17,7 +17,6 @@
 class AddrMan;
 class CActiveMasternodeManager;
 class CCoinJoinQueue;
-class CCoinJoinServer;
 class CDeterministicMNManager;
 class CDSTXManager;
 class CGovernanceManager;
@@ -26,6 +25,7 @@ class CInv;
 class CJWalletManager;
 class CMasternodeMetaMan;
 class CMasternodeSync;
+class CNetMsgMaker;
 class CSporkManager;
 class CTransaction;
 class CTxMemPool;
@@ -63,6 +63,8 @@ public:
     virtual void PeerRelayInv(const CInv& inv) = 0;
     virtual void PeerRelayInvFiltered(const CInv& inv, const CTransaction& relatedTx) = 0;
     virtual void PeerRelayInvFiltered(const CInv& inv, const uint256& relatedTxHash) = 0;
+    virtual void PeerRelayTransaction(const uint256& txid) = 0;
+    virtual void PeerRelayDSQ(const CCoinJoinQueue& queue) = 0;
     virtual void PeerAskPeersForTransaction(const uint256& txid) = 0;
     virtual size_t PeerGetRequestedObjectCount(NodeId nodeid) const = 0;
     virtual void PeerPostProcessMessage(MessageProcessingResult&& ret) = 0;
@@ -81,7 +83,14 @@ public:
     virtual void Stop() {}
     virtual void Interrupt() {}
     virtual void Schedule(CScheduler& scheduler) {}
+
     virtual void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv) {}
+
+    // It returns true, if NetHandler has a responsibility about having this type of inventory and has corresponding data.
+    virtual bool AlreadyHave(const CInv& inv) { return false; }
+
+    // It should return true, if there's data has been pushed
+    virtual bool ProcessGetData(CNode& pfrom, const CInv& inv, CConnman& connman, const CNetMsgMaker& msgMaker) { return false; }
 protected:
     PeerManagerInternal* m_peer_manager;
 };

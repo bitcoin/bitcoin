@@ -465,7 +465,7 @@ static RPCHelpMan getcoinjoininfo()
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     if (node.mn_activeman) {
-        node.active_ctx->cj_server->GetJsonInfo(obj);
+        node.active_ctx->m_cj_server.GetJsonInfo(obj);
         return obj;
     }
 

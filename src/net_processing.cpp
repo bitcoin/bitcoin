@@ -41,7 +41,7 @@
 #include <validation.h>
 
 #include <chainlock/chainlock.h>
-#include <coinjoin/server.h>
+#include <coinjoin/coinjoin.h>
 #include <coinjoin/walletman.h>
 #include <evo/deterministicmns.h>
 #include <evo/mnauth.h>
@@ -652,6 +652,8 @@ public:
     void PeerRelayInv(const CInv& inv) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void PeerRelayInvFiltered(const CInv& inv, const CTransaction& relatedTx) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void PeerRelayInvFiltered(const CInv& inv, const uint256& relatedTxHash) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void PeerRelayDSQ(const CCoinJoinQueue& queue) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void PeerRelayTransaction(const uint256& txid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void PeerAskPeersForTransaction(const uint256& txid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     size_t PeerGetRequestedObjectCount(NodeId nodeid) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, ::cs_main);
     void PeerPostProcessMessage(MessageProcessingResult&& ret) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -2348,17 +2350,25 @@ bool PeerManagerImpl::AlreadyHave(const CInv& inv)
     case MSG_QUORUM_PREMATURE_COMMITMENT:
         return m_llmq_ctx->qdkgsman->AlreadyHave(inv);
     case MSG_QUORUM_RECOVERED_SIG:
+    // TODO: move it to NetSigning
         return m_llmq_ctx->sigman->AlreadyHave(inv);
     case MSG_CLSIG:
         return m_llmq_ctx->clhandler->AlreadyHave(inv);
+    // TODO: move it to NetInstantSend
     case MSG_ISDLOCK:
         return m_llmq_ctx->isman->AlreadyHave(inv);
-    case MSG_DSQ:
-        return (m_cj_walletman && m_cj_walletman->hasQueue(inv.hash)) || (m_active_ctx && m_active_ctx->cj_server->HasQueue(inv.hash));
     case MSG_PLATFORM_BAN:
         return m_mn_metaman.AlreadyHavePlatformBan(inv.hash);
-    }
 
+    // At the end inventories that are handled by NetHandler
+    case MSG_DSQ:
+        if (m_cj_walletman && m_cj_walletman->hasQueue(inv.hash)) return true;
+
+        for (const auto& handler : m_handlers) {
+            if (handler->AlreadyHave(inv)) return true;
+        }
+        return false;
+    }
 
     // Don't know what it is, just say we already got one
     return true;
@@ -2972,10 +2982,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
             }
         }
         if (!push && inv.type == MSG_DSQ) {
-            auto opt_dsq = m_active_ctx ? m_active_ctx->cj_server->GetQueueFromHash(inv.hash) : std::nullopt;
-            if (m_cj_walletman && !opt_dsq.has_value()) {
-                opt_dsq = m_cj_walletman->getQueueFromHash(inv.hash);
-            }
+            auto opt_dsq = m_cj_walletman ? m_cj_walletman->getQueueFromHash(inv.hash) : std::nullopt;
             if (opt_dsq.has_value()) {
                 m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::DSQUEUE, *opt_dsq));
                 push = true;
@@ -2986,6 +2993,11 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
             if (opt_platform_ban.has_value()) {
                 m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::PLATFORMBAN, *opt_platform_ban));
                 push = true;
+            }
+        }
+        for (auto& handler : m_handlers) {
+            if (!push) {
+                push = handler->ProcessGetData(pfrom, inv, m_connman, msgMaker);
             }
         }
 
@@ -3603,9 +3615,6 @@ void PeerManagerImpl::PostProcessMessage(MessageProcessingResult&& result, NodeI
     }
     for (const auto& inv : result.m_inventory) {
         RelayInv(inv);
-    }
-    for (const auto& dsq : result.m_dsq) {
-        RelayDSQ(dsq);
     }
 }
 
@@ -5442,7 +5451,6 @@ void PeerManagerImpl::ProcessMessage(
             PostProcessMessage(m_cj_walletman->processMessage(pfrom, m_chainman.ActiveChainstate(), m_connman, m_mempool, msg_type, vRecv), pfrom.GetId());
         }
         if (m_active_ctx) {
-            PostProcessMessage(m_active_ctx->cj_server->ProcessMessage(pfrom, msg_type, vRecv), pfrom.GetId());
             m_active_ctx->shareman->ProcessMessage(pfrom, msg_type, vRecv);
         }
         PostProcessMessage(m_sporkman.ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom.GetId());
@@ -6570,6 +6578,16 @@ void PeerManagerImpl::PeerRelayInvFiltered(const CInv& inv, const CTransaction& 
 void PeerManagerImpl::PeerRelayInvFiltered(const CInv& inv, const uint256& relatedTxHash)
 {
     RelayInvFiltered(inv, relatedTxHash);
+}
+
+void PeerManagerImpl::PeerRelayDSQ(const CCoinJoinQueue& queue)
+{
+    RelayDSQ(queue);
+}
+
+void PeerManagerImpl::PeerRelayTransaction(const uint256& txid)
+{
+    RelayTransaction(txid);
 }
 
 void PeerManagerImpl::PeerAskPeersForTransaction(const uint256& txid)
