@@ -308,13 +308,13 @@ class CCoinsView
 {
 public:
     //! Retrieve the Coin (unspent transaction output) for a given outpoint.
-    virtual std::optional<Coin> GetCoin(const COutPoint& outpoint) const;
+    virtual std::optional<Coin> GetCoin(const COutPoint& outpoint) const = 0;
 
     //! Just check whether a given outpoint is unspent.
     virtual bool HaveCoin(const COutPoint &outpoint) const;
 
     //! Retrieve the block hash whose state this CCoinsView currently represents
-    virtual uint256 GetBestBlock() const;
+    virtual uint256 GetBestBlock() const = 0;
 
     //! Retrieve the range of blocks that may have been only partially written.
     //! If the database is in a consistent state, the result is the empty vector.
@@ -324,7 +324,7 @@ public:
 
     //! Do a bulk modification (multiple Coin changes + BestBlock change).
     //! The passed cursor is used to iterate through the coins.
-    virtual bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock);
+    virtual bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) = 0;
 
     //! Get a cursor to iterate over the whole state
     virtual std::unique_ptr<CCoinsViewCursor> Cursor() const;
