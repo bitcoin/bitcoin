@@ -2194,10 +2194,11 @@ bool GetBlockHash(const CChain& active_chain, uint256& hashRet, int nBlockHeight
 class WarningBitsConditionChecker : public AbstractThresholdConditionChecker
 {
 private:
-    int bit;
+    const ChainstateManager& m_chainman;
+    int m_bit;
 
 public:
-    explicit WarningBitsConditionChecker(int bitIn) : bit(bitIn) {}
+    explicit WarningBitsConditionChecker(const ChainstateManager& chainman, int bit) : m_chainman{chainman}, m_bit(bit) {}
 
     int64_t BeginTime(const Consensus::Params& params) const override { return 0; }
     int64_t EndTime(const Consensus::Params& params) const override { return std::numeric_limits<int64_t>::max(); }
@@ -2209,8 +2210,8 @@ public:
     {
         return pindex->nHeight >= params.MinBIP9WarningHeight &&
                ((pindex->nVersion & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS) &&
-               ((pindex->nVersion >> bit) & 1) != 0 &&
-               ((g_versionbitscache.ComputeBlockVersion(pindex->pprev, params) >> bit) & 1) == 0;
+               ((pindex->nVersion >> m_bit) & 1) != 0 &&
+               ((m_chainman.m_versionbitscache.ComputeBlockVersion(pindex->pprev, params) >> m_bit) & 1) == 0;
     }
 };
 
@@ -2995,7 +2996,7 @@ void CChainState::UpdateTip(const CBlockIndex* pindexNew)
     {
         const CBlockIndex* pindex = pindexNew;
         for (int bit = 0; bit < VERSIONBITS_NUM_BITS; bit++) {
-            WarningBitsConditionChecker checker(bit);
+            WarningBitsConditionChecker checker(m_chainman, bit);
             ThresholdState state = checker.GetStateFor(pindex, m_params.GetConsensus(), warningcache.at(bit));
             if (state == ThresholdState::ACTIVE || state == ThresholdState::LOCKED_IN) {
                 const bilingual_str warning = strprintf(_("Unknown new rules activated (versionbit %i)"), bit);
@@ -6100,9 +6101,9 @@ ChainstateManager::~ChainstateManager()
 {
     LOCK(::cs_main);
 
-    // TODO: The version bits cache and warning cache should probably become
-    // non-globals
-    g_versionbitscache.Clear();
+    m_versionbitscache.Clear();
+
+    // TODO: The warning cache should probably become non-global
     for (auto& i : warningcache) {
         i.clear();
     }

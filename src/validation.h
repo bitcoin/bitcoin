@@ -31,6 +31,7 @@
 #include <util/check.h>
 #include <util/hasher.h>
 #include <util/translation.h>
+#include <versionbits.h>
 
 #include <atomic>
 #include <chrono>
@@ -1011,6 +1012,11 @@ public:
         return m_blockman.m_prev_block_index;
     }
 
+    /**
+     * Track versionbit status
+     */
+    mutable VersionBitsCache m_versionbitscache;
+
     //! @returns true if a snapshot-based chainstate is in use. Also implies
     //!          that a background validation chainstate is also in use.
     bool IsSnapshotActive() const;
@@ -1083,13 +1089,13 @@ public:
 template<typename DEP>
 bool DeploymentActiveAfter(const CBlockIndex* pindexPrev, const ChainstateManager& chainman, DEP dep)
 {
-    return DeploymentActiveAfter(pindexPrev, chainman.GetConsensus(), dep);
+    return DeploymentActiveAfter(pindexPrev, chainman.GetConsensus(), dep, chainman.m_versionbitscache);
 }
 
 template<typename DEP>
 bool DeploymentActiveAt(const CBlockIndex& index, const ChainstateManager& chainman, DEP dep)
 {
-    return DeploymentActiveAt(index, chainman.GetConsensus(), dep);
+    return DeploymentActiveAt(index, chainman.GetConsensus(), dep, chainman.m_versionbitscache);
 }
 
 template<typename DEP>

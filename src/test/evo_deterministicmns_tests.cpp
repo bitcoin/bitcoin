@@ -286,7 +286,7 @@ void FuncV19Activation(TestChainSetup& setup)
     auto& chainman = *Assert(setup.m_node.chainman.get());
     auto& dmnman = *Assert(setup.m_node.dmnman);
 
-    BOOST_REQUIRE(!DeploymentActiveAfter(chainman.ActiveChain().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
+    BOOST_REQUIRE(!DeploymentActiveAfter(chainman.ActiveChain().Tip(), chainman.GetConsensus(), Consensus::DEPLOYMENT_V19));
 
     // create
     auto utxos = BuildSimpleUtxoMap(setup.m_coinbase_txns);
@@ -303,7 +303,7 @@ void FuncV19Activation(TestChainSetup& setup)
 
     auto block = std::make_shared<CBlock>(setup.CreateBlock({tx_reg}, coinbase_pk, chainman.ActiveChainstate()));
     BOOST_REQUIRE(chainman.ProcessNewBlock(block, true, nullptr));
-    BOOST_REQUIRE(!DeploymentActiveAfter(chainman.ActiveChain().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
+    BOOST_REQUIRE(!DeploymentActiveAfter(chainman.ActiveChain().Tip(), chainman.GetConsensus(), Consensus::DEPLOYMENT_V19));
     ++nHeight;
     BOOST_CHECK_EQUAL(chainman.ActiveChain().Height(), nHeight);
     dmnman.UpdatedBlockTip(chainman.ActiveChain().Tip());
@@ -321,7 +321,7 @@ void FuncV19Activation(TestChainSetup& setup)
 
     block = std::make_shared<CBlock>(setup.CreateBlock({tx_upreg}, coinbase_pk, chainman.ActiveChainstate()));
     BOOST_REQUIRE(chainman.ProcessNewBlock(block, true, nullptr));
-    BOOST_REQUIRE(!DeploymentActiveAfter(chainman.ActiveChain().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
+    BOOST_REQUIRE(!DeploymentActiveAfter(chainman.ActiveChain().Tip(), chainman.GetConsensus(), Consensus::DEPLOYMENT_V19));
     ++nHeight;
     BOOST_CHECK_EQUAL(chainman.ActiveChain().Height(), nHeight);
     dmnman.UpdatedBlockTip(chainman.ActiveChain().Tip());
@@ -341,7 +341,7 @@ void FuncV19Activation(TestChainSetup& setup)
     BOOST_REQUIRE(SignSignature(signing_provider, CTransaction(tx_reg), tx_spend, 0, SIGHASH_ALL));
     block = std::make_shared<CBlock>(setup.CreateBlock({tx_spend}, coinbase_pk, chainman.ActiveChainstate()));
     BOOST_REQUIRE(chainman.ProcessNewBlock(block, true, nullptr));
-    BOOST_REQUIRE(!DeploymentActiveAfter(chainman.ActiveChain().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
+    BOOST_REQUIRE(!DeploymentActiveAfter(chainman.ActiveChain().Tip(), chainman.GetConsensus(), Consensus::DEPLOYMENT_V19));
     ++nHeight;
     BOOST_CHECK_EQUAL(chainman.ActiveChain().Height(), nHeight);
     dmnman.UpdatedBlockTip(chainman.ActiveChain().Tip());
@@ -353,7 +353,7 @@ void FuncV19Activation(TestChainSetup& setup)
 
     // mine another block so that it's not the last one before V19
     setup.CreateAndProcessBlock({}, coinbase_pk);
-    BOOST_REQUIRE(!DeploymentActiveAfter(chainman.ActiveChain().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
+    BOOST_REQUIRE(!DeploymentActiveAfter(chainman.ActiveChain().Tip(), chainman.GetConsensus(), Consensus::DEPLOYMENT_V19));
     ++nHeight;
     BOOST_CHECK_EQUAL(chainman.ActiveChain().Height(), nHeight);
     dmnman.UpdatedBlockTip(chainman.ActiveChain().Tip());
@@ -365,7 +365,7 @@ void FuncV19Activation(TestChainSetup& setup)
 
     // this block should activate V19
     setup.CreateAndProcessBlock({}, coinbase_pk);
-    BOOST_REQUIRE(DeploymentActiveAfter(chainman.ActiveChain().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
+    BOOST_REQUIRE(DeploymentActiveAfter(chainman.ActiveChain().Tip(), chainman.GetConsensus(), Consensus::DEPLOYMENT_V19));
     ++nHeight;
     BOOST_CHECK_EQUAL(chainman.ActiveChain().Height(), nHeight);
     dmnman.UpdatedBlockTip(chainman.ActiveChain().Tip());
@@ -387,7 +387,7 @@ void FuncV19Activation(TestChainSetup& setup)
     {
         setup.CreateAndProcessBlock({}, coinbase_pk);
         BOOST_REQUIRE(
-            DeploymentActiveAfter(chainman.ActiveChain().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
+            DeploymentActiveAfter(chainman.ActiveChain().Tip(), chainman.GetConsensus(), Consensus::DEPLOYMENT_V19));
         BOOST_CHECK_EQUAL(chainman.ActiveChain().Height(), nHeight + 1 + i);
         dmnman.UpdatedBlockTip(chainman.ActiveChain().Tip());
         dmnman.DoMaintenance();
@@ -965,10 +965,9 @@ struct TestChainV19Setup : public TestChainV19BeforeActivationSetup {
         for (int i = 0; i < 5; ++i) {
             CreateAndProcessBlock({}, coinbase_pk);
         }
-        bool v19_just_activated{DeploymentActiveAfter(m_node.chainman->ActiveChain().Tip(), Params().GetConsensus(),
-                                                      Consensus::DEPLOYMENT_V19) &&
-                                !DeploymentActiveAt(*m_node.chainman->ActiveChain().Tip(), Params().GetConsensus(),
-                                                    Consensus::DEPLOYMENT_V19)};
+        bool v19_just_activated{
+            DeploymentActiveAfter(m_node.chainman->ActiveChain().Tip(), m_node.chainman->GetConsensus(), Consensus::DEPLOYMENT_V19) &&
+            !DeploymentActiveAt(*m_node.chainman->ActiveChain().Tip(), m_node.chainman->GetConsensus(), Consensus::DEPLOYMENT_V19)};
         assert(v19_just_activated);
     }
 };
@@ -977,7 +976,7 @@ struct TestChainV19Setup : public TestChainV19BeforeActivationSetup {
 TestChainV19BeforeActivationSetup::TestChainV19BeforeActivationSetup() :
     TestChainSetup(494, CBaseChainParams::REGTEST, {"-testactivationheight=v19@500", "-testactivationheight=v20@500", "-testactivationheight=mn_rr@500"})
 {
-    bool v19_active{DeploymentActiveAfter(m_node.chainman->ActiveChain().Tip(), Params().GetConsensus(),
+    bool v19_active{DeploymentActiveAfter(m_node.chainman->ActiveChain().Tip(), m_node.chainman->GetConsensus(),
                                           Consensus::DEPLOYMENT_V19)};
     assert(!v19_active);
 }

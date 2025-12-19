@@ -216,8 +216,9 @@ bool CSpecialTxProcessor::RebuildListFromBlock(const CBlock& block, gsl::not_nul
 
     newList.DecreaseScores();
 
-    const bool isMNRewardReallocation{DeploymentActiveAfter(pindexPrev, m_consensus_params, Consensus::DEPLOYMENT_MN_RR)};
-    const bool is_v24_deployed{DeploymentActiveAfter(pindexPrev, m_consensus_params, Consensus::DEPLOYMENT_V24)};
+    const bool isMNRewardReallocation{
+        DeploymentActiveAfter(pindexPrev, m_chainman.GetConsensus(), Consensus::DEPLOYMENT_MN_RR)};
+    const bool is_v24_deployed{DeploymentActiveAfter(pindexPrev, m_chainman, Consensus::DEPLOYMENT_V24)};
 
     // we skip the coinbase
     for (int i = 1; i < (int)block.vtx.size(); i++) {
