@@ -126,6 +126,7 @@ jobs:
       - name: Run linters
         if: inputs.build-target == 'linux64_multiprocess'
         run: |
+          CACHE_DIR="/cache"
           export BUILD_TARGET="${{ inputs.build-target }}"
           source ./ci/dash/matrix.sh
           ./ci/dash/lint-tidy.sh
