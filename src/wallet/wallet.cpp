@@ -1658,6 +1658,39 @@ bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const CTxOut 
     return true;
 }
 
+bool FillInputToWeight(CTxIn& txin, int64_t target_weight)
+{
+    assert(txin.scriptSig.empty());
+
+    int64_t txin_weight = ::GetSerializeSize(txin);
+
+    // Do nothing if the weight that should be added is less than the weight that already exists
+    if (target_weight < txin_weight) {
+        return false;
+    }
+    if (target_weight == txin_weight) {
+        return true;
+    }
+
+    // Subtract current txin weight, which should include empty witness stack
+    int64_t add_weight = target_weight - txin_weight;
+    assert(add_weight > 0);
+
+    add_weight -= (GetSizeOfCompactSize(add_weight) - 1);
+    txin.scriptSig.insert(txin.scriptSig.end(), add_weight, 0);
+
+    /*
+    // We will want to subtract the size of the Compact Size UInt that will also be serialized.
+    // However doing so when the size is near a boundary can result in a problem where it is not
+    // possible to have a stack element size and combination to exactly equal a target.
+    // So we allow to fullfill transaction 2 byte less in this situation.
+    */
+    assert(::GetSerializeSize(txin) <= static_cast<size_t>(target_weight));
+    assert(::GetSerializeSize(txin) >= static_cast<size_t>(target_weight) - 2);
+
+    return true;
+}
+
 // Helper for producing a bunch of max-sized low-S low-R signatures (eg 71 bytes)
 bool CWallet::DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> &txouts, const CCoinControl* coin_control) const
 {
@@ -1666,6 +1699,14 @@ bool CWallet::DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> 
     for (const auto& txout : txouts)
     {
         CTxIn& txin = txNew.vin[nIn];
+        // If weight was provided, fill the input to that weight
+        if (coin_control && coin_control->HasInputWeight(txin.prevout)) {
+            if (!FillInputToWeight(txin, coin_control->GetInputWeight(txin.prevout))) {
+                return false;
+            }
+            nIn++;
+            continue;
+        }
         const std::unique_ptr<SigningProvider> provider = GetSolvingProvider(txout.scriptPubKey);
         if (!provider || !DummySignInput(*provider, txin, txout, coin_control)) {
             if (!coin_control || !DummySignInput(coin_control->m_external_provider, txin, txout, coin_control)) {

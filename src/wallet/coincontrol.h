@@ -129,6 +129,23 @@ public:
         vOutpoints.assign(setSelected.begin(), setSelected.end());
     }
 
+    void SetInputWeight(const COutPoint& outpoint, int64_t weight)
+    {
+        m_input_weights[outpoint] = weight;
+    }
+
+    bool HasInputWeight(const COutPoint& outpoint) const
+    {
+        return m_input_weights.count(outpoint) > 0;
+    }
+
+    int64_t GetInputWeight(const COutPoint& outpoint) const
+    {
+        auto it = m_input_weights.find(outpoint);
+        assert(it != m_input_weights.end());
+        return it->second;
+    }
+
     // Dash-specific helpers
     void UseCoinJoin(bool fUseCoinJoin)
     {
@@ -139,10 +156,11 @@ public:
     {
         return nCoinType == CoinType::ONLY_FULLY_MIXED;
     }
-
 private:
     std::set<COutPoint> setSelected;
     std::map<COutPoint, CTxOut> m_external_txouts;
+    //! Map of COutPoints to the maximum weight (equals to size) for that input
+    std::map<COutPoint, int64_t> m_input_weights;
 };
 } // namespace wallet
 

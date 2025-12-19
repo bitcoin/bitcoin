@@ -1130,6 +1130,8 @@ bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
 bool RemoveWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
 
 bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const CTxOut &txout, const CCoinControl* coin_control = nullptr);
+
+bool FillInputToWeight(CTxIn& txin, int64_t target_weight);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_WALLET_H

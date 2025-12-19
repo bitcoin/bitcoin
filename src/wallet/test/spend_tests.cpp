@@ -58,5 +58,52 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
     BOOST_CHECK_EQUAL(fee, check_tx(fee + 123));
 }
 
+static void TestFillInputToWeight(int64_t additional_weight, int64_t expected_scriptsig_size)
+{
+    static const int64_t EMPTY_INPUT_WEIGHT = ::GetSerializeSize(CTxIn());
+
+    CTxIn input;
+    int64_t target_weight = EMPTY_INPUT_WEIGHT + additional_weight;
+    BOOST_CHECK(FillInputToWeight(input, target_weight));
+
+    BOOST_CHECK_LE(::GetSerializeSize(input), target_weight);
+    BOOST_CHECK_GE(::GetSerializeSize(input), target_weight - 2);
+
+    BOOST_CHECK_EQUAL(input.scriptSig.size(), expected_scriptsig_size);
+}
+
+BOOST_FIXTURE_TEST_CASE(FillInputToWeightTest, BasicTestingSetup)
+{
+    {
+        // Less than or equal minimum of 41 should not add any witness data
+        CTxIn input;
+        BOOST_CHECK(!FillInputToWeight(input, -1));
+        BOOST_CHECK_EQUAL(::GetSerializeSize(input), 41);
+        BOOST_CHECK(!FillInputToWeight(input, 0));
+        BOOST_CHECK_EQUAL(::GetSerializeSize(input), 41);
+        BOOST_CHECK(!FillInputToWeight(input, 40));
+        BOOST_CHECK_EQUAL(::GetSerializeSize(input), 41);
+        BOOST_CHECK(FillInputToWeight(input, 41));
+        BOOST_CHECK_EQUAL(::GetSerializeSize(input), 41);
+    }
+
+    // Make sure we can add at least one weight
+    TestFillInputToWeight(1, 1);
+
+    // 1 byte compact size uint boundary
+    TestFillInputToWeight(252, 252);
+    TestFillInputToWeight(253, 251);
+    TestFillInputToWeight(262, 260);
+    TestFillInputToWeight(263, 261);
+
+    // 3 byte compact size uint boundary
+    TestFillInputToWeight(65535, 65533);
+    TestFillInputToWeight(65536, 65532);
+    TestFillInputToWeight(65545, 65541);
+    TestFillInputToWeight(65546, 65542);
+
+    // Note: We don't test the next boundary because of memory allocation constraints.
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
