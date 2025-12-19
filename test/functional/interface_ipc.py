@@ -272,6 +272,12 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 assert empty_template is not None
                 block = await self.parse_and_deserialize_block(empty_template, ctx)
                 assert_equal(len(block.vtx), 1)
+
+                self.log.debug("Enforce minimum reserved weight for IPC clients too")
+                opts.blockReservedWeight = 0
+                refused_template = await create_block_template(mining, stack, ctx, opts)
+                assert refused_template is None
+
                 # Restore opts
                 opts.blockReservedWeight = 4000
 

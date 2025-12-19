@@ -41,7 +41,7 @@ struct BlockCreateOptions {
     bool use_mempool{true};
     /**
      * The default reserved weight for the fixed-size block header,
-     * transaction count and coinbase transaction.
+     * transaction count and coinbase transaction. Minimum: 2000 weight units.
      *
      * Cap'n Proto IPC clients do not currently have a way of leaving this field
      * unset and will always provide a value.
