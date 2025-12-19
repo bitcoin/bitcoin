@@ -47,13 +47,15 @@ export CTCACHE_CLANG_TIDY="${CLANG_TIDY_BIN}"
 mkdir -p "${CTCACHE_DIR}"
 
 CLANG_TIDY_CACHE=$(command -v clang-tidy-cache)
-CLANG_TIDY_CACHE_PY="/usr/local/bin/src/ctcache/clang_tidy_cache.py"
 
 # Verify ctcache is installed
 if [ -z "${CLANG_TIDY_CACHE}" ]; then
   echo "Error: clang-tidy-cache not found in PATH"
   exit 1
 fi
+
+# Derive Python script path from wrapper location (matches wrapper's own logic)
+CLANG_TIDY_CACHE_PY="$(dirname "${CLANG_TIDY_CACHE}")/src/ctcache/clang_tidy_cache.py"
 if [ ! -f "${CLANG_TIDY_CACHE_PY}" ]; then
   echo "Error: ctcache Python script not found at ${CLANG_TIDY_CACHE_PY}"
   exit 1
