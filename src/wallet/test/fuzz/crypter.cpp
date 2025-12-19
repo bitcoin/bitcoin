@@ -60,14 +60,24 @@ FUZZ_TARGET(crypter, .init = initialize_crypter)
                 cipher_text_ed = ConsumeRandomLengthByteVector(fuzzed_data_provider, 64);
             },
             [&] {
-                (void)crypt.Encrypt(plain_text_ed, cipher_text_ed);
+                if (crypt.Encrypt(plain_text_ed, cipher_text_ed)) {
+                    CKeyingMaterial decrypted_text;
+                    if (crypt.Decrypt(cipher_text_ed, decrypted_text)) {
+                        assert(decrypted_text == plain_text_ed);
+                    }
+                }
             },
             [&] {
                 (void)crypt.Decrypt(cipher_text_ed, plain_text_ed);
             },
             [&] {
-                const CKeyingMaterial master_key(random_key.begin(), random_key.end());;
-                (void)EncryptSecret(master_key, plain_text_ed, pubkey.GetHash(), cipher_text_ed);
+                const CKeyingMaterial master_key(random_key.begin(), random_key.end());
+                if (EncryptSecret(master_key, plain_text_ed, pubkey.GetHash(), cipher_text_ed)) {
+                    CKeyingMaterial decrypted_secret;
+                    if (DecryptSecret(master_key, cipher_text_ed, pubkey.GetHash(), decrypted_secret)) {
+                         assert(decrypted_secret == plain_text_ed);
+                    }
+                }
             },
             [&] {
                 std::optional<CPubKey> random_pub_key{ConsumeDeserializable<CPubKey>(fuzzed_data_provider)};
