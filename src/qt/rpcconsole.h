@@ -24,6 +24,7 @@
 class ClientModel;
 class RPCExecutor;
 class RPCTimerInterface;
+class WalletController;
 class WalletModel;
 
 namespace interfaces {
@@ -58,6 +59,7 @@ public:
     void setClientModel(ClientModel *model = nullptr, int bestblock_height = 0, int64_t bestblock_date = 0, uint256 bestblock_hash = uint256(), double verification_progress = 0.0);
 
 #ifdef ENABLE_WALLET
+    void setWalletController(WalletController* wallet_controller);
     void addWallet(WalletModel* const walletModel);
     void removeWallet(WalletModel* const walletModel);
 #endif // ENABLE_WALLET
@@ -117,10 +119,12 @@ public Q_SLOTS:
     void fontSmaller();
     void setFontSize(int newSize);
 
-    /** Wallet repair options */
+    /** Repair options */
+    void walletReindex();
+#ifdef ENABLE_WALLET
     void walletRescan1();
     void walletRescan2();
-    void walletReindex();
+#endif // ENABLE_WALLET
 
     /** Append the message to the message widget */
     void message(int category, const QString &msg) { message(category, msg, false); }
@@ -174,6 +178,12 @@ private:
     void setButtonIcons();
     /** Reload some themes related widgets */
     void reloadThemedWidgets();
+#ifdef ENABLE_WALLET
+    /** Initiate a wallet rescan */
+    void walletRescan(bool from_genesis);
+    /** Update wallet UI when selected wallet changes */
+    void onWalletChanged();
+#endif // ENABLE_WALLET
 
     enum ColumnWidths
     {
@@ -188,6 +198,7 @@ private:
     interfaces::Node& m_node;
     Ui::RPCConsole* const ui;
     ClientModel *clientModel = nullptr;
+    WalletController* m_wallet_controller{nullptr};
     QButtonGroup* pageButtons = nullptr;
     QStringList history;
     int historyPtr = 0;

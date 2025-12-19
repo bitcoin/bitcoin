@@ -19,6 +19,7 @@
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
 #include <qt/peertablesortproxy.h>
+#include <qt/walletcontroller.h>
 #include <qt/walletmodel.h>
 #include <rpc/client.h>
 #include <rpc/server.h>
@@ -70,8 +71,6 @@ const char fontSizeSettingsKey[] = "consoleFontSize";
 const TrafficGraphData::GraphRange INITIAL_TRAFFIC_GRAPH_SETTING = TrafficGraphData::Range_30m;
 
 // Repair parameters
-const QString RESCAN1("-rescan=1");
-const QString RESCAN2("-rescan=2");
 const QString REINDEX("-reindex");
 
 namespace {
@@ -574,12 +573,15 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     ui->WalletSelector->setVisible(false);
     ui->WalletSelectorLabel->setVisible(false);
 
-    // Wallet Repair Buttons
+    // Repair Buttons
     // Disable wallet repair options that require a wallet (enable them later when a wallet is added)
     ui->btn_rescan1->setEnabled(false);
     ui->btn_rescan2->setEnabled(false);
+#ifdef ENABLE_WALLET
     connect(ui->btn_rescan1, &QPushButton::clicked, this, &RPCConsole::walletRescan1);
     connect(ui->btn_rescan2, &QPushButton::clicked, this, &RPCConsole::walletRescan2);
+    connect(ui->WalletSelector, qOverload<int>(&QComboBox::currentIndexChanged), this, &RPCConsole::onWalletChanged);
+#endif // ENABLE_WALLET
     connect(ui->btn_reindex, &QPushButton::clicked, this, &RPCConsole::walletReindex);
 
     // Register RPC timer interface
@@ -820,6 +822,11 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
 }
 
 #ifdef ENABLE_WALLET
+void RPCConsole::setWalletController(WalletController* wallet_controller)
+{
+    m_wallet_controller = wallet_controller;
+}
+
 void RPCConsole::addWallet(WalletModel * const walletModel)
 {
     // use name for text and wallet model for internal data object (to allow to move to a wallet id later)
@@ -827,40 +834,29 @@ void RPCConsole::addWallet(WalletModel * const walletModel)
     if (ui->WalletSelector->count() == 2) {
         // First wallet added, set to default to match wallet RPC behavior
         ui->WalletSelector->setCurrentIndex(1);
-        // The only loaded wallet
-        ui->btn_rescan1->setEnabled(true);
-        ui->btn_rescan2->setEnabled(true);
-        QString wallet_path = GUIUtil::PathToQString(GetWalletDir()) + QDir::separator().toLatin1();
-        QString wallet_name = walletModel->getWalletName().isEmpty() ? "wallet.dat" : walletModel->getWalletName();
-        ui->wallet_path->setText(wallet_path + wallet_name);
-    } else {
+    }
+
+    // Update wallet path and button states for currently selected wallet
+    onWalletChanged();
+
+    // Show wallet selector when multiple wallets are loaded
+    if (ui->WalletSelector->count() > 2) {
         ui->WalletSelector->setVisible(true);
         ui->WalletSelectorLabel->setVisible(true);
-        // No wallet recovery for multiple loaded wallets
-        ui->btn_rescan1->setEnabled(false);
-        ui->btn_rescan2->setEnabled(false);
-        ui->wallet_path->clear();
     }
 }
 
 void RPCConsole::removeWallet(WalletModel * const walletModel)
 {
     ui->WalletSelector->removeItem(ui->WalletSelector->findData(QVariant::fromValue(walletModel)));
+
+    // Update wallet path and button states for currently selected wallet (or clear/disable if none)
+    onWalletChanged();
+
+    // Hide wallet selector when back to single wallet
     if (ui->WalletSelector->count() == 2) {
         ui->WalletSelector->setVisible(false);
         ui->WalletSelectorLabel->setVisible(false);
-        // Back to the only loaded wallet
-        ui->btn_rescan1->setEnabled(true);
-        ui->btn_rescan2->setEnabled(true);
-        WalletModel* wallet_model = ui->WalletSelector->itemData(1).value<WalletModel*>();
-        QString wallet_path = GUIUtil::PathToQString(GetWalletDir()) + QDir::separator().toLatin1();
-        QString wallet_name = wallet_model->getWalletName().isEmpty() ? "wallet.dat" : wallet_model->getWalletName();
-        ui->wallet_path->setText(wallet_path + wallet_name);
-    } else {
-        // No wallet recovery for multiple loaded wallets
-        ui->btn_rescan1->setEnabled(false);
-        ui->btn_rescan2->setEnabled(false);
-        ui->wallet_path->clear();
     }
 }
 
@@ -868,6 +864,24 @@ void RPCConsole::setCurrentWallet(WalletModel* const wallet_model)
 {
     QVariant data = QVariant::fromValue(wallet_model);
     ui->WalletSelector->setCurrentIndex(ui->WalletSelector->findData(data));
+}
+
+void RPCConsole::onWalletChanged()
+{
+    WalletModel* wallet_model = ui->WalletSelector->currentData().value<WalletModel*>();
+    if (wallet_model) {
+        QString wallet_path = GUIUtil::PathToQString(GetWalletDir()) + QDir::separator().toLatin1();
+        QString wallet_name = wallet_model->getWalletName().isEmpty() ? "wallet.dat" : wallet_model->getWalletName();
+        ui->wallet_path->setText(wallet_path + wallet_name);
+        // Enable rescan buttons when a valid wallet is selected
+        ui->btn_rescan1->setEnabled(true);
+        ui->btn_rescan2->setEnabled(true);
+    } else {
+        ui->wallet_path->clear();
+        // Disable rescan buttons when no wallet is selected (e.g., "(none)")
+        ui->btn_rescan1->setEnabled(false);
+        ui->btn_rescan2->setEnabled(false);
+    }
 }
 #endif
 
@@ -917,17 +931,36 @@ void RPCConsole::setFontSize(int newSize)
     ui->messagesWidget->verticalScrollBar()->setValue(oldPosFactor * ui->messagesWidget->verticalScrollBar()->maximum());
 }
 
-/** Restart wallet with "-rescan=1" */
-void RPCConsole::walletRescan1()
+#ifdef ENABLE_WALLET
+void RPCConsole::walletRescan(bool from_genesis)
 {
-    buildParameterlist(RESCAN1);
+    if (!m_wallet_controller) {
+        QMessageBox::critical(this, PACKAGE_NAME, QObject::tr("Error: Wallet controller not available."));
+        return;
+    }
+
+    WalletModel* wallet_model{ui->WalletSelector->currentData().value<WalletModel*>()};
+    if (!wallet_model) {
+        QMessageBox::critical(this, PACKAGE_NAME, QObject::tr("Error: Rescan failed. Wallet not loaded."));
+        return;
+    }
+
+    auto activity = new RescanWalletActivity(m_wallet_controller, this);
+    activity->rescan(wallet_model, from_genesis);
 }
 
-/** Restart wallet with "-rescan=2" */
+/** Rescan wallet from wallet creation */
+void RPCConsole::walletRescan1()
+{
+    walletRescan(/*from_genesis=*/false);
+}
+
+/** Rescan wallet from genesis block */
 void RPCConsole::walletRescan2()
 {
-    buildParameterlist(RESCAN2);
+    walletRescan(/*from_genesis=*/true);
 }
+#endif
 
 /** Restart wallet with "-reindex" */
 void RPCConsole::walletReindex()
@@ -952,8 +985,6 @@ void RPCConsole::buildParameterlist(QString arg)
     }
 
     // Remove existing repair-options
-    args.removeAll(RESCAN1);
-    args.removeAll(RESCAN2);
     args.removeAll(REINDEX);
 
     // Append repair parameter to command line.

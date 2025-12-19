@@ -5,6 +5,7 @@
 #ifndef BITCOIN_QT_WALLETCONTROLLER_H
 #define BITCOIN_QT_WALLETCONTROLLER_H
 
+#include <interfaces/wallet.h>
 #include <qt/sendcoinsrecipient.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
@@ -16,6 +17,7 @@
 #include <vector>
 
 #include <QMutex>
+#include <QPointer>
 #include <QThread>
 #include <QString>
 
@@ -169,6 +171,26 @@ Q_SIGNALS:
 
 private:
     void finish();
+};
+
+class RescanWalletActivity : public WalletControllerActivity
+{
+    Q_OBJECT
+
+public:
+    RescanWalletActivity(WalletController* wallet_controller, QWidget* parent_widget);
+
+    void rescan(WalletModel* wallet_model, bool from_genesis);
+
+Q_SIGNALS:
+    void rescanComplete();
+    void rescanFailed();
+
+private:
+    void finish();
+
+    QPointer<WalletModel> m_rescan_wallet_model;
+    wallet::RescanStatus m_rescan_status{};
 };
 
 #endif // BITCOIN_QT_WALLETCONTROLLER_H

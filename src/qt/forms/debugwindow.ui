@@ -81,7 +81,7 @@
      <item>
       <widget class="QPushButton" name="btnRepair">
        <property name="text">
-        <string>&amp;Wallet Repair</string>
+        <string>&amp;Repair</string>
        </property>
        <property name="checkable">
         <bool>true</bool>
@@ -1728,7 +1728,7 @@
        <item row="0" column="0" colspan="2">
         <widget class="QLabel" name="label_repair_header">
          <property name="text">
-          <string>Wallet repair options.</string>
+          <string>Repair options.</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -1738,7 +1738,7 @@
        <item row="1" column="0" colspan="2">
         <widget class="QLabel" name="label_repair_helptext">
          <property name="text">
-          <string>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockchain files or missing/obsolete transactions.</string>
+          <string>The buttons below will trigger repair actions to fix issues with corrupt files or missing/obsolete transactions.</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -1758,14 +1758,14 @@
           </size>
          </property>
          <property name="text">
-          <string>Rescan blockchain files 1</string>
+          <string>Rescan Chain</string>
          </property>
         </widget>
        </item>
        <item row="3" column="1">
         <widget class="QLabel" name="label_repair_rescan1">
          <property name="text">
-          <string>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</string>
+          <string>Rescan the chain for missing wallet transactions starting from wallet creation time.</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -1781,14 +1781,14 @@
           </size>
          </property>
          <property name="text">
-          <string>Rescan blockchain files 2</string>
+          <string>Rescan Chain (full)</string>
          </property>
         </widget>
        </item>
        <item row="4" column="1">
         <widget class="QLabel" name="label_repair_rescan2">
          <property name="text">
-          <string>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</string>
+          <string>Rescan the chain for missing wallet transactions starting from genesis block.</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -1798,14 +1798,14 @@
        <item row="5" column="0">
         <widget class="QPushButton" name="btn_reindex">
          <property name="text">
-          <string>Rebuild index</string>
+          <string>Rebuild Index</string>
          </property>
         </widget>
        </item>
        <item row="5" column="1">
         <widget class="QLabel" name="label_repair_reindex">
          <property name="text">
-          <string>-reindex: Rebuild block chain index from current blk000??.dat files.</string>
+          <string>Restarts the client to rebuild the chain index from current blk000??.dat files.</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
