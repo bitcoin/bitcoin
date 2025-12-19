@@ -99,6 +99,8 @@ jobs:
           ./ci/dash/build_src.sh
           ccache -X 9
           ccache -c
+          du -hd0 "${BASE_OUTDIR}"
+          rm -rf "${BASE_OUTDIR}"
         shell: bash
 
       - name: Save ccache cache
@@ -121,7 +123,6 @@ jobs:
 
       - name: Run unit tests
         run: |
-          BASE_OUTDIR="/output"
           BUILD_TARGET="${{ inputs.build-target }}"
           source ./ci/dash/matrix.sh
           ./ci/dash/test_unittests.sh
