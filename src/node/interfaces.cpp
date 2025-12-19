@@ -84,6 +84,7 @@ using interfaces::WalletLoader;
 using kernel::ChainstateRole;
 using node::BlockAssembler;
 using node::BlockWaitOptions;
+using node::CoinbaseTxTemplate;
 using util::Join;
 
 namespace node {
@@ -891,6 +892,11 @@ public:
     CTransactionRef getCoinbaseRawTx() override
     {
         return m_block_template->block.vtx[0];
+    }
+
+    CoinbaseTxTemplate getCoinbaseTx() override
+    {
+        return m_block_template->m_coinbase_tx_template;
     }
 
     std::vector<unsigned char> getCoinbaseCommitment() override
