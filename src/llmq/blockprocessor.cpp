@@ -131,8 +131,9 @@ MessageProcessingResult CQuorumBlockProcessor::ProcessMessage(const CNode& peer,
         if (pQuorumBaseBlockIndex->nHeight < (m_chainstate.m_chain.Height() - llmq_params_opt->dkgInterval)) {
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s is too old, peer=%d\n", __func__,
                      qc.quorumHash.ToString(), peer.GetId());
-            // TODO: enable punishment in some future version when all/most nodes are running with this fix
-            // ret.m_error = MisbehavingError{100};
+            if (peer.GetCommonVersion() >= QFCOMMIT_STALE_REPROP_BAN_VERSION) {
+                ret.m_error = MisbehavingError{100};
+            }
             return ret;
         }
         if (HasMinedCommitment(type, qc.quorumHash)) {
