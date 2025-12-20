@@ -20,7 +20,13 @@ struct ScriptTypeBlockStats {
     std::array<CAmount, TXOUT_TYPE_COUNT> output_values{};
 
     SERIALIZE_METHODS(ScriptTypeBlockStats, obj) {
-        READWRITE(obj.output_counts, obj.output_values);
+        // Serialize arrays element by element
+        for (size_t i = 0; i < TXOUT_TYPE_COUNT; ++i) {
+            READWRITE(obj.output_counts[i]);
+        }
+        for (size_t i = 0; i < TXOUT_TYPE_COUNT; ++i) {
+            READWRITE(obj.output_values[i]);
+        }
     }
 };
 
@@ -31,7 +37,7 @@ class ScriptTypeIndex final : public BaseIndex
 {
 private:
     /** Database key prefix set to 's' */
-    static constexpr char DB_SCRIPT_TYPE_STATS{'s'};
+    static constexpr uint8_t DB_SCRIPT_TYPE_STATS{'s'};
 
     std::unique_ptr<BaseIndex::DB> m_db;
 

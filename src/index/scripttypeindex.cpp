@@ -14,7 +14,12 @@ ScriptTypeIndex::ScriptTypeIndex(std::unique_ptr<interfaces::Chain> chain, size_
 
 ScriptTypeIndex::~ScriptTypeIndex() = default;
 
-bool ScriptTypeIndex::CustomAppend(const interfaces::BlockInfo& block) { return true; }
+bool ScriptTypeIndex::CustomAppend(const interfaces::BlockInfo& block) {
+    assert(block.data);
+    ScriptTypeBlockStats stats = ComputeStats(*block.data);
+    m_db->Write(std::make_pair(DB_SCRIPT_TYPE_STATS, block.hash), stats);
+    return true; 
+}
 bool ScriptTypeIndex::CustomRemove(const interfaces::BlockInfo& block) { return true; }
 bool ScriptTypeIndex::LookupStats(const uint256& block_hash, ScriptTypeBlockStats& stats) const { return false; }
 ScriptTypeBlockStats ScriptTypeIndex::ComputeStats(const CBlock& block) const { 
@@ -41,7 +46,5 @@ ScriptTypeBlockStats ScriptTypeIndex::ComputeStats(const CBlock& block) const {
         }
     }
 
-    
     return stats; 
-
 }
