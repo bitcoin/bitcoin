@@ -10,6 +10,7 @@ from io import BytesIO
 from test_framework.blocktools import NULL_OUTPOINT
 from test_framework.messages import (
     MAX_BLOCK_WEIGHT,
+    MAX_MONEY,
     CBlockHeader,
     CTransaction,
     CTxIn,
@@ -240,12 +241,15 @@ class IPCMiningTest(BitcoinTestFramework):
                 txsigops = await template.getTxSigops(ctx)
                 assert_equal(len(txsigops.result), 0)
 
-                self.log.debug("Wait for a new template")
+                self.log.debug("Wait for a new template, get one after the tip updates")
                 waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
                 waitoptions.timeout = timeout
-                waitoptions.feeThreshold = 1
+                # Ignore fee increases, wait only for the tip update
+                waitoptions.feeThreshold = MAX_MONEY
+                self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
                 template2 = await wait_and_do(
                     mining_wait_next_template(template, stack, ctx, waitoptions),
+                    # This mines the transaction, so it won't be in the next template
                     lambda: self.generate(self.nodes[0], 1))
                 assert template2 is not None
                 block2 = await mining_get_block(template2, ctx)
@@ -256,6 +260,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 assert template3 is None
 
                 self.log.debug("Wait for another, get one after increase in fees in the mempool")
+                waitoptions.feeThreshold = 1
                 template4 = await wait_and_do(
                     mining_wait_next_template(template2, stack, ctx, waitoptions),
                     lambda: self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0]))
