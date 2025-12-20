@@ -22,6 +22,7 @@
 #include <hash.h>
 #include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
+#include <index/scripttypeindex.h>
 #include <interfaces/mining.h>
 #include <kernel/coinstats.h>
 #include <logging/timer.h>
@@ -3464,6 +3465,104 @@ return RPCHelpMan{
     };
 }
 
+static RPCHelpMan getscripttypestats()
+{
+    return RPCHelpMan{"getscripttypestats",
+        "\nReturns script type statistics for a block.\n",
+        {
+            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::OBJ, "nonstandard", "Non-standard outputs",
+                {
+                    {RPCResult::Type::NUM, "count", "Number of outputs"},
+                    {RPCResult::Type::NUM, "value", "Total satoshis locked"},
+                }},
+                {RPCResult::Type::OBJ, "p2pk", "Pay-to-pubkey outputs",
+                {
+                    {RPCResult::Type::NUM, "count", "Number of outputs"},
+                    {RPCResult::Type::NUM, "value", "Total satoshis locked"},
+                }},
+                {RPCResult::Type::OBJ, "p2pkh", "Pay-to-pubkey-hash outputs",
+                {
+                    {RPCResult::Type::NUM, "count", "Number of outputs"},
+                    {RPCResult::Type::NUM, "value", "Total satoshis locked"},
+                }},
+                {RPCResult::Type::OBJ, "p2sh", "Pay-to-script-hash outputs",
+                {
+                    {RPCResult::Type::NUM, "count", "Number of outputs"},
+                    {RPCResult::Type::NUM, "value", "Total satoshis locked"},
+                }},
+                {RPCResult::Type::OBJ, "multisig", "Multisig outputs",
+                {
+                    {RPCResult::Type::NUM, "count", "Number of outputs"},
+                    {RPCResult::Type::NUM, "value", "Total satoshis locked"},
+                }},
+                {RPCResult::Type::OBJ, "nulldata", "Null data (OP_RETURN) outputs",
+                {
+                    {RPCResult::Type::NUM, "count", "Number of outputs"},
+                    {RPCResult::Type::NUM, "value", "Total satoshis locked"},
+                }},
+                {RPCResult::Type::OBJ, "p2wpkh", "Pay-to-witness-pubkey-hash outputs",
+                {
+                    {RPCResult::Type::NUM, "count", "Number of outputs"},
+                    {RPCResult::Type::NUM, "value", "Total satoshis locked"},
+                }},
+                {RPCResult::Type::OBJ, "p2wsh", "Pay-to-witness-script-hash outputs",
+                {
+                    {RPCResult::Type::NUM, "count", "Number of outputs"},
+                    {RPCResult::Type::NUM, "value", "Total satoshis locked"},
+                }},
+                {RPCResult::Type::OBJ, "p2tr", "Pay-to-taproot outputs",
+                {
+                    {RPCResult::Type::NUM, "count", "Number of outputs"},
+                    {RPCResult::Type::NUM, "value", "Total satoshis locked"},
+                }},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("getscripttypestats", "\"0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f\"")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            if (!g_script_type_index) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Script type index is not enabled. Start with -scripttypeindex.");
+            }
+
+            uint256 hash = ParseHashV(request.params[0], "blockhash");
+
+            ScriptTypeBlockStats stats;
+            if (!g_script_type_index->LookupStats(hash, stats)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in script type index");
+            }
+
+            UniValue result(UniValue::VOBJ);
+
+            // Helper lambda to create nested object for each script type
+            auto addScriptType = [&result](const std::string& name, uint64_t count, CAmount value) {
+                UniValue obj(UniValue::VOBJ);
+                obj.pushKV("count", count);
+                obj.pushKV("value", value);
+                result.pushKV(name, obj);
+            };
+
+            addScriptType("nonstandard", stats.output_counts[0], stats.output_values[0]);
+            addScriptType("p2pk", stats.output_counts[1], stats.output_values[1]);
+            addScriptType("p2pkh", stats.output_counts[2], stats.output_values[2]);
+            addScriptType("p2sh", stats.output_counts[3], stats.output_values[3]);
+            addScriptType("multisig", stats.output_counts[4], stats.output_values[4]);
+            addScriptType("nulldata", stats.output_counts[5], stats.output_values[5]);
+            addScriptType("p2wpkh", stats.output_counts[6], stats.output_values[6]);
+            addScriptType("p2wsh", stats.output_counts[7], stats.output_values[7]);
+            addScriptType("p2tr", stats.output_counts[8], stats.output_values[8]);
+
+            return result;
+        },
+    };
+}
+
 
 void RegisterBlockchainRPCCommands(CRPCTable& t)
 {
@@ -3498,6 +3597,7 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"blockchain", &waitforblock},
         {"blockchain", &waitforblockheight},
         {"hidden", &syncwithvalidationinterfacequeue},
+        {"blockchain", &getscripttypestats},
     };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
