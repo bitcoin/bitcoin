@@ -7,6 +7,10 @@
 #include <array>
 #include <cstdint>
 
+// Default to not maintain a script type index (we can enable it with the -scripttypeindex flag)
+static constexpr bool DEFAULT_SCRIPTTYPEINDEX{false};
+
+
 /**
  * Statistics for script types per block
  */
@@ -50,7 +54,7 @@ protected:
     BaseIndex::DB& GetDB() const override { return *m_db; }
 
 public:
-    explicit ScriptTypeIndex(std::unique_ptr<interfaces::Chain> chain, size_t cache_size);
+    explicit ScriptTypeIndex(std::unique_ptr<interfaces::Chain> chain, size_t cache_size, bool f_memory = false, bool f_wipe = false);
     ~ScriptTypeIndex() override;
 
     bool LookupStats(const uint256& block_hash, ScriptTypeBlockStats& stats) const;

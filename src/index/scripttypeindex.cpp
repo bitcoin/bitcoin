@@ -5,7 +5,7 @@
 
 std::unique_ptr<ScriptTypeIndex> g_script_type_index;
 
-ScriptTypeIndex::ScriptTypeIndex(std::unique_ptr<interfaces::Chain> chain, size_t cache_size)
+ScriptTypeIndex::ScriptTypeIndex(std::unique_ptr<interfaces::Chain> chain, size_t cache_size, bool f_memory, bool f_wipe)
     : BaseIndex(std::move(chain), "scripttypeindex")
     , m_db(std::make_unique<BaseIndex::DB>(gArgs.GetDataDirNet() / "indexes" / "scripttypeindex",
                                            cache_size, /*memory=*/false, /*wipe=*/false))
