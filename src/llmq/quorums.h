@@ -264,7 +264,8 @@ private:
     // On mainnet, we have around 62 quorums active at any point; let's cache a little more than double that to be safe.
     // it maps `quorum_hash` to `pindex`
     mutable Mutex cs_quorumBaseBlockIndexCache;
-    mutable Uint256LruHashMap<const CBlockIndex*, 128 /*max_size*/> quorumBaseBlockIndexCache;
+    mutable Uint256LruHashMap<const CBlockIndex*, /*max_size=*/128> quorumBaseBlockIndexCache
+        GUARDED_BY(cs_quorumBaseBlockIndexCache);
 
     mutable ctpl::thread_pool workerPool;
     mutable CThreadInterrupt quorumThreadInterrupt;
