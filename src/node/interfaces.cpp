@@ -81,6 +81,7 @@ using interfaces::Chain;
 using interfaces::FoundBlock;
 using interfaces::Handler;
 using interfaces::MakeSignalHandler;
+using interfaces::MemoryLoad;
 using interfaces::Mining;
 using interfaces::Node;
 using interfaces::Rpc;
@@ -1026,6 +1027,13 @@ public:
         reason = state.GetRejectReason();
         debug = state.GetDebugMessage();
         return state.IsValid();
+    }
+
+    MemoryLoad getMemoryLoad() override
+    {
+        LOCK(m_node.template_state_mutex);
+        CTxMemPool& mempool{*Assert(m_node.mempool)};
+        return {.usage = GetTemplateMemoryUsage(mempool, m_node.template_tx_refs)};
     }
 
     NodeContext* context() override { return &m_node; }
