@@ -4,7 +4,7 @@
 
 #include <util/check.h>
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h>
 
 #include <clientversion.h>
 #include <tinyformat.h>

@@ -5,7 +5,7 @@
 
 #include <wallet/wallet.h>
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h>
 #include <addresstype.h>
 #include <blockfilter.h>
 #include <chain.h>
