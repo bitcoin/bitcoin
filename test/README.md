@@ -67,6 +67,12 @@ Individual tests can be run by directly calling the test script, e.g.:
 build/test/functional/feature_rbf.py
 ```
 
+**Note for CMake users:** It is recommended to run the test runner from the build directory. This ensures the configuration file is loaded automatically via symlinks:
+
+```
+./build/test/functional/test_runner.py
+```
+
 or can be run through the test_runner harness, eg:
 
 ```
