@@ -242,7 +242,7 @@ UniValue CQuorumSnapshot::ToJson() const
         activeQ.push_back(h);
     }
     obj.pushKV("activeQuorumMembers", activeQ);
-    obj.pushKV("mnSkipListMode", mnSkipListMode);
+    obj.pushKV("mnSkipListMode", ToUnderlying(mnSkipListMode));
     UniValue skipList(UniValue::VARR);
     for (const auto& h : mnSkipList) {
         // cppcheck-suppress useStlAlgorithm

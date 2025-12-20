@@ -27,24 +27,24 @@ class CQuorumManager;
 
 class UniValue;
 
-//TODO use enum class (probably)
-enum SnapshotSkipMode : int {
+enum class SnapshotSkipMode : int {
     MODE_NO_SKIPPING = 0,
     MODE_SKIPPING_ENTRIES = 1,
     MODE_NO_SKIPPING_ENTRIES = 2,
     MODE_ALL_SKIPPED = 3
 };
+template<> struct is_serializable_enum<SnapshotSkipMode> : std::true_type {};
 
 namespace llmq {
 class CQuorumSnapshot
 {
 public:
     std::vector<bool> activeQuorumMembers;
-    int mnSkipListMode = 0;
+    SnapshotSkipMode mnSkipListMode{SnapshotSkipMode::MODE_NO_SKIPPING};
     std::vector<int> mnSkipList;
 
     CQuorumSnapshot() = default;
-    CQuorumSnapshot(std::vector<bool> _activeQuorumMembers, int _mnSkipListMode, std::vector<int> _mnSkipList) :
+    CQuorumSnapshot(std::vector<bool> _activeQuorumMembers, SnapshotSkipMode _mnSkipListMode, std::vector<int> _mnSkipList) :
         activeQuorumMembers(std::move(_activeQuorumMembers)),
         mnSkipListMode(_mnSkipListMode),
         mnSkipList(std::move(_mnSkipList))
