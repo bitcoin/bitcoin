@@ -226,7 +226,7 @@ CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CDeterministicMNManager& 
     m_quorums_watch{quorums_watch},
     db{util::MakeDbWrapper({db_params.path / "llmq" / "quorumdb", db_params.memory, db_params.wipe, /*cache_size=*/1 << 20})}
 {
-    utils::InitQuorumsCache(mapQuorumsCache, false);
+    utils::InitQuorumsCache(mapQuorumsCache, m_chainman.GetConsensus(), /*limit_by_connections=*/false);
     quorumThreadInterrupt.reset();
     MigrateOldQuorumDB(_evoDb);
 }
@@ -1114,7 +1114,7 @@ void CQuorumManager::StartCleanupOldQuorumDataThread(gsl::not_null<const CBlockI
         std::set<uint256> dbKeysToSkip;
 
         if (LOCK(cs_cleanup); cleanupQuorumsCache.empty()) {
-            utils::InitQuorumsCache(cleanupQuorumsCache, false);
+            utils::InitQuorumsCache(cleanupQuorumsCache, m_chainman.GetConsensus(), /*limit_by_connections=*/false);
         }
         for (const auto& params : Params().GetConsensus().llmqs) {
             if (quorumThreadInterrupt) {

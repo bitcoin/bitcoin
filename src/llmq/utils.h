@@ -21,7 +21,6 @@
 
 class CBlockIndex;
 class CConnman;
-class CDeterministicMN;
 class CDeterministicMNList;
 class CDeterministicMNManager;
 class ChainstateManager;
@@ -83,9 +82,9 @@ void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, CConnman
                                const CDeterministicMNList& tip_mn_list, const uint256& myProTxHash);
 
 template <typename CacheType>
-inline void InitQuorumsCache(CacheType& cache, bool limit_by_connections = true)
+inline void InitQuorumsCache(CacheType& cache, const Consensus::Params& consensus_params, bool limit_by_connections = true)
 {
-    for (const auto& llmq : Params().GetConsensus().llmqs) {
+    for (const auto& llmq : consensus_params.llmqs) {
         cache.emplace(std::piecewise_construct, std::forward_as_tuple(llmq.type),
                       std::forward_as_tuple(limit_by_connections ? llmq.keepOldConnections : llmq.keepOldKeys));
     }

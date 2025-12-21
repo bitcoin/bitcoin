@@ -52,7 +52,7 @@ CQuorumBlockProcessor::CQuorumBlockProcessor(CChainState& chainstate, CDetermini
     m_evoDb{evoDb},
     m_qsnapman{qsnapman}
 {
-    utils::InitQuorumsCache(mapHasMinedCommitmentCache);
+    utils::InitQuorumsCache(mapHasMinedCommitmentCache, m_chainstate.m_chainman.GetConsensus());
     LogPrintf("BLS verification uses %d additional threads\n", bls_threads);
     m_bls_queue.StartWorkerThreads(bls_threads);
 }

@@ -72,7 +72,7 @@ auto CachedGetQcHashesQcIndexedHashes(const CBlockIndex* pindexPrev, const llmq:
     qcHashes_cached.clear();
     qcIndexedHashes_cached.clear();
     if (qc_hashes_cached.empty()) {
-        llmq::utils::InitQuorumsCache(qc_hashes_cached);
+        llmq::utils::InitQuorumsCache(qc_hashes_cached, Params().GetConsensus());
     }
 
     for (const auto& [llmqType, vecBlockIndexes] : quorums) {

@@ -144,7 +144,7 @@ MessageProcessingResult CDKGSessionManager::ProcessMessage(CNode& pfrom, bool is
     {
         LOCK(cs_indexedQuorumsCache);
         if (indexedQuorumsCache.empty()) {
-            utils::InitQuorumsCache(indexedQuorumsCache);
+            utils::InitQuorumsCache(indexedQuorumsCache, m_chainman.GetConsensus());
         }
         indexedQuorumsCache[llmqType].get(quorumHash, quorumIndex);
     }
