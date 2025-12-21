@@ -229,7 +229,7 @@ class MiniWallet:
         assert_equal(self._mode, MiniWalletMode.ADDRESS_OP_TRUE)
         return self._address
 
-    def get_utxo(self, *, txid: str = '', vout: Optional[int] = None, mark_as_spent=True, confirmed_only=False) -> dict:
+    def get_utxo(self, *, txid: str = '', vout: Optional[int] = None, mark_as_spent=True, confirmed_only=False, min_coinbase_depth: int = COINBASE_MATURITY) -> dict:
         """
         Returns a utxo and marks it as spent (pops it from the internal list)
 
@@ -237,8 +237,8 @@ class MiniWallet:
         txid: get the first utxo we find from a specific transaction
         """
         self._utxos = sorted(self._utxos, key=lambda k: (k['value'], -k['height']))  # Put the largest utxo last
-        blocks_height = self._test_node.getblockchaininfo()['blocks']
-        mature_coins = list(filter(lambda utxo: not utxo['coinbase'] or COINBASE_MATURITY - 1 <= blocks_height - utxo['height'], self._utxos))
+        mature_coins = [u for u in self._utxos if self._is_mature(u, min_coinbase_depth)]
+
         if txid:
             utxo_filter: Any = filter(lambda utxo: txid == utxo['txid'], self._utxos)
         else:
@@ -253,11 +253,15 @@ class MiniWallet:
         else:
             return self._utxos[index]
 
-    def get_utxos(self, *, include_immature_coinbase=False, mark_as_spent=True, confirmed_only=False):
+    def get_utxos(self, *, include_immature_coinbase=False, mark_as_spent=True, confirmed_only=False, min_coinbase_depth: int = COINBASE_MATURITY):
         """Returns the list of all utxos and optionally mark them as spent"""
         if not include_immature_coinbase:
             blocks_height = self._test_node.getblockchaininfo()['blocks']
             utxo_filter = filter(lambda utxo: not utxo['coinbase'] or COINBASE_MATURITY - 1 <= blocks_height - utxo['height'], self._utxos)
+        else:
+            utxo_filter = self._utxos
+        if not include_immature_coinbase:
+            utxo_filter = filter(lambda u: self._is_mature(u, min_coinbase_depth), self._utxos)
         else:
             utxo_filter = self._utxos
         if confirmed_only:
@@ -314,13 +318,16 @@ class MiniWallet:
         fee_per_output=1000,
         target_vsize=0,
         confirmed_only=False,
+        min_coinbase_depth: int = COINBASE_MATURITY,
     ):
         """
         Create and return a transaction that spends the given UTXOs and creates a
         certain number of outputs with equal amounts. The output amounts can be
         set by amount_per_output or automatically calculated with a fee_per_output.
         """
-        utxos_to_spend = utxos_to_spend or [self.get_utxo(confirmed_only=confirmed_only)]
+        utxos_to_spend = utxos_to_spend or [self.get_utxo(confirmed_only=confirmed_only, min_coinbase_depth=min_coinbase_depth)]
+        # Hard guard: never build a tx spending immature coinbase
+        assert all(self._is_mature(u, min_coinbase_depth) for u in utxos_to_spend), "Attempted to spend immature coinbase UTXO"
         sequence = [sequence] * len(utxos_to_spend) if type(sequence) is int else sequence
         assert_equal(len(utxos_to_spend), len(sequence))
 
@@ -369,10 +376,11 @@ class MiniWallet:
             utxo_to_spend=None,
             target_vsize=0,
             confirmed_only=False,
+            min_coinbase_depth: int = COINBASE_MATURITY,
             **kwargs,
     ):
         """Create and return a tx with the specified fee. If fee is 0, use fee_rate, where the resulting fee may be exact or at most one satoshi higher than needed."""
-        utxo_to_spend = utxo_to_spend or self.get_utxo(confirmed_only=confirmed_only)
+        utxo_to_spend = utxo_to_spend or self.get_utxo(confirmed_only=confirmed_only, min_coinbase_depth=min_coinbase_depth)
         assert fee_rate >= 0
         assert fee >= 0
         # calculate fee
@@ -392,6 +400,7 @@ class MiniWallet:
             utxos_to_spend=[utxo_to_spend],
             amount_per_output=int(COIN * send_value),
             target_vsize=target_vsize,
+            min_coinbase_depth=min_coinbase_depth,
             **kwargs,
         )
         if not target_vsize:
