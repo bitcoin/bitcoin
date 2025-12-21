@@ -1,1 +1,3 @@
 src/clientversion.cpp export-subst
+*.sh text eol=lf
+*.py text eol=lf
