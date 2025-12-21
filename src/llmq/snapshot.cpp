@@ -106,96 +106,35 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
     auto target_cycles{response.GetCycles()};
     for (size_t idx{0}; idx < target_cycles.size(); idx++) {
         auto* cycle{target_cycles[idx]};
-        cycle->m_cycle_index = tipBlockIndex->GetAncestor(hBlockIndex->nHeight - (cycleLength * (idx + 1)));
+        const auto depth{idx + 1};
+        cycle->m_cycle_index = tipBlockIndex->GetAncestor(hBlockIndex->nHeight - (cycleLength * depth));
         if (!cycle->m_cycle_index) {
-            errorRet = strprintf("Cannot find block H-%dC", idx + 1);
+            errorRet = strprintf("Cannot find block H-%dC", depth);
             return false;
         }
         cycle->m_work_index = cycle->m_cycle_index->GetAncestor(cycle->m_cycle_index->nHeight - workDiff);
         if (!cycle->m_work_index) {
-            errorRet = strprintf("Cannot find work block H-%dC", idx + 1);
+            errorRet = strprintf("Cannot find work block H-%dC", depth);
             return false;
         }
-    }
-
-    if (use_legacy_construction) {
-        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
-                                       GetLastBaseBlockHash(baseBlockIndexes, response.cycleHMinusC.m_work_index, use_legacy_construction),
-                                       response.cycleHMinusC.m_work_index->GetBlockHash(), response.cycleHMinusC.m_diff, errorRet)) {
+        if (auto opt_snap = qsnapman.GetSnapshotForBlock(llmqType, cycle->m_cycle_index); opt_snap.has_value()) {
+            cycle->m_snap = std::move(opt_snap.value());
+        } else {
+            errorRet = strprintf("Cannot find quorum snapshot at H-%dC", depth);
             return false;
         }
-    }
-
-    auto snapshotHMinusC = qsnapman.GetSnapshotForBlock(llmqType, response.cycleHMinusC.m_cycle_index);
-    if (!snapshotHMinusC.has_value()) {
-        errorRet = strprintf("Can not find quorum snapshot at H-C");
-        return false;
-    } else {
-        response.cycleHMinusC.m_snap = std::move(snapshotHMinusC.value());
-    }
-
-    if (use_legacy_construction) {
-        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
-                                       GetLastBaseBlockHash(baseBlockIndexes, response.cycleHMinus2C.m_work_index, use_legacy_construction),
-                                       response.cycleHMinus2C.m_work_index->GetBlockHash(), response.cycleHMinus2C.m_diff, errorRet)) {
-            return false;
-        }
-    }
-
-    auto snapshotHMinus2C = qsnapman.GetSnapshotForBlock(llmqType, response.cycleHMinus2C.m_cycle_index);
-    if (!snapshotHMinus2C.has_value()) {
-        errorRet = strprintf("Can not find quorum snapshot at H-2C");
-        return false;
-    } else {
-        response.cycleHMinus2C.m_snap = std::move(snapshotHMinus2C.value());
-    }
-
-    if (use_legacy_construction) {
-        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
-                                       GetLastBaseBlockHash(baseBlockIndexes, response.cycleHMinus3C.m_work_index, use_legacy_construction),
-                                       response.cycleHMinus3C.m_work_index->GetBlockHash(), response.cycleHMinus3C.m_diff, errorRet)) {
-            return false;
-        }
-    }
-
-    auto snapshotHMinus3C = qsnapman.GetSnapshotForBlock(llmqType, response.cycleHMinus3C.m_cycle_index);
-    if (!snapshotHMinus3C.has_value()) {
-        errorRet = strprintf("Can not find quorum snapshot at H-3C");
-        return false;
-    } else {
-        response.cycleHMinus3C.m_snap = std::move(snapshotHMinus3C.value());
-    }
-
-    if (request.extraShare) {
-        if (!Assert(response.cycleHMinus4C)->m_work_index) {
-            errorRet = strprintf("Can not find work block H-4C");
-            return false;
-        }
-
-        auto snapshotHMinus4C = qsnapman.GetSnapshotForBlock(llmqType, response.cycleHMinus4C->m_cycle_index);
-        if (!snapshotHMinus4C.has_value()) {
-            errorRet = strprintf("Can not find quorum snapshot at H-4C");
-            return false;
-        }
-        response.cycleHMinus4C->m_snap = std::move(snapshotHMinus4C.value());
-
-        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
-                                       GetLastBaseBlockHash(baseBlockIndexes, response.cycleHMinus4C->m_work_index, use_legacy_construction),
-                                       response.cycleHMinus4C->m_work_index->GetBlockHash(), response.cycleHMinus4C->m_diff, errorRet)) {
-            return false;
-        }
-
-        if (!use_legacy_construction) {
-            baseBlockIndexes.push_back(response.cycleHMinus4C->m_work_index);
+        if (use_legacy_construction) {
+            if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
+                                           GetLastBaseBlockHash(baseBlockIndexes, cycle->m_work_index, use_legacy_construction),
+                                           cycle->m_work_index->GetBlockHash(), cycle->m_diff, errorRet))
+            {
+                return false;
+            }
         }
     }
 
     std::set<int> snapshotHeightsNeeded;
-
-    std::vector<const CBlockIndex*> qdata = qblockman.GetLastMinedCommitmentsPerQuorumIndexUntilBlock(llmqType,
-                                                                                                      blockIndex, 0);
-
-    for (const auto& obj : qdata) {
+    for (const auto& obj : qblockman.GetLastMinedCommitmentsPerQuorumIndexUntilBlock(llmqType, blockIndex, /*cycle=*/0)) {
         auto [qc, minedBlockHash] = qblockman.GetMinedCommitment(llmqType, obj->GetBlockHash());
         if (minedBlockHash == uint256::ZERO) {
             return false;
@@ -245,26 +184,16 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
     }
 
     if (!use_legacy_construction) {
-        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
-                                       GetLastBaseBlockHash(baseBlockIndexes, response.cycleHMinus3C.m_work_index, use_legacy_construction),
-                                       response.cycleHMinus3C.m_work_index->GetBlockHash(), response.cycleHMinus3C.m_diff, errorRet)) {
-            return false;
+        for (size_t idx = target_cycles.size(); idx-- > 0;) {
+            auto* cycle{target_cycles[idx]};
+            if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
+                                           GetLastBaseBlockHash(baseBlockIndexes, cycle->m_work_index, use_legacy_construction),
+                                           cycle->m_work_index->GetBlockHash(), cycle->m_diff, errorRet))
+            {
+                return false;
+            }
+            baseBlockIndexes.push_back(cycle->m_work_index);
         }
-        baseBlockIndexes.push_back(response.cycleHMinus3C.m_work_index);
-
-        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
-                                       GetLastBaseBlockHash(baseBlockIndexes, response.cycleHMinus2C.m_work_index, use_legacy_construction),
-                                       response.cycleHMinus2C.m_work_index->GetBlockHash(), response.cycleHMinus2C.m_diff, errorRet)) {
-            return false;
-        }
-        baseBlockIndexes.push_back(response.cycleHMinus2C.m_work_index);
-
-        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
-                                       GetLastBaseBlockHash(baseBlockIndexes, response.cycleHMinusC.m_work_index, use_legacy_construction),
-                                       response.cycleHMinusC.m_work_index->GetBlockHash(), response.cycleHMinusC.m_diff, errorRet)) {
-            return false;
-        }
-        baseBlockIndexes.push_back(response.cycleHMinusC.m_work_index);
 
         if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
                                        GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHIndex, use_legacy_construction),
