@@ -67,17 +67,13 @@ RUN set -ex; \
 
 # Install ctcache for clang-tidy result caching
 # Pin to specific commit to ensure patch applies correctly
-ARG CTCACHE_COMMIT=e33c063ca6e52b48bcefbc45d46d8c150ffa81ca
+ARG CTCACHE_COMMIT=e393144d5c49b060a1dbc7ae15b9c6973efb967d
 RUN set -ex; \
     mkdir -p /usr/local/bin/src/ctcache; \
     curl -fsSL "https://raw.githubusercontent.com/matus-chochlik/ctcache/${CTCACHE_COMMIT}/src/ctcache/clang_tidy_cache.py" \
         -o /usr/local/bin/src/ctcache/clang_tidy_cache.py; \
     curl -fsSL "https://raw.githubusercontent.com/matus-chochlik/ctcache/${CTCACHE_COMMIT}/clang-tidy" \
         -o /usr/local/bin/clang-tidy-cache; \
-    sed -i 's/return shlex\.split(command\["arguments"\]\[0\])/return command["arguments"]/' \
-        /usr/local/bin/src/ctcache/clang_tidy_cache.py; \
-    sed -i "s/digest = f'{i:x}'/digest = f'{i:02x}'/" \
-        /usr/local/bin/src/ctcache/clang_tidy_cache.py; \
     chmod +x /usr/local/bin/clang-tidy-cache;
 
 RUN \
