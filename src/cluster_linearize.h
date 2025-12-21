@@ -640,9 +640,13 @@ private:
 
     /** Data type to represent indexing into m_tx_data. */
     using TxIdx = uint32_t;
-    /** Data type to represent indexing into m_set_info. */
-    using SetIdx = uint32_t;
-
+    /** Data type to represent indexing into m_set_info. Use the smallest type possible to improve
+     *  cache locality. */
+    using SetIdx = std::conditional_t<(SetType::Size() <= 0xff),
+                                      uint8_t,
+                                      std::conditional_t<(SetType::Size() <= 0xffff),
+                                                         uint16_t,
+                                                         uint32_t>>;
     /** An invalid SetIdx. */
     static constexpr SetIdx INVALID_SET_IDX = SetIdx(-1);
 
@@ -651,7 +655,7 @@ private:
         /** The top set for every active child dependency this transaction has, indexed by child
          *  TxIdx. INVALID_SET_IDX if there is no active dependency with the corresponding child.
          */
-        std::vector<SetIdx> dep_top_idx;
+        std::array<SetIdx, SetType::Size()> dep_top_idx;
         /** The set of parent transactions of this transaction. Immutable after construction. */
         SetType parents;
         /** The set of child transactions of this transaction. Immutable after construction. */
@@ -961,7 +965,7 @@ public:
             tx_data.chunk_idx = num_chunks;
             m_set_info[num_chunks++] = SetInfo(depgraph, tx_idx);
             // Mark all its dependencies inactive.
-            tx_data.dep_top_idx.assign(m_tx_data.size(), INVALID_SET_IDX);
+            tx_data.dep_top_idx.fill(INVALID_SET_IDX);
         }
         Assume(num_chunks == num_transactions);
         // Mark all chunk sets as chunks.
