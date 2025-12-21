@@ -20,12 +20,12 @@
 class CBlockIndex;
 class CEvoDB;
 struct RPCResult;
-
-class UniValue;
-
 namespace llmq {
 class CQuorumBlockProcessor;
 class CQuorumManager;
+} // namespace llmq
+
+class UniValue;
 
 //TODO use enum class (probably)
 enum SnapshotSkipMode : int {
@@ -35,6 +35,7 @@ enum SnapshotSkipMode : int {
     MODE_ALL_SKIPPED = 3
 };
 
+namespace llmq {
 class CQuorumSnapshot
 {
 public:
