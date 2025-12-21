@@ -8,8 +8,9 @@
 #include <bls/bls.h>
 #include <evo/types.h>
 #include <llmq/params.h>
-
 #include <saltedhasher.h>
+
+#include <chainparams.h>
 #include <sync.h>
 #include <uint256.h>
 
@@ -28,10 +29,11 @@ class CDeterministicMNManager;
 class ChainstateManager;
 class CMasternodeMetaMan;
 class CSporkManager;
-
 namespace llmq {
 class CQuorumSnapshotManager;
+} // namespace llmq
 
+namespace llmq {
 namespace utils {
 // includes members which failed DKG
 std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(Consensus::LLMQType llmqType, CDeterministicMNManager& dmnman,
@@ -95,7 +97,13 @@ struct BlsCheck {
 };
 
 template <typename CacheType>
-void InitQuorumsCache(CacheType& cache, bool limit_by_connections = true);
+inline void InitQuorumsCache(CacheType& cache, bool limit_by_connections = true)
+{
+    for (const auto& llmq : Params().GetConsensus().llmqs) {
+        cache.emplace(std::piecewise_construct, std::forward_as_tuple(llmq.type),
+                      std::forward_as_tuple(limit_by_connections ? llmq.keepOldConnections : llmq.keepOldKeys));
+    }
+}
 } // namespace utils
 } // namespace llmq
 

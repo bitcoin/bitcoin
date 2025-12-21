@@ -926,30 +926,5 @@ bool BlsCheck::operator()()
     }
     return true;
 }
-
-template <typename CacheType>
-void InitQuorumsCache(CacheType& cache, bool limit_by_connections)
-{
-    for (const auto& llmq : Params().GetConsensus().llmqs) {
-        cache.emplace(std::piecewise_construct, std::forward_as_tuple(llmq.type),
-                      std::forward_as_tuple(limit_by_connections ? llmq.keepOldConnections : llmq.keepOldKeys));
-    }
-}
-template void InitQuorumsCache<std::map<Consensus::LLMQType, Uint256LruHashMap<bool>>>(
-    std::map<Consensus::LLMQType, Uint256LruHashMap<bool>>& cache, bool limit_by_connections);
-template void InitQuorumsCache<std::map<Consensus::LLMQType, Uint256LruHashMap<std::vector<CQuorumCPtr>>>>(
-    std::map<Consensus::LLMQType, Uint256LruHashMap<std::vector<CQuorumCPtr>>>& cache, bool limit_by_connections);
-template void InitQuorumsCache<
-    std::map<Consensus::LLMQType, Uint256LruHashMap<std::shared_ptr<llmq::CQuorum>>, std::less<Consensus::LLMQType>,
-             std::allocator<std::pair<Consensus::LLMQType const, Uint256LruHashMap<std::shared_ptr<llmq::CQuorum>>>>>>(
-    std::map<Consensus::LLMQType, Uint256LruHashMap<std::shared_ptr<llmq::CQuorum>>, std::less<Consensus::LLMQType>,
-             std::allocator<std::pair<Consensus::LLMQType const, Uint256LruHashMap<std::shared_ptr<llmq::CQuorum>>>>>& cache,
-    bool limit_by_connections);
-template void InitQuorumsCache<std::map<Consensus::LLMQType, Uint256LruHashMap<int>>>(
-    std::map<Consensus::LLMQType, Uint256LruHashMap<int>>& cache, bool limit_by_connections);
-template void InitQuorumsCache<std::map<Consensus::LLMQType, Uint256LruHashMap<uint256>>>(
-    std::map<Consensus::LLMQType, Uint256LruHashMap<uint256>>& cache, bool limit_by_connections);
-template void InitQuorumsCache<std::map<Consensus::LLMQType, Uint256LruHashMap<std::pair<uint256, int>>>>(
-    std::map<Consensus::LLMQType, Uint256LruHashMap<std::pair<uint256, int>>>& cache, bool limit_by_connections);
 } // namespace utils
 } // namespace llmq
