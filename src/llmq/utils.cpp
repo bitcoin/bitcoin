@@ -22,6 +22,7 @@
 #include <validation.h>
 
 #include <atomic>
+#include <map>
 #include <optional>
 
 /**
@@ -596,6 +597,46 @@ std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRota
 
 namespace llmq {
 namespace utils {
+BlsCheck::BlsCheck() = default;
+
+BlsCheck::BlsCheck(CBLSSignature sig, std::vector<CBLSPublicKey> pubkeys, uint256 msg_hash, std::string id_string) :
+    m_sig(sig),
+    m_pubkeys(pubkeys),
+    m_msg_hash(msg_hash),
+    m_id_string(id_string)
+{
+}
+
+BlsCheck::~BlsCheck() = default;
+
+bool BlsCheck::operator()()
+{
+    if (m_pubkeys.size() > 1) {
+        if (!m_sig.VerifySecureAggregated(m_pubkeys, m_msg_hash)) {
+            LogPrint(BCLog::LLMQ, "%s\n", m_id_string);
+            return false;
+        }
+    } else if (m_pubkeys.size() == 1) {
+        if (!m_sig.VerifyInsecure(m_pubkeys.back(), m_msg_hash)) {
+            LogPrint(BCLog::LLMQ, "%s\n", m_id_string);
+            return false;
+        }
+    } else {
+        // we should not get there ever
+        LogPrint(BCLog::LLMQ, "%s - no public keys are provided\n", m_id_string);
+        return false;
+    }
+    return true;
+}
+
+void BlsCheck::swap(BlsCheck& obj)
+{
+    std::swap(m_sig, obj.m_sig);
+    std::swap(m_pubkeys, obj.m_pubkeys);
+    std::swap(m_msg_hash, obj.m_msg_hash);
+    std::swap(m_id_string, obj.m_id_string);
+}
+
 std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(Consensus::LLMQType llmqType, CDeterministicMNManager& dmnman,
                                                       CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
                                                       gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
@@ -905,26 +946,6 @@ void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, CConnman
         }
         connman.AddPendingProbeConnections(probeConnections);
     }
-}
-
-bool BlsCheck::operator()()
-{
-    if (m_pubkeys.size() > 1) {
-        if (!m_sig.VerifySecureAggregated(m_pubkeys, m_msg_hash)) {
-            LogPrint(BCLog::LLMQ, "%s\n", m_id_string);
-            return false;
-        }
-    } else if (m_pubkeys.size() == 1) {
-        if (!m_sig.VerifyInsecure(m_pubkeys.back(), m_msg_hash)) {
-            LogPrint(BCLog::LLMQ, "%s\n", m_id_string);
-            return false;
-        }
-    } else {
-        // we should not get there ever
-        LogPrint(BCLog::LLMQ, "%s - no public keys are provided\n", m_id_string);
-        return false;
-    }
-    return true;
 }
 } // namespace utils
 } // namespace llmq

@@ -16,9 +16,7 @@
 
 #include <gsl/pointers.h>
 
-#include <map>
 #include <set>
-#include <unordered_set>
 #include <vector>
 
 class CBlockIndex;
@@ -35,6 +33,21 @@ class CQuorumSnapshotManager;
 
 namespace llmq {
 namespace utils {
+struct BlsCheck {
+    CBLSSignature m_sig;
+    std::vector<CBLSPublicKey> m_pubkeys;
+    uint256 m_msg_hash;
+    std::string m_id_string;
+
+public:
+    BlsCheck();
+    BlsCheck(CBLSSignature sig, std::vector<CBLSPublicKey> pubkeys, uint256 msg_hash, std::string id_string);
+    ~BlsCheck();
+
+    bool operator()();
+    void swap(BlsCheck& obj);
+};
+
 // includes members which failed DKG
 std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(Consensus::LLMQType llmqType, CDeterministicMNManager& dmnman,
                                                       CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
@@ -68,33 +81,6 @@ void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, CConnman
                                CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
                                const CSporkManager& sporkman, const CDeterministicMNList& tip_mn_list,
                                gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& myProTxHash);
-
-struct BlsCheck {
-    CBLSSignature m_sig;
-    std::vector<CBLSPublicKey> m_pubkeys;
-    uint256 m_msg_hash;
-    std::string m_id_string;
-
-    BlsCheck() = default;
-
-    BlsCheck(CBLSSignature sig, std::vector<CBLSPublicKey> pubkeys, uint256 msg_hash, std::string id_string) :
-        m_sig(sig),
-        m_pubkeys(pubkeys),
-        m_msg_hash(msg_hash),
-        m_id_string(id_string)
-    {
-    }
-
-    void swap(BlsCheck& obj)
-    {
-        std::swap(m_sig, obj.m_sig);
-        std::swap(m_pubkeys, obj.m_pubkeys);
-        std::swap(m_msg_hash, obj.m_msg_hash);
-        std::swap(m_id_string, obj.m_id_string);
-    }
-
-    bool operator()();
-};
 
 template <typename CacheType>
 inline void InitQuorumsCache(CacheType& cache, bool limit_by_connections = true)
