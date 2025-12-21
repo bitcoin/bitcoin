@@ -31,6 +31,11 @@
 std::optional<std::pair<CBLSSignature, uint32_t>> GetNonNullCoinbaseChainlock(const CBlockIndex* pindex);
 
 namespace {
+struct MasternodeScore {
+    arith_uint256 m_score;
+    CDeterministicMNCPtr m_node;
+};
+
 struct QuorumQuarter {
     llmq::CQuorumSnapshot m_snap;
     std::vector<std::vector<CDeterministicMNCPtr>> m_members;
@@ -103,10 +108,9 @@ uint256 GetHashModifier(const Consensus::LLMQParams& llmqParams, gsl::not_null<c
     return ::SerializeHash(std::make_pair(llmqParams.type, pCycleQuorumBaseBlockIndex->GetBlockHash()));
 }
 
-std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>>
-    CalculateScoresForQuorum(std::vector<CDeterministicMNCPtr>&& dmns, const uint256& modifier, const bool onlyEvoNodes)
+std::vector<MasternodeScore> CalculateScoresForQuorum(std::vector<CDeterministicMNCPtr>&& dmns, const uint256& modifier, const bool onlyEvoNodes)
 {
-    std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> scores;
+    std::vector<MasternodeScore> scores;
     scores.reserve(dmns.size());
 
     for (auto& dmn : dmns) {
@@ -124,10 +128,9 @@ std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>>
     return scores;
 }
 
-std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>>
-    CalculateScoresForQuorum(const CDeterministicMNList& mn_list, const uint256& modifier, const bool onlyEvoNodes)
+std::vector<MasternodeScore> CalculateScoresForQuorum(const CDeterministicMNList& mn_list, const uint256& modifier, const bool onlyEvoNodes)
 {
-    std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> scores;
+    std::vector<MasternodeScore> scores;
     scores.reserve(mn_list.GetAllMNsCount());
 
     mn_list.ForEachMNShared(/*onlyValid=*/true, [&](const auto& dmn) {
@@ -156,14 +159,13 @@ std::vector<CDeterministicMNCPtr> CalculateQuorum(List&& mn_list, const uint256&
 
     // sort is descending order
     std::sort(scores.rbegin(), scores.rend(),
-              [](const std::pair<arith_uint256, CDeterministicMNCPtr>& a,
-                 const std::pair<arith_uint256, CDeterministicMNCPtr>& b) {
-                  if (a.first == b.first) {
+              [](const MasternodeScore& a, const MasternodeScore& b) {
+                  if (a.m_score == b.m_score) {
                       // this should actually never happen, but we should stay compatible with how the non-deterministic MNs did the sorting
                       // TODO - add assert ?
-                      return a.second->collateralOutpoint < b.second->collateralOutpoint;
+                      return a.m_node->collateralOutpoint < b.m_node->collateralOutpoint;
                   }
-                  return a.first < b.first;
+                  return a.m_score < b.m_score;
               });
 
     // return top maxSize entries only (if specified)
@@ -173,8 +175,8 @@ std::vector<CDeterministicMNCPtr> CalculateQuorum(List&& mn_list, const uint256&
 
     std::vector<CDeterministicMNCPtr> result;
     result.reserve(scores.size());
-    for (auto& score : scores) {
-        result.emplace_back(std::move(score.second));
+    for (auto& [_, node] : scores) {
+        result.emplace_back(std::move(node));
     }
     return result;
 }
