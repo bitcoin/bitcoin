@@ -65,8 +65,20 @@ RUN set -ex; \
     make install -j "$(( $(nproc) - 1 ))"; \
     cd /opt && rm -rf /opt/iwyu;
 
+# Install ctcache for clang-tidy result caching
+# Pin to specific commit to ensure patch applies correctly
+ARG CTCACHE_COMMIT=e393144d5c49b060a1dbc7ae15b9c6973efb967d
+RUN set -ex; \
+    mkdir -p /usr/local/bin/src/ctcache; \
+    curl -fsSL "https://raw.githubusercontent.com/matus-chochlik/ctcache/${CTCACHE_COMMIT}/src/ctcache/clang_tidy_cache.py" \
+        -o /usr/local/bin/src/ctcache/clang_tidy_cache.py; \
+    curl -fsSL "https://raw.githubusercontent.com/matus-chochlik/ctcache/${CTCACHE_COMMIT}/clang-tidy" \
+        -o /usr/local/bin/clang-tidy-cache; \
+    chmod +x /usr/local/bin/clang-tidy-cache;
+
 RUN \
   mkdir -p /cache/ccache && \
+  mkdir /cache/ctcache && \
   mkdir /cache/depends && \
   mkdir /cache/sdk-sources && \
   chown ${USER_ID}:${GROUP_ID} /cache && \

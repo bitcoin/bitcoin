@@ -61,6 +61,9 @@ export CCACHE_COMPRESS=${CCACHE_COMPRESS:-1}
 # The cache dir.
 # This folder exists on the ci host and ci guest. Changes are propagated back and forth.
 export CCACHE_DIR=${CCACHE_DIR:-$CACHE_DIR/ccache}
+# ctcache (clang-tidy cache) configuration
+export CTCACHE_DIR=${CTCACHE_DIR:-$CACHE_DIR/ctcache}
+export CTCACHE_MAXSIZE_MB=${CTCACHE_MAXSIZE_MB:-50}
 # The depends dir.
 # This folder exists on the ci host and ci guest. Changes are propagated back and forth.
 export DEPENDS_DIR=${DEPENDS_DIR:-$BASE_ROOT_DIR/depends}
