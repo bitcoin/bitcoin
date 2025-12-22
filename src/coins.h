@@ -365,20 +365,21 @@ public:
 class CCoinsViewBacked : public CCoinsView
 {
 protected:
-    CCoinsView *base;
+    CCoinsView* base;
 
 public:
-    CCoinsViewBacked(CCoinsView *viewIn);
-    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
-    bool HaveCoin(const COutPoint &outpoint) const override;
-    uint256 GetBestBlock() const override;
-    std::vector<uint256> GetHeadBlocks() const override;
-    void SetBackend(CCoinsView &viewIn);
-    bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashBlock) override;
-    std::unique_ptr<CCoinsViewCursor> Cursor() const override;
-    size_t EstimateSize() const override;
-};
+    explicit CCoinsViewBacked(CCoinsView* viewIn) : base{viewIn} {}
 
+    void SetBackend(CCoinsView& viewIn) { base = &viewIn; }
+
+    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override { return base->GetCoin(outpoint); }
+    bool HaveCoin(const COutPoint& outpoint) const override { return base->HaveCoin(outpoint); }
+    uint256 GetBestBlock() const override { return base->GetBestBlock(); }
+    std::vector<uint256> GetHeadBlocks() const override { return base->GetHeadBlocks(); }
+    bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) override { return base->BatchWrite(cursor, hashBlock); }
+    std::unique_ptr<CCoinsViewCursor> Cursor() const override { return base->Cursor(); }
+    size_t EstimateSize() const override { return base->EstimateSize(); }
+};
 
 /** CCoinsView that adds a memory cache for transactions to another CCoinsView */
 class CCoinsViewCache : public CCoinsViewBacked
