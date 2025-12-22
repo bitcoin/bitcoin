@@ -43,6 +43,9 @@ private:
 
 class FontRegistry {
 public:
+    static constexpr int DEFAULT_FONT_SCALE{0};
+    static constexpr int DEFAULT_FONT_SIZE{12};
+    static constexpr FontFamily DEFAULT_FONT{FontFamily::SystemDefault};
     static constexpr QFont::Weight TARGET_WEIGHT_BOLD{QFont::Medium};
     static constexpr QFont::Weight TARGET_WEIGHT_NORMAL{
 #ifdef Q_OS_MACOS
@@ -54,6 +57,10 @@ public:
 
 public:
     void RegisterFont(const FontFamily& font);
+
+    bool IsValidWeight(const QFont::Weight& weight) const { return WeightToIdx(weight) != -1; }
+    int WeightToIdx(const QFont::Weight& weight) const;
+    QFont::Weight IdxToWeight(int index) const;
 
     void SetFont(const FontFamily& font);
     void SetFontScale(int font_scale) { m_font_scale = font_scale; }
@@ -73,9 +80,9 @@ public:
 
 private:
     double m_scale_steps{0.01};
-    FontFamily m_font{FontFamily::SystemDefault};
-    int m_font_scale{0};
-    int m_font_size{12};
+    FontFamily m_font{DEFAULT_FONT};
+    int m_font_scale{DEFAULT_FONT_SCALE};
+    int m_font_size{DEFAULT_FONT_SIZE};
     std::map<FontFamily, FontInfo> m_weights;
 };
 
@@ -84,16 +91,10 @@ extern FontRegistry g_font_registry;
 FontFamily fontFamilyFromString(const QString& strFamily);
 QString fontFamilyToString(FontFamily family);
 
-/** set/get font family: GUIUtil::fontFamily */
-FontFamily getFontFamilyDefault();
-
 /** Convert weight value from args (0-8) to QFont::Weight */
 bool weightFromArg(int nArg, QFont::Weight& weight);
 /** Convert QFont::Weight to an arg value (0-8) */
 int weightToArg(const QFont::Weight weight);
-
-/** set/get font scale: GUIUtil::fontScale */
-int getFontScaleDefault();
 
 /** Load dash specific application fonts */
 bool loadFonts();
@@ -122,13 +123,6 @@ QFont getFontNormal();
 
 /** Get the default bold QFont */
 QFont getFontBold();
-
-/** Convert an index to a weight in the supported weights vector */
-QFont::Weight supportedWeightFromIndex(int nIndex);
-/** Convert a weight to an index in the supported weights vector */
-int supportedWeightToIndex(QFont::Weight weight);
-/** Check if a weight is supported by the current font family */
-bool isSupportedWeight(QFont::Weight weight);
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_FONT_H

@@ -98,7 +98,7 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("theme", GUIUtil::getDefaultTheme());
 
     if (!settings.contains("fontFamily"))
-        settings.setValue("fontFamily", GUIUtil::fontFamilyToString(GUIUtil::getFontFamilyDefault()));
+        settings.setValue("fontFamily", GUIUtil::fontFamilyToString(GUIUtil::FontRegistry::DEFAULT_FONT));
     if (gArgs.SoftSetArg("-font-family", settings.value("fontFamily").toString().toStdString())) {
         if (GUIUtil::fontsLoaded()) {
             GUIUtil::g_font_registry.SetFont(GUIUtil::fontFamilyFromString(settings.value("fontFamily").toString()));
@@ -110,7 +110,7 @@ void OptionsModel::Init(bool resetSettings)
     }
 
     if (!settings.contains("fontScale"))
-        settings.setValue("fontScale", GUIUtil::getFontScaleDefault());
+        settings.setValue("fontScale", GUIUtil::FontRegistry::DEFAULT_FONT_SCALE);
     if (gArgs.SoftSetArg("-font-scale", settings.value("fontScale").toString().toStdString())) {
         if (GUIUtil::fontsLoaded()) {
             GUIUtil::g_font_registry.SetFontScale(settings.value("fontScale").toInt());
@@ -126,7 +126,7 @@ void OptionsModel::Init(bool resetSettings)
         if (GUIUtil::fontsLoaded()) {
             QFont::Weight weight;
             GUIUtil::weightFromArg(settings.value("fontWeightNormal").toInt(), weight);
-            if (!GUIUtil::isSupportedWeight(weight)) {
+            if (!GUIUtil::g_font_registry.IsValidWeight(weight)) {
                 // If the currently selected weight is not supported fallback to the lightest weight for normal font.
                 weight = GUIUtil::g_font_registry.GetSupportedWeights().front();
                 settings.setValue("fontWeightNormal", GUIUtil::weightToArg(weight));
@@ -144,7 +144,7 @@ void OptionsModel::Init(bool resetSettings)
         if (GUIUtil::fontsLoaded()) {
             QFont::Weight weight;
             GUIUtil::weightFromArg(settings.value("fontWeightBold").toInt(), weight);
-            if (!GUIUtil::isSupportedWeight(weight)) {
+            if (!GUIUtil::g_font_registry.IsValidWeight(weight)) {
                 // If the currently selected weight is not supported fallback to the second lightest weight for bold font
                 // or the lightest if there is only one.
                 auto vecSupported = GUIUtil::g_font_registry.GetSupportedWeights();
@@ -555,14 +555,14 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         case FontWeightNormal: {
             QFont::Weight weight{GUIUtil::g_font_registry.GetWeightNormalDefault()};
             GUIUtil::weightFromArg(settings.value("fontWeightNormal").toInt(), weight);
-            int nIndex = GUIUtil::supportedWeightToIndex(weight);
+            int nIndex = GUIUtil::g_font_registry.WeightToIdx(weight);
             assert(nIndex != -1);
             return nIndex;
         }
         case FontWeightBold: {
             QFont::Weight weight{GUIUtil::g_font_registry.GetWeightBoldDefault()};
             GUIUtil::weightFromArg(settings.value("fontWeightBold").toInt(), weight);
-            int nIndex = GUIUtil::supportedWeightToIndex(weight);
+            int nIndex = GUIUtil::g_font_registry.WeightToIdx(weight);
             assert(nIndex != -1);
             return nIndex;
         }
@@ -803,14 +803,14 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             }
             break;
         case FontWeightNormal: {
-            int nWeight = GUIUtil::weightToArg(GUIUtil::supportedWeightFromIndex(value.toInt()));
+            int nWeight = GUIUtil::weightToArg(GUIUtil::g_font_registry.IdxToWeight(value.toInt()));
             if (settings.value("fontWeightNormal") != nWeight) {
                 settings.setValue("fontWeightNormal", nWeight);
             }
             break;
         }
         case FontWeightBold: {
-            int nWeight = GUIUtil::weightToArg(GUIUtil::supportedWeightFromIndex(value.toInt()));
+            int nWeight = GUIUtil::weightToArg(GUIUtil::g_font_registry.IdxToWeight(value.toInt()));
             if (settings.value("fontWeightBold") != nWeight) {
                 settings.setValue("fontWeightBold", nWeight);
             }

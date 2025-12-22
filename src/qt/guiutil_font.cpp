@@ -81,9 +81,6 @@ static std::map<QPointer<QWidget>, std::tuple<FontWeight, bool, int>> mapFontUpd
 
 FontRegistry g_font_registry;
 
-// TODO: Fragile and crash-prone if calling the wrong function, get rid of it!
-const FontRegistry g_font_registry_default;
-
 FontInfo::FontInfo(const QString& font_name)
 {
     CalcSupportedWeights(font_name);
@@ -130,11 +127,6 @@ QString fontFamilyToString(FontFamily family)
     }
 }
 
-FontFamily getFontFamilyDefault()
-{
-    return g_font_registry_default.GetFont();
-}
-
 bool weightFromArg(int nArg, QFont::Weight& weight)
 {
     auto it = mapWeightArgs.first.find(nArg);
@@ -151,15 +143,10 @@ int weightToArg(const QFont::Weight weight)
     return mapWeightArgs.second.find(weight)->second;
 }
 
-int getFontScaleDefault()
-{
-    return g_font_registry_default.GetFontScale();
-}
-
 void FontInfo::CalcSupportedWeights(const QString& font_name)
 {
     auto getTestWidth = [](const QString& font_name, QFont::Weight weight) -> int {
-        QFont font = getFont(font_name, weight, false, g_font_registry_default.GetFontSize());
+        QFont font = getFont(font_name, weight, false, FontRegistry::DEFAULT_FONT_SIZE);
         return TextWidth(QFontMetrics(font), ("Check the width of this text to see if the weight change has an impact!"));
     };
     QFont::Weight prevWeight = vecWeightConsider.front();
@@ -511,26 +498,21 @@ QFont getFontBold()
     return getFont(FontWeight::Bold);
 }
 
-QFont::Weight supportedWeightFromIndex(int nIndex)
+QFont::Weight FontRegistry::IdxToWeight(int index) const
 {
-    auto vecWeights = g_font_registry.GetSupportedWeights();
-    assert(vecWeights.size() > uint64_t(nIndex));
-    return vecWeights[nIndex];
+    const auto vecWeights = GetSupportedWeights();
+    assert(vecWeights.size() > uint64_t(index));
+    return vecWeights.at(index);
 }
 
-int supportedWeightToIndex(QFont::Weight weight)
+int FontRegistry::WeightToIdx(const QFont::Weight& weight) const
 {
-    auto vecWeights = g_font_registry.GetSupportedWeights();
+    const auto vecWeights = GetSupportedWeights();
     for (uint64_t index = 0; index < vecWeights.size(); ++index) {
-        if (weight == vecWeights[index]) {
+        if (weight == vecWeights.at(index)) {
             return index;
         }
     }
     return -1;
-}
-
-bool isSupportedWeight(const QFont::Weight weight)
-{
-    return supportedWeightToIndex(weight) != -1;
 }
 } // namespace GUIUtil

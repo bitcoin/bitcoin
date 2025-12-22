@@ -141,7 +141,7 @@ void AppearanceWidget::updateFontWeightNormal(int nValue, bool fForce)
     }
     const QSignalBlocker blocker(ui->fontWeightNormalSlider);
     ui->fontWeightNormalSlider->setValue(nSliderValue);
-    GUIUtil::g_font_registry.SetWeightNormal(GUIUtil::supportedWeightFromIndex(ui->fontWeightNormalSlider->value()));
+    GUIUtil::g_font_registry.SetWeightNormal(GUIUtil::g_font_registry.IdxToWeight(ui->fontWeightNormalSlider->value()));
     GUIUtil::updateFonts();
 }
 
@@ -153,7 +153,7 @@ void AppearanceWidget::updateFontWeightBold(int nValue, bool fForce)
     }
     const QSignalBlocker blocker(ui->fontWeightBoldSlider);
     ui->fontWeightBoldSlider->setValue(nSliderValue);
-    GUIUtil::g_font_registry.SetWeightBold(GUIUtil::supportedWeightFromIndex(ui->fontWeightBoldSlider->value()));
+    GUIUtil::g_font_registry.SetWeightBold(GUIUtil::g_font_registry.IdxToWeight(ui->fontWeightBoldSlider->value()));
     GUIUtil::updateFonts();
 }
 
@@ -167,9 +167,9 @@ void AppearanceWidget::updateWeightSlider(const bool fForce)
     ui->fontWeightBoldSlider->setMinimum(0);
     ui->fontWeightBoldSlider->setMaximum(nMaximum);
 
-    if (fForce || !GUIUtil::isSupportedWeight(prevWeightNormal) || !GUIUtil::isSupportedWeight(prevWeightBold)) {
-        int nIndexNormal = GUIUtil::supportedWeightToIndex(GUIUtil::g_font_registry.GetWeightNormalDefault());
-        int nIndexBold = GUIUtil::supportedWeightToIndex(GUIUtil::g_font_registry.GetWeightBoldDefault());
+    if (fForce || !GUIUtil::g_font_registry.IsValidWeight(prevWeightNormal) || !GUIUtil::g_font_registry.IsValidWeight(prevWeightBold)) {
+        int nIndexNormal = GUIUtil::g_font_registry.WeightToIdx(GUIUtil::g_font_registry.GetWeightNormalDefault());
+        int nIndexBold = GUIUtil::g_font_registry.WeightToIdx(GUIUtil::g_font_registry.GetWeightBoldDefault());
         assert(nIndexNormal != -1 && nIndexBold != -1);
         updateFontWeightNormal(nIndexNormal, true);
         updateFontWeightBold(nIndexBold, true);
