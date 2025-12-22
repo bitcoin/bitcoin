@@ -8,7 +8,6 @@
 #include <streams.h>
 #include <sync.h>
 #include <tinyformat.h>
-#include <txdb.h>
 #include <uint256.h>
 #include <util/fs.h>
 #include <validation.h>
@@ -16,6 +15,7 @@
 #include <cassert>
 #include <cstdio>
 #include <optional>
+#include <span>
 #include <string>
 
 namespace node {

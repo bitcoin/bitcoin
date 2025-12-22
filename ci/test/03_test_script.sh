@@ -209,7 +209,7 @@ if [ "${RUN_TIDY}" = "true" ]; then
   fi
 
   # TODO: Consider enforcing IWYU across the entire codebase.
-  FILES_WITH_ENFORCED_IWYU="/src/(crypto|index)/.*\\.cpp"
+  FILES_WITH_ENFORCED_IWYU="/src/((crypto|index)/.*\\.cpp|node/blockstorage.cpp|node/utxo_snapshot.cpp|core_read.cpp|signet.cpp|kernel/chain.cpp)"
   jq --arg patterns "$FILES_WITH_ENFORCED_IWYU" 'map(select(.file | test($patterns)))' "${BASE_BUILD_DIR}/compile_commands.json" > "${BASE_BUILD_DIR}/compile_commands_iwyu_errors.json"
   jq --arg patterns "$FILES_WITH_ENFORCED_IWYU" 'map(select(.file | test($patterns) | not))' "${BASE_BUILD_DIR}/compile_commands.json" > "${BASE_BUILD_DIR}/compile_commands_iwyu_warnings.json"
 
