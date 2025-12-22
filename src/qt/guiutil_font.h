@@ -74,7 +74,7 @@ void setFont(const std::vector<QWidget*>& vecWidgets, FontWeight weight, int nPo
 void updateFonts();
 
 /** Get a properly weighted QFont object with the selected font. */
-QFont getFont(FontFamily family, QFont::Weight qWeight, bool fItalic = false, int nPointSize = -1);
+QFont getFont(const QString& font_name, QFont::Weight weight, bool italic = false, int point_sz = -1);
 QFont getFont(QFont::Weight qWeight, bool fItalic = false, int nPointSize = -1);
 QFont getFont(FontWeight weight, bool fItalic = false, int nPointSize = -1);
 
