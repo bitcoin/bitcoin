@@ -34,6 +34,26 @@ const std::map<QFont::Weight, std::pair<std::string, /*can_italic=*/bool>> mapMo
     {QFont::Normal, {"Regular", false}},
     {QFont::Thin, {"Thin", true}},
 }};
+
+//! Map between font weights and settings representation
+const auto mapWeightArgs = []() {
+    std::map<int, QFont::Weight> kv{
+        {0, QFont::Thin},
+        {1, QFont::ExtraLight},
+        {2, QFont::Light},
+        {3, QFont::Normal},
+        {4, QFont::Medium},
+        {5, QFont::DemiBold},
+        {6, QFont::Bold},
+        {7, QFont::ExtraBold},
+        {8, QFont::Black}
+    };
+    std::map<QFont::Weight, int> vk;
+    for (const auto& [key, val] : kv) {
+        vk[val] = key;
+    }
+    return std::pair{std::move(kv), std::move(vk)};
+}();
 } // anonymous namespace
 
 namespace GUIUtil {
@@ -108,19 +128,8 @@ void setFontFamily(FontFamily family)
 
 bool weightFromArg(int nArg, QFont::Weight& weight)
 {
-    const std::map<int, QFont::Weight> mapWeight{
-        {0, QFont::Thin},
-        {1, QFont::ExtraLight},
-        {2, QFont::Light},
-        {3, QFont::Normal},
-        {4, QFont::Medium},
-        {5, QFont::DemiBold},
-        {6, QFont::Bold},
-        {7, QFont::ExtraBold},
-        {8, QFont::Black}
-    };
-    auto it = mapWeight.find(nArg);
-    if (it == mapWeight.end()) {
+    auto it = mapWeightArgs.first.find(nArg);
+    if (it == mapWeightArgs.first.end()) {
         return false;
     }
     weight = it->second;
@@ -129,19 +138,8 @@ bool weightFromArg(int nArg, QFont::Weight& weight)
 
 int weightToArg(const QFont::Weight weight)
 {
-    const std::map<QFont::Weight, int> mapWeight{
-        {QFont::Thin, 0},
-        {QFont::ExtraLight, 1},
-        {QFont::Light, 2},
-        {QFont::Normal, 3},
-        {QFont::Medium, 4},
-        {QFont::DemiBold, 5},
-        {QFont::Bold, 6},
-        {QFont::ExtraBold, 7},
-        {QFont::Black, 8}
-    };
-    assert(mapWeight.count(weight));
-    return mapWeight.find(weight)->second;
+    assert(mapWeightArgs.second.count(weight));
+    return mapWeightArgs.second.find(weight)->second;
 }
 
 QFont::Weight toQFontWeight(FontWeight weight)
