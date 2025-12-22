@@ -2198,11 +2198,11 @@ struct KeyParser {
         assert(false);
     }
 
-    template<typename I> std::optional<Key> FromString(I begin, I end) const
+    std::optional<Key> FromString(std::span<const char>& in) const
     {
         assert(m_out);
         Key key = m_keys.size();
-        auto pk = ParsePubkey(m_expr_index, {&*begin, &*end}, ParseContext(), *m_out, m_key_parsing_error);
+        auto pk = ParsePubkey(m_expr_index, in, ParseContext(), *m_out, m_key_parsing_error);
         if (pk.empty()) return {};
         m_keys.emplace_back(std::move(pk));
         return key;

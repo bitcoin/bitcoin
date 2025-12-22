@@ -1806,29 +1806,27 @@ enum class ParseContext {
 
 int FindNextChar(std::span<const char> in, char m);
 
-/** Parse a key string ending at the end of the fragment's text representation. */
+/** Parse a key expression fully contained within a fragment with the name given by 'func' */
 template<typename Key, typename Ctx>
-std::optional<std::pair<Key, int>> ParseKeyEnd(std::span<const char> in, const Ctx& ctx)
+std::optional<Key> ParseKey(const std::string& func, std::span<const char>& in, const Ctx& ctx)
 {
-    int key_size = FindNextChar(in, ')');
-    if (key_size < 1) return {};
-    auto key = ctx.FromString(in.begin(), in.begin() + key_size);
-    if (!key) return {};
-    return {{std::move(*key), key_size}};
+    std::span<const char> expr = script::Expr(in);
+    if (!script::Func(func, expr)) return {};
+    return ctx.FromString(expr);
 }
 
-/** Parse a hex string ending at the end of the fragment's text representation. */
+/** Parse a hex string fully contained within a fragment with the name given by 'func' */
 template<typename Ctx>
-std::optional<std::pair<std::vector<unsigned char>, int>> ParseHexStrEnd(std::span<const char> in, const size_t expected_size,
+std::optional<std::vector<unsigned char>> ParseHexStr(const std::string& func, std::span<const char>& in, const size_t expected_size,
                                                                          const Ctx& ctx)
 {
-    int hash_size = FindNextChar(in, ')');
-    if (hash_size < 1) return {};
-    std::string val = std::string(in.begin(), in.begin() + hash_size);
+    std::span<const char> expr = script::Expr(in);
+    if (!script::Func(func, expr)) return {};
+    std::string val = std::string(expr.begin(), expr.end());
     if (!IsHex(val)) return {};
     auto hash = ParseHex(val);
     if (hash.size() != expected_size) return {};
-    return {{std::move(hash), hash_size}};
+    return hash;
 }
 
 /** BuildBack pops the last two elements off `constructed` and wraps them in the specified Fragment */
@@ -1891,7 +1889,8 @@ inline std::optional<Node<Key>> Parse(std::span<const char> in, const Ctx& ctx)
             next_comma = FindNextChar(in, ',');
             int key_length = (next_comma == -1) ? FindNextChar(in, ')') : next_comma;
             if (key_length < 1) return false;
-            auto key = ctx.FromString(in.begin(), in.begin() + key_length);
+            std::span<const char> sp{in.begin(), in.begin() + key_length};
+            auto key = ctx.FromString(sp);
             if (!key) return false;
             keys.push_back(std::move(*key));
             in = in.subspan(key_length + 1);
@@ -1978,77 +1977,59 @@ inline std::optional<Node<Key>> Parse(std::span<const char> in, const Ctx& ctx)
                 constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::JUST_0);
             } else if (Const("1", in)) {
                 constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::JUST_1);
-            } else if (Const("pk(", in)) {
-                auto res = ParseKeyEnd<Key, Ctx>(in, ctx);
-                if (!res) return {};
-                auto& [key, key_size] = *res;
-                constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::WRAP_C, Vector(Node<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::PK_K, Vector(std::move(key)))));
-                in = in.subspan(key_size + 1);
+            } else if (Const("pk(", in, /*skip=*/false)) {
+                std::optional<Key> key = ParseKey<Key, Ctx>("pk", in, ctx);
+                if (!key) return {};
+                constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::WRAP_C, Vector(Node<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::PK_K, Vector(std::move(*key)))));
                 script_size += IsTapscript(ctx.MsContext()) ? 33 : 34;
-            } else if (Const("pkh(", in)) {
-                auto res = ParseKeyEnd<Key>(in, ctx);
-                if (!res) return {};
-                auto& [key, key_size] = *res;
-                constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::WRAP_C, Vector(Node<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::PK_H, Vector(std::move(key)))));
-                in = in.subspan(key_size + 1);
+            } else if (Const("pkh(", in, /*skip=*/false)) {
+                std::optional<Key> key = ParseKey<Key, Ctx>("pkh", in, ctx);
+                if (!key) return {};
+                constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::WRAP_C, Vector(Node<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::PK_H, Vector(std::move(*key)))));
                 script_size += 24;
-            } else if (Const("pk_k(", in)) {
-                auto res = ParseKeyEnd<Key>(in, ctx);
-                if (!res) return {};
-                auto& [key, key_size] = *res;
-                constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::PK_K, Vector(std::move(key)));
-                in = in.subspan(key_size + 1);
+            } else if (Const("pk_k(", in, /*skip=*/false)) {
+                std::optional<Key> key = ParseKey<Key, Ctx>("pk_k", in, ctx);
+                if (!key) return {};
+                constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::PK_K, Vector(std::move(*key)));
                 script_size += IsTapscript(ctx.MsContext()) ? 32 : 33;
-            } else if (Const("pk_h(", in)) {
-                auto res = ParseKeyEnd<Key>(in, ctx);
-                if (!res) return {};
-                auto& [key, key_size] = *res;
-                constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::PK_H, Vector(std::move(key)));
-                in = in.subspan(key_size + 1);
+            } else if (Const("pk_h(", in, /*skip=*/false)) {
+                std::optional<Key> key = ParseKey<Key, Ctx>("pk_h", in, ctx);
+                if (!key) return {};
+                constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::PK_H, Vector(std::move(*key)));
                 script_size += 23;
-            } else if (Const("sha256(", in)) {
-                auto res = ParseHexStrEnd(in, 32, ctx);
-                if (!res) return {};
-                auto& [hash, hash_size] = *res;
-                constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::SHA256, std::move(hash));
-                in = in.subspan(hash_size + 1);
+            } else if (Const("sha256(", in, /*skip=*/false)) {
+                std::optional<std::vector<unsigned char>> hash = ParseHexStr("sha256", in, 32, ctx);
+                if (!hash) return {};
+                constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::SHA256, std::move(*hash));
                 script_size += 38;
-            } else if (Const("ripemd160(", in)) {
-                auto res = ParseHexStrEnd(in, 20, ctx);
-                if (!res) return {};
-                auto& [hash, hash_size] = *res;
-                constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::RIPEMD160, std::move(hash));
-                in = in.subspan(hash_size + 1);
+            } else if (Const("ripemd160(", in, /*skip=*/false)) {
+                std::optional<std::vector<unsigned char>> hash = ParseHexStr("ripemd160", in, 20, ctx);
+                if (!hash) return {};
+                constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::RIPEMD160, std::move(*hash));
                 script_size += 26;
-            } else if (Const("hash256(", in)) {
-                auto res = ParseHexStrEnd(in, 32, ctx);
-                if (!res) return {};
-                auto& [hash, hash_size] = *res;
-                constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::HASH256, std::move(hash));
-                in = in.subspan(hash_size + 1);
+            } else if (Const("hash256(", in, /*skip=*/false)) {
+                std::optional<std::vector<unsigned char>> hash = ParseHexStr("hash256", in, 32, ctx);
+                if (!hash) return {};
+                constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::HASH256, std::move(*hash));
                 script_size += 38;
-            } else if (Const("hash160(", in)) {
-                auto res = ParseHexStrEnd(in, 20, ctx);
-                if (!res) return {};
-                auto& [hash, hash_size] = *res;
-                constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::HASH160, std::move(hash));
-                in = in.subspan(hash_size + 1);
+            } else if (Const("hash160(", in, /*skip=*/false)) {
+                std::optional<std::vector<unsigned char>> hash = ParseHexStr("hash160", in, 20, ctx);
+                if (!hash) return {};
+                constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::HASH160, std::move(*hash));
                 script_size += 26;
-            } else if (Const("after(", in)) {
-                int arg_size = FindNextChar(in, ')');
-                if (arg_size < 1) return {};
-                const auto num{ToIntegral<int64_t>(std::string_view(in.data(), arg_size))};
+            } else if (Const("after(", in, /*skip=*/false)) {
+                auto expr = Expr(in);
+                if (!Func("after", expr)) return {};
+                const auto num{ToIntegral<int64_t>(std::string_view(expr.begin(), expr.end()))};
                 if (!num.has_value() || *num < 1 || *num >= 0x80000000L) return {};
                 constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::AFTER, *num);
-                in = in.subspan(arg_size + 1);
                 script_size += 1 + (*num > 16) + (*num > 0x7f) + (*num > 0x7fff) + (*num > 0x7fffff);
-            } else if (Const("older(", in)) {
-                int arg_size = FindNextChar(in, ')');
-                if (arg_size < 1) return {};
-                const auto num{ToIntegral<int64_t>(std::string_view(in.data(), arg_size))};
+            } else if (Const("older(", in, /*skip=*/false)) {
+                auto expr = Expr(in);
+                if (!Func("older", expr)) return {};
+                const auto num{ToIntegral<int64_t>(std::string_view(expr.begin(), expr.end()))};
                 if (!num.has_value() || *num < 1 || *num >= 0x80000000L) return {};
                 constructed.emplace_back(internal::NoDupCheck{}, ctx.MsContext(), Fragment::OLDER, *num);
-                in = in.subspan(arg_size + 1);
                 script_size += 1 + (*num > 16) + (*num > 0x7f) + (*num > 0x7fff) + (*num > 0x7fffff);
             } else if (Const("multi(", in)) {
                 if (!parse_multi_exp(in, /* is_multi_a = */false)) return {};
