@@ -418,7 +418,11 @@ RPCHelpMan listtransactions()
     return RPCHelpMan{
         "listtransactions",
         "If a label name is provided, this will return only incoming transactions paying to addresses with the specified label.\n"
-                "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions.\n",
+                "Returns up to 'count' most recent transactions ordered from oldest to newest while skipping the first number of \n"
+                "transactions specified in the 'skip' argument. A transaction can have multiple entries in this RPC response. \n"
+                "For instance, a wallet transaction that pays three addresses — one wallet-owned and two external — will produce \n"
+                "four entries. The payment to the wallet-owned address appears both as a send entry and as a receive entry. \n"
+                "As a result, the RPC response will contain one entry in the receive category and three entries in the send category.\n",
                 {
                     {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "If set, should be a valid label name to return only incoming transactions\n"
                           "with the specified label, or \"*\" to disable filtering and return all transactions."},
