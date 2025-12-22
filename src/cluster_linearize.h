@@ -1265,32 +1265,30 @@ public:
         /** A heap with all chunks (by representative) that can currently be included, sorted by
          *  chunk feerate and a random tie-breaker. */
         std::vector<std::pair<TxIdx, uint64_t>> ready_chunks;
-        /** Information about chunks:
-         *  - The first value is only used for chunk representatives, and counts the number of
-         *    unmet dependencies this chunk has on other chunks (not including dependencies within
-         *    the chunk itself).
-         *  - The second value is the number of unmet dependencies overall.
-         */
-        std::vector<std::pair<TxIdx, TxIdx>> chunk_deps(m_tx_data.size(), {0, 0});
+        /** For every chunk, indexed by representative, the number of unmet dependencies the chunk has on
+         *  other chunks (not including dependencies within the chunk itself). */
+        std::vector<TxIdx> chunk_deps(m_tx_data.size(), 0);
+        /** For every transaction, indexed by TxIdx, the number of unmet dependencies the
+         *  transaction has. */
+        std::vector<TxIdx> tx_deps(m_tx_data.size(), 0);
         /** The set of all chunk representatives. */
         SetType chunk_reps;
         /** A list with all transactions within the current chunk that can be included. */
         std::vector<TxIdx> ready_tx;
-        // Populate chunk_deps[c] with the number of {out-of-chunk dependencies, dependencies} the
-        // child has.
+        // Populate chunk_deps and tx_deps.
         for (TxIdx chl_idx : m_transaction_idxs) {
             const auto& chl_data = m_tx_data[chl_idx];
-            chunk_deps[chl_idx].second = chl_data.parents.Count();
+            tx_deps[chl_idx] = chl_data.parents.Count();
             auto chl_chunk_rep = chl_data.chunk_rep;
             chunk_reps.Set(chl_chunk_rep);
             for (auto par_idx : chl_data.parents) {
                 auto par_chunk_rep = m_tx_data[par_idx].chunk_rep;
-                chunk_deps[chl_chunk_rep].first += (par_chunk_rep != chl_chunk_rep);
+                chunk_deps[chl_chunk_rep] += (par_chunk_rep != chl_chunk_rep);
             }
         }
         // Construct a heap with all chunks that have no out-of-chunk dependencies.
         /** Comparison function for the heap. */
-        auto chunk_cmp_fn = [&](const std::pair<TxIdx, uint64_t>& a, const std::pair<TxIdx, uint64_t>& b) noexcept {
+        auto chunk_cmp_fn = [&](const auto& a, const auto& b) noexcept {
             auto& chunk_a = m_tx_data[a.first];
             auto& chunk_b = m_tx_data[b.first];
             Assume(chunk_a.chunk_rep == a.first);
@@ -1305,7 +1303,7 @@ public:
             return a.first < b.first;
         };
         for (TxIdx chunk_rep : chunk_reps) {
-            if (chunk_deps[chunk_rep].first == 0) ready_chunks.emplace_back(chunk_rep, m_rng.rand64());
+            if (chunk_deps[chunk_rep] == 0) ready_chunks.emplace_back(chunk_rep, m_rng.rand64());
         }
         std::make_heap(ready_chunks.begin(), ready_chunks.end(), chunk_cmp_fn);
         // Pop chunks off the heap, highest-feerate ones first.
@@ -1314,11 +1312,11 @@ public:
             std::pop_heap(ready_chunks.begin(), ready_chunks.end(), chunk_cmp_fn);
             ready_chunks.pop_back();
             Assume(m_tx_data[chunk_rep].chunk_rep == chunk_rep);
-            Assume(chunk_deps[chunk_rep].first == 0);
+            Assume(chunk_deps[chunk_rep] == 0);
             const auto& chunk_txn = m_tx_data[chunk_rep].chunk_setinfo.transactions;
             // Build heap of all includable transactions in chunk.
             for (TxIdx tx_idx : chunk_txn) {
-                if (chunk_deps[tx_idx].second == 0) {
+                if (tx_deps[tx_idx] == 0) {
                     ready_tx.push_back(tx_idx);
                 }
             }
@@ -1340,15 +1338,15 @@ public:
                 for (TxIdx chl_idx : tx_data.children) {
                     auto& chl_data = m_tx_data[chl_idx];
                     // Decrement tx dependency count.
-                    Assume(chunk_deps[chl_idx].second > 0);
-                    if (--chunk_deps[chl_idx].second == 0 && chunk_txn[chl_idx]) {
+                    Assume(tx_deps[chl_idx] > 0);
+                    if (--tx_deps[chl_idx] == 0 && chunk_txn[chl_idx]) {
                         // Child tx has no dependencies left, and is in this chunk. Add it to the tx queue.
                         ready_tx.push_back(chl_idx);
                     }
                     // Decrement chunk dependency count if this is out-of-chunk dependency.
                     if (chl_data.chunk_rep != chunk_rep) {
-                        Assume(chunk_deps[chl_data.chunk_rep].first > 0);
-                        if (--chunk_deps[chl_data.chunk_rep].first == 0) {
+                        Assume(chunk_deps[chl_data.chunk_rep] > 0);
+                        if (--chunk_deps[chl_data.chunk_rep] == 0) {
                             // Child chunk has no dependencies left. Add it to the chunk heap.
                             ready_chunks.emplace_back(chl_data.chunk_rep, m_rng.rand64());
                             std::push_heap(ready_chunks.begin(), ready_chunks.end(), chunk_cmp_fn);
