@@ -10,7 +10,6 @@ import platform
 import shutil
 import signal
 import subprocess
-import time
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import (
@@ -272,7 +271,8 @@ class InitTest(BitcoinTestFramework):
             # returns early it will return the current block height.
             self.log.debug(f"Calling waitforblockheight with {self.rpc_timeout} sec RPC timeout")
             fut = ex.submit(node.waitforblockheight, height=current_height+1, timeout=self.rpc_timeout*1000*2)
-            time.sleep(1)
+
+            self.wait_until(lambda: any(c["method"] == "waitforblockheight" for c in node.cli.getrpcinfo()["active_commands"]))
 
             self.log.debug(f"Sending break signal to pid {node.process.pid}")
             if platform.system() == 'Windows':
