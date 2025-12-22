@@ -90,6 +90,7 @@ SHORTID = {
     165: b"headers2",
     166: b"getqrinfo",
     167: b"qrinfo",
+    168: b"platformban",
 }
 
 # Dictionary which contains short message type ID for the P2P message

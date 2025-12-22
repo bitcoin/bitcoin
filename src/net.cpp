@@ -931,7 +931,7 @@ const std::array<std::string, 33> V2_BITCOIN_IDS = {
  * by a protocol upgrade, the old message is no longer supported by the client
  * and a new slot wasn't already allotted for the message.
  */
-const std::array<std::string, 40> V2_DASH_IDS = {
+const std::array<std::string, 41> V2_DASH_IDS = {
     NetMsgType::SPORK,
     NetMsgType::GETSPORKS,
     NetMsgType::SENDDSQUEUE,
@@ -971,7 +971,31 @@ const std::array<std::string, 40> V2_DASH_IDS = {
     NetMsgType::SENDHEADERS2,
     NetMsgType::HEADERS2,
     NetMsgType::GETQUORUMROTATIONINFO,
-    NetMsgType::QUORUMROTATIONINFO
+    NetMsgType::QUORUMROTATIONINFO,
+    NetMsgType::PLATFORMBAN
+};
+
+/** First Dash v2 short ID that was added after the initial v2 implementation.
+ *
+ * All IDs below this value are considered "baseline" and available to any
+ * peer that supports v2 transport. Only IDs >= this value require version
+ * negotiation.
+ */
+static constexpr uint8_t FIRST_NEW_V2_SHORT_ID = 168;
+
+/** Explicit version requirements for Dash v2 short IDs added after baseline.
+ *
+ * Maps short ID to the minimum protocol version required to use it.
+ * Only contains IDs that were added AFTER the initial v2 implementation.
+ * Baseline IDs (< 168) are implicitly available at BIP324_DASH_BASELINE_VERSION.
+ * To get the message name, use: V2ShortIDs()[short_id]
+ *
+ * IMPORTANT:
+ * - Never remove entries (historical compatibility)
+ * - Add new IDs as they are introduced
+ */
+static const std::map<uint8_t, int> V2_NEW_SHORT_ID_VERSIONS = {
+    {168, PLATFORMBAN_V2_SHORT_ID_VERSION},  // PLATFORMBAN
 };
 
 /** A complete set of short IDs
@@ -1026,6 +1050,41 @@ public:
 };
 
 const V2MessageMap V2_MESSAGE_MAP;
+
+/** Get the minimum protocol version required to use a given short ID.
+ *
+ * @param short_id The short ID to check
+ * @return Protocol version that introduced this ID, or std::nullopt if unknown
+ */
+std::optional<int> GetShortIDMinVersion(uint8_t short_id) {
+    // Baseline IDs: available at BIP324_DASH_BASELINE_VERSION+
+    if (short_id < FIRST_NEW_V2_SHORT_ID) {
+        return BIP324_DASH_BASELINE_VERSION;
+    }
+
+    // New IDs: check explicit mapping
+    auto it = V2_NEW_SHORT_ID_VERSIONS.find(short_id);
+    if (it != V2_NEW_SHORT_ID_VERSIONS.end()) {
+        return it->second;
+    }
+
+    return std::nullopt;  // Unknown/future short ID
+}
+
+/** Check if a peer supports a given short ID based on their protocol version.
+ *
+ * @param short_id The short ID to check
+ * @param peer_version The peer's protocol version
+ * @return true if the peer supports this short ID
+ */
+bool PeerSupportsShortID(uint8_t short_id, int peer_version) {
+    auto min_version = GetShortIDMinVersion(short_id);
+    if (!min_version) {
+        // Unknown short ID - be conservative and don't use it
+        return false;
+    }
+    return peer_version >= *min_version;
+}
 
 CKey GenerateRandomKey() noexcept
 {
@@ -1551,11 +1610,25 @@ bool V2Transport::SetMessageToSend(CSerializedNetMsg& msg) noexcept
     // Construct contents (encoding message type + payload).
     std::vector<uint8_t> contents;
     auto short_message_id = V2_MESSAGE_MAP(msg.m_type);
+
+    bool use_short_encoding = false;
     if (short_message_id) {
+        // Check if peer supports this short ID based on their protocol version
+        use_short_encoding = PeerSupportsShortID(*short_message_id, m_peer_version);
+
+        if (!use_short_encoding) {
+            LogPrint(BCLog::NET, "V2 transport: peer=%d (version %d) doesn't support short ID %d for %s, using long encoding\n",
+                     m_nodeid, m_peer_version, *short_message_id, msg.m_type);
+        }
+    }
+
+    if (use_short_encoding) {
+        // Use short encoding (1 byte)
         contents.resize(1 + msg.data.size());
         contents[0] = *short_message_id;
         std::copy(msg.data.begin(), msg.data.end(), contents.begin() + 1);
     } else {
+        // Use long encoding (13 bytes for message type)
         // Initialize with zeroes, and then write the message type string starting at offset 1.
         // This means contents[0] and the unused positions in contents[1..13] remain 0x00.
         contents.resize(1 + CMessageHeader::COMMAND_SIZE + msg.data.size(), 0);
@@ -1569,6 +1642,13 @@ bool V2Transport::SetMessageToSend(CSerializedNetMsg& msg) noexcept
     // Release memory
     ClearShrink(msg.data);
     return true;
+}
+
+void V2Transport::SetPeerVersion(int version) noexcept
+{
+    AssertLockNotHeld(m_send_mutex);
+    LOCK(m_send_mutex);
+    m_peer_version = version;
 }
 
 Transport::BytesToSend V2Transport::GetBytesToSend(bool have_next_message) const noexcept

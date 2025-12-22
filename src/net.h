@@ -389,6 +389,13 @@ public:
     /** Return the memory usage of this transport attributable to buffered data to send. */
     virtual size_t GetSendMemoryUsage() const noexcept = 0;
 
+    /** Set the peer's protocol version (used for v2 short ID negotiation).
+     *
+     * This is a no-op for V1 transport. V2 transport uses it to determine which
+     * short IDs are supported by the peer.
+     */
+    virtual void SetPeerVersion(int version) noexcept {}
+
     // 3. Miscellaneous functions.
 
     /** Whether upon disconnections, a reconnect with V1 is warranted. */
@@ -645,6 +652,8 @@ private:
     SendState m_send_state GUARDED_BY(m_send_mutex);
     /** Whether we've sent at least 24 bytes (which would trigger disconnect for V1 peers). */
     bool m_sent_v1_header_worth GUARDED_BY(m_send_mutex) {false};
+    /** Peer's protocol version for encoding decisions (e.g., v2 short ID negotiation). */
+    int m_peer_version GUARDED_BY(m_send_mutex) {INIT_PROTO_VERSION};
 
     /** Change the receive state. */
     void SetReceiveState(RecvState recv_state) noexcept EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex);
@@ -690,6 +699,7 @@ public:
     BytesToSend GetBytesToSend(bool have_next_message) const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
     void MarkBytesSent(size_t bytes_sent) noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
     size_t GetSendMemoryUsage() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
+    void SetPeerVersion(int version) noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
 
     // Miscellaneous functions.
     bool ShouldReconnectV1() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex, !m_send_mutex);
@@ -1006,6 +1016,8 @@ public:
     {
         Assume(m_greatest_common_version == INIT_PROTO_VERSION);
         m_greatest_common_version = greatest_common_version;
+        // Also update transport's peer version for v2 short ID negotiation
+        m_transport->SetPeerVersion(greatest_common_version);
     }
     int GetCommonVersion() const
     {

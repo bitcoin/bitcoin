@@ -1054,7 +1054,11 @@ public:
     V2TransportTester(bool test_initiator) :
         m_transport(0, test_initiator, SER_NETWORK, INIT_PROTO_VERSION),
         m_cipher{GenerateRandomTestKey(), MakeByteSpan(InsecureRand256())},
-        m_test_initiator(test_initiator) {}
+        m_test_initiator(test_initiator)
+    {
+        // Set peer version for v2 short ID negotiation
+        m_transport.SetPeerVersion(PROTOCOL_VERSION);
+    }
 
     /** Data type returned by Interact:
      *
