@@ -135,13 +135,6 @@ FontFamily getFontFamilyDefault()
     return g_font_registry_default.GetFont();
 }
 
-void setFontFamily(FontFamily family)
-{
-    g_font_registry.SetFont(family);
-    setApplicationFont();
-    updateFonts();
-}
-
 bool weightFromArg(int nArg, QFont::Weight& weight)
 {
     auto it = mapWeightArgs.first.find(nArg);
@@ -158,32 +151,9 @@ int weightToArg(const QFont::Weight weight)
     return mapWeightArgs.second.find(weight)->second;
 }
 
-QFont::Weight toQFontWeight(FontWeight weight)
-{
-    return weight == FontWeight::Bold ? g_font_registry.GetWeightBold() : g_font_registry.GetWeightNormal();
-}
-
-void setFontWeightNormal(const QFont::Weight& weight)
-{
-    g_font_registry.SetWeightNormal(weight);
-    updateFonts();
-}
-
-void setFontWeightBold(const QFont::Weight& weight)
-{
-    g_font_registry.SetWeightBold(weight);
-    updateFonts();
-}
-
 int getFontScaleDefault()
 {
     return g_font_registry_default.GetFontScale();
-}
-
-void setFontScale(int nScale)
-{
-    g_font_registry.SetFontScale(nScale);
-    updateFonts();
 }
 
 void FontInfo::CalcSupportedWeights(const QString& font_name)
@@ -527,7 +497,8 @@ QFont getFont(QFont::Weight qWeight, bool fItalic, int nPointSize)
 
 QFont getFont(FontWeight weight, bool fItalic, int nPointSize)
 {
-    return getFont(toQFontWeight(weight), fItalic, nPointSize);
+    return getFont(weight == FontWeight::Bold ? g_font_registry.GetWeightBold()
+                                              : g_font_registry.GetWeightNormal(), fItalic, nPointSize);
 }
 
 QFont getFontNormal()

@@ -101,7 +101,9 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("fontFamily", GUIUtil::fontFamilyToString(GUIUtil::getFontFamilyDefault()));
     if (gArgs.SoftSetArg("-font-family", settings.value("fontFamily").toString().toStdString())) {
         if (GUIUtil::fontsLoaded()) {
-            GUIUtil::setFontFamily(GUIUtil::fontFamilyFromString(settings.value("fontFamily").toString()));
+            GUIUtil::g_font_registry.SetFont(GUIUtil::fontFamilyFromString(settings.value("fontFamily").toString()));
+            GUIUtil::setApplicationFont();
+            GUIUtil::updateFonts();
         }
     } else {
         addOverriddenOption("-font-family");
@@ -111,7 +113,8 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("fontScale", GUIUtil::getFontScaleDefault());
     if (gArgs.SoftSetArg("-font-scale", settings.value("fontScale").toString().toStdString())) {
         if (GUIUtil::fontsLoaded()) {
-            GUIUtil::setFontScale(settings.value("fontScale").toInt());
+            GUIUtil::g_font_registry.SetFontScale(settings.value("fontScale").toInt());
+            GUIUtil::updateFonts();
         }
     } else {
         addOverriddenOption("-font-scale");
@@ -128,7 +131,8 @@ void OptionsModel::Init(bool resetSettings)
                 weight = GUIUtil::g_font_registry.GetSupportedWeights().front();
                 settings.setValue("fontWeightNormal", GUIUtil::weightToArg(weight));
             }
-            GUIUtil::setFontWeightNormal(weight);
+            GUIUtil::g_font_registry.SetWeightNormal(weight);
+            GUIUtil::updateFonts();
         }
     } else {
         addOverriddenOption("-font-weight-normal");
@@ -147,7 +151,8 @@ void OptionsModel::Init(bool resetSettings)
                 weight = vecSupported[vecSupported.size() > 1 ? 1 : 0];
                 settings.setValue("fontWeightBold", GUIUtil::weightToArg(weight));
             }
-            GUIUtil::setFontWeightBold(weight);
+            GUIUtil::g_font_registry.SetWeightBold(weight);
+            GUIUtil::updateFonts();
         }
     } else {
         addOverriddenOption("-font-weight-bold");

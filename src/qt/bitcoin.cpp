@@ -682,7 +682,9 @@ int GuiMain(int argc, char* argv[])
                                   QObject::tr("Error: Specified font-family invalid. Valid values: %1.").arg("SystemDefault, Montserrat"));
             return EXIT_FAILURE;
         }
-        GUIUtil::setFontFamily(family);
+        GUIUtil::g_font_registry.SetFont(family);
+        GUIUtil::setApplicationFont();
+        GUIUtil::updateFonts();
     }
     // Validate/set normal font weight
     if (gArgs.IsArgSet("-font-weight-normal")) {
@@ -692,7 +694,8 @@ int GuiMain(int argc, char* argv[])
                                   QObject::tr("Error: Specified font-weight-normal invalid. Valid range %1 to %2.").arg(0).arg(8));
             return EXIT_FAILURE;
         }
-        GUIUtil::setFontWeightNormal(weight);
+        GUIUtil::g_font_registry.SetWeightNormal(weight);
+        GUIUtil::updateFonts();
     }
     // Validate/set bold font weight
     if (gArgs.IsArgSet("-font-weight-bold")) {
@@ -702,7 +705,8 @@ int GuiMain(int argc, char* argv[])
                                   QObject::tr("Error: Specified font-weight-bold invalid. Valid range %1 to %2.").arg(0).arg(8));
             return EXIT_FAILURE;
         }
-        GUIUtil::setFontWeightBold(weight);
+        GUIUtil::g_font_registry.SetWeightBold(weight);
+        GUIUtil::updateFonts();
     }
     // Validate/set font scale
     if (gArgs.IsArgSet("-font-scale")) {
@@ -713,7 +717,8 @@ int GuiMain(int argc, char* argv[])
                                   QObject::tr("Error: Specified font-scale invalid. Valid range %1 to %2.").arg(nScaleMin).arg(nScaleMax));
             return EXIT_FAILURE;
         }
-        GUIUtil::setFontScale(nScale);
+        GUIUtil::g_font_registry.SetFontScale(nScale);
+        GUIUtil::updateFonts();
     }
     // Validate/set custom css directory
     if (gArgs.IsArgSet("-custom-css-dir")) {

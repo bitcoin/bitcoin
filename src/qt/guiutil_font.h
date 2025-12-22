@@ -86,24 +86,14 @@ QString fontFamilyToString(FontFamily family);
 
 /** set/get font family: GUIUtil::fontFamily */
 FontFamily getFontFamilyDefault();
-void setFontFamily(FontFamily family);
 
 /** Convert weight value from args (0-8) to QFont::Weight */
 bool weightFromArg(int nArg, QFont::Weight& weight);
 /** Convert QFont::Weight to an arg value (0-8) */
 int weightToArg(const QFont::Weight weight);
-/** Convert GUIUtil::FontWeight to QFont::Weight */
-QFont::Weight toQFontWeight(FontWeight weight);
-
-/** set/get normal font weight: GUIUtil::fontWeightNormal */
-void setFontWeightNormal(const QFont::Weight& weight);
-
-/** set/get bold font weight: GUIUtil::fontWeightBold */
-void setFontWeightBold(const QFont::Weight& weight);
 
 /** set/get font scale: GUIUtil::fontScale */
 int getFontScaleDefault();
-void setFontScale(int nScale);
 
 /** Load dash specific application fonts */
 bool loadFonts();
