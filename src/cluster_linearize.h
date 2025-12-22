@@ -1291,10 +1291,8 @@ public:
             tx_deps[chl_idx] = chl_data.parents.Count();
             auto chl_chunk_rep = chl_data.chunk_rep;
             chunk_reps.Set(chl_chunk_rep);
-            for (auto par_idx : chl_data.parents) {
-                auto par_chunk_rep = m_tx_data[par_idx].chunk_rep;
-                chunk_deps[chl_chunk_rep] += (par_chunk_rep != chl_chunk_rep);
-            }
+            const auto& chl_chunk_txn = m_tx_data[chl_chunk_rep].chunk_setinfo.transactions;
+            chunk_deps[chl_chunk_rep] += (chl_data.parents - chl_chunk_txn).Count();
         }
         /** Function to compute the highest element of a chunk, by fallback_order. */
         auto max_fallback_fn = [&](TxIdx chunk_rep) noexcept {
