@@ -54,6 +54,13 @@ const auto mapWeightArgs = []() {
     }
     return std::pair{std::move(kv), std::move(vk)};
 }();
+
+//! Wrapper for tinyformat (strprintf) that converts to QString
+template <typename... Args>
+QString qstrprintf(const std::string& fmt, const Args&... args)
+{
+    return QString::fromStdString(tfm::format(fmt, args...));
+}
 } // anonymous namespace
 
 namespace GUIUtil {
@@ -222,19 +229,19 @@ bool loadFonts()
     std::vector<int> vecFontIds{};
     auto importFont = [&vecFontIds](const QString& font_name) -> void {
         vecFontIds.push_back(QFontDatabase::addApplicationFont(font_name));
-        qDebug() << __func__ << ": " << font_name << " loaded with id " << vecFontIds.back();
+        qDebug() << qstrprintf("%s: %s loaded with id %d", __func__, font_name.toStdString(), vecFontIds.back());
     };
 
     // Load Montserrat
     const std::string montserrat_str{fontFamilyToString(FontFamily::Montserrat).toStdString()};
     // Import the italic Montserrat variant as it doesn't map to a weight
-    importFont(QString::fromStdString(strprintf(":fonts/%s-Italic", montserrat_str)));
+    importFont(qstrprintf(":fonts/%s-Italic", montserrat_str));
     // Import the rest of Montserrat variants
     for (const auto& [_, val] : mapMontserrat) {
         const auto& [variant, can_italic] = val;
-        importFont(QString::fromStdString(strprintf(":fonts/%s-%s", montserrat_str, variant)));
+        importFont(qstrprintf(":fonts/%s-%s", montserrat_str, variant));
         if (can_italic) {
-            importFont(QString::fromStdString(strprintf(":fonts/%s-%sItalic", montserrat_str, variant)));
+            importFont(qstrprintf(":fonts/%s-%sItalic", montserrat_str, variant));
         }
     }
 
@@ -250,9 +257,10 @@ bool loadFonts()
     // Print debug logs for added fonts fetched by the added ids
     for (const auto& i : vecFontIds) {
         for (const QString& f : QFontDatabase::applicationFontFamilies(i)) {
-            qDebug() << __func__ << ": - Font id " << i << " is family: " << f;
+            qDebug() << qstrprintf("%s: - Font id %d is family: %s", __func__, i, f.toStdString());
             for (const QString& style : database.styles(f)) {
-                qDebug() << __func__ << ": Style for family " << f << " with id: " << i << ": " << style;
+                qDebug() << qstrprintf("%s: Style for family %s with id: %d is %s", __func__, f.toStdString(), i,
+                                       style.toStdString());
             }
         }
     }
@@ -261,7 +269,7 @@ bool loadFonts()
     for (const QString& f : database.families()) {
         if (f.contains(QString::fromStdString(montserrat_str))) {
             for (const QString& style : database.styles(f)) {
-                qDebug() << __func__ << ": Family: " << f << ", Style: " << style;
+                qDebug() << qstrprintf("%s: Family: %s, Style: %s", __func__, f.toStdString(), style.toStdString());
             }
         }
     }
@@ -371,8 +379,9 @@ void setApplicationFont()
     font->setPointSizeF(defaultFontSize);
     qApp->setFont(*font);
 
-    qDebug() << __func__ << ": " << qApp->font().toString() << " family: " << qApp->font().family()
-             << ", style: " << qApp->font().styleName() << " match: " << qApp->font().exactMatch();
+    qDebug() << qstrprintf("%s: %s family: %s, style: %s match: %s", __func__, qApp->font().toString().toStdString(),
+                           qApp->font().family().toStdString(), qApp->font().styleName().toStdString(),
+                           qApp->font().exactMatch() ? "true" : "false");
 }
 
 void setFont(const std::vector<QWidget*>& vecWidgets, FontWeight weight, int nPointSize, bool fItalic)
@@ -465,10 +474,10 @@ void updateFonts()
             ++nUpdated;
         }
     }
-    qDebug().nospace() << __func__ << " - widget counts: updated/updatable/total(" << nUpdated << "/" << nUpdatable
-                       << "/" << qApp->allWidgets().size() << ")"
-                       << ", removed items: mapWidgetDefaultFontSizes/mapFontUpdates(" << nRemovedDefaultFonts << "/"
-                       << nRemovedFontUpdates << ")";
+    qDebug().nospace() << qstrprintf("%s - widget counts: updated/updatable/total(%d/%d/%d), removed items: "
+                                     "mapWidgetDefaultFontSizes/mapFontUpdates(%d/%d)",
+                                     __func__, nUpdated, nUpdatable, qApp->allWidgets().size(), nRemovedDefaultFonts,
+                                     nRemovedFontUpdates);
 
     // Perform the required font updates
     // NOTE: This is done as separate step to avoid scaling issues due to font inheritance
@@ -540,8 +549,9 @@ QFont getFont(FontFamily family, QFont::Weight qWeight, bool fItalic, int nPoint
     }
 
     if (gArgs.GetBoolArg("-debug-ui", false)) {
-        qDebug() << __func__ << ": font size: " << font.pointSizeF() << " family: " << font.family()
-                 << ", style: " << font.styleName() << ", weight:" << font.weight() << " match: " << font.exactMatch();
+        qDebug() << qstrprintf("%s: font size: %d, family: %s, style: %s, weight: %d match %s", __func__,
+                               font.pointSizeF(), font.family().toStdString(), font.styleName().toStdString(),
+                               font.weight(), font.exactMatch() ? "true" : "false");
     }
 
     return font;
