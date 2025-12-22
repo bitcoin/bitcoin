@@ -33,7 +33,7 @@ bool CFinalCommitment::VerifySignatureAsync(CDeterministicMNManager& dmnman, CQu
                                             gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
                                             CCheckQueueControl<utils::BlsCheck>* queue_control) const
 {
-    auto members = utils::GetAllQuorumMembers(llmqType, dmnman, qsnapman, chainman, pQuorumBaseBlockIndex);
+    auto members = utils::GetAllQuorumMembers(llmqType, {dmnman, qsnapman, chainman, pQuorumBaseBlockIndex});
     const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     if (!llmq_params_opt.has_value()) {
         LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] invalid llmqType=%d\n", quorumHash.ToString(),
@@ -152,7 +152,7 @@ bool CFinalCommitment::Verify(CDeterministicMNManager& dmnman, CQuorumSnapshotMa
         LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] invalid vvecSig\n", quorumHash.ToString());
         return false;
     }
-    auto members = utils::GetAllQuorumMembers(llmqType, dmnman, qsnapman, chainman, pQuorumBaseBlockIndex);
+    auto members = utils::GetAllQuorumMembers(llmqType, {dmnman, qsnapman, chainman, pQuorumBaseBlockIndex});
     if (LogAcceptDebug(BCLog::LLMQ)) {
         std::stringstream ss;
         std::stringstream ss2;

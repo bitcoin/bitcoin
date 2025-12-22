@@ -48,39 +48,39 @@ public:
     void swap(BlsCheck& obj);
 };
 
-// includes members which failed DKG
-std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(Consensus::LLMQType llmqType, CDeterministicMNManager& dmnman,
-                                                      CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
-                                                      gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
-                                                      bool reset_cache = false);
-
 uint256 DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2);
-
-Uint256HashSet GetQuorumConnections(const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman,
-                                    CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
-                                    const CSporkManager& sporkman, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
-                                    const uint256& forMember, bool onlyOutbound);
-
-Uint256HashSet GetQuorumRelayMembers(const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman,
-                                     CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
-                                     gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& forMember,
-                                     bool onlyOutbound);
 
 std::set<size_t> CalcDeterministicWatchConnections(Consensus::LLMQType llmqType,
                                                    gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
                                                    size_t memberCount, size_t connectionCount);
 
-bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, CConnman& connman, CDeterministicMNManager& dmnman,
-                             CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
-                             const CSporkManager& sporkman, const CDeterministicMNList& tip_mn_list,
-                             gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& myProTxHash,
-                             bool is_masternode, bool quorums_watch);
+struct UtilParameters {
+    CDeterministicMNManager& m_dmnman;
+    CQuorumSnapshotManager& m_qsnapman;
+    const ChainstateManager& m_chainman;
+    gsl::not_null<const CBlockIndex*> m_base_index;
 
-void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, CConnman& connman,
-                               CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
-                               CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
-                               const CSporkManager& sporkman, const CDeterministicMNList& tip_mn_list,
-                               gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& myProTxHash);
+public:
+    UtilParameters replace_index(gsl::not_null<const CBlockIndex*> base_index) const { return {m_dmnman, m_qsnapman, m_chainman, base_index}; }
+};
+
+// includes members which failed DKG
+std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(Consensus::LLMQType llmqType, const UtilParameters& util_params,
+                                                      bool reset_cache = false);
+
+Uint256HashSet GetQuorumConnections(const Consensus::LLMQParams& llmqParams, const CSporkManager& sporkman,
+                                    const UtilParameters& util_params, const uint256& forMember, bool onlyOutbound);
+
+Uint256HashSet GetQuorumRelayMembers(const Consensus::LLMQParams& llmqParams, const UtilParameters& util_params,
+                                     const uint256& forMember, bool onlyOutbound);
+
+bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, CConnman& connman, const CSporkManager& sporkman,
+                             const UtilParameters& util_params, const CDeterministicMNList& tip_mn_list,
+                             const uint256& myProTxHash, bool is_masternode, bool quorums_watch);
+
+void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, CConnman& connman, CMasternodeMetaMan& mn_metaman,
+                               const CSporkManager& sporkman, const UtilParameters& util_params,
+                               const CDeterministicMNList& tip_mn_list, const uint256& myProTxHash);
 
 template <typename CacheType>
 inline void InitQuorumsCache(CacheType& cache, bool limit_by_connections = true)

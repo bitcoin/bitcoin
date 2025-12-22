@@ -32,7 +32,7 @@ static void PreComputeQuorumMembers(CDeterministicMNManager& dmnman, llmq::CQuor
 {
     for (const Consensus::LLMQParams& params : llmq::GetEnabledQuorumParams(chainman, pindex->pprev)) {
         if (llmq::IsQuorumRotationEnabled(params, pindex) && (pindex->nHeight % params.dkgInterval == 0)) {
-            llmq::utils::GetAllQuorumMembers(params.type, dmnman, qsnapman, chainman, pindex, reset_cache);
+            llmq::utils::GetAllQuorumMembers(params.type, {dmnman, qsnapman, chainman, pindex}, reset_cache);
         }
     }
 }
