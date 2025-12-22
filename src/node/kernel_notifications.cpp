@@ -69,6 +69,10 @@ kernel::InterruptResult KernelNotifications::blockTip(SynchronizationState state
 
 void KernelNotifications::headerTip(SynchronizationState state, int64_t height, int64_t timestamp, bool presync)
 {
+    {
+        LOCK(m_header_tip_mutex);
+        m_header_tip_cv.notify_all();
+    }
     uiInterface.NotifyHeaderTip(state, height, timestamp, presync);
 }
 
