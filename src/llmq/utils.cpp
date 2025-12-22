@@ -36,11 +36,8 @@ struct MasternodeScore {
     CDeterministicMNCPtr m_node;
 };
 
-struct QuorumQuarter {
-    llmq::CQuorumSnapshot m_snap;
+struct QuorumQuarter : public llmq::CycleBase {
     std::vector<std::vector<CDeterministicMNCPtr>> m_members;
-    //! memory only
-    const CBlockIndex* m_cycle_index{nullptr};
 
 public:
     explicit QuorumQuarter(size_t size) : m_members(size) {}

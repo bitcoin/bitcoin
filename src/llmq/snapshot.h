@@ -99,9 +99,14 @@ public:
     }
 };
 
-struct CycleData {
+struct CycleBase {
     CQuorumSnapshot m_snap;
+    const CBlockIndex* m_cycle_index{nullptr};
+};
+
+struct CycleData : public CycleBase {
     CSimplifiedMNListDiff m_diff;
+    const CBlockIndex* m_work_index{nullptr};
 };
 
 class CQuorumRotationInfo
@@ -198,6 +203,7 @@ public:
         }
     }
 
+    std::vector<CycleData*> GetCycles();
     [[nodiscard]] static RPCResult GetJsonHelp(const std::string& key, bool optional);
     [[nodiscard]] UniValue ToJson() const;
 };
