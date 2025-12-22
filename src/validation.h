@@ -488,6 +488,10 @@ public:
     //! can fit per the dbcache setting.
     std::unique_ptr<CCoinsViewCache> m_cacheview GUARDED_BY(cs_main);
 
+    //! Used as an empty view that is only passed into ConnectBlock to help speed up block validation,
+    //! as well as not pollute the underlying cache with newly created coins in case the block is invalid.
+    std::unique_ptr<CCoinsViewCache> m_connect_block_view GUARDED_BY(cs_main);
+
     //! This constructor initializes CCoinsViewDB and CCoinsViewErrorCatcher instances, but it
     //! *does not* create a CCoinsViewCache instance by default. This is done separately because the
     //! presence of the cache has implications on whether or not we're allowed to flush the cache's

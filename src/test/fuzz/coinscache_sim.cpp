@@ -402,6 +402,12 @@ FUZZ_TARGET(coinscache_sim)
                 caches.back()->Sync();
             },
 
+            [&]() { // Reset.
+                sim_caches[caches.size()].Wipe();
+                // Apply to real caches.
+                caches.back()->Reset();
+            },
+
             [&]() { // GetCacheSize
                 (void)caches.back()->GetCacheSize();
             },

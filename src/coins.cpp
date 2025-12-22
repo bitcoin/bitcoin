@@ -275,6 +275,13 @@ bool CCoinsViewCache::Sync()
     return fOk;
 }
 
+void CCoinsViewCache::Reset() noexcept
+{
+    cacheCoins.clear();
+    cachedCoinsUsage = 0;
+    hashBlock.SetNull();
+}
+
 void CCoinsViewCache::Uncache(const COutPoint& hash)
 {
     CCoinsMap::iterator it = cacheCoins.find(hash);
