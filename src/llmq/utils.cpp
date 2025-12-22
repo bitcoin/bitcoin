@@ -329,7 +329,7 @@ void BuildQuorumSnapshot(const Consensus::LLMQParams& llmqParams, const Consensu
     }
 }
 
-std::vector<QuorumMembers> BuildNewQuorumQuarterMembers(const Consensus::LLMQParams& llmqParams, const llmq::utils::UtilParameters& util_params,
+std::vector<QuorumMembers> BuildNewQuorumQuarterMembers(const Consensus::LLMQParams& llmqParams, const llmq::UtilParameters& util_params,
                                                         const CDeterministicMNList& allMns, const PreviousQuorumQuarters& previousQuarters)
 {
     if (!llmqParams.useRotation || util_params.m_base_index->nHeight % llmqParams.dkgInterval != 0) {
@@ -442,7 +442,7 @@ std::vector<QuorumMembers> BuildNewQuorumQuarterMembers(const Consensus::LLMQPar
     return quarterQuorumMembers;
 }
 
-std::vector<QuorumMembers> ComputeQuorumMembersByQuarterRotation(const Consensus::LLMQParams& llmqParams, const llmq::utils::UtilParameters& util_params)
+std::vector<QuorumMembers> ComputeQuorumMembersByQuarterRotation(const Consensus::LLMQParams& llmqParams, const llmq::UtilParameters& util_params)
 {
     const int cycleLength = llmqParams.dkgInterval;
     if (!llmqParams.useRotation || util_params.m_base_index->nHeight % llmqParams.dkgInterval != 0) {

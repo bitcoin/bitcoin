@@ -31,6 +31,16 @@ class CQuorumSnapshotManager;
 } // namespace llmq
 
 namespace llmq {
+struct UtilParameters {
+    CDeterministicMNManager& m_dmnman;
+    CQuorumSnapshotManager& m_qsnapman;
+    const ChainstateManager& m_chainman;
+    gsl::not_null<const CBlockIndex*> m_base_index;
+
+public:
+    UtilParameters replace_index(gsl::not_null<const CBlockIndex*> base_index) const { return {m_dmnman, m_qsnapman, m_chainman, base_index}; }
+};
+
 namespace utils {
 struct BlsCheck {
     CBLSSignature m_sig;
@@ -52,16 +62,6 @@ uint256 DeterministicOutboundConnection(const uint256& proTxHash1, const uint256
 std::set<size_t> CalcDeterministicWatchConnections(Consensus::LLMQType llmqType,
                                                    gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
                                                    size_t memberCount, size_t connectionCount);
-
-struct UtilParameters {
-    CDeterministicMNManager& m_dmnman;
-    CQuorumSnapshotManager& m_qsnapman;
-    const ChainstateManager& m_chainman;
-    gsl::not_null<const CBlockIndex*> m_base_index;
-
-public:
-    UtilParameters replace_index(gsl::not_null<const CBlockIndex*> base_index) const { return {m_dmnman, m_qsnapman, m_chainman, base_index}; }
-};
 
 // includes members which failed DKG
 std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(Consensus::LLMQType llmqType, const UtilParameters& util_params,

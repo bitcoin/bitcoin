@@ -130,7 +130,7 @@ static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, llmq::CQuorumSn
             }
         }
         case TRANSACTION_QUORUM_COMMITMENT:
-            return llmq::CheckLLMQCommitment(dmnman, qsnapman, chainman, tx, pindexPrev, state);
+            return llmq::CheckLLMQCommitment({dmnman, qsnapman, chainman, pindexPrev}, tx, state);
         case TRANSACTION_MNHF_SIGNAL:
             return CheckMNHFTx(chainman, qman, tx, pindexPrev, state);
         case TRANSACTION_ASSET_LOCK:

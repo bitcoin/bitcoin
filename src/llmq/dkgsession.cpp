@@ -1280,7 +1280,7 @@ std::vector<CFinalCommitment> CDKGSession::FinalizeCommitments()
         t2.stop();
 
         cxxtimer::Timer t3(true);
-        if (!fqc.Verify(m_dmnman, m_qsnapman, m_chainman, m_quorum_base_block_index, true)) {
+        if (!fqc.Verify({m_dmnman, m_qsnapman, m_chainman, m_quorum_base_block_index}, true)) {
             logger.Batch("failed to verify final commitment");
             continue;
         }
@@ -1343,7 +1343,7 @@ CFinalCommitment CDKGSession::FinalizeSingleCommitment()
         fqc.quorumSig = fqc.membersSig;
     }
 
-    if (!fqc.Verify(m_dmnman, m_qsnapman, m_chainman, m_quorum_base_block_index, true)) {
+    if (!fqc.Verify({m_dmnman, m_qsnapman, m_chainman, m_quorum_base_block_index}, true)) {
         logger.Batch("failed to verify final commitment");
         assert(false);
     }
