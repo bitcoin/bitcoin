@@ -106,7 +106,7 @@ void OptionsModel::Init(bool resetSettings)
     }
     if (GUIUtil::fontsLoaded()) {
         if (auto font_name = QString::fromStdString(gArgs.GetArg("-font-family", settings.value("fontFamily").toString().toStdString()));
-            GUIUtil::g_font_registry.SetFont(font_name)) {
+            GUIUtil::g_font_registry.RegisterFont(font_name) && GUIUtil::g_font_registry.SetFont(font_name)) {
             GUIUtil::setApplicationFont();
         }
     }

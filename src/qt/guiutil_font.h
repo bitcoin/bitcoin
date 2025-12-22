@@ -63,7 +63,7 @@ public:
     };
 
 public:
-    void RegisterFont(const QString& font);
+    [[nodiscard]] bool RegisterFont(const QString& font, bool skip_checks = false);
 
     bool IsValidWeight(const QFont::Weight& weight) const { return WeightToIdx(weight) != -1; }
     int WeightToIdx(const QFont::Weight& weight) const;

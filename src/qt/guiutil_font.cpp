@@ -22,6 +22,9 @@
 #include <utility>
 
 namespace {
+//! Instance of font database shared among calls
+std::unique_ptr<QFontDatabase> g_font_db{nullptr};
+
 //! loadFonts stores the SystemDefault font in g_default_font to be able to reference it later again
 std::unique_ptr<QFont> g_default_font{nullptr};
 
@@ -131,9 +134,26 @@ FontInfo::FontInfo(const QString& font_name)
 
 FontInfo::~FontInfo() = default;
 
-void FontRegistry::RegisterFont(const QString& font)
+bool FontRegistry::RegisterFont(const QString& font, bool skip_checks)
 {
+    const bool font_known{std::find(g_fonts_known.begin(), g_fonts_known.end(), font) != g_fonts_known.end()};
+    if (m_weights.count(font)) {
+        // Font's already registered
+        assert(font_known);
+        return true;
+    }
+    if (!skip_checks) {
+        if (!g_font_db) { g_font_db = std::make_unique<QFontDatabase>(); }
+        if (!g_font_db->families().contains(font, Qt::CaseInsensitive)) {
+            // Font doesn't exist
+            return false;
+        }
+    }
     m_weights.emplace(font, FontInfo(font));
+    if (!font_known) {
+        g_fonts_known.push_back(font);
+    }
+    return true;
 }
 
 bool FontRegistry::SetFont(const QString& font)
@@ -247,13 +267,13 @@ bool loadFonts()
     }
 
 #ifndef QT_NO_DEBUG
-    QFontDatabase database;
+    if (!g_font_db) { g_font_db = std::make_unique<QFontDatabase>(); }
 
     // Print debug logs for added fonts fetched by the added ids
     for (const auto& i : vecFontIds) {
         for (const QString& f : QFontDatabase::applicationFontFamilies(i)) {
             qDebug() << qstrprintf("%s: - Font id %d is family: %s", __func__, i, f.toStdString());
-            for (const QString& style : database.styles(f)) {
+            for (const QString& style : g_font_db->styles(f)) {
                 qDebug() << qstrprintf("%s: Style for family %s with id: %d is %s", __func__, f.toStdString(), i,
                                        style.toStdString());
             }
@@ -261,22 +281,18 @@ bool loadFonts()
     }
 
     // Print debug logs for added fonts fetched by the family name
-    for (const QString& f : database.families()) {
+    for (const QString& f : g_font_db->families()) {
         if (f.contains(MONTSERRAT_FONT_STR)) {
-            for (const QString& style : database.styles(f)) {
+            for (const QString& style : g_font_db->styles(f)) {
                 qDebug() << qstrprintf("%s: Family: %s, Style: %s", __func__, f.toStdString(), style.toStdString());
             }
         }
     }
 #endif // QT_NO_DEBUG
 
-    // Initialize supported font weights for all available fonts
-    // Generate a vector with supported font weights by comparing the width of a certain test text for all font weights
     for (const auto& fonts : g_fonts_known) {
-        g_font_registry.RegisterFont(fonts);
+        assert(g_font_registry.RegisterFont(fonts, /*skip_checks=*/true));
     }
-
-    setApplicationFont();
 
     return true;
 }
@@ -294,7 +310,8 @@ void setApplicationFont()
 
     std::unique_ptr<QFont> font;
 
-    if (auto family = g_font_registry.GetFont(); family == MONTSERRAT_FONT_STR) {
+    auto family = g_font_registry.GetFont();
+    if (family == MONTSERRAT_FONT_STR) {
 #ifdef Q_OS_MACOS
         if (g_font_registry.GetWeightNormal() != FontRegistry::TARGET_WEIGHT_NORMAL) {
             font = std::make_unique<QFont>(getFontNormal());
@@ -306,8 +323,10 @@ void setApplicationFont()
         font = std::make_unique<QFont>(family);
         font->setWeight(g_font_registry.GetWeightNormal());
 #endif
-    } else {
+    } else if (family == OS_FONT_STR) {
         font = std::make_unique<QFont>(*g_default_font);
+    } else {
+        font = std::make_unique<QFont>(family);
     }
 
     font->setPointSizeF(g_font_registry.GetFontSize());

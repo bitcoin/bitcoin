@@ -673,11 +673,10 @@ int GuiMain(int argc, char* argv[])
     // Validate/set font family
     if (gArgs.IsArgSet("-font-family")) {
         QString family = gArgs.GetArg("-font-family", GUIUtil::FontRegistry::DEFAULT_FONT.toUtf8().toStdString()).c_str();
-        if (!GUIUtil::g_font_registry.SetFont(family)) {
+        if (!GUIUtil::g_font_registry.RegisterFont(family) || !GUIUtil::g_font_registry.SetFont(family)) {
             QMessageBox::critical(nullptr, PACKAGE_NAME, QObject::tr("Error: Font \"%1\" could not be loaded.").arg(family));
             return EXIT_FAILURE;
         }
-        GUIUtil::setApplicationFont();
     }
     // Validate/set normal font weight
     if (gArgs.IsArgSet("-font-weight-normal")) {
@@ -712,6 +711,7 @@ int GuiMain(int argc, char* argv[])
     }
     // Apply font changes
     GUIUtil::updateFonts();
+    GUIUtil::setApplicationFont();
     // Validate/set custom css directory
     if (gArgs.IsArgSet("-custom-css-dir")) {
         fs::path customDir = gArgs.GetPathArg("-custom-css-dir");
