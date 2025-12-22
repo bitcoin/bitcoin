@@ -365,17 +365,17 @@ protected:
     CCoinsView* base;
 
 public:
-    explicit CCoinsViewBacked(CCoinsView* view_in);
+    explicit CCoinsViewBacked(CCoinsView* view_in) : base{Assert(view_in)} {}
 
-    void SetBackend(CCoinsView& view_in);
+    void SetBackend(CCoinsView& view_in) { base = &view_in; }
 
-    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
-    bool HaveCoin(const COutPoint& outpoint) const override;
-    uint256 GetBestBlock() const override;
-    std::vector<uint256> GetHeadBlocks() const override;
-    void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hash_block) override;
-    std::unique_ptr<CCoinsViewCursor> Cursor() const override;
-    size_t EstimateSize() const override;
+    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override { return base->GetCoin(outpoint); }
+    bool HaveCoin(const COutPoint& outpoint) const override { return base->HaveCoin(outpoint); }
+    uint256 GetBestBlock() const override { return base->GetBestBlock(); }
+    std::vector<uint256> GetHeadBlocks() const override { return base->GetHeadBlocks(); }
+    void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hash_block) override { base->BatchWrite(cursor, hash_block); }
+    std::unique_ptr<CCoinsViewCursor> Cursor() const override { return base->Cursor(); }
+    size_t EstimateSize() const override { return base->EstimateSize(); }
 };
 
 
