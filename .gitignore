@@ -12,6 +12,7 @@
 
 # Only ignore unexpected patches
 *.patch
+!ci/test/*.patch
 !contrib/guix/patches/*.patch
 !depends/patches/**/*.patch
 

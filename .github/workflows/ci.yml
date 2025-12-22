@@ -522,6 +522,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - name: 'iwyu'
+            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
+            fallback-runner: 'ubuntu-24.04'
+            timeout-minutes: 120
+            file-env: './ci/test/00_setup_env_native_iwyu.sh'
+
           - name: '32 bit ARM'
             cirrus-runner: 'ubuntu-24.04-arm' # Cirrus' Arm runners are Apple (with virtual Linux aarch64), which doesn't support 32-bit mode
             fallback-runner: 'ubuntu-24.04-arm'

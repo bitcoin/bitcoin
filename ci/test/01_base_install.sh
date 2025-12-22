@@ -79,8 +79,9 @@ if [[ -n "${USE_INSTRUMENTED_LIBCPP}" ]]; then
   rm -rf /llvm-project
 fi
 
-if [[ "${RUN_TIDY}" == "true" ]]; then
+if [[ "${RUN_IWYU}" == true ]]; then
   ${CI_RETRY_EXE} git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_"${TIDY_LLVM_V}" /include-what-you-use
+  (cd /include-what-you-use && patch -p1 < /ci_container_base/ci/test/01_iwyu.patch)
   cmake -B /iwyu-build/ -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-"${TIDY_LLVM_V}" -S /include-what-you-use
   make -C /iwyu-build/ install "$MAKEJOBS"
 fi
