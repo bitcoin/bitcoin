@@ -118,14 +118,14 @@ void OptionsModel::Init(bool resetSettings)
     }
 
     if (!settings.contains("fontWeightNormal"))
-        settings.setValue("fontWeightNormal", GUIUtil::weightToArg(GUIUtil::getFontWeightNormalDefault()));
+        settings.setValue("fontWeightNormal", GUIUtil::weightToArg(GUIUtil::FontRegistry::TARGET_WEIGHT_NORMAL));
     if (gArgs.SoftSetArg("-font-weight-normal", settings.value("fontWeightNormal").toString().toStdString())) {
         if (GUIUtil::fontsLoaded()) {
             QFont::Weight weight;
             GUIUtil::weightFromArg(settings.value("fontWeightNormal").toInt(), weight);
             if (!GUIUtil::isSupportedWeight(weight)) {
                 // If the currently selected weight is not supported fallback to the lightest weight for normal font.
-                weight = GUIUtil::getSupportedWeights().front();
+                weight = GUIUtil::g_font_registry.GetSupportedWeights().front();
                 settings.setValue("fontWeightNormal", GUIUtil::weightToArg(weight));
             }
             GUIUtil::setFontWeightNormal(weight);
@@ -135,7 +135,7 @@ void OptionsModel::Init(bool resetSettings)
     }
 
     if (!settings.contains("fontWeightBold"))
-        settings.setValue("fontWeightBold", GUIUtil::weightToArg(GUIUtil::getFontWeightBoldDefault()));
+        settings.setValue("fontWeightBold", GUIUtil::weightToArg(GUIUtil::FontRegistry::TARGET_WEIGHT_BOLD));
     if (gArgs.SoftSetArg("-font-weight-bold", settings.value("fontWeightBold").toString().toStdString())) {
         if (GUIUtil::fontsLoaded()) {
             QFont::Weight weight;
@@ -143,7 +143,7 @@ void OptionsModel::Init(bool resetSettings)
             if (!GUIUtil::isSupportedWeight(weight)) {
                 // If the currently selected weight is not supported fallback to the second lightest weight for bold font
                 // or the lightest if there is only one.
-                auto vecSupported = GUIUtil::getSupportedWeights();
+                auto vecSupported = GUIUtil::g_font_registry.GetSupportedWeights();
                 weight = vecSupported[vecSupported.size() > 1 ? 1 : 0];
                 settings.setValue("fontWeightBold", GUIUtil::weightToArg(weight));
             }
@@ -548,14 +548,14 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         case FontScale:
             return settings.value("fontScale");
         case FontWeightNormal: {
-            QFont::Weight weight{GUIUtil::getSupportedFontWeightNormalDefault()};
+            QFont::Weight weight{GUIUtil::g_font_registry.GetWeightNormalDefault()};
             GUIUtil::weightFromArg(settings.value("fontWeightNormal").toInt(), weight);
             int nIndex = GUIUtil::supportedWeightToIndex(weight);
             assert(nIndex != -1);
             return nIndex;
         }
         case FontWeightBold: {
-            QFont::Weight weight{GUIUtil::getSupportedFontWeightBoldDefault()};
+            QFont::Weight weight{GUIUtil::g_font_registry.GetWeightBoldDefault()};
             GUIUtil::weightFromArg(settings.value("fontWeightBold").toInt(), weight);
             int nIndex = GUIUtil::supportedWeightToIndex(weight);
             assert(nIndex != -1);

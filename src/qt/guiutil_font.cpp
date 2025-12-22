@@ -135,11 +135,6 @@ FontFamily getFontFamilyDefault()
     return g_font_registry_default.GetFont();
 }
 
-FontFamily getFontFamily()
-{
-    return g_font_registry.GetFont();
-}
-
 void setFontFamily(FontFamily family)
 {
     g_font_registry.SetFont(family);
@@ -165,33 +160,13 @@ int weightToArg(const QFont::Weight weight)
 
 QFont::Weight toQFontWeight(FontWeight weight)
 {
-    return weight == FontWeight::Bold ? getFontWeightBold() : getFontWeightNormal();
-}
-
-QFont::Weight getFontWeightNormalDefault()
-{
-    return FontRegistry::TARGET_WEIGHT_NORMAL;
-}
-
-QFont::Weight getFontWeightNormal()
-{
-    return g_font_registry.GetWeightNormal();
+    return weight == FontWeight::Bold ? g_font_registry.GetWeightBold() : g_font_registry.GetWeightNormal();
 }
 
 void setFontWeightNormal(const QFont::Weight& weight)
 {
     g_font_registry.SetWeightNormal(weight);
     updateFonts();
-}
-
-QFont::Weight getFontWeightBoldDefault()
-{
-    return FontRegistry::TARGET_WEIGHT_BOLD;
-}
-
-QFont::Weight getFontWeightBold()
-{
-    return g_font_registry.GetWeightBold();
 }
 
 void setFontWeightBold(const QFont::Weight& weight)
@@ -205,20 +180,10 @@ int getFontScaleDefault()
     return g_font_registry_default.GetFontScale();
 }
 
-int getFontScale()
-{
-    return g_font_registry.GetFontScale();
-}
-
 void setFontScale(int nScale)
 {
     g_font_registry.SetFontScale(nScale);
     updateFonts();
-}
-
-double getScaledFontSize(int nSize)
-{
-    return g_font_registry.GetScaledFontSize(nSize);
 }
 
 void FontInfo::CalcSupportedWeights(const QString& font_name)
@@ -267,8 +232,8 @@ void FontInfo::CalcDefaultWeights(const QString& font_name)
 {
     assert(!m_supported_weights.empty());
 
-    m_normal_default = GetBestMatch(font_name, getFontWeightNormalDefault());
-    m_bold_default = GetBestMatch(font_name, getFontWeightBoldDefault());
+    m_normal_default = GetBestMatch(font_name, FontRegistry::TARGET_WEIGHT_NORMAL);
+    m_bold_default = GetBestMatch(font_name, FontRegistry::TARGET_WEIGHT_BOLD);
     if (m_normal_default == m_bold_default) {
         // If the results are the same use the next possible weight for bold font
         auto it = std::find(m_supported_weights.begin(), m_supported_weights.end(), m_normal_default);
@@ -358,15 +323,15 @@ void setApplicationFont()
     if (g_font_registry.GetFont() == FontFamily::Montserrat) {
         QString family = fontFamilyToString(FontFamily::Montserrat);
 #ifdef Q_OS_MACOS
-        if (getFontWeightNormal() != getFontWeightNormalDefault()) {
+        if (g_font_registry.GetWeightNormal() != FontRegistry::TARGET_WEIGHT_NORMAL) {
             font = std::make_unique<QFont>(getFontNormal());
         } else {
             font = std::make_unique<QFont>(family);
-            font->setWeight(getFontWeightNormalDefault());
+            font->setWeight(FontRegistry::TARGET_WEIGHT_NORMAL);
         }
 #else
         font = std::make_unique<QFont>(family);
-        font->setWeight(getFontWeightNormal());
+        font->setWeight(g_font_registry.GetWeightNormal());
 #endif
     } else {
         font = std::make_unique<QFont>(*osDefaultFont);
@@ -446,7 +411,7 @@ void updateFonts()
         QFont font = w->font();
         assert(font.pointSize() > 0);
         font.setFamily(qApp->font().family());
-        font.setWeight(getFontWeightNormal());
+        font.setWeight(g_font_registry.GetWeightNormal());
         font.setStyleName(qApp->font().styleName());
         font.setStyle(qApp->font().style());
 
@@ -461,7 +426,7 @@ void updateFonts()
             }
             font = getFont(std::get<0>(it->second), std::get<1>(it->second), nSize);
         } else {
-            font.setPointSizeF(getScaledFontSize(itDefault.first->second));
+            font.setPointSizeF(g_font_registry.GetScaledFontSize(itDefault.first->second));
         }
 
         if (w->font() != font) {
@@ -491,7 +456,7 @@ void updateFonts()
         if (it.second == -1) {
             it.second = fontClass.pointSize();
         }
-        double dSize = getScaledFontSize(it.second);
+        double dSize = g_font_registry.GetScaledFontSize(it.second);
         if (fontClass.pointSizeF() != dSize) {
             fontClass.setPointSizeF(dSize);
             qApp->setFont(fontClass, it.first.c_str());
@@ -543,7 +508,7 @@ QFont getFont(const QString& font_name, QFont::Weight weight, bool italic, int p
     }
 
     if (point_sz != -1) {
-        font.setPointSizeF(getScaledFontSize(point_sz));
+        font.setPointSizeF(g_font_registry.GetScaledFontSize(point_sz));
     }
 
     if (gArgs.GetBoolArg("-debug-ui", false)) {
@@ -573,21 +538,6 @@ QFont getFontNormal()
 QFont getFontBold()
 {
     return getFont(FontWeight::Bold);
-}
-
-QFont::Weight getSupportedFontWeightNormalDefault()
-{
-    return g_font_registry.GetWeightNormalDefault();
-}
-
-QFont::Weight getSupportedFontWeightBoldDefault()
-{
-    return g_font_registry.GetWeightBoldDefault();
-}
-
-std::vector<QFont::Weight> getSupportedWeights()
-{
-    return g_font_registry.GetSupportedWeights();
 }
 
 QFont::Weight supportedWeightFromIndex(int nIndex)

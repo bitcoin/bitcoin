@@ -79,12 +79,13 @@ private:
     std::map<FontFamily, FontInfo> m_weights;
 };
 
+extern FontRegistry g_font_registry;
+
 FontFamily fontFamilyFromString(const QString& strFamily);
 QString fontFamilyToString(FontFamily family);
 
 /** set/get font family: GUIUtil::fontFamily */
 FontFamily getFontFamilyDefault();
-FontFamily getFontFamily();
 void setFontFamily(FontFamily family);
 
 /** Convert weight value from args (0-8) to QFont::Weight */
@@ -95,24 +96,16 @@ int weightToArg(const QFont::Weight weight);
 QFont::Weight toQFontWeight(FontWeight weight);
 
 /** set/get normal font weight: GUIUtil::fontWeightNormal */
-QFont::Weight getFontWeightNormalDefault();
-QFont::Weight getFontWeightNormal();
 void setFontWeightNormal(const QFont::Weight& weight);
 
 /** set/get bold font weight: GUIUtil::fontWeightBold */
-QFont::Weight getFontWeightBoldDefault();
-QFont::Weight getFontWeightBold();
 void setFontWeightBold(const QFont::Weight& weight);
 
 /** set/get font scale: GUIUtil::fontScale */
 int getFontScaleDefault();
-int getFontScale();
 void setFontScale(int nScale);
 
-/** get font size with GUIUtil::fontScale applied */
-double getScaledFontSize(int nSize);
-
-/** Load dash specific appliciation fonts */
+/** Load dash specific application fonts */
 bool loadFonts();
 /** Check if the fonts have been loaded successfully */
 bool fontsLoaded();
@@ -140,12 +133,6 @@ QFont getFontNormal();
 /** Get the default bold QFont */
 QFont getFontBold();
 
-/** Return supported normal default for the current font family */
-QFont::Weight getSupportedFontWeightNormalDefault();
-/** Return supported bold default for the current font family */
-QFont::Weight getSupportedFontWeightBoldDefault();
-/** Return supported weights for the current font family */
-std::vector<QFont::Weight> getSupportedWeights();
 /** Convert an index to a weight in the supported weights vector */
 QFont::Weight supportedWeightFromIndex(int nIndex);
 /** Convert a weight to an index in the supported weights vector */

@@ -20,7 +20,12 @@
 
 AppearanceWidget::AppearanceWidget(QWidget* parent) :
     QWidget(parent),
-    ui{new Ui::AppearanceWidget()}
+    ui{new Ui::AppearanceWidget()},
+    prevTheme{GUIUtil::getActiveTheme()},
+    prevScale{GUIUtil::g_font_registry.GetFontScale()},
+    prevFontFamily{GUIUtil::g_font_registry.GetFont()},
+    prevWeightNormal{GUIUtil::g_font_registry.GetWeightNormal()},
+    prevWeightBold{GUIUtil::g_font_registry.GetWeightBold()}
 {
     ui->setupUi(this);
 
@@ -61,16 +66,16 @@ AppearanceWidget::~AppearanceWidget()
         if (prevTheme != GUIUtil::getActiveTheme()) {
             updateTheme(prevTheme);
         }
-        if (prevFontFamily != GUIUtil::getFontFamily()) {
+        if (prevFontFamily != GUIUtil::g_font_registry.GetFont()) {
             GUIUtil::setFontFamily(prevFontFamily);
         }
-        if (prevScale != GUIUtil::getFontScale()) {
+        if (prevScale != GUIUtil::g_font_registry.GetFontScale()) {
             GUIUtil::setFontScale(prevScale);
         }
-        if (prevWeightNormal != GUIUtil::getFontWeightNormal()) {
+        if (prevWeightNormal != GUIUtil::g_font_registry.GetWeightNormal()) {
             GUIUtil::setFontWeightNormal(prevWeightNormal);
         }
-        if (prevWeightBold != GUIUtil::getFontWeightBold()) {
+        if (prevWeightBold != GUIUtil::g_font_registry.GetWeightBold()) {
             GUIUtil::setFontWeightBold(prevWeightBold);
         }
     }
@@ -144,7 +149,7 @@ void AppearanceWidget::updateFontWeightBold(int nValue, bool fForce)
 
 void AppearanceWidget::updateWeightSlider(const bool fForce)
 {
-    int nMaximum = GUIUtil::getSupportedWeights().size() - 1;
+    int nMaximum = GUIUtil::g_font_registry.GetSupportedWeights().size() - 1;
 
     ui->fontWeightNormalSlider->setMinimum(0);
     ui->fontWeightNormalSlider->setMaximum(nMaximum);
@@ -153,8 +158,8 @@ void AppearanceWidget::updateWeightSlider(const bool fForce)
     ui->fontWeightBoldSlider->setMaximum(nMaximum);
 
     if (fForce || !GUIUtil::isSupportedWeight(prevWeightNormal) || !GUIUtil::isSupportedWeight(prevWeightBold)) {
-        int nIndexNormal = GUIUtil::supportedWeightToIndex(GUIUtil::getSupportedFontWeightNormalDefault());
-        int nIndexBold = GUIUtil::supportedWeightToIndex(GUIUtil::getSupportedFontWeightBoldDefault());
+        int nIndexNormal = GUIUtil::supportedWeightToIndex(GUIUtil::g_font_registry.GetWeightNormalDefault());
+        int nIndexBold = GUIUtil::supportedWeightToIndex(GUIUtil::g_font_registry.GetWeightBoldDefault());
         assert(nIndexNormal != -1 && nIndexBold != -1);
         updateFontWeightNormal(nIndexNormal, true);
         updateFontWeightBold(nIndexBold, true);
