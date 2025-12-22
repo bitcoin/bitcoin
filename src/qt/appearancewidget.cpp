@@ -33,11 +33,9 @@ AppearanceWidget::AppearanceWidget(QWidget* parent) :
         ui->theme->addItem(entry, QVariant(entry));
     }
 
-    GUIUtil::FontFamily fontSystem = GUIUtil::FontFamily::SystemDefault;
-    GUIUtil::FontFamily fontMontserrat = GUIUtil::FontFamily::Montserrat;
-
-    ui->fontFamily->addItem(GUIUtil::fontFamilyToString(fontSystem), QVariant(static_cast<int>(fontSystem)));
-    ui->fontFamily->addItem(GUIUtil::fontFamilyToString(fontMontserrat), QVariant(static_cast<int>(fontMontserrat)));
+    for (size_t idx{0}; idx < GUIUtil::g_fonts_known.size(); idx++) {
+        ui->fontFamily->addItem(GUIUtil::g_fonts_known[idx], QVariant((uint16_t)idx));
+    }
 
     updateWeightSlider();
 
@@ -118,7 +116,7 @@ void AppearanceWidget::updateTheme(const QString& theme)
 
 void AppearanceWidget::updateFontFamily(int index)
 {
-    GUIUtil::g_font_registry.SetFont(static_cast<GUIUtil::FontFamily>(ui->fontFamily->itemData(index).toInt()));
+    GUIUtil::g_font_registry.SetFont(GUIUtil::g_fonts_known[ui->fontFamily->itemData(index).toInt()]);
     GUIUtil::setApplicationFont();
     GUIUtil::updateFonts();
     updateWeightSlider(true);

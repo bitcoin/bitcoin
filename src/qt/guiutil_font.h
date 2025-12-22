@@ -7,17 +7,18 @@
 
 #include <QFont>
 #include <QString>
+#include <QStringView>
 #include <QWidget>
 
 #include <cmath>
 #include <cstdint>
+#include <map>
 #include <vector>
 
 namespace GUIUtil {
-enum class FontFamily : uint8_t {
-    SystemDefault,
-    Montserrat,
-};
+// TODO: Switch to QUtf8StringView when we switch to Qt 6
+constexpr QStringView MONTSERRAT_FONT_STR{u"Montserrat"};
+constexpr QStringView OS_FONT_STR{u"SystemDefault"};
 
 enum class FontWeight : uint8_t {
     Normal,
@@ -45,7 +46,7 @@ class FontRegistry {
 public:
     static constexpr int DEFAULT_FONT_SCALE{0};
     static constexpr int DEFAULT_FONT_SIZE{12};
-    static constexpr FontFamily DEFAULT_FONT{FontFamily::SystemDefault};
+    static constexpr QStringView DEFAULT_FONT{OS_FONT_STR};
     static constexpr QFont::Weight TARGET_WEIGHT_BOLD{QFont::Medium};
     static constexpr QFont::Weight TARGET_WEIGHT_NORMAL{
 #ifdef Q_OS_MACOS
@@ -56,20 +57,20 @@ public:
     };
 
 public:
-    void RegisterFont(const FontFamily& font);
+    void RegisterFont(const QString& font);
 
     bool IsValidWeight(const QFont::Weight& weight) const { return WeightToIdx(weight) != -1; }
     int WeightToIdx(const QFont::Weight& weight) const;
     QFont::Weight IdxToWeight(int index) const;
 
-    void SetFont(const FontFamily& font);
+    void SetFont(const QString& font);
     void SetFontScale(int font_scale) { m_font_scale = font_scale; }
     void SetWeightBold(const QFont::Weight& bold) { m_weights.at(m_font).m_bold = bold; }
     void SetWeightNormal(const QFont::Weight& normal) { m_weights.at(m_font).m_normal = normal; }
 
     double GetScaleSteps() const { return m_scale_steps; }
     double GetScaledFontSize(int size) const { return std::round(size * (1 + (m_font_scale * m_scale_steps)) * 4) / 4.0; }
-    FontFamily GetFont() const { return m_font; }
+    QString GetFont() const { return m_font; }
     int GetFontScale() const { return m_font_scale; }
     int GetFontSize() const { return m_font_size; }
     QFont::Weight GetWeightBold() const { return m_weights.at(m_font).m_bold; }
@@ -80,16 +81,15 @@ public:
 
 private:
     double m_scale_steps{0.01};
-    FontFamily m_font{DEFAULT_FONT};
+    QString m_font{DEFAULT_FONT.toUtf8()};
     int m_font_scale{DEFAULT_FONT_SCALE};
     int m_font_size{DEFAULT_FONT_SIZE};
-    std::map<FontFamily, FontInfo> m_weights;
+    std::map<QString, FontInfo> m_weights;
 };
 
 extern FontRegistry g_font_registry;
 
-FontFamily fontFamilyFromString(const QString& strFamily);
-QString fontFamilyToString(FontFamily family);
+extern std::vector<QString> g_fonts_known;
 
 /** Convert weight value from args (0-8) to QFont::Weight */
 bool weightFromArg(int nArg, QFont::Weight& weight);

@@ -98,10 +98,10 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("theme", GUIUtil::getDefaultTheme());
 
     if (!settings.contains("fontFamily"))
-        settings.setValue("fontFamily", GUIUtil::fontFamilyToString(GUIUtil::FontRegistry::DEFAULT_FONT));
+        settings.setValue("fontFamily", GUIUtil::FontRegistry::DEFAULT_FONT.toUtf8());
     if (gArgs.SoftSetArg("-font-family", settings.value("fontFamily").toString().toStdString())) {
         if (GUIUtil::fontsLoaded()) {
-            GUIUtil::g_font_registry.SetFont(GUIUtil::fontFamilyFromString(settings.value("fontFamily").toString()));
+            GUIUtil::g_font_registry.SetFont(settings.value("fontFamily").toString());
             GUIUtil::setApplicationFont();
         }
     } else {

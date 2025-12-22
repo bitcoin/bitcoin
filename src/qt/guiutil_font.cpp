@@ -75,9 +75,13 @@ QString qstrprintf(const std::string& fmt, const Args&... args)
 namespace GUIUtil {
 /** loadFonts stores the SystemDefault font in osDefaultFont to be able to reference it later again */
 static std::unique_ptr<QFont> osDefaultFont;
-
 // Contains all widgets and its font attributes (weight, italic, size) with font changes due to GUIUtil::setFont
 static std::map<QPointer<QWidget>, std::tuple<FontWeight, bool, int>> mapFontUpdates;
+// Fonts known by the client
+std::vector<QString> g_fonts_known{
+    OS_FONT_STR.toUtf8(),
+    MONTSERRAT_FONT_STR.toUtf8(),
+};
 
 FontRegistry g_font_registry;
 
@@ -91,40 +95,17 @@ FontInfo::FontInfo(const QString& font_name)
 
 FontInfo::~FontInfo() = default;
 
-void FontRegistry::RegisterFont(const FontFamily& font)
+void FontRegistry::RegisterFont(const QString& font)
 {
-    m_weights.emplace(font, FontInfo(fontFamilyToString(font)));
+    m_weights.emplace(font, FontInfo(font));
 }
 
-void FontRegistry::SetFont(const FontFamily& font)
+void FontRegistry::SetFont(const QString& font)
 {
     if (!m_weights.count(font)) {
-        throw std::runtime_error(strprintf("%s: Font family not loaded: %s", __func__, fontFamilyToString(font).toStdString()));
+        throw std::runtime_error(strprintf("%s: Font family not loaded: %s", __func__, font.toStdString()));
     }
     m_font = font;
-}
-
-FontFamily fontFamilyFromString(const QString& strFamily)
-{
-    if (strFamily == "SystemDefault") {
-        return FontFamily::SystemDefault;
-    }
-    if (strFamily == "Montserrat") {
-        return FontFamily::Montserrat;
-    }
-    throw std::invalid_argument(strprintf("Invalid font-family: %s", strFamily.toStdString()));
-}
-
-QString fontFamilyToString(FontFamily family)
-{
-    switch (family) {
-    case FontFamily::SystemDefault:
-        return "SystemDefault";
-    case FontFamily::Montserrat:
-        return "Montserrat";
-    default:
-        assert(false);
-    }
 }
 
 bool weightFromArg(int nArg, QFont::Weight& weight)
@@ -211,16 +192,14 @@ bool loadFonts()
         qDebug() << qstrprintf("%s: %s loaded with id %d", __func__, font_name.toStdString(), vecFontIds.back());
     };
 
-    // Load Montserrat
-    const std::string montserrat_str{fontFamilyToString(FontFamily::Montserrat).toStdString()};
     // Import the italic Montserrat variant as it doesn't map to a weight
-    importFont(qstrprintf(":fonts/%s-Italic", montserrat_str));
+    importFont(qstrprintf(":fonts/%s-Italic", MONTSERRAT_FONT_STR.toUtf8().toStdString()));
     // Import the rest of Montserrat variants
     for (const auto& [_, val] : mapMontserrat) {
         const auto& [variant, can_italic] = val;
-        importFont(qstrprintf(":fonts/%s-%s", montserrat_str, variant));
+        importFont(qstrprintf(":fonts/%s-%s", MONTSERRAT_FONT_STR.toUtf8().toStdString(), variant));
         if (can_italic) {
-            importFont(qstrprintf(":fonts/%s-%sItalic", montserrat_str, variant));
+            importFont(qstrprintf(":fonts/%s-%sItalic", MONTSERRAT_FONT_STR.toUtf8().toStdString(), variant));
         }
     }
 
@@ -246,7 +225,7 @@ bool loadFonts()
 
     // Print debug logs for added fonts fetched by the family name
     for (const QString& f : database.families()) {
-        if (f.contains(QString::fromStdString(montserrat_str))) {
+        if (f.contains(MONTSERRAT_FONT_STR)) {
             for (const QString& style : database.styles(f)) {
                 qDebug() << qstrprintf("%s: Family: %s, Style: %s", __func__, f.toStdString(), style.toStdString());
             }
@@ -256,8 +235,9 @@ bool loadFonts()
 
     // Initialize supported font weights for all available fonts
     // Generate a vector with supported font weights by comparing the width of a certain test text for all font weights
-    g_font_registry.RegisterFont(FontFamily::SystemDefault);
-    g_font_registry.RegisterFont(FontFamily::Montserrat);
+    for (const auto& fonts : g_fonts_known) {
+        g_font_registry.RegisterFont(fonts);
+    }
 
     setApplicationFont();
 
@@ -277,8 +257,7 @@ void setApplicationFont()
 
     std::unique_ptr<QFont> font;
 
-    if (g_font_registry.GetFont() == FontFamily::Montserrat) {
-        QString family = fontFamilyToString(FontFamily::Montserrat);
+    if (auto family = g_font_registry.GetFont(); family == MONTSERRAT_FONT_STR) {
 #ifdef Q_OS_MACOS
         if (g_font_registry.GetWeightNormal() != FontRegistry::TARGET_WEIGHT_NORMAL) {
             font = std::make_unique<QFont>(getFontNormal());
@@ -428,7 +407,7 @@ QFont getFont(const QString& font_name, QFont::Weight weight, bool italic, int p
         return font;
     }
 
-    if (font_name == "Montserrat") {
+    if (font_name == MONTSERRAT_FONT_STR) {
         assert(mapMontserrat.count(weight));
 #ifdef Q_OS_MACOS
         font.setFamily(font_name);
@@ -450,14 +429,14 @@ QFont getFont(const QString& font_name, QFont::Weight weight, bool italic, int p
             font.setFamily(font_name + QString{" "} + QString::fromStdString(mapMontserrat.at(weight).first));
         }
 #endif // Q_OS_MACOS
-    } else if (font_name == "SystemDefault") {
+    } else if (font_name == OS_FONT_STR) {
         font.setFamily(osDefaultFont->family());
     } else {
         font.setFamily(font_name);
     }
 
 #ifdef Q_OS_MACOS
-    if (font_name != "Montserrat")
+    if (font_name != MONTSERRAT_FONT_STR)
 #endif // Q_OS_MACOS
     {
         font.setWeight(weight);
@@ -479,7 +458,7 @@ QFont getFont(const QString& font_name, QFont::Weight weight, bool italic, int p
 
 QFont getFont(QFont::Weight qWeight, bool fItalic, int nPointSize)
 {
-    return getFont(fontFamilyToString(g_font_registry.GetFont()), qWeight, fItalic, nPointSize);
+    return getFont(g_font_registry.GetFont(), qWeight, fItalic, nPointSize);
 }
 
 QFont getFont(FontWeight weight, bool fItalic, int nPointSize)

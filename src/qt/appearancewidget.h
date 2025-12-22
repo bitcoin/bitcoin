@@ -50,7 +50,7 @@ private:
     bool fAcceptChanges{false};
     QString prevTheme;
     int prevScale;
-    GUIUtil::FontFamily prevFontFamily;
+    QString prevFontFamily;
     QFont::Weight prevWeightNormal;
     QFont::Weight prevWeightBold;
 
