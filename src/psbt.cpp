@@ -69,6 +69,19 @@ bool PartiallySignedTransaction::AddOutput(const CTxOut& txout, const PSBTOutput
     return true;
 }
 
+void PartiallySignedTransaction::StripDerivationPaths()
+{
+    // Loop over the inputs and strip m_tap_bip32_paths
+    for (unsigned int i = 0; i < inputs.size(); ++i) {
+        inputs[i].hd_keypaths.clear();
+    }
+
+    // Loop over the outputs and strip m_tap_bip32_paths
+    for (unsigned int i = 0; i < outputs.size(); ++i) {
+        outputs[i].hd_keypaths.clear();
+    }
+}
+
 bool PartiallySignedTransaction::GetInputUTXO(CTxOut& utxo, int input_index) const
 {
     const PSBTInput& input = inputs[input_index];
