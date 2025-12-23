@@ -97,6 +97,13 @@ enum class ScriptVerificationFlags : btck_ScriptVerificationFlags {
     ALL = btck_ScriptVerificationFlags_ALL
 };
 
+enum class BlockCheckFlags : btck_BlockCheckFlags {
+    NONE = btck_BlockCheckFlags_NONE,
+    POW = btck_BlockCheckFlags_POW,
+    MERKLE = btck_BlockCheckFlags_MERKLE,
+    ALL = btck_BlockCheckFlags_ALL
+};
+
 template <typename T>
 struct is_bitmask_enum : std::false_type {
 };
@@ -369,6 +376,7 @@ public:
 
 class Transaction;
 class TransactionOutput;
+class BlockValidationState;
 
 template <typename Derived>
 class ScriptPubkeyApi
@@ -702,6 +710,45 @@ public:
         : Handle{view} {}
 };
 
+template <typename Derived>
+class BlockValidationStateApi
+{
+private:
+    auto impl() const
+    {
+        return static_cast<const Derived*>(this)->get();
+    }
+    friend Derived;
+public:
+    ValidationMode GetValidationMode() const
+    {
+        return static_cast<ValidationMode>(btck_block_validation_state_get_validation_mode(impl()));
+    }
+
+    BlockValidationResult GetBlockValidationResult() const
+    {
+        return static_cast<BlockValidationResult>(btck_block_validation_state_get_block_validation_result(impl()));
+    }
+};
+
+class BlockValidationStateView : public View<btck_BlockValidationState>, public BlockValidationStateApi<BlockValidationStateView>
+{
+public:
+    explicit BlockValidationStateView(const btck_BlockValidationState* ptr) : View{ptr} {}
+};
+
+class BlockValidationState : public UniqueHandle<btck_BlockValidationState, btck_block_validation_state_destroy>, public BlockValidationStateApi<BlockValidationState>
+{
+public:
+    BlockValidationState() : UniqueHandle{btck_block_validation_state_create()} {}
+};
+
+class ConsensusParamsView : public View<btck_ConsensusParams>
+{
+public:
+    explicit ConsensusParamsView(const btck_ConsensusParams* ptr) : View{ptr} {}
+};
+
 class Block : public Handle<btck_Block, btck_block_copy, btck_block_destroy>
 {
 public:
@@ -720,6 +767,13 @@ public:
     TransactionView GetTransaction(size_t index) const
     {
         return TransactionView{btck_block_get_transaction_at(get(), index)};
+    }
+
+    bool Check(const ConsensusParamsView& consensus_params,
+        BlockCheckFlags flags,
+        BlockValidationState& state) const
+    {
+        return btck_block_check(get(), consensus_params.get(), static_cast<btck_BlockCheckFlags>(flags), state.get()) == 1;
     }
 
     MAKE_RANGE_METHOD(Transactions, Block, &Block::CountTransactions, &Block::GetTransaction, *this)
@@ -829,36 +883,12 @@ public:
     virtual void FatalErrorHandler(std::string_view error) {}
 };
 
-class BlockValidationState
-{
-private:
-    const btck_BlockValidationState* m_state;
-
-public:
-    BlockValidationState(const btck_BlockValidationState* state) : m_state{state} {}
-
-    BlockValidationState(const BlockValidationState&) = delete;
-    BlockValidationState& operator=(const BlockValidationState&) = delete;
-    BlockValidationState(BlockValidationState&&) = delete;
-    BlockValidationState& operator=(BlockValidationState&&) = delete;
-
-    ValidationMode GetValidationMode() const
-    {
-        return static_cast<ValidationMode>(btck_block_validation_state_get_validation_mode(m_state));
-    }
-
-    BlockValidationResult GetBlockValidationResult() const
-    {
-        return static_cast<BlockValidationResult>(btck_block_validation_state_get_block_validation_result(m_state));
-    }
-};
-
 class ValidationInterface
 {
 public:
     virtual ~ValidationInterface() = default;
 
-    virtual void BlockChecked(Block block, const BlockValidationState state) {}
+    virtual void BlockChecked(Block block, const BlockValidationStateView state) {}
 
     virtual void PowValidBlock(BlockTreeEntry entry, Block block) {}
 
@@ -872,6 +902,11 @@ class ChainParams : public Handle<btck_ChainParameters, btck_chain_parameters_co
 public:
     ChainParams(ChainType chain_type)
         : Handle{btck_chain_parameters_create(static_cast<btck_ChainType>(chain_type))} {}
+
+    ConsensusParamsView GetConsensusParams() const
+    {
+        return ConsensusParamsView{btck_chain_parameters_get_consensus_params(get())};
+    }
 };
 
 class ContextOptions : public UniqueHandle<btck_ContextOptions, btck_context_options_destroy>
@@ -916,7 +951,7 @@ public:
             btck_ValidationInterfaceCallbacks{
                 .user_data = heap_vi.release(),
                 .user_data_destroy = +[](void* user_data) { delete static_cast<user_type>(user_data); },
-                .block_checked = +[](void* user_data, btck_Block* block, const btck_BlockValidationState* state) { (*static_cast<user_type>(user_data))->BlockChecked(Block{block}, BlockValidationState{state}); },
+                .block_checked = +[](void* user_data, btck_Block* block, const btck_BlockValidationState* state) { (*static_cast<user_type>(user_data))->BlockChecked(Block{block}, BlockValidationStateView{state}); },
                 .pow_valid_block = +[](void* user_data, btck_Block* block, const btck_BlockTreeEntry* entry) { (*static_cast<user_type>(user_data))->PowValidBlock(BlockTreeEntry{entry}, Block{block}); },
                 .block_connected = +[](void* user_data, btck_Block* block, const btck_BlockTreeEntry* entry) { (*static_cast<user_type>(user_data))->BlockConnected(Block{block}, BlockTreeEntry{entry}); },
                 .block_disconnected = +[](void* user_data, btck_Block* block, const btck_BlockTreeEntry* entry) { (*static_cast<user_type>(user_data))->BlockDisconnected(Block{block}, BlockTreeEntry{entry}); },
