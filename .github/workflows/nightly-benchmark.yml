@@ -1,0 +1,179 @@
+name: Nightly Benchmark
+on:
+  workflow_run:
+    workflows: ["Nightly Rebase"]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  build:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50  # Need history for merge-base
+
+      - name: Get commit SHAs
+        run: |
+          # Benchcoin commit (for building)
+          echo "BENCHCOIN_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+          # Bitcoin commit - find merge-base with upstream
+          git remote add upstream https://github.com/bitcoin/bitcoin.git
+          git fetch upstream master
+          BITCOIN_SHA=$(git merge-base HEAD upstream/master)
+          echo "BITCOIN_SHA=$BITCOIN_SHA" >> "$GITHUB_ENV"
+
+          echo "Benchcoin: $(git rev-parse HEAD)"
+          echo "Bitcoin merge-base: $BITCOIN_SHA"
+
+      - name: Build master binary
+        run: |
+          nix develop --command python3 bench.py build \
+            -o ${{ runner.temp }}/binaries \
+            $BENCHCOIN_SHA:master
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-binaries
+          path: ${{ runner.temp }}/binaries/
+
+      - name: Upload commit info
+        run: |
+          echo "$BITCOIN_SHA" > ${{ runner.temp }}/commit.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: commit-info
+          path: ${{ runner.temp }}/commit.txt
+
+  benchmark:
+    needs: build
+    strategy:
+      matrix:
+        # Matrix entries from configs/nightly.toml: dbcache=[450,32000]
+        name: ["450", "32000"]
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 600
+    env:
+      ORIGINAL_DATADIR: /data/pruned-840k
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: nightly-binaries
+          path: ${{ runner.temp }}/binaries
+
+      - name: Set binary permissions
+        run: |
+          chmod +x ${{ runner.temp }}/binaries/master/bitcoind
+
+      - name: Run benchmark
+        run: |
+          nix develop --command python3 bench.py run \
+            --benchmark-config bench/configs/nightly.toml \
+            --matrix-entry ${{ matrix.name }} \
+            --datadir $ORIGINAL_DATADIR \
+            --tmp-datadir ${{ runner.temp }}/datadir \
+            --output-dir ${{ runner.temp }}/output \
+            master:${{ runner.temp }}/binaries/master/bitcoind
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: result-nightly-${{ matrix.name }}
+          path: ${{ runner.temp }}/output/results.json
+
+  publish:
+    needs: benchmark
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Checkout benchcoin tools
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          path: benchcoin-tools
+
+      - name: Download commit info
+        uses: actions/download-artifact@v4
+        with:
+          name: commit-info
+          path: ./commit-info
+
+      - name: Download 450 results
+        uses: actions/download-artifact@v4
+        with:
+          name: result-nightly-450
+          path: ./nightly-450-results
+
+      - name: Download 32000 results
+        uses: actions/download-artifact@v4
+        with:
+          name: result-nightly-32000
+          path: ./nightly-32000-results
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Get current date
+        run: |
+          echo "DATE=$(date -u +%Y-%m-%d)" >> "$GITHUB_ENV"
+
+      - name: Append results to history
+        run: |
+          COMMIT=$(cat ./commit-info/commit.txt)
+          cd benchcoin-tools
+
+          # Append 450 (default dbcache) result (with machine specs and config capture)
+          python3 bench.py nightly \
+            --history-file ../nightly-history.json \
+            append \
+            ../nightly-450-results/results.json \
+            "$COMMIT" \
+            450 \
+            450 \
+            --date "$DATE" \
+            --capture-machine \
+            --benchmark-config bench/configs/nightly.toml
+
+          # Append 32000 (large dbcache) result
+          python3 bench.py nightly \
+            --history-file ../nightly-history.json \
+            append \
+            ../nightly-32000-results/results.json \
+            "$COMMIT" \
+            32000 \
+            32000 \
+            --date "$DATE"
+
+      - name: Generate chart
+        run: |
+          cd benchcoin-tools
+          python3 bench.py nightly \
+            --history-file ../nightly-history.json \
+            chart \
+            ../index.html
+
+      - name: Commit and push to gh-pages
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add nightly-history.json index.html
+          git commit -m "Update nightly benchmark results for $DATE" || echo "No changes to commit"
+          git push origin gh-pages

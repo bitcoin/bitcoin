@@ -1,0 +1,146 @@
+name: Publish Results
+on:
+  workflow_run:
+    workflows: ["Benchmark"]
+    types: [completed]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      actions: read
+      contents: write
+      checks: read
+    env:
+      # Matrix entries from configs/pr.toml: dbcache=[450,32000] x instrumented=[false,true]
+      NETWORKS: "450-true,32000-true,450-false,32000-false"
+    outputs:
+      speedups: ${{ steps.generate.outputs.speedups }}
+      pr-number: ${{ steps.metadata.outputs.pr-number }}
+      result-url: ${{ steps.generate.outputs.result-url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Checkout benchcoin tools
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          path: benchcoin-tools
+
+      - name: Download artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh run download ${{ github.event.workflow_run.id }} --repo ${{ github.repository }}
+
+      - name: Extract artifacts
+        run: |
+          for network in ${NETWORKS//,/ }; do
+            # Create network-specific directories with results
+            if [ -d "result-${network}" ]; then
+              mkdir -p "${network}-results"
+              mv "result-${network}/results.json" "${network}-results/"
+            fi
+
+            # Copy flamegraphs into network results directory
+            if [ -d "flamegraph-${network}" ]; then
+              cp -r "flamegraph-${network}"/* "${network}-results/" 2>/dev/null || true
+            fi
+
+            # Copy plots into network results directory
+            if [ -d "pngs-${network}" ]; then
+              mkdir -p "${network}-results/plots"
+              cp -r "pngs-${network}"/* "${network}-results/plots/" 2>/dev/null || true
+            fi
+
+            # Keep metadata separate for extraction
+            if [ -d "run-metadata-${network}" ]; then
+              mkdir -p "${network}-metadata"
+              mv "run-metadata-${network}"/* "${network}-metadata/"
+            fi
+          done
+
+      - name: Extract metadata
+        id: metadata
+        run: |
+          # Find PR number and run ID from any available metadata
+          for network in ${NETWORKS//,/ }; do
+            if [ -f "${network}-metadata/github.json" ]; then
+              PR_NUMBER=$(jq -r '.event.pull_request.number // "main"' "${network}-metadata/github.json")
+              RUN_ID=$(jq -r '.run_id' "${network}-metadata/github.json")
+              echo "pr-number=${PR_NUMBER}" >> $GITHUB_OUTPUT
+              echo "run-id=${RUN_ID}" >> $GITHUB_OUTPUT
+              echo "Found metadata: PR=${PR_NUMBER}, Run=${RUN_ID}"
+              break
+            fi
+          done
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate report
+        id: generate
+        env:
+          PR_NUMBER: ${{ steps.metadata.outputs.pr-number }}
+          RUN_ID: ${{ steps.metadata.outputs.run-id }}
+        run: |
+          cd benchcoin-tools
+
+          # Build network arguments
+          NETWORK_ARGS=""
+          for network in ${NETWORKS//,/ }; do
+            if [ -d "../${network}-results" ]; then
+              NETWORK_ARGS="${NETWORK_ARGS} --network ${network}:../${network}-results"
+            fi
+          done
+
+          # Generate report
+          python3 bench.py report \
+            ${NETWORK_ARGS} \
+            --pr-number "${PR_NUMBER}" \
+            --run-id "${RUN_ID}" \
+            --update-index \
+            "../results/pr-${PR_NUMBER}/${RUN_ID}"
+
+          # Read speedups from generated results.json (filter for uninstrumented runs: *-false)
+          SPEEDUPS=$(jq -r '.speedups | to_entries | map(select(.key | endswith("-false"))) | map("\(.key): \(.value)%") | join(", ")' "../results/pr-${PR_NUMBER}/${RUN_ID}/results.json")
+          echo "speedups=${SPEEDUPS}" >> $GITHUB_OUTPUT
+
+          RESULT_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/results/pr-${PR_NUMBER}/${RUN_ID}/index.html"
+          echo "result-url=${RESULT_URL}" >> $GITHUB_OUTPUT
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: results
+
+      - name: Commit and push to gh-pages
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          # Note: Only add results/ directory, not root index.html
+          # The root index.html is managed by nightly-benchmark.yml
+          git add results/
+          git commit -m "Update benchmark results from run ${{ github.event.workflow_run.id }}"
+          git push origin gh-pages
+
+  comment-pr:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      actions: read
+    steps:
+      - name: Comment on PR
+        if: ${{ needs.build.outputs.pr-number != 'main' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ needs.build.outputs.pr-number }} \
+            --repo ${{ github.repository }} \
+            --body "📊 Benchmark results for this run (${{ github.event.workflow_run.id }}) will be available at: ${{ needs.build.outputs.result-url }} after the github pages \"build and deployment\" action has completed.
+          🚀 Speedups: ${{ needs.build.outputs.speedups }}"

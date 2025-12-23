@@ -1,0 +1,35 @@
+name: Nightly Rebase
+
+on:
+  schedule:
+    - cron: '0 5 * * *'  # 05:00 GMT daily
+  workflow_dispatch:  # manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  rebase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0  # Full history needed for rebase
+          token: ${{ secrets.REBASE_PAT }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream and rebase
+        run: |
+          git remote add upstream https://github.com/bitcoin/bitcoin.git
+          git fetch upstream master
+          git rebase upstream/master
+
+      - name: Push changes
+        run: |
+          git push --force origin master

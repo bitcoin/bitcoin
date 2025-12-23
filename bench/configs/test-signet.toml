@@ -1,0 +1,21 @@
+# Test benchmark configuration for signet
+# Quick local testing without dedicated sync peer
+#
+# Usage:
+#   bench.py run --benchmark-config bench/configs/test-signet.toml --matrix-entry 450 \
+#     --datadir /path/to/signet-datadir --output-dir ./output \
+#     test:./binaries/test/bitcoind
+
+[benchmark]
+start_height = 0
+runs = 1
+
+[bitcoind]
+stopatheight = 10000
+chain = "signet"
+prune = 1000
+daemon = false
+printtoconsole = false
+
+[bitcoind.matrix]
+dbcache = [450]

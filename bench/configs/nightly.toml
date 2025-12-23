@@ -1,0 +1,24 @@
+# Nightly benchmark configuration
+# Clone benchcoin + use this config = reproduce the benchmark
+#
+# Usage:
+#   bench.py run --benchmark-config bench/configs/nightly.toml --matrix-entry 450 \
+#     --datadir /data/pruned-840k --output-dir ./output \
+#     master:/path/to/bitcoind
+
+[benchmark]
+start_height = 840000
+runs = 2
+
+[bitcoind]
+stopatheight = 900000
+chain = "main"
+connect = "148.251.128.115:33333" # accepts whitelisted ip addrs only
+prune = 10000
+daemon = false
+printtoconsole = false
+
+# Parameter matrix - each value runs separately
+# Use --matrix-entry to select one (e.g., --matrix-entry 450)
+[bitcoind.matrix]
+dbcache = [450, 32000]

@@ -1,0 +1,112 @@
+name: Benchmark
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build-binaries:
+    runs-on: [self-hosted, linux, x64]
+    env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Fetch base commit
+        run: |
+          echo "HEAD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          git fetch --depth=1 origin ${{ github.event.pull_request.base.sha }}
+
+      - name: Build both binaries
+        run: |
+          nix develop --command python3 bench.py build \
+            -o ${{ runner.temp }}/binaries \
+            $BASE_SHA:base $HEAD_SHA:head
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: bitcoind-binaries
+          path: ${{ runner.temp }}/binaries/
+
+  benchmark:
+    needs: build-binaries
+    strategy:
+      matrix:
+        # Matrix entries from configs/pr.toml: dbcache=[450,32000] x instrumented=[false,true]
+        name: [450-false, 450-true, 32000-false, 32000-true]
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 600
+    env:
+      ORIGINAL_DATADIR: /data/pruned-840k
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: bitcoind-binaries
+          path: ${{ runner.temp }}/binaries
+
+      - name: Set binary permissions
+        run: |
+          chmod +x ${{ runner.temp }}/binaries/base/bitcoind
+          chmod +x ${{ runner.temp }}/binaries/head/bitcoind
+
+      - name: Fetch base commit
+        run: |
+          echo "HEAD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          git fetch --depth=1 origin ${{ github.event.pull_request.base.sha }}
+
+      - name: Run benchmark
+        run: |
+          nix develop --command python3 bench.py run \
+            --benchmark-config bench/configs/pr.toml \
+            --matrix-entry ${{ matrix.name }} \
+            --datadir $ORIGINAL_DATADIR \
+            --tmp-datadir ${{ runner.temp }}/datadir \
+            --output-dir ${{ runner.temp }}/output \
+            base:${{ runner.temp }}/binaries/base/bitcoind \
+            head:${{ runner.temp }}/binaries/head/bitcoind
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: result-${{ matrix.name }}
+          path: ${{ runner.temp }}/output/results.json
+
+      - name: Upload plots
+        uses: actions/upload-artifact@v4
+        with:
+          name: pngs-${{ matrix.name }}
+          path: ${{ runner.temp }}/output/plots/*.png
+          if-no-files-found: ignore
+
+      - name: Upload flamegraphs
+        uses: actions/upload-artifact@v4
+        with:
+          name: flamegraph-${{ matrix.name }}
+          path: ${{ runner.temp }}/output/*-flamegraph.svg
+          if-no-files-found: ignore
+
+      - name: Write context metadata
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+          RUNNER_CONTEXT: ${{ toJSON(runner) }}
+        run: |
+          mkdir -p ${{ runner.temp }}/contexts
+          echo "$GITHUB_CONTEXT" | nix develop --command jq "del(.token)" > ${{ runner.temp }}/contexts/github.json
+          echo "$RUNNER_CONTEXT" > ${{ runner.temp }}/contexts/runner.json
+
+      - name: Upload context metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-metadata-${{ matrix.name }}
+          path: ${{ runner.temp }}/contexts/

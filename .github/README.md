@@ -1,0 +1,1 @@
+../doc/benchcoin.md
