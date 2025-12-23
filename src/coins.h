@@ -355,7 +355,7 @@ public:
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     std::vector<uint256> GetHeadBlocks() const override;
-    void SetBackend(CCoinsView &viewIn);
+    virtual void SetBackend(CCoinsView &viewIn);
     void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override;
     size_t EstimateSize() const override;
@@ -451,7 +451,7 @@ public:
      * If will_reuse_cache is false, the cache will retain the same memory footprint
      * after flushing and should be destroyed to deallocate.
      */
-    void Flush(bool will_reuse_cache = true);
+    virtual void Flush(bool will_reuse_cache = true);
 
     /**
      * Push the modifications applied to this cache to its base while retaining
@@ -459,7 +459,7 @@ public:
      * Failure to call this method or Flush() before destruction will cause the changes
      * to be forgotten.
      */
-    void Sync();
+    virtual void Sync();
 
     //! Wipe local state.
     virtual void Reset() noexcept;
