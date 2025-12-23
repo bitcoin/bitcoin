@@ -376,6 +376,9 @@ protected:
     /* Cached dynamic memory usage for the inner Coin objects. */
     mutable size_t cachedCoinsUsage{0};
 
+    //! Get the coin from base but do not access or mutate cacheCoins.
+    std::optional<Coin> FetchCoinWithoutMutating(const COutPoint& outpoint) const noexcept;
+
 public:
     CCoinsViewCache(CCoinsView *baseIn, bool deterministic = false);
 
@@ -487,7 +490,7 @@ private:
      * @note this is marked const, but may actually append to `cacheCoins`, increasing
      * memory usage.
      */
-    CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
+    virtual CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
 };
 
 //! Utility function to add all of a transaction's outputs to a cache.

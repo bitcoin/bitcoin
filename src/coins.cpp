@@ -34,6 +34,20 @@ bool CCoinsViewBacked::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &h
 std::unique_ptr<CCoinsViewCursor> CCoinsViewBacked::Cursor() const { return base->Cursor(); }
 size_t CCoinsViewBacked::EstimateSize() const { return base->EstimateSize(); }
 
+std::optional<Coin> CCoinsViewCache::FetchCoinWithoutMutating(const COutPoint& outpoint) const noexcept
+{
+    // Walk up the chain of caches, returning on first entry that exists
+    const CCoinsView* view{base};
+    while (const auto* cache{dynamic_cast<const CCoinsViewCache*>(view)}) {
+        auto it{cache->cacheCoins.find(outpoint)};
+        if (it != cache->cacheCoins.end()) {
+            return !it->second.coin.IsSpent() ? std::optional<Coin>{it->second.coin} : std::nullopt;
+        }
+        view = cache->base;
+    }
+    return view->GetCoin(outpoint);
+}
+
 CCoinsViewCache::CCoinsViewCache(CCoinsView* baseIn, bool deterministic) :
     CCoinsViewBacked(baseIn), m_deterministic(deterministic),
     cacheCoins(0, SaltedOutpointHasher(/*deterministic=*/deterministic), CCoinsMap::key_equal{}, &m_cache_coins_memory_resource)
