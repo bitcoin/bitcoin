@@ -7,6 +7,7 @@
 #include <qt/forms/ui_openuridialog.h>
 
 #include <qt/guiutil.h>
+#include <qt/guiutil_font.h>
 #include <qt/sendcoinsrecipient.h>
 
 #include <QAbstractButton>

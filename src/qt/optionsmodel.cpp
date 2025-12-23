@@ -12,6 +12,7 @@
 #include <qt/bitcoinunits.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
+#include <qt/guiutil_font.h>
 
 #include <interfaces/node.h>
 #include <mapport.h>

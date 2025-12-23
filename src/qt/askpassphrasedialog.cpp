@@ -12,6 +12,7 @@
 
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
+#include <qt/guiutil_font.h>
 #include <qt/walletmodel.h>
 
 #include <support/allocators/secure.h>

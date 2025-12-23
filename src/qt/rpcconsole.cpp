@@ -18,6 +18,7 @@
 #include <qt/bantablemodel.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
+#include <qt/guiutil_font.h>
 #include <qt/peertablesortproxy.h>
 #include <qt/walletcontroller.h>
 #include <qt/walletmodel.h>

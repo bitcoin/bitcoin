@@ -7,6 +7,7 @@
 
 #include <qt/bitcoinunits.h>
 #include <qt/guiutil.h>
+#include <qt/guiutil_font.h>
 #include <qt/optionsmodel.h>
 #include <qt/qrimagewidget.h>
 #include <qt/walletmodel.h>

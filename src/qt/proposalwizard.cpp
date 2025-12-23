@@ -13,6 +13,7 @@
 #include <qt/bitcoinamountfield.h>
 #include <qt/bitcoinunits.h>
 #include <qt/guiutil.h>
+#include <qt/guiutil_font.h>
 #include <qt/optionsmodel.h>
 #include <qt/qvalidatedlineedit.h>
 #include <qt/rpcconsole.h>

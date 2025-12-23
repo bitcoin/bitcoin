@@ -139,6 +139,7 @@ BITCOIN_QT_H = \
   qt/proposalwizard.h \
   qt/guiconstants.h \
   qt/guiutil.h \
+  qt/guiutil_font.h \
   qt/initexecutor.h \
   qt/intro.h \
   qt/macdockiconhandler.h \
@@ -230,6 +231,7 @@ BITCOIN_QT_BASE_CPP = \
   qt/clientmodel.cpp \
   qt/csvmodelwriter.cpp \
   qt/guiutil.cpp \
+  qt/guiutil_font.cpp \
   qt/initexecutor.cpp \
   qt/intro.cpp \
   qt/modaloverlay.cpp \
