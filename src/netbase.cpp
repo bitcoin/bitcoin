@@ -141,6 +141,8 @@ std::vector<std::string> GetNetworkNames(bool append_unroutable)
     return names;
 }
 
+bool isClearnet(const enum Network net) { return net == NET_IPV4 || net == NET_IPV6; }
+
 static std::vector<CNetAddr> LookupIntern(const std::string& name, unsigned int nMaxSolutions, bool fAllowLookup, DNSLookupFn dns_lookup_function)
 {
     if (!ContainsNoNUL(name)) return {};
