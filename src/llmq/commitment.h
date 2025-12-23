@@ -76,7 +76,8 @@ public:
         return int(std::count(validMembers.begin(), validMembers.end(), true));
     }
 
-    bool VerifySignatureAsync(const llmq::UtilParameters& util_params, CCheckQueueControl<utils::BlsCheck>* queue_control) const;
+    bool VerifySignatureAsync(const llmq::UtilParameters& util_params,
+                              CCheckQueueControl<utils::BlsCheck>* queue_control) const;
     bool Verify(const llmq::UtilParameters& util_params, bool checkSigs) const;
     bool VerifyNull() const;
     bool VerifySizes(const Consensus::LLMQParams& params) const;

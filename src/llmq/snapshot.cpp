@@ -18,9 +18,9 @@ namespace {
 constexpr std::string_view DB_QUORUM_SNAPSHOT{"llmq_S"};
 
 //! Constructs a llmq::CycleData and populate it with metadata
-std::optional<llmq::CycleData> ConstructCycle(llmq::CQuorumSnapshotManager& qsnapman, const Consensus::LLMQType& llmq_type,
-                                              bool skip_snap, int32_t height, gsl::not_null<const CBlockIndex*> index_tip,
-                                              std::string& error)
+std::optional<llmq::CycleData> ConstructCycle(llmq::CQuorumSnapshotManager& qsnapman,
+                                              const Consensus::LLMQType& llmq_type, bool skip_snap, int32_t height,
+                                              gsl::not_null<const CBlockIndex*> index_tip, std::string& error)
 {
     llmq::CycleData ret;
     ret.m_cycle_index = index_tip->GetAncestor(height);
@@ -108,14 +108,17 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
 
     const int cycleLength = llmq_params_opt->dkgInterval;
 
-    auto cycle_base_opt = ConstructCycle(qsnapman, llmqType, /*skip_snap=*/true, /*height=*/blockIndex->nHeight - (blockIndex->nHeight % cycleLength), blockIndex, errorRet);
+    auto cycle_base_opt = ConstructCycle(qsnapman, llmqType, /*skip_snap=*/true,
+                                         /*height=*/blockIndex->nHeight - (blockIndex->nHeight % cycleLength),
+                                         blockIndex, errorRet);
     if (!cycle_base_opt.has_value()) {
         return false;
     }
     if (use_legacy_construction) {
         // Build MN list Diff always with highest baseblock
         if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
-                                       GetLastBaseBlockHash(baseBlockIndexes, cycle_base_opt->m_work_index, use_legacy_construction),
+                                       GetLastBaseBlockHash(baseBlockIndexes, cycle_base_opt->m_work_index,
+                                                            use_legacy_construction),
                                        cycle_base_opt->m_work_index->GetBlockHash(), response.mnListDiffH, errorRet)) {
             return false;
         }
@@ -125,13 +128,16 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
 
     auto target_cycles{response.GetCycles()};
     for (size_t idx{0}; idx < target_cycles.size(); idx++) {
-        auto cycle_opt = ConstructCycle(qsnapman, llmqType, /*skip_snap=*/false, /*height=*/cycle_base_opt->m_cycle_index->nHeight - (cycleLength * (idx + 1)), tipBlockIndex, errorRet);
+        auto cycle_opt = ConstructCycle(qsnapman, llmqType, /*skip_snap=*/false,
+                                        /*height=*/cycle_base_opt->m_cycle_index->nHeight - (cycleLength * (idx + 1)),
+                                        tipBlockIndex, errorRet);
         if (!cycle_opt.has_value()) {
             return false;
         }
         if (use_legacy_construction) {
             if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
-                                           GetLastBaseBlockHash(baseBlockIndexes, cycle_opt->m_work_index, use_legacy_construction),
+                                           GetLastBaseBlockHash(baseBlockIndexes, cycle_opt->m_work_index,
+                                                                use_legacy_construction),
                                            cycle_opt->m_work_index->GetBlockHash(), cycle_opt->m_diff, errorRet)) {
                 return false;
             }
@@ -165,7 +171,8 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
         response.quorumSnapshotList.push_back(cycle_opt->m_snap);
         CSimplifiedMNListDiff mnhneeded;
         if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
-                                       GetLastBaseBlockHash(baseBlockIndexes, cycle_opt->m_work_index, use_legacy_construction),
+                                       GetLastBaseBlockHash(baseBlockIndexes, cycle_opt->m_work_index,
+                                                            use_legacy_construction),
                                        cycle_opt->m_work_index->GetBlockHash(), mnhneeded, errorRet)) {
             return false;
         }
@@ -179,16 +186,17 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
         for (size_t idx = target_cycles.size(); idx-- > 0;) {
             auto* cycle{target_cycles[idx]};
             if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
-                                           GetLastBaseBlockHash(baseBlockIndexes, cycle->m_work_index, use_legacy_construction),
-                                           cycle->m_work_index->GetBlockHash(), cycle->m_diff, errorRet))
-            {
+                                           GetLastBaseBlockHash(baseBlockIndexes, cycle->m_work_index,
+                                                                use_legacy_construction),
+                                           cycle->m_work_index->GetBlockHash(), cycle->m_diff, errorRet)) {
                 return false;
             }
             baseBlockIndexes.push_back(cycle->m_work_index);
         }
 
         if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
-                                       GetLastBaseBlockHash(baseBlockIndexes, cycle_base_opt->m_work_index, use_legacy_construction),
+                                       GetLastBaseBlockHash(baseBlockIndexes, cycle_base_opt->m_work_index,
+                                                            use_legacy_construction),
                                        cycle_base_opt->m_work_index->GetBlockHash(), response.mnListDiffH, errorRet)) {
             return false;
         }
@@ -282,5 +290,4 @@ void CQuorumSnapshotManager::StoreSnapshotForBlock(const Consensus::LLMQType llm
     m_evoDb.GetRawDB().Write(std::make_pair(DB_QUORUM_SNAPSHOT, snapshotHash), snapshot);
     quorumSnapshotCache.insert(snapshotHash, snapshot);
 }
-
 } // namespace llmq

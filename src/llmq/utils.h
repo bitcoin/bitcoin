@@ -38,7 +38,10 @@ struct UtilParameters {
     gsl::not_null<const CBlockIndex*> m_base_index;
 
 public:
-    UtilParameters replace_index(gsl::not_null<const CBlockIndex*> base_index) const { return {m_dmnman, m_qsnapman, m_chainman, base_index}; }
+    UtilParameters replace_index(gsl::not_null<const CBlockIndex*> base_index) const
+    {
+        return {m_dmnman, m_qsnapman, m_chainman, base_index};
+    }
 };
 
 namespace utils {

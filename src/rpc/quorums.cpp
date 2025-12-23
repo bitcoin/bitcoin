@@ -377,12 +377,13 @@ static RPCHelpMan quorum_dkgstatus()
                     obj.pushKV("quorumHash", pQuorumBaseBlockIndex->GetBlockHash().ToString());
                     obj.pushKV("pindexTip", pindexTip->nHeight);
 
-                    auto allConnections = llmq::utils::GetQuorumConnections(llmq_params, *node.sporkman, {*node.dmnman,
-                                                                            *llmq_ctx.qsnapman, chainman,
-                                                                            pQuorumBaseBlockIndex}, proTxHash, false);
-                    auto outboundConnections = llmq::utils::GetQuorumConnections(llmq_params, *node.sporkman, {*node.dmnman,
-                                                                                 *llmq_ctx.qsnapman, chainman,
-                                                                                 pQuorumBaseBlockIndex},
+                    auto allConnections = llmq::utils::GetQuorumConnections(llmq_params, *node.sporkman,
+                                                                            {*node.dmnman, *llmq_ctx.qsnapman, chainman,
+                                                                             pQuorumBaseBlockIndex},
+                                                                            proTxHash, false);
+                    auto outboundConnections = llmq::utils::GetQuorumConnections(llmq_params, *node.sporkman,
+                                                                                 {*node.dmnman, *llmq_ctx.qsnapman,
+                                                                                  chainman, pQuorumBaseBlockIndex},
                                                                                  proTxHash, true);
                     std::map<uint256, CAddress> foundConnections;
                     connman.ForEachNode([&](const CNode* pnode) {

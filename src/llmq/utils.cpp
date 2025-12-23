@@ -64,7 +64,10 @@ public:
     explicit PreviousQuorumQuarters(size_t s) : quarterHMinusC(s), quarterHMinus2C(s), quarterHMinus3C(s) {}
 
     std::vector<QuorumQuarter*> GetCycles() { return {&quarterHMinusC, &quarterHMinus2C, &quarterHMinus3C}; }
-    std::vector<const QuorumQuarter*> GetCycles() const { return {&quarterHMinusC, &quarterHMinus2C, &quarterHMinus3C}; }
+    std::vector<const QuorumQuarter*> GetCycles() const
+    {
+        return {&quarterHMinusC, &quarterHMinus2C, &quarterHMinus3C};
+    }
 };
 
 arith_uint256 calculateQuorumScore(const CDeterministicMNCPtr& dmn, const uint256& modifier)
@@ -127,7 +130,8 @@ std::vector<MasternodeScore> CalculateScoresForQuorum(QuorumMembers&& dmns, cons
     return scores;
 }
 
-std::vector<MasternodeScore> CalculateScoresForQuorum(const CDeterministicMNList& mn_list, const uint256& modifier, const bool onlyEvoNodes)
+std::vector<MasternodeScore> CalculateScoresForQuorum(const CDeterministicMNList& mn_list, const uint256& modifier,
+                                                      const bool onlyEvoNodes)
 {
     std::vector<MasternodeScore> scores;
     scores.reserve(mn_list.GetAllMNsCount());
@@ -155,15 +159,14 @@ QuorumMembers CalculateQuorum(List&& mn_list, const uint256& modifier, size_t ma
     auto scores = CalculateScoresForQuorum(std::forward<List>(mn_list), modifier, onlyEvoNodes);
 
     // sort is descending order
-    std::sort(scores.rbegin(), scores.rend(),
-              [](const MasternodeScore& a, const MasternodeScore& b) {
-                  if (a.m_score == b.m_score) {
-                      // this should actually never happen, but we should stay compatible with how the non-deterministic MNs did the sorting
-                      // TODO - add assert ?
-                      return a.m_node->collateralOutpoint < b.m_node->collateralOutpoint;
-                  }
-                  return a.m_score < b.m_score;
-              });
+    std::sort(scores.rbegin(), scores.rend(), [](const MasternodeScore& a, const MasternodeScore& b) {
+        if (a.m_score == b.m_score) {
+            // this should actually never happen, but we should stay compatible with how the non-deterministic MNs did the sorting
+            // TODO - add assert ?
+            return a.m_node->collateralOutpoint < b.m_node->collateralOutpoint;
+        }
+        return a.m_score < b.m_score;
+    });
 
     // return top maxSize entries only (if specified)
     if (maxSize > 0 && scores.size() > maxSize) {
@@ -178,9 +181,11 @@ QuorumMembers CalculateQuorum(List&& mn_list, const uint256& modifier, size_t ma
     return result;
 }
 
-std::vector<QuorumMembers> GetQuorumQuarterMembersBySnapshot(
-    const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman, const Consensus::Params& consensus_params,
-    const CBlockIndex* pCycleQuorumBaseBlockIndex, const llmq::CQuorumSnapshot& snapshot, int nHeight)
+std::vector<QuorumMembers> GetQuorumQuarterMembersBySnapshot(const Consensus::LLMQParams& llmqParams,
+                                                             CDeterministicMNManager& dmnman,
+                                                             const Consensus::Params& consensus_params,
+                                                             const CBlockIndex* pCycleQuorumBaseBlockIndex,
+                                                             const llmq::CQuorumSnapshot& snapshot, int nHeight)
 {
     if (!llmqParams.useRotation || pCycleQuorumBaseBlockIndex->nHeight % llmqParams.dkgInterval != 0) {
         ASSERT_IF_DEBUG(false);
@@ -214,7 +219,8 @@ std::vector<QuorumMembers> GetQuorumQuarterMembersBySnapshot(
     }
 
     if (LogAcceptDebug(BCLog::LLMQ)) {
-        LogPrint(BCLog::LLMQ, "%s h[%d] from[%d] sortedCombinedMns[%s]\n", __func__, pCycleQuorumBaseBlockIndex->nHeight, nHeight, ToString(sortedCombinedMns));
+        LogPrint(BCLog::LLMQ, "%s h[%d] from[%d] sortedCombinedMns[%s]\n", __func__,
+                 pCycleQuorumBaseBlockIndex->nHeight, nHeight, ToString(sortedCombinedMns));
     }
 
     size_t numQuorums = static_cast<size_t>(llmqParams.signingActiveQuorumCount);
@@ -228,61 +234,61 @@ std::vector<QuorumMembers> GetQuorumQuarterMembersBySnapshot(
     }
 
     switch (snapshot.mnSkipListMode) {
-        case SnapshotSkipMode::MODE_NO_SKIPPING:
-        {
-            auto itm = sortedCombinedMns.begin();
-            for (const size_t i : irange::range(numQuorums)) {
-                while (quarterQuorumMembers[i].size() < quarterSize) {
-                    quarterQuorumMembers[i].push_back(*itm);
-                    itm++;
-                    if (itm == sortedCombinedMns.end()) {
-                        itm = sortedCombinedMns.begin();
-                    }
+    case SnapshotSkipMode::MODE_NO_SKIPPING: {
+        auto itm = sortedCombinedMns.begin();
+        for (const size_t i : irange::range(numQuorums)) {
+            while (quarterQuorumMembers[i].size() < quarterSize) {
+                quarterQuorumMembers[i].push_back(*itm);
+                itm++;
+                if (itm == sortedCombinedMns.end()) {
+                    itm = sortedCombinedMns.begin();
                 }
             }
-            return quarterQuorumMembers;
         }
-        case SnapshotSkipMode::MODE_SKIPPING_ENTRIES: // List holds entries to be skipped
-        {
-            size_t first_entry_index{0};
-            std::vector<int> processesdSkipList;
-            for (const auto& s : snapshot.mnSkipList) {
-                if (first_entry_index == 0) {
-                    first_entry_index = s;
-                    processesdSkipList.push_back(s);
-                } else {
-                    processesdSkipList.push_back(first_entry_index + s);
-                }
+        return quarterQuorumMembers;
+    }
+    case SnapshotSkipMode::MODE_SKIPPING_ENTRIES: // List holds entries to be skipped
+    {
+        size_t first_entry_index{0};
+        std::vector<int> processesdSkipList;
+        for (const auto& s : snapshot.mnSkipList) {
+            if (first_entry_index == 0) {
+                first_entry_index = s;
+                processesdSkipList.push_back(s);
+            } else {
+                processesdSkipList.push_back(first_entry_index + s);
             }
+        }
 
-            int idx = 0;
-            auto itsk = processesdSkipList.begin();
-            for (const size_t i : irange::range(numQuorums)) {
-                while (quarterQuorumMembers[i].size() < quarterSize) {
-                    if (itsk != processesdSkipList.end() && idx == *itsk) {
-                        itsk++;
-                    } else {
-                        quarterQuorumMembers[i].push_back(sortedCombinedMns[idx]);
-                    }
-                    idx++;
-                    if (idx == static_cast<int>(sortedCombinedMns.size())) {
-                        idx = 0;
-                    }
+        int idx = 0;
+        auto itsk = processesdSkipList.begin();
+        for (const size_t i : irange::range(numQuorums)) {
+            while (quarterQuorumMembers[i].size() < quarterSize) {
+                if (itsk != processesdSkipList.end() && idx == *itsk) {
+                    itsk++;
+                } else {
+                    quarterQuorumMembers[i].push_back(sortedCombinedMns[idx]);
+                }
+                idx++;
+                if (idx == static_cast<int>(sortedCombinedMns.size())) {
+                    idx = 0;
                 }
             }
-            return quarterQuorumMembers;
         }
-        case SnapshotSkipMode::MODE_NO_SKIPPING_ENTRIES: // List holds entries to be kept
-        case SnapshotSkipMode::MODE_ALL_SKIPPED: // Every node was skipped. Returning empty quarterQuorumMembers
-        default:
-            return quarterQuorumMembers;
+        return quarterQuorumMembers;
+    }
+    case SnapshotSkipMode::MODE_NO_SKIPPING_ENTRIES: // List holds entries to be kept
+    case SnapshotSkipMode::MODE_ALL_SKIPPED:         // Every node was skipped. Returning empty quarterQuorumMembers
+    default:
+        return quarterQuorumMembers;
     }
 }
 
 QuorumMembers ComputeQuorumMembers(Consensus::LLMQType llmqType, const CChainParams& chainparams,
                                    const CDeterministicMNList& mn_list, const CBlockIndex* pQuorumBaseBlockIndex)
 {
-    bool EvoOnly = (chainparams.GetConsensus().llmqTypePlatform == llmqType) && DeploymentActiveAfter(pQuorumBaseBlockIndex, chainparams.GetConsensus(), Consensus::DEPLOYMENT_V19);
+    bool EvoOnly = (chainparams.GetConsensus().llmqTypePlatform == llmqType) &&
+                   DeploymentActiveAfter(pQuorumBaseBlockIndex, chainparams.GetConsensus(), Consensus::DEPLOYMENT_V19);
     const auto& llmq_params_opt = chainparams.GetLLMQ(llmqType);
     assert(llmq_params_opt.has_value());
     if (llmq_params_opt->useRotation || pQuorumBaseBlockIndex->nHeight % llmq_params_opt->dkgInterval != 0) {
@@ -294,9 +300,10 @@ QuorumMembers ComputeQuorumMembers(Consensus::LLMQType llmqType, const CChainPar
     return CalculateQuorum(mn_list, modifier, llmq_params_opt->size, EvoOnly);
 }
 
-void BuildQuorumSnapshot(const Consensus::LLMQParams& llmqParams, const Consensus::Params& consensus_params, const CDeterministicMNList& allMns,
-                         const CDeterministicMNList& mnUsedAtH, std::vector<CDeterministicMNCPtr>& sortedCombinedMns,
-                         llmq::CQuorumSnapshot& quorumSnapshot, std::vector<int>& skipList, const CBlockIndex* pCycleQuorumBaseBlockIndex)
+void BuildQuorumSnapshot(const Consensus::LLMQParams& llmqParams, const Consensus::Params& consensus_params,
+                         const CDeterministicMNList& allMns, const CDeterministicMNList& mnUsedAtH,
+                         std::vector<CDeterministicMNCPtr>& sortedCombinedMns, llmq::CQuorumSnapshot& quorumSnapshot,
+                         std::vector<int>& skipList, const CBlockIndex* pCycleQuorumBaseBlockIndex)
 {
     if (!llmqParams.useRotation || pCycleQuorumBaseBlockIndex->nHeight % llmqParams.dkgInterval != 0) {
         ASSERT_IF_DEBUG(false);
@@ -307,11 +314,10 @@ void BuildQuorumSnapshot(const Consensus::LLMQParams& llmqParams, const Consensu
     const auto modifier = GetHashModifier(llmqParams, consensus_params, pCycleQuorumBaseBlockIndex);
     auto sortedAllMns = CalculateQuorum(allMns, modifier);
 
-    LogPrint(BCLog::LLMQ, "BuildQuorumSnapshot h[%d] numMns[%d]\n", pCycleQuorumBaseBlockIndex->nHeight, allMns.GetAllMNsCount());
+    LogPrint(BCLog::LLMQ, "BuildQuorumSnapshot h[%d] numMns[%d]\n", pCycleQuorumBaseBlockIndex->nHeight,
+             allMns.GetAllMNsCount());
 
-    std::fill(quorumSnapshot.activeQuorumMembers.begin(),
-              quorumSnapshot.activeQuorumMembers.end(),
-              false);
+    std::fill(quorumSnapshot.activeQuorumMembers.begin(), quorumSnapshot.activeQuorumMembers.end(), false);
     size_t index = {};
     for (const auto& dmn : sortedAllMns) {
         if (mnUsedAtH.HasMN(dmn->proTxHash)) {
@@ -329,8 +335,10 @@ void BuildQuorumSnapshot(const Consensus::LLMQParams& llmqParams, const Consensu
     }
 }
 
-std::vector<QuorumMembers> BuildNewQuorumQuarterMembers(const Consensus::LLMQParams& llmqParams, const llmq::UtilParameters& util_params,
-                                                        const CDeterministicMNList& allMns, const PreviousQuorumQuarters& previousQuarters)
+std::vector<QuorumMembers> BuildNewQuorumQuarterMembers(const Consensus::LLMQParams& llmqParams,
+                                                        const llmq::UtilParameters& util_params,
+                                                        const CDeterministicMNList& allMns,
+                                                        const PreviousQuorumQuarters& previousQuarters)
 {
     if (!llmqParams.useRotation || util_params.m_base_index->nHeight % llmqParams.dkgInterval != 0) {
         ASSERT_IF_DEBUG(false);
@@ -351,7 +359,9 @@ std::vector<QuorumMembers> BuildNewQuorumQuarterMembers(const Consensus::LLMQPar
     auto MnsUsedAtH = CDeterministicMNList();
     std::vector<CDeterministicMNList> MnsUsedAtHIndexed{nQuorums};
 
-    bool skipRemovedMNs = DeploymentActiveAfter(util_params.m_base_index, util_params.m_chainman.GetConsensus(), Consensus::DEPLOYMENT_V19) || (util_params.m_chainman.GetParams().NetworkIDString() == CBaseChainParams::TESTNET);
+    bool skipRemovedMNs = DeploymentActiveAfter(util_params.m_base_index, util_params.m_chainman.GetConsensus(),
+                                                Consensus::DEPLOYMENT_V19) ||
+                          (util_params.m_chainman.GetParams().NetworkIDString() == CBaseChainParams::TESTNET);
 
     for (const size_t idx : irange::range(nQuorums)) {
         for (auto* prev_cycle : previousQuarters.GetCycles()) {
@@ -390,7 +400,8 @@ std::vector<QuorumMembers> BuildNewQuorumQuarterMembers(const Consensus::LLMQPar
     }
 
     if (LogAcceptDebug(BCLog::LLMQ)) {
-        LogPrint(BCLog::LLMQ, "%s h[%d] sortedCombinedMns[%s]\n", __func__, util_params.m_base_index->nHeight, ToString(sortedCombinedMnsList));
+        LogPrint(BCLog::LLMQ, "%s h[%d] sortedCombinedMns[%s]\n", __func__, util_params.m_base_index->nHeight,
+                 ToString(sortedCombinedMnsList));
     }
 
     std::vector<int> skipList;
@@ -436,13 +447,15 @@ std::vector<QuorumMembers> BuildNewQuorumQuarterMembers(const Consensus::LLMQPar
     }
 
     llmq::CQuorumSnapshot quorumSnapshot{};
-    BuildQuorumSnapshot(llmqParams, util_params.m_chainman.GetConsensus(), allMns, MnsUsedAtH, sortedCombinedMnsList, quorumSnapshot, skipList, util_params.m_base_index);
+    BuildQuorumSnapshot(llmqParams, util_params.m_chainman.GetConsensus(), allMns, MnsUsedAtH, sortedCombinedMnsList,
+                        quorumSnapshot, skipList, util_params.m_base_index);
     util_params.m_qsnapman.StoreSnapshotForBlock(llmqParams.type, util_params.m_base_index, quorumSnapshot);
 
     return quarterQuorumMembers;
 }
 
-std::vector<QuorumMembers> ComputeQuorumMembersByQuarterRotation(const Consensus::LLMQParams& llmqParams, const llmq::UtilParameters& util_params)
+std::vector<QuorumMembers> ComputeQuorumMembersByQuarterRotation(const Consensus::LLMQParams& llmqParams,
+                                                                 const llmq::UtilParameters& util_params)
 {
     const int cycleLength = llmqParams.dkgInterval;
     if (!llmqParams.useRotation || util_params.m_base_index->nHeight % llmqParams.dkgInterval != 0) {
@@ -451,24 +464,30 @@ std::vector<QuorumMembers> ComputeQuorumMembersByQuarterRotation(const Consensus
     }
     const auto nQuorums{static_cast<size_t>(llmqParams.signingActiveQuorumCount)};
 
-    const CBlockIndex* pWorkBlockIndex = util_params.m_base_index->GetAncestor(util_params.m_base_index->nHeight - llmq::WORK_DIFF_DEPTH);
+    const CBlockIndex* pWorkBlockIndex = util_params.m_base_index->GetAncestor(util_params.m_base_index->nHeight -
+                                                                               llmq::WORK_DIFF_DEPTH);
     CDeterministicMNList allMns = util_params.m_dmnman.GetListForBlock(pWorkBlockIndex);
-    LogPrint(BCLog::LLMQ, "ComputeQuorumMembersByQuarterRotation llmqType[%d] nHeight[%d] allMns[%d]\n", ToUnderlying(llmqParams.type),
-             util_params.m_base_index->nHeight, allMns.GetValidMNsCount());
+    LogPrint(BCLog::LLMQ, "ComputeQuorumMembersByQuarterRotation llmqType[%d] nHeight[%d] allMns[%d]\n",
+             ToUnderlying(llmqParams.type), util_params.m_base_index->nHeight, allMns.GetValidMNsCount());
 
     PreviousQuorumQuarters previousQuarters(nQuorums);
     auto prev_cycles{previousQuarters.GetCycles()};
     for (size_t idx{0}; idx < prev_cycles.size(); idx++) {
-        prev_cycles[idx]->m_cycle_index = util_params.m_base_index->GetAncestor(util_params.m_base_index->nHeight - (cycleLength * (idx + 1)));
-        if (auto opt_snap = util_params.m_qsnapman.GetSnapshotForBlock(llmqParams.type, prev_cycles[idx]->m_cycle_index); opt_snap.has_value()) {
+        prev_cycles[idx]->m_cycle_index = util_params.m_base_index->GetAncestor(util_params.m_base_index->nHeight -
+                                                                                (cycleLength * (idx + 1)));
+        if (auto opt_snap = util_params.m_qsnapman.GetSnapshotForBlock(llmqParams.type, prev_cycles[idx]->m_cycle_index);
+            opt_snap.has_value()) {
             prev_cycles[idx]->m_snap = opt_snap.value();
         } else {
             // TODO: Check if it is triggered from outside (P2P, block validation) and maybe throw an exception
             // assert(false);
             break;
         }
-        prev_cycles[idx]->m_members = GetQuorumQuarterMembersBySnapshot(llmqParams, util_params.m_dmnman, util_params.m_chainman.GetConsensus(),
-                                                                        prev_cycles[idx]->m_cycle_index, prev_cycles[idx]->m_snap, util_params.m_base_index->nHeight);
+        prev_cycles[idx]->m_members = GetQuorumQuarterMembersBySnapshot(llmqParams, util_params.m_dmnman,
+                                                                        util_params.m_chainman.GetConsensus(),
+                                                                        prev_cycles[idx]->m_cycle_index,
+                                                                        prev_cycles[idx]->m_snap,
+                                                                        util_params.m_base_index->nHeight);
     }
 
     auto newQuarterMembers = BuildNewQuorumQuarterMembers(llmqParams, util_params, allMns, previousQuarters);
@@ -490,11 +509,13 @@ std::vector<QuorumMembers> ComputeQuorumMembersByQuarterRotation(const Consensus
     for (const size_t i : irange::range(nQuorums)) {
         // Move elements from previous quarters into quorumMembers
         for (auto* prev_cycle : prev_cycles | std::views::reverse) {
-            std::move(prev_cycle->m_members[i].begin(), prev_cycle->m_members[i].end(), std::back_inserter(quorumMembers[i]));
+            std::move(prev_cycle->m_members[i].begin(), prev_cycle->m_members[i].end(),
+                      std::back_inserter(quorumMembers[i]));
         }
         std::move(newQuarterMembers[i].begin(), newQuarterMembers[i].end(), std::back_inserter(quorumMembers[i]));
         if (LogAcceptDebug(BCLog::LLMQ)) {
-            LogPrint(BCLog::LLMQ, "QuorumComposition h[%d] i[%d]: [%s]\n", util_params.m_base_index->nHeight, i, ToString(quorumMembers[i]));
+            LogPrint(BCLog::LLMQ, "QuorumComposition h[%d] i[%d]: [%s]\n", util_params.m_base_index->nHeight, i,
+                     ToString(quorumMembers[i]));
         }
     }
 
@@ -577,12 +598,12 @@ QuorumMembers GetAllQuorumMembers(Consensus::LLMQType llmqType, const UtilParame
             InitQuorumsCache(mapIndexedQuorumMembers, util_params.m_chainman.GetConsensus());
         }
         /*
-         * Quorums created with rotation are now created in a different way. All signingActiveQuorumCount are created during the period of dkgInterval.
-         * But they are not created exactly in the same block, they are spread overtime: one quorum in each block until all signingActiveQuorumCount are created.
-         * The new concept of quorumIndex is introduced in order to identify them.
-         * In every dkgInterval blocks (also called CycleQuorumBaseBlock), the spread quorum creation starts like this:
-         * For quorumIndex = 0 : signingActiveQuorumCount
-         * Quorum Q with quorumIndex is created at height CycleQuorumBaseBlock + quorumIndex
+         * Quorums created with rotation are now created in a different way. All signingActiveQuorumCount are created
+         * during the period of dkgInterval. But they are not created exactly in the same block, they are spread
+         * overtime: one quorum in each block until all signingActiveQuorumCount are created. The new concept of
+         * quorumIndex is introduced in order to identify them. In every dkgInterval blocks (also called
+         * CycleQuorumBaseBlock), the spread quorum creation starts like this: For quorumIndex = 0 :
+         * signingActiveQuorumCount Quorum Q with quorumIndex is created at height CycleQuorumBaseBlock + quorumIndex
          */
 
         int quorumIndex = util_params.m_base_index->nHeight % llmq_params.dkgInterval;
@@ -593,13 +614,15 @@ QuorumMembers GetAllQuorumMembers(Consensus::LLMQType llmqType, const UtilParame
         const CBlockIndex* pCycleQuorumBaseBlockIndex = util_params.m_base_index->GetAncestor(cycleQuorumBaseHeight);
 
         /*
-         * Since mapQuorumMembers stores Quorum members per block hash, and we don't know yet the block hashes of blocks for all quorumIndexes (since these blocks are not created yet)
-         * We store them in a second cache mapIndexedQuorumMembers which stores them by {CycleQuorumBaseBlockHash, quorumIndex}
+         * Since mapQuorumMembers stores Quorum members per block hash, and we don't know yet the block hashes of blocks
+         * for all quorumIndexes (since these blocks are not created yet) We store them in a second cache
+         * mapIndexedQuorumMembers which stores them by {CycleQuorumBaseBlockHash, quorumIndex}
          */
         if (reset_cache) {
             LOCK(cs_indexed_members);
             mapIndexedQuorumMembers[llmqType].clear();
-        } else if (LOCK(cs_indexed_members); mapIndexedQuorumMembers[llmqType].get(std::pair(pCycleQuorumBaseBlockIndex->GetBlockHash(), quorumIndex), quorumMembers)) {
+        } else if (LOCK(cs_indexed_members); mapIndexedQuorumMembers[llmqType].get(
+                       std::pair(pCycleQuorumBaseBlockIndex->GetBlockHash(), quorumIndex), quorumMembers)) {
             LOCK(cs_members);
             mapQuorumMembers[llmqType].insert(util_params.m_base_index->GetBlockHash(), quorumMembers);
             return quorumMembers;
@@ -614,11 +637,15 @@ QuorumMembers GetAllQuorumMembers(Consensus::LLMQType llmqType, const UtilParame
                                                       std::move(q[i]));
         }
     } else {
-        const CBlockIndex* pWorkBlockIndex = DeploymentActiveAfter(util_params.m_base_index, util_params.m_chainman.GetConsensus(), Consensus::DEPLOYMENT_V20)
-                                                 ? util_params.m_base_index->GetAncestor(util_params.m_base_index->nHeight - WORK_DIFF_DEPTH)
+        const CBlockIndex* pWorkBlockIndex = DeploymentActiveAfter(util_params.m_base_index,
+                                                                   util_params.m_chainman.GetConsensus(),
+                                                                   Consensus::DEPLOYMENT_V20)
+                                                 ? util_params.m_base_index->GetAncestor(
+                                                       util_params.m_base_index->nHeight - WORK_DIFF_DEPTH)
                                                  : util_params.m_base_index.get();
         CDeterministicMNList mn_list = util_params.m_dmnman.GetListForBlock(pWorkBlockIndex);
-        quorumMembers = ComputeQuorumMembers(llmqType, util_params.m_chainman.GetParams(), mn_list, util_params.m_base_index);
+        quorumMembers = ComputeQuorumMembers(llmqType, util_params.m_chainman.GetParams(), mn_list,
+                                             util_params.m_base_index);
     }
 
     LOCK(cs_members);
@@ -767,7 +794,8 @@ bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, CConnman& 
         return false;
     }
 
-    LogPrint(BCLog::NET_NETCONN, "%s -- isMember=%d for quorum %s:\n", __func__, isMember, util_params.m_base_index->GetBlockHash().ToString());
+    LogPrint(BCLog::NET_NETCONN, "%s -- isMember=%d for quorum %s:\n", __func__, isMember,
+             util_params.m_base_index->GetBlockHash().ToString());
 
     Uint256HashSet connections;
     if (isMember) {
@@ -781,7 +809,8 @@ bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, CConnman& 
     if (!connections.empty()) {
         if (!connman.HasMasternodeQuorumNodes(llmqParams.type, util_params.m_base_index->GetBlockHash()) &&
             LogAcceptDebug(BCLog::LLMQ)) {
-            std::string debugMsg = strprintf("%s -- adding masternodes quorum connections for quorum %s:\n", __func__, util_params.m_base_index->GetBlockHash().ToString());
+            std::string debugMsg = strprintf("%s -- adding masternodes quorum connections for quorum %s:\n", __func__,
+                                             util_params.m_base_index->GetBlockHash().ToString());
             for (const auto& c : connections) {
                 auto dmn = tip_mn_list.GetValidMN(c);
                 if (!dmn) {
@@ -827,7 +856,8 @@ void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, CConnman
 
     if (!probeConnections.empty()) {
         if (LogAcceptDebug(BCLog::LLMQ)) {
-            std::string debugMsg = strprintf("%s -- adding masternodes probes for quorum %s:\n", __func__, util_params.m_base_index->GetBlockHash().ToString());
+            std::string debugMsg = strprintf("%s -- adding masternodes probes for quorum %s:\n", __func__,
+                                             util_params.m_base_index->GetBlockHash().ToString());
             for (const auto& c : probeConnections) {
                 auto dmn = tip_mn_list.GetValidMN(c);
                 if (!dmn) {

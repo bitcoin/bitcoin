@@ -225,7 +225,8 @@ BOOST_AUTO_TEST_CASE(quorum_rotation_info_serialization_test)
 
     CFinalCommitment commitment{GetLLMQParams(Consensus::LLMQType::LLMQ_TEST), uint256::ONE};
     rotInfo.lastCommitmentPerIndex.push_back(commitment);
-    rotInfo.quorumSnapshotList.push_back(CQuorumSnapshot({false, false, true}, SnapshotSkipMode::MODE_SKIPPING_ENTRIES, {7, 8}));
+    rotInfo.quorumSnapshotList.push_back(
+        CQuorumSnapshot({false, false, true}, SnapshotSkipMode::MODE_SKIPPING_ENTRIES, {7, 8}));
     BOOST_CHECK(TestSerializationRoundtrip(rotInfo));
 }
 
