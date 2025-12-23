@@ -65,7 +65,8 @@ AppearanceWidget::~AppearanceWidget()
             updateTheme(prevTheme);
         }
         if (prevFontFamily != GUIUtil::g_font_registry.GetFont()) {
-            GUIUtil::g_font_registry.SetFont(prevFontFamily);
+            const bool setfont_ret{GUIUtil::g_font_registry.SetFont(prevFontFamily)};
+            assert(setfont_ret);
             GUIUtil::setApplicationFont();
         }
         if (prevScale != GUIUtil::g_font_registry.GetFontScale()) {
@@ -116,7 +117,8 @@ void AppearanceWidget::updateTheme(const QString& theme)
 
 void AppearanceWidget::updateFontFamily(int index)
 {
-    GUIUtil::g_font_registry.SetFont(GUIUtil::g_fonts_known[ui->fontFamily->itemData(index).toInt()]);
+    const bool setfont_ret{GUIUtil::g_font_registry.SetFont(GUIUtil::g_fonts_known[ui->fontFamily->itemData(index).toInt()])};
+    assert(setfont_ret);
     GUIUtil::setApplicationFont();
     GUIUtil::updateFonts();
     updateWeightSlider(true);

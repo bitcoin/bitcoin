@@ -63,7 +63,7 @@ public:
     int WeightToIdx(const QFont::Weight& weight) const;
     QFont::Weight IdxToWeight(int index) const;
 
-    void SetFont(const QString& font);
+    [[nodiscard]] bool SetFont(const QString& font);
     void SetFontScale(int font_scale) { m_font_scale = font_scale; }
     void SetWeightBold(const QFont::Weight& bold)
     {

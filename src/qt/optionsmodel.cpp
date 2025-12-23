@@ -100,8 +100,7 @@ void OptionsModel::Init(bool resetSettings)
     if (!settings.contains("fontFamily"))
         settings.setValue("fontFamily", GUIUtil::FontRegistry::DEFAULT_FONT.toUtf8());
     if (gArgs.SoftSetArg("-font-family", settings.value("fontFamily").toString().toStdString())) {
-        if (GUIUtil::fontsLoaded()) {
-            GUIUtil::g_font_registry.SetFont(settings.value("fontFamily").toString());
+        if (GUIUtil::fontsLoaded() && GUIUtil::g_font_registry.SetFont(settings.value("fontFamily").toString())) {
             GUIUtil::setApplicationFont();
         }
     } else {

@@ -665,8 +665,7 @@ int GuiMain(int argc, char* argv[])
     GUIUtil::LogQtInfo();
     // Load custom application fonts and setup font management
     if (!GUIUtil::loadFonts()) {
-        QMessageBox::critical(nullptr, PACKAGE_NAME,
-                              QObject::tr("Error: Failed to load application fonts."));
+        QMessageBox::critical(nullptr, PACKAGE_NAME, QObject::tr("Error: Failed to load application fonts."));
         return EXIT_FAILURE;
     }
     // Load GUI settings from QSettings
@@ -674,7 +673,10 @@ int GuiMain(int argc, char* argv[])
     // Validate/set font family
     if (gArgs.IsArgSet("-font-family")) {
         QString family = gArgs.GetArg("-font-family", GUIUtil::FontRegistry::DEFAULT_FONT.toUtf8().toStdString()).c_str();
-        GUIUtil::g_font_registry.SetFont(family);
+        if (!GUIUtil::g_font_registry.SetFont(family)) {
+            QMessageBox::critical(nullptr, PACKAGE_NAME, QObject::tr("Error: Font \"%1\" could not be loaded.").arg(family));
+            return EXIT_FAILURE;
+        }
         GUIUtil::setApplicationFont();
     }
     // Validate/set normal font weight

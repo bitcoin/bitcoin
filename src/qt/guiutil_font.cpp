@@ -100,12 +100,13 @@ void FontRegistry::RegisterFont(const QString& font)
     m_weights.emplace(font, FontInfo(font));
 }
 
-void FontRegistry::SetFont(const QString& font)
+bool FontRegistry::SetFont(const QString& font)
 {
     if (!m_weights.count(font)) {
-        throw std::runtime_error(strprintf("%s: Font family not loaded: %s", __func__, font.toStdString()));
+        return false;
     }
     m_font = font;
+    return true;
 }
 
 bool weightFromArg(int nArg, QFont::Weight& weight)
