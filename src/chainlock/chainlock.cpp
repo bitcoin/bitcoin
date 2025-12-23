@@ -63,9 +63,6 @@ CChainLocksHandler::~CChainLocksHandler()
 
 void CChainLocksHandler::Start(const llmq::CInstantSendManager& isman)
 {
-    if (auto signer = m_signer.load(std::memory_order_acquire); signer) {
-        signer->Start();
-    }
     scheduler->scheduleEvery(
         [&]() {
             auto signer = m_signer.load(std::memory_order_acquire);
@@ -83,9 +80,6 @@ void CChainLocksHandler::Start(const llmq::CInstantSendManager& isman)
 void CChainLocksHandler::Stop()
 {
     scheduler->stop();
-    if (auto signer = m_signer.load(std::memory_order_acquire); signer) {
-        signer->Stop();
-    }
 }
 
 bool CChainLocksHandler::AlreadyHave(const CInv& inv) const

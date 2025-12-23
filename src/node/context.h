@@ -35,6 +35,9 @@ class NetGroupManager;
 class PeerManager;
 struct ActiveContext;
 struct LLMQContext;
+namespace llmq {
+struct ObserverContext;
+} // namespace llmq
 
 namespace interfaces {
 class Chain;
@@ -95,6 +98,7 @@ struct NodeContext {
     //! Dash contexts
     std::unique_ptr<ActiveContext> active_ctx;
     std::unique_ptr<LLMQContext> llmq_ctx;
+    std::unique_ptr<llmq::ObserverContext> observer_ctx;
 
     //! Declare default constructor and destructor that are not inline, so code
     //! instantiating the NodeContext struct doesn't need to #include class

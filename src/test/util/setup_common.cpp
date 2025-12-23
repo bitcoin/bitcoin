@@ -64,6 +64,8 @@
 #include <flat-database.h>
 #include <governance/governance.h>
 #include <llmq/context.h>
+#include <llmq/options.h>
+#include <llmq/signing.h>
 #include <masternode/active/context.h>
 #include <masternode/meta.h>
 #include <masternode/sync.h>
@@ -125,6 +127,18 @@ std::ostream& operator<<(std::ostream& os, const uint256& num)
     return os;
 }
 
+std::unique_ptr<PeerManager> MakePeerManager(CConnman& connman,
+                                             NodeContext& node,
+                                             BanMan* banman,
+                                             CActiveMasternodeManager* mn_activeman,
+                                             const CChainParams& chainparams,
+                                             bool ignore_incoming_txs)
+{
+    return PeerManager::make(chainparams, connman, *node.addrman, banman, *node.dstxman, *node.chainman, *node.mempool, *node.mn_metaman,
+                             *node.mn_sync, *node.govman, *node.sporkman, mn_activeman, node.active_ctx, node.dmnman, node.cj_walletman,
+                             node.llmq_ctx, node.observer_ctx, ignore_incoming_txs);
+}
+
 void DashChainstateSetup(ChainstateManager& chainman,
                          NodeContext& node,
                          bool llmq_dbs_in_memory,
@@ -134,7 +148,8 @@ void DashChainstateSetup(ChainstateManager& chainman,
     DashChainstateSetup(chainman, *Assert(node.govman.get()), *Assert(node.mn_metaman.get()), *Assert(node.mn_sync.get()),
                         *Assert(node.sporkman.get()), node.mn_activeman, node.chain_helper, node.cpoolman, node.dmnman,
                         node.evodb, node.mnhf_manager, node.llmq_ctx, Assert(node.mempool.get()), node.args->GetDataDirNet(),
-                        llmq_dbs_in_memory, llmq_dbs_wipe, consensus_params);
+                        llmq::QvvecSyncModeMap{}, llmq_dbs_in_memory, llmq_dbs_wipe, /*quorums_recovery=*/false, /*quorums_watch=*/false,
+                        llmq::DEFAULT_BLSCHECK_THREADS, llmq::DEFAULT_MAX_RECOVERED_SIGS_AGE, consensus_params);
 }
 
 void DashChainstateSetupClose(NodeContext& node)
@@ -325,13 +340,18 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
                                            m_args.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX),
                                            m_args.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX),
                                            chainparams.GetConsensus(),
+                                           llmq::GetEnabledQuorumVvecSyncEntries(m_args),
                                            m_args.GetBoolArg("-reindex-chainstate", false),
                                            m_cache_sizes.block_tree_db,
                                            m_cache_sizes.coins_db,
                                            m_cache_sizes.coins,
                                            /*block_tree_db_in_memory=*/true,
                                            /*coins_db_in_memory=*/true,
-                                           /*dash_dbs_in_memory=*/true);
+                                           /*dash_dbs_in_memory=*/true,
+                                           m_args.GetBoolArg("-llmq-data-recovery", llmq::DEFAULT_ENABLE_QUORUM_DATA_RECOVERY),
+                                           m_args.GetBoolArg("-watchquorums", llmq::DEFAULT_WATCH_QUORUMS),
+                                           llmq::DEFAULT_BLSCHECK_THREADS,
+                                           llmq::DEFAULT_MAX_RECOVERED_SIGS_AGE);
     assert(!maybe_load_error.has_value());
 
     auto maybe_verify_error = VerifyLoadedChainstate(
@@ -366,11 +386,8 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 #endif // ENABLE_WALLET
 
     m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    m_node.peerman = PeerManager::make(chainparams, *m_node.connman, *m_node.addrman, m_node.banman.get(), *m_node.dstxman,
-                                       *m_node.chainman, *m_node.mempool, *m_node.mn_metaman, *m_node.mn_sync,
-                                       *m_node.govman, *m_node.sporkman, /*mn_activeman=*/nullptr, m_node.dmnman,
-                                       /*active_ctx=*/nullptr, m_node.cj_walletman.get(), m_node.llmq_ctx,
-                                       /*ignore_incoming_txs=*/false);
+    m_node.peerman = MakePeerManager(*m_node.connman, m_node, m_node.banman.get(), /*mn_activeman=*/nullptr, chainparams,
+                                     /*ignore_incoming_txs=*/false);
     {
         CConnman::Options options;
         options.m_msgproc = m_node.peerman.get();
@@ -400,7 +417,6 @@ TestingSetup::~TestingSetup()
 
     // Interrupt() and PrepareShutdown() routines
     if (m_node.llmq_ctx) {
-        m_node.llmq_ctx->Interrupt();
         m_node.llmq_ctx->Stop();
     }
     if (m_node.connman) {

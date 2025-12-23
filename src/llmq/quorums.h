@@ -9,6 +9,7 @@
 #include <bls/bls_worker.h>
 #include <ctpl_stl.h>
 #include <evo/types.h>
+#include <llmq/options.h>
 #include <llmq/params.h>
 #include <llmq/types.h>
 #include <msg_result.h>
@@ -233,31 +234,38 @@ private:
 class CQuorumManager
 {
 private:
-    mutable Mutex cs_db;
-    std::unique_ptr<CDBWrapper> db GUARDED_BY(cs_db){nullptr};
-
     CBLSWorker& blsWorker;
     CDeterministicMNManager& m_dmnman;
-    CDKGSessionManager& dkgManager;
     CQuorumBlockProcessor& quorumBlockProcessor;
     CQuorumSnapshotManager& m_qsnapman;
     const CActiveMasternodeManager* const m_mn_activeman;
     const ChainstateManager& m_chainman;
     const CMasternodeSync& m_mn_sync;
     const CSporkManager& m_sporkman;
+    llmq::CDKGSessionManager* m_qdkgsman{nullptr};
+    const llmq::QvvecSyncModeMap m_sync_map;
+    const bool m_quorums_recovery{false};
+    const bool m_quorums_watch{false};
+
+private:
+    mutable Mutex cs_db;
+    std::unique_ptr<CDBWrapper> db GUARDED_BY(cs_db){nullptr};
 
     mutable Mutex cs_map_quorums;
     mutable std::map<Consensus::LLMQType, Uint256LruHashMap<CQuorumPtr>> mapQuorumsCache GUARDED_BY(cs_map_quorums);
+
     mutable Mutex cs_scan_quorums; // TODO: merge cs_map_quorums, cs_scan_quorums mutexes
     mutable std::map<Consensus::LLMQType, Uint256LruHashMap<std::vector<CQuorumCPtr>>> scanQuorumsCache
         GUARDED_BY(cs_scan_quorums);
+
     mutable Mutex cs_cleanup;
     mutable std::map<Consensus::LLMQType, Uint256LruHashMap<uint256>> cleanupQuorumsCache GUARDED_BY(cs_cleanup);
 
-    mutable Mutex cs_quorumBaseBlockIndexCache;
     // On mainnet, we have around 62 quorums active at any point; let's cache a little more than double that to be safe.
     // it maps `quorum_hash` to `pindex`
-    mutable Uint256LruHashMap<const CBlockIndex*, 128 /*max_size*/> quorumBaseBlockIndexCache;
+    mutable Mutex cs_quorumBaseBlockIndexCache;
+    mutable Uint256LruHashMap<const CBlockIndex*, /*max_size=*/128> quorumBaseBlockIndexCache
+        GUARDED_BY(cs_quorumBaseBlockIndexCache);
 
     mutable ctpl::thread_pool workerPool;
     mutable CThreadInterrupt quorumThreadInterrupt;
@@ -266,17 +274,26 @@ public:
     CQuorumManager() = delete;
     CQuorumManager(const CQuorumManager&) = delete;
     CQuorumManager& operator=(const CQuorumManager&) = delete;
-    explicit CQuorumManager(CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager,
-                            CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor,
-                            CQuorumSnapshotManager& qsnapman, const CActiveMasternodeManager* const mn_activeman,
-                            const ChainstateManager& chainman, const CMasternodeSync& mn_sync,
-                            const CSporkManager& sporkman, const util::DbWrapperParams& db_params);
+    explicit CQuorumManager(CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman, CEvoDB& _evoDb,
+                            CQuorumBlockProcessor& _quorumBlockProcessor, CQuorumSnapshotManager& qsnapman,
+                            const CActiveMasternodeManager* const mn_activeman, const ChainstateManager& chainman,
+                            const CMasternodeSync& mn_sync, const CSporkManager& sporkman,
+                            const llmq::QvvecSyncModeMap& sync_map, const util::DbWrapperParams& db_params,
+                            bool quorums_recovery, bool quorums_watch);
     ~CQuorumManager();
+
+    void ConnectManager(gsl::not_null<llmq::CDKGSessionManager*> qdkgsman)
+    {
+        // Prohibit double initialization
+        assert(m_qdkgsman == nullptr);
+        m_qdkgsman = qdkgsman;
+    }
+    void DisconnectManager() { m_qdkgsman = nullptr; }
 
     void Start();
     void Stop();
 
-    void TriggerQuorumDataRecoveryThreads(CConnman& connman, const CBlockIndex* pIndex) const
+    void TriggerQuorumDataRecoveryThreads(CConnman& connman, gsl::not_null<const CBlockIndex*> pIndex) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_scan_quorums, !cs_map_quorums);
 
     void UpdatedBlockTip(const CBlockIndex* pindexNew, CConnman& connman, bool fInitialDownload) const
@@ -298,13 +315,16 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_map_quorums, !cs_scan_quorums);
 
     // this one is cs_main-free
-    std::vector<CQuorumCPtr> ScanQuorums(Consensus::LLMQType llmqType, const CBlockIndex* pindexStart,
+    std::vector<CQuorumCPtr> ScanQuorums(Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pindexStart,
                                          size_t nCountRequested) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_map_quorums, !cs_scan_quorums);
 
+    bool IsWatching() const { return m_quorums_watch; }
+
 private:
     // all private methods here are cs_main-free
-    void CheckQuorumConnections(CConnman& connman, const Consensus::LLMQParams& llmqParams, const CBlockIndex* pindexNew) const
+    void CheckQuorumConnections(CConnman& connman, const Consensus::LLMQParams& llmqParams,
+                                gsl::not_null<const CBlockIndex*> pindexNew) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_scan_quorums, !cs_map_quorums);
 
     CQuorumPtr BuildQuorumFromCommitment(Consensus::LLMQType llmqType,
@@ -317,13 +337,13 @@ private:
     /// Returns the start offset for the masternode with the given proTxHash. This offset is applied when picking data recovery members of a quorum's
     /// memberlist and is calculated based on a list of all member of all active quorums for the given llmqType in a way that each member
     /// should receive the same number of request if all active llmqType members requests data from one llmqType quorum.
-    size_t GetQuorumRecoveryStartOffset(const CQuorum& quorum, const CBlockIndex* pIndex) const;
+    size_t GetQuorumRecoveryStartOffset(const CQuorum& quorum, gsl::not_null<const CBlockIndex*> pIndex) const;
 
     void StartCachePopulatorThread(CQuorumCPtr pQuorum) const;
-    void StartQuorumDataRecoveryThread(CConnman& connman, CQuorumCPtr pQuorum, const CBlockIndex* pIndex,
+    void StartQuorumDataRecoveryThread(CConnman& connman, CQuorumCPtr pQuorum, gsl::not_null<const CBlockIndex*> pIndex,
                                        uint16_t nDataMask) const;
 
-    void StartCleanupOldQuorumDataThread(const CBlockIndex* pIndex) const;
+    void StartCleanupOldQuorumDataThread(gsl::not_null<const CBlockIndex*> pIndex) const;
     void MigrateOldQuorumDB(CEvoDB& evoDb) const EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
 };
 

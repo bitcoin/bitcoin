@@ -46,26 +46,13 @@ static const std::string DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT_Q_INDEXED = "q_m
 static const std::string DB_BEST_BLOCK_UPGRADE = "q_bbu2";
 
 CQuorumBlockProcessor::CQuorumBlockProcessor(CChainState& chainstate, CDeterministicMNManager& dmnman, CEvoDB& evoDb,
-                                             CQuorumSnapshotManager& qsnapman) :
+                                             CQuorumSnapshotManager& qsnapman, int8_t bls_threads) :
     m_chainstate{chainstate},
     m_dmnman{dmnman},
     m_evoDb{evoDb},
     m_qsnapman{qsnapman}
 {
     utils::InitQuorumsCache(mapHasMinedCommitmentCache);
-
-    int bls_threads = gArgs.GetIntArg("-parbls", DEFAULT_BLSCHECK_THREADS);
-    if (bls_threads <= 0) {
-        // -parbls=0 means autodetect (number of cores - 1 validator threads)
-        // -parbls=-n means "leave n cores free" (number of cores - n - 1 validator threads)
-        bls_threads += GetNumCores();
-    }
-    // Subtract 1 because the main thread counts towards the par threads
-    bls_threads = std::max(bls_threads - 1, 0);
-
-    // Number of script-checking threads <= MAX_BLSCHECK_THREADS
-    bls_threads = std::min(bls_threads, MAX_BLSCHECK_THREADS);
-
     LogPrintf("BLS verification uses %d additional threads\n", bls_threads);
     m_bls_queue.StartWorkerThreads(bls_threads);
 }

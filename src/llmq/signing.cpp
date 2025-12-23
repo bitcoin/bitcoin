@@ -326,9 +326,11 @@ void CRecoveredSigsDb::CleanupOldVotes(int64_t maxAge)
 
 //////////////////
 
-CSigningManager::CSigningManager(const CQuorumManager& _qman, const util::DbWrapperParams& db_params) :
+CSigningManager::CSigningManager(const CQuorumManager& _qman, const util::DbWrapperParams& db_params,
+                                 int64_t max_recsigs_age) :
     db{db_params},
-    qman{_qman}
+    qman{_qman},
+    m_max_recsigs_age{max_recsigs_age}
 {
 }
 
@@ -534,10 +536,8 @@ void CSigningManager::TruncateRecoveredSig(Consensus::LLMQType llmqType, const u
 
 void CSigningManager::Cleanup()
 {
-    int64_t maxAge = gArgs.GetIntArg("-maxrecsigsage", DEFAULT_MAX_RECOVERED_SIGS_AGE);
-
-    db.CleanupOldRecoveredSigs(maxAge);
-    db.CleanupOldVotes(maxAge);
+    db.CleanupOldRecoveredSigs(m_max_recsigs_age);
+    db.CleanupOldVotes(m_max_recsigs_age);
 }
 
 void CSigningManager::RegisterRecoveredSigsListener(CRecoveredSigsListener* l)

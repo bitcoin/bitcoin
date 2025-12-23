@@ -59,7 +59,7 @@ public:
     CQuorumBlockProcessor(const CQuorumBlockProcessor&) = delete;
     CQuorumBlockProcessor& operator=(const CQuorumBlockProcessor&) = delete;
     explicit CQuorumBlockProcessor(CChainState& chainstate, CDeterministicMNManager& dmnman, CEvoDB& evoDb,
-                                   CQuorumSnapshotManager& qsnapman);
+                                   CQuorumSnapshotManager& qsnapman, int8_t bls_threads);
     ~CQuorumBlockProcessor();
 
     [[nodiscard]] MessageProcessingResult ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv)

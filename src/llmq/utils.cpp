@@ -838,9 +838,9 @@ bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, CConnman& 
                              CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
                              const CSporkManager& sporkman, const CDeterministicMNList& tip_mn_list,
                              gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& myProTxHash,
-                             bool is_masternode)
+                             bool is_masternode, bool quorums_watch)
 {
-    if (!is_masternode && !IsWatchQuorumsEnabled()) {
+    if (!is_masternode && !quorums_watch) {
         return false;
     }
 
@@ -851,7 +851,7 @@ bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, CConnman& 
 
     bool isMember = ranges::find_if(members, [&](const auto& dmn) { return dmn->proTxHash == myProTxHash; }) != members.end();
 
-    if (!isMember && !IsWatchQuorumsEnabled()) {
+    if (!isMember && !quorums_watch) {
         return false;
     }
 

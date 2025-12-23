@@ -158,9 +158,9 @@ public:
 class CSigningManager
 {
 private:
-
     CRecoveredSigsDb db;
     const CQuorumManager& qman;
+    const int64_t m_max_recsigs_age;
 
     mutable Mutex cs_pending;
     // Incoming and not verified yet
@@ -176,7 +176,7 @@ public:
     CSigningManager() = delete;
     CSigningManager(const CSigningManager&) = delete;
     CSigningManager& operator=(const CSigningManager&) = delete;
-    explicit CSigningManager(const CQuorumManager& _qman, const util::DbWrapperParams& db_params);
+    explicit CSigningManager(const CQuorumManager& _qman, const util::DbWrapperParams& db_params, int64_t max_recsigs_age);
     ~CSigningManager();
 
     bool AlreadyHave(const CInv& inv) const EXCLUSIVE_LOCKS_REQUIRED(!cs_pending);

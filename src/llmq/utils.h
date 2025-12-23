@@ -59,7 +59,7 @@ bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, CConnman& 
                              CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
                              const CSporkManager& sporkman, const CDeterministicMNList& tip_mn_list,
                              gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& myProTxHash,
-                             bool is_masternode);
+                             bool is_masternode, bool quorums_watch);
 
 void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, CConnman& connman,
                                CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,

@@ -431,8 +431,8 @@ public:
 
     void Start() EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void Stop() EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    void RegisterAsRecoveredSigsListener() EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    void UnregisterAsRecoveredSigsListener() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void RegisterRecoveryInterface() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void UnregisterRecoveryInterface() EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void InterruptWorkerThread() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void ProcessMessage(const CNode& pnode, const std::string& msg_type, CDataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(!cs);

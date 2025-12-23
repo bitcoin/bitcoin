@@ -5,6 +5,7 @@
 #include <masternode/active/notificationinterface.h>
 
 #include <governance/signing.h>
+#include <llmq/dkgsessionmgr.h>
 #include <llmq/ehf_signals.h>
 #include <llmq/signing_shares.h>
 #include <masternode/active/context.h>
@@ -27,6 +28,7 @@ void ActiveNotificationInterface::UpdatedBlockTip(const CBlockIndex* pindexNew, 
     m_mn_activeman.UpdatedBlockTip(pindexNew, pindexFork, fInitialDownload);
     m_active_ctx.ehf_sighandler->UpdatedBlockTip(pindexNew);
     m_active_ctx.gov_signer->UpdatedBlockTip(pindexNew);
+    m_active_ctx.qdkgsman->UpdatedBlockTip(pindexNew, fInitialDownload);
 }
 
 void ActiveNotificationInterface::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig, bool proactive_relay)

@@ -144,6 +144,7 @@ private:
     const ChainstateManager& m_chainman;
     const CSporkManager& m_sporkman;
     const Consensus::LLMQParams params;
+    const bool m_quorums_watch{false};
     const int quorumIndex;
 
     std::atomic<int> currentHeight {-1};
@@ -166,7 +167,8 @@ public:
                        CDKGSessionManager& _dkgManager, CMasternodeMetaMan& mn_metaman,
                        CQuorumBlockProcessor& _quorumBlockProcessor, CQuorumSnapshotManager& qsnapman,
                        const CActiveMasternodeManager* const mn_activeman, const ChainstateManager& chainman,
-                       const CSporkManager& sporkman, const Consensus::LLMQParams& _params, int _quorumIndex);
+                       const CSporkManager& sporkman, const Consensus::LLMQParams& _params, bool quorums_watch,
+                       int _quorumIndex);
     ~CDKGSessionHandler();
 
     void UpdatedBlockTip(const CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(!cs_phase_qhash);

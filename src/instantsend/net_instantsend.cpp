@@ -72,18 +72,10 @@ void NetInstantSend::Start()
     }
 
     workThread = std::thread(&util::TraceThread, "isman", [this] { WorkThreadMain(); });
-
-    if (auto signer = m_is_manager.Signer(); signer) {
-        signer->Start();
-    }
 }
 
 void NetInstantSend::Stop()
 {
-    if (auto signer = m_is_manager.Signer(); signer) {
-        signer->Stop();
-    }
-
     // make sure to call Interrupt() first
     if (!workInterrupt) {
         assert(false);

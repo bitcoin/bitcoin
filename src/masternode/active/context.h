@@ -13,6 +13,7 @@ class CCoinJoinServer;
 class CConnman;
 class CDeterministicMNManager;
 class CGovernanceManager;
+class CMasternodeMetaMan;
 class CMasternodeSync;
 class CMNHFManager;
 class CSporkManager;
@@ -27,9 +28,13 @@ namespace instantsend {
 class InstantSendSigner;
 } // namespace instantsend
 namespace llmq {
+class CDKGSessionManager;
 class CEHFSignalsHandler;
 class CSigSharesManager;
 } // namespace llmq
+namespace util {
+struct DbWrapperParams;
+} // namespace util
 
 struct ActiveContext {
 private:
@@ -40,10 +45,11 @@ public:
     ActiveContext() = delete;
     ActiveContext(const ActiveContext&) = delete;
     ActiveContext& operator=(const ActiveContext&) = delete;
-    explicit ActiveContext(ChainstateManager& chainman, CConnman& connman, CDeterministicMNManager& dmnman,
-                           CGovernanceManager& govman, CMNHFManager& mnhfman, CSporkManager& sporkman, CTxMemPool& mempool,
-                           LLMQContext& llmq_ctx, PeerManager& peerman, const CActiveMasternodeManager& mn_activeman,
-                           const CMasternodeSync& mn_sync, CCoinJoinServer& cj_server);
+    explicit ActiveContext(CCoinJoinServer& cj_server, CConnman& connman, CDeterministicMNManager& dmnman,
+                           CGovernanceManager& govman, ChainstateManager& chainman, CMasternodeMetaMan& mn_metaman,
+                           CMNHFManager& mnhfman, CSporkManager& sporkman, CTxMemPool& mempool, LLMQContext& llmq_ctx,
+                           PeerManager& peerman, const CActiveMasternodeManager& mn_activeman,
+                           const CMasternodeSync& mn_sync, const util::DbWrapperParams& db_params, bool quorums_watch);
     ~ActiveContext();
 
     void Interrupt();
@@ -57,6 +63,7 @@ public:
      */
     CCoinJoinServer& m_cj_server;
     const std::unique_ptr<GovernanceSigner> gov_signer;
+    const std::unique_ptr<llmq::CDKGSessionManager> qdkgsman;
     const std::unique_ptr<llmq::CSigSharesManager> shareman;
     const std::unique_ptr<llmq::CEHFSignalsHandler> ehf_sighandler;
 
