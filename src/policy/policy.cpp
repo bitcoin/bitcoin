@@ -318,7 +318,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
                 // Script path spend (2 or more stack elements after removing optional annex)
                 const auto& control_block = SpanPopBack(stack);
                 SpanPopBack(stack); // Ignore script
-                if (control_block.empty()) return false; // Empty control block is invalid
+                if (!VerifyTaprootControlBlockSize(control_block)) return false;
                 if ((control_block[0] & TAPROOT_LEAF_MASK) == TAPROOT_LEAF_TAPSCRIPT) {
                     // Leaf version 0xc0 (aka Tapscript, see BIP 342)
                     for (const auto& item : stack) {
