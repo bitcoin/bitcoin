@@ -52,7 +52,6 @@ void initialize_coins_view()
 void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& coins_view_cache, CCoinsView& backend_coins_view, bool is_db)
 {
     bool good_data{true};
-
     if (is_db) coins_view_cache.SetBestBlock(uint256::ONE);
     COutPoint random_out_point;
     Coin random_coin;
@@ -335,6 +334,12 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
             [&] {
                 (void)IsWitnessStandard(CTransaction{random_mutable_transaction}, coins_view_cache);
             });
+    }
+
+    // Stop async workers before accessing backend_coins_view to avoid data race
+    // (HaveCoin/GetCoin on CCoinsViewCache mutate cacheCoins via FetchCoin)
+    if (auto* async_cache{dynamic_cast<CoinsViewCacheAsync*>(&coins_view_cache)}) {
+        async_cache->Reset();
     }
 
     {
