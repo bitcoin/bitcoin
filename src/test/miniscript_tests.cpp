@@ -188,7 +188,7 @@ struct KeyConverter {
         return g_testdata->pkmap.at(keyid);
     }
 
-    std::optional<std::string> ToString(const Key& key) const {
+    std::optional<std::string> ToString(const Key& key, bool&) const {
         return HexStr(ToPKBytes(key));
     }
 
