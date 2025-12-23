@@ -236,13 +236,13 @@ class CQuorumManager
 private:
     CBLSWorker& blsWorker;
     CDeterministicMNManager& m_dmnman;
-    CDKGSessionManager& dkgManager;
     CQuorumBlockProcessor& quorumBlockProcessor;
     CQuorumSnapshotManager& m_qsnapman;
     const CActiveMasternodeManager* const m_mn_activeman;
     const ChainstateManager& m_chainman;
     const CMasternodeSync& m_mn_sync;
     const CSporkManager& m_sporkman;
+    llmq::CDKGSessionManager* m_qdkgsman{nullptr};
     const llmq::QvvecSyncModeMap m_sync_map;
     const bool m_quorums_recovery{false};
     const bool m_quorums_watch{false};
@@ -273,13 +273,21 @@ public:
     CQuorumManager() = delete;
     CQuorumManager(const CQuorumManager&) = delete;
     CQuorumManager& operator=(const CQuorumManager&) = delete;
-    explicit CQuorumManager(CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager,
-                            CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor,
-                            CQuorumSnapshotManager& qsnapman, const CActiveMasternodeManager* const mn_activeman,
-                            const ChainstateManager& chainman, const CMasternodeSync& mn_sync,
-                            const CSporkManager& sporkman, const llmq::QvvecSyncModeMap& sync_map,
-                            const util::DbWrapperParams& db_params, bool quorums_recovery, bool quorums_watch);
+    explicit CQuorumManager(CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman, CEvoDB& _evoDb,
+                            CQuorumBlockProcessor& _quorumBlockProcessor, CQuorumSnapshotManager& qsnapman,
+                            const CActiveMasternodeManager* const mn_activeman, const ChainstateManager& chainman,
+                            const CMasternodeSync& mn_sync, const CSporkManager& sporkman,
+                            const llmq::QvvecSyncModeMap& sync_map, const util::DbWrapperParams& db_params,
+                            bool quorums_recovery, bool quorums_watch);
     ~CQuorumManager();
+
+    void ConnectManager(gsl::not_null<llmq::CDKGSessionManager*> qdkgsman)
+    {
+        // Prohibit double initialization
+        assert(m_qdkgsman == nullptr);
+        m_qdkgsman = qdkgsman;
+    }
+    void DisconnectManager() { m_qdkgsman = nullptr; }
 
     void Start();
     void Stop();

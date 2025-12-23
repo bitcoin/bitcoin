@@ -72,7 +72,6 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
     BOOST_CHECK(!manager.SnapshotBlockhash().has_value());
 
     if (m_node.llmq_ctx) {
-        m_node.llmq_ctx->Interrupt();
         m_node.llmq_ctx->Stop();
     }
     DashChainstateSetupClose(m_node);
@@ -122,7 +121,6 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
     SyncWithValidationInterfaceQueue();
 
     if (m_node.llmq_ctx) {
-        m_node.llmq_ctx->Interrupt();
         m_node.llmq_ctx->Stop();
     }
     DashChainstateSetupClose(m_node);

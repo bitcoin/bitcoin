@@ -207,15 +207,14 @@ bool CQuorum::ReadContributions(const CDBWrapper& db)
     return true;
 }
 
-CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager,
-                               CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor,
-                               CQuorumSnapshotManager& qsnapman, const CActiveMasternodeManager* const mn_activeman,
-                               const ChainstateManager& chainman, const CMasternodeSync& mn_sync,
-                               const CSporkManager& sporkman, const llmq::QvvecSyncModeMap& sync_map,
-                               const util::DbWrapperParams& db_params, bool quorums_recovery, bool quorums_watch) :
+CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman, CEvoDB& _evoDb,
+                               CQuorumBlockProcessor& _quorumBlockProcessor, CQuorumSnapshotManager& qsnapman,
+                               const CActiveMasternodeManager* const mn_activeman, const ChainstateManager& chainman,
+                               const CMasternodeSync& mn_sync, const CSporkManager& sporkman,
+                               const llmq::QvvecSyncModeMap& sync_map, const util::DbWrapperParams& db_params,
+                               bool quorums_recovery, bool quorums_watch) :
     blsWorker{_blsWorker},
     m_dmnman{dmnman},
-    dkgManager{_dkgManager},
     quorumBlockProcessor{_quorumBlockProcessor},
     m_qsnapman{qsnapman},
     m_mn_activeman{mn_activeman},
@@ -451,7 +450,9 @@ bool CQuorumManager::BuildQuorumContributions(const CFinalCommitmentPtr& fqc, co
     std::vector<uint16_t> memberIndexes;
     std::vector<BLSVerificationVectorPtr> vvecs;
     std::vector<CBLSSecretKey> skContributions;
-    if (!dkgManager.GetVerifiedContributions((Consensus::LLMQType)fqc->llmqType, quorum->m_quorum_base_block_index, fqc->validMembers, memberIndexes, vvecs, skContributions)) {
+    if (!m_qdkgsman ||
+        !m_qdkgsman->GetVerifiedContributions((Consensus::LLMQType)fqc->llmqType, quorum->m_quorum_base_block_index,
+                                            fqc->validMembers, memberIndexes, vvecs, skContributions)) {
         return false;
     }
 
@@ -795,7 +796,9 @@ MessageProcessingResult CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& c
             }
 
             std::vector<CBLSIESEncryptedObject<CBLSSecretKey>> vecEncrypted;
-            if (!dkgManager.GetEncryptedContributions(request.GetLLMQType(), pQuorumBaseBlockIndex, pQuorum->qc->validMembers, request.GetProTxHash(), vecEncrypted)) {
+            if (!m_qdkgsman ||
+                !m_qdkgsman->GetEncryptedContributions(request.GetLLMQType(), pQuorumBaseBlockIndex,
+                                                     pQuorum->qc->validMembers, request.GetProTxHash(), vecEncrypted)) {
                 return sendQDATA(CQuorumDataRequest::Errors::ENCRYPTED_CONTRIBUTIONS_MISSING, request_limit_exceeded);
             }
 

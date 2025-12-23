@@ -258,9 +258,6 @@ void Interrupt(NodeContext& node)
     if (node.peerman) {
         node.peerman->InterruptHandlers();
     }
-    if (node.llmq_ctx) {
-        node.llmq_ctx->Interrupt();
-    }
     InterruptMapPort();
     if (node.connman)
         node.connman->Interrupt();
@@ -2323,7 +2320,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // ********************************************************* Step 10a: schedule Dash-specific tasks
 
-    node.llmq_ctx->Start(*node.peerman);
+    node.llmq_ctx->Start();
     node.peerman->StartHandlers();
     if (node.active_ctx) node.active_ctx->Start(*node.connman, *node.peerman);
 

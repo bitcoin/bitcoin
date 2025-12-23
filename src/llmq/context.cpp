@@ -29,9 +29,9 @@ LLMQContext::LLMQContext(ChainstateManager& chainman, CDeterministicMNManager& d
     qdkgsman{std::make_unique<llmq::CDKGSessionManager>(*bls_worker, dmnman, *dkg_debugman, mn_metaman,
                                                         *quorum_block_processor, *qsnapman, mn_activeman, chainman,
                                                         sporkman, db_params, quorums_watch)},
-    qman{std::make_unique<llmq::CQuorumManager>(*bls_worker, dmnman, *qdkgsman, evo_db, *quorum_block_processor,
-                                                *qsnapman, mn_activeman, chainman, mn_sync, sporkman, sync_map,
-                                                db_params, quorums_recovery, quorums_watch)},
+    qman{std::make_unique<llmq::CQuorumManager>(*bls_worker, dmnman, evo_db, *quorum_block_processor, *qsnapman,
+                                                mn_activeman, chainman, mn_sync, sporkman, sync_map, db_params,
+                                                quorums_recovery, quorums_watch)},
     sigman{std::make_unique<llmq::CSigningManager>(*qman, db_params, max_recsigs_age)},
     clhandler{std::make_unique<llmq::CChainLocksHandler>(chainman.ActiveChainstate(), *qman, sporkman, mempool, mn_sync)},
     isman{std::make_unique<llmq::CInstantSendManager>(*clhandler, chainman.ActiveChainstate(), *sigman, sporkman,
@@ -39,16 +39,16 @@ LLMQContext::LLMQContext(ChainstateManager& chainman, CDeterministicMNManager& d
 {
     // Have to start it early to let VerifyDB check ChainLock signatures in coinbase
     bls_worker->Start();
+    qman->ConnectManager(qdkgsman.get());
 }
 
-LLMQContext::~LLMQContext() {
+LLMQContext::~LLMQContext()
+{
+    qman->DisconnectManager();
     bls_worker->Stop();
 }
 
-void LLMQContext::Interrupt() {
-}
-
-void LLMQContext::Start(PeerManager& peerman)
+void LLMQContext::Start()
 {
     qman->Start();
     clhandler->Start(*isman);

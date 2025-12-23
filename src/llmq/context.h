@@ -48,8 +48,7 @@ public:
                          int8_t bls_threads, int64_t max_recsigs_age);
     ~LLMQContext();
 
-    void Interrupt();
-    void Start(PeerManager& peerman);
+    void Start();
     void Stop();
 
     /** Guaranteed if LLMQContext is initialized then all members are valid too

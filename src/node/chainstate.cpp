@@ -245,7 +245,6 @@ void DashChainstateSetup(ChainstateManager& chainman,
     cpoolman = std::make_unique<CCreditPoolManager>(*evodb, chainman);
 
     if (llmq_ctx) {
-        llmq_ctx->Interrupt();
         llmq_ctx->Stop();
     }
     llmq_ctx.reset();
