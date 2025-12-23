@@ -13,7 +13,7 @@
 #include <interfaces/chain.h>
 #include <key_io.h>
 #include <node/blockstorage.h>
-#include <node/types.h>
+#include <policy/feerate.h>
 #include <policy/policy.h>
 #include <rpc/server.h>
 #include <script/solver.h>
@@ -619,8 +619,9 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
     auto block_tx = TestSimpleSpend(*m_coinbase_txns[0], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
     m_coinbase_txns.push_back(CreateAndProcessBlock({block_tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
     auto mempool_tx = TestSimpleSpend(*m_coinbase_txns[1], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
-    BOOST_CHECK(m_node.chain->broadcastTransaction(MakeTransactionRef(mempool_tx), DEFAULT_TRANSACTION_MAXFEE, node::TxBroadcast::MEMPOOL_NO_BROADCAST, error));
-
+    auto tx_vsize = GetVirtualTransactionSize(CTransaction{mempool_tx});
+    auto default_feerate = CFeeRate(DEFAULT_TRANSACTION_MAXFEE, tx_vsize);
+    BOOST_CHECK(m_node.chain->broadcastTransaction(MakeTransactionRef(mempool_tx), DEFAULT_TRANSACTION_MAXFEE, default_feerate, node::TxBroadcast::MEMPOOL_NO_BROADCAST, error));
 
     // Reload wallet and make sure new transactions are detected despite events
     // being blocked
@@ -661,7 +662,9 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
             block_tx = TestSimpleSpend(*m_coinbase_txns[2], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
             m_coinbase_txns.push_back(CreateAndProcessBlock({block_tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
             mempool_tx = TestSimpleSpend(*m_coinbase_txns[3], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
-            BOOST_CHECK(m_node.chain->broadcastTransaction(MakeTransactionRef(mempool_tx), DEFAULT_TRANSACTION_MAXFEE, node::TxBroadcast::MEMPOOL_NO_BROADCAST, error));
+            auto tx_vsize = GetVirtualTransactionSize(CTransaction{mempool_tx});
+            auto def_max_feerate = CFeeRate(DEFAULT_TRANSACTION_MAXFEE, tx_vsize);
+            BOOST_CHECK(m_node.chain->broadcastTransaction(MakeTransactionRef(mempool_tx), DEFAULT_TRANSACTION_MAXFEE, default_feerate, node::TxBroadcast::MEMPOOL_NO_BROADCAST, error));
             m_node.validation_signals->SyncWithValidationInterfaceQueue();
         });
     wallet = TestLoadWallet(context);
