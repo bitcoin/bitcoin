@@ -194,15 +194,12 @@ public:
         auto it{m_tracker.find(Assert(conn))};
         if (it != m_tracker.end()) RemoveConnectionInternal(it);
     }
-    size_t CountActiveConnections() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
-    {
-        return WITH_LOCK(m_mutex, return m_tracker.size());
-    }
     //! Wait until there are no more connections with active requests in the tracker
-    void WaitUntilEmpty() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    [[nodiscard]] size_t WaitUntilEmpty(std::chrono::seconds timeout) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         WAIT_LOCK(m_mutex, lock);
-        m_cv.wait(lock, [this]() EXCLUSIVE_LOCKS_REQUIRED(m_mutex) { return m_tracker.empty(); });
+        m_cv.wait_for(lock, timeout, [this]() EXCLUSIVE_LOCKS_REQUIRED(m_mutex) { return m_tracker.empty(); });
+        return m_tracker.size();
     }
 };
 //! Track active requests
@@ -304,8 +301,8 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
         return;
     }
 
-    LogDebug(BCLog::HTTP, "Received a %s request for %s from %s\n",
-             RequestMethodString(hreq->GetRequestMethod()), SanitizeString(hreq->GetURI(), SAFE_CHARS_URI).substr(0, 100), hreq->GetPeer().ToStringAddrPort());
+    LogDebug(BCLog::HTTP, "Received a %s request (%p) for %s from %s",
+             RequestMethodString(hreq->GetRequestMethod()), req, SanitizeString(hreq->GetURI(), SAFE_CHARS_URI).substr(0, 100), hreq->GetPeer().ToStringAddrPort());
 
     // Find registered handler for prefix
     std::string strURI = hreq->GetURI();
@@ -535,26 +532,43 @@ void StopHTTPServer()
         evhttp_del_accept_socket(eventHTTP, socket);
     }
     boundSockets.clear();
-    {
-        if (const auto n_connections{g_requests.CountActiveConnections()}; n_connections != 0) {
-            LogDebug(BCLog::HTTP, "Waiting for %d connections to stop HTTP server\n", n_connections);
+    // Give clients time to close down TCP connections from their side before we
+    // free eventHTTP, this avoids issues like RemoteDisconnected exceptions in
+    // the test framework.
+    if (auto connections{g_requests.WaitUntilEmpty(/*timeout=*/30s)}) {
+        LogWarning("%d remaining HTTP connection(s) after 30s timeout, waiting for longer.", connections);
+        if ((connections = g_requests.WaitUntilEmpty(/*timeout=*/10min))) {
+            LogError("%d remaining HTTP connection(s) after long timeout. "
+                     "Aborting to avoid potential use-after-frees from "
+                     "connections still running after freeing eventHTTP. "
+                     "This indicates a bug in libevent or in our use of it.",
+                     connections);
+            std::abort();
         }
-        g_requests.WaitUntilEmpty();
     }
     if (eventHTTP) {
         // Schedule a callback to call evhttp_free in the event base thread, so
         // that evhttp_free does not need to be called again after the handling
         // of unfinished request connections that follows.
-        event_base_once(eventBase, -1, EV_TIMEOUT, [](evutil_socket_t, short, void*) {
+        if (int ret{event_base_once(eventBase, -1, EV_TIMEOUT, [](evutil_socket_t, short, void*) {
             evhttp_free(eventHTTP);
             eventHTTP = nullptr;
-        }, nullptr, nullptr);
+        }, nullptr, nullptr)}; ret != 0) {
+            LogDebug(BCLog::HTTP, "event_base_once() failed: %d", ret);
+        }
     }
     if (eventBase) {
         LogDebug(BCLog::HTTP, "Waiting for HTTP event thread to exit\n");
         if (g_thread_http.joinable()) g_thread_http.join();
+        if (eventHTTP) {
+            LogDebug(BCLog::HTTP, "Freeing eventHTTP-event was not picked up by ThreadHTTP before it exited.");
+            evhttp_free(eventHTTP);
+            eventHTTP = nullptr;
+        }
         event_base_free(eventBase);
         eventBase = nullptr;
+    } else {
+        Assume(!g_thread_http.joinable());
     }
     g_work_queue.reset();
     LogDebug(BCLog::HTTP, "Stopped HTTP server\n");
@@ -653,6 +667,7 @@ void HTTPRequest::WriteReply(int nStatus, std::span<const std::byte> reply)
 {
     assert(!replySent && req);
     if (m_interrupt) {
+        LogDebug(BCLog::HTTP, "Instructing client to close their TCP connection to us while processing %p", req);
         WriteHeader("Connection", "close");
     }
     // Send event to main http thread to send reply message
@@ -662,6 +677,7 @@ void HTTPRequest::WriteReply(int nStatus, std::span<const std::byte> reply)
     auto req_copy = req;
     HTTPEvent* ev = new HTTPEvent(eventBase, true, [req_copy, nStatus]{
         evhttp_send_reply(req_copy, nStatus, nullptr, nullptr);
+        LogDebug(BCLog::HTTP, "Replied to request %p", req_copy);
         // Re-enable reading from the socket. This is the second part of the libevent
         // workaround above.
         if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02010900) {
