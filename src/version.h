@@ -10,8 +10,7 @@
  * network protocol versioning
  */
 
-
-static const int PROTOCOL_VERSION = 70238;
+static const int PROTOCOL_VERSION = 70239;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
@@ -52,12 +51,14 @@ static const int INCREASE_MAX_HEADERS2_VERSION = 70235;
 //! Behavior of QRINFO is changed in this protocol version
 static const int EFFICIENT_QRINFO_VERSION = 70236;
 
-
 //! cycleHash in isdlock message switched to using quorum's base block in this version
 static const int ISDLOCK_CYCLEHASH_UPDATE_VERSION = 70237;
 
 //! Introduced new p2p message platform pose BAN
 static const int PLATFORM_BAN_VERSION = 70238;
+
+//! Ban of re-propagation of old QFCOMMIT enforcement
+static const int QFCOMMIT_STALE_REPROP_BAN_VERSION = 70239;
 
 // Make sure that none of the values above collide with `ADDRV2_FORMAT`.
 
