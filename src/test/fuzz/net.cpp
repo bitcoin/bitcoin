@@ -39,6 +39,7 @@ FUZZ_TARGET(net, .init = initialize_net)
     {
         node.SetAddrLocal(*service_opt);
     }
+    NetStats net_stats;
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
@@ -61,7 +62,7 @@ FUZZ_TARGET(net, .init = initialize_net)
             [&] {
                 const std::vector<uint8_t> b = ConsumeRandomLengthByteVector(fuzzed_data_provider);
                 bool complete;
-                node.ReceiveMsgBytes(b, complete);
+                node.ReceiveMsgBytes(b, complete, net_stats);
             });
     }
 
