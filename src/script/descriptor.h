@@ -108,7 +108,7 @@ struct Descriptor {
     /** Convert the descriptor back to a string, undoing parsing. */
     virtual std::string ToString(bool compat_format=false) const = 0;
 
-    /** Whether this descriptor will return one scriptPubKey or multiple (aka is or is not combo) */
+    /** Whether this descriptor will return at most one scriptPubKey or multiple (aka is or is not combo) */
     virtual bool IsSingleType() const = 0;
 
     /** Convert the descriptor to a private string. This fails if the provided provider does not have the relevant private keys. */
@@ -165,6 +165,9 @@ struct Descriptor {
      * @param[out] ext_pubs Any extended public keys
      */
     virtual void GetPubKeys(std::set<CPubKey>& pubkeys, std::set<CExtPubKey>& ext_pubs) const = 0;
+
+    /** Whether this descriptor produces any scripts with the Expand functions */
+    virtual bool HasScripts() const = 0;
 };
 
 /** Parse a `descriptor` string. Included private keys are put in `out`.
