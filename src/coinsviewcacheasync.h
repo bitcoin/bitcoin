@@ -10,6 +10,7 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <optional>
 #include <ranges>
@@ -47,6 +48,17 @@ private:
     mutable std::vector<InputToFetch> m_inputs{};
 
     /**
+     * The first 8 bytes of txids of all txs in the block being fetched. This is used to filter out inputs that
+     * are created earlier in the same block, since they will not be in the db or the cache.
+     * Using only the first 8 bytes is a performance improvement, versus storing the entire 32 bytes. In case of a
+     * collision of an input being spent having the same first 8 bytes as a txid of a tx elsewhere in the block,
+     * the input will not be fetched in the background. The input will still be fetched later on the main thread.
+     * Using a sorted vector and binary search lookups is a performance improvement. It is faster than
+     * using std::unordered_set with salted hash or std::set.
+     */
+    std::vector<uint64_t> m_txids{};
+
+    /**
      * Claim and fetch the next input in the queue.
      *
      * @return true if there are more inputs in the queue to fetch
@@ -58,6 +70,11 @@ private:
         if (i >= m_inputs.size()) [[unlikely]] return false;
 
         auto& input{m_inputs[i]};
+        // Inputs spending a coin from a tx earlier in the block won't be in the cache or db
+        if (std::ranges::binary_search(m_txids, input.outpoint.hash.ToUint256().GetUint64(0))) {
+            return true;
+        }
+
         if (auto coin{FetchCoinWithoutMutating(input.outpoint)}) [[likely]] input.coin.emplace(std::move(*coin));
         return true;
     }
@@ -89,7 +106,7 @@ private:
         }
 
         if (ret->second.coin.IsSpent()) [[unlikely]] {
-            // We will only get in here for BIP30 checks or a block with missing or spent inputs.
+            // We will only get in here for BIP30 checks, shorttxid collisions, or a block with missing or spent inputs.
             // TODO: Remove spent checks once we no longer return spent coins in coinscache_sim CoinsViewBottom.
             if (auto coin{FetchCoinWithoutMutating(outpoint)}; coin && !coin->IsSpent()) {
                 ret->second.coin = std::move(*coin);
@@ -107,12 +124,15 @@ public:
     //! Fetch all block inputs.
     void StartFetching(const CBlock& block) noexcept
     {
-        // Loop through the inputs of the block and set them in the queue.
+        // Loop through the inputs of the block and set them in the queue. Also construct the set of txids to filter.
         for (const auto& tx : block.vtx | std::views::drop(1)) [[likely]] {
             for (const auto& input : tx->vin) [[likely]] m_inputs.emplace_back(input.prevout);
+            m_txids.emplace_back(tx->GetHash().ToUint256().GetUint64(0));
         }
         // Don't start if there's nothing to fetch.
         if (m_inputs.empty()) [[unlikely]] return;
+        // Sort txids so we can do binary search lookups.
+        std::ranges::sort(m_txids);
         while (ProcessInput()) [[likely]] {}
     }
 
@@ -121,6 +141,7 @@ public:
         m_inputs.clear();
         m_input_head = 0;
         m_input_tail = 0;
+        m_txids.clear();
         CCoinsViewCache::Reset();
     }
 

@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <cstring>
 #include <ranges>
+#include <unordered_set>
 
 BOOST_AUTO_TEST_SUITE(coinsviewcacheasync_tests)
 
@@ -32,7 +33,19 @@ static CBlock CreateBlock() noexcept
 
     for (const auto i : std::views::iota(1, NUM_TXS)) {
         CMutableTransaction tx;
-        Txid txid{Txid::FromUint256(uint256(i))};
+        Txid txid;
+        if (i % 3 == 0) {
+            // External input
+            txid = Txid::FromUint256(uint256(i));
+        } else if (i % 3 == 1) {
+            // Internal spend (prev tx)
+            txid = prevhash;
+        } else {
+            // Test shortxid collisions (looks internal, but is external)
+            uint256 u{};
+            std::memcpy(u.begin(), prevhash.ToUint256().begin(), 8);
+            txid = Txid::FromUint256(u);
+        }
         tx.vin.emplace_back(txid, 0);
         prevhash = tx.GetHash();
         block.vtx.push_back(MakeTransactionRef(tx));
@@ -46,12 +59,17 @@ void PopulateView(const CBlock& block, CCoinsView& view, bool spent = false)
     CCoinsViewCache cache{&view};
     cache.SetBestBlock(uint256::ONE);
 
+    std::unordered_set<Txid, SaltedTxidHasher> txids{};
+    txids.reserve(block.vtx.size() - 1);
     for (const auto& tx : block.vtx | std::views::drop(1)) {
         for (const auto& in : tx->vin) {
-            Coin coin{};
-            if (!spent) coin.out.nValue = 1;
-            cache.EmplaceCoinInternalDANGER(COutPoint{in.prevout}, std::move(coin));
+            if (!txids.contains(in.prevout.hash)) {
+                Coin coin{};
+                if (!spent) coin.out.nValue = 1;
+                cache.EmplaceCoinInternalDANGER(COutPoint{in.prevout}, std::move(coin));
+            }
         }
+        txids.emplace(tx->GetHash());
     }
 
     cache.Flush();
@@ -60,6 +78,8 @@ void PopulateView(const CBlock& block, CCoinsView& view, bool spent = false)
 void CheckCache(const CBlock& block, const CCoinsViewCache& cache)
 {
     uint32_t counter{0};
+    std::unordered_set<Txid, SaltedTxidHasher> txids{};
+    txids.reserve(block.vtx.size() - 1);
 
     for (const auto& tx : block.vtx) {
         if (tx->IsCoinBase()) {
@@ -70,9 +90,12 @@ void CheckCache(const CBlock& block, const CCoinsViewCache& cache)
                 const auto& first{cache.AccessCoin(outpoint)};
                 const auto& second{cache.AccessCoin(outpoint)};
                 BOOST_CHECK_EQUAL(&first, &second);
-                ++counter;
-                BOOST_CHECK(cache.HaveCoinInCache(outpoint));
+                const auto should_have{!txids.contains(outpoint.hash)};
+                if (should_have) ++counter;
+                const auto have{cache.HaveCoinInCache(outpoint)};
+                BOOST_CHECK_EQUAL(should_have, !!have);
             }
+            txids.emplace(tx->GetHash());
         }
     }
     BOOST_CHECK_EQUAL(cache.GetCacheSize(), counter);
