@@ -22,6 +22,16 @@
 #include <utility>
 
 namespace {
+//! loadFonts stores the SystemDefault font in g_default_font to be able to reference it later again
+std::unique_ptr<QFont> g_default_font{nullptr};
+
+//! Font scaling information for Qt classes
+std::map<std::string, int> mapClassFontUpdates{
+    {"QMenu", -1},
+    {"QMessageBox", -1},
+    {"QTipLabel", -1},
+};
+
 //! Contains all widgets and its font attributes (weight, italic, size) with font changes due to GUIUtil::setFont
 std::map<QPointer<QWidget>, GUIUtil::FontAttrib> mapFontUpdates;
 
@@ -58,6 +68,33 @@ const auto mapWeightArgs = []() {
     return std::pair{std::move(kv), std::move(vk)};
 }();
 
+//! List of Qt classes to ignore when applying fonts
+constexpr std::array<std::string_view, 18> vecIgnoreClasses{
+    "BitcoinGUI",
+    "QComboBoxPrivateContainer",
+    "QComboBoxPrivateScroller",
+    "QDesktopScreenWidget",
+    "QDesktopWidget",
+    "QDialog",
+    "QFrame",
+    "QGroupBox",
+    "QListView",
+    "QMenu",
+    "QMessageBox",
+    "QScrollBar",
+    "QStackedWidget",
+    "QTipLabel",
+    "QVBoxLayout",
+    "QWidget",
+    "WalletFrame",
+    "WalletView",
+};
+
+//! List of Qt objects to ignore when applying fonts
+constexpr std::array<std::string_view, 1> vecIgnoreObjects{
+    "messagesWidget",
+};
+
 //! Weights considered when testing for weights supported by a font
 const auto vecWeightConsider = []() {
     std::vector<QFont::Weight> ret;
@@ -76,8 +113,6 @@ QString qstrprintf(const std::string& fmt, const Args&... args)
 } // anonymous namespace
 
 namespace GUIUtil {
-/** loadFonts stores the SystemDefault font in osDefaultFont to be able to reference it later again */
-static std::unique_ptr<QFont> osDefaultFont;
 // Fonts known by the client
 std::vector<QString> g_fonts_known{
     OS_FONT_STR.toUtf8(),
@@ -186,7 +221,7 @@ void FontInfo::CalcDefaultWeights(const QString& font_name)
 bool loadFonts()
 {
     // Before any font changes store the applications default font to use it as SystemDefault.
-    osDefaultFont = std::make_unique<QFont>(QApplication::font());
+    g_default_font = std::make_unique<QFont>(QApplication::font());
 
     std::vector<int> vecFontIds{};
     auto importFont = [&vecFontIds](const QString& font_name) -> void {
@@ -207,7 +242,7 @@ bool loadFonts()
 
     // Fail if an added id is -1 which means QFontDatabase::addApplicationFont failed.
     if (std::find(vecFontIds.begin(), vecFontIds.end(), -1) != vecFontIds.end()) {
-        osDefaultFont = nullptr;
+        g_default_font = nullptr;
         return false;
     }
 
@@ -248,7 +283,7 @@ bool loadFonts()
 
 bool fontsLoaded()
 {
-    return osDefaultFont != nullptr;
+    return g_default_font != nullptr;
 }
 
 void setApplicationFont()
@@ -272,7 +307,7 @@ void setApplicationFont()
         font->setWeight(g_font_registry.GetWeightNormal());
 #endif
     } else {
-        font = std::make_unique<QFont>(*osDefaultFont);
+        font = std::make_unique<QFont>(*g_default_font);
     }
 
     font->setPointSizeF(g_font_registry.GetFontSize());
@@ -296,7 +331,7 @@ void setFont(const std::vector<QWidget*>& vecWidgets, const FontAttrib& font_att
 void updateFonts()
 {
     // Fonts need to be loaded by GUIUtil::loadFonts(), if not just return.
-    if (!osDefaultFont) {
+    if (!g_default_font) {
         return;
     }
 
@@ -331,16 +366,8 @@ void updateFonts()
     std::map<QWidget*, QFont> mapWidgetFonts;
     // Loop through all widgets
     for (QWidget* w : qApp->allWidgets()) {
-        std::vector<QString> vecIgnoreClasses{
-            "QWidget", "QDialog", "QFrame", "QStackedWidget", "QDesktopWidget", "QDesktopScreenWidget",
-            "QTipLabel", "QMessageBox", "QMenu", "QComboBoxPrivateScroller", "QComboBoxPrivateContainer",
-            "QScrollBar", "QListView", "BitcoinGUI", "WalletView", "WalletFrame", "QVBoxLayout", "QGroupBox"
-        };
-        std::vector<QString> vecIgnoreObjects{
-            "messagesWidget"
-        };
         if (std::find(vecIgnoreClasses.begin(), vecIgnoreClasses.end(), w->metaObject()->className()) != vecIgnoreClasses.end() ||
-            std::find(vecIgnoreObjects.begin(), vecIgnoreObjects.end(), w->objectName()) != vecIgnoreObjects.end()) {
+            std::find(vecIgnoreObjects.begin(), vecIgnoreObjects.end(), w->objectName().toStdString()) != vecIgnoreObjects.end()) {
             continue;
         }
         ++nUpdatable;
@@ -385,9 +412,6 @@ void updateFonts()
     }
 
     // Scale the global font size for the classes in the map below
-    static std::map<std::string, int> mapClassFontUpdates{
-        {"QTipLabel", -1}, {"QMenu", -1}, {"QMessageBox", -1}
-    };
     for (auto& it : mapClassFontUpdates) {
         QFont fontClass = qApp->font(it.first.c_str());
         if (it.second == -1) {
@@ -431,7 +455,7 @@ QFont getFont(const QString& font_name, const FontAttrib& font_attrib)
         }
 #endif // Q_OS_MACOS
     } else if (font_name == OS_FONT_STR) {
-        font.setFamily(osDefaultFont->family());
+        font.setFamily(g_default_font->family());
     } else {
         font.setFamily(font_name);
     }
