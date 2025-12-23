@@ -791,6 +791,8 @@ protected:
     const std::vector<std::unique_ptr<PubkeyProvider>> m_pubkey_args;
     //! The string name of the descriptor function.
     const std::string m_name;
+    //! Warnings (not including subdescriptors).
+    std::vector<std::string> m_warnings;
 
     //! The sub-descriptor arguments (empty for everything but SH and WSH).
     //! In doc/descriptors.m this is referred to as SCRIPT expressions sh(SCRIPT)
@@ -990,6 +992,16 @@ public:
     }
 
     virtual std::unique_ptr<DescriptorImpl> Clone() const = 0;
+
+    // NOLINTNEXTLINE(misc-no-recursion)
+    std::vector<std::string> Warnings() const override {
+        std::vector<std::string> all = m_warnings;
+        for (const auto& sub : m_subdescriptor_args) {
+            auto sub_w = sub->Warnings();
+            all.insert(all.end(), sub_w.begin(), sub_w.end());
+        }
+        return all;
+    }
 };
 
 /** A parsed addr(A) descriptor. */
@@ -1537,7 +1549,24 @@ protected:
 
 public:
     MiniscriptDescriptor(std::vector<std::unique_ptr<PubkeyProvider>> providers, miniscript::NodeRef<uint32_t> node)
-        : DescriptorImpl(std::move(providers), "?"), m_node(std::move(node)) {}
+        : DescriptorImpl(std::move(providers), "?"), m_node(std::move(node))
+    {
+        // Traverse miniscript tree for unsafe use of older()
+        miniscript::ForEachNode(*m_node, [&](const miniscript::Node<uint32_t>& node) {
+            if (node.fragment == miniscript::Fragment::OLDER) {
+                const uint32_t raw = node.k;
+                const uint32_t value_part = raw & ~CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG;
+                if (value_part > CTxIn::SEQUENCE_LOCKTIME_MASK) {
+                    const bool is_time_based = (raw & CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG) != 0;
+                    if (is_time_based) {
+                        m_warnings.push_back(strprintf("time-based relative locktime: older(%u) > (65535 * 512) seconds is unsafe", raw));
+                    } else {
+                        m_warnings.push_back(strprintf("height-based relative locktime: older(%u) > 65535 blocks is unsafe", raw));
+                    }
+                }
+            }
+        });
+    }
 
     bool ToStringHelper(const SigningProvider* arg, std::string& out, const StringType type,
                         const DescriptorCache* cache = nullptr) const override

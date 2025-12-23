@@ -1271,4 +1271,50 @@ BOOST_AUTO_TEST_CASE(descriptor_literal_null_byte)
     BOOST_REQUIRE_MESSAGE(!descs.empty(), err);
 }
 
+BOOST_AUTO_TEST_CASE(descriptor_older_warnings)
+{
+    // A safe boundary value should yield no warnings.
+    {
+        FlatSigningProvider keys;
+        std::string err;
+        auto descs = Parse("wsh(and_v(v:pk(0379e45b3cf75f9c5f9befd8e9506fb962f6a9d185ac87001ec44a8d3df8d4a9e3),older(65535)))", keys, err, /*require_checksum=*/false);
+        BOOST_REQUIRE_MESSAGE(!descs.empty(), err);
+        BOOST_CHECK(descs[0]->Warnings().empty());
+    }
+
+    // Height-based unsafe value (65536) should produce one warning.
+    {
+        FlatSigningProvider keys;
+        std::string err;
+        const uint32_t height_unsafe = 65536;
+        auto descs = Parse(strprintf("wsh(and_v(v:pk(0379e45b3cf75f9c5f9befd8e9506fb962f6a9d185ac87001ec44a8d3df8d4a9e3),older(%u)))", height_unsafe), keys, err, /*require_checksum=*/false);
+        BOOST_REQUIRE_MESSAGE(!descs.empty(), err);
+        const auto& ws = descs[0]->Warnings();
+        BOOST_REQUIRE_EQUAL(ws.size(), 1U);
+        BOOST_CHECK_EQUAL(ws[0], strprintf("height-based relative locktime: older(%u) > 65535 blocks is unsafe", height_unsafe));
+    }
+
+    // Time-based unsafe value: add SEQUENCE_LOCKTIME_TYPE_FLAG (1<<22)
+    {
+        FlatSigningProvider keys;
+        std::string err;
+        const uint32_t time_unsafe = 65536 | CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG;
+        auto descs = Parse(strprintf("wsh(and_v(v:pk(0379e45b3cf75f9c5f9befd8e9506fb962f6a9d185ac87001ec44a8d3df8d4a9e3),older(%u)))", time_unsafe), keys, err, /*require_checksum=*/false);
+        BOOST_REQUIRE_MESSAGE(!descs.empty(), err);
+        const auto& warnings = descs[0]->Warnings();
+        BOOST_REQUIRE_EQUAL(warnings.size(), 1U);
+        BOOST_CHECK_EQUAL(warnings[0], strprintf("time-based relative locktime: older(%u) > (65535 * 512) seconds is unsafe", time_unsafe));
+    }
+
+    // Ensure no false positive warnings for absolute timelocks
+    {
+        FlatSigningProvider keys;
+        std::string err;
+        // Using after() with a large timestamp (> 65535)
+        auto descs = Parse("wsh(and_v(v:pk(0379e45b3cf75f9c5f9befd8e9506fb962f6a9d185ac87001ec44a8d3df8d4a9e3),after(1000000)))", keys, err, /*require_checksum=*/false);
+        BOOST_REQUIRE_MESSAGE(!descs.empty(), err);
+        BOOST_CHECK(descs[0]->Warnings().empty());
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
