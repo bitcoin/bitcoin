@@ -39,8 +39,8 @@ jobs:
         run: |
           BRANCH_NAME=$(echo "${GITHUB_REF##*/}" | tr '[:upper:]' '[:lower:]')
           REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          echo "tag=${BRANCH_NAME}" >> $GITHUB_OUTPUT
-          echo "repo=${REPO_NAME}" >> $GITHUB_OUTPUT
+          echo "tag=${BRANCH_NAME}" >> "$GITHUB_OUTPUT"
+          echo "repo=${REPO_NAME}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -83,8 +83,8 @@ jobs:
         run: |
           BRANCH_NAME=$(echo "${GITHUB_REF##*/}" | tr '[:upper:]' '[:lower:]')
           REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          echo "tag=${BRANCH_NAME}" >> $GITHUB_OUTPUT
-          echo "repo=${REPO_NAME}" >> $GITHUB_OUTPUT
+          echo "tag=${BRANCH_NAME}" >> "$GITHUB_OUTPUT"
+          echo "repo=${REPO_NAME}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
