@@ -167,8 +167,7 @@ BOOST_AUTO_TEST_CASE(quorum_rotation_info_construction_test)
 
     // Test default state
     BOOST_CHECK(!rotInfo.extraShare);
-    BOOST_CHECK_EQUAL(::SerializeHash(rotInfo.quorumSnapshotAtHMinus4C), ::SerializeHash(CQuorumSnapshot()));
-    BOOST_CHECK_EQUAL(::SerializeHash(rotInfo.mnListDiffAtHMinus4C), ::SerializeHash(CSimplifiedMNListDiff()));
+    BOOST_CHECK(!rotInfo.cycleHMinus4C.has_value());
     BOOST_CHECK(rotInfo.lastCommitmentPerIndex.empty());
     BOOST_CHECK(rotInfo.quorumSnapshotList.empty());
     BOOST_CHECK(rotInfo.mnListDiffList.empty());
@@ -206,9 +205,9 @@ BOOST_AUTO_TEST_CASE(quorum_rotation_info_serialization_test)
     CQuorumRotationInfo rotInfo;
 
     // Set up basic required fields
-    rotInfo.quorumSnapshotAtHMinusC = CQuorumSnapshot({true, false, true}, SnapshotSkipMode::MODE_SKIPPING_ENTRIES, {1, 2});
-    rotInfo.quorumSnapshotAtHMinus2C = CQuorumSnapshot({false, true, false}, SnapshotSkipMode::MODE_NO_SKIPPING, {});
-    rotInfo.quorumSnapshotAtHMinus3C = CQuorumSnapshot({true, true, false}, SnapshotSkipMode::MODE_ALL_SKIPPED, {3});
+    rotInfo.cycleHMinusC.m_snap = CQuorumSnapshot({true, false, true}, SnapshotSkipMode::MODE_SKIPPING_ENTRIES, {1, 2});
+    rotInfo.cycleHMinus2C.m_snap = CQuorumSnapshot({false, true, false}, SnapshotSkipMode::MODE_NO_SKIPPING, {});
+    rotInfo.cycleHMinus3C.m_snap = CQuorumSnapshot({true, true, false}, SnapshotSkipMode::MODE_ALL_SKIPPED, {3});
 
     // Test without extraShare
     rotInfo.extraShare = false;
@@ -219,7 +218,9 @@ BOOST_AUTO_TEST_CASE(quorum_rotation_info_serialization_test)
     BOOST_CHECK(TestSerializationRoundtrip(rotInfo));
 
     // Test with extraShare and initialized snapshot
-    rotInfo.quorumSnapshotAtHMinus4C = CQuorumSnapshot({false, false, true}, SnapshotSkipMode::MODE_SKIPPING_ENTRIES, {4, 5, 6});
+    llmq::CycleData extra_cycle;
+    extra_cycle.m_snap = CQuorumSnapshot({false, false, true}, SnapshotSkipMode::MODE_SKIPPING_ENTRIES, {4, 5, 6});
+    rotInfo.cycleHMinus4C = extra_cycle;
     BOOST_CHECK(TestSerializationRoundtrip(rotInfo));
 
     CFinalCommitment commitment{GetLLMQParams(Consensus::LLMQType::LLMQ_TEST), uint256::ONE};
