@@ -25,6 +25,12 @@ enum class FontWeight : uint8_t {
     Bold,
 };
 
+struct FontAttrib {
+    QFont::Weight m_weight;
+    double m_point_size{-1};
+    bool m_is_italic{false};
+};
+
 struct FontInfo {
     QFont::Weight m_bold;
     QFont::Weight m_bold_default;
@@ -135,16 +141,15 @@ void setApplicationFont();
 /** Workaround to set correct font styles in all themes since there is a bug in macOS which leads to
     issues loading variations of montserrat in css it also keeps track of the set fonts to update on
     theme changes. */
-void setFont(const std::vector<QWidget*>& vecWidgets, FontWeight weight, int nPointSize = -1, bool fItalic = false);
+void setFont(const std::vector<QWidget*>& vecWidgets, const FontAttrib& font_attrib);
 
 /** Update the font of all widgets where a custom font has been set with
     GUIUtil::setFont */
 void updateFonts();
 
 /** Get a properly weighted QFont object with the selected font. */
-QFont getFont(const QString& font_name, QFont::Weight weight, bool italic = false, int point_sz = -1);
-QFont getFont(QFont::Weight qWeight, bool fItalic = false, int nPointSize = -1);
-QFont getFont(FontWeight weight, bool fItalic = false, int nPointSize = -1);
+QFont getFont(const QString& font_name, const FontAttrib& font_attrib);
+QFont getFont(const FontAttrib& font_attrib);
 
 /** Get the default normal QFont */
 QFont getFontNormal();

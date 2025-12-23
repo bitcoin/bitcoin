@@ -37,7 +37,7 @@ SendCoinsEntry::SendCoinsEntry(QWidget* parent) :
     GUIUtil::setFont({ui->payToLabel,
                      ui->labellLabel,
                      ui->amountLabel,
-                     ui->messageLabel}, GUIUtil::FontWeight::Normal, 15);
+                     ui->messageLabel}, {GUIUtil::g_font_registry.GetWeightNormal(), 15});
 
     GUIUtil::updateFonts();
 

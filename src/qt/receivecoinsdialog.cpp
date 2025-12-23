@@ -23,10 +23,10 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget* parent) :
 {
     ui->setupUi(this);
 
-    GUIUtil::setFont({ui->label_6}, GUIUtil::FontWeight::Bold, 16);
+    GUIUtil::setFont({ui->label_6}, {GUIUtil::g_font_registry.GetWeightBold(), 16});
     GUIUtil::setFont({ui->label,
                       ui->label_2,
-                      ui->label_3}, GUIUtil::FontWeight::Normal, 15);
+                      ui->label_3}, {GUIUtil::g_font_registry.GetWeightNormal(), 15});
     GUIUtil::updateFonts();
 
     // context menu

@@ -313,8 +313,8 @@ GovernanceList::GovernanceList(QWidget* parent) :
     ui->setupUi(this);
 
     GUIUtil::setFont({ui->label_count_2, ui->countLabel, ui->label_mn_count, ui->mnCountLabel},
-                     GUIUtil::FontWeight::Bold, 14);
-    GUIUtil::setFont({ui->label_filter_2}, GUIUtil::FontWeight::Normal, 15);
+                     {GUIUtil::g_font_registry.GetWeightBold(), 14});
+    GUIUtil::setFont({ui->label_filter_2}, {GUIUtil::g_font_registry.GetWeightNormal(), 15});
 
     proposalModelProxy->setSourceModel(proposalModel);
     ui->govTableView->setModel(proposalModelProxy);

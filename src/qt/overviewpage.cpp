@@ -71,7 +71,7 @@ public:
 
         // Draw first line (with slightly bigger font than the second line will get)
         // Content: Date/Time, Optional IS indicator, Amount
-        painter->setFont(GUIUtil::getFont(GUIUtil::FontWeight::Normal, false, GUIUtil::g_font_registry.GetScaledFontSize(initialFontSize * 1.17)));
+        painter->setFont(GUIUtil::getFont({GUIUtil::g_font_registry.GetWeightNormal(), GUIUtil::g_font_registry.GetScaledFontSize(initialFontSize * 1.17), false}));
         // Date/Time
         colorForeground = qvariant_cast<QColor>(indexDate.data(Qt::ForegroundRole));
         QString strDate = indexDate.data(Qt::DisplayRole).toString();
@@ -92,7 +92,7 @@ public:
 
         // Draw second line (with the initial font)
         // Content: Address/label, Optional Watchonly indicator
-        painter->setFont(GUIUtil::getFont(GUIUtil::FontWeight::Normal, false, GUIUtil::g_font_registry.GetScaledFontSize(initialFontSize)));
+        painter->setFont(GUIUtil::getFont({GUIUtil::g_font_registry.GetWeightNormal(), GUIUtil::g_font_registry.GetScaledFontSize(initialFontSize), false}));
         // Address/Label
         colorForeground = qvariant_cast<QColor>(indexAddress.data(Qt::ForegroundRole));
         QString address = indexAddress.data(Qt::DisplayRole).toString();
@@ -153,19 +153,19 @@ OverviewPage::OverviewPage(QWidget* parent) :
     GUIUtil::setFont({ui->label_4,
                       ui->label_5,
                       ui->labelCoinJoinHeader
-                     }, GUIUtil::FontWeight::Bold, 16);
+                     }, {GUIUtil::g_font_registry.GetWeightBold(), 16});
 
     GUIUtil::setFont({ui->labelTotalText,
                       ui->labelWatchTotal,
                       ui->labelTotal
-                     }, GUIUtil::FontWeight::Bold, 14);
+                     }, {GUIUtil::g_font_registry.GetWeightBold(), 14});
 
     GUIUtil::setFont({ui->labelBalanceText,
                       ui->labelPendingText,
                       ui->labelImmatureText,
                       ui->labelWatchonly,
                       ui->labelSpendable
-                     }, GUIUtil::FontWeight::Bold);
+                     }, {GUIUtil::g_font_registry.GetWeightBold()});
 
     GUIUtil::updateFonts();
 
