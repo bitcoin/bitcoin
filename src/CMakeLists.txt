@@ -26,6 +26,10 @@ endif()
 include(../cmake/secp256k1.cmake)
 add_secp256k1(secp256k1)
 
+if(ENABLE_WAIT_FOR_DEBUGGER)
+  add_compile_definitions(ENABLE_WAIT_FOR_DEBUGGER=1)
+endif()
+
 # Set top-level target output locations.
 if(NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
