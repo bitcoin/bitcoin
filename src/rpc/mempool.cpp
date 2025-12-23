@@ -9,7 +9,6 @@
 
 #include <chainparams.h>
 #include <consensus/validation.h>
-#include <core_io.h>
 #include <kernel/mempool_entry.h>
 #include <net_processing.h>
 #include <node/mempool_persist_args.h>
@@ -17,6 +16,7 @@
 #include <policy/rbf.h>
 #include <policy/settings.h>
 #include <primitives/transaction.h>
+#include <rpc/mempool.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
@@ -830,7 +830,7 @@ static RPCHelpMan gettxspendingprevout()
     };
 }
 
-UniValue MempoolInfoToJSON(const CTxMemPool& pool)
+UniValue MempoolInfoToJSON(const CTxMemPool& pool, FeeRateUnit feerate_units)
 {
     // Make sure this call is atomic in the pool.
     LOCK(pool.cs);
@@ -841,9 +841,9 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     ret.pushKV("usage", (int64_t)pool.DynamicMemoryUsage());
     ret.pushKV("total_fee", ValueFromAmount(pool.GetTotalFee()));
     ret.pushKV("maxmempool", pool.m_opts.max_size_bytes);
-    ret.pushKV("mempoolminfee", ValueFromAmount(std::max(pool.GetMinFee(), pool.m_opts.min_relay_feerate).GetFeePerK()));
-    ret.pushKV("minrelaytxfee", ValueFromAmount(pool.m_opts.min_relay_feerate.GetFeePerK()));
-    ret.pushKV("incrementalrelayfee", ValueFromAmount(pool.m_opts.incremental_relay_feerate.GetFeePerK()));
+    ret.pushKV("mempoolminfee", ValueFromFeeRate(std::max(pool.GetMinFee(), pool.m_opts.min_relay_feerate), feerate_units));
+    ret.pushKV("minrelaytxfee", ValueFromFeeRate(pool.m_opts.min_relay_feerate, feerate_units));
+    ret.pushKV("incrementalrelayfee", ValueFromFeeRate(pool.m_opts.incremental_relay_feerate, feerate_units));
     ret.pushKV("unbroadcastcount", uint64_t{pool.GetUnbroadcastTxs().size()});
     ret.pushKV("fullrbf", true);
     ret.pushKV("permitbaremultisig", pool.m_opts.permit_bare_multisig);
@@ -857,7 +857,9 @@ static RPCHelpMan getmempoolinfo()
 {
     return RPCHelpMan{"getmempoolinfo",
         "Returns details on the active state of the TX memory pool.",
-        {},
+        {
+            {"satvB", RPCArg::Type::BOOL, RPCArg::Default{false}, "If enabled mempoolminfee, minrelaytxfee and incrementalrelayfee will be represented in " + CURRENCY_ATOM + "/vB instead of " + CURRENCY_UNIT + "/kvB"}
+        },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
@@ -883,7 +885,8 @@ static RPCHelpMan getmempoolinfo()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    return MempoolInfoToJSON(EnsureAnyMemPool(request.context));
+    FeeRateUnit feerate_units = self.Arg<bool>("satvB") ? FeeRateUnit::SAT_VB : FeeRateUnit::BTC_KVB;
+    return MempoolInfoToJSON(EnsureAnyMemPool(request.context), feerate_units);
 },
     };
 }
