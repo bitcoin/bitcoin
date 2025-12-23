@@ -52,9 +52,11 @@ void SetupArgs(ArgsManager& local_args, const std::vector<std::pair<std::string,
 // functions. The GetSetting method can always be used instead of GetArg
 // methods to retrieve original values, and there's not always an objective
 // answer to what GetArg behavior is best in every case. This test makes sure
-// there's test coverage for whatever the current behavior is, so it's not
-// broken or changed unintentionally.
-BOOST_AUTO_TEST_CASE(setting_args)
+// there's test coverage for the current behavior with ALLOW_ANY flag, so
+// it's not broken or changed unintentionally. Additional test cases with
+// flags other than ALLOW_ANY can be found in the setting_arg_allow_types
+// test below.
+BOOST_AUTO_TEST_CASE(setting_args_allow_any)
 {
     ArgsManager args;
     SetupArgs(args, {{"-foo", ArgsManager::ALLOW_ANY}});
@@ -155,6 +157,62 @@ BOOST_AUTO_TEST_CASE(setting_args)
     BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 100);
     BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), true);
     BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), false);
+}
+
+// Test behavior of GetArg functions with a settings.json file when
+// ALLOW_BOOL and ALLOW_INT flags are specified, in contrast to
+// setting_args_allow_any test above, which tests legacy behavior with the
+// ALLOW_ANY flag.
+//
+// Currently, the ReadSettingsFile() function ignores type flags and just copies
+// JSON values in the file directly into the Settings::rw_settings map without
+// converting the values to types specified by the flags, or returning errors if
+// the values were invalid and couldn't be converted. In the future it would be
+// nice to improve ReadSettingsFile() to use the flags so the parsing could be
+// more robust and return errors if problems were detected. This test could be
+// extended in that case.
+BOOST_AUTO_TEST_CASE(setting_args_allow_types)
+{
+    {
+        ArgsManager args;
+        args.LockSettings([&](common::Settings& settings) {
+            settings.rw_settings["boolarg1"] = true;
+            settings.rw_settings["boolarg2"] = false;
+        });
+        args.ForceSetArg("-datadir", fs::PathToString(m_path_root));
+        BOOST_CHECK(args.WriteSettingsFile());
+    }
+
+    {
+        ArgsManager args;
+        args.ForceSetArg("-datadir", fs::PathToString(m_path_root));
+        BOOST_CHECK(args.ReadSettingsFile());
+
+        BOOST_CHECK_EQUAL(args.GetSetting("-boolarg1").write(), "true");
+        BOOST_CHECK_EQUAL(args.GetSetting("-boolarg2").write(), "false");
+    }
+
+    {
+        ArgsManager args;
+        args.AddArg("-boolarg1", "", ArgsManager::ALLOW_BOOL, OptionsCategory::OPTIONS);
+        args.AddArg("-boolarg2", "", ArgsManager::ALLOW_BOOL, OptionsCategory::OPTIONS);
+        args.ForceSetArg("-datadir", fs::PathToString(m_path_root));
+        BOOST_CHECK(args.ReadSettingsFile());
+
+        BOOST_CHECK_EQUAL(args.GetBoolArg("-boolarg1").value(), true);
+        BOOST_CHECK_EQUAL(args.GetBoolArg("-boolarg2").value(), false);
+    }
+
+    {
+        ArgsManager args;
+        args.AddArg("-boolarg1", "", ArgsManager::ALLOW_INT, OptionsCategory::OPTIONS);
+        args.AddArg("-boolarg2", "", ArgsManager::ALLOW_INT, OptionsCategory::OPTIONS);
+        args.ForceSetArg("-datadir", fs::PathToString(m_path_root));
+        BOOST_CHECK(args.ReadSettingsFile());
+
+        BOOST_CHECK_EQUAL(args.GetIntArg("-boolarg1").value(), 1);
+        BOOST_CHECK_EQUAL(args.GetIntArg("-boolarg2").value(), 0);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(boolarg)
