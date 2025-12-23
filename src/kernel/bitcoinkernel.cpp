@@ -517,7 +517,10 @@ size_t btck_transaction_count_outputs(const btck_Transaction* transaction)
 const btck_TransactionOutput* btck_transaction_get_output_at(const btck_Transaction* transaction, size_t output_index)
 {
     const CTransaction& tx = *btck_Transaction::get(transaction);
-    assert(output_index < tx.vout.size());
+    if (output_index >= tx.vout.size()) {
+        LogError("output_index is out of bounds.");
+        return nullptr;
+    }
     return btck_TransactionOutput::ref(&tx.vout[output_index]);
 }
 
@@ -528,8 +531,12 @@ size_t btck_transaction_count_inputs(const btck_Transaction* transaction)
 
 const btck_TransactionInput* btck_transaction_get_input_at(const btck_Transaction* transaction, size_t input_index)
 {
-    assert(input_index < btck_Transaction::get(transaction)->vin.size());
-    return btck_TransactionInput::ref(&btck_Transaction::get(transaction)->vin[input_index]);
+    const CTransaction& tx = *btck_Transaction::get(transaction);
+    if (input_index >= tx.vin.size()) {
+        LogError("input_index is out of bounds.");
+        return nullptr;
+    }
+    return btck_TransactionInput::ref(&tx.vin[input_index]);
 }
 
 const btck_Txid* btck_transaction_get_txid(const btck_Transaction* transaction)
@@ -616,17 +623,23 @@ int btck_script_pubkey_verify(const btck_ScriptPubkey* script_pubkey,
                               const btck_ScriptVerificationFlags flags,
                               btck_ScriptVerifyStatus* status)
 {
-    // Assert that all specified flags are part of the interface before continuing
-    assert((flags & ~btck_ScriptVerificationFlags_ALL) == 0);
+    constexpr auto INVALID_REQUEST{-1};
+    constexpr auto INVALID_SCRIPT{0};
+    constexpr auto VALID_SCRIPT{1};
+
+    if ((flags & ~btck_ScriptVerificationFlags_ALL) != 0) {
+        LogError("Specified flag(s) are not part of the interface.");
+        return INVALID_REQUEST;
+    }
 
     if (!is_valid_flag_combination(script_verify_flags::from_int(flags))) {
         if (status) *status = btck_ScriptVerifyStatus_ERROR_INVALID_FLAGS_COMBINATION;
-        return 0;
+        return INVALID_SCRIPT;
     }
 
     if (flags & btck_ScriptVerificationFlags_TAPROOT && spent_outputs_ == nullptr) {
         if (status) *status = btck_ScriptVerifyStatus_ERROR_SPENT_OUTPUTS_REQUIRED;
-        return 0;
+        return INVALID_SCRIPT;
     }
 
     if (status) *status = btck_ScriptVerifyStatus_OK;
@@ -634,7 +647,10 @@ int btck_script_pubkey_verify(const btck_ScriptPubkey* script_pubkey,
     const CTransaction& tx{*btck_Transaction::get(tx_to)};
     std::vector<CTxOut> spent_outputs;
     if (spent_outputs_ != nullptr) {
-        assert(spent_outputs_len == tx.vin.size());
+        if (spent_outputs_len != tx.vin.size()) {
+            LogError("spent_outputs_len must be equal to tx_to's number of inputs.");
+            return INVALID_REQUEST;
+        }
         spent_outputs.reserve(spent_outputs_len);
         for (size_t i = 0; i < spent_outputs_len; i++) {
             const CTxOut& tx_out{btck_TransactionOutput::get(spent_outputs_[i])};
@@ -642,7 +658,10 @@ int btck_script_pubkey_verify(const btck_ScriptPubkey* script_pubkey,
         }
     }
 
-    assert(input_index < tx.vin.size());
+    if (input_index >= tx.vin.size()) {
+        LogError("input_index must be strictly smaller than the tx_to's number of inputs.");
+        return INVALID_REQUEST;
+    }
     PrecomputedTransactionData txdata{tx};
 
     if (spent_outputs_ != nullptr && flags & btck_ScriptVerificationFlags_TAPROOT) {
@@ -655,7 +674,7 @@ int btck_script_pubkey_verify(const btck_ScriptPubkey* script_pubkey,
                                script_verify_flags::from_int(flags),
                                TransactionSignatureChecker(&tx, input_index, amount, txdata, MissingDataBehavior::FAIL),
                                nullptr);
-    return result ? 1 : 0;
+    return result ? VALID_SCRIPT : INVALID_SCRIPT;
 }
 
 btck_TransactionInput* btck_transaction_input_copy(const btck_TransactionInput* input)
@@ -1069,8 +1088,12 @@ size_t btck_block_count_transactions(const btck_Block* block)
 
 const btck_Transaction* btck_block_get_transaction_at(const btck_Block* block, size_t index)
 {
-    assert(index < btck_Block::get(block)->vtx.size());
-    return btck_Transaction::ref(&btck_Block::get(block)->vtx[index]);
+    const auto& block_vtx = btck_Block::get(block)->vtx;
+    if (index >= block_vtx.size()) {
+        LogError("transaction_index is out of bounds.");
+        return nullptr;
+    }
+    return btck_Transaction::ref(&block_vtx[index]);
 }
 
 int btck_block_to_bytes(const btck_Block* block, btck_WriteBytes writer, void* user_data)
@@ -1170,8 +1193,12 @@ size_t btck_block_spent_outputs_count(const btck_BlockSpentOutputs* block_spent_
 
 const btck_TransactionSpentOutputs* btck_block_spent_outputs_get_transaction_spent_outputs_at(const btck_BlockSpentOutputs* block_spent_outputs, size_t transaction_index)
 {
-    assert(transaction_index < btck_BlockSpentOutputs::get(block_spent_outputs)->vtxundo.size());
-    const auto* tx_undo{&btck_BlockSpentOutputs::get(block_spent_outputs)->vtxundo.at(transaction_index)};
+    const auto& vtxundo = btck_BlockSpentOutputs::get(block_spent_outputs)->vtxundo;
+    if (transaction_index >= vtxundo.size()) {
+        LogError("transaction_spent_outputs_index is out of bounds.");
+        return nullptr;
+    }
+    const auto* tx_undo{&vtxundo.at(transaction_index)};
     return btck_TransactionSpentOutputs::ref(tx_undo);
 }
 
@@ -1197,8 +1224,12 @@ void btck_transaction_spent_outputs_destroy(btck_TransactionSpentOutputs* transa
 
 const btck_Coin* btck_transaction_spent_outputs_get_coin_at(const btck_TransactionSpentOutputs* transaction_spent_outputs, size_t coin_index)
 {
-    assert(coin_index < btck_TransactionSpentOutputs::get(transaction_spent_outputs).vprevout.size());
-    const Coin* coin{&btck_TransactionSpentOutputs::get(transaction_spent_outputs).vprevout.at(coin_index)};
+    const auto& vprevout = btck_TransactionSpentOutputs::get(transaction_spent_outputs).vprevout;
+    if (coin_index >= vprevout.size()) {
+        LogError("coin_index is out of bounds.");
+        return nullptr;
+    }
+    const Coin* coin{&vprevout.at(coin_index)};
     return btck_Coin::ref(coin);
 }
 
