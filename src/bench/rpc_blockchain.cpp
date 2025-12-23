@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <bench/data/block413567.raw.h>
+#include <bench/block_generator.h>
 #include <chain.h>
 #include <core_io.h>
 #include <primitives/block.h>
@@ -24,14 +24,15 @@
 namespace {
 
 struct TestBlockAndIndex {
-    const std::unique_ptr<const TestingSetup> testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN)};
+    const std::unique_ptr<const TestingSetup> testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::REGTEST)};
     CBlock block{};
     uint256 blockHash{};
     CBlockIndex blockindex{};
 
     TestBlockAndIndex()
     {
-        DataStream stream{benchmark::data::block413567};
+        const auto& params{testing_setup->m_node.chainman->GetParams()};
+        auto stream{benchmark::GetBlockData(params)};
         std::byte a{0};
         stream.write({&a, 1}); // Prevent compaction
 
@@ -39,7 +40,7 @@ struct TestBlockAndIndex {
 
         blockHash = block.GetHash();
         blockindex.phashBlock = &blockHash;
-        blockindex.nBits = 403014710;
+        blockindex.nBits = block.nBits;
     }
 };
 

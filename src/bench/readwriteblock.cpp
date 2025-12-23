@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <bench/data/block413567.raw.h>
+#include <bench/block_generator.h>
 #include <flatfile.h>
 #include <node/blockstorage.h>
 #include <primitives/block.h>
@@ -19,32 +19,26 @@
 #include <memory>
 #include <vector>
 
-static CBlock CreateTestBlock()
-{
-    DataStream stream{benchmark::data::block413567};
-    CBlock block;
-    stream >> TX_WITH_WITNESS(block);
-    return block;
-}
-
 static void WriteBlockBench(benchmark::Bench& bench)
 {
-    const auto testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN)};
+    const auto testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::REGTEST)};
     auto& blockman{testing_setup->m_node.chainman->m_blockman};
-    const CBlock block{CreateTestBlock()};
+    const auto& params{testing_setup->m_node.chainman->GetParams()};
+    const auto test_block{benchmark::GetBlock(params)};
     bench.run([&] {
-        const auto pos{blockman.WriteBlock(block, 413'567)};
+        const auto pos{blockman.WriteBlock(test_block, /*nHeight=*/1)};
         assert(!pos.IsNull());
     });
 }
 
 static void ReadBlockBench(benchmark::Bench& bench)
 {
-    const auto testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN)};
+    const auto testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::REGTEST)};
     auto& blockman{testing_setup->m_node.chainman->m_blockman};
-    const auto& test_block{CreateTestBlock()};
+    const auto& params{testing_setup->m_node.chainman->GetParams()};
+    const auto test_block{benchmark::GetBlock(params)};
     const auto& expected_hash{test_block.GetHash()};
-    const auto& pos{blockman.WriteBlock(test_block, 413'567)};
+    const auto& pos{blockman.WriteBlock(test_block, /*nHeight=*/1)};
     bench.run([&] {
         CBlock block;
         const auto success{blockman.ReadBlock(block, pos, expected_hash)};
@@ -54,9 +48,11 @@ static void ReadBlockBench(benchmark::Bench& bench)
 
 static void ReadRawBlockBench(benchmark::Bench& bench)
 {
-    const auto testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN)};
+    const auto testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::REGTEST)};
     auto& blockman{testing_setup->m_node.chainman->m_blockman};
-    const auto pos{blockman.WriteBlock(CreateTestBlock(), 413'567)};
+    const auto& params{testing_setup->m_node.chainman->GetParams()};
+    const auto test_block{benchmark::GetBlock(params)};
+    const auto pos{blockman.WriteBlock(test_block, /*nHeight=*/1)};
     bench.run([&] {
         const auto res{blockman.ReadRawBlock(pos)};
         assert(res);
