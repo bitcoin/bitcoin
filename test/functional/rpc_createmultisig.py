@@ -148,8 +148,38 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         assert_equal(rawtx3["complete"], False)
         assert_raises_rpc_error(-22, "TX decode failed", node2.combinerawtransaction, [rawtx2['hex'], rawtx3['hex'] + "00"])
         assert_raises_rpc_error(-22, "Missing transactions", node2.combinerawtransaction, [])
-        combined_rawtx = node2.combinerawtransaction([rawtx2["hex"], rawtx3["hex"]])
+        assert_raises_rpc_error(-22, "Missing transactions", node2.combinerawtransaction, [rawtx2['hex']])
 
+        # similar transaction but with different amount to send, transactions are not mergeable
+        unrelated_tx = node2.createrawtransaction([{"txid": tx["txid"], "vout": tx["sent_vout"]}], [{out_addr: outval * 2}])
+        assert_raises_rpc_error(-8, "Transaction number 2 not compatible with first transaction", node0.combinerawtransaction, [rawtx2['hex'], unrelated_tx])
+
+        # similar transaction but with different version, transactions are not mergeable
+        unrelated_tx = node2.createrawtransaction([{"txid": tx["txid"], "vout": tx["sent_vout"]}], [{out_addr: outval}], 0, True, 1)
+        assert_raises_rpc_error(-8, "Transaction number 2 not compatible with first transaction", node0.combinerawtransaction, [rawtx2['hex'], unrelated_tx])
+
+        # similar transaction but with different locktime, transactions are not mergeable
+        unrelated_tx = node2.createrawtransaction([{"txid": tx["txid"], "vout": tx["sent_vout"]}], [{out_addr: outval}], 1)
+        assert_raises_rpc_error(-8, "Transaction number 2 not compatible with first transaction", node0.combinerawtransaction, [rawtx2['hex'], unrelated_tx])
+
+        # similar transaction but with different output address (scriptPubKey), transactions are not mergeable
+        out_addr2 = getnewdestination('bech32')[2]
+        unrelated_tx = node2.createrawtransaction([{"txid": tx["txid"], "vout": tx["sent_vout"]}], [{out_addr2: outval}])
+        assert_raises_rpc_error(-8, "Transaction number 2 not compatible with first transaction", node0.combinerawtransaction, [rawtx2['hex'], unrelated_tx])
+
+        # similar transaction but with different sequence number, transactions are not mergeable
+        unrelated_tx = node2.createrawtransaction([{"txid": tx["txid"], "vout": tx["sent_vout"], "sequence": 1}], [{out_addr: outval}])
+        assert_raises_rpc_error(-8, "Transaction number 2 not compatible with first transaction", node0.combinerawtransaction, [rawtx2['hex'], unrelated_tx])
+
+        # similar transaction but with different input vout index, transactions are not mergeable
+        unrelated_tx = node2.createrawtransaction([{"txid": tx["txid"], "vout": tx["sent_vout"] + 1}], [{out_addr: outval}])
+        assert_raises_rpc_error(-8, "Transaction number 2 not compatible with first transaction", node0.combinerawtransaction, [rawtx2['hex'], unrelated_tx])
+
+        # Accept duplicate transactions in combinerawtransaction
+        dupe_merged_tx = node2.combinerawtransaction([rawtx2['hex'], rawtx2['hex']])
+        assert_equal(rawtx2['hex'], dupe_merged_tx)
+
+        combined_rawtx = node2.combinerawtransaction([rawtx2["hex"], rawtx3["hex"]])
         tx = node0.sendrawtransaction(combined_rawtx, 0)
         blk = self.generate(node0, 1)[0]
         assert tx in node0.getblock(blk)["tx"]
