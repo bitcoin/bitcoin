@@ -18,7 +18,7 @@
 #include <vector>
 
 /**
- * CCoinsViewCache subclass that fetches all block inputs before ConnectBlock without mutating the base cache.
+ * CCoinsViewCache subclass that fetches all block inputs during ConnectBlock without mutating the base cache.
  * Only used in ConnectBlock to pass as an ephemeral view that can be reset if the block is invalid.
  * It provides the same interface as CCoinsViewCache, overriding the FetchCoin private method and Reset.
  * It adds an additional StartFetching method to provide the block.
@@ -33,6 +33,8 @@ private:
 
     //! The inputs of the block which is being fetched.
     struct InputToFetch {
+        //! Set this after setting the coin. Test this before reading the coin.
+        bool ready{false};
         //! The outpoint of the input to fetch.
         const COutPoint& outpoint;
         //! The coin that will be fetched.
@@ -72,10 +74,12 @@ private:
         auto& input{m_inputs[i]};
         // Inputs spending a coin from a tx earlier in the block won't be in the cache or db
         if (std::ranges::binary_search(m_txids, input.outpoint.hash.ToUint256().GetUint64(0))) {
+            input.ready = true;
             return true;
         }
 
         if (auto coin{FetchCoinWithoutMutating(input.outpoint)}) [[likely]] input.coin.emplace(std::move(*coin));
+        input.ready = true;
         return true;
     }
 
@@ -102,6 +106,10 @@ private:
 
         if (const auto i{GetInputIndex(outpoint)}) [[likely]] {
             auto& input{m_inputs[*i]};
+            // Check if the coin is ready to be read.
+            while (!input.ready) {
+                ProcessInput();
+            }
             if (input.coin) [[likely]] ret->second.coin = std::move(*input.coin);
         }
 
@@ -133,7 +141,6 @@ public:
         if (m_inputs.empty()) [[unlikely]] return;
         // Sort txids so we can do binary search lookups.
         std::ranges::sort(m_txids);
-        while (ProcessInput()) [[likely]] {}
     }
 
     void Reset() noexcept override
