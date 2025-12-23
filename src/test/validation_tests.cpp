@@ -156,9 +156,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
     // cache flags on `CBlock`.
     auto is_mutated = [](CBlock& block, bool check_witness_root) {
         bool mutated{IsBlockMutated(block, check_witness_root)};
-        block.fChecked = false;
-        block.m_checked_witness_commitment = false;
-        block.m_checked_merkle_root = false;
+        block.ResetChecked();
         return mutated;
     };
     auto is_not_mutated = [&is_mutated](CBlock& block, bool check_witness_root) {
