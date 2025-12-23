@@ -1125,6 +1125,9 @@ public:
     /** Expose the cipher. */
     BIP324Cipher& GetCipher() { return m_cipher; }
 
+    /** Expose the transport. */
+    V2Transport& GetTransport() { return m_transport; }
+
     /** Schedule bytes to be sent to the transport. */
     void Send(Span<const uint8_t> data)
     {
@@ -1576,6 +1579,86 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.SendV1Version(CreateChainParams(*m_node.args, CBaseChainParams::MAIN)->MessageStart());
         auto ret = tester.Interact();
         BOOST_CHECK(!ret);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(v2_short_id_version_negotiation)
+{
+    // Test that v2 short ID encoding respects peer protocol version.
+    // This ensures backwards compatibility when adding new short IDs.
+
+    // Test 1: Baseline messages (short IDs 0-167) work with any v2-capable peer
+    {
+        V2TransportTester tester(true);
+        tester.GetTransport().SetPeerVersion(BIP324_DASH_BASELINE_VERSION); // v70235
+
+        auto ret = tester.Interact();
+        BOOST_REQUIRE(ret && ret->empty());
+        tester.SendKey();
+        tester.SendGarbage();
+        tester.ReceiveKey();
+        tester.SendGarbageTerm();
+        tester.SendVersion();
+        ret = tester.Interact();
+        BOOST_REQUIRE(ret && ret->empty());
+        tester.ReceiveGarbage();
+        tester.ReceiveVersion();
+
+        // SPORK (short ID 128) should use short encoding
+        auto msg_data = g_insecure_rand_ctx.randbytes<uint8_t>(100);
+        tester.AddMessage("spork", msg_data);
+        ret = tester.Interact();
+        BOOST_REQUIRE(ret && ret->empty());
+        tester.ReceiveMessage(uint8_t(128), msg_data);
+    }
+
+    // Test 2: New short IDs (168+) require version negotiation
+    {
+        // Old peer (v70238) - doesn't know about PLATFORMBAN short ID 168
+        V2TransportTester tester_old(true);
+        tester_old.GetTransport().SetPeerVersion(70238);
+
+        auto ret = tester_old.Interact();
+        BOOST_REQUIRE(ret && ret->empty());
+        tester_old.SendKey();
+        tester_old.SendGarbage();
+        tester_old.ReceiveKey();
+        tester_old.SendGarbageTerm();
+        tester_old.SendVersion();
+        ret = tester_old.Interact();
+        BOOST_REQUIRE(ret && ret->empty());
+        tester_old.ReceiveGarbage();
+        tester_old.ReceiveVersion();
+
+        // Old peer gets long encoding for PLATFORMBAN
+        auto msg_data_old = g_insecure_rand_ctx.randbytes<uint8_t>(100);
+        tester_old.AddMessage("platformban", msg_data_old);
+        ret = tester_old.Interact();
+        BOOST_REQUIRE(ret && ret->empty());
+        tester_old.ReceiveMessage("platformban", msg_data_old); // long encoding
+
+        // New peer (v70240) - knows about PLATFORMBAN short ID 168
+        V2TransportTester tester_new(true);
+        // Uses PROTOCOL_VERSION (70240) by default
+
+        ret = tester_new.Interact();
+        BOOST_REQUIRE(ret && ret->empty());
+        tester_new.SendKey();
+        tester_new.SendGarbage();
+        tester_new.ReceiveKey();
+        tester_new.SendGarbageTerm();
+        tester_new.SendVersion();
+        ret = tester_new.Interact();
+        BOOST_REQUIRE(ret && ret->empty());
+        tester_new.ReceiveGarbage();
+        tester_new.ReceiveVersion();
+
+        // New peer gets short encoding for PLATFORMBAN
+        auto msg_data_new = g_insecure_rand_ctx.randbytes<uint8_t>(100);
+        tester_new.AddMessage("platformban", msg_data_new);
+        ret = tester_new.Interact();
+        BOOST_REQUIRE(ret && ret->empty());
+        tester_new.ReceiveMessage(uint8_t(168), msg_data_new); // short encoding
     }
 }
 
