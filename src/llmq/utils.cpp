@@ -31,13 +31,27 @@
 std::optional<std::pair<CBLSSignature, uint32_t>> GetNonNullCoinbaseChainlock(const CBlockIndex* pindex);
 
 namespace {
+struct QuorumQuarter {
+    llmq::CQuorumSnapshot m_snap;
+    std::vector<std::vector<CDeterministicMNCPtr>> m_members;
+    //! memory only
+    const CBlockIndex* m_cycle_index{nullptr};
+
+public:
+    explicit QuorumQuarter(size_t size) : m_members(size) {}
+};
+
 // QuorumMembers per quorumIndex at heights H-Cycle, H-2Cycles, H-3Cycles
 struct PreviousQuorumQuarters {
-    std::vector<std::vector<CDeterministicMNCPtr>> quarterHMinusC;
-    std::vector<std::vector<CDeterministicMNCPtr>> quarterHMinus2C;
-    std::vector<std::vector<CDeterministicMNCPtr>> quarterHMinus3C;
-    explicit PreviousQuorumQuarters(size_t s) :
-        quarterHMinusC(s), quarterHMinus2C(s), quarterHMinus3C(s) {}
+    QuorumQuarter quarterHMinusC;
+    QuorumQuarter quarterHMinus2C;
+    QuorumQuarter quarterHMinus3C;
+
+public:
+    explicit PreviousQuorumQuarters(size_t s) : quarterHMinusC(s), quarterHMinus2C(s), quarterHMinus3C(s) {}
+
+    std::vector<QuorumQuarter*> GetCycles() { return {&quarterHMinusC, &quarterHMinus2C, &quarterHMinus3C}; }
+    std::vector<const QuorumQuarter*> GetCycles() const { return {&quarterHMinusC, &quarterHMinus2C, &quarterHMinus3C}; }
 };
 
 bool IsV19Active(gsl::not_null<const CBlockIndex*> pindexPrev)
@@ -350,53 +364,23 @@ std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(
 
     bool skipRemovedMNs = IsV19Active(pCycleQuorumBaseBlockIndex) || (Params().NetworkIDString() == CBaseChainParams::TESTNET);
 
-    for (const size_t i : irange::range(nQuorums)) {
-        for (const auto& mn : previousQuarters.quarterHMinusC[i]) {
-            if (skipRemovedMNs && !allMns.HasMN(mn->proTxHash)) {
-                continue;
-            }
-            if (allMns.IsMNPoSeBanned(mn->proTxHash)) {
-                continue;
-            }
-            try {
-                MnsUsedAtH.AddMN(mn);
-            } catch (const std::runtime_error& e) {
-            }
-            try {
-                MnsUsedAtHIndexed[i].AddMN(mn);
-            } catch (const std::runtime_error& e) {
-            }
-        }
-        for (const auto& mn : previousQuarters.quarterHMinus2C[i]) {
-            if (skipRemovedMNs && !allMns.HasMN(mn->proTxHash)) {
-                continue;
-            }
-            if (allMns.IsMNPoSeBanned(mn->proTxHash)) {
-                continue;
-            }
-            try {
-                MnsUsedAtH.AddMN(mn);
-            } catch (const std::runtime_error& e) {
-            }
-            try {
-                MnsUsedAtHIndexed[i].AddMN(mn);
-            } catch (const std::runtime_error& e) {
-            }
-        }
-        for (const auto& mn : previousQuarters.quarterHMinus3C[i]) {
-            if (skipRemovedMNs && !allMns.HasMN(mn->proTxHash)) {
-                continue;
-            }
-            if (allMns.IsMNPoSeBanned(mn->proTxHash)) {
-                continue;
-            }
-            try {
-                MnsUsedAtH.AddMN(mn);
-            } catch (const std::runtime_error& e) {
-            }
-            try {
-                MnsUsedAtHIndexed[i].AddMN(mn);
-            } catch (const std::runtime_error& e) {
+    for (const size_t idx : irange::range(nQuorums)) {
+        for (auto* prev_cycle : previousQuarters.GetCycles()) {
+            for (const auto& mn : prev_cycle->m_members[idx]) {
+                if (skipRemovedMNs && !allMns.HasMN(mn->proTxHash)) {
+                    continue;
+                }
+                if (allMns.IsMNPoSeBanned(mn->proTxHash)) {
+                    continue;
+                }
+                try {
+                    MnsUsedAtH.AddMN(mn);
+                } catch (const std::runtime_error& e) {
+                }
+                try {
+                    MnsUsedAtHIndexed[idx].AddMN(mn);
+                } catch (const std::runtime_error& e) {
+                }
             }
         }
     }
@@ -478,91 +462,52 @@ std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(
     return quarterQuorumMembers;
 }
 
-PreviousQuorumQuarters GetPreviousQuorumQuarterMembers(const Consensus::LLMQParams& llmqParams,
-                                                       CDeterministicMNManager& dmnman, llmq::CQuorumSnapshotManager& qsnapman,
-                                                       const CBlockIndex* pBlockHMinusCIndex,
-                                                       const CBlockIndex* pBlockHMinus2CIndex,
-                                                       const CBlockIndex* pBlockHMinus3CIndex, int nHeight)
-{
-    size_t nQuorums = static_cast<size_t>(llmqParams.signingActiveQuorumCount);
-    PreviousQuorumQuarters quarters{nQuorums};
-
-    std::optional<llmq::CQuorumSnapshot> quSnapshotHMinusC = qsnapman.GetSnapshotForBlock(llmqParams.type,
-                                                                                          pBlockHMinusCIndex);
-    if (quSnapshotHMinusC.has_value()) {
-        quarters.quarterHMinusC = GetQuorumQuarterMembersBySnapshot(llmqParams, dmnman, pBlockHMinusCIndex, quSnapshotHMinusC.value(), nHeight);
-        //TODO Check if it is triggered from outside (P2P, block validation). Throwing an exception is probably a wiser choice
-        //assert (!quarterHMinusC.empty());
-
-        std::optional<llmq::CQuorumSnapshot> quSnapshotHMinus2C = qsnapman.GetSnapshotForBlock(llmqParams.type,
-                                                                                               pBlockHMinus2CIndex);
-        if (quSnapshotHMinus2C.has_value()) {
-            quarters.quarterHMinus2C = GetQuorumQuarterMembersBySnapshot(llmqParams, dmnman, pBlockHMinus2CIndex, quSnapshotHMinus2C.value(), nHeight);
-            //TODO Check if it is triggered from outside (P2P, block validation). Throwing an exception is probably a wiser choice
-            //assert (!quarterHMinusC.empty());
-
-            std::optional<llmq::CQuorumSnapshot> quSnapshotHMinus3C = qsnapman.GetSnapshotForBlock(llmqParams.type,
-                                                                                                   pBlockHMinus3CIndex);
-            if (quSnapshotHMinus3C.has_value()) {
-                quarters.quarterHMinus3C = GetQuorumQuarterMembersBySnapshot(llmqParams, dmnman, pBlockHMinus3CIndex, quSnapshotHMinus3C.value(), nHeight);
-                //TODO Check if it is triggered from outside (P2P, block validation). Throwing an exception is probably a wiser choice
-                //assert (!quarterHMinusC.empty());
-            }
-        }
-    }
-
-    return quarters;
-}
-
 std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRotation(
     const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman, llmq::CQuorumSnapshotManager& qsnapman,
     const ChainstateManager& chainman, const CBlockIndex* pCycleQuorumBaseBlockIndex)
 {
-    const Consensus::LLMQType llmqType = llmqParams.type;
-
     const int cycleLength = llmqParams.dkgInterval;
     if (!llmqParams.useRotation || pCycleQuorumBaseBlockIndex->nHeight % llmqParams.dkgInterval != 0) {
         ASSERT_IF_DEBUG(false);
         return {};
     }
+    const auto nQuorums{static_cast<size_t>(llmqParams.signingActiveQuorumCount)};
 
-    const CBlockIndex* pBlockHMinusCIndex = pCycleQuorumBaseBlockIndex->GetAncestor(pCycleQuorumBaseBlockIndex->nHeight - cycleLength);
-    const CBlockIndex* pBlockHMinus2CIndex = pCycleQuorumBaseBlockIndex->GetAncestor(pCycleQuorumBaseBlockIndex->nHeight - 2 * cycleLength);
-    const CBlockIndex* pBlockHMinus3CIndex = pCycleQuorumBaseBlockIndex->GetAncestor(pCycleQuorumBaseBlockIndex->nHeight - 3 * cycleLength);
     const CBlockIndex* pWorkBlockIndex = pCycleQuorumBaseBlockIndex->GetAncestor(pCycleQuorumBaseBlockIndex->nHeight - 8);
     CDeterministicMNList allMns = dmnman.GetListForBlock(pWorkBlockIndex);
-    LogPrint(BCLog::LLMQ, "ComputeQuorumMembersByQuarterRotation llmqType[%d] nHeight[%d] allMns[%d]\n", ToUnderlying(llmqType), pCycleQuorumBaseBlockIndex->nHeight, allMns.GetValidMNsCount());
+    LogPrint(BCLog::LLMQ, "ComputeQuorumMembersByQuarterRotation llmqType[%d] nHeight[%d] allMns[%d]\n", ToUnderlying(llmqParams.type),
+             pCycleQuorumBaseBlockIndex->nHeight, allMns.GetValidMNsCount());
 
-    PreviousQuorumQuarters previousQuarters = GetPreviousQuorumQuarterMembers(llmqParams, dmnman, qsnapman,
-                                                                              pBlockHMinusCIndex, pBlockHMinus2CIndex,
-                                                                              pBlockHMinus3CIndex,
-                                                                              pCycleQuorumBaseBlockIndex->nHeight);
+    PreviousQuorumQuarters previousQuarters(nQuorums);
+    auto prev_cycles{previousQuarters.GetCycles()};
+    for (size_t idx{0}; idx < prev_cycles.size(); idx++) {
+        prev_cycles[idx]->m_cycle_index = pCycleQuorumBaseBlockIndex->GetAncestor(pCycleQuorumBaseBlockIndex->nHeight - (cycleLength * (idx + 1)));
+        if (auto opt_snap = qsnapman.GetSnapshotForBlock(llmqParams.type, prev_cycles[idx]->m_cycle_index); opt_snap.has_value()) {
+            prev_cycles[idx]->m_snap = opt_snap.value();
+        } else {
+            // TODO: Check if it is triggered from outside (P2P, block validation) and maybe throw an exception
+            // assert(false);
+            break;
+        }
+        prev_cycles[idx]->m_members = GetQuorumQuarterMembersBySnapshot(llmqParams, dmnman, prev_cycles[idx]->m_cycle_index,
+                                                                        prev_cycles[idx]->m_snap, pCycleQuorumBaseBlockIndex->nHeight);
+    }
 
-    size_t nQuorums = static_cast<size_t>(llmqParams.signingActiveQuorumCount);
-    std::vector<std::vector<CDeterministicMNCPtr>> quorumMembers{nQuorums};
-
-    auto newQuarterMembers = BuildNewQuorumQuarterMembers(llmqParams, qsnapman, allMns, pCycleQuorumBaseBlockIndex,
-                                                          previousQuarters);
-    //TODO Check if it is triggered from outside (P2P, block validation). Throwing an exception is probably a wiser choice
-    //assert (!newQuarterMembers.empty());
+    auto newQuarterMembers = BuildNewQuorumQuarterMembers(llmqParams, qsnapman, allMns, pCycleQuorumBaseBlockIndex, previousQuarters);
+    // TODO: Check if it is triggered from outside (P2P, block validation) and maybe throw an exception
+    // assert (!newQuarterMembers.empty());
 
     if (LogAcceptDebug(BCLog::LLMQ)) {
         for (const size_t i : irange::range(nQuorums)) {
             std::stringstream ss;
-
-            ss << " 3Cmns[";
-            for (const auto &m: previousQuarters.quarterHMinus3C[i]) {
-                ss << m->proTxHash.ToString().substr(0, 4) << "|";
+            for (size_t idx = prev_cycles.size(); idx-- > 0;) {
+                ss << strprintf(" %dCmns[", idx);
+                for (const auto &m: prev_cycles[idx]->m_members[i]) {
+                    ss << m->proTxHash.ToString().substr(0, 4) << "|";
+                }
+                ss << " ]";
             }
-            ss << " ] 2Cmns[";
-            for (const auto &m: previousQuarters.quarterHMinus2C[i]) {
-                ss << m->proTxHash.ToString().substr(0, 4) << "|";
-            }
-            ss << " ] Cmns[";
-            for (const auto &m: previousQuarters.quarterHMinusC[i]) {
-                ss << m->proTxHash.ToString().substr(0, 4) << "|";
-            }
-            ss << " ] new[";
+            ss << " new[";
             for (const auto &m: newQuarterMembers[i]) {
                 ss << m->proTxHash.ToString().substr(0, 4) << "|";
             }
@@ -572,11 +517,12 @@ std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRota
         }
     }
 
+    std::vector<std::vector<CDeterministicMNCPtr>> quorumMembers(nQuorums);
     for (const size_t i : irange::range(nQuorums)) {
         // Move elements from previous quarters into quorumMembers
-        std::move(previousQuarters.quarterHMinus3C[i].begin(), previousQuarters.quarterHMinus3C[i].end(), std::back_inserter(quorumMembers[i]));
-        std::move(previousQuarters.quarterHMinus2C[i].begin(), previousQuarters.quarterHMinus2C[i].end(), std::back_inserter(quorumMembers[i]));
-        std::move(previousQuarters.quarterHMinusC[i].begin(), previousQuarters.quarterHMinusC[i].end(), std::back_inserter(quorumMembers[i]));
+        for (auto* prev_cycle : prev_cycles | std::views::reverse) {
+            std::move(prev_cycle->m_members[i].begin(), prev_cycle->m_members[i].end(), std::back_inserter(quorumMembers[i]));
+        }
         std::move(newQuarterMembers[i].begin(), newQuarterMembers[i].end(), std::back_inserter(quorumMembers[i]));
 
         if (LogAcceptDebug(BCLog::LLMQ)) {
