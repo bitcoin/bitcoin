@@ -198,4 +198,19 @@ BOOST_AUTO_TEST_CASE(access_non_input_coin)
     }
 }
 
+// Test that the main thread can make progress with no workers
+BOOST_AUTO_TEST_CASE(fetch_main_thread)
+{
+    const auto block{CreateBlock()};
+    CCoinsViewDB db{{.path = "", .cache_bytes = 1_MiB, .memory_only = true}, {}};
+    CCoinsViewCache main_cache{&db};
+    PopulateView(block, main_cache);
+    CoinsViewCacheAsync view{&main_cache, /*deterministic=*/false, /*num_workers=*/0};
+    for (auto i{0}; i < 3; ++i) {
+        view.StartFetching(block);
+        CheckCache(block, view);
+        view.Reset();
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
