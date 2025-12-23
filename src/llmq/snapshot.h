@@ -36,6 +36,8 @@ enum class SnapshotSkipMode : int {
 template<> struct is_serializable_enum<SnapshotSkipMode> : std::true_type {};
 
 namespace llmq {
+constexpr int WORK_DIFF_DEPTH{8};
+
 class CQuorumSnapshot
 {
 public:

@@ -84,7 +84,7 @@ arith_uint256 calculateQuorumScore(const CDeterministicMNCPtr& dmn, const uint25
 uint256 GetHashModifier(const Consensus::LLMQParams& llmqParams, gsl::not_null<const CBlockIndex*> pCycleQuorumBaseBlockIndex)
 {
     ASSERT_IF_DEBUG(pCycleQuorumBaseBlockIndex->nHeight % llmqParams.dkgInterval == 0);
-    const CBlockIndex* pWorkBlockIndex = pCycleQuorumBaseBlockIndex->GetAncestor(pCycleQuorumBaseBlockIndex->nHeight - 8);
+    const CBlockIndex* pWorkBlockIndex = pCycleQuorumBaseBlockIndex->GetAncestor(pCycleQuorumBaseBlockIndex->nHeight - llmq::WORK_DIFF_DEPTH);
 
     if (IsV20Active(pWorkBlockIndex)) {
         // v20 is active: calculate modifier using the new way.
@@ -190,7 +190,7 @@ std::vector<std::vector<CDeterministicMNCPtr>> GetQuorumQuarterMembersBySnapshot
     std::vector<CDeterministicMNCPtr> sortedCombinedMns;
     {
         const CBlockIndex* pWorkBlockIndex = pCycleQuorumBaseBlockIndex->GetAncestor(
-            pCycleQuorumBaseBlockIndex->nHeight - 8);
+            pCycleQuorumBaseBlockIndex->nHeight - llmq::WORK_DIFF_DEPTH);
         auto mn_list = dmnman.GetListForBlock(pWorkBlockIndex);
         const auto modifier = GetHashModifier(llmqParams, pCycleQuorumBaseBlockIndex);
         auto sortedAllMns = CalculateQuorum(mn_list, modifier);
@@ -471,7 +471,7 @@ std::vector<std::vector<CDeterministicMNCPtr>>
     }
     const auto nQuorums{static_cast<size_t>(llmqParams.signingActiveQuorumCount)};
 
-    const CBlockIndex* pWorkBlockIndex = util_params.m_base_index->GetAncestor(util_params.m_base_index->nHeight - 8);
+    const CBlockIndex* pWorkBlockIndex = util_params.m_base_index->GetAncestor(util_params.m_base_index->nHeight - llmq::WORK_DIFF_DEPTH);
     CDeterministicMNList allMns = util_params.m_dmnman.GetListForBlock(pWorkBlockIndex);
     LogPrint(BCLog::LLMQ, "ComputeQuorumMembersByQuarterRotation llmqType[%d] nHeight[%d] allMns[%d]\n", ToUnderlying(llmqParams.type),
              util_params.m_base_index->nHeight, allMns.GetValidMNsCount());
@@ -651,7 +651,7 @@ std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(Consensus::LLMQType llmqTy
         }
     } else {
         const CBlockIndex* pWorkBlockIndex = IsV20Active(util_params.m_base_index)
-                                                 ? util_params.m_base_index->GetAncestor(util_params.m_base_index->nHeight - 8)
+                                                 ? util_params.m_base_index->GetAncestor(util_params.m_base_index->nHeight - WORK_DIFF_DEPTH)
                                                  : util_params.m_base_index.get();
         CDeterministicMNList mn_list = util_params.m_dmnman.GetListForBlock(pWorkBlockIndex);
         quorumMembers = ComputeQuorumMembers(llmqType, mn_list, util_params.m_base_index);
