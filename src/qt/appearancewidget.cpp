@@ -94,6 +94,12 @@ void AppearanceWidget::setModel(OptionsModel* _model)
         mapper->addMapping(ui->fontScaleSlider, OptionsModel::FontScale);
         mapper->addMapping(ui->fontWeightNormalSlider, OptionsModel::FontWeightNormal);
         mapper->addMapping(ui->fontWeightBoldSlider, OptionsModel::FontWeightBold);
+
+        const QSignalBlocker fontFamilyBlocker(ui->fontFamily);
+        const QSignalBlocker fontScaleBlocker(ui->fontScaleSlider);
+        const QSignalBlocker fontWeightNormalBlocker(ui->fontWeightNormalSlider);
+        const QSignalBlocker fontWeightBoldBlocker(ui->fontWeightBoldSlider);
+
         mapper->toFirst();
     }
 }
