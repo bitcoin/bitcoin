@@ -19,6 +19,7 @@ namespace GUIUtil {
 // TODO: Switch to QUtf8StringView when we switch to Qt 6
 constexpr QStringView MONTSERRAT_FONT_STR{u"Montserrat"};
 constexpr QStringView OS_FONT_STR{u"SystemDefault"};
+constexpr QStringView ROBOTO_MONO_FONT_STR{u"Roboto Mono"};
 
 enum class FontWeight : uint8_t {
     Normal,
@@ -63,7 +64,7 @@ public:
     };
 
 public:
-    [[nodiscard]] bool RegisterFont(const QString& font, bool skip_checks = false);
+    [[nodiscard]] bool RegisterFont(const QString& font, bool selectable, bool skip_checks = false);
 
     bool IsValidWeight(const QFont::Weight& weight) const { return WeightToIdx(weight) != -1; }
     int WeightToIdx(const QFont::Weight& weight) const;
@@ -123,7 +124,7 @@ private:
 
 extern FontRegistry g_font_registry;
 
-extern std::vector<QString> g_fonts_known;
+extern std::vector<std::pair<QString, /*selectable=*/bool>> g_fonts_known;
 
 /** Convert weight value from args (0-8) to QFont::Weight */
 bool weightFromArg(int nArg, QFont::Weight& weight);
@@ -146,6 +147,9 @@ void setFont(const std::vector<QWidget*>& vecWidgets, const FontAttrib& font_att
 /** Update the font of all widgets where a custom font has been set with
     GUIUtil::setFont */
 void updateFonts();
+
+/** Get list of all selectable fonts */
+std::vector<QString> getFonts(bool selectable_only);
 
 /** Get a properly weighted QFont object with the selected font. */
 QFont getFont(const QString& font_name, const FontAttrib& font_attrib);

@@ -116,10 +116,11 @@ QString qstrprintf(const std::string& fmt, const Args&... args)
 } // anonymous namespace
 
 namespace GUIUtil {
-// Fonts known by the client
-std::vector<QString> g_fonts_known{
-    OS_FONT_STR.toUtf8(),
-    MONTSERRAT_FONT_STR.toUtf8(),
+//! Fonts known by the client
+std::vector<std::pair<QString, /*selectable=*/bool>> g_fonts_known{
+    {MONTSERRAT_FONT_STR.toUtf8(), true},
+    {OS_FONT_STR.toUtf8(), true},
+    {ROBOTO_MONO_FONT_STR.toUtf8(), false},
 };
 
 FontRegistry g_font_registry;
@@ -134,12 +135,15 @@ FontInfo::FontInfo(const QString& font_name)
 
 FontInfo::~FontInfo() = default;
 
-bool FontRegistry::RegisterFont(const QString& font, bool skip_checks)
+bool FontRegistry::RegisterFont(const QString& font, bool selectable, bool skip_checks)
 {
-    const bool font_known{std::find(g_fonts_known.begin(), g_fonts_known.end(), font) != g_fonts_known.end()};
+    const auto font_strs{getFonts(/*selectable_only=*/false)};
+    auto font_it{std::find(font_strs.begin(), font_strs.end(), font)};
     if (m_weights.count(font)) {
         // Font's already registered
-        assert(font_known);
+        assert(font_it != font_strs.end());
+        // Overwrite selectable flag
+        g_fonts_known.at(std::distance(font_strs.begin(), font_it)).second = selectable;
         return true;
     }
     if (!skip_checks) {
@@ -150,8 +154,8 @@ bool FontRegistry::RegisterFont(const QString& font, bool skip_checks)
         }
     }
     m_weights.emplace(font, FontInfo(font));
-    if (!font_known) {
-        g_fonts_known.push_back(font);
+    if (font_it == font_strs.end()) {
+        g_fonts_known.emplace_back(font, selectable);
     }
     return true;
 }
@@ -290,8 +294,8 @@ bool loadFonts()
     }
 #endif // QT_NO_DEBUG
 
-    for (const auto& fonts : g_fonts_known) {
-        assert(g_font_registry.RegisterFont(fonts, /*skip_checks=*/true));
+    for (const auto& [fonts, selectable] : g_fonts_known) {
+        assert(g_font_registry.RegisterFont(fonts, selectable, /*skip_checks=*/true));
     }
 
     return true;
@@ -474,6 +478,10 @@ QFont getFont(const QString& font_name, const FontAttrib& font_attrib)
         font.setFamily(font_name);
     }
 
+    if (font_name == ROBOTO_MONO_FONT_STR) {
+        font.setStyleHint(QFont::Monospace);
+    }
+
 #ifdef Q_OS_MACOS
     if (font_name != MONTSERRAT_FONT_STR)
 #endif // Q_OS_MACOS
@@ -498,6 +506,15 @@ QFont getFont(const QString& font_name, const FontAttrib& font_attrib)
 QFont getFont(const FontAttrib& font_attrib)
 {
     return getFont(g_font_registry.GetFont(), font_attrib);
+}
+
+std::vector<QString> getFonts(bool selectable_only)
+{
+    std::vector<QString> ret;
+    for (const auto& [font, selectable] : g_fonts_known) {
+        if (selectable || !selectable_only) { ret.emplace_back(font); }
+    }
+    return ret;
 }
 
 QFont getFontNormal()

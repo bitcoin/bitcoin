@@ -34,7 +34,8 @@ AppearanceWidget::AppearanceWidget(QWidget* parent) :
     }
 
     for (size_t idx{0}; idx < GUIUtil::g_fonts_known.size(); idx++) {
-        ui->fontFamily->addItem(GUIUtil::g_fonts_known[idx], QVariant((uint16_t)idx));
+        const auto& [font, selectable] = GUIUtil::g_fonts_known[idx];
+        if (selectable) { ui->fontFamily->addItem(font, QVariant((uint16_t)idx)); }
     }
 
     updateWeightSlider();
@@ -154,7 +155,7 @@ void AppearanceWidget::updateTheme(const QString& theme)
 
 void AppearanceWidget::updateFontFamily(int index)
 {
-    const bool setfont_ret{GUIUtil::g_font_registry.SetFont(GUIUtil::g_fonts_known[ui->fontFamily->itemData(index).toInt()])};
+    const bool setfont_ret{GUIUtil::g_font_registry.SetFont(GUIUtil::g_fonts_known[ui->fontFamily->itemData(index).toInt()].first)};
     assert(setfont_ret);
     GUIUtil::setApplicationFont();
     GUIUtil::updateFonts();
