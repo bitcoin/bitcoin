@@ -305,7 +305,7 @@ void BlockManager::FindFilesToPruneManual(
     int count = 0;
     for (int fileNumber = 0; fileNumber < this->MaxBlockfileNum(); fileNumber++) {
         const auto& fileinfo = m_blockfile_info[fileNumber];
-        if (fileinfo.nSize == 0 || fileinfo.nHeightLast > (unsigned)last_block_can_prune || fileinfo.nHeightFirst < (unsigned)min_block_to_prune) {
+        if (fileinfo.nSize == 0 || fileinfo.nHeightLast > static_cast<unsigned>(last_block_can_prune) || fileinfo.nHeightFirst < static_cast<unsigned>(min_block_to_prune)) {
             continue;
         }
 
@@ -380,7 +380,7 @@ void BlockManager::FindFilesToPrune(
 
             // don't prune files that could have a block that's not within the allowable
             // prune range for the chain being pruned.
-            if (fileinfo.nHeightLast > (unsigned)last_block_can_prune || fileinfo.nHeightFirst < (unsigned)min_block_to_prune) {
+            if (fileinfo.nHeightLast > static_cast<unsigned>(last_block_can_prune) || fileinfo.nHeightFirst < static_cast<unsigned>(min_block_to_prune)) {
                 continue;
             }
 

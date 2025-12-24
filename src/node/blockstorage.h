@@ -99,13 +99,29 @@ class BlockTreeDB : public CDBWrapper
 {
 public:
     using CDBWrapper::CDBWrapper;
+
+    /** Write block file info and block index entries to the database in a single batch. */
     void WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*>>& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo);
+
+    /** Read block file info for the given file number. */
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo& info);
+
+    /** Read the last block file number from the database. */
     bool ReadLastBlockFile(int& nFile);
+
+    /** Write a flag indicating whether reindexing is in progress. */
     void WriteReindexing(bool fReindexing);
+
+    /** Read the reindexing flag from the database. */
     void ReadReindexing(bool& fReindexing);
+
+    /** Write a named boolean flag to the database. */
     void WriteFlag(const std::string& name, bool fValue);
+
+    /** Read a named boolean flag from the database. */
     bool ReadFlag(const std::string& name, bool& fValue);
+
+    /** Load the block index from disk into memory. */
     bool LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex, const util::SignalInterrupt& interrupt)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
