@@ -94,8 +94,12 @@ constexpr std::array<std::string_view, 18> vecIgnoreClasses{
 };
 
 //! List of Qt objects to ignore when applying fonts
-constexpr std::array<std::string_view, 1> vecIgnoreObjects{
+constexpr std::array<std::string_view, 5> vecIgnoreObjects{
+    "embeddedFont_label_1",
+    "embeddedFont_label_9",
     "messagesWidget",
+    "systemFont_label_1",
+    "systemFont_label_9",
 };
 
 //! Weights considered when testing for weights supported by a font

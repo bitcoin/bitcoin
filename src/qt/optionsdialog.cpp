@@ -217,6 +217,18 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
         ui->minimizeToTray->setEnabled(false);
     }
 
+    QFont embedded_font{GUIUtil::fixedPitchFont(/*use_embedded_font=*/true)};
+    ui->embeddedFont_radioButton->setText(ui->embeddedFont_radioButton->text().arg(embedded_font.family()));
+    ui->embeddedFont_label_1->setFont(embedded_font);
+    ui->embeddedFont_label_9->setFont(embedded_font);
+
+    QFont system_font{GUIUtil::fixedPitchFont(/*use_embedded_font=*/false)};
+    ui->systemFont_radioButton->setText(ui->systemFont_radioButton->text().arg(system_font.family()));
+    ui->systemFont_label_1->setFont(system_font);
+    ui->systemFont_label_9->setFont(system_font);
+    // Checking the embeddedFont_radioButton automatically unchecks the systemFont_radioButton.
+    ui->systemFont_radioButton->setChecked(true);
+
     GUIUtil::handleCloseWindowShortcut(this);
 }
 
@@ -381,6 +393,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->lang, OptionsModel::Language);
     mapper->addMapping(ui->unit, OptionsModel::DisplayUnit);
     mapper->addMapping(ui->thirdPartyTxUrls, OptionsModel::ThirdPartyTxUrls);
+    mapper->addMapping(ui->embeddedFont_radioButton, OptionsModel::UseEmbeddedMonospacedFont);
 
     /* Appearance
        See AppearanceWidget::setModel
