@@ -19,6 +19,7 @@ namespace GUIUtil {
 // TODO: Switch to QUtf8StringView when we switch to Qt 6
 constexpr QStringView MONTSERRAT_FONT_STR{u"Montserrat"};
 constexpr QStringView OS_FONT_STR{u"SystemDefault"};
+constexpr QStringView OS_MONO_FONT_STR{u"SystemMonospace"};
 constexpr QStringView ROBOTO_MONO_FONT_STR{u"Roboto Mono"};
 
 enum class FontWeight : uint8_t {
@@ -160,6 +161,9 @@ QFont getFontNormal();
 
 /** Get the default bold QFont */
 QFont getFontBold();
+
+/** (Bitcoin) Return a monospace font */
+QFont fixedPitchFont(bool use_embedded_font = false);
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_FONT_H

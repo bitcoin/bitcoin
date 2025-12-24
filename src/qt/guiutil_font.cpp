@@ -120,6 +120,7 @@ namespace GUIUtil {
 std::vector<std::pair<QString, /*selectable=*/bool>> g_fonts_known{
     {MONTSERRAT_FONT_STR.toUtf8(), true},
     {OS_FONT_STR.toUtf8(), true},
+    {OS_MONO_FONT_STR.toUtf8(), false},
     {ROBOTO_MONO_FONT_STR.toUtf8(), false},
 };
 
@@ -474,11 +475,13 @@ QFont getFont(const QString& font_name, const FontAttrib& font_attrib)
 #endif // Q_OS_MACOS
     } else if (font_name == OS_FONT_STR) {
         font.setFamily(g_default_font->family());
+    } else if (font_name == OS_MONO_FONT_STR) {
+        font.setFamily(QFontDatabase::systemFont(QFontDatabase::FixedFont).family());
     } else {
         font.setFamily(font_name);
     }
 
-    if (font_name == ROBOTO_MONO_FONT_STR) {
+    if (font_name == ROBOTO_MONO_FONT_STR || font_name == OS_MONO_FONT_STR) {
         font.setStyleHint(QFont::Monospace);
     }
 
@@ -543,5 +546,13 @@ int FontRegistry::WeightToIdx(const QFont::Weight& weight) const
         }
     }
     return -1;
+}
+
+QFont fixedPitchFont(bool use_embedded_font)
+{
+    return getFont({
+        use_embedded_font ? ROBOTO_MONO_FONT_STR.toUtf8() : OS_MONO_FONT_STR.toUtf8(),
+        g_font_registry.GetWeightNormal()
+    });
 }
 } // namespace GUIUtil

@@ -230,14 +230,6 @@ QString dateTimeStr(qint64 nTime)
     return dateTimeStr(QDateTime::fromSecsSinceEpoch((qint32)nTime));
 }
 
-QFont fixedPitchFont(bool use_embedded_font)
-{
-    if (use_embedded_font) {
-        return {"Roboto Mono"};
-    }
-    return QFontDatabase::systemFont(QFontDatabase::FixedFont);
-}
-
 // Just some dummy data to generate a convincing random-looking (but consistent) address
 static const uint8_t dummydata[] = {0xeb,0x15,0x23,0x1d,0xfc,0xeb,0x60,0x92,0x58,0x86,0xb6,0x7d,0x06,0x52,0x99,0x92,0x59,0x15,0xae,0xb1,0x72,0xc0,0x66,0x47};
 
