@@ -68,9 +68,9 @@ public:
     enum EncryptionStatus
     {
         NoKeys,       // wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)
-        Unencrypted,  // !wallet->IsCrypted()
-        Locked,       // wallet->IsCrypted() && wallet->IsLocked()
-        Unlocked      // wallet->IsCrypted() && !wallet->IsLocked()
+        Unencrypted,  // !wallet->HasEncryptionKeys()
+        Locked,       // wallet->HasEncryptionKeys() && wallet->IsLocked()
+        Unlocked      // wallet->HasEncryptionKeys() && !wallet->IsLocked()
     };
 
     OptionsModel* getOptionsModel() const;

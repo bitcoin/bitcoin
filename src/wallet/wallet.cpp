@@ -765,7 +765,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
     // Only descriptor wallets can be encrypted
     Assert(IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
 
-    if (IsCrypted())
+    if (HasEncryptionKeys())
         return false;
 
     CKeyingMaterial plain_master_key;
@@ -3291,14 +3291,9 @@ bool CWallet::IsTxImmatureCoinBase(const CWalletTx& wtx) const
     return GetTxBlocksToMaturity(wtx) > 0;
 }
 
-bool CWallet::IsCrypted() const
-{
-    return HasEncryptionKeys();
-}
-
 bool CWallet::IsLocked() const
 {
-    if (!IsCrypted()) {
+    if (!HasEncryptionKeys()) {
         return false;
     }
     LOCK(cs_wallet);
@@ -3307,7 +3302,7 @@ bool CWallet::IsLocked() const
 
 bool CWallet::Lock()
 {
-    if (!IsCrypted())
+    if (!HasEncryptionKeys())
         return false;
 
     {
@@ -3521,7 +3516,7 @@ DescriptorScriptPubKeyMan& CWallet::SetupDescriptorScriptPubKeyMan(WalletBatch& 
 {
     AssertLockHeld(cs_wallet);
     auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, m_keypool_size));
-    if (IsCrypted()) {
+    if (HasEncryptionKeys()) {
         if (IsLocked()) {
             throw std::runtime_error(std::string(__func__) + ": Wallet is locked, cannot setup new descriptors");
         }
