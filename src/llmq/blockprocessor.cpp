@@ -32,7 +32,7 @@ static void PreComputeQuorumMembers(CDeterministicMNManager& dmnman, llmq::CQuor
 {
     for (const Consensus::LLMQParams& params : llmq::GetEnabledQuorumParams(chainman, pindex->pprev)) {
         if (llmq::IsQuorumRotationEnabled(params, pindex) && (pindex->nHeight % params.dkgInterval == 0)) {
-            llmq::utils::GetAllQuorumMembers(params.type, dmnman, qsnapman, chainman, pindex, reset_cache);
+            llmq::utils::GetAllQuorumMembers(params.type, {dmnman, qsnapman, chainman, pindex}, reset_cache);
         }
     }
 }
@@ -52,7 +52,7 @@ CQuorumBlockProcessor::CQuorumBlockProcessor(CChainState& chainstate, CDetermini
     m_evoDb{evoDb},
     m_qsnapman{qsnapman}
 {
-    utils::InitQuorumsCache(mapHasMinedCommitmentCache);
+    utils::InitQuorumsCache(mapHasMinedCommitmentCache, m_chainstate.m_chainman.GetConsensus());
     LogPrintf("BLS verification uses %d additional threads\n", bls_threads);
     m_bls_queue.StartWorkerThreads(bls_threads);
 }
@@ -145,7 +145,7 @@ MessageProcessingResult CQuorumBlockProcessor::ProcessMessage(const CNode& peer,
         }
     }
 
-    if (!qc.Verify(m_dmnman, m_qsnapman, m_chainstate.m_chainman, pQuorumBaseBlockIndex, /*checkSigs=*/true)) {
+    if (!qc.Verify({m_dmnman, m_qsnapman, m_chainstate.m_chainman, pQuorumBaseBlockIndex}, /*checkSigs=*/true)) {
         LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- commitment for quorum %s:%d is not valid quorumIndex[%d] nversion[%d], peer=%d\n",
                  __func__, qc.quorumHash.ToString(),
                  ToUnderlying(qc.llmqType), qc.quorumIndex, qc.nVersion, peer.GetId());
@@ -215,7 +215,7 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, gsl::not_null<cons
                          pindex->nHeight, qc.quorumHash.ToString());
                 return false;
             }
-            qc.VerifySignatureAsync(m_dmnman, m_qsnapman, m_chainstate.m_chainman, pQuorumBaseBlockIndex, &queue_control);
+            qc.VerifySignatureAsync({m_dmnman, m_qsnapman, m_chainstate.m_chainman, pQuorumBaseBlockIndex}, &queue_control);
         }
 
         if (!queue_control.Wait()) {
@@ -337,7 +337,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
     }
 
     // we don't validate signatures here; they already validated on previous step
-    if (!qc.Verify(m_dmnman, m_qsnapman, m_chainstate.m_chainman, pQuorumBaseBlockIndex, /*checksigs=*/false)) {
+    if (!qc.Verify({m_dmnman, m_qsnapman, m_chainstate.m_chainman, pQuorumBaseBlockIndex}, /*checksigs=*/false)) {
         LogPrint(BCLog::LLMQ, /* Continued */
                  "%s -- height=%d, type=%d, quorumIndex=%d, quorumHash=%s, signers=%s, validMembers=%d, "
                  "quorumPublicKey=%s qc verify failed.\n",

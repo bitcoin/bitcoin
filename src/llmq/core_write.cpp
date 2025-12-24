@@ -182,22 +182,22 @@ UniValue CQuorumRotationInfo::ToJson() const
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("extraShare", extraShare);
 
-    obj.pushKV("quorumSnapshotAtHMinusC", quorumSnapshotAtHMinusC.ToJson());
-    obj.pushKV("quorumSnapshotAtHMinus2C", quorumSnapshotAtHMinus2C.ToJson());
-    obj.pushKV("quorumSnapshotAtHMinus3C", quorumSnapshotAtHMinus3C.ToJson());
+    obj.pushKV("quorumSnapshotAtHMinusC", cycleHMinusC.m_snap.ToJson());
+    obj.pushKV("quorumSnapshotAtHMinus2C", cycleHMinus2C.m_snap.ToJson());
+    obj.pushKV("quorumSnapshotAtHMinus3C", cycleHMinus3C.m_snap.ToJson());
 
     if (extraShare) {
-        obj.pushKV("quorumSnapshotAtHMinus4C", quorumSnapshotAtHMinus4C.ToJson());
+        obj.pushKV("quorumSnapshotAtHMinus4C", CHECK_NONFATAL(cycleHMinus4C)->m_snap.ToJson());
     }
 
     obj.pushKV("mnListDiffTip", mnListDiffTip.ToJson());
     obj.pushKV("mnListDiffH", mnListDiffH.ToJson());
-    obj.pushKV("mnListDiffAtHMinusC", mnListDiffAtHMinusC.ToJson());
-    obj.pushKV("mnListDiffAtHMinus2C", mnListDiffAtHMinus2C.ToJson());
-    obj.pushKV("mnListDiffAtHMinus3C", mnListDiffAtHMinus3C.ToJson());
+    obj.pushKV("mnListDiffAtHMinusC", cycleHMinusC.m_diff.ToJson());
+    obj.pushKV("mnListDiffAtHMinus2C", cycleHMinus2C.m_diff.ToJson());
+    obj.pushKV("mnListDiffAtHMinus3C", cycleHMinus3C.m_diff.ToJson());
 
     if (extraShare) {
-        obj.pushKV("mnListDiffAtHMinus4C", mnListDiffAtHMinus4C.ToJson());
+        obj.pushKV("mnListDiffAtHMinus4C", CHECK_NONFATAL(cycleHMinus4C)->m_diff.ToJson());
     }
     UniValue hqclists(UniValue::VARR);
     for (const auto& qc : lastCommitmentPerIndex) {
@@ -242,7 +242,7 @@ UniValue CQuorumSnapshot::ToJson() const
         activeQ.push_back(h);
     }
     obj.pushKV("activeQuorumMembers", activeQ);
-    obj.pushKV("mnSkipListMode", mnSkipListMode);
+    obj.pushKV("mnSkipListMode", ToUnderlying(mnSkipListMode));
     UniValue skipList(UniValue::VARR);
     for (const auto& h : mnSkipList) {
         // cppcheck-suppress useStlAlgorithm

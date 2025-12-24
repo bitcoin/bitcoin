@@ -144,7 +144,7 @@ MessageProcessingResult CDKGSessionManager::ProcessMessage(CNode& pfrom, bool is
     {
         LOCK(cs_indexedQuorumsCache);
         if (indexedQuorumsCache.empty()) {
-            utils::InitQuorumsCache(indexedQuorumsCache);
+            utils::InitQuorumsCache(indexedQuorumsCache, m_chainman.GetConsensus());
         }
         indexedQuorumsCache[llmqType].get(quorumHash, quorumIndex);
     }
@@ -295,7 +295,7 @@ void CDKGSessionManager::WriteEncryptedContributions(Consensus::LLMQType llmqTyp
 
 bool CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, std::vector<CBLSSecretKey>& skContributionsRet) const
 {
-    auto members = utils::GetAllQuorumMembers(llmqType, m_dmnman, m_qsnapman, m_chainman, pQuorumBaseBlockIndex);
+    auto members = utils::GetAllQuorumMembers(llmqType, {m_dmnman, m_qsnapman, m_chainman, pQuorumBaseBlockIndex});
 
     memberIndexesRet.clear();
     vvecsRet.clear();
@@ -344,7 +344,7 @@ bool CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, 
 
 bool CDKGSessionManager::GetEncryptedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, const uint256& nProTxHash, std::vector<CBLSIESEncryptedObject<CBLSSecretKey>>& vecRet) const
 {
-    auto members = utils::GetAllQuorumMembers(llmqType, m_dmnman, m_qsnapman, m_chainman, pQuorumBaseBlockIndex);
+    auto members = utils::GetAllQuorumMembers(llmqType, {m_dmnman, m_qsnapman, m_chainman, pQuorumBaseBlockIndex});
 
     vecRet.clear();
     vecRet.reserve(members.size());

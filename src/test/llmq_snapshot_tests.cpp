@@ -25,12 +25,12 @@ BOOST_AUTO_TEST_CASE(quorum_snapshot_construction_test)
     // Test default constructor
     CQuorumSnapshot snapshot1;
     BOOST_CHECK(snapshot1.activeQuorumMembers.empty());
-    BOOST_CHECK_EQUAL(snapshot1.mnSkipListMode, 0);
+    BOOST_CHECK_EQUAL(snapshot1.mnSkipListMode, SnapshotSkipMode::MODE_NO_SKIPPING);
     BOOST_CHECK(snapshot1.mnSkipList.empty());
 
     // Test parameterized constructor
     std::vector<bool> activeMembers = {true, false, true, true, false};
-    int skipMode = MODE_SKIPPING_ENTRIES;
+    auto skipMode = SnapshotSkipMode::MODE_SKIPPING_ENTRIES;
     std::vector<int> skipList = {1, 3, 5, 7};
 
     CQuorumSnapshot snapshot2(activeMembers, skipMode, skipList);
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(quorum_snapshot_serialization_test)
 {
     // Test with various configurations
     std::vector<bool> activeMembers = CreateBitVector(10, {0, 2, 4, 6, 8});
-    int skipMode = MODE_SKIPPING_ENTRIES;
+    auto skipMode = SnapshotSkipMode::MODE_SKIPPING_ENTRIES;
     std::vector<int> skipList = {10, 20, 30};
 
     CQuorumSnapshot snapshot(activeMembers, skipMode, skipList);
@@ -71,9 +71,14 @@ BOOST_AUTO_TEST_CASE(quorum_snapshot_serialization_test)
 BOOST_AUTO_TEST_CASE(quorum_snapshot_skip_modes_test)
 {
     // Test all skip modes
-    std::vector<int> skipModes = {MODE_NO_SKIPPING, MODE_SKIPPING_ENTRIES, MODE_NO_SKIPPING_ENTRIES, MODE_ALL_SKIPPED};
+    constexpr std::array<SnapshotSkipMode, 4> skipModes{
+        SnapshotSkipMode::MODE_NO_SKIPPING,
+        SnapshotSkipMode::MODE_SKIPPING_ENTRIES,
+        SnapshotSkipMode::MODE_NO_SKIPPING_ENTRIES,
+        SnapshotSkipMode::MODE_ALL_SKIPPED
+    };
 
-    for (int mode : skipModes) {
+    for (auto mode : skipModes) {
         CQuorumSnapshot snapshot({true, false, true}, mode, {1, 2, 3});
 
         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
@@ -101,7 +106,7 @@ BOOST_AUTO_TEST_CASE(quorum_snapshot_large_data_test)
         largeSkipList.push_back(i * 4);
     }
 
-    CQuorumSnapshot snapshot(largeActiveMembers, MODE_SKIPPING_ENTRIES, largeSkipList);
+    CQuorumSnapshot snapshot(largeActiveMembers, SnapshotSkipMode::MODE_SKIPPING_ENTRIES, largeSkipList);
 
     // Test serialization with large data
     // Test serialization manually instead of using roundtrip helper
@@ -116,17 +121,17 @@ BOOST_AUTO_TEST_CASE(quorum_snapshot_large_data_test)
 BOOST_AUTO_TEST_CASE(quorum_snapshot_empty_data_test)
 {
     // Test with empty data
-    CQuorumSnapshot emptySnapshot({}, MODE_NO_SKIPPING, {});
+    CQuorumSnapshot emptySnapshot({}, SnapshotSkipMode::MODE_NO_SKIPPING, {});
 
     // Test serialization roundtrip
     BOOST_CHECK(TestSerializationRoundtrip(emptySnapshot));
 
     // Test with empty active members but non-empty skip list
-    CQuorumSnapshot snapshot1({}, MODE_SKIPPING_ENTRIES, {1, 2, 3});
+    CQuorumSnapshot snapshot1({}, SnapshotSkipMode::MODE_SKIPPING_ENTRIES, {1, 2, 3});
     BOOST_CHECK(TestSerializationRoundtrip(snapshot1));
 
     // Test with non-empty active members but empty skip list
-    CQuorumSnapshot snapshot2({true, false, true}, MODE_NO_SKIPPING, {});
+    CQuorumSnapshot snapshot2({true, false, true}, SnapshotSkipMode::MODE_NO_SKIPPING, {});
     BOOST_CHECK(TestSerializationRoundtrip(snapshot2));
 }
 
@@ -135,15 +140,15 @@ BOOST_AUTO_TEST_CASE(quorum_snapshot_bit_serialization_test)
     // Test bit vector serialization edge cases
 
     // Test single bit
-    CQuorumSnapshot snapshot1({true}, MODE_NO_SKIPPING, {});
+    CQuorumSnapshot snapshot1({true}, SnapshotSkipMode::MODE_NO_SKIPPING, {});
     BOOST_CHECK(TestSerializationRoundtrip(snapshot1));
 
     // Test 8 bits (full byte)
-    CQuorumSnapshot snapshot8(std::vector<bool>(8, true), MODE_NO_SKIPPING, {});
+    CQuorumSnapshot snapshot8(std::vector<bool>(8, true), SnapshotSkipMode::MODE_NO_SKIPPING, {});
     BOOST_CHECK(TestSerializationRoundtrip(snapshot8));
 
     // Test 9 bits (more than one byte)
-    CQuorumSnapshot snapshot9(std::vector<bool>(9, false), MODE_NO_SKIPPING, {});
+    CQuorumSnapshot snapshot9(std::vector<bool>(9, false), SnapshotSkipMode::MODE_NO_SKIPPING, {});
     snapshot9.activeQuorumMembers[8] = true; // Set last bit
     BOOST_CHECK(TestSerializationRoundtrip(snapshot9));
 
@@ -152,7 +157,7 @@ BOOST_AUTO_TEST_CASE(quorum_snapshot_bit_serialization_test)
     for (size_t i = 0; i < alternating.size(); i++) {
         alternating[i] = (i % 2 == 0);
     }
-    CQuorumSnapshot snapshotAlt(alternating, MODE_NO_SKIPPING, {});
+    CQuorumSnapshot snapshotAlt(alternating, SnapshotSkipMode::MODE_NO_SKIPPING, {});
     BOOST_CHECK(TestSerializationRoundtrip(snapshotAlt));
 }
 
@@ -162,8 +167,7 @@ BOOST_AUTO_TEST_CASE(quorum_rotation_info_construction_test)
 
     // Test default state
     BOOST_CHECK(!rotInfo.extraShare);
-    BOOST_CHECK_EQUAL(::SerializeHash(rotInfo.quorumSnapshotAtHMinus4C), ::SerializeHash(CQuorumSnapshot()));
-    BOOST_CHECK_EQUAL(::SerializeHash(rotInfo.mnListDiffAtHMinus4C), ::SerializeHash(CSimplifiedMNListDiff()));
+    BOOST_CHECK(!rotInfo.cycleHMinus4C.has_value());
     BOOST_CHECK(rotInfo.lastCommitmentPerIndex.empty());
     BOOST_CHECK(rotInfo.quorumSnapshotList.empty());
     BOOST_CHECK(rotInfo.mnListDiffList.empty());
@@ -201,9 +205,9 @@ BOOST_AUTO_TEST_CASE(quorum_rotation_info_serialization_test)
     CQuorumRotationInfo rotInfo;
 
     // Set up basic required fields
-    rotInfo.quorumSnapshotAtHMinusC = CQuorumSnapshot({true, false, true}, MODE_SKIPPING_ENTRIES, {1, 2});
-    rotInfo.quorumSnapshotAtHMinus2C = CQuorumSnapshot({false, true, false}, MODE_NO_SKIPPING, {});
-    rotInfo.quorumSnapshotAtHMinus3C = CQuorumSnapshot({true, true, false}, MODE_ALL_SKIPPED, {3});
+    rotInfo.cycleHMinusC.m_snap = CQuorumSnapshot({true, false, true}, SnapshotSkipMode::MODE_SKIPPING_ENTRIES, {1, 2});
+    rotInfo.cycleHMinus2C.m_snap = CQuorumSnapshot({false, true, false}, SnapshotSkipMode::MODE_NO_SKIPPING, {});
+    rotInfo.cycleHMinus3C.m_snap = CQuorumSnapshot({true, true, false}, SnapshotSkipMode::MODE_ALL_SKIPPED, {3});
 
     // Test without extraShare
     rotInfo.extraShare = false;
@@ -214,12 +218,15 @@ BOOST_AUTO_TEST_CASE(quorum_rotation_info_serialization_test)
     BOOST_CHECK(TestSerializationRoundtrip(rotInfo));
 
     // Test with extraShare and initialized snapshot
-    rotInfo.quorumSnapshotAtHMinus4C = CQuorumSnapshot({false, false, true}, MODE_SKIPPING_ENTRIES, {4, 5, 6});
+    llmq::CycleData extra_cycle;
+    extra_cycle.m_snap = CQuorumSnapshot({false, false, true}, SnapshotSkipMode::MODE_SKIPPING_ENTRIES, {4, 5, 6});
+    rotInfo.cycleHMinus4C = extra_cycle;
     BOOST_CHECK(TestSerializationRoundtrip(rotInfo));
 
     CFinalCommitment commitment{GetLLMQParams(Consensus::LLMQType::LLMQ_TEST), uint256::ONE};
     rotInfo.lastCommitmentPerIndex.push_back(commitment);
-    rotInfo.quorumSnapshotList.push_back(CQuorumSnapshot({false, false, true}, MODE_SKIPPING_ENTRIES, {7, 8}));
+    rotInfo.quorumSnapshotList.push_back(
+        CQuorumSnapshot({false, false, true}, SnapshotSkipMode::MODE_SKIPPING_ENTRIES, {7, 8}));
     BOOST_CHECK(TestSerializationRoundtrip(rotInfo));
 }
 
@@ -227,7 +234,7 @@ BOOST_AUTO_TEST_CASE(quorum_snapshot_json_test)
 {
     // Create snapshot with test data
     std::vector<bool> activeMembers = {true, false, true, true, false, false, true};
-    int skipMode = MODE_SKIPPING_ENTRIES;
+    auto skipMode = SnapshotSkipMode::MODE_SKIPPING_ENTRIES;
     std::vector<int> skipList = {10, 20, 30, 40};
 
     CQuorumSnapshot snapshot(activeMembers, skipMode, skipList);
@@ -249,7 +256,7 @@ BOOST_AUTO_TEST_CASE(quorum_snapshot_json_test)
 BOOST_AUTO_TEST_CASE(quorum_snapshot_malformed_data_test)
 {
     // Create valid snapshot
-    CQuorumSnapshot snapshot({true, false, true}, MODE_SKIPPING_ENTRIES, {1, 2, 3});
+    CQuorumSnapshot snapshot({true, false, true}, SnapshotSkipMode::MODE_SKIPPING_ENTRIES, {1, 2, 3});
 
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << snapshot;

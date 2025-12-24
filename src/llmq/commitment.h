@@ -30,13 +30,15 @@ class TxValidationState;
 template <typename T>
 class CCheckQueueControl;
 struct RPCResult;
-
 namespace llmq {
 class CQuorumSnapshotManager;
+struct UtilParameters;
 namespace utils {
 struct BlsCheck;
 } // namespace utils
+} // namespace llmq
 
+namespace llmq {
 // This message is an aggregation of all received premature commitments and only valid if
 // enough (>=threshold) premature commitments were aggregated
 // This is mined on-chain as part of TRANSACTION_QUORUM_COMMITMENT
@@ -74,11 +76,9 @@ public:
         return int(std::count(validMembers.begin(), validMembers.end(), true));
     }
 
-    bool VerifySignatureAsync(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
-                              const ChainstateManager& chainman, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
+    bool VerifySignatureAsync(const llmq::UtilParameters& util_params,
                               CCheckQueueControl<utils::BlsCheck>* queue_control) const;
-    bool Verify(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
-                gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, bool checkSigs) const;
+    bool Verify(const llmq::UtilParameters& util_params, bool checkSigs) const;
     bool VerifyNull() const;
     bool VerifySizes(const Consensus::LLMQParams& params) const;
 
@@ -164,9 +164,7 @@ public:
     [[nodiscard]] UniValue ToJson() const;
 };
 
-bool CheckLLMQCommitment(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
-                         const ChainstateManager& chainman, const CTransaction& tx,
-                         gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state);
+bool CheckLLMQCommitment(const llmq::UtilParameters& util_params, const CTransaction& tx, TxValidationState& state);
 
 uint256 BuildCommitmentHash(Consensus::LLMQType llmqType, const uint256& blockHash, const std::vector<bool>& validMembers, const CBLSPublicKey& pubKey, const uint256& vvecHash);
 

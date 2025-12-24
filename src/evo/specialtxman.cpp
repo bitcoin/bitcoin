@@ -130,7 +130,7 @@ static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, llmq::CQuorumSn
             }
         }
         case TRANSACTION_QUORUM_COMMITMENT:
-            return llmq::CheckLLMQCommitment(dmnman, qsnapman, chainman, tx, pindexPrev, state);
+            return llmq::CheckLLMQCommitment({dmnman, qsnapman, chainman, pindexPrev}, tx, state);
         case TRANSACTION_MNHF_SIGNAL:
             return CheckMNHFTx(chainman, qman, tx, pindexPrev, state);
         case TRANSACTION_ASSET_LOCK:
@@ -442,8 +442,9 @@ bool CSpecialTxProcessor::RebuildListFromBlock(const CBlock& block, gsl::not_nul
 
                 // The commitment has already been validated at this point, so it's safe to use members of it
 
-                const auto members = llmq::utils::GetAllQuorumMembers(opt_qc->commitment.llmqType, m_dmnman, m_qsnapman,
-                                                                      m_chainman, pQuorumBaseBlockIndex);
+                const auto members = llmq::utils::GetAllQuorumMembers(opt_qc->commitment.llmqType,
+                                                                      {m_dmnman, m_qsnapman, m_chainman,
+                                                                       pQuorumBaseBlockIndex});
                 HandleQuorumCommitment(opt_qc->commitment, members, debugLogs, newList);
             }
         }

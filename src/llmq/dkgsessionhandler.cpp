@@ -565,12 +565,11 @@ void CDKGSessionHandler::HandleDKGRound(CConnman& connman, PeerManager& peerman)
     }
 
     const auto tip_mn_list = m_dmnman.GetListAtChainTip();
-    utils::EnsureQuorumConnections(params, connman, m_dmnman, m_qsnapman, m_chainman, m_sporkman, tip_mn_list,
-                                   pQuorumBaseBlockIndex, curSession->myProTxHash,
-                                   /*is_masternode=*/m_mn_activeman != nullptr, m_quorums_watch);
+    utils::EnsureQuorumConnections(params, connman, m_sporkman, {m_dmnman, m_qsnapman, m_chainman, pQuorumBaseBlockIndex}, tip_mn_list,
+                                   curSession->myProTxHash, /*is_masternode=*/m_mn_activeman != nullptr, m_quorums_watch);
     if (curSession->AreWeMember()) {
-        utils::AddQuorumProbeConnections(params, connman, m_dmnman, m_mn_metaman, m_qsnapman, m_chainman, m_sporkman,
-                                         tip_mn_list, pQuorumBaseBlockIndex, curSession->myProTxHash);
+        utils::AddQuorumProbeConnections(params, connman, m_mn_metaman, m_sporkman, {m_dmnman, m_qsnapman, m_chainman,
+                                         pQuorumBaseBlockIndex}, tip_mn_list, curSession->myProTxHash);
     }
 
     WaitForNextPhase(QuorumPhase::Initialized, QuorumPhase::Contribute, curQuorumHash);
