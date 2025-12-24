@@ -86,21 +86,46 @@ AppearanceWidget::~AppearanceWidget()
 void AppearanceWidget::setModel(OptionsModel* _model)
 {
     this->model = _model;
+    if (!_model) return;
 
-    if (_model) {
-        mapper->setModel(_model);
-        mapper->addMapping(ui->theme, OptionsModel::Theme);
-        mapper->addMapping(ui->fontFamily, OptionsModel::FontFamily);
-        mapper->addMapping(ui->fontScaleSlider, OptionsModel::FontScale);
-        mapper->addMapping(ui->fontWeightNormalSlider, OptionsModel::FontWeightNormal);
-        mapper->addMapping(ui->fontWeightBoldSlider, OptionsModel::FontWeightBold);
+    mapper->setModel(_model);
+    mapper->addMapping(ui->theme, OptionsModel::Theme);
+    mapper->addMapping(ui->fontFamily, OptionsModel::FontFamily);
+    mapper->addMapping(ui->fontScaleSlider, OptionsModel::FontScale);
+    mapper->addMapping(ui->fontWeightNormalSlider, OptionsModel::FontWeightNormal);
+    mapper->addMapping(ui->fontWeightBoldSlider, OptionsModel::FontWeightBold);
 
-        const QSignalBlocker fontFamilyBlocker(ui->fontFamily);
-        const QSignalBlocker fontScaleBlocker(ui->fontScaleSlider);
-        const QSignalBlocker fontWeightNormalBlocker(ui->fontWeightNormalSlider);
-        const QSignalBlocker fontWeightBoldBlocker(ui->fontWeightBoldSlider);
+    const QSignalBlocker fontFamilyBlocker(ui->fontFamily);
+    const QSignalBlocker fontScaleBlocker(ui->fontScaleSlider);
+    const QSignalBlocker fontWeightNormalBlocker(ui->fontWeightNormalSlider);
+    const QSignalBlocker fontWeightBoldBlocker(ui->fontWeightBoldSlider);
 
-        mapper->toFirst();
+    mapper->toFirst();
+
+    if (_model->isOptionOverridden("-font-family")) {
+        ui->fontFamily->setEnabled(false);
+        if (const auto idx{ui->fontFamily->findText(GUIUtil::g_font_registry.GetFont())}; idx != -1) {
+            ui->fontFamily->setCurrentIndex(idx);
+        }
+    }
+
+    if (_model->isOptionOverridden("-font-scale")) {
+        ui->fontScaleSlider->setEnabled(false);
+        ui->fontScaleSlider->setValue(GUIUtil::g_font_registry.GetFontScale());
+    }
+
+    if (_model->isOptionOverridden("-font-weight-normal")) {
+        ui->fontWeightNormalSlider->setEnabled(false);
+        if (const auto idx{GUIUtil::g_font_registry.WeightToIdx(GUIUtil::g_font_registry.GetWeightNormal())}; idx != -1) {
+            ui->fontWeightNormalSlider->setValue(idx);
+        }
+    }
+
+    if (_model->isOptionOverridden("-font-weight-bold")) {
+        ui->fontWeightBoldSlider->setEnabled(false);
+        if (const auto idx{GUIUtil::g_font_registry.WeightToIdx(GUIUtil::g_font_registry.GetWeightBold())}; idx != -1) {
+            ui->fontWeightBoldSlider->setValue(idx);
+        }
     }
 }
 
