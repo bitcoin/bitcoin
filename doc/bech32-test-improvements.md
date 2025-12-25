@@ -174,24 +174,38 @@ BOOST_AUTO_TEST_CASE(bech32_checksum_properties)
 ## Implementation Plan
 
 ### Phase 1: Foundation Tests
-- [ ] Add round-trip encoding test with basic cases
-- [ ] Add character set validation test
-- [ ] Add length boundary tests
+- [x] Add round-trip encoding test with basic cases (`bech32_roundtrip_encoding`)
+- [x] Add character set validation test (`bech32_charset_encoding`)
+- [x] Add length boundary tests (`bech32_length_limits`)
 
 ### Phase 2: Error Detection Tests
-- [ ] Add single-error detection test
-- [ ] Add multi-error detection tests (2, 3, 4 errors)
-- [ ] Add transposition detection test
+- [x] Add single-error detection test (`bech32_single_error_detection`)
+- [x] Add multi-error detection tests (2, 3, 4 errors) (`bech32_multiple_error_detection`)
+- [x] Add transposition detection test (`bech32_transposition_detection`)
 
 ### Phase 3: Edge Cases
-- [ ] Add HRP boundary tests
-- [ ] Add multiple separator tests
-- [ ] Add comprehensive case sensitivity tests
+- [x] Add HRP boundary tests (`bech32_hrp_limits`)
+- [x] Add multiple separator tests (included in `bech32_hrp_limits`)
+- [x] Add comprehensive case sensitivity tests (`bech32_case_sensitivity`)
 
 ### Phase 4: Documentation & Cleanup
-- [ ] Add comments referencing BIP-173 sections
-- [ ] Ensure consistent test naming
-- [ ] Update this document with completion status
+- [x] Add comments referencing BIP-173 sections
+- [x] Ensure consistent test naming
+- [x] Update this document with completion status
+
+## New Tests Added
+
+| Test Name | Description | BIP-173 Reference |
+|-----------|-------------|-------------------|
+| `bech32_charset_encoding` | Verifies all 32 valid characters encode/decode correctly | Character set table |
+| `bech32_roundtrip_encoding` | Tests encode→decode round-trip for various data sizes | Core functionality |
+| `bech32_length_limits` | Tests 90-character limit boundary | "90 character limit" |
+| `bech32_hrp_limits` | Tests HRP edge cases (min length, boundary chars, separator) | HRP specification |
+| `bech32_single_error_detection` | Verifies single-character errors are detected | Checksum properties |
+| `bech32_transposition_detection` | Verifies adjacent character swaps are detected | Error detection |
+| `bech32_multiple_error_detection` | Tests 2, 3, 4 error detection | "up to 4 errors" |
+| `bech32_case_sensitivity` | Tests uppercase, lowercase, and mixed case handling | Case sensitivity rules |
+| `bech32_checksum_properties` | Verifies checksum is 6 chars and changes with input | Checksum specification |
 
 ## Test Vectors from BIP-173
 
