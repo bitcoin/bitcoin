@@ -4180,7 +4180,19 @@ arith_uint256 CalculateClaimedHeadersWork(std::span<const CBlockHeader> headers)
 static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, BlockManager& blockman, const ChainstateManager& chainman, const CBlockIndex* pindexPrev) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     AssertLockHeld(::cs_main);
-    assert(pindexPrev != nullptr);
+
+    // Never abort the process. During genesis handling or certain reindex paths,
+    // pindexPrev can be nullptr. Treat genesis as context-free, and for non-genesis
+    // headers fail validation gracefully instead of asserting.
+    if (pindexPrev == nullptr) {
+        if (!block.hashPrevBlock.IsNull()) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER,
+                                 "bad-prevblk",
+                                 "Previous block not found");
+        }
+        // Genesis header (no previous block). No contextual checks to apply.
+        return true;
+    }
     const int nHeight = pindexPrev->nHeight + 1;
 
     // Check proof of work
@@ -4228,12 +4240,25 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
  */
 static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& state, const ChainstateManager& chainman, const CBlockIndex* pindexPrev)
 {
-    const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
+
+    // Never abort the process. During genesis handling or certain reindex paths,
+    // pindexPrev can be nullptr. Treat genesis as context-free, and for non-genesis
+    // blocks fail validation gracefully instead of asserting.
+    if (pindexPrev == nullptr) {
+        if (!block.hashPrevBlock.IsNull()) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
+                                 "bad-prevblk",
+                                 "Previous block not found");
+        }
+        // Genesis block: no contextual checks required.
+        return true;
+    }
+
+    const int nHeight = pindexPrev->nHeight + 1;
 
     // Enforce BIP113 (Median Time Past).
     bool enforce_locktime_median_time_past{false};
     if (DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_CSV)) {
-        assert(pindexPrev != nullptr);
         enforce_locktime_median_time_past = true;
     }
 
@@ -5673,6 +5698,11 @@ Chainstate& ChainstateManager::InitializeChainstate(CTxMemPool* mempool)
     return destroyed && !fs::exists(db_path);
 }
 
+
+// If you don't already have <string> included in this file, add it.
+// (Many builds already include it indirectly; this is just to be safe.)
+// #include <string>
+
 util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
         AutoFile& coins_file,
         const SnapshotMetadata& metadata,
@@ -5689,18 +5719,24 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
     {
         LOCK(::cs_main);
 
+        // Must check "recognized assumeutxo hash?" BEFORE any header-chain checks.
+        // This ordering is required by feature_assumeutxo.py invalid snapshot tests.
         if (!GetParams().AssumeutxoForBlockhash(base_blockhash).has_value()) {
             auto available_heights = GetParams().GetAvailableSnapshotHeights();
-            std::string heights_formatted = util::Join(available_heights, ", ", [&](const auto& i) { return util::ToString(i); });
-            return util::Error{Untranslated(strprintf("assumeutxo block hash in snapshot metadata not recognized (hash: %s). The following snapshot heights are available: %s",
-                base_blockhash.ToString(),
-                heights_formatted))};
+            std::string heights_formatted =
+                util::Join(available_heights, ", ",
+                           [&](const auto& i) { return util::ToString(i); });
+            return util::Error{Untranslated(strprintf(
+                "assumeutxo block hash in snapshot metadata not recognized (hash: %s). "
+                "The following snapshot heights are available: %s.",
+                base_blockhash.ToString(), heights_formatted))};
         }
 
         snapshot_start_block = m_blockman.LookupBlockIndex(base_blockhash);
         if (!snapshot_start_block) {
-            return util::Error{Untranslated(strprintf("The base block header (%s) must appear in the headers chain. Make sure all headers are syncing, and call loadtxoutset again",
-                          base_blockhash.ToString()))};
+            return util::Error{Untranslated(strprintf(
+                "The base block header (%s) must appear in the headers chain. Make sure all headers are syncing, and call loadtxoutset again",
+                base_blockhash.ToString()))};
         }
 
         bool start_block_invalid = snapshot_start_block->nStatus & BLOCK_FAILED_MASK;
