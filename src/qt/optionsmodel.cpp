@@ -1,10 +1,8 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <qt/optionsmodel.h>
 
@@ -17,18 +15,18 @@
 #include <mapport.h>
 #include <net.h>
 #include <netbase.h>
-#include <txdb.h> // for -dbcache defaults
+#include <node/caches.h>
+#include <node/chainstatemanager_args.h>
+#include <univalue.h>
 #include <util/string.h>
-#include <validation.h>    // For DEFAULT_SCRIPTCHECK_THREADS
-#include <wallet/wallet.h> // For DEFAULT_SPEND_ZEROCONF_CHANGE
+#include <validation.h>
+#include <wallet/wallet.h>
 
 #include <QDebug>
 #include <QLatin1Char>
 #include <QSettings>
 #include <QStringList>
 #include <QVariant>
-
-#include <univalue.h>
 
 const char *DEFAULT_GUI_PROXY_HOST = "127.0.0.1";
 
@@ -42,7 +40,6 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::ThreadsScriptVerif: return "par";
     case OptionsModel::SpendZeroConfChange: return "spendzeroconfchange";
     case OptionsModel::ExternalSignerPath: return "signer";
-    case OptionsModel::MapPortUPnP: return "upnp";
     case OptionsModel::MapPortNatpmp: return "natpmp";
     case OptionsModel::Listen: return "listen";
     case OptionsModel::Server: return "server";
@@ -118,6 +115,37 @@ struct ProxySetting {
 static ProxySetting ParseProxyString(const std::string& proxy);
 static std::string ProxyString(bool is_set, QString ip, QString port);
 
+static const QLatin1String fontchoice_str_embedded{"embedded"};
+static const QLatin1String fontchoice_str_best_system{"best_system"};
+static const QString fontchoice_str_custom_prefix{QStringLiteral("custom, ")};
+
+QString OptionsModel::FontChoiceToString(const OptionsModel::FontChoice& f)
+{
+    if (std::holds_alternative<FontChoiceAbstract>(f)) {
+        if (f == UseBestSystemFont) {
+            return fontchoice_str_best_system;
+        } else {
+            return fontchoice_str_embedded;
+        }
+    }
+    return fontchoice_str_custom_prefix + std::get<QFont>(f).toString();
+}
+
+OptionsModel::FontChoice OptionsModel::FontChoiceFromString(const QString& s)
+{
+    if (s == fontchoice_str_best_system) {
+        return FontChoiceAbstract::BestSystemFont;
+    } else if (s == fontchoice_str_embedded) {
+        return FontChoiceAbstract::EmbeddedFont;
+    } else if (s.startsWith(fontchoice_str_custom_prefix)) {
+        QFont f;
+        f.fromString(s.mid(fontchoice_str_custom_prefix.size()));
+        return f;
+    } else {
+        return FontChoiceAbstract::EmbeddedFont;  // default
+    }
+}
+
 OptionsModel::OptionsModel(interfaces::Node& node, QObject *parent) :
     QAbstractListModel(parent), m_node{node}
 {
@@ -185,7 +213,7 @@ bool OptionsModel::Init(bilingual_str& error)
 
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
-    for (OptionID option : {DatabaseCache, ThreadsScriptVerif, SpendZeroConfChange, ExternalSignerPath, MapPortUPnP,
+    for (OptionID option : {DatabaseCache, ThreadsScriptVerif, SpendZeroConfChange, ExternalSignerPath,
                             MapPortNatpmp, Listen, Server, Prune, ProxyUse, ProxyUseTor, Language}) {
         std::string setting = SettingName(option);
         if (node().isSettingIgnored(setting)) addOverriddenOption("-" + setting);
@@ -215,11 +243,16 @@ bool OptionsModel::Init(bilingual_str& error)
 #endif
 
     // Display
-    if (!settings.contains("UseEmbeddedMonospacedFont")) {
-        settings.setValue("UseEmbeddedMonospacedFont", "true");
+    if (settings.contains("FontForMoney")) {
+        m_font_money = FontChoiceFromString(settings.value("FontForMoney").toString());
+    } else if (settings.contains("UseEmbeddedMonospacedFont")) {
+        if (settings.value("UseEmbeddedMonospacedFont").toBool()) {
+            m_font_money = FontChoiceAbstract::EmbeddedFont;
+        } else {
+            m_font_money = FontChoiceAbstract::BestSystemFont;
+        }
     }
-    m_use_embedded_monospaced_font = settings.value("UseEmbeddedMonospacedFont").toBool();
-    Q_EMIT useEmbeddedMonospacedFontChanged(m_use_embedded_monospaced_font);
+    Q_EMIT fontForMoneyChanged(getFontForMoney());
 
     m_mask_values = settings.value("mask_values", false).toBool();
 
@@ -285,10 +318,15 @@ static ProxySetting ParseProxyString(const QString& proxy)
     if (proxy.isEmpty()) {
         return default_val;
     }
-    // contains IP at index 0 and port at index 1
-    QStringList ip_port = GUIUtil::SplitSkipEmptyParts(proxy, ":");
-    if (ip_port.size() == 2) {
-        return {true, ip_port.at(0), ip_port.at(1)};
+    uint16_t port{0};
+    std::string hostname;
+    if (SplitHostPort(proxy.toStdString(), port, hostname) && port != 0) {
+        // Valid and port within the valid range
+        // Check if the hostname contains a colon, indicating an IPv6 address
+        if (hostname.find(':') != std::string::npos) {
+            hostname = "[" + hostname + "]"; // Wrap IPv6 address in brackets
+        }
+        return {true, QString::fromStdString(hostname), QString::number(port)};
     } else { // Invalid: return default
         return default_val;
     }
@@ -359,6 +397,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
     return successful;
 }
 
+// NOLINTNEXTLINE(misc-no-recursion)
 QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) const
 {
     auto setting = [&]{ return node().getPersistentSetting(SettingName(option) + suffix); };
@@ -371,18 +410,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return m_show_tray_icon;
     case MinimizeToTray:
         return fMinimizeToTray;
-    case MapPortUPnP:
-#ifdef USE_UPNP
-        return SettingToBool(setting(), DEFAULT_UPNP);
-#else
-        return false;
-#endif // USE_UPNP
     case MapPortNatpmp:
-#ifdef USE_NATPMP
         return SettingToBool(setting(), DEFAULT_NATPMP);
-#else
-        return false;
-#endif // USE_NATPMP
     case MinimizeOnClose:
         return fMinimizeOnClose;
 
@@ -427,8 +456,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return strThirdPartyTxUrls;
     case Language:
         return QString::fromStdString(SettingToString(setting(), ""));
-    case UseEmbeddedMonospacedFont:
-        return m_use_embedded_monospaced_font;
+    case FontForMoney:
+        return QVariant::fromValue(m_font_money);
     case CoinControlFeatures:
         return fCoinControlFeatures;
     case EnablePSBTControls:
@@ -440,7 +469,7 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
                suffix.empty()          ? getOption(option, "-prev") :
                                          DEFAULT_PRUNE_TARGET_GB;
     case DatabaseCache:
-        return qlonglong(SettingToInt(setting(), nDefaultDbCache));
+        return qlonglong(SettingToInt(setting(), DEFAULT_DB_CACHE >> 20));
     case ThreadsScriptVerif:
         return qlonglong(SettingToInt(setting(), DEFAULT_SCRIPTCHECK_THREADS));
     case Listen:
@@ -454,6 +483,24 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
     }
 }
 
+QFont OptionsModel::getFontForChoice(const FontChoice& fc)
+{
+    QFont f;
+    if (std::holds_alternative<FontChoiceAbstract>(fc)) {
+        f = GUIUtil::fixedPitchFont(fc != UseBestSystemFont);
+        f.setWeight(QFont::Bold);
+    } else {
+        f = std::get<QFont>(fc);
+    }
+    return f;
+}
+
+QFont OptionsModel::getFontForMoney() const
+{
+    return getFontForChoice(m_font_money);
+}
+
+// NOLINTNEXTLINE(misc-no-recursion)
 bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::string& suffix)
 {
     auto changed = [&] { return value.isValid() && value != getOption(option, suffix); };
@@ -475,16 +522,10 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         fMinimizeToTray = value.toBool();
         settings.setValue("fMinimizeToTray", fMinimizeToTray);
         break;
-    case MapPortUPnP: // core option - can be changed on-the-fly
-        if (changed()) {
-            update(value.toBool());
-            node().mapPort(value.toBool(), getOption(MapPortNatpmp).toBool());
-        }
-        break;
     case MapPortNatpmp: // core option - can be changed on-the-fly
         if (changed()) {
             update(value.toBool());
-            node().mapPort(getOption(MapPortUPnP).toBool(), value.toBool());
+            node().mapPort(value.toBool());
         }
         break;
     case MinimizeOnClose:
@@ -586,11 +627,15 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             setRestartRequired(true);
         }
         break;
-    case UseEmbeddedMonospacedFont:
-        m_use_embedded_monospaced_font = value.toBool();
-        settings.setValue("UseEmbeddedMonospacedFont", m_use_embedded_monospaced_font);
-        Q_EMIT useEmbeddedMonospacedFontChanged(m_use_embedded_monospaced_font);
+    case FontForMoney:
+    {
+        const auto& new_font = value.value<FontChoice>();
+        if (m_font_money == new_font) break;
+        settings.setValue("FontForMoney", FontChoiceToString(new_font));
+        m_font_money = new_font;
+        Q_EMIT fontForMoneyChanged(getFontForMoney());
         break;
+    }
     case CoinControlFeatures:
         fCoinControlFeatures = value.toBool();
         settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
@@ -687,7 +732,7 @@ void OptionsModel::checkAndMigrate()
         // see https://github.com/bitcoin/bitcoin/pull/8273
         // force people to upgrade to the new value if they are using 100MB
         if (settingsVersion < 130000 && settings.contains("nDatabaseCache") && settings.value("nDatabaseCache").toLongLong() == 100)
-            settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
+            settings.setValue("nDatabaseCache", (qint64)(DEFAULT_DB_CACHE >> 20));
 
         settings.setValue(strSettingsVersionKey, CLIENT_VERSION);
     }
@@ -730,7 +775,6 @@ void OptionsModel::checkAndMigrate()
     migrate_setting(SpendZeroConfChange, "bSpendZeroConfChange");
     migrate_setting(ExternalSignerPath, "external_signer_path");
 #endif
-    migrate_setting(MapPortUPnP, "fUseUPnP");
     migrate_setting(MapPortNatpmp, "fUseNatpmp");
     migrate_setting(Listen, "fListen");
     migrate_setting(Server, "server");
@@ -744,7 +788,7 @@ void OptionsModel::checkAndMigrate()
 
     // In case migrating QSettings caused any settings value to change, rerun
     // parameter interaction code to update other settings. This is particularly
-    // important for the -listen setting, which should cause -listenonion, -upnp,
+    // important for the -listen setting, which should cause -listenonion
     // and other settings to default to false if it was set to false.
     // (https://github.com/bitcoin-core/gui/issues/567).
     node().initParameterInteraction();

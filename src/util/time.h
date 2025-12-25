@@ -1,16 +1,16 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_UTIL_TIME_H
 #define BITCOIN_UTIL_TIME_H
 
-#include <compat/compat.h>
-
 #include <chrono> // IWYU pragma: export
 #include <cstdint>
+#include <optional>
 #include <string>
+#include <string_view>
 
 using namespace std::chrono_literals;
 
@@ -30,6 +30,32 @@ using SteadyMilliseconds = std::chrono::time_point<std::chrono::steady_clock, st
 using SteadyMicroseconds = std::chrono::time_point<std::chrono::steady_clock, std::chrono::microseconds>;
 
 using SystemClock = std::chrono::system_clock;
+
+/**
+ * Version of SteadyClock that is mockable in the context of tests (set the
+ * current value with SetMockTime), otherwise the system steady clock.
+ */
+struct MockableSteadyClock : public std::chrono::steady_clock {
+    using time_point = std::chrono::time_point<MockableSteadyClock>;
+
+    using mock_time_point = std::chrono::time_point<MockableSteadyClock, std::chrono::milliseconds>;
+    static constexpr mock_time_point::duration INITIAL_MOCK_TIME{1};
+
+    /** Return current system time or mocked time, if set */
+    static time_point now() noexcept;
+    static std::time_t to_time_t(const time_point&) = delete; // unused
+    static time_point from_time_t(std::time_t) = delete;      // unused
+
+    /** Set mock time for testing.
+     * When mocking the steady clock, start at INITIAL_MOCK_TIME and add durations to elapse time as necessary
+     * for testing.
+     * To stop mocking, call ClearMockTime().
+     */
+    static void SetMockTime(mock_time_point::duration mock_time_in);
+
+    /** Clear mock time, go back to system steady clock. */
+    static void ClearMockTime();
+};
 
 void UninterruptibleSleep(const std::chrono::microseconds& n);
 
@@ -81,6 +107,7 @@ void SetMockTime(int64_t nMockTimeIn);
 
 /** For testing. Set e.g. with the setmocktime rpc, or -mocktime argument */
 void SetMockTime(std::chrono::seconds mock_time_in);
+void SetMockTime(std::chrono::time_point<NodeClock, std::chrono::seconds> mock);
 
 /** For testing */
 std::chrono::seconds GetMockTime();
@@ -107,6 +134,7 @@ T GetTime()
  */
 std::string FormatISO8601DateTime(int64_t nTime);
 std::string FormatISO8601Date(int64_t nTime);
+std::optional<int64_t> ParseISO8601DateTime(std::string_view str);
 
 /**
  * Convert milliseconds to a struct timeval for e.g. select.
@@ -117,8 +145,5 @@ struct timeval MillisToTimeval(int64_t nTimeout);
  * Convert milliseconds to a struct timeval for e.g. select.
  */
 struct timeval MillisToTimeval(std::chrono::milliseconds ms);
-
-/** Sanity check epoch match normal Unix epoch */
-bool ChronoSanityCheck();
 
 #endif // BITCOIN_UTIL_TIME_H

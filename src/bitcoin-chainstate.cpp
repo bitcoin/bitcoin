@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
@@ -11,31 +11,135 @@
 //
 // It is part of the libbitcoinkernel project.
 
-#include <kernel/chainparams.h>
-#include <kernel/chainstatemanager_opts.h>
-#include <kernel/checks.h>
-#include <kernel/context.h>
-#include <kernel/validation_cache_sizes.h>
-
-#include <consensus/validation.h>
-#include <core_io.h>
-#include <node/blockstorage.h>
-#include <node/caches.h>
-#include <node/chainstate.h>
-#include <scheduler.h>
-#include <script/sigcache.h>
-#include <util/chaintype.h>
-#include <util/thread.h>
-#include <validation.h>
-#include <validationinterface.h>
+#include <kernel/bitcoinkernel_wrapper.h>
 
 #include <cassert>
-#include <cstdint>
+#include <charconv>
 #include <filesystem>
-#include <functional>
-#include <iosfwd>
-#include <memory>
+#include <iostream>
+#include <optional>
 #include <string>
+#include <string_view>
+#include <vector>
+
+using namespace btck;
+
+std::vector<std::byte> hex_string_to_byte_vec(std::string_view hex)
+{
+    std::vector<std::byte> bytes;
+    bytes.reserve(hex.length() / 2);
+
+    for (size_t i{0}; i < hex.length(); i += 2) {
+        uint8_t byte_value;
+        auto [ptr, ec] = std::from_chars(hex.data() + i, hex.data() + i + 2, byte_value, 16);
+
+        if (ec != std::errc{} || ptr != hex.data() + i + 2) {
+            throw std::invalid_argument("Invalid hex character");
+        }
+        bytes.push_back(static_cast<std::byte>(byte_value));
+    }
+    return bytes;
+}
+
+class KernelLog
+{
+public:
+    void LogMessage(std::string_view message)
+    {
+        std::cout << "kernel: " << message;
+    }
+};
+
+class TestValidationInterface : public ValidationInterface
+{
+public:
+    TestValidationInterface() = default;
+
+    std::optional<std::string> m_expected_valid_block = std::nullopt;
+
+    void BlockChecked(const Block block, const BlockValidationState state) override
+    {
+        auto mode{state.GetValidationMode()};
+        switch (mode) {
+        case ValidationMode::VALID: {
+            std::cout << "Valid block" << std::endl;
+            return;
+        }
+        case ValidationMode::INVALID: {
+            std::cout << "Invalid block: ";
+            auto result{state.GetBlockValidationResult()};
+            switch (result) {
+            case BlockValidationResult::UNSET:
+                std::cout << "initial value. Block has not yet been rejected" << std::endl;
+                break;
+            case BlockValidationResult::HEADER_LOW_WORK:
+                std::cout << "the block header may be on a too-little-work chain" << std::endl;
+                break;
+            case BlockValidationResult::CONSENSUS:
+                std::cout << "invalid by consensus rules" << std::endl;
+                break;
+            case BlockValidationResult::CACHED_INVALID:
+                std::cout << "this block was cached as being invalid and we didn't store the reason why" << std::endl;
+                break;
+            case BlockValidationResult::INVALID_HEADER:
+                std::cout << "invalid proof of work or time too old" << std::endl;
+                break;
+            case BlockValidationResult::MUTATED:
+                std::cout << "the block's data didn't match the data committed to by the PoW" << std::endl;
+                break;
+            case BlockValidationResult::MISSING_PREV:
+                std::cout << "We don't have the previous block the checked one is built on" << std::endl;
+                break;
+            case BlockValidationResult::INVALID_PREV:
+                std::cout << "A block this one builds on is invalid" << std::endl;
+                break;
+            case BlockValidationResult::TIME_FUTURE:
+                std::cout << "block timestamp was > 2 hours in the future (or our clock is bad)" << std::endl;
+                break;
+            }
+            return;
+        }
+        case ValidationMode::INTERNAL_ERROR: {
+            std::cout << "Internal error" << std::endl;
+            return;
+        }
+        }
+    }
+};
+
+class TestKernelNotifications : public KernelNotifications
+{
+public:
+    void BlockTipHandler(SynchronizationState, const BlockTreeEntry, double) override
+    {
+        std::cout << "Block tip changed" << std::endl;
+    }
+
+    void ProgressHandler(std::string_view title, int progress_percent, bool resume_possible) override
+    {
+        std::cout << "Made progress: " << title << " " << progress_percent << "%" << std::endl;
+    }
+
+    void WarningSetHandler(Warning warning, std::string_view message) override
+    {
+        std::cout << message << std::endl;
+    }
+
+    void WarningUnsetHandler(Warning warning) override
+    {
+        std::cout << "Warning unset: " << static_cast<std::underlying_type_t<Warning>>(warning) << std::endl;
+    }
+
+    void FlushErrorHandler(std::string_view error) override
+    {
+        std::cout << error << std::endl;
+    }
+
+    void FatalErrorHandler(std::string_view error) override
+    {
+        std::cout << error << std::endl;
+    }
+};
 
 int main(int argc, char* argv[])
 {
@@ -49,257 +153,67 @@ int main(int argc, char* argv[])
             << "           BREAK IN FUTURE VERSIONS. DO NOT USE ON YOUR ACTUAL DATADIR." << std::endl;
         return 1;
     }
-    std::filesystem::path abs_datadir = std::filesystem::absolute(argv[1]);
+    std::filesystem::path abs_datadir{std::filesystem::absolute(argv[1])};
     std::filesystem::create_directories(abs_datadir);
 
-
-    // SETUP: Context
-    kernel::Context kernel_context{};
-    // We can't use a goto here, but we can use an assert since none of the
-    // things instantiated so far requires running the epilogue to be torn down
-    // properly
-    assert(kernel::SanityChecks(kernel_context));
-
-    // Necessary for CheckInputScripts (eventually called by ProcessNewBlock),
-    // which will try the script cache first and fall back to actually
-    // performing the check with the signature cache.
-    kernel::ValidationCacheSizes validation_cache_sizes{};
-    Assert(InitSignatureCache(validation_cache_sizes.signature_cache_bytes));
-    Assert(InitScriptExecutionCache(validation_cache_sizes.script_execution_cache_bytes));
-
-
-    // SETUP: Scheduling and Background Signals
-    CScheduler scheduler{};
-    // Start the lightweight task scheduler thread
-    scheduler.m_service_thread = std::thread(util::TraceThread, "scheduler", [&] { scheduler.serviceQueue(); });
-
-    // Gather some entropy once per minute.
-    scheduler.scheduleEvery(RandAddPeriodic, std::chrono::minutes{1});
-
-    GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
-
-    class KernelNotifications : public kernel::Notifications
-    {
-    public:
-        kernel::InterruptResult blockTip(SynchronizationState, CBlockIndex&) override
-        {
-            std::cout << "Block tip changed" << std::endl;
-            return {};
-        }
-        void headerTip(SynchronizationState, int64_t height, int64_t timestamp, bool presync) override
-        {
-            std::cout << "Header tip changed: " << height << ", " << timestamp << ", " << presync << std::endl;
-        }
-        void progress(const bilingual_str& title, int progress_percent, bool resume_possible) override
-        {
-            std::cout << "Progress: " << title.original << ", " << progress_percent << ", " << resume_possible << std::endl;
-        }
-        void warning(const bilingual_str& warning) override
-        {
-            std::cout << "Warning: " << warning.original << std::endl;
-        }
-        void flushError(const std::string& debug_message) override
-        {
-            std::cerr << "Error flushing block data to disk: " << debug_message << std::endl;
-        }
-        void fatalError(const std::string& debug_message, const bilingual_str& user_message) override
-        {
-            std::cerr << "Error: " << debug_message << std::endl;
-            std::cerr << (user_message.empty() ? "A fatal internal error occurred." : user_message.original) << std::endl;
-        }
+    btck_LoggingOptions logging_options = {
+        .log_timestamps = true,
+        .log_time_micros = false,
+        .log_threadnames = false,
+        .log_sourcelocations = false,
+        .always_print_category_levels = true,
     };
-    auto notifications = std::make_unique<KernelNotifications>();
 
+    logging_set_options(logging_options);
 
-    // SETUP: Chainstate
-    auto chainparams = CChainParams::Main();
-    const ChainstateManager::Options chainman_opts{
-        .chainparams = *chainparams,
-        .datadir = abs_datadir,
-        .adjusted_time_callback = NodeClock::now,
-        .notifications = *notifications,
-    };
-    const node::BlockManager::Options blockman_opts{
-        .chainparams = chainman_opts.chainparams,
-        .blocks_dir = abs_datadir / "blocks",
-        .notifications = chainman_opts.notifications,
-    };
-    ChainstateManager chainman{kernel_context.interrupt, chainman_opts, blockman_opts};
+    Logger logger{std::make_unique<KernelLog>()};
 
-    node::CacheSizes cache_sizes;
-    cache_sizes.block_tree_db = 2 << 20;
-    cache_sizes.coins_db = 2 << 22;
-    cache_sizes.coins = (450 << 20) - (2 << 20) - (2 << 22);
-    node::ChainstateLoadOptions options;
-    options.check_interrupt = [] { return false; };
-    auto [status, error] = node::LoadChainstate(chainman, cache_sizes, options);
-    if (status != node::ChainstateLoadStatus::SUCCESS) {
-        std::cerr << "Failed to load Chain state from your datadir." << std::endl;
-        goto epilogue;
-    } else {
-        std::tie(status, error) = node::VerifyLoadedChainstate(chainman, options);
-        if (status != node::ChainstateLoadStatus::SUCCESS) {
-            std::cerr << "Failed to verify loaded Chain state from your datadir." << std::endl;
-            goto epilogue;
-        }
+    ContextOptions options{};
+    ChainParams params{ChainType::MAINNET};
+    options.SetChainParams(params);
+
+    options.SetNotifications(std::make_shared<TestKernelNotifications>());
+    options.SetValidationInterface(std::make_shared<TestValidationInterface>());
+
+    Context context{options};
+
+    ChainstateManagerOptions chainman_opts{context, abs_datadir.string(), (abs_datadir / "blocks").string()};
+    chainman_opts.SetWorkerThreads(4);
+
+    std::unique_ptr<ChainMan> chainman;
+    try {
+        chainman = std::make_unique<ChainMan>(context, chainman_opts);
+    } catch (std::exception&) {
+        std::cerr << "Failed to instantiate ChainMan, exiting" << std::endl;
+        return 1;
     }
 
-    for (Chainstate* chainstate : WITH_LOCK(::cs_main, return chainman.GetAll())) {
-        BlockValidationState state;
-        if (!chainstate->ActivateBestChain(state, nullptr)) {
-            std::cerr << "Failed to connect best block (" << state.ToString() << ")" << std::endl;
-            goto epilogue;
-        }
-    }
-
-    // Main program logic starts here
-    std::cout
-        << "Hello! I'm going to print out some information about your datadir." << std::endl
-        << "\t"
-        << "Path: " << abs_datadir << std::endl;
-    {
-        LOCK(chainman.GetMutex());
-        std::cout
-        << "\t" << "Reindexing: " << std::boolalpha << node::fReindex.load() << std::noboolalpha << std::endl
-        << "\t" << "Snapshot Active: " << std::boolalpha << chainman.IsSnapshotActive() << std::noboolalpha << std::endl
-        << "\t" << "Active Height: " << chainman.ActiveHeight() << std::endl
-        << "\t" << "Active IBD: " << std::boolalpha << chainman.ActiveChainstate().IsInitialBlockDownload() << std::noboolalpha << std::endl;
-        CBlockIndex* tip = chainman.ActiveTip();
-        if (tip) {
-            std::cout << "\t" << tip->ToString() << std::endl;
-        }
-    }
+    std::cout << "Enter the block you want to validate on the next line:" << std::endl;
 
     for (std::string line; std::getline(std::cin, line);) {
         if (line.empty()) {
-            std::cerr << "Empty line found" << std::endl;
-            break;
+            std::cerr << "Empty line found, try again:" << std::endl;
+            continue;
         }
 
-        std::shared_ptr<CBlock> blockptr = std::make_shared<CBlock>();
-        CBlock& block = *blockptr;
-
-        if (!DecodeHexBlk(block, line)) {
-            std::cerr << "Block decode failed" << std::endl;
-            break;
+        auto raw_block{hex_string_to_byte_vec(line)};
+        std::unique_ptr<Block> block;
+        try {
+            block = std::make_unique<Block>(raw_block);
+        } catch (std::exception&) {
+            std::cerr << "Block decode failed, try again:" << std::endl;
+            continue;
         }
 
-        if (block.vtx.empty() || !block.vtx[0]->IsCoinBase()) {
-            std::cerr << "Block does not start with a coinbase" << std::endl;
-            break;
+        bool new_block = false;
+        bool accepted = chainman->ProcessBlock(*block, &new_block);
+        if (accepted) {
+            std::cerr << "Block has not yet been rejected" << std::endl;
+        } else {
+            std::cerr << "Block was not accepted" << std::endl;
         }
-
-        uint256 hash = block.GetHash();
-        {
-            LOCK(cs_main);
-            const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(hash);
-            if (pindex) {
-                if (pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
-                    std::cerr << "duplicate" << std::endl;
-                    break;
-                }
-                if (pindex->nStatus & BLOCK_FAILED_MASK) {
-                    std::cerr << "duplicate-invalid" << std::endl;
-                    break;
-                }
-            }
-        }
-
-        {
-            LOCK(cs_main);
-            const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock);
-            if (pindex) {
-                chainman.UpdateUncommittedBlockStructures(block, pindex);
-            }
-        }
-
-        // Adapted from rpc/mining.cpp
-        class submitblock_StateCatcher final : public CValidationInterface
-        {
-        public:
-            uint256 hash;
-            bool found;
-            BlockValidationState state;
-
-            explicit submitblock_StateCatcher(const uint256& hashIn) : hash(hashIn), found(false), state() {}
-
-        protected:
-            void BlockChecked(const CBlock& block, const BlockValidationState& stateIn) override
-            {
-                if (block.GetHash() != hash)
-                    return;
-                found = true;
-                state = stateIn;
-            }
-        };
-
-        bool new_block;
-        auto sc = std::make_shared<submitblock_StateCatcher>(block.GetHash());
-        RegisterSharedValidationInterface(sc);
-        bool accepted = chainman.ProcessNewBlock(blockptr, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
-        UnregisterSharedValidationInterface(sc);
-        if (!new_block && accepted) {
-            std::cerr << "duplicate" << std::endl;
-            break;
-        }
-        if (!sc->found) {
-            std::cerr << "inconclusive" << std::endl;
-            break;
-        }
-        std::cout << sc->state.ToString() << std::endl;
-        switch (sc->state.GetResult()) {
-        case BlockValidationResult::BLOCK_RESULT_UNSET:
-            std::cerr << "initial value. Block has not yet been rejected" << std::endl;
-            break;
-        case BlockValidationResult::BLOCK_HEADER_LOW_WORK:
-            std::cerr << "the block header may be on a too-little-work chain" << std::endl;
-            break;
-        case BlockValidationResult::BLOCK_CONSENSUS:
-            std::cerr << "invalid by consensus rules (excluding any below reasons)" << std::endl;
-            break;
-        case BlockValidationResult::BLOCK_RECENT_CONSENSUS_CHANGE:
-            std::cerr << "Invalid by a change to consensus rules more recent than SegWit." << std::endl;
-            break;
-        case BlockValidationResult::BLOCK_CACHED_INVALID:
-            std::cerr << "this block was cached as being invalid and we didn't store the reason why" << std::endl;
-            break;
-        case BlockValidationResult::BLOCK_INVALID_HEADER:
-            std::cerr << "invalid proof of work or time too old" << std::endl;
-            break;
-        case BlockValidationResult::BLOCK_MUTATED:
-            std::cerr << "the block's data didn't match the data committed to by the PoW" << std::endl;
-            break;
-        case BlockValidationResult::BLOCK_MISSING_PREV:
-            std::cerr << "We don't have the previous block the checked one is built on" << std::endl;
-            break;
-        case BlockValidationResult::BLOCK_INVALID_PREV:
-            std::cerr << "A block this one builds on is invalid" << std::endl;
-            break;
-        case BlockValidationResult::BLOCK_TIME_FUTURE:
-            std::cerr << "block timestamp was > 2 hours in the future (or our clock is bad)" << std::endl;
-            break;
-        case BlockValidationResult::BLOCK_CHECKPOINT:
-            std::cerr << "the block failed to meet one of our checkpoints" << std::endl;
-            break;
+        if (!new_block) {
+            std::cerr << "Block is a duplicate" << std::endl;
         }
     }
-
-epilogue:
-    // Without this precise shutdown sequence, there will be a lot of nullptr
-    // dereferencing and UB.
-    scheduler.stop();
-    if (chainman.m_thread_load.joinable()) chainman.m_thread_load.join();
-    StopScriptCheckWorkerThreads();
-
-    GetMainSignals().FlushBackgroundCallbacks();
-    {
-        LOCK(cs_main);
-        for (Chainstate* chainstate : chainman.GetAll()) {
-            if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
-                chainstate->ResetCoinsViews();
-            }
-        }
-    }
-    GetMainSignals().UnregisterBackgroundSignalScheduler();
 }

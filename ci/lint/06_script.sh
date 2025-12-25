@@ -1,39 +1,24 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018-2022 The Bitcoin Core developers
+# Copyright (c) 2018-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 export LC_ALL=C
 
-set -ex
+set -o errexit -o pipefail -o xtrace
 
-if [ -n "$LOCAL_BRANCH" ]; then
-  # To faithfully recreate CI linting locally, specify all commits on the current
-  # branch.
-  COMMIT_RANGE="$(git merge-base HEAD master)..HEAD"
-elif [ -n "$CIRRUS_PR" ]; then
-  COMMIT_RANGE="HEAD~..HEAD"
-  echo
-  git log --no-merges --oneline "$COMMIT_RANGE"
-  echo
-  test/lint/commit-script-check.sh "$COMMIT_RANGE"
-else
-  COMMIT_RANGE="SKIP_EMPTY_NOT_A_PR"
+if [ -n "${LINT_CI_IS_PR}" ]; then
+  export COMMIT_RANGE="HEAD~..HEAD"
+  if [ "$(git rev-list -1 HEAD)" != "$(git rev-list -1 --merges HEAD)" ]; then
+    echo "Error: The top commit must be a merge commit, usually the remote 'pull/<PR_NUMBER>/merge' branch."
+    false
+  fi
 fi
-export COMMIT_RANGE
 
-# This only checks that the trees are pure subtrees, it is not doing a full
-# check with -r to not have to fetch all the remotes.
-test/lint/git-subtree-check.sh src/crypto/ctaes
-test/lint/git-subtree-check.sh src/secp256k1
-test/lint/git-subtree-check.sh src/minisketch
-test/lint/git-subtree-check.sh src/leveldb
-test/lint/git-subtree-check.sh src/crc32c
-test/lint/check-doc.py
-test/lint/all-lint.py
+RUST_BACKTRACE=1 cargo run --manifest-path "./test/lint/test_runner/Cargo.toml"
 
-if [ "$CIRRUS_REPO_FULL_NAME" = "bitcoin/bitcoin" ] && [ "$CIRRUS_PR" = "" ] ; then
+if [ "${LINT_CI_SANITY_CHECK_COMMIT_SIG}" = "1" ] ; then
     # Sanity check only the last few commits to get notified of missing sigs,
     # missing keys, or expired keys. Usually there is only one new merge commit
     # per push on the master branch and a few commits on release branches, so

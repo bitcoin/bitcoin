@@ -4,8 +4,8 @@ AC_PREREQ([2.60])
 # the API. All changes in experimental modules are treated as
 # backwards-compatible and therefore at most increase the minor version.
 define(_PKG_VERSION_MAJOR, 0)
-define(_PKG_VERSION_MINOR, 3)
-define(_PKG_VERSION_PATCH, 3)
+define(_PKG_VERSION_MINOR, 7)
+define(_PKG_VERSION_PATCH, 1)
 define(_PKG_VERSION_IS_RELEASE, false)
 
 # The library version is based on libtool versioning of the ABI. The set of
@@ -13,8 +13,8 @@ define(_PKG_VERSION_IS_RELEASE, false)
 # https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
 # All changes in experimental modules are treated as if they don't affect the
 # interface and therefore only increase the revision.
-define(_LIB_VERSION_CURRENT, 2)
-define(_LIB_VERSION_REVISION, 3)
+define(_LIB_VERSION_CURRENT, 6)
+define(_LIB_VERSION_REVISION, 1)
 define(_LIB_VERSION_AGE, 0)
 
 AC_INIT([libsecp256k1],m4_join([.], _PKG_VERSION_MAJOR, _PKG_VERSION_MINOR, _PKG_VERSION_PATCH)m4_if(_PKG_VERSION_IS_RELEASE, [true], [], [-dev]),[https://github.com/bitcoin-core/secp256k1/issues],[libsecp256k1],[https://github.com/bitcoin-core/secp256k1])
@@ -111,7 +111,6 @@ AC_DEFUN([SECP_TRY_APPEND_DEFAULT_CFLAGS], [
       SECP_TRY_APPEND_CFLAGS([-Wcast-align=strict], $1) # GCC >= 8.0
       SECP_TRY_APPEND_CFLAGS([-Wconditional-uninitialized], $1) # Clang >= 3.0 only
       SECP_TRY_APPEND_CFLAGS([-Wreserved-identifier], $1) # Clang >= 13.0 only
-      SECP_TRY_APPEND_CFLAGS([-fvisibility=hidden], $1) # GCC >= 4.0
 
       CFLAGS="$SECP_TRY_APPEND_DEFAULT_CFLAGS_saved_CFLAGS"
     fi
@@ -145,7 +144,7 @@ AC_ARG_ENABLE(benchmark,
     [SECP_SET_DEFAULT([enable_benchmark], [yes], [yes])])
 
 AC_ARG_ENABLE(coverage,
-    AS_HELP_STRING([--enable-coverage],[enable compiler flags to support kcov coverage analysis [default=no]]), [],
+    AS_HELP_STRING([--enable-coverage],[enable coverage analysis support [default=no]]), [],
     [SECP_SET_DEFAULT([enable_coverage], [no], [no])])
 
 AC_ARG_ENABLE(tests,
@@ -184,6 +183,10 @@ AC_ARG_ENABLE(module_schnorrsig,
     AS_HELP_STRING([--enable-module-schnorrsig],[enable schnorrsig module [default=yes]]), [],
     [SECP_SET_DEFAULT([enable_module_schnorrsig], [yes], [yes])])
 
+AC_ARG_ENABLE(module_musig,
+    AS_HELP_STRING([--enable-module-musig],[enable MuSig2 module [default=yes]]), [],
+    [SECP_SET_DEFAULT([enable_module_musig], [yes], [yes])])
+
 AC_ARG_ENABLE(module_ellswift,
     AS_HELP_STRING([--enable-module-ellswift],[enable ElligatorSwift module [default=yes]]), [],
     [SECP_SET_DEFAULT([enable_module_ellswift], [yes], [yes])])
@@ -201,25 +204,24 @@ AC_ARG_ENABLE(external_default_callbacks,
 AC_ARG_WITH([test-override-wide-multiply], [] ,[set_widemul=$withval], [set_widemul=auto])
 
 AC_ARG_WITH([asm], [AS_HELP_STRING([--with-asm=x86_64|arm32|no|auto],
-[assembly optimizations to use (experimental: arm32) [default=auto]])],[req_asm=$withval], [req_asm=auto])
+[assembly to use (experimental: arm32) [default=auto]])],[req_asm=$withval], [req_asm=auto])
 
-AC_ARG_WITH([ecmult-window], [AS_HELP_STRING([--with-ecmult-window=SIZE|auto],
+AC_ARG_WITH([ecmult-window], [AS_HELP_STRING([--with-ecmult-window=SIZE],
 [window size for ecmult precomputation for verification, specified as integer in range [2..24].]
 [Larger values result in possibly better performance at the cost of an exponentially larger precomputed table.]
 [The table will store 2^(SIZE-1) * 64 bytes of data but can be larger in memory due to platform-specific padding and alignment.]
 [A window size larger than 15 will require you delete the prebuilt precomputed_ecmult.c file so that it can be rebuilt.]
 [For very large window sizes, use "make -j 1" to reduce memory use during compilation.]
-["auto" is a reasonable setting for desktop machines (currently 15). [default=auto]]
+[The default value is a reasonable setting for desktop machines (currently 15). [default=15]]
 )],
-[req_ecmult_window=$withval], [req_ecmult_window=auto])
+[set_ecmult_window=$withval], [set_ecmult_window=15])
 
-AC_ARG_WITH([ecmult-gen-precision], [AS_HELP_STRING([--with-ecmult-gen-precision=2|4|8|auto],
-[Precision bits to tune the precomputed table size for signing.]
-[The size of the table is 32kB for 2 bits, 64kB for 4 bits, 512kB for 8 bits of precision.]
-[A larger table size usually results in possible faster signing.]
-["auto" is a reasonable setting for desktop machines (currently 4). [default=auto]]
+AC_ARG_WITH([ecmult-gen-kb], [AS_HELP_STRING([--with-ecmult-gen-kb=2|22|86],
+[The size of the precomputed table for signing in multiples of 1024 bytes (on typical platforms).]
+[Larger values result in possibly better signing/keygeneration performance at the cost of a larger table.]
+[The default value is a reasonable setting for desktop machines (currently 86). [default=86]]
 )],
-[req_ecmult_gen_precision=$withval], [req_ecmult_gen_precision=auto])
+[set_ecmult_gen_kb=$withval], [set_ecmult_gen_kb=86])
 
 AC_ARG_WITH([valgrind], [AS_HELP_STRING([--with-valgrind=yes|no|auto],
 [Build with extra checks for running inside Valgrind [default=auto]]
@@ -246,6 +248,20 @@ fi
 
 if test x"$enable_ctime_tests" = x"auto"; then
     enable_ctime_tests=$enable_valgrind
+fi
+
+print_msan_notice=no
+if test x"$enable_ctime_tests" = x"yes"; then
+  SECP_MSAN_CHECK
+  # MSan on Clang >=16 reports uninitialized memory in function parameters and return values, even if
+  # the uninitialized variable is never actually "used". This is called "eager" checking, and it's
+  # sounds like good idea for normal use of MSan. However, it yields many false positives in the
+  # ctime_tests because many return values depend on secret (i.e., "uninitialized") values, and
+  # we're only interested in detecting branches (which count as "uses") on secret data.
+  if test x"$msan_enabled" = x"yes"; then
+    SECP_TRY_APPEND_CFLAGS([-fno-sanitize-memory-param-retval], SECP_CFLAGS)
+    print_msan_notice=yes
+  fi
 fi
 
 if test x"$enable_coverage" = x"yes"; then
@@ -279,24 +295,24 @@ else
   x86_64)
     SECP_X86_64_ASM_CHECK
     if test x"$has_x86_64_asm" != x"yes"; then
-      AC_MSG_ERROR([x86_64 assembly optimization requested but not available])
+      AC_MSG_ERROR([x86_64 assembly requested but not available])
     fi
     ;;
   arm32)
     SECP_ARM32_ASM_CHECK
     if test x"$has_arm32_asm" != x"yes"; then
-      AC_MSG_ERROR([ARM32 assembly optimization requested but not available])
+      AC_MSG_ERROR([ARM32 assembly requested but not available])
     fi
     ;;
   no)
     ;;
   *)
-    AC_MSG_ERROR([invalid assembly optimization selection])
+    AC_MSG_ERROR([invalid assembly selection])
     ;;
   esac
 fi
 
-# Select assembly optimization
+# Select assembly
 enable_external_asm=no
 
 case $set_asm in
@@ -309,7 +325,7 @@ arm32)
 no)
   ;;
 *)
-  AC_MSG_ERROR([invalid assembly optimizations])
+  AC_MSG_ERROR([invalid assembly selection])
   ;;
 esac
 
@@ -336,14 +352,7 @@ auto)
   ;;
 esac
 
-# Set ecmult window size
-if test x"$req_ecmult_window" = x"auto"; then
-  set_ecmult_window=15
-else
-  set_ecmult_window=$req_ecmult_window
-fi
-
-error_window_size=['window size for ecmult precomputation not an integer in range [2..24] or "auto"']
+error_window_size=['window size for ecmult precomputation not an integer in range [2..24]']
 case $set_ecmult_window in
 ''|*[[!0-9]]*)
   # no valid integer
@@ -358,19 +367,18 @@ case $set_ecmult_window in
   ;;
 esac
 
-# Set ecmult gen precision
-if test x"$req_ecmult_gen_precision" = x"auto"; then
-  set_ecmult_gen_precision=4
-else
-  set_ecmult_gen_precision=$req_ecmult_gen_precision
-fi
-
-case $set_ecmult_gen_precision in
-2|4|8)
-  SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DECMULT_GEN_PREC_BITS=$set_ecmult_gen_precision"
+case $set_ecmult_gen_kb in
+2)
+  SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DCOMB_BLOCKS=2 -DCOMB_TEETH=5"
+  ;;
+22)
+  SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DCOMB_BLOCKS=11 -DCOMB_TEETH=6"
+  ;;
+86)
+  SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DCOMB_BLOCKS=43 -DCOMB_TEETH=6"
   ;;
 *)
-  AC_MSG_ERROR(['ecmult gen precision not 2, 4, 8 or "auto"'])
+  AC_MSG_ERROR(['ecmult gen table size not 2, 22 or 86'])
   ;;
 esac
 
@@ -387,27 +395,38 @@ SECP_CFLAGS="$SECP_CFLAGS $WERROR_CFLAGS"
 ### Handle module options
 ###
 
-if test x"$enable_module_ecdh" = x"yes"; then
-  SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DENABLE_MODULE_ECDH=1"
+# Processing must be done in a reverse topological sorting of the dependency graph
+# (dependent module first).
+if test x"$enable_module_ellswift" = x"yes"; then
+  SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DENABLE_MODULE_ELLSWIFT=1"
+fi
+
+if test x"$enable_module_musig" = x"yes"; then
+  if test x"$enable_module_schnorrsig" = x"no"; then
+    AC_MSG_ERROR([Module dependency error: You have disabled the schnorrsig module explicitly, but it is required by the musig module.])
+  fi
+  enable_module_schnorrsig=yes
+  SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DENABLE_MODULE_MUSIG=1"
+fi
+
+if test x"$enable_module_schnorrsig" = x"yes"; then
+  if test x"$enable_module_extrakeys" = x"no"; then
+    AC_MSG_ERROR([Module dependency error: You have disabled the extrakeys module explicitly, but it is required by the schnorrsig module.])
+  fi
+  enable_module_extrakeys=yes
+  SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DENABLE_MODULE_SCHNORRSIG=1"
+fi
+
+if test x"$enable_module_extrakeys" = x"yes"; then
+  SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DENABLE_MODULE_EXTRAKEYS=1"
 fi
 
 if test x"$enable_module_recovery" = x"yes"; then
   SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DENABLE_MODULE_RECOVERY=1"
 fi
 
-if test x"$enable_module_schnorrsig" = x"yes"; then
-  SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DENABLE_MODULE_SCHNORRSIG=1"
-  enable_module_extrakeys=yes
-fi
-
-if test x"$enable_module_ellswift" = x"yes"; then
-  AC_DEFINE(ENABLE_MODULE_ELLSWIFT, 1, [Define this symbol to enable the ElligatorSwift module])
-fi
-
-# Test if extrakeys is set after the schnorrsig module to allow the schnorrsig
-# module to set enable_module_extrakeys=yes
-if test x"$enable_module_extrakeys" = x"yes"; then
-  SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DENABLE_MODULE_EXTRAKEYS=1"
+if test x"$enable_module_ecdh" = x"yes"; then
+  SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DENABLE_MODULE_ECDH=1"
 fi
 
 if test x"$enable_external_default_callbacks" = x"yes"; then
@@ -418,15 +437,18 @@ fi
 ### Check for --enable-experimental if necessary
 ###
 
-if test x"$enable_experimental" = x"yes"; then
-  AC_MSG_NOTICE([******])
-  AC_MSG_NOTICE([WARNING: experimental build])
-  AC_MSG_NOTICE([Experimental features do not have stable APIs or properties, and may not be safe for production use.])
-  AC_MSG_NOTICE([******])
-else
+if test x"$enable_experimental" = x"no"; then
   if test x"$set_asm" = x"arm32"; then
-    AC_MSG_ERROR([ARM32 assembly optimization is experimental. Use --enable-experimental to allow.])
+    AC_MSG_ERROR([ARM32 assembly is experimental. Use --enable-experimental to allow.])
   fi
+fi
+
+# Check for concurrency support (tests only)
+if test "x$enable_tests" != x"no"; then
+  AC_CHECK_HEADERS([sys/types.h sys/wait.h unistd.h])
+  AS_IF([test "x$ac_cv_header_sys_types_h" = xyes && test "x$ac_cv_header_sys_wait_h" = xyes &&
+         test "x$ac_cv_header_unistd_h" = xyes], [TEST_DEFINES="-DSUPPORTS_CONCURRENCY=1"], TEST_DEFINES="")
+  AC_SUBST(TEST_DEFINES)
 fi
 
 ###
@@ -446,6 +468,7 @@ AM_CONDITIONAL([ENABLE_MODULE_ECDH], [test x"$enable_module_ecdh" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_RECOVERY], [test x"$enable_module_recovery" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_EXTRAKEYS], [test x"$enable_module_extrakeys" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_SCHNORRSIG], [test x"$enable_module_schnorrsig" = x"yes"])
+AM_CONDITIONAL([ENABLE_MODULE_MUSIG], [test x"$enable_module_musig" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_ELLSWIFT], [test x"$enable_module_ellswift" = x"yes"])
 AM_CONDITIONAL([USE_EXTERNAL_ASM], [test x"$enable_external_asm" = x"yes"])
 AM_CONDITIONAL([USE_ASM_ARM], [test x"$set_asm" = x"arm32"])
@@ -461,6 +484,7 @@ echo "Build Options:"
 echo "  with external callbacks = $enable_external_default_callbacks"
 echo "  with benchmarks         = $enable_benchmark"
 echo "  with tests              = $enable_tests"
+echo "  with exhaustive tests   = $enable_exhaustive_tests"
 echo "  with ctime tests        = $enable_ctime_tests"
 echo "  with coverage           = $enable_coverage"
 echo "  with examples           = $enable_examples"
@@ -468,11 +492,12 @@ echo "  module ecdh             = $enable_module_ecdh"
 echo "  module recovery         = $enable_module_recovery"
 echo "  module extrakeys        = $enable_module_extrakeys"
 echo "  module schnorrsig       = $enable_module_schnorrsig"
+echo "  module musig            = $enable_module_musig"
 echo "  module ellswift         = $enable_module_ellswift"
 echo
 echo "  asm                     = $set_asm"
 echo "  ecmult window size      = $set_ecmult_window"
-echo "  ecmult gen prec. bits   = $set_ecmult_gen_precision"
+echo "  ecmult gen table size   = $set_ecmult_gen_kb KiB"
 # Hide test-only options unless they're used.
 if test x"$set_widemul" != xauto; then
 echo "  wide multiplication     = $set_widemul"
@@ -484,3 +509,17 @@ echo "  CPPFLAGS                = $CPPFLAGS"
 echo "  SECP_CFLAGS             = $SECP_CFLAGS"
 echo "  CFLAGS                  = $CFLAGS"
 echo "  LDFLAGS                 = $LDFLAGS"
+
+if test x"$print_msan_notice" = x"yes"; then
+  echo
+  echo "Note:"
+  echo "  MemorySanitizer detected, tried to add -fno-sanitize-memory-param-retval to SECP_CFLAGS"
+  echo "  to avoid false positives in ctime_tests. Pass --disable-ctime-tests to avoid this."
+fi
+
+if test x"$enable_experimental" = x"yes"; then
+  echo
+  echo "WARNING: Experimental build"
+  echo "  Experimental features do not have stable APIs or properties, and may not be safe for"
+  echo "  production use."
+fi

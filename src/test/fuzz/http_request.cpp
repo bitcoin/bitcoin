@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 
 #include <event2/buffer.h>
@@ -47,7 +48,8 @@ FUZZ_TARGET(http_request)
         return;
     }
 
-    HTTPRequest http_request{evreq, true};
+    util::SignalInterrupt interrupt;
+    HTTPRequest http_request{evreq, interrupt, true};
     const HTTPRequest::RequestMethod request_method = http_request.GetRequestMethod();
     (void)RequestMethodString(request_method);
     (void)http_request.GetURI();

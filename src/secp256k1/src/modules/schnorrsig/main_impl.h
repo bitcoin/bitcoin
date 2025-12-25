@@ -45,7 +45,7 @@ static void secp256k1_nonce_function_bip340_sha256_tagged_aux(secp256k1_sha256 *
 
 /* algo argument for nonce_function_bip340 to derive the nonce exactly as stated in BIP-340
  * by using the correct tagged hash function. */
-static const unsigned char bip340_algo[13] = "BIP0340/nonce";
+static const unsigned char bip340_algo[] = {'B', 'I', 'P', '0', '3', '4', '0', '/', 'n', 'o', 'n', 'c', 'e'};
 
 static const unsigned char schnorrsig_extraparams_magic[4] = SECP256K1_SCHNORRSIG_EXTRAPARAMS_MAGIC;
 
@@ -93,6 +93,9 @@ static int nonce_function_bip340(unsigned char *nonce32, const unsigned char *ms
     secp256k1_sha256_write(&sha, xonly_pk32, 32);
     secp256k1_sha256_write(&sha, msg, msglen);
     secp256k1_sha256_finalize(&sha, nonce32);
+    secp256k1_sha256_clear(&sha);
+    secp256k1_memclear_explicit(masked_key, sizeof(masked_key));
+
     return 1;
 }
 
@@ -136,7 +139,7 @@ static int secp256k1_schnorrsig_sign_internal(const secp256k1_context* ctx, unsi
     secp256k1_gej rj;
     secp256k1_ge pk;
     secp256k1_ge r;
-    unsigned char buf[32] = { 0 };
+    unsigned char nonce32[32] = { 0 };
     unsigned char pk_buf[32];
     unsigned char seckey[32];
     int ret = 1;
@@ -161,8 +164,8 @@ static int secp256k1_schnorrsig_sign_internal(const secp256k1_context* ctx, unsi
 
     secp256k1_scalar_get_b32(seckey, &sk);
     secp256k1_fe_get_b32(pk_buf, &pk.x);
-    ret &= !!noncefp(buf, msg, msglen, seckey, pk_buf, bip340_algo, sizeof(bip340_algo), ndata);
-    secp256k1_scalar_set_b32(&k, buf, NULL);
+    ret &= !!noncefp(nonce32, msg, msglen, seckey, pk_buf, bip340_algo, sizeof(bip340_algo), ndata);
+    secp256k1_scalar_set_b32(&k, nonce32, NULL);
     ret &= !secp256k1_scalar_is_zero(&k);
     secp256k1_scalar_cmov(&k, &secp256k1_scalar_one, !ret);
 
@@ -187,7 +190,9 @@ static int secp256k1_schnorrsig_sign_internal(const secp256k1_context* ctx, unsi
     secp256k1_memczero(sig64, 64, !ret);
     secp256k1_scalar_clear(&k);
     secp256k1_scalar_clear(&sk);
-    memset(seckey, 0, sizeof(seckey));
+    secp256k1_memclear_explicit(seckey, sizeof(seckey));
+    secp256k1_memclear_explicit(nonce32, sizeof(nonce32));
+    secp256k1_gej_clear(&rj);
 
     return ret;
 }
@@ -261,7 +266,7 @@ int secp256k1_schnorrsig_verify(const secp256k1_context* ctx, const unsigned cha
 
     secp256k1_fe_normalize_var(&r.y);
     return !secp256k1_fe_is_odd(&r.y) &&
-           secp256k1_fe_equal_var(&rx, &r.x);
+           secp256k1_fe_equal(&rx, &r.x);
 }
 
 #endif

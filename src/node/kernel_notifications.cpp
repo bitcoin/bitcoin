@@ -1,34 +1,34 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <node/kernel_notifications.h>
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <chain.h>
 #include <common/args.h>
 #include <common/system.h>
 #include <kernel/context.h>
+#include <kernel/warning.h>
 #include <logging.h>
 #include <node/abort.h>
 #include <node/interface_ui.h>
-#include <shutdown.h>
+#include <node/warnings.h>
 #include <util/check.h>
+#include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/translation.h>
-#include <warnings.h>
 
 #include <cstdint>
 #include <string>
 #include <thread>
 
+using util::ReplaceAll;
+
 static void AlertNotify(const std::string& strMessage)
 {
-    uiInterface.NotifyAlertChanged();
 #if HAVE_SYSTEM
     std::string strCmd = gArgs.GetArg("-alertnotify", "");
     if (strCmd.empty()) return;
@@ -46,23 +46,22 @@ static void AlertNotify(const std::string& strMessage)
 #endif
 }
 
-static void DoWarning(const bilingual_str& warning)
-{
-    static bool fWarned = false;
-    SetMiscWarning(warning);
-    if (!fWarned) {
-        AlertNotify(warning.original);
-        fWarned = true;
-    }
-}
-
 namespace node {
 
-kernel::InterruptResult KernelNotifications::blockTip(SynchronizationState state, CBlockIndex& index)
+kernel::InterruptResult KernelNotifications::blockTip(SynchronizationState state, const CBlockIndex& index, double verification_progress)
 {
-    uiInterface.NotifyBlockTip(state, &index);
+    {
+        LOCK(m_tip_block_mutex);
+        Assume(index.GetBlockHash() != uint256::ZERO);
+        m_tip_block = index.GetBlockHash();
+        m_tip_block_cv.notify_all();
+    }
+
+    uiInterface.NotifyBlockTip(state, index, verification_progress);
     if (m_stop_at_height && index.nHeight >= m_stop_at_height) {
-        StartShutdown();
+        if (!m_shutdown_request()) {
+            LogError("Failed to send shutdown signal after reaching stop height\n");
+        }
         return kernel::Interrupted{};
     }
     return {};
@@ -78,20 +77,35 @@ void KernelNotifications::progress(const bilingual_str& title, int progress_perc
     uiInterface.ShowProgress(title.translated, progress_percent, resume_possible);
 }
 
-void KernelNotifications::warning(const bilingual_str& warning)
+void KernelNotifications::warningSet(kernel::Warning id, const bilingual_str& message)
 {
-    DoWarning(warning);
+    if (m_warnings.Set(id, message)) {
+        AlertNotify(message.original);
+    }
 }
 
-void KernelNotifications::flushError(const std::string& debug_message)
+void KernelNotifications::warningUnset(kernel::Warning id)
 {
-    AbortNode(m_exit_status, debug_message);
+    m_warnings.Unset(id);
 }
 
-void KernelNotifications::fatalError(const std::string& debug_message, const bilingual_str& user_message)
+void KernelNotifications::flushError(const bilingual_str& message)
 {
-    node::AbortNode(m_exit_status, debug_message, user_message, m_shutdown_on_fatal_error);
+    AbortNode(m_shutdown_request, m_exit_status, message, &m_warnings);
 }
+
+void KernelNotifications::fatalError(const bilingual_str& message)
+{
+    node::AbortNode(m_shutdown_on_fatal_error ? m_shutdown_request : nullptr,
+                    m_exit_status, message, &m_warnings);
+}
+
+std::optional<uint256> KernelNotifications::TipBlock()
+{
+    AssertLockHeld(m_tip_block_mutex);
+    return m_tip_block;
+};
+
 
 void ReadNotificationArgs(const ArgsManager& args, KernelNotifications& notifications)
 {

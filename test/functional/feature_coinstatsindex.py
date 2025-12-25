@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2022 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test coinstatsindex across nodes.
@@ -27,6 +27,7 @@ from test_framework.script import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
     assert_raises_rpc_error,
 )
@@ -40,7 +41,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.supports_cli = False
         self.extra_args = [
             [],
             ["-coinstatsindex"]
@@ -151,7 +151,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         # Generate and send a normal tx with two outputs
         tx1 = self.wallet.send_to(
             from_node=node,
-            scriptPubKey=self.wallet.get_scriptPubKey(),
+            scriptPubKey=self.wallet.get_output_script(),
             amount=21 * COIN,
         )
 
@@ -190,7 +190,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         # has two outputs
         cb = create_coinbase(109, nValue=35)
         cb.vout.append(CTxOut(5 * COIN, CScript([OP_FALSE])))
-        cb.rehash()
 
         # Generate a block that includes previous coinbase
         tip = self.nodes[0].getbestblockhash()
@@ -242,6 +241,9 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         res12 = index_node.gettxoutsetinfo('muhash')
         assert_equal(res12, res10)
 
+        self.log.info("Test obtaining info for a non-existent block hash")
+        assert_raises_rpc_error(-5, "Block not found", index_node.gettxoutsetinfo, hash_type="none", hash_or_height="ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", use_index=True)
+
     def _test_use_index_option(self):
         self.log.info("Test use_index option for nodes running the index")
 
@@ -272,12 +274,12 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         res2 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=112)
         assert_equal(res["bestblock"], block)
         assert_equal(res["muhash"], res2["muhash"])
-        assert res["muhash"] != res_invalid["muhash"]
+        assert_not_equal(res["muhash"], res_invalid["muhash"])
 
         # Test that requesting reorged out block by hash is still returning correct results
         res_invalid2 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=reorg_block)
         assert_equal(res_invalid2["muhash"], res_invalid["muhash"])
-        assert res["muhash"] != res_invalid2["muhash"]
+        assert_not_equal(res["muhash"], res_invalid2["muhash"])
 
         # Add another block, so we don't depend on reconsiderblock remembering which
         # blocks were touched by invalidateblock
@@ -293,11 +295,11 @@ class CoinStatsIndexTest(BitcoinTestFramework):
     def _test_index_rejects_hash_serialized(self):
         self.log.info("Test that the rpc raises if the legacy hash is passed with the index")
 
-        msg = "hash_serialized_2 hash type cannot be queried for a specific block"
-        assert_raises_rpc_error(-8, msg, self.nodes[1].gettxoutsetinfo, hash_type='hash_serialized_2', hash_or_height=111)
+        msg = "hash_serialized_3 hash type cannot be queried for a specific block"
+        assert_raises_rpc_error(-8, msg, self.nodes[1].gettxoutsetinfo, hash_type='hash_serialized_3', hash_or_height=111)
 
         for use_index in {True, False, None}:
-            assert_raises_rpc_error(-8, msg, self.nodes[1].gettxoutsetinfo, hash_type='hash_serialized_2', hash_or_height=111, use_index=use_index)
+            assert_raises_rpc_error(-8, msg, self.nodes[1].gettxoutsetinfo, hash_type='hash_serialized_3', hash_or_height=111, use_index=use_index)
 
     def _test_init_index_after_reorg(self):
         self.log.info("Test a reorg while the index is deactivated")
@@ -319,6 +321,21 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         res1 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=None, use_index=True)
         assert_equal(res["muhash"], res1["muhash"])
 
+        self.log.info("Test index with an unclean restart after a reorg")
+        self.restart_node(1, extra_args=self.extra_args[1])
+        committed_height = index_node.getblockcount()
+        self.generate(index_node, 2, sync_fun=self.no_op)
+        self.sync_index_node()
+        block2 = index_node.getbestblockhash()
+        index_node.invalidateblock(block2)
+        self.generatetoaddress(index_node, 1, getnewdestination()[2], sync_fun=self.no_op)
+        self.sync_index_node()
+        index_node.kill_process()
+        self.start_node(1, extra_args=self.extra_args[1])
+        self.sync_index_node()
+        # Because of the unclean shutdown above, indexes reset to the point we last committed them to disk.
+        assert_equal(index_node.getindexinfo()['coinstatsindex']['best_block_height'], committed_height)
+
 
 if __name__ == '__main__':
-    CoinStatsIndexTest().main()
+    CoinStatsIndexTest(__file__).main()

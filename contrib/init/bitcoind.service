@@ -25,8 +25,7 @@ ExecStart=/usr/bin/bitcoind -pid=/run/bitcoind/bitcoind.pid \
                             -shutdownnotify='systemd-notify --stopping'
 
 # Make sure the config directory is readable by the service user
-PermissionsStartOnly=true
-ExecStartPre=/bin/chgrp bitcoin /etc/bitcoin
+ExecStartPre=!/bin/chgrp bitcoin /etc/bitcoin
 
 # Process management
 ####################
@@ -44,7 +43,6 @@ TimeoutStopSec=600
 
 # Run as bitcoin:bitcoin
 User=bitcoin
-Group=bitcoin
 
 # /run/bitcoind
 RuntimeDirectory=bitcoind
@@ -80,6 +78,9 @@ PrivateDevices=true
 
 # Deny the creation of writable and executable memory mappings.
 MemoryDenyWriteExecute=true
+
+# Restrict ABIs to help ensure MemoryDenyWriteExecute is enforced
+SystemCallArchitectures=native
 
 [Install]
 WantedBy=multi-user.target

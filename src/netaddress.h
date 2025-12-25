@@ -1,13 +1,9 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_NETADDRESS_H
 #define BITCOIN_NETADDRESS_H
-
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
 
 #include <compat/compat.h>
 #include <crypto/siphash.h>
@@ -22,15 +18,8 @@
 #include <cstdint>
 #include <ios>
 #include <string>
+#include <string_view>
 #include <vector>
-
-/**
- * A flag that is ORed into the protocol version to designate that addresses
- * should be serialized in (unserialized from) v2 format (BIP155).
- * Make sure that this does not collide with any of the values in `version.h`
- * or with `SERIALIZE_TRANSACTION_NO_WITNESS`.
- */
-static constexpr int ADDRV2_FORMAT = 0x20000000;
 
 /**
  * A network type.
@@ -89,6 +78,10 @@ static const std::array<uint8_t, 6> INTERNAL_IN_IPV6_PREFIX{
     0xFD, 0x6B, 0x88, 0xC0, 0x87, 0x24 // 0xFD + sha256("bitcoin")[0:5].
 };
 
+/// All CJDNS addresses start with 0xFC. See
+/// https://github.com/cjdelisle/cjdns/blob/master/doc/Whitepaper.md#pulling-it-all-together
+static constexpr uint8_t CJDNS_PREFIX{0xFC};
+
 /// Size of IPv4 address (in bytes).
 static constexpr size_t ADDR_IPV4_SIZE = 4;
 
@@ -111,7 +104,7 @@ static constexpr size_t ADDR_INTERNAL_SIZE = 10;
 /// SAM 3.1 and earlier do not support specifying ports and force the port to 0.
 static constexpr uint16_t I2P_SAM31_PORT{0};
 
-std::string OnionToString(Span<const uint8_t> addr);
+std::string OnionToString(std::span<const uint8_t> addr);
 
 /**
  * Network address.
@@ -147,7 +140,7 @@ public:
      * (e.g. IPv4) disguised as IPv6. This encoding is used in the legacy
      * `addr` encoding.
      */
-    void SetLegacyIPv6(Span<const uint8_t> ipv6);
+    void SetLegacyIPv6(std::span<const uint8_t> ipv6);
 
     bool SetInternal(const std::string& name);
 
@@ -159,11 +152,11 @@ public:
      * @returns Whether the operation was successful.
      * @see CNetAddr::IsTor(), CNetAddr::IsI2P()
      */
-    bool SetSpecial(const std::string& addr);
+    bool SetSpecial(std::string_view addr);
 
     bool IsBindAny() const; // INADDR_ANY equivalent
-    bool IsIPv4() const;    // IPv4 mapped address (::FFFF:0:0/96, 0.0.0.0/0)
-    bool IsIPv6() const;    // IPv6 address (not mapped IPv4, not Tor)
+    [[nodiscard]] bool IsIPv4() const { return m_net == NET_IPV4; } // IPv4 mapped address (::FFFF:0:0/96, 0.0.0.0/0)
+    [[nodiscard]] bool IsIPv6() const { return m_net == NET_IPV6; } // IPv6 address (not mapped IPv4, not Tor)
     bool IsRFC1918() const; // IPv4 private networks (10.0.0.0/8, 192.168.0.0/16, 172.16.0.0/12)
     bool IsRFC2544() const; // IPv4 inter-network communications (198.18.0.0/15)
     bool IsRFC6598() const; // IPv4 ISP-level NAT (100.64.0.0/10)
@@ -179,13 +172,21 @@ public:
     bool IsRFC6052() const; // IPv6 well-known prefix for IPv4-embedded address (64:FF9B::/96)
     bool IsRFC6145() const; // IPv6 IPv4-translated address (::FFFF:0:0:0/96) (actually defined in RFC2765)
     bool IsHeNet() const;   // IPv6 Hurricane Electric - https://he.net (2001:0470::/36)
-    bool IsTor() const;
-    bool IsI2P() const;
-    bool IsCJDNS() const;
+    [[nodiscard]] bool IsTor() const { return m_net == NET_ONION; }
+    [[nodiscard]] bool IsI2P() const { return m_net == NET_I2P; }
+    [[nodiscard]] bool IsCJDNS() const { return m_net == NET_CJDNS; }
+    [[nodiscard]] bool HasCJDNSPrefix() const { return m_addr[0] == CJDNS_PREFIX; }
     bool IsLocal() const;
     bool IsRoutable() const;
     bool IsInternal() const;
     bool IsValid() const;
+
+    /**
+     * Whether this object is a privacy network.
+     * TODO: consider adding IsCJDNS() here when more peers adopt CJDNS, see:
+     * https://github.com/bitcoin/bitcoin/pull/27411#issuecomment-1497176155
+     */
+    [[nodiscard]] bool IsPrivacyNet() const { return IsTor() || IsI2P(); }
 
     /**
      * Check if the current object can be serialized in pre-ADDRv2/BIP155 format.
@@ -209,7 +210,6 @@ public:
     bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
 
     friend bool operator==(const CNetAddr& a, const CNetAddr& b);
-    friend bool operator!=(const CNetAddr& a, const CNetAddr& b) { return !(a == b); }
     friend bool operator<(const CNetAddr& a, const CNetAddr& b);
 
     /**
@@ -220,13 +220,24 @@ public:
         return IsIPv4() || IsIPv6() || IsTor() || IsI2P() || IsCJDNS();
     }
 
+    enum class Encoding {
+        V1,
+        V2, //!< BIP155 encoding
+    };
+    struct SerParams {
+        const Encoding enc;
+        SER_PARAMS_OPFUNC
+    };
+    static constexpr SerParams V1{Encoding::V1};
+    static constexpr SerParams V2{Encoding::V2};
+
     /**
      * Serialize to a stream.
      */
     template <typename Stream>
     void Serialize(Stream& s) const
     {
-        if (s.GetVersion() & ADDRV2_FORMAT) {
+        if (s.template GetParams<SerParams>().enc == Encoding::V2) {
             SerializeV2Stream(s);
         } else {
             SerializeV1Stream(s);
@@ -239,33 +250,12 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        if (s.GetVersion() & ADDRV2_FORMAT) {
+        if (s.template GetParams<SerParams>().enc == Encoding::V2) {
             UnserializeV2Stream(s);
         } else {
             UnserializeV1Stream(s);
         }
     }
-
-    friend class CSubNet;
-
-private:
-    /**
-     * Parse a Tor address and set this object to it.
-     * @param[in] addr Address to parse, must be a valid C string, for example
-     * pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion.
-     * @returns Whether the operation was successful.
-     * @see CNetAddr::IsTor()
-     */
-    bool SetTor(const std::string& addr);
-
-    /**
-     * Parse an I2P address and set this object to it.
-     * @param[in] addr Address to parse, must be a valid C string, for example
-     * ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkdq.b32.i2p.
-     * @returns Whether the operation was successful.
-     * @see CNetAddr::IsI2P()
-     */
-    bool SetI2P(const std::string& addr);
 
     /**
      * BIP155 network ids recognized by this software.
@@ -278,6 +268,27 @@ private:
         I2P = 5,
         CJDNS = 6,
     };
+
+    friend class CSubNet;
+
+private:
+    /**
+     * Parse a Tor address and set this object to it.
+     * @param[in] addr Address to parse, must be a valid C string, for example
+     * pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion.
+     * @returns Whether the operation was successful.
+     * @see CNetAddr::IsTor()
+     */
+    bool SetTor(std::string_view addr);
+
+    /**
+     * Parse an I2P address and set this object to it.
+     * @param[in] addr Address to parse, must be a valid C string, for example
+     * ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkdq.b32.i2p.
+     * @returns Whether the operation was successful.
+     * @see CNetAddr::IsI2P()
+     */
+    bool SetI2P(std::string_view addr);
 
     /**
      * Size of CNetAddr when serialized as ADDRv1 (pre-BIP155) (in bytes).
@@ -426,7 +437,7 @@ private:
 
         if (SetNetFromBIP155Network(bip155_net, address_size)) {
             m_addr.resize(address_size);
-            s >> Span{m_addr};
+            s >> std::span{m_addr};
 
             if (m_net != NET_IPV6) {
                 return;
@@ -437,7 +448,7 @@ private:
             // Recognize NET_INTERNAL embedded in IPv6, such addresses are not
             // gossiped but could be coming from addrman, when unserializing from
             // disk.
-            if (HasPrefix(m_addr, INTERNAL_IN_IPV6_PREFIX)) {
+            if (util::HasPrefix(m_addr, INTERNAL_IN_IPV6_PREFIX)) {
                 m_net = NET_INTERNAL;
                 memmove(m_addr.data(), m_addr.data() + INTERNAL_IN_IPV6_PREFIX.size(),
                         ADDR_INTERNAL_SIZE);
@@ -445,8 +456,8 @@ private:
                 return;
             }
 
-            if (!HasPrefix(m_addr, IPV4_IN_IPV6_PREFIX) &&
-                !HasPrefix(m_addr, TORV2_IN_IPV6_PREFIX)) {
+            if (!util::HasPrefix(m_addr, IPV4_IN_IPV6_PREFIX) &&
+                !util::HasPrefix(m_addr, TORV2_IN_IPV6_PREFIX)) {
                 return;
             }
 
@@ -511,7 +522,6 @@ public:
     bool IsValid() const;
 
     friend bool operator==(const CSubNet& a, const CSubNet& b);
-    friend bool operator!=(const CSubNet& a, const CSubNet& b) { return !(a == b); }
     friend bool operator<(const CSubNet& a, const CSubNet& b);
 };
 
@@ -528,9 +538,20 @@ public:
     explicit CService(const struct sockaddr_in& addr);
     uint16_t GetPort() const;
     bool GetSockAddr(struct sockaddr* paddr, socklen_t* addrlen) const;
-    bool SetSockAddr(const struct sockaddr* paddr);
+    /**
+     * Set CService from a network sockaddr.
+     * @param[in] paddr Pointer to sockaddr structure
+     * @param[in] addrlen Length of sockaddr structure in bytes. This will be checked to exactly match the length of
+     * a socket address of the provided family, unless std::nullopt is passed
+     * @returns true on success
+     */
+    bool SetSockAddr(const struct sockaddr* paddr, socklen_t addrlen);
+    /**
+     * Get the address family
+     * @returns AF_UNSPEC if unspecified
+     */
+    [[nodiscard]] sa_family_t GetSAFamily() const;
     friend bool operator==(const CService& a, const CService& b);
-    friend bool operator!=(const CService& a, const CService& b) { return !(a == b); }
     friend bool operator<(const CService& a, const CService& b);
     std::vector<unsigned char> GetKey() const;
     std::string ToStringAddrPort() const;
@@ -540,8 +561,7 @@ public:
 
     SERIALIZE_METHODS(CService, obj)
     {
-        READWRITEAS(CNetAddr, obj);
-        READWRITE(Using<BigEndianFormatter<2>>(obj.port));
+        READWRITE(AsBase<CNetAddr>(obj), Using<BigEndianFormatter<2>>(obj.port));
     }
 
     friend class CServiceHash;
@@ -552,8 +572,8 @@ class CServiceHash
 {
 public:
     CServiceHash()
-        : m_salt_k0{GetRand<uint64_t>()},
-          m_salt_k1{GetRand<uint64_t>()}
+        : m_salt_k0{FastRandomContext().rand64()},
+          m_salt_k1{FastRandomContext().rand64()}
     {
     }
 

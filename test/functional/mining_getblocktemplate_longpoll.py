@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2021 The Bitcoin Core developers
+# Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test longpolling with getblocktemplate."""
@@ -73,4 +73,4 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         assert not thr.is_alive()
 
 if __name__ == '__main__':
-    GetBlockTemplateLPTest().main()
+    GetBlockTemplateLPTest(__file__).main()

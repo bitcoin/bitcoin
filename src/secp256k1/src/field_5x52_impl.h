@@ -12,11 +12,7 @@
 #include "field.h"
 #include "modinv64_impl.h"
 
-#if defined(USE_ASM_X86_64)
-#include "field_5x52_asm_impl.h"
-#else
 #include "field_5x52_int128_impl.h"
-#endif
 
 #ifdef VERIFY
 static void secp256k1_fe_impl_verify(const secp256k1_fe *a) {
@@ -214,13 +210,6 @@ SECP256K1_INLINE static int secp256k1_fe_impl_is_zero(const secp256k1_fe *a) {
 
 SECP256K1_INLINE static int secp256k1_fe_impl_is_odd(const secp256k1_fe *a) {
     return a->n[0] & 1;
-}
-
-SECP256K1_INLINE static void secp256k1_fe_impl_clear(secp256k1_fe *a) {
-    int i;
-    for (i=0; i<5; i++) {
-        a->n[i] = 0;
-    }
 }
 
 static int secp256k1_fe_impl_cmp_var(const secp256k1_fe *a, const secp256k1_fe *b) {

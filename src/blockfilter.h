@@ -1,22 +1,26 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_BLOCKFILTER_H
 #define BITCOIN_BLOCKFILTER_H
 
-#include <stdint.h>
-#include <string>
+#include <cstddef>
+#include <cstdint>
+#include <ios>
 #include <set>
+#include <string>
+#include <string_view>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include <attributes.h>
-#include <primitives/block.h>
-#include <serialize.h>
 #include <uint256.h>
-#include <undo.h>
 #include <util/bytevectorhash.h>
+
+class CBlock;
+class CBlockUndo;
 
 /**
  * This implements a Golomb-coded set as defined in BIP 158. It is a
@@ -96,7 +100,7 @@ enum class BlockFilterType : uint8_t
 const std::string& BlockFilterTypeName(BlockFilterType filter_type);
 
 /** Find a filter type by its human-readable name. */
-bool BlockFilterTypeByName(const std::string& name, BlockFilterType& filter_type);
+bool BlockFilterTypeByName(std::string_view name, BlockFilterType& filter_type);
 
 /** Get a list of known filter types. */
 const std::set<BlockFilterType>& AllBlockFilterTypes();

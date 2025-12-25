@@ -1,10 +1,6 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
 
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -21,7 +17,7 @@ void TestMultiplicationOverflow(FuzzedDataProvider& fuzzed_data_provider)
     const T i = fuzzed_data_provider.ConsumeIntegral<T>();
     const T j = fuzzed_data_provider.ConsumeIntegral<T>();
     const bool is_multiplication_overflow_custom = MultiplicationOverflow(i, j);
-#if defined(HAVE_BUILTIN_MUL_OVERFLOW)
+#ifndef _MSC_VER
     T result_builtin;
     const bool is_multiplication_overflow_builtin = __builtin_mul_overflow(i, j, &result_builtin);
     assert(is_multiplication_overflow_custom == is_multiplication_overflow_builtin);

@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2022 The Bitcoin Core developers
+// Copyright (c) 2015-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,10 +7,24 @@
 
 #include <functional>
 #include <optional>
+#include <span>
 #include <string>
 
-static const int DEFAULT_HTTP_THREADS=4;
-static const int DEFAULT_HTTP_WORKQUEUE=16;
+namespace util {
+class SignalInterrupt;
+} // namespace util
+
+/**
+ * The default value for `-rpcthreads`. This number of threads will be created at startup.
+ */
+static const int DEFAULT_HTTP_THREADS=16;
+
+/**
+ * The default value for `-rpcworkqueue`. This is the maximum depth of the work queue,
+ * we don't allocate this number of work queue items upfront.
+ */
+static const int DEFAULT_HTTP_WORKQUEUE=64;
+
 static const int DEFAULT_HTTP_SERVER_TIMEOUT=30;
 
 struct evhttp_request;
@@ -21,7 +35,7 @@ class HTTPRequest;
 /** Initialize HTTP server.
  * Call this before RegisterHTTPHandler or EventBase().
  */
-bool InitHTTPServer();
+bool InitHTTPServer(const util::SignalInterrupt& interrupt);
 /** Start HTTP server.
  * This is separate from InitHTTPServer to give users race-condition-free time
  * to register their handlers between InitHTTPServer and StartHTTPServer.
@@ -57,10 +71,11 @@ class HTTPRequest
 {
 private:
     struct evhttp_request* req;
+    const util::SignalInterrupt& m_interrupt;
     bool replySent;
 
 public:
-    explicit HTTPRequest(struct evhttp_request* req, bool replySent = false);
+    explicit HTTPRequest(struct evhttp_request* req, const util::SignalInterrupt& interrupt, bool replySent = false);
     ~HTTPRequest();
 
     enum RequestMethod {
@@ -118,12 +133,16 @@ public:
     /**
      * Write HTTP reply.
      * nStatus is the HTTP status code to send.
-     * strReply is the body of the reply. Keep it empty to send a standard message.
+     * reply is the body of the reply. Keep it empty to send a standard message.
      *
      * @note Can be called only once. As this will give the request back to the
      * main thread, do not call any other HTTPRequest methods after calling this.
      */
-    void WriteReply(int nStatus, const std::string& strReply = "");
+    void WriteReply(int nStatus, std::string_view reply = "")
+    {
+        WriteReply(nStatus, std::as_bytes(std::span{reply}));
+    }
+    void WriteReply(int nStatus, std::span<const std::byte> reply);
 };
 
 /** Get the query parameter value from request uri for a specified key, or std::nullopt if the key
@@ -146,7 +165,7 @@ class HTTPClosure
 {
 public:
     virtual void operator()() = 0;
-    virtual ~HTTPClosure() {}
+    virtual ~HTTPClosure() = default;
 };
 
 /** Event class. This can be used either as a cross-thread trigger or as a timer.

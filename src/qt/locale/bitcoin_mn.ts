@@ -2,16 +2,16 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation type="unfinished">Хаяг эсвэл шошгыг засаxд баруун товчийг дарна</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
         <translation type="unfinished">Шинэ хаяг нээх</translation>
     </message>
     <message>
         <source>&amp;New</source>
         <translation type="unfinished">&amp;Шинэ</translation>
-    </message>
-    <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Одоогоор сонгогдсон байгаа хаягуудыг сануулах</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -54,14 +54,6 @@
         <translation type="unfinished">С&amp;онго</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Илгээх хаягууд</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Хүлээн авах хаяг</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Эдгээр Биткойн хаягууд нь илгээх хаягууд. Хүлээн авах хаяг болон тоо хэмжээг илгээхээсээ өмнө сайн нягталж үзэж байна уу</translation>
     </message>
@@ -80,6 +72,15 @@
     <message>
         <source>Export Address List</source>
         <translation type="unfinished">Экспорт хийх хаягуудын жагсаалт</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">таслалаар тусгаарлагдсан файлууд</translation>
+    </message>
+    <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">хаягуудииг Илгээж байна - %1</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -233,17 +234,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Done loading</source>
-        <translation type="unfinished">Ачааллаж дууслаа</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="unfinished">Таны дансны үлдэгдэл хүрэлцэхгүй байна</translation>
-    </message>
-    </context>
-<context>
     <name>BitcoinGUI</name>
     <message>
         <source>&amp;Transactions</source>
@@ -260,6 +250,10 @@
     <message>
         <source>Quit application</source>
         <translation type="unfinished">Програмаас Гарах</translation>
+    </message>
+    <message>
+        <source>&amp;About %1</source>
+        <translation type="unfinished">&amp;Тухай %1</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -361,7 +355,7 @@
     <message>
         <source>Date: %1
 </source>
-        <translation type="unfinished">Огноо%1
+        <translation type="unfinished">Огноо:%1
 </translation>
     </message>
     <message>
@@ -497,6 +491,20 @@
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">хувилбар</translation>
+    </message>
+    </context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">Энэ цонхыг хаагдтал компьютерээ бүү унтраагаарай</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
     <message>
         <source>Bitcoin</source>
@@ -535,20 +543,6 @@
         <source>Error</source>
         <translation type="unfinished">Алдаа</translation>
     </message>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">хувилбар</translation>
-    </message>
-    </context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">Энэ цонхыг хаагдтал компьютерээ бүү унтраагаарай</translation>
-    </message>
 </context>
 <context>
     <name>ModalOverlay</name>
@@ -559,6 +553,10 @@
     </context>
 <context>
     <name>OpenURIDialog</name>
+    <message>
+        <source>URI:</source>
+        <translation type="unfinished">Гипер холбоос</translation>
+    </message>
     <message>
         <source>Paste address from clipboard</source>
         <extracomment>Tooltip text for button that allows you to paste an address that is in your clipboard.</extracomment>
@@ -967,10 +965,6 @@
         <translation type="unfinished">Явуулсан хаяг</translation>
     </message>
     <message>
-        <source>Payment to yourself</source>
-        <translation type="unfinished">Ѳѳрлүүгээ хийсэн тѳлбѳр</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">Олборлогдсон</translation>
     </message>
@@ -1034,10 +1028,6 @@
         <translation type="unfinished">Явуулсан хаяг</translation>
     </message>
     <message>
-        <source>To yourself</source>
-        <translation type="unfinished">Ѳѳрлүүгээ</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">Олборлогдсон</translation>
     </message>
@@ -1048,6 +1038,11 @@
     <message>
         <source>Min amount</source>
         <translation type="unfinished">Хамгийн бага хэмжээ</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">таслалаар тусгаарлагдсан файлууд</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -1113,6 +1108,17 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">Сонгогдсон таб дээрхи дата-г экспортлох</translation>
+    </message>
+    </context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>Done loading</source>
+        <translation type="unfinished">Ачааллаж дууслаа</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">Таны дансны үлдэгдэл хүрэлцэхгүй байна</translation>
     </message>
     </context>
 </TS>

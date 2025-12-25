@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018-2021 The Bitcoin Core developers
+# Copyright (c) 2018-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,7 +12,7 @@ for b_name in "${BASE_OUTDIR}/bin"/*; do
       echo "Wrap $b ..."
       mv "$b" "${b}_orig"
       echo '#!/usr/bin/env bash' > "$b"
-      echo "valgrind --gen-suppressions=all --quiet --error-exitcode=1 --suppressions=${BASE_ROOT_DIR}/contrib/valgrind.supp \"${b}_orig\" \"\$@\"" >> "$b"
+      echo "exec valgrind --gen-suppressions=all --quiet --error-exitcode=1 --suppressions=${BASE_ROOT_DIR}/contrib/valgrind.supp \"${b}_orig\" \"\$@\"" >> "$b"
       chmod +x "$b"
     done
 done

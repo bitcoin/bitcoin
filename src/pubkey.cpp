@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -13,9 +13,12 @@
 #include <secp256k1_schnorrsig.h>
 #include <span.h>
 #include <uint256.h>
+#include <util/strencodings.h>
 
 #include <algorithm>
 #include <cassert>
+
+using namespace util::hex_literals;
 
 namespace {
 
@@ -181,27 +184,47 @@ int ecdsa_signature_parse_der_lax(secp256k1_ecdsa_signature* sig, const unsigned
     return 1;
 }
 
-XOnlyPubKey::XOnlyPubKey(Span<const unsigned char> bytes)
+/** Nothing Up My Sleeve (NUMS) point
+ *
+ *  NUMS_H is a point with an unknown discrete logarithm, constructed by taking the sha256 of 'g'
+ *  (uncompressed encoding), which happens to be a point on the curve.
+ *
+ *  For an example script for calculating H, refer to the unit tests in
+ *  ./test/functional/test_framework/crypto/secp256k1.py
+ */
+constexpr XOnlyPubKey XOnlyPubKey::NUMS_H{
+    // Use immediate lambda to work around GCC-14 bug https://gcc.gnu.org/bugzilla/show_bug.cgi?id=117966
+    []() consteval { return XOnlyPubKey{"50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0"_hex_u8}; }(),
+};
+
+std::vector<CPubKey> XOnlyPubKey::GetCPubKeys() const
 {
-    assert(bytes.size() == 32);
-    std::copy(bytes.begin(), bytes.end(), m_keydata.begin());
+    std::vector<CPubKey> out;
+    unsigned char b[33] = {0x02};
+    std::copy(m_keydata.begin(), m_keydata.end(), b + 1);
+    CPubKey fullpubkey;
+    fullpubkey.Set(b, b + 33);
+    out.push_back(fullpubkey);
+    b[0] = 0x03;
+    fullpubkey.Set(b, b + 33);
+    out.push_back(fullpubkey);
+    return out;
 }
 
 std::vector<CKeyID> XOnlyPubKey::GetKeyIDs() const
 {
     std::vector<CKeyID> out;
-    // For now, use the old full pubkey-based key derivation logic. As it is indexed by
-    // Hash160(full pubkey), we need to return both a version prefixed with 0x02, and one
-    // with 0x03.
-    unsigned char b[33] = {0x02};
-    std::copy(m_keydata.begin(), m_keydata.end(), b + 1);
-    CPubKey fullpubkey;
-    fullpubkey.Set(b, b + 33);
-    out.push_back(fullpubkey.GetID());
-    b[0] = 0x03;
-    fullpubkey.Set(b, b + 33);
-    out.push_back(fullpubkey.GetID());
+    for (const CPubKey& pk : GetCPubKeys()) {
+        out.push_back(pk.GetID());
+    }
     return out;
+}
+
+CPubKey XOnlyPubKey::GetEvenCorrespondingCPubKey() const
+{
+    unsigned char full_key[CPubKey::COMPRESSED_SIZE] = {0x02};
+    std::copy(begin(), end(), full_key + 1);
+    return CPubKey{full_key};
 }
 
 bool XOnlyPubKey::IsFullyValid() const
@@ -210,7 +233,7 @@ bool XOnlyPubKey::IsFullyValid() const
     return secp256k1_xonly_pubkey_parse(secp256k1_context_static, &pubkey, m_keydata.data());
 }
 
-bool XOnlyPubKey::VerifySchnorr(const uint256& msg, Span<const unsigned char> sigbytes) const
+bool XOnlyPubKey::VerifySchnorr(const uint256& msg, std::span<const unsigned char> sigbytes) const
 {
     assert(sigbytes.size() == 64);
     secp256k1_xonly_pubkey pubkey;
@@ -315,13 +338,16 @@ bool CPubKey::Decompress() {
     return true;
 }
 
-bool CPubKey::Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const {
+bool CPubKey::Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc, uint256* bip32_tweak_out) const {
     assert(IsValid());
     assert((nChild >> 31) == 0);
     assert(size() == COMPRESSED_SIZE);
     unsigned char out[64];
     BIP32Hash(cc, nChild, *begin(), begin()+1, out);
     memcpy(ccChild.begin(), out+32, 32);
+    if (bip32_tweak_out) {
+        memcpy(bip32_tweak_out->begin(), out, 32);
+    }
     secp256k1_pubkey pubkey;
     if (!secp256k1_ec_pubkey_parse(secp256k1_context_static, &pubkey, vch, size())) {
         return false;
@@ -334,6 +360,12 @@ bool CPubKey::Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChi
     secp256k1_ec_pubkey_serialize(secp256k1_context_static, pub, &publen, &pubkey, SECP256K1_EC_COMPRESSED);
     pubkeyChild.Set(pub, pub + publen);
     return true;
+}
+
+EllSwiftPubKey::EllSwiftPubKey(std::span<const std::byte> ellswift) noexcept
+{
+    assert(ellswift.size() == SIZE);
+    std::copy(ellswift.begin(), ellswift.end(), m_pubkey.begin());
 }
 
 CPubKey EllSwiftPubKey::Decode() const
@@ -380,13 +412,13 @@ void CExtPubKey::DecodeWithVersion(const unsigned char code[BIP32_EXTKEY_WITH_VE
     Decode(&code[4]);
 }
 
-bool CExtPubKey::Derive(CExtPubKey &out, unsigned int _nChild) const {
+bool CExtPubKey::Derive(CExtPubKey &out, unsigned int _nChild, uint256* bip32_tweak_out) const {
     if (nDepth == std::numeric_limits<unsigned char>::max()) return false;
     out.nDepth = nDepth + 1;
     CKeyID id = pubkey.GetID();
     memcpy(out.vchFingerprint, &id, 4);
     out.nChild = _nChild;
-    return pubkey.Derive(out.pubkey, out.chaincode, _nChild, chaincode);
+    return pubkey.Derive(out.pubkey, out.chaincode, _nChild, chaincode, bip32_tweak_out);
 }
 
 /* static */ bool CPubKey::CheckLowS(const std::vector<unsigned char>& vchSig) {

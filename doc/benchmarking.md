@@ -8,16 +8,17 @@ thread queue, wallet balance.
 Running
 ---------------------
 
-For benchmarking, you only need to compile `bitcoin_bench`.  The bench runner
-warns if you configure with `--enable-debug`, but consider if building without
+For benchmarking, you only need to compile `bench_bitcoin`.  The bench runner
+warns if you configure with `-DCMAKE_BUILD_TYPE=Debug`, but consider if building without
 it will impact the benchmark(s) you are interested in by unlatching log printers
 and lock analysis.
 
-    make -C src bitcoin_bench
+    cmake -B build -DBUILD_BENCH=ON
+    cmake --build build -t bench_bitcoin
 
 After compiling bitcoin-core, the benchmarks can be run with:
 
-    src/bench/bench_bitcoin
+    build/bin/bench_bitcoin
 
 The output will look similar to:
 ```
@@ -39,23 +40,38 @@ The output will look similar to:
 Help
 ---------------------
 
-    src/bench/bench_bitcoin -?
+    build/bin/bench_bitcoin -h
 
 To print the various options, like listing the benchmarks without running them
 or using a regex filter to only run certain benchmarks.
 
 Notes
 ---------------------
-More benchmarks are needed for, in no particular order:
-- Script Validation
-- Coins database
-- Memory pool
-- Cuckoo Cache
-- P2P throughput
+
+Benchmarks help with monitoring for performance regressions and can act as a
+scope for future performance improvements. They should cover components that
+impact performance critical functions of the system. Functions are performance
+critical if their performance impacts users and the cost associated with a
+degradation in performance is high. A non-exhaustive list:
+
+- Initial block download (Cost: slow IBD results in full node operation being
+  less accessible)
+- Block template creation (Cost: slow block template creation may result in
+  lower fee revenue for miners)
+- Block propagation (Cost: slow block propagation may increase the rate of
+  orphaned blocks and mining centralization)
+
+A change aiming to improve the performance may be rejected when a clear
+end-to-end performance improvement cannot be demonstrated. The change might
+also be rejected if the code bloat or review/maintenance burden is too high to
+justify the improvement.
+
+Benchmarks are ill-suited for testing denial-of-service issues as they are
+restricted to the same input set (introducing bias). [Fuzz
+tests](/doc/fuzzing.md) are better suited for this purpose, as they are
+specifically aimed at exploring the possible input space.
 
 Going Further
 --------------------
 
-To monitor Bitcoin Core performance more in depth (like reindex or IBD): https://github.com/chaincodelabs/bitcoinperf
-
-To generate Flame Graphs for Bitcoin Core: https://github.com/eklitzke/bitcoin/blob/flamegraphs/doc/flamegraphs.md
+To monitor Bitcoin Core performance more in depth (like reindex or IBD): https://github.com/bitcoin-dev-tools/benchcoin

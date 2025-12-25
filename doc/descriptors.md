@@ -11,8 +11,6 @@ Supporting RPCs are:
   addresses.
 - `listunspent` outputs a specialized descriptor for the reported unspent outputs.
 - `getaddressinfo` outputs a descriptor for solvable addresses (since v0.18).
-- `importmulti` takes as input descriptors to import into a legacy wallet
-  (since v0.18).
 - `generatetodescriptor` takes as input a descriptor and generates coins to it
   (`regtest` only, since v0.19).
 - `utxoupdatepsbt` takes as input descriptors to add information to the psbt
@@ -23,6 +21,11 @@ Supporting RPCs are:
 - `listdescriptors` outputs descriptors imported into a descriptor wallet (since v22).
 - `scanblocks` takes as input descriptors to scan for in blocks and returns the
    relevant blockhashes (since v25).
+- `getdescriptoractivity` takes as input descriptors and blockhashes (as output
+  by `scanblocks`) and returns rich event data related to spends or receives associated
+  with the given descriptors.
+
+Bitcoin Core v24 extended `wsh()` output descriptor with [Miniscript](https://bitcoin.sipa.be/miniscript/) support (initially watch-only). Signing support for Miniscript descriptors was added in v25. And since v26 Miniscript expressions can now be used in Taproot descriptors.
 
 This document describes the language. For the specifics on usage, see the RPC
 documentation for the functions mentioned above.
@@ -42,6 +45,7 @@ Output descriptors currently support:
 - Any type of supported address through the `addr` function.
 - Raw hex scripts through the `raw` function.
 - Public keys (compressed and uncompressed) in hex notation, or BIP32 extended pubkeys with derivation paths.
+- [Miniscript](https://bitcoin.sipa.be/miniscript/) expressions in `wsh` (P2WSH) and `tr` (P2TR) functions.
 
 ## Examples
 
@@ -63,6 +67,9 @@ Output descriptors currently support:
 - `wsh(sortedmulti(1,xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/1/0/*,xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/*))` describes a set of *1-of-2* P2WSH multisig outputs where one multisig key is the *1/0/`i`* child of the first specified xpub and the other multisig key is the *0/0/`i`* child of the second specified xpub, and `i` is any number in a configurable range (`0-1000` by default). The order of public keys in the resulting witnessScripts is determined by the lexicographic order of the public keys at that index.
 - `tr(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5,{pk(fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556),pk(e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13)})` describes a P2TR output with the `c6...` x-only pubkey as internal key, and two script paths.
 - `tr(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5,sortedmulti_a(2,2f8bde4d1a07209355b4a7250a5c5128e88b84bddc619ab7cba8d569b240efe4,5cbdf0646e5db4eaa398f365f2ea7a0e3d419b7e0330e39ce92bddedcac4f9bc))` describes a P2TR output with the `c6...` x-only pubkey as internal key, and a single `multi_a` script that needs 2 signatures with 2 specified x-only keys, which will be sorted lexicographically.
+- `wsh(sortedmulti(2,[6f53d49c/44h/1h/0h]tpubDDjsCRDQ9YzyaAq9rspCfq8RZFrWoBpYnLxK6sS2hS2yukqSczgcYiur8Scx4Hd5AZatxTuzMtJQJhchufv1FRFanLqUP7JHwusSSpfcEp2/0/*,[e6807791/44h/1h/0h]tpubDDAfvogaaAxaFJ6c15ht7Tq6ZmiqFYfrSmZsHu7tHXBgnjMZSHAeHSwhvjARNA6Qybon4ksPksjRbPDVp7yXA1KjTjSd5x18KHqbppnXP1s/0/*,[367c9cfa/44h/1h/0h]tpubDDtPnSgWYk8dDnaDwnof4ehcnjuL5VoUt1eW2MoAed1grPHuXPDnkX1fWMvXfcz3NqFxPbhqNZ3QBdYjLz2hABeM9Z2oqMR1Gt2HHYDoCgh/0/*))#av0kxgw0` describes a *2-of-3* multisig. For brevity, the internal "change" descriptor accompanying the above external "receiving" descriptor is not included here, but it typically differs only in the xpub derivation steps, ending in `/1/*` for change addresses.
+- `wsh(thresh(4,pk([7258e4f9/44h/1h/0h]tpubDCZrkQoEU3845aFKUu9VQBYWZtrTwxMzcxnBwKFCYXHD6gEXvtFcxddCCLFsEwmxQaG15izcHxj48SXg1QS5FQGMBx5Ak6deXKPAL7wauBU/0/*),s:pk([c80b1469/44h/1h/0h]tpubDD3UwwHoNUF4F3Vi5PiUVTc3ji1uThuRfFyBexTSHoAcHuWW2z8qEE2YujegcLtgthr3wMp3ZauvNG9eT9xfJyxXCfNty8h6rDBYU8UU1qq/0/*),s:pk([4e5024fe/44h/1h/0h]tpubDDLrpPymPLSCJyCMLQdmcWxrAWwsqqssm5NdxT2WSdEBPSXNXxwbeKtsHAyXPpLkhUyKovtZgCi47QxVpw9iVkg95UUgeevyAqtJ9dqBqa1/0/*),s:pk([3b1d1ee9/44h/1h/0h]tpubDCmDTANBWPzf6d8Ap1J5Ku7J1Ay92MpHMrEV7M5muWxCrTBN1g5f1NPcjMEL6dJHxbvEKNZtYCdowaSTN81DAyLsmv6w6xjJHCQNkxrsrfu/0/*),sln:after(840000),sln:after(1050000),sln:after(1260000)))#k28080kv` describes a Miniscript multisig with spending policy: `thresh(4,pk(key_1),pk(key_2),pk(key_3),pk(key_4),after(t1),after(t2),after(t3))` that starts as 4-of-4 and "decays" to 3-of-4, 2-of-4, and finally 1-of-4 at each future halvening block height. For brevity, the internal "change" descriptor accompanying the above external "receiving" descriptor is not included here, but it typically differs only in the xpub derivation steps, ending in `/1/*` for change addresses.
+- `tr(musig(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y)/0/*)` describes a MuSig2 multisig with key derivation. The internal keys are derived at `m/0/*` from the aggregate key computed from the 2 participants.
 
 ## Reference
 
@@ -97,6 +104,7 @@ Descriptors consist of several types of expressions. The top level expression is
   - [WIF](https://en.bitcoin.it/wiki/Wallet_import_format) encoded private keys may be specified instead of the corresponding public key, with the same meaning.
   - `xpub` encoded extended public key or `xprv` encoded extended private key (as defined in [BIP 32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)).
     - Followed by zero or more `/NUM` unhardened and `/NUM'` hardened BIP32 derivation steps.
+      - No more than one of these derivation steps may be of the form `<NUM;NUM;...;NUM>` (including hardened indicators with either or both `NUM`). If such specifiers are included, the descriptor will be parsed as multiple descriptors where the first descriptor uses all of the first `NUM` in the pair, and the second descriptor uses the second `NUM` in the pair for all `KEY` expressions, and so on.
     - Optionally followed by a single `/*` or `/*'` final step to denote all (direct) unhardened or hardened children.
     - The usage of hardened derivation steps requires providing the private key.
 
@@ -167,9 +175,9 @@ The basic steps are:
      the participant's signer wallet. Avoid reusing this wallet for any purpose other than signing transactions from the
      corresponding multisig we are about to create. Hint: extract the wallet's xpubs using `listdescriptors` and pick the one from the
      `pkh` descriptor since it's least likely to be accidentally reused (legacy addresses)
-  2. Create a watch-only descriptor wallet (blank, private keys disabled). Now the multisig is created by importing the two descriptors:
+  2. Create a watch-only descriptor wallet (blank, private keys disabled). Now the multisig is created by importing the external and internal descriptors:
      `wsh(sortedmulti(<M>,XPUB1/0/*,XPUB2/0/*,…,XPUBN/0/*))` and `wsh(sortedmulti(<M>,XPUB1/1/*,XPUB2/1/*,…,XPUBN/1/*))`
-     (one descriptor w/ `0` for receiving addresses and another w/ `1` for change). Every participant does this
+     (one descriptor w/ `0` for receiving addresses and another w/ `1` for change). Every participant does this. All key origin information (master key fingerprint and all derivation steps) should be included with xpubs for proper support of hardware devices / external signers
   3. A receiving address is generated for the multisig. As a check to ensure step 2 was done correctly, every participant
      should verify they get the same addresses
   4. Funds are sent to the resulting address
@@ -189,6 +197,14 @@ this signing flow and the last (`m`th) signer can just broadcast the PSBT after 
 preferable in cases where there are more signers. This signing flow is also included in the test / Python example.
 [The test](/test/functional/wallet_multisig_descriptor_psbt.py) is meant to be documentation as much as it is a functional test, so
 it is kept as simple and readable as possible.
+
+#### Basic Miniscript-enabled "decaying" multisig example
+
+For an example of a multisig that starts as 4-of-4 and "decays" to 3-of-4, 2-of-4, and finally 1-of-4 at each future halvening block height, see [this functional test](/test/functional/wallet_miniscript_decaying_multisig_descriptor_psbt.py).
+
+This has the same "architecture" and signing flow as the above [Basic multisig example](#basic-multisig-example). The basic steps are identical aside from the descriptor that defines this wallet, which is of the form: `wsh(thresh(4,pk(XPUB1),s:pk(XPUB2),s:pk(XPUB3),s:pk(XPUB4),sln:after(t1),sln:after(t2),sln:after(t3)))`.
+
+[The test](/test/functional/wallet_miniscript_decaying_multisig_descriptor_psbt.py) is meant to be documentation as much as it is a functional test, so it is kept as simple and readable as possible.
 
 ### BIP32 derived keys and chains
 
@@ -243,7 +259,42 @@ Often it is useful to communicate a description of scripts along with the
 necessary private keys. For this reason, anywhere a public key or xpub is
 supported, a private key in WIF format or xprv may be provided instead.
 This is useful when private keys are necessary for hardened derivation
-steps, or for dumping wallet descriptors including private key material.
+steps, for signing transactions, or for dumping wallet descriptors
+including private key material.
+
+For example, after importing the following 2-of-3 multisig descriptor
+into a wallet, one could use `signrawtransactionwithwallet`
+to sign a transaction with the first key:
+```
+sh(multi(2,xprv.../84'/0'/0'/0/0,xpub1...,xpub2...))
+```
+Note how the first key is an xprv private key with a specific derivation path,
+while the other two are public keys.
+
+
+### Specifying receiving and change descriptors in one descriptor
+
+Since receiving and change addresses are frequently derived from the same
+extended key(s) but with a single derivation index changed, it is convenient
+to be able to specify a descriptor that can derive at the two different
+indexes. Thus a single tuple of indexes is allowed in each derivation path
+following the extended key. When this descriptor is parsed, multiple descriptors
+will be produced, the first one will use the first index in the tuple for all
+key expressions, the second will use the second index, the third will use the
+third index, and so on..
+
+For example, a descriptor of the form:
+
+    multi(2,xpub.../<0;1;2>/0/*,xpub.../<2;3;4>/*)
+
+will expand to the 3 descriptors
+
+    multi(2,xpub.../0/0/*,xpub.../2/*)
+    multi(2,xpub.../1/0/*,xpub.../3/*)
+    multi(2,xpub.../2/0/*,xpub.../4/*)
+
+When this tuple contains only two elements, wallet implementations can use the
+first descriptor for receiving addresses and the second descriptor for change addresses.
 
 ### Compatibility with old wallets
 
@@ -267,5 +318,5 @@ roughly 1 in a trillion chance of not detecting the errors.
 
 All RPCs in Bitcoin Core will include the checksum in their output. Only
 certain RPCs require checksums on input, including `deriveaddresses` and
-`importmulti`. The checksum for a descriptor without one can be computed
+`importdescriptors`. The checksum for a descriptor without one can be computed
 using the `getdescriptorinfo` RPC.

@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,7 +24,7 @@ static_assert(!ValidDeployment(static_cast<Consensus::BuriedDeployment>(Consensu
 template<typename T, T x>
 static constexpr bool is_minimum()
 {
-    using U = typename std::underlying_type<T>::type;
+    using U = std::underlying_type_t<T>;
     return x == std::numeric_limits<U>::min();
 }
 

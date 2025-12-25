@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +9,7 @@
 #include <key_io.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
+#include <validationinterface.h>
 #include <wallet/context.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
@@ -23,7 +24,6 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
         LOCK2(wallet->cs_wallet, ::cs_main);
         wallet->SetLastBlockProcessed(cchain.Height(), cchain.Tip()->GetBlockHash());
     }
-    wallet->LoadWallet();
     {
         LOCK(wallet->cs_wallet);
         wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
@@ -31,10 +31,11 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
 
         FlatSigningProvider provider;
         std::string error;
-        std::unique_ptr<Descriptor> desc = Parse("combo(" + EncodeSecret(key) + ")", provider, error, /* require_checksum=*/ false);
-        assert(desc);
+        auto descs = Parse("combo(" + EncodeSecret(key) + ")", provider, error, /* require_checksum=*/ false);
+        assert(descs.size() == 1);
+        auto& desc = descs.at(0);
         WalletDescriptor w_desc(std::move(desc), 0, 0, 1, 1);
-        if (!wallet->AddWalletDescriptor(w_desc, provider, "", false)) assert(false);
+        Assert(wallet->AddWalletDescriptor(w_desc, provider, "", false));
     }
     WalletRescanReserver reserver(*wallet);
     reserver.reserve();
@@ -71,9 +72,10 @@ std::shared_ptr<CWallet> TestLoadWallet(WalletContext& context)
 
 void TestUnloadWallet(std::shared_ptr<CWallet>&& wallet)
 {
-    SyncWithValidationInterfaceQueue();
+    // Calls SyncWithValidationInterfaceQueue
+    wallet->chain().waitForNotificationsIfTipChanged({});
     wallet->m_chain_notifications_handler.reset();
-    UnloadWallet(std::move(wallet));
+    WaitForDeleteWallet(std::move(wallet));
 }
 
 std::unique_ptr<WalletDatabase> DuplicateMockDatabase(WalletDatabase& database)
@@ -92,12 +94,7 @@ CTxDestination getNewDestination(CWallet& w, OutputType output_type)
     return *Assert(w.GetNewDestination(output_type, ""));
 }
 
-// BytePrefix compares equality with other byte spans that begin with the same prefix.
-struct BytePrefix { Span<const std::byte> prefix; };
-bool operator<(BytePrefix a, Span<const std::byte> b) { return a.prefix < b.subspan(0, std::min(a.prefix.size(), b.size())); }
-bool operator<(Span<const std::byte> a, BytePrefix b) { return a.subspan(0, std::min(a.size(), b.prefix.size())) < b.prefix; }
-
-MockableCursor::MockableCursor(const MockableData& records, bool pass, Span<const std::byte> prefix)
+MockableCursor::MockableCursor(const MockableData& records, bool pass, std::span<const std::byte> prefix)
 {
     m_pass = pass;
     std::tie(m_cursor, m_cursor_end) = records.equal_range(BytePrefix{prefix});
@@ -166,10 +163,10 @@ bool MockableBatch::HasKey(DataStream&& key)
         return false;
     }
     SerializeData key_data{key.begin(), key.end()};
-    return m_records.count(key_data) > 0;
+    return m_records.contains(key_data);
 }
 
-bool MockableBatch::ErasePrefix(Span<const std::byte> prefix)
+bool MockableBatch::ErasePrefix(std::span<const std::byte> prefix)
 {
     if (!m_pass) {
         return false;
@@ -195,4 +192,24 @@ MockableDatabase& GetMockableDatabase(CWallet& wallet)
 {
     return dynamic_cast<MockableDatabase&>(wallet.GetDatabase());
 }
+
+wallet::DescriptorScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std::string& desc_str, const bool success)
+{
+    keystore.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+
+    FlatSigningProvider keys;
+    std::string error;
+    auto parsed_descs = Parse(desc_str, keys, error, false);
+    Assert(success == (!parsed_descs.empty()));
+    if (!success) return nullptr;
+    auto& desc = parsed_descs.at(0);
+
+    const int64_t range_start = 0, range_end = 1, next_index = 0, timestamp = 1;
+
+    WalletDescriptor w_desc(std::move(desc), timestamp, range_start, range_end, next_index);
+
+    LOCK(keystore.cs_wallet);
+    auto spkm = Assert(keystore.AddWalletDescriptor(w_desc, keys,/*label=*/"", /*internal=*/false));
+    return &spkm.value().get();
+};
 } // namespace wallet

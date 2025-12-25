@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listdescriptors RPC."""
@@ -12,21 +12,18 @@ from test_framework.descriptors import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
     assert_raises_rpc_error,
 )
 
 
 class ListDescriptorsTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser, legacy=False)
-
     def set_test_params(self):
         self.num_nodes = 1
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
-        self.skip_if_no_sqlite()
 
     # do not create any wallet by default
     def init_wallet(self, *, node):
@@ -36,24 +33,19 @@ class ListDescriptorsTest(BitcoinTestFramework):
         node = self.nodes[0]
         assert_raises_rpc_error(-18, 'No wallet is loaded.', node.listdescriptors)
 
-        if self.is_bdb_compiled():
-            self.log.info('Test that the command is not available for legacy wallets.')
-            node.createwallet(wallet_name='w1', descriptors=False)
-            assert_raises_rpc_error(-4, 'listdescriptors is not available for non-descriptor wallets', node.listdescriptors)
-
         self.log.info('Test the command for empty descriptors wallet.')
-        node.createwallet(wallet_name='w2', blank=True, descriptors=True)
+        node.createwallet(wallet_name='w2', blank=True)
         assert_equal(0, len(node.get_wallet_rpc('w2').listdescriptors()['descriptors']))
 
         self.log.info('Test the command for a default descriptors wallet.')
-        node.createwallet(wallet_name='w3', descriptors=True)
+        node.createwallet(wallet_name='w3')
         result = node.get_wallet_rpc('w3').listdescriptors()
         assert_equal("w3", result['wallet_name'])
         assert_equal(8, len(result['descriptors']))
         assert_equal(8, len([d for d in result['descriptors'] if d['active']]))
         assert_equal(4, len([d for d in result['descriptors'] if d['internal']]))
         for item in result['descriptors']:
-            assert item['desc'] != ''
+            assert_not_equal(item['desc'], '')
             assert item['next_index'] == 0
             assert item['range'] == [0, 0]
             assert item['timestamp'] is not None
@@ -109,7 +101,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
         assert_equal(expected_private, wallet.listdescriptors(True))
 
         self.log.info('Test list private descriptors with watch-only wallet')
-        node.createwallet(wallet_name='watch-only', descriptors=True, disable_private_keys=True)
+        node.createwallet(wallet_name='watch-only', disable_private_keys=True)
         watch_only_wallet = node.get_wallet_rpc('watch-only')
         watch_only_wallet.importdescriptors([{
             'desc': descsum_create('wpkh(' + xpub_acc + ')'),
@@ -118,7 +110,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, 'Can\'t get descriptor string', watch_only_wallet.listdescriptors, True)
 
         self.log.info('Test non-active non-range combo descriptor')
-        node.createwallet(wallet_name='w4', blank=True, descriptors=True)
+        node.createwallet(wallet_name='w4', blank=True)
         wallet = node.get_wallet_rpc('w4')
         wallet.importdescriptors([{
             'desc': descsum_create('combo(' + node.get_deterministic_priv_key().key + ')'),
@@ -134,6 +126,26 @@ class ListDescriptorsTest(BitcoinTestFramework):
         }
         assert_equal(expected, wallet.listdescriptors())
 
+        self.log.info('Test taproot descriptor do not have mixed hardened derivation marker')
+        node.createwallet(wallet_name='w5', descriptors=True, disable_private_keys=True)
+        wallet = node.get_wallet_rpc('w5')
+        wallet.importdescriptors([{
+            'desc': "tr([1dce71b2/48'/1'/0'/2']tpubDEeP3GefjqbaDTTaVAF5JkXWhoFxFDXQ9KuhVrMBViFXXNR2B3Lvme2d2AoyiKfzRFZChq2AGMNbU1qTbkBMfNv7WGVXLt2pnYXY87gXqcs/0/*,and_v(v:pk([c658b283/48'/1'/0'/2']tpubDFL5wzgPBYK5pZ2Kh1T8qrxnp43kjE5CXfguZHHBrZSWpkfASy5rVfj7prh11XdqkC1P3kRwUPBeX7AHN8XBNx8UwiprnFnEm5jyswiRD4p/0/*),older(65535)))#xl20m6md",
+            'timestamp': TIME_GENESIS_BLOCK,
+        }])
+        expected = {
+            'wallet_name': 'w5',
+            'descriptors': [
+                {'active': False,
+                 'desc': 'tr([1dce71b2/48h/1h/0h/2h]tpubDEeP3GefjqbaDTTaVAF5JkXWhoFxFDXQ9KuhVrMBViFXXNR2B3Lvme2d2AoyiKfzRFZChq2AGMNbU1qTbkBMfNv7WGVXLt2pnYXY87gXqcs/0/*,and_v(v:pk([c658b283/48h/1h/0h/2h]tpubDFL5wzgPBYK5pZ2Kh1T8qrxnp43kjE5CXfguZHHBrZSWpkfASy5rVfj7prh11XdqkC1P3kRwUPBeX7AHN8XBNx8UwiprnFnEm5jyswiRD4p/0/*),older(65535)))#m4uznndk',
+                 'timestamp': TIME_GENESIS_BLOCK,
+                 'range': [0, 0],
+                 'next': 0,
+                 'next_index': 0},
+            ]
+        }
+        assert_equal(expected, wallet.listdescriptors())
+
 
 if __name__ == '__main__':
-    ListDescriptorsTest().main()
+    ListDescriptorsTest(__file__).main()

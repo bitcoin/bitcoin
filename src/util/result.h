@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
@@ -21,8 +21,8 @@ struct Error {
 //!
 //! It is intended for high-level functions that need to report error strings to
 //! end users. Lower-level functions that don't need this error-reporting and
-//! only need error-handling should avoid util::Result and instead use standard
-//! classes like std::optional, std::variant, and std::tuple, or custom structs
+//! that only need error-handling should avoid util::Result and instead use
+//! util::Expected, std::optional, std::variant, or custom structs
 //! and enum types to return function results.
 //!
 //! Usage examples can be found in \example ../test/result_tests.cpp, but in
@@ -39,6 +39,16 @@ private:
 
     std::variant<bilingual_str, T> m_variant;
 
+    //! Disallow copy constructor, require Result to be moved for efficiency.
+    Result(const Result&) = delete;
+
+    //! Disallow operator= to avoid confusion in the future when the Result
+    //! class gains support for richer error reporting, and callers should have
+    //! ability to set a new result value without clearing existing error
+    //! messages.
+    Result& operator=(const Result&) = delete;
+    Result& operator=(Result&&) = delete;
+
     template <typename FT>
     friend bilingual_str ErrorString(const Result<FT>& result);
 
@@ -46,6 +56,8 @@ public:
     Result() : m_variant{std::in_place_index_t<1>{}, std::monostate{}} {}  // constructor for void
     Result(T obj) : m_variant{std::in_place_index_t<1>{}, std::move(obj)} {}
     Result(Error error) : m_variant{std::in_place_index_t<0>{}, std::move(error.message)} {}
+    Result(Result&&) = default;
+    ~Result() = default;
 
     //! std::optional methods, so functions returning optional<T> can change to
     //! return Result<T> with minimal changes to existing code, and vice versa.

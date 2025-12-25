@@ -1,6 +1,8 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <qt/notificator.h>
 
@@ -16,7 +18,7 @@
 #ifdef USE_DBUS
 #include <QDBusMetaType>
 #include <QtDBus>
-#include <stdint.h>
+#include <cstdint>
 #endif
 #ifdef Q_OS_MACOS
 #include <qt/macnotificationhandler.h>
@@ -108,10 +110,10 @@ FreedesktopImage::FreedesktopImage(const QImage &img):
 
     for(unsigned int ptr = 0; ptr < num_pixels; ++ptr)
     {
-        image[ptr*BYTES_PER_PIXEL+0] = data[ptr] >> 16; // R
-        image[ptr*BYTES_PER_PIXEL+1] = data[ptr] >> 8;  // G
-        image[ptr*BYTES_PER_PIXEL+2] = data[ptr];       // B
-        image[ptr*BYTES_PER_PIXEL+3] = data[ptr] >> 24; // A
+        image[ptr * BYTES_PER_PIXEL + 0] = char(data[ptr] >> 16); // R
+        image[ptr * BYTES_PER_PIXEL + 1] = char(data[ptr] >> 8);  // G
+        image[ptr * BYTES_PER_PIXEL + 2] = char(data[ptr]);       // B
+        image[ptr * BYTES_PER_PIXEL + 3] = char(data[ptr] >> 24); // A
     }
 }
 
@@ -139,7 +141,6 @@ QVariant FreedesktopImage::toVariant(const QImage &img)
 
 void Notificator::notifyDBus(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout)
 {
-    // https://developer.gnome.org/notification-spec/
     // Arguments for DBus "Notify" call:
     QList<QVariant> args;
 

@@ -913,3 +913,4 @@ secp256k1_fe_sqr_inner:
 	ldmfd	sp!, {r4, r5, r6, r7, r8, r9, r10, r11, pc}
 	.size	secp256k1_fe_sqr_inner, .-secp256k1_fe_sqr_inner
 
+	.section .note.GNU-stack,"",%progbits

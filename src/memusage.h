@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2022 The Bitcoin Core developers
+// Copyright (c) 2015-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,9 +11,11 @@
 
 #include <cassert>
 #include <cstdlib>
+#include <list>
 #include <map>
 #include <memory>
 #include <set>
+#include <string>
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
@@ -83,10 +85,22 @@ struct stl_shared_counter
     size_t weak_count;
 };
 
-template<typename X>
-static inline size_t DynamicUsage(const std::vector<X>& v)
+template<typename T, typename Allocator>
+static inline size_t DynamicUsage(const std::vector<T, Allocator>& v)
 {
-    return MallocUsage(v.capacity() * sizeof(X));
+    return MallocUsage(v.capacity() * sizeof(T));
+}
+
+static inline size_t DynamicUsage(const std::string& s)
+{
+    const char* s_ptr = reinterpret_cast<const char*>(&s);
+    // Don't count the dynamic memory used for string, if it resides in the
+    // "small string" optimization area (which stores data inside the object itself, up to some
+    // size; 15 bytes in modern libstdc++).
+    if (!std::less{}(s.data(), s_ptr) && !std::greater{}(s.data() + s.size(), s_ptr + sizeof(s))) {
+        return 0;
+    }
+    return MallocUsage(s.capacity());
 }
 
 template<unsigned int N, typename X, typename S, typename D>
@@ -146,6 +160,21 @@ static inline size_t DynamicUsage(const std::shared_ptr<X>& p)
     // the counter and the storage (when using std::make_shared), or separate.
     // We can't observe the difference, however, so assume the worst.
     return p ? MallocUsage(sizeof(X)) + MallocUsage(sizeof(stl_shared_counter)) : 0;
+}
+
+template<typename X>
+struct list_node
+{
+private:
+    void* ptr_next;
+    void* ptr_prev;
+    X x;
+};
+
+template<typename X>
+static inline size_t DynamicUsage(const std::list<X>& l)
+{
+    return MallocUsage(sizeof(list_node<X>)) * l.size();
 }
 
 template<typename X>

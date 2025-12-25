@@ -103,6 +103,8 @@ class LEVELDB_EXPORT Status {
 inline Status::Status(const Status& rhs) {
   state_ = (rhs.state_ == nullptr) ? nullptr : CopyState(rhs.state_);
 }
+
+// NOLINTBEGIN(bugprone-unhandled-self-assignment)
 inline Status& Status::operator=(const Status& rhs) {
   // The following condition catches both aliasing (when this == &rhs),
   // and the common case where both rhs and *this are ok.
@@ -112,6 +114,8 @@ inline Status& Status::operator=(const Status& rhs) {
   }
   return *this;
 }
+// NOLINTEND(bugprone-unhandled-self-assignment)
+
 inline Status& Status::operator=(Status&& rhs) noexcept {
   std::swap(state_, rhs.state_);
   return *this;

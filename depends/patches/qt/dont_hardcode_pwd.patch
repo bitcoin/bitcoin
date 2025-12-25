@@ -1,27 +1,51 @@
-commit 0e953866fc4672486e29e1ba6d83b4207e7b2f0b
-Author: fanquake <fanquake@gmail.com>
-Date:   Tue Aug 18 15:09:06 2020 +0800
+Do not assume FHS in scripts
 
-    Don't hardcode pwd path
+On systems that do not follow the Filesystem Hierarchy Standard, such as
+guix, the hardcoded `/bin/pwd` will fail to be found so that the script
+will fail.
 
-    Let a man use his builtins if he wants to! Also, removes the unnecessary
-    assumption that pwd lives under /bin/pwd.
+Use `pwd`, instead, so that the command can be found through the normal
+path search mechanism.
 
-    See #15581.
+See https://github.com/qt/qtbase/commit/3388de698bfb9bbc456c08f03e83bf3e749df35c.
 
 diff --git a/qtbase/configure b/qtbase/configure
 index 08b49a8d..faea5b55 100755
 --- a/qtbase/configure
 +++ b/qtbase/configure
-@@ -36,9 +36,9 @@
- relconf=`basename $0`
+@@ -9,9 +9,9 @@
+ 
  # the directory of this script is the "source tree"
- relpath=`dirname $0`
+ relpath=`dirname "$0"`
 -relpath=`(cd "$relpath"; /bin/pwd)`
 +relpath=`(cd "$relpath"; pwd)`
  # the current directory is the "build tree" or "object tree"
 -outpath=`/bin/pwd`
 +outpath=`pwd`
+ outpathPrefix=$outpath
+ 
+ # do this early so we don't store it in config.status
 
- WHICH="which"
+--- a/qtbase/bin/qt-cmake.in
++++ b/qtbase/bin/qt-cmake.in
+@@ -2,7 +2,7 @@
+ 
+ # The directory of this script is the expanded absolute path of the "$qt_prefix/bin" directory.
+ script_dir_path=`dirname $0`
+-script_dir_path=`(cd "$script_dir_path"; /bin/pwd)`
++script_dir_path=`(cd "$script_dir_path"; pwd)`
+ 
+ # Try to use original cmake, otherwise to make it relocatable, use any cmake found in PATH.
+ original_cmake_path="@CMAKE_COMMAND@"
 
+--- a/qtbase/bin/qt-configure-module.in
++++ b/qtbase/bin/qt-configure-module.in
+@@ -2,7 +2,7 @@
+ set -eu
+ 
+ script_dir_path=`dirname $0`
+-script_dir_path=`(cd "$script_dir_path"; /bin/pwd)`
++script_dir_path=`(cd "$script_dir_path"; pwd)`
+ 
+ printUsage()
+ {

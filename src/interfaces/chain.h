@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,13 +7,17 @@
 
 #include <blockfilter.h>
 #include <common/settings.h>
-#include <primitives/transaction.h> // For CTransactionRef
+#include <kernel/chain.h> // IWYU pragma: export
+#include <node/types.h>
+#include <primitives/transaction.h>
+#include <util/result.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <functional>
+#include <map>
 #include <memory>
 #include <optional>
-#include <stddef.h>
-#include <stdint.h>
 #include <string>
 #include <vector>
 
@@ -30,6 +34,9 @@ enum class RBFTransactionState;
 struct bilingual_str;
 struct CBlockLocator;
 struct FeeCalculation;
+namespace kernel {
+struct ChainstateRole;
+} // namespace kernel
 namespace node {
 struct NodeContext;
 } // namespace node
@@ -38,12 +45,6 @@ namespace interfaces {
 
 class Handler;
 class Wallet;
-
-//! Hash/height pair to help track and identify blocks.
-struct BlockKey {
-    uint256 hash;
-    int height = -1;
-};
 
 //! Helper for findBlock to selectively return pieces of block data. If block is
 //! found, data will be returned by setting specified output variables. If block
@@ -78,21 +79,16 @@ public:
     mutable bool found = false;
 };
 
-//! Block data sent with blockConnected, blockDisconnected notifications.
-struct BlockInfo {
-    const uint256& hash;
-    const uint256* prev_hash = nullptr;
-    int height = -1;
-    int file_number = -1;
-    unsigned data_pos = 0;
-    const CBlock* data = nullptr;
-    const CBlockUndo* undo_data = nullptr;
-    // The maximum time in the chain up to and including this block.
-    // A timestamp that can only move forward.
-    unsigned int chain_time_max{0};
-
-    BlockInfo(const uint256& hash LIFETIMEBOUND) : hash(hash) {}
+//! The action to be taken after updating a settings value.
+//! WRITE indicates that the updated value must be written to disk,
+//! while SKIP_WRITE indicates that the change will be kept in memory-only
+//! without persisting it.
+enum class SettingsAction {
+    WRITE,
+    SKIP_WRITE
 };
+
+using SettingsUpdate = std::function<std::optional<interfaces::SettingsAction>(common::SettingsValue&)>;
 
 //! Interface giving clients (wallet processes, maybe other analysis tools in
 //! the future) ability to access to the chain state, receive notifications,
@@ -121,7 +117,7 @@ struct BlockInfo {
 class Chain
 {
 public:
-    virtual ~Chain() {}
+    virtual ~Chain() = default;
 
     //! Get current chain height, not including genesis block (returns 0 if
     //! chain only contains genesis block, nullopt if chain does not contain
@@ -134,13 +130,6 @@ public:
     //! Check that the block is available on disk (i.e. has not been
     //! pruned), and contains transactions.
     virtual bool haveBlockOnDisk(int height) = 0;
-
-    //! Get locator for the current chain tip.
-    virtual CBlockLocator getTipLocator() = 0;
-
-    //! Return a locator that refers to a block in the active chain.
-    //! If specified block is not in the active chain, return locator for the latest ancestor that is in the chain.
-    virtual CBlockLocator getActiveChainLocator(const uint256& block_hash) = 0;
 
     //! Return height of the highest block on chain in common with the locator,
     //! which will either be the original block used to create the locator,
@@ -200,21 +189,64 @@ public:
     virtual RBFTransactionState isRBFOptIn(const CTransaction& tx) = 0;
 
     //! Check if transaction is in mempool.
-    virtual bool isInMempool(const uint256& txid) = 0;
+    virtual bool isInMempool(const Txid& txid) = 0;
 
     //! Check if transaction has descendants in mempool.
-    virtual bool hasDescendantsInMempool(const uint256& txid) = 0;
+    virtual bool hasDescendantsInMempool(const Txid& txid) = 0;
 
-    //! Transaction is added to memory pool, if the transaction fee is below the
-    //! amount specified by max_tx_fee, and broadcast to all peers if relay is set to true.
-    //! Return false if the transaction could not be added due to the fee or for another reason.
+    //! Process a local transaction, optionally adding it to the mempool and
+    //! optionally broadcasting it to the network.
+    //! @param[in] tx Transaction to process.
+    //! @param[in] max_tx_fee Don't add the transaction to the mempool or
+    //! broadcast it if its fee is higher than this.
+    //! @param[in] broadcast_method Whether to add the transaction to the
+    //! mempool and how/whether to broadcast it.
+    //! @param[out] err_string Set if an error occurs.
+    //! @return False if the transaction could not be added due to the fee or for another reason.
     virtual bool broadcastTransaction(const CTransactionRef& tx,
-        const CAmount& max_tx_fee,
-        bool relay,
-        std::string& err_string) = 0;
+                                      const CAmount& max_tx_fee,
+                                      node::TxBroadcast broadcast_method,
+                                      std::string& err_string) = 0;
 
-    //! Calculate mempool ancestor and descendant counts for the given transaction.
-    virtual void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants, size_t* ancestorsize = nullptr, CAmount* ancestorfees = nullptr) = 0;
+    //! Calculate mempool ancestor and cluster counts for the given transaction.
+    virtual void getTransactionAncestry(const Txid& txid, size_t& ancestors, size_t& cluster_count, size_t* ancestorsize = nullptr, CAmount* ancestorfees = nullptr) = 0;
+
+    //! For each outpoint, calculate the fee-bumping cost to spend this outpoint at the specified
+    //  feerate, including bumping its ancestors. For example, if the target feerate is 10sat/vbyte
+    //  and this outpoint refers to a mempool transaction at 3sat/vbyte, the bump fee includes the
+    //  cost to bump the mempool transaction to 10sat/vbyte (i.e. 7 * mempooltx.vsize). If that
+    //  transaction also has, say, an unconfirmed parent with a feerate of 1sat/vbyte, the bump fee
+    //  includes the cost to bump the parent (i.e. 9 * parentmempooltx.vsize).
+    //
+    //  If the outpoint comes from an unconfirmed transaction that is already above the target
+    //  feerate or bumped by its descendant(s) already, it does not need to be bumped. Its bump fee
+    //  is 0. Likewise, if any of the transaction's ancestors are already bumped by a transaction
+    //  in our mempool, they are not included in the transaction's bump fee.
+    //
+    //  Also supported is bump-fee calculation in the case of replacements. If an outpoint
+    //  conflicts with another transaction in the mempool, it is assumed that the goal is to replace
+    //  that transaction. As such, the calculation will exclude the to-be-replaced transaction, but
+    //  will include the fee-bumping cost. If bump fees of descendants of the to-be-replaced
+    //  transaction are requested, the value will be 0. Fee-related RBF rules are not included as
+    //  they are logically distinct.
+    //
+    //  Any outpoints that are otherwise unavailable from the mempool (e.g. UTXOs from confirmed
+    //  transactions or transactions not yet broadcast by the wallet) are given a bump fee of 0.
+    //
+    //  If multiple outpoints come from the same transaction (which would be very rare because
+    //  it means that one transaction has multiple change outputs or paid the same wallet using multiple
+    //  outputs in the same transaction) or have shared ancestry, the bump fees are calculated
+    //  independently, i.e. as if only one of them is spent. This may result in double-fee-bumping. This
+    //  caveat can be rectified per use of the sister-function CalculateCombinedBumpFee(…).
+    virtual std::map<COutPoint, CAmount> calculateIndividualBumpFees(const std::vector<COutPoint>& outpoints, const CFeeRate& target_feerate) = 0;
+
+    //! Calculate the combined bump fee for an input set per the same strategy
+    //  as in CalculateIndividualBumpFees(…).
+    //  Unlike CalculateIndividualBumpFees(…), this does not return individual
+    //  bump fees per outpoint, but a single bump fee for the shared ancestry.
+    //  The combined bump fee may be used to correct overestimation due to
+    //  shared ancestry by multiple UTXOs after coin selection.
+    virtual std::optional<CAmount> calculateCombinedBumpFee(const std::vector<COutPoint>& outpoints, const CFeeRate& target_feerate) = 0;
 
     //! Get the node's package limits.
     //! Currently only returns the ancestor and descendant count limits, but could be enhanced to
@@ -222,7 +254,7 @@ public:
     virtual void getPackageLimits(unsigned int& limit_ancestor_count, unsigned int& limit_descendant_count) = 0;
 
     //! Check if transaction will pass the mempool's chain limits.
-    virtual bool checkChainLimits(const CTransactionRef& tx) = 0;
+    virtual util::Result<void> checkChainLimits(const CTransactionRef& tx) = 0;
 
     //! Estimate smart fee.
     virtual CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc = nullptr) = 0;
@@ -244,6 +276,9 @@ public:
 
     //! Check if any block has been pruned.
     virtual bool havePruned() = 0;
+
+    //! Get the current prune height.
+    virtual std::optional<int> getPruneHeight() = 0;
 
     //! Check if the node is ready to broadcast transactions.
     virtual bool isReadyToBroadcast() = 0;
@@ -270,13 +305,24 @@ public:
     class Notifications
     {
     public:
-        virtual ~Notifications() {}
+        virtual ~Notifications() = default;
         virtual void transactionAddedToMempool(const CTransactionRef& tx) {}
         virtual void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) {}
-        virtual void blockConnected(const BlockInfo& block) {}
+        virtual void blockConnected(const kernel::ChainstateRole& role, const BlockInfo& block) {}
         virtual void blockDisconnected(const BlockInfo& block) {}
         virtual void updatedBlockTip() {}
-        virtual void chainStateFlushed(const CBlockLocator& locator) {}
+        virtual void chainStateFlushed(const kernel::ChainstateRole& role, const CBlockLocator& locator) {}
+    };
+
+    //! Options specifying which chain notifications are required.
+    struct NotifyOptions
+    {
+        //! Include undo data with block connected notifications.
+        bool connect_undo_data = false;
+        //! Include block data with block disconnected notifications.
+        bool disconnect_data = false;
+        //! Include undo data with block disconnected notifications.
+        bool disconnect_undo_data = false;
     };
 
     //! Register handler for notifications.
@@ -293,12 +339,6 @@ public:
     //! Check if deprecated RPC is enabled.
     virtual bool rpcEnableDeprecated(const std::string& method) = 0;
 
-    //! Run function after given number of seconds. Cancel any previous calls with same name.
-    virtual void rpcRunLater(const std::string& name, std::function<void()> fn, int64_t seconds) = 0;
-
-    //! Current RPC serialization flags.
-    virtual int rpcSerializationFlags() = 0;
-
     //! Get settings value.
     virtual common::SettingsValue getSetting(const std::string& arg) = 0;
 
@@ -308,9 +348,23 @@ public:
     //! Return <datadir>/settings.json setting value.
     virtual common::SettingsValue getRwSetting(const std::string& name) = 0;
 
-    //! Write a setting to <datadir>/settings.json. Optionally just update the
-    //! setting in memory and do not write the file.
-    virtual bool updateRwSetting(const std::string& name, const common::SettingsValue& value, bool write=true) = 0;
+    //! Updates a setting in <datadir>/settings.json.
+    //! Null can be passed to erase the setting. There is intentionally no
+    //! support for writing null values to settings.json.
+    //! Depending on the action returned by the update function, this will either
+    //! update the setting in memory or write the updated settings to disk.
+    virtual bool updateRwSetting(const std::string& name, const SettingsUpdate& update_function) = 0;
+
+    //! Replace a setting in <datadir>/settings.json with a new value.
+    //! Null can be passed to erase the setting.
+    //! This method provides a simpler alternative to updateRwSetting when
+    //! atomically reading and updating the setting is not required.
+    virtual bool overwriteRwSetting(const std::string& name, common::SettingsValue value, SettingsAction action = SettingsAction::WRITE) = 0;
+
+    //! Delete a given setting in <datadir>/settings.json.
+    //! This method provides a simpler alternative to overwriteRwSetting when
+    //! erasing a setting, for ease of use and readability.
+    virtual bool deleteRwSettings(const std::string& name, SettingsAction action = SettingsAction::WRITE) = 0;
 
     //! Synchronously send transactionAddedToMempool notifications about all
     //! current mempool transactions to the specified handler and return after
@@ -322,7 +376,9 @@ public:
     //! removed transactions and already added new transactions.
     virtual void requestMempoolTransactions(Notifications& notifications) = 0;
 
-    //! Return true if an assumed-valid chain is in use.
+    //! Return true if an assumed-valid snapshot is in use. Note that this
+    //! returns true even after the snapshot is validated, until the next node
+    //! restart.
     virtual bool hasAssumedValidChain() = 0;
 
     //! Get internal node context. Useful for testing, but not
@@ -335,7 +391,7 @@ public:
 class ChainClient
 {
 public:
-    virtual ~ChainClient() {}
+    virtual ~ChainClient() = default;
 
     //! Register rpcs.
     virtual void registerRpcs() = 0;
@@ -349,14 +405,14 @@ public:
     //! Start client execution and provide a scheduler.
     virtual void start(CScheduler& scheduler) = 0;
 
-    //! Save state to disk.
-    virtual void flush() = 0;
-
     //! Shut down client.
     virtual void stop() = 0;
 
     //! Set mock time.
     virtual void setMockTime(int64_t time) = 0;
+
+    //! Mock the scheduler to fast forward in time.
+    virtual void schedulerMockForward(std::chrono::seconds delta_seconds) = 0;
 };
 
 //! Return implementation of Chain interface.

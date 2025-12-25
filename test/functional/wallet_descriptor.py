@@ -1,55 +1,95 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2022 The Bitcoin Core developers
+# Copyright (c) 2019-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test descriptor wallet function."""
-import os
 
 try:
     import sqlite3
 except ImportError:
     pass
 
+import re
+
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
     assert_raises_rpc_error
 )
+from test_framework.wallet_util import WalletUnlock
 
 
 class WalletDescriptorTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser, legacy=False)
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [['-keypool=100']]
-        self.wallet_names = []
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
-        self.skip_if_no_sqlite()
         self.skip_if_no_py_sqlite3()
 
+    def test_parent_descriptors(self):
+        self.log.info("Check that parent_descs is the same for all RPCs and is normalized")
+        self.nodes[0].createwallet(wallet_name="parent_descs")
+        wallet = self.nodes[0].get_wallet_rpc("parent_descs")
+        default_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        addr = wallet.getnewaddress()
+        parent_desc = wallet.getaddressinfo(addr)["parent_desc"]
+
+        # Verify that the parent descriptor is normalized
+        # First remove the checksum
+        desc_verify = parent_desc.split("#")[0]
+        # Next extract the xpub
+        desc_verify = re.sub(r"tpub\w+?(?=/)", "", desc_verify)
+        # Extract origin info
+        origin_match = re.search(r'\[([\da-fh/]+)\]', desc_verify)
+        origin_part = origin_match.group(1) if origin_match else ""
+        # Split on "]" for everything after the origin info
+        after_origin = desc_verify.split("]", maxsplit=1)[-1]
+        # Look for the hardened markers “h” inside each piece
+        # We don't need to check for aspostrophe as normalization will not output aspostrophe
+        found_hardened_in_origin = "h" in origin_part
+        found_hardened_after_origin = "h" in after_origin
+        assert_equal(found_hardened_in_origin, True)
+        assert_equal(found_hardened_after_origin, False)
+
+        # Send some coins so we can check listunspent, listtransactions, listunspent, and gettransaction
+        since_block = self.nodes[0].getbestblockhash()
+        txid = default_wallet.sendtoaddress(addr, 1)
+        self.generate(self.nodes[0], 1)
+
+        unspent = wallet.listunspent()
+        assert_equal(len(unspent), 1)
+        assert_equal(unspent[0]["parent_descs"], [parent_desc])
+
+        txs = wallet.listtransactions()
+        assert_equal(len(txs), 1)
+        assert_equal(txs[0]["parent_descs"], [parent_desc])
+
+        txs = wallet.listsinceblock(since_block)["transactions"]
+        assert_equal(len(txs), 1)
+        assert_equal(txs[0]["parent_descs"], [parent_desc])
+
+        tx = wallet.gettransaction(txid=txid, verbose=True)
+        assert_equal(tx["details"][0]["parent_descs"], [parent_desc])
+
+        wallet.unloadwallet()
+
     def run_test(self):
-        if self.is_bdb_compiled():
-            # Make a legacy wallet and check it is BDB
-            self.nodes[0].createwallet(wallet_name="legacy1", descriptors=False)
-            wallet_info = self.nodes[0].getwalletinfo()
-            assert_equal(wallet_info['format'], 'bdb')
-            self.nodes[0].unloadwallet("legacy1")
-        else:
-            self.log.warning("Skipping BDB test")
+        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
 
         # Make a descriptor wallet
         self.log.info("Making a descriptor wallet")
-        self.nodes[0].createwallet(wallet_name="desc1", descriptors=True)
+        self.nodes[0].createwallet(wallet_name="desc1")
+        wallet = self.nodes[0].get_wallet_rpc("desc1")
 
         # A descriptor wallet should have 100 addresses * 4 types = 400 keys
         self.log.info("Checking wallet info")
-        wallet_info = self.nodes[0].getwalletinfo()
+        wallet_info = wallet.getwalletinfo()
         assert_equal(wallet_info['format'], 'sqlite')
         assert_equal(wallet_info['keypoolsize'], 400)
         assert_equal(wallet_info['keypoolsize_hd_internal'], 400)
@@ -57,49 +97,49 @@ class WalletDescriptorTest(BitcoinTestFramework):
 
         # Check that getnewaddress works
         self.log.info("Test that getnewaddress and getrawchangeaddress work")
-        addr = self.nodes[0].getnewaddress("", "legacy")
-        addr_info = self.nodes[0].getaddressinfo(addr)
+        addr = wallet.getnewaddress("", "legacy")
+        addr_info = wallet.getaddressinfo(addr)
         assert addr_info['desc'].startswith('pkh(')
         assert_equal(addr_info['hdkeypath'], 'm/44h/1h/0h/0/0')
 
-        addr = self.nodes[0].getnewaddress("", "p2sh-segwit")
-        addr_info = self.nodes[0].getaddressinfo(addr)
+        addr = wallet.getnewaddress("", "p2sh-segwit")
+        addr_info = wallet.getaddressinfo(addr)
         assert addr_info['desc'].startswith('sh(wpkh(')
         assert_equal(addr_info['hdkeypath'], 'm/49h/1h/0h/0/0')
 
-        addr = self.nodes[0].getnewaddress("", "bech32")
-        addr_info = self.nodes[0].getaddressinfo(addr)
+        addr = wallet.getnewaddress("", "bech32")
+        addr_info = wallet.getaddressinfo(addr)
         assert addr_info['desc'].startswith('wpkh(')
         assert_equal(addr_info['hdkeypath'], 'm/84h/1h/0h/0/0')
 
-        addr = self.nodes[0].getnewaddress("", "bech32m")
-        addr_info = self.nodes[0].getaddressinfo(addr)
+        addr = wallet.getnewaddress("", "bech32m")
+        addr_info = wallet.getaddressinfo(addr)
         assert addr_info['desc'].startswith('tr(')
         assert_equal(addr_info['hdkeypath'], 'm/86h/1h/0h/0/0')
 
         # Check that getrawchangeaddress works
-        addr = self.nodes[0].getrawchangeaddress("legacy")
-        addr_info = self.nodes[0].getaddressinfo(addr)
+        addr = wallet.getrawchangeaddress("legacy")
+        addr_info = wallet.getaddressinfo(addr)
         assert addr_info['desc'].startswith('pkh(')
         assert_equal(addr_info['hdkeypath'], 'm/44h/1h/0h/1/0')
 
-        addr = self.nodes[0].getrawchangeaddress("p2sh-segwit")
-        addr_info = self.nodes[0].getaddressinfo(addr)
+        addr = wallet.getrawchangeaddress("p2sh-segwit")
+        addr_info = wallet.getaddressinfo(addr)
         assert addr_info['desc'].startswith('sh(wpkh(')
         assert_equal(addr_info['hdkeypath'], 'm/49h/1h/0h/1/0')
 
-        addr = self.nodes[0].getrawchangeaddress("bech32")
-        addr_info = self.nodes[0].getaddressinfo(addr)
+        addr = wallet.getrawchangeaddress("bech32")
+        addr_info = wallet.getaddressinfo(addr)
         assert addr_info['desc'].startswith('wpkh(')
         assert_equal(addr_info['hdkeypath'], 'm/84h/1h/0h/1/0')
 
-        addr = self.nodes[0].getrawchangeaddress("bech32m")
-        addr_info = self.nodes[0].getaddressinfo(addr)
+        addr = wallet.getrawchangeaddress("bech32m")
+        addr_info = wallet.getaddressinfo(addr)
         assert addr_info['desc'].startswith('tr(')
         assert_equal(addr_info['hdkeypath'], 'm/86h/1h/0h/1/0')
 
         # Make a wallet to receive coins at
-        self.nodes[0].createwallet(wallet_name="desc2", descriptors=True)
+        self.nodes[0].createwallet(wallet_name="desc2")
         recv_wrpc = self.nodes[0].get_wallet_rpc("desc2")
         send_wrpc = self.nodes[0].get_wallet_rpc("desc1")
 
@@ -111,29 +151,16 @@ class WalletDescriptorTest(BitcoinTestFramework):
         addr = recv_wrpc.getnewaddress()
         send_wrpc.sendtoaddress(addr, 10)
 
-        # Make sure things are disabled
-        self.log.info("Test disabled RPCs")
-        assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.importprivkey, "cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW")
-        assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.importpubkey, send_wrpc.getaddressinfo(send_wrpc.getnewaddress())["pubkey"])
-        assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.importaddress, recv_wrpc.getnewaddress())
-        assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.importmulti, [])
-        assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.addmultisigaddress, 1, [recv_wrpc.getnewaddress()])
-        assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.dumpprivkey, recv_wrpc.getnewaddress())
-        assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.dumpwallet, 'wallet.dump')
-        assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.importwallet, 'wallet.dump')
-        assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.sethdseed)
-
         self.log.info("Test encryption")
         # Get the master fingerprint before encrypt
         info1 = send_wrpc.getaddressinfo(send_wrpc.getnewaddress())
 
         # Encrypt wallet 0
         send_wrpc.encryptwallet('pass')
-        send_wrpc.walletpassphrase('pass', 10)
-        addr = send_wrpc.getnewaddress()
-        info2 = send_wrpc.getaddressinfo(addr)
-        assert info1['hdmasterfingerprint'] != info2['hdmasterfingerprint']
-        send_wrpc.walletlock()
+        with WalletUnlock(send_wrpc, "pass"):
+            addr = send_wrpc.getnewaddress()
+            info2 = send_wrpc.getaddressinfo(addr)
+            assert_not_equal(info1['hdmasterfingerprint'], info2['hdmasterfingerprint'])
         assert 'hdmasterfingerprint' in send_wrpc.getaddressinfo(send_wrpc.getnewaddress())
         info3 = send_wrpc.getaddressinfo(addr)
         assert_equal(info2['desc'], info3['desc'])
@@ -143,14 +170,13 @@ class WalletDescriptorTest(BitcoinTestFramework):
             send_wrpc.getnewaddress()
 
         self.log.info("Test that unlock is needed when deriving only hardened keys in an encrypted wallet")
-        send_wrpc.walletpassphrase('pass', 10)
-        send_wrpc.importdescriptors([{
-            "desc": "wpkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0h/*h)#y4dfsj7n",
-            "timestamp": "now",
-            "range": [0,10],
-            "active": True
-        }])
-        send_wrpc.walletlock()
+        with WalletUnlock(send_wrpc, "pass"):
+            send_wrpc.importdescriptors([{
+                "desc": "wpkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0h/*h)#y4dfsj7n",
+                "timestamp": "now",
+                "range": [0,10],
+                "active": True
+            }])
         # Exhaust keypool of 100
         for _ in range(100):
             send_wrpc.getnewaddress(address_type='bech32')
@@ -163,19 +189,19 @@ class WalletDescriptorTest(BitcoinTestFramework):
         enc_rpc.getnewaddress() # Makes sure that we can get a new address from a born encrypted wallet
 
         self.log.info("Test blank descriptor wallets")
-        self.nodes[0].createwallet(wallet_name='desc_blank', blank=True, descriptors=True)
+        self.nodes[0].createwallet(wallet_name='desc_blank', blank=True)
         blank_rpc = self.nodes[0].get_wallet_rpc('desc_blank')
         assert_raises_rpc_error(-4, 'This wallet has no available keys', blank_rpc.getnewaddress)
 
         self.log.info("Test descriptor wallet with disabled private keys")
-        self.nodes[0].createwallet(wallet_name='desc_no_priv', disable_private_keys=True, descriptors=True)
+        self.nodes[0].createwallet(wallet_name='desc_no_priv', disable_private_keys=True)
         nopriv_rpc = self.nodes[0].get_wallet_rpc('desc_no_priv')
         assert_raises_rpc_error(-4, 'This wallet has no available keys', nopriv_rpc.getnewaddress)
 
         self.log.info("Test descriptor exports")
-        self.nodes[0].createwallet(wallet_name='desc_export', descriptors=True)
+        self.nodes[0].createwallet(wallet_name='desc_export')
         exp_rpc = self.nodes[0].get_wallet_rpc('desc_export')
-        self.nodes[0].createwallet(wallet_name='desc_import', disable_private_keys=True, descriptors=True)
+        self.nodes[0].createwallet(wallet_name='desc_import', disable_private_keys=True)
         imp_rpc = self.nodes[0].get_wallet_rpc('desc_import')
 
         addr_types = [('legacy', False, 'pkh(', '44h/1h/0h', -13),
@@ -232,9 +258,9 @@ class WalletDescriptorTest(BitcoinTestFramework):
                 assert_equal(exp_addr, imp_addr)
 
         self.log.info("Test that loading descriptor wallet containing legacy key types throws error")
-        self.nodes[0].createwallet(wallet_name="crashme", descriptors=True)
+        self.nodes[0].createwallet(wallet_name="crashme")
         self.nodes[0].unloadwallet("crashme")
-        wallet_db = os.path.join(self.nodes[0].wallets_path, "crashme", self.wallet_data_filename)
+        wallet_db = self.nodes[0].wallets_path / "crashme" / self.wallet_data_filename
         conn = sqlite3.connect(wallet_db)
         with conn:
             # add "cscript" entry: key type is uint160 (20 bytes), value type is CScript (zero-length here)
@@ -242,6 +268,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
         conn.close()
         assert_raises_rpc_error(-4, "Unexpected legacy entry in descriptor wallet found.", self.nodes[0].loadwallet, "crashme")
 
+        self.test_parent_descriptors()
 
 if __name__ == '__main__':
-    WalletDescriptorTest().main ()
+    WalletDescriptorTest(__file__).main()

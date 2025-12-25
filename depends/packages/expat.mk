@@ -1,22 +1,18 @@
 package=expat
-$(package)_version=2.4.8
+$(package)_version=2.7.3
 $(package)_download_path=https://github.com/libexpat/libexpat/releases/download/R_$(subst .,_,$($(package)_version))/
-$(package)_file_name=$(package)-$($(package)_version).tar.xz
-$(package)_sha256_hash=f79b8f904b749e3e0d20afeadecf8249c55b2e32d4ebb089ae378df479dcaf25
+$(package)_file_name=$(package)-$($(package)_version).tar.gz
+$(package)_sha256_hash=821ac9710d2c073eaf13e1b1895a9c9aa66c1157a99635c639fbff65cdbdd732
+$(package)_build_subdir=build
 
-# -D_DEFAULT_SOURCE defines __USE_MISC, which exposes additional
-# definitions in endian.h, which are required for a working
-# endianess check in configure when building with -flto.
 define $(package)_set_vars
-  $(package)_config_opts=--disable-shared --without-docbook --without-tests --without-examples
-  $(package)_config_opts += --disable-dependency-tracking --enable-option-checking
-  $(package)_config_opts += --without-xmlwf
-  $(package)_config_opts_linux=--with-pic
-  $(package)_cppflags += -D_DEFAULT_SOURCE
+  $(package)_config_opts := -DCMAKE_BUILD_TYPE=None -DEXPAT_BUILD_TOOLS=OFF
+  $(package)_config_opts += -DEXPAT_BUILD_EXAMPLES=OFF -DEXPAT_BUILD_TESTS=OFF
+  $(package)_config_opts += -DBUILD_SHARED_LIBS=OFF
 endef
 
 define $(package)_config_cmds
-  $($(package)_autoconf)
+  $($(package)_cmake) -S .. -B .
 endef
 
 define $(package)_build_cmds
@@ -28,5 +24,5 @@ define $(package)_stage_cmds
 endef
 
 define $(package)_postprocess_cmds
-  rm -rf share lib/cmake lib/*.la
+  rm -rf share lib/cmake
 endef

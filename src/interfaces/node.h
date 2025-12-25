@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,18 +6,19 @@
 #define BITCOIN_INTERFACES_NODE_H
 
 #include <common/settings.h>
-#include <consensus/amount.h>          // For CAmount
-#include <net.h>                       // For NodeId
-#include <net_types.h>                 // For banmap_t
-#include <netaddress.h>                // For Network
-#include <netbase.h>                   // For ConnectionDirection
-#include <support/allocators/secure.h> // For SecureString
+#include <consensus/amount.h>
+#include <logging.h>
+#include <net.h>
+#include <net_types.h>
+#include <netaddress.h>
+#include <netbase.h>
+#include <support/allocators/secure.h>
 #include <util/translation.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <memory>
-#include <stddef.h>
-#include <stdint.h>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -26,14 +27,13 @@ class BanMan;
 class CFeeRate;
 class CNodeStats;
 class Coin;
-class RPCTimerInterface;
 class UniValue;
 class Proxy;
 enum class SynchronizationState;
-enum class TransactionError;
 struct CNodeStateStats;
 struct bilingual_str;
 namespace node {
+enum class TransactionError;
 struct NodeContext;
 } // namespace node
 namespace wallet {
@@ -59,7 +59,7 @@ struct BlockAndHeaderTipInfo
 class ExternalSigner
 {
 public:
-    virtual ~ExternalSigner() {};
+    virtual ~ExternalSigner() = default;
 
     //! Get signer display name
     virtual std::string getName() = 0;
@@ -69,7 +69,7 @@ public:
 class Node
 {
 public:
-    virtual ~Node() {}
+    virtual ~Node() = default;
 
     //! Init logging.
     virtual void initLogging() = 0;
@@ -84,7 +84,7 @@ public:
     virtual int getExitStatus() = 0;
 
     // Get log flags.
-    virtual uint32_t getLogCategories() = 0;
+    virtual BCLog::CategoryMask getLogCategories() = 0;
 
     //! Initialize app dependencies.
     virtual bool baseInitialize() = 0;
@@ -120,7 +120,7 @@ public:
     virtual void resetSettings() = 0;
 
     //! Map port.
-    virtual void mapPort(bool use_upnp, bool use_natpmp) = 0;
+    virtual void mapPort(bool enable) = 0;
 
     //! Get proxy.
     virtual bool getProxy(Network net, Proxy& proxy_info) = 0;
@@ -162,11 +162,17 @@ public:
     //! Get mempool dynamic usage.
     virtual size_t getMempoolDynamicUsage() = 0;
 
+    //! Get mempool maximum memory usage.
+    virtual size_t getMempoolMaxUsage() = 0;
+
     //! Get header tip height and time.
     virtual bool getHeaderTip(int& height, int64_t& block_time) = 0;
 
     //! Get num blocks.
     virtual int getNumBlocks() = 0;
+
+    //! Get network local addresses.
+    virtual std::map<CNetAddr, LocalServiceInfo> getNetLocalAddresses() = 0;
 
     //! Get best block hash.
     virtual uint256 getBestBlockHash() = 0;
@@ -198,17 +204,11 @@ public:
     //! List rpc commands.
     virtual std::vector<std::string> listRpcCommands() = 0;
 
-    //! Set RPC timer interface if unset.
-    virtual void rpcSetTimerInterfaceIfUnset(RPCTimerInterface* iface) = 0;
-
-    //! Unset RPC timer interface.
-    virtual void rpcUnsetTimerInterface(RPCTimerInterface* iface) = 0;
-
-    //! Get unspent outputs associated with a transaction.
-    virtual bool getUnspentOutput(const COutPoint& output, Coin& coin) = 0;
+    //! Get unspent output associated with a transaction.
+    virtual std::optional<Coin> getUnspentOutput(const COutPoint& output) = 0;
 
     //! Broadcast transaction.
-    virtual TransactionError broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, std::string& err_string) = 0;
+    virtual node::TransactionError broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, std::string& err_string) = 0;
 
     //! Get wallet loader.
     virtual WalletLoader& walletLoader() = 0;

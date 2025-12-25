@@ -1,11 +1,13 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/messages.h>
 #include <core_io.h>
+#include <node/context.h>
 #include <policy/feerate.h>
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <rpc/server.h>
@@ -13,35 +15,31 @@
 #include <rpc/util.h>
 #include <txmempool.h>
 #include <univalue.h>
-#include <util/fees.h>
+#include <validationinterface.h>
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <string>
+#include <string_view>
 
-namespace node {
-struct NodeContext;
-}
-
+using common::FeeModeFromString;
+using common::FeeModesDetail;
+using common::InvalidEstimateModeErrorMessage;
 using node::NodeContext;
 
 static RPCHelpMan estimatesmartfee()
 {
-    return RPCHelpMan{"estimatesmartfee",
-        "\nEstimates the approximate fee per kilobyte needed for a transaction to begin\n"
+    return RPCHelpMan{
+        "estimatesmartfee",
+        "Estimates the approximate fee per kilobyte needed for a transaction to begin\n"
         "confirmation within conf_target blocks if possible and return the number of blocks\n"
         "for which the estimate is valid. Uses virtual transaction size as defined\n"
         "in BIP 141 (witness data is discounted).\n",
         {
             {"conf_target", RPCArg::Type::NUM, RPCArg::Optional::NO, "Confirmation target in blocks (1 - 1008)"},
-            {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"conservative"}, "The fee estimate mode.\n"
-            "Whether to return a more conservative estimate which also satisfies\n"
-            "a longer history. A conservative estimate potentially returns a\n"
-            "higher feerate and is more likely to be sufficient for the desired\n"
-            "target, but is not as responsive to short term drops in the\n"
-            "prevailing fee market. Must be one of (case insensitive):\n"
-             "\"" + FeeModes("\"\n\"") + "\""},
+            {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"economical"}, "The fee estimate mode.\n"
+              + FeeModesDetail(std::string("default mode will be used"))},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -67,29 +65,27 @@ static RPCHelpMan estimatesmartfee()
             const NodeContext& node = EnsureAnyNodeContext(request.context);
             const CTxMemPool& mempool = EnsureMemPool(node);
 
+            CHECK_NONFATAL(mempool.m_opts.signals)->SyncWithValidationInterfaceQueue();
             unsigned int max_target = fee_estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
             unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
-            bool conservative = true;
-            if (!request.params[1].isNull()) {
-                FeeEstimateMode fee_mode;
-                if (!FeeModeFromString(request.params[1].get_str(), fee_mode)) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, InvalidEstimateModeErrorMessage());
-                }
-                if (fee_mode == FeeEstimateMode::ECONOMICAL) conservative = false;
+            FeeEstimateMode fee_mode;
+            if (!FeeModeFromString(self.Arg<std::string_view>("estimate_mode"), fee_mode)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, InvalidEstimateModeErrorMessage());
             }
 
             UniValue result(UniValue::VOBJ);
             UniValue errors(UniValue::VARR);
             FeeCalculation feeCalc;
+            bool conservative{fee_mode == FeeEstimateMode::CONSERVATIVE};
             CFeeRate feeRate{fee_estimator.estimateSmartFee(conf_target, &feeCalc, conservative)};
             if (feeRate != CFeeRate(0)) {
                 CFeeRate min_mempool_feerate{mempool.GetMinFee()};
-                CFeeRate min_relay_feerate{mempool.m_min_relay_feerate};
+                CFeeRate min_relay_feerate{mempool.m_opts.min_relay_feerate};
                 feeRate = std::max({feeRate, min_mempool_feerate, min_relay_feerate});
                 result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
             } else {
                 errors.push_back("Insufficient data or no feerate found");
-                result.pushKV("errors", errors);
+                result.pushKV("errors", std::move(errors));
             }
             result.pushKV("blocks", feeCalc.returnedTarget);
             return result;
@@ -99,8 +95,9 @@ static RPCHelpMan estimatesmartfee()
 
 static RPCHelpMan estimaterawfee()
 {
-    return RPCHelpMan{"estimaterawfee",
-        "\nWARNING: This interface is unstable and may disappear or change!\n"
+    return RPCHelpMan{
+        "estimaterawfee",
+        "WARNING: This interface is unstable and may disappear or change!\n"
         "\nWARNING: This is an advanced API call that is tightly coupled to the specific\n"
         "implementation of fee estimation. The parameters it can be called with\n"
         "and the results it returns will change if the internal implementation changes.\n"
@@ -154,7 +151,9 @@ static RPCHelpMan estimaterawfee()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
             CBlockPolicyEstimator& fee_estimator = EnsureAnyFeeEstimator(request.context);
+            const NodeContext& node = EnsureAnyNodeContext(request.context);
 
+            CHECK_NONFATAL(node.validation_signals)->SyncWithValidationInterfaceQueue();
             unsigned int max_target = fee_estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
             unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
             double threshold = 0.95;
@@ -197,18 +196,18 @@ static RPCHelpMan estimaterawfee()
                     horizon_result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
                     horizon_result.pushKV("decay", buckets.decay);
                     horizon_result.pushKV("scale", (int)buckets.scale);
-                    horizon_result.pushKV("pass", passbucket);
+                    horizon_result.pushKV("pass", std::move(passbucket));
                     // buckets.fail.start == -1 indicates that all buckets passed, there is no fail bucket to output
-                    if (buckets.fail.start != -1) horizon_result.pushKV("fail", failbucket);
+                    if (buckets.fail.start != -1) horizon_result.pushKV("fail", std::move(failbucket));
                 } else {
                     // Output only information that is still meaningful in the event of error
                     horizon_result.pushKV("decay", buckets.decay);
                     horizon_result.pushKV("scale", (int)buckets.scale);
-                    horizon_result.pushKV("fail", failbucket);
+                    horizon_result.pushKV("fail", std::move(failbucket));
                     errors.push_back("Insufficient data or no feerate found which meets threshold");
-                    horizon_result.pushKV("errors", errors);
+                    horizon_result.pushKV("errors", std::move(errors));
                 }
-                result.pushKV(StringForFeeEstimateHorizon(horizon), horizon_result);
+                result.pushKV(StringForFeeEstimateHorizon(horizon), std::move(horizon_result));
             }
             return result;
         },

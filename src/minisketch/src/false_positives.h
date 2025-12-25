@@ -81,7 +81,8 @@ uint64_t BaseFPBits(uint32_t bits, uint32_t capacity) {
 
 size_t ComputeCapacity(uint32_t bits, size_t max_elements, uint32_t fpbits) {
     if (bits == 0) return 0;
-    uint64_t base_fpbits = BaseFPBits(bits, max_elements);
+    if (max_elements > 0xffffffff) return max_elements;
+    uint64_t base_fpbits = BaseFPBits(bits, static_cast<uint32_t>(max_elements));
     // The fpbits provided by the base max_elements==capacity case are sufficient.
     if (base_fpbits >= fpbits) return max_elements;
     // Otherwise, increment capacity by ceil(fpbits / bits) beyond that.
@@ -90,6 +91,7 @@ size_t ComputeCapacity(uint32_t bits, size_t max_elements, uint32_t fpbits) {
 
 size_t ComputeMaxElements(uint32_t bits, size_t capacity, uint32_t fpbits) {
     if (bits == 0) return 0;
+    if (capacity > 0xffffffff) return capacity;
     // Start with max_elements=capacity, and decrease max_elements until the corresponding capacity is capacity.
     size_t max_elements = capacity;
     while (true) {

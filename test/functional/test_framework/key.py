@@ -13,7 +13,8 @@ import os
 import random
 import unittest
 
-from test_framework import secp256k1
+from test_framework.crypto import secp256k1
+from test_framework.util import assert_not_equal, random_bitflip
 
 # Point with no known discrete log.
 H_POINT = "50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0"
@@ -241,10 +242,9 @@ def verify_schnorr(key, sig, msg):
 
     - key is a 32-byte xonly pubkey (computed using compute_xonly_pubkey).
     - sig is a 64-byte Schnorr signature
-    - msg is a 32-byte message
+    - msg is a variable-length message
     """
     assert len(key) == 32
-    assert len(msg) == 32
     assert len(sig) == 64
 
     P = secp256k1.GE.from_bytes_xonly(key)
@@ -271,7 +271,6 @@ def sign_schnorr(key, msg, aux=None, flip_p=False, flip_r=False):
         aux = bytes(32)
 
     assert len(key) == 32
-    assert len(msg) == 32
     assert len(aux) == 32
 
     sec = int.from_bytes(key, 'big')
@@ -282,7 +281,7 @@ def sign_schnorr(key, msg, aux=None, flip_p=False, flip_r=False):
         sec = ORDER - sec
     t = (sec ^ int.from_bytes(TaggedHash("BIP0340/aux", aux), 'big')).to_bytes(32, 'big')
     kp = int.from_bytes(TaggedHash("BIP0340/nonce", t + P.to_bytes_xonly() + msg), 'big') % ORDER
-    assert kp != 0
+    assert_not_equal(kp, 0)
     R = kp * secp256k1.G
     k = kp if R.y.is_even() != flip_r else ORDER - kp
     e = int.from_bytes(TaggedHash("BIP0340/challenge", R.to_bytes_xonly() + P.to_bytes_xonly() + msg), 'big') % ORDER
@@ -290,30 +289,34 @@ def sign_schnorr(key, msg, aux=None, flip_p=False, flip_r=False):
 
 
 class TestFrameworkKey(unittest.TestCase):
-    def test_schnorr(self):
-        """Test the Python Schnorr implementation."""
+    def test_ecdsa_and_schnorr(self):
+        """Test the Python ECDSA and Schnorr implementations."""
         byte_arrays = [generate_privkey() for _ in range(3)] + [v.to_bytes(32, 'big') for v in [0, ORDER - 1, ORDER, 2**256 - 1]]
         keys = {}
-        for privkey in byte_arrays:  # build array of key/pubkey pairs
-            pubkey, _ = compute_xonly_pubkey(privkey)
-            if pubkey is not None:
-                keys[privkey] = pubkey
+        for privkey_bytes in byte_arrays:  # build array of key/pubkey pairs
+            privkey = ECKey()
+            privkey.set(privkey_bytes, compressed=True)
+            if privkey.is_valid:
+                keys[privkey] = privkey.get_pubkey()
         for msg in byte_arrays:  # test every combination of message, signing key, verification key
             for sign_privkey, _ in keys.items():
-                sig = sign_schnorr(sign_privkey, msg)
+                sig_ecdsa = sign_privkey.sign_ecdsa(msg)
+                sig_schnorr = sign_schnorr(sign_privkey.get_bytes(), msg)
                 for verify_privkey, verify_pubkey in keys.items():
+                    verify_xonly_pubkey = verify_pubkey.get_bytes()[1:]
                     if verify_privkey == sign_privkey:
-                        self.assertTrue(verify_schnorr(verify_pubkey, sig, msg))
-                        sig = list(sig)
-                        sig[random.randrange(64)] ^= (1 << (random.randrange(8)))  # damaging signature should break things
-                        sig = bytes(sig)
-                    self.assertFalse(verify_schnorr(verify_pubkey, sig, msg))
+                        self.assertTrue(verify_pubkey.verify_ecdsa(sig_ecdsa, msg))
+                        self.assertTrue(verify_schnorr(verify_xonly_pubkey, sig_schnorr, msg))
+                        sig_ecdsa = random_bitflip(sig_ecdsa)  # damaging signature should break things
+                        sig_schnorr = random_bitflip(sig_schnorr)
+                    self.assertFalse(verify_pubkey.verify_ecdsa(sig_ecdsa, msg))
+                    self.assertFalse(verify_schnorr(verify_xonly_pubkey, sig_schnorr, msg))
 
     def test_schnorr_testvectors(self):
         """Implement the BIP340 test vectors (read from bip340_test_vectors.csv)."""
         num_tests = 0
         vectors_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bip340_test_vectors.csv')
-        with open(vectors_file, newline='', encoding='utf8') as csvfile:
+        with open(vectors_file, newline='') as csvfile:
             reader = csv.reader(csvfile)
             next(reader)
             for row in reader:

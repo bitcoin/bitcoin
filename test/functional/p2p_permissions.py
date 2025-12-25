@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2022 The Bitcoin Core developers
+# Copyright (c) 2015-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test p2p permission message.
@@ -14,8 +14,10 @@ from test_framework.p2p import P2PDataStore
 from test_framework.test_node import ErrorMatch
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    append_config,
     assert_equal,
     p2p_port,
+    tor_port,
 )
 from test_framework.wallet import MiniWallet
 
@@ -57,11 +59,14 @@ class P2PPermissionsTests(BitcoinTestFramework):
         # by modifying the configuration file.
         ip_port = "127.0.0.1:{}".format(p2p_port(1))
         self.nodes[1].replace_in_config([("bind=127.0.0.1", "whitebind=bloomfilter,forcerelay@" + ip_port)])
+        # Explicitly bind the tor port to prevent collisions with the default tor port
+        append_config(self.nodes[1].datadir_path, [f"bind=127.0.0.1:{tor_port(self.nodes[1].index)}=onion"])
         self.checkpermission(
             ["-whitelist=noban@127.0.0.1"],
             # Check parameter interaction forcerelay should activate relay
             ["noban", "bloomfilter", "forcerelay", "relay", "download"])
         self.nodes[1].replace_in_config([("whitebind=bloomfilter,forcerelay@" + ip_port, "bind=127.0.0.1")])
+        self.nodes[1].replace_in_config([(f"bind=127.0.0.1:{tor_port(self.nodes[1].index)}=onion", "")])
 
         self.checkpermission(
             # legacy whitelistrelay should be ignored
@@ -83,7 +88,14 @@ class P2PPermissionsTests(BitcoinTestFramework):
             ["-whitelist=all@127.0.0.1"],
             ["forcerelay", "noban", "mempool", "bloomfilter", "relay", "download", "addr"])
 
+        for flag, permissions in [(["-whitelist=noban,out@127.0.0.1"], ["noban", "download"]), (["-whitelist=noban@127.0.0.1"], [])]:
+            self.restart_node(0, flag)
+            self.connect_nodes(0, 1)
+            peerinfo = self.nodes[0].getpeerinfo()[0]
+            assert_equal(peerinfo['permissions'], permissions)
+
         self.stop_node(1)
+        self.nodes[1].assert_start_raises_init_error(["-whitelist=in,out@127.0.0.1"], "Only direction was set, no permissions", match=ErrorMatch.PARTIAL_REGEX)
         self.nodes[1].assert_start_raises_init_error(["-whitelist=oopsie@127.0.0.1"], "Invalid P2P permission", match=ErrorMatch.PARTIAL_REGEX)
         self.nodes[1].assert_start_raises_init_error(["-whitelist=noban@127.0.0.1:230"], "Invalid netmask specified in", match=ErrorMatch.PARTIAL_REGEX)
         self.nodes[1].assert_start_raises_init_error(["-whitebind=noban@127.0.0.1/10"], "Cannot resolve -whitebind address", match=ErrorMatch.PARTIAL_REGEX)
@@ -99,34 +111,37 @@ class P2PPermissionsTests(BitcoinTestFramework):
 
         self.log.debug("Send a tx from the wallet initially")
         tx = self.wallet.create_self_transfer(sequence=SEQUENCE_FINAL)['tx']
-        txid = tx.rehash()
+        txid = tx.txid_hex
 
         self.log.debug("Wait until tx is in node[1]'s mempool")
         p2p_rebroadcast_wallet.send_txs_and_test([tx], self.nodes[1])
 
         self.log.debug("Check that node[1] will send the tx to node[0] even though it is already in the mempool")
         self.connect_nodes(1, 0)
-        with self.nodes[1].assert_debug_log(["Force relaying tx {} from peer=0".format(txid)]):
+        with self.nodes[1].assert_debug_log(["Force relaying tx {} (wtxid={}) from peer=0".format(txid, tx.wtxid_hex)]):
             p2p_rebroadcast_wallet.send_txs_and_test([tx], self.nodes[1])
             self.wait_until(lambda: txid in self.nodes[0].getrawmempool())
 
         self.log.debug("Check that node[1] will not send an invalid tx to node[0]")
         tx.vout[0].nValue += 1
-        txid = tx.rehash()
+        # add dust to cause policy rejection but no disconnection
+        tx.vout.append(tx.vout[0])
+        tx.vout[-1].nValue = 0
+        txid = tx.txid_hex
         # Send the transaction twice. The first time, it'll be rejected by ATMP because it conflicts
-        # with a mempool transaction. The second time, it'll be in the m_recent_rejects filter.
+        # with a mempool transaction. The second time, it'll be in the m_lazy_recent_rejects filter.
         p2p_rebroadcast_wallet.send_txs_and_test(
             [tx],
             self.nodes[1],
             success=False,
-            reject_reason='{} from peer=0 was not accepted: txn-mempool-conflict'.format(txid)
+            reject_reason='{} (wtxid={}) from peer=0 was not accepted: dust'.format(txid, tx.wtxid_hex)
         )
 
         p2p_rebroadcast_wallet.send_txs_and_test(
             [tx],
             self.nodes[1],
             success=False,
-            reject_reason='Not relaying non-mempool transaction {} from forcerelay peer=0'.format(txid)
+            reject_reason='Not relaying non-mempool transaction {} (wtxid={}) from forcerelay peer=0'.format(txid, tx.wtxid_hex)
         )
 
     def checkpermission(self, args, expectedPermissions):
@@ -140,4 +155,4 @@ class P2PPermissionsTests(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    P2PPermissionsTests().main()
+    P2PPermissionsTests(__file__).main()

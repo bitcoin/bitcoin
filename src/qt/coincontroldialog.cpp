@@ -1,10 +1,6 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
 
 #include <qt/coincontroldialog.h>
 #include <qt/forms/ui_coincontroldialog.h>
@@ -178,22 +174,17 @@ void CoinControlDialog::showMenu(const QPoint &point)
         contextMenuItem = item;
 
         // disable some items (like Copy Transaction ID, lock, unlock) for tree roots in context menu
-        if (item->data(COLUMN_ADDRESS, TxHashRole).toString().length() == 64) // transaction hash is 64 characters (this means it is a child node, so it is not a parent node in tree mode)
-        {
+        auto txid{Txid::FromHex(item->data(COLUMN_ADDRESS, TxHashRole).toString().toStdString())};
+        if (txid) { // a valid txid means this is a child node, and not a parent node in tree mode
             m_copy_transaction_outpoint_action->setEnabled(true);
-            if (model->wallet().isLockedCoin(COutPoint(uint256S(item->data(COLUMN_ADDRESS, TxHashRole).toString().toStdString()), item->data(COLUMN_ADDRESS, VOutRole).toUInt())))
-            {
+            if (model->wallet().isLockedCoin(COutPoint(*txid, item->data(COLUMN_ADDRESS, VOutRole).toUInt()))) {
                 lockAction->setEnabled(false);
                 unlockAction->setEnabled(true);
-            }
-            else
-            {
+            } else {
                 lockAction->setEnabled(true);
                 unlockAction->setEnabled(false);
             }
-        }
-        else // this means click on parent node in tree mode -> disable all
-        {
+        } else { // this means click on parent node in tree mode -> disable all
             m_copy_transaction_outpoint_action->setEnabled(false);
             lockAction->setEnabled(false);
             unlockAction->setEnabled(false);
@@ -244,7 +235,7 @@ void CoinControlDialog::lockCoin()
     if (contextMenuItem->checkState(COLUMN_CHECKBOX) == Qt::Checked)
         contextMenuItem->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
 
-    COutPoint outpt(uint256S(contextMenuItem->data(COLUMN_ADDRESS, TxHashRole).toString().toStdString()), contextMenuItem->data(COLUMN_ADDRESS, VOutRole).toUInt());
+    COutPoint outpt(Txid::FromHex(contextMenuItem->data(COLUMN_ADDRESS, TxHashRole).toString().toStdString()).value(), contextMenuItem->data(COLUMN_ADDRESS, VOutRole).toUInt());
     model->wallet().lockCoin(outpt, /* write_to_db = */ true);
     contextMenuItem->setDisabled(true);
     contextMenuItem->setIcon(COLUMN_CHECKBOX, platformStyle->SingleColorIcon(":/icons/lock_closed"));
@@ -254,7 +245,7 @@ void CoinControlDialog::lockCoin()
 // context menu action: unlock coin
 void CoinControlDialog::unlockCoin()
 {
-    COutPoint outpt(uint256S(contextMenuItem->data(COLUMN_ADDRESS, TxHashRole).toString().toStdString()), contextMenuItem->data(COLUMN_ADDRESS, VOutRole).toUInt());
+    COutPoint outpt(Txid::FromHex(contextMenuItem->data(COLUMN_ADDRESS, TxHashRole).toString().toStdString()).value(), contextMenuItem->data(COLUMN_ADDRESS, VOutRole).toUInt());
     model->wallet().unlockCoin(outpt);
     contextMenuItem->setDisabled(false);
     contextMenuItem->setIcon(COLUMN_CHECKBOX, QIcon());
@@ -344,9 +335,10 @@ void CoinControlDialog::radioListMode(bool checked)
 // checkbox clicked by user
 void CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
 {
-    if (column == COLUMN_CHECKBOX && item->data(COLUMN_ADDRESS, TxHashRole).toString().length() == 64) // transaction hash is 64 characters (this means it is a child node, so it is not a parent node in tree mode)
-    {
-        COutPoint outpt(uint256S(item->data(COLUMN_ADDRESS, TxHashRole).toString().toStdString()), item->data(COLUMN_ADDRESS, VOutRole).toUInt());
+    if (column != COLUMN_CHECKBOX) return;
+    auto txid{Txid::FromHex(item->data(COLUMN_ADDRESS, TxHashRole).toString().toStdString())};
+    if (txid) { // a valid txid means this is a child node, and not a parent node in tree mode
+        COutPoint outpt(*txid, item->data(COLUMN_ADDRESS, VOutRole).toUInt());
 
         if (item->checkState(COLUMN_CHECKBOX) == Qt::Unchecked)
             m_coin_control.UnSelect(outpt);
@@ -421,7 +413,19 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
         std::vector<unsigned char> witnessprogram;
         if (out.txout.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram))
         {
-            nBytesInputs += (32 + 4 + 1 + (107 / WITNESS_SCALE_FACTOR) + 4);
+            // add input skeleton bytes (outpoint, scriptSig size, nSequence)
+            nBytesInputs += (32 + 4 + 1 + 4);
+
+            if (witnessversion == 0) { // P2WPKH
+                // 1 WU (witness item count) + 72 WU (ECDSA signature with len byte) + 34 WU (pubkey with len byte)
+                nBytesInputs += 107 / WITNESS_SCALE_FACTOR;
+            } else if (witnessversion == 1) { // P2TR key-path spend
+                // 1 WU (witness item count) + 65 WU (Schnorr signature with len byte)
+                nBytesInputs += 66 / WITNESS_SCALE_FACTOR;
+            } else {
+                // not supported, should be unreachable
+                throw std::runtime_error("Trying to spend future segwit version script");
+            }
             fWitness = true;
         }
         else if(ExtractDestination(out.txout.scriptPubKey, address))

@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2022 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test UTXO set hash value calculation in gettxoutsetinfo."""
-
-import struct
 
 from test_framework.messages import (
     CBlock,
     COutPoint,
     from_hex,
 )
-from test_framework.muhash import MuHash3072
+from test_framework.crypto.muhash import MuHash3072
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
@@ -57,8 +55,8 @@ class UTXOSetHashTest(BitcoinTestFramework):
                     if (coinbase and n > 0):
                         continue
 
-                    data = COutPoint(int(tx.rehash(), 16), n).serialize()
-                    data += struct.pack("<i", height * 2 + coinbase)
+                    data = COutPoint(tx.txid_int, n).serialize()
+                    data += (height * 2 + coinbase).to_bytes(4, "little")
                     data += tx_out.serialize()
 
                     muhash.insert(data)
@@ -69,12 +67,12 @@ class UTXOSetHashTest(BitcoinTestFramework):
         assert_equal(finalized[::-1].hex(), node_muhash)
 
         self.log.info("Test deterministic UTXO set hash results")
-        assert_equal(node.gettxoutsetinfo()['hash_serialized_2'], "f9aa4fb5ffd10489b9a6994e70ccf1de8a8bfa2d5f201d9857332e9954b0855d")
-        assert_equal(node.gettxoutsetinfo("muhash")['muhash'], "d1725b2fe3ef43e55aa4907480aea98d406fc9e0bf8f60169e2305f1fbf5961b")
+        assert_equal(node.gettxoutsetinfo()['hash_serialized_3'], "e0b4c80f2880985fdf1adc331ed0735ac207588f986c91c7c05e8cf5fe6780f0")
+        assert_equal(node.gettxoutsetinfo("muhash")['muhash'], "8739b878f23030ef39a5547edc7b57f88d50fdaaf47314ff0524608deb13067e")
 
     def run_test(self):
         self.test_muhash_implementation()
 
 
 if __name__ == '__main__':
-    UTXOSetHashTest().main()
+    UTXOSetHashTest(__file__).main()

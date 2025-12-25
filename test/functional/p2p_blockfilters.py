@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2022 The Bitcoin Core developers
+# Copyright (c) 2019-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests NODE_COMPACT_FILTERS (BIP 157/158).
@@ -21,6 +21,7 @@ from test_framework.messages import (
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
 )
 
@@ -69,11 +70,11 @@ class CompactFiltersTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getblockcount(), 2000)
 
         # Check that nodes have signalled NODE_COMPACT_FILTERS correctly.
-        assert peer_0.nServices & NODE_COMPACT_FILTERS != 0
+        assert_not_equal(peer_0.nServices & NODE_COMPACT_FILTERS, 0)
         assert peer_1.nServices & NODE_COMPACT_FILTERS == 0
 
         # Check that the localservices is as expected.
-        assert int(self.nodes[0].getnetworkinfo()['localservices'], 16) & NODE_COMPACT_FILTERS != 0
+        assert_not_equal(int(self.nodes[0].getnetworkinfo()['localservices'], 16) & NODE_COMPACT_FILTERS, 0)
         assert int(self.nodes[1].getnetworkinfo()['localservices'], 16) & NODE_COMPACT_FILTERS == 0
 
         self.log.info("get cfcheckpt on chain to be re-orged out.")
@@ -93,7 +94,7 @@ class CompactFiltersTest(BitcoinTestFramework):
         self.nodes[0].syncwithvalidationinterfacequeue()
 
         main_block_hash = self.nodes[0].getblockhash(1000)
-        assert main_block_hash != stale_block_hash, "node 0 chain did not reorganize"
+        assert_not_equal(main_block_hash, stale_block_hash, error_message="node 0 chain did not reorganize")
 
         self.log.info("Check that peers can fetch cfcheckpt on active chain.")
         tip_hash = self.nodes[0].getbestblockhash()
@@ -211,38 +212,56 @@ class CompactFiltersTest(BitcoinTestFramework):
         ]
         for request in requests:
             peer_1 = self.nodes[1].add_p2p_connection(P2PInterface())
-            peer_1.send_message(request)
-            peer_1.wait_for_disconnect()
+            with self.nodes[1].assert_debug_log(expected_msgs=["requested unsupported block filter type"]):
+                peer_1.send_without_ping(request)
+                peer_1.wait_for_disconnect()
 
         self.log.info("Check that invalid requests result in disconnection.")
         requests = [
             # Requesting too many filters results in disconnection.
-            msg_getcfilters(
-                filter_type=FILTER_TYPE_BASIC,
-                start_height=0,
-                stop_hash=int(main_block_hash, 16),
+            (
+                msg_getcfilters(
+                    filter_type=FILTER_TYPE_BASIC,
+                    start_height=0,
+                    stop_hash=int(main_block_hash, 16),
+                ), "requested too many cfilters/cfheaders"
             ),
             # Requesting too many filter headers results in disconnection.
-            msg_getcfheaders(
-                filter_type=FILTER_TYPE_BASIC,
-                start_height=0,
-                stop_hash=int(tip_hash, 16),
+            (
+                msg_getcfheaders(
+                    filter_type=FILTER_TYPE_BASIC,
+                    start_height=0,
+                    stop_hash=int(tip_hash, 16),
+                ), "requested too many cfilters/cfheaders"
             ),
             # Requesting unknown filter type results in disconnection.
-            msg_getcfcheckpt(
-                filter_type=255,
-                stop_hash=int(main_block_hash, 16),
+            (
+                msg_getcfcheckpt(
+                    filter_type=255,
+                    stop_hash=int(main_block_hash, 16),
+                ), "requested unsupported block filter type"
             ),
             # Requesting unknown hash results in disconnection.
-            msg_getcfcheckpt(
-                filter_type=FILTER_TYPE_BASIC,
-                stop_hash=123456789,
+            (
+                msg_getcfcheckpt(
+                    filter_type=FILTER_TYPE_BASIC,
+                    stop_hash=123456789,
+                ), "requested invalid block hash"
+            ),
+            (
+                # Request with (start block height > stop block height) results in disconnection.
+                msg_getcfheaders(
+                    filter_type=FILTER_TYPE_BASIC,
+                    start_height=1000,
+                    stop_hash=int(self.nodes[0].getblockhash(999), 16),
+                ), "sent invalid getcfilters/getcfheaders with start height 1000 and stop height 999"
             ),
         ]
-        for request in requests:
+        for request, expected_log_msg in requests:
             peer_0 = self.nodes[0].add_p2p_connection(P2PInterface())
-            peer_0.send_message(request)
-            peer_0.wait_for_disconnect()
+            with self.nodes[0].assert_debug_log(expected_msgs=[expected_log_msg]):
+                peer_0.send_without_ping(request)
+                peer_0.wait_for_disconnect()
 
         self.log.info("Test -peerblockfilters without -blockfilterindex raises an error")
         self.stop_node(0)
@@ -264,4 +283,4 @@ def compute_last_header(prev_header, hashes):
 
 
 if __name__ == '__main__':
-    CompactFiltersTest().main()
+    CompactFiltersTest(__file__).main()

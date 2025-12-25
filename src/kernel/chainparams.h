@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,33 +7,21 @@
 #define BITCOIN_KERNEL_CHAINPARAMS_H
 
 #include <consensus/params.h>
-#include <netaddress.h>
+#include <kernel/messagestartchars.h>
 #include <primitives/block.h>
-#include <protocol.h>
 #include <uint256.h>
 #include <util/chaintype.h>
 #include <util/hash_type.h>
+#include <util/vector.h>
 
 #include <cstdint>
 #include <iterator>
-#include <map>
 #include <memory>
 #include <optional>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-typedef std::map<int, uint256> MapCheckpoints;
-
-struct CCheckpointData {
-    MapCheckpoints mapCheckpoints;
-
-    int GetHeight() const {
-        const auto& final_checkpoint = mapCheckpoints.rbegin();
-        return final_checkpoint->first /* height */;
-    }
-};
 
 struct AssumeutxoHash : public BaseHash<uint256> {
     explicit AssumeutxoHash(const uint256& hash) : BaseHash(hash) {}
@@ -45,17 +33,21 @@ struct AssumeutxoHash : public BaseHash<uint256> {
  * as valid.
  */
 struct AssumeutxoData {
-    //! The expected hash of the deserialized UTXO set.
-    const AssumeutxoHash hash_serialized;
+    int height;
 
-    //! Used to populate the nChainTx value, which is used during BlockManager::LoadBlockIndex().
+    //! The expected hash of the deserialized UTXO set.
+    AssumeutxoHash hash_serialized;
+
+    //! Used to populate the m_chain_tx_count value, which is used during BlockManager::LoadBlockIndex().
     //!
     //! We need to hardcode the value here because this is computed cumulatively using block data,
     //! which we do not necessarily have at the time of snapshot load.
-    const unsigned int nChainTx;
-};
+    uint64_t m_chain_tx_count;
 
-using MapAssumeutxo = std::map<int, const AssumeutxoData>;
+    //! The hash of the base block for this snapshot. Used to refer to assumeutxo data
+    //! prior to having a loaded blockindex.
+    uint256 blockhash;
+};
 
 /**
  * Holds various statistics on transactions within a chain. Used to estimate
@@ -65,8 +57,17 @@ using MapAssumeutxo = std::map<int, const AssumeutxoData>;
  */
 struct ChainTxData {
     int64_t nTime;    //!< UNIX timestamp of last known number of transactions
-    int64_t nTxCount; //!< total number of transactions between genesis and that timestamp
+    uint64_t tx_count; //!< total number of transactions between genesis and that timestamp
     double dTxRate;   //!< estimated number of transactions per second after that timestamp
+};
+
+//! Configuration for headers sync memory usage.
+struct HeadersSyncParams {
+    //! Distance in blocks between header commitments.
+    size_t commitment_period{0};
+    //! Minimum number of validated headers to accumulate in the redownload
+    //! buffer before feeding them into the permanent block index.
+    size_t redownload_buffer_size{0};
 };
 
 /**
@@ -87,25 +88,15 @@ public:
     };
 
     const Consensus::Params& GetConsensus() const { return consensus; }
-    const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
+    const MessageStartChars& MessageStart() const { return pchMessageStart; }
     uint16_t GetDefaultPort() const { return nDefaultPort; }
-    uint16_t GetDefaultPort(Network net) const
-    {
-        return net == NET_I2P ? I2P_SAM31_PORT : GetDefaultPort();
-    }
-    uint16_t GetDefaultPort(const std::string& addr) const
-    {
-        CNetAddr a;
-        return a.SetSpecial(addr) ? GetDefaultPort(a.GetNetwork()) : GetDefaultPort();
-    }
+    std::vector<int> GetAvailableSnapshotHeights() const;
 
     const CBlock& GenesisBlock() const { return genesis; }
     /** Default value for -checkmempool and -checkblockindex argument */
     bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
-    /** Policy: Filter transactions that do not match well-defined patterns */
-    bool RequireStandard() const { return fRequireStandard; }
     /** If this chain is exclusively used for testing */
-    bool IsTestChain() const { return m_is_test_chain; }
+    bool IsTestChain() const { return m_chain_type != ChainType::MAIN; }
     /** If this chain allows time to be mocked */
     bool IsMockableChain() const { return m_is_mockable_chain; }
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
@@ -124,11 +115,16 @@ public:
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::string& Bech32HRP() const { return bech32_hrp; }
     const std::vector<uint8_t>& FixedSeeds() const { return vFixedSeeds; }
-    const CCheckpointData& Checkpoints() const { return checkpointData; }
+    const HeadersSyncParams& HeadersSync() const { return m_headers_sync_params; }
 
-    //! Get allowed assumeutxo configuration.
-    //! @see ChainstateManager
-    const MapAssumeutxo& Assumeutxo() const { return m_assumeutxo_data; }
+    std::optional<AssumeutxoData> AssumeutxoForHeight(int height) const
+    {
+        return FindFirst(m_assumeutxo_data, [&](const auto& d) { return d.height == height; });
+    }
+    std::optional<AssumeutxoData> AssumeutxoForBlockhash(const uint256& blockhash) const
+    {
+        return FindFirst(m_assumeutxo_data, [&](const auto& d) { return d.blockhash == blockhash; });
+    }
 
     const ChainTxData& TxData() const { return chainTxData; }
 
@@ -156,18 +152,20 @@ public:
         std::unordered_map<Consensus::DeploymentPos, VersionBitsParameters> version_bits_parameters{};
         std::unordered_map<Consensus::BuriedDeployment, int> activation_heights{};
         bool fastprune{false};
+        bool enforce_bip94{false};
     };
 
     static std::unique_ptr<const CChainParams> RegTest(const RegTestOptions& options);
     static std::unique_ptr<const CChainParams> SigNet(const SigNetOptions& options);
     static std::unique_ptr<const CChainParams> Main();
     static std::unique_ptr<const CChainParams> TestNet();
+    static std::unique_ptr<const CChainParams> TestNet4();
 
 protected:
-    CChainParams() {}
+    CChainParams() = default;
 
     Consensus::Params consensus;
-    CMessageHeader::MessageStartChars pchMessageStart;
+    MessageStartChars pchMessageStart;
     uint16_t nDefaultPort;
     uint64_t nPruneAfterHeight;
     uint64_t m_assumed_blockchain_size;
@@ -179,12 +177,12 @@ protected:
     CBlock genesis;
     std::vector<uint8_t> vFixedSeeds;
     bool fDefaultConsistencyChecks;
-    bool fRequireStandard;
-    bool m_is_test_chain;
     bool m_is_mockable_chain;
-    CCheckpointData checkpointData;
-    MapAssumeutxo m_assumeutxo_data;
+    std::vector<AssumeutxoData> m_assumeutxo_data;
     ChainTxData chainTxData;
+    HeadersSyncParams m_headers_sync_params;
 };
+
+std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& pchMessageStart);
 
 #endif // BITCOIN_KERNEL_CHAINPARAMS_H

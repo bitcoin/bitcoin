@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,6 +20,8 @@
 #include <string>
 #include <system_error>
 #include <vector>
+
+using util::ToString;
 
 inline bool operator==(const common::SettingsValue& a, const common::SettingsValue& b)
 {
@@ -43,7 +45,7 @@ inline std::ostream& operator<<(std::ostream& os, const std::pair<std::string, c
 inline void WriteText(const fs::path& path, const std::string& text)
 {
     std::ofstream file;
-    file.open(path);
+    file.open(path.std_path());
     file << text;
 }
 
@@ -99,7 +101,9 @@ BOOST_AUTO_TEST_CASE(ReadWrite)
     // Check invalid json not allowed
     WriteText(path, R"(invalid json)");
     BOOST_CHECK(!common::ReadSettings(path, values, errors));
-    std::vector<std::string> fail_parse = {strprintf("Unable to parse settings file %s", fs::PathToString(path))};
+    std::vector<std::string> fail_parse = {strprintf("Settings file %s does not contain valid JSON. This is probably caused by disk corruption or a crash, "
+                                                     "and can be fixed by removing the file, which will reset settings to default values.",
+                                                     fs::PathToString(path))};
     BOOST_CHECK_EQUAL_COLLECTIONS(errors.begin(), errors.end(), fail_parse.begin(), fail_parse.end());
 }
 
@@ -119,16 +123,16 @@ static void CheckValues(const common::Settings& settings, const std::string& sin
 BOOST_AUTO_TEST_CASE(Simple)
 {
     common::Settings settings;
-    settings.command_line_options["name"].push_back("val1");
-    settings.command_line_options["name"].push_back("val2");
-    settings.ro_config["section"]["name"].push_back(2);
+    settings.command_line_options["name"].emplace_back("val1");
+    settings.command_line_options["name"].emplace_back("val2");
+    settings.ro_config["section"]["name"].emplace_back(2);
 
     // The last given arg takes precedence when specified via commandline.
     CheckValues(settings, R"("val2")", R"(["val1","val2",2])");
 
     common::Settings settings2;
-    settings2.ro_config["section"]["name"].push_back("val2");
-    settings2.ro_config["section"]["name"].push_back("val3");
+    settings2.ro_config["section"]["name"].emplace_back("val2");
+    settings2.ro_config["section"]["name"].emplace_back("val3");
 
     // The first given arg takes precedence when specified via config file.
     CheckValues(settings2, R"("val2")", R"(["val2","val3"])");
@@ -141,7 +145,7 @@ BOOST_AUTO_TEST_CASE(Simple)
 BOOST_AUTO_TEST_CASE(NullOverride)
 {
     common::Settings settings;
-    settings.command_line_options["name"].push_back("value");
+    settings.command_line_options["name"].emplace_back("value");
     BOOST_CHECK_EQUAL(R"("value")", GetSetting(settings, "section", "name", false, false, false).write().c_str());
     settings.forced_settings["name"] = {};
     BOOST_CHECK_EQUAL(R"(null)", GetSetting(settings, "section", "name", false, false, false).write().c_str());
@@ -202,11 +206,11 @@ BOOST_FIXTURE_TEST_CASE(Merge, MergeTestingSetup)
                                std::vector<common::SettingsValue>& dest) {
             if (action == SET || action == SECTION_SET) {
                 for (int i = 0; i < 2; ++i) {
-                    dest.push_back(value_prefix + ToString(++value_suffix));
+                    dest.emplace_back(value_prefix + ToString(++value_suffix));
                     desc += " " + name_prefix + name + "=" + dest.back().get_str();
                 }
             } else if (action == NEGATE || action == SECTION_NEGATE) {
-                dest.push_back(false);
+                dest.emplace_back(false);
                 desc += " " + name_prefix + "no" + name;
             }
         };

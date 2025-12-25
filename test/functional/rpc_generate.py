@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2022 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test generate* RPCs."""
+
+from concurrent.futures import ThreadPoolExecutor
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.wallet import MiniWallet
@@ -83,6 +85,13 @@ class RPCGenerateTest(BitcoinTestFramework):
         txid = block['tx'][1]
         assert_equal(node.getrawtransaction(txid=txid, verbose=False, blockhash=hash), rawtx)
 
+        # Ensure that generateblock can be called concurrently by many threads.
+        self.log.info('Generate blocks in parallel')
+        generate_50_blocks = lambda n: [n.generateblock(output=address, transactions=[]) for _ in range(50)]
+        rpcs = [node.cli for _ in range(6)]
+        with ThreadPoolExecutor(max_workers=len(rpcs)) as threads:
+            list(threads.map(generate_50_blocks, rpcs))
+
         self.log.info('Fail to generate block with out of order txs')
         txid1 = miniwallet.send_self_transfer(from_node=node)['txid']
         utxo1 = miniwallet.get_utxo(txid=txid1)
@@ -115,15 +124,16 @@ class RPCGenerateTest(BitcoinTestFramework):
             "cli option. Refer to -help for more information.\n"
         )
 
-        self.log.info("Test rpc generate raises with message to use cli option")
-        assert_raises_rpc_error(-32601, message, self.nodes[0].rpc.generate)
+        if not self.options.usecli:
+            self.log.info("Test rpc generate raises with message to use cli option")
+            assert_raises_rpc_error(-32601, message, self.nodes[0]._rpc.generate)
 
-        self.log.info("Test rpc generate help prints message to use cli option")
-        assert_equal(message, self.nodes[0].help("generate"))
+            self.log.info("Test rpc generate help prints message to use cli option")
+            assert_equal(message, self.nodes[0].help("generate"))
 
         self.log.info("Test rpc generate is a hidden command not discoverable in general help")
         assert message not in self.nodes[0].help()
 
 
 if __name__ == "__main__":
-    RPCGenerateTest().main()
+    RPCGenerateTest(__file__).main()

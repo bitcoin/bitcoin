@@ -1,13 +1,11 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_BITCOINGUI_H
 #define BITCOIN_QT_BITCOINGUI_H
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <qt/bitcoinunits.h>
 #include <qt/clientmodel.h>
@@ -81,7 +79,7 @@ public:
     */
     void setClientModel(ClientModel *clientModel = nullptr, interfaces::BlockAndHeaderTipInfo* tip_info = nullptr);
 #ifdef ENABLE_WALLET
-    void setWalletController(WalletController* wallet_controller);
+    void setWalletController(WalletController* wallet_controller, bool show_loading_minimized);
     WalletController* getWalletController();
 #endif
 
@@ -163,6 +161,8 @@ private:
     QAction* m_wallet_selector_label_action = nullptr;
     QAction* m_wallet_selector_action = nullptr;
     QAction* m_mask_values_action{nullptr};
+    QAction* m_migrate_wallet_action{nullptr};
+    QMenu* m_migrate_wallet_menu{nullptr};
 
     QLabel *m_wallet_selector_label = nullptr;
     QComboBox* m_wallet_selector = nullptr;
@@ -228,6 +228,8 @@ public Q_SLOTS:
     void setNetworkActive(bool network_active);
     /** Set number of blocks and last block date shown in the UI */
     void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, SyncType synctype, SynchronizationState sync_state);
+    /** Launch the wallet creation modal (no-op if wallet is not compiled) **/
+    void createWallet();
 
     /** Notify the user of an event from the core network or transaction handling code.
        @param[in] title             the message box / notification title
@@ -311,7 +313,7 @@ public Q_SLOTS:
     /** Simply calls showNormalIfMinimized(true) */
     void toggleHidden();
 
-    /** called by a timer to check if ShutdownRequested() has been set **/
+    /** called by a timer to check if shutdown has been requested */
     void detectShutdown();
 
     /** Show progress dialog e.g. for verifychain */

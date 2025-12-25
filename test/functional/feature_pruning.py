@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the pruning code.
@@ -25,6 +25,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
+    try_rpc,
 )
 
 # Rescans start at the earliest block up to 2 hours before a key timestamp, so
@@ -40,7 +41,7 @@ def mine_large_blocks(node, n):
     # Set the nTime if this is the first time this function has been called.
     # A static variable ensures that time is monotonicly increasing and is therefore
     # different for each block created => blockhash is unique.
-    if "nTimes" not in mine_large_blocks.__dict__:
+    if "nTime" not in mine_large_blocks.__dict__:
         mine_large_blocks.nTime = 0
 
     # Get the block parameters for the first block
@@ -57,7 +58,7 @@ def mine_large_blocks(node, n):
         # Submit to the node
         node.submitblock(block.serialize().hex())
 
-        previousblockhash = block.sha256
+        previousblockhash = block.hash_int
         height += 1
         mine_large_blocks.nTime += 1
 
@@ -65,13 +66,10 @@ def calc_usage(blockdir):
     return sum(os.path.getsize(blockdir + f) for f in os.listdir(blockdir) if os.path.isfile(os.path.join(blockdir, f))) / (1024. * 1024.)
 
 class PruneTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 6
-        self.supports_cli = False
+        self.uses_wallet = None
 
         # Create nodes 0 and 1 to mine.
         # Create node 2 to test pruning.
@@ -91,7 +89,7 @@ class PruneTest(BitcoinTestFramework):
     def setup_network(self):
         self.setup_nodes()
 
-        self.prunedir = os.path.join(self.nodes[2].chain_path, 'blocks', '')
+        self.prunedir = os.path.join(self.nodes[2].blocks_path, '')
 
         self.connect_nodes(0, 1)
         self.connect_nodes(1, 2)
@@ -227,7 +225,7 @@ class PruneTest(BitcoinTestFramework):
     def reorg_back(self):
         # Verify that a block on the old main chain fork has been pruned away
         assert_raises_rpc_error(-1, "Block not available (pruned data)", self.nodes[2].getblock, self.forkhash)
-        with self.nodes[2].assert_debug_log(expected_msgs=['block verification stopping at height', '(no data)']):
+        with self.nodes[2].assert_debug_log(expected_msgs=["Block verification stopping at height", "(no data)"]):
             assert not self.nodes[2].verifychain(checklevel=4, nblocks=0)
         self.log.info(f"Will need to redownload block {self.forkheight}")
 
@@ -290,7 +288,7 @@ class PruneTest(BitcoinTestFramework):
             assert_equal(ret + 1, node.getblockchaininfo()['pruneheight'])
 
         def has_block(index):
-            return os.path.isfile(os.path.join(self.nodes[node_number].chain_path, "blocks", f"blk{index:05}.dat"))
+            return os.path.isfile(os.path.join(self.nodes[node_number].blocks_path, f"blk{index:05}.dat"))
 
         # should not prune because chain tip of node 3 (995) < PruneAfterHeight (1000)
         assert_raises_rpc_error(-1, "Blockchain is too short for pruning", node.pruneblockchain, height(500))
@@ -479,7 +477,11 @@ class PruneTest(BitcoinTestFramework):
         self.log.info("Test invalid pruning command line options")
         self.test_invalid_command_line_options()
 
+        self.log.info("Test scanblocks can not return pruned data")
         self.test_scanblocks_pruned()
+
+        self.log.info("Test pruneheight reflects the presence of block and undo data")
+        self.test_pruneheight_undo_presence()
 
         self.log.info("Done")
 
@@ -494,5 +496,18 @@ class PruneTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, "Block not available (pruned data)", node.scanblocks,
             "start", [{"desc": f"raw({false_positive_spk.hex()})"}], 0, 0, "basic", {"filter_false_positives": True})
 
+    def test_pruneheight_undo_presence(self):
+        node = self.nodes[5]
+        pruneheight = node.getblockchaininfo()["pruneheight"]
+        fetch_block = node.getblockhash(pruneheight - 1)
+
+        self.connect_nodes(1, 5)
+        peers = node.getpeerinfo()
+        node.getblockfrompeer(fetch_block, peers[0]["id"])
+        self.wait_until(lambda: not try_rpc(-1, "Block not available (pruned data)", node.getblock, fetch_block), timeout=5)
+
+        new_pruneheight = node.getblockchaininfo()["pruneheight"]
+        assert_equal(pruneheight, new_pruneheight)
+
 if __name__ == '__main__':
-    PruneTest().main()
+    PruneTest(__file__).main()

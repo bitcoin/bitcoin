@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2021 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test loadblock option
@@ -10,7 +10,7 @@ To generate that file this test uses the helper scripts available
 in contrib/linearize.
 """
 
-import os
+from pathlib import Path
 import subprocess
 import sys
 import tempfile
@@ -32,42 +32,42 @@ class LoadblockTest(BitcoinTestFramework):
         self.generate(self.nodes[0], COINBASE_MATURITY, sync_fun=self.no_op)
 
         # Parsing the url of our node to get settings for config file
-        data_dir = self.nodes[0].datadir
+        data_dir = self.nodes[0].datadir_path
         node_url = urllib.parse.urlparse(self.nodes[0].url)
-        cfg_file = os.path.join(data_dir, "linearize.cfg")
-        bootstrap_file = os.path.join(self.options.tmpdir, "bootstrap.dat")
+        cfg_file = data_dir / "linearize.cfg"
+        bootstrap_file = Path(self.options.tmpdir) / "bootstrap.dat"
         genesis_block = self.nodes[0].getblockhash(0)
         blocks_dir = self.nodes[0].blocks_path
         hash_list = tempfile.NamedTemporaryFile(dir=data_dir,
                                                 mode='w',
                                                 delete=False,
-                                                encoding="utf-8")
+        )
 
         self.log.info("Create linearization config file")
-        with open(cfg_file, "a", encoding="utf-8") as cfg:
+        with open(cfg_file, "a") as cfg:
             cfg.write(f"datadir={data_dir}\n")
             cfg.write(f"rpcuser={node_url.username}\n")
             cfg.write(f"rpcpassword={node_url.password}\n")
             cfg.write(f"port={node_url.port}\n")
             cfg.write(f"host={node_url.hostname}\n")
             cfg.write(f"output_file={bootstrap_file}\n")
-            cfg.write(f"max_height=100\n")
-            cfg.write(f"netmagic=fabfb5da\n")
+            cfg.write("max_height=100\n")
+            cfg.write("netmagic=fabfb5da\n")
             cfg.write(f"input={blocks_dir}\n")
             cfg.write(f"genesis={genesis_block}\n")
             cfg.write(f"hashlist={hash_list.name}\n")
 
         base_dir = self.config["environment"]["SRCDIR"]
-        linearize_dir = os.path.join(base_dir, "contrib", "linearize")
+        linearize_dir = Path(base_dir) / "contrib" / "linearize"
 
         self.log.info("Run linearization of block hashes")
-        linearize_hashes_file = os.path.join(linearize_dir, "linearize-hashes.py")
+        linearize_hashes_file = linearize_dir / "linearize-hashes.py"
         subprocess.run([sys.executable, linearize_hashes_file, cfg_file],
                        stdout=hash_list,
                        check=True)
 
         self.log.info("Run linearization of block data")
-        linearize_data_file = os.path.join(linearize_dir, "linearize-data.py")
+        linearize_data_file = linearize_dir / "linearize-data.py"
         subprocess.run([sys.executable, linearize_data_file, cfg_file],
                        check=True)
 
@@ -80,4 +80,4 @@ class LoadblockTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    LoadblockTest().main()
+    LoadblockTest(__file__).main()

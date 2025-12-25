@@ -12,6 +12,21 @@ def main():
     expect_code(run_verify("", "pub", '0.32.awefa.12f9h'), 11, "Malformed version should fail")
     expect_code(run_verify('--min-good-sigs 20', "pub", "22.0"), 9, "--min-good-sigs 20 should fail")
 
+    print("- testing verification (22.0-x86_64-linux-gnu.tar.gz)", flush=True)
+    _220_x86_64_linux_gnu = run_verify("--json", "pub", "22.0-x86_64-linux-gnu.tar.gz")
+    try:
+        result = json.loads(_220_x86_64_linux_gnu.stdout.decode())
+    except Exception:
+        print("failed on 22.0-x86_64-linux-gnu.tar.gz --json:")
+        print_process_failure(_220_x86_64_linux_gnu)
+        raise
+
+    expect_code(_220_x86_64_linux_gnu, 0, "22.0-x86_64-linux-gnu.tar.gz should succeed")
+    v = result['verified_binaries']
+    assert result['good_trusted_sigs']
+    assert len(v) == 1
+    assert v['bitcoin-22.0-x86_64-linux-gnu.tar.gz'] == '59ebd25dd82a51638b7a6bb914586201e67db67b919b2a1ff08925a7936d1b16'
+
     print("- testing verification (22.0)", flush=True)
     _220 = run_verify("--json", "pub", "22.0")
     try:

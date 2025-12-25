@@ -1,15 +1,21 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <addrman.h>
 #include <bench/bench.h>
+#include <compat/compat.h>
+#include <netaddress.h>
 #include <netbase.h>
 #include <netgroup.h>
+#include <protocol.h>
 #include <random.h>
+#include <span.h>
+#include <uint256.h>
 #include <util/check.h>
 #include <util/time.h>
 
+#include <cstring>
 #include <optional>
 #include <vector>
 
@@ -127,7 +133,7 @@ static void AddrManSelectByNetwork(benchmark::Bench& bench)
     FillAddrMan(addrman);
 
     bench.run([&] {
-        (void)addrman.Select(/*new_only=*/false, NET_I2P);
+        (void)addrman.Select(/*new_only=*/false, {NET_I2P});
     });
 }
 

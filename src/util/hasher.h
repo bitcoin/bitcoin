@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,32 +8,55 @@
 #include <crypto/common.h>
 #include <crypto/siphash.h>
 #include <primitives/transaction.h>
+#include <span.h>
 #include <uint256.h>
 
+#include <concepts>
 #include <cstdint>
 #include <cstring>
 
-template <typename C> class Span;
+class SaltedUint256Hasher
+{
+    const PresaltedSipHasher m_hasher;
+
+public:
+    SaltedUint256Hasher();
+
+    size_t operator()(const uint256& hash) const
+    {
+        return m_hasher(hash);
+    }
+};
 
 class SaltedTxidHasher
 {
-private:
-    /** Salt */
-    const uint64_t k0, k1;
+    const PresaltedSipHasher m_hasher;
 
 public:
     SaltedTxidHasher();
 
-    size_t operator()(const uint256& txid) const {
-        return SipHashUint256(k0, k1, txid);
+    size_t operator()(const Txid& txid) const
+    {
+        return m_hasher(txid.ToUint256());
+    }
+};
+
+class SaltedWtxidHasher
+{
+    const PresaltedSipHasher m_hasher;
+
+public:
+    SaltedWtxidHasher();
+
+    size_t operator()(const Wtxid& wtxid) const
+    {
+        return m_hasher(wtxid.ToUint256());
     }
 };
 
 class SaltedOutpointHasher
 {
-private:
-    /** Salt */
-    const uint64_t k0, k1;
+    const PresaltedSipHasher m_hasher;
 
 public:
     SaltedOutpointHasher(bool deterministic = false);
@@ -45,15 +68,15 @@ public:
      * a slight performance penalty (around 1.6%), but this is compensated by
      * memory savings of about 9% which allow for a larger dbcache setting.
      *
-     * @see https://gcc.gnu.org/onlinedocs/gcc-9.2.0/libstdc++/manual/manual/unordered_associative.html
+     * @see https://gcc.gnu.org/onlinedocs/gcc-13.2.0/libstdc++/manual/manual/unordered_associative.html
      */
-    size_t operator()(const COutPoint& id) const noexcept {
-        return SipHashUint256Extra(k0, k1, id.hash, id.n);
+    size_t operator()(const COutPoint& id) const noexcept
+    {
+        return m_hasher(id.hash.ToUint256(), id.n);
     }
 };
 
-struct FilterHeaderHasher
-{
+struct FilterHeaderHasher {
     size_t operator()(const uint256& hash) const { return ReadLE64(hash.begin()); }
 };
 
@@ -95,7 +118,7 @@ private:
 public:
     SaltedSipHasher();
 
-    size_t operator()(const Span<const unsigned char>& script) const;
+    size_t operator()(const std::span<const unsigned char>& script) const;
 };
 
 #endif // BITCOIN_UTIL_HASHER_H

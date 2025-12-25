@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,7 +20,7 @@ void ScheduleBatchPriority()
     const static sched_param param{};
     const int rc = pthread_setschedparam(pthread_self(), SCHED_BATCH, &param);
     if (rc != 0) {
-        LogPrintf("Failed to pthread_setschedparam: %s\n", SysErrorString(rc));
+        LogWarning("Failed to pthread_setschedparam: %s", SysErrorString(rc));
     }
 #endif
 }

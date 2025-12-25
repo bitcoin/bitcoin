@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2022 The Bitcoin Core developers
+// Copyright (c) 2016-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +6,9 @@
 #include <bench/bench.h>
 #include <common/bloom.h>
 #include <crypto/common.h>
+#include <span.h>
 
+#include <cstdint>
 #include <vector>
 
 static void RollingBloom(benchmark::Bench& bench)

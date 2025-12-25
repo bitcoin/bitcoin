@@ -3,27 +3,27 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">I-right-click upang i-edit ang ♦address♦ o ♦label♦</translation>
+        <translation type="unfinished">pindutin lamang ang kanang pindutan upang i-edit ang address o label.</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Gumawa ng bagong ♦address♦</translation>
+        <translation type="unfinished">Lumikha ng bagong ♦address♦</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;Bago</translation>
+        <translation type="unfinished">Panibago</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Kopyahin ang pinipiling ♦address♦ sa kasalakuyan sa ♦clipboard♦ ng sistema</translation>
+        <source>&amp;Copy</source>
+        <translation type="unfinished">Gayahin</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">Isara</translation>
+        <translation type="unfinished">(Do you mean: Close?) :isara, sarado </translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">Tanggalin ang kasalukuyang napiling ♦address♦ sa listahan</translation>
+        <translation type="unfinished">Burahin ang kasalukuyang napiling ♦address♦ sa listahan</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -39,11 +39,11 @@
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation type="unfinished">&amp;Tanggalin</translation>
+        <translation type="unfinished">&amp;Burahin</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">Piliin ang ♦address♦ kung saan ipapadala ang mga coin</translation>
+        <translation type="unfinished">Piliin ang ♦address♦ kung saan ipapadala ang mga barya</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
@@ -51,15 +51,7 @@
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation type="unfinished">&amp;Pumili</translation>
-    </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Pinapadala ang mga ♦address♦</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Tinatanggap ang mga ♦address♦</translation>
+        <translation type="unfinished">(do you mean: CHOOSE?) ;Pumili,Piliin.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -94,7 +86,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
-        <translation type="unfinished">May mali sa pagsubok na i-save ang listahan ng address  sa 1%1. Pakisubukan ulit.</translation>
+        <translation type="unfinished">May mali sa pagsubok na i-save ang listahan ng address  sa %1. Pakisubukan ulit.</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -246,7 +238,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
-        <translation type="unfinished">Malubhang pagkakamali ay naganap. 1%1 hindi na pwedeng magpatuloy ng ligtas at ihihinto na.</translation>
+        <translation type="unfinished">Malubhang pagkakamali ay naganap. %1 hindi na pwedeng magpatuloy ng ligtas at ihihinto na.</translation>
     </message>
     <message>
         <source>Internal error</source>
@@ -254,7 +246,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
-        <translation type="unfinished">May panloob na pagkakamali ang naganap. 1%1 ay magtatangkang ituloy na ligtas. Ito ay hindi inaasahan na problema na maaaring i-ulat katulad ng pagkalarawan sa ibaba.</translation>
+        <translation type="unfinished">May panloob na pagkakamali ang naganap. %1 ay magtatangkang ituloy na ligtas. Ito ay hindi inaasahan na problema na maaaring i-ulat katulad ng pagkalarawan sa ibaba.</translation>
     </message>
 </context>
 <context>
@@ -270,20 +262,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Isang malubhang pagkakamali ang naganap. Suriin ang mga ♦setting♦ ng ♦file♦ na ♦writable♦, o subukan na patakbuhin sa ♦-nosettings♦.</translation>
     </message>
     <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation type="unfinished">Pagkakamali: Ang natukoy na datos na ♦directory♦ "1%1" ay wala.</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1.</source>
-        <translation type="unfinished">Pagkakamali: Hindi ma-parse ang ♦configuration file♦: %1.</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
-        <translation type="unfinished">Pagkakamali: 1%1</translation>
+        <translation type="unfinished">Pagkakamali: %1</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely…</source>
-        <translation type="unfinished">1%1 hindi pa nag-exit ng ligtas...</translation>
+        <translation type="unfinished">%1 hindi pa nag-exit ng ligtas...</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -331,18 +315,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
         </translation>
     </message>
-    </context>
-<context>
-    <name>bitcoin-core</name>
     <message>
-        <source>Settings file could not be read</source>
-        <translation type="unfinished">Ang mga ♦setting file♦ ay hindi mabasa</translation>
+        <source>default wallet</source>
+        <translation type="unfinished">pitaka na ♦default♦</translation>
     </message>
-    <message>
-        <source>Settings file could not be written</source>
-        <translation type="unfinished">Ang mga ♦settings file♦ ay hindi maisulat</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -379,7 +356,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation type="unfinished">Tungkol sa &amp;♦Qt♦</translation>
+        <translation type="unfinished">Patungkol sa &amp;♦Qt♦</translation>
+    </message>
+    <message>
+        <source>Show information about Qt</source>
+        <translation type="unfinished">Ipakita ang impormasyon tungkol sa Qt</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -390,6 +371,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Gumawa ng bagong pitaka</translation>
     </message>
     <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished">Bawasan</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation type="unfinished">Pitaka:</translation>
     </message>
@@ -397,10 +382,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Network activity disabled.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">Na-disable ang aktibidad ng ♦network♦</translation>
-    </message>
-    <message>
-        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
-        <translation type="unfinished">Ang paghalili ay  &lt;b&gt;na-enable&lt;/b&gt;: %1</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -488,7 +469,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation type="unfinished">&amp;Tulong</translation>
+        <translation type="unfinished">&amp;Tulungan</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
@@ -509,10 +490,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Processing blocks on disk…</source>
         <translation type="unfinished">Pinoproseso ang mga bloke sa ♦disk♦...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk…</source>
-        <translation type="unfinished">Ni-rere-index ang mga bloke sa ♦disk♦</translation>
     </message>
     <message>
         <source>Connecting to peers…</source>
@@ -570,6 +547,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Impormasyon</translation>
     </message>
     <message>
+        <source>Up to date</source>
+        <translation type="unfinished">napapapanahon</translation>
+    </message>
+    <message>
         <source>Load Partially Signed Bitcoin Transaction</source>
         <translation type="unfinished">Ang ♦Load♦ ay Bahagyang Napirmahan na Transaksyon sa ♦Bitcoin♦</translation>
     </message>
@@ -588,10 +569,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;Sending addresses</source>
         <translation type="unfinished">&amp;Pagpapadalhan na mga ♦address♦</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses</source>
-        <translation type="unfinished">&amp;Pagtatanggapan na mga ♦address♦</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI</source>
@@ -624,10 +601,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Mask the values in the Overview tab</source>
         <translation type="unfinished">I-mask ang  mga halaga sa loob ng ♦Overview tab♦</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">pitaka na ♦default♦</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -688,7 +661,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Error: %1</source>
-        <translation type="unfinished">Pagkakamali: 1%1</translation>
+        <translation type="unfinished">Pagkakamali: %1</translation>
     </message>
     <message>
         <source>Warning: %1</source>
@@ -793,10 +766,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Bayad:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Alikabok:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">Pagkatapos na Bayad:</translation>
     </message>
@@ -881,28 +850,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Kopyahin ang ♦bytes♦</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Kopyahin ang ♦dust♦</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">Kopyahin ang pagbabago</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1 naka-lock)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">oo</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">hindi</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">Ang tatak na ito ay nagiging pula kung ang sinomang tatanggap ay tatanggap ng halaga na mas maliit  sa kasalukuyang ♦dust threshold♦</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -955,10 +908,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Open wallet warning</source>
         <translation type="unfinished">Babala sa pagbukas ng pitaka</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">pitaka na ♦default♦</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1038,14 +987,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Gumawa ng Blankong Pitaka</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management</source>
-        <translation type="unfinished">Gumawa ng  mga ♦descriptors♦ para sa pamamahala sa ♦scriptPubKey♦</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet</source>
-        <translation type="unfinished">♦Descriptor♦ na pitaka</translation>
-    </message>
-    <message>
         <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
         <translation type="unfinished">Gumamit ng panlabas na pagpirmang ♦device♦ katulad ng ♦hardware♦ na pitaka. I-configure ang panlabas na ♦signer script♦ sa loob ng ♦preferences♦ ng pitaka n listahan. </translation>
     </message>
@@ -1056,10 +997,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Create</source>
         <translation type="unfinished">Gumawa</translation>
-    </message>
-    <message>
-        <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Pinagsama-sama na walang suporta ng ♦sqlite♦ (kailangan para sa ♦descriptor♦ na pitaka)</translation>
     </message>
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
@@ -1146,7 +1083,25 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">bersyon</translation>
+    </message>
+    </context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">Huwag Patayin ang inyong kompyuter hanggang mawala ang window na ito.</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Maligayang Pagdating</translation>
+    </message>
     <message>
         <source>Bitcoin</source>
         <translation type="unfinished">♦Bitcoin♦</translation>
@@ -1187,24 +1142,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error</source>
         <translation type="unfinished">Nagkamali</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Maligayang Pagdating</translation>
-    </message>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">bersyon</translation>
-    </message>
-    </context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">Huwag Patayin ang inyong kompyuter hanggang mawala ang window na ito.</translation>
     </message>
 </context>
 <context>
@@ -1252,14 +1189,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;External signer script path</source>
         <translation type="unfinished">&amp;Panlabas na ♦signer script♦ na daanan</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">♦Port♦ ng mapa gamit ang &amp;♦UPnP♦</translation>
-    </message>
-    <message>
-        <source>Map port using NA&amp;T-PMP</source>
-        <translation type="unfinished">♦Port♦ ng mapa gamit ang NA&amp;T-PMP</translation>
     </message>
     <message>
         <source>Allow incomin&amp;g connections</source>
@@ -1375,10 +1304,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Sukli:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Alikabok:</translation>
-    </message>
-    <message>
         <source>Copy quantity</source>
         <translation type="unfinished">Kopyahin ang dami</translation>
     </message>
@@ -1397,10 +1322,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">Kopyahin ang ♦bytes♦</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Kopyahin ang ♦dust♦</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -1507,13 +1428,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
-    <name>WalletModel</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">pitaka na ♦default♦</translation>
-    </message>
-</context>
-<context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
@@ -1524,4 +1438,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">I-export ang datos sa kasalukuyang ♦tab♦ sa isang file</translation>
     </message>
     </context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">pitaka na ♦default♦</translation>
+    </message>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">Ang mga ♦setting file♦ ay hindi mabasa</translation>
+    </message>
+    <message>
+        <source>Settings file could not be written</source>
+        <translation type="unfinished">Ang mga ♦settings file♦ ay hindi maisulat</translation>
+    </message>
+</context>
 </TS>

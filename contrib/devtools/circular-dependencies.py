@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Copyright (c) 2018-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import sys
 import re
-from typing import Dict, List, Set
 
 MAPPING = {
     'core_read.cpp': 'core_io.cpp',
@@ -33,7 +32,7 @@ def module_name(path):
     return None
 
 files = dict()
-deps: Dict[str, Set[str]] = dict()
+deps: dict[str, set[str]] = dict()
 
 RE = re.compile("^#include <(.*)>")
 
@@ -50,7 +49,7 @@ for arg in sys.argv[1:]:
 # TODO: implement support for multiple include directories
 for arg in sorted(files.keys()):
     module = files[arg]
-    with open(arg, 'r', encoding="utf8") as f:
+    with open(arg, 'r') as f:
         for line in f:
             match = RE.match(line)
             if match:
@@ -65,7 +64,7 @@ while True:
     shortest_cycle = None
     for module in sorted(deps.keys()):
         # Build the transitive closure of dependencies of module
-        closure: Dict[str, List[str]] = dict()
+        closure: dict[str, list[str]] = dict()
         for dep in deps[module]:
             closure[dep] = []
         while True:

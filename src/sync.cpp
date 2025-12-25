@@ -1,10 +1,6 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
 
 #include <sync.h>
 
@@ -41,11 +37,11 @@ struct CLockLocation {
         const char* pszFile,
         int nLine,
         bool fTryIn,
-        const std::string& thread_name)
+        std::string&& thread_name)
         : fTry(fTryIn),
           mutexName(pszName),
           sourceFile(pszFile),
-          m_thread_name(thread_name),
+          m_thread_name(std::move(thread_name)),
           sourceLine(nLine) {}
 
     std::string ToString() const
@@ -64,7 +60,7 @@ private:
     bool fTry;
     std::string mutexName;
     std::string sourceFile;
-    const std::string& m_thread_name;
+    const std::string m_thread_name;
     int sourceLine;
 };
 
@@ -94,8 +90,8 @@ LockData& GetLockData() {
 
 static void potential_deadlock_detected(const LockPair& mismatch, const LockStack& s1, const LockStack& s2)
 {
-    LogPrintf("POTENTIAL DEADLOCK DETECTED\n");
-    LogPrintf("Previous lock order was:\n");
+    LogError("POTENTIAL DEADLOCK DETECTED");
+    LogError("Previous lock order was:");
     for (const LockStackItem& i : s1) {
         std::string prefix{};
         if (i.first == mismatch.first) {
@@ -104,11 +100,11 @@ static void potential_deadlock_detected(const LockPair& mismatch, const LockStac
         if (i.first == mismatch.second) {
             prefix = " (2)";
         }
-        LogPrintf("%s %s\n", prefix, i.second.ToString());
+        LogError("%s %s", prefix, i.second.ToString());
     }
 
     std::string mutex_a, mutex_b;
-    LogPrintf("Current lock order is:\n");
+    LogError("Current lock order is:");
     for (const LockStackItem& i : s2) {
         std::string prefix{};
         if (i.first == mismatch.first) {
@@ -119,7 +115,7 @@ static void potential_deadlock_detected(const LockPair& mismatch, const LockStac
             prefix = " (2)";
             mutex_b = i.second.Name();
         }
-        LogPrintf("%s %s\n", prefix, i.second.ToString());
+        LogError("%s %s", prefix, i.second.ToString());
     }
     if (g_debug_lockorder_abort) {
         tfm::format(std::cerr, "Assertion failed: detected inconsistent lock order for %s, details in debug log.\n", s2.back().second.ToString());
@@ -130,14 +126,14 @@ static void potential_deadlock_detected(const LockPair& mismatch, const LockStac
 
 static void double_lock_detected(const void* mutex, const LockStack& lock_stack)
 {
-    LogPrintf("DOUBLE LOCK DETECTED\n");
-    LogPrintf("Lock order:\n");
+    LogError("DOUBLE LOCK DETECTED");
+    LogError("Lock order:");
     for (const LockStackItem& i : lock_stack) {
         std::string prefix{};
         if (i.first == mutex) {
             prefix = " (*)";
         }
-        LogPrintf("%s %s\n", prefix, i.second.ToString());
+        LogError("%s %s", prefix, i.second.ToString());
     }
     if (g_debug_lockorder_abort) {
         tfm::format(std::cerr,
@@ -152,8 +148,8 @@ template <typename MutexType>
 static void push_lock(MutexType* c, const CLockLocation& locklocation)
 {
     constexpr bool is_recursive_mutex =
-        std::is_base_of<RecursiveMutex, MutexType>::value ||
-        std::is_base_of<std::recursive_mutex, MutexType>::value;
+        std::is_base_of_v<RecursiveMutex, MutexType> ||
+        std::is_base_of_v<std::recursive_mutex, MutexType>;
 
     LockData& lockdata = GetLockData();
     std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
@@ -177,11 +173,11 @@ static void push_lock(MutexType* c, const CLockLocation& locklocation)
         }
 
         const LockPair p1 = std::make_pair(i.first, c);
-        if (lockdata.lockorders.count(p1))
+        if (lockdata.lockorders.contains(p1))
             continue;
 
         const LockPair p2 = std::make_pair(c, i.first);
-        if (lockdata.lockorders.count(p2)) {
+        if (lockdata.lockorders.contains(p2)) {
             auto lock_stack_copy = lock_stack;
             lock_stack.pop_back();
             potential_deadlock_detected(p1, lockdata.lockorders[p2], lock_stack_copy);
@@ -210,8 +206,6 @@ void EnterCritical(const char* pszName, const char* pszFile, int nLine, MutexTyp
 {
     push_lock(cs, CLockLocation(pszName, pszFile, nLine, fTry, util::ThreadGetInternalName()));
 }
-template void EnterCritical(const char*, const char*, int, Mutex*, bool);
-template void EnterCritical(const char*, const char*, int, RecursiveMutex*, bool);
 template void EnterCritical(const char*, const char*, int, std::mutex*, bool);
 template void EnterCritical(const char*, const char*, int, std::recursive_mutex*, bool);
 
@@ -229,10 +223,10 @@ void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, c
         }
     }
 
-    LogPrintf("INCONSISTENT LOCK ORDER DETECTED\n");
-    LogPrintf("Current lock order (least recent first) is:\n");
+    LogError("INCONSISTENT LOCK ORDER DETECTED");
+    LogError("Current lock order (least recent first) is:");
     for (const LockStackItem& i : lock_stack) {
-        LogPrintf(" %s\n", i.second.ToString());
+        LogError(" %s", i.second.ToString());
     }
     if (g_debug_lockorder_abort) {
         tfm::format(std::cerr, "%s:%s %s was not most recent critical section locked, details in debug log.\n", file, line, guardname);
@@ -246,7 +240,7 @@ void LeaveCritical()
     pop_lock();
 }
 
-std::string LocksHeld()
+static std::string LocksHeld()
 {
     LockData& lockdata = GetLockData();
     std::lock_guard<std::mutex> lock(lockdata.dd_mutex);

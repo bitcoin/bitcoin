@@ -1,8 +1,10 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <rpc/util.h>
+#include <scheduler.h>
+#include <wallet/context.h>
 #include <wallet/rpc/util.h>
 #include <wallet/wallet.h>
 
@@ -10,8 +12,9 @@
 namespace wallet {
 RPCHelpMan walletpassphrase()
 {
-    return RPCHelpMan{"walletpassphrase",
-                "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
+    return RPCHelpMan{
+        "walletpassphrase",
+        "Stores the wallet decryption key in memory for 'timeout' seconds.\n"
                 "This is needed prior to performing transactions related to private keys such as sending bitcoins\n"
             "\nNote:\n"
             "Issuing the walletpassphrase command while the wallet is already unlocked will set a new unlock\n"
@@ -87,24 +90,24 @@ RPCHelpMan walletpassphrase()
         relock_time = pwallet->nRelockTime;
     }
 
-    // rpcRunLater must be called without cs_wallet held otherwise a deadlock
-    // can occur. The deadlock would happen when RPCRunLater removes the
-    // previous timer (and waits for the callback to finish if already running)
-    // and the callback locks cs_wallet.
-    AssertLockNotHeld(wallet->cs_wallet);
+    // Get wallet scheduler to queue up the relock callback in the future.
+    // Scheduled events don't get destructed until they are executed,
+    // and they are executed in series in a single scheduler thread so
+    // no cs_wallet lock is needed.
+    WalletContext& context = EnsureWalletContext(request.context);
     // Keep a weak pointer to the wallet so that it is possible to unload the
     // wallet before the following callback is called. If a valid shared pointer
     // is acquired in the callback then the wallet is still loaded.
     std::weak_ptr<CWallet> weak_wallet = wallet;
-    pwallet->chain().rpcRunLater(strprintf("lockwallet(%s)", pwallet->GetName()), [weak_wallet, relock_time] {
+    context.scheduler->scheduleFromNow([weak_wallet, relock_time] {
         if (auto shared_wallet = weak_wallet.lock()) {
             LOCK2(shared_wallet->m_relock_mutex, shared_wallet->cs_wallet);
-            // Skip if this is not the most recent rpcRunLater callback.
+            // Skip if this is not the most recent relock callback.
             if (shared_wallet->nRelockTime != relock_time) return;
             shared_wallet->Lock();
             shared_wallet->nRelockTime = 0;
         }
-    }, nSleepTime);
+    }, std::chrono::seconds(nSleepTime));
 
     return UniValue::VNULL;
 },
@@ -114,8 +117,9 @@ RPCHelpMan walletpassphrase()
 
 RPCHelpMan walletpassphrasechange()
 {
-    return RPCHelpMan{"walletpassphrasechange",
-                "\nChanges the wallet passphrase from 'oldpassphrase' to 'newpassphrase'.\n",
+    return RPCHelpMan{
+        "walletpassphrasechange",
+        "Changes the wallet passphrase from 'oldpassphrase' to 'newpassphrase'.\n",
                 {
                     {"oldpassphrase", RPCArg::Type::STR, RPCArg::Optional::NO, "The current passphrase"},
                     {"newpassphrase", RPCArg::Type::STR, RPCArg::Optional::NO, "The new passphrase"},
@@ -173,8 +177,9 @@ RPCHelpMan walletpassphrasechange()
 
 RPCHelpMan walletlock()
 {
-    return RPCHelpMan{"walletlock",
-                "\nRemoves the wallet encryption key from memory, locking the wallet.\n"
+    return RPCHelpMan{
+        "walletlock",
+        "Removes the wallet encryption key from memory, locking the wallet.\n"
                 "After calling this method, you will need to call walletpassphrase again\n"
                 "before being able to call any methods which require the wallet to be unlocked.\n",
                 {},
@@ -215,12 +220,17 @@ RPCHelpMan walletlock()
 
 RPCHelpMan encryptwallet()
 {
-    return RPCHelpMan{"encryptwallet",
-                "\nEncrypts the wallet with 'passphrase'. This is for first time encryption.\n"
-                "After this, any calls that interact with private keys such as sending or signing \n"
-                "will require the passphrase to be set prior the making these calls.\n"
+    return RPCHelpMan{
+        "encryptwallet",
+        "Encrypts the wallet with 'passphrase'. This is for first time encryption.\n"
+        "After this, any calls that interact with private keys such as sending or signing \n"
+        "will require the passphrase to be set prior to making these calls.\n"
                 "Use the walletpassphrase call for this, and then walletlock call.\n"
-                "If the wallet is already encrypted, use the walletpassphrasechange call.\n",
+                "If the wallet is already encrypted, use the walletpassphrasechange call.\n"
+                "** IMPORTANT **\n"
+                "For security reasons, the encryption process will generate a new HD seed, resulting\n"
+                "in the creation of a fresh set of active descriptors. Therefore, it is crucial to\n"
+                "securely back up the newly generated wallet file using the backupwallet RPC.\n",
                 {
                     {"passphrase", RPCArg::Type::STR, RPCArg::Optional::NO, "The pass phrase to encrypt the wallet with. It must be at least 1 character, but should be long."},
                 },
@@ -268,7 +278,7 @@ RPCHelpMan encryptwallet()
         throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Failed to encrypt the wallet.");
     }
 
-    return "wallet encrypted; The keypool has been flushed and a new HD seed was generated (if you are using HD). You need to make a new backup.";
+    return "wallet encrypted; The keypool has been flushed and a new HD seed was generated. You need to make a new backup with the backupwallet RPC.";
 },
     };
 }

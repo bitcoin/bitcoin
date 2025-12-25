@@ -52,6 +52,9 @@ class LEVELDB_EXPORT Slice {
   // Return true iff the length of the referenced data is zero
   bool empty() const { return size_ == 0; }
 
+  const char* begin() const { return data(); }
+  const char* end() const { return data() + size(); }
+
   // Return the ith byte in the referenced data.
   // REQUIRES: n < size()
   char operator[](size_t n) const {

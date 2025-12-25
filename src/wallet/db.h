@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,13 +20,18 @@ class ArgsManager;
 struct bilingual_str;
 
 namespace wallet {
-void SplitWalletPath(const fs::path& wallet_path, fs::path& env_directory, std::string& database_filename);
+// BytePrefix compares equality with other byte spans that begin with the same prefix.
+struct BytePrefix {
+    std::span<const std::byte> prefix;
+};
+bool operator<(BytePrefix a, std::span<const std::byte> b);
+bool operator<(std::span<const std::byte> a, BytePrefix b);
 
 class DatabaseCursor
 {
 public:
-    explicit DatabaseCursor() {}
-    virtual ~DatabaseCursor() {}
+    explicit DatabaseCursor() = default;
+    virtual ~DatabaseCursor() = default;
 
     DatabaseCursor(const DatabaseCursor&) = delete;
     DatabaseCursor& operator=(const DatabaseCursor&) = delete;
@@ -51,13 +56,12 @@ private:
     virtual bool HasKey(DataStream&& key) = 0;
 
 public:
-    explicit DatabaseBatch() {}
-    virtual ~DatabaseBatch() {}
+    explicit DatabaseBatch() = default;
+    virtual ~DatabaseBatch() = default;
 
     DatabaseBatch(const DatabaseBatch&) = delete;
     DatabaseBatch& operator=(const DatabaseBatch&) = delete;
 
-    virtual void Flush() = 0;
     virtual void Close() = 0;
 
     template <typename K, typename T>
@@ -67,7 +71,7 @@ public:
         ssKey.reserve(1000);
         ssKey << key;
 
-        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+        DataStream ssValue{};
         if (!ReadKey(std::move(ssKey), ssValue)) return false;
         try {
             ssValue >> value;
@@ -84,7 +88,7 @@ public:
         ssKey.reserve(1000);
         ssKey << key;
 
-        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+        DataStream ssValue{};
         ssValue.reserve(10000);
         ssValue << value;
 
@@ -110,13 +114,14 @@ public:
 
         return HasKey(std::move(ssKey));
     }
-    virtual bool ErasePrefix(Span<const std::byte> prefix) = 0;
+    virtual bool ErasePrefix(std::span<const std::byte> prefix) = 0;
 
     virtual std::unique_ptr<DatabaseCursor> GetNewCursor() = 0;
-    virtual std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(Span<const std::byte> prefix) = 0;
+    virtual std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(std::span<const std::byte> prefix) = 0;
     virtual bool TxnBegin() = 0;
     virtual bool TxnCommit() = 0;
     virtual bool TxnAbort() = 0;
+    virtual bool HasActiveTxn() = 0;
 };
 
 /** An instance of this class represents one database.
@@ -125,59 +130,43 @@ class WalletDatabase
 {
 public:
     /** Create dummy DB handle */
-    WalletDatabase() : nUpdateCounter(0) {}
-    virtual ~WalletDatabase() {};
+    WalletDatabase() = default;
+    virtual ~WalletDatabase() = default;
 
     /** Open the database if it is not already opened. */
     virtual void Open() = 0;
 
     //! Counts the number of active database users to be sure that the database is not closed while someone is using it
     std::atomic<int> m_refcount{0};
-    /** Indicate the a new database user has began using the database. Increments m_refcount */
-    virtual void AddRef() = 0;
-    /** Indicate that database user has stopped using the database and that it could be flushed or closed. Decrement m_refcount */
-    virtual void RemoveRef() = 0;
 
-    /** Rewrite the entire database on disk, with the exception of key pszSkip if non-zero
+    /** Rewrite the entire database on disk
      */
-    virtual bool Rewrite(const char* pszSkip=nullptr) = 0;
+    virtual bool Rewrite() = 0;
 
     /** Back up the entire database to a file.
      */
     virtual bool Backup(const std::string& strDest) const = 0;
 
-    /** Make sure all changes are flushed to database file.
-     */
-    virtual void Flush() = 0;
     /** Flush to the database file and close the database.
      *  Also close the environment if no other databases are open in it.
      */
     virtual void Close() = 0;
-    /* flush the wallet passively (TRY_LOCK)
-       ideal to be called periodically */
-    virtual bool PeriodicFlush() = 0;
-
-    virtual void IncrementUpdateCounter() = 0;
-
-    virtual void ReloadDbEnv() = 0;
 
     /** Return path to main database file for logs and error messages. */
     virtual std::string Filename() = 0;
 
+    /** Return paths to all database created files */
+    virtual std::vector<fs::path> Files() = 0;
+
     virtual std::string Format() = 0;
 
-    std::atomic<unsigned int> nUpdateCounter;
-    unsigned int nLastSeen{0};
-    unsigned int nLastFlushed{0};
-    int64_t nLastWalletUpdate{0};
-
     /** Make a DatabaseBatch connected to this database */
-    virtual std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) = 0;
+    virtual std::unique_ptr<DatabaseBatch> MakeBatch() = 0;
 };
 
 enum class DatabaseFormat {
-    BERKELEY,
     SQLITE,
+    BERKELEY_RO,
 };
 
 struct DatabaseOptions {
@@ -198,6 +187,7 @@ enum class DatabaseStatus {
     SUCCESS,
     FAILED_BAD_PATH,
     FAILED_BAD_FORMAT,
+    FAILED_LEGACY_DISABLED,
     FAILED_ALREADY_LOADED,
     FAILED_ALREADY_EXISTS,
     FAILED_NOT_FOUND,
@@ -209,7 +199,7 @@ enum class DatabaseStatus {
 };
 
 /** Recursively list database paths in directory. */
-std::vector<fs::path> ListDatabases(const fs::path& path);
+std::vector<std::pair<fs::path, std::string>> ListDatabases(const fs::path& path);
 
 void ReadDatabaseArgs(const ArgsManager& args, DatabaseOptions& options);
 std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);

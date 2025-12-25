@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2022 The Bitcoin Core developers
+// Copyright (c) 2013-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -29,7 +29,7 @@ struct TestVector {
     explicit TestVector(std::string strHexMasterIn) : strHexMaster(strHexMasterIn) {}
 
     TestVector& operator()(std::string pub, std::string prv, unsigned int nChild) {
-        vDerive.push_back(TestDerivation());
+        vDerive.emplace_back();
         TestDerivation &der = vDerive.back();
         der.pub = pub;
         der.prv = prv;

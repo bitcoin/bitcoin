@@ -1,9 +1,9 @@
-// Copyright (c) 2015-2022 The Bitcoin Core developers
+// Copyright (c) 2015-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <hash.h>
+#include <crypto/sha256.h>
 #include <random.h>
 #include <uint256.h>
 

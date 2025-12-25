@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,7 +20,7 @@ FUZZ_TARGET(fee_rate)
     const CFeeRate fee_rate{satoshis_per_k};
 
     (void)fee_rate.GetFeePerK();
-    const auto bytes = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
+    const auto bytes = fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(0, std::numeric_limits<int32_t>::max());
     if (!MultiplicationOverflow(int64_t{bytes}, satoshis_per_k)) {
         (void)fee_rate.GetFee(bytes);
     }

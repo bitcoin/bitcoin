@@ -1,0 +1,80 @@
+commit 203148b1ed6d8f4bad8030ef64f0bc4083309010
+Author: fanquake <fanquake@gmail.com>
+Date:   Sat Oct 4 01:00:25 2025 +0100
+
+    static fixes
+
+    See: https://bugreports.qt.io/browse/QTBUG-86287
+    See: https://bugreports.qt.io/browse/QTBUG-137004
+
+diff --git a/cmake/3rdparty/extra-cmake-modules/find-modules/FindXCB.cmake b/cmake/3rdparty/extra-cmake-modules/find-modules/FindXCB.cmake
+index 26b9bf89633..0c546d09a8b 100644
+--- a/qtbase/cmake/3rdparty/extra-cmake-modules/find-modules/FindXCB.cmake
++++ b/qtbase/cmake/3rdparty/extra-cmake-modules/find-modules/FindXCB.cmake
+@@ -145,7 +145,7 @@ endforeach()
+ set(XCB_XCB_component_deps)
+ set(XCB_COMPOSITE_component_deps XCB XFIXES)
+ set(XCB_DAMAGE_component_deps XCB XFIXES)
+-set(XCB_IMAGE_component_deps XCB SHM)
++set(XCB_IMAGE_component_deps XCB SHM AUX)
+ set(XCB_RENDERUTIL_component_deps XCB RENDER)
+ set(XCB_XFIXES_component_deps XCB RENDER SHAPE)
+ set(XCB_XVMC_component_deps XCB XV)
+diff --git a/src/gui/configure.cmake b/src/gui/configure.cmake
+index 99c517e3581..a2e644f77d9 100644
+--- a/qtbase/src/gui/configure.cmake
++++ b/qtbase/src/gui/configure.cmake
+@@ -80,10 +80,14 @@ if((X11_SUPPORTED) OR QT_FIND_ALL_PACKAGES_ALWAYS)
+     qt_find_package(XCB 0.3.9 COMPONENTS ICCCM PROVIDED_TARGETS XCB::ICCCM MODULE_NAME gui QMAKE_LIB xcb_icccm)
+ endif()
+ qt_add_qmake_lib_dependency(xcb_icccm xcb)
++if((X11_SUPPORTED) OR QT_FIND_ALL_PACKAGES_ALWAYS)
++    qt_find_package(XCB 0.3.8 COMPONENTS UTIL PROVIDED_TARGETS XCB::UTIL MODULE_NAME gui QMAKE_LIB xcb_util)
++endif()
++qt_add_qmake_lib_dependency(xcb_util xcb)
+ if((X11_SUPPORTED) OR QT_FIND_ALL_PACKAGES_ALWAYS)
+     qt_find_package(XCB 0.3.9 COMPONENTS IMAGE PROVIDED_TARGETS XCB::IMAGE MODULE_NAME gui QMAKE_LIB xcb_image)
+ endif()
+-qt_add_qmake_lib_dependency(xcb_image xcb_shm xcb)
++qt_add_qmake_lib_dependency(xcb_image xcb_shm xcb_util xcb)
+ if((X11_SUPPORTED) OR QT_FIND_ALL_PACKAGES_ALWAYS)
+     qt_find_package(XCB 0.3.9 COMPONENTS KEYSYMS PROVIDED_TARGETS XCB::KEYSYMS MODULE_NAME gui QMAKE_LIB xcb_keysyms)
+ endif()
+@@ -488,6 +492,7 @@ qt_config_compile_test(xcb_syslibs
+     LIBRARIES
+         XCB::CURSOR
+         XCB::ICCCM
++        XCB::UTIL
+         XCB::IMAGE
+         XCB::KEYSYMS
+         XCB::RANDR
+@@ -503,6 +508,7 @@ qt_config_compile_test(xcb_syslibs
+ "// xkb.h is using a variable called 'explicit', which is a reserved keyword in C++
+ #define explicit dont_use_cxx_explicit
+ #include <xcb/xcb.h>
++#include <xcb/xcb_util.h>
+ #include <xcb/xcb_image.h>
+ #include <xcb/xcb_keysyms.h>
+ #include <xcb/xcb_cursor.h>
+diff --git a/src/plugins/platforms/xcb/CMakeLists.txt b/src/plugins/platforms/xcb/CMakeLists.txt
+index e8fb442dd43..e964138115c 100644
+--- a/qtbase/src/plugins/platforms/xcb/CMakeLists.txt
++++ b/qtbase/src/plugins/platforms/xcb/CMakeLists.txt
+@@ -52,6 +52,7 @@ qt_internal_add_module(XcbQpaPrivate
+         Qt::GuiPrivate
+         XCB::CURSOR
+         XCB::ICCCM
++        XCB::UTIL
+         XCB::IMAGE
+         XCB::KEYSYMS
+         XCB::RANDR
+--- a/qtbase/src/gui/configure.cmake
++++ b/qtbase/src/gui/configure.cmake
+@@ -504,6 +504,7 @@ qt_config_compile_test(xcb_syslibs
+         XCB::XFIXES
+         XCB::XKB
+         XCB::XCB
++        X11::Xau
+     CODE
+ "// xkb.h is using a variable called 'explicit', which is a reserved keyword in C++
+ #define explicit dont_use_cxx_explicit

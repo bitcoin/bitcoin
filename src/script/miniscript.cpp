@@ -1,13 +1,17 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <string>
+#include <limits>
 #include <vector>
-#include <script/script.h>
-#include <script/miniscript.h>
 
-#include <assert.h>
+#include <primitives/transaction.h>
+#include <script/miniscript.h>
+#include <script/script.h>
+#include <script/solver.h>
+#include <span.h>
+#include <util/check.h>
+#include <util/vector.h>
 
 namespace miniscript {
 namespace internal {
@@ -15,62 +19,67 @@ namespace internal {
 Type SanitizeType(Type e) {
     int num_types = (e << "K"_mst) + (e << "V"_mst) + (e << "B"_mst) + (e << "W"_mst);
     if (num_types == 0) return ""_mst; // No valid type, don't care about the rest
-    assert(num_types == 1); // K, V, B, W all conflict with each other
-    assert(!(e << "z"_mst) || !(e << "o"_mst)); // z conflicts with o
-    assert(!(e << "n"_mst) || !(e << "z"_mst)); // n conflicts with z
-    assert(!(e << "n"_mst) || !(e << "W"_mst)); // n conflicts with W
-    assert(!(e << "V"_mst) || !(e << "d"_mst)); // V conflicts with d
-    assert(!(e << "K"_mst) ||  (e << "u"_mst)); // K implies u
-    assert(!(e << "V"_mst) || !(e << "u"_mst)); // V conflicts with u
-    assert(!(e << "e"_mst) || !(e << "f"_mst)); // e conflicts with f
-    assert(!(e << "e"_mst) ||  (e << "d"_mst)); // e implies d
-    assert(!(e << "V"_mst) || !(e << "e"_mst)); // V conflicts with e
-    assert(!(e << "d"_mst) || !(e << "f"_mst)); // d conflicts with f
-    assert(!(e << "V"_mst) ||  (e << "f"_mst)); // V implies f
-    assert(!(e << "K"_mst) ||  (e << "s"_mst)); // K implies s
-    assert(!(e << "z"_mst) ||  (e << "m"_mst)); // z implies m
+    CHECK_NONFATAL(num_types == 1); // K, V, B, W all conflict with each other
+    CHECK_NONFATAL(!(e << "z"_mst) || !(e << "o"_mst)); // z conflicts with o
+    CHECK_NONFATAL(!(e << "n"_mst) || !(e << "z"_mst)); // n conflicts with z
+    CHECK_NONFATAL(!(e << "n"_mst) || !(e << "W"_mst)); // n conflicts with W
+    CHECK_NONFATAL(!(e << "V"_mst) || !(e << "d"_mst)); // V conflicts with d
+    CHECK_NONFATAL(!(e << "K"_mst) ||  (e << "u"_mst)); // K implies u
+    CHECK_NONFATAL(!(e << "V"_mst) || !(e << "u"_mst)); // V conflicts with u
+    CHECK_NONFATAL(!(e << "e"_mst) || !(e << "f"_mst)); // e conflicts with f
+    CHECK_NONFATAL(!(e << "e"_mst) ||  (e << "d"_mst)); // e implies d
+    CHECK_NONFATAL(!(e << "V"_mst) || !(e << "e"_mst)); // V conflicts with e
+    CHECK_NONFATAL(!(e << "d"_mst) || !(e << "f"_mst)); // d conflicts with f
+    CHECK_NONFATAL(!(e << "V"_mst) ||  (e << "f"_mst)); // V implies f
+    CHECK_NONFATAL(!(e << "K"_mst) ||  (e << "s"_mst)); // K implies s
+    CHECK_NONFATAL(!(e << "z"_mst) ||  (e << "m"_mst)); // z implies m
     return e;
 }
 
-Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Type>& sub_types, uint32_t k, size_t data_size, size_t n_subs, size_t n_keys) {
+Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Type>& sub_types, uint32_t k,
+                 size_t data_size, size_t n_subs, size_t n_keys, MiniscriptContext ms_ctx) {
     // Sanity check on data
     if (fragment == Fragment::SHA256 || fragment == Fragment::HASH256) {
-        assert(data_size == 32);
+        CHECK_NONFATAL(data_size == 32);
     } else if (fragment == Fragment::RIPEMD160 || fragment == Fragment::HASH160) {
-        assert(data_size == 20);
+        CHECK_NONFATAL(data_size == 20);
     } else {
-        assert(data_size == 0);
+        CHECK_NONFATAL(data_size == 0);
     }
     // Sanity check on k
     if (fragment == Fragment::OLDER || fragment == Fragment::AFTER) {
-        assert(k >= 1 && k < 0x80000000UL);
-    } else if (fragment == Fragment::MULTI) {
-        assert(k >= 1 && k <= n_keys);
+        CHECK_NONFATAL(k >= 1 && k < 0x80000000UL);
+    } else if (fragment == Fragment::MULTI || fragment == Fragment::MULTI_A) {
+        CHECK_NONFATAL(k >= 1 && k <= n_keys);
     } else if (fragment == Fragment::THRESH) {
-        assert(k >= 1 && k <= n_subs);
+        CHECK_NONFATAL(k >= 1 && k <= n_subs);
     } else {
-        assert(k == 0);
+        CHECK_NONFATAL(k == 0);
     }
     // Sanity check on subs
     if (fragment == Fragment::AND_V || fragment == Fragment::AND_B || fragment == Fragment::OR_B ||
         fragment == Fragment::OR_C || fragment == Fragment::OR_I || fragment == Fragment::OR_D) {
-        assert(n_subs == 2);
+        CHECK_NONFATAL(n_subs == 2);
     } else if (fragment == Fragment::ANDOR) {
-        assert(n_subs == 3);
+        CHECK_NONFATAL(n_subs == 3);
     } else if (fragment == Fragment::WRAP_A || fragment == Fragment::WRAP_S || fragment == Fragment::WRAP_C ||
                fragment == Fragment::WRAP_D || fragment == Fragment::WRAP_V || fragment == Fragment::WRAP_J ||
                fragment == Fragment::WRAP_N) {
-        assert(n_subs == 1);
+        CHECK_NONFATAL(n_subs == 1);
     } else if (fragment != Fragment::THRESH) {
-        assert(n_subs == 0);
+        CHECK_NONFATAL(n_subs == 0);
     }
     // Sanity check on keys
     if (fragment == Fragment::PK_K || fragment == Fragment::PK_H) {
-        assert(n_keys == 1);
+        CHECK_NONFATAL(n_keys == 1);
     } else if (fragment == Fragment::MULTI) {
-        assert(n_keys >= 1 && n_keys <= 20);
+        CHECK_NONFATAL(n_keys >= 1 && n_keys <= MAX_PUBKEYS_PER_MULTISIG);
+        CHECK_NONFATAL(!IsTapscript(ms_ctx));
+    } else if (fragment == Fragment::MULTI_A) {
+        CHECK_NONFATAL(n_keys >= 1 && n_keys <= MAX_PUBKEYS_PER_MULTI_A);
+        CHECK_NONFATAL(IsTapscript(ms_ctx));
     } else {
-        assert(n_keys == 0);
+        CHECK_NONFATAL(n_keys == 0);
     }
 
     // Below is the per-fragment logic for computing the expression types.
@@ -113,7 +122,8 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
             "e"_mst.If(x << "f"_mst) | // e=f_x
             (x & "ghijk"_mst) | // g=g_x, h=h_x, i=i_x, j=j_x, k=k_x
             (x & "ms"_mst) | // m=m_x, s=s_x
-            // NOTE: 'd:' is not 'u' under P2WSH as MINIMALIF is only a policy rule there.
+            // NOTE: 'd:' is 'u' under Tapscript but not P2WSH as MINIMALIF is only a policy rule there.
+            "u"_mst.If(IsTapscript(ms_ctx)) |
             "ndx"_mst; // n, d, x
         case Fragment::WRAP_V: return
             "V"_mst.If(x << "B"_mst) | // V=B_x
@@ -210,7 +220,12 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
                 ((x << "h"_mst) && (y << "g"_mst)) ||
                 ((x << "i"_mst) && (y << "j"_mst)) ||
                 ((x << "j"_mst) && (y << "i"_mst)))); // k=k_x*k_y*k_z* !(g_x*h_y + h_x*g_y + i_x*j_y + j_x*i_y)
-        case Fragment::MULTI: return "Bnudemsk"_mst;
+        case Fragment::MULTI: {
+            return "Bnudemsk"_mst;
+        }
+        case Fragment::MULTI_A: {
+            return "Budemsk"_mst;
+        }
         case Fragment::THRESH: {
             bool all_e = true;
             bool all_m = true;
@@ -246,11 +261,12 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
     assert(false);
 }
 
-size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_t k, size_t n_subs, size_t n_keys) {
+size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_t k, size_t n_subs,
+                        size_t n_keys, MiniscriptContext ms_ctx) {
     switch (fragment) {
         case Fragment::JUST_1:
         case Fragment::JUST_0: return 1;
-        case Fragment::PK_K: return 34;
+        case Fragment::PK_K: return IsTapscript(ms_ctx) ? 33 : 34;
         case Fragment::PK_H: return 3 + 21;
         case Fragment::OLDER:
         case Fragment::AFTER: return 1 + BuildScript(k).size();
@@ -259,6 +275,7 @@ size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_
         case Fragment::HASH160:
         case Fragment::RIPEMD160: return 4 + 2 + 21;
         case Fragment::MULTI: return 1 + BuildScript(n_keys).size() + BuildScript(k).size() + 34 * n_keys;
+        case Fragment::MULTI_A: return (1 + 32 + 1) * n_keys + BuildScript(k).size() + 1;
         case Fragment::AND_V: return subsize;
         case Fragment::WRAP_V: return subsize + (sub0typ << "x"_mst);
         case Fragment::WRAP_S:
@@ -372,9 +389,13 @@ std::optional<std::vector<Opcode>> DecomposeScript(const CScript& script)
             // Decompose OP_EQUALVERIFY into OP_EQUAL OP_VERIFY
             out.emplace_back(OP_EQUAL, std::vector<unsigned char>());
             opcode = OP_VERIFY;
+        } else if (opcode == OP_NUMEQUALVERIFY) {
+            // Decompose OP_NUMEQUALVERIFY into OP_NUMEQUAL OP_VERIFY
+            out.emplace_back(OP_NUMEQUAL, std::vector<unsigned char>());
+            opcode = OP_VERIFY;
         } else if (IsPushdataOp(opcode)) {
             if (!CheckMinimalPush(push_data, opcode)) return {};
-        } else if (it != itend && (opcode == OP_CHECKSIG || opcode == OP_CHECKMULTISIG || opcode == OP_EQUAL) && (*it == OP_VERIFY)) {
+        } else if (it != itend && (opcode == OP_CHECKSIG || opcode == OP_CHECKMULTISIG || opcode == OP_EQUAL || opcode == OP_NUMEQUAL) && (*it == OP_VERIFY)) {
             // Rule out non minimal VERIFY sequences
             return {};
         }
@@ -397,7 +418,7 @@ std::optional<int64_t> ParseScriptNumber(const Opcode& in) {
     return {};
 }
 
-int FindNextChar(Span<const char> sp, const char m)
+int FindNextChar(std::span<const char> sp, const char m)
 {
     for (int i = 0; i < (int)sp.size(); ++i) {
         if (sp[i] == m) return i;

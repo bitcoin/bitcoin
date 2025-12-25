@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the sendall RPC command."""
 
 from decimal import Decimal, getcontext
 
+from test_framework.messages import SEQUENCE_FINAL
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
+    assert_greater_than_or_equal,
     assert_raises_rpc_error,
 )
 
@@ -25,10 +27,6 @@ def cleanup(func):
     return wrapper
 
 class SendallTest(BitcoinTestFramework):
-    # Setup and helpers
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
@@ -303,10 +301,7 @@ class SendallTest(BitcoinTestFramework):
             "desc": utxo["desc"],
             "timestamp": 0,
         }]
-        if self.options.descriptors:
-            watchonly.importdescriptors(import_req)
-        else:
-            watchonly.importmulti(import_req)
+        watchonly.importdescriptors(import_req)
 
         sendall_tx_receipt = watchonly.sendall(recipients=[self.remainder_target], inputs=[utxo])
         psbt = sendall_tx_receipt["psbt"]
@@ -378,6 +373,86 @@ class SendallTest(BitcoinTestFramework):
         self.wallet.sendall(recipients=[self.remainder_target], fee_rate=300, options={"maxconf":4})
         assert_equal(len(self.wallet.listunspent()), 1)
         assert_equal(self.wallet.listunspent()[0]['confirmations'], 6)
+
+    @cleanup
+    def sendall_spends_unconfirmed_change(self):
+        self.log.info("Test that sendall spends unconfirmed change")
+        self.add_utxos([17])
+        self.wallet.sendtoaddress(self.remainder_target, 10)
+        assert_greater_than(self.wallet.getbalances()["mine"]["trusted"], 6)
+        self.test_sendall_success(sendall_args = [self.remainder_target])
+
+        assert_equal(self.wallet.getbalance(), 0)
+
+    @cleanup
+    def sendall_spends_unconfirmed_inputs_if_specified(self):
+        self.log.info("Test that sendall spends specified unconfirmed inputs")
+        self.def_wallet.sendtoaddress(self.wallet.getnewaddress(), 17)
+        self.wallet.syncwithvalidationinterfacequeue()
+        assert_equal(self.wallet.getbalances()["mine"]["untrusted_pending"], 17)
+        unspent = self.wallet.listunspent(minconf=0)[0]
+
+        self.wallet.sendall(recipients=[self.remainder_target], inputs=[unspent])
+        assert_equal(self.wallet.getbalance(), 0)
+
+    @cleanup
+    def sendall_does_ancestor_aware_funding(self):
+        self.log.info("Test that sendall does ancestor aware funding for unconfirmed inputs")
+
+        # higher parent feerate
+        self.def_wallet.sendtoaddress(address=self.wallet.getnewaddress(), amount=17, fee_rate=20)
+        self.wallet.syncwithvalidationinterfacequeue()
+
+        assert_equal(self.wallet.getbalances()["mine"]["untrusted_pending"], 17)
+        unspent = self.wallet.listunspent(minconf=0)[0]
+
+        parent_txid = unspent["txid"]
+        assert_equal(self.wallet.gettransaction(parent_txid)["confirmations"], 0)
+
+        res_1 = self.wallet.sendall(recipients=[self.def_wallet.getnewaddress()], inputs=[unspent], fee_rate=20, add_to_wallet=False, lock_unspents=True)
+        child_hex = res_1["hex"]
+
+        child_tx = self.wallet.decoderawtransaction(child_hex)
+        higher_parent_feerate_amount = child_tx["vout"][0]["value"]
+
+        # lower parent feerate
+        self.def_wallet.sendtoaddress(address=self.wallet.getnewaddress(), amount=17, fee_rate=10)
+        self.wallet.syncwithvalidationinterfacequeue()
+        assert_equal(self.wallet.getbalances()["mine"]["untrusted_pending"], 34)
+        unspent = self.wallet.listunspent(minconf=0)[0]
+
+        parent_txid = unspent["txid"]
+        assert_equal(self.wallet.gettransaction(parent_txid)["confirmations"], 0)
+
+        res_2 = self.wallet.sendall(recipients=[self.def_wallet.getnewaddress()], inputs=[unspent], fee_rate=20, add_to_wallet=False, lock_unspents=True)
+        child_hex = res_2["hex"]
+
+        child_tx = self.wallet.decoderawtransaction(child_hex)
+        lower_parent_feerate_amount = child_tx["vout"][0]["value"]
+
+        assert_greater_than(higher_parent_feerate_amount, lower_parent_feerate_amount)
+
+    @cleanup
+    def sendall_anti_fee_sniping(self):
+        self.log.info("Testing sendall does anti-fee-sniping when locktime is not specified")
+        self.add_utxos([10,11])
+        tx_from_wallet = self.test_sendall_success(sendall_args = [self.remainder_target])
+
+        # the locktime should be within 100 blocks of the
+        # block height
+        assert_greater_than_or_equal(tx_from_wallet["decoded"]["locktime"], tx_from_wallet["blockheight"] - 100)
+
+        self.log.info("Testing sendall does not do anti-fee-sniping when locktime is specified")
+        self.add_utxos([10,11])
+        txid = self.wallet.sendall(recipients=[self.remainder_target], options={"locktime":0})["txid"]
+        assert_equal(self.wallet.gettransaction(txid=txid, verbose=True)["decoded"]["locktime"], 0)
+
+        self.log.info("Testing sendall does not do anti-fee-sniping when even one of the sequences is final")
+        self.add_utxos([10, 11])
+        utxos = self.wallet.listunspent()
+        utxos[0]["sequence"] = SEQUENCE_FINAL
+        txid = self.wallet.sendall(recipients=[self.remainder_target], inputs=utxos)["txid"]
+        assert_equal(self.wallet.gettransaction(txid=txid, verbose=True)["decoded"]["locktime"], 0)
 
     # This tests needs to be the last one otherwise @cleanup will fail with "Transaction too large" error
     def sendall_fails_with_transaction_too_large(self):
@@ -460,8 +535,20 @@ class SendallTest(BitcoinTestFramework):
         # Sendall only uses outputs with less than a given number of confirmation when using minconf
         self.sendall_with_maxconf()
 
+        # Sendall discourages fee-sniping when a locktime is not specified
+        self.sendall_anti_fee_sniping()
+
+        # Sendall spends unconfirmed change
+        self.sendall_spends_unconfirmed_change()
+
+        # Sendall spends unconfirmed inputs if they are specified
+        self.sendall_spends_unconfirmed_inputs_if_specified()
+
+        # Sendall does ancestor aware funding when spending an unconfirmed UTXO
+        self.sendall_does_ancestor_aware_funding()
+
         # Sendall fails when many inputs result to too large transaction
         self.sendall_fails_with_transaction_too_large()
 
 if __name__ == '__main__':
-    SendallTest().main()
+    SendallTest(__file__).main()

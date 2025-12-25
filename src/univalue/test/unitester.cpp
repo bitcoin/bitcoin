@@ -1,130 +1,159 @@
 // Copyright 2014 BitPay Inc.
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2015-present The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/licenses/mit-license.php.
 
 #include <univalue.h>
 
+#include <univalue/test/fail1.json.h>
+#include <univalue/test/fail10.json.h>
+#include <univalue/test/fail11.json.h>
+#include <univalue/test/fail12.json.h>
+#include <univalue/test/fail13.json.h>
+#include <univalue/test/fail14.json.h>
+#include <univalue/test/fail15.json.h>
+#include <univalue/test/fail16.json.h>
+#include <univalue/test/fail17.json.h>
+#include <univalue/test/fail18.json.h>
+#include <univalue/test/fail19.json.h>
+#include <univalue/test/fail2.json.h>
+#include <univalue/test/fail20.json.h>
+#include <univalue/test/fail21.json.h>
+#include <univalue/test/fail22.json.h>
+#include <univalue/test/fail23.json.h>
+#include <univalue/test/fail24.json.h>
+#include <univalue/test/fail25.json.h>
+#include <univalue/test/fail26.json.h>
+#include <univalue/test/fail27.json.h>
+#include <univalue/test/fail28.json.h>
+#include <univalue/test/fail29.json.h>
+#include <univalue/test/fail3.json.h>
+#include <univalue/test/fail30.json.h>
+#include <univalue/test/fail31.json.h>
+#include <univalue/test/fail32.json.h>
+#include <univalue/test/fail33.json.h>
+#include <univalue/test/fail34.json.h>
+#include <univalue/test/fail35.json.h>
+#include <univalue/test/fail36.json.h>
+#include <univalue/test/fail37.json.h>
+#include <univalue/test/fail38.json.h>
+#include <univalue/test/fail39.json.h>
+#include <univalue/test/fail4.json.h>
+#include <univalue/test/fail40.json.h>
+#include <univalue/test/fail41.json.h>
+#include <univalue/test/fail42.json.h>
+#include <univalue/test/fail44.json.h>
+#include <univalue/test/fail45.json.h>
+#include <univalue/test/fail5.json.h>
+#include <univalue/test/fail6.json.h>
+#include <univalue/test/fail7.json.h>
+#include <univalue/test/fail8.json.h>
+#include <univalue/test/fail9.json.h>
+#include <univalue/test/pass1.json.h>
+#include <univalue/test/pass2.json.h>
+#include <univalue/test/pass3.json.h>
+#include <univalue/test/pass4.json.h>
+#include <univalue/test/round1.json.h>
+#include <univalue/test/round2.json.h>
+#include <univalue/test/round3.json.h>
+#include <univalue/test/round4.json.h>
+#include <univalue/test/round5.json.h>
+#include <univalue/test/round6.json.h>
+#include <univalue/test/round7.json.h>
+
+#include <array>
 #include <cassert>
 #include <cstdio>
 #include <string>
 
-#ifndef JSON_TEST_SRC
-#error JSON_TEST_SRC must point to test source directory
-#endif
-
-std::string srcdir(JSON_TEST_SRC);
-
 static std::string rtrim(std::string s)
 {
-    s.erase(s.find_last_not_of(" \n\r\t")+1);
+    s.erase(s.find_last_not_of(" \n\r\t") + 1);
     return s;
 }
 
 static void runtest(std::string filename, const std::string& jdata)
 {
-        std::string prefix = filename.substr(0, 4);
+    std::string prefix = filename.substr(0, 4);
 
-        bool wantPass = (prefix == "pass") || (prefix == "roun");
-        bool wantFail = (prefix == "fail");
-        bool wantRoundTrip = (prefix == "roun");
-        assert(wantPass || wantFail);
+    bool wantPass = (prefix == "pass") || (prefix == "roun");
+    bool wantFail = (prefix == "fail");
+    bool wantRoundTrip = (prefix == "roun");
+    assert(wantPass || wantFail);
 
-        UniValue val;
-        bool testResult = val.read(jdata);
+    UniValue val;
+    bool testResult = val.read(jdata);
 
-        if (wantPass) {
-            assert(testResult == true);
-        } else {
-            assert(testResult == false);
-        }
+    if (wantPass) {
+        assert(testResult == true);
+    } else {
+        assert(testResult == false);
+    }
 
-        if (wantRoundTrip) {
-            std::string odata = val.write(0, 0);
-            assert(odata == rtrim(jdata));
-        }
+    if (wantRoundTrip) {
+        std::string odata = val.write(0, 0);
+        assert(odata == rtrim(jdata));
+    }
 }
 
-static void runtest_file(const char *filename_)
-{
-        std::string basename(filename_);
-        std::string filename = srcdir + "/" + basename;
-        FILE *f = fopen(filename.c_str(), "r");
-        assert(f != nullptr);
-
-        std::string jdata;
-
-        char buf[4096];
-        while (!feof(f)) {
-                int bread = fread(buf, 1, sizeof(buf), f);
-                assert(!ferror(f));
-
-                std::string s(buf, bread);
-                jdata += s;
-        }
-
-        assert(!ferror(f));
-        fclose(f);
-
-        runtest(basename, jdata);
-}
-
-static const char *filenames[] = {
-        "fail10.json",
-        "fail11.json",
-        "fail12.json",
-        "fail13.json",
-        "fail14.json",
-        "fail15.json",
-        "fail16.json",
-        "fail17.json",
-        //"fail18.json",             // investigate
-        "fail19.json",
-        "fail1.json",
-        "fail20.json",
-        "fail21.json",
-        "fail22.json",
-        "fail23.json",
-        "fail24.json",
-        "fail25.json",
-        "fail26.json",
-        "fail27.json",
-        "fail28.json",
-        "fail29.json",
-        "fail2.json",
-        "fail30.json",
-        "fail31.json",
-        "fail32.json",
-        "fail33.json",
-        "fail34.json",
-        "fail35.json",
-        "fail36.json",
-        "fail37.json",
-        "fail38.json",               // invalid unicode: only first half of surrogate pair
-        "fail39.json",               // invalid unicode: only second half of surrogate pair
-        "fail40.json",               // invalid unicode: broken UTF-8
-        "fail41.json",               // invalid unicode: unfinished UTF-8
-        "fail42.json",               // valid json with garbage following a nul byte
-        "fail44.json",               // unterminated string
-        "fail45.json",               // nested beyond max depth
-        "fail3.json",
-        "fail4.json",                // extra comma
-        "fail5.json",
-        "fail6.json",
-        "fail7.json",
-        "fail8.json",
-        "fail9.json",               // extra comma
-        "pass1.json",
-        "pass2.json",
-        "pass3.json",
-        "pass4.json",
-        "round1.json",              // round-trip test
-        "round2.json",              // unicode
-        "round3.json",              // bare string
-        "round4.json",              // bare number
-        "round5.json",              // bare true
-        "round6.json",              // bare false
-        "round7.json",              // bare null
-};
+#define TEST_FILE(name) {#name, json_tests::name}
+inline constexpr std::array tests{std::to_array<std::tuple<std::string_view, std::string_view>>({
+    TEST_FILE(fail1),
+    TEST_FILE(fail10),
+    TEST_FILE(fail11),
+    TEST_FILE(fail12),
+    TEST_FILE(fail13),
+    TEST_FILE(fail14),
+    TEST_FILE(fail15),
+    TEST_FILE(fail16),
+    TEST_FILE(fail17),
+    TEST_FILE(fail18),
+    TEST_FILE(fail19),
+    TEST_FILE(fail2),
+    TEST_FILE(fail20),
+    TEST_FILE(fail21),
+    TEST_FILE(fail22),
+    TEST_FILE(fail23),
+    TEST_FILE(fail24),
+    TEST_FILE(fail25),
+    TEST_FILE(fail26),
+    TEST_FILE(fail27),
+    TEST_FILE(fail28),
+    TEST_FILE(fail29),
+    TEST_FILE(fail3),
+    TEST_FILE(fail30),
+    TEST_FILE(fail31),
+    TEST_FILE(fail32),
+    TEST_FILE(fail33),
+    TEST_FILE(fail34),
+    TEST_FILE(fail35),
+    TEST_FILE(fail36),
+    TEST_FILE(fail37),
+    TEST_FILE(fail38), // invalid unicode: only first half of surrogate pair
+    TEST_FILE(fail39), // invalid unicode: only second half of surrogate pair
+    TEST_FILE(fail4),  // extra comma
+    TEST_FILE(fail40), // invalid unicode: broken UTF-8
+    TEST_FILE(fail41), // invalid unicode: unfinished UTF-8
+    TEST_FILE(fail42), // valid json with garbage following a nul byte
+    TEST_FILE(fail44), // unterminated string
+    TEST_FILE(fail45), // nested beyond max depth
+    TEST_FILE(fail5),
+    TEST_FILE(fail6),
+    TEST_FILE(fail7),
+    TEST_FILE(fail8),
+    TEST_FILE(fail9), // extra comma
+    TEST_FILE(pass1),
+    TEST_FILE(pass2),
+    TEST_FILE(pass3),
+    TEST_FILE(pass4),
+    TEST_FILE(round1), // round-trip test
+    TEST_FILE(round2), // unicode
+    TEST_FILE(round3), // bare string
+    TEST_FILE(round4), // bare number
+    TEST_FILE(round5), // bare true
+    TEST_FILE(round6), // bare false
+    TEST_FILE(round7), // bare null
+})};
 
 // Test \u handling
 void unescape_unicode_test()
@@ -156,10 +185,10 @@ void no_nul_test()
     assert(val.read({buf + 3, 7}));
 }
 
-int main (int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-    for (const auto& f: filenames) {
-        runtest_file(f);
+    for (const auto& [file, json] : tests) {
+        runtest(std::string{file}, std::string{json});
     }
 
     unescape_unicode_test();
@@ -167,4 +196,3 @@ int main (int argc, char *argv[])
 
     return 0;
 }
-

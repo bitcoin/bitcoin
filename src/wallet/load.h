@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,15 +26,8 @@ bool VerifyWallets(WalletContext& context);
 bool LoadWallets(WalletContext& context);
 
 //! Complete startup of wallets.
-void StartWallets(WalletContext& context, CScheduler& scheduler);
+void StartWallets(WalletContext& context);
 
-//! Flush all wallets in preparation for shutdown.
-void FlushWallets(WalletContext& context);
-
-//! Stop all wallets. Wallets will be flushed first.
-void StopWallets(WalletContext& context);
-
-//! Close all wallets.
 void UnloadWallets(WalletContext& context);
 } // namespace wallet
 

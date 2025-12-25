@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2022 The Bitcoin Core developers
+# Copyright (c) 2016-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test various net timeouts.
@@ -67,26 +67,33 @@ class TimeoutsTest(BitcoinTestFramework):
         assert no_send_node.is_connected
 
         with self.nodes[0].assert_debug_log(['Unsupported message "ping" prior to verack from peer=0']):
-            no_verack_node.send_message(msg_ping())
+            no_verack_node.send_without_ping(msg_ping())
+
         with self.nodes[0].assert_debug_log(['non-version message before version handshake. Message "ping" from peer=1']):
-            no_version_node.send_message(msg_ping())
+            no_version_node.send_without_ping(msg_ping())
 
         self.mock_forward(1)
-
         assert "version" in no_verack_node.last_message
 
         assert no_verack_node.is_connected
         assert no_version_node.is_connected
         assert no_send_node.is_connected
 
-        no_verack_node.send_message(msg_ping())
-        no_version_node.send_message(msg_ping())
+        no_verack_node.send_without_ping(msg_ping())
+        no_version_node.send_without_ping(msg_ping())
 
-        expected_timeout_logs = [
-            "version handshake timeout peer=0",
-            "socket no message in first 3 seconds, 1 0 peer=1",
-            "socket no message in first 3 seconds, 0 0 peer=2",
-        ]
+        if self.options.v2transport:
+            expected_timeout_logs = [
+                "version handshake timeout, disconnecting peer=0",
+                "version handshake timeout, disconnecting peer=1",
+                "version handshake timeout, disconnecting peer=2",
+            ]
+        else:
+            expected_timeout_logs = [
+                "version handshake timeout, disconnecting peer=0",
+                "socket no message in first 3 seconds, never sent to peer, disconnecting peer=1",
+                "socket no message in first 3 seconds, never received from peer, never sent to peer, disconnecting peer=2",
+            ]
 
         with self.nodes[0].assert_debug_log(expected_msgs=expected_timeout_logs):
             self.mock_forward(2)
@@ -100,5 +107,6 @@ class TimeoutsTest(BitcoinTestFramework):
             extra_args=['-peertimeout=0'],
         )
 
+
 if __name__ == '__main__':
-    TimeoutsTest().main()
+    TimeoutsTest(__file__).main()

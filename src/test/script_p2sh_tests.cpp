@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +11,7 @@
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <test/util/setup_common.h>
+#include <test/util/transaction_utils.h>
 #include <validation.h>
 
 #include <vector>
@@ -18,9 +19,15 @@
 #include <boost/test/unit_test.hpp>
 
 // Helpers:
+static bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, std::string& reason)
+{
+    return IsStandardTx(tx, std::nullopt, permit_bare_multisig, CFeeRate{DUST_RELAY_TX_FEE}, reason);
+}
+
 static bool IsStandardTx(const CTransaction& tx, std::string& reason)
 {
-    return IsStandardTx(tx, std::nullopt, DEFAULT_PERMIT_BAREMULTISIG, CFeeRate{DUST_RELAY_TX_FEE}, reason);
+    return IsStandardTx(tx, std::nullopt, /*permit_bare_multisig=*/true, CFeeRate{DUST_RELAY_TX_FEE}, reason) &&
+           IsStandardTx(tx, std::nullopt, /*permit_bare_multisig=*/false, CFeeRate{DUST_RELAY_TX_FEE}, reason);
 }
 
 static std::vector<unsigned char> Serialize(const CScript& s)
@@ -107,13 +114,14 @@ BOOST_AUTO_TEST_CASE(sign)
     }
     // All of the above should be OK, and the txTos have valid signatures
     // Check to make sure signature verification fails if we use the wrong ScriptSig:
+    SignatureCache signature_cache{DEFAULT_SIGNATURE_CACHE_BYTES};
     for (int i = 0; i < 8; i++) {
         PrecomputedTransactionData txdata(txTo[i]);
         for (int j = 0; j < 8; j++)
         {
             CScript sigSave = txTo[i].vin[0].scriptSig;
             txTo[i].vin[0].scriptSig = txTo[j].vin[0].scriptSig;
-            bool sigOK = CScriptCheck(txFrom.vout[txTo[i].vin[0].prevout.n], CTransaction(txTo[i]), 0, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, false, &txdata)();
+            bool sigOK = !CScriptCheck(txFrom.vout[txTo[i].vin[0].prevout.n], CTransaction(txTo[i]), signature_cache, 0, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, false, &txdata)().has_value();
             if (i == j)
                 BOOST_CHECK_MESSAGE(sigOK, strprintf("VerifySignature %d %d", i, j));
             else
@@ -201,7 +209,9 @@ BOOST_AUTO_TEST_CASE(set)
     {
         SignatureData empty;
         BOOST_CHECK_MESSAGE(SignSignature(keystore, CTransaction(txFrom), txTo[i], 0, SIGHASH_ALL, empty), strprintf("SignSignature %d", i));
-        BOOST_CHECK_MESSAGE(IsStandardTx(CTransaction(txTo[i]), reason), strprintf("txTo[%d].IsStandard", i));
+        BOOST_CHECK_MESSAGE(IsStandardTx(CTransaction(txTo[i]), /*permit_bare_multisig=*/true, reason), strprintf("txTo[%d].IsStandard", i));
+        bool no_pbms_is_std = IsStandardTx(CTransaction(txTo[i]), /*permit_bare_multisig=*/false, reason);
+        BOOST_CHECK_MESSAGE((i == 0 ? no_pbms_is_std : !no_pbms_is_std), strprintf("txTo[%d].IsStandard(permbaremulti=false)", i));
     }
 }
 
@@ -353,6 +363,12 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     BOOST_CHECK(::AreInputsStandard(CTransaction(txTo), coins));
     // 22 P2SH sigops for all inputs (1 for vin[0], 6 for vin[3], 15 for vin[4]
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(txTo), coins), 22U);
+
+    CMutableTransaction coinbase_tx_mut;
+    coinbase_tx_mut.vin.resize(1);
+    CTransaction coinbase_tx{coinbase_tx_mut};
+    BOOST_CHECK(coinbase_tx.IsCoinBase());
+    BOOST_CHECK_EQUAL(GetP2SHSigOpCount(coinbase_tx, coins), 0U);
 
     CMutableTransaction txToNonStd1;
     txToNonStd1.vout.resize(1);

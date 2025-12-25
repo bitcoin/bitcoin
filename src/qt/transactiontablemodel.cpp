@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,6 +17,7 @@
 
 #include <core_io.h>
 #include <interfaces/handler.h>
+#include <tinyformat.h>
 #include <uint256.h>
 
 #include <algorithm>
@@ -34,7 +35,6 @@
 // Amount column is right-aligned it contains numbers
 static int column_alignments[] = {
         Qt::AlignLeft|Qt::AlignVCenter, /*status=*/
-        Qt::AlignLeft|Qt::AlignVCenter, /*watchonly=*/
         Qt::AlignLeft|Qt::AlignVCenter, /*date=*/
         Qt::AlignLeft|Qt::AlignVCenter, /*type=*/
         Qt::AlignLeft|Qt::AlignVCenter, /*address=*/
@@ -48,11 +48,11 @@ struct TxLessThan
     {
         return a.hash < b.hash;
     }
-    bool operator()(const TransactionRecord &a, const uint256 &b) const
+    bool operator()(const TransactionRecord &a, const Txid &b) const
     {
         return a.hash < b;
     }
-    bool operator()(const uint256 &a, const TransactionRecord &b) const
+    bool operator()(const Txid &a, const TransactionRecord &b) const
     {
         return a < b.hash;
     }
@@ -63,7 +63,7 @@ struct TransactionNotification
 {
 public:
     TransactionNotification() = default;
-    TransactionNotification(uint256 _hash, ChangeType _status, bool _showTransaction):
+    TransactionNotification(Txid _hash, ChangeType _status, bool _showTransaction):
         hash(_hash), status(_status), showTransaction(_showTransaction) {}
 
     void invoke(QObject *ttm)
@@ -77,7 +77,7 @@ public:
         assert(invoked);
     }
 private:
-    uint256 hash;
+    Txid hash;
     ChangeType status;
     bool showTransaction;
 };
@@ -102,7 +102,7 @@ public:
     bool m_loading = false;
     std::vector< TransactionNotification > vQueueNotifications;
 
-    void NotifyTransactionChanged(const uint256 &hash, ChangeType status);
+    void NotifyTransactionChanged(const Txid& hash, ChangeType status);
     void DispatchNotifications();
 
     /* Query entire wallet anew from core.
@@ -126,7 +126,7 @@ public:
 
        Call with transaction that was added, removed or changed.
      */
-    void updateWallet(interfaces::Wallet& wallet, const uint256 &hash, int status, bool showTransaction)
+    void updateWallet(interfaces::Wallet& wallet, const Txid& hash, int status, bool showTransaction)
     {
         qDebug() << "TransactionTablePriv::updateWallet: " + QString::fromStdString(hash.ToString()) + " " + QString::number(status);
 
@@ -218,7 +218,7 @@ public:
 
             // If a status update is needed (blocks came in since last check),
             // try to update the status of this transaction from the wallet.
-            // Otherwise, simply re-use the cached status.
+            // Otherwise, simply reuse the cached status.
             interfaces::WalletTxStatus wtx;
             int numBlocks;
             int64_t block_time;
@@ -254,7 +254,7 @@ TransactionTableModel::TransactionTableModel(const PlatformStyle *_platformStyle
 {
     subscribeToCoreSignals();
 
-    columns << QString() << QString() << tr("Date") << tr("Type") << tr("Label") << BitcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
+    columns << QString() << tr("Date") << tr("Type") << tr("Label") << BitcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
     priv->refreshWallet(walletModel->wallet());
 
     connect(walletModel->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &TransactionTableModel::updateDisplayUnit);
@@ -275,8 +275,7 @@ void TransactionTableModel::updateAmountColumnTitle()
 
 void TransactionTableModel::updateTransaction(const QString &hash, int status, bool showTransaction)
 {
-    uint256 updated;
-    updated.SetHex(hash.toStdString());
+    Txid updated = Txid::FromHex(hash.toStdString()).value();
 
     priv->updateWallet(walletModel->wallet(), updated, status, showTransaction);
 }
@@ -377,8 +376,6 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
     case TransactionRecord::SendToAddress:
     case TransactionRecord::SendToOther:
         return tr("Sent to");
-    case TransactionRecord::SendToSelf:
-        return tr("Payment to yourself");
     case TransactionRecord::Generated:
         return tr("Mined");
     default:
@@ -405,26 +402,18 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
 
 QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const
 {
-    QString watchAddress;
-    if (tooltip && wtx->involvesWatchAddress) {
-        // Mark transactions involving watch-only addresses by adding " (watch-only)"
-        watchAddress = QLatin1String(" (") + tr("watch-only") + QLatin1Char(')');
-    }
-
     switch(wtx->type)
     {
     case TransactionRecord::RecvFromOther:
-        return QString::fromStdString(wtx->address) + watchAddress;
+        return QString::fromStdString(wtx->address);
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::SendToAddress:
     case TransactionRecord::Generated:
-        return lookupAddress(wtx->address, tooltip) + watchAddress;
+        return lookupAddress(wtx->address, tooltip);
     case TransactionRecord::SendToOther:
-        return QString::fromStdString(wtx->address) + watchAddress;
-    case TransactionRecord::SendToSelf:
-        return lookupAddress(wtx->address, tooltip) + watchAddress;
+        return QString::fromStdString(wtx->address);
     default:
-        return tr("(n/a)") + watchAddress;
+        return tr("(n/a)");
     }
 }
 
@@ -441,8 +430,6 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
         if(label.isEmpty())
             return COLOR_BAREADDRESS;
         } break;
-    case TransactionRecord::SendToSelf:
-        return COLOR_BAREADDRESS;
     default:
         break;
     }
@@ -495,14 +482,6 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
     }
 }
 
-QVariant TransactionTableModel::txWatchonlyDecoration(const TransactionRecord *wtx) const
-{
-    if (wtx->involvesWatchAddress)
-        return QIcon(":/icons/eye");
-    else
-        return QVariant();
-}
-
 QString TransactionTableModel::formatTooltip(const TransactionRecord *rec) const
 {
     QString tooltip = formatTxStatus(rec) + QString("\n") + formatTxType(rec);
@@ -526,8 +505,6 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         switch (column) {
         case Status:
             return txStatusDecoration(rec);
-        case Watchonly:
-            return txWatchonlyDecoration(rec);
         case Date: return {};
         case Type: return {};
         case ToAddress:
@@ -543,7 +520,6 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     case Qt::DisplayRole:
         switch (column) {
         case Status: return {};
-        case Watchonly: return {};
         case Date:
             return formatTxDate(rec);
         case Type:
@@ -560,11 +536,9 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         case Status:
             return QString::fromStdString(rec->status.sortKey);
         case Date:
-            return rec->time;
+            return QString::fromStdString(strprintf("%020s-%s", rec->time, rec->status.sortKey));
         case Type:
             return formatTxType(rec);
-        case Watchonly:
-            return (rec->involvesWatchAddress ? 1 : 0);
         case ToAddress:
             return formatTxToAddress(rec, true);
         case Amount:
@@ -599,10 +573,6 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return rec->type;
     case DateRole:
         return QDateTime::fromSecsSinceEpoch(rec->time);
-    case WatchonlyRole:
-        return rec->involvesWatchAddress;
-    case WatchonlyDecorationRole:
-        return txWatchonlyDecoration(rec);
     case LongDescriptionRole:
         return priv->describe(walletModel->node(), walletModel->wallet(), rec, walletModel->getOptionsModel()->getDisplayUnit());
     case AddressRole:
@@ -675,8 +645,6 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
                 return tr("Date and time that the transaction was received.");
             case Type:
                 return tr("Type of transaction.");
-            case Watchonly:
-                return tr("Whether or not a watch-only address is involved in this transaction.");
             case ToAddress:
                 return tr("User-defined intent/purpose of the transaction.");
             case Amount:
@@ -705,7 +673,7 @@ void TransactionTableModel::updateDisplayUnit()
     Q_EMIT dataChanged(index(0, Amount), index(priv->size()-1, Amount));
 }
 
-void TransactionTablePriv::NotifyTransactionChanged(const uint256 &hash, ChangeType status)
+void TransactionTablePriv::NotifyTransactionChanged(const Txid& hash, ChangeType status)
 {
     // Find transaction in wallet
     // Determine whether to show transaction or not (determine this here so that no relocking is needed in GUI thread)

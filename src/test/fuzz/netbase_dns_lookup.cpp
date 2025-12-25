@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -59,9 +59,6 @@ FUZZ_TARGET(netbase_dns_lookup)
         assert(!resolved_service.IsInternal());
     }
     {
-        CSubNet resolved_subnet;
-        if (LookupSubNet(name, resolved_subnet)) {
-            assert(resolved_subnet.IsValid());
-        }
+        (void)LookupSubNet(name);
     }
 }

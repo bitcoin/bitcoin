@@ -7,7 +7,7 @@ export LC_ALL=C
 
 env >> test_env.log
 
-$CC -v || true
+$CXX -v || true
 valgrind --version || true
 
 ./autogen.sh
@@ -32,10 +32,10 @@ then
 fi
 
 if [ -n "$EXEC_CMD" ]; then
-    $EXEC_CMD ./test $TESTRUNS
-    $EXEC_CMD ./test-verify $TESTRUNS
+    $EXEC_CMD "./test$EXEC_EXT" $TESTRUNS
+    $EXEC_CMD "./test-verify$EXEC_EXT" $TESTRUNS
 fi
 
 if [ "$BENCH" = "yes" ]; then
-    $EXEC_CMD ./bench
+    $EXEC_CMD "./bench$EXEC_EXT"
 fi

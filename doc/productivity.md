@@ -1,29 +1,6 @@
-Productivity Notes
-==================
+# Productivity Notes
 
-Table of Contents
------------------
-
-* [General](#general)
-   * [Cache compilations with `ccache`](#cache-compilations-with-ccache)
-   * [Disable features with `./configure`](#disable-features-with-configure)
-   * [Make use of your threads with `make -j`](#make-use-of-your-threads-with-make--j)
-   * [Only build what you need](#only-build-what-you-need)
-   * [Compile on multiple machines](#compile-on-multiple-machines)
-   * [Multiple working directories with `git worktrees`](#multiple-working-directories-with-git-worktrees)
-   * [Interactive "dummy rebases" for fixups and execs with `git merge-base`](#interactive-dummy-rebases-for-fixups-and-execs-with-git-merge-base)
-* [Writing code](#writing-code)
-   * [Format C/C++ diffs with `clang-format-diff.py`](#format-cc-diffs-with-clang-format-diffpy)
-   * [Format Python diffs with `yapf-diff.py`](#format-python-diffs-with-yapf-diffpy)
-* [Rebasing/Merging code](#rebasingmerging-code)
-   * [More conflict context with `merge.conflictstyle diff3`](#more-conflict-context-with-mergeconflictstyle-diff3)
-* [Reviewing code](#reviewing-code)
-   * [Reduce mental load with `git diff` options](#reduce-mental-load-with-git-diff-options)
-   * [Reference PRs easily with `refspec`s](#reference-prs-easily-with-refspecs)
-   * [Diff the diffs with `git range-diff`](#diff-the-diffs-with-git-range-diff)
-
-General
-------
+## General
 
 ### Cache compilations with `ccache`
 
@@ -31,9 +8,9 @@ The easiest way to faster compile times is to cache compiles. `ccache` is a way 
 
 > ccache is a compiler cache. It speeds up recompilation by caching the result of previous compilations and detecting when the same compilation is being done again. Supported languages are C, C++, Objective-C and Objective-C++.
 
-Install `ccache` through your distribution's package manager, and run `./configure` with your normal flags to pick it up.
+Install `ccache` through your distribution's package manager, and run `cmake -B build` with your normal configuration options to pick it up.
 
-To use ccache for all your C/C++ projects, follow the symlinks method [here](https://ccache.samba.org/manual/latest.html#_run_modes) to set it up.
+To use ccache for all your C/C++ projects, follow the symlinks method [here](https://ccache.dev/manual/latest.html#_run_modes) to set it up.
 
 To get the most out of ccache, put something like this in `~/.ccache/ccache.conf`:
 
@@ -46,38 +23,30 @@ Note: base_dir is required for ccache to share cached compiles of the same file 
 
 You _must not_ set base_dir to "/", or anywhere that contains system headers (according to the ccache docs).
 
-### Disable features with `./configure`
+### Disable features when generating the build system
 
-After running `./autogen.sh`, which generates the `./configure` file, use `./configure --help` to identify features that you can disable to save on compilation time. A few common flags:
+During the generation of the build system only essential build options are enabled by default to save on compilation time.
 
-```sh
---without-miniupnpc
---without-natpmp
---disable-bench
---disable-wallet
---without-gui
-```
+Run `cmake -B build -LH` to see the full list of available options. GUI tools, such as `ccmake` and `cmake-gui`, can also be helpful.
 
-If you do need the wallet enabled, it is common for devs to add `--with-incompatible-bdb`. This uses your system bdb version for the wallet, so you don't have to find a copy of bdb 4.8. Wallets from such a build will be incompatible with any release binary (and vice versa), so use with caution on mainnet.
+### Make use of your threads with `-j`
 
-### Make use of your threads with `make -j`
-
-If you have multiple threads on your machine, you can tell `make` to utilize all of them with:
+If you have multiple threads on your machine, you can utilize all of them with:
 
 ```sh
-make -j"$(($(nproc)+1))"
+cmake --build build -j "$(($(nproc)+1))"
 ```
 
 ### Only build what you need
 
-When rebuilding during development, note that running `make`, without giving a target, will do a lot of work you probably don't need. It will build the GUI (unless you've disabled it) and all the tests (which take much longer to build than the app does).
+When rebuilding during development, note that running `cmake --build build`, without giving a target, will do a lot of work you probably don't need. It will build the GUI (if you've enabled it) and all the tests (which take much longer to build than the app does).
 
 Obviously, it is important to build and run the tests at appropriate times -- but when you just want a quick compile to check your work, consider picking one or a set of build targets relevant to what you're working on, e.g.:
 
 ```sh
-make src/bitcoind src/bitcoin-cli
-make src/qt/bitcoin-qt
-make -C src bitcoin_bench
+cmake --build build --target bitcoind bitcoin-cli
+cmake --build build --target bitcoin-qt
+cmake --build build --target bench_bitcoin
 ```
 
 (You can and should combine this with `-j`, as above, for a parallel build.)
@@ -110,9 +79,9 @@ To squash in `git commit --fixup` commits without rebasing over an updated maste
 git rebase -i --autosquash "$(git merge-base master HEAD)"
 ```
 
-To execute `make check` on every commit since last diverged from master, but without rebasing over an updated master, we can do the following:
+To execute `cmake --build build && ctest --test-dir build` on every commit since last diverged from master, but without rebasing over an updated master, we can do the following:
 ```sh
-git rebase -i --exec "make check" "$(git merge-base master HEAD)"
+git rebase -i --exec "cmake --build build && ctest --test-dir build" "$(git merge-base master HEAD)"
 ```
 
 -----
@@ -121,8 +90,7 @@ This synergizes well with [`ccache`](#cache-compilations-with-ccache) as objects
 
 You can also set up [upstream refspecs](#reference-prs-easily-with-refspecs) to refer to pull requests easier in the above `git worktree` commands.
 
-Writing code
-------------
+## Writing code
 
 ### Format C/C++ diffs with `clang-format-diff.py`
 
@@ -132,8 +100,7 @@ See [contrib/devtools/README.md](/contrib/devtools/README.md#clang-format-diff.p
 
 Usage is exactly the same as [`clang-format-diff.py`](#format-cc-diffs-with-clang-format-diffpy). You can get it [here](https://github.com/MarcoFalke/yapf-diff).
 
-Rebasing/Merging code
--------------
+## Rebasing/Merging code
 
 ### More conflict context with `merge.conflictstyle diff3`
 
@@ -161,8 +128,7 @@ theirs
 
 This may make it much clearer what caused the conflict. In this style, you can often just look at what changed between *original* and *theirs*, and mechanically apply that to *yours* (or the other way around).
 
-Reviewing code
---------------
+## Reviewing code
 
 ### Reduce mental load with `git diff` options
 
@@ -172,9 +138,17 @@ When reviewing patches that change symbol names in many places, use `git diff --
 
 When reviewing patches that move code around, try using `git diff --patience commit~:old/file.cpp commit:new/file/name.cpp`, and ignoring everything except the moved body of code which should show up as neither `+` or `-` lines. In case it was not a pure move, this may even work when combined with the `-w` or `--word-diff` options described above. `--color-moved=dimmed-zebra` will also dim the coloring of moved hunks in the diff on compatible terminals.
 
+### Fetch commits directly
+
+Before inspecting any remotely created commit locally, it has to be fetched.
+This is possible via `git fetch origin <full_commit_hash>`. Even commits not
+part of any branch or tag can be fetched as long as the remote has not garbage
+collected them.
+
+
 ### Reference PRs easily with `refspec`s
 
-When looking at other's pull requests, it may make sense to add the following section to your `.git/config` file:
+As an alternative to fetching commits directly, when looking at pull requests by others, it may make sense to add the following section to your `.git/config` file:
 
 ```
 [remote "upstream-pull"]
@@ -183,6 +157,37 @@ When looking at other's pull requests, it may make sense to add the following se
 ```
 
 This will add an `upstream-pull` remote to your git repository, which can be fetched using `git fetch --all` or `git fetch upstream-pull`. It will download and store on disk quite a lot of data (all PRs, including merged and closed ones). Afterwards, you can use `upstream-pull/NUMBER/head` in arguments to `git show`, `git checkout` and anywhere a commit id would be acceptable to see the changes from pull request NUMBER.
+
+### Fetch and update PRs individually
+
+The refspec remote is quite resource-heavy, and it is possible to fetch PRs singularly from the remote. To do this you can run:
+
+```bash
+# Individual fetch
+git fetch upstream pull/<number>/head
+
+# Fetch with automatic branch creation and switch
+git fetch upstream pull/<number>/head:pr-<number> && git switch pr-<number>
+```
+
+...from the command line, substituting `<number>` with the PR number you want to fetch/update.
+
+> [!NOTE]
+> The remote named "upstream" here must be the one that the pull request was opened against.
+> e.g. github.com/bitcoin/bitcoin.git or for the GUI github.com/bitcoin-core/gui
+
+Make these easier to use by adding aliases to your git config:
+
+```
+[alias]
+    # Fetch a single Pull Request and switch to it in a new branch, with `git pr 12345`
+    pr = "!f() { git fetch upstream pull/$1/head:pr-$1 && git switch pr-$1; }; f";
+
+    # Update a Pull Request branch, even after a force push, and even if checked out, with `git pru 12345`
+    pru = "!f() { git fetch --update-head-ok -f upstream pull/$1/head:pr-$1; }; f";
+```
+
+Then a simple `git pr 12345` will fetch and check out that pr from upstream.
 
 ### Diff the diffs with `git range-diff`
 
@@ -202,7 +207,7 @@ You can do:
 git range-diff master previously-reviewed-head new-head
 ```
 
-Note that `git range-diff` also work for rebases:
+Note that `git range-diff` also works for rebases:
 
 ```
        P1--P2--P3--P4--P5   <-- previously-reviewed-head

@@ -3,7 +3,7 @@ Bitcoin Core
 
 Setup
 ---------------------
-Bitcoin Core is the original Bitcoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Bitcoin transactions, which requires a few hundred gigabytes of disk space. Depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
+Bitcoin Core is the original Bitcoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Bitcoin transactions, which requires several hundred gigabytes or more of disk space. Depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to several days or more.
 
 To download Bitcoin Core, visit [bitcoincore.org](https://bitcoincore.org/en/download/).
 
@@ -17,6 +17,9 @@ Unpack the files into a directory and run:
 
 - `bin/bitcoin-qt` (GUI) or
 - `bin/bitcoind` (headless)
+- `bin/bitcoin` (wrapper command)
+
+The `bitcoin` command supports subcommands like `bitcoin gui`, `bitcoin node`, and `bitcoin rpc` exposing different functionality. Subcommands can be listed with `bitcoin help`.
 
 ### Windows
 
@@ -41,11 +44,10 @@ The following are developer notes on how to build Bitcoin Core on your native pl
 - [Dependencies](dependencies.md)
 - [macOS Build Notes](build-osx.md)
 - [Unix Build Notes](build-unix.md)
-- [Windows Build Notes](build-windows.md)
+- [Windows Build Notes](build-windows-msvc.md)
 - [FreeBSD Build Notes](build-freebsd.md)
 - [OpenBSD Build Notes](build-openbsd.md)
 - [NetBSD Build Notes](build-netbsd.md)
-- [Android Build Notes](build-android.md)
 
 Development
 ---------------------
@@ -59,7 +61,6 @@ The Bitcoin repo's [root README](/README.md) contains relevant information on th
 - [Translation Strings Policy](translation_strings_policy.md)
 - [JSON-RPC Interface](JSON-RPC-interface.md)
 - [Unauthenticated REST Interface](REST-interface.md)
-- [Shared Libraries](shared-libraries.md)
 - [BIPS](bips.md)
 - [Dnsseed Policy](dnsseed-policy.md)
 - [Benchmarking](benchmarking.md)
@@ -79,6 +80,7 @@ The Bitcoin repo's [root README](/README.md) contains relevant information on th
 - [Init Scripts (systemd/upstart/openrc)](init.md)
 - [Managing Wallets](managing-wallets.md)
 - [Multisig Tutorial](multisig-tutorial.md)
+- [Offline Signing Tutorial](offline-signing-tutorial.md)
 - [P2P bad ports definition and list](p2p-bad-ports.md)
 - [PSBT support](psbt.md)
 - [Reduce Memory](reduce-memory.md)

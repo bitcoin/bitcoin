@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -166,7 +166,7 @@ bool BitcoinUnits::parse(Unit unit, const QString& value, CAmount* val_out)
     {
         return false; // More than one dot
     }
-    QString whole = parts[0];
+    const QString& whole = parts[0];
     QString decimals;
 
     if(parts.size() > 1)

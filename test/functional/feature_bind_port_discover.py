@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2021 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -7,7 +7,10 @@ Test that -discover does not add all interfaces' addresses if we listen on only 
 """
 
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_not_equal,
+)
 
 # We need to bind to a routable address for this test to exercise the relevant code
 # and also must have another routable address on another interface which must not
@@ -71,8 +74,8 @@ class BindPortDiscoverTest(BitcoinTestFramework):
             if local['address'] == ADDR1:
                 found_addr1 = True
                 assert_equal(local['port'], BIND_PORT)
-            assert local['address'] != ADDR2
+            assert_not_equal(local['address'], ADDR2)
         assert found_addr1
 
 if __name__ == '__main__':
-    BindPortDiscoverTest().main()
+    BindPortDiscoverTest(__file__).main()

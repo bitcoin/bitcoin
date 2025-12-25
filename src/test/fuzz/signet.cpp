@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -25,7 +25,7 @@ void initialize_signet()
 FUZZ_TARGET(signet, .init = initialize_signet)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    const std::optional<CBlock> block = ConsumeDeserializable<CBlock>(fuzzed_data_provider);
+    const std::optional<CBlock> block = ConsumeDeserializable<CBlock>(fuzzed_data_provider, TX_WITH_WITNESS);
     if (!block) {
         return;
     }

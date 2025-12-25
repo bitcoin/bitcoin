@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2022 The Bitcoin Core developers
+// Copyright (c) 2016-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,9 +11,13 @@
 #include <crypto/sha3.h>
 #include <crypto/sha512.h>
 #include <crypto/siphash.h>
-#include <hash.h>
 #include <random.h>
+#include <span.h>
+#include <tinyformat.h>
 #include <uint256.h>
+
+#include <cstdint>
+#include <vector>
 
 /* Number of bytes to hash per iteration */
 static const uint64_t BUFFER_SIZE = 1000*1000;
@@ -36,13 +40,48 @@ static void SHA1(benchmark::Bench& bench)
     });
 }
 
-static void SHA256(benchmark::Bench& bench)
+static void SHA256_STANDARD(benchmark::Bench& bench)
 {
+    bench.name(strprintf("%s using the '%s' SHA256 implementation", __func__, SHA256AutoDetect(sha256_implementation::STANDARD)));
     uint8_t hash[CSHA256::OUTPUT_SIZE];
     std::vector<uint8_t> in(BUFFER_SIZE,0);
     bench.batch(in.size()).unit("byte").run([&] {
         CSHA256().Write(in.data(), in.size()).Finalize(hash);
     });
+    SHA256AutoDetect();
+}
+
+static void SHA256_SSE4(benchmark::Bench& bench)
+{
+    bench.name(strprintf("%s using the '%s' SHA256 implementation", __func__, SHA256AutoDetect(sha256_implementation::USE_SSE4)));
+    uint8_t hash[CSHA256::OUTPUT_SIZE];
+    std::vector<uint8_t> in(BUFFER_SIZE,0);
+    bench.batch(in.size()).unit("byte").run([&] {
+        CSHA256().Write(in.data(), in.size()).Finalize(hash);
+    });
+    SHA256AutoDetect();
+}
+
+static void SHA256_AVX2(benchmark::Bench& bench)
+{
+    bench.name(strprintf("%s using the '%s' SHA256 implementation", __func__, SHA256AutoDetect(sha256_implementation::USE_SSE4_AND_AVX2)));
+    uint8_t hash[CSHA256::OUTPUT_SIZE];
+    std::vector<uint8_t> in(BUFFER_SIZE,0);
+    bench.batch(in.size()).unit("byte").run([&] {
+        CSHA256().Write(in.data(), in.size()).Finalize(hash);
+    });
+    SHA256AutoDetect();
+}
+
+static void SHA256_SHANI(benchmark::Bench& bench)
+{
+    bench.name(strprintf("%s using the '%s' SHA256 implementation", __func__, SHA256AutoDetect(sha256_implementation::USE_SSE4_AND_SHANI)));
+    uint8_t hash[CSHA256::OUTPUT_SIZE];
+    std::vector<uint8_t> in(BUFFER_SIZE,0);
+    bench.batch(in.size()).unit("byte").run([&] {
+        CSHA256().Write(in.data(), in.size()).Finalize(hash);
+    });
+    SHA256AutoDetect();
 }
 
 static void SHA3_256_1M(benchmark::Bench& bench)
@@ -54,22 +93,92 @@ static void SHA3_256_1M(benchmark::Bench& bench)
     });
 }
 
-static void SHA256_32b(benchmark::Bench& bench)
+static void SHA256_32b_STANDARD(benchmark::Bench& bench)
 {
+    bench.name(strprintf("%s using the '%s' SHA256 implementation", __func__, SHA256AutoDetect(sha256_implementation::STANDARD)));
     std::vector<uint8_t> in(32,0);
     bench.batch(in.size()).unit("byte").run([&] {
         CSHA256()
             .Write(in.data(), in.size())
             .Finalize(in.data());
     });
+    SHA256AutoDetect();
 }
 
-static void SHA256D64_1024(benchmark::Bench& bench)
+static void SHA256_32b_SSE4(benchmark::Bench& bench)
 {
+    bench.name(strprintf("%s using the '%s' SHA256 implementation", __func__, SHA256AutoDetect(sha256_implementation::USE_SSE4)));
+    std::vector<uint8_t> in(32,0);
+    bench.batch(in.size()).unit("byte").run([&] {
+        CSHA256()
+            .Write(in.data(), in.size())
+            .Finalize(in.data());
+    });
+    SHA256AutoDetect();
+}
+
+static void SHA256_32b_AVX2(benchmark::Bench& bench)
+{
+    bench.name(strprintf("%s using the '%s' SHA256 implementation", __func__, SHA256AutoDetect(sha256_implementation::USE_SSE4_AND_AVX2)));
+    std::vector<uint8_t> in(32,0);
+    bench.batch(in.size()).unit("byte").run([&] {
+        CSHA256()
+            .Write(in.data(), in.size())
+            .Finalize(in.data());
+    });
+    SHA256AutoDetect();
+}
+
+static void SHA256_32b_SHANI(benchmark::Bench& bench)
+{
+    bench.name(strprintf("%s using the '%s' SHA256 implementation", __func__, SHA256AutoDetect(sha256_implementation::USE_SSE4_AND_SHANI)));
+    std::vector<uint8_t> in(32,0);
+    bench.batch(in.size()).unit("byte").run([&] {
+        CSHA256()
+            .Write(in.data(), in.size())
+            .Finalize(in.data());
+    });
+    SHA256AutoDetect();
+}
+
+static void SHA256D64_1024_STANDARD(benchmark::Bench& bench)
+{
+    bench.name(strprintf("%s using the '%s' SHA256 implementation", __func__, SHA256AutoDetect(sha256_implementation::STANDARD)));
     std::vector<uint8_t> in(64 * 1024, 0);
     bench.batch(in.size()).unit("byte").run([&] {
         SHA256D64(in.data(), in.data(), 1024);
     });
+    SHA256AutoDetect();
+}
+
+static void SHA256D64_1024_SSE4(benchmark::Bench& bench)
+{
+    bench.name(strprintf("%s using the '%s' SHA256 implementation", __func__, SHA256AutoDetect(sha256_implementation::USE_SSE4)));
+    std::vector<uint8_t> in(64 * 1024, 0);
+    bench.batch(in.size()).unit("byte").run([&] {
+        SHA256D64(in.data(), in.data(), 1024);
+    });
+    SHA256AutoDetect();
+}
+
+static void SHA256D64_1024_AVX2(benchmark::Bench& bench)
+{
+    bench.name(strprintf("%s using the '%s' SHA256 implementation", __func__, SHA256AutoDetect(sha256_implementation::USE_SSE4_AND_AVX2)));
+    std::vector<uint8_t> in(64 * 1024, 0);
+    bench.batch(in.size()).unit("byte").run([&] {
+        SHA256D64(in.data(), in.data(), 1024);
+    });
+    SHA256AutoDetect();
+}
+
+static void SHA256D64_1024_SHANI(benchmark::Bench& bench)
+{
+    bench.name(strprintf("%s using the '%s' SHA256 implementation", __func__, SHA256AutoDetect(sha256_implementation::USE_SSE4_AND_SHANI)));
+    std::vector<uint8_t> in(64 * 1024, 0);
+    bench.batch(in.size()).unit("byte").run([&] {
+        SHA256D64(in.data(), in.data(), 1024);
+    });
+    SHA256AutoDetect();
 }
 
 static void SHA512(benchmark::Bench& bench)
@@ -83,26 +192,14 @@ static void SHA512(benchmark::Bench& bench)
 
 static void SipHash_32b(benchmark::Bench& bench)
 {
-    uint256 x;
-    uint64_t k1 = 0;
+    FastRandomContext rng{/*fDeterministic=*/true};
+    PresaltedSipHasher presalted_sip_hasher(rng.rand64(), rng.rand64());
+    auto val{rng.rand256()};
+    auto i{0U};
     bench.run([&] {
-        *((uint64_t*)x.begin()) = SipHashUint256(0, ++k1, x);
-    });
-}
-
-static void FastRandom_32bit(benchmark::Bench& bench)
-{
-    FastRandomContext rng(true);
-    bench.run([&] {
-        rng.rand32();
-    });
-}
-
-static void FastRandom_1bit(benchmark::Bench& bench)
-{
-    FastRandomContext rng(true);
-    bench.run([&] {
-        rng.randbool();
+        ankerl::nanobench::doNotOptimizeAway(presalted_sip_hasher(val));
+        ++i;
+        val.data()[i % uint256::size()] ^= i & 0xFF;
     });
 }
 
@@ -150,19 +247,40 @@ static void MuHashPrecompute(benchmark::Bench& bench)
     });
 }
 
+static void MuHashFinalize(benchmark::Bench& bench)
+{
+    FastRandomContext rng(true);
+    MuHash3072 acc{rng.randbytes(32)};
+    acc /= MuHash3072{rng.rand256()};
+
+    bench.run([&] {
+        uint256 out;
+        acc.Finalize(out);
+        acc /= MuHash3072{out};
+    });
+}
+
 BENCHMARK(BenchRIPEMD160, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA1, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SHA256, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA256_STANDARD, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA256_SSE4, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA256_AVX2, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA256_SHANI, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA512, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA3_256_1M, benchmark::PriorityLevel::HIGH);
 
-BENCHMARK(SHA256_32b, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA256_32b_STANDARD, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA256_32b_SSE4, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA256_32b_AVX2, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA256_32b_SHANI, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SipHash_32b, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SHA256D64_1024, benchmark::PriorityLevel::HIGH);
-BENCHMARK(FastRandom_32bit, benchmark::PriorityLevel::HIGH);
-BENCHMARK(FastRandom_1bit, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA256D64_1024_STANDARD, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA256D64_1024_SSE4, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA256D64_1024_AVX2, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA256D64_1024_SHANI, benchmark::PriorityLevel::HIGH);
 
 BENCHMARK(MuHash, benchmark::PriorityLevel::HIGH);
 BENCHMARK(MuHashMul, benchmark::PriorityLevel::HIGH);
 BENCHMARK(MuHashDiv, benchmark::PriorityLevel::HIGH);
 BENCHMARK(MuHashPrecompute, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MuHashFinalize, benchmark::PriorityLevel::HIGH);

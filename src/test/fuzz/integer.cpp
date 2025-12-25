@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -33,13 +33,14 @@
 #include <util/overflow.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <version.h>
 
 #include <cassert>
 #include <chrono>
 #include <limits>
 #include <set>
 #include <vector>
+
+using util::ToString;
 
 void initialize_integer()
 {
@@ -62,13 +63,13 @@ FUZZ_TARGET(integer, .init = initialize_integer)
     const int16_t i16 = fuzzed_data_provider.ConsumeIntegral<int16_t>();
     const uint8_t u8 = fuzzed_data_provider.ConsumeIntegral<uint8_t>();
     const int8_t i8 = fuzzed_data_provider.ConsumeIntegral<int8_t>();
-    // We cannot assume a specific value of std::is_signed<char>::value:
+    // We cannot assume a specific value of std::is_signed_v<char>:
     // ConsumeIntegral<char>() instead of casting from {u,}int8_t.
     const char ch = fuzzed_data_provider.ConsumeIntegral<char>();
     const bool b = fuzzed_data_provider.ConsumeBool();
 
     const Consensus::Params& consensus_params = Params().GetConsensus();
-    (void)CheckProofOfWork(u256, u32, consensus_params);
+    (void)CheckProofOfWorkImpl(u256, u32, consensus_params);
     if (u64 <= MAX_MONEY) {
         const uint64_t compressed_money_amount = CompressAmount(u64);
         assert(u64 == DecompressAmount(compressed_money_amount));
@@ -77,11 +78,10 @@ FUZZ_TARGET(integer, .init = initialize_integer)
     } else {
         (void)CompressAmount(u64);
     }
-    static const uint256 u256_min(uint256S("0000000000000000000000000000000000000000000000000000000000000000"));
-    static const uint256 u256_max(uint256S("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+    constexpr uint256 u256_min{"0000000000000000000000000000000000000000000000000000000000000000"};
+    constexpr uint256 u256_max{"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
     const std::vector<uint256> v256{u256, u256_min, u256_max};
     (void)ComputeMerkleRoot(v256);
-    (void)CountBits(u64);
     (void)DecompressAmount(u64);
     {
         if (std::optional<CAmount> parsed = ParseMoney(FormatMoney(i64))) {
@@ -118,8 +118,8 @@ FUZZ_TARGET(integer, .init = initialize_integer)
     }
     (void)MillisToTimeval(i64);
     (void)SighashToStr(uch);
-    (void)SipHashUint256(u64, u64, u256);
-    (void)SipHashUint256Extra(u64, u64, u256, u32);
+    (void)PresaltedSipHasher(u64, u64)(u256);
+    (void)PresaltedSipHasher(u64, u64)(u256, u32);
     (void)ToLower(ch);
     (void)ToUpper(ch);
     {
@@ -140,7 +140,7 @@ FUZZ_TARGET(integer, .init = initialize_integer)
 
     const arith_uint256 au256 = UintToArith256(u256);
     assert(ArithToUint256(au256) == u256);
-    assert(uint256S(au256.GetHex()) == u256);
+    assert(uint256::FromHex(au256.GetHex()).value() == u256);
     (void)au256.bits();
     (void)au256.GetCompact(/* fNegative= */ false);
     (void)au256.GetCompact(/* fNegative= */ true);
@@ -214,7 +214,6 @@ FUZZ_TARGET(integer, .init = initialize_integer)
 
     {
         const ServiceFlags service_flags = (ServiceFlags)u64;
-        (void)HasAllDesirableServiceFlags(service_flags);
         (void)MayHaveUsefulAddressDB(service_flags);
     }
 
@@ -237,10 +236,6 @@ FUZZ_TARGET(integer, .init = initialize_integer)
         const uint16_t deserialized_u16 = ser_readdata16(stream);
         assert(u16 == deserialized_u16 && stream.empty());
 
-        ser_writedata16be(stream, u16);
-        const uint16_t deserialized_u16be = ser_readdata16be(stream);
-        assert(u16 == deserialized_u16be && stream.empty());
-
         ser_writedata8(stream, u8);
         const uint8_t deserialized_u8 = ser_readdata8(stream);
         assert(u8 == deserialized_u8 && stream.empty());
@@ -255,10 +250,5 @@ FUZZ_TARGET(integer, .init = initialize_integer)
             assert(u64 == deserialized_u64 && stream.empty());
         } catch (const std::ios_base::failure&) {
         }
-    }
-
-    try {
-        CHECK_NONFATAL(b);
-    } catch (const NonFatalCheckError&) {
     }
 }

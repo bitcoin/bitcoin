@@ -26,7 +26,7 @@ ServiceProxy class:
 
 - HTTP connections persist for the life of the AuthServiceProxy object
   (if server supports HTTP/1.1)
-- sends protocol 'version', per JSON-RPC 1.1
+- sends "jsonrpc":"2.0", per JSON-RPC 2.0
 - sends proper, incrementing 'id'
 - sends Basic HTTP authentication headers
 - parses all JSON numbers that look like floats as Decimal
@@ -75,6 +75,7 @@ class AuthServiceProxy():
         self.__service_url = service_url
         self._service_name = service_name
         self.ensure_ascii = ensure_ascii  # can be toggled on the fly by tests
+        self.reuse_http_connections = True
         self.__url = urllib.parse.urlparse(service_url)
         user = None if self.__url.username is None else self.__url.username.encode('utf8')
         passwd = None if self.__url.password is None else self.__url.password.encode('utf8')
@@ -92,6 +93,8 @@ class AuthServiceProxy():
             raise AttributeError
         if self._service_name is not None:
             name = "%s.%s" % (self._service_name, name)
+        if not self.reuse_http_connections:
+            self._set_conn()
         return AuthServiceProxy(self.__service_url, name, connection=self.__conn)
 
     def _request(self, method, path, postdata):
@@ -102,47 +105,67 @@ class AuthServiceProxy():
                    'User-Agent': USER_AGENT,
                    'Authorization': self.__auth_header,
                    'Content-type': 'application/json'}
+        if not self.reuse_http_connections:
+            self._set_conn()
         self.__conn.request(method, path, postdata, headers)
         return self._get_response()
+
+    def _json_dumps(self, obj):
+        return json.dumps(obj, default=serialization_fallback, ensure_ascii=self.ensure_ascii)
 
     def get_request(self, *args, **argsn):
         AuthServiceProxy.__id_count += 1
 
-        log.debug("-{}-> {} {}".format(
+        log.debug("-{}-> {} {} {}".format(
             AuthServiceProxy.__id_count,
             self._service_name,
-            json.dumps(args or argsn, default=serialization_fallback, ensure_ascii=self.ensure_ascii),
+            self._json_dumps(args),
+            self._json_dumps(argsn),
         ))
+
         if args and argsn:
             params = dict(args=args, **argsn)
         else:
             params = args or argsn
-        return {'version': '1.1',
+        return {'jsonrpc': '2.0',
                 'method': self._service_name,
                 'params': params,
                 'id': AuthServiceProxy.__id_count}
 
     def __call__(self, *args, **argsn):
-        postdata = json.dumps(self.get_request(*args, **argsn), default=serialization_fallback, ensure_ascii=self.ensure_ascii)
+        postdata = self._json_dumps(self.get_request(*args, **argsn))
         response, status = self._request('POST', self.__url.path, postdata.encode('utf-8'))
-        if response['error'] is not None:
-            raise JSONRPCException(response['error'], status)
-        elif 'result' not in response:
-            raise JSONRPCException({
-                'code': -343, 'message': 'missing JSON-RPC result'}, status)
-        elif status != HTTPStatus.OK:
-            raise JSONRPCException({
-                'code': -342, 'message': 'non-200 HTTP status code but no JSON-RPC error'}, status)
+        # For backwards compatibility tests, accept JSON RPC 1.1 responses
+        if 'jsonrpc' not in response:
+            if response['error'] is not None:
+                raise JSONRPCException(response['error'], status)
+            elif 'result' not in response:
+                raise JSONRPCException({
+                    'code': -343, 'message': 'missing JSON-RPC result'}, status)
+            elif status != HTTPStatus.OK:
+                raise JSONRPCException({
+                    'code': -342, 'message': 'non-200 HTTP status code but no JSON-RPC error'}, status)
+            else:
+                return response['result']
         else:
+            assert response['jsonrpc'] == '2.0'
+            if status != HTTPStatus.OK:
+                raise JSONRPCException({
+                    'code': -342, 'message': 'non-200 HTTP status code'}, status)
+            if 'error' in response:
+                raise JSONRPCException(response['error'], status)
+            elif 'result' not in response:
+                raise JSONRPCException({
+                    'code': -343, 'message': 'missing JSON-RPC 2.0 result and error'}, status)
             return response['result']
 
     def batch(self, rpc_call_list):
-        postdata = json.dumps(list(rpc_call_list), default=serialization_fallback, ensure_ascii=self.ensure_ascii)
+        postdata = self._json_dumps(list(rpc_call_list))
         log.debug("--> " + postdata)
         response, status = self._request('POST', self.__url.path, postdata.encode('utf-8'))
         if status != HTTPStatus.OK:
             raise JSONRPCException({
-                'code': -342, 'message': 'non-200 HTTP status code but no JSON-RPC error'}, status)
+                'code': -342, 'message': 'non-200 HTTP status code'}, status)
         return response
 
     def _get_response(self):
@@ -160,17 +183,31 @@ class AuthServiceProxy():
             raise JSONRPCException({
                 'code': -342, 'message': 'missing HTTP response from server'})
 
+        # Check for no-content HTTP status code, which can be returned when an
+        # RPC client requests a JSON-RPC 2.0 "notification" with no response.
+        # Currently this is only possible if clients call the _request() method
+        # directly to send a raw request.
+        if http_response.status == HTTPStatus.NO_CONTENT:
+            if len(http_response.read()) != 0:
+                raise JSONRPCException({'code': -342, 'message': 'Content received with NO CONTENT status code'})
+            return None, http_response.status
+
         content_type = http_response.getheader('Content-Type')
         if content_type != 'application/json':
             raise JSONRPCException(
                 {'code': -342, 'message': 'non-JSON HTTP response with \'%i %s\' from server' % (http_response.status, http_response.reason)},
                 http_response.status)
 
-        responsedata = http_response.read().decode('utf8')
+        data = http_response.read()
+        try:
+            responsedata = data.decode('utf8')
+        except UnicodeDecodeError as e:
+            raise JSONRPCException({
+                'code': -342, 'message': f'Cannot decode response in utf8 format, content: {data}, exception: {e}'})
         response = json.loads(responsedata, parse_float=decimal.Decimal)
         elapsed = time.time() - req_start_time
         if "error" in response and response["error"] is None:
-            log.debug("<-%s- [%.6f] %s" % (response["id"], elapsed, json.dumps(response["result"], default=serialization_fallback, ensure_ascii=self.ensure_ascii)))
+            log.debug("<-%s- [%.6f] %s" % (response["id"], elapsed, self._json_dumps(response["result"])))
         else:
             log.debug("<-- [%.6f] %s" % (elapsed, responsedata))
         return response, http_response.status

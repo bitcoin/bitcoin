@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2022 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that the wallet can send and receive using all combinations of address types.
@@ -66,9 +66,6 @@ from test_framework.util import (
 )
 
 class AddressTypeTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 6
         self.extra_args = [
@@ -79,10 +76,8 @@ class AddressTypeTest(BitcoinTestFramework):
             ["-changetype=p2sh-segwit"],
             [],
         ]
-        # whitelist all peers to speed up tx relay / mempool sync
-        for args in self.extra_args:
-            args.append("-whitelist=noban@127.0.0.1")
-        self.supports_cli = False
+        # whitelist peers to speed up tx relay / mempool sync
+        self.noban_tx_relay = True
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -231,28 +226,10 @@ class AddressTypeTest(BitcoinTestFramework):
         # no coinbases are maturing for the nodes-under-test during the test
         self.generate(self.nodes[5], COINBASE_MATURITY + 1)
 
-        uncompressed_1 = "0496b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52da7589379515d4e0a604f8141781e62294721166bf621e73a82cbf2342c858ee"
-        uncompressed_2 = "047211a824f55b505228e4c3d5194c1fcfaa15a456abdf37f9b9d97a4040afc073dee6c89064984f03385237d92167c13e236446b417ab79a0fcae412ae3316b77"
         compressed_1 = "0296b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52"
         compressed_2 = "037211a824f55b505228e4c3d5194c1fcfaa15a456abdf37f9b9d97a4040afc073"
 
-        if not self.options.descriptors:
-            # Tests for addmultisigaddress's address type behavior is only for legacy wallets.
-            # Descriptor wallets do not have addmultsigaddress so these tests are not needed for those.
-            # addmultisigaddress with at least 1 uncompressed key should return a legacy address.
-            for node in range(4):
-                self.test_address(node, self.nodes[node].addmultisigaddress(2, [uncompressed_1, uncompressed_2])['address'], True, 'legacy')
-                self.test_address(node, self.nodes[node].addmultisigaddress(2, [compressed_1, uncompressed_2])['address'], True, 'legacy')
-                self.test_address(node, self.nodes[node].addmultisigaddress(2, [uncompressed_1, compressed_2])['address'], True, 'legacy')
-            # addmultisigaddress with all compressed keys should return the appropriate address type (even when the keys are not ours).
-            self.test_address(0, self.nodes[0].addmultisigaddress(2, [compressed_1, compressed_2])['address'], True, 'legacy')
-            self.test_address(1, self.nodes[1].addmultisigaddress(2, [compressed_1, compressed_2])['address'], True, 'p2sh-segwit')
-            self.test_address(2, self.nodes[2].addmultisigaddress(2, [compressed_1, compressed_2])['address'], True, 'p2sh-segwit')
-            self.test_address(3, self.nodes[3].addmultisigaddress(2, [compressed_1, compressed_2])['address'], True, 'bech32')
-
         do_multisigs = [False]
-        if not self.options.descriptors:
-            do_multisigs.append(True)
 
         for explicit_type, multisig, from_node in itertools.product([False, True], do_multisigs, range(4)):
             address_type = None
@@ -282,9 +259,11 @@ class AddressTypeTest(BitcoinTestFramework):
                     else:
                         address = self.nodes[to_node].getnewaddress(address_type=address_type)
                 else:
-                    addr1 = self.nodes[to_node].getnewaddress()
-                    addr2 = self.nodes[to_node].getnewaddress()
-                    address = self.nodes[to_node].addmultisigaddress(2, [addr1, addr2])['address']
+                    pubkey1 = self.nodes[to_node].getaddressinfo(self.nodes[to_node].getnewaddress())["pubkey"]
+                    pubkey2 = self.nodes[to_node].getaddressinfo(self.nodes[to_node].getnewaddress())["pubkey"]
+                    ms = self.nodes[to_node].createmultisig(2, [pubkey1, pubkey2])
+                    import_res = self.nodes[to_node].importdescriptors([{"desc": ms["descriptor"], "timestamp": 0}])
+                    assert_equal(import_res[0]["success"], True)
 
                 # Do some sanity checking on the created address
                 if address_type is not None:
@@ -366,10 +345,11 @@ class AddressTypeTest(BitcoinTestFramework):
         self.test_address(3, self.nodes[3].getrawchangeaddress(), multisig=False, typ='bech32')
 
         self.log.info('test invalid address type arguments')
-        assert_raises_rpc_error(-5, "Unknown address type ''", self.nodes[3].addmultisigaddress, 2, [compressed_1, compressed_2], None, '')
+        assert_raises_rpc_error(-5, "Unknown address type ''", self.nodes[3].createmultisig, 2, [compressed_1, compressed_2], address_type="")
         assert_raises_rpc_error(-5, "Unknown address type ''", self.nodes[3].getnewaddress, None, '')
         assert_raises_rpc_error(-5, "Unknown address type ''", self.nodes[3].getrawchangeaddress, '')
         assert_raises_rpc_error(-5, "Unknown address type 'bech23'", self.nodes[3].getrawchangeaddress, 'bech23')
+        assert_raises_rpc_error(-5, "Unknown address type 'bech23'", self.nodes[3].createwalletdescriptor, "bech23")
 
         self.log.info("Nodes with changetype=p2sh-segwit never use a P2WPKH change output")
         self.test_change_output_type(4, [to_address_bech32_1], 'p2sh-segwit')
@@ -378,14 +358,9 @@ class AddressTypeTest(BitcoinTestFramework):
         self.test_address(4, self.nodes[4].getrawchangeaddress(), multisig=False, typ='p2sh-segwit')
         self.test_address(4, self.nodes[4].getrawchangeaddress('bech32'), multisig=False, typ='bech32')
 
-        if self.options.descriptors:
-            self.log.info("Descriptor wallets have bech32m addresses")
-            self.test_address(4, self.nodes[4].getnewaddress("", "bech32m"), multisig=False, typ="bech32m")
-            self.test_address(4, self.nodes[4].getrawchangeaddress("bech32m"), multisig=False, typ="bech32m")
-        else:
-            self.log.info("Legacy wallets cannot make bech32m addresses")
-            assert_raises_rpc_error(-8, "Legacy wallets cannot provide bech32m addresses", self.nodes[0].getnewaddress, "", "bech32m")
-            assert_raises_rpc_error(-8, "Legacy wallets cannot provide bech32m addresses", self.nodes[0].getrawchangeaddress, "bech32m")
+        self.log.info("Descriptor wallets have bech32m addresses")
+        self.test_address(4, self.nodes[4].getnewaddress("", "bech32m"), multisig=False, typ="bech32m")
+        self.test_address(4, self.nodes[4].getrawchangeaddress("bech32m"), multisig=False, typ="bech32m")
 
 if __name__ == '__main__':
-    AddressTypeTest().main()
+    AddressTypeTest(__file__).main()

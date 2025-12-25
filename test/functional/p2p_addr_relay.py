@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2021 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -75,9 +75,10 @@ class AddrReceiver(P2PInterface):
         return self.num_ipv4_received != 0
 
     def on_version(self, message):
-        self.send_message(msg_verack())
+        self.send_version()
+        self.send_without_ping(msg_verack())
         if (self.send_getaddr):
-            self.send_message(msg_getaddr())
+            self.send_without_ping(msg_getaddr())
 
     def getaddr_received(self):
         return self.message_count['getaddr'] > 0
@@ -133,7 +134,7 @@ class AddrTest(BitcoinTestFramework):
         self.mocktime += 10 * 60
         self.nodes[0].setmocktime(self.mocktime)
         for peer in receivers:
-            peer.sync_send_with_ping()
+            peer.sync_with_ping()
 
     def oversized_addr_test(self):
         self.log.info('Send an addr message that is too large')
@@ -141,7 +142,8 @@ class AddrTest(BitcoinTestFramework):
 
         msg = self.setup_addr_msg(1010)
         with self.nodes[0].assert_debug_log(['addr message size = 1010']):
-            addr_source.send_and_ping(msg)
+            addr_source.send_without_ping(msg)
+            addr_source.wait_for_disconnect()
 
         self.nodes[0].disconnect_p2ps()
 
@@ -270,15 +272,16 @@ class AddrTest(BitcoinTestFramework):
         full_outbound_peer.sync_with_ping()
         assert full_outbound_peer.getaddr_received()
 
-        self.log.info('Check that we do not send a getaddr message upon connecting to a block-relay-only peer')
+        self.log.info('Check that we do not send a getaddr message to a block-relay-only or inbound peer')
         block_relay_peer = self.nodes[0].add_outbound_p2p_connection(AddrReceiver(), p2p_idx=1, connection_type="block-relay-only")
         block_relay_peer.sync_with_ping()
         assert_equal(block_relay_peer.getaddr_received(), False)
 
-        self.log.info('Check that we answer getaddr messages only from inbound peers')
         inbound_peer = self.nodes[0].add_p2p_connection(AddrReceiver(send_getaddr=False))
         inbound_peer.sync_with_ping()
+        assert_equal(inbound_peer.getaddr_received(), False)
 
+        self.log.info('Check that we answer getaddr messages only from inbound peers')
         # Add some addresses to addrman
         for i in range(1000):
             first_octet = i >> 8
@@ -298,6 +301,16 @@ class AddrTest(BitcoinTestFramework):
         assert_equal(full_outbound_peer.num_ipv4_received, 0)
         assert_equal(block_relay_peer.num_ipv4_received, 0)
         assert inbound_peer.num_ipv4_received > 100
+
+        self.log.info('Check that we answer getaddr messages only once per connection')
+        received_addrs_before = inbound_peer.num_ipv4_received
+        with self.nodes[0].assert_debug_log(['Ignoring repeated "getaddr".']):
+            inbound_peer.send_and_ping(msg_getaddr())
+        self.mocktime += 10 * 60
+        self.nodes[0].setmocktime(self.mocktime)
+        inbound_peer.sync_with_ping()
+        received_addrs_after = inbound_peer.num_ipv4_received
+        assert_equal(received_addrs_before, received_addrs_after)
 
         self.nodes[0].disconnect_p2ps()
 
@@ -428,4 +441,4 @@ class AddrTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    AddrTest().main()
+    AddrTest(__file__).main()

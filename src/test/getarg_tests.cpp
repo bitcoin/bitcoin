@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,6 +15,8 @@
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
+
+using util::SplitString;
 
 BOOST_FIXTURE_TEST_SUITE(getarg_tests, BasicTestingSetup)
 

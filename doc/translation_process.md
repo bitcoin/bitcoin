@@ -8,7 +8,7 @@ Transifex is setup to monitor the GitHub repo for updates, and when code contain
 
 Multiple language support is critical in assisting Bitcoin’s global adoption, and growth. One of Bitcoin’s greatest strengths is cross-border money transfers, any help making that easier is greatly appreciated.
 
-See the [Transifex Bitcoin project](https://www.transifex.com/bitcoin/bitcoin/) to assist in translations. You should also join the translation mailing list for announcements - see details below.
+See the [Transifex Bitcoin project](https://explore.transifex.com/bitcoin/bitcoin/) to assist in translations. You should also join the translation mailing list for announcements - see details below.
 
 ### Writing code with translations
 We use automated scripts to help extract translations in both Qt, and non-Qt source files. It is rarely necessary to manually edit the files in `src/qt/locale/`. The translation source files must adhere to the following format:
@@ -18,8 +18,8 @@ We use automated scripts to help extract translations in both Qt, and non-Qt sou
 
 To automatically regenerate the `bitcoin_en.ts` file, run the following commands:
 ```sh
-cd src/
-make translate
+cmake --preset dev-mode -DWITH_USDT=OFF -DENABLE_IPC=OFF
+cmake --build build_dev_mode --target translate
 ```
 
 **Example Qt translation**
@@ -39,26 +39,12 @@ git commit
 ```
 
 ### Creating a Transifex account
-Visit the [Transifex Signup](https://www.transifex.com/signup/) page to create an account. Take note of your username and password, as they will be required to configure the command-line tool.
+Visit the [Transifex Signup](https://app.transifex.com/signup/open-source/) page to create an account. Take note of your username and password, as they will be required to configure the command-line tool.
 
-You can find the Bitcoin translation project at [https://www.transifex.com/bitcoin/bitcoin/](https://www.transifex.com/bitcoin/bitcoin/).
+You can find the Bitcoin translation project at [https://explore.transifex.com/bitcoin/bitcoin/](https://explore.transifex.com/bitcoin/bitcoin/).
 
 ### Installing the Transifex client command-line tool
-The client is used to fetch updated translations. If you are having problems, or need more details, see [https://docs.transifex.com/client/installing-the-client](https://docs.transifex.com/client/installing-the-client)
-
-`pip install transifex-client`
-
-Setup your Transifex client config as follows. Please *ignore the token field*.
-
-```ini
-nano ~/.transifexrc
-
-[https://www.transifex.com]
-hostname = https://www.transifex.com
-password = PASSWORD
-token =
-username = USERNAME
-```
+The client is used to fetch updated translations. Please check installation instructions and any other details at https://developers.transifex.com/docs/cli.
 
 The Transifex Bitcoin project config file is included as part of the repo. It can be found at `.tx/config`, however you shouldn’t need to change anything.
 

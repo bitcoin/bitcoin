@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2021 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -40,6 +40,7 @@ class path;
 class AskPassphraseDialog;
 class CreateWalletActivity;
 class CreateWalletDialog;
+class MigrateWalletActivity;
 class OpenWalletActivity;
 class WalletControllerActivity;
 
@@ -60,7 +61,7 @@ public:
 
     //! Returns all wallet names in the wallet dir mapped to whether the wallet
     //! is loaded.
-    std::map<std::string, bool> listWalletDir() const;
+    std::map<std::string, std::pair<bool, std::string>> listWalletDir() const;
 
     void closeWallet(WalletModel* wallet_model, QWidget* parent = nullptr);
     void closeAllWallets(QWidget* parent = nullptr);
@@ -83,6 +84,10 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_load_wallet;
 
     friend class WalletControllerActivity;
+    friend class MigrateWalletActivity;
+
+    //! Starts the wallet closure procedure
+    void removeWallet(WalletModel* wallet_model);
 };
 
 class WalletControllerActivity : public QObject
@@ -100,7 +105,7 @@ protected:
     interfaces::Node& node() const { return m_wallet_controller->m_node; }
     QObject* worker() const { return m_wallet_controller->m_activity_worker; }
 
-    void showProgressDialog(const QString& title_text, const QString& label_text);
+    void showProgressDialog(const QString& title_text, const QString& label_text, bool show_minimized=false);
 
     WalletController* const m_wallet_controller;
     QWidget* const m_parent_widget;
@@ -156,7 +161,7 @@ class LoadWalletsActivity : public WalletControllerActivity
 public:
     LoadWalletsActivity(WalletController* wallet_controller, QWidget* parent_widget);
 
-    void load();
+    void load(bool show_loading_minimized);
 };
 
 class RestoreWalletActivity : public WalletControllerActivity
@@ -172,6 +177,26 @@ Q_SIGNALS:
     void restored(WalletModel* wallet_model);
 
 private:
+    void finish();
+};
+
+class MigrateWalletActivity : public WalletControllerActivity
+{
+    Q_OBJECT
+
+public:
+    MigrateWalletActivity(WalletController* wallet_controller, QWidget* parent) : WalletControllerActivity(wallet_controller, parent) {}
+
+    void restore_and_migrate(const fs::path& path, const std::string& wallet_name);
+    void migrate(const std::string& path);
+
+Q_SIGNALS:
+    void migrated(WalletModel* wallet_model);
+
+private:
+    QString m_success_message;
+
+    void do_migrate(const std::string& name);
     void finish();
 };
 

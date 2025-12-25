@@ -1,10 +1,8 @@
-Translation Strings Policy
-===========================
+# Translation Strings Policy
 
 This document provides guidelines for internationalization of the Bitcoin Core software.
 
-How to translate?
-------------------
+## How to translate?
 
 To mark a message as translatable
 
@@ -14,8 +12,7 @@ To mark a message as translatable
 
 No internationalization is used for e.g. developer scripts outside `src`.
 
-Strings to be translated
--------------------------
+## Strings to be translated
 
 On a high level, these strings are to be translated:
 
@@ -27,8 +24,7 @@ Do not translate technical or extremely rare errors.
 Anything else that appears to the user in the GUI is to be translated. This includes labels, menu items, button texts, tooltips and window titles.
 This includes messages passed to the GUI through the UI interface through `InitMessage`, `ThreadSafeMessageBox` or `ShowProgress`.
 
-General recommendations
-------------------------
+## General recommendations
 
 ### Avoid unnecessary translation strings
 
@@ -97,4 +93,4 @@ The second example reduces the number of pluralized words that translators have 
 
 During a string freeze (often before a major release), no translation strings are to be added, modified or removed.
 
-This can be checked by executing `make translate` in the `src` directory, then verifying that `bitcoin_en.ts` remains unchanged.
+This can be checked by building the `translate` target with `cmake` ([instructions](translation_process.md)), then verifying that `bitcoin_en.ts` remains unchanged.

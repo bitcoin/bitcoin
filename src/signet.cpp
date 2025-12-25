@@ -1,33 +1,35 @@
-// Copyright (c) 2019-2021 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <signet.h>
 
-#include <array>
-#include <cstdint>
-#include <vector>
-
-#include <common/system.h>
 #include <consensus/merkle.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
-#include <core_io.h>
-#include <hash.h>
 #include <logging.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
-#include <span.h>
+#include <script/script.h>
 #include <streams.h>
 #include <uint256.h>
-#include <util/strencodings.h>
+#include <util/check.h>
+
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <exception>
+#include <memory>
+#include <span>
+#include <utility>
+#include <vector>
 
 static constexpr uint8_t SIGNET_HEADER[4] = {0xec, 0xc7, 0xda, 0xa2};
 
-static constexpr unsigned int BLOCK_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_DERSIG | SCRIPT_VERIFY_NULLDUMMY;
+static constexpr script_verify_flags BLOCK_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_DERSIG | SCRIPT_VERIFY_NULLDUMMY;
 
-static bool FetchAndClearCommitmentSection(const Span<const uint8_t> header, CScript& witness_commitment, std::vector<uint8_t>& result)
+static bool FetchAndClearCommitmentSection(const std::span<const uint8_t> header, CScript& witness_commitment, std::vector<uint8_t>& result)
 {
     CScript replacement;
     bool found_header = false;
@@ -38,7 +40,7 @@ static bool FetchAndClearCommitmentSection(const Span<const uint8_t> header, CSc
     std::vector<uint8_t> pushdata;
     while (witness_commitment.GetOp(pc, opcode, pushdata)) {
         if (pushdata.size() > 0) {
-            if (!found_header && pushdata.size() > (size_t)header.size() && Span{pushdata}.first(header.size()) == header) {
+            if (!found_header && pushdata.size() > header.size() && std::ranges::equal(std::span{pushdata}.first(header.size()), header)) {
                 // pushdata only counts if it has the header _and_ some data
                 result.insert(result.end(), pushdata.begin() + header.size(), pushdata.end());
                 pushdata.erase(pushdata.begin() + header.size(), pushdata.end());
@@ -58,9 +60,9 @@ static uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CB
 {
     std::vector<uint256> leaves;
     leaves.resize(block.vtx.size());
-    leaves[0] = cb.GetHash();
+    leaves[0] = cb.GetHash().ToUint256();
     for (size_t s = 1; s < block.vtx.size(); ++s) {
-        leaves[s] = block.vtx[s]->GetHash();
+        leaves[s] = block.vtx[s]->GetHash().ToUint256();
     }
     return ComputeMerkleRoot(std::move(leaves));
 }
@@ -68,13 +70,13 @@ static uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CB
 std::optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& challenge)
 {
     CMutableTransaction tx_to_spend;
-    tx_to_spend.nVersion = 0;
+    tx_to_spend.version = 0;
     tx_to_spend.nLockTime = 0;
     tx_to_spend.vin.emplace_back(COutPoint(), CScript(OP_0), 0);
     tx_to_spend.vout.emplace_back(0, challenge);
 
     CMutableTransaction tx_spending;
-    tx_spending.nVersion = 0;
+    tx_spending.version = 0;
     tx_spending.nLockTime = 0;
     tx_spending.vin.emplace_back(COutPoint(), CScript(), 0);
     tx_spending.vout.emplace_back(0, CScript(OP_RETURN));
@@ -98,7 +100,7 @@ std::optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& c
         // no signet solution -- allow this to support OP_TRUE as trivial block challenge
     } else {
         try {
-            SpanReader v{SER_NETWORK, INIT_PROTO_VERSION, signet_solution};
+            SpanReader v{signet_solution};
             v >> tx_spending.vin[0].scriptSig;
             v >> tx_spending.vin[0].scriptWitness.stack;
             if (!v.empty()) return std::nullopt; // extraneous data encountered
@@ -109,7 +111,7 @@ std::optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& c
     uint256 signet_merkle = ComputeModifiedMerkleRoot(modified_cb, block);
 
     std::vector<uint8_t> block_data;
-    CVectorWriter writer(SER_NETWORK, INIT_PROTO_VERSION, block_data, 0);
+    VectorWriter writer{block_data, 0};
     writer << block.nVersion;
     writer << block.hashPrevBlock;
     writer << signet_merkle;
@@ -132,7 +134,7 @@ bool CheckSignetBlockSolution(const CBlock& block, const Consensus::Params& cons
     const std::optional<SignetTxs> signet_txs = SignetTxs::Create(block, challenge);
 
     if (!signet_txs) {
-        LogPrint(BCLog::VALIDATION, "CheckSignetBlockSolution: Errors in block (block solution parse failure)\n");
+        LogDebug(BCLog::VALIDATION, "CheckSignetBlockSolution: Errors in block (block solution parse failure)\n");
         return false;
     }
 
@@ -144,7 +146,7 @@ bool CheckSignetBlockSolution(const CBlock& block, const Consensus::Params& cons
     TransactionSignatureChecker sigcheck(&signet_txs->m_to_sign, /* nInIn= */ 0, /* amountIn= */ signet_txs->m_to_spend.vout[0].nValue, txdata, MissingDataBehavior::ASSERT_FAIL);
 
     if (!VerifyScript(scriptSig, signet_txs->m_to_spend.vout[0].scriptPubKey, &witness, BLOCK_SCRIPT_VERIFY_FLAGS, sigcheck)) {
-        LogPrint(BCLog::VALIDATION, "CheckSignetBlockSolution: Errors in block (block solution invalid)\n");
+        LogDebug(BCLog::VALIDATION, "CheckSignetBlockSolution: Errors in block (block solution invalid)\n");
         return false;
     }
     return true;

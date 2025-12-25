@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2021 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,7 +31,7 @@ enum class Result
 };
 
 //! Return whether transaction can be bumped.
-bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid);
+bool TransactionCanBeBumped(const CWallet& wallet, const Txid& txid);
 
 /** Create bumpfee transaction based on feerate estimates.
  *
@@ -44,10 +44,10 @@ bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid);
  * @param[out] mtx The bump transaction itself
  * @param[in] require_mine Whether the original transaction must consist of inputs that can be spent by the wallet
  * @param[in] outputs Vector of new outputs to replace the bumped transaction's outputs
- * @param[in] reduce_output The position of the change output to deduct the fee from in the transaction being bumped
+ * @param[in] original_change_index The position of the change output to deduct the fee from in the transaction being bumped
  */
 Result CreateRateBumpTransaction(CWallet& wallet,
-    const uint256& txid,
+    const Txid& txid,
     const CCoinControl& coin_control,
     std::vector<bilingual_str>& errors,
     CAmount& old_fee,
@@ -55,7 +55,7 @@ Result CreateRateBumpTransaction(CWallet& wallet,
     CMutableTransaction& mtx,
     bool require_mine,
     const std::vector<CTxOut>& outputs,
-    std::optional<uint32_t> reduce_output = std::nullopt);
+    std::optional<uint32_t> original_change_index = std::nullopt);
 
 //! Sign the new transaction,
 //! @return false if the tx couldn't be found or if it was
@@ -67,10 +67,10 @@ bool SignTransaction(CWallet& wallet, CMutableTransaction& mtx);
 //! but sets errors if the tx could not be added to the mempool (will try later)
 //! or if the old transaction could not be marked as replaced.
 Result CommitTransaction(CWallet& wallet,
-    const uint256& txid,
+    const Txid& txid,
     CMutableTransaction&& mtx,
     std::vector<bilingual_str>& errors,
-    uint256& bumped_txid);
+    Txid& bumped_txid);
 
 struct SignatureWeights
 {

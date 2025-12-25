@@ -1,11 +1,11 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <common/system.h>
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
 #include <policy/policy.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
@@ -23,38 +23,32 @@ namespace wallet {
 static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWalletTx& wtx, bool require_mine, std::vector<bilingual_str>& errors) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     if (wallet.HasWalletSpend(wtx.tx)) {
-        errors.push_back(Untranslated("Transaction has descendants in the wallet"));
+        errors.emplace_back(Untranslated("Transaction has descendants in the wallet"));
         return feebumper::Result::INVALID_PARAMETER;
     }
 
     {
         if (wallet.chain().hasDescendantsInMempool(wtx.GetHash())) {
-            errors.push_back(Untranslated("Transaction has descendants in the mempool"));
+            errors.emplace_back(Untranslated("Transaction has descendants in the mempool"));
             return feebumper::Result::INVALID_PARAMETER;
         }
     }
 
     if (wallet.GetTxDepthInMainChain(wtx) != 0) {
-        errors.push_back(Untranslated("Transaction has been mined, or is conflicted with a mined transaction"));
+        errors.emplace_back(Untranslated("Transaction has been mined, or is conflicted with a mined transaction"));
         return feebumper::Result::WALLET_ERROR;
     }
 
-    if (!SignalsOptInRBF(*wtx.tx)) {
-        errors.push_back(Untranslated("Transaction is not BIP 125 replaceable"));
-        return feebumper::Result::WALLET_ERROR;
-    }
-
-    if (wtx.mapValue.count("replaced_by_txid")) {
-        errors.push_back(strprintf(Untranslated("Cannot bump transaction %s which was already bumped by transaction %s"), wtx.GetHash().ToString(), wtx.mapValue.at("replaced_by_txid")));
+    if (wtx.mapValue.contains("replaced_by_txid")) {
+        errors.push_back(Untranslated(strprintf("Cannot bump transaction %s which was already bumped by transaction %s", wtx.GetHash().ToString(), wtx.mapValue.at("replaced_by_txid"))));
         return feebumper::Result::WALLET_ERROR;
     }
 
     if (require_mine) {
         // check that original tx consists entirely of our inputs
         // if not, we can't bump the fee, because the wallet has no way of knowing the value of the other inputs (thus the fee)
-        isminefilter filter = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
-        if (!AllInputsMine(wallet, *wtx.tx, filter)) {
-            errors.push_back(Untranslated("Transaction contains inputs that don't belong to this wallet"));
+        if (!AllInputsMine(wallet, *wtx.tx)) {
+            errors.emplace_back(Untranslated("Transaction contains inputs that don't belong to this wallet"));
             return feebumper::Result::WALLET_ERROR;
         }
     }
@@ -63,7 +57,7 @@ static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWallet
 }
 
 //! Check if the user provided a valid feeRate
-static feebumper::Result CheckFeeRate(const CWallet& wallet, const CFeeRate& newFeerate, const int64_t maxTxSize, CAmount old_fee, std::vector<bilingual_str>& errors)
+static feebumper::Result CheckFeeRate(const CWallet& wallet, const CMutableTransaction& mtx, const CFeeRate& newFeerate, const int64_t maxTxSize, CAmount old_fee, std::vector<bilingual_str>& errors)
 {
     // check that fee rate is higher than mempool's minimum fee
     // (no point in bumping fee if we know that the new tx won't be accepted to the mempool)
@@ -73,38 +67,48 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CFeeRate& new
     CFeeRate minMempoolFeeRate = wallet.chain().mempoolMinFee();
 
     if (newFeerate.GetFeePerK() < minMempoolFeeRate.GetFeePerK()) {
-        errors.push_back(strprintf(
-            Untranslated("New fee rate (%s) is lower than the minimum fee rate (%s) to get into the mempool -- "),
+        errors.push_back(Untranslated(
+            strprintf("New fee rate (%s) is lower than the minimum fee rate (%s) to get into the mempool -- ",
             FormatMoney(newFeerate.GetFeePerK()),
-            FormatMoney(minMempoolFeeRate.GetFeePerK())));
+            FormatMoney(minMempoolFeeRate.GetFeePerK()))));
         return feebumper::Result::WALLET_ERROR;
     }
 
-    CAmount new_total_fee = newFeerate.GetFee(maxTxSize);
+    std::vector<COutPoint> reused_inputs;
+    reused_inputs.reserve(mtx.vin.size());
+    for (const CTxIn& txin : mtx.vin) {
+        reused_inputs.push_back(txin.prevout);
+    }
 
-    CFeeRate incrementalRelayFee = std::max(wallet.chain().relayIncrementalFee(), CFeeRate(WALLET_INCREMENTAL_RELAY_FEE));
+    std::optional<CAmount> combined_bump_fee = wallet.chain().calculateCombinedBumpFee(reused_inputs, newFeerate);
+    if (!combined_bump_fee.has_value()) {
+        errors.push_back(Untranslated(strprintf("Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.")));
+    }
+    CAmount new_total_fee = newFeerate.GetFee(maxTxSize) + combined_bump_fee.value();
+
+    CFeeRate incrementalRelayFee = wallet.chain().relayIncrementalFee();
 
     // Min total fee is old fee + relay fee
     CAmount minTotalFee = old_fee + incrementalRelayFee.GetFee(maxTxSize);
 
     if (new_total_fee < minTotalFee) {
-        errors.push_back(strprintf(Untranslated("Insufficient total fee %s, must be at least %s (oldFee %s + incrementalFee %s)"),
-            FormatMoney(new_total_fee), FormatMoney(minTotalFee), FormatMoney(old_fee), FormatMoney(incrementalRelayFee.GetFee(maxTxSize))));
+        errors.push_back(Untranslated(strprintf("Insufficient total fee %s, must be at least %s (oldFee %s + incrementalFee %s)",
+            FormatMoney(new_total_fee), FormatMoney(minTotalFee), FormatMoney(old_fee), FormatMoney(incrementalRelayFee.GetFee(maxTxSize)))));
         return feebumper::Result::INVALID_PARAMETER;
     }
 
     CAmount requiredFee = GetRequiredFee(wallet, maxTxSize);
     if (new_total_fee < requiredFee) {
-        errors.push_back(strprintf(Untranslated("Insufficient total fee (cannot be less than required fee %s)"),
-            FormatMoney(requiredFee)));
+        errors.push_back(Untranslated(strprintf("Insufficient total fee (cannot be less than required fee %s)",
+            FormatMoney(requiredFee))));
         return feebumper::Result::INVALID_PARAMETER;
     }
 
     // Check that in all cases the new fee doesn't violate maxTxFee
     const CAmount max_tx_fee = wallet.m_default_max_tx_fee;
     if (new_total_fee > max_tx_fee) {
-        errors.push_back(strprintf(Untranslated("Specified or calculated fee %s is too high (cannot be higher than -maxtxfee %s)"),
-            FormatMoney(new_total_fee), FormatMoney(max_tx_fee)));
+        errors.push_back(Untranslated(strprintf("Specified or calculated fee %s is too high (cannot be higher than -maxtxfee %s)",
+            FormatMoney(new_total_fee), FormatMoney(max_tx_fee))));
         return feebumper::Result::WALLET_ERROR;
     }
 
@@ -140,7 +144,7 @@ static CFeeRate EstimateFeeRate(const CWallet& wallet, const CWalletTx& wtx, con
 
 namespace feebumper {
 
-bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid)
+bool TransactionCanBeBumped(const CWallet& wallet, const Txid& txid)
 {
     LOCK(wallet.cs_wallet);
     const CWalletTx* wtx = wallet.GetWalletTx(txid);
@@ -151,30 +155,30 @@ bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid)
     return res == feebumper::Result::OK;
 }
 
-Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCoinControl& coin_control, std::vector<bilingual_str>& errors,
-                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, bool require_mine, const std::vector<CTxOut>& outputs, std::optional<uint32_t> reduce_output)
+Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinControl& coin_control, std::vector<bilingual_str>& errors,
+                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, bool require_mine, const std::vector<CTxOut>& outputs, std::optional<uint32_t> original_change_index)
 {
-    // Cannot both specify new outputs and an output to reduce
-    if (!outputs.empty() && reduce_output.has_value()) {
-        errors.push_back(Untranslated("Cannot specify both new outputs to use and an output index to reduce"));
+    // For now, cannot specify both new outputs to use and an output index to send change
+    if (!outputs.empty() && original_change_index.has_value()) {
+        errors.emplace_back(Untranslated("The options 'outputs' and 'original_change_index' are incompatible. You can only either specify a new set of outputs, or designate a change output to be recycled."));
         return Result::INVALID_PARAMETER;
     }
 
-    // We are going to modify coin control later, copy to re-use
+    // We are going to modify coin control later, copy to reuse
     CCoinControl new_coin_control(coin_control);
 
     LOCK(wallet.cs_wallet);
     errors.clear();
     auto it = wallet.mapWallet.find(txid);
     if (it == wallet.mapWallet.end()) {
-        errors.push_back(Untranslated("Invalid or non-wallet transaction id"));
+        errors.emplace_back(Untranslated("Invalid or non-wallet transaction id"));
         return Result::INVALID_ADDRESS_OR_KEY;
     }
     const CWalletTx& wtx = it->second;
 
-    // Make sure that reduce_output is valid
-    if (reduce_output.has_value() && reduce_output.value() >= wtx.tx->vout.size()) {
-        errors.push_back(Untranslated("Change position is out of range"));
+    // Make sure that original_change_index is valid
+    if (original_change_index.has_value() && original_change_index.value() >= wtx.tx->vout.size()) {
+        errors.emplace_back(Untranslated("Change position is out of range"));
         return Result::INVALID_PARAMETER;
     }
 
@@ -190,13 +194,12 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     for (const CTxIn& txin : wtx.tx->vin) {
         const Coin& coin = coins.at(txin.prevout);
         if (coin.out.IsNull()) {
-            errors.push_back(Untranslated(strprintf("%s:%u is already spent", txin.prevout.hash.GetHex(), txin.prevout.n)));
+            errors.emplace_back(Untranslated(strprintf("%s:%u is already spent", txin.prevout.hash.GetHex(), txin.prevout.n)));
             return Result::MISC_ERROR;
         }
-        if (wallet.IsMine(txin.prevout)) {
-            new_coin_control.Select(txin.prevout);
-        } else {
-            new_coin_control.SelectExternal(txin.prevout, coin.out);
+        PreselectedInput& preset_txin = new_coin_control.Select(txin.prevout);
+        if (!wallet.IsMine(txin.prevout)) {
+            preset_txin.SetTxOut(coin.out);
         }
         input_value += coin.out.nValue;
         spent_outputs.push_back(coin.out);
@@ -247,12 +250,12 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     const auto& txouts = outputs.empty() ? wtx.tx->vout : outputs;
     for (size_t i = 0; i < txouts.size(); ++i) {
         const CTxOut& output = txouts.at(i);
-        if (reduce_output.has_value() ?  reduce_output.value() == i : OutputIsChange(wallet, output)) {
-            CTxDestination change_dest;
-            ExtractDestination(output.scriptPubKey, change_dest);
-            new_coin_control.destChange = change_dest;
+        CTxDestination dest;
+        ExtractDestination(output.scriptPubKey, dest);
+        if (original_change_index.has_value() ?  original_change_index.value() == i : OutputIsChange(wallet, output)) {
+            new_coin_control.destChange = dest;
         } else {
-            CRecipient recipient = {output.scriptPubKey, output.nValue, false};
+            CRecipient recipient = {dest, output.nValue, false};
             recipients.push_back(recipient);
         }
         new_outputs_value += output.nValue;
@@ -268,7 +271,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
 
         // Add change as recipient with SFFO flag enabled, so fees are deduced from it.
         // If the output differs from the original tx output (because the user customized it) a new change output will be created.
-        recipients.emplace_back(CRecipient{GetScriptForDestination(new_coin_control.destChange), new_outputs_value, /*fSubtractFeeFromAmount=*/true});
+        recipients.emplace_back(CRecipient{new_coin_control.destChange, new_outputs_value, /*fSubtractFeeFromAmount=*/true});
         new_coin_control.destChange = CNoDestination();
     }
 
@@ -283,7 +286,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         }
         temp_mtx.vout = txouts;
         const int64_t maxTxSize{CalculateMaximumSignedTxSize(CTransaction(temp_mtx), &wallet, &new_coin_control).vsize};
-        Result res = CheckFeeRate(wallet, *new_coin_control.m_feerate, maxTxSize, old_fee, errors);
+        Result res = CheckFeeRate(wallet, temp_mtx, *new_coin_control.m_feerate, maxTxSize, old_fee, errors);
         if (res != Result::OK) {
             return res;
         }
@@ -307,10 +310,9 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     // We cannot source new unconfirmed inputs(bip125 rule 2)
     new_coin_control.m_min_depth = 1;
 
-    constexpr int RANDOM_CHANGE_POSITION = -1;
-    auto res = CreateTransaction(wallet, recipients, RANDOM_CHANGE_POSITION, new_coin_control, false);
+    auto res = CreateTransaction(wallet, recipients, /*change_pos=*/std::nullopt, new_coin_control, false);
     if (!res) {
-        errors.push_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + util::ErrorString(res));
+        errors.emplace_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + util::ErrorString(res));
         return Result::WALLET_ERROR;
     }
 
@@ -334,9 +336,9 @@ bool SignTransaction(CWallet& wallet, CMutableTransaction& mtx) {
         // First fill transaction with our data without signing,
         // so external signers are not asked to sign more than once.
         bool complete;
-        wallet.FillPSBT(psbtx, complete, SIGHASH_ALL, false /* sign */, true /* bip32derivs */);
-        const TransactionError err = wallet.FillPSBT(psbtx, complete, SIGHASH_ALL, true /* sign */, false  /* bip32derivs */);
-        if (err != TransactionError::OK) return false;
+        wallet.FillPSBT(psbtx, complete, std::nullopt, /*sign=*/false, /*bip32derivs=*/true);
+        auto err{wallet.FillPSBT(psbtx, complete, std::nullopt, /*sign=*/true, /*bip32derivs=*/false)};
+        if (err) return false;
         complete = FinalizeAndExtractPSBT(psbtx, mtx);
         return complete;
     } else {
@@ -344,7 +346,7 @@ bool SignTransaction(CWallet& wallet, CMutableTransaction& mtx) {
     }
 }
 
-Result CommitTransaction(CWallet& wallet, const uint256& txid, CMutableTransaction&& mtx, std::vector<bilingual_str>& errors, uint256& bumped_txid)
+Result CommitTransaction(CWallet& wallet, const Txid& txid, CMutableTransaction&& mtx, std::vector<bilingual_str>& errors, Txid& bumped_txid)
 {
     LOCK(wallet.cs_wallet);
     if (!errors.empty()) {
@@ -352,7 +354,7 @@ Result CommitTransaction(CWallet& wallet, const uint256& txid, CMutableTransacti
     }
     auto it = txid.IsNull() ? wallet.mapWallet.end() : wallet.mapWallet.find(txid);
     if (it == wallet.mapWallet.end()) {
-        errors.push_back(Untranslated("Invalid or non-wallet transaction id"));
+        errors.emplace_back(Untranslated("Invalid or non-wallet transaction id"));
         return Result::MISC_ERROR;
     }
     const CWalletTx& oldWtx = it->second;
@@ -373,7 +375,7 @@ Result CommitTransaction(CWallet& wallet, const uint256& txid, CMutableTransacti
     // mark the original tx as bumped
     bumped_txid = tx->GetHash();
     if (!wallet.MarkReplaced(oldWtx.GetHash(), bumped_txid)) {
-        errors.push_back(Untranslated("Created new bumpfee transaction but could not mark the original transaction as replaced"));
+        errors.emplace_back(Untranslated("Created new bumpfee transaction but could not mark the original transaction as replaced"));
     }
     return Result::OK;
 }

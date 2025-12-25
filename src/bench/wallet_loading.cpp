@@ -1,32 +1,37 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <addresstype.h>
 #include <bench/bench.h>
-#include <interfaces/chain.h>
-#include <node/context.h>
-#include <test/util/mining.h>
+#include <consensus/amount.h>
+#include <outputtype.h>
+#include <primitives/transaction.h>
 #include <test/util/setup_common.h>
-#include <wallet/test/util.h>
-#include <util/translation.h>
-#include <validationinterface.h>
+#include <util/check.h>
 #include <wallet/context.h>
-#include <wallet/receive.h>
+#include <wallet/db.h>
+#include <wallet/test/util.h>
+#include <wallet/transaction.h>
 #include <wallet/wallet.h>
+#include <wallet/walletutil.h>
 
-#include <optional>
+#include <cstdint>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace wallet{
 static void AddTx(CWallet& wallet)
 {
     CMutableTransaction mtx;
-    mtx.vout.push_back({COIN, GetScriptForDestination(*Assert(wallet.GetNewDestination(OutputType::BECH32, "")))});
-    mtx.vin.push_back(CTxIn());
+    mtx.vout.emplace_back(COIN, GetScriptForDestination(*Assert(wallet.GetNewDestination(OutputType::BECH32, ""))));
+    mtx.vin.emplace_back();
 
     wallet.AddToWallet(MakeTransactionRef(mtx), TxStateInactive{});
 }
 
-static void WalletLoading(benchmark::Bench& bench, bool legacy_wallet)
+static void WalletLoadingDescriptors(benchmark::Bench& bench)
 {
     const auto test_setup = MakeNoLogFileContext<TestingSetup>();
 
@@ -36,10 +41,7 @@ static void WalletLoading(benchmark::Bench& bench, bool legacy_wallet)
 
     // Setup the wallet
     // Loading the wallet will also create it
-    uint64_t create_flags = 0;
-    if (!legacy_wallet) {
-        create_flags = WALLET_FLAG_DESCRIPTORS;
-    }
+    uint64_t create_flags = WALLET_FLAG_DESCRIPTORS;
     auto database = CreateMockableWalletDatabase();
     auto wallet = TestLoadWallet(std::move(database), context, create_flags);
 
@@ -62,13 +64,5 @@ static void WalletLoading(benchmark::Bench& bench, bool legacy_wallet)
     });
 }
 
-#ifdef USE_BDB
-static void WalletLoadingLegacy(benchmark::Bench& bench) { WalletLoading(bench, /*legacy_wallet=*/true); }
-BENCHMARK(WalletLoadingLegacy, benchmark::PriorityLevel::HIGH);
-#endif
-
-#ifdef USE_SQLITE
-static void WalletLoadingDescriptors(benchmark::Bench& bench) { WalletLoading(bench, /*legacy_wallet=*/false); }
 BENCHMARK(WalletLoadingDescriptors, benchmark::PriorityLevel::HIGH);
-#endif
 } // namespace wallet

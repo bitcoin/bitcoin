@@ -1,21 +1,32 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <core_io.h>
 
-#include <primitives/block.h>
+#include <primitives/block.h> // IWYU pragma: keep
 #include <primitives/transaction.h>
+#include <script/interpreter.h>
 #include <script/script.h>
-#include <script/sign.h>
 #include <serialize.h>
 #include <streams.h>
 #include <util/result.h>
 #include <util/strencodings.h>
-#include <version.h>
+#include <util/string.h>
+#include <util/translation.h>
 
 #include <algorithm>
-#include <string>
+#include <compare>
+#include <cstdint>
+#include <exception>
+#include <map>
+#include <optional>
+#include <span>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+
+using util::SplitString;
 
 namespace {
 class OpCodeParser
@@ -38,7 +49,7 @@ public:
             }
             mapOpNames[strName] = static_cast<opcodetype>(op);
             // Convenience: OP_ADD and just ADD are both recognized:
-            if (strName.compare(0, 3, "OP_") == 0) { // strName starts with "OP_"
+            if (strName.starts_with("OP_")) {
                 mapOpNames[strName.substr(3)] = static_cast<opcodetype>(op);
             }
         }
@@ -82,7 +93,7 @@ CScript ParseScript(const std::string& s)
             }
 
             result << num.value();
-        } else if (w.substr(0, 2) == "0x" && w.size() > 2 && IsHex(std::string(w.begin() + 2, w.end()))) {
+        } else if (w.starts_with("0x") && w.size() > 2 && IsHex(std::string(w.begin() + 2, w.end()))) {
             // Raw hex data, inserted NOT pushed onto stack:
             std::vector<unsigned char> raw = ParseHex(std::string(w.begin() + 2, w.end()));
             result.insert(result.end(), raw.begin(), raw.end());
@@ -142,9 +153,9 @@ static bool DecodeTx(CMutableTransaction& tx, const std::vector<unsigned char>& 
     // Try decoding with extended serialization support, and remember if the result successfully
     // consumes the entire input.
     if (try_witness) {
-        CDataStream ssData(tx_data, SER_NETWORK, PROTOCOL_VERSION);
+        DataStream ssData(tx_data);
         try {
-            ssData >> tx_extended;
+            ssData >> TX_WITH_WITNESS(tx_extended);
             if (ssData.empty()) ok_extended = true;
         } catch (const std::exception&) {
             // Fall through.
@@ -160,9 +171,9 @@ static bool DecodeTx(CMutableTransaction& tx, const std::vector<unsigned char>& 
 
     // Try decoding with legacy serialization, and remember if the result successfully consumes the entire input.
     if (try_no_witness) {
-        CDataStream ssData(tx_data, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
+        DataStream ssData(tx_data);
         try {
-            ssData >> tx_legacy;
+            ssData >> TX_NO_WITNESS(tx_legacy);
             if (ssData.empty()) ok_legacy = true;
         } catch (const std::exception&) {
             // Fall through.
@@ -222,9 +233,9 @@ bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
         return false;
 
     std::vector<unsigned char> blockData(ParseHex(strHexBlk));
-    CDataStream ssBlock(blockData, SER_NETWORK, PROTOCOL_VERSION);
+    DataStream ssBlock(blockData);
     try {
-        ssBlock >> block;
+        ssBlock >> TX_WITH_WITNESS(block);
     }
     catch (const std::exception&) {
         return false;
@@ -233,18 +244,9 @@ bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
     return true;
 }
 
-bool ParseHashStr(const std::string& strHex, uint256& result)
-{
-    if ((strHex.size() != 64) || !IsHex(strHex))
-        return false;
-
-    result.SetHex(strHex);
-    return true;
-}
-
 util::Result<int> SighashFromStr(const std::string& sighash)
 {
-    static std::map<std::string, int> map_sighash_values = {
+    static const std::map<std::string, int> map_sighash_values = {
         {std::string("DEFAULT"), int(SIGHASH_DEFAULT)},
         {std::string("ALL"), int(SIGHASH_ALL)},
         {std::string("ALL|ANYONECANPAY"), int(SIGHASH_ALL|SIGHASH_ANYONECANPAY)},
@@ -257,6 +259,6 @@ util::Result<int> SighashFromStr(const std::string& sighash)
     if (it != map_sighash_values.end()) {
         return it->second;
     } else {
-        return util::Error{Untranslated(sighash + " is not a valid sighash parameter.")};
+        return util::Error{Untranslated("'" + sighash + "' is not a valid sighash parameter.")};
     }
 }

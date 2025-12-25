@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
@@ -6,9 +6,10 @@
 // Written and placed in public domain by Jeffrey Walton.
 // Based on code from Intel, and by Sean Gulley for the miTLS project.
 
-#ifdef ENABLE_X86_SHANI
+#if defined(ENABLE_SSE41) && defined(ENABLE_X86_SHANI)
 
-#include <stdint.h>
+#include <cstddef>
+#include <cstdint>
 #include <immintrin.h>
 
 #include <attributes.h>

@@ -6,13 +6,12 @@ There are several features that make it different from most similar systems:
 In theory, binaries for any target OS/architecture can be created, from a
 builder running any OS/architecture. In practice, build-side tools must be
 specified when the defaults don't fit, and packages must be amended to work
-on new hosts. For now, a build architecture of x86_64 is assumed, either on
-Linux or macOS.
+on new hosts.
 
 ### No reliance on timestamps
 
 File presence is used to determine what needs to be built. This makes the
-results distributable and easily digestable by automated builders.
+results distributable and easily digestible by automated builders.
 
 ### Each build only has its specified dependencies available at build-time.
 
@@ -28,7 +27,7 @@ etc), and as well as a hash of the same data for each recursive dependency. If
 any portion of a package's build recipe changes, it will be rebuilt as well as
 any other package that depends on it. If any of the main makefiles (Makefile,
 funcs.mk, etc) are changed, all packages will be rebuilt. After building, the
-results are cached into a tarball that can be re-used and distributed.
+results are cached into a tarball that can be reused and distributed.
 
 ### Package build results are (relatively) deterministic.
 

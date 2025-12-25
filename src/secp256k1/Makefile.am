@@ -37,7 +37,6 @@ noinst_HEADERS += src/field_10x26_impl.h
 noinst_HEADERS += src/field_5x52.h
 noinst_HEADERS += src/field_5x52_impl.h
 noinst_HEADERS += src/field_5x52_int128_impl.h
-noinst_HEADERS += src/field_5x52_asm_impl.h
 noinst_HEADERS += src/modinv32.h
 noinst_HEADERS += src/modinv32_impl.h
 noinst_HEADERS += src/modinv64.h
@@ -46,7 +45,12 @@ noinst_HEADERS += src/precomputed_ecmult.h
 noinst_HEADERS += src/precomputed_ecmult_gen.h
 noinst_HEADERS += src/assumptions.h
 noinst_HEADERS += src/checkmem.h
+noinst_HEADERS += src/tests_common.h
+noinst_HEADERS += src/testutil.h
+noinst_HEADERS += src/unit_test.h
+noinst_HEADERS += src/unit_test.c
 noinst_HEADERS += src/util.h
+noinst_HEADERS += src/util_local_visibility.h
 noinst_HEADERS += src/int128.h
 noinst_HEADERS += src/int128_impl.h
 noinst_HEADERS += src/int128_native.h
@@ -64,6 +68,8 @@ noinst_HEADERS += src/field.h
 noinst_HEADERS += src/field_impl.h
 noinst_HEADERS += src/bench.h
 noinst_HEADERS += src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.h
+noinst_HEADERS += src/hsort.h
+noinst_HEADERS += src/hsort_impl.h
 noinst_HEADERS += contrib/lax_der_parsing.h
 noinst_HEADERS += contrib/lax_der_parsing.c
 noinst_HEADERS += contrib/lax_der_privatekey_parsing.h
@@ -117,7 +123,7 @@ if USE_TESTS
 TESTS += noverify_tests
 noinst_PROGRAMS += noverify_tests
 noverify_tests_SOURCES = src/tests.c
-noverify_tests_CPPFLAGS = $(SECP_CONFIG_DEFINES)
+noverify_tests_CPPFLAGS = $(SECP_CONFIG_DEFINES) $(TEST_DEFINES)
 noverify_tests_LDADD = $(COMMON_LIB) $(PRECOMPUTED_LIB)
 noverify_tests_LDFLAGS = -static
 if !ENABLE_COVERAGE
@@ -182,6 +188,28 @@ schnorr_example_LDFLAGS += -lbcrypt
 endif
 TESTS += schnorr_example
 endif
+if ENABLE_MODULE_ELLSWIFT
+noinst_PROGRAMS += ellswift_example
+ellswift_example_SOURCES = examples/ellswift.c
+ellswift_example_CPPFLAGS = -I$(top_srcdir)/include -DSECP256K1_STATIC
+ellswift_example_LDADD = libsecp256k1.la
+ellswift_example_LDFLAGS = -static
+if BUILD_WINDOWS
+ellswift_example_LDFLAGS += -lbcrypt
+endif
+TESTS += ellswift_example
+endif
+if ENABLE_MODULE_MUSIG
+noinst_PROGRAMS += musig_example
+musig_example_SOURCES = examples/musig.c
+musig_example_CPPFLAGS = -I$(top_srcdir)/include -DSECP256K1_STATIC
+musig_example_LDADD = libsecp256k1.la
+musig_example_LDFLAGS = -static
+if BUILD_WINDOWS
+musig_example_LDFLAGS += -lbcrypt
+endif
+TESTS += musig_example
+endif
 endif
 
 ### Precomputed tables
@@ -225,9 +253,17 @@ maintainer-clean-local: clean-precomp
 ### (see the comments in the previous section for detailed rationale)
 TESTVECTORS = src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.h
 
+if ENABLE_MODULE_ECDH
+TESTVECTORS += src/wycheproof/ecdh_secp256k1_test.h
+endif
+
 src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.h:
 	mkdir -p $(@D)
-	python3 $(top_srcdir)/tools/tests_wycheproof_generate.py $(top_srcdir)/src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.json > $@
+	python3 $(top_srcdir)/tools/tests_wycheproof_generate_ecdsa.py $(top_srcdir)/src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.json > $@
+
+src/wycheproof/ecdh_secp256k1_test.h:
+	mkdir -p $(@D)
+	python3 $(top_srcdir)/tools/tests_wycheproof_generate_ecdh.py $(top_srcdir)/src/wycheproof/ecdh_secp256k1_test.json > $@
 
 testvectors: $(TESTVECTORS)
 
@@ -241,6 +277,7 @@ maintainer-clean-local: clean-testvectors
 ### Additional files to distribute
 EXTRA_DIST = autogen.sh CHANGELOG.md SECURITY.md
 EXTRA_DIST += doc/release-process.md doc/safegcd_implementation.md
+EXTRA_DIST += doc/ellswift.md doc/musig.md
 EXTRA_DIST += examples/EXAMPLES_COPYING
 EXTRA_DIST += sage/gen_exhaustive_groups.sage
 EXTRA_DIST += sage/gen_split_lambda_constants.sage
@@ -250,7 +287,9 @@ EXTRA_DIST += sage/secp256k1_params.sage
 EXTRA_DIST += sage/weierstrass_prover.sage
 EXTRA_DIST += src/wycheproof/WYCHEPROOF_COPYING
 EXTRA_DIST += src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.json
-EXTRA_DIST += tools/tests_wycheproof_generate.py
+EXTRA_DIST += src/wycheproof/ecdh_secp256k1_test.json
+EXTRA_DIST += tools/tests_wycheproof_generate_ecdsa.py
+EXTRA_DIST += tools/tests_wycheproof_generate_ecdh.py
 
 if ENABLE_MODULE_ECDH
 include src/modules/ecdh/Makefile.am.include
@@ -266,6 +305,10 @@ endif
 
 if ENABLE_MODULE_SCHNORRSIG
 include src/modules/schnorrsig/Makefile.am.include
+endif
+
+if ENABLE_MODULE_MUSIG
+include src/modules/musig/Makefile.am.include
 endif
 
 if ENABLE_MODULE_ELLSWIFT

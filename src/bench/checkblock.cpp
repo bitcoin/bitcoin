@@ -1,16 +1,25 @@
-// Copyright (c) 2016-2022 The Bitcoin Core developers
+// Copyright (c) 2016-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <bench/data.h>
-
+#include <bench/data/block413567.raw.h>
 #include <chainparams.h>
 #include <common/args.h>
 #include <consensus/validation.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <serialize.h>
+#include <span.h>
 #include <streams.h>
 #include <util/chaintype.h>
 #include <validation.h>
+
+#include <cassert>
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <vector>
 
 // These are the two major time-sinks which happen after we have fully received
 // a block off the wire, but before we can relay the block on to peers using
@@ -18,13 +27,13 @@
 
 static void DeserializeBlockTest(benchmark::Bench& bench)
 {
-    CDataStream stream(benchmark::data::block413567, SER_NETWORK, PROTOCOL_VERSION);
+    DataStream stream(benchmark::data::block413567);
     std::byte a{0};
     stream.write({&a, 1}); // Prevent compaction
 
     bench.unit("block").run([&] {
         CBlock block;
-        stream >> block;
+        stream >> TX_WITH_WITNESS(block);
         bool rewound = stream.Rewind(benchmark::data::block413567.size());
         assert(rewound);
     });
@@ -32,7 +41,7 @@ static void DeserializeBlockTest(benchmark::Bench& bench)
 
 static void DeserializeAndCheckBlockTest(benchmark::Bench& bench)
 {
-    CDataStream stream(benchmark::data::block413567, SER_NETWORK, PROTOCOL_VERSION);
+    DataStream stream(benchmark::data::block413567);
     std::byte a{0};
     stream.write({&a, 1}); // Prevent compaction
 
@@ -41,7 +50,7 @@ static void DeserializeAndCheckBlockTest(benchmark::Bench& bench)
 
     bench.unit("block").run([&] {
         CBlock block; // Note that CBlock caches its checked state, so we need to recreate it here
-        stream >> block;
+        stream >> TX_WITH_WITNESS(block);
         bool rewound = stream.Rewind(benchmark::data::block413567.size());
         assert(rewound);
 

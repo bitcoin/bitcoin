@@ -1,10 +1,6 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
 
 #include <qt/walletmodel.h>
 
@@ -18,18 +14,21 @@
 #include <qt/sendcoinsdialog.h>
 #include <qt/transactiontablemodel.h>
 
-#include <common/args.h> // for GetBoolArg
+#include <common/args.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <node/interface_ui.h>
+#include <node/types.h>
 #include <psbt.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
-#include <wallet/wallet.h> // for CRecipient
+#include <wallet/wallet.h>
 
-#include <stdint.h>
+#include <cstdint>
 #include <functional>
+#include <memory>
+#include <vector>
 
 #include <QDebug>
 #include <QMessageBox>
@@ -48,7 +47,6 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, ClientModel
     optionsModel(client_model.getOptionsModel()),
     timer(new QTimer(this))
 {
-    fHaveWatchOnly = m_wallet->haveWatchOnly();
     addressTableModel = new AddressTableModel(this);
     transactionTableModel = new TransactionTableModel(platformStyle, this);
     recentRequestsTableModel = new RecentRequestsTableModel(this);
@@ -144,12 +142,6 @@ void WalletModel::updateAddressBook(const QString &address, const QString &label
         addressTableModel->updateEntry(address, label, isMine, purpose, status);
 }
 
-void WalletModel::updateWatchOnlyFlag(bool fHaveWatchonly)
-{
-    fHaveWatchOnly = fHaveWatchonly;
-    Q_EMIT notifyWatchonlyChanged(fHaveWatchonly);
-}
-
 bool WalletModel::validateAddress(const QString& address) const
 {
     return IsValidDestinationString(address.toStdString());
@@ -187,9 +179,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             setAddress.insert(rcp.address);
             ++nAddresses;
 
-            CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
-            CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
-            vecSend.push_back(recipient);
+            vecSend.emplace_back(CRecipient{DecodeDestination(rcp.address.toStdString()), rcp.amount, rcp.fSubtractFeeFromAmount});
 
             total += rcp.amount;
         }
@@ -261,8 +251,8 @@ void WalletModel::sendCoins(WalletModelTransaction& transaction)
         auto& newTx = transaction.getWtx();
         wallet().commitTransaction(newTx, /*value_map=*/{}, std::move(vOrderForm));
 
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << *newTx;
+        DataStream ssTx;
+        ssTx << TX_WITH_WITNESS(*newTx);
         transaction_array.append((const char*)ssTx.data(), ssTx.size());
     }
 
@@ -278,7 +268,7 @@ void WalletModel::sendCoins(WalletModelTransaction& transaction)
                 // Check if we have a new address or an updated label
                 std::string name;
                 if (!m_wallet->getAddress(
-                     dest, &name, /* is_mine= */ nullptr, /* purpose= */ nullptr))
+                     dest, &name, /*purpose=*/nullptr))
                 {
                     m_wallet->setAddressBook(dest, strLabel, wallet::AddressPurpose::SEND);
                 }
@@ -392,7 +382,7 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel,
     assert(invoked);
 }
 
-static void NotifyTransactionChanged(WalletModel *walletmodel, const uint256 &hash, ChangeType status)
+static void NotifyTransactionChanged(WalletModel *walletmodel, const Txid& hash, ChangeType status)
 {
     Q_UNUSED(hash);
     Q_UNUSED(status);
@@ -406,13 +396,6 @@ static void ShowProgress(WalletModel *walletmodel, const std::string &title, int
     bool invoked = QMetaObject::invokeMethod(walletmodel, "showProgress", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(title)),
                               Q_ARG(int, nProgress));
-    assert(invoked);
-}
-
-static void NotifyWatchonlyChanged(WalletModel *walletmodel, bool fHaveWatchonly)
-{
-    bool invoked = QMetaObject::invokeMethod(walletmodel, "updateWatchOnlyFlag", Qt::QueuedConnection,
-                              Q_ARG(bool, fHaveWatchonly));
     assert(invoked);
 }
 
@@ -430,7 +413,6 @@ void WalletModel::subscribeToCoreSignals()
     m_handler_address_book_changed = m_wallet->handleAddressBookChanged(std::bind(NotifyAddressBookChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5));
     m_handler_transaction_changed = m_wallet->handleTransactionChanged(std::bind(NotifyTransactionChanged, this, std::placeholders::_1, std::placeholders::_2));
     m_handler_show_progress = m_wallet->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2));
-    m_handler_watch_only_changed = m_wallet->handleWatchOnlyChanged(std::bind(NotifyWatchonlyChanged, this, std::placeholders::_1));
     m_handler_can_get_addrs_changed = m_wallet->handleCanGetAddressesChanged(std::bind(NotifyCanGetAddressesChanged, this));
 }
 
@@ -442,13 +424,19 @@ void WalletModel::unsubscribeFromCoreSignals()
     m_handler_address_book_changed->disconnect();
     m_handler_transaction_changed->disconnect();
     m_handler_show_progress->disconnect();
-    m_handler_watch_only_changed->disconnect();
     m_handler_can_get_addrs_changed->disconnect();
 }
 
 // WalletModel::UnlockContext implementation
 WalletModel::UnlockContext WalletModel::requestUnlock()
 {
+    // Bugs in earlier versions may have resulted in wallets with private keys disabled to become "encrypted"
+    // (encryption keys are present, but not actually doing anything).
+    // To avoid issues with such wallets, check if the wallet has private keys disabled, and if so, return a context
+    // that indicates the wallet is not encrypted.
+    if (m_wallet->privateKeysDisabled()) {
+        return UnlockContext(this, /*valid=*/true, /*relock=*/false);
+    }
     bool was_locked = getEncryptionStatus() == Locked;
     if(was_locked)
     {
@@ -476,7 +464,7 @@ WalletModel::UnlockContext::~UnlockContext()
     }
 }
 
-bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
+bool WalletModel::bumpFee(Txid hash, Txid& new_hash)
 {
     CCoinControl coin_control;
     coin_control.m_signal_bip125_rbf = true;
@@ -527,28 +515,27 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
         return false;
     }
 
-    WalletModel::UnlockContext ctx(requestUnlock());
-    if(!ctx.isValid())
-    {
-        return false;
-    }
-
     // Short-circuit if we are returning a bumped transaction PSBT to clipboard
     if (retval == QMessageBox::Save) {
         // "Create Unsigned" clicked
         PartiallySignedTransaction psbtx(mtx);
         bool complete = false;
-        const TransactionError err = wallet().fillPSBT(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/true, nullptr, psbtx, complete);
-        if (err != TransactionError::OK || complete) {
+        const auto err{wallet().fillPSBT(std::nullopt, /*sign=*/false, /*bip32derivs=*/true, nullptr, psbtx, complete)};
+        if (err || complete) {
             QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Can't draft transaction."));
             return false;
         }
         // Serialize the PSBT
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+        DataStream ssTx{};
         ssTx << psbtx;
         GUIUtil::setClipboard(EncodeBase64(ssTx.str()).c_str());
-        Q_EMIT message(tr("PSBT copied"), tr("Copied to clipboard", "Fee-bump PSBT saved"), CClientUIInterface::MSG_INFORMATION);
+        Q_EMIT message(tr("PSBT copied"), tr("Fee-bump PSBT copied to clipboard"), CClientUIInterface::MSG_INFORMATION | CClientUIInterface::MODAL);
         return true;
+    }
+
+    WalletModel::UnlockContext ctx(requestUnlock());
+    if (!ctx.isValid()) {
+        return false;
     }
 
     assert(!m_wallet->privateKeysDisabled() || wallet().hasExternalSigner());
@@ -567,16 +554,17 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
     return true;
 }
 
-bool WalletModel::displayAddress(std::string sAddress) const
+void WalletModel::displayAddress(std::string sAddress) const
 {
     CTxDestination dest = DecodeDestination(sAddress);
-    bool res = false;
     try {
-        res = m_wallet->displayAddress(dest);
+        util::Result<void> result = m_wallet->displayAddress(dest);
+        if (!result) {
+            QMessageBox::warning(nullptr, tr("Signer error"), QString::fromStdString(util::ErrorString(result).translated));
+        }
     } catch (const std::runtime_error& e) {
         QMessageBox::critical(nullptr, tr("Can't display address"), e.what());
     }
-    return res;
 }
 
 bool WalletModel::isWalletEnabled()
@@ -591,8 +579,7 @@ QString WalletModel::getWalletName() const
 
 QString WalletModel::getDisplayName() const
 {
-    const QString name = getWalletName();
-    return name.isEmpty() ? "["+tr("default wallet")+"]" : name;
+    return GUIUtil::WalletDisplayName(getWalletName());
 }
 
 bool WalletModel::isMultiwallet() const
@@ -615,13 +602,7 @@ CAmount WalletModel::getAvailableBalance(const CCoinControl* control)
     // No selected coins, return the cached balance
     if (!control || !control->HasSelected()) {
         const interfaces::WalletBalances& balances = getCachedBalance();
-        CAmount available_balance = balances.balance;
-        // if wallet private keys are disabled, this is a watch-only wallet
-        // so, let's include the watch-only balance.
-        if (balances.have_watch_only && m_wallet->privateKeysDisabled()) {
-            available_balance += balances.watch_only_balance;
-        }
-        return available_balance;
+        return balances.balance;
     }
     // Fetch balance from the wallet, taking into account the selected coins
     return wallet().getAvailableBalance(*control);

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2020 The Bitcoin Core developers
+# Copyright (c) 2016-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test using named arguments for RPCs."""
@@ -35,4 +35,4 @@ class NamedArgumentTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Parameter arg1 specified twice both as positional and named argument", node.echo, 0, None, 2, arg1=1)
 
 if __name__ == '__main__':
-    NamedArgumentTest().main()
+    NamedArgumentTest(__file__).main()

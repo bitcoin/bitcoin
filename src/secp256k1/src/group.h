@@ -44,6 +44,14 @@ typedef struct {
 
 #define SECP256K1_GE_STORAGE_CONST_GET(t) SECP256K1_FE_STORAGE_CONST_GET(t.x), SECP256K1_FE_STORAGE_CONST_GET(t.y)
 
+/** Maximum allowed magnitudes for group element coordinates
+ *  in affine (x, y) and jacobian (x, y, z) representation. */
+#define SECP256K1_GE_X_MAGNITUDE_MAX  4
+#define SECP256K1_GE_Y_MAGNITUDE_MAX  3
+#define SECP256K1_GEJ_X_MAGNITUDE_MAX 4
+#define SECP256K1_GEJ_Y_MAGNITUDE_MAX 4
+#define SECP256K1_GEJ_Z_MAGNITUDE_MAX 1
+
 /** Set a group element equal to the point with given X and Y coordinates */
 static void secp256k1_ge_set_xy(secp256k1_ge *r, const secp256k1_fe *x, const secp256k1_fe *y);
 
@@ -72,7 +80,11 @@ static void secp256k1_ge_set_gej(secp256k1_ge *r, secp256k1_gej *a);
 /** Set a group element equal to another which is given in jacobian coordinates. */
 static void secp256k1_ge_set_gej_var(secp256k1_ge *r, secp256k1_gej *a);
 
-/** Set a batch of group elements equal to the inputs given in jacobian coordinates */
+/** Set group elements r[0:len] (affine) equal to group elements a[0:len] (jacobian).
+ * None of the group elements in a[0:len] may be infinity. Constant time. */
+static void secp256k1_ge_set_all_gej(secp256k1_ge *r, const secp256k1_gej *a, size_t len);
+
+/** Set group elements r[0:len] (affine) equal to group elements a[0:len] (jacobian). */
 static void secp256k1_ge_set_all_gej_var(secp256k1_ge *r, const secp256k1_gej *a, size_t len);
 
 /** Bring a batch of inputs to the same global z "denominator", based on ratios between
@@ -94,6 +106,9 @@ static void secp256k1_ge_set_all_gej_var(secp256k1_ge *r, const secp256k1_gej *a
  */
 static void secp256k1_ge_table_set_globalz(size_t len, secp256k1_ge *a, const secp256k1_fe *zr);
 
+/** Check two group elements (affine) for equality in variable time. */
+static int secp256k1_ge_eq_var(const secp256k1_ge *a, const secp256k1_ge *b);
+
 /** Set a group element (affine) equal to the point at infinity. */
 static void secp256k1_ge_set_infinity(secp256k1_ge *r);
 
@@ -105,6 +120,9 @@ static void secp256k1_gej_set_ge(secp256k1_gej *r, const secp256k1_ge *a);
 
 /** Check two group elements (jacobian) for equality in variable time. */
 static int secp256k1_gej_eq_var(const secp256k1_gej *a, const secp256k1_gej *b);
+
+/** Check two group elements (jacobian and affine) for equality in variable time. */
+static int secp256k1_gej_eq_ge_var(const secp256k1_gej *a, const secp256k1_ge *b);
 
 /** Compare the X coordinate of a group element (jacobian).
   * The magnitude of the group element's X coordinate must not exceed 31. */
@@ -160,6 +178,22 @@ static void secp256k1_ge_storage_cmov(secp256k1_ge_storage *r, const secp256k1_g
 /** Rescale a jacobian point by b which must be non-zero. Constant-time. */
 static void secp256k1_gej_rescale(secp256k1_gej *r, const secp256k1_fe *b);
 
+/** Convert a group element that is not infinity to a 64-byte array. The output
+ *  array is platform-dependent. */
+static void secp256k1_ge_to_bytes(unsigned char *buf, const secp256k1_ge *a);
+
+/** Convert a 64-byte array into group element. This function assumes that the
+ *  provided buffer correctly encodes a group element. */
+static void secp256k1_ge_from_bytes(secp256k1_ge *r, const unsigned char *buf);
+
+/** Convert a group element (that is allowed to be infinity) to a 64-byte
+ *  array. The output array is platform-dependent. */
+static void secp256k1_ge_to_bytes_ext(unsigned char *data, const secp256k1_ge *ge);
+
+/** Convert a 64-byte array into a group element. This function assumes that the
+ *  provided buffer is the output of secp256k1_ge_to_bytes_ext. */
+static void secp256k1_ge_from_bytes_ext(secp256k1_ge *ge, const unsigned char *data);
+
 /** Determine if a point (which is assumed to be on the curve) is in the correct (sub)group of the curve.
  *
  * In normal mode, the used group is secp256k1, which has cofactor=1 meaning that every point on the curve is in the
@@ -173,8 +207,10 @@ static int secp256k1_ge_is_in_correct_subgroup(const secp256k1_ge* ge);
 
 /** Check invariants on an affine group element (no-op unless VERIFY is enabled). */
 static void secp256k1_ge_verify(const secp256k1_ge *a);
+#define SECP256K1_GE_VERIFY(a) secp256k1_ge_verify(a)
 
 /** Check invariants on a Jacobian group element (no-op unless VERIFY is enabled). */
 static void secp256k1_gej_verify(const secp256k1_gej *a);
+#define SECP256K1_GEJ_VERIFY(a) secp256k1_gej_verify(a)
 
 #endif /* SECP256K1_GROUP_H */

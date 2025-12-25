@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2022 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that the wallet resends transactions periodically."""
 import time
+
+from decimal import Decimal
 
 from test_framework.blocktools import (
     create_block,
@@ -15,12 +17,11 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    get_fee,
+    try_rpc,
 )
 
 class ResendWalletTransactionsTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 1
 
@@ -86,18 +87,34 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         # ordering of mapWallet is, if the child is not before the parent, we will create a new
         # child (via bumpfee) and remove the old child (via removeprunedfunds) until we get the
         # ordering of child before parent.
-        child_txid = node.send(outputs=[{addr: 0.5}], inputs=[{"txid":txid, "vout":0}])["txid"]
+        child_inputs = [{"txid": txid, "vout": 0}]
+        child_txid = node.sendall(recipients=[addr], inputs=child_inputs)["txid"]
+        # Get the child tx's info for manual bumping
+        child_tx_info = node.gettransaction(txid=child_txid, verbose=True)
+        child_output_value = child_tx_info["decoded"]["vout"][0]["value"]
+        # Include an additional 1 vbyte buffer to handle when we have a smaller signature
+        additional_child_fee = get_fee(child_tx_info["decoded"]["vsize"] + 1, Decimal(0.00001100))
         while True:
             txids = node.listreceivedbyaddress(minconf=0, address_filter=addr)[0]["txids"]
             if txids == [child_txid, txid]:
                 break
-            bumped = node.bumpfee(child_txid)
+            # Manually bump the tx
+            # The inputs and the output address stay the same, just changing the amount for the new fee
+            child_output_value -= additional_child_fee
+            bumped_raw = node.createrawtransaction(inputs=child_inputs, outputs=[{addr: child_output_value}])
+            bumped = node.signrawtransactionwithwallet(bumped_raw)
+            bumped_txid = node.decoderawtransaction(bumped["hex"])["txid"]
+            # Sometimes we will get a signature that is a little bit shorter than we expect which causes the
+            # feerate to be a bit higher, then the followup to be a bit lower. This results in a replacement
+            # that can't be broadcast. We can just skip that and keep grinding.
+            if try_rpc(-26, "insufficient fee, rejecting replacement", node.sendrawtransaction, bumped["hex"]):
+                continue
             # The scheduler queue creates a copy of the added tx after
             # send/bumpfee and re-adds it to the wallet (undoing the next
             # removeprunedfunds). So empty the scheduler queue:
             node.syncwithvalidationinterfacequeue()
             node.removeprunedfunds(child_txid)
-            child_txid = bumped["txid"]
+            child_txid = bumped_txid
         entry_time = node.getmempoolentry(child_txid)["time"]
 
         block_time = entry_time + 6 * 60
@@ -129,4 +146,4 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    ResendWalletTransactionsTest().main()
+    ResendWalletTransactionsTest(__file__).main()

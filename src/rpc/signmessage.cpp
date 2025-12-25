@@ -1,8 +1,9 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/signmessage.h>
 #include <key.h>
 #include <key_io.h>
 #include <rpc/protocol.h>
@@ -10,7 +11,6 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <univalue.h>
-#include <util/message.h>
 
 #include <string>
 
@@ -38,11 +38,9 @@ static RPCHelpMan verifymessage()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
-            std::string strAddress = request.params[0].get_str();
-            std::string strSign = request.params[1].get_str();
-            std::string strMessage = request.params[2].get_str();
-
-            switch (MessageVerify(strAddress, strSign, strMessage)) {
+            switch (MessageVerify(std::string{self.Arg<std::string_view>("address")},
+                                  std::string{self.Arg<std::string_view>("signature")},
+                                  std::string{self.Arg<std::string_view>("message")})) {
             case MessageVerificationResult::ERR_INVALID_ADDRESS:
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
             case MessageVerificationResult::ERR_ADDRESS_NO_KEY:
@@ -63,8 +61,9 @@ static RPCHelpMan verifymessage()
 
 static RPCHelpMan signmessagewithprivkey()
 {
-    return RPCHelpMan{"signmessagewithprivkey",
-        "\nSign a message with the private key of an address\n",
+    return RPCHelpMan{
+        "signmessagewithprivkey",
+        "Sign a message with the private key of an address\n",
         {
             {"privkey", RPCArg::Type::STR, RPCArg::Optional::NO, "The private key to sign the message with."},
             {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "The message to create a signature of."},

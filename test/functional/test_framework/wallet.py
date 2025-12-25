@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2022 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """A limited-functionality wallet, which may replace a real wallet in tests"""
@@ -9,7 +9,6 @@ from decimal import Decimal
 from enum import Enum
 from typing import (
     Any,
-    List,
     Optional,
 )
 from test_framework.address import (
@@ -33,10 +32,10 @@ from test_framework.messages import (
     CTxIn,
     CTxInWitness,
     CTxOut,
+    hash256,
 )
 from test_framework.script import (
     CScript,
-    LEAF_VERSION_TAPSCRIPT,
     OP_NOP,
     OP_RETURN,
     OP_TRUE,
@@ -44,6 +43,7 @@ from test_framework.script import (
     taproot_construct,
 )
 from test_framework.script_util import (
+    bulk_vout,
     key_to_p2pk_script,
     key_to_p2pkh_script,
     key_to_p2sh_p2wpkh_script,
@@ -52,6 +52,7 @@ from test_framework.script_util import (
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
+    get_fee,
 )
 from test_framework.wallet_util import generate_keypair
 
@@ -66,7 +67,10 @@ class MiniWalletMode(Enum):
     However, if the transactions need to be modified by the user (e.g. prepending
     scriptSig for testing opcodes that are activated by a soft-fork), or the txs
     should contain an actual signature, the raw modes RAW_OP_TRUE and RAW_P2PK
-    can be useful. Summary of modes:
+    can be useful. In order to avoid mixing of UTXOs between different MiniWallet
+    instances, a tag name can be passed to the default mode, to create different
+    output scripts. Note that the UTXOs from the pre-generated test chain can
+    only be spent if no tag is passed. Summary of modes:
 
                     |      output       |           |  tx is   | can modify |  needs
          mode       |    description    |  address  | standard | scriptSig  | signing
@@ -81,22 +85,25 @@ class MiniWalletMode(Enum):
 
 
 class MiniWallet:
-    def __init__(self, test_node, *, mode=MiniWalletMode.ADDRESS_OP_TRUE):
+    def __init__(self, test_node, *, mode=MiniWalletMode.ADDRESS_OP_TRUE, tag_name=None):
         self._test_node = test_node
         self._utxos = []
         self._mode = mode
 
         assert isinstance(mode, MiniWalletMode)
         if mode == MiniWalletMode.RAW_OP_TRUE:
+            assert tag_name is None
             self._scriptPubKey = bytes(CScript([OP_TRUE]))
         elif mode == MiniWalletMode.RAW_P2PK:
             # use simple deterministic private key (k=1)
+            assert tag_name is None
             self._priv_key = ECKey()
             self._priv_key.set((1).to_bytes(32, 'big'), True)
             pub_key = self._priv_key.get_pubkey()
             self._scriptPubKey = key_to_p2pk_script(pub_key.get_bytes())
         elif mode == MiniWalletMode.ADDRESS_OP_TRUE:
-            self._address, self._internal_key = create_deterministic_address_bcrt1_p2tr_op_true()
+            internal_key = None if tag_name is None else compute_xonly_pubkey(hash256(tag_name.encode()))[0]
+            self._address, self._taproot_info = create_deterministic_address_bcrt1_p2tr_op_true(internal_key)
             self._scriptPubKey = address_to_scriptpubkey(self._address)
 
         # When the pre-mined test framework chain is used, it contains coinbase
@@ -109,17 +116,13 @@ class MiniWallet:
     def _create_utxo(self, *, txid, vout, value, height, coinbase, confirmations):
         return {"txid": txid, "vout": vout, "value": value, "height": height, "coinbase": coinbase, "confirmations": confirmations}
 
-    def _bulk_tx(self, tx, target_weight):
-        """Pad a transaction with extra outputs until it reaches a target weight (or higher).
+    def _bulk_tx(self, tx, target_vsize):
+        """Pad a transaction with extra outputs until it reaches a target vsize.
         returns the tx
         """
-        tx.vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN, b'a'])))
-        dummy_vbytes = (target_weight - tx.get_weight() + 3) // 4
-        tx.vout[-1].scriptPubKey = CScript([OP_RETURN, b'a' * dummy_vbytes])
-        # Lower bound should always be off by at most 3
-        assert_greater_than_or_equal(tx.get_weight(), target_weight)
-        # Higher bound should always be off by at most 3 + 12 weight (for encoding the length)
-        assert_greater_than_or_equal(target_weight + 15, tx.get_weight())
+        tx.vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN])))
+        bulk_vout(tx, target_vsize)
+
 
     def get_balance(self):
         return sum(u['value'] for u in self._utxos)
@@ -181,7 +184,12 @@ class MiniWallet:
         elif self._mode == MiniWalletMode.ADDRESS_OP_TRUE:
             tx.wit.vtxinwit = [CTxInWitness()] * len(tx.vin)
             for i in tx.wit.vtxinwit:
-                i.scriptWitness.stack = [CScript([OP_TRUE]), bytes([LEAF_VERSION_TAPSCRIPT]) + self._internal_key]
+                assert_equal(len(self._taproot_info.leaves), 1)
+                leaf_info = list(self._taproot_info.leaves.values())[0]
+                i.scriptWitness.stack = [
+                    leaf_info.script,
+                    bytes([leaf_info.version | self._taproot_info.negflag]) + self._taproot_info.internal_pubkey,
+                ]
         else:
             assert False
 
@@ -198,7 +206,7 @@ class MiniWallet:
         self.rescan_utxos()
         return blocks
 
-    def get_scriptPubKey(self):
+    def get_output_script(self):
         return self._scriptPubKey
 
     def get_descriptor(self):
@@ -208,7 +216,7 @@ class MiniWallet:
         assert_equal(self._mode, MiniWalletMode.ADDRESS_OP_TRUE)
         return self._address
 
-    def get_utxo(self, *, txid: str = '', vout: Optional[int] = None, mark_as_spent=True) -> dict:
+    def get_utxo(self, *, txid: str = '', vout: Optional[int] = None, mark_as_spent=True, confirmed_only=False) -> dict:
         """
         Returns a utxo and marks it as spent (pops it from the internal list)
 
@@ -224,19 +232,23 @@ class MiniWallet:
             utxo_filter = reversed(mature_coins)  # By default the largest utxo
         if vout is not None:
             utxo_filter = filter(lambda utxo: vout == utxo['vout'], utxo_filter)
+        if confirmed_only:
+            utxo_filter = filter(lambda utxo: utxo['confirmations'] > 0, utxo_filter)
         index = self._utxos.index(next(utxo_filter))
         if mark_as_spent:
             return self._utxos.pop(index)
         else:
             return self._utxos[index]
 
-    def get_utxos(self, *, include_immature_coinbase=False, mark_as_spent=True):
+    def get_utxos(self, *, include_immature_coinbase=False, mark_as_spent=True, confirmed_only=False):
         """Returns the list of all utxos and optionally mark them as spent"""
         if not include_immature_coinbase:
             blocks_height = self._test_node.getblockchaininfo()['blocks']
             utxo_filter = filter(lambda utxo: not utxo['coinbase'] or COINBASE_MATURITY - 1 <= blocks_height - utxo['height'], self._utxos)
         else:
             utxo_filter = self._utxos
+        if confirmed_only:
+            utxo_filter = filter(lambda utxo: utxo['confirmations'] > 0, utxo_filter)
         utxos = deepcopy(list(utxo_filter))
         if mark_as_spent:
             self._utxos = []
@@ -266,7 +278,7 @@ class MiniWallet:
         return {
             "sent_vout": 1,
             "txid": txid,
-            "wtxid": tx.getwtxid(),
+            "wtxid": tx.wtxid_hex,
             "hex": tx.serialize().hex(),
             "tx": tx,
         }
@@ -280,20 +292,22 @@ class MiniWallet:
     def create_self_transfer_multi(
         self,
         *,
-        utxos_to_spend: Optional[List[dict]] = None,
+        utxos_to_spend: Optional[list[dict]] = None,
         num_outputs=1,
         amount_per_output=0,
+        version=2,
         locktime=0,
         sequence=0,
         fee_per_output=1000,
-        target_weight=0
+        target_vsize=0,
+        confirmed_only=False,
     ):
         """
         Create and return a transaction that spends the given UTXOs and creates a
         certain number of outputs with equal amounts. The output amounts can be
         set by amount_per_output or automatically calculated with a fee_per_output.
         """
-        utxos_to_spend = utxos_to_spend or [self.get_utxo()]
+        utxos_to_spend = utxos_to_spend or [self.get_utxo(confirmed_only=confirmed_only)]
         sequence = [sequence] * len(utxos_to_spend) if type(sequence) is int else sequence
         assert_equal(len(utxos_to_spend), len(sequence))
 
@@ -309,14 +323,15 @@ class MiniWallet:
         tx = CTransaction()
         tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']), nSequence=seq) for utxo_to_spend, seq in zip(utxos_to_spend, sequence)]
         tx.vout = [CTxOut(amount_per_output, bytearray(self._scriptPubKey)) for _ in range(num_outputs)]
+        tx.version = version
         tx.nLockTime = locktime
 
         self.sign_tx(tx)
 
-        if target_weight:
-            self._bulk_tx(tx, target_weight)
+        if target_vsize:
+            self._bulk_tx(tx, target_vsize)
 
-        txid = tx.rehash()
+        txid = tx.txid_hex
         return {
             "new_utxos": [self._create_utxo(
                 txid=txid,
@@ -328,14 +343,23 @@ class MiniWallet:
             ) for i in range(len(tx.vout))],
             "fee": fee,
             "txid": txid,
-            "wtxid": tx.getwtxid(),
+            "wtxid": tx.wtxid_hex,
             "hex": tx.serialize().hex(),
             "tx": tx,
         }
 
-    def create_self_transfer(self, *, fee_rate=Decimal("0.003"), fee=Decimal("0"), utxo_to_spend=None, locktime=0, sequence=0, target_weight=0):
+    def create_self_transfer(
+            self,
+            *,
+            fee_rate=Decimal("0.003"),
+            fee=Decimal("0"),
+            utxo_to_spend=None,
+            target_vsize=0,
+            confirmed_only=False,
+            **kwargs,
+    ):
         """Create and return a tx with the specified fee. If fee is 0, use fee_rate, where the resulting fee may be exact or at most one satoshi higher than needed."""
-        utxo_to_spend = utxo_to_spend or self.get_utxo()
+        utxo_to_spend = utxo_to_spend or self.get_utxo(confirmed_only=confirmed_only)
         assert fee_rate >= 0
         assert fee >= 0
         # calculate fee
@@ -345,11 +369,19 @@ class MiniWallet:
             vsize = Decimal(168)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 60 bytes other)
         else:
             assert False
+        if target_vsize and not fee:  # respect fee_rate if target vsize is passed
+            fee = get_fee(target_vsize, fee_rate)
         send_value = utxo_to_spend["value"] - (fee or (fee_rate * vsize / 1000))
-
+        if send_value <= 0:
+            raise RuntimeError(f"UTXO value {utxo_to_spend['value']} is too small to cover fees {(fee or (fee_rate * vsize / 1000))}")
         # create tx
-        tx = self.create_self_transfer_multi(utxos_to_spend=[utxo_to_spend], locktime=locktime, sequence=sequence, amount_per_output=int(COIN * send_value), target_weight=target_weight)
-        if not target_weight:
+        tx = self.create_self_transfer_multi(
+            utxos_to_spend=[utxo_to_spend],
+            amount_per_output=int(COIN * send_value),
+            target_vsize=target_vsize,
+            **kwargs,
+        )
+        if not target_vsize:
             assert_equal(tx["tx"].get_vsize(), vsize)
         tx["new_utxo"] = tx.pop("new_utxos")[0]
 

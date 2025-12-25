@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2022 The Bitcoin Core developers
+// Copyright (c) 2015-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,14 +7,16 @@
 #include <common/system.h>
 #include <key.h>
 #include <prevector.h>
-#include <pubkey.h>
 #include <random.h>
+#include <script/script.h>
 
+#include <cstddef>
+#include <cstdint>
+#include <utility>
 #include <vector>
 
 static const size_t BATCHES = 101;
 static const size_t BATCH_SIZE = 30;
-static const int PREVECTOR_SIZE = 28;
 static const unsigned int QUEUE_BATCH_SIZE = 128;
 
 // This Benchmark tests the CheckQueue with a slightly realistic workload,
@@ -25,22 +27,23 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::Bench& bench)
     // We shouldn't ever be running with the checkqueue on a single core machine.
     if (GetNumCores() <= 1) return;
 
-    ECC_Start();
+    ECC_Context ecc_context{};
 
     struct PrevectorJob {
-        prevector<PREVECTOR_SIZE, uint8_t> p;
+        prevector<CScriptBase::STATIC_SIZE, uint8_t> p;
         explicit PrevectorJob(FastRandomContext& insecure_rand){
-            p.resize(insecure_rand.randrange(PREVECTOR_SIZE*2));
+            p.resize(insecure_rand.randrange(CScriptBase::STATIC_SIZE * 2));
         }
-        bool operator()()
+        std::optional<int> operator()()
         {
-            return true;
+            return std::nullopt;
         }
     };
-    CCheckQueue<PrevectorJob> queue {QUEUE_BATCH_SIZE};
+
     // The main thread should be counted to prevent thread oversubscription, and
     // to decrease the variance of benchmark results.
-    queue.StartWorkerThreads(GetNumCores() - 1);
+    int worker_threads_num{GetNumCores() - 1};
+    CCheckQueue<PrevectorJob> queue{QUEUE_BATCH_SIZE, worker_threads_num};
 
     // create all the data once, then submit copies in the benchmark.
     FastRandomContext insecure_rand(true);
@@ -53,15 +56,13 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::Bench& bench)
 
     bench.minEpochIterations(10).batch(BATCH_SIZE * BATCHES).unit("job").run([&] {
         // Make insecure_rand here so that each iteration is identical.
-        CCheckQueueControl<PrevectorJob> control(&queue);
+        CCheckQueueControl<PrevectorJob> control(queue);
         for (auto vChecks : vBatches) {
             control.Add(std::move(vChecks));
         }
         // control waits for completion by RAII, but
         // it is done explicitly here for clarity
-        control.Wait();
+        control.Complete();
     });
-    queue.StopWorkerThreads();
-    ECC_Stop();
 }
 BENCHMARK(CCheckQueueSpeedPrevectorJob, benchmark::PriorityLevel::HIGH);

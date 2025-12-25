@@ -27,10 +27,22 @@
 static const secp256k1_scalar secp256k1_scalar_one = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 1);
 static const secp256k1_scalar secp256k1_scalar_zero = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 0);
 
+SECP256K1_INLINE static void secp256k1_scalar_clear(secp256k1_scalar *r) {
+    secp256k1_memclear_explicit(r, sizeof(secp256k1_scalar));
+}
+
 static int secp256k1_scalar_set_b32_seckey(secp256k1_scalar *r, const unsigned char *bin) {
     int overflow;
     secp256k1_scalar_set_b32(r, bin, &overflow);
+
+    SECP256K1_SCALAR_VERIFY(r);
     return (!overflow) & (!secp256k1_scalar_is_zero(r));
+}
+
+static void secp256k1_scalar_verify(const secp256k1_scalar *r) {
+    VERIFY_CHECK(secp256k1_scalar_check_overflow(r) == 0);
+
+    (void)r;
 }
 
 #if defined(EXHAUSTIVE_TEST_ORDER)
@@ -53,11 +65,16 @@ static int secp256k1_scalar_set_b32_seckey(secp256k1_scalar *r, const unsigned c
  * (arbitrarily) set r2 = k + 5 (mod n) and r1 = k - r2 * lambda (mod n).
  */
 static void secp256k1_scalar_split_lambda(secp256k1_scalar * SECP256K1_RESTRICT r1, secp256k1_scalar * SECP256K1_RESTRICT r2, const secp256k1_scalar * SECP256K1_RESTRICT k) {
+    SECP256K1_SCALAR_VERIFY(k);
     VERIFY_CHECK(r1 != k);
     VERIFY_CHECK(r2 != k);
     VERIFY_CHECK(r1 != r2);
+
     *r2 = (*k + 5) % EXHAUSTIVE_TEST_ORDER;
     *r1 = (*k + (EXHAUSTIVE_TEST_ORDER - *r2) * EXHAUSTIVE_TEST_LAMBDA) % EXHAUSTIVE_TEST_ORDER;
+
+    SECP256K1_SCALAR_VERIFY(r1);
+    SECP256K1_SCALAR_VERIFY(r2);
 }
 #else
 /**
@@ -73,11 +90,11 @@ static void secp256k1_scalar_split_lambda_verify(const secp256k1_scalar *r1, con
 #endif
 
 /*
- * Both lambda and beta are primitive cube roots of unity.  That is lamba^3 == 1 mod n and
+ * Both lambda and beta are primitive cube roots of unity.  That is lambda^3 == 1 mod n and
  * beta^3 == 1 mod p, where n is the curve order and p is the field order.
  *
  * Furthermore, because (X^3 - 1) = (X - 1)(X^2 + X + 1), the primitive cube roots of unity are
- * roots of X^2 + X + 1.  Therefore lambda^2 + lamba == -1 mod n and beta^2 + beta == -1 mod p.
+ * roots of X^2 + X + 1.  Therefore lambda^2 + lambda == -1 mod n and beta^2 + beta == -1 mod p.
  * (The other primitive cube roots of unity are lambda^2 and beta^2 respectively.)
  *
  * Let l = -1/2 + i*sqrt(3)/2, the complex root of X^2 + X + 1. We can define a ring
@@ -140,9 +157,11 @@ static void secp256k1_scalar_split_lambda(secp256k1_scalar * SECP256K1_RESTRICT 
         0xE4437ED6UL, 0x010E8828UL, 0x6F547FA9UL, 0x0ABFE4C4UL,
         0x221208ACUL, 0x9DF506C6UL, 0x1571B4AEUL, 0x8AC47F71UL
     );
+    SECP256K1_SCALAR_VERIFY(k);
     VERIFY_CHECK(r1 != k);
     VERIFY_CHECK(r2 != k);
     VERIFY_CHECK(r1 != r2);
+
     /* these _var calls are constant time since the shift amount is constant */
     secp256k1_scalar_mul_shift_var(&c1, k, &g1, 384);
     secp256k1_scalar_mul_shift_var(&c2, k, &g2, 384);
@@ -153,6 +172,8 @@ static void secp256k1_scalar_split_lambda(secp256k1_scalar * SECP256K1_RESTRICT 
     secp256k1_scalar_negate(r1, r1);
     secp256k1_scalar_add(r1, r1, k);
 
+    SECP256K1_SCALAR_VERIFY(r1);
+    SECP256K1_SCALAR_VERIFY(r2);
 #ifdef VERIFY
     secp256k1_scalar_split_lambda_verify(r1, r2, k);
 #endif
@@ -212,7 +233,7 @@ static void secp256k1_scalar_split_lambda(secp256k1_scalar * SECP256K1_RESTRICT 
  * <=   {triangle inequality}
  *    a1*|k*b2/n - c1| + a2*|k*(-b1)/n - c2|
  * <    {Lemma 1 and Lemma 2}
- *    a1*(2^-1 + epslion1) + a2*(2^-1 + epsilon2)
+ *    a1*(2^-1 + epsilon1) + a2*(2^-1 + epsilon2)
  * <    {rounding up to an integer}
  *    (a1 + a2 + 1)/2
  * <    {rounding up to a power of 2}
@@ -230,7 +251,7 @@ static void secp256k1_scalar_split_lambda(secp256k1_scalar * SECP256K1_RESTRICT 
  * <=   {triangle inequality}
  *    (-b1)*|k*b2/n - c1| + b2*|k*(-b1)/n - c2|
  * <    {Lemma 1 and Lemma 2}
- *    (-b1)*(2^-1 + epslion1) + b2*(2^-1 + epsilon2)
+ *    (-b1)*(2^-1 + epsilon1) + b2*(2^-1 + epsilon2)
  * <    {rounding up to an integer}
  *    (-b1 + b2)/2 + 1
  * <    {rounding up to a power of 2}

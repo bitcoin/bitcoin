@@ -1,15 +1,15 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_TEST_SCRIPTNUM10_H
 #define BITCOIN_TEST_SCRIPTNUM10_H
 
-#include <assert.h>
+#include <cassert>
+#include <cstdint>
 #include <limits>
 #include <stdexcept>
-#include <stdint.h>
 #include <string>
 #include <vector>
 
@@ -61,18 +61,10 @@ public:
     }
 
     inline bool operator==(const int64_t& rhs) const    { return m_value == rhs; }
-    inline bool operator!=(const int64_t& rhs) const    { return m_value != rhs; }
-    inline bool operator<=(const int64_t& rhs) const    { return m_value <= rhs; }
-    inline bool operator< (const int64_t& rhs) const    { return m_value <  rhs; }
-    inline bool operator>=(const int64_t& rhs) const    { return m_value >= rhs; }
-    inline bool operator> (const int64_t& rhs) const    { return m_value >  rhs; }
+    inline auto operator<=>(const int64_t& rhs) const    { return m_value <=> rhs; }
 
     inline bool operator==(const CScriptNum10& rhs) const { return operator==(rhs.m_value); }
-    inline bool operator!=(const CScriptNum10& rhs) const { return operator!=(rhs.m_value); }
-    inline bool operator<=(const CScriptNum10& rhs) const { return operator<=(rhs.m_value); }
-    inline bool operator< (const CScriptNum10& rhs) const { return operator< (rhs.m_value); }
-    inline bool operator>=(const CScriptNum10& rhs) const { return operator>=(rhs.m_value); }
-    inline bool operator> (const CScriptNum10& rhs) const { return operator> (rhs.m_value); }
+    inline auto operator<=>(const CScriptNum10& rhs) const { return operator<=>(rhs.m_value); }
 
     inline CScriptNum10 operator+(   const int64_t& rhs)    const { return CScriptNum10(m_value + rhs);}
     inline CScriptNum10 operator-(   const int64_t& rhs)    const { return CScriptNum10(m_value - rhs);}

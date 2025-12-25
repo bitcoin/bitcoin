@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(allocate_any_byte)
 
     uint8_t num_allocs = 200;
 
-    auto data = std::vector<Span<uint8_t>>();
+    auto data = std::vector<std::span<uint8_t>>();
 
     // allocate an increasing number of bytes
     for (uint8_t num_bytes = 0; num_bytes < num_allocs; ++num_bytes) {
@@ -129,17 +129,17 @@ BOOST_AUTO_TEST_CASE(random_allocations)
     std::vector<PtrSizeAlignment> ptr_size_alignment{};
     for (size_t i = 0; i < 1000; ++i) {
         // make it a bit more likely to allocate than deallocate
-        if (ptr_size_alignment.empty() || 0 != InsecureRandRange(4)) {
+        if (ptr_size_alignment.empty() || 0 != m_rng.randrange(4)) {
             // allocate a random item
-            std::size_t alignment = std::size_t{1} << InsecureRandRange(8);          // 1, 2, ..., 128
-            std::size_t size = (InsecureRandRange(200) / alignment + 1) * alignment; // multiple of alignment
+            std::size_t alignment = std::size_t{1} << m_rng.randrange(8);          // 1, 2, ..., 128
+            std::size_t size = (m_rng.randrange(200) / alignment + 1) * alignment; // multiple of alignment
             void* ptr = resource.Allocate(size, alignment);
             BOOST_TEST(ptr != nullptr);
             BOOST_TEST((reinterpret_cast<uintptr_t>(ptr) & (alignment - 1)) == 0);
             ptr_size_alignment.push_back({ptr, size, alignment});
         } else {
             // deallocate a random item
-            auto& x = ptr_size_alignment[InsecureRandRange(ptr_size_alignment.size())];
+            auto& x = ptr_size_alignment[m_rng.randrange(ptr_size_alignment.size())];
             resource.Deallocate(x.ptr, x.bytes, x.alignment);
             x = ptr_size_alignment.back();
             ptr_size_alignment.pop_back();
@@ -156,21 +156,20 @@ BOOST_AUTO_TEST_CASE(random_allocations)
 
 BOOST_AUTO_TEST_CASE(memusage_test)
 {
-    auto std_map = std::unordered_map<int, int>{};
+    auto std_map = std::unordered_map<int64_t, int64_t>{};
 
-    using Map = std::unordered_map<int,
-                                   int,
-                                   std::hash<int>,
-                                   std::equal_to<int>,
-                                   PoolAllocator<std::pair<const int, int>,
-                                                 sizeof(std::pair<const int, int>) + sizeof(void*) * 4,
-                                                 alignof(void*)>>;
+    using Map = std::unordered_map<int64_t,
+                                   int64_t,
+                                   std::hash<int64_t>,
+                                   std::equal_to<int64_t>,
+                                   PoolAllocator<std::pair<const int64_t, int64_t>,
+                                                 sizeof(std::pair<const int64_t, int64_t>) + sizeof(void*) * 4>>;
     auto resource = Map::allocator_type::ResourceType(1024);
 
     PoolResourceTester::CheckAllDataAccountedFor(resource);
 
     {
-        auto resource_map = Map{0, std::hash<int>{}, std::equal_to<int>{}, &resource};
+        auto resource_map = Map{0, std::hash<int64_t>{}, std::equal_to<int64_t>{}, &resource};
 
         // can't have the same resource usage
         BOOST_TEST(memusage::DynamicUsage(std_map) != memusage::DynamicUsage(resource_map));
@@ -182,6 +181,11 @@ BOOST_AUTO_TEST_CASE(memusage_test)
 
         // Eventually the resource_map should have a much lower memory usage because it has less malloc overhead
         BOOST_TEST(memusage::DynamicUsage(resource_map) <= memusage::DynamicUsage(std_map) * 90 / 100);
+
+        // Make sure the pool is actually used by the nodes
+        auto max_nodes_per_chunk = resource.ChunkSizeBytes() / sizeof(Map::value_type);
+        auto min_num_allocated_chunks = resource_map.size() / max_nodes_per_chunk + 1;
+        BOOST_TEST(resource.NumAllocatedChunks() >= min_num_allocated_chunks);
     }
 
     PoolResourceTester::CheckAllDataAccountedFor(resource);

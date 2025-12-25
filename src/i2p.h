@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 
 #include <compat/compat.h>
 #include <netaddress.h>
+#include <netbase.h>
 #include <sync.h>
 #include <util/fs.h>
 #include <util/sock.h>
@@ -62,13 +63,11 @@ public:
      * private key will be generated and saved into the file.
      * @param[in] control_host Location of the SAM proxy.
      * @param[in,out] interrupt If this is signaled then all operations are canceled as soon as
-     * possible and executing methods throw an exception. Notice: only a pointer to the
-     * `CThreadInterrupt` object is saved, so it must not be destroyed earlier than this
-     * `Session` object.
+     * possible and executing methods throw an exception.
      */
     Session(const fs::path& private_key_file,
-            const CService& control_host,
-            CThreadInterrupt* interrupt);
+            const Proxy& control_host,
+            std::shared_ptr<CThreadInterrupt> interrupt);
 
     /**
      * Construct a transient session which will generate its own I2P private key
@@ -77,11 +76,9 @@ public:
      * the session will be lazily created later when first used.
      * @param[in] control_host Location of the SAM proxy.
      * @param[in,out] interrupt If this is signaled then all operations are canceled as soon as
-     * possible and executing methods throw an exception. Notice: only a pointer to the
-     * `CThreadInterrupt` object is saved, so it must not be destroyed earlier than this
-     * `Session` object.
+     * possible and executing methods throw an exception.
      */
-    Session(const CService& control_host, CThreadInterrupt* interrupt);
+    Session(const Proxy& control_host, std::shared_ptr<CThreadInterrupt> interrupt);
 
     /**
      * Destroy the session, closing the internally used sockets. The sockets that have been
@@ -105,7 +102,7 @@ public:
      * completion the `peer` member will be set to the address of the incoming peer.
      * @return true on success
      */
-    bool Accept(Connection& conn);
+    bool Accept(Connection& conn) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
      * Connect to an I2P peer.
@@ -154,14 +151,6 @@ private:
          */
         std::string Get(const std::string& key) const;
     };
-
-    /**
-     * Log a message in the `BCLog::I2P` category.
-     * @param[in] fmt printf(3)-like format string.
-     * @param[in] args printf(3)-like arguments that correspond to `fmt`.
-     */
-    template <typename... Args>
-    void Log(const std::string& fmt, const Args&... args) const;
 
     /**
      * Send request and get a reply from the SAM proxy.
@@ -235,14 +224,14 @@ private:
     const fs::path m_private_key_file;
 
     /**
-     * The host and port of the SAM control service.
+     * The SAM control service proxy.
      */
-    const CService m_control_host;
+    const Proxy m_control_host;
 
     /**
      * Cease network activity when this is signaled.
      */
-    CThreadInterrupt* const m_interrupt;
+    const std::shared_ptr<CThreadInterrupt> m_interrupt;
 
     /**
      * Mutex protecting the members that can be concurrently accessed.
@@ -261,6 +250,7 @@ private:
      * ("SESSION CREATE"). With the established session id we later open
      * other connections to the SAM service to accept incoming I2P
      * connections and make outgoing ones.
+     * If not connected then this unique_ptr will be empty.
      * See https://geti2p.net/en/docs/api/samv3
      */
     std::unique_ptr<Sock> m_control_sock GUARDED_BY(m_mutex);

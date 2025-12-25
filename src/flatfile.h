@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,24 +13,20 @@
 
 struct FlatFilePos
 {
-    int nFile{-1};
-    unsigned int nPos{0};
+    int32_t nFile{-1};
+    uint32_t nPos{0};
 
     SERIALIZE_METHODS(FlatFilePos, obj) { READWRITE(VARINT_MODE(obj.nFile, VarIntMode::NONNEGATIVE_SIGNED), VARINT(obj.nPos)); }
 
-    FlatFilePos() {}
+    FlatFilePos() = default;
 
-    FlatFilePos(int nFileIn, unsigned int nPosIn) :
-        nFile(nFileIn),
-        nPos(nPosIn)
+    FlatFilePos(int32_t nFileIn, uint32_t nPosIn)
+        : nFile{nFileIn},
+          nPos{nPosIn}
     {}
 
     friend bool operator==(const FlatFilePos &a, const FlatFilePos &b) {
         return (a.nFile == b.nFile && a.nPos == b.nPos);
-    }
-
-    friend bool operator!=(const FlatFilePos &a, const FlatFilePos &b) {
-        return !(a == b);
     }
 
     bool IsNull() const { return (nFile == -1); }
@@ -63,7 +59,7 @@ public:
     fs::path FileName(const FlatFilePos& pos) const;
 
     /** Open a handle to the file at the given position. */
-    FILE* Open(const FlatFilePos& pos, bool read_only = false);
+    FILE* Open(const FlatFilePos& pos, bool read_only = false) const;
 
     /**
      * Allocate additional space in a file after the given starting position. The amount allocated
@@ -74,7 +70,7 @@ public:
      * @param[out] out_of_space Whether the allocation failed due to insufficient disk space.
      * @return The number of bytes successfully allocated.
      */
-    size_t Allocate(const FlatFilePos& pos, size_t add_size, bool& out_of_space);
+    size_t Allocate(const FlatFilePos& pos, size_t add_size, bool& out_of_space) const;
 
     /**
      * Commit a file to disk, and optionally truncate off extra pre-allocated bytes if final.
@@ -83,7 +79,7 @@ public:
      * @param[in] finalize True if no more data will be written to this file.
      * @return true on success, false on failure.
      */
-    bool Flush(const FlatFilePos& pos, bool finalize = false);
+    bool Flush(const FlatFilePos& pos, bool finalize = false) const;
 };
 
 #endif // BITCOIN_FLATFILE_H

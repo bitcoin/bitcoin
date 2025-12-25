@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2021 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test transaction relay behavior during IBD:
@@ -28,8 +28,8 @@ from test_framework.p2p import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 
-MAX_FEE_FILTER = Decimal(9170997) / COIN
-NORMAL_FEE_FILTER = Decimal(100) / COIN
+MAX_FEE_FILTER = Decimal(9936506) / COIN
+NORMAL_FEE_FILTER = Decimal(10) / COIN
 
 
 class P2PIBDTxRelayTest(BitcoinTestFramework):
@@ -37,8 +37,8 @@ class P2PIBDTxRelayTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 2
         self.extra_args = [
-            ["-minrelaytxfee={}".format(NORMAL_FEE_FILTER)],
-            ["-minrelaytxfee={}".format(NORMAL_FEE_FILTER)],
+            ["-minrelaytxfee={:.8f}".format(NORMAL_FEE_FILTER)],
+            ["-minrelaytxfee={:.8f}".format(NORMAL_FEE_FILTER)],
         ]
 
     def run_test(self):
@@ -47,13 +47,15 @@ class P2PIBDTxRelayTest(BitcoinTestFramework):
             assert node.getblockchaininfo()['initialblockdownload']
             self.wait_until(lambda: all(peer['minfeefilter'] == MAX_FEE_FILTER for peer in node.getpeerinfo()))
 
+        self.nodes[0].setmocktime(int(time.time()))
+
         self.log.info("Check that nodes don't send getdatas for transactions while still in IBD")
         peer_inver = self.nodes[0].add_p2p_connection(P2PDataStore())
         txid = 0xdeadbeef
         peer_inver.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=txid)]))
         # The node should not send a getdata, but if it did, it would first delay 2 seconds
-        self.nodes[0].setmocktime(int(time.time() + NONPREF_PEER_TX_DELAY))
-        peer_inver.sync_send_with_ping()
+        self.nodes[0].bumpmocktime(NONPREF_PEER_TX_DELAY)
+        peer_inver.sync_with_ping()
         with p2p_lock:
             assert txid not in peer_inver.getdata_requests
         self.nodes[0].disconnect_p2ps()
@@ -86,4 +88,4 @@ class P2PIBDTxRelayTest(BitcoinTestFramework):
             peer_txer.send_and_ping(msg_tx(tx))
 
 if __name__ == '__main__':
-    P2PIBDTxRelayTest().main()
+    P2PIBDTxRelayTest(__file__).main()

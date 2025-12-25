@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,10 +32,6 @@
 // sends them to the server.
 //
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
-
 #include <qt/sendcoinsrecipient.h>
 
 #include <QObject>
@@ -53,6 +49,8 @@ class QByteArray;
 class QLocalServer;
 class QUrl;
 QT_END_NAMESPACE
+
+extern const QString BITCOIN_IPC_PREFIX;
 
 class PaymentServer : public QObject
 {

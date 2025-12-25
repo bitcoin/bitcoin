@@ -7,6 +7,15 @@
 #ifndef SECP256K1_MODULE_ECDH_TESTS_H
 #define SECP256K1_MODULE_ECDH_TESTS_H
 
+#include "../../unit_test.h"
+
+static int ecdh_hash_function_test_xpassthru(unsigned char *output, const unsigned char *x, const unsigned char *y, void *data) {
+    (void)y;
+    (void)data;
+    memcpy(output, x, 32);
+    return 1;
+}
+
 static int ecdh_hash_function_test_fail(unsigned char *output, const unsigned char *x, const unsigned char *y, void *data) {
     (void)output;
     (void)x;
@@ -25,32 +34,19 @@ static int ecdh_hash_function_custom(unsigned char *output, const unsigned char 
 }
 
 static void test_ecdh_api(void) {
-    /* Setup context that just counts errors */
-    secp256k1_context *tctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
     secp256k1_pubkey point;
     unsigned char res[32];
     unsigned char s_one[32] = { 0 };
-    int32_t ecount = 0;
     s_one[31] = 1;
 
-    secp256k1_context_set_error_callback(tctx, counting_illegal_callback_fn, &ecount);
-    secp256k1_context_set_illegal_callback(tctx, counting_illegal_callback_fn, &ecount);
-    CHECK(secp256k1_ec_pubkey_create(tctx, &point, s_one) == 1);
+    CHECK(secp256k1_ec_pubkey_create(CTX, &point, s_one) == 1);
 
     /* Check all NULLs are detected */
-    CHECK(secp256k1_ecdh(tctx, res, &point, s_one, NULL, NULL) == 1);
-    CHECK(ecount == 0);
-    CHECK(secp256k1_ecdh(tctx, NULL, &point, s_one, NULL, NULL) == 0);
-    CHECK(ecount == 1);
-    CHECK(secp256k1_ecdh(tctx, res, NULL, s_one, NULL, NULL) == 0);
-    CHECK(ecount == 2);
-    CHECK(secp256k1_ecdh(tctx, res, &point, NULL, NULL, NULL) == 0);
-    CHECK(ecount == 3);
-    CHECK(secp256k1_ecdh(tctx, res, &point, s_one, NULL, NULL) == 1);
-    CHECK(ecount == 3);
-
-    /* Cleanup */
-    secp256k1_context_destroy(tctx);
+    CHECK(secp256k1_ecdh(CTX, res, &point, s_one, NULL, NULL) == 1);
+    CHECK_ILLEGAL(CTX, secp256k1_ecdh(CTX, NULL, &point, s_one, NULL, NULL));
+    CHECK_ILLEGAL(CTX, secp256k1_ecdh(CTX, res, NULL, s_one, NULL, NULL));
+    CHECK_ILLEGAL(CTX, secp256k1_ecdh(CTX, res, &point, NULL, NULL, NULL));
+    CHECK(secp256k1_ecdh(CTX, res, &point, s_one, NULL, NULL) == 1);
 }
 
 static void test_ecdh_generator_basepoint(void) {
@@ -69,7 +65,7 @@ static void test_ecdh_generator_basepoint(void) {
         size_t point_ser_len = sizeof(point_ser);
         secp256k1_scalar s;
 
-        random_scalar_order(&s);
+        testutil_random_scalar_order(&s);
         secp256k1_scalar_get_b32(s_b32, &s);
 
         CHECK(secp256k1_ec_pubkey_create(CTX, &point[0], s_one) == 1);
@@ -96,23 +92,19 @@ static void test_ecdh_generator_basepoint(void) {
 
 static void test_bad_scalar(void) {
     unsigned char s_zero[32] = { 0 };
-    unsigned char s_overflow[32] = {
-        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
-        0xba, 0xae, 0xdc, 0xe6, 0xaf, 0x48, 0xa0, 0x3b,
-        0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41
-    };
+    unsigned char s_overflow[32] = { 0 };
     unsigned char s_rand[32] = { 0 };
     unsigned char output[32];
     secp256k1_scalar rand;
     secp256k1_pubkey point;
 
     /* Create random point */
-    random_scalar_order(&rand);
+    testutil_random_scalar_order(&rand);
     secp256k1_scalar_get_b32(s_rand, &rand);
     CHECK(secp256k1_ec_pubkey_create(CTX, &point, s_rand) == 1);
 
     /* Try to multiply it by bad values */
+    memcpy(s_overflow, secp256k1_group_order_bytes, 32);
     CHECK(secp256k1_ecdh(CTX, output, &point, s_zero, NULL, NULL) == 0);
     CHECK(secp256k1_ecdh(CTX, output, &point, s_overflow, NULL, NULL) == 0);
     /* ...and a good one */
@@ -140,7 +132,7 @@ static void test_result_basepoint(void) {
     CHECK(secp256k1_ecdh(CTX, out_base, &point, s_one, NULL, NULL) == 1);
 
     for (i = 0; i < 2 * COUNT; i++) {
-        random_scalar_order(&rand);
+        testutil_random_scalar_order(&rand);
         secp256k1_scalar_get_b32(s, &rand);
         secp256k1_scalar_inverse(&rand, &rand);
         secp256k1_scalar_get_b32(s_inv, &rand);
@@ -155,11 +147,46 @@ static void test_result_basepoint(void) {
     }
 }
 
-static void run_ecdh_tests(void) {
-    test_ecdh_api();
-    test_ecdh_generator_basepoint();
-    test_bad_scalar();
-    test_result_basepoint();
+static void test_ecdh_wycheproof(void) {
+#include "../../wycheproof/ecdh_secp256k1_test.h"
+    int t;
+    for (t = 0; t < SECP256K1_ECDH_WYCHEPROOF_NUMBER_TESTVECTORS; t++) {
+        int parsed_ok;
+        secp256k1_pubkey point;
+        const unsigned char *pk;
+        const unsigned char *sk;
+        const unsigned char *expected_shared_secret;
+        unsigned char output_ecdh[65] = { 0 };
+
+        int expected_result;
+
+        memset(&point, 0, sizeof(point));
+        pk = &wycheproof_ecdh_public_keys[testvectors[t].pk_offset];
+        parsed_ok = secp256k1_ec_pubkey_parse(CTX, &point, pk, testvectors[t].pk_len);
+
+        expected_result = testvectors[t].expected_result;
+        CHECK(parsed_ok == expected_result);
+        if (!parsed_ok) {
+            continue;
+        }
+
+        sk = &wycheproof_ecdh_private_keys[testvectors[t].sk_offset];
+        CHECK(testvectors[t].sk_len == 32);
+
+        CHECK(secp256k1_ecdh(CTX, output_ecdh, &point, sk, ecdh_hash_function_test_xpassthru, NULL) == 1);
+        expected_shared_secret = &wycheproof_ecdh_shared_secrets[testvectors[t].shared_offset];
+
+        CHECK(secp256k1_memcmp_var(output_ecdh, expected_shared_secret, testvectors[t].shared_len) == 0);
+    }
 }
+
+/* --- Test registry --- */
+static const struct tf_test_entry tests_ecdh[] = {
+    CASE1(test_ecdh_api),
+    CASE1(test_ecdh_generator_basepoint),
+    CASE1(test_bad_scalar),
+    CASE1(test_result_basepoint),
+    CASE1(test_ecdh_wycheproof),
+};
 
 #endif /* SECP256K1_MODULE_ECDH_TESTS_H */

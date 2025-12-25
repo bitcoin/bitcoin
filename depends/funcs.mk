@@ -6,12 +6,13 @@ $(1)_objc=$$($$($(1)_type)_OBJC)
 $(1)_objcxx=$$($$($(1)_type)_OBJCXX)
 $(1)_ar=$$($$($(1)_type)_AR)
 $(1)_ranlib=$$($$($(1)_type)_RANLIB)
-$(1)_libtool=$$($$($(1)_type)_LIBTOOL)
 $(1)_nm=$$($$($(1)_type)_NM)
 $(1)_cflags=$$($$($(1)_type)_CFLAGS) \
-            $$($$($(1)_type)_$$(release_type)_CFLAGS)
+            $$($$($(1)_type)_$$(release_type)_CFLAGS) \
+            -pipe -std=$(C_STANDARD)
 $(1)_cxxflags=$$($$($(1)_type)_CXXFLAGS) \
-              $$($$($(1)_type)_$$(release_type)_CXXFLAGS)
+              $$($$($(1)_type)_$$(release_type)_CXXFLAGS) \
+              -pipe -std=$(CXX_STANDARD)
 $(1)_ldflags=$$($$($(1)_type)_LDFLAGS) \
              $$($$($(1)_type)_$$(release_type)_LDFLAGS) \
              -L$$($($(1)_type)_prefix)/lib
@@ -35,39 +36,75 @@ define fetch_file_inner
 endef
 
 define fetch_file
-    ( test -f $$($(1)_source_dir)/$(4) || \
     ( $(call fetch_file_inner,$(1),$(2),$(3),$(4),$(5)) || \
-      $(call fetch_file_inner,$(1),$(FALLBACK_DOWNLOAD_PATH),$(3),$(4),$(5))))
+      $(call fetch_file_inner,$(1),$(FALLBACK_DOWNLOAD_PATH),$(4),$(4),$(5)))
+endef
+
+# Shell script to create a source tarball in $(1)_source from local directory
+# $(1)_local_dir instead of downloading remote sources. Tarball is recreated if
+# any paths in the local directory have a newer mtime, and checksum of the
+# tarball is saved to $(1)_fetched and returned as output.
+define fetch_local_dir_sha256
+    if ! [ -f $($(1)_source) ] || [ -n "$$(find $($(1)_local_dir) -newer $($(1)_source) | head -n1)" ]; then \
+        mkdir -p $(dir $($(1)_source)) && \
+        $(build_TAR) -c -f $($(1)_source) -C $($(1)_local_dir) . && \
+        rm -f $($(1)_fetched); \
+    fi && \
+    if ! [ -f $($(1)_fetched) ] || [ -n "$$(find $($(1)_source) -newer $($(1)_fetched))" ]; then \
+        mkdir -p $(dir $($(1)_fetched)) && \
+        cd $($(1)_source_dir) && \
+        $(build_SHA256SUM) $($(1)_all_sources) > $($(1)_fetched); \
+    fi && \
+    cut -d" " -f1 $($(1)_fetched)
 endef
 
 define int_get_build_recipe_hash
-$(eval $(1)_all_file_checksums:=$(shell $(build_SHA256SUM) $(meta_depends) packages/$(1).mk $(addprefix $(PATCHES_PATH)/$(1)/,$($(1)_patches)) | cut -d" " -f1))
+$(eval $(1)_patches_path?=$(PATCHES_PATH)/$(1))
+$(eval $(1)_all_file_checksums:=$(shell $(build_SHA256SUM) $(meta_depends) packages/$(1).mk $(addprefix $($(1)_patches_path)/,$($(1)_patches)) | cut -d" " -f1))
+# If $(1)_local_dir is set, create a tarball of the local directory contents to
+# use as the source of the package, and include a hash of the tarball in the
+# package id, so if directory contents change, the package and packages
+# depending on it will be rebuilt.
+$(if $($(1)_local_dir),$(eval $(1)_sha256_hash:=$(shell $(call fetch_local_dir_sha256,$(1)))))
+$(if $($(1)_local_dir),$(eval $(1)_all_file_checksums+=$($(1)_sha256_hash)))
 $(eval $(1)_recipe_hash:=$(shell echo -n "$($(1)_all_file_checksums)" | $(build_SHA256SUM) | cut -d" " -f1))
 endef
 
 define int_get_build_id
 $(eval $(1)_dependencies += $($(1)_$(host_arch)_$(host_os)_dependencies) $($(1)_$(host_os)_dependencies))
-$(eval $(1)_all_dependencies:=$(call int_get_all_dependencies,$(1),$($($(1)_type)_native_toolchain) $($($(1)_type)_native_binutils) $($(1)_dependencies)))
+$(eval $(1)_all_dependencies:=$(call int_get_all_dependencies,$(1),$($(1)_dependencies)))
 $(foreach dep,$($(1)_all_dependencies),$(eval $(1)_build_id_deps+=$(dep)-$($(dep)_version)-$($(dep)_recipe_hash)))
 $(eval $(1)_build_id_long:=$(1)-$($(1)_version)-$($(1)_recipe_hash)-$(release_type) $($(1)_build_id_deps) $($($(1)_type)_id))
 $(eval $(1)_build_id:=$(shell echo -n "$($(1)_build_id_long)" | $(build_SHA256SUM) | cut -c-$(HASH_LENGTH)))
 final_build_id_long+=$($(package)_build_id_long)
 
 #compute package-specific paths
-$(1)_build_subdir?=.
-$(1)_download_file?=$($(1)_file_name)
-$(1)_source_dir:=$(SOURCES_PATH)
-$(1)_source:=$$($(1)_source_dir)/$($(1)_file_name)
 $(1)_staging_dir=$(base_staging_dir)/$(host)/$(1)/$($(1)_version)-$($(1)_build_id)
 $(1)_staging_prefix_dir:=$$($(1)_staging_dir)$($($(1)_type)_prefix)
 $(1)_extract_dir:=$(base_build_dir)/$(host)/$(1)/$($(1)_version)-$($(1)_build_id)
-$(1)_download_dir:=$(base_download_dir)/$(1)-$($(1)_version)
 $(1)_build_dir:=$$($(1)_extract_dir)/$$($(1)_build_subdir)
 $(1)_cached_checksum:=$(BASE_CACHE)/$(host)/$(1)/$(1)-$($(1)_version)-$($(1)_build_id).tar.gz.hash
 $(1)_patch_dir:=$(base_build_dir)/$(host)/$(1)/$($(1)_version)-$($(1)_build_id)/.patches-$($(1)_build_id)
-$(1)_prefixbin:=$($($(1)_type)_prefix)/bin/
 $(1)_cached:=$(BASE_CACHE)/$(host)/$(1)/$(1)-$($(1)_version)-$($(1)_build_id).tar.gz
 $(1)_build_log:=$(BASEDIR)/$(1)-$($(1)_version)-$($(1)_build_id).log
+endef
+
+# Convert a string to a human-readable filename, replacing dot, slash, and space
+# characters that could cause problems with dashes and collapsing them.
+define int_friendly_file_name
+$(subst $(null) $(null),-,$(strip $(subst ., ,$(subst /, ,$(1)))))
+endef
+
+define int_get_build_properties
+$(1)_build_subdir?=.
+$(1)_download_file?=$($(1)_file_name)
+$(1)_source_dir:=$(SOURCES_PATH)
+# If $(1)_file_name is empty and $(1)_local_dir is nonempty, set file name to a
+# .tar file with a friendly filename named after the directory path.
+$(if $($(1)_file_name),,$(if $($(1)_local_dir),$(eval $(1)_file_name:=$(call int_friendly_file_name,$($(1)_local_dir)).tar)))
+$(1)_source:=$$($(1)_source_dir)/$($(1)_file_name)
+$(1)_download_dir:=$(base_download_dir)/$(1)-$($(1)_version)
+$(1)_prefixbin:=$($($(1)_type)_prefix)/bin/
 $(1)_all_sources=$($(1)_file_name) $($(1)_extra_sources)
 
 #stamps
@@ -139,16 +176,16 @@ $(1)_config_env+=PKG_CONFIG_LIBDIR=$($($(1)_type)_prefix)/lib/pkgconfig
 $(1)_config_env+=PKG_CONFIG_PATH=$($($(1)_type)_prefix)/share/pkgconfig
 $(1)_config_env+=PKG_CONFIG_SYSROOT_DIR=/
 $(1)_config_env+=CMAKE_MODULE_PATH=$($($(1)_type)_prefix)/lib/cmake
-$(1)_config_env+=PATH=$(build_prefix)/bin:$(PATH)
-$(1)_build_env+=PATH=$(build_prefix)/bin:$(PATH)
-$(1)_stage_env+=PATH=$(build_prefix)/bin:$(PATH)
+$(1)_config_env+=PATH="$(build_prefix)/bin:$(PATH)"
+$(1)_build_env+=PATH="$(build_prefix)/bin:$(PATH)"
+$(1)_stage_env+=PATH="$(build_prefix)/bin:$(PATH)"
 
 # Setting a --build type that differs from --host will explicitly enable
 # cross-compilation mode. Note that --build defaults to the output of
 # config.guess, which is what we set it too here. This also quells autoconf
 # warnings, "If you wanted to set the --build type, don't use --host.",
 # when using versions older than 2.70.
-$(1)_autoconf=./configure --build=$(BUILD) --host=$($($(1)_type)_host) --prefix=$($($(1)_type)_prefix) $$($(1)_config_opts) CC="$$($(1)_cc)" CXX="$$($(1)_cxx)"
+$(1)_autoconf=./configure --build=$(BUILD) --host=$($($(1)_type)_host) --prefix=$($($(1)_type)_prefix) --with-pic $$($(1)_config_opts) CC="$$($(1)_cc)" CXX="$$($(1)_cxx)"
 ifneq ($($(1)_nm),)
 $(1)_autoconf += NM="$$($(1)_nm)"
 endif
@@ -171,17 +208,30 @@ ifneq ($($(1)_ldflags),)
 $(1)_autoconf += LDFLAGS="$$($(1)_ldflags)"
 endif
 
+# We hardcode the library install path to "lib" to match the PKG_CONFIG_PATH
+# setting in depends/toolchain.cmake.in, which also hardcodes "lib".
+# Without this setting, CMake by default would use the OS library
+# directory, which might be "lib64" or something else, not "lib", on multiarch systems.
 $(1)_cmake=env CC="$$($(1)_cc)" \
                CFLAGS="$$($(1)_cppflags) $$($(1)_cflags)" \
                CXX="$$($(1)_cxx)" \
                CXXFLAGS="$$($(1)_cppflags) $$($(1)_cxxflags)" \
                LDFLAGS="$$($(1)_ldflags)" \
-             cmake -DCMAKE_INSTALL_PREFIX:PATH="$$($($(1)_type)_prefix)" $$($(1)_config_opts)
+               cmake -G "Unix Makefiles" \
+               -DCMAKE_INSTALL_PREFIX:PATH="$$($($(1)_type)_prefix)" \
+               -DCMAKE_AR=`which $$($(1)_ar)` \
+               -DCMAKE_NM=`which $$($(1)_nm)` \
+               -DCMAKE_RANLIB=`which $$($(1)_ranlib)` \
+               -DCMAKE_INSTALL_LIBDIR=lib/ \
+               -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+               -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(V) \
+               -DCMAKE_EXPORT_NO_PACKAGE_REGISTRY:BOOL=TRUE \
+               $$($(1)_config_opts)
 ifeq ($($(1)_type),build)
 $(1)_cmake += -DCMAKE_INSTALL_RPATH:PATH="$$($($(1)_type)_prefix)/lib"
 else
 ifneq ($(host),$(build))
-$(1)_cmake += -DCMAKE_SYSTEM_NAME=$($(host_os)_cmake_system)
+$(1)_cmake += -DCMAKE_SYSTEM_NAME=$($(host_os)_cmake_system_name)
 $(1)_cmake += -DCMAKE_C_COMPILER_TARGET=$(host)
 $(1)_cmake += -DCMAKE_CXX_COMPILER_TARGET=$(host)
 endif
@@ -196,7 +246,6 @@ endif
 $($(1)_fetched):
 	mkdir -p $$(@D) $(SOURCES_PATH)
 	rm -f $$@
-	touch $$@
 	cd $$(@D); $($(1)_fetch_cmds)
 	cd $($(1)_source_dir); $(foreach source,$($(1)_all_sources),$(build_SHA256SUM) $(source) >> $$(@);)
 	touch $$@
@@ -208,7 +257,7 @@ $($(1)_extracted): | $($(1)_fetched)
 $($(1)_preprocessed): | $($(1)_extracted)
 	echo Preprocessing $(1)...
 	mkdir -p $$(@D) $($(1)_patch_dir)
-	$(foreach patch,$($(1)_patches),cd $(PATCHES_PATH)/$(1); cp $(patch) $($(1)_patch_dir) ;)
+	$(foreach patch,$($(1)_patches),cd $($(1)_patches_path); cp $(patch) $($(1)_patch_dir) ;)
 	{ cd $$(@D); $($(1)_preprocess_cmds); } $$($(1)_logging)
 	touch $$@
 $($(1)_configured): | $($(1)_dependencies) $($(1)_preprocessed)
@@ -235,7 +284,7 @@ $($(1)_postprocessed): | $($(1)_staged)
 $($(1)_cached): | $($(1)_dependencies) $($(1)_postprocessed)
 	echo Caching $(1)...
 	cd $$($(1)_staging_dir)/$(host_prefix); \
-	  find . ! -name '.stamp_postprocessed' -print0 | TZ=UTC xargs -0r touch -h -m -t 200001011200; \
+	  find . ! -name '.stamp_postprocessed' -print0 | TZ=UTC xargs -0r $(build_TOUCH); \
 	  find . ! -name '.stamp_postprocessed' | LC_ALL=C sort | $(build_TAR) --numeric-owner --no-recursion -czf $$($(1)_staging_dir)/$$(@F) -T -
 	mkdir -p $$(@D)
 	rm -rf $$(@D) && mkdir -p $$(@D)
@@ -276,6 +325,9 @@ $(foreach package,$(all_packages),$(eval $(call int_vars,$(package))))
 $(foreach native_package,$(native_packages),$(eval include packages/$(native_package).mk))
 $(foreach package,$(packages),$(eval include packages/$(package).mk))
 
+#set build properties for included package files
+$(foreach package,$(all_packages),$(eval $(call int_get_build_properties,$(package))))
+
 #compute a hash of all files that comprise this package's build recipe
 $(foreach package,$(all_packages),$(eval $(call int_get_build_recipe_hash,$(package))))
 
@@ -287,6 +339,3 @@ $(foreach package,$(all_packages),$(eval $(call int_config_attach_build_config,$
 
 #create build targets
 $(foreach package,$(all_packages),$(eval $(call int_add_cmds,$(package))))
-
-#special exception: if a toolchain package exists, all non-native packages depend on it
-$(foreach package,$(packages),$(eval $($(package)_extracted): |$($($(host_arch)_$(host_os)_native_toolchain)_cached) $($($(host_arch)_$(host_os)_native_binutils)_cached) ))

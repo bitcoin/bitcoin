@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,18 +14,17 @@
 
 /** Class that mimics std::deque<bool>, but with std::vector<bool>'s bit packing.
  *
- * BlobSize selects the (minimum) number of bits that are allocated at once.
+ * BITS_PER_WORD selects the (minimum) number of bits that are allocated at once.
  * Larger values reduce the asymptotic memory usage overhead, at the cost of
  * needing larger up-front allocations. The default is 4096 bytes.
  */
-template<int BlobSize = 4096 * 8>
+template<int BITS_PER_WORD = 4096 * 8>
 class bitdeque
 {
     // Internal definitions
-    using word_type = std::bitset<BlobSize>;
+    using word_type = std::bitset<BITS_PER_WORD>;
     using deque_type = std::deque<word_type>;
-    static_assert(BlobSize > 0);
-    static constexpr int BITS_PER_WORD = BlobSize;
+    static_assert(BITS_PER_WORD > 0);
 
     // Forward and friend declarations of iterator types.
     template<bool Const> class Iterator;
@@ -100,12 +99,8 @@ class bitdeque
         friend Iterator operator+(Iterator x, difference_type dist) { x += dist; return x; }
         friend Iterator operator+(difference_type dist, Iterator x) { x += dist; return x; }
         friend Iterator operator-(Iterator x, difference_type dist) { x -= dist; return x; }
-        friend bool operator<(const Iterator& x, const Iterator& y) { return std::tie(x.m_it, x.m_bitpos) < std::tie(y.m_it, y.m_bitpos); }
-        friend bool operator>(const Iterator& x, const Iterator& y) { return std::tie(x.m_it, x.m_bitpos) > std::tie(y.m_it, y.m_bitpos); }
-        friend bool operator<=(const Iterator& x, const Iterator& y) { return std::tie(x.m_it, x.m_bitpos) <= std::tie(y.m_it, y.m_bitpos); }
-        friend bool operator>=(const Iterator& x, const Iterator& y) { return std::tie(x.m_it, x.m_bitpos) >= std::tie(y.m_it, y.m_bitpos); }
+        friend auto operator<=>(const Iterator& x, const Iterator& y) { return std::tie(x.m_it, x.m_bitpos) <=> std::tie(y.m_it, y.m_bitpos); }
         friend bool operator==(const Iterator& x, const Iterator& y) { return x.m_it == y.m_it && x.m_bitpos == y.m_bitpos; }
-        friend bool operator!=(const Iterator& x, const Iterator& y) { return x.m_it != y.m_it || x.m_bitpos != y.m_bitpos; }
         reference operator*() const { return (*m_it)[m_bitpos]; }
         reference operator[](difference_type pos) const { return *(*this + pos); }
     };

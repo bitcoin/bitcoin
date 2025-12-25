@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2022 The Bitcoin Core developers
+// Copyright (c) 2013-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,14 +7,10 @@
 #include <crypto/common.h>
 #include <crypto/hmac_sha512.h>
 
+#include <bit>
 #include <string>
 
-inline uint32_t ROTL32(uint32_t x, int8_t r)
-{
-    return (x << r) | (x >> (32 - r));
-}
-
-unsigned int MurmurHash3(unsigned int nHashSeed, Span<const unsigned char> vDataToHash)
+unsigned int MurmurHash3(unsigned int nHashSeed, std::span<const unsigned char> vDataToHash)
 {
     // The following is MurmurHash3 (x86_32), see https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp
     uint32_t h1 = nHashSeed;
@@ -31,11 +27,11 @@ unsigned int MurmurHash3(unsigned int nHashSeed, Span<const unsigned char> vData
         uint32_t k1 = ReadLE32(blocks + i*4);
 
         k1 *= c1;
-        k1 = ROTL32(k1, 15);
+        k1 = std::rotl(k1, 15);
         k1 *= c2;
 
         h1 ^= k1;
-        h1 = ROTL32(h1, 13);
+        h1 = std::rotl(h1, 13);
         h1 = h1 * 5 + 0xe6546b64;
     }
 
@@ -55,7 +51,7 @@ unsigned int MurmurHash3(unsigned int nHashSeed, Span<const unsigned char> vData
         case 1:
             k1 ^= tail[0];
             k1 *= c1;
-            k1 = ROTL32(k1, 15);
+            k1 = std::rotl(k1, 15);
             k1 *= c2;
             h1 ^= k1;
     }

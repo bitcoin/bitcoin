@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -40,6 +40,16 @@ public:
      *  The ip->AS mapping depends on how asmap is constructed.
      */
     uint32_t GetMappedAS(const CNetAddr& address) const;
+
+    /**
+     *  Analyze and log current health of ASMap based buckets.
+     */
+    void ASMapHealthCheck(const std::vector<CNetAddr>& clearnet_addrs) const;
+
+    /**
+     *  Indicates whether ASMap is being used for clearnet bucketing.
+     */
+    bool UsingASMap() const;
 
 private:
     /** Compressed IP->ASN mapping, loaded from a file when a node starts.

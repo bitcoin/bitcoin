@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,7 +11,9 @@
 
 #include <any>
 #include <memory>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 class JSONRPCRequest;
@@ -38,20 +40,21 @@ static const RPCResult RESULT_LAST_PROCESSED_BLOCK { RPCResult::Type::OBJ, "last
  */
 std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request);
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name);
+/**
+ * Ensures that a wallet name is specified across the endpoint and wallet_name.
+ * Throws `RPC_INVALID_PARAMETER` if none or different wallet names are specified.
+ */
+std::string EnsureUniqueWalletName(const JSONRPCRequest& request, std::optional<std::string_view> wallet_name);
 
 void EnsureWalletIsUnlocked(const CWallet&);
 WalletContext& EnsureWalletContext(const std::any& context);
-LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet, bool also_create = false);
-const LegacyScriptPubKeyMan& EnsureConstLegacyScriptPubKeyMan(const CWallet& wallet);
 
 bool GetAvoidReuseFlag(const CWallet& wallet, const UniValue& param);
-bool ParseIncludeWatchonly(const UniValue& include_watchonly, const CWallet& wallet);
 std::string LabelFromValue(const UniValue& value);
 //! Fetch parent descriptors of this scriptPubKey.
 void PushParentDescriptors(const CWallet& wallet, const CScript& script_pubkey, UniValue& entry);
 
 void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& status, bilingual_str& error);
-int64_t ParseISO8601DateTime(const std::string& str);
 void AppendLastProcessedBlock(UniValue& entry, const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 } //  namespace wallet
 

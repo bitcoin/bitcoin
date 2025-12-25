@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2022 The Bitcoin Core developers
+// Copyright (c) 2015-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,8 +8,11 @@
 #include <crypto/hmac_sha256.h>
 #include <httpserver.h>
 #include <logging.h>
+#include <netaddress.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
+#include <util/fs.h>
+#include <util/fs_helpers.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <walletinitinterface.h>
@@ -18,62 +21,28 @@
 #include <iterator>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
 
+using util::SplitString;
+using util::TrimStringView;
+
 /** WWW-Authenticate to present with 401 Unauthorized response */
 static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
 
-/** Simple one-shot callback timer to be used by the RPC mechanism to e.g.
- * re-lock the wallet.
- */
-class HTTPRPCTimer : public RPCTimerBase
-{
-public:
-    HTTPRPCTimer(struct event_base* eventBase, std::function<void()>& func, int64_t millis) :
-        ev(eventBase, false, func)
-    {
-        struct timeval tv;
-        tv.tv_sec = millis/1000;
-        tv.tv_usec = (millis%1000)*1000;
-        ev.trigger(&tv);
-    }
-private:
-    HTTPEvent ev;
-};
-
-class HTTPRPCTimerInterface : public RPCTimerInterface
-{
-public:
-    explicit HTTPRPCTimerInterface(struct event_base* _base) : base(_base)
-    {
-    }
-    const char* Name() override
-    {
-        return "HTTP";
-    }
-    RPCTimerBase* NewTimer(std::function<void()>& func, int64_t millis) override
-    {
-        return new HTTPRPCTimer(base, func, millis);
-    }
-private:
-    struct event_base* base;
-};
-
-
-/* Pre-base64-encoded authentication token */
-static std::string strRPCUserColonPass;
-/* Stored RPC timer interface (for unregistration) */
-static std::unique_ptr<HTTPRPCTimerInterface> httpRPCTimerInterface;
 /* List of -rpcauth values */
 static std::vector<std::vector<std::string>> g_rpcauth;
 /* RPC Auth Whitelist */
 static std::map<std::string, std::set<std::string>> g_rpc_whitelist;
 static bool g_rpc_whitelist_default = false;
 
-static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const UniValue& id)
+static void JSONErrorReply(HTTPRequest* req, UniValue objError, const JSONRPCRequest& jreq)
 {
+    // Sending HTTP errors is a legacy JSON-RPC behavior.
+    Assume(jreq.m_json_version != JSONRPCVersion::V2);
+
     // Send error reply from json-rpc error object
     int nStatus = HTTP_INTERNAL_SERVER_ERROR;
     int code = objError.find_value("code").getInt<int>();
@@ -83,7 +52,7 @@ static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const Uni
     else if (code == RPC_METHOD_NOT_FOUND)
         nStatus = HTTP_NOT_FOUND;
 
-    std::string strReply = JSONRPCReply(NullUniValue, objError, id);
+    std::string strReply = JSONRPCReplyObj(NullUniValue, std::move(objError), jreq.id, jreq.m_json_version).write() + "\n";
 
     req->WriteHeader("Content-Type", "application/json");
     req->WriteReply(nStatus, strReply);
@@ -91,31 +60,21 @@ static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const Uni
 
 //This function checks username and password against -rpcauth
 //entries from config file.
-static bool multiUserAuthorized(std::string strUserPass)
+static bool CheckUserAuthorized(std::string_view user, std::string_view pass)
 {
-    if (strUserPass.find(':') == std::string::npos) {
-        return false;
-    }
-    std::string strUser = strUserPass.substr(0, strUserPass.find(':'));
-    std::string strPass = strUserPass.substr(strUserPass.find(':') + 1);
-
-    for (const auto& vFields : g_rpcauth) {
-        std::string strName = vFields[0];
-        if (!TimingResistantEqual(strName, strUser)) {
+    for (const auto& fields : g_rpcauth) {
+        if (!TimingResistantEqual(std::string_view(fields[0]), user)) {
             continue;
         }
 
-        std::string strSalt = vFields[1];
-        std::string strHash = vFields[2];
+        const std::string& salt = fields[1];
+        const std::string& hash = fields[2];
 
-        static const unsigned int KEY_SIZE = 32;
-        unsigned char out[KEY_SIZE];
+        std::array<unsigned char, CHMAC_SHA256::OUTPUT_SIZE> out;
+        CHMAC_SHA256(UCharCast(salt.data()), salt.size()).Write(UCharCast(pass.data()), pass.size()).Finalize(out.data());
+        std::string hash_from_pass = HexStr(out);
 
-        CHMAC_SHA256(reinterpret_cast<const unsigned char*>(strSalt.data()), strSalt.size()).Write(reinterpret_cast<const unsigned char*>(strPass.data()), strPass.size()).Finalize(out);
-        std::vector<unsigned char> hexvec(out, out+KEY_SIZE);
-        std::string strHashFromPass = HexStr(hexvec);
-
-        if (TimingResistantEqual(strHashFromPass, strHash)) {
+        if (TimingResistantEqual(hash_from_pass, hash)) {
             return true;
         }
     }
@@ -124,9 +83,7 @@ static bool multiUserAuthorized(std::string strUserPass)
 
 static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUsernameOut)
 {
-    if (strRPCUserColonPass.empty()) // Belt-and-suspenders measure if InitRPCAuthentication was not called
-        return false;
-    if (strAuth.substr(0, 6) != "Basic ")
+    if (!strAuth.starts_with("Basic "))
         return false;
     std::string_view strUserPass64 = TrimStringView(std::string_view{strAuth}.substr(6));
     auto userpass_data = DecodeBase64(strUserPass64);
@@ -134,14 +91,14 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     if (!userpass_data) return false;
     strUserPass.assign(userpass_data->begin(), userpass_data->end());
 
-    if (strUserPass.find(':') != std::string::npos)
-        strAuthUsernameOut = strUserPass.substr(0, strUserPass.find(':'));
-
-    //Check if authorized under single-user field
-    if (TimingResistantEqual(strUserPass, strRPCUserColonPass)) {
-        return true;
+    size_t colon_pos = strUserPass.find(':');
+    if (colon_pos == std::string::npos) {
+        return false; // Invalid basic auth.
     }
-    return multiUserAuthorized(strUserPass);
+    std::string user = strUserPass.substr(0, colon_pos);
+    std::string pass = strUserPass.substr(colon_pos + 1);
+    strAuthUsernameOut = user;
+    return CheckUserAuthorized(user, pass);
 }
 
 static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
@@ -163,7 +120,7 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
     jreq.context = context;
     jreq.peerAddr = req->GetPeer().ToStringAddrPort();
     if (!RPCAuthorized(authHeader.second, jreq.authUser)) {
-        LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", jreq.peerAddr);
+        LogWarning("ThreadRPCServer incorrect password attempt from %s", jreq.peerAddr);
 
         /* Deter brute-forcing
            If this results in a DoS the user really
@@ -184,28 +141,38 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
         // Set the URI
         jreq.URI = req->GetURI();
 
-        std::string strReply;
-        bool user_has_whitelist = g_rpc_whitelist.count(jreq.authUser);
+        UniValue reply;
+        bool user_has_whitelist = g_rpc_whitelist.contains(jreq.authUser);
         if (!user_has_whitelist && g_rpc_whitelist_default) {
-            LogPrintf("RPC User %s not allowed to call any methods\n", jreq.authUser);
+            LogWarning("RPC User %s not allowed to call any methods", jreq.authUser);
             req->WriteReply(HTTP_FORBIDDEN);
             return false;
 
         // singleton request
         } else if (valRequest.isObject()) {
             jreq.parse(valRequest);
-            if (user_has_whitelist && !g_rpc_whitelist[jreq.authUser].count(jreq.strMethod)) {
-                LogPrintf("RPC User %s not allowed to call method %s\n", jreq.authUser, jreq.strMethod);
+            if (user_has_whitelist && !g_rpc_whitelist[jreq.authUser].contains(jreq.strMethod)) {
+                LogWarning("RPC User %s not allowed to call method %s", jreq.authUser, jreq.strMethod);
                 req->WriteReply(HTTP_FORBIDDEN);
                 return false;
             }
-            UniValue result = tableRPC.execute(jreq);
 
-            // Send reply
-            strReply = JSONRPCReply(result, NullUniValue, jreq.id);
+            // Legacy 1.0/1.1 behavior is for failed requests to throw
+            // exceptions which return HTTP errors and RPC errors to the client.
+            // 2.0 behavior is to catch exceptions and return HTTP success with
+            // RPC errors, as long as there is not an actual HTTP server error.
+            const bool catch_errors{jreq.m_json_version == JSONRPCVersion::V2};
+            reply = JSONRPCExec(jreq, catch_errors);
+
+            if (jreq.IsNotification()) {
+                // Even though we do execute notifications, we do not respond to them
+                req->WriteReply(HTTP_NO_CONTENT);
+                return true;
+            }
 
         // array of requests
         } else if (valRequest.isArray()) {
+            // Check authorization for each request's method
             if (user_has_whitelist) {
                 for (unsigned int reqIdx = 0; reqIdx < valRequest.size(); reqIdx++) {
                     if (!valRequest[reqIdx].isObject()) {
@@ -214,26 +181,57 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
                         const UniValue& request = valRequest[reqIdx].get_obj();
                         // Parse method
                         std::string strMethod = request.find_value("method").get_str();
-                        if (!g_rpc_whitelist[jreq.authUser].count(strMethod)) {
-                            LogPrintf("RPC User %s not allowed to call method %s\n", jreq.authUser, strMethod);
+                        if (!g_rpc_whitelist[jreq.authUser].contains(strMethod)) {
+                            LogWarning("RPC User %s not allowed to call method %s", jreq.authUser, strMethod);
                             req->WriteReply(HTTP_FORBIDDEN);
                             return false;
                         }
                     }
                 }
             }
-            strReply = JSONRPCExecBatch(jreq, valRequest.get_array());
+
+            // Execute each request
+            reply = UniValue::VARR;
+            for (size_t i{0}; i < valRequest.size(); ++i) {
+                // Batches never throw HTTP errors, they are always just included
+                // in "HTTP OK" responses. Notifications never get any response.
+                UniValue response;
+                try {
+                    jreq.parse(valRequest[i]);
+                    response = JSONRPCExec(jreq, /*catch_errors=*/true);
+                } catch (UniValue& e) {
+                    response = JSONRPCReplyObj(NullUniValue, std::move(e), jreq.id, jreq.m_json_version);
+                } catch (const std::exception& e) {
+                    response = JSONRPCReplyObj(NullUniValue, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id, jreq.m_json_version);
+                }
+                if (!jreq.IsNotification()) {
+                    reply.push_back(std::move(response));
+                }
+            }
+            // Return no response for an all-notification batch, but only if the
+            // batch request is non-empty. Technically according to the JSON-RPC
+            // 2.0 spec, an empty batch request should also return no response,
+            // However, if the batch request is empty, it means the request did
+            // not contain any JSON-RPC version numbers, so returning an empty
+            // response could break backwards compatibility with old RPC clients
+            // relying on previous behavior. Return an empty array instead of an
+            // empty response in this case to favor being backwards compatible
+            // over complying with the JSON-RPC 2.0 spec in this case.
+            if (reply.size() == 0 && valRequest.size() > 0) {
+                req->WriteReply(HTTP_NO_CONTENT);
+                return true;
+            }
         }
         else
             throw JSONRPCError(RPC_PARSE_ERROR, "Top-level object parse error");
 
         req->WriteHeader("Content-Type", "application/json");
-        req->WriteReply(HTTP_OK, strReply);
-    } catch (const UniValue& objError) {
-        JSONErrorReply(req, objError, jreq.id);
+        req->WriteReply(HTTP_OK, reply.write() + "\n");
+    } catch (UniValue& e) {
+        JSONErrorReply(req, std::move(e), jreq);
         return false;
     } catch (const std::exception& e) {
-        JSONErrorReply(req, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id);
+        JSONErrorReply(req, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq);
         return false;
     }
     return true;
@@ -241,18 +239,56 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
 
 static bool InitRPCAuthentication()
 {
+    std::string user;
+    std::string pass;
+
     if (gArgs.GetArg("-rpcpassword", "") == "")
     {
-        LogPrintf("Using random cookie authentication.\n");
-        if (!GenerateAuthCookie(&strRPCUserColonPass)) {
+        std::optional<fs::perms> cookie_perms{std::nullopt};
+        auto cookie_perms_arg{gArgs.GetArg("-rpccookieperms")};
+        if (cookie_perms_arg) {
+            auto perm_opt = InterpretPermString(*cookie_perms_arg);
+            if (!perm_opt) {
+                LogError("Invalid -rpccookieperms=%s; must be one of 'owner', 'group', or 'all'.", *cookie_perms_arg);
+                return false;
+            }
+            cookie_perms = *perm_opt;
+        }
+
+        switch (GenerateAuthCookie(cookie_perms, user, pass)) {
+        case GenerateAuthCookieResult::ERR:
             return false;
+        case GenerateAuthCookieResult::DISABLED:
+            LogInfo("RPC authentication cookie file generation is disabled.");
+            break;
+        case GenerateAuthCookieResult::OK:
+            LogInfo("Using random cookie authentication.");
+            break;
         }
     } else {
-        LogPrintf("Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.\n");
-        strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
+        LogInfo("Using rpcuser/rpcpassword authentication.");
+        LogWarning("The use of rpcuser/rpcpassword is less secure, because credentials are configured in plain text. It is recommended that locally-run instances switch to cookie-based auth, or otherwise to use hashed rpcauth credentials. See share/rpcauth in the source directory for more information.");
+        user = gArgs.GetArg("-rpcuser", "");
+        pass = gArgs.GetArg("-rpcpassword", "");
     }
-    if (gArgs.GetArg("-rpcauth", "") != "") {
-        LogPrintf("Using rpcauth authentication.\n");
+
+    // If there is a plaintext credential, hash it with a random salt before storage.
+    if (!user.empty() || !pass.empty()) {
+        // Generate a random 16 byte hex salt.
+        std::array<unsigned char, 16> raw_salt;
+        GetStrongRandBytes(raw_salt);
+        std::string salt = HexStr(raw_salt);
+
+        // Compute HMAC.
+        std::array<unsigned char, CHMAC_SHA256::OUTPUT_SIZE> out;
+        CHMAC_SHA256(UCharCast(salt.data()), salt.size()).Write(UCharCast(pass.data()), pass.size()).Finalize(out.data());
+        std::string hash = HexStr(out);
+
+        g_rpcauth.push_back({user, salt, hash});
+    }
+
+    if (!gArgs.GetArgs("-rpcauth").empty()) {
+        LogInfo("Using rpcauth authentication.\n");
         for (const std::string& rpcauth : gArgs.GetArgs("-rpcauth")) {
             std::vector<std::string> fields{SplitString(rpcauth, ':')};
             const std::vector<std::string> salt_hmac{SplitString(fields.back(), '$')};
@@ -261,17 +297,17 @@ static bool InitRPCAuthentication()
                 fields.insert(fields.end(), salt_hmac.begin(), salt_hmac.end());
                 g_rpcauth.push_back(fields);
             } else {
-                LogPrintf("Invalid -rpcauth argument.\n");
+                LogWarning("Invalid -rpcauth argument.");
                 return false;
             }
         }
     }
 
-    g_rpc_whitelist_default = gArgs.GetBoolArg("-rpcwhitelistdefault", gArgs.IsArgSet("-rpcwhitelist"));
+    g_rpc_whitelist_default = gArgs.GetBoolArg("-rpcwhitelistdefault", !gArgs.GetArgs("-rpcwhitelist").empty());
     for (const std::string& strRPCWhitelist : gArgs.GetArgs("-rpcwhitelist")) {
         auto pos = strRPCWhitelist.find(':');
         std::string strUser = strRPCWhitelist.substr(0, pos);
-        bool intersect = g_rpc_whitelist.count(strUser);
+        bool intersect = g_rpc_whitelist.contains(strUser);
         std::set<std::string>& whitelist = g_rpc_whitelist[strUser];
         if (pos != std::string::npos) {
             std::string strWhitelist = strRPCWhitelist.substr(pos + 1);
@@ -294,7 +330,7 @@ static bool InitRPCAuthentication()
 
 bool StartHTTPRPC(const std::any& context)
 {
-    LogPrint(BCLog::RPC, "Starting HTTP RPC server\n");
+    LogDebug(BCLog::RPC, "Starting HTTP RPC server\n");
     if (!InitRPCAuthentication())
         return false;
 
@@ -305,25 +341,19 @@ bool StartHTTPRPC(const std::any& context)
     }
     struct event_base* eventBase = EventBase();
     assert(eventBase);
-    httpRPCTimerInterface = std::make_unique<HTTPRPCTimerInterface>(eventBase);
-    RPCSetTimerInterface(httpRPCTimerInterface.get());
     return true;
 }
 
 void InterruptHTTPRPC()
 {
-    LogPrint(BCLog::RPC, "Interrupting HTTP RPC server\n");
+    LogDebug(BCLog::RPC, "Interrupting HTTP RPC server\n");
 }
 
 void StopHTTPRPC()
 {
-    LogPrint(BCLog::RPC, "Stopping HTTP RPC server\n");
+    LogDebug(BCLog::RPC, "Stopping HTTP RPC server\n");
     UnregisterHTTPHandler("/", true);
     if (g_wallet_init_interface.HasWalletSupport()) {
         UnregisterHTTPHandler("/wallet/", false);
-    }
-    if (httpRPCTimerInterface) {
-        RPCUnsetTimerInterface(httpRPCTimerInterface.get());
-        httpRPCTimerInterface.reset();
     }
 }

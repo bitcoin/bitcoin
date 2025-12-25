@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,9 +9,12 @@
 #ifndef BITCOIN_UTIL_STRENCODINGS_H
 #define BITCOIN_UTIL_STRENCODINGS_H
 
+#include <crypto/hex_base.h> // IWYU pragma: export
 #include <span.h>
 #include <util/string.h>
 
+#include <array>
+#include <bit>
 #include <charconv>
 #include <cstddef>
 #include <cstdint>
@@ -66,17 +69,12 @@ std::vector<Byte> ParseHex(std::string_view hex_str)
 {
     return TryParseHex<Byte>(hex_str).value_or(std::vector<Byte>{});
 }
-signed char HexDigit(char c);
 /* Returns true if each character in str is a hex character, and has an even
  * number of hex digits.*/
 bool IsHex(std::string_view str);
-/**
-* Return true if the string is a hex number, optionally prefixed with "0x"
-*/
-bool IsHexNumber(std::string_view str);
 std::optional<std::vector<unsigned char>> DecodeBase64(std::string_view str);
-std::string EncodeBase64(Span<const unsigned char> input);
-inline std::string EncodeBase64(Span<const std::byte> input) { return EncodeBase64(MakeUCharSpan(input)); }
+std::string EncodeBase64(std::span<const unsigned char> input);
+inline std::string EncodeBase64(std::span<const std::byte> input) { return EncodeBase64(MakeUCharSpan(input)); }
 inline std::string EncodeBase64(std::string_view str) { return EncodeBase64(MakeUCharSpan(str)); }
 std::optional<std::vector<unsigned char>> DecodeBase32(std::string_view str);
 
@@ -85,7 +83,7 @@ std::optional<std::vector<unsigned char>> DecodeBase32(std::string_view str);
  * If `pad` is true, then the output will be padded with '=' so that its length
  * is a multiple of 8.
  */
-std::string EncodeBase32(Span<const unsigned char> input, bool pad = true);
+std::string EncodeBase32(std::span<const unsigned char> input, bool pad = true);
 
 /**
  * Base32 encode.
@@ -107,8 +105,7 @@ bool SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut)
 
 // LocaleIndependentAtoi is provided for backwards compatibility reasons.
 //
-// New code should use ToIntegral or the ParseInt* functions
-// which provide parse error feedback.
+// New code should use ToIntegral.
 //
 // The goal of LocaleIndependentAtoi is to replicate the defined behaviour of
 // std::atoi as it behaves under the "C" locale, and remove some undefined
@@ -119,10 +116,10 @@ bool SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut)
 template <typename T>
 T LocaleIndependentAtoi(std::string_view str)
 {
-    static_assert(std::is_integral<T>::value);
+    static_assert(std::is_integral_v<T>);
     T result;
     // Emulate atoi(...) handling of white space and leading +/-.
-    std::string_view s = TrimStringView(str);
+    std::string_view s = util::TrimStringView(str);
     if (!s.empty() && s[0] == '+') {
         if (s.length() >= 2 && s[1] == '-') {
             return 0;
@@ -180,7 +177,7 @@ constexpr inline bool IsSpace(char c) noexcept {
 template <typename T>
 std::optional<T> ToIntegral(std::string_view str)
 {
-    static_assert(std::is_integral<T>::value);
+    static_assert(std::is_integral_v<T>);
     T result;
     const auto [first_nonmatching, error_condition] = std::from_chars(str.data(), str.data() + str.size(), result);
     if (first_nonmatching != str.data() + str.size() || error_condition != std::errc{}) {
@@ -188,55 +185,6 @@ std::optional<T> ToIntegral(std::string_view str)
     }
     return result;
 }
-
-/**
- * Convert string to signed 32-bit integer with strict parse error feedback.
- * @returns true if the entire string could be parsed as valid integer,
- *   false if not the entire string could be parsed or when overflow or underflow occurred.
- */
-[[nodiscard]] bool ParseInt32(std::string_view str, int32_t *out);
-
-/**
- * Convert string to signed 64-bit integer with strict parse error feedback.
- * @returns true if the entire string could be parsed as valid integer,
- *   false if not the entire string could be parsed or when overflow or underflow occurred.
- */
-[[nodiscard]] bool ParseInt64(std::string_view str, int64_t *out);
-
-/**
- * Convert decimal string to unsigned 8-bit integer with strict parse error feedback.
- * @returns true if the entire string could be parsed as valid integer,
- *   false if not the entire string could be parsed or when overflow or underflow occurred.
- */
-[[nodiscard]] bool ParseUInt8(std::string_view str, uint8_t *out);
-
-/**
- * Convert decimal string to unsigned 16-bit integer with strict parse error feedback.
- * @returns true if the entire string could be parsed as valid integer,
- *   false if the entire string could not be parsed or if overflow or underflow occurred.
- */
-[[nodiscard]] bool ParseUInt16(std::string_view str, uint16_t* out);
-
-/**
- * Convert decimal string to unsigned 32-bit integer with strict parse error feedback.
- * @returns true if the entire string could be parsed as valid integer,
- *   false if not the entire string could be parsed or when overflow or underflow occurred.
- */
-[[nodiscard]] bool ParseUInt32(std::string_view str, uint32_t *out);
-
-/**
- * Convert decimal string to unsigned 64-bit integer with strict parse error feedback.
- * @returns true if the entire string could be parsed as valid integer,
- *   false if not the entire string could be parsed or when overflow or underflow occurred.
- */
-[[nodiscard]] bool ParseUInt64(std::string_view str, uint64_t *out);
-
-/**
- * Convert a span of bytes to a lower-case hexadecimal string.
- */
-std::string HexStr(const Span<const uint8_t> s);
-inline std::string HexStr(const Span<const char> s) { return HexStr(MakeUCharSpan(s)); }
-inline std::string HexStr(const Span<const std::byte> s) { return HexStr(MakeUCharSpan(s)); }
 
 /**
  * Format a paragraph of text to a fixed width, adding spaces for
@@ -260,7 +208,6 @@ bool TimingResistantEqual(const T& a, const T& b)
 }
 
 /** Parse number as fixed point according to JSON number syntax.
- * See https://json.org/number.gif
  * @returns true on success, false on error.
  * @note The result must be in the range (-10^18,10^18), otherwise an overflow error will trigger.
  */
@@ -376,5 +323,79 @@ std::string Capitalize(std::string str);
  *                                 if ToIntegral is false, str is empty, trailing whitespace or overflow
  */
 std::optional<uint64_t> ParseByteUnits(std::string_view str, ByteUnit default_multiplier);
+
+namespace util {
+/** consteval version of HexDigit() without the lookup table. */
+consteval uint8_t ConstevalHexDigit(const char c)
+{
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 0xa;
+
+    throw "Only lowercase hex digits are allowed, for consistency";
+}
+
+namespace detail {
+template <size_t N>
+struct Hex {
+    std::array<std::byte, N / 2> bytes{};
+    consteval Hex(const char (&hex_str)[N])
+        // 2 hex digits required per byte + implicit null terminator
+        requires(N % 2 == 1)
+    {
+        if (hex_str[N - 1]) throw "null terminator required";
+        for (std::size_t i = 0; i < bytes.size(); ++i) {
+            bytes[i] = static_cast<std::byte>(
+                (ConstevalHexDigit(hex_str[2 * i]) << 4) |
+                 ConstevalHexDigit(hex_str[2 * i + 1]));
+        }
+    }
+};
+} // namespace detail
+
+/**
+ * ""_hex is a compile-time user-defined literal returning a
+ * `std::array<std::byte>`, equivalent to ParseHex(). Variants provided:
+ *
+ * - ""_hex_v: Returns `std::vector<std::byte>`, useful for heap allocation or
+ *   variable-length serialization.
+ *
+ * - ""_hex_u8: Returns `std::array<uint8_t>`, for cases where `std::byte` is
+ *   incompatible.
+ *
+ * - ""_hex_v_u8: Returns `std::vector<uint8_t>`, combining heap allocation with
+ *   `uint8_t`.
+ *
+ * @warning It could be necessary to use vector instead of array variants when
+ *   serializing, or vice versa, because vectors are assumed to be variable-
+ *   length and serialized with a size prefix, while arrays are considered fixed
+ *   length and serialized with no prefix.
+ *
+ * @warning It may be preferable to use vector variants to save stack space when
+ *   declaring local variables if hex strings are large. Alternatively variables
+ *   could be declared constexpr to avoid using stack space.
+ *
+ * @warning Avoid `uint8_t` variants when not necessary, as the codebase
+ *   migrates to use `std::byte` instead of `unsigned char` and `uint8_t`.
+ *
+ * @note One reason ""_hex uses `std::array` instead of `std::vector` like
+ *   ParseHex() does is because heap-based containers cannot cross the compile-
+ *   time/runtime barrier.
+ */
+inline namespace hex_literals {
+
+template <util::detail::Hex str>
+constexpr auto operator""_hex() { return str.bytes; }
+
+template <util::detail::Hex str>
+constexpr auto operator""_hex_u8() { return std::bit_cast<std::array<uint8_t, str.bytes.size()>>(str.bytes); }
+
+template <util::detail::Hex str>
+constexpr auto operator""_hex_v() { return std::vector<std::byte>{str.bytes.begin(), str.bytes.end()}; }
+
+template <util::detail::Hex str>
+inline auto operator""_hex_v_u8() { return std::vector<uint8_t>{UCharCast(str.bytes.data()), UCharCast(str.bytes.data() + str.bytes.size())}; }
+
+} // inline namespace hex_literals
+} // namespace util
 
 #endif // BITCOIN_UTIL_STRENCODINGS_H

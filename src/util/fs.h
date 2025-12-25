@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,6 +14,9 @@
 #include <ios>
 #include <ostream>
 #include <string>
+#include <string_view>
+#include <system_error>
+#include <type_traits>
 #include <utility>
 
 /** Filesystem operations and types */
@@ -32,10 +35,14 @@ class path : public std::filesystem::path
 public:
     using std::filesystem::path::path;
 
+    // Convenience method for accessing standard path type without needing a cast.
+    std::filesystem::path& std_path() { return *this; }
+    const std::filesystem::path& std_path() const { return *this; }
+
     // Allow path objects arguments for compatibility.
     path(std::filesystem::path path) : std::filesystem::path::path(std::move(path)) {}
     path& operator=(std::filesystem::path path) { std::filesystem::path::operator=(std::move(path)); return *this; }
-    path& operator/=(std::filesystem::path path) { std::filesystem::path::operator/=(path); return *this; }
+    path& operator/=(const std::filesystem::path& path) { std::filesystem::path::operator/=(path); return *this; }
 
     // Allow literal string arguments, which are safe as long as the literals are ASCII.
     path(const char* c) : std::filesystem::path(c) {}
@@ -52,28 +59,28 @@ public:
     // Disallow std::string conversion method to avoid locale-dependent encoding on windows.
     std::string string() const = delete;
 
-    std::string u8string() const
+    // Disallow implicit string conversion to ensure code is portable.
+    // `string_type` may be `string` or `wstring` depending on the platform, so
+    // using this conversion could result in code that compiles on unix but
+    // fails to compile on windows, or vice versa.
+    operator string_type() const = delete;
+
+    /**
+     * Return a UTF-8 representation of the path as a std::string, for
+     * compatibility with code using std::string. For code using the newer
+     * std::u8string type, it is more efficient to call the inherited
+     * std::filesystem::path::u8string method instead.
+     */
+    std::string utf8string() const
     {
-        const auto& utf8_str{std::filesystem::path::u8string()};
-        // utf8_str might either be std::string (C++17) or std::u8string
-        // (C++20). Convert both to std::string. This method can be removed
-        // after switching to C++20.
+        const std::u8string& utf8_str{std::filesystem::path::u8string()};
         return std::string{utf8_str.begin(), utf8_str.end()};
     }
-
-    // Required for path overloads in <fstream>.
-    // See https://gcc.gnu.org/git/?p=gcc.git;a=commit;h=96e0367ead5d8dcac3bec2865582e76e2fbab190
-    path& make_preferred() { std::filesystem::path::make_preferred(); return *this; }
-    path filename() const { return std::filesystem::path::filename(); }
 };
 
-static inline path u8path(const std::string& utf8_str)
+static inline path u8path(std::string_view utf8_str)
 {
-#if __cplusplus < 202002L
-    return std::filesystem::u8path(utf8_str);
-#else
     return std::filesystem::path(std::u8string{utf8_str.begin(), utf8_str.end()});
-#endif
 }
 
 // Disallow implicit std::string conversion for absolute to avoid
@@ -97,9 +104,9 @@ static inline auto quoted(const std::string& s)
 }
 
 // Allow safe path append operations.
-static inline path operator/(path p1, path p2)
+static inline path operator/(path p1, const path& p2)
 {
-    p1 /= std::move(p2);
+    p1 /= p2;
     return p1;
 }
 static inline path operator/(path p1, const char* p2)
@@ -140,7 +147,7 @@ static inline bool copy_file(const path& from, const path& to, copy_options opti
  * Because \ref PathToString and \ref PathFromString functions don't specify an
  * encoding, they are meant to be used internally, not externally. They are not
  * appropriate to use in applications requiring UTF-8, where
- * fs::path::u8string() and fs::u8path() methods should be used instead. Other
+ * fs::path::u8string() / fs::path::utf8string() and fs::u8path() methods should be used instead. Other
  * applications could require still different encodings. For example, JSON, XML,
  * or URI applications might prefer to use higher-level escapes (\uXXXX or
  * &XXXX; or %XX) instead of multibyte encoding. Rust, Python, Java applications
@@ -154,15 +161,15 @@ static inline std::string PathToString(const path& path)
     // use here, because these methods encode the path using C++'s narrow
     // multibyte encoding, which on Windows corresponds to the current "code
     // page", which is unpredictable and typically not able to represent all
-    // valid paths. So fs::path::u8string() and
+    // valid paths. So fs::path::utf8string() and
     // fs::u8path() functions are used instead on Windows. On
-    // POSIX, u8string/u8path functions are not safe to use because paths are
+    // POSIX, u8string/utf8string/u8path functions are not safe to use because paths are
     // not always valid UTF-8, so plain string methods which do not transform
     // the path there are used.
 #ifdef WIN32
-    return path.u8string();
+    return path.utf8string();
 #else
-    static_assert(std::is_same<path::string_type, std::string>::value, "PathToString not implemented on this platform");
+    static_assert(std::is_same_v<path::string_type, std::string>, "PathToString not implemented on this platform");
     return path.std::filesystem::path::string();
 #endif
 }
@@ -178,28 +185,6 @@ static inline path PathFromString(const std::string& string)
     return std::filesystem::path(string);
 #endif
 }
-
-/**
- * Create directory (and if necessary its parents), unless the leaf directory
- * already exists or is a symlink to an existing directory.
- * This is a temporary workaround for an issue in libstdc++ that has been fixed
- * upstream [PR101510].
- */
-static inline bool create_directories(const std::filesystem::path& p)
-{
-    if (std::filesystem::is_symlink(p) && std::filesystem::is_directory(p)) {
-        return false;
-    }
-    return std::filesystem::create_directories(p);
-}
-
-/**
- * This variant is not used. Delete it to prevent it from accidentally working
- * around the workaround. If it is needed, add a workaround in the same pattern
- * as above.
- */
-bool create_directories(const std::filesystem::path& p, std::error_code& ec) = delete;
-
 } // namespace fs
 
 /** Bridge operations to C stdio */
@@ -237,8 +222,6 @@ namespace fsbridge {
         void* hFile = (void*)-1; // INVALID_HANDLE_VALUE
 #endif
     };
-
-    std::string get_filesystem_error_message(const fs::filesystem_error& e);
 };
 
 // Disallow path operator<< formatting in tinyformat to avoid locale-dependent

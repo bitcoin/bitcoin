@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2022 The Bitcoin Core developers
+# Copyright (c) 2015-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test block processing."""
 import copy
-import struct
 import time
 
 from test_framework.blocktools import (
+    add_witness_commitment,
     create_block,
     create_coinbase,
     create_tx_with_script,
     get_legacy_sigopcount_block,
     MAX_BLOCK_SIGOPS,
+    REGTEST_N_BITS,
 )
 from test_framework.messages import (
     CBlock,
@@ -30,6 +31,7 @@ from test_framework.p2p import P2PDataStore
 from test_framework.script import (
     CScript,
     MAX_SCRIPT_ELEMENT_SIZE,
+    MAX_SCRIPT_SIZE,
     OP_2DUP,
     OP_CHECKMULTISIG,
     OP_CHECKMULTISIGVERIFY,
@@ -52,6 +54,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
+    assert_raises_rpc_error,
 )
 from test_framework.wallet_util import generate_keypair
 from data import invalid_txs
@@ -67,7 +70,7 @@ class CBrokenBlock(CBlock):
     def serialize(self, with_witness=False):
         r = b""
         r += super(CBlock, self).serialize()
-        r += struct.pack("<BQ", 255, len(self.vtx))
+        r += (255).to_bytes(1, "little") + len(self.vtx).to_bytes(8, "little")
         for tx in self.vtx:
             if with_witness:
                 r += tx.serialize_with_witness()
@@ -91,6 +94,9 @@ class FullBlockTest(BitcoinTestFramework):
             '-testactivationheight=bip34@2',
         ]]
 
+    def add_options(self, parser):
+        parser.add_argument("--skipreorg", action='store_true', dest="skip_reorg", help="Skip the large re-org test", default=False)
+
     def run_test(self):
         node = self.nodes[0]  # convenience reference to the node
 
@@ -107,14 +113,23 @@ class FullBlockTest(BitcoinTestFramework):
         # Create a new block
         b_dup_cb = self.next_block('dup_cb')
         b_dup_cb.vtx[0].vin[0].scriptSig = DUPLICATE_COINBASE_SCRIPT_SIG
-        b_dup_cb.vtx[0].rehash()
         duplicate_tx = b_dup_cb.vtx[0]
         b_dup_cb = self.update_block('dup_cb', [])
         self.send_blocks([b_dup_cb])
 
-        b0 = self.next_block(0)
+        # Add gigantic boundary scripts that respect all other limits
+        max_valid_script = CScript([b'\x01' * MAX_SCRIPT_ELEMENT_SIZE] * 19 + [b'\x01' * 62])
+        assert_equal(len(max_valid_script), MAX_SCRIPT_SIZE)
+        min_invalid_script = CScript([b'\x01' * MAX_SCRIPT_ELEMENT_SIZE] * 19 + [b'\x01' * 63])
+        assert_equal(len(min_invalid_script), MAX_SCRIPT_SIZE + 1)
+
+        b0 = self.next_block(0, additional_output_scripts=[max_valid_script, min_invalid_script])
         self.save_spendable_output()
         self.send_blocks([b0])
+
+        # Will test spending once possibly-mature
+        max_size_spendable_output = CTxIn(COutPoint(b0.vtx[0].txid_int, 1))
+        min_size_unspendable_output = CTxIn(COutPoint(b0.vtx[0].txid_int, 2))
 
         # These constants chosen specifically to trigger an immature coinbase spend
         # at a certain time below.
@@ -127,6 +142,19 @@ class FullBlockTest(BitcoinTestFramework):
             blocks.append(self.next_block(f"maturitybuffer.{i}"))
             self.save_spendable_output()
         self.send_blocks(blocks)
+
+        # MAX_SCRIPT_SIZE testing now that coins are mature
+        tx = CTransaction()
+        tx.vin.append(max_size_spendable_output)
+        tx.vout.append(CTxOut(0, CScript([])))
+        block = self.generateblock(self.nodes[0], output="raw(55)", transactions=[tx.serialize().hex()])
+        assert_equal(block["hash"], self.nodes[0].getbestblockhash())
+        self.nodes[0].invalidateblock(block["hash"])
+        assert_equal(self.nodes[0].getrawmempool(), [])
+
+        # MAX_SCRIPT_SIZE + 1 wasn't added to the utxo set
+        tx.vin[0] = min_size_unspendable_output
+        assert_raises_rpc_error(-25, f'TestBlockValidity failed: bad-txns-inputs-missingorspent, CheckTxInputs: inputs missing/spent in transaction {tx.txid_hex}', self.generateblock, self.nodes[0],  output="raw(55)", transactions=[tx.serialize().hex()])
 
         # collect spendable outputs now to avoid cluttering the code later on
         out = []
@@ -156,17 +184,21 @@ class FullBlockTest(BitcoinTestFramework):
             if template.valid_in_block:
                 continue
 
+            assert template.block_reject_reason or template.reject_reason
+
             self.log.info(f"Reject block with invalid tx: {TxTemplate.__name__}")
             blockname = f"for_invalid.{TxTemplate.__name__}"
             self.next_block(blockname)
             badtx = template.get_tx()
             if TxTemplate != invalid_txs.InputMissing:
                 self.sign_tx(badtx, attempt_spend_tx)
-            badtx.rehash()
             badblock = self.update_block(blockname, [badtx])
+            reject_reason = (template.block_reject_reason or template.reject_reason)
+            if reject_reason.startswith("mempool-script-verify-flag-failed"):
+                reject_reason = "block-script-verify-flag-failed" + reject_reason[33:]
             self.send_blocks(
                 [badblock], success=False,
-                reject_reason=(template.block_reject_reason or template.reject_reason),
+                reject_reason=reject_reason,
                 reconnect=True, timeout=2)
 
             self.move_tip(2)
@@ -250,7 +282,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.send_blocks([b12, b13, b14], success=False, reject_reason='bad-cb-amount', reconnect=True)
 
         # New tip should be b13.
-        assert_equal(node.getbestblockhash(), b13.hash)
+        assert_equal(node.getbestblockhash(), b13.hash_hex)
 
         # Add a block with MAX_BLOCK_SIGOPS and one with one more sigop
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6  (3)
@@ -324,7 +356,7 @@ class FullBlockTest(BitcoinTestFramework):
         script_length = (MAX_BLOCK_WEIGHT - b23.get_weight() - 276) // 4
         script_output = CScript([b'\x00' * script_length])
         tx.vout.append(CTxOut(0, script_output))
-        tx.vin.append(CTxIn(COutPoint(b23.vtx[1].sha256, 0)))
+        tx.vin.append(CTxIn(COutPoint(b23.vtx[1].txid_int, 0)))
         b23 = self.update_block(23, [tx])
         # Make sure the math above worked out to produce a max-weighted block
         assert_equal(b23.get_weight(), MAX_BLOCK_WEIGHT)
@@ -353,7 +385,6 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip(15)
         b26 = self.next_block(26, spend=out[6])
         b26.vtx[0].vin[0].scriptSig = b'\x00'
-        b26.vtx[0].rehash()
         # update_block causes the merkle root to get updated, even with no new
         # transactions, and updates the required state.
         b26 = self.update_block(26, [])
@@ -367,7 +398,6 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip(15)
         b28 = self.next_block(28, spend=out[6])
         b28.vtx[0].vin[0].scriptSig = b'\x00' * 101
-        b28.vtx[0].rehash()
         b28 = self.update_block(28, [])
         self.send_blocks([b28], success=False, reject_reason='bad-cb-length', reconnect=True)
 
@@ -381,7 +411,6 @@ class FullBlockTest(BitcoinTestFramework):
         b30.vtx[0].vin[0].scriptSig = bytes(b30.vtx[0].vin[0].scriptSig)  # Convert CScript to raw bytes
         b30.vtx[0].vin[0].scriptSig += b'\x00' * (100 - len(b30.vtx[0].vin[0].scriptSig))  # Fill with 0s
         assert_equal(len(b30.vtx[0].vin[0].scriptSig), 100)
-        b30.vtx[0].rehash()
         b30 = self.update_block(30, [])
         self.send_blocks([b30], True)
         self.save_spendable_output()
@@ -484,7 +513,6 @@ class FullBlockTest(BitcoinTestFramework):
         tx = self.create_tx(spend, 0, 1, p2sh_script)
         tx.vout.append(CTxOut(spend.vout[0].nValue - 1, CScript([OP_TRUE])))
         self.sign_tx(tx, spend)
-        tx.rehash()
         b39 = self.update_block(39, [tx])
         b39_outputs += 1
 
@@ -495,7 +523,6 @@ class FullBlockTest(BitcoinTestFramework):
         while total_weight < MAX_BLOCK_WEIGHT:
             tx_new = self.create_tx(tx_last, 1, 1, p2sh_script)
             tx_new.vout.append(CTxOut(tx_last.vout[1].nValue - 1, CScript([OP_TRUE])))
-            tx_new.rehash()
             total_weight += tx_new.get_weight()
             if total_weight >= MAX_BLOCK_WEIGHT:
                 break
@@ -529,25 +556,24 @@ class FullBlockTest(BitcoinTestFramework):
         numTxes = (MAX_BLOCK_SIGOPS - sigops) // b39_sigops_per_output
         assert_equal(numTxes <= b39_outputs, True)
 
-        lastOutpoint = COutPoint(b40.vtx[1].sha256, 0)
+        lastOutpoint = COutPoint(b40.vtx[1].txid_int, 0)
         new_txs = []
         for i in range(1, numTxes + 1):
             tx = CTransaction()
             tx.vout.append(CTxOut(1, CScript([OP_TRUE])))
             tx.vin.append(CTxIn(lastOutpoint, b''))
             # second input is corresponding P2SH output from b39
-            tx.vin.append(CTxIn(COutPoint(b39.vtx[i].sha256, 0), b''))
+            tx.vin.append(CTxIn(COutPoint(b39.vtx[i].txid_int, 0), b''))
             # Note: must pass the redeem_script (not p2sh_script) to the signature hash function
             tx.vin[1].scriptSig = CScript([redeem_script])
             sign_input_legacy(tx, 1, redeem_script, self.coinbase_key)
             new_txs.append(tx)
-            lastOutpoint = COutPoint(tx.sha256, 0)
+            lastOutpoint = COutPoint(tx.txid_int, 0)
 
         b40_sigops_to_fill = MAX_BLOCK_SIGOPS - (numTxes * b39_sigops_per_output + sigops) + 1
         tx = CTransaction()
         tx.vin.append(CTxIn(lastOutpoint, b''))
         tx.vout.append(CTxOut(1, CScript([OP_CHECKSIG] * b40_sigops_to_fill)))
-        tx.rehash()
         new_txs.append(tx)
         self.update_block(40, new_txs)
         self.send_blocks([b40], success=False, reject_reason='bad-blk-sigops', reconnect=True)
@@ -561,7 +587,6 @@ class FullBlockTest(BitcoinTestFramework):
         tx = CTransaction()
         tx.vin.append(CTxIn(lastOutpoint, b''))
         tx.vout.append(CTxOut(1, CScript([OP_CHECKSIG] * b41_sigops_to_fill)))
-        tx.rehash()
         self.update_block(41, [tx])
         self.send_blocks([b41], True)
 
@@ -586,19 +611,19 @@ class FullBlockTest(BitcoinTestFramework):
         # The next few blocks are going to be created "by hand" since they'll do funky things, such as having
         # the first transaction be non-coinbase, etc.  The purpose of b44 is to make sure this works.
         self.log.info("Build block 44 manually")
-        height = self.block_heights[self.tip.sha256] + 1
+        height = self.block_heights[self.tip.hash_int] + 1
         coinbase = create_coinbase(height, self.coinbase_pubkey)
         b44 = CBlock()
         b44.nTime = self.tip.nTime + 1
-        b44.hashPrevBlock = self.tip.sha256
-        b44.nBits = 0x207fffff
+        b44.hashPrevBlock = self.tip.hash_int
+        b44.nBits = REGTEST_N_BITS
         b44.vtx.append(coinbase)
         tx = self.create_and_sign_transaction(out[14], 1)
         b44.vtx.append(tx)
         b44.hashMerkleRoot = b44.calc_merkle_root()
         b44.solve()
         self.tip = b44
-        self.block_heights[b44.sha256] = height
+        self.block_heights[b44.hash_int] = height
         self.blocks[44] = b44
         self.send_blocks([b44], True)
 
@@ -606,12 +631,12 @@ class FullBlockTest(BitcoinTestFramework):
         non_coinbase = self.create_tx(out[15], 0, 1)
         b45 = CBlock()
         b45.nTime = self.tip.nTime + 1
-        b45.hashPrevBlock = self.tip.sha256
-        b45.nBits = 0x207fffff
+        b45.hashPrevBlock = self.tip.hash_int
+        b45.nBits = REGTEST_N_BITS
         b45.vtx.append(non_coinbase)
         b45.hashMerkleRoot = b45.calc_merkle_root()
         b45.solve()
-        self.block_heights[b45.sha256] = self.block_heights[self.tip.sha256] + 1
+        self.block_heights[b45.hash_int] = self.block_heights[self.tip.hash_int] + 1
         self.tip = b45
         self.blocks[45] = b45
         self.send_blocks([b45], success=False, reject_reason='bad-cb-missing', reconnect=True)
@@ -620,12 +645,12 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip(44)
         b46 = CBlock()
         b46.nTime = b44.nTime + 1
-        b46.hashPrevBlock = b44.sha256
-        b46.nBits = 0x207fffff
+        b46.hashPrevBlock = b44.hash_int
+        b46.nBits = REGTEST_N_BITS
         b46.vtx = []
         b46.hashMerkleRoot = 0
         b46.solve()
-        self.block_heights[b46.sha256] = self.block_heights[b44.sha256] + 1
+        self.block_heights[b46.hash_int] = self.block_heights[b44.hash_int] + 1
         self.tip = b46
         assert 46 not in self.blocks
         self.blocks[46] = b46
@@ -635,10 +660,9 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip(44)
         b47 = self.next_block(47)
         target = uint256_from_compact(b47.nBits)
-        while b47.sha256 <= target:
+        while b47.hash_int <= target:
             # Rehash nonces until an invalid too-high-hash block is found.
             b47.nNonce += 1
-            b47.rehash()
         self.send_blocks([b47], False, force_send=True, reject_reason='high-hash', reconnect=True)
 
         self.log.info("Reject a block with a timestamp >2 hours in the future")
@@ -696,8 +720,7 @@ class FullBlockTest(BitcoinTestFramework):
         # valid timestamp
         self.move_tip(53)
         b55 = self.next_block(55, spend=out[15])
-        b55.nTime = b35.nTime
-        self.update_block(55, [])
+        self.update_block(55, [], nTime=b35.nTime)
         self.send_blocks([b55], True)
         self.save_spendable_output()
 
@@ -710,10 +733,10 @@ class FullBlockTest(BitcoinTestFramework):
         self.log.info("Accept a previously rejected future block at a later time")
         node.setmocktime(int(time.time()) + 2*60*60)
         self.move_tip(48)
-        self.block_heights[b48.sha256] = self.block_heights[b44.sha256] + 1 # b48 is a parent of b44
+        self.block_heights[b48.hash_int] = self.block_heights[b44.hash_int] + 1 # b48 is a parent of b44
         b48p = self.next_block("48p")
         self.send_blocks([b48, b48p], success=True) # Reorg to the longer chain
-        node.invalidateblock(b48p.hash) # mark b48p as invalid
+        node.invalidateblock(b48p.hash_hex) # mark b48p as invalid
         node.setmocktime(0)
 
         # Test Merkle tree malleability
@@ -757,7 +780,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.blocks[56] = b56
         assert_equal(len(b56.vtx), 3)
         b56 = self.update_block(56, [tx1])
-        assert_equal(b56.hash, b57.hash)
+        assert_equal(b56.hash_hex, b57.hash_hex)
         self.send_blocks([b56], success=False, reject_reason='bad-txns-duplicate', reconnect=True)
 
         # b57p2 - a good block with 6 tx'es, don't submit until end
@@ -775,7 +798,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip(55)
         b56p2 = copy.deepcopy(b57p2)
         self.blocks["b56p2"] = b56p2
-        assert_equal(b56p2.hash, b57p2.hash)
+        assert_equal(b56p2.hash_hex, b57p2.hash_hex)
         assert_equal(len(b56p2.vtx), 6)
         b56p2 = self.update_block("b56p2", [tx3, tx4])
         self.send_blocks([b56p2], success=False, reject_reason='bad-txns-duplicate', reconnect=True)
@@ -799,9 +822,8 @@ class FullBlockTest(BitcoinTestFramework):
         self.next_block(58, spend=out[17])
         tx = CTransaction()
         assert len(out[17].vout) < 42
-        tx.vin.append(CTxIn(COutPoint(out[17].sha256, 42), CScript([OP_TRUE]), SEQUENCE_FINAL))
+        tx.vin.append(CTxIn(COutPoint(out[17].txid_int, 42), CScript([OP_TRUE]), SEQUENCE_FINAL))
         tx.vout.append(CTxOut(0, b""))
-        tx.calc_sha256()
         b58 = self.update_block(58, [tx])
         self.send_blocks([b58], success=False, reject_reason='bad-txns-inputs-missingorspent', reconnect=True)
 
@@ -831,8 +853,8 @@ class FullBlockTest(BitcoinTestFramework):
         self.log.info("Reject a block with a transaction with a duplicate hash of a previous transaction (BIP30)")
         self.move_tip(60)
         b61 = self.next_block(61)
+        b61.vtx[0].nLockTime = 0
         b61.vtx[0].vin[0].scriptSig = DUPLICATE_COINBASE_SCRIPT_SIG
-        b61.vtx[0].rehash()
         b61 = self.update_block(61, [])
         assert_equal(duplicate_tx.serialize(), b61.vtx[0].serialize())
         # BIP30 is always checked on regtest, regardless of the BIP34 activation height
@@ -846,21 +868,20 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip(57)
         self.next_block('spend_dup_cb')
         tx = CTransaction()
-        tx.vin.append(CTxIn(COutPoint(duplicate_tx.sha256, 0)))
+        tx.vin.append(CTxIn(COutPoint(duplicate_tx.txid_int, 0)))
         tx.vout.append(CTxOut(0, CScript([OP_TRUE])))
         self.sign_tx(tx, duplicate_tx)
-        tx.rehash()
         b_spend_dup_cb = self.update_block('spend_dup_cb', [tx])
 
         b_dup_2 = self.next_block('dup_2')
+        b_dup_2.vtx[0].nLockTime = 0
         b_dup_2.vtx[0].vin[0].scriptSig = DUPLICATE_COINBASE_SCRIPT_SIG
-        b_dup_2.vtx[0].rehash()
         b_dup_2 = self.update_block('dup_2', [])
         assert_equal(duplicate_tx.serialize(), b_dup_2.vtx[0].serialize())
-        assert_equal(self.nodes[0].gettxout(txid=duplicate_tx.hash, n=0)['confirmations'], 119)
+        assert_equal(self.nodes[0].gettxout(txid=duplicate_tx.txid_hex, n=0)['confirmations'], 119)
         self.send_blocks([b_spend_dup_cb, b_dup_2], success=True)
         # The duplicate has less confirmations
-        assert_equal(self.nodes[0].gettxout(txid=duplicate_tx.hash, n=0)['confirmations'], 1)
+        assert_equal(self.nodes[0].gettxout(txid=duplicate_tx.txid_hex, n=0)['confirmations'], 1)
 
         # Test tx.isFinal is properly rejected (not an exhaustive tx.isFinal test, that should be in data-driven transaction tests)
         #
@@ -872,10 +893,9 @@ class FullBlockTest(BitcoinTestFramework):
         self.next_block(62)
         tx = CTransaction()
         tx.nLockTime = 0xffffffff  # this locktime is non-final
-        tx.vin.append(CTxIn(COutPoint(out[18].sha256, 0)))  # don't set nSequence
+        tx.vin.append(CTxIn(COutPoint(out[18].txid_int, 0)))  # don't set nSequence
         tx.vout.append(CTxOut(0, CScript([OP_TRUE])))
         assert_greater_than(SEQUENCE_FINAL, tx.vin[0].nSequence)
-        tx.calc_sha256()
         b62 = self.update_block(62, [tx])
         self.send_blocks([b62], success=False, reject_reason='bad-txns-nonfinal', reconnect=True)
 
@@ -889,7 +909,6 @@ class FullBlockTest(BitcoinTestFramework):
         b63 = self.next_block(63)
         b63.vtx[0].nLockTime = 0xffffffff
         b63.vtx[0].vin[0].nSequence = 0xDEADBEEF
-        b63.vtx[0].rehash()
         b63 = self.update_block(63, [])
         self.send_blocks([b63], success=False, reject_reason='bad-txns-nonfinal', reconnect=True)
 
@@ -922,7 +941,7 @@ class FullBlockTest(BitcoinTestFramework):
         script_length = (MAX_BLOCK_WEIGHT - 4 * len(b64a.normal_serialize()) - 276) // 4
         script_output = CScript([b'\x00' * script_length])
         tx.vout.append(CTxOut(0, script_output))
-        tx.vin.append(CTxIn(COutPoint(b64a.vtx[1].sha256, 0)))
+        tx.vin.append(CTxIn(COutPoint(b64a.vtx[1].txid_int, 0)))
         b64a = self.update_block("64a", [tx])
         assert_equal(b64a.get_weight(), MAX_BLOCK_WEIGHT + 8 * 4)
         self.send_blocks([b64a], success=False, reject_reason='non-canonical ReadCompactSize()')
@@ -937,7 +956,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip('dup_2')
         b64 = CBlock(b64a)
         b64.vtx = copy.deepcopy(b64a.vtx)
-        assert_equal(b64.hash, b64a.hash)
+        assert_equal(b64.hash_hex, b64a.hash_hex)
         assert_equal(b64.get_weight(), MAX_BLOCK_WEIGHT)
         self.blocks[64] = b64
         b64 = self.update_block(64, [])
@@ -1019,10 +1038,9 @@ class FullBlockTest(BitcoinTestFramework):
         self.log.info("Reject a block containing a transaction spending from a non-existent input")
         self.move_tip(69)
         self.next_block(70, spend=out[21])
-        bogus_tx = CTransaction()
-        bogus_tx.sha256 = uint256_from_str(b"23c70ed7c0506e9178fc1a987f40a33946d4ad4c962b5ae3a52546da53af0c5c")
+        bogus_txid_int = uint256_from_str(b"23c70ed7c0506e9178fc1a987f40a33946d4ad4c962b5ae3a52546da53af0c5c")
         tx = CTransaction()
-        tx.vin.append(CTxIn(COutPoint(bogus_tx.sha256, 0), b"", SEQUENCE_FINAL))
+        tx.vin.append(CTxIn(COutPoint(bogus_txid_int, 0), b"", SEQUENCE_FINAL))
         tx.vout.append(CTxOut(1, b""))
         b70 = self.update_block(70, [tx])
         self.send_blocks([b70], success=False, reject_reason='bad-txns-inputs-missingorspent', reconnect=True)
@@ -1042,12 +1060,12 @@ class FullBlockTest(BitcoinTestFramework):
         b72 = self.update_block(72, [tx1, tx2])  # now tip is 72
         b71 = copy.deepcopy(b72)
         b71.vtx.append(tx2)   # add duplicate tx2
-        self.block_heights[b71.sha256] = self.block_heights[b69.sha256] + 1  # b71 builds off b69
+        self.block_heights[b71.hash_int] = self.block_heights[b69.hash_int] + 1  # b71 builds off b69
         self.blocks[71] = b71
 
         assert_equal(len(b71.vtx), 4)
         assert_equal(len(b72.vtx), 3)
-        assert_equal(b72.sha256, b71.sha256)
+        assert_equal(b72.hash_int, b71.hash_int)
 
         self.move_tip(71)
         self.send_blocks([b71], success=False, reject_reason='bad-txns-duplicate', reconnect=True)
@@ -1193,8 +1211,8 @@ class FullBlockTest(BitcoinTestFramework):
         # now check that tx78 and tx79 have been put back into the peer's mempool
         mempool = self.nodes[0].getrawmempool()
         assert_equal(len(mempool), 2)
-        assert tx78.hash in mempool
-        assert tx79.hash in mempool
+        assert tx78.txid_hex in mempool
+        assert tx79.txid_hex in mempool
 
         # Test invalid opcodes in dead execution paths.
         #
@@ -1208,7 +1226,6 @@ class FullBlockTest(BitcoinTestFramework):
 
         tx2 = self.create_and_sign_transaction(tx1, 0, CScript([OP_TRUE]))
         tx2.vin[0].scriptSig = CScript([OP_FALSE])
-        tx2.rehash()
 
         b83 = self.update_block(83, [tx1, tx2])
         self.send_blocks([b83], True)
@@ -1226,9 +1243,7 @@ class FullBlockTest(BitcoinTestFramework):
         tx1.vout.append(CTxOut(0, CScript([OP_TRUE])))
         tx1.vout.append(CTxOut(0, CScript([OP_TRUE])))
         tx1.vout.append(CTxOut(0, CScript([OP_TRUE])))
-        tx1.calc_sha256()
         self.sign_tx(tx1, out[29])
-        tx1.rehash()
         tx2 = self.create_tx(tx1, 1, 0, CScript([OP_RETURN]))
         tx2.vout.append(CTxOut(0, CScript([OP_RETURN])))
         tx3 = self.create_tx(tx1, 2, 0, CScript([OP_RETURN]))
@@ -1263,68 +1278,74 @@ class FullBlockTest(BitcoinTestFramework):
         b89a = self.update_block("89a", [tx])
         self.send_blocks([b89a], success=False, reject_reason='bad-txns-inputs-missingorspent', reconnect=True)
 
-        self.log.info("Test a re-org of one week's worth of blocks (1088 blocks)")
-
         self.move_tip(88)
-        LARGE_REORG_SIZE = 1088
-        blocks = []
-        spend = out[32]
-        for i in range(89, LARGE_REORG_SIZE + 89):
-            b = self.next_block(i, spend)
-            tx = CTransaction()
-            script_length = (MAX_BLOCK_WEIGHT - b.get_weight() - 276) // 4
-            script_output = CScript([b'\x00' * script_length])
-            tx.vout.append(CTxOut(0, script_output))
-            tx.vin.append(CTxIn(COutPoint(b.vtx[1].sha256, 0)))
-            b = self.update_block(i, [tx])
-            assert_equal(b.get_weight(), MAX_BLOCK_WEIGHT)
-            blocks.append(b)
-            self.save_spendable_output()
-            spend = self.get_spendable_output()
-
-        self.send_blocks(blocks, True, timeout=2440)
-        chain1_tip = i
-
-        # now create alt chain of same length
-        self.move_tip(88)
-        blocks2 = []
-        for i in range(89, LARGE_REORG_SIZE + 89):
-            blocks2.append(self.next_block("alt" + str(i)))
-        self.send_blocks(blocks2, False, force_send=False)
-
-        # extend alt chain to trigger re-org
-        block = self.next_block("alt" + str(chain1_tip + 1))
-        self.send_blocks([block], True, timeout=2440)
-
-        # ... and re-org back to the first chain
-        self.move_tip(chain1_tip)
-        block = self.next_block(chain1_tip + 1)
-        self.send_blocks([block], False, force_send=True)
-        block = self.next_block(chain1_tip + 2)
-        self.send_blocks([block], True, timeout=2440)
-
         self.log.info("Reject a block with an invalid block header version")
         b_v1 = self.next_block('b_v1', version=1)
         self.send_blocks([b_v1], success=False, force_send=True, reject_reason='bad-version(0x00000001)', reconnect=True)
 
-        self.move_tip(chain1_tip + 2)
+        self.move_tip(87)
         b_cb34 = self.next_block('b_cb34')
         b_cb34.vtx[0].vin[0].scriptSig = b_cb34.vtx[0].vin[0].scriptSig[:-1]
-        b_cb34.vtx[0].rehash()
         b_cb34.hashMerkleRoot = b_cb34.calc_merkle_root()
         b_cb34.solve()
         self.send_blocks([b_cb34], success=False, reject_reason='bad-cb-height', reconnect=True)
+
+        # Don't use v2transport for the large reorg, which is too slow with the unoptimized python ChaCha20 implementation
+        if self.options.v2transport:
+            self.nodes[0].disconnect_p2ps()
+            self.helper_peer = self.nodes[0].add_p2p_connection(P2PDataStore(), supports_v2_p2p=False)
+
+        self.move_tip(88)
+        if not self.options.skip_reorg:
+            self.log.info("Test a re-org of one week's worth of blocks (1088 blocks)")
+            LARGE_REORG_SIZE = 1088
+            blocks = []
+            spend = out[32]
+            for i in range(89, LARGE_REORG_SIZE + 89):
+                b = self.next_block(i, spend)
+                tx = CTransaction()
+                script_length = (MAX_BLOCK_WEIGHT - b.get_weight() - 276) // 4
+                script_output = CScript([b'\x00' * script_length])
+                tx.vout.append(CTxOut(0, script_output))
+                tx.vin.append(CTxIn(COutPoint(b.vtx[1].txid_int, 0)))
+                b = self.update_block(i, [tx])
+                assert_equal(b.get_weight(), MAX_BLOCK_WEIGHT)
+                blocks.append(b)
+                self.save_spendable_output()
+                spend = self.get_spendable_output()
+
+            self.send_blocks(blocks, True, timeout=2440)
+            chain1_tip = i
+
+            # now create alt chain of same length
+            self.move_tip(88)
+            blocks2 = []
+            for i in range(89, LARGE_REORG_SIZE + 89):
+                blocks2.append(self.next_block("alt" + str(i)))
+            self.send_blocks(blocks2, False, force_send=False)
+
+            # extend alt chain to trigger re-org
+            block = self.next_block("alt" + str(chain1_tip + 1))
+            self.send_blocks([block], True, timeout=2440)
+
+            # ... and re-org back to the first chain
+            self.move_tip(chain1_tip)
+            block = self.next_block(chain1_tip + 1)
+            self.send_blocks([block], False, force_send=True)
+            block = self.next_block(chain1_tip + 2)
+            self.send_blocks([block], True, timeout=2440)
 
     # Helper methods
     ################
 
     def add_transactions_to_block(self, block, tx_list):
-        [tx.rehash() for tx in tx_list]
         block.vtx.extend(tx_list)
 
     # this is a little handier to use than the version in blocktools.py
-    def create_tx(self, spend_tx, n, value, script=CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])):
-        return create_tx_with_script(spend_tx, n, amount=value, script_pub_key=script)
+    def create_tx(self, spend_tx, n, value, output_script=None):
+        if output_script is None:
+            output_script = CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])
+        return create_tx_with_script(spend_tx, n, amount=value, output_script=output_script)
 
     # sign a transaction, using the key we know about
     # this signs input 0 in tx, which is assumed to be spending output 0 in spend_tx
@@ -1335,37 +1356,41 @@ class FullBlockTest(BitcoinTestFramework):
             return
         sign_input_legacy(tx, 0, spend_tx.vout[0].scriptPubKey, self.coinbase_key)
 
-    def create_and_sign_transaction(self, spend_tx, value, script=CScript([OP_TRUE])):
-        tx = self.create_tx(spend_tx, 0, value, script)
+    def create_and_sign_transaction(self, spend_tx, value, output_script=None):
+        if output_script is None:
+            output_script = CScript([OP_TRUE])
+        tx = self.create_tx(spend_tx, 0, value, output_script=output_script)
         self.sign_tx(tx, spend_tx)
-        tx.rehash()
         return tx
 
-    def next_block(self, number, spend=None, additional_coinbase_value=0, script=CScript([OP_TRUE]), *, version=4):
+    def next_block(self, number, spend=None, additional_coinbase_value=0, *, script=None, version=4, additional_output_scripts=None):
+        if script is None:
+            script = CScript([OP_TRUE])
+        if additional_output_scripts is None:
+            additional_output_scripts = []
         if self.tip is None:
             base_block_hash = self.genesis_hash
             block_time = int(time.time()) + 1
         else:
-            base_block_hash = self.tip.sha256
+            base_block_hash = self.tip.hash_int
             block_time = self.tip.nTime + 1
         # First create the coinbase
         height = self.block_heights[base_block_hash] + 1
         coinbase = create_coinbase(height, self.coinbase_pubkey)
         coinbase.vout[0].nValue += additional_coinbase_value
-        coinbase.rehash()
+        for additional_script in additional_output_scripts:
+            coinbase.vout.append(CTxOut(0, additional_script))
         if spend is None:
             block = create_block(base_block_hash, coinbase, block_time, version=version)
         else:
             coinbase.vout[0].nValue += spend.vout[0].nValue - 1  # all but one satoshi to fees
-            coinbase.rehash()
-            tx = self.create_tx(spend, 0, 1, script)  # spend 1 satoshi
+            tx = self.create_tx(spend, 0, 1, output_script=script)  # spend 1 satoshi
             self.sign_tx(tx, spend)
-            tx.rehash()
             block = create_block(base_block_hash, coinbase, block_time, version=version, txlist=[tx])
         # Block is created. Find a valid nonce.
         block.solve()
         self.tip = block
-        self.block_heights[block.sha256] = height
+        self.block_heights[block.hash_int] = height
         assert number not in self.blocks
         self.blocks[number] = block
         return block
@@ -1385,17 +1410,22 @@ class FullBlockTest(BitcoinTestFramework):
         self.tip = self.blocks[number]
 
     # adds transactions to the block and updates state
-    def update_block(self, block_number, new_transactions):
+    def update_block(self, block_number, new_transactions, *, nTime=None):
         block = self.blocks[block_number]
         self.add_transactions_to_block(block, new_transactions)
-        old_sha256 = block.sha256
+        old_hash_int = block.hash_int
+        if nTime is not None:
+            block.nTime = nTime
         block.hashMerkleRoot = block.calc_merkle_root()
+        has_witness_tx = any(not tx.wit.is_null() for tx in block.vtx)
+        if has_witness_tx:
+            add_witness_commitment(block)
         block.solve()
         # Update the internal state just like in next_block
         self.tip = block
-        if block.sha256 != old_sha256:
-            self.block_heights[block.sha256] = self.block_heights[old_sha256]
-            del self.block_heights[old_sha256]
+        if block.hash_int != old_hash_int:
+            self.block_heights[block.hash_int] = self.block_heights[old_hash_int]
+            del self.block_heights[old_hash_int]
         self.blocks[block_number] = block
         return block
 
@@ -1431,4 +1461,4 @@ class FullBlockTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    FullBlockTest().main()
+    FullBlockTest(__file__).main()

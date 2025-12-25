@@ -1,18 +1,16 @@
-// Copyright (c) 2016-2022 The Bitcoin Core developers
+// Copyright (c) 2016-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <wallet/wallettool.h>
 
 #include <common/args.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/translation.h>
 #include <wallet/dump.h>
-#include <wallet/salvage.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
@@ -33,15 +31,10 @@ static void WalletCreate(CWallet* wallet_instance, uint64_t wallet_creation_flag
 {
     LOCK(wallet_instance->cs_wallet);
 
-    wallet_instance->SetMinVersion(FEATURE_LATEST);
     wallet_instance->InitWalletFlags(wallet_creation_flags);
 
-    if (!wallet_instance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-        auto spk_man = wallet_instance->GetOrCreateLegacyScriptPubKeyMan();
-        spk_man->SetupGeneration(false);
-    } else {
-        wallet_instance->SetupDescriptorScriptPubKeyMans();
-    }
+    Assert(wallet_instance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
+    wallet_instance->SetupDescriptorScriptPubKeyMans();
 
     tfm::format(std::cout, "Topping up keypool...\n");
     wallet_instance->TopUpKeyPool();
@@ -68,7 +61,6 @@ static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::pa
     }
 
     if (load_wallet_ret != DBErrors::LOAD_OK) {
-        wallet_instance = nullptr;
         if (load_wallet_ret == DBErrors::CORRUPT) {
             tfm::format(std::cerr, "Error loading %s: Wallet corrupted", name);
             return nullptr;
@@ -78,10 +70,10 @@ static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::pa
                 name);
         } else if (load_wallet_ret == DBErrors::TOO_NEW) {
             tfm::format(std::cerr, "Error loading %s: Wallet requires newer version of %s",
-                name, PACKAGE_NAME);
+                name, CLIENT_NAME);
             return nullptr;
         } else if (load_wallet_ret == DBErrors::NEED_REWRITE) {
-            tfm::format(std::cerr, "Wallet needed to be rewritten: restart %s to complete", PACKAGE_NAME);
+            tfm::format(std::cerr, "Wallet needed to be rewritten: restart %s to complete", CLIENT_NAME);
             return nullptr;
         } else if (load_wallet_ret == DBErrors::NEED_RESCAN) {
             tfm::format(std::cerr, "Error reading %s! Some transaction data might be missing or"
@@ -115,20 +107,8 @@ static void WalletShowInfo(CWallet* wallet_instance)
 
 bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
 {
-    if (args.IsArgSet("-format") && command != "createfromdump") {
-        tfm::format(std::cerr, "The -format option can only be used with the \"createfromdump\" command.\n");
-        return false;
-    }
     if (args.IsArgSet("-dumpfile") && command != "dump" && command != "createfromdump") {
         tfm::format(std::cerr, "The -dumpfile option can only be used with the \"dump\" and \"createfromdump\" commands.\n");
-        return false;
-    }
-    if (args.IsArgSet("-descriptors") && command != "create") {
-        tfm::format(std::cerr, "The -descriptors option can only be used with the 'create' command.\n");
-        return false;
-    }
-    if (args.IsArgSet("-legacy") && command != "create") {
-        tfm::format(std::cerr, "The -legacy option can only be used with the 'create' command.\n");
         return false;
     }
     if (command == "create" && !args.IsArgSet("-wallet")) {
@@ -142,22 +122,8 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         DatabaseOptions options;
         ReadDatabaseArgs(args, options);
         options.require_create = true;
-        // If -legacy is set, use it. Otherwise default to false.
-        bool make_legacy = args.GetBoolArg("-legacy", false);
-        // If neither -legacy nor -descriptors is set, default to true. If -descriptors is set, use its value.
-        bool make_descriptors = (!args.IsArgSet("-descriptors") && !args.IsArgSet("-legacy")) || (args.IsArgSet("-descriptors") && args.GetBoolArg("-descriptors", true));
-        if (make_legacy && make_descriptors) {
-            tfm::format(std::cerr, "Only one of -legacy or -descriptors can be set to true, not both\n");
-            return false;
-        }
-        if (!make_legacy && !make_descriptors) {
-            tfm::format(std::cerr, "One of -legacy or -descriptors must be set to true (or omitted)\n");
-            return false;
-        }
-        if (make_descriptors) {
-            options.create_flags |= WALLET_FLAG_DESCRIPTORS;
-            options.require_format = DatabaseFormat::SQLITE;
-        }
+        options.create_flags |= WALLET_FLAG_DESCRIPTORS;
+        options.require_format = DatabaseFormat::SQLITE;
 
         const std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, options);
         if (wallet_instance) {
@@ -172,32 +138,24 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         if (!wallet_instance) return false;
         WalletShowInfo(wallet_instance.get());
         wallet_instance->Close();
-    } else if (command == "salvage") {
-#ifdef USE_BDB
-        bilingual_str error;
-        std::vector<bilingual_str> warnings;
-        bool ret = RecoverDatabaseFile(args, path, error, warnings);
-        if (!ret) {
-            for (const auto& warning : warnings) {
-                tfm::format(std::cerr, "%s\n", warning.original);
-            }
-            if (!error.empty()) {
-                tfm::format(std::cerr, "%s\n", error.original);
-            }
-        }
-        return ret;
-#else
-        tfm::format(std::cerr, "Salvage command is not available as BDB support is not compiled");
-        return false;
-#endif
     } else if (command == "dump") {
         DatabaseOptions options;
         ReadDatabaseArgs(args, options);
         options.require_existing = true;
-        const std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, options);
-        if (!wallet_instance) return false;
+        DatabaseStatus status;
+
+        if (IsBDBFile(BDBDataFile(path))) {
+            options.require_format = DatabaseFormat::BERKELEY_RO;
+        }
+
         bilingual_str error;
-        bool ret = DumpWallet(args, *wallet_instance, error);
+        std::unique_ptr<WalletDatabase> database = MakeDatabase(path, options, status, error);
+        if (!database) {
+            tfm::format(std::cerr, "%s\n", error.original);
+            return false;
+        }
+
+        bool ret = DumpWallet(args, *database, error);
         if (!ret && !error.empty()) {
             tfm::format(std::cerr, "%s\n", error.original);
             return ret;

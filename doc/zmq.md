@@ -46,11 +46,10 @@ operation.
 
 ## Enabling
 
-By default, the ZeroMQ feature is automatically compiled in if the
-necessary prerequisites are found.  To disable, use --disable-zmq
-during the *configure* step of building bitcoind:
+By default, the ZeroMQ feature is not automatically compiled.
+To enable, use `-DWITH_ZMQ=ON` when configuring the build system:
 
-    $ ./configure --disable-zmq (other options)
+    $ cmake -B build -DWITH_ZMQ=ON
 
 To actually enable operation, one must set the appropriate options on
 the command line or in the configuration file.
@@ -85,46 +84,77 @@ For instance:
     $ bitcoind -zmqpubhashtx=tcp://127.0.0.1:28332 \
                -zmqpubhashtx=tcp://192.168.1.2:28332 \
                -zmqpubhashblock="tcp://[::1]:28333" \
-               -zmqpubrawtx=ipc:///tmp/bitcoind.tx.raw \
+               -zmqpubrawtx=unix:/tmp/bitcoind.tx.raw \
                -zmqpubhashtxhwm=10000
 
-Each PUB notification has a topic and body, where the header
-corresponds to the notification type. For instance, for the
-notification `-zmqpubhashtx` the topic is `hashtx` (no null
-terminator). These options can also be provided in bitcoin.conf.
+`bitcoin node` or `bitcoin gui` can also be substituted for `bitcoind`.
 
-The topics are:
+Notification types correspond to message topics (details in next section). For instance,
+for the notification `-zmqpubhashtx` the topic is `hashtx`. These options can also be
+provided in bitcoin.conf.
 
-`sequence`: the body is structured as the following based on the type of message:
+### Message format
 
-    <32-byte hash>C :                 Blockhash connected
-    <32-byte hash>D :                 Blockhash disconnected
-    <32-byte hash>R<8-byte LE uint> : Transactionhash removed from mempool for non-block inclusion reason
-    <32-byte hash>A<8-byte LE uint> : Transactionhash added mempool
+All ZMQ messages share the same structure with three parts: _topic_ string,
+message _body_, and _message sequence number_:
 
-Where the 8-byte uints correspond to the mempool sequence number.
+    | topic     | body                                                 | message sequence number  |
+    |-----------+------------------------------------------------------+--------------------------|
+    | rawtx     | <serialized transaction>                             | <4-byte LE uint>         |
+    | hashtx    | <reversed 32-byte transaction hash>                  | <4-byte LE uint>         |
+    | rawblock  | <serialized block>                                   | <4-byte LE uint>         |
+    | hashblock | <reversed 32-byte block hash>                        | <4-byte LE uint>         |
+    | sequence  | <reversed 32-byte block hash>C                       | <4-byte LE uint>         |
+    | sequence  | <reversed 32-byte block hash>D                       | <4-byte LE uint>         |
+    | sequence  | <reversed 32-byte transaction hash>R<8-byte LE uint> | <4-byte LE uint>         |
+    | sequence  | <reversed 32-byte transaction hash>A<8-byte LE uint> | <4-byte LE uint>         |
 
-`rawtx`: Notifies about all transactions, both when they are added to mempool or when a new block arrives. This means a transaction could be published multiple times. First, when it enters the mempool and then again in each block that includes it. The messages are ZMQ multipart messages with three parts. The first part is the topic (`rawtx`), the second part is the serialized transaction, and the last part is a sequence number (representing the message count to detect lost messages).
+where:
 
-    | rawtx | <serialized transaction> | <uint32 sequence number in Little Endian>
+ - message sequence number represents message count to detect lost messages, distinct for each topic
+ - all transaction and block hashes are in _reversed byte order_ (i. e. with bytes
+   produced by hashing function reversed), the same format as the RPC interface and block
+   explorers use to display transaction and block hashes
 
-`hashtx`: Notifies about all transactions, both when they are added to mempool or when a new block arrives. This means a transaction could be published multiple times. First, when it enters the mempool and then again in each block that includes it. The messages are ZMQ multipart messages with three parts. The first part is the topic (`hashtx`), the second part is the 32-byte transaction hash, and the last part is a sequence number (representing the message count to detect lost messages).
+#### rawtx
 
-    | hashtx | <32-byte transaction hash in Little Endian> | <uint32 sequence number in Little Endian>
+Notifies about all transactions, both when they are added to mempool or when a new block
+arrives. This means a transaction could be published multiple times: first when it enters
+mempool and then again in each block that includes it. The body part of the message is the
+serialized transaction.
 
+#### hashtx
 
-`rawblock`: Notifies when the chain tip is updated. Messages are ZMQ multipart messages with three parts. The first part is the topic (`rawblock`), the second part is the serialized block, and the last part is a sequence number (representing the message count to detect lost messages).
+Notifies about all transactions, both when they are added to mempool or when a new block
+arrives. This means a transaction could be published multiple times: first when it enters
+mempool and then again in each block that includes it. The body part of the message is the
+32-byte transaction hash in reversed byte order.
 
-    | rawblock | <serialized block> | <uint32 sequence number in Little Endian>
+#### rawblock
 
-`hashblock`: Notifies when the chain tip is updated. Messages are ZMQ multipart messages with three parts. The first part is the topic (`hashblock`), the second part is the 32-byte block hash, and the last part is a sequence number (representing the message count to detect lost messages).
+Notifies when the chain tip is updated. When assumeutxo is in use, this notification will
+not be issued for historical blocks connected to the background validation chainstate. The
+body part of the message is the serialized block.
 
-    | hashblock | <32-byte block hash in Little Endian> | <uint32 sequence number in Little Endian>
+#### hashblock
 
-**_NOTE:_**  Note that the 32-byte hashes are in Little Endian and not in the Big Endian format that the RPC interface and block explorers use to display transaction and block hashes.
+Notifies when the chain tip is updated. When assumeutxo is in use, this notification will
+not be issued for historical blocks connected to the background validation chainstate. The
+body part of the message is the 32-byte block hash in reversed byte order.
+
+#### sequence
+
+The 8-byte LE uints correspond to _mempool sequence number_ and the types of bodies are:
+
+   - `C` : block with this hash connected
+   - `D` : block with this hash disconnected
+   - `R` : transaction with this hash removed from mempool for non-block inclusion reason
+   - `A` : transaction with this hash added to mempool
+
+### Implementing ZMQ client
 
 ZeroMQ endpoint specifiers for TCP (and others) are documented in the
-[ZeroMQ API](http://api.zeromq.org/4-0:_start).
+[ZeroMQ API](https://libzmq.readthedocs.io/en/zeromq4-x/).
 
 Client side, then, the ZeroMQ subscriber socket must have the
 ZMQ_SUBSCRIBE option set to one or either of these prefixes (for
@@ -139,7 +169,7 @@ operating system configuration and must be configured prior to connection establ
 For example, when running on GNU/Linux, one might use the following
 to lower the keepalive setting to 10 minutes:
 
-sudo sysctl -w net.ipv4.tcp_keepalive_time=600
+    sudo sysctl -w net.ipv4.tcp_keepalive_time=600
 
 Setting the keepalive values appropriately for your operating environment may
 improve connectivity in situations where long-lived connections are silently
@@ -163,7 +193,7 @@ Note that for `*block` topics, when the block chain tip changes,
 a reorganisation may occur and just the tip will be notified.
 It is up to the subscriber to retrieve the chain from the last known
 block to the new tip. Also note that no notification will occur if the tip
-was in the active chain--as would be the case after calling invalidateblock RPC.
+was in the active chain, as would be the case after calling the `invalidateblock` RPC.
 In contrast, the `sequence` topic publishes all block connections and
 disconnections.
 

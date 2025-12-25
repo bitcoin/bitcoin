@@ -240,3 +240,10 @@ const UniValue& UniValue::find_value(std::string_view key) const
     return NullUniValue;
 }
 
+void UniValue::reserve(size_t new_cap)
+{
+    values.reserve(new_cap);
+    if (typ == VOBJ) {
+        keys.reserve(new_cap);
+    }
+}

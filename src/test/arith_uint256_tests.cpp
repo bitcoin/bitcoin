@@ -1,8 +1,9 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <arith_uint256.h>
+#include <test/util/setup_common.h>
 #include <uint256.h>
 
 #include <boost/test/unit_test.hpp>
@@ -22,7 +23,6 @@ static inline arith_uint256 arith_uint256V(const std::vector<unsigned char>& vch
 {
     return UintToArith256(uint256(vch));
 }
-
 const unsigned char R1Array[] =
     "\x9c\x52\x4a\xdb\xcf\x56\x11\x12\x2b\x29\x12\x5e\x5d\x35\xd2\xd2"
     "\x22\x81\xaa\xb5\x33\xf0\x08\x32\xd5\x56\xb1\xf9\xea\xe5\x1d\x7d";
@@ -35,8 +35,6 @@ const unsigned char R2Array[] =
     "\x70\x32\x1d\x7c\x47\xa5\x6b\x40\x26\x7e\x0a\xc3\xa6\x9c\xb6\xbf"
     "\x13\x30\x47\xa3\x19\x2d\xda\x71\x49\x13\x72\xf0\xb4\xca\x81\xd7";
 const arith_uint256 R2L = arith_uint256V(std::vector<unsigned char>(R2Array,R2Array+32));
-
-const char R1LplusR2L[] = "549FB09FEA236A1EA3E31D4D58F1B1369288D204211CA751527CFC175767850C";
 
 const unsigned char ZeroArray[] =
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -94,26 +92,25 @@ BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
     }
     BOOST_CHECK(ZeroL == (OneL << 256));
 
-    // String Constructor and Copy Constructor
-    BOOST_CHECK(arith_uint256("0x"+R1L.ToString()) == R1L);
-    BOOST_CHECK(arith_uint256("0x"+R2L.ToString()) == R2L);
-    BOOST_CHECK(arith_uint256("0x"+ZeroL.ToString()) == ZeroL);
-    BOOST_CHECK(arith_uint256("0x"+OneL.ToString()) == OneL);
-    BOOST_CHECK(arith_uint256("0x"+MaxL.ToString()) == MaxL);
-    BOOST_CHECK(arith_uint256(R1L.ToString()) == R1L);
-    BOOST_CHECK(arith_uint256("   0x"+R1L.ToString()+"   ") == R1L);
-    BOOST_CHECK(arith_uint256("") == ZeroL);
-    BOOST_CHECK(R1L == arith_uint256(R1ArrayHex));
+    // Construct from hex string
+    BOOST_CHECK_EQUAL(UintToArith256(uint256::FromHex(R1L.ToString()).value()), R1L);
+    BOOST_CHECK_EQUAL(UintToArith256(uint256::FromHex(R2L.ToString()).value()), R2L);
+    BOOST_CHECK_EQUAL(UintToArith256(uint256::FromHex(ZeroL.ToString()).value()), ZeroL);
+    BOOST_CHECK_EQUAL(UintToArith256(uint256::FromHex(OneL.ToString()).value()), OneL);
+    BOOST_CHECK_EQUAL(UintToArith256(uint256::FromHex(MaxL.ToString()).value()), MaxL);
+    BOOST_CHECK_EQUAL(UintToArith256(uint256::FromHex(R1ArrayHex).value()), R1L);
+
+    // Copy constructor
     BOOST_CHECK(arith_uint256(R1L) == R1L);
     BOOST_CHECK((arith_uint256(R1L^R2L)^R2L) == R1L);
     BOOST_CHECK(arith_uint256(ZeroL) == ZeroL);
     BOOST_CHECK(arith_uint256(OneL) == OneL);
 
     // uint64_t constructor
-    BOOST_CHECK( (R1L & arith_uint256("0xffffffffffffffff")) == arith_uint256(R1LLow64));
-    BOOST_CHECK(ZeroL == arith_uint256(0));
-    BOOST_CHECK(OneL == arith_uint256(1));
-    BOOST_CHECK(arith_uint256("0xffffffffffffffff") == arith_uint256(0xffffffffffffffffULL));
+    BOOST_CHECK_EQUAL(R1L & arith_uint256{0xffffffffffffffff}, arith_uint256{R1LLow64});
+    BOOST_CHECK_EQUAL(ZeroL, arith_uint256{0});
+    BOOST_CHECK_EQUAL(OneL, arith_uint256{1});
+    BOOST_CHECK_EQUAL(arith_uint256{0xffffffffffffffff}, arith_uint256{0xffffffffffffffffULL});
 
     // Assignment (from base_uint)
     arith_uint256 tmpL = ~ZeroL; BOOST_CHECK(tmpL == ~ZeroL);
@@ -277,12 +274,15 @@ BOOST_AUTO_TEST_CASE( comparison ) // <= >= < >
         BOOST_CHECK( R1L <= TmpL ); BOOST_CHECK( (R1L == TmpL) != (R1L < TmpL)); BOOST_CHECK( (TmpL == R1L) || !( R1L >= TmpL));
         BOOST_CHECK(! (TmpL < R1L)); BOOST_CHECK(! (R1L > TmpL));
     }
+
+    BOOST_CHECK_LT(ZeroL,
+                   OneL);
 }
 
 BOOST_AUTO_TEST_CASE( plusMinus )
 {
     arith_uint256 TmpL = 0;
-    BOOST_CHECK(R1L+R2L == arith_uint256(R1LplusR2L));
+    BOOST_CHECK_EQUAL(R1L + R2L, UintToArith256(uint256{"549fb09fea236a1ea3e31d4d58f1b1369288d204211ca751527cfc175767850c"}));
     TmpL += R1L;
     BOOST_CHECK(TmpL == R1L);
     TmpL += R2L;
@@ -346,8 +346,8 @@ BOOST_AUTO_TEST_CASE( multiply )
 
 BOOST_AUTO_TEST_CASE( divide )
 {
-    arith_uint256 D1L("AD7133AC1977FA2B7");
-    arith_uint256 D2L("ECD751716");
+    arith_uint256 D1L{UintToArith256(uint256{"00000000000000000000000000000000000000000000000ad7133ac1977fa2b7"})};
+    arith_uint256 D2L{UintToArith256(uint256{"0000000000000000000000000000000000000000000000000000000ecd751716"})};
     BOOST_CHECK((R1L / D1L).ToString() == "00000000000000000b8ac01106981635d9ed112290f8895545a7654dde28fb3a");
     BOOST_CHECK((R1L / D2L).ToString() == "000000000873ce8efec5b67150bad3aa8c5fcb70e947586153bf2cec7c37c57a");
     BOOST_CHECK(R1L / OneL == R1L);
@@ -368,7 +368,7 @@ static bool almostEqual(double d1, double d2)
     return fabs(d1-d2) <= 4*fabs(d1)*std::numeric_limits<double>::epsilon();
 }
 
-BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHex size() GetLow64 GetSerializeSize, Serialize, Unserialize
+BOOST_AUTO_TEST_CASE(methods)
 {
     BOOST_CHECK(R1L.GetHex() == R1L.ToString());
     BOOST_CHECK(R2L.GetHex() == R2L.ToString());
@@ -376,11 +376,14 @@ BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHex size() GetLow64 GetSerializeSiz
     BOOST_CHECK(MaxL.GetHex() == MaxL.ToString());
     arith_uint256 TmpL(R1L);
     BOOST_CHECK(TmpL == R1L);
-    TmpL.SetHex(R2L.ToString());   BOOST_CHECK(TmpL == R2L);
-    TmpL.SetHex(ZeroL.ToString()); BOOST_CHECK(TmpL == 0);
-    TmpL.SetHex(HalfL.ToString()); BOOST_CHECK(TmpL == HalfL);
+    TmpL = R2L;
+    BOOST_CHECK(TmpL == R2L);
+    TmpL = ZeroL;
+    BOOST_CHECK(TmpL == 0);
+    TmpL = HalfL;
+    BOOST_CHECK(TmpL == HalfL);
 
-    TmpL.SetHex(R1L.ToString());
+    TmpL = R1L;
     BOOST_CHECK(R1L.size() == 32);
     BOOST_CHECK(R2L.size() == 32);
     BOOST_CHECK(ZeroL.size() == 32);
@@ -556,6 +559,36 @@ BOOST_AUTO_TEST_CASE( getmaxcoverage ) // some more tests just to get 100% cover
     CHECKBITWISEOPERATOR(R1,~R2,|)
     CHECKBITWISEOPERATOR(R1,~R2,^)
     CHECKBITWISEOPERATOR(R1,~R2,&)
+}
+
+BOOST_AUTO_TEST_CASE(conversion)
+{
+    for (const arith_uint256& arith : {ZeroL, OneL, R1L, R2L}) {
+        const auto u256{uint256::FromHex(arith.GetHex()).value()};
+        BOOST_CHECK_EQUAL(UintToArith256(ArithToUint256(arith)), arith);
+        BOOST_CHECK_EQUAL(UintToArith256(u256), arith);
+        BOOST_CHECK_EQUAL(u256, ArithToUint256(arith));
+        BOOST_CHECK_EQUAL(ArithToUint256(arith).GetHex(), UintToArith256(u256).GetHex());
+    }
+
+    for (uint8_t num : {0, 1, 0xff}) {
+        BOOST_CHECK_EQUAL(UintToArith256(uint256{num}), arith_uint256{num});
+        BOOST_CHECK_EQUAL(uint256{num}, ArithToUint256(arith_uint256{num}));
+        BOOST_CHECK_EQUAL(UintToArith256(uint256{num}), num);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(operator_with_self)
+{
+    arith_uint256 v{2};
+    v *= v;
+    BOOST_CHECK_EQUAL(v, arith_uint256{4});
+    v /= v;
+    BOOST_CHECK_EQUAL(v, arith_uint256{1});
+    v += v;
+    BOOST_CHECK_EQUAL(v, arith_uint256{2});
+    v -= v;
+    BOOST_CHECK_EQUAL(v, arith_uint256{0});
 }
 
 BOOST_AUTO_TEST_SUITE_END()

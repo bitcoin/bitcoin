@@ -35,16 +35,18 @@ it will use a special cookie file for authentication. The cookie is generated wi
 content when the daemon starts, and deleted when it exits. Read access to this file
 controls who can access it through RPC.
 
-By default the cookie is stored in the data directory, but it's location can be overridden
-with the option '-rpccookiefile'.
+By default the cookie is stored in the data directory, but its location can be
+overridden with the option `-rpccookiefile`. Default file permissions for the
+cookie are "owner" (i.e. user read/writeable) via default application-wide file
+umask of `0077`, but these can be overridden with the `-rpccookieperms` option.
 
 This allows for running bitcoind without having to do any manual configuration.
 
 `conf`, `pid`, and `wallet` accept relative paths which are interpreted as
 relative to the data directory. `wallet` *only* supports relative paths.
 
-For an example configuration file that describes the configuration settings,
-see `share/examples/bitcoin.conf`.
+To generate an example configuration file that describes the configuration settings,
+see [contrib/devtools/README.md](../contrib/devtools/README.md#gen-bitcoin-confsh).
 
 Paths
 ---------------------------------

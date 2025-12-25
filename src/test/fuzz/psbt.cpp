@@ -1,17 +1,16 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 
 #include <node/psbt.h>
 #include <psbt.h>
 #include <pubkey.h>
 #include <script/script.h>
 #include <streams.h>
+#include <test/fuzz/FuzzedDataProvider.h>
+#include <test/fuzz/fuzz.h>
+#include <test/util/random.h>
 #include <util/check.h>
-#include <version.h>
 
 #include <cstdint>
 #include <optional>
@@ -24,6 +23,7 @@ using node::PSBTInputAnalysis;
 
 FUZZ_TARGET(psbt)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     PartiallySignedTransaction psbt_mut;
     std::string error;

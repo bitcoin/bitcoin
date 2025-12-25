@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,22 +16,41 @@
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <logging.h>
+#include <node/context.h>
+#include <node/kernel_notifications.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
 #include <primitives/transaction.h>
-#include <timedata.h>
 #include <util/moneystr.h>
+#include <util/signalinterrupt.h>
+#include <util/time.h>
 #include <validation.h>
 
 #include <algorithm>
 #include <utility>
+#include <numeric>
 
 namespace node {
+
+int64_t GetMinimumTime(const CBlockIndex* pindexPrev, const int64_t difficulty_adjustment_interval)
+{
+    int64_t min_time{pindexPrev->GetMedianTimePast() + 1};
+    // Height of block to be mined.
+    const int height{pindexPrev->nHeight + 1};
+    // Account for BIP94 timewarp rule on all networks. This makes future
+    // activation safer.
+    if (height % difficulty_adjustment_interval == 0) {
+        min_time = std::max<int64_t>(min_time, pindexPrev->GetBlockTime() - MAX_TIMEWARP);
+    }
+    return min_time;
+}
+
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
     int64_t nOldTime = pblock->nTime;
-    int64_t nNewTime{std::max<int64_t>(pindexPrev->GetMedianTimePast() + 1, TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()))};
+    int64_t nNewTime{std::max<int64_t>(GetMinimumTime(pindexPrev, consensusParams.DifficultyAdjustmentInterval()),
+                                       TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()))};
 
     if (nOldTime < nNewTime) {
         pblock->nTime = nNewTime;
@@ -59,14 +78,17 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
 
 static BlockAssembler::Options ClampOptions(BlockAssembler::Options options)
 {
-    // Limit weight to between 4K and DEFAULT_BLOCK_MAX_WEIGHT for sanity:
-    options.nBlockMaxWeight = std::clamp<size_t>(options.nBlockMaxWeight, 4000, DEFAULT_BLOCK_MAX_WEIGHT);
+    options.block_reserved_weight = std::clamp<size_t>(options.block_reserved_weight, MINIMUM_BLOCK_RESERVED_WEIGHT, MAX_BLOCK_WEIGHT);
+    options.coinbase_output_max_additional_sigops = std::clamp<size_t>(options.coinbase_output_max_additional_sigops, 0, MAX_BLOCK_SIGOPS_COST);
+    // Limit weight to between block_reserved_weight and MAX_BLOCK_WEIGHT for sanity:
+    // block_reserved_weight can safely exceed -blockmaxweight, but the rest of the block template will be empty.
+    options.nBlockMaxWeight = std::clamp<size_t>(options.nBlockMaxWeight, options.block_reserved_weight, MAX_BLOCK_WEIGHT);
     return options;
 }
 
 BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options)
     : chainparams{chainstate.m_chainman.GetParams()},
-      m_mempool{mempool},
+      m_mempool{options.use_mempool ? mempool : nullptr},
       m_chainstate{chainstate},
       m_options{ClampOptions(options)}
 {
@@ -79,47 +101,33 @@ void ApplyArgsManOptions(const ArgsManager& args, BlockAssembler::Options& optio
     if (const auto blockmintxfee{args.GetArg("-blockmintxfee")}) {
         if (const auto parsed{ParseMoney(*blockmintxfee)}) options.blockMinFeeRate = CFeeRate{*parsed};
     }
+    options.print_modified_fee = args.GetBoolArg("-printpriority", options.print_modified_fee);
+    options.block_reserved_weight = args.GetIntArg("-blockreservedweight", options.block_reserved_weight);
 }
-static BlockAssembler::Options ConfiguredOptions()
-{
-    BlockAssembler::Options options;
-    ApplyArgsManOptions(gArgs, options);
-    return options;
-}
-
-BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool)
-    : BlockAssembler(chainstate, mempool, ConfiguredOptions()) {}
 
 void BlockAssembler::resetBlock()
 {
-    inBlock.clear();
-
-    // Reserve space for coinbase tx
-    nBlockWeight = 4000;
-    nBlockSigOpsCost = 400;
+    // Reserve space for fixed-size block header, txs count, and coinbase tx.
+    nBlockWeight = m_options.block_reserved_weight;
+    nBlockSigOpsCost = m_options.coinbase_output_max_additional_sigops;
 
     // These counters do not include coinbase tx
     nBlockTx = 0;
     nFees = 0;
 }
 
-std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
+std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
 {
     const auto time_start{SteadyClock::now()};
 
     resetBlock();
 
     pblocktemplate.reset(new CBlockTemplate());
-
-    if (!pblocktemplate.get()) {
-        return nullptr;
-    }
     CBlock* const pblock = &pblocktemplate->block; // pointer for convenience
 
-    // Add dummy coinbase tx as first transaction
+    // Add dummy coinbase tx as first transaction. It is skipped by the
+    // getblocktemplate RPC and mining interface consumers must not use it.
     pblock->vtx.emplace_back();
-    pblocktemplate->vTxFees.push_back(-1); // updated at end
-    pblocktemplate->vTxSigOpsCost.push_back(-1); // updated at end
 
     LOCK(::cs_main);
     CBlockIndex* pindexPrev = m_chainstate.m_chain.Tip();
@@ -133,14 +141,14 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         pblock->nVersion = gArgs.GetIntArg("-blockversion", pblock->nVersion);
     }
 
-    pblock->nTime = TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime());
+    pblock->nTime = TicksSinceEpoch<std::chrono::seconds>(NodeClock::now());
     m_lock_time_cutoff = pindexPrev->GetMedianTimePast();
 
-    int nPackagesSelected = 0;
-    int nDescendantsUpdated = 0;
     if (m_mempool) {
         LOCK(m_mempool->cs);
-        addPackageTxs(*m_mempool, nPackagesSelected, nDescendantsUpdated);
+        m_mempool->StartBlockBuilding();
+        addChunks();
+        m_mempool->StopBlockBuilding();
     }
 
     const auto time_1{SteadyClock::now()};
@@ -152,57 +160,45 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     CMutableTransaction coinbaseTx;
     coinbaseTx.vin.resize(1);
     coinbaseTx.vin[0].prevout.SetNull();
+    coinbaseTx.vin[0].nSequence = CTxIn::MAX_SEQUENCE_NONFINAL; // Make sure timelock is enforced.
     coinbaseTx.vout.resize(1);
-    coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
+    coinbaseTx.vout[0].scriptPubKey = m_options.coinbase_output_script;
     coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
+    Assert(nHeight > 0);
+    coinbaseTx.nLockTime = static_cast<uint32_t>(nHeight - 1);
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = m_chainstate.m_chainman.GenerateCoinbaseCommitment(*pblock, pindexPrev);
-    pblocktemplate->vTxFees[0] = -nFees;
 
-    LogPrintf("CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
+    LogInfo("CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
 
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
     UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
     pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
     pblock->nNonce         = 0;
-    pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
-    BlockValidationState state;
-    if (m_options.test_block_validity && !TestBlockValidity(state, chainparams, m_chainstate, *pblock, pindexPrev,
-                                                  GetAdjustedTime, /*fCheckPOW=*/false, /*fCheckMerkleRoot=*/false)) {
-        throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, state.ToString()));
+    if (m_options.test_block_validity) {
+        if (BlockValidationState state{TestBlockValidity(m_chainstate, *pblock, /*check_pow=*/false, /*check_merkle_root=*/false)}; !state.IsValid()) {
+            throw std::runtime_error(strprintf("TestBlockValidity failed: %s", state.ToString()));
+        }
     }
     const auto time_2{SteadyClock::now()};
 
-    LogPrint(BCLog::BENCH, "CreateNewBlock() packages: %.2fms (%d packages, %d updated descendants), validity: %.2fms (total %.2fms)\n",
-             Ticks<MillisecondsDouble>(time_1 - time_start), nPackagesSelected, nDescendantsUpdated,
+    LogDebug(BCLog::BENCH, "CreateNewBlock() chunks: %.2fms, validity: %.2fms (total %.2fms)\n",
+             Ticks<MillisecondsDouble>(time_1 - time_start),
              Ticks<MillisecondsDouble>(time_2 - time_1),
              Ticks<MillisecondsDouble>(time_2 - time_start));
 
     return std::move(pblocktemplate);
 }
 
-void BlockAssembler::onlyUnconfirmed(CTxMemPool::setEntries& testSet)
+bool BlockAssembler::TestChunkBlockLimits(FeePerWeight chunk_feerate, int64_t chunk_sigops_cost) const
 {
-    for (CTxMemPool::setEntries::iterator iit = testSet.begin(); iit != testSet.end(); ) {
-        // Only test txs not already in the block
-        if (inBlock.count(*iit)) {
-            testSet.erase(iit++);
-        } else {
-            iit++;
-        }
-    }
-}
-
-bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost) const
-{
-    // TODO: switch to weight-based accounting for packages instead of vsize-based accounting.
-    if (nBlockWeight + WITNESS_SCALE_FACTOR * packageSize >= m_options.nBlockMaxWeight) {
+    if (nBlockWeight + chunk_feerate.size >= m_options.nBlockMaxWeight) {
         return false;
     }
-    if (nBlockSigOpsCost + packageSigOpsCost >= MAX_BLOCK_SIGOPS_COST) {
+    if (nBlockSigOpsCost + chunk_sigops_cost >= MAX_BLOCK_SIGOPS_COST) {
         return false;
     }
     return true;
@@ -210,222 +206,238 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost
 
 // Perform transaction-level checks before adding to block:
 // - transaction finality (locktime)
-bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package) const
+bool BlockAssembler::TestChunkTransactions(const std::vector<CTxMemPoolEntryRef>& txs) const
 {
-    for (CTxMemPool::txiter it : package) {
-        if (!IsFinalTx(it->GetTx(), nHeight, m_lock_time_cutoff)) {
+    for (const auto tx : txs) {
+        if (!IsFinalTx(tx.get().GetTx(), nHeight, m_lock_time_cutoff)) {
             return false;
         }
     }
     return true;
 }
 
-void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
+void BlockAssembler::AddToBlock(const CTxMemPoolEntry& entry)
 {
-    pblocktemplate->block.vtx.emplace_back(iter->GetSharedTx());
-    pblocktemplate->vTxFees.push_back(iter->GetFee());
-    pblocktemplate->vTxSigOpsCost.push_back(iter->GetSigOpCost());
-    nBlockWeight += iter->GetTxWeight();
+    pblocktemplate->block.vtx.emplace_back(entry.GetSharedTx());
+    pblocktemplate->vTxFees.push_back(entry.GetFee());
+    pblocktemplate->vTxSigOpsCost.push_back(entry.GetSigOpCost());
+    nBlockWeight += entry.GetTxWeight();
     ++nBlockTx;
-    nBlockSigOpsCost += iter->GetSigOpCost();
-    nFees += iter->GetFee();
-    inBlock.insert(iter);
+    nBlockSigOpsCost += entry.GetSigOpCost();
+    nFees += entry.GetFee();
 
-    bool fPrintPriority = gArgs.GetBoolArg("-printpriority", DEFAULT_PRINTPRIORITY);
-    if (fPrintPriority) {
-        LogPrintf("fee rate %s txid %s\n",
-                  CFeeRate(iter->GetModifiedFee(), iter->GetTxSize()).ToString(),
-                  iter->GetTx().GetHash().ToString());
+    if (m_options.print_modified_fee) {
+        LogInfo("fee rate %s txid %s\n",
+                  CFeeRate(entry.GetModifiedFee(), entry.GetTxSize()).ToString(),
+                  entry.GetTx().GetHash().ToString());
     }
 }
 
-/** Add descendants of given transactions to mapModifiedTx with ancestor
- * state updated assuming given transactions are inBlock. Returns number
- * of updated descendants. */
-static int UpdatePackagesForAdded(const CTxMemPool& mempool,
-                                  const CTxMemPool::setEntries& alreadyAdded,
-                                  indexed_modified_transaction_set& mapModifiedTx) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs)
+void BlockAssembler::addChunks()
 {
-    AssertLockHeld(mempool.cs);
-
-    int nDescendantsUpdated = 0;
-    for (CTxMemPool::txiter it : alreadyAdded) {
-        CTxMemPool::setEntries descendants;
-        mempool.CalculateDescendants(it, descendants);
-        // Insert all descendants (not yet in block) into the modified set
-        for (CTxMemPool::txiter desc : descendants) {
-            if (alreadyAdded.count(desc)) {
-                continue;
-            }
-            ++nDescendantsUpdated;
-            modtxiter mit = mapModifiedTx.find(desc);
-            if (mit == mapModifiedTx.end()) {
-                CTxMemPoolModifiedEntry modEntry(desc);
-                mit = mapModifiedTx.insert(modEntry).first;
-            }
-            mapModifiedTx.modify(mit, update_for_parent_inclusion(it));
-        }
-    }
-    return nDescendantsUpdated;
-}
-
-void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::vector<CTxMemPool::txiter>& sortedEntries)
-{
-    // Sort package by ancestor count
-    // If a transaction A depends on transaction B, then A's ancestor count
-    // must be greater than B's.  So this is sufficient to validly order the
-    // transactions for block inclusion.
-    sortedEntries.clear();
-    sortedEntries.insert(sortedEntries.begin(), package.begin(), package.end());
-    std::sort(sortedEntries.begin(), sortedEntries.end(), CompareTxIterByAncestorCount());
-}
-
-// This transaction selection algorithm orders the mempool based
-// on feerate of a transaction including all unconfirmed ancestors.
-// Since we don't remove transactions from the mempool as we select them
-// for block inclusion, we need an alternate method of updating the feerate
-// of a transaction with its not-yet-selected ancestors as we go.
-// This is accomplished by walking the in-mempool descendants of selected
-// transactions and storing a temporary modified state in mapModifiedTxs.
-// Each time through the loop, we compare the best transaction in
-// mapModifiedTxs with the next transaction in the mempool to decide what
-// transaction package to work on next.
-void BlockAssembler::addPackageTxs(const CTxMemPool& mempool, int& nPackagesSelected, int& nDescendantsUpdated)
-{
-    AssertLockHeld(mempool.cs);
-
-    // mapModifiedTx will store sorted packages after they are modified
-    // because some of their txs are already in the block
-    indexed_modified_transaction_set mapModifiedTx;
-    // Keep track of entries that failed inclusion, to avoid duplicate work
-    CTxMemPool::setEntries failedTx;
-
-    CTxMemPool::indexed_transaction_set::index<ancestor_score>::type::iterator mi = mempool.mapTx.get<ancestor_score>().begin();
-    CTxMemPool::txiter iter;
-
     // Limit the number of attempts to add transactions to the block when it is
     // close to full; this is just a simple heuristic to finish quickly if the
     // mempool has a lot of entries.
     const int64_t MAX_CONSECUTIVE_FAILURES = 1000;
+    constexpr int32_t BLOCK_FULL_ENOUGH_WEIGHT_DELTA = 4000;
     int64_t nConsecutiveFailed = 0;
 
-    while (mi != mempool.mapTx.get<ancestor_score>().end() || !mapModifiedTx.empty()) {
-        // First try to find a new transaction in mapTx to evaluate.
-        //
-        // Skip entries in mapTx that are already in a block or are present
-        // in mapModifiedTx (which implies that the mapTx ancestor state is
-        // stale due to ancestor inclusion in the block)
-        // Also skip transactions that we've already failed to add. This can happen if
-        // we consider a transaction in mapModifiedTx and it fails: we can then
-        // potentially consider it again while walking mapTx.  It's currently
-        // guaranteed to fail again, but as a belt-and-suspenders check we put it in
-        // failedTx and avoid re-evaluation, since the re-evaluation would be using
-        // cached size/sigops/fee values that are not actually correct.
-        /** Return true if given transaction from mapTx has already been evaluated,
-         * or if the transaction's cached data in mapTx is incorrect. */
-        if (mi != mempool.mapTx.get<ancestor_score>().end()) {
-            auto it = mempool.mapTx.project<0>(mi);
-            assert(it != mempool.mapTx.end());
-            if (mapModifiedTx.count(it) || inBlock.count(it) || failedTx.count(it)) {
-                ++mi;
-                continue;
-            }
-        }
+    std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> selected_transactions;
+    selected_transactions.reserve(MAX_CLUSTER_COUNT_LIMIT);
+    FeePerWeight chunk_feerate;
 
-        // Now that mi is not stale, determine which transaction to evaluate:
-        // the next entry from mapTx, or the best from mapModifiedTx?
-        bool fUsingModified = false;
+    // This fills selected_transactions
+    chunk_feerate = m_mempool->GetBlockBuilderChunk(selected_transactions);
+    FeePerVSize chunk_feerate_vsize = ToFeePerVSize(chunk_feerate);
 
-        modtxscoreiter modit = mapModifiedTx.get<ancestor_score>().begin();
-        if (mi == mempool.mapTx.get<ancestor_score>().end()) {
-            // We're out of entries in mapTx; use the entry from mapModifiedTx
-            iter = modit->iter;
-            fUsingModified = true;
-        } else {
-            // Try to compare the mapTx entry to the mapModifiedTx entry
-            iter = mempool.mapTx.project<0>(mi);
-            if (modit != mapModifiedTx.get<ancestor_score>().end() &&
-                    CompareTxMemPoolEntryByAncestorFee()(*modit, CTxMemPoolModifiedEntry(iter))) {
-                // The best entry in mapModifiedTx has higher score
-                // than the one from mapTx.
-                // Switch which transaction (package) to consider
-                iter = modit->iter;
-                fUsingModified = true;
-            } else {
-                // Either no entry in mapModifiedTx, or it's worse than mapTx.
-                // Increment mi for the next loop iteration.
-                ++mi;
-            }
-        }
-
-        // We skip mapTx entries that are inBlock, and mapModifiedTx shouldn't
-        // contain anything that is inBlock.
-        assert(!inBlock.count(iter));
-
-        uint64_t packageSize = iter->GetSizeWithAncestors();
-        CAmount packageFees = iter->GetModFeesWithAncestors();
-        int64_t packageSigOpsCost = iter->GetSigOpCostWithAncestors();
-        if (fUsingModified) {
-            packageSize = modit->nSizeWithAncestors;
-            packageFees = modit->nModFeesWithAncestors;
-            packageSigOpsCost = modit->nSigOpCostWithAncestors;
-        }
-
-        if (packageFees < m_options.blockMinFeeRate.GetFee(packageSize)) {
-            // Everything else we might consider has a lower fee rate
+    while (selected_transactions.size() > 0) {
+        // Check to see if min fee rate is still respected.
+        if (chunk_feerate_vsize << m_options.blockMinFeeRate.GetFeePerVSize()) {
+            // Everything else we might consider has a lower feerate
             return;
         }
 
-        if (!TestPackage(packageSize, packageSigOpsCost)) {
-            if (fUsingModified) {
-                // Since we always look at the best entry in mapModifiedTx,
-                // we must erase failed entries so that we can consider the
-                // next best entry on the next loop iteration
-                mapModifiedTx.get<ancestor_score>().erase(modit);
-                failedTx.insert(iter);
-            }
+        int64_t chunk_sig_ops = 0;
+        for (const auto& tx : selected_transactions) {
+            chunk_sig_ops += tx.get().GetSigOpCost();
+        }
 
+        // Check to see if this chunk will fit.
+        if (!TestChunkBlockLimits(chunk_feerate, chunk_sig_ops) || !TestChunkTransactions(selected_transactions)) {
+            // This chunk won't fit, so we skip it and will try the next best one.
+            m_mempool->SkipBuilderChunk();
             ++nConsecutiveFailed;
 
-            if (nConsecutiveFailed > MAX_CONSECUTIVE_FAILURES && nBlockWeight >
-                    m_options.nBlockMaxWeight - 4000) {
+            if (nConsecutiveFailed > MAX_CONSECUTIVE_FAILURES && nBlockWeight +
+                    BLOCK_FULL_ENOUGH_WEIGHT_DELTA > m_options.nBlockMaxWeight) {
                 // Give up if we're close to full and haven't succeeded in a while
-                break;
+                return;
             }
-            continue;
-        }
+        } else {
+            m_mempool->IncludeBuilderChunk();
 
-        auto ancestors{mempool.AssumeCalculateMemPoolAncestors(__func__, *iter, CTxMemPool::Limits::NoLimits(), /*fSearchForParents=*/false)};
-
-        onlyUnconfirmed(ancestors);
-        ancestors.insert(iter);
-
-        // Test if all tx's are Final
-        if (!TestPackageTransactions(ancestors)) {
-            if (fUsingModified) {
-                mapModifiedTx.get<ancestor_score>().erase(modit);
-                failedTx.insert(iter);
+            // This chunk will fit, so add it to the block.
+            nConsecutiveFailed = 0;
+            for (const auto& tx : selected_transactions) {
+                AddToBlock(tx);
             }
-            continue;
+            pblocktemplate->m_package_feerates.emplace_back(chunk_feerate_vsize);
         }
 
-        // This transaction will make it in; reset the failed counter.
-        nConsecutiveFailed = 0;
-
-        // Package can be added. Sort the entries in a valid order.
-        std::vector<CTxMemPool::txiter> sortedEntries;
-        SortForBlock(ancestors, sortedEntries);
-
-        for (size_t i = 0; i < sortedEntries.size(); ++i) {
-            AddToBlock(sortedEntries[i]);
-            // Erase from the modified set, if present
-            mapModifiedTx.erase(sortedEntries[i]);
-        }
-
-        ++nPackagesSelected;
-
-        // Update transactions that depend on each of these
-        nDescendantsUpdated += UpdatePackagesForAdded(mempool, ancestors, mapModifiedTx);
+        selected_transactions.clear();
+        chunk_feerate = m_mempool->GetBlockBuilderChunk(selected_transactions);
+        chunk_feerate_vsize = ToFeePerVSize(chunk_feerate);
     }
+}
+
+void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t version, uint32_t timestamp, uint32_t nonce)
+{
+    if (block.vtx.size() == 0) {
+        block.vtx.emplace_back(coinbase);
+    } else {
+        block.vtx[0] = coinbase;
+    }
+    block.nVersion = version;
+    block.nTime = timestamp;
+    block.nNonce = nonce;
+    block.hashMerkleRoot = BlockMerkleRoot(block);
+
+    // Reset cached checks
+    block.m_checked_witness_commitment = false;
+    block.m_checked_merkle_root = false;
+    block.fChecked = false;
+}
+
+void InterruptWait(KernelNotifications& kernel_notifications, bool& interrupt_wait)
+{
+    LOCK(kernel_notifications.m_tip_block_mutex);
+    interrupt_wait = true;
+    kernel_notifications.m_tip_block_cv.notify_all();
+}
+
+std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainman,
+                                                      KernelNotifications& kernel_notifications,
+                                                      CTxMemPool* mempool,
+                                                      const std::unique_ptr<CBlockTemplate>& block_template,
+                                                      const BlockWaitOptions& options,
+                                                      const BlockAssembler::Options& assemble_options,
+                                                      bool& interrupt_wait)
+{
+    // Delay calculating the current template fees, just in case a new block
+    // comes in before the next tick.
+    CAmount current_fees = -1;
+
+    // Alternate waiting for a new tip and checking if fees have risen.
+    // The latter check is expensive so we only run it once per second.
+    auto now{NodeClock::now()};
+    const auto deadline = now + options.timeout;
+    const MillisecondsDouble tick{1000};
+    const bool allow_min_difficulty{chainman.GetParams().GetConsensus().fPowAllowMinDifficultyBlocks};
+
+    do {
+        bool tip_changed{false};
+        {
+            WAIT_LOCK(kernel_notifications.m_tip_block_mutex, lock);
+            // Note that wait_until() checks the predicate before waiting
+            kernel_notifications.m_tip_block_cv.wait_until(lock, std::min(now + tick, deadline), [&]() EXCLUSIVE_LOCKS_REQUIRED(kernel_notifications.m_tip_block_mutex) {
+                AssertLockHeld(kernel_notifications.m_tip_block_mutex);
+                const auto tip_block{kernel_notifications.TipBlock()};
+                // We assume tip_block is set, because this is an instance
+                // method on BlockTemplate and no template could have been
+                // generated before a tip exists.
+                tip_changed = Assume(tip_block) && tip_block != block_template->block.hashPrevBlock;
+                return tip_changed || chainman.m_interrupt || interrupt_wait;
+            });
+            if (interrupt_wait) {
+                interrupt_wait = false;
+                return nullptr;
+            }
+        }
+
+        if (chainman.m_interrupt) return nullptr;
+        // At this point the tip changed, a full tick went by or we reached
+        // the deadline.
+
+        // Must release m_tip_block_mutex before locking cs_main, to avoid deadlocks.
+        LOCK(::cs_main);
+
+        // On test networks return a minimum difficulty block after 20 minutes
+        if (!tip_changed && allow_min_difficulty) {
+            const NodeClock::time_point tip_time{std::chrono::seconds{chainman.ActiveChain().Tip()->GetBlockTime()}};
+            if (now > tip_time + 20min) {
+                tip_changed = true;
+            }
+        }
+
+        /**
+         * We determine if fees increased compared to the previous template by generating
+         * a fresh template. There may be more efficient ways to determine how much
+         * (approximate) fees for the next block increased, perhaps more so after
+         * Cluster Mempool.
+         *
+         * We'll also create a new template if the tip changed during this iteration.
+         */
+        if (options.fee_threshold < MAX_MONEY || tip_changed) {
+            auto new_tmpl{BlockAssembler{
+                chainman.ActiveChainstate(),
+                mempool,
+                assemble_options}
+                              .CreateNewBlock()};
+
+            // If the tip changed, return the new template regardless of its fees.
+            if (tip_changed) return new_tmpl;
+
+            // Calculate the original template total fees if we haven't already
+            if (current_fees == -1) {
+                current_fees = std::accumulate(block_template->vTxFees.begin(), block_template->vTxFees.end(), CAmount{0});
+            }
+
+            // Check if fees increased enough to return the new template
+            const CAmount new_fees = std::accumulate(new_tmpl->vTxFees.begin(), new_tmpl->vTxFees.end(), CAmount{0});
+            Assume(options.fee_threshold != MAX_MONEY);
+            if (new_fees >= current_fees + options.fee_threshold) return new_tmpl;
+        }
+
+        now = NodeClock::now();
+    } while (now < deadline);
+
+    return nullptr;
+}
+
+std::optional<BlockRef> GetTip(ChainstateManager& chainman)
+{
+    LOCK(::cs_main);
+    CBlockIndex* tip{chainman.ActiveChain().Tip()};
+    if (!tip) return {};
+    return BlockRef{tip->GetBlockHash(), tip->nHeight};
+}
+
+std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const uint256& current_tip, MillisecondsDouble& timeout)
+{
+    Assume(timeout >= 0ms); // No internal callers should use a negative timeout
+    if (timeout < 0ms) timeout = 0ms;
+    if (timeout > std::chrono::years{100}) timeout = std::chrono::years{100}; // Upper bound to avoid UB in std::chrono
+    auto deadline{std::chrono::steady_clock::now() + timeout};
+    {
+        WAIT_LOCK(kernel_notifications.m_tip_block_mutex, lock);
+        // For callers convenience, wait longer than the provided timeout
+        // during startup for the tip to be non-null. That way this function
+        // always returns valid tip information when possible and only
+        // returns null when shutting down, not when timing out.
+        kernel_notifications.m_tip_block_cv.wait(lock, [&]() EXCLUSIVE_LOCKS_REQUIRED(kernel_notifications.m_tip_block_mutex) {
+            return kernel_notifications.TipBlock() || chainman.m_interrupt;
+        });
+        if (chainman.m_interrupt) return {};
+        // At this point TipBlock is set, so continue to wait until it is
+        // different then `current_tip` provided by caller.
+        kernel_notifications.m_tip_block_cv.wait_until(lock, deadline, [&]() EXCLUSIVE_LOCKS_REQUIRED(kernel_notifications.m_tip_block_mutex) {
+            return Assume(kernel_notifications.TipBlock()) != current_tip || chainman.m_interrupt;
+        });
+    }
+    if (chainman.m_interrupt) return {};
+
+    // Must release m_tip_block_mutex before getTip() locks cs_main, to
+    // avoid deadlocks.
+    return GetTip(chainman);
 }
 } // namespace node

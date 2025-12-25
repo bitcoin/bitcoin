@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2018-2022 The Bitcoin Core developers
+# Copyright (c) 2018-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,7 +11,8 @@ Check include guards.
 import re
 import sys
 from subprocess import check_output
-from typing import List
+
+from lint_ignore_dirs import SHARED_EXCLUDED_SUBTREES
 
 
 HEADER_ID_PREFIX = 'BITCOIN_'
@@ -19,22 +20,18 @@ HEADER_ID_SUFFIX = '_H'
 
 EXCLUDE_FILES_WITH_PREFIX = ['contrib/devtools/bitcoin-tidy',
                              'src/crypto/ctaes',
-                             'src/leveldb',
-                             'src/crc32c',
-                             'src/secp256k1',
-                             'src/minisketch',
                              'src/tinyformat.h',
                              'src/bench/nanobench.h',
-                             'src/test/fuzz/FuzzedDataProvider.h']
+                             'src/test/fuzz/FuzzedDataProvider.h'] + SHARED_EXCLUDED_SUBTREES
 
 
-def _get_header_file_lst() -> List[str]:
+def _get_header_file_lst() -> list[str]:
     """ Helper function to get a list of header filepaths to be
         checked for include guards.
     """
     git_cmd_lst = ['git', 'ls-files', '--', '*.h']
     header_file_lst = check_output(
-        git_cmd_lst).decode('utf-8').splitlines()
+        git_cmd_lst, text=True).splitlines()
 
     header_file_lst = [hf for hf in header_file_lst
                        if not any(ef in hf for ef
@@ -74,7 +71,7 @@ def main():
 
         regex_pattern = f'^#(ifndef|define|endif //) {header_id}'
 
-        with open(header_file, 'r', encoding='utf-8') as f:
+        with open(header_file, 'r') as f:
             header_file_contents = f.readlines()
 
         count = 0
@@ -86,7 +83,7 @@ def main():
 
         if count != 3:
             print(f'{header_file} seems to be missing the expected '
-                  'include guard:')
+                  'include guard to prevent the double inclusion problem:')
             print(f'  #ifndef {header_id}')
             print(f'  #define {header_id}')
             print('  ...')

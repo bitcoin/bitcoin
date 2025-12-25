@@ -1,11 +1,10 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 #include <test/util/setup_common.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
-#include <util/getuniquepath.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -18,9 +17,12 @@ BOOST_FIXTURE_TEST_SUITE(fs_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(fsbridge_pathtostring)
 {
     std::string u8_str = "fs_tests_₿_🏃";
+    std::u8string str8{u8"fs_tests_₿_🏃"};
     BOOST_CHECK_EQUAL(fs::PathToString(fs::PathFromString(u8_str)), u8_str);
-    BOOST_CHECK_EQUAL(fs::u8path(u8_str).u8string(), u8_str);
-    BOOST_CHECK_EQUAL(fs::PathFromString(u8_str).u8string(), u8_str);
+    BOOST_CHECK_EQUAL(fs::u8path(u8_str).utf8string(), u8_str);
+    BOOST_CHECK_EQUAL(fs::path(str8).utf8string(), u8_str);
+    BOOST_CHECK(fs::path(str8).u8string() == str8);
+    BOOST_CHECK_EQUAL(fs::PathFromString(u8_str).utf8string(), u8_str);
     BOOST_CHECK_EQUAL(fs::PathToString(fs::u8path(u8_str)), u8_str);
 #ifndef WIN32
     // On non-windows systems, verify that arbitrary byte strings containing
@@ -47,39 +49,39 @@ BOOST_AUTO_TEST_CASE(fsbridge_fstream)
     fs::path tmpfolder = m_args.GetDataDirBase();
     // tmpfile1 should be the same as tmpfile2
     fs::path tmpfile1 = tmpfolder / fs::u8path("fs_tests_₿_🏃");
-    fs::path tmpfile2 = tmpfolder / fs::u8path("fs_tests_₿_🏃");
+    fs::path tmpfile2 = tmpfolder / fs::path(u8"fs_tests_₿_🏃");
     {
-        std::ofstream file{tmpfile1};
+        std::ofstream file{tmpfile1.std_path()};
         file << "bitcoin";
     }
     {
-        std::ifstream file{tmpfile2};
+        std::ifstream file{tmpfile2.std_path()};
         std::string input_buffer;
         file >> input_buffer;
         BOOST_CHECK_EQUAL(input_buffer, "bitcoin");
     }
     {
-        std::ifstream file{tmpfile1, std::ios_base::in | std::ios_base::ate};
+        std::ifstream file{tmpfile1.std_path(), std::ios_base::in | std::ios_base::ate};
         std::string input_buffer;
         file >> input_buffer;
         BOOST_CHECK_EQUAL(input_buffer, "");
     }
     {
-        std::ofstream file{tmpfile2, std::ios_base::out | std::ios_base::app};
+        std::ofstream file{tmpfile2.std_path(), std::ios_base::out | std::ios_base::app};
         file << "tests";
     }
     {
-        std::ifstream file{tmpfile1};
+        std::ifstream file{tmpfile1.std_path()};
         std::string input_buffer;
         file >> input_buffer;
         BOOST_CHECK_EQUAL(input_buffer, "bitcointests");
     }
     {
-        std::ofstream file{tmpfile2, std::ios_base::out | std::ios_base::trunc};
+        std::ofstream file{tmpfile2.std_path(), std::ios_base::out | std::ios_base::trunc};
         file << "bitcoin";
     }
     {
-        std::ifstream file{tmpfile1};
+        std::ifstream file{tmpfile1.std_path()};
         std::string input_buffer;
         file >> input_buffer;
         BOOST_CHECK_EQUAL(input_buffer, "bitcoin");
@@ -101,40 +103,25 @@ BOOST_AUTO_TEST_CASE(fsbridge_fstream)
         BOOST_CHECK_EQUAL(tmpfile1, fsbridge::AbsPathJoin(tmpfile1, ""));
         BOOST_CHECK_EQUAL(tmpfile1, fsbridge::AbsPathJoin(tmpfile1, {}));
     }
-    {
-        fs::path p1 = GetUniquePath(tmpfolder);
-        fs::path p2 = GetUniquePath(tmpfolder);
-        fs::path p3 = GetUniquePath(tmpfolder);
-
-        // Ensure that the parent path is always the same.
-        BOOST_CHECK_EQUAL(tmpfolder, p1.parent_path());
-        BOOST_CHECK_EQUAL(tmpfolder, p2.parent_path());
-        BOOST_CHECK_EQUAL(tmpfolder, p3.parent_path());
-
-        // Ensure that generated paths are actually different.
-        BOOST_CHECK(p1 != p2);
-        BOOST_CHECK(p2 != p3);
-        BOOST_CHECK(p1 != p3);
-    }
 }
 
 BOOST_AUTO_TEST_CASE(rename)
 {
     const fs::path tmpfolder{m_args.GetDataDirBase()};
 
-    const fs::path path1{GetUniquePath(tmpfolder)};
-    const fs::path path2{GetUniquePath(tmpfolder)};
+    const fs::path path1{tmpfolder / "a"};
+    const fs::path path2{tmpfolder / "b"};
 
     const std::string path1_contents{"1111"};
     const std::string path2_contents{"2222"};
 
     {
-        std::ofstream file{path1};
+        std::ofstream file{path1.std_path()};
         file << path1_contents;
     }
 
     {
-        std::ofstream file{path2};
+        std::ofstream file{path2.std_path()};
         file << path2_contents;
     }
 
@@ -144,36 +131,12 @@ BOOST_AUTO_TEST_CASE(rename)
     BOOST_CHECK(!fs::exists(path1));
 
     {
-        std::ifstream file{path2};
+        std::ifstream file{path2.std_path()};
         std::string contents;
         file >> contents;
         BOOST_CHECK_EQUAL(contents, path1_contents);
     }
     fs::remove(path2);
 }
-
-#ifndef __MINGW64__ // no symlinks on mingw
-BOOST_AUTO_TEST_CASE(create_directories)
-{
-    // Test fs::create_directories workaround.
-    const fs::path tmpfolder{m_args.GetDataDirBase()};
-
-    const fs::path dir{GetUniquePath(tmpfolder)};
-    fs::create_directory(dir);
-    BOOST_CHECK(fs::exists(dir));
-    BOOST_CHECK(fs::is_directory(dir));
-    BOOST_CHECK(!fs::create_directories(dir));
-
-    const fs::path symlink{GetUniquePath(tmpfolder)};
-    fs::create_directory_symlink(dir, symlink);
-    BOOST_CHECK(fs::exists(symlink));
-    BOOST_CHECK(fs::is_symlink(symlink));
-    BOOST_CHECK(fs::is_directory(symlink));
-    BOOST_CHECK(!fs::create_directories(symlink));
-
-    fs::remove(symlink);
-    fs::remove(dir);
-}
-#endif // __MINGW64__
 
 BOOST_AUTO_TEST_SUITE_END()

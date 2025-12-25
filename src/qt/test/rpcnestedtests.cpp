@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2021 The Bitcoin Core developers
+// Copyright (c) 2016-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -64,13 +64,13 @@ void RPCNestedTests::rpcNestedTests()
     RPCConsole::RPCExecuteCommandLine(m_node, result, "getblock( getblock( getblock(getbestblockhash())[hash] )[hash], true)"); //4 level nesting with whitespace, filtering path and boolean parameter
 
     RPCConsole::RPCExecuteCommandLine(m_node, result, "getblockchaininfo");
-    QVERIFY(result.substr(0,1) == "{");
+    QVERIFY(result.starts_with("{"));
 
     RPCConsole::RPCExecuteCommandLine(m_node, result, "getblockchaininfo()");
-    QVERIFY(result.substr(0,1) == "{");
+    QVERIFY(result.starts_with("{"));
 
     RPCConsole::RPCExecuteCommandLine(m_node, result, "getblockchaininfo "); //whitespace at the end will be tolerated
-    QVERIFY(result.substr(0,1) == "{");
+    QVERIFY(result.starts_with("{"));
 
     RPCConsole::RPCExecuteCommandLine(m_node, result, "getblockchaininfo()[\"chain\"]"); //Quote path identifier are allowed, but look after a child containing the quotes in the key
     QVERIFY(result == "null");
@@ -85,8 +85,12 @@ void RPCNestedTests::rpcNestedTests()
     QVERIFY(result == "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
     QVERIFY(filtered == "getblock(getbestblockhash())[tx][0]");
 
-    RPCConsole::RPCParseCommandLine(nullptr, result, "importprivkey", false, &filtered);
-    QVERIFY(filtered == "importprivkey(…)");
+    RPCConsole::RPCParseCommandLine(nullptr, result, "createwallet test true", false, &filtered);
+    QVERIFY(filtered == "createwallet(…)");
+    RPCConsole::RPCParseCommandLine(nullptr, result, "createwalletdescriptor abc", false, &filtered);
+    QVERIFY(filtered == "createwalletdescriptor(…)");
+    RPCConsole::RPCParseCommandLine(nullptr, result, "migratewallet abc abc", false, &filtered);
+    QVERIFY(filtered == "migratewallet(…)");
     RPCConsole::RPCParseCommandLine(nullptr, result, "signmessagewithprivkey abc", false, &filtered);
     QVERIFY(filtered == "signmessagewithprivkey(…)");
     RPCConsole::RPCParseCommandLine(nullptr, result, "signmessagewithprivkey abc,def", false, &filtered);
@@ -99,12 +103,6 @@ void RPCNestedTests::rpcNestedTests()
     QVERIFY(filtered == "walletpassphrasechange(…)");
     RPCConsole::RPCParseCommandLine(nullptr, result, "help(encryptwallet(abc, def))", false, &filtered);
     QVERIFY(filtered == "help(encryptwallet(…))");
-    RPCConsole::RPCParseCommandLine(nullptr, result, "help(importprivkey())", false, &filtered);
-    QVERIFY(filtered == "help(importprivkey(…))");
-    RPCConsole::RPCParseCommandLine(nullptr, result, "help(importprivkey(help()))", false, &filtered);
-    QVERIFY(filtered == "help(importprivkey(…))");
-    RPCConsole::RPCParseCommandLine(nullptr, result, "help(importprivkey(abc), walletpassphrase(def))", false, &filtered);
-    QVERIFY(filtered == "help(importprivkey(…), walletpassphrase(…))");
 
     RPCConsole::RPCExecuteCommandLine(m_node, result, "rpcNestedTest");
     QVERIFY(result == "[]");
@@ -127,6 +125,11 @@ void RPCNestedTests::rpcNestedTests()
     RPCConsole::RPCExecuteCommandLine(m_node, result, "rpcNestedTest(   abc   ,   cba )");
     QVERIFY(result == "[\"abc\",\"cba\"]");
 
+// Handle deprecated macro, can be removed once minimum Qt is at least 6.3.0.
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 3, 0))
+#undef QVERIFY_EXCEPTION_THROWN
+#define QVERIFY_EXCEPTION_THROWN(expression, exceptiontype) QVERIFY_THROWS_EXCEPTION(exceptiontype, expression)
+#endif
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(m_node, result, "getblockchaininfo() .\n"), std::runtime_error); //invalid syntax
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(m_node, result, "getblockchaininfo() getblockchaininfo()"), std::runtime_error); //invalid syntax
     RPCConsole::RPCExecuteCommandLine(m_node, result, "getblockchaininfo("); //tolerate non closing brackets if we have no arguments

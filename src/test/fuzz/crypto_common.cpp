@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -34,6 +34,10 @@ FUZZ_TARGET(crypto_common)
     std::array<uint8_t, 8> writele64_arr;
     WriteLE64(writele64_arr.data(), random_u64);
     assert(ReadLE64(writele64_arr.data()) == random_u64);
+
+    std::array<uint8_t, 2> writebe16_arr;
+    WriteBE16(writebe16_arr.data(), random_u16);
+    assert(ReadBE16(writebe16_arr.data()) == random_u16);
 
     std::array<uint8_t, 4> writebe32_arr;
     WriteBE32(writebe32_arr.data(), random_u32);

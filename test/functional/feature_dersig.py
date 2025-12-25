@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2022 The Bitcoin Core developers
+# Copyright (c) 2015-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test BIP66 (DER SIG).
@@ -47,10 +47,10 @@ DERSIG_HEIGHT = 102
 class BIP66Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        # whitelist peers to speed up tx relay / mempool sync
+        self.noban_tx_relay = True
         self.extra_args = [[
             f'-testactivationheight=dersig@{DERSIG_HEIGHT}',
-            '-whitelist=noban@127.0.0.1',
-            '-par=1',  # Use only one script thread to get the exact log msg for testing
         ]]
         self.setup_clean_chain = True
         self.rpc_timeout = 240
@@ -81,7 +81,6 @@ class BIP66Test(BitcoinTestFramework):
 
         spendtx = self.create_tx(self.coinbase_txids[0])
         unDERify(spendtx)
-        spendtx.rehash()
 
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
@@ -93,15 +92,15 @@ class BIP66Test(BitcoinTestFramework):
         peer.send_and_ping(msg_block(block))
         assert_equal(self.nodes[0].getblockcount(), DERSIG_HEIGHT - 1)
         self.test_dersig_info(is_active=True)  # Not active as of current tip, but next block must obey rules
-        assert_equal(self.nodes[0].getbestblockhash(), block.hash)
+        assert_equal(self.nodes[0].getbestblockhash(), block.hash_hex)
 
         self.log.info("Test that blocks must now be at least version 3")
-        tip = block.sha256
+        tip = block.hash_int
         block_time += 1
         block = create_block(tip, create_coinbase(DERSIG_HEIGHT), block_time, version=2)
         block.solve()
 
-        with self.nodes[0].assert_debug_log(expected_msgs=[f'{block.hash}, bad-version(0x00000002)']):
+        with self.nodes[0].assert_debug_log(expected_msgs=[f'{block.hash_hex}, bad-version(0x00000002)']):
             peer.send_and_ping(msg_block(block))
             assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
             peer.sync_with_ping()
@@ -109,18 +108,22 @@ class BIP66Test(BitcoinTestFramework):
         self.log.info("Test that transactions with non-DER signatures cannot appear in a block")
         block.nVersion = 4
 
-        spendtx = self.create_tx(self.coinbase_txids[1])
+        coin_txid = self.coinbase_txids[1]
+        spendtx = self.create_tx(coin_txid)
         unDERify(spendtx)
-        spendtx.rehash()
 
         # First we show that this tx is valid except for DERSIG by getting it
         # rejected from the mempool for exactly that reason.
+        spendtx_txid = spendtx.txid_hex
+        spendtx_wtxid = spendtx.wtxid_hex
         assert_equal(
             [{
-                'txid': spendtx.hash,
-                'wtxid': spendtx.getwtxid(),
+                'txid': spendtx_txid,
+                'wtxid': spendtx_wtxid,
                 'allowed': False,
-                'reject-reason': 'non-mandatory-script-verify-flag (Non-canonical DER signature)',
+                'reject-reason': 'mempool-script-verify-flag-failed (Non-canonical DER signature)',
+                'reject-details': 'mempool-script-verify-flag-failed (Non-canonical DER signature), ' +
+                                  f"input 0 of {spendtx_txid} (wtxid {spendtx_wtxid}), spending {coin_txid}:0"
             }],
             self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0),
         )
@@ -130,7 +133,7 @@ class BIP66Test(BitcoinTestFramework):
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
 
-        with self.nodes[0].assert_debug_log(expected_msgs=[f'CheckInputScripts on {block.vtx[-1].hash} failed with non-mandatory-script-verify-flag (Non-canonical DER signature)']):
+        with self.nodes[0].assert_debug_log(expected_msgs=['Block validation error: block-script-verify-flag-failed (Non-canonical DER signature)']):
             peer.send_and_ping(msg_block(block))
             assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
             peer.sync_with_ping()
@@ -143,8 +146,8 @@ class BIP66Test(BitcoinTestFramework):
         self.test_dersig_info(is_active=True)  # Not active as of current tip, but next block must obey rules
         peer.send_and_ping(msg_block(block))
         self.test_dersig_info(is_active=True)  # Active as of current tip
-        assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.sha256)
+        assert_equal(self.nodes[0].getbestblockhash(), block.hash_hex)
 
 
 if __name__ == '__main__':
-    BIP66Test().main()
+    BIP66Test(__file__).main()

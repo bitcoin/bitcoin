@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,6 +8,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/util/random.h>
 #include <util/bytevectorhash.h>
 #include <util/golombrice.h>
 
@@ -42,6 +43,7 @@ std::vector<uint64_t> BuildHashedSet(const std::unordered_set<std::vector<uint8_
 
 FUZZ_TARGET(golomb_rice)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     std::vector<uint8_t> golomb_rice_data;
     std::vector<uint64_t> encoded_deltas;
@@ -51,9 +53,9 @@ FUZZ_TARGET(golomb_rice)
         for (int i = 0; i < n; ++i) {
             elements.insert(ConsumeRandomLengthByteVector(fuzzed_data_provider, 16));
         }
-        CVectorWriter stream(SER_NETWORK, 0, golomb_rice_data, 0);
+        VectorWriter stream{golomb_rice_data, 0};
         WriteCompactSize(stream, static_cast<uint32_t>(elements.size()));
-        BitStreamWriter<CVectorWriter> bitwriter(stream);
+        BitStreamWriter bitwriter{stream};
         if (!elements.empty()) {
             uint64_t last_value = 0;
             for (const uint64_t value : BuildHashedSet(elements, static_cast<uint64_t>(elements.size()) * static_cast<uint64_t>(BASIC_FILTER_M))) {
@@ -68,8 +70,8 @@ FUZZ_TARGET(golomb_rice)
 
     std::vector<uint64_t> decoded_deltas;
     {
-        SpanReader stream{SER_NETWORK, 0, golomb_rice_data};
-        BitStreamReader<SpanReader> bitreader{stream};
+        SpanReader stream{golomb_rice_data};
+        BitStreamReader bitreader{stream};
         const uint32_t n = static_cast<uint32_t>(ReadCompactSize(stream));
         for (uint32_t i = 0; i < n; ++i) {
             decoded_deltas.push_back(GolombRiceDecode(bitreader, BASIC_FILTER_P));
@@ -80,14 +82,14 @@ FUZZ_TARGET(golomb_rice)
 
     {
         const std::vector<uint8_t> random_bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider, 1024);
-        SpanReader stream{SER_NETWORK, 0, random_bytes};
+        SpanReader stream{random_bytes};
         uint32_t n;
         try {
             n = static_cast<uint32_t>(ReadCompactSize(stream));
         } catch (const std::ios_base::failure&) {
             return;
         }
-        BitStreamReader<SpanReader> bitreader{stream};
+        BitStreamReader bitreader{stream};
         for (uint32_t i = 0; i < std::min<uint32_t>(n, 1024); ++i) {
             try {
                 (void)GolombRiceDecode(bitreader, BASIC_FILTER_P);

@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,14 +10,6 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-
-#if defined(__has_builtin)
-#if __has_builtin(__builtin_add_overflow)
-#define HAVE_BUILTIN_ADD_OVERFLOW
-#endif
-#elif defined(__GNUC__)
-#define HAVE_BUILTIN_ADD_OVERFLOW
-#endif
 
 namespace {
 template <typename T>
@@ -32,7 +24,7 @@ void TestAdditionOverflow(FuzzedDataProvider& fuzzed_data_provider)
     assert(is_addition_overflow_custom == AdditionOverflow(j, i));
     assert(maybe_add == CheckedAdd(j, i));
     assert(sat_add == SaturatingAdd(j, i));
-#if defined(HAVE_BUILTIN_ADD_OVERFLOW)
+#ifndef _MSC_VER
     T result_builtin;
     const bool is_addition_overflow_builtin = __builtin_add_overflow(i, j, &result_builtin);
     assert(is_addition_overflow_custom == is_addition_overflow_builtin);

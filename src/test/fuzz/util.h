@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +11,7 @@
 #include <compat/compat.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <key.h>
 #include <merkleblock.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -19,7 +20,6 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <uint256.h>
-#include <version.h>
 
 #include <algorithm>
 #include <array>
@@ -70,15 +70,16 @@ template<typename B = uint8_t>
     return BytesToBits(ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length));
 }
 
-[[nodiscard]] inline CDataStream ConsumeDataStream(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
+[[nodiscard]] inline DataStream ConsumeDataStream(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
 {
-    return CDataStream{ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length), SER_NETWORK, INIT_PROTO_VERSION};
+    return DataStream{ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length)};
 }
 
 [[nodiscard]] inline std::vector<std::string> ConsumeRandomLengthStringVector(FuzzedDataProvider& fuzzed_data_provider, const size_t max_vector_size = 16, const size_t max_string_length = 16) noexcept
 {
     const size_t n_elements = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, max_vector_size);
     std::vector<std::string> r;
+    r.reserve(n_elements);
     for (size_t i = 0; i < n_elements; ++i) {
         r.push_back(fuzzed_data_provider.ConsumeRandomLengthString(max_string_length));
     }
@@ -90,17 +91,35 @@ template <typename T>
 {
     const size_t n_elements = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, max_vector_size);
     std::vector<T> r;
+    r.reserve(n_elements);
     for (size_t i = 0; i < n_elements; ++i) {
         r.push_back(fuzzed_data_provider.ConsumeIntegral<T>());
     }
     return r;
 }
 
+template <typename P>
+[[nodiscard]] P ConsumeDeserializationParams(FuzzedDataProvider& fuzzed_data_provider) noexcept;
+
+template <typename T, typename P>
+[[nodiscard]] std::optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_data_provider, const P& params, const std::optional<size_t>& max_length = std::nullopt) noexcept
+{
+    const std::vector<uint8_t> buffer{ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length)};
+    DataStream ds{buffer};
+    T obj;
+    try {
+        ds >> params(obj);
+    } catch (const std::ios_base::failure&) {
+        return std::nullopt;
+    }
+    return obj;
+}
+
 template <typename T>
 [[nodiscard]] inline std::optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
 {
     const std::vector<uint8_t> buffer = ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length);
-    CDataStream ds{buffer, SER_NETWORK, INIT_PROTO_VERSION};
+    DataStream ds{buffer};
     T obj;
     try {
         ds >> obj;
@@ -115,7 +134,7 @@ template <typename WeakEnumType, size_t size>
 {
     return fuzzed_data_provider.ConsumeBool() ?
                fuzzed_data_provider.PickValueInArray<WeakEnumType>(all_types) :
-               WeakEnumType(fuzzed_data_provider.ConsumeIntegral<typename std::underlying_type<WeakEnumType>::type>());
+               WeakEnumType(fuzzed_data_provider.ConsumeIntegral<std::underlying_type_t<WeakEnumType>>());
 }
 
 [[nodiscard]] inline opcodetype ConsumeOpcodeType(FuzzedDataProvider& fuzzed_data_provider) noexcept
@@ -127,7 +146,7 @@ template <typename WeakEnumType, size_t size>
 
 [[nodiscard]] int64_t ConsumeTime(FuzzedDataProvider& fuzzed_data_provider, const std::optional<int64_t>& min = std::nullopt, const std::optional<int64_t>& max = std::nullopt) noexcept;
 
-[[nodiscard]] CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider, const std::optional<std::vector<uint256>>& prevout_txids, const int max_num_in = 10, const int max_num_out = 10) noexcept;
+[[nodiscard]] CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider, const std::optional<std::vector<Txid>>& prevout_txids, const int max_num_in = 10, const int max_num_out = 10) noexcept;
 
 [[nodiscard]] CScriptWitness ConsumeScriptWitness(FuzzedDataProvider& fuzzed_data_provider, const size_t max_stack_elem_size = 32) noexcept;
 
@@ -163,12 +182,32 @@ template <typename WeakEnumType, size_t size>
     return UintToArith256(ConsumeUInt256(fuzzed_data_provider));
 }
 
+[[nodiscard]] inline arith_uint256 ConsumeArithUInt256InRange(FuzzedDataProvider& fuzzed_data_provider, const arith_uint256& min, const arith_uint256& max) noexcept
+{
+    assert(min <= max);
+    const arith_uint256 range = max - min;
+    const arith_uint256 value = ConsumeArithUInt256(fuzzed_data_provider);
+    arith_uint256 result = value;
+    // Avoid division by 0, in case range + 1 results in overflow.
+    if (range != ~arith_uint256(0)) {
+        const arith_uint256 quotient = value / (range + 1);
+        result = value - (quotient * (range + 1));
+    }
+    result += min;
+    assert(result >= min && result <= max);
+    return result;
+}
+
+[[nodiscard]] std::map<COutPoint, Coin> ConsumeCoins(FuzzedDataProvider& fuzzed_data_provider) noexcept;
+
 [[nodiscard]] CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept;
+
+[[nodiscard]] CKey ConsumePrivateKey(FuzzedDataProvider& fuzzed_data_provider, std::optional<bool> compressed = std::nullopt) noexcept;
 
 template <typename T>
 [[nodiscard]] bool MultiplicationOverflow(const T i, const T j) noexcept
 {
-    static_assert(std::is_integral<T>::value, "Integral required.");
+    static_assert(std::is_integral_v<T>, "Integral required.");
     if (std::numeric_limits<T>::is_signed) {
         if (i > 0) {
             if (j > 0) {
@@ -242,31 +281,6 @@ public:
 
     static int close(void* cookie);
 };
-
-[[nodiscard]] inline FuzzedFileProvider ConsumeFile(FuzzedDataProvider& fuzzed_data_provider) noexcept
-{
-    return {fuzzed_data_provider};
-}
-
-class FuzzedAutoFileProvider
-{
-    FuzzedFileProvider m_fuzzed_file_provider;
-
-public:
-    FuzzedAutoFileProvider(FuzzedDataProvider& fuzzed_data_provider) : m_fuzzed_file_provider{fuzzed_data_provider}
-    {
-    }
-
-    AutoFile open()
-    {
-        return AutoFile{m_fuzzed_file_provider.open()};
-    }
-};
-
-[[nodiscard]] inline FuzzedAutoFileProvider ConsumeAutoFile(FuzzedDataProvider& fuzzed_data_provider) noexcept
-{
-    return {fuzzed_data_provider};
-}
 
 #define WRITE_TO_STREAM_CASE(type, consume) \
     [&] {                                   \

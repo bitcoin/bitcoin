@@ -1,24 +1,31 @@
-add_library(example INTERFACE)
-target_include_directories(example INTERFACE
-  ${PROJECT_SOURCE_DIR}/include
-)
-target_link_libraries(example INTERFACE
-  secp256k1
-  $<$<PLATFORM_ID:Windows>:bcrypt>
-)
+function(add_example name)
+  set(target_name ${name}_example)
+  add_executable(${target_name} ${name}.c)
+  target_include_directories(${target_name} PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+  )
+  target_link_libraries(${target_name}
+    secp256k1
+    $<$<PLATFORM_ID:Windows>:bcrypt>
+  )
+  set(test_name ${name}_example)
+  add_test(NAME secp256k1_${test_name} COMMAND ${target_name})
+endfunction()
 
-add_executable(ecdsa_example ecdsa.c)
-target_link_libraries(ecdsa_example example)
-add_test(NAME ecdsa_example COMMAND ecdsa_example)
+add_example(ecdsa)
 
 if(SECP256K1_ENABLE_MODULE_ECDH)
-  add_executable(ecdh_example ecdh.c)
-  target_link_libraries(ecdh_example example)
-  add_test(NAME ecdh_example COMMAND ecdh_example)
+  add_example(ecdh)
 endif()
 
 if(SECP256K1_ENABLE_MODULE_SCHNORRSIG)
-  add_executable(schnorr_example schnorr.c)
-  target_link_libraries(schnorr_example example)
-  add_test(NAME schnorr_example COMMAND schnorr_example)
+  add_example(schnorr)
+endif()
+
+if(SECP256K1_ENABLE_MODULE_ELLSWIFT)
+  add_example(ellswift)
+endif()
+
+if(SECP256K1_ENABLE_MODULE_MUSIG)
+  add_example(musig)
 endif()

@@ -1,0 +1,54 @@
+This fixes several instances where _MSC_VER was
+used to determine whether to use afunix.h or not.
+
+See https://github.com/zeromq/libzmq/pull/4678.
+--- a/src/ipc_address.hpp
++++ b/src/ipc_address.hpp
+@@ -7,7 +7,7 @@
+ 
+ #include <string>
+ 
+-#if defined _MSC_VER
++#if defined ZMQ_HAVE_WINDOWS
+ #include <afunix.h>
+ #else
+ #include <sys/socket.h>
+diff --git a/src/ipc_connecter.cpp b/src/ipc_connecter.cpp
+index 3f988745..ed2a0645 100644
+--- a/src/ipc_connecter.cpp
++++ b/src/ipc_connecter.cpp
+@@ -16,7 +16,7 @@
+ #include "ipc_address.hpp"
+ #include "session_base.hpp"
+ 
+-#ifdef _MSC_VER
++#if defined ZMQ_HAVE_WINDOWS
+ #include <afunix.h>
+ #else
+ #include <unistd.h>
+diff --git a/src/ipc_listener.cpp b/src/ipc_listener.cpp
+index 50126040..5428579b 100644
+--- a/src/ipc_listener.cpp
++++ b/src/ipc_listener.cpp
+@@ -17,7 +17,7 @@
+ #include "socket_base.hpp"
+ #include "address.hpp"
+ 
+-#ifdef _MSC_VER
++#ifdef ZMQ_HAVE_WINDOWS
+ #ifdef ZMQ_IOTHREAD_POLLER_USE_SELECT
+ #error On Windows, IPC does not work with POLLER=select, use POLLER=epoll instead, or disable IPC transport
+ #endif
+diff --git a/tests/testutil.cpp b/tests/testutil.cpp
+index bdc80283..6f21e8f6 100644
+--- a/tests/testutil.cpp
++++ b/tests/testutil.cpp
+@@ -7,7 +7,7 @@
+ 
+ #if defined _WIN32
+ #include "../src/windows.hpp"
+-#if defined _MSC_VER
++#if defined ZMQ_HAVE_WINDOWS
+ #if defined ZMQ_HAVE_IPC
+ #include <direct.h>
+ #include <afunix.h>

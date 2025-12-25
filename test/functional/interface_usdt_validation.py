@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,6 +8,7 @@
 """
 
 import ctypes
+import time
 
 # Test will be skipped if we don't have bcc installed
 try:
@@ -17,8 +18,10 @@ except ImportError:
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
-
+from test_framework.util import (
+    assert_equal,
+    bpf_cflags,
+)
 
 validation_blockconnected_program = """
 #include <uapi/linux/ptrace.h>
@@ -38,7 +41,9 @@ struct connected_block
 BPF_PERF_OUTPUT(block_connected);
 int trace_block_connected(struct pt_regs *ctx) {
     struct connected_block block = {};
-    bpf_usdt_readarg_p(1, ctx, &block.hash, 32);
+    void *phash = NULL;
+    bpf_usdt_readarg(1, ctx, &phash);
+    bpf_probe_read_user(&block.hash, sizeof(block.hash), phash);
     bpf_usdt_readarg(2, ctx, &block.height);
     bpf_usdt_readarg(3, ctx, &block.transactions);
     bpf_usdt_readarg(4, ctx, &block.inputs);
@@ -59,6 +64,7 @@ class ValidationTracepointTest(BitcoinTestFramework):
         self.skip_if_no_bitcoind_tracepoints()
         self.skip_if_no_python_bcc()
         self.skip_if_no_bpf_permissions()
+        self.skip_if_running_under_valgrind()
 
     def run_test(self):
         # Tests the validation:block_connected tracepoint by generating blocks
@@ -86,7 +92,6 @@ class ValidationTracepointTest(BitcoinTestFramework):
                     self.duration)
 
         BLOCKS_EXPECTED = 2
-        blocks_checked = 0
         expected_blocks = dict()
         events = []
 
@@ -95,23 +100,23 @@ class ValidationTracepointTest(BitcoinTestFramework):
         ctx.enable_probe(probe="validation:block_connected",
                          fn_name="trace_block_connected")
         bpf = BPF(text=validation_blockconnected_program,
-                  usdt_contexts=[ctx], debug=0)
+                  usdt_contexts=[ctx], debug=0, cflags=bpf_cflags())
 
         def handle_blockconnected(_, data, __):
-            nonlocal events, blocks_checked
             event = ctypes.cast(data, ctypes.POINTER(Block)).contents
             self.log.info(f"handle_blockconnected(): {event}")
             events.append(event)
-            blocks_checked += 1
 
         bpf["block_connected"].open_perf_buffer(
             handle_blockconnected)
 
         self.log.info(f"mine {BLOCKS_EXPECTED} blocks")
-        block_hashes = self.generatetoaddress(
-            self.nodes[0], BLOCKS_EXPECTED, ADDRESS_BCRT1_UNSPENDABLE)
-        for block_hash in block_hashes:
-            expected_blocks[block_hash] = self.nodes[0].getblock(block_hash, 2)
+        generatetoaddress_duration = dict()
+        for _ in range(BLOCKS_EXPECTED):
+            start = time.time()
+            hash = self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE)[0]
+            generatetoaddress_duration[hash] = (time.time() - start) * 1e9  # in nanoseconds
+            expected_blocks[hash] = self.nodes[0].getblock(hash, 2)
 
         bpf.perf_buffer_poll(timeout=200)
 
@@ -126,12 +131,16 @@ class ValidationTracepointTest(BitcoinTestFramework):
             assert_equal(0, event.sigops)  # no sigops in coinbase tx
             # only plausibility checks
             assert event.duration > 0
+            # generatetoaddress (mining and connecting) takes longer than
+            # connecting the block. In case the duration unit is off, we'll
+            # detect it with this assert.
+            assert event.duration < generatetoaddress_duration[block_hash]
             del expected_blocks[block_hash]
-        assert_equal(BLOCKS_EXPECTED, blocks_checked)
+        assert_equal(BLOCKS_EXPECTED, len(events))
         assert_equal(0, len(expected_blocks))
 
         bpf.cleanup()
 
 
 if __name__ == '__main__':
-    ValidationTracepointTest().main()
+    ValidationTracepointTest(__file__).main()

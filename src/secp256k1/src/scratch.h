@@ -21,6 +21,8 @@ typedef struct secp256k1_scratch_space_struct {
     size_t max_size;
 } secp256k1_scratch;
 
+typedef struct secp256k1_scratch_space_struct secp256k1_scratch_space;
+
 static secp256k1_scratch* secp256k1_scratch_create(const secp256k1_callback* error_callback, size_t max_size);
 
 static void secp256k1_scratch_destroy(const secp256k1_callback* error_callback, secp256k1_scratch* scratch);

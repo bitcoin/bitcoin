@@ -1,0 +1,20 @@
+autosetup-find-tclsh: Quote CC_FOR_BUILD to prevent word splitting
+
+In some build environments, CC_FOR_BUILD can include essential compiler
+flags. For example, in Guix it may have a value such as:
+`/gnu/store/10krix03rl5hqjv2c0qmj44ic9bgd8rc-gcc-toolchain-13.3.0/bin/gcc -isystem /gnu/store/10krix03rl5hqjv2c0qmj44ic9bgd8rc-gcc-toolchain-13.3.0/include`
+
+See upstream: https://github.com/msteveb/autosetup/pull/81.
+
+
+--- a/autosetup/autosetup-find-tclsh
++++ b/autosetup/autosetup-find-tclsh
+@@ -8,7 +8,7 @@
+ 	{ $tclsh "$d/${1-autosetup-test-tclsh}"; } 2>/dev/null && exit 0
+ done
+ echo 1>&2 "No installed jimsh or tclsh, building local bootstrap jimsh0"
+-for cc in ${CC_FOR_BUILD:-cc} gcc; do
++for cc in "${CC_FOR_BUILD:-cc}" gcc; do
+ 	{ $cc -o jimsh0 "$d/jimsh0.c"; } 2>/dev/null >/dev/null || continue
+ 	./jimsh0 "$d/${1-autosetup-test-tclsh}" && exit 0
+ done

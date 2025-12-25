@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2021 The Bitcoin Core developers
+// Copyright (c) 2014-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,11 +8,12 @@
 #include <bech32.h>
 #include <script/interpreter.h>
 #include <script/solver.h>
+#include <tinyformat.h>
 #include <util/strencodings.h>
 
 #include <algorithm>
-#include <assert.h>
-#include <string.h>
+#include <cassert>
+#include <cstring>
 
 /// Maximum witness length for Bech32 addresses.
 static constexpr std::size_t BECH32_WITNESS_PROG_MAX_LEN = 40;
@@ -66,16 +67,18 @@ public:
 
     std::string operator()(const WitnessUnknown& id) const
     {
-        if (id.version < 1 || id.version > 16 || id.length < 2 || id.length > 40) {
+        const std::vector<unsigned char>& program = id.GetWitnessProgram();
+        if (id.GetWitnessVersion() < 1 || id.GetWitnessVersion() > 16 || program.size() < 2 || program.size() > 40) {
             return {};
         }
-        std::vector<unsigned char> data = {(unsigned char)id.version};
-        data.reserve(1 + (id.length * 8 + 4) / 5);
-        ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, id.program, id.program + id.length);
+        std::vector<unsigned char> data = {(unsigned char)id.GetWitnessVersion()};
+        data.reserve(1 + (program.size() * 8 + 4) / 5);
+        ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, program.begin(), program.end());
         return bech32::Encode(bech32::Encoding::BECH32M, m_params.Bech32HRP(), data);
     }
 
     std::string operator()(const CNoDestination& no) const { return {}; }
+    std::string operator()(const PubKeyDestination& pk) const { return {}; }
 };
 
 CTxDestination DecodeDestination(const std::string& str, const CChainParams& params, std::string& error_str, std::vector<int>* error_locations)
@@ -178,6 +181,10 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
                 return tap;
             }
 
+            if (CScript::IsPayToAnchor(version, data)) {
+                return PayToAnchor();
+            }
+
             if (version > 16) {
                 error_str = "Invalid Bech32 address witness version";
                 return CNoDestination();
@@ -188,11 +195,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
                 return CNoDestination();
             }
 
-            WitnessUnknown unk;
-            unk.version = version;
-            std::copy(data.begin(), data.end(), unk.program);
-            unk.length = data.size();
-            return unk;
+            return WitnessUnknown{version, data};
         } else {
             error_str = strprintf("Invalid padding in Bech32 data section");
             return CNoDestination();
@@ -229,7 +232,7 @@ std::string EncodeSecret(const CKey& key)
 {
     assert(key.IsValid());
     std::vector<unsigned char> data = Params().Base58Prefix(CChainParams::SECRET_KEY);
-    data.insert(data.end(), key.begin(), key.end());
+    data.insert(data.end(), UCharCast(key.begin()), UCharCast(key.end()));
     if (key.IsCompressed()) {
         data.push_back(1);
     }
@@ -270,6 +273,9 @@ CExtKey DecodeExtKey(const std::string& str)
         if (data.size() == BIP32_EXTKEY_SIZE + prefix.size() && std::equal(prefix.begin(), prefix.end(), data.begin())) {
             key.Decode(data.data() + prefix.size());
         }
+    }
+    if (!data.empty()) {
+        memory_cleanse(data.data(), data.size());
     }
     return key;
 }

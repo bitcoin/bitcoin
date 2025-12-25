@@ -1,18 +1,22 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <node/mini_miner.h>
 
+#include <boost/multi_index/detail/hash_index_iterator.hpp>
+#include <boost/operators.hpp>
 #include <consensus/amount.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
-#include <timedata.h>
+#include <sync.h>
+#include <txmempool.h>
+#include <uint256.h>
 #include <util/check.h>
-#include <util/moneystr.h>
 
 #include <algorithm>
 #include <numeric>
+#include <ranges>
 #include <utility>
 
 namespace node {
@@ -24,7 +28,7 @@ MiniMiner::MiniMiner(const CTxMemPool& mempool, const std::vector<COutPoint>& ou
     // Anything that's spent by the mempool is to-be-replaced
     // Anything otherwise unavailable just has a bump fee of 0
     for (const auto& outpoint : outpoints) {
-        if (!mempool.exists(GenTxid::Txid(outpoint.hash))) {
+        if (!mempool.exists(outpoint.hash)) {
             // This UTXO is either confirmed or not yet submitted to mempool.
             // If it's confirmed, no bump fee is required.
             // If it's not yet submitted, we have no information, so return 0.
@@ -58,12 +62,8 @@ MiniMiner::MiniMiner(const CTxMemPool& mempool, const std::vector<COutPoint>& ou
     if (m_requested_outpoints_by_txid.empty()) return;
 
     // Calculate the cluster and construct the entry map.
-    std::vector<uint256> txids_needed;
-    txids_needed.reserve(m_requested_outpoints_by_txid.size());
-    for (const auto& [txid, _]: m_requested_outpoints_by_txid) {
-        txids_needed.push_back(txid);
-    }
-    const auto cluster = mempool.GatherClusters(txids_needed);
+    auto txids_needed{m_requested_outpoints_by_txid | std::views::keys};
+    const auto cluster = mempool.GatherClusters({txids_needed.begin(), txids_needed.end()});
     if (cluster.empty()) {
         // An empty cluster means that at least one of the transactions is missing from the mempool
         // (should not be possible given processing above) or DoS limit was hit.
@@ -73,8 +73,14 @@ MiniMiner::MiniMiner(const CTxMemPool& mempool, const std::vector<COutPoint>& ou
 
     // Add every entry to m_entries_by_txid and m_entries, except the ones that will be replaced.
     for (const auto& txiter : cluster) {
-        if (!m_to_be_replaced.count(txiter->GetTx().GetHash())) {
-            auto [mapiter, success] = m_entries_by_txid.emplace(txiter->GetTx().GetHash(), MiniMinerMempoolEntry(txiter));
+        if (!m_to_be_replaced.contains(txiter->GetTx().GetHash())) {
+            auto [ancestor_count, ancestor_size, ancestor_fee] = mempool.CalculateAncestorData(*txiter);
+            auto [mapiter, success] = m_entries_by_txid.emplace(txiter->GetTx().GetHash(),
+                MiniMinerMempoolEntry{/*tx_in=*/txiter->GetSharedTx(),
+                                      /*vsize_self=*/txiter->GetTxSize(),
+                                      /*vsize_ancestor=*/int64_t(ancestor_size),
+                                      /*fee_self=*/txiter->GetModifiedFee(),
+                                      /*fee_ancestor=*/ancestor_fee});
             m_entries.push_back(mapiter);
         } else {
             auto outpoints_it = m_requested_outpoints_by_txid.find(txiter->GetTx().GetHash());
@@ -95,13 +101,13 @@ MiniMiner::MiniMiner(const CTxMemPool& mempool, const std::vector<COutPoint>& ou
         // Cache descendants for future use. Unlike the real mempool, a descendant MiniMinerMempoolEntry
         // will not exist without its ancestor MiniMinerMempoolEntry, so these sets won't be invalidated.
         std::vector<MockEntryMap::iterator> cached_descendants;
-        const bool remove{m_to_be_replaced.count(txid) > 0};
+        const bool remove{m_to_be_replaced.contains(txid)};
         CTxMemPool::setEntries descendants;
         mempool.CalculateDescendants(txiter, descendants);
-        Assume(descendants.count(txiter) > 0);
+        Assume(descendants.contains(txiter));
         for (const auto& desc_txiter : descendants) {
             const auto txid_desc = desc_txiter->GetTx().GetHash();
-            const bool remove_desc{m_to_be_replaced.count(txid_desc) > 0};
+            const bool remove_desc{m_to_be_replaced.contains(txid_desc)};
             auto desc_it{m_entries_by_txid.find(txid_desc)};
             Assume((desc_it == m_entries_by_txid.end()) == remove_desc);
             if (remove) Assume(remove_desc);
@@ -124,7 +130,49 @@ MiniMiner::MiniMiner(const CTxMemPool& mempool, const std::vector<COutPoint>& ou
     SanityCheck();
 }
 
-// Compare by min(ancestor feerate, individual feerate), then iterator
+MiniMiner::MiniMiner(const std::vector<MiniMinerMempoolEntry>& manual_entries,
+                     const std::map<Txid, std::set<Txid>>& descendant_caches)
+{
+    for (const auto& entry : manual_entries) {
+        const auto& txid = entry.GetTx().GetHash();
+        // We need to know the descendant set of every transaction.
+        if (!Assume(descendant_caches.contains(txid))) {
+            m_ready_to_calculate = false;
+            return;
+        }
+        // Just forward these args onto MiniMinerMempoolEntry
+        auto [mapiter, success] = m_entries_by_txid.emplace(txid, entry);
+        // Txids must be unique; this txid shouldn't already be an entry in m_entries_by_txid
+        if (Assume(success)) m_entries.push_back(mapiter);
+    }
+    // Descendant cache is already built, but we need to translate them to m_entries_by_txid iters.
+    for (const auto& [txid, desc_txids] : descendant_caches) {
+        // Descendant cache should include at least the tx itself.
+        if (!Assume(!desc_txids.empty())) {
+            m_ready_to_calculate = false;
+            return;
+        }
+        std::vector<MockEntryMap::iterator> descendants;
+        for (const auto& desc_txid : desc_txids) {
+            auto desc_it{m_entries_by_txid.find(desc_txid)};
+            // Descendants should only include transactions with corresponding entries.
+            if (!Assume(desc_it != m_entries_by_txid.end())) {
+                m_ready_to_calculate = false;
+                return;
+            } else {
+                descendants.emplace_back(desc_it);
+            }
+        }
+        m_descendant_set_by_txid.emplace(txid, descendants);
+    }
+    Assume(m_to_be_replaced.empty());
+    Assume(m_requested_outpoints_by_txid.empty());
+    Assume(m_bump_fees.empty());
+    Assume(m_inclusion_order.empty());
+    SanityCheck();
+}
+
+// Compare by min(ancestor feerate, individual feerate), then txid
 //
 // Under the ancestor-based mining approach, high-feerate children can pay for parents, but high-feerate
 // parents do not incentive inclusion of their children. Therefore the mining algorithm only considers
@@ -133,21 +181,13 @@ struct AncestorFeerateComparator
 {
     template<typename I>
     bool operator()(const I& a, const I& b) const {
-        auto min_feerate = [](const MiniMinerMempoolEntry& e) -> CFeeRate {
-            const CAmount ancestor_fee{e.GetModFeesWithAncestors()};
-            const int64_t ancestor_size{e.GetSizeWithAncestors()};
-            const CAmount tx_fee{e.GetModifiedFee()};
-            const int64_t tx_size{e.GetTxSize()};
-            // Comparing ancestor feerate with individual feerate:
-            //     ancestor_fee / ancestor_size <= tx_fee / tx_size
-            // Avoid division and possible loss of precision by
-            // multiplying both sides by the sizes:
-            return ancestor_fee * tx_size < tx_fee * ancestor_size ?
-                       CFeeRate(ancestor_fee, ancestor_size) :
-                       CFeeRate(tx_fee, tx_size);
+        auto min_feerate = [](const MiniMinerMempoolEntry& e) -> FeeFrac {
+            FeeFrac self_feerate(e.GetModifiedFee(), e.GetTxSize());
+            FeeFrac ancestor_feerate(e.GetModFeesWithAncestors(), e.GetSizeWithAncestors());
+            return std::min(ancestor_feerate, self_feerate);
         };
-        CFeeRate a_feerate{min_feerate(a->second)};
-        CFeeRate b_feerate{min_feerate(b->second)};
+        FeeFrac a_feerate{min_feerate(a->second)};
+        FeeFrac b_feerate{min_feerate(b->second)};
         if (a_feerate != b_feerate) {
             return a_feerate > b_feerate;
         }
@@ -161,7 +201,7 @@ void MiniMiner::DeleteAncestorPackage(const std::set<MockEntryMap::iterator, Ite
     Assume(ancestors.size() >= 1);
     // "Mine" all transactions in this ancestor set.
     for (auto& anc : ancestors) {
-        Assume(m_in_block.count(anc->first) == 0);
+        Assume(!m_in_block.contains(anc->first));
         m_in_block.insert(anc->first);
         m_total_fees += anc->second.GetModifiedFee();
         m_total_vsize += anc->second.GetTxSize();
@@ -171,9 +211,8 @@ void MiniMiner::DeleteAncestorPackage(const std::set<MockEntryMap::iterator, Ite
         for (auto& descendant : it->second) {
             // If these fail, we must be double-deducting.
             Assume(descendant->second.GetModFeesWithAncestors() >= anc->second.GetModifiedFee());
-            Assume(descendant->second.vsize_with_ancestors >= anc->second.GetTxSize());
-            descendant->second.fee_with_ancestors -= anc->second.GetModifiedFee();
-            descendant->second.vsize_with_ancestors -= anc->second.GetTxSize();
+            Assume(descendant->second.GetSizeWithAncestors() >= anc->second.GetTxSize());
+            descendant->second.UpdateAncestorState(-anc->second.GetTxSize(), -anc->second.GetModifiedFee());
         }
     }
     // Delete these entries.
@@ -201,11 +240,13 @@ void MiniMiner::SanityCheck() const
                entry->second.GetModFeesWithAncestors() >= entry->second.GetModifiedFee();}));
     // None of the entries should be to-be-replaced transactions
     Assume(std::all_of(m_to_be_replaced.begin(), m_to_be_replaced.end(),
-        [&](const auto& txid){return m_entries_by_txid.find(txid) == m_entries_by_txid.end();}));
+        [&](const auto& txid){ return !m_entries_by_txid.contains(txid); }));
 }
 
-void MiniMiner::BuildMockTemplate(const CFeeRate& target_feerate)
+void MiniMiner::BuildMockTemplate(std::optional<CFeeRate> target_feerate)
 {
+    const auto num_txns{m_entries_by_txid.size()};
+    uint32_t sequence_num{0};
     while (!m_entries_by_txid.empty()) {
         // Sort again, since transaction removal may change some m_entries' ancestor feerates.
         std::sort(m_entries.begin(), m_entries.end(), AncestorFeerateComparator());
@@ -216,7 +257,8 @@ void MiniMiner::BuildMockTemplate(const CFeeRate& target_feerate)
         const auto ancestor_package_size = (*best_iter)->second.GetSizeWithAncestors();
         const auto ancestor_package_fee = (*best_iter)->second.GetModFeesWithAncestors();
         // Stop here. Everything that didn't "make it into the block" has bumpfee.
-        if (ancestor_package_fee < target_feerate.GetFee(ancestor_package_size)) {
+        if (target_feerate.has_value() &&
+            ancestor_package_fee < target_feerate->GetFee(ancestor_package_size)) {
             break;
         }
 
@@ -232,7 +274,7 @@ void MiniMiner::BuildMockTemplate(const CFeeRate& target_feerate)
                 ancestors.insert(*iter);
                 for (const auto& input : (*iter)->second.GetTx().vin) {
                     if (auto parent_it{m_entries_by_txid.find(input.prevout.hash)}; parent_it != m_entries_by_txid.end()) {
-                        if (ancestors.count(parent_it) == 0) {
+                        if (!ancestors.contains(parent_it)) {
                             to_process.insert(parent_it);
                         }
                     }
@@ -240,12 +282,30 @@ void MiniMiner::BuildMockTemplate(const CFeeRate& target_feerate)
                 to_process.erase(iter);
             }
         }
+        // Track the order in which transactions were selected.
+        for (const auto& ancestor : ancestors) {
+            m_inclusion_order.emplace(ancestor->first, sequence_num);
+        }
         DeleteAncestorPackage(ancestors);
         SanityCheck();
+        ++sequence_num;
     }
-    Assume(m_in_block.empty() || m_total_fees >= target_feerate.GetFee(m_total_vsize));
+    if (!target_feerate.has_value()) {
+        Assume(m_in_block.size() == num_txns);
+    } else {
+        Assume(m_in_block.empty() || m_total_fees >= target_feerate->GetFee(m_total_vsize));
+    }
+    Assume(m_in_block.empty() || sequence_num > 0);
+    Assume(m_in_block.size() == m_inclusion_order.size());
     // Do not try to continue building the block template with a different feerate.
     m_ready_to_calculate = false;
+}
+
+
+std::map<Txid, uint32_t> MiniMiner::Linearize()
+{
+    BuildMockTemplate(std::nullopt);
+    return m_inclusion_order;
 }
 
 std::map<COutPoint, CAmount> MiniMiner::CalculateBumpFees(const CFeeRate& target_feerate)
@@ -340,20 +400,20 @@ std::optional<CAmount> MiniMiner::CalculateTotalBumpFees(const CFeeRate& target_
     for (const auto& [txid, outpoints] : m_requested_outpoints_by_txid) {
         // Skip any ancestors that already have a miner score higher than the target feerate
         // (already "made it" into the block)
-        if (m_in_block.count(txid)) continue;
+        if (m_in_block.contains(txid)) continue;
         auto iter = m_entries_by_txid.find(txid);
         if (iter == m_entries_by_txid.end()) continue;
         to_process.insert(iter);
         ancestors.insert(iter);
     }
 
-    std::set<uint256> has_been_processed;
+    std::set<Txid> has_been_processed;
     while (!to_process.empty()) {
         auto iter = to_process.begin();
         const CTransaction& tx = (*iter)->second.GetTx();
         for (const auto& input : tx.vin) {
             if (auto parent_it{m_entries_by_txid.find(input.prevout.hash)}; parent_it != m_entries_by_txid.end()) {
-                if (!has_been_processed.count(input.prevout.hash)) {
+                if (!has_been_processed.contains(input.prevout.hash)) {
                     to_process.insert(parent_it);
                 }
                 ancestors.insert(parent_it);

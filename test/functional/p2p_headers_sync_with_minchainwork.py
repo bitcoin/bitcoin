@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2022 The Bitcoin Core developers
+# Copyright (c) 2019-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that we reject low difficulty headers to prevent our block tree from filling up with useless bloat"""
@@ -20,6 +20,8 @@ from test_framework.blocktools import (
 )
 
 from test_framework.util import assert_equal
+
+import time
 
 NODE1_BLOCKS_REQUIRED = 15
 NODE2_BLOCKS_REQUIRED = 2047
@@ -47,6 +49,10 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         self.connect_nodes(0, 1)
         self.connect_nodes(0, 2)
         self.connect_nodes(0, 3)
+
+    def mocktime_all(self, time):
+        for n in self.nodes:
+            n.setmocktime(time)
 
     def test_chains_sync_when_long_enough(self):
         self.log.info("Generate blocks on the node with no required chainwork, and verify nodes 1 and 2 have no new headers in their headers tree")
@@ -123,7 +129,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
             block = create_block(hashprev = hashPrevBlock, tmpl=node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS))
             block.solve()
             new_blocks.append(block)
-            hashPrevBlock = block.sha256
+            hashPrevBlock = block.hash_int
 
         headers_message = msg_headers(headers=new_blocks)
         p2p.send_and_ping(headers_message)
@@ -149,7 +155,9 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
 
         self.reconnect_all()
 
+        self.mocktime_all(int(time.time()))  # Temporarily hold time to avoid internal timeouts
         self.sync_blocks(timeout=300) # Ensure tips eventually agree
+        self.mocktime_all(0)
 
 
     def run_test(self):
@@ -162,4 +170,4 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    RejectLowDifficultyHeadersTest().main()
+    RejectLowDifficultyHeadersTest(__file__).main()

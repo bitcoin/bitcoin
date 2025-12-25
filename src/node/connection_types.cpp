@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,6 +20,20 @@ std::string ConnectionTypeAsString(ConnectionType conn_type)
         return "block-relay-only";
     case ConnectionType::ADDR_FETCH:
         return "addr-fetch";
+    } // no default case, so the compiler can warn about missing cases
+
+    assert(false);
+}
+
+std::string TransportTypeAsString(TransportProtocolType transport_type)
+{
+    switch (transport_type) {
+    case TransportProtocolType::DETECTING:
+        return "detecting";
+    case TransportProtocolType::V1:
+        return "v1";
+    case TransportProtocolType::V2:
+        return "v2";
     } // no default case, so the compiler can warn about missing cases
 
     assert(false);

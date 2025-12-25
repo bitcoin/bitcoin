@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +6,6 @@
 #include <chainparams.h>
 #include <index/txindex.h>
 #include <interfaces/chain.h>
-#include <test/util/index.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
 
@@ -30,10 +29,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
     // BlockUntilSyncedToCurrentChain should return false before txindex is started.
     BOOST_CHECK(!txindex.BlockUntilSyncedToCurrentChain());
 
-    BOOST_REQUIRE(txindex.StartBackgroundSync());
-
-    // Allow tx index to catch up with the block index.
-    IndexWaitSynced(txindex);
+    txindex.Sync();
 
     // Check that txindex excludes genesis block transactions.
     const CBlock& genesis_block = Params().GenesisBlock();
@@ -71,7 +67,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
     // SyncWithValidationInterfaceQueue() call below is also needed to ensure
     // TSAN always sees the test thread waiting for the notification thread, and
     // avoid potential false positive reports.
-    SyncWithValidationInterfaceQueue();
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
 
     // shutdown sequence (c.f. Shutdown() in init.cpp)
     txindex.Stop();

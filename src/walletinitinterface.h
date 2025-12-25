@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2021 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,7 +22,7 @@ public:
     /** Add wallets that should be opened to list of chain clients. */
     virtual void Construct(node::NodeContext& node) const = 0;
 
-    virtual ~WalletInitInterface() {}
+    virtual ~WalletInitInterface() = default;
 };
 
 extern const WalletInitInterface& g_wallet_init_interface;

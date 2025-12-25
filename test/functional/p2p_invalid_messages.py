@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2021 The Bitcoin Core developers
+# Copyright (c) 2015-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node responses to invalid network messages."""
 
 import random
-import struct
 import time
 
 from test_framework.messages import (
@@ -109,6 +108,9 @@ class InvalidMessagesTest(BitcoinTestFramework):
         self.nodes[0].disconnect_p2ps()
 
     def test_magic_bytes(self):
+        # Skip with v2, magic bytes are v1-specific
+        if self.options.v2transport:
+            return
         self.log.info("Test message with invalid magic bytes disconnects peer")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
         with self.nodes[0].assert_debug_log(['Header error: Wrong MessageStart ffffffff received']):
@@ -120,6 +122,9 @@ class InvalidMessagesTest(BitcoinTestFramework):
         self.nodes[0].disconnect_p2ps()
 
     def test_checksum(self):
+        # Skip with v2, the checksum is v1-specific
+        if self.options.v2transport:
+            return
         self.log.info("Test message with invalid checksum logs an error")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
         with self.nodes[0].assert_debug_log(['Header error: Wrong checksum (badmsg, 2 bytes), expected 78df0a04 was ffffffff']):
@@ -137,7 +142,11 @@ class InvalidMessagesTest(BitcoinTestFramework):
     def test_size(self):
         self.log.info("Test message with oversized payload disconnects peer")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
-        with self.nodes[0].assert_debug_log(['Header error: Size too large (badmsg, 4000001 bytes)']):
+        error_msg = (
+            ['V2 transport error: packet too large (4000014 bytes)'] if self.options.v2transport
+            else ['Header error: Size too large (badmsg, 4000001 bytes)']
+        )
+        with self.nodes[0].assert_debug_log(error_msg):
             msg = msg_unrecognized(str_data="d" * (VALID_DATA_LIMIT + 1))
             msg = conn.build_message(msg)
             conn.send_raw_message(msg)
@@ -147,15 +156,26 @@ class InvalidMessagesTest(BitcoinTestFramework):
     def test_msgtype(self):
         self.log.info("Test message with invalid message type logs an error")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
-        with self.nodes[0].assert_debug_log(['Header error: Invalid message type']):
+        if self.options.v2transport:
+            msgtype = 99 # not defined
             msg = msg_unrecognized(str_data="d")
-            msg = conn.build_message(msg)
-            # Modify msgtype
-            msg = msg[:7] + b'\x00' + msg[7 + 1:]
-            conn.send_raw_message(msg)
-            conn.sync_with_ping(timeout=1)
-        # Check that traffic is accounted for (24 bytes header + 2 bytes payload)
-        assert_equal(self.nodes[0].getpeerinfo()[0]['bytesrecv_per_msg']['*other*'], 26)
+            contents = msgtype.to_bytes(1, 'big') + msg.serialize()
+            tmsg = conn.v2_state.v2_enc_packet(contents, ignore=False)
+            with self.nodes[0].assert_debug_log(['V2 transport error: invalid message type']):
+                conn.send_raw_message(tmsg)
+                conn.sync_with_ping(timeout=1)
+            # Check that traffic is accounted for (20 bytes plus 3 bytes contents)
+            assert_equal(self.nodes[0].getpeerinfo()[0]['bytesrecv_per_msg']['*other*'], 23)
+        else:
+            with self.nodes[0].assert_debug_log(['Header error: Invalid message type']):
+                msg = msg_unrecognized(str_data="d")
+                msg = conn.build_message(msg)
+                # Modify msgtype
+                msg = msg[:7] + b'\x00' + msg[7 + 1:]
+                conn.send_raw_message(msg)
+                conn.sync_with_ping(timeout=1)
+                # Check that traffic is accounted for (24 bytes header + 2 bytes payload)
+                assert_equal(self.nodes[0].getpeerinfo()[0]['bytesrecv_per_msg']['*other*'], 26)
         self.nodes[0].disconnect_p2ps()
 
     def test_addrv2(self, label, required_log_messages, raw_addrv2):
@@ -212,11 +232,11 @@ class InvalidMessagesTest(BitcoinTestFramework):
                 '208d'))     # port
 
     def test_addrv2_unrecognized_network(self):
-        now_hex = struct.pack('<I', int(time.time())).hex()
+        now_hex = int(time.time()).to_bytes(4, "little").hex()
         self.test_addrv2('unrecognized network',
             [
                 'received: addrv2 (25 bytes)',
-                '9.9.9.9:8333 mapped',
+                '9.9.9.9:8333',
                 'Added 1 addresses',
             ],
             bytes.fromhex(
@@ -240,7 +260,9 @@ class InvalidMessagesTest(BitcoinTestFramework):
         msg_type = msg.msgtype.decode('ascii')
         self.log.info("Test {} message of size {} is logged as misbehaving".format(msg_type, size))
         with self.nodes[0].assert_debug_log(['Misbehaving', '{} message size = {}'.format(msg_type, size)]):
-            self.nodes[0].add_p2p_connection(P2PInterface()).send_and_ping(msg)
+            conn = self.nodes[0].add_p2p_connection(P2PInterface())
+            conn.send_without_ping(msg)
+            conn.wait_for_disconnect()
         self.nodes[0].disconnect_p2ps()
 
     def test_oversized_inv_msg(self):
@@ -266,23 +288,20 @@ class InvalidMessagesTest(BitcoinTestFramework):
         blockheader.hashPrevBlock = int(blockheader_tip_hash, 16)
         blockheader.nTime = int(time.time())
         blockheader.nBits = blockheader_tip.nBits
-        blockheader.rehash()
-        while not blockheader.hash.startswith('0'):
+        while not blockheader.hash_hex.startswith('0'):
             blockheader.nNonce += 1
-            blockheader.rehash()
         peer = self.nodes[0].add_p2p_connection(P2PInterface())
         peer.send_and_ping(msg_headers([blockheader]))
         assert_equal(self.nodes[0].getblockchaininfo()['headers'], 1)
         chaintips = self.nodes[0].getchaintips()
         assert_equal(chaintips[0]['status'], 'headers-only')
-        assert_equal(chaintips[0]['hash'], blockheader.hash)
+        assert_equal(chaintips[0]['hash'], blockheader.hash_hex)
 
         # invalidate PoW
-        while not blockheader.hash.startswith('f'):
+        while not blockheader.hash_hex.startswith('f'):
             blockheader.nNonce += 1
-            blockheader.rehash()
         with self.nodes[0].assert_debug_log(['Misbehaving', 'header with invalid proof of work']):
-            peer.send_message(msg_headers([blockheader]))
+            peer.send_without_ping(msg_headers([blockheader]))
             peer.wait_for_disconnect()
 
     def test_noncontinuous_headers_msg(self):
@@ -301,19 +320,22 @@ class InvalidMessagesTest(BitcoinTestFramework):
         # delete arbitrary block header somewhere in the middle to break link
         del block_headers[random.randrange(1, len(block_headers)-1)]
         with self.nodes[0].assert_debug_log(expected_msgs=MISBEHAVING_NONCONTINUOUS_HEADERS_MSGS):
-            peer.send_and_ping(msg_headers(block_headers))
+            peer.send_without_ping(msg_headers(block_headers))
+            peer.wait_for_disconnect()
         self.nodes[0].disconnect_p2ps()
 
     def test_resource_exhaustion(self):
         self.log.info("Test node stays up despite many large junk messages")
-        conn = self.nodes[0].add_p2p_connection(P2PDataStore())
-        conn2 = self.nodes[0].add_p2p_connection(P2PDataStore())
+        # Don't use v2 here - the non-optimised encryption would take too long to encrypt
+        # the large messages
+        conn = self.nodes[0].add_p2p_connection(P2PDataStore(), supports_v2_p2p=False)
+        conn2 = self.nodes[0].add_p2p_connection(P2PDataStore(), supports_v2_p2p=False)
         msg_at_size = msg_unrecognized(str_data="b" * VALID_DATA_LIMIT)
         assert len(msg_at_size.serialize()) == MAX_PROTOCOL_MESSAGE_LENGTH
 
         self.log.info("(a) Send 80 messages, each of maximum valid data size (4MB)")
         for _ in range(80):
-            conn.send_message(msg_at_size)
+            conn.send_without_ping(msg_at_size)
 
         # Check that, even though the node is being hammered by nonsense from one
         # connection, it can still service other peers in a timely way.
@@ -331,4 +353,4 @@ class InvalidMessagesTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    InvalidMessagesTest().main()
+    InvalidMessagesTest(__file__).main()

@@ -1,13 +1,14 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_NODE_TRANSACTION_H
 #define BITCOIN_NODE_TRANSACTION_H
 
+#include <common/messages.h>
+#include <node/types.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
-#include <util/error.h>
 
 class CBlockIndex;
 class CTxMemPool;
@@ -26,6 +27,12 @@ struct NodeContext;
  */
 static const CFeeRate DEFAULT_MAX_RAW_TX_FEE_RATE{COIN / 10};
 
+/** Maximum burn value for sendrawtransaction, submitpackage, and testmempoolaccept RPC calls.
+ * By default, a transaction with a burn value higher than this will be rejected
+ * by these RPCs and the GUI. This can be overridden with the maxburnamount argument.
+ */
+static const CAmount DEFAULT_MAX_BURN_AMOUNT{0};
+
 /**
  * Submit a transaction to the mempool and (optionally) relay it to all P2P peers.
  *
@@ -39,11 +46,16 @@ static const CFeeRate DEFAULT_MAX_RAW_TX_FEE_RATE{COIN / 10};
  * @param[in]  tx the transaction to broadcast
  * @param[out] err_string reference to std::string to fill with error string if available
  * @param[in]  max_tx_fee reject txs with fees higher than this (if 0, accept any fee)
- * @param[in]  relay flag if both mempool insertion and p2p relay are requested
+ * @param[in]  broadcast_method whether to add the transaction to the mempool and how to broadcast it
  * @param[in]  wait_callback wait until callbacks have been processed to avoid stale result due to a sequentially RPC.
  * return error
  */
-[[nodiscard]] TransactionError BroadcastTransaction(NodeContext& node, CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback);
+[[nodiscard]] TransactionError BroadcastTransaction(NodeContext& node,
+                                                    CTransactionRef tx,
+                                                    std::string& err_string,
+                                                    const CAmount& max_tx_fee,
+                                                    TxBroadcast broadcast_method,
+                                                    bool wait_callback);
 
 /**
  * Return transaction with a given hash.
@@ -54,10 +66,11 @@ static const CFeeRate DEFAULT_MAX_RAW_TX_FEE_RATE{COIN / 10};
  * @param[in]  block_index     The block to read from disk, or nullptr
  * @param[in]  mempool         If provided, check mempool for tx
  * @param[in]  hash            The txid
+ * @param[in]  blockman        Used to access and read blocks from disk
  * @param[out] hashBlock       The block hash, if the tx was found via -txindex or block_index
  * @returns                    The tx if found, otherwise nullptr
  */
-CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, uint256& hashBlock, const BlockManager& blockman);
+CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const Txid& hash, const BlockManager& blockman, uint256& hashBlock);
 } // namespace node
 
 #endif // BITCOIN_NODE_TRANSACTION_H

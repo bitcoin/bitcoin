@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2022 The Bitcoin Core developers
+# Copyright (c) 2016-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test version bits warning system.
@@ -32,7 +32,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
     def setup_network(self):
         self.alert_filename = os.path.join(self.options.tmpdir, "alert.txt")
         # Open and close to create zero-length file
-        with open(self.alert_filename, 'w', encoding='utf8'):
+        with open(self.alert_filename, 'w'):
             pass
         self.extra_args = [[f"-alertnotify=echo %s >> \"{self.alert_filename}\""]]
         self.setup_nodes()
@@ -47,15 +47,15 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         for _ in range(numblocks):
             block = create_block(tip, create_coinbase(height + 1), block_time, version=version)
             block.solve()
-            peer.send_message(msg_block(block))
+            peer.send_without_ping(msg_block(block))
             block_time += 1
             height += 1
-            tip = block.sha256
+            tip = block.hash_int
         peer.sync_with_ping()
 
     def versionbits_in_alert_file(self):
         """Test that the versionbits warning has been written to the alert file."""
-        with open(self.alert_filename, 'r', encoding='utf8') as f:
+        with open(self.alert_filename, 'r') as f:
             alert_text = f.read()
         return VB_PATTERN.search(alert_text) is not None
 
@@ -73,8 +73,8 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         self.generatetoaddress(node, VB_PERIOD - VB_THRESHOLD + 1, node_deterministic_address)
 
         # Check that we're not getting any versionbit-related errors in get*info()
-        assert not VB_PATTERN.match(node.getmininginfo()["warnings"])
-        assert not VB_PATTERN.match(node.getnetworkinfo()["warnings"])
+        assert not VB_PATTERN.match(",".join(node.getmininginfo()["warnings"]))
+        assert not VB_PATTERN.match(",".join(node.getnetworkinfo()["warnings"]))
 
         # Build one period of blocks with VB_THRESHOLD blocks signaling some unknown bit
         self.send_blocks_with_version(peer, VB_THRESHOLD, VB_UNKNOWN_VERSION)
@@ -94,10 +94,10 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # Generating one more block will be enough to generate an error.
         self.generatetoaddress(node, 1, node_deterministic_address)
         # Check that get*info() shows the versionbits unknown rules warning
-        assert WARN_UNKNOWN_RULES_ACTIVE in node.getmininginfo()["warnings"]
-        assert WARN_UNKNOWN_RULES_ACTIVE in node.getnetworkinfo()["warnings"]
+        assert WARN_UNKNOWN_RULES_ACTIVE in ",".join(node.getmininginfo()["warnings"])
+        assert WARN_UNKNOWN_RULES_ACTIVE in ",".join(node.getnetworkinfo()["warnings"])
         # Check that the alert file shows the versionbits unknown rules warning
         self.wait_until(lambda: self.versionbits_in_alert_file())
 
 if __name__ == '__main__':
-    VersionBitsWarningTest().main()
+    VersionBitsWarningTest(__file__).main()

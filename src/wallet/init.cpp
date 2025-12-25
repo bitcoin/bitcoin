@@ -1,7 +1,9 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <common/args.h>
 #include <init.h>
@@ -16,9 +18,6 @@
 #include <util/check.h>
 #include <util/moneystr.h>
 #include <util/translation.h>
-#ifdef USE_BDB
-#include <wallet/bdb.h>
-#endif
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 #include <walletinitinterface.h>
@@ -44,11 +43,11 @@ public:
 
 void WalletInit::AddWalletOptions(ArgsManager& argsman) const
 {
-    argsman.AddArg("-addresstype", strprintf("What type of addresses to use (\"legacy\", \"p2sh-segwit\", \"bech32\", or \"bech32m\", default: \"%s\")", FormatOutputType(DEFAULT_ADDRESS_TYPE)), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
+    argsman.AddArg("-addresstype", strprintf("What type of addresses to use (%s, default: \"%s\")", FormatAllOutputTypes(), FormatOutputType(DEFAULT_ADDRESS_TYPE)), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
     argsman.AddArg("-avoidpartialspends", strprintf("Group outputs by address, selecting many (possibly all) or none, instead of selecting on a per-output basis. Privacy is improved as addresses are mostly swept with fewer transactions and outputs are aggregated in clean change addresses. It may result in higher fees due to less optimal coin selection caused by this added limitation and possibly a larger-than-necessary number of inputs being used. Always enabled for wallets with \"avoid_reuse\" enabled, otherwise default: %u.", DEFAULT_AVOIDPARTIALSPENDS), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
     argsman.AddArg("-changetype",
-                   "What type of change to use (\"legacy\", \"p2sh-segwit\", \"bech32\", or \"bech32m\"). Default is \"legacy\" when "
-                   "-addresstype=legacy, else it is an implementation detail.",
+                   strprintf("What type of change to use (%s). Default is \"legacy\" when "
+                   "-addresstype=legacy, else it is an implementation detail.", FormatAllOutputTypes()),
                    ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
     argsman.AddArg("-consolidatefeerate=<amt>", strprintf("The maximum feerate (in %s/kvB) at which transaction building may use more inputs than strictly necessary so that the wallet's UTXO pool can be reduced (default: %s).", CURRENCY_UNIT, FormatMoney(DEFAULT_CONSOLIDATE_FEERATE)), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
     argsman.AddArg("-disablewallet", "Do not load the wallet and disable wallet RPC calls", ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
@@ -64,7 +63,7 @@ void WalletInit::AddWalletOptions(ArgsManager& argsman) const
         CURRENCY_UNIT, FormatMoney(DEFAULT_TRANSACTION_MAXFEE)), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-mintxfee=<amt>", strprintf("Fee rates (in %s/kvB) smaller than this are considered zero fee for transaction creation (default: %s)",
                                                             CURRENCY_UNIT, FormatMoney(DEFAULT_TRANSACTION_MINFEE)), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
-    argsman.AddArg("-paytxfee=<amt>", strprintf("Fee rate (in %s/kvB) to add to transactions you send (default: %s)",
+    argsman.AddArg("-paytxfee=<amt>", strprintf("(DEPRECATED) Fee rate (in %s/kvB) to add to transactions you send (default: %s)",
                                                             CURRENCY_UNIT, FormatMoney(CFeeRate{DEFAULT_PAY_TX_FEE}.GetFeePerK())), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
 #ifdef ENABLE_EXTERNAL_SIGNER
     argsman.AddArg("-signer=<cmd>", "External signing tool, see doc/external-signer.md", ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
@@ -79,47 +78,24 @@ void WalletInit::AddWalletOptions(ArgsManager& argsman) const
 #endif
     argsman.AddArg("-walletrbf", strprintf("Send transactions with full-RBF opt-in enabled (RPC only, default: %u)", DEFAULT_WALLET_RBF), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
 
-#ifdef USE_BDB
-    argsman.AddArg("-dblogsize=<n>", strprintf("Flush wallet database activity from memory to disk log every <n> megabytes (default: %u)", DatabaseOptions().max_log_mb), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::WALLET_DEBUG_TEST);
-    argsman.AddArg("-flushwallet", strprintf("Run a thread to flush wallet periodically (default: %u)", DEFAULT_FLUSHWALLET), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::WALLET_DEBUG_TEST);
-    argsman.AddArg("-privdb", strprintf("Sets the DB_PRIVATE flag in the wallet db environment (default: %u)", !DatabaseOptions().use_shared_memory), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::WALLET_DEBUG_TEST);
-#else
-    argsman.AddHiddenArgs({"-dblogsize", "-flushwallet", "-privdb"});
-#endif
-
-#ifdef USE_SQLITE
     argsman.AddArg("-unsafesqlitesync", "Set SQLite synchronous=OFF to disable waiting for the database to sync to disk. This is unsafe and can cause data loss and corruption. This option is only used by tests to improve their performance (default: false)", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::WALLET_DEBUG_TEST);
-#else
-    argsman.AddHiddenArgs({"-unsafesqlitesync"});
-#endif
 
     argsman.AddArg("-walletrejectlongchains", strprintf("Wallet will not create transactions that violate mempool chain limits (default: %u)", DEFAULT_WALLET_REJECT_LONG_CHAINS), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::WALLET_DEBUG_TEST);
     argsman.AddArg("-walletcrosschain", strprintf("Allow reusing wallet files across chains (default: %u)", DEFAULT_WALLETCROSSCHAIN), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::WALLET_DEBUG_TEST);
-
-    argsman.AddHiddenArgs({"-zapwallettxes"});
 }
 
 bool WalletInit::ParameterInteraction() const
 {
-#ifdef USE_BDB
-     if (!BerkeleyDatabaseSanityCheck()) {
-         return InitError(Untranslated("A version conflict was detected between the run-time BerkeleyDB library and the one used during compilation."));
-     }
-#endif
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         for (const std::string& wallet : gArgs.GetArgs("-wallet")) {
-            LogPrintf("%s: parameter interaction: -disablewallet -> ignoring -wallet=%s\n", __func__, wallet);
+            LogInfo("Parameter interaction: -disablewallet -> ignoring -wallet=%s", wallet);
         }
 
         return true;
     }
 
     if (gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) && gArgs.SoftSetBoolArg("-walletbroadcast", false)) {
-        LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -walletbroadcast=0\n", __func__);
-    }
-
-    if (gArgs.IsArgSet("-zapwallettxes")) {
-        return InitError(Untranslated("-zapwallettxes has been removed. If you are attempting to remove a stuck transaction from your wallet, please use abandontransaction instead."));
+        LogInfo("Parameter interaction: -blocksonly=1 -> setting -walletbroadcast=0");
     }
 
     return true;
@@ -129,7 +105,7 @@ void WalletInit::Construct(NodeContext& node) const
 {
     ArgsManager& args = *Assert(node.args);
     if (args.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
-        LogPrintf("Wallet disabled!\n");
+        LogInfo("Wallet disabled!");
         return;
     }
     auto wallet_loader = node.init->makeWalletLoader(*node.chain);

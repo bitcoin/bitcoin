@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Linux network utilities.
 
-Roughly based on http://voorloopnul.com/blog/a-python-netstat-in-less-than-100-lines-of-code/ by Ricardo Pascal
+Roughly based on https://web.archive.org/web/20190424172231/http://voorloopnul.com/blog/a-python-netstat-in-less-than-100-lines-of-code/ by Ricardo Pascal
 """
 
 import sys
@@ -12,6 +12,10 @@ import socket
 import struct
 import array
 import os
+
+# Easily unreachable address. Attempts to connect to it will stay within the machine.
+# Used to avoid non-loopback traffic or DNS queries.
+UNREACHABLE_PROXY_ARG = '-proxy=127.0.0.1:1'
 
 # STATE_ESTABLISHED = '01'
 # STATE_SYN_SENT  = '02'
@@ -25,6 +29,11 @@ import os
 STATE_LISTEN = '0A'
 # STATE_CLOSING = '0B'
 
+# Address manager size constants as defined in addrman_impl.h
+ADDRMAN_NEW_BUCKET_COUNT = 1 << 10
+ADDRMAN_TRIED_BUCKET_COUNT = 1 << 8
+ADDRMAN_BUCKET_SIZE = 1 << 6
+
 def get_socket_inodes(pid):
     '''
     Get list of socket inodes for process pid.
@@ -32,9 +41,12 @@ def get_socket_inodes(pid):
     base = '/proc/%i/fd' % pid
     inodes = []
     for item in os.listdir(base):
-        target = os.readlink(os.path.join(base, item))
-        if target.startswith('socket:'):
-            inodes.append(int(target[8:-1]))
+        try:
+            target = os.readlink(os.path.join(base, item))
+            if target.startswith('socket:'):
+                inodes.append(int(target[8:-1]))
+        except FileNotFoundError:
+            pass
     return inodes
 
 def _remove_empty(array):
@@ -57,7 +69,7 @@ def netstat(typ='tcp'):
     To get pid of all network process running on system, you must run this script
     as superuser
     '''
-    with open('/proc/net/'+typ,'r',encoding='utf8') as f:
+    with open('/proc/net/'+typ,'r') as f:
         content = f.readlines()
         content.pop(0)
     result = []
@@ -153,3 +165,19 @@ def test_ipv6_local():
     except socket.error:
         have_ipv6 = False
     return have_ipv6
+
+def test_unix_socket():
+    '''Return True if UNIX sockets are available on this platform.'''
+    try:
+        socket.AF_UNIX
+    except AttributeError:
+        return False
+    else:
+        return True
+
+def format_addr_port(addr, port):
+    '''Return either "addr:port" or "[addr]:port" based on whether addr looks like an IPv6 address.'''
+    if ":" in addr:
+        return f"[{addr}]:{port}"
+    else:
+        return f"{addr}:{port}"

@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,6 +16,7 @@
 #include <test/util/setup_common.h>
 #include <util/asmap.h>
 #include <util/chaintype.h>
+#include <util/time.h>
 
 #include <cstdint>
 #include <optional>
@@ -33,6 +34,11 @@ FUZZ_TARGET(net, .init = initialize_net)
     SetMockTime(ConsumeTime(fuzzed_data_provider));
     CNode node{ConsumeNode(fuzzed_data_provider)};
     node.SetCommonVersion(fuzzed_data_provider.ConsumeIntegral<int>());
+    if (const auto service_opt =
+            ConsumeDeserializable<CService>(fuzzed_data_provider, ConsumeDeserializationParams<CNetAddr::SerParams>(fuzzed_data_provider)))
+    {
+        node.SetAddrLocal(*service_opt);
+    }
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
@@ -53,13 +59,6 @@ FUZZ_TARGET(net, .init = initialize_net)
                 }
             },
             [&] {
-                const std::optional<CService> service_opt = ConsumeDeserializable<CService>(fuzzed_data_provider);
-                if (!service_opt) {
-                    return;
-                }
-                node.SetAddrLocal(*service_opt);
-            },
-            [&] {
                 const std::vector<uint8_t> b = ConsumeRandomLengthByteVector(fuzzed_data_provider);
                 bool complete;
                 node.ReceiveMsgBytes(b, complete);
@@ -76,4 +75,42 @@ FUZZ_TARGET(net, .init = initialize_net)
     const NetPermissionFlags net_permission_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
     (void)node.HasPermission(net_permission_flags);
     (void)node.ConnectedThroughNetwork();
+}
+
+FUZZ_TARGET(local_address, .init = initialize_net)
+{
+    FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    CService service{ConsumeService(fuzzed_data_provider)};
+    CNode node{ConsumeNode(fuzzed_data_provider)};
+    {
+        LOCK(g_maplocalhost_mutex);
+        mapLocalHost.clear();
+    }
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
+        CallOneOf(
+            fuzzed_data_provider,
+            [&] {
+                service = ConsumeService(fuzzed_data_provider);
+            },
+            [&] {
+                const bool added{AddLocal(service, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, LOCAL_MAX - 1))};
+                if (!added) return;
+                assert(service.IsRoutable());
+                assert(IsLocal(service));
+                assert(SeenLocal(service));
+            },
+            [&] {
+                (void)RemoveLocal(service);
+            },
+            [&] {
+                (void)SeenLocal(service);
+            },
+            [&] {
+                (void)IsLocal(service);
+            },
+            [&] {
+                (void)GetLocalAddress(node);
+            });
+    }
 }

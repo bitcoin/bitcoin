@@ -14,10 +14,6 @@
         <translation type="unfinished">പുതിയത്</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">നിലവിൽ തിരഞ്ഞെടുത്ത വിലാസം സിസ്റ്റം ക്ലിപ്പ്ബോർഡിലേക്ക് പകർത്തുക</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;പകർത്തുക</translation>
     </message>
@@ -58,14 +54,6 @@
         <translation type="unfinished">തി&amp;രഞ്ഞെടുക്കുക</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">അയക്കേണ്ട വിലാസങ്ങൾ</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">സ്വീകരിക്കുന്ന വിലാസങ്ങൾ</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">പൈസ അയയ്ക്കുന്നതിനുള്ള നിങ്ങളുടെ ബിറ്റ് കോയിൻ വിലാസങ്ങളാണ് ഇവ. നാണയങ്ങൾ അയയ്ക്കുന്നതിനുമുമ്പ് എല്ലായ്പ്പോഴും തുകയും സ്വീകരിക്കുന്ന വിലാസവും പരിശോധിക്കുക.</translation>
     </message>
@@ -90,6 +78,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Export Address List</source>
         <translation type="unfinished">കയറ്റുമതി വിലാസങ്ങൾ </translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">കോമയാൽ വേർതിരിച്ച ഫയൽ (* .csv)</translation>
+    </message>
+    <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">സ്വീകരിക്കുന്ന വിലാസങ്ങൾ - %1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">സ്വീകരിക്കുന്ന വിലാസങ്ങൾ - %1</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -174,6 +175,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">വാലെറ്റിന്റെ പഴയ രഹസ്യപദവും പുതിയ രഹസ്യപദവും നൽകുക.</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">തുടരുക</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished">മടങ്ങിപ്പോവുക</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">നിങ്ങളുടെ വാലറ്റ് എൻ‌ക്രിപ്റ്റ് ചെയ്യുന്നതിലൂടെ നിങ്ങളുടെ കമ്പ്യൂട്ടറിനെ ബാധിക്കുന്ന ക്ഷുദ്രവെയർ‌ മോഷ്ടിക്കുന്നതിൽ‌ നിന്നും നിങ്ങളുടെ ബിറ്റ്കോയിനുകളെ പൂർണ്ണമായി സംരക്ഷിക്കാൻ‌ കഴിയില്ല.</translation>
     </message>
@@ -214,8 +223,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">വാലറ്റ് ഡീക്രിപ്ഷനായി നൽകിയ പാസ്‌ഫ്രേസ് തെറ്റാണ്.</translation>
     </message>
     <message>
+        <source>The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
+        <translation type="unfinished">വാലറ്റ് ഡീക്രിപ്ഷനായി നൽകിയ പാസ്ഫ്രെയ്സ് തെറ്റാണ്. അതിൽ ഒരു ശൂന്യ പ്രതീകം അടങ്ങിയിരിക്കുന്നു (അതായത് - ഒരു സീറോ ബൈറ്റ്). 25.0-ന് മുമ്പ് ഈ സോഫ്‌റ്റ്‌വെയറിൻ്റെ ഒരു പതിപ്പ് ഉപയോഗിച്ചാണ് പാസ്‌ഫ്രെയ്‌സ് സജ്ജീകരിച്ചതെങ്കിൽ, ആദ്യത്തെ അസാധുവായ പ്രതീകം വരെയുള്ള - എന്നാൽ ഉൾപ്പെടുത്താതെയുള്ള പ്രതീകങ്ങൾ മാത്രം ഉപയോഗിച്ച് വീണ്ടും ശ്രമിക്കുക. ഇത് വിജയകരമാണെങ്കിൽ, ഭാവിയിൽ ഈ പ്രശ്‌നം ഒഴിവാക്കുന്നതിന് ദയവായി ഒരു പുതിയ പാസ്‌ഫ്രെയ്‌സ് സജ്ജീകരിക്കുക.</translation>
+    </message>
+    <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation type="unfinished">വാലറ്റ് പാസ്‌ഫ്രെയ്‌സ് വിജയകരമായി മാറ്റി.</translation>
+    </message>
+    <message>
+        <source>Passphrase change failed</source>
+        <translation type="unfinished">പാസ്‌ഫ്രെയ്‌സ് മാറ്റം പരാജയപ്പെട്ടു</translation>
+    </message>
+    <message>
+        <source>The old passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character.</source>
+        <translation type="unfinished">വാലറ്റ് ഡീക്രിപ്‌ഷനായി നൽകിയ പഴയ പാസ്‌ഫ്രെയ്‌സ് തെറ്റാണ്. അതിൽ ഒരു ശൂന്യ പ്രതീകം അടങ്ങിയിരിക്കുന്നു (അതായത് - ഒരു സീറോ ബൈറ്റ്). 25.0-ന് മുമ്പ് ഈ സോഫ്‌റ്റ്‌വെയറിൻ്റെ ഒരു പതിപ്പ് ഉപയോഗിച്ചാണ് പാസ്‌ഫ്രെയ്‌സ് സജ്ജീകരിച്ചതെങ്കിൽ, ആദ്യത്തെ അസാധുവായ പ്രതീകം വരെയുള്ള - എന്നാൽ ഉൾപ്പെടുത്താതെയുള്ള പ്രതീകങ്ങൾ മാത്രം ഉപയോഗിച്ച് വീണ്ടും ശ്രമിക്കുക.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -236,6 +257,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>BitcoinApplication</name>
     <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">ക്രമീകരണങ്ങൾ ഫയൽ %1 കേടായതോ അസാധുവായതോ ആയിരിക്കാം.</translation>
+    </message>
+    <message>
+        <source>Runaway exception</source>
+        <translation type="unfinished">റൺവേ ഒഴിവാക്കൽ പിശക്</translation>
+    </message>
+    <message>
         <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
         <translation type="unfinished">മാരകമായ ഒരു പിശക് സംഭവിച്ചു. %1 ന് മേലിൽ സുരക്ഷിതമായി തുടരാനാകില്ല, ഒപ്പം ഉപേക്ഷിക്കുകയും ചെയ്യും.</translation>
     </message>
@@ -244,12 +273,30 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ആന്തരിക പിശക്
  </translation>
     </message>
-    </context>
+    <message>
+        <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <translation type="unfinished">ഒരു ആന്തരിക പിശക് സംഭവിച്ചു. %1 സുരക്ഷിതമായി തുടരാൻ ശ്രമിക്കും. ഇത് ഒരു അപ്രതീക്ഷിത ബഗ് ആണ്, ഇത് ചുവടെ വിവരിച്ചിരിക്കുന്നതുപോലെ റിപ്പോർട്ട് ചെയ്യാവുന്നതാണ്.</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
+        <source>Do you want to reset settings to default values, or to abort without making changes?</source>
+        <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
+        <translation type="unfinished">ഡിഫോൾട്ട് മൂല്യങ്ങളിലേക്ക് ക്രമീകരണം പുനഃസജ്ജമാക്കണോ അതോ മാറ്റങ്ങൾ വരുത്താതെ തന്നെ നിർത്തലാക്കണോ?</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
+        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
+        <translation type="unfinished">ഒരു മാരകമായ പിശക് സംഭവിച്ചു. ക്രമീകരണ ഫയൽ എഴുതാനാവുന്നതാണോയെന്ന് പരിശോധിക്കുക അല്ലെങ്കിൽ ക്രമീകരണങ്ങളില്ലാതെ പ്രവർത്തിപ്പിക്കാൻ ശ്രമിക്കുക.</translation>
+    </message>
+    <message>
         <source>Error: %1</source>
         <translation type="unfinished">തെറ്റ് : %1 </translation>
+    </message>
+    <message>
+        <source>%1 didn't yet exit safely…</source>
+        <translation type="unfinished">%1 ഇതുവരെ സുരക്ഷിതമായി പുറത്തുകടന്നിട്ടില്ല…</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -258,6 +305,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Enter a Bitcoin address (e.g. %1)</source>
         <translation type="unfinished">ഒരു ബിറ്റ്കോയിൻ വിലാസം നൽകുക(e.g. %1)</translation>
+    </message>
+    <message>
+        <source>Inbound</source>
+        <extracomment>An inbound connection from a peer. An inbound connection is a connection initiated by a peer.</extracomment>
+        <translation type="unfinished">അകത്തേക്കു വരുന്ന</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <extracomment>An outbound connection to a peer. An outbound connection is a connection initiated by us.</extracomment>
+        <translation type="unfinished">പുറത്തേക് പോകുന്ന </translation>
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
@@ -301,102 +358,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
         </translation>
     </message>
-    </context>
-<context>
-    <name>bitcoin-core</name>
     <message>
-        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation type="unfinished">-maxtxfee യുടെ മൂല്യം വളരെ വലുതാണ്! ഇത്രയും ഉയര്ന്ന പ്രതിഫലം ഒരൊറ്റ ഇടപാടിൽ നൽകാൻ സാധ്യതയുണ്ട്.</translation>
+        <source>default wallet</source>
+        <translation type="unfinished">സ്ഥിരം ആയ വാലറ്റ്</translation>
     </message>
-    <message>
-        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
-        <translation type="unfinished">പ്രതിഫലം മൂല്യനിർണയം ലഭ്യമാകാത്ത പക്ഷം നിങ്ങൾ നല്കേണ്ടിവരുന്ന ഇടപാട് പ്രതിഫലം ഇതാണ്.</translation>
-    </message>
-    <message>
-        <source>Error reading from database, shutting down.</source>
-        <translation type="unfinished">ഡാറ്റാബേസിൽ നിന്നും വായിച്ചെടുക്കുന്നതിനു തടസം നേരിട്ടു, പ്രവർത്തനം അവസാനിപ്പിക്കുന്നു.</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low for %s</source>
-        <translation type="unfinished">Error: %s ൽ ഡിസ്ക് സ്പേസ് വളരെ കുറവാണ്</translation>
-    </message>
-    <message>
-        <source>Invalid -onion address or hostname: '%s'</source>
-        <translation type="unfinished">തെറ്റായ ഒണിയൻ അഡ്രസ് അല്ലെങ്കിൽ ഹോസ്റ്റ്നെയിം: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address or hostname: '%s'</source>
-        <translation type="unfinished">തെറ്റായ -പ്രോക്സി അഡ്രസ് അല്ലെങ്കിൽ ഹോസ്റ്റ് നെയിം : '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation type="unfinished">തെറ്റായ തുക  -paytxfee=&lt;amount&gt; :'%s' (ഏറ്റവും കുറഞ്ഞത് %s എങ്കിലും ആയിരിക്കണം )</translation>
-    </message>
-    <message>
-        <source>Invalid netmask specified in -whitelist: '%s'</source>
-        <translation type="unfinished">-whitelist: '%s' ൽ രേഖപ്പെടുത്തിയിരിക്കുന്ന netmask തെറ്റാണ് </translation>
-    </message>
-    <message>
-        <source>Need to specify a port with -whitebind: '%s'</source>
-        <translation type="unfinished">-whitebind: '%s' നൊടൊപ്പം ഒരു പോർട്ട് കൂടി നിർദ്ദേശിക്കേണ്ടതുണ്ട് </translation>
-    </message>
-    <message>
-        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
-        <translation type="unfinished">സിസ്റ്റത്തിന്റെ പരിമിധികളാൽ -maxconnections ന്റെ മൂല്യം %d ൽ  നിന്നും %d യിലേക്ക് കുറക്കുന്നു.</translation>
-    </message>
-    <message>
-        <source>Section [%s] is not recognized.</source>
-        <translation type="unfinished">Section [%s]  തിരിച്ചറിഞ്ഞില്ല.</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation type="unfinished">ഇടപാട് സൈൻ ചെയ്യുന്നത് പരാജയപ്പെട്ടു.</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" does not exist</source>
-        <translation type="unfinished">നിർദേശിച്ച -walletdir "%s" നിലവിൽ ഇല്ല</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" is a relative path</source>
-        <translation type="unfinished">നിർദേശിച്ച -walletdir "%s" ഒരു റിലേറ്റീവ് പാത്ത് ആണ്</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" is not a directory</source>
-        <translation type="unfinished">നിർദേശിച്ച  -walletdir "%s" ഒരു ഡയറക്ടറി അല്ല </translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to pay the fee</source>
-        <translation type="unfinished">ഇടപാട് മൂല്യം തീരെ കുറവായതിനാൽ പ്രതിഫലം നൽകാൻ കഴിയില്ല.</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation type="unfinished">ഇത് പരീക്ഷിച്ചുകൊണ്ടിരിക്കുന്ന ഒരു സോഫ്റ്റ്‌വെയർ ആണ്.</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation type="unfinished">ഇടപാട് മൂല്യം വളരെ കുറവാണ്</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation type="unfinished">ഇടപാട് വളരെ വലുതാണ് </translation>
-    </message>
-    <message>
-        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation type="unfinished">ഈ കംപ്യൂട്ടറിലെ %s ൽ ബൈൻഡ് ചെയ്യാൻ സാധിക്കുന്നില്ല ( ബൈൻഡ് തിരികെ തന്ന പിശക് %s )</translation>
-    </message>
-    <message>
-        <source>Unable to create the PID file '%s': %s</source>
-        <translation type="unfinished">PID ഫയൽ '%s': %s നിർമിക്കാൻ സാധിക്കുന്നില്ല </translation>
-    </message>
-    <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">പ്രാഥമിക കീ നിർമ്മിക്കാൻ സാധിക്കുന്നില്ല</translation>
-    </message>
-    <message>
-        <source>Unknown -blockfilterindex value %s.</source>
-        <translation type="unfinished">-blockfilterindex ന്റെ മൂല്യം %s മനസിലാക്കാൻ കഴിയുന്നില്ല.</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -448,6 +414,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ഒരു പുതിയ വാലറ്റ് സൃഷ്ടിക്കുക</translation>
     </message>
     <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished"> ഒപ്പം ചെറുതാക്കുക</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation type="unfinished">വാലറ്റ്:</translation>
     </message>
@@ -462,7 +432,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">ഒരു ബിറ്റ്കോയിൻ വിലാസത്തിലേക്ക് നാണയങ്ങൾ അയയ്ക്കുക</translation>
+        <translation type="unfinished">ഒരു ബിറ്റ്‌കോയിൻ വിലാസത്തിലേക് പണം അയക്കുക </translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -481,16 +451,56 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;സ്വീകരിക്കുക</translation>
     </message>
     <message>
+        <source>&amp;Options…</source>
+        <translation type="unfinished">ഇഷ്‌ടമുള്ളത്‌ തിരഞ്ഞെടുക്കല്‍</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet…</source>
+        <translation type="unfinished">വാലറ്റ് എൻക്രിപ്റ്റ് ചെയ്യുക…</translation>
+    </message>
+    <message>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation type="unfinished">നിങ്ങളുടെ വാലറ്റിന്റെ സ്വകാര്യ കീകൾ എൻ‌ക്രിപ്റ്റ് ചെയ്യുക</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet…</source>
+        <translation type="unfinished"> ബാക്കപ്പ് വാലറ്റും…</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase…</source>
+        <translation type="unfinished">പാസ്ഫ്രെയ്സ് മാറ്റുക</translation>
+    </message>
+    <message>
+        <source>Sign &amp;message…</source>
+        <translation type="unfinished">ഒപ്പിടുക, സന്ദേശം നൽകുക</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
         <translation type="unfinished">നിങ്ങളുടെ ബിറ്റ്കോയിൻ വിലാസങ്ങൾ സ്വന്തമാണെന്ന് തെളിയിക്കാൻ സന്ദേശങ്ങൾ ഒപ്പിടുക</translation>
     </message>
     <message>
+        <source>&amp;Verify message…</source>
+        <translation type="unfinished">സന്ദേശം പരിശോധിക്കുക...</translation>
+    </message>
+    <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
         <translation type="unfinished">നിർദ്ദിഷ്ട ബിറ്റ്കോയിൻ വിലാസങ്ങളിൽ സന്ദേശങ്ങൾ ഒപ്പിട്ടിട്ടുണ്ടെന്ന് ഉറപ്പാക്കാൻ സ്ഥിരീകരിക്കുക</translation>
+    </message>
+    <message>
+        <source>&amp;Load PSBT from file…</source>
+        <translation type="unfinished"> തുറന്ന് URL</translation>
+    </message>
+    <message>
+        <source>Close Wallet…</source>
+        <translation type="unfinished">വാലറ്റ് അടയ്ക്കുക</translation>
+    </message>
+    <message>
+        <source>Create Wallet…</source>
+        <translation type="unfinished">വാലറ്റ് സൃഷ്ടിക്കുക</translation>
+    </message>
+    <message>
+        <source>Close All Wallets…</source>
+        <translation type="unfinished">എല്ലാ വാലറ്റുകളും അടയ്ക്കുക</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -507,6 +517,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Tabs toolbar</source>
         <translation type="unfinished">ടാബുകളുടെ ടൂൾബാർ</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network…</source>
+        <translation type="unfinished"> നെറ്റ്‌വർക്കുമായി സമന്വയിപ്പിക്കുന്നു...</translation>
+    </message>
+    <message>
+        <source>Connecting to peers…</source>
+        <translation type="unfinished">നിങ്ങളെപ്പോലുള്ള ഉപയോക്താക്കളുമായി കണക്റ്റുചെയ്യുന്നു....</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -530,6 +548,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
             <numerusform />
         </translation>
+    </message>
+    <message>
+        <source>%1 behind</source>
+        <translation type="unfinished">%1 പുറകിൽ</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -596,8 +618,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">വാലറ്റ് പൂട്ടുക </translation>
     </message>
     <message>
+        <source>Restore a wallet from a backup file</source>
+        <extracomment>Status tip for Restore Wallet menu item</extracomment>
+        <translation type="unfinished">ഒരു ബാക്കപ്പ് ഫയലിൽ നിന്ന് ഒരു വാലറ്റ് പുനഃസ്ഥാപിക്കുക</translation>
+    </message>
+    <message>
         <source>Close all wallets</source>
         <translation type="unfinished">എല്ലാ വാലറ്റുകളും അടയ്‌ക്കുക ...</translation>
+    </message>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">വാലറ്റ് മൈഗ്രേറ്റ് ചെയ്യുക</translation>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
@@ -612,12 +643,23 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">അവലോകന ടാബിൽ മൂല്യങ്ങൾ മാസ്ക് ചെയ്യുക</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation type="unfinished">സ്ഥിരം ആയ വാലറ്റ്</translation>
-    </message>
-    <message>
         <source>No wallets available</source>
         <translation type="unfinished">വാലറ്റ് ഒന്നും ലഭ്യം അല്ല </translation>
+    </message>
+    <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation type="unfinished">വാലറ്റ് അടിസ്ഥാനവിവരം</translation>
+    </message>
+    <message>
+        <source>Load Wallet Backup</source>
+        <extracomment>The title for Restore Wallet File Windows</extracomment>
+        <translation type="unfinished">വാലറ്റ് ബാക്കപ്പ് ലോഡ് ചെയ്യുക</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
+        <translation type="unfinished">വാലറ്റ് പുനഃസ്ഥാപിക്കുക</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -748,10 +790,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ഫീസ്‌ / പ്രതിഫലം :</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">പൊടി:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">ഫീസ് കഴിഞ്ഞ്:</translation>
     </message>
@@ -816,28 +854,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ബൈറ്റ്സ് പകർത്തു</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">ഡസ്ട് പകർത്തു</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">ചേഞ്ച് പകർത്തു</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1 ലോക്ക് ആക്കിയിരിക്കുന്നു)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">അതെ / ശരി</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">ഇല്ല</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">ഏതെങ്കിലും സ്വീകർത്താവിന് നിലവിലെ ഡസ്ട് പരിധിയേക്കാൾ ചെറിയ തുക ലഭിക്കുകയാണെങ്കിൽ ഈ ലേബൽ ചുവപ്പായി മാറുന്നു.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -873,15 +895,26 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
-    <name>OpenWalletActivity</name>
+    <name>MigrateWalletActivity</name>
     <message>
-        <source>default wallet</source>
-        <translation type="unfinished">സ്ഥിരം ആയ വാലറ്റ്</translation>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">വാലറ്റ് മൈഗ്രേറ്റ് ചെയ്യുക</translation>
     </message>
+    </context>
+<context>
+    <name>OpenWalletActivity</name>
     <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
         <translation type="unfinished">വാലറ്റ് തുറക്കുക </translation>
+    </message>
+    </context>
+<context>
+    <name>RestoreWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">വാലറ്റ് പുനഃസ്ഥാപിക്കുക</translation>
     </message>
     </context>
 <context>
@@ -972,6 +1005,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">നാമധേയം / പേര് </translation>
     </message>
     <message>
+        <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
+        <translation type="unfinished">ഡയറക്ടറി ഇതിനകം നിലവിലുണ്ട്. നിങ്ങൾ ഇവിടെ ഒരു പുതിയ ഡയറക്ടറി സൃഷ്ടിക്കാൻ ആഗ്രഹിക്കുന്നുവെങ്കിൽ %1 ചേർക്കുക.</translation>
+    </message>
+    <message>
         <source>Path already exists, and is not a directory.</source>
         <translation type="unfinished">പാത്ത് ഇതിനകം നിലവിലുണ്ട്, അത് ഒരു ഡയറക്ടറിയല്ല.</translation>
     </message>
@@ -981,7 +1018,33 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">പതിപ്പ്</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">കമാൻഡ്-ലൈൻ ഓപ്ഷനുകൾ</translation>
+    </message>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down…</source>
+        <translation type="unfinished">%1 നിർത്തുകയാണ്...</translation>
+    </message>
+    </context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">സ്വാഗതം</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">%1 ലേക്ക് സ്വാഗതം.</translation>
+    </message>
     <message>
         <source>Bitcoin</source>
         <translation type="unfinished">ബിറ്റ്കോയിൻ</translation>
@@ -1019,21 +1082,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Error</source>
         <translation type="unfinished">പിശക് </translation>
     </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">സ്വാഗതം</translation>
-    </message>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">പതിപ്പ്</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">കമാൻഡ്-ലൈൻ ഓപ്ഷനുകൾ</translation>
-    </message>
 </context>
 <context>
     <name>ModalOverlay</name>
@@ -1057,8 +1105,32 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>OptionsDialog</name>
     <message>
+        <source>(0 = auto, &lt;0 = leave that many cores free)</source>
+        <translation type="unfinished">(0 = ഓട്ടോ, &lt;0 = അത്രയും കോറുകൾ സൗജന്യമായി വിടുക)</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation type="unfinished">വാലറ്റ്</translation>
+    </message>
+    <message>
+        <source>Expert</source>
+        <translation type="unfinished">വിദഗ്ധൻ</translation>
+    </message>
+    <message>
+        <source>&amp;Port:</source>
+        <translation type="unfinished">&amp;പോർട്ട്:</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation type="unfinished">ടോർ</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation type="unfinished">&amp;ജാലകം </translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">തുടരുക</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1076,8 +1148,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ലഭ്യമായ</translation>
     </message>
     <message>
-        <source>Spendable:</source>
-        <translation type="unfinished">വിനിയോഗിക്കാവുന്നത് / ചെലവാക്കാവുന്നത് </translation>
+        <source>Pending:</source>
+        <translation type="unfinished">തീരുമാനിക്കപ്പെടാത്ത</translation>
+    </message>
+    <message>
+        <source>Balances</source>
+        <translation type="unfinished">മിച്ചം ഉള്ള തുക </translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation type="unfinished">മൊത്തം</translation>
+    </message>
+    <message>
+        <source>Your current total balance</source>
+        <translation type="unfinished">നിങ്ങളുടെ നിലവിൽ ഉള്ള മുഴുവൻ തുക </translation>
     </message>
     <message>
         <source>Recent transactions</source>
@@ -1087,12 +1171,28 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
+        <source>Save…</source>
+        <translation type="unfinished">സൂക്ഷിക്കുക</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished">അവസാനിപ്പിക്കുക</translation>
+    </message>
+    <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
         <translation type="unfinished">ഇടപാട് വിജയകരമായി ഒപ്പിട്ടു.  ഇടപാട് പ്രക്ഷേപണത്തിന് തയ്യാറാണ്</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation type="unfinished">മുഴുവന്‍ തുക </translation>
     </message>
     </context>
 <context>
     <name>PaymentServer</name>
+    <message>
+        <source>Payment request error</source>
+        <translation type="unfinished">പണം അഭ്യര്‍ത്ഥന പിശക്‌</translation>
+    </message>
     <message>
         <source>URI handling</source>
         <translation type="unfinished">യു‌ആർ‌ഐ കൈകാര്യം ചെയ്യൽ</translation>
@@ -1103,7 +1203,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished">യു‌ആർ‌ഐ പാഴ്‌സുചെയ്യാൻ‌ കഴിയില്ല! അസാധുവായ ബിറ്റ്കോയിൻ വിലാസം അല്ലെങ്കിൽ കേടായ യു‌ആർ‌ഐ പാരാമീറ്ററുകൾ കാരണം ഇത് സംഭവിക്കാം.</translation>
+        <translation type="unfinished">യു‌ആർ‌ഐ പാഴ്‌സുചെയ്യാൻ‌ കഴിയില്ല! അസാധുവായ ബിറ്റ്കോയിൻ വിലാസം അല്ലെങ്കിൽ തെറ്റായ യു‌ആർ‌ഐ പാരാമീറ്ററുകൾ കാരണം ഇത് സംഭവിക്കാം.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1123,6 +1223,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">പിംഗ് </translation>
     </message>
     <message>
+        <source>Age</source>
+        <extracomment>Title of Peers Table column which indicates the duration (length of time) since the peer connection started.</extracomment>
+        <translation type="unfinished">പ്രായം</translation>
+    </message>
+    <message>
         <source>Sent</source>
         <extracomment>Title of Peers Table column which indicates the total amount of network information we have sent to the peer.</extracomment>
         <translation type="unfinished">അയക്കുക </translation>
@@ -1137,9 +1242,60 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
         <translation type="unfinished">വിലാസം</translation>
     </message>
+    <message>
+        <source>Type</source>
+        <extracomment>Title of Peers Table column which describes the type of peer connection. The "type" describes why the connection exists.</extracomment>
+        <translation type="unfinished">തരം</translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <extracomment>Title of Peers Table column which states the network the peer connected through.</extracomment>
+        <translation type="unfinished">ശൃംഖല</translation>
+    </message>
+    <message>
+        <source>Inbound</source>
+        <extracomment>An Inbound Connection from a Peer.</extracomment>
+        <translation type="unfinished">അകത്തേക്കു വരുന്ന</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <extracomment>An Outbound Connection to a Peer.</extracomment>
+        <translation type="unfinished">പുറത്തേക് പോകുന്ന </translation>
+    </message>
+</context>
+<context>
+    <name>QRImageWidget</name>
+    <message>
+        <source>&amp;Save Image…</source>
+        <translation type="unfinished">ചിത്രം സൂക്ഷിക്കുക</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Image</source>
+        <translation type="unfinished">ചിത്രം പകര്‍ത്തുക</translation>
+    </message>
     </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <source>&amp;Information</source>
+        <translation type="unfinished">അറിയിപ്പ്</translation>
+    </message>
+    <message>
+        <source>General</source>
+        <translation type="unfinished">പൊതുവായ</translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <translation type="unfinished">ശൃംഖല</translation>
+    </message>
+    <message>
+        <source>Name</source>
+        <translation type="unfinished">നാമപദം</translation>
+    </message>
+    <message>
+        <source>Wallet: </source>
+        <translation type="unfinished">പണസഞ്ചി</translation>
+    </message>
     <message>
         <source>Received</source>
         <translation type="unfinished">ലഭിച്ചവ </translation>
@@ -1181,6 +1337,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Wallet:</source>
         <translation type="unfinished">വാലറ്റ്:</translation>
+    </message>
+    <message>
+        <source>&amp;Save Image…</source>
+        <translation type="unfinished">ചിത്രം സൂക്ഷിക്കുക</translation>
     </message>
     </context>
 <context>
@@ -1225,10 +1385,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">മാറ്റം</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">പൊടി:</translation>
-    </message>
-    <message>
         <source>Copy quantity</source>
         <translation type="unfinished">നിര്‍ദ്ധിഷ്‌ടസംഖ്യ / അളവ് പകർത്തുക</translation>
     </message>
@@ -1249,12 +1405,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ബൈറ്റ്സ് പകർത്തു</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">ഡസ്ട് പകർത്തു</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">ചേഞ്ച് പകർത്തു</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation type="unfinished">മുഴുവന്‍ തുക </translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -1316,6 +1472,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">തീയതി </translation>
     </message>
     <message>
+        <source>Type</source>
+        <translation type="unfinished">തരം</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation type="unfinished">ലേബൽ</translation>
     </message>
@@ -1327,12 +1487,21 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>TransactionView</name>
     <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">കോമയാൽ വേർതിരിച്ച ഫയൽ (* .csv)</translation>
+    </message>
+    <message>
         <source>Confirmed</source>
         <translation type="unfinished">സ്ഥിതീകരിച്ചു</translation>
     </message>
     <message>
         <source>Date</source>
         <translation type="unfinished">തീയതി </translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation type="unfinished">തരം</translation>
     </message>
     <message>
         <source>Label</source>
@@ -1359,13 +1528,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
-    <name>WalletModel</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">സ്ഥിരം ആയ വാലറ്റ്</translation>
-    </message>
-</context>
-<context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
@@ -1374,6 +1536,98 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">നിലവിലുള്ള  ടാബിലെ  വിവരങ്ങൾ ഒരു ഫയലിലേക്ക് എക്സ്പോർട്ട് ചെയ്യുക</translation>
+    </message>
+    <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation type="unfinished">വാലറ്റ് അടിസ്ഥാനവിവരം</translation>
+    </message>
+    </context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation type="unfinished">പ്രതിഫലം മൂല്യനിർണയം ലഭ്യമാകാത്ത പക്ഷം നിങ്ങൾ നല്കേണ്ടിവരുന്ന ഇടപാട് പ്രതിഫലം ഇതാണ്.</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">സ്ഥിരം ആയ വാലറ്റ്</translation>
+    </message>
+    <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation type="unfinished">ഡാറ്റാബേസിൽ നിന്നും വായിച്ചെടുക്കുന്നതിനു തടസം നേരിട്ടു, പ്രവർത്തനം അവസാനിപ്പിക്കുന്നു.</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation type="unfinished">Error: %s ൽ ഡിസ്ക് സ്പേസ് വളരെ കുറവാണ്</translation>
+    </message>
+    <message>
+        <source>Invalid -onion address or hostname: '%s'</source>
+        <translation type="unfinished">തെറ്റായ ഒണിയൻ അഡ്രസ് അല്ലെങ്കിൽ ഹോസ്റ്റ്നെയിം: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation type="unfinished">തെറ്റായ -പ്രോക്സി അഡ്രസ് അല്ലെങ്കിൽ ഹോസ്റ്റ് നെയിം : '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid netmask specified in -whitelist: '%s'</source>
+        <translation type="unfinished">-whitelist: '%s' ൽ രേഖപ്പെടുത്തിയിരിക്കുന്ന netmask തെറ്റാണ് </translation>
+    </message>
+    <message>
+        <source>Need to specify a port with -whitebind: '%s'</source>
+        <translation type="unfinished">-whitebind: '%s' നൊടൊപ്പം ഒരു പോർട്ട് കൂടി നിർദ്ദേശിക്കേണ്ടതുണ്ട് </translation>
+    </message>
+    <message>
+        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
+        <translation type="unfinished">സിസ്റ്റത്തിന്റെ പരിമിധികളാൽ -maxconnections ന്റെ മൂല്യം %d ൽ  നിന്നും %d യിലേക്ക് കുറക്കുന്നു.</translation>
+    </message>
+    <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation type="unfinished">Section [%s]  തിരിച്ചറിഞ്ഞില്ല.</translation>
+    </message>
+    <message>
+        <source>Signing transaction failed</source>
+        <translation type="unfinished">ഇടപാട് സൈൻ ചെയ്യുന്നത് പരാജയപ്പെട്ടു.</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation type="unfinished">നിർദേശിച്ച -walletdir "%s" നിലവിൽ ഇല്ല</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation type="unfinished">നിർദേശിച്ച -walletdir "%s" ഒരു റിലേറ്റീവ് പാത്ത് ആണ്</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation type="unfinished">നിർദേശിച്ച  -walletdir "%s" ഒരു ഡയറക്ടറി അല്ല </translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to pay the fee</source>
+        <translation type="unfinished">ഇടപാട് മൂല്യം തീരെ കുറവായതിനാൽ പ്രതിഫലം നൽകാൻ കഴിയില്ല.</translation>
+    </message>
+    <message>
+        <source>This is experimental software.</source>
+        <translation type="unfinished">ഇത് പരീക്ഷിച്ചുകൊണ്ടിരിക്കുന്ന ഒരു സോഫ്റ്റ്‌വെയർ ആണ്.</translation>
+    </message>
+    <message>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished">ഇടപാട് മൂല്യം വളരെ കുറവാണ്</translation>
+    </message>
+    <message>
+        <source>Transaction too large</source>
+        <translation type="unfinished">ഇടപാട് വളരെ വലുതാണ് </translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
+        <translation type="unfinished">ഈ കംപ്യൂട്ടറിലെ %s ൽ ബൈൻഡ് ചെയ്യാൻ സാധിക്കുന്നില്ല ( ബൈൻഡ് തിരികെ തന്ന പിശക് %s )</translation>
+    </message>
+    <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation type="unfinished">PID ഫയൽ '%s': %s നിർമിക്കാൻ സാധിക്കുന്നില്ല </translation>
+    </message>
+    <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation type="unfinished">-blockfilterindex ന്റെ മൂല്യം %s മനസിലാക്കാൻ കഴിയുന്നില്ല.</translation>
     </message>
     </context>
 </TS>

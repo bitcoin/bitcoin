@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,7 +19,7 @@
 class LockedPageAllocator
 {
 public:
-    virtual ~LockedPageAllocator() {}
+    virtual ~LockedPageAllocator() = default;
     /** Allocate and lock memory pages.
      * If len is not a multiple of the system page size, it is rounded up.
      * Returns nullptr in case of allocation failure.

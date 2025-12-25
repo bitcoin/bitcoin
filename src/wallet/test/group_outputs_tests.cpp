@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
@@ -19,7 +19,6 @@ static int nextLockTime = 0;
 static std::shared_ptr<CWallet> NewWallet(const node::NodeContext& m_node)
 {
     std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(m_node.chain.get(), "", CreateMockableWalletDatabase());
-    wallet->LoadWallet();
     LOCK(wallet->cs_wallet);
     wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
     wallet->SetupDescriptorScriptPubKeyMans();
@@ -40,7 +39,7 @@ static void addCoin(CoinsResult& coins,
     tx.vout[0].nValue = nValue;
     tx.vout[0].scriptPubKey = GetScriptForDestination(dest);
 
-    const uint256& txid = tx.GetHash();
+    const auto txid{tx.GetHash()};
     LOCK(wallet.cs_wallet);
     auto ret = wallet.mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(txid), std::forward_as_tuple(MakeTransactionRef(std::move(tx)), TxStateInactive{}));
     assert(ret.second);
@@ -51,7 +50,6 @@ static void addCoin(CoinsResult& coins,
                    txout,
                    depth,
                    CalculateMaximumSignedInputSize(txout, &wallet, /*coin_control=*/nullptr),
-                   /*spendable=*/ true,
                    /*solvable=*/ true,
                    /*safe=*/ true,
                    wtx.GetTxTime(),

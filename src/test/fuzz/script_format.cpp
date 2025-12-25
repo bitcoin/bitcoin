@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -30,5 +30,7 @@ FUZZ_TARGET(script_format, .init = initialize_script_format)
     (void)ScriptToAsmStr(script, /*fAttemptSighashDecode=*/fuzzed_data_provider.ConsumeBool());
 
     UniValue o1(UniValue::VOBJ);
-    ScriptToUniv(script, /*out=*/o1, /*include_hex=*/fuzzed_data_provider.ConsumeBool(), /*include_address=*/fuzzed_data_provider.ConsumeBool());
+    auto include_hex = fuzzed_data_provider.ConsumeBool();
+    auto include_address = fuzzed_data_provider.ConsumeBool();
+    ScriptToUniv(script, /*out=*/o1, include_hex, include_address);
 }

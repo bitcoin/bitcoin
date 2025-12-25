@@ -7,6 +7,7 @@
 #define SECP256K1_MODULE_ELLSWIFT_TESTS_H
 
 #include "../../../include/secp256k1_ellswift.h"
+#include "../../unit_test.h"
 
 struct ellswift_xswiftec_inv_test {
     int enc_bitmap;
@@ -188,9 +189,9 @@ void run_ellswift_tests(void) {
             CHECK(ret == ((testcase->enc_bitmap >> c) & 1));
             if (ret) {
                 secp256k1_fe x2;
-                CHECK(check_fe_equal(&t, &testcase->encs[c]));
+                CHECK(fe_equal(&t, &testcase->encs[c]));
                 secp256k1_ellswift_xswiftec_var(&x2, &testcase->u, &testcase->encs[c]);
-                CHECK(check_fe_equal(&testcase->x, &x2));
+                CHECK(fe_equal(&testcase->x, &x2));
             }
         }
     }
@@ -203,7 +204,7 @@ void run_ellswift_tests(void) {
         CHECK(ret);
         ret = secp256k1_pubkey_load(CTX, &ge, &pubkey);
         CHECK(ret);
-        CHECK(check_fe_equal(&testcase->x, &ge.x));
+        CHECK(fe_equal(&testcase->x, &ge.x));
         CHECK(secp256k1_fe_is_odd(&ge.y) == testcase->odd_y);
     }
     for (i = 0; (unsigned)i < sizeof(ellswift_xdh_tests_bip324) / sizeof(ellswift_xdh_tests_bip324[0]); ++i) {
@@ -229,15 +230,15 @@ void run_ellswift_tests(void) {
         secp256k1_ge g, g2;
         secp256k1_pubkey pubkey, pubkey2;
         /* Generate random public key and random randomizer. */
-        random_group_element_test(&g);
+        testutil_random_ge_test(&g);
         secp256k1_pubkey_save(&pubkey, &g);
-        secp256k1_testrand256(rnd32);
+        testrand256(rnd32);
         /* Convert the public key to ElligatorSwift and back. */
         secp256k1_ellswift_encode(CTX, ell64, &pubkey, rnd32);
         secp256k1_ellswift_decode(CTX, &pubkey2, ell64);
         secp256k1_pubkey_load(CTX, &g2, &pubkey2);
         /* Compare with original. */
-        ge_equals_ge(&g, &g2);
+        CHECK(secp256k1_ge_eq_var(&g, &g2));
     }
     /* Verify the behavior of secp256k1_ellswift_create */
     for (i = 0; i < 400 * COUNT; i++) {
@@ -249,8 +250,8 @@ void run_ellswift_tests(void) {
         unsigned char ell64[64];
         int ret;
         /* Generate random secret key and random randomizer. */
-        if (i & 1) secp256k1_testrand256_test(auxrnd32);
-        random_scalar_order_test(&sec);
+        if (i & 1) testrand256_test(auxrnd32);
+        testutil_random_scalar_order_test(&sec);
         secp256k1_scalar_get_b32(sec32, &sec);
         /* Construct ElligatorSwift-encoded public keys for that key. */
         ret = secp256k1_ellswift_create(CTX, ell64, sec32, (i & 1) ? auxrnd32 : NULL);
@@ -259,7 +260,7 @@ void run_ellswift_tests(void) {
         secp256k1_ellswift_decode(CTX, &pub, ell64);
         secp256k1_pubkey_load(CTX, &dec, &pub);
         secp256k1_ecmult(&res, NULL, &secp256k1_scalar_zero, &sec);
-        ge_equals_gej(&dec, &res);
+        CHECK(secp256k1_gej_eq_ge_var(&res, &dec));
     }
     /* Verify that secp256k1_ellswift_xdh computes the right shared X coordinate. */
     for (i = 0; i < 800 * COUNT; i++) {
@@ -271,11 +272,11 @@ void run_ellswift_tests(void) {
         secp256k1_pubkey pub;
         int ret;
         /* Generate random secret key. */
-        random_scalar_order_test(&sec);
+        testutil_random_scalar_order_test(&sec);
         secp256k1_scalar_get_b32(sec32, &sec);
         /* Generate random ElligatorSwift encoding for the remote key and decode it. */
-        secp256k1_testrand256_test(ell64);
-        secp256k1_testrand256_test(ell64 + 32);
+        testrand256_test(ell64);
+        testrand256_test(ell64 + 32);
         secp256k1_ellswift_decode(CTX, &pub, ell64);
         secp256k1_pubkey_load(CTX, &dec, &pub);
         secp256k1_gej_set_ge(&decj, &dec);
@@ -285,12 +286,12 @@ void run_ellswift_tests(void) {
         ret = secp256k1_ellswift_xdh(CTX, share32, ell64, ell64, sec32, i & 1, &ellswift_xdh_hash_x32, NULL);
         CHECK(ret);
         (void)secp256k1_fe_set_b32_limit(&share_x, share32); /* no overflow is possible */
-        secp256k1_fe_verify(&share_x);
+        SECP256K1_FE_VERIFY(&share_x);
         /* Compute seckey*pubkey directly. */
         secp256k1_ecmult(&resj, &decj, &sec, NULL);
         secp256k1_ge_set_gej(&res, &resj);
         /* Compare. */
-        CHECK(check_fe_equal(&res.x, &share_x));
+        CHECK(fe_equal(&res.x, &share_x));
     }
     /* Verify the joint behavior of secp256k1_ellswift_xdh */
     for (i = 0; i < 200 * COUNT; i++) {
@@ -313,18 +314,18 @@ void run_ellswift_tests(void) {
             data = NULL;
         } else {
             hash_function = secp256k1_ellswift_xdh_hash_function_prefix;
-            secp256k1_testrand256_test(prefix64);
-            secp256k1_testrand256_test(prefix64 + 32);
+            testrand256_test(prefix64);
+            testrand256_test(prefix64 + 32);
             data = prefix64;
         }
 
         /* Generate random secret keys and random randomizers. */
-        secp256k1_testrand256_test(auxrnd32a);
-        secp256k1_testrand256_test(auxrnd32b);
-        random_scalar_order_test(&seca);
+        testrand256_test(auxrnd32a);
+        testrand256_test(auxrnd32b);
+        testutil_random_scalar_order_test(&seca);
         /* Draw secb uniformly at random to make sure that the secret keys
          * differ */
-        random_scalar_order(&secb);
+        testutil_random_scalar_order(&secb);
         secp256k1_scalar_get_b32(sec32a, &seca);
         secp256k1_scalar_get_b32(sec32b, &secb);
 
@@ -349,13 +350,13 @@ void run_ellswift_tests(void) {
         /* Verify that the shared secret doesn't match if other side's public key is incorrect. */
         /* For A (using a bad public key for B): */
         memcpy(ell64b_bad, ell64b, sizeof(ell64a_bad));
-        secp256k1_testrand_flip(ell64b_bad, sizeof(ell64b_bad));
+        testrand_flip(ell64b_bad, sizeof(ell64b_bad));
         ret = secp256k1_ellswift_xdh(CTX, share32_bad, ell64a, ell64b_bad, sec32a, 0, hash_function, data);
         CHECK(ret); /* Mismatching encodings don't get detected by secp256k1_ellswift_xdh. */
         CHECK(secp256k1_memcmp_var(share32_bad, share32a, 32) != 0);
         /* For B (using a bad public key for A): */
         memcpy(ell64a_bad, ell64a, sizeof(ell64a_bad));
-        secp256k1_testrand_flip(ell64a_bad, sizeof(ell64a_bad));
+        testrand_flip(ell64a_bad, sizeof(ell64a_bad));
         ret = secp256k1_ellswift_xdh(CTX, share32_bad, ell64a_bad, ell64b, sec32b, 1, hash_function, data);
         CHECK(ret);
         CHECK(secp256k1_memcmp_var(share32_bad, share32b, 32) != 0);
@@ -363,12 +364,12 @@ void run_ellswift_tests(void) {
         /* Verify that the shared secret doesn't match if the private key is incorrect. */
         /* For A: */
         memcpy(sec32a_bad, sec32a, sizeof(sec32a_bad));
-        secp256k1_testrand_flip(sec32a_bad, sizeof(sec32a_bad));
+        testrand_flip(sec32a_bad, sizeof(sec32a_bad));
         ret = secp256k1_ellswift_xdh(CTX, share32_bad, ell64a, ell64b, sec32a_bad, 0, hash_function, data);
         CHECK(!ret || secp256k1_memcmp_var(share32_bad, share32a, 32) != 0);
         /* For B: */
         memcpy(sec32b_bad, sec32b, sizeof(sec32b_bad));
-        secp256k1_testrand_flip(sec32b_bad, sizeof(sec32b_bad));
+        testrand_flip(sec32b_bad, sizeof(sec32b_bad));
         ret = secp256k1_ellswift_xdh(CTX, share32_bad, ell64a, ell64b, sec32b_bad, 1, hash_function, data);
         CHECK(!ret || secp256k1_memcmp_var(share32_bad, share32b, 32) != 0);
 
@@ -376,7 +377,7 @@ void run_ellswift_tests(void) {
             /* Verify that the shared secret doesn't match when a different encoding of the same public key is used. */
             /* For A (changing B's public key): */
             memcpy(auxrnd32b_bad, auxrnd32b, sizeof(auxrnd32b_bad));
-            secp256k1_testrand_flip(auxrnd32b_bad, sizeof(auxrnd32b_bad));
+            testrand_flip(auxrnd32b_bad, sizeof(auxrnd32b_bad));
             ret = secp256k1_ellswift_create(CTX, ell64b_bad, sec32b, auxrnd32b_bad);
             CHECK(ret);
             ret = secp256k1_ellswift_xdh(CTX, share32_bad, ell64a, ell64b_bad, sec32a, 0, hash_function, data);
@@ -384,7 +385,7 @@ void run_ellswift_tests(void) {
             CHECK(secp256k1_memcmp_var(share32_bad, share32a, 32) != 0);
             /* For B (changing A's public key): */
             memcpy(auxrnd32a_bad, auxrnd32a, sizeof(auxrnd32a_bad));
-            secp256k1_testrand_flip(auxrnd32a_bad, sizeof(auxrnd32a_bad));
+            testrand_flip(auxrnd32a_bad, sizeof(auxrnd32a_bad));
             ret = secp256k1_ellswift_create(CTX, ell64a_bad, sec32a, auxrnd32a_bad);
             CHECK(ret);
             ret = secp256k1_ellswift_xdh(CTX, share32_bad, ell64a_bad, ell64b, sec32b, 1, hash_function, data);
@@ -405,32 +406,38 @@ void run_ellswift_tests(void) {
 
     /* Test hash initializers. */
     {
-        secp256k1_sha256 sha, sha_optimized;
-        static const unsigned char encode_tag[25] = "secp256k1_ellswift_encode";
-        static const unsigned char create_tag[25] = "secp256k1_ellswift_create";
-        static const unsigned char bip324_tag[26] = "bip324_ellswift_xonly_ecdh";
+        secp256k1_sha256 sha_optimized;
+        /* "secp256k1_ellswift_encode" */
+        static const unsigned char encode_tag[] = {'s', 'e', 'c', 'p', '2', '5', '6', 'k', '1', '_', 'e', 'l', 'l', 's', 'w', 'i', 'f', 't', '_', 'e', 'n', 'c', 'o', 'd', 'e'};
+        /* "secp256k1_ellswift_create" */
+        static const unsigned char create_tag[] = {'s', 'e', 'c', 'p', '2', '5', '6', 'k', '1', '_', 'e', 'l', 'l', 's', 'w', 'i', 'f', 't', '_', 'c', 'r', 'e', 'a', 't', 'e'};
+        /* "bip324_ellswift_xonly_ecdh" */
+        static const unsigned char bip324_tag[] = {'b', 'i', 'p', '3', '2', '4', '_', 'e', 'l', 'l', 's', 'w', 'i', 'f', 't', '_', 'x', 'o', 'n', 'l', 'y', '_', 'e', 'c', 'd', 'h'};
 
         /* Check that hash initialized by
          * secp256k1_ellswift_sha256_init_encode has the expected
          * state. */
-        secp256k1_sha256_initialize_tagged(&sha, encode_tag, sizeof(encode_tag));
         secp256k1_ellswift_sha256_init_encode(&sha_optimized);
-        test_sha256_eq(&sha, &sha_optimized);
+        test_sha256_tag_midstate(&sha_optimized, encode_tag, sizeof(encode_tag));
 
         /* Check that hash initialized by
          * secp256k1_ellswift_sha256_init_create has the expected
          * state. */
-        secp256k1_sha256_initialize_tagged(&sha, create_tag, sizeof(create_tag));
         secp256k1_ellswift_sha256_init_create(&sha_optimized);
-        test_sha256_eq(&sha, &sha_optimized);
+        test_sha256_tag_midstate(&sha_optimized, create_tag, sizeof(create_tag));
 
         /* Check that hash initialized by
          * secp256k1_ellswift_sha256_init_bip324 has the expected
          * state. */
-        secp256k1_sha256_initialize_tagged(&sha, bip324_tag, sizeof(bip324_tag));
         secp256k1_ellswift_sha256_init_bip324(&sha_optimized);
-        test_sha256_eq(&sha, &sha_optimized);
+        test_sha256_tag_midstate(&sha_optimized, bip324_tag, sizeof(bip324_tag));
     }
 }
+
+/* --- Test registry --- */
+/* TODO: subdivide test in cases */
+static const struct tf_test_entry tests_ellswift[] = {
+    CASE(ellswift_tests),
+};
 
 #endif

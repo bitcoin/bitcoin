@@ -1,0 +1,34 @@
+CMake: Prevent creation of empty InputSupportPrivate module
+
+The combination of
+    -no-feature-evdev
+    -no-feature-tslib
+    -no-feature-libinput
+led to the creation of the InputSupportPrivate module without source
+files.
+
+This triggered CMake upstream issue 23464 when using CMake < 3.25.
+
+Fix this by adjusting the inexact condition that decides whether to
+build InputSupportPrivate.
+
+
+See: https://codereview.qt-project.org/c/qt/qtbase/+/633612
+
+
+--- a/qtbase/src/platformsupport/CMakeLists.txt
++++ b/qtbase/src/platformsupport/CMakeLists.txt
+@@ -3,7 +3,12 @@
+ 
+ add_subdirectory(devicediscovery)
+ add_subdirectory(fbconvenience)
+-if(QT_FEATURE_evdev OR QT_FEATURE_integrityhid OR QT_FEATURE_libinput OR QT_FEATURE_tslib OR QT_FEATURE_xkbcommon)
++if(QT_FEATURE_evdev
++    OR QT_FEATURE_vxworksevdev
++    OR QT_FEATURE_integrityhid
++    OR QT_FEATURE_libinput
++    OR QT_FEATURE_tslib
++    OR (QT_FEATURE_libinput AND QT_FEATURE_xkbcommon))
+     add_subdirectory(input)
+ endif()
+ if(QT_FEATURE_kms)

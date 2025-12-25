@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,8 +9,8 @@
 #include <vector>
 
 ByteVectorHash::ByteVectorHash() :
-    m_k0(GetRand<uint64_t>()),
-    m_k1(GetRand<uint64_t>())
+    m_k0(FastRandomContext().rand64()),
+    m_k1(FastRandomContext().rand64())
 {
 }
 

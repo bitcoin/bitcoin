@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -36,7 +36,7 @@ InitWalletDirTestingSetup::InitWalletDirTestingSetup(const ChainType chainType) 
     fs::create_directories(m_walletdir_path_cases["default"]);
     fs::create_directories(m_walletdir_path_cases["custom"]);
     fs::create_directories(m_walletdir_path_cases["relative"]);
-    std::ofstream f{m_walletdir_path_cases["file"]};
+    std::ofstream f{m_walletdir_path_cases["file"].std_path()};
     f.close();
 }
 

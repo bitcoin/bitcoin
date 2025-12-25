@@ -1,19 +1,16 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_WALLETMODEL_H
 #define BITCOIN_QT_WALLETMODEL_H
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
-
 #include <key.h>
 
 #include <qt/walletmodeltransaction.h>
 
 #include <interfaces/wallet.h>
+#include <primitives/transaction_identifier.h>
 #include <support/allocators/secure.h>
 
 #include <vector>
@@ -133,8 +130,8 @@ public:
 
     UnlockContext requestUnlock();
 
-    bool bumpFee(uint256 hash, uint256& new_hash);
-    bool displayAddress(std::string sAddress) const;
+    bool bumpFee(Txid hash, Txid& new_hash);
+    void displayAddress(std::string sAddress) const;
 
     static bool isWalletEnabled();
 
@@ -166,12 +163,10 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_address_book_changed;
     std::unique_ptr<interfaces::Handler> m_handler_transaction_changed;
     std::unique_ptr<interfaces::Handler> m_handler_show_progress;
-    std::unique_ptr<interfaces::Handler> m_handler_watch_only_changed;
     std::unique_ptr<interfaces::Handler> m_handler_can_get_addrs_changed;
     ClientModel* m_client_model;
     interfaces::Node& m_node;
 
-    bool fHaveWatchOnly;
     bool fForceCheckBalanceChanged{false};
 
     // Wallet has an options model for wallet-specific options
@@ -215,9 +210,6 @@ Q_SIGNALS:
     // Show progress dialog e.g. for rescan
     void showProgress(const QString &title, int nProgress);
 
-    // Watch-only address added
-    void notifyWatchonlyChanged(bool fHaveWatchonly);
-
     // Signal that wallet is about to be removed
     void unload();
 
@@ -236,8 +228,6 @@ public Q_SLOTS:
     void updateTransaction();
     /* New, updated or removed address book entry */
     void updateAddressBook(const QString &address, const QString &label, bool isMine, wallet::AddressPurpose purpose, int status);
-    /* Watch-only added */
-    void updateWatchOnlyFlag(bool fHaveWatchonly);
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();
 };

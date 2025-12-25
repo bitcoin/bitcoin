@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -7,6 +7,7 @@
 #ifndef BITCOIN_KEY_H
 #define BITCOIN_KEY_H
 
+#include <musig.h>
 #include <pubkey.h>
 #include <serialize.h>
 #include <support/allocators/secure.h>
@@ -28,6 +29,8 @@ constexpr static size_t ECDH_SECRET_SIZE = CSHA256::OUTPUT_SIZE;
 // Used to represent ECDH shared secret (ECDH_SECRET_SIZE bytes)
 using ECDHSecret = std::array<std::byte, ECDH_SECRET_SIZE>;
 
+class KeyPair;
+
 /** An encapsulated private key. */
 class CKey
 {
@@ -46,66 +49,85 @@ public:
         "COMPRESSED_SIZE is larger than SIZE");
 
 private:
-    //! Whether this private key is valid. We check for correctness when modifying the key
-    //! data, so fValid should always correspond to the actual state.
-    bool fValid{false};
+    /** Internal data container for private key material. */
+    using KeyType = std::array<unsigned char, 32>;
 
     //! Whether the public key corresponding to this private key is (to be) compressed.
     bool fCompressed{false};
 
-    //! The actual byte data
-    std::vector<unsigned char, secure_allocator<unsigned char> > keydata;
+    //! The actual byte data. nullptr for invalid keys.
+    secure_unique_ptr<KeyType> keydata;
 
     //! Check whether the 32-byte array pointed to by vch is valid keydata.
     bool static Check(const unsigned char* vch);
 
-public:
-    //! Construct an invalid private key.
-    CKey()
+    void MakeKeyData()
     {
-        // Important: vch must be 32 bytes in length to not break serialization
-        keydata.resize(32);
+        if (!keydata) keydata = make_secure_unique<KeyType>();
     }
+
+    void ClearKeyData()
+    {
+        keydata.reset();
+    }
+
+public:
+    CKey() noexcept = default;
+    CKey(CKey&&) noexcept = default;
+    CKey& operator=(CKey&&) noexcept = default;
+
+    CKey& operator=(const CKey& other)
+    {
+        if (this != &other) {
+            if (other.keydata) {
+                MakeKeyData();
+                *keydata = *other.keydata;
+            } else {
+                ClearKeyData();
+            }
+            fCompressed = other.fCompressed;
+        }
+        return *this;
+    }
+
+    CKey(const CKey& other) { *this = other; }
 
     friend bool operator==(const CKey& a, const CKey& b)
     {
         return a.fCompressed == b.fCompressed &&
             a.size() == b.size() &&
-            memcmp(a.keydata.data(), b.keydata.data(), a.size()) == 0;
+            memcmp(a.data(), b.data(), a.size()) == 0;
     }
 
     //! Initialize using begin and end iterators to byte data.
     template <typename T>
     void Set(const T pbegin, const T pend, bool fCompressedIn)
     {
-        if (size_t(pend - pbegin) != keydata.size()) {
-            fValid = false;
-        } else if (Check(&pbegin[0])) {
-            memcpy(keydata.data(), (unsigned char*)&pbegin[0], keydata.size());
-            fValid = true;
+        if (size_t(pend - pbegin) != std::tuple_size_v<KeyType>) {
+            ClearKeyData();
+        } else if (Check(UCharCast(&pbegin[0]))) {
+            MakeKeyData();
+            memcpy(keydata->data(), (unsigned char*)&pbegin[0], keydata->size());
             fCompressed = fCompressedIn;
         } else {
-            fValid = false;
+            ClearKeyData();
         }
     }
 
     //! Simple read-only vector-like interface.
-    unsigned int size() const { return (fValid ? keydata.size() : 0); }
-    const std::byte* data() const { return reinterpret_cast<const std::byte*>(keydata.data()); }
-    const unsigned char* begin() const { return keydata.data(); }
-    const unsigned char* end() const { return keydata.data() + size(); }
+    unsigned int size() const { return keydata ? keydata->size() : 0; }
+    const std::byte* data() const { return keydata ? reinterpret_cast<const std::byte*>(keydata->data()) : nullptr; }
+    const std::byte* begin() const { return data(); }
+    const std::byte* end() const { return data() + size(); }
 
     //! Check whether this private key is valid.
-    bool IsValid() const { return fValid; }
+    bool IsValid() const { return !!keydata; }
 
     //! Check whether the public key corresponding to this private key is (to be) compressed.
     bool IsCompressed() const { return fCompressed; }
 
     //! Generate a new private key using a cryptographic PRNG.
     void MakeNewKey(bool fCompressed);
-
-    //! Negate private key
-    bool Negate();
 
     /**
      * Convert the private key to a CPrivKey (serialized OpenSSL private key data).
@@ -149,7 +171,7 @@ public:
      *                              (this is used for key path spending, with specific
      *                              Merkle root of the script tree).
      */
-    bool SignSchnorr(const uint256& hash, Span<unsigned char> sig, const uint256* merkle_root, const uint256& aux) const;
+    bool SignSchnorr(const uint256& hash, std::span<unsigned char> sig, const uint256* merkle_root, const uint256& aux) const;
 
     //! Derive BIP32 child key.
     [[nodiscard]] bool Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const;
@@ -171,7 +193,7 @@ public:
      *  resulting encoding will be indistinguishable from uniform to any adversary who does not
      *  know the private key (because the private key itself is always used as entropy as well).
      */
-    EllSwiftPubKey EllSwiftCreate(Span<const std::byte> entropy) const;
+    EllSwiftPubKey EllSwiftCreate(std::span<const std::byte> entropy) const;
 
     /** Compute a BIP324-style ECDH shared secret.
      *
@@ -183,7 +205,28 @@ public:
     ECDHSecret ComputeBIP324ECDHSecret(const EllSwiftPubKey& their_ellswift,
                                        const EllSwiftPubKey& our_ellswift,
                                        bool initiating) const;
+    /** Compute a KeyPair
+     *
+     *  Wraps a `secp256k1_keypair` type.
+     *
+     *  `merkle_root` is used to optionally perform tweaking of
+     *  the internal key, as specified in BIP341:
+     *
+     *  - If merkle_root == nullptr: no tweaking is done, use the internal key directly (this is
+     *                               used for signatures in BIP342 script).
+     *  - If merkle_root->IsNull():  tweak the internal key with H_TapTweak(pubkey) (this is used for
+     *                               key path spending when no scripts are present).
+     *  - Otherwise:                 tweak the internal key with H_TapTweak(pubkey || *merkle_root)
+     *                               (this is used for key path spending with the
+     *                               Merkle root of the script tree).
+     */
+    KeyPair ComputeKeyPair(const uint256* merkle_root) const;
+
+    std::vector<uint8_t> CreateMuSig2Nonce(MuSig2SecNonce& secnonce, const uint256& sighash, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys);
+    std::optional<uint256> CreateMuSig2PartialSig(const uint256& hash, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys, const std::map<CPubKey, std::vector<uint8_t>>& pubnonces, MuSig2SecNonce& secnonce, const std::vector<std::pair<uint256, bool>>& tweaks);
 };
+
+CKey GenerateRandomKey(bool compressed = true) noexcept;
 
 struct CExtKey {
     unsigned char nDepth;
@@ -201,20 +244,89 @@ struct CExtKey {
             a.key == b.key;
     }
 
+    CExtKey() = default;
+    CExtKey(const CExtPubKey& xpub, const CKey& key_in) : nDepth(xpub.nDepth), nChild(xpub.nChild), chaincode(xpub.chaincode), key(key_in)
+    {
+        std::copy(xpub.vchFingerprint, xpub.vchFingerprint + sizeof(xpub.vchFingerprint), vchFingerprint);
+    }
+
     void Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const;
     void Decode(const unsigned char code[BIP32_EXTKEY_SIZE]);
     [[nodiscard]] bool Derive(CExtKey& out, unsigned int nChild) const;
     CExtPubKey Neuter() const;
-    void SetSeed(Span<const std::byte> seed);
+    void SetSeed(std::span<const std::byte> seed);
 };
 
-/** Initialize the elliptic curve support. May not be called twice without calling ECC_Stop first. */
-void ECC_Start();
+/** KeyPair
+ *
+ *  Wraps a `secp256k1_keypair` type, an opaque data structure for holding a secret and public key.
+ *  This is intended for BIP340 keys and allows us to easily determine if the secret key needs to
+ *  be negated by checking the parity of the public key. This class primarily intended for passing
+ *  secret keys to libsecp256k1 functions expecting a `secp256k1_keypair`. For all other cases,
+ *  CKey should be preferred.
+ *
+ *  A KeyPair can be created from a CKey with an optional merkle_root tweak (per BIP342). See
+ *  CKey::ComputeKeyPair for more details.
+ */
+class KeyPair
+{
+public:
+    KeyPair() noexcept = default;
+    KeyPair(KeyPair&&) noexcept = default;
+    KeyPair& operator=(KeyPair&&) noexcept = default;
+    KeyPair& operator=(const KeyPair& other)
+    {
+        if (this != &other) {
+            if (other.m_keypair) {
+                MakeKeyPairData();
+                *m_keypair = *other.m_keypair;
+            } else {
+                ClearKeyPairData();
+            }
+        }
+        return *this;
+    }
 
-/** Deinitialize the elliptic curve support. No-op if ECC_Start wasn't called first. */
-void ECC_Stop();
+    KeyPair(const KeyPair& other) { *this = other; }
+
+    friend KeyPair CKey::ComputeKeyPair(const uint256* merkle_root) const;
+    [[nodiscard]] bool SignSchnorr(const uint256& hash, std::span<unsigned char> sig, const uint256& aux) const;
+
+    //! Check whether this keypair is valid.
+    bool IsValid() const { return !!m_keypair; }
+
+private:
+    KeyPair(const CKey& key, const uint256* merkle_root);
+
+    using KeyType = std::array<unsigned char, 96>;
+    secure_unique_ptr<KeyType> m_keypair;
+
+    void MakeKeyPairData()
+    {
+        if (!m_keypair) m_keypair = make_secure_unique<KeyType>();
+    }
+
+    void ClearKeyPairData()
+    {
+        m_keypair.reset();
+    }
+};
 
 /** Check that required EC support is available at runtime. */
 bool ECC_InitSanityCheck();
+
+/**
+ * RAII class initializing and deinitializing global state for elliptic curve support.
+ * Only one instance may be initialized at a time.
+ *
+ * In the future global ECC state could be removed, and this class could contain
+ * state and be passed as an argument to ECC key functions.
+ */
+class ECC_Context
+{
+public:
+    ECC_Context();
+    ~ECC_Context();
+};
 
 #endif // BITCOIN_KEY_H

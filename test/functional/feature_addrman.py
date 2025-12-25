@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (c) 2021-2022 The Bitcoin Core developers
+# Copyright (c) 2021-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test addrman functionality"""
 
 import os
 import re
-import struct
 
-from test_framework.messages import ser_uint256, hash256
-from test_framework.p2p import MAGIC_BYTES
+from test_framework.messages import ser_uint256, hash256, MAGIC_BYTES
+from test_framework.netutil import ADDRMAN_NEW_BUCKET_COUNT, ADDRMAN_TRIED_BUCKET_COUNT, ADDRMAN_BUCKET_SIZE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import ErrorMatch
 from test_framework.util import assert_equal
-
 
 def serialize_addrman(
     *,
@@ -29,15 +27,15 @@ def serialize_addrman(
     tried = []
     INCOMPATIBILITY_BASE = 32
     r = MAGIC_BYTES[net_magic]
-    r += struct.pack("B", format)
-    r += struct.pack("B", INCOMPATIBILITY_BASE + lowest_compatible)
+    r += format.to_bytes(1, "little")
+    r += (INCOMPATIBILITY_BASE + lowest_compatible).to_bytes(1, "little")
     r += ser_uint256(bucket_key)
-    r += struct.pack("<i", len_new or len(new))
-    r += struct.pack("<i", len_tried or len(tried))
+    r += (len_new or len(new)).to_bytes(4, "little", signed=True)
+    r += (len_tried or len(tried)).to_bytes(4, "little", signed=True)
     ADDRMAN_NEW_BUCKET_COUNT = 1 << 10
-    r += struct.pack("<i", ADDRMAN_NEW_BUCKET_COUNT ^ (1 << 30))
+    r += (ADDRMAN_NEW_BUCKET_COUNT ^ (1 << 30)).to_bytes(4, "little", signed=True)
     for _ in range(ADDRMAN_NEW_BUCKET_COUNT):
-        r += struct.pack("<i", 0)
+        r += (0).to_bytes(4, "little", signed=True)
     checksum = hash256(r)
     r += mock_checksum or checksum
     return r
@@ -56,7 +54,7 @@ class AddrmanTest(BitcoinTestFramework):
         peers_dat = os.path.join(self.nodes[0].chain_path, "peers.dat")
         init_error = lambda reason: (
             f"Error: Invalid or corrupt peers.dat \\({reason}\\). If you believe this "
-            f"is a bug, please report it to {self.config['environment']['PACKAGE_BUGREPORT']}. "
+            f"is a bug, please report it to {self.config['environment']['CLIENT_BUGREPORT']}. "
             f'As a workaround, you can move the file \\("{re.escape(peers_dat)}"\\) out of the way \\(rename, '
             "move, or delete\\) to have a new one created on the next start."
         )
@@ -117,17 +115,34 @@ class AddrmanTest(BitcoinTestFramework):
 
         self.log.info("Check that corrupt addrman cannot be read (len_tried)")
         self.stop_node(0)
+        max_len_tried = ADDRMAN_TRIED_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE
         write_addrman(peers_dat, len_tried=-1)
         self.nodes[0].assert_start_raises_init_error(
-            expected_msg=init_error("Corrupt AddrMan serialization: nTried=-1, should be in \\[0, 16384\\]:.*"),
+            expected_msg=init_error(f"Corrupt AddrMan serialization: nTried=-1, should be in \\[0, {max_len_tried}\\]:.*"),
+            match=ErrorMatch.FULL_REGEX,
+        )
+
+        self.log.info("Check that corrupt addrman cannot be read (large len_tried)")
+        write_addrman(peers_dat, len_tried=max_len_tried + 1)
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg=init_error(f"Corrupt AddrMan serialization: nTried={max_len_tried + 1}, should be in \\[0, {max_len_tried}\\]:.*"),
             match=ErrorMatch.FULL_REGEX,
         )
 
         self.log.info("Check that corrupt addrman cannot be read (len_new)")
         self.stop_node(0)
+        max_len_new = ADDRMAN_NEW_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE
         write_addrman(peers_dat, len_new=-1)
         self.nodes[0].assert_start_raises_init_error(
-            expected_msg=init_error("Corrupt AddrMan serialization: nNew=-1, should be in \\[0, 65536\\]:.*"),
+            expected_msg=init_error(f"Corrupt AddrMan serialization: nNew=-1, should be in \\[0, {max_len_new}\\]:.*"),
+            match=ErrorMatch.FULL_REGEX,
+        )
+
+        self.log.info("Check that corrupt addrman cannot be read (large len_new)")
+        self.stop_node(0)
+        write_addrman(peers_dat, len_new=max_len_new + 1)
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg=init_error(f"Corrupt AddrMan serialization: nNew={max_len_new + 1}, should be in \\[0, {max_len_new}\\]:.*"),
             match=ErrorMatch.FULL_REGEX,
         )
 
@@ -140,14 +155,9 @@ class AddrmanTest(BitcoinTestFramework):
         )
 
         self.log.info("Check that missing addrman is recreated")
-        self.stop_node(0)
-        os.remove(peers_dat)
-        with self.nodes[0].assert_debug_log([
-                f'Creating peers.dat because the file was not found ("{peers_dat}")',
-        ]):
-            self.start_node(0)
+        self.restart_node(0, clear_addrman=True)
         assert_equal(self.nodes[0].getnodeaddresses(), [])
 
 
 if __name__ == "__main__":
-    AddrmanTest().main()
+    AddrmanTest(__file__).main()

@@ -70,11 +70,18 @@ fi
 mkdir -p "$VERSION_BASE"
 
 ################
+# SOURCE_DATE_EPOCH should not unintentionally be set
+################
+
+check_source_date_epoch
+
+################
 # Build directories should not exist
 ################
 
 # Default to building for all supported HOSTs (overridable by environment)
-export HOSTS="${HOSTS:-x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu powerpc64-linux-gnu powerpc64le-linux-gnu
+# powerpc64le-linux-gnu currently disabled due non-determinism issues across build arches.
+export HOSTS="${HOSTS:-x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu powerpc64-linux-gnu
                        x86_64-w64-mingw32
                        x86_64-apple-darwin arm64-apple-darwin}"
 
@@ -360,12 +367,16 @@ INFO: Building ${VERSION:?not set} for platform triple ${HOST:?not set}:
           ...bind-mounted in container to: '$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST")'
       ...outputting in: '$(outdir_for_host "$HOST")'
           ...bind-mounted in container to: '$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST")'
+      ADDITIONAL FLAGS (if set)
+          ADDITIONAL_GUIX_COMMON_FLAGS: ${ADDITIONAL_GUIX_COMMON_FLAGS}
+          ADDITIONAL_GUIX_ENVIRONMENT_FLAGS: ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS}
+          ADDITIONAL_GUIX_TIMEMACHINE_FLAGS: ${ADDITIONAL_GUIX_TIMEMACHINE_FLAGS}
 EOF
 
         # Run the build script 'contrib/guix/libexec/build.sh' in the build
         # container specified by 'contrib/guix/manifest.scm'.
         #
-        # Explanation of `guix environment` flags:
+        # Explanation of `guix shell` flags:
         #
         #   --container        run command within an isolated container
         #
@@ -428,7 +439,7 @@ EOF
         #    more information.
         #
         # shellcheck disable=SC2086,SC2031
-        time-machine environment --manifest="${PWD}/contrib/guix/manifest.scm" \
+        time-machine shell --manifest="${PWD}/contrib/guix/manifest.scm" \
                                  --container \
                                  --pure \
                                  --no-cwd \

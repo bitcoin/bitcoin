@@ -1,21 +1,16 @@
-// Copyright (c) 2016-2022 The Bitcoin Core developers
+// Copyright (c) 2016-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <support/lockedpool.h>
 #include <support/cleanse.h>
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
-
 #ifdef WIN32
 #include <windows.h>
 #else
-#include <sys/mman.h> // for mmap
-#include <sys/resource.h> // for getrlimit
-#include <limits.h> // for PAGESIZE
-#include <unistd.h> // for sysconf
+#include <sys/mman.h>
+#include <sys/resource.h>
+#include <unistd.h>
 #endif
 
 #include <algorithm>
@@ -50,9 +45,7 @@ Arena::Arena(void *base_in, size_t size_in, size_t alignment_in):
     chunks_free_end.emplace(static_cast<char*>(base) + size_in, it);
 }
 
-Arena::~Arena()
-{
-}
+Arena::~Arena() = default;
 
 void* Arena::alloc(size_t size)
 {

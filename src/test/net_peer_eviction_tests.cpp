@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,7 +31,7 @@ bool IsProtected(int num_peers,
     for (NodeEvictionCandidate& candidate : candidates) {
         candidate_setup_fn(candidate);
     }
-    Shuffle(candidates.begin(), candidates.end(), random_context);
+    std::shuffle(candidates.begin(), candidates.end(), random_context);
 
     const size_t size{candidates.size()};
     const size_t expected{size - size / 2}; // Expect half the candidates will be protected.
@@ -40,12 +40,12 @@ bool IsProtected(int num_peers,
 
     size_t unprotected_count{0};
     for (const NodeEvictionCandidate& candidate : candidates) {
-        if (protected_peer_ids.count(candidate.id)) {
+        if (protected_peer_ids.contains(candidate.id)) {
             // this peer should have been removed from the eviction candidates
             BOOST_TEST_MESSAGE(strprintf("expected candidate to be protected: %d", candidate.id));
             return false;
         }
-        if (unprotected_peer_ids.count(candidate.id)) {
+        if (unprotected_peer_ids.contains(candidate.id)) {
             // this peer remains in the eviction candidates, as expected
             ++unprotected_count;
         }
@@ -572,12 +572,12 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
 // Returns true if any of the node ids in node_ids are selected for eviction.
 bool IsEvicted(std::vector<NodeEvictionCandidate> candidates, const std::unordered_set<NodeId>& node_ids, FastRandomContext& random_context)
 {
-    Shuffle(candidates.begin(), candidates.end(), random_context);
+    std::shuffle(candidates.begin(), candidates.end(), random_context);
     const std::optional<NodeId> evicted_node_id = SelectNodeToEvict(std::move(candidates));
     if (!evicted_node_id) {
         return false;
     }
-    return node_ids.count(*evicted_node_id);
+    return node_ids.contains(*evicted_node_id);
 }
 
 // Create number_of_nodes random nodes, apply setup function candidate_setup_fn,

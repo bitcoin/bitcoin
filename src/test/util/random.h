@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,67 +9,32 @@
 #include <random.h>
 #include <uint256.h>
 
+#include <atomic>
 #include <cstdint>
 
-/**
- * This global and the helpers that use it are not thread-safe.
- *
- * If thread-safety is needed, the global could be made thread_local (given
- * that thread_local is supported on all architectures we support) or a
- * per-thread instance could be used in the multi-threaded test.
- */
-extern FastRandomContext g_insecure_rand_ctx;
-
-/**
- * Flag to make GetRand in random.h return the same number
- */
-extern bool g_mock_deterministic_tests;
-
 enum class SeedRand {
-    ZEROS, //!< Seed with a compile time constant of zeros
-    SEED,  //!< Call the Seed() helper
+    /**
+     * Seed with a compile time constant of zeros.
+     */
+    ZEROS,
+    /**
+     * Seed with a fixed value that never changes over the lifetime of this
+     * process. The seed is read from the RANDOM_CTX_SEED environment variable
+     * if set, otherwise generated randomly once, saved, and reused.
+     */
+    FIXED_SEED,
 };
 
-/** Seed the given random ctx or use the seed passed in via an environment var */
-void Seed(FastRandomContext& ctx);
+/** Seed the global RNG state for testing and log the seed value. This affects all randomness, except GetStrongRandBytes(). */
+void SeedRandomStateForTest(SeedRand seed);
 
-static inline void SeedInsecureRand(SeedRand seed = SeedRand::SEED)
-{
-    if (seed == SeedRand::ZEROS) {
-        g_insecure_rand_ctx = FastRandomContext(/*fDeterministic=*/true);
-    } else {
-        Seed(g_insecure_rand_ctx);
-    }
-}
+extern std::atomic<bool> g_seeded_g_prng_zero;
+extern std::atomic<bool> g_used_g_prng;
 
-static inline uint32_t InsecureRand32()
+template <RandomNumberGenerator Rng>
+inline CAmount RandMoney(Rng&& rng)
 {
-    return g_insecure_rand_ctx.rand32();
-}
-
-static inline uint256 InsecureRand256()
-{
-    return g_insecure_rand_ctx.rand256();
-}
-
-static inline uint64_t InsecureRandBits(int bits)
-{
-    return g_insecure_rand_ctx.randbits(bits);
-}
-
-static inline uint64_t InsecureRandRange(uint64_t range)
-{
-    return g_insecure_rand_ctx.randrange(range);
-}
-
-static inline bool InsecureRandBool()
-{
-    return g_insecure_rand_ctx.randbool();
-}
-
-static inline CAmount InsecureRandMoneyAmount()
-{
-    return static_cast<CAmount>(InsecureRandRange(MAX_MONEY + 1));
+    return CAmount{rng.randrange(MAX_MONEY + 1)};
 }
 
 #endif // BITCOIN_TEST_UTIL_RANDOM_H

@@ -1,6 +1,8 @@
-// Copyright (c) 2016-2022 The Bitcoin Core developers
+// Copyright (c) 2016-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <qt/modaloverlay.h>
 #include <qt/forms/ui_modaloverlay.h>
@@ -23,12 +25,13 @@ ModalOverlay::ModalOverlay(bool enable_wallet, QWidget* parent)
         parent->installEventFilter(this);
         raise();
     }
+    ui->closeButton->installEventFilter(this);
 
     blockProcessTime.clear();
     setVisible(false);
     if (!enable_wallet) {
         ui->infoText->setVisible(false);
-        ui->infoTextStrong->setText(tr("%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.").arg(PACKAGE_NAME));
+        ui->infoTextStrong->setText(tr("%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.").arg(CLIENT_NAME));
     }
 
     m_animation.setTargetObject(this);
@@ -58,6 +61,11 @@ bool ModalOverlay::eventFilter(QObject * obj, QEvent * ev) {
             raise();
         }
     }
+
+    if (obj == ui->closeButton && ev->type() == QEvent::FocusOut && layerIsVisible) {
+        ui->closeButton->setFocus(Qt::OtherFocusReason);
+    }
+
     return QWidget::eventFilter(obj, ev);
 }
 
@@ -185,6 +193,10 @@ void ModalOverlay::showHide(bool hide, bool userRequested)
     m_animation.setEndValue(QPoint(0, hide ? height() : 0));
     m_animation.start(QAbstractAnimation::KeepWhenStopped);
     layerIsVisible = !hide;
+
+    if (layerIsVisible) {
+        ui->closeButton->setFocus(Qt::OtherFocusReason);
+    }
 }
 
 void ModalOverlay::closeClicked()

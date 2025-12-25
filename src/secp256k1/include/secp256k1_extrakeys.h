@@ -19,7 +19,7 @@ extern "C" {
  *  use secp256k1_xonly_pubkey_serialize and secp256k1_xonly_pubkey_parse. To
  *  compare keys, use secp256k1_xonly_pubkey_cmp.
  */
-typedef struct {
+typedef struct secp256k1_xonly_pubkey {
     unsigned char data[64];
 } secp256k1_xonly_pubkey;
 
@@ -30,7 +30,7 @@ typedef struct {
  *  guaranteed to be portable between different platforms or versions. It is
  *  however guaranteed to be 96 bytes in size, and can be safely copied/moved.
  */
-typedef struct {
+typedef struct secp256k1_keypair {
     unsigned char data[96];
 } secp256k1_keypair;
 
@@ -39,7 +39,7 @@ typedef struct {
  *  Returns: 1 if the public key was fully valid.
  *           0 if the public key could not be parsed or is invalid.
  *
- *  Args:   ctx: a secp256k1 context object.
+ *  Args:   ctx: pointer to a context object.
  *  Out: pubkey: pointer to a pubkey object. If 1 is returned, it is set to a
  *               parsed version of input. If not, it's set to an invalid value.
  *  In: input32: pointer to a serialized xonly_pubkey.
@@ -54,9 +54,9 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_xonly_pubkey_parse(
  *
  *  Returns: 1 always.
  *
- *  Args:     ctx: a secp256k1 context object.
- *  Out: output32: a pointer to a 32-byte array to place the serialized key in.
- *  In:    pubkey: a pointer to a secp256k1_xonly_pubkey containing an initialized public key.
+ *  Args:     ctx: pointer to a context object.
+ *  Out: output32: pointer to a 32-byte array to place the serialized key in.
+ *  In:    pubkey: pointer to a secp256k1_xonly_pubkey containing an initialized public key.
  */
 SECP256K1_API int secp256k1_xonly_pubkey_serialize(
     const secp256k1_context *ctx,
@@ -69,7 +69,7 @@ SECP256K1_API int secp256k1_xonly_pubkey_serialize(
  *  Returns: <0 if the first public key is less than the second
  *           >0 if the first public key is greater than the second
  *           0 if the two public keys are equal
- *  Args: ctx:      a secp256k1 context object.
+ *  Args: ctx:      pointer to a context object.
  *  In:   pubkey1:  first public key to compare
  *        pubkey2:  second public key to compare
  */
@@ -90,7 +90,7 @@ SECP256K1_API int secp256k1_xonly_pubkey_cmp(
  *                     the negation of the pubkey and set to 0 otherwise.
  *  In:        pubkey: pointer to a public key that is converted.
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_xonly_pubkey_from_pubkey(
+SECP256K1_API int secp256k1_xonly_pubkey_from_pubkey(
     const secp256k1_context *ctx,
     secp256k1_xonly_pubkey *xonly_pubkey,
     int *pk_parity,
@@ -155,10 +155,13 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_xonly_pubkey_tweak_add_
     const unsigned char *tweak32
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(4) SECP256K1_ARG_NONNULL(5);
 
-/** Compute the keypair for a secret key.
+/** Compute the keypair for a valid secret key.
  *
- *  Returns: 1: secret was valid, keypair is ready to use
- *           0: secret was invalid, try again with a different secret
+ *  See the documentation of `secp256k1_ec_seckey_verify` for more information
+ *  about the validity of secret keys.
+ *
+ *  Returns: 1: secret key is valid
+ *           0: secret key is invalid
  *  Args:    ctx: pointer to a context object (not secp256k1_context_static).
  *  Out: keypair: pointer to the created keypair.
  *  In:   seckey: pointer to a 32-byte secret key.
@@ -176,7 +179,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_create(
  *  Out: seckey: pointer to a 32-byte buffer for the secret key.
  *  In: keypair: pointer to a keypair.
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_sec(
+SECP256K1_API int secp256k1_keypair_sec(
     const secp256k1_context *ctx,
     unsigned char *seckey,
     const secp256k1_keypair *keypair
@@ -189,7 +192,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_sec(
  *  Out: pubkey: pointer to a pubkey object, set to the keypair public key.
  *  In: keypair: pointer to a keypair.
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_pub(
+SECP256K1_API int secp256k1_keypair_pub(
     const secp256k1_context *ctx,
     secp256k1_pubkey *pubkey,
     const secp256k1_keypair *keypair
@@ -208,7 +211,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_pub(
  *               pk_parity argument of secp256k1_xonly_pubkey_from_pubkey.
  *  In: keypair: pointer to a keypair.
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_xonly_pub(
+SECP256K1_API int secp256k1_keypair_xonly_pub(
     const secp256k1_context *ctx,
     secp256k1_xonly_pubkey *pubkey,
     int *pk_parity,

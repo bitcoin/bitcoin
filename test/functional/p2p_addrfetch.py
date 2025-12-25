@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2021 The Bitcoin Core developers
+# Copyright (c) 2021-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -48,7 +48,7 @@ class P2PAddrFetch(BitcoinTestFramework):
         self.assert_getpeerinfo(peer_ids=[peer_id])
 
         self.log.info("Check that we send getaddr but don't try to sync headers with the addr-fetch peer")
-        peer.sync_send_with_ping()
+        peer.sync_with_ping()
         with p2p_lock:
             assert peer.message_count['getaddr'] == 1
             assert peer.message_count['getheaders'] == 0
@@ -62,7 +62,7 @@ class P2PAddrFetch(BitcoinTestFramework):
 
         self.log.info("Check that answering with larger addr messages leads to disconnect")
         msg.addrs = [ADDR] * 2
-        peer.send_message(msg)
+        peer.send_without_ping(msg)
         peer.wait_for_disconnect(timeout=5)
 
         self.log.info("Check timeout for addr-fetch peer that does not send addrs")
@@ -83,4 +83,4 @@ class P2PAddrFetch(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    P2PAddrFetch().main()
+    P2PAddrFetch(__file__).main()

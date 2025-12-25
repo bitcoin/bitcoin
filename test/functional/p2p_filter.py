@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2021 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -11,6 +11,7 @@ from test_framework.messages import (
     COIN,
     MAX_BLOOM_FILTER_SIZE,
     MAX_BLOOM_HASH_FUNCS,
+    MSG_WTX,
     MSG_BLOCK,
     MSG_FILTERED_BLOCK,
     msg_filteradd,
@@ -61,7 +62,7 @@ class P2PBloomFilter(P2PInterface):
             else:
                 want.inv.append(i)
         if len(want.inv):
-            self.send_message(want)
+            self.send_without_ping(want)
 
     def on_merkleblock(self, message):
         self._merkleblock_received = True
@@ -93,9 +94,10 @@ class P2PBloomFilter(P2PInterface):
 class FilterTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        # whitelist peers to speed up tx relay / mempool sync
+        self.noban_tx_relay = True
         self.extra_args = [[
             '-peerbloomfilters',
-            '-whitelist=noban@127.0.0.1',  # immediate tx relay
         ]]
 
     def generatetoscriptpubkey(self, scriptpubkey):
@@ -135,14 +137,22 @@ class FilterTest(BitcoinTestFramework):
         self.log.info("Check that a node with bloom filters enabled services p2p mempool messages")
         filter_peer = P2PBloomFilter()
 
-        self.log.debug("Create a tx relevant to the peer before connecting")
-        txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=filter_peer.watch_script_pubkey, amount=9 * COIN)["txid"]
+        self.log.info("Create two tx before connecting, one relevant to the node another that is not")
+        rel_txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=filter_peer.watch_script_pubkey, amount=1 * COIN)["txid"]
+        irr_result = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=2 * COIN)
+        irr_txid = irr_result["txid"]
+        irr_wtxid = irr_result["wtxid"]
 
-        self.log.debug("Send a mempool msg after connecting and check that the tx is received")
+        self.log.info("Send a mempool msg after connecting and check that the relevant tx is announced")
         self.nodes[0].add_p2p_connection(filter_peer)
         filter_peer.send_and_ping(filter_peer.watch_filter_init)
-        filter_peer.send_message(msg_mempool())
-        filter_peer.wait_for_tx(txid)
+        filter_peer.send_without_ping(msg_mempool())
+        filter_peer.wait_for_tx(rel_txid)
+
+        self.log.info("Request the irrelevant transaction even though it was not announced")
+        filter_peer.send_without_ping(msg_getdata([CInv(t=MSG_WTX, h=int(irr_wtxid, 16))]))
+        self.log.info("We should get it anyway because it was in the mempool on connection to peer")
+        filter_peer.wait_for_tx(irr_txid)
 
     def test_frelay_false(self, filter_peer):
         self.log.info("Check that a node with fRelay set to false does not receive invs until the filter is set")
@@ -177,7 +187,7 @@ class FilterTest(BitcoinTestFramework):
         filter_peer.merkleblock_received = False
         filter_peer.tx_received = False
         self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=7 * COIN)
-        filter_peer.sync_send_with_ping()
+        filter_peer.sync_with_ping()
         assert not filter_peer.merkleblock_received
         assert not filter_peer.tx_received
 
@@ -232,7 +242,7 @@ class FilterTest(BitcoinTestFramework):
         version_without_fRelay.strSubVer = P2P_SUBVERSION
         version_without_fRelay.nServices = P2P_SERVICES
         version_without_fRelay.relay = 0
-        filter_peer_without_nrelay.send_message(version_without_fRelay)
+        filter_peer_without_nrelay.send_without_ping(version_without_fRelay)
         filter_peer_without_nrelay.wait_for_verack()
         assert not self.nodes[0].getpeerinfo()[0]['relaytxes']
         self.test_frelay_false(filter_peer_without_nrelay)
@@ -242,4 +252,4 @@ class FilterTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    FilterTest().main()
+    FilterTest(__file__).main()
