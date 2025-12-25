@@ -21,7 +21,7 @@ jobs:
       run: make check
     - name: make distcheck
       run: make distcheck
-            - name: Setup Java JDK
+    - name: Setup Java JDK
   uses: actions/setup-java@v5.1.0
   with:
     # The Java version to set up. Takes a whole or semver Java version. See examples of supported syntax in README file
@@ -64,9 +64,9 @@ jobs:
     mvn-toolchain-id: # optional
     # Name of Maven Toolchain Vendor if the default name of "${distribution}" is not wanted. See examples of supported syntax in Advanced Usage file
     mvn-toolchain-vendor: # optional
-
-                    - name: Setup .NET Core SDK
-  uses: actions/setup-dotnet@v5.0.1
+    
+- name: Setup .NET Core SDK
+uses: actions/setup-dotnet@v5.0.1
   with:
     # Optional SDK version(s) to use. If not provided, will install global.json version when available. Examples: 2.2.104, 3.1, 3.1.x, 3.x, 6.0.2xx
     dotnet-version: # optional
