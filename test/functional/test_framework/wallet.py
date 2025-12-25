@@ -113,6 +113,19 @@ class MiniWallet:
         # for those mature UTXOs, so that all txs spend confirmed coins
         self.rescan_utxos()
 
+    # --- Guard helpers: coinbase maturity ---
+    def _depth(self, utxo) -> int:
+        """Current chain depth for a given utxo (1 = just mined)."""
+        return self._test_node.getblockchaininfo()['blocks'] - utxo['height'] + 1
+
+    def _is_mature(self, utxo, min_coinbase_depth: int = COINBASE_MATURITY) -> bool:
+        """Non-coinbase always ok; coinbase must reach min_coinbase_depth."""
+        # UTXO dicts may come from different RPCs / helpers.
+        # Some provide 'coinbase', others provide 'generated', and some provide neither.
+        # Default to treating missing as non-coinbase to avoid KeyError in tests.
+        coinbase = utxo.get('coinbase', utxo.get('generated', False))
+        return (not coinbase) or (self._depth(utxo) >= min_coinbase_depth)
+
     def _create_utxo(self, *, txid, vout, value, height, coinbase, confirmations):
         return {"txid": txid, "vout": vout, "value": value, "height": height, "coinbase": coinbase, "confirmations": confirmations}
 
