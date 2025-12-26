@@ -674,6 +674,9 @@ private:
     std::vector<TxData> m_tx_data;
     /** Information about each set (chunk, or active dependency top set). Indexed by SetIdx. */
     std::vector<SetInfo<SetType>> m_set_info;
+    /** For each chunk, indexed by SetIdx, the set of out-of-chunk reachable transactions, in the
+     *  upwards (.first) and downwards (.second) direction. */
+    std::vector<std::pair<SetType, SetType>> m_reachable;
     /** A FIFO of chunk SetIdxs for chunks that may be improved still. */
     VecDeque<SetIdx> m_suboptimal_chunks;
     /** A FIFO of chunk indexes with a pivot transaction in them, and a flag to indicate their
@@ -732,20 +735,17 @@ private:
         }
     }
 
-    /** Find the set of out-of-chunk transactions reachable from tx_idxs. */
-    template<bool DownWard>
-    SetType GetReachable(const SetType& tx_idxs) const noexcept
+    /** Find the set of out-of-chunk transactions reachable from tx_idxs, both in upwards and
+     *  downwards direction. */
+    std::pair<SetType, SetType> GetReachable(const SetType& tx_idxs) const noexcept
     {
-        SetType ret;
+        SetType parents, children;
         for (auto tx_idx : tx_idxs) {
             const auto& tx_data = m_tx_data[tx_idx];
-            if constexpr (DownWard) {
-                ret |= tx_data.children;
-            } else {
-                ret |= tx_data.parents;
-            }
+            parents |= tx_data.parents;
+            children |= tx_data.children;
         }
-        return ret - tx_idxs;
+        return {parents - tx_idxs, children - tx_idxs};
     }
 
     /** Make the inactive dependency from child to parent, which must not be in the same chunk
@@ -795,6 +795,11 @@ private:
         // Merge top_info into bottom_info, which becomes the merged chunk.
         bottom_info |= top_info;
         m_cost += bottom_info.transactions.Count();
+        // Compute merged sets of reachable transactions from the new chunk.
+        m_reachable[child_chunk_idx].first |= m_reachable[parent_chunk_idx].first;
+        m_reachable[child_chunk_idx].second |= m_reachable[parent_chunk_idx].second;
+        m_reachable[child_chunk_idx].first -= bottom_info.transactions;
+        m_reachable[child_chunk_idx].second -= bottom_info.transactions;
         // Make parent chunk the set for the new active dependency.
         parent_data.dep_top_idx[child_idx] = parent_chunk_idx;
         m_chunk_idxs.Reset(parent_chunk_idx);
@@ -829,6 +834,9 @@ private:
                           /*chunk_idx=*/parent_chunk_idx, /*dep_change=*/bottom_info);
         UpdateChunk<true>(/*tx_idxs=*/bottom_info.transactions, /*query=*/child_idx,
                           /*chunk_idx=*/child_chunk_idx, /*dep_change=*/top_info);
+        // Compute the new sets of reachable transactions for each new chunk.
+        m_reachable[child_chunk_idx] = GetReachable(bottom_info.transactions);
+        m_reachable[parent_chunk_idx] = GetReachable(top_info.transactions);
     }
 
     /** Activate a dependency from the bottom set to the top set. Return the index of the merged
@@ -899,7 +907,7 @@ private:
         uint64_t best_other_chunk_tiebreak{0};
 
         /** Which parent/child transactions we still need to process the chunks for. */
-        auto todo = GetReachable<DownWard>(chunk_info.transactions);
+        auto todo = DownWard ? m_reachable[chunk_idx].second : m_reachable[chunk_idx].first;
         while (todo.Any()) {
             // Find a chunk for a transaction in todo, and remove all its transactions from todo.
             auto reached_chunk_idx = m_tx_data[todo.First()].chunk_idx;
@@ -975,6 +983,7 @@ public:
         auto num_transactions = m_transaction_idxs.Count();
         m_tx_data.resize(depgraph.PositionRange());
         m_set_info.resize(num_transactions);
+        m_reachable.resize(num_transactions);
         size_t num_chunks = 0;
         for (auto tx_idx : m_transaction_idxs) {
             // Fill in transaction data.
@@ -988,6 +997,12 @@ public:
             m_set_info[num_chunks++] = SetInfo(depgraph, tx_idx);
             // Mark all its dependencies inactive.
             tx_data.dep_top_idx.fill(INVALID_SET_IDX);
+        }
+        // Set the reachable transactions for each chunk to the transactions' parents and children.
+        for (SetIdx chunk_idx = 0; chunk_idx < num_transactions; ++chunk_idx) {
+            auto& tx_data = m_tx_data[m_set_info[chunk_idx].transactions.First()];
+            m_reachable[chunk_idx].first = tx_data.parents;
+            m_reachable[chunk_idx].second = tx_data.children;
         }
         Assume(num_chunks == num_transactions);
         // Mark all chunk sets as chunks.
@@ -1425,6 +1440,8 @@ public:
             assert(chunk_info.transactions == expected_chunk);
             // Verify the chunk's feerate.
             assert(chunk_info.feerate == depgraph.FeeRate(expected_chunk));
+            // Verify the chunk's reachable transactions.
+            assert(m_reachable[chunk_idx] == GetReachable(expected_chunk));
         }
         // Verify that together, the chunks cover all transactions.
         assert(chunk_cover == depgraph.Positions());
