@@ -36,6 +36,7 @@ const char *DEFAULT_GUI_PROXY_HOST = "127.0.0.1";
 
 static QString GetDefaultProxyAddress();
 
+static const QLatin1String fontchoice_str_app_font{"application_font"};
 static const QLatin1String fontchoice_str_embedded{"embedded"};
 static const QLatin1String fontchoice_str_best_system{"best_system"};
 static const QString fontchoice_str_custom_prefix{QStringLiteral("custom, ")};
@@ -43,18 +44,24 @@ static const QString fontchoice_str_custom_prefix{QStringLiteral("custom, ")};
 QString OptionsModel::FontChoiceToString(const OptionsModel::FontChoice& f)
 {
     if (std::holds_alternative<FontChoiceAbstract>(f)) {
-        if (f == UseBestSystemFont) {
+        switch (std::get<FontChoiceAbstract>(f)) {
+        case FontChoiceAbstract::ApplicationFont:
+            return fontchoice_str_app_font;
+        case FontChoiceAbstract::BestSystemFont:
             return fontchoice_str_best_system;
-        } else {
+        case FontChoiceAbstract::EmbeddedFont:
             return fontchoice_str_embedded;
         }
+        assert(false);
     }
     return fontchoice_str_custom_prefix + std::get<QFont>(f).toString();
 }
 
 OptionsModel::FontChoice OptionsModel::FontChoiceFromString(const QString& s)
 {
-    if (s == fontchoice_str_best_system) {
+    if (s == fontchoice_str_app_font) {
+        return FontChoiceAbstract::ApplicationFont;
+    } else if (s == fontchoice_str_best_system) {
         return FontChoiceAbstract::BestSystemFont;
     } else if (s == fontchoice_str_embedded) {
         return FontChoiceAbstract::EmbeddedFont;
@@ -63,7 +70,7 @@ OptionsModel::FontChoice OptionsModel::FontChoiceFromString(const QString& s)
         f.fromString(s.mid(fontchoice_str_custom_prefix.size()));
         return f;
     } else {
-        return FontChoiceAbstract::EmbeddedFont;  // default
+        return FontChoiceAbstract::ApplicationFont;  // default
     }
 }
 
@@ -518,8 +525,19 @@ QFont OptionsModel::getFontForChoice(const FontChoice& fc)
 {
     QFont f;
     if (std::holds_alternative<FontChoiceAbstract>(fc)) {
-        f = GUIUtil::fixedPitchFont(fc != UseBestSystemFont);
-        f.setWeight(QFont::Bold);
+        switch (std::get<FontChoiceAbstract>(fc)) {
+        case FontChoiceAbstract::ApplicationFont:
+            f = GUIUtil::getFontBold();
+            break;
+        case FontChoiceAbstract::EmbeddedFont:
+            f = GUIUtil::fixedPitchFont(true);
+            f.setWeight(QFont::Bold);
+            break;
+        case FontChoiceAbstract::BestSystemFont:
+            f = GUIUtil::fixedPitchFont(false);
+            f.setWeight(QFont::Bold);
+            break;
+        }
     } else {
         f = std::get<QFont>(fc);
     }
@@ -904,9 +922,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case FontForMoney:
         {
             const auto& new_font = value.value<FontChoice>();
-            if (m_font_money == new_font) break;
-            settings.setValue("FontForMoney", FontChoiceToString(new_font));
-            m_font_money = new_font;
+            if (m_font_money != new_font) {
+                settings.setValue("FontForMoney", FontChoiceToString(new_font));
+                m_font_money = new_font;
+            }
             Q_EMIT fontForMoneyChanged(getFontForMoney());
             break;
         }

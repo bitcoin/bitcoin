@@ -46,8 +46,9 @@ void setupFontOptions(QComboBox* cb, QLabel* preview)
 {
     QFont embedded_font{GUIUtil::fixedPitchFont(true)};
     QFont system_font{GUIUtil::fixedPitchFont(false)};
+    cb->addItem(QObject::tr("Default monospace font \"%1\"").arg(QFontInfo(system_font).family()), QVariant::fromValue(OptionsModel::FontChoice{OptionsModel::FontChoiceAbstract::BestSystemFont}));
     cb->addItem(QObject::tr("Embedded \"%1\"").arg(QFontInfo(embedded_font).family()), QVariant::fromValue(OptionsModel::FontChoice{OptionsModel::FontChoiceAbstract::EmbeddedFont}));
-    cb->addItem(QObject::tr("Default system font \"%1\"").arg(QFontInfo(system_font).family()), QVariant::fromValue(OptionsModel::FontChoice{OptionsModel::FontChoiceAbstract::BestSystemFont}));
+    cb->addItem(QObject::tr("Use existing font"), QVariant::fromValue(OptionsModel::FontChoice{OptionsModel::FontChoiceAbstract::ApplicationFont}));
     cb->addItem(QObject::tr("Custom…"));
 
     const auto& on_font_choice_changed = [cb, preview](int index) {
@@ -100,20 +101,26 @@ AppearanceWidget::AppearanceWidget(QWidget* parent) :
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
     mapper->setOrientation(Qt::Vertical);
 
-    connect(ui->theme, &QComboBox::currentTextChanged, this, &AppearanceWidget::updateTheme);
-    connect(ui->fontFamily, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &AppearanceWidget::updateFontFamily);
-    connect(ui->fontScaleSlider, &QSlider::valueChanged, this, &AppearanceWidget::updateFontScale);
-    connect(ui->fontWeightNormalSlider, &QSlider::valueChanged, [this](auto nValue) { updateFontWeightNormal(nValue); });
-    connect(ui->fontWeightBoldSlider, &QSlider::valueChanged, [this](auto nValue) { updateFontWeightBold(nValue); });
-
-    connect(ui->theme, &QComboBox::currentTextChanged, [this]() { Q_EMIT appearanceChanged(); });
-    connect(ui->fontFamily, &QComboBox::currentTextChanged, [this]() { Q_EMIT appearanceChanged(); });
-    connect(ui->fontScaleSlider, &QSlider::sliderReleased, [this]() { Q_EMIT appearanceChanged(); });
-    connect(ui->fontWeightNormalSlider, &QSlider::sliderReleased, [this]() { Q_EMIT appearanceChanged(); });
-    connect(ui->fontWeightBoldSlider, &QSlider::sliderReleased, [this]() { Q_EMIT appearanceChanged(); });
-
     setupFontOptions(ui->moneyFont, ui->moneyFont_preview);
+
+    connect(ui->fontFamily, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &AppearanceWidget::updateFontFamily);
+    connect(ui->fontFamily, QOverload<int>::of(&QComboBox::currentIndexChanged), [this]() { Q_EMIT appearanceChanged(); });
+    connect(ui->fontFamily, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &AppearanceWidget::updateMoneyPreview);
+
+    connect(ui->fontScaleSlider, &QSlider::sliderReleased, [this]() { Q_EMIT appearanceChanged(); });
+    connect(ui->fontScaleSlider, &QSlider::valueChanged, this, &AppearanceWidget::updateFontScale);
+
+    connect(ui->fontWeightBoldSlider, &QSlider::sliderReleased, [this]() { Q_EMIT appearanceChanged(); });
+    connect(ui->fontWeightBoldSlider, &QSlider::valueChanged, [this](auto nValue) { updateFontWeightBold(nValue); });
+    connect(ui->fontWeightBoldSlider, &QSlider::valueChanged, this, &AppearanceWidget::updateMoneyPreview);
+
+    connect(ui->fontWeightNormalSlider, &QSlider::sliderReleased, [this]() { Q_EMIT appearanceChanged(); });
+    connect(ui->fontWeightNormalSlider, &QSlider::valueChanged, [this](auto nValue) { updateFontWeightNormal(nValue); });
+
     connect(ui->moneyFont, &QComboBox::currentTextChanged, [this]() { Q_EMIT appearanceChanged(); });
+
+    connect(ui->theme, &QComboBox::currentTextChanged, this, &AppearanceWidget::updateTheme);
+    connect(ui->theme, &QComboBox::currentTextChanged, [this]() { Q_EMIT appearanceChanged(); });
 }
 
 AppearanceWidget::~AppearanceWidget()
@@ -257,6 +264,22 @@ void AppearanceWidget::updateFontWeightBold(int nValue, bool fForce)
     GUIUtil::g_font_registry.SetWeightBold(GUIUtil::g_font_registry.IdxToWeight(ui->fontWeightBoldSlider->value()));
     GUIUtil::setApplicationFont();
     GUIUtil::updateFonts();
+}
+
+void AppearanceWidget::updateMoneyPreview()
+{
+    QVariant item_data = ui->moneyFont->currentData();
+    if (!item_data.canConvert<OptionsModel::FontChoice>()) {
+        return;
+    }
+    const auto fc = item_data.value<OptionsModel::FontChoice>();
+    if (!std::holds_alternative<OptionsModel::FontChoiceAbstract>(fc)) {
+        return;
+    }
+    if (std::get<OptionsModel::FontChoiceAbstract>(fc) != OptionsModel::FontChoiceAbstract::ApplicationFont) {
+        return;
+    }
+    ui->moneyFont_preview->setFont(GUIUtil::getFontBold());
 }
 
 void AppearanceWidget::updateWeightSlider(const bool fForce)

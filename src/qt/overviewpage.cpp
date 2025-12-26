@@ -165,13 +165,7 @@ OverviewPage::OverviewPage(QWidget* parent) :
                      }, {GUIUtil::g_font_registry.GetWeightBold()});
 
     // Calls GUIUtil::updateFonts() internally
-    setMonospacedFont(GUIUtil::fixedPitchFont(
-#ifdef Q_OS_MACOS
-        true
-#else
-        false
-#endif // Q_OS_MACOS
-    ));
+    setMonospacedFont(GUIUtil::getFontBold());
 
     m_balances.balance = -1;
 

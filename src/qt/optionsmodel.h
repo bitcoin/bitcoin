@@ -97,8 +97,9 @@ public:
     };
 
     enum class FontChoiceAbstract {
-        EmbeddedFont,
+        ApplicationFont,
         BestSystemFont,
+        EmbeddedFont,
     };
     typedef std::variant<FontChoiceAbstract, QFont> FontChoice;
     static inline const FontChoice UseBestSystemFont{FontChoiceAbstract::BestSystemFont};
@@ -150,7 +151,7 @@ private:
     QString language;
     BitcoinUnit m_display_bitcoin_unit;
     QString strThirdPartyTxUrls;
-    FontChoice m_font_money{FontChoiceAbstract::EmbeddedFont};
+    FontChoice m_font_money{FontChoiceAbstract::ApplicationFont};
     bool fCoinControlFeatures;
     bool m_sub_fee_from_amount;
     bool m_enable_psbt_controls;
