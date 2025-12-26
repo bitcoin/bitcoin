@@ -849,10 +849,21 @@ private:
         return INVALID_SET_IDX;
     }
 
-    /** Perform an upward or downward merge step, on the specified chunk. Returns the merged chunk,
-     *  or INVALID_SET_IDX if no merge took place. */
+    /** Activate a dependency from chunk_idx to merge_chunk_idx (if !DownWard), or a dependency
+     *  from merge_chunk_idx to chunk_idx (if DownWard). Return the index of the merged chunk. */
     template<bool DownWard>
-    SetIdx MergeStep(SetIdx chunk_idx) noexcept
+    SetIdx MergeChunksDirected(SetIdx chunk_idx, SetIdx merge_chunk_idx) noexcept
+    {
+        if constexpr (DownWard) {
+            return MergeChunks(chunk_idx, merge_chunk_idx);
+        } else {
+            return MergeChunks(merge_chunk_idx, chunk_idx);
+        }
+    }
+
+    /** Determine which chunk to merge chunk_idx with, or INVALID_SET_IDX if none. */
+    template<bool DownWard>
+    SetIdx PickMergeCandidate(SetIdx chunk_idx) noexcept
     {
         /** Information about the chunk. */
         auto& chunk_info = m_set_info[chunk_idx];
@@ -898,17 +909,20 @@ private:
                 }
             }
         }
-        // Stop if there are no candidate chunks to merge with.
-        if (best_other_chunk_idx == INVALID_SET_IDX) return INVALID_SET_IDX;
-        if constexpr (DownWard) {
-            chunk_idx = MergeChunks(chunk_idx, best_other_chunk_idx);
-        } else {
-            chunk_idx = MergeChunks(best_other_chunk_idx, chunk_idx);
-        }
+        return best_other_chunk_idx;
+    }
+
+    /** Perform an upward or downward merge step, on the specified chunk. Returns the merged chunk,
+     *  or INVALID_SET_IDX if no merge took place. */
+    template<bool DownWard>
+    SetIdx MergeStep(SetIdx chunk_idx) noexcept
+    {
+        auto merge_chunk_idx = PickMergeCandidate<DownWard>(chunk_idx);
+        if (merge_chunk_idx == INVALID_SET_IDX) return INVALID_SET_IDX;
+        chunk_idx = MergeChunksDirected<DownWard>(chunk_idx, merge_chunk_idx);
         Assume(chunk_idx != INVALID_SET_IDX);
         return chunk_idx;
     }
-
 
     /** Perform an upward or downward merge sequence on the specified transaction. */
     template<bool DownWard>
