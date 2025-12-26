@@ -165,7 +165,13 @@ OverviewPage::OverviewPage(QWidget* parent) :
                      }, {GUIUtil::g_font_registry.GetWeightBold()});
 
     // Calls GUIUtil::updateFonts() internally
-    setMonospacedFont(/*use_embedded_font=*/false);
+    setMonospacedFont(GUIUtil::fixedPitchFont(
+#ifdef Q_OS_MACOS
+        true
+#else
+        false
+#endif // Q_OS_MACOS
+    ));
 
     m_balances.balance = -1;
 
@@ -302,8 +308,8 @@ void OverviewPage::setClientModel(ClientModel *model)
         // Show warning, for example if this is a prerelease version
         connect(model, &ClientModel::alertsChanged, this, &OverviewPage::updateAlerts);
         updateAlerts(model->getStatusBarWarnings());
-        connect(model->getOptionsModel(), &OptionsModel::useEmbeddedMonospacedFontChanged, this, &OverviewPage::setMonospacedFont);
-        setMonospacedFont(model->getOptionsModel()->getUseEmbeddedMonospacedFont());
+        connect(model->getOptionsModel(), &OptionsModel::fontForMoneyChanged, this, &OverviewPage::setMonospacedFont);
+        setMonospacedFont(clientModel->getOptionsModel()->getFontForMoney());
         // explicitly update CoinJoin frame and transaction list to reflect actual settings
         updateAdvancedCJUI(model->getOptionsModel()->getShowAdvancedCJUI());
     }
@@ -376,12 +382,12 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
     ui->labelTransactionsStatus->setVisible(fShow);
 }
 
-void OverviewPage::setMonospacedFont(bool use_embedded_font)
+void OverviewPage::setMonospacedFont(const QFont& f)
 {
     GUIUtil::setFont({
         ui->labelTotal,
         ui->labelWatchTotal,
-    }, {GUIUtil::fixedPitchFont(use_embedded_font).family(), GUIUtil::g_font_registry.GetWeightBold(), 14});
+    }, {f.family(), GUIUtil::g_font_registry.GetWeightBold(), 14});
 
     GUIUtil::setFont({
         ui->labelAmountRounds,
@@ -393,7 +399,7 @@ void OverviewPage::setMonospacedFont(bool use_embedded_font)
         ui->labelWatchAvailable,
         ui->labelWatchPending,
         ui->labelWatchImmature,
-    }, {GUIUtil::fixedPitchFont(use_embedded_font).family(), GUIUtil::g_font_registry.GetWeightBold()});
+    }, {f.family(), GUIUtil::g_font_registry.GetWeightBold()});
 
     GUIUtil::updateFonts();
 }
