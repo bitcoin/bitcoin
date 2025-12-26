@@ -15,8 +15,64 @@
 
 #include <QComboBox>
 #include <QDataWidgetMapper>
+#include <QFontDialog>
+#include <QFontInfo>
 #include <QSettings>
 #include <QSlider>
+
+int setFontChoice(QComboBox* cb, const OptionsModel::FontChoice& fc)
+{
+    int i;
+    for (i = cb->count(); --i >= 0; ) {
+        QVariant item_data = cb->itemData(i);
+        if (!item_data.canConvert<OptionsModel::FontChoice>()) continue;
+        if (item_data.value<OptionsModel::FontChoice>() == fc) {
+            break;
+        }
+    }
+    if (i == -1) {
+        // New item needed
+        QFont chosen_font = OptionsModel::getFontForChoice(fc);
+        QSignalBlocker block_currentindexchanged_signal(cb);  // avoid triggering QFontDialog
+        cb->insertItem(0, QFontInfo(chosen_font).family(), QVariant::fromValue(fc));
+        i = 0;
+    }
+
+    cb->setCurrentIndex(i);
+    return i;
+}
+
+void setupFontOptions(QComboBox* cb, QLabel* preview)
+{
+    QFont embedded_font{GUIUtil::fixedPitchFont(true)};
+    QFont system_font{GUIUtil::fixedPitchFont(false)};
+    cb->addItem(QObject::tr("Embedded \"%1\"").arg(QFontInfo(embedded_font).family()), QVariant::fromValue(OptionsModel::FontChoice{OptionsModel::FontChoiceAbstract::EmbeddedFont}));
+    cb->addItem(QObject::tr("Default system font \"%1\"").arg(QFontInfo(system_font).family()), QVariant::fromValue(OptionsModel::FontChoice{OptionsModel::FontChoiceAbstract::BestSystemFont}));
+    cb->addItem(QObject::tr("Custom…"));
+
+    const auto& on_font_choice_changed = [cb, preview](int index) {
+        static int previous_index = -1;
+        QVariant item_data = cb->itemData(index);
+        QFont f;
+        if (item_data.canConvert<OptionsModel::FontChoice>()) {
+            f = OptionsModel::getFontForChoice(item_data.value<OptionsModel::FontChoice>());
+        } else {
+            bool ok;
+            f = QFontDialog::getFont(&ok, GUIUtil::fixedPitchFont(false), cb->parentWidget());
+            if (!ok) {
+                cb->setCurrentIndex(previous_index);
+                return;
+            }
+            index = setFontChoice(cb, OptionsModel::FontChoice{f});
+        }
+        if (preview) {
+            preview->setFont(f);
+        }
+        previous_index = index;
+    };
+    QObject::connect(cb, QOverload<int>::of(&QComboBox::currentIndexChanged), on_font_choice_changed);
+    on_font_choice_changed(cb->currentIndex());
+}
 
 AppearanceWidget::AppearanceWidget(QWidget* parent) :
     QWidget(parent),
@@ -55,6 +111,9 @@ AppearanceWidget::AppearanceWidget(QWidget* parent) :
     connect(ui->fontScaleSlider, &QSlider::sliderReleased, [this]() { Q_EMIT appearanceChanged(); });
     connect(ui->fontWeightNormalSlider, &QSlider::sliderReleased, [this]() { Q_EMIT appearanceChanged(); });
     connect(ui->fontWeightBoldSlider, &QSlider::sliderReleased, [this]() { Q_EMIT appearanceChanged(); });
+
+    setupFontOptions(ui->moneyFont, ui->moneyFont_preview);
+    connect(ui->moneyFont, &QComboBox::currentTextChanged, [this]() { Q_EMIT appearanceChanged(); });
 }
 
 AppearanceWidget::~AppearanceWidget()
@@ -104,6 +163,9 @@ void AppearanceWidget::setModel(OptionsModel* _model)
 
     mapper->toFirst();
 
+    const auto& font_for_money = _model->data(_model->index(OptionsModel::FontForMoney, 0), Qt::EditRole).value<OptionsModel::FontChoice>();
+    setFontChoice(ui->moneyFont, font_for_money);
+
     const bool override_family{_model->isOptionOverridden("-font-family")};
     if (override_family) {
         ui->fontFamily->setEnabled(false);
@@ -139,6 +201,9 @@ void AppearanceWidget::setModel(OptionsModel* _model)
 void AppearanceWidget::accept()
 {
     fAcceptChanges = true;
+    if (model) {
+        model->setData(model->index(OptionsModel::FontForMoney, 0), ui->moneyFont->itemData(ui->moneyFont->currentIndex()));
+    }
 }
 
 void AppearanceWidget::updateTheme(const QString& theme)
