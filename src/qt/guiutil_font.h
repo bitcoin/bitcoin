@@ -22,15 +22,11 @@ constexpr QStringView OS_FONT_STR{u"SystemDefault"};
 constexpr QStringView OS_MONO_FONT_STR{u"SystemMonospace"};
 constexpr QStringView ROBOTO_MONO_FONT_STR{u"Roboto Mono"};
 
+extern std::vector<std::pair<QString, /*selectable=*/bool>> g_fonts_known;
+
 enum class FontWeight : uint8_t {
     Normal,
     Bold,
-};
-
-struct FontAttrib {
-    QFont::Weight m_weight;
-    double m_point_size{-1};
-    bool m_is_italic{false};
 };
 
 struct FontInfo {
@@ -125,7 +121,17 @@ private:
 
 extern FontRegistry g_font_registry;
 
-extern std::vector<std::pair<QString, /*selectable=*/bool>> g_fonts_known;
+struct FontAttrib {
+    QString m_font;
+    QFont::Weight m_weight;
+    double m_point_size{-1};
+    bool m_is_italic{false};
+
+    FontAttrib(QString font, QFont::Weight weight, double point_size = -1, bool is_italic = false);
+    // cppcheck-suppress noExplicitConstructor
+    FontAttrib(QFont::Weight weight, double point_size = -1, bool is_italic = false);
+    ~FontAttrib();
+};
 
 /** Convert weight value from args (0-8) to QFont::Weight */
 bool weightFromArg(int nArg, QFont::Weight& weight);
@@ -153,7 +159,6 @@ void updateFonts();
 std::vector<QString> getFonts(bool selectable_only);
 
 /** Get a properly weighted QFont object with the selected font. */
-QFont getFont(const QString& font_name, const FontAttrib& font_attrib);
 QFont getFont(const FontAttrib& font_attrib);
 
 /** Get the default normal QFont */

@@ -189,7 +189,7 @@ int weightToArg(const QFont::Weight weight)
 void FontInfo::CalcSupportedWeights(const QString& font_name)
 {
     auto getTestWidth = [](const QString& font_name, QFont::Weight weight) -> int {
-        QFont font = getFont(font_name, {weight, FontRegistry::DEFAULT_FONT_SIZE, false});
+        QFont font = getFont({font_name, weight, FontRegistry::DEFAULT_FONT_SIZE, false});
         return TextWidth(QFontMetrics(font), ("Check the width of this text to see if the weight change has an impact!"));
     };
     QFont::Weight prevWeight = vecWeightConsider.front();
@@ -242,6 +242,24 @@ void FontInfo::CalcDefaultWeights(const QString& font_name)
         }
     }
 }
+
+FontAttrib::FontAttrib(QString font, QFont::Weight weight, double point_size, bool is_italic) :
+    m_font{font},
+    m_weight{weight},
+    m_point_size{point_size},
+    m_is_italic{is_italic}
+{
+}
+
+FontAttrib::FontAttrib(QFont::Weight weight, double point_size, bool is_italic) :
+    m_font{g_font_registry.GetFont()},
+    m_weight{weight},
+    m_point_size{point_size},
+    m_is_italic{is_italic}
+{
+}
+
+FontAttrib::~FontAttrib() = default;
 
 bool loadFonts()
 {
@@ -407,7 +425,7 @@ void updateFonts()
             if (nSize == -1) {
                 nSize = itDefault.first->second;
             }
-            font = getFont({it->second.m_weight, nSize, it->second.m_is_italic});
+            font = getFont({it->second.m_font, it->second.m_weight, nSize, it->second.m_is_italic});
         } else {
             font.setPointSizeF(g_font_registry.GetScaledFontSize(itDefault.first->second));
         }
@@ -444,17 +462,17 @@ void updateFonts()
     }
 }
 
-QFont getFont(const QString& font_name, const FontAttrib& font_attrib)
+QFont getFont(const FontAttrib& font_attrib)
 {
     QFont font;
     if (!fontsLoaded()) {
         return font;
     }
 
-    if (font_name == MONTSERRAT_FONT_STR) {
+    if (font_attrib.m_font == MONTSERRAT_FONT_STR) {
         assert(mapMontserrat.count(font_attrib.m_weight));
 #ifdef Q_OS_MACOS
-        font.setFamily(font_name);
+        font.setFamily(font_attrib.m_font);
         font.setStyleName([&]() {
             std::string ret{mapMontserrat.at(font_attrib.m_weight).first};
             if (font_attrib.m_is_italic) {
@@ -468,25 +486,25 @@ QFont getFont(const QString& font_name, const FontAttrib& font_attrib)
         }());
 #else
         if (font_attrib.m_weight == QFont::Normal || font_attrib.m_weight == QFont::Bold) {
-            font.setFamily(font_name);
+            font.setFamily(font_attrib.m_font);
         } else {
-            font.setFamily(font_name + QString{" "} + QString::fromStdString(mapMontserrat.at(font_attrib.m_weight).first));
+            font.setFamily(qstrprintf("%s %s", font_attrib.m_font.toStdString(), mapMontserrat.at(font_attrib.m_weight).first));
         }
 #endif // Q_OS_MACOS
-    } else if (font_name == OS_FONT_STR) {
+    } else if (font_attrib.m_font == OS_FONT_STR) {
         font.setFamily(g_default_font->family());
-    } else if (font_name == OS_MONO_FONT_STR) {
+    } else if (font_attrib.m_font == OS_MONO_FONT_STR) {
         font.setFamily(QFontDatabase::systemFont(QFontDatabase::FixedFont).family());
     } else {
-        font.setFamily(font_name);
+        font.setFamily(font_attrib.m_font);
     }
 
-    if (font_name == ROBOTO_MONO_FONT_STR || font_name == OS_MONO_FONT_STR) {
+    if (font_attrib.m_font == ROBOTO_MONO_FONT_STR || font_attrib.m_font == OS_MONO_FONT_STR) {
         font.setStyleHint(QFont::Monospace);
     }
 
 #ifdef Q_OS_MACOS
-    if (font_name != MONTSERRAT_FONT_STR)
+    if (font_attrib.m_font != MONTSERRAT_FONT_STR)
 #endif // Q_OS_MACOS
     {
         font.setWeight(font_attrib.m_weight);
@@ -504,11 +522,6 @@ QFont getFont(const QString& font_name, const FontAttrib& font_attrib)
     }
 
     return font;
-}
-
-QFont getFont(const FontAttrib& font_attrib)
-{
-    return getFont(g_font_registry.GetFont(), font_attrib);
 }
 
 std::vector<QString> getFonts(bool selectable_only)
