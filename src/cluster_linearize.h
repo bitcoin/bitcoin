@@ -827,24 +827,32 @@ private:
         bottom_info -= top_info;
         // See the comment above in Activate(). We perform the opposite operations here, removing
         // instead of adding.
+        SetType top_parents, top_children;
         for (auto tx_idx : top_info.transactions) {
             auto& tx_data = m_tx_data[tx_idx];
             tx_data.chunk_idx = parent_chunk_idx;
+            top_parents |= tx_data.parents;
+            top_children |= tx_data.children;
             for (auto dep_child_idx : tx_data.active_children) {
                 auto& dep_top_info = m_set_info[tx_data.dep_top_idx[dep_child_idx]];
                 if (dep_top_info.transactions[parent_idx]) dep_top_info -= bottom_info;
             }
         }
+        SetType bottom_parents, bottom_children;
         for (auto tx_idx : bottom_info.transactions) {
             auto& tx_data = m_tx_data[tx_idx];
+            bottom_parents |= tx_data.parents;
+            bottom_children |= tx_data.children;
             for (auto dep_child_idx : tx_data.active_children) {
                 auto& dep_top_info = m_set_info[tx_data.dep_top_idx[dep_child_idx]];
                 if (dep_top_info.transactions[child_idx]) dep_top_info -= top_info;
             }
         }
         // Compute the new sets of reachable transactions for each new chunk.
-        m_reachable[child_chunk_idx] = GetReachable(bottom_info.transactions);
-        m_reachable[parent_chunk_idx] = GetReachable(top_info.transactions);
+        m_reachable[parent_chunk_idx].first = top_parents - top_info.transactions;
+        m_reachable[parent_chunk_idx].second = top_children - top_info.transactions;
+        m_reachable[child_chunk_idx].first = bottom_parents - bottom_info.transactions;
+        m_reachable[child_chunk_idx].second = bottom_children - bottom_info.transactions;
         // Return the two new set idxs.
         return {parent_chunk_idx, child_chunk_idx};
     }
