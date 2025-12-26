@@ -554,139 +554,7 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 {
     if(role == Qt::EditRole)
     {
-        QSettings settings;
-        switch(index.row())
-        {
-        case StartAtStartup:
-            return GUIUtil::GetStartOnSystemStartup();
-        case ShowTrayIcon:
-            return m_show_tray_icon;
-        case MinimizeToTray:
-            return fMinimizeToTray;
-        case MapPortUPnP:
-#ifdef USE_UPNP
-            return settings.value("fUseUPnP");
-#else
-            return false;
-#endif // USE_UPNP
-        case MapPortNatpmp:
-#ifdef USE_NATPMP
-            return settings.value("fUseNatpmp");
-#else
-            return false;
-#endif // USE_NATPMP
-        case MinimizeOnClose:
-            return fMinimizeOnClose;
-
-        // default proxy
-        case ProxyUse:
-            return settings.value("fUseProxy", false);
-        case ProxyIP:
-            return GetProxySetting(settings, "addrProxy").ip;
-        case ProxyPort:
-            return GetProxySetting(settings, "addrProxy").port;
-
-        // separate Tor proxy
-        case ProxyUseTor:
-            return settings.value("fUseSeparateProxyTor", false);
-        case ProxyIPTor:
-            return GetProxySetting(settings, "addrSeparateProxyTor").ip;
-        case ProxyPortTor:
-            return GetProxySetting(settings, "addrSeparateProxyTor").port;
-
-#ifdef ENABLE_WALLET
-        case SpendZeroConfChange:
-            return settings.value("bSpendZeroConfChange");
-        case ExternalSignerPath:
-            return settings.value("external_signer_path");
-        case SubFeeFromAmount:
-            return m_sub_fee_from_amount;
-        case ShowMasternodesTab:
-            return settings.value("fShowMasternodesTab");
-        case ShowGovernanceTab:
-            return settings.value("fShowGovernanceTab");
-        case CoinJoinEnabled:
-            return settings.value("fCoinJoinEnabled");
-        case ShowAdvancedCJUI:
-            return fShowAdvancedCJUI;
-        case ShowCoinJoinPopups:
-            return settings.value("fShowCoinJoinPopups");
-        case LowKeysWarning:
-            return settings.value("fLowKeysWarning");
-        case CoinJoinSessions:
-            return settings.value("nCoinJoinSessions");
-        case CoinJoinRounds:
-            return settings.value("nCoinJoinRounds");
-        case CoinJoinAmount:
-            return settings.value("nCoinJoinAmount");
-        case CoinJoinDenomsGoal:
-            return settings.value("nCoinJoinDenomsGoal");
-        case CoinJoinDenomsHardCap:
-            return settings.value("nCoinJoinDenomsHardCap");
-        case CoinJoinMultiSession:
-            return settings.value("fCoinJoinMultiSession");
-#endif
-        case DisplayUnit:
-            return QVariant::fromValue(m_display_bitcoin_unit);
-        case ThirdPartyTxUrls:
-            return strThirdPartyTxUrls;
-#ifdef ENABLE_WALLET
-        case Digits:
-            return settings.value("digits");
-#endif // ENABLE_WALLET
-        case Theme:
-            return settings.value("theme");
-        case FontFamily:
-            return settings.value("fontFamily");
-        case FontScale:
-            return settings.value("fontScale");
-        case FontWeightNormal: {
-            int nIndex = [&]() -> int {
-                if (QFont::Weight weight; GUIUtil::weightFromArg(settings.value("fontWeightNormal").toInt(), weight) && GUIUtil::g_font_registry.IsValidWeight(weight)) {
-                    return GUIUtil::g_font_registry.WeightToIdx(weight);
-                }
-                return GUIUtil::g_font_registry.WeightToIdx(GUIUtil::g_font_registry.GetWeightNormalDefault());
-            }();
-            assert(nIndex != -1);
-            return nIndex;
-        }
-        case FontWeightBold: {
-            int nIndex = [&]() -> int {
-                if (QFont::Weight weight; GUIUtil::weightFromArg(settings.value("fontWeightBold").toInt(), weight) && GUIUtil::g_font_registry.IsValidWeight(weight)) {
-                    return GUIUtil::g_font_registry.WeightToIdx(weight);
-                }
-                return GUIUtil::g_font_registry.WeightToIdx(GUIUtil::g_font_registry.GetWeightBoldDefault());
-            }();
-            assert(nIndex != -1);
-            return nIndex;
-        }
-        case Language:
-            return settings.value("language");
-        case FontForMoney:
-            return QVariant::fromValue(m_font_money);
-#ifdef ENABLE_WALLET
-        case CoinControlFeatures:
-            return fCoinControlFeatures;
-        case EnablePSBTControls:
-            return settings.value("enable_psbt_controls");
-        case KeepChangeAddress:
-            return fKeepChangeAddress;
-#endif // ENABLE_WALLET
-        case Prune:
-            return settings.value("bPrune");
-        case PruneSize:
-            return settings.value("nPruneSize");
-        case DatabaseCache:
-            return settings.value("nDatabaseCache");
-        case ThreadsScriptVerif:
-            return settings.value("nThreadsScriptVerif");
-        case Listen:
-            return settings.value("fListen");
-        case Server:
-            return settings.value("server");
-        default:
-            return QVariant();
-        }
+        return getOption(OptionID(index.row()));
     }
     return QVariant();
 }
@@ -697,295 +565,438 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
     bool successful = true; /* set to false on parse error */
     if(role == Qt::EditRole)
     {
-        QSettings settings;
-        switch(index.row())
-        {
-        case StartAtStartup:
-            successful = GUIUtil::SetStartOnSystemStartup(value.toBool());
-            break;
-        case ShowTrayIcon:
-            m_show_tray_icon = value.toBool();
-            settings.setValue("fHideTrayIcon", !m_show_tray_icon);
-            Q_EMIT showTrayIconChanged(m_show_tray_icon);
-            break;
-        case MinimizeToTray:
-            fMinimizeToTray = value.toBool();
-            settings.setValue("fMinimizeToTray", fMinimizeToTray);
-            break;
-        case MapPortUPnP: // core option - can be changed on-the-fly
-            settings.setValue("fUseUPnP", value.toBool());
-            break;
-        case MapPortNatpmp: // core option - can be changed on-the-fly
-            settings.setValue("fUseNatpmp", value.toBool());
-            break;
-        case MinimizeOnClose:
-            fMinimizeOnClose = value.toBool();
-            settings.setValue("fMinimizeOnClose", fMinimizeOnClose);
-            break;
-
-        // default proxy
-        case ProxyUse:
-            if (settings.value("fUseProxy") != value) {
-                settings.setValue("fUseProxy", value.toBool());
-                setRestartRequired(true);
-            }
-            break;
-        case ProxyIP: {
-            auto ip_port = GetProxySetting(settings, "addrProxy");
-            if (!ip_port.is_set || ip_port.ip != value.toString()) {
-                ip_port.ip = value.toString();
-                SetProxySetting(settings, "addrProxy", ip_port);
-                setRestartRequired(true);
-            }
-        }
-        break;
-        case ProxyPort: {
-            auto ip_port = GetProxySetting(settings, "addrProxy");
-            if (!ip_port.is_set || ip_port.port != value.toString()) {
-                ip_port.port = value.toString();
-                SetProxySetting(settings, "addrProxy", ip_port);
-                setRestartRequired(true);
-            }
-        }
-        break;
-
-        // separate Tor proxy
-        case ProxyUseTor:
-            if (settings.value("fUseSeparateProxyTor") != value) {
-                settings.setValue("fUseSeparateProxyTor", value.toBool());
-                setRestartRequired(true);
-            }
-            break;
-        case ProxyIPTor: {
-            auto ip_port = GetProxySetting(settings, "addrSeparateProxyTor");
-            if (!ip_port.is_set || ip_port.ip != value.toString()) {
-                ip_port.ip = value.toString();
-                SetProxySetting(settings, "addrSeparateProxyTor", ip_port);
-                setRestartRequired(true);
-            }
-        }
-        break;
-        case ProxyPortTor: {
-            auto ip_port = GetProxySetting(settings, "addrSeparateProxyTor");
-            if (!ip_port.is_set || ip_port.port != value.toString()) {
-                ip_port.port = value.toString();
-                SetProxySetting(settings, "addrSeparateProxyTor", ip_port);
-                setRestartRequired(true);
-            }
-        }
-        break;
-
-#ifdef ENABLE_WALLET
-        case SpendZeroConfChange:
-            if (settings.value("bSpendZeroConfChange") != value) {
-                settings.setValue("bSpendZeroConfChange", value);
-                setRestartRequired(true);
-            }
-            break;
-        case ExternalSignerPath:
-            if (settings.value("external_signer_path") != value.toString()) {
-                settings.setValue("external_signer_path", value.toString());
-                setRestartRequired(true);
-            }
-            break;
-        case ShowMasternodesTab:
-            if (settings.value("fShowMasternodesTab") != value) {
-                settings.setValue("fShowMasternodesTab", value);
-                setRestartRequired(true);
-            }
-            break;
-        case SubFeeFromAmount:
-            m_sub_fee_from_amount = value.toBool();
-            settings.setValue("SubFeeFromAmount", m_sub_fee_from_amount);
-            break;
-        case ShowGovernanceTab:
-            if (settings.value("fShowGovernanceTab") != value) {
-                settings.setValue("fShowGovernanceTab", value);
-                setRestartRequired(true);
-            }
-            break;
-        case CoinJoinEnabled:
-            if (settings.value("fCoinJoinEnabled") != value) {
-                settings.setValue("fCoinJoinEnabled", value.toBool());
-                Q_EMIT coinJoinEnabledChanged();
-            }
-            break;
-        case ShowAdvancedCJUI:
-            if (settings.value("fShowAdvancedCJUI") != value) {
-                fShowAdvancedCJUI = value.toBool();
-                settings.setValue("fShowAdvancedCJUI", fShowAdvancedCJUI);
-                Q_EMIT AdvancedCJUIChanged(fShowAdvancedCJUI);
-            }
-            break;
-        case ShowCoinJoinPopups:
-            settings.setValue("fShowCoinJoinPopups", value);
-            break;
-        case LowKeysWarning:
-            settings.setValue("fLowKeysWarning", value);
-            break;
-        case CoinJoinSessions:
-            if (settings.value("nCoinJoinSessions") != value) {
-                node().coinJoinOptions().setSessions(value.toInt());
-                settings.setValue("nCoinJoinSessions", node().coinJoinOptions().getSessions());
-                Q_EMIT coinJoinRoundsChanged();
-            }
-            break;
-        case CoinJoinRounds:
-            if (settings.value("nCoinJoinRounds") != value)
-            {
-                node().coinJoinOptions().setRounds(value.toInt());
-                settings.setValue("nCoinJoinRounds", node().coinJoinOptions().getRounds());
-                Q_EMIT coinJoinRoundsChanged();
-            }
-            break;
-        case CoinJoinAmount:
-            if (settings.value("nCoinJoinAmount") != value)
-            {
-                node().coinJoinOptions().setAmount(value.toInt());
-                settings.setValue("nCoinJoinAmount", node().coinJoinOptions().getAmount());
-                Q_EMIT coinJoinAmountChanged();
-            }
-            break;
-        case CoinJoinDenomsGoal:
-            if (settings.value("nCoinJoinDenomsGoal") != value) {
-                node().coinJoinOptions().setDenomsGoal(value.toInt());
-                settings.setValue("nCoinJoinDenomsGoal", node().coinJoinOptions().getDenomsGoal());
-            }
-            break;
-        case CoinJoinDenomsHardCap:
-            if (settings.value("nCoinJoinDenomsHardCap") != value) {
-                node().coinJoinOptions().setDenomsHardCap(value.toInt());
-                settings.setValue("nCoinJoinDenomsHardCap", node().coinJoinOptions().getDenomsHardCap());
-            }
-            break;
-        case CoinJoinMultiSession:
-            if (settings.value("fCoinJoinMultiSession") != value)
-            {
-                node().coinJoinOptions().setMultiSessionEnabled(value.toBool());
-                settings.setValue("fCoinJoinMultiSession", node().coinJoinOptions().isMultiSessionEnabled());
-            }
-            break;
-#endif
-        case DisplayUnit:
-            setDisplayUnit(value);
-            break;
-        case ThirdPartyTxUrls:
-            if (strThirdPartyTxUrls != value.toString()) {
-                strThirdPartyTxUrls = value.toString();
-                settings.setValue("strThirdPartyTxUrls", strThirdPartyTxUrls);
-                setRestartRequired(true);
-            }
-            break;
-#ifdef ENABLE_WALLET
-        case Digits:
-            if (settings.value("digits") != value) {
-                settings.setValue("digits", value);
-                setRestartRequired(true);
-            }
-            break;
-#endif // ENABLE_WALLET
-        case Theme:
-            // Set in AppearanceWidget::updateTheme slot now
-            // to allow instant theme changes.
-            break;
-        case FontFamily:
-            if (settings.value("fontFamily") != value) {
-                settings.setValue("fontFamily", value);
-            }
-            break;
-        case FontScale:
-            if (settings.value("fontScale") != value) {
-                settings.setValue("fontScale", value);
-            }
-            break;
-        case FontWeightNormal: {
-            int nWeight = GUIUtil::weightToArg(GUIUtil::g_font_registry.IdxToWeight(value.toInt()));
-            if (settings.value("fontWeightNormal") != nWeight) {
-                settings.setValue("fontWeightNormal", nWeight);
-            }
-            break;
-        }
-        case FontWeightBold: {
-            int nWeight = GUIUtil::weightToArg(GUIUtil::g_font_registry.IdxToWeight(value.toInt()));
-            if (settings.value("fontWeightBold") != nWeight) {
-                settings.setValue("fontWeightBold", nWeight);
-            }
-            break;
-        }
-        case Language:
-            if (settings.value("language") != value) {
-                settings.setValue("language", value);
-                setRestartRequired(true);
-            }
-            break;
-        case FontForMoney:
-        {
-            const auto& new_font = value.value<FontChoice>();
-            if (m_font_money != new_font) {
-                settings.setValue("FontForMoney", FontChoiceToString(new_font));
-                m_font_money = new_font;
-            }
-            Q_EMIT fontForMoneyChanged(getFontForMoney());
-            break;
-        }
-#ifdef ENABLE_WALLET
-        case CoinControlFeatures:
-            fCoinControlFeatures = value.toBool();
-            settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
-            Q_EMIT coinControlFeaturesChanged(fCoinControlFeatures);
-            break;
-        case EnablePSBTControls:
-            m_enable_psbt_controls = value.toBool();
-            settings.setValue("enable_psbt_controls", m_enable_psbt_controls);
-            break;
-        case KeepChangeAddress:
-            fKeepChangeAddress = value.toBool();
-            settings.setValue("fKeepChangeAddress", fKeepChangeAddress);
-            Q_EMIT keepChangeAddressChanged(fKeepChangeAddress);
-            break;
-        case Prune:
-            if (settings.value("bPrune") != value) {
-                settings.setValue("bPrune", value);
-                setRestartRequired(true);
-            }
-            break;
-        case PruneSize:
-            if (settings.value("nPruneSize") != value) {
-                settings.setValue("nPruneSize", value);
-                setRestartRequired(true);
-            }
-            break;
-#endif // ENABLE_WALLET
-        case DatabaseCache:
-            if (settings.value("nDatabaseCache") != value) {
-                settings.setValue("nDatabaseCache", value);
-                setRestartRequired(true);
-            }
-            break;
-        case ThreadsScriptVerif:
-            if (settings.value("nThreadsScriptVerif") != value) {
-                settings.setValue("nThreadsScriptVerif", value);
-                setRestartRequired(true);
-            }
-            break;
-        case Listen:
-            if (settings.value("fListen") != value) {
-                settings.setValue("fListen", value);
-                setRestartRequired(true);
-            }
-            break;
-        case Server:
-            if (settings.value("server") != value) {
-                settings.setValue("server", value);
-                setRestartRequired(true);
-            }
-            break;
-        default:
-            break;
-        }
+        successful = setOption(OptionID(index.row()), value);
     }
 
     Q_EMIT dataChanged(index, index);
+
+    return successful;
+}
+
+QVariant OptionsModel::getOption(OptionID option) const
+{
+    QSettings settings;
+    switch (option) {
+    case StartAtStartup:
+        return GUIUtil::GetStartOnSystemStartup();
+    case ShowTrayIcon:
+        return m_show_tray_icon;
+    case MinimizeToTray:
+        return fMinimizeToTray;
+    case MapPortUPnP:
+#ifdef USE_UPNP
+        return settings.value("fUseUPnP");
+#else
+        return false;
+#endif // USE_UPNP
+    case MapPortNatpmp:
+#ifdef USE_NATPMP
+        return settings.value("fUseNatpmp");
+#else
+        return false;
+#endif // USE_NATPMP
+    case MinimizeOnClose:
+        return fMinimizeOnClose;
+
+    // default proxy
+    case ProxyUse:
+        return settings.value("fUseProxy", false);
+    case ProxyIP:
+        return GetProxySetting(settings, "addrProxy").ip;
+    case ProxyPort:
+        return GetProxySetting(settings, "addrProxy").port;
+
+    // separate Tor proxy
+    case ProxyUseTor:
+        return settings.value("fUseSeparateProxyTor", false);
+    case ProxyIPTor:
+        return GetProxySetting(settings, "addrSeparateProxyTor").ip;
+    case ProxyPortTor:
+        return GetProxySetting(settings, "addrSeparateProxyTor").port;
+
+#ifdef ENABLE_WALLET
+    case SpendZeroConfChange:
+        return settings.value("bSpendZeroConfChange");
+    case ExternalSignerPath:
+        return settings.value("external_signer_path");
+    case SubFeeFromAmount:
+        return m_sub_fee_from_amount;
+    case ShowMasternodesTab:
+        return settings.value("fShowMasternodesTab");
+    case ShowGovernanceTab:
+        return settings.value("fShowGovernanceTab");
+    case CoinJoinEnabled:
+        return settings.value("fCoinJoinEnabled");
+    case ShowAdvancedCJUI:
+        return fShowAdvancedCJUI;
+    case ShowCoinJoinPopups:
+        return settings.value("fShowCoinJoinPopups");
+    case LowKeysWarning:
+        return settings.value("fLowKeysWarning");
+    case CoinJoinSessions:
+        return settings.value("nCoinJoinSessions");
+    case CoinJoinRounds:
+        return settings.value("nCoinJoinRounds");
+    case CoinJoinAmount:
+        return settings.value("nCoinJoinAmount");
+    case CoinJoinDenomsGoal:
+        return settings.value("nCoinJoinDenomsGoal");
+    case CoinJoinDenomsHardCap:
+        return settings.value("nCoinJoinDenomsHardCap");
+    case CoinJoinMultiSession:
+        return settings.value("fCoinJoinMultiSession");
+#endif
+    case DisplayUnit:
+        return QVariant::fromValue(m_display_bitcoin_unit);
+    case ThirdPartyTxUrls:
+        return strThirdPartyTxUrls;
+#ifdef ENABLE_WALLET
+    case Digits:
+        return settings.value("digits");
+#endif // ENABLE_WALLET
+    case Theme:
+        return settings.value("theme");
+    case FontFamily:
+        return settings.value("fontFamily");
+    case FontScale:
+        return settings.value("fontScale");
+    case FontWeightNormal: {
+        int nIndex = [&]() -> int {
+            if (QFont::Weight weight; GUIUtil::weightFromArg(settings.value("fontWeightNormal").toInt(), weight) && GUIUtil::g_font_registry.IsValidWeight(weight)) {
+                return GUIUtil::g_font_registry.WeightToIdx(weight);
+            }
+            return GUIUtil::g_font_registry.WeightToIdx(GUIUtil::g_font_registry.GetWeightNormalDefault());
+        }();
+        assert(nIndex != -1);
+        return nIndex;
+    }
+    case FontWeightBold: {
+        int nIndex = [&]() -> int {
+            if (QFont::Weight weight; GUIUtil::weightFromArg(settings.value("fontWeightBold").toInt(), weight) && GUIUtil::g_font_registry.IsValidWeight(weight)) {
+                return GUIUtil::g_font_registry.WeightToIdx(weight);
+            }
+            return GUIUtil::g_font_registry.WeightToIdx(GUIUtil::g_font_registry.GetWeightBoldDefault());
+        }();
+        assert(nIndex != -1);
+        return nIndex;
+    }
+    case Language:
+        return settings.value("language");
+    case FontForMoney:
+        return QVariant::fromValue(m_font_money);
+#ifdef ENABLE_WALLET
+    case CoinControlFeatures:
+        return fCoinControlFeatures;
+    case EnablePSBTControls:
+        return settings.value("enable_psbt_controls");
+    case KeepChangeAddress:
+        return fKeepChangeAddress;
+#endif // ENABLE_WALLET
+    case Prune:
+        return settings.value("bPrune");
+    case PruneSize:
+        return settings.value("nPruneSize");
+    case DatabaseCache:
+        return settings.value("nDatabaseCache");
+    case ThreadsScriptVerif:
+        return settings.value("nThreadsScriptVerif");
+    case Listen:
+        return settings.value("fListen");
+    case Server:
+        return settings.value("server");
+    default:
+        return QVariant();
+    }
+}
+
+bool OptionsModel::setOption(OptionID option, const QVariant& value)
+{
+    bool successful = true; /* set to false on parse error */
+    QSettings settings;
+    switch (option) {
+    case StartAtStartup:
+        successful = GUIUtil::SetStartOnSystemStartup(value.toBool());
+        break;
+    case ShowTrayIcon:
+        m_show_tray_icon = value.toBool();
+        settings.setValue("fHideTrayIcon", !m_show_tray_icon);
+        Q_EMIT showTrayIconChanged(m_show_tray_icon);
+        break;
+    case MinimizeToTray:
+        fMinimizeToTray = value.toBool();
+        settings.setValue("fMinimizeToTray", fMinimizeToTray);
+        break;
+    case MapPortUPnP: // core option - can be changed on-the-fly
+        settings.setValue("fUseUPnP", value.toBool());
+        break;
+    case MapPortNatpmp: // core option - can be changed on-the-fly
+        settings.setValue("fUseNatpmp", value.toBool());
+        break;
+    case MinimizeOnClose:
+        fMinimizeOnClose = value.toBool();
+        settings.setValue("fMinimizeOnClose", fMinimizeOnClose);
+        break;
+
+    // default proxy
+    case ProxyUse:
+        if (settings.value("fUseProxy") != value) {
+            settings.setValue("fUseProxy", value.toBool());
+            setRestartRequired(true);
+        }
+        break;
+    case ProxyIP: {
+        auto ip_port = GetProxySetting(settings, "addrProxy");
+        if (!ip_port.is_set || ip_port.ip != value.toString()) {
+            ip_port.ip = value.toString();
+            SetProxySetting(settings, "addrProxy", ip_port);
+            setRestartRequired(true);
+        }
+    }
+    break;
+    case ProxyPort: {
+        auto ip_port = GetProxySetting(settings, "addrProxy");
+        if (!ip_port.is_set || ip_port.port != value.toString()) {
+            ip_port.port = value.toString();
+            SetProxySetting(settings, "addrProxy", ip_port);
+            setRestartRequired(true);
+        }
+    }
+    break;
+
+    // separate Tor proxy
+    case ProxyUseTor:
+        if (settings.value("fUseSeparateProxyTor") != value) {
+            settings.setValue("fUseSeparateProxyTor", value.toBool());
+            setRestartRequired(true);
+        }
+        break;
+    case ProxyIPTor: {
+        auto ip_port = GetProxySetting(settings, "addrSeparateProxyTor");
+        if (!ip_port.is_set || ip_port.ip != value.toString()) {
+            ip_port.ip = value.toString();
+            SetProxySetting(settings, "addrSeparateProxyTor", ip_port);
+            setRestartRequired(true);
+        }
+    }
+    break;
+    case ProxyPortTor: {
+        auto ip_port = GetProxySetting(settings, "addrSeparateProxyTor");
+        if (!ip_port.is_set || ip_port.port != value.toString()) {
+            ip_port.port = value.toString();
+            SetProxySetting(settings, "addrSeparateProxyTor", ip_port);
+            setRestartRequired(true);
+        }
+    }
+    break;
+
+#ifdef ENABLE_WALLET
+    case SpendZeroConfChange:
+        if (settings.value("bSpendZeroConfChange") != value) {
+            settings.setValue("bSpendZeroConfChange", value);
+            setRestartRequired(true);
+        }
+        break;
+    case ExternalSignerPath:
+        if (settings.value("external_signer_path") != value.toString()) {
+            settings.setValue("external_signer_path", value.toString());
+            setRestartRequired(true);
+        }
+        break;
+    case ShowMasternodesTab:
+        if (settings.value("fShowMasternodesTab") != value) {
+            settings.setValue("fShowMasternodesTab", value);
+            setRestartRequired(true);
+        }
+        break;
+    case SubFeeFromAmount:
+        m_sub_fee_from_amount = value.toBool();
+        settings.setValue("SubFeeFromAmount", m_sub_fee_from_amount);
+        break;
+    case ShowGovernanceTab:
+        if (settings.value("fShowGovernanceTab") != value) {
+            settings.setValue("fShowGovernanceTab", value);
+            setRestartRequired(true);
+        }
+        break;
+    case CoinJoinEnabled:
+        if (settings.value("fCoinJoinEnabled") != value) {
+            settings.setValue("fCoinJoinEnabled", value.toBool());
+            Q_EMIT coinJoinEnabledChanged();
+        }
+        break;
+    case ShowAdvancedCJUI:
+        if (settings.value("fShowAdvancedCJUI") != value) {
+            fShowAdvancedCJUI = value.toBool();
+            settings.setValue("fShowAdvancedCJUI", fShowAdvancedCJUI);
+            Q_EMIT AdvancedCJUIChanged(fShowAdvancedCJUI);
+        }
+        break;
+    case ShowCoinJoinPopups:
+        settings.setValue("fShowCoinJoinPopups", value);
+        break;
+    case LowKeysWarning:
+        settings.setValue("fLowKeysWarning", value);
+        break;
+    case CoinJoinSessions:
+        if (settings.value("nCoinJoinSessions") != value) {
+            node().coinJoinOptions().setSessions(value.toInt());
+            settings.setValue("nCoinJoinSessions", node().coinJoinOptions().getSessions());
+            Q_EMIT coinJoinRoundsChanged();
+        }
+        break;
+    case CoinJoinRounds:
+        if (settings.value("nCoinJoinRounds") != value)
+        {
+            node().coinJoinOptions().setRounds(value.toInt());
+            settings.setValue("nCoinJoinRounds", node().coinJoinOptions().getRounds());
+            Q_EMIT coinJoinRoundsChanged();
+        }
+        break;
+    case CoinJoinAmount:
+        if (settings.value("nCoinJoinAmount") != value)
+        {
+            node().coinJoinOptions().setAmount(value.toInt());
+            settings.setValue("nCoinJoinAmount", node().coinJoinOptions().getAmount());
+            Q_EMIT coinJoinAmountChanged();
+        }
+        break;
+    case CoinJoinDenomsGoal:
+        if (settings.value("nCoinJoinDenomsGoal") != value) {
+            node().coinJoinOptions().setDenomsGoal(value.toInt());
+            settings.setValue("nCoinJoinDenomsGoal", node().coinJoinOptions().getDenomsGoal());
+        }
+        break;
+    case CoinJoinDenomsHardCap:
+        if (settings.value("nCoinJoinDenomsHardCap") != value) {
+            node().coinJoinOptions().setDenomsHardCap(value.toInt());
+            settings.setValue("nCoinJoinDenomsHardCap", node().coinJoinOptions().getDenomsHardCap());
+        }
+        break;
+    case CoinJoinMultiSession:
+        if (settings.value("fCoinJoinMultiSession") != value)
+        {
+            node().coinJoinOptions().setMultiSessionEnabled(value.toBool());
+            settings.setValue("fCoinJoinMultiSession", node().coinJoinOptions().isMultiSessionEnabled());
+        }
+        break;
+#endif
+    case DisplayUnit:
+        setDisplayUnit(value);
+        break;
+    case ThirdPartyTxUrls:
+        if (strThirdPartyTxUrls != value.toString()) {
+            strThirdPartyTxUrls = value.toString();
+            settings.setValue("strThirdPartyTxUrls", strThirdPartyTxUrls);
+            setRestartRequired(true);
+        }
+        break;
+#ifdef ENABLE_WALLET
+    case Digits:
+        if (settings.value("digits") != value) {
+            settings.setValue("digits", value);
+            setRestartRequired(true);
+        }
+        break;
+#endif // ENABLE_WALLET
+    case Theme:
+        // Set in AppearanceWidget::updateTheme slot now
+        // to allow instant theme changes.
+        break;
+    case FontFamily:
+        if (settings.value("fontFamily") != value) {
+            settings.setValue("fontFamily", value);
+        }
+        break;
+    case FontScale:
+        if (settings.value("fontScale") != value) {
+            settings.setValue("fontScale", value);
+        }
+        break;
+    case FontWeightNormal: {
+        int nWeight = GUIUtil::weightToArg(GUIUtil::g_font_registry.IdxToWeight(value.toInt()));
+        if (settings.value("fontWeightNormal") != nWeight) {
+            settings.setValue("fontWeightNormal", nWeight);
+        }
+        break;
+    }
+    case FontWeightBold: {
+        int nWeight = GUIUtil::weightToArg(GUIUtil::g_font_registry.IdxToWeight(value.toInt()));
+        if (settings.value("fontWeightBold") != nWeight) {
+            settings.setValue("fontWeightBold", nWeight);
+        }
+        break;
+    }
+    case Language:
+        if (settings.value("language") != value) {
+            settings.setValue("language", value);
+            setRestartRequired(true);
+        }
+        break;
+    case FontForMoney:
+    {
+        const auto& new_font = value.value<FontChoice>();
+        if (m_font_money != new_font) {
+            settings.setValue("FontForMoney", FontChoiceToString(new_font));
+            m_font_money = new_font;
+        }
+        Q_EMIT fontForMoneyChanged(getFontForMoney());
+        break;
+    }
+#ifdef ENABLE_WALLET
+    case CoinControlFeatures:
+        fCoinControlFeatures = value.toBool();
+        settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
+        Q_EMIT coinControlFeaturesChanged(fCoinControlFeatures);
+        break;
+    case EnablePSBTControls:
+        m_enable_psbt_controls = value.toBool();
+        settings.setValue("enable_psbt_controls", m_enable_psbt_controls);
+        break;
+    case KeepChangeAddress:
+        fKeepChangeAddress = value.toBool();
+        settings.setValue("fKeepChangeAddress", fKeepChangeAddress);
+        Q_EMIT keepChangeAddressChanged(fKeepChangeAddress);
+        break;
+    case Prune:
+        if (settings.value("bPrune") != value) {
+            settings.setValue("bPrune", value);
+            setRestartRequired(true);
+        }
+        break;
+    case PruneSize:
+        if (settings.value("nPruneSize") != value) {
+            settings.setValue("nPruneSize", value);
+            setRestartRequired(true);
+        }
+        break;
+#endif // ENABLE_WALLET
+    case DatabaseCache:
+        if (settings.value("nDatabaseCache") != value) {
+            settings.setValue("nDatabaseCache", value);
+            setRestartRequired(true);
+        }
+        break;
+    case ThreadsScriptVerif:
+        if (settings.value("nThreadsScriptVerif") != value) {
+            settings.setValue("nThreadsScriptVerif", value);
+            setRestartRequired(true);
+        }
+        break;
+    case Listen:
+        if (settings.value("fListen") != value) {
+            settings.setValue("fListen", value);
+            setRestartRequired(true);
+        }
+        break;
+    case Server:
+        if (settings.value("server") != value) {
+            settings.setValue("server", value);
+            setRestartRequired(true);
+        }
+        break;
+    default:
+        break;
+    }
 
     return successful;
 }
