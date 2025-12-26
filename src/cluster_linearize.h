@@ -721,36 +721,6 @@ private:
         return TxIdx(-1);
     }
 
-    /** Update a chunk:
-     *  - All transactions have their chunk index set to `chunk_idx`.
-     *  - All dependencies which have `query` in their top set get `dep_change` added to it
-     *    (if `!Subtract`) or removed from it (if `Subtract`).
-     */
-    template<bool Subtract>
-    void UpdateChunk(const SetType& tx_idxs, TxIdx query, SetIdx chunk_idx, const SetInfo<SetType>& dep_change) noexcept
-    {
-        // Iterate over all the chunk's transactions.
-        for (auto tx_idx : tx_idxs) {
-            auto& tx_data = m_tx_data[tx_idx];
-            // Update the chunk index for this transaction.
-            tx_data.chunk_idx = chunk_idx;
-            // Iterate over all active dependencies with tx_idx as parent. Combined with the outer
-            // loop this iterates over all internal active dependencies of the chunk.
-            for (auto child_idx : tx_data.active_children) {
-                auto& top_set_info = m_set_info[tx_data.dep_top_idx[child_idx]];
-                // If this dependency's top set contains query, update it to add/remove
-                // dep_change.
-                if (top_set_info.transactions[query]) {
-                    if constexpr (Subtract) {
-                        top_set_info -= dep_change;
-                    } else {
-                        top_set_info |= dep_change;
-                    }
-                }
-            }
-        }
-    }
-
     /** Find the set of out-of-chunk transactions reachable from tx_idxs, both in upwards and
      *  downwards direction. */
     std::pair<SetType, SetType> GetReachable(const SetType& tx_idxs) const noexcept
@@ -797,17 +767,26 @@ private:
         // dependency being activated (E->C here) in its top set, will have the opposite part added
         // to it. This is true for B->A and F->E, but not for C->A and F->D.
         //
-        // Let UpdateChunk traverse the old parent chunk top_info (ABC in example), and add
-        // bottom_info (DEF) to every dependency's top set which has the parent (C) in it. At the
-        // same time, change the chunk_idx for each to be child_chunk_idx, which becomes the set for
-        // the merged chunk.
-        UpdateChunk<false>(/*tx_idxs=*/top_info.transactions, /*query=*/parent_idx,
-                           /*chunk_idx=*/child_chunk_idx, /*dep_change=*/bottom_info);
-        // Let UpdateChunk traverse the old child chunk bottom_info (DEF in example), and add
-        // top_info (ABC) to every dependency's top set which has the child (E) in it. The chunk
-        // these are part of isn't being changed here (already child_chunk_idx for each).
-        UpdateChunk<false>(/*tx_idxs=*/bottom_info.transactions, /*query=*/child_idx,
-                           /*chunk_idx=*/child_chunk_idx, /*dep_change=*/top_info);
+        // Traverse the old parent chunk top_info (ABC in example), and add bottom_info (DEF) to
+        // every dependency's top set which has the parent (C) in it. At the same time, change the
+        // chunk_idx for each to be child_chunk_idx, which becomes the set for the merged chunk.
+        for (auto tx_idx : top_info.transactions) {
+            auto& tx_data = m_tx_data[tx_idx];
+            tx_data.chunk_idx = child_chunk_idx;
+            for (auto dep_child_idx : tx_data.active_children) {
+                auto& dep_top_info = m_set_info[tx_data.dep_top_idx[dep_child_idx]];
+                if (dep_top_info.transactions[parent_idx]) dep_top_info |= bottom_info;
+            }
+        }
+        // Traverse the old child chunk bottom_info (DEF in example), and add top_info (ABC) to
+        // every dependency's top set which has the child (E) in it.
+        for (auto tx_idx : bottom_info.transactions) {
+            auto& tx_data = m_tx_data[tx_idx];
+            for (auto dep_child_idx : tx_data.active_children) {
+                auto& dep_top_info = m_set_info[tx_data.dep_top_idx[dep_child_idx]];
+                if (dep_top_info.transactions[child_idx]) dep_top_info |= top_info;
+            }
+        }
         // Merge top_info into bottom_info, which becomes the merged chunk.
         bottom_info |= top_info;
         m_cost += bottom_info.transactions.Count();
@@ -848,10 +827,21 @@ private:
         bottom_info -= top_info;
         // See the comment above in Activate(). We perform the opposite operations here, removing
         // instead of adding.
-        UpdateChunk<true>(/*tx_idxs=*/top_info.transactions, /*query=*/parent_idx,
-                          /*chunk_idx=*/parent_chunk_idx, /*dep_change=*/bottom_info);
-        UpdateChunk<true>(/*tx_idxs=*/bottom_info.transactions, /*query=*/child_idx,
-                          /*chunk_idx=*/child_chunk_idx, /*dep_change=*/top_info);
+        for (auto tx_idx : top_info.transactions) {
+            auto& tx_data = m_tx_data[tx_idx];
+            tx_data.chunk_idx = parent_chunk_idx;
+            for (auto dep_child_idx : tx_data.active_children) {
+                auto& dep_top_info = m_set_info[tx_data.dep_top_idx[dep_child_idx]];
+                if (dep_top_info.transactions[parent_idx]) dep_top_info -= bottom_info;
+            }
+        }
+        for (auto tx_idx : bottom_info.transactions) {
+            auto& tx_data = m_tx_data[tx_idx];
+            for (auto dep_child_idx : tx_data.active_children) {
+                auto& dep_top_info = m_set_info[tx_data.dep_top_idx[dep_child_idx]];
+                if (dep_top_info.transactions[child_idx]) dep_top_info -= top_info;
+            }
+        }
         // Compute the new sets of reachable transactions for each new chunk.
         m_reachable[child_chunk_idx] = GetReachable(bottom_info.transactions);
         m_reachable[parent_chunk_idx] = GetReachable(top_info.transactions);
