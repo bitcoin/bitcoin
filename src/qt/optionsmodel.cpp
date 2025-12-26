@@ -69,6 +69,7 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::CoinJoinRounds: return "coinjoinrounds";
     case OptionsModel::CoinJoinSessions: return "coinjoinsessions";
     case OptionsModel::FontFamily: return "font-family";
+    case OptionsModel::FontScale: return "font-scale";
     default: throw std::logic_error(strprintf("GUI option %i has no corresponding node setting.", option));
     }
 }
@@ -82,6 +83,7 @@ static bool RequiresNumWorkaround(OptionsModel::OptionID option)
     case OptionsModel::CoinJoinRounds:
     case OptionsModel::CoinJoinSessions:
     case OptionsModel::DatabaseCache:
+    case OptionsModel::FontScale:
     case OptionsModel::Prune:
     case OptionsModel::PruneSize:
     case OptionsModel::ThreadsScriptVerif:
@@ -263,14 +265,11 @@ bool OptionsModel::Init(bilingual_str& error)
     }
 
     // Font Scale
-    if (!settings.contains("fontScale")) {
-        settings.setValue("fontScale", GUIUtil::FontRegistry::DEFAULT_FONT_SCALE);
-    }
-    if (!gArgs.SoftSetArg("-font-scale", settings.value("fontScale").toString().toStdString())) {
+    if (node().isSettingIgnored("font-scale")) {
         addOverriddenOption("-font-scale");
     }
     if (GUIUtil::fontsLoaded()) {
-        GUIUtil::g_font_registry.SetFontScale(gArgs.GetIntArg("-font-scale", settings.value("fontScale").toString().toInt()));
+        GUIUtil::g_font_registry.SetFontScale(SettingToInt(node().getPersistentSetting("font-scale"), GUIUtil::FontRegistry::DEFAULT_FONT_SCALE));
     }
 
     // Font Weight (Normal)
@@ -649,7 +648,7 @@ QVariant OptionsModel::getOption(OptionID option) const
     case FontFamily:
         return QString::fromStdString(SettingToString(setting(), GUIUtil::FontRegistry::DEFAULT_FONT.toUtf8().toStdString()));
     case FontScale:
-        return settings.value("fontScale");
+        return qlonglong(SettingToInt(setting(), GUIUtil::FontRegistry::DEFAULT_FONT_SCALE));
     case FontWeightNormal: {
         int nIndex = [&]() -> int {
             if (QFont::Weight weight; GUIUtil::weightFromArg(settings.value("fontWeightNormal").toInt(), weight) && GUIUtil::g_font_registry.IsValidWeight(weight)) {
@@ -904,8 +903,8 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value)
         }
         break;
     case FontScale:
-        if (settings.value("fontScale") != value) {
-            settings.setValue("fontScale", value);
+        if (changed()) {
+            update(value.toInt());
         }
         break;
     case FontWeightNormal: {
@@ -1117,6 +1116,7 @@ void OptionsModel::checkAndMigrate()
     //! Dash
     if (GUIUtil::fontsLoaded()) {
         migrate_setting(FontFamily, "fontFamily");
+        migrate_setting(FontScale, "fontScale");
     }
 #ifdef ENABLE_WALLET
     migrate_setting(CoinJoinAmount, "nCoinJoinAmount");
