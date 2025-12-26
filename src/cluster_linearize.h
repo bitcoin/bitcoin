@@ -755,8 +755,9 @@ private:
         return child_chunk_idx;
     }
 
-    /** Make a specified active dependency inactive. */
-    void Deactivate(TxIdx parent_idx, TxIdx child_idx) noexcept
+    /** Make a specified active dependency inactive. Returns the created parent and child chunk
+     *  indexes. */
+    std::pair<SetIdx, SetIdx> Deactivate(TxIdx parent_idx, TxIdx child_idx) noexcept
     {
         // Gather and check information about the parent transactions.
         auto& parent_data = m_tx_data[parent_idx];
@@ -785,6 +786,8 @@ private:
         // Compute the new sets of reachable transactions for each new chunk.
         m_reachable[child_chunk_idx] = GetReachable(bottom_info.transactions);
         m_reachable[parent_chunk_idx] = GetReachable(top_info.transactions);
+        // Return the two new set idxs.
+        return {parent_chunk_idx, child_chunk_idx};
     }
 
     /** Activate a dependency from the bottom set to the top set, which must exist. Return the
@@ -888,11 +891,11 @@ private:
         return chunk_idx;
     }
 
-    /** Perform an upward or downward merge sequence on the specified transaction. */
+    /** Perform an upward or downward merge sequence on the specified chunk. */
     template<bool DownWard>
-    void MergeSequence(TxIdx tx_idx) noexcept
+    void MergeSequence(SetIdx chunk_idx) noexcept
     {
-        auto chunk_idx = m_tx_data[tx_idx].chunk_idx;
+        Assume(m_chunk_idxs[chunk_idx]);
         while (true) {
             auto merged_chunk_idx = MergeStep<DownWard>(chunk_idx);
             if (merged_chunk_idx == INVALID_SET_IDX) break;
@@ -908,7 +911,7 @@ private:
     {
         // Deactivate the specified dependency, splitting it into two new chunks: a top containing
         // the parent, and a bottom containing the child. The top should have a higher feerate.
-        Deactivate(parent_idx, child_idx);
+        auto [parent_chunk_idx, child_chunk_idx] = Deactivate(parent_idx, child_idx);
 
         // At this point we have exactly two chunks which may violate topology constraints (the
         // parent chunk and child chunk that were produced by deactivating dep_idx). We can fix
@@ -917,9 +920,9 @@ private:
 
         // Merge the top chunk with lower-feerate chunks it depends on (which may be the bottom it
         // was just split from, or other pre-existing chunks).
-        MergeSequence<false>(parent_idx);
+        MergeSequence<false>(parent_chunk_idx);
         // Merge the bottom chunk with higher-feerate chunks that depend on it.
-        MergeSequence<true>(child_idx);
+        MergeSequence<true>(child_chunk_idx);
     }
 
 public:
