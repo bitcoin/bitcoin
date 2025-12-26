@@ -159,7 +159,7 @@ class WalletSendTest(BitcoinTestFramework):
             assert "txid" in res
         else:
             assert_equal(res["complete"], False)
-            assert not "txid" in res
+            assert "txid" not in res
             assert "psbt" in res
 
         from_balance = from_wallet.getbalances()["mine"]["trusted"]
