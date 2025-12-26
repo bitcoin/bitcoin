@@ -3115,6 +3115,7 @@ bool Chainstate::ConnectTip(
              Ticks<MillisecondsDouble>(time_2 - time_1));
     {
         auto& view{*m_coins_views->m_connect_block_view};
+        view.StartFetching(*block_to_connect);
         bool rv = ConnectBlock(*block_to_connect, state, pindexNew, view);
         if (m_chainman.m_options.signals) {
             m_chainman.m_options.signals->BlockChecked(block_to_connect, state);

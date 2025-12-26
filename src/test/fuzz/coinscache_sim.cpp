@@ -3,7 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <coins.h>
+#include <coinsviewcacheasync.h>
 #include <crypto/sha256.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -34,12 +36,16 @@ struct PrecomputedData
     //! Randomly generated Coin values.
     Coin coins[NUM_COINS];
 
+    //! Block with a tx containing as inputs the above outpoints.
+    CBlock block;
+
     PrecomputedData()
     {
         static const uint8_t PREFIX_O[1] = {'o'}; /** Hash prefix for outpoint hashes. */
         static const uint8_t PREFIX_S[1] = {'s'}; /** Hash prefix for coins scriptPubKeys. */
         static const uint8_t PREFIX_M[1] = {'m'}; /** Hash prefix for coins nValue/fCoinBase. */
 
+        CMutableTransaction tx;
         for (uint32_t i = 0; i < NUM_OUTPOINTS; ++i) {
             uint32_t idx = (i * 1200U) >> 12; /* Map 3 or 4 entries to same txid. */
             const uint8_t ser[4] = {uint8_t(idx), uint8_t(idx >> 8), uint8_t(idx >> 16), uint8_t(idx >> 24)};
@@ -47,7 +53,9 @@ struct PrecomputedData
             CSHA256().Write(PREFIX_O, 1).Write(ser, sizeof(ser)).Finalize(txid.begin());
             outpoints[i].hash = Txid::FromUint256(txid);
             outpoints[i].n = i;
+            tx.vin.emplace_back(outpoints[i]);
         }
+        block.vtx.push_back(MakeTransactionRef(tx));
 
         for (uint32_t i = 0; i < NUM_COINS; ++i) {
             const uint8_t ser[4] = {uint8_t(i), uint8_t(i >> 8), uint8_t(i >> 16), uint8_t(i >> 24)};
@@ -191,9 +199,17 @@ public:
     }
 };
 
+std::unique_ptr<CoinsViewCacheAsync> g_async_cache{};
+
 } // namespace
 
-FUZZ_TARGET(coinscache_sim)
+static void setup_coinscache_sim()
+{
+    LogInstance().DisableLogging();
+    g_async_cache = std::make_unique<CoinsViewCacheAsync>(nullptr, /*deterministic=*/true);
+}
+
+FUZZ_TARGET(coinscache_sim, .init = setup_coinscache_sim)
 {
     /** Precomputed COutPoint and CCoins values. */
     static const PrecomputedData data;
@@ -206,6 +222,8 @@ FUZZ_TARGET(coinscache_sim)
     CacheLevel sim_caches[MAX_CACHES + 1];
     /** Current height in the simulation. */
     uint32_t current_height = 1U;
+    /** Current height of the one async cache if added. */
+    uint32_t current_async_height{0};
 
     // Initialize bottom simulated cache.
     sim_caches[0].Wipe();
@@ -376,7 +394,15 @@ FUZZ_TARGET(coinscache_sim)
             [&]() { // Add a cache level (if not already at the max).
                 if (caches.size() != MAX_CACHES) {
                     // Apply to real caches.
-                    caches.emplace_back(new CCoinsViewCache(&*caches.back(), /*deterministic=*/true));
+                    const auto use_async{provider.ConsumeBool()};
+                    if (use_async && current_async_height == 0) {
+                        g_async_cache->SetBackend(*caches.back());
+                        g_async_cache->StartFetching(data.block);
+                        caches.emplace_back(std::move(g_async_cache));
+                        current_async_height = caches.size();
+                    } else {
+                        caches.emplace_back(new CCoinsViewCache(&*caches.back(), /*deterministic=*/true));
+                    }
                     // Apply to simulation data.
                     sim_caches[caches.size()].Wipe();
                 }
@@ -385,6 +411,11 @@ FUZZ_TARGET(coinscache_sim)
             [&]() { // Remove a cache level.
                 // Apply to real caches (this reduces caches.size(), implicitly doing the same on the simulation data).
                 caches.back()->SanityCheck();
+                if (current_async_height > 0 && current_async_height == caches.size()) {
+                    caches.back()->Reset();
+                    g_async_cache.reset(static_cast<CoinsViewCacheAsync*>(caches.back().release()));
+                    current_async_height = 0;
+                }
                 caches.pop_back();
             },
 
@@ -463,5 +494,10 @@ FUZZ_TARGET(coinscache_sim)
             assert(realcoin->fCoinBase == data.coins[sim->first].fCoinBase);
             assert(realcoin->nHeight == sim->second);
         }
+    }
+
+    if (current_async_height != 0) {
+        caches[current_async_height - 1]->Reset();
+        g_async_cache.reset(static_cast<CoinsViewCacheAsync*>(caches[current_async_height - 1].release()));
     }
 }

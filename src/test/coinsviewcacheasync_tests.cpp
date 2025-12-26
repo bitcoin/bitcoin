@@ -86,6 +86,7 @@ BOOST_AUTO_TEST_CASE(fetch_inputs_from_db)
     CCoinsViewCache main_cache{&db};
     CoinsViewCacheAsync view{&main_cache};
     for (auto i{0}; i < 3; ++i) {
+        view.StartFetching(block);
         CheckCache(block, view);
         // Check that no coins have been moved up to main cache from db
         for (const auto& tx : block.vtx) {
@@ -105,6 +106,7 @@ BOOST_AUTO_TEST_CASE(fetch_inputs_from_cache)
     PopulateView(block, main_cache);
     CoinsViewCacheAsync view{&main_cache};
     for (auto i{0}; i < 3; ++i) {
+        view.StartFetching(block);
         CheckCache(block, view);
         view.Reset();
     }
@@ -122,6 +124,7 @@ BOOST_AUTO_TEST_CASE(fetch_no_double_spend)
     PopulateView(block, main_cache, /*spent=*/true);
     CoinsViewCacheAsync view{&main_cache};
     for (auto i{0}; i < 3; ++i) {
+        view.StartFetching(block);
         for (const auto& tx : block.vtx) {
             for (const auto& in : tx->vin) {
                 const auto& c{view.AccessCoin(in.prevout)};
@@ -141,6 +144,7 @@ BOOST_AUTO_TEST_CASE(fetch_no_inputs)
     CCoinsViewCache main_cache{&db};
     CoinsViewCacheAsync view{&main_cache};
     for (auto i{0}; i < 3; ++i) {
+        view.StartFetching(block);
         for (const auto& tx : block.vtx) {
             for (const auto& in : tx->vin) {
                 const auto& c{view.AccessCoin(in.prevout)};
@@ -148,6 +152,25 @@ BOOST_AUTO_TEST_CASE(fetch_no_inputs)
             }
         }
         BOOST_CHECK_EQUAL(view.GetCacheSize(), 0);
+        view.Reset();
+    }
+}
+
+// Access coin that is not a block's input
+BOOST_AUTO_TEST_CASE(access_non_input_coin)
+{
+    const auto block{CreateBlock()};
+    CCoinsViewDB db{{.path = "", .cache_bytes = 1_MiB, .memory_only = true}, {}};
+    CCoinsViewCache main_cache{&db};
+    Coin coin{};
+    coin.out.nValue = 1;
+    const COutPoint outpoint{Txid::FromUint256(uint256::ZERO), 0};
+    main_cache.EmplaceCoinInternalDANGER(COutPoint{Txid::FromUint256(uint256::ZERO), 0}, std::move(coin));
+    CoinsViewCacheAsync view{&main_cache};
+    for (auto i{0}; i < 3; ++i) {
+        view.StartFetching(block);
+        const auto& accessed_coin{view.AccessCoin(outpoint)};
+        BOOST_CHECK(!accessed_coin.IsSpent());
         view.Reset();
     }
 }
