@@ -732,6 +732,22 @@ private:
         }
     }
 
+    /** Find the set of out-of-chunk transactions reachable from tx_idxs. */
+    template<bool DownWard>
+    SetType GetReachable(const SetType& tx_idxs) const noexcept
+    {
+        SetType ret;
+        for (auto tx_idx : tx_idxs) {
+            const auto& tx_data = m_tx_data[tx_idx];
+            if constexpr (DownWard) {
+                ret |= tx_data.children;
+            } else {
+                ret |= tx_data.parents;
+            }
+        }
+        return ret - tx_idxs;
+    }
+
     /** Make the inactive dependency from child to parent, which must not be in the same chunk
      *  already, active. Returns the merged chunk idx. */
     SetIdx Activate(TxIdx parent_idx, TxIdx child_idx) noexcept
@@ -867,16 +883,11 @@ private:
     {
         /** Information about the chunk. */
         auto& chunk_info = m_set_info[chunk_idx];
-        SetType chunk_txn = chunk_info.transactions;
-        // Iterate over all transactions in the chunk, figuring out which other chunk each
-        // depends on, but only testing each other chunk once. For those depended-on chunks,
+        // Iterate over all chunks reachable from this one. For those depended-on chunks,
         // remember the highest-feerate (if DownWard) or lowest-feerate (if !DownWard) one.
         // If multiple equal-feerate candidate chunks to merge with exist, pick a random one
         // among them.
 
-        /** Which transactions have been reached from this chunk already. Initialize with the
-         *  chunk itself, so internal dependencies within the chunk are ignored. */
-        SetType explored = chunk_txn;
         /** The minimum feerate (if downward) or maximum feerate (if upward) to consider when
          *  looking for candidate chunks to merge with. Initially, this is the original chunk's
          *  feerate, but is updated to be the current best candidate whenever one is found. */
@@ -886,29 +897,26 @@ private:
         /** We generate random tiebreak values to pick between equal-feerate candidate chunks.
          *  This variable stores the tiebreak of the current best candidate. */
         uint64_t best_other_chunk_tiebreak{0};
-        for (auto tx_idx : chunk_txn) {
-            auto& tx_data = m_tx_data[tx_idx];
-            /** The transactions reached by following dependencies from tx that have not been
-             *  explored before. */
-            auto newly_reached = (DownWard ? tx_data.children : tx_data.parents) - explored;
-            explored |= newly_reached;
-            while (newly_reached.Any()) {
-                // Find a chunk inside newly_reached, and remove it from newly_reached.
-                auto reached_chunk_idx = m_tx_data[newly_reached.First()].chunk_idx;
-                auto& reached_chunk_info = m_set_info[reached_chunk_idx];
-                newly_reached -= reached_chunk_info.transactions;
-                // See if it has an acceptable feerate.
-                auto cmp = DownWard ? FeeRateCompare(best_other_chunk_feerate, reached_chunk_info.feerate)
-                                    : FeeRateCompare(reached_chunk_info.feerate, best_other_chunk_feerate);
-                if (cmp > 0) continue;
-                uint64_t tiebreak = m_rng.rand64();
-                if (cmp < 0 || tiebreak >= best_other_chunk_tiebreak) {
-                    best_other_chunk_feerate = reached_chunk_info.feerate;
-                    best_other_chunk_idx = reached_chunk_idx;
-                    best_other_chunk_tiebreak = tiebreak;
-                }
+
+        /** Which parent/child transactions we still need to process the chunks for. */
+        auto todo = GetReachable<DownWard>(chunk_info.transactions);
+        while (todo.Any()) {
+            // Find a chunk for a transaction in todo, and remove all its transactions from todo.
+            auto reached_chunk_idx = m_tx_data[todo.First()].chunk_idx;
+            auto& reached_chunk_info = m_set_info[reached_chunk_idx];
+            todo -= reached_chunk_info.transactions;
+            // See if it has an acceptable feerate.
+            auto cmp = DownWard ? FeeRateCompare(best_other_chunk_feerate, reached_chunk_info.feerate)
+                                : FeeRateCompare(reached_chunk_info.feerate, best_other_chunk_feerate);
+            if (cmp > 0) continue;
+            uint64_t tiebreak = m_rng.rand64();
+            if (cmp < 0 || tiebreak >= best_other_chunk_tiebreak) {
+                best_other_chunk_feerate = reached_chunk_info.feerate;
+                best_other_chunk_idx = reached_chunk_idx;
+                best_other_chunk_tiebreak = tiebreak;
             }
         }
+
         return best_other_chunk_idx;
     }
 

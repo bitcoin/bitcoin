@@ -401,15 +401,15 @@ inline uint64_t MaxOptimalLinearizationIters(DepGraphIndex cluster_count)
     // encountered in randomized tests. The purpose of these numbers is guaranteeing that for
     // *some* reasonable cost bound, optimal linearizations are always found.
     static constexpr uint64_t ITERS[65] = {
-         0,
-         0, 4, 10, 34, 76, 132, 206, 252,
-         394, 419, 530, 696, 724, 1148, 1052, 1207,
-         1496, 1755, 2278, 2401, 2726, 2483, 4456, 4828,
-         6455, 6541, 7901, 6489, 6505, 7379, 8259, 8551,
-         8899, 9074, 9878, 10061, 8900, 9532, 9665, 12984,
-         16376, 12580, 14638, 15672, 21863, 20244, 22413, 24050,
-         28701, 19950, 25245, 28957, 24414, 25082, 24409, 40474,
-         45140, 41684, 36137, 62550, 59199, 51758, 58734, 59018
+        0,
+        0, 4, 10, 34, 76, 144, 206, 252,
+        394, 428, 560, 649, 762, 1148, 1124, 1321,
+        1569, 1535, 2248, 2148, 2824, 3130, 4456, 4828,
+        6455, 6541, 6593, 5939, 6822, 7145, 7943, 9488,
+        8076, 9065, 10357, 9457, 8983, 9725, 9777, 14381,
+        12091, 11216, 17115, 19640, 18789, 21585, 22386, 28593,
+        26580, 19898, 31984, 27569, 27745, 32075, 41429, 33363
+        37441, 41442, 46645, 41559, 59199, 53713, 63259, 78412
     };
     assert(cluster_count < std::size(ITERS));
     // Multiply the table number by two, to account for the fact that they are not absolutes.
