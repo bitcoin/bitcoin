@@ -11,7 +11,7 @@ define $(package)_set_vars
   $(package)_config_opts += -DBOOST_TEST_HEADERS_ONLY=ON
   $(package)_config_opts += -DBOOST_ENABLE_MPI=OFF
   $(package)_config_opts += -DBOOST_ENABLE_PYTHON=OFF
-  $(package)_config_opts += -DBOOST_INSTALL_LAYOUT=system
+  $(package)_config_opts += -DBOOST_INSTALL_LAYOUT=versioned
   $(package)_config_opts += -DBUILD_TESTING=OFF
   $(package)_config_opts += -DCMAKE_DISABLE_FIND_PACKAGE_ICU=ON
 endef
