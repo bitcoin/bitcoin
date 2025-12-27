@@ -332,11 +332,11 @@ public:
     CAmount GetValueOut() const;
 
     /**
-     * Get the total transaction size in bytes, including witness data.
+     * Calculate the total transaction size in bytes, including witness data.
      * "Total Size" defined in BIP141 and BIP144.
      * @return Total transaction size in bytes
      */
-    unsigned int GetTotalSize() const;
+    unsigned int ComputeTotalSize() const;
 
     bool IsCoinBase() const
     {
