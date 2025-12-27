@@ -221,14 +221,15 @@ void ValidationSignals::BlockConnected(const ChainstateRole& role, const std::sh
                           pindex->nHeight);
 }
 
-void ValidationSignals::MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight)
+void ValidationSignals::MempoolTransactionsRemovedForBlock(const std::vector<CTransactionRef>& block_txs, const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight)
 {
-    auto event = [txs_removed_for_block, nBlockHeight, this] {
-        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.MempoolTransactionsRemovedForBlock(txs_removed_for_block, nBlockHeight); });
+    auto event = [block_txs, txs_removed_for_block, nBlockHeight, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.MempoolTransactionsRemovedForBlock(block_txs, txs_removed_for_block, nBlockHeight); });
     };
-    ENQUEUE_AND_LOG_EVENT(event, "%s: block height=%s txs removed=%s", __func__,
+    ENQUEUE_AND_LOG_EVENT(event, "%s: block height=%s txs removed=%s block txs=%s", __func__,
                           nBlockHeight,
-                          txs_removed_for_block.size());
+                          txs_removed_for_block.size(),
+                          block_txs.size());
 }
 
 void ValidationSignals::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
