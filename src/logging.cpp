@@ -410,7 +410,7 @@ void BCLog::Logger::FormatLogStrInPlace(std::string& str, BCLog::LogFlags catego
     str.insert(0, GetLogPrefix(category, level));
 
     if (m_log_sourcelocations) {
-        str.insert(0, strprintf("[%s:%d] [%s] ", RemovePrefixView(source_loc.file_name(), "./"), source_loc.line(), source_loc.function_name_short()));
+        str.insert(0, strprintf("[%s:%d] [%s] ", RemovePrefixView(RemovePrefixView(source_loc.file_name(), "./"), "src/"), source_loc.line(), source_loc.function_name_short()));
     }
 
     if (m_log_threadnames) {
