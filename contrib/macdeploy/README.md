@@ -15,14 +15,14 @@ When complete, it will have produced `Bitcoin-Core.zip`.
 A free Apple Developer Account is required to proceed.
 
 Our macOS SDK can be extracted from
-[Xcode_15.xip](https://download.developer.apple.com/Developer_Tools/Xcode_15/Xcode_15.xip).
+[Xcode_26.1.1_Apple_silicon.xip](https://download.developer.apple.com/Developer_Tools/Xcode_26.1.1/Xcode_26.1.1_Apple_silicon.xip).
 
 Alternatively, after logging in to your account go to 'Downloads', then 'More'
-and search for [`Xcode 15`](https://developer.apple.com/download/all/?q=Xcode%2015).
+and search for [`Xcode 26.1.1`](https://developer.apple.com/download/all/?q=Xcode%2026.1.1).
 
 An Apple ID and cookies enabled for the hostname are needed to download this.
 
-The `sha256sum` of the downloaded XIP archive should be `4daaed2ef2253c9661779fa40bfff50655dc7ec45801aba5a39653e7bcdde48e`.
+The `sha256sum` of the downloaded XIP archive should be `f4c65b01e2807372b61553c71036dbfef492d7c79d4c380a5afb61aa1018e555`.
 
 To extract the `.xip` on Linux:
 
@@ -33,13 +33,13 @@ git clone https://github.com/bitcoin-core/apple-sdk-tools.git
 
 # Unpack the .xip and place the resulting Xcode.app in your current
 # working directory
-python3 apple-sdk-tools/extract_xcode.py -f Xcode_15.xip | cpio -d -i
+python3 apple-sdk-tools/extract_xcode.py -f Xcode_26.1.1_Apple_silicon.xip | cpio -d -i
 ```
 
 On macOS:
 
 ```bash
-xip -x Xcode_15.xip
+xip -x Xcode_26.1.1_Apple_silicon.xip
 ```
 
 ### Step 2: Generating the SDK tarball from `Xcode.app`
@@ -51,8 +51,8 @@ path to `Xcode.app` (extracted in the previous stage) as the first argument.
 ./contrib/macdeploy/gen-sdk.py '/path/to/Xcode.app'
 ```
 
-The generated archive should be: `Xcode-15.0-15A240d-extracted-SDK-with-libcxx-headers.tar`.
-The `sha256sum` should be `95b00dc41fa090747dc0a7907a5031a2fcb2d7f95c9584ba6bccdb99b6e3d498`.
+The generated archive should be: `Xcode-26.1.1-17B100-extracted-SDK-with-libcxx-headers.tar`.
+The `sha256sum` should be `9600fa93644df674ee916b5e2c8a6ba8dacf631996a65dc922d003b98b5ea3b1`.
 
 ## Deterministic macOS App Notes
 
