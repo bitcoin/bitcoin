@@ -115,8 +115,15 @@ execute_process(
 execute_process(
   COMMAND ${LCONVERT_EXECUTABLE}
     -drop-translations
-    -o ${PROJECT_SOURCE_DIR}/src/qt/locale/bitcoin_en.xlf
+    -o ${PROJECT_SOURCE_DIR}/src/qt/locale/bitcoin_en.new.xlf
     -i ${PROJECT_SOURCE_DIR}/src/qt/locale/bitcoin_en.ts
+  COMMAND_ERROR_IS_FATAL ANY
+)
+
+execute_process(
+  COMMAND python3 ${PROJECT_SOURCE_DIR}/contrib/devtools/stabilize_xlf_ids.py
+    ${PROJECT_SOURCE_DIR}/src/qt/locale/bitcoin_en.xlf
+    ${PROJECT_SOURCE_DIR}/src/qt/locale/bitcoin_en.new.xlf
   COMMAND_ERROR_IS_FATAL ANY
 )
 
