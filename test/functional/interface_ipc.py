@@ -33,7 +33,7 @@ async def destroying(obj, ctx):
 
 async def create_block_template(mining, stack, ctx, opts):
     """Call mining.createNewBlock() and return template, then call template.destroy() when stack exits."""
-    return await stack.enter_async_context(destroying((await mining.createNewBlock(opts)).result, ctx))
+    return await stack.enter_async_context(destroying((await mining.createNewBlock(ctx, opts)).result, ctx))
 
 async def wait_next_template(template, stack, ctx, opts):
     """Call template.waitNext() and return template, then call template.destroy() when stack exits."""
@@ -246,7 +246,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
 
             current_block_height = self.nodes[0].getchaintips()[0]["height"]
             check_opts = self.capnp_modules['mining'].BlockCheckOptions()
-            async with destroying((await mining.createNewBlock(opts)).result, ctx) as template:
+            async with destroying((await mining.createNewBlock(ctx, opts)).result, ctx) as template:
                 block = await self.parse_and_deserialize_block(template, ctx)
                 coinbase = await self.parse_and_deserialize_coinbase_tx(template, ctx)
                 balance = miniwallet.get_balance()
@@ -258,7 +258,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 self.log.debug("Submit a block with a bad version")
                 block.nVersion = 0
                 block.solve()
-                check = await mining.checkBlock(block.serialize(), check_opts)
+                check = await mining.checkBlock(ctx, block.serialize(), check_opts)
                 assert_equal(check.result, False)
                 assert_equal(check.reason, "bad-version(0x00000000)")
                 submitted = (await template.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())).result
@@ -268,7 +268,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 block.solve()
 
                 self.log.debug("First call checkBlock()")
-                block_valid = (await mining.checkBlock(block.serialize(), check_opts)).result
+                block_valid = (await mining.checkBlock(ctx, block.serialize(), check_opts)).result
                 assert_equal(block_valid, True)
 
                 # The remote template block will be mutated, capture the original:
@@ -300,7 +300,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
             miniwallet.rescan_utxos()
             assert_equal(miniwallet.get_balance(), balance + 1)
             self.log.debug("Check block should fail now, since it is a duplicate")
-            check = await mining.checkBlock(block.serialize(), check_opts)
+            check = await mining.checkBlock(ctx, block.serialize(), check_opts)
             assert_equal(check.result, False)
             assert_equal(check.reason, "inconclusive-not-best-prevblk")
 
