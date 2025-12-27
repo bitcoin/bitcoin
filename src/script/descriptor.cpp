@@ -1744,7 +1744,7 @@ static DeriveType ParseDeriveType(std::vector<std::span<const char>>& split, boo
 }
 
 /** Parse a public key that excludes origin information. */
-std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t key_exp_index, const std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, bool& apostrophe, std::string& error)
+std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t& key_exp_index, const std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, bool& apostrophe, std::string& error)
 {
     std::vector<std::unique_ptr<PubkeyProvider>> ret;
     bool permit_uncompressed = ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH;
@@ -1769,6 +1769,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t key_exp_i
             if (pubkey.IsFullyValid()) {
                 if (permit_uncompressed || pubkey.IsCompressed()) {
                     ret.emplace_back(std::make_unique<ConstPubkeyProvider>(key_exp_index, pubkey, false));
+                    ++key_exp_index;
                     return ret;
                 } else {
                     error = "Uncompressed keys are not allowed";
@@ -1780,6 +1781,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t key_exp_i
                 pubkey.Set(std::begin(fullkey), std::end(fullkey));
                 if (pubkey.IsFullyValid()) {
                     ret.emplace_back(std::make_unique<ConstPubkeyProvider>(key_exp_index, pubkey, true));
+                    ++key_exp_index;
                     return ret;
                 }
             }
@@ -1792,6 +1794,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t key_exp_i
                 CPubKey pubkey = key.GetPubKey();
                 out.keys.emplace(pubkey.GetID(), key);
                 ret.emplace_back(std::make_unique<ConstPubkeyProvider>(key_exp_index, pubkey, ctx == ParseScriptContext::P2TR));
+                ++key_exp_index;
                 return ret;
             } else {
                 error = "Uncompressed keys are not allowed";
@@ -1815,6 +1818,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t key_exp_i
     for (auto& path : paths) {
         ret.emplace_back(std::make_unique<BIP32PubkeyProvider>(key_exp_index, extpubkey, std::move(path), type, apostrophe));
     }
+    ++key_exp_index;
     return ret;
 }
 
@@ -1872,7 +1876,6 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
             max_multipath_len = std::max(max_multipath_len, pk.size());
 
             providers.emplace_back(std::move(pk));
-            key_exp_index++;
         }
         if (!any_key_parsed) {
             error = "musig(): Must contain key expressions";
@@ -1964,6 +1967,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
             // No multipath derivation, MuSigPubkeyProvider uses the first (and only) participant pubkey providers, and the first (and only) path
             emplace_final_provider(0, 0);
         }
+        ++key_exp_index; // Increment key expression index for the MuSigPubkeyProvider too
         return ret;
     }
 
@@ -2054,12 +2058,12 @@ struct KeyParser {
     mutable std::string m_key_parsing_error;
     //! The script context we're operating within (Tapscript or P2WSH).
     const miniscript::MiniscriptContext m_script_ctx;
-    //! The number of keys that were parsed before starting to parse this Miniscript descriptor.
-    uint32_t m_offset;
+    //! The current key expression index
+    uint32_t& m_expr_index;
 
     KeyParser(FlatSigningProvider* out LIFETIMEBOUND, const SigningProvider* in LIFETIMEBOUND,
-              miniscript::MiniscriptContext ctx, uint32_t offset = 0)
-        : m_out(out), m_in(in), m_script_ctx(ctx), m_offset(offset) {}
+              miniscript::MiniscriptContext ctx, uint32_t& key_exp_index)
+        : m_out(out), m_in(in), m_script_ctx(ctx), m_expr_index(key_exp_index) {}
 
     bool KeyCompare(const Key& a, const Key& b) const {
         return *m_keys.at(a).at(0) < *m_keys.at(b).at(0);
@@ -2077,8 +2081,7 @@ struct KeyParser {
     {
         assert(m_out);
         Key key = m_keys.size();
-        uint32_t exp_index = m_offset + key;
-        auto pk = ParsePubkey(exp_index, {&*begin, &*end}, ParseContext(), *m_out, m_key_parsing_error);
+        auto pk = ParsePubkey(m_expr_index, {&*begin, &*end}, ParseContext(), *m_out, m_key_parsing_error);
         if (pk.empty()) return {};
         m_keys.emplace_back(std::move(pk));
         return key;
@@ -2150,7 +2153,6 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
             error = strprintf("pk(): %s", error);
             return {};
         }
-        ++key_exp_index;
         for (auto& pubkey : pubkeys) {
             ret.emplace_back(std::make_unique<PKDescriptor>(std::move(pubkey), ctx == ParseScriptContext::P2TR));
         }
@@ -2162,7 +2164,6 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
             error = strprintf("pkh(): %s", error);
             return {};
         }
-        ++key_exp_index;
         for (auto& pubkey : pubkeys) {
             ret.emplace_back(std::make_unique<PKHDescriptor>(std::move(pubkey)));
         }
@@ -2174,7 +2175,6 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
             error = strprintf("combo(): %s", error);
             return {};
         }
-        ++key_exp_index;
         for (auto& pubkey : pubkeys) {
             ret.emplace_back(std::make_unique<ComboDescriptor>(std::move(pubkey)));
         }
@@ -2214,7 +2214,6 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
             script_size += pks.at(0)->GetSize() + 1;
             max_providers_len = std::max(max_providers_len, pks.size());
             providers.emplace_back(std::move(pks));
-            key_exp_index++;
         }
         if ((multi || sortedmulti) && (providers.empty() || providers.size() > MAX_PUBKEYS_PER_MULTISIG)) {
             error = strprintf("Cannot have %u keys in multisig; must have between 1 and %d keys, inclusive", providers.size(), MAX_PUBKEYS_PER_MULTISIG);
@@ -2284,7 +2283,6 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
             error = strprintf("wpkh(): %s", error);
             return {};
         }
-        key_exp_index++;
         for (auto& pubkey : pubkeys) {
             ret.emplace_back(std::make_unique<WPKHDescriptor>(std::move(pubkey)));
         }
@@ -2337,7 +2335,6 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
             return {};
         }
         size_t max_providers_len = internal_keys.size();
-        ++key_exp_index;
         std::vector<std::vector<std::unique_ptr<DescriptorImpl>>> subscripts; //!< list of multipath expanded script subexpressions
         std::vector<int> depths; //!< depth in the tree of each subexpression (same length subscripts)
         if (expr.size()) {
@@ -2441,7 +2438,6 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
             error = strprintf("rawtr(): %s", error);
             return {};
         }
-        ++key_exp_index;
         for (auto& pubkey : output_keys) {
             ret.emplace_back(std::make_unique<RawTRDescriptor>(std::move(pubkey)));
         }
@@ -2505,7 +2501,6 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
             // A signature check is required for a miniscript to be sane. Therefore no sane miniscript
             // may have an empty list of public keys.
             CHECK_NONFATAL(!parser.m_keys.empty());
-            key_exp_index += parser.m_keys.size();
             // Make sure all vecs are of the same length, or exactly length 1
             // For length 1 vectors, clone subdescs until vector is the same length
             size_t num_multipath = std::max_element(parser.m_keys.begin(), parser.m_keys.end(),
@@ -2680,7 +2675,8 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
 
     if (ctx == ParseScriptContext::P2WSH || ctx == ParseScriptContext::P2TR) {
         const auto script_ctx{ctx == ParseScriptContext::P2WSH ? miniscript::MiniscriptContext::P2WSH : miniscript::MiniscriptContext::TAPSCRIPT};
-        KeyParser parser(/* out = */nullptr, /* in = */&provider, /* ctx = */script_ctx);
+        uint32_t key_exp_index = 0;
+        KeyParser parser(/* out = */nullptr, /* in = */&provider, /* ctx = */script_ctx, key_exp_index);
         auto node = miniscript::FromScript(script, parser);
         if (node && node->IsSane()) {
             std::vector<std::unique_ptr<PubkeyProvider>> keys;
