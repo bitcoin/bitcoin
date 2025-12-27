@@ -307,6 +307,7 @@ fn lint_py_lint() -> LintResult {
             "E702", // multiple statements on one line (semicolon)
             "E703", // statement ends with a semicolon
             "E711", // comparison to None should be 'if cond is None:'
+            "E713", // test for membership should be "not in"
             "E714", // test for object identity should be "is not"
             "E721", // do not compare types, use "isinstance()"
             "E722", // do not use bare 'except'

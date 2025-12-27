@@ -172,7 +172,7 @@ PE_ALLOWED_LIBRARIES = {
 def check_version(max_versions, version, arch) -> bool:
     (lib, _, ver) = version.rpartition('_')
     ver = tuple([int(x) for x in ver.split('.')])
-    if not lib in max_versions:
+    if lib not in max_versions:
         return False
     if isinstance(max_versions[lib], tuple):
         return ver <= max_versions[lib]

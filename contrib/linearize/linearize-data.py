@@ -229,7 +229,7 @@ class BlockDataCopier:
             inExtent = BlockExtent(self.inFn, self.inF.tell(), inhdr, blk_hdr, inLen)
 
             self.hash_str = calc_hash_str(blk_hdr)
-            if not self.hash_str in blkmap:
+            if self.hash_str not in blkmap:
                 # Because blocks can be written to files out-of-order as of 0.10, the script
                 # may encounter blocks it doesn't know about. Treat as debug output.
                 if settings['debug_output'] == 'true':
@@ -320,7 +320,7 @@ if __name__ == '__main__':
     blkmap = mkblockmap(blkindex)
 
     # Block hash map won't be byte-reversed. Neither should the genesis hash.
-    if not settings['genesis'] in blkmap:
+    if settings['genesis'] not in blkmap:
         print("Genesis block not found in hashlist")
     else:
         BlockDataCopier(settings, blkindex, blkmap).run()
