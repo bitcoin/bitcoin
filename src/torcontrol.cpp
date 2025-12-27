@@ -50,27 +50,27 @@ using util::ToString;
 /** Default control ip and port */
 const std::string DEFAULT_TOR_CONTROL = "127.0.0.1:" + ToString(DEFAULT_TOR_CONTROL_PORT);
 /** Tor cookie size (from control-spec.txt) */
-static const int TOR_COOKIE_SIZE = 32;
+constexpr int TOR_COOKIE_SIZE = 32;
 /** Size of client/server nonce for SAFECOOKIE */
-static const int TOR_NONCE_SIZE = 32;
+constexpr int TOR_NONCE_SIZE = 32;
 /** Tor control reply code. Ref: https://spec.torproject.org/control-spec/replies.html */
-static const int TOR_REPLY_OK = 250;
-static const int TOR_REPLY_UNRECOGNIZED = 510;
+constexpr int TOR_REPLY_OK = 250;
+constexpr int TOR_REPLY_UNRECOGNIZED = 510;
 /** For computing serverHash in SAFECOOKIE */
 static const std::string TOR_SAFE_SERVERKEY = "Tor safe cookie authentication server-to-controller hash";
 /** For computing clientHash in SAFECOOKIE */
 static const std::string TOR_SAFE_CLIENTKEY = "Tor safe cookie authentication controller-to-server hash";
 /** Exponential backoff configuration - initial timeout in seconds */
-static const float RECONNECT_TIMEOUT_START = 1.0;
+constexpr float RECONNECT_TIMEOUT_START = 1.0;
 /** Exponential backoff configuration - growth factor */
-static const float RECONNECT_TIMEOUT_EXP = 1.5;
+constexpr float RECONNECT_TIMEOUT_EXP = 1.5;
 /** Maximum reconnect timeout in seconds to prevent excessive delays */
-static const float RECONNECT_TIMEOUT_MAX = 600.0;
+constexpr float RECONNECT_TIMEOUT_MAX = 600.0;
 /** Maximum length for lines received on TorControlConnection.
  * tor-control-spec.txt mentions that there is explicitly no limit defined to line length,
  * this is belt-and-suspenders sanity limit to prevent memory exhaustion.
  */
-static const int MAX_LINE_LENGTH = 100000;
+constexpr int MAX_LINE_LENGTH = 100000;
 
 /****** Low-level TorControlConnection ********/
 
