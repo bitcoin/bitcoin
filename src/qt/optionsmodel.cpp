@@ -70,6 +70,7 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::CoinJoinSessions: return "coinjoinsessions";
     case OptionsModel::FontFamily: return "font-family";
     case OptionsModel::FontScale: return "font-scale";
+    case OptionsModel::FontWeightNormal: return "font-weight-normal";
     default: throw std::logic_error(strprintf("GUI option %i has no corresponding node setting.", option));
     }
 }
@@ -84,6 +85,7 @@ static bool RequiresNumWorkaround(OptionsModel::OptionID option)
     case OptionsModel::CoinJoinSessions:
     case OptionsModel::DatabaseCache:
     case OptionsModel::FontScale:
+    case OptionsModel::FontWeightNormal:
     case OptionsModel::Prune:
     case OptionsModel::PruneSize:
     case OptionsModel::ThreadsScriptVerif:
@@ -138,6 +140,22 @@ static int PruneSizeGB(const util::SettingsValue& prune_setting)
 static int ParsePruneSizeGB(const QVariant& prune_size)
 {
     return std::max(1, prune_size.toInt());
+}
+
+static int GetFallbackWeightIndex()
+{
+    // If the currently selected weight is not supported fallback to the lightest weight for normal font.
+    return 0;
+}
+
+static int WeightArgToIdx(int weight_arg)
+{
+    if (QFont::Weight weight; GUIUtil::weightFromArg(weight_arg, weight)) {
+        if (int index = GUIUtil::g_font_registry.WeightToIdx(weight); index != -1) {
+            return index;
+        }
+    }
+    return GetFallbackWeightIndex();
 }
 
 struct ProxySetting {
@@ -273,10 +291,7 @@ bool OptionsModel::Init(bilingual_str& error)
     }
 
     // Font Weight (Normal)
-    if (!settings.contains("fontWeightNormal")) {
-        settings.setValue("fontWeightNormal", GUIUtil::weightToArg(GUIUtil::FontRegistry::TARGET_WEIGHT_NORMAL));
-    }
-    if (gArgs.IsArgSet("-font-weight-normal") && !gArgs.SoftSetArg("-font-weight-normal", settings.value("fontWeightNormal").toString().toStdString())) {
+    if (node().isSettingIgnored("font-weight-normal")) {
         addOverriddenOption("-font-weight-normal");
     }
 
@@ -285,10 +300,10 @@ bool OptionsModel::Init(bilingual_str& error)
         // If font was overridden by CLI but weight wasn't, use the font's default weight
         QFont::Weight weight{GUIUtil::g_font_registry.GetWeightNormalDefault()};
         if (!override_family || isOptionOverridden("-font-weight-normal")) {
-            GUIUtil::weightFromArg(gArgs.GetIntArg("-font-weight-normal", settings.value("fontWeightNormal").toInt()), weight);
-            if (!GUIUtil::g_font_registry.IsValidWeight(weight)) {
-                // If the currently selected weight is not supported fallback to the lightest weight for normal font.
-                weight = GUIUtil::g_font_registry.GetSupportedWeights().front();
+            const auto raw_weight{SettingToInt(node().getPersistentSetting("font-weight-normal"), GUIUtil::weightToArg(GUIUtil::FontRegistry::TARGET_WEIGHT_NORMAL))};
+            if (!GUIUtil::weightFromArg(raw_weight, weight) || !GUIUtil::g_font_registry.IsValidWeight(weight)) {
+                weight = GUIUtil::g_font_registry.IdxToWeight(GetFallbackWeightIndex());
+                node().forceSetting("font-weight-normal", GUIUtil::weightToArg(weight));
             }
         }
         GUIUtil::g_font_registry.SetWeightNormal(weight);
@@ -649,16 +664,8 @@ QVariant OptionsModel::getOption(OptionID option) const
         return QString::fromStdString(SettingToString(setting(), GUIUtil::FontRegistry::DEFAULT_FONT.toUtf8().toStdString()));
     case FontScale:
         return qlonglong(SettingToInt(setting(), GUIUtil::FontRegistry::DEFAULT_FONT_SCALE));
-    case FontWeightNormal: {
-        int nIndex = [&]() -> int {
-            if (QFont::Weight weight; GUIUtil::weightFromArg(settings.value("fontWeightNormal").toInt(), weight) && GUIUtil::g_font_registry.IsValidWeight(weight)) {
-                return GUIUtil::g_font_registry.WeightToIdx(weight);
-            }
-            return GUIUtil::g_font_registry.WeightToIdx(GUIUtil::g_font_registry.GetWeightNormalDefault());
-        }();
-        assert(nIndex != -1);
-        return nIndex;
-    }
+    case FontWeightNormal:
+        return WeightArgToIdx(SettingToInt(setting(), GUIUtil::g_font_registry.GetWeightNormalDefault()));
     case FontWeightBold: {
         int nIndex = [&]() -> int {
             if (QFont::Weight weight; GUIUtil::weightFromArg(settings.value("fontWeightBold").toInt(), weight) && GUIUtil::g_font_registry.IsValidWeight(weight)) {
@@ -908,9 +915,8 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value)
         }
         break;
     case FontWeightNormal: {
-        int nWeight = GUIUtil::weightToArg(GUIUtil::g_font_registry.IdxToWeight(value.toInt()));
-        if (settings.value("fontWeightNormal") != nWeight) {
-            settings.setValue("fontWeightNormal", nWeight);
+        if (changed()) {
+            update(GUIUtil::weightToArg(GUIUtil::g_font_registry.IdxToWeight(value.toInt())));
         }
         break;
     }
@@ -1088,6 +1094,8 @@ void OptionsModel::checkAndMigrate()
                 ProxySetting parsed = ParseProxyString(value.toString());
                 setOption(ProxyIPTor, parsed.ip);
                 setOption(ProxyPortTor, parsed.port);
+            } else if (option == FontWeightNormal) {
+                setOption(option, WeightArgToIdx(value.toInt()));
             } else {
                 setOption(option, value);
             }
@@ -1117,6 +1125,7 @@ void OptionsModel::checkAndMigrate()
     if (GUIUtil::fontsLoaded()) {
         migrate_setting(FontFamily, "fontFamily");
         migrate_setting(FontScale, "fontScale");
+        migrate_setting(FontWeightNormal, "fontWeightNormal");
     }
 #ifdef ENABLE_WALLET
     migrate_setting(CoinJoinAmount, "nCoinJoinAmount");
