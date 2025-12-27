@@ -50,6 +50,11 @@ struct CBlockTemplate
     /* A vector of package fee rates, ordered by the sequence in which
      * packages are selected for inclusion in the block template.*/
     std::vector<FeePerVSize> m_package_feerates;
+    /*
+     * Coinbase transaction template, so IPC clients don't have to parse the
+     * dummy transaction directly.
+     */
+    CoinbaseTxTemplate m_coinbase_tx_template;
 };
 
 /** Generate a new block, without valid proof-of-work */
@@ -157,6 +162,7 @@ std::optional<BlockRef> GetTip(ChainstateManager& chainman);
 /* Waits for the connected tip to change until timeout has elapsed. During node initialization, this will wait until the tip is connected (regardless of `timeout`).
  * Returns the current tip, or nullopt if the node is shutting down. */
 std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const uint256& current_tip, MillisecondsDouble& timeout);
+
 } // namespace node
 
 #endif // BITCOIN_NODE_MINER_H
