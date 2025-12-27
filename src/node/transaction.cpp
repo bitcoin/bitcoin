@@ -74,13 +74,14 @@ TransactionError BroadcastTransaction(NodeContext& node,
             wtxid = mempool_tx->GetWitnessHash();
         } else {
             // Transaction is not already in the mempool.
-            if (max_tx_fee > 0) {
+            const bool check_max_fee{max_tx_fee > 0};
+            if (check_max_fee || broadcast_method == TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST) {
                 // First, call ATMP with test_accept and check the fee. If ATMP
                 // fails here, return error immediately.
                 const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, /*test_accept=*/ true);
                 if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
                     return HandleATMPError(result.m_state, err_string);
-                } else if (result.m_base_fees.value() > max_tx_fee) {
+                } else if (check_max_fee && result.m_base_fees.value() > max_tx_fee) {
                     return TransactionError::MAX_FEE_EXCEEDED;
                 }
             }
@@ -103,6 +104,8 @@ TransactionError BroadcastTransaction(NodeContext& node,
                     // best-effort of initial broadcast
                     node.mempool->AddUnbroadcastTx(txid);
                 }
+                break;
+            case TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST:
                 break;
             }
 
@@ -133,7 +136,10 @@ TransactionError BroadcastTransaction(NodeContext& node,
     case TxBroadcast::MEMPOOL_NO_BROADCAST:
         break;
     case TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL:
-        node.peerman->RelayTransaction(txid, wtxid);
+        node.peerman->InitiateTxBroadcastToAll(txid, wtxid);
+        break;
+    case TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST:
+        node.peerman->InitiateTxBroadcastPrivate(tx);
         break;
     }
 

@@ -484,7 +484,10 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
         tr("Outbound Feeler: short-lived, for testing addresses"),
         /*: Explanatory text for a short-lived outbound peer connection that is used
             to request addresses from a peer. */
-        tr("Outbound Address Fetch: short-lived, for soliciting addresses")};
+        tr("Outbound Address Fetch: short-lived, for soliciting addresses"),
+        /*: Explanatory text for a short-lived outbound peer connection that is used
+            to broadcast privacy-sensitive data (like our transactions). */
+        tr("Private broadcast: short-lived, for broadcasting privacy-sensitive transactions")};
     const QString connection_types_list{"<ul><li>" + Join(CONNECTION_TYPE_DOC, QString("</li><li>")) + "</li></ul>"};
     ui->peerConnectionTypeLabel->setToolTip(ui->peerConnectionTypeLabel->toolTip().arg(connection_types_list));
     const std::vector<QString> TRANSPORT_TYPE_DOC{
