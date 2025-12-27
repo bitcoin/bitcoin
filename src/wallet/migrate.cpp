@@ -436,7 +436,7 @@ public:
             }
 
             // Go back to the indexes
-            s.seek(-to_jump, SEEK_CUR);
+            s.seek(-to_jump, SeekFrom::Curr);
         }
     }
 };
@@ -515,7 +515,7 @@ public:
             to_jump += InternalRecord::FIXED_SIZE + rec_hdr.len;
 
             // Go back to the indexes
-            s.seek(-to_jump, SEEK_CUR);
+            s.seek(-to_jump, SeekFrom::Curr);
         }
     }
 };
@@ -523,7 +523,7 @@ public:
 static void SeekToPage(AutoFile& s, uint32_t page_num, uint32_t page_size)
 {
     int64_t pos = int64_t{page_num} * page_size;
-    s.seek(pos, SEEK_SET);
+    s.seek(pos, SeekFrom::Set);
 }
 
 void BerkeleyRODatabase::Open()
