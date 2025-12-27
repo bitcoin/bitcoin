@@ -947,3 +947,19 @@ CService MaybeFlipIPv6toCJDNS(const CService& service)
     }
     return ret;
 }
+
+CService GetBindAddress(const Sock& sock)
+{
+    CService addr_bind;
+    sockaddr_storage storage;
+    socklen_t len = sizeof(storage);
+
+    auto sa = static_cast<sockaddr*>(static_cast<void*>(&storage));
+
+    if (!sock.GetSockName(sa, &len)) {
+        addr_bind.SetSockAddr(sa, len);
+    } else {
+        LogWarning("getsockname failed\n");
+    }
+    return addr_bind;
+}
