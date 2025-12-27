@@ -711,7 +711,7 @@ static bool rest_block_filter(const std::any& context, HTTPRequest* req, const s
 }
 
 // A bit of a hack - dependency on a function defined in rpc/blockchain.cpp
-RPCHelpMan getblockchaininfo();
+RPCMethod getblockchaininfo();
 
 static bool rest_chaininfo(const std::any& context, HTTPRequest* req, const std::string& uri_part)
 {
@@ -738,7 +738,7 @@ static bool rest_chaininfo(const std::any& context, HTTPRequest* req, const std:
 }
 
 
-RPCHelpMan getdeploymentinfo();
+RPCMethod getdeploymentinfo();
 
 static bool rest_deploymentinfo(const std::any& context, HTTPRequest* req, const std::string& str_uri_part)
 {
