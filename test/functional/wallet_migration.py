@@ -675,6 +675,40 @@ class WalletMigrationTest(BitcoinTestFramework):
         # migrate_and_get_rpc already checks for backup file existence
         assert os.path.basename(res["backup_path"]).startswith("default_wallet")
 
+        wallet.unloadwallet()
+
+    def test_default_wallet_failure(self):
+        self.log.info("Test failure during unnamed (default) wallet migration")
+        master_wallet = self.master_node.get_wallet_rpc(self.default_wallet_name)
+        wallet = self.create_legacy_wallet("", blank=True)
+        wallet.importaddress(master_wallet.getnewaddress(address_type="legacy"))
+
+        # Create wallet directory with the watch-only name and a wallet file.
+        # Because the wallet dir exists, this will cause migration to fail.
+        watch_only_dir = self.master_node.wallets_path / "_watchonly"
+        os.mkdir(watch_only_dir)
+        shutil.copyfile(self.old_node.wallets_path / "wallet.dat", watch_only_dir / "wallet.dat")
+
+        mocked_time = int(time.time())
+        self.master_node.setmocktime(mocked_time)
+        assert_raises_rpc_error(-4, "Failed to create database", self.migrate_and_get_rpc, "")
+        self.master_node.setmocktime(0)
+
+        # Verify the /wallets/ path exists
+        assert self.master_node.wallets_path.exists()
+        # Check backup file exists. Because the wallet has no name, the backup is prefixed with 'default_wallet'
+        assert (self.master_node.wallets_path / f"default_wallet_{mocked_time}.legacy.bak").exists()
+        # Verify the original unnamed wallet was restored
+        assert (self.master_node.wallets_path / "wallet.dat").exists()
+        # And verify it is still a BDB wallet
+        with open(self.master_node.wallets_path / "wallet.dat", "rb") as f:
+            data = f.read(16)
+            _, _, magic = struct.unpack("QII", data)
+            assert_equal(magic, BTREE_MAGIC)
+
+        # Test cleanup: Clear unnamed default wallet from old node
+        os.remove(self.old_node.wallets_path / "wallet.dat")
+
     def test_direct_file(self):
         self.log.info("Test migration of a wallet that is not in a wallet directory")
         wallet = self.create_legacy_wallet("plainfile")
@@ -1560,6 +1594,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_wallet_with_relative_path()
         self.test_wallet_with_path("path/to/mywallet/")
         self.test_wallet_with_path("path/that/ends/in/..")
+        self.test_default_wallet_failure()
         self.test_default_wallet()
         self.test_direct_file()
         self.test_addressbook()
