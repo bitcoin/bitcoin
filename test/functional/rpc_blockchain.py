@@ -136,6 +136,7 @@ class BlockchainTest(BitcoinTestFramework):
         self.log.info("Test getblockchaininfo")
 
         keys = [
+            'backgroundvalidation',
             'bestblockhash',
             'bits',
             'blocks',
@@ -169,6 +170,10 @@ class BlockchainTest(BitcoinTestFramework):
         # check other pruning fields given that prune=1
         assert res['pruned']
         assert not res['automatic_pruning']
+
+        # check background validation
+        assert not res['backgroundvalidation']
+        assert "background" not in res.keys()
 
         self.restart_node(0, ['-stopatheight=207'])
         res = self.nodes[0].getblockchaininfo()
