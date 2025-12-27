@@ -4515,7 +4515,12 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
         std::string name = to_reload->GetName();
         to_reload.reset();
         to_reload = LoadWallet(context, name, /*load_on_start=*/std::nullopt, options, status, error, warnings);
-        return to_reload != nullptr;
+        if (!to_reload) {
+            LogError("Failed to load wallet '%s' after migration. Rolling back migration to preserve consistency. "
+                     "Error cause: %s\n", wallet_name, error.original);
+            return false;
+        }
+        return true;
     };
 
     // Before anything else, check if there is something to migrate.
@@ -4596,6 +4601,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
     if (success) {
         // Migration successful, unload all wallets locally, then reload them.
         // Reload the main wallet
+        LogInfo("Loading new wallets after migration...\n");
         track_for_cleanup(*local_wallet);
         success = reload_wallet(local_wallet);
         res.wallet = local_wallet;
