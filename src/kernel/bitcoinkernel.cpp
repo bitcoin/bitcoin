@@ -885,6 +885,11 @@ const btck_BlockTreeEntry* btck_block_tree_entry_get_previous(const btck_BlockTr
     return btck_BlockTreeEntry::ref(btck_BlockTreeEntry::get(entry).pprev);
 }
 
+btck_BlockValidationState* btck_block_validation_state_create()
+{
+    return btck_BlockValidationState::create(BlockValidationState{});
+}
+
 btck_ValidationMode btck_block_validation_state_get_validation_mode(const btck_BlockValidationState* block_validation_state_)
 {
     auto& block_validation_state = btck_BlockValidationState::get(block_validation_state_);
@@ -917,6 +922,16 @@ btck_BlockValidationResult btck_block_validation_state_get_block_validation_resu
         return btck_BlockValidationResult_HEADER_LOW_WORK;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
+}
+
+btck_BlockValidationState* btck_block_validation_state_copy(const btck_BlockValidationState* state)
+{
+    return btck_BlockValidationState::copy(state);
+}
+
+void btck_block_validation_state_destroy(btck_BlockValidationState* state)
+{
+    delete state;
 }
 
 btck_ChainstateManagerOptions* btck_chainstate_manager_options_create(const btck_Context* context, const char* data_dir, size_t data_dir_len, const char* blocks_dir, size_t blocks_dir_len)
