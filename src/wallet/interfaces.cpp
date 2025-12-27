@@ -140,7 +140,7 @@ public:
     {
         return m_wallet->EncryptWallet(wallet_passphrase);
     }
-    bool isCrypted() override { return m_wallet->IsCrypted(); }
+    bool isCrypted() override { return m_wallet->HasEncryptionKeys(); }
     bool lock() override { return m_wallet->Lock(); }
     bool unlock(const SecureString& wallet_passphrase) override { return m_wallet->Unlock(wallet_passphrase); }
     bool isLocked() override { return m_wallet->IsLocked(); }
@@ -623,7 +623,7 @@ public:
     {
         auto wallets{GetWallets(m_context)};
         auto it = std::find_if(wallets.begin(), wallets.end(), [&](std::shared_ptr<CWallet> w){ return w->GetName() == wallet_name; });
-        if (it != wallets.end()) return (*it)->IsCrypted();
+        if (it != wallets.end()) return (*it)->HasEncryptionKeys();
 
         // Unloaded wallet, read db
         DatabaseOptions options;

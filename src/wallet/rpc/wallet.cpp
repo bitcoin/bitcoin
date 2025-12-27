@@ -93,7 +93,7 @@ static RPCHelpMan getwalletinfo()
     obj.pushKV("keypoolsize", (int64_t)kpExternalSize);
     obj.pushKV("keypoolsize_hd_internal", pwallet->GetKeyPoolSize() - kpExternalSize);
 
-    if (pwallet->IsCrypted()) {
+    if (pwallet->HasEncryptionKeys()) {
         obj.pushKV("unlocked_until", pwallet->nRelockTime);
     }
     obj.pushKV("paytxfee", ValueFromAmount(pwallet->m_pay_tx_fee.GetFeePerK()));

@@ -489,7 +489,6 @@ public:
         assert(NotifyUnload.empty());
     }
 
-    bool IsCrypted() const;
     bool IsLocked() const override;
     bool Lock();
 
