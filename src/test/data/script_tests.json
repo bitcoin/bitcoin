@@ -2680,6 +2680,30 @@
     "TAPSCRIPT_EMPTY_PUBKEY",
     "TAPSCRIPT: OP_CHECKSIG with empty pubkey must fail"
 ],
+[
+    [
+        "aa",
+        "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 0x0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff",
+    "P2SH,WITNESS,TAPROOT",
+    "TAPROOT_WRONG_CONTROL_SIZE",
+    "TAPSCRIPT: Control block size (32 bytes) < min size"
+],
+[
+    [
+        "aa",
+        "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff0000",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 0x0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff",
+    "P2SH,WITNESS,TAPROOT",
+    "TAPROOT_WRONG_CONTROL_SIZE",
+    "TAPSCRIPT: Control block size (34 bytes) - base size % node size != 0"
+],
 
 ["NULLFAIL should cover all signatures and signatures only"],
 ["0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", "0x01 0x14 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0x01 0x14 CHECKMULTISIG NOT", "DERSIG", "OK", "BIP66 and NULLFAIL-compliant"],
