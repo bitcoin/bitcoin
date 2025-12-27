@@ -398,20 +398,43 @@ class TestNode():
 
     def generate(self, nblocks, maxtries=1000000, **kwargs):
         self.log.debug("TestNode.generate() dispatches `generate` call to `generatetoaddress`")
-        return self.generatetoaddress(nblocks=nblocks, address=self.get_deterministic_priv_key().address, maxtries=maxtries, **kwargs)
+
+        # The framework passes this guard kwarg. Consume it here so we don't forward twice.
+        called_by_framework = kwargs.pop("called_by_framework", False)
+        assert called_by_framework, (
+            "Direct call of this mining RPC is discouraged. Please use one of the "
+            "self.generate* methods on the test framework, which sync the nodes to avoid "
+            "intermittent test issues. You may use sync_fun=self.no_op to disable the sync explicitly."
+        )
+
+        # Some forks/framework paths may pass other internal flags; don't forward them to RPC.
+        kwargs.pop("invalid_call", None)
+
+        # Use positional params for compatibility (some daemons don't support named params).
+        return self.__getattr__("generatetoaddress")(
+            nblocks,
+            self.get_deterministic_priv_key().address,
+            maxtries,
+        )
 
     def generateblock(self, *args, called_by_framework, **kwargs):
         assert called_by_framework, "Direct call of this mining RPC is discouraged. Please use one of the self.generate* methods on the test framework, which sync the nodes to avoid intermittent test issues. You may use sync_fun=self.no_op to disable the sync explicitly."
         return self.__getattr__('generateblock')(*args, **kwargs)
 
     def generatetoaddress(self, nblocks, address, maxtries=1000000, *, called_by_framework, **_ignore):
-        assert called_by_framework, "Direct call of this mining RPC is discouraged. Please use one of the self.generate* methods on the test framework, which sync the nodes to avoid intermittent test issues. You may use sync_fun=self.no_op to disable the sync explicitly."
-        # Accept extra framework kwargs but don't forward them to RPC
+        assert called_by_framework, (
+            "Direct call of this mining RPC is discouraged. Please use one of the self.generate* methods "
+            "on the test framework, which sync the nodes to avoid intermittent test issues. You may use "
+            "sync_fun=self.no_op to disable the sync explicitly."
+        )
         return self.__getattr__('generatetoaddress')(nblocks=nblocks, address=address, maxtries=maxtries)
 
     def generatetodescriptor(self, nblocks, descriptor, maxtries=1000000, *, called_by_framework, **_ignore):
-        assert called_by_framework, "Direct call of this mining RPC is discouraged. Please use one of the self.generate* methods on the test framework, which sync the nodes to avoid intermittent test issues. You may use sync_fun=self.no_op to disable the sync explicitly."
-        # Accept extra framework kwargs but don't forward them to RPC
+        assert called_by_framework, (
+            "Direct call of this mining RPC is discouraged. Please use one of the self.generate* methods "
+            "on the test framework, which sync the nodes to avoid intermittent test issues. You may use "
+            "sync_fun=self.no_op to disable the sync explicitly."
+        )
         return self.__getattr__('generatetodescriptor')(nblocks=nblocks, descriptor=descriptor, maxtries=maxtries)
 
     def setmocktime(self, timestamp):

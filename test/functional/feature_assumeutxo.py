@@ -227,15 +227,23 @@ class AssumeutxoTest(BitcoinTestFramework):
     def test_snapshot_block_invalidated(self, dump_output_path):
         self.log.info("Test snapshot is not loaded when base block is invalid.")
         node = self.nodes[0]
+
+        base_blockhash = node.getblockhash(SNAPSHOT_BASE_HEIGHT)
+
         # We are testing the case where the base block is invalidated itself
         # and also the case where one of its parents is invalidated.
         for height in [SNAPSHOT_BASE_HEIGHT, SNAPSHOT_BASE_HEIGHT - 1]:
-            block_hash = node.getblockhash(height)
-            node.invalidateblock(block_hash)
+            bad_hash = node.getblockhash(height)
+            node.invalidateblock(bad_hash)
             assert_equal(node.getblockcount(), height - 1)
-            msg = f"Unable to load UTXO snapshot: The base block header ({block_hash}) is part of an invalid chain."
+
+            msg = (
+                "Unable to load UTXO snapshot: "
+                f"The base block header ({base_blockhash}) is part of an invalid chain."
+            )
             assert_raises_rpc_error(-32603, msg, node.loadtxoutset, dump_output_path)
-            node.reconsiderblock(block_hash)
+
+            node.reconsiderblock(bad_hash)
 
     def test_snapshot_in_a_divergent_chain(self, dump_output_path):
         n0 = self.nodes[0]
