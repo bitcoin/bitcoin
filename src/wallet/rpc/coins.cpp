@@ -389,7 +389,7 @@ RPCHelpMan listlockunspent()
         UniValue o(UniValue::VOBJ);
 
         o.pushKV("txid", outpt.hash.GetHex());
-        o.pushKV("vout", (int)outpt.n);
+        o.pushKV("vout", outpt.n);
         ret.push_back(std::move(o));
     }
 
@@ -617,7 +617,7 @@ RPCHelpMan listunspent()
 
         UniValue entry(UniValue::VOBJ);
         entry.pushKV("txid", out.outpoint.hash.GetHex());
-        entry.pushKV("vout", (int)out.outpoint.n);
+        entry.pushKV("vout", out.outpoint.n);
 
         if (fValidAddress) {
             entry.pushKV("address", EncodeDestination(address));

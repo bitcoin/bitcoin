@@ -333,7 +333,7 @@ static void clusterToJSON(const CTxMemPool& pool, UniValue& info, std::vector<co
         total_weight += tx->GetAdjustedWeight();
     }
     info.pushKV("clusterweight", total_weight);
-    info.pushKV("txcount", (int)cluster.size());
+    info.pushKV("txcount", cluster.size());
 
     // Output the cluster by chunk. This isn't handed to us by the mempool, but
     // we can calculate it by looking at the chunk feerates of each transaction
@@ -366,10 +366,10 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
     auto [ancestor_count, ancestor_size, ancestor_fees] = pool.CalculateAncestorData(e);
     auto [descendant_count, descendant_size, descendant_fees] = pool.CalculateDescendantData(e);
 
-    info.pushKV("vsize", (int)e.GetTxSize());
-    info.pushKV("weight", (int)e.GetTxWeight());
+    info.pushKV("vsize", e.GetTxSize());
+    info.pushKV("weight", e.GetTxWeight());
     info.pushKV("time", count_seconds(e.GetTime()));
-    info.pushKV("height", (int)e.GetHeight());
+    info.pushKV("height", e.GetHeight());
     info.pushKV("descendantcount", descendant_count);
     info.pushKV("descendantsize", descendant_size);
     info.pushKV("ancestorcount", ancestor_count);
@@ -815,7 +815,7 @@ static RPCHelpMan gettxspendingprevout()
             for (const COutPoint& prevout : prevouts) {
                 UniValue o(UniValue::VOBJ);
                 o.pushKV("txid", prevout.hash.ToString());
-                o.pushKV("vout", (uint64_t)prevout.n);
+                o.pushKV("vout", prevout.n);
 
                 const CTransaction* spendingTx = mempool.GetConflictTx(prevout);
                 if (spendingTx != nullptr) {
@@ -836,15 +836,15 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     LOCK(pool.cs);
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("loaded", pool.GetLoadTried());
-    ret.pushKV("size", (int64_t)pool.size());
-    ret.pushKV("bytes", (int64_t)pool.GetTotalTxSize());
-    ret.pushKV("usage", (int64_t)pool.DynamicMemoryUsage());
+    ret.pushKV("size", pool.size());
+    ret.pushKV("bytes", pool.GetTotalTxSize());
+    ret.pushKV("usage", pool.DynamicMemoryUsage());
     ret.pushKV("total_fee", ValueFromAmount(pool.GetTotalFee()));
     ret.pushKV("maxmempool", pool.m_opts.max_size_bytes);
     ret.pushKV("mempoolminfee", ValueFromAmount(std::max(pool.GetMinFee(), pool.m_opts.min_relay_feerate).GetFeePerK()));
     ret.pushKV("minrelaytxfee", ValueFromAmount(pool.m_opts.min_relay_feerate.GetFeePerK()));
     ret.pushKV("incrementalrelayfee", ValueFromAmount(pool.m_opts.incremental_relay_feerate.GetFeePerK()));
-    ret.pushKV("unbroadcastcount", uint64_t{pool.GetUnbroadcastTxs().size()});
+    ret.pushKV("unbroadcastcount", pool.GetUnbroadcastTxs().size());
     ret.pushKV("fullrbf", true);
     ret.pushKV("permitbaremultisig", pool.m_opts.permit_bare_multisig);
     ret.pushKV("maxdatacarriersize", pool.m_opts.max_datacarrier_bytes.value_or(0));
@@ -1270,7 +1270,7 @@ static RPCHelpMan submitpackage()
                     break;
                 case MempoolAcceptResult::ResultType::VALID:
                 case MempoolAcceptResult::ResultType::MEMPOOL_ENTRY:
-                    result_inner.pushKV("vsize", int64_t{it->second.m_vsize.value()});
+                    result_inner.pushKV("vsize", it->second.m_vsize.value());
                     UniValue fees(UniValue::VOBJ);
                     fees.pushKV("base", ValueFromAmount(it->second.m_base_fees.value()));
                     if (tx_result.m_result_type == MempoolAcceptResult::ResultType::VALID) {

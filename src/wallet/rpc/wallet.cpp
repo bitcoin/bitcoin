@@ -89,8 +89,8 @@ static RPCHelpMan getwalletinfo()
     obj.pushKV("walletname", pwallet->GetName());
     obj.pushKV("walletversion", latest_legacy_wallet_minversion);
     obj.pushKV("format", pwallet->GetDatabase().Format());
-    obj.pushKV("txcount",       (int)pwallet->mapWallet.size());
-    obj.pushKV("keypoolsize", (int64_t)kpExternalSize);
+    obj.pushKV("txcount", pwallet->mapWallet.size());
+    obj.pushKV("keypoolsize", kpExternalSize);
     obj.pushKV("keypoolsize_hd_internal", pwallet->GetKeyPoolSize() - kpExternalSize);
 
     if (pwallet->HasEncryptionKeys()) {

@@ -175,14 +175,14 @@ static void TxInErrorToJSON(const CTxIn& txin, UniValue& vErrorsRet, const std::
 {
     UniValue entry(UniValue::VOBJ);
     entry.pushKV("txid", txin.prevout.hash.ToString());
-    entry.pushKV("vout", (uint64_t)txin.prevout.n);
+    entry.pushKV("vout", txin.prevout.n);
     UniValue witness(UniValue::VARR);
     for (unsigned int i = 0; i < txin.scriptWitness.stack.size(); i++) {
         witness.push_back(HexStr(txin.scriptWitness.stack[i]));
     }
     entry.pushKV("witness", std::move(witness));
     entry.pushKV("scriptSig", HexStr(txin.scriptSig));
-    entry.pushKV("sequence", (uint64_t)txin.nSequence);
+    entry.pushKV("sequence", txin.nSequence);
     entry.pushKV("error", strMessage);
     vErrorsRet.push_back(std::move(entry));
 }
