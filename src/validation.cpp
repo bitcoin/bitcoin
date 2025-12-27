@@ -1853,14 +1853,13 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     return nSubsidy;
 }
 
-CoinsViews::CoinsViews(DBParams db_params, CoinsViewOptions options)
-    : m_dbview{std::move(db_params), std::move(options)},
-      m_catcherview(&m_dbview) {}
+CoinsViews::CoinsViews(DBParams db_params, CoinsViewOptions options, std::function<void()> read_error_cb)
+    : m_dbview{std::move(db_params), std::move(options), std::move(read_error_cb)} {}
 
 void CoinsViews::InitCache()
 {
     AssertLockHeld(::cs_main);
-    m_cacheview = std::make_unique<CCoinsViewCache>(&m_catcherview);
+    m_cacheview = std::make_unique<CCoinsViewCache>(&m_dbview);
 }
 
 Chainstate::Chainstate(
@@ -1916,7 +1915,8 @@ void Chainstate::SetTargetBlockHash(uint256 block_hash)
 void Chainstate::InitCoinsDB(
     size_t cache_size_bytes,
     bool in_memory,
-    bool should_wipe)
+    bool should_wipe,
+    std::function<void()> read_error_cb)
 {
     m_coins_views = std::make_unique<CoinsViews>(
         DBParams{
@@ -1926,7 +1926,8 @@ void Chainstate::InitCoinsDB(
             .wipe_data = should_wipe,
             .obfuscate = true,
             .options = m_chainman.m_options.coins_db},
-        m_chainman.m_options.coins_view);
+        m_chainman.m_options.coins_view,
+        std::move(read_error_cb));
 
     m_coinsdb_cache_size_bytes = cache_size_bytes;
 }

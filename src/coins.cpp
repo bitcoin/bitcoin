@@ -362,31 +362,3 @@ const Coin& AccessByTxid(const CCoinsViewCache& view, const Txid& txid)
     }
     return coinEmpty;
 }
-
-template <typename ReturnType, typename Func>
-static ReturnType ExecuteBackedWrapper(Func func, const std::vector<std::function<void()>>& err_callbacks)
-{
-    try {
-        return func();
-    } catch(const std::runtime_error& e) {
-        for (const auto& f : err_callbacks) {
-            f();
-        }
-        LogError("Error reading from database: %s\n", e.what());
-        // Starting the shutdown sequence and returning false to the caller would be
-        // interpreted as 'entry not found' (as opposed to unable to read data), and
-        // could lead to invalid interpretation. Just exit immediately, as we can't
-        // continue anyway, and all writes should be atomic.
-        std::abort();
-    }
-}
-
-std::optional<Coin> CCoinsViewErrorCatcher::GetCoin(const COutPoint& outpoint) const
-{
-    return ExecuteBackedWrapper<std::optional<Coin>>([&]() { return CCoinsViewBacked::GetCoin(outpoint); }, m_err_callbacks);
-}
-
-bool CCoinsViewErrorCatcher::HaveCoin(const COutPoint& outpoint) const
-{
-    return ExecuteBackedWrapper<bool>([&]() { return CCoinsViewBacked::HaveCoin(outpoint); }, m_err_callbacks);
-}
