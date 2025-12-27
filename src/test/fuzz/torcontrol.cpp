@@ -14,12 +14,14 @@
 
 class DummyTorControlConnection : public TorControlConnection
 {
+    CThreadInterrupt m_dummy_interrupt;
+
 public:
-    DummyTorControlConnection() : TorControlConnection{nullptr}
+    DummyTorControlConnection() : TorControlConnection{m_dummy_interrupt}
     {
     }
 
-    bool Connect(const std::string&, const ConnectionCB&, const ConnectionCB&)
+    bool Connect(const std::string&)
     {
         return true;
     }
