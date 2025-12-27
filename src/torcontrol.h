@@ -90,7 +90,7 @@ private:
     /** Connection to control socket */
     struct bufferevent* b_conn{nullptr};
     /** Message being received */
-    TorControlReply message;
+    TorControlReply m_message;
     /** Response handlers */
     std::deque<ReplyHandlerCB> reply_handlers;
 
@@ -108,7 +108,7 @@ class TorController
 {
 public:
     TorController(struct event_base* base, const std::string& tor_control_center, const CService& target);
-    TorController() : conn{nullptr} {
+    TorController() : m_conn{nullptr} {
         // Used for testing only.
     }
     ~TorController();
@@ -121,18 +121,18 @@ public:
 private:
     struct event_base* base;
     const std::string m_tor_control_center;
-    TorControlConnection conn;
-    std::string private_key;
-    std::string service_id;
-    bool reconnect;
+    TorControlConnection m_conn;
+    std::string m_private_key;
+    std::string m_service_id;
+    bool m_reconnect;
     struct event *reconnect_ev = nullptr;
-    float reconnect_timeout;
-    CService service;
+    float m_reconnect_timeout;
+    CService m_service;
     const CService m_target;
     /** Cookie for SAFECOOKIE auth */
-    std::vector<uint8_t> cookie;
+    std::vector<uint8_t> m_cookie;
     /** ClientNonce for SAFECOOKIE auth */
-    std::vector<uint8_t> clientNonce;
+    std::vector<uint8_t> m_client_nonce;
 
 public:
     /** Callback for GETINFO net/listeners/socks result */
