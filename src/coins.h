@@ -303,58 +303,83 @@ private:
     bool m_will_erase;
 };
 
-/** Abstract view on the open txout dataset. */
+/** Pure abstract view on the open txout dataset. */
 class CCoinsView
 {
 public:
+    //! As we use CCoinsViews polymorphically, have a virtual destructor
+    virtual ~CCoinsView() = default;
+
     //! Retrieve the Coin (unspent transaction output) for a given outpoint.
-    virtual std::optional<Coin> GetCoin(const COutPoint& outpoint) const;
+    virtual std::optional<Coin> GetCoin(const COutPoint& outpoint) const = 0;
 
     //! Just check whether a given outpoint is unspent.
-    virtual bool HaveCoin(const COutPoint &outpoint) const;
+    virtual bool HaveCoin(const COutPoint& outpoint) const = 0;
 
     //! Retrieve the block hash whose state this CCoinsView currently represents
-    virtual uint256 GetBestBlock() const;
+    virtual uint256 GetBestBlock() const = 0;
 
     //! Retrieve the range of blocks that may have been only partially written.
     //! If the database is in a consistent state, the result is the empty vector.
     //! Otherwise, a two-element vector is returned consisting of the new and
     //! the old block hash, in that order.
-    virtual std::vector<uint256> GetHeadBlocks() const;
+    virtual std::vector<uint256> GetHeadBlocks() const = 0;
 
     //! Do a bulk modification (multiple Coin changes + BestBlock change).
     //! The passed cursor is used to iterate through the coins.
-    virtual bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock);
+    virtual bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) = 0;
 
     //! Get a cursor to iterate over the whole state
-    virtual std::unique_ptr<CCoinsViewCursor> Cursor() const;
+    virtual std::unique_ptr<CCoinsViewCursor> Cursor() const = 0;
 
-    //! As we use CCoinsViews polymorphically, have a virtual destructor
-    virtual ~CCoinsView() = default;
-
-    //! Estimate database size (0 if not implemented)
-    virtual size_t EstimateSize() const { return 0; }
+    //! Estimate database size
+    virtual size_t EstimateSize() const = 0;
 };
 
+/** Noop coins view. */
+class CCoinsViewEmpty final : public CCoinsView
+{
+private:
+    CCoinsViewEmpty() = default;
+
+public:
+    static CCoinsViewEmpty& Get()
+    {
+        static CCoinsViewEmpty instance;
+        return instance;
+    }
+
+    CCoinsViewEmpty(const CCoinsViewEmpty&) = delete;
+    CCoinsViewEmpty& operator=(const CCoinsViewEmpty&) = delete;
+
+    std::optional<Coin> GetCoin(const COutPoint&) const override { return {}; }
+    bool HaveCoin(const COutPoint&) const override { return false; }
+    uint256 GetBestBlock() const override { return {}; }
+    std::vector<uint256> GetHeadBlocks() const override { return {}; }
+    bool BatchWrite(CoinsViewCacheCursor&, const uint256&) override { return false; }
+    std::unique_ptr<CCoinsViewCursor> Cursor() const override { return {}; }
+    size_t EstimateSize() const override { return 0; }
+};
 
 /** CCoinsView backed by another CCoinsView */
 class CCoinsViewBacked : public CCoinsView
 {
 protected:
-    CCoinsView *base;
+    CCoinsView* base;
 
 public:
-    CCoinsViewBacked(CCoinsView *viewIn);
-    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
-    bool HaveCoin(const COutPoint &outpoint) const override;
-    uint256 GetBestBlock() const override;
-    std::vector<uint256> GetHeadBlocks() const override;
-    void SetBackend(CCoinsView &viewIn);
-    bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashBlock) override;
-    std::unique_ptr<CCoinsViewCursor> Cursor() const override;
-    size_t EstimateSize() const override;
-};
+    explicit CCoinsViewBacked(CCoinsView* viewIn) : base{viewIn} {}
 
+    void SetBackend(CCoinsView& viewIn) { base = &viewIn; }
+
+    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override { return base->GetCoin(outpoint); }
+    bool HaveCoin(const COutPoint& outpoint) const override { return base->HaveCoin(outpoint); }
+    uint256 GetBestBlock() const override { return base->GetBestBlock(); }
+    std::vector<uint256> GetHeadBlocks() const override { return base->GetHeadBlocks(); }
+    bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) override { return base->BatchWrite(cursor, hashBlock); }
+    std::unique_ptr<CCoinsViewCursor> Cursor() const override { return base->Cursor(); }
+    size_t EstimateSize() const override { return base->EstimateSize(); }
+};
 
 /** CCoinsView that adds a memory cache for transactions to another CCoinsView */
 class CCoinsViewCache : public CCoinsViewBacked
@@ -378,6 +403,7 @@ protected:
 
 public:
     CCoinsViewCache(CCoinsView *baseIn, bool deterministic = false);
+    CCoinsViewCache() : CCoinsViewCache{&CCoinsViewEmpty::Get()} {}
 
     /**
      * By deleting the copy constructor, we prevent accidentally using it when one intends to create a cache on top of a base cache.
