@@ -222,7 +222,7 @@ CService GetLocalAddress(const CNode& peer)
     return GetLocal(peer).value_or(CService{CNetAddr(), GetListenPort()});
 }
 
-static int GetnScore(const CService& addr)
+int GetnScore(const CService& addr)
 {
     LOCK(g_maplocalhost_mutex);
     const auto it = mapLocalHost.find(addr);
@@ -320,7 +320,9 @@ bool SeenLocal(const CService& addr)
     LOCK(g_maplocalhost_mutex);
     const auto it = mapLocalHost.find(addr);
     if (it == mapLocalHost.end()) return false;
-    ++it->second.nScore;
+    if (it->second.nScore < std::numeric_limits<int>::max()) {
+        ++it->second.nScore;
+    }
     return true;
 }
 
