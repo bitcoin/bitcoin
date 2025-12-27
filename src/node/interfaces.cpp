@@ -963,6 +963,11 @@ public:
 
     std::unique_ptr<BlockTemplate> createNewBlock(const BlockCreateOptions& options) override
     {
+        // Enforce minimum block_reserved_weight to avoid silently clamping it
+        if (options.block_reserved_weight && options.block_reserved_weight < MINIMUM_BLOCK_RESERVED_WEIGHT) {
+            return {};
+        }
+
         // Ensure m_tip_block is set so consumers of BlockTemplate can rely on that.
         if (!waitTipChanged(uint256::ZERO, MillisecondsDouble::max())) return {};
 
