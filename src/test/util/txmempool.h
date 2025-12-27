@@ -8,6 +8,7 @@
 #include <policy/packages.h>
 #include <txmempool.h>
 #include <util/time.h>
+#include <validation.h>
 
 namespace node {
 struct NodeContext;
@@ -15,6 +16,15 @@ struct NodeContext;
 struct PackageMempoolAcceptResult;
 
 CTxMemPool::Options MemPoolOptionsForTest(const node::NodeContext& node);
+
+class DummyChainState final : public Chainstate
+{
+public:
+    void SetMempool(CTxMemPool* mempool)
+    {
+        m_mempool = mempool;
+    }
+};
 
 struct TestMemPoolEntryHelper {
     // Default values
