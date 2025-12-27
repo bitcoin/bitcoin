@@ -315,7 +315,7 @@ static std::vector<RPCResult> MempoolEntryDescription()
 void AppendChunkInfo(UniValue& all_chunks, FeePerWeight chunk_feerate, std::vector<const CTxMemPoolEntry *> chunk_txs)
 {
     UniValue chunk(UniValue::VOBJ);
-    chunk.pushKV("chunkfee", ValueFromAmount((int)chunk_feerate.fee));
+    chunk.pushKV("chunkfee", ValueFromAmount(chunk_feerate.fee));
     chunk.pushKV("chunkweight", chunk_feerate.size);
     UniValue chunk_txids(UniValue::VARR);
     for (const auto& chunk_tx : chunk_txs) {
@@ -383,7 +383,7 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
     fees.pushKV("modified", ValueFromAmount(e.GetModifiedFee()));
     fees.pushKV("ancestor", ValueFromAmount(ancestor_fees));
     fees.pushKV("descendant", ValueFromAmount(descendant_fees));
-    fees.pushKV("chunk", ValueFromAmount((int)feerate.fee));
+    fees.pushKV("chunk", ValueFromAmount(feerate.fee));
     info.pushKV("fees", std::move(fees));
 
     const CTransaction& tx = e.GetTx();
