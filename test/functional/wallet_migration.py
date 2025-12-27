@@ -5,6 +5,7 @@
 """Test Migrating a wallet from legacy to descriptor."""
 
 import os
+from pathlib import Path
 import random
 import shutil
 import struct
@@ -25,6 +26,7 @@ from test_framework.script import hash160
 from test_framework.script_util import key_to_p2pkh_script, key_to_p2pk_script, script_to_p2sh_script, script_to_p2wsh_script
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_raises_rpc_error,
     find_vout_for_address,
     sha256sum_file,
@@ -523,6 +525,14 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         assert_equal(bals, wallet.getbalances())
 
+    def clear_default_wallet(self, backup_file):
+        # Test cleanup: Clear unnamed default wallet for subsequent tests
+        (self.old_node.wallets_path / "wallet.dat").unlink()
+        (self.master_node.wallets_path / "wallet.dat").unlink(missing_ok=True)
+        shutil.rmtree(self.master_node.wallets_path / "default_wallet_watchonly", ignore_errors=True)
+        shutil.rmtree(self.master_node.wallets_path / "default_wallet_solvables", ignore_errors=True)
+        backup_file.unlink()
+
     def test_default_wallet(self):
         self.log.info("Test migration of the wallet named as the empty string")
         wallet = self.create_legacy_wallet("")
@@ -549,6 +559,36 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         self.master_node.setmocktime(0)
 
+        wallet.unloadwallet()
+        self.clear_default_wallet(backup_file=Path(res["backup_path"]))
+
+    def test_default_wallet_watch_only(self):
+        self.log.info("Test unnamed (default) watch-only wallet migration")
+        master_wallet = self.master_node.get_wallet_rpc(self.default_wallet_name)
+        wallet = self.create_legacy_wallet("", blank=True)
+        wallet.importaddress(master_wallet.getnewaddress(address_type="legacy"))
+
+        res, def_wallet = self.migrate_and_get_rpc("")
+        wallet = self.master_node.get_wallet_rpc("default_wallet_watchonly")
+
+        info = wallet.getwalletinfo()
+        assert_equal(info["descriptors"], True)
+        assert_equal(info["format"], "sqlite")
+        assert_equal(info["private_keys_enabled"], False)
+        assert_equal(info["walletname"], "default_wallet_watchonly")
+
+        # The default wallet will still exist and have newly generated descriptors
+        assert (self.master_node.wallets_path / "wallet.dat").exists()
+        def_wallet_info = def_wallet.getwalletinfo()
+        assert_equal(def_wallet_info["descriptors"], True)
+        assert_equal(def_wallet_info["format"], "sqlite")
+        assert_equal(def_wallet_info["private_keys_enabled"], True)
+        assert_equal(def_wallet_info["walletname"], "")
+        assert_greater_than(def_wallet_info["keypoolsize"], 0)
+
+        wallet.unloadwallet()
+        self.clear_default_wallet(backup_file=Path(res["backup_path"]))
+
     def test_default_wallet_failure(self):
         self.log.info("Test failure during unnamed (default) wallet migration")
         master_wallet = self.master_node.get_wallet_rpc(self.default_wallet_name)
@@ -557,7 +597,7 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         # Create wallet directory with the watch-only name and a wallet file.
         # Because the wallet dir exists, this will cause migration to fail.
-        watch_only_dir = self.master_node.wallets_path / "_watchonly"
+        watch_only_dir = self.master_node.wallets_path / "default_wallet_watchonly"
         os.mkdir(watch_only_dir)
         shutil.copyfile(self.old_node.wallets_path / "wallet.dat", watch_only_dir / "wallet.dat")
 
@@ -580,7 +620,7 @@ class WalletMigrationTest(BitcoinTestFramework):
             assert_equal(magic, BTREE_MAGIC)
 
         # Test cleanup: clear default wallet for next test
-        os.remove(self.old_node.wallets_path / "wallet.dat")
+        self.clear_default_wallet(backup_path)
 
     def test_direct_file(self):
         self.log.info("Test migration of a wallet that is not in a wallet directory")
@@ -1408,6 +1448,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_unloaded_by_path()
         self.test_default_wallet_failure()
         self.test_default_wallet()
+        self.test_default_wallet_watch_only()
         self.test_direct_file()
         self.test_addressbook()
         self.test_migrate_raw_p2sh()
