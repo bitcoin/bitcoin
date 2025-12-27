@@ -227,6 +227,10 @@ btck_Warning cast_btck_warning(kernel::Warning warning)
 }
 
 struct LoggingConnection {
+    // Reference to global log instance. This could be replaced with a
+    // per-connection instance (#30342) to give clients more granular control
+    // over logging.
+    BCLog::Logger& m_logger{LogInstance()};
     std::unique_ptr<std::list<std::function<void(const std::string&)>>::iterator> m_connection;
     void* m_user_data;
     std::function<void(void* user_data)> m_deleter;
@@ -235,18 +239,7 @@ struct LoggingConnection {
     {
         LOCK(cs_main);
 
-        auto connection{LogInstance().PushBackCallback([callback, user_data](const std::string& str) { callback(user_data, str.c_str(), str.length()); })};
-
-        // Only start logging if we just added the connection.
-        if (LogInstance().NumConnections() == 1 && !LogInstance().StartLogging()) {
-            LogError("Logger start failed.");
-            LogInstance().DeleteCallback(connection);
-            if (user_data && user_data_destroy_callback) {
-                user_data_destroy_callback(user_data);
-            }
-            throw std::runtime_error("Failed to start logging");
-        }
-
+        auto connection{m_logger.PushBackCallback([callback, user_data](const std::string& str) { callback(user_data, str.c_str(), str.length()); })};
         m_connection = std::make_unique<std::list<std::function<void(const std::string&)>>::iterator>(connection);
         m_user_data = user_data;
         m_deleter = user_data_destroy_callback;
@@ -258,15 +251,7 @@ struct LoggingConnection {
     {
         LOCK(cs_main);
         LogDebug(BCLog::KERNEL, "Logger disconnecting.");
-
-        // Switch back to buffering by calling DisconnectTestLogger if the
-        // connection that we are about to remove is the last one.
-        if (LogInstance().NumConnections() == 1) {
-            LogInstance().DisconnectTestLogger();
-        } else {
-            LogInstance().DeleteCallback(*m_connection);
-        }
-
+        m_logger.DeleteCallback(*m_connection);
         m_connection.reset();
         if (m_user_data && m_deleter) {
             m_deleter(m_user_data);
@@ -381,6 +366,7 @@ protected:
 
 struct ContextOptions {
     mutable Mutex m_mutex;
+    BCLog::Logger* m_logger GUARDED_BY(m_mutex) {nullptr};
     std::unique_ptr<const CChainParams> m_chainparams GUARDED_BY(m_mutex);
     std::shared_ptr<KernelNotifications> m_notifications GUARDED_BY(m_mutex);
     std::shared_ptr<KernelValidationInterface> m_validation_interface GUARDED_BY(m_mutex);
@@ -389,6 +375,8 @@ struct ContextOptions {
 class Context
 {
 public:
+    BCLog::Logger* m_logger;
+
     std::unique_ptr<kernel::Context> m_context;
 
     std::shared_ptr<KernelNotifications> m_notifications;
@@ -402,9 +390,20 @@ public:
     std::shared_ptr<KernelValidationInterface> m_validation_interface;
 
     Context(const ContextOptions* options, bool& sane)
-        : m_context{std::make_unique<kernel::Context>()},
+        : m_logger{options && options->m_logger ? options->m_logger : nullptr},
+          m_context{std::make_unique<kernel::Context>()},
           m_interrupt{std::make_unique<util::SignalInterrupt>()}
     {
+        if (!m_logger) {
+            // For efficiency, disable logging globally instead of writing log
+            // messages to temporary buffer if no log callbacks are connected.
+            if (BCLog::Logger& logger{LogInstance()}; logger.NumConnections() == 0 && logger.Enabled()) {
+                logger.DisableLogging();
+            }
+        } else if (!m_logger->StartLogging()) {
+            throw std::runtime_error("Failed to start logging");
+        }
+
         if (options) {
             LOCK(options->m_mutex);
             if (options->m_chainparams) {
@@ -737,39 +736,38 @@ void btck_txid_destroy(btck_Txid* txid)
     delete txid;
 }
 
-void btck_logging_set_options(const btck_LoggingOptions options)
+void btck_logging_set_options(btck_LoggingConnection* logger, const btck_LoggingOptions options)
 {
+    BCLog::Logger& log{btck_LoggingConnection::get(logger).m_logger};
     LOCK(cs_main);
-    LogInstance().m_log_timestamps = options.log_timestamps;
-    LogInstance().m_log_time_micros = options.log_time_micros;
-    LogInstance().m_log_threadnames = options.log_threadnames;
-    LogInstance().m_log_sourcelocations = options.log_sourcelocations;
-    LogInstance().m_always_print_category_level = options.always_print_category_levels;
+    log.m_log_timestamps = options.log_timestamps;
+    log.m_log_time_micros = options.log_time_micros;
+    log.m_log_threadnames = options.log_threadnames;
+    log.m_log_sourcelocations = options.log_sourcelocations;
+    log.m_always_print_category_level = options.always_print_category_levels;
 }
 
-void btck_logging_set_level_category(btck_LogCategory category, btck_LogLevel level)
+void btck_logging_set_level_category(btck_LoggingConnection* logger, btck_LogCategory category, btck_LogLevel level)
 {
+    BCLog::Logger& log{btck_LoggingConnection::get(logger).m_logger};
     LOCK(cs_main);
     if (category == btck_LogCategory_ALL) {
-        LogInstance().SetLogLevel(get_bclog_level(level));
+        log.SetLogLevel(get_bclog_level(level));
     }
 
-    LogInstance().AddCategoryLogLevel(get_bclog_flag(category), get_bclog_level(level));
+    log.AddCategoryLogLevel(get_bclog_flag(category), get_bclog_level(level));
 }
 
-void btck_logging_enable_category(btck_LogCategory category)
+void btck_logging_enable_category(btck_LoggingConnection* logger, btck_LogCategory category)
 {
-    LogInstance().EnableCategory(get_bclog_flag(category));
+    BCLog::Logger& log{btck_LoggingConnection::get(logger).m_logger};
+    log.EnableCategory(get_bclog_flag(category));
 }
 
-void btck_logging_disable_category(btck_LogCategory category)
+void btck_logging_disable_category(btck_LoggingConnection* logger, btck_LogCategory category)
 {
-    LogInstance().DisableCategory(get_bclog_flag(category));
-}
-
-void btck_logging_disable()
-{
-    LogInstance().DisableLogging();
+    BCLog::Logger& log{btck_LoggingConnection::get(logger).m_logger};
+    log.DisableCategory(get_bclog_flag(category));
 }
 
 btck_LoggingConnection* btck_logging_connection_create(btck_LogCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback)
@@ -821,6 +819,12 @@ void btck_chain_parameters_destroy(btck_ChainParameters* chain_parameters)
 btck_ContextOptions* btck_context_options_create()
 {
     return btck_ContextOptions::create();
+}
+
+void btck_context_options_set_logger(btck_ContextOptions* options, btck_LoggingConnection* logger)
+{
+    LOCK(btck_ContextOptions::get(options).m_mutex);
+    btck_ContextOptions::get(options).m_logger = &btck_LoggingConnection::get(logger).m_logger;
 }
 
 void btck_context_options_set_chainparams(btck_ContextOptions* options, const btck_ChainParameters* chain_parameters)
