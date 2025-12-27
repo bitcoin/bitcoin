@@ -45,7 +45,7 @@ static void add_coin(const CAmount& nValue, int nInput, SelectionResult& result)
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
     COutput output(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/1, /*input_bytes=*/-1, /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/false, /*fees=*/ 0);
     OutputGroup group;
-    group.Insert(std::make_shared<COutput>(output), /*ancestors=*/ 0, /*descendants=*/ 0);
+    group.Insert(std::make_shared<COutput>(output), /*ancestors=*/ 0, /*cluster_count=*/ 0);
     result.AddInput(group);
 }
 
@@ -57,7 +57,7 @@ static void add_coin(const CAmount& nValue, int nInput, SelectionResult& result,
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
     std::shared_ptr<COutput> coin = std::make_shared<COutput>(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/1, /*input_bytes=*/148, /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/false, fee);
     OutputGroup group;
-    group.Insert(coin, /*ancestors=*/ 0, /*descendants=*/ 0);
+    group.Insert(coin, /*ancestors=*/ 0, /*cluster_count=*/ 0);
     coin->long_term_fee = long_term_fee; // group.Insert() will modify long_term_fee, so we need to set it afterwards
     result.AddInput(group);
 }
@@ -131,7 +131,7 @@ inline std::vector<OutputGroup>& GroupCoins(const std::vector<COutput>& availabl
     for (auto& coin : available_coins) {
         static_groups.emplace_back();
         OutputGroup& group = static_groups.back();
-        group.Insert(std::make_shared<COutput>(coin), /*ancestors=*/ 0, /*descendants=*/ 0);
+        group.Insert(std::make_shared<COutput>(coin), /*ancestors=*/ 0, /*cluster_count=*/ 0);
         group.m_subtract_fee_outputs = subtract_fee_outputs;
     }
     return static_groups;
