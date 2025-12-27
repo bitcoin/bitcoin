@@ -698,6 +698,13 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert self.master_node.wallets_path.exists()
         # Check backup file exists. Because the wallet has no name, the backup is prefixed with 'default_wallet'
         assert (self.master_node.wallets_path / f"default_wallet_{mocked_time}.legacy.bak").exists()
+        # Verify the original unnamed wallet was restored
+        assert (self.master_node.wallets_path / "wallet.dat").exists()
+        # And verify it is still a BDB wallet
+        with open(self.master_node.wallets_path / "wallet.dat", "rb") as f:
+            data = f.read(16)
+            _, _, magic = struct.unpack("QII", data)
+            assert_equal(magic, BTREE_MAGIC)
 
         # Test cleanup: Clear unnamed default wallet from old node
         os.remove(self.old_node.wallets_path / "wallet.dat")

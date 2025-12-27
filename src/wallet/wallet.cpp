@@ -478,10 +478,23 @@ std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& b
             return nullptr;
         }
 
-        if (fs::exists(wallet_path) || !TryCreateDirectories(wallet_path)) {
-            error = Untranslated(strprintf("Failed to create database path '%s'. Database already exists.", fs::PathToString(wallet_path)));
-            status = DatabaseStatus::FAILED_ALREADY_EXISTS;
-            return nullptr;
+        bool is_unnamed_wallet = wallet_name.empty() && wallet_path == GetWalletDir();
+        if (is_unnamed_wallet) {
+            // The legacy unnamed wallet lives in the main wallet directory.
+            // Only check if the wallet file exists to avoid overwriting.
+            TryCreateDirectories(GetWalletDir()); // no-op if the dir already exist
+            if (fs::exists(wallet_file)) {
+                error = Untranslated(strprintf("Failed to create database path '%s'. Database already exists.", fs::PathToString(wallet_path)));
+                status = DatabaseStatus::FAILED_ALREADY_EXISTS;
+            }
+        } else {
+            // Every other wallet has its own subdirectory.
+            // Fail if the directory already exists to avoid overwriting.
+            if (fs::exists(wallet_path) || !TryCreateDirectories(wallet_path)) {
+                error = Untranslated(strprintf("Failed to create database path '%s'. Database already exists.", fs::PathToString(wallet_path)));
+                status = DatabaseStatus::FAILED_ALREADY_EXISTS;
+                return nullptr;
+            }
         }
 
         fs::copy_file(backup_file, wallet_file, fs::copy_options::none);
