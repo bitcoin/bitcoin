@@ -24,6 +24,11 @@ on:
         required: false
         type: string
         default: ""
+      runs-on:
+        description: "Runner label to use (e.g., ubuntu-24.04 or ubuntu-24.04-arm)"
+        required: false
+        default: ubuntu-24.04
+        type: string
     outputs:
       key:
         description: "Key needed for restoring artifacts bundle"
@@ -32,7 +37,7 @@ on:
 jobs:
   build-src:
     name: Build source
-    runs-on: ubuntu-24.04
+    runs-on: ${{ inputs.runs-on }}
     outputs:
       key:  ${{ steps.bundle.outputs.key }}
     container:

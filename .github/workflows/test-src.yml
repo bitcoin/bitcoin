@@ -15,6 +15,11 @@ on:
         description: "Path to built container at registry"
         required: true
         type: string
+      runs-on:
+        description: "Runner label to use (e.g., ubuntu-24.04 or ubuntu-24.04-arm)"
+        required: false
+        default: ubuntu-24.04
+        type: string
 
 env:
   INTEGRATION_TESTS_ARGS: "--extended --exclude feature_pruning,feature_dbcrash"
@@ -23,7 +28,7 @@ env:
 jobs:
   test-src:
     name: Test source
-    runs-on: ubuntu-24.04
+    runs-on: ${{ inputs.runs-on }}
     container:
       image: ${{ inputs.container-path }}
       options: --user root

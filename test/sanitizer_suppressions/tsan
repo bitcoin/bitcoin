@@ -41,6 +41,13 @@ race:libzmq
 # Race in headers only Boost Test
 race:std::__1::ios_base::flags
 
+# BerkeleyDB internal lock ordering - BDB uses its own locking protocol
+# with pthread rwlocks that TSAN cannot properly reason about
+deadlock:BerkeleyBatch
+deadlock:DatabaseBatch
+deadlock:__db_pthread_mutex
+
+
 # Intermittent issues
 # -------------------
 #

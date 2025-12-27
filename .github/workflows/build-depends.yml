@@ -11,6 +11,11 @@ on:
         description: "Path to built container at registry"
         required: true
         type: string
+      runs-on:
+        description: "Runner label to use (e.g., ubuntu-24.04 or ubuntu-24.04-arm)"
+        required: false
+        default: ubuntu-24.04
+        type: string
     outputs:
       key:
         description: "Key needed for restoring depends cache"
@@ -25,7 +30,7 @@ on:
 jobs:
   check-cache:
     name: Check cache
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
     outputs:
       cache-hit: ${{ steps.cache-check.outputs.cache-hit }}
       cache-key: ${{ steps.setup.outputs.cache-key }}
@@ -52,11 +57,12 @@ jobs:
           source ./ci/dash/matrix.sh
           echo "DEP_OPTS=${DEP_OPTS}" >> "${GITHUB_OUTPUT}"
           echo "HOST=${HOST}" >> "${GITHUB_OUTPUT}"
+          echo "RUNNER_ARCH=$(uname -m)" >> "${GITHUB_OUTPUT}"
           DEP_HASH="$(echo -n "${BUILD_TARGET}" "${DEP_OPTS}" "${HOST}" | sha256sum | head -c 64)"
           echo "DEP_HASH=${DEP_HASH}" >> "${GITHUB_OUTPUT}"
           DOCKERFILE_HASH="${{ hashFiles('contrib/containers/ci/ci.Dockerfile', 'contrib/containers/ci/ci-slim.Dockerfile') }}"
           PACKAGES_HASH="${{ hashFiles('depends/packages/*', 'depends/Makefile') }}"
-          CACHE_KEY="depends-${DOCKERFILE_HASH}-${{ inputs.build-target }}-${DEP_HASH}-${PACKAGES_HASH}"
+          CACHE_KEY="depends-${DOCKERFILE_HASH}-${{ inputs.runs-on }}-${{ inputs.build-target }}-${DEP_HASH}-${PACKAGES_HASH}"
           echo "cache-key=${CACHE_KEY}" >> "${GITHUB_OUTPUT}"
           echo "Cache key: ${CACHE_KEY}"
         shell: bash
@@ -73,7 +79,7 @@ jobs:
     name: Build depends
     needs: [check-cache]
     if: needs.check-cache.outputs.cache-hit != 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ${{ inputs.runs-on }}
     container:
       image: ${{ inputs.container-path }}
       options: --user root

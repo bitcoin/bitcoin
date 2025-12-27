@@ -86,7 +86,7 @@ jobs:
       container-path: ${{ needs.container.outputs.path }}
 
   depends-linux64_multiprocess:
-    name: x86_64-pc-linux-gnu_multiprocess
+    name: linux64_multiprocess
     uses: ./.github/workflows/build-depends.yml
     needs: [container, cache-sources]
     if: |
@@ -95,6 +95,7 @@ jobs:
     with:
       build-target: linux64_multiprocess
       container-path: ${{ needs.container.outputs.path }}
+      runs-on: ubuntu-24.04-arm
 
   depends-linux64_nowallet:
     name: x86_64-pc-linux-gnu_nowallet
@@ -176,6 +177,7 @@ jobs:
       depends-key: ${{ needs.depends-linux64_multiprocess.outputs.key }}
       depends-host: ${{ needs.depends-linux64_multiprocess.outputs.host }}
       depends-dep-opts: ${{ needs.depends-linux64_multiprocess.outputs.dep-opts }}
+      runs-on: ubuntu-24.04-arm
 
   src-linux64_nowallet:
     name: linux64_nowallet-build
@@ -211,6 +213,7 @@ jobs:
       depends-key: ${{ needs.depends-linux64_multiprocess.outputs.key }}
       depends-host: ${{ needs.depends-linux64_multiprocess.outputs.host }}
       depends-dep-opts: ${{ needs.depends-linux64_multiprocess.outputs.dep-opts }}
+      runs-on: ubuntu-24.04-arm
 
   src-linux64_ubsan:
     name: linux64_ubsan-build
@@ -263,6 +266,7 @@ jobs:
       bundle-key: ${{ needs.src-linux64_multiprocess.outputs.key }}
       build-target: linux64_multiprocess
       container-path: ${{ needs.container-slim.outputs.path }}
+      runs-on: ubuntu-24.04-arm
 
   test-linux64_nowallet:
     name: linux64_nowallet-test
@@ -290,6 +294,7 @@ jobs:
       bundle-key: ${{ needs.src-linux64_tsan.outputs.key }}
       build-target: linux64_tsan
       container-path: ${{ needs.container-slim.outputs.path }}
+      runs-on: ubuntu-24.04-arm
 
   test-linux64_ubsan:
     name: linux64_ubsan-test
