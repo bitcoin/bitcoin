@@ -136,6 +136,13 @@ static inline bool copy_file(const path& from, const path& to, copy_options opti
     return std::filesystem::copy_file(from, to, options);
 }
 
+// Disallow implicit std::string conversion for copy to avoid locale-dependent
+// encoding on Windows. This is currently only used in fuzzing.
+static inline void copy(const path& from, const path& to, copy_options options)
+{
+    std::filesystem::copy(from, to, options);
+}
+
 /**
  * Convert path object to a byte string. On POSIX, paths natively are byte
  * strings, so this is trivial. On Windows, paths natively are Unicode, so an
