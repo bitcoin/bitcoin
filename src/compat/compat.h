@@ -38,6 +38,18 @@
 typedef u_short sa_family_t;
 #endif
 
+// Brace style in the IN6ADDR_*_INIT macros differs across platforms.
+#if defined(__illumos__)
+#define COMPAT_IN6ADDR_ANY_INIT {{IN6ADDR_ANY_INIT}}
+#else
+#define COMPAT_IN6ADDR_ANY_INIT IN6ADDR_ANY_INIT
+#endif
+#if defined(__illumos__) || defined(_MSC_VER)
+#define COMPAT_IN6ADDR_LOOPBACK_INIT {{IN6ADDR_LOOPBACK_INIT}}
+#else
+#define COMPAT_IN6ADDR_LOOPBACK_INIT IN6ADDR_LOOPBACK_INIT
+#endif
+
 // We map Linux / BSD error functions and codes, to the equivalent
 // Windows definitions, and use the WSA* names throughout our code.
 // Note that glibc defines EWOULDBLOCK as EAGAIN (see errno.h).
