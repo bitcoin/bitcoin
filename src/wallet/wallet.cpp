@@ -4356,6 +4356,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
             for (const auto& path_to_remove : paths_to_remove) fs::remove(path_to_remove);
         }
 
+        LogInfo("Loading new wallets after migration...\n");
         // Migration successful, load all the migrated wallets.
         for (std::shared_ptr<CWallet>* wallet_ptr : {&local_wallet, &res.watchonly_wallet, &res.solvables_wallet}) {
             if (success && *wallet_ptr) {
@@ -4366,10 +4367,16 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
                 std::string wallet_name = wallet->GetName();
                 wallet.reset();
                 wallet = LoadWallet(context, wallet_name, /*load_on_start=*/std::nullopt, options, status, error, warnings);
-                success = (wallet != nullptr);
+                if (!wallet) {
+                    LogError("Failed to load wallet '%s' after migration. Rolling back migration to preserve consistency. "
+                             "Error cause: %s\n", wallet_name, error.original);
+                    success = false;
+                    break;
+                }
 
-                // When no wallet is set, set the main wallet.
-                if (success && !res.wallet) {
+                // Set the first successfully loaded wallet as the main one.
+                // The loop order is intentional and must always start with the local wallet.
+                if (!res.wallet) {
                     res.wallet_name = wallet->GetName();
                     res.wallet = std::move(wallet);
                 }
