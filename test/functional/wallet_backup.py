@@ -136,7 +136,7 @@ class WalletBackupTest(BitcoinTestFramework):
         backup_file = self.nodes[0].datadir_path / 'wallet.bak'
         wallet_name = "res0"
         wallet_file = node.wallets_path / wallet_name
-        error_message = "Failed to create database path '{}'. Database already exists.".format(wallet_file)
+        error_message = "Failed to restore wallet. Database file exists in '{}'.".format(wallet_file / "wallet.dat")
         assert_raises_rpc_error(-36, error_message, node.restorewallet, wallet_name, backup_file)
         assert wallet_file.exists()
 
