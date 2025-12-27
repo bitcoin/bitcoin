@@ -491,6 +491,16 @@ try_append_cxx_flags("-fno-extended-identifiers" TARGET core_interface SKIP_LINK
 try_append_cxx_flags("-fdebug-prefix-map=A=B" TARGET core_interface SKIP_LINK
   IF_CHECK_PASSED "-fdebug-prefix-map=${PROJECT_SOURCE_DIR}/src=."
 )
+
+
+# Adjust source paths for debugging:
+# This ensures that the debugger (gdb/lldb) can find the original source files
+# even when the build directory is separate from the source directory.
+try_append_cxx_flags("-fdebug-prefix-map=A=B" TARGET core_interface SKIP_LINK
+  IF_CHECK_PASSED
+  "-fdebug-prefix-map=${PROJECT_BINARY_DIR}/src=${PROJECT_SOURCE_DIR}/src"
+)
+
 try_append_cxx_flags("-fmacro-prefix-map=A=B" TARGET core_interface SKIP_LINK
   IF_CHECK_PASSED "-fmacro-prefix-map=${PROJECT_SOURCE_DIR}/src=."
 )
