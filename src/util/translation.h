@@ -80,6 +80,9 @@ consteval auto _(util::TranslatedLiteral str) { return str; }
 
 /** Mark a bilingual_str as untranslated */
 inline bilingual_str Untranslated(std::string original) { return {original, original}; }
+template <std::size_t N>
+inline bilingual_str Untranslated(const char (&original)[N]) { return Untranslated(std::string{original}); }
+
 
 // Provide an overload of tinyformat::format for BilingualFmt format strings and bilingual_str or TranslatedLiteral args.
 namespace tinyformat {
