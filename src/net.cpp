@@ -931,7 +931,7 @@ const std::array<std::string, 33> V2_BITCOIN_IDS = {
  * by a protocol upgrade, the old message is no longer supported by the client
  * and a new slot wasn't already allotted for the message.
  */
-const std::array<std::string, 40> V2_DASH_IDS = {
+const std::array<std::string, 41> V2_DASH_IDS = {
     NetMsgType::SPORK,
     NetMsgType::GETSPORKS,
     NetMsgType::SENDDSQUEUE,
@@ -971,8 +971,38 @@ const std::array<std::string, 40> V2_DASH_IDS = {
     NetMsgType::SENDHEADERS2,
     NetMsgType::HEADERS2,
     NetMsgType::GETQUORUMROTATIONINFO,
-    NetMsgType::QUORUMROTATIONINFO
+    NetMsgType::QUORUMROTATIONINFO,
+    NetMsgType::PLATFORMBAN
 };
+
+ /** Explicit version requirements for Dash v2 short IDs added after baseline.
+ *
+ * Maps message type to the minimum protocol version required to use its short ID.
+ * Only contains messages that were added AFTER the initial v2 implementation.
+ * Messages not in this map are baseline messages available at BIP324_DASH_BASELINE_VERSION.
+ *
+ * IMPORTANT:
+ * - Never remove entries (historical compatibility)
+ * - Add new messages as they are introduced
+ */
+static const std::map<std::string, int> V2_NEW_SHORT_ID_VERSIONS = {
+    {NetMsgType::PLATFORMBAN, PLATFORMBAN_V2_SHORT_ID_VERSION},
+};
+
+/** Get the minimum protocol version required for a message's short ID.
+ *
+ * @param message_type The message type to check
+ * @return Minimum protocol version required
+ */
+int GetMessageMinVersion(const std::string& message_type)
+{
+    auto it = V2_NEW_SHORT_ID_VERSIONS.find(message_type);
+    if (it != V2_NEW_SHORT_ID_VERSIONS.end()) {
+        return it->second;
+    }
+    // Not in map means it's a baseline message
+    return BIP324_DASH_BASELINE_VERSION;
+}
 
 /** A complete set of short IDs
  *
@@ -1551,11 +1581,14 @@ bool V2Transport::SetMessageToSend(CSerializedNetMsg& msg) noexcept
     // Construct contents (encoding message type + payload).
     std::vector<uint8_t> contents;
     auto short_message_id = V2_MESSAGE_MAP(msg.m_type);
-    if (short_message_id) {
+
+    if (short_message_id.has_value() && m_peer_version >= GetMessageMinVersion(msg.m_type)) {
+        // Use short encoding (1 byte)
         contents.resize(1 + msg.data.size());
         contents[0] = *short_message_id;
         std::copy(msg.data.begin(), msg.data.end(), contents.begin() + 1);
     } else {
+        // Use long encoding (13 bytes for message type)
         // Initialize with zeroes, and then write the message type string starting at offset 1.
         // This means contents[0] and the unused positions in contents[1..13] remain 0x00.
         contents.resize(1 + CMessageHeader::COMMAND_SIZE + msg.data.size(), 0);
@@ -1569,6 +1602,13 @@ bool V2Transport::SetMessageToSend(CSerializedNetMsg& msg) noexcept
     // Release memory
     ClearShrink(msg.data);
     return true;
+}
+
+void V2Transport::SetPeerVersion(int version) noexcept
+{
+    AssertLockNotHeld(m_send_mutex);
+    LOCK(m_send_mutex);
+    m_peer_version = version;
 }
 
 Transport::BytesToSend V2Transport::GetBytesToSend(bool have_next_message) const noexcept
