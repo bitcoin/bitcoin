@@ -286,6 +286,13 @@ target_link_libraries(bitcoin_node
     $<TARGET_NAME_IF_EXISTS:libevent::pthreads>
     $<TARGET_NAME_IF_EXISTS:USDT::headers>
 )
+if(WITH_EMBEDDED_ASMAP)
+  target_compile_definitions(bitcoin_node PRIVATE ENABLE_EMBEDDED_ASMAP=1)
+  include(TargetDataSources)
+  target_raw_data_sources(bitcoin_node NAMESPACE node::data
+    node/data/ip_asn.dat
+  )
+endif()
 
 # Bitcoin wrapper executable that can call other executables.
 if(BUILD_BITCOIN_BIN)
