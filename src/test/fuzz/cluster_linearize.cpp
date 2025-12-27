@@ -58,8 +58,6 @@
  *   - clusterlin_postlinearize
  *   - clusterlin_postlinearize_tree
  *   - clusterlin_postlinearize_moved_leaf
- * - FixLinearization tests:
- *   - clusterlin_fix_linearization
  * - MakeConnected tests (a test-only function):
  *   - clusterlin_make_connected
  */
@@ -998,35 +996,40 @@ FUZZ_TARGET(clusterlin_linearize)
     DepGraph<TestBitSet> depgraph;
     uint64_t rng_seed{0};
     uint64_t iter_count{0};
-    uint8_t make_connected{1};
+    uint8_t flags{7};
     try {
-        reader >> VARINT(iter_count) >> Using<DepGraphFormatter>(depgraph) >> rng_seed >> make_connected;
+        reader >> VARINT(iter_count) >> Using<DepGraphFormatter>(depgraph) >> rng_seed >> flags;
     } catch (const std::ios_base::failure&) {}
+    bool make_connected = flags & 1;
+    // The following 3 booleans have 4 combinations:
+    // - (flags & 6) == 0: do not provide input linearization.
+    // - (flags & 6) == 2: provide potentially non-topological input.
+    // - (flags & 6) == 4: provide topological input linearization, but do not claim it is
+    //                     topological.
+    // - (flags & 6) == 6: provide topological input linearization, and claim it is topological.
+    bool provide_input = flags & 6;
+    bool provide_topological_input = flags & 4;
+    bool claim_topological_input = (flags & 6) == 6;
     // The most complicated graphs are connected ones (other ones just split up). Optionally force
     // the graph to be connected.
     if (make_connected) MakeConnected(depgraph);
 
     // Optionally construct an old linearization for it.
     std::vector<DepGraphIndex> old_linearization;
-    {
-        uint8_t have_old_linearization{0};
-        try {
-            reader >> have_old_linearization;
-        } catch(const std::ios_base::failure&) {}
-        if (have_old_linearization & 1) {
-            old_linearization = ReadLinearization(depgraph, reader);
-            SanityCheck(depgraph, old_linearization);
-        }
+    if (provide_input) {
+        old_linearization = ReadLinearization(depgraph, reader, /*topological=*/provide_topological_input);
+        if (provide_topological_input) SanityCheck(depgraph, old_linearization);
     }
 
     // Invoke Linearize().
     iter_count &= 0x7ffff;
-    auto [linearization, optimal, cost] = Linearize(depgraph, iter_count, rng_seed, old_linearization);
+    auto [linearization, optimal, cost] = Linearize(depgraph, iter_count, rng_seed, old_linearization, /*is_topological=*/claim_topological_input);
     SanityCheck(depgraph, linearization);
     auto chunking = ChunkLinearization(depgraph, linearization);
 
-    // Linearization must always be as good as the old one, if provided.
-    if (!old_linearization.empty()) {
+    // Linearization must always be as good as the old one, if provided and topological (even when
+    // not claimed to be topological).
+    if (provide_topological_input) {
         auto old_chunking = ChunkLinearization(depgraph, old_linearization);
         auto cmp = CompareChunks(chunking, old_chunking);
         assert(cmp >= 0);
@@ -1196,47 +1199,4 @@ FUZZ_TARGET(clusterlin_postlinearize_moved_leaf)
     auto new_chunking = ChunkLinearization(depgraph, lin_moved);
     auto cmp = CompareChunks(new_chunking, old_chunking);
     assert(cmp >= 0);
-}
-
-FUZZ_TARGET(clusterlin_fix_linearization)
-{
-    // Verify expected properties of FixLinearization() on arbitrary linearizations.
-
-    // Retrieve a depgraph from the fuzz input.
-    SpanReader reader(buffer);
-    DepGraph<TestBitSet> depgraph;
-    try {
-        reader >> Using<DepGraphFormatter>(depgraph);
-    } catch (const std::ios_base::failure&) {}
-
-    // Construct an arbitrary linearization (not necessarily topological for depgraph).
-    std::vector<DepGraphIndex> linearization = ReadLinearization(depgraph, reader, /*topological=*/false);
-    assert(linearization.size() == depgraph.TxCount());
-
-    // Determine what prefix of linearization is topological, i.e., the position of the first entry
-    // in linearization which corresponds to a transaction that is not preceded by all its
-    // ancestors.
-    size_t topo_prefix = 0;
-    auto todo = depgraph.Positions();
-    while (topo_prefix < linearization.size()) {
-        DepGraphIndex idx = linearization[topo_prefix];
-        todo.Reset(idx);
-        if (todo.Overlaps(depgraph.Ancestors(idx))) break;
-        ++topo_prefix;
-    }
-
-    // Then make a fixed copy of linearization.
-    auto linearization_fixed = linearization;
-    FixLinearization(depgraph, linearization_fixed);
-    // Sanity check it (which includes testing whether it is topological).
-    SanityCheck(depgraph, linearization_fixed);
-
-    // FixLinearization does not modify the topological prefix of linearization.
-    assert(std::equal(linearization.begin(), linearization.begin() + topo_prefix,
-                      linearization_fixed.begin()));
-    // This also means that if linearization was entirely topological, FixLinearization cannot have
-    // modified it. This is implied by the assertion above already, but repeat it explicitly.
-    if (topo_prefix == linearization.size()) {
-        assert(linearization == linearization_fixed);
-    }
 }

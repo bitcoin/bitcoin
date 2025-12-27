@@ -1338,8 +1338,9 @@ public:
  * @param[in] rng_seed            A random number seed to control search order. This prevents peers
  *                                from predicting exactly which clusters would be hard for us to
  *                                linearize.
- * @param[in] old_linearization   An existing linearization for the cluster (which must be
- *                                topologically valid), or empty.
+ * @param[in] old_linearization   An existing linearization for the cluster, or empty.
+ * @param[in] is_topological      (Only relevant if old_linearization is not empty) Whether
+ *                                old_linearization is topologically valid.
  * @return                        A tuple of:
  *                                - The resulting linearization. It is guaranteed to be at least as
  *                                  good (in the feerate diagram sense) as old_linearization.
@@ -1348,12 +1349,13 @@ public:
  *                                - How many optimization steps were actually performed.
  */
 template<typename SetType>
-std::tuple<std::vector<DepGraphIndex>, bool, uint64_t> Linearize(const DepGraph<SetType>& depgraph, uint64_t max_iterations, uint64_t rng_seed, std::span<const DepGraphIndex> old_linearization = {}) noexcept
+std::tuple<std::vector<DepGraphIndex>, bool, uint64_t> Linearize(const DepGraph<SetType>& depgraph, uint64_t max_iterations, uint64_t rng_seed, std::span<const DepGraphIndex> old_linearization = {}, bool is_topological = true) noexcept
 {
     /** Initialize a spanning forest data structure for this cluster. */
     SpanningForestState forest(depgraph, rng_seed);
     if (!old_linearization.empty()) {
         forest.LoadLinearization(old_linearization);
+        if (!is_topological) forest.MakeTopological();
     } else {
         forest.MakeTopological();
     }
@@ -1570,38 +1572,6 @@ void PostLinearize(const DepGraph<SetType>& depgraph, std::span<DepGraphIndex> l
             cur_group = entries[cur_group].prev_group;
         }
         Assume(done == linearization.size());
-    }
-}
-
-/** Make linearization topological, retaining its ordering where possible. */
-template<typename SetType>
-void FixLinearization(const DepGraph<SetType>& depgraph, std::span<DepGraphIndex> linearization) noexcept
-{
-    // This algorithm can be summarized as moving every element in the linearization backwards
-    // until it is placed after all its ancestors.
-    SetType done;
-    const auto len = linearization.size();
-    // Iterate over the elements of linearization from back to front (i is distance from back).
-    for (DepGraphIndex i = 0; i < len; ++i) {
-        /** The element at that position. */
-        DepGraphIndex elem = linearization[len - 1 - i];
-        /** j represents how far from the back of the linearization elem should be placed. */
-        DepGraphIndex j = i;
-        // Figure out which elements need to be moved before elem.
-        SetType place_before = done & depgraph.Ancestors(elem);
-        // Find which position to place elem in (updating j), continuously moving the elements
-        // in between forward.
-        while (place_before.Any()) {
-            // j cannot be 0 here; if it was, then there was necessarily nothing earlier which
-            // elem needs to be placed before anymore, and place_before would be empty.
-            Assume(j > 0);
-            auto to_swap = linearization[len - 1 - (j - 1)];
-            place_before.Reset(to_swap);
-            linearization[len - 1 - (j--)] = to_swap;
-        }
-        // Put elem in its final position and mark it as done.
-        linearization[len - 1 - j] = elem;
-        done.Set(elem);
     }
 }
 
