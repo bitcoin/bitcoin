@@ -115,10 +115,9 @@ class AbandonConflictTest(BitcoinTestFramework):
         # inputs are still spent, but change not received
         newbalance = alice.getbalance()
         assert_equal(newbalance, balance - signed3_change)
-        # Unconfirmed received funds that are not in mempool, also shouldn't show
-        # up in unconfirmed balance
+        # Unconfirmed received funds that are not in mempool
         balances = alice.getbalances()['mine']
-        assert_equal(balances['untrusted_pending'] + balances['trusted'], newbalance)
+        assert_equal(balances['untrusted_pending'] + balances['trusted'] + balances['nonmempool'], newbalance)
         # Also shouldn't show up in listunspent
         assert not txABC2 in [utxo["txid"] for utxo in alice.listunspent(0)]
         balance = newbalance
