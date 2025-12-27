@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Migrating a wallet from legacy to descriptor."""
+from pathlib import Path
 import os.path
 import random
 import shutil
@@ -659,6 +660,14 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         assert_equal(bals, wallet.getbalances())
 
+    def clear_default_wallet(self, backup_file):
+        # Test cleanup: Clear unnamed default wallet for subsequent tests
+        (self.old_node.wallets_path / "wallet.dat").unlink()
+        (self.master_node.wallets_path / "wallet.dat").unlink(missing_ok=True)
+        shutil.rmtree(self.master_node.wallets_path / "default_wallet_watchonly", ignore_errors=True)
+        shutil.rmtree(self.master_node.wallets_path / "default_wallet_solvables", ignore_errors=True)
+        backup_file.unlink()
+
     def test_default_wallet(self):
         self.log.info("Test migration of the wallet named as the empty string")
         wallet = self.create_legacy_wallet("")
@@ -676,6 +685,26 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert os.path.basename(res["backup_path"]).startswith("default_wallet")
 
         wallet.unloadwallet()
+        self.clear_default_wallet(backup_file=Path(res["backup_path"]))
+
+    def test_default_wallet_watch_only(self):
+        self.log.info("Test unnamed (default) watch-only wallet migration")
+        master_wallet = self.master_node.get_wallet_rpc(self.default_wallet_name)
+        wallet = self.create_legacy_wallet("", blank=True)
+        wallet.importaddress(master_wallet.getnewaddress(address_type="legacy"))
+
+        res, wallet = self.migrate_and_get_rpc("")
+
+        info = wallet.getwalletinfo()
+        assert_equal(info["descriptors"], True)
+        assert_equal(info["format"], "sqlite")
+        assert_equal(info["private_keys_enabled"], False)
+        assert_equal(info["walletname"], "default_wallet_watchonly")
+        # Check the default wallet is not available anymore
+        assert not (self.master_node.wallets_path / "wallet.dat").exists()
+
+        wallet.unloadwallet()
+        self.clear_default_wallet(backup_file=Path(res["backup_path"]))
 
     def test_default_wallet_failure(self):
         self.log.info("Test failure during unnamed (default) wallet migration")
@@ -685,7 +714,7 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         # Create wallet directory with the watch-only name and a wallet file.
         # Because the wallet dir exists, this will cause migration to fail.
-        watch_only_dir = self.master_node.wallets_path / "_watchonly"
+        watch_only_dir = self.master_node.wallets_path / "default_wallet_watchonly"
         os.mkdir(watch_only_dir)
         shutil.copyfile(self.old_node.wallets_path / "wallet.dat", watch_only_dir / "wallet.dat")
 
@@ -705,7 +734,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.assert_is_bdb("")
 
         # Test cleanup: clear default wallet for next test
-        os.remove(self.old_node.wallets_path / "wallet.dat")
+        self.clear_default_wallet(backup_path)
 
     def test_direct_file(self):
         self.log.info("Test migration of a wallet that is not in a wallet directory")
@@ -1594,6 +1623,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_wallet_with_path("path/that/ends/in/..")
         self.test_default_wallet_failure()
         self.test_default_wallet()
+        self.test_default_wallet_watch_only()
         self.test_direct_file()
         self.test_addressbook()
         self.test_migrate_raw_p2sh()
