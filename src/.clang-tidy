@@ -40,3 +40,5 @@ CheckOptions:
    value: false
  - key: bugprone-unused-return-value.CheckedReturnTypes
    value: '^::std::error_code$;^::std::error_condition$;^::std::errc$;^::std::expected$;^::util::Result$;^::util::Expected$'
+ - key: bugprone-unused-return-value.AllowCastToVoid
+   value: true  # Can be removed with C++26 once the _ placeholder exists.
