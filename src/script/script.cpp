@@ -257,7 +257,7 @@ bool CScript::IsWitnessProgram(int& version, std::vector<unsigned char>& program
     }
     if ((size_t)((*this)[1] + 2) == this->size()) {
         version = DecodeOP_N((opcodetype)(*this)[0]);
-        program = std::vector<unsigned char>(this->begin() + 2, this->end());
+        program.assign(this->begin() + 2, this->end());
         return true;
     }
     return false;
