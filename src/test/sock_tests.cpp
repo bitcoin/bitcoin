@@ -81,61 +81,76 @@ BOOST_AUTO_TEST_CASE(move_assignment)
     BOOST_CHECK(SocketIsClosed(s2));
 }
 
-#ifndef WIN32 // Windows does not have socketpair(2).
+struct tcp_socket_pair {
+    std::unique_ptr<Sock> sender{};
+    std::unique_ptr<Sock> receiver{};
 
-static void CreateSocketPair(int s[2])
-{
-    BOOST_REQUIRE_EQUAL(socketpair(AF_UNIX, SOCK_STREAM, 0, s), 0);
-}
+    static tcp_socket_pair create(bool connect = true)
+    {
+        tcp_socket_pair socks{};
+        socks.sender = std::make_unique<Sock>(CreateSocket());
+        socks.receiver = std::make_unique<Sock>(CreateSocket());
+        if (connect) socks.connect();
 
-static void SendAndRecvMessage(const Sock& sender, const Sock& receiver)
-{
-    const char* msg = "abcd";
-    constexpr ssize_t msg_len = 4;
-    char recv_buf[10];
+        return socks;
+    }
 
-    BOOST_CHECK_EQUAL(sender.Send(msg, msg_len, 0), msg_len);
-    BOOST_CHECK_EQUAL(receiver.Recv(recv_buf, sizeof(recv_buf), 0), msg_len);
-    BOOST_CHECK_EQUAL(strncmp(msg, recv_buf, msg_len), 0);
-}
+    void connect()
+    {
+        sockaddr_in addr;
+        addr.sin_family = AF_INET;
+        addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+        addr.sin_port = 0;
+
+        BOOST_REQUIRE_EQUAL(receiver->Bind(reinterpret_cast<sockaddr*>(&addr), sizeof(addr)), 0);
+        BOOST_REQUIRE_EQUAL(receiver->Listen(1), 0);
+
+        // Get the address of the listener.
+        sockaddr_in bound{};
+        socklen_t blen = sizeof(bound);
+        BOOST_REQUIRE_EQUAL(receiver->GetSockName(reinterpret_cast<sockaddr*>(&bound), &blen), 0);
+        BOOST_REQUIRE_EQUAL(blen, sizeof(bound));
+
+        // Sender attempts to initiate connection to listener.
+        BOOST_REQUIRE_EQUAL(sender->Connect(reinterpret_cast<sockaddr*>(&bound), sizeof(bound)), 0);
+
+        // Listener accepts connection.
+        std::unique_ptr<Sock> accepted = receiver->Accept(nullptr, nullptr);
+        // The call to accept(2) succeeded.
+        BOOST_REQUIRE(accepted != nullptr);
+
+        receiver = std::move(accepted);
+    }
+
+    void send_and_receive()
+    {
+        const char* msg = "abcd";
+        constexpr ssize_t msg_len = 4;
+        char recv_buf[10];
+
+        BOOST_CHECK_EQUAL(sender->Send(msg, msg_len, 0), msg_len);
+        BOOST_CHECK_EQUAL(receiver->Recv(recv_buf, sizeof(recv_buf), 0), msg_len);
+        BOOST_CHECK_EQUAL(strncmp(msg, recv_buf, msg_len), 0);
+    }
+};
 
 BOOST_AUTO_TEST_CASE(send_and_receive)
 {
-    int s[2];
-    CreateSocketPair(s);
+    tcp_socket_pair socks = tcp_socket_pair::create(/*connect=*/true);
+    socks.send_and_receive();
 
-    Sock* sock0 = new Sock(s[0]);
-    Sock* sock1 = new Sock(s[1]);
-
-    SendAndRecvMessage(*sock0, *sock1);
-
-    Sock* sock0moved = new Sock(std::move(*sock0));
-    Sock* sock1moved = new Sock(INVALID_SOCKET);
-    *sock1moved = std::move(*sock1);
-
-    delete sock0;
-    delete sock1;
-
-    SendAndRecvMessage(*sock1moved, *sock0moved);
-
-    delete sock0moved;
-    delete sock1moved;
-
-    BOOST_CHECK(SocketIsClosed(s[0]));
-    BOOST_CHECK(SocketIsClosed(s[1]));
+    // Sockets are still connected after being moved.
+    tcp_socket_pair socks_moved = std::move(socks);
+    socks_moved.send_and_receive();
 }
 
 BOOST_AUTO_TEST_CASE(wait)
 {
-    int s[2];
-    CreateSocketPair(s);
+    tcp_socket_pair socks = tcp_socket_pair::create(/*connect=*/true);
 
-    Sock sock0(s[0]);
-    Sock sock1(s[1]);
+    std::thread waiter([&socks]() { (void)socks.receiver->Wait(24h, Sock::RECV); });
 
-    std::thread waiter([&sock0]() { (void)sock0.Wait(24h, Sock::RECV); });
-
-    BOOST_REQUIRE_EQUAL(sock1.Send("a", 1, 0), 1);
+    BOOST_REQUIRE_EQUAL(socks.sender->Send("a", 1, 0), 1);
 
     waiter.join();
 }
@@ -144,31 +159,26 @@ BOOST_AUTO_TEST_CASE(recv_until_terminator_limit)
 {
     constexpr auto timeout = 1min; // High enough so that it is never hit.
     CThreadInterrupt interrupt;
-    int s[2];
-    CreateSocketPair(s);
 
-    Sock sock_send(s[0]);
-    Sock sock_recv(s[1]);
+    tcp_socket_pair socks = tcp_socket_pair::create(/*connect=*/true);
 
-    std::thread receiver([&sock_recv, &timeout, &interrupt]() {
+    std::thread receiver([&socks, &timeout, &interrupt]() {
         constexpr size_t max_data{10};
         bool threw_as_expected{false};
         // BOOST_CHECK_EXCEPTION() writes to some variables shared with the main thread which
         // creates a data race. So mimic it manually.
         try {
-            (void)sock_recv.RecvUntilTerminator('\n', timeout, interrupt, max_data);
+            (void)socks.receiver->RecvUntilTerminator('\n', timeout, interrupt, max_data);
         } catch (const std::runtime_error& e) {
             threw_as_expected = HasReason("too many bytes without a terminator")(e);
         }
         assert(threw_as_expected);
     });
 
-    BOOST_REQUIRE_NO_THROW(sock_send.SendComplete("1234567", timeout, interrupt));
-    BOOST_REQUIRE_NO_THROW(sock_send.SendComplete("89a\n", timeout, interrupt));
+    BOOST_REQUIRE_NO_THROW(socks.sender->SendComplete("1234567", timeout, interrupt));
+    BOOST_REQUIRE_NO_THROW(socks.sender->SendComplete("89a\n", timeout, interrupt));
 
     receiver.join();
 }
-
-#endif /* WIN32 */
 
 BOOST_AUTO_TEST_SUITE_END()
