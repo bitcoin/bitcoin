@@ -74,10 +74,10 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
                 }
             },
             [&] {
-                (void)coins_view_cache.Flush(/*will_reuse_cache=*/fuzzed_data_provider.ConsumeBool());
+                coins_view_cache.Flush(/*will_reuse_cache=*/fuzzed_data_provider.ConsumeBool());
             },
             [&] {
-                (void)coins_view_cache.Sync();
+                coins_view_cache.Sync();
             },
             [&] {
                 uint256 best_block{ConsumeUInt256(fuzzed_data_provider)};
