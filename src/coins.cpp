@@ -43,6 +43,7 @@ CCoinsViewCache::CCoinsViewCache(CCoinsView* baseIn, bool deterministic) :
     CCoinsViewBacked(baseIn), m_deterministic(deterministic),
     cacheCoins(0, SaltedOutpointHasher(/*deterministic=*/deterministic), CCoinsMap::key_equal{}, &m_cache_coins_memory_resource)
 {
+    (void)base->GetBestBlock(); // Sanity check validity of base
     m_sentinel.second.SelfRef(m_sentinel);
 }
 
