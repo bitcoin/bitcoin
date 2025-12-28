@@ -78,6 +78,7 @@ AppearanceWidget::~AppearanceWidget()
         if (prevWeightBold != GUIUtil::g_font_registry.GetWeightBold()) {
             GUIUtil::g_font_registry.SetWeightBold(prevWeightBold);
         }
+        GUIUtil::setApplicationFont();
         GUIUtil::updateFonts();
     }
     delete ui;
@@ -175,6 +176,7 @@ void AppearanceWidget::updateFontWeightNormal(int nValue, bool fForce)
     const QSignalBlocker blocker(ui->fontWeightNormalSlider);
     ui->fontWeightNormalSlider->setValue(nSliderValue);
     GUIUtil::g_font_registry.SetWeightNormal(GUIUtil::g_font_registry.IdxToWeight(ui->fontWeightNormalSlider->value()));
+    GUIUtil::setApplicationFont();
     GUIUtil::updateFonts();
 }
 
@@ -187,6 +189,7 @@ void AppearanceWidget::updateFontWeightBold(int nValue, bool fForce)
     const QSignalBlocker blocker(ui->fontWeightBoldSlider);
     ui->fontWeightBoldSlider->setValue(nSliderValue);
     GUIUtil::g_font_registry.SetWeightBold(GUIUtil::g_font_registry.IdxToWeight(ui->fontWeightBoldSlider->value()));
+    GUIUtil::setApplicationFont();
     GUIUtil::updateFonts();
 }
 

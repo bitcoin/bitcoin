@@ -167,7 +167,7 @@ void OptionsModel::Init(bool resetSettings)
     }
 
     // Apply font changes
-    GUIUtil::updateFonts();
+    GUIUtil::setApplicationFont();
 
 #ifdef ENABLE_WALLET
     if (!settings.contains("fCoinControlFeatures"))
