@@ -21,6 +21,7 @@
 #include <llmq/context.h>
 #include <llmq/debug.h>
 #include <llmq/dkgsession.h>
+#include <llmq/observer/context.h>
 #include <llmq/options.h>
 #include <llmq/quorums.h>
 #include <llmq/signhash.h>
@@ -296,7 +297,7 @@ static RPCHelpMan quorum_info()
 
 static RPCResult quorum_dkgstatus_help()
 {
-    auto ret = llmq::CDKGDebugStatus::GetJsonHelp(/*key=*/"", /*optional=*/false);
+    auto ret = llmq::CDKGDebugStatus::GetJsonHelp(/*key=*/"", /*optional=*/false, /*inner_optional=*/true);
     auto mod_inner = ret.m_inner;
     mod_inner.push_back({RPCResult::Type::ARR, "quorumConnections", "Array of objects containing quorum connection information", {
         {RPCResult::Type::OBJ, "", "", {
@@ -332,12 +333,6 @@ static RPCHelpMan quorum_dkgstatus()
         RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
-    const ChainstateManager& chainman = EnsureChainman(node);
-    const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
-    const CConnman& connman = EnsureConnman(node);
-    CHECK_NONFATAL(node.sporkman);
-
     int detailLevel = 0;
     if (!request.params[0].isNull()) {
         detailLevel = ParseInt32V(request.params[0], "detail_level");
@@ -346,17 +341,25 @@ static RPCHelpMan quorum_dkgstatus()
         }
     }
 
-    llmq::CDKGDebugStatus status;
-    llmq_ctx.dkg_debugman->GetLocalDebugStatus(status);
-
-    auto ret = status.ToJson(*CHECK_NONFATAL(node.dmnman), *llmq_ctx.qsnapman, chainman, detailLevel);
-
-    CBlockIndex* pindexTip = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
-    int tipHeight = pindexTip->nHeight;
-    const uint256 proTxHash = node.mn_activeman ? node.mn_activeman->GetProTxHash() : uint256();
-
+    UniValue ret(UniValue::VOBJ);
     UniValue minableCommitments(UniValue::VARR);
     UniValue quorumArrConnections(UniValue::VARR);
+
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const ChainstateManager& chainman = EnsureChainman(node);
+    const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+    if (const auto* debugman = node.active_ctx ? node.active_ctx->dkgdbgman.get()
+                                               : node.observer_ctx ? node.observer_ctx->dkgdbgman.get()
+                                                                   : nullptr; debugman) {
+        llmq::CDKGDebugStatus status;
+        debugman->GetLocalDebugStatus(status);
+        ret = status.ToJson(*CHECK_NONFATAL(node.dmnman), *llmq_ctx.qsnapman, chainman, detailLevel);
+    }
+
+    const CConnman& connman = EnsureConnman(node);
+    const CBlockIndex* const pindexTip = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
+    const int tipHeight = pindexTip->nHeight;
+    const uint256 proTxHash = node.mn_activeman ? node.mn_activeman->GetProTxHash() : uint256{};
     for (const auto& type : llmq::GetEnabledQuorumTypes(chainman, pindexTip)) {
         const auto llmq_params_opt = Params().GetLLMQ(type);
         CHECK_NONFATAL(llmq_params_opt.has_value());
@@ -377,14 +380,14 @@ static RPCHelpMan quorum_dkgstatus()
                     obj.pushKV("quorumHash", pQuorumBaseBlockIndex->GetBlockHash().ToString());
                     obj.pushKV("pindexTip", pindexTip->nHeight);
 
-                    auto allConnections = llmq::utils::GetQuorumConnections(llmq_params, *node.sporkman,
+                    auto allConnections = llmq::utils::GetQuorumConnections(llmq_params, *CHECK_NONFATAL(node.sporkman),
                                                                             {*node.dmnman, *llmq_ctx.qsnapman, chainman,
                                                                              pQuorumBaseBlockIndex},
-                                                                            proTxHash, false);
+                                                                            proTxHash, /*onlyOutbound=*/false);
                     auto outboundConnections = llmq::utils::GetQuorumConnections(llmq_params, *node.sporkman,
                                                                                  {*node.dmnman, *llmq_ctx.qsnapman,
                                                                                   chainman, pQuorumBaseBlockIndex},
-                                                                                 proTxHash, true);
+                                                                                 proTxHash, /*onlyOutbound=*/true);
                     std::map<uint256, CAddress> foundConnections;
                     connman.ForEachNode([&](const CNode* pnode) {
                         auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
@@ -943,7 +946,6 @@ static RPCHelpMan quorum_rotationinfo()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
-    ;
 
     llmq::CGetQuorumRotationInfo cmd;
     llmq::CQuorumRotationInfo quorumRotationInfoRet;
@@ -997,14 +999,17 @@ static RPCHelpMan quorum_dkginfo()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
-    const ChainstateManager& chainman = EnsureChainman(node);
-    const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+    if (!node.active_ctx && !node.observer_ctx) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Only available in masternode or watch-only mode.");
+    }
+    const auto& dkgdbgman = *(node.active_ctx ? node.active_ctx->dkgdbgman.get() : node.observer_ctx->dkgdbgman.get());
 
     llmq::CDKGDebugStatus status;
-    llmq_ctx.dkg_debugman->GetLocalDebugStatus(status);
+    dkgdbgman.GetLocalDebugStatus(status);
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("active_dkgs", status.sessions.size());
 
+    const ChainstateManager& chainman = EnsureChainman(node);
     const int nTipHeight{WITH_LOCK(cs_main, return chainman.ActiveChain().Height())};
     auto minNextDKG = [](const Consensus::Params& consensusParams, int nTipHeight) {
         int minDkgWindow{std::numeric_limits<int>::max()};

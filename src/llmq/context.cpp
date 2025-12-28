@@ -8,7 +8,6 @@
 #include <chainlock/chainlock.h>
 #include <instantsend/instantsend.h>
 #include <llmq/blockprocessor.h>
-#include <llmq/debug.h>
 #include <llmq/quorums.h>
 #include <llmq/signing.h>
 #include <llmq/snapshot.h>
@@ -20,7 +19,6 @@ LLMQContext::LLMQContext(ChainstateManager& chainman, CDeterministicMNManager& d
                          const llmq::QvvecSyncModeMap& sync_map, const util::DbWrapperParams& db_params,
                          bool quorums_recovery, bool quorums_watch, int8_t bls_threads, int64_t max_recsigs_age) :
     bls_worker{std::make_shared<CBLSWorker>()},
-    dkg_debugman{std::make_unique<llmq::CDKGDebugManager>()},
     qsnapman{std::make_unique<llmq::CQuorumSnapshotManager>(evo_db)},
     quorum_block_processor{std::make_unique<llmq::CQuorumBlockProcessor>(chainman.ActiveChainstate(), dmnman, evo_db,
                                                                          *qsnapman, bls_threads)},

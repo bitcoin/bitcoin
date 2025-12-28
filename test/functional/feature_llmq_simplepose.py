@@ -140,7 +140,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.wait_for_quorum_phase(q, 6, expected_good_nodes, None, 0, mninfos_online)
 
         self.log.info("Waiting final commitment")
-        self.wait_for_quorum_commitment(q, nodes)
+        self.wait_for_quorum_commitment(q, mninfos_online)
 
         self.log.info("Mining final commitment")
         self.bump_mocktime(1, nodes=nodes)

@@ -4,19 +4,20 @@
 
 #include <llmq/observer/context.h>
 
+#include <llmq/debug.h>
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/quorums.h>
 
 namespace llmq {
-ObserverContext::ObserverContext(CBLSWorker& bls_worker, CDeterministicMNManager& dmnman,
-                                 CMasternodeMetaMan& mn_metaman, llmq::CDKGDebugManager& dkg_debugman,
+ObserverContext::ObserverContext(CBLSWorker& bls_worker, CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
                                  llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumManager& qman,
                                  llmq::CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
                                  const CSporkManager& sporkman, const util::DbWrapperParams& db_params) :
     m_qman{qman},
-    qdkgsman{std::make_unique<llmq::CDKGSessionManager>(bls_worker, dmnman, dkg_debugman, mn_metaman, qblockman,
-                                                        qsnapman, /*mn_activeman=*/nullptr, chainman, sporkman,
-                                                        db_params, /*quorums_watch=*/true)}
+    dkgdbgman{std::make_unique<llmq::CDKGDebugManager>()},
+    qdkgsman{std::make_unique<llmq::CDKGSessionManager>(bls_worker, dmnman, *dkgdbgman, mn_metaman, qblockman, qsnapman,
+                                                        /*mn_activeman=*/nullptr, chainman, sporkman, db_params,
+                                                        /*quorums_watch=*/true)}
 {
     m_qman.ConnectManager(qdkgsman.get());
 }
