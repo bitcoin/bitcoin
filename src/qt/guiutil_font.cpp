@@ -313,12 +313,7 @@ void setApplicationFont()
     auto family = g_font_registry.GetFont();
     if (family == MONTSERRAT_FONT_STR) {
 #ifdef Q_OS_MACOS
-        if (g_font_registry.GetWeightNormal() != FontRegistry::TARGET_WEIGHT_NORMAL) {
-            font = std::make_unique<QFont>(getFontNormal());
-        } else {
-            font = std::make_unique<QFont>(family);
-            font->setWeight(FontRegistry::TARGET_WEIGHT_NORMAL);
-        }
+        font = std::make_unique<QFont>(getFontNormal());
 #else
         font = std::make_unique<QFont>(family);
         font->setWeight(g_font_registry.GetWeightNormal());
