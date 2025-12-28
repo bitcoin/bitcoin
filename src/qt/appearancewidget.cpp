@@ -102,7 +102,8 @@ void AppearanceWidget::setModel(OptionsModel* _model)
 
     mapper->toFirst();
 
-    if (_model->isOptionOverridden("-font-family")) {
+    const bool override_family{_model->isOptionOverridden("-font-family")};
+    if (override_family) {
         ui->fontFamily->setEnabled(false);
         if (const auto idx{ui->fontFamily->findText(GUIUtil::g_font_registry.GetFont())}; idx != -1) {
             ui->fontFamily->setCurrentIndex(idx);
@@ -114,15 +115,19 @@ void AppearanceWidget::setModel(OptionsModel* _model)
         ui->fontScaleSlider->setValue(GUIUtil::g_font_registry.GetFontScale());
     }
 
-    if (_model->isOptionOverridden("-font-weight-normal")) {
-        ui->fontWeightNormalSlider->setEnabled(false);
+    if (bool is_overridden{_model->isOptionOverridden("-font-weight-normal")}; is_overridden || override_family) {
+        if (is_overridden) {
+            ui->fontWeightNormalSlider->setEnabled(false);
+        }
         if (const auto idx{GUIUtil::g_font_registry.WeightToIdx(GUIUtil::g_font_registry.GetWeightNormal())}; idx != -1) {
             ui->fontWeightNormalSlider->setValue(idx);
         }
     }
 
-    if (_model->isOptionOverridden("-font-weight-bold")) {
-        ui->fontWeightBoldSlider->setEnabled(false);
+    if (bool is_overridden{_model->isOptionOverridden("-font-weight-bold")}; is_overridden || override_family) {
+        if (is_overridden) {
+            ui->fontWeightBoldSlider->setEnabled(false);
+        }
         if (const auto idx{GUIUtil::g_font_registry.WeightToIdx(GUIUtil::g_font_registry.GetWeightBold())}; idx != -1) {
             ui->fontWeightBoldSlider->setValue(idx);
         }
