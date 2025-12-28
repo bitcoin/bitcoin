@@ -12,30 +12,6 @@
 #include <string>
 #include <vector>
 
-class DummyTorControlConnection : public TorControlConnection
-{
-    CThreadInterrupt m_dummy_interrupt;
-
-public:
-    DummyTorControlConnection() : TorControlConnection{m_dummy_interrupt}
-    {
-    }
-
-    bool Connect(const std::string&)
-    {
-        return true;
-    }
-
-    void Disconnect()
-    {
-    }
-
-    bool Command(const std::string&, const ReplyHandlerCB&)
-    {
-        return true;
-    }
-};
-
 void initialize_torcontrol()
 {
     static const auto testing_setup = MakeNoLogFileContext<>();
@@ -46,6 +22,9 @@ FUZZ_TARGET(torcontrol, .init = initialize_torcontrol)
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
     TorController tor_controller;
+    CThreadInterrupt interrupt;
+    TorControlConnection conn{interrupt};
+
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         TorControlReply tor_control_reply;
         CallOneOf(
@@ -60,23 +39,23 @@ FUZZ_TARGET(torcontrol, .init = initialize_torcontrol)
                 tor_control_reply.code = fuzzed_data_provider.ConsumeIntegral<int>();
             });
         tor_control_reply.lines = ConsumeRandomLengthStringVector(fuzzed_data_provider);
-        if (tor_control_reply.lines.empty()) {
-            break;
-        }
-        DummyTorControlConnection dummy_tor_control_connection;
+
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                tor_controller.add_onion_cb(dummy_tor_control_connection, tor_control_reply);
+                tor_controller.add_onion_cb(conn, tor_control_reply);
             },
             [&] {
-                tor_controller.auth_cb(dummy_tor_control_connection, tor_control_reply);
+                tor_controller.auth_cb(conn, tor_control_reply);
             },
             [&] {
-                tor_controller.authchallenge_cb(dummy_tor_control_connection, tor_control_reply);
+                tor_controller.authchallenge_cb(conn, tor_control_reply);
             },
             [&] {
-                tor_controller.protocolinfo_cb(dummy_tor_control_connection, tor_control_reply);
+                tor_controller.protocolinfo_cb(conn, tor_control_reply);
+            },
+            [&] {
+                tor_controller.get_socks_cb(conn, tor_control_reply);
             });
     }
 }
