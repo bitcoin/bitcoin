@@ -557,6 +557,7 @@ libbitcoin_node_a_SOURCES = \
   llmq/snapshot.cpp \
   llmq/utils.cpp \
   llmq/observer/context.cpp \
+  llmq/observer/quorums.cpp \
   mapport.cpp \
   masternode/active/context.cpp \
   masternode/active/notificationinterface.cpp \
