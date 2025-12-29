@@ -149,7 +149,11 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
                 auto spks{spk_manager->GetScriptPubKeys()};
                 if (!spks.empty()) {
                     auto& spk{PickValue(fuzzed_data_provider, spks)};
-                    (void)spk_manager->MarkUnusedAddresses(spk);
+                    try  {
+                        (void)spk_manager->MarkUnusedAddresses(spk);
+                    } catch (const std::runtime_error&) {
+                        // Expected failure when cache is inconsistent with map
+                    }
                 }
             },
             [&] {
@@ -194,6 +198,97 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
                 auto bip32derivs = fuzzed_data_provider.ConsumeBool();
                 auto finalize = fuzzed_data_provider.ConsumeBool();
                 (void)spk_manager->FillPSBT(psbt, txdata, sighash_type, sign, bip32derivs, nullptr, finalize);
+            },
+            [&] {
+                std::vector<unsigned char> key_bytes = ConsumeFixedLengthByteVector(fuzzed_data_provider, 32);
+                CKeyingMaterial master_key(key_bytes.begin(), key_bytes.end());
+                (void)spk_manager->CheckDecryptionKey(master_key);
+            },
+            [&] {
+                CKey key = ConsumePrivateKey(fuzzed_data_provider);
+                if (key.IsValid()) {
+                    CKeyID key_id = key.GetPubKey().GetID();
+                    spk_manager->AddKey(key_id, key);
+
+                    LOCK(spk_manager->cs_desc_man);
+                    assert(spk_manager->HasPrivKey(key_id));
+                    assert(spk_manager->GetKey(key_id).value() == key);
+                }
+            },
+            [&] {
+                CKey key = ConsumePrivateKey(fuzzed_data_provider);
+                if (key.IsValid()) {
+                    std::vector<unsigned char> crypted_secret = ConsumeRandomLengthByteVector(fuzzed_data_provider);
+                    if (spk_manager->AddCryptedKey(key.GetPubKey().GetID(), key.GetPubKey(), crypted_secret)) {
+                        assert(spk_manager->HaveCryptedKeys());
+                    }
+                }
+            },
+            [&] {
+                DescriptorCache cache;
+                LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 20) {
+                    std::vector<unsigned char> xpub_bytes = fuzzed_data_provider.ConsumeBytes<unsigned char>(BIP32_EXTKEY_SIZE);
+                    if (xpub_bytes.size() != BIP32_EXTKEY_SIZE) break;
+
+                    CExtPubKey xpub;
+                    xpub.Decode(xpub_bytes.data());
+                    if (!xpub.pubkey.IsValid()) continue;
+
+                    // Bias indices towards small numbers (0-100) to ensure they fall within
+                    // the active descriptor range.
+                    uint32_t key_exp_index = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
+                    if (fuzzed_data_provider.ConsumeBool()) key_exp_index %= 100;
+
+                    CallOneOf(
+                        fuzzed_data_provider,
+                        [&] {
+                            cache.CacheParentExtPubKey(key_exp_index, xpub);
+                        },
+                        [&] {
+                            uint32_t der_index = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
+                            cache.CacheDerivedExtPubKey(key_exp_index, der_index, xpub);
+                        },
+                        [&] {
+                            cache.CacheLastHardenedExtPubKey(key_exp_index, xpub);
+                    });
+                }
+                try {
+                    spk_manager->SetCache(cache);
+                } catch (const std::runtime_error&) {
+                    // Expected if expansion fails or index conflicts occur
+                }
+            },
+            [&] {
+                // If the wallet is encrypted, we cannot setup a new SPKM without the master key.
+                if (wallet.HasEncryptionKeys()) return;
+
+                DescriptorScriptPubKeyMan new_spkm(wallet, 1000);
+                CKey seed_key = ConsumePrivateKey(fuzzed_data_provider);
+                if (!seed_key.IsValid()) return;
+
+                CExtKey master_key;
+                master_key.SetSeed(seed_key);
+
+                const OutputType type = fuzzed_data_provider.PickValueInArray({
+                    OutputType::LEGACY,
+                    OutputType::P2SH_SEGWIT,
+                    OutputType::BECH32,
+                    OutputType::BECH32M
+                });
+
+                WalletBatch batch(wallet.GetDatabase());
+                try {
+                    new_spkm.SetupDescriptorGeneration(batch, master_key, type, fuzzed_data_provider.ConsumeBool());
+                } catch (const std::runtime_error&) {
+                    // Expected errors (e.g. DB errors)
+                }
+            },
+            [&] {
+                try  {
+                    spk_manager->UpgradeDescriptorCache();
+                } catch (const std::runtime_error&) {
+                    // Expected if write fails or descriptor expansion fails
+                }
             }
         );
     }
