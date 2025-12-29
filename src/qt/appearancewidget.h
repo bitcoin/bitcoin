@@ -8,6 +8,7 @@
 #include <QWidget>
 
 #include <qt/guiutil.h>
+#include <qt/guiutil_font.h>
 
 namespace Ui {
 class AppearanceWidget;
@@ -47,11 +48,11 @@ private:
     QDataWidgetMapper* mapper;
     OptionsModel* model;
     bool fAcceptChanges{false};
-    QString prevTheme{GUIUtil::getActiveTheme()};
-    int prevScale{GUIUtil::getFontScale()};
-    GUIUtil::FontFamily prevFontFamily{GUIUtil::getFontFamily()};
-    QFont::Weight prevWeightNormal{GUIUtil::getFontWeightNormal()};
-    QFont::Weight prevWeightBold{GUIUtil::getFontWeightBold()};
+    QString prevTheme;
+    int prevScale;
+    QString prevFontFamily;
+    QFont::Weight prevWeightNormal;
+    QFont::Weight prevWeightBold;
 
     void updateWeightSlider(bool fForce = false);
 };

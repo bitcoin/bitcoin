@@ -13,6 +13,7 @@
 #include <qt/addresstablemodel.h>
 #include <qt/bitcoinunits.h>
 #include <qt/guiutil.h>
+#include <qt/guiutil_font.h>
 #include <qt/optionsmodel.h>
 #include <qt/walletmodel.h>
 
@@ -57,7 +58,7 @@ CoinControlDialog::CoinControlDialog(CCoinControl& coin_control, WalletModel* _m
                       ui->labelCoinControlFeeText,
                       ui->labelCoinControlAfterFeeText,
                       ui->labelCoinControlChangeText
-                     }, GUIUtil::FontWeight::Bold);
+                     }, {GUIUtil::g_font_registry.GetWeightBold()});
 
     GUIUtil::updateFonts();
 

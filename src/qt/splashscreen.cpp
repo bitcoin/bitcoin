@@ -16,6 +16,7 @@
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
 #include <qt/guiutil.h>
+#include <qt/guiutil_font.h>
 #include <qt/networkstyle.h>
 #include <qt/walletmodel.h>
 #include <util/system.h>

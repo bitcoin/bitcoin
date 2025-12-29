@@ -8,6 +8,7 @@
 #include <key.h>
 #include <qt/bitcoin.h>
 #include <qt/bitcoingui.h>
+#include <qt/guiutil_font.h>
 #include <qt/networkstyle.h>
 #include <qt/rpcconsole.h>
 #include <shutdown.h>
@@ -79,6 +80,7 @@ void AppTests::appTests()
     qRegisterMetaType<interfaces::BlockAndHeaderTipInfo>("interfaces::BlockAndHeaderTipInfo");
     m_app.parameterSetup();
     GUIUtil::loadFonts();
+    GUIUtil::setApplicationFont();
     m_app.createOptionsModel(true /* reset settings */);
     QScopedPointer<const NetworkStyle> style(
         NetworkStyle::instantiate(Params().NetworkIDString()));

@@ -18,6 +18,7 @@
 #include <qt/bantablemodel.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
+#include <qt/guiutil_font.h>
 #include <qt/peertablesortproxy.h>
 #include <qt/walletcontroller.h>
 #include <qt/walletmodel.h>
@@ -487,7 +488,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
                       ui->peerHeading,
                       ui->label_repair_header,
                       ui->banHeading
-                     }, GUIUtil::FontWeight::Bold, 16);
+                     }, {GUIUtil::g_font_registry.GetWeightBold(), 16});
 
     GUIUtil::updateFonts();
 
@@ -1164,8 +1165,8 @@ void RPCConsole::showPage(int index)
         }
     }
 
-    GUIUtil::setFont({btnActive}, GUIUtil::FontWeight::Bold, 16);
-    GUIUtil::setFont(vecNormal, GUIUtil::FontWeight::Normal, 16);
+    GUIUtil::setFont({btnActive}, {GUIUtil::g_font_registry.GetWeightBold(), 16});
+    GUIUtil::setFont(vecNormal, {GUIUtil::g_font_registry.GetWeightNormal(), 16});
     GUIUtil::updateFonts();
 
     ui->stackedWidgetRPC->setCurrentIndex(index);

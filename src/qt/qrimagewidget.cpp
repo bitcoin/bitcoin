@@ -5,6 +5,7 @@
 #include <qt/qrimagewidget.h>
 
 #include <qt/guiutil.h>
+#include <qt/guiutil_font.h>
 
 #include <QApplication>
 #include <QClipboard>

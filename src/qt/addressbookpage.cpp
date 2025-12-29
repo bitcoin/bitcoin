@@ -14,6 +14,7 @@
 #include <qt/csvmodelwriter.h>
 #include <qt/editaddressdialog.h>
 #include <qt/guiutil.h>
+#include <qt/guiutil_font.h>
 #include <qt/optionsmodel.h>
 #include <qt/qrdialog.h>
 

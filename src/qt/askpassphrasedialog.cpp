@@ -12,6 +12,7 @@
 
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
+#include <qt/guiutil_font.h>
 #include <qt/walletmodel.h>
 
 #include <support/allocators/secure.h>
@@ -30,7 +31,7 @@ AskPassphraseDialog::AskPassphraseDialog(Mode _mode, QWidget *parent, SecureStri
 {
     ui->setupUi(this);
 
-    GUIUtil::setFont({ui->capsLabel}, GUIUtil::FontWeight::Bold);
+    GUIUtil::setFont({ui->capsLabel}, {GUIUtil::g_font_registry.GetWeightBold()});
 
     GUIUtil::updateFonts();
 

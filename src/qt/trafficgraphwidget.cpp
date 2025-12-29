@@ -6,6 +6,7 @@
 #include <qt/trafficgraphwidget.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
+#include <qt/guiutil_font.h>
 
 #include <QPainter>
 #include <QPainterPath>
@@ -167,8 +168,8 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
     const QString strReceived = tr("Received");
     const QString strSent = tr("Sent");
     // Get a bold font for the title and a normal one for the rest
-    QFont fontTotal = GUIUtil::getFont(GUIUtil::FontWeight::Bold, false, 16);
-    QFont fontInOut = GUIUtil::getFont(GUIUtil::FontWeight::Normal, false, 12);
+    QFont fontTotal = GUIUtil::getFont({GUIUtil::g_font_registry.GetWeightBold(), 16, false});
+    QFont fontInOut = GUIUtil::getFont({GUIUtil::g_font_registry.GetWeightNormal(), 12, false});
     // Use font metrics to determine minimum rect sizes depending on the font scale
     QFontMetrics fmTotal(fontTotal);
     QFontMetrics fmInOut(fontInOut);

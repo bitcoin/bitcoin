@@ -5,10 +5,11 @@
 #include <qt/masternodelist.h>
 #include <qt/forms/ui_masternodelist.h>
 
+#include <coins.h>
 #include <evo/deterministicmns.h>
 #include <qt/clientmodel.h>
-#include <coins.h>
 #include <qt/guiutil.h>
+#include <qt/guiutil_font.h>
 #include <qt/walletmodel.h>
 
 #include <univalue.h>
@@ -41,8 +42,8 @@ MasternodeList::MasternodeList(QWidget* parent) :
 
     GUIUtil::setFont({ui->label_count_2,
                       ui->countLabelDIP3
-                     }, GUIUtil::FontWeight::Bold, 14);
-    GUIUtil::setFont({ui->label_filter_2}, GUIUtil::FontWeight::Normal, 15);
+                     }, {GUIUtil::g_font_registry.GetWeightBold(), 14});
+    GUIUtil::setFont({ui->label_filter_2}, {GUIUtil::g_font_registry.GetWeightNormal(), 15});
 
     int columnAddressWidth = 200;
     int columnTypeWidth = 160;

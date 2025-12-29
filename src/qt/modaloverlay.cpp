@@ -7,6 +7,7 @@
 
 #include <chainparams.h>
 #include <qt/guiutil.h>
+#include <qt/guiutil_font.h>
 
 #include <QEasingCurve>
 #include <QResizeEvent>
@@ -28,7 +29,7 @@ foreverHidden(false)
                       ui->labelSyncDone,
                       ui->labelProgressIncrease,
                       ui->labelEstimatedTimeLeft,
-                     }, GUIUtil::FontWeight::Bold);
+                     }, {GUIUtil::g_font_registry.GetWeightBold()});
 
     ui->warningIcon->setPixmap(GUIUtil::getIcon("warning", GUIUtil::ThemedColor::ORANGE).pixmap(48, 48));
 

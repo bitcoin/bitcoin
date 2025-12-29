@@ -13,6 +13,7 @@
 #include <qt/bitcoinamountfield.h>
 #include <qt/bitcoinunits.h>
 #include <qt/guiutil.h>
+#include <qt/guiutil_font.h>
 #include <qt/optionsmodel.h>
 #include <qt/qvalidatedlineedit.h>
 #include <qt/rpcconsole.h>
@@ -43,7 +44,7 @@ ProposalWizard::ProposalWizard(interfaces::Node& node, WalletModel* walletModel,
 {
     m_ui->setupUi(this);
 
-    GUIUtil::setFont({m_ui->labelHeader}, GUIUtil::FontWeight::Bold, 16);
+    GUIUtil::setFont({m_ui->labelHeader}, {GUIUtil::g_font_registry.GetWeightBold(), 16});
     GUIUtil::disableMacFocusRect(this);
     GUIUtil::updateFonts();
 
