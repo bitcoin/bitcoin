@@ -126,15 +126,20 @@ void OptionsModel::Init(bool resetSettings)
     if (!settings.contains("fontWeightNormal")) {
         settings.setValue("fontWeightNormal", GUIUtil::weightToArg(GUIUtil::FontRegistry::TARGET_WEIGHT_NORMAL));
     }
-    if (!gArgs.SoftSetArg("-font-weight-normal", settings.value("fontWeightNormal").toString().toStdString())) {
+    if (gArgs.IsArgSet("-font-weight-normal") && !gArgs.SoftSetArg("-font-weight-normal", settings.value("fontWeightNormal").toString().toStdString())) {
         addOverriddenOption("-font-weight-normal");
     }
+
+    const bool override_family{isOptionOverridden("-font-family")};
     if (GUIUtil::fontsLoaded()) {
-        QFont::Weight weight;
-        GUIUtil::weightFromArg(gArgs.GetIntArg("-font-weight-normal", settings.value("fontWeightNormal").toInt()), weight);
-        if (!GUIUtil::g_font_registry.IsValidWeight(weight)) {
-            // If the currently selected weight is not supported fallback to the lightest weight for normal font.
-            weight = GUIUtil::g_font_registry.GetSupportedWeights().front();
+        // If font was overridden by CLI but weight wasn't, use the font's default weight
+        QFont::Weight weight{GUIUtil::g_font_registry.GetWeightNormalDefault()};
+        if (!override_family || isOptionOverridden("-font-weight-normal")) {
+            GUIUtil::weightFromArg(gArgs.GetIntArg("-font-weight-normal", settings.value("fontWeightNormal").toInt()), weight);
+            if (!GUIUtil::g_font_registry.IsValidWeight(weight)) {
+                // If the currently selected weight is not supported fallback to the lightest weight for normal font.
+                weight = GUIUtil::g_font_registry.GetSupportedWeights().front();
+            }
         }
         GUIUtil::g_font_registry.SetWeightNormal(weight);
     }
@@ -143,17 +148,20 @@ void OptionsModel::Init(bool resetSettings)
     if (!settings.contains("fontWeightBold")) {
         settings.setValue("fontWeightBold", GUIUtil::weightToArg(GUIUtil::FontRegistry::TARGET_WEIGHT_BOLD));
     }
-    if (!gArgs.SoftSetArg("-font-weight-bold", settings.value("fontWeightBold").toString().toStdString())) {
+    if (gArgs.IsArgSet("-font-weight-bold") && !gArgs.SoftSetArg("-font-weight-bold", settings.value("fontWeightBold").toString().toStdString())) {
         addOverriddenOption("-font-weight-bold");
     }
     if (GUIUtil::fontsLoaded()) {
-        QFont::Weight weight;
-        GUIUtil::weightFromArg(gArgs.GetIntArg("-font-weight-bold", settings.value("fontWeightBold").toInt()), weight);
-        if (!GUIUtil::g_font_registry.IsValidWeight(weight)) {
-            // If the currently selected weight is not supported fallback to the second lightest weight for bold font
-            // or the lightest if there is only one.
-            auto vecSupported = GUIUtil::g_font_registry.GetSupportedWeights();
-            weight = vecSupported[vecSupported.size() > 1 ? 1 : 0];
+        // If font was overridden by CLI but weight wasn't, use the font's default weight
+        QFont::Weight weight{GUIUtil::g_font_registry.GetWeightBoldDefault()};
+        if (!override_family || isOptionOverridden("-font-weight-bold")) {
+            GUIUtil::weightFromArg(gArgs.GetIntArg("-font-weight-bold", settings.value("fontWeightBold").toInt()), weight);
+            if (!GUIUtil::g_font_registry.IsValidWeight(weight)) {
+                // If the currently selected weight is not supported fallback to the second lightest weight for bold font
+                // or the lightest if there is only one.
+                auto vecSupported = GUIUtil::g_font_registry.GetSupportedWeights();
+                weight = vecSupported[vecSupported.size() > 1 ? 1 : 0];
+            }
         }
         GUIUtil::g_font_registry.SetWeightBold(weight);
     }
