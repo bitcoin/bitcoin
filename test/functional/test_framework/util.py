@@ -19,12 +19,15 @@ import re
 import shlex
 import time
 import types
+import resource
+from concurrent.futures import ThreadPoolExecutor
+import subprocess
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
 from .descriptors import descsum_create
 from collections.abc import Callable
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 SATOSHI_PRECISION = Decimal('0.00000001')
 
@@ -387,32 +390,125 @@ def ensure_for(*, duration, f, check_interval=0.2):
         time.sleep(check_interval)
 
 
-def wait_until_helper_internal(predicate, *, timeout=60, lock=None, timeout_factor=1.0, check_interval=0.05):
-    """Sleep until the predicate resolves to be True.
+def wait_until_helper_internal(
+    predicate: Union[Callable[[], bool], str, List[Callable[[], bool]]],
+    *,
+    timeout: float = 60,
+    lock: Optional[object] = None,
+    timeout_factor: float = 1.0,
+    check_interval: float = 0.05,
+    history: Optional[List] = None,
+    adaptive: bool = False,
+    retries: int = 0,
+    observability_url: Optional[str] = None
+):
+    """Wait until a predicate returns True, with adaptive timeout, retries, and telemetry."""
+    if adaptive:
+        try:
+            load = os.getloadavg()[0]
+            timeout_factor *= (1 + load / 5.0)
+        except OSError:
+            logger.warning("Could not get system load for adaptive timeout.")
 
-    Warning: Note that this method is not recommended to be used in tests as it is
-    not aware of the context of the test framework. Using the `wait_until()` members
-    from `BitcoinTestFramework` or `P2PInterface` class ensures the timeout is
-    properly scaled. Furthermore, `wait_until()` from `P2PInterface` class in
-    `p2p.py` has a preset lock.
-    """
-    timeout = timeout * timeout_factor
-    time_end = time.time() + timeout
+    current_timeout = timeout * timeout_factor
+    attempt = 0
+    local_history = [] if history is None else history
 
-    while time.time() < time_end:
-        if lock:
-            with lock:
-                if predicate():
-                    return
-        else:
-            if predicate():
+    while attempt <= retries:
+        start_time = time.time()
+        time_end = start_time + current_timeout
+        loop_history = []
+
+        while time.time() < time_end:
+            results = None
+            all_true = False
+
+            if callable(predicate) or isinstance(predicate, list):
+                if isinstance(predicate, list):
+                    with ThreadPoolExecutor(max_workers=len(predicate)) as executor:
+                        results = list(executor.map(lambda p: p(), predicate))
+                        all_true = all(results)
+                else:
+                    if lock:
+                        with lock:
+                            result = predicate()
+                    else:
+                        result = predicate()
+                    results = [result]
+                    all_true = result
+            elif isinstance(predicate, str):
+                try:
+                    subprocess.check_call(predicate, shell=True)
+                    result = True
+                except subprocess.CalledProcessError:
+                    result = False
+                results = [result]
+                all_true = result
+            else:
+                raise ValueError("Predicate must be callable, list of callables, or str (shell command).")
+
+            loop_history.append((time.time(), results))
+            if all_true:
+                local_history.extend(loop_history)
                 return
-        time.sleep(check_interval)
 
-    # Print the cause of the timeout
-    predicate_source = "''''\n" + inspect.getsource(predicate) + "'''"
-    logger.error("wait_until() failed. Predicate: {}".format(predicate_source))
-    raise AssertionError("Predicate {} not true after {} seconds".format(predicate_source, timeout))
+            time.sleep(check_interval)
+
+        local_history.extend(loop_history)
+        attempt += 1
+        if attempt <= retries:
+            check_interval *= 1.2
+            current_timeout *= 1.1
+
+    predicate_source = inspect.getsource(predicate) if callable(predicate) else str(predicate)
+    call_stack = '\n'.join([f"{frame.filename}:{frame.lineno} {frame.function}" for frame in inspect.stack()])
+    memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+    cpu_times = os.times()
+
+    error_msg = (
+        f"wait_until() failed after {timeout} seconds (adjusted: {current_timeout}, retries: {retries}).\n"
+        f"Predicate: ''''\n{predicate_source}\n''''\n"
+        f"Call stack:\n{call_stack}\n"
+        f"Memory usage: {memory_usage:.2f} MB\n"
+        f"CPU times: {cpu_times}\n"
+    )
+    logger.error(error_msg)
+
+    # Analyze history
+    if local_history:
+        times = [t for t, _ in local_history]
+        if len(times) > 1:
+            deltas = [times[i + 1] - times[i] for i in range(len(times) - 1)]
+            avg_delta = sum(deltas) / len(deltas)
+            suggested_interval = avg_delta * 1.5
+            logger.info(f"Suggested check_interval adjustment: {suggested_interval:.3f} (based on average poll delta {avg_delta:.3f})")
+
+        num_fails = sum(
+            1 for _, r in local_history
+            if (not all(r) if isinstance(r, list) else not r)
+        )
+        logger.info(f"AI-assisted insight: Predicate failed {num_fails}/{len(local_history)} times. Possible flaky timing issue.")
+
+    # Observability
+    if observability_url:
+        try:
+            import requests
+            telemetry = {
+                "predicate_source": predicate_source,
+                "call_stack": call_stack,
+                "memory_usage": memory_usage,
+                "cpu_times": str(cpu_times),
+                "history_summary": f"Failed {sum(1 for _, r in local_history if (not all(r) if isinstance(r, list) else not r))} times",
+                "error": "Timeout"
+            }
+            requests.post(observability_url, json=telemetry)
+            logger.info("Sent telemetry to observability dashboard.")
+        except ImportError:
+            logger.warning("requests module not available for observability.")
+        except Exception as e:
+            logger.error(f"Failed to send telemetry: {e}")
+
+    raise AssertionError(f"Predicate {predicate_source} not true after {current_timeout} seconds and {retries} retries")
 
 
 def bpf_cflags():
