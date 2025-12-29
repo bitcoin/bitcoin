@@ -225,6 +225,9 @@ private:
     bool ReadContributions(const CDBWrapper& db) EXCLUSIVE_LOCKS_REQUIRED(!cs_vvec_shShare);
 };
 
+uint256 MakeQuorumKey(const CQuorum& q);
+void DataCleanupHelper(CDBWrapper& db, std::set<uint256> skip_list, bool compact = false);
+
 /**
  * The quorum manager maintains quorums which were mined on chain. When a quorum is requested from the manager,
  * it will lookup the commitment (through CQuorumBlockProcessor) and build a CQuorum object from it.
