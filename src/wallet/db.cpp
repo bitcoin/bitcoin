@@ -7,6 +7,7 @@
 #include <common/args.h>
 #include <util/fs.h>
 #include <util/log.h>
+#include <util/translation.h>
 #include <wallet/db.h>
 
 #include <algorithm>
@@ -84,6 +85,26 @@ fs::path BDBDataFile(const fs::path& wallet_path)
         // data and log files.
         return wallet_path / "wallet.dat";
     }
+}
+
+static bilingual_str FileError(const fs::path& path, const std::error_code& ec)
+{
+    bilingual_str error{strprintf(_("Error: Wallet db file cannot be modified. Path: %s, Error: %s."), fs::PathToString(path), ec.message())};
+    if (ec == std::errc::permission_denied || ec == std::errc::operation_not_permitted || ec == std::errc::read_only_file_system) {
+        error += Untranslated(" ") + _("Adjust directory or file permissions and try again.");
+    }
+    return error;
+}
+
+util::Result<void> WalletDatabase::Erase()
+{
+    Close();
+    for (const fs::path& file : Files()) {
+        std::error_code ec;
+        fs::remove(file, ec);
+        if (ec) return util::Error{FileError(file, ec)};
+    }
+    return {};
 }
 
 fs::path SQLiteDataFile(const fs::path& path)

@@ -10,6 +10,7 @@
 #include <streams.h>
 #include <support/allocators/secure.h>
 #include <util/fs.h>
+#include <util/result.h>
 
 #include <memory>
 #include <optional>
@@ -158,6 +159,9 @@ public:
 
     /** Make a DatabaseBatch connected to this database */
     virtual std::unique_ptr<DatabaseBatch> MakeBatch() = 0;
+
+    /** Close the database and erase all its files */
+    util::Result<void> Erase();
 };
 
 enum class DatabaseFormat {

@@ -3792,10 +3792,11 @@ bool CWallet::MigrateToSQLite(bilingual_str& error)
         return false;
     }
 
-    // Close this database and delete the file
-    fs::path db_path = fs::PathFromString(m_database->Filename());
-    m_database->Close();
-    fs::remove(db_path);
+    // Close this database and erase its files
+    if (auto res{m_database->Erase()}; !res) {
+        error = util::ErrorString(res);
+        return false;
+    }
 
     // Generate the path for the location of the migrated wallet
     // Wallets that are plain files rather than wallet directories will be migrated to be wallet directories.
