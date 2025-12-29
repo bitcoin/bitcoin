@@ -208,10 +208,11 @@ def transform_process_message_target(targets, src_dir):
     p2p_msg_target = "process_message"
     if (p2p_msg_target, {}) in targets:
         lines = subprocess.run(
-            ["git", "grep", "--function-context", "ALL_NET_MESSAGE_TYPES{", src_dir / "src" / "protocol.h"],
+            ["git", "grep", "--function-context", "ALL_NET_MESSAGE_TYPES{", "src/protocol.h"],
             check=True,
             stdout=subprocess.PIPE,
             text=True,
+            cwd=src_dir,
         ).stdout.splitlines()
         lines = [l.split("::", 1)[1].split(",")[0].lower() for l in lines if l.startswith("src/protocol.h-    NetMsgType::")]
         assert len(lines)
@@ -226,10 +227,11 @@ def transform_rpc_target(targets, src_dir):
     rpc_target = "rpc"
     if (rpc_target, {}) in targets:
         lines = subprocess.run(
-            ["git", "grep", "--function-context", "RPC_COMMANDS_SAFE_FOR_FUZZING{", src_dir / "src" / "test" / "fuzz" / "rpc.cpp"],
+            ["git", "grep", "--function-context", "RPC_COMMANDS_SAFE_FOR_FUZZING{", "src/test/fuzz/rpc.cpp"],
             check=True,
             stdout=subprocess.PIPE,
             text=True,
+            cwd=src_dir,
         ).stdout.splitlines()
         lines = [l.split("\"", 1)[1].split("\"")[0] for l in lines if l.startswith("src/test/fuzz/rpc.cpp-    \"")]
         assert len(lines)
