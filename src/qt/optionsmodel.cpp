@@ -564,16 +564,22 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         case FontScale:
             return settings.value("fontScale");
         case FontWeightNormal: {
-            QFont::Weight weight{GUIUtil::g_font_registry.GetWeightNormalDefault()};
-            GUIUtil::weightFromArg(settings.value("fontWeightNormal").toInt(), weight);
-            int nIndex = GUIUtil::g_font_registry.WeightToIdx(weight);
+            int nIndex = [&]() -> int {
+                if (QFont::Weight weight; GUIUtil::weightFromArg(settings.value("fontWeightNormal").toInt(), weight) && GUIUtil::g_font_registry.IsValidWeight(weight)) {
+                    return GUIUtil::g_font_registry.WeightToIdx(weight);
+                }
+                return GUIUtil::g_font_registry.WeightToIdx(GUIUtil::g_font_registry.GetWeightNormalDefault());
+            }();
             assert(nIndex != -1);
             return nIndex;
         }
         case FontWeightBold: {
-            QFont::Weight weight{GUIUtil::g_font_registry.GetWeightBoldDefault()};
-            GUIUtil::weightFromArg(settings.value("fontWeightBold").toInt(), weight);
-            int nIndex = GUIUtil::g_font_registry.WeightToIdx(weight);
+            int nIndex = [&]() -> int {
+                if (QFont::Weight weight; GUIUtil::weightFromArg(settings.value("fontWeightBold").toInt(), weight) && GUIUtil::g_font_registry.IsValidWeight(weight)) {
+                    return GUIUtil::g_font_registry.WeightToIdx(weight);
+                }
+                return GUIUtil::g_font_registry.WeightToIdx(GUIUtil::g_font_registry.GetWeightBoldDefault());
+            }();
             assert(nIndex != -1);
             return nIndex;
         }
