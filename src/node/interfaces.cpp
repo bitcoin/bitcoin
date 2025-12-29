@@ -82,7 +82,6 @@ using interfaces::Mining;
 using interfaces::Node;
 using interfaces::WalletLoader;
 using kernel::ChainstateRole;
-using node::BlockAssembler;
 using node::BlockWaitOptions;
 using node::CoinbaseTx;
 using util::Join;
@@ -861,9 +860,11 @@ class BlockTemplateImpl : public BlockTemplate
 {
 public:
     explicit BlockTemplateImpl(BlockAssembler::Options assemble_options,
-                               std::unique_ptr<CBlockTemplate> block_template,
+                               BlockTemplateRef block_template_ref,
                                NodeContext& node) : m_assemble_options(std::move(assemble_options)),
-                                                    m_block_template(std::move(block_template)),
+                                                    // We make a copy of the object here because we want to keep the block
+                                                    // template and be able to modify it later.
+                                                    m_block_template(std::make_unique<CBlockTemplate>(*block_template_ref)),
                                                     m_node(node)
     {
         assert(m_block_template);
@@ -922,8 +923,8 @@ public:
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
     {
-        auto new_template = WaitAndCreateNewBlock(chainman(), notifications(), m_node.mempool.get(), m_block_template, options, m_assemble_options, m_interrupt_wait);
-        if (new_template) return std::make_unique<BlockTemplateImpl>(m_assemble_options, std::move(new_template), m_node);
+        BlockTemplateRef new_template_ref = WaitAndCreateNewBlock(m_node.block_template_cache.get(), chainman(), notifications(), *m_block_template, options, m_assemble_options, m_interrupt_wait);
+        if (new_template_ref) return std::make_unique<BlockTemplateImpl>(m_assemble_options, new_template_ref, m_node);
         return nullptr;
     }
 
@@ -934,7 +935,7 @@ public:
 
     const BlockAssembler::Options m_assemble_options;
 
-    const std::unique_ptr<CBlockTemplate> m_block_template;
+    std::unique_ptr<CBlockTemplate> m_block_template;
 
     bool m_interrupt_wait{false};
     ChainstateManager& chainman() { return *Assert(m_node.chainman); }
@@ -974,7 +975,8 @@ public:
 
         BlockAssembler::Options assemble_options{options};
         ApplyArgsManOptions(*Assert(m_node.args), assemble_options);
-        return std::make_unique<BlockTemplateImpl>(assemble_options, BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options}.CreateNewBlock(), m_node);
+        auto new_template = m_node.block_template_cache->GetBlockTemplate(assemble_options);
+        return std::make_unique<BlockTemplateImpl>(assemble_options, new_template, m_node);
     }
 
     bool checkBlock(const CBlock& block, const node::BlockCheckOptions& options, std::string& reason, std::string& debug) override
