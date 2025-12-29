@@ -183,6 +183,59 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
                 auto bip32derivs = fuzzed_data_provider.ConsumeBool();
                 auto finalize = fuzzed_data_provider.ConsumeBool();
                 (void)spk_manager->FillPSBT(psbt, txdata, sighash_type, sign, bip32derivs, nullptr, finalize);
+            },
+            [&] {
+                std::vector<unsigned char> key_bytes = ConsumeFixedLengthByteVector(fuzzed_data_provider, 32);
+                CKeyingMaterial master_key(key_bytes.begin(), key_bytes.end());
+                (void)spk_manager->CheckDecryptionKey(master_key);
+            },
+            [&] {
+                CKey key = ConsumePrivateKey(fuzzed_data_provider);
+                if (key.IsValid()) {
+                    CKeyID key_id = key.GetPubKey().GetID();
+                    spk_manager->AddKey(key_id, key);
+
+                    LOCK(spk_manager->cs_desc_man);
+                    assert(spk_manager->HasPrivKey(key_id));
+                    assert(spk_manager->GetKey(key_id).value() == key);
+                }
+            },
+            [&] {
+                CKey key = ConsumePrivateKey(fuzzed_data_provider);
+                if (key.IsValid()) {
+                    std::vector<unsigned char> crypted_secret = ConsumeRandomLengthByteVector(fuzzed_data_provider);
+                    if (spk_manager->AddCryptedKey(key.GetPubKey().GetID(), key.GetPubKey(), crypted_secret)) {
+                        assert(spk_manager->HaveCryptedKeys());
+                    }
+                }
+            },
+            [&] {
+                // If the wallet is encrypted, we cannot setup a new SPKM without the master key.
+                if (wallet.HasEncryptionKeys()) return;
+
+                DescriptorScriptPubKeyMan new_spkm(wallet, 1000);
+                CKey seed_key = ConsumePrivateKey(fuzzed_data_provider);
+                if (!seed_key.IsValid()) return;
+
+                CExtKey master_key;
+                master_key.SetSeed(seed_key);
+
+                const OutputType type = fuzzed_data_provider.PickValueInArray({
+                    OutputType::LEGACY,
+                    OutputType::P2SH_SEGWIT,
+                    OutputType::BECH32,
+                    OutputType::BECH32M
+                });
+
+                WalletBatch batch(wallet.GetDatabase());
+                try {
+                    new_spkm.SetupDescriptorGeneration(batch, master_key, type, fuzzed_data_provider.ConsumeBool());
+                } catch (const std::runtime_error&) {
+                    // Expected errors (e.g. DB errors)
+                }
+            },
+            [&] {
+                spk_manager->UpgradeDescriptorCache();
             }
         );
     }
