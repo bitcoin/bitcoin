@@ -3841,7 +3841,16 @@ bool CWallet::MigrateToSQLite(bilingual_str& error)
     // Close this database and delete the file
     fs::path db_path = fs::PathFromString(m_database->Filename());
     m_database->Close();
-    fs::remove(db_path);
+
+    std::error_code err_db;
+    fs::remove(db_path, err_db);
+    if (err_db) {
+        std::string err_help;
+        const bool perm_issue = err_db.value() == EACCES || err_db.value() == EPERM  || err_db.value() == EROFS;
+        if (perm_issue) err_help = "Adjust directory or file permissions to proceed with migration.";
+        error = strprintf(_("Error: Wallet db cannot be updated. %s"), err_help);
+        return false;
+    }
 
     // Generate the path for the location of the migrated wallet
     // Wallets that are plain files rather than wallet directories will be migrated to be wallet directories.
