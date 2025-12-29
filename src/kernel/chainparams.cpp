@@ -16,6 +16,7 @@
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
 #include <script/script.h>
+#include <tinyformat.h>
 #include <uint256.h>
 #include <util/chaintype.h>
 #include <util/log.h>
@@ -29,6 +30,7 @@
 #include <iterator>
 #include <map>
 #include <span>
+#include <stdexcept>
 #include <utility>
 
 using namespace util::hex_literals;
@@ -596,6 +598,7 @@ public:
             if (version_bits_params.active_duration != std::numeric_limits<int>::max() && version_bits_params.active_duration % consensus.vDeployments[deployment_pos].period != 0) {
                 throw std::runtime_error(strprintf("active_duration (%d) must be a multiple of period (%d)", version_bits_params.active_duration, consensus.vDeployments[deployment_pos].period));
             }
+            consensus.vDeployments[deployment_pos].threshold = version_bits_params.threshold;
         }
 
         genesis = CreateGenesisBlock(1296688602, 2, 0x207fffff, 1, 50 * COIN);

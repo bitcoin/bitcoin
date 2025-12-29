@@ -68,8 +68,8 @@ void ReadRegTestArgs(const ArgsManager& args, CChainParams::RegTestOptions& opti
 
     for (const std::string& strDeployment : args.GetArgs("-vbparams")) {
         std::vector<std::string> vDeploymentParams = SplitString(strDeployment, ':');
-        if (vDeploymentParams.size() < 3 || 6 < vDeploymentParams.size()) {
-            throw std::runtime_error("Version bits parameters malformed, expecting deployment:start:end[:min_activation_height[:max_activation_height[:active_duration]]]");
+        if (vDeploymentParams.size() < 3 || 7 < vDeploymentParams.size()) {
+            throw std::runtime_error("Version bits parameters malformed, expecting deployment:start:end[:min_activation_height[:max_activation_height[:active_duration[:threshold]]]]");
         }
         CChainParams::VersionBitsParameters vbparams{};
         const auto start_time{ToIntegral<int64_t>(vDeploymentParams[1])};
@@ -105,6 +105,13 @@ void ReadRegTestArgs(const ArgsManager& args, CChainParams::RegTestOptions& opti
             }
             vbparams.active_duration = *active_duration;
         }
+        if (vDeploymentParams.size() >= 7) {
+            const auto threshold{ToIntegral<int>(vDeploymentParams[6])};
+            if (!threshold) {
+                throw std::runtime_error(strprintf("Invalid threshold (%s)", vDeploymentParams[6]));
+            }
+            vbparams.threshold = *threshold;
+        }
         // Validate that timeout and max_activation_height are mutually exclusive
         if (vbparams.timeout != Consensus::BIP9Deployment::NO_TIMEOUT && vbparams.max_activation_height < std::numeric_limits<int>::max()) {
             throw std::runtime_error(strprintf("Cannot specify both timeout (%ld) and max_activation_height (%d) for deployment %s. Use timeout for BIP9 or max_activation_height for mandatory activation deadline, not both.", vbparams.timeout, vbparams.max_activation_height, vDeploymentParams[0]));
@@ -114,8 +121,8 @@ void ReadRegTestArgs(const ArgsManager& args, CChainParams::RegTestOptions& opti
             if (vDeploymentParams[0] == VersionBitsDeploymentInfo[j].name) {
                 options.version_bits_parameters[Consensus::DeploymentPos(j)] = vbparams;
                 found = true;
-                LogInfo("Setting version bits activation parameters for %s to start=%ld, timeout=%ld, min_activation_height=%d, max_activation_height=%d, active_duration=%d",
-                        vDeploymentParams[0], vbparams.start_time, vbparams.timeout, vbparams.min_activation_height, vbparams.max_activation_height, vbparams.active_duration);
+                LogInfo("Setting version bits activation parameters for %s to start=%ld, timeout=%ld, min_activation_height=%d, max_activation_height=%d, active_duration=%d, threshold=%d",
+                        vDeploymentParams[0], vbparams.start_time, vbparams.timeout, vbparams.min_activation_height, vbparams.max_activation_height, vbparams.active_duration, vbparams.threshold);
                 break;
             }
         }
