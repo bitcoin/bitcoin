@@ -95,7 +95,6 @@ using interfaces::Node;
 using interfaces::Rpc;
 using interfaces::WalletLoader;
 using kernel::ChainstateRole;
-using node::BlockAssembler;
 using node::BlockCreateOptions;
 using node::BlockWaitOptions;
 using node::CoinbaseTx;
@@ -878,63 +877,58 @@ public:
 class BlockTemplateImpl : public BlockTemplate
 {
 public:
-    explicit BlockTemplateImpl(BlockCreateOptions create_options,
-                               std::unique_ptr<CBlockTemplate> block_template,
-                               const NodeContext& node) : m_create_options(std::move(create_options)),
-                                                          m_block_template(std::move(block_template)),
+    explicit BlockTemplateImpl(BlockCreateOptions assemble_options,
+                               BlockTemplateRef block_template_ref,
+                               const NodeContext& node) : m_assemble_options(std::move(assemble_options)),
+                                                          m_block_template_ref(std::move(block_template_ref)),
                                                           m_node(node)
     {
-        assert(m_block_template);
+        assert(m_block_template_ref);
     }
 
     CBlockHeader getBlockHeader() override
     {
-        return m_block_template->block;
+        return currentBlock();
     }
 
     CBlock getBlock() override
     {
-        return m_block_template->block;
+        return currentBlock();
     }
 
     std::vector<CAmount> getTxFees() override
     {
-        return m_block_template->vTxFees;
+        return m_block_template_ref->vTxFees;
     }
 
     std::vector<int64_t> getTxSigops() override
     {
-        return m_block_template->vTxSigOpsCost;
+        return m_block_template_ref->vTxSigOpsCost;
     }
 
     CoinbaseTx getCoinbaseTx() override
     {
-        return m_block_template->m_coinbase_tx;
+        return m_block_template_ref->m_coinbase_tx;
     }
 
     std::vector<uint256> getCoinbaseMerklePath() override
     {
-        return TransactionMerklePath(m_block_template->block, 0);
+        return TransactionMerklePath(currentBlock(), 0);
     }
 
     bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) override
     {
-        AddMerkleRootAndCoinbase(m_block_template->block, std::move(coinbase), version, timestamp, nonce);
+        m_block = m_block_template_ref->block;
+        AddMerkleRootAndCoinbase(*m_block, std::move(coinbase), version, timestamp, nonce);
         std::string reason;
         std::string debug;
-        return SubmitBlock(chainman(), std::make_shared<const CBlock>(m_block_template->block), /*new_block=*/nullptr, reason, debug);
+        return SubmitBlock(chainman(), std::make_shared<const CBlock>(*m_block), /*new_block=*/nullptr, reason, debug);
     }
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
     {
-        auto new_template = WaitAndCreateNewBlock(chainman(),
-                                                  notifications(),
-                                                  m_node.mempool.get(),
-                                                  m_block_template,
-                                                  /*wait_options=*/options,
-                                                  /*create_options=*/m_create_options,
-                                                  /*interrupt_wait=*/m_interrupt_wait);
-        if (new_template) return std::make_unique<BlockTemplateImpl>(m_create_options, std::move(new_template), m_node);
+        BlockTemplateRef new_template_ref = WaitAndCreateNewBlock(*Assert(m_node.block_template_cache), chainman(), notifications(), *m_block_template_ref, options, m_assemble_options, m_interrupt_wait);
+        if (new_template_ref) return std::make_unique<BlockTemplateImpl>(m_assemble_options, new_template_ref, m_node);
         return nullptr;
     }
 
@@ -943,11 +937,16 @@ public:
         InterruptWait(notifications(), m_interrupt_wait);
     }
 
-    const BlockCreateOptions m_create_options;
-
-    const std::unique_ptr<CBlockTemplate> m_block_template;
-
+private:
+    const BlockCreateOptions m_assemble_options;
+    const BlockTemplateRef m_block_template_ref;
+    std::optional<CBlock> m_block;
     bool m_interrupt_wait{false};
+    // Returns m_block if a solution has been submitted, otherwise the template block.
+    const CBlock& currentBlock() const
+    {
+        return m_block ? *m_block : m_block_template_ref->block;
+    }
     ChainstateManager& chainman() { return *Assert(m_node.chainman); }
     KernelNotifications& notifications() { return *Assert(m_node.notifications); }
     const NodeContext& m_node;
@@ -1000,13 +999,8 @@ public:
             if (!CooldownIfHeadersAhead(chainman(), notifications(), *maybe_tip, m_interrupt_mining)) return {};
         }
         const BlockCreateOptions create_options{MergeMiningOptions(options, m_node.mining_args)};
-        return std::make_unique<BlockTemplateImpl>(create_options,
-                                                   BlockAssembler{
-                                                       chainman().ActiveChainstate(),
-                                                       m_node.mempool.get(),
-                                                       create_options,
-                                                   }.CreateNewBlock(),
-                                                   m_node);
+        auto new_template = Assert(m_node.block_template_cache)->GetBlockTemplate(create_options, std::nullopt);
+        return std::make_unique<BlockTemplateImpl>(create_options, std::move(new_template), m_node);
     }
 
     void interrupt() override

@@ -518,13 +518,13 @@ void InterruptWait(KernelNotifications& kernel_notifications, bool& interrupt_wa
     kernel_notifications.m_tip_block_cv.notify_all();
 }
 
-std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainman,
-                                                      KernelNotifications& kernel_notifications,
-                                                      CTxMemPool* mempool,
-                                                      const std::unique_ptr<CBlockTemplate>& block_template,
-                                                      const BlockWaitOptions& wait_options,
-                                                      const BlockCreateOptions& create_options,
-                                                      bool& interrupt_wait)
+BlockTemplateRef WaitAndCreateNewBlock(BlockTemplateCache& block_template_cache,
+                                       ChainstateManager& chainman,
+                                       KernelNotifications& kernel_notifications,
+                                       const CBlockTemplate& block_template,
+                                       const BlockWaitOptions& options,
+                                       const BlockCreateOptions& assemble_options,
+                                       bool& interrupt_wait)
 {
     // Delay calculating the current template fees, just in case a new block
     // comes in before the next tick.
@@ -533,7 +533,7 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
     // Alternate waiting for a new tip and checking if fees have risen.
     // The latter check is expensive so we only run it once per second.
     auto now{NodeClock::now()};
-    const auto deadline = now + wait_options.timeout;
+    const auto deadline = now + options.timeout;
     const MillisecondsDouble tick{1000};
     const bool allow_min_difficulty{chainman.GetParams().GetConsensus().fPowAllowMinDifficultyBlocks};
 
@@ -548,7 +548,7 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
                 // We assume tip_block is set, because this is an instance
                 // method on BlockTemplate and no template could have been
                 // generated before a tip exists.
-                tip_changed = Assume(tip_block) && tip_block != block_template->block.hashPrevBlock;
+                tip_changed = Assume(tip_block) && tip_block != block_template.block.hashPrevBlock;
                 return tip_changed || chainman.m_interrupt || interrupt_wait;
             });
             if (interrupt_wait) {
@@ -580,25 +580,26 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
          *
          * We'll also create a new template if the tip changed during this iteration.
          */
-        if (wait_options.fee_threshold < MAX_MONEY || tip_changed) {
-            auto new_tmpl{BlockAssembler{
-                chainman.ActiveChainstate(),
-                mempool,
-                create_options
-                }.CreateNewBlock()};
+        if (options.fee_threshold < MAX_MONEY || tip_changed) {
+            // Passing std::nullopt as template_max_age bypasses the cache completely.
+            // We want a fresh template here because the cache currently returns a cached
+            // template regardless of mempool fee increases. In the future, when the cache
+            // can account for fee increases that affect the template, we can pass a desired
+            // fee increase threshold instead of std::nullopt.
+            auto new_tmpl{block_template_cache.GetBlockTemplate(assemble_options, std::nullopt)};
 
             // If the tip changed, return the new template regardless of its fees.
             if (tip_changed) return new_tmpl;
 
             // Calculate the original template total fees if we haven't already
             if (current_fees == -1) {
-                current_fees = std::accumulate(block_template->vTxFees.begin(), block_template->vTxFees.end(), CAmount{0});
+                current_fees = std::accumulate(block_template.vTxFees.begin(), block_template.vTxFees.end(), CAmount{0});
             }
 
             // Check if fees increased enough to return the new template
             const CAmount new_fees = std::accumulate(new_tmpl->vTxFees.begin(), new_tmpl->vTxFees.end(), CAmount{0});
-            Assume(wait_options.fee_threshold != MAX_MONEY);
-            if (new_fees >= current_fees + wait_options.fee_threshold) return new_tmpl;
+            Assume(options.fee_threshold != MAX_MONEY);
+            if (new_fees >= current_fees + options.fee_threshold) return new_tmpl;
         }
 
         now = NodeClock::now();
