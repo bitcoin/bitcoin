@@ -4,12 +4,15 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test createwallet arguments.
 """
+import os
+import stat
 
 from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    is_dir_writable,
     wallet_importprivkey,
 )
 from test_framework.wallet_util import generate_keypair, WalletUnlock
@@ -25,8 +28,26 @@ class CreateWalletTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
+    def test_bad_dir_permissions(self, node):
+        self.log.info("Test wallet creation failure due to non-writable directory")
+        wallet_name = "bad_permissions"
+        dir_path = node.wallets_path / wallet_name
+        dir_path.mkdir(parents=True)
+        original_dir_perms = dir_path.stat().st_mode
+        os.chmod(dir_path, original_dir_perms & ~(stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH))
+        if is_dir_writable(dir_path):
+            self.log.warning("Skipping non-writable directory test: unable to enforce read-only permissions")
+        else:
+            # Run actual test
+            assert_raises_rpc_error(-4, f"SQLiteDatabase: Failed to open database in directory '{str(dir_path)}': directory is not writable", node.createwallet, wallet_name=wallet_name)
+        # Reset directory permissions for cleanup
+        dir_path.chmod(original_dir_perms)
+
+
     def run_test(self):
         node = self.nodes[0]
+
+        self.test_bad_dir_permissions(node)
 
         self.log.info("Run createwallet with invalid parameters.")
         # Run createwallet with invalid parameters. This must not prevent a new wallet with the same name from being created with the correct parameters.
