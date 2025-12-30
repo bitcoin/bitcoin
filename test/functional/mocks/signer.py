@@ -44,7 +44,7 @@ def displayaddress(args):
         return sys.stdout.write(json.dumps({"error": "Unexpected fingerprint", "fingerprint": args.fingerprint}))
 
     expected_desc = [
-        "pkh([00000001/84'/1'/0'/0/0]02c97dc3f4420402e01a113984311bf4a1b8de376cac0bdcfaf1b3ac81f13433c7)#0yneg42r"
+        "pkh([00000001/44'/1'/0'/0/0]02c97dc3f4420402e01a113984311bf4a1b8de376cac0bdcfaf1b3ac81f13433c7)#0yneg42r"
     ]
     if args.desc not in expected_desc:
         return sys.stdout.write(json.dumps({"error": "Unexpected descriptor", "desc": args.desc}))
