@@ -25,14 +25,10 @@ def getdescriptors(args):
 
     sys.stdout.write(json.dumps({
         "receive": [
-            "pkh([00000001/44'/1'/" + args.account + "']" + xpub + "/0/*)#vt6w3l3j",
-            "sh(pkh([00000001/49'/1'/" + args.account + "']" + xpub + "/0/*))#az7uyg3n",
-            "pkh([00000001/84'/1'/" + args.account + "']" + xpub + "/0/*)#58ssc2nq"
+            "pkh([00000001/44'/1'/" + args.account + "']" + xpub + "/0/*)#vt6w3l3j"
         ],
         "internal": [
-            "pkh([00000001/44'/1'/" + args.account + "']" + xpub + "/1/*)#all0v2p2",
-            "sh(pkh([00000001/49'/1'/" + args.account + "']" + xpub + "/1/*))#mpkel968",
-            "pkh([00000001/84'/1'/" + args.account + "']" + xpub + "/1/*)#9n439lrc"
+            "pkh([00000001/44'/1'/" + args.account + "']" + xpub + "/1/*)#all0v2p2"
         ]
     }))
 
