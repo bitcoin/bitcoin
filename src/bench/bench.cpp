@@ -11,6 +11,7 @@
 
 #include <chrono>
 #include <compare>
+#include <csignal>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -49,6 +50,21 @@ const std::function<std::string()> G_TEST_GET_FULL_NAME = []() {
 };
 
 namespace {
+
+void BenchSignalHandler(int signal)
+{
+    if (signal == SIGABRT) {
+        if (!g_running_benchmark_name.empty()) {
+            std::cerr << "Benchmark failed: " << g_running_benchmark_name << "." << std::endl;
+        } else {
+            std::cerr << "Benchmark failed before a name was set." << std::endl;
+        }
+    } else {
+        std::cerr << "Unexpected signal " << signal << " received." << std::endl;
+    }
+    std::signal(signal, SIG_DFL); // Reset to default since we're re-raising the signal
+    std::raise(signal);
+}
 
 void GenerateTemplateResults(const std::vector<ankerl::nanobench::Result>& benchmarkResults, const fs::path& file, const char* tpl)
 {
@@ -106,6 +122,8 @@ void BenchRunner::RunAll(const Args& args)
 {
     std::regex reFilter(args.regex_filter);
     std::smatch baseMatch;
+
+    std::signal(SIGABRT, BenchSignalHandler);
 
     if (args.sanity_check) {
         std::cout << "Running with -sanity-check option, output is being suppressed as benchmark results will be useless." << std::endl;
