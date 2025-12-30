@@ -4082,7 +4082,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         LogDebug(BCLog::NET, "Received addr: %u addresses (%u processed, %u rate-limited) from peer=%d\n",
                  vAddr.size(), num_proc, num_rate_limit, pfrom.GetId());
 
-        m_addrman.Add(vAddrOk, pfrom.addr, 2h);
+        m_addrman.Add(vAddrOk, pfrom.addr, /*time_penalty=*/2h);
         if (vAddr.size() < 1000) peer.m_getaddr_sent = false;
 
         // AddrFetch: Require multiple addresses to avoid disconnecting on self-announcements
@@ -5245,7 +5245,7 @@ bool PeerManagerImpl::ProcessMessages(CNode& node, std::atomic<bool>& interruptM
             LOCK(peer.m_getdata_requests_mutex);
             if (!peer.m_getdata_requests.empty()) fMoreWork = true;
         }
-        // Does this peer has an orphan ready to reconsider?
+        // Does this peer have an orphan ready to reconsider?
         // (Note: we may have provided a parent for an orphan provided
         //  by another peer that was already processed; in that case,
         //  the extra work may not be noticed, possibly resulting in an
