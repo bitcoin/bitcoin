@@ -4,6 +4,7 @@
 
 #include <kernel/bitcoinkernel.h>
 #include <kernel/bitcoinkernel_wrapper.h>
+#include <util/fs.h>
 
 #define BOOST_TEST_MODULE Bitcoin Kernel Test Suite
 #include <boost/test/included/unit_test.hpp>
@@ -13,7 +14,6 @@
 #include <charconv>
 #include <cstdint>
 #include <cstdlib>
-#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -98,16 +98,16 @@ public:
 };
 
 struct TestDirectory {
-    std::filesystem::path m_directory;
+    fs::path m_directory;
     TestDirectory(std::string directory_name)
-        : m_directory{std::filesystem::temp_directory_path() / (directory_name + random_string(16))}
+        : m_directory{fs::path{fs::temp_directory_path()} / fs::u8path(directory_name + "_🌽_" + random_string(16))}
     {
-        std::filesystem::create_directories(m_directory);
+        fs::create_directories(m_directory);
     }
 
     ~TestDirectory()
     {
-        std::filesystem::remove_all(m_directory);
+        fs::remove_all(m_directory);
     }
 };
 
@@ -725,19 +725,19 @@ BOOST_AUTO_TEST_CASE(btck_chainman_tests)
 
     { // test with default context
         Context context{};
-        ChainstateManagerOptions chainman_opts{context, test_directory.m_directory.string(), (test_directory.m_directory / "blocks").string()};
+        ChainstateManagerOptions chainman_opts{context, PathToString(test_directory.m_directory), PathToString(test_directory.m_directory / "blocks")};
         ChainMan chainman{context, chainman_opts};
     }
 
     { // test with default context options
         ContextOptions options{};
         Context context{options};
-        ChainstateManagerOptions chainman_opts{context, test_directory.m_directory.string(), (test_directory.m_directory / "blocks").string()};
+        ChainstateManagerOptions chainman_opts{context, PathToString(test_directory.m_directory), PathToString(test_directory.m_directory / "blocks")};
         ChainMan chainman{context, chainman_opts};
     }
     { // null or empty data_directory or blocks_directory are not allowed
         Context context{};
-        auto valid_dir{test_directory.m_directory.string()};
+        auto valid_dir{PathToString(test_directory.m_directory)};
         std::vector<std::pair<std::string_view, std::string_view>> illegal_cases{
             {"", valid_dir},
             {valid_dir, {nullptr, 0}},
@@ -753,7 +753,7 @@ BOOST_AUTO_TEST_CASE(btck_chainman_tests)
     auto notifications{std::make_shared<TestKernelNotifications>()};
     auto context{create_context(notifications, ChainType::MAINNET)};
 
-    ChainstateManagerOptions chainman_opts{context, test_directory.m_directory.string(), (test_directory.m_directory / "blocks").string()};
+    ChainstateManagerOptions chainman_opts{context, PathToString(test_directory.m_directory), PathToString(test_directory.m_directory / "blocks")};
     chainman_opts.SetWorkerThreads(4);
     BOOST_CHECK(!chainman_opts.SetWipeDbs(/*wipe_block_tree=*/true, /*wipe_chainstate=*/false));
     BOOST_CHECK(chainman_opts.SetWipeDbs(/*wipe_block_tree=*/true, /*wipe_chainstate=*/true));
@@ -769,7 +769,7 @@ std::unique_ptr<ChainMan> create_chainman(TestDirectory& test_directory,
                                           bool chainstate_db_in_memory,
                                           Context& context)
 {
-    ChainstateManagerOptions chainman_opts{context, test_directory.m_directory.string(), (test_directory.m_directory / "blocks").string()};
+    ChainstateManagerOptions chainman_opts{context, PathToString(test_directory.m_directory), PathToString(test_directory.m_directory / "blocks")};
 
     if (reindex) {
         chainman_opts.SetWipeDbs(/*wipe_block_tree=*/reindex, /*wipe_chainstate=*/reindex);
@@ -842,7 +842,7 @@ void chainman_reindex_chainstate_test(TestDirectory& test_directory)
         /*block_tree_db_in_memory=*/false, /*chainstate_db_in_memory=*/false, context)};
 
     std::vector<std::string> import_files;
-    import_files.push_back((test_directory.m_directory / "blocks" / "blk00000.dat").string());
+    import_files.push_back(PathToString(test_directory.m_directory / "blocks" / "blk00000.dat"));
     BOOST_CHECK(chainman->ImportBlocks(import_files));
 }
 
@@ -992,9 +992,9 @@ BOOST_AUTO_TEST_CASE(btck_chainman_in_memory_tests)
         BOOST_CHECK(new_block);
     }
 
-    BOOST_CHECK(std::filesystem::exists(in_memory_test_directory.m_directory / "blocks"));
-    BOOST_CHECK(!std::filesystem::exists(in_memory_test_directory.m_directory / "blocks" / "index"));
-    BOOST_CHECK(!std::filesystem::exists(in_memory_test_directory.m_directory / "chainstate"));
+    BOOST_CHECK(fs::exists(in_memory_test_directory.m_directory / "blocks"));
+    BOOST_CHECK(!fs::exists(in_memory_test_directory.m_directory / "blocks" / "index"));
+    BOOST_CHECK(!fs::exists(in_memory_test_directory.m_directory / "chainstate"));
 
     BOOST_CHECK(context.interrupt());
 }
@@ -1172,8 +1172,8 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     BOOST_CHECK_EQUAL(count, chain.CountEntries());
 
 
-    std::filesystem::remove_all(test_directory.m_directory / "blocks" / "blk00000.dat");
+    fs::remove_all(test_directory.m_directory / "blocks" / "blk00000.dat");
     BOOST_CHECK(!chainman->ReadBlock(tip_2).has_value());
-    std::filesystem::remove_all(test_directory.m_directory / "blocks" / "rev00000.dat");
+    fs::remove_all(test_directory.m_directory / "blocks" / "rev00000.dat");
     BOOST_CHECK_THROW(chainman->ReadBlockSpentOutputs(tip), std::runtime_error);
 }
