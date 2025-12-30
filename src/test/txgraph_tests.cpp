@@ -388,4 +388,62 @@ BOOST_AUTO_TEST_CASE(txgraph_chunk_chain)
     worst_chunk_checker({feerateA}, feerateA);
 }
 
+BOOST_AUTO_TEST_CASE(txgraph_staging)
+{
+    /** The maximum cluster count used in this test. */
+    static constexpr int MAX_CLUSTER_COUNT = 50;
+    /** The total number of transactions in the test. */
+    static constexpr int NUM_TOTAL_TX = 2;
+    /** Set a very large cluster size limit so that only the count limit is triggered. */
+    static constexpr int32_t MAX_CLUSTER_SIZE = 100'000 * 100;
+
+    // Create a new graph for the test.
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, NUM_ACCEPTABLE_ITERS);
+
+    std::vector<TxGraph::Ref> refs;
+    refs.reserve(NUM_TOTAL_TX);
+
+    FeePerWeight feerateA{2, 10};
+    FeePerWeight feerateB{1, 10};
+
+    // everytime adding a transaction, test the chunk status
+    // [A]
+    refs.push_back(graph->AddTransaction(feerateA));
+    BOOST_CHECK_EQUAL(graph->HaveStaging(), false);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 1);
+
+    graph->StartStaging();
+    BOOST_CHECK_EQUAL(graph->HaveStaging(), true);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 1);
+
+    // [A, B]
+    refs.push_back(graph->AddTransaction(feerateB));
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::MAIN), 1);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 2);
+    BOOST_CHECK_EQUAL(graph->Exists(refs[0], TxGraph::Level::TOP), true);
+    BOOST_CHECK_EQUAL(graph->Exists(refs[1], TxGraph::Level::TOP), true);
+
+    graph->AddDependency(/*parent=*/refs[0], /*child=*/refs[1]);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::MAIN), 1);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 2);
+
+    graph->CommitStaging();
+    BOOST_CHECK_EQUAL(graph->HaveStaging(), false);
+
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::MAIN), 2);
+
+    graph->StartStaging();
+
+    // [A]
+    graph->RemoveTransaction(refs[1]);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::MAIN), 2);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 1);
+
+    graph->CommitStaging();
+
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::MAIN), 1);
+
+    graph->SanityCheck();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
