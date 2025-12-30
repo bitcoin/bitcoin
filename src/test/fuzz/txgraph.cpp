@@ -710,7 +710,7 @@ FUZZ_TARGET(txgraph)
                 std::shuffle(refs.begin(), refs.end(), rng);
                 // Invoke the real function.
                 auto result = real->CountDistinctClusters(refs, level_select);
-                // Build a set with representatives of the clusters the Refs occur in in the
+                // Build a set with representatives of the clusters the Refs occur in the
                 // simulated graph. For each, remember the lowest-index transaction SimPos in the
                 // cluster.
                 SimTxGraph::SetType sim_reps;

@@ -38,7 +38,7 @@ class DepGraph
         /** All descendants of the transaction (including itself). */
         SetType descendants;
 
-        /** Equality operator (primarily for for testing purposes). */
+        /** Equality operator (primarily for testing purposes). */
         friend bool operator==(const Entry&, const Entry&) noexcept = default;
 
         /** Construct an empty entry. */

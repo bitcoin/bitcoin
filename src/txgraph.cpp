@@ -1834,7 +1834,7 @@ void TxGraphImpl::GroupClusters(int level) noexcept
     // Sort an_deps by applying the same order to the involved child cluster.
     std::sort(an_deps.begin(), an_deps.end(), [&](auto& a, auto& b) noexcept { return a.second < b.second; });
 
-    // Run the union-find algorithm to to find partitions of the input Clusters which need to be
+    // Run the union-find algorithm to find partitions of the input Clusters which need to be
     // grouped together. See https://en.wikipedia.org/wiki/Disjoint-set_data_structure.
     {
         /** Each PartitionData entry contains information about a single input Cluster. */
