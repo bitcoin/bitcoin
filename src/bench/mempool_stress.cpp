@@ -140,7 +140,7 @@ static void ComplexMemPool(benchmark::Bench& bench)
 
         // Add all transactions to the mempool.
         // Also store the first 10 transactions from each cluster as the
-        // transactions we'll "mine" in the the benchmark.
+        // transactions we'll "mine" in the benchmark.
         int tx_count = 0;
         for (auto& tx : transactions) {
             if (tx_count < 10) {
