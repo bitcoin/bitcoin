@@ -794,8 +794,12 @@ class NetworkThread(threading.Thread):
             # `proto` functions
 
             listener = await cls.network_event_loop.create_server(peer_protocol, addr, port)
-            logger.debug("Listening server on %s:%d should be started" % (addr, port))
-            cls.listeners[(addr, port)] = listener
+            # When port=0, the OS assigns an available ephemeral port. Retrieve
+            # the actual port so callers know where the server is listening.
+            actual_port = listener.sockets[0].getsockname()[1]
+            logger.debug("Listening server on %s:%d should be started" % (addr, actual_port))
+            cls.listeners[(addr, actual_port)] = listener
+            port = actual_port
 
         cls.protos[(addr, port)] = proto
         callback(addr, port)
