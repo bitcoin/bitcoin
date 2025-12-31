@@ -3967,7 +3967,12 @@ void CWallet::SetupDescriptorScriptPubKeyMans(const SecureString& mnemonic_arg, 
                 spk_manager->SetupDescriptor(std::move(desc));
                 uint256 id = spk_manager->GetID();
                 m_spk_managers[id] = std::move(spk_manager);
-                AddActiveScriptPubKeyMan(id, internal);
+                // Only activate BIP44 descriptors, similar to how the non-external-signer branch
+                // only activates certain types (External and Internal, but not CoinJoin)
+                std::string bip44_purpose = strprintf("/%d'/%s'", BIP32_PURPOSE_STANDARD, Params().ExtCoinType());
+                if (desc_str.find(bip44_purpose) != std::string::npos) {
+                    AddActiveScriptPubKeyMan(id, internal);
+                }
             }
         }
     }
