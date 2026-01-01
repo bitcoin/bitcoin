@@ -104,7 +104,7 @@ class ChainTiebreaksTest(BitcoinTestFramework):
         node.invalidateblock(blocks[0].hash_hex)
 
     def test_chain_split_from_disk(self):
-        """Test active chain selection with in-memory forks and out-of-order blocks."""
+        """Test active chain selection with on-disk forks and out-of-order blocks."""
         node = self.nodes[0]
         peer = node.add_p2p_connection(P2PDataStore())
 
