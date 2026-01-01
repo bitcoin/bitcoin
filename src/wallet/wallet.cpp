@@ -4193,85 +4193,58 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
         if (wallet.IsWalletFlagSet(WALLET_FLAG_KEY_ORIGIN_METADATA)) {
             options.create_flags |= WALLET_FLAG_KEY_ORIGIN_METADATA;
         }
+
+        const auto fn_create_wallet = [&context, &options, &empty_context, load_on_startup](const std::string& wallet_name,
+                                                                           const std::vector<std::pair<std::string, int64_t>>& descs_to_import,
+                                                                           std::shared_ptr<CWallet>& out_wallet, bilingual_str& error) {
+                DatabaseStatus status;
+                std::vector<bilingual_str> warnings;
+                std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(wallet_name, options, status, error);
+                if (!database) {
+                    error = strprintf(_("Wallet file creation failed: %s"), error);
+                    return false;
+                }
+
+                out_wallet = CWallet::CreateNew(empty_context, wallet_name, std::move(database), options.create_flags, /*born_encrypted=*/false, error, warnings);
+                if (!out_wallet) {
+                    error = _("Error: Failed to create new watchonly wallet");
+                    return false;
+                }
+                LOCK(out_wallet->cs_wallet);
+
+                // Parse the descriptors and add them to the new wallet
+                for (const auto& [desc_str, creation_time] : descs_to_import) {
+                    // Parse the descriptor
+                    FlatSigningProvider keys;
+                    std::string parse_err;
+                    std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, parse_err, /*require_checksum=*/ true);
+                    // LegacyDataSPKM should not produce invalid, multipath, or ranged watch-only descriptors.
+                    assert(descs.size() == 1);
+                    assert(!descs.at(0)->IsRange());
+
+                    // Add to the wallet
+                    WalletDescriptor w_desc(std::move(descs.at(0)), creation_time, 0, 0, 0);
+                    if (auto spkm_res = out_wallet->AddWalletDescriptor(w_desc, keys, "", false); !spkm_res) {
+                        throw std::runtime_error(util::ErrorString(spkm_res).original);
+                    }
+                }
+
+                // Add the wallet to settings
+                UpdateWalletSetting(*context.chain, wallet_name, load_on_startup, warnings);
+                return true;
+        };
+
         if (data->watch_descs.size() > 0) {
             wallet.WalletLogPrintf("Making a new watchonly wallet containing the watched scripts\n");
-
-            DatabaseStatus status;
-            std::vector<bilingual_str> warnings;
-            std::string wallet_name = MigrationPrefixName(wallet) + "_watchonly";
-            std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(wallet_name, options, status, error);
-            if (!database) {
-                error = strprintf(_("Wallet file creation failed: %s"), error);
-                return false;
-            }
-
-            data->watchonly_wallet = CWallet::CreateNew(empty_context, wallet_name, std::move(database), options.create_flags, /*born_encrypted=*/false, error, warnings);
-            if (!data->watchonly_wallet) {
-                error = _("Error: Failed to create new watchonly wallet");
-                return false;
-            }
-            res.watchonly_wallet = data->watchonly_wallet;
-            LOCK(data->watchonly_wallet->cs_wallet);
-
-            // Parse the descriptors and add them to the new wallet
-            for (const auto& [desc_str, creation_time] : data->watch_descs) {
-                // Parse the descriptor
-                FlatSigningProvider keys;
-                std::string parse_err;
-                std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, parse_err, /*require_checksum=*/ true);
-                // LegacyDataSPKM should not produce invalid, multipath, or ranged watch-only descriptors.
-                assert(descs.size() == 1);
-                assert(!descs.at(0)->IsRange());
-
-                // Add to the wallet
-                WalletDescriptor w_desc(std::move(descs.at(0)), creation_time, 0, 0, 0);
-                if (auto spkm_res = data->watchonly_wallet->AddWalletDescriptor(w_desc, keys, "", false); !spkm_res) {
-                    throw std::runtime_error(util::ErrorString(spkm_res).original);
-                }
-            }
-
-            // Add the wallet to settings
-            UpdateWalletSetting(*context.chain, wallet_name, load_on_startup, warnings);
+            bool ret = fn_create_wallet(/*wallet_name=*/MigrationPrefixName(wallet) + "_watchonly", data->watch_descs, /*out_wallet=*/data->watchonly_wallet, error);
+            res.watchonly_wallet = data->watchonly_wallet; // always set just so it can be cleaned up later
+            if (!ret) return false;
         }
         if (data->solvable_descs.size() > 0) {
             wallet.WalletLogPrintf("Making a new watchonly wallet containing the unwatched solvable scripts\n");
-
-            DatabaseStatus status;
-            std::vector<bilingual_str> warnings;
-            std::string wallet_name = MigrationPrefixName(wallet) + "_solvables";
-            std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(wallet_name, options, status, error);
-            if (!database) {
-                error = strprintf(_("Wallet file creation failed: %s"), error);
-                return false;
-            }
-
-            data->solvable_wallet = CWallet::CreateNew(empty_context, wallet_name, std::move(database), options.create_flags, /*born_encrypted=*/false, error, warnings);
-            if (!data->solvable_wallet) {
-                error = _("Error: Failed to create new watchonly wallet");
-                return false;
-            }
-            res.solvables_wallet = data->solvable_wallet;
-            LOCK(data->solvable_wallet->cs_wallet);
-
-            // Parse the descriptors and add them to the new wallet
-            for (const auto& [desc_str, creation_time] : data->solvable_descs) {
-                // Parse the descriptor
-                FlatSigningProvider keys;
-                std::string parse_err;
-                std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, parse_err, /*require_checksum=*/ true);
-                // LegacyDataSPKM should not produce invalid, multipath, or ranged watch-only descriptors.
-                assert(descs.size() == 1);
-                assert(!descs.at(0)->IsRange());
-
-                // Add to the wallet
-                WalletDescriptor w_desc(std::move(descs.at(0)), creation_time, 0, 0, 0);
-                if (auto spkm_res = data->solvable_wallet->AddWalletDescriptor(w_desc, keys, "", false); !spkm_res) {
-                    throw std::runtime_error(util::ErrorString(spkm_res).original);
-                }
-            }
-
-            // Add the wallet to settings
-            UpdateWalletSetting(*context.chain, wallet_name, load_on_startup, warnings);
+            bool ret = fn_create_wallet(/*wallet_name=*/MigrationPrefixName(wallet) + "_solvables", data->solvable_descs, /*out_wallet=*/data->solvable_wallet, error);
+            res.solvables_wallet = data->solvable_wallet;  // always set just so it can be cleaned up later
+            if (!ret) return false;
         }
     }
 
