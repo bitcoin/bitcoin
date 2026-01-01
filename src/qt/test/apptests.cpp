@@ -72,16 +72,11 @@ void AppTests::appTests()
     }
 #endif
 
-    fs::create_directories([] {
-        BasicTestingSetup test{CBaseChainParams::REGTEST}; // Create a temp data directory to backup the gui settings to
-        return gArgs.GetDataDirNet() / "blocks";
-    }());
-
     qRegisterMetaType<interfaces::BlockAndHeaderTipInfo>("interfaces::BlockAndHeaderTipInfo");
     m_app.parameterSetup();
     GUIUtil::loadFonts();
     GUIUtil::setApplicationFont();
-    m_app.createOptionsModel(true /* reset settings */);
+    QVERIFY(m_app.createOptionsModel(true /* reset settings */));
     QScopedPointer<const NetworkStyle> style(
         NetworkStyle::instantiate(Params().NetworkIDString()));
     m_app.createWindow(style.data());

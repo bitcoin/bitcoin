@@ -154,6 +154,8 @@ void TestGUI(interfaces::Node& node)
     SendCoinsDialog sendCoinsDialog;
     TransactionView transactionView;
     OptionsModel optionsModel(node);
+    bilingual_str error;
+    QVERIFY(optionsModel.Init(error));
     ClientModel clientModel(node, &optionsModel);
     WalletModel walletModel(interfaces::MakeWallet(context, wallet), clientModel);
     sendCoinsDialog.setModel(&walletModel);
