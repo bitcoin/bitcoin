@@ -4148,6 +4148,7 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
         const auto fn_create_wallet = [&context, &options, &empty_context](const std::string& wallet_name,
                                                                            const std::vector<std::pair<std::string, int64_t>>& descs_to_import,
                                                                            std::shared_ptr<CWallet>& out_wallet, bilingual_str& error) {
+            try {
                 DatabaseStatus status;
                 std::vector<bilingual_str> warnings;
                 std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(wallet_name, options, status, error);
@@ -4182,6 +4183,10 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
                 // Add the wallet to settings
                 UpdateWalletSetting(*context.chain, wallet_name, /*load_on_startup=*/true, warnings);
                 return true;
+            } catch (std::exception& e) {
+                error = strprintf(_("Failed to create new wallet '%s'. Error: %s"), wallet_name, e.what());
+                return false;
+            }
         };
 
         if (data->watch_descs.size() > 0) {
