@@ -197,13 +197,25 @@ SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_pa
     }
 }
 
-void SQLiteBatch::SetupSQLStatements()
+void SQLiteBatch::MaybeSetupSQLStatement(SQLiteStatementType type)
 {
-    m_read_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "SELECT value FROM main WHERE key = ?");
-    m_insert_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "INSERT INTO main VALUES(?, ?)");
-    m_overwrite_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "INSERT or REPLACE into main values(?, ?)");
-    m_delete_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "DELETE FROM main WHERE key = ?");
-    m_delete_prefix_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "DELETE FROM main WHERE instr(key, ?) = 1");
+    switch (type) {
+    case SQLiteStatementType::READ:
+        if (!m_read_stmt) m_read_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "SELECT value FROM main WHERE key = ?");
+        break;
+    case SQLiteStatementType::INSERT:
+        if (!m_insert_stmt) m_insert_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "INSERT INTO main VALUES(?, ?)");
+        break;
+    case SQLiteStatementType::OVERWRITE:
+        if (!m_overwrite_stmt) m_overwrite_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "INSERT or REPLACE into main values(?, ?)");
+        break;
+    case SQLiteStatementType::ERASE:
+        if (!m_delete_stmt) m_delete_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "DELETE FROM main WHERE key = ?");
+        break;
+    case SQLiteStatementType::ERASE_PREFIX:
+        if (!m_delete_prefix_stmt) m_delete_prefix_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "DELETE FROM main WHERE instr(key, ?) = 1");
+        break;
+    }
 }
 
 SQLiteDatabase::~SQLiteDatabase()
@@ -425,8 +437,6 @@ SQLiteBatch::SQLiteBatch(SQLiteDatabase& database)
 {
     // Make sure we have a db handle
     assert(m_database.m_db);
-
-    SetupSQLStatements();
 }
 
 SQLiteBatch::~SQLiteBatch()
@@ -475,7 +485,7 @@ void SQLiteBatch::Close()
 bool SQLiteBatch::ReadKey(DataStream&& key, DataStream& value)
 {
     if (!m_database.m_db) return false;
-    assert(m_read_stmt);
+    MaybeSetupSQLStatement(SQLiteStatementType::READ);
 
     // Bind: leftmost parameter in statement is index 1
     if (!m_read_stmt->Bind(1, key, "key")) return false;
@@ -519,12 +529,13 @@ bool SQLiteBatch::ExecStatement(SQLiteStatement* stmt)
 bool SQLiteBatch::WriteKey(DataStream&& key, DataStream&& value, bool overwrite)
 {
     if (!m_database.m_db) return false;
-    assert(m_insert_stmt && m_overwrite_stmt);
 
     SQLiteStatement* stmt;
     if (overwrite) {
+        MaybeSetupSQLStatement(SQLiteStatementType::OVERWRITE);
         stmt = m_overwrite_stmt.get();
     } else {
+        MaybeSetupSQLStatement(SQLiteStatementType::INSERT);
         stmt = m_insert_stmt.get();
     }
 
@@ -538,7 +549,7 @@ bool SQLiteBatch::WriteKey(DataStream&& key, DataStream&& value, bool overwrite)
 bool SQLiteBatch::EraseKey(DataStream&& key)
 {
     if (!m_database.m_db) return false;
-    assert(m_delete_stmt);
+    MaybeSetupSQLStatement(SQLiteStatementType::ERASE);
 
     // Bind: leftmost parameter in statement is index 1
     if (!m_delete_stmt->Bind(1, key, "key")) return false;
@@ -548,7 +559,7 @@ bool SQLiteBatch::EraseKey(DataStream&& key)
 bool SQLiteBatch::ErasePrefix(std::span<const std::byte> prefix)
 {
     if (!m_database.m_db) return false;
-    assert(m_delete_prefix_stmt);
+    MaybeSetupSQLStatement(SQLiteStatementType::ERASE_PREFIX);
 
     // Bind: leftmost parameter in statement is index 1
     if (!m_delete_prefix_stmt->Bind(1, prefix, "key")) return false;
@@ -558,7 +569,7 @@ bool SQLiteBatch::ErasePrefix(std::span<const std::byte> prefix)
 bool SQLiteBatch::HasKey(DataStream&& key)
 {
     if (!m_database.m_db) return false;
-    assert(m_read_stmt);
+    MaybeSetupSQLStatement(SQLiteStatementType::READ);
 
     // Bind: leftmost parameter in statement is index 1
     if (!m_read_stmt->Bind(1, key, "key")) return false;

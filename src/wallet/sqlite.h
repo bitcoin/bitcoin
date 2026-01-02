@@ -71,7 +71,16 @@ private:
      */
     bool m_txn{false};
 
-    void SetupSQLStatements();
+    enum SQLiteStatementType
+    {
+        READ,
+        INSERT,
+        OVERWRITE,
+        ERASE,
+        ERASE_PREFIX,
+    };
+
+    void MaybeSetupSQLStatement(SQLiteStatementType type);
     bool ExecStatement(SQLiteStatement* stmt);
     bool ExecEraseStatement(SQLiteStatement* stmt, std::span<const std::byte> blob);
 
