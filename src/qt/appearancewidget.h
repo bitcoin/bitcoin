@@ -41,7 +41,6 @@ private Q_SLOTS:
     void updateFontScale(int nScale);
     void updateFontWeightNormal(int nValue, bool fForce = false);
     void updateFontWeightBold(int nValue, bool fForce = false);
-    void updateMoneyPreview();
     void updateMoneyFont(int index);
 
 private:

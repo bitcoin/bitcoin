@@ -505,13 +505,18 @@
       </spacer>
      </item>
      <item>
-      <widget class="QComboBox" name="moneyFont"/>
-     </item>
-     <item>
-      <widget class="QLabel" name="moneyFont_preview">
-       <property name="text">
-        <string notr="true">111.11111111 DASH
-909.09090909 DASH</string>
+      <widget class="QComboBox" name="moneyFont">
+       <property name="minimumSize">
+        <size>
+         <width>282</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>282</width>
+         <height>16777215</height>
+        </size>
        </property>
       </widget>
      </item>

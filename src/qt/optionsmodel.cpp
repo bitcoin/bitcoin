@@ -527,21 +527,20 @@ QFont OptionsModel::getFontForChoice(const FontChoice& fc)
     if (std::holds_alternative<FontChoiceAbstract>(fc)) {
         switch (std::get<FontChoiceAbstract>(fc)) {
         case FontChoiceAbstract::ApplicationFont:
-            f = GUIUtil::getFontBold();
+            f.setFamily(GUIUtil::g_font_registry.GetFont());
             break;
         case FontChoiceAbstract::EmbeddedFont:
             f = GUIUtil::fixedPitchFont(true);
-            f.setWeight(QFont::Bold);
             break;
         case FontChoiceAbstract::BestSystemFont:
             f = GUIUtil::fixedPitchFont(false);
-            f.setWeight(QFont::Bold);
             break;
         }
     } else {
         f = std::get<QFont>(fc);
     }
-    f.setPointSize(10);
+    // Note: Only the font family is actually used by callers.
+    // Weight and size are overridden in setMonospacedFont().
     return f;
 }
 

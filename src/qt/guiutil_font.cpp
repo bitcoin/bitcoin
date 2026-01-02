@@ -94,9 +94,8 @@ constexpr std::array<std::string_view, 18> vecIgnoreClasses{
 };
 
 //! List of Qt objects to ignore when applying fonts
-constexpr std::array<std::string_view, 2> vecIgnoreObjects{
+constexpr std::array<std::string_view, 1> vecIgnoreObjects{
     "messagesWidget",
-    "moneyFont_preview",
 };
 
 //! Weights considered when testing for weights supported by a font
