@@ -55,6 +55,7 @@ enum class VerifyRecSigStatus
 class CDKGSessionManager;
 class CQuorumBlockProcessor;
 class CQuorumSnapshotManager;
+class QuorumObserver;
 class QuorumParticipant;
 
 /**
@@ -180,6 +181,7 @@ public:
 class CQuorum
 {
     friend class CQuorumManager;
+    friend class llmq::QuorumObserver;
     friend class llmq::QuorumParticipant;
 
 public:
@@ -239,6 +241,7 @@ void DataCleanupHelper(CDBWrapper& db, std::set<uint256> skip_list, bool compact
  */
 class CQuorumManager
 {
+    friend class llmq::QuorumObserver;
     friend class llmq::QuorumParticipant;
 
 private:
@@ -249,8 +252,7 @@ private:
     const CActiveMasternodeManager* const m_mn_activeman;
     const ChainstateManager& m_chainman;
     llmq::CDKGSessionManager* m_qdkgsman{nullptr};
-    std::unique_ptr<llmq::QuorumParticipant> m_handler{nullptr};
-    const bool m_quorums_recovery{false};
+    std::unique_ptr<llmq::QuorumObserver> m_handler{nullptr};
     const bool m_quorums_watch{false};
 
 private:

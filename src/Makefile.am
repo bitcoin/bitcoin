@@ -287,6 +287,7 @@ BITCOIN_CORE_H = \
   llmq/types.h \
   llmq/utils.h \
   llmq/observer/context.h \
+  llmq/observer/quorums.h \
   logging.h \
   logging/timer.h \
   mapport.h \

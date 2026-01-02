@@ -216,9 +216,17 @@ CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CDeterministicMNManager& 
     m_qsnapman{qsnapman},
     m_mn_activeman{mn_activeman},
     m_chainman{chainman},
-    m_handler{std::make_unique<llmq::QuorumParticipant>(_blsWorker, dmnman, *this, qsnapman, mn_activeman, chainman,
-                                                        mn_sync, sporkman, sync_map, quorums_recovery, quorums_watch)},
-    m_quorums_recovery{quorums_recovery},
+    m_handler{[&]() -> std::unique_ptr<llmq::QuorumObserver> {
+        if (mn_activeman) {
+            return std::make_unique<llmq::QuorumParticipant>(_blsWorker, dmnman, *this, qsnapman, mn_activeman, chainman,
+                                                             mn_sync, sporkman, sync_map, quorums_recovery, quorums_watch);
+        } else if (quorums_watch) {
+            return std::make_unique<llmq::QuorumObserver>(dmnman, *this, qsnapman, mn_activeman, chainman, mn_sync,
+                                                          sporkman, sync_map, quorums_recovery, quorums_watch);
+        } else {
+            return nullptr;
+        }
+    }()},
     m_quorums_watch{quorums_watch},
     db{util::MakeDbWrapper({db_params.path / "llmq" / "quorumdb", db_params.memory, db_params.wipe, /*cache_size=*/1 << 20})}
 {
