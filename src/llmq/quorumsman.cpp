@@ -481,16 +481,22 @@ MessageProcessingResult CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& c
         }
 
         // Check if request wants ENCRYPTED_CONTRIBUTIONS data
-        MessageProcessingResult ret{};
+        CQuorumDataRequest::Errors ret_err{CQuorumDataRequest::Errors::NONE};
+        MessageProcessingResult qdata_ret{}, ret{};
         if (m_handler) {
             ret = m_handler->ProcessContribQGETDATA(request_limit_exceeded, ssResponseData, *pQuorum, request, pQuorumBaseBlockIndex);
             if (auto request_err = request.GetError(); request_err != CQuorumDataRequest::Errors::NONE &&
                                                        request_err != CQuorumDataRequest::Errors::UNDEFINED) {
-                auto qdata_ret = sendQDATA(request_err, request_limit_exceeded);
-                return ret.empty() ? qdata_ret : ret;
+                ret_err = request_err;
             }
         }
-        return ret.empty() ? sendQDATA(CQuorumDataRequest::Errors::NONE, request_limit_exceeded, ssResponseData) : ret;
+        // sendQDATA also pushes a message independent of the returned value
+        if (ret_err != CQuorumDataRequest::Errors::NONE) {
+            qdata_ret = sendQDATA(ret_err, request_limit_exceeded);
+        } else {
+            qdata_ret = sendQDATA(CQuorumDataRequest::Errors::NONE, request_limit_exceeded, ssResponseData);
+        }
+        return ret.empty() ? qdata_ret : ret;
     }
 
     if (msg_type == NetMsgType::QDATA) {
@@ -518,7 +524,7 @@ MessageProcessingResult CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& c
         }
 
         if (request.GetError() != CQuorumDataRequest::Errors::NONE) {
-            LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- %s: %s, from peer=%d\n", __func__, msg_type, strprintf("Error %d (%s)", request.GetError(), request.GetErrorString()), pfrom.GetId());
+            LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- %s: Error %d (%s), from peer=%d\n", __func__, msg_type, request.GetError(), request.GetErrorString(), pfrom.GetId());
             return {};
         }
 

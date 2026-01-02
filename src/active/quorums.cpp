@@ -137,7 +137,8 @@ MessageProcessingResult QuorumParticipant::ProcessContribQDATA(CNode& pfrom, CDa
                                                                CQuorum& quorum, CQuorumDataRequest& request)
 {
     if (request.GetDataMask() & CQuorumDataRequest::ENCRYPTED_CONTRIBUTIONS) {
-        if (WITH_LOCK(quorum.cs_vvec_shShare, return quorum.quorumVvec->size() != size_t(quorum.params.threshold))) {
+        if (WITH_LOCK(quorum.cs_vvec_shShare, return !quorum.HasVerificationVectorInternal()
+                                                     || quorum.quorumVvec->size() != size_t(quorum.params.threshold))) {
             // Don't bump score because we asked for it
             LogPrint(BCLog::LLMQ, "QuorumParticipant::%s -- %s: No valid quorum verification vector available, from peer=%d\n", __func__, NetMsgType::QDATA, pfrom.GetId());
             return {};

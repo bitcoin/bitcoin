@@ -26,7 +26,7 @@ uint256 MakeQuorumKey(const CQuorum& q)
     return hw.GetHash();
 }
 
-void DataCleanupHelper(CDBWrapper& db, std::set<uint256> skip_list, bool compact)
+void DataCleanupHelper(CDBWrapper& db, const std::set<uint256>& skip_list, bool compact)
 {
     const auto prefixes = {DB_QUORUM_QUORUM_VVEC, DB_QUORUM_SK_SHARE};
 
@@ -124,7 +124,7 @@ bool CQuorum::SetVerificationVector(const std::vector<CBLSPublicKey>& quorumVecI
 
 bool CQuorum::SetSecretKeyShare(const CBLSSecretKey& secretKeyShare, const uint256& protx_hash)
 {
-    if (!secretKeyShare.IsValid() || (secretKeyShare.GetPublicKey() != GetPubKeyShare(GetMemberIndex(protx_hash)))) {
+    if (protx_hash.IsNull() || !secretKeyShare.IsValid() || (secretKeyShare.GetPublicKey() != GetPubKeyShare(GetMemberIndex(protx_hash)))) {
         return false;
     }
     LOCK(cs_vvec_shShare);
