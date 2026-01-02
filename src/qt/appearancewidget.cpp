@@ -118,6 +118,7 @@ AppearanceWidget::AppearanceWidget(QWidget* parent) :
     connect(ui->fontWeightNormalSlider, &QSlider::valueChanged, [this](auto nValue) { updateFontWeightNormal(nValue); });
 
     connect(ui->moneyFont, &QComboBox::currentTextChanged, [this]() { Q_EMIT appearanceChanged(); });
+    connect(ui->moneyFont, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &AppearanceWidget::updateMoneyFont);
 
     connect(ui->theme, &QComboBox::currentTextChanged, this, &AppearanceWidget::updateTheme);
     connect(ui->theme, &QComboBox::currentTextChanged, [this]() { Q_EMIT appearanceChanged(); });
@@ -145,6 +146,13 @@ AppearanceWidget::~AppearanceWidget()
         if (prevWeightBold != GUIUtil::g_font_registry.GetWeightBold()) {
             GUIUtil::g_font_registry.SetWeightBold(prevWeightBold);
         }
+        // Restore monospace font if cancelled
+        if (model) {
+            const auto& current_money_font = model->data(model->index(OptionsModel::FontForMoney, 0), Qt::EditRole).value<OptionsModel::FontChoice>();
+            if (current_money_font != prevMoneyFont) {
+                model->setData(model->index(OptionsModel::FontForMoney, 0), QVariant::fromValue(prevMoneyFont));
+            }
+        }
         GUIUtil::setApplicationFont();
         GUIUtil::updateFonts();
     }
@@ -171,6 +179,7 @@ void AppearanceWidget::setModel(OptionsModel* _model)
     mapper->toFirst();
 
     const auto& font_for_money = _model->data(_model->index(OptionsModel::FontForMoney, 0), Qt::EditRole).value<OptionsModel::FontChoice>();
+    prevMoneyFont = font_for_money;  // Save original value for cancel
     setFontChoice(ui->moneyFont, font_for_money);
 
     const bool override_family{_model->isOptionOverridden("-font-family")};
@@ -208,9 +217,7 @@ void AppearanceWidget::setModel(OptionsModel* _model)
 void AppearanceWidget::accept()
 {
     fAcceptChanges = true;
-    if (model) {
-        model->setData(model->index(OptionsModel::FontForMoney, 0), ui->moneyFont->itemData(ui->moneyFont->currentIndex()));
-    }
+    // Note: FontForMoney is now updated immediately via updateMoneyFont()
 }
 
 void AppearanceWidget::updateTheme(const QString& theme)
@@ -280,6 +287,19 @@ void AppearanceWidget::updateMoneyPreview()
         return;
     }
     ui->moneyFont_preview->setFont(GUIUtil::getFontBold());
+}
+
+void AppearanceWidget::updateMoneyFont(int index)
+{
+    if (!model) {
+        return;
+    }
+    QVariant item_data = ui->moneyFont->itemData(index);
+    if (!item_data.canConvert<OptionsModel::FontChoice>()) {
+        return;
+    }
+    // Update the model immediately to trigger live preview in Overview page
+    model->setData(model->index(OptionsModel::FontForMoney, 0), item_data);
 }
 
 void AppearanceWidget::updateWeightSlider(const bool fForce)
