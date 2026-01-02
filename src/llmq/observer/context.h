@@ -5,6 +5,8 @@
 #ifndef BITCOIN_LLMQ_OBSERVER_CONTEXT_H
 #define BITCOIN_LLMQ_OBSERVER_CONTEXT_H
 
+#include <llmq/options.h>
+
 #include <validationinterface.h>
 
 #include <memory>
@@ -14,6 +16,7 @@ class CBlockIndex;
 class CDeterministicMNManager;
 class ChainstateManager;
 class CMasternodeMetaMan;
+class CMasternodeSync;
 class CSporkManager;
 namespace llmq {
 class CDKGDebugManager;
@@ -21,6 +24,7 @@ class CDKGSessionManager;
 class CQuorumBlockProcessor;
 class CQuorumManager;
 class CQuorumSnapshotManager;
+class QuorumObserver;
 } // namespace llmq
 namespace util {
 struct DbWrapperParams;
@@ -36,9 +40,10 @@ public:
     ObserverContext(const ObserverContext&) = delete;
     ObserverContext& operator=(const ObserverContext&) = delete;
     ObserverContext(CBLSWorker& bls_worker, CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
-                    llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumManager& qman,
+                    CMasternodeSync& mn_sync, llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumManager& qman,
                     llmq::CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
-                    const CSporkManager& sporkman, const util::DbWrapperParams& db_params);
+                    const CSporkManager& sporkman, const llmq::QvvecSyncModeMap& sync_map,
+                    const util::DbWrapperParams& db_params, bool quorums_recovery);
     ~ObserverContext();
 
 protected:
@@ -48,6 +53,9 @@ protected:
 public:
     const std::unique_ptr<llmq::CDKGDebugManager> dkgdbgman;
     const std::unique_ptr<llmq::CDKGSessionManager> qdkgsman;
+
+private:
+    const std::unique_ptr<llmq::QuorumObserver> qman_handler;
 };
 } // namespace llmq
 

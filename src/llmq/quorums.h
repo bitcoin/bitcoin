@@ -28,7 +28,6 @@
 class CActiveMasternodeManager;
 class CBlockIndex;
 class CChain;
-class CChainState;
 class CConnman;
 class ChainstateManager;
 class CDataStream;
@@ -249,11 +248,9 @@ private:
     CDeterministicMNManager& m_dmnman;
     CQuorumBlockProcessor& quorumBlockProcessor;
     CQuorumSnapshotManager& m_qsnapman;
-    const CActiveMasternodeManager* const m_mn_activeman;
     const ChainstateManager& m_chainman;
     llmq::CDKGSessionManager* m_qdkgsman{nullptr};
-    std::unique_ptr<llmq::QuorumObserver> m_handler{nullptr};
-    const bool m_quorums_watch{false};
+    llmq::QuorumObserver* m_handler{nullptr};
 
 private:
     mutable Mutex cs_db;
@@ -285,19 +282,22 @@ public:
     CQuorumManager& operator=(const CQuorumManager&) = delete;
     explicit CQuorumManager(CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman, CEvoDB& _evoDb,
                             CQuorumBlockProcessor& _quorumBlockProcessor, CQuorumSnapshotManager& qsnapman,
-                            const CActiveMasternodeManager* const mn_activeman, const ChainstateManager& chainman,
-                            const CMasternodeSync& mn_sync, const CSporkManager& sporkman,
-                            const llmq::QvvecSyncModeMap& sync_map, const util::DbWrapperParams& db_params,
-                            bool quorums_recovery, bool quorums_watch);
+                            const ChainstateManager& chainman, const util::DbWrapperParams& db_params);
     ~CQuorumManager();
 
-    void ConnectManager(gsl::not_null<llmq::CDKGSessionManager*> qdkgsman)
+    void ConnectManagers(gsl::not_null<llmq::QuorumObserver*> handler, gsl::not_null<llmq::CDKGSessionManager*> qdkgsman)
     {
         // Prohibit double initialization
+        assert(m_handler == nullptr);
+        m_handler = handler;
         assert(m_qdkgsman == nullptr);
         m_qdkgsman = qdkgsman;
     }
-    void DisconnectManager() { m_qdkgsman = nullptr; }
+    void DisconnectManagers()
+    {
+        m_handler = nullptr;
+        m_qdkgsman = nullptr;
+    }
 
     void Start();
     void Stop();
@@ -324,7 +324,8 @@ public:
                                          size_t nCountRequested) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_map_quorums, !cs_scan_quorums);
 
-    bool IsWatching() const { return m_quorums_watch; }
+    bool IsMasternode() const;
+    bool IsWatching() const;
 
 private:
     // all private methods here are cs_main-free

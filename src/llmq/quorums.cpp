@@ -206,28 +206,12 @@ bool CQuorum::ReadContributions(const CDBWrapper& db)
 
 CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman, CEvoDB& _evoDb,
                                CQuorumBlockProcessor& _quorumBlockProcessor, CQuorumSnapshotManager& qsnapman,
-                               const CActiveMasternodeManager* const mn_activeman, const ChainstateManager& chainman,
-                               const CMasternodeSync& mn_sync, const CSporkManager& sporkman,
-                               const llmq::QvvecSyncModeMap& sync_map, const util::DbWrapperParams& db_params,
-                               bool quorums_recovery, bool quorums_watch) :
+                               const ChainstateManager& chainman, const util::DbWrapperParams& db_params) :
     blsWorker{_blsWorker},
     m_dmnman{dmnman},
     quorumBlockProcessor{_quorumBlockProcessor},
     m_qsnapman{qsnapman},
-    m_mn_activeman{mn_activeman},
     m_chainman{chainman},
-    m_handler{[&]() -> std::unique_ptr<llmq::QuorumObserver> {
-        if (mn_activeman) {
-            return std::make_unique<llmq::QuorumParticipant>(_blsWorker, dmnman, *this, qsnapman, mn_activeman, chainman,
-                                                             mn_sync, sporkman, sync_map, quorums_recovery, quorums_watch);
-        } else if (quorums_watch) {
-            return std::make_unique<llmq::QuorumObserver>(dmnman, *this, qsnapman, mn_activeman, chainman, mn_sync,
-                                                          sporkman, sync_map, quorums_recovery, quorums_watch);
-        } else {
-            return nullptr;
-        }
-    }()},
-    m_quorums_watch{quorums_watch},
     db{util::MakeDbWrapper({db_params.path / "llmq" / "quorumdb", db_params.memory, db_params.wipe, /*cache_size=*/1 << 20})}
 {
     utils::InitQuorumsCache(mapQuorumsCache, m_chainman.GetConsensus(), /*limit_by_connections=*/false);
@@ -505,6 +489,22 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
     return {vecResultQuorums.begin(), vecResultQuorums.begin() + nResultEndIndex};
 }
 
+bool CQuorumManager::IsMasternode() const
+{
+    if (m_handler) {
+        return m_handler->IsMasternode();
+    }
+    return false;
+}
+
+bool CQuorumManager::IsWatching() const
+{
+    if (m_handler) {
+        return m_handler->IsWatching();
+    }
+    return false;
+}
+
 CQuorumCPtr CQuorumManager::GetQuorum(Consensus::LLMQType llmqType, const uint256& quorumHash) const
 {
     const CBlockIndex* pQuorumBaseBlockIndex = [&]() {
@@ -549,7 +549,7 @@ CQuorumCPtr CQuorumManager::GetQuorum(Consensus::LLMQType llmqType, gsl::not_nul
 MessageProcessingResult CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
 {
     if (msg_type == NetMsgType::QGETDATA) {
-        if (m_mn_activeman == nullptr || (pfrom.GetVerifiedProRegTxHash().IsNull() && !pfrom.qwatch)) {
+        if (!IsMasternode() || (pfrom.GetVerifiedProRegTxHash().IsNull() && !pfrom.qwatch)) {
             return MisbehavingError{10, "not a verified masternode or a qwatch connection"};
         }
 
@@ -635,7 +635,7 @@ MessageProcessingResult CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& c
     }
 
     if (msg_type == NetMsgType::QDATA) {
-        if ((m_mn_activeman == nullptr && !m_quorums_watch) || pfrom.GetVerifiedProRegTxHash().IsNull()) {
+        if ((!IsMasternode() && !IsWatching()) || pfrom.GetVerifiedProRegTxHash().IsNull()) {
             return MisbehavingError{10, "not a verified masternode and -watchquorums is not enabled"};
         }
 
@@ -695,8 +695,10 @@ MessageProcessingResult CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& c
         WITH_LOCK(cs_db, pQuorum->WriteContributions(*db));
         return {};
     }
+
     return {};
 }
+
 void CQuorumManager::StartCachePopulatorThread(CQuorumCPtr pQuorum) const
 {
     if (!pQuorum->HasVerificationVector()) {

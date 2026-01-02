@@ -21,18 +21,16 @@
 
 namespace llmq {
 QuorumObserver::QuorumObserver(CDeterministicMNManager& dmnman, CQuorumManager& qman, CQuorumSnapshotManager& qsnapman,
-                               const CActiveMasternodeManager* const mn_activeman, const ChainstateManager& chainman,
-                               const CMasternodeSync& mn_sync, const CSporkManager& sporkman,
-                               const llmq::QvvecSyncModeMap& sync_map, bool quorums_recovery, bool quorums_watch) :
+                               const ChainstateManager& chainman, const CMasternodeSync& mn_sync,
+                               const CSporkManager& sporkman, const llmq::QvvecSyncModeMap& sync_map,
+                               bool quorums_recovery) :
     m_dmnman{dmnman},
     m_qman{qman},
     m_qsnapman{qsnapman},
-    m_mn_activeman{mn_activeman},
     m_chainman{chainman},
     m_mn_sync{mn_sync},
     m_sporkman{sporkman},
     m_quorums_recovery{quorums_recovery},
-    m_quorums_watch{quorums_watch},
     m_sync_map{sync_map}
 {
 }
@@ -48,7 +46,7 @@ void QuorumObserver::UpdatedBlockTip(const CBlockIndex* pindexNew, CConnman& con
         CheckQuorumConnections(connman, params, pindexNew);
     }
 
-    if (m_mn_activeman != nullptr || m_quorums_watch) {
+    {
         // Cleanup expired data requests
         LOCK(m_qman.cs_data_requests);
         auto it = m_qman.mapQuorumDataRequests.begin();
@@ -97,16 +95,12 @@ Uint256HashSet QuorumObserver::GetQuorumsToDelete(CConnman& connman, const Conse
 void QuorumObserver::CheckQuorumConnections(CConnman& connman, const Consensus::LLMQParams& llmqParams,
                                             gsl::not_null<const CBlockIndex*> pindexNew) const
 {
-    if (!m_quorums_watch) {
-        return;
-    }
-
     auto lastQuorums = m_qman.ScanQuorums(llmqParams.type, pindexNew, (size_t)llmqParams.keepOldConnections);
     auto deletableQuorums = GetQuorumsToDelete(connman, llmqParams, pindexNew);
 
     for (const auto& quorum : lastQuorums) {
         if (utils::EnsureQuorumConnections(llmqParams, connman, m_sporkman, {m_dmnman, m_qsnapman, m_chainman, quorum->m_quorum_base_block_index},
-                                           m_dmnman.GetListAtChainTip(), /*myProTxHash=*/uint256{}, /*is_masternode=*/false, m_quorums_watch)) {
+                                           m_dmnman.GetListAtChainTip(), /*myProTxHash=*/uint256{}, /*is_masternode=*/false, /*quorums_watch=*/true)) {
             if (deletableQuorums.erase(quorum->qc->quorumHash) > 0) {
                 LogPrint(BCLog::LLMQ, "QuorumObserver::%s -- llmqType[%d] h[%d] keeping mn quorum connections for quorum: [%d:%s]\n", __func__, ToUnderlying(llmqParams.type), pindexNew->nHeight, quorum->m_quorum_base_block_index->nHeight, quorum->m_quorum_base_block_index->GetBlockHash().ToString());
             }
@@ -142,6 +136,18 @@ MessageProcessingResult QuorumObserver::ProcessContribQDATA(CNode& pfrom, CDataS
 {
     // Watch-only nodes ignore encrypted contributions
     return {};
+}
+
+bool QuorumObserver::IsMasternode() const
+{
+    // Watch-only nodes are not masternodes
+    return false;
+}
+
+bool QuorumObserver::IsWatching() const
+{
+    // We are only initialized if watch-only mode is enabled
+    return true;
 }
 
 void QuorumObserver::DataRecoveryThread(CConnman& connman, gsl::not_null<const CBlockIndex*> block_index,
@@ -273,7 +279,7 @@ void QuorumObserver::StartVvecSyncThread(CConnman& connman, gsl::not_null<const 
 
 void QuorumObserver::TriggerQuorumDataRecoveryThreads(CConnman& connman, gsl::not_null<const CBlockIndex*> block_index) const
 {
-    if (!m_quorums_recovery || !m_quorums_watch) {
+    if (!m_quorums_recovery) {
         return;
     }
 
@@ -313,7 +319,7 @@ void QuorumObserver::StartCleanupOldQuorumDataThread(gsl::not_null<const CBlockI
     // window and it's better to have more room so we pick next cycle.
     // dkgMiningWindowStart for small quorums is 10 i.e. a safe block to start
     // these calculations is at height 576 + 24 * 2 + 10 = 576 + 58.
-    if ((m_mn_activeman == nullptr && !m_quorums_watch) || (pIndex->nHeight % 576 != 58)) {
+    if (pIndex->nHeight % 576 != 58) {
         return;
     }
 
