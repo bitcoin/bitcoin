@@ -7,9 +7,11 @@
 #include <evo/deterministicmns.h>
 #include <llmq/commitment.h>
 #include <llmq/options.h>
-#include <llmq/quorumsman.h>
+#include <llmq/quorums.h>
 #include <llmq/utils.h>
 #include <masternode/sync.h>
+#include <msg_result.h>
+#include <unordered_lru_cache.h>
 
 #include <chain.h>
 #include <chainparams.h>
@@ -20,7 +22,7 @@
 #include <cxxtimer.hpp>
 
 namespace llmq {
-QuorumObserver::QuorumObserver(CConnman& connman, CDeterministicMNManager& dmnman, CQuorumManager& qman,
+QuorumObserver::QuorumObserver(CConnman& connman, CDeterministicMNManager& dmnman, QuorumObserverParent& qman,
                                CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
                                const CMasternodeSync& mn_sync, const CSporkManager& sporkman,
                                const llmq::QvvecSyncModeMap& sync_map, bool quorums_recovery) :
@@ -66,18 +68,8 @@ void QuorumObserver::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
         CheckQuorumConnections(params, pindexNew);
     }
 
-    {
-        // Cleanup expired data requests
-        LOCK(m_qman.cs_data_requests);
-        auto it = m_qman.mapQuorumDataRequests.begin();
-        while (it != m_qman.mapQuorumDataRequests.end()) {
-            if (it->second.IsExpired(/*add_bias=*/true)) {
-                it = m_qman.mapQuorumDataRequests.erase(it);
-            } else {
-                ++it;
-            }
-        }
-    }
+    // Cleanup expired data requests
+    m_qman.CleanupExpiredDataRequests();
 
     TriggerQuorumDataRecoveryThreads(pindexNew);
     StartCleanupOldQuorumDataThread(pindexNew);
@@ -230,14 +222,10 @@ void QuorumObserver::DataRecoveryThread(gsl::not_null<const CBlockIndex*> block_
                 }
                 // Access the member list of the quorum with the calculated offset applied to balance the load equally
                 pCurrentMemberHash = &vecMemberHashes[(start_offset + nTries++) % vecMemberHashes.size()];
-                {
-                    LOCK(m_qman.cs_data_requests);
-                    const CQuorumDataRequestKey key(*pCurrentMemberHash, true, pQuorum->qc->quorumHash, pQuorum->qc->llmqType);
-                    auto it = m_qman.mapQuorumDataRequests.find(key);
-                    if (it != m_qman.mapQuorumDataRequests.end() && !it->second.IsExpired(/*add_bias=*/true)) {
-                        printLog("Already asked");
-                        continue;
-                    }
+                if (m_qman.IsDataRequestPending(*pCurrentMemberHash, /*we_requested=*/true, pQuorum->qc->quorumHash,
+                                                pQuorum->qc->llmqType)) {
+                    printLog("Already asked");
+                    continue;
                 }
                 // Sleep a bit depending on the start offset to balance out multiple requests to same masternode
                 quorumThreadInterrupt.sleep_for(std::chrono::milliseconds(start_offset * 100));
@@ -256,20 +244,20 @@ void QuorumObserver::DataRecoveryThread(gsl::not_null<const CBlockIndex*> block_
                     nTimeLastSuccess = GetTime<std::chrono::seconds>().count();
                     printLog("Requested");
                 } else {
-                    LOCK(m_qman.cs_data_requests);
-                    const CQuorumDataRequestKey key(*pCurrentMemberHash, true, pQuorum->qc->quorumHash, pQuorum->qc->llmqType);
-                    auto it = m_qman.mapQuorumDataRequests.find(key);
-                    if (it == m_qman.mapQuorumDataRequests.end()) {
+                    const auto status = m_qman.GetDataRequestStatus(*pCurrentMemberHash, /*we_requested=*/true,
+                                                                    pQuorum->qc->quorumHash, pQuorum->qc->llmqType);
+                    switch (status) {
+                    case DataRequestStatus::NotFound:
                         printLog("Failed");
                         pNode->fDisconnect = true;
                         pCurrentMemberHash = nullptr;
                         return;
-                    } else if (it->second.IsProcessed()) {
+                    case DataRequestStatus::Processed:
                         printLog("Processed");
                         pNode->fDisconnect = true;
                         pCurrentMemberHash = nullptr;
                         return;
-                    } else {
+                    case DataRequestStatus::Pending:
                         printLog("Waiting");
                         return;
                     }
@@ -376,7 +364,7 @@ void QuorumObserver::StartCleanupOldQuorumDataThread(gsl::not_null<const CBlockI
         }
 
         if (!quorumThreadInterrupt) {
-            WITH_LOCK(m_qman.cs_db, DataCleanupHelper(*m_qman.db, dbKeysToSkip));
+            m_qman.CleanupOldQuorumData(dbKeysToSkip);
         }
 
         LogPrint(BCLog::LLMQ, "QuorumObserver::StartCleanupOldQuorumDataThread -- done. time=%d\n", t.count());

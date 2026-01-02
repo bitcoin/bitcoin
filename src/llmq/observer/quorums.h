@@ -5,8 +5,9 @@
 #ifndef BITCOIN_LLMQ_OBSERVER_QUORUMS_H
 #define BITCOIN_LLMQ_OBSERVER_QUORUMS_H
 
+#include <bls/bls_ies.h>
 #include <ctpl_stl.h>
-#include <llmq/quorumsman.h>
+#include <llmq/options.h>
 #include <llmq/types.h>
 
 #include <consensus/params.h>
@@ -15,24 +16,58 @@
 #include <sync.h>
 #include <threadsafety.h>
 #include <uint256.h>
+#include <util/threadinterrupt.h>
 
 #include <gsl/pointers.h>
 
 #include <map>
+#include <set>
 
 class CConnman;
+class CDataStream;
+class CDeterministicMNManager;
+class CMasternodeSync;
+class CNode;
+class CSporkManager;
 struct MessageProcessingResult;
+namespace llmq {
+class CQuorumDataRequest;
+class CQuorumSnapshotManager;
+} // namespace llmq
 
 namespace llmq {
-class CQuorumManager;
-enum class QvvecSyncMode : int8_t;
+enum class DataRequestStatus : uint8_t {
+    NotFound,
+    Pending,
+    Processed,
+};
+
+class QuorumObserverParent
+{
+public:
+    virtual ~QuorumObserverParent() = default;
+    virtual bool GetEncryptedContributions(Consensus::LLMQType llmq_type, const CBlockIndex* block_index,
+                                           const std::vector<bool>& valid_members, const uint256& protx_hash,
+                                           std::vector<CBLSIESEncryptedObject<CBLSSecretKey>>& vec_enc) const = 0;
+    virtual bool IsDataRequestPending(const uint256& proRegTx, bool we_requested, const uint256& quorumHash,
+                                      Consensus::LLMQType llmqType) const = 0;
+    virtual bool RequestQuorumData(CNode* pfrom, CConnman& connman, const CQuorum& quorum, uint16_t nDataMask,
+                                   const uint256& proTxHash) const = 0;
+    virtual DataRequestStatus GetDataRequestStatus(const uint256& proRegTx, bool we_requested,
+                                                   const uint256& quorumHash, Consensus::LLMQType llmqType) const = 0;
+    virtual std::vector<CQuorumCPtr> ScanQuorums(Consensus::LLMQType llmqType,
+                                                 gsl::not_null<const CBlockIndex*> pindexStart,
+                                                 size_t nCountRequested) const = 0;
+    virtual void CleanupExpiredDataRequests() const = 0;
+    virtual void CleanupOldQuorumData(const std::set<uint256>& dbKeysToSkip) const = 0;
+};
 
 class QuorumObserver
 {
 protected:
     CConnman& m_connman;
     CDeterministicMNManager& m_dmnman;
-    CQuorumManager& m_qman;
+    QuorumObserverParent& m_qman;
     CQuorumSnapshotManager& m_qsnapman;
     const ChainstateManager& m_chainman;
     const CMasternodeSync& m_mn_sync;
@@ -51,7 +86,7 @@ public:
     QuorumObserver() = delete;
     QuorumObserver(const QuorumObserver&) = delete;
     QuorumObserver& operator=(const QuorumObserver&) = delete;
-    explicit QuorumObserver(CConnman& connman, CDeterministicMNManager& dmnman, CQuorumManager& qman,
+    explicit QuorumObserver(CConnman& connman, CDeterministicMNManager& dmnman, QuorumObserverParent& qman,
                             CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
                             const CMasternodeSync& mn_sync, const CSporkManager& sporkman,
                             const llmq::QvvecSyncModeMap& sync_map, bool quorums_recovery);

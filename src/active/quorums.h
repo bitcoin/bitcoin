@@ -6,7 +6,6 @@
 #define BITCOIN_ACTIVE_QUORUMS_H
 
 #include <llmq/observer/quorums.h>
-#include <llmq/quorumsman.h>
 #include <llmq/types.h>
 
 #include <consensus/params.h>
@@ -27,14 +26,14 @@ class CDKGSessionManager;
 class CNode;
 class CSporkManager;
 struct MessageProcessingResult;
-
 namespace llmq {
 class CQuorum;
 class CQuorumDataRequest;
-class CQuorumManager;
 class CQuorumSnapshotManager;
 enum class QvvecSyncMode : int8_t;
+} // namespace llmq
 
+namespace llmq {
 class QuorumParticipant final : public QuorumObserver
 {
 private:
@@ -47,7 +46,7 @@ public:
     QuorumParticipant(const QuorumParticipant&) = delete;
     QuorumParticipant& operator=(const QuorumParticipant&) = delete;
     explicit QuorumParticipant(CBLSWorker& bls_worker, CConnman& connman, CDeterministicMNManager& dmnman,
-                               CQuorumManager& qman, CQuorumSnapshotManager& qsnapman,
+                               QuorumObserverParent& qman, CQuorumSnapshotManager& qsnapman,
                                const CActiveMasternodeManager& mn_activeman, const ChainstateManager& chainman,
                                const CMasternodeSync& mn_sync, const CSporkManager& sporkman,
                                const llmq::QvvecSyncModeMap& sync_map, bool quorums_recovery, bool quorums_watch);

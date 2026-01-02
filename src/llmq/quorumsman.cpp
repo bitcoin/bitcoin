@@ -4,7 +4,6 @@
 
 #include <llmq/quorumsman.h>
 
-#include <active/quorums.h>
 #include <bls/bls.h>
 #include <bls/bls_ies.h>
 #include <evo/deterministicmns.h>
@@ -52,6 +51,16 @@ CQuorumManager::~CQuorumManager()
         m_cache_interrupt();
         m_cache_thread.join();
     }
+}
+
+bool CQuorumManager::GetEncryptedContributions(Consensus::LLMQType llmq_type, const CBlockIndex* block_index,
+                                               const std::vector<bool>& valid_members, const uint256& protx_hash,
+                                               std::vector<CBLSIESEncryptedObject<CBLSSecretKey>>& vec_enc) const
+{
+    if (m_qdkgsman) {
+        return m_qdkgsman->GetEncryptedContributions(llmq_type, block_index, valid_members, protx_hash, vec_enc);
+    }
+    return false;
 }
 
 CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(const Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, bool populate_cache) const
@@ -311,6 +320,49 @@ bool CQuorumManager::IsWatching() const
         return m_handler->IsWatching();
     }
     return false;
+}
+
+bool CQuorumManager::IsDataRequestPending(const uint256& proRegTx, bool we_requested, const uint256& quorumHash,
+                                          Consensus::LLMQType llmqType) const
+{
+    const CQuorumDataRequestKey key{proRegTx, we_requested, quorumHash, llmqType};
+    LOCK(cs_data_requests);
+    const auto it = mapQuorumDataRequests.find(key);
+    return it != mapQuorumDataRequests.end() && !it->second.IsExpired(/*add_bias=*/true);
+}
+
+DataRequestStatus CQuorumManager::GetDataRequestStatus(const uint256& proRegTx, bool we_requested,
+                                                       const uint256& quorumHash, Consensus::LLMQType llmqType) const
+{
+    const CQuorumDataRequestKey key{proRegTx, we_requested, quorumHash, llmqType};
+    LOCK(cs_data_requests);
+    const auto it = mapQuorumDataRequests.find(key);
+    if (it == mapQuorumDataRequests.end()) {
+        return DataRequestStatus::NotFound;
+    }
+    if (it->second.IsProcessed()) {
+        return DataRequestStatus::Processed;
+    }
+    return DataRequestStatus::Pending;
+}
+
+void CQuorumManager::CleanupExpiredDataRequests() const
+{
+    LOCK(cs_data_requests);
+    auto it = mapQuorumDataRequests.begin();
+    while (it != mapQuorumDataRequests.end()) {
+        if (it->second.IsExpired(/*add_bias=*/true)) {
+            it = mapQuorumDataRequests.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void CQuorumManager::CleanupOldQuorumData(const std::set<uint256>& dbKeysToSkip) const
+{
+    LOCK(cs_db);
+    DataCleanupHelper(*db, dbKeysToSkip);
 }
 
 CQuorumCPtr CQuorumManager::GetQuorum(Consensus::LLMQType llmqType, const uint256& quorumHash) const

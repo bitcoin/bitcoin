@@ -6,6 +6,7 @@
 #define BITCOIN_LLMQ_QUORUMSMAN_H
 
 #include <evo/types.h>
+#include <llmq/observer/quorums.h>
 #include <llmq/options.h>
 #include <llmq/params.h>
 #include <llmq/quorums.h>
@@ -42,7 +43,7 @@ struct DbWrapperParams;
 } // namespace util
 
 namespace llmq {
-enum class VerifyRecSigStatus {
+enum class VerifyRecSigStatus : uint8_t {
     NoQuorum,
     Invalid,
     Valid,
@@ -60,7 +61,7 @@ class QuorumParticipant;
  *
  * It is also responsible for initialization of the intra-quorum connections for new quorums.
  */
-class CQuorumManager
+class CQuorumManager final : public QuorumObserverParent
 {
     friend class llmq::QuorumObserver;
     friend class llmq::QuorumParticipant;
@@ -123,6 +124,10 @@ public:
         m_qdkgsman = nullptr;
     }
 
+    bool GetEncryptedContributions(Consensus::LLMQType llmq_type, const CBlockIndex* block_index,
+                                   const std::vector<bool>& valid_members, const uint256& protx_hash,
+                                   std::vector<CBLSIESEncryptedObject<CBLSSecretKey>>& vec_enc) const override;
+
     [[nodiscard]] MessageProcessingResult ProcessMessage(CNode& pfrom, CConnman& connman, std::string_view msg_type,
                                                          CDataStream& vRecv)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_data_requests, !cs_map_quorums, !m_cache_cs);
@@ -130,7 +135,8 @@ public:
     static bool HasQuorum(Consensus::LLMQType llmqType, const CQuorumBlockProcessor& quorum_block_processor, const uint256& quorumHash);
 
     bool RequestQuorumData(CNode* pfrom, CConnman& connman, const CQuorum& quorum, uint16_t nDataMask,
-                           const uint256& proTxHash = uint256()) const EXCLUSIVE_LOCKS_REQUIRED(!cs_data_requests);
+                           const uint256& proTxHash = uint256()) const override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_data_requests);
 
     // all these methods will lock cs_main for a short period of time
     CQuorumCPtr GetQuorum(Consensus::LLMQType llmqType, const uint256& quorumHash) const
@@ -140,11 +146,19 @@ public:
 
     // this one is cs_main-free
     std::vector<CQuorumCPtr> ScanQuorums(Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pindexStart,
-                                         size_t nCountRequested) const
+                                         size_t nCountRequested) const override
         EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !cs_map_quorums, !cs_scan_quorums, !m_cache_cs);
 
     bool IsMasternode() const;
     bool IsWatching() const;
+
+    bool IsDataRequestPending(const uint256& proRegTx, bool we_requested, const uint256& quorumHash,
+                              Consensus::LLMQType llmqType) const override EXCLUSIVE_LOCKS_REQUIRED(!cs_data_requests);
+    DataRequestStatus GetDataRequestStatus(const uint256& proRegTx, bool we_requested, const uint256& quorumHash,
+                                           Consensus::LLMQType llmqType) const override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_data_requests);
+    void CleanupExpiredDataRequests() const override EXCLUSIVE_LOCKS_REQUIRED(!cs_data_requests);
+    void CleanupOldQuorumData(const std::set<uint256>& dbKeysToSkip) const override EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
 
 private:
     // all private methods here are cs_main-free
