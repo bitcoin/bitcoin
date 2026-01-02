@@ -71,6 +71,7 @@ private Q_SLOTS:
     void handleTransactionClicked(const QModelIndex &index);
     void updateAlerts(const QString &warnings);
     void updateWatchOnlyLabels(bool showWatchOnly);
+    void setMonospacedFont(bool use_embedded_font);
 };
 
 #endif // BITCOIN_QT_OVERVIEWPAGE_H

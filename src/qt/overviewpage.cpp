@@ -155,10 +155,7 @@ OverviewPage::OverviewPage(QWidget* parent) :
                       ui->labelCoinJoinHeader
                      }, {GUIUtil::g_font_registry.GetWeightBold(), 16});
 
-    GUIUtil::setFont({ui->labelTotalText,
-                      ui->labelWatchTotal,
-                      ui->labelTotal
-                     }, {GUIUtil::g_font_registry.GetWeightBold(), 14});
+    GUIUtil::setFont({ui->labelTotalText}, {GUIUtil::g_font_registry.GetWeightBold(), 14});
 
     GUIUtil::setFont({ui->labelBalanceText,
                       ui->labelPendingText,
@@ -167,7 +164,8 @@ OverviewPage::OverviewPage(QWidget* parent) :
                       ui->labelSpendable
                      }, {GUIUtil::g_font_registry.GetWeightBold()});
 
-    GUIUtil::updateFonts();
+    // Calls GUIUtil::updateFonts() internally
+    setMonospacedFont(/*use_embedded_font=*/false);
 
     m_balances.balance = -1;
 
@@ -304,6 +302,7 @@ void OverviewPage::setClientModel(ClientModel *model)
         // Show warning, for example if this is a prerelease version
         connect(model, &ClientModel::alertsChanged, this, &OverviewPage::updateAlerts);
         updateAlerts(model->getStatusBarWarnings());
+        setMonospacedFont(/*use_embedded_font=*/false);
         // explicitly update CoinJoin frame and transaction list to reflect actual settings
         updateAdvancedCJUI(model->getOptionsModel()->getShowAdvancedCJUI());
     }
@@ -374,6 +373,28 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
     ui->labelWalletStatus->setVisible(fShow);
     ui->labelCoinJoinSyncStatus->setVisible(fShow);
     ui->labelTransactionsStatus->setVisible(fShow);
+}
+
+void OverviewPage::setMonospacedFont(bool use_embedded_font)
+{
+    GUIUtil::setFont({
+        ui->labelTotal,
+        ui->labelWatchTotal,
+    }, {GUIUtil::fixedPitchFont(use_embedded_font).family(), GUIUtil::g_font_registry.GetWeightBold(), 14});
+
+    GUIUtil::setFont({
+        ui->labelAmountRounds,
+        ui->labelAnonymized,
+        ui->labelBalance,
+        ui->labelUnconfirmed,
+        ui->labelImmature,
+        ui->labelSubmittedDenom,
+        ui->labelWatchAvailable,
+        ui->labelWatchPending,
+        ui->labelWatchImmature,
+    }, {GUIUtil::fixedPitchFont(use_embedded_font).family(), GUIUtil::g_font_registry.GetWeightBold()});
+
+    GUIUtil::updateFonts();
 }
 
 void OverviewPage::updateCoinJoinProgress()
