@@ -3950,10 +3950,9 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
     }
 
     // Get best block locator so that we can copy it to the watchonly and solvables
+    // Note: The best block locator was introduced in #152 so ancient wallets do not have it
     CBlockLocator best_block_locator;
-    if (!local_wallet_batch.ReadBestBlock(best_block_locator)) {
-        return util::Error{_("Error: Unable to read wallet's best block locator record")};
-    }
+    (void)local_wallet_batch.ReadBestBlock(best_block_locator);
 
     // Update m_txos to match the descriptors remaining in this wallet
     m_txos.clear();
