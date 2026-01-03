@@ -155,10 +155,7 @@ OverviewPage::OverviewPage(QWidget* parent) :
                       ui->labelCoinJoinHeader
                      }, {GUIUtil::g_font_registry.GetWeightBold(), 16});
 
-    GUIUtil::setFont({ui->labelTotalText,
-                      ui->labelWatchTotal,
-                      ui->labelTotal
-                     }, {GUIUtil::g_font_registry.GetWeightBold(), 14});
+    GUIUtil::setFont({ui->labelTotalText}, {GUIUtil::g_font_registry.GetWeightBold(), 14});
 
     GUIUtil::setFont({ui->labelBalanceText,
                       ui->labelPendingText,
@@ -322,13 +319,17 @@ void OverviewPage::setWalletModel(WalletModel *model)
         setBalance(balances);
         connect(model, &WalletModel::balanceChanged, this, &OverviewPage::setBalance);
 
-        connect(model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &OverviewPage::updateDisplayUnit);
-
         updateWatchOnlyLabels((wallet.haveWatchOnly() && !model->wallet().privateKeysDisabled()) || gArgs.GetBoolArg("-debug-ui", false));
         connect(model, &WalletModel::notifyWatchonlyChanged, [this](bool showWatchOnly) {
             updateWatchOnlyLabels(showWatchOnly && !walletModel->wallet().privateKeysDisabled());
         });
 
+        // Money font and unit
+        setMonospacedFont(model->getOptionsModel()->getFontForMoney());
+        connect(model->getOptionsModel(), &OptionsModel::fontForMoneyChanged, this, &OverviewPage::setMonospacedFont);
+        connect(model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &OverviewPage::updateDisplayUnit);
+
+        // CoinJoin
         connect(model->getOptionsModel(), &OptionsModel::coinJoinRoundsChanged, this, &OverviewPage::updateCoinJoinProgress);
         connect(model->getOptionsModel(), &OptionsModel::coinJoinAmountChanged, this, &OverviewPage::updateCoinJoinProgress);
         connect(model->getOptionsModel(), &OptionsModel::AdvancedCJUIChanged, this, &OverviewPage::updateAdvancedCJUI);
@@ -374,6 +375,28 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
     ui->labelWalletStatus->setVisible(fShow);
     ui->labelCoinJoinSyncStatus->setVisible(fShow);
     ui->labelTransactionsStatus->setVisible(fShow);
+}
+
+void OverviewPage::setMonospacedFont(const QFont& f)
+{
+    GUIUtil::setFont({
+        ui->labelTotal,
+        ui->labelWatchTotal,
+    }, {f.family(), GUIUtil::g_font_registry.GetWeightBold(), 14});
+
+    GUIUtil::setFont({
+        ui->labelAmountRounds,
+        ui->labelAnonymized,
+        ui->labelBalance,
+        ui->labelUnconfirmed,
+        ui->labelImmature,
+        ui->labelSubmittedDenom,
+        ui->labelWatchAvailable,
+        ui->labelWatchPending,
+        ui->labelWatchImmature,
+    }, {f.family(), GUIUtil::g_font_registry.GetWeightBold()});
+
+    GUIUtil::updateFonts();
 }
 
 void OverviewPage::updateCoinJoinProgress()

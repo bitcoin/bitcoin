@@ -9,12 +9,11 @@
 
 #include <qt/guiutil.h>
 #include <qt/guiutil_font.h>
+#include <qt/optionsmodel.h>
 
 namespace Ui {
 class AppearanceWidget;
 }
-
-class OptionsModel;
 
 class QDataWidgetMapper;
 class QSlider;
@@ -42,6 +41,7 @@ private Q_SLOTS:
     void updateFontScale(int nScale);
     void updateFontWeightNormal(int nValue, bool fForce = false);
     void updateFontWeightBold(int nValue, bool fForce = false);
+    void updateMoneyFont(int index);
 
 private:
     Ui::AppearanceWidget* ui;
@@ -53,6 +53,7 @@ private:
     QString prevFontFamily;
     QFont::Weight prevWeightNormal;
     QFont::Weight prevWeightBold;
+    OptionsModel::FontChoice prevMoneyFont{OptionsModel::FontChoiceAbstract::ApplicationFont};
 
     void updateWeightSlider(bool fForce = false);
 };

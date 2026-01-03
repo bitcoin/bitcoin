@@ -19,16 +19,14 @@ namespace GUIUtil {
 // TODO: Switch to QUtf8StringView when we switch to Qt 6
 constexpr QStringView MONTSERRAT_FONT_STR{u"Montserrat"};
 constexpr QStringView OS_FONT_STR{u"SystemDefault"};
+constexpr QStringView OS_MONO_FONT_STR{u"SystemMonospace"};
+constexpr QStringView ROBOTO_MONO_FONT_STR{u"Roboto Mono"};
+
+extern std::vector<std::pair<QString, /*selectable=*/bool>> g_fonts_known;
 
 enum class FontWeight : uint8_t {
     Normal,
     Bold,
-};
-
-struct FontAttrib {
-    QFont::Weight m_weight;
-    double m_point_size{-1};
-    bool m_is_italic{false};
 };
 
 struct FontInfo {
@@ -63,7 +61,7 @@ public:
     };
 
 public:
-    [[nodiscard]] bool RegisterFont(const QString& font, bool skip_checks = false);
+    [[nodiscard]] bool RegisterFont(const QString& font, bool selectable, bool skip_checks = false);
 
     bool IsValidWeight(const QFont::Weight& weight) const { return WeightToIdx(weight) != -1; }
     int WeightToIdx(const QFont::Weight& weight) const;
@@ -123,7 +121,17 @@ private:
 
 extern FontRegistry g_font_registry;
 
-extern std::vector<QString> g_fonts_known;
+struct FontAttrib {
+    QString m_font;
+    QFont::Weight m_weight;
+    double m_point_size{-1};
+    bool m_is_italic{false};
+
+    FontAttrib(QString font, QFont::Weight weight, double point_size = -1, bool is_italic = false);
+    // cppcheck-suppress noExplicitConstructor
+    FontAttrib(QFont::Weight weight, double point_size = -1, bool is_italic = false);
+    ~FontAttrib();
+};
 
 /** Convert weight value from args (0-8) to QFont::Weight */
 bool weightFromArg(int nArg, QFont::Weight& weight);
@@ -147,8 +155,10 @@ void setFont(const std::vector<QWidget*>& vecWidgets, const FontAttrib& font_att
     GUIUtil::setFont */
 void updateFonts();
 
+/** Get list of all selectable fonts */
+std::vector<QString> getFonts(bool selectable_only);
+
 /** Get a properly weighted QFont object with the selected font. */
-QFont getFont(const QString& font_name, const FontAttrib& font_attrib);
 QFont getFont(const FontAttrib& font_attrib);
 
 /** Get the default normal QFont */
@@ -156,6 +166,9 @@ QFont getFontNormal();
 
 /** Get the default bold QFont */
 QFont getFontBold();
+
+/** (Bitcoin) Return a monospace font */
+QFont fixedPitchFont(bool use_embedded_font = false);
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_FONT_H

@@ -11,8 +11,10 @@
 #include <cstdint>
 
 #include <QAbstractListModel>
+#include <QFont>
 
 #include <assert.h>
+#include <variant>
 
 namespace interfaces {
 class Node;
@@ -66,6 +68,7 @@ public:
         FontWeightNormal,       // int
         FontWeightBold,         // int
         Language,               // QString
+        FontForMoney,           // FontChoice
         CoinControlFeatures,    // bool
         SubFeeFromAmount,       // bool
         KeepChangeAddress,      // bool
@@ -93,6 +96,15 @@ public:
         OptionIDRowCount,
     };
 
+    enum class FontChoiceAbstract {
+        ApplicationFont,
+        BestSystemFont,
+        EmbeddedFont,
+    };
+    typedef std::variant<FontChoiceAbstract, QFont> FontChoice;
+    static inline const FontChoice UseBestSystemFont{FontChoiceAbstract::BestSystemFont};
+    static QFont getFontForChoice(const FontChoice& fc);
+
     void Init(bool resetSettings = false);
     void Reset();
 
@@ -108,6 +120,7 @@ public:
     bool getMinimizeOnClose() const { return fMinimizeOnClose; }
     BitcoinUnit getDisplayUnit() const { return m_display_bitcoin_unit; }
     QString getThirdPartyTxUrls() const { return strThirdPartyTxUrls; }
+    QFont getFontForMoney() const;
     bool getCoinControlFeatures() const { return fCoinControlFeatures; }
     bool getSubFeeFromAmount() const { return m_sub_fee_from_amount; }
     bool getEnablePSBTControls() const { return m_enable_psbt_controls; }
@@ -138,6 +151,7 @@ private:
     QString language;
     BitcoinUnit m_display_bitcoin_unit;
     QString strThirdPartyTxUrls;
+    FontChoice m_font_money{FontChoiceAbstract::ApplicationFont};
     bool fCoinControlFeatures;
     bool m_sub_fee_from_amount;
     bool m_enable_psbt_controls;
@@ -145,6 +159,9 @@ private:
     bool fShowAdvancedCJUI;
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
+
+    static QString FontChoiceToString(const OptionsModel::FontChoice&);
+    static FontChoice FontChoiceFromString(const QString&);
 
     // Add option to list of GUI options overridden through command line/config file
     void addOverriddenOption(const std::string &option);
@@ -160,6 +177,9 @@ Q_SIGNALS:
     void coinControlFeaturesChanged(bool);
     void keepChangeAddressChanged(bool);
     void showTrayIconChanged(bool);
+    void fontForMoneyChanged(const QFont&);
 };
+
+Q_DECLARE_METATYPE(OptionsModel::FontChoice)
 
 #endif // BITCOIN_QT_OPTIONSMODEL_H
