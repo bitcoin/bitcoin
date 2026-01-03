@@ -54,7 +54,6 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      bool is_spentindex_enabled,
                                                      bool is_timeindex_enabled,
                                                      const Consensus::Params& consensus_params,
-                                                     const llmq::QvvecSyncModeMap& sync_map,
                                                      bool fReindexChainState,
                                                      int64_t nBlockTreeDBCache,
                                                      int64_t nCoinDBCache,
@@ -62,8 +61,6 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      bool block_tree_db_in_memory,
                                                      bool coins_db_in_memory,
                                                      bool dash_dbs_in_memory,
-                                                     bool quorums_recovery,
-                                                     bool quorums_watch,
                                                      int8_t bls_threads,
                                                      int64_t max_recsigs_age,
                                                      std::function<bool()> shutdown_requested,
@@ -92,9 +89,8 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
     pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, block_tree_db_in_memory, fReset));
 
     DashChainstateSetup(chainman, govman, mn_metaman, mn_sync, sporkman, mn_activeman, chain_helper, cpoolman,
-                        dmnman, evodb, mnhf_manager, llmq_ctx, mempool, data_dir, sync_map, dash_dbs_in_memory,
-                        /*llmq_dbs_wipe=*/fReset || fReindexChainState, quorums_recovery, quorums_watch,
-                        bls_threads, max_recsigs_age, consensus_params);
+                        dmnman, evodb, mnhf_manager, llmq_ctx, mempool, data_dir, dash_dbs_in_memory,
+                        /*llmq_dbs_wipe=*/fReset || fReindexChainState, bls_threads, max_recsigs_age, consensus_params);
 
     if (fReset) {
         pblocktree->WriteReindexing(true);
@@ -228,11 +224,8 @@ void DashChainstateSetup(ChainstateManager& chainman,
                          std::unique_ptr<LLMQContext>& llmq_ctx,
                          CTxMemPool* mempool,
                          const fs::path& data_dir,
-                         const llmq::QvvecSyncModeMap& sync_map,
                          bool llmq_dbs_in_memory,
                          bool llmq_dbs_wipe,
-                         bool quorums_recovery,
-                         bool quorums_watch,
                          int8_t bls_threads,
                          int64_t max_recsigs_age,
                          const Consensus::Params& consensus_params)
@@ -248,9 +241,9 @@ void DashChainstateSetup(ChainstateManager& chainman,
         llmq_ctx->Stop();
     }
     llmq_ctx.reset();
-    llmq_ctx = std::make_unique<LLMQContext>(chainman, *dmnman, *evodb, sporkman, *mempool, mn_activeman.get(), mn_sync, sync_map,
+    llmq_ctx = std::make_unique<LLMQContext>(chainman, *dmnman, *evodb, sporkman, *mempool, mn_sync,
                                              util::DbWrapperParams{.path = data_dir, .memory = llmq_dbs_in_memory, .wipe = llmq_dbs_wipe},
-                                             quorums_recovery, quorums_watch, bls_threads, max_recsigs_age);
+                                             bls_threads, max_recsigs_age);
     mempool->ConnectManagers(dmnman.get(), llmq_ctx->isman.get());
     // Enable CMNHFManager::{Process, Undo}Block
     mnhf_manager->ConnectManagers(llmq_ctx->qman.get());

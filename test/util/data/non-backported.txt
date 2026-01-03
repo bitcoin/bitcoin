@@ -1,3 +1,5 @@
+src/active/*.cpp
+src/active/*.h
 src/batchedlogger.*
 src/bench/bls*.cpp
 src/bls/*.cpp

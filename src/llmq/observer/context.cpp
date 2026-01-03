@@ -6,25 +6,40 @@
 
 #include <llmq/debug.h>
 #include <llmq/dkgsessionmgr.h>
-#include <llmq/quorums.h>
+#include <llmq/observer/quorums.h>
+#include <llmq/quorumsman.h>
 
 namespace llmq {
-ObserverContext::ObserverContext(CBLSWorker& bls_worker, CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
+ObserverContext::ObserverContext(CBLSWorker& bls_worker, CConnman& connman, CDeterministicMNManager& dmnman,
+                                 CMasternodeMetaMan& mn_metaman, CMasternodeSync& mn_sync,
                                  llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumManager& qman,
                                  llmq::CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
-                                 const CSporkManager& sporkman, const util::DbWrapperParams& db_params) :
+                                 const CSporkManager& sporkman, const llmq::QvvecSyncModeMap& sync_map,
+                                 const util::DbWrapperParams& db_params, bool quorums_recovery) :
     m_qman{qman},
     dkgdbgman{std::make_unique<llmq::CDKGDebugManager>()},
     qdkgsman{std::make_unique<llmq::CDKGSessionManager>(bls_worker, dmnman, *dkgdbgman, mn_metaman, qblockman, qsnapman,
                                                         /*mn_activeman=*/nullptr, chainman, sporkman, db_params,
-                                                        /*quorums_watch=*/true)}
+                                                        /*quorums_watch=*/true)},
+    qman_handler{std::make_unique<llmq::QuorumObserver>(connman, dmnman, qman, qsnapman, chainman, mn_sync, sporkman,
+                                                        sync_map, quorums_recovery)}
 {
-    m_qman.ConnectManager(qdkgsman.get());
+    m_qman.ConnectManagers(qman_handler.get(), qdkgsman.get());
 }
 
 ObserverContext::~ObserverContext()
 {
-    m_qman.DisconnectManager();
+    m_qman.DisconnectManagers();
+}
+
+void ObserverContext::Start()
+{
+    qman_handler->Start();
+}
+
+void ObserverContext::Stop()
+{
+    qman_handler->Stop();
 }
 
 void ObserverContext::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
@@ -33,5 +48,6 @@ void ObserverContext::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlock
         return;
 
     qdkgsman->UpdatedBlockTip(pindexNew, fInitialDownload);
+    qman_handler->UpdatedBlockTip(pindexNew, fInitialDownload);
 }
 } // namespace llmq

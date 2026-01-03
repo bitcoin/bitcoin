@@ -38,7 +38,7 @@ namespace llmq {
 class CInstantSendManager;
 class CQuorumManager;
 class CSigningManager;
-enum class VerifyRecSigStatus;
+enum class VerifyRecSigStatus : uint8_t;
 
 class CChainLocksHandler final : public chainlock::ChainLockSignerParent
 {

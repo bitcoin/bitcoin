@@ -12,7 +12,7 @@
 #include <validation.h>
 
 #include <chainlock/chainlock.h>
-#include <llmq/quorums.h>
+#include <llmq/quorumsman.h>
 #include <llmq/signing_shares.h>
 #include <masternode/sync.h>
 #include <spork.h>

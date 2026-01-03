@@ -23,7 +23,7 @@
 #include <llmq/dkgsession.h>
 #include <llmq/observer/context.h>
 #include <llmq/options.h>
-#include <llmq/quorums.h>
+#include <llmq/quorumsman.h>
 #include <llmq/signhash.h>
 #include <llmq/signing.h>
 #include <llmq/signing_shares.h>

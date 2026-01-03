@@ -151,6 +151,7 @@ endif
 .PHONY: FORCE check-symbols check-security
 # dash core #
 BITCOIN_CORE_H = \
+  active/quorums.h \
   addrdb.h \
   addressindex.h \
   spentindex.h \
@@ -278,6 +279,7 @@ BITCOIN_CORE_H = \
   llmq/options.h \
   llmq/params.h \
   llmq/quorums.h \
+  llmq/quorumsman.h \
   llmq/signhash.h \
   llmq/signing.h \
   llmq/net_signing.h \
@@ -286,6 +288,7 @@ BITCOIN_CORE_H = \
   llmq/types.h \
   llmq/utils.h \
   llmq/observer/context.h \
+  llmq/observer/quorums.h \
   logging.h \
   logging/timer.h \
   mapport.h \
@@ -479,6 +482,7 @@ libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 libbitcoin_node_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libbitcoin_node_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_node_a_SOURCES = \
+  active/quorums.cpp \
   addrdb.cpp \
   addressindex.cpp \
   addrman.cpp \
@@ -549,12 +553,14 @@ libbitcoin_node_a_SOURCES = \
   llmq/net_signing.cpp \
   llmq/options.cpp \
   llmq/quorums.cpp \
+  llmq/quorumsman.cpp \
   llmq/signhash.cpp \
   llmq/signing.cpp \
   llmq/signing_shares.cpp \
   llmq/snapshot.cpp \
   llmq/utils.cpp \
   llmq/observer/context.cpp \
+  llmq/observer/quorums.cpp \
   mapport.cpp \
   masternode/active/context.cpp \
   masternode/active/notificationinterface.cpp \

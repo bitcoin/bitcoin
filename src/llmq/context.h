@@ -37,10 +37,8 @@ public:
     LLMQContext(const LLMQContext&) = delete;
     LLMQContext& operator=(const LLMQContext&) = delete;
     explicit LLMQContext(ChainstateManager& chainman, CDeterministicMNManager& dmnman, CEvoDB& evo_db,
-                         CSporkManager& sporkman, CTxMemPool& mempool,
-                         const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync,
-                         const llmq::QvvecSyncModeMap& sync_map, const util::DbWrapperParams& db_params,
-                         bool quorums_recovery, bool quorums_watch, int8_t bls_threads, int64_t max_recsigs_age);
+                         CSporkManager& sporkman, CTxMemPool& mempool, const CMasternodeSync& mn_sync,
+                         const util::DbWrapperParams& db_params, int8_t bls_threads, int64_t max_recsigs_age);
     ~LLMQContext();
 
     void Start();

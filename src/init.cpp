@@ -292,6 +292,7 @@ void PrepareShutdown(NodeContext& node)
     StopRPC();
     StopHTTPServer();
 
+    if (node.observer_ctx) node.observer_ctx->Stop();
     if (node.active_ctx) node.active_ctx->Stop();
     if (node.peerman) node.peerman->StopHandlers();
     if (node.llmq_ctx) node.llmq_ctx->Stop();
@@ -1958,9 +1959,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     fReindex = args.GetBoolArg("-reindex", false);
     bool fReindexChainState = args.GetBoolArg("-reindex-chainstate", false);
 
-    const bool quorums_recovery = args.GetBoolArg("-llmq-data-recovery", llmq::DEFAULT_ENABLE_QUORUM_DATA_RECOVERY);
-    const bool quorums_watch = args.GetBoolArg("-watchquorums", llmq::DEFAULT_WATCH_QUORUMS);
-
     // cache size calculations
     CacheSizes cache_sizes = CalculateCacheSizes(args, g_enabled_filter_types.size());
 
@@ -2028,7 +2026,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                               args.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX),
                                               args.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX),
                                               chainparams.GetConsensus(),
-                                              llmq::GetEnabledQuorumVvecSyncEntries(args),
                                               fReindexChainState,
                                               cache_sizes.block_tree_db,
                                               cache_sizes.coins_db,
@@ -2036,8 +2033,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                               /*block_tree_db_in_memory=*/false,
                                               /*coins_db_in_memory=*/false,
                                               /*dash_dbs_in_memory=*/false,
-                                              quorums_recovery,
-                                              quorums_watch,
                                               /*bls_threads=*/[&args]() -> int8_t {
                                                   int8_t threads = args.GetIntArg("-parbls", llmq::DEFAULT_BLSCHECK_THREADS);
                                                   if (threads <= 0) {
@@ -2211,26 +2206,30 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!g_active_notification_interface);
     assert(!node.observer_ctx);
 
-    node.peerman->AddExtraHandler(std::make_unique<NetInstantSend>(node.peerman.get(), *node.llmq_ctx->isman, *node.llmq_ctx->qman, chainman.ActiveChainstate()));
-    node.peerman->AddExtraHandler(std::make_unique<NetSigning>(node.peerman.get(), *node.llmq_ctx->sigman));
-
+    const bool quorums_recovery = args.GetBoolArg("-llmq-data-recovery", llmq::DEFAULT_ENABLE_QUORUM_DATA_RECOVERY);
+    const bool quorums_watch = args.GetBoolArg("-watchquorums", llmq::DEFAULT_WATCH_QUORUMS);
+    const llmq::QvvecSyncModeMap sync_map{llmq::GetEnabledQuorumVvecSyncEntries(args)};
     const util::DbWrapperParams dash_db_params{.path = args.GetDataDirNet(), .memory = false, .wipe = (fReindex || fReindexChainState)};
     if (node.mn_activeman) {
         auto cj_server = std::make_unique<CCoinJoinServer>(node.peerman.get(), chainman, *node.connman, *node.dmnman, *node.dstxman, *node.mn_metaman,
                                                            *node.mempool, *node.mn_activeman, *node.mn_sync, *node.llmq_ctx->isman);
         node.active_ctx = std::make_unique<ActiveContext>(*cj_server, *node.connman, *node.dmnman, *node.govman, chainman, *node.mn_metaman,
                                                           *node.mnhf_manager, *node.sporkman, *node.mempool, *node.llmq_ctx, *node.peerman,
-                                                          *node.mn_activeman, *node.mn_sync, dash_db_params, quorums_watch);
+                                                          *node.mn_activeman, *node.mn_sync, sync_map, dash_db_params, quorums_recovery, quorums_watch);
         node.peerman->AddExtraHandler(std::move(cj_server));
         g_active_notification_interface = std::make_unique<ActiveNotificationInterface>(*node.active_ctx, *node.mn_activeman);
         RegisterValidationInterface(g_active_notification_interface.get());
     } else if (quorums_watch) {
-        node.observer_ctx = std::make_unique<llmq::ObserverContext>(*node.llmq_ctx->bls_worker, *node.dmnman, *node.mn_metaman, *node.llmq_ctx->quorum_block_processor,
-                                                                    *node.llmq_ctx->qman, *node.llmq_ctx->qsnapman, chainman, *node.sporkman, dash_db_params);
+        node.observer_ctx = std::make_unique<llmq::ObserverContext>(*node.llmq_ctx->bls_worker, *node.connman, *node.dmnman, *node.mn_metaman, *node.mn_sync,
+                                                                    *node.llmq_ctx->quorum_block_processor, *node.llmq_ctx->qman, *node.llmq_ctx->qsnapman,
+                                                                    chainman, *node.sporkman, sync_map, dash_db_params, quorums_recovery);
         RegisterValidationInterface(node.observer_ctx.get());
     }
 
     // ********************************************************* Step 7d: Setup other Dash services
+
+    node.peerman->AddExtraHandler(std::make_unique<NetInstantSend>(node.peerman.get(), *node.llmq_ctx->isman, *node.llmq_ctx->qman, chainman.ActiveChainstate()));
+    node.peerman->AddExtraHandler(std::make_unique<NetSigning>(node.peerman.get(), *node.llmq_ctx->sigman));
 
     assert(!node.cj_walletman);
     if (!node.active_ctx) {
@@ -2339,6 +2338,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     node.llmq_ctx->Start();
     node.peerman->StartHandlers();
     if (node.active_ctx) node.active_ctx->Start(*node.connman, *node.peerman);
+    if (node.observer_ctx) node.observer_ctx->Start();
 
     node.scheduler->scheduleEvery(std::bind(&CNetFulfilledRequestManager::DoMaintenance, std::ref(*node.netfulfilledman)), std::chrono::minutes{1});
     node.scheduler->scheduleEvery(std::bind(&CMasternodeUtils::DoMaintenance, std::ref(*node.connman), std::ref(*node.dmnman), std::ref(*node.mn_sync), node.cj_walletman.get()), std::chrono::minutes{1});

@@ -13,7 +13,7 @@
 #include <evo/specialtx.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/commitment.h>
-#include <llmq/quorums.h>
+#include <llmq/quorumsman.h>
 #include <node/blockstorage.h>
 #include <serialize.h>
 #include <univalue.h>

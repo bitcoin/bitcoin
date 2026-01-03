@@ -67,6 +67,8 @@ struct MessageProcessingResult
     MessageProcessingResult(MisbehavingError error) :
         m_error(error)
     {}
+
+    bool empty() const { return !m_error.has_value() && m_inventory.empty() && m_dsq.empty() && m_transactions.empty() && !m_to_erase.has_value(); }
 };
 
 #endif // BITCOIN_MSG_RESULT_H

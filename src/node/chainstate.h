@@ -5,8 +5,6 @@
 #ifndef BITCOIN_NODE_CHAINSTATE_H
 #define BITCOIN_NODE_CHAINSTATE_H
 
-#include <llmq/options.h>
-
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -100,7 +98,6 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      bool is_spentindex_enabled,
                                                      bool is_timeindex_enabled,
                                                      const Consensus::Params& consensus_params,
-                                                     const llmq::QvvecSyncModeMap& sync_map,
                                                      bool fReindexChainState,
                                                      int64_t nBlockTreeDBCache,
                                                      int64_t nCoinDBCache,
@@ -108,8 +105,6 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      bool block_tree_db_in_memory,
                                                      bool coins_db_in_memory,
                                                      bool dash_dbs_in_memory,
-                                                     bool quorums_recovery,
-                                                     bool quorums_watch,
                                                      int8_t bls_threads,
                                                      int64_t max_recsigs_age,
                                                      std::function<bool()> shutdown_requested = nullptr,
@@ -130,11 +125,8 @@ void DashChainstateSetup(ChainstateManager& chainman,
                          std::unique_ptr<LLMQContext>& llmq_ctx,
                          CTxMemPool* mempool,
                          const fs::path& data_dir,
-                         const llmq::QvvecSyncModeMap& sync_map,
                          bool llmq_dbs_in_memory,
                          bool llmq_dbs_wipe,
-                         bool quorums_recovery,
-                         bool quorums_watch,
                          int8_t bls_threads,
                          int64_t max_recsigs_age,
                          const Consensus::Params& consensus_params);

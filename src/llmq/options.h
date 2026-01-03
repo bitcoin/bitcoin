@@ -21,7 +21,7 @@ enum class LLMQType : uint8_t;
 } // namespace Consensus
 
 namespace llmq {
-enum class QvvecSyncMode {
+enum class QvvecSyncMode : int8_t {
     Invalid = -1,
     Always = 0,
     OnlyIfTypeMember = 1,

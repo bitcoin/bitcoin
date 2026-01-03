@@ -8,7 +8,7 @@
 #include <cxxtimer.hpp>
 #include <instantsend/instantsend.h>
 #include <llmq/commitment.h>
-#include <llmq/quorums.h>
+#include <llmq/quorumsman.h>
 #include <llmq/signhash.h>
 #include <llmq/signing.h>
 #include <util/thread.h>
