@@ -42,11 +42,11 @@ void initialize_coins_view()
     static const auto testing_setup = MakeNoLogFileContext<>();
 }
 
-void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend_coins_view, bool is_db)
+void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView* backend_coins_view, bool is_db)
 {
     bool good_data{true};
 
-    CCoinsViewCache coins_view_cache{&backend_coins_view, /*deterministic=*/true};
+    CCoinsViewCache coins_view_cache{backend_coins_view, /*deterministic=*/true};
     if (is_db) coins_view_cache.SetBestBlock(uint256::ONE);
     COutPoint random_out_point;
     Coin random_coin;
@@ -108,9 +108,9 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
             },
             [&] {
                 if (fuzzed_data_provider.ConsumeBool()) {
-                    backend_coins_view = CCoinsView{};
+                    *backend_coins_view = CCoinsView{};
                 }
-                coins_view_cache.SetBackend(backend_coins_view);
+                coins_view_cache.SetBackend(*backend_coins_view);
             },
             [&] {
                 const std::optional<COutPoint> opt_out_point = ConsumeDeserializable<COutPoint>(fuzzed_data_provider);
@@ -190,11 +190,11 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
             assert(!exists_using_access_coin && !exists_using_have_coin_in_cache && !exists_using_have_coin);
         }
         // If HaveCoin on the backend is true, it must also be on the cache if the coin wasn't spent.
-        const bool exists_using_have_coin_in_backend = backend_coins_view.HaveCoin(random_out_point);
+        const bool exists_using_have_coin_in_backend = backend_coins_view->HaveCoin(random_out_point);
         if (!coin_using_access_coin.IsSpent() && exists_using_have_coin_in_backend) {
             assert(exists_using_have_coin);
         }
-        if (auto coin{backend_coins_view.GetCoin(random_out_point)}) {
+        if (auto coin{backend_coins_view->GetCoin(random_out_point)}) {
             assert(exists_using_have_coin_in_backend);
             // Note we can't assert that `coin_using_get_coin == *coin` because the coin in
             // the cache may have been modified but not yet flushed.
@@ -220,11 +220,11 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
     }
 
     {
-        std::unique_ptr<CCoinsViewCursor> coins_view_cursor = backend_coins_view.Cursor();
+        std::unique_ptr<CCoinsViewCursor> coins_view_cursor = backend_coins_view->Cursor();
         assert(is_db == !!coins_view_cursor);
-        (void)backend_coins_view.EstimateSize();
-        (void)backend_coins_view.GetBestBlock();
-        (void)backend_coins_view.GetHeadBlocks();
+        (void)backend_coins_view->EstimateSize();
+        (void)backend_coins_view->GetBestBlock();
+        (void)backend_coins_view->GetHeadBlocks();
     }
 
     if (fuzzed_data_provider.ConsumeBool()) {
@@ -312,7 +312,7 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     CCoinsView backend_coins_view;
-    TestCoinsView(fuzzed_data_provider, backend_coins_view, /*is_db=*/false);
+    TestCoinsView(fuzzed_data_provider, &backend_coins_view, /*is_db=*/false);
 }
 
 FUZZ_TARGET(coins_view_db, .init = initialize_coins_view)
@@ -324,5 +324,5 @@ FUZZ_TARGET(coins_view_db, .init = initialize_coins_view)
         .memory_only = true,
     };
     CCoinsViewDB coins_db{std::move(db_params), CoinsViewOptions{}};
-    TestCoinsView(fuzzed_data_provider, coins_db, /*is_db=*/true);
+    TestCoinsView(fuzzed_data_provider, &coins_db, /*is_db=*/true);
 }
