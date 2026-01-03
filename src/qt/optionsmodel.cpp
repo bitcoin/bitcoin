@@ -1052,6 +1052,15 @@ void OptionsModel::checkAndMigrate()
             settings.remove("bUsePrivateSend");
         }
 
+        if (settingsVersion < 230100) {
+            settings.remove("fPrivateSendEnabled");
+            settings.remove("fPrivateSendMultiSession");
+            settings.remove("fShowAdvancedPSUI");
+            settings.remove("fShowPrivateSendPopups");
+            settings.remove("nPrivateSendAmount");
+            settings.remove("nPrivateSendRounds");
+        }
+
         settings.setValue(strSettingsVersionKey, CLIENT_VERSION);
     }
 
@@ -1072,31 +1081,4 @@ void OptionsModel::checkAndMigrate()
     if (!GUIUtil::isValidTheme(strActiveTheme)) {
         settings.setValue("theme", GUIUtil::getDefaultTheme());
     }
-
-    // begin PrivateSend -> CoinJoin migration
-    if (settings.contains("nPrivateSendRounds") && !settings.contains("nCoinJoinRounds")) {
-        settings.setValue("nCoinJoinRounds", settings.value("nPrivateSendRounds").toInt());
-        settings.remove("nPrivateSendRounds");
-    }
-    if (settings.contains("nPrivateSendAmount") && !settings.contains("nCoinJoinAmount")) {
-        settings.setValue("nCoinJoinAmount", settings.value("nPrivateSendAmount").toInt());
-        settings.remove("nPrivateSendAmount");
-    }
-    if (settings.contains("fPrivateSendEnabled") && !settings.contains("fCoinJoinEnabled")) {
-        settings.setValue("fCoinJoinEnabled", settings.value("fPrivateSendEnabled").toBool());
-        settings.remove("fPrivateSendEnabled");
-    }
-    if (settings.contains("fPrivateSendMultiSession") && !settings.contains("fCoinJoinMultiSession")) {
-        settings.setValue("fCoinJoinMultiSession", settings.value("fPrivateSendMultiSession").toBool());
-        settings.remove("fPrivateSendMultiSession");
-    }
-    if (settings.contains("fShowAdvancedPSUI") && !settings.contains("fShowAdvancedCJUI")) {
-        settings.setValue("fShowAdvancedCJUI", settings.value("fShowAdvancedPSUI").toBool());
-        settings.remove("fShowAdvancedPSUI");
-    }
-    if (settings.contains("fShowPrivateSendPopups") && !settings.contains("fShowCoinJoinPopups")) {
-        settings.setValue("fShowCoinJoinPopups", settings.value("fShowPrivateSendPopups").toBool());
-        settings.remove("fShowPrivateSendPopups");
-    }
-    // end PrivateSend -> CoinJoin migration
 }
