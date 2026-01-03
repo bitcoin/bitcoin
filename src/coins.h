@@ -102,7 +102,6 @@ using CoinsCachePair = std::pair<const COutPoint, CCoinsCacheEntry>;
  * - unspent, FRESH, DIRTY (e.g. a new coin created in the cache)
  * - unspent, not FRESH, DIRTY (e.g. a coin changed in the cache during a reorg)
  * - unspent, not FRESH, not DIRTY (e.g. an unspent coin fetched from the parent cache)
- * - spent, FRESH, not DIRTY (e.g. a spent coin fetched from the parent cache)
  * - spent, not FRESH, DIRTY (e.g. a coin is spent and spentness needs to be flushed to the parent)
  */
 struct CCoinsCacheEntry
@@ -117,12 +116,6 @@ private:
      * the parent cache for batch writing. This is a performance optimization
      * compared to giving all entries in the cache to the parent and having the
      * parent scan for only modified entries.
-     *
-     * FRESH-but-not-DIRTY coins can not occur in practice, since that would
-     * mean a spent coin exists in the parent CCoinsView and not in the child
-     * CCoinsViewCache. Nevertheless, if a spent coin is retrieved from the
-     * parent cache, the FRESH-but-not-DIRTY coin will be tracked by the linked
-     * list and deleted when Sync or Flush is called on the CCoinsViewCache.
      */
     CoinsCachePair* m_prev{nullptr};
     CoinsCachePair* m_next{nullptr};
