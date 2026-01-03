@@ -991,7 +991,7 @@ NodeRef GenNode(MsCtx script_ctx, F ConsumeNode, Type root_type, bool strict_val
             }
             if (!node->IsValid()) return {};
             // Update resource predictions.
-            if (node->fragment == Fragment::WRAP_V && node->subs[0]->GetType() << "x"_mst) {
+            if (node->Fragment() == Fragment::WRAP_V && node->Subs()[0]->GetType() << "x"_mst) {
                 ops += 1;
                 scriptsize += 1;
             }
@@ -1167,28 +1167,28 @@ void TestNode(const MsCtx script_ctx, const NodeRef& node, FuzzedDataProvider& p
         return sig_ptr != nullptr && sig_ptr->second;
     };
     bool satisfiable = node->IsSatisfiable([&](const Node& node) -> bool {
-        switch (node.fragment) {
+        switch (node.Fragment()) {
         case Fragment::PK_K:
         case Fragment::PK_H:
-            return is_key_satisfiable(node.keys[0]);
+            return is_key_satisfiable(node.Keys()[0]);
         case Fragment::MULTI:
         case Fragment::MULTI_A: {
-            size_t sats = std::count_if(node.keys.begin(), node.keys.end(), [&](const auto& key) {
+            size_t sats = std::ranges::count_if(node.Keys(), [&](const auto& key) {
                 return size_t(is_key_satisfiable(key));
             });
-            return sats >= node.k;
+            return sats >= node.K();
         }
         case Fragment::OLDER:
         case Fragment::AFTER:
-            return node.k & 1;
+            return node.K() & 1;
         case Fragment::SHA256:
-            return TEST_DATA.sha256_preimages.contains(node.data);
+            return TEST_DATA.sha256_preimages.contains(node.Data());
         case Fragment::HASH256:
-            return TEST_DATA.hash256_preimages.contains(node.data);
+            return TEST_DATA.hash256_preimages.contains(node.Data());
         case Fragment::RIPEMD160:
-            return TEST_DATA.ripemd160_preimages.contains(node.data);
+            return TEST_DATA.ripemd160_preimages.contains(node.Data());
         case Fragment::HASH160:
-            return TEST_DATA.hash160_preimages.contains(node.data);
+            return TEST_DATA.hash160_preimages.contains(node.Data());
         default:
             assert(false);
         }

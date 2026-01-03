@@ -1607,8 +1607,8 @@ public:
     {
         // Traverse miniscript tree for unsafe use of older()
         miniscript::ForEachNode(*m_node, [&](const miniscript::Node<uint32_t>& node) {
-            if (node.fragment == miniscript::Fragment::OLDER) {
-                const uint32_t raw = node.k;
+            if (node.Fragment() == miniscript::Fragment::OLDER) {
+                const uint32_t raw = node.K();
                 const uint32_t value_part = raw & ~CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG;
                 if (value_part > CTxIn::SEQUENCE_LOCKTIME_MASK) {
                     const bool is_time_based = (raw & CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG) != 0;
