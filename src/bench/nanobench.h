@@ -137,6 +137,11 @@ class Result;
 class Rng;
 class BigO;
 
+namespace detail {
+template <typename SetupOp>
+class SetupRunner;
+} // namespace detail
+
 /**
  * @brief Renders output from a mustache-like template and benchmark results.
  *
@@ -819,7 +824,7 @@ public:
     /**
      * @brief Minimum time each epoch should take.
      *
-     * Default is zero, so we are fully relying on clockResolutionMultiple(). In most cases this is exactly what you want. If you see
+     * Default is 1ms, so we are mostly relying on clockResolutionMultiple(). In most cases this is exactly what you want. If you see
      * that the evaluation is unreliable with a high `err%`, you can increase either minEpochTime() or minEpochIterations().
      *
      * @see maxEpochTime, minEpochIterations
@@ -1007,7 +1012,21 @@ public:
     Bench& config(Config const& benchmarkConfig);
     ANKERL_NANOBENCH(NODISCARD) Config const& config() const noexcept;
 
+    /**
+     * @brief Configure an untimed setup step per epoch (fluent API).
+     *
+     * Example: `bench.setup(...).run(...);`
+     */
+    template <typename SetupOp>
+    detail::SetupRunner<SetupOp> setup(SetupOp setupOp);
+
 private:
+    template <typename SetupOp, typename Op>
+    Bench& runImpl(SetupOp& setupOp, Op&& op);
+
+    template <typename SetupOp>
+    friend class detail::SetupRunner;
+
     Config mConfig{};
     std::vector<Result> mResults{};
 };
@@ -1207,14 +1226,44 @@ constexpr uint64_t Rng::rotl(uint64_t x, unsigned k) noexcept {
     return (x << k) | (x >> (64U - k));
 }
 
+namespace detail {
+
+template <typename SetupOp>
+class SetupRunner {
+public:
+    explicit SetupRunner(SetupOp setupOp, Bench& bench)
+        : mSetupOp(std::move(setupOp))
+        , mBench(bench) {}
+
+    template <typename Op>
+    ANKERL_NANOBENCH_NO_SANITIZE("integer")
+    Bench& run(Op&& op) {
+        return mBench.runImpl(mSetupOp, std::forward<Op>(op));
+    }
+
+private:
+    SetupOp mSetupOp;
+    Bench& mBench;
+};
+} // namespace detail
+
 template <typename Op>
 ANKERL_NANOBENCH_NO_SANITIZE("integer")
 Bench& Bench::run(Op&& op) {
+    auto setupOp = [] {};
+    return runImpl(setupOp, std::forward<Op>(op));
+}
+
+template <typename SetupOp, typename Op>
+ANKERL_NANOBENCH_NO_SANITIZE("integer")
+Bench& Bench::runImpl(SetupOp& setupOp, Op&& op) {
     // It is important that this method is kept short so the compiler can do better optimizations/ inlining of op()
     detail::IterationLogic iterationLogic(*this);
     auto& pc = detail::performanceCounters();
 
     while (auto n = iterationLogic.numIters()) {
+        setupOp();
+
         pc.beginMeasure();
         Clock::time_point const before = Clock::now();
         while (n-- > 0) {
@@ -1227,6 +1276,11 @@ Bench& Bench::run(Op&& op) {
     }
     iterationLogic.moveResultTo(mResults);
     return *this;
+}
+
+template <typename SetupOp>
+detail::SetupRunner<SetupOp> Bench::setup(SetupOp setupOp) {
+    return detail::SetupRunner<SetupOp>(std::move(setupOp), *this);
 }
 
 // Performs all evaluations.
