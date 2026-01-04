@@ -1603,6 +1603,37 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.start_node(self.old_node.index)
         self.connect_nodes(1, 0)
 
+    def unsynced_wallet_on_pruned_node_fails(self):
+        self.log.info("Test migration of an unsynced wallet on a pruned node fails gracefully")
+        wallet = self.create_legacy_wallet("", load_on_startup=False)
+        last_wallet_synced_block = wallet.getwalletinfo()['lastprocessedblock']['height']
+        wallet.unloadwallet()
+
+        shutil.copyfile(self.old_node.wallets_path / "wallet.dat", self.master_node.wallets_path / "wallet.dat")
+
+        # Generate blocks just so the wallet best block is pruned
+        self.restart_node(0, ["-fastprune", "-prune=1", "-nowallet"])
+        self.connect_nodes(0, 1)
+        self.generate(self.master_node, 450, sync_fun=self.no_op)
+        self.master_node.pruneblockchain(250)
+        # Ensure next block to sync is unavailable
+        assert_raises_rpc_error(-1, "Block not available (pruned data)", self.master_node.getblock, self.master_node.getblockhash(last_wallet_synced_block + 1))
+
+        # Check migration failure
+        mocked_time = int(time.time())
+        self.master_node.setmocktime(mocked_time)
+        assert_raises_rpc_error(-4, "last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of a pruned node)", self.master_node.migratewallet, wallet_name="")
+        self.master_node.setmocktime(0)
+
+        # Verify the /wallets/ path exists, the wallet is still BDB and the backup file is there.
+        assert self.master_node.wallets_path.exists()
+        self.assert_is_bdb("")
+        backup_path = self.master_node.wallets_path / f"default_wallet_{mocked_time}.legacy.bak"
+        assert backup_path.exists()
+
+        self.clear_default_wallet(backup_path)
+
+
     def run_test(self):
         self.master_node = self.nodes[0]
         self.old_node = self.nodes[1]
@@ -1642,6 +1673,9 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_taproot()
         self.test_solvable_no_privs()
         self.test_loading_failure_after_migration()
+
+        # Note: After this test the first 250 blocks of 'master_node' are pruned
+        self.unsynced_wallet_on_pruned_node_fails()
 
 if __name__ == '__main__':
     WalletMigrationTest(__file__).main()
