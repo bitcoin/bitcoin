@@ -120,7 +120,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         balances = alice.getbalances()['mine']
         assert_equal(balances['untrusted_pending'] + balances['trusted'], newbalance)
         # Also shouldn't show up in listunspent
-        assert not txABC2 in [utxo["txid"] for utxo in alice.listunspent(0)]
+        assert txABC2 not in [utxo["txid"] for utxo in alice.listunspent(0)]
         balance = newbalance
 
         # Abandon original transaction and verify inputs are available again

@@ -126,7 +126,7 @@ class PSBTTest(BitcoinTestFramework):
         utxos = wonline.listunspent(addresses=[offline_addr])
         raw = wonline.createrawtransaction([{"txid":utxos[0]["txid"], "vout":utxos[0]["vout"]}],[{online_addr:0.9999}])
         psbt = wonline.walletprocesspsbt(online_node.converttopsbt(raw))["psbt"]
-        assert not "not_witness_utxo" in mining_node.decodepsbt(psbt)["inputs"][0]
+        assert "not_witness_utxo" not in mining_node.decodepsbt(psbt)["inputs"][0]
 
         # add non-witness UTXO manually
         psbt_new = PSBT.from_base64(psbt)
@@ -136,7 +136,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Have the offline node sign the PSBT (which will remove the non-witness UTXO)
         signed_psbt = offline_node.walletprocesspsbt(psbt_new.to_base64())
-        assert not "non_witness_utxo" in mining_node.decodepsbt(signed_psbt["psbt"])["inputs"][0]
+        assert "non_witness_utxo" not in mining_node.decodepsbt(signed_psbt["psbt"])["inputs"][0]
 
         # Make sure we can mine the resulting transaction
         txid = mining_node.sendrawtransaction(signed_psbt["hex"])
