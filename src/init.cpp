@@ -2012,7 +2012,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                               *node.mn_metaman,
                                               *node.mn_sync,
                                               *node.sporkman,
-                                              node.mn_activeman,
                                               node.chain_helper,
                                               node.cpoolman,
                                               node.dmnman,

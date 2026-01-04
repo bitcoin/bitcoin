@@ -145,9 +145,9 @@ void DashChainstateSetup(ChainstateManager& chainman,
                          const Consensus::Params& consensus_params)
 {
     DashChainstateSetup(chainman, *Assert(node.govman.get()), *Assert(node.mn_metaman.get()), *Assert(node.mn_sync.get()),
-                        *Assert(node.sporkman.get()), node.mn_activeman, node.chain_helper, node.cpoolman, node.dmnman,
-                        node.evodb, node.mnhf_manager, node.llmq_ctx, Assert(node.mempool.get()), node.args->GetDataDirNet(),
-                        llmq_dbs_in_memory, llmq_dbs_wipe, llmq::DEFAULT_BLSCHECK_THREADS, llmq::DEFAULT_MAX_RECOVERED_SIGS_AGE, consensus_params);
+                        *Assert(node.sporkman.get()), node.chain_helper, node.cpoolman, node.dmnman, node.evodb, node.mnhf_manager,
+                        node.llmq_ctx, Assert(node.mempool.get()), node.args->GetDataDirNet(), llmq_dbs_in_memory, llmq_dbs_wipe,
+                        llmq::DEFAULT_BLSCHECK_THREADS, llmq::DEFAULT_MAX_RECOVERED_SIGS_AGE, consensus_params);
 }
 
 void DashChainstateSetupClose(NodeContext& node)
@@ -324,7 +324,6 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
                                            *Assert(m_node.mn_metaman.get()),
                                            *Assert(m_node.mn_sync.get()),
                                            *Assert(m_node.sporkman.get()),
-                                           m_node.mn_activeman,
                                            m_node.chain_helper,
                                            m_node.cpoolman,
                                            m_node.dmnman,
