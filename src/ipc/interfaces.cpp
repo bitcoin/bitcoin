@@ -84,6 +84,12 @@ public:
     std::unique_ptr<interfaces::Init> connectAddress(std::string& address) override
     {
         if (address.empty() || address == "0") return nullptr;
+        
+        // Validate address to prevent CSRF attacks
+        if (address != "auto" && address != "unix" && address != "tcp") {
+            throw std::invalid_argument("Invalid address type: " + address);
+        }
+        
         int fd;
         if (address == "auto") {
             // Treat "auto" the same as "unix" except don't treat it an as error
@@ -92,7 +98,7 @@ public:
             // bitcoin-node process and connect to it.
             address = "unix";
             try {
-                fd = m_process->connect(gArgs.GetDataDirNet(), "bitcoin-node", address);
+                fd = m_process->connect(gArgs.GetDataDirNet(), m_exe_name, address);
             } catch (const std::system_error& e) {
                 // If connection type is auto and socket path isn't accepting connections, or doesn't exist, catch the error and return null;
                 if (e.code() == std::errc::connection_refused || e.code() == std::errc::no_such_file_or_directory) {
@@ -101,7 +107,7 @@ public:
                 throw;
             }
         } else {
-            fd = m_process->connect(gArgs.GetDataDirNet(), "bitcoin-node", address);
+            fd = m_process->connect(gArgs.GetDataDirNet(), m_exe_name, address);
         }
         return m_protocol->connect(fd, m_exe_name);
     }

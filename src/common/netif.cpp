@@ -216,7 +216,7 @@ std::optional<CNetAddr> QueryDefaultGatewayImpl(sa_family_t family)
     Assume(best_route.NextHop.si_family == family);
     if (family == AF_INET) {
         return CNetAddr(best_route.NextHop.Ipv4.sin_addr);
-    } else if(family == AF_INET6) {
+    } else if (family == AF_INET6) {
         return CNetAddr(best_route.NextHop.Ipv6.sin6_addr, best_route.InterfaceIndex);
     }
     return std::nullopt;
@@ -298,7 +298,7 @@ std::optional<CNetAddr> QueryDefaultGateway(Network network)
     sa_family_t family;
     if (network == NET_IPV4) {
         family = AF_INET;
-    } else if(network == NET_IPV6) {
+    } else if (network == NET_IPV6) {
         family = AF_INET6;
     } else {
         return std::nullopt;

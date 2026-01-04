@@ -422,7 +422,7 @@ std::optional<uint64_t> ParseByteUnits(std::string_view str, ByteUnit default_mu
 
     uint64_t unit_amount = static_cast<uint64_t>(multiplier);
     auto parsed_num = ToIntegral<uint64_t>(unit ? str.substr(0, str.size() - 1) : str);
-    if (!parsed_num || parsed_num > std::numeric_limits<uint64_t>::max() / unit_amount) { // check overflow
+    if (!parsed_num || *parsed_num > std::numeric_limits<uint64_t>::max() / unit_amount) { // check overflow
         return std::nullopt;
     }
     return *parsed_num * unit_amount;

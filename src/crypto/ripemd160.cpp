@@ -256,7 +256,7 @@ CRIPEMD160& CRIPEMD160::Write(const unsigned char* data, size_t len)
         ripemd160::Transform(s, buf);
         bufsize = 0;
     }
-    while (end - data >= 64) {
+    while (static_cast<size_t>(end - data) >= 64) {
         // Process full chunks directly from the source.
         ripemd160::Transform(s, data);
         bytes += 64;
@@ -264,8 +264,8 @@ CRIPEMD160& CRIPEMD160::Write(const unsigned char* data, size_t len)
     }
     if (end > data) {
         // Fill the buffer with what remains.
-        memcpy(buf + bufsize, data, end - data);
-        bytes += end - data;
+        memcpy(buf + bufsize, data, static_cast<size_t>(end - data));
+        bytes += static_cast<size_t>(end - data);
     }
     return *this;
 }

@@ -40,8 +40,19 @@ class HTTPBasicsTest(BitcoinTestFramework):
 
     def conf_setup(self):
         #Append rpcauth to bitcoin.conf before initialization
-        self.rtpassword = "cA773lm788buwYe4g4WT+05pKyNruVKjQ25x3n0DQcM="
-        rpcauth = "rpcauth=rt:93648e835a54c573682c2eb19f882535$7681e9c5b74bdd85e78166031d2058e1069b3ed7ed967c93fc63abba06f31144"
+        import base64
+        import secrets
+        
+        # Generate random password instead of hardcoded one
+        self.rtpassword = base64.b64encode(secrets.token_bytes(32)).decode('ascii')
+        
+        gen_rpcauth = self.config["environment"]["RPCAUTH"]
+        
+        # Generate RPCAUTH with the random password
+        p = subprocess.Popen([sys.executable, gen_rpcauth, 'rt', self.rtpassword], stdout=subprocess.PIPE, text=True)
+        lines = p.stdout.read().splitlines()
+        p.wait()
+        rpcauth = lines[1]
 
         self.rpcuser = "rpcuser💻"
         self.rpcpassword = "rpcpassword🔑"
@@ -52,12 +63,14 @@ class HTTPBasicsTest(BitcoinTestFramework):
         self.rt2password = "8/F3uMDw4KSEbw96U3CA1C4X05dkHDN2BPFjTgZW4KI="
         p = subprocess.Popen([sys.executable, gen_rpcauth, 'rt2', self.rt2password], stdout=subprocess.PIPE, text=True)
         lines = p.stdout.read().splitlines()
+        p.wait()
         rpcauth2 = lines[1]
 
         # Generate RPCAUTH without specifying password
         self.user = ''.join(SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(10))
         p = subprocess.Popen([sys.executable, gen_rpcauth, self.user], stdout=subprocess.PIPE, text=True)
         lines = p.stdout.read().splitlines()
+        p.wait()
         rpcauth3 = lines[1]
         self.password = lines[3]
 

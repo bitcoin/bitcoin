@@ -191,12 +191,24 @@ def print_logs_html(log_events):
     """Renders the iterator of log events into html."""
     try:
         import jinja2 #type:ignore
+        import html
     except ImportError:
         print("jinja2 not found. Try `pip install jinja2`")
         sys.exit(1)
-    print(jinja2.Environment(loader=jinja2.FileSystemLoader('./'))
+    
+    # Sanitize log events to prevent code injection
+    sanitized_events = []
+    for event in log_events:
+        sanitized_event = {
+            'timestamp': html.escape(event.timestamp),
+            'source': html.escape(event.source),
+            'event': html.escape(event.event)
+        }
+        sanitized_events.append(sanitized_event)
+    
+    print(jinja2.Environment(loader=jinja2.FileSystemLoader('./'), autoescape=True)
                     .get_template('combined_log_template.html')
-                    .render(title="Combined Logs from testcase", log_events=[event._asdict() for event in log_events]))
+                    .render(title="Combined Logs from testcase", log_events=sanitized_events))
 
 
 if __name__ == '__main__':
