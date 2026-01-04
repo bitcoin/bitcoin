@@ -45,11 +45,19 @@ class CQuorumSnapshotManager;
 
 class CDKGSessionManager
 {
+public:
+    struct SessionHandlerKey {
+        Consensus::LLMQType llmq_type;
+        int quorum_idx;
+        auto operator<=>(const SessionHandlerKey&) const = default;
+    };
+
+    using SessionHandlerMap = std::map<SessionHandlerKey, std::unique_ptr<CDKGSessionHandler>>;
+
+private:
     static constexpr int64_t MAX_CONTRIBUTION_CACHE_TIME = 60 * 1000;
 
 private:
-    std::unique_ptr<CDBWrapper> db{nullptr};
-
     CBLSWorker& blsWorker;
     CDeterministicMNManager& m_dmnman;
     CDKGDebugManager& dkgDebugManager;
@@ -59,8 +67,10 @@ private:
     const CSporkManager& spork_manager;
     const bool m_quorums_watch{false};
 
-    //TODO name struct instead of std::pair
-    std::map<std::pair<Consensus::LLMQType, int>, CDKGSessionHandler> dkgSessionHandlers;
+private:
+    std::unique_ptr<CDBWrapper> db{nullptr};
+
+    SessionHandlerMap dkgSessionHandlers;
 
     mutable Mutex contributionsCacheCs;
     struct ContributionsCacheKey {
