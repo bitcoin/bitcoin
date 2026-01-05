@@ -7,6 +7,8 @@
 
 #include <llmq/dkgsessionhandler.h>
 
+#include <gsl/pointers.h>
+
 namespace llmq {
 class ActiveDKGSessionHandler final : public llmq::CDKGSessionHandler
 {
@@ -62,7 +64,7 @@ public:
 private:
     std::pair<QuorumPhase, uint256> GetPhaseAndQuorumHash() const EXCLUSIVE_LOCKS_REQUIRED(!cs_phase_qhash);
 
-    bool InitNewQuorum(const CBlockIndex* pQuorumBaseBlockIndex);
+    bool InitNewQuorum(gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex);
 
     /**
      * @param curPhase current QuorumPhase

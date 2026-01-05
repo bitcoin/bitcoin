@@ -23,8 +23,6 @@ CDKGSessionHandler::CDKGSessionHandler(CBLSWorker& _blsWorker, CDeterministicMNM
                                        CDKGDebugManager& _dkgDebugManager, CDKGSessionManager& _dkgManager,
                                        CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
                                        const Consensus::LLMQParams& _params, bool quorums_watch, int _quorumIndex) :
-    curSession{std::make_unique<CDKGSession>(_blsWorker, dmnman, _dkgDebugManager, _dkgManager, qsnapman, chainman,
-                                             /*pQuorumBaseBlockIndex=*/nullptr, _params)},
     params{_params},
     quorumIndex{_quorumIndex},
     // we allow size*2 messages as we need to make sure we see bad behavior (double messages)

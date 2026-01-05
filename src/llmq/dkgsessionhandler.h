@@ -131,7 +131,7 @@ private:
     friend class CDKGSessionManager;
 
 protected:
-    std::unique_ptr<CDKGSession> curSession;
+    std::unique_ptr<CDKGSession> curSession{nullptr};
     const Consensus::LLMQParams& params;
     const int quorumIndex;
 

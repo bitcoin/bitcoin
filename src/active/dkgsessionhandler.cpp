@@ -38,11 +38,6 @@ ActiveDKGSessionHandler::ActiveDKGSessionHandler(
     m_sporkman{sporkman},
     m_quorums_watch{quorums_watch}
 {
-    // Overwrite session initialized in parent
-    curSession.reset();
-    curSession = std::make_unique<ActiveDKGSession>(m_bls_worker, m_dmnman, m_dkgdbgman, m_qdkgsman, m_mn_metaman,
-                                                    m_qsnapman, m_mn_activeman, m_chainman, m_sporkman,
-                                                    /*pQuorumBaseBlockIndex=*/nullptr, llmq_params);
 }
 
 ActiveDKGSessionHandler::~ActiveDKGSessionHandler() = default;
@@ -99,7 +94,7 @@ std::pair<QuorumPhase, uint256> ActiveDKGSessionHandler::GetPhaseAndQuorumHash()
     return std::make_pair(phase, quorumHash);
 }
 
-bool ActiveDKGSessionHandler::InitNewQuorum(const CBlockIndex* pQuorumBaseBlockIndex)
+bool ActiveDKGSessionHandler::InitNewQuorum(gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex)
 {
     if (!DeploymentDIP0003Enforced(pQuorumBaseBlockIndex->nHeight, Params().GetConsensus())) {
         return false;
@@ -532,6 +527,9 @@ void ActiveDKGSessionHandler::PhaseHandlerThread(CConnman& connman, PeerManager&
 
 bool ActiveDKGSessionHandler::GetContribution(const uint256& hash, CDKGContribution& ret) const
 {
+    if (!curSession) {
+        return false;
+    }
     LOCK(curSession->invCs);
     auto it = curSession->contributions.find(hash);
     if (it != curSession->contributions.end()) {
@@ -543,6 +541,9 @@ bool ActiveDKGSessionHandler::GetContribution(const uint256& hash, CDKGContribut
 
 bool ActiveDKGSessionHandler::GetComplaint(const uint256& hash, CDKGComplaint& ret) const
 {
+    if (!curSession) {
+        return false;
+    }
     LOCK(curSession->invCs);
     auto it = curSession->complaints.find(hash);
     if (it != curSession->complaints.end()) {
@@ -554,6 +555,9 @@ bool ActiveDKGSessionHandler::GetComplaint(const uint256& hash, CDKGComplaint& r
 
 bool ActiveDKGSessionHandler::GetJustification(const uint256& hash, CDKGJustification& ret) const
 {
+    if (!curSession) {
+        return false;
+    }
     LOCK(curSession->invCs);
     auto it = curSession->justifications.find(hash);
     if (it != curSession->justifications.end()) {
@@ -565,6 +569,9 @@ bool ActiveDKGSessionHandler::GetJustification(const uint256& hash, CDKGJustific
 
 bool ActiveDKGSessionHandler::GetPrematureCommitment(const uint256& hash, CDKGPrematureCommitment& ret) const
 {
+    if (!curSession) {
+        return false;
+    }
     LOCK(curSession->invCs);
     auto it = curSession->prematureCommitments.find(hash);
     if (it != curSession->prematureCommitments.end() && curSession->validCommitments.count(hash)) {
