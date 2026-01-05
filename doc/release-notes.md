@@ -1,9 +1,9 @@
 v30.x Release Notes
 ===================
 
-Bitcoin Core version v30.1 is now available from:
+Bitcoin Core version v30.x is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-30.1/>
+  <https://bitcoincore.org/bin/bitcoin-core-30.x/>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
@@ -40,69 +40,41 @@ unsupported systems.
 Notable changes
 ===============
 
-### Wallet
+### IPC
 
-- #33528 wallet: don't consider unconfirmed TRUC coins with ancestors
+- #33511 init: Fix Ctrl-C shutdown hangs during wait calls
 
 ### Build
 
-- #33580 depends: Use `$(package)_file_name` when downloading from the fallback
-- #33906 depends: Add patch for Windows11Style plugin
-- #32009 contrib: turn off compression of macOS SDK to fix determinism
-
-### IPC
-
-- #33229 multiprocess: Don't require bitcoin -m argument when IPC options are used
-- #33517 multiprocess: Fix high overhead from message logging
-- #33519 Update libmultiprocess subtree in 30.x branch
-- #33566 miner: fix empty mempool case for waitNext()
-- #33676 interfaces: enable cancelling running waitNext calls
-
-### P2P
-
-- #33723 chainparams: remove dnsseed.bitcoin.dashjr-list-of-p2p-nodes.us
-
-### GUI
-
-- gui#899 qt: Modernize custom filtering
-- gui#901 Add createwallet, createwalletdescriptor, and migratewallet to history filter
+- #33950 guix: reduce allowed exported symbols
+- #34107 build: Update minimum required Boost version
 
 ### Test
 
-- #33612 test: change log rate limit version gate
+- #34137 test: Avoid hard time.sleep(1) in feature_init.py
+
+### Fuzz
+
+- #34091 fuzz: doc: remove any mention to address_deserialize_v2
 
 ### Doc
 
-- #33630 doc: correct topology requirements in submitpackage helptext
-- #33826 scripted-diff: Remove obsolete comment
-- #33827 doc: Correct pkgin command usage on NetBSD
+- #34182 doc: Update OpenBSD Build Guide
 
 ### Misc
 
-- #33508 ci: fix buildx gha cache authentication on forks
-- #33558 ci: Use native platform for win-cross task
-- #33581 ci: Properly include $FILE_ENV in DEPENDS_HASH
-- #33744 ci: Fix lint runner selection (and docker cache)
-- #33996 contrib: fix manpage generation
+- #34174 doc: update copyright year to 2026
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- Ava Chow
-- Cory Fields
-- Eugene Siegel
+- brunoerg
 - fanquake
-- glozow
 - Hennadii Stepanov
-- ismaelsadeeq
 - MarcoFalke
 - Ryan Ofsky
-- SatsAndSports
-- Sjors Provoost
-- WakeTrainDev
-- willcl-ark
 
 As well as to everyone that helped with translations on
 [Transifex](https://explore.transifex.com/bitcoin/bitcoin/).
