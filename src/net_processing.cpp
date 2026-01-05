@@ -4945,8 +4945,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         return;
     }
 
-    // Ignore unknown commands for extensibility
-    LogDebug(BCLog::NET, "Unknown command \"%s\" from peer=%d\n", SanitizeString(msg_type), pfrom.GetId());
+    // Ignore unknown message types for extensibility
+    LogDebug(BCLog::NET, "Unknown message type \"%s\" from peer=%d", SanitizeString(msg_type), pfrom.GetId());
     return;
 }
 
@@ -5301,7 +5301,7 @@ void PeerManagerImpl::MaybeSendPing(CNode& node_to, Peer& peer, std::chrono::mic
             peer.m_ping_nonce_sent = nonce;
             MakeAndPushMessage(node_to, NetMsgType::PING, nonce);
         } else {
-            // Peer is too old to support ping command with nonce, pong will never arrive.
+            // Peer is too old to support ping message type with nonce, pong will never arrive.
             peer.m_ping_nonce_sent = 0;
             MakeAndPushMessage(node_to, NetMsgType::PING);
         }
