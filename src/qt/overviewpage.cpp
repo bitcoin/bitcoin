@@ -204,6 +204,7 @@ void OverviewPage::handleTransactionClicked(const QModelIndex &index)
 void OverviewPage::setPrivacy(bool privacy)
 {
     m_privacy = privacy;
+    clientModel->getOptionsModel()->setOption(OptionsModel::OptionID::MaskValues, privacy);
     if (m_balances.balance != -1) {
         setBalance(m_balances);
         coinJoinStatus(true);
