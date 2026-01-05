@@ -50,12 +50,6 @@ SHA256_SUMS = {
     "8a288189bd4b7c23bb1f917256290dd606d9d47a533dcede0c6190a8f4722e1a": {"tag": "v19.3.0", "tarball": "dashcore-19.3.0-win64.zip"},
     "c2f3ff5631094abe16af8e476d1197be8685ee20601deda5cad0c34fc879c3de": {"tag": "v19.3.0", "tarball": "dashcore-19.3.0-x86_64-linux-gnu.tar.gz"},
     #
-    "2870149fda49e731fdf67951408e8b9a1f21f4d91693add0287fe6abb7f8e5b4": {"tag": "v19.1.0", "tarball": "dashcore-19.1.0-aarch64-linux-gnu.tar.gz"},
-    "900f6209831f1a21be7ed51edd48a6312fdfb8759fac94b77b23d77484254356": {"tag": "v19.1.0", "tarball": "dashcore-19.1.0-osx64.tar.gz"},
-    "4ff370e904f08f9b31727535c5ccdde616d7cdee2fb9396aa887910fc87702ff": {"tag": "v19.1.0", "tarball": "dashcore-19.1.0-osx.dmg"},
-    "49fb6cc79429cd46e57b9b1197c863dac5ca56a17004596d9cc364f5fcf395f8": {"tag": "v19.1.0", "tarball": "dashcore-19.1.0-riscv64-linux-gnu.tar.gz"},
-    "4aad6aedd3b45ae8c5279ad6ee886e7d80a1faa59be9bae882bdd6df68992990": {"tag": "v19.1.0", "tarball": "dashcore-19.1.0-x86_64-linux-gnu.tar.gz"},
-    #
     "d7907726666e9266f5eae830789a1c36cf8c84b43bc0c0fab907317a5cc03f09": {"tag": "v18.2.2", "tarball": "dashcore-18.2.2-aarch64-linux-gnu.tar.gz"},
     "b70c5fb7c916f093840b9adb6f0287488843e0e69b403e99ed0bc93d34e24f85": {"tag": "v18.2.2", "tarball": "dashcore-18.2.2-osx.dmg"},
     "9b376e99400a3b0cb8e777477cf07567c36ed65018e4becbd98eebfbcca3efee": {"tag": "v18.2.2", "tarball": "dashcore-18.2.2-osx64.tar.gz"},
@@ -327,7 +321,7 @@ if __name__ == '__main__':
                         help='target directory.', default='releases')
     all_tags = sorted([*set([v['tag'] for v in SHA256_SUMS.values()])])
     parser.add_argument('tags', nargs='*', default=all_tags,
-                        help='release tags. e.g.: v19.1.0 v19.0.0-rc.9 '
+                        help='release tags. e.g.: v19.3.0 v19.0.0-rc.9 '
                         '(if not specified, the full list needed for '
                         'backwards compatibility tests will be used)'
                         )
