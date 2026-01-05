@@ -29,6 +29,11 @@ import sys
 import tempfile
 import re
 import logging
+from test_framework.util import (
+    Binaries,
+    export_env_build_path,
+    get_binary_paths,
+)
 
 # Minimum amount of space to run the tests.
 MIN_FREE_SPACE = 1.1 * 1024 * 1024 * 1024
@@ -87,7 +92,12 @@ EXTENDED_SCRIPTS = [
     'feature_index_prune.py',
 ]
 
+# Special script to run each bench sanity check
+TOOL_BENCH_SANITY_CHECK = "tool_bench_sanity_check.py"
+
 BASE_SCRIPTS = [
+    # Special scripts that are "expanded" later
+    TOOL_BENCH_SANITY_CHECK,
     # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
     # vv Tests less than 5m vv
@@ -458,6 +468,8 @@ def main():
         print("Re-compile with the -DBUILD_DAEMON=ON build option")
         sys.exit(1)
 
+    export_env_build_path(config)
+
     # Build tests
     test_list = deque()
     if tests:
@@ -511,6 +523,15 @@ def main():
             else:
                 # Exclude all variants of a test
                 remove_tests([test for test in test_list if test.split('.py')[0] == exclude_test.split('.py')[0]])
+
+    if config["components"].getboolean("BUILD_BENCH") and TOOL_BENCH_SANITY_CHECK in test_list:
+        # Remove it, and expand it for each bench in the list
+        test_list.remove(TOOL_BENCH_SANITY_CHECK)
+        bench_cmd = Binaries(get_binary_paths(config), bin_dir=None).bench_argv() + ["-list"]
+        bench_list = subprocess.check_output(bench_cmd, text=True).splitlines()
+        bench_list = [f"{TOOL_BENCH_SANITY_CHECK} --bench={b}" for b in bench_list]
+        # Start with special scripts (variable, unknown runtime)
+        test_list.extendleft(reversed(bench_list))
 
     if args.filter:
         test_list = deque(filter(re.compile(args.filter).search, test_list))

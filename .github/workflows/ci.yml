@@ -320,6 +320,7 @@ jobs:
           BITCOIN_BIN: '${{ github.workspace }}\build\bin\Release\bitcoin.exe'
           BITCOIND: '${{ github.workspace }}\build\bin\Release\bitcoind.exe'
           BITCOINCLI: '${{ github.workspace }}\build\bin\Release\bitcoin-cli.exe'
+          BITCOIN_BENCH: '${{ github.workspace }}\build\bin\Release\bench_bitcoin.exe'
           BITCOINTX: '${{ github.workspace }}\build\bin\Release\bitcoin-tx.exe'
           BITCOINUTIL: '${{ github.workspace }}\build\bin\Release\bitcoin-util.exe'
           BITCOINWALLET: '${{ github.workspace }}\build\bin\Release\bitcoin-wallet.exe'
@@ -482,9 +483,6 @@ jobs:
           ./src/secp256k1/bin/tests.exe
           ./src/univalue/object.exe
           ./src/univalue/unitester.exe
-
-      - name: Run benchmarks
-        run: ./bin/bench_bitcoin.exe -sanity-check
 
       - name: Adjust paths in test/config.ini
         shell: pwsh
