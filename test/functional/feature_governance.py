@@ -17,6 +17,9 @@ from test_framework.util import assert_equal, satoshi_round
 GOVERNANCE_UPDATE_MIN = 60 * 60 # src/governance/object.h
 
 class DashGovernanceTest (DashTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.set_dash_test_params(6, 5, [[
             "-budgetparams=10:10:10",

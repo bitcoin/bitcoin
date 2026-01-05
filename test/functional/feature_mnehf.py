@@ -26,6 +26,9 @@ from test_framework.util import (
 )
 
 class MnehfTest(DashTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         extra_args = [["-vbparams=testdummy:0:999999999999:0:4:4:4:5:1", "-persistmempool=0"]] * 4
         self.set_dash_test_params(4, 3, extra_args=extra_args)

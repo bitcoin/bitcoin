@@ -149,6 +149,9 @@ class EvoNode:
         test.log.debug(f"Destroyed EvoNode with collateral_txid={self.mn.collateral_txid}, collateral_vout={self.mn.collateral_vout}, provider_txid={old_protx_hash}")
 
 class NetInfoTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [[

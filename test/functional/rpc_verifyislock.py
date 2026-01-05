@@ -15,6 +15,9 @@ Test verifyislock rpc
 '''
 
 class RPCVerifyISLockTest(DashTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         # -whitelist is needed to avoid the trickling logic on node0
         self.set_dash_test_params(6, 5, [["-whitelist=127.0.0.1"], [], [], [], [], []])

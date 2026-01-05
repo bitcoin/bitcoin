@@ -50,6 +50,9 @@ class TestP2PConn(P2PInterface):
         return self.last_mnlistdiff
 
 class LLMQQuorumRotationTest(DashTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.set_dash_test_params(9, 8, extra_args=[["-vbparams=testdummy:999999999999:999999999999"]] * 9)
         self.set_dash_llmq_test_params(4, 4)

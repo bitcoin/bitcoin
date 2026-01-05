@@ -20,6 +20,9 @@ from test_framework.test_framework import (
 from test_framework.util import assert_equal, force_finish_mnsync, p2p_port, softfork_active
 
 class DIP3Test(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.num_initial_mn = 11 # Should be >= 11 to make sure quorums are not always the same MNs
         self.num_nodes = 1 + self.num_initial_mn + 2 # +1 for controller, +1 for mn-qt, +1 for mn created after dip3 activation

@@ -45,6 +45,9 @@ class TestP2PConn(P2PInterface):
 
 
 class DIP3V19Test(DashTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.extra_args = [[
             '-deprecatedrpc=legacy_mn',

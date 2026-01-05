@@ -15,6 +15,9 @@ Test "quorum" rpc subcommands
 '''
 
 class RPCMasternodeTest(DashTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.set_dash_test_params(4, 3)
 

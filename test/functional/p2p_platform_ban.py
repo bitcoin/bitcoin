@@ -19,6 +19,9 @@ class PlatformBanInterface(P2PInterface):
 
 
 class PlatformBanMessagesTest(DashTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.set_dash_test_params(1, 0, [[]], evo_count=3)
 

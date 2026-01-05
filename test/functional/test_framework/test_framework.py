@@ -1812,7 +1812,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.log.info("Creating and starting %s simple nodes", num_simple_nodes)
         for i in range(0, num_simple_nodes):
             self.create_simple_node(self.extra_args)
-        if self.requires_wallet:
+        if self._requires_wallet:
             self.import_deterministic_coinbase_privkeys()
         required_balance = EVONODE_COLLATERAL * self.evo_count
         required_balance += MASTERNODE_COLLATERAL * (self.mn_count - self.evo_count) + 100

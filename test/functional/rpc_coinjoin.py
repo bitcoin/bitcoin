@@ -25,6 +25,9 @@ COINJOIN_TARGET_MAX = int(MAX_MONEY / COIN)
 COINJOIN_TARGET_MIN = 2
 
 class CoinJoinTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.num_nodes = 1
 

@@ -12,6 +12,9 @@ from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_equal, satoshi_round
 
 class DashGovernanceTest (DashTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.set_dash_test_params(6, 5, [["-budgetparams=10:10:10"]] * 6)
 

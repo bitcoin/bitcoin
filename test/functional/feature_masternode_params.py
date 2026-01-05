@@ -18,6 +18,9 @@ BASIC_FILTER_INDEX = 'basic filter index'
 
 
 class MasternodeParamsTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
@@ -77,12 +80,13 @@ class MasternodeParamsTest(BitcoinTestFramework):
         self.stop_node(1)
 
         # Check debug log for parameter interaction messages during startup
-        with self.nodes[1].assert_debug_log(["parameter interaction: -masternodeblsprivkey set -> setting -disablewallet=1"]):
-            self.start_node(1, extra_args=[
-                f"-masternodeblsprivkey={bls_key}",
-                "-peerblockfilters=0",
-                "-blockfilterindex=0"
-            ])
+        if self.is_wallet_compiled():
+            with self.nodes[1].assert_debug_log(["parameter interaction: -masternodeblsprivkey set -> setting -disablewallet=1"]):
+                self.start_node(1, extra_args=[
+                    f"-masternodeblsprivkey={bls_key}",
+                    "-peerblockfilters=0",
+                    "-blockfilterindex=0"
+                ])
         # Note: The peerblockfilters and blockfilterindex messages won't be in the log
         # when explicitly disabled, only when auto-enabled
 

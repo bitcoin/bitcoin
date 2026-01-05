@@ -32,11 +32,13 @@ msgHashConflict = "0000000000000000000000000000000000000000000000000000000000000
 
 q_type=100
 class LLMQSigningTest(DashTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.set_dash_test_params(1, 0, [["-llmqtestinstantsenddip0024=llmq_test_instantsend", "-peertimeout=300000000"]],
                 evo_count=2)
         self.set_dash_llmq_test_params(1, 1)
-
 
     def mine_single_node_quorum(self):
         node = self.nodes[0]
