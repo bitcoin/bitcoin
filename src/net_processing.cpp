@@ -268,6 +268,7 @@ struct Peer {
     bool m_outbound_version_message_sent GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
 
     /** This peer's reported block height when we connected */
+    // TODO: remove in v32.0, only show reported height once in "receive version message: ..." debug log
     std::atomic<int> m_starting_height{-1};
 
     /** The pong reply we're expecting, or 0 if no pong expected. */
