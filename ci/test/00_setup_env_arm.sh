@@ -12,8 +12,6 @@ export PACKAGES="python3-zmq g++-arm-linux-gnueabihf libc6:armhf libstdc++6:armh
 export CONTAINER_NAME=ci_arm_linux
 export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:24.04"  # Check that https://packages.ubuntu.com/noble/g++-arm-linux-gnueabihf (version 13.x, similar to guix) can cross-compile
 export CI_IMAGE_PLATFORM="linux/arm64"
-export RUN_UNIT_TESTS=true
-export RUN_FUNCTIONAL_TESTS=false
 export GOAL="install"
 export CI_LIMIT_STACK_SIZE=1
 # -Wno-psabi is to disable ABI warnings: "note: parameter passing for argument of type ... changed in GCC 7.1"

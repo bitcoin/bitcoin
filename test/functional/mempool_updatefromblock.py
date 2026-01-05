@@ -13,7 +13,7 @@ import time
 
 from test_framework.blocktools import create_empty_fork
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.util import assert_equal, assert_greater_than_or_equal, assert_raises_rpc_error
 from test_framework.wallet import MiniWallet
 from test_framework.mempool_util import DEFAULT_CLUSTER_LIMIT
 
@@ -161,12 +161,17 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
         # but not all, and any time parent is dropped, child is also removed
         self.trigger_reorg(fork_blocks=fork_blocks)
         mempool = self.nodes[0].getrawmempool()
-        expected_parent_count = len(large_std_txs) - 2
-        assert_equal(len(mempool), expected_parent_count * 2)
+        # At least one parent must be dropped, but more may be dropped,
+        # depending on the dynamic cost overhead.
+        expected_parent_count = len(large_std_txs) - 1
+        assert_greater_than_or_equal(expected_parent_count * 2, len(mempool))
+        expected_parent_count = len(mempool) // 2
+
+        parent_presence = [tx["txid"] in mempool for tx in large_std_txs]
 
         # The txns at the end of the list, or most recently confirmed, should have been trimmed
-        assert_equal([tx["txid"] in mempool for tx in large_std_txs], [tx["txid"] in mempool for tx in small_child_txs])
-        assert_equal([tx["txid"] in mempool for tx in large_std_txs], [True] * expected_parent_count + [False] * 2)
+        assert_equal(parent_presence, [tx["txid"] in mempool for tx in small_child_txs])
+        assert_equal(parent_presence, [True] * expected_parent_count + [False] * (len(large_std_txs) - expected_parent_count))
 
     def test_chainlimits_exceeded(self):
         self.log.info('Check that too long chains on reorg are handled')
