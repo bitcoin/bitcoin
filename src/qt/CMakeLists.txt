@@ -317,3 +317,7 @@ else()
     -P ${PROJECT_SOURCE_DIR}/share/qt/translate.cmake
   )
 endif()
+
+if(ANDROID)
+  add_subdirectory(android)
+endif()

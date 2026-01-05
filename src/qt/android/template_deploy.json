@@ -1,0 +1,54 @@
+{
+  "description": "This file will be copied and modified by cmake to be read by androiddeployqt.",
+  "qt": {
+    "armeabi-v7a": "@QT_ANDROID_SDK@",
+    "arm64-v8a": "@QT_ANDROID_SDK@",
+    "x86_64": "@QT_ANDROID_SDK@"
+  },
+  "qtDataDirectory": {
+    "armeabi-v7a": ".",
+    "arm64-v8a": ".",
+    "x86_64": "."
+  },
+  "qtLibExecsDirectory": {
+    "armeabi-v7a": "libexec",
+    "arm64-v8a": "libexec",
+    "x86_64": "libexec"
+  },
+  "qtLibsDirectory": {
+    "armeabi-v7a": "lib",
+    "arm64-v8a": "lib",
+    "x86_64": "lib"
+  },
+  "qtPluginsDirectory": {
+    "armeabi-v7a": "plugins",
+    "arm64-v8a": "plugins",
+    "x86_64": "plugins"
+  },
+  "sdk": "@ANDROID_SDK_ROOT@",
+  "sdkBuildToolsRevision": "35.0.0",
+  "ndk": "@ANDROID_NDK_ROOT@",
+  "toolchain-prefix": "llvm",
+  "tool-prefix": "llvm",
+  "useLLVM": true,
+  "toolchain-version": "clang",
+  "ndk-host": "linux-x86_64",
+  "android-api-level": "@ANDROID_API_LEVEL@",
+  "android-sdk-platform": "android-@ANDROID_API_LEVEL@",
+  "architectures": {
+    "armeabi-v7a": "arm-linux-androideabi",
+    "arm64-v8a": "aarch64-linux-android",
+    "x86_64": "x86_64-linux-android"
+  },
+  "android-deploy-plugins": "@QT_ANDROID_SDK@/plugins/platforms/libplugins_platforms_qtforandroid_@CMAKE_ANDROID_ARCH_ABI@.so",
+  "application-binary": "bitcoin-qt",
+  "rcc-binary": "@QT_HOST_PATH@/libexec/rcc",
+  "android-package-source-directory": "@ANDROID_PACKAGE_SOURCE_DIR@",
+  "extraPrefixDirs": [
+    "."
+  ],
+  "extraLibraryDirs": [],
+  "zstdCompression": false,
+  "stdcpp-path": "@ANDROID_NDK_ROOT@/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/",
+  "qmlimportscanner-binary": "@QT_HOST_PATH@/libexec/qmlimportscanner"
+}
