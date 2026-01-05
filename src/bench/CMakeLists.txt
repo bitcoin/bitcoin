@@ -2,6 +2,8 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
+include(DiscoverTests)
+
 add_executable(bench_bitcoin
   bench_bitcoin.cpp
   bench.cpp
@@ -84,8 +86,12 @@ if(ENABLE_WALLET)
   target_link_libraries(bench_bitcoin bitcoin_wallet)
 endif()
 
-add_test(NAME bench_sanity_check
-  COMMAND bench_bitcoin -sanity-check
+discover_tests(bench_bitcoin
+  DISCOVERY_ARGS        [[-list]]
+  DISCOVERY_MATCH       [[.+]]
+  TEST_NAME_REPLACEMENT [[bitcoin.bench.\0]]
+  TEST_ARGS_REPLACEMENT [[-filter='^\0$']]
+  PROPERTIES LABELS bench
 )
 
 install_binary_component(bench_bitcoin INTERNAL)
