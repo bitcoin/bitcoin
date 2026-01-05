@@ -11,6 +11,7 @@ $(package)_linux_dependencies := freetype fontconfig libxcb libxkbcommon libxcb_
 $(package)_freebsd_dependencies := $($(package)_linux_dependencies)
 $(package)_patches_path := $(qt_details_patches_path)
 $(package)_patches := dont_hardcode_pwd.patch
+$(package)_patches += fix_android_jni_static.patch
 $(package)_patches += qtbase_avoid_qmain.patch
 $(package)_patches += qtbase_platformsupport.patch
 $(package)_patches += qtbase_plugins_cocoa.patch
@@ -82,7 +83,11 @@ endif
 $(package)_config_opts += -qt-libpng
 $(package)_config_opts += -qt-pcre
 $(package)_config_opts += -qt-zlib
-$(package)_config_opts += -static
+ifeq ($(host_os),android)
+  $(package)_config_opts += -shared
+else
+  $(package)_config_opts += -static
+endif
 $(package)_config_opts += -no-feature-backtrace
 $(package)_config_opts += -no-feature-colordialog
 $(package)_config_opts += -no-feature-concurrent
@@ -152,6 +157,16 @@ $(package)_config_opts_freebsd := $$($(package)_config_opts_linux)
 $(package)_config_opts_mingw32 := -no-dbus
 $(package)_config_opts_mingw32 += -no-freetype
 $(package)_config_opts_mingw32 += -no-pkg-config
+
+$(package)_config_opts_android  = -android-sdk $(ANDROID_SDK)
+$(package)_config_opts_android += -android-ndk $(ANDROID_NDK)
+$(package)_config_opts_android += -android-ndk-platform android-$(ANDROID_API_LEVEL)
+$(package)_config_opts_android += -android-abis $(android_abi)
+$(package)_config_opts_android += -egl
+$(package)_config_opts_android += -no-dbus
+$(package)_config_opts_android += -no-fontconfig
+$(package)_config_opts_android += -opengl es2
+$(package)_config_opts_android += -qt-freetype
 
 # CMake build options.
 $(package)_config_env := CC="$$($(package)_cc)"
@@ -256,6 +271,7 @@ endif
 
 define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/dont_hardcode_pwd.patch && \
+  patch -p1 -i $($(package)_patch_dir)/fix_android_jni_static.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase_avoid_qmain.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase_platformsupport.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase_plugins_cocoa.patch && \
@@ -280,6 +296,9 @@ endef
 define $(package)_stage_cmds
   cmake --install . --prefix $($(package)_staging_prefix_dir) --strip
 endef
+ifeq ($(host_os),android)
+  $(package)_stage_cmds += && cp -r $($(package)_extract_dir)/qtbase/src/android/jar/src $($(package)_staging_prefix_dir)/src/android/java
+endif
 
 define $(package)_postprocess_cmds
   rm -rf doc/

@@ -65,10 +65,10 @@ $(package)_config_opts += -qt-zlib
 $(package)_config_opts += -no-feature-backtrace
 $(package)_config_opts += -no-feature-permissions
 $(package)_config_opts += -no-feature-process
-$(package)_config_opts += -no-feature-settings
+$(package)_config_opts += -feature-settings
 
 # Core tools.
-$(package)_config_opts += -no-feature-androiddeployqt
+$(package)_config_opts += -feature-androiddeployqt
 $(package)_config_opts += -no-feature-macdeployqt
 $(package)_config_opts += -no-feature-windeployqt
 $(package)_config_opts += -no-feature-qmake

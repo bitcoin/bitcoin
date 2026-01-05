@@ -99,6 +99,10 @@ host_os+=$(findstring netbsd,$(full_host_os))
 host_os+=$(findstring openbsd,$(full_host_os))
 host_os+=$(findstring mingw32,$(full_host_os))
 
+ifeq (android,$(findstring android,$(full_host_os)))
+host_os:=android
+endif
+
 host_os:=$(strip $(host_os))
 ifeq ($(host_os),)
 host_os=$(full_host_os)
@@ -235,6 +239,12 @@ $(host_prefix)/toolchain.cmake : toolchain.cmake.in $(host_prefix)/.stamp_$(fina
             -e 's|@wallet_packages@|$(wallet_packages_)|' \
             -e 's|@usdt_packages@|$(usdt_packages_)|' \
             -e 's|@ipc_packages@|$(ipc_packages_)|' \
+            -e 's|@multiprocess@|$(MULTIPROCESS)|' \
+            -e 's|@android_abi@|$(android_abi)|' \
+            -e 's|@android_ndk@|$(ANDROID_NDK)|' \
+            -e 's|@android_sdk@|$(ANDROID_SDK)|' \
+            -e 's|@android_toolchain_bin_dir@|$(android_toolchain_bin_dir)|' \
+            -e 's|@android_libcxx_shared_dir@|$(android_libcxx_shared_dir)|' \
             $< > $@
 	touch $@
 
