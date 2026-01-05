@@ -8,6 +8,7 @@
 #include <evo/deterministicmns.h>
 #include <governance/governance.h>
 #include <index/txindex.h>
+#include <masternode/active/context.h>
 #include <masternode/node.h>
 #include <masternode/payments.h>
 #include <net.h>
@@ -198,15 +199,16 @@ static RPCHelpMan masternode_status()
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
 
-    if (!node.mn_activeman) {
+    if (!node.active_ctx) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "This node does not run an active masternode.");
     }
+    const auto& mn_activeman{*node.active_ctx->nodeman};
 
     UniValue mnObj(UniValue::VOBJ);
     // keep compatibility with legacy status for now (TODO: get deprecated/removed later)
-    mnObj.pushKV("outpoint", node.mn_activeman->GetOutPoint().ToStringShort());
-    mnObj.pushKV("service", node.mn_activeman->GetService().ToStringAddrPort());
-    auto dmn = CHECK_NONFATAL(node.dmnman)->GetListAtChainTip().GetMN(node.mn_activeman->GetProTxHash());
+    mnObj.pushKV("outpoint", mn_activeman.GetOutPoint().ToStringShort());
+    mnObj.pushKV("service", mn_activeman.GetService().ToStringAddrPort());
+    auto dmn = CHECK_NONFATAL(node.dmnman)->GetListAtChainTip().GetMN(mn_activeman.GetProTxHash());
     if (dmn) {
         mnObj.pushKV("proTxHash", dmn->proTxHash.ToString());
         mnObj.pushKV("type", std::string(GetMnType(dmn->nType).description));
@@ -214,8 +216,8 @@ static RPCHelpMan masternode_status()
         mnObj.pushKV("collateralIndex", dmn->collateralOutpoint.n);
         mnObj.pushKV("dmnState", dmn->pdmnState->ToJson(dmn->nType));
     }
-    mnObj.pushKV("state", node.mn_activeman->GetStateString());
-    mnObj.pushKV("status", node.mn_activeman->GetStatus());
+    mnObj.pushKV("state", mn_activeman.GetStateString());
+    mnObj.pushKV("status", mn_activeman.GetStatus());
 
     return mnObj;
 },

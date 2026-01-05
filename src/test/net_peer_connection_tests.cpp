@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(test_addnode_getaddednodeinfo_and_connection_detection)
 {
     const auto& chainparams = Params();
     auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman);
-    auto peerman = MakePeerManager(*connman, m_node, /*banman=*/nullptr, /*mn_activeman=*/nullptr, chainparams, /*ignore_incoming_txs=*/false);
+    auto peerman = MakePeerManager(*connman, m_node, /*banman=*/nullptr, chainparams, /*ignore_incoming_txs=*/false);
     NodeId id{0};
     std::vector<CNode*> nodes;
 

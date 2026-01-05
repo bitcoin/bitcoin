@@ -587,7 +587,6 @@ public:
                     CDSTXManager& dstxman, ChainstateManager& chainman, CTxMemPool& pool,
                     CMasternodeMetaMan& mn_metaman, CMasternodeSync& mn_sync, CGovernanceManager& govman,
                     CSporkManager& sporkman,
-                    const CActiveMasternodeManager* const mn_activeman,
                     const std::unique_ptr<ActiveContext>& active_ctx,
                     const std::unique_ptr<CDeterministicMNManager>& dmnman,
                     const std::unique_ptr<CJWalletManager>& cj_walletman,
@@ -821,8 +820,6 @@ private:
     CMasternodeSync& m_mn_sync;
     CGovernanceManager& m_govman;
     CSporkManager& m_sporkman;
-    /** Pointer to this node's CActiveMasternodeManager. May be nullptr - check existence before dereferencing. */
-    const CActiveMasternodeManager* const m_mn_activeman;
 
     /** The height of the best chain */
     std::atomic<int> m_best_height{-1};
@@ -1635,7 +1632,7 @@ void PeerManagerImpl::RequestObject(NodeId nodeid, const CInv& inv, std::chrono:
 
     // Calculate the time to try requesting this transaction. Use
     // fPreferredDownload as a proxy for outbound peers.
-    std::chrono::microseconds process_time = CalculateObjectGetDataTime(inv, current_time, /*is_masternode=*/m_mn_activeman != nullptr,
+    std::chrono::microseconds process_time = CalculateObjectGetDataTime(inv, current_time, /*is_masternode=*/m_active_ctx != nullptr,
                                                                         !state->fPreferredDownload);
 
     peer_download_state.m_object_process_time.emplace(process_time, inv);
@@ -2046,21 +2043,19 @@ std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, 
                                                CTxMemPool& pool, CMasternodeMetaMan& mn_metaman,
                                                CMasternodeSync& mn_sync, CGovernanceManager& govman,
                                                CSporkManager& sporkman,
-                                               const CActiveMasternodeManager* const mn_activeman,
                                                const std::unique_ptr<ActiveContext>& active_ctx,
                                                const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                                const std::unique_ptr<CJWalletManager>& cj_walletman,
                                                const std::unique_ptr<LLMQContext>& llmq_ctx,
                                                const std::unique_ptr<llmq::ObserverContext>& observer_ctx, bool ignore_incoming_txs)
 {
-    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, dstxman, chainman, pool, mn_metaman, mn_sync, govman, sporkman, mn_activeman, active_ctx, dmnman, cj_walletman, llmq_ctx, observer_ctx, ignore_incoming_txs);
+    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, dstxman, chainman, pool, mn_metaman, mn_sync, govman, sporkman, active_ctx, dmnman, cj_walletman, llmq_ctx, observer_ctx, ignore_incoming_txs);
 }
 
 PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, AddrMan& addrman, BanMan* banman,
                                  CDSTXManager& dstxman, ChainstateManager& chainman, CTxMemPool& pool,
                                  CMasternodeMetaMan& mn_metaman, CMasternodeSync& mn_sync, CGovernanceManager& govman,
                                  CSporkManager& sporkman,
-                                 const CActiveMasternodeManager* const mn_activeman,
                                  const std::unique_ptr<ActiveContext>& active_ctx,
                                  const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                  const std::unique_ptr<CJWalletManager>& cj_walletman,
@@ -2082,7 +2077,6 @@ PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& conn
       m_mn_sync(mn_sync),
       m_govman(govman),
       m_sporkman(sporkman),
-      m_mn_activeman(mn_activeman),
       m_ignore_incoming_txs(ignore_incoming_txs)
 {
     // While Erlay support is incomplete, it must be enabled explicitly via -txreconciliation.
@@ -3714,7 +3708,7 @@ void PeerManagerImpl::ProcessMessage(
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(msg_type), vRecv.size(), pfrom.GetId());
     ::g_stats_client->inc("message.received." + SanitizeString(msg_type), 1.0f);
 
-    const bool is_masternode = m_mn_activeman != nullptr;
+    const bool is_masternode = m_active_ctx != nullptr;
 
     PeerRef peer = GetPeerRef(pfrom.GetId());
     if (peer == nullptr) return;
@@ -3985,7 +3979,7 @@ void PeerManagerImpl::ProcessMessage(
         }
 
         if (is_masternode && !pfrom.m_masternode_probe_connection) {
-            CMNAuth::PushMNAUTH(pfrom, m_connman, *m_mn_activeman);
+            CMNAuth::PushMNAUTH(pfrom, m_connman, *m_active_ctx->nodeman);
         }
 
         // Tell our peer we prefer to receive headers rather than inv's
@@ -5479,7 +5473,7 @@ void PeerManagerImpl::ProcessMessage(
             }
         }
         PostProcessMessage(m_sporkman.ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom.GetId());
-        PostProcessMessage(CMNAuth::ProcessMessage(pfrom, peer->m_their_services, m_connman, m_mn_metaman, m_mn_activeman, m_mn_sync, m_dmnman->GetListAtChainTip(), msg_type, vRecv), pfrom.GetId());
+        PostProcessMessage(CMNAuth::ProcessMessage(pfrom, peer->m_their_services, m_connman, m_mn_metaman, (m_active_ctx ? m_active_ctx->nodeman.get() : nullptr), m_mn_sync, m_dmnman->GetListAtChainTip(), msg_type, vRecv), pfrom.GetId());
         PostProcessMessage(m_llmq_ctx->quorum_block_processor->ProcessMessage(pfrom, msg_type, vRecv), pfrom.GetId());
         PostProcessMessage(m_llmq_ctx->qman->ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom.GetId());
         PostProcessMessage(ProcessPlatformBanMessage(pfrom.GetId(), msg_type, vRecv), pfrom.GetId());
@@ -5978,7 +5972,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
     assert(m_llmq_ctx);
 
-    const bool is_masternode = m_mn_activeman != nullptr;
+    const bool is_masternode = m_active_ctx != nullptr;
 
     PeerRef peer = GetPeerRef(pto->GetId());
     if (!peer) return false;

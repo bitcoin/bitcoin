@@ -49,11 +49,11 @@ bool GetLocal(CService& addr, const CNetAddr* paddrPeer)
 }
 } // anonymous namespace
 
-CActiveMasternodeManager::CActiveMasternodeManager(const CBLSSecretKey& sk, CConnman& connman,
-                                                   const std::unique_ptr<CDeterministicMNManager>& dmnman) :
-    m_info{sk, sk.GetPublicKey()},
+CActiveMasternodeManager::CActiveMasternodeManager(CConnman& connman, CDeterministicMNManager& dmnman,
+                                                   const CBLSSecretKey& sk) :
     m_connman{connman},
-    m_dmnman{dmnman}
+    m_dmnman{dmnman},
+    m_info{sk, sk.GetPublicKey()}
 {
     assert(sk.IsValid()); /* We can assume pk is valid if sk is valid */
     LogPrintf("MASTERNODE:\n  blsPubKeyOperator legacy: %s\n  blsPubKeyOperator basic: %s\n",
@@ -128,7 +128,7 @@ void CActiveMasternodeManager::InitInternal(const CBlockIndex* pindex)
         return;
     }
 
-    CDeterministicMNList mnList = Assert(m_dmnman)->GetListForBlock(pindex);
+    CDeterministicMNList mnList = m_dmnman.GetListForBlock(pindex);
 
     auto dmn = mnList.GetMNByOperatorKey(m_info.blsPubKeyOperator);
     if (!dmn) {
@@ -177,8 +177,8 @@ void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, con
 
     const auto [cur_state, cur_protx_hash] = WITH_READ_LOCK(cs, return std::make_pair(m_state, m_info.proTxHash));
     if (cur_state == MasternodeState::READY) {
-        auto oldMNList = Assert(m_dmnman)->GetListForBlock(pindexNew->pprev);
-        auto newMNList = m_dmnman->GetListForBlock(pindexNew);
+        auto oldMNList = m_dmnman.GetListForBlock(pindexNew->pprev);
+        auto newMNList = m_dmnman.GetListForBlock(pindexNew);
         auto reset = [this, pindexNew](MasternodeState state) -> void {
             LOCK(cs);
             m_state = state;

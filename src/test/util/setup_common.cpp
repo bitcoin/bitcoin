@@ -129,12 +129,11 @@ std::ostream& operator<<(std::ostream& os, const uint256& num)
 std::unique_ptr<PeerManager> MakePeerManager(CConnman& connman,
                                              NodeContext& node,
                                              BanMan* banman,
-                                             CActiveMasternodeManager* mn_activeman,
                                              const CChainParams& chainparams,
                                              bool ignore_incoming_txs)
 {
     return PeerManager::make(chainparams, connman, *node.addrman, banman, *node.dstxman, *node.chainman, *node.mempool, *node.mn_metaman,
-                             *node.mn_sync, *node.govman, *node.sporkman, mn_activeman, node.active_ctx, node.dmnman, node.cj_walletman,
+                             *node.mn_sync, *node.govman, *node.sporkman, node.active_ctx, node.dmnman, node.cj_walletman,
                              node.llmq_ctx, node.observer_ctx, ignore_incoming_txs);
 }
 
@@ -380,7 +379,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 #endif // ENABLE_WALLET
 
     m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    m_node.peerman = MakePeerManager(*m_node.connman, m_node, m_node.banman.get(), /*mn_activeman=*/nullptr, chainparams,
+    m_node.peerman = MakePeerManager(*m_node.connman, m_node, m_node.banman.get(), chainparams,
                                      /*ignore_incoming_txs=*/false);
     {
         CConnman::Options options;

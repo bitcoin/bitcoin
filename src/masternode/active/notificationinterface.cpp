@@ -12,9 +12,8 @@
 #include <masternode/active/context.h>
 #include <masternode/node.h>
 
-ActiveNotificationInterface::ActiveNotificationInterface(ActiveContext& active_ctx, CActiveMasternodeManager& mn_activeman) :
-    m_active_ctx{active_ctx},
-    m_mn_activeman{mn_activeman}
+ActiveNotificationInterface::ActiveNotificationInterface(ActiveContext& active_ctx) :
+    m_active_ctx{active_ctx}
 {
 }
 
@@ -26,7 +25,7 @@ void ActiveNotificationInterface::UpdatedBlockTip(const CBlockIndex* pindexNew, 
     if (fInitialDownload || pindexNew == pindexFork) // In IBD or blocks were disconnected without any new ones
         return;
 
-    m_mn_activeman.UpdatedBlockTip(pindexNew, pindexFork, fInitialDownload);
+    m_active_ctx.nodeman->UpdatedBlockTip(pindexNew, pindexFork, fInitialDownload);
     m_active_ctx.ehf_sighandler->UpdatedBlockTip(pindexNew);
     m_active_ctx.gov_signer->UpdatedBlockTip(pindexNew);
     m_active_ctx.qdkgsman->UpdatedBlockTip(pindexNew, fInitialDownload);

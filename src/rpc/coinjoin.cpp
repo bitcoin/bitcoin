@@ -86,7 +86,7 @@ static RPCHelpMan coinjoin_reset()
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
 
-    if (node.mn_activeman) {
+    if (node.active_ctx) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
     }
 
@@ -120,7 +120,7 @@ static RPCHelpMan coinjoin_start()
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
 
-    if (node.mn_activeman) {
+    if (node.active_ctx) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
     }
 
@@ -161,7 +161,7 @@ static RPCHelpMan coinjoin_status()
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
 
-    if (node.mn_activeman) {
+    if (node.active_ctx) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
     }
 
@@ -200,7 +200,7 @@ static RPCHelpMan coinjoin_stop()
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
 
-    if (node.mn_activeman) {
+    if (node.active_ctx) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
     }
 
@@ -464,8 +464,8 @@ static RPCHelpMan getcoinjoininfo()
     UniValue obj(UniValue::VOBJ);
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
-    if (node.mn_activeman) {
-        node.active_ctx->m_cj_server.GetJsonInfo(obj);
+    if (node.active_ctx) {
+        node.active_ctx->GetCJServer().GetJsonInfo(obj);
         return obj;
     }
 

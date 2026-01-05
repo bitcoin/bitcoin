@@ -419,8 +419,6 @@ void PrepareShutdown(NodeContext& node)
     }
 #endif
 
-    node.mn_activeman.reset();
-
     node.chain_clients.clear();
 
     // After all wallets are removed, destroy all CoinJoin objects
@@ -1730,16 +1728,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
-    std::string strMasterNodeBLSPrivKey = args.GetArg("-masternodeblsprivkey", "");
-    if (!strMasterNodeBLSPrivKey.empty()) {
-        CBLSSecretKey keyOperator(ParseHex(strMasterNodeBLSPrivKey));
-        if (!keyOperator.IsValid()) {
-            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
-        }
-        // Create and register mn_activeman, will init later in ThreadImport
-        node.mn_activeman = std::make_unique<CActiveMasternodeManager>(keyOperator, *node.connman, node.dmnman);
-    }
-
     // Check port numbers
     for (const std::string port_option : {
         "-port",
@@ -2191,7 +2179,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.peerman);
     node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(), *node.dstxman,
                                      chainman, *node.mempool, *node.mn_metaman, *node.mn_sync,
-                                     *node.govman, *node.sporkman, node.mn_activeman.get(), node.active_ctx, node.dmnman,
+                                     *node.govman, *node.sporkman, node.active_ctx, node.dmnman,
                                      node.cj_walletman, node.llmq_ctx, node.observer_ctx, ignores_incoming_txs);
     RegisterValidationInterface(node.peerman.get());
 
@@ -2209,14 +2197,16 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     const bool quorums_watch = args.GetBoolArg("-watchquorums", llmq::DEFAULT_WATCH_QUORUMS);
     const llmq::QvvecSyncModeMap sync_map{llmq::GetEnabledQuorumVvecSyncEntries(args)};
     const util::DbWrapperParams dash_db_params{.path = args.GetDataDirNet(), .memory = false, .wipe = (fReindex || fReindexChainState)};
-    if (node.mn_activeman) {
-        auto cj_server = std::make_unique<CCoinJoinServer>(node.peerman.get(), chainman, *node.connman, *node.dmnman, *node.dstxman, *node.mn_metaman,
-                                                           *node.mempool, *node.mn_activeman, *node.mn_sync, *node.llmq_ctx->isman);
-        node.active_ctx = std::make_unique<ActiveContext>(*cj_server, *node.connman, *node.dmnman, *node.govman, chainman, *node.mn_metaman,
-                                                          *node.mnhf_manager, *node.sporkman, *node.mempool, *node.llmq_ctx, *node.peerman,
-                                                          *node.mn_activeman, *node.mn_sync, sync_map, dash_db_params, quorums_recovery, quorums_watch);
-        node.peerman->AddExtraHandler(std::move(cj_server));
-        g_active_notification_interface = std::make_unique<ActiveNotificationInterface>(*node.active_ctx, *node.mn_activeman);
+    if (const auto operator_sk_str = args.GetArg("-masternodeblsprivkey", ""); !operator_sk_str.empty()) {
+        const CBLSSecretKey operator_sk{ParseHex(operator_sk_str)};
+        if (!operator_sk.IsValid()) {
+            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
+        }
+        // Will init later in ThreadImport
+        node.active_ctx = std::make_unique<ActiveContext>(*node.connman, *node.dmnman, *node.govman, chainman, *node.mn_metaman, *node.mnhf_manager,
+                                                          *node.sporkman, *node.mempool, *node.llmq_ctx, *node.peerman, *node.mn_sync, operator_sk,
+                                                          sync_map, dash_db_params, quorums_recovery, quorums_watch);
+        g_active_notification_interface = std::make_unique<ActiveNotificationInterface>(*node.active_ctx);
         RegisterValidationInterface(g_active_notification_interface.get());
     } else if (quorums_watch) {
         node.observer_ctx = std::make_unique<llmq::ObserverContext>(*node.llmq_ctx->bls_worker, *node.connman, *node.dmnman, *node.mn_metaman, *node.mn_sync,
@@ -2230,8 +2220,13 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     node.peerman->AddExtraHandler(std::make_unique<NetInstantSend>(node.peerman.get(), *node.llmq_ctx->isman, *node.llmq_ctx->qman, chainman.ActiveChainstate()));
     node.peerman->AddExtraHandler(std::make_unique<NetSigning>(node.peerman.get(), *node.llmq_ctx->sigman));
 
-    assert(!node.cj_walletman);
-    if (!node.active_ctx) {
+    if (node.active_ctx) {
+        auto cj_server = std::make_unique<CCoinJoinServer>(node.peerman.get(), chainman, *node.connman, *node.dmnman, *node.dstxman, *node.mn_metaman,
+                                                           *node.mempool, *node.active_ctx->nodeman, *node.mn_sync, *node.llmq_ctx->isman);
+        node.active_ctx->SetCJServer(cj_server.get());
+        node.peerman->AddExtraHandler(std::move(cj_server));
+    } else {
+        assert(!node.cj_walletman);
         // Can return nullptr if built without wallet support, must check before use
         node.cj_walletman = CJWalletManager::make(chainman, *node.dmnman, *node.mn_metaman, *node.mempool, *node.mn_sync,
                                                   *node.llmq_ctx->isman, !ignores_incoming_txs);
@@ -2336,7 +2331,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     node.llmq_ctx->Start();
     node.peerman->StartHandlers();
-    if (node.active_ctx) node.active_ctx->Start(*node.connman, *node.peerman);
     if (node.observer_ctx) node.observer_ctx->Start();
 
     node.scheduler->scheduleEvery(std::bind(&CNetFulfilledRequestManager::DoMaintenance, std::ref(*node.netfulfilledman)), std::chrono::minutes{1});
@@ -2344,7 +2338,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     node.scheduler->scheduleEvery(std::bind(&CDeterministicMNManager::DoMaintenance, std::ref(*node.dmnman)), std::chrono::seconds{10});
     node.peerman->ScheduleHandlers(*node.scheduler);
 
-    if (node.mn_activeman) {
+    if (node.active_ctx) {
+        node.active_ctx->Start(*node.connman, *node.peerman);
         node.scheduler->scheduleEvery(std::bind(&llmq::CDKGSessionManager::CleanupOldContributions, std::ref(*node.active_ctx->qdkgsman)), std::chrono::hours{1});
     }
 
@@ -2491,10 +2486,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             }
         }
 
-        if (node.mn_activeman != nullptr) {
-            node.mn_activeman->Init(chainman.ActiveTip());
+        if (node.active_ctx) {
+            node.active_ctx->nodeman->Init(chainman.ActiveTip());
         }
-
     });
 #ifdef ENABLE_WALLET
     if (!args.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
@@ -2562,7 +2556,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     connOptions.nMaxOutboundLimit = *opt_max_upload;
     connOptions.m_peer_connect_timeout = peer_connect_timeout;
     connOptions.socketEventsMode = ::g_socket_events_mode;
-    connOptions.m_active_masternode = node.mn_activeman != nullptr;
+    connOptions.m_active_masternode = node.active_ctx != nullptr;
 
     // Port to bind to if `-bind=addr` is provided without a `:port` suffix.
     const uint16_t default_bind_port =

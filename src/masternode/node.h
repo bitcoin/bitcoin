@@ -30,7 +30,11 @@ struct CActiveMasternodeInfo {
 
 class CActiveMasternodeManager
 {
-public:
+private:
+    CConnman& m_connman;
+    CDeterministicMNManager& m_dmnman;
+
+private:
     enum class MasternodeState {
         WAITING_FOR_PROTX,
         POSE_BANNED,
@@ -41,20 +45,16 @@ public:
         SOME_ERROR,
     };
 
-private:
     mutable SharedMutex cs;
     MasternodeState m_state GUARDED_BY(cs){MasternodeState::WAITING_FOR_PROTX};
     CActiveMasternodeInfo m_info GUARDED_BY(cs);
     std::string m_error GUARDED_BY(cs);
 
-    CConnman& m_connman;
-    const std::unique_ptr<CDeterministicMNManager>& m_dmnman;
-
 public:
     CActiveMasternodeManager() = delete;
     CActiveMasternodeManager(const CActiveMasternodeManager&) = delete;
     CActiveMasternodeManager& operator=(const CActiveMasternodeManager&) = delete;
-    explicit CActiveMasternodeManager(const CBLSSecretKey& sk, CConnman& connman, const std::unique_ptr<CDeterministicMNManager>& dmnman);
+    explicit CActiveMasternodeManager(CConnman& connman, CDeterministicMNManager& dmnman, const CBLSSecretKey& sk);
     ~CActiveMasternodeManager();
 
     void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)

@@ -21,7 +21,7 @@ public:
     ActiveNotificationInterface() = delete;
     ActiveNotificationInterface(const ActiveNotificationInterface&) = delete;
     ActiveNotificationInterface& operator=(const ActiveNotificationInterface&) = delete;
-    explicit ActiveNotificationInterface(ActiveContext& active_ctx, CActiveMasternodeManager& mn_activeman);
+    explicit ActiveNotificationInterface(ActiveContext& active_ctx);
     virtual ~ActiveNotificationInterface();
 
 protected:
@@ -31,7 +31,6 @@ protected:
 
 private:
     ActiveContext& m_active_ctx;
-    CActiveMasternodeManager& m_mn_activeman;
 };
 
 extern std::unique_ptr<ActiveNotificationInterface> g_active_notification_interface;
