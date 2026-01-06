@@ -35,4 +35,4 @@ static void ExpandDescriptor(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(ExpandDescriptor, benchmark::PriorityLevel::HIGH);
+BENCHMARK(ExpandDescriptor);

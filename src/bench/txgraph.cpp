@@ -123,4 +123,4 @@ void BenchTxGraphTrim(benchmark::Bench& bench)
 
 static void TxGraphTrim(benchmark::Bench& bench) { BenchTxGraphTrim(bench); }
 
-BENCHMARK(TxGraphTrim, benchmark::PriorityLevel::HIGH);
+BENCHMARK(TxGraphTrim);

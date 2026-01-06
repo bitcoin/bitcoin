@@ -126,6 +126,6 @@ static void BlockEncodingLargeExtra(benchmark::Bench& bench)
     BlockEncodingBench(bench, 50000, 5000);
 }
 
-BENCHMARK(BlockEncodingNoExtra, benchmark::PriorityLevel::HIGH);
-BENCHMARK(BlockEncodingStdExtra, benchmark::PriorityLevel::HIGH);
-BENCHMARK(BlockEncodingLargeExtra, benchmark::PriorityLevel::HIGH);
+BENCHMARK(BlockEncodingNoExtra);
+BENCHMARK(BlockEncodingStdExtra);
+BENCHMARK(BlockEncodingLargeExtra);

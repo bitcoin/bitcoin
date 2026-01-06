@@ -30,4 +30,4 @@ static void FindByte(benchmark::Bench& bench)
     assert(file.fclose() == 0);
 }
 
-BENCHMARK(FindByte, benchmark::PriorityLevel::HIGH);
+BENCHMARK(FindByte);

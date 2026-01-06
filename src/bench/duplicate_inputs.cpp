@@ -76,4 +76,4 @@ static void DuplicateInputs(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(DuplicateInputs, benchmark::PriorityLevel::HIGH);
+BENCHMARK(DuplicateInputs);

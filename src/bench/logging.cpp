@@ -57,8 +57,8 @@ static void LogWithoutWriteToFile(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(LogWithDebug, benchmark::PriorityLevel::HIGH);
-BENCHMARK(LogWithoutDebug, benchmark::PriorityLevel::HIGH);
-BENCHMARK(LogWithThreadNames, benchmark::PriorityLevel::HIGH);
-BENCHMARK(LogWithoutThreadNames, benchmark::PriorityLevel::HIGH);
-BENCHMARK(LogWithoutWriteToFile, benchmark::PriorityLevel::HIGH);
+BENCHMARK(LogWithDebug);
+BENCHMARK(LogWithoutDebug);
+BENCHMARK(LogWithThreadNames);
+BENCHMARK(LogWithoutThreadNames);
+BENCHMARK(LogWithoutWriteToFile);
