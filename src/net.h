@@ -1683,8 +1683,9 @@ private:
     BanMan* m_banman;
 
     /**
-     * Addresses that were saved during the previous clean shutdown. We'll
-     * attempt to make block-relay-only connections to them.
+     * Addresses that were saved during the previous clean shutdown or when
+     * the network was deactivated. We'll attempt to make block-relay-only
+     * connections to them once the network is active.
      */
     mutable Mutex m_anchors_mutex;
     std::vector<CAddress> m_anchors GUARDED_BY(m_anchors_mutex);

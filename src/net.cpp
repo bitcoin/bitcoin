@@ -3658,6 +3658,7 @@ void CConnman::StopThreads()
 void CConnman::StopNodes()
 {
     AssertLockNotHeld(m_reconnections_mutex);
+    AssertLockNotHeld(m_anchors_mutex);
 
     if (fAddressesInitialized) {
         DumpAddresses();
@@ -3666,10 +3667,18 @@ void CConnman::StopNodes()
         if (m_use_addrman_outgoing) {
             // Anchor connections are only dumped during clean shutdown.
             std::vector<CAddress> anchors_to_dump = GetCurrentBlockRelayOnlyConns();
-            if (anchors_to_dump.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
-                anchors_to_dump.resize(MAX_BLOCK_RELAY_ONLY_ANCHORS);
+            {
+                LOCK(m_anchors_mutex);
+                if (!fNetworkActive && !m_anchors.empty()) {
+                    anchors_to_dump = m_anchors;
+                }
             }
-            DumpAnchors(gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME, anchors_to_dump);
+            if (!anchors_to_dump.empty()) {
+                if (anchors_to_dump.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
+                    anchors_to_dump.resize(MAX_BLOCK_RELAY_ONLY_ANCHORS);
+                }
+                DumpAnchors(gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME, anchors_to_dump);
+            }
         }
     }
 
