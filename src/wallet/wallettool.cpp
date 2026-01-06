@@ -111,7 +111,7 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         tfm::format(std::cerr, "The -dumpfile option can only be used with the \"dump\" and \"createfromdump\" commands.\n");
         return false;
     }
-    if (command == "create" && !args.IsArgSet("-wallet")) {
+    if ((command == "create" || command == "createfromdump") && !args.IsArgSet("-wallet")) {
         tfm::format(std::cerr, "Wallet name must be provided when creating a new wallet.\n");
         return false;
     }
@@ -119,6 +119,10 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
     const fs::path path = fsbridge::AbsPathJoin(GetWalletDir(), fs::PathFromString(name));
 
     if (command == "create") {
+        if (name.empty()) {
+            tfm::format(std::cerr, "Wallet name cannot be empty\n");
+            return false;
+        }
         DatabaseOptions options;
         ReadDatabaseArgs(args, options);
         options.require_create = true;
