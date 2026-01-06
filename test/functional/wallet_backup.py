@@ -184,13 +184,8 @@ class WalletBackupTest(BitcoinTestFramework):
         # This is also useful to test the migration recovery after failure logic
         node = self.nodes[3]
         backup_file = self.nodes[0].datadir_path / 'wallet.bak'
-        wallet_name = ""
-        res = node.restorewallet(wallet_name, backup_file)
-        assert_equal(res['name'], "")
-        assert (node.wallets_path / "wallet.dat").exists()
-        # Clean for follow-up tests
-        node.unloadwallet("")
-        os.remove(node.wallets_path / "wallet.dat")
+        assert_raises_rpc_error(-8, "Wallet name cannot be empty", node.restorewallet, "", backup_file)
+        assert not (node.wallets_path / "wallet.dat").exists()
 
     def test_pruned_wallet_backup(self):
         self.log.info("Test loading backup on a pruned node when the backup was created close to the prune height of the restoring node")
@@ -213,9 +208,8 @@ class WalletBackupTest(BitcoinTestFramework):
 
         self.log.info("Test restore on a pruned node when the backup was beyond the pruning point")
         backup_file = self.nodes[0].datadir_path / 'wallet.bak'
-        wallet_name = ""
         error_message = "Wallet loading failed. Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of a pruned node)"
-        assert_raises_rpc_error(-4, error_message, node.restorewallet, wallet_name, backup_file)
+        assert_raises_rpc_error(-4, error_message, node.restorewallet, "restore_pruned", backup_file)
         assert node.wallets_path.exists() # ensure the wallets dir exists
 
     def run_test(self):

@@ -196,6 +196,7 @@ enum class DatabaseStatus {
     FAILED_VERIFY,
     FAILED_ENCRYPT,
     FAILED_INVALID_BACKUP_FILE,
+    FAILED_NEW_UNNAMED,
 };
 
 /** Recursively list database paths in directory. */
