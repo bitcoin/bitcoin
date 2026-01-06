@@ -165,5 +165,7 @@ unforeseen configurations which result in some scripts being excluded. If a migr
 unexpectedly or otherwise misses any scripts, please create an issue on GitHub. A backup of the
 original wallet can be found in the wallet directory with the name `<name>-<timestamp>.legacy.bak`.
 
+`migratewallet` also provides a mechanism for deleting your legacy wallet entirely provided you are running a pruned node.
+
 The backup can be restored using the methods discussed in the
 [Restoring the Wallet From a Backup](#16-restoring-the-wallet-from-a-backup) section.
