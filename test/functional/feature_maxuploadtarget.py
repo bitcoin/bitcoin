@@ -50,6 +50,7 @@ class MaxUploadTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [[
             f"-maxuploadtarget={UPLOAD_TARGET_MB}M",
+            "-datacarriersize=100000",
         ]]
 
     def assert_uploadtarget_state(self, *, target_reached, serve_historical_blocks):

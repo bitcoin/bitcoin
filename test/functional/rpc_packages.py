@@ -453,6 +453,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         self.restart_node(0, extra_args=[
             "-maxmempool=5",
             "-persistmempool=0",
+            "-datacarriersize=100000",
         ])
         self.wallet.rescan_utxos()
 

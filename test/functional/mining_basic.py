@@ -61,9 +61,9 @@ class MiningTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         self.extra_args = [
-            [],
-            [],
-            ["-fastprune", "-prune=1"]
+            ["-datacarriersize=100000"],
+            ["-datacarriersize=100000"],
+            ["-fastprune", "-prune=1", "-datacarriersize=100000"]
         ]
         self.setup_clean_chain = True
 
@@ -318,7 +318,7 @@ class MiningTest(BitcoinTestFramework):
         # Test block template creation with custom -blockmaxweight
         custom_block_weight = MAX_BLOCK_WEIGHT - 2000
         # Reducing the weight by 2000 units will prevent 1 large transaction from fitting into the block.
-        self.restart_node(0, extra_args=[f"-blockmaxweight={custom_block_weight}"])
+        self.restart_node(0, extra_args=[f"-blockmaxweight={custom_block_weight}", "-datacarriersize=100000"])
 
         self.log.info("Testing the block template with custom -blockmaxweight to include 9 large and 2 normal transactions.")
         self.verify_block_template(
@@ -328,7 +328,7 @@ class MiningTest(BitcoinTestFramework):
 
         # Ensure the block weight does not exceed the maximum
         self.log.info(f"Testing that the block weight will never exceed {MAX_BLOCK_WEIGHT - DEFAULT_BLOCK_RESERVED_WEIGHT}.")
-        self.restart_node(0, extra_args=[f"-blockmaxweight={MAX_BLOCK_WEIGHT}"])
+        self.restart_node(0, extra_args=[f"-blockmaxweight={MAX_BLOCK_WEIGHT}", "-datacarriersize=100000"])
         self.log.info("Sending 2 additional normal transactions to fill the mempool to the maximum block weight.")
         self.send_transactions(utxos[LARGE_TXS_COUNT + 2:], NORMAL_FEERATE, NORMAL_VSIZE)
         self.log.info(f"Testing that the mempool's weight matches the maximum block weight: {MAX_BLOCK_WEIGHT}.")
@@ -342,7 +342,7 @@ class MiningTest(BitcoinTestFramework):
 
         self.log.info("Test -blockreservedweight startup option.")
         # Lowering the -blockreservedweight by 4000 will allow for two more transactions.
-        self.restart_node(0, extra_args=["-blockreservedweight=4000"])
+        self.restart_node(0, extra_args=["-blockreservedweight=4000", "-datacarriersize=100000"])
         self.verify_block_template(
             expected_tx_count=12,
             expected_weight=MAX_BLOCK_WEIGHT - 4000,

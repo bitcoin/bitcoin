@@ -44,7 +44,7 @@ def cleanup(extra_args=None):
 class MempoolTRUC(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [[]]
+        self.extra_args = [["-datacarriersize=100000"]]
         self.setup_clean_chain = True
 
     def check_mempool(self, txids):
@@ -209,7 +209,7 @@ class MempoolTRUC(BitcoinTestFramework):
         self.trigger_reorg(fork_blocks)
         self.check_mempool([tx_v3_block["txid"], tx_v2_block["txid"], tx_v3_block2["txid"], tx_v2_from_v3["txid"], tx_v3_from_v2["txid"], tx_v3_child_large["txid"], tx_chain_1["txid"], tx_chain_2["txid"], tx_chain_3["txid"], tx_chain_4["txid"]])
 
-    @cleanup(extra_args=["-limitclustercount=1"])
+    @cleanup(extra_args=["-limitclustercount=1", "-datacarriersize=100000"])
     def test_nondefault_package_limits(self):
         """
         Max standard tx size + TRUC rules imply the cluster rules (at their default
@@ -241,7 +241,7 @@ class MempoolTRUC(BitcoinTestFramework):
         self.generate(node, 1)
 
         self.log.info("Test that a decreased limitclustersize also applies to TRUC child")
-        self.restart_node(0, extra_args=["-limitclustersize=10", "-acceptnonstdtxn=1"])
+        self.restart_node(0, extra_args=["-limitclustersize=10", "-acceptnonstdtxn=1", "-datacarriersize=100000"])
         tx_v3_parent_large2 = self.wallet.send_self_transfer(from_node=node, target_vsize=parent_target_vsize, version=3)
         tx_v3_child_large2 = self.wallet.create_self_transfer(utxo_to_spend=tx_v3_parent_large2["new_utxo"], target_vsize=child_target_vsize, version=3)
         # Parent and child are within TRUC limits
@@ -249,7 +249,7 @@ class MempoolTRUC(BitcoinTestFramework):
         assert_greater_than_or_equal(TRUC_CHILD_MAX_VSIZE, tx_v3_child_large2["tx"].get_vsize())
         assert_raises_rpc_error(-26, "too-large-cluster", node.sendrawtransaction, tx_v3_child_large2["hex"])
         self.log.info("Test that a decreased limitclustercount also applies to TRUC transactions")
-        self.restart_node(0, extra_args=["-limitclustercount=1", "-acceptnonstdtxn=1"])
+        self.restart_node(0, extra_args=["-limitclustercount=1", "-acceptnonstdtxn=1", "-datacarriersize=100000"])
         assert_raises_rpc_error(-26, "too-large-cluster", node.sendrawtransaction, tx_v3_child_large2["hex"])
         self.check_mempool([tx_v3_parent_large2["txid"]])
 

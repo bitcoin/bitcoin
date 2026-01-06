@@ -60,7 +60,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [[
-            '-txindex','-permitbaremultisig=0',
+            '-txindex','-permitbaremultisig=0','-datacarriersize=100000',
         ]] * self.num_nodes
         self.supports_cli = False
 

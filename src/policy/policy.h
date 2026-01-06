@@ -76,9 +76,10 @@ static constexpr unsigned int DEFAULT_DESCENDANT_LIMIT{25};
 /** Default for -datacarrier */
 static const bool DEFAULT_ACCEPT_DATACARRIER = true;
 /**
- * Default setting for -datacarriersize in vbytes.
+ * Default setting for -datacarriersize. 80 bytes of data, +1 for OP_RETURN,
+ * +2 for the pushdata opcodes.
  */
-static const unsigned int MAX_OP_RETURN_RELAY = MAX_STANDARD_TX_WEIGHT / WITNESS_SCALE_FACTOR;
+static const unsigned int MAX_OP_RETURN_RELAY = 83;
 /**
  * An extra transaction can be added to a package, as long as it only has one
  * ancestor and is no larger than this. Not really any reason to make this

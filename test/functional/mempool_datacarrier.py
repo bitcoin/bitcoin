@@ -26,12 +26,13 @@ CUSTOM_DATACARRIER_ARG = 83
 
 class DataCarrierTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 4
+        self.num_nodes = 5
         self.extra_args = [
-            [], # default is uncapped
+            [], # default is 83 bytes (80 data + 3 overhead)
             ["-datacarrier=0"], # no relay of datacarrier
             ["-datacarrier=1", f"-datacarriersize={CUSTOM_DATACARRIER_ARG}"],
             ["-datacarrier=1", "-datacarriersize=2"],
+            ["-datacarrier=1", "-datacarriersize=100000"], # explicit unlimited
         ]
 
     def test_null_data_transaction(self, node: TestNode, data, success: bool) -> None:
@@ -58,20 +59,23 @@ class DataCarrierTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getmempoolinfo()["maxdatacarriersize"], 0)
         assert_equal(self.nodes[2].getmempoolinfo()["maxdatacarriersize"], CUSTOM_DATACARRIER_ARG)
         assert_equal(self.nodes[3].getmempoolinfo()["maxdatacarriersize"], 2)
+        assert_equal(self.nodes[4].getmempoolinfo()["maxdatacarriersize"], 100000)
 
-        # By default, any size is allowed.
-
-        # If it is custom set to 83, the historical value,
-        # only 80 bytes are used for data (+1 for OP_RETURN, +2 for the pushdata opcodes).
+        # By default, only 80 bytes are used for data (+1 for OP_RETURN, +2 for the pushdata opcodes).
+        # This matches the historical default (CUSTOM_DATACARRIER_ARG).
         custom_size_data = randbytes(CUSTOM_DATACARRIER_ARG - 3)
         too_long_data = randbytes(CUSTOM_DATACARRIER_ARG - 2)
-        extremely_long_data = randbytes(MAX_OP_RETURN_RELAY - 200)
+        extremely_long_data = randbytes(10000)
         one_byte = randbytes(1)
         zero_bytes = randbytes(0)
 
-        self.log.info("Testing a null data transaction succeeds for default arg regardless of size.")
-        self.test_null_data_transaction(node=self.nodes[0], data=too_long_data, success=True)
-        self.test_null_data_transaction(node=self.nodes[0], data=extremely_long_data, success=True)
+        self.log.info("Testing a null data transaction with default -datacarriersize (83 bytes).")
+        self.test_null_data_transaction(node=self.nodes[0], data=custom_size_data, success=True)
+        self.test_null_data_transaction(node=self.nodes[0], data=too_long_data, success=False)
+
+        self.log.info("Testing a null data transaction succeeds for explicit unlimited -datacarriersize.")
+        self.test_null_data_transaction(node=self.nodes[4], data=too_long_data, success=True)
+        self.test_null_data_transaction(node=self.nodes[4], data=extremely_long_data, success=True)
 
         self.log.info("Testing a null data transaction with -datacarrier=false.")
         self.test_null_data_transaction(node=self.nodes[1], data=custom_size_data, success=False)

@@ -34,6 +34,7 @@ class PackageRBFTest(BitcoinTestFramework):
         # Required for fill_mempool()
         self.extra_args = [[
             "-maxmempool=5",
+            "-datacarriersize=100000",
         ]] * self.num_nodes
 
     def assert_mempool_contents(self, expected=None):

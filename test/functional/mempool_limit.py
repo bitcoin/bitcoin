@@ -30,6 +30,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [[
             "-maxmempool=5",
+            "-datacarriersize=100000",
         ]]
 
     def test_mid_package_eviction_success(self):

@@ -25,7 +25,7 @@ CUSTOM_DESCENDANT_COUNT = CUSTOM_ANCESTOR_COUNT
 class MempoolUpdateFromBlockTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [['-limitclustersize=1000']]
+        self.extra_args = [['-limitclustersize=1000', '-datacarriersize=100000']]
 
     def trigger_reorg(self, fork_blocks):
         """Trigger reorg of the fork blocks."""

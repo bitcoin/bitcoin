@@ -78,6 +78,7 @@ class PackageRelayTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [[
             "-maxmempool=5",
+            "-datacarriersize=100000",
         ]]
 
     def create_tx_below_mempoolminfee(self, wallet, utxo_to_spend=None):

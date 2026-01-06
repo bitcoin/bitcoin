@@ -52,6 +52,8 @@ MAX_PUBKEYS_PER_MULTISIG = 20
 class BytesPerSigOpTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        # Test requires large datacarrier for padding outputs
+        self.extra_args = [["-datacarriersize=100000"]]
 
     def create_p2wsh_spending_tx(self, witness_script, output_script):
         """Create a 1-input-1-output P2WSH spending transaction with only the
@@ -227,7 +229,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
             else:
                 bytespersigop_parameter = f"-bytespersigop={bytes_per_sigop}"
                 self.log.info(f"Test sigops limit setting {bytespersigop_parameter}...")
-                self.restart_node(0, extra_args=[bytespersigop_parameter])
+                self.restart_node(0, extra_args=[bytespersigop_parameter, "-datacarriersize=100000"])
 
             for num_sigops in (69, 101, 142, 183, 222):
                 self.test_sigops_limit(bytes_per_sigop, num_sigops)
