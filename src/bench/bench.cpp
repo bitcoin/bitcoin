@@ -5,6 +5,7 @@
 #include <bench/bench.h>
 
 #include <test/util/setup_common.h> // IWYU pragma: keep
+#include <util/check.h>
 #include <util/fs.h>
 
 #include <chrono>
@@ -71,7 +72,7 @@ BenchRunner::BenchmarkMap& BenchRunner::benchmarks()
 
 BenchRunner::BenchRunner(std::string name, BenchFunction func)
 {
-    benchmarks().insert(std::make_pair(name, func));
+    Assert(benchmarks().try_emplace(std::move(name), std::move(func)).second);
 }
 
 void BenchRunner::RunAll(const Args& args)

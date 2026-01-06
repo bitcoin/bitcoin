@@ -64,8 +64,8 @@ public:
 };
 } // namespace benchmark
 
-// BENCHMARK(foo) expands to:  benchmark::BenchRunner bench_11foo{"foo", foo};
+// BENCHMARK(foo) expands to:  benchmark::BenchRunner bench_runner_foo{"foo", foo};
 #define BENCHMARK(n) \
-    benchmark::BenchRunner PASTE2(bench_, PASTE2(__LINE__, n)){STRINGIZE(n), n};
+    benchmark::BenchRunner PASTE2(bench_runner_, n){STRINGIZE(n), n};
 
 #endif // BITCOIN_BENCH_BENCH_H
