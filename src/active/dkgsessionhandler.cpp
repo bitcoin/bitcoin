@@ -24,8 +24,7 @@ ActiveDKGSessionHandler::ActiveDKGSessionHandler(
     llmq::CDKGDebugManager& dkgdbgman, llmq::CDKGSessionManager& qdkgsman, llmq::CQuorumBlockProcessor& qblockman,
     llmq::CQuorumSnapshotManager& qsnapman, const CActiveMasternodeManager& mn_activeman, const ChainstateManager& chainman,
     const CSporkManager& sporkman, const Consensus::LLMQParams& llmq_params, bool quorums_watch, int quorums_idx) :
-    llmq::CDKGSessionHandler(bls_worker, dmnman, dkgdbgman, qdkgsman, qsnapman, chainman, llmq_params, quorums_watch,
-                             quorums_idx),
+    llmq::CDKGSessionHandler(llmq_params),
     m_bls_worker{bls_worker},
     m_dmnman{dmnman},
     m_mn_metaman{mn_metaman},
@@ -36,7 +35,8 @@ ActiveDKGSessionHandler::ActiveDKGSessionHandler(
     m_mn_activeman{mn_activeman},
     m_chainman{chainman},
     m_sporkman{sporkman},
-    m_quorums_watch{quorums_watch}
+    m_quorums_watch{quorums_watch},
+    quorumIndex{quorums_idx}
 {
 }
 

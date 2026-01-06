@@ -9,27 +9,26 @@
 
 #include <net.h> // for NodeId
 #include <net_processing.h>
+#include <protocol.h>
+#include <serialize.h>
+#include <streams.h>
+#include <sync.h>
+#include <uint256.h>
 
-#include <atomic>
 #include <list>
 #include <map>
 #include <memory>
-#include <optional>
 #include <set>
-#include <string>
 #include <string_view>
-#include <thread>
 #include <vector>
 
-class CActiveMasternodeManager;
-class CBLSWorker;
 class CBlockIndex;
 class CConnman;
-class ChainstateManager;
-class CDeterministicMNManager;
-class CMasternodeMetaMan;
-class CSporkManager;
 class PeerManager;
+
+namespace Consensus {
+struct LLMQParams;
+} // namespace Consensus
 
 namespace llmq
 {
@@ -37,11 +36,7 @@ class CDKGContribution;
 class CDKGComplaint;
 class CDKGJustification;
 class CDKGPrematureCommitment;
-class CDKGDebugManager;
-class CDKGSession;
 class CDKGSessionManager;
-class CQuorumBlockProcessor;
-class CQuorumSnapshotManager;
 
 enum class QuorumPhase {
     Initialized = 1,
@@ -131,9 +126,7 @@ private:
     friend class CDKGSessionManager;
 
 protected:
-    std::unique_ptr<CDKGSession> curSession{nullptr};
     const Consensus::LLMQParams& params;
-    const int quorumIndex;
 
     // Do not guard these, they protect their internals themselves
     CDKGPendingMessages pendingContributions;
@@ -142,9 +135,7 @@ protected:
     CDKGPendingMessages pendingPrematureCommitments;
 
 public:
-    CDKGSessionHandler(CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman, CDKGDebugManager& _dkgDebugManager,
-                       CDKGSessionManager& _dkgManager, CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
-                       const Consensus::LLMQParams& _params, bool quorums_watch, int _quorumIndex);
+    explicit CDKGSessionHandler(const Consensus::LLMQParams& _params);
     virtual ~CDKGSessionHandler();
 
     [[nodiscard]] MessageProcessingResult ProcessMessage(NodeId from, std::string_view msg_type, CDataStream& vRecv);

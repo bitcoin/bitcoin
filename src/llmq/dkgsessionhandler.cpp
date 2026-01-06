@@ -4,27 +4,15 @@
 
 #include <llmq/dkgsessionhandler.h>
 
-#include <evo/deterministicmns.h>
-#include <llmq/commitment.h>
-#include <llmq/debug.h>
-#include <llmq/dkgsession.h>
-#include <llmq/options.h>
-#include <llmq/utils.h>
-#include <util/underlying.h>
+#include <hash.h>
+#include <logging.h>
+#include <span.h>
 
-#include <deploymentstatus.h>
-#include <chainparams.h>
-#include <net_processing.h>
-#include <validation.h>
-#include <util/thread.h>
+#include <stdexcept>
 
 namespace llmq {
-CDKGSessionHandler::CDKGSessionHandler(CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman,
-                                       CDKGDebugManager& _dkgDebugManager, CDKGSessionManager& _dkgManager,
-                                       CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
-                                       const Consensus::LLMQParams& _params, bool quorums_watch, int _quorumIndex) :
+CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params) :
     params{_params},
-    quorumIndex{_quorumIndex},
     // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
     pendingContributions{(size_t)_params.size * 2, MSG_QUORUM_CONTRIB},
     pendingComplaints{(size_t)_params.size * 2, MSG_QUORUM_COMPLAINT},
