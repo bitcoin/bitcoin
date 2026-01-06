@@ -120,6 +120,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   net_types.cpp
   netaddress.cpp
   netbase.cpp
+  node/interface_ui.cpp
   outputtype.cpp
   policy/feerate.cpp
   policy/policy.cpp
@@ -154,12 +155,18 @@ include(InstallBinaryComponent)
 if(ENABLE_WALLET)
   add_subdirectory(wallet)
 
-  if(BUILD_WALLET_TOOL)
+  if(BUILD_WALLET_TOOL OR ENABLE_IPC)
     add_executable(bitcoin-wallet
       bitcoin-wallet.cpp
-      init/bitcoin-wallet.cpp
       wallet/wallettool.cpp
     )
+    if(ENABLE_IPC)
+      # FIX: Dependency on kernel should be dropped. See BitcoinWalletInit constructor comment.
+      target_sources(bitcoin-wallet PRIVATE init/bitcoin-wallet-ipc.cpp kernel/context.cpp)
+      target_link_libraries(bitcoin-wallet bitcoin_ipc)
+    else()
+      target_sources(bitcoin-wallet PRIVATE init/bitcoin-wallet.cpp)
+    endif()
     add_windows_resources(bitcoin-wallet bitcoin-wallet-res.rc)
     add_windows_application_manifest(bitcoin-wallet)
     target_link_libraries(bitcoin-wallet
@@ -218,7 +225,6 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   node/context.cpp
   node/database_args.cpp
   node/eviction.cpp
-  node/interface_ui.cpp
   node/interfaces.cpp
   node/kernel_notifications.cpp
   node/mempool_args.cpp
