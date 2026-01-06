@@ -151,6 +151,7 @@ endif
 .PHONY: FORCE check-symbols check-security
 # dash core #
 BITCOIN_CORE_H = \
+  active/dkgsessionhandler.h \
   active/quorums.h \
   addrdb.h \
   addressindex.h \

@@ -190,9 +190,7 @@ bool CDKGSessionManager::GetContribution(const uint256& hash, CDKGContribution& 
         return false;
 
     for (const auto& [_, dkgType] : dkgSessionHandlers) {
-        assert(dkgType);
-        LOCK(dkgType->cs_phase_qhash);
-        const auto dkgPhase = dkgType->phase;
+        const auto dkgPhase = Assert(dkgType)->GetPhase();
         if (dkgPhase < QuorumPhase::Initialized || dkgPhase > QuorumPhase::Contribute) {
             continue;
         }
@@ -209,9 +207,7 @@ bool CDKGSessionManager::GetComplaint(const uint256& hash, CDKGComplaint& ret) c
         return false;
 
     for (const auto& [_, dkgType] : dkgSessionHandlers) {
-        assert(dkgType);
-        LOCK(dkgType->cs_phase_qhash);
-        const auto dkgPhase = dkgType->phase;
+        const auto dkgPhase = Assert(dkgType)->GetPhase();
         if (dkgPhase < QuorumPhase::Contribute || dkgPhase > QuorumPhase::Complain) {
             continue;
         }
@@ -228,9 +224,7 @@ bool CDKGSessionManager::GetJustification(const uint256& hash, CDKGJustification
         return false;
 
     for (const auto& [_, dkgType] : dkgSessionHandlers) {
-        assert(dkgType);
-        LOCK(dkgType->cs_phase_qhash);
-        const auto dkgPhase = dkgType->phase;
+        const auto dkgPhase = Assert(dkgType)->GetPhase();
         if (dkgPhase < QuorumPhase::Complain || dkgPhase > QuorumPhase::Justify) {
             continue;
         }
@@ -247,9 +241,7 @@ bool CDKGSessionManager::GetPrematureCommitment(const uint256& hash, CDKGPrematu
         return false;
 
     for (const auto& [_, dkgType] : dkgSessionHandlers) {
-        assert(dkgType);
-        LOCK(dkgType->cs_phase_qhash);
-        const auto dkgPhase = dkgType->phase;
+        const auto dkgPhase = Assert(dkgType)->GetPhase();
         if (dkgPhase < QuorumPhase::Justify || dkgPhase > QuorumPhase::Commit) {
             continue;
         }
@@ -418,5 +410,4 @@ void CDKGSessionManager::CleanupOldContributions() const
         }
     }
 }
-
 } // namespace llmq

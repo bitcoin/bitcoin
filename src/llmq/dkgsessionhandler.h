@@ -130,31 +130,11 @@ class CDKGSessionHandler
 private:
     friend class CDKGSessionManager;
 
-private:
-    std::atomic<bool> stopRequested{false};
-
-    CBLSWorker& blsWorker;
-    CDeterministicMNManager& m_dmnman;
-    CDKGDebugManager& dkgDebugManager;
-    CDKGSessionManager& dkgManager;
-    CMasternodeMetaMan& m_mn_metaman;
-    CQuorumBlockProcessor& quorumBlockProcessor;
-    CQuorumSnapshotManager& m_qsnapman;
-    const CActiveMasternodeManager* const m_mn_activeman;
-    const ChainstateManager& m_chainman;
-    const CSporkManager& m_sporkman;
+protected:
     const Consensus::LLMQParams params;
-    const bool m_quorums_watch{false};
     const int quorumIndex;
 
-    std::atomic<int> currentHeight {-1};
-    mutable Mutex cs_phase_qhash;
-    QuorumPhase phase GUARDED_BY(cs_phase_qhash) {QuorumPhase::Idle};
-    uint256 quorumHash GUARDED_BY(cs_phase_qhash);
-
     std::unique_ptr<CDKGSession> curSession;
-    std::thread phaseHandlerThread;
-    std::string m_thread_name;
 
     // Do not guard these, they protect their internals themselves
     CDKGPendingMessages pendingContributions;
@@ -169,45 +149,20 @@ public:
                        const CActiveMasternodeManager* const mn_activeman, const ChainstateManager& chainman,
                        const CSporkManager& sporkman, const Consensus::LLMQParams& _params, bool quorums_watch,
                        int _quorumIndex);
-    ~CDKGSessionHandler();
+    virtual ~CDKGSessionHandler();
 
-    void UpdatedBlockTip(const CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(!cs_phase_qhash);
     [[nodiscard]] MessageProcessingResult ProcessMessage(NodeId from, std::string_view msg_type, CDataStream& vRecv);
 
-    void StartThread(CConnman& connman, PeerManager& peerman);
-    void StopThread();
-
-    bool GetContribution(const uint256& hash, CDKGContribution& ret) const;
-    bool GetComplaint(const uint256& hash, CDKGComplaint& ret) const;
-    bool GetJustification(const uint256& hash, CDKGJustification& ret) const;
-    bool GetPrematureCommitment(const uint256& hash, CDKGPrematureCommitment& ret) const;
-
-private:
-    bool InitNewQuorum(const CBlockIndex* pQuorumBaseBlockIndex);
-
-    std::pair<QuorumPhase, uint256> GetPhaseAndQuorumHash() const EXCLUSIVE_LOCKS_REQUIRED(!cs_phase_qhash);
-
-    using StartPhaseFunc = std::function<void()>;
-    using WhileWaitFunc = std::function<bool()>;
-    /**
-     * @param curPhase current QuorumPhase
-     * @param nextPhase next QuorumPhase
-     * @param expectedQuorumHash expected QuorumHash, defaults to null
-     * @param shouldNotWait function that returns bool, defaults to function that returns false. If the function returns false, we will wait in the loop, if true, we don't wait
-     */
-    void WaitForNextPhase(
-        std::optional<QuorumPhase> curPhase, QuorumPhase nextPhase, const uint256& expectedQuorumHash = uint256(),
-        const WhileWaitFunc& shouldNotWait = [] { return false; }) const EXCLUSIVE_LOCKS_REQUIRED(!cs_phase_qhash);
-    void WaitForNewQuorum(const uint256& oldQuorumHash) const EXCLUSIVE_LOCKS_REQUIRED(!cs_phase_qhash);
-    void SleepBeforePhase(QuorumPhase curPhase, const uint256& expectedQuorumHash, double randomSleepFactor,
-                          const WhileWaitFunc& runWhileWaiting) const EXCLUSIVE_LOCKS_REQUIRED(!cs_phase_qhash);
-    void HandlePhase(QuorumPhase curPhase, QuorumPhase nextPhase, const uint256& expectedQuorumHash,
-                     double randomSleepFactor, const StartPhaseFunc& startPhaseFunc,
-                     const WhileWaitFunc& runWhileWaiting) EXCLUSIVE_LOCKS_REQUIRED(!cs_phase_qhash);
-    void HandleDKGRound(CConnman& connman, PeerManager& peerman) EXCLUSIVE_LOCKS_REQUIRED(!cs_phase_qhash);
-    void PhaseHandlerThread(CConnman& connman, PeerManager& peerman) EXCLUSIVE_LOCKS_REQUIRED(!cs_phase_qhash);
+public:
+    virtual bool GetContribution(const uint256& hash, CDKGContribution& ret) const { return false; }
+    virtual bool GetComplaint(const uint256& hash, CDKGComplaint& ret) const { return false; }
+    virtual bool GetJustification(const uint256& hash, CDKGJustification& ret) const { return false; }
+    virtual bool GetPrematureCommitment(const uint256& hash, CDKGPrematureCommitment& ret) const { return false; }
+    virtual QuorumPhase GetPhase() const { return QuorumPhase::Idle; }
+    virtual void StartThread(CConnman& connman, PeerManager& peerman) {}
+    virtual void StopThread() {}
+    virtual void UpdatedBlockTip(const CBlockIndex* pindexNew) {}
 };
-
 } // namespace llmq
 
 #endif // BITCOIN_LLMQ_DKGSESSIONHANDLER_H

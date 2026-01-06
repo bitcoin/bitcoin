@@ -27,17 +27,17 @@ class CDeterministicMN;
 class CMasternodeMetaMan;
 class CSporkManager;
 class PeerManager;
-
-namespace llmq
-{
-
-class CFinalCommitment;
+namespace llmq {
+class ActiveDKGSessionHandler;
 class CDKGDebugManager;
+class CDKGPendingMessages;
 class CDKGSession;
 class CDKGSessionManager;
-class CDKGPendingMessages;
+class CFinalCommitment;
 class CQuorumSnapshotManager;
+} // namespace llmq
 
+namespace llmq {
 class CDKGContribution
 {
 public:
@@ -274,6 +274,7 @@ public:
  */
 class CDKGSession
 {
+    friend class ActiveDKGSessionHandler;
     friend class CDKGSessionHandler;
     friend class CDKGSessionManager;
     friend class CDKGLogger;

@@ -2937,8 +2937,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
 
         if (!push && (inv.type == MSG_QUORUM_CONTRIB)) {
             llmq::CDKGContribution o;
-            if ((m_observer_ctx && m_observer_ctx->qdkgsman->GetContribution(inv.hash, o))
-                || (m_active_ctx && m_active_ctx->qdkgsman->GetContribution(inv.hash, o))) {
+            if (m_active_ctx && m_active_ctx->qdkgsman->GetContribution(inv.hash, o)) {
                 m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCONTRIB, o));
                 push = true;
             }
@@ -2946,8 +2945,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
 
         if (!push && (inv.type == MSG_QUORUM_COMPLAINT)) {
             llmq::CDKGComplaint o;
-            if ((m_observer_ctx && m_observer_ctx->qdkgsman->GetComplaint(inv.hash, o))
-                || (m_active_ctx && m_active_ctx->qdkgsman->GetComplaint(inv.hash, o))) {
+            if (m_active_ctx && m_active_ctx->qdkgsman->GetComplaint(inv.hash, o)) {
                 m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCOMPLAINT, o));
                 push = true;
             }
@@ -2955,8 +2953,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
 
         if (!push && (inv.type == MSG_QUORUM_JUSTIFICATION)) {
             llmq::CDKGJustification o;
-            if ((m_observer_ctx && m_observer_ctx->qdkgsman->GetJustification(inv.hash, o))
-                || (m_active_ctx && m_active_ctx->qdkgsman->GetJustification(inv.hash, o))) {
+            if (m_active_ctx && m_active_ctx->qdkgsman->GetJustification(inv.hash, o)) {
                 m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QJUSTIFICATION, o));
                 push = true;
             }
@@ -2964,8 +2961,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
 
         if (!push && (inv.type == MSG_QUORUM_PREMATURE_COMMITMENT)) {
             llmq::CDKGPrematureCommitment o;
-            if ((m_observer_ctx && m_observer_ctx->qdkgsman->GetPrematureCommitment(inv.hash, o))
-                || (m_active_ctx && m_active_ctx->qdkgsman->GetPrematureCommitment(inv.hash, o))) {
+            if (m_active_ctx && m_active_ctx->qdkgsman->GetPrematureCommitment(inv.hash, o)) {
                 m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QPCOMMITMENT, o));
                 push = true;
             }
