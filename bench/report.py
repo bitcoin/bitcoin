@@ -229,7 +229,7 @@ class ReportGenerator:
         output_dir: Path,
         title: str = "Benchmark Results",
     ) -> ReportResult:
-        """Generate HTML report from benchmark artifacts.
+        """Generate HTML report from benchmark artifacts (single binary mode).
 
         Args:
             input_dir: Directory containing results.json and artifacts
@@ -237,7 +237,7 @@ class ReportGenerator:
             title: Title for the report
 
         Returns:
-            ReportResult with paths and speedup data
+            ReportResult with paths
         """
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -252,11 +252,8 @@ class ReportGenerator:
         # Parse results
         runs = self._parse_results(data)
 
-        # Calculate speedups
-        speedups = self._calculate_speedups(runs)
-
-        # Generate HTML
-        html = self._generate_html(runs, speedups, title, input_dir, output_dir)
+        # Generate HTML (no nightly comparison in single-directory mode)
+        html = self._generate_html(runs, {}, title, input_dir, output_dir)
 
         # Write report
         index_file = output_dir / "index.html"
@@ -269,7 +266,7 @@ class ReportGenerator:
         return ReportResult(
             output_dir=output_dir,
             index_file=index_file,
-            speedups=speedups,
+            speedups={},
         )
 
     def generate_index(
@@ -336,33 +333,6 @@ class ReportGenerator:
             )
 
         return runs
-
-    def _calculate_speedups(self, runs: list[BenchmarkRun]) -> dict[str, float]:
-        """Calculate speedup percentages.
-
-        Uses the first entry as baseline and compares all others against it.
-        Returns a dict mapping command name to speedup percentage.
-        """
-        speedups = {}
-
-        if len(runs) < 2:
-            return speedups
-
-        # Use first run as baseline
-        baseline = runs[0]
-        baseline_mean = baseline.mean
-
-        if baseline_mean <= 0:
-            return speedups
-
-        # Calculate speedup for each other run
-        for run in runs[1:]:
-            speedup = ((baseline_mean - run.mean) / baseline_mean) * 100
-            # Use command name as key, extracting just the name part
-            name = run.command
-            speedups[name] = round(speedup, 1)
-
-        return speedups
 
     def _calculate_nightly_comparison(
         self, runs: list[BenchmarkRun], commit: str | None = None
@@ -490,9 +460,7 @@ class ReportGenerator:
             """
 
         # Generate nightly comparison section
-        nightly_section = self._generate_nightly_section(
-            nightly_comparison, commit
-        )
+        nightly_section = self._generate_nightly_section(nightly_comparison, commit)
 
         # Generate graphs section
         graphs_section = self._generate_graphs_section(runs, input_dir, output_dir)
@@ -539,7 +507,13 @@ class ReportGenerator:
                 has_nightly_data = True
                 nightly_minutes = nightly_mean / 60
                 nightly_time_str = f"{nightly_minutes:.1f} min"
-                nightly_info = f"{nightly_time_str} ({nightly_date})"
+                # Include commit link if available
+                if nightly_commit:
+                    short_commit = nightly_commit[:7]
+                    commit_link = f'<a href="{self.repo_url}/commit/{nightly_commit}" target="_blank" class="text-blue-600 hover:underline">{short_commit}</a>'
+                    nightly_info = f"{nightly_time_str} ({nightly_date}, {commit_link})"
+                else:
+                    nightly_info = f"{nightly_time_str} ({nightly_date})"
 
                 # Format speedup
                 if speedup is not None:
@@ -570,13 +544,15 @@ class ReportGenerator:
 
             # Collect data for chart
             if nightly_mean:
-                pr_chart_data.append({
-                    "config": config,
-                    "mean": pr_mean,
-                    "stddev": pr_stddev or 0,
-                    "commit": commit or "unknown",
-                    "date": date.today().isoformat(),
-                })
+                pr_chart_data.append(
+                    {
+                        "config": config,
+                        "mean": pr_mean,
+                        "stddev": pr_stddev or 0,
+                        "commit": commit or "unknown",
+                        "date": date.today().isoformat(),
+                    }
+                )
 
         # Build comparison table HTML
         table_html = f"""
@@ -602,6 +578,7 @@ class ReportGenerator:
         chart_html = ""
         if has_nightly_data and self.nightly_history and pr_chart_data:
             from bench.nightly import generate_pr_chart_snippet
+
             chart_html = f"""
             <h3 class="text-lg font-semibold mb-4">Performance Trend</h3>
             <div class="mb-8">
@@ -743,6 +720,7 @@ class ReportPhase:
         nightly_history: NightlyHistory | None = None
         if nightly_history_file and nightly_history_file.exists():
             from bench.nightly import NightlyHistory
+
             nightly_history = NightlyHistory(nightly_history_file)
         self.generator = ReportGenerator(repo_url, nightly_history)
 

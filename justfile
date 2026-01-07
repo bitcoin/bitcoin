@@ -9,92 +9,84 @@ default:
 
 # Test instrumented run using signet (includes report generation)
 [group('local')]
-test-instrumented base head datadir:
-    nix develop --command python3 bench.py build --skip-existing {{ base }}:base {{ head }}:head
+test-instrumented commit datadir:
+    nix develop --command python3 bench.py build --skip-existing {{ commit }}:pr
     nix develop --command python3 bench.py --profile quick run \
-        --chain signet \
-        --instrumented \
+        --benchmark-config bench/configs/pr.toml \
+        --matrix-entry 450-true \
         --datadir {{ datadir }} \
-        base:./binaries/base/bitcoind \
-        head:./binaries/head/bitcoind
+        pr:./binaries/pr/bitcoind
     nix develop --command python3 bench.py report bench-output/ bench-output/
 
 # Test uninstrumented run using signet
 [group('local')]
-test-uninstrumented base head datadir:
-    nix develop --command python3 bench.py build --skip-existing {{ base }}:base {{ head }}:head
+test-uninstrumented commit datadir:
+    nix develop --command python3 bench.py build --skip-existing {{ commit }}:pr
     nix develop --command python3 bench.py --profile quick run \
-        --chain signet \
+        --benchmark-config bench/configs/pr.toml \
+        --matrix-entry 450-false \
         --datadir {{ datadir }} \
-        base:./binaries/base/bitcoind \
-        head:./binaries/head/bitcoind
+        pr:./binaries/pr/bitcoind
 
 # Full benchmark with instrumentation (flamegraphs + plots)
 [group('local')]
-instrumented base head datadir:
-    python3 bench.py build {{ base }}:base {{ head }}:head
-    python3 bench.py --profile quick run \
-        --instrumented \
+instrumented commit datadir:
+    python3 bench.py build {{ commit }}:pr
+    python3 bench.py run \
+        --benchmark-config bench/configs/pr.toml \
+        --matrix-entry 450-true \
         --datadir {{ datadir }} \
-        base:./binaries/base/bitcoind \
-        head:./binaries/head/bitcoind
+        pr:./binaries/pr/bitcoind
 
-# Just build binaries (useful for incremental testing)
+# Just build a binary (useful for incremental testing)
 [group('local')]
-build *commits:
-    python3 bench.py build {{ commits }}
+build commit:
+    python3 bench.py build {{ commit }}
 
-# Run benchmark with pre-built binaries
+# Run benchmark with pre-built binary
 [group('local')]
-run datadir *binaries:
-    python3 bench.py run --datadir {{ datadir }} {{ binaries }}
+run datadir binary:
+    python3 bench.py run \
+        --benchmark-config bench/configs/pr.toml \
+        --matrix-entry 450-false \
+        --datadir {{ datadir }} \
+        {{ binary }}
 
 # Generate plots from a debug.log file
 [group('local')]
 analyze commit logfile output_dir="./plots":
     python3 bench.py analyze {{ commit }} {{ logfile }} --output-dir {{ output_dir }}
 
-# Compare benchmark results
-[group('local')]
-compare *results_files:
-    python3 bench.py compare {{ results_files }}
-
 # Generate HTML report from benchmark results
 [group('local')]
-report input_dir output_dir:
-    python3 bench.py report {{ input_dir }} {{ output_dir }}
+report input_dir output_dir nightly_history="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -n "{{ nightly_history }}" ]; then
+        python3 bench.py report {{ input_dir }} {{ output_dir }} --nightly-history {{ nightly_history }}
+    else
+        python3 bench.py report {{ input_dir }} {{ output_dir }}
+    fi
 
 # ============================================================================
 # CI commands (called by GitHub Actions)
 # ============================================================================
 
-# Build binaries for CI
+# Build binary for CI
 [group('ci')]
-ci-build base_commit head_commit binaries_dir:
-    python3 bench.py build -o {{ binaries_dir }} {{ base_commit }}:base {{ head_commit }}:head
+ci-build commit binaries_dir:
+    python3 bench.py build -o {{ binaries_dir }} {{ commit }}:pr
 
-# Run uninstrumented benchmarks for CI
+# Run benchmark for CI
 [group('ci')]
-ci-run datadir tmp_datadir output_dir dbcache binaries_dir:
-    python3 bench.py --profile ci run \
+ci-run benchmark_config matrix_entry datadir tmp_datadir output_dir binaries_dir:
+    python3 bench.py run \
+        --benchmark-config {{ benchmark_config }} \
+        --matrix-entry {{ matrix_entry }} \
         --datadir {{ datadir }} \
         --tmp-datadir {{ tmp_datadir }} \
         --output-dir {{ output_dir }} \
-        --dbcache {{ dbcache }} \
-        base:{{ binaries_dir }}/base/bitcoind \
-        head:{{ binaries_dir }}/head/bitcoind
-
-# Run instrumented benchmarks for CI
-[group('ci')]
-ci-run-instrumented datadir tmp_datadir output_dir dbcache binaries_dir:
-    python3 bench.py --profile ci run \
-        --instrumented \
-        --datadir {{ datadir }} \
-        --tmp-datadir {{ tmp_datadir }} \
-        --output-dir {{ output_dir }} \
-        --dbcache {{ dbcache }} \
-        base:{{ binaries_dir }}/base/bitcoind \
-        head:{{ binaries_dir }}/head/bitcoind
+        pr:{{ binaries_dir }}/pr/bitcoind
 
 # ============================================================================
 # Git helpers

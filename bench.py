@@ -2,32 +2,28 @@
 """Benchcoin - Bitcoin Core benchmarking toolkit.
 
 A CLI for building, benchmarking, analyzing, and reporting on Bitcoin Core
-performance.
+performance. PR results are compared against nightly baseline data.
 
 Usage:
-    bench.py build COMMIT[:NAME]...   Build bitcoind at one or more commits
-    bench.py run NAME:BINARY...       Benchmark one or more binaries
-    bench.py analyze COMMIT LOGFILE   Generate plots from debug.log
-    bench.py compare RESULTS...       Compare benchmark results
-    bench.py report INPUT OUTPUT      Generate HTML report
-    bench.py nightly append ...       Append result to nightly history
-    bench.py nightly chart ...        Generate nightly chart HTML
+    bench.py build COMMIT            Build bitcoind at a commit
+    bench.py run NAME:BINARY         Benchmark a binary
+    bench.py analyze COMMIT LOGFILE  Generate plots from debug.log
+    bench.py report OUTPUT           Generate HTML report with nightly comparison
+    bench.py nightly append ...      Append result to nightly history
+    bench.py nightly chart ...       Generate nightly chart HTML
 
 Examples:
-    # Build two commits
-    bench.py build HEAD~1:before HEAD:after
+    # Build at HEAD
+    bench.py build HEAD:pr
 
-    # Benchmark built binaries
-    bench.py run before:./binaries/before/bitcoind after:./binaries/after/bitcoind --datadir /data
+    # Benchmark built binary
+    bench.py run pr:./binaries/pr/bitcoind --datadir /data
 
-    # Compare results
-    bench.py compare ./bench-output/results.json
-
-    # Generate HTML report
-    bench.py report ./bench-output ./report
+    # Generate HTML report with nightly comparison
+    bench.py report --network 450-false:./results --nightly-history ./nightly-history.json ./output
 
     # Append nightly result and regenerate chart
-    bench.py nightly append results.json abc123 default 450
+    bench.py nightly append results.json abc123 450 450
     bench.py nightly chart ./index.html
 """
 
@@ -49,7 +45,7 @@ logger = logging.getLogger(__name__)
 
 
 def cmd_build(args: argparse.Namespace) -> int:
-    """Build bitcoind at one or more commits."""
+    """Build bitcoind at a commit."""
     from bench.build import BuildPhase
 
     capabilities = detect_capabilities()
@@ -71,12 +67,10 @@ def cmd_build(args: argparse.Namespace) -> int:
 
     try:
         result = phase.run(
-            args.commits,
+            args.commit,
             output_dir=Path(args.output_dir) if args.output_dir else None,
         )
-        logger.info(f"Built {len(result.binaries)} binary(ies):")
-        for binary in result.binaries:
-            logger.info(f"  {binary.name}: {binary.path}")
+        logger.info(f"Built binary: {result.binary.name} at {result.binary.path}")
         return 0
     except Exception as e:
         logger.error(f"Build failed: {e}")
@@ -84,7 +78,7 @@ def cmd_build(args: argparse.Namespace) -> int:
 
 
 def cmd_run(args: argparse.Namespace) -> int:
-    """Run benchmark on one or more binaries."""
+    """Run benchmark on a binary."""
     from bench.benchmark import BenchmarkPhase, parse_binary_spec
     from bench.benchmark_config import BenchmarkConfig
 
@@ -143,90 +137,47 @@ def cmd_run(args: argparse.Namespace) -> int:
             logger.error(error)
         return 1
 
-    # Parse binary specs
+    # Parse binary spec
     try:
-        binaries = [parse_binary_spec(spec) for spec in args.binaries]
+        binary = parse_binary_spec(args.binary)
     except ValueError as e:
         logger.error(str(e))
         return 1
 
-    # Validate binaries exist
-    for name, path in binaries:
-        if not path.exists():
-            logger.error(f"Binary not found: {path} ({name})")
-            return 1
+    # Validate binary exists
+    name, path = binary
+    if not path.exists():
+        logger.error(f"Binary not found: {path} ({name})")
+        return 1
 
     phase = BenchmarkPhase(config, capabilities, benchmark_config)
     output_dir = Path(config.output_dir)
 
     try:
         result = phase.run(
-            binaries=binaries,
+            binary=binary,
             datadir=Path(config.datadir) if config.datadir else None,
             output_dir=output_dir,
         )
         logger.info(f"Results saved to: {result.results_file}")
 
         # For instrumented runs, also generate plots
-        if config.instrumented:
+        if config.instrumented and result.debug_log:
             from bench.analyze import AnalyzePhase
 
             analyze_phase = AnalyzePhase()
-
-            for binary_result in result.binaries:
-                if binary_result.debug_log:
-                    try:
-                        analyze_phase.run(
-                            commit=binary_result.name,
-                            log_file=binary_result.debug_log,
-                            output_dir=output_dir / "plots",
-                        )
-                    except Exception as e:
-                        logger.warning(f"Analysis for {binary_result.name} failed: {e}")
+            try:
+                analyze_phase.run(
+                    commit=result.name,
+                    log_file=result.debug_log,
+                    output_dir=output_dir / "plots",
+                )
+            except Exception as e:
+                logger.warning(f"Analysis failed: {e}")
 
         return 0
     except Exception as e:
         logger.error(f"Benchmark failed: {e}")
-        if args.verbose:
-            import traceback
-
-            traceback.print_exc()
-        return 1
-
-
-def cmd_compare(args: argparse.Namespace) -> int:
-    """Compare benchmark results from multiple files."""
-    from bench.compare import ComparePhase
-
-    if args.verbose:
-        logging.getLogger().setLevel(logging.DEBUG)
-
-    results_files = [Path(f) for f in args.results_files]
-
-    # Validate files exist
-    for f in results_files:
-        if not f.exists():
-            logger.error(f"Results file not found: {f}")
-            return 1
-
-    phase = ComparePhase()
-
-    try:
-        result = phase.run(results_files, baseline=args.baseline)
-
-        # Output results
-        output_json = phase.to_json(result)
-
-        if args.output:
-            output_path = Path(args.output)
-            output_path.write_text(output_json)
-            logger.info(f"Comparison saved to: {output_path}")
-        else:
-            print(output_json)
-
-        return 0
-    except Exception as e:
-        logger.error(f"Comparison failed: {e}")
         if args.verbose:
             import traceback
 
@@ -420,15 +371,14 @@ def main() -> int:
     # Build command
     build_parser = subparsers.add_parser(
         "build",
-        help="Build bitcoind at one or more commits",
-        description="Build bitcoind binaries from git commits. "
-        "Each commit can optionally have a name suffix: COMMIT:NAME",
+        help="Build bitcoind at a commit",
+        description="Build bitcoind binary from a git commit. "
+        "Optionally provide a name suffix: COMMIT:NAME",
     )
     build_parser.add_argument(
-        "commits",
-        nargs="+",
+        "commit",
         metavar="COMMIT[:NAME]",
-        help="Commit(s) to build. Format: COMMIT or COMMIT:NAME (e.g., HEAD:latest, abc123:v27)",
+        help="Commit to build. Format: COMMIT or COMMIT:NAME (e.g., HEAD:pr, abc123:test)",
     )
     build_parser.add_argument(
         "-o",
@@ -446,15 +396,13 @@ def main() -> int:
     # Run command
     run_parser = subparsers.add_parser(
         "run",
-        help="Run benchmark on one or more binaries",
-        description="Benchmark bitcoind binaries using hyperfine. "
-        "Each binary must have a name and path: NAME:PATH",
+        help="Run benchmark on a binary",
+        description="Benchmark a bitcoind binary using hyperfine.",
     )
     run_parser.add_argument(
-        "binaries",
-        nargs="+",
+        "binary",
         metavar="NAME:PATH",
-        help="Binary(ies) to benchmark. Format: NAME:PATH (e.g., v27:./binaries/v27/bitcoind)",
+        help="Binary to benchmark. Format: NAME:PATH (e.g., pr:./binaries/pr/bitcoind)",
     )
     run_parser.add_argument(
         "--datadir",
@@ -504,32 +452,6 @@ def main() -> int:
         help="Output directory for plots",
     )
     analyze_parser.set_defaults(func=cmd_analyze)
-
-    # Compare command
-    compare_parser = subparsers.add_parser(
-        "compare",
-        help="Compare benchmark results from multiple files",
-        description="Load and compare results from one or more results.json files. "
-        "Calculates speedup percentages relative to a baseline.",
-    )
-    compare_parser.add_argument(
-        "results_files",
-        nargs="+",
-        metavar="RESULTS_FILE",
-        help="results.json file(s) to compare",
-    )
-    compare_parser.add_argument(
-        "--baseline",
-        metavar="NAME",
-        help="Name of the baseline entry (default: first entry)",
-    )
-    compare_parser.add_argument(
-        "-o",
-        "--output",
-        metavar="FILE",
-        help="Output file for comparison JSON (default: stdout)",
-    )
-    compare_parser.set_defaults(func=cmd_compare)
 
     # Report command
     report_parser = subparsers.add_parser(

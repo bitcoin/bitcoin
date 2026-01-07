@@ -1,4 +1,4 @@
-"""Benchmark phase - run hyperfine benchmarks on bitcoind binaries."""
+"""Benchmark phase - run hyperfine benchmark on a bitcoind binary."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import os
 import shutil
 import subprocess
 import tempfile
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -21,18 +21,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# Debug flags for instrumented mode
-INSTRUMENTED_DEBUG_FLAGS = ["coindb", "leveldb", "bench", "validation"]
-
-
-@dataclass
-class BinaryResult:
-    """Result for a single binary."""
-
-    name: str
-    flamegraph: Path | None = None
-    debug_log: Path | None = None
-
 
 @dataclass
 class BenchmarkResult:
@@ -40,7 +28,9 @@ class BenchmarkResult:
 
     results_file: Path
     instrumented: bool
-    binaries: list[BinaryResult] = field(default_factory=list)
+    name: str
+    flamegraph: Path | None = None
+    debug_log: Path | None = None
 
 
 def parse_binary_spec(spec: str) -> tuple[str, Path]:
@@ -57,7 +47,7 @@ def parse_binary_spec(spec: str) -> tuple[str, Path]:
 
 
 class BenchmarkPhase:
-    """Run hyperfine benchmarks on bitcoind binaries."""
+    """Run hyperfine benchmark on a bitcoind binary."""
 
     def __init__(
         self,
@@ -72,32 +62,31 @@ class BenchmarkPhase:
 
     def run(
         self,
-        binaries: list[tuple[str, Path]],
+        binary: tuple[str, Path],
         datadir: Path | None,
         output_dir: Path,
     ) -> BenchmarkResult:
-        """Run benchmarks on given binaries.
+        """Run benchmark on given binary.
 
         Args:
-            binaries: List of (name, binary_path) tuples
+            binary: Tuple of (name, binary_path)
             datadir: Source datadir with blockchain snapshot (None for fresh sync)
             output_dir: Where to store results
 
         Returns:
             BenchmarkResult with paths to outputs
         """
-        if not binaries:
-            raise ValueError("At least one binary is required")
+        name, binary_path = binary
 
-        # Validate all binaries exist
-        for name, path in binaries:
-            if not path.exists():
-                raise FileNotFoundError(f"Binary not found: {path} ({name})")
+        # Validate binary exists
+        if not binary_path.exists():
+            raise FileNotFoundError(f"Binary not found: {binary_path} ({name})")
 
-        # Ensure binaries can run on this system (patches guix binaries on NixOS)
-        for name, path in binaries:
-            if not ensure_binary_runnable(path):
-                raise RuntimeError(f"Binary {name} at {path} cannot be made runnable")
+        # Ensure binary can run on this system (patches guix binaries on NixOS)
+        if not ensure_binary_runnable(binary_path):
+            raise RuntimeError(
+                f"Binary {name} at {binary_path} cannot be made runnable"
+            )
 
         # Check prerequisites
         errors = self.capabilities.check_for_run(self.config.instrumented)
@@ -122,9 +111,7 @@ class BenchmarkPhase:
             logger.info(f"  Source datadir: {datadir}")
         else:
             logger.info("  Mode: Fresh sync (no source datadir)")
-        logger.info(f"  Binaries: {len(binaries)}")
-        for name, path in binaries:
-            logger.info(f"    {name}: {path}")
+        logger.info(f"  Binary: {name} at {binary_path}")
         logger.info(f"  Instrumented: {self.config.instrumented}")
         logger.info(f"  Runs: {self.config.runs}")
         logger.info(f"  dbcache: {self.config.dbcache}")
@@ -139,7 +126,8 @@ class BenchmarkPhase:
 
             # Build hyperfine command
             cmd = self._build_hyperfine_cmd(
-                binaries=binaries,
+                name=name,
+                binary_path=binary_path,
                 tmp_datadir=tmp_datadir,
                 results_file=results_file,
                 setup_script=setup_script,
@@ -148,55 +136,49 @@ class BenchmarkPhase:
                 output_dir=output_dir,
             )
 
-            # Log the commands being benchmarked
-            logger.info("Commands to benchmark:")
-            for name, path in binaries:
-                bitcoind_cmd = self._build_bitcoind_cmd(path, tmp_datadir)
-                logger.info(f"  {name}: {bitcoind_cmd}")
+            # Log the command being benchmarked
+            bitcoind_cmd = self._build_bitcoind_cmd(binary_path, tmp_datadir)
+            logger.info(f"Command to benchmark: {bitcoind_cmd}")
 
             if self.config.dry_run:
                 logger.info(f"[DRY RUN] Would run: {' '.join(cmd)}")
                 return BenchmarkResult(
                     results_file=results_file,
                     instrumented=self.config.instrumented,
+                    name=name,
                 )
 
             # Log the full hyperfine command
             logger.info("Running hyperfine...")
-            logger.info(f"  Command: {' '.join(cmd[:7])} ...")  # First few args
             logger.debug(f"  Full command: {' '.join(cmd)}")
             subprocess.run(cmd, check=True)
 
-            # Collect results
-            benchmark_result = BenchmarkResult(
+            # Collect result
+            result = BenchmarkResult(
                 results_file=results_file,
                 instrumented=self.config.instrumented,
+                name=name,
             )
 
-            # For instrumented runs, collect flamegraphs and debug logs
+            # For instrumented runs, collect flamegraph and debug log
             if self.config.instrumented:
                 logger.info("Collecting instrumented artifacts...")
-                for name, _path in binaries:
-                    binary_result = BinaryResult(name=name)
+                flamegraph_file = output_dir / f"{name}-flamegraph.svg"
+                debug_log_file = output_dir / f"{name}-debug.log"
 
-                    flamegraph_file = output_dir / f"{name}-flamegraph.svg"
-                    debug_log_file = output_dir / f"{name}-debug.log"
-
-                    if flamegraph_file.exists():
-                        binary_result.flamegraph = flamegraph_file
-                        logger.info(f"  Flamegraph ({name}): {flamegraph_file}")
-                    if debug_log_file.exists():
-                        binary_result.debug_log = debug_log_file
-                        logger.info(f"  Debug log ({name}): {debug_log_file}")
-
-                    benchmark_result.binaries.append(binary_result)
+                if flamegraph_file.exists():
+                    result.flamegraph = flamegraph_file
+                    logger.info(f"  Flamegraph: {flamegraph_file}")
+                if debug_log_file.exists():
+                    result.debug_log = debug_log_file
+                    logger.info(f"  Debug log: {debug_log_file}")
 
             # Clean up tmp_datadir
             if tmp_datadir.exists():
                 logger.debug(f"Cleaning up tmp_datadir: {tmp_datadir}")
                 shutil.rmtree(tmp_datadir)
 
-            return benchmark_result
+            return result
 
         finally:
             # Clean up temp scripts
@@ -254,7 +236,7 @@ class BenchmarkPhase:
         return self._create_temp_script(commands, "prepare")
 
     def _create_cleanup_script(self, tmp_datadir: Path) -> Path:
-        """Create cleanup script (runs after all timing runs for each command)."""
+        """Create cleanup script (runs after all timing runs)."""
         commands = [
             f'rm -rf "{tmp_datadir}"/*',
         ]
@@ -301,7 +283,8 @@ class BenchmarkPhase:
 
     def _build_hyperfine_cmd(
         self,
-        binaries: list[tuple[str, Path]],
+        name: str,
+        binary_path: Path,
         tmp_datadir: Path,
         results_file: Path,
         setup_script: Path,
@@ -319,22 +302,18 @@ class BenchmarkPhase:
             f"--runs={self.config.runs}",
             f"--export-json={results_file}",
             "--show-output",
+            f"--command-name={name}",
         ]
 
-        # Add command names and build commands
-        for name, binary_path in binaries:
-            cmd.append(f"--command-name={name}")
+        # Build the actual command to benchmark
+        bitcoind_cmd = self._build_bitcoind_cmd(binary_path, tmp_datadir)
 
-        # Build the actual commands to benchmark
-        for name, binary_path in binaries:
-            bitcoind_cmd = self._build_bitcoind_cmd(binary_path, tmp_datadir)
+        # For instrumented runs, append the conclude logic
+        if self.config.instrumented:
+            conclude = self._create_conclude_commands(name, tmp_datadir, output_dir)
+            bitcoind_cmd += f" && {conclude}"
 
-            # For instrumented runs, append the conclude logic to each command
-            if self.config.instrumented:
-                conclude = self._create_conclude_commands(name, tmp_datadir, output_dir)
-                bitcoind_cmd += f" && {conclude}"
-
-            cmd.append(bitcoind_cmd)
+        cmd.append(bitcoind_cmd)
 
         return cmd
 
@@ -344,8 +323,7 @@ class BenchmarkPhase:
         tmp_datadir: Path,
         output_dir: Path,
     ) -> str:
-        """Create inline conclude commands for a specific binary."""
-        # Return shell commands to run after each benchmark
+        """Create inline conclude commands for the binary."""
         commands = []
 
         # Move flamegraph if exists
