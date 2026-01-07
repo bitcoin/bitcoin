@@ -1,9 +1,9 @@
-v30.x Release Notes
+v30.2rc1 Release Notes
 ===================
 
-Bitcoin Core version v30.x is now available from:
+Bitcoin Core version v30.2rc1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-30.x/>
+  <https://bitcoincore.org/bin/bitcoin-core-30.2/test.rc1/>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
@@ -40,6 +40,11 @@ unsupported systems.
 Notable changes
 ===============
 
+### Wallet
+
+- #34156 wallet: fix unnamed legacy wallet migration failure
+- #34215 wallettool: fix unnamed createfromdump failure walletsdir deletion
+
 ### IPC
 
 - #33511 init: Fix Ctrl-C shutdown hangs during wait calls
@@ -70,8 +75,10 @@ Credits
 
 Thanks to everyone who directly contributed to this release:
 
+- Ava Chow
 - brunoerg
 - fanquake
+- furszy
 - Hennadii Stepanov
 - MarcoFalke
 - Ryan Ofsky
