@@ -161,7 +161,7 @@ bool MutableTransactionSignatureCreator::CreateMuSig2PartialSig(const SigningPro
     if (!secnonce || !secnonce->get().IsValid()) return false;
 
     // Compute the sig
-    std::optional<uint256> sig = key.CreateMuSig2PartialSig(*sighash, aggregate_pubkey, pubkeys, pubnonces, *secnonce, tweaks);
+    std::optional<uint256> sig = ::CreateMuSig2PartialSig(*sighash, key, aggregate_pubkey, pubkeys, pubnonces, *secnonce, tweaks);
     if (!sig) return false;
     partial_sig = std::move(*sig);
 

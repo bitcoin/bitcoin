@@ -7,7 +7,6 @@
 #ifndef BITCOIN_KEY_H
 #define BITCOIN_KEY_H
 
-#include <musig.h>
 #include <pubkey.h>
 #include <serialize.h>
 #include <support/allocators/secure.h>
@@ -221,8 +220,6 @@ public:
      *                               Merkle root of the script tree).
      */
     KeyPair ComputeKeyPair(const uint256* merkle_root) const;
-
-    std::optional<uint256> CreateMuSig2PartialSig(const uint256& hash, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys, const std::map<CPubKey, std::vector<uint8_t>>& pubnonces, MuSig2SecNonce& secnonce, const std::vector<std::pair<uint256, bool>>& tweaks);
 };
 
 CKey GenerateRandomKey(bool compressed = true) noexcept;

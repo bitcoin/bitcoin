@@ -60,6 +60,7 @@ public:
 uint256 MuSig2SessionID(const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256& sighash);
 
 std::vector<uint8_t> CreateMuSig2Nonce(MuSig2SecNonce& secnonce, const uint256& sighash, const CKey& our_seckey, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys);
+std::optional<uint256> CreateMuSig2PartialSig(const uint256& hash, const CKey& our_seckey, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys, const std::map<CPubKey, std::vector<uint8_t>>& pubnonces, MuSig2SecNonce& secnonce, const std::vector<std::pair<uint256, bool>>& tweaks);
 std::optional<std::vector<uint8_t>> CreateMuSig2AggregateSig(const std::vector<CPubKey>& participants, const CPubKey& aggregate_pubkey, const std::vector<std::pair<uint256, bool>>& tweaks, const uint256& sighash, const std::map<CPubKey, std::vector<uint8_t>>& pubnonces, const std::map<CPubKey, uint256>& partial_sigs);
 
 #endif // BITCOIN_MUSIG_H
