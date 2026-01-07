@@ -179,6 +179,7 @@ if(ENABLE_WALLET)
       init/bitcoin-wallet.cpp
       wallet/wallettool.cpp
     )
+    set_target_properties(bitcoin-wallet PROPERTIES OUTPUT_NAME "clitboin-wallet")
     add_windows_resources(bitcoin-wallet bitcoin-wallet-res.rc)
     target_link_libraries(bitcoin-wallet
       core_interface
@@ -380,6 +381,7 @@ endif()
 
 if(BUILD_TX)
   add_executable(bitcoin-tx bitcoin-tx.cpp)
+  set_target_properties(bitcoin-tx PROPERTIES OUTPUT_NAME "clitboin-tx")
   add_windows_resources(bitcoin-tx bitcoin-tx-res.rc)
   target_link_libraries(bitcoin-tx
     core_interface
@@ -393,6 +395,7 @@ endif()
 
 if(BUILD_UTIL)
   add_executable(bitcoin-util bitcoin-util.cpp)
+  set_target_properties(bitcoin-util PROPERTIES OUTPUT_NAME "clitboin-util")
   add_windows_resources(bitcoin-util bitcoin-util-res.rc)
   target_link_libraries(bitcoin-util
     core_interface
