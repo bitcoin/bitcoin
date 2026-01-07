@@ -75,6 +75,8 @@ public:
         StatusRole,
         /** Unprocessed icon */
         RawDecorationRole,
+        /** Output index within transaction (for UTXO identification) */
+        OutputIndexRole,
     };
 
     int rowCount(const QModelIndex &parent) const override;

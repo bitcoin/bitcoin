@@ -95,6 +95,8 @@ public:
         Server,                 // bool
         EnablePSBTControls,     // bool
         MaskValues,             // bool
+        DustProtection,         // bool
+        DustProtectionThreshold, // CAmount (in duffs)
         OptionIDRowCount,
     };
 
@@ -130,6 +132,8 @@ public:
     bool getEnablePSBTControls() const { return m_enable_psbt_controls; }
     bool getKeepChangeAddress() const { return fKeepChangeAddress; }
     bool getShowAdvancedCJUI() { return fShowAdvancedCJUI; }
+    bool getDustProtection() const { return fDustProtection; }
+    qint64 getDustProtectionThreshold() const { return nDustProtectionThreshold; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
     bool isOptionOverridden(const QString& option) const { return strOverriddenByCommandLine.contains(option); }
     void emitCoinJoinEnabledChanged();
@@ -160,6 +164,8 @@ private:
     bool m_mask_values;
     bool fKeepChangeAddress;
     bool fShowAdvancedCJUI;
+    bool fDustProtection;
+    qint64 nDustProtectionThreshold;
 
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
@@ -183,6 +189,7 @@ Q_SIGNALS:
     void keepChangeAddressChanged(bool);
     void showTrayIconChanged(bool);
     void fontForMoneyChanged(const QFont&);
+    void dustProtectionChanged();
 };
 
 Q_DECLARE_METATYPE(OptionsModel::FontChoice)

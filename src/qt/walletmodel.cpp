@@ -149,6 +149,56 @@ void WalletModel::updateTransaction()
     fForceCheckBalanceChanged = true;
 }
 
+void WalletModel::checkAndLockDustOutputs(const QString& hashStr)
+{
+    // Check if dust protection is enabled
+    if (!optionsModel || !optionsModel->getDustProtection()) {
+        return;
+    }
+
+    qint64 dustThreshold = optionsModel->getDustProtectionThreshold();
+    if (dustThreshold <= 0) {
+        return;
+    }
+
+    uint256 hash;
+    hash.SetHex(hashStr.toStdString());
+
+    // Get the transaction
+    interfaces::WalletTx wtx = m_wallet->getWalletTx(hash);
+    if (!wtx.tx) {
+        return;
+    }
+
+    // Check if any inputs belong to this wallet (isFromMe check)
+    bool isFromMe = false;
+    for (const auto& mine : wtx.txin_is_mine) {
+        if (mine) {
+            isFromMe = true;
+            break;
+        }
+    }
+
+    // If this transaction has our inputs, it's not external dust
+    if (isFromMe) {
+        return;
+    }
+
+    // Check each output and lock if it's dust
+    for (size_t i = 0; i < wtx.tx->vout.size(); i++) {
+        // Only lock outputs that belong to us
+        if (!wtx.txout_is_mine[i]) {
+            continue;
+        }
+
+        CAmount value = wtx.tx->vout[i].nValue;
+        if (value > 0 && value <= dustThreshold) {
+            COutPoint outpoint(hash, i);
+            m_wallet->lockCoin(outpoint, true /* write_to_db */);
+        }
+    }
+}
+
 void WalletModel::updateNumISLocks()
 {
     cachedNumISLocks++;
@@ -456,10 +506,16 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel,
 
 static void NotifyTransactionChanged(WalletModel *walletmodel, const uint256 &hash, ChangeType status)
 {
-    Q_UNUSED(hash);
-    Q_UNUSED(status);
     bool invoked = QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection);
     assert(invoked);
+
+    // For new transactions, check if dust protection should lock UTXOs
+    if (status == CT_NEW) {
+        QString hashStr = QString::fromStdString(hash.ToString());
+        invoked = QMetaObject::invokeMethod(walletmodel, "checkAndLockDustOutputs", Qt::QueuedConnection,
+                                            Q_ARG(QString, hashStr));
+        assert(invoked);
+    }
 }
 
 static void NotifyISLockReceived(WalletModel *walletmodel)

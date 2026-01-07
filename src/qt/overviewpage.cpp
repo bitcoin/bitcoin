@@ -13,6 +13,7 @@
 #include <qt/optionsmodel.h>
 #include <qt/transactionfilterproxy.h>
 #include <qt/transactionoverviewwidget.h>
+#include <qt/transactionrecord.h>
 #include <qt/transactiontablemodel.h>
 #include <qt/utilitydialog.h>
 #include <qt/walletmodel.h>
@@ -759,6 +760,8 @@ void OverviewPage::SetupTransactionList(int nNumItems)
         filter->setDynamicSortFilter(true);
         filter->setSortRole(Qt::EditRole);
         filter->setShowInactive(false);
+        // Exclude dust receive transactions from overview
+        filter->setTypeFilter(TransactionFilterProxy::ALL_TYPES & ~TransactionFilterProxy::TYPE(TransactionRecord::DustReceive));
         filter->sort(TransactionTableModel::Date, Qt::DescendingOrder);
         ui->listTransactions->setModel(filter.get());
     }

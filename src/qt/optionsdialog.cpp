@@ -73,6 +73,10 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     ui->pruneSize->setEnabled(false);
     connect(ui->prune, &QPushButton::toggled, ui->pruneSize, &QWidget::setEnabled);
 
+    /* Dust protection */
+    ui->dustProtectionThreshold->setEnabled(false);
+    connect(ui->dustProtection, &QCheckBox::toggled, ui->dustProtectionThreshold, &QWidget::setEnabled);
+
     /* Wallet */
     ui->coinJoinEnabled->setText(tr("Enable %1 features").arg(QString::fromStdString(gCoinJoinName)));
 
@@ -344,6 +348,8 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->subFeeFromAmount, OptionsModel::SubFeeFromAmount);
     mapper->addMapping(ui->m_enable_psbt_controls, OptionsModel::EnablePSBTControls);
     mapper->addMapping(ui->keepChangeAddress, OptionsModel::KeepChangeAddress);
+    mapper->addMapping(ui->dustProtection, OptionsModel::DustProtection);
+    mapper->addMapping(ui->dustProtectionThreshold, OptionsModel::DustProtectionThreshold);
     mapper->addMapping(ui->showMasternodesTab, OptionsModel::ShowMasternodesTab);
     mapper->addMapping(ui->showGovernanceTab, OptionsModel::ShowGovernanceTab);
     mapper->addMapping(ui->showAdvancedCJUI, OptionsModel::ShowAdvancedCJUI);

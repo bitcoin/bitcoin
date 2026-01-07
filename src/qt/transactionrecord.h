@@ -86,6 +86,7 @@ public:
         CoinJoinCreateDenominations,
         CoinJoinSend,
         PlatformTransfer,
+        DustReceive,
     };
 
     /** Number of confirmation recommended for accepting a transaction */
@@ -116,7 +117,8 @@ public:
     /** Decompose CWallet transaction to model transaction records.
      */
     static bool showTransaction();
-    static QList<TransactionRecord> decomposeTransaction(interfaces::Node& node, interfaces::Wallet& wallet, const interfaces::WalletTx& wtx);
+    static QList<TransactionRecord> decomposeTransaction(interfaces::Node& node, interfaces::Wallet& wallet, const interfaces::WalletTx& wtx,
+                                                         bool dustProtectionEnabled = false, CAmount dustThreshold = 0);
 
     /** @name Immutable transaction attributes
       @{*/
