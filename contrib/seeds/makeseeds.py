@@ -77,10 +77,9 @@ def parseline(line: str) -> Union[dict, None]:
                 m = PATTERN_I2P.match(sline[0])
                 if m is None:
                     return None
-                else:
-                    net = 'i2p'
-                    ipstr = sortkey = m.group(1)
-                    port = int(m.group(2))
+                net = 'i2p'
+                ipstr = sortkey = m.group(1)
+                port = int(m.group(2))
             else:
                 net = 'onion'
                 ipstr = sortkey = m.group(1)
@@ -163,9 +162,9 @@ def filterbyasn(asmap: ASMap, ips: list[dict], max_per_asn: dict, max_per_net: i
     # Filter IPv46 by ASN, and limit to max_per_net per network
     result = []
     net_count: dict[str, int] = collections.defaultdict(int)
-    asn_count: dict[int, int] = collections.defaultdict(int)
+    asn_count = collections.defaultdict(int)
 
-    for i, ip in enumerate(ips_ipv46):
+    for ip in ips_ipv46:
         if net_count[ip['net']] == max_per_net:
             # do not add this ip as we already too many
             # ips from this network
@@ -211,7 +210,7 @@ def main():
     print('Done.', file=sys.stderr)
 
     print('Loading and parsing DNS seeds…', end='', file=sys.stderr, flush=True)
-    with open(args.seeds, 'r') as f:
+    with open(args.seeds, 'r', encoding='utf-8') as f:
         lines = f.readlines()
     ips = [parseline(line) for line in lines]
     random.shuffle(ips)
