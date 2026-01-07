@@ -690,6 +690,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         master_wallet = self.master_node.get_wallet_rpc(self.default_wallet_name)
         wallet = self.create_legacy_wallet("", blank=True)
         wallet.importaddress(master_wallet.getnewaddress(address_type="legacy"))
+        wallet.unloadwallet()
 
         # Create wallet directory with the watch-only name and a wallet file.
         # Because the wallet dir exists, this will cause migration to fail.
@@ -699,7 +700,8 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         mocked_time = int(time.time())
         self.master_node.setmocktime(mocked_time)
-        assert_raises_rpc_error(-4, "Failed to create database", self.migrate_and_get_rpc, "")
+        shutil.copyfile(self.old_node.wallets_path / "wallet.dat", self.master_node.wallets_path / "wallet.dat")
+        assert_raises_rpc_error(-4, "Failed to create database", self.master_node.migratewallet, wallet_name="")
         self.master_node.setmocktime(0)
 
         # Verify the /wallets/ path exists
