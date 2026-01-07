@@ -319,6 +319,12 @@ class ToolWalletTest(BitcoinTestFramework):
         self.write_dump(dump_data, bad_sum_wallet_dump)
         self.assert_raises_tool_error('Error: Checksum is not the correct size', '-wallet=badload', '-dumpfile={}'.format(bad_sum_wallet_dump), 'createfromdump')
         assert not (self.nodes[0].wallets_path / "badload").is_dir()
+        self.assert_raises_tool_error('Error: Checksum is not the correct size', '-wallet=', '-dumpfile={}'.format(bad_sum_wallet_dump), 'createfromdump')
+        assert self.nodes[0].wallets_path.exists()
+        assert not (self.nodes[0].wallets_path / "wallet.dat").exists()
+
+        self.log.info('Checking createfromdump with an unnamed wallet')
+        self.do_tool_createfromdump("", "wallet.dump")
 
     def test_chainless_conflicts(self):
         self.log.info("Test wallet tool when wallet contains conflicting transactions")
