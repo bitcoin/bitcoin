@@ -899,8 +899,12 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def skip_if_no_bpf_permissions(self):
         """Skip the running test if we don't have permissions to do BPF syscalls and load BPF maps."""
         # check for 'root' permissions
-        if os.geteuid() != 0:
-            raise SkipTest("no permissions to use BPF (please review the tests carefully before running them with higher privileges)")
+        try:
+            if os.geteuid() != 0:
+                raise SkipTest("no permissions to use BPF (please review the tests carefully before running them with higher privileges)")
+        except AttributeError:
+            # os.geteuid() not available on Windows
+            raise SkipTest("BPF permissions check not supported on this platform")
 
     def skip_if_platform_not_linux(self):
         """Skip the running test if we are not on a Linux platform"""
@@ -1038,3 +1042,4 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             return result
         except ImportError:
             self.log.warning("sqlite3 module not available, skipping tests that inspect the database")
+            return None
