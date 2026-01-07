@@ -333,6 +333,25 @@ class NightlyHistory:
             f"Appended result: {result.date} {result.commit[:8]} {result.config} {result.mean:.1f}s"
         )
 
+    def get_latest(self, config: str) -> NightlyResult | None:
+        """Get the most recent result for a given config.
+
+        Args:
+            config: Config name (e.g., '450', '32000')
+
+        Returns:
+            Most recent NightlyResult for that config, or None if not found
+        """
+        matching = [r for r in self.results if r.config == config]
+        if not matching:
+            return None
+        # Results are sorted by date, so last one is most recent
+        return matching[-1]
+
+    def get_chart_data(self) -> list[dict]:
+        """Get results in format suitable for chart embedding."""
+        return [r.to_dict() for r in self.results]
+
     def append_from_results_json(
         self,
         results_file: Path,
@@ -398,6 +417,131 @@ def generate_nightly_chart(history: NightlyHistory, output_file: Path) -> None:
     output_file.parent.mkdir(parents=True, exist_ok=True)
     output_file.write_text(html)
     logger.info(f"Generated nightly chart: {output_file}")
+
+
+# HTML/JS snippet for PR comparison chart (embedded in report)
+PR_CHART_SNIPPET = """
+<div id="pr-comparison-chart" style="width:100%; height:400px;"></div>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>
+  const nightlyData = {nightly_data};
+  const prData = {pr_data};
+
+  const colors = {{
+    '450': {{ line: '#3b82f6', error: 'rgba(59, 130, 246, 0.3)' }},
+    '32000': {{ line: '#f97316', error: 'rgba(249, 115, 22, 0.3)' }}
+  }};
+  const prColors = {{
+    '450': '#10b981',   // Green for PR 450
+    '32000': '#ef4444'  // Red for PR 32000
+  }};
+
+  const toMinutes = (seconds) => seconds / 60;
+
+  function buildTraces() {{
+    const traces = [];
+
+    // Nightly traces (lines with markers)
+    ['450', '32000'].forEach(config => {{
+      const configData = nightlyData.filter(d => d.config === config);
+      if (configData.length > 0) {{
+        traces.push({{
+          name: config === '450' ? '450MB nightly' : '32GB nightly',
+          x: configData.map(d => d.date),
+          y: configData.map(d => toMinutes(d.mean)),
+          text: configData.map(d => d.commit.slice(0, 8)),
+          customdata: configData.map(d => [d.commit, toMinutes(d.stddev || 0)]),
+          hovertemplate: '<b>%{{text}}</b><br>%{{y:.1f}} min<br>\\u00b1%{{customdata[1]:.1f}} min<extra>' + (config === '450' ? '450MB' : '32GB') + ' nightly</extra>',
+          mode: 'lines+markers',
+          line: {{ color: colors[config].line, width: 2 }},
+          marker: {{ size: 6 }},
+          error_y: {{
+            type: 'data',
+            array: configData.map(d => toMinutes(d.stddev || 0)),
+            visible: true,
+            color: colors[config].error,
+            thickness: 1.5
+          }}
+        }});
+      }}
+    }});
+
+    // PR traces (star markers)
+    prData.forEach(pr => {{
+      const config = pr.config;
+      traces.push({{
+        name: config === '450' ? '450MB PR' : '32GB PR',
+        x: [pr.date],
+        y: [toMinutes(pr.mean)],
+        text: [pr.commit.slice(0, 8)],
+        customdata: [[pr.commit, toMinutes(pr.stddev || 0)]],
+        hovertemplate: '<b>PR %{{text}}</b><br>%{{y:.1f}} min<br>\\u00b1%{{customdata[1]:.1f}} min<extra>' + (config === '450' ? '450MB' : '32GB') + ' PR</extra>',
+        mode: 'markers',
+        marker: {{
+          symbol: 'star',
+          size: 16,
+          color: prColors[config],
+          line: {{ color: '#ffffff', width: 2 }}
+        }}
+      }});
+    }});
+
+    return traces;
+  }}
+
+  const layout = {{
+    title: {{
+      text: 'PR vs Nightly Sync Performance',
+      font: {{ size: 16 }}
+    }},
+    xaxis: {{
+      title: {{ text: 'Date' }},
+      tickangle: -45
+    }},
+    yaxis: {{
+      title: {{ text: 'Time (minutes)' }},
+      rangemode: 'tozero'
+    }},
+    legend: {{
+      orientation: 'h',
+      yanchor: 'bottom',
+      y: 1.02,
+      xanchor: 'right',
+      x: 1
+    }},
+    hovermode: 'closest',
+    margin: {{ t: 60, b: 80 }}
+  }};
+
+  const config = {{
+    responsive: true,
+    displayModeBar: 'hover',
+    modeBarButtonsToRemove: ['lasso2d', 'select2d', 'autoScale2d'],
+    displaylogo: false
+  }};
+
+  Plotly.newPlot('pr-comparison-chart', buildTraces(), layout, config);
+</script>
+"""
+
+
+def generate_pr_chart_snippet(
+    history: NightlyHistory,
+    pr_results: list[dict],
+) -> str:
+    """Generate HTML/JS snippet for PR comparison chart.
+
+    Args:
+        history: NightlyHistory with nightly results
+        pr_results: List of PR result dicts with keys: config, mean, stddev, commit, date
+
+    Returns:
+        HTML string to embed in report
+    """
+    nightly_data = json.dumps(history.get_chart_data())
+    pr_data = json.dumps(pr_results)
+
+    return PR_CHART_SNIPPET.format(nightly_data=nightly_data, pr_data=pr_data)
 
 
 class NightlyPhase:

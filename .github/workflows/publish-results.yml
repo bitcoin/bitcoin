@@ -15,7 +15,7 @@ jobs:
       # Matrix entries from configs/pr.toml: dbcache=[450,32000] x instrumented=[false,true]
       NETWORKS: "450-true,32000-true,450-false,32000-false"
     outputs:
-      speedups: ${{ steps.generate.outputs.speedups }}
+      comparison: ${{ steps.generate.outputs.comparison }}
       pr-number: ${{ steps.metadata.outputs.pr-number }}
       result-url: ${{ steps.generate.outputs.result-url }}
     steps:
@@ -65,14 +65,16 @@ jobs:
       - name: Extract metadata
         id: metadata
         run: |
-          # Find PR number and run ID from any available metadata
+          # Find PR number, run ID, and commit from any available metadata
           for network in ${NETWORKS//,/ }; do
             if [ -f "${network}-metadata/github.json" ]; then
               PR_NUMBER=$(jq -r '.event.pull_request.number // "main"' "${network}-metadata/github.json")
               RUN_ID=$(jq -r '.run_id' "${network}-metadata/github.json")
+              HEAD_SHA=$(jq -r '.event.pull_request.head.sha // .sha' "${network}-metadata/github.json")
               echo "pr-number=${PR_NUMBER}" >> $GITHUB_OUTPUT
               echo "run-id=${RUN_ID}" >> $GITHUB_OUTPUT
-              echo "Found metadata: PR=${PR_NUMBER}, Run=${RUN_ID}"
+              echo "head-sha=${HEAD_SHA}" >> $GITHUB_OUTPUT
+              echo "Found metadata: PR=${PR_NUMBER}, Run=${RUN_ID}, Commit=${HEAD_SHA}"
               break
             fi
           done
@@ -87,6 +89,7 @@ jobs:
         env:
           PR_NUMBER: ${{ steps.metadata.outputs.pr-number }}
           RUN_ID: ${{ steps.metadata.outputs.run-id }}
+          HEAD_SHA: ${{ steps.metadata.outputs.head-sha }}
         run: |
           cd benchcoin-tools
 
@@ -98,17 +101,40 @@ jobs:
             fi
           done
 
-          # Generate report
+          # Generate report with nightly comparison
           python3 bench.py report \
             ${NETWORK_ARGS} \
             --pr-number "${PR_NUMBER}" \
             --run-id "${RUN_ID}" \
+            --commit "${HEAD_SHA}" \
+            --nightly-history ../nightly-history.json \
             --update-index \
             "../results/pr-${PR_NUMBER}/${RUN_ID}"
 
-          # Read speedups from generated results.json (filter for uninstrumented runs: *-false)
-          SPEEDUPS=$(jq -r '.speedups | to_entries | map(select(.key | endswith("-false"))) | map("\(.key): \(.value)%") | join(", ")' "../results/pr-${PR_NUMBER}/${RUN_ID}/results.json")
-          echo "speedups=${SPEEDUPS}" >> $GITHUB_OUTPUT
+          # Build comparison summary for PR comment
+          if [ -f "../nightly-history.json" ]; then
+            COMPARISON=$(jq -r '
+              if .nightly_comparison then
+                .nightly_comparison | to_entries | map(
+                  "\(.key) MB: \(.value.pr_mean / 60 | floor) min" +
+                  if .value.nightly_mean then
+                    " (nightly: \(.value.nightly_mean / 60 | floor) min, \(.value.nightly_date)) → " +
+                    if .value.speedup_percent > 0 then "+\(.value.speedup_percent)% faster"
+                    elif .value.speedup_percent < 0 then "\(.value.speedup_percent)% slower"
+                    else "same"
+                    end
+                  else " (no nightly baseline)"
+                  end
+                ) | join("\n- ")
+              else "No comparison data available"
+              end
+            ' "../results/pr-${PR_NUMBER}/${RUN_ID}/results.json")
+          else
+            COMPARISON="No nightly history available for comparison"
+          fi
+          echo "comparison<<EOF" >> $GITHUB_OUTPUT
+          echo "${COMPARISON}" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
           RESULT_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/results/pr-${PR_NUMBER}/${RUN_ID}/index.html"
           echo "result-url=${RESULT_URL}" >> $GITHUB_OUTPUT
@@ -142,5 +168,10 @@ jobs:
         run: |
           gh pr comment ${{ needs.build.outputs.pr-number }} \
             --repo ${{ github.repository }} \
-            --body "📊 Benchmark results for this run (${{ github.event.workflow_run.id }}) will be available at: ${{ needs.build.outputs.result-url }} after the github pages \"build and deployment\" action has completed.
-          🚀 Speedups: ${{ needs.build.outputs.speedups }}"
+            --body "## Benchmark Results
+
+          **Comparison to nightly master:**
+          - ${{ needs.build.outputs.comparison }}
+
+          [View detailed results](${{ needs.build.outputs.result-url }})
+          [View nightly trend chart](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/)"

@@ -5,26 +5,21 @@ on:
       - master
 
 jobs:
-  build-binaries:
+  build-binary:
     runs-on: [self-hosted, linux, x64]
-    env:
-      BASE_SHA: ${{ github.event.pull_request.base.sha }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      - name: Fetch base commit
+      - name: Build PR binary
         run: |
-          echo "HEAD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-          git fetch --depth=1 origin ${{ github.event.pull_request.base.sha }}
-
-      - name: Build both binaries
-        run: |
+          HEAD_SHA=$(git rev-parse HEAD)
+          echo "HEAD_SHA=${HEAD_SHA}" >> "$GITHUB_ENV"
           nix develop --command python3 bench.py build \
             -o ${{ runner.temp }}/binaries \
-            $BASE_SHA:base $HEAD_SHA:head
+            ${HEAD_SHA}:pr
 
       - name: Upload binaries
         uses: actions/upload-artifact@v4
@@ -33,7 +28,7 @@ jobs:
           path: ${{ runner.temp }}/binaries/
 
   benchmark:
-    needs: build-binaries
+    needs: build-binary
     strategy:
       matrix:
         # Matrix entries from configs/pr.toml: dbcache=[450,32000] x instrumented=[false,true]
@@ -42,7 +37,6 @@ jobs:
     timeout-minutes: 600
     env:
       ORIGINAL_DATADIR: /data/pruned-840k
-      BASE_SHA: ${{ github.event.pull_request.base.sha }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -57,13 +51,7 @@ jobs:
 
       - name: Set binary permissions
         run: |
-          chmod +x ${{ runner.temp }}/binaries/base/bitcoind
-          chmod +x ${{ runner.temp }}/binaries/head/bitcoind
-
-      - name: Fetch base commit
-        run: |
-          echo "HEAD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-          git fetch --depth=1 origin ${{ github.event.pull_request.base.sha }}
+          chmod +x ${{ runner.temp }}/binaries/pr/bitcoind
 
       - name: Run benchmark
         run: |
@@ -73,8 +61,7 @@ jobs:
             --datadir $ORIGINAL_DATADIR \
             --tmp-datadir ${{ runner.temp }}/datadir \
             --output-dir ${{ runner.temp }}/output \
-            base:${{ runner.temp }}/binaries/base/bitcoind \
-            head:${{ runner.temp }}/binaries/head/bitcoind
+            pr:${{ runner.temp }}/binaries/pr/bitcoind
 
       - name: Upload results
         uses: actions/upload-artifact@v4

@@ -10,8 +10,12 @@ import logging
 import re
 import shutil
 from dataclasses import dataclass, field
+from datetime import date
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from bench.nightly import NightlyHistory
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +38,7 @@ RUN_REPORT_TEMPLATE = """<!DOCTYPE html>
           <table class="min-w-full table-auto">
             <thead>
               <tr class="bg-gray-50">
-                <th class="px-4 py-2 text-left">Network</th>
-                <th class="px-4 py-2">Command</th>
+                <th class="px-4 py-2 text-left">Config</th>
                 <th class="px-4 py-2">Mean (s)</th>
                 <th class="px-4 py-2">Std Dev</th>
                 <th class="px-4 py-2">User (s)</th>
@@ -48,21 +51,8 @@ RUN_REPORT_TEMPLATE = """<!DOCTYPE html>
           </table>
         </div>
 
-        <!-- Speedup Summary Table -->
-        <h3 class="text-lg font-semibold mb-4">Speedup Summary</h3>
-        <div class="overflow-x-auto mb-8">
-          <table class="min-w-full table-auto">
-            <thead>
-              <tr class="bg-gray-50">
-                <th class="px-4 py-2 text-left">Network</th>
-                <th class="px-4 py-2">Speedup (%)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {speedup_rows}
-            </tbody>
-          </table>
-        </div>
+        <!-- Nightly Comparison Section -->
+        {nightly_section}
 
         <!-- Flamegraphs and Plots -->
         {graphs_section}
@@ -118,9 +108,12 @@ class ReportGenerator:
     """Generate HTML reports from benchmark results."""
 
     def __init__(
-        self, repo_url: str = "https://github.com/bitcoin-dev-tools/benchcoin"
+        self,
+        repo_url: str = "https://github.com/bitcoin-dev-tools/benchcoin",
+        nightly_history: NightlyHistory | None = None,
     ):
         self.repo_url = repo_url
+        self.nightly_history = nightly_history
 
     def generate_multi_network(
         self,
@@ -129,6 +122,7 @@ class ReportGenerator:
         title: str = "Benchmark Results",
         pr_number: str | None = None,
         run_id: str | None = None,
+        commit: str | None = None,
     ) -> ReportResult:
         """Generate HTML report from multiple network benchmark results.
 
@@ -138,6 +132,7 @@ class ReportGenerator:
             title: Title for the report
             pr_number: PR number (for CI reports)
             run_id: Run ID (for CI reports)
+            commit: Commit hash for PR (used in chart)
 
         Returns:
             ReportResult with paths and speedup data
@@ -177,8 +172,8 @@ class ReportGenerator:
         if not all_runs:
             raise ValueError("No benchmark results found in any network directory")
 
-        # Calculate speedups per network
-        speedups = self._calculate_speedups_per_network(all_runs)
+        # Calculate nightly comparison (for uninstrumented configs only)
+        nightly_comparison = self._calculate_nightly_comparison(all_runs, commit)
 
         # Build title with PR/run info if provided
         full_title = title
@@ -187,7 +182,7 @@ class ReportGenerator:
 
         # Generate HTML
         html = self._generate_html(
-            all_runs, speedups, full_title, output_dir, output_dir
+            all_runs, nightly_comparison, full_title, output_dir, output_dir, commit
         )
 
         # Write report
@@ -195,8 +190,8 @@ class ReportGenerator:
         index_file.write_text(html)
         logger.info(f"Generated report: {index_file}")
 
-        # Write combined results.json
-        combined_results = {
+        # Write combined results.json with nightly comparison
+        combined_results: dict[str, Any] = {
             "results": [
                 {
                     "network": run.network,
@@ -208,10 +203,19 @@ class ReportGenerator:
                 }
                 for run in all_runs
             ],
-            "speedups": speedups,
         }
+        if nightly_comparison:
+            combined_results["nightly_comparison"] = nightly_comparison
+
         results_file = output_dir / "results.json"
         results_file.write_text(json.dumps(combined_results, indent=2))
+
+        # Return speedups derived from nightly comparison for backwards compatibility
+        speedups = {
+            config: data["speedup_percent"]
+            for config, data in nightly_comparison.items()
+            if data.get("speedup_percent") is not None
+        }
 
         return ReportResult(
             output_dir=output_dir,
@@ -360,39 +364,83 @@ class ReportGenerator:
 
         return speedups
 
-    def _calculate_speedups_per_network(
-        self, runs: list[BenchmarkRun]
-    ) -> dict[str, float]:
-        """Calculate speedup percentages per network.
+    def _calculate_nightly_comparison(
+        self, runs: list[BenchmarkRun], commit: str | None = None
+    ) -> dict[str, dict[str, Any]]:
+        """Calculate comparison against nightly baseline.
 
-        For each network, uses 'base' as baseline and calculates speedup for 'head'.
-        Returns a dict mapping network name to speedup percentage.
+        Compares PR results against the most recent nightly results for each config.
+        Only considers uninstrumented configs (those without '-true' suffix).
+
+        Args:
+            runs: List of benchmark runs
+            commit: PR commit hash
+
+        Returns:
+            Dict mapping config to comparison data:
+            {
+                "450": {
+                    "pr_mean": 14500.0,
+                    "pr_stddev": 100.0,
+                    "nightly_mean": 14800.0,
+                    "nightly_date": "2026-01-05",
+                    "nightly_commit": "abc123...",
+                    "speedup_percent": 2.0
+                }
+            }
         """
-        speedups = {}
+        comparison: dict[str, dict[str, Any]] = {}
 
-        # Group runs by network
-        networks: dict[str, list[BenchmarkRun]] = {}
+        if not self.nightly_history:
+            logger.warning("No nightly history available for comparison")
+            return comparison
+
+        # Group runs by network/config, only uninstrumented (no '-true' suffix)
         for run in runs:
-            if run.network not in networks:
-                networks[run.network] = []
-            networks[run.network].append(run)
+            network = run.network
 
-        # Calculate speedup for each network
-        for network, network_runs in networks.items():
-            base_mean = None
-            head_mean = None
+            # Skip instrumented configs
+            if network.endswith("-true"):
+                continue
 
-            for run in network_runs:
-                if run.command == "base":
-                    base_mean = run.mean
-                elif run.command == "head":
-                    head_mean = run.mean
+            # Extract base config name (e.g., "450-false" -> "450")
+            config = network.replace("-false", "")
 
-            if base_mean and head_mean and base_mean > 0:
-                speedup = ((base_mean - head_mean) / base_mean) * 100
-                speedups[network] = round(speedup, 1)
+            # Get PR result mean
+            pr_mean = run.mean
+            pr_stddev = run.stddev
 
-        return speedups
+            # Get latest nightly for this config
+            nightly = self.nightly_history.get_latest(config)
+
+            if nightly:
+                speedup = None
+                if nightly.mean > 0:
+                    speedup = round(((nightly.mean - pr_mean) / nightly.mean) * 100, 1)
+
+                comparison[config] = {
+                    "pr_mean": pr_mean,
+                    "pr_stddev": pr_stddev,
+                    "pr_commit": commit,
+                    "nightly_mean": nightly.mean,
+                    "nightly_stddev": nightly.stddev,
+                    "nightly_date": nightly.date,
+                    "nightly_commit": nightly.commit,
+                    "speedup_percent": speedup,
+                }
+            else:
+                # No nightly data, just record PR result
+                comparison[config] = {
+                    "pr_mean": pr_mean,
+                    "pr_stddev": pr_stddev,
+                    "pr_commit": commit,
+                    "nightly_mean": None,
+                    "nightly_date": None,
+                    "nightly_commit": None,
+                    "speedup_percent": None,
+                }
+
+        return comparison
 
     def _copy_network_artifacts(
         self, network: str, input_dir: Path, output_dir: Path
@@ -416,30 +464,24 @@ class ReportGenerator:
     def _generate_html(
         self,
         runs: list[BenchmarkRun],
-        speedups: dict[str, float],
+        nightly_comparison: dict[str, dict[str, Any]],
         title: str,
         input_dir: Path,
         output_dir: Path,
+        commit: str | None = None,
     ) -> str:
         """Generate the HTML report."""
-        # Sort runs by network then by command (base first)
-        sorted_runs = sorted(
-            runs,
-            key=lambda r: (r.network, 0 if "base" in r.command.lower() else 1),
-        )
+        # Sort runs by network
+        sorted_runs = sorted(runs, key=lambda r: r.network)
 
         # Generate run data rows
         run_data_rows = ""
         for run in sorted_runs:
-            # Create commit link if there's a commit hash in the command
-            command_html = self._linkify_commit(run.command)
-
             stddev_str = f"{run.stddev:.3f}" if run.stddev else "N/A"
 
             run_data_rows += f"""
               <tr class="border-t">
                 <td class="px-4 py-2 font-mono text-sm">{run.network}</td>
-                <td class="px-4 py-2 font-mono text-sm text-center">{command_html}</td>
                 <td class="px-4 py-2 text-center">{run.mean:.3f}</td>
                 <td class="px-4 py-2 text-center">{stddev_str}</td>
                 <td class="px-4 py-2 text-center">{run.user:.3f}</td>
@@ -447,26 +489,10 @@ class ReportGenerator:
               </tr>
             """
 
-        # Generate speedup rows
-        speedup_rows = ""
-        for name, speedup in speedups.items():
-            # Skip instrumented runs in speedup summary
-            if name.lower().endswith("-instrumented"):
-                continue
-
-            color_class = ""
-            if speedup > 0:
-                color_class = "text-green-600"
-            elif speedup < 0:
-                color_class = "text-red-600"
-
-            sign = "+" if speedup > 0 else ""
-            speedup_rows += f"""
-              <tr class="border-t">
-                <td class="px-4 py-2 font-mono text-sm">{name}</td>
-                <td class="px-4 py-2 text-center {color_class}">{sign}{speedup}%</td>
-              </tr>
-            """
+        # Generate nightly comparison section
+        nightly_section = self._generate_nightly_section(
+            nightly_comparison, commit
+        )
 
         # Generate graphs section
         graphs_section = self._generate_graphs_section(runs, input_dir, output_dir)
@@ -474,9 +500,116 @@ class ReportGenerator:
         return RUN_REPORT_TEMPLATE.format(
             title=title,
             run_data_rows=run_data_rows,
-            speedup_rows=speedup_rows,
+            nightly_section=nightly_section,
             graphs_section=graphs_section,
         )
+
+    def _generate_nightly_section(
+        self,
+        nightly_comparison: dict[str, dict[str, Any]],
+        commit: str | None = None,
+    ) -> str:
+        """Generate the nightly comparison section with table and chart."""
+        if not nightly_comparison:
+            return """
+            <div class="bg-yellow-50 border border-yellow-200 rounded p-4 mb-8">
+              <p class="text-yellow-800">No nightly baseline data available for comparison.</p>
+            </div>
+            """
+
+        # Build comparison table
+        comparison_rows = ""
+        has_nightly_data = False
+        pr_chart_data = []
+
+        for config, data in sorted(nightly_comparison.items()):
+            pr_mean = data["pr_mean"]
+            pr_stddev = data.get("pr_stddev")
+            nightly_mean = data.get("nightly_mean")
+            nightly_date = data.get("nightly_date")
+            nightly_commit = data.get("nightly_commit")
+            speedup = data.get("speedup_percent")
+
+            # Format PR time
+            pr_minutes = pr_mean / 60
+            pr_time_str = f"{pr_minutes:.1f} min"
+
+            # Format nightly time
+            if nightly_mean:
+                has_nightly_data = True
+                nightly_minutes = nightly_mean / 60
+                nightly_time_str = f"{nightly_minutes:.1f} min"
+                nightly_info = f"{nightly_time_str} ({nightly_date})"
+
+                # Format speedup
+                if speedup is not None:
+                    color_class = ""
+                    if speedup > 0:
+                        color_class = "text-green-600"
+                    elif speedup < 0:
+                        color_class = "text-red-600"
+                    sign = "+" if speedup > 0 else ""
+                    speedup_str = f'<span class="{color_class}">{sign}{speedup}%</span>'
+                else:
+                    speedup_str = "N/A"
+            else:
+                nightly_info = "No baseline"
+                speedup_str = "N/A"
+
+            # Config display name
+            config_name = "450 MB" if config == "450" else "32 GB"
+
+            comparison_rows += f"""
+              <tr class="border-t">
+                <td class="px-4 py-2 font-mono text-sm">{config_name}</td>
+                <td class="px-4 py-2 text-center">{pr_time_str}</td>
+                <td class="px-4 py-2 text-center">{nightly_info}</td>
+                <td class="px-4 py-2 text-center">{speedup_str}</td>
+              </tr>
+            """
+
+            # Collect data for chart
+            if nightly_mean:
+                pr_chart_data.append({
+                    "config": config,
+                    "mean": pr_mean,
+                    "stddev": pr_stddev or 0,
+                    "commit": commit or "unknown",
+                    "date": date.today().isoformat(),
+                })
+
+        # Build comparison table HTML
+        table_html = f"""
+        <h3 class="text-lg font-semibold mb-4">Comparison to Nightly Master</h3>
+        <div class="overflow-x-auto mb-8">
+          <table class="min-w-full table-auto">
+            <thead>
+              <tr class="bg-gray-50">
+                <th class="px-4 py-2 text-left">Config</th>
+                <th class="px-4 py-2">PR Time</th>
+                <th class="px-4 py-2">Nightly Time (Date)</th>
+                <th class="px-4 py-2">Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              {comparison_rows}
+            </tbody>
+          </table>
+        </div>
+        """
+
+        # Add chart if we have nightly data
+        chart_html = ""
+        if has_nightly_data and self.nightly_history and pr_chart_data:
+            from bench.nightly import generate_pr_chart_snippet
+            chart_html = f"""
+            <h3 class="text-lg font-semibold mb-4">Performance Trend</h3>
+            <div class="mb-8">
+              {generate_pr_chart_snippet(self.nightly_history, pr_chart_data)}
+            </div>
+            """
+
+        return table_html + chart_html
 
     def _linkify_commit(self, command: str) -> str:
         """Convert commit hashes in command to links."""
@@ -603,9 +736,15 @@ class ReportPhase:
     """Generate reports from benchmark results."""
 
     def __init__(
-        self, repo_url: str = "https://github.com/bitcoin-dev-tools/benchcoin"
+        self,
+        repo_url: str = "https://github.com/bitcoin-dev-tools/benchcoin",
+        nightly_history_file: Path | None = None,
     ):
-        self.generator = ReportGenerator(repo_url)
+        nightly_history: NightlyHistory | None = None
+        if nightly_history_file and nightly_history_file.exists():
+            from bench.nightly import NightlyHistory
+            nightly_history = NightlyHistory(nightly_history_file)
+        self.generator = ReportGenerator(repo_url, nightly_history)
 
     def run(
         self,
@@ -632,6 +771,7 @@ class ReportPhase:
         title: str = "Benchmark Results",
         pr_number: str | None = None,
         run_id: str | None = None,
+        commit: str | None = None,
     ) -> ReportResult:
         """Generate report from multiple network benchmark results.
 
@@ -641,12 +781,13 @@ class ReportPhase:
             title: Title for the report
             pr_number: PR number (for CI reports)
             run_id: Run ID (for CI reports)
+            commit: Commit hash for PR
 
         Returns:
             ReportResult with paths and speedup data
         """
         return self.generator.generate_multi_network(
-            network_dirs, output_dir, title, pr_number, run_id
+            network_dirs, output_dir, title, pr_number, run_id, commit
         )
 
     def update_index(self, results_dir: Path, output_file: Path) -> None:

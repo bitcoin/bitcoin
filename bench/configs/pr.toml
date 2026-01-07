@@ -1,17 +1,17 @@
-# PR benchmark configuration (base vs head comparison)
+# PR benchmark configuration
 # Clone benchcoin + use this config = reproduce the benchmark
 #
 # Usage:
 #   bench.py run --benchmark-config bench/configs/pr.toml --matrix-entry 450-false \
 #     --datadir /data/pruned-840k --output-dir ./output \
-#     base:/path/to/base/bitcoind head:/path/to/head/bitcoind
+#     pr:/path/to/pr/bitcoind
 
 [benchmark]
 start_height = 840000
-runs = 3
+runs = 2
 
 [bitcoind]
-stopatheight = 855000
+stopatheight = 900000
 chain = "main"
 connect = "148.251.128.115:33333"
 prune = 10000

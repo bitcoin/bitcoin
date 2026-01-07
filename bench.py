@@ -275,7 +275,8 @@ def cmd_report(args: argparse.Namespace) -> int:
         logging.getLogger().setLevel(logging.DEBUG)
 
     output_dir = Path(args.output_dir)
-    phase = ReportPhase()
+    nightly_history_file = Path(args.nightly_history) if args.nightly_history else None
+    phase = ReportPhase(nightly_history_file=nightly_history_file)
 
     try:
         # CI multi-network mode
@@ -300,6 +301,7 @@ def cmd_report(args: argparse.Namespace) -> int:
                 title=args.title or "Benchmark Results",
                 pr_number=args.pr_number,
                 run_id=args.run_id,
+                commit=args.commit,
             )
 
             # Update results index if we have a results directory
@@ -323,12 +325,12 @@ def cmd_report(args: argparse.Namespace) -> int:
                 title=args.title or "Benchmark Results",
             )
 
-        # Print speedups
+        # Print nightly comparison (speedups vs nightly)
         if result.speedups:
-            logger.info("Speedups:")
-            for network, speedup in result.speedups.items():
+            logger.info("Comparison to nightly:")
+            for config, speedup in result.speedups.items():
                 sign = "+" if speedup > 0 else ""
-                logger.info(f"  {network}: {sign}{speedup}%")
+                logger.info(f"  {config}: {sign}{speedup}%")
 
         return 0
     except Exception as e:
@@ -568,6 +570,16 @@ def main() -> int:
         "--update-index",
         action="store_true",
         help="Update main index.html (for CI reports)",
+    )
+    report_parser.add_argument(
+        "--nightly-history",
+        metavar="PATH",
+        help="Path to nightly-history.json for comparison against nightly baseline",
+    )
+    report_parser.add_argument(
+        "--commit",
+        metavar="SHA",
+        help="PR commit hash (for chart display)",
     )
     report_parser.set_defaults(func=cmd_report)
 
