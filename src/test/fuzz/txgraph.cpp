@@ -1069,6 +1069,36 @@ FUZZ_TARGET(txgraph)
             auto sim_diagram = ChunkLinearization(sims[0].graph, sim_lin);
             auto cmp = CompareChunks(real_diagram, sim_diagram);
             assert(cmp == 0);
+
+            // Verify consistency of cross-cluster chunk ordering with tie-break (equal-feerate
+            // prefix size).
+            auto real_chunking = ChunkLinearizationInfo(sims[0].graph, vec1);
+            /** Map with one entry per component of the sim main graph. Key is the first Pos of the
+             *  component. Value is the sum of all chunk sizes from that component seen
+             *  already, at the current chunk feerate. */
+            std::map<SimTxGraph::Pos, int32_t> comp_prefix_sizes;
+            /** Current chunk feerate. */
+            FeeFrac last_chunk_feerate;
+            /** Largest seen equal-feerate chunk prefix size. */
+            int32_t max_chunk_prefix_size{0};
+            for (const auto& chunk : real_chunking) {
+                // If this is the first chunk with a strictly lower feerate, reset.
+                if (chunk.feerate << last_chunk_feerate) {
+                    comp_prefix_sizes.clear();
+                    max_chunk_prefix_size = 0;
+                }
+                last_chunk_feerate = chunk.feerate;
+                // Find which sim component this chunk belongs to.
+                auto component = sims[0].graph.GetConnectedComponent(sims[0].graph.Positions(), chunk.transactions.First());
+                assert(chunk.transactions.IsSubsetOf(component));
+                auto comp_key = component.First();
+                auto& comp_prefix_size = comp_prefix_sizes[comp_key];
+                comp_prefix_size += chunk.feerate.size;
+                // Verify consistency: within each component (= cluster in txgraph), the
+                // equal-feerate chunk prefix size must be monotonically increasing.
+                assert(comp_prefix_size >= max_chunk_prefix_size);
+                max_chunk_prefix_size = comp_prefix_size;
+            }
         }
 
         // For every transaction in the total ordering, find a random one before it and after it,
