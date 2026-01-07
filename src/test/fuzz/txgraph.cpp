@@ -1065,7 +1065,8 @@ FUZZ_TARGET(txgraph)
         // that calling Linearize on it does not improve it further.
         if (sims[0].real_is_optimal) {
             auto real_diagram = ChunkLinearization(sims[0].graph, vec1);
-            auto [sim_lin, _optimal, _cost] = Linearize(sims[0].graph, 300000, rng.rand64(), vec1);
+            auto [sim_lin, sim_optimal, _cost] = Linearize(sims[0].graph, 300000, rng.rand64(), IndexTxOrder{}, vec1);
+            PostLinearize(sims[0].graph, sim_lin);
             auto sim_diagram = ChunkLinearization(sims[0].graph, sim_lin);
             auto cmp = CompareChunks(real_diagram, sim_diagram);
             assert(cmp == 0);
@@ -1094,10 +1095,27 @@ FUZZ_TARGET(txgraph)
                 auto comp_key = component.First();
                 auto& comp_prefix_size = comp_prefix_sizes[comp_key];
                 comp_prefix_size += chunk.feerate.size;
-                // Verify consistency: within each component (= cluster in txgraph), the
-                // equal-feerate chunk prefix size must be monotonically increasing.
+                // Verify consistency: within each group of equal-feerate chunks, the equal-feerate
+                // chunk prefix size must be monotonically increasing.
                 assert(comp_prefix_size >= max_chunk_prefix_size);
                 max_chunk_prefix_size = comp_prefix_size;
+            }
+
+            // Verify that within each cluster, the internal ordering matches that of the
+            // simulation if that is optimal too, since per-cluster optimal orderings are
+            // deterministic.
+            if (sim_optimal) {
+                for (const auto& component : sims[0].GetComponents()) {
+                    std::vector<DepGraphIndex> sim_chunk_lin;
+                    for (auto i : sim_lin) {
+                        if (component[i]) sim_chunk_lin.push_back(i);
+                    }
+                    std::vector<DepGraphIndex> real_chunk_lin;
+                    for (auto i : vec1) {
+                        if (component[i]) real_chunk_lin.push_back(i);
+                    }
+                    assert(sim_chunk_lin == real_chunk_lin);
+                }
             }
         }
 

@@ -925,7 +925,7 @@ FUZZ_TARGET(clusterlin_sfl)
         if (rng.randbits(4) == 0) {
             // Verify that the diagram of GetLinearization() is at least as good as GetDiagram(),
             // from time to time.
-            auto lin = sfl.GetLinearization();
+            auto lin = sfl.GetLinearization(IndexTxOrder{});
             auto lin_diagram = ChunkLinearization(depgraph, lin);
             auto cmp_lin = CompareChunks(lin_diagram, diagram);
             assert(cmp_lin >= 0);
@@ -1044,7 +1044,7 @@ FUZZ_TARGET(clusterlin_linearize)
 
     // Invoke Linearize().
     iter_count &= 0x7ffff;
-    auto [linearization, optimal, cost] = Linearize(depgraph, iter_count, rng_seed, old_linearization, /*is_topological=*/claim_topological_input);
+    auto [linearization, optimal, cost] = Linearize(depgraph, iter_count, rng_seed, IndexTxOrder{}, old_linearization, /*is_topological=*/claim_topological_input);
     SanityCheck(depgraph, linearization);
     auto chunking = ChunkLinearization(depgraph, linearization);
 
@@ -1085,8 +1085,8 @@ FUZZ_TARGET(clusterlin_linearize)
 
         // Verify that within every chunk, the transactions are in a valid order. For any pair of
         // transactions, it should not be possible to swap them; either due to a missing
-        // dependency, or because the order would be inconsistent with decreasing feerate and
-        // increasing size.
+        // dependency, or because the order would be inconsistent with decreasing feerate,
+        // increasing size, and fallback order (just DepGraphIndex value here).
         auto chunking_info = ChunkLinearizationInfo(depgraph, linearization);
         TestBitSet done;
         unsigned pos{0};
@@ -1103,6 +1103,10 @@ FUZZ_TARGET(clusterlin_linearize)
                         // Verify that individual transaction feerate is decreasing (note that >=
                         // tie-breaks by size).
                         assert(depgraph.FeeRate(tx1) >= depgraph.FeeRate(tx2));
+                        // If feerate and size are equal, compare by DepGraphIndex.
+                        if (depgraph.FeeRate(tx1) == depgraph.FeeRate(tx2)) {
+                            assert(tx1 < tx2);
+                        }
                     }
                 }
                 done.Set(tx1);
@@ -1112,7 +1116,8 @@ FUZZ_TARGET(clusterlin_linearize)
 
         // Verify that chunks themselves are in a valid order. For any pair of chunks, it should
         // not be possible to swap them; either due to a missing dependency, or because the order
-        // would be inconsistent with decreasing chunk feerate and increasing chunk size.
+        // would be inconsistent with decreasing chunk feerate, increasing chunk size, and order
+        // of maximum fallback-ordered element (just maximum DepGraphIndex element here).
         done = {};
         // Go over all pairs of chunks. done is the set of transactions seen before chunk_num1.
         for (unsigned chunk_num1 = 0; chunk_num1 < chunking_info.size(); ++chunk_num1) {
@@ -1125,10 +1130,20 @@ FUZZ_TARGET(clusterlin_linearize)
                     // chunk2 could take position chunk_num1.
                     // Verify that chunk feerate is decreasing (note that >= tie-breaks by size).
                     assert(chunk1.feerate >= chunk2.feerate);
+                    // If feerate and size are equal, compare by maximum DepGraphIndex element.
+                    if (chunk1.feerate == chunk2.feerate) {
+                        assert(chunk1.transactions.Last() < chunk2.transactions.Last());
+                    }
                 }
             }
             done |= chunk1.transactions;
         }
+
+        // Redo from scratch with a different rng_seed. The resulting linearization should be
+        // deterministic, if both are optimal.
+        auto [linearization2, optimal2, cost2] = Linearize(depgraph, MaxOptimalLinearizationIters(depgraph.TxCount()) + 1, rng_seed ^ 0x1337, IndexTxOrder{});
+        assert(optimal2);
+        assert(linearization2 == linearization);
     }
 }
 
@@ -1217,7 +1232,7 @@ FUZZ_TARGET(clusterlin_postlinearize_tree)
 
     // Try to find an even better linearization directly. This must not change the diagram for the
     // same reason.
-    auto [opt_linearization, _optimal, _cost] = Linearize(depgraph_tree, 100000, rng_seed, post_linearization);
+    auto [opt_linearization, _optimal, _cost] = Linearize(depgraph_tree, 100000, rng_seed, IndexTxOrder{}, post_linearization);
     auto opt_chunking = ChunkLinearization(depgraph_tree, opt_linearization);
     auto cmp_opt = CompareChunks(opt_chunking, post_chunking);
     assert(cmp_opt == 0);
