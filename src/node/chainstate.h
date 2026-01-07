@@ -11,7 +11,6 @@
 #include <optional>
 #include <string>
 
-class CActiveMasternodeManager;
 class CChainstateHelper;
 class CCreditPoolManager;
 class CDeterministicMNManager;

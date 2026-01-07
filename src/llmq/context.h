@@ -9,7 +9,6 @@
 
 #include <memory>
 
-class CActiveMasternodeManager;
 class CBLSWorker;
 class ChainstateManager;
 class CDeterministicMNManager;
