@@ -3,9 +3,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <musig.h>
+#include <key.h>
+#include <random.h>
 #include <support/allocators/secure.h>
 
 #include <secp256k1_musig.h>
+
+extern secp256k1_context* secp256k1_context_sign;
 
 //! MuSig2 chaincode as defined by BIP 328
 using namespace util::hex_literals;
@@ -125,6 +129,40 @@ uint256 MuSig2SessionID(const CPubKey& script_pubkey, const CPubKey& part_pubkey
     hasher << script_pubkey << part_pubkey << sighash;
     return hasher.GetSHA256();
 }
+
+std::vector<uint8_t> CreateMuSig2Nonce(MuSig2SecNonce& secnonce, const uint256& sighash, const CKey& our_seckey, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys)
+{
+    // Get the keyagg cache and aggregate pubkey
+    secp256k1_musig_keyagg_cache keyagg_cache;
+    if (!MuSig2AggregatePubkeys(pubkeys, keyagg_cache, aggregate_pubkey)) return {};
+
+    // Parse participant pubkey
+    CPubKey our_pubkey = our_seckey.GetPubKey();
+    secp256k1_pubkey pubkey;
+    if (!secp256k1_ec_pubkey_parse(secp256k1_context_static, &pubkey, our_pubkey.data(), our_pubkey.size())) {
+        return {};
+    }
+
+    // Generate randomness for nonce
+    uint256 rand;
+    GetStrongRandBytes(rand);
+
+    // Generate nonce
+    secp256k1_musig_pubnonce pubnonce;
+    if (!secp256k1_musig_nonce_gen(secp256k1_context_sign, secnonce.Get(), &pubnonce, rand.data(), UCharCast(our_seckey.begin()), &pubkey, sighash.data(), &keyagg_cache, nullptr)) {
+        return {};
+    }
+
+    // Serialize pubnonce
+    std::vector<uint8_t> out;
+    out.resize(MUSIG2_PUBNONCE_SIZE);
+    if (!secp256k1_musig_pubnonce_serialize(secp256k1_context_static, out.data(), &pubnonce)) {
+        return {};
+    }
+
+    return out;
+}
+
 
 std::optional<std::vector<uint8_t>> CreateMuSig2AggregateSig(const std::vector<CPubKey>& part_pubkeys, const CPubKey& aggregate_pubkey, const std::vector<std::pair<uint256, bool>>& tweaks, const uint256& sighash, const std::map<CPubKey, std::vector<uint8_t>>& pubnonces, const std::map<CPubKey, uint256>& partial_sigs)
 {
