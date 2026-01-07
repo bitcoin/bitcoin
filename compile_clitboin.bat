@@ -5,36 +5,44 @@ echo ==========================================
 echo Clitboin Compilation Helper
 echo ==========================================
 
-REM Attempt to find VsDevCmd.bat
+set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
 set "VS_DEV_CMD="
 
-REM Check common locations for Visual Studio 2022
-if exist "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat" (
-    set "VS_DEV_CMD=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat"
-) else if exist "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" (
-    set "VS_DEV_CMD=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
-) else if exist "C:\Program Files\Microsoft Visual Studio\2022\Professional\Common7\Tools\VsDevCmd.bat" (
-    set "VS_DEV_CMD=C:\Program Files\Microsoft Visual Studio\2022\Professional\Common7\Tools\VsDevCmd.bat"
-)
-
-REM Check common locations for Visual Studio 2019 (fallback)
-if not defined VS_DEV_CMD (
-    if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat" (
-        set "VS_DEV_CMD=C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat"
+REM Strategy 1: Use vswhere to find any VS installation
+if exist "%VSWHERE%" (
+    for /f "usebackq tokens=*" %%i in (`"%VSWHERE%" -latest -products * -property installationPath`) do (
+        set "VS_INSTALL_DIR=%%i"
     )
 )
 
-if not defined VS_DEV_CMD (
-    echo ERROR: Could not find Visual Studio Developer Command Prompt (VsDevCmd.bat).
-    echo Please verify you have Visual Studio 2022 installed with "Desktop development with C++".
-    echo.
-    echo You may need to compile manually by opening "Developer PowerShell for VS 2022" and running:
-    echo   cmake -B build --preset vs2022-static
-    echo   cmake --build build --config Release
-    exit /b 1
+if defined VS_INSTALL_DIR (
+    if exist "!VS_INSTALL_DIR!\Common7\Tools\VsDevCmd.bat" (
+        set "VS_DEV_CMD=!VS_INSTALL_DIR!\Common7\Tools\VsDevCmd.bat"
+        goto :Found
+    )
 )
 
-echo Found VS Dev Cmd: !VS_DEV_CMD!
+REM Strategy 2: Check standard paths (fallback)
+if exist "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat" (
+    set "VS_DEV_CMD=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat"
+    goto :Found
+)
+if exist "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" (
+    set "VS_DEV_CMD=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
+    goto :Found
+)
+if exist "C:\Program Files\Microsoft Visual Studio\2022\Professional\Common7\Tools\VsDevCmd.bat" (
+    set "VS_DEV_CMD=C:\Program Files\Microsoft Visual Studio\2022\Professional\Common7\Tools\VsDevCmd.bat"
+    goto :Found
+)
+
+:NotFound
+echo ERROR: Could not find Visual Studio Developer Command Prompt (VsDevCmd.bat).
+echo Please verify you have Visual Studio 2022 installed.
+exit /b 1
+
+:Found
+echo Found VS Dev Cmd: "!VS_DEV_CMD!"
 echo Setting up build environment...
 call "!VS_DEV_CMD!"
 
@@ -43,6 +51,7 @@ echo Configuring Clitboin build...
 cmake -B build --preset vs2022-static
 if %errorlevel% neq 0 (
     echo ERROR: CMake configuration failed.
+    echo Ensure "Desktop development with C++" workload is installed.
     exit /b 1
 )
 
