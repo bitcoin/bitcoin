@@ -52,7 +52,7 @@ genesisReward = 50 * 100000000
 pubkey_hex = "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f"
 output_script = bytes.fromhex(pubkey_hex) + b'\xac' # OP_CHECKSIG
 # Push it
-output_script_pushed = push_bytes(output_script) # Length prefix handled by script encoding? 
+output_script_pushed = push_bytes(output_script) 
 # Wait, CScript << hex << OP_CHECKSIG.
 # The hex is pushed as data.
 # Then OP_CHECKSIG is appended.
@@ -99,56 +99,63 @@ tx_locktime = b'\x00\x00\x00\x00'
 tx_serialized = (
     tx_ver +
     tx_vin_count +
-    tx_prev_hash + tx_prev_index + tx_script_len + script_sig + tx_sequence +
-    tx_vout_count + tx_value + tx_out_script_len + tx_out_script +
+    tx_prev_hash +
+    tx_prev_index +
+    tx_script_len +
+    script_sig +
+    tx_sequence +
+    tx_vout_count +
+    tx_value +
+    tx_out_script_len +
+    tx_out_script +
     tx_locktime
 )
 
-# Calculate Merkle Root (TxHash)
-# For single tx, merkle root = tx hash
-tx_hash = sha256d(tx_serialized)
+# Hash Genesis Tx (Double SHA256)
+genesis_tx_hash = sha256d(tx_serialized)
+# Reverse for display (Little Endian)
+genesis_tx_hash_hex = binascii.hexlify(genesis_tx_hash[::-1]).decode('utf-8')
+print(f"Genesis Tx Hash: {genesis_tx_hash_hex}")
 
-print(f"Merkle Root: {binascii.hexlify(tx_hash[::-1]).decode('utf-8')}")
+# --- Construct Genesis Block Header ---
+# Version (1)
+block_ver = struct.pack('<i', nVersion)
+# Prev Block (0)
+block_prev = b'\x00' * 32
+# Merkle Root (Hash of Genesis Tx)
+block_merkle = genesis_tx_hash # Already internal byte order
+# Time
+block_time = struct.pack('<I', nTime)
+# Bits
+block_bits = struct.pack('<I', nBits)
 
-# --- Mine Genesis Block ---
+# Nonce (We need to mine it!)
+print("Mining Genesis Block...")
 target = compact_to_target(nBits)
-print(f"Target: {target:064x}")
 
-nonce = 0
-print("Mining...")
-start_time = time.time()
-
+nNonce = 0
 while True:
-    # Block Header
-    # Version (int32)
-    header = struct.pack('<i', nVersion)
-    # PrevBlock (32 bytes 0)
-    header += b'\x00' * 32
-    # MerkleRoot (32 bytes)
-    header += tx_hash # Already internal byte order? No, sha256d returns internal.
-    # Time (uint32)
-    header += struct.pack('<I', nTime)
-    # Bits (uint32)
-    header += struct.pack('<I', nBits)
-    # Nonce (uint32)
-    header_with_nonce = header + struct.pack('<I', nonce)
+    block_nonce = struct.pack('<I', nNonce)
+    header = (
+        block_ver +
+        block_prev +
+        block_merkle +
+        block_time +
+        block_bits +
+        block_nonce
+    )
     
-    block_hash = sha256d(header_with_nonce)
+    block_hash = sha256d(header)
     block_hash_int = int.from_bytes(block_hash, 'little')
     
     if block_hash_int <= target:
-        print(f"\nFOUND GENESIS!")
-        print(f"Nonce: {nonce}")
-        print(f"Time: {nTime}")
+        print(f"Success!")
+        print(f"Nonce: {nNonce}")
         print(f"Hash: {binascii.hexlify(block_hash[::-1]).decode('utf-8')}")
-        print(f"Merkle: {binascii.hexlify(tx_hash[::-1]).decode('utf-8')}")
+        print(f"Merkle Root: {genesis_tx_hash_hex}")
         break
-        
-    nonce += 1
-    if nonce % 100000 == 0:
-        print(f"Nonce: {nonce}", end='\r')
-        if nonce > 0xffffffff:
-            nonce = 0
-            nTime += 1
-            print(f"Time updated to {nTime}")
+    
+    nNonce += 1
+    if nNonce % 1000000 == 0:
+        print(f"Scanning nonce {nNonce}...")
 
