@@ -1082,6 +1082,53 @@ FUZZ_TARGET(clusterlin_linearize)
         auto read_chunking = ChunkLinearization(depgraph, read);
         auto cmp_read = CompareChunks(chunking, read_chunking);
         assert(cmp_read >= 0);
+
+        // Verify that within every chunk, the transactions are in a valid order. For any pair of
+        // transactions, it should not be possible to swap them; either due to a missing
+        // dependency, or because the order would be inconsistent with decreasing feerate and
+        // increasing size.
+        auto chunking_info = ChunkLinearizationInfo(depgraph, linearization);
+        TestBitSet done;
+        unsigned pos{0};
+        for (const auto& chunk : chunking_info) {
+            auto chunk_start = pos;
+            auto chunk_end = pos + chunk.transactions.Count() - 1;
+            // Go over all pairs of transactions. done is the set of transactions seen before pos1.
+            for (unsigned pos1 = chunk_start; pos1 <= chunk_end; ++pos1) {
+                auto tx1 = linearization[pos1];
+                for (unsigned pos2 = pos1 + 1; pos2 <= chunk_end; ++pos2) {
+                    auto tx2 = linearization[pos2];
+                    if ((depgraph.Ancestors(tx2) - done).Count() == 1) {
+                        // tx2 could take position pos1.
+                        // Verify that individual transaction feerate is decreasing (note that >=
+                        // tie-breaks by size).
+                        assert(depgraph.FeeRate(tx1) >= depgraph.FeeRate(tx2));
+                    }
+                }
+                done.Set(tx1);
+            }
+            pos += chunk.transactions.Count();
+        }
+
+        // Verify that chunks themselves are in a valid order. For any pair of chunks, it should
+        // not be possible to swap them; either due to a missing dependency, or because the order
+        // would be inconsistent with decreasing chunk feerate and increasing chunk size.
+        done = {};
+        // Go over all pairs of chunks. done is the set of transactions seen before chunk_num1.
+        for (unsigned chunk_num1 = 0; chunk_num1 < chunking_info.size(); ++chunk_num1) {
+            const auto& chunk1 = chunking_info[chunk_num1];
+            for (unsigned chunk_num2 = chunk_num1 + 1; chunk_num2 < chunking_info.size(); ++chunk_num2) {
+                const auto& chunk2 = chunking_info[chunk_num2];
+                TestBitSet chunk2_ancestors;
+                for (auto tx : chunk2.transactions) chunk2_ancestors |= depgraph.Ancestors(tx);
+                if ((chunk2_ancestors - done).IsSubsetOf(chunk2.transactions)) {
+                    // chunk2 could take position chunk_num1.
+                    // Verify that chunk feerate is decreasing (note that >= tie-breaks by size).
+                    assert(chunk1.feerate >= chunk2.feerate);
+                }
+            }
+            done |= chunk1.transactions;
+        }
     }
 }
 

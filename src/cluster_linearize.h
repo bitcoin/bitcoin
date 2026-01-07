@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include <attributes.h>
 #include <memusage.h>
 #include <random.h>
 #include <span.h>
@@ -687,6 +688,9 @@ private:
     /** The number of updated transactions in activations/deactivations. */
     uint64_t m_cost{0};
 
+    /** The DepGraph we are trying to linearize. */
+    const DepGraph<SetType>& m_depgraph;
+
     /** Pick a random transaction within a set (which must be non-empty). */
     TxIdx PickRandomTx(const SetType& tx_idxs) noexcept
     {
@@ -959,7 +963,8 @@ private:
 public:
     /** Construct a spanning forest for the given DepGraph, with every transaction in its own chunk
      *  (not topological). */
-    explicit SpanningForestState(const DepGraph<SetType>& depgraph, uint64_t rng_seed) noexcept : m_rng(rng_seed)
+    explicit SpanningForestState(const DepGraph<SetType>& depgraph LIFETIMEBOUND, uint64_t rng_seed) noexcept :
+        m_rng(rng_seed), m_depgraph(depgraph)
     {
         m_transaction_idxs = depgraph.Positions();
         auto num_transactions = m_transaction_idxs.Count();
@@ -1253,8 +1258,9 @@ public:
         std::vector<std::pair<TxIdx, TxIdx>> chunk_deps(m_tx_data.size(), {0, 0});
         /** The set of all chunk representatives. */
         SetType chunk_reps;
-        /** A list with all transactions within the current chunk that can be included. */
-        std::vector<TxIdx> ready_tx;
+        /** A heap with all transactions within the current chunk that can be included, with a
+         *  random tie-breaker. */
+        std::vector<std::pair<TxIdx, uint64_t>> ready_tx;
         // Populate chunk_deps[c] with the number of {out-of-chunk dependencies, dependencies} the
         // child has.
         for (TxIdx chl_idx : m_transaction_idxs) {
@@ -1267,8 +1273,19 @@ public:
                 chunk_deps[chl_chunk_rep].first += (par_chunk_rep != chl_chunk_rep);
             }
         }
+        /** Comparison function for the transaction heap. */
+        auto tx_cmp_fn = [&](const auto& a, const auto& b) noexcept {
+            // First sort by transaction FeeFrac (preferring smaller size for equal-feerate).
+            auto& a_feerate = m_depgraph.FeeRate(a.first);
+            auto& b_feerate = m_depgraph.FeeRate(b.first);
+            if (a_feerate != b_feerate) return a_feerate < b_feerate;
+            // Tie-break randomly.
+            if (a.second != b.second) return a.second < b.second;
+            // Lastly, tie-break by TxIdx.
+            return a.first < b.first;
+        };
         // Construct a heap with all chunks that have no out-of-chunk dependencies.
-        /** Comparison function for the heap. */
+        /** Comparison function for the chunk heap. */
         auto chunk_cmp_fn = [&](const std::pair<TxIdx, uint64_t>& a, const std::pair<TxIdx, uint64_t>& b) noexcept {
             auto& chunk_a = m_tx_data[a.first];
             auto& chunk_b = m_tx_data[b.first];
@@ -1296,21 +1313,20 @@ public:
             Assume(chunk_deps[chunk_rep].first == 0);
             const auto& chunk_txn = m_tx_data[chunk_rep].chunk_setinfo.transactions;
             // Build heap of all includable transactions in chunk.
+            Assume(ready_tx.empty());
             for (TxIdx tx_idx : chunk_txn) {
                 if (chunk_deps[tx_idx].second == 0) {
-                    ready_tx.push_back(tx_idx);
+                    ready_tx.emplace_back(tx_idx, m_rng.rand64());
                 }
             }
             Assume(!ready_tx.empty());
+            std::make_heap(ready_tx.begin(), ready_tx.end(), tx_cmp_fn);
             // Pick transactions from the ready queue, append them to linearization, and decrement
             // dependency counts.
             while (!ready_tx.empty()) {
-                // Move a random queue element to the back.
-                auto pos = m_rng.randrange(ready_tx.size());
-                if (pos != ready_tx.size() - 1) std::swap(ready_tx.back(), ready_tx[pos]);
-                // Pop from the back.
-                auto tx_idx = ready_tx.back();
-                Assume(chunk_txn[tx_idx]);
+                // Pop an element from the tx_ready heap.
+                auto [tx_idx, _rnd] = ready_tx.front();
+                std::pop_heap(ready_tx.begin(), ready_tx.end(), tx_cmp_fn);
                 ready_tx.pop_back();
                 // Append to linearization.
                 ret.push_back(tx_idx);
@@ -1321,8 +1337,9 @@ public:
                     // Decrement tx dependency count.
                     Assume(chunk_deps[chl_idx].second > 0);
                     if (--chunk_deps[chl_idx].second == 0 && chunk_txn[chl_idx]) {
-                        // Child tx has no dependencies left, and is in this chunk. Add it to the tx queue.
-                        ready_tx.push_back(chl_idx);
+                        // Child tx has no dependencies left, and is in this chunk. Add it to the tx heap.
+                        ready_tx.emplace_back(chl_idx, m_rng.rand64());
+                        std::push_heap(ready_tx.begin(), ready_tx.end(), tx_cmp_fn);
                     }
                     // Decrement chunk dependency count if this is out-of-chunk dependency.
                     if (chl_data.chunk_rep != chunk_rep) {
