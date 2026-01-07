@@ -23,6 +23,10 @@ using namespace cluster_linearize;
 
 namespace {
 
+struct SimTxObject : public TxGraph::Ref
+{
+};
+
 /** Data type representing a naive simulated TxGraph, keeping all transactions (even from
  *  disconnected components) in a single DepGraph. Unlike the real TxGraph, this only models
  *  a single graph, and multiple instances are used to simulate main/staging. */
@@ -42,14 +46,14 @@ struct SimTxGraph
     /** The dependency graph (for all transactions in the simulation, regardless of
      *  connectivity/clustering). */
     DepGraph<SetType> graph;
-    /** For each position in graph, which TxGraph::Ref it corresponds with (if any). Use shared_ptr
+    /** For each position in graph, which SimTxObject it corresponds with (if any). Use shared_ptr
      *  so that a SimTxGraph can be copied to create a staging one, while sharing Refs with
      *  the main graph. */
-    std::array<std::shared_ptr<TxGraph::Ref>, MAX_TRANSACTIONS> simmap;
+    std::array<std::shared_ptr<SimTxObject>, MAX_TRANSACTIONS> simmap;
     /** For each TxGraph::Ref in graph, the position it corresponds with. */
     std::map<const TxGraph::Ref*, Pos> simrevmap;
-    /** The set of TxGraph::Ref entries that have been removed, but not yet destroyed. */
-    std::vector<std::shared_ptr<TxGraph::Ref>> removed;
+    /** The set of SimTxObject entries that have been removed, but not yet destroyed. */
+    std::vector<std::shared_ptr<SimTxObject>> removed;
     /** Whether the graph is oversized (true = yes, false = no, std::nullopt = unknown). */
     std::optional<bool> oversized;
     /** The configured maximum number of transactions per cluster. */
@@ -129,8 +133,8 @@ struct SimTxGraph
         return MISSING;
     }
 
-    /** Given a position in this simulated graph, get the corresponding TxGraph::Ref. */
-    TxGraph::Ref* GetRef(Pos pos)
+    /** Given a position in this simulated graph, get the corresponding SimTxObject. */
+    SimTxObject* GetRef(Pos pos)
     {
         assert(graph.Positions()[pos]);
         assert(simmap[pos]);
@@ -145,7 +149,7 @@ struct SimTxGraph
         real_is_optimal = false;
         MakeModified(simpos);
         assert(graph.Positions()[simpos]);
-        simmap[simpos] = std::make_shared<TxGraph::Ref>();
+        simmap[simpos] = std::make_shared<SimTxObject>();
         txgraph.AddTransaction(*simmap[simpos], feerate);
         auto ptr = simmap[simpos].get();
         simrevmap[ptr] = simpos;
@@ -309,8 +313,8 @@ FUZZ_TARGET(txgraph)
      *  specialized test cases that are hard to perform more generically. */
     InsecureRandomContext rng(provider.ConsumeIntegral<uint64_t>());
 
-    /** Variable used whenever an empty TxGraph::Ref is needed. */
-    TxGraph::Ref empty_ref;
+    /** Variable used whenever an empty SimTxObject is needed. */
+    SimTxObject empty_ref;
 
     /** The maximum number of transactions per (non-oversized) cluster we will use in this
      *  simulation. */
@@ -344,9 +348,9 @@ FUZZ_TARGET(txgraph)
     /** Currently active block builders. */
     std::vector<BlockBuilderData> block_builders;
 
-    /** Function to pick any Ref (for either sim in sims: from sim.simmap or sim.removed, or the
-     *  empty Ref). */
-    auto pick_fn = [&]() noexcept -> TxGraph::Ref* {
+    /** Function to pick any SimTxObject (for either sim in sims: from sim.simmap or sim.removed, or the
+     *  empty one). */
+    auto pick_fn = [&]() noexcept -> SimTxObject* {
         size_t tx_count[2] = {sims[0].GetTransactionCount(), 0};
         /** The number of possible choices. */
         size_t choices = tx_count[0] + sims[0].removed.size() + 1;
