@@ -28,6 +28,11 @@
     # Redirect stderr to stdout
     exec 2>&1
 
+    # SOURCE_DATE_EPOCH might leak into the tool outputs.
+    # Therefore, unset it to enable the reuse of packages built
+    # in the same environment but for a different commit.
+    unset SOURCE_DATE_EPOCH
+
     echo "BEGIN ALL"
 
     # Include any ID salts supplied via command line
