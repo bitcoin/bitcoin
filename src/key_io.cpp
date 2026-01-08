@@ -83,14 +83,18 @@ public:
 
 CTxDestination DecodeDestination(const std::string& str, const CChainParams& params, std::string& error_str, std::vector<int>* error_locations)
 {
-    std::vector<unsigned char> data;
-    uint160 hash;
     error_str = "";
 
-    // Note this will be false if it is a valid Bech32 address for a different network
-    bool is_bech32 = (ToLower(str.substr(0, params.Bech32HRP().size())) == params.Bech32HRP());
+    static constexpr uint8_t MAX_BASE58_CHARS = 100;
+    static constexpr uint8_t MAX_BASE58_CHECK_CHARS = 21;
 
-    if (!is_bech32 && DecodeBase58Check(str, data, 21)) {
+    std::vector<unsigned char> data, bech32_data;
+
+    auto [bech32_encoding, bech32_hrp, bech32_chars] = bech32::Decode(str);
+    bool is_bech32 = bech32_encoding != bech32::Encoding::INVALID;
+
+    if (!is_bech32 && DecodeBase58Check(str, data, MAX_BASE58_CHECK_CHARS)) {
+        uint160 hash;
         // base58-encoded Bitcoin addresses.
         // Public-key-hash-addresses have version 0 (or 111 testnet).
         // The data vector contains RIPEMD160(SHA256(pubkey)), where pubkey is the serialized public key.
@@ -118,8 +122,10 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
         }
         return CNoDestination();
     } else if (!is_bech32) {
+        auto [bech32_error, bech32_error_loc] = bech32::LocateErrors(str);
+
         // Try Base58 decoding without the checksum, using a much larger max length
-        if (!DecodeBase58(str, data, 100)) {
+        if (!DecodeBase58(str, data, MAX_BASE58_CHARS)) {
             error_str = "Invalid or unsupported Segwit (Bech32) or Base58 encoding.";
         } else {
             error_str = "Invalid checksum or length of Base58 address (P2PKH or P2SH)";
@@ -149,39 +155,39 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
             return CNoDestination();
         }
         // The rest of the symbols are converted witness program bytes.
-        data.reserve(((dec.data.size() - 1) * 5) / 8);
-        if (ConvertBits<5, 8, false>([&](unsigned char c) { data.push_back(c); }, dec.data.begin() + 1, dec.data.end())) {
+        bech32_data.reserve(((bech32_chars.size() - 1) * 5) / 8);
+        if (ConvertBits<5, 8, false>([&](unsigned char c) { bech32_data.push_back(c); }, bech32_chars.begin() + 1, bech32_chars.end())) {
 
-            std::string_view byte_str{data.size() == 1 ? "byte" : "bytes"};
+            std::string_view byte_str{bech32_data.size() == 1 ? "byte" : "bytes"};
 
             if (version == 0) {
                 {
                     WitnessV0KeyHash keyid;
-                    if (data.size() == keyid.size()) {
-                        std::copy(data.begin(), data.end(), keyid.begin());
+                    if (bech32_data.size() == keyid.size()) {
+                        std::copy(bech32_data.begin(), bech32_data.end(), keyid.begin());
                         return keyid;
                     }
                 }
                 {
                     WitnessV0ScriptHash scriptid;
-                    if (data.size() == scriptid.size()) {
-                        std::copy(data.begin(), data.end(), scriptid.begin());
+                    if (bech32_data.size() == scriptid.size()) {
+                        std::copy(bech32_data.begin(), bech32_data.end(), scriptid.begin());
                         return scriptid;
                     }
                 }
 
-                error_str = strprintf("Invalid Bech32 v0 address program size (%d %s), per BIP141", data.size(), byte_str);
+                error_str = strprintf("Invalid Bech32 v0 address program size (%d %s), per BIP141", bech32_data.size(), byte_str);
                 return CNoDestination();
             }
 
-            if (version == 1 && data.size() == WITNESS_V1_TAPROOT_SIZE) {
+            if (version == 1 && bech32_data.size() == WITNESS_V1_TAPROOT_SIZE) {
                 static_assert(WITNESS_V1_TAPROOT_SIZE == WitnessV1Taproot::size());
                 WitnessV1Taproot tap;
-                std::copy(data.begin(), data.end(), tap.begin());
+                std::copy(bech32_data.begin(), bech32_data.end(), tap.begin());
                 return tap;
             }
 
-            if (CScript::IsPayToAnchor(version, data)) {
+            if (CScript::IsPayToAnchor(version, bech32_data)) {
                 return PayToAnchor();
             }
 
@@ -190,22 +196,21 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
                 return CNoDestination();
             }
 
-            if (data.size() < 2 || data.size() > BECH32_WITNESS_PROG_MAX_LEN) {
-                error_str = strprintf("Invalid Bech32 address program size (%d %s)", data.size(), byte_str);
+            if (bech32_data.size() < 2 || bech32_data.size() > BECH32_WITNESS_PROG_MAX_LEN) {
+                error_str = strprintf("Invalid Bech32 address program size (%d %s)", bech32_data.size(), byte_str);
                 return CNoDestination();
             }
 
-            return WitnessUnknown{version, data};
+            return WitnessUnknown{version, bech32_data};
         } else {
             error_str = strprintf("Invalid padding in Bech32 data section");
             return CNoDestination();
         }
     }
 
-    // Perform Bech32 error location
-    auto res = bech32::LocateErrors(str);
-    error_str = res.first;
-    if (error_locations) *error_locations = std::move(res.second);
+    auto [bech32_error, bech32_error_loc] = bech32::LocateErrors(str);
+    error_str = bech32_error;
+    if (error_locations) *error_locations = std::move(bech32_error_loc);
     return CNoDestination();
 }
 } // namespace
