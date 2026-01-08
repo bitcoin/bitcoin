@@ -421,7 +421,7 @@ def generate_nightly_chart(history: NightlyHistory, output_file: Path) -> None:
 
 # HTML/JS snippet for PR comparison chart (embedded in report)
 PR_CHART_SNIPPET = """
-<div id="pr-comparison-chart" style="width:100%; height:400px;"></div>
+<div id="pr-comparison-chart" style="width:100%; height:800px;"></div>
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 <script>
   const nightlyData = {nightly_data};
