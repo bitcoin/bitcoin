@@ -66,6 +66,7 @@ static std::optional<std::pair<WalletDescriptor, FlatSigningProvider>> CreateWal
     if (IsTooExpensive(MakeUCharSpan(mocked_descriptor))) return {};
     const auto desc_str{MOCKED_DESC_CONVERTER.GetDescriptor(mocked_descriptor)};
     if (!desc_str.has_value()) return std::nullopt;
+    if (HasTooLargeLeafSize(MakeUCharSpan(*desc_str))) return {};
 
     FlatSigningProvider keys;
     std::string error;

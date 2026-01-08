@@ -76,4 +76,12 @@ constexpr int MAX_WRAPPERS{100};
  */
 bool HasTooManyWrappers(std::span<const uint8_t> buff, int max_wrappers = MAX_WRAPPERS);
 
+/// Default maximum leaf size. This should be large enough to cover an extended
+/// key, including paths "/", inside and outside of "[]".
+constexpr uint32_t MAX_LEAF_SIZE{200};
+
+/// Whether the expanded buffer (after calling GetDescriptor() in
+/// MockedDescriptorConverter) has a leaf size too large.
+bool HasTooLargeLeafSize(std::span<const uint8_t> buff, uint32_t max_leaf_size = MAX_LEAF_SIZE);
+
 #endif // BITCOIN_TEST_FUZZ_UTIL_DESCRIPTOR_H

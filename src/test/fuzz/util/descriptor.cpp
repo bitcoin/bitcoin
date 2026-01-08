@@ -143,3 +143,23 @@ bool HasTooManyWrappers(std::span<const uint8_t> buff, const int max_wrappers)
 
     return false;
 }
+
+bool HasTooLargeLeafSize(std::span<const uint8_t> buff, const uint32_t max_leaf_size)
+{
+    uint32_t leaf_len{0};
+    for (auto c : buff) {
+        if (c == '(' || c == ')' || c == ',' || c == '{' || c == '}') {
+            // Possibly start a fresh leaf, or a fresh function name (with
+            // wrappers), or terminate a prior leaf.
+            leaf_len = 0;
+        } else {
+            // Just treat everything else as a leaf. This will also reject long
+            // function names, but this should be fine if the max_leaf_size is
+            // set large enough.
+            if (++leaf_len > max_leaf_size) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
