@@ -140,7 +140,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
         if (!DecodeBase58(str, data, MAX_BASE58_CHARS)) {
             // If bech32 decoding failed due to invalid base32 chars, address format is ambiguous; otherwise, report bech32 error
             bool is_validBech32Chars = (bech32_error != "Invalid Base 32 character");
-            error_str = is_validBech32Chars ? "Bech32(m) address decoded with error: " + bech32_error : "Address is not valid Base58 or Bech32";
+            error_str = is_validBech32Chars ? "Bech32 address decoded with error: " + bech32_error : "Address is not valid Base58 or Bech32";
         } else {
             // This covers the case where an address is encoded as valid base58 and invalid Bech32 due to a non base32 error
             error_str = "Invalid checksum or length of Base58 address (P2PKH or P2SH)";
@@ -153,24 +153,22 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
         return CNoDestination();
     }
 
-    data.clear();
-    const auto dec = bech32::Decode(str);
-    if (dec.encoding == bech32::Encoding::BECH32 || dec.encoding == bech32::Encoding::BECH32M) {
-        if (dec.data.empty()) {
+    if (bech32_encoding == bech32::Encoding::BECH32 || bech32_encoding == bech32::Encoding::BECH32M) {
+        if (bech32_chars.empty()) {
             error_str = "Empty Bech32 data section";
             return CNoDestination();
         }
         // Bech32 decoding
-        if (dec.hrp != params.Bech32HRP()) {
-            error_str = strprintf("Invalid or unsupported prefix for Segwit (Bech32) address (expected %s, got %s)", params.Bech32HRP(), dec.hrp);
+        if (bech32_hrp != params.Bech32HRP()) {
+            error_str = strprintf("Invalid or unsupported prefix for Segwit (Bech32) address (expected %s, got %s)", params.Bech32HRP(), bech32_hrp);
             return CNoDestination();
         }
-        int version = dec.data[0]; // The first 5 bit symbol is the witness version (0-16)
-        if (version == 0 && dec.encoding != bech32::Encoding::BECH32) {
+        int version = bech32_chars[0]; // The first 5 bit symbol is the witness version (0-16)
+        if (version == 0 && bech32_encoding != bech32::Encoding::BECH32) {
             error_str = "Version 0 witness address must use Bech32 checksum";
             return CNoDestination();
         }
-        if (version != 0 && dec.encoding != bech32::Encoding::BECH32M) {
+        if (version != 0 && bech32_encoding != bech32::Encoding::BECH32M) {
             error_str = "Version 1+ witness address must use Bech32m checksum";
             return CNoDestination();
         }
@@ -228,6 +226,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
         }
     }
 
+    // Perform Bech32 error location
     auto [bech32_error, bech32_error_loc] = bech32::LocateErrors(str);
     error_str = bech32_error;
     if (error_locations) *error_locations = std::move(bech32_error_loc);
