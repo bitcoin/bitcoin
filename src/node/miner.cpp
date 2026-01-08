@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <utility>
 #include <numeric>
+#include <stdexcept>
 
 namespace node {
 
@@ -81,7 +82,15 @@ static BlockCreateOptions ClampOptions(BlockCreateOptions options)
     // Typically block_reserved_weight and block_max_weight are set by
     // ApplyMiningDefaults before the constructor calls this; value_or(DEFAULT_...)
     // only affects (test) call sites that don't go through the Mining interface.
-    options.block_reserved_weight = std::clamp<size_t>(options.block_reserved_weight.value_or(DEFAULT_BLOCK_RESERVED_WEIGHT), MINIMUM_BLOCK_RESERVED_WEIGHT, MAX_BLOCK_WEIGHT);
+    const size_t reserved_weight{options.block_reserved_weight.value_or(DEFAULT_BLOCK_RESERVED_WEIGHT)};
+    // Reject too-small values instead of clamping so callers don't silently
+    // end up mining with different options than requested.
+    if (reserved_weight < MINIMUM_BLOCK_RESERVED_WEIGHT) {
+        throw std::runtime_error(strprintf("block_reserved_weight (%zu) must be at least %u weight units",
+                                           reserved_weight,
+                                           MINIMUM_BLOCK_RESERVED_WEIGHT));
+    }
+    options.block_reserved_weight = std::min<size_t>(reserved_weight, MAX_BLOCK_WEIGHT);
     options.coinbase_output_max_additional_sigops = std::clamp<size_t>(options.coinbase_output_max_additional_sigops, 0, MAX_BLOCK_SIGOPS_COST);
     // Limit weight to between block_reserved_weight and MAX_BLOCK_WEIGHT for sanity:
     // block_reserved_weight can safely exceed -blockmaxweight, but the rest of the block template will be empty.
