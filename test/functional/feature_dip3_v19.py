@@ -68,6 +68,9 @@ class DIP3V19Test(DashTestFramework):
         b_0 = self.nodes[0].getbestblockhash()
         self.test_getmnlistdiff(null_hash, b_0, {}, [], expected_updated)
 
+        extra_legacy_mn: MasternodeInfo = self.dynamically_add_masternode()
+        assert extra_legacy_mn is not None
+
         mn_list_before = self.nodes[0].masternodelist()
         pubkeyoperator_list_before = set([mn_list_before[e]["pubkeyoperator"] for e in mn_list_before])
 
@@ -95,8 +98,13 @@ class DIP3V19Test(DashTestFramework):
         assert evo_info_3 is not None
         self.dynamically_evo_update_service(evo_info_0, 9, should_be_rejected=True)
 
-        self.log.info(f"Trying to revoke proTx:{self.mninfo[-1].proTxHash}")
+        # Test revoking a post-V19 masternode (basic BLS scheme)
+        self.log.info(f"Trying to revoke post-V19 proTx:{evo_info_3.proTxHash}")
         self.test_revoke_protx(evo_info_3.nodeIdx, self.mninfo[-1])
+
+        # Test revoking a pre-V19 masternode (legacy BLS scheme) after V19 activation
+        self.log.info(f"Trying to revoke pre-V19 (legacy) proTx:{extra_legacy_mn.proTxHash}")
+        self.test_revoke_protx(extra_legacy_mn.nodeIdx, extra_legacy_mn)
 
         self.mine_quorum(llmq_type_name='llmq_test', llmq_type=100)
 
