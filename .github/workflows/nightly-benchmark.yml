@@ -131,42 +131,47 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Get current date
+      - name: Get current date and machine ID
         run: |
           echo "DATE=$(date -u +%Y-%m-%d)" >> "$GITHUB_ENV"
+          # Detect machine architecture for history file naming
+          MACHINE_ID=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+          echo "MACHINE_ID=${MACHINE_ID}" >> "$GITHUB_ENV"
 
       - name: Append results to history
         run: |
           COMMIT=$(cat ./commit-info/commit.txt)
           cd benchcoin-tools
 
-          # Append 450 (default dbcache) result (with machine specs and config capture)
+          # History file is per-machine
+          HISTORY_FILE="../nightly-history-${MACHINE_ID}.json"
+
+          # Append 450 (default dbcache) result
           python3 bench.py nightly \
-            --history-file ../nightly-history.json \
+            --history-file "$HISTORY_FILE" \
             append \
             ../nightly-450-results/results.json \
             "$COMMIT" \
             450 \
-            450 \
             --date "$DATE" \
-            --capture-machine \
             --benchmark-config bench/configs/nightly.toml
 
           # Append 32000 (large dbcache) result
           python3 bench.py nightly \
-            --history-file ../nightly-history.json \
+            --history-file "$HISTORY_FILE" \
             append \
             ../nightly-32000-results/results.json \
             "$COMMIT" \
             32000 \
-            32000 \
-            --date "$DATE"
+            --date "$DATE" \
+            --benchmark-config bench/configs/nightly.toml
 
       - name: Generate chart
         run: |
           cd benchcoin-tools
+          # Generate chart from this machine's history
           python3 bench.py nightly \
-            --history-file ../nightly-history.json \
+            --history-file "../nightly-history-${MACHINE_ID}.json" \
             chart \
             ../index.html
 
@@ -174,6 +179,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add nightly-history.json index.html
-          git commit -m "Update nightly benchmark results for $DATE" || echo "No changes to commit"
+          git add "nightly-history-${MACHINE_ID}.json" index.html
+          git commit -m "Update nightly benchmark results for $DATE (${MACHINE_ID})" || echo "No changes to commit"
           git push origin gh-pages

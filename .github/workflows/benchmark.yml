@@ -31,8 +31,8 @@ jobs:
     needs: build-binary
     strategy:
       matrix:
-        # Matrix entries from configs/pr.toml: dbcache=[450,32000] x instrumented=[false,true]
-        name: [450-false, 450-true, 32000-false, 32000-true]
+        # Matrix entries from configs/pr.toml: dbcache=[450,32000] x instrumentation=[uninstrumented,instrumented]
+        name: [450-uninstrumented, 450-instrumented, 32000-uninstrumented, 32000-instrumented]
     runs-on: [self-hosted, linux, x64]
     timeout-minutes: 600
     env:

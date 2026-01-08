@@ -60,7 +60,7 @@ class BenchmarkConfig:
 
             [bitcoind.matrix]
             dbcache = [450, 32000]
-            instrumented = [false, true]
+            instrumentation = ["uninstrumented", "instrumented"]
 
             [bitcoind.instrumented]
             debug = ["coindb", "leveldb", "bench", "validation"]
@@ -107,21 +107,21 @@ class BenchmarkConfig:
         """Expand parameter matrix into list of configurations.
 
         Returns list of dicts, each containing:
-            - name: combined name from values like "450-false"
+            - name: combined name from values like "450-uninstrumented"
             - All parameter values from the matrix
 
         Example:
             matrix = {
                 'dbcache': [450, 32000],
-                'instrumented': [false, true]
+                'instrumentation': ['uninstrumented', 'instrumented']
             }
 
             Returns:
                 [
-                    {'name': '450-false', 'dbcache': 450, 'instrumented': False},
-                    {'name': '450-true', 'dbcache': 450, 'instrumented': True},
-                    {'name': '32000-false', 'dbcache': 32000, 'instrumented': False},
-                    {'name': '32000-true', 'dbcache': 32000, 'instrumented': True},
+                    {'name': '450-uninstrumented', 'dbcache': 450, 'instrumentation': 'uninstrumented'},
+                    {'name': '450-instrumented', 'dbcache': 450, 'instrumentation': 'instrumented'},
+                    {'name': '32000-uninstrumented', 'dbcache': 32000, 'instrumentation': 'uninstrumented'},
+                    {'name': '32000-instrumented', 'dbcache': 32000, 'instrumentation': 'instrumented'},
                 ]
         """
         if not self.matrix:
@@ -194,7 +194,7 @@ class BenchmarkConfig:
 
         # Matrix parameters as placeholders
         for param_name in self.matrix.keys():
-            if param_name != "instrumented":  # instrumented is a flag, not a param
+            if param_name != "instrumentation":  # instrumentation is a mode, not a bitcoind param
                 parts.append(f"-{param_name}={{{param_name}}}")
 
         # Bitcoind args from config (skip empty/missing)

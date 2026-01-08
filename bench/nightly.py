@@ -225,50 +225,89 @@ NIGHTLY_CHART_TEMPLATE = """<!DOCTYPE html>
 
 @dataclass
 class NightlyResult:
-    """A single nightly benchmark result."""
+    """A single nightly benchmark result with embedded config and machine info."""
 
     date: str
     commit: str
-    config: str  # 'default' or 'large'
-    dbcache: int
     mean: float
     stddev: float
     runs: int
+    config: dict[str, Any]   # Full benchmark config (dbcache inside config.bitcoind.dbcache)
+    machine: dict[str, Any]  # Full machine specs
+
+    @property
+    def dbcache(self) -> int:
+        """Extract dbcache from nested config."""
+        return self.config.get("bitcoind", {}).get("dbcache", 0)
+
+    @property
+    def machine_id(self) -> str:
+        """Get short machine ID from architecture."""
+        from bench.machine import ARCH_TO_ID
+        arch = self.machine.get("architecture", "unknown")
+        return ARCH_TO_ID.get(arch.lower(), arch.lower())
+
+    @property
+    def instrumentation(self) -> str:
+        """Get instrumentation mode from config."""
+        return self.config.get("instrumentation", "uninstrumented")
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             "date": self.date,
             "commit": self.commit,
-            "config": self.config,
-            "dbcache": self.dbcache,
             "mean": self.mean,
             "stddev": self.stddev,
             "runs": self.runs,
+            "config": self.config,
+            "machine": self.machine,
         }
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> NightlyResult:
-        """Create from dictionary."""
+        """Create from dictionary.
+
+        Handles both new format (embedded config/machine) and legacy format.
+        """
+        # Check if this is the new format (has config as dict)
+        if isinstance(data.get("config"), dict):
+            return cls(
+                date=data["date"],
+                commit=data["commit"],
+                mean=data["mean"],
+                stddev=data["stddev"],
+                runs=data["runs"],
+                config=data["config"],
+                machine=data.get("machine", {}),
+            )
+
+        # Legacy format - convert to new format
+        dbcache = data.get("dbcache", 0)
+        config_name = data.get("config", str(dbcache))  # e.g., "450" or "32000"
         return cls(
             date=data["date"],
             commit=data["commit"],
-            config=data["config"],
-            dbcache=data["dbcache"],
             mean=data["mean"],
             stddev=data["stddev"],
             runs=data["runs"],
+            config={
+                "bitcoind": {"dbcache": dbcache},
+                "instrumentation": "uninstrumented",
+            },
+            machine={},
         )
 
 
 class NightlyHistory:
-    """Manages the nightly benchmark history stored in JSON."""
+    """Manages the nightly benchmark history stored in JSON.
+
+    Each result is self-contained with its own config and machine info.
+    """
 
     def __init__(self, history_file: Path):
         self.history_file = history_file
         self.results: list[NightlyResult] = []
-        self.machine: dict | None = None
-        self.config: dict | None = None
         self._load()
 
     def _load(self) -> None:
@@ -277,87 +316,86 @@ class NightlyHistory:
             with open(self.history_file) as f:
                 data = json.load(f)
             self.results = [NightlyResult.from_dict(r) for r in data.get("results", [])]
-            self.machine = data.get("machine")
-            self.config = data.get("config")
             logger.info(f"Loaded {len(self.results)} results from {self.history_file}")
         else:
             self.results = []
-            self.machine = None
-            self.config = None
             logger.info(f"No existing history at {self.history_file}")
 
     def save(self) -> None:
         """Save history to JSON file."""
         self.history_file.parent.mkdir(parents=True, exist_ok=True)
         data: dict = {"results": [r.to_dict() for r in self.results]}
-        if self.config:
-            data["config"] = self.config
-        if self.machine:
-            data["machine"] = self.machine
         with open(self.history_file, "w") as f:
             json.dump(data, f, indent=2)
         logger.info(f"Saved {len(self.results)} results to {self.history_file}")
 
-    def set_machine(self, machine_specs: dict) -> None:
-        """Set or update the machine specifications."""
-        self.machine = machine_specs
-        logger.info(f"Set machine specs: {machine_specs.get('cpu_model', 'Unknown')}")
-
-    def set_config(self, benchmark_config: dict) -> None:
-        """Set or update the benchmark configuration."""
-        self.config = benchmark_config
-        logger.info(
-            f"Set benchmark config: {benchmark_config.get('start_height', '?')} -> "
-            f"{benchmark_config.get('stop_height', '?')}"
-        )
-
     def append(self, result: NightlyResult) -> None:
         """Append a new result to history."""
-        # Check for duplicate (same date, commit, config)
+        # Check for duplicate (same date, commit, dbcache)
         for existing in self.results:
             if (
                 existing.date == result.date
                 and existing.commit == result.commit
-                and existing.config == result.config
+                and existing.dbcache == result.dbcache
             ):
                 logger.warning(
-                    f"Duplicate result for {result.date} {result.commit[:8]} {result.config}, replacing"
+                    f"Duplicate result for {result.date} {result.commit[:8]} dbcache={result.dbcache}, replacing"
                 )
                 self.results.remove(existing)
                 break
 
         self.results.append(result)
-        # Sort by date, then config
-        self.results.sort(key=lambda r: (r.date, r.config))
+        # Sort by date, then dbcache
+        self.results.sort(key=lambda r: (r.date, r.dbcache))
         logger.info(
-            f"Appended result: {result.date} {result.commit[:8]} {result.config} {result.mean:.1f}s"
+            f"Appended result: {result.date} {result.commit[:8]} dbcache={result.dbcache} {result.mean:.1f}s"
         )
 
-    def get_latest(self, config: str) -> NightlyResult | None:
-        """Get the most recent result for a given config.
+    def get_latest(self, dbcache: int | str) -> NightlyResult | None:
+        """Get the most recent result for a given dbcache config.
 
         Args:
-            config: Config name (e.g., '450', '32000')
+            dbcache: DB cache size in MB (int) or config name like '450', '32000'
 
         Returns:
-            Most recent NightlyResult for that config, or None if not found
+            Most recent NightlyResult for that dbcache, or None if not found
         """
-        matching = [r for r in self.results if r.config == config]
+        # Handle string config names like '450', '32000'
+        if isinstance(dbcache, str):
+            try:
+                dbcache = int(dbcache)
+            except ValueError:
+                return None
+
+        matching = [r for r in self.results if r.dbcache == dbcache]
         if not matching:
             return None
         # Results are sorted by date, so last one is most recent
         return matching[-1]
 
     def get_chart_data(self) -> list[dict]:
-        """Get results in format suitable for chart embedding."""
-        return [r.to_dict() for r in self.results]
+        """Get results in format suitable for chart embedding.
+
+        Returns a simplified format for the JS chart that includes
+        a 'config' field derived from dbcache for backwards compatibility.
+        """
+        chart_data = []
+        for r in self.results:
+            chart_data.append({
+                "date": r.date,
+                "commit": r.commit,
+                "mean": r.mean,
+                "stddev": r.stddev,
+                "config": str(r.dbcache),  # For chart grouping: "450" or "32000"
+            })
+        return chart_data
 
     def append_from_results_json(
         self,
         results_file: Path,
         commit: str,
-        config: str,
-        dbcache: int,
+        benchmark_config: dict[str, Any],
+        machine_specs: dict[str, Any],
         date_str: str | None = None,
     ) -> None:
         """Append result from a hyperfine results.json file.
@@ -365,8 +403,8 @@ class NightlyHistory:
         Args:
             results_file: Path to hyperfine results.json
             commit: Git commit hash
-            config: Config name ('default' or 'large')
-            dbcache: DB cache size in MB
+            benchmark_config: Full benchmark config dict (includes bitcoind.dbcache)
+            machine_specs: Machine specs dict
             date_str: Date string (YYYY-MM-DD), defaults to today
         """
         if not results_file.exists():
@@ -393,11 +431,11 @@ class NightlyHistory:
         result = NightlyResult(
             date=date_str,
             commit=commit,
-            config=config,
-            dbcache=dbcache,
             mean=mean,
             stddev=stddev if stddev else 0,
             runs=runs,
+            config=benchmark_config,
+            machine=machine_specs,
         )
         self.append(result)
 
@@ -554,39 +592,48 @@ class NightlyPhase:
         self,
         results_file: Path,
         commit: str,
-        config: str,
         dbcache: int,
         date_str: str | None = None,
-        capture_machine: bool = False,
         benchmark_config_file: Path | None = None,
+        instrumentation: str = "uninstrumented",
     ) -> None:
         """Append a result from hyperfine results.json to history.
 
         Args:
             results_file: Path to hyperfine results.json
             commit: Git commit hash
-            config: Config name ('default' or 'large')
             dbcache: DB cache size in MB
             date_str: Date string (YYYY-MM-DD), defaults to today
-            capture_machine: If True, detect and store machine specs
-            benchmark_config_file: If provided, load and store benchmark config
+            benchmark_config_file: Path to benchmark config TOML
+            instrumentation: Instrumentation mode ('uninstrumented' or 'instrumented')
         """
+        from bench.benchmark_config import BenchmarkConfig
+        from bench.machine import get_machine_specs
+
         history = NightlyHistory(self.history_file)
 
-        if capture_machine:
-            from bench.machine import get_machine_specs
+        # Get machine specs (always captured per-result now)
+        machine_specs = get_machine_specs().to_dict()
 
-            specs = get_machine_specs()
-            history.set_machine(specs.to_dict())
-
+        # Build benchmark config dict
         if benchmark_config_file:
-            from bench.benchmark_config import BenchmarkConfig
-
             benchmark_config = BenchmarkConfig.from_toml(benchmark_config_file)
-            history.set_config(benchmark_config.to_dict())
+            config_dict = benchmark_config.to_dict()
+        else:
+            config_dict = {}
+
+        # Ensure dbcache is in the config
+        if "bitcoind" not in config_dict:
+            config_dict["bitcoind"] = {}
+        config_dict["bitcoind"]["dbcache"] = dbcache
+        config_dict["instrumentation"] = instrumentation
 
         history.append_from_results_json(
-            results_file, commit, config, dbcache, date_str
+            results_file=results_file,
+            commit=commit,
+            benchmark_config=config_dict,
+            machine_specs=machine_specs,
+            date_str=date_str,
         )
         history.save()
 

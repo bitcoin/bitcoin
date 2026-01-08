@@ -44,6 +44,14 @@ class MachineSpecs:
             total_ram_gb=data.get("total_ram_gb", 0.0),
         )
 
+    def get_machine_id(self) -> str:
+        """Get short machine identifier from architecture.
+
+        Returns:
+            Short ID like "amd64" or "arm64"
+        """
+        return get_machine_id(self.architecture)
+
 
 def _run_command(cmd: list[str]) -> str:
     """Run a command and return stdout, or empty string on failure."""
@@ -173,3 +181,28 @@ def get_machine_specs() -> MachineSpecs:
         f"{total_ram_gb}GB RAM, {disk_type}, {os_kernel})"
     )
     return specs
+
+
+# Architecture to short ID mapping
+ARCH_TO_ID = {
+    "x86_64": "amd64",
+    "amd64": "amd64",
+    "aarch64": "arm64",
+    "arm64": "arm64",
+}
+
+
+def get_machine_id(architecture: str | None = None) -> str:
+    """Get short machine identifier from architecture.
+
+    Args:
+        architecture: Architecture string (e.g., "x86_64", "aarch64").
+                      If None, auto-detect from system.
+
+    Returns:
+        Short ID like "amd64" or "arm64"
+    """
+    if architecture is None:
+        architecture = _run_command(["uname", "-m"]) or "unknown"
+
+    return ARCH_TO_ID.get(architecture.lower(), architecture.lower())

@@ -38,8 +38,11 @@ class Capabilities:
     is_nixos: bool
     is_ci: bool
 
-    def check_for_run(self, instrumented: bool = False) -> list[str]:
+    def check_for_run(self, instrumented: str | bool = "uninstrumented") -> list[str]:
         """Check if we have required capabilities for a benchmark run.
+
+        Args:
+            instrumented: Either "instrumented"/"uninstrumented" string or legacy bool
 
         Returns list of errors (empty if all good).
         """
@@ -48,7 +51,13 @@ class Capabilities:
         if not self.has_hyperfine:
             errors.append("hyperfine not found in PATH (required for benchmarking)")
 
-        if instrumented:
+        # Handle both string and bool for backwards compatibility
+        is_instrumented = (
+            instrumented == "instrumented"
+            if isinstance(instrumented, str)
+            else instrumented
+        )
+        if is_instrumented:
             if not self.has_flamegraph:
                 errors.append(
                     "flamegraph not found in PATH (required for --instrumented)"

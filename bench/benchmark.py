@@ -27,7 +27,7 @@ class BenchmarkResult:
     """Result of the benchmark phase."""
 
     results_file: Path
-    instrumented: bool
+    instrumented: str  # "uninstrumented" or "instrumented"
     name: str
     flamegraph: Path | None = None
     debug_log: Path | None = None
@@ -59,6 +59,11 @@ class BenchmarkPhase:
         self.capabilities = capabilities
         self.benchmark_config = benchmark_config
         self._temp_scripts: list[Path] = []
+
+    @property
+    def is_instrumented(self) -> bool:
+        """Whether this benchmark run is instrumented (flamegraphs, debug logs)."""
+        return self.config.is_instrumented
 
     def run(
         self,
@@ -161,7 +166,7 @@ class BenchmarkPhase:
             )
 
             # For instrumented runs, collect flamegraph and debug log
-            if self.config.instrumented:
+            if self.is_instrumented:
                 logger.info("Collecting instrumented artifacts...")
                 flamegraph_file = output_dir / f"{name}-flamegraph.svg"
                 debug_log_file = output_dir / f"{name}-debug.log"
@@ -254,7 +259,7 @@ class BenchmarkPhase:
         parts = []
 
         # Add flamegraph wrapper for instrumented mode
-        if self.config.instrumented:
+        if self.is_instrumented:
             parts.append("flamegraph")
             parts.append("--palette bitcoin")
             parts.append("--title 'bitcoind IBD'")
@@ -275,7 +280,7 @@ class BenchmarkPhase:
                 parts.append(formatted)
 
         # Debug flags for instrumented mode
-        if self.config.instrumented and self.benchmark_config.instrumented_debug:
+        if self.is_instrumented and self.benchmark_config.instrumented_debug:
             for flag in self.benchmark_config.instrumented_debug:
                 parts.append(f"-debug={flag}")
 
@@ -309,7 +314,7 @@ class BenchmarkPhase:
         bitcoind_cmd = self._build_bitcoind_cmd(binary_path, tmp_datadir)
 
         # For instrumented runs, append the conclude logic
-        if self.config.instrumented:
+        if self.is_instrumented:
             conclude = self._create_conclude_commands(name, tmp_datadir, output_dir)
             bitcoind_cmd += f" && {conclude}"
 

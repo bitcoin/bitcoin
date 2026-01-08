@@ -19,6 +19,74 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+
+def format_config_display(
+    dbcache: int,
+    machine_id: str | None = None,
+    instrumentation: str | None = None,
+) -> str:
+    """Format config for display.
+
+    Args:
+        dbcache: DB cache size in MB
+        machine_id: Machine ID (e.g., "amd64", "arm64")
+        instrumentation: Instrumentation mode (e.g., "instrumented", "uninstrumented")
+
+    Returns:
+        Display string like "dbcache=450MB (amd64, instrumented)"
+
+    Examples:
+        >>> format_config_display(450)
+        'dbcache=450MB'
+        >>> format_config_display(32000, "amd64")
+        'dbcache=32GB (amd64)'
+        >>> format_config_display(450, "arm64", "instrumented")
+        'dbcache=450MB (arm64, instrumented)'
+    """
+    # Format dbcache with unit
+    if dbcache >= 1000:
+        cache_str = f"{dbcache // 1000}GB"
+    else:
+        cache_str = f"{dbcache}MB"
+
+    # Build optional parts (exclude "uninstrumented" as it's the default)
+    parts = []
+    if machine_id:
+        parts.append(machine_id)
+    if instrumentation and instrumentation != "uninstrumented":
+        parts.append(instrumentation)
+
+    if parts:
+        return f"dbcache={cache_str} ({', '.join(parts)})"
+    return f"dbcache={cache_str}"
+
+
+def parse_network_name(network: str) -> tuple[int, str]:
+    """Parse a network/config name to extract dbcache and instrumentation.
+
+    Args:
+        network: Network name like "450-uninstrumented", "32000-instrumented", "450", "32000"
+
+    Returns:
+        Tuple of (dbcache_int, instrumentation_str)
+
+    Examples:
+        >>> parse_network_name("450-uninstrumented")
+        (450, 'uninstrumented')
+        >>> parse_network_name("32000-instrumented")
+        (32000, 'instrumented')
+        >>> parse_network_name("450")
+        (450, 'uninstrumented')
+    """
+    parts = network.split("-")
+    try:
+        dbcache = int(parts[0])
+    except ValueError:
+        dbcache = 0
+
+    instrumentation = parts[1] if len(parts) > 1 else "uninstrumented"
+    return dbcache, instrumentation
+
 # HTML template for individual run report
 RUN_REPORT_TEMPLATE = """<!DOCTYPE html>
 <html>
@@ -449,9 +517,13 @@ class ReportGenerator:
         for run in sorted_runs:
             stddev_str = f"{run.stddev:.3f}" if run.stddev else "N/A"
 
+            # Format config name for display
+            dbcache, instrumentation = parse_network_name(run.network)
+            config_display = format_config_display(dbcache, instrumentation=instrumentation)
+
             run_data_rows += f"""
               <tr class="border-t">
-                <td class="px-4 py-2 font-mono text-sm">{run.network}</td>
+                <td class="px-4 py-2 font-mono text-sm">{config_display}</td>
                 <td class="px-4 py-2 text-center">{run.mean:.3f}</td>
                 <td class="px-4 py-2 text-center">{stddev_str}</td>
                 <td class="px-4 py-2 text-center">{run.user:.3f}</td>
@@ -530,8 +602,12 @@ class ReportGenerator:
                 nightly_info = "No baseline"
                 speedup_str = "N/A"
 
-            # Config display name
-            config_name = "450 MB" if config == "450" else "32 GB"
+            # Config display name using helper
+            try:
+                dbcache = int(config)
+            except ValueError:
+                dbcache = 0
+            config_name = format_config_display(dbcache)
 
             comparison_rows += f"""
               <tr class="border-t">

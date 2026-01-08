@@ -2,7 +2,7 @@
 # Clone benchcoin + use this config = reproduce the benchmark
 #
 # Usage:
-#   bench.py run --benchmark-config bench/configs/pr.toml --matrix-entry 450-false \
+#   bench.py run --benchmark-config bench/configs/pr.toml --matrix-entry 450-uninstrumented \
 #     --datadir /data/pruned-840k --output-dir ./output \
 #     pr:/path/to/pr/bitcoind
 
@@ -19,11 +19,11 @@ daemon = false
 printtoconsole = false
 
 # Parameter matrix - creates multiple benchmark configurations
-# Matrix expands to: 450-false, 450-true, 32000-false, 32000-true
+# Matrix expands to: 450-uninstrumented, 450-instrumented, 32000-uninstrumented, 32000-instrumented
 [bitcoind.matrix]
 dbcache = [450, 32000]
-instrumented = [false, true]
+instrumentation = ["uninstrumented", "instrumented"]
 
-# Debug flags enabled when instrumented = true
+# Debug flags enabled when instrumentation = "instrumented"
 [bitcoind.instrumented]
 debug = ["coindb", "leveldb", "bench", "validation"]

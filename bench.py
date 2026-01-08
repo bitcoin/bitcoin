@@ -20,10 +20,10 @@ Examples:
     bench.py run pr:./binaries/pr/bitcoind --datadir /data
 
     # Generate HTML report with nightly comparison
-    bench.py report --network 450-false:./results --nightly-history ./nightly-history.json ./output
+    bench.py report --network 450-uninstrumented:./results --nightly-history ./nightly-history.json ./output
 
     # Append nightly result and regenerate chart
-    bench.py nightly append results.json abc123 450 450
+    bench.py nightly append results.json abc123 450 --benchmark-config bench/configs/nightly.toml
     bench.py nightly chart ./index.html
 """
 
@@ -119,8 +119,8 @@ def cmd_run(args: argparse.Namespace) -> int:
     # Apply matrix entry values
     if "dbcache" in matrix_entry:
         cli_args["dbcache"] = matrix_entry["dbcache"]
-    if "instrumented" in matrix_entry:
-        cli_args["instrumented"] = matrix_entry["instrumented"]
+    if "instrumentation" in matrix_entry:
+        cli_args["instrumented"] = matrix_entry["instrumentation"]
 
     config = build_config(
         cli_args=cli_args,
@@ -162,7 +162,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         logger.info(f"Results saved to: {result.results_file}")
 
         # For instrumented runs, also generate plots
-        if config.instrumented and result.debug_log:
+        if config.instrumented == "instrumented" and result.debug_log:
             from bench.analyze import AnalyzePhase
 
             analyze_phase = AnalyzePhase()
@@ -315,11 +315,10 @@ def cmd_nightly(args: argparse.Namespace) -> int:
             phase.append(
                 results_file=Path(args.results_file),
                 commit=args.commit,
-                config=args.config,
                 dbcache=args.dbcache,
                 date_str=args.date,
-                capture_machine=args.capture_machine,
                 benchmark_config_file=benchmark_config_file,
+                instrumentation=args.instrumentation,
             )
             logger.info(f"Appended result to {history_file}")
         elif args.nightly_command == "chart":
@@ -435,7 +434,7 @@ def main() -> int:
         "--matrix-entry",
         required=True,
         metavar="NAME",
-        help="Matrix entry to run (e.g., 'default', 'large-instrumented')",
+        help="Matrix entry to run (e.g., '450-uninstrumented', '32000-instrumented')",
     )
     run_parser.set_defaults(func=cmd_run)
 
@@ -527,7 +526,7 @@ def main() -> int:
         "append",
         help="Append a result to the nightly history",
         description="Parse a hyperfine results.json file and append the result "
-        "to the nightly history JSON file.",
+        "to the nightly history JSON file. Machine specs are automatically captured.",
     )
     nightly_append.add_argument(
         "results_file",
@@ -536,10 +535,6 @@ def main() -> int:
     nightly_append.add_argument(
         "commit",
         help="Git commit hash",
-    )
-    nightly_append.add_argument(
-        "config",
-        help="Configuration name (e.g., '450', '32000' from matrix entry)",
     )
     nightly_append.add_argument(
         "dbcache",
@@ -552,14 +547,15 @@ def main() -> int:
         help="Date for this result (default: today)",
     )
     nightly_append.add_argument(
-        "--capture-machine",
-        action="store_true",
-        help="Detect and store machine specs (CPU, architecture, disk type)",
-    )
-    nightly_append.add_argument(
         "--benchmark-config",
         metavar="PATH",
         help="Benchmark config TOML file to store with results",
+    )
+    nightly_append.add_argument(
+        "--instrumentation",
+        default="uninstrumented",
+        choices=["uninstrumented", "instrumented"],
+        help="Instrumentation mode (default: uninstrumented)",
     )
 
     # nightly chart

@@ -76,7 +76,7 @@ class Config:
     output_dir: str = "./bench-output"
 
     # Behavior flags
-    instrumented: bool = False
+    instrumented: str = "uninstrumented"  # "uninstrumented" or "instrumented"
     skip_existing: bool = False
     no_cache_drop: bool = False
     verbose: bool = False
@@ -85,13 +85,18 @@ class Config:
     # Profile used (for reference)
     profile: str = "full"
 
+    @property
+    def is_instrumented(self) -> bool:
+        """Whether instrumented mode is enabled (flamegraphs, debug logs)."""
+        return self.instrumented == "instrumented"
+
     def __post_init__(self) -> None:
         # If tmp_datadir not set, derive from output_dir
         if self.tmp_datadir is None:
             self.tmp_datadir = str(Path(self.output_dir) / "tmp-datadir")
 
         # Instrumented mode forces runs=1
-        if self.instrumented and self.runs != 1:
+        if self.is_instrumented and self.runs != 1:
             self.runs = 1
 
     def validate(self) -> list[str]:

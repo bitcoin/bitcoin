@@ -12,8 +12,10 @@ jobs:
       contents: write
       checks: read
     env:
-      # Matrix entries from configs/pr.toml: dbcache=[450,32000] x instrumented=[false,true]
-      NETWORKS: "450-true,32000-true,450-false,32000-false"
+      # Matrix entries from configs/pr.toml: dbcache=[450,32000] x instrumentation=[uninstrumented,instrumented]
+      NETWORKS: "450-uninstrumented,450-instrumented,32000-uninstrumented,32000-instrumented"
+      # Machine ID for nightly history file (PR benchmarks run on x64 runners)
+      MACHINE_ID: "amd64"
     outputs:
       comparison: ${{ steps.generate.outputs.comparison }}
       pr-number: ${{ steps.metadata.outputs.pr-number }}
@@ -101,18 +103,18 @@ jobs:
             fi
           done
 
-          # Generate report with nightly comparison
+          # Generate report with nightly comparison (use per-machine history file)
           python3 bench.py report \
             ${NETWORK_ARGS} \
             --pr-number "${PR_NUMBER}" \
             --run-id "${RUN_ID}" \
             --commit "${HEAD_SHA}" \
-            --nightly-history ../nightly-history.json \
+            --nightly-history "../nightly-history-${MACHINE_ID}.json" \
             --update-index \
             "../results/pr-${PR_NUMBER}/${RUN_ID}"
 
           # Build comparison summary for PR comment
-          if [ -f "../nightly-history.json" ]; then
+          if [ -f "../nightly-history-${MACHINE_ID}.json" ]; then
             COMPARISON=$(jq -r '
               if .nightly_comparison then
                 .nightly_comparison | to_entries | map(
