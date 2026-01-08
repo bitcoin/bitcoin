@@ -1,0 +1,252 @@
+{
+  "invalid": {
+    "mainnet": [
+      {
+        "address": "tc1qw508d6qejxtdg4y5r3zarvary0c5xw7kg3g4ty",
+        "error": "Invalid or unsupported prefix for Segwit (Bech32) address (expected bc, got tc)",
+        "error_locations": [],
+        "comment": "Invalid hrp"
+      },
+      {
+        "address": "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t5",
+        "error": "Bech32 address decoded with error: Invalid Bech32 checksum",
+        "error_locations": [41],
+        "comment": null
+      },
+      {
+        "address": "BC13W508D6QEJXTDG4Y5R3ZARVARY0C5XW7KN40WF2",
+        "error": "Version 1+ witness address must use Bech32m checksum",
+        "error_locations": [],
+        "comment": null
+      },
+      {
+        "address": "bc1rw5uspcuh",
+        "error": "Version 1+ witness address must use Bech32m checksum",
+        "error_locations": [],
+        "comment": "Invalid program length"
+      },
+      {
+        "address": "bc10w508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kw5rljs90",
+        "error": "Version 1+ witness address must use Bech32m checksum",
+        "error_locations": [],
+        "comment": "Invalid program length"
+      },
+      {
+        "address": "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
+        "error": "Invalid SegWit v0 address program size (16 bytes), per BIP141",
+        "error_locations": [],
+        "comment": null
+      },
+      {
+        "address": "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sL5k7",
+        "error": "Bech32 address decoded with error: Invalid character or mixed case",
+        "error_locations": [58],
+        "comment": "tb1, Mixed case"
+      },
+      {
+        "address": "BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3t4",
+        "error": "Bech32 address decoded with error: Invalid character or mixed case",
+        "error_locations": [40],
+        "comment": "bc1, Mixed case, not in BIP 173 test vectors"
+      },
+      {
+        "address": "bc1zw508d6qejxtdg4y5r3zarvaryvqyzf3du",
+        "error": "Version 1+ witness address must use Bech32m checksum",
+        "error_locations": [],
+        "comment": "Wrong padding"
+      },
+      {
+        "address": "bc1qfysxzmfq2phhyarvv9hxgtjgdajxcw3fpkpph893lw",
+        "error": "Invalid padding in Bech32 data section",
+        "error_locations": [],
+        "comment": "tb1, Non-zero padding in 8-to-5 conversion"
+      },
+      {
+        "address": "bc1gmk9yu",
+        "error": "Empty Bech32 data section",
+        "error_locations": [],
+        "comment": null
+      },
+      {
+        "address": "tc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq5zuyut",
+        "error": "Invalid or unsupported prefix for Segwit (Bech32) address (expected bc, got tc)",
+        "error_locations": [],
+        "comment": "Invalid human-readable part"
+      },
+      {
+        "address": "bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqh2y7hd",
+        "error": "Version 1+ witness address must use Bech32m checksum",
+        "error_locations": [],
+        "comment": "Invalid checksum (Bech32 instead of Bech32m)"
+      },
+      {
+        "address": "BC1PFYSXZMFQ2PHHYARVV9HXGTJGFAZYCWJYPQQQF9ZLQ6",
+        "error": "Version 1+ witness address must use Bech32m checksum",
+        "error_locations": [],
+        "comment": "Invalid checksum (Bech32 instead of Bech32m)"
+      },
+      {
+        "address": "bc1qfysxzmfq2phhyarvv9hxgtjgfazycwjypqqqfm706a",
+        "error": "Version 0 witness address must use Bech32 checksum",
+        "error_locations": [],
+        "comment": "Invalid checksum (Bech32m instead of Bech32)"
+      },
+      {
+        "address": "Address is not valid Base58 or Bech32 ",
+        "error": "Bech32 address decoded with error: Invalid character or mixed case",
+        "error_locations": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 27, 28, 29, 30, 32, 33, 34, 37],
+        "comment": "Invalid character in checksum"
+      },
+      {
+        "address": "BC130XLXVLHEMJA6C4DQV22UAPCTQUPFHLXM9H8Z3K2E72Q4K9HCZ7VQ7ZWS8R",
+        "error": "Invalid Bech32 address witness version",
+        "error_locations": [],
+        "comment": null
+      },
+      {
+        "address": "bc1pw5dgrnzv",
+        "error": "Invalid Bech32 address program size (1 byte)",
+        "error_locations": [],
+        "comment": null
+      },
+      {
+        "address": "bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7v8n0nx0muaewav253zgeav",
+        "error": "Invalid Bech32 address program size (41 bytes)",
+        "error_locations": [],
+        "comment": null
+      },
+      {
+        "address": "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
+        "error": "Invalid SegWit v0 address program size (16 bytes), per BIP141",
+        "error_locations": [],
+        "comment": null
+      },
+      {
+        "address": "bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7v07qwwzcrf",
+        "error": "Invalid padding in Bech32 data section",
+        "error_locations": [],
+        "comment": "zero padding of more than 4 bits"
+      },
+      {
+        "address": "bc1gmk9yu",
+        "error": "Empty Bech32 data section",
+        "error_locations": [],
+        "comment": null
+      }
+    ],
+    "signet": [
+      {
+        "address": "tc1qw508d6qejxtdg4y5r3zarvary0c5xw7kg3g4ty",
+        "error": "Invalid or unsupported prefix for Segwit (Bech32) address (expected tb, got tc)",
+        "error_locations": [],
+        "comment": "Invalid hrp"
+      },
+      {
+        "address": "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3pjxtptv",
+        "error": "Invalid padding in Bech32 data section",
+        "error_locations": [],
+        "comment": "tb1, Non-zero padding in 8-to-5 conversion"
+      },
+      {
+        "address": "tb1z0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqglt7rf",
+        "error": "Version 1+ witness address must use Bech32m checksum",
+        "error_locations": [],
+        "comment": "tb1, Invalid checksum (Bech32 instead of Bech32m)"
+      },
+      {
+        "address": "tb1q0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq24jc47",
+        "error": "Version 0 witness address must use Bech32 checksum",
+        "error_locations": [],
+        "comment": "tb1, Invalid checksum (Bech32m instead of Bech32)"
+      },
+      {
+        "address": "tb1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq47Zagq",
+        "error": "Bech32 address decoded with error: Invalid character or mixed case",
+        "error_locations": [58],
+        "comment": "tb1, Mixed case"
+      },
+      {
+        "address": "tb1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vpggkg4j",
+        "error": "Invalid padding in Bech32 data section",
+        "error_locations": [],
+        "comment": "tb1, Non-zero padding in 8-to-5 conversion"
+      }
+    ]
+  },
+  "valid": {
+    "mainnet": [
+      {
+        "address": "BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4",
+        "scriptPubKey": "0014751e76e8199196d454941c45d1b3a323f1433bd6",
+        "comment": null
+      },
+      {
+        "address": "bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3",
+        "scriptPubKey": "00201863143c14c5166804bd19203356da136c985678cd4d27a1b8c6329604903262",
+        "comment": null
+      },
+      {
+        "address": "bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kt5nd6y",
+        "scriptPubKey": "5128751e76e8199196d454941c45d1b3a323f1433bd6751e76e8199196d454941c45d1b3a323f1433bd6",
+        "comment": null
+      },
+      {
+        "address": "BC1SW50QGDZ25J",
+        "scriptPubKey": "6002751e",
+        "comment": null
+      },
+      {
+        "address": "bc1zw508d6qejxtdg4y5r3zarvaryvaxxpcs",
+        "scriptPubKey": "5210751e76e8199196d454941c45d1b3a323",
+        "comment": null
+      },
+      {
+        "address": "bc1qqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvses5wp4dt",
+        "scriptPubKey": "0020000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
+        "comment": null
+      },
+      {
+        "address": "bc1pqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvses7epu4h",
+        "scriptPubKey": "5120000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
+        "comment": null
+      },
+      {
+        "address": "bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqzk5jj0",
+        "scriptPubKey": "512079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+        "comment": null
+      },
+      {
+        "address": "bc1pfeessrawgf",
+        "scriptPubKey": "51024e73",
+        "comment": "PayToAnchor(P2A)"
+      }
+    ],
+    "signet": [
+      {
+        "address": "tb1pfees9rn5nz",
+        "scriptPubKey": "51024e73",
+        "comment": "PayToAnchor(P2A)"
+      },
+      {
+        "address": "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sl5k7",
+        "scriptPubKey": "00201863143c14c5166804bd19203356da136c985678cd4d27a1b8c6329604903262",
+        "comment": null
+      },
+      {
+        "address": "tb1qqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvsesrxh6hy",
+        "scriptPubKey": "0020000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
+        "comment": null
+      },
+      {
+        "address": "tb1pqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvsesf3hn0c",
+        "scriptPubKey": "5120000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
+        "comment": null
+      },
+      {
+        "address": "tb1pqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvsesf3hn0c",
+        "scriptPubKey": "5120000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
+        "comment": null
+      }
+    ]
+  }
+}

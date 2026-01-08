@@ -4,220 +4,21 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test validateaddress for main chain"""
 
-from test_framework.test_framework import BitcoinTestFramework
+import json
+import os
 
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
-INVALID_DATA = [
-    # BIP 173
-    (
-        "tc1qw508d6qejxtdg4y5r3zarvary0c5xw7kg3g4ty",
-        "Invalid or unsupported prefix for Segwit (Bech32) address (expected bc, got tc)",  # Invalid hrp
-        [],
-    ),
-    ("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t5", "Bech32 address decoded with error: Invalid Bech32 checksum", [41]),
-    (
-        "BC13W508D6QEJXTDG4Y5R3ZARVARY0C5XW7KN40WF2",
-        "Version 1+ witness address must use Bech32m checksum",
-        [],
-    ),
-    (
-        "bc1rw5uspcuh",
-        "Version 1+ witness address must use Bech32m checksum",  # Invalid program length
-        [],
-    ),
-    (
-        "bc10w508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kw5rljs90",
-        "Version 1+ witness address must use Bech32m checksum",  # Invalid program length
-        [],
-    ),
-    (
-        "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
-        "Invalid SegWit v0 address program size (16 bytes), per BIP141",
-        [],
-    ),
-    (
-        "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sL5k7",
-        "Bech32 address decoded with error: Invalid character or mixed case",  # tb1, Mixed case
-        [58],
-    ),
-    (
-        "BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3t4",
-        "Bech32 address decoded with error: Invalid character or mixed case",  # bc1, Mixed case, not in BIP 173 test vectors
-        [40],
-    ),
-    (
-        "bc1zw508d6qejxtdg4y5r3zarvaryvqyzf3du",
-        "Version 1+ witness address must use Bech32m checksum",  # Wrong padding
-        [],
-    ),
-    (
-        "bc1qfysxzmfq2phhyarvv9hxgtjgdajxcw3fpkpph893lw",
-        "Invalid padding in Bech32 data section",  # tb1, Non-zero padding in 8-to-5 conversion
-        [],
-    ),
-    ("bc1gmk9yu", "Empty Bech32 data section", []),
-    # BIP 350
-    (
-        "tc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq5zuyut",
-        "Invalid or unsupported prefix for Segwit (Bech32) address (expected bc, got tc)",  # Invalid human-readable part
-        [],
-    ),
-    (
-        "bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqh2y7hd",
-        "Version 1+ witness address must use Bech32m checksum",  # Invalid checksum (Bech32 instead of Bech32m)
-        [],
-    ),
-    (
-        "BC1PFYSXZMFQ2PHHYARVV9HXGTJGFAZYCWJYPQQQF9ZLQ6",
-        "Version 1+ witness address must use Bech32m checksum",  # Invalid checksum (Bech32 instead of Bech32m)
-        [],
-    ),
-    (
-        "bc1qfysxzmfq2phhyarvv9hxgtjgfazycwjypqqqfm706a",
-        "Version 0 witness address must use Bech32 checksum",  # Invalid checksum (Bech32m instead of Bech32)
-        [],
-    ),
-    (
-        "Address is not valid Base58 or Bech32 ",
-        "Bech32 address decoded with error: Invalid character or mixed case",  # Invalid character in checksum
-         [x for x in range(1, 21)] + [22, 23, 24] + [27, 28, 29, 30] + [32, 33, 34] + [37],
-    ),
-    (
-        "BC130XLXVLHEMJA6C4DQV22UAPCTQUPFHLXM9H8Z3K2E72Q4K9HCZ7VQ7ZWS8R",
-        "Invalid Bech32 address witness version",
-        [],
-    ),
-    ("bc1pw5dgrnzv", "Invalid Bech32 address program size (1 byte)", []),
-    (
-        "bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7v8n0nx0muaewav253zgeav",
-        "Invalid Bech32 address program size (41 bytes)",
-        [],
-    ),
-    (
-        "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
-        "Invalid SegWit v0 address program size (16 bytes), per BIP141",
-        [],
-    ),
-    (
-        "bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7v07qwwzcrf",
-        "Invalid padding in Bech32 data section",  # zero padding of more than 4 bits
-        [],
-    ),
-    ("bc1gmk9yu", "Empty Bech32 data section", []),
-]
-VALID_DATA = [
-    # BIP 350
-    (
-        "BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4",
-        "0014751e76e8199196d454941c45d1b3a323f1433bd6",
-    ),
-    # (
-    #   "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sl5k7",
-    #   "00201863143c14c5166804bd19203356da136c985678cd4d27a1b8c6329604903262",
-    # ),
-    (
-        "bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3",
-        "00201863143c14c5166804bd19203356da136c985678cd4d27a1b8c6329604903262",
-    ),
-    (
-        "bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kt5nd6y",
-        "5128751e76e8199196d454941c45d1b3a323f1433bd6751e76e8199196d454941c45d1b3a323f1433bd6",
-    ),
-    ("BC1SW50QGDZ25J", "6002751e"),
-    ("bc1zw508d6qejxtdg4y5r3zarvaryvaxxpcs", "5210751e76e8199196d454941c45d1b3a323"),
-    # (
-    #   "tb1qqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvsesrxh6hy",
-    #   "0020000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
-    # ),
-    (
-        "bc1qqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvses5wp4dt",
-        "0020000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
-    ),
-    # (
-    #   "tb1pqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvsesf3hn0c",
-    #   "5120000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
-    # ),
-    (
-        "bc1pqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvses7epu4h",
-        "5120000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
-    ),
-    (
-        "bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqzk5jj0",
-        "512079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
-    ),
-    # PayToAnchor(P2A)
-    (
-        "bc1pfeessrawgf",
-        "51024e73",
-    ),
-]
-
-INVALID_DATA_SIGNET = [
-    # BIP 173
-    (
-        "tc1qw508d6qejxtdg4y5r3zarvary0c5xw7kg3g4ty",
-        "Invalid or unsupported prefix for Segwit (Bech32) signet address (expected tb, got tc)",  # Invalid hrp
-        [],
-    ),
-    (
-        "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3pjxtptv",
-        "Invalid padding in Bech32 data section",  # tb1, Non-zero padding in 8-to-5 conversion
-        [],
-    ),
-    (
-        "tb1z0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqglt7rf",
-        "Version 1+ witness address must use Bech32m checksum",  # tb1, Invalid checksum (Bech32 instead of Bech32m)
-        [],
-    ),
-    (
-        "tb1q0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq24jc47",
-        "Version 0 witness address must use Bech32 checksum",  # tb1, Invalid checksum (Bech32m instead of Bech32)
-        [],
-    ),
-    (
-        "tb1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq47Zagq",
-        "Bech32 address decoded with error: Invalid character or mixed case",  # tb1, Mixed case
-        [58],
-    ),
-    (
-        "tb1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vpggkg4j",
-        "Invalid padding in Bech32 data section",  # tb1, Non-zero padding in 8-to-5 conversion
-        [],
-    ),
-]
-
-VALID_DATA_SIGNET = [
-    # PayToAnchor(P2A)
-    (
-        "tb1pfees9rn5nz",
-        "51024e73",
-    ),
-    (
-       "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sl5k7",
-       "00201863143c14c5166804bd19203356da136c985678cd4d27a1b8c6329604903262",
-    ),
-    (
-        "tb1qqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvsesrxh6hy",
-        "0020000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
-    ),
-    (
-        "tb1pqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvsesf3hn0c",
-        "5120000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
-    ),
-    (
-        "tb1pqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvsesf3hn0c",
-        "5120000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
-    ),
-]
+TESTSDIR = os.path.dirname(os.path.realpath(__file__))
 
 
 class ValidateAddressMainTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.chain = ""  # main
+        self.chain = "signet"
         self.num_nodes = 1
-        self.extra_args = [["-prune=899"]] * self.num_nodes
+        self.extra_args = [["-prune=899", "-signet"]]
 
     def check_valid(self, addr, spk):
         info = self.nodes[0].validateaddress(addr)
@@ -232,15 +33,33 @@ class ValidateAddressMainTest(BitcoinTestFramework):
         assert_equal(res["error"], error_str)
         assert_equal(res["error_locations"], error_locations)
 
-    def test_validateaddress(self):
-        for (addr, error, locs) in INVALID_DATA:
-            self.check_invalid(addr, error, locs)
-        for (addr, spk) in VALID_DATA:
-            self.check_valid(addr, spk)
+    def load_test_data(self, filename):
+        with open(filename, 'r', encoding='utf-8') as f:
+            return json.load(f)
+
+    def test_validateaddress_signet(self, test_data):
+        for entry in test_data["invalid"]["signet"]:
+            self.check_invalid(entry["address"], entry["error"], entry["error_locations"])
+        for entry in test_data["valid"]["signet"]:
+            self.check_valid(entry["address"], entry["scriptPubKey"])
+
+    def test_validateaddress_mainnet(self, test_data):
+        for entry in test_data["invalid"]["mainnet"]:
+            self.check_invalid(entry["address"], entry["error"], entry["error_locations"])
+        for entry in test_data["valid"]["mainnet"]:
+            self.check_valid(entry["address"], entry["scriptPubKey"])
 
     def run_test(self):
-        self.test_validateaddress()
+        test_data = self.load_test_data(os.path.join(TESTSDIR, "data", "rpc_validateaddress.json"))
 
+        self.test_validateaddress_signet(test_data)
+        self.stop_nodes()
+        self.nodes.clear()
+        self.chain = ""
+        self.extra_args = [["-prune=899"]]
+        self.setup_chain()
+        self.setup_network()
+        self.test_validateaddress_mainnet(test_data)
 
 if __name__ == "__main__":
     ValidateAddressMainTest(__file__).main()
