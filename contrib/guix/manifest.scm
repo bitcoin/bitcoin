@@ -2,7 +2,6 @@
              ((gnu packages bash) #:select (bash-minimal))
              (gnu packages bison)
              ((gnu packages certs) #:select (nss-certs))
-             ((gnu packages check) #:select (libfaketime))
              ((gnu packages cmake) #:select (cmake-minimal))
              (gnu packages commencement)
              (gnu packages compression)
@@ -17,7 +16,7 @@
              (gnu packages pkg-config)
              ((gnu packages python) #:select (python-minimal))
              ((gnu packages python-build) #:select (python-poetry-core))
-             ((gnu packages python-crypto) #:select (python-asn1crypto))
+             ((gnu packages python-crypto) #:select (python-asn1crypto python-cryptography))
              ((gnu packages python-science) #:select (python-scikit-build-core))
              ((gnu packages python-xyz) #:select (python-pydantic-2))
              ((gnu packages tls) #:select (openssl))
@@ -209,7 +208,7 @@ and abstract ELF, PE and MachO formats.")
 (define osslsigncode
   (package
     (name "osslsigncode")
-    (version "2.5")
+    (version "2.12")
     (source (origin
               (method git-fetch)
               (uri (git-reference
@@ -217,19 +216,10 @@ and abstract ELF, PE and MachO formats.")
                     (commit version)))
               (sha256
                (base32
-                "1j47vwq4caxfv0xw68kw5yh00qcpbd56d7rq6c483ma3y7s96yyz"))))
+                "000balq0cw49jra9gvr8dk8x7ns9gd77qim3z8qci5rrkjbb8nai"))))
     (build-system cmake-build-system)
-    (arguments
-     (list
-      #:phases
-      #~(modify-phases %standard-phases
-          (replace 'check
-            (lambda* (#:key tests? #:allow-other-keys)
-              (if tests?
-                  (invoke "faketime" "-f" "@2025-01-01 00:00:00" ;; Tests fail after 2025.
-                          "ctest" "--output-on-failure" "--no-tests=error")
-                  (format #t "test suite not run~%")))))))
-    (inputs (list libfaketime openssl))
+    (inputs (list openssl zlib))
+    (native-inputs (list python-cryptography python-minimal))
     (home-page "https://github.com/mtrojnar/osslsigncode")
     (synopsis "Authenticode signing and timestamping tool")
     (description "osslsigncode is a small tool that implements part of the
