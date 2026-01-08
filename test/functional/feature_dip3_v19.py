@@ -108,6 +108,9 @@ class DIP3V19Test(DashTestFramework):
         self.log.info(f"Trying to revoke pre-V19 (legacy) proTx:{extra_legacy_mn.proTxHash}")
         self.test_revoke_protx(extra_legacy_mn.nodeIdx, extra_legacy_mn)
 
+        # Avoid including these masternodes in next dkg to improve test stability
+        self.move_blocks(self.nodes, 24)
+
         self.mine_quorum(llmq_type_name='llmq_test', llmq_type=100)
 
         self.log.info("Checking that adding more regular MNs after v19 doesn't break DKGs and IS/CLs")
