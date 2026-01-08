@@ -74,7 +74,7 @@ std::optional<std::string> MockedDescriptorConverter::GetDescriptor(std::string_
     return desc;
 }
 
-bool HasDeepDerivPath(const FuzzBufferType& buff, const int max_depth)
+bool HasDeepDerivPath(std::span<const uint8_t> buff, const int max_depth)
 {
     auto depth{0};
     for (const auto& ch: buff) {
@@ -88,7 +88,7 @@ bool HasDeepDerivPath(const FuzzBufferType& buff, const int max_depth)
     return false;
 }
 
-bool HasTooManySubFrag(const FuzzBufferType& buff, const int max_subs, const size_t max_nested_subs)
+bool HasTooManySubFrag(std::span<const uint8_t> buff, const int max_subs, const size_t max_nested_subs)
 {
     // We use a stack because there may be many nested sub-frags.
     std::stack<int> counts;
@@ -112,7 +112,7 @@ bool HasTooManySubFrag(const FuzzBufferType& buff, const int max_subs, const siz
     return false;
 }
 
-bool HasTooManyWrappers(const FuzzBufferType& buff, const int max_wrappers)
+bool HasTooManyWrappers(std::span<const uint8_t> buff, const int max_wrappers)
 {
     // The number of nested wrappers. Nested wrappers are always characters which follow each other so we don't have to
     // use a stack as we do above when counting the number of sub-fragments.
