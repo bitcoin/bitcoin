@@ -102,7 +102,9 @@ class DIP3V19Test(DashTestFramework):
         self.log.info(f"Trying to revoke post-V19 proTx:{evo_info_3.proTxHash}")
         self.test_revoke_protx(evo_info_3.nodeIdx, self.mninfo[-1])
 
-        # Test revoking a pre-V19 masternode (legacy BLS scheme) after V19 activation
+        # Test updating and revoking a pre-V19 masternode (legacy BLS scheme) after V19 activation
+        self.log.info(f"Trying to update pre-V19 proTx:{extra_legacy_mn.proTxHash}")
+        self.test_update_service_protx(extra_legacy_mn)
         self.log.info(f"Trying to revoke pre-V19 (legacy) proTx:{extra_legacy_mn.proTxHash}")
         self.test_revoke_protx(extra_legacy_mn.nodeIdx, extra_legacy_mn)
 
@@ -143,6 +145,24 @@ class DIP3V19Test(DashTestFramework):
             if mn.proTxHash == revoke_mn.proTxHash:
                 self.mninfo.remove(mn)
                 return
+
+    def test_update_service_protx(self, mn: MasternodeInfo):
+        fund_txid = self.nodes[0].sendtoaddress(mn.fundsAddr, 1)
+        self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
+        tip = self.generate(self.nodes[0], 1)[0]
+        assert_equal(self.nodes[0].getrawtransaction(fund_txid, 1, tip)['confirmations'], 1)
+
+        protx_result = mn.update_service(self.nodes[0], submit=True, addrs_core_p2p=[f'127.0.0.2:{mn.nodePort}'])
+        self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
+        tip = self.generate(self.nodes[0], 1)[0]
+        assert_equal(self.nodes[0].getrawtransaction(protx_result, 1, tip)['confirmations'], 1)
+
+        for node in self.nodes:
+            protx_info = node.protx('info', mn.proTxHash)
+            mn_list = node.masternode('list')
+            assert_equal(protx_info['state']['addresses']['core_p2p'][0], '127.0.0.2:%d' % mn.nodePort)
+            assert_equal(mn_list['%s-%d' % (mn.collateral_txid, mn.collateral_vout)]['addresses']['core_p2p'][0], '127.0.0.2:%d' % mn.nodePort)
+        self.log.info(f"Successfully updated={mn.proTxHash}")
 
     def test_getmnlistdiff(self, base_block_hash, block_hash, base_mn_list, expected_deleted, expected_updated):
         d = self.test_getmnlistdiff_base(base_block_hash, block_hash)
