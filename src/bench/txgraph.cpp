@@ -12,6 +12,11 @@
 
 namespace {
 
+std::strong_ordering PointerComparator(TxGraph::Ref& a, TxGraph::Ref& b) noexcept
+{
+    return (&a) <=> (&b);
+}
+
 void BenchTxGraphTrim(benchmark::Bench& bench)
 {
     // The from-block transactions consist of 1000 fully linear clusters, each with 64
@@ -60,7 +65,7 @@ void BenchTxGraphTrim(benchmark::Bench& bench)
     std::vector<size_t> top_components;
 
     InsecureRandomContext rng(11);
-    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, NUM_ACCEPTABLE_ITERS);
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, NUM_ACCEPTABLE_ITERS, PointerComparator);
 
     // Construct the top chains.
     for (int chain = 0; chain < NUM_TOP_CHAINS; ++chain) {

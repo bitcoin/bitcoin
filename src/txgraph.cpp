@@ -403,6 +403,8 @@ private:
     /** The number of linearization improvement steps needed per cluster to be considered
      *  acceptable. */
     const uint64_t m_acceptable_iters;
+    /** Fallback ordering for transactions. */
+    const std::function<std::strong_ordering(TxGraph::Ref&, TxGraph::Ref&)> m_fallback_order;
 
     /** Information about one group of Clusters to be merged. */
     struct GroupEntry
@@ -619,11 +621,17 @@ private:
     std::vector<GraphIndex> m_unlinked;
 
 public:
-    /** Construct a new TxGraphImpl with the specified limits. */
-    explicit TxGraphImpl(DepGraphIndex max_cluster_count, uint64_t max_cluster_size, uint64_t acceptable_iters) noexcept :
+    /** Construct a new TxGraphImpl with the specified limits and fallback order. */
+    explicit TxGraphImpl(
+        DepGraphIndex max_cluster_count,
+        uint64_t max_cluster_size,
+        uint64_t acceptable_iters,
+        const std::function<std::strong_ordering(TxGraph::Ref&, TxGraph::Ref&)>& fallback_order
+    ) noexcept :
         m_max_cluster_count(max_cluster_count),
         m_max_cluster_size(max_cluster_size),
         m_acceptable_iters(acceptable_iters),
+        m_fallback_order(fallback_order),
         m_main_chunkindex(ChunkOrder(this))
     {
         Assume(max_cluster_count >= 1);
@@ -3514,7 +3522,7 @@ TxGraph::Ref::Ref(Ref&& other) noexcept
     std::swap(m_index, other.m_index);
 }
 
-std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count, uint64_t max_cluster_size, uint64_t acceptable_iters) noexcept
+std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count, uint64_t max_cluster_size, uint64_t acceptable_iters, const std::function<std::strong_ordering(TxGraph::Ref&, TxGraph::Ref&)>& fallback_order) noexcept
 {
-    return std::make_unique<TxGraphImpl>(max_cluster_count, max_cluster_size, acceptable_iters);
+    return std::make_unique<TxGraphImpl>(max_cluster_count, max_cluster_size, acceptable_iters, fallback_order);
 }

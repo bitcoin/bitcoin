@@ -25,6 +25,10 @@ namespace {
 
 struct SimTxObject : public TxGraph::Ref
 {
+    // Use random uint64_t as txids for this simulation (0 = empty object).
+    const uint64_t m_txid{0};
+    SimTxObject() noexcept = default;
+    explicit SimTxObject(uint64_t txid) noexcept : m_txid(txid) {}
 };
 
 /** Data type representing a naive simulated TxGraph, keeping all transactions (even from
@@ -142,14 +146,14 @@ struct SimTxGraph
     }
 
     /** Add a new transaction to the simulation and the specified real graph. */
-    void AddTransaction(TxGraph& txgraph, const FeePerWeight& feerate)
+    void AddTransaction(TxGraph& txgraph, const FeePerWeight& feerate, uint64_t txid)
     {
         assert(graph.TxCount() < MAX_TRANSACTIONS);
         auto simpos = graph.AddTransaction(feerate);
         real_is_optimal = false;
         MakeModified(simpos);
         assert(graph.Positions()[simpos]);
-        simmap[simpos] = std::make_shared<SimTxObject>();
+        simmap[simpos] = std::make_shared<SimTxObject>(txid);
         txgraph.AddTransaction(*simmap[simpos], feerate);
         auto ptr = simmap[simpos].get();
         simrevmap[ptr] = simpos;
@@ -324,8 +328,23 @@ FUZZ_TARGET(txgraph)
     /** The number of iterations to consider a cluster acceptably linearized. */
     auto acceptable_iters = provider.ConsumeIntegralInRange<uint64_t>(0, 10000);
 
+    /** The set of uint64_t "txid"s that have been assigned before. */
+    std::set<uint64_t> assigned_txids;
+
     // Construct a real graph, and a vector of simulated graphs (main, and possibly staging).
-    auto real = MakeTxGraph(max_cluster_count, max_cluster_size, acceptable_iters);
+    auto fallback_order = [&](TxGraph::Ref& a, TxGraph::Ref& b) noexcept {
+        uint64_t txid_a = static_cast<SimTxObject&>(a).m_txid;
+        uint64_t txid_b = static_cast<SimTxObject&>(b).m_txid;
+        assert(assigned_txids.contains(txid_a));
+        assert(assigned_txids.contains(txid_b));
+        return txid_a <=> txid_b;
+    };
+    auto real = MakeTxGraph(
+        /*max_cluster_count=*/max_cluster_count,
+        /*max_cluster_size=*/max_cluster_size,
+        /*acceptable_iters=*/acceptable_iters,
+        /*fallback_order=*/fallback_order);
+
     std::vector<SimTxGraph> sims;
     sims.reserve(2);
     sims.emplace_back(max_cluster_count, max_cluster_size);
@@ -460,8 +479,14 @@ FUZZ_TARGET(txgraph)
                     size = provider.ConsumeIntegralInRange<uint32_t>(1, 0xff);
                 }
                 FeePerWeight feerate{fee, size};
+                // Pick a novel txid (and not 0, which is reserved for empty_ref).
+                uint64_t txid;
+                do {
+                    txid = rng.rand64();
+                } while (txid == 0 || assigned_txids.contains(txid));
+                assigned_txids.insert(txid);
                 // Create the transaction in the simulation and the real graph.
-                top_sim.AddTransaction(*real, feerate);
+                top_sim.AddTransaction(*real, feerate, txid);
                 break;
             } else if ((block_builders.empty() || sims.size() > 1) && top_sim.GetTransactionCount() + top_sim.removed.size() > 1 && command-- == 0) {
                 // AddDependency.
@@ -1069,7 +1094,12 @@ FUZZ_TARGET(txgraph)
         // that calling Linearize on it does not improve it further.
         if (sims[0].real_is_optimal) {
             auto real_diagram = ChunkLinearization(sims[0].graph, vec1);
-            auto [sim_lin, sim_optimal, _cost] = Linearize(sims[0].graph, 300000, rng.rand64(), IndexTxOrder{}, vec1);
+            auto fallback_order_sim = [&](DepGraphIndex a, DepGraphIndex b) noexcept {
+                auto txid_a = sims[0].GetRef(a)->m_txid;
+                auto txid_b = sims[0].GetRef(b)->m_txid;
+                return txid_a <=> txid_b;
+            };
+            auto [sim_lin, sim_optimal, _cost] = Linearize(sims[0].graph, 300000, rng.rand64(), fallback_order_sim, vec1);
             PostLinearize(sims[0].graph, sim_lin);
             auto sim_diagram = ChunkLinearization(sims[0].graph, sim_lin);
             auto cmp = CompareChunks(real_diagram, sim_diagram);

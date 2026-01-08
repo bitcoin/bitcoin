@@ -173,7 +173,15 @@ static CTxMemPool::Options&& Flatten(CTxMemPool::Options&& opts, bilingual_str& 
 CTxMemPool::CTxMemPool(Options opts, bilingual_str& error)
     : m_opts{Flatten(std::move(opts), error)}
 {
-    m_txgraph = MakeTxGraph(m_opts.limits.cluster_count, m_opts.limits.cluster_size_vbytes * WITNESS_SCALE_FACTOR, ACCEPTABLE_ITERS);
+    m_txgraph = MakeTxGraph(
+        /*max_cluster_count=*/m_opts.limits.cluster_count,
+        /*max_cluster_size=*/m_opts.limits.cluster_size_vbytes * WITNESS_SCALE_FACTOR,
+        /*acceptable_iters=*/ACCEPTABLE_ITERS,
+        /*fallback_order=*/[&](TxGraph::Ref& a, TxGraph::Ref& b) noexcept {
+            const Txid& txid_a = static_cast<CTxMemPoolEntry&>(a).GetTx().GetHash();
+            const Txid& txid_b = static_cast<CTxMemPoolEntry&>(b).GetTx().GetHash();
+            return txid_a <=> txid_b;
+        });
 }
 
 bool CTxMemPool::isSpent(const COutPoint& outpoint) const
