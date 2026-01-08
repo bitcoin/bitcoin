@@ -757,7 +757,13 @@ class TestHandler:
             log_stdout = tempfile.SpooledTemporaryFile(max_size=2**16)
             log_stderr = tempfile.SpooledTemporaryFile(max_size=2**16)
             test_argv = test.split()
-            testdir = "{}/{}_{}".format(self.tmpdir, re.sub(".py$", "", test_argv[0]), portseed)
+            # On Windows, use ASCII-only path for tests that use old binaries (e.g. v0.14.3)
+            # which don't handle Unicode paths properly.
+            if platform.system() == 'Windows' and test_argv[0] == 'feature_unsupported_utxo_db.py':
+                ascii_tmpdir = "{}/test_runner_ascii_{}".format(tempfile.gettempdir(), datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
+                testdir = "{}/{}_{}".format(ascii_tmpdir, re.sub(".py$", "", test_argv[0]), portseed)
+            else:
+                testdir = "{}/{}_{}".format(self.tmpdir, re.sub(".py$", "", test_argv[0]), portseed)
             tmpdir_arg = ["--tmpdir={}".format(testdir)]
 
             def proc_wait(task):
