@@ -890,7 +890,8 @@ static RPCHelpMan setnetworkactive()
 {
     return RPCHelpMan{
         "setnetworkactive",
-        "Disable/enable all p2p network activity.\n",
+        "Disable/enable all p2p network activity.\n"
+        "Disabling it can prevent anchors from being preserved.\n",
                 {
                     {"state", RPCArg::Type::BOOL, RPCArg::Optional::NO, "true to enable networking, false to disable"},
                 },
