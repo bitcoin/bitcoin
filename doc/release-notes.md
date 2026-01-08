@@ -1,9 +1,9 @@
-v30.2rc1 Release Notes
+v30.2 Release Notes
 ===================
 
-Bitcoin Core version v30.2rc1 is now available from:
+Bitcoin Core version v30.2 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-30.2/test.rc1/>
+  <https://bitcoincore.org/bin/bitcoin-core-30.2/>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
@@ -44,6 +44,7 @@ Notable changes
 
 - #34156 wallet: fix unnamed legacy wallet migration failure
 - #34215 wallettool: fix unnamed createfromdump failure walletsdir deletion
+- #34221 test: migration, avoid backup name mismatch in default_wallet_failure
 
 ### IPC
 
@@ -53,10 +54,12 @@ Notable changes
 
 - #33950 guix: reduce allowed exported symbols
 - #34107 build: Update minimum required Boost version
+- #34227 guix: Fix osslsigncode tests
 
 ### Test
 
 - #34137 test: Avoid hard time.sleep(1) in feature_init.py
+- #34226 wallet: test: Relative wallet failed migration cleanup
 
 ### Fuzz
 
@@ -77,6 +80,7 @@ Thanks to everyone who directly contributed to this release:
 
 - Ava Chow
 - brunoerg
+- davidgumberg
 - fanquake
 - furszy
 - Hennadii Stepanov
