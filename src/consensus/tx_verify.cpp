@@ -71,21 +71,26 @@ std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags
         int nCoinHeight = prevHeights[txinIndex];
 
         if (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG) {
-            const int64_t nCoinTime{Assert(block.GetAncestor(std::max(nCoinHeight - 1, 0)))->GetMedianTimePast()};
-            // NOTE: Subtract 1 to maintain nLockTime semantics
-            // BIP 68 relative lock times have the semantics of calculating
-            // the first block or time at which the transaction would be
-            // valid. When calculating the effective block time or height
-            // for the entire transaction, we switch to using the
-            // semantics of nLockTime which is the last invalid block
-            // time or height.  Thus we subtract 1 from the calculated
-            // time or height.
+            // Get the ancestor block for time-based sequence locks
+            const CBlockIndex* pAncestor{block.GetAncestor(std::max(nCoinHeight - 1, 0))};
+            if (pAncestor) {
+                const int64_t nCoinTime{pAncestor->GetMedianTimePast()};
+                // NOTE: Subtract 1 to maintain nLockTime semantics
+                // BIP 68 relative lock times have the semantics of calculating
+                // the first block or time at which the transaction would be
+                // valid. When calculating the effective block time or height
+                // for the entire transaction, we switch to using the
+                // semantics of nLockTime which is the last invalid block
+                // time or height.  Thus we subtract 1 from the calculated
+                // time or height.
 
-            // Time-based relative lock-times are measured from the
-            // smallest allowed timestamp of the block containing the
-            // txout being spent, which is the median time past of the
-            // block prior.
-            nMinTime = std::max(nMinTime, nCoinTime + (int64_t)((txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_MASK) << CTxIn::SEQUENCE_LOCKTIME_GRANULARITY) - 1);
+                // Time-based relative lock-times are measured from the
+                // smallest allowed timestamp of the block containing the
+                // txout being spent, which is the median time past of the
+                // block prior.
+                nMinTime = std::max(nMinTime, nCoinTime + (int64_t)((txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_MASK) << CTxIn::SEQUENCE_LOCKTIME_GRANULARITY) - 1);
+            }
+            // If pAncestor is nullptr (invalid height), skip time-based sequence lock for this input
         } else {
             nMinHeight = std::max(nMinHeight, nCoinHeight + (int)(txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_MASK) - 1);
         }

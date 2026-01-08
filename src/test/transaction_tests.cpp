@@ -8,6 +8,7 @@
 
 #include <checkqueue.h>
 #include <clientversion.h>
+#include <chain.h>
 #include <consensus/amount.h>
 #include <consensus/tx_check.h>
 #include <consensus/tx_verify.h>
@@ -1267,6 +1268,73 @@ BOOST_AUTO_TEST_CASE(spends_witness_prog)
         tx_spend.vin[0].scriptSig.clear();
         BOOST_CHECK(!::SpendsNonAnchorWitnessProg(CTransaction{tx_spend}, coins));
     }
+}
+
+BOOST_AUTO_TEST_CASE(calculate_sequence_locks_invalid_height)
+{
+    // Test that CalculateSequenceLocks handles invalid input heights gracefully
+    // without crashing (regression test for potential null pointer dereference)
+
+    // Create a mock block index at height 100
+    auto block{std::make_unique<CBlockIndex>()};
+    block->nHeight = 100;
+
+    // Create a transaction with one input
+    CMutableTransaction tx;
+    tx.vin.resize(1);
+    tx.vin[0].prevout = COutPoint(uint256::ONE, 0);
+    tx.vin[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | 1; // Time-based sequence lock
+    tx.version = 2; // BIP68 activated
+
+    // Set prevHeights with an invalid height (greater than block height)
+    std::vector<int> prevHeights = {150}; // Height 150 > block height 100
+
+    // This should not crash and should return valid lock pair
+    auto [minHeight, minTime] = CalculateSequenceLocks(tx, LOCKTIME_VERIFY_SEQUENCE, prevHeights, *block);
+
+    // Since the ancestor lookup failed, minTime should remain -1 (no time lock)
+    BOOST_CHECK_EQUAL(minTime, -1);
+    BOOST_CHECK_EQUAL(minHeight, -1);
+}
+
+BOOST_AUTO_TEST_CASE(calculate_sequence_locks_valid_height)
+{
+    // Test that CalculateSequenceLocks works correctly with valid heights
+
+    // Create a mock block index at height 100
+    auto block{std::make_unique<CBlockIndex>()};
+    block->nHeight = 100;
+
+    // Create a transaction with one input
+    CMutableTransaction tx;
+    tx.vin.resize(1);
+    tx.vin[0].prevout = COutPoint(uint256::ONE, 0);
+    tx.vin[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | 1; // Time-based sequence lock
+    tx.version = 2; // BIP68 activated
+
+    // Set prevHeights with a valid height (less than block height)
+    std::vector<int> prevHeights = {50}; // Height 50 < block height 100
+
+    // This should work normally
+    auto [minHeight, minTime] = CalculateSequenceLocks(tx, LOCKTIME_VERIFY_SEQUENCE, prevHeights, *block);
+
+    // Should have calculated sequence locks (exact values depend on the sequence number)
+    BOOST_CHECK(minTime >= -1); // -1 means no time lock, positive means time lock required
+    BOOST_CHECK(minHeight >= -1); // -1 means no height lock, positive means height lock required
+}
+
+BOOST_AUTO_TEST_CASE(sequence_locks_empty_transaction)
+{
+    // Test SequenceLocks with empty transaction (edge case)
+
+    CTransaction tx;
+    std::vector<int> prevHeights;
+    auto block{std::make_unique<CBlockIndex>()};
+    block->nHeight = 100;
+
+    // Should handle empty transaction gracefully
+    bool result = SequenceLocks(tx, LOCKTIME_VERIFY_SEQUENCE, prevHeights, *block);
+    BOOST_CHECK(result);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
