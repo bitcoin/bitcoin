@@ -2,7 +2,7 @@ name: Nightly Rebase
 
 on:
   schedule:
-    - cron: '0 5 * * *'  # 05:00 GMT daily
+    - cron: '0 1 * * *'  # 01:00 GMT daily
   workflow_dispatch:  # manual trigger
 
 permissions:
