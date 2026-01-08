@@ -137,8 +137,8 @@ class TestFrameworkEllSwift(unittest.TestCase):
         with open(vectors_file, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                u = FE.from_bytes(bytes.fromhex(row['u']))
-                x = FE.from_bytes(bytes.fromhex(row['x']))
+                u = FE.from_bytes_checked(bytes.fromhex(row['u']))
+                x = FE.from_bytes_checked(bytes.fromhex(row['x']))
                 for case in range(8):
                     ret = xswiftec_inv(x, u, case)
                     if ret is None:
