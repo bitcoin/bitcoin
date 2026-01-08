@@ -4,23 +4,23 @@
 
 #include <llmq/signing_shares.h>
 
+#include <active/masternode.h>
+#include <bls/bls_batchverifier.h>
+#include <evo/deterministicmns.h>
 #include <llmq/commitment.h>
 #include <llmq/options.h>
 #include <llmq/quorumsman.h>
 #include <llmq/signhash.h>
 #include <llmq/signing.h>
-
-#include <bls/bls_batchverifier.h>
-#include <chainparams.h>
-#include <evo/deterministicmns.h>
-#include <masternode/node.h>
-#include <net_processing.h>
-#include <netmessagemaker.h>
 #include <spork.h>
 #include <util/irange.h>
+#include <util/underlying.h>
+
+#include <chainparams.h>
+#include <net_processing.h>
+#include <netmessagemaker.h>
 #include <util/thread.h>
 #include <util/time.h>
-#include <util/underlying.h>
 #include <validation.h>
 
 #include <cxxtimer.hpp>

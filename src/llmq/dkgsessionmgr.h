@@ -9,6 +9,8 @@
 #include <bls/bls_worker.h>
 #include <llmq/dkgsessionhandler.h>
 #include <msg_result.h>
+#include <util/irange.h>
+
 #include <net_types.h>
 
 #include <map>
@@ -45,22 +47,29 @@ class CQuorumSnapshotManager;
 
 class CDKGSessionManager
 {
+public:
+    struct SessionHandlerKey {
+        Consensus::LLMQType llmq_type;
+        int quorum_idx;
+        auto operator<=>(const SessionHandlerKey&) const = default;
+    };
+
+    using SessionHandlerMap = std::map<SessionHandlerKey, std::unique_ptr<CDKGSessionHandler>>;
+
+private:
     static constexpr int64_t MAX_CONTRIBUTION_CACHE_TIME = 60 * 1000;
+
+private:
+    CDeterministicMNManager& m_dmnman;
+    CQuorumSnapshotManager& m_qsnapman;
+    const ChainstateManager& m_chainman;
+    const CSporkManager& m_sporkman;
+    const bool m_quorums_watch{false};
 
 private:
     std::unique_ptr<CDBWrapper> db{nullptr};
 
-    CBLSWorker& blsWorker;
-    CDeterministicMNManager& m_dmnman;
-    CDKGDebugManager& dkgDebugManager;
-    CQuorumBlockProcessor& quorumBlockProcessor;
-    CQuorumSnapshotManager& m_qsnapman;
-    const ChainstateManager& m_chainman;
-    const CSporkManager& spork_manager;
-    const bool m_quorums_watch{false};
-
-    //TODO name struct instead of std::pair
-    std::map<std::pair<Consensus::LLMQType, int>, CDKGSessionHandler> dkgSessionHandlers;
+    SessionHandlerMap dkgSessionHandlers;
 
     mutable Mutex contributionsCacheCs;
     struct ContributionsCacheKey {
@@ -85,12 +94,22 @@ public:
     CDKGSessionManager() = delete;
     CDKGSessionManager(const CDKGSessionManager&) = delete;
     CDKGSessionManager& operator=(const CDKGSessionManager&) = delete;
-    explicit CDKGSessionManager(CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman,
-                                CDKGDebugManager& _dkgDebugManager, CMasternodeMetaMan& mn_metaman,
-                                CQuorumBlockProcessor& _quorumBlockProcessor, CQuorumSnapshotManager& qsnapman,
-                                const CActiveMasternodeManager* const mn_activeman, const ChainstateManager& chainman,
-                                const CSporkManager& sporkman, const util::DbWrapperParams& db_params, bool quorums_watch);
+    explicit CDKGSessionManager(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
+                                const ChainstateManager& chainman, const CSporkManager& sporkman,
+                                const util::DbWrapperParams& db_params, bool quorums_watch);
     ~CDKGSessionManager();
+
+    template <typename HandlerFn>
+    void InitializeHandlers(HandlerFn&& handler_fn)
+    {
+        const Consensus::Params& consensus_params = Params().GetConsensus();
+        for (const auto& params : consensus_params.llmqs) {
+            auto session_count = (params.useRotation) ? params.signingActiveQuorumCount : 1;
+            for (const auto i : irange::range(session_count)) {
+                dkgSessionHandlers.emplace(SessionHandlerKey{params.type, i}, handler_fn(params, i));
+            }
+        }
+    }
 
     void StartThreads(CConnman& connman, PeerManager& peerman);
     void StopThreads();

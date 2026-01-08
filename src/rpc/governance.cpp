@@ -2,17 +2,19 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chainparams.h>
-#include <core_io.h>
+#include <active/context.h>
+#include <active/masternode.h>
 #include <evo/deterministicmns.h>
 #include <governance/classes.h>
 #include <governance/common.h>
 #include <governance/governance.h>
 #include <governance/validators.h>
 #include <governance/vote.h>
-#include <index/txindex.h>
-#include <masternode/node.h>
 #include <masternode/sync.h>
+
+#include <chainparams.h>
+#include <core_io.h>
+#include <index/txindex.h>
 #include <node/context.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
@@ -330,12 +332,12 @@ static RPCHelpMan gobject_submit()
 
     auto mnList = CHECK_NONFATAL(node.dmnman)->GetListAtChainTip();
 
-    if (node.mn_activeman) {
-        const bool fMnFound = mnList.HasValidMNByCollateral(node.mn_activeman->GetOutPoint());
-
+    if (node.active_ctx) {
+        const auto& mn_activeman{*node.active_ctx->nodeman};
+        const bool fMnFound = mnList.HasValidMNByCollateral(mn_activeman.GetOutPoint());
         LogPrint(BCLog::GOBJECT, /* Continued */
                  "gobject_submit -- pubKeyOperator = %s, outpoint = %s, params.size() = %lld, fMnFound = %d\n",
-                 node.mn_activeman->GetPubKey().ToString(false), node.mn_activeman->GetOutPoint().ToStringShort(),
+                 mn_activeman.GetPubKey().ToString(false), mn_activeman.GetOutPoint().ToStringShort(),
                  request.params.size(), fMnFound);
     } else {
         LogPrint(BCLog::GOBJECT, "gobject_submit -- pubKeyOperator = N/A, outpoint = N/A, params.size() = %lld, fMnFound = %d\n",

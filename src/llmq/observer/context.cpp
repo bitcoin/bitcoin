@@ -9,6 +9,8 @@
 #include <llmq/observer/quorums.h>
 #include <llmq/quorumsman.h>
 
+#include <validation.h>
+
 namespace llmq {
 ObserverContext::ObserverContext(CBLSWorker& bls_worker, CConnman& connman, CDeterministicMNManager& dmnman,
                                  CMasternodeMetaMan& mn_metaman, CMasternodeSync& mn_sync,
@@ -18,12 +20,15 @@ ObserverContext::ObserverContext(CBLSWorker& bls_worker, CConnman& connman, CDet
                                  const util::DbWrapperParams& db_params, bool quorums_recovery) :
     m_qman{qman},
     dkgdbgman{std::make_unique<llmq::CDKGDebugManager>()},
-    qdkgsman{std::make_unique<llmq::CDKGSessionManager>(bls_worker, dmnman, *dkgdbgman, mn_metaman, qblockman, qsnapman,
-                                                        /*mn_activeman=*/nullptr, chainman, sporkman, db_params,
+    qdkgsman{std::make_unique<llmq::CDKGSessionManager>(dmnman, qsnapman, chainman, sporkman, db_params,
                                                         /*quorums_watch=*/true)},
     qman_handler{std::make_unique<llmq::QuorumObserver>(connman, dmnman, qman, qsnapman, chainman, mn_sync, sporkman,
                                                         sync_map, quorums_recovery)}
 {
+    qdkgsman->InitializeHandlers([&](const Consensus::LLMQParams& llmq_params,
+                                     [[maybe_unused]] int quorum_idx) -> std::unique_ptr<llmq::CDKGSessionHandler> {
+        return std::make_unique<llmq::CDKGSessionHandler>(llmq_params);
+    });
     m_qman.ConnectManagers(qman_handler.get(), qdkgsman.get());
 }
 

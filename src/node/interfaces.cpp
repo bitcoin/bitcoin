@@ -756,7 +756,7 @@ public:
     }
     bool isMasternode() override
     {
-        return m_context->mn_activeman != nullptr;
+        return m_context->active_ctx != nullptr;
     }
     bool isLoadingBlocks() override { return node::fReindex || node::fImporting; }
     void setNetworkActive(bool active) override

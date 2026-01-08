@@ -2,23 +2,24 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chainparams.h>
+#include <active/context.h>
+#include <active/masternode.h>
 #include <evo/assetlocktx.h>
 #include <evo/chainhelper.h>
 #include <evo/deterministicmns.h>
 #include <governance/governance.h>
-#include <index/txindex.h>
-#include <masternode/node.h>
 #include <masternode/payments.h>
+#include <rpc/evo_util.h>
+
+#include <chainparams.h>
+#include <index/txindex.h>
 #include <net.h>
 #include <netbase.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
-#include <rpc/evo_util.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
-#include <univalue.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 #include <validation.h>
@@ -29,6 +30,8 @@
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
 #endif // ENABLE_WALLET
+
+#include <univalue.h>
 
 using node::GetTransaction;
 using node::NodeContext;
@@ -198,15 +201,16 @@ static RPCHelpMan masternode_status()
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
 
-    if (!node.mn_activeman) {
+    if (!node.active_ctx) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "This node does not run an active masternode.");
     }
+    const auto& mn_activeman{*node.active_ctx->nodeman};
 
     UniValue mnObj(UniValue::VOBJ);
     // keep compatibility with legacy status for now (TODO: get deprecated/removed later)
-    mnObj.pushKV("outpoint", node.mn_activeman->GetOutPoint().ToStringShort());
-    mnObj.pushKV("service", node.mn_activeman->GetService().ToStringAddrPort());
-    auto dmn = CHECK_NONFATAL(node.dmnman)->GetListAtChainTip().GetMN(node.mn_activeman->GetProTxHash());
+    mnObj.pushKV("outpoint", mn_activeman.GetOutPoint().ToStringShort());
+    mnObj.pushKV("service", mn_activeman.GetService().ToStringAddrPort());
+    auto dmn = CHECK_NONFATAL(node.dmnman)->GetListAtChainTip().GetMN(mn_activeman.GetProTxHash());
     if (dmn) {
         mnObj.pushKV("proTxHash", dmn->proTxHash.ToString());
         mnObj.pushKV("type", std::string(GetMnType(dmn->nType).description));
@@ -214,8 +218,8 @@ static RPCHelpMan masternode_status()
         mnObj.pushKV("collateralIndex", dmn->collateralOutpoint.n);
         mnObj.pushKV("dmnState", dmn->pdmnState->ToJson(dmn->nType));
     }
-    mnObj.pushKV("state", node.mn_activeman->GetStateString());
-    mnObj.pushKV("status", node.mn_activeman->GetStatus());
+    mnObj.pushKV("state", mn_activeman.GetStateString());
+    mnObj.pushKV("status", mn_activeman.GetStatus());
 
     return mnObj;
 },

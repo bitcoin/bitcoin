@@ -13,8 +13,8 @@
 #include <llmq/snapshot.h>
 #include <validation.h>
 
-LLMQContext::LLMQContext(ChainstateManager& chainman, CDeterministicMNManager& dmnman, CEvoDB& evo_db,
-                         CSporkManager& sporkman, CTxMemPool& mempool, const CMasternodeSync& mn_sync,
+LLMQContext::LLMQContext(CDeterministicMNManager& dmnman, CEvoDB& evo_db, CSporkManager& sporkman, CTxMemPool& mempool,
+                         const ChainstateManager& chainman, const CMasternodeSync& mn_sync,
                          const util::DbWrapperParams& db_params, int8_t bls_threads, int64_t max_recsigs_age) :
     bls_worker{std::make_shared<CBLSWorker>()},
     qsnapman{std::make_unique<llmq::CQuorumSnapshotManager>(evo_db)},

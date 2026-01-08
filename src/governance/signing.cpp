@@ -4,9 +4,9 @@
 
 #include <governance/signing.h>
 
+#include <active/masternode.h>
 #include <evo/deterministicmns.h>
 #include <governance/classes.h>
-#include <masternode/node.h>
 #include <masternode/sync.h>
 
 #include <chainparams.h>

@@ -4,6 +4,7 @@
 
 #include <active/quorums.h>
 
+#include <active/masternode.h>
 #include <bls/bls_ies.h>
 #include <bls/bls_worker.h>
 #include <evo/deterministicmns.h>
@@ -12,7 +13,6 @@
 #include <llmq/options.h>
 #include <llmq/quorums.h>
 #include <llmq/utils.h>
-#include <masternode/node.h>
 #include <masternode/sync.h>
 
 #include <chain.h>

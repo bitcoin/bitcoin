@@ -2,18 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chainparams.h>
-#include <deploymentstatus.h>
-#include <index/txindex.h>
-#include <net_processing.h>
-#include <node/context.h>
-#include <rpc/evo_util.h>
-#include <rpc/server.h>
-#include <rpc/server_util.h>
-#include <rpc/util.h>
-#include <util/check.h>
-#include <validation.h>
-
+#include <active/context.h>
+#include <active/masternode.h>
 #include <chainlock/chainlock.h>
 #include <evo/deterministicmns.h>
 #include <llmq/blockprocessor.h>
@@ -29,8 +19,18 @@
 #include <llmq/signing_shares.h>
 #include <llmq/snapshot.h>
 #include <llmq/utils.h>
-#include <masternode/active/context.h>
-#include <masternode/node.h>
+#include <rpc/evo_util.h>
+
+#include <chainparams.h>
+#include <deploymentstatus.h>
+#include <index/txindex.h>
+#include <net_processing.h>
+#include <node/context.h>
+#include <rpc/server.h>
+#include <rpc/server_util.h>
+#include <rpc/util.h>
+#include <util/check.h>
+#include <validation.h>
 
 #include <iomanip>
 #include <optional>
@@ -359,7 +359,7 @@ static RPCHelpMan quorum_dkgstatus()
     const CConnman& connman = EnsureConnman(node);
     const CBlockIndex* const pindexTip = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
     const int tipHeight = pindexTip->nHeight;
-    const uint256 proTxHash = node.mn_activeman ? node.mn_activeman->GetProTxHash() : uint256{};
+    const uint256 proTxHash = node.active_ctx ? node.active_ctx->nodeman->GetProTxHash() : uint256{};
     for (const auto& type : llmq::GetEnabledQuorumTypes(chainman, pindexTip)) {
         const auto llmq_params_opt = Params().GetLLMQ(type);
         CHECK_NONFATAL(llmq_params_opt.has_value());
@@ -372,7 +372,7 @@ static RPCHelpMan quorum_dkgstatus()
             obj.pushKV("llmqType", std::string(llmq_params.name));
             obj.pushKV("quorumIndex", quorumIndex);
 
-            if (node.mn_activeman) {
+            if (node.active_ctx) {
                 int quorumHeight = tipHeight - (tipHeight % llmq_params.dkgInterval) + quorumIndex;
                 if (quorumHeight <= tipHeight) {
                     const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return chainman.ActiveChain()[quorumHeight]);
@@ -501,7 +501,7 @@ static RPCHelpMan quorum_memberof()
 static UniValue quorum_sign_helper(const JSONRPCRequest& request, Consensus::LLMQType llmqType)
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
-    if (!node.mn_activeman) {
+    if (!node.active_ctx) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Only available in masternode mode.");
     }
 

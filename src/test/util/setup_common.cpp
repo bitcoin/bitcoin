@@ -49,6 +49,7 @@
 #include <validationinterface.h>
 #include <walletinitinterface.h>
 
+#include <active/context.h>
 #include <bls/bls.h>
 #include <coinjoin/coinjoin.h>
 #include <coinjoin/walletman.h>
@@ -65,7 +66,6 @@
 #include <governance/governance.h>
 #include <llmq/context.h>
 #include <llmq/signing.h>
-#include <masternode/active/context.h>
 #include <masternode/meta.h>
 #include <masternode/sync.h>
 #include <netfulfilledman.h>
@@ -129,12 +129,11 @@ std::ostream& operator<<(std::ostream& os, const uint256& num)
 std::unique_ptr<PeerManager> MakePeerManager(CConnman& connman,
                                              NodeContext& node,
                                              BanMan* banman,
-                                             CActiveMasternodeManager* mn_activeman,
                                              const CChainParams& chainparams,
                                              bool ignore_incoming_txs)
 {
     return PeerManager::make(chainparams, connman, *node.addrman, banman, *node.dstxman, *node.chainman, *node.mempool, *node.mn_metaman,
-                             *node.mn_sync, *node.govman, *node.sporkman, mn_activeman, node.active_ctx, node.dmnman, node.cj_walletman,
+                             *node.mn_sync, *node.govman, *node.sporkman, node.active_ctx, node.dmnman, node.cj_walletman,
                              node.llmq_ctx, node.observer_ctx, ignore_incoming_txs);
 }
 
@@ -145,9 +144,9 @@ void DashChainstateSetup(ChainstateManager& chainman,
                          const Consensus::Params& consensus_params)
 {
     DashChainstateSetup(chainman, *Assert(node.govman.get()), *Assert(node.mn_metaman.get()), *Assert(node.mn_sync.get()),
-                        *Assert(node.sporkman.get()), node.mn_activeman, node.chain_helper, node.cpoolman, node.dmnman,
-                        node.evodb, node.mnhf_manager, node.llmq_ctx, Assert(node.mempool.get()), node.args->GetDataDirNet(),
-                        llmq_dbs_in_memory, llmq_dbs_wipe, llmq::DEFAULT_BLSCHECK_THREADS, llmq::DEFAULT_MAX_RECOVERED_SIGS_AGE, consensus_params);
+                        *Assert(node.sporkman.get()), node.chain_helper, node.cpoolman, node.dmnman, node.evodb, node.mnhf_manager,
+                        node.llmq_ctx, Assert(node.mempool.get()), node.args->GetDataDirNet(), llmq_dbs_in_memory, llmq_dbs_wipe,
+                        llmq::DEFAULT_BLSCHECK_THREADS, llmq::DEFAULT_MAX_RECOVERED_SIGS_AGE, consensus_params);
 }
 
 void DashChainstateSetupClose(NodeContext& node)
@@ -324,7 +323,6 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
                                            *Assert(m_node.mn_metaman.get()),
                                            *Assert(m_node.mn_sync.get()),
                                            *Assert(m_node.sporkman.get()),
-                                           m_node.mn_activeman,
                                            m_node.chain_helper,
                                            m_node.cpoolman,
                                            m_node.dmnman,
@@ -381,7 +379,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 #endif // ENABLE_WALLET
 
     m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    m_node.peerman = MakePeerManager(*m_node.connman, m_node, m_node.banman.get(), /*mn_activeman=*/nullptr, chainparams,
+    m_node.peerman = MakePeerManager(*m_node.connman, m_node, m_node.banman.get(), chainparams,
                                      /*ignore_incoming_txs=*/false);
     {
         CConnman::Options options;

@@ -89,7 +89,6 @@ static constexpr CAmount CENT{1000000};
 std::unique_ptr<PeerManager> MakePeerManager(CConnman& connman,
                                              node::NodeContext& node,
                                              BanMan* banman,
-                                             CActiveMasternodeManager* mn_activeman,
                                              const CChainParams& chainparams,
                                              bool ignore_incoming_txs);
 void DashChainstateSetup(ChainstateManager& chainman,

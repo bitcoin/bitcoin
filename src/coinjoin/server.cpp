@@ -4,11 +4,13 @@
 
 #include <coinjoin/server.h>
 
-#include <core_io.h>
+#include <active/masternode.h>
 #include <evo/deterministicmns.h>
 #include <masternode/meta.h>
-#include <masternode/node.h>
 #include <masternode/sync.h>
+#include <util/ranges.h>
+
+#include <core_io.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
@@ -18,7 +20,6 @@
 #include <streams.h>
 #include <txmempool.h>
 #include <util/moneystr.h>
-#include <util/ranges.h>
 #include <util/system.h>
 #include <validation.h>
 

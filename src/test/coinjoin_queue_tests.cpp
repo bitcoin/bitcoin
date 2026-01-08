@@ -4,14 +4,15 @@
 
 #include <test/util/setup_common.h>
 
+#include <active/masternode.h>
 #include <bls/bls.h>
 #include <coinjoin/coinjoin.h>
-#include <masternode/node.h>
+
 #include <uint256.h>
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(coinjoin_queue_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(coinjoin_queue_tests, TestingSetup)
 
 static CBLSSecretKey MakeSecretKey()
 {
@@ -24,7 +25,7 @@ static CBLSSecretKey MakeSecretKey()
 BOOST_AUTO_TEST_CASE(queue_sign_and_verify)
 {
     // Build active MN manager with operator key using node context wiring
-    CActiveMasternodeManager mn_activeman(MakeSecretKey(), *Assert(m_node.connman), m_node.dmnman);
+    CActiveMasternodeManager mn_activeman(*Assert(m_node.connman), *Assert(m_node.dmnman), MakeSecretKey());
 
     CCoinJoinQueue q;
     q.nDenom = CoinJoin::AmountToDenomination(CoinJoin::GetSmallestDenomination());

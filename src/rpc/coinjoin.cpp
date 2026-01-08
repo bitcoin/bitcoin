@@ -2,9 +2,6 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <coinjoin/server.h>
-#include <coinjoin/walletman.h>
-#include <masternode/active/context.h>
 #include <node/context.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
@@ -13,6 +10,10 @@
 #include <wallet/receive.h>
 #include <wallet/rpc/util.h>
 #include <walletinitinterface.h>
+
+#include <active/context.h>
+#include <coinjoin/server.h>
+#include <coinjoin/walletman.h>
 
 #ifdef ENABLE_WALLET
 #include <coinjoin/options.h>
@@ -86,7 +87,7 @@ static RPCHelpMan coinjoin_reset()
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
 
-    if (node.mn_activeman) {
+    if (node.active_ctx) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
     }
 
@@ -120,7 +121,7 @@ static RPCHelpMan coinjoin_start()
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
 
-    if (node.mn_activeman) {
+    if (node.active_ctx) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
     }
 
@@ -161,7 +162,7 @@ static RPCHelpMan coinjoin_status()
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
 
-    if (node.mn_activeman) {
+    if (node.active_ctx) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
     }
 
@@ -200,7 +201,7 @@ static RPCHelpMan coinjoin_stop()
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
 
-    if (node.mn_activeman) {
+    if (node.active_ctx) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
     }
 
@@ -464,8 +465,8 @@ static RPCHelpMan getcoinjoininfo()
     UniValue obj(UniValue::VOBJ);
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
-    if (node.mn_activeman) {
-        node.active_ctx->m_cj_server.GetJsonInfo(obj);
+    if (node.active_ctx) {
+        node.active_ctx->GetCJServer().GetJsonInfo(obj);
         return obj;
     }
 
