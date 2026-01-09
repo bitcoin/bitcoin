@@ -65,6 +65,13 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, ClientModel
     recentRequestsTableModel = new RecentRequestsTableModel(this);
 
     subscribeToCoreSignals();
+
+    // Connect dust protection settings change to lock existing dust
+    if (optionsModel) {
+        connect(optionsModel, &OptionsModel::dustProtectionChanged, this, &WalletModel::lockExistingDustOutputs);
+        // Lock existing dust on startup if dust protection is enabled
+        lockExistingDustOutputs();
+    }
 }
 
 WalletModel::~WalletModel()
@@ -191,6 +198,49 @@ void WalletModel::checkAndLockDustOutputs(const QString& hashStr)
             if (m_wallet->txoutIsMine(txout)) {
                 m_wallet->lockCoin(COutPoint(hash, i), /*write_to_db=*/true);
             }
+        }
+    }
+}
+
+void WalletModel::lockExistingDustOutputs()
+{
+    if (!optionsModel || !optionsModel->getDustProtection()) {
+        return;
+    }
+
+    CAmount dustThreshold = optionsModel->getDustProtectionThreshold();
+    if (dustThreshold <= 0) {
+        return;
+    }
+
+    // Iterate UTXOs (much smaller set than all transactions)
+    for (const auto& [dest, coins] : m_wallet->listCoins()) {
+        for (const auto& [outpoint, wtxout] : coins) {
+            // Skip if already locked
+            if (m_wallet->isLockedCoin(outpoint)) continue;
+
+            // Skip if above threshold
+            if (wtxout.txout.nValue > dustThreshold) continue;
+
+            // Get the transaction to check for coinbase/special tx and isFromMe
+            CTransactionRef tx = m_wallet->getTx(outpoint.hash);
+            if (!tx) continue;
+
+            // Skip coinbase and special transactions
+            if (tx->IsCoinBase() || tx->nType != TRANSACTION_NORMAL) continue;
+
+            // Check if any input is ours (skip self-sends)
+            bool isFromMe = false;
+            for (const auto& txin : tx->vin) {
+                if (m_wallet->txinIsMine(txin)) {
+                    isFromMe = true;
+                    break;
+                }
+            }
+            if (isFromMe) continue;
+
+            // External dust - lock it
+            m_wallet->lockCoin(outpoint, /*write_to_db=*/true);
         }
     }
 }
