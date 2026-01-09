@@ -506,6 +506,10 @@ jobs:
             --exclude feature_unsupported_utxo_db.py \
             `# See https://github.com/bitcoin/bitcoin/issues/31409.` \
             --exclude wallet_multiwallet.py
+          # Run feature_unsupported_utxo_db sequentially in ASCII-only tmp dir,
+          # because it is excluded above due to lack of UTF-8 support in the
+          # ancient release.
+          py -3 test/functional/feature_unsupported_utxo_db.py --previous-releases --tmpdir="${RUNNER_TEMP}/test_feature_unsupported_utxo_db"
 
   ci-matrix:
     name: ${{ matrix.name }}
