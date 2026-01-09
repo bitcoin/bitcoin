@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import re
@@ -11,6 +12,14 @@ from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
+NUM_COLORS = 10
+
+
+def series_color_index(key: str) -> int:
+    """Compute deterministic color index from series key using MD5."""
+    hash_bytes = hashlib.md5(key.encode()).digest()
+    return int.from_bytes(hash_bytes[:4], "little") % NUM_COLORS
 
 
 def _normalize_cpu_model(cpu_model: str) -> str:
@@ -107,20 +116,22 @@ def series_key(result: "NightlyResult") -> str:
 def series_label(result: "NightlyResult") -> str:
     """Generate human-readable series label for chart legend."""
     machine = result.machine or {}
+    config = result.config or {}
+    bitcoind = config.get("bitcoind", {})
 
+    arch = machine.get("architecture", "unknown")
     cpu_model = machine.get("cpu_model", "Unknown")
     cpu_short = _extract_cpu_short_name(cpu_model)
-
     ram = machine.get("total_ram_gb", 0)
-    ram_str = f"{int(ram)}GB" if ram else "?GB"
+    ram_str = f"{int(ram)}GB RAM" if ram else "?GB RAM"
+
+    start = config.get("start_height", 0)
+    stop = bitcoind.get("stopatheight", 0)
+    block_range = f"{start}-{stop}" if start and stop else "?-?"
 
     dbcache = result.dbcache
-    if dbcache >= 1000:
-        cache_str = f"{dbcache // 1000}GB"
-    else:
-        cache_str = f"{dbcache}MB"
 
-    return f"{cpu_short} {ram_str} - {cache_str} dbcache"
+    return f"{arch}, {cpu_short}, {ram_str}, {block_range}, dbcache {dbcache}"
 
 
 # HTML template for the nightly chart homepage
@@ -186,7 +197,7 @@ NIGHTLY_CHART_TEMPLATE = """<!DOCTYPE html>
     <div class="w-full">
       <h1 class="text-3xl font-bold mb-2">Bitcoin Core Nightly IBD Benchmark</h1>
       <p class="text-secondary mb-4">
-        IBD from a single networked peer from block 840,000 to 900,000 on a Hetzner AX52
+        IBD from a single networked peer
       </p>
       <div class="card rounded-lg p-4">
         <div id="nightly-chart" style="width:100%; height:calc(100vh - 200px); min-height:400px;"></div>
@@ -223,14 +234,9 @@ NIGHTLY_CHART_TEMPLATE = """<!DOCTYPE html>
         '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52'
       ];
 
-      // Deterministic color assignment from series key
-      function getSeriesColor(seriesKey) {{
-        let hash = 0;
-        for (let i = 0; i < seriesKey.length; i++) {{
-          hash = ((hash << 5) - hash) + seriesKey.charCodeAt(i);
-          hash = hash & hash;
-        }}
-        return PALETTE[Math.abs(hash) % PALETTE.length];
+      // Get color from pre-computed index (computed in Python using MD5)
+      function getSeriesColor(colorIndex) {{
+        return PALETTE[colorIndex % PALETTE.length];
       }}
 
       function getErrorColor(hexColor) {{
@@ -252,6 +258,7 @@ NIGHTLY_CHART_TEMPLATE = """<!DOCTYPE html>
           if (!seriesMap.has(key)) {{
             seriesMap.set(key, {{
               label: d.series_label || (d.config + ' dbcache'),
+              colorIndex: d.color_index || 0,
               points: []
             }});
           }}
@@ -266,7 +273,7 @@ NIGHTLY_CHART_TEMPLATE = """<!DOCTYPE html>
 
         sortedSeries.forEach(([seriesKey, series]) => {{
           const points = series.points.sort((a, b) => a.date.localeCompare(b.date));
-          const color = getSeriesColor(seriesKey);
+          const color = getSeriesColor(series.colorIndex);
 
           traces.push({{
             name: series.label,
@@ -295,7 +302,7 @@ NIGHTLY_CHART_TEMPLATE = """<!DOCTYPE html>
         const isDark = theme === 'dark';
         return {{
           title: {{
-            text: 'Sync from block 840,000 to 855,000',
+            text: 'Sync from block 840,000 to 900,000',
             font: {{ size: 18, color: isDark ? '#f9fafb' : '#111827' }}
           }},
           xaxis: {{
@@ -313,11 +320,11 @@ NIGHTLY_CHART_TEMPLATE = """<!DOCTYPE html>
             linecolor: isDark ? '#4b5563' : '#d1d5db'
           }},
           legend: {{
-            orientation: 'v',
+            orientation: 'h',
             yanchor: 'top',
-            y: 1,
-            xanchor: 'left',
-            x: 1.02,
+            y: -0.15,
+            xanchor: 'center',
+            x: 0.5,
             font: {{ color: isDark ? '#d1d5db' : '#4b5563', size: 11 }},
             bgcolor: isDark ? 'rgba(31, 41, 55, 0.8)' : 'rgba(255, 255, 255, 0.8)',
             bordercolor: isDark ? '#4b5563' : '#d1d5db',
@@ -331,7 +338,7 @@ NIGHTLY_CHART_TEMPLATE = """<!DOCTYPE html>
             bordercolor: isDark ? '#4b5563' : '#d1d5db',
             font: {{ color: isDark ? '#f9fafb' : '#111827', size: 13 }}
           }},
-          margin: {{ t: 80, b: 80, r: 250 }},
+          margin: {{ t: 80, b: 150 }},
           paper_bgcolor: 'rgba(0,0,0,0)',
           plot_bgcolor: 'rgba(0,0,0,0)'
         }};
@@ -515,6 +522,7 @@ class NightlyHistory:
         """
         chart_data = []
         for r in self.results:
+            key = series_key(r)
             chart_data.append(
                 {
                     "date": r.date,
@@ -522,8 +530,9 @@ class NightlyHistory:
                     "mean": r.mean,
                     "stddev": r.stddev,
                     "config": str(r.dbcache),  # Legacy compatibility
-                    "series_key": series_key(r),
+                    "series_key": key,
                     "series_label": series_label(r),
+                    "color_index": series_color_index(key),
                 }
             )
         return chart_data
@@ -609,14 +618,9 @@ PR_CHART_SNIPPET = """
     '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52'
   ];
 
-  // Deterministic color assignment from series key
-  function getSeriesColor(seriesKey) {{
-    let hash = 0;
-    for (let i = 0; i < seriesKey.length; i++) {{
-      hash = ((hash << 5) - hash) + seriesKey.charCodeAt(i);
-      hash = hash & hash;
-    }}
-    return PALETTE[Math.abs(hash) % PALETTE.length];
+  // Get color from pre-computed index (computed in Python using MD5)
+  function getSeriesColor(colorIndex) {{
+    return PALETTE[colorIndex % PALETTE.length];
   }}
 
   function getErrorColor(hexColor) {{
@@ -638,6 +642,7 @@ PR_CHART_SNIPPET = """
       if (!nightlySeriesMap.has(key)) {{
         nightlySeriesMap.set(key, {{
           label: d.series_label || (d.config + ' dbcache'),
+          colorIndex: d.color_index || 0,
           points: []
         }});
       }}
@@ -650,7 +655,7 @@ PR_CHART_SNIPPET = """
 
     sortedSeries.forEach(([seriesKey, series]) => {{
       const points = series.points.sort((a, b) => a.date.localeCompare(b.date));
-      const color = getSeriesColor(seriesKey);
+      const color = getSeriesColor(series.colorIndex);
 
       traces.push({{
         name: series.label + ' (nightly)',
@@ -676,7 +681,7 @@ PR_CHART_SNIPPET = """
     prData.forEach(pr => {{
       const key = pr.series_key || pr.config;
       const label = pr.series_label || (pr.config + ' dbcache');
-      const color = getSeriesColor(key);
+      const color = getSeriesColor(pr.color_index || 0);
 
       traces.push({{
         name: label + ' (PR)',
@@ -713,17 +718,17 @@ PR_CHART_SNIPPET = """
       rangemode: 'tozero'
     }},
     legend: {{
-      orientation: 'v',
+      orientation: 'h',
       yanchor: 'top',
-      y: 1,
-      xanchor: 'left',
-      x: 1.02,
+      y: -0.15,
+      xanchor: 'center',
+      x: 0.5,
       font: {{ size: 11 }},
       itemclick: 'toggle',
       itemdoubleclick: 'toggleothers'
     }},
     hovermode: 'closest',
-    margin: {{ t: 60, b: 80, r: 250 }}
+    margin: {{ t: 60, b: 150 }}
   }};
 
   const config = {{

@@ -17,6 +17,7 @@ from typing import Any
 from bench.nightly import (
     NightlyHistory,
     generate_pr_chart_snippet,
+    series_color_index,
     series_key,
     series_label,
 )
@@ -629,6 +630,7 @@ class ReportGenerator:
 
             # Collect data for chart
             if nightly_mean:
+                key = data.get("series_key", f"unknown|db{config}|0-0")
                 pr_chart_data.append(
                     {
                         "config": config,
@@ -636,8 +638,9 @@ class ReportGenerator:
                         "stddev": pr_stddev or 0,
                         "commit": commit or "unknown",
                         "date": date.today().isoformat(),
-                        "series_key": data.get("series_key", f"unknown|db{config}|0-0"),
+                        "series_key": key,
                         "series_label": data.get("series_label", f"{config} dbcache"),
+                        "color_index": series_color_index(key),
                     }
                 )
 
