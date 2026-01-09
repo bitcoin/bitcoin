@@ -447,8 +447,8 @@ def generate_nightly_chart(history: NightlyHistory, output_file: Path) -> None:
         history: NightlyHistory instance with loaded results
         output_file: Path to write index.html
     """
-    # Convert results to JSON for embedding in HTML
-    chart_data = json.dumps([r.to_dict() for r in history.results])
+    # Convert results to simplified format for JS chart (config as string, not object)
+    chart_data = json.dumps(history.get_chart_data())
 
     html = NIGHTLY_CHART_TEMPLATE.format(chart_data=chart_data)
 
@@ -596,6 +596,7 @@ class NightlyPhase:
         date_str: str | None = None,
         benchmark_config_file: Path | None = None,
         instrumentation: str = "uninstrumented",
+        machine_specs_file: Path | None = None,
     ) -> None:
         """Append a result from hyperfine results.json to history.
 
@@ -606,14 +607,19 @@ class NightlyPhase:
             date_str: Date string (YYYY-MM-DD), defaults to today
             benchmark_config_file: Path to benchmark config TOML
             instrumentation: Instrumentation mode ('uninstrumented' or 'instrumented')
+            machine_specs_file: Path to pre-captured machine specs JSON (optional)
         """
         from bench.benchmark_config import BenchmarkConfig
-        from bench.machine import get_machine_specs
 
         history = NightlyHistory(self.history_file)
 
-        # Get machine specs (always captured per-result now)
-        machine_specs = get_machine_specs().to_dict()
+        # Get machine specs from file if provided, otherwise detect current machine
+        if machine_specs_file:
+            machine_specs = json.loads(machine_specs_file.read_text())
+            logger.info(f"Using pre-captured machine specs from {machine_specs_file}")
+        else:
+            from bench.machine import get_machine_specs
+            machine_specs = get_machine_specs().to_dict()
 
         # Build benchmark config dict
         if benchmark_config_file:

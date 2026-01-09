@@ -312,6 +312,9 @@ def cmd_nightly(args: argparse.Namespace) -> int:
             benchmark_config_file = (
                 Path(args.benchmark_config) if args.benchmark_config else None
             )
+            machine_specs_file = (
+                Path(args.machine_specs) if args.machine_specs else None
+            )
             phase.append(
                 results_file=Path(args.results_file),
                 commit=args.commit,
@@ -319,6 +322,7 @@ def cmd_nightly(args: argparse.Namespace) -> int:
                 date_str=args.date,
                 benchmark_config_file=benchmark_config_file,
                 instrumentation=args.instrumentation,
+                machine_specs_file=machine_specs_file,
             )
             logger.info(f"Appended result to {history_file}")
         elif args.nightly_command == "chart":
@@ -556,6 +560,11 @@ def main() -> int:
         default="uninstrumented",
         choices=["uninstrumented", "instrumented"],
         help="Instrumentation mode (default: uninstrumented)",
+    )
+    nightly_append.add_argument(
+        "--machine-specs",
+        metavar="PATH",
+        help="Path to pre-captured machine specs JSON (default: detect current machine)",
     )
 
     # nightly chart

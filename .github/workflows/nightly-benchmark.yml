@@ -49,6 +49,20 @@ jobs:
           name: commit-info
           path: ${{ runner.temp }}/commit.txt
 
+      - name: Capture machine specs
+        run: |
+          nix develop --command python3 -c "
+          from bench.machine import get_machine_specs
+          import json
+          print(json.dumps(get_machine_specs().to_dict()))
+          " > ${{ runner.temp }}/machine-specs.json
+
+      - name: Upload machine specs
+        uses: actions/upload-artifact@v4
+        with:
+          name: machine-specs
+          path: ${{ runner.temp }}/machine-specs.json
+
   benchmark:
     needs: build
     strategy:
@@ -126,6 +140,12 @@ jobs:
           name: result-nightly-32000
           path: ./nightly-32000-results
 
+      - name: Download machine specs
+        uses: actions/download-artifact@v4
+        with:
+          name: machine-specs
+          path: ./machine-specs
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -154,7 +174,8 @@ jobs:
             "$COMMIT" \
             450 \
             --date "$DATE" \
-            --benchmark-config bench/configs/nightly.toml
+            --benchmark-config bench/configs/nightly.toml \
+            --machine-specs ../machine-specs/machine-specs.json
 
           # Append 32000 (large dbcache) result
           python3 bench.py nightly \
@@ -164,7 +185,8 @@ jobs:
             "$COMMIT" \
             32000 \
             --date "$DATE" \
-            --benchmark-config bench/configs/nightly.toml
+            --benchmark-config bench/configs/nightly.toml \
+            --machine-specs ../machine-specs/machine-specs.json
 
       - name: Generate chart
         run: |
