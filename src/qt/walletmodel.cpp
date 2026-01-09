@@ -23,6 +23,7 @@
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <node/interface_ui.h>
+#include <primitives/transaction.h>
 #include <psbt.h>
 #include <util/system.h> // for GetBoolArg
 #include <util/translation.h>
@@ -156,7 +157,7 @@ void WalletModel::checkAndLockDustOutputs(const QString& hashStr)
         return;
     }
 
-    qint64 dustThreshold = optionsModel->getDustProtectionThreshold();
+    CAmount dustThreshold = optionsModel->getDustProtectionThreshold();
     if (dustThreshold <= 0) {
         return;
     }
@@ -164,37 +165,32 @@ void WalletModel::checkAndLockDustOutputs(const QString& hashStr)
     uint256 hash;
     hash.SetHex(hashStr.toStdString());
 
-    // Get the transaction
-    interfaces::WalletTx wtx = m_wallet->getWalletTx(hash);
-    if (!wtx.tx) {
+    // Get the transaction (lighter than getWalletTx)
+    CTransactionRef tx = m_wallet->getTx(hash);
+    if (!tx) {
         return;
     }
 
-    // Check if any inputs belong to this wallet (isFromMe check)
-    bool isFromMe = false;
-    for (const auto& mine : wtx.txin_is_mine) {
-        if (mine) {
-            isFromMe = true;
-            break;
-        }
-    }
-
-    // If this transaction has our inputs, it's not external dust
-    if (isFromMe) {
+    // Skip coinbase and special transactions - not dust attacks
+    if (tx->IsCoinBase() || tx->nType != TRANSACTION_NORMAL) {
         return;
     }
 
-    // Check each output and lock if it's dust
-    for (size_t i = 0; i < wtx.tx->vout.size(); i++) {
-        // Only lock outputs that belong to us
-        if (!wtx.txout_is_mine[i]) {
-            continue;
+    // Check if any input belongs to this wallet (isFromMe check)
+    // Early exit on first match
+    for (const auto& txin : tx->vin) {
+        if (m_wallet->txinIsMine(txin)) {
+            return;
         }
+    }
 
-        CAmount value = wtx.tx->vout[i].nValue;
-        if (value > 0 && value <= dustThreshold) {
-            COutPoint outpoint(hash, i);
-            m_wallet->lockCoin(outpoint, true /* write_to_db */);
+    // Check each output - threshold first (cheap), then ownership (more expensive)
+    for (size_t i = 0; i < tx->vout.size(); i++) {
+        const CTxOut& txout = tx->vout[i];
+        if (txout.nValue > 0 && txout.nValue <= dustThreshold) {
+            if (m_wallet->txoutIsMine(txout)) {
+                m_wallet->lockCoin(COutPoint(hash, i), /*write_to_db=*/true);
+            }
         }
     }
 }
