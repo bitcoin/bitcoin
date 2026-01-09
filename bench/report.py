@@ -12,10 +12,14 @@ import shutil
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-if TYPE_CHECKING:
-    from bench.nightly import NightlyHistory
+from bench.nightly import (
+    NightlyHistory,
+    generate_pr_chart_snippet,
+    series_key,
+    series_label,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +90,7 @@ def parse_network_name(network: str) -> tuple[int, str]:
 
     instrumentation = parts[1] if len(parts) > 1 else "uninstrumented"
     return dbcache, instrumentation
+
 
 # HTML template for individual run report
 RUN_REPORT_TEMPLATE = """<!DOCTYPE html>
@@ -465,6 +470,8 @@ class ReportGenerator:
                     "nightly_date": nightly.date,
                     "nightly_commit": nightly.commit,
                     "speedup_percent": speedup,
+                    "series_key": series_key(nightly),
+                    "series_label": series_label(nightly),
                 }
             else:
                 # No nightly data, just record PR result
@@ -519,7 +526,9 @@ class ReportGenerator:
 
             # Format config name for display
             dbcache, instrumentation = parse_network_name(run.network)
-            config_display = format_config_display(dbcache, instrumentation=instrumentation)
+            config_display = format_config_display(
+                dbcache, instrumentation=instrumentation
+            )
 
             run_data_rows += f"""
               <tr class="border-t">
@@ -627,6 +636,8 @@ class ReportGenerator:
                         "stddev": pr_stddev or 0,
                         "commit": commit or "unknown",
                         "date": date.today().isoformat(),
+                        "series_key": data.get("series_key", f"unknown|db{config}|0-0"),
+                        "series_label": data.get("series_label", f"{config} dbcache"),
                     }
                 )
 
@@ -653,8 +664,6 @@ class ReportGenerator:
         # Add chart if we have nightly data
         chart_html = ""
         if has_nightly_data and self.nightly_history and pr_chart_data:
-            from bench.nightly import generate_pr_chart_snippet
-
             chart_html = f"""
             <h3 class="text-lg font-semibold mb-4">Performance Trend</h3>
             <div class="mb-8">

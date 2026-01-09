@@ -4,12 +4,124 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
+
+def _normalize_cpu_model(cpu_model: str) -> str:
+    """Normalize CPU model to short identifier.
+
+    Examples:
+        "AMD Ryzen 7 7700 8-Core Processor" -> "ryzen77008core"
+        "AMD EPYC 7763 64-Core Processor" -> "epyc776364core"
+        "Apple M2 Pro" -> "applem2pro"
+        "Intel(R) Core(TM) i7-12700K" -> "corei712700k"
+    """
+    model = cpu_model.lower()
+    for word in ["processor", "(r)", "(tm)", "amd", "intel"]:
+        model = model.replace(word, "")
+    parts = [p.strip() for p in model.split() if p.strip()]
+    return "".join(parts).replace("-", "").replace(" ", "")[:25]
+
+
+def _bucket_ram(ram_gb: float) -> int:
+    """Bucket RAM to nearest standard size for grouping."""
+    if ram_gb <= 0:
+        return 0
+    if ram_gb <= 32:
+        return round(ram_gb / 8) * 8
+    return round(ram_gb / 32) * 32
+
+
+def _normalize_kernel(kernel: str) -> str:
+    """Extract major.minor from kernel version."""
+    parts = kernel.split(".")
+    if len(parts) >= 2:
+        return f"{parts[0]}.{parts[1].split('-')[0]}"
+    return kernel.split("-")[0]
+
+
+def _normalize_disk_type(disk_type: str) -> str:
+    """Normalize disk type to short form."""
+    disk_lower = disk_type.lower()
+    if "nvme" in disk_lower:
+        return "nvme"
+    if "ssd" in disk_lower:
+        return "ssd"
+    if "hdd" in disk_lower:
+        return "hdd"
+    return disk_lower[:10]
+
+
+def _extract_cpu_short_name(cpu_model: str) -> str:
+    """Extract a readable short CPU name for labels."""
+    patterns = [
+        r"Ryzen \d+ \d+",
+        r"EPYC \d+",
+        r"M\d+ (?:Pro|Max|Ultra)?",
+        r"i[3579]-\d+\w*",
+        r"Xeon \w+-\d+",
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, cpu_model, re.IGNORECASE)
+        if match:
+            return match.group(0)
+
+    words = cpu_model.replace("(R)", "").replace("(TM)", "").split()
+    meaningful = [
+        w
+        for w in words
+        if w.lower() not in ["processor", "core", "amd", "intel", "apple"]
+    ]
+    return " ".join(meaningful[:2]) if meaningful else cpu_model[:20]
+
+
+def series_key(result: "NightlyResult") -> str:
+    """Generate unique series key from machine specs and config.
+
+    Format: {cpu_short}|{ram}GB|{disk}|{kernel}|db{dbcache}|{start}-{stop}
+    Example: ryzen77008core|64GB|nvme|6.6|db450|840000-900000
+    """
+    machine = result.machine or {}
+    config = result.config or {}
+    bitcoind = config.get("bitcoind", {})
+
+    cpu = _normalize_cpu_model(machine.get("cpu_model", "unknown"))
+    ram = _bucket_ram(machine.get("total_ram_gb", 0))
+    disk = _normalize_disk_type(machine.get("disk_type", "unknown"))
+    kernel = _normalize_kernel(machine.get("os_kernel", "unknown"))
+
+    dbcache = bitcoind.get("dbcache", result.dbcache)
+    start = config.get("start_height", 0)
+    stop = bitcoind.get("stopatheight", 0)
+
+    return f"{cpu}|{ram}GB|{disk}|{kernel}|db{dbcache}|{start}-{stop}"
+
+
+def series_label(result: "NightlyResult") -> str:
+    """Generate human-readable series label for chart legend."""
+    machine = result.machine or {}
+
+    cpu_model = machine.get("cpu_model", "Unknown")
+    cpu_short = _extract_cpu_short_name(cpu_model)
+
+    ram = machine.get("total_ram_gb", 0)
+    ram_str = f"{int(ram)}GB" if ram else "?GB"
+
+    dbcache = result.dbcache
+    if dbcache >= 1000:
+        cache_str = f"{dbcache // 1000}GB"
+    else:
+        cache_str = f"{dbcache}MB"
+
+    return f"{cpu_short} {ram_str} - {cache_str} dbcache"
+
 
 # HTML template for the nightly chart homepage
 NIGHTLY_CHART_TEMPLATE = """<!DOCTYPE html>
@@ -105,61 +217,76 @@ NIGHTLY_CHART_TEMPLATE = """<!DOCTYPE html>
         setTheme(current === 'dark' ? 'light' : 'dark');
       }}
 
-      // Colors that work well in both themes
-      const colors = {{
-        '450': {{ line: '#3b82f6', error: 'rgba(59, 130, 246, 0.3)' }},    // Blue
-        '32000': {{ line: '#f97316', error: 'rgba(249, 115, 22, 0.3)' }}   // Orange
-      }};
+      // Colorblind-friendly palette
+      const PALETTE = [
+        '#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A',
+        '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52'
+      ];
+
+      // Deterministic color assignment from series key
+      function getSeriesColor(seriesKey) {{
+        let hash = 0;
+        for (let i = 0; i < seriesKey.length; i++) {{
+          hash = ((hash << 5) - hash) + seriesKey.charCodeAt(i);
+          hash = hash & hash;
+        }}
+        return PALETTE[Math.abs(hash) % PALETTE.length];
+      }}
+
+      function getErrorColor(hexColor) {{
+        const r = parseInt(hexColor.slice(1, 3), 16);
+        const g = parseInt(hexColor.slice(3, 5), 16);
+        const b = parseInt(hexColor.slice(5, 7), 16);
+        return `rgba(${{r}}, ${{g}}, ${{b}}, 0.3)`;
+      }}
 
       // Convert seconds to minutes
       const toMinutes = (seconds) => seconds / 60;
 
       function buildTraces() {{
-        const smallData = data.filter(d => d.config === '450');
-        const largeData = data.filter(d => d.config === '32000');
+        // Group data by series_key
+        const seriesMap = new Map();
+
+        data.forEach(d => {{
+          const key = d.series_key || d.config;  // Fallback for legacy data
+          if (!seriesMap.has(key)) {{
+            seriesMap.set(key, {{
+              label: d.series_label || (d.config + ' dbcache'),
+              points: []
+            }});
+          }}
+          seriesMap.get(key).points.push(d);
+        }});
+
         const traces = [];
 
-        if (smallData.length > 0) {{
-          traces.push({{
-            name: '450MB dbcache',
-            x: smallData.map(d => d.date),
-            y: smallData.map(d => toMinutes(d.mean)),
-            text: smallData.map(d => d.commit.slice(0, 8)),
-            customdata: smallData.map(d => [d.commit, toMinutes(d.stddev)]),
-            hovertemplate: '<b>%{{text}}</b><br>%{{y:.1f}} min<br>\u00b1%{{customdata[1]:.1f}} min<extra>450MB</extra>',
-            mode: 'lines+markers',
-            line: {{ color: colors['450'].line, width: 2 }},
-            marker: {{ size: 8 }},
-            error_y: {{
-              type: 'data',
-              array: smallData.map(d => toMinutes(d.stddev)),
-              visible: true,
-              color: colors['450'].error,
-              thickness: 1.5
-            }}
-          }});
-        }}
+        // Sort series by label for consistent legend order
+        const sortedSeries = Array.from(seriesMap.entries())
+          .sort((a, b) => a[1].label.localeCompare(b[1].label));
 
-        if (largeData.length > 0) {{
+        sortedSeries.forEach(([seriesKey, series]) => {{
+          const points = series.points.sort((a, b) => a.date.localeCompare(b.date));
+          const color = getSeriesColor(seriesKey);
+
           traces.push({{
-            name: '32GB dbcache',
-            x: largeData.map(d => d.date),
-            y: largeData.map(d => toMinutes(d.mean)),
-            text: largeData.map(d => d.commit.slice(0, 8)),
-            customdata: largeData.map(d => [d.commit, toMinutes(d.stddev)]),
-            hovertemplate: '<b>%{{text}}</b><br>%{{y:.1f}} min<br>\u00b1%{{customdata[1]:.1f}} min<extra>32GB</extra>',
+            name: series.label,
+            x: points.map(d => d.date),
+            y: points.map(d => toMinutes(d.mean)),
+            text: points.map(d => d.commit.slice(0, 8)),
+            customdata: points.map(d => [d.commit, toMinutes(d.stddev || 0)]),
+            hovertemplate: '<b>%{{text}}</b><br>%{{y:.1f}} min<br>\u00b1%{{customdata[1]:.1f}} min<extra>' + series.label + '</extra>',
             mode: 'lines+markers',
-            line: {{ color: colors['32000'].line, width: 2 }},
+            line: {{ color: color, width: 2 }},
             marker: {{ size: 8 }},
             error_y: {{
               type: 'data',
-              array: largeData.map(d => toMinutes(d.stddev)),
+              array: points.map(d => toMinutes(d.stddev || 0)),
               visible: true,
-              color: colors['32000'].error,
+              color: getErrorColor(color),
               thickness: 1.5
             }}
           }});
-        }}
+        }});
 
         return traces;
       }}
@@ -186,12 +313,17 @@ NIGHTLY_CHART_TEMPLATE = """<!DOCTYPE html>
             linecolor: isDark ? '#4b5563' : '#d1d5db'
           }},
           legend: {{
-            orientation: 'h',
-            yanchor: 'bottom',
-            y: 1.02,
-            xanchor: 'right',
-            x: 1,
-            font: {{ color: isDark ? '#d1d5db' : '#4b5563' }}
+            orientation: 'v',
+            yanchor: 'top',
+            y: 1,
+            xanchor: 'left',
+            x: 1.02,
+            font: {{ color: isDark ? '#d1d5db' : '#4b5563', size: 11 }},
+            bgcolor: isDark ? 'rgba(31, 41, 55, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+            bordercolor: isDark ? '#4b5563' : '#d1d5db',
+            borderwidth: 1,
+            itemclick: 'toggle',
+            itemdoubleclick: 'toggleothers'
           }},
           hovermode: 'closest',
           hoverlabel: {{
@@ -199,7 +331,7 @@ NIGHTLY_CHART_TEMPLATE = """<!DOCTYPE html>
             bordercolor: isDark ? '#4b5563' : '#d1d5db',
             font: {{ color: isDark ? '#f9fafb' : '#111827', size: 13 }}
           }},
-          margin: {{ t: 80, b: 80 }},
+          margin: {{ t: 80, b: 80, r: 250 }},
           paper_bgcolor: 'rgba(0,0,0,0)',
           plot_bgcolor: 'rgba(0,0,0,0)'
         }};
@@ -232,7 +364,9 @@ class NightlyResult:
     mean: float
     stddev: float
     runs: int
-    config: dict[str, Any]   # Full benchmark config (dbcache inside config.bitcoind.dbcache)
+    config: dict[
+        str, Any
+    ]  # Full benchmark config (dbcache inside config.bitcoind.dbcache)
     machine: dict[str, Any]  # Full machine specs
 
     @property
@@ -244,6 +378,7 @@ class NightlyResult:
     def machine_id(self) -> str:
         """Get short machine ID from architecture."""
         from bench.machine import ARCH_TO_ID
+
         arch = self.machine.get("architecture", "unknown")
         return ARCH_TO_ID.get(arch.lower(), arch.lower())
 
@@ -284,7 +419,6 @@ class NightlyResult:
 
         # Legacy format - convert to new format
         dbcache = data.get("dbcache", 0)
-        config_name = data.get("config", str(dbcache))  # e.g., "450" or "32000"
         return cls(
             date=data["date"],
             commit=data["commit"],
@@ -376,18 +510,22 @@ class NightlyHistory:
     def get_chart_data(self) -> list[dict]:
         """Get results in format suitable for chart embedding.
 
-        Returns a simplified format for the JS chart that includes
-        a 'config' field derived from dbcache for backwards compatibility.
+        Returns data with series_key and series_label for dynamic grouping.
+        Also includes legacy 'config' field for backward compatibility.
         """
         chart_data = []
         for r in self.results:
-            chart_data.append({
-                "date": r.date,
-                "commit": r.commit,
-                "mean": r.mean,
-                "stddev": r.stddev,
-                "config": str(r.dbcache),  # For chart grouping: "450" or "32000"
-            })
+            chart_data.append(
+                {
+                    "date": r.date,
+                    "commit": r.commit,
+                    "mean": r.mean,
+                    "stddev": r.stddev,
+                    "config": str(r.dbcache),  # Legacy compatibility
+                    "series_key": series_key(r),
+                    "series_label": series_label(r),
+                }
+            )
         return chart_data
 
     def append_from_results_json(
@@ -465,62 +603,96 @@ PR_CHART_SNIPPET = """
   const nightlyData = {nightly_data};
   const prData = {pr_data};
 
-  const colors = {{
-    '450': {{ line: '#3b82f6', error: 'rgba(59, 130, 246, 0.3)' }},
-    '32000': {{ line: '#f97316', error: 'rgba(249, 115, 22, 0.3)' }}
-  }};
-  const prColors = {{
-    '450': '#10b981',   // Green for PR 450
-    '32000': '#ef4444'  // Red for PR 32000
-  }};
+  // Colorblind-friendly palette
+  const PALETTE = [
+    '#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A',
+    '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52'
+  ];
+
+  // Deterministic color assignment from series key
+  function getSeriesColor(seriesKey) {{
+    let hash = 0;
+    for (let i = 0; i < seriesKey.length; i++) {{
+      hash = ((hash << 5) - hash) + seriesKey.charCodeAt(i);
+      hash = hash & hash;
+    }}
+    return PALETTE[Math.abs(hash) % PALETTE.length];
+  }}
+
+  function getErrorColor(hexColor) {{
+    const r = parseInt(hexColor.slice(1, 3), 16);
+    const g = parseInt(hexColor.slice(3, 5), 16);
+    const b = parseInt(hexColor.slice(5, 7), 16);
+    return `rgba(${{r}}, ${{g}}, ${{b}}, 0.3)`;
+  }}
 
   const toMinutes = (seconds) => seconds / 60;
 
   function buildTraces() {{
     const traces = [];
 
-    // Nightly traces (lines with markers)
-    ['450', '32000'].forEach(config => {{
-      const configData = nightlyData.filter(d => d.config === config);
-      if (configData.length > 0) {{
-        traces.push({{
-          name: config === '450' ? '450MB nightly' : '32GB nightly',
-          x: configData.map(d => d.date),
-          y: configData.map(d => toMinutes(d.mean)),
-          text: configData.map(d => d.commit.slice(0, 8)),
-          customdata: configData.map(d => [d.commit, toMinutes(d.stddev || 0)]),
-          hovertemplate: '<b>%{{text}}</b><br>%{{y:.1f}} min<br>\\u00b1%{{customdata[1]:.1f}} min<extra>' + (config === '450' ? '450MB' : '32GB') + ' nightly</extra>',
-          mode: 'lines+markers',
-          line: {{ color: colors[config].line, width: 2 }},
-          marker: {{ size: 6 }},
-          error_y: {{
-            type: 'data',
-            array: configData.map(d => toMinutes(d.stddev || 0)),
-            visible: true,
-            color: colors[config].error,
-            thickness: 1.5
-          }}
+    // Group nightly data by series_key
+    const nightlySeriesMap = new Map();
+    nightlyData.forEach(d => {{
+      const key = d.series_key || d.config;
+      if (!nightlySeriesMap.has(key)) {{
+        nightlySeriesMap.set(key, {{
+          label: d.series_label || (d.config + ' dbcache'),
+          points: []
         }});
       }}
+      nightlySeriesMap.get(key).points.push(d);
     }});
 
-    // PR traces (star markers)
-    prData.forEach(pr => {{
-      const config = pr.config;
+    // Add nightly traces
+    const sortedSeries = Array.from(nightlySeriesMap.entries())
+      .sort((a, b) => a[1].label.localeCompare(b[1].label));
+
+    sortedSeries.forEach(([seriesKey, series]) => {{
+      const points = series.points.sort((a, b) => a.date.localeCompare(b.date));
+      const color = getSeriesColor(seriesKey);
+
       traces.push({{
-        name: config === '450' ? '450MB PR' : '32GB PR',
+        name: series.label + ' (nightly)',
+        x: points.map(d => d.date),
+        y: points.map(d => toMinutes(d.mean)),
+        text: points.map(d => d.commit.slice(0, 8)),
+        customdata: points.map(d => [d.commit, toMinutes(d.stddev || 0)]),
+        hovertemplate: '<b>%{{text}}</b><br>%{{y:.1f}} min<br>\\u00b1%{{customdata[1]:.1f}} min<extra>' + series.label + ' nightly</extra>',
+        mode: 'lines+markers',
+        line: {{ color: color, width: 2 }},
+        marker: {{ size: 6 }},
+        error_y: {{
+          type: 'data',
+          array: points.map(d => toMinutes(d.stddev || 0)),
+          visible: true,
+          color: getErrorColor(color),
+          thickness: 1.5
+        }}
+      }});
+    }});
+
+    // Add PR traces (star markers)
+    prData.forEach(pr => {{
+      const key = pr.series_key || pr.config;
+      const label = pr.series_label || (pr.config + ' dbcache');
+      const color = getSeriesColor(key);
+
+      traces.push({{
+        name: label + ' (PR)',
         x: [pr.date],
         y: [toMinutes(pr.mean)],
         text: [pr.commit.slice(0, 8)],
         customdata: [[pr.commit, toMinutes(pr.stddev || 0)]],
-        hovertemplate: '<b>PR %{{text}}</b><br>%{{y:.1f}} min<br>\\u00b1%{{customdata[1]:.1f}} min<extra>' + (config === '450' ? '450MB' : '32GB') + ' PR</extra>',
+        hovertemplate: '<b>PR %{{text}}</b><br>%{{y:.1f}} min<br>\\u00b1%{{customdata[1]:.1f}} min<extra>' + label + ' PR</extra>',
         mode: 'markers',
         marker: {{
           symbol: 'star',
           size: 16,
-          color: prColors[config],
+          color: color,
           line: {{ color: '#ffffff', width: 2 }}
-        }}
+        }},
+        showlegend: false
       }});
     }});
 
@@ -541,14 +713,17 @@ PR_CHART_SNIPPET = """
       rangemode: 'tozero'
     }},
     legend: {{
-      orientation: 'h',
-      yanchor: 'bottom',
-      y: 1.02,
-      xanchor: 'right',
-      x: 1
+      orientation: 'v',
+      yanchor: 'top',
+      y: 1,
+      xanchor: 'left',
+      x: 1.02,
+      font: {{ size: 11 }},
+      itemclick: 'toggle',
+      itemdoubleclick: 'toggleothers'
     }},
     hovermode: 'closest',
-    margin: {{ t: 60, b: 80 }}
+    margin: {{ t: 60, b: 80, r: 250 }}
   }};
 
   const config = {{
@@ -619,6 +794,7 @@ class NightlyPhase:
             logger.info(f"Using pre-captured machine specs from {machine_specs_file}")
         else:
             from bench.machine import get_machine_specs
+
             machine_specs = get_machine_specs().to_dict()
 
         # Build benchmark config dict

@@ -194,7 +194,9 @@ class BenchmarkConfig:
 
         # Matrix parameters as placeholders
         for param_name in self.matrix.keys():
-            if param_name != "instrumentation":  # instrumentation is a mode, not a bitcoind param
+            if (
+                param_name != "instrumentation"
+            ):  # instrumentation is a mode, not a bitcoind param
                 parts.append(f"-{param_name}={{{param_name}}}")
 
         # Bitcoind args from config (skip empty/missing)
