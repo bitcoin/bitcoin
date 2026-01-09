@@ -736,6 +736,11 @@ class WalletMigrationTest(BitcoinTestFramework):
             os.mkdir(watch_only_dir)
             shutil.copyfile(old_path / "wallet.dat", watch_only_dir / "wallet.dat")
 
+        # Make a file in the wallets dir that must still exist after migration
+        survive_path = self.master_node.wallets_path / "survive"
+        open(survive_path, "wb").close()
+        assert survive_path.exists()
+
         mocked_time = int(time.time())
         self.master_node.setmocktime(mocked_time)
         if fail:
@@ -747,6 +752,8 @@ class WalletMigrationTest(BitcoinTestFramework):
         # Verify the /wallets/ path exists.
         assert self.master_node.wallets_path.exists()
 
+        # Verify survive is still there
+        assert survive_path.exists()
         # Verify both wallet paths exist.
         assert Path(old_path / "wallet.dat").exists()
         assert Path(master_path / "wallet.dat").exists()
