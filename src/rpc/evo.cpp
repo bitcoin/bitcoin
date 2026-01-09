@@ -1012,6 +1012,13 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
     ptx.nVersion = ProTxVersion::GetMaxFromDeployment<CProUpServTx>(WITH_LOCK(::cs_main,
                                                                               return chainman.ActiveChain().Tip()),
                                                                     chainman);
+
+    // Legacy masternodes must upgrade to BasicBLS before using higher versions.
+    // Clamp to BasicBLS to avoid "bad-protx-version-upgrade" validation failure.
+    if (dmn->pdmnState->nVersion == ProTxVersion::LegacyBLS && ptx.nVersion > ProTxVersion::BasicBLS) {
+        ptx.nVersion = ProTxVersion::BasicBLS;
+    }
+
     ptx.netInfo = NetInfoInterface::MakeNetInfo(ptx.nVersion);
 
     ProcessNetInfoCore(ptx, request.params[1], /*optional=*/false);
@@ -1260,6 +1267,12 @@ static RPCHelpMan protx_revoke()
 
     ptx.nVersion = ProTxVersion::GetMaxFromDeployment<CProUpRevTx>(WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()),
                                                                    chainman);
+
+    // Legacy masternodes must upgrade to BasicBLS before using higher versions.
+    // Clamp to BasicBLS to avoid "bad-protx-version-upgrade" validation failure.
+    if (dmn->pdmnState->nVersion == ProTxVersion::LegacyBLS && ptx.nVersion > ProTxVersion::BasicBLS) {
+        ptx.nVersion = ProTxVersion::BasicBLS;
+    }
 
     CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[1].get_str(), "operatorKey");
 
