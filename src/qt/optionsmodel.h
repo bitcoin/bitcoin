@@ -24,6 +24,9 @@ class Node;
 extern const char *DEFAULT_GUI_PROXY_HOST;
 static constexpr uint16_t DEFAULT_GUI_PROXY_PORT = 9050;
 
+/** Default threshold for dust attack protection (in duffs) */
+static constexpr qint64 DEFAULT_DUST_PROTECTION_THRESHOLD = 10000;
+
 /**
  * Convert configured prune target MiB to displayed GB. Round up to avoid underestimating max disk usage.
  */
@@ -164,8 +167,8 @@ private:
     bool m_mask_values;
     bool fKeepChangeAddress;
     bool fShowAdvancedCJUI;
-    bool fDustProtection;
-    qint64 nDustProtectionThreshold;
+    bool fDustProtection{false};
+    qint64 nDustProtectionThreshold{DEFAULT_DUST_PROTECTION_THRESHOLD};
 
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;

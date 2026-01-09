@@ -364,8 +364,8 @@ bool OptionsModel::Init(bilingual_str& error)
     fDustProtection = settings.value("fDustProtection", false).toBool();
 
     if (!settings.contains("nDustProtectionThreshold"))
-        settings.setValue("nDustProtectionThreshold", (qlonglong)10000);
-    nDustProtectionThreshold = settings.value("nDustProtectionThreshold", (qlonglong)10000).toLongLong();
+        settings.setValue("nDustProtectionThreshold", (qlonglong)DEFAULT_DUST_PROTECTION_THRESHOLD);
+    nDustProtectionThreshold = settings.value("nDustProtectionThreshold", (qlonglong)DEFAULT_DUST_PROTECTION_THRESHOLD).toLongLong();
 #endif // ENABLE_WALLET
 
     // These are shared with the core or have a command-line parameter
