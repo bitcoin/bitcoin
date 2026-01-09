@@ -101,7 +101,7 @@ def main():
         print("Commit must not contain spaces", file=sys.stderr)
         sys.exit(1)
     verify_tree = args.verify_tree
-    no_sha1 = True
+    no_sha1 = False  # FIXME: temporary fix for a merge commit signature involving SHA1
     prev_commit = ""
     initial_commit = current_commit
 
