@@ -473,12 +473,19 @@ void TransactionView::unlockDust()
     }
 
     // Get the transaction hash
+    QVariant hashVar = selection.at(0).data(TransactionTableModel::TxHashRole);
+    if (!hashVar.isValid()) {
+        return;
+    }
     uint256 hash;
-    QString hashQStr = selection.at(0).data(TransactionTableModel::TxHashRole).toString();
-    hash.SetHex(hashQStr.toStdString());
+    hash.SetHex(hashVar.toString().toStdString());
 
     // Get the output index
-    int outputIdx = selection.at(0).data(TransactionTableModel::OutputIndexRole).toInt();
+    QVariant idxVar = selection.at(0).data(TransactionTableModel::OutputIndexRole);
+    if (!idxVar.isValid()) {
+        return;
+    }
+    int outputIdx = idxVar.toInt();
 
     // Create the outpoint and unlock
     COutPoint outpoint(hash, outputIdx);
