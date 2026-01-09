@@ -358,6 +358,16 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 assert empty_template is not None
                 block = await self.parse_and_deserialize_block(empty_template, ctx)
                 assert_equal(len(block.vtx), 1)
+
+                self.log.debug("Enforce minimum reserved weight for IPC clients too")
+                opts.blockReservedWeight = 0
+                try:
+                    await mining.createNewBlock(opts)
+                    raise AssertionError("createNewBlock unexpectedly succeeded")
+                except capnp.lib.capnp.KjException as e:
+                    assert_equal(e.description, "remote exception: std::exception: block_reserved_weight (0) must be at least 2000 weight units")
+                    assert_equal(e.type, "FAILED")
+
                 # Restore opts
                 opts.blockReservedWeight = 4000
 
