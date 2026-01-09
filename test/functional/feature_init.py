@@ -53,7 +53,7 @@ class InitTest(BitcoinTestFramework):
                 os.kill(node.process.pid, signal.CTRL_BREAK_EVENT)
             else:
                 node.process.terminate()
-            node.process.wait()
+            assert_equal(0, node.process.wait())
 
         lines_to_terminate_after = [
             b'Validating signatures for all blocks',
