@@ -134,6 +134,10 @@ FUZZ_TARGET(wallet_create_transaction, .init = initialize_setup)
                 bool lockUnspents = fuzzed_data_provider.ConsumeBool();
 
                 [[maybe_unused]] auto _{FundTransaction(*fuzzed_wallet.wallet, tx, recipients, change_pos, lockUnspents, coin_control)};
+            },
+            [&] {
+                LOCK(fuzzed_wallet.wallet->cs_wallet);
+                (void)ListCoins(*fuzzed_wallet.wallet);
             }
         );
     }
