@@ -187,6 +187,8 @@ public:
      *  when called from Compact, to recompute after GraphIndexes may have changed; in this case,
      *  no chunk index objects are removed or created either. */
     virtual void Updated(TxGraphImpl& graph, int level, bool rename) noexcept = 0;
+    /** Remove all chunk index entries for this cluster (level=0 only). */
+    virtual void RemoveChunkData(TxGraphImpl& graph) noexcept = 0;
     /** Create a copy of this Cluster in staging, returning a pointer to it (used by PullIn). */
     virtual Cluster* CopyToStaging(TxGraphImpl& graph) const noexcept = 0;
     /** Get the list of Clusters in main that conflict with this one (which is assumed to be in staging). */
@@ -283,6 +285,7 @@ public:
     int GetLevel(const TxGraphImpl& graph) const noexcept final;
     void UpdateMapping(DepGraphIndex cluster_idx, GraphIndex graph_idx) noexcept final { m_mapping[cluster_idx] = graph_idx; }
     void Updated(TxGraphImpl& graph, int level, bool rename) noexcept final;
+    void RemoveChunkData(TxGraphImpl& graph) noexcept final;
     Cluster* CopyToStaging(TxGraphImpl& graph) const noexcept final;
     void GetConflicts(const TxGraphImpl& graph, std::vector<Cluster*>& out) const noexcept final;
     void MakeStagingTransactionsMissing(TxGraphImpl& graph) noexcept final;
@@ -339,6 +342,7 @@ public:
     int GetLevel(const TxGraphImpl& graph) const noexcept final;
     void UpdateMapping(DepGraphIndex cluster_idx, GraphIndex graph_idx) noexcept final { Assume(cluster_idx == 0); m_graph_index = graph_idx; }
     void Updated(TxGraphImpl& graph, int level, bool rename) noexcept final;
+    void RemoveChunkData(TxGraphImpl& graph) noexcept final;
     Cluster* CopyToStaging(TxGraphImpl& graph) const noexcept final;
     void GetConflicts(const TxGraphImpl& graph, std::vector<Cluster*>& out) const noexcept final;
     void MakeStagingTransactionsMissing(TxGraphImpl& graph) noexcept final;
@@ -697,6 +701,11 @@ public:
         auto& entry = m_entries[idx];
         Assume(entry.m_ref != nullptr);
         Assume(m_main_chunkindex_observers == 0 || !entry.m_locator[0].IsPresent());
+        // Remove all chunk index entries for the affected cluster, to avoid any chunk indexes
+        // referencing unlinked/destroyed Refs.
+        if (entry.m_locator[0].IsPresent()) {
+            entry.m_locator[0].cluster->RemoveChunkData(*this);
+        }
         entry.m_ref = nullptr;
         // Mark the transaction as to be removed in all levels where it explicitly or implicitly
         // exists.
@@ -1009,6 +1018,21 @@ void TxGraphImpl::ClearLocator(int level, GraphIndex idx, bool oversized_tx) noe
         }
     }
     if (level == 0) ClearChunkData(entry);
+}
+
+void GenericClusterImpl::RemoveChunkData(TxGraphImpl& graph) noexcept
+{
+    for (DepGraphIndex idx : m_linearization) {
+        auto& entry = graph.m_entries[m_mapping[idx]];
+        graph.ClearChunkData(entry);
+    }
+}
+
+void SingletonClusterImpl::RemoveChunkData(TxGraphImpl& graph) noexcept
+{
+    if (GetTxCount() == 0) return;
+    auto& entry = graph.m_entries[m_graph_index];
+    graph.ClearChunkData(entry);
 }
 
 void GenericClusterImpl::Updated(TxGraphImpl& graph, int level, bool rename) noexcept
@@ -2774,14 +2798,16 @@ void GenericClusterImpl::SanityCheck(const TxGraphImpl& graph, int level) const
             assert(entry.m_main_chunk_feerate == linchunking[chunk_num].feerate);
             // Verify that an entry in the chunk index exists for every chunk-ending transaction.
             ++chunk_pos;
-            bool is_chunk_end = (chunk_pos == linchunking[chunk_num].transactions.Count());
-            assert((entry.m_main_chunkindex_iterator != graph.m_main_chunkindex.end()) == is_chunk_end);
-            if (is_chunk_end) {
-                auto& chunk_data = *entry.m_main_chunkindex_iterator;
-                if (m_done == m_depgraph.Positions() && chunk_pos == 1) {
-                    assert(chunk_data.m_chunk_count == LinearizationIndex(-1));
-                } else {
-                    assert(chunk_data.m_chunk_count == chunk_pos);
+            if (graph.m_main_clusterset.m_to_remove.empty()) {
+                bool is_chunk_end = (chunk_pos == linchunking[chunk_num].transactions.Count());
+                assert((entry.m_main_chunkindex_iterator != graph.m_main_chunkindex.end()) == is_chunk_end);
+                if (is_chunk_end) {
+                    auto& chunk_data = *entry.m_main_chunkindex_iterator;
+                    if (m_done == m_depgraph.Positions() && chunk_pos == 1) {
+                        assert(chunk_data.m_chunk_count == LinearizationIndex(-1));
+                    } else {
+                        assert(chunk_data.m_chunk_count == chunk_pos);
+                    }
                 }
             }
             // If this Cluster has an acceptable quality level, its chunks must be connected.
@@ -2805,9 +2831,11 @@ void SingletonClusterImpl::SanityCheck(const TxGraphImpl& graph, int level) cons
         if (level == 0 && IsAcceptable()) {
             assert(entry.m_main_lin_index == 0);
             assert(entry.m_main_chunk_feerate == m_feerate);
-            assert(entry.m_main_chunkindex_iterator != graph.m_main_chunkindex.end());
-            auto& chunk_data = *entry.m_main_chunkindex_iterator;
-            assert(chunk_data.m_chunk_count == LinearizationIndex(-1));
+            if (graph.m_main_clusterset.m_to_remove.empty()) {
+                assert(entry.m_main_chunkindex_iterator != graph.m_main_chunkindex.end());
+                auto& chunk_data = *entry.m_main_chunkindex_iterator;
+                assert(chunk_data.m_chunk_count == LinearizationIndex(-1));
+            }
         }
     }
 }
