@@ -94,6 +94,8 @@ def main():
         incorrect_sha512_allowed = f.read().splitlines()
     with open(dirname + "/trusted-keys", "r") as f:
         trusted_keys = f.read().splitlines()
+    with open(dirname + "/allow-sha1-commits", "r") as f:
+        sha1_allowed = f.read().splitlines()
 
     # Set commit and variables
     current_commit = args.commit
@@ -136,6 +138,8 @@ def main():
 
 
         os.environ['BITCOIN_VERIFY_COMMITS_ALLOW_SHA1'] = "0" if no_sha1 else "1"
+        if current_commit in sha1_allowed:
+            os.environ['BITCOIN_VERIFY_COMMITS_ALLOW_SHA1'] = "1"
         allow_revsig = current_commit in revsig_allowed
 
         # Check that the commit (and parents) was signed with a trusted key
