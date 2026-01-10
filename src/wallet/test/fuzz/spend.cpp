@@ -45,19 +45,13 @@ FUZZ_TARGET(wallet_create_transaction, .init = initialize_setup)
     };
 
     CCoinControl coin_control;
-    if (fuzzed_data_provider.ConsumeBool()) coin_control.m_version = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
     coin_control.m_avoid_partial_spends = fuzzed_data_provider.ConsumeBool();
     coin_control.m_include_unsafe_inputs = fuzzed_data_provider.ConsumeBool();
-    if (fuzzed_data_provider.ConsumeBool()) coin_control.m_confirm_target = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, 999'000);
-    coin_control.destChange = fuzzed_data_provider.ConsumeBool() ? fuzzed_wallet.GetDestination(fuzzed_data_provider) : ConsumeTxDestination(fuzzed_data_provider);
-    if (fuzzed_data_provider.ConsumeBool()) coin_control.m_change_type = fuzzed_data_provider.PickValueInArray(OUTPUT_TYPES);
-    if (fuzzed_data_provider.ConsumeBool()) coin_control.m_feerate = CFeeRate(ConsumeMoney(fuzzed_data_provider, /*max=*/COIN));
     coin_control.m_allow_other_inputs = fuzzed_data_provider.ConsumeBool();
-    coin_control.m_locktime = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
-    coin_control.fOverrideFeeRate = fuzzed_data_provider.ConsumeBool();
 
     int next_locktime{0};
     CAmount all_values{0};
+    std::vector<COutPoint> available_outpoints;
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000)
     {
         CMutableTransaction tx;
@@ -72,6 +66,7 @@ FUZZ_TARGET(wallet_create_transaction, .init = initialize_setup)
         auto txid{tx.GetHash()};
         auto ret{fuzzed_wallet.wallet->mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(txid), std::forward_as_tuple(MakeTransactionRef(std::move(tx)), TxStateConfirmed{chainstate.m_chain.Tip()->GetBlockHash(), chainstate.m_chain.Height(), /*index=*/0}))};
         assert(ret.second);
+        available_outpoints.emplace_back(txid, 0);
     }
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100) {
@@ -99,10 +94,27 @@ FUZZ_TARGET(wallet_create_transaction, .init = initialize_setup)
                                         /*nAmount=*/ConsumeMoney(fuzzed_data_provider),
                                         /*fSubtractFeeFromAmount=*/fuzzed_data_provider.ConsumeBool()});
                 }
-
                 std::optional<unsigned int> change_pos;
                 if (fuzzed_data_provider.ConsumeBool()) change_pos = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
                 [[maybe_unused]] auto _{CreateTransaction(*fuzzed_wallet.wallet, recipients, change_pos, coin_control)};
+            },
+            [&] {
+                if (fuzzed_data_provider.ConsumeBool()) coin_control.m_version = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
+                if (fuzzed_data_provider.ConsumeBool()) coin_control.m_confirm_target = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, 999'000);
+                if (fuzzed_data_provider.ConsumeBool()) coin_control.destChange = fuzzed_data_provider.ConsumeBool() ? fuzzed_wallet.GetDestination(fuzzed_data_provider) : ConsumeTxDestination(fuzzed_data_provider);
+                if (fuzzed_data_provider.ConsumeBool()) coin_control.m_change_type = fuzzed_data_provider.PickValueInArray(OUTPUT_TYPES);
+                if (fuzzed_data_provider.ConsumeBool()) coin_control.m_feerate = CFeeRate(ConsumeMoney(fuzzed_data_provider, /*max=*/COIN));
+                if (fuzzed_data_provider.ConsumeBool()) coin_control.m_locktime = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
+                if (fuzzed_data_provider.ConsumeBool()) coin_control.fOverrideFeeRate = fuzzed_data_provider.ConsumeBool();
+
+                if (!available_outpoints.empty() && fuzzed_data_provider.ConsumeBool()) {
+                    COutPoint op = PickValue(fuzzed_data_provider, available_outpoints);
+                    if (fuzzed_data_provider.ConsumeBool()) {
+                        coin_control.Select(op);
+                    } else {
+                        coin_control.UnSelect(op);
+                    }
+                }
             }
         );
     }
