@@ -1,0 +1,44 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/quantumcast-core" },
+    { "path": "./packages/quantumcast-signal" },
+    { "path": "./packages/tor-manager" },
+    { "path": "./packages/bunker-instagram" },
+    { "path": "./packages/bunker-protonmail" },
+    { "path": "./packages/bunker-electrum" },
+    { "path": "./packages/bunker-x" },
+    { "path": "./packages/pattern-obfuscator" }
+  ],
+  "compilerOptions": {
+    /* Configuración del Proyecto Compuesto */
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "incremental": true,
+
+    /* Configuración del Lenguaje */
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"],
+    "resolveJsonModule": true,
+
+    /* Emit */
+    "outDir": "${configDir}/dist",
+    "rootDir": "${configDir}/src",
+    "sourceMap": true,
+
+    /* Opciones de Rigor */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true
+  }
+}
