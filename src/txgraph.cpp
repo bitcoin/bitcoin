@@ -753,7 +753,7 @@ public:
 
     // Implementations for the public TxGraph interface.
 
-    Ref AddTransaction(const FeePerWeight& feerate) noexcept final;
+    void AddTransaction(Ref& arg, const FeePerWeight& feerate) noexcept final;
     void RemoveTransaction(const Ref& arg) noexcept final;
     void AddDependency(const Ref& parent, const Ref& child) noexcept final;
     void SetTransactionFee(const Ref&, int64_t fee) noexcept final;
@@ -2115,20 +2115,19 @@ void TxGraphImpl::MakeAllAcceptable(int level) noexcept
 
 GenericClusterImpl::GenericClusterImpl(uint64_t sequence) noexcept : Cluster{sequence} {}
 
-TxGraph::Ref TxGraphImpl::AddTransaction(const FeePerWeight& feerate) noexcept
+void TxGraphImpl::AddTransaction(Ref& arg, const FeePerWeight& feerate) noexcept
 {
     Assume(m_main_chunkindex_observers == 0 || GetTopLevel() != 0);
     Assume(feerate.size > 0);
-    // Construct a new Ref.
-    Ref ret;
+    Assume(GetRefGraph(arg) == nullptr);
     // Construct a new Entry, and link it with the Ref.
     auto idx = m_entries.size();
     m_entries.emplace_back();
     auto& entry = m_entries.back();
     entry.m_main_chunkindex_iterator = m_main_chunkindex.end();
-    entry.m_ref = &ret;
-    GetRefGraph(ret) = this;
-    GetRefIndex(ret) = idx;
+    entry.m_ref = &arg;
+    GetRefGraph(arg) = this;
+    GetRefIndex(arg) = idx;
     // Construct a new singleton Cluster (which is necessarily optimally linearized).
     bool oversized = uint64_t(feerate.size) > m_max_cluster_size;
     auto cluster = CreateEmptyCluster(1);
@@ -2146,8 +2145,6 @@ TxGraph::Ref TxGraphImpl::AddTransaction(const FeePerWeight& feerate) noexcept
         clusterset.m_oversized = true;
         clusterset.m_group_data = std::nullopt;
     }
-    // Return the Ref.
-    return ret;
 }
 
 void TxGraphImpl::RemoveTransaction(const Ref& arg) noexcept

@@ -67,12 +67,14 @@ public:
 
     /** Virtual destructor, so inheriting is safe. */
     virtual ~TxGraph() = default;
-    /** Construct a new transaction with the specified feerate, and return a Ref to it.
+    /** Initialize arg (which must be an empty Ref) to refer to a new transaction in this graph
+     *  with the specified feerate.
+     *
      *  If a staging graph exists, the new transaction is only created there. feerate.size must be
-     *  strictly positive. In all further calls, only Refs created by AddTransaction() are allowed
+     *  strictly positive. In all further calls, only Refs passed to AddTransaction() are allowed
      *  to be passed to this TxGraph object (or empty Ref objects). Ref objects may outlive the
-     *  TxGraph they were created for. */
-    [[nodiscard]] virtual Ref AddTransaction(const FeePerWeight& feerate) noexcept = 0;
+     *  TxGraph they were added to. */
+    virtual void AddTransaction(Ref& arg, const FeePerWeight& feerate) noexcept = 0;
     /** Remove the specified transaction. If a staging graph exists, the removal only happens
      *  there. This is a no-op if the transaction was already removed.
      *
@@ -235,8 +237,7 @@ public:
         /** Index into the Graph's m_entries. Only used if m_graph != nullptr. */
         GraphIndex m_index = GraphIndex(-1);
     public:
-        /** Construct an empty Ref. Non-empty Refs can only be created using
-         *  TxGraph::AddTransaction. */
+        /** Construct an empty Ref. It can be initialized through TxGraph::AddTransaction. */
         Ref() noexcept = default;
         /** Destroy this Ref. If it is not empty, the corresponding transaction is removed (in both
          *  main and staging, if it exists). */
