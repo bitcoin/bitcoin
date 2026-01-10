@@ -74,31 +74,38 @@ FUZZ_TARGET(wallet_create_transaction, .init = initialize_setup)
         assert(ret.second);
     }
 
-    std::vector<CRecipient> recipients;
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100) {
-        CTxDestination destination;
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                destination = fuzzed_wallet.GetDestination(fuzzed_data_provider);
-            },
-            [&] {
-                CScript script;
-                script << OP_RETURN;
-                destination = CNoDestination{script};
-            },
-            [&] {
-                destination = ConsumeTxDestination(fuzzed_data_provider);
+                std::vector<CRecipient> recipients;
+                LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 50) {
+                    CTxDestination destination;
+                    CallOneOf(
+                        fuzzed_data_provider,
+                        [&] {
+                            destination = fuzzed_wallet.GetDestination(fuzzed_data_provider);
+                        },
+                        [&] {
+                            CScript script;
+                            script << OP_RETURN;
+                            destination = CNoDestination{script};
+                        },
+                        [&] {
+                            destination = ConsumeTxDestination(fuzzed_data_provider);
+                        }
+                    );
+                    recipients.push_back({destination,
+                                        /*nAmount=*/ConsumeMoney(fuzzed_data_provider),
+                                        /*fSubtractFeeFromAmount=*/fuzzed_data_provider.ConsumeBool()});
+                }
+
+                std::optional<unsigned int> change_pos;
+                if (fuzzed_data_provider.ConsumeBool()) change_pos = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
+                [[maybe_unused]] auto _{CreateTransaction(*fuzzed_wallet.wallet, recipients, change_pos, coin_control)};
             }
         );
-        recipients.push_back({destination,
-                              /*nAmount=*/ConsumeMoney(fuzzed_data_provider),
-                              /*fSubtractFeeFromAmount=*/fuzzed_data_provider.ConsumeBool()});
     }
-
-    std::optional<unsigned int> change_pos;
-    if (fuzzed_data_provider.ConsumeBool()) change_pos = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
-    (void)CreateTransaction(*fuzzed_wallet.wallet, recipients, change_pos, coin_control);
 }
 } // namespace
 } // namespace wallet
