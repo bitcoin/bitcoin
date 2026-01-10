@@ -69,8 +69,6 @@ class GitState:
 class GitError(Exception):
     """Git operation failed."""
 
-    pass
-
 
 def git_checkout(commit: str, repo_path: Path | None = None) -> None:
     """Checkout a specific commit."""

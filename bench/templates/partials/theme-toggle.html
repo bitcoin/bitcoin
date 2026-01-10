@@ -1,0 +1,25 @@
+<button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">
+  <span id="theme-icon">🌙</span>
+</button>
+
+<script>
+function getPreferredTheme() {
+  const saved = localStorage.getItem('theme');
+  if (saved) return saved;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function setTheme(theme) {
+  document.documentElement.classList.toggle('dark', theme === 'dark');
+  document.getElementById('theme-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
+  localStorage.setItem('theme', theme);
+  if (typeof updateChart === 'function') {
+    updateChart(theme);
+  }
+}
+
+function toggleTheme() {
+  const current = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+  setTheme(current === 'dark' ? 'light' : 'dark');
+}
+</script>

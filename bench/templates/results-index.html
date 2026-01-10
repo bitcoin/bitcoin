@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Bitcoin Benchmark Results{% endblock %}
+
+{% block content %}
+<div class="w-9/10 mx-auto">
+  <h1 class="text-3xl font-bold mb-8">Bitcoin Benchmark Results</h1>
+  <div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-xl font-semibold mb-4">Available Results</h2>
+    <ul class="space-y-2">
+      {% for pr_num, pr_runs in results %}
+      <li class="font-semibold">PR #{{ pr_num }}
+        <ul class="ml-8 space-y-1">
+          {% for run in pr_runs %}
+          <li><a href="results/pr-{{ pr_num }}/{{ run }}/index.html" class="text-blue-600 hover:underline">Run {{ run }}</a></li>
+          {% endfor %}
+        </ul>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

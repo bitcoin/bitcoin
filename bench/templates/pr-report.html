@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Benchmark Results{% endblock %}
+
+{% block content %}
+<div class="w-9/10 mx-auto">
+  <h1 class="text-3xl font-bold mb-8">Benchmark Results</h1>
+  <div class="bg-white rounded-lg shadow p-6 mb-8">
+    <h2 class="text-xl font-semibold mb-4">{{ title }}</h2>
+
+    <h3 class="text-lg font-semibold mb-4">Run Data</h3>
+    <div class="overflow-x-auto mb-8">
+      <table class="min-w-full table-auto">
+        <thead>
+          <tr class="bg-gray-50">
+            <th class="px-4 py-2 text-left">Config</th>
+            <th class="px-4 py-2">Mean (s)</th>
+            <th class="px-4 py-2">Std Dev</th>
+            <th class="px-4 py-2">User (s)</th>
+            <th class="px-4 py-2">System (s)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for run in runs %}
+          <tr class="border-t">
+            <td class="px-4 py-2 font-mono text-sm">{{ run.config_display }}</td>
+            <td class="px-4 py-2 text-center">{{ "%.3f"|format(run.mean) }}</td>
+            <td class="px-4 py-2 text-center">{{ "%.3f"|format(run.stddev) if run.stddev else "N/A" }}</td>
+            <td class="px-4 py-2 text-center">{{ "%.3f"|format(run.user) }}</td>
+            <td class="px-4 py-2 text-center">{{ "%.3f"|format(run.system) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if nightly_comparison %}
+    <h3 class="text-lg font-semibold mb-4">Comparison to Nightly Master</h3>
+    <div class="overflow-x-auto mb-8">
+      <table class="min-w-full table-auto">
+        <thead>
+          <tr class="bg-gray-50">
+            <th class="px-4 py-2 text-left">Config</th>
+            <th class="px-4 py-2">PR Time</th>
+            <th class="px-4 py-2">Nightly Time (Date)</th>
+            <th class="px-4 py-2">Change</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for config, data in nightly_comparison|dictsort %}
+          <tr class="border-t">
+            <td class="px-4 py-2 font-mono text-sm">{{ data.config_display }}</td>
+            <td class="px-4 py-2 text-center">{{ "%.1f"|format(data.pr_mean / 60) }} min</td>
+            <td class="px-4 py-2 text-center">
+              {% if data.nightly_mean %}
+                {{ "%.1f"|format(data.nightly_mean / 60) }} min
+                ({{ data.nightly_date }}{% if data.nightly_commit %},
+                <a href="{{ repo_url }}/commit/{{ data.nightly_commit }}" target="_blank" class="text-blue-600 hover:underline">{{ data.nightly_commit[:7] }}</a>{% endif %})
+              {% else %}
+                No baseline
+              {% endif %}
+            </td>
+            <td class="px-4 py-2 text-center">
+              {% if data.speedup_percent is not none %}
+                {% if data.speedup_percent > 0 %}
+                  <span class="text-green-600">+{{ data.speedup_percent }}%</span>
+                {% elif data.speedup_percent < 0 %}
+                  <span class="text-red-600">{{ data.speedup_percent }}%</span>
+                {% else %}
+                  {{ data.speedup_percent }}%
+                {% endif %}
+              {% else %}
+                N/A
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if pr_chart_data %}
+    <h3 class="text-lg font-semibold mb-4">Performance Trend</h3>
+    <div class="mb-8">
+      {% include 'partials/pr-chart.html' %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="bg-yellow-50 border border-yellow-200 rounded p-4 mb-8">
+      <p class="text-yellow-800">No nightly baseline data available for comparison.</p>
+    </div>
+    {% endif %}
+
+    {% if graphs %}
+    <h3 class="text-lg font-semibold mb-4">Flamegraphs and Plots</h3>
+    {% for graph in graphs %}
+    <div class="mb-8">
+      <h4 class="text-md font-medium mb-2">{{ graph.label }}</h4>
+      {% if graph.flamegraph %}
+      <object data="{{ graph.flamegraph }}" type="image/svg+xml" width="100%" class="mb-4"></object>
+      {% endif %}
+      {% for plot in graph.plots %}
+      <a href="{{ plot.path }}" target="_blank">
+        <img src="{{ plot.path }}" alt="{{ plot.name }}" class="mb-4 max-w-full h-auto">
+      </a>
+      {% endfor %}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

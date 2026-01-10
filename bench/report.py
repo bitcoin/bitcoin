@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import json
 import logging
-import re
 import shutil
 from dataclasses import dataclass, field
 from datetime import date
@@ -16,11 +15,11 @@ from typing import Any
 
 from bench.nightly import (
     NightlyHistory,
-    generate_pr_chart_snippet,
     series_color_index,
     series_key,
     series_label,
 )
+from bench.render import render_template
 
 logger = logging.getLogger(__name__)
 
@@ -91,69 +90,6 @@ def parse_network_name(network: str) -> tuple[int, str]:
 
     instrumentation = parts[1] if len(parts) > 1 else "uninstrumented"
     return dbcache, instrumentation
-
-
-# HTML template for individual run report
-RUN_REPORT_TEMPLATE = """<!DOCTYPE html>
-<html>
-  <head>
-    <title>Benchmark Results</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  </head>
-  <body class="bg-gray-100 p-8">
-    <div class="w-9/10 mx-auto">
-      <h1 class="text-3xl font-bold mb-8">Benchmark Results</h1>
-      <div class="bg-white rounded-lg shadow p-6 mb-8">
-        <h2 class="text-xl font-semibold mb-4">{title}</h2>
-
-        <!-- Run Data Table -->
-        <h3 class="text-lg font-semibold mb-4">Run Data</h3>
-        <div class="overflow-x-auto mb-8">
-          <table class="min-w-full table-auto">
-            <thead>
-              <tr class="bg-gray-50">
-                <th class="px-4 py-2 text-left">Config</th>
-                <th class="px-4 py-2">Mean (s)</th>
-                <th class="px-4 py-2">Std Dev</th>
-                <th class="px-4 py-2">User (s)</th>
-                <th class="px-4 py-2">System (s)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {run_data_rows}
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Nightly Comparison Section -->
-        {nightly_section}
-
-        <!-- Flamegraphs and Plots -->
-        {graphs_section}
-      </div>
-    </div>
-  </body>
-</html>"""
-
-# HTML template for main index
-INDEX_TEMPLATE = """<!DOCTYPE html>
-<html>
-  <head>
-    <title>Bitcoin Benchmark Results</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  </head>
-  <body class="bg-gray-100 p-8">
-    <div class="w-9/10 mx-auto">
-      <h1 class="text-3xl font-bold mb-8">Bitcoin Benchmark Results</h1>
-      <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-xl font-semibold mb-4">Available Results</h2>
-        <ul class="space-y-2">
-          {run_list}
-        </ul>
-      </div>
-    </div>
-  </body>
-</html>"""
 
 
 @dataclass
@@ -354,7 +290,7 @@ class ReportGenerator:
             results_dir: Directory containing pr-* subdirectories
             output_file: Where to write index.html
         """
-        runs = []
+        results = []
 
         if results_dir.exists():
             for pr_dir in sorted(results_dir.iterdir()):
@@ -365,24 +301,9 @@ class ReportGenerator:
                         if run_dir.is_dir():
                             pr_runs.append(run_dir.name)
                     if pr_runs:
-                        runs.append((pr_num, pr_runs))
+                        results.append((pr_num, pr_runs))
 
-        run_list_html = ""
-        for pr_num, pr_runs in runs:
-            run_links = "\n".join(
-                f'<li><a href="results/pr-{pr_num}/{run}/index.html" '
-                f'class="text-blue-600 hover:underline">Run {run}</a></li>'
-                for run in pr_runs
-            )
-            run_list_html += f"""
-            <li class="font-semibold">PR #{pr_num}
-              <ul class="ml-8 space-y-1">
-                {run_links}
-              </ul>
-            </li>
-            """
-
-        html = INDEX_TEMPLATE.format(run_list=run_list_html)
+        html = render_template("results-index.html", results=results)
         output_file.write_text(html)
         logger.info(f"Generated index: {output_file}")
 
@@ -517,125 +438,79 @@ class ReportGenerator:
         commit: str | None = None,
     ) -> str:
         """Generate the HTML report."""
-        # Sort runs by network
         sorted_runs = sorted(runs, key=lambda r: r.network)
 
-        # Generate run data rows
-        run_data_rows = ""
+        runs_data = []
         for run in sorted_runs:
-            stddev_str = f"{run.stddev:.3f}" if run.stddev else "N/A"
-
-            # Format config name for display
             dbcache, instrumentation = parse_network_name(run.network)
             config_display = format_config_display(
                 dbcache, instrumentation=instrumentation
             )
+            runs_data.append(
+                {
+                    "config_display": config_display,
+                    "mean": run.mean,
+                    "stddev": run.stddev,
+                    "user": run.user,
+                    "system": run.system,
+                }
+            )
 
-            run_data_rows += f"""
-              <tr class="border-t">
-                <td class="px-4 py-2 font-mono text-sm">{config_display}</td>
-                <td class="px-4 py-2 text-center">{run.mean:.3f}</td>
-                <td class="px-4 py-2 text-center">{stddev_str}</td>
-                <td class="px-4 py-2 text-center">{run.user:.3f}</td>
-                <td class="px-4 py-2 text-center">{run.system:.3f}</td>
-              </tr>
-            """
-
-        # Generate nightly comparison section
-        nightly_section = self._generate_nightly_section(nightly_comparison, commit)
-
-        # Generate graphs section
-        graphs_section = self._generate_graphs_section(runs, input_dir, output_dir)
-
-        return RUN_REPORT_TEMPLATE.format(
-            title=title,
-            run_data_rows=run_data_rows,
-            nightly_section=nightly_section,
-            graphs_section=graphs_section,
+        nightly_data, pr_chart_data = self._prepare_nightly_data(
+            nightly_comparison, commit
         )
 
-    def _generate_nightly_section(
+        graphs = self._prepare_graphs_data(runs, input_dir, output_dir)
+
+        nightly_chart_data = None
+        if pr_chart_data and self.nightly_history:
+            nightly_chart_data = self.nightly_history.get_chart_data()
+
+        return render_template(
+            "pr-report.html",
+            title=title,
+            runs=runs_data,
+            nightly_comparison=nightly_data,
+            pr_chart_data=pr_chart_data,
+            nightly_chart_data=nightly_chart_data,
+            graphs=graphs,
+            repo_url=self.repo_url,
+        )
+
+    def _prepare_nightly_data(
         self,
         nightly_comparison: dict[str, dict[str, Any]],
         commit: str | None = None,
-    ) -> str:
-        """Generate the nightly comparison section with table and chart."""
-        if not nightly_comparison:
-            return """
-            <div class="bg-yellow-50 border border-yellow-200 rounded p-4 mb-8">
-              <p class="text-yellow-800">No nightly baseline data available for comparison.</p>
-            </div>
-            """
+    ) -> tuple[dict[str, dict[str, Any]], list[dict]]:
+        """Prepare nightly comparison data for template rendering.
 
-        # Build comparison table
-        comparison_rows = ""
-        has_nightly_data = False
+        Returns:
+            Tuple of (nightly_comparison_with_display, pr_chart_data)
+        """
+        if not nightly_comparison:
+            return {}, []
+
+        result = {}
         pr_chart_data = []
 
         for config, data in sorted(nightly_comparison.items()):
-            pr_mean = data["pr_mean"]
-            pr_stddev = data.get("pr_stddev")
-            nightly_mean = data.get("nightly_mean")
-            nightly_date = data.get("nightly_date")
-            nightly_commit = data.get("nightly_commit")
-            speedup = data.get("speedup_percent")
-
-            # Format PR time
-            pr_minutes = pr_mean / 60
-            pr_time_str = f"{pr_minutes:.1f} min"
-
-            # Format nightly time
-            if nightly_mean:
-                has_nightly_data = True
-                nightly_minutes = nightly_mean / 60
-                nightly_time_str = f"{nightly_minutes:.1f} min"
-                # Include commit link if available
-                if nightly_commit:
-                    short_commit = nightly_commit[:7]
-                    commit_link = f'<a href="{self.repo_url}/commit/{nightly_commit}" target="_blank" class="text-blue-600 hover:underline">{short_commit}</a>'
-                    nightly_info = f"{nightly_time_str} ({nightly_date}, {commit_link})"
-                else:
-                    nightly_info = f"{nightly_time_str} ({nightly_date})"
-
-                # Format speedup
-                if speedup is not None:
-                    color_class = ""
-                    if speedup > 0:
-                        color_class = "text-green-600"
-                    elif speedup < 0:
-                        color_class = "text-red-600"
-                    sign = "+" if speedup > 0 else ""
-                    speedup_str = f'<span class="{color_class}">{sign}{speedup}%</span>'
-                else:
-                    speedup_str = "N/A"
-            else:
-                nightly_info = "No baseline"
-                speedup_str = "N/A"
-
-            # Config display name using helper
             try:
                 dbcache = int(config)
             except ValueError:
                 dbcache = 0
-            config_name = format_config_display(dbcache)
 
-            comparison_rows += f"""
-              <tr class="border-t">
-                <td class="px-4 py-2 font-mono text-sm">{config_name}</td>
-                <td class="px-4 py-2 text-center">{pr_time_str}</td>
-                <td class="px-4 py-2 text-center">{nightly_info}</td>
-                <td class="px-4 py-2 text-center">{speedup_str}</td>
-              </tr>
-            """
+            result[config] = {
+                **data,
+                "config_display": format_config_display(dbcache),
+            }
 
-            # Collect data for chart
-            if nightly_mean:
+            if data.get("nightly_mean"):
                 key = data.get("series_key", f"unknown|db{config}|0-0")
                 pr_chart_data.append(
                     {
                         "config": config,
-                        "mean": pr_mean,
-                        "stddev": pr_stddev or 0,
+                        "mean": data["pr_mean"],
+                        "stddev": data.get("pr_stddev") or 0,
                         "commit": commit or "unknown",
                         "date": date.today().isoformat(),
                         "series_key": key,
@@ -644,82 +519,32 @@ class ReportGenerator:
                     }
                 )
 
-        # Build comparison table HTML
-        table_html = f"""
-        <h3 class="text-lg font-semibold mb-4">Comparison to Nightly Master</h3>
-        <div class="overflow-x-auto mb-8">
-          <table class="min-w-full table-auto">
-            <thead>
-              <tr class="bg-gray-50">
-                <th class="px-4 py-2 text-left">Config</th>
-                <th class="px-4 py-2">PR Time</th>
-                <th class="px-4 py-2">Nightly Time (Date)</th>
-                <th class="px-4 py-2">Change</th>
-              </tr>
-            </thead>
-            <tbody>
-              {comparison_rows}
-            </tbody>
-          </table>
-        </div>
-        """
+        return result, pr_chart_data
 
-        # Add chart if we have nightly data
-        chart_html = ""
-        if has_nightly_data and self.nightly_history and pr_chart_data:
-            chart_html = f"""
-            <h3 class="text-lg font-semibold mb-4">Performance Trend</h3>
-            <div class="mb-8">
-              {generate_pr_chart_snippet(self.nightly_history, pr_chart_data)}
-            </div>
-            """
-
-        return table_html + chart_html
-
-    def _linkify_commit(self, command: str) -> str:
-        """Convert commit hashes in command to links."""
-
-        def replace_commit(match):
-            commit = match.group(1)
-            short_commit = commit[:8] if len(commit) > 8 else commit
-            return f'(<a href="{self.repo_url}/commit/{commit}" target="_blank" class="text-blue-600 hover:underline">{short_commit}</a>)'
-
-        return re.sub(r"\(([a-f0-9]{7,40})\)", replace_commit, command)
-
-    def _generate_graphs_section(
+    def _prepare_graphs_data(
         self,
         runs: list[BenchmarkRun],
         input_dir: Path,
         output_dir: Path,
-    ) -> str:
-        """Generate the flamegraphs and plots section."""
-        graphs_html = ""
+    ) -> list[dict]:
+        """Prepare flamegraphs and plots data for template rendering."""
+        graphs = []
 
         for run in runs:
-            # Use the command/name directly (e.g., "base", "head")
             name = run.command
             network = run.network
 
-            # Check for flamegraph - try both with and without network prefix
-            # Network-prefixed: {network}-{name}-flamegraph.svg (for multi-network reports)
-            # Non-prefixed: {name}-flamegraph.svg (for single-network reports)
             flamegraph_name = None
-            flamegraph_path = None
-
             network_prefixed = f"{network}-{name}-flamegraph.svg"
             non_prefixed = f"{name}-flamegraph.svg"
 
             if (output_dir / network_prefixed).exists():
                 flamegraph_name = network_prefixed
-                flamegraph_path = output_dir / network_prefixed
             elif (input_dir / non_prefixed).exists():
                 flamegraph_name = non_prefixed
-                flamegraph_path = input_dir / non_prefixed
 
-            # Check for plots - try both network-prefixed and non-prefixed directories
             plot_files = []
             plots_dir = None
-
             network_plots_dir = output_dir / f"{network}-plots"
             regular_plots_dir = input_dir / "plots"
 
@@ -738,41 +563,24 @@ class ReportGenerator:
                     if p.name.startswith(f"{name}-") and p.suffix == ".png"
                 ]
 
-            if not flamegraph_path and not plot_files:
+            if not flamegraph_name and not plot_files:
                 continue
 
-            # Build display label
             display_label = f"{network} - {name}" if network != "default" else name
+            plots_rel_path = plots_dir.name if plots_dir else ""
 
-            graphs_html += f"""
-            <div class="mb-8">
-              <h4 class="text-md font-medium mb-2">{display_label}</h4>
-            """
+            graphs.append(
+                {
+                    "label": display_label,
+                    "flamegraph": flamegraph_name,
+                    "plots": [
+                        {"name": p, "path": f"{plots_rel_path}/{p}"}
+                        for p in sorted(plot_files)
+                    ],
+                }
+            )
 
-            if flamegraph_path:
-                graphs_html += f"""
-                <object data="{flamegraph_name}" type="image/svg+xml" width="100%" class="mb-4"></object>
-                """
-
-            if plot_files and plots_dir:
-                # Determine the relative path for plots
-                plots_rel_path = plots_dir.name
-                for plot in sorted(plot_files):
-                    graphs_html += f"""
-                <a href="{plots_rel_path}/{plot}" target="_blank">
-                  <img src="{plots_rel_path}/{plot}" alt="{plot}" class="mb-4 max-w-full h-auto">
-                </a>
-                """
-
-            graphs_html += "</div>"
-
-        if graphs_html:
-            return f"""
-            <h3 class="text-lg font-semibold mb-4">Flamegraphs and Plots</h3>
-            {graphs_html}
-            """
-
-        return ""
+        return graphs
 
     def _copy_artifacts(self, input_dir: Path, output_dir: Path) -> None:
         """Copy flamegraphs and plots to output directory."""
@@ -807,8 +615,6 @@ class ReportPhase:
     ):
         nightly_history: NightlyHistory | None = None
         if nightly_history_file and nightly_history_file.exists():
-            from bench.nightly import NightlyHistory
-
             nightly_history = NightlyHistory(nightly_history_file)
         self.generator = ReportGenerator(repo_url, nightly_history)
 

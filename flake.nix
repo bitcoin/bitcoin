@@ -157,6 +157,7 @@
               pkgs.perf
               pkgs.perf-tools
               pkgs.python312
+              pkgs.python312Packages.jinja2
               pkgs.python312Packages.matplotlib
               pkgs.util-linux
 
