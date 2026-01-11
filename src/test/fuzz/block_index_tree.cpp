@@ -131,8 +131,8 @@ FUZZ_TARGET(block_index_tree, .init = initialize_block_index_tree)
                                 BlockValidationState state;
                                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "consensus-invalid");
                                 chainman.InvalidBlockFound(block, state);
-                                // This results in duplicate calls to InvalidChainFound, but mirrors the behavior in validation
-                                chainman.InvalidChainFound(to_connect.front());
+                                // This results in duplicate calls to UpdateBestInvalid, but mirrors the behavior in validation
+                                chainman.UpdateBestInvalid(to_connect.front());
                                 break;
                             } else {
                                 block->RaiseValidity(BLOCK_VALID_SCRIPTS);
