@@ -1990,7 +1990,7 @@ void Chainstate::CheckForkWarningConditions()
 }
 
 // Update m_best_invalid to track the invalid block with the most work
-void Chainstate::InvalidChainFound(CBlockIndex* pindexNew)
+void Chainstate::UpdateBestInvalid(CBlockIndex* pindexNew)
 {
     AssertLockHeld(cs_main);
     if (!m_chainman.m_best_invalid || pindexNew->nChainWork > m_chainman.m_best_invalid->nChainWork) {
@@ -2021,7 +2021,7 @@ void Chainstate::InvalidBlockFound(CBlockIndex* pindex, const BlockValidationSta
         LogInfo("%s:  current best=%s  height=%d  log2_work=%f  date=%s\n", __func__,
         tip->GetBlockHash().ToString(), m_chain.Height(), log(tip->nChainWork.getdouble())/log(2.0),
         FormatISO8601DateTime(tip->GetBlockTime()));
-        InvalidChainFound(pindex);
+        UpdateBestInvalid(pindex);
         CheckForkWarningConditions();
     }
 }
@@ -3302,7 +3302,7 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex*
                 if (state.IsInvalid()) {
                     // The block violates a consensus rule.
                     if (state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
-                        InvalidChainFound(vpindexToConnect.front());
+                        UpdateBestInvalid(vpindexToConnect.front());
                     }
                     state = BlockValidationState();
                     fInvalidFound = true;
@@ -3701,7 +3701,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
         }
 
         // Track the last disconnected block, so we can correct its BLOCK_FAILED_CHILD status in future
-        // iterations, or, if it's the last one, call InvalidChainFound on it.
+        // iterations, or, if it's the last one, call UpdateBestInvalid on it.
         to_mark_failed = invalid_walk_tip;
     }
 
@@ -3734,7 +3734,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
             }
         }
 
-        InvalidChainFound(to_mark_failed);
+        UpdateBestInvalid(to_mark_failed);
         LogInfo("Invalidated block: hash=%s height=%d\n",
             to_mark_failed->GetBlockHash().ToString(), to_mark_failed->nHeight);
         CheckForkWarningConditions();
