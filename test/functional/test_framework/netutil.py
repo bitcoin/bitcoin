@@ -2,7 +2,7 @@
 # Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Linux network utilities.
+"""Linux and macOS network utilities.
 
 Roughly based on https://web.archive.org/web/20190424172231/http://voorloopnul.com/blog/a-python-netstat-in-less-than-100-lines-of-code/ by Ricardo Pascal
 """
@@ -88,12 +88,23 @@ def get_bind_addrs(pid):
     '''
     Get bind addresses as (host,port) tuples for process pid.
     '''
-    inodes = get_socket_inodes(pid)
-    bind_addrs = []
-    for conn in netstat('tcp') + netstat('tcp6'):
-        if conn[3] == STATE_LISTEN and conn[4] in inodes:
-            bind_addrs.append(conn[1])
-    return bind_addrs
+    if sys.platform.startswith("linux"):
+        inodes = get_socket_inodes(pid)
+        bind_addrs = []
+        for conn in netstat('tcp') + netstat('tcp6'):
+            if conn[3] == STATE_LISTEN and conn[4] in inodes:
+                bind_addrs.append(conn[1])
+        return bind_addrs
+    elif sys.platform == "darwin":
+        import re
+        import subprocess
+        output = subprocess.check_output(["lsof", "-nP", "-a", "-p", str(pid), "-iTCP", "-sTCP:LISTEN", "-Ftn"], text=True)
+        return [
+            (addr_to_hex(("::" if sock_type == "IPv6" else "0.0.0.0") if host == "*" else host.strip("[]")), int(port))
+            for sock_type, host, port in re.findall(r"t(IPv[46])\nn(\*|\[.+?]|[^:]+):(\d+)", output)
+        ]
+    else:
+        raise NotImplementedError(f"get_bind_addrs is not supported on {sys.platform}")
 
 # from: https://code.activestate.com/recipes/439093/
 def all_interfaces():
