@@ -1030,13 +1030,11 @@ public:
     ValidationCache m_validation_cache;
 
     /**
-     * Whether initial block download has ended and IsInitialBlockDownload
-     * should return false from now on.
+     * Whether initial block download (IBD) is ongoing.
      *
-     * Mutable because we need to be able to mark IsInitialBlockDownload()
-     * const, which latches this for caching purposes.
+     * Once set to false, IsInitialBlockDownload() will keep returning false.
      */
-    mutable std::atomic<bool> m_cached_finished_ibd{false};
+    mutable std::atomic_bool m_cached_is_ibd{true};
 
     /**
      * Every received block is assigned a unique and increasing identifier, so we

@@ -145,7 +145,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
     // Reset IBD state so IsInitialBlockDownload() returns true and causes
     // MaybeRebalanceCaches() to prioritize the snapshot chainstate, giving it
     // more cache space than the snapshot chainstate. Calling ResetIbd() is
-    // necessary because m_cached_finished_ibd is already latched to true before
+    // necessary because m_cached_is_ibd is already latched to false before
     // the test starts due to the test setup. After ResetIbd() is called,
     // IsInitialBlockDownload() will return true because at this point the active
     // chainstate has a null chain tip.
@@ -167,14 +167,14 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_ibd_exit_after_loading_blocks, ChainTe
 {
     CBlockIndex tip;
     ChainstateManager& chainman{*Assert(m_node.chainman)};
-    auto apply{[&](bool cached_finished_ibd, bool loading_blocks, bool tip_exists, bool enough_work, bool tip_recent) {
+    auto apply{[&](bool cached_is_ibd, bool loading_blocks, bool tip_exists, bool enough_work, bool tip_recent) {
         LOCK(::cs_main);
         chainman.ResetChainstates();
         chainman.InitializeChainstate(m_node.mempool.get());
 
         const auto recent_time{Now<NodeSeconds>() - chainman.m_options.max_tip_age};
 
-        chainman.m_cached_finished_ibd.store(cached_finished_ibd, std::memory_order_relaxed);
+        chainman.m_cached_is_ibd.store(cached_is_ibd, std::memory_order_relaxed);
         chainman.m_blockman.m_importing = loading_blocks;
         if (tip_exists) {
             tip.nChainWork = chainman.MinimumChainWork() - (enough_work ? 0 : 1);
@@ -185,13 +185,13 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_ibd_exit_after_loading_blocks, ChainTe
         }
     }};
 
-    for (const bool cached_finished_ibd : {false, true}) {
+    for (const bool cached_is_ibd : {false, true}) {
         for (const bool loading_blocks : {false, true}) {
             for (const bool tip_exists : {false, true}) {
                 for (const bool enough_work : {false, true}) {
                     for (const bool tip_recent : {false, true}) {
-                        apply(cached_finished_ibd, loading_blocks, tip_exists, enough_work, tip_recent);
-                        const bool expected_ibd = !cached_finished_ibd && (loading_blocks || !tip_exists || !enough_work || !tip_recent);
+                        apply(cached_is_ibd, loading_blocks, tip_exists, enough_work, tip_recent);
+                        const bool expected_ibd = cached_is_ibd && (loading_blocks || !tip_exists || !enough_work || !tip_recent);
                         BOOST_CHECK_EQUAL(chainman.IsInitialBlockDownload(), expected_ibd);
                     }
                 }

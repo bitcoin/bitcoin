@@ -32,14 +32,14 @@ void TestChainstateManager::DisableNextWrite()
 
 void TestChainstateManager::ResetIbd()
 {
-    m_cached_finished_ibd = false;
+    m_cached_is_ibd = true;
     assert(IsInitialBlockDownload());
 }
 
 void TestChainstateManager::JumpOutOfIbd()
 {
     Assert(IsInitialBlockDownload());
-    m_cached_finished_ibd = true;
+    m_cached_is_ibd = false;
     Assert(!IsInitialBlockDownload());
 }
 

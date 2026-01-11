@@ -1939,7 +1939,7 @@ void Chainstate::InitCoinsCache(size_t cache_size_bytes)
     m_coins_views->InitCache();
 }
 
-// Note that though this is marked const, we may end up modifying `m_cached_finished_ibd`, which
+// Note that though this is marked const, we may end up modifying `m_cached_is_ibd`, which
 // is a performance-related implementation detail. This function must be marked
 // `const` so that `CValidationInterface` clients (which are given a `const Chainstate*`)
 // can call it.
@@ -1947,11 +1947,11 @@ void Chainstate::InitCoinsCache(size_t cache_size_bytes)
 bool ChainstateManager::IsInitialBlockDownload() const
 {
     // Optimization: pre-test latch before taking the lock.
-    if (m_cached_finished_ibd.load(std::memory_order_relaxed))
+    if (!m_cached_is_ibd.load(std::memory_order_relaxed))
         return false;
 
     LOCK(cs_main);
-    if (m_cached_finished_ibd.load(std::memory_order_relaxed))
+    if (!m_cached_is_ibd.load(std::memory_order_relaxed))
         return false;
     if (m_blockman.LoadingBlocks()) {
         return true;
@@ -1967,7 +1967,7 @@ bool ChainstateManager::IsInitialBlockDownload() const
         return true;
     }
     LogInfo("Leaving InitialBlockDownload (latching to false)");
-    m_cached_finished_ibd.store(true, std::memory_order_relaxed);
+    m_cached_is_ibd.store(false, std::memory_order_relaxed);
     return false;
 }
 
