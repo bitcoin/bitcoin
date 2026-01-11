@@ -17,8 +17,7 @@ class RPCBindTest(BitcoinTestFramework):
         self.supports_cli = False
 
     def skip_test_if_missing_module(self):
-        # due to OS-specific network stats queries, this test works only on Linux
-        self.skip_if_platform_not_linux()
+        self.skip_if_platform_not_linux_or_mac()
 
     def setup_network(self):
         self.add_nodes(self.num_nodes, None)
@@ -105,8 +104,11 @@ class RPCBindTest(BitcoinTestFramework):
             raise SkipTest("This test requires ipv6 support.")
 
         self.log.info("Check for non-loopback interface")
+        interfaces = all_interfaces()
+        if not interfaces:
+            raise AssertionError("all_interfaces() returned no IPv4 interfaces")
         self.non_loopback_ip = None
-        for name,ip in all_interfaces():
+        for name,ip in interfaces:
             if ip != '127.0.0.1':
                 self.non_loopback_ip = ip
                 break
