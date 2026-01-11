@@ -28,15 +28,15 @@ FeeRateEstimatorResult MemPoolFeeRateEstimator::EstimateFeeRate(int target, bool
     const auto& m_package_feerates = blocktemplate->m_package_feerates;
     const auto percentiles = CalculatePercentiles(m_package_feerates, DEFAULT_BLOCK_MAX_WEIGHT);
     if (percentiles.empty()) {
-        result.errors.emplace_back("Unable to provide a fee rate due to insufficient data");
+        result.errors.emplace_back(strprintf("%s: Unable to provide a fee rate due to insufficient data", FeeRateEstimatorTypeToString(result.feerate_estimator)));
         return result;
     }
 
     LogDebug(BCLog::ESTIMATEFEE,
-             "Block height %s, Block template 25th percentile fee rate: %s %s/kvB, "
+             "%s: Block height %s, Block template 25th percentile fee rate: %s %s/kvB, "
              "50th percentile fee rate: %s %s/kvB, 75th percentile fee rate: %s %s/kvB, "
              "95th percentile fee rate: %s %s/kvB\n",
-             result.current_block_height,
+             FeeRateEstimatorTypeToString(result.feerate_estimator), result.current_block_height,
              CFeeRate(percentiles.p25.fee, percentiles.p25.size).GetFeePerK(), CURRENCY_ATOM,
              CFeeRate(percentiles.p50.fee, percentiles.p50.size).GetFeePerK(), CURRENCY_ATOM,
              CFeeRate(percentiles.p75.fee, percentiles.p75.size).GetFeePerK(), CURRENCY_ATOM,

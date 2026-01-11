@@ -35,3 +35,15 @@ Percentiles CalculatePercentiles(const std::vector<FeePerVSize>& chunk_feerates,
     // Return empty percentiles if we couldn't calculate the 95th percentile.
     return percentiles.p95.IsEmpty() ? Percentiles{} : percentiles;
 }
+
+std::string FeeRateEstimatorTypeToString(FeeRateEstimatorType feerate_estimator_type)
+{
+    switch (feerate_estimator_type) {
+    case FeeRateEstimatorType::BLOCK_POLICY:
+        return std::string("Block Policy Estimator");
+    case FeeRateEstimatorType::MEMPOOL_POLICY:
+        return std::string("Mempool Fee Rate Estimator");
+    }
+    // no default case, so the compiler can warn about missing cases
+    assert(false);
+}

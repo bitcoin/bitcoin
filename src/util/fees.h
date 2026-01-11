@@ -94,4 +94,6 @@ struct FeeRateEstimatorResult {
     }
 };
 
+std::string FeeRateEstimatorTypeToString(FeeRateEstimatorType feerate_estimator_type);
+
 #endif // BITCOIN_UTIL_FEES_H

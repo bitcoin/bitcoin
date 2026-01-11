@@ -952,8 +952,8 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
     if (feeCalc) *feeCalc = temp_fee_calc;
     if (median < 0) return CFeeRate(0); // error condition
 
-    LogDebug(BCLog::ESTIMATEFEE, "estimateSmartFee Selected feerate :%g Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
-             median, temp_fee_calc.returnedTarget, temp_fee_calc.desiredTarget, StringForFeeReason(temp_fee_calc.reason), temp_fee_calc.est.decay,
+    LogDebug(BCLog::ESTIMATEFEE, "%s: estimateSmartFee Selected feerate :%g Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
+             FeeRateEstimatorTypeToString(FeeRateEstimatorType::BLOCK_POLICY), median, temp_fee_calc.returnedTarget, temp_fee_calc.desiredTarget, StringForFeeReason(temp_fee_calc.reason), temp_fee_calc.est.decay,
              temp_fee_calc.est.pass.start, temp_fee_calc.est.pass.end,
              (temp_fee_calc.est.pass.totalConfirmed + temp_fee_calc.est.pass.inMempool + temp_fee_calc.est.pass.leftMempool) > 0.0 ? 100 * temp_fee_calc.est.pass.withinTarget / (temp_fee_calc.est.pass.totalConfirmed + temp_fee_calc.est.pass.inMempool + temp_fee_calc.est.pass.leftMempool) : 0.0,
              temp_fee_calc.est.pass.withinTarget, temp_fee_calc.est.pass.totalConfirmed, temp_fee_calc.est.pass.inMempool, temp_fee_calc.est.pass.leftMempool,
