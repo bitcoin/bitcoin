@@ -1971,7 +1971,7 @@ void Chainstate::CheckForkWarningConditions()
 }
 
 // Update m_best_invalid to track the invalid block with the most work
-void Chainstate::InvalidChainFound(CBlockIndex* pindexNew)
+void Chainstate::UpdateBestInvalid(CBlockIndex* pindexNew)
 {
     AssertLockHeld(cs_main);
     if (!m_chainman.m_best_invalid || pindexNew->nChainWork > m_chainman.m_best_invalid->nChainWork) {
@@ -1990,7 +1990,7 @@ void Chainstate::InvalidBlockFound(CBlockIndex* pindex, const BlockValidationSta
         m_blockman.m_dirty_blockindex.insert(pindex);
         setBlockIndexCandidates.erase(pindex);
         PropagateBlockInvalidity(pindex);
-        InvalidChainFound(pindex);
+        UpdateBestInvalid(pindex);
 
         LogInfo("%s: invalid block=%s height=%d log2_work=%f date=%s", __func__,
                 pindex->GetBlockHash().ToString(), pindex->nHeight,
@@ -3252,7 +3252,7 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex&
                         // InvalidBlockFound (called from ConnectTip) has already marked the
                         // failed block and all of its descendants as invalid.
                         Assume(vpindexToConnect.front()->nStatus & BLOCK_FAILED_VALID);
-                        InvalidChainFound(vpindexToConnect.front());
+                        UpdateBestInvalid(vpindexToConnect.front());
                     }
                     state = BlockValidationState();
                     fInvalidFound = true;
@@ -3691,7 +3691,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* const
         // never was in the active chain.
         PropagateBlockInvalidity(to_mark_failed);
 
-        InvalidChainFound(to_mark_failed);
+        UpdateBestInvalid(to_mark_failed);
         LogInfo("Invalidated block: hash=%s height=%d",
                 to_mark_failed->GetBlockHash().ToString(), to_mark_failed->nHeight);
         CheckForkWarningConditions();

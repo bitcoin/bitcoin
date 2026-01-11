@@ -866,7 +866,7 @@ protected:
     bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     void CheckForkWarningConditions() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    void InvalidChainFound(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void UpdateBestInvalid(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     /** Set invalidity status to all descendants of an already invalid block,
      *  and recalculate the best header if it was in that subtree */
     void PropagateBlockInvalidity(CBlockIndex* invalid_block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
