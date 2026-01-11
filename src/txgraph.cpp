@@ -2131,11 +2131,14 @@ std::pair<uint64_t, bool> GenericClusterImpl::Relinearize(TxGraphImpl& graph, in
     if (IsOptimal()) return {0, false};
     // Invoke the actual linearization algorithm (passing in the existing one).
     uint64_t rng_seed = graph.m_rng.rand64();
-    auto [linearization, optimal, cost] = Linearize(m_depgraph, max_iters, rng_seed, IndexTxOrder{}, m_linearization, /*is_topological=*/IsTopological());
-    // Postlinearize to improve the linearization (if optimal, only the sub-chunk order), and
-    // reduce the amount of information the IndexTxOrder-based fallback order leaks about
-    // DepGraphIndexes in the cluster. This also guarantees that all chunks are connected (even
-    // when non-optimal).
+    const auto fallback_order = [&](DepGraphIndex a, DepGraphIndex b) noexcept {
+        const auto ref_a = graph.m_entries[m_mapping[a]].m_ref;
+        const auto ref_b = graph.m_entries[m_mapping[b]].m_ref;
+        return graph.m_fallback_order(*ref_a, *ref_b);
+    };
+    auto [linearization, optimal, cost] = Linearize(m_depgraph, max_iters, rng_seed, fallback_order, m_linearization, /*is_topological=*/IsTopological());
+    // Postlinearize to improve the linearization (if optimal, only the sub-chunk order).
+    // This also guarantees that all chunks are connected (even when non-optimal).
     PostLinearize(m_depgraph, linearization);
     // Update the linearization.
     m_linearization = std::move(linearization);
