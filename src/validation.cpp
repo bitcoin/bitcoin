@@ -1947,25 +1947,12 @@ void Chainstate::InitCoinsCache(size_t cache_size_bytes)
 bool ChainstateManager::IsInitialBlockDownload() const
 {
     // Optimization: pre-test latch before taking the lock.
-    if (!m_cached_is_ibd.load(std::memory_order_relaxed))
-        return false;
+    if (!m_cached_is_ibd.load(std::memory_order_relaxed)) return false;
 
     LOCK(cs_main);
-    if (!m_cached_is_ibd.load(std::memory_order_relaxed))
-        return false;
-    if (m_blockman.LoadingBlocks()) {
-        return true;
-    }
-    CChain& chain{ActiveChain()};
-    if (chain.Tip() == nullptr) {
-        return true;
-    }
-    if (chain.Tip()->nChainWork < MinimumChainWork()) {
-        return true;
-    }
-    if (chain.Tip()->Time() < Now<NodeSeconds>() - m_options.max_tip_age) {
-        return true;
-    }
+    if (!m_cached_is_ibd.load(std::memory_order_relaxed)) return false;
+    if (m_blockman.LoadingBlocks()) return true;
+    if (!ActiveChain().IsTipRecent(MinimumChainWork(), m_options.max_tip_age)) return true;
     LogInfo("Leaving InitialBlockDownload (latching to false)");
     m_cached_is_ibd.store(false, std::memory_order_relaxed);
     return false;

@@ -1054,7 +1054,8 @@ int btck_chainstate_manager_import_blocks(btck_ChainstateManager* chainman, cons
                 import_files.emplace_back(std::string{block_file_paths_data[i], block_file_paths_lens[i]}.c_str());
             }
         }
-        node::ImportBlocks(*btck_ChainstateManager::get(chainman).m_chainman, import_files);
+        auto& chainman_ref{*btck_ChainstateManager::get(chainman).m_chainman};
+        node::ImportBlocks(chainman_ref, import_files);
     } catch (const std::exception& e) {
         LogError("Failed to import blocks: %s", e.what());
         return -1;
