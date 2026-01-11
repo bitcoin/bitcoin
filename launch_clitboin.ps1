@@ -5,23 +5,23 @@
 $ErrorActionPreference = "Stop"
 
 # 1. Locate Binaries
-$BitcoindPath = ".\src\bitcoind.exe"
-$CliPath = ".\src\bitcoin-cli.exe"
+$BitcoindPath = ".\src\clitboind.exe"
+$CliPath = ".\src\clitboin-cli.exe"
 
 if (-not (Test-Path $BitcoindPath)) {
     # Check Debug build
-    $BitcoindPath = ".\build\src\Debug\bitcoind.exe"
-    $CliPath = ".\build\src\Debug\bitcoin-cli.exe"
+    $BitcoindPath = ".\build\src\Debug\clitboind.exe"
+    $CliPath = ".\build\src\Debug\clitboin-cli.exe"
 }
 
 if (-not (Test-Path $BitcoindPath)) {
     # Check Release build
-    $BitcoindPath = ".\build\src\Release\bitcoind.exe"
-    $CliPath = ".\build\src\Release\bitcoin-cli.exe"
+    $BitcoindPath = ".\build\src\Release\clitboind.exe"
+    $CliPath = ".\build\src\Release\clitboin-cli.exe"
 }
 
 if (-not (Test-Path $BitcoindPath)) {
-    Write-Host "ERROR: Could not find bitcoind.exe. Please compile the project first!" -ForegroundColor Red
+    Write-Host "ERROR: Could not find clitboind.exe. Please compile the project first!" -ForegroundColor Red
     exit 1
 }
 
