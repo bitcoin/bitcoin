@@ -3,22 +3,22 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <kernel/chainparams.h>
+#include "chainparams.h"
 
-#include <chainparamsseeds.h>
-#include <consensus/amount.h>
-#include <consensus/merkle.h>
-#include <consensus/params.h>
-#include <hash.h>
-#include <kernel/messagestartchars.h>
-#include <logging.h>
-#include <primitives/block.h>
-#include <primitives/transaction.h>
-#include <script/interpreter.h>
-#include <script/script.h>
-#include <uint256.h>
-#include <util/chaintype.h>
-#include <util/strencodings.h>
+#include "chainparamsseeds.h"
+#include "consensus/amount.h"
+#include "consensus/merkle.h"
+#include "consensus/params.h"
+#include "hash.h"
+#include "kernel/messagestartchars.h"
+#include "logging.h"
+#include "primitives/block.h"
+#include "primitives/transaction.h"
+#include "script/interpreter.h"
+#include "script/script.h"
+#include "uint256.h"
+#include "util/chaintype.h"
+#include "util/strencodings.h"
 
 #include <algorithm>
 #include <cassert>
@@ -70,7 +70,7 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
  *     CTxOut(nValue=50.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
  *   vMerkleTree: 4a5e1e
  */
-static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+static CBlock CreateGenesisBlock(std::uint32_t nTime, std::uint32_t nNonce, std::uint32_t nBits, std::int32_t nVersion, const CAmount& genesisReward)
 {
     const char* pszTimestamp = "Clitboin 2026: The Coin for the People";
     const CScript genesisOutputScript = CScript() << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f"_hex << OP_CHECKSIG;
@@ -86,7 +86,7 @@ public:
         m_chain_type = ChainType::MAIN;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
-        consensus.nSubsidyHalvingInterval = 210000;
+        consensus.nSubsidyHalvingInterval = 240000;
         consensus.script_flag_exceptions.emplace( // BIP16 exception
             uint256{"00000000000002dc756eebf4f49723ed8d30cc28a5f108eb94b1ba88ac4f9c22"}, SCRIPT_VERIFY_NONE);
         consensus.script_flag_exceptions.emplace( // Taproot exception
@@ -100,12 +100,12 @@ public:
         consensus.MinBIP9WarningHeight = 483840; // segwit activation height + miner confirmation window
         consensus.powLimit = uint256{"7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-        consensus.nPowTargetSpacing = 10 * 60;
+        consensus.nPowTargetSpacing = 60; // 1 minute
         consensus.fPowAllowMinDifficultyBlocks = true; // Allow min difficulty blocks on Mainnet (Clitboin)
         consensus.enforce_BIP94 = false;
         consensus.fPowNoRetargeting = false;
-        consensus.nRuleChangeActivationThreshold = 1815; // 90% of 2016
-        consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
+        consensus.nRuleChangeActivationThreshold = 18144; // 90% of 20160
+        consensus.nMinerConfirmationWindow = 20160; // nPowTargetTimespan / nPowTargetSpacing
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;

@@ -47,9 +47,25 @@ echo Found VS Dev Cmd: "!VS_DEV_CMD!"
 echo Setting up build environment...
 call "!VS_DEV_CMD!"
 
+REM Find CMake
+set "CMAKE_CMD=cmake"
+where cmake >nul 2>nul
+if %errorlevel% neq 0 (
+    if exist "C:\Program Files\CMake\bin\cmake.exe" (
+        set "CMAKE_CMD=C:\Program Files\CMake\bin\cmake.exe"
+    ) else (
+        if defined VS_INSTALL_DIR (
+            if exist "!VS_INSTALL_DIR!\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" (
+                set "CMAKE_CMD=!VS_INSTALL_DIR!\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe"
+            )
+        )
+    )
+)
+echo Using CMake: "!CMAKE_CMD!"
+
 echo.
 echo Configuring Clitboin build...
-cmake -B build --preset vs2022-static
+"!CMAKE_CMD!" -B build --preset vs2022-static
 if %errorlevel% neq 0 (
     echo ERROR: CMake configuration failed.
     echo Ensure "Desktop development with C++" workload is installed.
@@ -58,7 +74,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo Compiling Clitboin (Release)...
-cmake --build build --config Release
+"!CMAKE_CMD!" --build build --config Release
 if %errorlevel% neq 0 (
     echo ERROR: Compilation failed.
     exit /b 1

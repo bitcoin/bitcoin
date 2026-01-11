@@ -5,7 +5,7 @@
 #ifndef BITCOIN_UTIL_TRANSLATION_H
 #define BITCOIN_UTIL_TRANSLATION_H
 
-#include <tinyformat.h>
+#include <tinyformat/tinyformat.h>
 
 #include <functional>
 #include <string>

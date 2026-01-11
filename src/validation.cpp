@@ -3,9 +3,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
+#include "bitcoin-build-config.h" // IWYU pragma: keep
 
-#include <validation.h>
+#include "validation.h"
 
 #include <arith_uint256.h>
 #include <chain.h>
@@ -68,6 +68,7 @@
 #include <cassert>
 #include <chrono>
 #include <deque>
+#include <memory>
 #include <numeric>
 #include <optional>
 #include <ranges>
@@ -75,6 +76,7 @@
 #include <string>
 #include <tuple>
 #include <utility>
+#include <vector>
 
 using kernel::CCoinsStats;
 using kernel::CoinStatsHashType;
@@ -1937,13 +1939,16 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
+    if (nHeight == 1) {
+        return 10000000 * COIN;
+    }
     int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
     // Force block reward to zero when right shift is undefined.
     if (halvings >= 64)
         return 0;
 
-    CAmount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
+    CAmount nSubsidy = 50000 * COIN;
+    // Subsidy is cut in half every 240,000 blocks which will occur approximately every 5.5 months (at 1 min blocks).
     nSubsidy >>= halvings;
     return nSubsidy;
 }

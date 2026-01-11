@@ -5,11 +5,16 @@
 
 
 
-#include <common/args.h>
-#include <tinyformat.h>
-#include <util/chaintype.h>
+#include "chainparamsbase.h"
 
-#include <assert.h>
+
+#include "common/args.h"
+#include "util/chaintype.h"
+
+#include <cassert>
+#include <memory>
+#include <string>
+#include <vector>
 
 void SetupChainParamsBaseOptions(ArgsManager& argsman)
 {
@@ -26,6 +31,7 @@ void SetupChainParamsBaseOptions(ArgsManager& argsman)
 }
 
 static std::unique_ptr<CBaseChainParams> globalChainBaseParams;
+
 
 const CBaseChainParams& BaseParams()
 {
