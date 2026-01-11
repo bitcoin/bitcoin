@@ -492,6 +492,7 @@ private:
     /** Compare two entries (which must both exist within the main graph). */
     std::strong_ordering CompareMainTransactions(GraphIndex a, GraphIndex b) const noexcept
     {
+        if (a == b) return std::strong_ordering::equal;
         Assume(a < m_entries.size() && b < m_entries.size());
         const auto& entry_a = m_entries[a];
         const auto& entry_b = m_entries[b];
@@ -505,14 +506,20 @@ private:
         if (entry_a.m_main_equal_feerate_chunk_prefix_size != entry_b.m_main_equal_feerate_chunk_prefix_size) {
             return entry_a.m_main_equal_feerate_chunk_prefix_size <=> entry_b.m_main_equal_feerate_chunk_prefix_size;
         }
-        // Compare Cluster m_sequence as tie-break for equal chunk feerates.
+        // Compare by maximum m_fallback_order element to order equal-feerate chunks in distinct
+        // clusters.
         const auto& locator_a = entry_a.m_locator[0];
         const auto& locator_b = entry_b.m_locator[0];
         Assume(locator_a.IsPresent() && locator_b.IsPresent());
         if (locator_a.cluster != locator_b.cluster) {
+            auto fallback_cmp = m_fallback_order(*m_entries[entry_a.m_main_max_chunk_fallback].m_ref,
+                                                 *m_entries[entry_b.m_main_max_chunk_fallback].m_ref);
+            if (fallback_cmp != 0) return fallback_cmp;
+            // This shouldn't be reachable as m_fallback_order defines a strong ordering.
+            Assume(false);
             return CompareClusters(locator_a.cluster, locator_b.cluster);
         }
-        // As final tie-break, compare position within cluster linearization.
+        // Within a single chunk, sort by position within cluster linearization.
         return entry_a.m_main_lin_index <=> entry_b.m_main_lin_index;
     }
 
@@ -612,6 +619,9 @@ private:
         int32_t m_main_equal_feerate_chunk_prefix_size;
         /** The position this transaction has in the main linearization (if present). */
         LinearizationIndex m_main_lin_index;
+        /** Of all transactions within this transaction's chunk in main (if present there), the
+         *  maximal one according to m_fallback_order. */
+        GraphIndex m_main_max_chunk_fallback = GraphIndex(-1);
     };
 
     /** The set of all transactions (in all levels combined). GraphIndex values index into this. */
@@ -882,6 +892,9 @@ void TxGraphImpl::ClearChunkData(Entry& entry) noexcept
 void TxGraphImpl::CreateChunkData(GraphIndex idx, LinearizationIndex chunk_count) noexcept
 {
     auto& entry = m_entries[idx];
+    // Make sure to not create chunk data for unlinked entries, which would make invoking
+    // m_fallback_order on them impossible.
+    Assume(entry.m_ref != nullptr);
     if (!m_main_chunkindex_discarded.empty()) {
         // Reuse an discarded node handle.
         auto& node = m_main_chunkindex_discarded.back().value();
@@ -1087,6 +1100,17 @@ void GenericClusterImpl::Updated(TxGraphImpl& graph, int level, bool rename) noe
             } else {
                 equal_feerate_chunk_feerate += chunk.feerate;
             }
+            // Determine the m_fallback_order maximum transaction in the chunk.
+            auto it = chunk.transactions.begin();
+            GraphIndex max_element = m_mapping[*it];
+            ++it;
+            while (it != chunk.transactions.end()) {
+                GraphIndex this_element = m_mapping[*it];
+                if (graph.m_fallback_order(*graph.m_entries[this_element].m_ref, *graph.m_entries[max_element].m_ref) > 0) {
+                    max_element = this_element;
+                }
+                ++it;
+            }
             // Iterate over the transactions in the linearization, which must match those in chunk.
             while (true) {
                 DepGraphIndex idx = m_linearization[lin_idx];
@@ -1095,6 +1119,7 @@ void GenericClusterImpl::Updated(TxGraphImpl& graph, int level, bool rename) noe
                 entry.m_main_lin_index = lin_idx++;
                 entry.m_main_chunk_feerate = FeePerWeight::FromFeeFrac(chunk.feerate);
                 entry.m_main_equal_feerate_chunk_prefix_size = equal_feerate_chunk_feerate.size;
+                entry.m_main_max_chunk_fallback = max_element;
                 Assume(chunk.transactions[idx]);
                 chunk.transactions.Reset(idx);
                 if (chunk.transactions.None()) {
@@ -1129,6 +1154,7 @@ void SingletonClusterImpl::Updated(TxGraphImpl& graph, int level, bool rename) n
         entry.m_main_lin_index = 0;
         entry.m_main_chunk_feerate = m_feerate;
         entry.m_main_equal_feerate_chunk_prefix_size = m_feerate.size;
+        entry.m_main_max_chunk_fallback = m_graph_index;
         // Always use the special LinearizationIndex(-1), indicating singleton chunk at end of
         // Cluster, here.
         if (!rename) graph.CreateChunkData(m_graph_index, LinearizationIndex(-1));
@@ -1783,10 +1809,8 @@ void TxGraphImpl::Compact() noexcept
         m_entries.pop_back();
     }
 
-    // In a future commit, chunk information will end up containing a GraphIndex of the
-    // max-fallback transaction in the chunk. Since GraphIndex values may have been reassigned, we
-    // will need to recompute the chunk information (even if not IsAcceptable), so that the index
-    // order and comparisons remain consistent.
+    // Update the affected clusters, to fixup Entry::m_main_max_chunk_fallback values which may
+    // have become outdated due to the compaction above.
     std::sort(affected_main.begin(), affected_main.end());
     affected_main.erase(std::unique(affected_main.begin(), affected_main.end()), affected_main.end());
     for (Cluster* cluster : affected_main) {
@@ -2646,6 +2670,10 @@ void TxGraphImpl::CommitStaging() noexcept
     // Staging must exist.
     Assume(m_staging_clusterset.has_value());
     Assume(m_main_chunkindex_observers == 0);
+    // Get rid of removed transactions in staging before moving to main, to avoid the need to add
+    // them to the chunk index (which may be problematic if they were unlinked and thus have no Ref
+    // to use in fallback comparisons).
+    ApplyRemovals(/*up_to_level=*/1);
     // Delete all conflicting Clusters in main, to make place for moving the staging ones
     // there. All of these have been copied to staging in PullIn().
     auto conflicts = GetConflicts();
@@ -2832,6 +2860,7 @@ void GenericClusterImpl::SanityCheck(const TxGraphImpl& graph, int level) const
             if (!linchunking[chunk_num].transactions[lin_pos]) {
                 // First transaction of a new chunk.
                 ++chunk_num;
+                assert(chunk_num < linchunking.size());
                 chunk_pos = 0;
                 if (linchunking[chunk_num].feerate << equal_feerate_prefix) {
                     equal_feerate_prefix = linchunking[chunk_num].feerate;

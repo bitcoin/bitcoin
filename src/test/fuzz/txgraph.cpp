@@ -1114,13 +1114,13 @@ FUZZ_TARGET(txgraph)
             std::map<SimTxGraph::Pos, int32_t> comp_prefix_sizes;
             /** Current chunk feerate. */
             FeeFrac last_chunk_feerate;
-            /** Largest seen equal-feerate chunk prefix size. */
-            int32_t max_chunk_prefix_size{0};
+            /** Largest seen (equal-feerate chunk prefix size, max txid).  */
+            std::pair<int32_t, uint64_t> max_chunk_tiebreak{0, 0};
             for (const auto& chunk : real_chunking) {
                 // If this is the first chunk with a strictly lower feerate, reset.
                 if (chunk.feerate << last_chunk_feerate) {
                     comp_prefix_sizes.clear();
-                    max_chunk_prefix_size = 0;
+                    max_chunk_tiebreak = {0, 0};
                 }
                 last_chunk_feerate = chunk.feerate;
                 // Find which sim component this chunk belongs to.
@@ -1129,10 +1129,17 @@ FUZZ_TARGET(txgraph)
                 auto comp_key = component.First();
                 auto& comp_prefix_size = comp_prefix_sizes[comp_key];
                 comp_prefix_size += chunk.feerate.size;
-                // Verify consistency: within each group of equal-feerate chunks, the equal-feerate
-                // chunk prefix size must be monotonically increasing.
-                assert(comp_prefix_size >= max_chunk_prefix_size);
-                max_chunk_prefix_size = comp_prefix_size;
+                // Determine the chunk's max txid.
+                uint64_t chunk_max_txid{0};
+                for (auto tx : chunk.transactions) {
+                    auto txid = sims[0].GetRef(tx)->m_txid;
+                    chunk_max_txid = std::max(txid, chunk_max_txid);
+                }
+                // Verify consistency: within each group of equal-feerate chunks, the
+                // (equal-feerate chunk prefix size, max txid) must be increasing.
+                std::pair<int32_t, uint64_t> chunk_tiebreak{comp_prefix_size, chunk_max_txid};
+                assert(chunk_tiebreak > max_chunk_tiebreak);
+                max_chunk_tiebreak = chunk_tiebreak;
             }
 
             // Verify that within each cluster, the internal ordering matches that of the
@@ -1150,6 +1157,52 @@ FUZZ_TARGET(txgraph)
                     }
                     assert(sim_chunk_lin == real_chunk_lin);
                 }
+            }
+
+            // Verify that a fresh TxGraph, with the same transactions and txids, but constructed
+            // in a different order, and with a different RNG state, recreates the exact same
+            // ordering, showing that for optimal graphs, the full mempool ordering is
+            // deterministic.
+            auto real_redo = MakeTxGraph(
+                /*max_cluster_count=*/max_cluster_count,
+                /*max_cluster_size=*/max_cluster_size,
+                /*acceptable_iters=*/acceptable_iters,
+                /*fallback_order=*/fallback_order);
+            /** Vector (indexed by SimTxGraph::Pos) of TxObjects in real_redo). */
+            std::vector<std::optional<SimTxObject>> txobjects_redo;
+            txobjects_redo.resize(sims[0].graph.PositionRange());
+            // Recreate the graph's transactions with same feerate and txid.
+            std::vector<DepGraphIndex> positions;
+            for (auto i : sims[0].graph.Positions()) positions.push_back(i);
+            std::shuffle(positions.begin(), positions.end(), rng);
+            for (auto i : positions) {
+                txobjects_redo[i].emplace(sims[0].GetRef(i)->m_txid);
+                real_redo->AddTransaction(*txobjects_redo[i], FeePerWeight::FromFeeFrac(sims[0].graph.FeeRate(i)));
+            }
+            // Recreate the graph's dependencies.
+            std::vector<std::pair<DepGraphIndex, DepGraphIndex>> deps;
+            for (auto i : sims[0].graph.Positions()) {
+                for (auto j : sims[0].graph.GetReducedParents(i)) {
+                    deps.emplace_back(j, i);
+                }
+            }
+            std::shuffle(deps.begin(), deps.end(), rng);
+            for (auto [parent, child] : deps) {
+                real_redo->AddDependency(*txobjects_redo[parent], *txobjects_redo[child]);
+            }
+            // Do work to reach optimality.
+            if (!real_redo->DoWork(300000)) {
+                // Start from a random permutation.
+                auto vec_redo = vec1;
+                std::shuffle(vec_redo.begin(), vec_redo.end(), rng);
+                if (vec_redo == vec1) std::next_permutation(vec_redo.begin(), vec_redo.end());
+                // Sort it according to the main graph order in real_redo.
+                auto cmp_redo = [&](SimTxGraph::Pos a, SimTxGraph::Pos b) noexcept {
+                    return real_redo->CompareMainOrder(*txobjects_redo[a], *txobjects_redo[b]) < 0;
+                };
+                std::sort(vec_redo.begin(), vec_redo.end(), cmp_redo);
+                // Compare with the ordering we got from real.
+                assert(vec1 == vec_redo);
             }
         }
 
