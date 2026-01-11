@@ -1032,9 +1032,11 @@ public:
     /**
      * Whether initial block download (IBD) is ongoing.
      *
-     * Once set to false, IsInitialBlockDownload() will keep returning false.
+     * This value is used for lock-free IBD checks, and latches from true to
+     * false once block loading has finished and the current chain tip has
+     * enough work and is recent.
      */
-    mutable std::atomic_bool m_cached_is_ibd{true};
+    std::atomic_bool m_cached_is_ibd{true};
 
     /**
      * Every received block is assigned a unique and increasing identifier, so we
@@ -1154,6 +1156,19 @@ public:
     int ActiveHeight() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChain().Height(); }
     CBlockIndex* ActiveTip() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChain().Tip(); }
     //! @}
+
+    /**
+     * Update and possibly latch the IBD status.
+     *
+     * If block loading has finished and the current chain tip has enough work
+     * and is recent, set `m_cached_is_ibd` to false. This function never sets
+     * the flag back to true.
+     *
+     * This should be called after operations that may affect IBD exit
+     * conditions (e.g. after updating the active chain tip, or after
+     * `ImportBlocks()` finishes).
+     */
+    void UpdateIBDStatus() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     node::BlockMap& BlockIndex() EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {

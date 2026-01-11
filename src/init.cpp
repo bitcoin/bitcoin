@@ -1966,6 +1966,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         ScheduleBatchPriority();
         // Import blocks and ActivateBestChain()
         ImportBlocks(chainman, vImportFiles);
+        WITH_LOCK(::cs_main, chainman.UpdateIBDStatus());
         if (args.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
             LogInfo("Stopping after block import");
             if (!(Assert(node.shutdown_request))()) {

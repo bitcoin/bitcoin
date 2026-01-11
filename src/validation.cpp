@@ -1939,23 +1939,15 @@ void Chainstate::InitCoinsCache(size_t cache_size_bytes)
     m_coins_views->InitCache();
 }
 
-// Note that though this is marked const, we may end up modifying `m_cached_is_ibd`, which
-// is a performance-related implementation detail. This function must be marked
-// `const` so that `CValidationInterface` clients (which are given a `const Chainstate*`)
-// can call it.
+// This function must be marked `const` so that `CValidationInterface` clients
+// (which are given a `const Chainstate*`) can call it.
+//
+// It is lock-free and depends on `m_cached_is_ibd`, which is latched by
+// `UpdateIBDStatus()`.
 //
 bool ChainstateManager::IsInitialBlockDownload() const
 {
-    // Optimization: pre-test latch before taking the lock.
-    if (!m_cached_is_ibd.load(std::memory_order_relaxed)) return false;
-
-    LOCK(cs_main);
-    if (!m_cached_is_ibd.load(std::memory_order_relaxed)) return false;
-    if (m_blockman.LoadingBlocks()) return true;
-    if (!ActiveChain().IsTipRecent(MinimumChainWork(), m_options.max_tip_age)) return true;
-    LogInfo("Leaving InitialBlockDownload (latching to false)");
-    m_cached_is_ibd.store(false, std::memory_order_relaxed);
-    return false;
+    return m_cached_is_ibd.load(std::memory_order_relaxed);
 }
 
 void Chainstate::CheckForkWarningConditions()
@@ -2999,6 +2991,7 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
     }
 
     m_chain.SetTip(*pindexDelete->pprev);
+    m_chainman.UpdateIBDStatus();
 
     UpdateTip(pindexDelete->pprev);
     // Let wallets know transactions went from 1-confirmed to
@@ -3128,6 +3121,7 @@ bool Chainstate::ConnectTip(
     }
     // Update m_chain & related variables.
     m_chain.SetTip(*pindexNew);
+    m_chainman.UpdateIBDStatus();
     UpdateTip(pindexNew);
 
     const auto time_6{SteadyClock::now()};
@@ -3329,6 +3323,15 @@ static SynchronizationState GetSynchronizationState(bool init, bool blockfiles_i
     if (!init) return SynchronizationState::POST_INIT;
     if (!blockfiles_indexed) return SynchronizationState::INIT_REINDEX;
     return SynchronizationState::INIT_DOWNLOAD;
+}
+
+void ChainstateManager::UpdateIBDStatus()
+{
+    if (!m_cached_is_ibd.load(std::memory_order_relaxed)) return;
+    if (m_blockman.LoadingBlocks()) return;
+    if (!CurrentChainstate().m_chain.IsTipRecent(MinimumChainWork(), m_options.max_tip_age)) return;
+    LogInfo("Leaving InitialBlockDownload (latching to false)");
+    m_cached_is_ibd.store(false, std::memory_order_relaxed);
 }
 
 bool ChainstateManager::NotifyHeaderTip()
@@ -4614,6 +4617,7 @@ bool Chainstate::LoadChainTip()
         return false;
     }
     m_chain.SetTip(*pindex);
+    m_chainman.UpdateIBDStatus();
     tip = m_chain.Tip();
 
     // Make sure our chain tip before shutting down scores better than any other candidate
