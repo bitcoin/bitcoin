@@ -106,33 +106,44 @@ def get_bind_addrs(pid):
     else:
         raise NotImplementedError(f"get_bind_addrs is not supported on {sys.platform}")
 
-# from: https://code.activestate.com/recipes/439093/
 def all_interfaces():
     '''
-    Return all interfaces that are up
+    Return all IPv4 interfaces that are up.
     '''
-    import fcntl  # Linux only, so only import when required
+    if sys.platform.startswith("linux"):
+        import fcntl  # Linux only, so only import when required
 
-    is_64bits = sys.maxsize > 2**32
-    struct_size = 40 if is_64bits else 32
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    max_possible = 8 # initial value
-    while True:
-        bytes = max_possible * struct_size
-        names = array.array('B', b'\0' * bytes)
-        outbytes = struct.unpack('iL', fcntl.ioctl(
-            s.fileno(),
-            0x8912,  # SIOCGIFCONF
-            struct.pack('iL', bytes, names.buffer_info()[0])
-        ))[0]
-        if outbytes == bytes:
-            max_possible *= 2
-        else:
-            break
-    namestr = names.tobytes()
-    return [(namestr[i:i+16].split(b'\0', 1)[0],
-             socket.inet_ntoa(namestr[i+20:i+24]))
-            for i in range(0, outbytes, struct_size)]
+        is_64bits = sys.maxsize > 2**32
+        struct_size = 40 if is_64bits else 32
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        max_possible = 8 # initial value
+        while True:
+            bytes = max_possible * struct_size
+            names = array.array('B', b'\0' * bytes)
+            outbytes = struct.unpack('iL', fcntl.ioctl(
+                s.fileno(),
+                0x8912,  # SIOCGIFCONF
+                struct.pack('iL', bytes, names.buffer_info()[0])
+            ))[0]
+            if outbytes == bytes:
+                max_possible *= 2
+            else:
+                break
+        namestr = names.tobytes()
+        return [(namestr[i:i+16].split(b'\0', 1)[0],
+                 socket.inet_ntoa(namestr[i+20:i+24]))
+                for i in range(0, outbytes, struct_size)]
+    elif sys.platform == "darwin":
+        import re
+        import subprocess
+        output = subprocess.check_output(["ifconfig", "-au"], text=True)
+        return [
+            (m["iface"].encode(), ip)
+            for m in re.finditer(r"(?m)^(?P<iface>\S+):(?P<block>[^\n]*(?:\n[ \t]+[^\n]*)*)", output)
+            for ip in re.findall(r"inet (\S+)", m["block"])
+        ]
+    else:
+        raise NotImplementedError(f"all_interfaces is not supported on {sys.platform}")
 
 def addr_to_hex(addr):
     '''
