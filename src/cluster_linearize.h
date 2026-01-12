@@ -658,13 +658,14 @@ private:
     /** Structure with information about a single transaction. */
     struct TxData {
         /** The top set for every active child dependency this transaction has, indexed by child
-         *  TxIdx. INVALID_SET_IDX if there is no active dependency with the corresponding child.
-         */
+         *  TxIdx. Only defined for indexes in active_children. */
         std::array<SetIdx, SetType::Size()> dep_top_idx;
         /** The set of parent transactions of this transaction. Immutable after construction. */
         SetType parents;
         /** The set of child transactions of this transaction. Immutable after construction. */
         SetType children;
+        /** The set of child transactions reachable through an active dependency. */
+        SetType active_children;
         /** Which chunk this transaction belongs to. */
         SetIdx chunk_idx;
     };
@@ -723,9 +724,7 @@ private:
             tx_data.chunk_idx = chunk_idx;
             // Iterate over all active dependencies with tx_idx as parent. Combined with the outer
             // loop this iterates over all internal active dependencies of the chunk.
-            for (auto child_idx : tx_data.children) {
-                // Skip inactive dependencies.
-                if (tx_data.dep_top_idx[child_idx] == INVALID_SET_IDX) continue;
+            for (auto child_idx : tx_data.active_children) {
                 auto& top_set_info = m_set_info[tx_data.dep_top_idx[child_idx]];
                 // If this dependency's top set contains query, update it to add/remove
                 // dep_change.
@@ -761,7 +760,7 @@ private:
         auto& parent_data = m_tx_data[parent_idx];
         auto& child_data = m_tx_data[child_idx];
         Assume(parent_data.children[child_idx]);
-        Assume(parent_data.dep_top_idx[child_idx] == INVALID_SET_IDX);
+        Assume(!parent_data.active_children[child_idx]);
         // Get the set index of the chunks the parent and child are currently in. The parent chunk
         // will become the top set of the newly activated dependency, while the child chunk will be
         // grown to become the merged chunk.
@@ -807,6 +806,7 @@ private:
         m_reachable[child_chunk_idx].second -= bottom_info.transactions;
         // Make parent chunk the set for the new active dependency.
         parent_data.dep_top_idx[child_idx] = parent_chunk_idx;
+        parent_data.active_children.Set(child_idx);
         m_chunk_idxs.Reset(parent_chunk_idx);
         // Return the newly merged chunk.
         return child_chunk_idx;
@@ -819,7 +819,7 @@ private:
         // Gather and check information about the parent transactions.
         auto& parent_data = m_tx_data[parent_idx];
         Assume(parent_data.children[child_idx]);
-        Assume(parent_data.dep_top_idx[child_idx] != INVALID_SET_IDX);
+        Assume(parent_data.active_children[child_idx]);
         // Get the top set of the active dependency (which will become the parent chunk) and the
         // chunk set the transactions are currently in (which will become the bottom chunk).
         auto parent_chunk_idx = parent_data.dep_top_idx[child_idx];
@@ -829,7 +829,7 @@ private:
         auto& bottom_info = m_set_info[child_chunk_idx];
 
         // Remove the active dependency.
-        parent_data.dep_top_idx[child_idx] = INVALID_SET_IDX;
+        parent_data.active_children.Reset(child_idx);
         m_chunk_idxs.Set(parent_chunk_idx);
         m_cost += bottom_info.transactions.Count();
         // Subtract the top_info from the bottom_info, as it will become the child chunk.
@@ -1012,8 +1012,6 @@ public:
             // Create a singleton chunk for it.
             tx_data.chunk_idx = num_chunks;
             m_set_info[num_chunks++] = SetInfo(depgraph, tx_idx);
-            // Mark all its dependencies inactive.
-            tx_data.dep_top_idx.fill(INVALID_SET_IDX);
         }
         // Set the reachable transactions for each chunk to the transactions' parents and children.
         for (SetIdx chunk_idx = 0; chunk_idx < num_transactions; ++chunk_idx) {
@@ -1115,9 +1113,7 @@ public:
             for (auto tx_idx : chunk_info.transactions) {
                 const auto& tx_data = m_tx_data[tx_idx];
                 // Iterate over all active child dependencies of the transaction.
-                for (auto child_idx : tx_data.children) {
-                    // Skip inactive child dependencies.
-                    if (tx_data.dep_top_idx[child_idx] == INVALID_SET_IDX) continue;
+                for (auto child_idx : tx_data.active_children) {
                     auto& dep_top_info = m_set_info[tx_data.dep_top_idx[child_idx]];
                     // Define gain(top) = fee(top)*size(chunk) - fee(chunk)*size(top).
                     //                  = (feerate(top) - feerate(chunk)) * size(top) * size(chunk).
@@ -1205,9 +1201,7 @@ public:
         for (auto tx_idx : chunk_info.transactions) {
             const auto& tx_data = m_tx_data[tx_idx];
             // Iterate over all active child dependencies of the transaction.
-            for (auto child_idx : tx_data.children) {
-                // Skip inactive child dependencies.
-                if (tx_data.dep_top_idx[child_idx] == INVALID_SET_IDX) continue;
+            for (auto child_idx : tx_data.active_children) {
                 const auto& dep_top_info = m_set_info[tx_data.dep_top_idx[child_idx]];
                 // Skip if this dependency does not have equal top and bottom set feerates. Note
                 // that the top cannot have higher feerate than the bottom, or OptimizeSteps would
@@ -1411,7 +1405,7 @@ public:
         for (auto tx_idx : m_transaction_idxs) {
             for (auto child_idx : m_tx_data[tx_idx].children) {
                 all_dependencies.emplace_back(tx_idx, child_idx);
-                if (m_tx_data[tx_idx].dep_top_idx[child_idx] != INVALID_SET_IDX) {
+                if (m_tx_data[tx_idx].active_children[child_idx]) {
                     active_dependencies.emplace_back(tx_idx, child_idx);
                 }
             }
