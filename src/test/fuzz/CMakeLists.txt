@@ -20,6 +20,7 @@ add_executable(fuzz
   block_header.cpp
   block_index.cpp
   block_index_tree.cpp
+  block_policy_estimator.cpp
   blockfilter.cpp
   bloom_filter.cpp
   buffered_file.cpp
@@ -86,7 +87,6 @@ add_executable(fuzz
   parse_script.cpp
   parse_univalue.cpp
   partially_downloaded_block.cpp
-  policy_estimator.cpp
   policy_estimator_io.cpp
   poolresource.cpp
   pow.cpp
