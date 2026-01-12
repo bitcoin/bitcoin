@@ -631,6 +631,11 @@ using IndexTxOrder = std::compare_three_way;
  *   - Inside the selected chunk (see above), among the dependencies whose top feerate is strictly
  *     higher than its bottom feerate in the selected chunk, if any, a uniformly random dependency
  *     is deactivated.
+ *   - After every split, it is possible that the top and the bottom chunk merge with each other
+ *     again in the merge sequence (through a top->bottom dependency, not through the deactivated
+ *     one, which was bottom->top). Call this a self-merge. If a self-merge does not occur after
+ *     a split, the resulting linearization is strictly improved (the area under the convexified
+ *     feerate diagram increases by at least gain/2), while self-merges do not change it.
  *
  * - How to decide the exact output linearization:
  *   - When there are multiple equal-feerate chunks with no dependencies between them, output a
@@ -852,8 +857,8 @@ private:
         return {parent_chunk_idx, child_chunk_idx};
     }
 
-    /** Activate a dependency from the bottom set to the top set. Return the index of the merged
-     *  chunk, or INVALID_SET_IDX if merge is possible. */
+    /** Activate a dependency from the bottom set to the top set, which must exist. Return the
+     *  index of the merged chunk. */
     SetIdx MergeChunks(SetIdx top_idx, SetIdx bottom_idx) noexcept
     {
         auto& top_chunk_info = m_set_info[top_idx];
@@ -866,7 +871,7 @@ private:
             auto& tx_data = m_tx_data[tx_idx];
             num_deps += (tx_data.children & bottom_chunk_info.transactions).Count();
         }
-        if (num_deps == 0) return INVALID_SET_IDX;
+        Assume(num_deps > 0);
         // Uniformly randomly pick one of them and activate it.
         TxIdx pick = m_rng.randrange(num_deps);
         for (auto tx_idx : top_chunk_info.transactions) {
@@ -979,13 +984,21 @@ private:
         // parent chunk and child chunk that were produced by deactivating dep_idx). We can fix
         // these using just merge sequences, one upwards and one downwards, avoiding the need for a
         // full MakeTopological.
-
-        // Merge the top chunk with lower-feerate chunks it depends on (which may be the bottom it
-        // was just split from, or other pre-existing chunks).
-        MergeSequence<false>(parent_chunk_idx);
-        // Merge the bottom chunk with higher-feerate chunks that depend on it (if it wasn't merged
-        // with the top already).
-        if (m_chunk_idxs[child_chunk_idx]) MergeSequence<true>(child_chunk_idx);
+        const auto& parent_reachable = m_reachable[parent_chunk_idx].first;
+        const auto& child_chunk_txn = m_set_info[child_chunk_idx].transactions;
+        if (parent_reachable.Overlaps(child_chunk_txn)) {
+            // The parent chunk has a dependency on a transaction in the child chunk. In this case,
+            // the parent needs to merge back with the child chunk (a self-merge), and no other
+            // merges are needed. Special-case this, so the overhead of PickMergeCandidate and
+            // MergeSequence can be avoided.
+            auto merged_chunk_idx = MergeChunks(child_chunk_idx, parent_chunk_idx);
+            m_suboptimal_chunks.push_back(merged_chunk_idx);
+        } else {
+            // Merge the top chunk with lower-feerate chunks it depends on.
+            MergeSequence<false>(parent_chunk_idx);
+            // Merge the bottom chunk with higher-feerate chunks that depend on it.
+            MergeSequence<true>(child_chunk_idx);
+        }
     }
 
     /** Determine the next chunk to optimize, or INVALID_SET_IDX if none. */
@@ -1235,11 +1248,13 @@ public:
 
         // Otherwise, deactivate the dependency that was found.
         auto [parent_chunk_idx, child_chunk_idx] = Deactivate(candidate_dep.first, candidate_dep.second);
-        // Try to activate a dependency between the new bottom and the new top (opposite from the
+        // Determine if there is a dependency from the new bottom to the new top (opposite from the
         // dependency that was just deactivated).
-        auto merged_chunk_idx = MergeChunks(child_chunk_idx, parent_chunk_idx);
-        if (merged_chunk_idx != INVALID_SET_IDX) {
-            // A self-merge happened.
+        auto& parent_reachable = m_reachable[parent_chunk_idx].first;
+        auto& child_chunk_txn = m_set_info[child_chunk_idx].transactions;
+        if (parent_reachable.Overlaps(child_chunk_txn)) {
+            // A self-merge is needed.
+            auto merged_chunk_idx = MergeChunks(child_chunk_idx, parent_chunk_idx);
             // Re-insert the chunk into the queue, in the same direction. Note that the chunk_idx
             // will have changed.
             m_nonminimal_chunks.emplace_back(merged_chunk_idx, pivot_idx, flags);
