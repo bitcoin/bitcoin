@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -136,6 +136,8 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "getmempoolancestors",
     "getmempooldescendants",
     "getmempoolentry",
+    "getmempoolfeeratediagram",
+    "getmempoolcluster",
     "getmempoolinfo",
     "getmininginfo",
     "getnettotals",
@@ -381,6 +383,12 @@ FUZZ_TARGET(rpc, .init = initialize_rpc)
         arguments.push_back(ConsumeRPCArgument(fuzzed_data_provider, good_data));
     }
     try {
+        std::optional<test_only_CheckFailuresAreExceptionsNotAborts> maybe_mock{};
+        if (rpc_command == "echo") {
+            // Avoid aborting fuzzing for this specific test-only RPC with an
+            // intentional trigger_internal_bug
+            maybe_mock.emplace();
+        }
         rpc_testing_setup->CallRPC(rpc_command, arguments);
     } catch (const UniValue& json_rpc_error) {
         const std::string error_msg{json_rpc_error.find_value("message").get_str()};

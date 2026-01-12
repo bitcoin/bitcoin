@@ -78,7 +78,7 @@ body:
     id: os
     attributes:
       label: Operating system and version
-      placeholder: e.g. "MacOS Ventura 13.2" or "Ubuntu 22.04 LTS"
+      placeholder: e.g. "MacOS 26.0" or "Ubuntu 26.04 LTS"
     validations:
       required: true
   - type: textarea
@@ -90,4 +90,3 @@ body:
         e.g. OS/CPU and disk type, network connectivity
     validations:
       required: false
-

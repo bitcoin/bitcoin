@@ -35,8 +35,8 @@ wallet versions of Bitcoin Core are generally supported.
 Compatibility
 ==============
 
-Bitcoin Core is supported and tested on operating systems using the
-Linux Kernel 3.17+, macOS 14+, and Windows 10+. Bitcoin
+Bitcoin Core is supported and tested on the following operating systems or newer:
+Linux Kernel 3.17, macOS 14, and Windows 10 (version 1903). Bitcoin
 Core should also work on most other Unix-like systems but is not as
 frequently tested on them. It is not recommended to use Bitcoin Core on
 unsupported systems.

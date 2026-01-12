@@ -544,8 +544,7 @@ void BerkeleyRODatabase::Open()
     page_size = outer_meta.pagesize;
 
     // Verify the size of the file is a multiple of the page size
-    db_file.seek(0, SEEK_END);
-    int64_t size = db_file.tell();
+    const int64_t size{db_file.size()};
 
     // Since BDB stores everything in a page, the file size should be a multiple of the page size;
     // However, BDB doesn't actually check that this is the case, and enforcing this check results
@@ -719,12 +718,12 @@ bool BerkeleyRODatabase::Backup(const std::string& dest) const
     }
     try {
         if (fs::exists(dst) && fs::equivalent(src, dst)) {
-            LogPrintf("cannot backup to wallet source file %s\n", fs::PathToString(dst));
+            LogWarning("cannot backup to wallet source file %s", fs::PathToString(dst));
             return false;
         }
 
         fs::copy_file(src, dst, fs::copy_options::overwrite_existing);
-        LogPrintf("copied %s to %s\n", fs::PathToString(m_filepath), fs::PathToString(dst));
+        LogInfo("copied %s to %s\n", fs::PathToString(m_filepath), fs::PathToString(dst));
         return true;
     } catch (const fs::filesystem_error& e) {
         LogWarning("error copying %s to %s - %s\n", fs::PathToString(m_filepath), fs::PathToString(dst), e.code().message());
@@ -748,7 +747,7 @@ bool BerkeleyROBatch::ReadKey(DataStream&& key, DataStream& value)
 bool BerkeleyROBatch::HasKey(DataStream&& key)
 {
     SerializeData key_data{key.begin(), key.end()};
-    return m_database.m_records.count(key_data) > 0;
+    return m_database.m_records.contains(key_data);
 }
 
 BerkeleyROCursor::BerkeleyROCursor(const BerkeleyRODatabase& database, std::span<const std::byte> prefix)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -161,8 +161,8 @@ class EncryptedP2PMisbehaving(BitcoinTestFramework):
         node0 = self.nodes[0]
         expected_debug_message = [
             [],  # EARLY_KEY_RESPONSE
-            ["V2 transport error: missing garbage terminator, peer=1"],  # EXCESS_GARBAGE
-            ["V2 handshake timeout, disconnecting peer=3"],  # WRONG_GARBAGE_TERMINATOR
+            ["V2 transport error: missing garbage terminator"],  # EXCESS_GARBAGE
+            ["V2 handshake timeout, disconnecting peer"],  # WRONG_GARBAGE_TERMINATOR
             ["V2 transport error: packet decryption failure"],  # WRONG_GARBAGE
             ["V2 transport error: packet decryption failure"],  # SEND_NO_AAD
             [],  # SEND_NON_EMPTY_VERSION_PACKET

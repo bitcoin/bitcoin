@@ -55,7 +55,7 @@ class ConfArgsTest(BitcoinTestFramework):
         os.rename(conf_path.with_suffix('.confbkp'), conf_path)
 
         self.log.debug('Verifying includeconf directive pointing to directory is caught')
-        with open(conf_path, 'a', encoding='utf-8') as conf:
+        with open(conf_path, 'a') as conf:
             conf.write(f'includeconf={self.nodes[0].datadir_path}\n')
         self.nodes[0].assert_start_raises_init_error(
             extra_args=['-regtest'],
@@ -68,12 +68,12 @@ class ConfArgsTest(BitcoinTestFramework):
         self.log.info('Disabling configuration via -noconf')
 
         conf_path = self.nodes[0].datadir_path / 'bitcoin.conf'
-        with open(conf_path, encoding='utf-8') as conf:
+        with open(conf_path) as conf:
             settings = [f'-{line.rstrip()}' for line in conf if len(line) > 1 and line[0] != '[']
         os.rename(conf_path, conf_path.with_suffix('.confbkp'))
 
         self.log.debug('Verifying garbage in config can be detected')
-        with open(conf_path, 'a', encoding='utf-8') as conf:
+        with open(conf_path, 'a') as conf:
             conf.write('garbage\n')
         self.nodes[0].assert_start_raises_init_error(
             extra_args=['-regtest'],
@@ -107,9 +107,9 @@ class ConfArgsTest(BitcoinTestFramework):
             expected_msg=conf_in_config_file_err,
         )
         inc_conf_file_path = self.nodes[0].datadir_path / 'include.conf'
-        with open(self.nodes[0].datadir_path / 'bitcoin.conf', 'a', encoding='utf-8') as conf:
+        with open(self.nodes[0].datadir_path / 'bitcoin.conf', 'a') as conf:
             conf.write(f'includeconf={inc_conf_file_path}\n')
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with open(inc_conf_file_path, 'w') as conf:
             conf.write('conf=some.conf\n')
         self.nodes[0].assert_start_raises_init_error(
             expected_msg=conf_in_config_file_err,
@@ -119,65 +119,65 @@ class ConfArgsTest(BitcoinTestFramework):
             expected_msg='Error: Error parsing command line arguments: Invalid parameter -dash_cli=1',
             extra_args=['-dash_cli=1'],
         )
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with open(inc_conf_file_path, 'w') as conf:
             conf.write('dash_conf=1\n')
 
         with self.nodes[0].assert_debug_log(expected_msgs=['Ignoring unknown configuration value dash_conf']):
             self.start_node(0)
         self.stop_node(0)
 
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with open(inc_conf_file_path, 'w') as conf:
             conf.write('reindex=1\n')
 
-        with self.nodes[0].assert_debug_log(expected_msgs=['Warning: reindex=1 is set in the configuration file, which will significantly slow down startup. Consider removing or commenting out this option for better performance, unless there is currently a condition which makes rebuilding the indexes necessary']):
+        with self.nodes[0].assert_debug_log(expected_msgs=["[warning] reindex=1 is set in the configuration file, which will significantly slow down startup. Consider removing or commenting out this option for better performance, unless there is currently a condition which makes rebuilding the indexes necessary"]):
             self.start_node(0)
         self.stop_node(0)
 
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with open(inc_conf_file_path, 'w') as conf:
             conf.write('-dash=1\n')
         self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 1: -dash=1, options in configuration file must be specified without leading -')
 
         if self.is_wallet_compiled():
-            with open(inc_conf_file_path, 'w', encoding='utf8') as conf:
+            with open(inc_conf_file_path, 'w') as conf:
                 conf.write("wallet=foo\n")
             self.nodes[0].assert_start_raises_init_error(expected_msg=f'Error: Config setting for -wallet only applied on {self.chain} network when in [{self.chain}] section.')
 
         main_conf_file_path = self.nodes[0].datadir_path / "bitcoin_main.conf"
         util.write_config(main_conf_file_path, n=0, chain='', extra_config=f'includeconf={inc_conf_file_path}\n')
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with open(inc_conf_file_path, 'w') as conf:
             conf.write('acceptnonstdtxn=1\n')
         self.nodes[0].assert_start_raises_init_error(extra_args=[f"-conf={main_conf_file_path}", "-allowignoredconf"], expected_msg='Error: acceptnonstdtxn is not currently supported for main chain')
 
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with open(inc_conf_file_path, 'w') as conf:
             conf.write('nono\n')
         self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 1: nono, if you intended to specify a negated option, use nono=1 instead')
 
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with open(inc_conf_file_path, 'w') as conf:
             conf.write('server=1\nrpcuser=someuser\nrpcpassword=some#pass')
         self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 3, using # in rpcpassword can be ambiguous and should be avoided')
 
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with open(inc_conf_file_path, 'w') as conf:
             conf.write('server=1\nrpcuser=someuser\nmain.rpcpassword=some#pass')
         self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 3, using # in rpcpassword can be ambiguous and should be avoided')
 
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with open(inc_conf_file_path, 'w') as conf:
             conf.write('server=1\nrpcuser=someuser\n[main]\nrpcpassword=some#pass')
         self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 4, using # in rpcpassword can be ambiguous and should be avoided')
 
         inc_conf_file2_path = self.nodes[0].datadir_path / 'include2.conf'
-        with open(self.nodes[0].datadir_path / 'bitcoin.conf', 'a', encoding='utf-8') as conf:
+        with open(self.nodes[0].datadir_path / 'bitcoin.conf', 'a') as conf:
             conf.write(f'includeconf={inc_conf_file2_path}\n')
 
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with open(inc_conf_file_path, 'w') as conf:
             conf.write('testnot.datadir=1\n')
-        with open(inc_conf_file2_path, 'w', encoding='utf-8') as conf:
+        with open(inc_conf_file2_path, 'w') as conf:
             conf.write('[testnet]\n')
         self.restart_node(0)
         self.nodes[0].stop_node(expected_stderr=f'Warning: {inc_conf_file_path}:1 Section [testnot] is not recognized.{os.linesep}{inc_conf_file2_path}:1 Section [testnet] is not recognized.')
 
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with open(inc_conf_file_path, 'w') as conf:
             conf.write('')  # clear
-        with open(inc_conf_file2_path, 'w', encoding='utf-8') as conf:
+        with open(inc_conf_file2_path, 'w') as conf:
             conf.write('')  # clear
 
     def test_config_file_log(self):
@@ -229,7 +229,7 @@ class ConfArgsTest(BitcoinTestFramework):
                 )
 
     def test_log_buffer(self):
-        with self.nodes[0].assert_debug_log(expected_msgs=['Warning: parsed potentially confusing double-negative -listen=0\n']):
+        with self.nodes[0].assert_debug_log(expected_msgs=["[warning] Parsed potentially confusing double-negative -listen=0\n"]):
             self.start_node(0, extra_args=['-nolisten=0'])
         self.stop_node(0)
 
@@ -522,9 +522,9 @@ class ConfArgsTest(BitcoinTestFramework):
         conf_file = default_data_dir / "bitcoin.conf"
 
         # datadir needs to be set before [chain] section
-        with open(conf_file, encoding='utf8') as f:
+        with open(conf_file) as f:
             conf_file_contents = f.read()
-        with open(conf_file, 'w', encoding='utf8') as f:
+        with open(conf_file, 'w') as f:
             f.write(f"datadir={new_data_dir}\n")
             f.write(conf_file_contents)
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -118,8 +118,8 @@ FUZZ_TARGET(integer, .init = initialize_integer)
     }
     (void)MillisToTimeval(i64);
     (void)SighashToStr(uch);
-    (void)SipHashUint256(u64, u64, u256);
-    (void)SipHashUint256Extra(u64, u64, u256, u32);
+    (void)PresaltedSipHasher(u64, u64)(u256);
+    (void)PresaltedSipHasher(u64, u64)(u256, u32);
     (void)ToLower(ch);
     (void)ToUpper(ch);
     {
@@ -250,10 +250,5 @@ FUZZ_TARGET(integer, .init = initialize_integer)
             assert(u64 == deserialized_u64 && stream.empty());
         } catch (const std::ios_base::failure&) {
         }
-    }
-
-    try {
-        CHECK_NONFATAL(b);
-    } catch (const NonFatalCheckError&) {
     }
 }

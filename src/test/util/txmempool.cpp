@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,6 +10,7 @@
 #include <policy/rbf.h>
 #include <policy/truc_policy.h>
 #include <txmempool.h>
+#include <test/util/transaction_utils.h>
 #include <util/check.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -37,7 +38,7 @@ CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction& tx) co
 
 CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CTransactionRef& tx) const
 {
-    return CTxMemPoolEntry{tx, nFee, TicksSinceEpoch<std::chrono::seconds>(time), nHeight, m_sequence, spendsCoinbase, sigOpCost, lp};
+    return CTxMemPoolEntry{TxGraph::Ref(), tx, nFee, TicksSinceEpoch<std::chrono::seconds>(time), nHeight, m_sequence, spendsCoinbase, sigOpCost, lp};
 }
 
 std::optional<std::string> CheckPackageMempoolAcceptResult(const Package& txns,
@@ -59,7 +60,7 @@ std::optional<std::string> CheckPackageMempoolAcceptResult(const Package& txns,
     }
     for (const auto& tx : txns) {
         const auto& wtxid = tx->GetWitnessHash();
-        if (result.m_tx_results.count(wtxid) == 0) {
+        if (!result.m_tx_results.contains(wtxid)) {
             return strprintf("result not found for tx %s", wtxid.ToString());
         }
 
@@ -157,7 +158,7 @@ void CheckMempoolEphemeralInvariants(const CTxMemPool& tx_pool)
         Assert(entry.GetFee() == 0 && entry.GetModifiedFee() == 0);
 
         // Transaction has single dust; make sure it's swept or will not be mined
-        const auto& children = entry.GetMemPoolChildrenConst();
+        const auto& children = tx_pool.GetChildren(entry);
 
         // Multiple children should never happen as non-dust-spending child
         // can get mined as package
@@ -183,38 +184,75 @@ void CheckMempoolTRUCInvariants(const CTxMemPool& tx_pool)
     LOCK(tx_pool.cs);
     for (const auto& tx_info : tx_pool.infoAll()) {
         const auto& entry = *Assert(tx_pool.GetEntry(tx_info.tx->GetHash()));
+        auto [desc_count, desc_size, desc_fees] = tx_pool.CalculateDescendantData(entry);
+        auto [anc_count, anc_size, anc_fees] = tx_pool.CalculateAncestorData(entry);
+
         if (tx_info.tx->version == TRUC_VERSION) {
             // Check that special maximum virtual size is respected
             Assert(entry.GetTxSize() <= TRUC_MAX_VSIZE);
 
             // Check that special TRUC ancestor/descendant limits and rules are always respected
-            Assert(entry.GetCountWithDescendants() <= TRUC_DESCENDANT_LIMIT);
-            Assert(entry.GetCountWithAncestors() <= TRUC_ANCESTOR_LIMIT);
-            Assert(entry.GetSizeWithDescendants() <= TRUC_MAX_VSIZE + TRUC_CHILD_MAX_VSIZE);
-            Assert(entry.GetSizeWithAncestors() <= TRUC_MAX_VSIZE + TRUC_CHILD_MAX_VSIZE);
-
+            Assert(desc_count <= TRUC_DESCENDANT_LIMIT);
+            Assert(anc_count <= TRUC_ANCESTOR_LIMIT);
+            Assert(desc_size <= TRUC_MAX_VSIZE + TRUC_CHILD_MAX_VSIZE);
+            Assert(anc_size <= TRUC_MAX_VSIZE + TRUC_CHILD_MAX_VSIZE);
             // If this transaction has at least 1 ancestor, it's a "child" and has restricted weight.
-            if (entry.GetCountWithAncestors() > 1) {
+            if (anc_count > 1) {
                 Assert(entry.GetTxSize() <= TRUC_CHILD_MAX_VSIZE);
                 // All TRUC transactions must only have TRUC unconfirmed parents.
-                const auto& parents = entry.GetMemPoolParentsConst();
+                const auto& parents = tx_pool.GetParents(entry);
                 Assert(parents.begin()->get().GetSharedTx()->version == TRUC_VERSION);
             }
-        } else if (entry.GetCountWithAncestors() > 1) {
+        } else if (anc_count > 1) {
             // All non-TRUC transactions must only have non-TRUC unconfirmed parents.
-            for (const auto& parent : entry.GetMemPoolParentsConst()) {
+            for (const auto& parent : tx_pool.GetParents(entry)) {
                 Assert(parent.get().GetSharedTx()->version != TRUC_VERSION);
             }
         }
     }
 }
 
-void AddToMempool(CTxMemPool& tx_pool, const CTxMemPoolEntry& entry)
+void TryAddToMempool(CTxMemPool& tx_pool, const CTxMemPoolEntry& entry)
 {
     LOCK2(cs_main, tx_pool.cs);
     auto changeset = tx_pool.GetChangeSet();
     changeset->StageAddition(entry.GetSharedTx(), entry.GetFee(),
             entry.GetTime().count(), entry.GetHeight(), entry.GetSequence(),
             entry.GetSpendsCoinbase(), entry.GetSigOpCost(), entry.GetLockPoints());
-    changeset->Apply();
+    if (changeset->CheckMemPoolPolicyLimits()) changeset->Apply();
+}
+
+void MockMempoolMinFee(const CFeeRate& target_feerate, CTxMemPool& mempool)
+{
+    LOCK2(cs_main, mempool.cs);
+    // Transactions in the mempool will affect the new minimum feerate.
+    assert(mempool.size() == 0);
+    // The target feerate cannot be too low...
+    // ...otherwise the transaction's feerate will need to be negative.
+    assert(target_feerate > mempool.m_opts.incremental_relay_feerate);
+    // ...otherwise this is not meaningful. The feerate policy uses the maximum of both feerates.
+    assert(target_feerate > mempool.m_opts.min_relay_feerate);
+
+    // Manually create an invalid transaction. Manually set the fee in the CTxMemPoolEntry to
+    // achieve the exact target feerate.
+    CMutableTransaction mtx{};
+    mtx.vin.emplace_back(COutPoint{Txid::FromUint256(uint256{123}), 0});
+    mtx.vout.emplace_back(1 * COIN, GetScriptForDestination(WitnessV0ScriptHash(CScript() << OP_TRUE)));
+    // Set a large size so that the fee evaluated at target_feerate (which is usually in sats/kvB) is an integer.
+    // Otherwise, GetMinFee() may end up slightly different from target_feerate.
+    BulkTransaction(mtx, 4000);
+    const auto tx{MakeTransactionRef(mtx)};
+    LockPoints lp;
+    // The new mempool min feerate is equal to the removed package's feerate + incremental feerate.
+    const auto tx_fee = target_feerate.GetFee(GetVirtualTransactionSize(*tx)) -
+        mempool.m_opts.incremental_relay_feerate.GetFee(GetVirtualTransactionSize(*tx));
+    {
+        auto changeset = mempool.GetChangeSet();
+        changeset->StageAddition(tx, /*fee=*/tx_fee,
+                /*time=*/0, /*entry_height=*/1, /*entry_sequence=*/0,
+                /*spends_coinbase=*/true, /*sigops_cost=*/1, lp);
+        changeset->Apply();
+    }
+    mempool.TrimToSize(0);
+    assert(mempool.GetMinFee() == target_feerate);
 }

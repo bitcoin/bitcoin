@@ -1,16 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
 #include <tinyformat.h>
-#include <util/time.h>
-
-std::string CBlockFileInfo::ToString() const
-{
-    return strprintf("CBlockFileInfo(blocks=%u, size=%u, heights=%u...%u, time=%s...%s)", nBlocks, nSize, nHeightFirst, nHeightLast, FormatISO8601Date(nTimeFirst), FormatISO8601Date(nTimeLast));
-}
+#include <util/check.h>
 
 std::string CBlockIndex::ToString() const
 {
@@ -158,18 +153,26 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& fr
 /** Find the last common ancestor two blocks have.
  *  Both pa and pb must be non-nullptr. */
 const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* pb) {
+    // First rewind to the last common height (the forking point cannot be past one of the two).
     if (pa->nHeight > pb->nHeight) {
         pa = pa->GetAncestor(pb->nHeight);
     } else if (pb->nHeight > pa->nHeight) {
         pb = pb->GetAncestor(pa->nHeight);
     }
-
-    while (pa != pb && pa && pb) {
+    while (pa != pb) {
+        // Jump back until pa and pb have a common "skip" ancestor.
+        while (pa->pskip != pb->pskip) {
+            // This logic relies on the property that equal-height blocks have equal-height skip
+            // pointers.
+            Assume(pa->nHeight == pb->nHeight);
+            Assume(pa->pskip->nHeight == pb->pskip->nHeight);
+            pa = pa->pskip;
+            pb = pb->pskip;
+        }
+        // At this point, pa and pb are different, but have equal pskip. The forking point lies in
+        // between pa/pb on the one end, and pa->pskip/pb->pskip on the other end.
         pa = pa->pprev;
         pb = pb->pprev;
     }
-
-    // Eventually all chain branches meet at the genesis block.
-    assert(pa == pb);
     return pa;
 }

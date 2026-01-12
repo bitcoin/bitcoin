@@ -18,7 +18,8 @@ ${CI_RETRY_EXE} apt-get update
 # - curl/xz-utils (to install shellcheck)
 # - git (used in many lint scripts)
 # - gpg (used by verify-commits)
-${CI_RETRY_EXE} apt-get install -y cargo curl xz-utils git gpg
+# - moreutils (used by scripted-diff)
+${CI_RETRY_EXE} apt-get install -y cargo curl xz-utils git gpg moreutils
 
 PYTHON_PATH="/python_build"
 if [ ! -d "${PYTHON_PATH}/bin" ]; then
@@ -39,7 +40,6 @@ command -v python3
 python3 --version
 
 ${CI_RETRY_EXE} pip3 install \
-  codespell==2.4.1 \
   lief==0.16.6 \
   mypy==1.18.2 \
   pyzmq==27.1.0 \

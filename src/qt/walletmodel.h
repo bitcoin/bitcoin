@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -68,9 +68,9 @@ public:
     enum EncryptionStatus
     {
         NoKeys,       // wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)
-        Unencrypted,  // !wallet->IsCrypted()
-        Locked,       // wallet->IsCrypted() && wallet->IsLocked()
-        Unlocked      // wallet->IsCrypted() && !wallet->IsLocked()
+        Unencrypted,  // !wallet->HasEncryptionKeys()
+        Locked,       // wallet->HasEncryptionKeys() && wallet->IsLocked()
+        Unlocked      // wallet->HasEncryptionKeys() && !wallet->IsLocked()
     };
 
     OptionsModel* getOptionsModel() const;

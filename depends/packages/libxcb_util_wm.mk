@@ -1,12 +1,12 @@
 package=libxcb_util_wm
-$(package)_version=0.4.1
+$(package)_version=0.4.2
 $(package)_download_path=https://xcb.freedesktop.org/dist
 $(package)_file_name=xcb-util-wm-$($(package)_version).tar.gz
-$(package)_sha256_hash=038b39c4bdc04a792d62d163ba7908f4bb3373057208c07110be73c1b04b8334
+$(package)_sha256_hash=dcecaaa535802fd57c84cceeff50c64efe7f2326bf752e16d2b77945649c8cd7
 $(package)_dependencies=libxcb
 
 define $(package)_set_vars
-$(package)_config_opts=--disable-static --disable-devel-docs --without-doxygen
+$(package)_config_opts=--disable-shared --disable-devel-docs --without-doxygen
 $(package)_config_opts += --disable-dependency-tracking --enable-option-checking
 endef
 

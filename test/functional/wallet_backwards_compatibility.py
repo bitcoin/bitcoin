@@ -100,7 +100,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         bad_deriv_wallet.dumpwallet(dump_path)
         addr = None
         seed = None
-        with open(dump_path, encoding="utf8") as f:
+        with open(dump_path) as f:
             for line in f:
                 if f"hdkeypath=m/0'/0'/{LAST_KEYPOOL_INDEX}'" in line:
                     addr = line.split(" ")[4].split("=")[1]
@@ -123,7 +123,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         os.unlink(dump_path)
         bad_deriv_wallet.dumpwallet(dump_path)
         bad_path_addr = None
-        with open(dump_path, encoding="utf8") as f:
+        with open(dump_path) as f:
             for line in f:
                 if f"hdkeypath={bad_deriv_path}" in line:
                     bad_path_addr = line.split(" ")[4].split("=")[1]

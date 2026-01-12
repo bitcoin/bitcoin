@@ -7,6 +7,7 @@
 #include <policy/rbf.h>
 #include <primitives/transaction_identifier.h>
 #include <rpc/util.h>
+#include <rpc/rawtransaction_util.h>
 #include <rpc/blockchain.h>
 #include <util/vector.h>
 #include <wallet/receive.h>
@@ -417,7 +418,11 @@ RPCHelpMan listtransactions()
     return RPCHelpMan{
         "listtransactions",
         "If a label name is provided, this will return only incoming transactions paying to addresses with the specified label.\n"
-                "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions.\n",
+                "Returns up to 'count' most recent transactions ordered from oldest to newest while skipping the first number of \n"
+                "transactions specified in the 'skip' argument. A transaction can have multiple entries in this RPC response. \n"
+                "For instance, a wallet transaction that pays three addresses — one wallet-owned and two external — will produce \n"
+                "four entries. The payment to the wallet-owned address appears both as a send entry and as a receive entry. \n"
+                "As a result, the RPC response will contain one entry in the receive category and three entries in the send category.\n",
                 {
                     {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "If set, should be a valid label name to return only incoming transactions\n"
                           "with the specified label, or \"*\" to disable filtering and return all transactions."},
@@ -700,7 +705,7 @@ RPCHelpMan gettransaction()
                         {RPCResult::Type::STR_HEX, "hex", "Raw data for transaction"},
                         {RPCResult::Type::OBJ, "decoded", /*optional=*/true, "The decoded transaction (only present when `verbose` is passed)",
                         {
-                            {RPCResult::Type::ELISION, "", "Equivalent to the RPC decoderawtransaction method, or the RPC getrawtransaction method when `verbose` is passed."},
+                            DecodeTxDoc(/*txid_field_doc=*/"The transaction id", /*wallet=*/true),
                         }},
                         RESULT_LAST_PROCESSED_BLOCK,
                     })
@@ -752,7 +757,16 @@ RPCHelpMan gettransaction()
 
     if (verbose) {
         UniValue decoded(UniValue::VOBJ);
-        TxToUniv(*wtx.tx, /*block_hash=*/uint256(), /*entry=*/decoded, /*include_hex=*/false);
+        TxToUniv(*wtx.tx,
+                /*block_hash=*/uint256(),
+                /*entry=*/decoded,
+                /*include_hex=*/false,
+                /*txundo=*/nullptr,
+                /*verbosity=*/TxVerbosity::SHOW_DETAILS,
+                /*is_change_func=*/[&pwallet](const CTxOut& txout) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+                                        AssertLockHeld(pwallet->cs_wallet);
+                                        return OutputIsChange(*pwallet, txout);
+                                    });
         entry.pushKV("decoded", std::move(decoded));
     }
 
@@ -792,7 +806,7 @@ RPCHelpMan abandontransaction()
 
     Txid hash{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
 
-    if (!pwallet->mapWallet.count(hash)) {
+    if (!pwallet->mapWallet.contains(hash)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
     }
     if (!pwallet->AbandonTransaction(hash)) {

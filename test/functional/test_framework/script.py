@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2022 The Bitcoin Core developers
+# Copyright (c) 2015-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Functionality to build scripts, as well as signature hash functions.
@@ -27,6 +27,11 @@ MAX_SCRIPT_SIZE = 10000
 MAX_PUBKEYS_PER_MULTI_A = 999
 LOCKTIME_THRESHOLD = 500000000
 ANNEX_TAG = 0x50
+
+SEQUENCE_LOCKTIME_DISABLE_FLAG = (1<<31)
+SEQUENCE_LOCKTIME_TYPE_FLAG = (1<<22) # this means use time (0 means height)
+SEQUENCE_LOCKTIME_GRANULARITY = 9 # this is a bit-shift
+SEQUENCE_LOCKTIME_MASK = 0x0000ffff
 
 LEAF_VERSION_TAPSCRIPT = 0xc0
 
@@ -847,7 +852,7 @@ def TaprootSignatureMsg(txTo, spent_utxos, hash_type, input_index=0, *, scriptpa
     if scriptpath:
         ss += TaggedHash("TapLeaf", bytes([leaf_ver]) + ser_string(leaf_script))
         ss += bytes([0])
-        ss += codeseparator_pos.to_bytes(4, "little", signed=True)
+        ss += codeseparator_pos.to_bytes(4, "little", signed=False)
     assert len(ss) == 175 - (in_type == SIGHASH_ANYONECANPAY) * 49 - (out_type != SIGHASH_ALL and out_type != SIGHASH_SINGLE) * 32 + (annex is not None) * 32 + scriptpath * 37
     return ss
 

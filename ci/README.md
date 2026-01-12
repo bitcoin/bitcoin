@@ -20,11 +20,30 @@ requires `bash`, `docker`, and `python3` to be installed. To run on different ar
 sudo apt install bash docker.io python3 qemu-user-static
 ```
 
-It is recommended to run the ci system in a clean env. To run the test stage
-with a specific configuration,
+For some sanitizer builds, the kernel's address-space layout randomization
+(ASLR) entropy can cause sanitizer shadow memory mappings to fail. When running
+the CI locally you may need to reduce that entropy by running:
 
 ```
-env -i HOME="$HOME" PATH="$PATH" USER="$USER" bash -c 'FILE_ENV="./ci/test/00_setup_env_arm.sh" ./ci/test_run_all.sh'
+sudo sysctl -w vm.mmap_rnd_bits=28
+```
+
+To run a test that requires emulating a CPU architecture different from the
+host, we may rely on the container environment recognizing foreign executables
+and automatically running them using `qemu`. The following sets us up to do so
+(also works for `podman`):
+
+```
+docker run --rm --privileged docker.io/multiarch/qemu-user-static --reset -p yes
+```
+
+It is recommended to run the CI system in a clean environment. The `env -i`
+command below ensures that *only* specified environment variables are propagated
+into the local CI.
+To run the test stage with a specific configuration:
+
+```
+env -i HOME="$HOME" PATH="$PATH" USER="$USER" FILE_ENV="./ci/test/00_setup_env_arm.sh" ./ci/test_run_all.sh
 ```
 
 ## Configurations
@@ -43,7 +62,7 @@ It is also possible to force a specific configuration without modifying the
 file. For example,
 
 ```
-env -i HOME="$HOME" PATH="$PATH" USER="$USER" bash -c 'MAKEJOBS="-j1" FILE_ENV="./ci/test/00_setup_env_arm.sh" ./ci/test_run_all.sh'
+env -i HOME="$HOME" PATH="$PATH" USER="$USER" MAKEJOBS="-j1" FILE_ENV="./ci/test/00_setup_env_arm.sh" ./ci/test_run_all.sh
 ```
 
 The files starting with `0n` (`n` greater than 0) are the scripts that are run

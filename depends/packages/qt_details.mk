@@ -13,14 +13,14 @@ qt_details_qttools_sha256_hash := f03bb7df619cd9ac9dba110e30b7bcab5dd88eb8bdc9cc
 
 qt_details_patches_path := $(PATCHES_PATH)/qt
 
-qt_details_top_download_path := https://code.qt.io/cgit/qt/qt5.git/plain
+qt_details_top_download_path := https://raw.githubusercontent.com/qt/qt5/refs/heads/$(qt_details_version)
 qt_details_top_cmakelists_file_name := CMakeLists.txt
-qt_details_top_cmakelists_download_file := $(qt_details_top_cmakelists_file_name)?h=$(qt_details_version)
+qt_details_top_cmakelists_download_file := $(qt_details_top_cmakelists_file_name)
 qt_details_top_cmakelists_sha256_hash := 9fb720a633c0c0a21c31fe62a34bf617726fed72480d4064f29ca5d6973d513f
 qt_details_top_cmake_download_path := $(qt_details_top_download_path)/cmake
 qt_details_top_cmake_ecmoptionaladdsubdirectory_file_name := ECMOptionalAddSubdirectory.cmake
-qt_details_top_cmake_ecmoptionaladdsubdirectory_download_file := $(qt_details_top_cmake_ecmoptionaladdsubdirectory_file_name)?h=$(qt_details_version)
+qt_details_top_cmake_ecmoptionaladdsubdirectory_download_file := $(qt_details_top_cmake_ecmoptionaladdsubdirectory_file_name)
 qt_details_top_cmake_ecmoptionaladdsubdirectory_sha256_hash := 97ee8bbfcb0a4bdcc6c1af77e467a1da0c5b386c42be2aa97d840247af5f6f70
 qt_details_top_cmake_qttoplevelhelpers_file_name := QtTopLevelHelpers.cmake
-qt_details_top_cmake_qttoplevelhelpers_download_file := $(qt_details_top_cmake_qttoplevelhelpers_file_name)?h=$(qt_details_version)
+qt_details_top_cmake_qttoplevelhelpers_download_file := $(qt_details_top_cmake_qttoplevelhelpers_file_name)
 qt_details_top_cmake_qttoplevelhelpers_sha256_hash := 5ac2a7159ee27b5b86d26ecff44922e7b8f319aa847b7b5766dc17932fd4a294

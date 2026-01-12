@@ -97,7 +97,7 @@ rewards to a wallet address owned by the mining node.
 
 ```
 >>> test.nodes[0].createwallet('default')
-{'name': 'default', 'warning': 'Empty string given as passphrase, wallet will not be encrypted.'}
+{'name': 'default'}
 >>> address = test.nodes[0].getnewaddress()
 >>> test.generatetoaddress(test.nodes[0], 101, address)
 ['2b98dd0044aae6f1cca7f88a0acf366a4bfe053c7f7b00da3c0d115f03d67efb', ...
@@ -179,7 +179,6 @@ can be called after the TestShell is shut down.
 | `coveragedir` | `None` | Records bitcoind RPC test coverage into this directory if set. |
 | `loglevel` | `INFO` | Logs events at this level and higher. Can be set to `DEBUG`, `INFO`, `WARNING`, `ERROR` or `CRITICAL`. |
 | `nocleanup` | `False` | Cleans up temporary test directory if set to `True` during `shutdown`. |
-| `noshutdown` | `False` | Does not stop bitcoind instances after `shutdown` if set to `True`. |
 | `num_nodes` | `1` | Sets the number of initialized bitcoind processes. |
 | `perf` | False | Profiles running nodes with `perf` for the duration of the test if set to `True`. |
 | `rpc_timeout` | `60` | Sets the RPC server timeout for the underlying bitcoind processes. |

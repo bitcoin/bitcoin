@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +9,7 @@
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <node/types.h>
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
 #include <scheduler.h>
@@ -140,7 +140,7 @@ public:
     {
         return m_wallet->EncryptWallet(wallet_passphrase);
     }
-    bool isCrypted() override { return m_wallet->IsCrypted(); }
+    bool isCrypted() override { return m_wallet->HasEncryptionKeys(); }
     bool lock() override { return m_wallet->Lock(); }
     bool unlock(const SecureString& wallet_passphrase) override { return m_wallet->Unlock(wallet_passphrase); }
     bool isLocked() override { return m_wallet->IsLocked(); }
@@ -597,16 +597,15 @@ public:
             return util::Error{error};
         }
     }
-    util::Result<std::unique_ptr<Wallet>> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, std::vector<bilingual_str>& warnings) override
+    util::Result<std::unique_ptr<Wallet>> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, std::vector<bilingual_str>& warnings, bool load_after_restore) override
     {
         DatabaseStatus status;
         bilingual_str error;
-        std::unique_ptr<Wallet> wallet{MakeWallet(m_context, RestoreWallet(m_context, backup_file, wallet_name, /*load_on_start=*/true, status, error, warnings))};
-        if (wallet) {
-            return wallet;
-        } else {
+        std::unique_ptr<Wallet> wallet{MakeWallet(m_context, RestoreWallet(m_context, backup_file, wallet_name, /*load_on_start=*/true, status, error, warnings, load_after_restore))};
+        if (!error.empty()) {
             return util::Error{error};
         }
+        return wallet;
     }
     util::Result<WalletMigrationResult> migrateWallet(const std::string& name, const SecureString& passphrase) override
     {
@@ -624,7 +623,7 @@ public:
     {
         auto wallets{GetWallets(m_context)};
         auto it = std::find_if(wallets.begin(), wallets.end(), [&](std::shared_ptr<CWallet> w){ return w->GetName() == wallet_name; });
-        if (it != wallets.end()) return (*it)->IsCrypted();
+        if (it != wallets.end()) return (*it)->HasEncryptionKeys();
 
         // Unloaded wallet, read db
         DatabaseOptions options;

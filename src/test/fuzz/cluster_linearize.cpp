@@ -24,29 +24,22 @@
  *          possibly by comparison with other implementations (at the end of the line ->).
  *   <<---: The right side is implemented using the left side.
  *
- *   +-----------------------+
- *   | SearchCandidateFinder | <<---------------------\
- *   +-----------------------+                        |
- *     |                                            +-----------+
- *     |                                            | Linearize |
- *     |                                            +-----------+
- *     |        +-------------------------+           |  |
- *     |        | AncestorCandidateFinder | <<--------/  |
- *     |        +-------------------------+              |
- *     |          |                     ^                |        ^^  PRODUCTION CODE
- *     |          |                     |                |        ||
+ *   +---------------------+                        +-----------+
+ *   | SpanningForestState | <<-------------------- | Linearize |
+ *   +---------------------+                        +-----------+
+ *               |                                       |
+ *               |                                       |        ^^  PRODUCTION CODE
+ *               |                                       |        ||
  *  ==============================================================================================
- *     |          |                     |                |        ||
- *     | clusterlin_ancestor_finder*    |                |        vv  TEST CODE
- *     |                                |                |
- *     |-clusterlin_search_finder*      |                |-clusterlin_linearize*
- *     |                                |                |
- *     v                                |                v
- *   +-----------------------+          |           +-----------------+
+ *               |                                       |        ||
+ *               |-clusterlin_sfl*                       |        vv  TEST CODE
+ *               |                                       |
+ *               \------------------------------------\  |-clusterlin_linearize*
+ *                                                    |  |
+ *                                                    v  v
+ *   +-----------------------+                      +-----------------+
  *   | SimpleCandidateFinder | <<-------------------| SimpleLinearize |
- *   +-----------------------+          |           +-----------------+
- *                  |                   |                |
- *                  +-------------------/                |
+ *   +-----------------------+                      +-----------------+
  *                  |                                    |
  *                  |-clusterlin_simple_finder*          |-clusterlin_simple_linearize*
  *                  v                                    v
@@ -59,17 +52,12 @@
  *   - clusterlin_depgraph_sim
  *   - clusterlin_depgraph_serialization
  *   - clusterlin_components
- * - ChunkLinearization and LinearizationChunking tests:
+ * - ChunkLinearization and ChunkLinearizationInfo tests:
  *   - clusterlin_chunking
- *   - clusterlin_linearization_chunking
  * - PostLinearize tests:
  *   - clusterlin_postlinearize
  *   - clusterlin_postlinearize_tree
  *   - clusterlin_postlinearize_moved_leaf
- * - MergeLinearization tests:
- *   - clusterlin_merge
- * - FixLinearization tests:
- *   - clusterlin_fix_linearization
  * - MakeConnected tests (a test-only function):
  *   - clusterlin_make_connected
  */
@@ -78,11 +66,8 @@ using namespace cluster_linearize;
 
 namespace {
 
-/** A simple finder class for candidate sets.
- *
- * This class matches SearchCandidateFinder in interface and behavior, though with fewer
- * optimizations.
- */
+/** A simple finder class for candidate sets (topologically-valid subsets with high feerate), only
+ *  used by SimpleLinearize below. */
 template<typename SetType>
 class SimpleCandidateFinder
 {
@@ -153,7 +138,8 @@ public:
 /** A very simple finder class for optimal candidate sets, which tries every subset.
  *
  * It is even simpler than SimpleCandidateFinder, and exists just to help test the correctness of
- * SimpleCandidateFinder, which is then used to test the correctness of SearchCandidateFinder.
+ * SimpleCandidateFinder, so that it can be used in SimpleLinearize, which is then used to test the
+ * correctness of Linearize.
  */
 template<typename SetType>
 class ExhaustiveCandidateFinder
@@ -204,8 +190,8 @@ public:
 /** A simple linearization algorithm.
  *
  * This matches Linearize() in interface and behavior, though with fewer optimizations, lacking
- * the ability to pass in an existing linearization, and using just SimpleCandidateFinder rather
- * than AncestorCandidateFinder and SearchCandidateFinder.
+ * the ability to pass in an existing linearization, and linearizing by simply finding the
+ * consecutive remaining highest-feerate topological subset using SimpleCandidateFinder.
  */
 template<typename SetType>
 std::pair<std::vector<DepGraphIndex>, bool> SimpleLinearize(const DepGraph<SetType>& depgraph, uint64_t max_iterations)
@@ -328,18 +314,24 @@ SetType ReadTopologicalSet(const DepGraph<SetType>& depgraph, const SetType& tod
 
 /** Given a dependency graph, construct any valid linearization for it, reading from a SpanReader. */
 template<typename BS>
-std::vector<DepGraphIndex> ReadLinearization(const DepGraph<BS>& depgraph, SpanReader& reader)
+std::vector<DepGraphIndex> ReadLinearization(const DepGraph<BS>& depgraph, SpanReader& reader, bool topological=true)
 {
     std::vector<DepGraphIndex> linearization;
     TestBitSet todo = depgraph.Positions();
-    // In every iteration one topologically-valid transaction is appended to linearization.
+    // In every iteration one transaction is appended to linearization.
     while (todo.Any()) {
-        // Compute the set of transactions with no not-yet-included ancestors.
+        // Compute the set of transactions to select from.
         TestBitSet potential_next;
-        for (auto j : todo) {
-            if ((depgraph.Ancestors(j) & todo) == TestBitSet::Singleton(j)) {
-                potential_next.Set(j);
+        if (topological) {
+            // Find all transactions with no not-yet-included ancestors.
+            for (auto j : todo) {
+                if ((depgraph.Ancestors(j) & todo) == TestBitSet::Singleton(j)) {
+                    potential_next.Set(j);
+                }
             }
+        } else {
+            // Allow any element to be selected next, regardless of topology.
+            potential_next = todo;
         }
         // There must always be one (otherwise there is a cycle in the graph).
         assert(potential_next.Any());
@@ -362,6 +354,45 @@ std::vector<DepGraphIndex> ReadLinearization(const DepGraph<BS>& depgraph, SpanR
         }
     }
     return linearization;
+}
+
+/** Given a dependency graph, construct a tree-structured graph.
+ *
+ * Copies the nodes from the depgraph, but only keeps the first parent (even direction)
+ * or the first child (odd direction) for each transaction.
+ */
+template<typename BS>
+DepGraph<BS> BuildTreeGraph(const DepGraph<BS>& depgraph, uint8_t direction)
+{
+    DepGraph<BS> depgraph_tree;
+    for (DepGraphIndex i = 0; i < depgraph.PositionRange(); ++i) {
+        if (depgraph.Positions()[i]) {
+            depgraph_tree.AddTransaction(depgraph.FeeRate(i));
+        } else {
+            // For holes, add a dummy transaction which is deleted below, so that non-hole
+            // transactions retain their position.
+            depgraph_tree.AddTransaction(FeeFrac{});
+        }
+    }
+    depgraph_tree.RemoveTransactions(BS::Fill(depgraph.PositionRange()) - depgraph.Positions());
+
+    if (direction & 1) {
+        for (DepGraphIndex i : depgraph.Positions()) {
+            auto children = depgraph.GetReducedChildren(i);
+            if (children.Any()) {
+                depgraph_tree.AddDependencies(BS::Singleton(i), children.First());
+            }
+        }
+    } else {
+        for (DepGraphIndex i : depgraph.Positions()) {
+            auto parents = depgraph.GetReducedParents(i);
+            if (parents.Any()) {
+                depgraph_tree.AddDependencies(BS::Singleton(parents.First()), i);
+            }
+        }
+    }
+
+    return depgraph_tree;
 }
 
 } // namespace
@@ -452,63 +483,72 @@ FUZZ_TARGET(clusterlin_depgraph_sim)
         }
     };
 
+    auto last_compaction_pos{real.PositionRange()};
+
     LIMITED_WHILE(provider.remaining_bytes() > 0, 1000) {
-        uint8_t command = provider.ConsumeIntegral<uint8_t>();
-        if (num_tx_sim == 0 || ((command % 3) <= 0 && num_tx_sim < TestBitSet::Size())) {
-            // AddTransaction.
-            auto fee = provider.ConsumeIntegralInRange<int64_t>(-0x8000000000000, 0x7ffffffffffff);
-            auto size = provider.ConsumeIntegralInRange<int32_t>(1, 0x3fffff);
-            FeeFrac feerate{fee, size};
-            // Apply to DepGraph.
-            auto idx = real.AddTransaction(feerate);
-            // Verify that the returned index is correct.
-            assert(!sim[idx].has_value());
-            for (DepGraphIndex i = 0; i < TestBitSet::Size(); ++i) {
-                if (!sim[i].has_value()) {
-                    assert(idx == i);
-                    break;
-                }
-            }
-            // Update sim.
-            sim[idx] = {feerate, TestBitSet::Singleton(idx)};
-            ++num_tx_sim;
-            continue;
-        }
-        if ((command % 3) <= 1 && num_tx_sim > 0) {
-            // AddDependencies.
-            DepGraphIndex child = idx_fn();
-            auto parents = subset_fn();
-            // Apply to DepGraph.
-            real.AddDependencies(parents, child);
-            // Apply to sim.
-            sim[child]->second |= parents;
-            continue;
-        }
-        if (num_tx_sim > 0) {
-            // Remove transactions.
-            auto del = set_fn();
-            // Propagate all ancestry information before deleting anything in the simulation (as
-            // intermediary transactions may be deleted which impact connectivity).
-            anc_update_fn();
-            // Compare the state of the transactions being deleted.
-            for (auto i : del) check_fn(i);
-            // Apply to DepGraph.
-            real.RemoveTransactions(del);
-            // Apply to sim.
-            for (DepGraphIndex i = 0; i < sim.size(); ++i) {
-                if (sim[i].has_value()) {
-                    if (del[i]) {
-                        --num_tx_sim;
-                        sim[i] = std::nullopt;
-                    } else {
-                        sim[i]->second -= del;
+        int command = provider.ConsumeIntegral<uint8_t>() % 4;
+        while (true) {
+            // Iterate decreasing command until an applicable branch is found.
+            if (num_tx_sim < TestBitSet::Size() && command-- == 0) {
+                // AddTransaction.
+                auto fee = provider.ConsumeIntegralInRange<int64_t>(-0x8000000000000, 0x7ffffffffffff);
+                auto size = provider.ConsumeIntegralInRange<int32_t>(1, 0x3fffff);
+                FeeFrac feerate{fee, size};
+                // Apply to DepGraph.
+                auto idx = real.AddTransaction(feerate);
+                // Verify that the returned index is correct.
+                assert(!sim[idx].has_value());
+                for (DepGraphIndex i = 0; i < TestBitSet::Size(); ++i) {
+                    if (!sim[i].has_value()) {
+                        assert(idx == i);
+                        break;
                     }
                 }
+                // Update sim.
+                sim[idx] = {feerate, TestBitSet::Singleton(idx)};
+                ++num_tx_sim;
+                break;
+            } else if (num_tx_sim > 0 && command-- == 0) {
+                // AddDependencies.
+                DepGraphIndex child = idx_fn();
+                auto parents = subset_fn();
+                // Apply to DepGraph.
+                real.AddDependencies(parents, child);
+                // Apply to sim.
+                sim[child]->second |= parents;
+                break;
+            } else if (num_tx_sim > 0 && command-- == 0) {
+                // Remove transactions.
+                auto del = set_fn();
+                // Propagate all ancestry information before deleting anything in the simulation (as
+                // intermediary transactions may be deleted which impact connectivity).
+                anc_update_fn();
+                // Compare the state of the transactions being deleted.
+                for (auto i : del) check_fn(i);
+                // Apply to DepGraph.
+                real.RemoveTransactions(del);
+                // Apply to sim.
+                for (DepGraphIndex i = 0; i < sim.size(); ++i) {
+                    if (sim[i].has_value()) {
+                        if (del[i]) {
+                            --num_tx_sim;
+                            sim[i] = std::nullopt;
+                        } else {
+                            sim[i]->second -= del;
+                        }
+                    }
+                }
+                break;
+            } else if (command-- == 0) {
+                // Compact.
+                const size_t mem_before{real.DynamicMemoryUsage()};
+                real.Compact();
+                const size_t mem_after{real.DynamicMemoryUsage()};
+                assert(real.PositionRange() < last_compaction_pos ? mem_after < mem_before : mem_after <= mem_before);
+                last_compaction_pos = real.PositionRange();
+                break;
             }
-            continue;
         }
-        // This should be unreachable (one of the 3 above actions should always be possible).
-        assert(false);
     }
 
     // Compare the real obtained depgraph against the simulation.
@@ -684,8 +724,16 @@ FUZZ_TARGET(clusterlin_chunking)
     // Read a valid linearization for depgraph.
     auto linearization = ReadLinearization(depgraph, reader);
 
-    // Invoke the chunking function.
+    // Invoke the chunking functions.
     auto chunking = ChunkLinearization(depgraph, linearization);
+    auto chunking_info = ChunkLinearizationInfo(depgraph, linearization);
+
+    // Verify consistency between the two functions.
+    assert(chunking.size() == chunking_info.size());
+    for (size_t i = 0; i < chunking.size(); ++i) {
+        assert(chunking[i] == chunking_info[i].feerate);
+        assert(SetInfo(depgraph, chunking_info[i].transactions) == chunking_info[i]);
+    }
 
     // Verify that chunk feerates are monotonically non-increasing.
     for (size_t i = 1; i < chunking.size(); ++i) {
@@ -694,7 +742,7 @@ FUZZ_TARGET(clusterlin_chunking)
 
     // Naively recompute the chunks (each is the highest-feerate prefix of what remains).
     auto todo = depgraph.Positions();
-    for (const auto& chunk_feerate : chunking) {
+    for (const auto& [chunk_set, chunk_feerate] : chunking_info) {
         assert(todo.Any());
         SetInfo<TestBitSet> accumulator, best;
         for (DepGraphIndex idx : linearization) {
@@ -706,61 +754,11 @@ FUZZ_TARGET(clusterlin_chunking)
             }
         }
         assert(chunk_feerate == best.feerate);
+        assert(chunk_set == best.transactions);
         assert(best.transactions.IsSubsetOf(todo));
         todo -= best.transactions;
     }
     assert(todo.None());
-}
-
-FUZZ_TARGET(clusterlin_ancestor_finder)
-{
-    // Verify that AncestorCandidateFinder works as expected.
-
-    // Retrieve a depgraph from the fuzz input.
-    SpanReader reader(buffer);
-    DepGraph<TestBitSet> depgraph;
-    try {
-        reader >> Using<DepGraphFormatter>(depgraph);
-    } catch (const std::ios_base::failure&) {}
-
-    AncestorCandidateFinder anc_finder(depgraph);
-    auto todo = depgraph.Positions();
-    while (todo.Any()) {
-        // Call the ancestor finder's FindCandidateSet for what remains of the graph.
-        assert(!anc_finder.AllDone());
-        assert(todo.Count() == anc_finder.NumRemaining());
-        auto best_anc = anc_finder.FindCandidateSet();
-        // Sanity check the result.
-        assert(best_anc.transactions.Any());
-        assert(best_anc.transactions.IsSubsetOf(todo));
-        assert(depgraph.FeeRate(best_anc.transactions) == best_anc.feerate);
-        assert(depgraph.IsConnected(best_anc.transactions));
-        // Check that it is topologically valid.
-        for (auto i : best_anc.transactions) {
-            assert((depgraph.Ancestors(i) & todo).IsSubsetOf(best_anc.transactions));
-        }
-
-        // Compute all remaining ancestor sets.
-        std::optional<SetInfo<TestBitSet>> real_best_anc;
-        for (auto i : todo) {
-            SetInfo info(depgraph, todo & depgraph.Ancestors(i));
-            if (!real_best_anc.has_value() || info.feerate > real_best_anc->feerate) {
-                real_best_anc = info;
-            }
-        }
-        // The set returned by anc_finder must equal the real best ancestor sets.
-        assert(real_best_anc.has_value());
-        assert(*real_best_anc == best_anc);
-
-        // Find a non-empty topologically valid subset of transactions to remove from the graph.
-        // Using an empty set would mean the next iteration is identical to the current one, and
-        // could cause an infinite loop.
-        auto del_set = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
-        todo -= del_set;
-        anc_finder.MarkDone(del_set);
-    }
-    assert(anc_finder.AllDone());
-    assert(anc_finder.NumRemaining() == 0);
 }
 
 static constexpr auto MAX_SIMPLE_ITERATIONS = 300000;
@@ -769,11 +767,11 @@ FUZZ_TARGET(clusterlin_simple_finder)
 {
     // Verify that SimpleCandidateFinder works as expected by sanity checking the results
     // and comparing them (if claimed to be optimal) against the sets found by
-    // ExhaustiveCandidateFinder and AncestorCandidateFinder.
+    // ExhaustiveCandidateFinder.
     //
     // Note that SimpleCandidateFinder is only used in tests; the purpose of this fuzz test is to
-    // establish confidence in SimpleCandidateFinder, so that it can be used to test
-    // SearchCandidateFinder below.
+    // establish confidence in SimpleCandidateFinder, so that it can be used in SimpleLinearize,
+    // which is then used to test Linearize below.
 
     // Retrieve a depgraph from the fuzz input.
     SpanReader reader(buffer);
@@ -782,18 +780,15 @@ FUZZ_TARGET(clusterlin_simple_finder)
         reader >> Using<DepGraphFormatter>(depgraph);
     } catch (const std::ios_base::failure&) {}
 
-    // Instantiate the SimpleCandidateFinder to be tested, and the ExhaustiveCandidateFinder and
-    // AncestorCandidateFinder it is being tested against.
+    // Instantiate the SimpleCandidateFinder to be tested, and the ExhaustiveCandidateFinder it is
+    // being tested against.
     SimpleCandidateFinder smp_finder(depgraph);
     ExhaustiveCandidateFinder exh_finder(depgraph);
-    AncestorCandidateFinder anc_finder(depgraph);
 
     auto todo = depgraph.Positions();
     while (todo.Any()) {
         assert(!smp_finder.AllDone());
         assert(!exh_finder.AllDone());
-        assert(!anc_finder.AllDone());
-        assert(anc_finder.NumRemaining() == todo.Count());
 
         // Call SimpleCandidateFinder.
         auto [found, iterations_done] = smp_finder.FindCandidateSet(MAX_SIMPLE_ITERATIONS);
@@ -820,10 +815,6 @@ FUZZ_TARGET(clusterlin_simple_finder)
 
         // Perform further quality checks only if SimpleCandidateFinder claims an optimal result.
         if (optimal) {
-            // Compare with AncestorCandidateFinder.
-            auto anc = anc_finder.FindCandidateSet();
-            assert(anc.feerate <= found.feerate);
-
             if (todo.Count() <= 12) {
                 // Compare with ExhaustiveCandidateFinder. This quickly gets computationally
                 // expensive for large clusters (O(2^n)), so only do it for sufficiently small ones.
@@ -844,234 +835,10 @@ FUZZ_TARGET(clusterlin_simple_finder)
         todo -= del_set;
         smp_finder.MarkDone(del_set);
         exh_finder.MarkDone(del_set);
-        anc_finder.MarkDone(del_set);
     }
 
     assert(smp_finder.AllDone());
     assert(exh_finder.AllDone());
-    assert(anc_finder.AllDone());
-    assert(anc_finder.NumRemaining() == 0);
-}
-
-FUZZ_TARGET(clusterlin_search_finder)
-{
-    // Verify that SearchCandidateFinder works as expected by sanity checking the results
-    // and comparing with the results from SimpleCandidateFinder and AncestorCandidateFinder,
-    // if the result is claimed to be optimal.
-
-    // Retrieve an RNG seed, a depgraph, and whether to make it connected, from the fuzz input.
-    SpanReader reader(buffer);
-    DepGraph<TestBitSet> depgraph;
-    uint64_t rng_seed{0};
-    uint8_t make_connected{1};
-    try {
-        reader >> Using<DepGraphFormatter>(depgraph) >> rng_seed >> make_connected;
-    } catch (const std::ios_base::failure&) {}
-    // The most complicated graphs are connected ones (other ones just split up). Optionally force
-    // the graph to be connected.
-    if (make_connected) MakeConnected(depgraph);
-
-    // Instantiate the candidate finders.
-    SearchCandidateFinder src_finder(depgraph, rng_seed);
-    SimpleCandidateFinder smp_finder(depgraph);
-    AncestorCandidateFinder anc_finder(depgraph);
-
-    auto todo = depgraph.Positions();
-    while (todo.Any()) {
-        assert(!src_finder.AllDone());
-        assert(!smp_finder.AllDone());
-        assert(!anc_finder.AllDone());
-        assert(anc_finder.NumRemaining() == todo.Count());
-
-        // For each iteration, read an iteration count limit from the fuzz input.
-        uint64_t max_iterations = 1;
-        try {
-            reader >> VARINT(max_iterations);
-        } catch (const std::ios_base::failure&) {}
-        max_iterations &= 0xfffff;
-
-        // Read an initial subset from the fuzz input (allowed to be empty).
-        auto init_set = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/false);
-        SetInfo init_best(depgraph, init_set);
-
-        // Call the search finder's FindCandidateSet for what remains of the graph.
-        auto [found, iterations_done] = src_finder.FindCandidateSet(max_iterations, init_best);
-        bool optimal = iterations_done < max_iterations;
-
-        // Sanity check the result.
-        assert(iterations_done <= max_iterations);
-        assert(found.transactions.Any());
-        assert(found.transactions.IsSubsetOf(todo));
-        assert(depgraph.FeeRate(found.transactions) == found.feerate);
-        if (!init_best.feerate.IsEmpty()) assert(found.feerate >= init_best.feerate);
-        // Check that it is topologically valid.
-        for (auto i : found.transactions) {
-            assert(found.transactions.IsSupersetOf(depgraph.Ancestors(i) & todo));
-        }
-
-        // At most 2^(N-1) iterations can be required: the maximum number of non-empty topological
-        // subsets a (connected) cluster with N transactions can have. Even when the cluster is no
-        // longer connected after removing certain transactions, this holds, because the connected
-        // components are searched separately.
-        assert(iterations_done <= (uint64_t{1} << (todo.Count() - 1)));
-        // Additionally, test that no more than sqrt(2^N)+1 iterations are required. This is just
-        // an empirical bound that seems to hold, without proof. Still, add a test for it so we
-        // can learn about counterexamples if they exist.
-        if (iterations_done >= 1 && todo.Count() <= 63) {
-            Assume((iterations_done - 1) * (iterations_done - 1) <= uint64_t{1} << todo.Count());
-        }
-
-        // Perform quality checks only if SearchCandidateFinder claims an optimal result.
-        if (optimal) {
-            // Optimal sets are always connected.
-            assert(depgraph.IsConnected(found.transactions));
-
-            // Compare with SimpleCandidateFinder.
-            auto [simple, simple_iters] = smp_finder.FindCandidateSet(MAX_SIMPLE_ITERATIONS);
-            assert(found.feerate >= simple.feerate);
-            if (simple_iters < MAX_SIMPLE_ITERATIONS) {
-                assert(found.feerate == simple.feerate);
-            }
-
-            // Compare with AncestorCandidateFinder;
-            auto anc = anc_finder.FindCandidateSet();
-            assert(found.feerate >= anc.feerate);
-
-            // Compare with a non-empty topological set read from the fuzz input (comparing with an
-            // empty set is not interesting).
-            auto read_topo = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
-            assert(found.feerate >= depgraph.FeeRate(read_topo));
-        }
-
-        // Find a non-empty topologically valid subset of transactions to remove from the graph.
-        // Using an empty set would mean the next iteration is identical to the current one, and
-        // could cause an infinite loop.
-        auto del_set = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
-        todo -= del_set;
-        src_finder.MarkDone(del_set);
-        smp_finder.MarkDone(del_set);
-        anc_finder.MarkDone(del_set);
-    }
-
-    assert(src_finder.AllDone());
-    assert(smp_finder.AllDone());
-    assert(anc_finder.AllDone());
-    assert(anc_finder.NumRemaining() == 0);
-}
-
-FUZZ_TARGET(clusterlin_linearization_chunking)
-{
-    // Verify the behavior of LinearizationChunking.
-
-    // Retrieve a depgraph from the fuzz input.
-    SpanReader reader(buffer);
-    DepGraph<TestBitSet> depgraph;
-    try {
-        reader >> Using<DepGraphFormatter>(depgraph);
-    } catch (const std::ios_base::failure&) {}
-
-    // Retrieve a topologically-valid subset of depgraph (allowed to be empty, because the argument
-    // to LinearizationChunking::Intersect is allowed to be empty).
-    auto todo = depgraph.Positions();
-    auto subset = SetInfo(depgraph, ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/false));
-
-    // Retrieve a valid linearization for depgraph.
-    auto linearization = ReadLinearization(depgraph, reader);
-
-    // Construct a LinearizationChunking object, initially for the whole linearization.
-    LinearizationChunking chunking(depgraph, linearization);
-
-    // Incrementally remove transactions from the chunking object, and check various properties at
-    // every step.
-    while (todo.Any()) {
-        assert(chunking.NumChunksLeft() > 0);
-
-        // Construct linearization with just todo.
-        std::vector<DepGraphIndex> linearization_left;
-        for (auto i : linearization) {
-            if (todo[i]) linearization_left.push_back(i);
-        }
-
-        // Compute the chunking for linearization_left.
-        auto chunking_left = ChunkLinearization(depgraph, linearization_left);
-
-        // Verify that it matches the feerates of the chunks of chunking.
-        assert(chunking.NumChunksLeft() == chunking_left.size());
-        for (DepGraphIndex i = 0; i < chunking.NumChunksLeft(); ++i) {
-            assert(chunking.GetChunk(i).feerate == chunking_left[i]);
-        }
-
-        // Check consistency of chunking.
-        TestBitSet combined;
-        for (DepGraphIndex i = 0; i < chunking.NumChunksLeft(); ++i) {
-            const auto& chunk_info = chunking.GetChunk(i);
-            // Chunks must be non-empty.
-            assert(chunk_info.transactions.Any());
-            // Chunk feerates must be monotonically non-increasing.
-            if (i > 0) assert(!(chunk_info.feerate >> chunking.GetChunk(i - 1).feerate));
-            // Chunks must be a subset of what is left of the linearization.
-            assert(chunk_info.transactions.IsSubsetOf(todo));
-            // Chunks' claimed feerates must match their transactions' aggregate feerate.
-            assert(depgraph.FeeRate(chunk_info.transactions) == chunk_info.feerate);
-            // Chunks must be the highest-feerate remaining prefix.
-            SetInfo<TestBitSet> accumulator, best;
-            for (auto j : linearization) {
-                if (todo[j] && !combined[j]) {
-                    accumulator.Set(depgraph, j);
-                    if (best.feerate.IsEmpty() || accumulator.feerate > best.feerate) {
-                        best = accumulator;
-                    }
-                }
-            }
-            assert(best.transactions == chunk_info.transactions);
-            assert(best.feerate == chunk_info.feerate);
-            // Chunks cannot overlap.
-            assert(!chunk_info.transactions.Overlaps(combined));
-            combined |= chunk_info.transactions;
-            // Chunks must be topological.
-            for (auto idx : chunk_info.transactions) {
-                assert((depgraph.Ancestors(idx) & todo).IsSubsetOf(combined));
-            }
-        }
-        assert(combined == todo);
-
-        // Verify the expected properties of LinearizationChunking::IntersectPrefixes:
-        auto intersect = chunking.IntersectPrefixes(subset);
-        // - Intersecting again doesn't change the result.
-        assert(chunking.IntersectPrefixes(intersect) == intersect);
-        // - The intersection is topological.
-        TestBitSet intersect_anc;
-        for (auto idx : intersect.transactions) {
-            intersect_anc |= (depgraph.Ancestors(idx) & todo);
-        }
-        assert(intersect.transactions == intersect_anc);
-        // - The claimed intersection feerate matches its transactions.
-        assert(intersect.feerate == depgraph.FeeRate(intersect.transactions));
-        // - The intersection may only be empty if its input is empty.
-        assert(intersect.transactions.Any() == subset.transactions.Any());
-        // - The intersection feerate must be as high as the input.
-        assert(intersect.feerate >= subset.feerate);
-        // - No non-empty intersection between the intersection and a prefix of the chunks of the
-        //   remainder of the linearization may be better than the intersection.
-        TestBitSet prefix;
-        for (DepGraphIndex i = 0; i < chunking.NumChunksLeft(); ++i) {
-            prefix |= chunking.GetChunk(i).transactions;
-            auto reintersect = SetInfo(depgraph, prefix & intersect.transactions);
-            if (!reintersect.feerate.IsEmpty()) {
-                assert(reintersect.feerate <= intersect.feerate);
-            }
-        }
-
-        // Find a non-empty topologically valid subset of transactions to remove from the graph.
-        // Using an empty set would mean the next iteration is identical to the current one, and
-        // could cause an infinite loop.
-        auto done = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
-        todo -= done;
-        chunking.MarkDone(done);
-        subset = SetInfo(depgraph, subset.transactions - done);
-    }
-
-    assert(chunking.NumChunksLeft() == 0);
 }
 
 FUZZ_TARGET(clusterlin_simple_linearize)
@@ -1121,6 +888,104 @@ FUZZ_TARGET(clusterlin_simple_linearize)
     }
 }
 
+FUZZ_TARGET(clusterlin_sfl)
+{
+    // Verify the individual steps of the SFL algorithm.
+
+    SpanReader reader(buffer);
+    DepGraph<TestBitSet> depgraph;
+    uint8_t flags{1};
+    uint64_t rng_seed{0};
+    try {
+        reader >> rng_seed >> flags >> Using<DepGraphFormatter>(depgraph);
+    } catch (const std::ios_base::failure&) {}
+    if (depgraph.TxCount() <= 1) return;
+    InsecureRandomContext rng(rng_seed);
+    /** Whether to make the depgraph connected. */
+    const bool make_connected = flags & 1;
+    /** Whether to load some input linearization into the state. */
+    const bool load_linearization = flags & 2;
+    /** Whether that input linearization is topological. */
+    const bool load_topological = load_linearization && (flags & 4);
+
+    // Initialize SFL state.
+    if (make_connected) MakeConnected(depgraph);
+    SpanningForestState sfl(depgraph, rng.rand64());
+
+    // Function to test the state.
+    std::vector<FeeFrac> last_diagram;
+    auto test_fn = [&](bool is_optimal = false) {
+        if (rng.randbits(4) == 0) {
+            // Perform sanity checks from time to time (too computationally expensive to do after
+            // every step).
+            sfl.SanityCheck(depgraph);
+        }
+        auto diagram = sfl.GetDiagram();
+        if (rng.randbits(4) == 0) {
+            // Verify that the diagram of GetLinearization() is at least as good as GetDiagram(),
+            // from time to time.
+            auto lin = sfl.GetLinearization();
+            auto lin_diagram = ChunkLinearization(depgraph, lin);
+            auto cmp_lin = CompareChunks(lin_diagram, diagram);
+            assert(cmp_lin >= 0);
+            // If we're in an allegedly optimal state, they must match.
+            if (is_optimal) assert(cmp_lin == 0);
+        }
+        // Verify that subsequent calls to GetDiagram() never get worse/incomparable.
+        if (!last_diagram.empty()) {
+            auto cmp = CompareChunks(diagram, last_diagram);
+            assert(cmp >= 0);
+        }
+        last_diagram = std::move(diagram);
+    };
+
+    if (load_linearization) {
+        auto input_lin = ReadLinearization(depgraph, reader, load_topological);
+        sfl.LoadLinearization(input_lin);
+        if (load_topological) {
+            // The diagram of the loaded linearization forms an initial lower bound on future
+            // diagrams.
+            last_diagram = ChunkLinearization(depgraph, input_lin);
+        } else {
+            // The input linearization may have been non-topological, so invoke MakeTopological to
+            // fix it still.
+            sfl.MakeTopological();
+        }
+    } else {
+        // Invoke MakeTopological to create an initial from-scratch topological state.
+        sfl.MakeTopological();
+    }
+
+    // Loop until optimal.
+    test_fn();
+    sfl.StartOptimizing();
+    while (true) {
+        test_fn();
+        if (!sfl.OptimizeStep()) break;
+    }
+    test_fn(/*is_optimal=*/true);
+
+    // Verify that optimality is reached within an expected amount of work. This protects against
+    // hypothetical bugs that hugely increase the amount of work needed to reach optimality.
+    assert(sfl.GetCost() <= MaxOptimalLinearizationIters(depgraph.TxCount()));
+
+    // The result must be as good as SimpleLinearize.
+    auto [simple_linearization, simple_optimal] = SimpleLinearize(depgraph, MAX_SIMPLE_ITERATIONS / 10);
+    auto simple_diagram = ChunkLinearization(depgraph, simple_linearization);
+    auto simple_cmp = CompareChunks(last_diagram, simple_diagram);
+    assert(simple_cmp >= 0);
+    if (simple_optimal) assert(simple_cmp == 0);
+
+    // We can compare with any arbitrary linearization, and the diagram must be at least as good as
+    // each.
+    for (int i = 0; i < 10; ++i) {
+        auto read_lin = ReadLinearization(depgraph, reader);
+        auto read_diagram = ChunkLinearization(depgraph, read_lin);
+        auto cmp = CompareChunks(last_diagram, read_diagram);
+        assert(cmp >= 0);
+    }
+}
+
 FUZZ_TARGET(clusterlin_linearize)
 {
     // Verify the behavior of Linearize().
@@ -1131,43 +996,47 @@ FUZZ_TARGET(clusterlin_linearize)
     DepGraph<TestBitSet> depgraph;
     uint64_t rng_seed{0};
     uint64_t iter_count{0};
-    uint8_t make_connected{1};
+    uint8_t flags{7};
     try {
-        reader >> VARINT(iter_count) >> Using<DepGraphFormatter>(depgraph) >> rng_seed >> make_connected;
+        reader >> VARINT(iter_count) >> Using<DepGraphFormatter>(depgraph) >> rng_seed >> flags;
     } catch (const std::ios_base::failure&) {}
+    bool make_connected = flags & 1;
+    // The following 3 booleans have 4 combinations:
+    // - (flags & 6) == 0: do not provide input linearization.
+    // - (flags & 6) == 2: provide potentially non-topological input.
+    // - (flags & 6) == 4: provide topological input linearization, but do not claim it is
+    //                     topological.
+    // - (flags & 6) == 6: provide topological input linearization, and claim it is topological.
+    bool provide_input = flags & 6;
+    bool provide_topological_input = flags & 4;
+    bool claim_topological_input = (flags & 6) == 6;
     // The most complicated graphs are connected ones (other ones just split up). Optionally force
     // the graph to be connected.
     if (make_connected) MakeConnected(depgraph);
 
     // Optionally construct an old linearization for it.
     std::vector<DepGraphIndex> old_linearization;
-    {
-        uint8_t have_old_linearization{0};
-        try {
-            reader >> have_old_linearization;
-        } catch(const std::ios_base::failure&) {}
-        if (have_old_linearization & 1) {
-            old_linearization = ReadLinearization(depgraph, reader);
-            SanityCheck(depgraph, old_linearization);
-        }
+    if (provide_input) {
+        old_linearization = ReadLinearization(depgraph, reader, /*topological=*/provide_topological_input);
+        if (provide_topological_input) SanityCheck(depgraph, old_linearization);
     }
 
     // Invoke Linearize().
     iter_count &= 0x7ffff;
-    auto [linearization, optimal, cost] = Linearize(depgraph, iter_count, rng_seed, old_linearization);
-    assert(cost <= iter_count);
+    auto [linearization, optimal, cost] = Linearize(depgraph, iter_count, rng_seed, old_linearization, /*is_topological=*/claim_topological_input);
     SanityCheck(depgraph, linearization);
     auto chunking = ChunkLinearization(depgraph, linearization);
 
-    // Linearization must always be as good as the old one, if provided.
-    if (!old_linearization.empty()) {
+    // Linearization must always be as good as the old one, if provided and topological (even when
+    // not claimed to be topological).
+    if (provide_topological_input) {
         auto old_chunking = ChunkLinearization(depgraph, old_linearization);
         auto cmp = CompareChunks(chunking, old_chunking);
         assert(cmp >= 0);
     }
 
     // If the iteration count is sufficiently high, an optimal linearization must be found.
-    if (iter_count >= MaxOptimalLinearizationIters(depgraph.TxCount())) {
+    if (iter_count > MaxOptimalLinearizationIters(depgraph.TxCount())) {
         assert(optimal);
     }
 
@@ -1182,9 +1051,13 @@ FUZZ_TARGET(clusterlin_linearize)
         // If SimpleLinearize finds the optimal result too, they must be equal (if not,
         // SimpleLinearize is broken).
         if (simple_optimal) assert(cmp == 0);
-        // If simple_chunking is diagram-optimal, it cannot have more chunks than chunking (as
-        // chunking is claimed to be optimal, which implies minimal chunks).
-        if (cmp == 0) assert(chunking.size() >= simple_chunking.size());
+
+        // Temporarily disabled, as Linearize() currently does not guarantee minimal chunks, even
+        // when it reports an optimal result. This will be re-introduced in a later commit.
+        //
+        // // If simple_chunking is diagram-optimal, it cannot have more chunks than chunking (as
+        // // chunking is claimed to be optimal, which implies minimal chunks).
+        // if (cmp == 0) assert(chunking.size() >= simple_chunking.size());
 
         // Compare with a linearization read from the fuzz input.
         auto read = ReadLinearization(depgraph, reader);
@@ -1230,10 +1103,9 @@ FUZZ_TARGET(clusterlin_postlinearize)
     assert(cmp >= 0);
 
     // The chunks that come out of postlinearizing are always connected.
-    LinearizationChunking linchunking(depgraph, post_linearization);
-    while (linchunking.NumChunksLeft()) {
-        assert(depgraph.IsConnected(linchunking.GetChunk(0).transactions));
-        linchunking.MarkDone(linchunking.GetChunk(0).transactions);
+    auto linchunking = ChunkLinearizationInfo(depgraph, post_linearization);
+    for (const auto& [chunk_set, _chunk_feerate] : linchunking) {
+        assert(depgraph.IsConnected(chunk_set));
     }
 }
 
@@ -1251,35 +1123,7 @@ FUZZ_TARGET(clusterlin_postlinearize_tree)
         reader >> direction >> rng_seed >> Using<DepGraphFormatter>(depgraph_gen);
     } catch (const std::ios_base::failure&) {}
 
-    // Now construct a new graph, copying the nodes, but leaving only the first parent (even
-    // direction) or the first child (odd direction).
-    DepGraph<TestBitSet> depgraph_tree;
-    for (DepGraphIndex i = 0; i < depgraph_gen.PositionRange(); ++i) {
-        if (depgraph_gen.Positions()[i]) {
-            depgraph_tree.AddTransaction(depgraph_gen.FeeRate(i));
-        } else {
-            // For holes, add a dummy transaction which is deleted below, so that non-hole
-            // transactions retain their position.
-            depgraph_tree.AddTransaction(FeeFrac{});
-        }
-    }
-    depgraph_tree.RemoveTransactions(TestBitSet::Fill(depgraph_gen.PositionRange()) - depgraph_gen.Positions());
-
-    if (direction & 1) {
-        for (DepGraphIndex i = 0; i < depgraph_gen.TxCount(); ++i) {
-            auto children = depgraph_gen.GetReducedChildren(i);
-            if (children.Any()) {
-                depgraph_tree.AddDependencies(TestBitSet::Singleton(i), children.First());
-            }
-         }
-    } else {
-        for (DepGraphIndex i = 0; i < depgraph_gen.TxCount(); ++i) {
-            auto parents = depgraph_gen.GetReducedParents(i);
-            if (parents.Any()) {
-                depgraph_tree.AddDependencies(TestBitSet::Singleton(parents.First()), i);
-            }
-        }
-    }
+    auto depgraph_tree = BuildTreeGraph(depgraph_gen, direction);
 
     // Retrieve a linearization from the fuzz input.
     std::vector<DepGraphIndex> linearization;
@@ -1300,8 +1144,8 @@ FUZZ_TARGET(clusterlin_postlinearize_tree)
     // Verify that post-linearizing again does not change the diagram. The result must be identical
     // as post_linearization ought to be optimal already with a tree-structured graph.
     auto post_post_linearization = post_linearization;
-    PostLinearize(depgraph_tree, post_linearization);
-    SanityCheck(depgraph_tree, post_linearization);
+    PostLinearize(depgraph_tree, post_post_linearization);
+    SanityCheck(depgraph_tree, post_post_linearization);
     auto post_post_chunking = ChunkLinearization(depgraph_tree, post_post_linearization);
     auto cmp_post = CompareChunks(post_post_chunking, post_chunking);
     assert(cmp_post == 0);
@@ -1355,92 +1199,4 @@ FUZZ_TARGET(clusterlin_postlinearize_moved_leaf)
     auto new_chunking = ChunkLinearization(depgraph, lin_moved);
     auto cmp = CompareChunks(new_chunking, old_chunking);
     assert(cmp >= 0);
-}
-
-FUZZ_TARGET(clusterlin_merge)
-{
-    // Construct an arbitrary graph from the fuzz input.
-    SpanReader reader(buffer);
-    DepGraph<TestBitSet> depgraph;
-    try {
-        reader >> Using<DepGraphFormatter>(depgraph);
-    } catch (const std::ios_base::failure&) {}
-
-    // Retrieve two linearizations from the fuzz input.
-    auto lin1 = ReadLinearization(depgraph, reader);
-    auto lin2 = ReadLinearization(depgraph, reader);
-
-    // Merge the two.
-    auto lin_merged = MergeLinearizations(depgraph, lin1, lin2);
-
-    // Compute chunkings and compare.
-    auto chunking1 = ChunkLinearization(depgraph, lin1);
-    auto chunking2 = ChunkLinearization(depgraph, lin2);
-    auto chunking_merged = ChunkLinearization(depgraph, lin_merged);
-    auto cmp1 = CompareChunks(chunking_merged, chunking1);
-    assert(cmp1 >= 0);
-    auto cmp2 = CompareChunks(chunking_merged, chunking2);
-    assert(cmp2 >= 0);
-}
-
-FUZZ_TARGET(clusterlin_fix_linearization)
-{
-    // Verify expected properties of FixLinearization() on arbitrary linearizations.
-
-    // Retrieve a depgraph from the fuzz input.
-    SpanReader reader(buffer);
-    DepGraph<TestBitSet> depgraph;
-    try {
-        reader >> Using<DepGraphFormatter>(depgraph);
-    } catch (const std::ios_base::failure&) {}
-
-    // Construct an arbitrary linearization (not necessarily topological for depgraph).
-    std::vector<DepGraphIndex> linearization;
-    /** Which transactions of depgraph are yet to be included in linearization. */
-    TestBitSet todo = depgraph.Positions();
-    while (todo.Any()) {
-        // Read a number from the fuzz input in range [0, todo.Count()).
-        uint64_t val{0};
-        try {
-            reader >> VARINT(val);
-        } catch (const std::ios_base::failure&) {}
-        val %= todo.Count();
-        // Find the val'th element in todo, remove it from todo, and append it to linearization.
-        for (auto idx : todo) {
-            if (val == 0) {
-                linearization.push_back(idx);
-                todo.Reset(idx);
-                break;
-            }
-            --val;
-        }
-    }
-    assert(linearization.size() == depgraph.TxCount());
-
-    // Determine what prefix of linearization is topological, i.e., the position of the first entry
-    // in linearization which corresponds to a transaction that is not preceded by all its
-    // ancestors.
-    size_t topo_prefix = 0;
-    todo = depgraph.Positions();
-    while (topo_prefix < linearization.size()) {
-        DepGraphIndex idx = linearization[topo_prefix];
-        todo.Reset(idx);
-        if (todo.Overlaps(depgraph.Ancestors(idx))) break;
-        ++topo_prefix;
-    }
-
-    // Then make a fixed copy of linearization.
-    auto linearization_fixed = linearization;
-    FixLinearization(depgraph, linearization_fixed);
-    // Sanity check it (which includes testing whether it is topological).
-    SanityCheck(depgraph, linearization_fixed);
-
-    // FixLinearization does not modify the topological prefix of linearization.
-    assert(std::equal(linearization.begin(), linearization.begin() + topo_prefix,
-                      linearization_fixed.begin()));
-    // This also means that if linearization was entirely topological, FixLinearization cannot have
-    // modified it. This is implied by the assertion above already, but repeat it explicitly.
-    if (topo_prefix == linearization.size()) {
-        assert(linearization == linearization_fixed);
-    }
 }

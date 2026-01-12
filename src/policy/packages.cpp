@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,7 +26,7 @@ bool IsTopoSortedPackage(const Package& txns, std::unordered_set<Txid, SaltedTxi
     // than its child.
     for (const auto& tx : txns) {
         for (const auto& input : tx->vin) {
-            if (later_txids.find(input.prevout.hash) != later_txids.end()) {
+            if (later_txids.contains(input.prevout.hash)) {
                 // The parent is a subsequent transaction in the package.
                 return false;
             }
@@ -62,7 +62,7 @@ bool IsConsistentPackage(const Package& txns)
             return false;
         }
         for (const auto& input : tx->vin) {
-            if (inputs_seen.find(input.prevout) != inputs_seen.end()) {
+            if (inputs_seen.contains(input.prevout)) {
                 // This input is also present in another tx in the package.
                 return false;
             }
@@ -76,7 +76,7 @@ bool IsConsistentPackage(const Package& txns)
     return true;
 }
 
-bool IsWellFormedPackage(const Package& txns, PackageValidationState& state, bool require_sorted)
+bool IsWellFormedPackage(const Package& txns, PackageValidationState& state)
 {
     const unsigned int package_count = txns.size();
 
@@ -105,7 +105,7 @@ bool IsWellFormedPackage(const Package& txns, PackageValidationState& state, boo
     // An unsorted package will fail anyway on missing-inputs, but it's better to quit earlier and
     // fail on something less ambiguous (missing-inputs could also be an orphan or trying to
     // spend nonexistent coins).
-    if (require_sorted && !IsTopoSortedPackage(txns, later_txids)) {
+    if (!IsTopoSortedPackage(txns, later_txids)) {
         return state.Invalid(PackageValidationResult::PCKG_POLICY, "package-not-sorted");
     }
 
@@ -130,7 +130,7 @@ bool IsChildWithParents(const Package& package)
 
     // Every transaction must be a parent of the last transaction in the package.
     return std::all_of(package.cbegin(), package.cend() - 1,
-                       [&input_txids](const auto& ptx) { return input_txids.count(ptx->GetHash()) > 0; });
+                       [&input_txids](const auto& ptx) { return input_txids.contains(ptx->GetHash()); });
 }
 
 bool IsChildWithParentsTree(const Package& package)
@@ -142,7 +142,7 @@ bool IsChildWithParentsTree(const Package& package)
     // Each parent must not have an input who is one of the other parents.
     return std::all_of(package.cbegin(), package.cend() - 1, [&](const auto& ptx) {
         for (const auto& input : ptx->vin) {
-            if (parent_txids.count(input.prevout.hash) > 0) return false;
+            if (parent_txids.contains(input.prevout.hash)) return false;
         }
         return true;
     });

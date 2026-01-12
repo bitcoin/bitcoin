@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -116,7 +116,7 @@ int ProcessImpl::connect(const fs::path& data_dir,
     }
     int connect_error = errno;
     if (::close(fd) != 0) {
-        LogPrintf("Error closing file descriptor %i '%s': %s\n", fd, address, SysErrorString(errno));
+        LogWarning("Error closing file descriptor %i '%s': %s", fd, address, SysErrorString(errno));
     }
     throw std::system_error(connect_error, std::system_category());
 }
@@ -147,7 +147,7 @@ int ProcessImpl::bind(const fs::path& data_dir, const std::string& exe_name, std
     }
     int bind_error = errno;
     if (::close(fd) != 0) {
-        LogPrintf("Error closing file descriptor %i: %s\n", fd, SysErrorString(errno));
+        LogWarning("Error closing file descriptor %i: %s", fd, SysErrorString(errno));
     }
     throw std::system_error(bind_error, std::system_category());
 }

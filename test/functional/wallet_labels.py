@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2022 The Bitcoin Core developers
+# Copyright (c) 2016-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test label RPCs.
@@ -49,6 +49,27 @@ class WalletLabelsTest(BitcoinTestFramework):
 
         for rpc_call in rpc_calls:
             assert_raises_rpc_error(-11, "Invalid label name", *rpc_call, label="*")
+
+    def test_label_named_parameter_handling(self):
+        """Test that getnewaddress with labels containing '=' characters is handled correctly in -named mode"""
+        self.log.info("Test getnewaddress label parameter handling")
+        node = self.nodes[0]
+
+        # Test getnewaddress with explicit named parameter containing '='
+        label_with_equals = "wallet=wallet"
+        result = node.cli("-named", "getnewaddress", f"label={label_with_equals}").send_cli()
+        address = result.strip()
+        addr_info = node.getaddressinfo(address)
+        assert_equal(addr_info.get('labels', []), [label_with_equals])
+
+        self.log.info("Test bitcoin-cli -named passes parameter containing '=' by position if it does not specify a known parameter name and is in a string position")
+        equals_label = "my=label"
+        result = node.cli("-named", "getnewaddress", equals_label).send_cli()
+        address = result.strip()
+        addr_info = node.getaddressinfo(address)
+        assert_equal(addr_info.get('labels', []), [equals_label])
+
+        self.log.info("getnewaddress label parameter handling test completed successfully")
 
     def run_test(self):
         # Check that there's no UTXO on the node
@@ -159,6 +180,7 @@ class WalletLabelsTest(BitcoinTestFramework):
         change_label(node, labels[2].addresses[0], labels[2], labels[2])
 
         self.invalid_label_name_test()
+        self.test_label_named_parameter_handling()
 
         # This is a descriptor wallet test because of segwit v1+ addresses
         self.log.info('Check watchonly labels')

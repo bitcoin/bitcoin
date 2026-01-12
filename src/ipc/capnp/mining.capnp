@@ -1,4 +1,4 @@
-# Copyright (c) 2024 The Bitcoin Core developers
+# Copyright (c) 2024-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -33,6 +33,7 @@ interface BlockTemplate $Proxy.wrap("interfaces::BlockTemplate") {
     getCoinbaseMerklePath @8 (context: Proxy.Context) -> (result: List(Data));
     submitSolution @9 (context: Proxy.Context, version: UInt32, timestamp: UInt32, nonce: UInt32, coinbase :Data) -> (result: Bool);
     waitNext @10 (context: Proxy.Context, options: BlockWaitOptions) -> (result: BlockTemplate);
+    interruptWait @11() -> ();
 }
 
 struct BlockCreateOptions $Proxy.wrap("node::BlockCreateOptions") {

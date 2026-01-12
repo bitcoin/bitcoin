@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2022 The Bitcoin Core developers
+// Copyright (c) 2014-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -58,7 +58,7 @@ public:
 
     uint256 GetBestBlock() const override { return hashBestBlock_; }
 
-    bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) override
+    void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) override
     {
         for (auto it{cursor.Begin()}; it != cursor.End(); it = cursor.NextAndMaybeErase(*it)){
             if (it->second.IsDirty()) {
@@ -72,7 +72,6 @@ public:
         }
         if (!hashBlock.IsNull())
             hashBestBlock_ = hashBlock;
-        return true;
     }
 };
 
@@ -237,7 +236,7 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
                 unsigned int flushIndex = m_rng.randrange(stack.size() - 1);
                 if (fake_best_block) stack[flushIndex]->SetBestBlock(m_rng.rand256());
                 bool should_erase = m_rng.randrange(4) < 3;
-                BOOST_CHECK(should_erase ? stack[flushIndex]->Flush() : stack[flushIndex]->Sync());
+                should_erase ? stack[flushIndex]->Flush() : stack[flushIndex]->Sync();
                 flushed_without_erase |= !should_erase;
             }
         }
@@ -247,7 +246,7 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
                 //Remove the top cache
                 if (fake_best_block) stack.back()->SetBestBlock(m_rng.rand256());
                 bool should_erase = m_rng.randrange(4) < 3;
-                BOOST_CHECK(should_erase ? stack.back()->Flush() : stack.back()->Sync());
+                should_erase ? stack.back()->Flush() : stack.back()->Sync();
                 flushed_without_erase |= !should_erase;
                 stack.pop_back();
             }
@@ -386,15 +385,15 @@ BOOST_FIXTURE_TEST_CASE(updatecoins_simulation_test, UpdateTest)
                     auto utxod = FindRandomFrom(disconnected_coins);
                     tx = CMutableTransaction{std::get<0>(utxod->second)};
                     prevout = tx.vin[0].prevout;
-                    if (!CTransaction(tx).IsCoinBase() && !utxoset.count(prevout)) {
+                    if (!CTransaction(tx).IsCoinBase() && !utxoset.contains(prevout)) {
                         disconnected_coins.erase(utxod->first);
                         continue;
                     }
 
                     // If this tx is already IN the UTXO, then it must be a coinbase, and it must be a duplicate
-                    if (utxoset.count(utxod->first)) {
+                    if (utxoset.contains(utxod->first)) {
                         assert(CTransaction(tx).IsCoinBase());
-                        assert(duplicate_coins.count(utxod->first));
+                        assert(duplicate_coins.contains(utxod->first));
                     }
                     disconnected_coins.erase(utxod->first);
                 }
@@ -417,7 +416,7 @@ BOOST_FIXTURE_TEST_CASE(updatecoins_simulation_test, UpdateTest)
 
                 // The test is designed to ensure spending a duplicate coinbase will work properly
                 // if that ever happens and not resurrect the previously overwritten coinbase
-                if (duplicate_coins.count(prevout)) {
+                if (duplicate_coins.contains(prevout)) {
                     spent_a_duplicate_coinbase = true;
                 }
 
@@ -496,13 +495,13 @@ BOOST_FIXTURE_TEST_CASE(updatecoins_simulation_test, UpdateTest)
             // Every 100 iterations, flush an intermediate cache
             if (stack.size() > 1 && m_rng.randbool() == 0) {
                 unsigned int flushIndex = m_rng.randrange(stack.size() - 1);
-                BOOST_CHECK(stack[flushIndex]->Flush());
+                stack[flushIndex]->Flush();
             }
         }
         if (m_rng.randrange(100) == 0) {
             // Every 100 iterations, change the cache stack.
             if (stack.size() > 0 && m_rng.randbool() == 0) {
-                BOOST_CHECK(stack.back()->Flush());
+                stack.back()->Flush();
                 stack.pop_back();
             }
             if (stack.size() == 0 || (stack.size() < 4 && m_rng.randbool())) {
@@ -662,9 +661,9 @@ static void WriteCoinsViewEntry(CCoinsView& view, const MaybeCoin& cache_coin)
     sentinel.second.SelfRef(sentinel);
     CCoinsMapMemoryResource resource;
     CCoinsMap map{0, CCoinsMap::hasher{}, CCoinsMap::key_equal{}, &resource};
-    auto usage{cache_coin ? InsertCoinsMapEntry(map, sentinel, *cache_coin) : 0};
-    auto cursor{CoinsViewCacheCursor(usage, sentinel, map, /*will_erase=*/true)};
-    BOOST_CHECK(view.BatchWrite(cursor, {}));
+    if (cache_coin) InsertCoinsMapEntry(map, sentinel, *cache_coin);
+    auto cursor{CoinsViewCacheCursor(sentinel, map, /*will_erase=*/true)};
+    view.BatchWrite(cursor, {});
 }
 
 class SingleEntryCacheTest
@@ -1083,6 +1082,42 @@ BOOST_AUTO_TEST_CASE(coins_resource_is_used)
     }
 
     PoolResourceTester::CheckAllDataAccountedFor(resource);
+}
+
+BOOST_AUTO_TEST_CASE(ccoins_addcoin_exception_keeps_usage_balanced)
+{
+    CCoinsView root;
+    CCoinsViewCacheTest cache{&root};
+
+    const COutPoint outpoint{Txid::FromUint256(m_rng.rand256()), m_rng.rand32()};
+
+    const Coin coin1{CTxOut{m_rng.randrange(10), CScript{} << m_rng.randbytes(CScriptBase::STATIC_SIZE + 1)}, 1, false};
+    cache.AddCoin(outpoint, Coin{coin1}, /*possible_overwrite=*/false);
+    cache.SelfTest();
+
+    const Coin coin2{CTxOut{m_rng.randrange(20), CScript{} << m_rng.randbytes(CScriptBase::STATIC_SIZE + 2)}, 2, false};
+    BOOST_CHECK_THROW(cache.AddCoin(outpoint, Coin{coin2}, /*possible_overwrite=*/false), std::logic_error);
+    cache.SelfTest();
+
+    BOOST_CHECK(cache.AccessCoin(outpoint) == coin1);
+}
+
+BOOST_AUTO_TEST_CASE(ccoins_emplace_duplicate_keeps_usage_balanced)
+{
+    CCoinsView root;
+    CCoinsViewCacheTest cache{&root};
+
+    const COutPoint outpoint{Txid::FromUint256(m_rng.rand256()), m_rng.rand32()};
+
+    const Coin coin1{CTxOut{m_rng.randrange(10), CScript{} << m_rng.randbytes(CScriptBase::STATIC_SIZE + 1)}, 1, false};
+    cache.EmplaceCoinInternalDANGER(COutPoint{outpoint}, Coin{coin1});
+    cache.SelfTest();
+
+    const Coin coin2{CTxOut{m_rng.randrange(20), CScript{} << m_rng.randbytes(CScriptBase::STATIC_SIZE + 2)}, 2, false};
+    cache.EmplaceCoinInternalDANGER(COutPoint{outpoint}, Coin{coin2});
+    cache.SelfTest();
+
+    BOOST_CHECK(cache.AccessCoin(outpoint) == coin1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

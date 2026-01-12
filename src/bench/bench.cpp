@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2022 The Bitcoin Core developers
+// Copyright (c) 2015-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -56,7 +56,7 @@ void GenerateTemplateResults(const std::vector<ankerl::nanobench::Result>& bench
         // nothing to write, bail out
         return;
     }
-    std::ofstream fout{file};
+    std::ofstream fout{file.std_path()};
     if (fout.is_open()) {
         ankerl::nanobench::render(tpl, benchmarkResults, fout);
         std::cout << "Created " << file << std::endl;

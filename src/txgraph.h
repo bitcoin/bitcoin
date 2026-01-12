@@ -202,6 +202,13 @@ public:
      *  graph must not be oversized. If the graph is empty, {{}, FeePerWeight{}} is returned. */
     virtual std::pair<std::vector<Ref*>, FeePerWeight> GetWorstMainChunk() noexcept = 0;
 
+    /** Get the approximate memory usage for this object, just counting the main graph. If a
+     *  staging graph is present, return a number corresponding to memory usage after
+     *  AbortStaging() would be called. BlockBuilders' memory usage, memory usage of internally
+     *  queued operations, and memory due to temporary caches, is not included here. Can always be
+     *  called. */
+    virtual size_t GetMainMemoryUsage() noexcept = 0;
+
     /** Perform an internal consistency check on this object. */
     virtual void SanityCheck() const = 0;
 
@@ -234,8 +241,8 @@ public:
         /** Destroy this Ref. If it is not empty, the corresponding transaction is removed (in both
          *  main and staging, if it exists). */
         virtual ~Ref();
-        // Support moving a Ref.
-        Ref& operator=(Ref&& other) noexcept;
+        // Support move-constructing a Ref.
+        Ref& operator=(Ref&& other) noexcept = delete;
         Ref(Ref&& other) noexcept;
         // Do not permit copy constructing or copy assignment. A TxGraph entry can have at most one
         // Ref pointing to it.

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -118,14 +118,14 @@ FUZZ_TARGET(script, .init = initialize_script)
             (void)FindAndDelete(script_mut, *other_script);
         }
         const std::vector<std::string> random_string_vector = ConsumeRandomLengthStringVector(fuzzed_data_provider);
-        const uint32_t u32{fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
-        const uint32_t flags{u32 | SCRIPT_VERIFY_P2SH};
+        const auto flags_rand{fuzzed_data_provider.ConsumeIntegral<script_verify_flags::value_type>()};
+        const auto flags = script_verify_flags::from_int(flags_rand) | SCRIPT_VERIFY_P2SH;
         {
             CScriptWitness wit;
             for (const auto& s : random_string_vector) {
                 wit.stack.emplace_back(s.begin(), s.end());
             }
-            (void)CountWitnessSigOps(script, *other_script, &wit, flags);
+            (void)CountWitnessSigOps(script, *other_script, wit, flags);
             wit.SetNull();
         }
     }

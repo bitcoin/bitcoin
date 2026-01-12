@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
-# Copyright (c) 2023 The Bitcoin Core developers
+# Copyright (c) 2023-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import time
 
+from test_framework.blocktools import MAX_STANDARD_TX_WEIGHT
 from test_framework.mempool_util import (
     create_large_orphan,
     tx_in_orphanage,
 )
 from test_framework.messages import (
     CInv,
-    CTxInWitness,
     DEFAULT_ANCESTOR_LIMIT,
     MSG_TX,
     MSG_WITNESS_TX,
     MSG_WTX,
+    malleate_tx_to_invalid_witness,
     msg_getdata,
     msg_inv,
     msg_notfound,
@@ -138,22 +139,6 @@ class OrphanHandlingTest(BitcoinTestFramework):
         peer.wait_for_getdata([wtxid])
         peer.send_and_ping(msg_tx(tx))
 
-    def create_malleated_version(self, tx):
-        """
-        Create a malleated version of the tx where the witness is replaced with garbage data.
-        Returns a CTransaction object.
-        """
-        tx_bad_wit = tx_from_hex(tx["hex"])
-        tx_bad_wit.wit.vtxinwit = [CTxInWitness()]
-        # Add garbage data to witness 0. We cannot simply strip the witness, as the node would
-        # classify it as a transaction in which the witness was missing rather than wrong.
-        tx_bad_wit.wit.vtxinwit[0].scriptWitness.stack = [b'garbage']
-
-        assert_equal(tx["txid"], tx_bad_wit.txid_hex)
-        assert_not_equal(tx["wtxid"], tx_bad_wit.wtxid_hex)
-
-        return tx_bad_wit
-
     @cleanup
     def test_arrival_timing_orphan(self):
         self.log.info("Test missing parents that arrive during delay are not requested")
@@ -204,15 +189,15 @@ class OrphanHandlingTest(BitcoinTestFramework):
         peer2 = node.add_p2p_connection(PeerTxRelayer())
 
         self.log.info("Test orphan handling when a nonsegwit parent is known to be invalid")
-        parent_low_fee_nonsegwit = self.wallet_nonsegwit.create_self_transfer(fee_rate=0)
-        assert_equal(parent_low_fee_nonsegwit["txid"], parent_low_fee_nonsegwit["tx"].wtxid_hex)
+        parent_overly_large_nonsegwit = self.wallet_nonsegwit.create_self_transfer(target_vsize=int(MAX_STANDARD_TX_WEIGHT / 4) + 1)
+        assert_equal(parent_overly_large_nonsegwit["txid"], parent_overly_large_nonsegwit["tx"].wtxid_hex)
         parent_other = self.wallet_nonsegwit.create_self_transfer()
         child_nonsegwit = self.wallet_nonsegwit.create_self_transfer_multi(
-            utxos_to_spend=[parent_other["new_utxo"], parent_low_fee_nonsegwit["new_utxo"]])
+            utxos_to_spend=[parent_other["new_utxo"], parent_overly_large_nonsegwit["new_utxo"]])
 
-        # Relay the parent. It should be rejected because it pays 0 fees.
-        self.relay_transaction(peer1, parent_low_fee_nonsegwit["tx"])
-        assert parent_low_fee_nonsegwit["txid"] not in node.getrawmempool()
+        # Relay the parent. It should be rejected (and not reconsiderable) because it violated size limitations.
+        self.relay_transaction(peer1, parent_overly_large_nonsegwit["tx"])
+        assert parent_overly_large_nonsegwit["txid"] not in node.getrawmempool()
 
         # Relay the child. It should not be accepted because it has missing inputs.
         # Its parent should not be requested because its hash (txid == wtxid) has been added to the rejection filter.
@@ -224,7 +209,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
         self.nodes[0].bumpmocktime(GETDATA_TX_INTERVAL)
         peer1.assert_never_requested(int(parent_other["txid"], 16))
         peer2.assert_never_requested(int(parent_other["txid"], 16))
-        peer2.assert_never_requested(int(parent_low_fee_nonsegwit["txid"], 16))
+        peer2.assert_never_requested(int(parent_overly_large_nonsegwit["txid"], 16))
 
         self.log.info("Test orphan handling when a segwit parent was invalid but may be retried with another witness")
         parent_low_fee = self.wallet.create_self_transfer(fee_rate=0)
@@ -407,23 +392,23 @@ class OrphanHandlingTest(BitcoinTestFramework):
         peer3 = node.add_p2p_connection(PeerTxRelayer(wtxidrelay=False))
 
         self.log.info("Test that an orphan with rejected parents, along with any descendants, cannot be retried with an alternate witness")
-        parent_low_fee_nonsegwit = self.wallet_nonsegwit.create_self_transfer(fee_rate=0)
-        assert_equal(parent_low_fee_nonsegwit["txid"], parent_low_fee_nonsegwit["tx"].wtxid_hex)
-        child = self.wallet.create_self_transfer(utxo_to_spend=parent_low_fee_nonsegwit["new_utxo"])
+        parent_overly_large_nonsegwit = self.wallet_nonsegwit.create_self_transfer(target_vsize=int(MAX_STANDARD_TX_WEIGHT / 4) + 1)
+        assert_equal(parent_overly_large_nonsegwit["txid"], parent_overly_large_nonsegwit["tx"].wtxid_hex)
+        child = self.wallet.create_self_transfer(utxo_to_spend=parent_overly_large_nonsegwit["new_utxo"])
         grandchild = self.wallet.create_self_transfer(utxo_to_spend=child["new_utxo"])
         assert_not_equal(child["txid"], child["tx"].wtxid_hex)
         assert_not_equal(grandchild["txid"], grandchild["tx"].wtxid_hex)
 
         # Relay the parent. It should be rejected because it pays 0 fees.
-        self.relay_transaction(peer1, parent_low_fee_nonsegwit["tx"])
-        assert parent_low_fee_nonsegwit["txid"] not in node.getrawmempool()
+        self.relay_transaction(peer1, parent_overly_large_nonsegwit["tx"])
+        assert parent_overly_large_nonsegwit["txid"] not in node.getrawmempool()
 
         # Relay the child. It should be rejected for having missing parents, and this rejection is
         # cached by txid and wtxid.
         self.relay_transaction(peer1, child["tx"])
         assert_equal(0, len(node.getrawmempool()))
         assert not tx_in_orphanage(node, child["tx"])
-        peer1.assert_never_requested(parent_low_fee_nonsegwit["txid"])
+        peer1.assert_never_requested(parent_overly_large_nonsegwit["txid"])
 
         # Grandchild should also not be kept in orphanage because its parent has been rejected.
         self.relay_transaction(peer2, grandchild["tx"])
@@ -449,7 +434,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
         tx_child = self.wallet.create_self_transfer(utxo_to_spend=tx_parent["new_utxo"])
 
         # Create a fake version of the child
-        tx_orphan_bad_wit = self.create_malleated_version(tx_child)
+        tx_orphan_bad_wit = malleate_tx_to_invalid_witness(tx_child)
 
         bad_peer = node.add_p2p_connection(P2PInterface())
         honest_peer = node.add_p2p_connection(P2PInterface())
@@ -496,7 +481,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
         tx_middle = self.wallet.create_self_transfer(utxo_to_spend=tx_grandparent["new_utxo"])
 
         # Create a fake version of the middle tx
-        tx_orphan_bad_wit = self.create_malleated_version(tx_middle)
+        tx_orphan_bad_wit = malleate_tx_to_invalid_witness(tx_middle)
 
         # Create grandchild spending from tx_middle (and spending from tx_orphan_bad_wit since they
         # have the same txid).
@@ -550,7 +535,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
 
         # Create the real child and fake version
         tx_child = self.wallet.create_self_transfer(utxo_to_spend=tx_parent["new_utxo"])
-        tx_orphan_bad_wit = self.create_malleated_version(tx_child)
+        tx_orphan_bad_wit = malleate_tx_to_invalid_witness(tx_child)
 
         bad_peer = node.add_p2p_connection(PeerTxRelayer())
         # Must not send wtxidrelay because otherwise the inv(TX) will be ignored later
@@ -830,16 +815,6 @@ class OrphanHandlingTest(BitcoinTestFramework):
         assert orphan["txid"] in final_mempool
         assert tx_replacer_C["txid"] in final_mempool
 
-    @cleanup
-    def test_maxorphantx_option(self):
-        # This test should be removed when -maxorphantx is removed.
-        self.log.info("Test that setting the -maxorphantx option does not error")
-        warning = "Warning: Option '-maxorphantx' is set but no longer has any effect (see release notes). Please remove it from your configuration."
-        self.restart_node(0, extra_args=["-maxorphantx=5"])
-        assert_equal(self.nodes[0].getorphantxs(), [])
-        self.stop_node(0, expected_stderr=warning)
-        self.restart_node(0)
-
     def run_test(self):
         self.nodes[0].setmocktime(int(time.time()))
         self.wallet_nonsegwit = MiniWallet(self.nodes[0], mode=MiniWalletMode.RAW_P2PK)
@@ -860,7 +835,6 @@ class OrphanHandlingTest(BitcoinTestFramework):
         self.test_announcers_before_and_after()
         self.test_parents_change()
         self.test_maximal_package_protected()
-        self.test_maxorphantx_option()
 
 
 if __name__ == '__main__':

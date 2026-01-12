@@ -57,6 +57,8 @@ public:
      */
     CAmount GetFee(int32_t virtual_bytes) const;
 
+    FeePerVSize GetFeePerVSize() const { return m_feerate; }
+
     /**
      * Return the fee in satoshis for a vsize of 1000 vbytes
      */

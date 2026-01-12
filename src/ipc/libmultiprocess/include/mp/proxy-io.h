@@ -98,35 +98,28 @@ public:
     EventLoop& m_loop;
 };
 
-using LogFn = std::function<void(bool raise, std::string message)>;
-
-class Logger
-{
-public:
-    Logger(bool raise, LogFn& fn) : m_raise(raise), m_fn(fn) {}
-    Logger(Logger&& logger) : m_raise(logger.m_raise), m_fn(logger.m_fn), m_buffer(std::move(logger.m_buffer)) {}
-    ~Logger() noexcept(false)
-    {
-        if (m_fn) m_fn(m_raise, m_buffer.str());
-    }
-
-    template <typename T>
-    friend Logger& operator<<(Logger& logger, T&& value)
-    {
-        if (logger.m_fn) logger.m_buffer << std::forward<T>(value);
-        return logger;
-    }
-
-    template <typename T>
-    friend Logger& operator<<(Logger&& logger, T&& value)
-    {
-        return logger << std::forward<T>(value);
-    }
-
-    bool m_raise;
-    LogFn& m_fn;
-    std::ostringstream m_buffer;
+//! Log flags. Update stringify function if changed!
+enum class Log {
+    Trace = 0,
+    Debug,
+    Info,
+    Warning,
+    Error,
+    Raise,
 };
+
+kj::StringPtr KJ_STRINGIFY(Log flags);
+
+struct LogMessage {
+
+    //! Message to be logged
+    std::string message;
+
+    //! The severity level of this message
+    Log level;
+};
+
+using LogFn = std::function<void(LogMessage)>;
 
 struct LogOptions {
 
@@ -136,7 +129,59 @@ struct LogOptions {
     //! Maximum number of characters to use when representing
     //! request and response structs as strings.
     size_t max_chars{200};
+
+    //! Messages with a severity level less than log_level will not be
+    //! reported.
+    Log log_level{Log::Trace};
 };
+
+class Logger
+{
+public:
+    Logger(const LogOptions& options, Log log_level) : m_options(options), m_log_level(log_level) {}
+
+    Logger(Logger&&) = delete;
+    Logger& operator=(Logger&&) = delete;
+    Logger(const Logger&) = delete;
+    Logger& operator=(const Logger&) = delete;
+
+    ~Logger() noexcept(false)
+    {
+        if (enabled()) m_options.log_fn({std::move(m_buffer).str(), m_log_level});
+    }
+
+    template <typename T>
+    friend Logger& operator<<(Logger& logger, T&& value)
+    {
+        if (logger.enabled()) logger.m_buffer << std::forward<T>(value);
+        return logger;
+    }
+
+    template <typename T>
+    friend Logger& operator<<(Logger&& logger, T&& value)
+    {
+        return logger << std::forward<T>(value);
+    }
+
+    explicit operator bool() const
+    {
+        return enabled();
+    }
+
+private:
+    bool enabled() const
+    {
+        return m_options.log_fn && m_log_level >= m_options.log_level;
+    }
+
+    const LogOptions& m_options;
+    Log m_log_level;
+    std::ostringstream m_buffer;
+};
+
+#define MP_LOGPLAIN(loop, ...) if (mp::Logger logger{(loop).m_log_opts, __VA_ARGS__}; logger) logger
+
+#define MP_LOG(loop, ...) MP_LOGPLAIN(loop, __VA_ARGS__) << "{" << LongThreadName((loop).m_exe_name) << "} "
 
 std::string LongThreadName(const char* exe_name);
 
@@ -168,8 +213,19 @@ std::string LongThreadName(const char* exe_name);
 class EventLoop
 {
 public:
-    //! Construct event loop object.
-    EventLoop(const char* exe_name, LogFn log_fn, void* context = nullptr);
+    //! Construct event loop object with default logging options.
+    EventLoop(const char* exe_name, LogFn log_fn, void* context = nullptr)
+        : EventLoop(exe_name, LogOptions{std::move(log_fn)}, context){}
+
+    //! Construct event loop object with specified logging options.
+    EventLoop(const char* exe_name, LogOptions log_opts, void* context = nullptr);
+
+    //! Backwards-compatible constructor for previous (deprecated) logging callback signature
+    EventLoop(const char* exe_name, std::function<void(bool, std::string)> old_callback, void* context = nullptr)
+        : EventLoop(exe_name,
+                LogFn{[old_callback = std::move(old_callback)](LogMessage log_data) {old_callback(log_data.level == Log::Raise, std::move(log_data.message));}},
+                context){}
+
     ~EventLoop();
 
     //! Run event loop. Does not return until shutdown. This should only be
@@ -209,15 +265,6 @@ public:
 
     //! Check if loop should exit.
     bool done() const MP_REQUIRES(m_mutex);
-
-    Logger log()
-    {
-        Logger logger(false, m_log_opts.log_fn);
-        logger << "{" << LongThreadName(m_exe_name) << "} ";
-        return logger;
-    }
-    Logger logPlain() { return {false, m_log_opts.log_fn}; }
-    Logger raise() { return {true, m_log_opts.log_fn}; }
 
     //! Process name included in thread names so combined debug output from
     //! multiple processes is easier to understand.
@@ -281,12 +328,13 @@ struct Waiter
     Waiter() = default;
 
     template <typename Fn>
-    void post(Fn&& fn)
+    bool post(Fn&& fn)
     {
         const Lock lock(m_mutex);
-        assert(!m_fn);
+        if (m_fn) return false;
         m_fn = std::forward<Fn>(fn);
         m_cv.notify_all();
+        return true;
     }
 
     template <class Predicate>
@@ -642,7 +690,7 @@ std::unique_ptr<ProxyClient<InitInterface>> ConnectStream(EventLoop& loop, int f
         init_client = connection->m_rpc_system->bootstrap(ServerVatId().vat_id).castAs<InitInterface>();
         Connection* connection_ptr = connection.get();
         connection->onDisconnect([&loop, connection_ptr] {
-            loop.log() << "IPC client: unexpected network disconnect.";
+            MP_LOG(loop, Log::Warning) << "IPC client: unexpected network disconnect.";
             delete connection_ptr;
         });
     });
@@ -665,7 +713,7 @@ void _Serve(EventLoop& loop, kj::Own<kj::AsyncIoStream>&& stream, InitImpl& init
     });
     auto it = loop.m_incoming_connections.begin();
     it->onDisconnect([&loop, it] {
-        loop.log() << "IPC server: socket disconnected.";
+        MP_LOG(loop, Log::Info) << "IPC server: socket disconnected.";
         loop.m_incoming_connections.erase(it);
     });
 }

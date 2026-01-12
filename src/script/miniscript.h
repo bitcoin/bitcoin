@@ -7,8 +7,10 @@
 
 #include <algorithm>
 #include <compare>
+#include <concepts>
 #include <cstdint>
 #include <cstdlib>
+#include <functional>
 #include <iterator>
 #include <memory>
 #include <optional>
@@ -194,6 +196,21 @@ template<typename Key> using NodeRef = std::unique_ptr<const Node<Key>>;
 //! Construct a miniscript node as a unique_ptr.
 template<typename Key, typename... Args>
 NodeRef<Key> MakeNodeRef(Args&&... args) { return std::make_unique<const Node<Key>>(std::forward<Args>(args)...); }
+
+//! Unordered traversal of a miniscript node tree.
+template <typename Key, std::invocable<const Node<Key>&> Fn>
+void ForEachNode(const Node<Key>& root, Fn&& fn)
+{
+    std::vector<std::reference_wrapper<const Node<Key>>> stack{root};
+    while (!stack.empty()) {
+        const Node<Key>& node = stack.back();
+        std::invoke(fn, node);
+        stack.pop_back();
+        for (const auto& sub : node.subs) {
+            stack.emplace_back(*sub);
+        }
+    }
+}
 
 //! The different node types in miniscript.
 enum class Fragment {

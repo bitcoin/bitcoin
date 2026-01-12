@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -57,8 +57,12 @@
 #include <sys/auxv.h>
 #endif
 
-#ifndef _MSC_VER
-extern char** environ; // NOLINT(readability-redundant-declaration): Necessary on some platforms
+#if defined(__APPLE__) || \
+    defined(__FreeBSD__) || \
+    defined(__NetBSD__) || \
+    defined(__OpenBSD__) || \
+    defined(__illumos__)
+extern char** environ; // Necessary on the above platforms
 #endif
 
 namespace {

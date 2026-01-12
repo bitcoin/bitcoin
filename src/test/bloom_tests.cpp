@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -140,11 +140,11 @@ BOOST_AUTO_TEST_CASE(bloom_match)
     BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(tx), "Simple Bloom filter didn't match output address");
 
     filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
-    filter.insert(COutPoint(Txid::FromHex("90c122d70786e899529d71dbeba91ba216982fb6ba58f3bdaab65e73b7e9260b").value(), 0));
+    filter.insert(COutPoint{Txid{"90c122d70786e899529d71dbeba91ba216982fb6ba58f3bdaab65e73b7e9260b"}, 0});
     BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(tx), "Simple Bloom filter didn't match COutPoint");
 
     filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
-    COutPoint prevOutPoint(Txid::FromHex("90c122d70786e899529d71dbeba91ba216982fb6ba58f3bdaab65e73b7e9260b").value(), 0);
+    COutPoint prevOutPoint{Txid{"90c122d70786e899529d71dbeba91ba216982fb6ba58f3bdaab65e73b7e9260b"}, 0};
     {
         std::vector<unsigned char> data(32 + sizeof(unsigned int));
         memcpy(data.data(), prevOutPoint.hash.begin(), 32);
@@ -162,11 +162,11 @@ BOOST_AUTO_TEST_CASE(bloom_match)
     BOOST_CHECK_MESSAGE(!filter.IsRelevantAndUpdate(tx), "Simple Bloom filter matched random address");
 
     filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
-    filter.insert(COutPoint(Txid::FromHex("90c122d70786e899529d71dbeba91ba216982fb6ba58f3bdaab65e73b7e9260b").value(), 1));
+    filter.insert(COutPoint{Txid{"90c122d70786e899529d71dbeba91ba216982fb6ba58f3bdaab65e73b7e9260b"}, 1});
     BOOST_CHECK_MESSAGE(!filter.IsRelevantAndUpdate(tx), "Simple Bloom filter matched COutPoint for an output we didn't care about");
 
     filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
-    filter.insert(COutPoint(Txid::FromHex("000000d70786e899529d71dbeba91ba216982fb6ba58f3bdaab65e73b7e9260b").value(), 0));
+    filter.insert(COutPoint{Txid{"000000d70786e899529d71dbeba91ba216982fb6ba58f3bdaab65e73b7e9260b"}, 0});
     BOOST_CHECK_MESSAGE(!filter.IsRelevantAndUpdate(tx), "Simple Bloom filter matched COutPoint for an output we didn't care about");
 }
 
@@ -426,9 +426,9 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_p2pubkey_only)
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
 
     // We should match the generation outpoint
-    BOOST_CHECK(filter.contains(COutPoint(Txid::FromHex("147caa76786596590baa4e98f5d9f48b86c7765e489f7a6ff3360fe5c674360b").value(), 0)));
+    BOOST_CHECK(filter.contains(COutPoint{Txid{"147caa76786596590baa4e98f5d9f48b86c7765e489f7a6ff3360fe5c674360b"}, 0}));
     // ... but not the 4th transaction's output (its not pay-2-pubkey)
-    BOOST_CHECK(!filter.contains(COutPoint(Txid::FromHex("02981fa052f0481dbc5868f4fc2166035a10f27a03cfd2de67326471df5bc041").value(), 0)));
+    BOOST_CHECK(!filter.contains(COutPoint{Txid{"02981fa052f0481dbc5868f4fc2166035a10f27a03cfd2de67326471df5bc041"}, 0}));
 }
 
 BOOST_AUTO_TEST_CASE(merkle_block_4_test_update_none)
@@ -451,8 +451,8 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_update_none)
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
 
     // We shouldn't match any outpoints (UPDATE_NONE)
-    BOOST_CHECK(!filter.contains(COutPoint(Txid::FromHex("147caa76786596590baa4e98f5d9f48b86c7765e489f7a6ff3360fe5c674360b").value(), 0)));
-    BOOST_CHECK(!filter.contains(COutPoint(Txid::FromHex("02981fa052f0481dbc5868f4fc2166035a10f27a03cfd2de67326471df5bc041").value(), 0)));
+    BOOST_CHECK(!filter.contains(COutPoint{Txid{"147caa76786596590baa4e98f5d9f48b86c7765e489f7a6ff3360fe5c674360b"}, 0}));
+    BOOST_CHECK(!filter.contains(COutPoint{Txid{"02981fa052f0481dbc5868f4fc2166035a10f27a03cfd2de67326471df5bc041"}, 0}));
 }
 
 std::vector<unsigned char> BloomTest::RandomData()

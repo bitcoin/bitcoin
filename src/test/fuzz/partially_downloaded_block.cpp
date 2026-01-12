@@ -81,7 +81,7 @@ FUZZ_TARGET(partially_downloaded_block, .init = initialize_pdb)
 
         if (add_to_mempool && !pool.exists(tx->GetHash())) {
             LOCK2(cs_main, pool.cs);
-            AddToMempool(pool, ConsumeTxMemPoolEntry(fuzzed_data_provider, *tx));
+            TryAddToMempool(pool, ConsumeTxMemPoolEntry(fuzzed_data_provider, *tx));
             available.insert(i);
         }
     }
@@ -95,12 +95,12 @@ FUZZ_TARGET(partially_downloaded_block, .init = initialize_pdb)
     for (size_t i = 0; i < cmpctblock.BlockTxCount(); i++) {
         // If init_status == READ_STATUS_OK then a available transaction in the
         // compact block (i.e. IsTxAvailable(i) == true) implies that we marked
-        // that transaction as available above (i.e. available.count(i) > 0).
+        // that transaction as available above (i.e. available.contains(i)).
         // The reverse is not true, due to possible compact block short id
-        // collisions (i.e. available.count(i) > 0 does not imply
+        // collisions (i.e. available.contains(i) does not imply
         // IsTxAvailable(i) == true).
         if (init_status == READ_STATUS_OK) {
-            assert(!pdb.IsTxAvailable(i) || available.count(i) > 0);
+            assert(!pdb.IsTxAvailable(i) || available.contains(i));
         }
 
         bool skip{fuzzed_data_provider.ConsumeBool()};

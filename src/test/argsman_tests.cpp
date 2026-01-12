@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -232,8 +232,8 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
     BOOST_CHECK(testArgs.m_settings.command_line_options.size() == 3 && testArgs.m_settings.ro_config.empty());
     BOOST_CHECK(testArgs.IsArgSet("-a") && testArgs.IsArgSet("-b") && testArgs.IsArgSet("-ccc")
                 && !testArgs.IsArgSet("f") && !testArgs.IsArgSet("-d"));
-    BOOST_CHECK(testArgs.m_settings.command_line_options.count("a") && testArgs.m_settings.command_line_options.count("b") && testArgs.m_settings.command_line_options.count("ccc")
-                && !testArgs.m_settings.command_line_options.count("f") && !testArgs.m_settings.command_line_options.count("d"));
+    BOOST_CHECK(testArgs.m_settings.command_line_options.contains("a") && testArgs.m_settings.command_line_options.contains("b") && testArgs.m_settings.command_line_options.contains("ccc")
+                && !testArgs.m_settings.command_line_options.contains("f") && !testArgs.m_settings.command_line_options.contains("d"));
 
     BOOST_CHECK(testArgs.m_settings.command_line_options["a"].size() == 1);
     BOOST_CHECK(testArgs.m_settings.command_line_options["a"].front().get_str() == "");
@@ -460,18 +460,18 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     BOOST_CHECK(test_args.m_settings.ro_config["sec1"].size() == 3);
     BOOST_CHECK(test_args.m_settings.ro_config["sec2"].size() == 2);
 
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("a"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("b"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("ccc"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("d"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("fff"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("ggg"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("h"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("i"));
-    BOOST_CHECK(test_args.m_settings.ro_config["sec1"].count("ccc"));
-    BOOST_CHECK(test_args.m_settings.ro_config["sec1"].count("h"));
-    BOOST_CHECK(test_args.m_settings.ro_config["sec2"].count("ccc"));
-    BOOST_CHECK(test_args.m_settings.ro_config["sec2"].count("iii"));
+    BOOST_CHECK(test_args.m_settings.ro_config[""].contains("a"));
+    BOOST_CHECK(test_args.m_settings.ro_config[""].contains("b"));
+    BOOST_CHECK(test_args.m_settings.ro_config[""].contains("ccc"));
+    BOOST_CHECK(test_args.m_settings.ro_config[""].contains("d"));
+    BOOST_CHECK(test_args.m_settings.ro_config[""].contains("fff"));
+    BOOST_CHECK(test_args.m_settings.ro_config[""].contains("ggg"));
+    BOOST_CHECK(test_args.m_settings.ro_config[""].contains("h"));
+    BOOST_CHECK(test_args.m_settings.ro_config[""].contains("i"));
+    BOOST_CHECK(test_args.m_settings.ro_config["sec1"].contains("ccc"));
+    BOOST_CHECK(test_args.m_settings.ro_config["sec1"].contains("h"));
+    BOOST_CHECK(test_args.m_settings.ro_config["sec2"].contains("ccc"));
+    BOOST_CHECK(test_args.m_settings.ro_config["sec2"].contains("iii"));
 
     BOOST_CHECK(test_args.IsArgSet("-a"));
     BOOST_CHECK(test_args.IsArgSet("-b"));

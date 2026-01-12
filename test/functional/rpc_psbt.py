@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2022 The Bitcoin Core developers
+# Copyright (c) 2018-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the Partially Signed Transaction RPCs.
@@ -126,7 +126,7 @@ class PSBTTest(BitcoinTestFramework):
         utxos = wonline.listunspent(addresses=[offline_addr])
         raw = wonline.createrawtransaction([{"txid":utxos[0]["txid"], "vout":utxos[0]["vout"]}],[{online_addr:0.9999}])
         psbt = wonline.walletprocesspsbt(online_node.converttopsbt(raw))["psbt"]
-        assert not "not_witness_utxo" in mining_node.decodepsbt(psbt)["inputs"][0]
+        assert "not_witness_utxo" not in mining_node.decodepsbt(psbt)["inputs"][0]
 
         # add non-witness UTXO manually
         psbt_new = PSBT.from_base64(psbt)
@@ -136,7 +136,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Have the offline node sign the PSBT (which will remove the non-witness UTXO)
         signed_psbt = offline_node.walletprocesspsbt(psbt_new.to_base64())
-        assert not "non_witness_utxo" in mining_node.decodepsbt(signed_psbt["psbt"])["inputs"][0]
+        assert "non_witness_utxo" not in mining_node.decodepsbt(signed_psbt["psbt"])["inputs"][0]
 
         # Make sure we can mine the resulting transaction
         txid = mining_node.sendrawtransaction(signed_psbt["hex"])
@@ -368,6 +368,43 @@ class PSBTTest(BitcoinTestFramework):
         decoded_psbt = self.nodes[0].decodepsbt(psbtx["psbt"])
         changepos = psbtx["changepos"]
         assert_equal(decoded_psbt["tx"]["vout"][changepos]["scriptPubKey"]["type"], expected_type)
+
+    def test_psbt_named_parameter_handling(self):
+        """Test that PSBT Base64 parameters with '=' padding are handled correctly in -named mode"""
+        self.log.info("Testing PSBT Base64 parameter handling with '=' padding characters")
+        node = self.nodes[0]
+        psbt_with_padding = "cHNidP8BAJoCAAAAAqvNEjSrzRI0q80SNKvNEjSrzRI0q80SNKvNEjSrzRI0AAAAAAD9////NBLNqzQSzas0Es2rNBLNqzQSzas0Es2rNBLNqzQSzasBAAAAAP3///8CoIYBAAAAAAAWABQVQBGVs/sqFAmC8HZ8O+g1htqivkANAwAAAAAAFgAUir7MzgyzDnRMjdkVa7d+Dwr07jsAAAAAAAAAAAA="
+
+        # Test decodepsbt with explicit named parameter containing '=' padding
+        result = node.cli("-named", "decodepsbt", f"psbt={psbt_with_padding}").send_cli()
+        assert 'tx' in result
+
+        # Test decodepsbt with positional argument containing '=' padding
+        result = node.cli("-named", "decodepsbt", psbt_with_padding).send_cli()
+        assert 'tx' in result
+
+        # Test analyzepsbt with positional argument containing '=' padding
+        result = node.cli("-named", "analyzepsbt", psbt_with_padding).send_cli()
+        assert 'inputs' in result
+
+        # Test finalizepsbt with positional argument containing '=' padding
+        result = node.cli("-named", "finalizepsbt", psbt_with_padding, "extract=true").send_cli()
+        assert 'complete' in result
+
+        # Test walletprocesspsbt with positional argument containing '=' padding
+        result = node.cli("-named", "walletprocesspsbt", psbt_with_padding).send_cli()
+        assert 'complete' in result
+
+        # Test utxoupdatepsbt with positional argument containing '=' padding
+        result = node.cli("-named", "utxoupdatepsbt", psbt_with_padding).send_cli()
+        assert isinstance(result, str) and len(result) > 0
+
+        # Test that unknown parameter with '=' gets treated as positional and return error
+        unknown_psbt_param = "unknown_param_data=more_data="
+        # This should be treated as positional and fail with decode error, not parameter error
+        assert_raises_rpc_error(-22, "TX decode failed invalid base64", node.cli("-named", "finalizepsbt", unknown_psbt_param).send_cli)
+
+        self.log.info("PSBT parameter handling test completed successfully")
 
     def run_test(self):
         # Create and fund a raw tx for sending 10 BTC
@@ -601,7 +638,7 @@ class PSBTTest(BitcoinTestFramework):
                 assert_raises_rpc_error(-3, f"JSON value of type {k} for field conf_target is not of expected type number",
                     self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {"estimate_mode": mode, "conf_target": v, "add_inputs": True})
             for n in [-1, 0, 1009]:
-                assert_raises_rpc_error(-8, "Invalid conf_target, must be between 1 and 1008",  # max value of 1008 per src/policy/fees.h
+                assert_raises_rpc_error(-8, "Invalid conf_target, must be between 1 and 1008",  # max value of 1008 per src/policy/fees/block_policy_estimator.h
                     self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {"estimate_mode": mode, "conf_target": n, "add_inputs": True})
 
         self.log.info("Test walletcreatefundedpsbt with too-high fee rate produces total fee well above -maxtxfee and raises RPC error")
@@ -762,7 +799,7 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(unknown_psbt, unknown_out)
 
         # Open the data file
-        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_psbt.json'), encoding='utf-8') as f:
+        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_psbt.json')) as f:
             d = json.load(f)
             invalids = d['invalid']
             invalid_with_msgs = d["invalid_with_msg"]
@@ -1211,6 +1248,7 @@ class PSBTTest(BitcoinTestFramework):
         if not self.options.usecli:
             self.test_sighash_mismatch()
         self.test_sighash_adding()
+        self.test_psbt_named_parameter_handling()
 
 if __name__ == '__main__':
     PSBTTest(__file__).main()

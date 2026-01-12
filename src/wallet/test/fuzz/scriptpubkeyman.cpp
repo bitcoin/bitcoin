@@ -125,7 +125,7 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
             [&] {
                 const CScript script{ConsumeScript(fuzzed_data_provider)};
                 if (spk_manager->IsMine(script)) {
-                    assert(spk_manager->GetScriptPubKeys().count(script));
+                    assert(spk_manager->GetScriptPubKeys().contains(script));
                 }
             },
             [&] {

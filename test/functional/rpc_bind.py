@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test running bitcoind with the -rpcbind and -rpcallowip options."""
@@ -123,7 +123,10 @@ class RPCBindTest(BitcoinTestFramework):
                 self.run_invalid_bind_test(['[::1]'], ['[::1]:notaport', '[::1]:-18443', '[::1]:0', '[::1]:65536'])
                 self.run_invalid_allowip_test()
         if not self.options.run_ipv4 and not self.options.run_ipv6:
-            self._run_nonloopback_tests()
+            if self.non_loopback_ip:
+                self._run_nonloopback_tests()
+            else:
+                self.log.info('Non-loopback IP address not found, skipping non-loopback tests')
 
     def _run_loopback_tests(self):
         if self.options.run_ipv4:

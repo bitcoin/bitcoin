@@ -150,11 +150,16 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
             // thread.
             KJ_IF_MAYBE (thread_server, perhaps) {
                 const auto& thread = static_cast<ProxyServer<Thread>&>(*thread_server);
-                server.m_context.loop->log()
+                MP_LOG(*server.m_context.loop, Log::Debug)
                     << "IPC server post request  #" << req << " {" << thread.m_thread_context.thread_name << "}";
-                thread.m_thread_context.waiter->post(std::move(invoke));
+                if (!thread.m_thread_context.waiter->post(std::move(invoke))) {
+                    MP_LOG(*server.m_context.loop, Log::Error)
+                        << "IPC server error request #" << req
+                        << " {" << thread.m_thread_context.thread_name << "}" << ", thread busy";
+                    throw std::runtime_error("thread busy");
+                }
             } else {
-                server.m_context.loop->log()
+                MP_LOG(*server.m_context.loop, Log::Error)
                     << "IPC server error request #" << req << ", missing thread to execute request";
                 throw std::runtime_error("invalid thread handle");
             }

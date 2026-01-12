@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -29,7 +29,7 @@ static void AddTx(const CTransactionRef& tx, CTxMemPool& pool) EXCLUSIVE_LOCKS_R
     unsigned int sigOpCost{4};
     uint64_t fee{0};
     LockPoints lp;
-    AddToMempool(pool, CTxMemPoolEntry(
+    TryAddToMempool(pool, CTxMemPoolEntry(TxGraph::Ref(),
         tx, fee, nTime, nHeight, sequence,
         spendsCoinbase, sigOpCost, lp));
 }

@@ -50,12 +50,14 @@ CMake will put the resulting object files, libraries, and executables into a ded
 
 In the following instructions, the "Debug" configuration can be specified instead of the "Release" one.
 
+Run `cmake -B build -LH` to see the full list of available options.
+
 ### 4. Building with Static Linking with GUI
 
 ```
 cmake -B build --preset vs2022-static          # It might take a while if the vcpkg binary cache is unpopulated or invalidated.
 cmake --build build --config Release           # Append "-j N" for N parallel jobs.
-ctest --test-dir build --build-config Release  # Append "-j N" for N parallel tests. Some tests are disabled if Python 3 is not available.
+ctest --test-dir build --build-config Release  # Append "-j N" for N parallel tests.
 cmake --install build --config Release         # Optional.
 ```
 
@@ -64,7 +66,7 @@ cmake --install build --config Release         # Optional.
 ```
 cmake -B build --preset vs2022 -DBUILD_GUI=OFF # It might take a while if the vcpkg binary cache is unpopulated or invalidated.
 cmake --build build --config Release           # Append "-j N" for N parallel jobs.
-ctest --test-dir build --build-config Release  # Append "-j N" for N parallel tests. Some tests are disabled if Python 3 is not available.
+ctest --test-dir build --build-config Release  # Append "-j N" for N parallel tests.
 ```
 
 ### 6. vcpkg-specific Issues and Workarounds
@@ -95,7 +97,7 @@ cmake -B build --preset vs2022-static -DVCPKG_INSTALLED_DIR="C:\path_without_spa
 One can skip vcpkg manifest default features to speedup the configuration step.
 For example, the following invocation will skip all features except for "wallet" and "tests" and their dependencies:
 ```
-cmake -B build --preset vs2022 -DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="wallet;tests" -DBUILD_GUI=OFF
+cmake -B build --preset vs2022 -DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="wallet;tests" -DBUILD_GUI=OFF -DWITH_ZMQ=OFF
 ```
 
 Available features are listed in the [`vcpkg.json`](/vcpkg.json) file.

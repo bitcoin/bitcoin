@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,6 +12,7 @@
 #define BITCOIN_COMMON_MESSAGES_H
 
 #include <string>
+#include <string_view>
 
 struct bilingual_str;
 
@@ -23,7 +24,7 @@ enum class TransactionError;
 
 namespace common {
 enum class PSBTError;
-bool FeeModeFromString(const std::string& mode_string, FeeEstimateMode& fee_estimate_mode);
+bool FeeModeFromString(std::string_view mode_string, FeeEstimateMode& fee_estimate_mode);
 std::string StringForFeeReason(FeeReason reason);
 std::string FeeModes(const std::string& delimiter);
 std::string FeeModeInfo(std::pair<std::string, FeeEstimateMode>& mode);

@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2022 The Bitcoin Core developers
+// Copyright (c) 2016-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -193,13 +193,11 @@ static void SHA512(benchmark::Bench& bench)
 static void SipHash_32b(benchmark::Bench& bench)
 {
     FastRandomContext rng{/*fDeterministic=*/true};
-    auto k0{rng.rand64()}, k1{rng.rand64()};
+    PresaltedSipHasher presalted_sip_hasher(rng.rand64(), rng.rand64());
     auto val{rng.rand256()};
     auto i{0U};
     bench.run([&] {
-        ankerl::nanobench::doNotOptimizeAway(SipHashUint256(k0, k1, val));
-        ++k0;
-        ++k1;
+        ankerl::nanobench::doNotOptimizeAway(presalted_sip_hasher(val));
         ++i;
         val.data()[i % uint256::size()] ^= i & 0xFF;
     });

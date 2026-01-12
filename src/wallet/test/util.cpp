@@ -163,7 +163,7 @@ bool MockableBatch::HasKey(DataStream&& key)
         return false;
     }
     SerializeData key_data{key.begin(), key.end()};
-    return m_records.count(key_data) > 0;
+    return m_records.contains(key_data);
 }
 
 bool MockableBatch::ErasePrefix(std::span<const std::byte> prefix)

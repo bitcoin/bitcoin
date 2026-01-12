@@ -36,24 +36,24 @@ class FeatureFrameworkStartupFailures(BitcoinTestFramework):
     # Launches a child test process that runs this same file, but instantiates
     # a child test. Verifies that it raises only the expected exception, once.
     def _verify_startup_failure(self, test, internal_args, expected_exception):
+        name = test.__name__
+        def format_child_output(output):
+            return f"\n<{name} OUTPUT BEGIN>\n{output.strip()}\n<{name} OUTPUT END>\n"
+
         # Inherit sys.argv from parent, only overriding tmpdir to a subdirectory
         # so children don't fail due to colliding with the parent dir.
         assert self.options.tmpdir, "Framework should always set tmpdir."
         subdir = md5(expected_exception.encode('utf-8')).hexdigest()[:8]
-        args = [sys.executable] + sys.argv + [f"--tmpdir={self.options.tmpdir}/{subdir}", f"--internal_test={test.__name__}"] + internal_args
+        args = [sys.executable] + sys.argv + [f"--tmpdir={self.options.tmpdir}/{subdir}", f"--internal_test={name}"] + internal_args
 
         try:
-            # The subprocess encoding argument gives different results for e.output
-            # on Linux/Windows, so handle decoding by ourselves for consistency.
             output = subprocess.run(args, timeout=60 * self.options.timeout_factor,
-                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout.decode("utf-8")
+                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True).stdout
         except subprocess.TimeoutExpired as e:
-            print("Unexpected child process timeout!\n"
-                  "WARNING: Timeouts like this halt execution of TestNode logic, "
-                  "meaning dangling bitcoind processes are to be expected.\n"
-                  f"<CHILD OUTPUT BEGIN>\n{e.output.decode('utf-8')}\n<CHILD OUTPUT END>",
-                  file=sys.stderr)
-            raise
+            sys.exit("Unexpected child process timeout!\n"
+                     "WARNING: Timeouts like this halt execution of TestNode logic, "
+                     "meaning dangling bitcoind processes are to be expected.\n" +
+                     (format_child_output(e.output.decode("utf-8")) if e.output else "<EMPTY OUTPUT>"))
 
         errors = []
         if (n := output.count("Traceback")) != 1:
@@ -63,13 +63,17 @@ class FeatureFrameworkStartupFailures(BitcoinTestFramework):
         if (n := output.count("Test failed. Test logging available at")) != 1:
             errors.append(f"Found {n}/1 test failure output messages.")
 
-        assert not errors, f"Child test didn't contain (only) expected errors:\n{linesep.join(errors)}\n<CHILD OUTPUT BEGIN>\n{output}\n<CHILD OUTPUT END>\n"
+        assert not errors, (f"Child test did NOT contain (only) expected errors:\n{linesep.join(errors)}\n" +
+                            format_child_output(output))
+
+        self.log.debug("Child test did contain (only) expected errors:\n" +
+                       format_child_output(output))
 
     def run_test(self):
         self.log.info("Verifying _verify_startup_failure() functionality (self-check).")
         assert_raises_message(
             AssertionError,
-            ( "Child test didn't contain (only) expected errors:\n"
+            ( "Child test did NOT contain (only) expected errors:\n"
              f"Found 0/1 tracebacks - expecting exactly one with no knock-on exceptions.{linesep}"
              f"Found 0/1 occurrences of the specific exception: NonExistentError{linesep}"
               "Found 0/1 test failure output messages."),
@@ -78,7 +82,7 @@ class FeatureFrameworkStartupFailures(BitcoinTestFramework):
             "NonExistentError",
         )
 
-        self.log.info("Parent process is measuring node startup duration in order to obtain a reasonable timeout value for later test...")
+        self.log.info("Parent process is measuring node startup duration in order to obtain a reasonable timeout value for later tests...")
         node_start_time = time.time()
         self.nodes[0].start()
         self.nodes[0].wait_for_rpc_connection()
@@ -90,6 +94,12 @@ class FeatureFrameworkStartupFailures(BitcoinTestFramework):
         self._verify_startup_failure(
             TestWrongRpcPortStartupFailure, [f"--internal_node_start_duration={node_start_duration}"],
             r"AssertionError: \[node 0\] Unable to connect to bitcoind after \d+s \(ignored errors: {[^}]*'OSError \w+'?: \d+[^}]*}, latest: '[\w ]+'/\w+\([^)]+\)\)"
+        )
+
+        self.log.info("Verifying timeout while waiting for init errors that do not occur results in only one exception.")
+        self._verify_startup_failure(
+            TestMissingInitErrorTimeout, [f"--internal_node_start_duration={node_start_duration}"],
+            r"AssertionError: \[node 0\] bitcoind should have exited within \d+s with an error \(cmd:"
         )
 
         self.log.info("Verifying startup failure due to invalid arg results in only one exception.")
@@ -109,20 +119,41 @@ class InternalTestMixin:
         # Just here to silence unrecognized argument error, we actually read the value in the if-main at the bottom.
         parser.add_argument("--internal_test", dest="internal_never_read", help="ONLY TO BE USED WHEN TEST RELAUNCHES ITSELF")
 
-class TestWrongRpcPortStartupFailure(InternalTestMixin, BitcoinTestFramework):
+class InternalDurationTestMixin(InternalTestMixin):
     def add_options(self, parser):
+        # Receives the previously measured duration for node startup + RPC connection establishment.
         parser.add_argument("--internal_node_start_duration", dest="node_start_duration", help="ONLY TO BE USED WHEN TEST RELAUNCHES ITSELF", type=float)
         InternalTestMixin.add_options(self, parser)
 
+    def get_reasonable_rpc_timeout(self):
+        # 2 * the measured test startup duration should be enough.
+        # Divide by timeout_factor to counter multiplication in BitcoinTestFramework.
+        return max(3, 2 * self.options.node_start_duration) / self.options.timeout_factor
+
+class TestWrongRpcPortStartupFailure(InternalDurationTestMixin, BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         # Override RPC listen port to something TestNode isn't expecting so that
         # we are unable to establish an RPC connection.
         self.extra_args = [[f"-rpcport={rpc_port(2)}"]]
         # Override the timeout to avoid waiting unnecessarily long to realize
-        # nothing is on that port. Divide by timeout_factor to counter
-        # multiplication in base, 2 * node_start_duration should be enough.
-        self.rpc_timeout = max(3, 2 * self.options.node_start_duration) / self.options.timeout_factor
+        # nothing is on that port.
+        self.rpc_timeout = self.get_reasonable_rpc_timeout()
+
+    def run_test(self):
+        assert False, "Should have failed earlier during startup."
+
+class TestMissingInitErrorTimeout(InternalDurationTestMixin, BitcoinTestFramework):
+    def set_test_params(self):
+        self.num_nodes = 1
+        # Override the timeout to avoid waiting unnecessarily long for an init
+        # error which never occurs.
+        self.rpc_timeout = self.get_reasonable_rpc_timeout()
+
+    def setup_network(self):
+        self.add_nodes(self.num_nodes, self.extra_args)
+        self.nodes[0].assert_start_raises_init_error()
+        assert False, "assert_start_raises_init_error() should raise an exception due to timeout since we don't expect an init error."
 
     def run_test(self):
         assert False, "Should have failed earlier during startup."

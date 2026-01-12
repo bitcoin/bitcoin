@@ -3,12 +3,19 @@
 , enableLibcxx ? false # Whether to use libc++ toolchain and libraries instead of libstdc++
 , minimal ? false # Whether to create minimal shell without extra tools (faster when cross compiling)
 , capnprotoVersion ? null
+, capnprotoSanitizers ? null # Optional sanitizers to build cap'n proto with
 , cmakeVersion ? null
+, libcxxSanitizers ? null # Optional LLVM_USE_SANITIZER value to use for libc++, see https://llvm.org/docs/CMake.html
 }:
 
 let
   lib  = pkgs.lib;
-  llvm = crossPkgs.llvmPackages_20;
+  llvmBase = crossPkgs.llvmPackages_21;
+  llvm = llvmBase // lib.optionalAttrs (libcxxSanitizers != null) {
+    libcxx = llvmBase.libcxx.override {
+      devExtraCmakeFlags = [ "-DLLVM_USE_SANITIZER=${libcxxSanitizers}" ];
+    };
+  };
   capnprotoHashes = {
     "0.7.0" = "sha256-Y/7dUOQPDHjniuKNRw3j8dG1NI9f/aRWpf8V0WzV9k8=";
     "0.7.1" = "sha256-3cBpVmpvCXyqPUXDp12vCFCk32ZXWpkdOliNH37UwWE=";
@@ -35,7 +42,17 @@ let
   } // (lib.optionalAttrs (lib.versionOlder capnprotoVersion "0.10") {
     env = { }; # Drop -std=c++20 flag forced by nixpkgs
   }));
-  capnproto = capnprotoBase.override (lib.optionalAttrs enableLibcxx { clangStdenv = llvm.libcxxStdenv; });
+  capnproto = (capnprotoBase.overrideAttrs (old: lib.optionalAttrs (capnprotoSanitizers != null) {
+    env = (old.env or { }) // {
+      CXXFLAGS =
+        lib.concatStringsSep " " [
+          (old.env.CXXFLAGS or "")
+          "-fsanitize=${capnprotoSanitizers}"
+          "-fno-omit-frame-pointer"
+          "-g"
+        ];
+    };
+  })).override (lib.optionalAttrs enableLibcxx { clangStdenv = llvm.libcxxStdenv; });
   clang = if enableLibcxx then llvm.libcxxClang else llvm.clang;
   clang-tools = llvm.clang-tools.override { inherit enableLibcxx; };
   cmakeHashes = {

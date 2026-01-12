@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -57,11 +57,9 @@ static void ReadRawBlockBench(benchmark::Bench& bench)
     const auto testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN)};
     auto& blockman{testing_setup->m_node.chainman->m_blockman};
     const auto pos{blockman.WriteBlock(CreateTestBlock(), 413'567)};
-    std::vector<std::byte> block_data;
-    blockman.ReadRawBlock(block_data, pos); // warmup
     bench.run([&] {
-        const auto success{blockman.ReadRawBlock(block_data, pos)};
-        assert(success);
+        const auto res{blockman.ReadRawBlock(pos)};
+        assert(res);
     });
 }
 

@@ -138,19 +138,18 @@ struct SimTxGraph
     }
 
     /** Add a new transaction to the simulation. */
-    TxGraph::Ref* AddTransaction(const FeePerWeight& feerate)
+    void AddTransaction(TxGraph::Ref&& ref, const FeePerWeight& feerate)
     {
         assert(graph.TxCount() < MAX_TRANSACTIONS);
         auto simpos = graph.AddTransaction(feerate);
         real_is_optimal = false;
         MakeModified(simpos);
         assert(graph.Positions()[simpos]);
-        simmap[simpos] = std::make_shared<TxGraph::Ref>();
+        simmap[simpos] = std::make_shared<TxGraph::Ref>(std::move(ref));
         auto ptr = simmap[simpos].get();
         simrevmap[ptr] = simpos;
         // This may invalidate our cached oversized value.
         if (oversized.has_value() && !*oversized) oversized = std::nullopt;
-        return ptr;
     }
 
     /** Add a dependency between two positions in this graph. */
@@ -459,9 +458,7 @@ FUZZ_TARGET(txgraph)
                 // Create a real TxGraph::Ref.
                 auto ref = real->AddTransaction(feerate);
                 // Create a shared_ptr place in the simulation to put the Ref in.
-                auto ref_loc = top_sim.AddTransaction(feerate);
-                // Move it in place.
-                *ref_loc = std::move(ref);
+                top_sim.AddTransaction(std::move(ref), feerate);
                 break;
             } else if ((block_builders.empty() || sims.size() > 1) && top_sim.GetTransactionCount() + top_sim.removed.size() > 1 && command-- == 0) {
                 // AddDependency.
@@ -713,7 +710,7 @@ FUZZ_TARGET(txgraph)
                 std::shuffle(refs.begin(), refs.end(), rng);
                 // Invoke the real function.
                 auto result = real->CountDistinctClusters(refs, level_select);
-                // Build a set with representatives of the clusters the Refs occur in in the
+                // Build a set with representatives of the clusters the Refs occur in the
                 // simulated graph. For each, remember the lowest-index transaction SimPos in the
                 // cluster.
                 SimTxGraph::SetType sim_reps;
@@ -1012,6 +1009,21 @@ FUZZ_TARGET(txgraph)
                 }
                 assert(!top_sim.IsOversized());
                 break;
+            } else if (command-- == 0) {
+                // GetMainMemoryUsage().
+                auto usage = real->GetMainMemoryUsage();
+                // Test stability.
+                if (alt) {
+                    auto usage2 = real->GetMainMemoryUsage();
+                    assert(usage == usage2);
+                }
+                // Only empty graphs have 0 memory usage.
+                if (main_sim.GetTransactionCount() == 0) {
+                    assert(usage == 0);
+                } else {
+                    assert(usage > 0);
+                }
+                break;
             }
         }
     }
@@ -1218,10 +1230,9 @@ FUZZ_TARGET(txgraph)
                     // Construct a chunking object for the simulated graph, using the reported cluster
                     // linearization as ordering, and compare it against the reported chunk feerates.
                     if (sims.size() == 1 || level == TxGraph::Level::MAIN) {
-                        cluster_linearize::LinearizationChunking simlinchunk(sim.graph, simlin);
+                        auto simlinchunk = ChunkLinearizationInfo(sim.graph, simlin);
                         DepGraphIndex idx{0};
-                        for (unsigned chunknum = 0; chunknum < simlinchunk.NumChunksLeft(); ++chunknum) {
-                            auto chunk = simlinchunk.GetChunk(chunknum);
+                        for (auto& chunk : simlinchunk) {
                             // Require that the chunks of cluster linearizations are connected (this must
                             // be the case as all linearizations inside are PostLinearized).
                             assert(sim.graph.IsConnected(chunk.transactions));

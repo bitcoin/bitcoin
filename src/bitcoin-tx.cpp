@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -588,7 +588,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
 
-    if (!registers.count("privatekeys"))
+    if (!registers.contains("privatekeys"))
         throw std::runtime_error("privatekeys register variable must be set.");
     FillableSigningProvider tempKeystore;
     UniValue keysObj = registers["privatekeys"];
@@ -604,7 +604,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
     }
 
     // Add previous txouts given in the RPC call:
-    if (!registers.count("prevtxs"))
+    if (!registers.contains("prevtxs"))
         throw std::runtime_error("prevtxs register variable must be set.");
     UniValue prevtxsObj = registers["prevtxs"];
     {

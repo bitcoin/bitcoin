@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,7 +8,6 @@
 #include <scheduler.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
-#include <kernel/chain.h>
 #include <validationinterface.h>
 
 #include <atomic>

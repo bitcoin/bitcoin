@@ -1,20 +1,30 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <core_io.h>
 
-#include <primitives/block.h>
+#include <primitives/block.h> // IWYU pragma: keep
 #include <primitives/transaction.h>
+#include <script/interpreter.h>
 #include <script/script.h>
-#include <script/sign.h>
 #include <serialize.h>
 #include <streams.h>
 #include <util/result.h>
 #include <util/strencodings.h>
+#include <util/string.h>
+#include <util/translation.h>
 
 #include <algorithm>
-#include <string>
+#include <compare>
+#include <cstdint>
+#include <exception>
+#include <map>
+#include <optional>
+#include <span>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 using util::SplitString;
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -30,10 +30,42 @@
 namespace ipc {
 namespace capnp {
 namespace {
-void IpcLogFn(bool raise, std::string message)
+
+mp::Log GetRequestedIPCLogLevel()
 {
-    LogDebug(BCLog::IPC, "%s\n", message);
-    if (raise) throw Exception(message);
+    if (LogAcceptCategory(BCLog::IPC, BCLog::Level::Trace)) return mp::Log::Trace;
+    if (LogAcceptCategory(BCLog::IPC, BCLog::Level::Debug)) return mp::Log::Debug;
+
+    // Info, Warning, and Error are logged unconditionally
+    return mp::Log::Info;
+}
+
+void IpcLogFn(mp::LogMessage message)
+{
+    switch (message.level) {
+    case mp::Log::Trace:
+        LogTrace(BCLog::IPC, "%s", message.message);
+        return;
+    case mp::Log::Debug:
+        LogDebug(BCLog::IPC, "%s", message.message);
+        return;
+    case mp::Log::Info:
+        LogInfo("ipc: %s", message.message);
+        return;
+    case mp::Log::Warning:
+        LogWarning("ipc: %s", message.message);
+        return;
+    case mp::Log::Error:
+        LogError("ipc: %s", message.message);
+        return;
+    case mp::Log::Raise:
+        LogError("ipc: %s", message.message);
+        throw Exception(message.message);
+    } // no default case, so the compiler can warn about missing cases
+
+    // Be conservative and assume that if MP ever adds a new log level, it
+    // should only be shown at our most verbose level.
+    LogTrace(BCLog::IPC, "%s", message.message);
 }
 
 class CapnpProtocol : public Protocol
@@ -62,7 +94,11 @@ public:
     {
         assert(!m_loop);
         mp::g_thread_context.thread_name = mp::ThreadName(exe_name);
-        m_loop.emplace(exe_name, &IpcLogFn, &m_context);
+        mp::LogOptions opts = {
+            .log_fn = IpcLogFn,
+            .log_level = GetRequestedIPCLogLevel()
+        };
+        m_loop.emplace(exe_name, std::move(opts), &m_context);
         if (ready_fn) ready_fn();
         mp::ServeStream<messages::Init>(*m_loop, fd, init);
         m_parent_connection = &m_loop->m_incoming_connections.back();
@@ -90,7 +126,11 @@ public:
         std::promise<void> promise;
         m_loop_thread = std::thread([&] {
             util::ThreadRename("capnp-loop");
-            m_loop.emplace(exe_name, &IpcLogFn, &m_context);
+            mp::LogOptions opts = {
+                .log_fn = IpcLogFn,
+                .log_level = GetRequestedIPCLogLevel()
+            };
+            m_loop.emplace(exe_name, std::move(opts), &m_context);
             m_loop_ref.emplace(*m_loop);
             promise.set_value();
             m_loop->loop();

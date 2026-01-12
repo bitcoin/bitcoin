@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2022 The Bitcoin Core developers
+// Copyright (c) 2014-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +10,7 @@
 #include <cstring>
 
 #if !defined(DISABLE_OPTIMIZED_SHA256)
-#include <compat/cpuid.h>
+#include <compat/cpuid.h> // IWYU pragma: keep
 
 #if defined(__linux__) && defined(ENABLE_ARM_SHANI)
 #include <sys/auxv.h>

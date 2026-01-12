@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2022 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test recovery from a crash during chainstate writing.
@@ -53,7 +53,6 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
 
         # Set -maxmempool=0 to turn off mempool memory sharing with dbcache
         self.base_args = [
-            "-limitdescendantsize=0",
             "-maxmempool=0",
             "-dbbatchsize=200000",
         ]

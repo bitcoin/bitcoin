@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,11 +6,18 @@
 #define BITCOIN_INDEX_COINSTATSINDEX_H
 
 #include <arith_uint256.h>
+#include <consensus/amount.h>
 #include <crypto/muhash.h>
 #include <index/base.h>
+#include <interfaces/chain.h>
+#include <uint256.h>
+
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <optional>
 
 class CBlockIndex;
-class CDBBatch;
 namespace kernel {
 struct CCoinsStats;
 }

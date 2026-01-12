@@ -63,7 +63,7 @@ chainstate and a sync to tip begins. A new chainstate directory is created in th
 datadir for the snapshot chainstate called `chainstate_snapshot`.
 
 When this directory is present in the datadir, the snapshot chainstate will be detected
-and loaded as active on node startup (via `DetectSnapshotChainstate()`).
+and loaded as active on node startup (via `LoadAssumeutxoChainstate()`).
 
 A special file is created within that directory, `base_blockhash`, which contains the
 serialized `uint256` of the base block of the snapshot. This is used to reinitialize
@@ -97,14 +97,13 @@ sequentially.
 ### Background chainstate hits snapshot base block
 
 Once the tip of the background chainstate hits the base block of the snapshot
-chainstate, we stop use of the background chainstate by setting `m_disabled`, in
-`MaybeCompleteSnapshotValidation()`, which is checked in `ActivateBestChain()`). We hash the
+chainstate, we hash the
 background chainstate's UTXO set contents and ensure it matches the compiled value in
 `CMainParams::m_assumeutxo_data`.
 
 |    |    |
 | ---------- | ----------- |
-| number of chainstates | 2 (ibd has `m_disabled=true`) |
+| number of chainstates | 2 |
 | active chainstate | snapshot |
 
 The background chainstate data lingers on disk until the program is restarted.

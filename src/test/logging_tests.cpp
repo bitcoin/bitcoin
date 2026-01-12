@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -40,7 +40,7 @@ static void ResetLogger()
 static std::vector<std::string> ReadDebugLogLines()
 {
     std::vector<std::string> lines;
-    std::ifstream ifs{LogInstance().m_file_path};
+    std::ifstream ifs{LogInstance().m_file_path.std_path()};
     for (std::string line; std::getline(ifs, line);) {
         lines.push_back(std::move(line));
     }
@@ -118,44 +118,24 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
         BCLog::LogFlags category;
         BCLog::Level level;
         std::string prefix;
-        std::source_location loc;
+        SourceLocation loc;
     };
 
     std::vector<Case> cases = {
-        {"foo1: bar1", BCLog::NET, BCLog::Level::Debug, "[net] ", std::source_location::current()},
-        {"foo2: bar2", BCLog::NET, BCLog::Level::Info, "[net:info] ", std::source_location::current()},
-        {"foo3: bar3", BCLog::ALL, BCLog::Level::Debug, "[debug] ", std::source_location::current()},
-        {"foo4: bar4", BCLog::ALL, BCLog::Level::Info, "", std::source_location::current()},
-        {"foo5: bar5", BCLog::NONE, BCLog::Level::Debug, "[debug] ", std::source_location::current()},
-        {"foo6: bar6", BCLog::NONE, BCLog::Level::Info, "", std::source_location::current()},
+        {"foo1: bar1", BCLog::NET, BCLog::Level::Debug, "[net] ", SourceLocation{__func__}},
+        {"foo2: bar2", BCLog::NET, BCLog::Level::Info, "[net:info] ", SourceLocation{__func__}},
+        {"foo3: bar3", BCLog::ALL, BCLog::Level::Debug, "[debug] ", SourceLocation{__func__}},
+        {"foo4: bar4", BCLog::ALL, BCLog::Level::Info, "", SourceLocation{__func__}},
+        {"foo5: bar5", BCLog::NONE, BCLog::Level::Debug, "[debug] ", SourceLocation{__func__}},
+        {"foo6: bar6", BCLog::NONE, BCLog::Level::Info, "", SourceLocation{__func__}},
     };
 
     std::vector<std::string> expected;
     for (auto& [msg, category, level, prefix, loc] : cases) {
-        expected.push_back(tfm::format("[%s:%s] [%s] %s%s", util::RemovePrefix(loc.file_name(), "./"), loc.line(), loc.function_name(), prefix, msg));
+        expected.push_back(tfm::format("[%s:%s] [%s] %s%s", util::RemovePrefix(loc.file_name(), "./"), loc.line(), loc.function_name_short(), prefix, msg));
         LogInstance().LogPrintStr(msg, std::move(loc), category, level, /*should_ratelimit=*/false);
     }
     std::vector<std::string> log_lines{ReadDebugLogLines()};
-    BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
-}
-
-BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacrosDeprecated, LogSetup)
-{
-    LogInstance().EnableCategory(BCLog::NET);
-    LogPrintf("foo5: %s\n", "bar5");
-    LogPrintLevel(BCLog::NET, BCLog::Level::Trace, "foo4: %s\n", "bar4"); // not logged
-    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "foo7: %s\n", "bar7");
-    LogPrintLevel(BCLog::NET, BCLog::Level::Info, "foo8: %s\n", "bar8");
-    LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "foo9: %s\n", "bar9");
-    LogPrintLevel(BCLog::NET, BCLog::Level::Error, "foo10: %s\n", "bar10");
-    std::vector<std::string> log_lines{ReadDebugLogLines()};
-    std::vector<std::string> expected = {
-        "foo5: bar5",
-        "[net] foo7: bar7",
-        "[net:info] foo8: bar8",
-        "[net:warning] foo9: bar9",
-        "[net:error] foo10: bar10",
-    };
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }
 
@@ -205,26 +185,25 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros_CategoryName, LogSetup)
 
 BOOST_FIXTURE_TEST_CASE(logging_SeverityLevels, LogSetup)
 {
+    LogInstance().SetLogLevel(BCLog::Level::Debug);
     LogInstance().EnableCategory(BCLog::LogFlags::ALL);
     LogInstance().SetCategoryLogLevel(/*category_str=*/"net", /*level_str=*/"info");
 
     // Global log level
-    LogPrintLevel(BCLog::HTTP, BCLog::Level::Info, "foo1: %s\n", "bar1");
-    LogPrintLevel(BCLog::MEMPOOL, BCLog::Level::Trace, "foo2: %s. This log level is lower than the global one.\n", "bar2");
-    LogPrintLevel(BCLog::VALIDATION, BCLog::Level::Warning, "foo3: %s\n", "bar3");
-    LogPrintLevel(BCLog::RPC, BCLog::Level::Error, "foo4: %s\n", "bar4");
+    LogInfo("info_%s", 1);
+    LogTrace(BCLog::HTTP, "trace_%s. This log level is lower than the global one.", 2);
+    LogDebug(BCLog::HTTP, "debug_%s", 3);
+    LogWarning("warn_%s", 4);
+    LogError("err_%s", 5);
 
     // Category-specific log level
-    LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "foo5: %s\n", "bar5");
-    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "foo6: %s. This log level is the same as the global one but lower than the category-specific one, which takes precedence. \n", "bar6");
-    LogPrintLevel(BCLog::NET, BCLog::Level::Error, "foo7: %s\n", "bar7");
+    LogDebug(BCLog::NET, "debug_%s. This log level is the same as the global one but lower than the category-specific one, which takes precedence.", 6);
 
     std::vector<std::string> expected = {
-        "[http:info] foo1: bar1",
-        "[validation:warning] foo3: bar3",
-        "[rpc:error] foo4: bar4",
-        "[net:warning] foo5: bar5",
-        "[net:error] foo7: bar7",
+        "info_1",
+        "[http] debug_3",
+        "[warning] warn_4",
+        "[error] err_5",
     };
     std::vector<std::string> log_lines{ReadDebugLogLines()};
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
@@ -327,8 +306,8 @@ BOOST_AUTO_TEST_CASE(logging_log_rate_limiter)
     auto& limiter{*Assert(limiter_)};
 
     using Status = BCLog::LogRateLimiter::Status;
-    auto source_loc_1{std::source_location::current()};
-    auto source_loc_2{std::source_location::current()};
+    auto source_loc_1{SourceLocation{__func__}};
+    auto source_loc_2{SourceLocation{__func__}};
 
     // A fresh limiter should not have any suppressions
     BOOST_CHECK(!limiter.SuppressionsActive());
@@ -421,7 +400,7 @@ void TestLogFromLocation(Location location, const std::string& message,
     using Status = BCLog::LogRateLimiter::Status;
     if (!suppressions_active) assert(status == Status::UNSUPPRESSED); // developer error
 
-    std::ofstream ofs(LogInstance().m_file_path, std::ios::out | std::ios::trunc); // clear debug log
+    std::ofstream ofs(LogInstance().m_file_path.std_path(), std::ios::out | std::ios::trunc); // clear debug log
     LogFromLocation(location, message);
     auto log_lines{ReadDebugLogLines()};
     BOOST_TEST_INFO_SCOPE(log_lines.size() << " log_lines read: \n" << util::Join(log_lines, "\n"));

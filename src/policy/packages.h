@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,15 +24,10 @@ static constexpr uint32_t MAX_PACKAGE_COUNT{25};
 static constexpr uint32_t MAX_PACKAGE_WEIGHT = 404'000;
 static_assert(MAX_PACKAGE_WEIGHT >= MAX_STANDARD_TX_WEIGHT);
 
-// If a package is to be evaluated, it must be at least as large as the mempool's ancestor/descendant limits,
-// otherwise transactions that would be individually accepted may be rejected in a package erroneously.
-// Since a submitted package must be child-with-parents (all of the transactions are a parent
-// of the child), package limits are ultimately bounded by mempool package limits. Ensure that the
-// defaults reflect this constraint.
-static_assert(DEFAULT_DESCENDANT_LIMIT >= MAX_PACKAGE_COUNT);
-static_assert(DEFAULT_ANCESTOR_LIMIT >= MAX_PACKAGE_COUNT);
-static_assert(MAX_PACKAGE_WEIGHT >= DEFAULT_ANCESTOR_SIZE_LIMIT_KVB * WITNESS_SCALE_FACTOR * 1000);
-static_assert(MAX_PACKAGE_WEIGHT >= DEFAULT_DESCENDANT_SIZE_LIMIT_KVB * WITNESS_SCALE_FACTOR * 1000);
+// Packages are part of a single cluster, so ensure that the package limits are
+// set within the mempool's cluster size limits.
+static_assert(DEFAULT_CLUSTER_LIMIT >= MAX_PACKAGE_COUNT);
+static_assert(MAX_PACKAGE_WEIGHT <= DEFAULT_CLUSTER_SIZE_LIMIT_KVB * WITNESS_SCALE_FACTOR * 1000);
 
 /** A "reason" why a package was invalid. It may be that one or more of the included
  * transactions is invalid or the package itself violates our rules.
@@ -76,7 +71,7 @@ bool IsConsistentPackage(const Package& txns);
  * 3. If any dependencies exist between transactions, parents must appear before children.
  * 4. Transactions cannot conflict, i.e., spend the same inputs.
  */
-bool IsWellFormedPackage(const Package& txns, PackageValidationState& state, bool require_sorted);
+bool IsWellFormedPackage(const Package& txns, PackageValidationState& state);
 
 /** Context-free check that a package is exactly one child and its parents; not all parents need to
  * be present, but the package must not contain any transactions that are not the child's parents.

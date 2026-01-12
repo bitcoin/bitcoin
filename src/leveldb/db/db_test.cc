@@ -2194,7 +2194,7 @@ TEST(DBTest, Randomized) {
           if (i == 0 || !rnd.OneIn(10)) {
             k = RandomKey(&rnd);
           } else {
-            // Periodically re-use the same key from the previous iter, so
+            // Periodically reuse the same key from the previous iter, so
             // we have multiple entries in the write batch for the same key
           }
           if (rnd.OneIn(2)) {

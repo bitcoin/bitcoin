@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2022 The Bitcoin Core developers
+# Copyright (c) 2015-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test bitcoind with different proxy configuration.
@@ -468,8 +468,8 @@ class ProxyTest(BitcoinTestFramework):
         assert_equal(nets["ipv6"]["proxy"], "127.6.6.6:6666")
         self.stop_node(1)
 
-        self.log.info("Test overriding the Tor proxy")
-        self.start_node(1, extra_args=["-proxy=127.1.1.1:1111", "-proxy=127.2.2.2:2222=tor"])
+        self.log.info("Test overriding the Onion proxy")
+        self.start_node(1, extra_args=["-proxy=127.1.1.1:1111", "-proxy=127.2.2.2:2222=onion"])
         nets = networks_dict(self.nodes[1].getnetworkinfo())
         assert_equal(nets["ipv4"]["proxy"], "127.1.1.1:1111")
         assert_equal(nets["ipv6"]["proxy"], "127.1.1.1:1111")

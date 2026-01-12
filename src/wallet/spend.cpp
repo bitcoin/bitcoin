@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -219,7 +219,7 @@ void CoinsResult::Erase(const std::unordered_set<COutPoint, SaltedOutpointHasher
     for (auto& [type, vec] : coins) {
         auto remove_it = std::remove_if(vec.begin(), vec.end(), [&](const COutput& coin) {
             // remove it if it's on the set
-            if (coins_to_remove.count(coin.outpoint) == 0) return false;
+            if (!coins_to_remove.contains(coin.outpoint)) return false;
 
             // update cached amounts
             total_amount -= coin.txout.nValue;
@@ -382,7 +382,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             // be a 1-block reorg away from the chain where transactions A and C
             // were accepted to another chain where B, B', and C were all
             // accepted.
-            if (nDepth == 0 && wtx.mapValue.count("replaces_txid")) {
+            if (nDepth == 0 && wtx.mapValue.contains("replaces_txid")) {
                 safeTx = false;
             }
 
@@ -394,7 +394,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             // intending to replace A', but potentially resulting in a scenario
             // where A, A', and D could all be accepted (instead of just B and
             // D, or just A and A' like the user would want).
-            if (nDepth == 0 && wtx.mapValue.count("replaced_by_txid")) {
+            if (nDepth == 0 && wtx.mapValue.contains("replaced_by_txid")) {
                 safeTx = false;
             }
 
@@ -403,6 +403,11 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                     if (wtx.tx->version != TRUC_VERSION) continue;
                     // this unconfirmed v3 transaction already has a child
                     if (wtx.truc_child_in_mempool.has_value()) continue;
+
+                    // this unconfirmed v3 transaction has a parent: spending would create a third generation
+                    size_t ancestors, descendants;
+                    wallet.chain().getTransactionAncestry(wtx.tx->GetHash(), ancestors, descendants);
+                    if (ancestors > 1) continue;
                 } else {
                     if (wtx.tx->version == TRUC_VERSION) continue;
                     Assume(!wtx.truc_child_in_mempool.has_value());
@@ -1034,7 +1039,7 @@ void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
     }
 }
 
-size_t GetSerializeSizeForRecipient(const CRecipient& recipient)
+uint64_t GetSerializeSizeForRecipient(const CRecipient& recipient)
 {
     return ::GetSerializeSize(CTxOut(recipient.nAmount, GetScriptForDestination(recipient.dest)));
 }

@@ -19,6 +19,7 @@ add_executable(fuzz
   block.cpp
   block_header.cpp
   block_index.cpp
+  block_index_tree.cpp
   blockfilter.cpp
   bloom_filter.cpp
   buffered_file.cpp
@@ -41,6 +42,7 @@ add_executable(fuzz
   decode_tx.cpp
   descriptor_parse.cpp
   deserialize.cpp
+  difference_formatter.cpp
   eval_script.cpp
   feefrac.cpp
   fee_rate.cpp
@@ -134,6 +136,9 @@ add_executable(fuzz
   vecdeque.cpp
   versionbits.cpp
 )
+
+add_windows_application_manifest(fuzz)
+
 target_link_libraries(fuzz
   core_interface
   fuzzer_interface

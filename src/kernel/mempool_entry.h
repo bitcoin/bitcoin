@@ -11,6 +11,7 @@
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <primitives/transaction.h>
+#include <txgraph.h>
 #include <util/epochguard.h>
 #include <util/overflow.h>
 
@@ -62,23 +63,15 @@ struct CompareIteratorByHash {
  *
  */
 
-class CTxMemPoolEntry
+class CTxMemPoolEntry : public TxGraph::Ref
 {
 public:
     typedef std::reference_wrapper<const CTxMemPoolEntry> CTxMemPoolEntryRef;
-    // two aliases, should the types ever diverge
-    typedef std::set<CTxMemPoolEntryRef, CompareIteratorByHash> Parents;
-    typedef std::set<CTxMemPoolEntryRef, CompareIteratorByHash> Children;
 
 private:
-    CTxMemPoolEntry(const CTxMemPoolEntry&) = default;
-    struct ExplicitCopyTag {
-        explicit ExplicitCopyTag() = default;
-    };
+    CTxMemPoolEntry(const CTxMemPoolEntry&) = delete;
 
     const CTransactionRef tx;
-    mutable Parents m_parents;
-    mutable Children m_children;
     const CAmount nFee;             //!< Cached to avoid expensive parent-transaction lookups
     const int32_t nTxWeight;         //!< ... and avoid recomputing tx weight (also used for GetTxSize())
     const size_t nUsageSize;        //!< ... and total memory usage
@@ -87,30 +80,17 @@ private:
     const unsigned int entryHeight; //!< Chain height when entering the mempool
     const bool spendsCoinbase;      //!< keep track of transactions that spend a coinbase
     const int64_t sigOpCost;        //!< Total sigop cost
-    CAmount m_modified_fee;         //!< Used for determining the priority of the transaction for mining in a block
+    mutable CAmount m_modified_fee; //!< Used for determining the priority of the transaction for mining in a block
     mutable LockPoints lockPoints;  //!< Track the height and time at which tx was final
 
-    // Information about descendants of this transaction that are in the
-    // mempool; if we remove this transaction we must remove all of these
-    // descendants as well.
-    int64_t m_count_with_descendants{1}; //!< number of descendant transactions
-    // Using int64_t instead of int32_t to avoid signed integer overflow issues.
-    int64_t nSizeWithDescendants;      //!< ... and size
-    CAmount nModFeesWithDescendants;   //!< ... and total fees (all including us)
-
-    // Analogous statistics for ancestor transactions
-    int64_t m_count_with_ancestors{1};
-    // Using int64_t instead of int32_t to avoid signed integer overflow issues.
-    int64_t nSizeWithAncestors;
-    CAmount nModFeesWithAncestors;
-    int64_t nSigOpCostWithAncestors;
-
 public:
-    CTxMemPoolEntry(const CTransactionRef& tx, CAmount fee,
+    virtual ~CTxMemPoolEntry() = default;
+    CTxMemPoolEntry(TxGraph::Ref&& ref, const CTransactionRef& tx, CAmount fee,
                     int64_t time, unsigned int entry_height, uint64_t entry_sequence,
                     bool spends_coinbase,
                     int64_t sigops_cost, LockPoints lp)
-        : tx{tx},
+        : TxGraph::Ref(std::move(ref)),
+          tx{tx},
           nFee{fee},
           nTxWeight{GetTransactionWeight(*tx)},
           nUsageSize{RecursiveDynamicUsage(tx)},
@@ -120,19 +100,11 @@ public:
           spendsCoinbase{spends_coinbase},
           sigOpCost{sigops_cost},
           m_modified_fee{nFee},
-          lockPoints{lp},
-          nSizeWithDescendants{GetTxSize()},
-          nModFeesWithDescendants{nFee},
-          nSizeWithAncestors{GetTxSize()},
-          nModFeesWithAncestors{nFee},
-          nSigOpCostWithAncestors{sigOpCost} {}
+          lockPoints{lp} {}
 
-    CTxMemPoolEntry(ExplicitCopyTag, const CTxMemPoolEntry& entry) : CTxMemPoolEntry(entry) {}
     CTxMemPoolEntry& operator=(const CTxMemPoolEntry&) = delete;
-    CTxMemPoolEntry(CTxMemPoolEntry&&) = delete;
+    CTxMemPoolEntry(CTxMemPoolEntry&&) = default;
     CTxMemPoolEntry& operator=(CTxMemPoolEntry&&) = delete;
-
-    static constexpr ExplicitCopyTag ExplicitCopy{};
 
     const CTransaction& GetTx() const { return *this->tx; }
     CTransactionRef GetSharedTx() const { return this->tx; }
@@ -141,6 +113,7 @@ public:
     {
         return GetVirtualTransactionSize(nTxWeight, sigOpCost, ::nBytesPerSigOp);
     }
+    int32_t GetAdjustedWeight() const { return GetSigOpsAdjustedWeight(nTxWeight, sigOpCost, ::nBytesPerSigOp); }
     int32_t GetTxWeight() const { return nTxWeight; }
     std::chrono::seconds GetTime() const { return std::chrono::seconds{nTime}; }
     unsigned int GetHeight() const { return entryHeight; }
@@ -150,15 +123,9 @@ public:
     size_t DynamicMemoryUsage() const { return nUsageSize; }
     const LockPoints& GetLockPoints() const { return lockPoints; }
 
-    // Adjusts the descendant state.
-    void UpdateDescendantState(int32_t modifySize, CAmount modifyFee, int64_t modifyCount);
-    // Adjusts the ancestor state
-    void UpdateAncestorState(int32_t modifySize, CAmount modifyFee, int64_t modifyCount, int64_t modifySigOps);
     // Updates the modified fees with descendants/ancestors.
-    void UpdateModifiedFee(CAmount fee_diff)
+    void UpdateModifiedFee(CAmount fee_diff) const
     {
-        nModFeesWithDescendants = SaturatingAdd(nModFeesWithDescendants, fee_diff);
-        nModFeesWithAncestors = SaturatingAdd(nModFeesWithAncestors, fee_diff);
         m_modified_fee = SaturatingAdd(m_modified_fee, fee_diff);
     }
 
@@ -168,21 +135,7 @@ public:
         lockPoints = lp;
     }
 
-    uint64_t GetCountWithDescendants() const { return m_count_with_descendants; }
-    int64_t GetSizeWithDescendants() const { return nSizeWithDescendants; }
-    CAmount GetModFeesWithDescendants() const { return nModFeesWithDescendants; }
-
     bool GetSpendsCoinbase() const { return spendsCoinbase; }
-
-    uint64_t GetCountWithAncestors() const { return m_count_with_ancestors; }
-    int64_t GetSizeWithAncestors() const { return nSizeWithAncestors; }
-    CAmount GetModFeesWithAncestors() const { return nModFeesWithAncestors; }
-    int64_t GetSigOpCostWithAncestors() const { return nSigOpCostWithAncestors; }
-
-    const Parents& GetMemPoolParentsConst() const { return m_parents; }
-    const Children& GetMemPoolChildrenConst() const { return m_children; }
-    Parents& GetMemPoolParents() const { return m_parents; }
-    Children& GetMemPoolChildren() const { return m_children; }
 
     mutable size_t idx_randomized; //!< Index in mempool's txns_randomized
     mutable Epoch::Marker m_epoch_marker; //!< epoch when last touched, useful for graph algorithms

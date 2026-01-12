@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2022 The Bitcoin Core developers
+# Copyright (c) 2018-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test bitcoin-wallet."""
@@ -83,7 +83,7 @@ class ToolWalletTest(BitcoinTestFramework):
 
     def read_dump(self, filename):
         dump = OrderedDict()
-        with open(filename, "r", encoding="utf8") as f:
+        with open(filename, "r") as f:
             for row in f:
                 row = row.strip()
                 key, value = row.split(',')
@@ -98,7 +98,7 @@ class ToolWalletTest(BitcoinTestFramework):
     def write_dump(self, dump, filename, magic=None, skip_checksum=False):
         if magic is None:
             magic = "BITCOIN_CORE_WALLET_DUMP"
-        with open(filename, "w", encoding="utf8") as f:
+        with open(filename, "w") as f:
             row = ",".join([magic, dump[magic]]) + "\n"
             f.write(row)
             for k, v in dump.items():
@@ -319,6 +319,12 @@ class ToolWalletTest(BitcoinTestFramework):
         self.write_dump(dump_data, bad_sum_wallet_dump)
         self.assert_raises_tool_error('Error: Checksum is not the correct size', '-wallet=badload', '-dumpfile={}'.format(bad_sum_wallet_dump), 'createfromdump')
         assert not (self.nodes[0].wallets_path / "badload").is_dir()
+        self.assert_raises_tool_error('Error: Checksum is not the correct size', '-wallet=', '-dumpfile={}'.format(bad_sum_wallet_dump), 'createfromdump')
+        assert self.nodes[0].wallets_path.exists()
+        assert not (self.nodes[0].wallets_path / "wallet.dat").exists()
+
+        self.log.info('Checking createfromdump with an unnamed wallet')
+        self.do_tool_createfromdump("", "wallet.dump")
 
     def test_chainless_conflicts(self):
         self.log.info("Test wallet tool when wallet contains conflicting transactions")

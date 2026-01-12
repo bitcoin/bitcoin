@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,9 +7,9 @@
 
 #include <chain.h>
 #include <consensus/validation.h>
-#include <kernel/chain.h>
 #include <kernel/mempool_entry.h>
 #include <kernel/mempool_removal_reason.h>
+#include <kernel/types.h>
 #include <logging.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -20,6 +20,8 @@
 #include <memory>
 #include <unordered_map>
 #include <utility>
+
+using kernel::ChainstateRole;
 
 /**
  * ValidationSignalsImpl manages a list of shared_ptr<CValidationInterface> callbacks.
@@ -209,7 +211,8 @@ void ValidationSignals::TransactionRemovedFromMempool(const CTransactionRef& tx,
                           RemovalReasonToString(reason));
 }
 
-void ValidationSignals::BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindex) {
+void ValidationSignals::BlockConnected(const ChainstateRole& role, const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
+{
     auto event = [role, pblock, pindex, this] {
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BlockConnected(role, pblock, pindex); });
     };
@@ -238,7 +241,8 @@ void ValidationSignals::BlockDisconnected(const std::shared_ptr<const CBlock>& p
                           pindex->nHeight);
 }
 
-void ValidationSignals::ChainStateFlushed(ChainstateRole role, const CBlockLocator &locator) {
+void ValidationSignals::ChainStateFlushed(const ChainstateRole& role, const CBlockLocator& locator)
+{
     auto event = [role, locator, this] {
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.ChainStateFlushed(role, locator); });
     };

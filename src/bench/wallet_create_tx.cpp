@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +11,7 @@
 #include <consensus/merkle.h>
 #include <interfaces/chain.h>
 #include <kernel/chain.h>
+#include <kernel/types.h>
 #include <node/blockstorage.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
@@ -39,6 +40,7 @@
 #include <utility>
 #include <vector>
 
+using kernel::ChainstateRole;
 using wallet::CWallet;
 using wallet::CreateMockableWalletDatabase;
 using wallet::WALLET_FLAG_DESCRIPTORS;
@@ -101,7 +103,7 @@ void generateFakeBlock(const CChainParams& params,
 
     // notify wallet
     const auto& pindex = WITH_LOCK(::cs_main, return context.chainman->ActiveChain().Tip());
-    wallet.blockConnected(ChainstateRole::NORMAL, kernel::MakeBlockInfo(pindex, &block));
+    wallet.blockConnected(ChainstateRole{}, kernel::MakeBlockInfo(pindex, &block));
 }
 
 struct PreSelectInputs {
