@@ -88,7 +88,7 @@ def get_bind_addrs(pid):
     '''
     Get bind addresses as (host,port) tuples for process pid.
     '''
-    if sys.platform.startswith("linux"):
+    if sys.platform == 'linux':
         inodes = get_socket_inodes(pid)
         bind_addrs = []
         for conn in netstat('tcp') + netstat('tcp6'):
@@ -110,7 +110,7 @@ def all_interfaces():
     '''
     Return all IPv4 interfaces that are up.
     '''
-    if sys.platform.startswith("linux"):
+    if sys.platform == 'linux':
         import fcntl  # Linux only, so only import when required
 
         is_64bits = sys.maxsize > 2**32
