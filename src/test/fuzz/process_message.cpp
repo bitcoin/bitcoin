@@ -116,7 +116,7 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
             more_work = connman.ProcessMessagesOnce(p2p_node);
         } catch (const std::ios_base::failure&) {
         }
-        g_setup->m_node.peerman->SendMessages(&p2p_node);
+        g_setup->m_node.peerman->SendMessages(p2p_node);
     }
     g_setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
     g_setup->m_node.connman->StopNodes();

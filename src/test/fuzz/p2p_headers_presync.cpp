@@ -97,7 +97,7 @@ void HeadersSyncSetup::SendMessage(FuzzedDataProvider& fuzzed_data_provider, CSe
         connman.ProcessMessagesOnce(connection);
     } catch (const std::ios_base::failure&) {
     }
-    m_node.peerman->SendMessages(&connection);
+    m_node.peerman->SendMessages(connection);
 }
 
 CBlockHeader ConsumeHeader(FuzzedDataProvider& fuzzed_data_provider, const uint256& prev_hash, uint32_t prev_nbits)
