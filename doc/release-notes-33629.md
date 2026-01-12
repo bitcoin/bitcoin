@@ -41,3 +41,11 @@ are noted:
   mempool.
 
 - Chunk size and chunk fees are now also included in the output of `getmempoolentry`.
+
+- The "CPFP Carveout" has been removed from the mempool logic. The CPFP carveout
+  allowed one additional child transaction to be added to a package that's already
+  at its descendant limit, but only if that child has exactly one ancestor
+  (the package's root) and is small (no larger than 10kvB). Nothing is allowed to
+  bypass the cluster count limit. It is expected that smart contracting use-cases
+  requiring similar functionality employ TRUC transactions and sibling eviction
+  instead going forward.
