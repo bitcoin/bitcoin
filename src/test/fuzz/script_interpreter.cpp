@@ -7,6 +7,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <util/check.h>
 
 #include <cstdint>
 #include <optional>
@@ -43,5 +44,29 @@ FUZZ_TARGET(script_interpreter)
     }
     {
         (void)CastToBool(ConsumeRandomLengthByteVector(fuzzed_data_provider));
+    }
+}
+
+/** Differential fuzzing for SignatureHash with and without cache. */
+FUZZ_TARGET(sighash_cache)
+{
+    FuzzedDataProvider provider(buffer.data(), buffer.size());
+
+    // Get inputs to the sighash function that won't change across types.
+    const auto scriptcode{ConsumeScript(provider)};
+    const auto tx{ConsumeTransaction(provider, std::nullopt)};
+    if (tx.vin.empty()) return;
+    const auto in_index{provider.ConsumeIntegralInRange<uint32_t>(0, tx.vin.size() - 1)};
+    const auto amount{ConsumeMoney(provider)};
+    const auto sigversion{(SigVersion)provider.ConsumeIntegralInRange(0, 1)};
+
+    // Check the sighash function will give the same result for 100 fuzzer-generated hash types whether or not a cache is
+    // provided. The cache is conserved across types to exercise cache hits.
+    SigHashCache sighash_cache{};
+    for (int i{0}; i < 100; ++i) {
+        const auto hash_type{((i & 2) == 0) ? provider.ConsumeIntegral<int8_t>() : provider.ConsumeIntegral<int32_t>()};
+        const auto nocache_res{SignatureHash(scriptcode, tx, in_index, hash_type, amount, sigversion)};
+        const auto cache_res{SignatureHash(scriptcode, tx, in_index, hash_type, amount, sigversion, nullptr, &sighash_cache)};
+        Assert(nocache_res == cache_res);
     }
 }
