@@ -411,6 +411,29 @@ class ConfArgsTest(BitcoinTestFramework):
                 self.restart_node(0, extra_args=[connect_arg, '-dnsseed', '-proxy=localhost:1080'])
         self.stop_node(0)
 
+    def test_privatebroadcast(self):
+        self.log.info("Test that an invalid usage of -privatebroadcast throws an init error")
+        self.stop_node(0)
+        # -privatebroadcast init error: Tor/I2P not reachable at startup
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=["-privatebroadcast"],
+            expected_msg=(
+                "Error: Private broadcast of own transactions requested (-privatebroadcast), "
+                "but none of Tor or I2P networks is reachable"))
+        # -privatebroadcast init error: incompatible with -connect
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=["-privatebroadcast", "-connect=127.0.0.1:8333", "-onion=127.0.0.1:9050"],
+            expected_msg=(
+                "Error: Private broadcast of own transactions requested (-privatebroadcast), but -connect is also configured. "
+                "They are incompatible because the private broadcast needs to open new connections to randomly "
+                "chosen Tor or I2P peers. Consider using -maxconnections=0 -addnode=... instead"))
+        # Warning case: private broadcast allowed, but -proxyrandomize=0 triggers a privacy warning
+        self.start_node(0, extra_args=["-privatebroadcast", "-onion=127.0.0.1:9050", "-proxyrandomize=0"])
+        self.stop_node(0, expected_stderr=(
+            "Warning: Private broadcast of own transactions requested (-privatebroadcast) and "
+            "-proxyrandomize is disabled. Tor circuits for private broadcast connections may "
+            "be correlated to other connections over Tor. For maximum privacy set -proxyrandomize=1."))
+
     def test_ignored_conf(self):
         self.log.info('Test error is triggered when the datadir in use contains a bitcoin.conf file that would be ignored '
                       'because a conflicting -conf file argument is passed.')
@@ -496,6 +519,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.test_seed_peers()
         self.test_networkactive()
         self.test_connect_with_seednode()
+        self.test_privatebroadcast()
 
         self.test_dir_config()
         self.test_negated_config()

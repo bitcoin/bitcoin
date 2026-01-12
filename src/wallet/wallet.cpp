@@ -2013,6 +2013,9 @@ bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
     case node::TxBroadcast::MEMPOOL_NO_BROADCAST:
         what = "to mempool without broadcast";
         break;
+    case node::TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST:
+        what = "for private broadcast without adding to the mempool";
+        break;
     }
     WalletLogPrintf("Submitting wtx %s %s\n", wtx.GetHash().ToString(), what);
     // We must set TxStateInMempool here. Even though it will also be set later by the
