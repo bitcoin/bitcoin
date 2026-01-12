@@ -26,8 +26,13 @@ jobs:
           BITCOIN_SHA=$(git merge-base HEAD upstream/master)
           echo "BITCOIN_SHA=$BITCOIN_SHA" >> "$GITHUB_ENV"
 
+          # Get commit date for the Bitcoin commit (for chart X-axis)
+          COMMIT_DATE=$(git log -1 --format=%cd --date=short "$BITCOIN_SHA")
+          echo "COMMIT_DATE=$COMMIT_DATE" >> "$GITHUB_ENV"
+
           echo "Benchcoin: $(git rev-parse HEAD)"
           echo "Bitcoin merge-base: $BITCOIN_SHA"
+          echo "Commit date: $COMMIT_DATE"
 
       - name: Build master binary
         run: |
@@ -44,10 +49,13 @@ jobs:
       - name: Upload commit info
         run: |
           echo "$BITCOIN_SHA" > ${{ runner.temp }}/commit.txt
+          echo "$COMMIT_DATE" > ${{ runner.temp }}/commit-date.txt
       - uses: actions/upload-artifact@v4
         with:
           name: commit-info
-          path: ${{ runner.temp }}/commit.txt
+          path: |
+            ${{ runner.temp }}/commit.txt
+            ${{ runner.temp }}/commit-date.txt
 
       - name: Capture machine specs
         run: |
@@ -151,9 +159,13 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Get current date
+      - name: Get dates
         run: |
-          echo "DATE=$(date -u +%Y-%m-%d)" >> "$GITHUB_ENV"
+          # Commit date (for chart X-axis)
+          COMMIT_DATE=$(cat ./commit-info/commit-date.txt)
+          echo "COMMIT_DATE=$COMMIT_DATE" >> "$GITHUB_ENV"
+          # Run date (for reference)
+          echo "RUN_DATE=$(date -u +%Y-%m-%d)" >> "$GITHUB_ENV"
 
       - name: Append results to history
         run: |
@@ -167,7 +179,8 @@ jobs:
             ../nightly-450-results/results.json \
             "$COMMIT" \
             450 \
-            --date "$DATE" \
+            --date "$COMMIT_DATE" \
+            --run-date "$RUN_DATE" \
             --benchmark-config bench/configs/nightly.toml \
             --machine-specs ../machine-specs/machine-specs.json
 
@@ -178,7 +191,8 @@ jobs:
             ../nightly-32000-results/results.json \
             "$COMMIT" \
             32000 \
-            --date "$DATE" \
+            --date "$COMMIT_DATE" \
+            --run-date "$RUN_DATE" \
             --benchmark-config bench/configs/nightly.toml \
             --machine-specs ../machine-specs/machine-specs.json
 
@@ -195,5 +209,5 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add nightly-history.json index.html
-          git commit -m "Update nightly benchmark results for $DATE" || echo "No changes to commit"
+          git commit -m "Update nightly benchmark results for $COMMIT_DATE" || echo "No changes to commit"
           git push origin gh-pages

@@ -323,6 +323,7 @@ def cmd_nightly(args: argparse.Namespace) -> int:
                 benchmark_config_file=benchmark_config_file,
                 instrumentation=args.instrumentation,
                 machine_specs_file=machine_specs_file,
+                run_date=args.run_date or "",
             )
             logger.info(f"Appended result to {history_file}")
         elif args.nightly_command == "chart":
@@ -565,6 +566,11 @@ def main() -> int:
         "--machine-specs",
         metavar="PATH",
         help="Path to pre-captured machine specs JSON (default: detect current machine)",
+    )
+    nightly_append.add_argument(
+        "--run-date",
+        metavar="YYYY-MM-DD",
+        help="Date when benchmark was executed (default: today). Stored for reference.",
     )
 
     # nightly chart

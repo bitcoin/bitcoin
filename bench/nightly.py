@@ -138,7 +138,7 @@ def series_label(result: "NightlyResult") -> str:
 class NightlyResult:
     """A single nightly benchmark result with embedded config and machine info."""
 
-    date: str
+    date: str  # Commit date (YYYY-MM-DD) - displayed on chart X-axis
     commit: str
     mean: float
     stddev: float
@@ -147,6 +147,7 @@ class NightlyResult:
         str, Any
     ]  # Full benchmark config (dbcache inside config.bitcoind.dbcache)
     machine: dict[str, Any]  # Full machine specs
+    run_date: str = ""  # When benchmark was executed (reference only)
 
     @property
     def dbcache(self) -> int:
@@ -168,7 +169,7 @@ class NightlyResult:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
-        return {
+        result = {
             "date": self.date,
             "commit": self.commit,
             "mean": self.mean,
@@ -177,6 +178,9 @@ class NightlyResult:
             "config": self.config,
             "machine": self.machine,
         }
+        if self.run_date:
+            result["run_date"] = self.run_date
+        return result
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> NightlyResult:
@@ -194,6 +198,7 @@ class NightlyResult:
                 runs=data["runs"],
                 config=data["config"],
                 machine=data.get("machine", {}),
+                run_date=data.get("run_date", ""),
             )
 
         # Legacy format - convert to new format
@@ -209,6 +214,7 @@ class NightlyResult:
                 "instrumentation": "uninstrumented",
             },
             machine={},
+            run_date=data.get("run_date", ""),
         )
 
 
@@ -316,6 +322,7 @@ class NightlyHistory:
         benchmark_config: dict[str, Any],
         machine_specs: dict[str, Any],
         date_str: str | None = None,
+        run_date: str = "",
     ) -> None:
         """Append result from a hyperfine results.json file.
 
@@ -324,7 +331,8 @@ class NightlyHistory:
             commit: Git commit hash
             benchmark_config: Full benchmark config dict (includes bitcoind.dbcache)
             machine_specs: Machine specs dict
-            date_str: Date string (YYYY-MM-DD), defaults to today
+            date_str: Commit date string (YYYY-MM-DD), defaults to today
+            run_date: When the benchmark was executed (YYYY-MM-DD), for reference
         """
         if not results_file.exists():
             raise FileNotFoundError(f"Results file not found: {results_file}")
@@ -355,6 +363,7 @@ class NightlyHistory:
             runs=runs,
             config=benchmark_config,
             machine=machine_specs,
+            run_date=run_date,
         )
         self.append(result)
 
@@ -391,6 +400,7 @@ class NightlyPhase:
         benchmark_config_file: Path | None = None,
         instrumentation: str = "uninstrumented",
         machine_specs_file: Path | None = None,
+        run_date: str = "",
     ) -> None:
         """Append a result from hyperfine results.json to history.
 
@@ -398,10 +408,11 @@ class NightlyPhase:
             results_file: Path to hyperfine results.json
             commit: Git commit hash
             dbcache: DB cache size in MB
-            date_str: Date string (YYYY-MM-DD), defaults to today
+            date_str: Commit date string (YYYY-MM-DD), defaults to today
             benchmark_config_file: Path to benchmark config TOML
             instrumentation: Instrumentation mode ('uninstrumented' or 'instrumented')
             machine_specs_file: Path to pre-captured machine specs JSON (optional)
+            run_date: When the benchmark was executed (YYYY-MM-DD), for reference
         """
         from bench.benchmark_config import BenchmarkConfig
 
@@ -435,6 +446,7 @@ class NightlyPhase:
             benchmark_config=config_dict,
             machine_specs=machine_specs,
             date_str=date_str,
+            run_date=run_date,
         )
         history.save()
 
