@@ -53,7 +53,6 @@
 #include <evo/chainhelper.h>
 #include <evo/deterministicmns.h>
 #include <evo/evodb.h>
-#include <evo/mnhftx.h>
 #include <evo/specialtx.h>
 #include <evo/specialtxman.h>
 #include <masternode/payments.h>
@@ -6065,11 +6064,6 @@ bool ChainstateManager::IsQuorumTypeEnabled(const Consensus::LLMQType llmqType,
 
     // Something wrong with conditions above, they are not consistent
     assert(false);
-}
-
-std::unordered_map<uint8_t, int> ChainstateManager::GetSignalsStage(const CBlockIndex* const pindexPrev)
-{
-    return m_active_chainstate->ChainHelper().ehf_manager->GetSignalsStage(pindexPrev);
 }
 
 void ChainstateManager::MaybeRebalanceCaches()

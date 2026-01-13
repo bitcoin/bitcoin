@@ -16,6 +16,7 @@
 #include <consensus/validation.h>
 #include <deploymentinfo.h>
 #include <deploymentstatus.h>
+#include <evo/chainhelper.h>
 #include <fs.h>
 #include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
@@ -1550,7 +1551,7 @@ RPCHelpMan getblockchaininfo()
     const CBlockIndex& tip{*CHECK_NONFATAL(active_chainstate.m_chain.Tip())};
     const int height{tip.nHeight};
 
-    const auto ehfSignals{chainman.GetSignalsStage(&tip)};
+    const auto ehfSignals{active_chainstate.ChainHelper().GetSignalsStage(&tip)};
 
     UniValue obj(UniValue::VOBJ);
     if (args.IsArgSet("-devnet")) {

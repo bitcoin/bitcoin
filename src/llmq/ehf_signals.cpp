@@ -7,6 +7,7 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
+#include <evo/chainhelper.h>
 #include <evo/mnhftx.h>
 #include <index/txindex.h> // g_txindex
 #include <llmq/commitment.h>
@@ -36,7 +37,7 @@ void CEHFSignalsHandler::UpdatedBlockTip(const CBlockIndex* const pindexNew)
 {
     if (!DeploymentActiveAfter(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) return;
 
-    const auto ehfSignals = m_chainman.GetSignalsStage(pindexNew);
+    const auto ehfSignals = m_chainman.ActiveChainstate().ChainHelper().ehf_manager->GetSignalsStage(pindexNew);
     for (const auto& deployment : Params().GetConsensus().vDeployments) {
         // Skip deployments that do not use dip0023
         if (!deployment.useEHF) continue;
@@ -92,7 +93,8 @@ MessageProcessingResult CEHFSignalsHandler::HandleNewRecoveredSig(const CRecover
     }
 
     MessageProcessingResult ret;
-    const auto ehfSignals = m_chainman.GetSignalsStage(WITH_LOCK(::cs_main, return m_chainman.ActiveTip()));
+    const auto ehfSignals = m_chainman.ActiveChainstate().ChainHelper().ehf_manager->GetSignalsStage(
+        WITH_LOCK(::cs_main, return m_chainman.ActiveTip()));
     MNHFTxPayload mnhfPayload;
     for (const auto& deployment : Params().GetConsensus().vDeployments) {
         // skip deployments that do not use dip0023 or that have already been mined

@@ -7,7 +7,9 @@
 
 #include <memory>
 #include <optional>
+#include <unordered_map>
 
+class CBlockIndex;
 class CCreditPoolManager;
 class CDeterministicMNManager;
 class CEvoDB;
@@ -62,6 +64,8 @@ public:
     bool IsInstantSendWaitingForTx(const uint256& hash) const;
     bool RemoveConflictingISLockByTx(const CTransaction& tx);
     bool ShouldInstantSendRejectConflicts() const;
+
+    std::unordered_map<uint8_t, int> GetSignalsStage(const CBlockIndex* const pindexPrev);
 
 public:
     const std::unique_ptr<CMNHFManager> ehf_manager;
