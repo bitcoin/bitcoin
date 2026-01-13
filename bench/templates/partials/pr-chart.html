@@ -126,4 +126,9 @@
   };
 
   Plotly.newPlot('pr-comparison-chart', buildTraces(), layout, config);
+
+  document.getElementById('pr-comparison-chart').on('plotly_click', function(data) {
+    const commit = data.points[0].customdata[0];
+    window.open('https://github.com/bitcoin/bitcoin/commit/' + commit, '_blank');
+  });
 </script>
