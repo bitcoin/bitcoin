@@ -81,10 +81,8 @@ jobs:
             fi
           done
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
 
       - name: Generate report
         id: generate
@@ -93,28 +91,26 @@ jobs:
           RUN_ID: ${{ steps.metadata.outputs.run-id }}
           HEAD_SHA: ${{ steps.metadata.outputs.head-sha }}
         run: |
-          cd benchcoin-tools
-
           # Build network arguments
           NETWORK_ARGS=""
           for network in ${NETWORKS//,/ }; do
-            if [ -d "../${network}-results" ]; then
-              NETWORK_ARGS="${NETWORK_ARGS} --network ${network}:../${network}-results"
+            if [ -d "./${network}-results" ]; then
+              NETWORK_ARGS="${NETWORK_ARGS} --network ${network}:./${network}-results"
             fi
           done
 
           # Generate report with nightly comparison (use per-machine history file)
-          python3 bench.py report \
+          nix develop ./benchcoin-tools --command python3 benchcoin-tools/bench.py report \
             ${NETWORK_ARGS} \
             --pr-number "${PR_NUMBER}" \
             --run-id "${RUN_ID}" \
             --commit "${HEAD_SHA}" \
-            --nightly-history "../nightly-history-${MACHINE_ID}.json" \
+            --nightly-history "./nightly-history-${MACHINE_ID}.json" \
             --update-index \
-            "../results/pr-${PR_NUMBER}/${RUN_ID}"
+            "./results/pr-${PR_NUMBER}/${RUN_ID}"
 
           # Build comparison summary for PR comment
-          if [ -f "../nightly-history-${MACHINE_ID}.json" ]; then
+          if [ -f "./nightly-history-${MACHINE_ID}.json" ]; then
             COMPARISON=$(jq -r '
               if .nightly_comparison then
                 .nightly_comparison | to_entries | map(
@@ -130,7 +126,7 @@ jobs:
                 ) | join("\n- ")
               else "No comparison data available"
               end
-            ' "../results/pr-${PR_NUMBER}/${RUN_ID}/results.json")
+            ' "./results/pr-${PR_NUMBER}/${RUN_ID}/results.json")
           else
             COMPARISON="No nightly history available for comparison"
           fi

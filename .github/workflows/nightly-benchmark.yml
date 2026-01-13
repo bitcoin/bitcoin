@@ -154,10 +154,8 @@ jobs:
           name: machine-specs
           path: ./machine-specs
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
 
       - name: Get dates
         run: |
@@ -170,39 +168,37 @@ jobs:
       - name: Append results to history
         run: |
           COMMIT=$(cat ./commit-info/commit.txt)
-          cd benchcoin-tools
 
           # Append 450 (default dbcache) result
-          python3 bench.py nightly \
-            --history-file ../nightly-history.json \
+          nix develop ./benchcoin-tools --command python3 benchcoin-tools/bench.py nightly \
+            --history-file ./nightly-history.json \
             append \
-            ../nightly-450-results/results.json \
+            ./nightly-450-results/results.json \
             "$COMMIT" \
             450 \
             --date "$COMMIT_DATE" \
             --run-date "$RUN_DATE" \
-            --benchmark-config bench/configs/nightly.toml \
-            --machine-specs ../machine-specs/machine-specs.json
+            --benchmark-config benchcoin-tools/bench/configs/nightly.toml \
+            --machine-specs ./machine-specs/machine-specs.json
 
           # Append 32000 (large dbcache) result
-          python3 bench.py nightly \
-            --history-file ../nightly-history.json \
+          nix develop ./benchcoin-tools --command python3 benchcoin-tools/bench.py nightly \
+            --history-file ./nightly-history.json \
             append \
-            ../nightly-32000-results/results.json \
+            ./nightly-32000-results/results.json \
             "$COMMIT" \
             32000 \
             --date "$COMMIT_DATE" \
             --run-date "$RUN_DATE" \
-            --benchmark-config bench/configs/nightly.toml \
-            --machine-specs ../machine-specs/machine-specs.json
+            --benchmark-config benchcoin-tools/bench/configs/nightly.toml \
+            --machine-specs ./machine-specs/machine-specs.json
 
       - name: Generate chart
         run: |
-          cd benchcoin-tools
-          python3 bench.py nightly \
-            --history-file ../nightly-history.json \
+          nix develop ./benchcoin-tools --command python3 benchcoin-tools/bench.py nightly \
+            --history-file ./nightly-history.json \
             chart \
-            ../index.html
+            ./index.html
 
       - name: Commit and push to gh-pages
         run: |
