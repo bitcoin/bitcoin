@@ -116,7 +116,7 @@ static void PrevectorFillVectorIndirect(benchmark::Bench& bench)
     {                                                                \
         Prevector##name<nontrivial_t>(bench);                        \
     }                                                                \
-    BENCHMARK(Prevector##name##Nontrivial);         \
+    BENCHMARK(Prevector##name##Nontrivial);                          \
     static void Prevector##name##Trivial(benchmark::Bench& bench)    \
     {                                                                \
         Prevector##name<trivial_t>(bench);                           \

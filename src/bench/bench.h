@@ -38,7 +38,7 @@ namespace benchmark {
 
 using ankerl::nanobench::Bench;
 
-typedef std::function<void(Bench&)> BenchFunction;
+using BenchFunction = std::function<void(Bench&)>;
 
 struct Args {
     bool is_list_only;
@@ -64,8 +64,8 @@ public:
 };
 } // namespace benchmark
 
-// BENCHMARK(foo) expands to:  benchmark::BenchRunner bench_runner_foo{"foo", foo};
+// BENCHMARK(foo); expands to:  benchmark::BenchRunner bench_runner_foo{"foo", foo};
 #define BENCHMARK(n) \
-    benchmark::BenchRunner PASTE2(bench_runner_, n){STRINGIZE(n), n};
+    benchmark::BenchRunner PASTE2(bench_runner_, n) { STRINGIZE(n), n }
 
 #endif // BITCOIN_BENCH_BENCH_H
