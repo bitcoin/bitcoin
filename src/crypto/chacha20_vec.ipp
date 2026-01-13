@@ -125,7 +125,8 @@ template <size_t I, size_t ITER = 0>
 ALWAYS_INLINE void arr_shuf0(std::array<vec256, I>& arr)
 {
     vec256& x = std::get<ITER>(arr);
-    x = __builtin_shufflevector(x, x, 1, 2, 3, 0, 5, 6, 7, 4);
+    x = vec256{x[1], x[2], x[3], x[0], x[5], x[6], x[7], x[4]};
+
     if constexpr(ITER + 1 < I ) arr_shuf0<I, ITER + 1>(arr);
 }
 
@@ -133,7 +134,8 @@ template <size_t I, size_t ITER = 0>
 ALWAYS_INLINE void arr_shuf1(std::array<vec256, I>& arr)
 {
     vec256& x = std::get<ITER>(arr);
-    x = __builtin_shufflevector(x, x, 2, 3, 0, 1, 6, 7, 4, 5);
+    x = vec256{x[2], x[3], x[0], x[1], x[6], x[7], x[4], x[5]};
+
     if constexpr(ITER + 1 < I ) arr_shuf1<I, ITER + 1>(arr);
 }
 
@@ -141,7 +143,8 @@ template <size_t I, size_t ITER = 0>
 ALWAYS_INLINE void arr_shuf2(std::array<vec256, I>& arr)
 {
     vec256& x = std::get<ITER>(arr);
-    x = __builtin_shufflevector(x, x, 3, 0, 1, 2, 7, 4, 5, 6);
+    x = vec256{x[3], x[0], x[1], x[2], x[7], x[4], x[5], x[6]};
+
     if constexpr(ITER + 1 < I ) arr_shuf2<I, ITER + 1>(arr);
 }
 
