@@ -134,7 +134,7 @@ void StartThreadMapPort()
     }
 }
 
-void StartMapPort(bool enable)
+void EnableMapPort(bool enable)
 {
     if (enable) {
         StartThreadMapPort();

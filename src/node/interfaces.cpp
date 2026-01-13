@@ -24,7 +24,6 @@
 #include <kernel/context.h>
 #include <kernel/mempool_entry.h>
 #include <logging.h>
-#include <mapport.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netaddress.h>
@@ -186,7 +185,9 @@ public:
         });
         args().WriteSettingsFile();
     }
-    void mapPort(bool enable) override { StartMapPort(enable); }
+    void mapPort(bool enable) override {
+        if (m_context->connman) m_context->connman->SetMapPortEnabled(enable);
+    }
     bool getProxy(Network net, Proxy& proxy_info) override { return GetProxy(net, proxy_info); }
     size_t getNodeCount(ConnectionDirection flags) override
     {
