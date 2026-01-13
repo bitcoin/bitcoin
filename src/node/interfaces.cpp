@@ -28,7 +28,6 @@
 #include <kernel/context.h>
 #include <key.h>
 #include <logging.h>
-#include <mapport.h>
 #include <net.h>
 #include <net_processing.h>
 #include <net_types.h>
@@ -199,7 +198,9 @@ public:
         });
         args().WriteSettingsFile();
     }
-    void mapPort(bool enable) override { StartMapPort(enable); }
+    void mapPort(bool enable) override {
+        if (m_context->connman) m_context->connman->SetMapPortEnabled(enable);
+    }
     std::optional<Proxy> getProxy(Network net) override { return GetProxy(net); }
     size_t getNodeCount(ConnectionDirection flags) override
     {
