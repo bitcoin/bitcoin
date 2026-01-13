@@ -13,12 +13,14 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
+#include <kernel/chain.h>
 #include <logging.h>
 #include <node/kernel_notifications.h>
 #include <node/miner.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <sync.h>
 #include <util/moneystr.h>
@@ -28,7 +30,6 @@
 
 #include <algorithm>
 #include <numeric>
-#include <utility>
 
 namespace node {
 
@@ -327,6 +328,29 @@ BlockTemplateCache::BlockTemplateCache(CTxMemPool& mempool, ChainstateManager& c
     : m_mempool(mempool), m_chainman(chainman), m_block_template_cache_size(block_template_cache_size)
 {
 }
+
+void BlockTemplateCache::BlockConnected(
+    const ChainstateRole& role,
+    const std::shared_ptr<const CBlock>& /*unused*/,
+    const CBlockIndex* /*unused*/)
+{
+    LOCK(m_mutex);
+    // Clear the cached blocks when the newly connected block
+    // is not connecting to a historical chain that is used to validate
+    // the current active chain.
+    if (!role.historical) {
+        m_block_templates.clear();
+    }
+}
+
+void BlockTemplateCache::BlockDisconnected(
+    const std::shared_ptr<const CBlock>& /*unused*/,
+    const CBlockIndex* /*unused*/)
+{
+    LOCK(m_mutex);
+    m_block_templates.clear();
+}
+
 BlockTemplateRef BlockTemplateCache::CreateBlockTemplateInternal(const BlockAssembler::Options& options)
 {
     Chainstate& current_chainstate = m_chainman.CurrentChainstate();

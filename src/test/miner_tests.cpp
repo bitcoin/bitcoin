@@ -62,7 +62,9 @@ struct MinerTestingSetup : public TestingSetup {
         // doesn't become oversized.
         opts.limits.cluster_size_vbytes = 1'200'000;
         m_node.mempool = std::make_unique<CTxMemPool>(opts, error);
+        m_node.validation_signals->UnregisterValidationInterface(m_node.block_template_cache.get());
         m_node.block_template_cache = std::make_unique<node::BlockTemplateCache>(*m_node.mempool.get(), *m_node.chainman);
+        m_node.validation_signals->RegisterValidationInterface(m_node.block_template_cache.get());
         Assert(error.empty());
         return *m_node.mempool;
     }

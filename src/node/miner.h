@@ -7,14 +7,15 @@
 #define BITCOIN_NODE_MINER_H
 
 #include <interfaces/types.h>
+#include <kernel/types.h>
 #include <node/types.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
-#include <sync.h>
 #include <txmempool.h>
 #include <util/feefrac.h>
 #include <util/time.h>
 #include <validation.h>
+#include <validationinterface.h>
 
 #include <boost/multi_index/identity.hpp>
 #include <boost/multi_index/indexed_by.hpp>
@@ -27,6 +28,7 @@
 #include <deque>
 #include <memory>
 #include <optional>
+#include <utility>
 
 class ArgsManager;
 class CBlockIndex;
@@ -36,6 +38,7 @@ class CScript;
 namespace Consensus { struct Params; };
 
 using interfaces::BlockRef;
+using kernel::ChainstateRole;
 
 namespace node {
 class KernelNotifications;
@@ -155,8 +158,12 @@ private:
  *   its block creation option, and return it.
  * - When the cache exceeds the configured maximum cache size after an insertion, the oldest template
  *   is evicted.
+
+ * The cache inherits from CValidationInterface to receive notifications
+ * about connected and disconnected blocks, which triggers cache invalidation,
+ * ensuring stale templates are not returned.
  */
-class BlockTemplateCache
+class BlockTemplateCache : public CValidationInterface
 {
 private:
     std::deque<std::pair<BlockAssembler::Options, BlockTemplateRef>> m_block_templates;
@@ -169,7 +176,7 @@ private:
 
 public:
     BlockTemplateCache(CTxMemPool& mempool, ChainstateManager& chainman, size_t block_template_cache_size = DEFAULT_BLOCK_TEMPLATE_CACHE_SIZE);
-    ~BlockTemplateCache() = default;
+    virtual ~BlockTemplateCache() = default;
 
     /**
      * If a cached template exists with identical options and its age is less than
@@ -181,6 +188,12 @@ public:
      * @return a BlockTemplateRef.
      */
     BlockTemplateRef GetBlockTemplate(const BlockAssembler::Options& options, MillisecondsDouble max_template_age = MillisecondsDouble{0}) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Overridden from CValidationInterface. */
+    void BlockConnected(const ChainstateRole& role, const std::shared_ptr<const CBlock>& /*unused*/, const CBlockIndex* /*unused*/)
+        override EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    void BlockDisconnected(const std::shared_ptr<const CBlock>& /*unused*/, const CBlockIndex* /*unused*/)
+        override EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 };
 
 /**
