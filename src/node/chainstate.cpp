@@ -45,7 +45,6 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      std::unique_ptr<CCreditPoolManager>& cpoolman,
                                                      std::unique_ptr<CDeterministicMNManager>& dmnman,
                                                      std::unique_ptr<CEvoDB>& evodb,
-                                                     std::unique_ptr<CMNHFManager>& mnhf_manager,
                                                      std::unique_ptr<LLMQContext>& llmq_ctx,
                                                      CTxMemPool* mempool,
                                                      const fs::path& data_dir,
@@ -75,9 +74,6 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
     evodb.reset();
     evodb = std::make_unique<CEvoDB>(util::DbWrapperParams{.path = data_dir, .memory = dash_dbs_in_memory, .wipe = fReset || fReindexChainState});
 
-    mnhf_manager.reset();
-    mnhf_manager = std::make_unique<CMNHFManager>(*evodb, chainman);
-
     chainman.InitializeChainstate(mempool, *evodb, chain_helper);
     chainman.m_total_coinstip_cache = nCoinCacheUsage;
     chainman.m_total_coinsdb_cache = nCoinDBCache;
@@ -89,7 +85,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
     pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, block_tree_db_in_memory, fReset));
 
     DashChainstateSetup(chainman, govman, mn_metaman, mn_sync, sporkman, chainlocks, chain_helper, cpoolman,
-                        dmnman, evodb, mnhf_manager, llmq_ctx, mempool, data_dir, dash_dbs_in_memory,
+                        dmnman, evodb, llmq_ctx, mempool, data_dir, dash_dbs_in_memory,
                         /*llmq_dbs_wipe=*/fReset || fReindexChainState, bls_threads, max_recsigs_age, consensus_params);
 
     if (fReset) {
@@ -198,7 +194,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
         }
     }
 
-    if (!mnhf_manager->ForceSignalDBUpdate()) {
+    if (!chain_helper->ehf_manager->ForceSignalDBUpdate()) {
         return ChainstateLoadingError::ERROR_UPGRADING_SIGNALS_DB;
     }
 
@@ -220,7 +216,6 @@ void DashChainstateSetup(ChainstateManager& chainman,
                          std::unique_ptr<CCreditPoolManager>& cpoolman,
                          std::unique_ptr<CDeterministicMNManager>& dmnman,
                          std::unique_ptr<CEvoDB>& evodb,
-                         std::unique_ptr<CMNHFManager>& mnhf_manager,
                          std::unique_ptr<LLMQContext>& llmq_ctx,
                          CTxMemPool* mempool,
                          const fs::path& data_dir,
@@ -242,27 +237,26 @@ void DashChainstateSetup(ChainstateManager& chainman,
                                              util::DbWrapperParams{.path = data_dir, .memory = llmq_dbs_in_memory, .wipe = llmq_dbs_wipe},
                                              bls_threads, max_recsigs_age);
     mempool->ConnectManagers(dmnman.get(), llmq_ctx->isman.get());
-    // Enable CMNHFManager::{Process, Undo}Block
-    mnhf_manager->ConnectManagers(llmq_ctx->qman.get());
-
     chain_helper.reset();
-    chain_helper = std::make_unique<CChainstateHelper>(*cpoolman, *dmnman, *mnhf_manager, govman, *(llmq_ctx->isman), *(llmq_ctx->quorum_block_processor),
+    chain_helper = std::make_unique<CChainstateHelper>(*evodb, *cpoolman, *dmnman, govman, *(llmq_ctx->isman), *(llmq_ctx->quorum_block_processor),
                                                        *(llmq_ctx->qsnapman), chainman, consensus_params, mn_sync, sporkman, chainlocks,
                                                        *(llmq_ctx->qman));
+
+    // TODO: drop ConnectManagers completely from here
+    // qman should not be needed for Process/Undo block because validation & processing are 2 different stages
+    // Enable CMNHFManager::{Process, Undo}Block
+    chain_helper->ehf_manager->ConnectManagers(llmq_ctx->qman.get());
+
 }
 
 void DashChainstateSetupClose(std::unique_ptr<CChainstateHelper>& chain_helper,
                               std::unique_ptr<CCreditPoolManager>& cpoolman,
                               std::unique_ptr<CDeterministicMNManager>& dmnman,
-                              std::unique_ptr<CMNHFManager>& mnhf_manager,
                               std::unique_ptr<LLMQContext>& llmq_ctx,
                               CTxMemPool* mempool)
 
 {
     chain_helper.reset();
-    if (mnhf_manager) {
-        mnhf_manager->DisconnectManagers();
-    }
     llmq_ctx.reset();
     cpoolman.reset();
     mempool->DisconnectManagers();

@@ -60,7 +60,6 @@
 #include <evo/creditpool.h>
 #include <evo/deterministicmns.h>
 #include <evo/evodb.h>
-#include <evo/mnhftx.h>
 #include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
 #include <evo/specialtxman.h>
@@ -146,14 +145,14 @@ void DashChainstateSetup(ChainstateManager& chainman,
                          const Consensus::Params& consensus_params)
 {
     DashChainstateSetup(chainman, *Assert(node.govman.get()), *Assert(node.mn_metaman.get()), *Assert(node.mn_sync.get()),
-                        *Assert(node.sporkman.get()), *Assert(node.chainlocks), node.chain_helper, node.cpoolman, node.dmnman, node.evodb, node.mnhf_manager,
+                        *Assert(node.sporkman.get()), *Assert(node.chainlocks), node.chain_helper, node.cpoolman, node.dmnman, node.evodb,
                         node.llmq_ctx, Assert(node.mempool.get()), node.args->GetDataDirNet(), llmq_dbs_in_memory, llmq_dbs_wipe,
                         llmq::DEFAULT_BLSCHECK_THREADS, llmq::DEFAULT_MAX_RECOVERED_SIGS_AGE, consensus_params);
 }
 
 void DashChainstateSetupClose(NodeContext& node)
 {
-    DashChainstateSetupClose(node.chain_helper, node.cpoolman, node.dmnman, node.mnhf_manager, node.llmq_ctx,
+    DashChainstateSetupClose(node.chain_helper, node.cpoolman, node.dmnman, node.llmq_ctx,
                              Assert(node.mempool.get()));
 }
 
@@ -287,7 +286,6 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     m_node.chainman = std::make_unique<ChainstateManager>(chainparams);
     m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(m_cache_sizes.block_tree_db, true);
 
-    m_node.mnhf_manager = std::make_unique<CMNHFManager>(*m_node.evodb, *m_node.chainman);
     m_node.mn_sync = std::make_unique<CMasternodeSync>(std::make_unique<NodeSyncNotifierImpl>(*m_node.connman, *m_node.netfulfilledman));
     m_node.govman = std::make_unique<CGovernanceManager>(*m_node.mn_metaman, *m_node.chainman, m_node.dmnman, *m_node.mn_sync);
 
@@ -307,7 +305,6 @@ ChainTestingSetup::~ChainTestingSetup()
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     m_node.govman.reset();
     m_node.mn_sync.reset();
-    m_node.mnhf_manager.reset();
     m_node.chainman.reset();
     m_node.mempool.reset();
     m_node.fee_estimator.reset();
@@ -333,7 +330,6 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
                                            m_node.cpoolman,
                                            m_node.dmnman,
                                            m_node.evodb,
-                                           m_node.mnhf_manager,
                                            m_node.llmq_ctx,
                                            Assert(m_node.mempool.get()),
                                            Assert(m_node.args)->GetDataDirNet(),

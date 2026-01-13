@@ -1080,6 +1080,9 @@ public:
                              std::optional<bool> optDIP0024IsActive = std::nullopt,
                              std::optional<bool> optHaveDIP0024Quorums = std::nullopt) const;
 
+    // TODO: move it inside ActiveChainstate (active_chainsate is CChainState)
+    std::unordered_map<uint8_t, int> GetSignalsStage(const CBlockIndex* const pindexPrev);
+
     ~ChainstateManager();
 };
 

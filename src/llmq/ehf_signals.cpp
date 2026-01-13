@@ -7,20 +7,19 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
-#include <index/txindex.h> // g_txindex
-#include <primitives/transaction.h>
-#include <validation.h>
-
 #include <evo/mnhftx.h>
+#include <index/txindex.h> // g_txindex
 #include <llmq/commitment.h>
 #include <llmq/quorumsman.h>
 #include <llmq/signing_shares.h>
+#include <primitives/transaction.h>
+#include <validation.h>
+#include <versionbits.h>
 
 namespace llmq {
-CEHFSignalsHandler::CEHFSignalsHandler(ChainstateManager& chainman, CMNHFManager& mnhfman, CSigningManager& sigman,
+CEHFSignalsHandler::CEHFSignalsHandler(ChainstateManager& chainman, CSigningManager& sigman,
                                        CSigSharesManager& shareman, const CQuorumManager& qman) :
     m_chainman(chainman),
-    mnhfman(mnhfman),
     sigman(sigman),
     shareman(shareman),
     qman(qman)
@@ -37,7 +36,7 @@ void CEHFSignalsHandler::UpdatedBlockTip(const CBlockIndex* const pindexNew)
 {
     if (!DeploymentActiveAfter(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) return;
 
-    const auto ehfSignals = mnhfman.GetSignalsStage(pindexNew);
+    const auto ehfSignals = m_chainman.GetSignalsStage(pindexNew);
     for (const auto& deployment : Params().GetConsensus().vDeployments) {
         // Skip deployments that do not use dip0023
         if (!deployment.useEHF) continue;
@@ -93,7 +92,7 @@ MessageProcessingResult CEHFSignalsHandler::HandleNewRecoveredSig(const CRecover
     }
 
     MessageProcessingResult ret;
-    const auto ehfSignals = mnhfman.GetSignalsStage(WITH_LOCK(::cs_main, return m_chainman.ActiveTip()));
+    const auto ehfSignals = m_chainman.GetSignalsStage(WITH_LOCK(::cs_main, return m_chainman.ActiveTip()));
     MNHFTxPayload mnhfPayload;
     for (const auto& deployment : Params().GetConsensus().vDeployments) {
         // skip deployments that do not use dip0023 or that have already been mined

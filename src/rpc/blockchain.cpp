@@ -1550,7 +1550,7 @@ RPCHelpMan getblockchaininfo()
     const CBlockIndex& tip{*CHECK_NONFATAL(active_chainstate.m_chain.Tip())};
     const int height{tip.nHeight};
 
-    const auto ehfSignals{CHECK_NONFATAL(node.mnhf_manager)->GetSignalsStage(&tip)};
+    const auto ehfSignals{chainman.GetSignalsStage(&tip)};
 
     UniValue obj(UniValue::VOBJ);
     if (args.IsArgSet("-devnet")) {

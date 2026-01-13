@@ -30,7 +30,6 @@ class CNetFulfilledRequestManager;
 class CScheduler;
 class CSporkManager;
 class CTxMemPool;
-class CMNHFManager;
 class NetGroupManager;
 class PeerManager;
 struct ActiveContext;
@@ -97,7 +96,6 @@ struct NodeContext {
     std::unique_ptr<CGovernanceManager> govman;
     std::unique_ptr<CMasternodeMetaMan> mn_metaman;
     std::unique_ptr<CMasternodeSync> mn_sync;
-    std::unique_ptr<CMNHFManager> mnhf_manager;
     std::unique_ptr<CNetFulfilledRequestManager> netfulfilledman;
     std::unique_ptr<CSporkManager> sporkman;
     std::unique_ptr<chainlock::Chainlocks> chainlocks;

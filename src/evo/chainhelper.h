@@ -10,6 +10,7 @@
 
 class CCreditPoolManager;
 class CDeterministicMNManager;
+class CEvoDB;
 class ChainstateManager;
 class CMNHFManager;
 class CMNPaymentsProcessor;
@@ -43,7 +44,7 @@ public:
     CChainstateHelper() = delete;
     CChainstateHelper(const CChainstateHelper&) = delete;
     CChainstateHelper& operator=(const CChainstateHelper&) = delete;
-    explicit CChainstateHelper(CCreditPoolManager& cpoolman, CDeterministicMNManager& dmnman, CMNHFManager& mnhfman,
+    explicit CChainstateHelper(CEvoDB& evodb, CCreditPoolManager& cpoolman, CDeterministicMNManager& dmnman,
                                CGovernanceManager& govman, llmq::CInstantSendManager& isman,
                                llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumSnapshotManager& qsnapman,
                                const ChainstateManager& chainman, const Consensus::Params& consensus_params,
@@ -63,6 +64,7 @@ public:
     bool ShouldInstantSendRejectConflicts() const;
 
 public:
+    const std::unique_ptr<CMNHFManager> ehf_manager;
     const std::unique_ptr<CMNPaymentsProcessor> mn_payments;
     const std::unique_ptr<CSpecialTxProcessor> special_tx;
 };

@@ -30,8 +30,8 @@
 #include <evo/cbtx.h>
 #include <evo/chainhelper.h>
 #include <evo/creditpool.h>
-#include <evo/deterministicmns.h>
 #include <evo/mnhftx.h>
+#include <evo/deterministicmns.h>
 #include <evo/simplifiedmns.h>
 #include <evo/specialtxman.h>
 #include <governance/governance.h>
@@ -76,7 +76,6 @@ BlockAssembler::BlockAssembler(CChainState& chainstate, const NodeContext& node,
       m_chain_helper(chainstate.ChainHelper()),
       m_chainstate(chainstate),
       m_evoDb(*Assert(node.evodb)),
-      m_mnhfman(*Assert(node.mnhf_manager)),
       m_chainlocks(*Assert(node.chainlocks)),
       m_clhandler(*Assert(node.clhandler)),
       m_isman(*Assert(Assert(node.llmq_ctx)->isman)),
@@ -475,7 +474,7 @@ void BlockAssembler::addPackageTxs(const CTxMemPool& mempool, int& nPackagesSele
     }
 
     // This map with signals is used only to find duplicates
-    std::unordered_map<uint8_t, int> signals = m_mnhfman.GetSignalsStage(pindexPrev);
+    std::unordered_map<uint8_t, int> signals = m_chain_helper.ehf_manager->GetSignalsStage(pindexPrev);
 
     // mapModifiedTx will store sorted packages after they are modified
     // because some of their txs are already in the block

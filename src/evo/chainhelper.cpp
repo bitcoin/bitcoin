@@ -7,21 +7,23 @@
 #include <chainparams.h>
 
 #include <chainlock/chainlock.h>
+#include <evo/mnhftx.h>
 #include <evo/specialtxman.h>
 #include <instantsend/instantsend.h>
 #include <instantsend/lock.h>
 #include <masternode/payments.h>
 
-CChainstateHelper::CChainstateHelper(CCreditPoolManager& cpoolman, CDeterministicMNManager& dmnman,
-                                     CMNHFManager& mnhfman, CGovernanceManager& govman, llmq::CInstantSendManager& isman,
+CChainstateHelper::CChainstateHelper(CEvoDB& evodb, CCreditPoolManager& cpoolman, CDeterministicMNManager& dmnman,
+                                     CGovernanceManager& govman, llmq::CInstantSendManager& isman,
                                      llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumSnapshotManager& qsnapman,
                                      const ChainstateManager& chainman, const Consensus::Params& consensus_params,
                                      const CMasternodeSync& mn_sync, const CSporkManager& sporkman,
                                      const chainlock::Chainlocks& chainlocks, const llmq::CQuorumManager& qman) :
     isman{isman},
     m_chainlocks{chainlocks},
+    ehf_manager{std::make_unique<CMNHFManager>(evodb, chainman)},
     mn_payments{std::make_unique<CMNPaymentsProcessor>(dmnman, govman, chainman, consensus_params, mn_sync, sporkman)},
-    special_tx{std::make_unique<CSpecialTxProcessor>(cpoolman, dmnman, mnhfman, qblockman, qsnapman, chainman,
+    special_tx{std::make_unique<CSpecialTxProcessor>(cpoolman, dmnman, *ehf_manager, qblockman, qsnapman, chainman,
                                                      consensus_params, chainlocks, qman)}
 {}
 
