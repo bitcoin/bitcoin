@@ -12,7 +12,7 @@
       <li class="font-semibold">PR #{{ pr_num }}
         <ul class="ml-8 space-y-1">
           {% for run in pr_runs %}
-          <li><a href="results/pr-{{ pr_num }}/{{ run }}/index.html" class="text-blue-600 hover:underline">Run {{ run }}</a></li>
+          <li><a href="pr-{{ pr_num }}/{{ run }}/index.html" class="text-blue-600 hover:underline">Run {{ run }}</a></li>
           {% endfor %}
         </ul>
       </li>
