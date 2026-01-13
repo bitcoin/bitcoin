@@ -77,7 +77,7 @@ public:
     ADD_SIGNALS_DECL_WRAPPER(ThreadSafeMessageBox, bool, const bilingual_str& message, const std::string& caption, unsigned int style);
 
     /** If possible, ask the user a question. If not, falls back to ThreadSafeMessageBox(noninteractive_message, caption, style) and returns false. */
-    ADD_SIGNALS_DECL_WRAPPER(ThreadSafeQuestion, bool, const bilingual_str& message, const std::string& noninteractive_message, const std::string& caption, unsigned int style);
+    ADD_SIGNALS_DECL_WRAPPER(ThreadSafeQuestion, bool, const bilingual_str& message, const std::string& noninteractive_message, unsigned int style);
 
     /** Progress message during initialization. */
     ADD_SIGNALS_DECL_WRAPPER(InitMessage, void, const std::string& message);

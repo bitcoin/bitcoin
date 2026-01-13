@@ -225,7 +225,6 @@ public:
     //! Register handler for question messages.
     using QuestionFn = std::function<bool(const bilingual_str& message,
         const std::string& non_interactive_message,
-        const std::string& caption,
         unsigned int style)>;
     virtual std::unique_ptr<Handler> handleQuestion(QuestionFn fn) = 0;
 
