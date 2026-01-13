@@ -3,8 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <node/miner.h>
-
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
@@ -17,18 +15,20 @@
 #include <deploymentstatus.h>
 #include <logging.h>
 #include <node/kernel_notifications.h>
+#include <node/miner.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
 #include <primitives/transaction.h>
+#include <sync.h>
 #include <util/moneystr.h>
 #include <util/signalinterrupt.h>
 #include <util/time.h>
 #include <validation.h>
 
 #include <algorithm>
-#include <utility>
 #include <numeric>
+#include <utility>
 
 namespace node {
 
@@ -321,6 +321,38 @@ void BlockAssembler::addChunks()
         chunk_feerate = m_mempool->GetBlockBuilderChunk(selected_transactions);
         chunk_feerate_vsize = ToFeePerVSize(chunk_feerate);
     }
+}
+
+BlockTemplateCache::BlockTemplateCache(CTxMemPool& mempool, ChainstateManager& chainman, size_t block_template_cache_size)
+    : m_mempool(mempool), m_chainman(chainman), m_block_template_cache_size(block_template_cache_size)
+{
+}
+BlockTemplateRef BlockTemplateCache::CreateBlockTemplateInternal(const BlockAssembler::Options& options)
+{
+    Chainstate& current_chainstate = m_chainman.CurrentChainstate();
+    BlockAssembler assembler{current_chainstate, &m_mempool, options};
+    auto block_template = std::make_shared<const CBlockTemplate>(*assembler.CreateNewBlock());
+    Assume(m_block_templates.size() <= m_block_template_cache_size);
+    m_block_templates.emplace_back(options, block_template);
+    if (m_block_templates.size() > m_block_template_cache_size) m_block_templates.pop_front();
+    return block_template;
+}
+
+BlockTemplateRef BlockTemplateCache::GetBlockTemplate(const BlockAssembler::Options& options, MillisecondsDouble max_template_age)
+{
+    LOCK2(cs_main, m_mutex);
+    // Cache lookup compares all block creation option fields for an exact match. Note that differences
+    // in test_block_validity, print_modified_fee, and coinbase_output_script only affect
+    // tests and benchmarks, not production usage.
+    // This implies that these fields can differ in test scenarios without impacting real-world block template
+    // functionality. Discrepancies in the above fields will still cause cache misses, but since they are fixed
+    // in non-test and benchmark environments, it is okay to compare for an exact match.
+    for (auto it = m_block_templates.rbegin(); it != m_block_templates.rend(); it++) {
+        if (it->first == options && !TimeIntervalElapsed(it->second->m_creation_time, max_template_age)) {
+            return it->second;
+        }
+    }
+    return CreateBlockTemplateInternal(options);
 }
 
 void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t version, uint32_t timestamp, uint32_t nonce)
