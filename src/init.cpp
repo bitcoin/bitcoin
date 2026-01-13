@@ -404,7 +404,7 @@ void PrepareShutdown(NodeContext& node)
                 chainstate->ResetCoinsViews();
             }
         }
-        DashChainstateSetupClose(node.chain_helper, node.cpoolman, node.dmnman, node.llmq_ctx,
+        DashChainstateSetupClose(node.chain_helper, node.dmnman, node.llmq_ctx,
                                  Assert(node.mempool.get()));
         node.evodb.reset();
     }
@@ -1994,7 +1994,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                               *node.sporkman,
                                               *node.chainlocks,
                                               node.chain_helper,
-                                              node.cpoolman,
                                               node.dmnman,
                                               node.evodb,
                                               node.llmq_ctx,

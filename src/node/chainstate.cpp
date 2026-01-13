@@ -21,7 +21,6 @@
 
 #include <bls/bls.h>
 #include <evo/chainhelper.h>
-#include <evo/creditpool.h>
 #include <evo/deterministicmns.h>
 #include <evo/evodb.h>
 #include <evo/mnhftx.h>
@@ -42,7 +41,6 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      CSporkManager& sporkman,
                                                      chainlock::Chainlocks& chainlocks,
                                                      std::unique_ptr<CChainstateHelper>& chain_helper,
-                                                     std::unique_ptr<CCreditPoolManager>& cpoolman,
                                                      std::unique_ptr<CDeterministicMNManager>& dmnman,
                                                      std::unique_ptr<CEvoDB>& evodb,
                                                      std::unique_ptr<LLMQContext>& llmq_ctx,
@@ -84,7 +82,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
     pblocktree.reset();
     pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, block_tree_db_in_memory, fReset));
 
-    DashChainstateSetup(chainman, govman, mn_metaman, mn_sync, sporkman, chainlocks, chain_helper, cpoolman,
+    DashChainstateSetup(chainman, govman, mn_metaman, mn_sync, sporkman, chainlocks, chain_helper,
                         dmnman, evodb, llmq_ctx, mempool, data_dir, dash_dbs_in_memory,
                         /*llmq_dbs_wipe=*/fReset || fReindexChainState, bls_threads, max_recsigs_age, consensus_params);
 
@@ -213,7 +211,6 @@ void DashChainstateSetup(ChainstateManager& chainman,
                          CSporkManager& sporkman,
                          chainlock::Chainlocks& chainlocks,
                          std::unique_ptr<CChainstateHelper>& chain_helper,
-                         std::unique_ptr<CCreditPoolManager>& cpoolman,
                          std::unique_ptr<CDeterministicMNManager>& dmnman,
                          std::unique_ptr<CEvoDB>& evodb,
                          std::unique_ptr<LLMQContext>& llmq_ctx,
@@ -229,22 +226,18 @@ void DashChainstateSetup(ChainstateManager& chainman,
     dmnman.reset();
     dmnman = std::make_unique<CDeterministicMNManager>(*evodb, mn_metaman);
 
-    cpoolman.reset();
-    cpoolman = std::make_unique<CCreditPoolManager>(*evodb, chainman);
-
     llmq_ctx.reset();
     llmq_ctx = std::make_unique<LLMQContext>(*dmnman, *evodb, sporkman, chainlocks, *mempool, chainman, mn_sync,
                                              util::DbWrapperParams{.path = data_dir, .memory = llmq_dbs_in_memory, .wipe = llmq_dbs_wipe},
                                              bls_threads, max_recsigs_age);
     mempool->ConnectManagers(dmnman.get(), llmq_ctx->isman.get());
     chain_helper.reset();
-    chain_helper = std::make_unique<CChainstateHelper>(*evodb, *cpoolman, *dmnman, govman, *(llmq_ctx->isman), *(llmq_ctx->quorum_block_processor),
+    chain_helper = std::make_unique<CChainstateHelper>(*evodb, *dmnman, govman, *(llmq_ctx->isman), *(llmq_ctx->quorum_block_processor),
                                                        *(llmq_ctx->qsnapman), chainman, consensus_params, mn_sync, sporkman, chainlocks,
                                                        *(llmq_ctx->qman));
 }
 
 void DashChainstateSetupClose(std::unique_ptr<CChainstateHelper>& chain_helper,
-                              std::unique_ptr<CCreditPoolManager>& cpoolman,
                               std::unique_ptr<CDeterministicMNManager>& dmnman,
                               std::unique_ptr<LLMQContext>& llmq_ctx,
                               CTxMemPool* mempool)
@@ -252,7 +245,6 @@ void DashChainstateSetupClose(std::unique_ptr<CChainstateHelper>& chain_helper,
 {
     chain_helper.reset();
     llmq_ctx.reset();
-    cpoolman.reset();
     mempool->DisconnectManagers();
     dmnman.reset();
 }

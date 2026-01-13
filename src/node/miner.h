@@ -23,7 +23,6 @@ class CBlockIndex;
 class CChainParams;
 class CChainstateHelper;
 class CConnman;
-class CCreditPoolManager;
 class CEvoDB;
 class CScript;
 struct LLMQContext;
@@ -170,7 +169,6 @@ private:
     int64_t m_lock_time_cutoff;
 
     BlockManager& m_blockman;
-    CCreditPoolManager& m_cpoolman;
     CChainstateHelper& m_chain_helper;
     CChainState& m_chainstate;
     CEvoDB& m_evoDb;

@@ -46,12 +46,12 @@ public:
     CChainstateHelper() = delete;
     CChainstateHelper(const CChainstateHelper&) = delete;
     CChainstateHelper& operator=(const CChainstateHelper&) = delete;
-    explicit CChainstateHelper(CEvoDB& evodb, CCreditPoolManager& cpoolman, CDeterministicMNManager& dmnman,
-                               CGovernanceManager& govman, llmq::CInstantSendManager& isman,
-                               llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumSnapshotManager& qsnapman,
-                               const ChainstateManager& chainman, const Consensus::Params& consensus_params,
-                               const CMasternodeSync& mn_sync, const CSporkManager& sporkman,
-                               const chainlock::Chainlocks& chainlocks, const llmq::CQuorumManager& qman);
+    explicit CChainstateHelper(CEvoDB& evodb, CDeterministicMNManager& dmnman, CGovernanceManager& govman,
+                               llmq::CInstantSendManager& isman, llmq::CQuorumBlockProcessor& qblockman,
+                               llmq::CQuorumSnapshotManager& qsnapman, const ChainstateManager& chainman,
+                               const Consensus::Params& consensus_params, const CMasternodeSync& mn_sync,
+                               const CSporkManager& sporkman, const chainlock::Chainlocks& chainlocks,
+                               const llmq::CQuorumManager& qman);
     ~CChainstateHelper();
 
     /** Passthrough functions to chainlock::Chainlocks*/
@@ -69,6 +69,7 @@ public:
 
 public:
     const std::unique_ptr<CMNHFManager> ehf_manager;
+    const std::unique_ptr<CCreditPoolManager> credit_pool_manager;
     const std::unique_ptr<CMNPaymentsProcessor> mn_payments;
     const std::unique_ptr<CSpecialTxProcessor> special_tx;
 };

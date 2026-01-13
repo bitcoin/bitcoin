@@ -16,7 +16,6 @@ class CActiveMasternodeManager;
 class AddrMan;
 class CBlockPolicyEstimator;
 class CConnman;
-class CCreditPoolManager;
 class CDeterministicMNManager;
 class CDSTXManager;
 class CChainstateHelper;
@@ -87,7 +86,6 @@ struct NodeContext {
     std::unique_ptr<CScheduler> scheduler;
     std::function<void()> rpc_interruption_point = [] {};
     //! Dash managers
-    std::unique_ptr<CCreditPoolManager> cpoolman;
     std::unique_ptr<CJWalletManager> cj_walletman;
     std::unique_ptr<CDSTXManager> dstxman;
     std::unique_ptr<CEvoDB> evodb;
