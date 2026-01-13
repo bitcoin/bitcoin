@@ -2,6 +2,7 @@
 # Copyright (c) 2022-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+import configparser
 import os
 import re
 import subprocess
@@ -44,6 +45,37 @@ if not topdir:
 # Get input and output directories.
 builddir = os.getenv('BUILDDIR', os.path.join(topdir, 'build'))
 mandir = os.getenv('MANDIR', os.path.join(topdir, 'doc/man'))
+
+# Check build configuration to ensure all features are enabled for complete documentation.
+# Man pages should document all available options, which requires the build to have
+# wallet, ZMQ, and system call support enabled.
+REQUIRED_COMPONENTS = {
+    'ENABLE_WALLET': 'wallet-specific options (e.g., -wallet, -disablewallet)',
+    'ENABLE_ZMQ': 'ZMQ notification options (e.g., -zmqpubhashtx)',
+}
+
+config_path = os.path.join(builddir, 'test', 'config.ini')
+if os.path.exists(config_path):
+    config = configparser.ConfigParser()
+    config.read(config_path)
+    components = dict(config.items('components')) if config.has_section('components') else {}
+
+    missing_components = []
+    for component, description in REQUIRED_COMPONENTS.items():
+        if component.lower() not in components:
+            missing_components.append(f'  - {component}: {description}')
+
+    if missing_components:
+        print("WARNING: Build is missing components needed for complete man page documentation:", file=sys.stderr)
+        for msg in missing_components:
+            print(msg, file=sys.stderr)
+        print("Man pages generated from this build should NOT be committed.", file=sys.stderr)
+        print("To generate complete man pages, rebuild with all features enabled.", file=sys.stderr)
+        print(file=sys.stderr)
+else:
+    print(f"WARNING: Build configuration not found at {config_path}", file=sys.stderr)
+    print("Cannot verify that all features are enabled for complete documentation.", file=sys.stderr)
+    print(file=sys.stderr)
 
 # Verify that all the required binaries are usable, and extract copyright
 # message in a first pass.
