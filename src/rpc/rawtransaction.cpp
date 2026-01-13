@@ -618,6 +618,28 @@ static RPCHelpMan combinerawtransaction()
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Missing transactions");
     }
 
+    // Verify all transactions are variants of the same transaction (same inputs and outputs)
+    const CMutableTransaction& baseTx = txVariants[0];
+    for (size_t idx = 1; idx < txVariants.size(); idx++) {
+        const CMutableTransaction& tx = txVariants[idx];
+        if (tx.vin.size() != baseTx.vin.size()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("TX %d has %d inputs, but TX 0 has %d inputs. All transactions must be variants of the same transaction.", idx, tx.vin.size(), baseTx.vin.size()));
+        }
+        if (tx.vout.size() != baseTx.vout.size()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("TX %d has %d outputs, but TX 0 has %d outputs. All transactions must be variants of the same transaction.", idx, tx.vout.size(), baseTx.vout.size()));
+        }
+        for (size_t i = 0; i < baseTx.vin.size(); i++) {
+            if (tx.vin[i].prevout != baseTx.vin[i].prevout) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("TX %d input %d spends different outpoint than TX 0. All transactions must be variants of the same transaction.", idx, i));
+            }
+        }
+        for (size_t i = 0; i < baseTx.vout.size(); i++) {
+            if (tx.vout[i].nValue != baseTx.vout[i].nValue || tx.vout[i].scriptPubKey != baseTx.vout[i].scriptPubKey) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("TX %d output %d differs from TX 0. All transactions must be variants of the same transaction.", idx, i));
+            }
+        }
+    }
+
     // mergedTx will end up with all the signatures; it
     // starts as a clone of the rawtx:
     CMutableTransaction mergedTx(txVariants[0]);
