@@ -21,6 +21,33 @@ Unpack the files into a directory and run:
 
 The `bitcoin` command supports subcommands like `bitcoin gui`, `bitcoin node`, and `bitcoin rpc` exposing different functionality. Subcommands can be listed with `bitcoin help`.
 
+#### Installing on Linux
+
+The pre-built binaries require certain libraries to be installed on your system.
+
+**Ubuntu/Debian:**
+```bash
+sudo apt-get update
+sudo apt-get install libxcb-xinerama0 libxcb-cursor0
+```
+
+**Fedora:**
+```bash
+sudo dnf install xcb-util-cursor
+```
+
+**Arch Linux:**
+```bash
+sudo pacman -S xcb-util-cursor
+```
+
+After installing the required libraries, you can optionally install the binaries system-wide:
+```bash
+sudo install -m 0755 -o root -g root -t /usr/local/bin bin/*
+```
+
+For more detailed instructions, see the [Bitcoin Core full node guide](https://bitcoin.org/en/full-node#other-linux-gui).
+
 ### Windows
 
 Unpack the files into a directory, and then run bitcoin-qt.exe.
