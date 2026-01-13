@@ -1377,7 +1377,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
     options.coins_error_cb = [] {
         uiInterface.ThreadSafeMessageBox(
             _("Error reading from database, shutting down."),
-            "", CClientUIInterface::MSG_ERROR);
+            CClientUIInterface::MSG_ERROR);
     };
     uiInterface.InitMessage(_("Loading block index…"));
     auto catch_exceptions = [](auto&& f) -> ChainstateLoadResult {
