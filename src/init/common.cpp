@@ -98,6 +98,11 @@ util::Result<void> SetLoggingCategories(const ArgsManager& args)
             return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat)};
         }
     }
+
+    if (LogInstance().GetCategoryMask() != BCLog::NONE) {
+        LogInfo("Debug logging is enabled (-debug). Additional log output may contain privacy-sensitive information. Be cautious when sharing logs.");
+    }
+
     return {};
 }
 
