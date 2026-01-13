@@ -41,8 +41,6 @@
 #include <util/translation.h>
 #include <validation.h>
 
-#include <functional>
-
 #include <QAction>
 #include <QActionGroup>
 #include <QApplication>
@@ -1617,8 +1615,12 @@ static bool ThreadSafeMessageBox(BitcoinGUI* gui, const bilingual_str& message, 
 void BitcoinGUI::subscribeToCoreSignals()
 {
     // Connect signals to client
-    m_handler_message_box = m_node.handleMessageBox(std::bind(ThreadSafeMessageBox, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-    m_handler_question = m_node.handleQuestion(std::bind(ThreadSafeMessageBox, this, std::placeholders::_1, std::placeholders::_3, std::placeholders::_4));
+    m_handler_message_box = m_node.handleMessageBox([this](const bilingual_str& message, const std::string& caption, unsigned int style) {
+        return ThreadSafeMessageBox(this, message, caption, style);
+    });
+    m_handler_question = m_node.handleQuestion([this](const bilingual_str& message, const std::string& /*non_interactive_message*/, const std::string& caption, unsigned int style) {
+        return ThreadSafeMessageBox(this, message, caption, style);
+    });
 }
 
 void BitcoinGUI::unsubscribeFromCoreSignals()
