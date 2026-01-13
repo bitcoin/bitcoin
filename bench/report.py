@@ -360,16 +360,16 @@ class ReportGenerator:
             logger.warning("No nightly history available for comparison")
             return comparison
 
-        # Group runs by network/config, only uninstrumented (no '-true' suffix)
+        # Group runs by network/config, only uninstrumented
         for run in runs:
             network = run.network
 
             # Skip instrumented configs
-            if network.endswith("-true"):
+            if network.endswith("-true") or network.endswith("-instrumented"):
                 continue
 
-            # Extract base config name (e.g., "450-false" -> "450")
-            config = network.replace("-false", "")
+            # Extract base config name (e.g., "450-false" -> "450", "450-uninstrumented" -> "450")
+            config = network.replace("-false", "").replace("-uninstrumented", "")
 
             # Get PR result mean
             pr_mean = run.mean
