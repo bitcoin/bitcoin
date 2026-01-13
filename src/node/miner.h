@@ -7,14 +7,15 @@
 #define BITCOIN_NODE_MINER_H
 
 #include <interfaces/types.h>
+#include <kernel/types.h>
 #include <node/types.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
-#include <sync.h>
 #include <txmempool.h>
 #include <util/feefrac.h>
 #include <util/time.h>
 #include <validation.h>
+#include <validationinterface.h>
 
 #include <boost/multi_index/identity.hpp>
 #include <boost/multi_index/indexed_by.hpp>
@@ -27,6 +28,7 @@
 #include <deque>
 #include <memory>
 #include <optional>
+#include <utility>
 
 class ArgsManager;
 class CBlockIndex;
@@ -36,6 +38,7 @@ class CScript;
 namespace Consensus { struct Params; };
 
 using interfaces::BlockRef;
+using kernel::ChainstateRole;
 
 namespace node {
 class KernelNotifications;
@@ -164,8 +167,13 @@ private:
  *
  * When adding a new entry causes the cache to exceed its size limit, the
  * oldest cached template (by insertion order) is evicted.
+is evicted.
+
+ * The cache inherits from CValidationInterface to receive notifications
+ * about connected and disconnected blocks, which triggers cache invalidation,
+ * ensuring stale templates are not returned.
  */
-class BlockTemplateCache
+class BlockTemplateCache : public CValidationInterface
 {
     CTxMemPool& m_mempool;
     ChainstateManager& m_chainman;
@@ -175,7 +183,6 @@ class BlockTemplateCache
     using TemplateEntry = std::pair<BlockAssembler::Options, BlockTemplateRef>;
     // FIFO cache; at most one template per BlockAssembler::Options.
     std::deque<TemplateEntry> m_block_templates GUARDED_BY(m_mutex);
-
     /**
      * Search for a cached template matching the provided options.
      *
@@ -186,7 +193,6 @@ class BlockTemplateCache
     BlockTemplateRef getCachedTemplate(const BlockAssembler::Options& options,
                                        MillisecondsDouble template_age_limit)
         EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
-
     /**
      * Create a new block template.
      *
@@ -200,6 +206,7 @@ public:
     explicit BlockTemplateCache(CTxMemPool& mempool,
                                 ChainstateManager& chainman,
                                 size_t block_template_cache_size = DEFAULT_BLOCK_TEMPLATE_CACHE_SIZE);
+    virtual ~BlockTemplateCache() = default;
     /**
      * Get a block template from the cache or create a new one.
      *
@@ -216,6 +223,12 @@ public:
 
     /** Test-only: verify cache invariants */
     void SanityCheck() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Overridden from CValidationInterface. */
+    void BlockConnected(const ChainstateRole& role, const std::shared_ptr<const CBlock>& /*unused*/, const CBlockIndex* /*unused*/)
+        override EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    void BlockDisconnected(const std::shared_ptr<const CBlock>& /*unused*/, const CBlockIndex* /*unused*/)
+        override EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 };
 
 /**

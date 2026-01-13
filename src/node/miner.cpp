@@ -13,12 +13,14 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
+#include <kernel/chain.h>
 #include <logging.h>
 #include <node/kernel_notifications.h>
 #include <node/miner.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <sync.h>
 #include <util/moneystr.h>
@@ -28,7 +30,6 @@
 
 #include <algorithm>
 #include <numeric>
-#include <utility>
 
 namespace node {
 
@@ -326,6 +327,25 @@ void BlockAssembler::addChunks()
 BlockTemplateCache::BlockTemplateCache(CTxMemPool& mempool, ChainstateManager& chainman, size_t block_template_cache_size)
     : m_mempool(mempool), m_chainman(chainman), m_block_template_cache_size(block_template_cache_size)
 {
+}
+
+void BlockTemplateCache::BlockConnected(
+    const ChainstateRole& role,
+    const std::shared_ptr<const CBlock>& /*unused*/,
+    const CBlockIndex* /*unused*/)
+{
+    // Ignore block being connected to historical chain, not current chain.
+    if (role.historical) return;
+    LOCK(m_mutex);
+    m_block_templates.clear();
+}
+
+void BlockTemplateCache::BlockDisconnected(
+    const std::shared_ptr<const CBlock>& /*unused*/,
+    const CBlockIndex* /*unused*/)
+{
+    LOCK(m_mutex);
+    m_block_templates.clear();
 }
 
 BlockTemplateRef BlockTemplateCache::createBlockTemplateInternal(const BlockAssembler::Options& options)

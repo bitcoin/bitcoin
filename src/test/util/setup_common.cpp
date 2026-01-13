@@ -298,6 +298,12 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
 ChainTestingSetup::~ChainTestingSetup()
 {
     if (m_node.scheduler) m_node.scheduler->stop();
+
+    if (m_node.validation_signals) {
+        m_node.validation_signals->FlushBackgroundCallbacks();
+        if (m_node.block_template_cache) m_node.validation_signals->UnregisterValidationInterface(m_node.block_template_cache.get());
+    }
+
     if (m_node.validation_signals) m_node.validation_signals->FlushBackgroundCallbacks();
     if (m_node.block_template_cache) m_node.block_template_cache.reset();
     m_node.connman.reset();
@@ -349,6 +355,7 @@ TestingSetup::TestingSetup(
     LoadVerifyActivateChainstate();
 
     m_node.block_template_cache = std::make_unique<node::BlockTemplateCache>(*m_node.mempool.get(), *m_node.chainman);
+    if (m_node.validation_signals) m_node.validation_signals->RegisterValidationInterface(m_node.block_template_cache.get());
 
     if (!opts.setup_net) return;
 
