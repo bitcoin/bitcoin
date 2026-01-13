@@ -33,6 +33,7 @@ interface FooInterface $Proxy.wrap("mp::test::FooImplementation") {
     passFn @16 (context :Proxy.Context, fn :FooFn) -> (result :Int32);
     callFn @17 () -> ();
     callFnAsync @18 (context :Proxy.Context) -> ();
+    callIntFnAsync @21 (context :Proxy.Context, arg :Int32) -> (result :Int32);
 }
 
 interface FooCallback $Proxy.wrap("mp::test::FooCallback") {

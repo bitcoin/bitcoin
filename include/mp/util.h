@@ -9,6 +9,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstring>
+#include <exception>
 #include <functional>
 #include <kj/string-tree.h>
 #include <mutex>
@@ -241,6 +242,64 @@ inline char* CharCast(unsigned char* c) { return (char*)c; }
 inline const char* CharCast(const char* c) { return c; }
 inline const char* CharCast(const unsigned char* c) { return (const char*)c; }
 
+//! Exception that can be thrown from code executing an IPC call that is interrupted.
+struct InterruptException final : std::exception {
+    explicit InterruptException(std::string message) : m_message(std::move(message)) {}
+    const char* what() const noexcept override { return m_message.c_str(); }
+    std::string m_message;
+};
+
+class CancelProbe;
+
+//! Helper class that detects when a promise is cancelled. Used to detect
+//! cancelled requests and prevent potential crashes on unclean disconnects.
+//!
+//! In the future, this could also be used to support a way for wrapped C++
+//! methods to detect cancellation (like approach #4 in
+//! https://github.com/bitcoin/bitcoin/issues/33575).
+class CancelMonitor
+{
+public:
+    inline ~CancelMonitor();
+    inline void setCancelled(CancelProbe& probe);
+
+    bool m_cancelled{false};
+    std::function<void()> m_on_cancel;
+    CancelProbe* m_probe{nullptr};
+};
+
+//! Helper object to attach to a promise and update a CancelMonitor.
+class CancelProbe
+{
+public:
+    CancelProbe(CancelMonitor& monitor) : m_monitor(&monitor)
+    {
+        assert(!monitor.m_probe);
+        monitor.m_probe = this;
+    }
+    ~CancelProbe()
+    {
+        if (m_monitor) m_monitor->setCancelled(*this);
+    }
+    CancelMonitor* m_monitor;
+};
+
+CancelMonitor::~CancelMonitor()
+{
+    if (m_probe) {
+        assert(m_probe->m_monitor == this);
+        m_probe->m_monitor = nullptr;
+        m_probe = nullptr;
+    }
+}
+
+void CancelMonitor::setCancelled(CancelProbe& probe)
+{
+    assert(m_probe == &probe);
+    m_cancelled = true;
+    if (m_on_cancel) m_on_cancel();
+    m_probe = nullptr;
+}
 } // namespace mp
 
 #endif // MP_UTIL_H
