@@ -241,12 +241,6 @@ void DashChainstateSetup(ChainstateManager& chainman,
     chain_helper = std::make_unique<CChainstateHelper>(*evodb, *cpoolman, *dmnman, govman, *(llmq_ctx->isman), *(llmq_ctx->quorum_block_processor),
                                                        *(llmq_ctx->qsnapman), chainman, consensus_params, mn_sync, sporkman, chainlocks,
                                                        *(llmq_ctx->qman));
-
-    // TODO: drop ConnectManagers completely from here
-    // qman should not be needed for Process/Undo block because validation & processing are 2 different stages
-    // Enable CMNHFManager::{Process, Undo}Block
-    chain_helper->ehf_manager->ConnectManagers(llmq_ctx->qman.get());
-
 }
 
 void DashChainstateSetupClose(std::unique_ptr<CChainstateHelper>& chain_helper,

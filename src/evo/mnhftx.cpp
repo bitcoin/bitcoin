@@ -43,9 +43,10 @@ CMutableTransaction MNHFTxPayload::PrepareTx() const
     return tx;
 }
 
-CMNHFManager::CMNHFManager(CEvoDB& evoDb, const ChainstateManager& chainman) :
+CMNHFManager::CMNHFManager(CEvoDB& evoDb, const ChainstateManager& chainman, const llmq::CQuorumManager& qman) :
     m_evoDb(evoDb),
-    m_chainman{chainman}
+    m_chainman{chainman},
+    m_qman{qman}
 {
     assert(globalInstance == nullptr);
     globalInstance = this;
@@ -202,11 +203,9 @@ static bool extractSignals(const ChainstateManager& chainman, const llmq::CQuoru
 
 std::optional<CMNHFManager::Signals> CMNHFManager::ProcessBlock(const CBlock& block, const CBlockIndex* const pindex, bool fJustCheck, BlockValidationState& state)
 {
-    auto qman = Assert(m_qman.load(std::memory_order_acquire));
-
     try {
         std::vector<uint8_t> new_signals;
-        if (!extractSignals(m_chainman, *qman, block, pindex, new_signals, state)) {
+        if (!extractSignals(m_chainman, m_qman, block, pindex, new_signals, state)) {
             // state is set inside extractSignals
             return std::nullopt;
         }
@@ -253,11 +252,9 @@ std::optional<CMNHFManager::Signals> CMNHFManager::ProcessBlock(const CBlock& bl
 
 bool CMNHFManager::UndoBlock(const CBlock& block, const CBlockIndex* const pindex)
 {
-    auto qman = Assert(m_qman.load(std::memory_order_acquire));
-
     std::vector<uint8_t> excluded_signals;
     BlockValidationState state;
-    if (!extractSignals(m_chainman, *qman, block, pindex, excluded_signals, state)) {
+    if (!extractSignals(m_chainman, m_qman, block, pindex, excluded_signals, state)) {
         LogPrintf("CMNHFManager::%s: failed to extract signals\n", __func__);
         return false;
     }
@@ -368,18 +365,6 @@ void CMNHFManager::AddSignal(const CBlockIndex* const pindex, int bit)
     auto signals = GetForBlock(pindex->pprev);
     signals.emplace(bit, pindex->nHeight);
     AddToCache(signals, pindex);
-}
-
-void CMNHFManager::ConnectManagers(gsl::not_null<llmq::CQuorumManager*> qman)
-{
-    // Do not allow double-initialization
-    assert(m_qman.load(std::memory_order_acquire) == nullptr);
-    m_qman.store(qman, std::memory_order_release);
-}
-
-void CMNHFManager::DisconnectManagers()
-{
-    m_qman.store(nullptr, std::memory_order_release);
 }
 
 bool CMNHFManager::ForceSignalDBUpdate()

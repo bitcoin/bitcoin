@@ -21,7 +21,7 @@ CChainstateHelper::CChainstateHelper(CEvoDB& evodb, CCreditPoolManager& cpoolman
                                      const chainlock::Chainlocks& chainlocks, const llmq::CQuorumManager& qman) :
     isman{isman},
     m_chainlocks{chainlocks},
-    ehf_manager{std::make_unique<CMNHFManager>(evodb, chainman)},
+    ehf_manager{std::make_unique<CMNHFManager>(evodb, chainman, qman)},
     mn_payments{std::make_unique<CMNPaymentsProcessor>(dmnman, govman, chainman, consensus_params, mn_sync, sporkman)},
     special_tx{std::make_unique<CSpecialTxProcessor>(cpoolman, dmnman, *ehf_manager, qblockman, qsnapman, chainman,
                                                      consensus_params, chainlocks, qman)}
