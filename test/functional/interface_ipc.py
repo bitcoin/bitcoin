@@ -20,10 +20,14 @@ from test_framework.messages import (
     ser_uint256,
     COIN,
 )
+from test_framework.script import (
+    CScript,
+    CScriptNum,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_not_equal
+    assert_not_equal,
 )
 from test_framework.wallet import MiniWallet
 from typing import Optional
@@ -194,6 +198,12 @@ class IPCInterfaceTest(BitcoinTestFramework):
         coinbase_tx.vin = [CTxIn()]
         coinbase_tx.vin[0].prevout = NULL_OUTPOINT
         coinbase_tx.vin[0].nSequence = coinbase_res.sequence
+
+        # Verify there's no dummy extraNonce in the coinbase scriptSig
+        current_block_height = self.nodes[0].getchaintips()[0]["height"]
+        expected_scriptsig = CScript([CScriptNum(current_block_height + 1)])
+        assert_equal(coinbase_res.scriptSigPrefix.hex(), expected_scriptsig.hex())
+
         # Typically a mining pool appends its name and an extraNonce
         coinbase_tx.vin[0].scriptSig = coinbase_res.scriptSigPrefix
 

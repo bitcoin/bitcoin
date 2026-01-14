@@ -29,6 +29,7 @@ COutPoint generatetoaddress(const NodeContext& node, const std::string& address)
     assert(IsValidDestination(dest));
     BlockAssembler::Options assembler_options;
     assembler_options.coinbase_output_script = GetScriptForDestination(dest);
+    assembler_options.include_dummy_extranonce = true;
 
     return MineBlock(node, assembler_options);
 }
@@ -139,6 +140,7 @@ std::shared_ptr<CBlock> PrepareBlock(const NodeContext& node, const CScript& coi
 {
     BlockAssembler::Options assembler_options;
     assembler_options.coinbase_output_script = coinbase_scriptPubKey;
+    assembler_options.include_dummy_extranonce = true;
     ApplyArgsManOptions(*node.args, assembler_options);
     return PrepareBlock(node, assembler_options);
 }

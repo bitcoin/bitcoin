@@ -35,6 +35,7 @@ BOOST_AUTO_TEST_CASE(MiningInterface)
     BOOST_REQUIRE(mining);
 
     BlockAssembler::Options options;
+    options.include_dummy_extranonce = true;
     std::unique_ptr<BlockTemplate> block_template;
 
     // Set node time a few minutes past the testnet4 genesis block
