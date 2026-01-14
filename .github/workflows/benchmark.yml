@@ -69,13 +69,6 @@ jobs:
           name: result-${{ matrix.name }}
           path: ${{ runner.temp }}/output/results.json
 
-      - name: Upload plots
-        uses: actions/upload-artifact@v4
-        with:
-          name: pngs-${{ matrix.name }}
-          path: ${{ runner.temp }}/output/plots/*.png
-          if-no-files-found: ignore
-
       - name: Upload flamegraphs
         uses: actions/upload-artifact@v4
         with:

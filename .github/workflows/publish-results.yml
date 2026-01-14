@@ -49,12 +49,6 @@ jobs:
               cp -r "flamegraph-${network}"/* "${network}-results/" 2>/dev/null || true
             fi
 
-            # Copy plots into network results directory
-            if [ -d "pngs-${network}" ]; then
-              mkdir -p "${network}-results/plots"
-              cp -r "pngs-${network}"/* "${network}-results/plots/" 2>/dev/null || true
-            fi
-
             # Copy debug logs into network results directory
             if [ -d "debug-logs-${network}" ]; then
               cp -r "debug-logs-${network}"/* "${network}-results/" 2>/dev/null || true

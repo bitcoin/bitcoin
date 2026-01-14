@@ -1,0 +1,344 @@
+<div id="debug-charts-{{ chart_id }}" class="debug-log-charts">
+  <div class="text-gray-500 text-sm mb-2">Loading charts from debug.log...</div>
+</div>
+
+<script>
+(function() {
+  const containerId = 'debug-charts-{{ chart_id }}';
+  const logUrl = '{{ debug_log_url }}';
+
+  // Regex patterns (ported from Python analyze.py)
+  const UPDATETIP_RE = /^([\d\-:TZ]+) UpdateTip: new best.+height=(\d+).+tx=(\d+).+cache=([\d.]+)MiB\((\d+)txo\)/;
+  const LEVELDB_COMPACT_RE = /^([\d\-:TZ]+) \[leveldb\] Compacting.*files/;
+  const LEVELDB_GEN_TABLE_RE = /^([\d\-:TZ]+) \[leveldb\] Generated table.*: (\d+) keys, (\d+) bytes/;
+  const VALIDATION_TXADD_RE = /^([\d\-:TZ]+) \[validation\] TransactionAddedToMempool/;
+  const COINDB_WRITE_BATCH_RE = /^([\d\-:TZ]+) \[coindb\] Writing (partial|final) batch of ([\d.]+) MiB/;
+  const COINDB_COMMIT_RE = /^([\d\-:TZ]+) \[coindb\] Committed (\d+) changed transaction outputs/;
+
+  // Fork heights for annotations (ported from Python)
+  const FORKS = [
+    { height: 227931, label: 'BIP34', color: 'blue', style: 'dash' },
+    { height: 363725, label: 'BIP66', color: 'blue', style: 'dash' },
+    { height: 388381, label: 'BIP65', color: 'blue', style: 'dash' },
+    { height: 419328, label: 'CSV', color: 'blue', style: 'dash' },
+    { height: 481824, label: 'SegWit', color: 'green', style: 'dash' },
+    { height: 709632, label: 'Taproot', color: 'red', style: 'dash' },
+    { height: 210000, label: 'Halving 1', color: 'purple', style: 'dot' },
+    { height: 420000, label: 'Halving 2', color: 'purple', style: 'dot' },
+    { height: 630000, label: 'Halving 3', color: 'purple', style: 'dot' },
+    { height: 840000, label: 'Halving 4', color: 'purple', style: 'dot' },
+  ];
+
+  function parseTimestamp(isoStr) {
+    return new Date(isoStr);
+  }
+
+  function parseDebugLog(content) {
+    const lines = content.split('\n');
+    const data = {
+      updateTip: [],
+      leveldbCompact: [],
+      leveldbGenTable: [],
+      validationTxAdd: [],
+      coindbWriteBatch: [],
+      coindbCommit: []
+    };
+
+    for (const line of lines) {
+      let match;
+
+      if ((match = UPDATETIP_RE.exec(line))) {
+        data.updateTip.push({
+          timestamp: parseTimestamp(match[1]),
+          height: parseInt(match[2]),
+          txCount: parseInt(match[3]),
+          cacheSizeMb: parseFloat(match[4]),
+          cacheCoinsCount: parseInt(match[5])
+        });
+      } else if ((match = LEVELDB_COMPACT_RE.exec(line))) {
+        data.leveldbCompact.push({
+          timestamp: parseTimestamp(match[1])
+        });
+      } else if ((match = LEVELDB_GEN_TABLE_RE.exec(line))) {
+        data.leveldbGenTable.push({
+          timestamp: parseTimestamp(match[1]),
+          keysCount: parseInt(match[2]),
+          bytesCount: parseInt(match[3])
+        });
+      } else if ((match = VALIDATION_TXADD_RE.exec(line))) {
+        data.validationTxAdd.push({
+          timestamp: parseTimestamp(match[1])
+        });
+      } else if ((match = COINDB_WRITE_BATCH_RE.exec(line))) {
+        data.coindbWriteBatch.push({
+          timestamp: parseTimestamp(match[1]),
+          isPartial: match[2] === 'partial',
+          sizeMb: parseFloat(match[3])
+        });
+      } else if ((match = COINDB_COMMIT_RE.exec(line))) {
+        data.coindbCommit.push({
+          timestamp: parseTimestamp(match[1]),
+          txoutCount: parseInt(match[2])
+        });
+      }
+    }
+
+    return data;
+  }
+
+  function getBaseTime(data) {
+    if (data.updateTip.length > 0) {
+      return data.updateTip[0].timestamp;
+    }
+    return new Date();
+  }
+
+  function toElapsedMinutes(timestamp, baseTime) {
+    return (timestamp - baseTime) / 1000 / 60;
+  }
+
+  function getForkShapes(minHeight, maxHeight, yMax) {
+    return FORKS
+      .filter(f => f.height >= minHeight && f.height <= maxHeight)
+      .map(f => ({
+        type: 'line',
+        x0: f.height,
+        x1: f.height,
+        y0: 0,
+        y1: yMax,
+        line: {
+          color: f.color,
+          width: 1,
+          dash: f.style
+        }
+      }));
+  }
+
+  function getForkAnnotations(minHeight, maxHeight, yMax) {
+    return FORKS
+      .filter(f => f.height >= minHeight && f.height <= maxHeight)
+      .map(f => ({
+        x: f.height,
+        y: yMax,
+        text: f.label,
+        showarrow: false,
+        font: { size: 10, color: f.color },
+        textangle: -90,
+        xanchor: 'left',
+        yanchor: 'bottom'
+      }));
+  }
+
+  function createChart(container, title, xData, yData, xLabel, yLabel, options = {}) {
+    const div = document.createElement('div');
+    div.style.width = '100%';
+    div.style.height = '400px';
+    div.style.marginBottom = '20px';
+    container.appendChild(div);
+
+    const trace = {
+      x: xData,
+      y: yData,
+      mode: 'markers',
+      type: 'scatter',
+      marker: { size: 4, opacity: 0.6 }
+    };
+
+    const layout = {
+      title: { text: title, font: { size: 14 } },
+      xaxis: { title: xLabel },
+      yaxis: { title: yLabel },
+      margin: { t: 40, b: 60, l: 60, r: 20 },
+      shapes: options.shapes || [],
+      annotations: options.annotations || []
+    };
+
+    Plotly.newPlot(div, [trace], layout, { responsive: true, displayModeBar: false });
+  }
+
+  function renderAllCharts(data, container) {
+    container.innerHTML = '';
+
+    if (data.updateTip.length === 0) {
+      container.innerHTML = '<p class="text-gray-500">No UpdateTip entries found in debug.log</p>';
+      return;
+    }
+
+    const baseTime = getBaseTime(data);
+    const heights = data.updateTip.map(e => e.height);
+    const minHeight = Math.min(...heights);
+    const maxHeight = Math.max(...heights);
+
+    // 1. Height vs Time
+    createChart(
+      container,
+      'Block Height vs Time',
+      data.updateTip.map(e => toElapsedMinutes(e.timestamp, baseTime)),
+      data.updateTip.map(e => e.height),
+      'Elapsed minutes',
+      'Block height'
+    );
+
+    // 2. Cache Size vs Height (with fork markers)
+    const cacheSizes = data.updateTip.map(e => e.cacheSizeMb);
+    const maxCache = Math.max(...cacheSizes);
+    createChart(
+      container,
+      'Cache Size vs Block Height',
+      heights,
+      cacheSizes,
+      'Block height',
+      'Cache size (MiB)',
+      {
+        shapes: getForkShapes(minHeight, maxHeight, maxCache),
+        annotations: getForkAnnotations(minHeight, maxHeight, maxCache)
+      }
+    );
+
+    // 3. Cache Size vs Time
+    createChart(
+      container,
+      'Cache Size vs Time',
+      data.updateTip.map(e => toElapsedMinutes(e.timestamp, baseTime)),
+      cacheSizes,
+      'Elapsed minutes',
+      'Cache size (MiB)'
+    );
+
+    // 4. Transactions vs Height
+    const txCounts = data.updateTip.map(e => e.txCount);
+    const maxTx = Math.max(...txCounts);
+    createChart(
+      container,
+      'Transaction Count vs Block Height',
+      heights,
+      txCounts,
+      'Block height',
+      'Transaction count',
+      {
+        shapes: getForkShapes(minHeight, maxHeight, maxTx),
+        annotations: getForkAnnotations(minHeight, maxHeight, maxTx)
+      }
+    );
+
+    // 5. Coins Cache vs Height
+    const coinsCounts = data.updateTip.map(e => e.cacheCoinsCount);
+    const maxCoins = Math.max(...coinsCounts);
+    createChart(
+      container,
+      'UTXO Cache Size vs Block Height',
+      heights,
+      coinsCounts,
+      'Block height',
+      'Cached UTXOs',
+      {
+        shapes: getForkShapes(minHeight, maxHeight, maxCoins),
+        annotations: getForkAnnotations(minHeight, maxHeight, maxCoins)
+      }
+    );
+
+    // 6. LevelDB Compaction Events
+    if (data.leveldbCompact.length > 0) {
+      createChart(
+        container,
+        'LevelDB Compaction Events vs Time',
+        data.leveldbCompact.map(e => toElapsedMinutes(e.timestamp, baseTime)),
+        data.leveldbCompact.map(() => 1),
+        'Elapsed minutes',
+        'Compaction event'
+      );
+    }
+
+    // 7. LevelDB Keys Generated
+    if (data.leveldbGenTable.length > 0) {
+      createChart(
+        container,
+        'LevelDB Keys Generated vs Time',
+        data.leveldbGenTable.map(e => toElapsedMinutes(e.timestamp, baseTime)),
+        data.leveldbGenTable.map(e => e.keysCount),
+        'Elapsed minutes',
+        'Keys count'
+      );
+
+      // 8. LevelDB Bytes Generated
+      createChart(
+        container,
+        'LevelDB Bytes Generated vs Time',
+        data.leveldbGenTable.map(e => toElapsedMinutes(e.timestamp, baseTime)),
+        data.leveldbGenTable.map(e => e.bytesCount),
+        'Elapsed minutes',
+        'Bytes'
+      );
+    }
+
+    // 9. Validation TX Added
+    if (data.validationTxAdd.length > 0) {
+      createChart(
+        container,
+        'Transactions Added to Mempool vs Time',
+        data.validationTxAdd.map(e => toElapsedMinutes(e.timestamp, baseTime)),
+        data.validationTxAdd.map(() => 1),
+        'Elapsed minutes',
+        'Transaction event'
+      );
+    }
+
+    // 10. CoinDB Write Batch Size
+    if (data.coindbWriteBatch.length > 0) {
+      createChart(
+        container,
+        'CoinDB Write Batch Size vs Time',
+        data.coindbWriteBatch.map(e => toElapsedMinutes(e.timestamp, baseTime)),
+        data.coindbWriteBatch.map(e => e.sizeMb),
+        'Elapsed minutes',
+        'Batch size (MiB)'
+      );
+    }
+
+    // 11. CoinDB Commits
+    if (data.coindbCommit.length > 0) {
+      createChart(
+        container,
+        'CoinDB TxOuts Committed vs Time',
+        data.coindbCommit.map(e => toElapsedMinutes(e.timestamp, baseTime)),
+        data.coindbCommit.map(e => e.txoutCount),
+        'Elapsed minutes',
+        'TxOut count'
+      );
+    }
+  }
+
+  async function loadAndRenderCharts() {
+    const container = document.getElementById(containerId);
+
+    try {
+      const response = await fetch(logUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch: ${response.status}`);
+      }
+
+      let content;
+      if (logUrl.endsWith('.gz')) {
+        const compressed = await response.arrayBuffer();
+        const decompressed = pako.inflate(new Uint8Array(compressed));
+        content = new TextDecoder().decode(decompressed);
+      } else {
+        content = await response.text();
+      }
+
+      const data = parseDebugLog(content);
+      renderAllCharts(data, container);
+    } catch (error) {
+      container.innerHTML = `<p class="text-red-500">Error loading debug.log: ${error.message}</p>`;
+      console.error('Error loading debug.log:', error);
+    }
+  }
+
+  // Wait for Plotly and pako to be available
+  if (typeof Plotly !== 'undefined' && typeof pako !== 'undefined') {
+    loadAndRenderCharts();
+  } else {
+    window.addEventListener('load', loadAndRenderCharts);
+  }
+})();
+</script>

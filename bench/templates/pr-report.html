@@ -93,24 +93,22 @@
     {% endif %}
 
     {% if graphs %}
-    <h3 class="text-lg font-semibold mb-4">Flamegraphs and Plots</h3>
+    <h3 class="text-lg font-semibold mb-4">Flamegraphs and Charts</h3>
     {% for graph in graphs %}
     <div class="mb-8">
       <h4 class="text-md font-medium mb-2">{{ graph.label }}</h4>
       {% if graph.flamegraph %}
       <object data="{{ graph.flamegraph }}" type="image/svg+xml" width="100%" class="mb-4"></object>
       {% endif %}
-      {% for plot in graph.plots %}
-      <a href="{{ plot.path }}" target="_blank">
-        <img src="{{ plot.path }}" alt="{{ plot.name }}" class="mb-4 max-w-full h-auto">
-      </a>
-      {% endfor %}
       {% if graph.debug_log %}
-      <div class="mt-2">
+      <div class="mt-2 mb-4">
         <a href="{{ graph.debug_log }}" target="_blank" class="text-blue-600 hover:underline">
-          View debug.log
+          Download debug.log
         </a>
       </div>
+      {% set chart_id = graph.label | replace(' ', '-') | replace('.', '') | lower %}
+      {% set debug_log_url = graph.debug_log %}
+      {% include 'partials/debug-log-charts.html' %}
       {% endif %}
     </div>
     {% endfor %}

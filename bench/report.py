@@ -5,6 +5,7 @@ Ported from the JavaScript logic in .github/workflows/publish-results.yml.
 
 from __future__ import annotations
 
+import gzip
 import json
 import logging
 import shutil
@@ -419,20 +420,13 @@ class ReportGenerator:
             shutil.copy2(svg, dest)
             logger.debug(f"Copied {svg.name} as {dest.name}")
 
-        # Copy plots directory with network prefix
-        plots_dir = input_dir / "plots"
-        if plots_dir.exists():
-            dest_plots = output_dir / f"{network}-plots"
-            if dest_plots.exists():
-                shutil.rmtree(dest_plots)
-            shutil.copytree(plots_dir, dest_plots)
-            logger.debug(f"Copied plots to {dest_plots}")
-
-        # Copy debug logs with network prefix
+        # Gzip and copy debug logs with network prefix
         for log in input_dir.glob("*-debug.log"):
-            dest = output_dir / f"{network}-{log.name}"
-            shutil.copy2(log, dest)
-            logger.debug(f"Copied {log.name} as {dest.name}")
+            dest = output_dir / f"{network}-{log.name}.gz"
+            with open(log, "rb") as f_in:
+                with gzip.open(dest, "wb") as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+            logger.debug(f"Compressed {log.name} as {dest.name}")
 
     def _generate_html(
         self,
@@ -533,7 +527,7 @@ class ReportGenerator:
         input_dir: Path,
         output_dir: Path,
     ) -> list[dict]:
-        """Prepare flamegraphs and plots data for template rendering."""
+        """Prepare flamegraphs and debug logs data for template rendering."""
         graphs = []
 
         for run in runs:
@@ -549,57 +543,35 @@ class ReportGenerator:
             elif (input_dir / non_prefixed).exists():
                 flamegraph_name = non_prefixed
 
-            plot_files = []
-            plots_dir = None
-            network_plots_dir = output_dir / f"{network}-plots"
-            regular_plots_dir = input_dir / "plots"
-
-            if network_plots_dir.exists():
-                plots_dir = network_plots_dir
-                plot_files = [
-                    p.name
-                    for p in plots_dir.iterdir()
-                    if p.name.startswith(f"{name}-") and p.suffix == ".png"
-                ]
-            elif regular_plots_dir.exists():
-                plots_dir = regular_plots_dir
-                plot_files = [
-                    p.name
-                    for p in plots_dir.iterdir()
-                    if p.name.startswith(f"{name}-") and p.suffix == ".png"
-                ]
-
             debug_log_name = None
+            network_prefixed_log_gz = f"{network}-{name}-debug.log.gz"
             network_prefixed_log = f"{network}-{name}-debug.log"
             non_prefixed_log = f"{name}-debug.log"
 
-            if (output_dir / network_prefixed_log).exists():
+            if (output_dir / network_prefixed_log_gz).exists():
+                debug_log_name = network_prefixed_log_gz
+            elif (output_dir / network_prefixed_log).exists():
                 debug_log_name = network_prefixed_log
             elif (input_dir / non_prefixed_log).exists():
                 debug_log_name = non_prefixed_log
 
-            if not flamegraph_name and not plot_files and not debug_log_name:
+            if not flamegraph_name and not debug_log_name:
                 continue
 
             display_label = f"{network} - {name}" if network != "default" else name
-            plots_rel_path = plots_dir.name if plots_dir else ""
 
             graphs.append(
                 {
                     "label": display_label,
                     "flamegraph": flamegraph_name,
                     "debug_log": debug_log_name,
-                    "plots": [
-                        {"name": p, "path": f"{plots_rel_path}/{p}"}
-                        for p in sorted(plot_files)
-                    ],
                 }
             )
 
         return graphs
 
     def _copy_artifacts(self, input_dir: Path, output_dir: Path) -> None:
-        """Copy flamegraphs and plots to output directory."""
+        """Copy flamegraphs and gzip debug logs to output directory."""
         # Skip if input and output are the same directory
         if input_dir.resolve() == output_dir.resolve():
             logger.debug("Input and output are the same directory, skipping copy")
@@ -611,20 +583,13 @@ class ReportGenerator:
             shutil.copy2(svg, dest)
             logger.debug(f"Copied {svg.name}")
 
-        # Copy plots directory
-        plots_dir = input_dir / "plots"
-        if plots_dir.exists():
-            dest_plots = output_dir / "plots"
-            if dest_plots.exists():
-                shutil.rmtree(dest_plots)
-            shutil.copytree(plots_dir, dest_plots)
-            logger.debug("Copied plots directory")
-
-        # Copy debug logs
+        # Gzip and copy debug logs
         for log in input_dir.glob("*-debug.log"):
-            dest = output_dir / log.name
-            shutil.copy2(log, dest)
-            logger.debug(f"Copied {log.name}")
+            dest = output_dir / f"{log.name}.gz"
+            with open(log, "rb") as f_in:
+                with gzip.open(dest, "wb") as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+            logger.debug(f"Compressed {log.name} as {dest.name}")
 
 
 class ReportPhase:
