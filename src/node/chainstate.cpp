@@ -83,7 +83,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
     pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, block_tree_db_in_memory, fReset));
 
     DashChainstateSetup(chainman, govman, mn_metaman, mn_sync, sporkman, chainlocks, chain_helper,
-                        dmnman, evodb, llmq_ctx, mempool, data_dir, dash_dbs_in_memory,
+                        dmnman, *evodb, llmq_ctx, mempool, data_dir, dash_dbs_in_memory,
                         /*llmq_dbs_wipe=*/fReset || fReindexChainState, bls_threads, max_recsigs_age, consensus_params);
 
     if (fReset) {
@@ -212,7 +212,7 @@ void DashChainstateSetup(ChainstateManager& chainman,
                          chainlock::Chainlocks& chainlocks,
                          std::unique_ptr<CChainstateHelper>& chain_helper,
                          std::unique_ptr<CDeterministicMNManager>& dmnman,
-                         std::unique_ptr<CEvoDB>& evodb,
+                         CEvoDB& evodb,
                          std::unique_ptr<LLMQContext>& llmq_ctx,
                          CTxMemPool* mempool,
                          const fs::path& data_dir,
@@ -224,15 +224,15 @@ void DashChainstateSetup(ChainstateManager& chainman,
 {
     // Same logic as pblocktree
     dmnman.reset();
-    dmnman = std::make_unique<CDeterministicMNManager>(*evodb, mn_metaman);
+    dmnman = std::make_unique<CDeterministicMNManager>(evodb, mn_metaman);
 
     llmq_ctx.reset();
-    llmq_ctx = std::make_unique<LLMQContext>(*dmnman, *evodb, sporkman, chainlocks, *mempool, chainman, mn_sync,
+    llmq_ctx = std::make_unique<LLMQContext>(*dmnman, evodb, sporkman, chainlocks, *mempool, chainman, mn_sync,
                                              util::DbWrapperParams{.path = data_dir, .memory = llmq_dbs_in_memory, .wipe = llmq_dbs_wipe},
                                              bls_threads, max_recsigs_age);
     mempool->ConnectManagers(dmnman.get(), llmq_ctx->isman.get());
     chain_helper.reset();
-    chain_helper = std::make_unique<CChainstateHelper>(*evodb, *dmnman, govman, *(llmq_ctx->isman), *(llmq_ctx->quorum_block_processor),
+    chain_helper = std::make_unique<CChainstateHelper>(evodb, *dmnman, govman, *(llmq_ctx->isman), *(llmq_ctx->quorum_block_processor),
                                                        *(llmq_ctx->qsnapman), chainman, consensus_params, mn_sync, sporkman, chainlocks,
                                                        *(llmq_ctx->qman));
 }

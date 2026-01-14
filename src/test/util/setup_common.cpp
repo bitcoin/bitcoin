@@ -144,7 +144,7 @@ void DashChainstateSetup(ChainstateManager& chainman,
                          const Consensus::Params& consensus_params)
 {
     DashChainstateSetup(chainman, *Assert(node.govman.get()), *Assert(node.mn_metaman.get()), *Assert(node.mn_sync.get()),
-                        *Assert(node.sporkman.get()), *Assert(node.chainlocks), node.chain_helper, node.dmnman, node.evodb,
+                        *Assert(node.sporkman.get()), *Assert(node.chainlocks), node.chain_helper, node.dmnman, *node.evodb,
                         node.llmq_ctx, Assert(node.mempool.get()), node.args->GetDataDirNet(), llmq_dbs_in_memory, llmq_dbs_wipe,
                         llmq::DEFAULT_BLSCHECK_THREADS, llmq::DEFAULT_MAX_RECOVERED_SIGS_AGE, consensus_params);
 }
