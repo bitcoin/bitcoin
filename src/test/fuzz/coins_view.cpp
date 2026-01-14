@@ -335,6 +335,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
     {
         const Coin& coin_using_access_coin = coins_view_cache.AccessCoin(random_out_point);
         const bool exists_using_access_coin = !(coin_using_access_coin == EMPTY_COIN);
+        const bool is_spent_using_access_coin{coin_using_access_coin.IsSpent()};
         const bool exists_using_have_coin = coins_view_cache.HaveCoin(random_out_point);
         const bool exists_using_have_coin_in_cache = coins_view_cache.HaveCoinInCache(random_out_point);
         if (auto coin{coins_view_cache.GetCoin(random_out_point)}) {
@@ -343,9 +344,16 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
         } else {
             assert(!exists_using_access_coin && !exists_using_have_coin_in_cache && !exists_using_have_coin);
         }
+
+        // Stop async workers before accessing backend_coins_view to avoid data race
+        // (HaveCoin/GetCoin on CCoinsViewCache mutate cacheCoins via FetchCoin)
+        if (auto* async_cache{dynamic_cast<CoinsViewCacheAsync*>(&coins_view_cache)}) {
+            const auto reset_guard{async_cache->CreateResetGuard()};
+        }
+
         // If HaveCoin on the backend is true, it must also be on the cache if the coin wasn't spent.
         const bool exists_using_have_coin_in_backend = backend_coins_view.HaveCoin(random_out_point);
-        if (!coin_using_access_coin.IsSpent() && exists_using_have_coin_in_backend) {
+        if (!is_spent_using_access_coin && exists_using_have_coin_in_backend) {
             assert(exists_using_have_coin);
         }
         if (auto coin{backend_coins_view.GetCoin(random_out_point)}) {

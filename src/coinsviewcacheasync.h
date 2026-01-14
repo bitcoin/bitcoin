@@ -10,7 +10,9 @@
 #include <crypto/common.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <tinyformat.h>
 #include <util/check.h>
+#include <util/threadnames.h>
 
 #include <algorithm>
 #include <atomic>
@@ -18,15 +20,77 @@
 #include <cstdint>
 #include <optional>
 #include <ranges>
+#include <thread>
 #include <utility>
 #include <vector>
 
+static constexpr int32_t WORKER_THREADS{4};
+
 /**
- * CCoinsViewCache subclass that fetches all block inputs during ConnectBlock without mutating the base cache.
+ * CCoinsViewCache subclass that asynchronously fetches all block inputs in parallel during ConnectBlock without
+ * mutating the base cache.
+ *
  * Only used in ConnectBlock to pass as an ephemeral view that can be reset if the block is invalid.
  * It provides the same interface as CCoinsViewCache. It overrides all methods that mutate base,
  * stopping threads before calling superclass.
  * It adds an additional StartFetching method to provide the block.
+ *
+ * When a block is passed to StartFetching, the inputs of the block are flattened into a vector of InputToFetch
+ * objects. A vector of sorted shorttxids of all block txs is also constructed. The main thread arrives at the
+ * barrier, which releases all worker threads waiting on the barrier at the top of their loop. The worker threads
+ * call ProcessInputInBackground() repeatedly until all inputs have been fetched, then wait on the barrier a second
+ * time at the end of their loop.
+ *
+ * ProcessInputInBackground() atomically fetches and increments m_input_head, so each thread can only access a
+ * single element of the m_inputs vector at a time. Workers race to claim inputs, so they may fetch elements in any
+ * order. If the fetched index is greater than the size of m_inputs, no more inputs can be fetched and false is
+ * returned.
+ *
+ * The worker claims the InputToFetch at this index. Before fetching, it checks if the input's txid prefix matches
+ * any shorttxid in the sorted vector using binary search. If there is a match, the input is spending a coin created
+ * earlier in the same block and won't be in the base cache, so fetching is skipped. Otherwise, the coin is fetched
+ * from the base cache and moved to the InputToFetch object. The ready flag is then set with a release memory order.
+ * This allows the ready flag to be used as a memory fence, guaranteeing the coin being written to the object will
+ * have happened before another thread tests the flag with an acquire memory order.
+ *
+ * When a coin is requested from the cache on the main thread, if a cache miss occurs the coin is first looked up
+ * from the m_inputs vector instead of the base cache. The vector is scanned beginning at the element at
+ * m_input_tail. If the InputToFetch object has the same outpoint as requested, m_input_tail is advanced to the next
+ * index so the previous inputs do not need to be scanned again. The InputToFetch object's ready flag is tested with an
+ * acquire memory order. If the object is ready, then the worker has successfully fetched that input in the
+ * background and the object's coin is returned. If the object is not ready, the main thread
+ * will call ProcessInputInBackground() repeatedly until the requested coin is ready. This lets the main thread make
+ * progress by claiming other inputs while waiting on the worker that claimed the input that was requested.
+ *
+ * When Flush or Reset is called after the block is validated, the main thread arrives at the barrier again to
+ * release all workers from the barrier at the bottom of their loop. The workers return to wait on the barrier at
+ * the top of their loop until the next block is passed to StartFetching.
+ *
+ *       Workers advance m_input_head to fetch inputs. Main thread advances m_input_tail to consume.
+ *
+ *       Before workers start:
+ *
+ *                 m_input_head
+ *                 m_input_tail
+ *                      │
+ *                      ▼
+ *                 ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐
+ *       m_inputs: │ waiting │ waiting │ waiting │ waiting │ waiting │ waiting │ waiting │ waiting │ waiting │
+ *                 │         │         │         │         │         │         │         │         │         │
+ *                 └─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┘
+ *
+ *       After workers start:
+ *
+ *                                       Worker 2            Worker 0  Worker 3  Worker 1  m_input_head
+ *                                          │                   │         │         │         │
+ *                                          ▼                   ▼         ▼         ▼         ▼
+ *                 ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐
+ *       m_inputs: │  ready  │  ready  │fetching │  ready  │fetching │fetching │fetching │ waiting │ waiting │
+ *                 │consumed │    ✓    │    ●    │    ✓    │    ●    │    ●    │    ●    │         │         │
+ *                 └─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┘
+ *                                ▲
+ *                                │
+ *                           m_input_tail
  */
 class CoinsViewCacheAsync : public CCoinsViewCache
 {
@@ -104,7 +168,12 @@ private:
             m_input_tail = i + 1;
             // Check if the coin is ready to be read. We need to acquire to match the worker thread's release.
             while (!input.ready.test(std::memory_order_acquire)) {
-                ProcessInputInBackground();
+                // Work instead of waiting if the coin is not ready
+                if (!ProcessInputInBackground()) {
+                    // No more work, just wait
+                    input.ready.wait(/*old=*/false, std::memory_order_acquire);
+                    break;
+                }
             }
             // We can move the coin since we won't access this input again.
             if (input.coin) [[likely]] return std::move(*input.coin);
@@ -116,7 +185,8 @@ private:
         return base->PeekCoin(outpoint);
     }
 
-    std::barrier<> m_barrier{1};
+    std::vector<std::thread> m_worker_threads{};
+    std::barrier<> m_barrier;
 
     //! Stop all worker threads.
     void StopFetching() noexcept
@@ -178,12 +248,28 @@ public:
         CCoinsViewCache::Reset();
     }
 
-    using CCoinsViewCache::CCoinsViewCache;
+    explicit CoinsViewCacheAsync(CCoinsView* base_in, bool deterministic = false,
+        int32_t num_workers = WORKER_THREADS) noexcept
+        : CCoinsViewCache{base_in, deterministic}, m_barrier{num_workers + 1}
+    {
+        for (const auto n : std::views::iota(0, num_workers)) {
+            m_worker_threads.emplace_back([this, n] {
+                util::ThreadRename(strprintf("inputfetch.%i", n));
+                while (true) {
+                    m_barrier.arrive_and_wait();
+                    while (ProcessInputInBackground()) [[likely]] {}
+                    if (m_inputs.empty()) [[unlikely]] return;
+                    m_barrier.arrive_and_wait();
+                }
+            });
+        }
+    }
 
     ~CoinsViewCacheAsync() override
     {
         StopFetching();
         m_barrier.arrive_and_drop();
+        for (auto& t : m_worker_threads) t.join();
     }
 };
 
