@@ -1,9 +1,9 @@
-v30.2 Release Notes
+v30.x Release Notes
 ===================
 
-Bitcoin Core version v30.2 is now available from:
+Bitcoin Core version v30.x is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-30.2/>
+  <https://bitcoincore.org/bin/bitcoin-core-30.x/>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
@@ -42,50 +42,46 @@ Notable changes
 
 ### Wallet
 
-- #34156 wallet: fix unnamed legacy wallet migration failure
-- #34215 wallettool: fix unnamed createfromdump failure walletsdir deletion
-- #34221 test: migration, avoid backup name mismatch in default_wallet_failure
+- #34358 wallet: fix removeprunedfunds bug with conflicting transactions
 
-### IPC
+### PSBT
 
-- #33511 init: Fix Ctrl-C shutdown hangs during wait calls
+- #34272 psbt: Fix PSBTInputSignedAndVerified bounds assert
 
 ### Build
 
-- #33950 guix: reduce allowed exported symbols
-- #34107 build: Update minimum required Boost version
-- #34227 guix: Fix osslsigncode tests
+- #34281 build: Temporarily remove confusing and brittle -fdebug-prefix-map
 
 ### Test
 
-- #34137 test: Avoid hard time.sleep(1) in feature_init.py
-- #34226 wallet: test: Relative wallet failed migration cleanup
-
-### Fuzz
-
-- #34091 fuzz: doc: remove any mention to address_deserialize_v2
+- #34185 test: fix feature_pruning when built without wallet
+- #34282 qa: Fix Windows logging bug
+- #34390 test: allow overriding tar in get_previous_releases.py
 
 ### Doc
 
-- #34182 doc: Update OpenBSD Build Guide
+- #34252 doc: add 433 (Pay to Anchor) to bips.md
+- #34413 doc: Remove outdated -fdebug-prefix-map section in dev notes
 
-### Misc
+### CI
 
-- #34174 doc: update copyright year to 2026
+- #32513 ci: remove 3rd party js from windows dll gha job
+- #34344 ci: update GitHub Actions versions
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- Ava Chow
 - brunoerg
-- davidgumberg
 - fanquake
-- furszy
 - Hennadii Stepanov
+- Lőrinc
+- m3dwards
 - MarcoFalke
-- Ryan Ofsky
+- mzumsande
+- Padraic Slattery
+- Sebastian Falbesoner
 
 As well as to everyone that helped with translations on
 [Transifex](https://explore.transifex.com/bitcoin/bitcoin/).
