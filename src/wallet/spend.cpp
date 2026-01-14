@@ -223,7 +223,7 @@ void CoinsResult::Erase(const std::unordered_set<COutPoint, SaltedOutpointHasher
 
             // update cached amounts
             total_amount -= coin.txout.nValue;
-            if (coin.HasEffectiveValue()) total_effective_amount = *total_effective_amount - coin.GetEffectiveValue();
+            if (coin.HasEffectiveValue() && total_effective_amount.has_value()) total_effective_amount = *total_effective_amount - coin.GetEffectiveValue();
             return true;
         });
         vec.erase(remove_it, vec.end());
