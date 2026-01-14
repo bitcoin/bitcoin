@@ -2527,7 +2527,17 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     std::vector<PrecomputedTransactionData> txsdata(block.vtx.size());
 
-    const auto chk_input_rules{DeploymentActiveAt(*pindex, m_chainman, Consensus::DEPLOYMENT_REDUCED_DATA) ? CheckTxInputsRules::OutputSizeLimit : CheckTxInputsRules::None};
+    const CheckTxInputsRules chk_input_rules{DeploymentActiveAt(*pindex, m_chainman, Consensus::DEPLOYMENT_REDUCED_DATA) ? CheckTxInputsRules::OutputSizeLimit : CheckTxInputsRules::None};
+
+    // Check generation tx output sizes if REDUCED_DATA is active
+    if (chk_input_rules.test(CheckTxInputsRules::OutputSizeLimit)) {
+        TxValidationState tx_state;
+        if (!Consensus::CheckOutputSizes(*block.vtx[0], tx_state)) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
+                                 tx_state.GetRejectReason(),
+                                 tx_state.GetDebugMessage() + " in generation tx " + block.vtx[0]->GetHash().ToString());
+        }
+    }
 
     std::vector<int> prevheights;
     CAmount nFees = 0;

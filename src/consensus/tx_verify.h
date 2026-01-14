@@ -44,6 +44,13 @@ public:
 
 namespace Consensus {
 /**
+ * Check whether all outputs of this transaction satisfy size limits.
+ * Regular outputs must be <= MAX_OUTPUT_SCRIPT_SIZE (34 bytes).
+ * OP_RETURN outputs must be <= MAX_OUTPUT_DATA_SIZE (83 bytes).
+ */
+bool CheckOutputSizes(const CTransaction& tx, TxValidationState& state);
+
+/**
  * Check whether all inputs of this transaction are valid (no double spends and amounts)
  * This does not modify the UTXO set. This does not check scripts and sigs.
  * @param[out] txfee Set to the transaction fee if successful.
