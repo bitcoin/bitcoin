@@ -1435,7 +1435,7 @@ void DescriptorScriptPubKeyMan::SetCache(const DescriptorCache& cache)
         FlatSigningProvider out_keys;
         std::vector<CScript> scripts_temp;
         if (!m_wallet_descriptor.descriptor->ExpandFromCache(i, m_wallet_descriptor.cache, scripts_temp, out_keys)) {
-            throw std::runtime_error("Error: Unable to expand wallet descriptor from cache");
+            throw std::runtime_error(std::string(__func__) + ": Unable to expand wallet descriptor from cache");
         }
         // Add all of the scriptPubKeys to the scriptPubKey set
         new_spks.insert(scripts_temp.begin(), scripts_temp.end());
@@ -1556,7 +1556,7 @@ void DescriptorScriptPubKeyMan::UpgradeDescriptorCache()
     std::vector<CScript> scripts_temp;
     DescriptorCache temp_cache;
     if (!m_wallet_descriptor.descriptor->Expand(0, provider, scripts_temp, out_keys, &temp_cache)){
-        throw std::runtime_error("Unable to expand descriptor");
+        throw std::runtime_error(std::string(__func__) + ": Unable to expand descriptor");
     }
 
     // Cache the last hardened xpubs
