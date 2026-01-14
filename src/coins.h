@@ -380,7 +380,7 @@ protected:
      * Discard all modifications made to this cache without flushing to the base view.
      * This can be used to efficiently reuse a cache instance across multiple operations.
      */
-    void Reset() noexcept;
+    virtual void Reset() noexcept;
 
     /* Get the coin from base. Used for cache misses in FetchCoin. */
     virtual std::optional<Coin> GetCoinFromBase(const COutPoint& outpoint) const;
