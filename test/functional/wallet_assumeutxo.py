@@ -12,6 +12,7 @@ from test_framework.messages import COIN
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
+    assert_greater_than_or_equal,
     assert_raises_rpc_error,
     ensure_for,
 )
@@ -201,10 +202,13 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(n1.getbalance(), 0)
 
         self.log.info("Backup from before the snapshot height can't be loaded during background sync")
-        expected_error_message = "Wallet loading failed. Error loading wallet. Wallet requires blocks to be downloaded, and software does not currently support loading wallets while blocks are being downloaded out of order when using assumeutxo snapshots. Wallet should be able to load successfully after node sync reaches height 299"
-        assert_raises_rpc_error(-4, expected_error_message, n1.restorewallet, "w2", "backup_w2.dat")
+        # Error message for wallets that need blocks before the snapshot height.
+        def loading_error(height):
+            return f"Wallet loading failed. Error loading wallet. Wallet requires blocks to be downloaded, and software does not currently support loading wallets while blocks are being downloaded out of order when using assumeutxo snapshots. Wallet should be able to load successfully after node sync reaches height {height}"
+        # The target height is SNAPSHOT_BASE_HEIGHT because that's when background sync completes.
+        assert_raises_rpc_error(-4, loading_error(SNAPSHOT_BASE_HEIGHT), n1.restorewallet, "w2", "backup_w2.dat")
 
-        self.test_backup_during_background_sync_pruned_node(n3, dump_output, expected_error_message)
+        self.test_backup_during_background_sync_pruned_node(n3, dump_output, loading_error(SNAPSHOT_BASE_HEIGHT))
 
         self.log.info("Test loading descriptors during background sync")
         wallet_name = "w1"
@@ -239,7 +243,28 @@ class AssumeutxoTest(BitcoinTestFramework):
             "Restarted node before snapshot validation completed, reloading...")
         self.restart_node(1, extra_args=self.extra_args[1])
 
-        # TODO: inspect state of e.g. the wallet before reconnecting
+        self.log.info("Verify node state after restart during background sync")
+        # Verify there are still two chainstates (background validation not complete)
+        chainstates = n1.getchainstates()['chainstates']
+        assert_equal(len(chainstates), 2)
+        # The background chainstate should still be at START_HEIGHT
+        assert_equal(chainstates[0]['blocks'], START_HEIGHT)
+        # The snapshot chainstate should be at least PAUSE_HEIGHT. It may be
+        # higher because stopatheight may allow additional blocks to be
+        # processed during shutdown (per stopatheight documentation).
+        assert_greater_than_or_equal(chainstates[1]['blocks'], PAUSE_HEIGHT)
+
+        # After restart, wallets that existed before cannot be loaded because
+        # the wallet loading code checks if required blocks are available for
+        # rescanning. During assumeutxo background sync, blocks before the
+        # snapshot are not available, so wallet loading fails.
+        # After restart, the required height is SNAPSHOT_BASE_HEIGHT + 1 for all wallets.
+        assert_raises_rpc_error(-4, loading_error(SNAPSHOT_BASE_HEIGHT + 1), n1.loadwallet, "w")
+        assert_raises_rpc_error(-4, loading_error(SNAPSHOT_BASE_HEIGHT + 1), n1.loadwallet, wallet_name)
+
+        # Verify backup from before snapshot height still can't be restored
+        assert_raises_rpc_error(-4, loading_error(SNAPSHOT_BASE_HEIGHT + 1), n1.restorewallet, "w2_test", "backup_w2.dat")
+
         self.complete_background_validation(n1)
 
         self.log.info("Ensuring wallet can be restored from a backup that was created before the snapshot height")
