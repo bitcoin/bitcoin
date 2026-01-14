@@ -10,6 +10,7 @@
 #include <attributes.h>
 #include <chain.h>
 #include <checkqueue.h>
+#include <coinsviewcacheasync.h>
 #include <consensus/amount.h>
 #include <cuckoocache.h>
 #include <deploymentstatus.h>
@@ -491,7 +492,7 @@ public:
 
     //! Temporary CCoinsViewCache layered on top of m_cacheview and passed to ConnectBlock().
     //! Reset between calls and flushed only on success, so invalid blocks don't pollute the underlying cache.
-    std::unique_ptr<CCoinsViewCache> m_connect_block_view GUARDED_BY(cs_main);
+    std::unique_ptr<CoinsViewCacheAsync> m_connect_block_view GUARDED_BY(cs_main);
 
     //! This constructor initializes CCoinsViewDB and CCoinsViewErrorCatcher instances, but it
     //! *does not* create a CCoinsViewCache instance by default. This is done separately because the
