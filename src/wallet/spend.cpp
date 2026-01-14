@@ -1208,7 +1208,25 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     if (!select_coins_res) {
         // 'SelectCoins' either returns a specific error message or, if empty, means a general "Insufficient funds".
         const bilingual_str& err = util::ErrorString(select_coins_res);
-        return util::Error{err.empty() ?_("Insufficient funds") : err};
+        if (!err.empty()) return util::Error{err};
+
+        // Check if we have enough balance but cannot cover the fees
+        CAmount available_balance = preset_inputs.GetTotalAmount() + available_coins.GetTotalAmount();
+        // Note: if SelectCoins() fails when SFFO is enabled (recipients_sum = selection_target with SFFO),
+        // then recipients_sum > available_balance and we wouldn't enter into the if condition below.
+        if (available_balance >= recipients_sum) {
+            // If we have coins with balance, they should have effective values since we constructed them with valid feerate.
+            assert(!preset_inputs.Size() || preset_inputs.GetEffectiveTotalAmount().has_value());
+            assert(!available_coins.Size() || available_coins.GetEffectiveTotalAmount().has_value());
+            CAmount available_effective_balance = preset_inputs.GetEffectiveTotalAmount().value_or(0) + available_coins.GetEffectiveTotalAmount().value_or(0);
+            if (available_effective_balance < selection_target) {
+                Assume(!coin_selection_params.m_subtract_fee_outputs);
+                return util::Error{strprintf(_("The total exceeds your balance when the %s transaction fee is included."), FormatMoney(selection_target - recipients_sum))};
+            }
+        }
+
+        // General failure description
+        return util::Error{_("Insufficient funds")};
     }
     const SelectionResult& result = *select_coins_res;
     TRACEPOINT(coin_selection, selected_coins,
