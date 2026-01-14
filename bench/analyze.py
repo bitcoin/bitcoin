@@ -425,7 +425,7 @@ class PlotGenerator:
             return
 
         plt.figure(figsize=(30, 10))
-        plt.plot(x, y)
+        plt.scatter(x, y, alpha=0.6, s=20)
         plt.title(title, fontsize=20)
         plt.xlabel(x_label, fontsize=16)
         plt.ylabel(y_label, fontsize=16)
