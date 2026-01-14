@@ -197,11 +197,11 @@
     Plotly.react('nightly-chart', buildTraces(), getLayout(theme), config);
   }
 
+  setTheme(getPreferredTheme());
+
   document.getElementById('nightly-chart').on('plotly_click', function(data) {
     const commit = data.points[0].customdata[0];
     window.open('https://github.com/bitcoin/bitcoin/commit/' + commit, '_blank');
   });
-
-  setTheme(getPreferredTheme());
 </script>
 {% endblock %}
