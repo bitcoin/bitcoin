@@ -103,6 +103,8 @@ BASE_SCRIPTS = [
     # vv Tests less than 5m vv
     'feature_fee_estimation.py',
     'feature_taproot.py',
+    'feature_reduced_data_temporary_deployment.py',
+    'feature_bip9_max_activation_height.py',
     'feature_rdts.py',
     'feature_block.py',
     'mempool_ephemeral_dust.py',
@@ -146,7 +148,6 @@ BASE_SCRIPTS = [
     'rpc_bind.py --nonloopback',
     'p2p_headers_sync_with_minchainwork.py',
     'p2p_feefilter.py',
-    'feature_bip9_max_activation_height.py',
     'feature_csv_activation.py',
     'feature_reduced_data_utxo_height.py',
     'p2p_sendheaders.py',
