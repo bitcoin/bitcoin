@@ -4,29 +4,30 @@
 
 #include <evo/specialtxman.h>
 
+#include <chainlock/chainlock.h>
+#include <chainlock/clsig.h>
+#include <chainlock/handler.h>
 #include <chainparams.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
-#include <hash.h>
-#include <primitives/block.h>
-#include <util/irange.h>
-#include <util/system.h>
-#include <validation.h>
-
-#include <chainlock/chainlock.h>
-#include <chainlock/clsig.h>
-#include <chainlock/handler.h>
 #include <evo/assetlocktx.h>
 #include <evo/cbtx.h>
 #include <evo/creditpool.h>
 #include <evo/deterministicmns.h>
 #include <evo/mnhftx.h>
+#include <evo/netinfo.h>
 #include <evo/simplifiedmns.h>
+#include <hash.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/commitment.h>
 #include <llmq/quorumsman.h>
 #include <llmq/utils.h>
+#include <messagesigner.h>
+#include <primitives/block.h>
+#include <util/irange.h>
+#include <util/system.h>
+#include <validation.h>
 
 static bool CheckCbTxBestChainlock(const CCbTx& cbTx, const CBlockIndex* pindex, const Consensus::Params& consensus_params,
                                    const CChain& chain, const llmq::CQuorumManager& qman,
@@ -756,6 +757,473 @@ bool CSpecialTxProcessor::CheckCreditPoolDiffForBlock(const CBlock& block, const
     } catch (const std::exception& e) {
         LogPrintf("CSpecialTxProcessor::%s -- FAILURE! %s\n", __func__, e.what());
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "failed-checkcreditpooldiff");
+    }
+
+    return true;
+}
+
+template <typename ProTx>
+static bool CheckService(const ProTx& proTx, TxValidationState& state)
+{
+    switch (proTx.netInfo->Validate()) {
+    case NetInfoStatus::BadAddress:
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-addr");
+    case NetInfoStatus::BadPort:
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-port");
+    case NetInfoStatus::BadType:
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-addr-type");
+    case NetInfoStatus::NotRoutable:
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-addr-unroutable");
+    case NetInfoStatus::Malformed:
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-bad");
+    case NetInfoStatus::Success:
+        return true;
+    // Shouldn't be possible during self-checks
+    case NetInfoStatus::BadInput:
+    case NetInfoStatus::Duplicate:
+    case NetInfoStatus::MaxLimit:
+        assert(false);
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+
+template <typename ProTx>
+static bool CheckPlatformFields(const ProTx& proTx, bool is_extended_addr, TxValidationState& state)
+{
+    if (proTx.platformNodeID.IsNull()) {
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-platform-nodeid");
+    }
+
+    if (is_extended_addr) {
+        // platformHTTPPort and platformP2PPort have been subsumed by netInfo. They should always be zero.
+        if (proTx.platformP2PPort != 0) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-platform-p2p-port");
+        }
+        if (proTx.platformHTTPPort != 0) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-platform-http-port");
+        }
+        return true;
+    }
+
+    if (::IsNodeOnMainnet()) {
+        if (proTx.platformP2PPort != ::MainParams().GetDefaultPlatformP2PPort()) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-platform-p2p-port");
+        }
+        if (proTx.platformHTTPPort != ::MainParams().GetDefaultPlatformHTTPPort()) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-platform-http-port");
+        }
+    }
+    if (proTx.platformP2PPort == ::MainParams().GetDefaultPort()) {
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-platform-p2p-port");
+    }
+    if (proTx.platformHTTPPort == ::MainParams().GetDefaultPort()) {
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-platform-http-port");
+    }
+
+    const uint16_t core_port{proTx.netInfo->GetPrimary().GetPort()};
+    if (proTx.platformP2PPort == proTx.platformHTTPPort || proTx.platformP2PPort == core_port ||
+        proTx.platformHTTPPort == core_port) {
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-platform-dup-ports");
+    }
+
+    return true;
+}
+
+template <typename ProTx>
+static bool CheckHashSig(const ProTx& proTx, const PKHash& pkhash, TxValidationState& state)
+{
+    if (std::string strError; !CHashSigner::VerifyHash(::SerializeHash(proTx), ToKeyID(pkhash), proTx.vchSig, strError)) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-sig");
+    }
+    return true;
+}
+
+template <typename ProTx>
+static bool CheckStringSig(const ProTx& proTx, const PKHash& pkhash, TxValidationState& state)
+{
+    if (std::string strError; !CMessageSigner::VerifyMessage(ToKeyID(pkhash), proTx.vchSig, proTx.MakeSignString(), strError)) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-sig");
+    }
+    return true;
+}
+
+template <typename ProTx>
+static bool CheckHashSig(const ProTx& proTx, const CBLSPublicKey& pubKey, TxValidationState& state)
+{
+    if (!proTx.sig.VerifyInsecure(pubKey, ::SerializeHash(proTx))) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-sig");
+    }
+    return true;
+}
+
+template <typename ProTx>
+static std::optional<ProTx> GetValidatedPayload(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev,
+                                                const ChainstateManager& chainman, TxValidationState& state)
+{
+    if (tx.nType != ProTx::SPECIALTX_TYPE) {
+        state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-type");
+        return std::nullopt;
+    }
+
+    auto opt_ptx = GetTxPayload<ProTx>(tx);
+    if (!opt_ptx) {
+        state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-payload");
+        return std::nullopt;
+    }
+    if (!opt_ptx->IsTriviallyValid(pindexPrev, chainman, state)) {
+        // pass the state returned by the function above
+        return std::nullopt;
+    }
+    return opt_ptx;
+}
+
+/**
+ * Validates potential changes to masternode state version by ProTx transaction version
+ * @param[in]  pindexPrev    Previous block index to validate DEPLOYMENT_V24 activation
+ * @param[in]  tx_type       Special transaction type
+ * @param[in]  state_version Current masternode state version
+ * @param[in]  tx_version    Proposed transaction version
+ * @param[out] state         This may be set to an Error state if any error occurred processing them
+ * @returns                  true if version change is valid or DEPLOYMENT_V24 is not active
+ */
+static bool IsVersionChangeValid(gsl::not_null<const CBlockIndex*> pindexPrev, const uint16_t tx_type,
+                          const uint16_t state_version, const uint16_t tx_version, const ChainstateManager& chainman,
+                          TxValidationState& state)
+{
+    if (!DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_V24)) {
+        // New restrictions only apply after v24 deployment
+        return true;
+    }
+
+    if (state_version >= ProTxVersion::BasicBLS && tx_version == ProTxVersion::LegacyBLS) {
+        // Don't allow legacy scheme versioned transactions after upgrading to basic scheme
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version-downgrade");
+    }
+
+    if (state_version == ProTxVersion::LegacyBLS && tx_version > ProTxVersion::BasicBLS) {
+        // Nodes using the legacy scheme must first upgrade to the basic scheme before upgrading further
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version-upgrade");
+    }
+
+    if (tx_type != TRANSACTION_PROVIDER_UPDATE_SERVICE && tx_version == ProTxVersion::ExtAddr) {
+        // Only new entries (ProRegTx) and service updates (ProUpServTx) can use ExtAddr versioning
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version-tx-type");
+    }
+
+    return true;
+}
+
+bool CheckProRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev,
+                   CDeterministicMNManager& dmnman, const CCoinsViewCache& view, const ChainstateManager& chainman,
+                   TxValidationState& state, bool check_sigs)
+{
+    const auto opt_ptx = GetValidatedPayload<CProRegTx>(tx, pindexPrev, chainman, state);
+    if (!opt_ptx) {
+        // pass the state returned by the function above
+        return false;
+    }
+
+    const bool is_v24_active{DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_V24)};
+
+    // No longer allow legacy scheme masternode registration
+    if (is_v24_active && opt_ptx->nVersion < ProTxVersion::BasicBLS) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version-disallowed");
+    }
+
+    // It's allowed to set addr to 0, which will put the MN into PoSe-banned state and require a ProUpServTx to be issues later
+    // If any of both is set, it must be valid however
+    if (!opt_ptx->netInfo->IsEmpty() && !CheckService(*opt_ptx, state)) {
+        // pass the state returned by the function above
+        return false;
+    }
+
+    if (opt_ptx->nType == MnType::Evo) {
+        if (!CheckPlatformFields(*opt_ptx, opt_ptx->nVersion >= ProTxVersion::ExtAddr, state)) {
+            return false;
+        }
+    }
+
+    CTxDestination collateralTxDest;
+    const PKHash *keyForPayloadSig = nullptr;
+    COutPoint collateralOutpoint;
+
+    CAmount expectedCollateral = GetMnType(opt_ptx->nType).collat_amount;
+
+    if (!opt_ptx->collateralOutpoint.hash.IsNull()) {
+        Coin coin;
+        if (!view.GetCoin(opt_ptx->collateralOutpoint, coin) || coin.IsSpent() || coin.out.nValue != expectedCollateral) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-collateral");
+        }
+
+        if (!ExtractDestination(coin.out.scriptPubKey, collateralTxDest)) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-collateral-dest");
+        }
+
+        // Extract key from collateral. This only works for P2PK and P2PKH collaterals and will fail for P2SH.
+        // Issuer of this ProRegTx must prove ownership with this key by signing the ProRegTx
+        keyForPayloadSig = std::get_if<PKHash>(&collateralTxDest);
+        if (!keyForPayloadSig) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-collateral-pkh");
+        }
+
+        collateralOutpoint = opt_ptx->collateralOutpoint;
+    } else {
+        if (opt_ptx->collateralOutpoint.n >= tx.vout.size()) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-collateral-index");
+        }
+        if (tx.vout[opt_ptx->collateralOutpoint.n].nValue != expectedCollateral) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-collateral");
+        }
+
+        if (!ExtractDestination(tx.vout[opt_ptx->collateralOutpoint.n].scriptPubKey, collateralTxDest)) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-collateral-dest");
+        }
+
+        collateralOutpoint = COutPoint(tx.GetHash(), opt_ptx->collateralOutpoint.n);
+    }
+
+    // don't allow reuse of collateral key for other keys (don't allow people to put the collateral key onto an online server)
+    // this check applies to internal and external collateral, but internal collaterals are not necessarily a P2PKH
+    if (collateralTxDest == CTxDestination(PKHash(opt_ptx->keyIDOwner)) || collateralTxDest == CTxDestination(PKHash(opt_ptx->keyIDVoting))) {
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-collateral-reuse");
+    }
+
+    if (pindexPrev) {
+        auto mnList = dmnman.GetListForBlock(pindexPrev);
+
+        // only allow reusing of addresses when it's for the same collateral (which replaces the old MN)
+        for (const auto& entry : opt_ptx->netInfo->GetEntries()) {
+            if (const auto service_opt{entry.GetAddrPort()}) {
+                if (mnList.HasUniqueProperty(*service_opt) &&
+                    mnList.GetUniquePropertyMN(*service_opt)->collateralOutpoint != collateralOutpoint) {
+                    return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-netinfo-entry");
+                }
+            } else if (const auto domain_opt{entry.GetDomainPort()}) {
+                if (mnList.HasUniqueProperty(*domain_opt) &&
+                    mnList.GetUniquePropertyMN(*domain_opt)->collateralOutpoint != collateralOutpoint) {
+                    return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-netinfo-entry");
+                }
+            } else {
+                return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-entry");
+            }
+        }
+
+        // never allow duplicate keys, even if this ProTx would replace an existing MN
+        if (mnList.HasUniqueProperty(opt_ptx->keyIDOwner) || mnList.HasUniqueProperty(opt_ptx->pubKeyOperator)) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-key");
+        }
+
+        // never allow duplicate platformNodeIds for EvoNodes
+        if (opt_ptx->nType == MnType::Evo) {
+            if (mnList.HasUniqueProperty(opt_ptx->platformNodeID)) {
+                return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-platformnodeid");
+            }
+        }
+
+        if (!DeploymentDIP0003Enforced(pindexPrev->nHeight, Params().GetConsensus())) {
+            if (opt_ptx->keyIDOwner != opt_ptx->keyIDVoting) {
+                return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-key-not-same");
+            }
+        }
+    }
+
+    if (!CheckInputsHash(tx, *opt_ptx, state)) {
+        // pass the state returned by the function above
+        return false;
+    }
+
+    if (keyForPayloadSig) {
+        // collateral is not part of this ProRegTx, so we must verify ownership of the collateral
+        if (check_sigs && !CheckStringSig(*opt_ptx, *keyForPayloadSig, state)) {
+            // pass the state returned by the function above
+            return false;
+        }
+    } else {
+        // collateral is part of this ProRegTx, so we know the collateral is owned by the issuer
+        if (!opt_ptx->vchSig.empty()) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-sig");
+        }
+    }
+
+    return true;
+}
+
+bool CheckProUpServTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, CDeterministicMNManager& dmnman,
+                      const ChainstateManager& chainman, TxValidationState& state, bool check_sigs)
+{
+    const auto opt_ptx = GetValidatedPayload<CProUpServTx>(tx, pindexPrev, chainman, state);
+    if (!opt_ptx) {
+        // pass the state returned by the function above
+        return false;
+    }
+
+    if (!CheckService(*opt_ptx, state)) {
+        // pass the state returned by the function above
+        return false;
+    }
+
+    if (opt_ptx->nType == MnType::Evo) {
+        if (!CheckPlatformFields(*opt_ptx, opt_ptx->nVersion >= ProTxVersion::ExtAddr, state)) {
+            return false;
+        }
+    }
+
+    auto mnList = dmnman.GetListForBlock(pindexPrev);
+    auto dmn = mnList.GetMN(opt_ptx->proTxHash);
+    if (!dmn) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-hash");
+    }
+
+    if (!IsVersionChangeValid(pindexPrev, tx.nType, dmn->pdmnState->nVersion, opt_ptx->nVersion, chainman, state)) {
+        // pass the state returned by the function above
+        return false;
+    }
+
+    // don't allow updating to addresses already used by other MNs
+    for (const auto& entry : opt_ptx->netInfo->GetEntries()) {
+        if (const auto service_opt{entry.GetAddrPort()}) {
+            if (mnList.HasUniqueProperty(*service_opt) &&
+                mnList.GetUniquePropertyMN(*service_opt)->proTxHash != opt_ptx->proTxHash) {
+                return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-netinfo-entry");
+            }
+        } else if (const auto domain_opt{entry.GetDomainPort()}) {
+            if (mnList.HasUniqueProperty(*domain_opt) && mnList.GetUniquePropertyMN(*domain_opt)->proTxHash != opt_ptx->proTxHash) {
+                return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-netinfo-entry");
+            }
+        } else {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-entry");
+        }
+    }
+
+    // don't allow updating to platformNodeIds already used by other EvoNodes
+    if (opt_ptx->nType == MnType::Evo) {
+        if (mnList.HasUniqueProperty(opt_ptx->platformNodeID)  && mnList.GetUniquePropertyMN(opt_ptx->platformNodeID)->proTxHash != opt_ptx->proTxHash) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-platformnodeid");
+        }
+    }
+
+    if (opt_ptx->scriptOperatorPayout != CScript()) {
+        if (dmn->nOperatorReward == 0) {
+            // don't allow setting operator reward payee in case no operatorReward was set
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-operator-payee");
+        }
+        if (!opt_ptx->scriptOperatorPayout.IsPayToPublicKeyHash() && !opt_ptx->scriptOperatorPayout.IsPayToScriptHash()) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-operator-payee");
+        }
+    }
+
+    // we can only check the signature if pindexPrev != nullptr and the MN is known
+    if (!CheckInputsHash(tx, *opt_ptx, state)) {
+        // pass the state returned by the function above
+        return false;
+    }
+    if (check_sigs && !CheckHashSig(*opt_ptx, dmn->pdmnState->pubKeyOperator.Get(), state)) {
+        // pass the state returned by the function above
+        return false;
+    }
+
+    return true;
+}
+
+bool CheckProUpRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev,
+                     CDeterministicMNManager& dmnman, const CCoinsViewCache& view, const ChainstateManager& chainman,
+                     TxValidationState& state, bool check_sigs)
+{
+    const auto opt_ptx = GetValidatedPayload<CProUpRegTx>(tx, pindexPrev, chainman, state);
+    if (!opt_ptx) {
+        // pass the state returned by the function above
+        return false;
+    }
+
+    CTxDestination payoutDest;
+    if (!ExtractDestination(opt_ptx->scriptPayout, payoutDest)) {
+        // should not happen as we checked script types before
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-payee-dest");
+    }
+
+    auto mnList = dmnman.GetListForBlock(pindexPrev);
+    auto dmn = mnList.GetMN(opt_ptx->proTxHash);
+    if (!dmn) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-hash");
+    }
+
+    if (!IsVersionChangeValid(pindexPrev, tx.nType, dmn->pdmnState->nVersion, opt_ptx->nVersion, chainman, state)) {
+        // pass the state returned by the function above
+        return false;
+    }
+
+    // don't allow reuse of payee key for other keys (don't allow people to put the payee key onto an online server)
+    if (payoutDest == CTxDestination(PKHash(dmn->pdmnState->keyIDOwner)) || payoutDest == CTxDestination(PKHash(opt_ptx->keyIDVoting))) {
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-payee-reuse");
+    }
+
+    Coin coin;
+    if (!view.GetCoin(dmn->collateralOutpoint, coin) || coin.IsSpent()) {
+        // this should never happen (there would be no dmn otherwise)
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-collateral");
+    }
+
+    // don't allow reuse of collateral key for other keys (don't allow people to put the collateral key onto an online server)
+    CTxDestination collateralTxDest;
+    if (!ExtractDestination(coin.out.scriptPubKey, collateralTxDest)) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-collateral-dest");
+    }
+    if (collateralTxDest == CTxDestination(PKHash(dmn->pdmnState->keyIDOwner)) || collateralTxDest == CTxDestination(PKHash(opt_ptx->keyIDVoting))) {
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-collateral-reuse");
+    }
+
+    if (mnList.HasUniqueProperty(opt_ptx->pubKeyOperator)) {
+        auto otherDmn = mnList.GetUniquePropertyMN(opt_ptx->pubKeyOperator);
+        if (opt_ptx->proTxHash != otherDmn->proTxHash) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-key");
+        }
+    }
+
+    if (!DeploymentDIP0003Enforced(pindexPrev->nHeight, Params().GetConsensus())) {
+        if (dmn->pdmnState->keyIDOwner != opt_ptx->keyIDVoting) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-key-not-same");
+        }
+    }
+
+    if (!CheckInputsHash(tx, *opt_ptx, state)) {
+        // pass the state returned by the function above
+        return false;
+    }
+    if (check_sigs && !CheckHashSig(*opt_ptx, PKHash(dmn->pdmnState->keyIDOwner), state)) {
+        // pass the state returned by the function above
+        return false;
+    }
+
+    return true;
+}
+
+bool CheckProUpRevTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, CDeterministicMNManager& dmnman,
+                     const ChainstateManager& chainman, TxValidationState& state, bool check_sigs)
+{
+    const auto opt_ptx = GetValidatedPayload<CProUpRevTx>(tx, pindexPrev, chainman, state);
+    if (!opt_ptx) {
+        // pass the state returned by the function above
+        return false;
+    }
+
+    auto mnList = dmnman.GetListForBlock(pindexPrev);
+    auto dmn = mnList.GetMN(opt_ptx->proTxHash);
+    if (!dmn) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-hash");
+    }
+
+    if (!IsVersionChangeValid(pindexPrev, tx.nType, dmn->pdmnState->nVersion, opt_ptx->nVersion, chainman, state)) {
+        // pass the state returned by the function above
+        return false;
+    }
+
+    if (!CheckInputsHash(tx, *opt_ptx, state)) {
+        // pass the state returned by the function above
+        return false;
+    }
+    if (check_sigs && !CheckHashSig(*opt_ptx, dmn->pdmnState->pubKeyOperator.Get(), state)) {
+        // pass the state returned by the function above
+        return false;
     }
 
     return true;

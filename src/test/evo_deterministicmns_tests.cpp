@@ -11,6 +11,7 @@
 #include <evo/providertx.h>
 #include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
+#include <evo/specialtxman.h>
 #include <llmq/context.h>
 #include <messagesigner.h>
 #include <node/transaction.h>
