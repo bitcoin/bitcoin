@@ -4,6 +4,11 @@
 
 #include <test/fuzz/util/descriptor.h>
 
+#include <key.h>
+#include <key_io.h>
+#include <pubkey.h>
+#include <util/strencodings.h>
+
 #include <ranges>
 #include <stack>
 
