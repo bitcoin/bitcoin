@@ -3,18 +3,22 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <coins.h>
-#include <coinsviewcachecontroller.h>
+#include <coinsviewcacheasync.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <primitives/transaction_identifier.h>
 #include <txdb.h>
 #include <uint256.h>
 #include <util/byte_units.h>
+#include <util/hasher.h>
 
 #include <boost/test/unit_test.hpp>
 
+#include <cstdint>
+#include <cstring>
 #include <ranges>
 
-BOOST_AUTO_TEST_SUITE(coinsviewcachecontroller_tests)
+BOOST_AUTO_TEST_SUITE(coinsviewcacheasync_tests)
 
 static CBlock CreateBlock() noexcept
 {
@@ -37,7 +41,7 @@ static CBlock CreateBlock() noexcept
     return block;
 }
 
-void PopulateView(const CBlock& block, CCoinsView& view)
+void PopulateView(const CBlock& block, CCoinsView& view, bool spent = false)
 {
     CCoinsViewCache cache{&view};
     cache.SetBestBlock(uint256::ONE);
@@ -45,12 +49,107 @@ void PopulateView(const CBlock& block, CCoinsView& view)
     for (const auto& tx : block.vtx | std::views::drop(1)) {
         for (const auto& in : tx->vin) {
             Coin coin{};
-            coin.out.nValue = 1;
+            if (!spent) coin.out.nValue = 1;
             cache.EmplaceCoinInternalDANGER(COutPoint{in.prevout}, std::move(coin));
         }
     }
 
     cache.Flush();
+}
+
+void CheckCache(const CBlock& block, const CCoinsViewCache& cache)
+{
+    uint32_t counter{0};
+
+    for (const auto& tx : block.vtx) {
+        if (tx->IsCoinBase()) {
+            BOOST_CHECK(!cache.HaveCoinInCache(tx->vin[0].prevout));
+        } else {
+            for (const auto& in : tx->vin) {
+                const auto& outpoint{in.prevout};
+                const auto& first{cache.AccessCoin(outpoint)};
+                const auto& second{cache.AccessCoin(outpoint)};
+                BOOST_CHECK_EQUAL(&first, &second);
+                ++counter;
+                BOOST_CHECK(cache.HaveCoinInCache(outpoint));
+            }
+        }
+    }
+    BOOST_CHECK_EQUAL(cache.GetCacheSize(), counter);
+}
+
+BOOST_AUTO_TEST_CASE(fetch_inputs_from_db)
+{
+    const auto block{CreateBlock()};
+    CCoinsViewDB db{{.path = "", .cache_bytes = 1_MiB, .memory_only = true}, {}};
+    PopulateView(block, db);
+    CCoinsViewCache main_cache{&db};
+    CoinsViewCacheAsyncController controller{&main_cache};
+    for (auto i{0}; i < 3; ++i) {
+        auto view{controller.Start()};
+        CheckCache(block, *view);
+        // Check that no coins have been moved up to main cache from db
+        for (const auto& tx : block.vtx) {
+            for (const auto& in : tx->vin) {
+                BOOST_CHECK(!main_cache.HaveCoinInCache(in.prevout));
+            }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(fetch_inputs_from_cache)
+{
+    const auto block{CreateBlock()};
+    CCoinsViewDB db{{.path = "", .cache_bytes = 1_MiB, .memory_only = true}, {}};
+    CCoinsViewCache main_cache{&db};
+    PopulateView(block, main_cache);
+    CoinsViewCacheAsyncController controller{&main_cache};
+    for (auto i{0}; i < 3; ++i) {
+        auto view{controller.Start()};
+        CheckCache(block, *view);
+    }
+}
+
+// Test for the case where a block spends coins that are spent in the cache, but
+// the spentness has not been flushed to the db.
+BOOST_AUTO_TEST_CASE(fetch_no_double_spend)
+{
+    const auto block{CreateBlock()};
+    CCoinsViewDB db{{.path = "", .cache_bytes = 1_MiB, .memory_only = true}, {}};
+    PopulateView(block, db);
+    CCoinsViewCache main_cache{&db};
+    // Add all inputs as spent already in cache
+    PopulateView(block, main_cache, /*spent=*/true);
+    CoinsViewCacheAsyncController controller{&main_cache};
+    for (auto i{0}; i < 3; ++i) {
+        auto view{controller.Start()};
+        for (const auto& tx : block.vtx) {
+            for (const auto& in : tx->vin) {
+                const auto& c{view->AccessCoin(in.prevout)};
+                BOOST_CHECK(c.IsSpent());
+            }
+        }
+        // Coins are not added to the view, even though they exist unspent in the parent db
+        BOOST_CHECK_EQUAL(view->GetCacheSize(), 0);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(fetch_no_inputs)
+{
+    const auto block{CreateBlock()};
+    CCoinsViewDB db{{.path = "", .cache_bytes = 1_MiB, .memory_only = true}, {}};
+    CCoinsViewCache main_cache{&db};
+    CoinsViewCacheAsyncController controller{&main_cache};
+    for (auto i{0}; i < 3; ++i) {
+        auto view{controller.Start()};
+        for (const auto& tx : block.vtx) {
+            for (const auto& in : tx->vin) {
+                const auto& c{view->AccessCoin(in.prevout)};
+                BOOST_CHECK(c.IsSpent());
+            }
+        }
+        BOOST_CHECK_EQUAL(view->GetCacheSize(), 0);
+    }
 }
 
 // Test that Handle destruction resets the cache
@@ -60,7 +159,7 @@ BOOST_AUTO_TEST_CASE(handle_scope_resets_cache)
     CCoinsViewDB db{{.path = "", .cache_bytes = 1_MiB, .memory_only = true}, {}};
     CCoinsViewCache main_cache{&db};
     PopulateView(block, main_cache);
-    CoinsViewCacheController controller{&main_cache};
+    CoinsViewCacheAsyncController controller{&main_cache};
 
     CCoinsViewCache* first_cache_ptr{nullptr};
     {

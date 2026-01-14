@@ -1856,7 +1856,7 @@ void CoinsViews::InitCache()
 {
     AssertLockHeld(::cs_main);
     m_cacheview = std::make_unique<CCoinsViewCache>(&m_catcherview);
-    m_connect_block_controller = std::make_unique<CoinsViewCacheController>(&*m_cacheview);
+    m_connect_block_controller = std::make_unique<CoinsViewCacheAsyncController>(&*m_cacheview);
 }
 
 Chainstate::Chainstate(

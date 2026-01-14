@@ -382,6 +382,8 @@ protected:
     /* Cached dynamic memory usage for the inner Coin objects. */
     mutable size_t cachedCoinsUsage{0};
 
+    /* Get the coin from base. Used for cache misses in FetchCoin. */
+    virtual std::optional<Coin> GetCoinFromBase(const COutPoint& outpoint) const;
 public:
     CCoinsViewCache(CCoinsView *baseIn, bool deterministic = false);
 
