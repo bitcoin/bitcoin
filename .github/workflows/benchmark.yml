@@ -83,6 +83,13 @@ jobs:
           path: ${{ runner.temp }}/output/*-flamegraph.svg
           if-no-files-found: ignore
 
+      - name: Upload debug logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-logs-${{ matrix.name }}
+          path: ${{ runner.temp }}/output/*-debug.log
+          if-no-files-found: ignore
+
       - name: Write context metadata
         env:
           GITHUB_CONTEXT: ${{ toJSON(github) }}

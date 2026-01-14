@@ -55,6 +55,11 @@ jobs:
               cp -r "pngs-${network}"/* "${network}-results/plots/" 2>/dev/null || true
             fi
 
+            # Copy debug logs into network results directory
+            if [ -d "debug-logs-${network}" ]; then
+              cp -r "debug-logs-${network}"/* "${network}-results/" 2>/dev/null || true
+            fi
+
             # Keep metadata separate for extraction
             if [ -d "run-metadata-${network}" ]; then
               mkdir -p "${network}-metadata"

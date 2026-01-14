@@ -113,6 +113,13 @@ jobs:
           name: result-nightly-${{ matrix.name }}
           path: ${{ runner.temp }}/output/results.json
 
+      - name: Upload debug logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-logs-nightly-${{ matrix.name }}
+          path: ${{ runner.temp }}/output/*-debug.log
+          if-no-files-found: ignore
+
   publish:
     needs: benchmark
     runs-on: ubuntu-latest

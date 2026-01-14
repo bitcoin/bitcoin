@@ -105,6 +105,13 @@
         <img src="{{ plot.path }}" alt="{{ plot.name }}" class="mb-4 max-w-full h-auto">
       </a>
       {% endfor %}
+      {% if graph.debug_log %}
+      <div class="mt-2">
+        <a href="{{ graph.debug_log }}" target="_blank" class="text-blue-600 hover:underline">
+          View debug.log
+        </a>
+      </div>
+      {% endif %}
     </div>
     {% endfor %}
     {% endif %}

@@ -165,18 +165,18 @@ class BenchmarkPhase:
                 name=name,
             )
 
-            # For instrumented runs, collect flamegraph and debug log
-            if self.is_instrumented:
-                logger.info("Collecting instrumented artifacts...")
-                flamegraph_file = output_dir / f"{name}-flamegraph.svg"
-                debug_log_file = output_dir / f"{name}-debug.log"
+            # Collect debug log (all runs)
+            debug_log_file = output_dir / f"{name}-debug.log"
+            if debug_log_file.exists():
+                result.debug_log = debug_log_file
+                logger.info(f"Collected debug log: {debug_log_file}")
 
+            # For instrumented runs, also collect flamegraph
+            if self.is_instrumented:
+                flamegraph_file = output_dir / f"{name}-flamegraph.svg"
                 if flamegraph_file.exists():
                     result.flamegraph = flamegraph_file
-                    logger.info(f"  Flamegraph: {flamegraph_file}")
-                if debug_log_file.exists():
-                    result.debug_log = debug_log_file
-                    logger.info(f"  Debug log: {debug_log_file}")
+                    logger.info(f"Collected flamegraph: {flamegraph_file}")
 
             # Clean up tmp_datadir
             if tmp_datadir.exists():
@@ -313,10 +313,9 @@ class BenchmarkPhase:
         # Build the actual command to benchmark
         bitcoind_cmd = self._build_bitcoind_cmd(binary_path, tmp_datadir)
 
-        # For instrumented runs, append the conclude logic
-        if self.is_instrumented:
-            conclude = self._create_conclude_commands(name, tmp_datadir, output_dir)
-            bitcoind_cmd += f" && {conclude}"
+        # Append conclude logic (debug.log for all, flamegraph for instrumented)
+        conclude = self._create_conclude_commands(name, tmp_datadir, output_dir)
+        bitcoind_cmd += f" && {conclude}"
 
         cmd.append(bitcoind_cmd)
 
@@ -331,12 +330,13 @@ class BenchmarkPhase:
         """Create inline conclude commands for the binary."""
         commands = []
 
-        # Move flamegraph if exists
-        commands.append(
-            f'if [ -e flamegraph.svg ]; then mv flamegraph.svg "{output_dir}/{name}-flamegraph.svg"; fi'
-        )
+        # Move flamegraph if exists (instrumented only)
+        if self.is_instrumented:
+            commands.append(
+                f'if [ -e flamegraph.svg ]; then mv flamegraph.svg "{output_dir}/{name}-flamegraph.svg"; fi'
+            )
 
-        # Copy debug log if exists
+        # Copy debug log if exists (all runs)
         commands.append(
             f'debug_log=$(find "{tmp_datadir}" -name debug.log -print -quit); '
             f'if [ -n "$debug_log" ]; then cp "$debug_log" "{output_dir}/{name}-debug.log"; fi'

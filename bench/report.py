@@ -428,6 +428,12 @@ class ReportGenerator:
             shutil.copytree(plots_dir, dest_plots)
             logger.debug(f"Copied plots to {dest_plots}")
 
+        # Copy debug logs with network prefix
+        for log in input_dir.glob("*-debug.log"):
+            dest = output_dir / f"{network}-{log.name}"
+            shutil.copy2(log, dest)
+            logger.debug(f"Copied {log.name} as {dest.name}")
+
     def _generate_html(
         self,
         runs: list[BenchmarkRun],
@@ -563,7 +569,16 @@ class ReportGenerator:
                     if p.name.startswith(f"{name}-") and p.suffix == ".png"
                 ]
 
-            if not flamegraph_name and not plot_files:
+            debug_log_name = None
+            network_prefixed_log = f"{network}-{name}-debug.log"
+            non_prefixed_log = f"{name}-debug.log"
+
+            if (output_dir / network_prefixed_log).exists():
+                debug_log_name = network_prefixed_log
+            elif (input_dir / non_prefixed_log).exists():
+                debug_log_name = non_prefixed_log
+
+            if not flamegraph_name and not plot_files and not debug_log_name:
                 continue
 
             display_label = f"{network} - {name}" if network != "default" else name
@@ -573,6 +588,7 @@ class ReportGenerator:
                 {
                     "label": display_label,
                     "flamegraph": flamegraph_name,
+                    "debug_log": debug_log_name,
                     "plots": [
                         {"name": p, "path": f"{plots_rel_path}/{p}"}
                         for p in sorted(plot_files)
@@ -603,6 +619,12 @@ class ReportGenerator:
                 shutil.rmtree(dest_plots)
             shutil.copytree(plots_dir, dest_plots)
             logger.debug("Copied plots directory")
+
+        # Copy debug logs
+        for log in input_dir.glob("*-debug.log"):
+            dest = output_dir / log.name
+            shutil.copy2(log, dest)
+            logger.debug(f"Copied {log.name}")
 
 
 class ReportPhase:
