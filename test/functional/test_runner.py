@@ -215,6 +215,7 @@ BASE_SCRIPTS = [
     'rpc_rawtransaction.py',
     'wallet_transactiontime_rescan.py',
     'p2p_addrv2_relay.py',
+    'p2p_outbound_management.py',
     'p2p_compactblocks_hb.py --v1transport',
     'p2p_compactblocks_hb.py --v2transport',
     'p2p_disconnect_ban.py --v1transport',

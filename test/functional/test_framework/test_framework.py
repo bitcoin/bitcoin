@@ -18,12 +18,15 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 
 from .address import create_deterministic_address_bcrt1_p2tr_op_true
 from .authproxy import JSONRPCException
 from . import coverage
-from .p2p import NetworkThread
+from .netutil import format_addr_port
+from .p2p import NetworkThread, P2P_SERVICES, P2PInterface
+from .socks5 import Socks5Configuration, Socks5Server
 from .test_node import TestNode
 from .util import (
     Binaries,
@@ -125,7 +128,14 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         # Disable ThreadOpenConnections by default, so that adding entries to
         # addrman will not result in automatic connections to them.
         self.disable_autoconnect = True
+        # Auto outbound mode re-routes automatic outbound connections with a SOCKS5 proxy
+        # to local addresses, behind which there could be a python p2p or another node.
+        self.auto_outbound_mode = False
+        # Optional callback to override auto outbound destination. Should return (addr, port, listener).
+        self.auto_outbound_factory = None
         self.set_test_params()
+        if self.auto_outbound_mode:
+            self.disable_autoconnect = False
         assert self.wallet_names is None or len(self.wallet_names) <= self.num_nodes
         self.rpc_timeout = int(self.rpc_timeout * self.options.timeout_factor) # optionally, increase timeout by a factor
 
@@ -396,6 +406,72 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 assert_equal(chain_info["blocks"], 200)
                 assert_equal(chain_info["initialblockdownload"], False)
 
+    def _create_auto_outbound_listener(self, listener):
+        """Helper to create and setup a P2P listener for auto outbound mode"""
+        actual_to_addr = ""
+        actual_to_port = 0
+
+        listener.peer_connect_helper(dstaddr="0.0.0.0", dstport=0, net=self.chain, timeout_factor=self.options.timeout_factor)
+        listener.peer_connect_send_version(services=P2P_SERVICES)
+
+        def on_listen_done(addr, port):
+            nonlocal actual_to_addr
+            nonlocal actual_to_port
+            actual_to_addr = addr
+            actual_to_port = port
+
+        self.network_thread.listen(
+            addr="127.0.0.1",
+            port=0, # Dynamic port allocation
+            p2p=listener,
+            callback=on_listen_done)
+
+        # Wait until the callback has been called.
+        self.wait_until(lambda: actual_to_port != 0)
+
+        return (actual_to_addr, actual_to_port)
+
+    def _setup_auto_outbound_mode(self):
+        """Setup SOCKS5 proxy with destinations factory for auto outbound mode."""
+        socks5_server_config = Socks5Configuration()
+        socks5_server_config.addr = ("127.0.0.1", p2p_port(self.num_nodes))
+        socks5_server_config.unauth = True
+        socks5_server_config.auth = True
+
+        self.socks5_server = Socks5Server(socks5_server_config)
+        self.socks5_server.start()
+
+        self.auto_outbound_destinations = []
+        self.auto_outbound_destinations_lock = threading.Lock()
+
+        def destinations_factory(requested_to_addr, requested_to_port):
+            with self.auto_outbound_destinations_lock:
+                i = len(self.auto_outbound_destinations)
+
+                if self.auto_outbound_factory:
+                    actual_to_addr, actual_to_port, listener = self.auto_outbound_factory(i)
+                else:
+                    # Create listener with default P2PInterface
+                    listener = P2PInterface()
+                    actual_to_addr, actual_to_port = self._create_auto_outbound_listener(listener)
+
+                self.log.debug(f"Instructing the SOCKS5 proxy to redirect connection i={i} to "
+                               f"{format_addr_port(actual_to_addr, actual_to_port)}")
+
+                self.auto_outbound_destinations.append({
+                    "requested_to": format_addr_port(requested_to_addr, requested_to_port),
+                    "node": listener,
+                })
+
+                assert_equal(len(self.auto_outbound_destinations), i + 1)
+                return {
+                    "actual_to_addr": actual_to_addr,
+                    "actual_to_port": actual_to_port,
+                }
+
+        self.socks5_server.conf.destinations_factory = destinations_factory
+        return socks5_server_config
+
     def import_deterministic_coinbase_privkeys(self):
         for i in range(self.num_nodes):
             self.init_wallet(node=i)
@@ -447,6 +523,13 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             extra_confs = [[]] * num_nodes
         if extra_args is None:
             extra_args = [[]] * num_nodes
+        # Add auto outbound mode proxy configuration
+        if self.auto_outbound_mode:
+            socks5_config = self._setup_auto_outbound_mode()
+            for i in range(num_nodes):
+                extra_args[i] = extra_args[i] + [
+                    f"-proxy={socks5_config.addr[0]}:{socks5_config.addr[1]}"
+                ]
         # Whitelist peers to speed up tx relay / mempool sync. Don't use it if testing tx relay or timing.
         if self.noban_tx_relay:
             for i in range(len(extra_args)):

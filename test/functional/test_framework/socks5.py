@@ -203,6 +203,9 @@ class Socks5Server():
         self.s = socket.socket(conf.af)
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.s.bind(conf.addr)
+        # When port=0, the OS assigns an available port. Update conf.addr
+        # to reflect the actual bound address so callers can use it.
+        self.conf.addr = self.s.getsockname()
         self.s.listen(5)
         self.running = False
         self.thread = None
