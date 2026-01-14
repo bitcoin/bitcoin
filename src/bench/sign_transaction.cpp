@@ -100,7 +100,7 @@ static void SignSchnorrWithNullMerkleRoot(benchmark::Bench& bench)
     SignSchnorrTapTweakBenchmark(bench, /*use_null_merkle_root=*/true);
 }
 
-BENCHMARK(SignTransactionECDSA, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SignTransactionSchnorr, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SignSchnorrWithMerkleRoot, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SignSchnorrWithNullMerkleRoot, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SignTransactionECDSA);
+BENCHMARK(SignTransactionSchnorr);
+BENCHMARK(SignSchnorrWithMerkleRoot);
+BENCHMARK(SignSchnorrWithNullMerkleRoot);

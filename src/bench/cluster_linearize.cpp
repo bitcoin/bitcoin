@@ -150,12 +150,12 @@ static void LinearizeOptimallyPerCost(benchmark::Bench& bench)
     BenchLinearizeOptimallyPerCost(bench, "LinearizeOptimallySyntheticPerCost", CLUSTERS_SYNTHETIC);
 }
 
-BENCHMARK(PostLinearize16TxWorstCase, benchmark::PriorityLevel::HIGH);
-BENCHMARK(PostLinearize32TxWorstCase, benchmark::PriorityLevel::HIGH);
-BENCHMARK(PostLinearize48TxWorstCase, benchmark::PriorityLevel::HIGH);
-BENCHMARK(PostLinearize64TxWorstCase, benchmark::PriorityLevel::HIGH);
-BENCHMARK(PostLinearize75TxWorstCase, benchmark::PriorityLevel::HIGH);
-BENCHMARK(PostLinearize99TxWorstCase, benchmark::PriorityLevel::HIGH);
+BENCHMARK(PostLinearize16TxWorstCase);
+BENCHMARK(PostLinearize32TxWorstCase);
+BENCHMARK(PostLinearize48TxWorstCase);
+BENCHMARK(PostLinearize64TxWorstCase);
+BENCHMARK(PostLinearize75TxWorstCase);
+BENCHMARK(PostLinearize99TxWorstCase);
 
-BENCHMARK(LinearizeOptimallyTotal, benchmark::PriorityLevel::HIGH);
-BENCHMARK(LinearizeOptimallyPerCost, benchmark::PriorityLevel::HIGH);
+BENCHMARK(LinearizeOptimallyTotal);
+BENCHMARK(LinearizeOptimallyPerCost);

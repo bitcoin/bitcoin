@@ -5,25 +5,20 @@
 #include <bench/bench.h>
 
 #include <test/util/setup_common.h> // IWYU pragma: keep
-#include <tinyformat.h>
+#include <util/check.h>
 #include <util/fs.h>
-#include <util/string.h>
 
 #include <chrono>
 #include <compare>
 #include <fstream>
 #include <functional>
 #include <iostream>
-#include <map>
-#include <ratio>
 #include <regex>
-#include <set>
-#include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace std::chrono_literals;
-using util::Join;
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
@@ -69,37 +64,15 @@ void GenerateTemplateResults(const std::vector<ankerl::nanobench::Result>& bench
 
 namespace benchmark {
 
-// map a label to one or multiple priority levels
-std::map<std::string, uint8_t> map_label_priority = {
-    {"high", PriorityLevel::HIGH},
-    {"low", PriorityLevel::LOW},
-    {"all", 0xff}
-};
-
-std::string ListPriorities()
-{
-    using item_t = std::pair<std::string, uint8_t>;
-    auto sort_by_priority = [](item_t a, item_t b){ return a.second < b.second; };
-    std::set<item_t, decltype(sort_by_priority)> sorted_priorities(map_label_priority.begin(), map_label_priority.end(), sort_by_priority);
-    return Join(sorted_priorities, ',', [](const auto& entry){ return entry.first; });
-}
-
-uint8_t StringToPriority(const std::string& str)
-{
-    auto it = map_label_priority.find(str);
-    if (it == map_label_priority.end()) throw std::runtime_error(strprintf("Unknown priority level %s", str));
-    return it->second;
-}
-
 BenchRunner::BenchmarkMap& BenchRunner::benchmarks()
 {
     static BenchmarkMap benchmarks_map;
     return benchmarks_map;
 }
 
-BenchRunner::BenchRunner(std::string name, BenchFunction func, PriorityLevel level)
+BenchRunner::BenchRunner(std::string name, BenchFunction func)
 {
-    benchmarks().insert(std::make_pair(name, std::make_pair(func, level)));
+    Assert(benchmarks().try_emplace(std::move(name), std::move(func)).second);
 }
 
 void BenchRunner::RunAll(const Args& args)
@@ -120,12 +93,7 @@ void BenchRunner::RunAll(const Args& args)
     };
 
     std::vector<ankerl::nanobench::Result> benchmarkResults;
-    for (const auto& [name, bench_func] : benchmarks()) {
-        const auto& [func, priority_level] = bench_func;
-
-        if (!(priority_level & args.priority)) {
-            continue;
-        }
+    for (const auto& [name, func] : benchmarks()) {
 
         if (!std::regex_match(name, baseMatch, reFilter)) {
             continue;
