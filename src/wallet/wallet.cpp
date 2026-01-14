@@ -965,7 +965,8 @@ bool CWallet::MarkReplaced(const Txid& originalHash, const Txid& newHash)
 
     bool success = true;
     if (!batch.WriteTx(wtx)) {
-        WalletLogInfo("%s: Updating batch tx %s failed\n", __func__, wtx.GetHash().ToString());
+        WalletLogInfo("%s: Updating batch tx failed", __func__);
+        WalletLogDebug("  txid=%s", wtx.GetHash().ToString());
         success = false;
     }
 
@@ -1090,7 +1091,8 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
     }
 
     //// debug print
-    WalletLogInfo("AddToWallet %s  %s%s %s\n", hash.ToString(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""), TxStateString(state));
+    WalletLogInfo("AddToWallet %s%s %s", (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""), TxStateString(state));
+    WalletLogDebug("  txid=%s", hash.ToString());
 
     // Write to disk
     if (fInsertedNew || fUpdated)
@@ -1182,7 +1184,8 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
                 std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(txin.prevout);
                 while (range.first != range.second) {
                     if (range.first->second != tx.GetHash()) {
-                        WalletLogInfo("Transaction %s (in block %s) conflicts with wallet transaction %s (both spend %s:%i)\n", tx.GetHash().ToString(), conf->confirmed_block_hash.ToString(), range.first->second.ToString(), range.first->first.hash.ToString(), range.first->first.n);
+                        WalletLogInfo("Transaction (in block %s) conflicts with wallet transaction (both spend same outpoint)", conf->confirmed_block_hash.ToString());
+                        WalletLogDebug("  txid=%s, wallet_txid=%s, outpoint=%s:%i", tx.GetHash().ToString(), range.first->second.ToString(), range.first->first.hash.ToString(), range.first->first.n);
                         MarkConflicted(conf->confirmed_block_hash, conf->confirmed_block_height, range.first->second);
                     }
                     range.first++;
@@ -2017,7 +2020,8 @@ bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
         what = "for private broadcast without adding to the mempool";
         break;
     }
-    WalletLogInfo("Submitting wtx %s %s\n", wtx.GetHash().ToString(), what);
+    WalletLogInfo("Submitting wtx %s", what);
+    WalletLogDebug("  txid=%s", wtx.GetHash().ToString());
     // We must set TxStateInMempool here. Even though it will also be set later by the
     // entered-mempool callback, if we did not there would be a race where a
     // user could call sendmoney in a loop and hit spurious out of funds errors
@@ -2298,7 +2302,8 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
 void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm)
 {
     LOCK(cs_wallet);
-    WalletLogInfo("CommitTransaction:\n%s\n", util::RemoveSuffixView(tx->ToString(), "\n"));
+    WalletLogInfo("CommitTransaction");
+    WalletLogDebug("  %s", util::RemoveSuffixView(tx->ToString(), "\n"));
 
     // Add tx to wallet, because if it has change it's also ours,
     // otherwise just for transaction history.
@@ -2790,7 +2795,8 @@ unsigned int CWallet::ComputeTimeSmart(const CWalletTx& wtx, bool rescanning_old
                 nTimeSmart = std::max(latestEntry, std::min(blocktime, latestNow));
             }
         } else {
-            WalletLogInfo("%s: found %s in block %s not in index\n", __func__, wtx.GetHash().ToString(), block_hash->ToString());
+            WalletLogInfo("%s: found wallet transaction in block %s not in index", __func__, block_hash->ToString());
+            WalletLogDebug("  txid=%s", wtx.GetHash().ToString());
         }
     }
     return nTimeSmart;

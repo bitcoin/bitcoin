@@ -176,6 +176,7 @@ static const std::map<std::string, BCLog::LogFlags, std::less<>> LOG_CATEGORIES_
     {"http", BCLog::HTTP},
     {"bench", BCLog::BENCH},
     {"zmq", BCLog::ZMQ},
+    {"wallet", BCLog::WALLET},
     {"walletdb", BCLog::WALLETDB},
     {"rpc", BCLog::RPC},
     {"estimatefee", BCLog::ESTIMATEFEE},

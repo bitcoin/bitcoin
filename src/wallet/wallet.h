@@ -938,6 +938,13 @@ public:
         LogInfo("[%s] %s", LogName(), tfm::format(wallet_fmt, params...));
     };
 
+    /** Prepends the wallet name in debug logging output to ease debugging in multi-wallet use cases */
+    template <typename... Params>
+    void WalletLogDebug(util::ConstevalFormatString<sizeof...(Params)> wallet_fmt, const Params&... params) const
+    {
+        LogDebug(BCLog::WALLET, "[%s] %s", LogName(), tfm::format(wallet_fmt, params...));
+    };
+
     //! Returns all unique ScriptPubKeyMans in m_internal_spk_managers and m_external_spk_managers
     std::set<ScriptPubKeyMan*> GetActiveScriptPubKeyMans() const;
     bool IsActiveScriptPubKeyMan(const ScriptPubKeyMan& spkm) const;
