@@ -841,7 +841,8 @@ static bool CheckHashSig(const ProTx& proTx, const PKHash& pkhash, TxValidationS
 template <typename ProTx>
 static bool CheckStringSig(const ProTx& proTx, const PKHash& pkhash, TxValidationState& state)
 {
-    if (std::string strError; !CMessageSigner::VerifyMessage(ToKeyID(pkhash), proTx.vchSig, proTx.MakeSignString(), strError)) {
+    if (std::string strError;
+        !CMessageSigner::VerifyMessage(ToKeyID(pkhash), proTx.vchSig, proTx.MakeSignString(), strError)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-sig");
     }
     return true;
@@ -887,8 +888,8 @@ static std::optional<ProTx> GetValidatedPayload(const CTransaction& tx, gsl::not
  * @returns                  true if version change is valid or DEPLOYMENT_V24 is not active
  */
 static bool IsVersionChangeValid(gsl::not_null<const CBlockIndex*> pindexPrev, const uint16_t tx_type,
-                          const uint16_t state_version, const uint16_t tx_version, const ChainstateManager& chainman,
-                          TxValidationState& state)
+                                 const uint16_t state_version, const uint16_t tx_version,
+                                 const ChainstateManager& chainman, TxValidationState& state)
 {
     if (!DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_V24)) {
         // New restrictions only apply after v24 deployment
@@ -930,8 +931,8 @@ bool CheckProRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pin
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version-disallowed");
     }
 
-    // It's allowed to set addr to 0, which will put the MN into PoSe-banned state and require a ProUpServTx to be issues later
-    // If any of both is set, it must be valid however
+    // It's allowed to set addr to 0, which will put the MN into PoSe-banned state and require a ProUpServTx to be
+    // issues later. If any of both is set, it must be valid however
     if (!opt_ptx->netInfo->IsEmpty() && !CheckService(*opt_ptx, state)) {
         // pass the state returned by the function above
         return false;
@@ -944,7 +945,7 @@ bool CheckProRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pin
     }
 
     CTxDestination collateralTxDest;
-    const PKHash *keyForPayloadSig = nullptr;
+    const PKHash* keyForPayloadSig = nullptr;
     COutPoint collateralOutpoint;
 
     CAmount expectedCollateral = GetMnType(opt_ptx->nType).collat_amount;
@@ -984,7 +985,8 @@ bool CheckProRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pin
 
     // don't allow reuse of collateral key for other keys (don't allow people to put the collateral key onto an online server)
     // this check applies to internal and external collateral, but internal collaterals are not necessarily a P2PKH
-    if (collateralTxDest == CTxDestination(PKHash(opt_ptx->keyIDOwner)) || collateralTxDest == CTxDestination(PKHash(opt_ptx->keyIDVoting))) {
+    if (collateralTxDest == CTxDestination(PKHash(opt_ptx->keyIDOwner)) ||
+        collateralTxDest == CTxDestination(PKHash(opt_ptx->keyIDVoting))) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-collateral-reuse");
     }
 
@@ -1087,7 +1089,8 @@ bool CheckProUpServTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> 
                 return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-netinfo-entry");
             }
         } else if (const auto domain_opt{entry.GetDomainPort()}) {
-            if (mnList.HasUniqueProperty(*domain_opt) && mnList.GetUniquePropertyMN(*domain_opt)->proTxHash != opt_ptx->proTxHash) {
+            if (mnList.HasUniqueProperty(*domain_opt) &&
+                mnList.GetUniquePropertyMN(*domain_opt)->proTxHash != opt_ptx->proTxHash) {
                 return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-netinfo-entry");
             }
         } else {
@@ -1097,7 +1100,8 @@ bool CheckProUpServTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> 
 
     // don't allow updating to platformNodeIds already used by other EvoNodes
     if (opt_ptx->nType == MnType::Evo) {
-        if (mnList.HasUniqueProperty(opt_ptx->platformNodeID)  && mnList.GetUniquePropertyMN(opt_ptx->platformNodeID)->proTxHash != opt_ptx->proTxHash) {
+        if (mnList.HasUniqueProperty(opt_ptx->platformNodeID) &&
+            mnList.GetUniquePropertyMN(opt_ptx->platformNodeID)->proTxHash != opt_ptx->proTxHash) {
             return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-platformnodeid");
         }
     }
@@ -1153,7 +1157,8 @@ bool CheckProUpRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> p
     }
 
     // don't allow reuse of payee key for other keys (don't allow people to put the payee key onto an online server)
-    if (payoutDest == CTxDestination(PKHash(dmn->pdmnState->keyIDOwner)) || payoutDest == CTxDestination(PKHash(opt_ptx->keyIDVoting))) {
+    if (payoutDest == CTxDestination(PKHash(dmn->pdmnState->keyIDOwner)) ||
+        payoutDest == CTxDestination(PKHash(opt_ptx->keyIDVoting))) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-payee-reuse");
     }
 
@@ -1168,7 +1173,8 @@ bool CheckProUpRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> p
     if (!ExtractDestination(coin.out.scriptPubKey, collateralTxDest)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-collateral-dest");
     }
-    if (collateralTxDest == CTxDestination(PKHash(dmn->pdmnState->keyIDOwner)) || collateralTxDest == CTxDestination(PKHash(opt_ptx->keyIDVoting))) {
+    if (collateralTxDest == CTxDestination(PKHash(dmn->pdmnState->keyIDOwner)) ||
+        collateralTxDest == CTxDestination(PKHash(opt_ptx->keyIDVoting))) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-collateral-reuse");
     }
 
