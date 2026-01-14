@@ -6226,7 +6226,7 @@ Chainstate& ChainstateManager::AddChainstate(std::unique_ptr<Chainstate> chainst
 
     // Transfer possession of the mempool to the chainstate.
     // Mempool is empty at this point because we're still in IBD.
-    assert(prev_chainstate.m_mempool->size() == 0);
+    assert(!prev_chainstate.m_mempool || prev_chainstate.m_mempool->size() == 0);
     assert(!curr_chainstate.m_mempool);
     std::swap(curr_chainstate.m_mempool, prev_chainstate.m_mempool);
     return curr_chainstate;
