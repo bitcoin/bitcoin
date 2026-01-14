@@ -4,8 +4,10 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the IPC (multiprocess) interface."""
 import asyncio
+import http.client
 import inspect
-from contextlib import asynccontextmanager, AsyncExitStack
+import re
+from contextlib import asynccontextmanager, AsyncExitStack, ExitStack
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
@@ -397,9 +399,109 @@ class IPCInterfaceTest(BitcoinTestFramework):
 
         asyncio.run(capnp.run(async_routine()))
 
+    def run_unclean_disconnect_test(self):
+        """Test behavior when disconnecting during an IPC call that later
+        returns a non-null interface pointer. Currently this behavior causes a
+        crash as reported https://github.com/bitcoin/bitcoin/issues/34250, but a
+        followup will change this behavior."""
+        node = self.nodes[0]
+        self.log.info("Running disconnect during BlockTemplate.waitNext")
+        timeout = self.rpc_timeout * 1000.0
+        disconnected_log_check = ExitStack()
+
+        async def async_routine():
+            ctx, init = await self.make_capnp_init_ctx()
+            self.log.debug("Create Mining proxy object")
+            mining = init.makeMining(ctx).result
+
+            self.log.debug("Create a template")
+            opts = self.capnp_modules['mining'].BlockCreateOptions()
+            opts.useMempool = True
+            opts.blockReservedWeight = 4000
+            opts.coinbaseOutputMaxAdditionalSigops = 0
+            template = (await mining.createNewBlock(opts)).result
+
+            self.log.debug("Wait for a new template")
+            waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
+            waitoptions.timeout = timeout
+            waitoptions.feeThreshold = 1
+            with node.assert_debug_log(expected_msgs=["BlockTemplate.waitNext", "IPC server post request"]):
+                promise = template.waitNext(ctx, waitoptions)
+                await asyncio.sleep(0.1)
+            disconnected_log_check.enter_context(node.assert_debug_log(expected_msgs=["IPC server: socket disconnected"]))
+            del promise
+
+        asyncio.run(capnp.run(async_routine()))
+
+        # Wait for socket disconnected log message, then generate a block to
+        # cause the waitNext() call to return a new template. This will cause a
+        # crash and disconnect with error output.
+        disconnected_log_check.close()
+        try:
+            self.generate(node, 1)
+        except (http.client.RemoteDisconnected, BrokenPipeError, ConnectionResetError):
+            pass
+        node.wait_until_stopped(expected_ret_code=(-11, -6, 1, 66), expected_stderr=re.compile(r"\S"))
+        self.start_node(0)
+
+    def run_thread_busy_test(self):
+        """Test behavior when sending multiple calls to the same server thread
+        which used to cause a crash as reported
+        https://github.com/bitcoin/bitcoin/issues/33923 and currently causes a
+        thread busy error. A future change will make this just queue the calls
+        for execution and not trigger any error"""
+        node = self.nodes[0]
+        self.log.info("Running thread busy test")
+        timeout = self.rpc_timeout * 1000.0
+
+        async def async_routine():
+            ctx, init = await self.make_capnp_init_ctx()
+            self.log.debug("Create Mining proxy object")
+            mining = init.makeMining(ctx).result
+
+            self.log.debug("Create a template")
+            opts = self.capnp_modules['mining'].BlockCreateOptions()
+            opts.useMempool = True
+            opts.blockReservedWeight = 4000
+            opts.coinbaseOutputMaxAdditionalSigops = 0
+            template = (await mining.createNewBlock(opts)).result
+
+            self.log.debug("Wait for a new template")
+            waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
+            waitoptions.timeout = timeout
+            waitoptions.feeThreshold = 1
+
+            # Make multiple waitNext calls where the first will start to
+            # execute, the second will be posted waiting to execute, and the
+            # third will fail to execute because the execution thread is busy.
+            with node.assert_debug_log(expected_msgs=["BlockTemplate.waitNext", "IPC server post request"]):
+                promise1 = template.waitNext(ctx, waitoptions)
+                await asyncio.sleep(0.1)
+            with node.assert_debug_log(expected_msgs=["BlockTemplate.waitNext", "IPC server post request"]):
+                promise2 = template.waitNext(ctx, waitoptions)
+                await asyncio.sleep(0.1)
+            try:
+                await template.waitNext(ctx, waitoptions)
+            except capnp.lib.capnp.KjException as e:
+                assert_equal(e.description, "remote exception: std::exception: thread busy")
+                assert_equal(e.type, "FAILED")
+            else:
+                raise AssertionError("Expected thread busy exception")
+
+            # Generate a new block to make the active waitNext calls return, then clean up.
+            self.generate(node, 1, sync_fun=lambda: None)
+            await ((await promise1).result).destroy(ctx)
+            await ((await promise2).result).destroy(ctx)
+            await template.destroy(ctx)
+
+        asyncio.run(capnp.run(async_routine()))
+
+
     def run_test(self):
         self.run_echo_test()
         self.run_mining_test()
+        self.run_unclean_disconnect_test()
+        self.run_thread_busy_test()
 
 if __name__ == '__main__':
     IPCInterfaceTest(__file__).main()
