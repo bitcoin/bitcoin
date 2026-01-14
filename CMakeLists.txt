@@ -488,9 +488,8 @@ try_append_cxx_flags("-fno-extended-identifiers" TARGET core_interface SKIP_LINK
 # which can cause issues with coverage builds, particularly when using
 # Clang in the OSS-Fuzz environment due to its use of other options
 # and a third party script, or with GCC.
-try_append_cxx_flags("-fdebug-prefix-map=A=B" TARGET core_interface SKIP_LINK
-  IF_CHECK_PASSED "-fdebug-prefix-map=${PROJECT_SOURCE_DIR}/src=."
-)
+# Set `-fmacro-prefix-map`, so that source file names are expanded without the
+# src prefix.
 try_append_cxx_flags("-fmacro-prefix-map=A=B" TARGET core_interface SKIP_LINK
   IF_CHECK_PASSED "-fmacro-prefix-map=${PROJECT_SOURCE_DIR}/src=."
 )
