@@ -25,6 +25,7 @@ class BenchmarkConfig:
     """
 
     # Benchmark metadata
+    full_ibd: bool
     start_height: int
     runs: int
 
@@ -78,8 +79,13 @@ class BenchmarkConfig:
         instrumented = bitcoind.pop("instrumented", {})
         instrumented_debug = instrumented.get("debug", [])
 
+        # Full IBD mode: skip datadir copy, sync from genesis
+        full_ibd = benchmark.get("full_ibd", False)
+        start_height = 0 if full_ibd else benchmark.get("start_height", 0)
+
         config = cls(
-            start_height=benchmark.get("start_height", 0),
+            full_ibd=full_ibd,
+            start_height=start_height,
             runs=benchmark.get("runs", 3),
             matrix=matrix,
             bitcoind_args=bitcoind,
@@ -88,6 +94,8 @@ class BenchmarkConfig:
         )
 
         logger.info(f"Loaded benchmark config from {path}")
+        if config.full_ibd:
+            logger.info("  Mode: Full IBD (fresh sync from genesis)")
         logger.info(f"  Start height: {config.start_height}, Runs: {config.runs}")
         if config.matrix:
             logger.info(f"  Matrix parameters: {list(config.matrix.keys())}")
@@ -217,6 +225,7 @@ class BenchmarkConfig:
         This captures the config for logging with results.
         """
         result: dict[str, Any] = {
+            "full_ibd": self.full_ibd,
             "start_height": self.start_height,
             "runs": self.runs,
             "command_template": self.generate_command_template(),

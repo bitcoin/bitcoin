@@ -105,9 +105,12 @@ def cmd_run(args: argparse.Namespace) -> int:
         return 1
     logger.info(f"Using matrix entry: {matrix_entry}")
 
+    # In full IBD mode, ignore datadir (sync from genesis)
+    datadir = None if benchmark_config.full_ibd else args.datadir
+
     # Build config with CLI args and benchmark config values
     cli_args: dict = {
-        "datadir": args.datadir,
+        "datadir": datadir,
         "tmp_datadir": args.tmp_datadir,
         "output_dir": args.output_dir,
         "no_cache_drop": args.no_cache_drop,
