@@ -37,6 +37,8 @@ bool operator==(const Coin &a, const Coin &b) {
            a.out == b.out;
 }
 
+Coin MakeTestCoin() { return Coin{CTxOut{1, CScript{}}, 1, false}; }
+
 class CCoinsViewTest : public CCoinsView
 {
     FastRandomContext& m_rng;
@@ -1057,6 +1059,86 @@ BOOST_FIXTURE_TEST_CASE(ccoins_flush_behavior, FlushTest)
         TestFlushBehavior(view.get(), base, caches, /*do_erasing_flush=*/false);
         TestFlushBehavior(view.get(), base, caches, /*do_erasing_flush=*/true);
     }
+}
+
+BOOST_AUTO_TEST_CASE(ccoins_haveinputs_uses_base_getcoin)
+{
+    const COutPoint prevout{Txid::FromUint256(m_rng.rand256()), 0};
+
+    CCoinsViewDB db{{.path = "test", .cache_bytes = 1 << 23, .memory_only = true}, {}};
+    {
+        CCoinsViewCache write_cache{&db};
+        write_cache.SetBestBlock(m_rng.rand256());
+        write_cache.AddCoin(prevout, MakeTestCoin(), /*possible_overwrite=*/false);
+        write_cache.Flush();
+    }
+
+    class CCoinsViewSpy final : public CCoinsViewBacked
+    {
+    public:
+        const COutPoint expected;
+        mutable size_t havecoin_calls{0}, getcoin_calls{0};
+
+        explicit CCoinsViewSpy(CCoinsView* view, COutPoint out) : CCoinsViewBacked(view), expected{std::move(out)} {}
+
+        std::optional<Coin> GetCoin(const COutPoint& out) const override
+        {
+            ++getcoin_calls;
+            BOOST_CHECK(out == expected);
+            return CCoinsViewBacked::GetCoin(out);
+        }
+
+        bool HaveCoin(const COutPoint& out) const override
+        {
+            ++havecoin_calls;
+            BOOST_CHECK(out == expected);
+            return CCoinsViewBacked::HaveCoin(out);
+        }
+    };
+
+    CCoinsViewSpy base{&db, prevout};
+    CCoinsViewCache cache{&base};
+
+    CMutableTransaction mtx;
+    mtx.vin.emplace_back(prevout);
+    const CTransaction tx{mtx};
+    BOOST_CHECK(!tx.IsCoinBase());
+
+    BOOST_CHECK(cache.HaveInputs(tx));
+    BOOST_CHECK_EQUAL(base.getcoin_calls, 1);
+    BOOST_CHECK_EQUAL(base.havecoin_calls, 0);
+}
+
+BOOST_AUTO_TEST_CASE(ccoins_haveinputs_checks_cache_first)
+{
+    class CCoinsViewNoCall final : public CCoinsView
+    {
+    public:
+        std::optional<Coin> GetCoin(const COutPoint&) const override
+        {
+            BOOST_FAIL("Base GetCoin should not be called when input is cached");
+            return std::nullopt;
+        }
+
+        bool HaveCoin(const COutPoint&) const override
+        {
+            BOOST_FAIL("Base HaveCoin should not be called when input is cached");
+            return false;
+        }
+    };
+
+    const COutPoint prevout{Txid::FromUint256(m_rng.rand256()), 0};
+    CCoinsViewNoCall base;
+    CCoinsViewCache cache{&base};
+
+    cache.AddCoin(prevout, MakeTestCoin(), /*possible_overwrite=*/false);
+    BOOST_CHECK(cache.HaveCoinInCache(prevout));
+
+    CMutableTransaction mtx;
+    mtx.vin.emplace_back(prevout);
+    const CTransaction tx{mtx};
+    BOOST_CHECK(!tx.IsCoinBase());
+    BOOST_CHECK(cache.HaveInputs(tx));
 }
 
 BOOST_AUTO_TEST_CASE(coins_resource_is_used)
