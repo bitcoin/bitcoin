@@ -175,7 +175,7 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
 
         if (!ExtractDestination(txout.scriptPubKey, address) && !txout.scriptPubKey.IsUnspendable())
         {
-            wallet.WalletLogPrintf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
+            wallet.WalletLogInfo("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
                                     wtx.GetHash().ToString());
             address = CNoDestination();
         }
