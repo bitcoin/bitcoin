@@ -40,7 +40,7 @@ class MasternodeList : public QWidget
     Q_OBJECT
 
 public:
-    explicit MasternodeList(QWidget* parent = 0);
+    explicit MasternodeList(QWidget* parent = nullptr);
     ~MasternodeList();
 
     enum {

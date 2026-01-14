@@ -59,18 +59,13 @@ class CRateCheckBuffer
 private:
     std::vector<int64_t> vecTimestamps;
 
-    int nDataStart;
-
-    int nDataEnd;
-
-    bool fBufferEmpty;
+    int nDataStart{0};
+    int nDataEnd{0};
+    bool fBufferEmpty{true};
 
 public:
     CRateCheckBuffer() :
-        vecTimestamps(RATE_BUFFER_SIZE),
-        nDataStart(0),
-        nDataEnd(0),
-        fBufferEmpty(true)
+        vecTimestamps(RATE_BUFFER_SIZE)
     {
     }
 

@@ -13,7 +13,7 @@ class CProposalValidator
 {
 private:
     UniValue objJSON;
-    bool fJSONValid;
+    bool fJSONValid{false};
     bool fAllowScript;
     std::string strErrorMessages;
 

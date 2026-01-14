@@ -268,7 +268,7 @@ private:
     CKeyingMaterial vMasterKey GUARDED_BY(cs_wallet);
 
     //! if fOnlyMixingAllowed is true, only mixing should be allowed in unlocked wallet
-    bool fOnlyMixingAllowed;
+    bool fOnlyMixingAllowed{false};
 
     bool Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixingOnly = false);
 
@@ -461,8 +461,7 @@ public:
 
     /** Construct wallet with specified name and database implementation. */
     CWallet(interfaces::Chain* chain, interfaces::CoinJoin::Loader* coinjoin_loader, const std::string& name, const ArgsManager& args, std::unique_ptr<WalletDatabase> database)
-        : fOnlyMixingAllowed(false),
-          m_args(args),
+        : m_args(args),
           m_chain(chain),
           m_coinjoin_loader(coinjoin_loader),
           m_name(name),

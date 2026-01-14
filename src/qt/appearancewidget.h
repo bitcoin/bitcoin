@@ -24,7 +24,7 @@ class AppearanceWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit AppearanceWidget(QWidget* parent = 0);
+    explicit AppearanceWidget(QWidget* parent = nullptr);
     ~AppearanceWidget();
 
     void setModel(OptionsModel* model);

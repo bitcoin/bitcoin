@@ -49,7 +49,7 @@ Q_SIGNALS:
     void outOfSyncWarningClicked();
 
 private:
-    QTimer *timer;
+    QTimer* timer{nullptr};
     Ui::OverviewPage *ui;
     ClientModel *clientModel;
     WalletModel *walletModel;

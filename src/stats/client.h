@@ -17,11 +17,11 @@
 class ArgsManager;
 
 /** Default host assumed to be running a Statsd server */
-static const std::string DEFAULT_STATSD_HOST{""};
+static const std::string DEFAULT_STATSD_HOST{};
 /** Default prefix prepended to Statsd message keys */
-static const std::string DEFAULT_STATSD_PREFIX{""};
+static const std::string DEFAULT_STATSD_PREFIX{};
 /** Default suffix appended to Statsd message keys */
-static const std::string DEFAULT_STATSD_SUFFIX{""};
+static const std::string DEFAULT_STATSD_SUFFIX{};
 
 /** Default number of milliseconds between flushing a queue of messages */
 static constexpr int DEFAULT_STATSD_DURATION{1000};

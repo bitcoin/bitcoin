@@ -75,10 +75,10 @@ private:
     SampleQueueMap sampleStash;
 
     GraphRange currentGraphRange;
-    int currentSampleCounter;
+    int currentSampleCounter{0};
 
-    quint64 nLastBytesIn;
-    quint64 nLastBytesOut;
+    quint64 nLastBytesIn{0};
+    quint64 nLastBytesOut{0};
 
     void update(GraphRange range, const TrafficSample &trafficSample);
 

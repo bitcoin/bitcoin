@@ -23,10 +23,7 @@ const int TrafficGraphData::SMALLEST_SAMPLE_PERIOD =
         TrafficGraphData::RangeMinutes[TrafficGraphData::Range_5m] * 60 * 1000 / TrafficGraphData::DESIRED_DATA_SAMPLES;
 
 TrafficGraphData::TrafficGraphData(GraphRange range)
-    :currentGraphRange(range),
-    currentSampleCounter(0),
-    nLastBytesIn(0),
-    nLastBytesOut(0)
+    :currentGraphRange(range)
 {
 }
 

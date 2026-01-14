@@ -127,7 +127,7 @@ public:
         std::vector<uint256> tmpUsedMasternodes;
         s >> tmpMetaInfo >> nDsqCount >> tmpUsedMasternodes;
         for (auto& mm : tmpMetaInfo) {
-            metaInfos.emplace(mm.m_protx_hash, CMasternodeMetaInfo{std::move(mm)});
+            metaInfos.emplace(mm.m_protx_hash, CMasternodeMetaInfo{mm});
         }
 
         // Convert vector to deque and build unordered_set for O(1) lookups

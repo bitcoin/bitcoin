@@ -39,13 +39,10 @@
 #include <QSystemTrayIcon>
 #include <QTimer>
 
-OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
-    QDialog(parent, GUIUtil::dialog_flags),
-    ui(new Ui::OptionsDialog),
-    model(nullptr),
-    mapper(nullptr),
-    pageButtons(nullptr),
-    m_enable_wallet(enableWallet)
+OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
+    : QDialog(parent, GUIUtil::dialog_flags),
+      ui(new Ui::OptionsDialog),
+      m_enable_wallet(enableWallet)
 {
     ui->setupUi(this);
 
