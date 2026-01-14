@@ -39,7 +39,6 @@ bool noui_ThreadSafeMessageBox(const bilingual_str& message, unsigned int style)
         if (!fSecure) LogInfo("%s\n", message.original);
         break;
     default:
-        strCaption = ": "; // caption is always empty TODO fix this
         if (!fSecure) LogInfo("%s%s\n", strCaption, message.original);
     }
 

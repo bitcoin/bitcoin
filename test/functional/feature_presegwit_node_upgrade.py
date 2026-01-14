@@ -38,7 +38,7 @@ class SegwitUpgradeTest(BitcoinTestFramework):
         # because the blockchain consists of 3 insufficiently validated blocks per segwit consensus rules.
         node.assert_start_raises_init_error(
             extra_args=["-testactivationheight=segwit@5"],
-            expected_msg=": Witness data for blocks after height 5 requires "
+            expected_msg="Witness data for blocks after height 5 requires "
             f"validation. Please restart with -reindex..{os.linesep}"
             "Please restart with -reindex or -reindex-chainstate to recover.",
         )
