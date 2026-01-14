@@ -210,16 +210,10 @@ public:
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
         std::optional<std::string> strValue{ReadImpl(ssKey)};
-        if (!strValue) {
-            return false;
-        }
-        try {
-            DataStream ssValue{MakeByteSpan(*strValue)};
-            m_obfuscation(ssValue);
-            ssValue >> value;
-        } catch (const std::exception&) {
-            return false;
-        }
+        if (!strValue) return false;
+        DataStream ssValue{MakeByteSpan(*strValue)};
+        m_obfuscation(ssValue);
+        ssValue >> value;
         return true;
     }
 
