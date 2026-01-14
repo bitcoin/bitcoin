@@ -15,7 +15,6 @@
 #include <governance/validators.h>
 #include <masternode/meta.h>
 #include <masternode/sync.h>
-#include <netfulfilledman.h>
 #include <netmessagemaker.h>
 #include <protocol.h>
 #include <shutdown.h>
@@ -63,12 +62,11 @@ GovernanceStore::GovernanceStore() :
 {
 }
 
-CGovernanceManager::CGovernanceManager(CMasternodeMetaMan& mn_metaman, CNetFulfilledRequestManager& netfulfilledman,
+CGovernanceManager::CGovernanceManager(CMasternodeMetaMan& mn_metaman,
                                        const ChainstateManager& chainman,
                                        const std::unique_ptr<CDeterministicMNManager>& dmnman, CMasternodeSync& mn_sync) :
     m_db{std::make_unique<db_type>("governance.dat", "magicGovernanceCache")},
     m_mn_metaman{mn_metaman},
-    m_netfulfilledman{netfulfilledman},
     m_chainman{chainman},
     m_dmnman{dmnman},
     m_mn_sync{mn_sync},
@@ -649,17 +647,8 @@ MessageProcessingResult CGovernanceManager::SyncSingleObjVotes(CNode& peer, cons
 MessageProcessingResult CGovernanceManager::SyncObjects(CNode& peer, CConnman& connman) const
 {
     LOCK(cs_store);
-    assert(m_netfulfilledman.IsValid());
-
     // do not provide any data until our node is synced
     if (!m_mn_sync.IsSynced()) return {};
-
-    if (m_netfulfilledman.HasFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC)) {
-        // Asking for the whole list multiple times in a short period of time is no good
-        LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- peer already asked me for the list\n", __func__);
-        return MisbehavingError{20};
-    }
-    m_netfulfilledman.AddFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC);
 
     // SYNC GOVERNANCE OBJECTS WITH OTHER CLIENT
 

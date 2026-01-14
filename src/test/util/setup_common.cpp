@@ -286,7 +286,7 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 
     m_node.mnhf_manager = std::make_unique<CMNHFManager>(*m_node.evodb, *m_node.chainman);
     m_node.mn_sync = std::make_unique<CMasternodeSync>(std::make_unique<NodeSyncNotifierImpl>(*m_node.connman, *m_node.netfulfilledman));
-    m_node.govman = std::make_unique<CGovernanceManager>(*m_node.mn_metaman, *m_node.netfulfilledman, *m_node.chainman, m_node.dmnman, *m_node.mn_sync);
+    m_node.govman = std::make_unique<CGovernanceManager>(*m_node.mn_metaman, *m_node.chainman, m_node.dmnman, *m_node.mn_sync);
 
     // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
     constexpr int script_check_threads = 2;

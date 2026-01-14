@@ -9,15 +9,17 @@
 
 class CGovernanceManager;
 class CMasternodeSync;
+class CNetFulfilledRequestManager;
 
 class NetGovernance final : public NetHandler
 {
 public:
-    NetGovernance(PeerManagerInternal* peer_manager, CGovernanceManager& gov_manager, CMasternodeSync& node_sync,
+    NetGovernance(PeerManagerInternal* peer_manager, CGovernanceManager& gov_manager, CMasternodeSync& node_sync, CNetFulfilledRequestManager& netfulfilledman,
                   CConnman& connman) :
         NetHandler(peer_manager),
         m_gov_manager(gov_manager),
         m_node_sync(node_sync),
+        m_netfulfilledman(netfulfilledman),
         m_connman(connman)
     {
     }
@@ -28,6 +30,7 @@ public:
 private:
     CGovernanceManager& m_gov_manager;
     CMasternodeSync& m_node_sync;
+    CNetFulfilledRequestManager& m_netfulfilledman;
     CConnman& m_connman;
 };
 

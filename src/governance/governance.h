@@ -41,7 +41,6 @@ class CGovernanceObject;
 class CGovernanceVote;
 class CMasternodeMetaMan;
 class CMasternodeSync;
-class CNetFulfilledRequestManager;
 class CSporkManager;
 class CSuperblock;
 
@@ -252,7 +251,6 @@ private:
     bool is_valid{false};
 
     CMasternodeMetaMan& m_mn_metaman;
-    CNetFulfilledRequestManager& m_netfulfilledman;
     const ChainstateManager& m_chainman;
     const std::unique_ptr<CDeterministicMNManager>& m_dmnman;
     CMasternodeSync& m_mn_sync;
@@ -274,7 +272,7 @@ public:
     CGovernanceManager() = delete;
     CGovernanceManager(const CGovernanceManager&) = delete;
     CGovernanceManager& operator=(const CGovernanceManager&) = delete;
-    explicit CGovernanceManager(CMasternodeMetaMan& mn_metaman, CNetFulfilledRequestManager& netfulfilledman,
+    explicit CGovernanceManager(CMasternodeMetaMan& mn_metaman,
                                 const ChainstateManager& chainman,
                                 const std::unique_ptr<CDeterministicMNManager>& dmnman, CMasternodeSync& mn_sync);
     ~CGovernanceManager();

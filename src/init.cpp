@@ -1983,7 +1983,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
          */
         node.mn_sync = std::make_unique<CMasternodeSync>(std::make_unique<NodeSyncNotifierImpl>(*node.connman, *node.netfulfilledman));
 
-        node.govman = std::make_unique<CGovernanceManager>(*node.mn_metaman, *node.netfulfilledman, *node.chainman, node.dmnman, *node.mn_sync);
+        node.govman = std::make_unique<CGovernanceManager>(*node.mn_metaman, *node.chainman, node.dmnman, *node.mn_sync);
 
         const bool fReset = fReindex;
         bilingual_str strLoadError;
@@ -2259,7 +2259,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             }
             return InitError(strprintf(_("Failed to clear governance cache at %s"), file_path));
         }
-        node.peerman->AddExtraHandler(std::make_unique<NetGovernance>(node.peerman.get(), *node.govman, *node.mn_sync, *node.connman));
+        node.peerman->AddExtraHandler(std::make_unique<NetGovernance>(node.peerman.get(), *node.govman, *node.mn_sync, *node.netfulfilledman, *node.connman));
     }
     node.peerman->AddExtraHandler(std::make_unique<SyncManager>(node.peerman.get(), *node.govman, *node.mn_sync, *node.connman, *node.netfulfilledman));
 

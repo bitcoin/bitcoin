@@ -10,6 +10,7 @@
 #include <logging.h>
 #include <masternode/sync.h>
 #include <net.h>
+#include <netfulfilledman.h>
 #include <scheduler.h>
 
 class CConnman;
@@ -61,7 +62,15 @@ void NetGovernance::ProcessMessage(CNode& peer, const std::string& msg_type, CDa
 
         LogPrint(BCLog::GOBJECT, "MNGOVERNANCESYNC -- syncing governance objects to our peer %s\n", peer.GetLogString());
         if (nProp == uint256()) {
-            m_peer_manager->PeerPostProcessMessage(m_gov_manager.SyncObjects(peer, m_connman));
+            assert(m_netfulfilledman.IsValid());
+            if (!m_netfulfilledman.HasFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC)) {
+                m_netfulfilledman.AddFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC);
+                m_peer_manager->PeerPostProcessMessage(m_gov_manager.SyncObjects(peer, m_connman));
+            } else {
+                // Asking for the whole list multiple times in a short period of time is no good
+                LogPrint(BCLog::GOBJECT, "MNGOVERNANCESYNC -- peer already asked me for the list\n");
+                m_peer_manager->PeerMisbehaving(peer.GetId(), 20);
+            }
         } else {
             m_peer_manager->PeerPostProcessMessage(m_gov_manager.SyncSingleObjVotes(peer, nProp, filter, m_connman));
         }
