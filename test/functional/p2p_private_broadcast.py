@@ -36,7 +36,6 @@ from test_framework.test_framework import (
     BitcoinTestFramework,
 )
 from test_framework.util import (
-    MAX_NODES,
     assert_equal,
     assert_not_equal,
     assert_raises_rpc_error,
@@ -181,9 +180,6 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         self.socks5_server = Socks5Server(socks5_server_config)
         self.socks5_server.start()
 
-        # Tor ports are the highest among p2p/rpc/tor, so this should be the first available port.
-        ports_base = tor_port(MAX_NODES) + 1
-
         self.destinations = []
 
         self.destinations_lock = threading.Lock()
@@ -215,9 +211,12 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
                         actual_to_addr = addr
                         actual_to_port = port
 
+                    # Use port=0 to let the OS assign an available port. This
+                    # avoids "address already in use" errors when tests run
+                    # concurrently or ports are still in TIME_WAIT state.
                     self.network_thread.listen(
                         addr="127.0.0.1",
-                        port=ports_base + i,
+                        port=0,
                         p2p=listener,
                         callback=on_listen_done)
                     # Wait until the callback has been called.
