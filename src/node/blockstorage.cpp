@@ -171,6 +171,31 @@ std::string CBlockFileInfo::ToString() const
 
 namespace node {
 
+namespace {
+Obfuscation::Key ReadXorKeyFile(const fs::path& file)
+{
+    Obfuscation::Key obfuscation{};
+    AutoFile xor_key_file{fsbridge::fopen(file, "rb")};
+    xor_key_file >> obfuscation;
+    return obfuscation;
+}
+
+void WriteXorKeyFile(const fs::path& file, const Obfuscation::Key& obfuscation, bool overwrite)
+{
+#ifdef __MINGW64__
+    const char* mode{"wb"}; // Temporary workaround for https://github.com/bitcoin/bitcoin/issues/30210
+#else
+    const char* mode{overwrite ? "wb" : "wbx"};
+#endif
+    AutoFile xor_key_file{fsbridge::fopen(file, mode)};
+    xor_key_file << obfuscation;
+    if (xor_key_file.fclose() != 0) {
+        throw std::runtime_error{strprintf("Error closing XOR key file %s: %s", fs::PathToString(file), SysErrorString(errno))};
+    }
+}
+
+} // namespace
+
 bool CBlockIndexWorkComparator::operator()(const CBlockIndex* pa, const CBlockIndex* pb) const
 {
     // First sort by most total work, ...
@@ -1206,23 +1231,10 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
     const fs::path xor_key_path{opts.blocks_dir / "xor.dat"};
     if (fs::exists(xor_key_path)) {
         // A pre-existing xor key file has priority.
-        AutoFile xor_key_file{fsbridge::fopen(xor_key_path, "rb")};
-        xor_key_file >> obfuscation;
+        obfuscation = ReadXorKeyFile(xor_key_path);
     } else {
         // Create initial or missing xor key file
-        AutoFile xor_key_file{fsbridge::fopen(xor_key_path,
-#ifdef __MINGW64__
-            "wb" // Temporary workaround for https://github.com/bitcoin/bitcoin/issues/30210
-#else
-            "wbx"
-#endif
-        )};
-        xor_key_file << obfuscation;
-        if (xor_key_file.fclose() != 0) {
-            throw std::runtime_error{strprintf("Error closing XOR key file %s: %s",
-                                               fs::PathToString(xor_key_path),
-                                               SysErrorString(errno))};
-        }
+        WriteXorKeyFile(xor_key_path, obfuscation, /*overwrite=*/false);
     }
     // If the user disabled the key, it must be zero.
     if (!opts.use_xor && obfuscation != decltype(obfuscation){}) {
