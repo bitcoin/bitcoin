@@ -22,25 +22,75 @@ def run(cmd, **kwargs):
 
 def main():
     print("Export only allowed settings:")
-    settings = run(
-        ["bash", "-c", "grep export ./ci/test/00_setup_env*.sh"],
-        stdout=subprocess.PIPE,
-        text=True,
-    ).stdout.splitlines()
-    settings = set(l.split("=")[0].split("export ")[1] for l in settings)
-    # Add "hidden" settings, which are never exported, manually. Otherwise,
-    # they will not be passed on.
-    settings.update([
+    # Hardcode the list of allowed settings instead of grepping scripts to prevent injection.
+    # This list is derived from all variables exported in ci/test/00_setup_env*.sh
+    settings = {
+        "APT_LLVM_V",
         "BASE_BUILD_DIR",
+        "BASE_OUTDIR",
+        "BASE_READ_ONLY_DIR",
+        "BASE_ROOT_DIR",
+        "BASE_SCRATCH_DIR",
+        "BITCOIN_CMD",
+        "BITCOIN_CONFIG",
+        "BITCOIN_CONFIG_ALL",
+        "BOOST_TEST_RANDOM",
+        "CCACHE_COMPRESS",
+        "CCACHE_DIR",
+        "CCACHE_MAXSIZE",
+        "CCACHE_TEMPDIR",
+        "CI_BASE_PACKAGES",
+        "CI_CONTAINER_CAP",
         "CI_FAILFAST_TEST_LEAVE_DANGLING",
-    ])
+        "CI_IMAGE_NAME_TAG",
+        "CI_IMAGE_PLATFORM",
+        "CI_LIMIT_STACK_SIZE",
+        "CI_OS_NAME",
+        "CI_RETRY_EXE",
+        "CMAKE_GENERATOR",
+        "CONTAINER_NAME",
+        "DEBIAN_FRONTEND",
+        "DEPENDS_DIR",
+        "DEP_OPTS",
+        "DIR_QA_ASSETS",
+        "DOWNLOAD_PREVIOUS_RELEASES",
+        "DOCKER_BUILD_CACHE_ARG",
+        "DPKG_ADD_ARCH",
+        "FILE_ENV",
+        "FUZZ_TESTS_CONFIG",
+        "GOAL",
+        "HOST",
+        "LC_ALL",
+        "MAKEJOBS",
+        "MSAN_AND_LIBCXX_FLAGS",
+        "MSAN_FLAGS",
+        "NO_DEPENDS",
+        "OSX_SDK",
+        "PACKAGES",
+        "PIP_PACKAGES",
+        "PREVIOUS_RELEASES_DIR",
+        "RUN_CHECK_DEPS",
+        "RUN_FUNCTIONAL_TESTS",
+        "RUN_FUZZ_TESTS",
+        "RUN_IWYU",
+        "RUN_TIDY",
+        "RUN_UNIT_TESTS",
+        "SDK_URL",
+        "TEST_RUNNER_EXTRA",
+        "TEST_RUNNER_TIMEOUT_FACTOR",
+        "TIDY_LLVM_V",
+        "USE_INSTRUMENTED_LIBCPP",
+        "USE_VALGRIND",
+        "XCODE_BUILD_ID",
+        "XCODE_VERSION",
+    }
 
     # Append $USER to /tmp/env to support multi-user systems and $CONTAINER_NAME
     # to allow support starting multiple runs simultaneously by the same user.
-    env_file = "/tmp/env-{u}-{c}".format(
-        u=os.environ["USER"],
-        c=os.environ["CONTAINER_NAME"],
-    )
+    # Sanitize inputs for file name safety.
+    user_sanitized = "".join(c for c in os.environ.get("USER", "unknown") if c.isalnum())
+    container_sanitized = "".join(c for c in os.environ["CONTAINER_NAME"] if c.isalnum())
+    env_file = f"/tmp/env-{user_sanitized}-{container_sanitized}"
     with open(env_file, "w") as file:
         for k, v in os.environ.items():
             if k in settings:

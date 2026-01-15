@@ -34,11 +34,12 @@ import logging
 import os
 import subprocess
 import typing as t
-import re
 import sys
 import shutil
 import tempfile
 import textwrap
+import urllib.request
+from urllib.error import HTTPError
 import enum
 from hashlib import sha256
 from pathlib import PurePath, Path
@@ -108,10 +109,20 @@ def parse_version_string(version_str):
     return version_base, rc, platform
 
 
-def download_with_wget(remote_file, local_file):
-    result = subprocess.run(['wget', '-O', local_file, remote_file],
-                            stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-    return result.returncode == 0, result.stdout.decode().rstrip()
+def download_with_urllib(url, local_file):
+    """Download a file over HTTP(S) using urllib."""
+    if not url.startswith(("http://", "https://")):
+        log.warning(f"Refusing to fetch non-HTTP(S) URL: {url}")
+        return False, "Refused non-HTTP(S) URL"
+
+    try:
+        with urllib.request.urlopen(url) as response, open(local_file, 'wb') as out_file:
+            shutil.copyfileobj(response, out_file)
+        return True, ""
+    except HTTPError as e:
+        return False, f"HTTPError: {e}"
+    except Exception as e:
+        return False, str(e)
 
 
 def verify_with_gpg(
@@ -121,8 +132,12 @@ def verify_with_gpg(
 ) -> tuple[int, str]:
     with tempfile.NamedTemporaryFile() as status_file:
         args = [
-            'gpg', '--yes', '--verify', '--verify-options', 'show-primary-uid-only', "--status-file", status_file.name,
-            '--output', output_filename if output_filename else '', signature_filename, filename]
+            'gpg', '--yes', '--verify', '--verify-options', 'show-primary-uid-only', "--status-file", status_file.name]
+        
+        if output_filename:
+            args.extend(['--output', output_filename])
+            
+        args.extend([signature_filename, filename])
 
         env = dict(os.environ, LANGUAGE='en')
         result = subprocess.run(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, env=env)
@@ -132,6 +147,8 @@ def verify_with_gpg(
     log.debug(f'Result from GPG ({result.returncode}): {result.stdout.decode()}')
     log.debug(f"{gpg_data}")
     return result.returncode, gpg_data
+
+
 
 
 class SigData:
@@ -258,14 +275,14 @@ def get_files_from_hosts_and_compare(
         return host.rstrip('/') + '/' + path.lstrip('/')
 
     url = join_url(primary_host)
-    success, output = download_with_wget(url, filename)
+    success, output = download_with_urllib(url, filename)
     if not success:
         log.error(
             f"couldn't fetch file ({url}). "
             "Have you specified the version number in the following format?\n"
             f"{VERSION_FORMAT} "
             f"(example: {VERSION_EXAMPLE})\n"
-            f"wget output:\n{indent(output)}")
+            f"download error:\n{indent(output)}")
         return ReturnCode.FILE_GET_FAILED
     else:
         log.info(f"got file {url} as {filename}")
@@ -274,12 +291,12 @@ def get_files_from_hosts_and_compare(
     for i, host in enumerate(other_hosts):
         url = join_url(host)
         fname = filename + f'.{i + 2}'
-        success, output = download_with_wget(url, fname)
+        success, output = download_with_urllib(url, fname)
 
         if require_all and not success:
             log.error(
                 f"{host} failed to provide file ({url}), but {primary_host} did?\n"
-                f"wget output:\n{indent(output)}")
+                f"download error:\n{indent(output)}")
             return ReturnCode.FILE_MISSING_FROM_ONE_HOST
         elif not success:
             log.warning(
@@ -508,13 +525,13 @@ def verify_published_handler(args: argparse.Namespace) -> ReturnCode:
     # download binaries
     for _, binary_filename in hashes_to_verify:
         log.info(f"downloading {binary_filename} to {WORKINGDIR}")
-        success, output = download_with_wget(
+        success, output = download_with_urllib(
             HOST1 + remote_dir + binary_filename, binary_filename)
 
         if not success:
             log.error(
                 f"failed to download {binary_filename}\n"
-                f"wget output:\n{indent(output)}")
+                f"download error:\n{indent(output)}")
             return ReturnCode.BINARY_DOWNLOAD_FAILED
 
     # verify hashes

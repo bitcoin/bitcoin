@@ -9,10 +9,13 @@ runs:
   steps:
     - name: Check inputs
       shell: python
+      env:
+        CACHE_PROVIDER: ${{ inputs.cache-provider }}
       run: |
+        import os
         # We expect only gha or cirrus as inputs to cache-provider
-        if "${{ inputs.cache-provider }}" not in ("gha", "cirrus"):
-          print("::warning title=Unknown input to configure docker action::Provided value was ${{ inputs.cache-provider }}")
+        if os.environ["CACHE_PROVIDER"] not in ("gha", "cirrus"):
+          print(f"::warning title=Unknown input to configure docker action::Provided value was {os.environ['CACHE_PROVIDER']}")
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -35,6 +38,11 @@ runs:
 
     - name: Construct docker build cache args
       shell: bash
+      env:
+        CACHE_PROVIDER: ${{ inputs.cache-provider }}
+        EVENT_NAME: ${{ github.event_name }}
+        REF_NAME: ${{ github.ref_name }}
+        DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
       run: |
         # Configure docker build cache backend
         #
@@ -43,7 +51,7 @@ runs:
         # which are set automatically when running on GitHub infra: https://docs.docker.com/build/cache/backends/gha/#synopsis
 
         # Use cirrus cache host
-        if [[ ${{ inputs.cache-provider }} == 'cirrus' ]]; then
+        if [[ $CACHE_PROVIDER == 'cirrus' ]]; then
           url_args="url=${CIRRUS_CACHE_HOST},url_v2=${CIRRUS_CACHE_HOST}"
         else
           url_args=""
@@ -53,7 +61,7 @@ runs:
         args=(--cache-from "type=gha${url_args:+,${url_args}},scope=${CONTAINER_NAME}")
 
         # Only add --cache-to when using the Cirrus cache provider and pushing to the default branch.
-        if [[ ${{ inputs.cache-provider }} == 'cirrus' && ${{ github.event_name }} == "push" && ${{ github.ref_name }} == ${{ github.event.repository.default_branch }} ]]; then
+        if [[ $CACHE_PROVIDER == 'cirrus' && $EVENT_NAME == "push" && $REF_NAME == $DEFAULT_BRANCH ]]; then
           args+=(--cache-to "type=gha${url_args:+,${url_args}},mode=max,ignore-error=true,scope=${CONTAINER_NAME}")
         fi
 

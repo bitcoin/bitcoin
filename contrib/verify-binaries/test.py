@@ -51,9 +51,15 @@ def run_verify(global_args: str, command: str, command_args: str) -> subprocess.
     if command == "pub":
         command += " --cleanup"
 
+    cmd = [sys.executable, str(path)]
+    if global_args:
+        cmd.extend(global_args.split())
+    cmd.extend(command.split())
+    cmd.extend(command_args.split())
+
     return subprocess.run(
-        f"{path} {global_args} {command} {command_args}",
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        cmd,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
 
 
 def expect_code(completed: subprocess.CompletedProcess, expected_code: int, msg: str):

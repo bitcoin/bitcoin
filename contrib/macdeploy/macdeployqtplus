@@ -16,7 +16,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import sys, re, os, platform, shutil, stat, subprocess, os.path
+import sys
+import re
+import os
+import platform
+import shutil
+import stat
+import subprocess
 from argparse import ArgumentParser
 from pathlib import Path
 from subprocess import PIPE, run
@@ -349,8 +355,6 @@ def deployPlugins(appBundleInfo: ApplicationBundleInfo, deploymentInfo: Deployme
             continue
 
         for pluginName in filenames:
-            pluginPath = os.path.join(pluginDirectory, pluginName)
-
             if pluginName.split('.')[0] not in ['libqminimal', 'libqcocoa', 'libqmacstyle']:
                 continue
 
@@ -488,7 +492,7 @@ with open(os.path.join(applicationBundle.resourcesPath, "qt.conf"), "wb") as f:
 # ------------------------------------------------
 
 if platform.system() == "Darwin":
-    subprocess.check_call(f"codesign --deep --force --sign - {target}", shell=True)
+    subprocess.check_call(["codesign", "--deep", "--force", "--sign", "-", target], shell=False)
 
 # ------------------------------------------------
 
