@@ -1,6 +1,6 @@
-Bitcoin Core version 29.x is now available from:
+Bitcoin Core version 29.3rc1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-29.x/>
+  <https://bitcoincore.org/bin/bitcoin-core-29.3/test.rc1/>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -37,6 +37,36 @@ unsupported systems.
 Notable changes
 ===============
 
+### P2P
+
+- #33050 net, validation: don't punish peers for consensus-invalid txs
+- #33723 chainparams: remove dnsseed.bitcoin.dashjr-list-of-p2p-nodes.us
+
+### Validation
+
+- #32473 Introduce per-txin sighash midstate cache for legacy/p2sh/segwitv0 scripts
+- #33105 validation: detect witness stripping without re-running Script checks
+
+### Wallet
+
+- #33268 wallet: Identify transactions spending 0-value outputs, and add tests for anchor outputs in a wallet
+- #34156 wallet: fix unnamed legacy wallet migration failure
+- #34226 wallet: test: Relative wallet failed migration cleanup
+- #34123 wallet: migration, avoid creating spendable wallet from a watch-only legacy wallet
+- #34215 wallettool: fix unnamed createfromdump failure walletsdir deletion
+
+### Mining
+
+- #33475 bugfix: miner: fix `addPackageTxs` unsigned integer overflow
+
+### Build
+
+- #34227 guix: Fix `osslsigncode` tests
+
+### Documentation
+
+- #33623 doc: document capnproto and libmultiprocess deps in 29.x
+
 ### Test
 
 - #33612 test: change log rate limit version gate
@@ -51,8 +81,17 @@ Credits
 
 Thanks to everyone who directly contributed to this release:
 
+- Anthony Towns
+- Antoine Poinsot
 - Ava Chow
+- David Gumberg
 - Eugene Siegel
+- fanquake
+- furszy
+- Hennadii Stepanov
+- ismaelsadeeq
+- Pieter Wuille
+- SatsAndSports
 - willcl-ark
 
 As well as to everyone that helped with translations on
