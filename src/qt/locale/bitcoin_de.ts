@@ -4831,7 +4831,7 @@ Please try running the latest software version.
         <translation type="unfinished">Nicht erkannter Deskriptor gefunden. Wallet %s wird geladen.
 
 Die Wallet wurde möglicherweise in einer neueren Version erstellt.
-Bitte mit der neueste Softwareversion auszuführen.
+Bitte mit der neuesten Softwareversion ausführen.
 </translation>
     </message>
     <message>
