@@ -1467,7 +1467,7 @@ RPCHelpMan sendall()
             }
 
             if (options.exists("version")) {
-                coin_control.m_version = options["version"].getInt<int>();
+                coin_control.m_version = options["version"].getInt<decltype(coin_control.m_version)>();
             }
 
             if (coin_control.m_version == TRUC_VERSION) {

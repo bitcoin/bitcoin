@@ -326,7 +326,9 @@ jobs:
           BITCOINWALLET: '${{ github.workspace }}\build\bin\Release\bitcoin-wallet.exe'
           BITCOINCHAINSTATE: '${{ github.workspace }}\build\bin\Release\bitcoin-chainstate.exe'
           TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
-        run: py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix="${RUNNER_TEMP}" --combinedlogslen=99999999 --timeout-factor=${TEST_RUNNER_TIMEOUT_FACTOR} ${TEST_RUNNER_EXTRA}
+        run: |
+          py -3 -m pip install pyzmq
+          py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --quiet --tmpdirprefix="${RUNNER_TEMP}" --combinedlogslen=99999999 --timeout-factor=${TEST_RUNNER_TIMEOUT_FACTOR} ${TEST_RUNNER_EXTRA}
 
       - name: Clone corpora
         if: matrix.job-type == 'fuzz'
@@ -499,11 +501,18 @@ jobs:
 
       - name: Run functional tests
         env:
-          # TODO: Fix the excluded test and re-enable it.
-          # feature_unsupported_utxo_db.py fails on windows because of emojis in the test data directory
-          EXCLUDE: '--exclude wallet_multiwallet.py,feature_unsupported_utxo_db.py'
           TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
-        run: py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix="$RUNNER_TEMP" --combinedlogslen=99999999 --timeout-factor=$TEST_RUNNER_TIMEOUT_FACTOR $EXCLUDE $TEST_RUNNER_EXTRA
+        run: |
+          py -3 -m pip install pyzmq
+          py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --quiet --tmpdirprefix="$RUNNER_TEMP" --combinedlogslen=99999999 --timeout-factor=$TEST_RUNNER_TIMEOUT_FACTOR $TEST_RUNNER_EXTRA \
+            `# feature_unsupported_utxo_db.py fails on Windows because of emojis in the test data directory.` \
+            --exclude feature_unsupported_utxo_db.py \
+            `# See https://github.com/bitcoin/bitcoin/issues/31409.` \
+            --exclude wallet_multiwallet.py
+          # Run feature_unsupported_utxo_db sequentially in ASCII-only tmp dir,
+          # because it is excluded above due to lack of UTF-8 support in the
+          # ancient release.
+          py -3 test/functional/feature_unsupported_utxo_db.py --previous-releases --tmpdir="${RUNNER_TEMP}/test_feature_unsupported_utxo_db"
 
   ci-matrix:
     name: ${{ matrix.name }}

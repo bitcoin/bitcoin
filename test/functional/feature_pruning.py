@@ -346,20 +346,22 @@ class PruneTest(BitcoinTestFramework):
 
         self.log.info("Success")
 
-    def wallet_test(self):
+    def test_wallet_rescan(self):
         # check that the pruning node's wallet is still in good shape
         self.log.info("Stop and start pruning node to trigger wallet rescan")
         self.restart_node(2, extra_args=["-prune=550"])
-        self.log.info("Success")
+
+        wallet_info = self.nodes[2].getwalletinfo()
+        self.wait_until(lambda: wallet_info["scanning"] == False)
+        self.wait_until(lambda: wallet_info["lastprocessedblock"]["height"] == self.nodes[2].getblockcount())
 
         # check that wallet loads successfully when restarting a pruned node after IBD.
         # this was reported to fail in #7494.
-        self.log.info("Syncing node 5 to test wallet")
-        self.connect_nodes(0, 5)
-        nds = [self.nodes[0], self.nodes[5]]
-        self.sync_blocks(nds, wait=5, timeout=300)
         self.restart_node(5, extra_args=["-prune=550", "-blockfilterindex=1"]) # restart to trigger rescan
-        self.log.info("Success")
+
+        wallet_info = self.nodes[5].getwalletinfo()
+        self.wait_until(lambda: wallet_info["scanning"] == False)
+        self.wait_until(lambda: wallet_info["lastprocessedblock"]["height"] == self.nodes[0].getblockcount())
 
     def run_test(self):
         self.log.info("Warning! This test requires 4GB of disk space")
@@ -467,9 +469,13 @@ class PruneTest(BitcoinTestFramework):
         self.log.info("Test manual pruning with timestamps")
         self.manual_test(4, use_timestamp=True)
 
+        self.log.info("Syncing node 5 to node 0")
+        self.connect_nodes(0, 5)
+        self.sync_blocks([self.nodes[0], self.nodes[5]], wait=5, timeout=300)
+
         if self.is_wallet_compiled():
             self.log.info("Test wallet re-scan")
-            self.wallet_test()
+            self.test_wallet_rescan()
 
             self.log.info("Test it's not possible to rescan beyond pruned data")
             self.test_rescan_blockchain()

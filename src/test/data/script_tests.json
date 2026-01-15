@@ -438,6 +438,7 @@
 ["-1 0", "BOOLOR", "P2SH,STRICTENC", "OK"],
 ["0 0", "NUMEQUAL", "P2SH,STRICTENC", "OK"],
 ["0 0", "NUMEQUALVERIFY 1", "P2SH,STRICTENC", "OK"],
+["2 0", "NUMEQUALVERIFY", "P2SH,STRICTENC", "NUMEQUALVERIFY"],
 ["-1 0", "NUMNOTEQUAL", "P2SH,STRICTENC", "OK"],
 ["-1 0", "LESSTHAN", "P2SH,STRICTENC", "OK"],
 ["1 0", "GREATERTHAN", "P2SH,STRICTENC", "OK"],
@@ -1683,6 +1684,20 @@
     "P2PK with hybrid pubkey"
 ],
 [
+    "0x00",
+    "0x21 0x0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798 CHECKSIG",
+    "STRICTENC",
+    "PUBKEYTYPE",
+    "P2PK with invalid length for uncompressed key"
+],
+[
+    "0x00",
+    "0x41 0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8 CHECKSIG",
+    "STRICTENC",
+    "PUBKEYTYPE",
+    "P2PK with invalid length for compressed key"
+],
+[
     "0x47 0x30440220035d554e3153c14950c9993f41c496607a8e24093db0595be7bf875cf64fcf1f02204731c8c4e5daf15e706cec19cdd8f2c5b1d05490e11dab8465ed426569b6e92101",
     "0x41 0x0679be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8 CHECKSIG NOT",
     "",
@@ -2255,6 +2270,18 @@
     "P2SH,WITNESS,WITNESS_PUBKEYTYPE",
     "WITNESS_PUBKEYTYPE",
     "Basic P2SH(P2WPKH)"
+],
+[
+    [
+        "",
+        "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+        0.00000001
+    ],
+    "",
+    "0 0x14 0xfe78b0052557b3d67248d04e4f7b99c361167432",
+    "P2SH,WITNESS,WITNESS_PUBKEYTYPE",
+    "WITNESS_PUBKEYTYPE",
+    "P2WPKH with invalid prefix for compressed key"
 ],
 
 ["Testing P2WSH multisig with compressed keys"],

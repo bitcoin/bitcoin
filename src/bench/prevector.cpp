@@ -116,12 +116,12 @@ static void PrevectorFillVectorIndirect(benchmark::Bench& bench)
     {                                                                \
         Prevector##name<nontrivial_t>(bench);                        \
     }                                                                \
-    BENCHMARK(Prevector##name##Nontrivial, benchmark::PriorityLevel::HIGH);         \
+    BENCHMARK(Prevector##name##Nontrivial);                          \
     static void Prevector##name##Trivial(benchmark::Bench& bench)    \
     {                                                                \
         Prevector##name<trivial_t>(bench);                           \
     }                                                                \
-    BENCHMARK(Prevector##name##Trivial, benchmark::PriorityLevel::HIGH);
+    BENCHMARK(Prevector##name##Trivial);
 
 PREVECTOR_TEST(Clear)
 PREVECTOR_TEST(Destructor)

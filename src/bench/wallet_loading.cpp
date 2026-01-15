@@ -64,5 +64,5 @@ static void WalletLoadingDescriptors(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(WalletLoadingDescriptors, benchmark::PriorityLevel::HIGH);
+BENCHMARK(WalletLoadingDescriptors);
 } // namespace wallet

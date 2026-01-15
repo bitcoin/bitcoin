@@ -479,7 +479,7 @@ std::vector<FeeFrac> ChunkLinearization(const DepGraph<SetType>& depgraph, std::
  * feerate, each individually sorted in an arbitrary but topological (= no child before parent)
  * way.
  *
- * We define three quality properties the state can have, each being stronger than the previous:
+ * We define four quality properties the state can have:
  *
  * - acyclic: The state is acyclic whenever no cycle of active dependencies exists within the
  *            graph, ignoring the parent/child direction. This is equivalent to saying that within
@@ -529,7 +529,19 @@ std::vector<FeeFrac> ChunkLinearization(const DepGraph<SetType>& depgraph, std::
  *            satisfied. Thus, the state being optimal is more a "the eventual output is *known*
  *            to be optimal".
  *
- *            The algorithm terminates whenever an optimal state is reached.
+ * - minimal: We say the state is minimal when it is:
+ *            - acyclic
+ *            - topological, except that inactive dependencies between equal-feerate chunks are
+ *              allowed as long as they do not form a loop.
+ *            - like optimal, no active dependencies whose top feerate is strictly higher than
+ *              the bottom feerate are allowed.
+ *            - no chunk contains a proper non-empty subset which includes all its own in-chunk
+ *              dependencies of the same feerate as the chunk itself.
+ *
+ *            A minimal state effectively corresponds to an optimal state, where every chunk has
+ *            been split into its minimal equal-feerate components.
+ *
+ *            The algorithm terminates whenever a minimal state is reached.
  *
  *
  * This leads to the following high-level algorithm:
@@ -539,6 +551,10 @@ std::vector<FeeFrac> ChunkLinearization(const DepGraph<SetType>& depgraph, std::
  * - Loop until optimal (no dependencies with higher-feerate top than bottom), or time runs out:
  *   - Deactivate a violating dependency, potentially making the state non-topological.
  *   - Activate other dependencies to make the state topological again.
+ * - If there is time left and the state is optimal:
+ *   - Attempt to split chunks into equal-feerate parts without mutual dependencies between them.
+ *     When this succeeds, recurse into them.
+ *   - If no such chunks can be found, the state is minimal.
  * - Output the chunks from high to low feerate, each internally sorted topologically.
  *
  * When merging, we always either:
@@ -558,6 +574,7 @@ std::vector<FeeFrac> ChunkLinearization(const DepGraph<SetType>& depgraph, std::
  *   - Deactivate D, causing the chunk it is in to split into top T and bottom B.
  *   - Do an upwards merge of T, if possible. If so, repeat the same with the merged result.
  *   - Do a downwards merge of B, if possible. If so, repeat the same with the merged result.
+ * - Split chunks further to obtain a minimal state, see below.
  * - Output the chunks from high to low feerate, each internally sorted topologically.
  *
  * Instead of performing merges arbitrarily to make the initial state topological, it is possible
@@ -568,6 +585,21 @@ std::vector<FeeFrac> ChunkLinearization(const DepGraph<SetType>& depgraph, std::
  *   - Find the chunk C that transaction is in (which will be singleton).
  *   - Do an upwards merge of C, if possible. If so, repeat the same with the merged result.
  * No downwards merges are needed in this case.
+ *
+ * After reaching an optimal state, it can be transformed into a minimal state by attempting to
+ * split chunks further into equal-feerate parts. To do so, pick a specific transaction in each
+ * chunk (the pivot), and rerun the above split-then-merge procedure again:
+ * - first, while pretending the pivot transaction has an infinitesimally higher (or lower) fee
+ *   than it really has. If a split exists with the pivot in the top part (or bottom part), this
+ *   will find it.
+ * - if that fails to split, repeat while pretending the pivot transaction has an infinitesimally
+ *   lower (or higher) fee. If a split exists with the pivot in the bottom part (or top part), this
+ *   will find it.
+ * - if either succeeds, repeat the procedure for the newly found chunks to split them further.
+ *   If not, the chunk is already minimal.
+ * If the chunk can be split into equal-feerate parts, then the pivot must exist in either the top
+ * or bottom part of that potential split. By trying both with the same pivot, if a split exists,
+ * it will be found.
  *
  * What remains to be specified are a number of heuristics:
  *
@@ -644,9 +676,29 @@ private:
     std::vector<DepData> m_dep_data;
     /** A FIFO of chunk representatives of chunks that may be improved still. */
     VecDeque<TxIdx> m_suboptimal_chunks;
+    /** A FIFO of chunk representatives with a pivot transaction in them, and a flag to indicate
+     *  their status:
+     *  - bit 1: currently attempting to move the pivot down, rather than up.
+     *  - bit 2: this is the second stage, so we have already tried moving the pivot in the other
+     *           direction.
+     */
+    VecDeque<std::tuple<TxIdx, TxIdx, unsigned>> m_nonminimal_chunks;
 
     /** The number of updated transactions in activations/deactivations. */
     uint64_t m_cost{0};
+
+    /** Pick a random transaction within a set (which must be non-empty). */
+    TxIdx PickRandomTx(const SetType& tx_idxs) noexcept
+    {
+        Assume(tx_idxs.Any());
+        unsigned pos = m_rng.randrange<unsigned>(tx_idxs.Count());
+        for (auto tx_idx : tx_idxs) {
+            if (pos == 0) return tx_idx;
+            --pos;
+        }
+        Assume(false);
+        return TxIdx(-1);
+    }
 
     /** Update a chunk:
      *  - All transactions have their chunk representative set to `chunk_rep`.
@@ -769,8 +821,9 @@ private:
                           /*chunk_rep=*/bottom_rep, /*dep_change=*/top_part);
     }
 
-    /** Activate a dependency from the chunk represented by bottom_rep to the chunk represented by
-     *  top_rep, which must exist. Return the representative of the merged chunk. */
+    /** Activate a dependency from the chunk represented by bottom_idx to the chunk represented by
+     *  top_idx. Return the representative of the merged chunk, or TxIdx(-1) if no merge is
+     *  possible. */
     TxIdx MergeChunks(TxIdx top_rep, TxIdx bottom_rep) noexcept
     {
         auto& top_chunk = m_tx_data[top_rep];
@@ -783,7 +836,7 @@ private:
             auto& tx_data = m_tx_data[tx];
             num_deps += (tx_data.children & bottom_chunk.chunk_setinfo.transactions).Count();
         }
-        Assume(num_deps > 0);
+        if (num_deps == 0) return TxIdx(-1);
         // Uniformly randomly pick one of them and activate it.
         TxIdx pick = m_rng.randrange(num_deps);
         for (auto tx : top_chunk.chunk_setinfo.transactions) {
@@ -1068,6 +1121,119 @@ public:
         return false;
     }
 
+    /** Initialize data structure for minimizing the chunks. Can only be called if state is known
+     *  to be optimal. OptimizeStep() cannot be called anymore afterwards. */
+    void StartMinimizing() noexcept
+    {
+        m_nonminimal_chunks.clear();
+        m_nonminimal_chunks.reserve(m_transaction_idxs.Count());
+        // Gather all chunks, and for each, add it with a random pivot in it, and a random initial
+        // direction, to m_nonminimal_chunks.
+        for (auto tx : m_transaction_idxs) {
+            auto& tx_data = m_tx_data[tx];
+            if (tx_data.chunk_rep == tx) {
+                TxIdx pivot_idx = PickRandomTx(tx_data.chunk_setinfo.transactions);
+                m_nonminimal_chunks.emplace_back(tx, pivot_idx, m_rng.randbits<1>());
+                // Randomize the initial order of nonminimal chunks in the queue.
+                TxIdx j = m_rng.randrange<TxIdx>(m_nonminimal_chunks.size());
+                if (j != m_nonminimal_chunks.size() - 1) {
+                    std::swap(m_nonminimal_chunks.back(), m_nonminimal_chunks[j]);
+                }
+            }
+        }
+    }
+
+    /** Try to reduce a chunk's size. Returns false if all chunks are minimal, true otherwise. */
+    bool MinimizeStep() noexcept
+    {
+        // If the queue of potentially-non-minimal chunks is empty, we are done.
+        if (m_nonminimal_chunks.empty()) return false;
+        // Pop an entry from the potentially-non-minimal chunk queue.
+        auto [chunk_rep, pivot_idx, flags] = m_nonminimal_chunks.front();
+        m_nonminimal_chunks.pop_front();
+        auto& chunk_data = m_tx_data[chunk_rep];
+        Assume(chunk_data.chunk_rep == chunk_rep);
+        /** Whether to move the pivot down rather than up. */
+        bool move_pivot_down = flags & 1;
+        /** Whether this is already the second stage. */
+        bool second_stage = flags & 2;
+
+        // Find a random dependency whose top and bottom set feerates are equal, and which has
+        // pivot in bottom set (if move_pivot_down) or in top set (if !move_pivot_down).
+        DepIdx candidate_dep = DepIdx(-1);
+        uint64_t candidate_tiebreak{0};
+        bool have_any = false;
+        // Iterate over all transactions.
+        for (auto tx_idx : chunk_data.chunk_setinfo.transactions) {
+            const auto& tx_data = m_tx_data[tx_idx];
+            // Iterate over all active child dependencies of the transaction.
+            for (auto dep_idx : tx_data.child_deps) {
+                auto& dep_data = m_dep_data[dep_idx];
+                // Skip inactive child dependencies.
+                if (!dep_data.active) continue;
+                // Skip if this dependency does not have equal top and bottom set feerates. Note
+                // that the top cannot have higher feerate than the bottom, or OptimizeSteps would
+                // have dealt with it.
+                if (dep_data.top_setinfo.feerate << chunk_data.chunk_setinfo.feerate) continue;
+                have_any = true;
+                // Skip if this dependency does not have pivot in the right place.
+                if (move_pivot_down == dep_data.top_setinfo.transactions[pivot_idx]) continue;
+                // Remember this as our chosen dependency if it has a better tiebreak.
+                uint64_t tiebreak = m_rng.rand64() | 1;
+                if (tiebreak > candidate_tiebreak) {
+                    candidate_tiebreak = tiebreak;
+                    candidate_dep = dep_idx;
+                }
+            }
+        }
+        // If no dependencies have equal top and bottom set feerate, this chunk is minimal.
+        if (!have_any) return true;
+        // If all found dependencies have the pivot in the wrong place, try moving it in the other
+        // direction. If this was the second stage already, we are done.
+        if (candidate_tiebreak == 0) {
+            // Switch to other direction, and to second phase.
+            flags ^= 3;
+            if (!second_stage) m_nonminimal_chunks.emplace_back(chunk_rep, pivot_idx, flags);
+            return true;
+        }
+
+        // Otherwise, deactivate the dependency that was found.
+        Deactivate(candidate_dep);
+        auto& dep_data = m_dep_data[candidate_dep];
+        auto parent_chunk_rep = m_tx_data[dep_data.parent].chunk_rep;
+        auto child_chunk_rep = m_tx_data[dep_data.child].chunk_rep;
+        // Try to activate a dependency between the new bottom and the new top (opposite from the
+        // dependency that was just deactivated).
+        auto merged_chunk_rep = MergeChunks(child_chunk_rep, parent_chunk_rep);
+        if (merged_chunk_rep != TxIdx(-1)) {
+            // A self-merge happened.
+            // Re-insert the chunk into the queue, in the same direction. Note that the chunk_rep
+            // will have changed.
+            m_nonminimal_chunks.emplace_back(merged_chunk_rep, pivot_idx, flags);
+        } else {
+            // No self-merge happens, and thus we have found a way to split the chunk. Create two
+            // smaller chunks, and add them to the queue. The one that contains the current pivot
+            // gets to continue with it in the same direction, to minimize the number of times we
+            // alternate direction. If we were in the second phase already, the newly created chunk
+            // inherits that too, because we know no split with the pivot on the other side is
+            // possible already. The new chunk without the current pivot gets a new randomly-chosen
+            // one.
+            if (move_pivot_down) {
+                auto parent_pivot_idx = PickRandomTx(m_tx_data[parent_chunk_rep].chunk_setinfo.transactions);
+                m_nonminimal_chunks.emplace_back(parent_chunk_rep, parent_pivot_idx, m_rng.randbits<1>());
+                m_nonminimal_chunks.emplace_back(child_chunk_rep, pivot_idx, flags);
+            } else {
+                auto child_pivot_idx = PickRandomTx(m_tx_data[child_chunk_rep].chunk_setinfo.transactions);
+                m_nonminimal_chunks.emplace_back(parent_chunk_rep, pivot_idx, flags);
+                m_nonminimal_chunks.emplace_back(child_chunk_rep, child_pivot_idx, m_rng.randbits<1>());
+            }
+            if (m_rng.randbool()) {
+                std::swap(m_nonminimal_chunks.back(), m_nonminimal_chunks[m_nonminimal_chunks.size() - 2]);
+            }
+        }
+        return true;
+    }
+
     /** Construct a topologically-valid linearization from the current forest state. Must be
      *  topological. */
     std::vector<DepGraphIndex> GetLinearization() noexcept
@@ -1182,6 +1348,10 @@ public:
      * After an OptimizeStep(), the diagram will always be at least as good as before. Once
      * OptimizeStep() returns false, the diagram will be equivalent to that produced by
      * GetLinearization(), and optimal.
+     *
+     * After a MinimizeStep(), the diagram cannot change anymore (in the CompareChunks() sense),
+     * but its number of segments can increase still. Once MinimizeStep() returns false, the number
+     * of chunks of the produced linearization will match the number of segments in the diagram.
      */
     std::vector<FeeFrac> GetDiagram() const noexcept
     {
@@ -1328,6 +1498,19 @@ public:
             auto tx_idx = m_suboptimal_chunks[i];
             assert(m_transaction_idxs[tx_idx]);
         }
+
+        //
+        // Verify m_nonminimal_chunks.
+        //
+        SetType nonminimal_reps;
+        for (size_t i = 0; i < m_nonminimal_chunks.size(); ++i) {
+            auto [chunk_rep, pivot, flags] = m_nonminimal_chunks[i];
+            assert(m_tx_data[chunk_rep].chunk_rep == chunk_rep);
+            assert(m_tx_data[pivot].chunk_rep == chunk_rep);
+            assert(!nonminimal_reps[chunk_rep]);
+            nonminimal_reps.Set(chunk_rep);
+        }
+        assert(nonminimal_reps.IsSubsetOf(m_transaction_idxs));
     }
 };
 
@@ -1345,7 +1528,7 @@ public:
  *                                - The resulting linearization. It is guaranteed to be at least as
  *                                  good (in the feerate diagram sense) as old_linearization.
  *                                - A boolean indicating whether the result is guaranteed to be
- *                                  optimal.
+ *                                  optimal with minimal chunks.
  *                                - How many optimization steps were actually performed.
  */
 template<typename SetType>
@@ -1361,11 +1544,19 @@ std::tuple<std::vector<DepGraphIndex>, bool, uint64_t> Linearize(const DepGraph<
     }
     // Make improvement steps to it until we hit the max_iterations limit, or an optimal result
     // is found.
-    bool optimal = false;
     if (forest.GetCost() < max_iterations) {
         forest.StartOptimizing();
         do {
-            if (!forest.OptimizeStep()) {
+            if (!forest.OptimizeStep()) break;
+        } while (forest.GetCost() < max_iterations);
+    }
+    // Make chunk minimization steps until we hit the max_iterations limit, or all chunks are
+    // minimal.
+    bool optimal = false;
+    if (forest.GetCost() < max_iterations) {
+        forest.StartMinimizing();
+        do {
+            if (!forest.MinimizeStep()) {
                 optimal = true;
                 break;
             }

@@ -39,8 +39,6 @@ import sys
 import shutil
 import tempfile
 import textwrap
-import urllib.request
-import urllib.error
 import enum
 from hashlib import sha256
 from pathlib import PurePath, Path
@@ -116,18 +114,6 @@ def download_with_wget(remote_file, local_file):
     return result.returncode == 0, result.stdout.decode().rstrip()
 
 
-def download_lines_with_urllib(url) -> tuple[bool, list[str]]:
-    """Get (success, text lines of a file) over HTTP."""
-    try:
-        return (True, [
-            line.strip().decode() for line in urllib.request.urlopen(url).readlines()])
-    except urllib.error.HTTPError as e:
-        log.warning(f"HTTP request to {url} failed (HTTPError): {e}")
-    except Exception as e:
-        log.warning(f"HTTP request to {url} failed ({e})")
-    return (False, [])
-
-
 def verify_with_gpg(
     filename,
     signature_filename,
@@ -146,11 +132,6 @@ def verify_with_gpg(
     log.debug(f'Result from GPG ({result.returncode}): {result.stdout.decode()}')
     log.debug(f"{gpg_data}")
     return result.returncode, gpg_data
-
-
-def remove_files(filenames):
-    for filename in filenames:
-        os.remove(filename)
 
 
 class SigData:

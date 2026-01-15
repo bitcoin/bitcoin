@@ -144,4 +144,4 @@ static void MempoolEviction(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(MempoolEviction, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MempoolEviction);

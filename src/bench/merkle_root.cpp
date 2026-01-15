@@ -24,4 +24,4 @@ static void MerkleRoot(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(MerkleRoot, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MerkleRoot);

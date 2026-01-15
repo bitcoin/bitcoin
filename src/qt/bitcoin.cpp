@@ -380,53 +380,54 @@ void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHead
 {
     qDebug() << __func__ << ": Initialization result: " << success;
 
-    if (success) {
-        delete m_splash;
-        m_splash = nullptr;
+    if (!success || m_node->shutdownRequested()) {
+        requestShutdown();
+        return;
+    }
 
-        // Log this only after AppInitMain finishes, as then logging setup is guaranteed complete
-        qInfo() << "Platform customization:" << platformStyle->getName();
-        clientModel = new ClientModel(node(), optionsModel);
-        window->setClientModel(clientModel, &tip_info);
+    delete m_splash;
+    m_splash = nullptr;
 
-        // If '-min' option passed, start window minimized (iconified) or minimized to tray
-        bool start_minimized = gArgs.GetBoolArg("-min", false);
+    // Log this only after AppInitMain finishes, as then logging setup is guaranteed complete
+    qInfo() << "Platform customization:" << platformStyle->getName();
+    clientModel = new ClientModel(node(), optionsModel);
+    window->setClientModel(clientModel, &tip_info);
+
+    // If '-min' option passed, start window minimized (iconified) or minimized to tray
+    bool start_minimized = gArgs.GetBoolArg("-min", false);
 #ifdef ENABLE_WALLET
-        if (WalletModel::isWalletEnabled()) {
-            m_wallet_controller = new WalletController(*clientModel, platformStyle, this);
-            window->setWalletController(m_wallet_controller, /*show_loading_minimized=*/start_minimized);
-            if (paymentServer) {
-                paymentServer->setOptionsModel(optionsModel);
-            }
+    if (WalletModel::isWalletEnabled()) {
+        m_wallet_controller = new WalletController(*clientModel, platformStyle, this);
+        window->setWalletController(m_wallet_controller, /*show_loading_minimized=*/start_minimized);
+        if (paymentServer) {
+            paymentServer->setOptionsModel(optionsModel);
         }
+    }
 #endif // ENABLE_WALLET
 
-        // Show or minimize window
-        if (!start_minimized) {
-            window->show();
-        } else if (clientModel->getOptionsModel()->getMinimizeToTray() && window->hasTrayIcon()) {
-            // do nothing as the window is managed by the tray icon
-        } else {
-            window->showMinimized();
-        }
-        Q_EMIT windowShown(window);
+    // Show or minimize window
+    if (!start_minimized) {
+        window->show();
+    } else if (clientModel->getOptionsModel()->getMinimizeToTray() && window->hasTrayIcon()) {
+        // do nothing as the window is managed by the tray icon
+    } else {
+        window->showMinimized();
+    }
+    Q_EMIT windowShown(window);
 
 #ifdef ENABLE_WALLET
-        // Now that initialization/startup is done, process any command-line
-        // bitcoin: URIs or payment requests:
-        if (paymentServer) {
-            connect(paymentServer, &PaymentServer::receivedPaymentRequest, window, &BitcoinGUI::handlePaymentRequest);
-            connect(window, &BitcoinGUI::receivedURI, paymentServer, &PaymentServer::handleURIOrFile);
-            connect(paymentServer, &PaymentServer::message, [this](const QString& title, const QString& message, unsigned int style) {
-                window->message(title, message, style);
-            });
-            QTimer::singleShot(100ms, paymentServer, &PaymentServer::uiReady);
-        }
-#endif
-        pollShutdownTimer->start(SHUTDOWN_POLLING_DELAY);
-    } else {
-        requestShutdown();
+    // Now that initialization/startup is done, process any command-line
+    // bitcoin: URIs or payment requests:
+    if (paymentServer) {
+        connect(paymentServer, &PaymentServer::receivedPaymentRequest, window, &BitcoinGUI::handlePaymentRequest);
+        connect(window, &BitcoinGUI::receivedURI, paymentServer, &PaymentServer::handleURIOrFile);
+        connect(paymentServer, &PaymentServer::message, [this](const QString& title, const QString& message, unsigned int style) {
+            window->message(title, message, style);
+        });
+        QTimer::singleShot(100ms, paymentServer, &PaymentServer::uiReady);
     }
+#endif
+    pollShutdownTimer->start(SHUTDOWN_POLLING_DELAY);
 }
 
 void BitcoinApplication::handleRunawayException(const QString &message)

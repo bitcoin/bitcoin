@@ -6,16 +6,38 @@
 import asyncio
 import inspect
 from contextlib import asynccontextmanager, AsyncExitStack
+from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
 import shutil
-from test_framework.messages import (CBlock, CTransaction, ser_uint256, COIN)
+from test_framework.blocktools import NULL_OUTPOINT
+from test_framework.messages import (
+    CBlock,
+    CTransaction,
+    CTxIn,
+    CTxOut,
+    CTxInWitness,
+    ser_uint256,
+    COIN,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_not_equal
 )
 from test_framework.wallet import MiniWallet
+from typing import Optional
+
+# Stores the result of getCoinbaseTx()
+@dataclass
+class CoinbaseTxData:
+    version: int
+    sequence: int
+    scriptSigPrefix: bytes
+    witness: Optional[bytes]
+    blockRewardRemaining: int
+    requiredOutputs: list[bytes]
+    lockTime: int
 
 # Test may be skipped and not have capnp installed
 try:
@@ -123,10 +145,31 @@ class IPCInterfaceTest(BitcoinTestFramework):
         return block
 
     async def parse_and_deserialize_coinbase_tx(self, block_template, ctx):
-        coinbase_data = BytesIO((await block_template.getCoinbaseTx(ctx)).result)
+        assert block_template is not None
+        coinbase_data = BytesIO((await block_template.getCoinbaseRawTx(ctx)).result)
         tx = CTransaction()
         tx.deserialize(coinbase_data)
         return tx
+
+    async def parse_and_deserialize_coinbase(self, block_template, ctx) -> CoinbaseTxData:
+        assert block_template is not None
+        # Note: the template_capnp struct will be garbage-collected when this
+        # method returns, so it is important to copy any Data fields from it
+        # which need to be accessed later using the bytes() cast. Starting with
+        # pycapnp v2.2.0, Data fields have type `memoryview` and are ephemeral.
+        template_capnp = (await block_template.getCoinbaseTx(ctx)).result
+        witness: Optional[bytes] = None
+        if template_capnp._has("witness"):
+            witness = bytes(template_capnp.witness)
+        return CoinbaseTxData(
+            version=int(template_capnp.version),
+            sequence=int(template_capnp.sequence),
+            scriptSigPrefix=bytes(template_capnp.scriptSigPrefix),
+            witness=witness,
+            blockRewardRemaining=int(template_capnp.blockRewardRemaining),
+            requiredOutputs=[bytes(output) for output in template_capnp.requiredOutputs],
+            lockTime=int(template_capnp.lockTime),
+        )
 
     def run_echo_test(self):
         self.log.info("Running echo test")
@@ -141,6 +184,54 @@ class IPCInterfaceTest(BitcoinTestFramework):
             self.log.debug("Destroy the Echo object")
             echo.destroy(ctx)
         asyncio.run(capnp.run(async_routine()))
+
+    async def build_coinbase_test(self, template, ctx, miniwallet):
+        self.log.debug("Build coinbase transaction using getCoinbaseTx()")
+        assert template is not None
+        coinbase_res = await self.parse_and_deserialize_coinbase(template, ctx)
+        coinbase_tx = CTransaction()
+        coinbase_tx.version = coinbase_res.version
+        coinbase_tx.vin = [CTxIn()]
+        coinbase_tx.vin[0].prevout = NULL_OUTPOINT
+        coinbase_tx.vin[0].nSequence = coinbase_res.sequence
+        # Typically a mining pool appends its name and an extraNonce
+        coinbase_tx.vin[0].scriptSig = coinbase_res.scriptSigPrefix
+
+        # We currently always provide a coinbase witness, even for empty
+        # blocks, but this may change, so always check:
+        has_witness = coinbase_res.witness is not None
+        if has_witness:
+            coinbase_tx.wit.vtxinwit = [CTxInWitness()]
+            coinbase_tx.wit.vtxinwit[0].scriptWitness.stack = [coinbase_res.witness]
+
+        # First output is our payout
+        coinbase_tx.vout = [CTxOut()]
+        coinbase_tx.vout[0].scriptPubKey = miniwallet.get_output_script()
+        coinbase_tx.vout[0].nValue = coinbase_res.blockRewardRemaining
+        # Add SegWit OP_RETURN. This is currently always present even for
+        # empty blocks, but this may change.
+        found_witness_op_return = False
+        # Compare SegWit OP_RETURN to getCoinbaseCommitment()
+        coinbase_commitment = (await template.getCoinbaseCommitment(ctx)).result
+        for output_data in coinbase_res.requiredOutputs:
+            output = CTxOut()
+            output.deserialize(BytesIO(output_data))
+            coinbase_tx.vout.append(output)
+            if output.scriptPubKey == coinbase_commitment:
+                found_witness_op_return = True
+
+        assert_equal(has_witness, found_witness_op_return)
+
+        coinbase_tx.nLockTime = coinbase_res.lockTime
+
+        # Compare to dummy coinbase provided by the deprecated getCoinbaseTx()
+        coinbase_legacy = await self.parse_and_deserialize_coinbase_tx(template, ctx)
+        assert_equal(coinbase_legacy.vout[0].nValue, coinbase_res.blockRewardRemaining)
+        # Swap dummy output for our own
+        coinbase_legacy.vout[0].scriptPubKey = coinbase_tx.vout[0].scriptPubKey
+        assert_equal(coinbase_tx.serialize().hex(), coinbase_legacy.serialize().hex())
+
+        return coinbase_tx
 
     def run_mining_test(self):
         self.log.info("Running mining test")
@@ -191,7 +282,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 assert_equal(len(txfees.result), 0)
                 txsigops = await template.getTxSigops(ctx)
                 assert_equal(len(txsigops.result), 0)
-                coinbase_data = BytesIO((await template.getCoinbaseTx(ctx)).result)
+                coinbase_data = BytesIO((await template.getCoinbaseRawTx(ctx)).result)
                 coinbase = CTransaction()
                 coinbase.deserialize(coinbase_data)
                 assert_equal(coinbase.vin[0].prevout.hash, 0)
@@ -248,9 +339,9 @@ class IPCInterfaceTest(BitcoinTestFramework):
             check_opts = self.capnp_modules['mining'].BlockCheckOptions()
             async with destroying((await mining.createNewBlock(opts)).result, ctx) as template:
                 block = await self.parse_and_deserialize_block(template, ctx)
-                coinbase = await self.parse_and_deserialize_coinbase_tx(template, ctx)
                 balance = miniwallet.get_balance()
-                coinbase.vout[0].scriptPubKey = miniwallet.get_output_script()
+                coinbase = await self.build_coinbase_test(template, ctx, miniwallet)
+                # Reduce payout for balance comparison simplicity
                 coinbase.vout[0].nValue = COIN
                 block.vtx[0] = coinbase
                 block.hashMerkleRoot = block.calc_merkle_root()

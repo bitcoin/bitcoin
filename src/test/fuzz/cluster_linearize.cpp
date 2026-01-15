@@ -914,7 +914,8 @@ FUZZ_TARGET(clusterlin_sfl)
 
     // Function to test the state.
     std::vector<FeeFrac> last_diagram;
-    auto test_fn = [&](bool is_optimal = false) {
+    bool was_optimal{false};
+    auto test_fn = [&](bool is_optimal = false, bool is_minimal = false) {
         if (rng.randbits(4) == 0) {
             // Perform sanity checks from time to time (too computationally expensive to do after
             // every step).
@@ -930,13 +931,21 @@ FUZZ_TARGET(clusterlin_sfl)
             assert(cmp_lin >= 0);
             // If we're in an allegedly optimal state, they must match.
             if (is_optimal) assert(cmp_lin == 0);
+            // If we're in an allegedly minimal state, they must also have the same number of
+            // segments.
+            if (is_minimal) assert(diagram.size() == lin_diagram.size());
         }
         // Verify that subsequent calls to GetDiagram() never get worse/incomparable.
         if (!last_diagram.empty()) {
             auto cmp = CompareChunks(diagram, last_diagram);
             assert(cmp >= 0);
+            // If the last diagram was already optimal, the new one cannot be better.
+            if (was_optimal) assert(cmp == 0);
+            // Also, if the diagram was already optimal, the number of segments can only increase.
+            if (was_optimal) assert(diagram.size() >= last_diagram.size());
         }
         last_diagram = std::move(diagram);
+        was_optimal = is_optimal;
     };
 
     if (load_linearization) {
@@ -963,7 +972,15 @@ FUZZ_TARGET(clusterlin_sfl)
         test_fn();
         if (!sfl.OptimizeStep()) break;
     }
+
+    // Loop until minimal.
     test_fn(/*is_optimal=*/true);
+    sfl.StartMinimizing();
+    while (true) {
+        test_fn(/*is_optimal=*/true);
+        if (!sfl.MinimizeStep()) break;
+    }
+    test_fn(/*is_optimal=*/true, /*is_minimal=*/true);
 
     // Verify that optimality is reached within an expected amount of work. This protects against
     // hypothetical bugs that hugely increase the amount of work needed to reach optimality.
@@ -975,6 +992,9 @@ FUZZ_TARGET(clusterlin_sfl)
     auto simple_cmp = CompareChunks(last_diagram, simple_diagram);
     assert(simple_cmp >= 0);
     if (simple_optimal) assert(simple_cmp == 0);
+    // If the diagram matches, we must also have at least as many segments (because the SFL state
+    // and its produced diagram are minimal);
+    if (simple_cmp == 0) assert(last_diagram.size() >= simple_diagram.size());
 
     // We can compare with any arbitrary linearization, and the diagram must be at least as good as
     // each.
@@ -983,6 +1003,7 @@ FUZZ_TARGET(clusterlin_sfl)
         auto read_diagram = ChunkLinearization(depgraph, read_lin);
         auto cmp = CompareChunks(last_diagram, read_diagram);
         assert(cmp >= 0);
+        if (cmp == 0) assert(last_diagram.size() >= read_diagram.size());
     }
 }
 
@@ -1052,12 +1073,9 @@ FUZZ_TARGET(clusterlin_linearize)
         // SimpleLinearize is broken).
         if (simple_optimal) assert(cmp == 0);
 
-        // Temporarily disabled, as Linearize() currently does not guarantee minimal chunks, even
-        // when it reports an optimal result. This will be re-introduced in a later commit.
-        //
-        // // If simple_chunking is diagram-optimal, it cannot have more chunks than chunking (as
-        // // chunking is claimed to be optimal, which implies minimal chunks).
-        // if (cmp == 0) assert(chunking.size() >= simple_chunking.size());
+        // If simple_chunking is diagram-optimal, it cannot have more chunks than chunking (as
+        // chunking is claimed to be optimal, which implies minimal chunks).
+        if (cmp == 0) assert(chunking.size() >= simple_chunking.size());
 
         // Compare with a linearization read from the fuzz input.
         auto read = ReadLinearization(depgraph, reader);
