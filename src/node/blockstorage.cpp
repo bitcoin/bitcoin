@@ -1244,16 +1244,23 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
         // Create initial or missing xor key file
         WriteXorKeyFile(xor_key_path, obfuscation, /*overwrite=*/false);
     }
+    const Obfuscation result{obfuscation};
     // If the user disabled the key, it must be zero.
-    if (!opts.use_xor && obfuscation != decltype(obfuscation){}) {
+    if (!opts.use_xor && result) {
         throw std::runtime_error{
             strprintf("The blocksdir XOR-key can not be disabled when a random key was already stored! "
                       "Stored key: '%s', stored path: '%s'.",
-                      HexStr(obfuscation), fs::PathToString(xor_key_path)),
+                      result.HexKey(), fs::PathToString(xor_key_path)),
         };
     }
-    LogInfo("Using obfuscation key for blocksdir *.dat files (%s): '%s'\n", fs::PathToString(opts.blocks_dir), HexStr(obfuscation));
-    return Obfuscation{obfuscation};
+    if (result) {
+        LogInfo("Using obfuscation key for blocksdir *.dat files (%s): '%s'\n", fs::PathToString(opts.blocks_dir), result.HexKey());
+    } else if (opts.use_xor) {
+        LogInfo("Obfuscation is not active for blocksdir *.dat files (%s). To obfuscate existing files, restart with the -reobfuscate-blocks option.",
+                fs::PathToString(opts.blocks_dir));
+    }
+
+    return result;
 }
 
 BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
