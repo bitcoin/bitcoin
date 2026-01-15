@@ -1931,7 +1931,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     "Approximately %u GB of data will be stored in this directory."
                 ),
                 fs::quoted(fs::PathToString(args.GetBlocksDirPath())),
-                chainparams.AssumedBlockchainSize()
+                (additional_bytes_needed / 1024 / 1024 / 1024)
             ));
         }
     }
