@@ -1335,6 +1335,7 @@ bool BlockReobfuscationPending(const fs::path& blocks_dir)
 
 void ObfuscateBlocks(
     const util::SignalInterrupt& interrupt,
+    kernel::Notifications& notifications,
     const fs::path& blocks_dir,
     const std::optional<Obfuscation::Key>& requested_key)
 {
@@ -1355,6 +1356,8 @@ void ObfuscateBlocks(
     if (auto delta_obfuscation{PrepareDeltaObfuscation(blocks_dir, requested_key)}) {
         std::ranges::sort(files, {}, &BlockFileEntry::file_num);
         LogInfo("[obfuscate] Reobfuscating %s block and undo files", files.size());
+        constexpr auto title{_("Reobfuscating blocks…")};
+        notifications.progress(title, /*progress_percent=*/0, /*resume_possible=*/true);
         std::vector<std::byte> buffer(REOBFUSCATION_BUFFER_SIZE);
         size_t done{0};
         int last_percent{0};
@@ -1364,9 +1367,11 @@ void ObfuscateBlocks(
 
             if (int percent{static_cast<int>(100 * ++done / files.size())}; percent > last_percent) {
                 LogInfo("[obfuscate] Migrating %s - %s%% done", fs::PathToString(file.path.filename()), percent);
+                notifications.progress(title, percent, /*resume_possible=*/true);
                 last_percent = percent;
             }
         }
+        notifications.progress(title, /*progress_percent=*/100, /*resume_possible=*/true);
         fs::remove(xor_dat);
     }
     if (!DirectoryCommit(blocks_dir)) throw std::runtime_error{"Failed to commit blocks directory"};

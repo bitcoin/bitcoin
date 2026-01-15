@@ -1386,7 +1386,7 @@ static util::Result<void> ReobfuscateBlocksIfRequested(NodeContext& node, const 
     }
     try {
         uiInterface.InitMessage(_("Reobfuscating blocks…"));
-        node::ObfuscateBlocks(*Assert(node.shutdown_signal), blocks_dir, requested_key);
+        node::ObfuscateBlocks(*Assert(node.shutdown_signal), *Assert(node.notifications), blocks_dir, requested_key);
     } catch (const std::exception& e) {
         return util::Error{strprintf(_("Block reobfuscation failed: %s"), e.what())};
     }
