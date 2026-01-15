@@ -664,6 +664,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         # Test cleanup: Clear unnamed default wallet for subsequent tests
         (self.old_node.wallets_path / "wallet.dat").unlink()
         (self.master_node.wallets_path / "wallet.dat").unlink(missing_ok=True)
+        (self.master_node.wallets_path / "wallet.dat-journal").unlink(missing_ok=True)
         shutil.rmtree(self.master_node.wallets_path / "default_wallet_watchonly", ignore_errors=True)
         shutil.rmtree(self.master_node.wallets_path / "default_wallet_solvables", ignore_errors=True)
         backup_file.unlink()
@@ -706,13 +707,13 @@ class WalletMigrationTest(BitcoinTestFramework):
         wallet.unloadwallet()
         self.clear_default_wallet(backup_file=Path(res["backup_path"]))
 
-    def test_migration_failure(self, wallet_name):
+    def test_migration_failure(self, wallet_name, fail=True):
         is_default = wallet_name == ""
         wallet_pretty_name = "unnamed (default)" if is_default else f'"{wallet_name}"'
-        self.log.info(f"Test failure during migration of wallet named: {wallet_pretty_name}")
+        self.log.info(f"Test {'failure' if fail else 'success'} during migration of wallet named: {wallet_pretty_name}")
         # Preface, set up legacy wallet and unload it
         master_wallet = self.master_node.get_wallet_rpc(self.default_wallet_name)
-        wallet = self.create_legacy_wallet(wallet_name, blank=True)
+        wallet = self.create_legacy_wallet(wallet_name)
         wallet.importaddress(master_wallet.getnewaddress(address_type="legacy"))
         wallet.unloadwallet()
 
@@ -731,12 +732,16 @@ class WalletMigrationTest(BitcoinTestFramework):
         # DoMigration().
         wo_dirname = f"{wo_prefix}_watchonly"
         watch_only_dir = self.master_node.wallets_path / wo_dirname
-        os.mkdir(watch_only_dir)
-        shutil.copyfile(old_path / "wallet.dat", watch_only_dir / "wallet.dat")
+        if fail:
+            os.mkdir(watch_only_dir)
+            shutil.copyfile(old_path / "wallet.dat", watch_only_dir / "wallet.dat")
 
         mocked_time = int(time.time())
         self.master_node.setmocktime(mocked_time)
-        assert_raises_rpc_error(-4, "Failed to create database", self.master_node.migratewallet, wallet_name)
+        if fail:
+            assert_raises_rpc_error(-4, "Failed to create database", self.master_node.migratewallet, wallet_name)
+        else:
+            self.master_node.migratewallet(wallet_name)
         self.master_node.setmocktime(0)
 
         # Verify the /wallets/ path exists.
@@ -750,13 +755,26 @@ class WalletMigrationTest(BitcoinTestFramework):
         backup_path = self.master_node.wallets_path / f"{backup_prefix}_{mocked_time}.legacy.bak"
         assert backup_path.exists()
 
-        self.assert_is_bdb(wallet_name)
+        if fail:
+            self.assert_is_bdb(wallet_name)
+        else:
+            wallet = self.master_node.get_wallet_rpc(wallet_name)
+            info = wallet.getwalletinfo()
+            assert_equal(info["descriptors"], True)
+            self.assert_is_sqlite(wallet_name)
+            self.assert_is_sqlite(wo_dirname)
+
+            self.master_node.unloadwallet(wallet_name)
+            self.master_node.unloadwallet(wo_dirname)
 
         # Cleanup
         if is_default:
             self.clear_default_wallet(backup_path)
         else:
             backup_path.unlink()
+            if not fail:
+                Path(watch_only_dir / "wallet.dat-journal").unlink(missing_ok=True)
+                Path(master_path / "wallet.dat-journal").unlink(missing_ok=True)
             Path(watch_only_dir / "wallet.dat").unlink()
             Path(watch_only_dir).rmdir()
             Path(master_path / "wallet.dat").unlink()
@@ -1687,6 +1705,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         ]
         for wallet_name in migration_failure_cases:
             self.test_migration_failure(wallet_name=wallet_name)
+            self.test_migration_failure(wallet_name=wallet_name, fail=False)
 
         self.test_default_wallet()
         self.test_default_wallet_watch_only()
