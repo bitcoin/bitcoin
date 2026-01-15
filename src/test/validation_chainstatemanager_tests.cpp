@@ -202,7 +202,7 @@ struct SnapshotTestSetup : TestChain100Setup {
 
             for (CTransactionRef& txn : m_coinbase_txns) {
                 COutPoint op{txn->GetHash(), 0};
-                BOOST_CHECK(ibd_coinscache.HaveCoin(op));
+                BOOST_CHECK(ibd_coinscache.GetCoin(op));
                 total_coins++;
             }
 
@@ -307,7 +307,7 @@ struct SnapshotTestSetup : TestChain100Setup {
 
                 for (CTransactionRef& txn : m_coinbase_txns) {
                     COutPoint op{txn->GetHash(), 0};
-                    BOOST_CHECK(coinscache.HaveCoin(op));
+                    BOOST_CHECK(coinscache.GetCoin(op));
                     total_coins++;
                 }
 
@@ -336,7 +336,7 @@ struct SnapshotTestSetup : TestChain100Setup {
 
                 for (CTransactionRef& txn : m_coinbase_txns) {
                     COutPoint op{txn->GetHash(), 0};
-                    if (coinscache.HaveCoin(op)) {
+                    if (coinscache.GetCoin(op)) {
                         (is_background ? coins_in_background : coins_in_active)++;
                     } else if (is_background) {
                         coins_missing_from_background++;
