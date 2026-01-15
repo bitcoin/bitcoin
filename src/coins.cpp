@@ -23,14 +23,8 @@ void CCoinsView::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlo
 
 std::unique_ptr<CCoinsViewCursor> CCoinsView::Cursor() const { return nullptr; }
 
-bool CCoinsView::HaveCoin(const COutPoint &outpoint) const
-{
-    return GetCoin(outpoint).has_value();
-}
-
 CCoinsViewBacked::CCoinsViewBacked(CCoinsView *viewIn) : base(viewIn) { }
 std::optional<Coin> CCoinsViewBacked::GetCoin(const COutPoint& outpoint) const { return base->GetCoin(outpoint); }
-bool CCoinsViewBacked::HaveCoin(const COutPoint &outpoint) const { return base->HaveCoin(outpoint); }
 uint256 CCoinsViewBacked::GetBestBlock() const { return base->GetBestBlock(); }
 std::vector<uint256> CCoinsViewBacked::GetHeadBlocks() const { return base->GetHeadBlocks(); }
 void CCoinsViewBacked::SetBackend(CCoinsView &viewIn) { base = &viewIn; }
@@ -127,7 +121,7 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
     bool fCoinbase = tx.IsCoinBase();
     const Txid& txid = tx.GetHash();
     for (size_t i = 0; i < tx.vout.size(); ++i) {
-        bool overwrite = check_for_overwrite ? cache.HaveCoin(COutPoint(txid, i)) : fCoinbase;
+        bool overwrite = check_for_overwrite ? !!cache.GetCoin(COutPoint(txid, i)) : fCoinbase;
         // Coinbase transactions can always be overwritten, in order to correctly
         // deal with the pre-BIP30 occurrences of duplicate coinbase transactions.
         cache.AddCoin(COutPoint(txid, i), Coin(tx.vout[i], nHeight, fCoinbase), overwrite);
@@ -165,11 +159,6 @@ const Coin& CCoinsViewCache::AccessCoin(const COutPoint &outpoint) const {
     } else {
         return it->second.coin;
     }
-}
-
-bool CCoinsViewCache::HaveCoin(const COutPoint &outpoint) const {
-    CCoinsMap::const_iterator it = FetchCoin(outpoint);
-    return (it != cacheCoins.end() && !it->second.coin.IsSpent());
 }
 
 bool CCoinsViewCache::HaveCoinInCache(const COutPoint &outpoint) const {
@@ -297,7 +286,7 @@ bool CCoinsViewCache::HaveInputs(const CTransaction& tx) const
 {
     if (!tx.IsCoinBase()) {
         for (unsigned int i = 0; i < tx.vin.size(); i++) {
-            if (!HaveCoin(tx.vin[i].prevout)) {
+            if (AccessCoin(tx.vin[i].prevout).IsSpent()) {
                 return false;
             }
         }
@@ -383,9 +372,4 @@ static ReturnType ExecuteBackedWrapper(Func func, const std::vector<std::functio
 std::optional<Coin> CCoinsViewErrorCatcher::GetCoin(const COutPoint& outpoint) const
 {
     return ExecuteBackedWrapper<std::optional<Coin>>([&]() { return CCoinsViewBacked::GetCoin(outpoint); }, m_err_callbacks);
-}
-
-bool CCoinsViewErrorCatcher::HaveCoin(const COutPoint& outpoint) const
-{
-    return ExecuteBackedWrapper<bool>([&]() { return CCoinsViewBacked::HaveCoin(outpoint); }, m_err_callbacks);
 }

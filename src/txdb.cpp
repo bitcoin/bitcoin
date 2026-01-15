@@ -71,10 +71,6 @@ std::optional<Coin> CCoinsViewDB::GetCoin(const COutPoint& outpoint) const
     return std::nullopt;
 }
 
-bool CCoinsViewDB::HaveCoin(const COutPoint &outpoint) const {
-    return m_db->Exists(CoinEntry(&outpoint));
-}
-
 uint256 CCoinsViewDB::GetBestBlock() const {
     uint256 hashBestChain;
     if (!m_db->Read(DB_BEST_BLOCK, hashBestChain))
