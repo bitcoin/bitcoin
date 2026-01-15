@@ -4532,7 +4532,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
         to_reload = LoadWallet(context, name, /*load_on_start=*/std::nullopt, options, status, error, warnings);
         if (!to_reload) {
             LogError("Failed to load wallet '%s' after migration. Rolling back migration to preserve consistency. "
-                     "Error cause: %s\n", wallet_name, error.original);
+                     "Error cause: %s\n", name, error.original);
             return false;
         }
         return true;
