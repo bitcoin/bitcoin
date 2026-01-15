@@ -171,8 +171,8 @@ optimize-pngs.py
 A script to optimize png files in the dash
 repository (requires pngcrush).
 
-security-check.py and test-security-check.py
-============================================
+security-check.py
+=================
 
 Perform basic security checks on a series of executables.
 
