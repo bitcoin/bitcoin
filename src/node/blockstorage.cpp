@@ -172,6 +172,26 @@ std::string CBlockFileInfo::ToString() const
 namespace node {
 
 namespace {
+struct BlockFileEntry {
+    std::string file_num;
+    bool is_block;
+    fs::path path;
+};
+
+std::vector<BlockFileEntry> CollectBlockAndUndoFiles(const fs::path& blocks_dir)
+{
+    std::vector<BlockFileEntry> files;
+    for (fs::directory_iterator it(blocks_dir); it != fs::directory_iterator(); ++it) {
+        const auto& path{fs::PathToString(it->path().filename())};
+        if (fs::is_regular_file(*it) && path.length() == 12 && path.ends_with(".dat")) {
+            if (const bool is_block{path.starts_with("blk")}; is_block || path.starts_with("rev")) {
+                files.push_back({path.substr(3, 5), is_block, it->path()});
+            }
+        }
+    }
+    return files;
+}
+
 std::array<std::byte, Obfuscation::KEY_SIZE> ReadXorKeyFile(const fs::path& file)
 {
     std::array<std::byte, Obfuscation::KEY_SIZE> obfuscation{};
@@ -671,17 +691,11 @@ void BlockManager::CleanupBlockRevFiles() const
     // Remove the rev files immediately and insert the blk file paths into an
     // ordered map keyed by block file index.
     LogInfo("Removing unusable blk?????.dat and rev?????.dat files for -reindex with -prune");
-    for (fs::directory_iterator it(m_opts.blocks_dir); it != fs::directory_iterator(); it++) {
-        const std::string path = fs::PathToString(it->path().filename());
-        if (fs::is_regular_file(*it) &&
-            path.length() == 12 &&
-            path.ends_with(".dat"))
-        {
-            if (path.starts_with("blk")) {
-                mapBlockFiles[path.substr(3, 5)] = it->path();
-            } else if (path.starts_with("rev")) {
-                remove(it->path());
-            }
+    for (const auto& file : CollectBlockAndUndoFiles(m_opts.blocks_dir)) {
+        if (file.is_block) {
+            mapBlockFiles[file.file_num] = file.path;
+        } else {
+            remove(file.path);
         }
     }
 
