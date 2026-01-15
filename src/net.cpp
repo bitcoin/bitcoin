@@ -506,7 +506,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
             if (!proxyConnectionFailed) {
                 // If a connection to the node was attempted, and failure (if any) is not caused by a problem connecting to
                 // the proxy, mark this as an attempt.
-                addrman.Attempt(target_addr, fCountFailure);
+                addrman.get().Attempt(target_addr, fCountFailure);
             }
         } else if (pszDest && GetNameProxy(proxy)) {
             std::string host;
@@ -2301,7 +2301,7 @@ void CConnman::ThreadDNSAddressSeed()
     if (gArgs.GetBoolArg("-forcednsseed", DEFAULT_FORCEDNSSEED)) {
         // When -forcednsseed is provided, query all.
         seeds_right_now = seeds.size();
-    } else if (addrman.Size() == 0) {
+    } else if (addrman.get().Size() == 0) {
         // If we have no known peers, query all.
         // This will occur on the first run, or if peers.dat has been
         // deleted.
@@ -2323,13 +2323,13 @@ void CConnman::ThreadDNSAddressSeed()
         //   DNS seeds, and if that fails too, also try the fixed seeds.
         //   (done in ThreadOpenConnections)
         int found = 0;
-        const std::chrono::seconds seeds_wait_time = (addrman.Size() >= DNSSEEDS_DELAY_PEER_THRESHOLD ? DNSSEEDS_DELAY_MANY_PEERS : DNSSEEDS_DELAY_FEW_PEERS);
+        const std::chrono::seconds seeds_wait_time = (addrman.get().Size() >= DNSSEEDS_DELAY_PEER_THRESHOLD ? DNSSEEDS_DELAY_MANY_PEERS : DNSSEEDS_DELAY_FEW_PEERS);
 
         for (const std::string& seed : seeds) {
             if (seeds_right_now == 0) {
                 seeds_right_now += DNSSEEDS_TO_QUERY_AT_ONCE;
 
-                if (addrman.Size() > 0) {
+                if (addrman.get().Size() > 0) {
                     LogInfo("Waiting %d seconds before querying DNS seeds.\n", seeds_wait_time.count());
                     std::chrono::seconds to_wait = seeds_wait_time;
                     while (to_wait.count() > 0) {
@@ -2389,7 +2389,7 @@ void CConnman::ThreadDNSAddressSeed()
                         vAdd.push_back(addr);
                         found++;
                     }
-                    addrman.Add(vAdd, resolveSource);
+                    addrman.get().Add(vAdd, resolveSource);
                 } else {
                     // If the seed does not support a subdomain with our desired service bits,
                     // we make an ADDR_FETCH connection to the DNS resolved peer address for the
@@ -2412,7 +2412,7 @@ void CConnman::DumpAddresses()
     DumpPeerAddresses(::gArgs, addrman);
 
     LogDebug(BCLog::NET, "Flushed %d addresses to peers.dat  %dms\n",
-             addrman.Size(), Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
+             addrman.get().Size(), Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
 }
 
 void CConnman::ProcessAddrFetch()
@@ -2506,7 +2506,7 @@ std::unordered_set<Network> CConnman::GetReachableEmptyNetworks() const
     for (int n = 0; n < NET_MAX; n++) {
         enum Network net = (enum Network)n;
         if (net == NET_UNROUTABLE || net == NET_INTERNAL) continue;
-        if (g_reachable_nets.Contains(net) && addrman.Size(net, std::nullopt) == 0) {
+        if (g_reachable_nets.Contains(net) && addrman.get().Size(net, std::nullopt) == 0) {
             networks.insert(net);
         }
     }
@@ -2526,7 +2526,7 @@ bool CConnman::MaybePickPreferredNetwork(std::optional<Network>& network)
 
     LOCK(m_nodes_mutex);
     for (const auto net : nets) {
-        if (g_reachable_nets.Contains(net) && m_network_conn_counts[net] == 0 && addrman.Size(net) != 0) {
+        if (g_reachable_nets.Contains(net) && m_network_conn_counts[net] == 0 && addrman.get().Size(net) != 0) {
             network = net;
             return true;
         }
@@ -2578,7 +2578,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
     const bool use_seednodes{!gArgs.GetArgs("-seednode").empty()};
 
     auto seed_node_timer = NodeClock::now();
-    bool add_addr_fetch{addrman.Size() == 0 && !seed_nodes.empty()};
+    bool add_addr_fetch{addrman.get().Size() == 0 && !seed_nodes.empty()};
     constexpr std::chrono::seconds ADD_NEXT_SEEDNODE = 10s;
 
     if (!add_fixed_seeds) {
@@ -2591,7 +2591,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
             const auto& seed{SpanPopBack(seed_nodes)};
             AddAddrFetch(seed);
 
-            if (addrman.Size() == 0) {
+            if (addrman.get().Size() == 0) {
                 LogInfo("Empty addrman, adding seednode (%s) to addrfetch\n", seed);
             } else {
                 LogInfo("Couldn't connect to peers from addrman after %d seconds. Adding seednode (%s) to addrfetch\n", ADD_NEXT_SEEDNODE.count(), seed);
@@ -2646,7 +2646,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
                                  seed_addrs.end());
                 CNetAddr local;
                 local.SetInternal("fixedseeds");
-                addrman.Add(seed_addrs, local);
+                addrman.get().Add(seed_addrs, local);
                 add_fixed_seeds = false;
                 LogInfo("Added %d fixed seeds from reachable networks.\n", seed_addrs.size());
             }
@@ -2778,7 +2778,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
             continue;
         }
 
-        addrman.ResolveCollisions();
+        addrman.get().ResolveCollisions();
 
         const auto current_time{NodeClock::now()};
         int nTries = 0;
@@ -2809,21 +2809,21 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
             if (fFeeler) {
                 // First, try to get a tried table collision address. This returns
                 // an empty (invalid) address if there are no collisions to try.
-                std::tie(addr, addr_last_try) = addrman.SelectTriedCollision();
+                std::tie(addr, addr_last_try) = addrman.get().SelectTriedCollision();
 
                 if (!addr.IsValid()) {
                     // No tried table collisions. Select a new table address
                     // for our feeler.
-                    std::tie(addr, addr_last_try) = addrman.Select(true, reachable_nets);
+                    std::tie(addr, addr_last_try) = addrman.get().Select(true, reachable_nets);
                 } else if (AlreadyConnectedToAddress(addr)) {
                     // If test-before-evict logic would have us connect to a
                     // peer that we're already connected to, just mark that
                     // address as Good(). We won't be able to initiate the
                     // connection anyway, so this avoids inadvertently evicting
                     // a currently-connected peer.
-                    addrman.Good(addr);
+                    addrman.get().Good(addr);
                     // Select a new table address for our feeler instead.
-                    std::tie(addr, addr_last_try) = addrman.Select(true, reachable_nets);
+                    std::tie(addr, addr_last_try) = addrman.get().Select(true, reachable_nets);
                 }
             } else {
                 // Not a feeler
@@ -2831,8 +2831,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
                 // peer from that network. The eviction logic in net_processing
                 // ensures that a peer from another network will be evicted.
                 std::tie(addr, addr_last_try) = preferred_net.has_value()
-                    ? addrman.Select(false, {*preferred_net})
-                    : addrman.Select(false, reachable_nets);
+                    ? addrman.get().Select(false, {*preferred_net})
+                    : addrman.get().Select(false, reachable_nets);
             }
 
             // Require outbound IPv4/IPv6 connections, other than feelers, to be to distinct network groups
@@ -3244,7 +3244,7 @@ void CConnman::ThreadPrivateBroadcast()
             continue;
         }
 
-        const auto [addr, _] = addrman.Select(/*new_only=*/false, {net.value()});
+        const auto [addr, _] = addrman.get().Select(/*new_only=*/false, {net.value()});
 
         if (!addr.IsValid() || IsLocal(addr)) {
             ++addrman_num_bad_addresses;
@@ -3695,7 +3695,7 @@ CConnman::~CConnman()
 
 std::vector<CAddress> CConnman::GetAddressesUnsafe(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered) const
 {
-    std::vector<CAddress> addresses = addrman.GetAddr(max_addresses, max_pct, network, filtered);
+    std::vector<CAddress> addresses = addrman.get().GetAddr(max_addresses, max_pct, network, filtered);
     if (m_banman) {
         addresses.erase(std::remove_if(addresses.begin(), addresses.end(),
                         [this](const CAddress& addr){return m_banman->IsDiscouraged(addr) || m_banman->IsBanned(addr);}),
