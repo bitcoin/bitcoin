@@ -10,18 +10,22 @@
 #include <tinyformat.h>
 #include <util/strencodings.h>
 
+#include <algorithm>
 #include <array>
 #include <bit>
 #include <climits>
 #include <cstdint>
 #include <ios>
 #include <memory>
+#include <optional>
+#include <string_view>
 
 class Obfuscation
 {
 public:
     using KeyType = uint64_t;
     static constexpr size_t KEY_SIZE{sizeof(KeyType)};
+    using Key = std::array<std::byte, KEY_SIZE>;
 
     Obfuscation() { SetRotations(0); }
     explicit Obfuscation(std::span<const std::byte, KEY_SIZE> key_bytes)
@@ -30,6 +34,14 @@ public:
     }
 
     operator bool() const { return m_rotations[0] != 0; }
+
+    static Obfuscation Delta(const Obfuscation& old_obfuscation, const Obfuscation& new_obfuscation)
+    {
+        Key delta_bytes{};
+        old_obfuscation(delta_bytes);
+        new_obfuscation(delta_bytes);
+        return Obfuscation{delta_bytes};
+    }
 
     void operator()(std::span<std::byte> target, size_t key_offset = 0) const
     {
@@ -63,6 +75,7 @@ public:
     void Serialize(Stream& s) const
     {
         // Use vector serialization for convenient compact size prefix.
+        // xor.dat uses array serialization instead
         std::vector<std::byte> bytes{KEY_SIZE};
         std::memcpy(bytes.data(), &m_rotations[0], KEY_SIZE);
         s << bytes;
@@ -80,6 +93,14 @@ public:
     std::string HexKey() const
     {
         return HexStr(std::as_bytes(std::span{&m_rotations[0], 1}));
+    }
+
+    static std::optional<Key> KeyFromHex(std::string_view hex)
+    {
+        if (hex.size() != 2 * KEY_SIZE || !IsHex(hex)) return std::nullopt;
+        Key key{};
+        std::ranges::copy(ParseHex<std::byte>(hex), key.begin());
+        return key;
     }
 
 private:
