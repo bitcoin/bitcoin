@@ -539,10 +539,11 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
  };
  
  const IncludeMapEntry stdlib_c_include_map[] = {
-@@ -601,31 +601,31 @@ const IncludeMapEntry stdlib_c_include_map[] = {
+@@ -600,32 +600,32 @@ const IncludeMapEntry stdlib_c_include_map[] = {
+   // https://github.com/cplusplus/draft/blob/c+%2B20/source/lib-intro.tex
    //
    // $ curl -s -N https://raw.githubusercontent.com/cplusplus/draft/c%2B%2B20/source/lib-intro.tex | sed -n '/begin{multicolfloattable}.*{headers.cpp.c}/,/end{multicolfloattable}/p' | grep tcode | perl -nle 'm/tcode{<c(.*)>}/ && print qq@  { "<$1.h>", kPublic, "<c$1>", kPublic },@' | sort
-   { "<assert.h>", kPublic, "<cassert>", kPublic },
+-  { "<assert.h>", kPublic, "<cassert>", kPublic },
 -  { "<complex.h>", kPublic, "<ccomplex>", kPublic },
 -  { "<ctype.h>", kPublic, "<cctype>", kPublic },
 -  { "<errno.h>", kPublic, "<cerrno>", kPublic },
@@ -568,6 +569,7 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
 -  { "<uchar.h>", kPublic, "<cuchar>", kPublic },
 -  { "<wchar.h>", kPublic, "<cwchar>", kPublic },
 -  { "<wctype.h>", kPublic, "<cwctype>", kPublic },
++  { "<assert.h>", kPrivate, "<cassert>", kPublic },
 +  { "<complex.h>", kPrivate, "<ccomplex>", kPublic },
 +  { "<ctype.h>", kPrivate, "<cctype>", kPublic },
 +  { "<errno.h>", kPrivate, "<cerrno>", kPublic },
