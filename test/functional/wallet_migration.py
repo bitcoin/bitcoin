@@ -1686,6 +1686,8 @@ class WalletMigrationTest(BitcoinTestFramework):
         backup_path = self.master_node.wallets_path / f"default_wallet_{mocked_time}.legacy.bak"
         assert backup_path.exists()
 
+        assert not (self.master_node.wallets_path / "wallet.dat-journal").exists()
+
         self.clear_default_wallet(backup_path)
 
 
