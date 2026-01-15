@@ -56,6 +56,8 @@ class SignalInterrupt;
 } // namespace util
 
 namespace kernel {
+class Notifications;
+
 class CBlockFileInfo
 {
 public:
@@ -491,6 +493,7 @@ bool BlockReobfuscationPending(const fs::path& blocks_dir);
 /** Rewrite block and undo files under a requested or random XOR key. Interrupted migrations resume on the next call. */
 bool ObfuscateBlocks(
     const util::SignalInterrupt& interrupt,
+    kernel::Notifications& notifications,
     const fs::path& blocks_dir,
     const std::optional<Obfuscation::Key>& requested_key);
 } // namespace node
