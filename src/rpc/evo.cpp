@@ -1009,9 +1009,16 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
         throw std::runtime_error(strprintf("masternode with proTxHash %s is not a %s", ptx.proTxHash.ToString(), GetMnType(mnType).description));
     }
 
-    ptx.nVersion = ProTxVersion::GetMaxFromDeployment<CProUpServTx>(
-        WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()), chainman,
-        /*is_basic_override=*/dmn->pdmnState->nVersion > ProTxVersion::LegacyBLS);
+    ptx.nVersion = ProTxVersion::GetMaxFromDeployment<CProUpServTx>(WITH_LOCK(::cs_main,
+                                                                              return chainman.ActiveChain().Tip()),
+                                                                    chainman);
+
+    // Legacy masternodes must upgrade to BasicBLS before using higher versions.
+    // Clamp to BasicBLS to avoid "bad-protx-version-upgrade" validation failure.
+    if (dmn->pdmnState->nVersion == ProTxVersion::LegacyBLS && ptx.nVersion > ProTxVersion::BasicBLS) {
+        ptx.nVersion = ProTxVersion::BasicBLS;
+    }
+
     ptx.netInfo = NetInfoInterface::MakeNetInfo(ptx.nVersion);
 
     ProcessNetInfoCore(ptx, request.params[1], /*optional=*/false);
@@ -1077,9 +1084,7 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
 
     FundSpecialTx(*wallet, tx, ptx, feeSource);
 
-    const bool isV19active = DeploymentActiveAfter(WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip();),
-                                                   chainman.GetConsensus(), Consensus::DEPLOYMENT_V19);
-    SignSpecialTxPayloadByHash(tx, ptx, keyOperator, !isV19active);
+    SignSpecialTxPayloadByHash(tx, ptx, keyOperator, /*use_legacy=*/ptx.nVersion == ProTxVersion::LegacyBLS);
     SetTxPayload(tx, ptx);
 
     return SignAndSendSpecialTx(request, chain_helper, chainman, tx, fSubmit);
@@ -1260,9 +1265,14 @@ static RPCHelpMan protx_revoke()
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
     }
 
-    ptx.nVersion = ProTxVersion::GetMaxFromDeployment<CProUpRevTx>(
-        WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()), chainman,
-        /*is_basic_override=*/dmn->pdmnState->nVersion >= ProTxVersion::BasicBLS);
+    ptx.nVersion = ProTxVersion::GetMaxFromDeployment<CProUpRevTx>(WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()),
+                                                                   chainman);
+
+    // Legacy masternodes must upgrade to BasicBLS before using higher versions.
+    // Clamp to BasicBLS to avoid "bad-protx-version-upgrade" validation failure.
+    if (dmn->pdmnState->nVersion == ProTxVersion::LegacyBLS && ptx.nVersion > ProTxVersion::BasicBLS) {
+        ptx.nVersion = ProTxVersion::BasicBLS;
+    }
 
     CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[1].get_str(), "operatorKey");
 
