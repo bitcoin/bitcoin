@@ -740,6 +740,9 @@ class WalletMigrationTest(BitcoinTestFramework):
         survive_path = self.master_node.wallets_path / "survive"
         open(survive_path, "wb").close()
         assert survive_path.exists()
+        survive2_path = master_path / "survive"
+        open(survive2_path, "wb").close()
+        assert survive2_path.exists()
 
         mocked_time = int(time.time())
         self.master_node.setmocktime(mocked_time)
@@ -754,6 +757,7 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         # Verify survive is still there
         assert survive_path.exists()
+        assert survive2_path.exists()
         # Verify both wallet paths exist.
         assert Path(old_path / "wallet.dat").exists()
         assert Path(master_path / "wallet.dat").exists()
