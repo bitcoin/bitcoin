@@ -17,6 +17,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <cstdint>
 #include <optional>
 #include <string>
 
@@ -104,6 +105,45 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
     vAddr.emplace_back(ResolveService("250.1.1.4", 8333), NODE_NONE);
     BOOST_CHECK(addrman->Add(vAddr, source));
     BOOST_CHECK(addrman->Size() >= 1);
+}
+
+BOOST_AUTO_TEST_CASE(addrman_penalty_self_announcement)
+{
+    SetMockTime(Now<NodeSeconds>());
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+
+    const auto base_time{Now<NodeSeconds>() - 10000s};
+    CService addr1 = ResolveService("250.1.1.1", 8333);
+    CNetAddr source1 = ResolveIP("250.1.1.1"); // Same as addr1 - self announcement
+
+    CAddress caddr1(addr1, NODE_NONE);
+    caddr1.nTime = base_time;
+
+    const auto time_penalty{3600s};
+
+    BOOST_CHECK(addrman->Add({caddr1}, source1, time_penalty));
+
+    auto addr_pos1{addrman->FindAddressEntry(caddr1)};
+    BOOST_REQUIRE(addr_pos1.has_value());
+
+    std::vector<CAddress> addresses{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt)};
+    BOOST_REQUIRE_EQUAL(addresses.size(), 1U);
+
+    BOOST_CHECK(addresses[0].nTime == base_time);
+
+    CService addr2{ResolveService("250.1.1.2", 8333)};
+    CNetAddr source2{ResolveIP("250.1.1.3")}; // Different from addr2 - not self announcement
+
+    CAddress caddr2(addr2, NODE_NONE);
+    caddr2.nTime = base_time;
+
+    BOOST_CHECK(addrman->Add({caddr2}, source2, time_penalty));
+
+    addresses = addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt);
+    BOOST_REQUIRE_EQUAL(addresses.size(), 2U);
+
+    CAddress retrieved_addr2{addresses[0]};
+    BOOST_CHECK(retrieved_addr2.nTime == base_time - time_penalty);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_ports)
