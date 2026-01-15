@@ -46,6 +46,7 @@ class BlockValidationState;
 class CBlockUndo;
 class Chainstate;
 class ChainstateManager;
+
 namespace Consensus {
 struct Params;
 }
@@ -54,6 +55,8 @@ class SignalInterrupt;
 } // namespace util
 
 namespace kernel {
+class Notifications;
+
 class CBlockFileInfo
 {
 public:
@@ -480,6 +483,7 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
 
 bool ObfuscateBlocks(
     const util::SignalInterrupt& interrupt,
+    kernel::Notifications& notifications,
     std::string_view suffix,
     const fs::path& blocks_dir,
     const fs::path& xor_dat,
