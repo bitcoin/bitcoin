@@ -33,7 +33,7 @@ class CQuorumManager;
 class CQuorumSnapshotManager;
 } // namespace llmq
 
-extern RecursiveMutex cs_main;
+extern RecursiveMutex cs_main; // NOLINT(readability-redundant-declaration)
 
 class CSpecialTxProcessor
 {

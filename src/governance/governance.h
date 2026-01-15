@@ -52,7 +52,7 @@ using vote_time_pair_t = std::pair<CGovernanceVote, int64_t>;
 static constexpr int RATE_BUFFER_SIZE = 5;
 static constexpr bool DEFAULT_GOVERNANCE_ENABLE{true};
 
-extern RecursiveMutex cs_main;
+extern RecursiveMutex cs_main; // NOLINT(readability-redundant-declaration)
 
 class CRateCheckBuffer
 {

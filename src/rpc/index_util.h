@@ -22,7 +22,7 @@ class uint256;
 
 enum class AddressType : uint8_t;
 
-extern RecursiveMutex cs_main;
+extern RecursiveMutex cs_main; // NOLINT(readability-redundant-declaration)
 
 //! throws JSONRPCError if address index is unavailable
 bool GetAddressIndex(CBlockTreeDB& block_tree_db, const uint160& addressHash, const AddressType type,

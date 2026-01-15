@@ -42,7 +42,7 @@
 class CBlockIndex;
 class CChain;
 class CChainState;
-extern RecursiveMutex cs_main;
+extern RecursiveMutex cs_main; // NOLINT(readability-redundant-declaration)
 
 // Forward declaration for CBLSLazyPublicKey:
 template<typename T> class CBLSLazyWrapper;

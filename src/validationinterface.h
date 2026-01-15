@@ -12,7 +12,7 @@
 #include <functional>
 #include <memory>
 
-extern RecursiveMutex cs_main;
+extern RecursiveMutex cs_main; // NOLINT(readability-redundant-declaration)
 class BlockValidationState;
 class CBlock;
 class CBlockIndex;

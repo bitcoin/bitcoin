@@ -46,7 +46,7 @@ static const int64_t max_filter_index_cache = 1024;
 static const int64_t nMaxCoinsDBCache = 8;
 
 // Actually declared in validation.cpp; can't include because of circular dependency.
-extern RecursiveMutex cs_main;
+extern RecursiveMutex cs_main; // NOLINT(readability-redundant-declaration)
 
 /** CCoinsView backed by the coin database (chainstate/) */
 class CCoinsViewDB final : public CCoinsView

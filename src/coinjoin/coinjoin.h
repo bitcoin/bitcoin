@@ -34,7 +34,7 @@ class CChainLocksHandler;
 class CInstantSendManager;
 } // namespace llmq
 
-extern RecursiveMutex cs_main;
+extern RecursiveMutex cs_main; // NOLINT(readability-redundant-declaration)
 
 // timeouts
 static constexpr int COINJOIN_AUTO_TIMEOUT_MIN = 5;
