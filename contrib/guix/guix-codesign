@@ -328,16 +328,6 @@ EOF
         #     container so that we have something to build. '/bitcoin' was
         #     chosen arbitrarily.
         #
-        #   ${SOURCES_PATH:+--share="$SOURCES_PATH"}
-        #
-        #                     make the downloaded depends sources path available
-        #                     inside the isolated container
-        #
-        #     The isolated container has no network access as it's in a
-        #     different network namespace from the main machine, so we have to
-        #     make the downloaded depends sources available to it. The sources
-        #     should have been downloaded prior to this invocation.
-        #
         #  ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"}
         #
         #                     fetch substitute from SUBSTITUTE_URLS if they are
@@ -359,7 +349,6 @@ EOF
                                  --share="$DETACHED_SIGS_REPO"=/detached-sigs \
                                  --expose="$(git rev-parse --git-common-dir)" \
                                  --expose="$(git -C "$DETACHED_SIGS_REPO" rev-parse --git-common-dir)" \
-                                 ${SOURCES_PATH:+--share="$SOURCES_PATH"} \
                                  --cores="$JOBS" \
                                  --keep-failed \
                                  --fallback \
@@ -372,7 +361,6 @@ EOF
                                         JOBS="$JOBS" \
                                         SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:?unable to determine value}" \
                                         ${V:+V=1} \
-                                        ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"} \
                                         DISTSRC="$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST")" \
                                         OUTDIR="$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST" codesigned)" \
                                         DIST_ARCHIVE_BASE=/outdir-base/dist-archive \
