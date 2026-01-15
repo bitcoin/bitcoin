@@ -5,18 +5,20 @@
 #ifndef BITCOIN_TEST_FUZZ_UTIL_DESCRIPTOR_H
 #define BITCOIN_TEST_FUZZ_UTIL_DESCRIPTOR_H
 
-#include <key_io.h>
-#include <util/strencodings.h>
-#include <script/descriptor.h>
-#include <test/fuzz/fuzz.h>
-
-#include <functional>
+#include <array>
+#include <cinttypes>
+#include <cstddef>
+#include <limits>
+#include <optional>
+#include <span>
+#include <string>
+#include <string_view>
 
 /**
- * Converts a mocked descriptor string to a valid one. Every key in a mocked descriptor key is
+ * Converts a mocked descriptor string to a valid one. Every key in a mocked descriptor is
  * represented by 2 hex characters preceded by the '%' character. We parse the two hex characters
  * as an index in a list of pre-generated keys. This list contains keys of the various types
- * accepted in descriptor keys expressions.
+ * accepted in descriptor key expressions.
  */
 class MockedDescriptorConverter {
 private:
