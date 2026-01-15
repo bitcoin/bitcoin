@@ -74,7 +74,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
                 }
             },
             [&] {
-                coins_view_cache.Flush(/*will_reuse_cache=*/fuzzed_data_provider.ConsumeBool());
+                coins_view_cache.Flush(/*reallocate_cache=*/fuzzed_data_provider.ConsumeBool());
             },
             [&] {
                 coins_view_cache.Sync();
