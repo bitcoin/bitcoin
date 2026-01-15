@@ -1233,12 +1233,12 @@ clean-local:
 
 check-symbols: $(bin_PROGRAMS)
 	@echo "Running symbol and dynamic library checks..."
-	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
+	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/guix/symbol-check.py $(bin_PROGRAMS)
 
 check-security: $(bin_PROGRAMS)
 if HARDEN
 	@echo "Checking binary security..."
-	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/security-check.py $(bin_PROGRAMS)
+	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/guix/security-check.py $(bin_PROGRAMS)
 endif
 
 

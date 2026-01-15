@@ -53,8 +53,8 @@ DIST_SHARE = \
   $(top_srcdir)/share/genbuild.sh \
   $(top_srcdir)/share/rpcauth
 
-BIN_CHECKS=$(top_srcdir)/contrib/devtools/symbol-check.py \
-           $(top_srcdir)/contrib/devtools/security-check.py \
+BIN_CHECKS=$(top_srcdir)/contrib/guix/symbol-check.py \
+           $(top_srcdir)/contrib/guix/security-check.py \
            $(top_srcdir)/contrib/devtools/utils.py
 
 WINDOWS_PACKAGING = $(top_srcdir)/share/pixmaps/dash.ico \
