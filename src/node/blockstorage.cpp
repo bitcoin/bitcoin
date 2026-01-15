@@ -1341,6 +1341,7 @@ bool BlockReobfuscationPending(const fs::path& blocks_dir)
 
 bool ObfuscateBlocks(
     const util::SignalInterrupt& interrupt,
+    kernel::Notifications& notifications,
     const fs::path& blocks_dir,
     const std::optional<std::array<std::byte, Obfuscation::KEY_SIZE>>& requested_key)
 {
@@ -1359,6 +1360,8 @@ bool ObfuscateBlocks(
         auto files{CollectBlockAndUndoFiles(blocks_dir)};
         std::ranges::sort(files, {}, &BlockFileEntry::file_num);
         LogInfo("[obfuscate] Reobfuscating %s block and undo files", files.size());
+        constexpr auto title{_("Reobfuscating blocks…")};
+        notifications.progress(title, /*progress_percent=*/0, /*resume_possible=*/true);
         std::vector<std::byte> chunk;
         size_t done{0};
         int last_percent{0};
@@ -1368,9 +1371,11 @@ bool ObfuscateBlocks(
 
             if (const int percent{static_cast<int>(100 * ++done / files.size())}; percent > last_percent) {
                 LogInfo("[obfuscate] Migrating %s - %s%% done", fs::PathToString(file.path.filename()), percent);
+                notifications.progress(title, percent, /*resume_possible=*/true);
                 last_percent = percent;
             }
         }
+        if (files.empty()) notifications.progress(title, /*progress_percent=*/100, /*resume_possible=*/true);
         Assert(Remove(xor_dat));
         DirectoryCommit(blocks_dir);
     }

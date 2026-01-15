@@ -1338,7 +1338,7 @@ static util::Result<void> ReobfuscateBlocksIfRequested(NodeContext& node, const 
     if (!args.GetBoolArg("-blocksxor").value_or(kernel::DEFAULT_XOR_BLOCKSDIR)) {
         return util::Error{_("Block reobfuscation cannot proceed with -blocksxor=0")};
     }
-    if (!node::ObfuscateBlocks(*g_shutdown, blocks_dir, requested_key)) {
+    if (!node::ObfuscateBlocks(*g_shutdown, *Assert(node.notifications), blocks_dir, requested_key)) {
         return util::Error{_("Block obfuscation failed")};
     }
     return {};
