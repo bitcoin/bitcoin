@@ -722,5 +722,36 @@ BOOST_FIXTURE_TEST_CASE(RemoveTxs, TestChain100Setup)
     TestUnloadWallet(std::move(wallet));
 }
 
+BOOST_AUTO_TEST_CASE(wallet_interface_getters_basic)
+{
+    // Create a wallet interface from a test wallet
+    WalletContext context;
+    context.chain = m_node.chain.get();
+    context.args = m_node.args;
+
+    std::shared_ptr<CWallet> wallet_ptr = std::make_shared<CWallet>(m_node.chain.get(), "test_wallet", CreateMockableWalletDatabase());
+    BOOST_REQUIRE_EQUAL(wallet_ptr->LoadWallet(), DBErrors::LOAD_OK);
+
+    std::unique_ptr<interfaces::Wallet> wallet_interface = interfaces::MakeWallet(context, wallet_ptr);
+    BOOST_REQUIRE(wallet_interface != nullptr);
+
+    std::string wallet_name = wallet_interface->getWalletName();
+    BOOST_CHECK_EQUAL(wallet_name, "test_wallet");
+
+    BOOST_CHECK_EQUAL(wallet_interface->isCrypted(), false);
+
+    BOOST_CHECK_EQUAL(wallet_interface->isLocked(), false);
+
+    OutputType default_type = wallet_interface->getDefaultAddressType();
+    BOOST_CHECK(default_type == OutputType::BECH32 || default_type == OutputType::LEGACY ||
+                default_type == OutputType::P2SH_SEGWIT || default_type == OutputType::BECH32M);
+
+    CAmount max_fee = wallet_interface->getDefaultMaxTxFee();
+    BOOST_CHECK(max_fee > 0);
+
+    unsigned int confirm_target = wallet_interface->getConfirmTarget();
+    BOOST_CHECK(confirm_target > 0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
