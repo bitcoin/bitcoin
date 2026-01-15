@@ -410,7 +410,6 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                     if (ancestors > 1) continue;
                 } else {
                     if (wtx.tx->version == TRUC_VERSION) continue;
-                    Assume(!wtx.truc_child_in_mempool.has_value());
                 }
             }
 
