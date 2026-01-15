@@ -91,6 +91,7 @@
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/moneystr.h>
+#include <util/obfuscation.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
@@ -106,6 +107,7 @@
 
 #include <algorithm>
 #include <any>
+#include <array>
 #include <cerrno>
 #include <condition_variable>
 #include <cstddef>
@@ -551,6 +553,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
             "(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >=%u = automatically prune block files to stay under the specified target size in MiB)", MIN_DISK_SPACE_FOR_BLOCK_FILES / 1_MiB), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-reindex", "If enabled, wipe chain state and block index, and rebuild them from blk*.dat files on disk. Also wipe and rebuild other optional indexes that are active. If an assumeutxo snapshot was loaded, its chainstate will be wiped as well. The snapshot can then be reloaded via RPC.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-reindex-chainstate", "If enabled, wipe chain state, and rebuild it from blk*.dat files on disk. If an assumeutxo snapshot was loaded, its chainstate will be wiped as well. The snapshot can then be reloaded via RPC.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-reobfuscate-blocks", "Reobfuscate existing blk*/rev* files. If a 16 character hexadecimal value is provided, it's used as the new XOR key; otherwise, the value is treated as a boolean and a random key is generated. This operation is resumable.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-settings=<file>", strprintf("Specify path to dynamic settings data file. Can be disabled with -nosettings. File is written at runtime and not meant to be edited by users (use %s instead for custom settings). Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME, BITCOIN_SETTINGS_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #if HAVE_SYSTEM
     argsman.AddArg("-startupnotify=<cmd>", "Execute command on startup.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -1315,6 +1318,32 @@ static std::optional<CService> CheckBindingConflicts(const CConnman::Options& co
     return std::nullopt;
 }
 
+static util::Result<void> ReobfuscateBlocksIfRequested(NodeContext& node, const ArgsManager& args)
+{
+    std::optional<std::array<std::byte, Obfuscation::KEY_SIZE>> requested_key{};
+    bool reobfuscate_requested{false};
+    if (const auto arg{args.GetArg("-reobfuscate-blocks")}) {
+        if ((requested_key = Obfuscation::KeyFromHex(*arg))) {
+            reobfuscate_requested = true;
+        } else if (arg->empty() || *arg == "1") {
+            reobfuscate_requested = true;
+        } else if (*arg != "0") {
+            return util::Error{strprintf(_("Invalid -reobfuscate-blocks value '%s'"), *arg)};
+        }
+    }
+
+    const auto blocks_dir{args.GetBlocksDirPath()};
+    if (!reobfuscate_requested && !node::BlockReobfuscationPending(blocks_dir)) return {};
+
+    if (!args.GetBoolArg("-blocksxor").value_or(kernel::DEFAULT_XOR_BLOCKSDIR)) {
+        return util::Error{_("Block reobfuscation cannot proceed with -blocksxor=0")};
+    }
+    if (!node::ObfuscateBlocks(*g_shutdown, blocks_dir, requested_key)) {
+        return util::Error{_("Block obfuscation failed")};
+    }
+    return {};
+}
+
 // A GUI user may opt to retry once with do_reindex set if there is a failure during chainstate initialization.
 // The function therefore has to support re-entry.
 static ChainstateLoadResult InitAndLoadChainstate(
@@ -1847,6 +1876,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 #endif
 
     // ********************************************************* Step 7: load block chain
+
+    if (auto reobfuscation_result{ReobfuscateBlocksIfRequested(node, args)}; !reobfuscation_result) {
+        if (ShutdownRequested(node)) {
+            LogInfo("Shutdown requested. Exiting.");
+            return true;
+        }
+        return InitError(util::ErrorString(reobfuscation_result));
+    }
 
     // cache size calculations
     node::LogOversizedDbCache(args);

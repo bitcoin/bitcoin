@@ -30,11 +30,13 @@
 #include <util/check.h>
 #include <util/expected.h>
 #include <util/fs.h>
+#include <util/fs_helpers.h>
 #include <util/log.h>
 #include <util/obfuscation.h>
 #include <util/overflow.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
+#include <util/string.h>
 #include <util/strencodings.h>
 #include <util/syserror.h>
 #include <util/time.h>
@@ -172,6 +174,9 @@ std::string CBlockFileInfo::ToString() const
 namespace node {
 
 namespace {
+constexpr auto XOR_KEY_FILE_NAME{"xor.dat"};
+constexpr auto BLOCK_REOBFUSCATION_SUFFIX{".reobfuscated"};
+
 struct BlockFileEntry {
     std::string file_num;
     bool is_block;
@@ -182,10 +187,10 @@ std::vector<BlockFileEntry> CollectBlockAndUndoFiles(const fs::path& blocks_dir)
 {
     std::vector<BlockFileEntry> files;
     for (fs::directory_iterator it(blocks_dir); it != fs::directory_iterator(); ++it) {
-        const auto& path{fs::PathToString(it->path().filename())};
-        if (fs::is_regular_file(*it) && path.length() == 12 && path.ends_with(".dat")) {
-            if (const bool is_block{path.starts_with("blk")}; is_block || path.starts_with("rev")) {
-                files.emplace_back(path.substr(3, 5), is_block, it->path());
+        const auto filename{fs::PathToString(it->path().filename())};
+        if (fs::is_regular_file(*it) && filename.length() == 12 && filename.ends_with(".dat")) {
+            if (const bool is_block{filename.starts_with("blk")}; is_block || filename.starts_with("rev")) {
+                files.emplace_back(filename.substr(3, 5), is_block, it->path());
             }
         }
     }
@@ -200,15 +205,14 @@ std::array<std::byte, Obfuscation::KEY_SIZE> ReadXorKeyFile(const fs::path& file
     return obfuscation;
 }
 
-void WriteXorKeyFile(const fs::path& file, const std::array<std::byte, Obfuscation::KEY_SIZE>& obfuscation)
+void WriteXorKeyFile(const fs::path& file, const std::array<std::byte, Obfuscation::KEY_SIZE>& obfuscation, bool overwrite)
 {
-    AutoFile xor_key_file{fsbridge::fopen(file,
 #ifdef __MINGW64__
-        "wb" // Temporary workaround for https://github.com/bitcoin/bitcoin/issues/30210
+    const char* mode{"wb"}; // Temporary workaround for https://github.com/bitcoin/bitcoin/issues/30210
 #else
-        "wbx"
+    const char* mode{overwrite ? "wb" : "wbx"};
 #endif
-    )};
+    AutoFile xor_key_file{fsbridge::fopen(file, mode)};
     xor_key_file << obfuscation;
     if (xor_key_file.fclose() != 0) {
         throw std::runtime_error{strprintf("Error closing XOR key file %s: %s",
@@ -217,6 +221,64 @@ void WriteXorKeyFile(const fs::path& file, const std::array<std::byte, Obfuscati
     }
 }
 
+bool IsValidXorKeyFile(const fs::path& file)
+{
+    std::error_code ec;
+    return fs::file_size(file, ec) == Obfuscation::KEY_SIZE;
+}
+
+std::optional<Obfuscation> PrepareDeltaObfuscation(
+    const fs::path& xor_dat,
+    const fs::path& xor_new,
+    const std::optional<std::array<std::byte, Obfuscation::KEY_SIZE>>& requested_key,
+    const fs::path& blocks_dir)
+{
+    if (IsValidXorKeyFile(xor_new) && !IsValidXorKeyFile(xor_dat)) return std::nullopt; // migration was interrupted
+
+    if (!IsValidXorKeyFile(xor_dat)) {
+        WriteXorKeyFile(xor_dat, {}, /*overwrite=*/false);
+        DirectoryCommit(blocks_dir);
+    }
+    const Obfuscation old_obfuscation{ReadXorKeyFile(xor_dat)};
+    LogInfo("[obfuscate] old key: %s", old_obfuscation.HexKey());
+
+    if (!IsValidXorKeyFile(xor_new)) {
+        WriteXorKeyFile(xor_new, requested_key ? *requested_key : FastRandomContext{}.randbytes<Obfuscation::KEY_SIZE>(), /*overwrite=*/true);
+        DirectoryCommit(blocks_dir);
+    }
+
+    const Obfuscation new_obfuscation{ReadXorKeyFile(xor_new)};
+    LogInfo("[obfuscate] new key: %s", new_obfuscation.HexKey());
+
+    return Obfuscation::Delta(old_obfuscation, new_obfuscation);
+}
+
+bool MigrateBlockFile(const BlockFileEntry& entry, const Obfuscation& delta_obfuscation, std::vector<std::byte>& chunk)
+{
+    const fs::path staged_path{entry.path + BLOCK_REOBFUSCATION_SUFFIX};
+
+    // Resume case: staged complete, original already deleted
+    if (fs::exists(staged_path) && !fs::exists(entry.path)) return true;
+
+    AutoFile old_blocks{fsbridge::fopen(entry.path, "rb"), delta_obfuscation}; // deobfuscate & reobfuscate with a single combined key
+    if (old_blocks.IsNull()) return false;
+    AutoFile new_blocks{fsbridge::fopen(staged_path, "wb")};
+    if (new_blocks.IsNull()) return false;
+
+    const size_t chunk_size{entry.is_block ? BLOCKFILE_CHUNK_SIZE : UNDOFILE_CHUNK_SIZE};
+    if (chunk.size() < chunk_size) chunk.resize(chunk_size);
+    auto read_buffer{std::span{chunk}.first(chunk_size)};
+    for (size_t n{0}; (n = old_blocks.detail_fread(read_buffer));) {
+        new_blocks.write_buffer(std::span{chunk}.first(n));
+    }
+    if (!old_blocks.feof() || old_blocks.fclose() || !new_blocks.Commit() || new_blocks.fclose()) return false;
+    fs::last_write_time(staged_path, fs::last_write_time(entry.path)); // preserve timestamp
+    // The staged file must be durable before the original is deleted; the
+    // unlink itself needs no fsync - if it is lost in a crash, resume
+    // simply re-copies this one file.
+    DirectoryCommit(staged_path.parent_path());
+    return Remove(entry.path);
+}
 } // namespace
 
 bool CBlockIndexWorkComparator::operator()(const CBlockIndex* pa, const CBlockIndex* pb) const
@@ -1245,13 +1307,13 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
         FastRandomContext{}.fillrand(obfuscation);
     }
 
-    const fs::path xor_key_path{opts.blocks_dir / "xor.dat"};
+    const fs::path xor_key_path{opts.blocks_dir / XOR_KEY_FILE_NAME};
     if (fs::exists(xor_key_path)) {
         // A pre-existing xor key file has priority.
         obfuscation = ReadXorKeyFile(xor_key_path);
     } else {
         // Create initial or missing xor key file
-        WriteXorKeyFile(xor_key_path, obfuscation);
+        WriteXorKeyFile(xor_key_path, obfuscation, /*overwrite=*/false);
     }
     // If the user disabled the key, it must be zero.
     if (!opts.use_xor && obfuscation != decltype(obfuscation){}) {
@@ -1270,6 +1332,63 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
     }
 
     return result;
+}
+
+bool BlockReobfuscationPending(const fs::path& blocks_dir)
+{
+    return fs::exists((blocks_dir / XOR_KEY_FILE_NAME) + BLOCK_REOBFUSCATION_SUFFIX);
+}
+
+bool ObfuscateBlocks(
+    const util::SignalInterrupt& interrupt,
+    const fs::path& blocks_dir,
+    const std::optional<std::array<std::byte, Obfuscation::KEY_SIZE>>& requested_key)
+{
+    const auto start{SteadyClock::now()};
+    const fs::path xor_dat{blocks_dir / XOR_KEY_FILE_NAME};
+    const fs::path xor_new{xor_dat + BLOCK_REOBFUSCATION_SUFFIX};
+    if (requested_key && IsValidXorKeyFile(xor_new)) {
+        const auto existing_key{ReadXorKeyFile(xor_new)};
+        if (!std::ranges::equal(existing_key, *requested_key)) {
+            LogError("[obfuscate] Requested XOR key does not match staged %s", fs::PathToString(xor_new.filename()));
+            return false;
+        }
+    }
+
+    if (const auto delta_obfuscation{PrepareDeltaObfuscation(xor_dat, xor_new, requested_key, blocks_dir)}) {
+        auto files{CollectBlockAndUndoFiles(blocks_dir)};
+        std::ranges::sort(files, {}, &BlockFileEntry::file_num);
+        LogInfo("[obfuscate] Reobfuscating %s block and undo files", files.size());
+        std::vector<std::byte> chunk;
+        size_t done{0};
+        int last_percent{0};
+        for (const auto& file : files) {
+            if (interrupt) return false;
+            if (!MigrateBlockFile(file, *delta_obfuscation, chunk)) return false;
+
+            if (const int percent{static_cast<int>(100 * ++done / files.size())}; percent > last_percent) {
+                LogInfo("[obfuscate] Migrating %s - %s%% done", fs::PathToString(file.path.filename()), percent);
+                last_percent = percent;
+            }
+        }
+        Assert(Remove(xor_dat));
+        DirectoryCommit(blocks_dir);
+    }
+
+    // After migration rename new files to old names and use the new obfuscation key
+    for (const auto& entry : fs::directory_iterator(blocks_dir)) {
+        const auto filename{fs::PathToString(entry.path().filename())};
+        if (entry.path() != xor_new && entry.is_regular_file() && filename.ends_with(BLOCK_REOBFUSCATION_SUFFIX)) {
+            const auto destination{entry.path().parent_path() / util::RemoveSuffixView(filename, BLOCK_REOBFUSCATION_SUFFIX)};
+            Assert(RenameOver(entry.path(), destination));
+        }
+    }
+    Assert(RenameOver(xor_new, xor_dat)); // last step, signaling completion
+    DirectoryCommit(blocks_dir);
+
+    LogInfo("[obfuscate] Block and Undo file migration finished in %ss", Ticks<std::chrono::seconds>(SteadyClock::now() - start));
+
+    return true;
 }
 
 BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
