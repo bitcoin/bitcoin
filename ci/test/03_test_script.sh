@@ -229,6 +229,8 @@ if [[ "${RUN_IWYU}" == true ]]; then
              -Xiwyu --max_line_length=160 \
              2>&1 | tee /tmp/iwyu_ci.out
     python3 "/include-what-you-use/fix_includes.py" --nosafe_headers < /tmp/iwyu_ci.out
+    mapfile -t files < <(git diff --name-only)
+    ./ci/test/modernize-deprecated-headers.py "${files[@]}"
     git diff -U0 | ./contrib/devtools/clang-format-diff.py -binary="clang-format-${TIDY_LLVM_V}" -p1 -i -v
   }
 
