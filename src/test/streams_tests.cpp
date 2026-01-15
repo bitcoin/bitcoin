@@ -55,6 +55,35 @@ BOOST_AUTO_TEST_CASE(obfuscation_hexkey)
 
     const Obfuscation obfuscation{key_bytes};
     BOOST_CHECK_EQUAL(obfuscation.HexKey(), HexStr(key_bytes));
+
+    const auto parsed_key{Obfuscation::KeyFromHex(obfuscation.HexKey())};
+    BOOST_REQUIRE(parsed_key);
+    BOOST_CHECK(std::ranges::equal(*parsed_key, key_bytes));
+
+    BOOST_CHECK(!Obfuscation::KeyFromHex(""));
+    BOOST_CHECK(!Obfuscation::KeyFromHex("00"));                                        // too short
+    BOOST_CHECK(!Obfuscation::KeyFromHex(obfuscation.HexKey() + "00"));                 // too long
+    BOOST_CHECK(!Obfuscation::KeyFromHex(std::string(2 * Obfuscation::KEY_SIZE, 'z'))); // not hex
+}
+
+BOOST_AUTO_TEST_CASE(obfuscation_delta)
+{
+    const auto data{m_rng.randbytes<std::byte>(128)};
+    const Obfuscation old_obfuscation{m_rng.randbytes<Obfuscation::KEY_SIZE>()};
+    const Obfuscation new_obfuscation{m_rng.randbytes<Obfuscation::KEY_SIZE>()};
+
+    auto old_obfuscated{data};
+    old_obfuscation(old_obfuscated);
+
+    const Obfuscation delta{Obfuscation::Delta(old_obfuscation, new_obfuscation)};
+    auto delta_applied{old_obfuscated};
+    delta(delta_applied);
+
+    auto new_obfuscated{data};
+    new_obfuscation(new_obfuscated);
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(delta_applied.begin(), delta_applied.end(),
+                                  new_obfuscated.begin(), new_obfuscated.end());
 }
 
 BOOST_AUTO_TEST_CASE(obfuscation_serialize)
