@@ -185,9 +185,7 @@ void WriteXorKeyFile(const fs::path& file, const Obfuscation::Key& obfuscation, 
     const char* mode{overwrite ? "wb" : "wbx"};
     AutoFile xor_key_file{fsbridge::fopen(file, mode)};
     xor_key_file << obfuscation;
-    if (xor_key_file.fclose() != 0) {
-        throw std::runtime_error{strprintf("Error closing XOR key file %s: %s", fs::PathToString(file), SysErrorString(errno))};
-    }
+    if (bool success{xor_key_file.Commit()}; xor_key_file.fclose() || !success) throw std::runtime_error{strprintf("Error writing XOR key file %s", fs::PathToString(file))};
 }
 
 } // namespace
