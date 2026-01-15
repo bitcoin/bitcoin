@@ -1,15 +1,15 @@
 # macOS Build Guide
 
-**Updated for MacOS [11.2](https://www.apple.com/macos/big-sur/)**
+**Updated for MacOS [14](https://www.apple.com/macos/macos-sequoia/)**
 
-This guide describes how to build dashd, command-line utilities, and GUI on macOS
+This guide describes how to build dashd, command-line utilities, and GUI on macOS.
 
 ## Preparation
 
 The commands in this guide should be executed in a Terminal application.
 macOS comes with a built-in Terminal located in:
 
-```
+```bash
 /Applications/Utilities/Terminal.app
 ```
 
@@ -49,18 +49,6 @@ See [dependencies.md](dependencies.md) for a complete overview.
 ``` bash
 brew install automake libtool boost gmp pkg-config libevent
 ```
-
-``` bash
-brew install llvm
-```
-
-And append the following to the configure commands below:
-
-``` bash
-CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++
-```
-
-Try `llvm@17` if compilation fails with the default version of llvm.
 
 ### 4. Clone Dash repository
 
