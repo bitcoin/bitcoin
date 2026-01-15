@@ -2341,14 +2341,8 @@ DBErrors CWallet::LoadWallet()
     Assert(m_spk_managers.empty());
     Assert(m_wallet_flags == 0);
     DBErrors nLoadWalletRet = WalletBatch(GetDatabase()).LoadWallet(this);
-    if (nLoadWalletRet == DBErrors::NEED_REWRITE)
-    {
-        if (GetDatabase().Rewrite())
-        {
-            for (const auto& spk_man_pair : m_spk_managers) {
-                spk_man_pair.second->RewriteDB();
-            }
-        }
+    if (nLoadWalletRet == DBErrors::NEED_REWRITE) {
+        GetDatabase().Rewrite();
     }
 
     if (m_spk_managers.empty()) {
