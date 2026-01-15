@@ -179,6 +179,9 @@ namespace BCLog {
             Level level;
         };
 
+        explicit Logger();
+        ~Logger();
+
     private:
         mutable StdMutex m_cs; // Can not use Mutex from sync.h because in debug mode it would cause a deadlock when a potential deadlock was detected
 
@@ -191,6 +194,9 @@ namespace BCLog {
 
         //! Dispatches log entries to its registered callbacks.
         util::log::Dispatcher m_dispatcher{};
+
+        //! Handle for the callback registered on m_dispatcher.
+        const util::log::Dispatcher::CallbackHandle m_callback_handle;
 
         //! Manages the rate limiting of each log location.
         std::shared_ptr<LogRateLimiter> m_limiter GUARDED_BY(m_cs);
@@ -212,9 +218,8 @@ namespace BCLog {
         /** Slots that connect to the print signal */
         std::list<std::function<void(const std::string&)>> m_print_callbacks GUARDED_BY(m_cs) {};
 
-        /** Send a string to the log output (internal) */
-        void LogPrintStr_(std::string_view str, SourceLocation&& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
-            EXCLUSIVE_LOCKS_REQUIRED(m_cs);
+        /** Send an entry to the log output (internal) */
+        void LogPrintStr_(const util::log::Entry& log_entry) EXCLUSIVE_LOCKS_REQUIRED(m_cs);
 
         std::string GetLogPrefix(LogFlags category, Level level) const;
 
@@ -234,9 +239,8 @@ namespace BCLog {
         /** Get the Dispatcher that is used by this Logger to dispatch callbacks. */
         util::log::Dispatcher& GetDispatcher() { return m_dispatcher; }
 
-        /** Send a string to the log output */
-        void LogPrintStr(std::string_view str, SourceLocation&& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
-            EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+        /** Send an entry to the log output */
+        void LogPrintStr(const util::log::Entry& log_entry) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         /** Returns whether logs will be written to any output */
         bool Enabled() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
@@ -348,23 +352,9 @@ static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level leve
 /** Return true if str parses as a log category and set the flag */
 bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
 
-template <typename... Args>
-inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags flag, BCLog::Level level, bool should_ratelimit, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
-{
-    if (LogInstance().Enabled()) {
-        std::string log_msg;
-        try {
-            log_msg = tfm::format(fmt, args...);
-        } catch (tinyformat::format_error& fmterr) {
-            log_msg = "Error \"" + std::string{fmterr.what()} + "\" while formatting log message: " + fmt.fmt;
-        }
-        LogInstance().LogPrintStr(log_msg, std::move(source_loc), flag, level, should_ratelimit);
-    }
-}
-
 // Allow __func__ to be used in any context without warnings:
 // NOLINTNEXTLINE(bugprone-lambda-function-name)
-#define LogPrintLevel_(category, level, should_ratelimit, ...) LogPrintFormatInternal(SourceLocation{__func__}, category, level, should_ratelimit, __VA_ARGS__)
+#define LogPrintLevel_(category, level, should_ratelimit, ...) util::log::g_dispatcher().Log(level, category, SourceLocation{__func__}, should_ratelimit, __VA_ARGS__)
 
 // Log unconditionally. Uses basic rate limiting to mitigate disk filling attacks.
 // Be conservative when using functions that unconditionally log to debug.log!

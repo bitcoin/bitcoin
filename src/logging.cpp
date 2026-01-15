@@ -36,8 +36,6 @@ BCLog::Logger& LogInstance()
  * access the logger. When the shutdown sequence is fully audited and tested,
  * explicit destruction of these objects can be implemented by changing this
  * from a raw pointer to a std::unique_ptr.
- * Since the ~Logger() destructor is never called, the Logger class and all
- * its subclasses must have implicitly-defined destructors.
  *
  * This method of initialization was originally introduced in
  * ee3374234c60aba2cc4c5cd5cac1c0aefc2d817c.
@@ -82,7 +80,11 @@ bool BCLog::Logger::StartLogging()
     // dump buffered messages from before we opened the log
     m_buffering = false;
     if (m_buffer_lines_discarded > 0) {
-        LogPrintStr_(strprintf("Early logging buffer overflowed, %d log lines discarded.\n", m_buffer_lines_discarded), SourceLocation{__func__}, BCLog::ALL, Level::Info, /*should_ratelimit=*/false);
+        LogPrintStr_({.category = BCLog::ALL,
+                      .message = strprintf("Early logging buffer overflowed, %d log lines discarded.", m_buffer_lines_discarded),
+                      .source_loc = __func__,
+                      .level = Level::Info,
+                      .should_ratelimit = false});
     }
     while (!m_msgs_before_open.empty()) {
         const auto& buflog = m_msgs_before_open.front();
@@ -428,27 +430,27 @@ void BCLog::Logger::FormatLogStrInPlace(std::string& str, BCLog::LogFlags catego
     str.insert(0, LogTimestampStr(now, mocktime));
 }
 
-void BCLog::Logger::LogPrintStr(std::string_view str, SourceLocation&& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
+void BCLog::Logger::LogPrintStr(const util::log::Entry& entry)
 {
     StdLockGuard scoped_lock(m_cs);
-    return LogPrintStr_(str, std::move(source_loc), category, level, should_ratelimit);
+    return LogPrintStr_(entry);
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-void BCLog::Logger::LogPrintStr_(std::string_view str, SourceLocation&& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
+void BCLog::Logger::LogPrintStr_(const util::log::Entry& entry)
 {
-    std::string str_prefixed = LogEscapeMessage(str);
+    std::string str_prefixed = LogEscapeMessage(entry.message);
 
     if (m_buffering) {
         {
             BufferedLog buf{
-                .now = SystemClock::now(),
+                .now = entry.timestamp,
                 .mocktime = GetMockTime(),
                 .str = str_prefixed,
-                .threadname = util::ThreadGetInternalName(),
-                .source_loc = std::move(source_loc),
-                .category = category,
-                .level = level,
+                .threadname = entry.thread_name,
+                .source_loc = entry.source_loc,
+                .category = static_cast<LogFlags>(entry.category),
+                .level = entry.level,
             };
             m_cur_buffer_memusage += MemUsage(buf);
             m_msgs_before_open.push_back(std::move(buf));
@@ -467,21 +469,24 @@ void BCLog::Logger::LogPrintStr_(std::string_view str, SourceLocation&& source_l
         return;
     }
 
-    FormatLogStrInPlace(str_prefixed, category, level, source_loc, util::ThreadGetInternalName(), SystemClock::now(), GetMockTime());
+    FormatLogStrInPlace(str_prefixed, static_cast<LogFlags>(entry.category), entry.level, entry.source_loc, entry.thread_name, entry.timestamp, GetMockTime());
     bool ratelimit{false};
-    if (should_ratelimit && m_limiter) {
-        auto status{m_limiter->Consume(source_loc, str_prefixed)};
+    if (entry.should_ratelimit && m_limiter) {
+        auto status{m_limiter->Consume(entry.source_loc, str_prefixed)};
         if (status == LogRateLimiter::Status::NEWLY_SUPPRESSED) {
             // NOLINTNEXTLINE(misc-no-recursion)
-            LogPrintStr_(strprintf(
-                             "Excessive logging detected from %s:%d (%s): >%d bytes logged during "
-                             "the last time window of %is. Suppressing logging to disk from this "
-                             "source location until time window resets. Console logging "
-                             "unaffected. Last log entry.",
-                             source_loc.file_name(), source_loc.line(), source_loc.function_name_short(),
-                             m_limiter->m_max_bytes,
-                             Ticks<std::chrono::seconds>(m_limiter->m_reset_window)),
-                         SourceLocation{__func__}, LogFlags::ALL, Level::Warning, /*should_ratelimit=*/false); // with should_ratelimit=false, this cannot lead to infinite recursion
+            LogPrintStr_({.category = LogFlags::ALL,
+                          .message = strprintf(
+                              "Excessive logging detected from %s:%d (%s): >%d bytes logged during "
+                              "the last time window of %is. Suppressing logging to disk from this "
+                              "source location until time window resets. Console logging "
+                              "unaffected. Last log entry.",
+                              entry.source_loc.file_name(), entry.source_loc.line(), entry.source_loc.function_name_short(),
+                              m_limiter->m_max_bytes,
+                              Ticks<std::chrono::seconds>(m_limiter->m_reset_window)),
+                          .source_loc = __func__,
+                          .level = Level::Warning,
+                          .should_ratelimit = false}); // with should_ratelimit=false, this cannot lead to infinite recursion
         } else if (status == LogRateLimiter::Status::STILL_SUPPRESSED) {
             ratelimit = true;
         }
@@ -608,4 +613,14 @@ bool BCLog::Logger::SetCategoryLogLevel(std::string_view category_str, std::stri
     StdLockGuard scoped_lock(m_cs);
     m_category_log_levels[flag] = level.value();
     return true;
+}
+
+BCLog::Logger::Logger() : m_callback_handle{m_dispatcher.RegisterCallback(
+                              [this](const util::log::Entry& entry) {
+                                  LogPrintStr(entry);
+                              })} {}
+
+BCLog::Logger::~Logger()
+{
+    m_dispatcher.UnregisterCallback(m_callback_handle);
 }
