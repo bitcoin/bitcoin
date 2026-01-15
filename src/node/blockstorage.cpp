@@ -30,12 +30,14 @@
 #include <util/check.h>
 #include <util/expected.h>
 #include <util/fs.h>
+#include <util/fs_helpers.h>
 #include <util/log.h>
 #include <util/obfuscation.h>
 #include <util/overflow.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/syserror.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -172,6 +174,10 @@ std::string CBlockFileInfo::ToString() const
 namespace node {
 
 namespace {
+constexpr auto XOR_KEY_FILE_NAME{"xor.dat"};
+constexpr auto BLOCK_REOBFUSCATION_SUFFIX{".reobfuscated"};
+constexpr size_t REOBFUSCATION_BUFFER_SIZE{1_MiB}; // Independent of FlatFileSeq preallocation
+
 struct BlockFileEntry {
     std::string file_num;
     bool is_block;
@@ -214,6 +220,66 @@ void WriteXorKeyFile(const fs::path& file, const Obfuscation::Key& obfuscation, 
     }
 }
 
+bool IsValidXorKeyFile(const fs::path& file)
+{
+    std::error_code ec;
+    return fs::file_size(file, ec) == Obfuscation::KEY_SIZE;
+}
+
+std::optional<Obfuscation> PrepareDeltaObfuscation(
+    const fs::path& xor_dat,
+    const fs::path& xor_new,
+    const std::optional<Obfuscation::Key>& requested_key,
+    const fs::path& blocks_dir)
+{
+    Obfuscation::Key old_key{};
+    if (IsValidXorKeyFile(xor_dat)) {
+        old_key = ReadXorKeyFile(xor_dat);
+    } else {
+        if (IsValidXorKeyFile(xor_new)) return std::nullopt; // only the renames remain
+        WriteXorKeyFile(xor_dat, old_key, /*overwrite=*/false);
+        DirectoryCommit(blocks_dir);
+    }
+
+    Obfuscation::Key new_key{};
+    if (IsValidXorKeyFile(xor_new)) {
+        new_key = ReadXorKeyFile(xor_new);
+    } else {
+        new_key = requested_key ? *requested_key : FastRandomContext{}.randbytes<Obfuscation::KEY_SIZE>();
+        WriteXorKeyFile(xor_new, new_key, /*overwrite=*/true);
+        DirectoryCommit(blocks_dir);
+    }
+
+    Obfuscation old_obfuscation{old_key}, new_obfuscation{new_key};
+    LogInfo("[obfuscate] old key: %s", old_obfuscation.HexKey());
+    LogInfo("[obfuscate] new key: %s", new_obfuscation.HexKey());
+
+    if (auto delta{Obfuscation::Delta(old_obfuscation, new_obfuscation)}) return delta;
+    return std::nullopt; // Keys already match; only the renames remain
+}
+
+bool MigrateBlockFile(const BlockFileEntry& entry, const Obfuscation& delta_obfuscation, std::span<std::byte> buffer)
+{
+    const fs::path staged_path{entry.path + BLOCK_REOBFUSCATION_SUFFIX};
+
+    // Resume after deleting the original
+    if (fs::exists(staged_path) && !fs::exists(entry.path)) return true;
+
+    AutoFile old_blocks{fsbridge::fopen(entry.path, "rb"), delta_obfuscation}; // apply both keys in one pass
+    if (old_blocks.IsNull()) return false;
+    AutoFile new_blocks{fsbridge::fopen(staged_path, "wb")};
+    if (new_blocks.IsNull()) return false;
+
+    while (auto n{old_blocks.detail_fread(buffer)}) {
+        new_blocks.write_buffer(buffer.first(n));
+    }
+    if (!old_blocks.feof() || old_blocks.fclose() || !new_blocks.Commit() || new_blocks.fclose()) return false;
+    fs::last_write_time(staged_path, fs::last_write_time(entry.path)); // preserve timestamp
+    // Make the staged file durable before deletion. If a crash loses the deletion, resume copies the file again
+    DirectoryCommit(staged_path.parent_path());
+    fs::remove(entry.path);
+    return true;
+}
 } // namespace
 
 bool CBlockIndexWorkComparator::operator()(const CBlockIndex* pa, const CBlockIndex* pb) const
@@ -1242,7 +1308,7 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
         FastRandomContext{}.fillrand(obfuscation);
     }
 
-    const fs::path xor_key_path{opts.blocks_dir / "xor.dat"};
+    const fs::path xor_key_path{opts.blocks_dir / XOR_KEY_FILE_NAME};
     if (fs::exists(xor_key_path)) {
         // A pre-existing xor key file has priority.
         obfuscation = ReadXorKeyFile(xor_key_path);
@@ -1267,6 +1333,60 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
     }
 
     return result;
+}
+
+bool BlockReobfuscationPending(const fs::path& blocks_dir)
+{
+    return fs::exists((blocks_dir / XOR_KEY_FILE_NAME) + BLOCK_REOBFUSCATION_SUFFIX);
+}
+
+bool ObfuscateBlocks(
+    const util::SignalInterrupt& interrupt,
+    const fs::path& blocks_dir,
+    const std::optional<Obfuscation::Key>& requested_key)
+{
+    const auto start{SteadyClock::now()};
+    const fs::path xor_dat{blocks_dir / XOR_KEY_FILE_NAME};
+    const fs::path xor_new{xor_dat + BLOCK_REOBFUSCATION_SUFFIX};
+    if (requested_key && IsValidXorKeyFile(xor_new) && ReadXorKeyFile(xor_new) != *requested_key) {
+        LogError("[obfuscate] Requested XOR key does not match staged %s", fs::PathToString(xor_new.filename()));
+        return false;
+    }
+
+    if (auto delta_obfuscation{PrepareDeltaObfuscation(xor_dat, xor_new, requested_key, blocks_dir)}) {
+        auto files{CollectBlockAndUndoFiles(blocks_dir)};
+        std::ranges::sort(files, {}, &BlockFileEntry::file_num);
+        LogInfo("[obfuscate] Reobfuscating %s block and undo files", files.size());
+        std::vector<std::byte> buffer(REOBFUSCATION_BUFFER_SIZE);
+        size_t done{0};
+        int last_percent{0};
+        for (auto& file : files) {
+            if (interrupt) return false;
+            if (!MigrateBlockFile(file, *delta_obfuscation, buffer)) return false;
+
+            if (int percent{static_cast<int>(100 * ++done / files.size())}; percent > last_percent) {
+                LogInfo("[obfuscate] Migrating %s - %s%% done", fs::PathToString(file.path.filename()), percent);
+                last_percent = percent;
+            }
+        }
+        fs::remove(xor_dat);
+        DirectoryCommit(blocks_dir);
+    }
+
+    // Activate staged data files before the new key. Renaming the key signals completion
+    for (auto& entry : fs::directory_iterator(blocks_dir)) {
+        auto filename{fs::PathToString(entry.path().filename())};
+        if (entry.path() != xor_new && entry.is_regular_file() && filename.ends_with(BLOCK_REOBFUSCATION_SUFFIX)) {
+            auto destination{entry.path().parent_path() / util::RemoveSuffixView(filename, BLOCK_REOBFUSCATION_SUFFIX)};
+            fs::rename(entry.path(), destination);
+        }
+    }
+    fs::rename(xor_new, xor_dat);
+    DirectoryCommit(blocks_dir);
+
+    LogInfo("[obfuscate] Block and Undo file migration finished in %ss", Ticks<std::chrono::seconds>(SteadyClock::now() - start));
+
+    return true;
 }
 
 BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
