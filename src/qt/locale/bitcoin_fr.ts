@@ -1716,12 +1716,12 @@ Le processus de migration créera une sauvegarde du portefeuille avant migration
     <message>
         <source>Enable &amp;PSBT controls</source>
         <extracomment>An options window setting to enable PSBT controls.</extracomment>
-        <translation type="unfinished">Activer les contrôles &amp;TBPS</translation>
+        <translation type="unfinished">Activer les contrôles &amp;TBSP</translation>
     </message>
     <message>
         <source>Whether to show PSBT controls.</source>
         <extracomment>Tooltip text for options window setting that enables PSBT controls.</extracomment>
-        <translation type="unfinished">Afficher ou non les contrôles TBPS.</translation>
+        <translation type="unfinished">Afficher ou non les contrôles TBSP.</translation>
     </message>
     <message>
         <source>External Signer (e.g. hardware wallet)</source>
@@ -3942,7 +3942,7 @@ Accédez à Fichier &gt; Ouvrir un portefeuille pour en charger un.
     </message>
     <message>
         <source>PSBT copied</source>
-        <translation type="unfinished">La TBPS a été copiée</translation>
+        <translation type="unfinished">La TBSP a été copiée</translation>
     </message>
     <message>
         <source>Fee-bump PSBT copied to clipboard</source>
