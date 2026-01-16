@@ -34,6 +34,7 @@ import logging
 import os
 import subprocess
 import typing as t
+import re
 import sys
 import shutil
 import tempfile
@@ -133,10 +134,10 @@ def verify_with_gpg(
     with tempfile.NamedTemporaryFile() as status_file:
         args = [
             'gpg', '--yes', '--verify', '--verify-options', 'show-primary-uid-only', "--status-file", status_file.name]
-        
+
         if output_filename:
             args.extend(['--output', output_filename])
-            
+
         args.extend([signature_filename, filename])
 
         env = dict(os.environ, LANGUAGE='en')
