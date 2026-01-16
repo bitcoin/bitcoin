@@ -2848,8 +2848,8 @@ void PeerManagerImpl::HeadersDirectFetchBlocks(CNode& pfrom, const Peer& peer, c
                 uint32_t nFetchFlags = GetFetchFlags(peer);
                 vGetData.emplace_back(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash());
                 BlockRequested(pfrom.GetId(), *pindex);
-                LogDebug(BCLog::NET, "Requesting block %s from  peer=%d\n",
-                        pindex->GetBlockHash().ToString(), pfrom.GetId());
+                LogDebug(BCLog::NET, "Requesting block %s from peer=%d\n",
+                         pindex->GetBlockHash().ToString(), pfrom.GetId());
             }
             if (vGetData.size() > 1) {
                 LogDebug(BCLog::NET, "Downloading blocks toward %s (%d) via headers direct fetch\n",
@@ -3798,7 +3798,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         auto new_peer_msg = [&]() {
             const auto mapped_as{m_connman.GetMappedAS(pfrom.addr)};
-            return strprintf("New %s peer connected: transport: %s, version: %d, blocks=%d peer=%d%s%s\n",
+            return strprintf("New %s peer connected: transport: %s, version: %d, blocks=%d, peer=%d%s%s\n",
                 pfrom.ConnectionTypeAsString(),
                 TransportTypeAsString(pfrom.m_transport->GetInfo().transport_type),
                 pfrom.nVersion.load(), peer->m_starting_height,
@@ -4124,7 +4124,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
             if (inv.IsMsgBlk()) {
                 const bool fAlreadyHave = AlreadyHaveBlock(inv.hash);
-                LogDebug(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
+                LogDebug(BCLog::NET, "got inv: %s %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
 
                 UpdateBlockAvailability(pfrom.GetId(), inv.hash);
                 if (!fAlreadyHave && !m_chainman.m_blockman.LoadingBlocks() && !IsBlockRequested(inv.hash)) {
@@ -4147,7 +4147,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
                 if (!m_chainman.IsInitialBlockDownload()) {
                     const bool fAlreadyHave{m_txdownloadman.AddTxAnnouncement(pfrom.GetId(), gtxid, current_time)};
-                    LogDebug(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
+                    LogDebug(BCLog::NET, "got inv: %s %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
                 }
             } else {
                 LogDebug(BCLog::NET, "Unknown inv type \"%s\" received from peer=%d\n", inv.ToString(), pfrom.GetId());
