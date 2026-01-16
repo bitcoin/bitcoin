@@ -304,6 +304,14 @@ typedef struct btck_Txid btck_Txid;
  */
 typedef struct btck_BlockHeader btck_BlockHeader;
 
+/**
+ * A non-owning view of a string with explicit length.
+ */
+typedef struct {
+    const char* data; //!< Pointer to string data (not necessarily null-terminated).
+    size_t size;      //!< Size of the string.
+} btck_StringView;
+
 /** Current sync state passed to tip changed callbacks. */
 typedef uint8_t btck_SynchronizationState;
 #define btck_SynchronizationState_INIT_REINDEX ((btck_SynchronizationState)(0))
@@ -829,6 +837,22 @@ BITCOINKERNEL_API btck_LoggingConnection* BITCOINKERNEL_WARN_UNUSED_RESULT btck_
  * Stop logging and destroy the logging connection.
  */
 BITCOINKERNEL_API void btck_logging_connection_destroy(btck_LoggingConnection* logging_connection);
+
+/**
+ * @brief Get the name of a log level.
+ *
+ * @param[in] level  The log level.
+ * @return           String name (e.g., "trace", "debug", "info", "warning", "error").
+ */
+BITCOINKERNEL_API btck_StringView btck_log_level_get_name(btck_LogLevel level);
+
+/**
+ * @brief Get the name of a log category.
+ *
+ * @param[in] category  The log category.
+ * @return              String name (e.g., "all", "bench", "validation").
+ */
+BITCOINKERNEL_API btck_StringView btck_log_category_get_name(btck_LogCategory category);
 
 ///@}
 
