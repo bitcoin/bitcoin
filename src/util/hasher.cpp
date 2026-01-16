@@ -9,7 +9,7 @@
 
 #include <limits>
 
-SaltedTxidHasher::SaltedTxidHasher() : k0(), k1() {}
+SaltedTxidHasher::SaltedTxidHasher() : k0(GetRand<uint64_t>()), k1(GetRand<uint64_t>()) {}
 
 SaltedOutpointHasher::SaltedOutpointHasher(bool deterministic) :
     k0(deterministic ? 0x8e819f2607a18de6 : GetRand<uint64_t>()),
