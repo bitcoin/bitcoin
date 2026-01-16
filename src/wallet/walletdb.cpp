@@ -593,12 +593,6 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
     });
     result = std::max(result, script_res.m_result);
 
-    // Check whether rewrite is needed
-    if (ckey_res.m_records > 0) {
-        // Rewrite encrypted wallets of versions 0.4.0 and 0.5.0rc:
-        if (last_client == 40000 || last_client == 50000) result = std::max(result, DBErrors::NEED_REWRITE);
-    }
-
     // Load keymeta
     std::map<uint160, CHDChain> hd_chains;
     LoadResult keymeta_res = LoadRecords(pwallet, batch, DBKeys::KEYMETA,
