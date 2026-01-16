@@ -497,6 +497,117 @@ BOOST_FIXTURE_TEST_CASE(wallet_disableprivkeys, TestChain100Setup)
     BOOST_CHECK(!wallet->GetNewDestination(OutputType::BECH32, ""));
 }
 
+BOOST_FIXTURE_TEST_CASE(wallet_getnewchangedestination, TestChain100Setup)
+{
+    CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+    auto wallet = CreateSyncedWallet(*m_node.chain, WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return m_node.chainman->ActiveChain()), coinbaseKey);
+
+    {
+        LOCK(wallet->cs_wallet);
+        // Test BECH32 change destination generation
+        auto op_dest = wallet->GetNewChangeDestination(OutputType::BECH32);
+        BOOST_CHECK(op_dest);
+        BOOST_CHECK(IsValidDestination(*op_dest));
+
+        // Verify we can get multiple different change destinations
+        auto op_dest2 = wallet->GetNewChangeDestination(OutputType::BECH32);
+        BOOST_CHECK(op_dest2);
+        BOOST_CHECK(IsValidDestination(*op_dest2));
+        // Each call should return a different address from internal keypool
+        BOOST_CHECK(*op_dest != *op_dest2);
+
+        // Test that change destinations use internal keypool by verifying we can still get receiving addresses after getting change addresses
+        auto op_receive_dest = wallet->GetNewDestination(OutputType::BECH32, "");
+        BOOST_CHECK(op_receive_dest);
+        BOOST_CHECK(IsValidDestination(*op_receive_dest));
+        // Change and receive addresses should be different
+        BOOST_CHECK(*op_dest != *op_receive_dest);
+
+        // Test other output types: P2SH_SEGWIT, LEGACY, and BECH32M
+        auto op_p2sh_dest = wallet->GetNewChangeDestination(OutputType::P2SH_SEGWIT);
+        BOOST_CHECK(op_p2sh_dest);
+        BOOST_CHECK(IsValidDestination(*op_p2sh_dest));
+
+        auto op_legacy_dest = wallet->GetNewChangeDestination(OutputType::LEGACY);
+        BOOST_CHECK(op_legacy_dest);
+        BOOST_CHECK(IsValidDestination(*op_legacy_dest));
+
+        auto op_bech32m_dest = wallet->GetNewChangeDestination(OutputType::BECH32M);
+        BOOST_CHECK(op_bech32m_dest);
+        BOOST_CHECK(IsValidDestination(*op_bech32m_dest));
+
+        // Verify all output types generate different addresses
+        BOOST_CHECK(*op_p2sh_dest != *op_legacy_dest);
+        BOOST_CHECK(*op_p2sh_dest != *op_bech32m_dest);
+        BOOST_CHECK(*op_legacy_dest != *op_bech32m_dest);
+    }
+
+    // Test using change address in an actual transaction
+    {
+        LOCK(wallet->cs_wallet);
+        // Get a change destination
+        auto op_change_dest = wallet->GetNewChangeDestination(OutputType::BECH32);
+        BOOST_CHECK(op_change_dest);
+        BOOST_CHECK(IsValidDestination(*op_change_dest));
+
+        // Create a transaction that will use this change address
+        // Get a receiving address for the recipient
+        auto op_recipient_dest = wallet->GetNewDestination(OutputType::BECH32, "");
+        BOOST_CHECK(op_recipient_dest);
+        BOOST_CHECK(IsValidDestination(*op_recipient_dest));
+
+        // Create a transaction with a small amount to ensure change is generated
+        CCoinControl coin_control;
+        coin_control.destChange = *op_change_dest;
+        CRecipient recipient{*op_recipient_dest, 1 * COIN, /*subtract_fee=*/false};
+        auto res = CreateTransaction(*wallet, {recipient}, /*change_pos=*/std::nullopt, coin_control);
+        BOOST_CHECK(res);
+
+        // transaction has a change output to our specified change destination
+        const CTransaction& tx = *res->tx;
+        bool found_change_output = false;
+        for (const auto& txout : tx.vout) {
+            CTxDestination dest;
+            if (ExtractDestination(txout.scriptPubKey, dest) && dest == *op_change_dest) {
+                found_change_output = true;
+                break;
+            }
+        }
+        BOOST_CHECK(found_change_output);
+    }
+
+    // wallet with disabled private keys for watch-only
+    {
+        const std::shared_ptr<CWallet> watch_only_wallet = std::make_shared<CWallet>(m_node.chain.get(), "", CreateMockableWalletDatabase());
+        LOCK(watch_only_wallet->cs_wallet);
+        watch_only_wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+        watch_only_wallet->SetWalletFlag(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
+        // Should fail to get change destination when private keys are disabled
+        auto op_dest = watch_only_wallet->GetNewChangeDestination(OutputType::BECH32);
+        BOOST_CHECK(!op_dest);
+    }
+
+    // unsupported output type
+    {
+        LOCK(wallet->cs_wallet);
+        // UNKNOWN is not a valid output type for address generation
+        auto op_dest = wallet->GetNewChangeDestination(OutputType::UNKNOWN);
+        // Should fail because wallet doesn't have ScriptPubKeyMan for UNKNOWN type
+        BOOST_CHECK(!op_dest);
+    }
+
+    // wallet with the descriptors flag set but no descriptors added
+    {
+        const std::shared_ptr<CWallet> empty_wallet = std::make_shared<CWallet>(m_node.chain.get(), "", CreateMockableWalletDatabase());
+        LOCK(empty_wallet->cs_wallet);
+        empty_wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+        // Wallet has descriptors flag but no actual descriptors added
+        // GetScriptPubKeyMan will return nullptr, testing that error path
+        auto op_dest = empty_wallet->GetNewChangeDestination(OutputType::BECH32);
+        BOOST_CHECK(!op_dest);
+    }
+}
+
 // Explicit calculation which is used to test the wallet constant
 // We get the same virtual size due to rounding(weight/4) for both use_max_sig values
 static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)
