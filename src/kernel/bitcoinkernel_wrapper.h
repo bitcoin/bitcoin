@@ -830,6 +830,18 @@ inline void logging_disable_category(LogCategory category)
     btck_logging_disable_category(static_cast<btck_LogCategory>(category));
 }
 
+inline std::string_view log_level_get_name(LogLevel level)
+{
+    auto name{btck_log_level_get_name(static_cast<btck_LogLevel>(level))};
+    return {name.data, name.size};
+}
+
+inline std::string_view log_category_get_name(LogCategory category)
+{
+    auto name{btck_log_category_get_name(static_cast<btck_LogCategory>(category))};
+    return {name.data, name.size};
+}
+
 template <typename T>
 concept Log = requires(T a, std::string_view message) {
     { a.LogMessage(message) } -> std::same_as<void>;

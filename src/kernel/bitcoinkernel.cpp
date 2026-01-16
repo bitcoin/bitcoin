@@ -37,6 +37,8 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <array>
+#include <cassert>
 #include <cstddef>
 #include <cstring>
 #include <exception>
@@ -47,6 +49,7 @@
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -146,60 +149,52 @@ struct btck_BlockValidationState : Handle<btck_BlockValidationState, BlockValida
 
 namespace {
 
-BCLog::Level get_bclog_level(btck_LogLevel level)
+
+struct LogLevelMapping {
+    util::log::Level bclog;
+    std::string_view name;
+};
+
+// Single source of truth for log level mappings (indexed by btck_LogLevel)
+constexpr auto LOG_LEVELS = [] {
+    std::array<LogLevelMapping, 3> a{};
+    a[btck_LogLevel_TRACE] = {util::log::Level::Trace, "trace"};
+    a[btck_LogLevel_DEBUG] = {util::log::Level::Debug, "debug"};
+    a[btck_LogLevel_INFO] = {util::log::Level::Info, "info"};
+    return a;
+}();
+
+constexpr util::log::Level get_bclog_level(btck_LogLevel level)
 {
-    switch (level) {
-    case btck_LogLevel_INFO: {
-        return BCLog::Level::Info;
-    }
-    case btck_LogLevel_DEBUG: {
-        return BCLog::Level::Debug;
-    }
-    case btck_LogLevel_TRACE: {
-        return BCLog::Level::Trace;
-    }
-    }
-    assert(false);
+    assert(level < LOG_LEVELS.size());
+    return LOG_LEVELS[level].bclog;
 }
 
-BCLog::LogFlags get_bclog_flag(btck_LogCategory category)
+struct LogCategoryMapping {
+    BCLog::LogFlags bclog;
+    std::string_view name;
+};
+
+// Single source of truth for log category mappings (indexed by btck_LogCategory)
+constexpr auto LOG_CATEGORIES = [] {
+    std::array<LogCategoryMapping, 11> a{};
+    a[btck_LogCategory_ALL] = {BCLog::LogFlags::ALL, "all"};
+    a[btck_LogCategory_BENCH] = {BCLog::LogFlags::BENCH, "bench"};
+    a[btck_LogCategory_BLOCKSTORAGE] = {BCLog::LogFlags::BLOCKSTORAGE, "blockstorage"};
+    a[btck_LogCategory_COINDB] = {BCLog::LogFlags::COINDB, "coindb"};
+    a[btck_LogCategory_LEVELDB] = {BCLog::LogFlags::LEVELDB, "leveldb"};
+    a[btck_LogCategory_MEMPOOL] = {BCLog::LogFlags::MEMPOOL, "mempool"};
+    a[btck_LogCategory_PRUNE] = {BCLog::LogFlags::PRUNE, "prune"};
+    a[btck_LogCategory_RAND] = {BCLog::LogFlags::RAND, "rand"};
+    a[btck_LogCategory_REINDEX] = {BCLog::LogFlags::REINDEX, "reindex"};
+    a[btck_LogCategory_VALIDATION] = {BCLog::LogFlags::VALIDATION, "validation"};
+    a[btck_LogCategory_KERNEL] = {BCLog::LogFlags::KERNEL, "kernel"};
+    return a;
+}();
+
+constexpr BCLog::LogFlags get_bclog_flag(btck_LogCategory category)
 {
-    switch (category) {
-    case btck_LogCategory_BENCH: {
-        return BCLog::LogFlags::BENCH;
-    }
-    case btck_LogCategory_BLOCKSTORAGE: {
-        return BCLog::LogFlags::BLOCKSTORAGE;
-    }
-    case btck_LogCategory_COINDB: {
-        return BCLog::LogFlags::COINDB;
-    }
-    case btck_LogCategory_LEVELDB: {
-        return BCLog::LogFlags::LEVELDB;
-    }
-    case btck_LogCategory_MEMPOOL: {
-        return BCLog::LogFlags::MEMPOOL;
-    }
-    case btck_LogCategory_PRUNE: {
-        return BCLog::LogFlags::PRUNE;
-    }
-    case btck_LogCategory_RAND: {
-        return BCLog::LogFlags::RAND;
-    }
-    case btck_LogCategory_REINDEX: {
-        return BCLog::LogFlags::REINDEX;
-    }
-    case btck_LogCategory_VALIDATION: {
-        return BCLog::LogFlags::VALIDATION;
-    }
-    case btck_LogCategory_KERNEL: {
-        return BCLog::LogFlags::KERNEL;
-    }
-    case btck_LogCategory_ALL: {
-        return BCLog::LogFlags::ALL;
-    }
-    }
-    assert(false);
+    return LOG_CATEGORIES[category].bclog;
 }
 
 btck_SynchronizationState cast_state(SynchronizationState state)
@@ -785,6 +780,20 @@ btck_LoggingConnection* btck_logging_connection_create(btck_LogCallback callback
 void btck_logging_connection_destroy(btck_LoggingConnection* connection)
 {
     delete connection;
+}
+
+btck_StringView btck_log_level_get_name(btck_LogLevel level)
+{
+    assert(level < LOG_LEVELS.size());
+    const auto& name{LOG_LEVELS[level].name};
+    return {name.data(), name.size()};
+}
+
+btck_StringView btck_log_category_get_name(btck_LogCategory category)
+{
+    assert(category < LOG_CATEGORIES.size());
+    const auto& name{LOG_CATEGORIES[category].name};
+    return {name.data(), name.size()};
 }
 
 btck_ChainParameters* btck_chain_parameters_create(const btck_ChainType chain_type)
