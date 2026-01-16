@@ -7,12 +7,15 @@
 #include <key.h>
 #include <key_io.h>
 #include <pubkey.h>
+#include <span.h>
 #include <util/strencodings.h>
 
 #include <ranges>
 #include <stack>
+#include <vector>
 
-void MockedDescriptorConverter::Init() {
+void MockedDescriptorConverter::Init()
+{
     // The data to use as a private key or a seed for an xprv.
     std::array<std::byte, 32> key_data{std::byte{1}};
     // Generate keys of all kinds and store them in the keys array.

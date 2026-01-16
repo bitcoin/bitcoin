@@ -86,4 +86,31 @@ constexpr uint32_t MAX_LEAF_SIZE{200};
 /// MockedDescriptorConverter) has a leaf size too large.
 bool HasTooLargeLeafSize(std::span<const uint8_t> buff, uint32_t max_leaf_size = MAX_LEAF_SIZE);
 
+/// Deriving "expensive" descriptors will consume useful fuzz compute. The
+/// compute is better spent on a smaller subset of descriptors, which still
+/// covers all real end-user settings.
+///
+/// Use this function after MockedDescriptorConverter::GetDescriptor()
+inline bool IsTooExpensive(std::span<const uint8_t> buffer)
+{
+    // Key derivation is expensive. Deriving deep derivation paths takes a lot of compute and we'd
+    // rather spend time elsewhere in this target, like on the actual descriptor syntax. So rule
+    // out strings which could correspond to a descriptor containing a too large derivation path.
+    if (HasDeepDerivPath(buffer)) return true;
+
+    // Some fragments can take a virtually unlimited number of sub-fragments (thresh, multi_a) but
+    // may perform quadratic operations on them. Limit the number of sub-fragments per fragment.
+    if (HasTooManySubFrag(buffer)) return true;
+
+    // The script building logic performs quadratic copies in the number of nested wrappers. Limit
+    // the number of nested wrappers per fragment.
+    if (HasTooManyWrappers(buffer)) return true;
+
+    // If any suspected leaf is too large, it will likely not represent a valid
+    // use-case. Also, possible base58 parsing in the leaf is quadratic. So
+    // limit the leaf size.
+    if (HasTooLargeLeafSize(buffer)) return true;
+
+    return false;
+}
 #endif // BITCOIN_TEST_FUZZ_UTIL_DESCRIPTOR_H
