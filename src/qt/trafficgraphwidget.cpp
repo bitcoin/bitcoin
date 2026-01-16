@@ -18,12 +18,10 @@
 #define XMARGIN                 10
 #define YMARGIN                 10
 
-#define DEFAULT_SAMPLE_HEIGHT    1.1f
-
 TrafficGraphWidget::TrafficGraphWidget(QWidget *parent) :
     QWidget(parent),
     timer(nullptr),
-    fMax(DEFAULT_SAMPLE_HEIGHT),
+    fMax(default_sample_height),
     nMins(0),
     clientModel(nullptr),
     trafficGraphData(TrafficGraphData::Range_30m)
@@ -234,7 +232,7 @@ void TrafficGraphWidget::updateRates()
     bool updated = trafficGraphData.update(clientModel->node().getTotalBytesRecv(),clientModel->node().getTotalBytesSent());
 
     if (updated){
-        float tmax = DEFAULT_SAMPLE_HEIGHT;
+        float tmax = default_sample_height;
         for (const TrafficSample& sample : trafficGraphData.getCurrentRangeQueueWithAverageBandwidth()) {
             if(sample.in > tmax) tmax = sample.in;
             if(sample.out > tmax) tmax = sample.out;
@@ -253,7 +251,7 @@ void TrafficGraphWidget::setGraphRangeMins(int value)
 void TrafficGraphWidget::clear()
 {
     trafficGraphData.clear();
-    fMax = DEFAULT_SAMPLE_HEIGHT;
+    fMax = default_sample_height;
     if(clientModel) {
         trafficGraphData.setLastBytes(clientModel->node().getTotalBytesRecv(), clientModel->node().getTotalBytesSent());
     }
