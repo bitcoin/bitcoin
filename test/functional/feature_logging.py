@@ -118,7 +118,7 @@ class LoggingTest(BitcoinTestFramework):
 
         self.log.info("Test -logips formatting in net logs")
         self.restart_node(0, ['-debug=net', '-logips=1'])
-        with self.nodes[0].assert_debug_log(["peer=0 peeraddr="]):
+        with self.nodes[0].assert_debug_log(["peer=0, peeraddr="]):
             p2p = self.nodes[0].add_p2p_connection(P2PInterface())
             p2p.wait_for_verack()
             self.nodes[0].disconnect_p2ps()
