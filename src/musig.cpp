@@ -9,8 +9,6 @@
 
 #include <secp256k1_musig.h>
 
-extern secp256k1_context* secp256k1_context_sign;
-
 //! MuSig2 chaincode as defined by BIP 328
 using namespace util::hex_literals;
 constexpr uint256 MUSIG_CHAINCODE{
@@ -149,7 +147,7 @@ std::vector<uint8_t> CreateMuSig2Nonce(MuSig2SecNonce& secnonce, const uint256& 
 
     // Generate nonce
     secp256k1_musig_pubnonce pubnonce;
-    if (!secp256k1_musig_nonce_gen(secp256k1_context_sign, secnonce.Get(), &pubnonce, rand.data(), UCharCast(our_seckey.begin()), &pubkey, sighash.data(), &keyagg_cache, nullptr)) {
+    if (!secp256k1_musig_nonce_gen(GetSecp256k1SignContext(), secnonce.Get(), &pubnonce, rand.data(), UCharCast(our_seckey.begin()), &pubkey, sighash.data(), &keyagg_cache, nullptr)) {
         return {};
     }
 
@@ -166,7 +164,7 @@ std::vector<uint8_t> CreateMuSig2Nonce(MuSig2SecNonce& secnonce, const uint256& 
 std::optional<uint256> CreateMuSig2PartialSig(const uint256& sighash, const CKey& our_seckey, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys, const std::map<CPubKey, std::vector<uint8_t>>& pubnonces, MuSig2SecNonce& secnonce, const std::vector<std::pair<uint256, bool>>& tweaks)
 {
     secp256k1_keypair keypair;
-    if (!secp256k1_keypair_create(secp256k1_context_sign, &keypair, UCharCast(our_seckey.begin()))) return std::nullopt;
+    if (!secp256k1_keypair_create(GetSecp256k1SignContext(), &keypair, UCharCast(our_seckey.begin()))) return std::nullopt;
 
     // Get the keyagg cache and aggregate pubkey
     secp256k1_musig_keyagg_cache keyagg_cache;

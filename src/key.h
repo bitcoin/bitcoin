@@ -15,6 +15,8 @@
 #include <stdexcept>
 #include <vector>
 
+struct secp256k1_context_struct;
+typedef struct secp256k1_context_struct secp256k1_context;
 
 /**
  * CPrivKey is a serialized private key, with all parameters included
@@ -310,6 +312,9 @@ private:
 
 /** Check that required EC support is available at runtime. */
 bool ECC_InitSanityCheck();
+
+/** Access the secp256k1 context used for signing and MuSig2 nonce generation. */
+secp256k1_context* GetSecp256k1SignContext();
 
 /**
  * RAII class initializing and deinitializing global state for elliptic curve support.
