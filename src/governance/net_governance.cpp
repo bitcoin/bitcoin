@@ -27,8 +27,21 @@ void NetGovernance::Schedule(CScheduler& scheduler)
         [this]() -> void {
             if (!m_node_sync.IsSynced()) return;
 
-            // CHECK OBJECTS WE'VE ASKED FOR, REMOVE OLD ENTRIES
-            m_gov_manager.RequestOrphanObjects(m_connman);
+            // Request governance objects for orphan votes
+            auto vecOrphanHashes = m_gov_manager.GetOrphanVoteObjectHashes();
+            if (!vecOrphanHashes.empty()) {
+                LogPrint(BCLog::GOBJECT, "NetGovernance::Schedule -- requesting %d orphan objects\n",
+                         vecOrphanHashes.size());
+                const CConnman::NodesSnapshot snap{m_connman, CConnman::FullyConnectedOnly};
+                for (const uint256& nHash : vecOrphanHashes) {
+                    for (CNode* pnode : snap.Nodes()) {
+                        if (!pnode->CanRelay()) continue;
+                        CNetMsgMaker msgMaker(pnode->GetCommonVersion());
+                        CBloomFilter filter; // Empty filter - we want the object, not votes
+                        m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, nHash, filter));
+                    }
+                }
+            }
 
             // CHECK AND REMOVE - REPROCESS GOVERNANCE OBJECTS
             m_gov_manager.CheckAndRemove();
@@ -158,7 +171,8 @@ void NetGovernance::ProcessMessage(CNode& peer, const std::string& msg_type, CDa
         }
 
         CGovernanceException exception;
-        if (m_gov_manager.ProcessVote(&peer, vote, exception, m_connman)) {
+        uint256 hashToRequest;
+        if (m_gov_manager.ProcessVote(&peer, vote, exception, hashToRequest)) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- %s new\n", strHash);
             m_node_sync.BumpAssetLastTime("MNGOVERNANCEOBJECTVOTE");
 
@@ -175,6 +189,12 @@ void NetGovernance::ProcessMessage(CNode& peer, const std::string& msg_type, CDa
             // m_peer_manager->PeerRelayInv(CInv{MSG_GOVERNANCE_OBJECT_VOTE, nHash});
         } else {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- Rejected vote, error = %s\n", exception.what());
+            if (hashToRequest != uint256()) {
+                // Orphan vote - request the missing governance object
+                CNetMsgMaker msgMaker(peer.GetCommonVersion());
+                CBloomFilter filter; // Empty filter - we just want the object, not votes
+                m_connman.PushMessage(&peer, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, hashToRequest, filter));
+            }
             if ((exception.GetNodePenalty() != 0) && m_node_sync.IsSynced()) {
                 m_peer_manager->PeerMisbehaving(peer.GetId(), exception.GetNodePenalty());
             }

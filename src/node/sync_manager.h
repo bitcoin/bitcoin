@@ -29,6 +29,7 @@ public:
 
 private:
     void SendGovernanceSyncRequest(CNode* pnode) const;
+    void SendGovernanceObjectSyncRequest(CNode* pnode, const uint256& nHash, bool fUseFilter) const;
     int RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy) const;
     void ProcessTick();
 

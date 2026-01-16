@@ -36,6 +36,18 @@ void SyncManager::SendGovernanceSyncRequest(CNode* pnode) const
     m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, uint256(), filter));
 }
 
+void SyncManager::SendGovernanceObjectSyncRequest(CNode* pnode, const uint256& nHash, bool fUseFilter) const
+{
+    if (!pnode) return;
+
+    LogPrint(BCLog::GOBJECT, "SyncManager::%s -- nHash %s peer=%d\n", __func__, nHash.ToString(), pnode->GetId());
+
+    CBloomFilter filter = fUseFilter ? m_gov_manager.GetVoteBloomFilter(nHash) : CBloomFilter();
+
+    CNetMsgMaker msgMaker(pnode->GetCommonVersion());
+    m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, nHash, filter));
+}
+
 int SyncManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy) const
 {
     // Maximum number of nodes to request votes from for the same object hash on real networks
@@ -107,7 +119,7 @@ int SyncManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesC
             // to early to ask the same node
             if (mapAskedRecently[nHashGovobj].count(pnode->addr)) continue;
 
-            m_gov_manager.RequestGovernanceObject(pnode, nHashGovobj, m_connman, true);
+            SendGovernanceObjectSyncRequest(pnode, nHashGovobj, true);
             mapAskedRecently[nHashGovobj][pnode->addr] = nNow + nTimeout;
             fAsked = true;
             // stop loop if max number of peers per obj was asked

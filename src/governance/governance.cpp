@@ -15,7 +15,6 @@
 #include <governance/validators.h>
 #include <masternode/meta.h>
 #include <masternode/sync.h>
-#include <netmessagemaker.h>
 #include <protocol.h>
 #include <shutdown.h>
 #include <spork.h>
@@ -740,16 +739,20 @@ bool CGovernanceManager::ProcessVoteAndRelay(const CGovernanceVote& vote, CGover
 {
     AssertLockNotHeld(cs_store);
     AssertLockNotHeld(cs_relay);
-    bool fOK = ProcessVote(/*pfrom=*/nullptr, vote, exception, connman);
+    uint256 hashToRequest; // Ignored for local votes (no peer to request from)
+    bool fOK = ProcessVote(/*pfrom=*/nullptr, vote, exception, hashToRequest);
     if (fOK) {
         RelayVote(vote);
     }
     return fOK;
 }
 
-bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, CGovernanceException& exception, CConnman& connman)
+bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, CGovernanceException& exception,
+                                     uint256& hashToRequest)
 {
     AssertLockNotHeld(cs_store);
+    hashToRequest = uint256();
+
     ENTER_CRITICAL_SECTION(cs_store);
     uint256 nHashVote = vote.GetHash();
     uint256 nHashGovobj = vote.GetParentHash();
@@ -777,12 +780,8 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
         exception = CGovernanceException(msg, GOVERNANCE_EXCEPTION_WARNING);
         if (cmmapOrphanVotes.Insert(nHashGovobj, vote_time_pair_t(vote, count_seconds(GetTime<std::chrono::seconds>() +
                                                                                       GOVERNANCE_ORPHAN_EXPIRATION_TIME)))) {
-            LEAVE_CRITICAL_SECTION(cs_store);
-            RequestGovernanceObject(pfrom, nHashGovobj, connman);
-            LogPrint(BCLog::GOBJECT, "%s\n", msg);
-            return false;
+            hashToRequest = nHashGovobj; // Caller should request this object
         }
-
         LogPrint(BCLog::GOBJECT, "%s\n", msg);
         LEAVE_CRITICAL_SECTION(cs_store);
         return false;
@@ -875,36 +874,24 @@ void CGovernanceManager::CheckPostponedObjects()
     }
 }
 
-void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nHash, CConnman& connman, bool fUseFilter) const
+CBloomFilter CGovernanceManager::GetVoteBloomFilter(const uint256& nHash) const
 {
-    AssertLockNotHeld(cs_store);
-    if (!pfrom) {
-        return;
+    LOCK(cs_store);
+
+    auto pObj = FindConstGovernanceObjectInternal(nHash);
+    if (!pObj) {
+        return CBloomFilter();
     }
 
-    LogPrint(BCLog::GOBJECT, "CGovernanceManager::RequestGovernanceObject -- nHash %s peer=%d\n", nHash.ToString(), pfrom->GetId());
+    CBloomFilter filter(Params().GetConsensus().nGovernanceFilterElements, GOVERNANCE_FILTER_FP_RATE,
+                        GetRand<int>(/*nMax=*/999999), BLOOM_UPDATE_ALL);
 
-    CNetMsgMaker msgMaker(pfrom->GetCommonVersion());
-
-    CBloomFilter filter;
-
-    size_t nVoteCount = 0;
-    if (fUseFilter) {
-        LOCK(cs_store);
-        auto pObj = FindConstGovernanceObjectInternal(nHash);
-
-        if (pObj) {
-            filter = CBloomFilter(Params().GetConsensus().nGovernanceFilterElements, GOVERNANCE_FILTER_FP_RATE, GetRand<int>(/*nMax=*/999999), BLOOM_UPDATE_ALL);
-            std::vector<CGovernanceVote> vecVotes = WITH_LOCK(pObj->cs, return pObj->GetVoteFile().GetVotes());
-            nVoteCount = vecVotes.size();
-            for (const auto& vote : vecVotes) {
-                filter.insert(vote.GetHash());
-            }
-        }
+    std::vector<CGovernanceVote> vecVotes = WITH_LOCK(pObj->cs, return pObj->GetVoteFile().GetVotes());
+    for (const auto& vote : vecVotes) {
+        filter.insert(vote.GetHash());
     }
 
-    LogPrint(BCLog::GOBJECT, "CGovernanceManager::RequestGovernanceObject -- nHash %s nVoteCount %d peer=%d\n", nHash.ToString(), nVoteCount, pfrom->GetId());
-    connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, nHash, filter));
+    return filter;
 }
 
 CDeterministicMNManager& CGovernanceManager::GetMNManager() { return *Assert(m_dmnman); }
@@ -1084,45 +1071,34 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex* pindex)
     ExecuteBestSuperblock(Assert(m_dmnman)->GetListAtChainTip(), pindex->nHeight);
 }
 
-void CGovernanceManager::RequestOrphanObjects(CConnman& connman)
+std::vector<uint256> CGovernanceManager::GetOrphanVoteObjectHashes()
 {
-    AssertLockNotHeld(cs_store);
+    LOCK(cs_store);
 
-    std::vector<uint256> vecHashesFiltered;
     int64_t nNow = GetTime<std::chrono::seconds>().count();
-    {
-        LOCK(cs_store);
 
-        // clean up outdated before requesting
-        const vote_cmm_t::list_t& items = cmmapOrphanVotes.GetItemList();
-        for (auto it = items.begin(); it != items.end();) {
-            auto prevIt = it;
-            ++it;
-            const auto& [_, time] = prevIt->value;
-            if (time < nNow) {
-                cmmapOrphanVotes.Erase(prevIt->key, prevIt->value);
-            }
-        }
-
-        std::vector<uint256> vecHashes;
-        cmmapOrphanVotes.GetKeys(vecHashes);
-        for (const uint256& nHash : vecHashes) {
-            if (mapObjects.find(nHash) == mapObjects.end()) {
-                vecHashesFiltered.push_back(nHash);
-            }
+    // Clean up expired orphan votes
+    const vote_cmm_t::list_t& items = cmmapOrphanVotes.GetItemList();
+    for (auto it = items.begin(); it != items.end();) {
+        auto prevIt = it;
+        ++it;
+        const auto& [_, time] = prevIt->value;
+        if (time < nNow) {
+            cmmapOrphanVotes.Erase(prevIt->key, prevIt->value);
         }
     }
 
-    const CConnman::NodesSnapshot snap{connman, /* cond = */ CConnman::FullyConnectedOnly};
-    LogPrint(BCLog::GOBJECT, "CGovernanceObject::RequestOrphanObjects -- number objects = %d\n", vecHashesFiltered.size());
-    for (const uint256& nHash : vecHashesFiltered) {
-        for (CNode* pnode : snap.Nodes()) {
-            if (!pnode->CanRelay()) {
-                continue;
-            }
-            RequestGovernanceObject(pnode, nHash, connman);
+    // Get hashes of objects we don't have yet
+    std::vector<uint256> vecHashesFiltered;
+    std::vector<uint256> vecHashes;
+    cmmapOrphanVotes.GetKeys(vecHashes);
+    for (const uint256& nHash : vecHashes) {
+        if (mapObjects.find(nHash) == mapObjects.end()) {
+            vecHashesFiltered.push_back(nHash);
         }
     }
+
+    return vecHashesFiltered;
 }
 
 void CGovernanceManager::RemoveInvalidVotes()
