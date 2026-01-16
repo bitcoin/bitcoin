@@ -591,37 +591,23 @@ bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
     return true;
 }
 
-MessageProcessingResult CGovernanceManager::SyncSingleObjVotes(CNode& peer, const uint256& nProp, const CBloomFilter& filter, CConnman& connman)
+std::vector<CInv> CGovernanceManager::GetSyncableVoteInvs(const uint256& nProp, const CBloomFilter& filter) const
 {
     LOCK(cs_store);
-    // do not provide any data until our node is synced
-    if (!m_mn_sync.IsSynced()) return {};
 
-    // SYNC GOVERNANCE OBJECTS WITH OTHER CLIENT
-
-    LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- syncing single object to peer=%d, nProp = %s\n", __func__, peer.GetId(), nProp.ToString());
-
-    // single valid object and its valid votes
     auto it = mapObjects.find(nProp);
     if (it == mapObjects.end()) {
-        LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- no matching object for hash %s, peer=%d\n", __func__, nProp.ToString(), peer.GetId());
         return {};
     }
+
     const auto& govobj = *Assert(it->second);
-    std::string strHash = it->first.ToString();
-
-    LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- attempting to sync govobj: %s, peer=%d\n", __func__, strHash, peer.GetId());
-
     if (govobj.IsSetCachedDelete() || govobj.IsSetExpired()) {
-        LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- not syncing deleted/expired govobj: %s, peer=%d\n", __func__,
-            strHash, peer.GetId());
         return {};
     }
 
-    MessageProcessingResult ret{};
+    std::vector<CInv> invs;
     const auto tip_mn_list = Assert(m_dmnman)->GetListAtChainTip();
 
-    {
     LOCK(govobj.cs);
     const auto& fileVotes = govobj.GetVoteFile();
     for (const auto& vote : fileVotes.GetVotes()) {
@@ -632,51 +618,27 @@ MessageProcessingResult CGovernanceManager::SyncSingleObjVotes(CNode& peer, cons
         if (filter.contains(nVoteHash) || !vote.IsValid(tip_mn_list, onlyVotingKeyAllowed)) {
             continue;
         }
-        ret.m_inventory.emplace_back(MSG_GOVERNANCE_OBJECT_VOTE, nVoteHash);
-    }
+        invs.emplace_back(MSG_GOVERNANCE_OBJECT_VOTE, nVoteHash);
     }
 
-    CNetMsgMaker msgMaker(peer.GetCommonVersion());
-    connman.PushMessage(&peer, msgMaker.Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_GOVOBJ_VOTE,
-                                             static_cast<int>(ret.m_inventory.size())));
-    LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- sent %d votes to peer=%d\n", __func__, ret.m_inventory.size(),
-             peer.GetId());
-    return ret;
+    return invs;
 }
 
-MessageProcessingResult CGovernanceManager::SyncObjects(CNode& peer, CConnman& connman) const
+std::vector<CInv> CGovernanceManager::GetSyncableObjectInvs() const
 {
     LOCK(cs_store);
-    // do not provide any data until our node is synced
-    if (!m_mn_sync.IsSynced()) return {};
 
-    // SYNC GOVERNANCE OBJECTS WITH OTHER CLIENT
+    std::vector<CInv> invs;
+    invs.reserve(mapObjects.size());
 
-    LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- syncing all objects to peer=%d\n", __func__, peer.GetId());
-
-    // all valid objects, no votes
-    MessageProcessingResult ret{};
     for (const auto& [nHash, govobj] : mapObjects) {
-        std::string strHash = nHash.ToString();
-        LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- attempting to sync govobj: %s, peer=%d\n", __func__, strHash, peer.GetId());
-
         if (Assert(govobj)->IsSetCachedDelete() || govobj->IsSetExpired()) {
-            LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- not syncing deleted/expired govobj: %s, peer=%d\n", __func__,
-                strHash, peer.GetId());
             continue;
         }
-
-        // Push the inventory budget proposal message over to the other client
-        LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- syncing govobj: %s, peer=%d\n", __func__, strHash, peer.GetId());
-        ret.m_inventory.emplace_back(MSG_GOVERNANCE_OBJECT, nHash);
+        invs.emplace_back(MSG_GOVERNANCE_OBJECT, nHash);
     }
 
-    CNetMsgMaker msgMaker(peer.GetCommonVersion());
-    connman.PushMessage(&peer, msgMaker.Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_GOVOBJ,
-                                             static_cast<int>(ret.m_inventory.size())));
-    LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- sent %d objects to peer=%d\n", __func__, ret.m_inventory.size(),
-             peer.GetId());
-    return ret;
+    return invs;
 }
 
 void CGovernanceManager::MasternodeRateUpdate(const CGovernanceObject& govobj)

@@ -5,12 +5,15 @@
 #include <governance/net_governance.h>
 
 #include <chainparams.h>
+#include <common/bloom.h>
 #include <evo/deterministicmns.h>
 #include <governance/governance.h>
 #include <logging.h>
 #include <masternode/sync.h>
+#include <msg_result.h>
 #include <net.h>
 #include <netfulfilledman.h>
+#include <netmessagemaker.h>
 #include <scheduler.h>
 
 class CConnman;
@@ -62,17 +65,39 @@ void NetGovernance::ProcessMessage(CNode& peer, const std::string& msg_type, CDa
 
         LogPrint(BCLog::GOBJECT, "MNGOVERNANCESYNC -- syncing governance objects to our peer %s\n", peer.GetLogString());
         if (nProp == uint256()) {
+            // Full sync of all governance objects
             assert(m_netfulfilledman.IsValid());
-            if (!m_netfulfilledman.HasFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC)) {
-                m_netfulfilledman.AddFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC);
-                m_peer_manager->PeerPostProcessMessage(m_gov_manager.SyncObjects(peer, m_connman));
-            } else {
+            if (m_netfulfilledman.HasFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC)) {
                 // Asking for the whole list multiple times in a short period of time is no good
                 LogPrint(BCLog::GOBJECT, "MNGOVERNANCESYNC -- peer already asked me for the list\n");
                 m_peer_manager->PeerMisbehaving(peer.GetId(), 20);
+                return;
             }
+            m_netfulfilledman.AddFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC);
+
+            auto invs = m_gov_manager.GetSyncableObjectInvs();
+            LogPrint(BCLog::GOBJECT, "MNGOVERNANCESYNC -- syncing %d objects to peer=%d\n", invs.size(), peer.GetId());
+
+            CNetMsgMaker msgMaker(peer.GetCommonVersion());
+            m_connman.PushMessage(&peer, msgMaker.Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_GOVOBJ,
+                                                       static_cast<int>(invs.size())));
+
+            MessageProcessingResult ret;
+            ret.m_inventory = std::move(invs);
+            m_peer_manager->PeerPostProcessMessage(std::move(ret));
         } else {
-            m_peer_manager->PeerPostProcessMessage(m_gov_manager.SyncSingleObjVotes(peer, nProp, filter, m_connman));
+            // Sync votes for a specific governance object
+            auto invs = m_gov_manager.GetSyncableVoteInvs(nProp, filter);
+            LogPrint(BCLog::GOBJECT, "MNGOVERNANCESYNC -- syncing %d votes for %s to peer=%d\n", invs.size(),
+                     nProp.ToString(), peer.GetId());
+
+            CNetMsgMaker msgMaker(peer.GetCommonVersion());
+            m_connman.PushMessage(&peer, msgMaker.Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_GOVOBJ_VOTE,
+                                                       static_cast<int>(invs.size())));
+
+            MessageProcessingResult ret;
+            ret.m_inventory = std::move(invs);
+            m_peer_manager->PeerPostProcessMessage(std::move(ret));
         }
     }
     // A NEW GOVERNANCE OBJECT HAS ARRIVED

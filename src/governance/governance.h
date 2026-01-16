@@ -373,10 +373,11 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     void RequestGovernanceObject(CNode* pfrom, const uint256& nHash, CConnman& connman, bool fUseFilter = false) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
-    [[nodiscard]] MessageProcessingResult SyncObjects(CNode& peer, CConnman& connman) const
+    /** Returns inventory items for all syncable (non-deleted, non-expired) governance objects */
+    [[nodiscard]] std::vector<CInv> GetSyncableObjectInvs() const EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+    /** Returns inventory items for syncable votes on a specific object, filtered by bloom filter */
+    [[nodiscard]] std::vector<CInv> GetSyncableVoteInvs(const uint256& nProp, const CBloomFilter& filter) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
-    [[nodiscard]] MessageProcessingResult SyncSingleObjVotes(CNode& peer, const uint256& nProp, const CBloomFilter& filter,
-                                                             CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     /// Called to indicate a requested object or vote has been received
     bool AcceptMessage(const uint256& nHash) EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     bool ProcessObject(const CNode& peer, const uint256& hash, CGovernanceObject& govobj)
