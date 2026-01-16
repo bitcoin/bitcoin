@@ -18,7 +18,8 @@ import os
 import sqlite3
 import sys
 import time
-from typing import BinaryIO
+from dataclasses import dataclass
+from typing import BinaryIO, Iterator
 
 
 UTXO_DUMP_MAGIC = b'utxo\xff'
@@ -111,6 +112,145 @@ def decompress_pubkey(compressed_pubkey: bytes) -> bytes:
     return bytes([4]) + x.to_bytes(32, 'big') + y.to_bytes(32, 'big')
 
 
+@dataclass(slots=True)
+class UTXORecord:
+    """Data type for internal representation of UTXOs."""
+    coin_idx: int
+    prevout_hash: bytes
+    prevout_index: int
+    height: int
+    is_coinbase: bool
+    amount: int
+    scriptpubkey: bytes
+
+
+class UTXOReader:
+    """Class to decode Bitcoin Core UTXO dump files."""
+
+    def __init__(self, filename: str, verbose: bool):
+        """Construct a new UTXOReader for the given file, which is not yet opened."""
+        self._filename = filename
+        self._file: BinaryIO | None = None
+        self._num_utxos: int | None = None
+        self._network_string: str | None = None
+        self._max_height = 0
+        self._verbose = verbose
+
+    def __enter__(self) -> "UTXOReader":
+        """Open the file and parse the header."""
+        self._file = open(self._filename, 'rb')
+        # read metadata (magic bytes, version, network magic, block hash, UTXO count)
+        magic_bytes = self._file.read(5)
+        version = int.from_bytes(self._file.read(2), 'little')
+        network_magic = self._file.read(4)
+        block_hash = self._file.read(32)
+        self._num_utxos = int.from_bytes(self._file.read(8), 'little')
+        if magic_bytes != UTXO_DUMP_MAGIC:
+            print(f"Error: provided input file '{self._filename}' is not a UTXO dump.")
+            sys.exit(1)
+        if version != UTXO_DUMP_VERSION:
+            print(f"Error: provided input file '{self._filename}' has unknown UTXO dump version {version} "
+                  f"(only version {UTXO_DUMP_VERSION} supported)")
+            sys.exit(1)
+        self._network_string = NET_MAGIC_BYTES.get(network_magic, f"unknown network ({network_magic.hex()})")
+        print(f"UTXO Snapshot for {self._network_string} at block hash "
+              f"{block_hash[::-1].hex()[:32]}..., contains {self._num_utxos} coins")
+        return self
+
+    def __exit__(self, _exc_type: str, _exc_value: str, _traceback: str) -> None:
+        """Close the file."""
+        if self._file:
+            self._file.close()
+
+    @property
+    def num_utxos(self) -> int:
+        """Get the total number of UTXOs in this dump."""
+        assert self._num_utxos is not None
+        return self._num_utxos
+
+    @property
+    def max_height(self) -> int:
+        """Get the maximum height of a record returned by records so far."""
+        return self._max_height
+
+    @property
+    def network_string(self) -> str:
+        """Get the network identifier string."""
+        assert self._network_string is not None
+        return self._network_string
+
+    @property
+    def records(self) -> Iterator[UTXORecord]:
+        """Get a generator for all the UTXO records in the dump."""
+        assert self._file is not None
+        coins_per_hash_left = 0
+        prevout_hash = None
+        prevout_index = 0
+        start_time = time.time()
+        for coin_idx in range(1, self.num_utxos + 1):
+            # read key (COutPoint)
+            if coins_per_hash_left == 0:  # read next prevout hash
+                prevout_hash = self._file.read(32)
+                coins_per_hash_left = read_compactsize(self._file)
+            prevout_index = read_compactsize(self._file)
+            # read value (Coin)
+            code = read_varint(self._file)
+            height = code >> 1
+            is_coinbase = bool(code & 1)
+            amount = decompress_amount(read_varint(self._file))
+            scriptpubkey = decompress_script(self._file)
+            # Convert.
+            assert prevout_hash is not None
+            yield UTXORecord(coin_idx, prevout_hash, prevout_index, height, is_coinbase, amount, scriptpubkey)
+            coins_per_hash_left -= 1
+            self._max_height = max(height, self._max_height)
+            # Report.
+            if self._verbose:
+                print(f"Coin {coin_idx}/{self.num_utxos}:")
+                print(f"    prevout = {prevout_hash[::-1].hex()}:{prevout_index}")
+                print(f"    amount = {amount}, height = {height}, coinbase = {is_coinbase}")
+                print(f"    scriptPubKey = {scriptpubkey.hex()}\n")
+            if coin_idx % (1024 * 1024) == 0:
+                elapsed = time.time() - start_time
+                print(f"{coin_idx} coins converted [{coin_idx / self.num_utxos * 100:.2f}%], "
+                      f"{elapsed:.3f}s passed since start")
+        if self._file.read(1) != b'':  # EOF should be reached by now
+            print(f"WARNING: input file {self._filename} has not reached EOF yet!")
+            sys.exit(1)
+
+
+def convert_to_sqlite(reader: UTXOReader,
+                      filename: str,
+                      spk_hex: bool,
+                      txid_hex: bool,
+                      txid_reverse: bool) -> None:
+    """Convert from the specified UTXO reader to SQLite."""
+    txid_fmt = "TEXT" if txid_hex else "BLOB"
+    spk_fmt = "TEXT" if spk_hex else "BLOB"
+    with sqlite3.connect(filename) as con:
+        # create database table
+        con.execute(f"CREATE TABLE utxos(txid {txid_fmt}, vout INT, value INT, coinbase INT, height INT, scriptpubkey {spk_fmt})")
+        write_batch = []
+        num_utxos = reader.num_utxos
+        for record in reader.records:
+            scriptpubkey_write = record.scriptpubkey.hex() if spk_hex else record.scriptpubkey
+            txid = record.prevout_hash
+            if txid_reverse:
+                txid = txid[::-1]
+            txid_write: bytes | str
+            if txid_hex:
+                txid_write = txid.hex()
+            else:
+                txid_write = txid
+            write_batch.append((txid_write, record.prevout_index, record.amount, record.is_coinbase, record.height, scriptpubkey_write))
+
+            if record.coin_idx % (16 * 1024) == 0 or record.coin_idx == num_utxos:
+                # write utxo batch to database
+                con.executemany("INSERT INTO utxos VALUES(?, ?, ?, ?, ?, ?)", write_batch)
+                con.commit()
+                write_batch.clear()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('infile', help='filename of compact-serialized UTXO set (input)')
@@ -128,89 +268,13 @@ def main() -> None:
         print(f"Error: provided output file '{args.outfile}' already exists.")
         sys.exit(1)
 
-    spk_hex = args.spk == 'hex'
-    txid_hex = args.txid == 'hex'
-    txid_reverse = args.txid != 'raw'
-
-    # create database table
-    txid_fmt = "TEXT" if txid_hex else "BLOB"
-    spk_fmt = "TEXT" if spk_hex else "BLOB"
-    con = sqlite3.connect(args.outfile)
-    con.execute(f"CREATE TABLE utxos(txid {txid_fmt}, vout INT, value INT, coinbase INT, height INT, scriptpubkey {spk_fmt})")
-
-    # read metadata (magic bytes, version, network magic, block hash, UTXO count)
-    f = open(args.infile, 'rb')
-    magic_bytes = f.read(5)
-    version = int.from_bytes(f.read(2), 'little')
-    network_magic = f.read(4)
-    block_hash = f.read(32)
-    num_utxos = int.from_bytes(f.read(8), 'little')
-    if magic_bytes != UTXO_DUMP_MAGIC:
-        print(f"Error: provided input file '{args.infile}' is not an UTXO dump.")
-        sys.exit(1)
-    if version != UTXO_DUMP_VERSION:
-        print(f"Error: provided input file '{args.infile}' has unknown UTXO dump version {version} "
-              f"(only version {UTXO_DUMP_VERSION} supported)")
-        sys.exit(1)
-    network_string = NET_MAGIC_BYTES.get(network_magic, f"unknown network ({network_magic.hex()})")
-    print(f"UTXO Snapshot for {network_string} at block hash "
-          f"{block_hash[::-1].hex()[:32]}..., contains {num_utxos} coins")
-
-    start_time = time.time()
-    write_batch = []
-    coins_per_hash_left = 0
-    prevout_hash = None
-    max_height = 0
-
-    for coin_idx in range(1, num_utxos + 1):
-        # read key (COutPoint)
-        if coins_per_hash_left == 0:  # read next prevout hash
-            prevout_hash = f.read(32)
-            coins_per_hash_left = read_compactsize(f)
-        prevout_index = read_compactsize(f)
-        # read value (Coin)
-        code = read_varint(f)
-        height = code >> 1
-        is_coinbase = code & 1
-        amount = decompress_amount(read_varint(f))
-        scriptpubkey = decompress_script(f)
-
-        scriptpubkey_write = scriptpubkey.hex() if spk_hex else scriptpubkey
-        assert prevout_hash is not None
-        txid = prevout_hash
-        if txid_reverse:
-            txid = txid[::-1]
-        txid_write: bytes | str
-        if txid_hex:
-            txid_write = txid.hex()
-        else:
-            txid_write = txid
-        write_batch.append((txid_write, prevout_index, amount, is_coinbase, height, scriptpubkey_write))
-        max_height = max(height, max_height)
-        coins_per_hash_left -= 1
-
-        if args.verbose:
-            print(f"Coin {coin_idx}/{num_utxos}:")
-            print(f"    prevout = {prevout_hash[::-1].hex()}:{prevout_index}")
-            print(f"    amount = {amount}, height = {height}, coinbase = {is_coinbase}")
-            print(f"    scriptPubKey = {scriptpubkey.hex()}\n")
-
-        if coin_idx % (16 * 1024) == 0 or coin_idx == num_utxos:
-            # write utxo batch to database
-            con.executemany("INSERT INTO utxos VALUES(?, ?, ?, ?, ?, ?)", write_batch)
-            con.commit()
-            write_batch.clear()
-
-        if coin_idx % (1024 * 1024) == 0:
-            elapsed = time.time() - start_time
-            print(f"{coin_idx} coins converted [{coin_idx / num_utxos * 100:.2f}%], "
-                  f"{elapsed:.3f}s passed since start")
-    con.close()
-
-    print(f"TOTAL: {num_utxos} coins written to {args.outfile}, snapshot height is {max_height}.")
-    if f.read(1) != b'':  # EOF should be reached by now
-        print(f"WARNING: input file {args.infile} has not reached EOF yet!")
-        sys.exit(1)
+    # Convert.
+    with UTXOReader(args.infile, args.verbose) as reader:
+        spk_hex = args.spk == 'hex'
+        txid_hex = args.txid == 'hex'
+        txid_reverse = args.txid != 'raw'
+        convert_to_sqlite(reader, args.outfile, spk_hex, txid_hex, txid_reverse)
+        print(f"TOTAL: {reader.num_utxos} coins written to {args.outfile}, snapshot height is {reader.max_height}.")
 
 
 if __name__ == '__main__':
