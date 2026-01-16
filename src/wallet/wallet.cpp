@@ -1105,7 +1105,11 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
     }
 
     //// debug print
-    WalletLogPrintf("AddToWallet %s  %s%s %s\n", hash.ToString(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""), TxStateString(state));
+    std::string status{"no-change"};
+    if (fInsertedNew || fUpdated) {
+        status = fInsertedNew ? (fUpdated ? "new, update" : "new") : "update";
+    }
+    WalletLogPrintf("AddToWallet %s %s %s\n", hash.ToString(), status, TxStateString(state));
 
     // Write to disk
     if (fInsertedNew || fUpdated)
