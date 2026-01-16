@@ -30,6 +30,7 @@ jobs:
             build
             guix
             ci
+            lint
             chore
             revert
             trivial
