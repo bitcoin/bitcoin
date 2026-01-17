@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import tempfile
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable
@@ -21,9 +23,31 @@ def load_jsonl(path: Path) -> list[dict[str, Any]]:
 
 def append_jsonl(path: Path, rows: Iterable[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as handle:
-        for row in rows:
-            handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+    existing_content = ""
+    original_mode = None
+    if path.exists():
+        existing_content = path.read_text(encoding="utf-8")
+        original_mode = path.stat().st_mode
+
+    temp_path: str | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            "w",
+            encoding="utf-8",
+            dir=path.parent,
+            delete=False,
+        ) as handle:
+            temp_path = handle.name
+            if existing_content:
+                handle.write(existing_content)
+            for row in rows:
+                handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+        if original_mode is not None:
+            os.chmod(temp_path, original_mode)
+        os.replace(temp_path, path)
+    finally:
+        if temp_path is not None and os.path.exists(temp_path):
+            os.unlink(temp_path)
 
 
 def process_ideas(ideas_file: Path = IDEAS_FILE, outputs_file: Path = OUTPUTS_FILE) -> int:
