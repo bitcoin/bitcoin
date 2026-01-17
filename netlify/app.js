@@ -35,6 +35,8 @@ const networkStatus = document.getElementById("network-status");
 const blockHeight = document.getElementById("block-height");
 const syncState = document.getElementById("sync-state");
 const syncPercent = document.getElementById("sync-percent");
+const syncProgress = document.getElementById("sync-progress");
+const syncChip = document.getElementById("sync-chip");
 const latency = document.getElementById("latency");
 const mempool = document.getElementById("mempool");
 const nextBlock = document.getElementById("next-block");
@@ -432,6 +434,17 @@ const renderNetwork = () => {
     nextBlock.textContent = "—";
     networkStatus.textContent = "Red principal · Sincronizando";
     networkStatus.classList.add("warning");
+    networkStatus.classList.remove("success");
+    if (syncProgress) {
+      syncProgress.style.width = "0%";
+      syncProgress.classList.add("warning");
+      syncProgress.classList.remove("success");
+    }
+    if (syncChip) {
+      syncChip.textContent = "Sincronizando";
+      syncChip.classList.add("warning");
+      syncChip.classList.remove("success");
+    }
     return;
   }
 
@@ -444,12 +457,26 @@ const renderNetwork = () => {
     nextBlock.textContent = "—";
     networkStatus.textContent = "Estado de red no disponible";
     networkStatus.classList.add("warning");
+    networkStatus.classList.remove("success");
+    if (syncProgress) {
+      syncProgress.style.width = "0%";
+      syncProgress.classList.add("warning");
+      syncProgress.classList.remove("success");
+    }
+    if (syncChip) {
+      syncChip.textContent = "Sin conexión";
+      syncChip.classList.add("warning");
+      syncChip.classList.remove("success");
+    }
     return;
   }
 
   const data = networkState.data || {};
   const syncValue = Number(data.verificationProgress ?? 0);
-  const syncDisplay = Number.isFinite(syncValue) ? (syncValue * 100).toFixed(2) : "—";
+  const syncPercentValue = Number.isFinite(syncValue)
+    ? Math.min(Math.max(syncValue * 100, 0), 100)
+    : 0;
+  const syncDisplay = Number.isFinite(syncValue) ? syncPercentValue.toFixed(2) : "—";
   const peers = data.peers?.total ?? 0;
   const height = Number.isFinite(data.blocks) ? data.blocks : null;
   const latencyValue = Number.isFinite(data.avgPingMs) ? Math.round(data.avgPingMs) : null;
@@ -469,6 +496,17 @@ const renderNetwork = () => {
   const isSynced = Number.isFinite(syncValue) ? syncValue >= 0.9995 : false;
   networkStatus.textContent = isSynced ? `${chainLabel} · Sincronizada` : `${chainLabel} · Sincronizando`;
   networkStatus.classList.toggle("warning", !isSynced);
+  networkStatus.classList.toggle("success", isSynced);
+  if (syncProgress) {
+    syncProgress.style.width = `${syncPercentValue}%`;
+    syncProgress.classList.toggle("warning", !isSynced);
+    syncProgress.classList.toggle("success", isSynced);
+  }
+  if (syncChip) {
+    syncChip.textContent = isSynced ? "Completo" : "En progreso";
+    syncChip.classList.toggle("warning", !isSynced);
+    syncChip.classList.toggle("success", isSynced);
+  }
 };
 
 const cycleNetwork = async () => {

@@ -420,6 +420,62 @@
         color: var(--muted);
       }
 
+      .network-progress {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .progress-track {
+        flex: 1;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(5, 9, 20, 0.85);
+        border: 1px solid rgba(123, 231, 255, 0.18);
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        display: block;
+        height: 100%;
+        width: 0%;
+        background: var(--accent);
+        transition: width 0.3s ease, background 0.3s ease;
+      }
+
+      .progress-fill.success {
+        background: var(--accent-3);
+      }
+
+      .progress-fill.warning {
+        background: var(--warning);
+      }
+
+      .progress-chip {
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        border: 1px solid rgba(123, 231, 255, 0.35);
+        color: var(--accent);
+        background: rgba(123, 231, 255, 0.1);
+        white-space: nowrap;
+      }
+
+      .progress-chip.success {
+        border-color: rgba(66, 255, 179, 0.4);
+        color: var(--accent-3);
+        background: rgba(66, 255, 179, 0.12);
+      }
+
+      .progress-chip.warning {
+        border-color: rgba(255, 211, 105, 0.4);
+        color: var(--warning);
+        background: rgba(255, 211, 105, 0.12);
+      }
+
       .seed-box {
         padding: 12px;
         border-radius: 12px;
@@ -574,6 +630,12 @@
           <div class="network-grid" id="network-grid">
             <div class="network-row"><span>Nodo</span><strong>bitcoin-core-01</strong></div>
             <div class="network-row"><span>Sincronización</span><strong id="sync-percent">99.98%</strong></div>
+            <div class="network-progress" aria-label="Progreso de verificación">
+              <div class="progress-track">
+                <span class="progress-fill warning" id="sync-progress" style="width: 0%"></span>
+              </div>
+              <span class="progress-chip warning" id="sync-chip">Sincronizando</span>
+            </div>
             <div class="network-row"><span>Latencia media</span><strong id="latency">182 ms</strong></div>
             <div class="network-row"><span>MemPool</span><strong id="mempool">123 MB</strong></div>
             <div class="network-row"><span>Próximo bloque</span><strong id="next-block">~8 min</strong></div>
