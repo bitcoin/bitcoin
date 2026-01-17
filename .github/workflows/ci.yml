@@ -64,7 +64,7 @@ jobs:
       MAX_COUNT: 6  # Keep in sync with name above
     steps:
       - name: Determine fetch depth
-        run: echo "FETCH_DEPTH=$((${{ github.event.pull_request.commits }} + 2))" >> "$GITHUB_ENV"
+        run: echo "FETCH_DEPTH=$((${{ github.event.pull_request.commits }} + 1000))" >> "$GITHUB_ENV"
       - *ANNOTATION_PR_NUMBER
       - uses: actions/checkout@v6
         with:
