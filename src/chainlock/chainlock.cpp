@@ -17,6 +17,11 @@ bool Chainlocks::IsEnabled() const
     return m_sporks.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED);
 }
 
+bool Chainlocks::IsSigningEnabled() const
+{
+    return m_sporks.GetSporkValue(SPORK_19_CHAINLOCKS_ENABLED) == 0;
+}
+
 chainlock::ChainLockSig Chainlocks::GetBestChainLock() const
 {
     LOCK(cs);

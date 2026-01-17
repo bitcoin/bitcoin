@@ -33,6 +33,7 @@ public:
     Chainlocks(const CSporkManager& sporkman);
 
     [[nodiscard]] bool IsEnabled() const;
+    [[nodiscard]] bool IsSigningEnabled() const;
 
     [[nodiscard]] chainlock::ChainLockSig GetBestChainLock() const
         EXCLUSIVE_LOCKS_REQUIRED(!cs);

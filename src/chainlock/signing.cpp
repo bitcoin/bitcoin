@@ -11,20 +11,18 @@
 #include <instantsend/instantsend.h>
 #include <llmq/signing_shares.h>
 #include <masternode/sync.h>
-#include <spork.h>
 
 using node::ReadBlockFromDisk;
 
 namespace chainlock {
 ChainLockSigner::ChainLockSigner(CChainState& chainstate, const chainlock::Chainlocks& chainlocks, ChainLockSignerParent& clhandler,
                                  llmq::CSigningManager& sigman, llmq::CSigSharesManager& shareman,
-                                 CSporkManager& sporkman, const CMasternodeSync& mn_sync) :
+                                 const CMasternodeSync& mn_sync) :
     m_chainstate{chainstate},
     m_chainlocks{chainlocks},
     m_clhandler{clhandler},
     m_sigman{sigman},
     m_shareman{shareman},
-    m_sporkman{sporkman},
     m_mn_sync{mn_sync}
 {
 }
@@ -47,12 +45,7 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
         return;
     }
 
-    if (!m_chainlocks.IsEnabled()) {
-        return;
-    }
-
-    if (m_sporkman.GetSporkValue(SPORK_19_CHAINLOCKS_ENABLED) != 0) {
-        // ChainLocks signing not enabled
+    if (!m_chainlocks.IsEnabled() || !m_chainlocks.IsSigningEnabled()) {
         return;
     }
 

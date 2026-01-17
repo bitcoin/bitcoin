@@ -10,7 +10,6 @@
 #include <llmq/signing.h>
 
 class CMasternodeSync;
-class CSporkManager;
 struct MessageProcessingResult;
 namespace llmq {
 class CChainLocksHandler;
@@ -42,7 +41,6 @@ private:
     ChainLockSignerParent& m_clhandler; // TODO: fully replace to Chainlocks
     llmq::CSigningManager& m_sigman;
     llmq::CSigSharesManager& m_shareman;
-    CSporkManager& m_sporkman;
     const CMasternodeSync& m_mn_sync;
 
 private:
@@ -65,7 +63,7 @@ public:
     ChainLockSigner(const ChainLockSigner&) = delete;
     ChainLockSigner& operator=(const ChainLockSigner&) = delete;
     explicit ChainLockSigner(CChainState& chainstate, const chainlock::Chainlocks& chainlocks, ChainLockSignerParent& clhandler, llmq::CSigningManager& sigman,
-                             llmq::CSigSharesManager& shareman, CSporkManager& sporkman, const CMasternodeSync& mn_sync);
+                             llmq::CSigSharesManager& shareman, const CMasternodeSync& mn_sync);
     ~ChainLockSigner();
 
     void RegisterRecoveryInterface();
