@@ -1,52 +1,7 @@
-const walletState = {
-  available: 1.2485,
-  pending: 0.0421,
-  lastMovement: -0.015,
-  addresses: [
-    "bc1q5u3a9k2l8ysq0w4d5m5kz9rq5sxfg7l9k3p7d",
-    "bc1q9uvj3pj7d6z3l8xj0f2m0k4e7npxv8p4c3z1s",
-    "bc1qk6a9s4p2h5y8r7w3d9t0m2z5x4c8n1b6r9j2",
-  ],
-  seedWords: [
-    "luz",
-    "trazo",
-    "pino",
-    "luna",
-    "brisa",
-    "faro",
-    "nube",
-    "roble",
-    "cobre",
-    "cauce",
-    "delta",
-    "norte",
-  ],
-  history: [
-    {
-      id: "TX-3911",
-      type: "Recibido",
-      amount: "+0.034 BTC",
-      status: "confirmado",
-      from: "Alice",
-      time: "hace 2 h",
-    },
-    {
-      id: "TX-3895",
-      type: "Enviado",
-      amount: "-0.015 BTC",
-      status: "confirmado",
-      from: "Servicios Cloud",
-      time: "hace 12 min",
-    },
-    {
-      id: "TX-3880",
-      type: "Enviado",
-      amount: "-0.006 BTC",
-      status: "pendiente",
-      from: "Reserva",
-      time: "hace 1 h",
-    },
-  ],
+let walletState = {
+  status: "loading",
+  data: null,
+  error: null,
 };
 
 const availableBalance = document.getElementById("balance-available");
@@ -86,18 +41,71 @@ const seedStatus = document.getElementById("seed-status");
 
 let seedVisible = false;
 
-const formatBtc = (value) => `${value.toFixed(4)} BTC`;
+const formatBtc = (value) => `${Number(value || 0).toFixed(4)} BTC`;
+
+const getWalletData = () =>
+  walletState.data || {
+    available: 0,
+    pending: 0,
+    lastMovement: 0,
+    addresses: [],
+    seedWords: [],
+    history: [],
+  };
 
 const updateBalances = () => {
-  availableBalance.textContent = formatBtc(walletState.available);
-  pendingBalance.textContent = formatBtc(walletState.pending);
-  lastMovement.textContent = `${walletState.lastMovement > 0 ? "+" : ""}${walletState.lastMovement} BTC`;
-  availableHint.textContent = walletState.available.toFixed(4);
+  if (walletState.status === "loading") {
+    availableBalance.textContent = "Cargando...";
+    pendingBalance.textContent = "Cargando...";
+    lastMovement.textContent = "Cargando...";
+    availableHint.textContent = "—";
+    return;
+  }
+
+  if (walletState.status === "error") {
+    availableBalance.textContent = "—";
+    pendingBalance.textContent = "—";
+    lastMovement.textContent = "—";
+    availableHint.textContent = "—";
+    return;
+  }
+
+  const data = getWalletData();
+  availableBalance.textContent = formatBtc(data.available);
+  pendingBalance.textContent = formatBtc(data.pending);
+  lastMovement.textContent = `${data.lastMovement > 0 ? "+" : ""}${Number(data.lastMovement || 0).toFixed(4)} BTC`;
+  availableHint.textContent = Number(data.available || 0).toFixed(4);
 };
 
 const renderHistory = () => {
   historyList.innerHTML = "";
-  walletState.history.forEach((item) => {
+
+  if (walletState.status === "loading") {
+    const li = document.createElement("li");
+    li.className = "history-item";
+    li.textContent = "Cargando movimientos...";
+    historyList.appendChild(li);
+    return;
+  }
+
+  if (walletState.status === "error") {
+    const li = document.createElement("li");
+    li.className = "history-item";
+    li.textContent = "No se pudo cargar el historial. Intenta de nuevo.";
+    historyList.appendChild(li);
+    return;
+  }
+
+  const data = getWalletData();
+  if (!data.history.length) {
+    const li = document.createElement("li");
+    li.className = "history-item";
+    li.textContent = "Sin movimientos recientes.";
+    historyList.appendChild(li);
+    return;
+  }
+
+  data.history.forEach((item) => {
     const li = document.createElement("li");
     li.className = "history-item";
     li.innerHTML = `
@@ -119,7 +127,33 @@ const renderHistory = () => {
 
 const renderAddresses = () => {
   addressList.innerHTML = "";
-  walletState.addresses.slice(0, 3).forEach((address, index) => {
+
+  if (walletState.status === "loading") {
+    const li = document.createElement("li");
+    li.className = "address-item";
+    li.textContent = "Cargando direcciones...";
+    addressList.appendChild(li);
+    return;
+  }
+
+  if (walletState.status === "error") {
+    const li = document.createElement("li");
+    li.className = "address-item";
+    li.textContent = "No se pudieron cargar las direcciones.";
+    addressList.appendChild(li);
+    return;
+  }
+
+  const data = getWalletData();
+  if (!data.addresses.length) {
+    const li = document.createElement("li");
+    li.className = "address-item";
+    li.textContent = "Sin direcciones disponibles.";
+    addressList.appendChild(li);
+    return;
+  }
+
+  data.addresses.slice(0, 3).forEach((address, index) => {
     const li = document.createElement("li");
     li.className = "address-item";
     li.innerHTML = `
@@ -135,10 +169,12 @@ const renderAddresses = () => {
 
 const renderQr = () => {
   qrCode.innerHTML = "";
+  const data = getWalletData();
+  const addressSeed = data.addresses[0] ? data.addresses[0].length : 12;
   const totalCells = 144;
   for (let i = 0; i < totalCells; i += 1) {
     const cell = document.createElement("span");
-    const seed = (i * 37 + walletState.addresses[0].length) % 11;
+    const seed = (i * 37 + addressSeed) % 11;
     if (seed % 2 === 0) {
       cell.style.opacity = "0.9";
     } else if (seed % 3 === 0) {
@@ -164,7 +200,10 @@ const validateAddress = (value) => {
 
 const validateAmount = (value) => {
   const amount = Number(value);
-  return !Number.isNaN(amount) && amount > 0 && amount <= walletState.available;
+  if (walletState.status !== "ready") {
+    return false;
+  }
+  return !Number.isNaN(amount) && amount > 0 && amount <= getWalletData().available;
 };
 
 const validateFee = (value) => {
@@ -185,6 +224,11 @@ const simulateEstimate = () => {
 sendForm.addEventListener("submit", (event) => {
   event.preventDefault();
   resetErrors();
+
+  if (walletState.status !== "ready") {
+    formStatus.textContent = "Espera a que cargue la información del wallet.";
+    return;
+  }
 
   const addressValue = addressInput.value.trim();
   const amountValue = amountInput.value;
@@ -214,11 +258,12 @@ sendForm.addEventListener("submit", (event) => {
 
   const amountNumber = Number(amountValue);
   const feeNumber = Number(feeValue) / 10000;
-  walletState.available = Math.max(0, walletState.available - amountNumber - feeNumber);
-  walletState.pending += amountNumber;
-  walletState.lastMovement = -amountNumber;
+  const data = getWalletData();
+  data.available = Math.max(0, data.available - amountNumber - feeNumber);
+  data.pending += amountNumber;
+  data.lastMovement = -amountNumber;
 
-  walletState.history.unshift({
+  data.history.unshift({
     id: `TX-${Math.floor(Math.random() * 9000 + 1000)}`,
     type: "Enviado",
     amount: `-${amountNumber.toFixed(3)} BTC`,
@@ -239,7 +284,12 @@ estimateButton.addEventListener("click", () => {
 });
 
 copyAddressButton.addEventListener("click", async () => {
-  const address = walletState.addresses[0];
+  const data = getWalletData();
+  const address = data.addresses[0];
+  if (!address) {
+    receiveStatus.textContent = "No hay dirección disponible.";
+    return;
+  }
   try {
     await navigator.clipboard.writeText(address);
     receiveStatus.textContent = "Dirección copiada. Comparte con cuidado.";
@@ -249,19 +299,34 @@ copyAddressButton.addEventListener("click", async () => {
 });
 
 newAddressButton.addEventListener("click", () => {
+  if (walletState.status !== "ready") {
+    receiveStatus.textContent = "No es posible generar una dirección aún.";
+    return;
+  }
+  const data = getWalletData();
   const rand = Math.random().toString(36).slice(2, 10);
   const newAddress = `bc1q${rand}9l${rand}x2${rand}`;
-  walletState.addresses.unshift(newAddress);
-  walletState.addresses = walletState.addresses.slice(0, 5);
+  data.addresses.unshift(newAddress);
+  data.addresses = data.addresses.slice(0, 5);
   renderAddresses();
   renderQr();
   receiveStatus.textContent = "Nueva dirección generada y lista para compartir.";
 });
 
+const renderSeed = () => {
+  const data = getWalletData();
+  if (!data.seedWords.length) {
+    seedBox.textContent = "Seed no disponible";
+    toggleSeedButton.textContent = "Mostrar seed";
+    return;
+  }
+  seedBox.textContent = seedVisible ? data.seedWords.join(" ") : "•••• •••• •••• •••• •••• ••••";
+  toggleSeedButton.textContent = seedVisible ? "Ocultar seed" : "Mostrar seed";
+};
+
 toggleSeedButton.addEventListener("click", () => {
   seedVisible = !seedVisible;
-  seedBox.textContent = seedVisible ? walletState.seedWords.join(" ") : "•••• •••• •••• •••• •••• ••••";
-  toggleSeedButton.textContent = seedVisible ? "Ocultar seed" : "Mostrar seed";
+  renderSeed();
 });
 
 backupSeedButton.addEventListener("click", () => {
@@ -287,9 +352,36 @@ const cycleNetwork = () => {
   networkStatus.classList.toggle("warning", sync < 99.95);
 };
 
-updateBalances();
-renderHistory();
-renderAddresses();
-renderQr();
+const loadWalletSummary = async () => {
+  walletState = { status: "loading", data: null, error: null };
+  updateBalances();
+  renderHistory();
+  renderAddresses();
+  renderQr();
+  renderSeed();
+
+  try {
+    const response = await fetch("/api/wallet/summary");
+    if (!response.ok) {
+      throw new Error(`Respuesta inválida (${response.status})`);
+    }
+    const payload = await response.json();
+    walletState = { status: "ready", data: payload, error: null };
+  } catch (error) {
+    walletState = {
+      status: "error",
+      data: null,
+      error: error instanceof Error ? error.message : "Error desconocido",
+    };
+  }
+
+  updateBalances();
+  renderHistory();
+  renderAddresses();
+  renderQr();
+  renderSeed();
+};
+
+loadWalletSummary();
 cycleNetwork();
 setInterval(cycleNetwork, 6000);
