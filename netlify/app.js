@@ -351,7 +351,9 @@ sendForm.addEventListener("submit", async (event) => {
     }
 
     if (payload.mempool?.bytes) {
-      mempool.textContent = `${(payload.mempool.bytes / 1e6).toFixed(1)} MB`;
+      const mempoolValue = (payload.mempool.bytes / 1e6).toFixed(1);
+      mempool.textContent = `${mempoolValue} MB`;
+      mempool.title = `${mempoolValue} MB · tamaño del mempool en MB`;
     }
 
     formStatus.textContent = `Transacción ${payload.txid || ""} enviada (${payload.status || "pendiente"}).`;
@@ -427,6 +429,8 @@ const formatChainLabel = (chain) => {
 };
 
 const renderNetwork = () => {
+  const latencyTooltipBase = "ms promedio entre peers";
+  const mempoolTooltipBase = "tamaño del mempool en MB";
   if (networkState.status === "loading") {
     blockHeight.textContent = "Altura: Cargando...";
     syncState.textContent = "Peers: Cargando...";
@@ -434,6 +438,8 @@ const renderNetwork = () => {
     latency.textContent = "—";
     mempool.textContent = "—";
     nextBlock.textContent = "—";
+    latency.title = "No disponible";
+    mempool.title = "No disponible";
     if (peersInbound) {
       peersInbound.textContent = "Entrantes: —";
     }
@@ -463,6 +469,8 @@ const renderNetwork = () => {
     latency.textContent = "—";
     mempool.textContent = "—";
     nextBlock.textContent = "—";
+    latency.title = "No disponible";
+    mempool.title = "No disponible";
     if (peersInbound) {
       peersInbound.textContent = "Entrantes: —";
     }
@@ -507,6 +515,9 @@ const renderNetwork = () => {
   syncPercent.textContent = syncDisplay === "—" ? "—" : `${syncDisplay}%`;
   latency.textContent = latencyValue !== null ? `${latencyValue} ms` : "—";
   mempool.textContent = mempoolValue !== null ? `${mempoolValue} MB` : "—";
+  latency.title =
+    latencyValue !== null ? `${latencyValue} ${latencyTooltipBase}` : "No disponible";
+  mempool.title = mempoolValue !== null ? `${mempoolValue} MB · ${mempoolTooltipBase}` : "No disponible";
   nextBlock.textContent = `~${nextBlockMinutes} min`;
   if (peersInbound) {
     peersInbound.textContent = `Entrantes: ${inboundPeers !== null ? inboundPeers : "—"}`;
