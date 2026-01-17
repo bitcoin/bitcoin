@@ -133,6 +133,30 @@
         box-shadow: inset 0 0 0 1px rgba(123, 231, 255, 0.08);
         display: grid;
         gap: 16px;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .card::after {
+        content: "";
+        position: absolute;
+        inset: auto -40% -60% auto;
+        width: 220px;
+        height: 220px;
+        background: radial-gradient(circle, rgba(123, 231, 255, 0.18), transparent 70%);
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        pointer-events: none;
+      }
+
+      .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 24px 45px rgba(4, 12, 26, 0.55);
+      }
+
+      .card:hover::after {
+        opacity: 1;
       }
 
       .card h2 {
@@ -145,20 +169,27 @@
         grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       }
 
-      .balance-item {
+      .summary-card {
         padding: 14px;
         border-radius: 12px;
         background: rgba(10, 16, 34, 0.6);
         display: grid;
         gap: 4px;
+        border: 1px solid rgba(123, 231, 255, 0.08);
+        transition: border 0.2s ease, box-shadow 0.2s ease;
       }
 
-      .balance-item span {
+      .summary-card:hover {
+        border-color: rgba(123, 231, 255, 0.35);
+        box-shadow: inset 0 0 0 1px rgba(123, 231, 255, 0.15);
+      }
+
+      .summary-card span {
         color: var(--muted);
         font-size: 0.85rem;
       }
 
-      .balance-item strong {
+      .summary-card strong {
         font-size: 1.15rem;
       }
 
@@ -219,7 +250,7 @@
         gap: 12px;
       }
 
-      button,
+      .btn,
       .link {
         border: none;
         padding: 12px 18px;
@@ -227,26 +258,34 @@
         font-weight: 600;
         font-size: 0.95rem;
         cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
         text-decoration: none;
         color: var(--text);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
       }
 
-      button.primary {
+      .btn-primary {
         background: linear-gradient(120deg, var(--accent), var(--accent-2));
         color: #04121c;
         box-shadow: 0 8px 24px rgba(123, 231, 255, 0.25);
       }
 
-      button.secondary,
+      .btn-secondary,
       .link {
         background: rgba(123, 231, 255, 0.08);
         border: 1px solid rgba(123, 231, 255, 0.3);
       }
 
-      button:active,
+      .btn:active,
       .link:active {
         transform: scale(0.98);
+      }
+
+      .btn:hover {
+        box-shadow: 0 0 18px rgba(123, 231, 255, 0.35);
       }
 
       .receive-grid {
@@ -316,24 +355,30 @@
         font-size: 0.85rem;
       }
 
-      .status-pill {
+      .status-pill,
+      .tx-status {
         padding: 4px 10px;
         border-radius: 999px;
         font-size: 0.75rem;
         font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
       }
 
-      .status-pill.confirmed {
+      .status-pill.confirmed,
+      .tx-status.confirmed {
         background: rgba(66, 255, 179, 0.16);
         color: var(--accent-3);
       }
 
-      .status-pill.pending {
+      .status-pill.pending,
+      .tx-status.pending {
         background: rgba(255, 211, 105, 0.16);
         color: var(--warning);
       }
 
-      .status-pill.failed {
+      .status-pill.failed,
+      .tx-status.failed {
         background: rgba(255, 107, 145, 0.16);
         color: var(--danger);
       }
@@ -388,17 +433,17 @@
         <section class="card">
           <h2>Resumen de saldo</h2>
           <div class="balance-grid">
-            <div class="balance-item">
+            <div class="summary-card">
               <span>Disponible</span>
               <strong id="balance-available">1.2485 BTC</strong>
               <div class="helper">≈ 82,450 USD</div>
             </div>
-            <div class="balance-item">
+            <div class="summary-card">
               <span>En confirmación</span>
               <strong id="balance-pending">0.0421 BTC</strong>
               <div class="helper">3 transacciones pendientes</div>
             </div>
-            <div class="balance-item">
+            <div class="summary-card">
               <span>Último movimiento</span>
               <strong id="last-movement">-0.015 BTC</strong>
               <div class="helper">hace 12 min</div>
@@ -455,8 +500,8 @@
               ></textarea>
             </div>
             <div class="cta">
-              <button class="primary" type="submit">Enviar ahora</button>
-              <button class="secondary" type="button" id="estimate">Calcular tiempo</button>
+              <button class="btn btn-primary" type="submit">Enviar ahora</button>
+              <button class="btn btn-secondary" type="button" id="estimate">Calcular tiempo</button>
             </div>
             <div class="helper" id="form-status">Listo para firmar y transmitir.</div>
           </form>
@@ -475,8 +520,8 @@
                 <ul class="address-list" id="address-list"></ul>
               </div>
               <div class="cta">
-                <button class="secondary" type="button" id="copy-address">Copiar dirección</button>
-                <button class="primary" type="button" id="new-address">Generar nueva</button>
+                <button class="btn btn-secondary" type="button" id="copy-address">Copiar dirección</button>
+                <button class="btn btn-primary" type="button" id="new-address">Generar nueva</button>
               </div>
               <div class="helper" id="receive-status">Comparte solo una dirección a la vez.</div>
             </div>
@@ -507,8 +552,8 @@
               <div class="seed-box" id="seed-phrase">•••• •••• •••• •••• •••• ••••</div>
             </div>
             <div class="cta">
-              <button class="secondary" type="button" id="toggle-seed">Mostrar seed</button>
-              <button class="primary" type="button" id="backup-seed">Respaldar seed</button>
+              <button class="btn btn-secondary" type="button" id="toggle-seed">Mostrar seed</button>
+              <button class="btn btn-primary" type="button" id="backup-seed">Respaldar seed</button>
             </div>
             <div class="helper" id="seed-status">Guarda tu seed fuera de línea y nunca la compartas.</div>
           </div>

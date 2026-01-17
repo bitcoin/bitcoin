@@ -103,7 +103,7 @@ const renderHistory = () => {
     li.innerHTML = `
       <div class="history-meta">
         <span>${item.type} · ${item.id}</span>
-        <span class="status-pill ${item.status === "confirmado" ? "confirmed" : item.status === "pendiente" ? "pending" : "failed"}">
+        <span class="status-pill tx-status ${item.status === "confirmado" ? "confirmed" : item.status === "pendiente" ? "pending" : "failed"}">
           ${item.status}
         </span>
       </div>
