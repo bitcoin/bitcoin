@@ -14,6 +14,7 @@ validate blocks and transactions. It also includes a wallet and graphical user
 interface, which can be optionally built.
 
 Further information about Bitcoin Core is available in the [doc folder](/doc).
+Operators using satellite or cellular links can review the alternative networking guidance in [doc/alt-networking.md](doc/alt-networking.md).
 
 License
 -------

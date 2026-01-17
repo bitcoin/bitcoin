@@ -71,6 +71,7 @@ The Bitcoin repo's [root README](/README.md) contains relevant information on th
 * Discuss project-specific development on #bitcoin-core-dev on Libera Chat. If you don't have an IRC client, you can use [web.libera.chat](https://web.libera.chat/#bitcoin-core-dev).
 
 ### Miscellaneous
+- [Alternative networking over satellite and 4G](alt-networking.md)
 - [Assets Attribution](assets-attribution.md)
 - [bitcoin.conf Configuration File](bitcoin-conf.md)
 - [CJDNS Support](cjdns.md)
