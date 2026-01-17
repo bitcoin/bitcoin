@@ -14,6 +14,9 @@ const availableBalance = document.getElementById("balance-available");
 const pendingBalance = document.getElementById("balance-pending");
 const lastMovement = document.getElementById("last-movement");
 const availableHint = document.getElementById("available-hint");
+const activeAddressCode = document.getElementById("active-address");
+const copyActiveAddressButton = document.getElementById("copy-active-address");
+const activeAddressStatus = document.getElementById("active-address-status");
 const historyList = document.getElementById("history-list");
 const addressList = document.getElementById("address-list");
 const qrCode = document.getElementById("qr-code");
@@ -65,6 +68,15 @@ const updateBalances = () => {
     pendingBalance.textContent = "Cargando...";
     lastMovement.textContent = "Cargando...";
     availableHint.textContent = "—";
+    if (activeAddressCode) {
+      activeAddressCode.textContent = "Cargando...";
+    }
+    if (copyActiveAddressButton) {
+      copyActiveAddressButton.disabled = true;
+    }
+    if (activeAddressStatus) {
+      activeAddressStatus.textContent = "Esperando datos de la wallet.";
+    }
     return;
   }
 
@@ -73,6 +85,15 @@ const updateBalances = () => {
     pendingBalance.textContent = "—";
     lastMovement.textContent = "—";
     availableHint.textContent = "—";
+    if (activeAddressCode) {
+      activeAddressCode.textContent = "Sin datos";
+    }
+    if (copyActiveAddressButton) {
+      copyActiveAddressButton.disabled = true;
+    }
+    if (activeAddressStatus) {
+      activeAddressStatus.textContent = "No se pudo cargar la dirección.";
+    }
     return;
   }
 
@@ -81,6 +102,17 @@ const updateBalances = () => {
   pendingBalance.textContent = formatBtc(data.pending);
   lastMovement.textContent = `${data.lastMovement > 0 ? "+" : ""}${Number(data.lastMovement || 0).toFixed(4)} BTC`;
   availableHint.textContent = Number(data.available || 0).toFixed(4);
+  if (activeAddressCode) {
+    activeAddressCode.textContent = data.addresses[0] || "Sin dirección disponible";
+  }
+  if (copyActiveAddressButton) {
+    copyActiveAddressButton.disabled = !data.addresses[0];
+  }
+  if (activeAddressStatus) {
+    activeAddressStatus.textContent = data.addresses[0]
+      ? "Lista para compartir."
+      : "Genera una nueva dirección para recibir fondos.";
+  }
 };
 
 const renderHistory = () => {
@@ -227,6 +259,21 @@ const simulateEstimate = () => {
   formStatus.textContent = `Tiempo estimado de confirmación: ${eta}.`;
 };
 
+const copyActiveAddress = async (statusElement) => {
+  const data = getWalletData();
+  const address = data.addresses[0];
+  if (!address) {
+    statusElement.textContent = "No hay dirección disponible.";
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(address);
+    statusElement.textContent = "Dirección copiada. Comparte con cuidado.";
+  } catch (error) {
+    statusElement.textContent = "No se pudo copiar automáticamente.";
+  }
+};
+
 sendForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   resetErrors();
@@ -317,19 +364,14 @@ estimateButton.addEventListener("click", () => {
 });
 
 copyAddressButton.addEventListener("click", async () => {
-  const data = getWalletData();
-  const address = data.addresses[0];
-  if (!address) {
-    receiveStatus.textContent = "No hay dirección disponible.";
-    return;
-  }
-  try {
-    await navigator.clipboard.writeText(address);
-    receiveStatus.textContent = "Dirección copiada. Comparte con cuidado.";
-  } catch (error) {
-    receiveStatus.textContent = "No se pudo copiar automáticamente.";
-  }
+  await copyActiveAddress(receiveStatus);
 });
+
+if (copyActiveAddressButton && activeAddressStatus) {
+  copyActiveAddressButton.addEventListener("click", async () => {
+    await copyActiveAddress(activeAddressStatus);
+  });
+}
 
 newAddressButton.addEventListener("click", () => {
   if (walletState.status !== "ready") {
@@ -343,6 +385,7 @@ newAddressButton.addEventListener("click", () => {
   data.addresses = data.addresses.slice(0, 5);
   renderAddresses();
   renderQr();
+  updateBalances();
   receiveStatus.textContent = "Nueva dirección generada y lista para compartir.";
 });
 
