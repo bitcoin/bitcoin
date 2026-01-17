@@ -193,6 +193,30 @@
         font-size: 1.15rem;
       }
 
+      .balance-card {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 12px;
+        background: rgba(5, 9, 20, 0.72);
+        border: 1px solid rgba(123, 231, 255, 0.16);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .balance-card code {
+        display: block;
+        color: var(--accent);
+        font-size: 0.82rem;
+        word-break: break-all;
+      }
+
+      .balance-card .btn {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+      }
+
       .form {
         display: grid;
         gap: 14px;
@@ -236,6 +260,7 @@
       .helper {
         font-size: 0.8rem;
         color: var(--muted);
+        line-height: 1.4;
       }
 
       .error {
@@ -324,8 +349,9 @@
         display: flex;
         justify-content: space-between;
         gap: 12px;
-        align-items: center;
+        align-items: flex-start;
         font-size: 0.9rem;
+        border: 1px solid rgba(123, 231, 255, 0.12);
       }
 
       .address-item code {
@@ -437,6 +463,16 @@
               <span>Disponible</span>
               <strong id="balance-available">1.2485 BTC</strong>
               <div class="helper">≈ 82,450 USD</div>
+              <div class="balance-card">
+                <div>
+                  <div class="helper">Dirección activa</div>
+                  <code id="active-address">bc1qexample...</code>
+                </div>
+                <button class="btn btn-secondary" type="button" id="copy-active-address">
+                  Copiar dirección
+                </button>
+              </div>
+              <div class="helper" id="active-address-status">Lista para compartir.</div>
             </div>
             <div class="summary-card">
               <span>En confirmación</span>
