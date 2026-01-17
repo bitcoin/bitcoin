@@ -94,10 +94,8 @@ void TestOptimalLinearization(const std::vector<uint8_t>& enc, const std::vector
             SanityCheck(depgraph, lin);
             auto chunking = ChunkLinearization(depgraph, lin);
             BOOST_CHECK(std::is_eq(CompareChunks(chunking, optimal_diagram)));
-            // TODO: temporarily disabled; SFL does not guarantee minimal chunks. This will be
-            // reinstated in a future commit.
-            // // Verify that the chunks are minimal.
-            // BOOST_CHECK(chunking.size() == optimal_diagram.size());
+            // Verify that the chunks are minimal.
+            BOOST_CHECK_EQUAL(chunking.size(), optimal_diagram.size());
         }
         tx_count = depgraph.PositionRange();
     };

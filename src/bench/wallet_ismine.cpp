@@ -66,6 +66,6 @@ static void WalletIsMine(benchmark::Bench& bench, int num_combo = 0)
 
 static void WalletIsMineDescriptors(benchmark::Bench& bench) { WalletIsMine(bench); }
 static void WalletIsMineMigratedDescriptors(benchmark::Bench& bench) { WalletIsMine(bench, /*num_combo=*/2000); }
-BENCHMARK(WalletIsMineDescriptors, benchmark::PriorityLevel::LOW);
-BENCHMARK(WalletIsMineMigratedDescriptors, benchmark::PriorityLevel::LOW);
+BENCHMARK(WalletIsMineDescriptors);
+BENCHMARK(WalletIsMineMigratedDescriptors);
 } // namespace wallet

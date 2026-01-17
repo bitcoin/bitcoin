@@ -42,8 +42,29 @@ public:
     // Sigop cost per transaction, not including coinbase transaction.
     virtual std::vector<int64_t> getTxSigops() = 0;
 
-    virtual CTransactionRef getCoinbaseTx() = 0;
+    /**
+     * Return serialized dummy coinbase transaction.
+     *
+     * @note deprecated: use getCoinbaseTx()
+     */
+    virtual CTransactionRef getCoinbaseRawTx() = 0;
+
+    /** Return fields needed to construct a coinbase transaction */
+    virtual node::CoinbaseTx getCoinbaseTx() = 0;
+
+    /**
+     * Return scriptPubKey with SegWit OP_RETURN.
+     *
+     * @note deprecated: use getCoinbaseTx()
+     */
     virtual std::vector<unsigned char> getCoinbaseCommitment() = 0;
+
+    /**
+     * Return which output in the dummy coinbase contains the SegWit OP_RETURN.
+     *
+     * @note deprecated. Scan outputs from getCoinbaseTx() outputs field for the
+     *       SegWit marker.
+     */
     virtual int getWitnessCommitmentIndex() = 0;
 
     /**

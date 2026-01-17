@@ -2,6 +2,7 @@
              ((gnu packages bash) #:select (bash-minimal))
              (gnu packages bison)
              ((gnu packages certs) #:select (nss-certs))
+             ((gnu packages check) #:select (libfaketime))
              ((gnu packages cmake) #:select (cmake-minimal))
              (gnu packages commencement)
              (gnu packages compression)
@@ -93,7 +94,17 @@ chain for " target " development."))
       (home-page (package-home-page xgcc))
       (license (package-license xgcc)))))
 
-(define base-gcc gcc-13) ;; 13.3.0
+(define base-gcc
+  (package
+    (inherit gcc-14) ;; 14.2.0
+    (version "14.3.0")
+    (source (origin
+              (method url-fetch)
+              (uri (string-append "mirror://gnu/gcc/gcc-"
+                                  version "/gcc-" version ".tar.xz"))
+              (sha256
+               (base32
+                "0fna78ly417g69fdm4i5f3ms96g8xzzjza8gwp41lqr5fqlpgp70"))))))
 
 (define base-linux-kernel-headers linux-libre-headers-6.1)
 
@@ -113,7 +124,7 @@ desirable for building Bitcoin Core release binaries."
 
 (define (gcc-libgcc-patches gcc)
   (package-with-extra-patches gcc
-    (search-our-patches "gcc-remap-guix-store.patch")))
+    (search-our-patches "gcc-remap-guix-store.patch" "gcc-ssa-generation.patch")))
 
 (define (binutils-mingw-patches binutils)
   (package-with-extra-patches binutils
@@ -208,7 +219,17 @@ and abstract ELF, PE and MachO formats.")
                (base32
                 "1j47vwq4caxfv0xw68kw5yh00qcpbd56d7rq6c483ma3y7s96yyz"))))
     (build-system cmake-build-system)
-    (inputs (list openssl))
+    (arguments
+     (list
+      #:phases
+      #~(modify-phases %standard-phases
+          (replace 'check
+            (lambda* (#:key tests? #:allow-other-keys)
+              (if tests?
+                  (invoke "faketime" "-f" "@2025-01-01 00:00:00" ;; Tests fail after 2025.
+                          "ctest" "--output-on-failure" "--no-tests=error")
+                  (format #t "test suite not run~%")))))))
+    (inputs (list libfaketime openssl))
     (home-page "https://github.com/mtrojnar/osslsigncode")
     (synopsis "Authenticode signing and timestamping tool")
     (description "osslsigncode is a small tool that implements part of the
@@ -421,7 +442,9 @@ inspecting signatures in Mach-O binaries.")
             ;; https://gcc.gnu.org/install/configure.html
             (list "--enable-threads=posix",
                   "--enable-default-ssp=yes",
+                  "--enable-host-bind-now=yes",
                   "--disable-gcov",
+                  "--disable-libgomp",
                   building-on)))))))
 
 (define-public linux-base-gcc
@@ -435,9 +458,13 @@ inspecting signatures in Mach-O binaries.")
             (list "--enable-initfini-array=yes",
                   "--enable-default-ssp=yes",
                   "--enable-default-pie=yes",
+                  "--enable-host-bind-now=yes",
                   "--enable-standard-branch-protection=yes",
                   "--enable-cet=yes",
+                  "--enable-gprofng=no",
                   "--disable-gcov",
+                  "--disable-libgomp",
+                  "--disable-libquadmath",
                   "--disable-libsanitizer",
                   building-on)))
         ((#:phases phases)
@@ -544,7 +571,7 @@ inspecting signatures in Mach-O binaries.")
         gzip
         xz
         ;; Build tools
-        gcc-toolchain-13
+        gcc-toolchain-14
         cmake-minimal
         gnu-make
         ninja
@@ -564,7 +591,7 @@ inspecting signatures in Mach-O binaries.")
           ((string-contains target "-linux-")
            (list bison
                  pkg-config
-                 (list gcc-toolchain-13 "static")
+                 (list gcc-toolchain-14 "static")
                  (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
            (list clang-toolchain-19

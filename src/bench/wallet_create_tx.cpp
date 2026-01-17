@@ -215,6 +215,6 @@ static void WalletCreateTxUsePresetInputsAndCoinSelection(benchmark::Bench& benc
 
 static void WalletAvailableCoins(benchmark::Bench& bench) { AvailableCoins(bench, {OutputType::BECH32M}); }
 
-BENCHMARK(WalletCreateTxUseOnlyPresetInputs, benchmark::PriorityLevel::LOW)
-BENCHMARK(WalletCreateTxUsePresetInputsAndCoinSelection, benchmark::PriorityLevel::LOW)
-BENCHMARK(WalletAvailableCoins, benchmark::PriorityLevel::LOW);
+BENCHMARK(WalletCreateTxUseOnlyPresetInputs);
+BENCHMARK(WalletCreateTxUsePresetInputsAndCoinSelection);
+BENCHMARK(WalletAvailableCoins);

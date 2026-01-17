@@ -5,18 +5,20 @@
 #ifndef BITCOIN_TEST_FUZZ_UTIL_DESCRIPTOR_H
 #define BITCOIN_TEST_FUZZ_UTIL_DESCRIPTOR_H
 
-#include <key_io.h>
-#include <util/strencodings.h>
-#include <script/descriptor.h>
-#include <test/fuzz/fuzz.h>
-
-#include <functional>
+#include <array>
+#include <cinttypes>
+#include <cstddef>
+#include <limits>
+#include <optional>
+#include <span>
+#include <string>
+#include <string_view>
 
 /**
- * Converts a mocked descriptor string to a valid one. Every key in a mocked descriptor key is
+ * Converts a mocked descriptor string to a valid one. Every key in a mocked descriptor is
  * represented by 2 hex characters preceded by the '%' character. We parse the two hex characters
  * as an index in a list of pre-generated keys. This list contains keys of the various types
- * accepted in descriptor keys expressions.
+ * accepted in descriptor key expressions.
  */
 class MockedDescriptorConverter {
 private:
@@ -53,7 +55,7 @@ constexpr int MAX_DEPTH{2};
  * Whether the buffer, if it represents a valid descriptor, contains a derivation path deeper than
  * a given maximum depth. Note this may also be hit for deriv paths in origins.
  */
-bool HasDeepDerivPath(const FuzzBufferType& buff, const int max_depth = MAX_DEPTH);
+bool HasDeepDerivPath(std::span<const uint8_t> buff, int max_depth = MAX_DEPTH);
 
 //! Default maximum number of sub-fragments.
 constexpr int MAX_SUBS{1'000};
@@ -64,8 +66,8 @@ constexpr size_t MAX_NESTED_SUBS{10'000};
  * Whether the buffer, if it represents a valid descriptor, contains a fragment with more
  * sub-fragments than the given maximum.
  */
-bool HasTooManySubFrag(const FuzzBufferType& buff, const int max_subs = MAX_SUBS,
-                       const size_t max_nested_subs = MAX_NESTED_SUBS);
+bool HasTooManySubFrag(std::span<const uint8_t> buff, int max_subs = MAX_SUBS,
+                       size_t max_nested_subs = MAX_NESTED_SUBS);
 
 //! Default maximum number of wrappers per fragment.
 constexpr int MAX_WRAPPERS{100};
@@ -74,6 +76,14 @@ constexpr int MAX_WRAPPERS{100};
  * Whether the buffer, if it represents a valid descriptor, contains a fragment with more
  * wrappers than the given maximum.
  */
-bool HasTooManyWrappers(const FuzzBufferType& buff, const int max_wrappers = MAX_WRAPPERS);
+bool HasTooManyWrappers(std::span<const uint8_t> buff, int max_wrappers = MAX_WRAPPERS);
+
+/// Default maximum leaf size. This should be large enough to cover an extended
+/// key, including paths "/", inside and outside of "[]".
+constexpr uint32_t MAX_LEAF_SIZE{200};
+
+/// Whether the expanded buffer (after calling GetDescriptor() in
+/// MockedDescriptorConverter) has a leaf size too large.
+bool HasTooLargeLeafSize(std::span<const uint8_t> buff, uint32_t max_leaf_size = MAX_LEAF_SIZE);
 
 #endif // BITCOIN_TEST_FUZZ_UTIL_DESCRIPTOR_H

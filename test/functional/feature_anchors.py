@@ -10,7 +10,7 @@ from test_framework.p2p import P2PInterface, P2P_SERVICES
 from test_framework.socks5 import Socks5Configuration, Socks5Server
 from test_framework.messages import CAddress, hash256
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import check_node_connections, assert_equal, p2p_port
+from test_framework.util import check_node_connections, assert_equal
 
 INBOUND_CONNECTIONS = 5
 BLOCK_RELAY_CONNECTIONS = 2
@@ -92,7 +92,9 @@ class AnchorsTest(BitcoinTestFramework):
         onion_conf = Socks5Configuration()
         onion_conf.auth = True
         onion_conf.unauth = True
-        onion_conf.addr = ('127.0.0.1', p2p_port(self.num_nodes))
+        # Use port=0 for dynamic allocation to avoid conflicts with concurrent
+        # tests or ports in TIME_WAIT state from previous test runs.
+        onion_conf.addr = ('127.0.0.1', 0)
         onion_conf.keep_alive = True
         onion_proxy = Socks5Server(onion_conf)
         onion_proxy.start()

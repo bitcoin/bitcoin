@@ -90,6 +90,8 @@ public:
         //! Number of headers sent in one getheaders message result (this is
         //! a test-only option).
         uint32_t max_headers_result{MAX_HEADERS_RESULTS};
+        //! Whether private broadcast is used for sending transactions.
+        bool private_broadcast{DEFAULT_PRIVATE_BROADCAST};
     };
 
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,
@@ -116,8 +118,19 @@ public:
     /** Get peer manager info. */
     virtual PeerManagerInfo GetInfo() const = 0;
 
-    /** Relay transaction to all peers. */
-    virtual void RelayTransaction(const Txid& txid, const Wtxid& wtxid) = 0;
+    /**
+     * Initiate a transaction broadcast to eligible peers.
+     * Queue the witness transaction id to `Peer::TxRelay::m_tx_inventory_to_send`
+     * for each peer. Later, depending on `Peer::TxRelay::m_next_inv_send_time` and if
+     * the transaction is in the mempool, an `INV` about it may be sent to the peer.
+     */
+    virtual void InitiateTxBroadcastToAll(const Txid& txid, const Wtxid& wtxid) = 0;
+
+    /**
+     * Initiate a private transaction broadcast. This is done
+     * asynchronously via short-lived connections to peers on privacy networks.
+     */
+    virtual void InitiateTxBroadcastPrivate(const CTransactionRef& tx) = 0;
 
     /** Send ping message to all peers */
     virtual void SendPings() = 0;

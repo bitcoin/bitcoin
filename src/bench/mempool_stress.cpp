@@ -208,7 +208,7 @@ static void MempoolCheck(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(MemPoolAncestorsDescendants, benchmark::PriorityLevel::HIGH);
-BENCHMARK(MemPoolAddTransactions, benchmark::PriorityLevel::HIGH);
-BENCHMARK(ComplexMemPool, benchmark::PriorityLevel::HIGH);
-BENCHMARK(MempoolCheck, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MemPoolAncestorsDescendants);
+BENCHMARK(MemPoolAddTransactions);
+BENCHMARK(ComplexMemPool);
+BENCHMARK(MempoolCheck);

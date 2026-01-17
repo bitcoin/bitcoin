@@ -84,4 +84,4 @@ static void MempoolCheckEphemeralSpends(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(MempoolCheckEphemeralSpends, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MempoolCheckEphemeralSpends);

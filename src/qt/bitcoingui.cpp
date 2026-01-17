@@ -452,7 +452,11 @@ void BitcoinGUI::createActions()
             //: Label of the input field where the name of the wallet is entered.
             QString label = tr("Wallet Name");
             QString wallet_name = QInputDialog::getText(this, title, label, QLineEdit::Normal, "", &wallet_name_ok);
-            if (!wallet_name_ok || wallet_name.isEmpty()) return;
+            if (!wallet_name_ok) return;
+            if (wallet_name.isEmpty()) {
+                QMessageBox::critical(nullptr, tr("Invalid Wallet Name"), tr("Wallet name cannot be empty"));
+                return;
+            }
 
             auto activity = new RestoreWalletActivity(m_wallet_controller, this);
             connect(activity, &RestoreWalletActivity::restored, this, &BitcoinGUI::setCurrentWallet, Qt::QueuedConnection);
