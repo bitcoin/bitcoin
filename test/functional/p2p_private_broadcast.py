@@ -384,6 +384,26 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         assert_equal(info[0]["final_state"]["received_from"], self.destinations[0]["requested_to"])
         assert "aborted" not in info[0]["final_state"]
 
+        self.log.info("Checking abortprivatebroadcast removes a pending private-broadcast transaction")
+        tx_abort = wallet.create_self_transfer()
+        tx_originator.sendrawtransaction(hexstring=tx_abort["hex"], maxfeerate=0.1)
+        assert any(t["wtxid"] == tx_abort["wtxid"] for t in tx_originator.getprivatebroadcastinfo()["transactions"])
+        abort_time_before = int(time.time())
+        abort_res = tx_originator.abortprivatebroadcast(tx_abort["txid"])
+        abort_time_after = int(time.time())
+        assert_equal(len(abort_res["removed_transactions"]), 1)
+        assert_equal(abort_res["removed_transactions"][0]["txid"], tx_abort["txid"])
+        assert_equal(abort_res["removed_transactions"][0]["wtxid"], tx_abort["wtxid"])
+        assert_equal(abort_res["removed_transactions"][0]["hex"].lower(), tx_abort["hex"].lower())
+        # After abort, the transaction should remain stored with an aborted final_state.
+        pbinfo = tx_originator.getprivatebroadcastinfo()
+        info = [t for t in pbinfo["transactions"] if t["wtxid"] == tx_abort["wtxid"]]
+        assert_equal(len(info), 1)
+        assert_equal(info[0]["final_state"]["aborted"], "Manually aborted via abortprivatebroadcast RPC")
+        # The abort time is recorded on the node; allow a little slack around the RPC call.
+        assert abort_time_before - 5 <= info[0]["final_state"]["time"] <= abort_time_after + 5
+        assert "received_from" not in info[0]["final_state"]
+
         self.log.info("Sending a transaction that is already in the mempool")
         skip_destinations = len(self.destinations)
         tx_originator.sendrawtransaction(hexstring=txs[0]["hex"], maxfeerate=0)
