@@ -9,6 +9,7 @@
 #include <consensus/amount.h>
 #include <net.h>
 #include <node/txorphanage.h>
+#include <private_broadcast.h>
 #include <protocol.h>
 #include <threadsafety.h>
 #include <util/expected.h>
@@ -117,6 +118,9 @@ public:
 
     /** Get peer manager info. */
     virtual PeerManagerInfo GetInfo() const = 0;
+
+    /** Get info about transactions currently being privately broadcast. */
+    virtual std::vector<PrivateBroadcast::TxBroadcastInfo> GetPrivateBroadcastInfo() const = 0;
 
     /**
      * Initiate a transaction broadcast to eligible peers.
