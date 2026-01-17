@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Bitcoind Netlify Nexus</title>
+    <title>Wallet Nexus · Bitcoin</title>
     <meta
       name="description"
-      content="Panel futurista para conectar el repo a Netlify y visualizar el estado de despliegue."
+      content="Panel futurista para gestionar una wallet de Bitcoin con envío, recepción, historial y seguridad."
     />
     <style>
       :root {
@@ -21,6 +21,7 @@
         --text: #e6f2ff;
         --muted: #90a0bc;
         --danger: #ff6b91;
+        --warning: #ffd369;
         font-family: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
       }
 
@@ -42,8 +43,12 @@
         padding: 40px 24px;
       }
 
+      main {
+        width: min(1240px, 100%);
+      }
+
       .grid {
-        width: min(1200px, 100%);
+        width: 100%;
         display: grid;
         gap: 24px;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -59,6 +64,8 @@
         box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
         position: relative;
         overflow: hidden;
+        display: grid;
+        gap: 16px;
       }
 
       .hero::after {
@@ -73,12 +80,11 @@
       .hero h1 {
         font-size: clamp(2rem, 3vw, 3rem);
         letter-spacing: 0.04em;
-        margin-bottom: 12px;
       }
 
       .hero p {
         color: var(--muted);
-        max-width: 640px;
+        max-width: 700px;
         line-height: 1.6;
       }
 
@@ -92,6 +98,32 @@
         color: var(--accent);
       }
 
+      .hero-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+      }
+
+      .pill {
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: 1px solid rgba(123, 231, 255, 0.35);
+        background: rgba(123, 231, 255, 0.1);
+      }
+
+      .pill.success {
+        border-color: rgba(66, 255, 179, 0.4);
+        color: var(--accent-3);
+      }
+
+      .pill.warning {
+        border-color: rgba(255, 211, 105, 0.4);
+        color: var(--warning);
+      }
+
       .card {
         padding: 22px;
         background: var(--panel);
@@ -99,76 +131,92 @@
         border: 1px solid transparent;
         border-image: linear-gradient(135deg, var(--panel-border), transparent 70%) 1;
         box-shadow: inset 0 0 0 1px rgba(123, 231, 255, 0.08);
+        display: grid;
+        gap: 16px;
       }
 
       .card h2 {
         font-size: 1.1rem;
-        margin-bottom: 12px;
       }
 
-      .steps {
-        list-style: none;
+      .balance-grid {
         display: grid;
         gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       }
 
-      .step {
-        display: flex;
-        gap: 12px;
-        align-items: flex-start;
-        padding: 12px;
+      .balance-item {
+        padding: 14px;
         border-radius: 12px;
         background: rgba(10, 16, 34, 0.6);
-      }
-
-      .step span {
         display: grid;
-        place-items: center;
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        background: rgba(123, 231, 255, 0.2);
-        color: var(--accent);
-        font-weight: 600;
+        gap: 4px;
       }
 
-      .step p {
+      .balance-item span {
         color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .balance-item strong {
+        font-size: 1.15rem;
+      }
+
+      .form {
+        display: grid;
+        gap: 14px;
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+
+      label {
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      input,
+      textarea,
+      select {
+        background: rgba(5, 9, 20, 0.9);
+        border: 1px solid rgba(123, 231, 255, 0.2);
+        border-radius: 10px;
+        color: var(--text);
+        padding: 10px 12px;
         font-size: 0.95rem;
+        outline: none;
+        transition: border 0.2s ease, box-shadow 0.2s ease;
       }
 
-      .status {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
+      input:focus,
+      textarea:focus,
+      select:focus {
+        border-color: rgba(123, 231, 255, 0.6);
+        box-shadow: 0 0 0 2px rgba(123, 231, 255, 0.15);
       }
 
-      .status-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+      textarea {
+        min-height: 80px;
+        resize: vertical;
+      }
+
+      .helper {
+        font-size: 0.8rem;
         color: var(--muted);
       }
 
-      .badge {
-        padding: 6px 12px;
-        border-radius: 999px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        background: rgba(66, 255, 179, 0.16);
-        color: var(--accent-3);
-      }
-
-      .badge.waiting {
-        background: rgba(255, 107, 145, 0.16);
+      .error {
         color: var(--danger);
+        font-size: 0.82rem;
+        min-height: 18px;
       }
 
       .cta {
         display: flex;
         flex-wrap: wrap;
         gap: 12px;
-        margin-top: 20px;
       }
 
       button,
@@ -201,30 +249,114 @@
         transform: scale(0.98);
       }
 
-      .terminal {
+      .receive-grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      }
+
+      .qr {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        background: rgba(5, 9, 20, 0.85);
+        border-radius: 16px;
+        padding: 10px;
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 4px;
+        border: 1px solid rgba(123, 231, 255, 0.2);
+      }
+
+      .qr span {
+        border-radius: 4px;
+        background: rgba(123, 231, 255, 0.3);
+      }
+
+      .address-list {
+        list-style: none;
+        display: grid;
+        gap: 10px;
+      }
+
+      .address-item {
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(10, 16, 34, 0.6);
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        font-size: 0.9rem;
+      }
+
+      .address-item code {
+        color: var(--accent);
+        font-size: 0.85rem;
+      }
+
+      .history {
+        list-style: none;
+        display: grid;
+        gap: 12px;
+      }
+
+      .history-item {
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(10, 16, 34, 0.6);
+        display: grid;
+        gap: 6px;
+      }
+
+      .history-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .status-pill {
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+
+      .status-pill.confirmed {
+        background: rgba(66, 255, 179, 0.16);
+        color: var(--accent-3);
+      }
+
+      .status-pill.pending {
+        background: rgba(255, 211, 105, 0.16);
+        color: var(--warning);
+      }
+
+      .status-pill.failed {
+        background: rgba(255, 107, 145, 0.16);
+        color: var(--danger);
+      }
+
+      .network-grid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .network-row {
+        display: flex;
+        justify-content: space-between;
+        color: var(--muted);
+      }
+
+      .seed-box {
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(5, 9, 20, 0.85);
+        border: 1px dashed rgba(123, 231, 255, 0.4);
         font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
         font-size: 0.9rem;
-        background: rgba(5, 9, 20, 0.85);
-        padding: 16px;
-        border-radius: 12px;
-        border: 1px solid rgba(123, 231, 255, 0.2);
         color: var(--accent);
-        min-height: 120px;
-        overflow: hidden;
-      }
-
-      .terminal span {
-        color: var(--text);
-      }
-
-      .glow {
-        position: absolute;
-        width: 160px;
-        height: 160px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(66, 255, 179, 0.3), transparent 70%);
-        right: -40px;
-        bottom: -40px;
       }
 
       footer {
@@ -236,156 +368,158 @@
     </style>
   </head>
   <body>
-    <main class="grid">
+    <main>
       <section class="hero">
-        <div class="tagline">Netlify nexus · despliegue continuo</div>
-        <h1>Conecta tu repo de Bitcoin Core a Netlify</h1>
+        <div class="tagline">wallet nexus · panel seguro</div>
+        <h1>Control total de tu wallet Bitcoin</h1>
         <p>
-          Este panel futurista está listo para servir como landing y tablero de
-          despliegue. Integra instrucciones claras, resumen de avances y acciones
-          rápidas para conectar el repositorio con Netlify y visualizar el estado
-          de publicación.
+          Supervisa saldos, envíos, recepción y seguridad desde una interfaz clara y
+          futurista. Todo lo esencial para operar con confianza en la red Bitcoin,
+          con métricas en tiempo real y protección de claves.
         </p>
-        <div class="cta">
-          <button class="primary" id="connect">Conectar repo</button>
-          <button class="secondary" id="copy">Copiar URL del repo</button>
-          <a class="link" href="https://app.netlify.com/start" target="_blank" rel="noreferrer">
-            Iniciar en Netlify
-          </a>
-        </div>
-        <div class="glow"></div>
-      </section>
-
-      <section class="card">
-        <h2>Pasos esenciales</h2>
-        <ul class="steps">
-          <li class="step">
-            <span>01</span>
-            <div>
-              <strong>Importa el repositorio</strong>
-              <p>Selecciona el repo y autoriza acceso desde GitHub.</p>
-            </div>
-          </li>
-          <li class="step">
-            <span>02</span>
-            <div>
-              <strong>Define el build</strong>
-              <p>Usa <code>netlify/</code> como directorio de publicación.</p>
-            </div>
-          </li>
-          <li class="step">
-            <span>03</span>
-            <div>
-              <strong>Activa notificaciones</strong>
-              <p>Agrega Slack/Discord para monitoreo continuo.</p>
-            </div>
-          </li>
-        </ul>
-      </section>
-
-      <section class="card">
-        <h2>Estado del despliegue</h2>
-        <div class="status">
-          <div class="status-row">
-            <span>Último build</span>
-            <span class="badge" id="build-status">Listo para publicar</span>
-          </div>
-          <div class="status-row">
-            <span>Commit reciente</span>
-            <span id="commit-hash">--</span>
-          </div>
-          <div class="status-row">
-            <span>Tiempo estimado</span>
-            <span id="eta">2m 10s</span>
-          </div>
-          <div class="status-row">
-            <span>Región</span>
-            <span>Global Edge</span>
-          </div>
+        <div class="hero-meta">
+          <span class="pill success" id="network-status">Red principal · Sincronizada</span>
+          <span class="pill" id="block-height">Altura: 821,442</span>
+          <span class="pill warning" id="sync-state">Peers: 14 activos</span>
         </div>
       </section>
 
-      <section class="card">
-        <h2>Bitácora futurista</h2>
-        <div class="terminal" id="terminal">
-          <div>&gt; Buscando actualizaciones recientes...</div>
-        </div>
+      <section class="grid">
+        <section class="card">
+          <h2>Resumen de saldo</h2>
+          <div class="balance-grid">
+            <div class="balance-item">
+              <span>Disponible</span>
+              <strong id="balance-available">1.2485 BTC</strong>
+              <div class="helper">≈ 82,450 USD</div>
+            </div>
+            <div class="balance-item">
+              <span>En confirmación</span>
+              <strong id="balance-pending">0.0421 BTC</strong>
+              <div class="helper">3 transacciones pendientes</div>
+            </div>
+            <div class="balance-item">
+              <span>Último movimiento</span>
+              <strong id="last-movement">-0.015 BTC</strong>
+              <div class="helper">hace 12 min</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Enviar fondos</h2>
+          <form class="form" id="send-form" novalidate>
+            <div class="field">
+              <label for="send-address">Dirección destino</label>
+              <input
+                id="send-address"
+                name="send-address"
+                type="text"
+                placeholder="bc1q..."
+                autocomplete="off"
+                required
+              />
+              <div class="helper">Asegúrate de pegar una dirección válida de Bitcoin.</div>
+              <div class="error" id="address-error"></div>
+            </div>
+            <div class="field">
+              <label for="send-amount">Monto (BTC)</label>
+              <input
+                id="send-amount"
+                name="send-amount"
+                type="number"
+                min="0"
+                step="0.0001"
+                placeholder="0.005"
+                required
+              />
+              <div class="helper">Disponible para envío: <span id="available-hint">1.2485</span> BTC.</div>
+              <div class="error" id="amount-error"></div>
+            </div>
+            <div class="field">
+              <label for="send-fee">Tarifa sugerida (sat/vB)</label>
+              <select id="send-fee" name="send-fee" required>
+                <option value="5">5 sat/vB · económico</option>
+                <option value="12" selected>12 sat/vB · estándar</option>
+                <option value="25">25 sat/vB · prioritario</option>
+              </select>
+              <div class="helper">Se recalculará el tiempo estimado según la red.</div>
+              <div class="error" id="fee-error"></div>
+            </div>
+            <div class="field">
+              <label for="send-note">Nota interna</label>
+              <textarea
+                id="send-note"
+                name="send-note"
+                placeholder="Pago a proveedor, ahorro, etc."
+              ></textarea>
+            </div>
+            <div class="cta">
+              <button class="primary" type="submit">Enviar ahora</button>
+              <button class="secondary" type="button" id="estimate">Calcular tiempo</button>
+            </div>
+            <div class="helper" id="form-status">Listo para firmar y transmitir.</div>
+          </form>
+        </section>
+
+        <section class="card">
+          <h2>Recibir fondos</h2>
+          <div class="receive-grid">
+            <div>
+              <div class="qr" id="qr-code" aria-label="Código QR para recibir"></div>
+              <div class="helper">Escanea con cualquier wallet para recibir BTC.</div>
+            </div>
+            <div class="form">
+              <div>
+                <strong>Direcciones activas</strong>
+                <ul class="address-list" id="address-list"></ul>
+              </div>
+              <div class="cta">
+                <button class="secondary" type="button" id="copy-address">Copiar dirección</button>
+                <button class="primary" type="button" id="new-address">Generar nueva</button>
+              </div>
+              <div class="helper" id="receive-status">Comparte solo una dirección a la vez.</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Historial de transacciones</h2>
+          <ul class="history" id="history-list"></ul>
+        </section>
+
+        <section class="card">
+          <h2>Estado de red</h2>
+          <div class="network-grid" id="network-grid">
+            <div class="network-row"><span>Nodo</span><strong>bitcoin-core-01</strong></div>
+            <div class="network-row"><span>Sincronización</span><strong id="sync-percent">99.98%</strong></div>
+            <div class="network-row"><span>Latencia media</span><strong id="latency">182 ms</strong></div>
+            <div class="network-row"><span>MemPool</span><strong id="mempool">123 MB</strong></div>
+            <div class="network-row"><span>Próximo bloque</span><strong id="next-block">~8 min</strong></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Gestión de claves y seed</h2>
+          <div class="form">
+            <div>
+              <div class="helper">Seed cifrada (12 palabras)</div>
+              <div class="seed-box" id="seed-phrase">•••• •••• •••• •••• •••• ••••</div>
+            </div>
+            <div class="cta">
+              <button class="secondary" type="button" id="toggle-seed">Mostrar seed</button>
+              <button class="primary" type="button" id="backup-seed">Respaldar seed</button>
+            </div>
+            <div class="helper" id="seed-status">Guarda tu seed fuera de línea y nunca la compartas.</div>
+          </div>
+        </section>
       </section>
 
       <footer>
-        Diseñado para mostrar tus avances y conectar con Netlify sin fricción.
+        Panel diseñado para operaciones diarias, seguridad reforzada y control total sobre tu wallet.
       </footer>
     </main>
 
-    <script>
-      const repositoryUrl = "https://github.com/bitcoin/bitcoin";
-      const connectButton = document.getElementById("connect");
-      const copyButton = document.getElementById("copy");
-      const terminal = document.getElementById("terminal");
-      const commitHash = document.getElementById("commit-hash");
-      const buildStatus = document.getElementById("build-status");
-      const eta = document.getElementById("eta");
-
-      const timeline = [
-        "Validando configuración de Netlify...",
-        "Sincronizando ramas y variables de entorno...",
-        "Preparando despliegue continuo...",
-        "Verificación final completada.",
-      ];
-
-      let lineIndex = 0;
-
-      const pushLine = () => {
-        if (lineIndex >= timeline.length) {
-          return;
-        }
-
-        const line = document.createElement("div");
-        line.innerHTML = `&gt; <span>${timeline[lineIndex]}</span>`;
-        terminal.appendChild(line);
-        terminal.scrollTop = terminal.scrollHeight;
-        lineIndex += 1;
-      };
-
-      const simulateProgress = () => {
-        buildStatus.textContent = "Sincronizando...";
-        buildStatus.classList.add("waiting");
-        eta.textContent = "1m 45s";
-        pushLine();
-
-        setTimeout(() => {
-          eta.textContent = "0m 40s";
-          pushLine();
-        }, 1200);
-
-        setTimeout(() => {
-          buildStatus.textContent = "Despliegue listo";
-          buildStatus.classList.remove("waiting");
-          eta.textContent = "Completado";
-          pushLine();
-        }, 2400);
-      };
-
-      connectButton.addEventListener("click", () => {
-        simulateProgress();
-        const newHash = Math.random().toString(16).slice(2, 9).toUpperCase();
-        commitHash.textContent = `#${newHash}`;
-      });
-
-      copyButton.addEventListener("click", async () => {
-        try {
-          await navigator.clipboard.writeText(repositoryUrl);
-          copyButton.textContent = "URL copiada";
-          setTimeout(() => {
-            copyButton.textContent = "Copiar URL del repo";
-          }, 1500);
-        } catch (error) {
-          copyButton.textContent = "No se pudo copiar";
-        }
-      });
-
-      pushLine();
-      setTimeout(pushLine, 900);
-    </script>
+    <script src="app.js" defer></script>
   </body>
 </html>
