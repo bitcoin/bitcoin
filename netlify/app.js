@@ -40,6 +40,8 @@ const syncChip = document.getElementById("sync-chip");
 const latency = document.getElementById("latency");
 const mempool = document.getElementById("mempool");
 const nextBlock = document.getElementById("next-block");
+const peersInbound = document.getElementById("peers-inbound");
+const peersOutbound = document.getElementById("peers-outbound");
 
 const copyAddressButton = document.getElementById("copy-address");
 const newAddressButton = document.getElementById("new-address");
@@ -432,6 +434,12 @@ const renderNetwork = () => {
     latency.textContent = "—";
     mempool.textContent = "—";
     nextBlock.textContent = "—";
+    if (peersInbound) {
+      peersInbound.textContent = "Entrantes: —";
+    }
+    if (peersOutbound) {
+      peersOutbound.textContent = "Salientes: —";
+    }
     networkStatus.textContent = "Red principal · Sincronizando";
     networkStatus.classList.add("warning");
     networkStatus.classList.remove("success");
@@ -455,6 +463,12 @@ const renderNetwork = () => {
     latency.textContent = "—";
     mempool.textContent = "—";
     nextBlock.textContent = "—";
+    if (peersInbound) {
+      peersInbound.textContent = "Entrantes: —";
+    }
+    if (peersOutbound) {
+      peersOutbound.textContent = "Salientes: —";
+    }
     networkStatus.textContent = "Estado de red no disponible";
     networkStatus.classList.add("warning");
     networkStatus.classList.remove("success");
@@ -478,6 +492,8 @@ const renderNetwork = () => {
     : 0;
   const syncDisplay = Number.isFinite(syncValue) ? syncPercentValue.toFixed(2) : "—";
   const peers = data.peers?.total ?? 0;
+  const inboundPeers = Number.isFinite(data.peers?.inbound) ? data.peers.inbound : null;
+  const outboundPeers = Number.isFinite(data.peers?.outbound) ? data.peers.outbound : null;
   const height = Number.isFinite(data.blocks) ? data.blocks : null;
   const latencyValue = Number.isFinite(data.avgPingMs) ? Math.round(data.avgPingMs) : null;
   const mempoolValue = Number.isFinite(data.mempoolBytes)
@@ -492,6 +508,12 @@ const renderNetwork = () => {
   latency.textContent = latencyValue !== null ? `${latencyValue} ms` : "—";
   mempool.textContent = mempoolValue !== null ? `${mempoolValue} MB` : "—";
   nextBlock.textContent = `~${nextBlockMinutes} min`;
+  if (peersInbound) {
+    peersInbound.textContent = `Entrantes: ${inboundPeers !== null ? inboundPeers : "—"}`;
+  }
+  if (peersOutbound) {
+    peersOutbound.textContent = `Salientes: ${outboundPeers !== null ? outboundPeers : "—"}`;
+  }
 
   const isSynced = Number.isFinite(syncValue) ? syncValue >= 0.9995 : false;
   networkStatus.textContent = isSynced ? `${chainLabel} · Sincronizada` : `${chainLabel} · Sincronizando`;

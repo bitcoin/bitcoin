@@ -492,6 +492,15 @@
         color: var(--muted);
         font-size: 0.85rem;
       }
+
+      .peer-details {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
     </style>
   </head>
   <body>
@@ -508,6 +517,10 @@
           <span class="pill success" id="network-status">Red principal · Sincronizada</span>
           <span class="pill" id="block-height">Altura: 821,442</span>
           <span class="pill warning" id="sync-state">Peers: 14 activos</span>
+        </div>
+        <div class="peer-details">
+          <span id="peers-inbound">Entrantes: —</span>
+          <span id="peers-outbound">Salientes: —</span>
         </div>
       </section>
 
