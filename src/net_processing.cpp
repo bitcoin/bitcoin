@@ -543,6 +543,7 @@ public:
     std::vector<node::TxOrphanage::OrphanInfo> GetOrphanTransactions() override EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
     PeerManagerInfo GetInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     std::vector<PrivateBroadcast::TxBroadcastInfo> GetPrivateBroadcastInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    std::vector<CTransactionRef> AbortPrivateBroadcast(const uint256& id) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void InitiateTxBroadcastToAll(const Txid& txid, const Wtxid& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void InitiateTxBroadcastPrivate(const CTransactionRef& tx) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -1856,6 +1857,33 @@ PeerManagerInfo PeerManagerImpl::GetInfo() const
 std::vector<PrivateBroadcast::TxBroadcastInfo> PeerManagerImpl::GetPrivateBroadcastInfo() const
 {
     return m_tx_for_private_broadcast.GetBroadcastInfo();
+}
+
+std::vector<CTransactionRef> PeerManagerImpl::AbortPrivateBroadcast(const uint256& id)
+{
+    const auto snapshot{m_tx_for_private_broadcast.GetBroadcastInfo()};
+    std::vector<CTransactionRef> to_stop;
+    to_stop.reserve(snapshot.size());
+    for (const auto& entry : snapshot) {
+        if (entry.tx->GetHash().ToUint256() == id || entry.tx->GetWitnessHash().ToUint256() == id) {
+            to_stop.push_back(entry.tx);
+        }
+    }
+
+    size_t connections_cancelled{0};
+    for (const auto& tx : to_stop) {
+        const auto peer_acks{m_tx_for_private_broadcast.StopBroadcasting(tx, "Manually aborted via abortprivatebroadcast RPC")};
+        if (!peer_acks.has_value()) continue;
+        if (NUM_PRIVATE_BROADCAST_PER_TX > peer_acks.value()) {
+            connections_cancelled += (NUM_PRIVATE_BROADCAST_PER_TX - peer_acks.value());
+        }
+    }
+
+    if (connections_cancelled > 0) {
+        m_connman.m_private_broadcast.NumToOpenSub(connections_cancelled);
+    }
+
+    return to_stop;
 }
 
 void PeerManagerImpl::AddToCompactExtraTransactions(const CTransactionRef& tx)
