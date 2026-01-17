@@ -3,20 +3,26 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test torcontrol functionality with a mock Tor control server."""
-
 import socket
 import threading
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, p2p_port
+from test_framework.util import (
+    assert_equal,
+    ensure_for,
+    p2p_port,
+)
 
 
 class MockTorControlServer:
-    def __init__(self, port):
+    def __init__(self, port, manual_mode=False):
         self.port = port
         self.sock = None
+        self.conn = None
         self.running = False
         self.thread = None
         self.received_commands = []
+        self.manual_mode = manual_mode
+        self.conn_ready = threading.Event()
 
     def start(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -31,6 +37,8 @@ class MockTorControlServer:
 
     def stop(self):
         self.running = False
+        if self.conn:
+            self.conn.close()
         if self.sock:
             self.sock.close()
         if self.thread:
@@ -39,9 +47,10 @@ class MockTorControlServer:
     def _serve(self):
         while self.running:
             try:
-                conn, _ = self.sock.accept()
-                conn.settimeout(1.0)
-                self._handle_connection(conn)
+                self.conn, _ = self.sock.accept()
+                self.conn.settimeout(1.0)
+                self.conn_ready.set()
+                self._handle_connection(self.conn)
             except socket.timeout:
                 continue
             except OSError:
@@ -61,12 +70,17 @@ class MockTorControlServer:
                         command = line.decode('utf-8').strip()
                         if command:
                             self.received_commands.append(command)
-                            response = self._get_response(command)
-                            conn.sendall(response.encode('utf-8'))
+                            if not self.manual_mode:
+                                response = self._get_response(command)
+                                conn.sendall(response.encode('utf-8'))
                 except socket.timeout:
                     continue
         finally:
             conn.close()
+
+    def send_raw(self, data):
+        if self.conn:
+            self.conn.sendall(data.encode('utf-8'))
 
     def _get_response(self, command):
         if command == "PROTOCOLINFO 1":
@@ -93,7 +107,7 @@ class TorControlTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
-    def run_test(self):
+    def test_basic(self):
         self.log.info("Test Tor control basic functionality")
         tor_port = p2p_port(self.num_nodes + 1)
         mock_tor = MockTorControlServer(tor_port)
@@ -117,6 +131,47 @@ class TorControlTest(BitcoinTestFramework):
         # Clean up
         mock_tor.stop()
 
+    def test_partial_data(self):
+        self.log.info("Test that partial Tor control responses are buffered until complete")
+
+        tor_port = p2p_port(self.num_nodes + 2)
+        mock_tor = MockTorControlServer(tor_port, manual_mode=True)
+        mock_tor.start()
+
+        self.restart_node(0, extra_args=[
+            f"-torcontrol=127.0.0.1:{tor_port}",
+            "-listenonion=1",
+            "-debug=tor"
+        ])
+
+        # Wait for connection and PROTOCOLINFO command
+        mock_tor.conn_ready.wait(timeout=10)
+        self.wait_until(lambda: len(mock_tor.received_commands) >= 1, timeout=10)
+        assert_equal(mock_tor.received_commands[0], "PROTOCOLINFO 1")
+
+        # Send partial response (no \r\n on last line)
+        mock_tor.send_raw(
+            "250-PROTOCOLINFO 1\r\n"
+            "250-AUTH METHODS=NULL\r\n"
+            "250 OK"
+        )
+
+        # Verify AUTHENTICATE is not sent
+        ensure_for(duration=2, f=lambda: len(mock_tor.received_commands) == 1)
+
+        # Complete the response
+        mock_tor.send_raw("\r\n")
+
+        # Should now process the complete response and send AUTHENTICATE
+        self.wait_until(lambda: len(mock_tor.received_commands) >= 2, timeout=5)
+        assert_equal(mock_tor.received_commands[1], "AUTHENTICATE")
+
+        # Clean up
+        mock_tor.stop()
+
+    def run_test(self):
+        self.test_basic()
+        self.test_partial_data()
 
 if __name__ == '__main__':
     TorControlTest(__file__).main()
