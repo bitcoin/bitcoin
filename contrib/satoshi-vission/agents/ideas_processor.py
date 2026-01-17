@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 import tempfile
 from datetime import datetime
 from pathlib import Path
@@ -14,11 +15,24 @@ IDEAS_FILE = Path(__file__).resolve().parent / "agents_ideas.jsonl"
 OUTPUTS_FILE = Path(__file__).resolve().parent / "agents_outputs.jsonl"
 
 
-def load_jsonl(path: Path) -> list[dict[str, Any]]:
+def load_jsonl(path: Path, *, strict: bool = False) -> list[dict[str, Any]]:
     if not path.exists():
         return []
     with path.open("r", encoding="utf-8") as handle:
-        return [json.loads(line) for line in handle if line.strip()]
+        entries: list[dict[str, Any]] = []
+        for line_number, line in enumerate(handle, start=1):
+            if not line.strip():
+                continue
+            try:
+                entries.append(json.loads(line))
+            except json.JSONDecodeError as exc:
+                print(
+                    f"Warning: failed to decode JSON in {path} at line {line_number}: {exc}",
+                    file=sys.stderr,
+                )
+                if strict:
+                    raise
+        return entries
 
 
 def append_jsonl(path: Path, rows: Iterable[dict[str, Any]]) -> None:
@@ -50,8 +64,13 @@ def append_jsonl(path: Path, rows: Iterable[dict[str, Any]]) -> None:
             os.unlink(temp_path)
 
 
-def process_ideas(ideas_file: Path = IDEAS_FILE, outputs_file: Path = OUTPUTS_FILE) -> int:
-    ideas = load_jsonl(ideas_file)
+def process_ideas(
+    ideas_file: Path = IDEAS_FILE,
+    outputs_file: Path = OUTPUTS_FILE,
+    *,
+    strict: bool = False,
+) -> int:
+    ideas = load_jsonl(ideas_file, strict=strict)
     if not ideas:
         return 0
 
@@ -78,9 +97,14 @@ def main() -> int:
         default=OUTPUTS_FILE,
         help="Ruta al archivo JSONL para guardar los resultados.",
     )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Falla al primer registro JSONL malformado.",
+    )
     args = parser.parse_args()
 
-    total = process_ideas(args.ideas_file, args.outputs_file)
+    total = process_ideas(args.ideas_file, args.outputs_file, strict=args.strict)
     print(f"Procesadas {total} ideas.")
     return 0
 
