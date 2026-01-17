@@ -1,2 +1,3 @@
 /api/wallet/summary /.netlify/functions/wallet-summary 200
 /api/tx/send /.netlify/functions/tx-send 200
+/api/network/status /.netlify/functions/network-status 200

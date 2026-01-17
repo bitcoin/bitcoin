@@ -4,6 +4,12 @@ let walletState = {
   error: null,
 };
 
+let networkState = {
+  status: "loading",
+  data: null,
+  error: null,
+};
+
 const availableBalance = document.getElementById("balance-available");
 const pendingBalance = document.getElementById("balance-pending");
 const lastMovement = document.getElementById("last-movement");
@@ -360,23 +366,88 @@ backupSeedButton.addEventListener("click", () => {
   seedStatus.textContent = "Respaldo iniciado. Guarda el archivo cifrado en un lugar seguro.";
 });
 
-const cycleNetwork = () => {
-  const height = 821442 + Math.floor(Math.random() * 6);
-  const peers = 12 + Math.floor(Math.random() * 6);
-  const sync = (99.92 + Math.random() * 0.07).toFixed(2);
-  const latencyValue = 160 + Math.floor(Math.random() * 60);
-  const mempoolValue = 110 + Math.floor(Math.random() * 60);
-  const nextBlockMinutes = 6 + Math.floor(Math.random() * 6);
+const formatChainLabel = (chain) => {
+  if (chain === "main") {
+    return "Red principal";
+  }
+  if (chain === "test") {
+    return "Testnet";
+  }
+  if (chain === "signet") {
+    return "Signet";
+  }
+  return chain ? chain.toUpperCase() : "Red";
+};
 
-  blockHeight.textContent = `Altura: ${height.toLocaleString("es-ES")}`;
+const renderNetwork = () => {
+  if (networkState.status === "loading") {
+    blockHeight.textContent = "Altura: Cargando...";
+    syncState.textContent = "Peers: Cargando...";
+    syncPercent.textContent = "—";
+    latency.textContent = "—";
+    mempool.textContent = "—";
+    nextBlock.textContent = "—";
+    networkStatus.textContent = "Red principal · Sincronizando";
+    networkStatus.classList.add("warning");
+    return;
+  }
+
+  if (networkState.status === "error") {
+    blockHeight.textContent = "Altura: —";
+    syncState.textContent = "Peers: —";
+    syncPercent.textContent = "—";
+    latency.textContent = "—";
+    mempool.textContent = "—";
+    nextBlock.textContent = "—";
+    networkStatus.textContent = "Estado de red no disponible";
+    networkStatus.classList.add("warning");
+    return;
+  }
+
+  const data = networkState.data || {};
+  const syncValue = Number(data.verificationProgress ?? 0);
+  const syncDisplay = Number.isFinite(syncValue) ? (syncValue * 100).toFixed(2) : "—";
+  const peers = data.peers?.total ?? 0;
+  const height = Number.isFinite(data.blocks) ? data.blocks : null;
+  const latencyValue = Number.isFinite(data.avgPingMs) ? Math.round(data.avgPingMs) : null;
+  const mempoolValue = Number.isFinite(data.mempoolBytes)
+    ? (data.mempoolBytes / (1024 * 1024)).toFixed(1)
+    : null;
+  const nextBlockMinutes = Number.isFinite(data.nextBlockMinutes) ? Math.round(data.nextBlockMinutes) : 10;
+  const chainLabel = formatChainLabel(data.chain);
+
+  blockHeight.textContent = height ? `Altura: ${height.toLocaleString("es-ES")}` : "Altura: —";
   syncState.textContent = `Peers: ${peers} activos`;
-  syncPercent.textContent = `${sync}%`;
-  latency.textContent = `${latencyValue} ms`;
-  mempool.textContent = `${mempoolValue} MB`;
+  syncPercent.textContent = syncDisplay === "—" ? "—" : `${syncDisplay}%`;
+  latency.textContent = latencyValue !== null ? `${latencyValue} ms` : "—";
+  mempool.textContent = mempoolValue !== null ? `${mempoolValue} MB` : "—";
   nextBlock.textContent = `~${nextBlockMinutes} min`;
 
-  networkStatus.textContent = sync >= 99.95 ? "Red principal · Sincronizada" : "Red principal · Sincronizando";
-  networkStatus.classList.toggle("warning", sync < 99.95);
+  const isSynced = Number.isFinite(syncValue) ? syncValue >= 0.9995 : false;
+  networkStatus.textContent = isSynced ? `${chainLabel} · Sincronizada` : `${chainLabel} · Sincronizando`;
+  networkStatus.classList.toggle("warning", !isSynced);
+};
+
+const cycleNetwork = async () => {
+  networkState = { status: "loading", data: null, error: null };
+  renderNetwork();
+
+  try {
+    const response = await fetch("/api/network/status");
+    if (!response.ok) {
+      throw new Error(`Respuesta inválida (${response.status})`);
+    }
+    const payload = await response.json();
+    networkState = { status: "ready", data: payload, error: null };
+  } catch (error) {
+    networkState = {
+      status: "error",
+      data: null,
+      error: error instanceof Error ? error.message : "Error desconocido",
+    };
+  }
+
+  renderNetwork();
 };
 
 const loadWalletSummary = async () => {
