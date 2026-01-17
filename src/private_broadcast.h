@@ -37,6 +37,18 @@ public:
         NodeClock::time_point time;
     };
 
+    struct PeerSendInfo {
+        CService address;
+        NodeClock::time_point sent;
+        std::optional<NodeClock::time_point> received;
+    };
+
+    struct TxBroadcastInfo {
+        CTransactionRef tx;
+        std::vector<PeerSendInfo> peers;
+        std::optional<FinalState> final_state;
+    };
+
     /**
      * Add a transaction to the storage.
      * @param[in] tx The transaction to add.
@@ -123,6 +135,12 @@ public:
      * Get the transactions that have not been broadcast recently.
      */
     std::vector<CTransactionRef> GetStale() const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /**
+     * Get stats about all transactions currently being privately broadcast.
+     */
+    std::vector<TxBroadcastInfo> GetBroadcastInfo() const
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
 private:

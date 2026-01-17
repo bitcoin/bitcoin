@@ -155,6 +155,31 @@ std::vector<CTransactionRef> PrivateBroadcast::GetStale() const
     return stale;
 }
 
+std::vector<PrivateBroadcast::TxBroadcastInfo> PrivateBroadcast::GetBroadcastInfo() const
+    EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+{
+    LOCK(m_mutex);
+    std::vector<TxBroadcastInfo> entries;
+    entries.reserve(m_transactions.size());
+
+    for (const auto& [tx, state] : m_transactions) {
+        TxBroadcastInfo info;
+        info.tx = tx;
+        info.peers.reserve(state.sent_to.size());
+        for (const auto& status : state.sent_to) {
+            info.peers.push_back(PeerSendInfo{
+                .address = status.address,
+                .sent = status.picked,
+                .received = status.confirmed,
+            });
+        }
+        info.final_state = state.final_state;
+        entries.push_back(std::move(info));
+    }
+
+    return entries;
+}
+
 PrivateBroadcast::Priority PrivateBroadcast::DerivePriority(const std::vector<SendStatus>& sent_to)
 {
     Priority p;
