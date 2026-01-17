@@ -30,6 +30,14 @@
 class PrivateBroadcast
 {
 public:
+    struct TxBroadcastInfo {
+        CTransactionRef tx;
+        size_t num_sent{0};
+        std::optional<NodeClock::time_point> last_sent{};
+        size_t num_peer_reception_acks{0};
+        std::optional<NodeClock::time_point> last_peer_reception_ack{};
+    };
+
     /**
      * Add a transaction to the storage.
      * @param[in] tx The transaction to add.
@@ -93,6 +101,12 @@ public:
      * Get the transactions that have not been broadcast recently.
      */
     std::vector<CTransactionRef> GetStale() const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /**
+     * Get stats about all transactions currently being privately broadcast.
+     */
+    std::vector<TxBroadcastInfo> GetBroadcastInfo() const
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
 private:
