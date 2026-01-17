@@ -221,7 +221,7 @@ const simulateEstimate = () => {
   formStatus.textContent = `Tiempo estimado de confirmación: ${eta}.`;
 };
 
-sendForm.addEventListener("submit", (event) => {
+sendForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   resetErrors();
 
@@ -257,25 +257,52 @@ sendForm.addEventListener("submit", (event) => {
   }
 
   const amountNumber = Number(amountValue);
-  const feeNumber = Number(feeValue) / 10000;
-  const data = getWalletData();
-  data.available = Math.max(0, data.available - amountNumber - feeNumber);
-  data.pending += amountNumber;
-  data.lastMovement = -amountNumber;
+  const feeNumber = Number(feeValue);
+  formStatus.textContent = "Construyendo y firmando la transacción...";
 
-  data.history.unshift({
-    id: `TX-${Math.floor(Math.random() * 9000 + 1000)}`,
-    type: "Enviado",
-    amount: `-${amountNumber.toFixed(3)} BTC`,
-    status: "pendiente",
-    from: addressValue.slice(0, 10) + "...",
-    time: "justo ahora",
-  });
+  try {
+    const response = await fetch("/api/tx/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        address: addressValue,
+        amount: amountNumber,
+        feeRate: feeNumber,
+      }),
+    });
 
-  updateBalances();
-  renderHistory();
-  formStatus.textContent = "Transacción creada y enviada a la mempool.";
-  sendForm.reset();
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload?.error || `Error del backend (${response.status})`);
+    }
+
+    if (payload.wallet) {
+      walletState = {
+        status: "ready",
+        data: {
+          ...getWalletData(),
+          ...payload.wallet,
+        },
+        error: null,
+      };
+      updateBalances();
+      renderHistory();
+      renderAddresses();
+      renderQr();
+    }
+
+    if (payload.mempool?.bytes) {
+      mempool.textContent = `${(payload.mempool.bytes / 1e6).toFixed(1)} MB`;
+    }
+
+    formStatus.textContent = `Transacción ${payload.txid || ""} enviada (${payload.status || "pendiente"}).`;
+    sendForm.reset();
+  } catch (error) {
+    formStatus.textContent =
+      error instanceof Error ? error.message : "No se pudo enviar la transacción.";
+  }
 });
 
 estimateButton.addEventListener("click", () => {
