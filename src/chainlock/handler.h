@@ -5,6 +5,7 @@
 #ifndef BITCOIN_CHAINLOCK_HANDLER_H
 #define BITCOIN_CHAINLOCK_HANDLER_H
 
+#include <chainlock/chainlock.h>
 #include <chainlock/clsig.h>
 
 #include <net_types.h>
@@ -31,7 +32,6 @@ class CBlockIndex;
 class CChainState;
 class CMasternodeSync;
 class CScheduler;
-class CSporkManager;
 class CTxMemPool;
 
 namespace llmq {
@@ -43,9 +43,10 @@ enum class VerifyRecSigStatus : uint8_t;
 class CChainLocksHandler final : public chainlock::ChainLockSignerParent
 {
 private:
+    chainlock::Chainlocks& m_chainlocks;
+
     CChainState& m_chainstate;
     CQuorumManager& qman;
-    CSporkManager& spork_manager;
     CTxMemPool& mempool;
     const CMasternodeSync& m_mn_sync;
     std::unique_ptr<CScheduler> scheduler;
@@ -57,13 +58,7 @@ private:
     std::atomic<bool> tryLockChainTipScheduled{false};
     std::atomic<bool> isEnabled{false};
 
-    uint256 bestChainLockHash GUARDED_BY(cs);
-    chainlock::ChainLockSig bestChainLock GUARDED_BY(cs);
-
-    chainlock::ChainLockSig bestChainLockWithKnownBlock GUARDED_BY(cs);
-    const CBlockIndex* bestChainLockBlockIndex GUARDED_BY(cs){nullptr};
     const CBlockIndex* lastNotifyChainLockBlockIndex GUARDED_BY(cs){nullptr};
-
     Uint256HashMap<std::chrono::seconds> txFirstSeenTime GUARDED_BY(cs);
 
     std::map<uint256, std::chrono::seconds> seenChainLocks GUARDED_BY(cs);
@@ -74,7 +69,7 @@ public:
     CChainLocksHandler() = delete;
     CChainLocksHandler(const CChainLocksHandler&) = delete;
     CChainLocksHandler& operator=(const CChainLocksHandler&) = delete;
-    explicit CChainLocksHandler(CChainState& chainstate, CQuorumManager& _qman, CSporkManager& sporkman,
+    explicit CChainLocksHandler(chainlock::Chainlocks& chainlocks, CChainState& chainstate, CQuorumManager& _qman,
                                 CTxMemPool& _mempool, const CMasternodeSync& mn_sync);
     ~CChainLocksHandler();
 
@@ -91,18 +86,12 @@ public:
 
     bool AlreadyHave(const CInv& inv) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    bool GetChainLockByHash(const uint256& hash, chainlock::ChainLockSig& ret) const
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    chainlock::ChainLockSig GetBestChainLock() const
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void UpdateTxFirstSeenMap(const Uint256HashSet& tx, const int64_t& time) override EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     [[nodiscard]] MessageProcessingResult ProcessNewChainLock(NodeId from, const chainlock::ChainLockSig& clsig,
                                                               const uint256& hash) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    void AcceptedBlockHeader(gsl::not_null<const CBlockIndex*> pindexNew)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void UpdatedBlockTip(const llmq::CInstantSendManager& isman);
     void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
@@ -115,24 +104,15 @@ public:
     void EnforceBestChainLock()
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    bool HasChainLock(int nHeight, const uint256& blockHash) const override
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const override
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
     VerifyRecSigStatus VerifyChainLock(const chainlock::ChainLockSig& clsig) const;
 
-    [[nodiscard]] int32_t GetBestChainLockHeight() const override
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool IsTxSafeForMining(const uint256& txid) const override
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    [[nodiscard]] bool IsEnabled() const override { return isEnabled; }
 
 private:
     void Cleanup()
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
-
-bool AreChainLocksEnabled(const CSporkManager& sporkman);
 } // namespace llmq
 
 #endif // BITCOIN_CHAINLOCK_HANDLER_H

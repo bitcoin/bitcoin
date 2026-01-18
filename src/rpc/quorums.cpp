@@ -5,6 +5,7 @@
 #include <active/context.h>
 #include <active/masternode.h>
 #include <chainlock/chainlock.h>
+#include <chainlock/handler.h>
 #include <evo/deterministicmns.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/commitment.h>
@@ -1217,7 +1218,8 @@ static RPCHelpMan submitchainlock()
     }
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
-    const int32_t bestCLHeight = llmq_ctx.clhandler->GetBestChainLock().getHeight();
+    CHECK_NONFATAL(node.chainlocks);
+    const int32_t bestCLHeight = node.chainlocks->GetBestChainLock().getHeight();
     if (nBlockHeight <= bestCLHeight) return bestCLHeight;
 
     CBLSSignature sig;
@@ -1240,7 +1242,7 @@ static RPCHelpMan submitchainlock()
 
     PeerManager& peerman = EnsurePeerman(node);
     peerman.PostProcessMessage(llmq_ctx.clhandler->ProcessNewChainLock(-1, clsig, ::SerializeHash(clsig)));
-    return llmq_ctx.clhandler->GetBestChainLock().getHeight();
+    return node.chainlocks->GetBestChainLock().getHeight();
 },
     };
 }

@@ -9,6 +9,7 @@
 #include <validation.h>
 
 #include <chainlock/chainlock.h>
+#include <chainlock/handler.h>
 #include <coinjoin/coinjoin.h>
 #include <evo/deterministicmns.h>
 #include <evo/mnauth.h>
@@ -26,14 +27,16 @@ CDSNotificationInterface::CDSNotificationInterface(CConnman& connman,
                                                    CGovernanceManager& govman,
                                                    const ChainstateManager& chainman,
                                                    const std::unique_ptr<CDeterministicMNManager>& dmnman,
-                                                   const std::unique_ptr<LLMQContext>& llmq_ctx) :
+                                                   const std::unique_ptr<LLMQContext>& llmq_ctx,
+                                                   chainlock::Chainlocks& chainlocks) :
     m_connman{connman},
     m_dstxman{dstxman},
     m_mn_sync{mn_sync},
     m_govman{govman},
     m_chainman{chainman},
     m_dmnman{dmnman},
-    m_llmq_ctx{llmq_ctx}
+    m_llmq_ctx{llmq_ctx},
+    m_chainlocks{chainlocks}
 {
 }
 
@@ -47,7 +50,7 @@ void CDSNotificationInterface::InitializeCurrentBlockTip()
 
 void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 {
-    Assert(m_llmq_ctx)->clhandler->AcceptedBlockHeader(pindexNew);
+    m_chainlocks.AcceptedBlockHeader(pindexNew);
     m_mn_sync.AcceptedBlockHeader(pindexNew);
 }
 
@@ -74,7 +77,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     if (fInitialDownload)
         return;
 
-    m_dstxman.UpdatedBlockTip(pindexNew, *Assert(m_llmq_ctx)->clhandler, m_mn_sync);
+    m_dstxman.UpdatedBlockTip(pindexNew, m_chainlocks, m_mn_sync);
 
     m_llmq_ctx->isman->UpdatedBlockTip(pindexNew);
     m_llmq_ctx->clhandler->UpdatedBlockTip(*m_llmq_ctx->isman);
@@ -124,7 +127,7 @@ void CDSNotificationInterface::NotifyChainLock(const CBlockIndex* pindex,
                                                const std::shared_ptr<const chainlock::ChainLockSig>& clsig)
 {
     Assert(m_llmq_ctx)->isman->NotifyChainLock(pindex);
-    m_dstxman.NotifyChainLock(pindex, *m_llmq_ctx->clhandler, m_mn_sync);
+    m_dstxman.NotifyChainLock(pindex, m_chainlocks, m_mn_sync);
 }
 
 std::unique_ptr<CDSNotificationInterface> g_ds_notification_interface;

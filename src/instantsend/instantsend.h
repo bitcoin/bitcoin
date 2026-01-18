@@ -37,6 +37,8 @@ namespace util {
 struct DbWrapperParams;
 } // namespace util
 
+namespace chainlock { class Chainlocks; }
+
 namespace instantsend {
 class InstantSendSigner;
 
@@ -52,7 +54,6 @@ struct PendingState {
 } // namespace instantsend
 
 namespace llmq {
-class CChainLocksHandler;
 class CSigningManager;
 
 class CInstantSendManager final : public instantsend::InstantSendSignerParent
@@ -60,7 +61,7 @@ class CInstantSendManager final : public instantsend::InstantSendSignerParent
 private:
     instantsend::CInstantSendDb db;
 
-    CChainLocksHandler& clhandler;
+    const chainlock::Chainlocks& m_chainlocks;
     CChainState& m_chainstate;
     CSigningManager& sigman;
     CSporkManager& spork_manager;
@@ -105,7 +106,7 @@ public:
     CInstantSendManager() = delete;
     CInstantSendManager(const CInstantSendManager&) = delete;
     CInstantSendManager& operator=(const CInstantSendManager&) = delete;
-    explicit CInstantSendManager(CChainLocksHandler& _clhandler, CChainState& chainstate, CSigningManager& _sigman,
+    explicit CInstantSendManager(const chainlock::Chainlocks& chainlocks, CChainState& chainstate, CSigningManager& _sigman,
                                  CSporkManager& sporkman, CTxMemPool& _mempool, const CMasternodeSync& mn_sync,
                                  const util::DbWrapperParams& db_params);
     ~CInstantSendManager();

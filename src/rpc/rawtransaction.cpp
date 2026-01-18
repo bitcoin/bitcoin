@@ -69,7 +69,7 @@ using node::GetTransaction;
 using node::NodeContext;
 using node::PSBTAnalysis;
 
-void TxToJSON(const CTransaction& tx, const uint256 hashBlock, const  CTxMemPool& mempool, const CChainState& active_chainstate, const llmq::CChainLocksHandler& clhandler, const llmq::CInstantSendManager& isman, UniValue& entry, TxVerbosity verbosity = TxVerbosity::SHOW_DETAILS)
+void TxToJSON(const CTransaction& tx, const uint256 hashBlock, const  CTxMemPool& mempool, const CChainState& active_chainstate, const chainlock::Chainlocks& chainlocks, const llmq::CInstantSendManager& isman, UniValue& entry, TxVerbosity verbosity = TxVerbosity::SHOW_DETAILS)
 {
     CHECK_NONFATAL(verbosity >= TxVerbosity::SHOW_DETAILS);
     LOCK(::cs_main);
@@ -117,7 +117,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, const  CTxMemPool
                 entry.pushKV("confirmations", 1 + active_chainstate.m_chain.Height() - pindex->nHeight);
                 entry.pushKV("time", pindex->GetBlockTime());
                 entry.pushKV("blocktime", pindex->GetBlockTime());
-                chainLock = clhandler.HasChainLock(pindex->nHeight, pindex->GetBlockHash());
+                chainLock = chainlocks.HasChainLock(pindex->nHeight, pindex->GetBlockHash());
             } else {
                 entry.pushKV("height", -1);
                 entry.pushKV("confirmations", 0);
@@ -329,10 +329,11 @@ static RPCHelpMan getrawtransaction()
 
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
     const CTxMemPool& mempool = EnsureMemPool(node);
+    CHECK_NONFATAL(node.chainlocks);
 
     UniValue result(UniValue::VOBJ);
     if (blockindex) result.pushKV("in_active_chain", in_active_chain);
-    TxToJSON(*tx, hash_block, mempool, chainman.ActiveChainstate(), *llmq_ctx.clhandler, *llmq_ctx.isman, result);
+    TxToJSON(*tx, hash_block, mempool, chainman.ActiveChainstate(), *node.chainlocks, *llmq_ctx.isman, result);
     return result;
 },
     };
@@ -390,6 +391,7 @@ static RPCHelpMan getrawtransactionmulti() {
     const NodeContext& node{EnsureAnyNodeContext(request.context)};
     const ChainstateManager& chainman{EnsureChainman(node)};
     const LLMQContext& llmq_ctx{EnsureLLMQContext(node)};
+    CHECK_NONFATAL(node.chainlocks);
     CTxMemPool& mempool{EnsureMemPool(node)};
 
     if (transactions.size() > 100) {
@@ -424,7 +426,7 @@ static RPCHelpMan getrawtransactionmulti() {
                 result.pushKV(txid_str, "None");
             } else if (fVerbose) {
                 UniValue tx_data{UniValue::VOBJ};
-                TxToJSON(*tx, hash_block, mempool, chainman.ActiveChainstate(), *llmq_ctx.clhandler, *llmq_ctx.isman, tx_data);
+                TxToJSON(*tx, hash_block, mempool, chainman.ActiveChainstate(), *node.chainlocks, *llmq_ctx.isman, tx_data);
                 result.pushKV(txid_str, tx_data);
             } else {
                 result.pushKV(txid_str, EncodeHexTx(*tx));
@@ -548,9 +550,9 @@ static RPCHelpMan gettxchainlocks()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
-    const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
     const ChainstateManager& chainman = EnsureChainman(node);
     const CChainState& active_chainstate = chainman.ActiveChainstate();
+    CHECK_NONFATAL(node.chainlocks);
 
     UniValue result_arr(UniValue::VARR);
     UniValue txids = request.params[0].get_array();
@@ -592,7 +594,7 @@ static RPCHelpMan gettxchainlocks()
             }
         }
         if (height != -1) {
-            chainLock = llmq_ctx.clhandler->HasChainLock(height, hash_block);
+            chainLock = node.chainlocks->HasChainLock(height, hash_block);
         }
         result.pushKV("height", height);
         result.pushKV("chainlock", chainLock);
@@ -635,7 +637,7 @@ static RPCHelpMan getassetunlockstatuses()
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const CTxMemPool& mempool = EnsureMemPool(node);
-    const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+    CHECK_NONFATAL(node.chainlocks);
     const ChainstateManager& chainman = EnsureChainman(node);
 
     UniValue result_arr(UniValue::VARR);
@@ -667,7 +669,7 @@ static RPCHelpMan getassetunlockstatuses()
     }
     else {
         const auto pBlockIndexBestCL = [&]() -> const CBlockIndex* {
-            const auto best_clsig = llmq_ctx.clhandler->GetBestChainLock();
+            const auto best_clsig = node.chainlocks->GetBestChainLock();
             if (!best_clsig.IsNull()) {
                 return pTipBlockIndex->GetAncestor(best_clsig.getHeight());
             }

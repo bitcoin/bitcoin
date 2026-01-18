@@ -6,6 +6,7 @@
 
 #include <addrman.h>
 #include <banman.h>
+#include <chainlock/chainlock.h>
 #include <chainparams.h>
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
@@ -133,7 +134,7 @@ std::unique_ptr<PeerManager> MakePeerManager(CConnman& connman,
                                              bool ignore_incoming_txs)
 {
     return PeerManager::make(chainparams, connman, *node.addrman, banman, *node.dstxman, *node.chainman, *node.mempool, *node.mn_metaman,
-                             *node.mn_sync, *node.govman, *node.sporkman, node.active_ctx, node.dmnman, node.cj_walletman,
+                             *node.mn_sync, *node.govman, *node.sporkman, *node.chainlocks, node.active_ctx, node.dmnman, node.cj_walletman,
                              node.llmq_ctx, node.observer_ctx, ignore_incoming_txs);
 }
 
@@ -144,7 +145,7 @@ void DashChainstateSetup(ChainstateManager& chainman,
                          const Consensus::Params& consensus_params)
 {
     DashChainstateSetup(chainman, *Assert(node.govman.get()), *Assert(node.mn_metaman.get()), *Assert(node.mn_sync.get()),
-                        *Assert(node.sporkman.get()), node.chain_helper, node.cpoolman, node.dmnman, node.evodb, node.mnhf_manager,
+                        *Assert(node.sporkman.get()), *Assert(node.chainlocks), node.chain_helper, node.cpoolman, node.dmnman, node.evodb, node.mnhf_manager,
                         node.llmq_ctx, Assert(node.mempool.get()), node.args->GetDataDirNet(), llmq_dbs_in_memory, llmq_dbs_wipe,
                         llmq::DEFAULT_BLSCHECK_THREADS, llmq::DEFAULT_MAX_RECOVERED_SIGS_AGE, consensus_params);
 }
@@ -233,6 +234,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     m_node.mn_metaman = std::make_unique<CMasternodeMetaMan>();
     m_node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
     m_node.sporkman = std::make_unique<CSporkManager>();
+    m_node.chainlocks = std::make_unique<chainlock::Chainlocks>(*m_node.sporkman);
     m_node.evodb = std::make_unique<CEvoDB>(util::DbWrapperParams{.path = m_node.args->GetDataDirNet(), .memory = true, .wipe = true});
 
     static bool noui_connected = false;
@@ -323,6 +325,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
                                            *Assert(m_node.mn_metaman.get()),
                                            *Assert(m_node.mn_sync.get()),
                                            *Assert(m_node.sporkman.get()),
+                                           *Assert(m_node.chainlocks.get()),
                                            m_node.chain_helper,
                                            m_node.cpoolman,
                                            m_node.dmnman,

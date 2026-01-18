@@ -17,6 +17,7 @@
 #include <validation.h>
 
 #include <active/context.h>
+#include <chainlock/chainlock.h>
 #include <coinjoin/coinjoin.h>
 #include <coinjoin/walletman.h>
 #include <evo/chainhelper.h>

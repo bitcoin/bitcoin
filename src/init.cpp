@@ -23,6 +23,7 @@
 #include <hash.h>
 #include <httpserver.h>
 #include <httprpc.h>
+#include <chainlock/chainlock.h>
 #include <init/common.h>
 #include <interfaces/chain.h>
 #include <index/blockfilterindex.h>
@@ -1692,6 +1693,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     assert(!node.sporkman);
     node.sporkman = std::make_unique<CSporkManager>();
+    node.chainlocks = std::make_unique<chainlock::Chainlocks>(*node.sporkman);
 
     std::vector<std::string> vSporkAddresses;
     if (args.IsArgSet("-sporkaddr")) {
@@ -1989,6 +1991,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                               *node.mn_metaman,
                                               *node.mn_sync,
                                               *node.sporkman,
+                                              *node.chainlocks,
                                               node.chain_helper,
                                               node.cpoolman,
                                               node.dmnman,
@@ -2168,12 +2171,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.peerman);
     node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(), *node.dstxman,
                                      chainman, *node.mempool, *node.mn_metaman, *node.mn_sync,
-                                     *node.govman, *node.sporkman, node.active_ctx, node.dmnman,
+                                     *node.govman, *node.sporkman, *node.chainlocks, node.active_ctx, node.dmnman,
                                      node.cj_walletman, node.llmq_ctx, node.observer_ctx, ignores_incoming_txs);
     RegisterValidationInterface(node.peerman.get());
 
     g_ds_notification_interface = std::make_unique<CDSNotificationInterface>(
-        *node.connman, *node.dstxman, *node.mn_sync, *node.govman, chainman, node.dmnman, node.llmq_ctx
+        *node.connman, *node.dstxman, *node.mn_sync, *node.govman, chainman, node.dmnman, node.llmq_ctx, *node.chainlocks
     );
     RegisterValidationInterface(g_ds_notification_interface.get());
 
@@ -2192,7 +2195,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
         // Will init later in ThreadImport
         node.active_ctx = std::make_unique<ActiveContext>(*node.llmq_ctx->bls_worker, chainman, *node.connman, *node.dmnman, *node.govman, *node.mn_metaman,
-                                                          *node.mnhf_manager, *node.sporkman, *node.mempool, *node.llmq_ctx->clhandler, *node.llmq_ctx->isman,
+                                                          *node.mnhf_manager, *node.sporkman, *node.chainlocks, *node.mempool, *node.llmq_ctx->clhandler, *node.llmq_ctx->isman,
                                                           *node.llmq_ctx->quorum_block_processor, *node.llmq_ctx->qman, *node.llmq_ctx->qsnapman, *node.llmq_ctx->sigman,
                                                           *node.peerman, *node.mn_sync, operator_sk, sync_map, dash_db_params, quorums_recovery, quorums_watch);
         RegisterValidationInterface(node.active_ctx.get());

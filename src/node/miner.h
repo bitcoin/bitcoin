@@ -29,6 +29,7 @@ class CMNHFManager;
 class CScript;
 struct LLMQContext;
 
+namespace chainlock { class Chainlocks; }
 namespace Consensus { struct Params; };
 namespace llmq {
 class CChainLocksHandler;
@@ -172,6 +173,7 @@ private:
     CChainState& m_chainstate;
     CEvoDB& m_evoDb;
     CMNHFManager& m_mnhfman;
+    const chainlock::Chainlocks& m_chainlocks;
     llmq::CChainLocksHandler& m_clhandler;
     llmq::CInstantSendManager& m_isman;
     const CChainParams& chainparams;

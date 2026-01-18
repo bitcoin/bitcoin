@@ -282,12 +282,12 @@ static bool rest_headers(const CoreContext& context,
         return true;
     }
     case RESTResponseFormat::JSON: {
-        const LLMQContext* llmq_ctx = GetLLMQContext(context, req);
-        if (!llmq_ctx) return false;
+        const NodeContext* const node = GetNodeContext(context, req);
+        if (!node || !node->chainlocks) return false;
 
         UniValue jsonHeaders(UniValue::VARR);
         for (const CBlockIndex *pindex : headers) {
-            jsonHeaders.push_back(blockheaderToJSON(tip, pindex, *llmq_ctx->clhandler));
+            jsonHeaders.push_back(blockheaderToJSON(tip, pindex, *node->chainlocks));
         }
         std::string strJSON = jsonHeaders.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
@@ -356,10 +356,13 @@ static bool rest_block(const CoreContext& context,
     }
 
     case RESTResponseFormat::JSON: {
+        const NodeContext* const node = GetNodeContext(context, req);
+        if (!node || !node->chainlocks) return false;
+
         const LLMQContext* llmq_ctx = GetLLMQContext(context, req);
         if (!llmq_ctx) return false;
 
-        UniValue objBlock = blockToJSON(chainman.m_blockman, block, tip, pblockindex, *llmq_ctx->clhandler, *llmq_ctx->isman, tx_verbosity);
+        UniValue objBlock = blockToJSON(chainman.m_blockman, block, tip, pblockindex, *node->chainlocks, *llmq_ctx->isman, tx_verbosity);
         std::string strJSON = objBlock.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
         req->WriteReply(HTTP_OK, strJSON);

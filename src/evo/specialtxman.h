@@ -25,9 +25,9 @@ class CMNHFManager;
 class TxValidationState;
 struct MNListUpdates;
 
+namespace chainlock { class Chainlocks; }
 namespace Consensus { struct Params; }
 namespace llmq {
-class CChainLocksHandler;
 class CQuorumBlockProcessor;
 class CQuorumManager;
 class CQuorumSnapshotManager;
@@ -45,14 +45,14 @@ private:
     llmq::CQuorumSnapshotManager& m_qsnapman;
     const ChainstateManager& m_chainman;
     const Consensus::Params& m_consensus_params;
-    const llmq::CChainLocksHandler& m_clhandler;
+    const chainlock::Chainlocks& m_chainlocks;
     const llmq::CQuorumManager& m_qman;
 
 public:
     explicit CSpecialTxProcessor(CCreditPoolManager& cpoolman, CDeterministicMNManager& dmnman, CMNHFManager& mnhfman,
                                  llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumSnapshotManager& qsnapman,
                                  const ChainstateManager& chainman, const Consensus::Params& consensus_params,
-                                 const llmq::CChainLocksHandler& clhandler, const llmq::CQuorumManager& qman) :
+                                 const chainlock::Chainlocks& chainlocks, const llmq::CQuorumManager& qman) :
         m_cpoolman(cpoolman),
         m_dmnman{dmnman},
         m_mnhfman{mnhfman},
@@ -60,7 +60,7 @@ public:
         m_qsnapman{qsnapman},
         m_chainman(chainman),
         m_consensus_params{consensus_params},
-        m_clhandler{clhandler},
+        m_chainlocks{chainlocks},
         m_qman{qman}
     {
     }

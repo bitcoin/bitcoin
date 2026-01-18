@@ -5,6 +5,7 @@
 #ifndef BITCOIN_CHAINLOCK_SIGNING_H
 #define BITCOIN_CHAINLOCK_SIGNING_H
 
+#include <chainlock/chainlock.h>
 #include <chainlock/clsig.h>
 #include <llmq/signing.h>
 
@@ -28,10 +29,6 @@ class ChainLockSignerParent
 public:
     virtual ~ChainLockSignerParent() = default;
 
-    virtual int32_t GetBestChainLockHeight() const = 0;
-    virtual bool HasChainLock(int nHeight, const uint256& blockHash) const = 0;
-    virtual bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const = 0;
-    virtual bool IsEnabled() const = 0;
     virtual bool IsTxSafeForMining(const uint256& txid) const = 0;
     [[nodiscard]] virtual MessageProcessingResult ProcessNewChainLock(NodeId from, const ChainLockSig& clsig, const uint256& hash) = 0;
     virtual void UpdateTxFirstSeenMap(const Uint256HashSet& tx, const int64_t& time) = 0;
@@ -41,7 +38,8 @@ class ChainLockSigner final : public llmq::CRecoveredSigsListener
 {
 private:
     CChainState& m_chainstate;
-    ChainLockSignerParent& m_clhandler;
+    const chainlock::Chainlocks& m_chainlocks;
+    ChainLockSignerParent& m_clhandler; // TODO: fully replace to Chainlocks
     llmq::CSigningManager& m_sigman;
     llmq::CSigSharesManager& m_shareman;
     CSporkManager& m_sporkman;
@@ -66,7 +64,7 @@ public:
     ChainLockSigner() = delete;
     ChainLockSigner(const ChainLockSigner&) = delete;
     ChainLockSigner& operator=(const ChainLockSigner&) = delete;
-    explicit ChainLockSigner(CChainState& chainstate, ChainLockSignerParent& clhandler, llmq::CSigningManager& sigman,
+    explicit ChainLockSigner(CChainState& chainstate, const chainlock::Chainlocks& chainlocks, ChainLockSignerParent& clhandler, llmq::CSigningManager& sigman,
                              llmq::CSigSharesManager& shareman, CSporkManager& sporkman, const CMasternodeSync& mn_sync);
     ~ChainLockSigner();
 

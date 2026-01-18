@@ -23,11 +23,11 @@ class CBlock;
 class CBlockIndex;
 class CChainState;
 class CCoinsView;
+namespace chainlock { class Chainlocks; }
 namespace kernel {
 enum class CoinStatsHashType : uint8_t;
 }
 namespace llmq {
-class CChainLocksHandler;
 class CInstantSendManager;
 } // namespace llmq
 namespace node {
@@ -51,10 +51,10 @@ double GetDifficulty(const CBlockIndex* blockindex);
 void RPCNotifyBlockChange(const CBlockIndex*);
 
 /** Block description to JSON */
-UniValue blockToJSON(node::BlockManager& blockman, const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, const llmq::CChainLocksHandler& clhandler, const llmq::CInstantSendManager& isman, TxVerbosity verbosity) LOCKS_EXCLUDED(cs_main);
+UniValue blockToJSON(node::BlockManager& blockman, const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, const chainlock::Chainlocks& chainlocks, const llmq::CInstantSendManager& isman, TxVerbosity verbosity) LOCKS_EXCLUDED(cs_main);
 
 /** Block header to JSON */
-UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex, const llmq::CChainLocksHandler& clhandler) LOCKS_EXCLUDED(cs_main);
+UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex, const chainlock::Chainlocks& chainlocks) LOCKS_EXCLUDED(cs_main);
 
 /** Used by getblockstats to get feerates at different percentiles by weight  */
 void CalculatePercentilesBySize(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES], std::vector<std::pair<CAmount, int64_t>>& scores, int64_t total_size);

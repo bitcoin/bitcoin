@@ -7,7 +7,7 @@
 #include <active/dkgsessionhandler.h>
 #include <active/masternode.h>
 #include <active/quorums.h>
-#include <chainlock/chainlock.h>
+#include <chainlock/handler.h>
 #include <chainlock/signing.h>
 #include <governance/governance.h>
 #include <governance/signing.h>
@@ -25,7 +25,7 @@
 
 ActiveContext::ActiveContext(CBLSWorker& bls_worker, ChainstateManager& chainman, CConnman& connman,
                              CDeterministicMNManager& dmnman, CGovernanceManager& govman,
-                             CMasternodeMetaMan& mn_metaman, CMNHFManager& mnhfman, CSporkManager& sporkman,
+                             CMasternodeMetaMan& mn_metaman, CMNHFManager& mnhfman, CSporkManager& sporkman, const chainlock::Chainlocks& chainlocks,
                              CTxMemPool& mempool, llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman,
                              llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumManager& qman,
                              llmq::CQuorumSnapshotManager& qsnapman, llmq::CSigningManager& sigman,
@@ -44,9 +44,9 @@ ActiveContext::ActiveContext(CBLSWorker& bls_worker, ChainstateManager& chainman
     ehf_sighandler{std::make_unique<llmq::CEHFSignalsHandler>(chainman, mnhfman, sigman, *shareman, qman)},
     qman_handler{std::make_unique<llmq::QuorumParticipant>(bls_worker, connman, dmnman, qman, qsnapman, *nodeman, chainman,
                                                            mn_sync, sporkman, sync_map, quorums_recovery, quorums_watch)},
-    cl_signer{std::make_unique<chainlock::ChainLockSigner>(chainman.ActiveChainstate(), clhandler, sigman, *shareman,
+    cl_signer{std::make_unique<chainlock::ChainLockSigner>(chainman.ActiveChainstate(), chainlocks, clhandler, sigman, *shareman,
                                                            sporkman, mn_sync)},
-    is_signer{std::make_unique<instantsend::InstantSendSigner>(chainman.ActiveChainstate(), clhandler, isman, sigman,
+    is_signer{std::make_unique<instantsend::InstantSendSigner>(chainman.ActiveChainstate(), chainlocks, isman, sigman,
                                                                *shareman, qman, sporkman, mempool, mn_sync)}
 {
     qdkgsman->InitializeHandlers([&](const Consensus::LLMQParams& llmq_params,

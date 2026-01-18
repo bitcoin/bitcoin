@@ -5,7 +5,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
-#include <chainlock/chainlock.h>
 #include <chainparams.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
@@ -357,7 +356,6 @@ static RPCHelpMan generateblock()
     }
 
     const CChainParams& chainparams(Params());
-    const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
     ChainstateManager& chainman = EnsureChainman(node);
     CChainState& active_chainstate = chainman.ActiveChainstate();
@@ -383,7 +381,7 @@ static RPCHelpMan generateblock()
         LOCK(cs_main);
 
         BlockValidationState state;
-        if (!TestBlockValidity(state, *llmq_ctx.clhandler, *CHECK_NONFATAL(node.evodb), chainparams, active_chainstate,
+        if (!TestBlockValidity(state, *CHECK_NONFATAL(node.chainlocks), *CHECK_NONFATAL(node.evodb), chainparams, active_chainstate,
                                block, chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock), false, false)) {
             throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("TestBlockValidity failed: %s", state.GetRejectReason()));
         }
@@ -699,14 +697,12 @@ static RPCHelpMan getblocktemplate()
                 return "duplicate-inconclusive";
             }
 
-            const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
-
             CBlockIndex* const pindexPrev = active_chain.Tip();
             // TestBlockValidity only supports blocks built on the current Tip
             if (block.hashPrevBlock != pindexPrev->GetBlockHash())
                 return "inconclusive-not-best-prevblk";
             BlockValidationState state;
-            TestBlockValidity(state, *llmq_ctx.clhandler, *CHECK_NONFATAL(node.evodb), Params(), active_chainstate,
+            TestBlockValidity(state, *CHECK_NONFATAL(node.chainlocks), *CHECK_NONFATAL(node.evodb), Params(), active_chainstate,
                               block, pindexPrev, false, true);
             return BIP22ValidationResult(state);
         }

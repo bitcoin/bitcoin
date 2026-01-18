@@ -28,7 +28,9 @@
 #include <llmq/utils.h>
 
 static bool CheckCbTxBestChainlock(const CCbTx& cbTx, const CBlockIndex* pindex,
-                                   const llmq::CChainLocksHandler& chainlock_handler, BlockValidationState& state)
+    const Consensus::Params& m_consensus_params,
+        const CChain& chain, const llmq::CQuorumManager& qman,
+                                   const chainlock::Chainlocks& chainlocks, BlockValidationState& state)
 {
     if (cbTx.nVersion < CCbTx::Version::CLSIG_AND_BALANCE) {
         return true;
@@ -38,7 +40,7 @@ static bool CheckCbTxBestChainlock(const CCbTx& cbTx, const CBlockIndex* pindex,
     static const CBlockIndex* cached_pindex GUARDED_BY(cached_mutex){nullptr};
     static std::optional<std::pair<CBLSSignature, uint32_t>> cached_chainlock GUARDED_BY(cached_mutex){std::nullopt};
 
-    auto best_clsig = chainlock_handler.GetBestChainLock();
+    auto best_clsig = chainlocks.GetBestChainLock();
     if (best_clsig.getHeight() == pindex->nHeight - 1 && cbTx.bestCLHeightDiff == 0 &&
         cbTx.bestCLSignature == best_clsig.getSig()) {
         // matches our best clsig which still hold values for the previous block
@@ -78,9 +80,14 @@ static bool CheckCbTxBestChainlock(const CCbTx& cbTx, const CBlockIndex* pindex,
             return true;
         }
         uint256 curBlockCoinbaseCLBlockHash = pindex->GetAncestor(curBlockCoinbaseCLHeight)->GetBlockHash();
-        if (chainlock_handler.VerifyChainLock(
-                chainlock::ChainLockSig(curBlockCoinbaseCLHeight, curBlockCoinbaseCLBlockHash, cbTx.bestCLSignature)) !=
-            llmq::VerifyRecSigStatus::Valid) {
+        // TODO: remove duplicated code with CChainLocksHandler::VerifyChainLock
+        const auto llmqType = m_consensus_params.llmqTypeChainLocks;
+        chainlock::ChainLockSig clsig{curBlockCoinbaseCLHeight, curBlockCoinbaseCLBlockHash, cbTx.bestCLSignature};
+        const uint256 nRequestId = chainlock::GenSigRequestId(clsig.getHeight());
+
+        llmq::VerifyRecSigStatus ret = llmq::VerifyRecoveredSig(llmqType, chain, qman, clsig.getHeight(), nRequestId,
+                                        clsig.getBlockHash(), clsig.getSig());
+        if (ret != llmq::VerifyRecSigStatus::Valid) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-invalid-clsig");
         }
         LOCK(cached_mutex);
@@ -657,7 +664,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
             LogPrint(BCLog::BENCHMARK, "      - CalcCbTxMerkleRootQuorums: %.2fms [%.2fs]\n",
                      0.001 * (nTime6_2 - nTime6_1), nTimeMerkleQuorums * 0.000001);
 
-            if (!CheckCbTxBestChainlock(*opt_cbTx, pindex, m_clhandler, state)) {
+            if (!CheckCbTxBestChainlock(*opt_cbTx, pindex, m_consensus_params, m_chainman.ActiveChain(), m_qman, m_chainlocks, state)) {
                 // pass the state returned by the function above
                 return false;
             }

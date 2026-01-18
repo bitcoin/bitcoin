@@ -25,6 +25,7 @@
 #include <validation.h>
 
 #include <chainlock/chainlock.h>
+#include <chainlock/handler.h>
 #include <evo/specialtx.h>
 #include <evo/cbtx.h>
 #include <evo/chainhelper.h>
@@ -76,6 +77,7 @@ BlockAssembler::BlockAssembler(CChainState& chainstate, const NodeContext& node,
       m_chainstate(chainstate),
       m_evoDb(*Assert(node.evodb)),
       m_mnhfman(*Assert(node.mnhf_manager)),
+      m_chainlocks(*Assert(node.chainlocks)),
       m_clhandler(*Assert(Assert(node.llmq_ctx)->clhandler)),
       m_isman(*Assert(Assert(node.llmq_ctx)->isman)),
       chainparams(params),
@@ -121,10 +123,10 @@ void BlockAssembler::resetBlock()
 }
 
 // Helper to calculate best chainlock
-static bool CalcCbTxBestChainlock(const llmq::CChainLocksHandler& chainlock_handler, const CBlockIndex* pindexPrev,
+static bool CalcCbTxBestChainlock(const chainlock::Chainlocks& chainlocks, const CBlockIndex* pindexPrev,
                                   uint32_t& bestCLHeightDiff, CBLSSignature& bestCLSignature)
 {
-    auto best_clsig = chainlock_handler.GetBestChainLock();
+    auto best_clsig = chainlocks.GetBestChainLock();
     if (best_clsig.getHeight() < Params().GetConsensus().DeploymentHeight(Consensus::DEPLOYMENT_V19)) {
         // We don't want legacy BLS ChainLocks in CbTx (can happen on regtest/devenets)
         best_clsig = chainlock::ChainLockSig{};
@@ -299,7 +301,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
                 throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootQuorums failed: %s", __func__, state.ToString()));
             }
             if (fV20Active_context) {
-                if (CalcCbTxBestChainlock(m_clhandler, pindexPrev, cbTx.bestCLHeightDiff, cbTx.bestCLSignature)) {
+                if (CalcCbTxBestChainlock(m_chainlocks, pindexPrev, cbTx.bestCLHeightDiff, cbTx.bestCLSignature)) {
                     LogPrintf("CreateNewBlock() h[%d] CbTx bestCLHeightDiff[%d] CLSig[%s]\n", nHeight, cbTx.bestCLHeightDiff, cbTx.bestCLSignature.ToString());
                 } else {
                     // not an error
@@ -334,7 +336,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(*pblock->vtx[0]);
 
     BlockValidationState state;
-    if (!TestBlockValidity(state, m_clhandler, m_evoDb, chainparams, m_chainstate, *pblock, pindexPrev, false, false)) {
+    if (!TestBlockValidity(state, m_chainlocks, m_evoDb, chainparams, m_chainstate, *pblock, pindexPrev, false, false)) {
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, state.ToString()));
     }
     int64_t nTime2 = GetTimeMicros();

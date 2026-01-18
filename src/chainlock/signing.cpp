@@ -16,10 +16,11 @@
 using node::ReadBlockFromDisk;
 
 namespace chainlock {
-ChainLockSigner::ChainLockSigner(CChainState& chainstate, ChainLockSignerParent& clhandler,
+ChainLockSigner::ChainLockSigner(CChainState& chainstate, const chainlock::Chainlocks& chainlocks, ChainLockSignerParent& clhandler,
                                  llmq::CSigningManager& sigman, llmq::CSigSharesManager& shareman,
                                  CSporkManager& sporkman, const CMasternodeSync& mn_sync) :
     m_chainstate{chainstate},
+    m_chainlocks{chainlocks},
     m_clhandler{clhandler},
     m_sigman{sigman},
     m_shareman{shareman},
@@ -46,7 +47,7 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
         return;
     }
 
-    if (!m_clhandler.IsEnabled()) {
+    if (!m_chainlocks.IsEnabled()) {
         return;
     }
 
@@ -75,12 +76,12 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
         }
     }
 
-    if (m_clhandler.GetBestChainLockHeight() >= pindex->nHeight) {
+    if (m_chainlocks.GetBestChainLockHeight() >= pindex->nHeight) {
         // already got the same CLSIG or a better one
         return;
     }
 
-    if (m_clhandler.HasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+    if (m_chainlocks.HasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
         // don't sign if another conflicting CLSIG is already present. EnforceBestChainLock will later enforce
         // the correct chain.
         return;
@@ -102,7 +103,7 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
                 LogPrint(BCLog::CHAINLOCKS, "%s -- tip and previous %d blocks all safe\n", __func__, TX_CONFIRM_THRESHOLD);
                 break;
             }
-            if (m_clhandler.HasChainLock(pindexWalk->nHeight, pindexWalk->GetBlockHash())) {
+            if (m_chainlocks.HasChainLock(pindexWalk->nHeight, pindexWalk->GetBlockHash())) {
                 // we don't care about islocks for TXs that are ChainLocked already
                 LogPrint(BCLog::CHAINLOCKS, "%s -- chainlock at height %d\n", __func__, pindexWalk->nHeight);
                 break;
@@ -130,7 +131,7 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
     uint256 requestId = GenSigRequestId(pindex->nHeight);
     uint256 msgHash = pindex->GetBlockHash();
 
-    if (m_clhandler.GetBestChainLockHeight() >= pindex->nHeight) {
+    if (m_chainlocks.GetBestChainLockHeight() >= pindex->nHeight) {
         // might have happened while we didn't hold cs
         return;
     }
@@ -222,7 +223,7 @@ ChainLockSigner::BlockTxs::mapped_type ChainLockSigner::GetBlockTxs(const uint25
 
 MessageProcessingResult ChainLockSigner::HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig)
 {
-    if (!m_clhandler.IsEnabled()) {
+    if (!m_chainlocks.IsEnabled()) {
         return {};
     }
 
@@ -234,7 +235,7 @@ MessageProcessingResult ChainLockSigner::HandleNewRecoveredSig(const llmq::CReco
             // this is not what we signed, so lets not create a CLSIG for it
             return {};
         }
-        if (m_clhandler.GetBestChainLockHeight() >= lastSignedHeight) {
+        if (m_chainlocks.GetBestChainLockHeight() >= lastSignedHeight) {
             // already got the same or a better CLSIG through the CLSIG message
             return {};
         }
@@ -253,10 +254,10 @@ std::vector<std::shared_ptr<Uint256HashSet>> ChainLockSigner::Cleanup()
         const auto* pindex = m_chainstate.m_blockman.LookupBlockIndex(it->first);
         if (!pindex) {
             it = blockTxs.erase(it);
-        } else if (m_clhandler.HasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+        } else if (m_chainlocks.HasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
             removed.push_back(it->second);
             it = blockTxs.erase(it);
-        } else if (m_clhandler.HasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+        } else if (m_chainlocks.HasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
             it = blockTxs.erase(it);
         } else {
             ++it;

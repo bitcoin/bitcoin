@@ -39,6 +39,8 @@ namespace llmq {
 struct ObserverContext;
 } // namespace llmq
 
+namespace chainlock { class Chainlocks; }
+
 namespace interfaces {
 class Chain;
 class ChainClient;
@@ -94,6 +96,7 @@ struct NodeContext {
     std::unique_ptr<CMNHFManager> mnhf_manager;
     std::unique_ptr<CNetFulfilledRequestManager> netfulfilledman;
     std::unique_ptr<CSporkManager> sporkman;
+    std::unique_ptr<chainlock::Chainlocks> chainlocks;
     //! Dash contexts
     std::unique_ptr<ActiveContext> active_ctx;
     std::unique_ptr<LLMQContext> llmq_ctx;

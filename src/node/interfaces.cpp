@@ -1074,8 +1074,8 @@ public:
     }
     bool hasChainLock(int height, const uint256& hash) override
     {
-        if (m_node.llmq_ctx == nullptr || m_node.llmq_ctx->clhandler == nullptr) return false;
-        return m_node.llmq_ctx->clhandler->HasChainLock(height, hash);
+        if (m_node.chainlocks == nullptr) return false;
+        return m_node.chainlocks->HasChainLock(height, hash);
     }
     std::vector<COutPoint> listMNCollaterials(const std::vector<std::pair<const CTransactionRef&, uint32_t>>& outputs) override
     {

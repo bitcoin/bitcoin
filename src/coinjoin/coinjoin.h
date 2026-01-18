@@ -29,8 +29,11 @@ class ChainstateManager;
 class CMasternodeSync;
 class CTxMemPool;
 
+namespace chainlock {
+class Chainlocks;
+} // namespace chainlock
+
 namespace llmq {
-class CChainLocksHandler;
 class CInstantSendManager;
 } // namespace llmq
 
@@ -280,7 +283,7 @@ public:
     // Used only for unit tests
     [[nodiscard]] std::optional<int> GetConfirmedHeight() const { return nConfirmedHeight; }
     void SetConfirmedHeight(std::optional<int> nConfirmedHeightIn) { assert(nConfirmedHeightIn == std::nullopt || *nConfirmedHeightIn > 0); nConfirmedHeight = nConfirmedHeightIn; }
-    bool IsExpired(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler) const;
+    bool IsExpired(const CBlockIndex* pindex, const chainlock::Chainlocks& chainlocks) const;
     [[nodiscard]] bool IsValidStructure() const;
 };
 
@@ -380,10 +383,10 @@ public:
     void AddDSTX(const CCoinJoinBroadcastTx& dstx) EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
     CCoinJoinBroadcastTx GetDSTX(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
 
-    void UpdatedBlockTip(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler,
+    void UpdatedBlockTip(const CBlockIndex* pindex, const chainlock::Chainlocks& chainlocks,
                          const CMasternodeSync& mn_sync)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
-    void NotifyChainLock(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler,
+    void NotifyChainLock(const CBlockIndex* pindex, const chainlock::Chainlocks& chainlocks,
                          const CMasternodeSync& mn_sync)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
 
@@ -394,7 +397,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
 
 private:
-    void CheckDSTXes(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler)
+    void CheckDSTXes(const CBlockIndex* pindex, const chainlock::Chainlocks& chainlocks)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
     void UpdateDSTXConfirmedHeight(const CTransactionRef& tx, std::optional<int> nHeight)
         EXCLUSIVE_LOCKS_REQUIRED(cs_mapdstx);

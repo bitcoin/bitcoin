@@ -66,9 +66,7 @@ struct Params;
 namespace node {
 class SnapshotMetadata;
 } // namespace node
-namespace llmq {
-class CChainLocksHandler;
-} // namespace llmq
+namespace chainlock { class Chainlocks; }
 
 /** Default for -mempoolexpiry, expiration time for mempool transactions in hours */
 static const unsigned int DEFAULT_MEMPOOL_EXPIRY = 336;
@@ -377,7 +375,7 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
 
 /** Check a block is completely valid from start to finish (only works on top of our current best block) */
 bool TestBlockValidity(BlockValidationState& state,
-                       llmq::CChainLocksHandler& clhandler,
+                       const chainlock::Chainlocks& chainlocks,
                        CEvoDB& evoDb,
                        const CChainParams& chainparams,
                        CChainState& chainstate,
