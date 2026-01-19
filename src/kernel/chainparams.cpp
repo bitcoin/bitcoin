@@ -3,28 +3,26 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "chainparams.h"
+#include <kernel/chainparams.h>
 
 #include "chainparamsseeds.h"
-#include "consensus/amount.h"
-#include "consensus/merkle.h"
 #include "consensus/params.h"
-#include "hash.h"
 #include "kernel/messagestartchars.h"
-#include "logging.h"
-#include "primitives/block.h"
-#include "primitives/transaction.h"
-#include "script/interpreter.h"
-#include "script/script.h"
-#include "uint256.h"
+#include "tinyformat.h"
 #include "util/chaintype.h"
 #include "util/strencodings.h"
 
-#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <cstring>
-#include <type_traits>
+#include <limits>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
 
 using namespace util::hex_literals;
 
@@ -33,7 +31,8 @@ using namespace util::hex_literals;
 // A fix may be on the way:
 // https://developercommunity.visualstudio.com/t/consteval-conversion-function-fails/1579014
 #if defined(_MSC_VER)
-auto consteval_ctor(auto&& input) { return input; }
+template <typename T>
+auto consteval_ctor(T&& input) { return input; }
 #else
 #define consteval_ctor(input) (input)
 #endif

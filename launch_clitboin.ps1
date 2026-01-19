@@ -47,7 +47,14 @@ Write-Host "Checking Balance..." -ForegroundColor Green
 & $CliPath -conf=$(Get-Location)\clitboin.conf getbalance
 
 # 6. Launch Explorer & Wallet UI
-Write-Host "Starting Explorer (http://localhost:5000)..." -ForegroundColor Cyan
+Write-Host "Starting Explorer (GUI)..." -ForegroundColor Cyan
+if (Test-Path $ExplorerPath) {
+    Start-Process -FilePath $ExplorerPath -ArgumentList "-conf=$(Get-Location)\clitboin.conf"
+} else {
+    Write-Host "WARNING: clitexplorer.exe not found." -ForegroundColor Yellow
+}
+
+Write-Host "Done! Your Clitboin node is running." -ForegroundColor Cyan
 Start-Process -FilePath "python" -ArgumentList "simple_explorer.py"
 
 Write-Host "Starting Web Wallet (http://localhost:5001)..." -ForegroundColor Cyan

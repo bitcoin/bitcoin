@@ -7,7 +7,6 @@
 
 #include "chainparamsbase.h"
 
-
 #include "common/args.h"
 #include "util/chaintype.h"
 

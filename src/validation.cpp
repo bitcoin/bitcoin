@@ -3,6 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+// Copyright (c) 2009-present The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include "bitcoin-build-config.h" // IWYU pragma: keep
 
 #include "validation.h"
@@ -1947,7 +1951,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     if (halvings >= 64)
         return 0;
 
-    CAmount nSubsidy = 50000 * COIN;
+    CAmount nSubsidy = 500 * COIN;
     // Subsidy is cut in half every 240,000 blocks which will occur approximately every 5.5 months (at 1 min blocks).
     nSubsidy >>= halvings;
     return nSubsidy;

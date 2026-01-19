@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
+#include "bitcoin-build-config.h" // IWYU pragma: keep
 
 #include "util/translation.h"
 #include "tinyformat.h"
@@ -11,7 +11,14 @@
 #include <string>
 #include <vector>
 
-#include "util/string.h"
+#ifndef COPYRIGHT_HOLDERS
+#define COPYRIGHT_HOLDERS "The %s developers"
+#endif
+
+#ifndef COPYRIGHT_HOLDERS_SUBSTITUTION
+#define COPYRIGHT_HOLDERS_SUBSTITUTION "Clitboin Core"
+#endif
+
 using std::string;
 using std::vector;
 using util::Join;

@@ -7,7 +7,6 @@
 
 #include <cassert>
 #include <cstddef>
-#include <span>
 #include <type_traits>
 #include <utility>
 

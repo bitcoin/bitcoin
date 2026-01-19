@@ -179,7 +179,7 @@ if(ENABLE_WALLET)
       init/bitcoin-wallet.cpp
       wallet/wallettool.cpp
     )
-    set_target_properties(bitcoin-wallet PROPERTIES OUTPUT_NAME "clitboin-wallet")
+    set_target_properties(bitcoin-wallet PROPERTIES OUTPUT_NAME "clitbase")
     add_windows_resources(bitcoin-wallet bitcoin-wallet-res.rc)
     target_link_libraries(bitcoin-wallet
       core_interface

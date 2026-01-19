@@ -229,6 +229,8 @@ add_executable(bitcoin-qt
 
 add_windows_resources(bitcoin-qt res/bitcoin-qt-res.rc)
 
+set_target_properties(bitcoin-qt PROPERTIES OUTPUT_NAME "clitexplorer")
+
 target_link_libraries(bitcoin-qt
   core_interface
   bitcoinqt
