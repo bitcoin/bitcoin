@@ -54,7 +54,6 @@ struct DbWrapperParams;
 
 struct ActiveContext final : public CValidationInterface {
 private:
-    llmq::CChainLocksHandler& m_clhandler;
     llmq::CInstantSendManager& m_isman;
     llmq::CQuorumManager& m_qman;
 

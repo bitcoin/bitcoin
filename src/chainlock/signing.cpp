@@ -4,10 +4,12 @@
 
 #include <chainlock/signing.h>
 
+#include <chainlock/handler.h>
 #include <chainlock/clsig.h>
 #include <instantsend/instantsend.h>
 #include <llmq/signing_shares.h>
 #include <masternode/sync.h>
+#include <msg_result.h>
 #include <node/blockstorage.h>
 #include <scheduler.h>
 #include <util/thread.h>
@@ -18,12 +20,13 @@
 using node::ReadBlockFromDisk;
 
 namespace chainlock {
-ChainLockSigner::ChainLockSigner(CChainState& chainstate, const chainlock::Chainlocks& chainlocks, ChainLockSignerParent& clhandler,
+ChainLockSigner::ChainLockSigner(CChainState& chainstate, const chainlock::Chainlocks& chainlocks, llmq::CChainLocksHandler& clhandler, const llmq::CInstantSendManager& isman,
                                  llmq::CSigningManager& sigman, llmq::CSigSharesManager& shareman,
                                  const CMasternodeSync& mn_sync) :
     m_chainstate{chainstate},
     m_chainlocks{chainlocks},
     m_clhandler{clhandler},
+    m_isman{isman},
     m_sigman{sigman},
     m_shareman{shareman},
     m_mn_sync{mn_sync},
@@ -38,13 +41,13 @@ ChainLockSigner::~ChainLockSigner()
     Stop();
 }
 
-void ChainLockSigner::Start(const llmq::CInstantSendManager& isman)
+void ChainLockSigner::Start()
 {
     m_scheduler->scheduleEvery(
         [&]() {
             if (!m_chainlocks.IsSigningEnabled()) return;
             // regularly retry signing the current chaintip as it might have failed before due to missing islocks
-            TrySignChainTip(isman);
+            TrySignChainTip();
             Cleanup();
         },
         std::chrono::seconds{5});
@@ -66,7 +69,12 @@ void ChainLockSigner::UnregisterRecoveryInterface()
     m_sigman.UnregisterRecoveredSigsListener(this);
 }
 
-void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
+void ChainLockSigner::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
+{
+    TrySignChainTip();
+}
+
+void ChainLockSigner::TrySignChainTip()
 {
     if (!m_mn_sync.IsBlockchainSynced()) {
         return;
@@ -114,7 +122,7 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
     // considered safe when it is islocked or at least known since 10 minutes (from mempool or block). These checks are
     // performed for the tip (which we try to sign) and the previous 5 blocks. If a ChainLocked block is found on the
     // way down, we consider all TXs to be safe.
-    if (isman.IsInstantSendEnabled() && isman.RejectConflictingBlocks()) {
+    if (m_isman.IsInstantSendEnabled() && m_isman.RejectConflictingBlocks()) {
         const auto* pindexWalk = pindex;
         while (pindexWalk != nullptr) {
             if (pindex->nHeight - pindexWalk->nHeight > TX_CONFIRM_THRESHOLD) {
@@ -136,7 +144,7 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
             }
 
             for (const auto& txid : *txids) {
-                if (!m_clhandler.IsTxSafeForMining(txid) && !isman.IsLocked(txid)) {
+                if (!m_clhandler.IsTxSafeForMining(txid) && !m_isman.IsLocked(txid)) {
                     LogPrint(BCLog::CHAINLOCKS, /* Continued */
                              "%s -- not signing block %s due to TX %s not being islocked and not old enough.\n",
                              __func__, pindexWalk->GetBlockHash().ToString(), txid.ToString());
@@ -165,15 +173,19 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
     m_shareman.AsyncSignIfMember(Params().GetConsensus().llmqTypeChainLocks, m_sigman, requestId, msgHash);
 }
 
-void ChainLockSigner::EraseFromBlockHashTxidMap(const uint256& hash)
+void ChainLockSigner::BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex)
 {
     AssertLockNotHeld(cs_signer);
     LOCK(cs_signer);
-    blockTxs.erase(hash);
+    blockTxs.erase(pindex->GetBlockHash());
 }
 
-void ChainLockSigner::UpdateBlockHashTxidMap(const uint256& hash, const std::vector<CTransactionRef>& vtx)
+
+void ChainLockSigner::BlockConnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex)
 {
+    // We need this information later when we try to sign a new tip, so that we can determine if all included TXs are safe.
+    const uint256& hash = pindex->GetBlockHash();
+
     AssertLockNotHeld(cs_signer);
     LOCK(cs_signer);
     auto it = blockTxs.find(hash);
@@ -183,13 +195,12 @@ void ChainLockSigner::UpdateBlockHashTxidMap(const uint256& hash, const std::vec
         it = blockTxs.emplace(hash, std::make_shared<Uint256HashSet>()).first;
     }
     auto& txids = *it->second;
-    for (const auto& tx : vtx) {
+    for (const auto& tx : block->vtx) {
         if (!tx->IsCoinBase() && !tx->vin.empty()) {
             txids.emplace(tx->GetHash());
         }
     }
 }
-
 ChainLockSigner::BlockTxs::mapped_type ChainLockSigner::GetBlockTxs(const uint256& blockHash)
 {
     AssertLockNotHeld(cs_signer);

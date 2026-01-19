@@ -23,8 +23,8 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     # Dash
     "active/context -> llmq/signing_shares -> net_processing -> active/context",
     "banman -> common/bloom -> evo/assetlocktx -> llmq/quorumsman -> net -> banman",
-    "chainlock/handler -> chainlock/signing -> llmq/signing_shares -> net_processing -> chainlock/handler",
-    "chainlock/handler -> chainlock/signing -> llmq/signing_shares -> net_processing -> llmq/context -> chainlock/handler",
+    "chainlock/handler -> instantsend/instantsend -> instantsend/signing -> llmq/signing_shares -> net_processing -> chainlock/handler",
+    "chainlock/handler -> instantsend/instantsend -> instantsend/signing -> llmq/signing_shares -> net_processing -> llmq/context -> chainlock/handler",
     "chainlock/chainlock -> spork -> msg_result -> coinjoin/coinjoin -> chainlock/chainlock",
     "chainlock/chainlock -> spork -> net -> evo/deterministicmns -> validation -> chainlock/chainlock",
     "coinjoin/coinjoin -> instantsend/instantsend -> spork -> msg_result -> coinjoin/coinjoin",

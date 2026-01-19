@@ -80,7 +80,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     m_dstxman.UpdatedBlockTip(pindexNew, m_chainlocks, m_mn_sync);
 
     m_llmq_ctx->isman->UpdatedBlockTip(pindexNew);
-    m_llmq_ctx->clhandler->UpdatedBlockTip(*m_llmq_ctx->isman);
+    m_llmq_ctx->clhandler->UpdatedBlockTip();
 
     if (m_govman.IsValid()) {
         m_govman.UpdatedBlockTip(pindexNew);
@@ -111,7 +111,6 @@ void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock
 void CDSNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)
 {
     Assert(m_llmq_ctx)->isman->BlockDisconnected(pblock, pindexDisconnected);
-    m_llmq_ctx->clhandler->BlockDisconnected(pblock, pindexDisconnected);
     m_dstxman.BlockDisconnected(pblock, pindexDisconnected);
 }
 

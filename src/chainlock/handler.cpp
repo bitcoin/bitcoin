@@ -132,7 +132,7 @@ MessageProcessingResult CChainLocksHandler::ProcessNewChainLock(const NodeId fro
     return clsig_inv;
 }
 
-void CChainLocksHandler::UpdatedBlockTip(const llmq::CInstantSendManager& isman)
+void CChainLocksHandler::UpdatedBlockTip()
 {
     // don't call TrySignChainTip directly but instead let the scheduler call it. This way we ensure that cs_main is
     // never locked and TrySignChainTip is not called twice in parallel. Also avoids recursive calls due to
@@ -141,13 +141,9 @@ void CChainLocksHandler::UpdatedBlockTip(const llmq::CInstantSendManager& isman)
     if (bool expected = false; tryLockChainTipScheduled.compare_exchange_strong(expected, true)) {
         scheduler->scheduleFromNow(
             [&]() {
-                auto signer = m_signer.load(std::memory_order_acquire);
                 CheckActiveState();
                 EnforceBestChainLock();
                 Cleanup();
-                if (signer) {
-                    signer->TrySignChainTip(isman);
-                }
                 tryLockChainTipScheduled = false;
             },
             std::chrono::seconds{0});
@@ -194,19 +190,6 @@ void CChainLocksHandler::BlockConnected(const std::shared_ptr<const CBlock>& pbl
                 txFirstSeenTime.emplace(tx->GetHash(), curTime);
             }
         }
-    }
-
-    // We need this information later when we try to sign a new tip, so that we can determine if all included TXs are safe.
-    if (auto signer = m_signer.load(std::memory_order_acquire); signer) {
-        signer->UpdateBlockHashTxidMap(pindex->GetBlockHash(), pblock->vtx);
-    }
-}
-
-void CChainLocksHandler::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock,
-                                           gsl::not_null<const CBlockIndex*> pindexDisconnected)
-{
-    if (auto signer = m_signer.load(std::memory_order_acquire); signer) {
-        signer->EraseFromBlockHashTxidMap(pindexDisconnected->GetBlockHash());
     }
 }
 
