@@ -258,7 +258,7 @@ jobs:
           sed -i '1s/^/set(ENV{CMAKE_POLICY_VERSION_MINIMUM} 3.5)\n/' "${VCPKG_INSTALLATION_ROOT}/scripts/ports.cmake"
 
       - name: vcpkg tools cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: C:/vcpkg/downloads/tools
           key: ${{ github.job }}-vcpkg-tools
@@ -409,7 +409,7 @@ jobs:
         uses: ./.github/actions/save-caches
 
       - name: Upload built executables
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.artifact-name }}-${{ github.run_id }}
           path: |
@@ -447,7 +447,7 @@ jobs:
           ref: ${{ needs.record-frozen-commit.outputs.commit }}
 
       - name: Download built executables
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: ${{ matrix.artifact-name }}-${{ github.run_id }}
 
