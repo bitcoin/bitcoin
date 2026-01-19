@@ -181,3 +181,17 @@ def format_addr_port(addr, port):
         return f"[{addr}]:{port}"
     else:
         return f"{addr}:{port}"
+
+
+def set_freebsd_high_port_range(sock):
+    '''On FreeBSD, set socket to use the high ephemeral port range (49152-65535).
+
+    FreeBSD's default ephemeral port range (10000-65535) overlaps with the test
+    framework's static port range (11000-26000). Using IP_PORTRANGE_HIGH avoids
+    this overlap when binding to port 0 for dynamic port allocation.
+    '''
+    if sys.platform.startswith('freebsd'):
+        # Constants from FreeBSD's netinet/in.h
+        IP_PORTRANGE = 19
+        IP_PORTRANGE_HIGH = 1
+        sock.setsockopt(socket.IPPROTO_IP, IP_PORTRANGE, IP_PORTRANGE_HIGH)
