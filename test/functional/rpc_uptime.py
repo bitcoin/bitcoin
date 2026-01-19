@@ -26,9 +26,12 @@ class UptimeTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Mocktime must be in the range [0, 9223372036], not -1.", self.nodes[0].setmocktime, -1)
 
     def _test_uptime(self):
-        wait_time = 10
-        self.nodes[0].setmocktime(int(time.time() + wait_time))
-        assert self.nodes[0].uptime() >= wait_time
+        wait_time = 20_000
+        uptime_before = self.nodes[0].uptime()
+        self.nodes[0].setmocktime(int(time.time()) + wait_time)
+        uptime_after = self.nodes[0].uptime()
+        self.nodes[0].setmocktime(0)
+        assert uptime_after - uptime_before < wait_time, "uptime should not jump with wall clock"
 
 
 if __name__ == '__main__':
