@@ -32,7 +32,7 @@ class ToolWalletTest(BitcoinTestFramework):
         if self.options.descriptors and 'create' in args:
             default_args.append('-descriptors')
 
-        return subprocess.Popen([self.options.bitcoinwallet] + default_args + list(args), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        return subprocess.Popen([self.options.bitcoinwallet] + default_args + list(args), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
     def assert_raises_tool_error(self, error, *args):
         p = self.dash_wallet_process(*args)

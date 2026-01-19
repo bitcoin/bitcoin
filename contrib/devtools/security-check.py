@@ -34,7 +34,7 @@ def check_ELF_RELRO(binary) -> bool:
         flags = binary.get(lief.ELF.DYNAMIC_TAGS.FLAGS)
         if flags.value & lief.ELF.DYNAMIC_FLAGS.BIND_NOW:
             have_bindnow = True
-    except:
+    except Exception:
         have_bindnow = False
 
     return have_gnu_relro and have_bindnow

@@ -565,11 +565,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.nodes.append(test_node_i)
             if not test_node_i.version_is_at_least(160000):
                 # adjust conf for pre 16
-                conf_file = test_node_i.bitcoinconf
-                with open(conf_file, 'r', encoding='utf8') as conf:
-                    conf_data = conf.read()
-                with open(conf_file, 'w', encoding='utf8') as conf:
-                    conf.write(conf_data.replace('[regtest]', ''))
+                test_node_i.replace_in_config([('[regtest]', '')])
 
     def add_dynamically_node(self, extra_args=None, *, rpchost=None, binary=None):
         if self.bind_to_localhost_only:
@@ -654,7 +650,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 node.start(extra_args[i], *args, **kwargs)
             for node in self.nodes:
                 node.wait_for_rpc_connection()
-        except:
+        except Exception:
             # If one node failed to start, stop the others
             self.stop_nodes()
             raise
@@ -1040,6 +1036,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Skip the running test if we are not on a Linux platform"""
         if platform.system() != "Linux":
             raise SkipTest("not on a Linux system")
+
+    def skip_if_platform_not_posix(self):
+        """Skip the running test if we are not on a POSIX platform"""
+        if os.name != 'posix':
+            raise SkipTest("not on a POSIX system")
 
     def skip_if_no_bitcoind_zmq(self):
         """Skip the running test if dashd has not been compiled with zmq support."""
@@ -1604,7 +1605,7 @@ class DashTestFramework(BitcoinTestFramework):
         try:
             created_mn_info = self.dynamically_prepare_masternode(mn_idx, evo, rnd)
             protx_success = True
-        except:
+        except Exception:
             self.log.info("dynamically_prepare_masternode failed")
 
         assert_equal(protx_success, not should_be_rejected)
@@ -1687,7 +1688,7 @@ class DashTestFramework(BitcoinTestFramework):
             evo_info.bury_tx(self, genIdx=0, txid=protx_result, depth=1)
             self.log.info("Updated EvoNode %s: platformNodeID=%s, platformP2PPort=%s, platformHTTPPort=%s" % (evo_info.proTxHash, platform_node_id, addrs_platform_p2p, addrs_platform_https))
             protx_success = True
-        except:
+        except Exception:
             self.log.info("protx_evo rejected")
 
         assert_equal(protx_success, not should_be_rejected)
@@ -1935,7 +1936,7 @@ class DashTestFramework(BitcoinTestFramework):
         def check_instantlock():
             try:
                 return node.getrawtransaction(txid, True)["instantlock"]
-            except:
+            except Exception:
                 return False
 
         self.log.info(f"Expecting InstantLock for {txid}")
@@ -1946,7 +1947,7 @@ class DashTestFramework(BitcoinTestFramework):
             try:
                 block = node.getblock(block_hash)
                 return block["confirmations"] > 0 and block["chainlock"]
-            except:
+            except Exception:
                 return False
         self.log.info(f"Expecting ChainLock for {block_hash}")
         if self.wait_until(check_chainlocked_block, timeout=timeout, do_assert=expected) and not expected:

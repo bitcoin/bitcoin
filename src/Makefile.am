@@ -946,8 +946,9 @@ libbitcoin_common_a_SOURCES = \
   protocol.cpp \
   psbt.cpp \
   rpc/evo_util.cpp \
-  rpc/rawtransaction_util.cpp \
   rpc/external_signer.cpp \
+  rpc/rawtransaction_util.cpp \
+  rpc/request.cpp \
   rpc/util.cpp \
   saltedhasher.cpp \
   scheduler.cpp \
@@ -982,7 +983,6 @@ libbitcoin_util_a_SOURCES = \
   messagesigner.cpp \
   random.cpp \
   randomenv.cpp \
-  rpc/request.cpp \
   stacktraces.cpp \
   support/cleanse.cpp \
   sync.cpp \
@@ -1082,6 +1082,7 @@ endif
 dash_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
+  $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
 dash_cli_LDADD += $(BACKTRACE_LIBS) $(EVENT_LIBS) $(GMP_LIBS)

@@ -91,7 +91,7 @@ class LLMQConnections(DashTestFramework):
                             self.mine_cycle_quorum()
                             mn.get_node(self).mockscheduler(60) # we check for old connections via the scheduler every 60 seconds
                     removed = True
-                except:
+                except Exception:
                     pass # it's ok to not remove connections sometimes
             if removed:
                 break
@@ -105,7 +105,7 @@ class LLMQConnections(DashTestFramework):
                     with mn.get_node(self).assert_debug_log(['adding mn inter-quorum connections']):
                         self.mine_cycle_quorum()
                     added = True
-                except:
+                except Exception:
                     pass # it's ok to not add connections sometimes
             if added:
                 break
