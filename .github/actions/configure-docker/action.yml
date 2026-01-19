@@ -16,7 +16,7 @@ runs:
 
     # This is required to allow buildkit to access the actions cache
     - name: Expose actions cache variables
-      uses: actions/github-script@v6
+      uses: actions/github-script@v8
       with:
         script: |
           Object.keys(process.env).forEach(function (key) {
