@@ -106,8 +106,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   common/system.cpp
   common/url.cpp
   compressor.cpp
-  core_read.cpp
-  core_write.cpp
+  core_io.cpp
   deploymentinfo.cpp
   external_signer.cpp
   init/common.cpp
