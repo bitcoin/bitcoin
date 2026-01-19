@@ -81,7 +81,7 @@ public:
     }
     void DisconnectSigner() { m_signer.store(nullptr, std::memory_order_release); }
 
-    void Start(const llmq::CInstantSendManager& isman);
+    void Start();
     void Stop();
 
     bool AlreadyHave(const CInv& inv) const
@@ -109,6 +109,8 @@ public:
     bool IsTxSafeForMining(const uint256& txid) const override
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
+    void CleanupFromSigner(const std::vector<std::shared_ptr<Uint256HashSet>>& cleanup_txes) override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 private:
     void Cleanup()
         EXCLUSIVE_LOCKS_REQUIRED(!cs);

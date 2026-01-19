@@ -4,13 +4,16 @@
 
 #include <chainlock/signing.h>
 
-#include <node/blockstorage.h>
-#include <validation.h>
-
 #include <chainlock/clsig.h>
 #include <instantsend/instantsend.h>
 #include <llmq/signing_shares.h>
 #include <masternode/sync.h>
+#include <node/blockstorage.h>
+#include <scheduler.h>
+#include <util/thread.h>
+#include <validation.h>
+
+#include <thread>
 
 using node::ReadBlockFromDisk;
 
@@ -23,11 +26,35 @@ ChainLockSigner::ChainLockSigner(CChainState& chainstate, const chainlock::Chain
     m_clhandler{clhandler},
     m_sigman{sigman},
     m_shareman{shareman},
-    m_mn_sync{mn_sync}
+    m_mn_sync{mn_sync},
+    m_scheduler{std::make_unique<CScheduler>()},
+    m_scheduler_thread{
+        std::make_unique<std::thread>(std::thread(util::TraceThread, "cls-schdlr", [&] { m_scheduler->serviceQueue(); }))}
 {
 }
 
-ChainLockSigner::~ChainLockSigner() = default;
+ChainLockSigner::~ChainLockSigner()
+{
+    Stop();
+}
+
+void ChainLockSigner::Start(const llmq::CInstantSendManager& isman)
+{
+    m_scheduler->scheduleEvery(
+        [&]() {
+            if (!m_chainlocks.IsSigningEnabled()) return;
+            // regularly retry signing the current chaintip as it might have failed before due to missing islocks
+            TrySignChainTip(isman);
+            Cleanup();
+        },
+        std::chrono::seconds{5});
+}
+
+void ChainLockSigner::Stop()
+{
+    m_scheduler->stop();
+    if (m_scheduler_thread->joinable()) m_scheduler_thread->join();
+}
 
 void ChainLockSigner::RegisterRecoveryInterface()
 {
@@ -238,8 +265,17 @@ MessageProcessingResult ChainLockSigner::HandleNewRecoveredSig(const llmq::CReco
     return m_clhandler.ProcessNewChainLock(-1, clsig, ::SerializeHash(clsig));
 }
 
-std::vector<std::shared_ptr<Uint256HashSet>> ChainLockSigner::Cleanup()
+void ChainLockSigner::Cleanup()
 {
+    constexpr auto CLEANUP_INTERVAL{30s};
+    if (!m_mn_sync.IsBlockchainSynced()) {
+        return;
+    }
+
+    if (!m_cleanup_throttler.TryCleanup(CLEANUP_INTERVAL)) {
+        return;
+    }
+
     AssertLockNotHeld(cs_signer);
     std::vector<std::shared_ptr<Uint256HashSet>> removed;
     LOCK2(::cs_main, cs_signer);
@@ -256,6 +292,6 @@ std::vector<std::shared_ptr<Uint256HashSet>> ChainLockSigner::Cleanup()
             ++it;
         }
     }
-    return removed;
+    m_clhandler.CleanupFromSigner(removed);
 }
 } // namespace chainlock

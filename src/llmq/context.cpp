@@ -40,7 +40,7 @@ LLMQContext::~LLMQContext()
 
 void LLMQContext::Start()
 {
-    clhandler->Start(*isman);
+    clhandler->Start();
 }
 
 void LLMQContext::Stop()

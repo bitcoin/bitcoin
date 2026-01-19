@@ -77,6 +77,7 @@ void ActiveContext::Start(CConnman& connman, PeerManager& peerman)
     qman_handler->Start();
     qdkgsman->StartThreads(connman, peerman);
     shareman->Start();
+    cl_signer->Start(m_isman);
     cl_signer->RegisterRecoveryInterface();
     is_signer->RegisterRecoveryInterface();
     shareman->RegisterRecoveryInterface();
@@ -87,6 +88,7 @@ void ActiveContext::Stop()
     shareman->UnregisterRecoveryInterface();
     is_signer->UnregisterRecoveryInterface();
     cl_signer->UnregisterRecoveryInterface();
+    cl_signer->Stop();
     shareman->Stop();
     qdkgsman->StopThreads();
     qman_handler->Stop();

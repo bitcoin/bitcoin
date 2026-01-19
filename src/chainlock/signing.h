@@ -8,7 +8,9 @@
 #include <chainlock/chainlock.h>
 #include <chainlock/clsig.h>
 #include <llmq/signing.h>
+#include <util/time.h>
 
+class CScheduler;
 class CMasternodeSync;
 struct MessageProcessingResult;
 namespace llmq {
@@ -28,6 +30,7 @@ class ChainLockSignerParent
 public:
     virtual ~ChainLockSignerParent() = default;
 
+    virtual void CleanupFromSigner(const std::vector<std::shared_ptr<Uint256HashSet>>& cleanup_txes) = 0;
     virtual bool IsTxSafeForMining(const uint256& txid) const = 0;
     [[nodiscard]] virtual MessageProcessingResult ProcessNewChainLock(NodeId from, const ChainLockSig& clsig, const uint256& hash) = 0;
     virtual void UpdateTxFirstSeenMap(const Uint256HashSet& tx, const int64_t& time) = 0;
@@ -38,7 +41,7 @@ class ChainLockSigner final : public llmq::CRecoveredSigsListener
 private:
     CChainState& m_chainstate;
     const chainlock::Chainlocks& m_chainlocks;
-    ChainLockSignerParent& m_clhandler; // TODO: fully replace to Chainlocks
+    ChainLockSignerParent& m_clhandler;
     llmq::CSigningManager& m_sigman;
     llmq::CSigSharesManager& m_shareman;
     const CMasternodeSync& m_mn_sync;
@@ -53,6 +56,10 @@ private:
 private:
     mutable Mutex cs_signer;
 
+    std::unique_ptr<CScheduler> m_scheduler;
+    std::unique_ptr<std::thread> m_scheduler_thread;
+    CleanupThrottler<NodeClock> m_cleanup_throttler;
+
     BlockTxs blockTxs GUARDED_BY(cs_signer);
     int32_t lastSignedHeight GUARDED_BY(cs_signer){-1};
     uint256 lastSignedRequestId GUARDED_BY(cs_signer);
@@ -65,6 +72,9 @@ public:
     explicit ChainLockSigner(CChainState& chainstate, const chainlock::Chainlocks& chainlocks, ChainLockSignerParent& clhandler, llmq::CSigningManager& sigman,
                              llmq::CSigSharesManager& shareman, const CMasternodeSync& mn_sync);
     ~ChainLockSigner();
+
+    void Start(const llmq::CInstantSendManager& isman);
+    void Stop();
 
     void RegisterRecoveryInterface();
     void UnregisterRecoveryInterface();
@@ -79,7 +89,7 @@ public:
     [[nodiscard]] MessageProcessingResult HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
 
-    [[nodiscard]] std::vector<std::shared_ptr<Uint256HashSet>> Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
+    void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
 
 private:
     [[nodiscard]] BlockTxs::mapped_type GetBlockTxs(const uint256& blockHash)

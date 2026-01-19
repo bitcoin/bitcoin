@@ -55,18 +55,13 @@ CChainLocksHandler::~CChainLocksHandler()
     scheduler_thread->join();
 }
 
-void CChainLocksHandler::Start(const llmq::CInstantSendManager& isman)
+void CChainLocksHandler::Start()
 {
     scheduler->scheduleEvery(
         [&]() {
-            auto signer = m_signer.load(std::memory_order_acquire);
             CheckActiveState();
             EnforceBestChainLock();
             Cleanup();
-            // regularly retry signing the current chaintip as it might have failed before due to missing islocks
-            if (signer) {
-                signer->TrySignChainTip(isman);
-            }
         },
         std::chrono::seconds{5});
 }
@@ -291,6 +286,16 @@ VerifyRecSigStatus CChainLocksHandler::VerifyChainLock(const chainlock::ChainLoc
                                     clsig.getBlockHash(), clsig.getSig());
 }
 
+void CChainLocksHandler::CleanupFromSigner(const std::vector<std::shared_ptr<Uint256HashSet>>& cleanup_txes)
+{
+    LOCK(cs);
+    for (const auto& tx : cleanup_txes) {
+        for (const uint256& txid : *tx) {
+            txFirstSeenTime.erase(txid);
+        }
+    }
+}
+
 void CChainLocksHandler::Cleanup()
 {
     constexpr auto CLEANUP_INTERVAL{30s};
@@ -309,16 +314,6 @@ void CChainLocksHandler::Cleanup()
                 it = seenChainLocks.erase(it);
             } else {
                 ++it;
-            }
-        }
-    }
-
-    if (auto signer = m_signer.load(std::memory_order_acquire); signer) {
-        const auto cleanup_txes{signer->Cleanup()};
-        LOCK(cs);
-        for (const auto& tx : cleanup_txes) {
-            for (const auto& txid : *tx) {
-                txFirstSeenTime.erase(txid);
             }
         }
     }
