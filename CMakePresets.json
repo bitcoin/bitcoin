@@ -3,13 +3,16 @@
   "cmakeMinimumRequired": {"major": 3, "minor": 21, "patch": 0},
   "configurePresets": [
     {
-      "name": "vs2022",
-      "displayName": "Build using 'Visual Studio 17 2022' generator and 'x64-windows' triplet",
+      "architecture": "x64",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      },
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
       },
+      "displayName": "Base: Visual Studio 17 2022 x64",
       "generator": "Visual Studio 17 2022",
       "architecture": "x64",
       "toolchainFile": "$env{VCPKG_ROOT}\\scripts\\buildsystems\\vcpkg.cmake",
