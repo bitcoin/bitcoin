@@ -9,6 +9,7 @@
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
+#include <crypto/hex_base.h>
 #include <key_io.h>
 #include <primitives/block.h> // IWYU pragma: keep
 #include <primitives/transaction.h>

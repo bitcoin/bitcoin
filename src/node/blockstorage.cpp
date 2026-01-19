@@ -7,6 +7,7 @@
 #include <arith_uint256.h>
 #include <chain.h>
 #include <consensus/params.h>
+#include <crypto/hex_base.h>
 #include <dbwrapper.h>
 #include <flatfile.h>
 #include <hash.h>
