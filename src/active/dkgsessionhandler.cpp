@@ -343,7 +343,7 @@ static void RelayInvToParticipants(const CDKGSession& session, const CConnman& c
                  "HasMasternodeQuorumNodes[%d] for quorumHash[%s] forMember[%s] relayMembers[%s]",
                  inv.ToString(), relayMembers.size(), connman.GetNodeCount(ConnectionDirection::Both),
                  connman.GetNetworkActive(),
-                 connman.HasMasternodeQuorumNodes(session.GetParams().type, session.BlockIndex()->GetBlockHash()),
+                 connman.HasMasternodeQuorumNodes(session.GetType(), session.BlockIndex()->GetBlockHash()),
                  session.BlockIndex()->GetBlockHash().ToString(), session.ProTx().ToString().substr(0, 4), ss.str());
 
     std::stringstream ss2;

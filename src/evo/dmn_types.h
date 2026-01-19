@@ -53,7 +53,7 @@ constexpr auto Invalid = mntype_struct{
 
 } // namespace dmn_types
 
-[[nodiscard]] constexpr const dmn_types::mntype_struct GetMnType(MnType type)
+[[nodiscard]] constexpr dmn_types::mntype_struct GetMnType(MnType type)
 {
     switch (type) {
         case MnType::Regular: return dmn_types::Regular;

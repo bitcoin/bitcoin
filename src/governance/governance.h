@@ -52,25 +52,20 @@ using vote_time_pair_t = std::pair<CGovernanceVote, int64_t>;
 static constexpr int RATE_BUFFER_SIZE = 5;
 static constexpr bool DEFAULT_GOVERNANCE_ENABLE{true};
 
-extern RecursiveMutex cs_main;
+extern RecursiveMutex cs_main; // NOLINT(readability-redundant-declaration)
 
 class CRateCheckBuffer
 {
 private:
     std::vector<int64_t> vecTimestamps;
 
-    int nDataStart;
-
-    int nDataEnd;
-
-    bool fBufferEmpty;
+    int nDataStart{0};
+    int nDataEnd{0};
+    bool fBufferEmpty{true};
 
 public:
     CRateCheckBuffer() :
-        vecTimestamps(RATE_BUFFER_SIZE),
-        nDataStart(0),
-        nDataEnd(0),
-        fBufferEmpty(true)
+        vecTimestamps(RATE_BUFFER_SIZE)
     {
     }
 

@@ -9,13 +9,9 @@
 
 namespace wallet {
 /* hd account data model */
-class CHDAccount
-{
-public:
-    uint32_t nExternalChainCounter;
-    uint32_t nInternalChainCounter;
-
-    CHDAccount() : nExternalChainCounter(0), nInternalChainCounter(0) {}
+struct CHDAccount {
+    uint32_t nExternalChainCounter{0};
+    uint32_t nInternalChainCounter{0};
 
     SERIALIZE_METHODS(CHDAccount, obj)
     {

@@ -102,7 +102,7 @@ public:
         return nBlockHeight;
     }
 
-    const uint256 GetGovernanceObjHash() const { return nGovObjHash; }
+    uint256 GetGovernanceObjHash() const { return nGovObjHash; }
 
     int CountPayments() const { return (int)vecPayments.size(); }
     bool GetPayment(int nPaymentIndex, CGovernancePayment& paymentRet);

@@ -37,7 +37,6 @@
 
 WalletView::WalletView(WalletModel* wallet_model, QWidget* parent)
     : QStackedWidget(parent),
-      clientModel(nullptr),
       walletModel(wallet_model)
 {
     assert(walletModel);

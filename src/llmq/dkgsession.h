@@ -389,7 +389,7 @@ public:
     [[nodiscard]] const Uint256HashSet& RelayMembers() const { return relayMembers; }
     [[nodiscard]] const CBlockIndex* BlockIndex() const { return m_quorum_base_block_index; }
     [[nodiscard]] const uint256& ProTx() const { return myProTxHash; }
-    [[nodiscard]] const Consensus::LLMQParams GetParams() const { return params; }
+    [[nodiscard]] Consensus::LLMQType GetType() const { return params.type; }
 
 protected:
     virtual bool MaybeDecrypt(const CBLSIESMultiRecipientObjects<CBLSSecretKey>& obj, size_t idx,

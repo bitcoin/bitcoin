@@ -22,7 +22,7 @@ class QRDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit QRDialog(QWidget *parent = 0);
+    explicit QRDialog(QWidget* parent = nullptr);
     ~QRDialog();
 
     void setInfo(QString strWindowtitle, QString strQRCode, QString strTextInfo, QString strQRCodeTitle);

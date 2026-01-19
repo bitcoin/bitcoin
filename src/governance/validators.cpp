@@ -18,7 +18,6 @@ const size_t MAX_NAME_SIZE = 40;
 
 CProposalValidator::CProposalValidator(const std::string& strHexData, bool fAllowScript) :
     objJSON(UniValue::VOBJ),
-    fJSONValid(false),
     fAllowScript(fAllowScript),
     strErrorMessages()
 {

@@ -63,13 +63,13 @@ Q_SIGNALS:
 
 private:
     Ui::SendCoinsDialog *ui;
-    ClientModel *clientModel;
-    WalletModel *model;
+    ClientModel* clientModel{nullptr};
+    WalletModel* model{nullptr};
     std::unique_ptr<wallet::CCoinControl> m_coin_control;
     std::unique_ptr<WalletModelTransaction> m_current_transaction;
-    bool fNewRecipientAllowed;
+    bool fNewRecipientAllowed{true};
     bool send(const QList<SendCoinsRecipient>& recipients, QString& question_string, QString& informative_text, QString& detailed_text);
-    bool fFeeMinimized;
+    bool fFeeMinimized{true};
     bool fKeepChangeAddress;
 
     // Process WalletModel::SendCoinsReturn and generate a pair consisting

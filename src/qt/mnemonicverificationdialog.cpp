@@ -27,7 +27,6 @@ MnemonicVerificationDialog::MnemonicVerificationDialog(const SecureString& mnemo
     QDialog(parent, GUIUtil::dialog_flags),
     ui(new Ui::MnemonicVerificationDialog),
     m_mnemonic(mnemonic),
-    m_mnemonic_revealed(false),
     m_view_only(viewOnly)
 {
     ui->setupUi(this);

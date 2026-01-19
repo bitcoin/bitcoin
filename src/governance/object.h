@@ -24,7 +24,7 @@ class ChainstateManager;
 class CMasternodeMetaMan;
 struct RPCResult;
 
-extern RecursiveMutex cs_main;
+extern RecursiveMutex cs_main; // NOLINT(readability-redundant-declaration)
 
 static constexpr double GOVERNANCE_FILTER_FP_RATE = 0.001;
 static constexpr CAmount GOVERNANCE_PROPOSAL_FEE_TX = (1 * COIN);

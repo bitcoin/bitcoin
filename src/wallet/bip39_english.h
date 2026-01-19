@@ -2073,7 +2073,7 @@ const char * const wordlist[] = {
 "zero",
 "zone",
 "zoo",
-0,
+nullptr,
 };
 
 #endif // BITCOIN_WALLET_BIP39_ENGLISH_H

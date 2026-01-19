@@ -189,10 +189,10 @@ private:
     bool HasKey(CDataStream&& key) override;
 
 protected:
-    Db* pdb;
+    Db* pdb{nullptr};
     std::string strFile;
-    DbTxn* activeTxn;
-    Dbc* m_cursor;
+    DbTxn* activeTxn{nullptr};
+    Dbc* m_cursor{nullptr};
     bool fReadOnly;
     bool fFlushOnClose;
     BerkeleyEnvironment *env;

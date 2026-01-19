@@ -29,8 +29,9 @@
 #include <QPainter>
 #include <QScreen>
 
-SplashScreen::SplashScreen(const NetworkStyle *networkStyle) :
-    QWidget(), curAlignment(0)
+
+SplashScreen::SplashScreen(const NetworkStyle* networkStyle)
+    : QWidget()
 {
 
     // transparent background

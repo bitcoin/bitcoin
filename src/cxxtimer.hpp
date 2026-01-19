@@ -118,20 +118,17 @@ public:
     typename duration_t::rep count() const;
 
 private:
-
-    bool started_;
-    bool paused_;
-    std::chrono::steady_clock::time_point reference_;
-    std::chrono::duration<long double> accumulated_;
+    bool started_{false};
+    bool paused_{false};
+    std::chrono::steady_clock::time_point reference_{std::chrono::steady_clock::now()};
+    std::chrono::duration<long double> accumulated_{std::chrono::duration<long double>(0)};
 };
 
 }
 
 
-inline cxxtimer::Timer::Timer(bool start) :
-        started_(false), paused_(false),
-        reference_(std::chrono::steady_clock::now()),
-        accumulated_(std::chrono::duration<long double>(0)) {
+inline cxxtimer::Timer::Timer(bool start)
+{
     if (start) {
         this->start();
     }

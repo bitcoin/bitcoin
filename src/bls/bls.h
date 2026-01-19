@@ -390,7 +390,7 @@ class CBLSLazyWrapper
 private:
     mutable std::mutex mutex;
 
-    mutable std::array<uint8_t, BLSObject::SerSize> vecBytes;
+    mutable std::array<uint8_t, BLSObject::SerSize> vecBytes{};
 
     mutable BLSObject obj;
     mutable bool objInitialized{false};
@@ -403,7 +403,6 @@ private:
 
 public:
     CBLSLazyWrapper() :
-        vecBytes{},
         bufLegacyScheme(bls::bls_legacy_scheme.load())
     {}
 

@@ -89,9 +89,9 @@ Q_SIGNALS:
 private:
     Ui::OptionsDialog *ui;
     ClientModel* m_client_model{nullptr};
-    OptionsModel *model;
-    QDataWidgetMapper *mapper;
-    QButtonGroup* pageButtons;
+    OptionsModel* model{nullptr};
+    QDataWidgetMapper* mapper{nullptr};
+    QButtonGroup* pageButtons{nullptr};
     QString previousTheme;
     AppearanceWidget* appearance;
     bool fCoinJoinEnabledPrev{false};

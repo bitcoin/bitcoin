@@ -104,7 +104,7 @@ struct ScriptParserContext {
         return key.data;
     }
 
-    const std::vector<unsigned char> ToPKHBytes(const Key& key) const
+    std::vector<unsigned char> ToPKHBytes(const Key& key) const
     {
         if (key.is_hash) return key.data;
         const auto h = Hash160(key.data);

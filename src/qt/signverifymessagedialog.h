@@ -37,8 +37,8 @@ protected:
 
 private:
     Ui::SignVerifyMessageDialog *ui;
-    WalletModel *model;
-    QButtonGroup* pageButtons;
+    WalletModel* model{nullptr};
+    QButtonGroup* pageButtons{nullptr};
 
     void showEvent(QShowEvent* event) override;
 

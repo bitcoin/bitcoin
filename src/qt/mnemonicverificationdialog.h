@@ -50,7 +50,7 @@ private:
     SecureString m_mnemonic;
     std::vector<SecureString> m_words;
     QList<int> m_selected_positions;
-    bool m_mnemonic_revealed;
+    bool m_mnemonic_revealed{false};
     bool m_has_ever_revealed{false};
     bool m_view_only{false};
     class QGridLayout* m_gridLayout{nullptr};

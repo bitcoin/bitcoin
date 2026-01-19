@@ -63,11 +63,7 @@ int getIndexForConfTarget(int target) {
 SendCoinsDialog::SendCoinsDialog(bool _fCoinJoin, QWidget* parent) :
     QDialog(parent, GUIUtil::dialog_flags),
     ui(new Ui::SendCoinsDialog),
-    clientModel(nullptr),
-    model(nullptr),
-    m_coin_control(new CCoinControl),
-    fNewRecipientAllowed(true),
-    fFeeMinimized(true)
+    m_coin_control(new CCoinControl)
 {
     ui->setupUi(this);
 

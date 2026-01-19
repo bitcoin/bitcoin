@@ -40,7 +40,7 @@ class CSpecialTxProcessor;
 class TxValidationState;
 struct RPCResult;
 
-extern RecursiveMutex cs_main;
+extern RecursiveMutex cs_main; // NOLINT(readability-redundant-declaration)
 
 class CDeterministicMN
 {

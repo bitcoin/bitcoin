@@ -31,7 +31,7 @@ class CDeterministicMNManager;
 class CEvoDB;
 class CNode;
 
-extern RecursiveMutex cs_main;
+extern RecursiveMutex cs_main; // NOLINT(readability-redundant-declaration)
 
 namespace llmq
 {

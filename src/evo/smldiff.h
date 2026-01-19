@@ -29,7 +29,7 @@ class CQuorumBlockProcessor;
 class CQuorumManager;
 } // namespace llmq
 
-extern RecursiveMutex cs_main;
+extern RecursiveMutex cs_main; // NOLINT(readability-redundant-declaration)
 
 /// P2P messages
 

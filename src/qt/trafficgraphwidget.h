@@ -34,13 +34,14 @@ public Q_SLOTS:
     void clear();
 
 private:
+    static constexpr float default_sample_height{1.1f};
     typedef std::function<float(const TrafficSample&)> SampleChooser;
     void paintPath(QPainterPath &path, const TrafficGraphData::SampleQueue &queue, SampleChooser chooser);
 
-    QTimer *timer;
-    float fMax;
-    int nMins;
-    ClientModel *clientModel;
+    QTimer* timer{nullptr};
+    float fMax{default_sample_height};
+    int nMins{0};
+    ClientModel* clientModel{nullptr};
     TrafficGraphData trafficGraphData;
 };
 

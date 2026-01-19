@@ -22,8 +22,7 @@
 
 SendCoinsEntry::SendCoinsEntry(QWidget* parent) :
     QWidget(parent),
-    ui(new Ui::SendCoinsEntry),
-    model(nullptr)
+    ui(new Ui::SendCoinsEntry)
 {
     ui->setupUi(this);
 

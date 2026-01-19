@@ -14,7 +14,7 @@ class CSHA1
 private:
     uint32_t s[5];
     unsigned char buf[64];
-    uint64_t bytes;
+    uint64_t bytes{0};
 
 public:
     static const size_t OUTPUT_SIZE = 20;
