@@ -20,8 +20,8 @@
 #include <cstdint>
 #include <limits>
 #include <optional>
-#include <string>      // IWYU pragma: export
-#include <string_view> // IWYU pragma: export
+#include <string>
+#include <string_view>
 #include <system_error>
 #include <type_traits>
 #include <vector>
