@@ -2534,7 +2534,7 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
     return res;
 }
 
-util::Result<CTxDestination> CWallet::GetNewDestination(const OutputType type, const std::string label)
+util::Result<CTxDestination> CWallet::GetNewDestination(const OutputType type, const std::string& label)
 {
     LOCK(cs_wallet);
     auto spk_man = GetScriptPubKeyMan(type, /*internal=*/false);

@@ -136,7 +136,7 @@ std::string HelpExampleRpc(const std::string& methodname, const std::string& arg
 std::string HelpExampleRpcNamed(const std::string& methodname, const RPCArgList& args);
 
 CPubKey HexToPubKey(const std::string& hex_in);
-CTxDestination AddAndGetMultisigDestination(const int required, const std::vector<CPubKey>& pubkeys, OutputType type, FlatSigningProvider& keystore, CScript& script_out);
+CTxDestination AddAndGetMultisigDestination(int required, const std::vector<CPubKey>& pubkeys, OutputType type, FlatSigningProvider& keystore, CScript& script_out);
 
 UniValue DescribeAddress(const CTxDestination& dest);
 
@@ -154,7 +154,7 @@ UniValue JSONRPCTransactionError(node::TransactionError terr, const std::string&
 std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value);
 
 /** Evaluate a descriptor given as a string, or as a {"desc":...,"range":...} object, with default range of 1000. */
-std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, FlatSigningProvider& provider, const bool expand_priv = false);
+std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, FlatSigningProvider& provider, bool expand_priv = false);
 
 /**
  * Serializing JSON objects depends on the outer type. Only arrays and
@@ -372,7 +372,7 @@ struct RPCResult {
         : RPCResult{type, std::move(m_key_name), /*optional=*/false, std::move(description), std::move(inner), skip_type_check} {}
 
     /** Append the sections of the result. */
-    void ToSections(Sections& sections, OuterType outer_type = OuterType::NONE, const int current_indent = 0) const;
+    void ToSections(Sections& sections, OuterType outer_type = OuterType::NONE, int current_indent = 0) const;
     /** Return the type string of the result when it is in an object (dict). */
     std::string ToStringObj() const;
     /** Return the description string, including the result type. */
@@ -527,6 +527,6 @@ std::vector<RPCResult> ScriptPubKeyDoc();
  *
  * @return  the target
  */
-uint256 GetTarget(const CBlockIndex& blockindex, const uint256 pow_limit);
+uint256 GetTarget(const CBlockIndex& blockindex, uint256 pow_limit);
 
 #endif // BITCOIN_RPC_UTIL_H

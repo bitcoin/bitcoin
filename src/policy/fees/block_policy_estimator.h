@@ -200,7 +200,7 @@ private:
     const fs::path m_estimation_filepath;
 public:
     /** Create new BlockPolicyEstimator and initialize stats tracking classes with default values */
-    CBlockPolicyEstimator(const fs::path& estimation_filepath, const bool read_stale_estimates);
+    CBlockPolicyEstimator(const fs::path& estimation_filepath, bool read_stale_estimates);
     virtual ~CBlockPolicyEstimator();
 
     /** Process all the transactions that have been included in a block */

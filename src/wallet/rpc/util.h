@@ -54,7 +54,7 @@ std::string LabelFromValue(const UniValue& value);
 //! Fetch parent descriptors of this scriptPubKey.
 void PushParentDescriptors(const CWallet& wallet, const CScript& script_pubkey, UniValue& entry);
 
-void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& status, bilingual_str& error);
+void HandleWalletError(const std::shared_ptr<CWallet>& wallet, DatabaseStatus& status, bilingual_str& error);
 void AppendLastProcessedBlock(UniValue& entry, const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 } //  namespace wallet
 

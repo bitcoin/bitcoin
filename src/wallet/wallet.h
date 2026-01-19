@@ -444,7 +444,7 @@ private:
      * block locator and m_last_block_processed, and registering for
      * notifications about new blocks and transactions.
      */
-    static bool AttachChain(const std::shared_ptr<CWallet>& wallet, interfaces::Chain& chain, const bool rescan_required, bilingual_str& error, std::vector<bilingual_str>& warnings);
+    static bool AttachChain(const std::shared_ptr<CWallet>& wallet, interfaces::Chain& chain, bool rescan_required, bilingual_str& error, std::vector<bilingual_str>& warnings);
 
     static NodeClock::time_point GetDefaultNextResend();
 
@@ -648,7 +648,7 @@ public:
         //! USER_ABORT.
         uint256 last_failed_block;
     };
-    ScanResult ScanForWalletTransactions(const uint256& start_block, int start_height, std::optional<int> max_height, const WalletRescanReserver& reserver, bool fUpdate, const bool save_progress);
+    ScanResult ScanForWalletTransactions(const uint256& start_block, int start_height, std::optional<int> max_height, const WalletRescanReserver& reserver, bool fUpdate, bool save_progress);
     void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) override;
     /** Set the next time this wallet should resend transactions to 12-36 hours from now, ~1 day on average. */
     void SetNextResend() { m_next_resend = GetDefaultNextResend(); }
@@ -768,7 +768,7 @@ public:
     /**
      * Retrieve all the known labels in the address book
      */
-    std::set<std::string> ListAddrBookLabels(const std::optional<AddressPurpose> purpose) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    std::set<std::string> ListAddrBookLabels(std::optional<AddressPurpose> purpose) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * Walk-through the address book entries.
@@ -783,8 +783,8 @@ public:
      */
     void MarkDestinationsDirty(const std::set<CTxDestination>& destinations) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    util::Result<CTxDestination> GetNewDestination(const OutputType type, const std::string label);
-    util::Result<CTxDestination> GetNewChangeDestination(const OutputType type);
+    util::Result<CTxDestination> GetNewDestination(OutputType type, const std::string& label);
+    util::Result<CTxDestination> GetNewChangeDestination(OutputType type);
 
     bool IsMine(const CTxDestination& dest) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool IsMine(const CScript& script) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);

@@ -54,7 +54,7 @@ std::vector<std::pair<CTxDestination, CAmount>> ParseOutputs(const UniValue& out
 void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in);
 
 /** Create a transaction from univalue parameters */
-CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, std::optional<bool> rbf, const uint32_t version);
+CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, std::optional<bool> rbf, uint32_t version);
 
 /** Explain the UniValue "decoded" transaction object, may include extra fields if processed by wallet **/
 std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc, bool wallet);

@@ -552,7 +552,7 @@ public:
     };
     void UnitTestMisbehaving(NodeId peer_id) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex) { Misbehaving(*Assert(GetPeerRef(peer_id)), ""); };
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, DataStream& vRecv,
-                        const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override
+                        std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex, !m_tx_download_mutex);
     void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) override;
     ServiceFlags GetDesirableServiceFlags(ServiceFlags services) const override;

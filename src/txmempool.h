@@ -553,7 +553,7 @@ public:
     bool CheckPolicyLimits(const CTransactionRef& tx);
 
     /** Removes a transaction from the unbroadcast set */
-    void RemoveUnbroadcastTx(const Txid& txid, const bool unchecked = false);
+    void RemoveUnbroadcastTx(const Txid& txid, bool unchecked = false);
 
     /** Returns transactions in unbroadcast set */
     std::set<Txid> GetUnbroadcastTxs() const
@@ -662,7 +662,7 @@ public:
 
         using TxHandle = CTxMemPool::txiter;
 
-        TxHandle StageAddition(const CTransactionRef& tx, const CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, bool spends_coinbase, int64_t sigops_cost, LockPoints lp);
+        TxHandle StageAddition(const CTransactionRef& tx, CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, bool spends_coinbase, int64_t sigops_cost, LockPoints lp);
 
         void StageRemoval(CTxMemPool::txiter it);
 

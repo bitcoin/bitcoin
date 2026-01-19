@@ -306,7 +306,7 @@ typedef std::map<CoinEligibilityFilter, OutputGroupTypeMap> FilteredOutputGroups
  * @param[in]   payment_value   Average payment value of the transaction output(s).
  * @param[in]   change_fee      Fee for creating a change output.
  */
-[[nodiscard]] CAmount GenerateChangeTarget(const CAmount payment_value, const CAmount change_fee, FastRandomContext& rng);
+[[nodiscard]] CAmount GenerateChangeTarget(CAmount payment_value, CAmount change_fee, FastRandomContext& rng);
 
 enum class SelectionAlgorithm : uint8_t
 {
@@ -317,7 +317,7 @@ enum class SelectionAlgorithm : uint8_t
     MANUAL = 4,
 };
 
-std::string GetAlgorithmName(const SelectionAlgorithm algo);
+std::string GetAlgorithmName(SelectionAlgorithm algo);
 
 struct SelectionResult
 {
@@ -371,7 +371,7 @@ public:
     void AddInputs(const std::set<std::shared_ptr<COutput>>& inputs, bool subtract_fee_outputs);
 
     /** How much individual inputs overestimated the bump fees for shared ancestries */
-    void SetBumpFeeDiscount(const CAmount discount);
+    void SetBumpFeeDiscount(CAmount discount);
 
     /** Calculates and stores the waste for this result given the cost of change
      * and the opportunity cost of spending these inputs now vs in the future.
@@ -385,7 +385,7 @@ public:
      *                              used if there is change, in which case it must be non-negative.
      * @param[in] change_fee        The fee for creating a change output
      */
-    void RecalculateWaste(const CAmount min_viable_change, const CAmount change_cost, const CAmount change_fee);
+    void RecalculateWaste(CAmount min_viable_change, CAmount change_cost, CAmount change_fee);
     [[nodiscard]] CAmount GetWaste() const;
 
     /** Tracks that algorithm was able to exhaustively search the entire combination space before hitting limit of tries */
@@ -432,7 +432,7 @@ public:
      * @returns Amount for change output, 0 when there is no change.
      *
      */
-    CAmount GetChange(const CAmount min_viable_change, const CAmount change_fee) const;
+    CAmount GetChange(CAmount min_viable_change, CAmount change_fee) const;
 
     CAmount GetTarget() const { return m_target; }
 

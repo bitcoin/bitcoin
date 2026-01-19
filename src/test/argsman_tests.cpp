@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(util_datadir)
 struct TestArgsManager : public ArgsManager
 {
     TestArgsManager() { m_network_only_args.clear(); }
-    void ReadConfigString(const std::string str_config)
+    void ReadConfigString(const std::string& str_config)
     {
         std::istringstream streamConfig(str_config);
         {
@@ -63,7 +63,7 @@ struct TestArgsManager : public ArgsManager
         std::string error;
         BOOST_REQUIRE(ReadConfigStream(streamConfig, "", error));
     }
-    void SetNetworkOnlyArg(const std::string arg)
+    void SetNetworkOnlyArg(const std::string& arg)
     {
         LOCK(cs_args);
         m_network_only_args.insert(arg);

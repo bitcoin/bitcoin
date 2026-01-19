@@ -20,7 +20,7 @@ namespace wallet {
 /** Testing setup and teardown for wallet.
  */
 struct WalletTestingSetup : public TestingSetup {
-    explicit WalletTestingSetup(const ChainType chainType = ChainType::MAIN);
+    explicit WalletTestingSetup(ChainType chainType = ChainType::MAIN);
     ~WalletTestingSetup();
 
     std::unique_ptr<interfaces::WalletLoader> m_wallet_loader;

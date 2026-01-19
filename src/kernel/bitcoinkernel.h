@@ -760,7 +760,7 @@ BITCOINKERNEL_API void btck_logging_disable();
  *
  * @param[in] options Sets formatting options of the log messages.
  */
-BITCOINKERNEL_API void btck_logging_set_options(const btck_LoggingOptions options);
+BITCOINKERNEL_API void btck_logging_set_options(btck_LoggingOptions options);
 
 /**
  * @brief Set the log level of the global internal logger. This does not
@@ -835,7 +835,7 @@ BITCOINKERNEL_API void btck_logging_connection_destroy(btck_LoggingConnection* l
  * @return               An allocated chain parameters opaque struct.
  */
 BITCOINKERNEL_API btck_ChainParameters* BITCOINKERNEL_WARN_UNUSED_RESULT btck_chain_parameters_create(
-    const btck_ChainType chain_type);
+    btck_ChainType chain_type);
 
 /**
  * Copy the chain parameters.
