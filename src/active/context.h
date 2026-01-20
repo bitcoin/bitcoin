@@ -30,13 +30,13 @@ class GovernanceSigner;
 class PeerManager;
 namespace chainlock {
 class Chainlocks;
+class ChainlockHandler;
 class ChainLockSigner;
 } // namespace chainlock
 namespace instantsend {
 class InstantSendSigner;
 } // namespace instantsend
 namespace llmq {
-class CChainLocksHandler;
 class CDKGDebugManager;
 class CDKGSessionManager;
 class CEHFSignalsHandler;
@@ -64,7 +64,7 @@ public:
     explicit ActiveContext(CBLSWorker& bls_worker, ChainstateManager& chainman, CConnman& connman,
                            CDeterministicMNManager& dmnman, CGovernanceManager& govman, CMasternodeMetaMan& mn_metaman,
                            CMNHFManager& mnhfman, CSporkManager& sporkman, const chainlock::Chainlocks& chainlocks, CTxMemPool& mempool,
-                           llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman,
+                           chainlock::ChainlockHandler& clhandler, llmq::CInstantSendManager& isman,
                            llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumManager& qman,
                            llmq::CQuorumSnapshotManager& qsnapman, llmq::CSigningManager& sigman, PeerManager& peerman,
                            const CMasternodeSync& mn_sync, const CBLSSecretKey& operator_sk,

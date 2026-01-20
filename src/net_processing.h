@@ -32,10 +32,12 @@ class CTxMemPool;
 struct ActiveContext;
 struct LLMQContext;
 namespace llmq {
-class CChainLocksHandler;
 struct ObserverContext;
 } // namespace llmq
-namespace chainlock { class Chainlocks; }
+namespace chainlock {
+class Chainlocks;
+class ChainlockHandler;
+} // namespace chainlock
 
 /** Default for -maxorphantxsize, maximum size in megabytes the orphan map can grow before entries are removed */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS_SIZE = 10; // this allows around 100 TXs of max size (and many more of normal size)
@@ -109,7 +111,7 @@ public:
                                              CTxMemPool& pool, CMasternodeMetaMan& mn_metaman, CMasternodeSync& mn_sync,
                                              CGovernanceManager& govman, CSporkManager& sporkman,
                                              const chainlock::Chainlocks& chainlocks,
-                                             llmq::CChainLocksHandler& clhandler,
+                                             chainlock::ChainlockHandler& clhandler,
                                              const std::unique_ptr<ActiveContext>& active_ctx,
                                              const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                              const std::unique_ptr<CJWalletManager>& cj_walletman,

@@ -26,7 +26,7 @@
 ActiveContext::ActiveContext(CBLSWorker& bls_worker, ChainstateManager& chainman, CConnman& connman,
                              CDeterministicMNManager& dmnman, CGovernanceManager& govman,
                              CMasternodeMetaMan& mn_metaman, CMNHFManager& mnhfman, CSporkManager& sporkman, const chainlock::Chainlocks& chainlocks,
-                             CTxMemPool& mempool, llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman,
+                             CTxMemPool& mempool, chainlock::ChainlockHandler& clhandler, llmq::CInstantSendManager& isman,
                              llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumManager& qman,
                              llmq::CQuorumSnapshotManager& qsnapman, llmq::CSigningManager& sigman,
                              PeerManager& peerman, const CMasternodeSync& mn_sync, const CBLSSecretKey& operator_sk,

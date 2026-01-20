@@ -2171,7 +2171,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.dstxman);
     node.dstxman = std::make_unique<CDSTXManager>(*node.chainlocks);
 
-    node.clhandler = std::make_unique<llmq::CChainLocksHandler>(*node.chainlocks, chainman, *node.mempool, *node.mn_sync);
+    node.clhandler = std::make_unique<chainlock::ChainlockHandler>(*node.chainlocks, chainman, *node.mempool, *node.mn_sync);
     RegisterValidationInterface(node.clhandler.get());
 
     assert(!node.peerman);

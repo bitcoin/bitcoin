@@ -588,7 +588,7 @@ public:
                     CDSTXManager& dstxman, ChainstateManager& chainman, CTxMemPool& pool,
                     CMasternodeMetaMan& mn_metaman, CMasternodeSync& mn_sync, CGovernanceManager& govman,
                     CSporkManager& sporkman, const chainlock::Chainlocks& chainlocks,
-                    llmq::CChainLocksHandler& clhandler,
+                    chainlock::ChainlockHandler& clhandler,
                     const std::unique_ptr<ActiveContext>& active_ctx,
                     const std::unique_ptr<CDeterministicMNManager>& dmnman,
                     const std::unique_ptr<CJWalletManager>& cj_walletman,
@@ -823,8 +823,8 @@ private:
     CGovernanceManager& m_govman;
     CSporkManager& m_sporkman;
     const chainlock::Chainlocks& m_chainlocks;
-    // TODO: consider further refactoring CChainLocksHandler to NetHandler to avoid boiler code in PeerManager
-    llmq::CChainLocksHandler& m_clhandler;
+    // TODO: consider further refactoring ChainlockHandler to NetHandler to avoid boiler code in PeerManager
+    chainlock::ChainlockHandler& m_clhandler;
 
     /** The height of the best chain */
     std::atomic<int> m_best_height{-1};
@@ -2048,7 +2048,7 @@ std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, 
                                                CTxMemPool& pool, CMasternodeMetaMan& mn_metaman,
                                                CMasternodeSync& mn_sync, CGovernanceManager& govman,
                                                CSporkManager& sporkman, const chainlock::Chainlocks& chainlocks,
-                                               llmq::CChainLocksHandler& clhandler,
+                                               chainlock::ChainlockHandler& clhandler,
                                                const std::unique_ptr<ActiveContext>& active_ctx,
                                                const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                                const std::unique_ptr<CJWalletManager>& cj_walletman,
@@ -2063,7 +2063,7 @@ PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& conn
                                  CMasternodeMetaMan& mn_metaman, CMasternodeSync& mn_sync, CGovernanceManager& govman,
                                  CSporkManager& sporkman,
                                  const chainlock::Chainlocks& chainlocks,
-                                 llmq::CChainLocksHandler& clhandler,
+                                 chainlock::ChainlockHandler& clhandler,
                                  const std::unique_ptr<ActiveContext>& active_ctx,
                                  const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                  const std::unique_ptr<CJWalletManager>& cj_walletman,

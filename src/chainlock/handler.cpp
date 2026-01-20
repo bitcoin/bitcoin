@@ -29,14 +29,14 @@ CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMe
 
 using node::GetTransaction;
 
-namespace llmq {
 namespace {
 static constexpr auto CLEANUP_SEEN_TIMEOUT{24h};
 //! How long to wait for islocks until we consider a block with non-islocked TXs to be safe to sign
 static constexpr auto WAIT_FOR_ISLOCK_TIMEOUT{10min};
 } // anonymous namespace
 
-CChainLocksHandler::CChainLocksHandler(chainlock::Chainlocks& chainlocks, ChainstateManager& chainman,
+namespace chainlock {
+ChainlockHandler::ChainlockHandler(chainlock::Chainlocks& chainlocks, ChainstateManager& chainman,
                                        CTxMemPool& _mempool, const CMasternodeSync& mn_sync) :
     m_chainlocks{chainlocks},
     m_chainman{chainman},
@@ -48,13 +48,13 @@ CChainLocksHandler::CChainLocksHandler(chainlock::Chainlocks& chainlocks, Chains
 {
 }
 
-CChainLocksHandler::~CChainLocksHandler()
+ChainlockHandler::~ChainlockHandler()
 {
     scheduler->stop();
     scheduler_thread->join();
 }
 
-void CChainLocksHandler::Start()
+void ChainlockHandler::Start()
 {
     scheduler->scheduleEvery(
         [&]() {
@@ -65,18 +65,18 @@ void CChainLocksHandler::Start()
         std::chrono::seconds{5});
 }
 
-void CChainLocksHandler::Stop()
+void ChainlockHandler::Stop()
 {
     scheduler->stop();
 }
 
-bool CChainLocksHandler::AlreadyHave(const CInv& inv) const
+bool ChainlockHandler::AlreadyHave(const CInv& inv) const
 {
     LOCK(cs);
     return seenChainLocks.count(inv.hash) != 0;
 }
 
-void CChainLocksHandler::UpdateTxFirstSeenMap(const Uint256HashSet& tx, const int64_t& time)
+void ChainlockHandler::UpdateTxFirstSeenMap(const Uint256HashSet& tx, const int64_t& time)
 {
     AssertLockNotHeld(cs);
     LOCK(cs);
@@ -85,7 +85,7 @@ void CChainLocksHandler::UpdateTxFirstSeenMap(const Uint256HashSet& tx, const in
     }
 }
 
-MessageProcessingResult CChainLocksHandler::ProcessNewChainLock(const NodeId from, const chainlock::ChainLockSig& clsig, const llmq::CQuorumManager& qman,
+MessageProcessingResult ChainlockHandler::ProcessNewChainLock(const NodeId from, const chainlock::ChainLockSig& clsig, const llmq::CQuorumManager& qman,
                                                                 const uint256& hash)
 {
     CheckActiveState();
@@ -103,8 +103,8 @@ MessageProcessingResult CChainLocksHandler::ProcessNewChainLock(const NodeId fro
         }
     }
 
-    if (const auto ret = chainlock::VerifyChainLock(Params().GetConsensus(), m_chainman.ActiveChain(), qman, clsig); ret != VerifyRecSigStatus::Valid) {
-        LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), status=%d peer=%d\n", __func__,
+    if (const auto ret = chainlock::VerifyChainLock(Params().GetConsensus(), m_chainman.ActiveChain(), qman, clsig); ret != llmq::VerifyRecSigStatus::Valid) {
+        LogPrint(BCLog::CHAINLOCKS, "ChainlockHandler::%s -- invalid CLSIG (%s), status=%d peer=%d\n", __func__,
                  clsig.ToString(), ToUnderlying(ret), from);
         if (from != -1) {
             return MisbehavingError{10};
@@ -124,14 +124,14 @@ MessageProcessingResult CChainLocksHandler::ProcessNewChainLock(const NodeId fro
             },
             std::chrono::seconds{0});
 
-        LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- processed new CLSIG (%s), peer=%d\n", __func__,
+        LogPrint(BCLog::CHAINLOCKS, "ChainlockHandler::%s -- processed new CLSIG (%s), peer=%d\n", __func__,
                  clsig.ToString(), from);
     }
     const CInv clsig_inv(MSG_CLSIG, hash);
     return clsig_inv;
 }
 
-void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
+void ChainlockHandler::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
     if (pindexNew == pindexFork) // blocks were disconnected without any new ones
         return;
@@ -155,7 +155,7 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBl
     }
 }
 
-void CChainLocksHandler::CheckActiveState()
+void ChainlockHandler::CheckActiveState()
 {
     bool oldIsEnabled = isEnabled;
     isEnabled = m_chainlocks.IsEnabled();
@@ -170,7 +170,7 @@ void CChainLocksHandler::CheckActiveState()
     }
 }
 
-void CChainLocksHandler::TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime, uint64_t)
+void ChainlockHandler::TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime, uint64_t)
 {
     if (tx->IsCoinBase() || tx->vin.empty()) {
         return;
@@ -180,12 +180,12 @@ void CChainLocksHandler::TransactionAddedToMempool(const CTransactionRef& tx, in
     txFirstSeenTime.emplace(tx->GetHash(), nAcceptTime);
 }
 
-void CChainLocksHandler::AcceptedBlockHeader(const CBlockIndex* pindexNew)
+void ChainlockHandler::AcceptedBlockHeader(const CBlockIndex* pindexNew)
 {
     m_chainlocks.AcceptedBlockHeader(pindexNew);
 }
 
-void CChainLocksHandler::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
+void ChainlockHandler::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
 {
     if (!m_mn_sync.IsBlockchainSynced()) {
         return;
@@ -203,7 +203,7 @@ void CChainLocksHandler::BlockConnected(const std::shared_ptr<const CBlock>& pbl
     }
 }
 
-bool CChainLocksHandler::IsTxSafeForMining(const uint256& txid) const
+bool ChainlockHandler::IsTxSafeForMining(const uint256& txid) const
 {
     auto tx_age{0s};
     {
@@ -219,7 +219,7 @@ bool CChainLocksHandler::IsTxSafeForMining(const uint256& txid) const
 
 // WARNING: cs_main and cs should not be held!
 // This should also not be called from validation signals, as this might result in recursive calls
-void CChainLocksHandler::EnforceBestChainLock()
+void ChainlockHandler::EnforceBestChainLock()
 {
     if (!isEnabled) {
         return;
@@ -240,7 +240,7 @@ void CChainLocksHandler::EnforceBestChainLock()
     // Go backwards through the chain referenced by clsig until we find a block that is part of the main chain.
     // For each of these blocks, check if there are children that are NOT part of the chain referenced by clsig
     // and mark all of them as conflicting.
-    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- enforcing block %s via CLSIG (%s)\n", __func__,
+    LogPrint(BCLog::CHAINLOCKS, "ChainlockHandler::%s -- enforcing block %s via CLSIG (%s)\n", __func__,
              currentBestChainLockBlockIndex->GetBlockHash().ToString(), clsig.ToString());
     m_chainman.ActiveChainstate().EnforceBlock(dummy_state, currentBestChainLockBlockIndex);
 
@@ -249,7 +249,7 @@ void CChainLocksHandler::EnforceBestChainLock()
                                                      currentBestChainLockBlockIndex->nHeight)) !=
         currentBestChainLockBlockIndex) {
         if (!m_chainman.ActiveChainstate().ActivateBestChain(dummy_state)) {
-            LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, dummy_state.ToString());
+            LogPrintf("ChainlockHandler::%s -- ActivateBestChain failed: %s\n", __func__, dummy_state.ToString());
             return;
         }
         LOCK(::cs_main);
@@ -270,7 +270,7 @@ void CChainLocksHandler::EnforceBestChainLock()
     ::g_stats_client->gauge("chainlocks.blockHeight", clsig.getHeight(), 1.0f);
 }
 
-void CChainLocksHandler::CleanupFromSigner(const std::vector<std::shared_ptr<Uint256HashSet>>& cleanup_txes)
+void ChainlockHandler::CleanupFromSigner(const std::vector<std::shared_ptr<Uint256HashSet>>& cleanup_txes)
 {
     LOCK(cs);
     for (const auto& tx : cleanup_txes) {
@@ -280,7 +280,7 @@ void CChainLocksHandler::CleanupFromSigner(const std::vector<std::shared_ptr<Uin
     }
 }
 
-void CChainLocksHandler::Cleanup()
+void ChainlockHandler::Cleanup()
 {
     constexpr auto CLEANUP_INTERVAL{30s};
     if (!m_mn_sync.IsBlockchainSynced()) {
@@ -324,10 +324,7 @@ void CChainLocksHandler::Cleanup()
         }
     }
 }
-} // namespace llmq
 
-namespace chainlock
-{
 llmq::VerifyRecSigStatus VerifyChainLock(const Consensus::Params& params, const CChain& chain, const llmq::CQuorumManager& qman, const chainlock::ChainLockSig& clsig)
 {
     const auto llmqType = params.llmqTypeChainLocks;

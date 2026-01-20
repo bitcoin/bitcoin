@@ -31,10 +31,6 @@ class CScheduler;
 class CTxMemPool;
 struct MessageProcessingResult;
 
-namespace chainlock {
-class Chainlocks;
-struct ChainLockSig;
-} // namespace chainlock
 namespace Consensus {
 struct Params;
 } // namespace Consensus
@@ -43,8 +39,13 @@ namespace llmq
 {
 class CQuorumManager;
 enum class VerifyRecSigStatus : uint8_t;
+} // namespace llmq
 
-class CChainLocksHandler final : public CValidationInterface
+namespace chainlock {
+class Chainlocks;
+struct ChainLockSig;
+
+class ChainlockHandler final : public CValidationInterface
 {
 private:
     chainlock::Chainlocks& m_chainlocks;
@@ -67,12 +68,12 @@ private:
     CleanupThrottler<NodeClock> cleanupThrottler;
 
 public:
-    CChainLocksHandler() = delete;
-    CChainLocksHandler(const CChainLocksHandler&) = delete;
-    CChainLocksHandler& operator=(const CChainLocksHandler&) = delete;
-    explicit CChainLocksHandler(chainlock::Chainlocks& chainlocks, ChainstateManager& chainman,
+    ChainlockHandler() = delete;
+    ChainlockHandler(const ChainlockHandler&) = delete;
+    ChainlockHandler& operator=(const ChainlockHandler&) = delete;
+    explicit ChainlockHandler(chainlock::Chainlocks& chainlocks, ChainstateManager& chainman,
                                 CTxMemPool& _mempool, const CMasternodeSync& mn_sync);
-    ~CChainLocksHandler();
+    ~ChainlockHandler();
 
     void Start();
     void Stop();
@@ -111,10 +112,7 @@ private:
     void Cleanup()
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
-} // namespace llmq
 
-namespace chainlock
-{
 llmq::VerifyRecSigStatus VerifyChainLock(const Consensus::Params& params, const CChain& chain, const llmq::CQuorumManager& qman, const chainlock::ChainLockSig& clsig);
 } // namespace chainlock
 

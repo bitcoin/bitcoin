@@ -27,7 +27,7 @@ CChainstateHelper::CChainstateHelper(CCreditPoolManager& cpoolman, CDeterministi
 
 CChainstateHelper::~CChainstateHelper() = default;
 
-/** Passthrough functions to CChainLocksHandler */
+/** Passthrough functions to chainlock::Chainlocks */
 bool CChainstateHelper::HasConflictingChainLock(int nHeight, const uint256& blockHash) const
 {
     return m_chainlocks.HasConflictingChainLock(nHeight, blockHash);
