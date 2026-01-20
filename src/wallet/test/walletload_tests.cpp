@@ -37,6 +37,8 @@ public:
     std::optional<int64_t> MaxSatisfactionElems() const override { return {}; }
     void GetPubKeys(std::set<CPubKey>& pubkeys, std::set<CExtPubKey>& ext_pubs) const override {}
     std::vector<std::string> Warnings() const override { return {}; }
+    uint32_t GetMaxKeyExpr() const override { return 0; }
+    size_t GetKeyCount() const override { return 0; }
 };
 
 BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)

@@ -283,6 +283,14 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     BOOST_CHECK_EQUAL(parse_pub->IsRange(), (flags & RANGE) != 0);
     BOOST_CHECK_EQUAL(parse_priv->IsRange(), (flags & RANGE) != 0);
 
+    // Check that the highest key expression index matches the number of keys in the descriptor
+    BOOST_TEST_INFO("Pub desc: " + pub);
+    uint32_t key_exprs = parse_pub->GetMaxKeyExpr();
+    BOOST_CHECK_EQUAL(key_exprs + 1, parse_pub->GetKeyCount());
+    BOOST_TEST_INFO("Priv desc: " + prv);
+    BOOST_CHECK_EQUAL(key_exprs, parse_priv->GetMaxKeyExpr());
+    BOOST_CHECK_EQUAL(key_exprs + 1, parse_priv->GetKeyCount());
+
     // * For ranged descriptors,  the `scripts` parameter is a list of expected result outputs, for subsequent
     //   positions to evaluate the descriptors on (so the first element of `scripts` is for evaluating the
     //   descriptor at 0; the second at 1; and so on). To verify this, we evaluate the descriptors once for
