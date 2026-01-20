@@ -8,6 +8,7 @@
 #include <logging/categories.h> // IWYU pragma: export
 #include <threadsafety.h>
 #include <tinyformat.h>
+#include <util/check.h>
 #include <util/source.h> // IWYU pragma: export
 #include <util/string.h>
 #include <util/threadnames.h>
@@ -128,5 +129,31 @@ Dispatcher& g_dispatcher();
  * Note: does not check if any callbacks are actually registered.
  */
 bool LogAcceptCategory(uint64_t category, util::log::Level level);
+
+// Unconditionally dispatch log to all registered callbacks.
+// Allow __func__ to be used in any context without warnings:
+// NOLINTNEXTLINE(bugprone-lambda-function-name)
+#define detail_Dispatch(category, level, should_ratelimit, ...) util::log::g_dispatcher().Log(level, category, SourceLocation{__func__}, should_ratelimit, __VA_ARGS__)
+
+// Dispatch log message to all registered callbacks if it satisfies LogAcceptCategory. For Info levels
+// and up, arguments are always evaluated. For Debug and lower, arguments are ONLY evaluated when
+// the log is actually dispatched (i.e. if it satisfied LogAcceptCategory).
+#define LogPrintLevel_(category, level, should_ratelimit, ...)                              \
+    do {                                                                                    \
+        if (LogAcceptCategory(category, level) && util::log::g_dispatcher().Enabled()) {    \
+            detail_Dispatch(category, level, should_ratelimit, __VA_ARGS__);                \
+        } else if ((level) >= util::log::Level::Info) {                                     \
+            /* For Info levels and up, we guarantee that arguments are always evaluated. */ \
+            [](auto&&...) {}(__VA_ARGS__);                                                  \
+        }                                                                                   \
+    } while (0)
+
+// Arguments are always evaluated, even when logging is disabled.
+#define LogInfo(...) LogPrintLevel_(BCLog::LogFlags::ALL, util::log::Level::Info, /*should_ratelimit=*/true, __VA_ARGS__)
+#define LogWarning(...) LogPrintLevel_(BCLog::LogFlags::ALL, util::log::Level::Warning, /*should_ratelimit=*/true, __VA_ARGS__)
+#define LogError(...) LogPrintLevel_(BCLog::LogFlags::ALL, util::log::Level::Error, /*should_ratelimit=*/true, __VA_ARGS__)
+
+#define LogDebug(category, ...) LogPrintLevel_(category, util::log::Level::Debug, /*should_ratelimit=*/false, __VA_ARGS__)
+#define LogTrace(category, ...) LogPrintLevel_(category, util::log::Level::Trace, /*should_ratelimit=*/false, __VA_ARGS__)
 
 #endif // BITCOIN_UTIL_LOG_H
