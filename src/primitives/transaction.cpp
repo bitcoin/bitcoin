@@ -107,7 +107,7 @@ CAmount CTransaction::GetValueOut() const
     return nValueOut;
 }
 
-unsigned int CTransaction::GetTotalSize() const
+unsigned int CTransaction::ComputeTotalSize() const
 {
     return ::GetSerializeSize(TX_WITH_WITNESS(*this));
 }

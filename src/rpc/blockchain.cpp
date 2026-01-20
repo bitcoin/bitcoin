@@ -2053,7 +2053,7 @@ static RPCHelpMan getblockstats()
         int64_t tx_size = 0;
         if (do_calculate_size) {
 
-            tx_size = tx->GetTotalSize();
+            tx_size = tx->ComputeTotalSize();
             if (do_mediantxsize) {
                 txsize_array.push_back(tx_size);
             }
