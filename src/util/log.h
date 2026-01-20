@@ -60,4 +60,35 @@ enum class Level {
 };
 } // namespace util::log
 
+// Allow __func__ to be used in any context without warnings:
+// NOLINTNEXTLINE(bugprone-lambda-function-name)
+#define LogPrintLevel_(category, level, should_ratelimit, ...) LogPrintFormatInternal(SourceLocation{__func__}, category, level, should_ratelimit, __VA_ARGS__)
+
+// Log unconditionally. Uses basic rate limiting to mitigate disk filling attacks.
+// Be conservative when using functions that unconditionally log to debug.log!
+// It should not be the case that an inbound peer can fill up a user's storage
+// with debug.log entries.
+#define LogInfo(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, /*should_ratelimit=*/true, __VA_ARGS__)
+#define LogWarning(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Warning, /*should_ratelimit=*/true, __VA_ARGS__)
+#define LogError(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Error, /*should_ratelimit=*/true, __VA_ARGS__)
+
+// Use a macro instead of a function for conditional logging to prevent
+// evaluating arguments when logging for the category is not enabled.
+
+// Log by prefixing the output with the passed category name and severity level. This logs conditionally if
+// the category is allowed. No rate limiting is applied, because users specifying -debug are assumed to be
+// developers or power users who are aware that -debug may cause excessive disk usage due to logging.
+#define detail_LogIfCategoryAndLevelEnabled(category, level, ...)      \
+    do {                                                               \
+        if (LogAcceptCategory((category), (level))) {                  \
+            bool rate_limit{level >= BCLog::Level::Info};              \
+            Assume(!rate_limit); /*Only called with the levels below*/ \
+            LogPrintLevel_(category, level, rate_limit, __VA_ARGS__);  \
+        }                                                              \
+    } while (0)
+
+// Log conditionally, prefixing the output with the passed category name.
+#define LogDebug(category, ...) detail_LogIfCategoryAndLevelEnabled(category, BCLog::Level::Debug, __VA_ARGS__)
+#define LogTrace(category, ...) detail_LogIfCategoryAndLevelEnabled(category, BCLog::Level::Trace, __VA_ARGS__)
+
 #endif // BITCOIN_UTIL_LOG_H
