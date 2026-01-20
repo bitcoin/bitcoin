@@ -1033,7 +1033,7 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
     // Create a transaction fanning out as many such P2SH outputs as is standard to spend in a
     // single transaction, and a transaction spending them.
     CMutableTransaction tx_create, tx_max_sigops;
-    const unsigned p2sh_inputs_count{MAX_TX_LEGACY_SIGOPS / MAX_P2SH_SIGOPS};
+    const unsigned p2sh_inputs_count{MAX_TX_BIP54_SIGOPS / MAX_P2SH_SIGOPS};
     tx_create.vout.reserve(p2sh_inputs_count);
     for (unsigned i{0}; i < p2sh_inputs_count; ++i) {
         tx_create.vout.emplace_back(424242 + i, max_sigops_p2sh);
@@ -1045,7 +1045,7 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
     }
 
     // p2sh_inputs_count is truncated to 166 (from 166.6666..)
-    BOOST_CHECK_LT(p2sh_inputs_count * MAX_P2SH_SIGOPS, MAX_TX_LEGACY_SIGOPS);
+    BOOST_CHECK_LT(p2sh_inputs_count * MAX_P2SH_SIGOPS, MAX_TX_BIP54_SIGOPS);
     AddCoins(coins, CTransaction(tx_create), 0, false);
 
     // 2490 sigops is below the limit.
@@ -1060,7 +1060,7 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
     }
     tx_max_sigops.vin.emplace_back(prev_txid, p2sh_inputs_count, CScript() << ToByteVector(max_sigops_redeem_script));
     AddCoins(coins, CTransaction(tx_create), 0, false);
-    BOOST_CHECK_GT((p2sh_inputs_count + 1) * MAX_P2SH_SIGOPS, MAX_TX_LEGACY_SIGOPS);
+    BOOST_CHECK_GT((p2sh_inputs_count + 1) * MAX_P2SH_SIGOPS, MAX_TX_BIP54_SIGOPS);
     auto legacy_sigops_count = GetP2SHSigOpCount(CTransaction(tx_max_sigops), coins);
     BOOST_CHECK_EQUAL(legacy_sigops_count, 2505);
     std::string reject_reason("bad-txns-nonstandard-inputs");
@@ -1089,7 +1089,7 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
     AddCoins(coins, CTransaction(tx_create_p2pk), 0, false);
 
     // The transaction now contains exactly 2500 sigops, the check should pass.
-    BOOST_CHECK_EQUAL(p2sh_inputs_count * MAX_P2SH_SIGOPS + p2pk_inputs_count * 1, MAX_TX_LEGACY_SIGOPS);
+    BOOST_CHECK_EQUAL(p2sh_inputs_count * MAX_P2SH_SIGOPS + p2pk_inputs_count * 1, MAX_TX_BIP54_SIGOPS);
     BOOST_CHECK(::ValidateInputsStandardness(CTransaction(tx_max_sigops), coins).IsValid());
 
     // Now, add some Segwit inputs. We add one for each defined Segwit output type. The limit
@@ -1118,7 +1118,7 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
     }
     AddCoins(coins, CTransaction(tx_create_p2pk), 0, false);
     auto legacy_sigop_count_p2pk = p2sh_inputs_count * MAX_P2SH_SIGOPS + p2pk_inputs_count * 1;
-    BOOST_CHECK_GT(legacy_sigop_count_p2pk, MAX_TX_LEGACY_SIGOPS);
+    BOOST_CHECK_GT(legacy_sigop_count_p2pk, MAX_TX_BIP54_SIGOPS);
     {
         auto validation_state = ValidateInputsStandardness(CTransaction(tx_max_sigops), coins);
         BOOST_CHECK(validation_state.IsInvalid());
