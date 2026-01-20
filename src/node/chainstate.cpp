@@ -237,9 +237,6 @@ void DashChainstateSetup(ChainstateManager& chainman,
     cpoolman.reset();
     cpoolman = std::make_unique<CCreditPoolManager>(*evodb, chainman);
 
-    if (llmq_ctx) {
-        llmq_ctx->Stop();
-    }
     llmq_ctx.reset();
     llmq_ctx = std::make_unique<LLMQContext>(*dmnman, *evodb, sporkman, chainlocks, *mempool, chainman, mn_sync,
                                              util::DbWrapperParams{.path = data_dir, .memory = llmq_dbs_in_memory, .wipe = llmq_dbs_wipe},

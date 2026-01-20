@@ -24,6 +24,7 @@
 #include <httpserver.h>
 #include <httprpc.h>
 #include <chainlock/chainlock.h>
+#include <chainlock/handler.h>
 #include <init/common.h>
 #include <interfaces/chain.h>
 #include <index/blockfilterindex.h>
@@ -295,7 +296,8 @@ void PrepareShutdown(NodeContext& node)
     if (node.observer_ctx) node.observer_ctx->Stop();
     if (node.active_ctx) node.active_ctx->Stop();
     if (node.peerman) node.peerman->StopHandlers();
-    if (node.llmq_ctx) node.llmq_ctx->Stop();
+    if (node.clhandler) node.clhandler->Stop();
+
 
     for (const auto& client : node.chain_clients) {
         client->flush();
@@ -2168,15 +2170,17 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.dstxman);
     node.dstxman = std::make_unique<CDSTXManager>();
 
+    node.clhandler = std::make_unique<llmq::CChainLocksHandler>(*node.chainlocks, chainman, *node.llmq_ctx->qman, *node.mempool, *node.mn_sync);
+
     assert(!node.peerman);
     node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(), *node.dstxman,
                                      chainman, *node.mempool, *node.mn_metaman, *node.mn_sync,
-                                     *node.govman, *node.sporkman, *node.chainlocks, node.active_ctx, node.dmnman,
+                                     *node.govman, *node.sporkman, *node.chainlocks, *node.clhandler, node.active_ctx, node.dmnman,
                                      node.cj_walletman, node.llmq_ctx, node.observer_ctx, ignores_incoming_txs);
     RegisterValidationInterface(node.peerman.get());
 
     g_ds_notification_interface = std::make_unique<CDSNotificationInterface>(
-        *node.connman, *node.dstxman, *node.mn_sync, *node.govman, chainman, node.dmnman, node.llmq_ctx, *node.chainlocks
+        *node.connman, *node.dstxman, *node.mn_sync, *node.govman, chainman, node.dmnman, node.llmq_ctx, *node.chainlocks, *node.clhandler
     );
     RegisterValidationInterface(g_ds_notification_interface.get());
 
@@ -2195,7 +2199,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
         // Will init later in ThreadImport
         node.active_ctx = std::make_unique<ActiveContext>(*node.llmq_ctx->bls_worker, chainman, *node.connman, *node.dmnman, *node.govman, *node.mn_metaman,
-                                                          *node.mnhf_manager, *node.sporkman, *node.chainlocks, *node.mempool, *node.llmq_ctx->clhandler, *node.llmq_ctx->isman,
+                                                          *node.mnhf_manager, *node.sporkman, *node.chainlocks, *node.mempool, *node.clhandler, *node.llmq_ctx->isman,
                                                           *node.llmq_ctx->quorum_block_processor, *node.llmq_ctx->qman, *node.llmq_ctx->qsnapman, *node.llmq_ctx->sigman,
                                                           *node.peerman, *node.mn_sync, operator_sk, sync_map, dash_db_params, quorums_recovery, quorums_watch);
         RegisterValidationInterface(node.active_ctx.get());
@@ -2320,7 +2324,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // ********************************************************* Step 10a: schedule Dash-specific tasks
 
-    node.llmq_ctx->Start();
+    node.clhandler->Start();
     node.peerman->StartHandlers();
     if (node.observer_ctx) node.observer_ctx->Start();
 

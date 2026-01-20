@@ -15,6 +15,7 @@ class ChainstateManager;
 class CMasternodeSync;
 struct LLMQContext;
 
+namespace llmq { class CChainLocksHandler; }
 namespace chainlock
 {
 class Chainlocks;
@@ -33,7 +34,8 @@ public:
                                       const ChainstateManager& chainman,
                                       const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                       const std::unique_ptr<LLMQContext>& llmq_ctx,
-                                      chainlock::Chainlocks& chainlocks);
+                                      chainlock::Chainlocks& chainlocks,
+                                      llmq::CChainLocksHandler& clhandler);
     virtual ~CDSNotificationInterface();
 
     // a small helper to initialize current block height in sub-modules on startup
@@ -62,6 +64,7 @@ private:
     const std::unique_ptr<CDeterministicMNManager>& m_dmnman;
     const std::unique_ptr<LLMQContext>& m_llmq_ctx;
     chainlock::Chainlocks& m_chainlocks;
+    llmq::CChainLocksHandler& m_clhandler;
 };
 
 extern std::unique_ptr<CDSNotificationInterface> g_ds_notification_interface;

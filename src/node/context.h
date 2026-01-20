@@ -36,6 +36,7 @@ class PeerManager;
 struct ActiveContext;
 struct LLMQContext;
 namespace llmq {
+class CChainLocksHandler;
 struct ObserverContext;
 } // namespace llmq
 
@@ -97,6 +98,7 @@ struct NodeContext {
     std::unique_ptr<CNetFulfilledRequestManager> netfulfilledman;
     std::unique_ptr<CSporkManager> sporkman;
     std::unique_ptr<chainlock::Chainlocks> chainlocks;
+    std::unique_ptr<llmq::CChainLocksHandler> clhandler;
     //! Dash contexts
     std::unique_ptr<ActiveContext> active_ctx;
     std::unique_ptr<LLMQContext> llmq_ctx;

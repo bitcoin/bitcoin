@@ -5,8 +5,6 @@
 #include <llmq/context.h>
 
 #include <bls/bls_worker.h>
-#include <chainlock/handler.h>
-#include <chainlock/handler.h>
 #include <instantsend/instantsend.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/quorumsman.h>
@@ -24,8 +22,6 @@ LLMQContext::LLMQContext(CDeterministicMNManager& dmnman, CEvoDB& evo_db, CSpork
     qman{std::make_unique<llmq::CQuorumManager>(*bls_worker, dmnman, evo_db, *quorum_block_processor, *qsnapman,
                                                 chainman, db_params)},
     sigman{std::make_unique<llmq::CSigningManager>(*qman, db_params, max_recsigs_age)},
-    // TODO: move-out clhandler from LLMQContext so far as it has nothing to do with llmq's context
-    clhandler{std::make_unique<llmq::CChainLocksHandler>(chainlocks, chainman, *qman, mempool, mn_sync)},
     isman{std::make_unique<llmq::CInstantSendManager>(chainlocks, chainman.ActiveChainstate(), *sigman, sporkman,
                                                       mempool, mn_sync, db_params)}
 {
@@ -36,14 +32,4 @@ LLMQContext::LLMQContext(CDeterministicMNManager& dmnman, CEvoDB& evo_db, CSpork
 LLMQContext::~LLMQContext()
 {
     bls_worker->Stop();
-}
-
-void LLMQContext::Start()
-{
-    clhandler->Start();
-}
-
-void LLMQContext::Stop()
-{
-    clhandler->Stop();
 }

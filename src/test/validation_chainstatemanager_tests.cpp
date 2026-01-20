@@ -16,9 +16,9 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <chainlock/handler.h>
 #include <evo/evodb.h>
 #include <llmq/blockprocessor.h>
-#include <llmq/context.h>
 #include <llmq/signing.h>
 #include <spork.h>
 
@@ -71,8 +71,8 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
 
     BOOST_CHECK(!manager.SnapshotBlockhash().has_value());
 
-    if (m_node.llmq_ctx) {
-        m_node.llmq_ctx->Stop();
+    if (m_node.clhandler) {
+        m_node.clhandler->Stop();
     }
     DashChainstateSetupClose(m_node);
 
@@ -120,8 +120,8 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
     // Let scheduler events finish running to avoid accessing memory that is going to be unloaded
     SyncWithValidationInterfaceQueue();
 
-    if (m_node.llmq_ctx) {
-        m_node.llmq_ctx->Stop();
+    if (m_node.clhandler) {
+        m_node.clhandler->Stop();
     }
     DashChainstateSetupClose(m_node);
 }

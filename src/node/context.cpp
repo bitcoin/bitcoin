@@ -18,6 +18,7 @@
 
 #include <active/context.h>
 #include <chainlock/chainlock.h>
+#include <chainlock/handler.h>
 #include <coinjoin/coinjoin.h>
 #include <coinjoin/walletman.h>
 #include <evo/chainhelper.h>

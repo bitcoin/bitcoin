@@ -588,6 +588,7 @@ public:
                     CDSTXManager& dstxman, ChainstateManager& chainman, CTxMemPool& pool,
                     CMasternodeMetaMan& mn_metaman, CMasternodeSync& mn_sync, CGovernanceManager& govman,
                     CSporkManager& sporkman, const chainlock::Chainlocks& chainlocks,
+                    llmq::CChainLocksHandler& clhandler,
                     const std::unique_ptr<ActiveContext>& active_ctx,
                     const std::unique_ptr<CDeterministicMNManager>& dmnman,
                     const std::unique_ptr<CJWalletManager>& cj_walletman,
@@ -822,6 +823,8 @@ private:
     CGovernanceManager& m_govman;
     CSporkManager& m_sporkman;
     const chainlock::Chainlocks& m_chainlocks;
+    // TODO: consider further refactoring CChainLocksHandler to NetHandler to avoid boiler code in PeerManager
+    llmq::CChainLocksHandler& m_clhandler;
 
     /** The height of the best chain */
     std::atomic<int> m_best_height{-1};
@@ -2045,13 +2048,14 @@ std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, 
                                                CTxMemPool& pool, CMasternodeMetaMan& mn_metaman,
                                                CMasternodeSync& mn_sync, CGovernanceManager& govman,
                                                CSporkManager& sporkman, const chainlock::Chainlocks& chainlocks,
+                                               llmq::CChainLocksHandler& clhandler,
                                                const std::unique_ptr<ActiveContext>& active_ctx,
                                                const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                                const std::unique_ptr<CJWalletManager>& cj_walletman,
                                                const std::unique_ptr<LLMQContext>& llmq_ctx,
                                                const std::unique_ptr<llmq::ObserverContext>& observer_ctx, bool ignore_incoming_txs)
 {
-    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, dstxman, chainman, pool, mn_metaman, mn_sync, govman, sporkman, chainlocks, active_ctx, dmnman, cj_walletman, llmq_ctx, observer_ctx, ignore_incoming_txs);
+    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, dstxman, chainman, pool, mn_metaman, mn_sync, govman, sporkman, chainlocks, clhandler, active_ctx, dmnman, cj_walletman, llmq_ctx, observer_ctx, ignore_incoming_txs);
 }
 
 PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, AddrMan& addrman, BanMan* banman,
@@ -2059,6 +2063,7 @@ PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& conn
                                  CMasternodeMetaMan& mn_metaman, CMasternodeSync& mn_sync, CGovernanceManager& govman,
                                  CSporkManager& sporkman,
                                  const chainlock::Chainlocks& chainlocks,
+                                 llmq::CChainLocksHandler& clhandler,
                                  const std::unique_ptr<ActiveContext>& active_ctx,
                                  const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                  const std::unique_ptr<CJWalletManager>& cj_walletman,
@@ -2081,6 +2086,7 @@ PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& conn
       m_govman(govman),
       m_sporkman(sporkman),
       m_chainlocks(chainlocks),
+      m_clhandler{clhandler},
       m_ignore_incoming_txs(ignore_incoming_txs)
 {
     // While Erlay support is incomplete, it must be enabled explicitly via -txreconciliation.
@@ -2361,7 +2367,7 @@ bool PeerManagerImpl::AlreadyHave(const CInv& inv)
     // TODO: move it to NetSigning
         return m_llmq_ctx->sigman->AlreadyHave(inv);
     case MSG_CLSIG:
-        return m_llmq_ctx->clhandler->AlreadyHave(inv);
+        return m_clhandler.AlreadyHave(inv);
     // TODO: move it to NetInstantSend
     case MSG_ISDLOCK:
         return m_llmq_ctx->isman->AlreadyHave(inv);
@@ -5488,7 +5494,7 @@ void PeerManagerImpl::ProcessMessage(
                 vRecv >> clsig;
                 const uint256& hash = ::SerializeHash(clsig);
                 WITH_LOCK(::cs_main, EraseObjectRequest(pfrom.GetId(), CInv{MSG_CLSIG, hash}));
-                PostProcessMessage(m_llmq_ctx->clhandler->ProcessNewChainLock(pfrom.GetId(), clsig, hash), pfrom.GetId());
+                PostProcessMessage(m_clhandler.ProcessNewChainLock(pfrom.GetId(), clsig, hash), pfrom.GetId());
             }
             return; // CLSIG
         }

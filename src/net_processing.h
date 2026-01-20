@@ -32,6 +32,7 @@ class CTxMemPool;
 struct ActiveContext;
 struct LLMQContext;
 namespace llmq {
+class CChainLocksHandler;
 struct ObserverContext;
 } // namespace llmq
 namespace chainlock { class Chainlocks; }
@@ -108,6 +109,7 @@ public:
                                              CTxMemPool& pool, CMasternodeMetaMan& mn_metaman, CMasternodeSync& mn_sync,
                                              CGovernanceManager& govman, CSporkManager& sporkman,
                                              const chainlock::Chainlocks& chainlocks,
+                                             llmq::CChainLocksHandler& clhandler,
                                              const std::unique_ptr<ActiveContext>& active_ctx,
                                              const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                              const std::unique_ptr<CJWalletManager>& cj_walletman,

@@ -1114,8 +1114,8 @@ static RPCHelpMan verifychainlock()
         }
     }
 
-    const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
-    return llmq_ctx.clhandler->VerifyChainLock(chainlock::ChainLockSig(nBlockHeight, nBlockHash, sig)) ==
+    CHECK_NONFATAL(node.clhandler);
+    return node.clhandler->VerifyChainLock(chainlock::ChainLockSig(nBlockHeight, nBlockHash, sig)) ==
            llmq::VerifyRecSigStatus::Valid;
 },
     };
@@ -1217,8 +1217,8 @@ static RPCHelpMan submitchainlock()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid block height");
     }
     const NodeContext& node = EnsureAnyNodeContext(request.context);
-    const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
     CHECK_NONFATAL(node.chainlocks);
+    CHECK_NONFATAL(node.clhandler);
     const int32_t bestCLHeight = node.chainlocks->GetBestChainLock().getHeight();
     if (nBlockHeight <= bestCLHeight) return bestCLHeight;
 
@@ -1229,7 +1229,7 @@ static RPCHelpMan submitchainlock()
 
 
     const auto clsig{chainlock::ChainLockSig(nBlockHeight, nBlockHash, sig)};
-    const llmq::VerifyRecSigStatus ret{llmq_ctx.clhandler->VerifyChainLock(clsig)};
+    const llmq::VerifyRecSigStatus ret{node.clhandler->VerifyChainLock(clsig)};
     if (ret == llmq::VerifyRecSigStatus::NoQuorum) {
         LOCK(cs_main);
         const ChainstateManager& chainman = EnsureChainman(node);
@@ -1241,7 +1241,7 @@ static RPCHelpMan submitchainlock()
     }
 
     PeerManager& peerman = EnsurePeerman(node);
-    peerman.PostProcessMessage(llmq_ctx.clhandler->ProcessNewChainLock(-1, clsig, ::SerializeHash(clsig)));
+    peerman.PostProcessMessage(node.clhandler->ProcessNewChainLock(-1, clsig, ::SerializeHash(clsig)));
     return node.chainlocks->GetBestChainLock().getHeight();
 },
     };

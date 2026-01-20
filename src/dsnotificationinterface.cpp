@@ -28,7 +28,8 @@ CDSNotificationInterface::CDSNotificationInterface(CConnman& connman,
                                                    const ChainstateManager& chainman,
                                                    const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                                    const std::unique_ptr<LLMQContext>& llmq_ctx,
-                                                   chainlock::Chainlocks& chainlocks) :
+                                                   chainlock::Chainlocks& chainlocks,
+                                                   llmq::CChainLocksHandler& clhandler) :
     m_connman{connman},
     m_dstxman{dstxman},
     m_mn_sync{mn_sync},
@@ -36,7 +37,8 @@ CDSNotificationInterface::CDSNotificationInterface(CConnman& connman,
     m_chainman{chainman},
     m_dmnman{dmnman},
     m_llmq_ctx{llmq_ctx},
-    m_chainlocks{chainlocks}
+    m_chainlocks{chainlocks},
+    m_clhandler{clhandler}
 {
 }
 
@@ -80,7 +82,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     m_dstxman.UpdatedBlockTip(pindexNew, m_chainlocks, m_mn_sync);
 
     m_llmq_ctx->isman->UpdatedBlockTip(pindexNew);
-    m_llmq_ctx->clhandler->UpdatedBlockTip();
+    m_clhandler.UpdatedBlockTip();
 
     if (m_govman.IsValid()) {
         m_govman.UpdatedBlockTip(pindexNew);
@@ -91,7 +93,7 @@ void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef& 
                                                          uint64_t mempool_sequence)
 {
     Assert(m_llmq_ctx)->isman->TransactionAddedToMempool(ptx);
-    m_llmq_ctx->clhandler->TransactionAddedToMempool(ptx, nAcceptTime);
+    m_clhandler.TransactionAddedToMempool(ptx, nAcceptTime);
     m_dstxman.TransactionAddedToMempool(ptx);
 }
 
@@ -104,7 +106,7 @@ void CDSNotificationInterface::TransactionRemovedFromMempool(const CTransactionR
 void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
 {
     Assert(m_llmq_ctx)->isman->BlockConnected(pblock, pindex);
-    m_llmq_ctx->clhandler->BlockConnected(pblock, pindex);
+    m_clhandler.BlockConnected(pblock, pindex);
     m_dstxman.BlockConnected(pblock, pindex);
 }
 

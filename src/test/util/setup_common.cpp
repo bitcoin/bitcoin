@@ -7,6 +7,7 @@
 #include <addrman.h>
 #include <banman.h>
 #include <chainlock/chainlock.h>
+#include <chainlock/handler.h>
 #include <chainparams.h>
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
@@ -134,7 +135,7 @@ std::unique_ptr<PeerManager> MakePeerManager(CConnman& connman,
                                              bool ignore_incoming_txs)
 {
     return PeerManager::make(chainparams, connman, *node.addrman, banman, *node.dstxman, *node.chainman, *node.mempool, *node.mn_metaman,
-                             *node.mn_sync, *node.govman, *node.sporkman, *node.chainlocks, node.active_ctx, node.dmnman, node.cj_walletman,
+                             *node.mn_sync, *node.govman, *node.sporkman, *node.chainlocks, *node.clhandler, node.active_ctx, node.dmnman, node.cj_walletman,
                              node.llmq_ctx, node.observer_ctx, ignore_incoming_txs);
 }
 
@@ -290,6 +291,8 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     m_node.mn_sync = std::make_unique<CMasternodeSync>(std::make_unique<NodeSyncNotifierImpl>(*m_node.connman, *m_node.netfulfilledman));
     m_node.govman = std::make_unique<CGovernanceManager>(*m_node.mn_metaman, *m_node.chainman, m_node.dmnman, *m_node.mn_sync);
 
+    m_node.clhandler = std::make_unique<llmq::CChainLocksHandler>(*m_node.chainlocks, *m_node.chainman, *m_node.llmq_ctx->qman, *m_node.mempool, *m_node.mn_sync);
+
     // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
     constexpr int script_check_threads = 2;
     StartScriptCheckWorkerThreads(script_check_threads);
@@ -412,8 +415,8 @@ TestingSetup::~TestingSetup()
     m_node.dstxman.reset();
 
     // Interrupt() and PrepareShutdown() routines
-    if (m_node.llmq_ctx) {
-        m_node.llmq_ctx->Stop();
+    if (m_node.clhandler) {
+        m_node.clhandler->Stop();
     }
     if (m_node.connman) {
         m_node.connman->Stop();
