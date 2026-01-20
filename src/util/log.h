@@ -162,4 +162,13 @@ Dispatcher& g_dispatcher();
 
 } // namespace util::log
 
+/**
+ * Return true if global logger will log at the specified category and level.
+ * @see util::log::Dispatcher::WillLog(Level level, uint64_t category)
+ */
+static inline bool LogAcceptCategory(uint64_t category, util::log::Level level)
+{
+    return util::log::g_dispatcher().WillLog(level, category);
+}
+
 #endif // BITCOIN_UTIL_LOG_H
