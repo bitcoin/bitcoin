@@ -181,6 +181,12 @@ struct Descriptor {
 
     /** Semantic/safety warnings (includes subdescriptors). */
     virtual std::vector<std::string> Warnings() const = 0;
+
+    /** Get the maximum key expression index. Used only for tests */
+    virtual uint32_t GetMaxKeyExpr() const = 0;
+
+    /** Get the number of key expressions in this descriptor. Used only for tests */
+    virtual size_t GetKeyCount() const = 0;
 };
 
 /** Parse a `descriptor` string. Included private keys are put in `out`.

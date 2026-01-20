@@ -161,12 +161,11 @@ typedef std::vector<uint32_t> KeyPath;
 /** Interface for public key objects in descriptors. */
 struct PubkeyProvider
 {
-protected:
+public:
     //! Index of this key expression in the descriptor
     //! E.g. If this PubkeyProvider is key1 in multi(2, key1, key2, key3), then m_expr_index = 0
-    uint32_t m_expr_index;
+    const uint32_t m_expr_index;
 
-public:
     explicit PubkeyProvider(uint32_t exp_index) : m_expr_index(exp_index) {}
 
     virtual ~PubkeyProvider() = default;
@@ -229,6 +228,9 @@ public:
 
     /** Whether this PubkeyProvider is a BIP 32 extended key that can be derived from */
     virtual bool IsBIP32() const = 0;
+
+    /** Get the count of keys known by this PubkeyProvider. Usually one, but may be more for key aggregation schemes */
+    virtual size_t GetKeyCount() const { return 1; }
 };
 
 class OriginPubkeyProvider final : public PubkeyProvider
@@ -788,6 +790,10 @@ public:
         // musig() can only be a BIP 32 key if all participants are bip32 too
         return std::all_of(m_participants.begin(), m_participants.end(), [](const auto& pubkey) { return pubkey->IsBIP32(); });
     }
+    size_t GetKeyCount() const override
+    {
+        return 1 + m_participants.size();
+    }
 };
 
 /** Base class for all Descriptor implementations. */
@@ -1040,6 +1046,32 @@ public:
             all.insert(all.end(), sub_w.begin(), sub_w.end());
         }
         return all;
+    }
+
+    // NOLINTNEXTLINE(misc-no-recursion)
+    uint32_t GetMaxKeyExpr() const override
+    {
+        uint32_t max_key_expr{0};
+        for (const auto& p : m_pubkey_args) {
+            max_key_expr = std::max(max_key_expr, p->m_expr_index);
+        }
+        for (const auto& s : m_subdescriptor_args) {
+            max_key_expr = std::max(max_key_expr, s->GetMaxKeyExpr());
+        }
+        return max_key_expr;
+    }
+
+    // NOLINTNEXTLINE(misc-no-recursion)
+    size_t GetKeyCount() const override
+    {
+        size_t count{0};
+        for (const auto& p : m_pubkey_args) {
+            count += p->GetKeyCount();
+        }
+        for (const auto& s : m_subdescriptor_args) {
+            count += s->GetKeyCount();
+        }
+        return count;
     }
 };
 
