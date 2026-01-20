@@ -12,8 +12,8 @@
 #include <cstring>
 #include <locale>
 #include <sstream>
-#include <string>      // IWYU pragma: export
-#include <string_view> // IWYU pragma: export
+#include <string>
+#include <string_view>
 #include <vector>
 
 namespace util {

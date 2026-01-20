@@ -9,6 +9,7 @@
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
+#include <crypto/hex_base.h>
 #include <key_io.h>
 // IWYU incorrectly suggests replacing this header
 // with forward declarations.

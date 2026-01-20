@@ -9,7 +9,7 @@
 #ifndef BITCOIN_UTIL_STRENCODINGS_H
 #define BITCOIN_UTIL_STRENCODINGS_H
 
-#include <crypto/hex_base.h> // IWYU pragma: export
+#include <crypto/hex_base.h>
 #include <span.h>
 #include <util/string.h>
 
@@ -20,8 +20,8 @@
 #include <cstdint>
 #include <limits>
 #include <optional>
-#include <string>      // IWYU pragma: export
-#include <string_view> // IWYU pragma: export
+#include <string>
+#include <string_view>
 #include <system_error>
 #include <type_traits>
 #include <vector>
