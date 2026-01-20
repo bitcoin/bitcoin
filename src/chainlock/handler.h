@@ -85,6 +85,7 @@ public:
                                                               const uint256& hash)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
+    void AcceptedBlockHeader(gsl::not_null<const CBlockIndex*> pindexNew);
     void UpdatedBlockTip();
     void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);

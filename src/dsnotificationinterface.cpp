@@ -8,7 +8,6 @@
 #include <util/check.h>
 #include <validation.h>
 
-#include <chainlock/chainlock.h>
 #include <chainlock/handler.h>
 #include <coinjoin/coinjoin.h>
 #include <evo/deterministicmns.h>
@@ -52,7 +51,7 @@ void CDSNotificationInterface::InitializeCurrentBlockTip()
 
 void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 {
-    m_chainlocks.AcceptedBlockHeader(pindexNew);
+    m_clhandler.AcceptedBlockHeader(pindexNew);
     m_mn_sync.AcceptedBlockHeader(pindexNew);
 }
 

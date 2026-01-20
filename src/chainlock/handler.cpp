@@ -174,6 +174,11 @@ void CChainLocksHandler::TransactionAddedToMempool(const CTransactionRef& tx, in
     txFirstSeenTime.emplace(tx->GetHash(), nAcceptTime);
 }
 
+void CChainLocksHandler::AcceptedBlockHeader(gsl::not_null<const CBlockIndex*> pindexNew)
+{
+    m_chainlocks.AcceptedBlockHeader(pindexNew);
+}
+
 void CChainLocksHandler::BlockConnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindex)
 {
     if (!m_mn_sync.IsBlockchainSynced()) {
