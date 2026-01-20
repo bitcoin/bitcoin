@@ -17,7 +17,6 @@
 #include <util/message.h> // for MESSAGE_MAGIC
 #include <util/ranges.h>
 #include <util/string.h>
-#include <validation.h>
 
 #include <string>
 
