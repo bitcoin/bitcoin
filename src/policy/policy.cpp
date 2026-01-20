@@ -185,7 +185,7 @@ static bool CheckSigopsBIP54(const CTransaction& tx, const CCoinsViewCache& inpu
         sigops += txin.scriptSig.GetSigOpCount(/*fAccurate=*/true);
         sigops += prev_txo.scriptPubKey.GetSigOpCount(txin.scriptSig);
 
-        if (sigops > MAX_TX_LEGACY_SIGOPS) {
+        if (sigops > MAX_TX_BIP54_SIGOPS) {
             return false;
         }
     }
