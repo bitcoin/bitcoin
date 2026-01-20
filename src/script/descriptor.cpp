@@ -1082,7 +1082,8 @@ public:
 
     std::optional<int64_t> MaxSatSize(bool use_max_sig) const override {
         const auto ecdsa_sig_size = use_max_sig ? 72 : 71;
-        return 1 + (m_xonly ? 65 : ecdsa_sig_size);
+        // Schnorr signatures (x-only keys) are 64 bytes with default SIGHASH_DEFAULT
+        return 1 + (m_xonly ? 64 : ecdsa_sig_size);
     }
 
     std::optional<int64_t> MaxSatisfactionWeight(bool use_max_sig) const override {
@@ -1266,7 +1267,8 @@ public:
     }
 
     std::optional<int64_t> MaxSatSize(bool use_max_sig) const override {
-        return (1 + 65) * m_threshold + (m_pubkey_args.size() - m_threshold);
+        // Schnorr signatures are 64 bytes with default SIGHASH_DEFAULT
+        return (1 + 64) * m_threshold + (m_pubkey_args.size() - m_threshold);
     }
 
     std::optional<int64_t> MaxSatisfactionElems() const override { return m_pubkey_args.size(); }
@@ -1426,9 +1428,22 @@ public:
 
     std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 32; }
 
-    std::optional<int64_t> MaxSatisfactionWeight(bool) const override {
-        // FIXME: We assume keypath spend, which can lead to very large underestimations.
-        return 1 + 65;
+    std::optional<int64_t> MaxSatisfactionWeight(bool use_max_sig) const override {
+        int64_t max_weight = 1 + 65;
+        for (size_t i = 0; i < m_subdescriptor_args.size(); ++i) {
+            const auto& subdesc = m_subdescriptor_args[i];
+            int depth = m_depths[i];
+            // For Taproot, witness bytes = weight units (1:1), so use MaxSatSize not MaxSatisfactionWeight
+            const auto sat_size = subdesc->MaxSatSize(use_max_sig);
+            const auto script_size = subdesc->ScriptSize();
+            if (!sat_size || !script_size) return {};
+            int64_t sat_weight = *sat_size;
+            int64_t script_weight = GetSizeOfCompactSize(*script_size) + *script_size;
+            int64_t control_block_size = 1 + 32 + (int64_t)depth * 32;
+            int64_t control_block_weight = GetSizeOfCompactSize(control_block_size) + control_block_size;
+            max_weight = std::max(max_weight, sat_weight + script_weight + control_block_weight);
+        }
+        return max_weight;
     }
 
     std::optional<int64_t> MaxSatisfactionElems() const override {

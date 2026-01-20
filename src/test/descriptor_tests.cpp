@@ -1317,4 +1317,45 @@ BOOST_AUTO_TEST_CASE(descriptor_older_warnings)
     }
 }
 
+BOOST_AUTO_TEST_CASE(descriptor_tr_max_satisfaction_weight)
+{
+    FlatSigningProvider provider;
+    std::string error;
+
+    // A Taproot descriptor with a script path heavier than the key path.
+    // Key path: 1 + 65 = 66 weight units.
+    // Script path: pk(key)
+    // - Satisfaction (Sig): 65 weight units (64 bytes sig + 1 byte len)
+    // - Script (pk): 34 bytes (32 key + 1 push + 1 check). Weight: 1 + 34 = 35.
+    // - Control Block: 33 bytes (1 version + 32 internal key). Weight: 1 + 33 = 34.
+    // Total script path weight: 65 + 35 + 34 = 134.
+
+    // We use a valid x-only pubkey for internal key and script key.
+    std::string desc_str = "tr(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5,pk(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5))";
+    auto parsed = Parse(desc_str, provider, error);
+    BOOST_CHECK_EQUAL(parsed.size(), 1U);
+    const auto& desc = parsed[0];
+    BOOST_CHECK(desc->IsSolvable());
+
+    auto max_weight = desc->MaxSatisfactionWeight(true);
+    BOOST_CHECK(max_weight.has_value());
+    BOOST_CHECK_EQUAL(*max_weight, 134);
+
+    // sortedmulti_a example
+    // tr(KEY, sortedmulti_a(2, K1, K2))
+    std::string desc_multi = "tr(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5,sortedmulti_a(2,c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5,f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9))";
+    parsed = Parse(desc_multi, provider, error);
+    BOOST_CHECK_EQUAL(parsed.size(), 1U);
+    const auto& desc2 = parsed[0];
+    auto max_weight2 = desc2->MaxSatisfactionWeight(true);
+    BOOST_CHECK(max_weight2.has_value());
+
+    // Script: (33+1)+(33+1)+1+1 = 70. Weight: 1+70=71.
+    // Each key is 33 bytes (0x20 push + 32 bytes x-only key) + 1 byte opcode.
+    // Sat: 2*65=130 (two 64-byte Schnorr sigs with length prefix).
+    // CB: 1+32=33. Weight: 1+33=34.
+    // Total: 71+130+34=235.
+    BOOST_CHECK_EQUAL(*max_weight2, 235);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
