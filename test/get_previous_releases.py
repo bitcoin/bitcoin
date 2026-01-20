@@ -23,6 +23,8 @@ import time
 import urllib.request
 import zipfile
 
+TAR = os.getenv('TAR', 'tar')
+
 SHA256_SUMS = {
     "0e2819135366f150d9906e294b61dff58fd1996ebd26c2f8e979d6c0b7a79580": {"tag": "v0.14.3", "archive": "bitcoin-0.14.3-aarch64-linux-gnu.tar.gz"},
     "d86fc90824a85c38b25c8488115178d5785dbc975f5ff674f9f5716bc8ad6e65": {"tag": "v0.14.3", "archive": "bitcoin-0.14.3-arm-linux-gnueabihf.tar.gz"},
@@ -214,7 +216,7 @@ def download_binary(tag, args) -> int:
             print(f"Zip extraction failed: {e}", file=sys.stderr)
             return 1
     else:
-        ret = subprocess.run(['tar', '-zxf', archive, '-C', tag,
+        ret = subprocess.run([TAR, '-zxf', archive, '-C', tag,
                               '--strip-components=1',
                               'bitcoin-{tag}'.format(tag=tag[1:])]).returncode
         if ret != 0:
