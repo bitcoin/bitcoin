@@ -125,10 +125,14 @@ struct ParserContext {
         return a < b;
     }
 
-    std::optional<std::string> ToString(const Key& key) const
+    std::optional<std::string> ToString(const Key& key, bool& has_priv_key) const
     {
+        has_priv_key = false;
         auto it = TEST_DATA.dummy_key_idx_map.find(key);
-        if (it == TEST_DATA.dummy_key_idx_map.end()) return {};
+        if (it == TEST_DATA.dummy_key_idx_map.end()) {
+            return HexStr(key);
+        }
+        has_priv_key = true;
         uint8_t idx = it->second;
         return HexStr(std::span{&idx, 1});
     }
