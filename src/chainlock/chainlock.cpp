@@ -4,6 +4,7 @@
 
 #include <chainlock/chainlock.h>
 
+#include <chainlock/clsig.h>
 #include <spork.h>
 #include <logging.h>
 
@@ -159,5 +160,4 @@ void Chainlocks::AcceptedBlockHeader(gsl::not_null<const CBlockIndex*> pindexNew
         bestChainLockBlockIndex = pindexNew;
     }
 }
-
 } // namespace chainlock::

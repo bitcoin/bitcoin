@@ -5,21 +5,21 @@
 #include <chainlock/handler.h>
 
 #include <chain.h>
+#include <chainlock/chainlock.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <instantsend/instantsend.h>
+#include <llmq/quorumsman.h>
+#include <masternode/sync.h>
 #include <node/interface_ui.h>
 #include <scheduler.h>
+#include <stats/client.h>
 #include <txmempool.h>
 #include <util/thread.h>
 #include <util/time.h>
 #include <util/underlying.h>
 #include <validation.h>
 #include <validationinterface.h>
-
-#include <instantsend/instantsend.h>
-#include <llmq/quorumsman.h>
-#include <masternode/sync.h>
-#include <stats/client.h>
 
 // Forward declaration to break dependency over node/transaction.h
 namespace node {
@@ -260,15 +260,6 @@ void CChainLocksHandler::EnforceBestChainLock()
     ::g_stats_client->gauge("chainlocks.blockHeight", clsig.getHeight(), 1.0f);
 }
 
-VerifyRecSigStatus CChainLocksHandler::VerifyChainLock(const chainlock::ChainLockSig& clsig) const
-{
-    const auto llmqType = Params().GetConsensus().llmqTypeChainLocks;
-    const uint256 nRequestId = chainlock::GenSigRequestId(clsig.getHeight());
-
-    return llmq::VerifyRecoveredSig(llmqType, m_chainman.ActiveChain(), qman, clsig.getHeight(), nRequestId,
-                                    clsig.getBlockHash(), clsig.getSig());
-}
-
 void CChainLocksHandler::CleanupFromSigner(const std::vector<std::shared_ptr<Uint256HashSet>>& cleanup_txes)
 {
     LOCK(cs);
@@ -324,3 +315,15 @@ void CChainLocksHandler::Cleanup()
     }
 }
 } // namespace llmq
+
+namespace chainlock
+{
+llmq::VerifyRecSigStatus VerifyChainLock(const Consensus::Params& params, const CChain& chain, const llmq::CQuorumManager& qman, const chainlock::ChainLockSig& clsig)
+{
+    const auto llmqType = params.llmqTypeChainLocks;
+    const uint256 request_id = chainlock::GenSigRequestId(clsig.getHeight());
+
+    return llmq::VerifyRecoveredSig(llmqType, chain, qman, clsig.getHeight(), request_id,
+                                    clsig.getBlockHash(), clsig.getSig());
+}
+} // namespace chainlock

@@ -62,6 +62,7 @@ public:
 
     void ResetChainlock() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
+
 } // namespace chainlock
 
 #endif // BITCOIN_CHAINLOCK_CHAINLOCK_H

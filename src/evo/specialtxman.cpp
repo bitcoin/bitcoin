@@ -16,6 +16,7 @@
 
 #include <chainlock/chainlock.h>
 #include <chainlock/clsig.h>
+#include <chainlock/handler.h>
 #include <evo/assetlocktx.h>
 #include <evo/cbtx.h>
 #include <evo/creditpool.h>
@@ -80,13 +81,8 @@ static bool CheckCbTxBestChainlock(const CCbTx& cbTx, const CBlockIndex* pindex,
             return true;
         }
         uint256 curBlockCoinbaseCLBlockHash = pindex->GetAncestor(curBlockCoinbaseCLHeight)->GetBlockHash();
-        // TODO: remove duplicated code with CChainLocksHandler::VerifyChainLock
-        const auto llmqType = m_consensus_params.llmqTypeChainLocks;
         chainlock::ChainLockSig clsig{curBlockCoinbaseCLHeight, curBlockCoinbaseCLBlockHash, cbTx.bestCLSignature};
-        const uint256 nRequestId = chainlock::GenSigRequestId(clsig.getHeight());
-
-        llmq::VerifyRecSigStatus ret = llmq::VerifyRecoveredSig(llmqType, chain, qman, clsig.getHeight(), nRequestId,
-                                        clsig.getBlockHash(), clsig.getSig());
+        llmq::VerifyRecSigStatus ret = chainlocks::VerifyChainLock(m_consensus_params, chain, qman, clsig);
         if (ret != llmq::VerifyRecSigStatus::Valid) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-invalid-clsig");
         }

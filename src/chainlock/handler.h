@@ -5,9 +5,6 @@
 #ifndef BITCOIN_CHAINLOCK_HANDLER_H
 #define BITCOIN_CHAINLOCK_HANDLER_H
 
-#include <chainlock/chainlock.h>
-#include <chainlock/clsig.h>
-
 #include <net_types.h>
 #include <primitives/transaction.h>
 #include <protocol.h>
@@ -23,19 +20,27 @@
 #include <map>
 #include <memory>
 #include <thread>
-#include <unordered_map>
 
 class CBlock;
 class CBlockIndex;
-class ChainstateManager;
+class CChain;
 class CMasternodeSync;
+class ChainstateManager;
 class CScheduler;
 class CTxMemPool;
 struct MessageProcessingResult;
 
-namespace llmq {
+namespace chainlock {
+class Chainlocks;
+struct ChainLockSig;
+} // namespace chainlock
+namespace Consensus {
+struct Params;
+} // namespace Consensus
+
+namespace llmq
+{
 class CQuorumManager;
-class CSigningManager;
 enum class VerifyRecSigStatus : uint8_t;
 
 class CChainLocksHandler
@@ -44,7 +49,6 @@ private:
     chainlock::Chainlocks& m_chainlocks;
 
     ChainstateManager& m_chainman;
-    CQuorumManager& qman;
     CTxMemPool& mempool;
     const CMasternodeSync& m_mn_sync;
     std::unique_ptr<CScheduler> scheduler;
@@ -90,8 +94,6 @@ public:
     void EnforceBestChainLock()
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    VerifyRecSigStatus VerifyChainLock(const chainlock::ChainLockSig& clsig) const;
-
     bool IsTxSafeForMining(const uint256& txid) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
@@ -102,5 +104,10 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
 } // namespace llmq
+
+namespace chainlock
+{
+llmq::VerifyRecSigStatus VerifyChainLock(const Consensus::Params& params, const CChain& chain, const llmq::CQuorumManager& qman, const chainlock::ChainLockSig& clsig);
+} // namespace chainlock
 
 #endif // BITCOIN_CHAINLOCK_HANDLER_H
