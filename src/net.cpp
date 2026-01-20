@@ -3695,13 +3695,12 @@ CConnman::~CConnman()
 
 std::vector<CAddress> CConnman::GetAddressesUnsafe(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered) const
 {
-    std::vector<CAddress> addresses = addrman.get().GetAddr(max_addresses, max_pct, network, filtered);
-    if (m_banman) {
-        addresses.erase(std::remove_if(addresses.begin(), addresses.end(),
-                        [this](const CAddress& addr){return m_banman->IsDiscouraged(addr) || m_banman->IsBanned(addr);}),
-                        addresses.end());
-    }
-    return addresses;
+    // This runs under AddrMan::cs, and BanMan checks take m_banned_mutex.
+    // The lock order here is AddrMan::cs -> m_banned_mutex.
+    const AddrMan::AddrPolicy policy = [this](const CAddress& addr) {
+        return m_banman && (m_banman->IsDiscouraged(addr) || m_banman->IsBanned(addr));
+    };
+    return addrman.get().GetAddr(max_addresses, max_pct, network, filtered, policy);
 }
 
 std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addresses, size_t max_pct)
