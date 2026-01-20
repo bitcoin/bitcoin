@@ -1592,7 +1592,7 @@ private:
     std::vector<ListenSocket> vhListenSocket;
     std::atomic<bool> fNetworkActive{true};
     bool fAddressesInitialized{false};
-    AddrMan& addrman;
+    std::reference_wrapper<AddrMan> addrman;
     const NetGroupManager& m_netgroupman;
     std::deque<std::string> m_addr_fetches GUARDED_BY(m_addr_fetches_mutex);
     Mutex m_addr_fetches_mutex;
