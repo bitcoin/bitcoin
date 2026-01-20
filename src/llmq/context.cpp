@@ -15,7 +15,7 @@
 #include <validation.h>
 
 LLMQContext::LLMQContext(CDeterministicMNManager& dmnman, CEvoDB& evo_db, CSporkManager& sporkman, chainlock::Chainlocks& chainlocks, CTxMemPool& mempool,
-                         const ChainstateManager& chainman, const CMasternodeSync& mn_sync,
+                         ChainstateManager& chainman, const CMasternodeSync& mn_sync,
                          const util::DbWrapperParams& db_params, int8_t bls_threads, int64_t max_recsigs_age) :
     bls_worker{std::make_shared<CBLSWorker>()},
     qsnapman{std::make_unique<llmq::CQuorumSnapshotManager>(evo_db)},
@@ -25,7 +25,7 @@ LLMQContext::LLMQContext(CDeterministicMNManager& dmnman, CEvoDB& evo_db, CSpork
                                                 chainman, db_params)},
     sigman{std::make_unique<llmq::CSigningManager>(*qman, db_params, max_recsigs_age)},
     // TODO: move-out clhandler from LLMQContext so far as it has nothing to do with llmq's context
-    clhandler{std::make_unique<llmq::CChainLocksHandler>(chainlocks, chainman.ActiveChainstate(), *qman, mempool, mn_sync)},
+    clhandler{std::make_unique<llmq::CChainLocksHandler>(chainlocks, chainman, *qman, mempool, mn_sync)},
     isman{std::make_unique<llmq::CInstantSendManager>(chainlocks, chainman.ActiveChainstate(), *sigman, sporkman,
                                                       mempool, mn_sync, db_params)}
 {

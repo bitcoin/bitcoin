@@ -27,7 +27,7 @@
 
 class CBlock;
 class CBlockIndex;
-class CChainState;
+class ChainstateManager;
 class CMasternodeSync;
 class CScheduler;
 class CTxMemPool;
@@ -43,7 +43,7 @@ class CChainLocksHandler
 private:
     chainlock::Chainlocks& m_chainlocks;
 
-    CChainState& m_chainstate;
+    ChainstateManager& m_chainman;
     CQuorumManager& qman;
     CTxMemPool& mempool;
     const CMasternodeSync& m_mn_sync;
@@ -65,7 +65,7 @@ public:
     CChainLocksHandler() = delete;
     CChainLocksHandler(const CChainLocksHandler&) = delete;
     CChainLocksHandler& operator=(const CChainLocksHandler&) = delete;
-    explicit CChainLocksHandler(chainlock::Chainlocks& chainlocks, CChainState& chainstate, CQuorumManager& _qman,
+    explicit CChainLocksHandler(chainlock::Chainlocks& chainlocks, ChainstateManager& chainman, CQuorumManager& _qman,
                                 CTxMemPool& _mempool, const CMasternodeSync& mn_sync);
     ~CChainLocksHandler();
 

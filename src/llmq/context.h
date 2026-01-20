@@ -39,7 +39,7 @@ public:
     LLMQContext(const LLMQContext&) = delete;
     LLMQContext& operator=(const LLMQContext&) = delete;
     explicit LLMQContext(CDeterministicMNManager& dmnman, CEvoDB& evo_db, CSporkManager& sporkman, chainlock::Chainlocks& chainlocks, CTxMemPool& mempool,
-                         const ChainstateManager& chainman, const CMasternodeSync& mn_sync,
+                         ChainstateManager& chainman, const CMasternodeSync& mn_sync,
                          const util::DbWrapperParams& db_params, int8_t bls_threads, int64_t max_recsigs_age);
     ~LLMQContext();
 

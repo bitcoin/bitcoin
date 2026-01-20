@@ -36,10 +36,10 @@ static constexpr auto CLEANUP_SEEN_TIMEOUT{24h};
 static constexpr auto WAIT_FOR_ISLOCK_TIMEOUT{10min};
 } // anonymous namespace
 
-CChainLocksHandler::CChainLocksHandler(chainlock::Chainlocks& chainlocks, CChainState& chainstate, CQuorumManager& _qman,
+CChainLocksHandler::CChainLocksHandler(chainlock::Chainlocks& chainlocks, ChainstateManager& chainman, CQuorumManager& _qman,
                                        CTxMemPool& _mempool, const CMasternodeSync& mn_sync) :
     m_chainlocks{chainlocks},
-    m_chainstate{chainstate},
+    m_chainman{chainman},
     qman{_qman},
     mempool{_mempool},
     m_mn_sync{mn_sync},
@@ -113,7 +113,7 @@ MessageProcessingResult CChainLocksHandler::ProcessNewChainLock(const NodeId fro
         return {};
     }
 
-    const CBlockIndex* pindex = WITH_LOCK(::cs_main, return m_chainstate.m_blockman.LookupBlockIndex(clsig.getBlockHash()));
+    const CBlockIndex* pindex = WITH_LOCK(::cs_main, return m_chainman.m_blockman.LookupBlockIndex(clsig.getBlockHash()));
 
     if (!m_chainlocks.UpdateBestChainlock(hash, clsig, pindex)) return {};
 
@@ -232,18 +232,18 @@ void CChainLocksHandler::EnforceBestChainLock()
     // and mark all of them as conflicting.
     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- enforcing block %s via CLSIG (%s)\n", __func__,
              currentBestChainLockBlockIndex->GetBlockHash().ToString(), clsig.ToString());
-    m_chainstate.EnforceBlock(dummy_state, currentBestChainLockBlockIndex);
+    m_chainman.ActiveChainstate().EnforceBlock(dummy_state, currentBestChainLockBlockIndex);
 
 
-    if (/*activateNeeded =*/WITH_LOCK(::cs_main, return m_chainstate.m_chain.Tip()->GetAncestor(
+    if (/*activateNeeded =*/WITH_LOCK(::cs_main, return m_chainman.ActiveTip()->GetAncestor(
                                                      currentBestChainLockBlockIndex->nHeight)) !=
         currentBestChainLockBlockIndex) {
-        if (!m_chainstate.ActivateBestChain(dummy_state)) {
+        if (!m_chainman.ActiveChainstate().ActivateBestChain(dummy_state)) {
             LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, dummy_state.ToString());
             return;
         }
         LOCK(::cs_main);
-        if (m_chainstate.m_chain.Tip()->GetAncestor(currentBestChainLockBlockIndex->nHeight) !=
+        if (m_chainman.ActiveTip()->GetAncestor(currentBestChainLockBlockIndex->nHeight) !=
             currentBestChainLockBlockIndex) {
             return;
         }
@@ -265,7 +265,7 @@ VerifyRecSigStatus CChainLocksHandler::VerifyChainLock(const chainlock::ChainLoc
     const auto llmqType = Params().GetConsensus().llmqTypeChainLocks;
     const uint256 nRequestId = chainlock::GenSigRequestId(clsig.getHeight());
 
-    return llmq::VerifyRecoveredSig(llmqType, m_chainstate.m_chain, qman, clsig.getHeight(), nRequestId,
+    return llmq::VerifyRecoveredSig(llmqType, m_chainman.ActiveChain(), qman, clsig.getHeight(), nRequestId,
                                     clsig.getBlockHash(), clsig.getSig());
 }
 
@@ -309,10 +309,10 @@ void CChainLocksHandler::Cleanup()
             // tx has vanished, probably due to conflicts
             it = txFirstSeenTime.erase(it);
         } else if (!hashBlock.IsNull()) {
-            const auto* pindex = m_chainstate.m_blockman.LookupBlockIndex(hashBlock);
+            const auto* pindex = m_chainman.m_blockman.LookupBlockIndex(hashBlock);
             assert(pindex); // GetTransaction gave us that hashBlock, it should resolve to a valid block index
-            if (m_chainstate.m_chain.Tip()->GetAncestor(pindex->nHeight) == pindex &&
-                m_chainstate.m_chain.Height() - pindex->nHeight > chainlock::TX_CONFIRM_THRESHOLD) {
+            if (m_chainman.ActiveTip()->GetAncestor(pindex->nHeight) == pindex &&
+                m_chainman.ActiveChain().Height() - pindex->nHeight > chainlock::TX_CONFIRM_THRESHOLD) {
                 // tx is sufficiently deep, we can stop tracking it
                 it = txFirstSeenTime.erase(it);
             } else {
