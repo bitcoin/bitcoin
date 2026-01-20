@@ -173,6 +173,11 @@ bool BCLog::Logger::WillLogCategoryLevel(BCLog::LogFlags category, BCLog::Level 
     return level >= (it == m_category_log_levels.end() ? LogLevel() : it->second);
 }
 
+bool LogAcceptCategory(uint64_t category, BCLog::Level level)
+{
+    return LogInstance().WillLogCategoryLevel(static_cast<BCLog::LogFlags>(category), level);
+}
+
 bool BCLog::Logger::DefaultShrinkDebugFile() const
 {
     return m_categories == BCLog::NONE;

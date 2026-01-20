@@ -123,4 +123,10 @@ Dispatcher& g_dispatcher();
 
 } // namespace util::log
 
+/**
+ * Return true if logs should be dispatched at the specified category and level.
+ * Note: does not check if any callbacks are actually registered.
+ */
+bool LogAcceptCategory(uint64_t category, util::log::Level level);
+
 #endif // BITCOIN_UTIL_LOG_H
