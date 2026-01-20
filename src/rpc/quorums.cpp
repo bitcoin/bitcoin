@@ -1114,8 +1114,8 @@ static RPCHelpMan verifychainlock()
         }
     }
 
-    CHECK_NONFATAL(node.clhandler);
-    return node.clhandler->VerifyChainLock(chainlock::ChainLockSig(nBlockHeight, nBlockHash, sig)) ==
+    const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+    return chainlock::VerifyChainLock(Params().GetConsensus(), chainman.ActiveChain(), *CHECK_NONFATAL(llmq_ctx.qman), chainlock::ChainLockSig{nBlockHeight, nBlockHash, sig}) ==
            llmq::VerifyRecSigStatus::Valid;
 },
     };
@@ -1217,8 +1217,8 @@ static RPCHelpMan submitchainlock()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid block height");
     }
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
     CHECK_NONFATAL(node.chainlocks);
-    CHECK_NONFATAL(node.clhandler);
     const int32_t bestCLHeight = node.chainlocks->GetBestChainLock().getHeight();
     if (nBlockHeight <= bestCLHeight) return bestCLHeight;
 
@@ -1227,12 +1227,11 @@ static RPCHelpMan submitchainlock()
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature format");
     }
 
-
+    const ChainstateManager& chainman = EnsureChainman(node);
     const auto clsig{chainlock::ChainLockSig(nBlockHeight, nBlockHash, sig)};
-    const llmq::VerifyRecSigStatus ret{node.clhandler->VerifyChainLock(clsig)};
+    const llmq::VerifyRecSigStatus ret{chainlock::VerifyChainLock(Params().GetConsensus(), chainman.ActiveChain(), *llmq_ctx.qman, clsig)};
     if (ret == llmq::VerifyRecSigStatus::NoQuorum) {
         LOCK(cs_main);
-        const ChainstateManager& chainman = EnsureChainman(node);
         const CBlockIndex* pIndex{chainman.ActiveChain().Tip()};
         throw JSONRPCError(RPC_MISC_ERROR, strprintf("No quorum found. Current tip height: %d hash: %s\n", pIndex->nHeight, pIndex->GetBlockHash().ToString()));
     }
@@ -1241,7 +1240,8 @@ static RPCHelpMan submitchainlock()
     }
 
     PeerManager& peerman = EnsurePeerman(node);
-    peerman.PostProcessMessage(node.clhandler->ProcessNewChainLock(-1, clsig, ::SerializeHash(clsig)));
+    CHECK_NONFATAL(node.clhandler);
+    peerman.PostProcessMessage(node.clhandler->ProcessNewChainLock(-1, clsig, *llmq_ctx.qman, ::SerializeHash(clsig)));
     return node.chainlocks->GetBestChainLock().getHeight();
 },
     };

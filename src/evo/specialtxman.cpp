@@ -29,8 +29,8 @@
 #include <llmq/utils.h>
 
 static bool CheckCbTxBestChainlock(const CCbTx& cbTx, const CBlockIndex* pindex,
-    const Consensus::Params& m_consensus_params,
-        const CChain& chain, const llmq::CQuorumManager& qman,
+                                   const Consensus::Params& consensus_params,
+                                   const CChain& chain, const llmq::CQuorumManager& qman,
                                    const chainlock::Chainlocks& chainlocks, BlockValidationState& state)
 {
     if (cbTx.nVersion < CCbTx::Version::CLSIG_AND_BALANCE) {
@@ -82,7 +82,7 @@ static bool CheckCbTxBestChainlock(const CCbTx& cbTx, const CBlockIndex* pindex,
         }
         uint256 curBlockCoinbaseCLBlockHash = pindex->GetAncestor(curBlockCoinbaseCLHeight)->GetBlockHash();
         chainlock::ChainLockSig clsig{curBlockCoinbaseCLHeight, curBlockCoinbaseCLBlockHash, cbTx.bestCLSignature};
-        llmq::VerifyRecSigStatus ret = chainlocks::VerifyChainLock(m_consensus_params, chain, qman, clsig);
+        llmq::VerifyRecSigStatus ret = chainlock::VerifyChainLock(consensus_params, chain, qman, clsig);
         if (ret != llmq::VerifyRecSigStatus::Valid) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-invalid-clsig");
         }

@@ -5494,7 +5494,7 @@ void PeerManagerImpl::ProcessMessage(
                 vRecv >> clsig;
                 const uint256& hash = ::SerializeHash(clsig);
                 WITH_LOCK(::cs_main, EraseObjectRequest(pfrom.GetId(), CInv{MSG_CLSIG, hash}));
-                PostProcessMessage(m_clhandler.ProcessNewChainLock(pfrom.GetId(), clsig, hash), pfrom.GetId());
+                PostProcessMessage(m_clhandler.ProcessNewChainLock(pfrom.GetId(), clsig, *m_llmq_ctx->qman, hash), pfrom.GetId());
             }
             return; // CLSIG
         }

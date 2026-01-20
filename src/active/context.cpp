@@ -43,7 +43,7 @@ ActiveContext::ActiveContext(CBLSWorker& bls_worker, ChainstateManager& chainman
     ehf_sighandler{std::make_unique<llmq::CEHFSignalsHandler>(chainman, mnhfman, sigman, *shareman, qman)},
     qman_handler{std::make_unique<llmq::QuorumParticipant>(bls_worker, connman, dmnman, qman, qsnapman, *nodeman, chainman,
                                                            mn_sync, sporkman, sync_map, quorums_recovery, quorums_watch)},
-    cl_signer{std::make_unique<chainlock::ChainLockSigner>(chainman.ActiveChainstate(), chainlocks, clhandler, isman, sigman, *shareman,
+    cl_signer{std::make_unique<chainlock::ChainLockSigner>(chainman.ActiveChainstate(), chainlocks, clhandler, isman, qman, sigman, *shareman,
                                                            mn_sync)},
     is_signer{std::make_unique<instantsend::InstantSendSigner>(chainman.ActiveChainstate(), chainlocks, isman, sigman,
                                                                *shareman, qman, sporkman, mempool, mn_sync)}

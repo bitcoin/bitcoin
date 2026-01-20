@@ -69,7 +69,7 @@ public:
     CChainLocksHandler() = delete;
     CChainLocksHandler(const CChainLocksHandler&) = delete;
     CChainLocksHandler& operator=(const CChainLocksHandler&) = delete;
-    explicit CChainLocksHandler(chainlock::Chainlocks& chainlocks, ChainstateManager& chainman, CQuorumManager& _qman,
+    explicit CChainLocksHandler(chainlock::Chainlocks& chainlocks, ChainstateManager& chainman,
                                 CTxMemPool& _mempool, const CMasternodeSync& mn_sync);
     ~CChainLocksHandler();
 
@@ -80,7 +80,8 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void UpdateTxFirstSeenMap(const Uint256HashSet& tx, const int64_t& time) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    [[nodiscard]] MessageProcessingResult ProcessNewChainLock(NodeId from, const chainlock::ChainLockSig& clsig,
+    [[nodiscard]] MessageProcessingResult ProcessNewChainLock(NodeId from, const chainlock::ChainLockSig& clsig, const llmq::CQuorumManager& qman,
+
                                                               const uint256& hash)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 

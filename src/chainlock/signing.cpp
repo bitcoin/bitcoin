@@ -20,13 +20,14 @@
 using node::ReadBlockFromDisk;
 
 namespace chainlock {
-ChainLockSigner::ChainLockSigner(CChainState& chainstate, const chainlock::Chainlocks& chainlocks, llmq::CChainLocksHandler& clhandler, const llmq::CInstantSendManager& isman,
+ChainLockSigner::ChainLockSigner(CChainState& chainstate, const chainlock::Chainlocks& chainlocks, llmq::CChainLocksHandler& clhandler, const llmq::CInstantSendManager& isman, const llmq::CQuorumManager& qman,
                                  llmq::CSigningManager& sigman, llmq::CSigSharesManager& shareman,
                                  const CMasternodeSync& mn_sync) :
     m_chainstate{chainstate},
     m_chainlocks{chainlocks},
     m_clhandler{clhandler},
     m_isman{isman},
+    m_qman{qman},
     m_sigman{sigman},
     m_shareman{shareman},
     m_mn_sync{mn_sync},
@@ -273,7 +274,7 @@ MessageProcessingResult ChainLockSigner::HandleNewRecoveredSig(const llmq::CReco
 
         clsig = ChainLockSig(lastSignedHeight, lastSignedMsgHash, recoveredSig.sig.Get());
     }
-    return m_clhandler.ProcessNewChainLock(-1, clsig, ::SerializeHash(clsig));
+    return m_clhandler.ProcessNewChainLock(-1, clsig, m_qman, ::SerializeHash(clsig));
 }
 
 void ChainLockSigner::Cleanup()

@@ -36,11 +36,10 @@ static constexpr auto CLEANUP_SEEN_TIMEOUT{24h};
 static constexpr auto WAIT_FOR_ISLOCK_TIMEOUT{10min};
 } // anonymous namespace
 
-CChainLocksHandler::CChainLocksHandler(chainlock::Chainlocks& chainlocks, ChainstateManager& chainman, CQuorumManager& _qman,
+CChainLocksHandler::CChainLocksHandler(chainlock::Chainlocks& chainlocks, ChainstateManager& chainman,
                                        CTxMemPool& _mempool, const CMasternodeSync& mn_sync) :
     m_chainlocks{chainlocks},
     m_chainman{chainman},
-    qman{_qman},
     mempool{_mempool},
     m_mn_sync{mn_sync},
     scheduler{std::make_unique<CScheduler>()},
@@ -86,7 +85,7 @@ void CChainLocksHandler::UpdateTxFirstSeenMap(const Uint256HashSet& tx, const in
     }
 }
 
-MessageProcessingResult CChainLocksHandler::ProcessNewChainLock(const NodeId from, const chainlock::ChainLockSig& clsig,
+MessageProcessingResult CChainLocksHandler::ProcessNewChainLock(const NodeId from, const chainlock::ChainLockSig& clsig, const llmq::CQuorumManager& qman,
                                                                 const uint256& hash)
 {
     CheckActiveState();
@@ -104,7 +103,7 @@ MessageProcessingResult CChainLocksHandler::ProcessNewChainLock(const NodeId fro
         }
     }
 
-    if (const auto ret = VerifyChainLock(clsig); ret != VerifyRecSigStatus::Valid) {
+    if (const auto ret = chainlock::VerifyChainLock(Params().GetConsensus(), m_chainman.ActiveChain(), qman, clsig); ret != VerifyRecSigStatus::Valid) {
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), status=%d peer=%d\n", __func__,
                  clsig.ToString(), ToUnderlying(ret), from);
         if (from != -1) {

@@ -2170,7 +2170,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.dstxman);
     node.dstxman = std::make_unique<CDSTXManager>();
 
-    node.clhandler = std::make_unique<llmq::CChainLocksHandler>(*node.chainlocks, chainman, *node.llmq_ctx->qman, *node.mempool, *node.mn_sync);
+    node.clhandler = std::make_unique<llmq::CChainLocksHandler>(*node.chainlocks, chainman, *node.mempool, *node.mn_sync);
 
     assert(!node.peerman);
     node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(), *node.dstxman,

@@ -31,6 +31,7 @@ private:
     const chainlock::Chainlocks& m_chainlocks;
     llmq::CChainLocksHandler& m_clhandler;
     const llmq::CInstantSendManager& m_isman;
+    const llmq::CQuorumManager& m_qman;
     llmq::CSigningManager& m_sigman;
     llmq::CSigSharesManager& m_shareman;
     const CMasternodeSync& m_mn_sync;
@@ -58,7 +59,7 @@ public:
     ChainLockSigner() = delete;
     ChainLockSigner(const ChainLockSigner&) = delete;
     ChainLockSigner& operator=(const ChainLockSigner&) = delete;
-    explicit ChainLockSigner(CChainState& chainstate, const chainlock::Chainlocks& chainlocks, llmq::CChainLocksHandler& clhandler, const llmq::CInstantSendManager& isman, llmq::CSigningManager& sigman,
+    explicit ChainLockSigner(CChainState& chainstate, const chainlock::Chainlocks& chainlocks, llmq::CChainLocksHandler& clhandler, const llmq::CInstantSendManager& isman, const llmq::CQuorumManager& qman, llmq::CSigningManager& sigman,
                              llmq::CSigSharesManager& shareman, const CMasternodeSync& mn_sync);
     ~ChainLockSigner();
 
