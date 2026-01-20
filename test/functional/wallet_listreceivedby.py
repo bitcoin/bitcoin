@@ -124,6 +124,17 @@ class ReceivedByTest(BitcoinTestFramework):
         # Trying to getreceivedby for an address the wallet doesn't own should return an error
         assert_raises_rpc_error(-4, "Address not found in wallet", self.nodes[0].getreceivedbyaddress, addr)
 
+        # Test multiple transactions to the same address
+        addr_with_multiple_txs = self.nodes[1].getnewaddress()
+        self.nodes[0].sendtoaddress(addr_with_multiple_txs, Decimal("0.1"))
+        self.nodes[0].sendtoaddress(addr_with_multiple_txs, Decimal("0.2"))
+        self.generate(self.nodes[0], 1)
+        balance = self.nodes[1].getreceivedbyaddress(addr_with_multiple_txs)
+        assert_equal(balance, Decimal("0.3"))
+
+        # Test invalid address format error
+        assert_raises_rpc_error(-5, "Invalid Bitcoin address", self.nodes[1].getreceivedbyaddress, "invalid_address")
+
         self.log.info("listreceivedbylabel + getreceivedbylabel Test")
 
         # set pre-state
@@ -144,7 +155,7 @@ class ReceivedByTest(BitcoinTestFramework):
                             {"label": label},
                             received_by_label_json)
 
-        # getreceivedbyaddress should return same balance because of 0 confirmations
+        # getreceivedbylabel should return same balance because of 0 confirmations
         balance = self.nodes[1].getreceivedbylabel(label)
         assert_equal(balance, balance_by_label)
 
