@@ -41,6 +41,43 @@ const CBlockIndex* NaiveLastCommonAncestor(const CBlockIndex* a, const CBlockInd
 
 } // namespace
 
+BOOST_AUTO_TEST_CASE(cchain_basic_tests)
+{
+    // An empty chain
+    const auto chain_0 = CChain{};
+    // A chain with 2 blocks
+    auto chain_2 = CChain{};
+    auto genesis = CBlockIndex{};
+    genesis.nHeight = 0;
+    chain_2.SetTip(genesis);
+    auto bi1 = CBlockIndex{};
+    bi1.nHeight = 1;
+    chain_2.SetTip(bi1);
+
+    BOOST_CHECK_EQUAL(chain_0.Height(), -1);
+    BOOST_CHECK_EQUAL(chain_2.Height(), 1);
+
+    BOOST_CHECK_EQUAL(chain_0.Tip(), nullptr);
+    BOOST_CHECK_EQUAL(chain_2.Tip(), &bi1);
+
+    // Indexer accessor: call with valid and invalid (low & high) values
+    BOOST_CHECK_EQUAL(chain_2[0], &genesis);
+    BOOST_CHECK_EQUAL(chain_2[1], &bi1);
+    BOOST_CHECK_EQUAL(chain_2[-1], nullptr);
+    BOOST_CHECK_EQUAL(chain_2[2], nullptr);
+
+    // Contains: call with contained & non-contained blocks, and with nullptr
+    BOOST_CHECK_EQUAL(chain_2.Contains(&genesis), true);
+    BOOST_CHECK_EQUAL(chain_2.Contains(&bi1), true);
+    BOOST_CHECK_EQUAL(chain_0.Contains(&bi1), false);
+    // BOOST_CHECK_EQUAL(chain_0.Contains(nullptr), false); // fail with memory access violation
+
+    // Call with non-tip & tip blocks, and with nulltr
+    BOOST_CHECK_EQUAL(chain_2.Next(&genesis), &bi1);
+    BOOST_CHECK_EQUAL(chain_2.Next(&bi1), nullptr);
+    // BOOST_CHECK_EQUAL(chain_0.Next(nullptr), nullptr); // fail with memory access violation
+}
+
 BOOST_AUTO_TEST_CASE(chain_test)
 {
     FastRandomContext ctx;
