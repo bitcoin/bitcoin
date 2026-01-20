@@ -180,6 +180,23 @@ QFont getFont(const GUIUtil::FontAttrib& font_attrib)
 
     return font;
 }
+
+//! Removes entries from a map where QPointer keys point to deleted objects
+template <typename T>
+size_t pruneStaleEntities(T& map)
+{
+    size_t removed{0};
+    auto it = map.begin();
+    while (it != map.end()) {
+        if (it->first.isNull()) {
+            it = map.erase(it);
+            ++removed;
+        } else {
+            ++it;
+        }
+    }
+    return removed;
+}
 } // anonymous namespace
 
 namespace GUIUtil {
@@ -476,27 +493,8 @@ void updateFonts()
     // QPointer becomes nullptr for objects that were deleted.
     // Remove them from mapDefaultFontSize and mapFontUpdates
     // before proceeding any further.
-    size_t nRemovedDefaultFonts{0};
-    auto itd = mapWidgetDefaultFontSizes.begin();
-    while (itd != mapWidgetDefaultFontSizes.end()) {
-        if (itd->first.isNull()) {
-            itd = mapWidgetDefaultFontSizes.erase(itd);
-            ++nRemovedDefaultFonts;
-        } else {
-            ++itd;
-        }
-    }
-
-    size_t nRemovedFontUpdates{0};
-    auto itn = mapFontUpdates.begin();
-    while (itn != mapFontUpdates.end()) {
-        if (itn->first.isNull()) {
-            itn = mapFontUpdates.erase(itn);
-            ++nRemovedFontUpdates;
-        } else {
-            ++itn;
-        }
-    }
+    const size_t nRemovedDefaultFonts{pruneStaleEntities(mapWidgetDefaultFontSizes)};
+    const size_t nRemovedFontUpdates{pruneStaleEntities(mapFontUpdates)};
 
     size_t nUpdatable{0}, nUpdated{0};
     std::map<QWidget*, QFont> mapWidgetFonts;
