@@ -295,8 +295,8 @@ void PrepareShutdown(NodeContext& node)
 
     if (node.observer_ctx) node.observer_ctx->Stop();
     if (node.active_ctx) node.active_ctx->Stop();
-    if (node.peerman) node.peerman->StopHandlers();
     if (node.clhandler) node.clhandler->Stop();
+    if (node.peerman) node.peerman->StopHandlers();
 
 
     for (const auto& client : node.chain_clients) {
@@ -306,6 +306,7 @@ void PrepareShutdown(NodeContext& node)
 
     // Because these depend on each-other, we make sure that neither can be
     // using the other before destroying them.
+    if (node.clhandler) UnregisterValidationInterface(node.clhandler.get());
     if (node.peerman) UnregisterValidationInterface(node.peerman.get());
     if (node.connman) node.connman->Stop();
 
@@ -2168,9 +2169,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     ChainstateManager& chainman = *Assert(node.chainman);
 
     assert(!node.dstxman);
-    node.dstxman = std::make_unique<CDSTXManager>();
+    node.dstxman = std::make_unique<CDSTXManager>(*node.chainlocks);
 
     node.clhandler = std::make_unique<llmq::CChainLocksHandler>(*node.chainlocks, chainman, *node.mempool, *node.mn_sync);
+    RegisterValidationInterface(node.clhandler.get());
 
     assert(!node.peerman);
     node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(), *node.dstxman,
@@ -2180,7 +2182,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     RegisterValidationInterface(node.peerman.get());
 
     g_ds_notification_interface = std::make_unique<CDSNotificationInterface>(
-        *node.connman, *node.dstxman, *node.mn_sync, *node.govman, chainman, node.dmnman, node.llmq_ctx, *node.chainlocks, *node.clhandler
+        *node.connman, *node.dstxman, *node.mn_sync, *node.govman, chainman, node.dmnman, node.llmq_ctx
     );
     RegisterValidationInterface(g_ds_notification_interface.get());
 
@@ -2324,8 +2326,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // ********************************************************* Step 10a: schedule Dash-specific tasks
 
-    node.clhandler->Start();
     node.peerman->StartHandlers();
+    node.clhandler->Start();
     if (node.observer_ctx) node.observer_ctx->Start();
 
     node.scheduler->scheduleEvery(std::bind(&CNetFulfilledRequestManager::DoMaintenance, std::ref(*node.netfulfilledman)), std::chrono::minutes{1});

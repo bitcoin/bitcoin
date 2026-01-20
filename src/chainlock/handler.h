@@ -11,6 +11,7 @@
 #include <saltedhasher.h>
 #include <sync.h>
 #include <util/time.h>
+#include <validationinterface.h>
 
 #include <gsl/pointers.h>
 
@@ -43,7 +44,7 @@ namespace llmq
 class CQuorumManager;
 enum class VerifyRecSigStatus : uint8_t;
 
-class CChainLocksHandler
+class CChainLocksHandler final : public CValidationInterface
 {
 private:
     chainlock::Chainlocks& m_chainlocks;
@@ -85,12 +86,7 @@ public:
                                                               const uint256& hash)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    void AcceptedBlockHeader(gsl::not_null<const CBlockIndex*> pindexNew);
-    void UpdatedBlockTip();
-    void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindex)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+public:
     void CheckActiveState()
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void EnforceBestChainLock()
@@ -101,6 +97,16 @@ public:
 
     void CleanupFromSigner(const std::vector<std::shared_ptr<Uint256HashSet>>& cleanup_txes)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+protected:
+    // CValidationInterface
+    void AcceptedBlockHeader(const CBlockIndex *pindexNew) override EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime, uint64_t mempool_sequence) override EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex) override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
 private:
     void Cleanup()
         EXCLUSIVE_LOCKS_REQUIRED(!cs);

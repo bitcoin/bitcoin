@@ -367,7 +367,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         });
     assert(!maybe_verify_error.has_value());
 
-    m_node.dstxman = std::make_unique<CDSTXManager>();
+    m_node.dstxman = std::make_unique<CDSTXManager>(*Assert(m_node.chainlocks));
 #ifdef ENABLE_WALLET
     // The test suite doesn't use masternode mode, so we may initialize it
     m_node.cj_walletman = CJWalletManager::make(*m_node.chainman, *m_node.dmnman, *m_node.mn_metaman, *m_node.mempool,

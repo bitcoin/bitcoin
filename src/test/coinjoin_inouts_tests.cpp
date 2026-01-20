@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(broadcasttx_expiry_height_logic)
     uint256 blk_hash = uint256S("03");
     index.nHeight = 125; // 125 - 100 == 25 > 24 → expired by height
     index.phashBlock = &blk_hash;
-    BOOST_CHECK(dstx.IsExpired(&index, Assert(m_node.chain_helper)->m_chainlocks));
+    BOOST_CHECK(dstx.IsExpired(&index));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

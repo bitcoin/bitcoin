@@ -283,7 +283,7 @@ public:
     // Used only for unit tests
     [[nodiscard]] std::optional<int> GetConfirmedHeight() const { return nConfirmedHeight; }
     void SetConfirmedHeight(std::optional<int> nConfirmedHeightIn) { assert(nConfirmedHeightIn == std::nullopt || *nConfirmedHeightIn > 0); nConfirmedHeight = nConfirmedHeightIn; }
-    bool IsExpired(const CBlockIndex* pindex, const chainlock::Chainlocks& chainlocks) const;
+    bool IsExpired(const CBlockIndex* pindex) const;
     [[nodiscard]] bool IsValidStructure() const;
 };
 
@@ -371,23 +371,22 @@ namespace CoinJoin
 
 class CDSTXManager
 {
+    const chainlock::Chainlocks& m_chainlocks;
     Mutex cs_mapdstx;
     std::map<uint256, CCoinJoinBroadcastTx> mapDSTX GUARDED_BY(cs_mapdstx);
 
 public:
     CDSTXManager(const CDSTXManager&) = delete;
     CDSTXManager& operator=(const CDSTXManager&) = delete;
-    CDSTXManager();
+    CDSTXManager(const chainlock::Chainlocks& chainlocks);
     ~CDSTXManager();
 
     void AddDSTX(const CCoinJoinBroadcastTx& dstx) EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
     CCoinJoinBroadcastTx GetDSTX(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
 
-    void UpdatedBlockTip(const CBlockIndex* pindex, const chainlock::Chainlocks& chainlocks,
-                         const CMasternodeSync& mn_sync)
+    void UpdatedBlockTip(const CBlockIndex* pindex, const CMasternodeSync& mn_sync)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
-    void NotifyChainLock(const CBlockIndex* pindex, const chainlock::Chainlocks& chainlocks,
-                         const CMasternodeSync& mn_sync)
+    void NotifyChainLock(const CBlockIndex* pindex, const CMasternodeSync& mn_sync)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
 
     void TransactionAddedToMempool(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
@@ -397,7 +396,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
 
 private:
-    void CheckDSTXes(const CBlockIndex* pindex, const chainlock::Chainlocks& chainlocks)
+    void CheckDSTXes(const CBlockIndex* pindex)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
     void UpdateDSTXConfirmedHeight(const CTransactionRef& tx, std::optional<int> nHeight)
         EXCLUSIVE_LOCKS_REQUIRED(cs_mapdstx);

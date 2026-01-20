@@ -131,12 +131,18 @@ MessageProcessingResult CChainLocksHandler::ProcessNewChainLock(const NodeId fro
     return clsig_inv;
 }
 
-void CChainLocksHandler::UpdatedBlockTip()
+void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
+    if (pindexNew == pindexFork) // blocks were disconnected without any new ones
+        return;
+    if (fInitialDownload) return;
+
+    // TODO: reconsider removing scheduler from here, because UpdatedBlockTip is already async call from notification scheduler
     // don't call TrySignChainTip directly but instead let the scheduler call it. This way we ensure that cs_main is
     // never locked and TrySignChainTip is not called twice in parallel. Also avoids recursive calls due to
     // EnforceBestChainLock switching chains.
     // atomic[If tryLockChainTipScheduled is false, do (set it to true] and schedule signing).
+
     if (bool expected = false; tryLockChainTipScheduled.compare_exchange_strong(expected, true)) {
         scheduler->scheduleFromNow(
             [&]() {
@@ -164,7 +170,7 @@ void CChainLocksHandler::CheckActiveState()
     }
 }
 
-void CChainLocksHandler::TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime)
+void CChainLocksHandler::TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime, uint64_t)
 {
     if (tx->IsCoinBase() || tx->vin.empty()) {
         return;
@@ -174,12 +180,12 @@ void CChainLocksHandler::TransactionAddedToMempool(const CTransactionRef& tx, in
     txFirstSeenTime.emplace(tx->GetHash(), nAcceptTime);
 }
 
-void CChainLocksHandler::AcceptedBlockHeader(gsl::not_null<const CBlockIndex*> pindexNew)
+void CChainLocksHandler::AcceptedBlockHeader(const CBlockIndex* pindexNew)
 {
     m_chainlocks.AcceptedBlockHeader(pindexNew);
 }
 
-void CChainLocksHandler::BlockConnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindex)
+void CChainLocksHandler::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
 {
     if (!m_mn_sync.IsBlockchainSynced()) {
         return;
