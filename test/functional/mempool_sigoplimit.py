@@ -33,7 +33,7 @@ from test_framework.script_util import (
     keys_to_multisig_script,
     script_to_p2wsh_script,
     script_to_p2sh_script,
-    MAX_STD_LEGACY_SIGOPS,
+    MAX_TX_BIP54_SIGOPS,
     MAX_STD_P2SH_SIGOPS,
 )
 from test_framework.test_framework import BitcoinTestFramework
@@ -198,7 +198,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
 
         # Create enough outputs to reach the sigops limit when spending them all at once.
         outpoints = []
-        for _ in range(int(MAX_STD_LEGACY_SIGOPS / MAX_STD_P2SH_SIGOPS) + 1):
+        for _ in range(int(MAX_TX_BIP54_SIGOPS / MAX_STD_P2SH_SIGOPS) + 1):
             res = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=packed_p2sh_script, amount=1_000)
             txid = int.from_bytes(bytes.fromhex(res["txid"]), byteorder="big")
             outpoints.append(COutPoint(txid, res["sent_vout"]))
