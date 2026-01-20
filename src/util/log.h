@@ -8,6 +8,7 @@
 #include <logging/categories.h> // IWYU pragma: export
 #include <threadsafety.h>
 #include <tinyformat.h>
+#include <util/check.h>
 #include <util/string.h>
 #include <util/threadnames.h>
 
@@ -170,5 +171,26 @@ static inline bool LogAcceptCategory(uint64_t category, util::log::Level level)
 {
     return util::log::g_dispatcher().WillLog(level, category);
 }
+
+// Allow __func__ to be used in any context without warnings:
+// NOLINTNEXTLINE(bugprone-lambda-function-name)
+#define LogPrintLevel_(category, level, should_ratelimit, ...) util::log::g_dispatcher().Log(level, category, SourceLocation{__func__}, should_ratelimit, __VA_ARGS__)
+
+// Arguments are always evaluated, even when logging is disabled.
+#define LogInfo(...) LogPrintLevel_(BCLog::LogFlags::ALL, util::log::Level::Info, /*should_ratelimit=*/true, __VA_ARGS__)
+#define LogWarning(...) LogPrintLevel_(BCLog::LogFlags::ALL, util::log::Level::Warning, /*should_ratelimit=*/true, __VA_ARGS__)
+#define LogError(...) LogPrintLevel_(BCLog::LogFlags::ALL, util::log::Level::Error, /*should_ratelimit=*/true, __VA_ARGS__)
+
+// Use a macro instead of a function to prevent evaluating arguments when the log will be dropped anyway.
+#define detail_LogIfCategoryAndLevelEnabled(category, level, ...)                     \
+    do {                                                                              \
+        Assume(level < util::log::Level::Info);                                       \
+        if (LogAcceptCategory((category), (level))) {                                 \
+            LogPrintLevel_(category, level, /*should_ratelimit=*/false, __VA_ARGS__); \
+        }                                                                             \
+    } while (0)
+
+#define LogDebug(category, ...) detail_LogIfCategoryAndLevelEnabled(category, util::log::Level::Debug, __VA_ARGS__)
+#define LogTrace(category, ...) detail_LogIfCategoryAndLevelEnabled(category, util::log::Level::Trace, __VA_ARGS__)
 
 #endif // BITCOIN_UTIL_LOG_H
