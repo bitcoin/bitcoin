@@ -1,0 +1,20 @@
+[
+  # Compiler intrinsics.
+  # See: https://github.com/include-what-you-use/include-what-you-use/issues/1764.
+  { "include": [ "<emmintrin.h>", "private", "<immintrin.h>", "public" ] },
+  { "include": [ "<smmintrin.h>", "private", "<immintrin.h>", "public" ] },
+  { "include": [ "<tmmintrin.h>", "private", "<immintrin.h>", "public" ] },
+
+  # libc symbols.
+  { "symbol": ["AT_HWCAP", "private", "<sys/auxv.h>", "public"] },
+  { "symbol": ["AT_HWCAP2", "private", "<sys/auxv.h>", "public"] },
+
+  # Fixed in https://github.com/include-what-you-use/include-what-you-use/pull/1706.
+  { "symbol": ["SEEK_CUR", "private", "<cstdio>", "public"] },
+  { "symbol": ["SEEK_END", "private", "<cstdio>", "public"] },
+  { "symbol": ["SEEK_SET", "private", "<cstdio>", "public"] },
+
+  # IWYU bug.
+  # See: https://github.com/include-what-you-use/include-what-you-use/issues/1863.
+  { "symbol": ["std::vector", "private", "<vector>", "public"] },
+]

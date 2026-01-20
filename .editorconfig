@@ -1,0 +1,26 @@
+# This is the top-most EditorConfig file.
+root = true
+
+# For all files.
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Source code files
+[*.{h,cpp,rs,py,sh}]
+indent_size = 4
+
+# .cirrus.yml, etc.
+[*.yml]
+indent_size = 2
+
+# Makefiles (only relevant for depends build)
+[Makefile]
+indent_style = tab
+
+# CMake files
+[{CMakeLists.txt,*.cmake,*.cmake.in}]
+indent_size = 2

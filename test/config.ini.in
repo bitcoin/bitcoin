@@ -1,0 +1,30 @@
+# Copyright (c) 2013-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+# These environment variables are set by the build process and read by
+# test/*/test_runner.py
+
+[environment]
+CLIENT_NAME=@CLIENT_NAME@
+CLIENT_BUGREPORT=@CLIENT_BUGREPORT@
+SRCDIR=@abs_top_srcdir@
+BUILDDIR=@abs_top_builddir@
+EXEEXT=@EXEEXT@
+RPCAUTH=@abs_top_srcdir@/share/rpcauth/rpcauth.py
+
+[components]
+# Which components are enabled. These are commented out by cmake if they were disabled during configuration.
+@ENABLE_WALLET_TRUE@ENABLE_WALLET=true
+@BUILD_BENCH_TRUE@BUILD_BENCH=true
+@BUILD_BITCOIN_CLI_TRUE@ENABLE_CLI=true
+@BUILD_BITCOIN_TX_TRUE@BUILD_BITCOIN_TX=true
+@BUILD_BITCOIN_UTIL_TRUE@ENABLE_BITCOIN_UTIL=true
+@BUILD_BITCOIN_CHAINSTATE_TRUE@ENABLE_BITCOIN_CHAINSTATE=true
+@BUILD_BITCOIN_WALLET_TRUE@ENABLE_WALLET_TOOL=true
+@BUILD_BITCOIND_TRUE@ENABLE_BITCOIND=true
+@ENABLE_FUZZ_BINARY_TRUE@ENABLE_FUZZ_BINARY=true
+@ENABLE_ZMQ_TRUE@ENABLE_ZMQ=true
+@ENABLE_EXTERNAL_SIGNER_TRUE@ENABLE_EXTERNAL_SIGNER=true
+@ENABLE_USDT_TRACEPOINTS_TRUE@ENABLE_USDT_TRACEPOINTS=true
+@ENABLE_IPC_TRUE@ENABLE_IPC=true

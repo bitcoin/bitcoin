@@ -1,0 +1,24 @@
+# Copyright (c) The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or https://opensource.org/license/mit/.
+
+# See test/lint/README.md for usage.
+
+FROM mirror.gcr.io/ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LC_ALL=C.UTF-8
+
+COPY ./ci/retry/retry /ci_retry
+COPY ./.python-version /.python-version
+COPY ./ci/lint/container-entrypoint.sh /entrypoint.sh
+COPY ./ci/lint/01_install.sh /install.sh
+
+RUN /install.sh && \
+  echo 'alias lint="./ci/lint/06_script.sh"' >> ~/.bashrc && \
+  chmod 755 /entrypoint.sh && \
+  rm -rf /var/lib/apt/lists/*
+
+
+WORKDIR /bitcoin
+ENTRYPOINT ["/entrypoint.sh"]

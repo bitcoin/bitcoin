@@ -1,0 +1,54 @@
+We don't use librt, so don't try and link against it.
+
+Related to: https://github.com/zeromq/libzmq/pull/4702.
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 03462271..87ceab3c 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -564,13 +564,6 @@ else()
+   check_cxx_symbol_exists(SO_BUSY_POLL sys/socket.h ZMQ_HAVE_BUSY_POLL)
+ endif()
+ 
+-if(NOT MINGW)
+-  find_library(RT_LIBRARY rt)
+-  if(RT_LIBRARY)
+-    set(pkg_config_libs_private "${pkg_config_libs_private} -lrt")
+-  endif()
+-endif()
+-
+ find_package(Threads)
+ 
+ if(WIN32 AND NOT CYGWIN)
+@@ -588,9 +581,7 @@ if(WIN32 AND NOT CYGWIN)
+ endif()
+ 
+ if(NOT MSVC)
+-  set(CMAKE_REQUIRED_LIBRARIES rt)
+   check_cxx_symbol_exists(clock_gettime time.h HAVE_CLOCK_GETTIME)
+-  set(CMAKE_REQUIRED_LIBRARIES)
+ 
+   check_cxx_symbol_exists(fork unistd.h HAVE_FORK)
+   check_cxx_symbol_exists(gethrtime sys/time.h HAVE_GETHRTIME)
+@@ -1503,10 +1494,6 @@ if(BUILD_SHARED)
+     target_link_libraries(libzmq iphlpapi)
+   endif()
+ 
+-  if(RT_LIBRARY)
+-    target_link_libraries(libzmq -lrt)
+-  endif()
+-
+   if(norm_FOUND)
+       target_link_libraries(libzmq norm::norm)
+   endif()
+@@ -1553,10 +1540,6 @@ if(BUILD_STATIC)
+     target_link_libraries(libzmq-static iphlpapi)
+   endif()
+ 
+-  if(RT_LIBRARY)
+-    target_link_libraries(libzmq-static -lrt)
+-  endif()
+-
+   if(CMAKE_SYSTEM_NAME MATCHES "QNX")
+     add_definitions(-DUNITY_EXCLUDE_MATH_H)
+   endif()

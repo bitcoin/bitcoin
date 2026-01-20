@@ -1,0 +1,722 @@
+#!/usr/bin/env python3
+# Copyright (c) 2014-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+"""Helpful routines for regression testing."""
+
+from base64 import b64encode
+from decimal import Decimal
+from subprocess import CalledProcessError
+import hashlib
+import inspect
+import json
+import logging
+import os
+import pathlib
+import platform
+import random
+import re
+import shlex
+import time
+import types
+
+from . import coverage
+from .authproxy import AuthServiceProxy, JSONRPCException
+from .descriptors import descsum_create
+from collections.abc import Callable
+from typing import Optional, Union
+
+SATOSHI_PRECISION = Decimal('0.00000001')
+
+logger = logging.getLogger("TestFramework.utils")
+
+# Assert functions
+##################
+
+
+def assert_approx(v, vexp, vspan=0.00001):
+    """Assert that `v` is within `vspan` of `vexp`"""
+    if isinstance(v, Decimal) or isinstance(vexp, Decimal):
+        v=Decimal(v)
+        vexp=Decimal(vexp)
+        vspan=Decimal(vspan)
+    if v < vexp - vspan:
+        raise AssertionError("%s < [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
+    if v > vexp + vspan:
+        raise AssertionError("%s > [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
+
+
+def assert_fee_amount(fee, tx_size, feerate_BTC_kvB):
+    """Assert the fee is in range."""
+    assert isinstance(tx_size, int)
+    target_fee = get_fee(tx_size, feerate_BTC_kvB)
+    if fee < target_fee:
+        raise AssertionError("Fee of %s BTC too low! (Should be %s BTC)" % (str(fee), str(target_fee)))
+    # allow the wallet's estimation to be at most 2 bytes off
+    high_fee = get_fee(tx_size + 2, feerate_BTC_kvB)
+    if fee > high_fee:
+        raise AssertionError("Fee of %s BTC too high! (Should be %s BTC)" % (str(fee), str(target_fee)))
+
+
+def summarise_dict_differences(thing1, thing2):
+    if not isinstance(thing1, dict) or not isinstance(thing2, dict):
+        return thing1, thing2
+    d1, d2 = {}, {}
+    for k in sorted(thing1.keys()):
+        if k not in thing2:
+            d1[k] = thing1[k]
+        elif thing1[k] != thing2[k]:
+            d1[k], d2[k] = summarise_dict_differences(thing1[k], thing2[k])
+    for k in sorted(thing2.keys()):
+        if k not in thing1:
+            d2[k] = thing2[k]
+    return d1, d2
+
+def assert_equal(thing1, thing2, *args):
+    if thing1 != thing2 and not args and isinstance(thing1, dict) and isinstance(thing2, dict):
+        d1,d2 = summarise_dict_differences(thing1, thing2)
+        raise AssertionError("not(%s == %s)\n  in particular not(%s == %s)" % (thing1, thing2, d1, d2))
+    if thing1 != thing2 or any(thing1 != arg for arg in args):
+        raise AssertionError("not(%s)" % " == ".join(str(arg) for arg in (thing1, thing2) + args))
+
+def assert_not_equal(thing1, thing2, *, error_message=""):
+    if thing1 == thing2:
+        raise AssertionError(f"Both values are {thing1}{f', {error_message}' if error_message else ''}")
+
+
+def assert_greater_than(thing1, thing2):
+    if thing1 <= thing2:
+        raise AssertionError("%s <= %s" % (str(thing1), str(thing2)))
+
+
+def assert_greater_than_or_equal(thing1, thing2):
+    if thing1 < thing2:
+        raise AssertionError("%s < %s" % (str(thing1), str(thing2)))
+
+
+def assert_raises(exc, fun, *args, **kwds):
+    assert_raises_message(exc, None, fun, *args, **kwds)
+
+
+def assert_raises_message(exc, message, fun, *args, **kwds):
+    try:
+        fun(*args, **kwds)
+    except JSONRPCException:
+        raise AssertionError("Use assert_raises_rpc_error() to test RPC failures")
+    except exc as e:
+        if message is not None and message not in str(e):
+            raise AssertionError("Expected substring not found in exception:\n"
+                                 f"substring: '{message}'\nexception: {e!r}.")
+    except Exception as e:
+        raise AssertionError("Unexpected exception raised: " + type(e).__name__)
+    else:
+        raise AssertionError("No exception raised")
+
+
+def assert_raises_process_error(returncode: int, output: str, fun: Callable, *args, **kwds):
+    """Execute a process and asserts the process return code and output.
+
+    Calls function `fun` with arguments `args` and `kwds`. Catches a CalledProcessError
+    and verifies that the return code and output are as expected. Throws AssertionError if
+    no CalledProcessError was raised or if the return code and output are not as expected.
+
+    Args:
+        returncode: the process return code.
+        output: [a substring of] the process output.
+        fun: the function to call. This should execute a process.
+        args*: positional arguments for the function.
+        kwds**: named arguments for the function.
+    """
+    try:
+        fun(*args, **kwds)
+    except CalledProcessError as e:
+        if returncode != e.returncode:
+            raise AssertionError("Unexpected returncode %i" % e.returncode)
+        if output not in e.output:
+            raise AssertionError("Expected substring not found:" + e.output)
+    else:
+        raise AssertionError("No exception raised")
+
+
+def assert_raises_rpc_error(code: Optional[int], message: Optional[str], fun: Callable, *args, **kwds):
+    """Run an RPC and verify that a specific JSONRPC exception code and message is raised.
+
+    Calls function `fun` with arguments `args` and `kwds`. Catches a JSONRPCException
+    and verifies that the error code and message are as expected. Throws AssertionError if
+    no JSONRPCException was raised or if the error code/message are not as expected.
+
+    Args:
+        code: the error code returned by the RPC call (defined in src/rpc/protocol.h).
+            Set to None if checking the error code is not required.
+        message: [a substring of] the error string returned by the RPC call.
+            Set to None if checking the error string is not required.
+        fun: the function to call. This should be the name of an RPC.
+        args*: positional arguments for the function.
+        kwds**: named arguments for the function.
+    """
+    assert try_rpc(code, message, fun, *args, **kwds), "No exception raised"
+
+
+def try_rpc(code, message, fun, *args, **kwds):
+    """Tries to run an rpc command.
+
+    Test against error code and message if the rpc fails.
+    Returns whether a JSONRPCException was raised."""
+    try:
+        fun(*args, **kwds)
+    except JSONRPCException as e:
+        # JSONRPCException was thrown as expected. Check the code and message values are correct.
+        if (code is not None) and (code != e.error["code"]):
+            raise AssertionError("Unexpected JSONRPC error code %i" % e.error["code"])
+        if (message is not None) and (message not in e.error['message']):
+            raise AssertionError(
+                "Expected substring not found in error message:\nsubstring: '{}'\nerror message: '{}'.".format(
+                    message, e.error['message']))
+        return True
+    except Exception as e:
+        raise AssertionError("Unexpected exception raised: " + type(e).__name__)
+    else:
+        return False
+
+
+def assert_is_hex_string(string):
+    try:
+        int(string, 16)
+    except Exception as e:
+        raise AssertionError("Couldn't interpret %r as hexadecimal; raised: %s" % (string, e))
+
+
+def assert_is_hash_string(string, length=64):
+    if not isinstance(string, str):
+        raise AssertionError("Expected a string, got type %r" % type(string))
+    elif length and len(string) != length:
+        raise AssertionError("String of length %d expected; got %d" % (length, len(string)))
+    elif not re.match('[abcdef0-9]+$', string):
+        raise AssertionError("String %r contains invalid characters for a hash." % string)
+
+
+def assert_array_result(object_array, to_match, expected, should_not_find=False):
+    """
+        Pass in array of JSON objects, a dictionary with key/value pairs
+        to match against, and another dictionary with expected key/value
+        pairs.
+        If the should_not_find flag is true, to_match should not be found
+        in object_array
+        """
+    if should_not_find:
+        assert_equal(expected, {})
+    num_matched = 0
+    for item in object_array:
+        all_match = True
+        for key, value in to_match.items():
+            if item[key] != value:
+                all_match = False
+        if not all_match:
+            continue
+        elif should_not_find:
+            num_matched = num_matched + 1
+        for key, value in expected.items():
+            if item[key] != value:
+                raise AssertionError("%s : expected %s=%s" % (str(item), str(key), str(value)))
+            num_matched = num_matched + 1
+    if num_matched == 0 and not should_not_find:
+        raise AssertionError("No objects matched %s" % (str(to_match)))
+    if num_matched > 0 and should_not_find:
+        raise AssertionError("Objects were found %s" % (str(to_match)))
+
+
+# Utility functions
+###################
+
+
+def check_json_precision():
+    """Make sure json library being used does not lose precision converting BTC values"""
+    n = Decimal("20000000.00000003")
+    satoshis = int(json.loads(json.dumps(float(n))) * 1.0e8)
+    if satoshis != 2000000000000003:
+        raise RuntimeError("JSON encode/decode loses precision")
+
+
+class Binaries:
+    """Helper class to provide information about bitcoin binaries
+
+    Attributes:
+        paths: Object returned from get_binary_paths() containing information
+            which binaries and command lines to use from environment variables and
+            the config file.
+        bin_dir: An optional string containing a directory path to look for
+            binaries, which takes precedence over the paths above, if specified.
+            This is used by tests calling binaries from previous releases.
+    """
+    def __init__(self, paths, bin_dir):
+        self.paths = paths
+        self.bin_dir = bin_dir
+
+    def node_argv(self, **kwargs):
+        "Return argv array that should be used to invoke bitcoind"
+        return self._argv("node", self.paths.bitcoind, **kwargs)
+
+    def rpc_argv(self):
+        "Return argv array that should be used to invoke bitcoin-cli"
+        # Add -nonamed because "bitcoin rpc" enables -named by default, but bitcoin-cli doesn't
+        return self._argv("rpc", self.paths.bitcoincli) + ["-nonamed"]
+
+    def bench_argv(self):
+        "Return argv array that should be used to invoke bench_bitcoin"
+        return self._argv("bench", self.paths.bitcoin_bench)
+
+    def tx_argv(self):
+        "Return argv array that should be used to invoke bitcoin-tx"
+        return self._argv("tx", self.paths.bitcointx)
+
+    def util_argv(self):
+        "Return argv array that should be used to invoke bitcoin-util"
+        return self._argv("util", self.paths.bitcoinutil)
+
+    def wallet_argv(self):
+        "Return argv array that should be used to invoke bitcoin-wallet"
+        return self._argv("wallet", self.paths.bitcoinwallet)
+
+    def chainstate_argv(self):
+        "Return argv array that should be used to invoke bitcoin-chainstate"
+        return self._argv("chainstate", self.paths.bitcoinchainstate)
+
+    def _argv(self, command, bin_path, need_ipc=False):
+        """Return argv array that should be used to invoke the command. It
+        either uses the bitcoin wrapper executable (if BITCOIN_CMD is set or
+        need_ipc is True), or the direct binary path (bitcoind, etc). When
+        bin_dir is set (by tests calling binaries from previous releases) it
+        always uses the direct path."""
+        if self.bin_dir is not None:
+            return [os.path.join(self.bin_dir, os.path.basename(bin_path))]
+        elif self.paths.bitcoin_cmd is not None or need_ipc:
+            # If the current test needs IPC functionality, use the bitcoin
+            # wrapper binary and append -m so it calls multiprocess binaries.
+            bitcoin_cmd = self.paths.bitcoin_cmd or [self.paths.bitcoin_bin]
+            return bitcoin_cmd + (["-m"] if need_ipc else []) + [command]
+        else:
+            return [bin_path]
+
+
+def get_binary_paths(config):
+    """Get paths of all binaries from environment variables or their default values"""
+
+    paths = types.SimpleNamespace()
+    binaries = {
+        "bitcoin": "BITCOIN_BIN",
+        "bitcoind": "BITCOIND",
+        "bench_bitcoin": "BITCOIN_BENCH",
+        "bitcoin-cli": "BITCOINCLI",
+        "bitcoin-util": "BITCOINUTIL",
+        "bitcoin-tx": "BITCOINTX",
+        "bitcoin-chainstate": "BITCOINCHAINSTATE",
+        "bitcoin-wallet": "BITCOINWALLET",
+    }
+    # Set paths to bitcoin core binaries allowing overrides with environment
+    # variables.
+    for binary, env_variable_name in binaries.items():
+        default_filename = os.path.join(
+            config["environment"]["BUILDDIR"],
+            "bin",
+            binary + config["environment"]["EXEEXT"],
+        )
+        setattr(paths, env_variable_name.lower(), os.getenv(env_variable_name, default=default_filename))
+    # BITCOIN_CMD environment variable can be specified to invoke bitcoin
+    # wrapper binary instead of other executables.
+    paths.bitcoin_cmd = shlex.split(os.getenv("BITCOIN_CMD", "")) or None
+    return paths
+
+
+def export_env_build_path(config):
+    os.environ["PATH"] = os.pathsep.join([
+        os.path.join(config["environment"]["BUILDDIR"], "bin"),
+        os.environ["PATH"],
+    ])
+
+
+def count_bytes(hex_string):
+    return len(bytearray.fromhex(hex_string))
+
+
+def str_to_b64str(string):
+    return b64encode(string.encode('utf-8')).decode('ascii')
+
+
+def ceildiv(a, b):
+    """
+    Divide 2 ints and round up to next int rather than round down
+    Implementation requires python integers, which have a // operator that does floor division.
+    Other types like decimal.Decimal whose // operator truncates towards 0 will not work.
+    """
+    assert isinstance(a, int)
+    assert isinstance(b, int)
+    return -(-a // b)
+
+
+def random_bitflip(data):
+    data = list(data)
+    data[random.randrange(len(data))] ^= (1 << (random.randrange(8)))
+    return bytes(data)
+
+
+def get_fee(tx_size, feerate_btc_kvb):
+    """Calculate the fee in BTC given a feerate is BTC/kvB. Reflects CFeeRate::GetFee"""
+    feerate_sat_kvb = int(feerate_btc_kvb * Decimal(1e8)) # Fee in sat/kvb as an int to avoid float precision errors
+    target_fee_sat = ceildiv(feerate_sat_kvb * tx_size, 1000) # Round calculated fee up to nearest sat
+    return target_fee_sat / Decimal(1e8) # Return result in  BTC
+
+
+def satoshi_round(amount: Union[int, float, str], *, rounding: str) -> Decimal:
+    """Rounds a Decimal amount to the nearest satoshi using the specified rounding mode."""
+    return Decimal(amount).quantize(SATOSHI_PRECISION, rounding=rounding)
+
+
+def ensure_for(*, duration, f, check_interval=0.2):
+    """Check if the predicate keeps returning True for duration.
+
+    check_interval can be used to configure the wait time between checks.
+    Setting check_interval to 0 will allow to have two checks: one in the
+    beginning and one after duration.
+    """
+    # If check_interval is 0 or negative or larger than duration, we fall back
+    # to checking once in the beginning and once at the end of duration
+    if check_interval <= 0 or check_interval > duration:
+        check_interval = duration
+    time_end = time.time() + duration
+    predicate_source = "''''\n" + inspect.getsource(f) + "'''"
+    while True:
+        if not f():
+            raise AssertionError(f"Predicate {predicate_source} became false within {duration} seconds")
+        if time.time() > time_end:
+            return
+        time.sleep(check_interval)
+
+
+def wait_until_helper_internal(predicate, *, timeout=60, lock=None, timeout_factor=1.0, check_interval=0.05):
+    """Sleep until the predicate resolves to be True.
+
+    Warning: Note that this method is not recommended to be used in tests as it is
+    not aware of the context of the test framework. Using the `wait_until()` members
+    from `BitcoinTestFramework` or `P2PInterface` class ensures the timeout is
+    properly scaled. Furthermore, `wait_until()` from `P2PInterface` class in
+    `p2p.py` has a preset lock.
+    """
+    timeout = timeout * timeout_factor
+    time_end = time.time() + timeout
+
+    while time.time() < time_end:
+        if lock:
+            with lock:
+                if predicate():
+                    return
+        else:
+            if predicate():
+                return
+        time.sleep(check_interval)
+
+    # Print the cause of the timeout
+    predicate_source = "''''\n" + inspect.getsource(predicate) + "'''"
+    logger.error("wait_until() failed. Predicate: {}".format(predicate_source))
+    raise AssertionError("Predicate {} not true after {} seconds".format(predicate_source, timeout))
+
+
+def bpf_cflags():
+    return [
+        "-Wno-error=implicit-function-declaration",
+        "-Wno-duplicate-decl-specifier",  # https://github.com/bitcoin/bitcoin/issues/32322
+    ]
+
+
+def sha256sum_file(filename):
+    h = hashlib.sha256()
+    with open(filename, 'rb') as f:
+        d = f.read(4096)
+        while len(d) > 0:
+            h.update(d)
+            d = f.read(4096)
+    return h.digest()
+
+
+def util_xor(data, key, *, offset):
+    data = bytearray(data)
+    for i in range(len(data)):
+        data[i] ^= key[(i + offset) % len(key)]
+    return bytes(data)
+
+
+# RPC/P2P connection constants and functions
+############################################
+
+# The maximum number of nodes a single test can spawn
+MAX_NODES = 12
+# Don't assign p2p, rpc or tor ports lower than this
+PORT_MIN = int(os.getenv('TEST_RUNNER_PORT_MIN', default=11000))
+# The number of ports to "reserve" for p2p, rpc and tor, each
+PORT_RANGE = 5000
+
+
+class PortSeed:
+    # Must be initialized with a unique integer for each process
+    n = None
+
+
+def get_rpc_proxy(url: str, node_number: int, *, timeout: Optional[int]=None, coveragedir: Optional[str]=None) -> coverage.AuthServiceProxyWrapper:
+    """
+    Args:
+        url: URL of the RPC server to call
+        node_number: the node number (or id) that this calls to
+
+    Kwargs:
+        timeout: HTTP timeout in seconds
+        coveragedir: Directory
+
+    Returns:
+        AuthServiceProxy. convenience object for making RPC calls.
+
+    """
+    proxy_kwargs = {}
+    if timeout is not None:
+        proxy_kwargs['timeout'] = int(timeout)
+
+    proxy = AuthServiceProxy(url, **proxy_kwargs)
+
+    coverage_logfile = coverage.get_filename(coveragedir, node_number) if coveragedir else None
+
+    return coverage.AuthServiceProxyWrapper(proxy, url, coverage_logfile)
+
+
+def p2p_port(n):
+    assert n <= MAX_NODES
+    return PORT_MIN + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
+
+
+def rpc_port(n):
+    return p2p_port(n) + PORT_RANGE
+
+
+def tor_port(n):
+    return p2p_port(n) + PORT_RANGE * 2
+
+
+def rpc_url(datadir, i, chain, rpchost):
+    rpc_u, rpc_p = get_auth_cookie(datadir, chain)
+    host = '127.0.0.1'
+    port = rpc_port(i)
+    if rpchost:
+        parts = rpchost.split(':')
+        if len(parts) == 2:
+            host, port = parts
+        else:
+            host = rpchost
+    return "http://%s:%s@%s:%d" % (rpc_u, rpc_p, host, int(port))
+
+
+# Node functions
+################
+
+
+def initialize_datadir(dirname, n, chain, disable_autoconnect=True):
+    datadir = get_datadir_path(dirname, n)
+    if not os.path.isdir(datadir):
+        os.makedirs(datadir)
+    write_config(os.path.join(datadir, "bitcoin.conf"), n=n, chain=chain, disable_autoconnect=disable_autoconnect)
+    os.makedirs(os.path.join(datadir, 'stderr'), exist_ok=True)
+    os.makedirs(os.path.join(datadir, 'stdout'), exist_ok=True)
+    return datadir
+
+
+def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=True):
+    # Translate chain subdirectory name to config name
+    if chain == 'testnet3':
+        chain_name_conf_arg = 'testnet'
+        chain_name_conf_section = 'test'
+    else:
+        chain_name_conf_arg = chain
+        chain_name_conf_section = chain
+    with open(config_path, 'w') as f:
+        if chain_name_conf_arg:
+            f.write("{}=1\n".format(chain_name_conf_arg))
+        if chain_name_conf_section:
+            f.write("[{}]\n".format(chain_name_conf_section))
+        f.write("port=" + str(p2p_port(n)) + "\n")
+        f.write("rpcport=" + str(rpc_port(n)) + "\n")
+        # Disable server-side timeouts to avoid intermittent issues
+        f.write("rpcservertimeout=99000\n")
+        f.write("rpcdoccheck=1\n")
+        f.write("rpcthreads=2\n")
+        f.write("fallbackfee=0.0002\n")
+        f.write("server=1\n")
+        f.write("keypool=1\n")
+        f.write("discover=0\n")
+        f.write("dnsseed=0\n")
+        f.write("fixedseeds=0\n")
+        f.write("listenonion=0\n")
+        # Increase peertimeout to avoid disconnects while using mocktime.
+        # peertimeout is measured in mock time, so setting it large enough to
+        # cover any duration in mock time is sufficient. It can be overridden
+        # in tests.
+        f.write("peertimeout=999999999\n")
+        f.write("printtoconsole=0\n")
+        f.write("natpmp=0\n")
+        f.write("shrinkdebugfile=0\n")
+        # To improve SQLite wallet performance so that the tests don't timeout, use -unsafesqlitesync
+        f.write("unsafesqlitesync=1\n")
+        if disable_autoconnect:
+            f.write("connect=0\n")
+        # Limit max connections to mitigate test failures on some systems caused by the warning:
+        # "Warning: Reducing -maxconnections from <...> to <...> due to system limitations".
+        # The value is calculated as follows:
+        #  available_fds = 256          // Same as FD_SETSIZE on NetBSD.
+        #  MIN_CORE_FDS = 151           // Number of file descriptors required for core functionality.
+        #  MAX_ADDNODE_CONNECTIONS = 8  // Maximum number of -addnode outgoing nodes.
+        #  nBind == 3                   // Maximum number of bound interfaces used in a test.
+        #
+        #  min_required_fds = MIN_CORE_FDS + MAX_ADDNODE_CONNECTIONS + nBind = 151 + 8 + 3 = 162;
+        #  nMaxConnections = available_fds - min_required_fds = 256 - 161 = 94;
+        f.write("maxconnections=94\n")
+        f.write("par=" + str(min(2, os.cpu_count())) + "\n")
+        f.write(extra_config)
+
+
+def get_datadir_path(dirname, n):
+    return pathlib.Path(dirname) / f"node{n}"
+
+
+def get_temp_default_datadir(temp_dir: pathlib.Path) -> tuple[dict, pathlib.Path]:
+    """Return os-specific environment variables that can be set to make the
+    GetDefaultDataDir() function return a datadir path under the provided
+    temp_dir, as well as the complete path it would return."""
+    if platform.system() == "Windows":
+        env = dict(APPDATA=str(temp_dir))
+        datadir = temp_dir / "Bitcoin"
+    else:
+        env = dict(HOME=str(temp_dir))
+        if platform.system() == "Darwin":
+            datadir = temp_dir / "Library/Application Support/Bitcoin"
+        else:
+            datadir = temp_dir / ".bitcoin"
+    return env, datadir
+
+
+def append_config(datadir, options):
+    with open(os.path.join(datadir, "bitcoin.conf"), 'a') as f:
+        for option in options:
+            f.write(option + "\n")
+
+
+def get_auth_cookie(datadir, chain):
+    user = None
+    password = None
+    if os.path.isfile(os.path.join(datadir, "bitcoin.conf")):
+        with open(os.path.join(datadir, "bitcoin.conf"), 'r') as f:
+            for line in f:
+                if line.startswith("rpcuser="):
+                    assert user is None  # Ensure that there is only one rpcuser line
+                    user = line.split("=")[1].strip("\n")
+                if line.startswith("rpcpassword="):
+                    assert password is None  # Ensure that there is only one rpcpassword line
+                    password = line.split("=")[1].strip("\n")
+    try:
+        with open(os.path.join(datadir, chain, ".cookie"), 'r') as f:
+            userpass = f.read()
+            split_userpass = userpass.split(':')
+            user = split_userpass[0]
+            password = split_userpass[1]
+    except OSError:
+        pass
+    if user is None or password is None:
+        raise ValueError("No RPC credentials")
+    return user, password
+
+
+# If a cookie file exists in the given datadir, delete it.
+def delete_cookie_file(datadir, chain):
+    if os.path.isfile(os.path.join(datadir, chain, ".cookie")):
+        logger.debug("Deleting leftover cookie file")
+        os.remove(os.path.join(datadir, chain, ".cookie"))
+
+
+def softfork_active(node, key):
+    """Return whether a softfork is active."""
+    return node.getdeploymentinfo()['deployments'][key]['active']
+
+
+def set_node_times(nodes, t):
+    for node in nodes:
+        node.setmocktime(t)
+
+
+def check_node_connections(*, node, num_in, num_out):
+    info = node.getnetworkinfo()
+    assert_equal(info["connections_in"], num_in)
+    assert_equal(info["connections_out"], num_out)
+
+
+# Transaction/Block functions
+#############################
+
+
+# Create large OP_RETURN txouts that can be appended to a transaction
+# to make it large (helper for constructing large transactions). The
+# total serialized size of the txouts is about 66k vbytes.
+def gen_return_txouts():
+    from .messages import CTxOut
+    from .script import CScript, OP_RETURN
+    txouts = [CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN, b'\x01'*67437]))]
+    assert_equal(sum([len(txout.serialize()) for txout in txouts]), 67456)
+    return txouts
+
+
+# Create a spend of each passed-in utxo, splicing in "txouts" to each raw
+# transaction to make it large.  See gen_return_txouts() above.
+def create_lots_of_big_transactions(mini_wallet, node, fee, tx_batch_size, txouts, utxos=None):
+    txids = []
+    use_internal_utxos = utxos is None
+    for _ in range(tx_batch_size):
+        tx = mini_wallet.create_self_transfer(
+            utxo_to_spend=None if use_internal_utxos else utxos.pop(),
+            fee=fee,
+        )["tx"]
+        tx.vout.extend(txouts)
+        res = node.testmempoolaccept([tx.serialize().hex()])[0]
+        assert_equal(res['fees']['base'], fee)
+        txids.append(node.sendrawtransaction(tx.serialize().hex()))
+    return txids
+
+
+def mine_large_block(test_framework, mini_wallet, node):
+    # generate a 66k transaction,
+    # and 14 of them is close to the 1MB block limit
+    txouts = gen_return_txouts()
+    fee = 100 * node.getnetworkinfo()["relayfee"]
+    create_lots_of_big_transactions(mini_wallet, node, fee, 14, txouts)
+    test_framework.generate(node, 1)
+
+
+def find_vout_for_address(node, txid, addr):
+    """
+    Locate the vout index of the given transaction sending to the
+    given address. Raises runtime error exception if not found.
+    """
+    tx = node.getrawtransaction(txid, True)
+    for i in range(len(tx["vout"])):
+        if addr == tx["vout"][i]["scriptPubKey"]["address"]:
+            return i
+    raise RuntimeError("Vout not found for address: txid=%s, addr=%s" % (txid, addr))
+
+
+def sync_txindex(test_framework, node):
+    test_framework.log.debug("Waiting for node txindex to sync")
+    sync_start = int(time.time())
+    test_framework.wait_until(lambda: node.getindexinfo("txindex")["txindex"]["synced"])
+    test_framework.log.debug(f"Synced in {time.time() - sync_start} seconds")
+
+def wallet_importprivkey(wallet_rpc, privkey, timestamp, *, label=""):
+    desc = descsum_create("combo(" + privkey + ")")
+    req = [{
+        "desc": desc,
+        "timestamp": timestamp,
+        "label": label,
+    }]
+    import_res = wallet_rpc.importdescriptors(req)
+    assert_equal(import_res[0]["success"], True)

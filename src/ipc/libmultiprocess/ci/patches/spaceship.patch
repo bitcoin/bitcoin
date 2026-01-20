@@ -1,0 +1,29 @@
+commit e3da7da967b94f373c29a198ce45f30fb9f0e517
+Author: Ed Catmur <ed@catmur.uk>
+Date:   Tue Jan 31 16:27:04 2023 +0000
+
+    Remove operator!= synthesized by spaceship
+    
+    An operator!= suppresses the reversed equality comparison candidate generation.
+    
+    This is visible in clang 16 (rc0 just released) and in gcc trunk (so probably gcc 13).
+
+diff --git a/c++/src/kj/string.h b/c++/src/kj/string.h
+index 193442aa..17835892 100644
+--- a/c++/src/kj/string.h
++++ b/c++/src/kj/string.h
+@@ -122,10 +122,14 @@ public:
+   inline constexpr const char* end() const { return content.end() - 1; }
+ 
+   inline constexpr bool operator==(decltype(nullptr)) const { return content.size() <= 1; }
++#if !__cpp_impl_three_way_comparison
+   inline constexpr bool operator!=(decltype(nullptr)) const { return content.size() > 1; }
++#endif
+ 
+   inline bool operator==(const StringPtr& other) const;
++#if !__cpp_impl_three_way_comparison
+   inline bool operator!=(const StringPtr& other) const { return !(*this == other); }
++#endif
+   inline bool operator< (const StringPtr& other) const;
+   inline bool operator> (const StringPtr& other) const { return other < *this; }
+   inline bool operator<=(const StringPtr& other) const { return !(other < *this); }

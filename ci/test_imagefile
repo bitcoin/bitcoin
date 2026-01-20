@@ -1,0 +1,24 @@
+# Copyright (c) The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or https://opensource.org/license/mit/.
+
+# See ci/README.md for usage.
+
+# We never want scratch, but default arg silences a Warning
+ARG CI_IMAGE_NAME_TAG=scratch
+FROM ${CI_IMAGE_NAME_TAG}
+
+ARG FILE_ENV
+ENV FILE_ENV=${FILE_ENV}
+
+ARG BASE_ROOT_DIR
+ENV BASE_ROOT_DIR=${BASE_ROOT_DIR}
+
+# Make retry available in PATH, needed for CI_RETRY_EXE
+COPY ./ci/retry/retry /usr/bin/retry
+COPY ./ci/test/00_setup_env.sh ./${FILE_ENV} ./ci/test/01_base_install.sh ./ci/test/01_iwyu.patch /ci_container_base/ci/test/
+
+# Bash is required, so install it when missing
+RUN sh -c "bash -c 'true' || ( apk update && apk add --no-cache bash )"
+
+RUN ["bash", "-c", "cd /ci_container_base/ && set -o errexit && source ./ci/test/00_setup_env.sh && ./ci/test/01_base_install.sh"]

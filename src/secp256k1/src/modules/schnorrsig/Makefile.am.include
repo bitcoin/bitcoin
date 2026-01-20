@@ -1,0 +1,5 @@
+include_HEADERS += include/secp256k1_schnorrsig.h
+noinst_HEADERS += src/modules/schnorrsig/main_impl.h
+noinst_HEADERS += src/modules/schnorrsig/tests_impl.h
+noinst_HEADERS += src/modules/schnorrsig/tests_exhaustive_impl.h
+noinst_HEADERS += src/modules/schnorrsig/bench_impl.h

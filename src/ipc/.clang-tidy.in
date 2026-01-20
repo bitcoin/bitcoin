@@ -1,0 +1,5 @@
+Checks:
+  # See: https://github.com/capnproto/capnproto/pull/2334.
+  - "-clang-analyzer-core.UndefinedBinaryOperatorResult"
+  # See: https://github.com/capnproto/capnproto/pull/2417.
+  - "-clang-analyzer-security.ArrayBound"

@@ -1,0 +1,12 @@
+name: 'Clear unnecessary files'
+description: 'Clear out unnecessary files to make space on the VM'
+runs:
+  using: 'composite'
+  steps:
+    - name: Clear unnecessary files
+      shell: bash
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        set +o errexit
+        sudo bash -c '(ionice -c 3 nice -n 19 rm -rf /usr/share/dotnet/ /usr/local/graalvm/ /usr/local/.ghcup/ /usr/local/share/powershell /usr/local/share/chromium /usr/local/lib/android /usr/local/lib/node_modules)&'
