@@ -753,14 +753,13 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
     AssertLockNotHeld(cs_store);
     hashToRequest = uint256();
 
-    ENTER_CRITICAL_SECTION(cs_store);
+    LOCK(cs_store);
     uint256 nHashVote = vote.GetHash();
     uint256 nHashGovobj = vote.GetParentHash();
 
     if (cmapVoteToObject.HasKey(nHashVote)) {
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::%s -- skipping known valid vote %s for object %s\n", __func__,
             nHashVote.ToString(), nHashGovobj.ToString());
-        LEAVE_CRITICAL_SECTION(cs_store);
         return false;
     }
 
@@ -769,7 +768,6 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
             __func__, vote.GetMasternodeOutpoint().ToStringShort(), nHashGovobj.ToString())};
         LogPrint(BCLog::GOBJECT, "%s\n", msg);
         exception = CGovernanceException(msg, GOVERNANCE_EXCEPTION_PERMANENT_ERROR, 20);
-        LEAVE_CRITICAL_SECTION(cs_store);
         return false;
     }
 
@@ -783,7 +781,6 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
             hashToRequest = nHashGovobj; // Caller should request this object
         }
         LogPrint(BCLog::GOBJECT, "%s\n", msg);
-        LEAVE_CRITICAL_SECTION(cs_store);
         return false;
     }
 
@@ -792,7 +789,6 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
     if (govobj.IsSetCachedDelete() || govobj.IsSetExpired()) {
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::%s -- ignoring vote for expired or deleted object, hash = %s\n",
             __func__, nHashGovobj.ToString());
-        LEAVE_CRITICAL_SECTION(cs_store);
         return false;
     }
 
@@ -802,7 +798,6 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
     } else if (exception.GetType() == GOVERNANCE_EXCEPTION_PERMANENT_ERROR && exception.GetNodePenalty() == 20) {
         cmapInvalidVotes.Insert(nHashVote, vote);
     }
-    LEAVE_CRITICAL_SECTION(cs_store);
     return fOk;
 }
 
