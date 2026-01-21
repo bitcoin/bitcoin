@@ -872,7 +872,9 @@ static RPCHelpMan getblocktemplate()
 
         // Create new block
         block_template = miner.createNewBlock();
-        CHECK_NONFATAL(block_template);
+        if (!block_template) {
+    	    throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Mining subsystem is not available");
+        }
 
 
         // Need to update only after we know createNewBlock succeeded
