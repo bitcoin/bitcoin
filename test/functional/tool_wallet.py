@@ -136,6 +136,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.assert_raises_tool_error('Error parsing command line arguments: Invalid parameter -foo', '-foo')
         self.assert_raises_tool_error('No method provided. Run `bitcoin-wallet -help` for valid methods.')
         self.assert_raises_tool_error('Wallet name must be provided when creating a new wallet.', 'create')
+        self.assert_raises_tool_error('Wallet name must be provided when creating a new wallet.', 'createfromdump')
         error = f"SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of {self.config['environment']['CLIENT_NAME']}?"
         self.assert_raises_tool_error(
             error,
@@ -319,12 +320,6 @@ class ToolWalletTest(BitcoinTestFramework):
         self.write_dump(dump_data, bad_sum_wallet_dump)
         self.assert_raises_tool_error('Error: Checksum is not the correct size', '-wallet=badload', '-dumpfile={}'.format(bad_sum_wallet_dump), 'createfromdump')
         assert not (self.nodes[0].wallets_path / "badload").is_dir()
-        self.assert_raises_tool_error('Error: Checksum is not the correct size', '-wallet=', '-dumpfile={}'.format(bad_sum_wallet_dump), 'createfromdump')
-        assert self.nodes[0].wallets_path.exists()
-        assert not (self.nodes[0].wallets_path / "wallet.dat").exists()
-
-        self.log.info('Checking createfromdump with an unnamed wallet')
-        self.do_tool_createfromdump("", "wallet.dump")
 
     def test_chainless_conflicts(self):
         self.log.info("Test wallet tool when wallet contains conflicting transactions")
@@ -427,6 +422,15 @@ class ToolWalletTest(BitcoinTestFramework):
         self.assert_raises_tool_error("Invalid parameter -descriptors", "-wallet=legacy", "-descriptors=false", "create")
         assert not (self.nodes[0].wallets_path / "legacy").exists()
 
+    def test_no_create_unnamed(self):
+        self.log.info("Test that unnamed (default) wallets cannot be created")
+
+        self.assert_raises_tool_error("Wallet name cannot be empty", "-wallet=", "create")
+        assert not (self.nodes[0].wallets_path / "wallet.dat").exists()
+
+        self.assert_raises_tool_error("Wallet name cannot be empty", "-wallet=", "-dumpfile=wallet.dump", "createfromdump")
+        assert not (self.nodes[0].wallets_path / "wallet.dat").exists()
+
     def run_test(self):
         self.wallet_path = self.nodes[0].wallets_path / self.default_wallet_name / self.wallet_data_filename
         self.test_invalid_tool_commands_and_args()
@@ -439,6 +443,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.test_chainless_conflicts()
         self.test_dump_very_large_records()
         self.test_no_create_legacy()
+        self.test_no_create_unnamed()
 
 
 if __name__ == '__main__':

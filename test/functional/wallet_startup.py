@@ -6,6 +6,9 @@
 
 Verify that a bitcoind node can maintain list of wallets loading on startup
 """
+import shutil
+import uuid
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -24,13 +27,24 @@ class WalletStartupTest(BitcoinTestFramework):
         self.add_nodes(self.num_nodes)
         self.start_nodes()
 
+    def create_unnamed_wallet(self, **kwargs):
+        """
+        createwallet disallows empty wallet names, so create a temporary named wallet
+        and move its wallet.dat to the unnamed wallet location
+        """
+        wallet_name = uuid.uuid4().hex
+        self.nodes[0].createwallet(wallet_name=wallet_name, **kwargs)
+        self.nodes[0].unloadwallet(wallet_name)
+        shutil.move(self.nodes[0].wallets_path / wallet_name / "wallet.dat", self.nodes[0].wallets_path / "wallet.dat")
+        shutil.rmtree(self.nodes[0].wallets_path / wallet_name)
+
     def run_test(self):
         self.log.info('Should start without any wallets')
         assert_equal(self.nodes[0].listwallets(), [])
         assert_equal(self.nodes[0].listwalletdir(), {'wallets': []})
 
         self.log.info('New default wallet should load by default when there are no other wallets')
-        self.nodes[0].createwallet(wallet_name='', load_on_startup=False)
+        self.create_unnamed_wallet(load_on_startup=False)
         self.restart_node(0)
         assert_equal(self.nodes[0].listwallets(), [''])
 
