@@ -15,6 +15,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    find_vout_for_address,
     wallet_importprivkey,
 )
 from test_framework.wallet_util import generate_keypair
@@ -116,6 +117,21 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
         w1.removeprunedfunds(txnid3)
         assert not [tx for tx in w1.listtransactions() if tx['txid'] == txnid3]
+
+        # Import a spending transaction with no wallet outputs (issue #21647)
+        txid = self.nodes[0].sendtoaddress(address3, 0.1)
+        vout = find_vout_for_address(self.nodes[0], txid, address3)
+        self.generate(self.nodes[0], 1)
+        external_addr = self.nodes[0].getnewaddress()
+        spend_txid = w1.sendall(recipients=[external_addr], inputs=[{"txid": txid, "vout": vout}])["txid"]
+        self.sync_mempools()
+        self.generate(self.nodes[0], 1)
+        spend_raw = w1.gettransaction(spend_txid)['hex']
+        spend_proof = self.nodes[0].gettxoutproof([spend_txid])
+        w1.removeprunedfunds(spend_txid)
+        assert not [tx for tx in w1.listtransactions() if tx['txid'] == spend_txid]
+        w1.importprunedfunds(spend_raw, spend_proof)
+        assert [tx for tx in w1.listtransactions() if tx['txid'] == spend_txid]
 
         # Check various RPC parameter validation errors
         assert_raises_rpc_error(-22, "TX decode failed", w1.importprunedfunds, b'invalid tx'.hex(), proof1)

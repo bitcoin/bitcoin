@@ -82,7 +82,7 @@ RPCHelpMan importprunedfunds()
     unsigned int txnIndex = vIndex[it - vMatch.begin()];
 
     CTransactionRef tx_ref = MakeTransactionRef(tx);
-    if (pwallet->IsMine(*tx_ref)) {
+    if (pwallet->IsMine(*tx_ref) || pwallet->IsFromMe(*tx_ref)) {
         pwallet->AddToWallet(std::move(tx_ref), TxStateConfirmed{merkleBlock.header.GetHash(), height, static_cast<int>(txnIndex)});
         return UniValue::VNULL;
     }
