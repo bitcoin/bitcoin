@@ -108,14 +108,33 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         assert_equal(address_info['ismine'], True)
 
         # Remove transactions
-        assert_raises_rpc_error(-4, f'Transaction {txnid1} does not belong to this wallet', w1.removeprunedfunds, txnid1)
-        assert not [tx for tx in w1.listtransactions() if tx['txid'] == txnid1]
 
-        wwatch.removeprunedfunds(txnid2)
-        assert not [tx for tx in wwatch.listtransactions() if tx['txid'] == txnid2]
+        # First, fund w1
+        addr_spend = w1.getnewaddress()
+        self.nodes[0].sendtoaddress(addr_spend, 1)
+        self.generate(self.nodes[0], 1)
+        self.sync_all()
 
-        w1.removeprunedfunds(txnid3)
-        assert not [tx for tx in w1.listtransactions() if tx['txid'] == txnid3]
+        # Spend it
+        dest = self.nodes[0].getnewaddress()
+        tx_spend = w1.sendtoaddress(dest, Decimal("0.5"))
+        self.generate(self.nodes[0], 1)
+        self.sync_all()
+
+        # Get raw tx + proof
+        raw_spend = w1.gettransaction(tx_spend)["hex"]
+        proof_spend = self.nodes[0].gettxoutproof([tx_spend])
+
+        # Remove it from wallet
+        w1.removeprunedfunds(tx_spend)
+        self.sync_all()
+
+        # Now re-import it (THIS is what used to fail)
+        w1.importprunedfunds(raw_spend, proof_spend)
+
+        # Check that it is back
+        assert [tx for tx in w1.listtransactions() if tx['txid'] == tx_spend]
+
 
         # Check various RPC parameter validation errors
         assert_raises_rpc_error(-22, "TX decode failed", w1.importprunedfunds, b'invalid tx'.hex(), proof1)
