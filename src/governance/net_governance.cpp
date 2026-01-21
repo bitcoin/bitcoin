@@ -10,7 +10,6 @@
 #include <governance/governance.h>
 #include <logging.h>
 #include <masternode/sync.h>
-#include <msg_result.h>
 #include <net.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
@@ -94,10 +93,9 @@ void NetGovernance::ProcessMessage(CNode& peer, const std::string& msg_type, CDa
             CNetMsgMaker msgMaker(peer.GetCommonVersion());
             m_connman.PushMessage(&peer, msgMaker.Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_GOVOBJ,
                                                        static_cast<int>(invs.size())));
-
-            MessageProcessingResult ret;
-            ret.m_inventory = std::move(invs);
-            m_peer_manager->PeerPostProcessMessage(std::move(ret));
+            for (const auto& inv : invs) {
+                m_peer_manager->PeerRelayInv(inv);
+            }
         } else {
             // Sync votes for a specific governance object
             auto invs = m_gov_manager.GetSyncableVoteInvs(nProp, filter);
@@ -107,10 +105,9 @@ void NetGovernance::ProcessMessage(CNode& peer, const std::string& msg_type, CDa
             CNetMsgMaker msgMaker(peer.GetCommonVersion());
             m_connman.PushMessage(&peer, msgMaker.Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_GOVOBJ_VOTE,
                                                        static_cast<int>(invs.size())));
-
-            MessageProcessingResult ret;
-            ret.m_inventory = std::move(invs);
-            m_peer_manager->PeerPostProcessMessage(std::move(ret));
+            for (const auto& inv : invs) {
+                m_peer_manager->PeerRelayInv(inv);
+            }
         }
     }
     // A NEW GOVERNANCE OBJECT HAS ARRIVED

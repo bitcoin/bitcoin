@@ -8,7 +8,6 @@
 #include <cachemap.h>
 #include <cachemultimap.h>
 #include <governance/signing.h>
-#include <msg_result.h>
 
 #include <protocol.h>
 #include <sync.h>

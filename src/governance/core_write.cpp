@@ -5,6 +5,7 @@
 #include <governance/common.h>
 #include <governance/governance.h>
 
+#include <core_io.h>
 #include <rpc/util.h>
 #include <util/check.h>
 
