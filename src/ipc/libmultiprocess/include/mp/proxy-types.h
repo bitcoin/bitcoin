@@ -87,7 +87,7 @@ struct StructField
 // actually construct the read destination object. For example, if a std::string
 // is being read, the ReadField call will call the custom emplace_fn with char*
 // and size_t arguments, and the emplace function can decide whether to call the
-// constructor via the operator or make_shared or emplace or just return a
+// constructor via the operator, make_shared, emplace or just return a
 // temporary string that is moved from.
 template <typename LocalType, typename EmplaceFn>
 struct ReadDestEmplace
@@ -205,11 +205,11 @@ void BuildField(TypeList<LocalTypes...>, Context& context, Output&& output, Valu
     }
 }
 
-// Adapter to let BuildField overloads methods work set & init list elements as
-// if they were fields of a struct. If BuildField is changed to use some kind of
-// accessor class instead of calling method pointers, then then maybe this could
-// go away or be simplified, because would no longer be a need to return
-// ListOutput method pointers emulating capnp struct method pointers..
+// Adapter that allows BuildField overloads to work with, set, and initialize list
+// elements as if they were fields of a struct. If BuildField is changed to use some
+// kind of accessor class instead of calling method pointers, then maybe this could
+// go away or be simplified, because there would no longer be a need to return
+// ListOutput method pointers emulating capnp struct method pointers.
 template <typename ListType>
 struct ListOutput;
 

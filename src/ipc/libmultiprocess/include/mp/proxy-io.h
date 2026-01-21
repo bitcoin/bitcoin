@@ -317,12 +317,12 @@ public:
     void* m_context;
 };
 
-//! Single element task queue used to handle recursive capnp calls. (If server
-//! makes an callback into the client in the middle of a request, while client
+//! Single element task queue used to handle recursive capnp calls. (If the
+//! server makes a callback into the client in the middle of a request, while the client
 //! thread is blocked waiting for server response, this is what allows the
-//! client to run the request in the same thread, the same way code would run in
-//! single process, with the callback sharing same thread stack as the original
-//! call.
+//! client to run the request in the same thread, the same way code would run in a
+//! single process, with the callback sharing the same thread stack as the original
+//! call.)
 struct Waiter
 {
     Waiter() = default;

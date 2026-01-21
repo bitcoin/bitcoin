@@ -25,6 +25,7 @@
 #include <mp/proxy.capnp.h>
 #include <mp/proxy-io.h>
 #include <mp/util.h>
+#include <mp/version.h>
 #include <optional>
 #include <set>
 #include <stdexcept>
@@ -32,11 +33,18 @@
 #include <string_view>
 #include <system_error>
 #include <thread>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 namespace mp {
 namespace test {
+
+/** Check version.h header values */
+constexpr auto kMP_MAJOR_VERSION{MP_MAJOR_VERSION};
+constexpr auto kMP_MINOR_VERSION{MP_MINOR_VERSION};
+static_assert(std::is_integral_v<decltype(kMP_MAJOR_VERSION)>, "MP_MAJOR_VERSION must be an integral constant");
+static_assert(std::is_integral_v<decltype(kMP_MINOR_VERSION)>, "MP_MINOR_VERSION must be an integral constant");
 
 /**
  * Test setup class creating a two way connection between a
