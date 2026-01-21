@@ -180,6 +180,7 @@ Q_SIGNALS:
     void coinControlFeaturesChanged(bool);
     void keepChangeAddressChanged(bool);
     void showCoinJoinChanged();
+    void showGovernanceChanged(bool);
     void showTrayIconChanged(bool);
     void fontForMoneyChanged(const QFont&);
 };

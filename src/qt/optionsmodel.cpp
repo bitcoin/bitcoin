@@ -850,7 +850,7 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
     case ShowGovernanceTab:
         if (settings.value("fShowGovernanceTab") != value) {
             settings.setValue("fShowGovernanceTab", value);
-            setRestartRequired(true);
+            Q_EMIT showGovernanceChanged(value.toBool());
         }
         break;
     case CoinJoinEnabled:

@@ -739,20 +739,17 @@ void BitcoinGUI::createToolBars()
             masternodeButton->setEnabled(true);
         }
 
-        if (settings.value("fShowGovernanceTab").toBool()) {
-            governanceButton = new QToolButton(this);
-            governanceButton->setText(tr("&Governance"));
-            governanceButton->setStatusTip(tr("View Governance Proposals"));
-            tabGroup->addButton(governanceButton);
-            connect(governanceButton, &QToolButton::clicked, this, &BitcoinGUI::gotoGovernancePage);
-            governanceButton->setEnabled(true);
-        }
+        governanceButton = new QToolButton(this);
+        governanceButton->setText(tr("&Governance"));
+        governanceButton->setStatusTip(tr("View Governance Proposals"));
+        tabGroup->addButton(governanceButton);
 
         connect(overviewButton, &QToolButton::clicked, this, &BitcoinGUI::gotoOverviewPage);
         connect(sendCoinsButton, &QToolButton::clicked, [this]{ gotoSendCoinsPage(); });
         connect(coinJoinCoinsButton, &QToolButton::clicked, [this]{ gotoCoinJoinCoinsPage(); });
         connect(receiveCoinsButton, &QToolButton::clicked, this, &BitcoinGUI::gotoReceiveCoinsPage);
         connect(historyButton, &QToolButton::clicked, this, &BitcoinGUI::gotoHistoryPage);
+        connect(governanceButton, &QToolButton::clicked, this, &BitcoinGUI::gotoGovernancePage);
 
         // Give the selected tab button a bolder font.
         connect(tabGroup, qOverload<QAbstractButton *, bool>(&QButtonGroup::buttonToggled), this, &BitcoinGUI::highlightTabButton);
@@ -764,6 +761,7 @@ void BitcoinGUI::createToolBars()
             button->setCheckable(true);
             QAction* action = toolbar->addWidget(button);
             if (button == coinJoinCoinsButton) { m_coinjoin_action = action; }
+            else if (button == governanceButton) { m_governance_action = action; }
         }
 
         overviewButton->setChecked(true);
@@ -885,6 +883,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
             m_mask_values_action->setChecked(optionsModel->getOption(OptionsModel::OptionID::MaskValues).toBool());
 
             connect(optionsModel, &OptionsModel::showCoinJoinChanged, this, &BitcoinGUI::updateCoinJoinVisibility);
+            connect(optionsModel, &OptionsModel::showGovernanceChanged, this, &BitcoinGUI::updateGovernanceVisibility);
 
             if (trayIcon) {
                 // be aware of the tray icon disable state change reported by the OptionsModel object.
@@ -920,6 +919,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
     }
 
     updateCoinJoinVisibility();
+    updateGovernanceVisibility();
 }
 
 #ifdef ENABLE_WALLET
@@ -1251,8 +1251,7 @@ void BitcoinGUI::highlightTabButton(QAbstractButton *button, bool checked)
 
 void BitcoinGUI::gotoGovernancePage()
 {
-    QSettings settings;
-    if (settings.value("fShowGovernanceTab").toBool() && governanceButton) {
+    if (governanceButton) {
         governanceButton->setChecked(true);
         if (walletFrame) walletFrame->gotoGovernancePage();
     }
@@ -1466,6 +1465,22 @@ void BitcoinGUI::updateCoinJoinVisibility()
     if (coinJoinCoinsButton) coinJoinCoinsButton->setVisible(fEnabled);
     if (coinJoinCoinsAction) coinJoinCoinsAction->setVisible(fEnabled);
     if (showCoinJoinHelpAction) showCoinJoinHelpAction->setVisible(fEnabled);
+
+    GUIUtil::updateButtonGroupShortcuts(tabGroup);
+    updateWidth();
+}
+
+void BitcoinGUI::updateGovernanceVisibility()
+{
+    const bool fShow = [](){
+        QSettings settings;
+        return settings.value("fShowGovernanceTab").toBool()
+    }();
+
+    // Show/hide the underlying QAction, hiding the QToolButton itself doesn't
+    // work for the GUI part but is still needed for shortcuts to work properly.
+    if (m_governance_action) m_governance_action->setVisible(fShow);
+    if (governanceButton) governanceButton->setVisible(fShow);
 
     GUIUtil::updateButtonGroupShortcuts(tabGroup);
     updateWidth();
