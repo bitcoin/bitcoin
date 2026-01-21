@@ -74,7 +74,6 @@ BOOST_AUTO_TEST_CASE(run_command)
         // Unable to parse JSON
         BOOST_CHECK_EXCEPTION(RunCommandParseJSON(mock_executable("invalid_json")), std::runtime_error, HasReason("Unable to parse JSON: {"));
     }
-#ifndef WIN32
     {
         // Test stdin
         const UniValue result = RunCommandParseJSON(mock_executable("pass_stdin_to_stdout"), "{\"success\": true}");
@@ -83,7 +82,6 @@ BOOST_AUTO_TEST_CASE(run_command)
         BOOST_CHECK(!success.isNull());
         BOOST_CHECK_EQUAL(success.get_bool(), true);
     }
-#endif
 }
 #endif // ENABLE_EXTERNAL_SIGNER
 
