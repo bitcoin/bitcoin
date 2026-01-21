@@ -2383,8 +2383,15 @@ util::Result<void> CWallet::RemoveTxs(WalletBatch& batch, std::vector<Txid>& txs
         for (const auto& it : erased_txs) {
             const Txid hash{it->first};
             wtxOrdered.erase(it->second.m_it_wtxOrdered);
-            for (const auto& txin : it->second.tx->vin)
-                mapTxSpends.erase(txin.prevout);
+            for (const auto& txin : it->second.tx->vin) {
+                auto range = mapTxSpends.equal_range(txin.prevout);
+                for (auto iter = range.first; iter != range.second; ++iter) {
+                    if (iter->second == hash) {
+                        mapTxSpends.erase(iter);
+                        break;
+                    }
+                }
+            }
             for (unsigned int i = 0; i < it->second.tx->vout.size(); ++i) {
                 m_txos.erase(COutPoint(hash, i));
             }
