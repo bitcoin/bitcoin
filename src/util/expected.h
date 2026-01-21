@@ -6,9 +6,10 @@
 #define BITCOIN_UTIL_EXPECTED_H
 
 #include <attributes.h>
+#include <util/check.h>
 
 #include <cassert>
-#include <type_traits>
+#include <exception>
 #include <utility>
 #include <variant>
 
@@ -20,8 +21,18 @@ template <class E>
 class Unexpected
 {
 public:
-    constexpr explicit Unexpected(E e) : err(std::move(e)) {}
-    E err;
+    constexpr explicit Unexpected(E e) : m_error(std::move(e)) {}
+
+    constexpr const E& error() const& noexcept LIFETIMEBOUND { return m_error; }
+    constexpr E& error() & noexcept LIFETIMEBOUND { return m_error; }
+    constexpr E&& error() && noexcept LIFETIMEBOUND { return std::move(m_error); }
+
+private:
+    E m_error;
+};
+
+struct BadExpectedAccess : std::exception {
+    const char* what() const noexcept override { return "Bad util::Expected access"; }
 };
 
 /// The util::Expected class provides a standard way for low-level functions to
@@ -33,58 +44,87 @@ template <class T, class E>
 class Expected
 {
 private:
-    using ValueType = std::conditional_t<std::is_same_v<T, void>, std::monostate, T>;
-    std::variant<ValueType, E> m_data;
+    std::variant<T, E> m_data;
 
 public:
-    constexpr Expected() : m_data{std::in_place_index_t<0>{}, ValueType{}} {}
-    constexpr Expected(ValueType v) : m_data{std::in_place_index_t<0>{}, std::move(v)} {}
+    constexpr Expected() : m_data{std::in_place_index<0>, T{}} {}
+    constexpr Expected(T v) : m_data{std::in_place_index<0>, std::move(v)} {}
     template <class Err>
-    constexpr Expected(Unexpected<Err> u) : m_data{std::in_place_index_t<1>{}, std::move(u.err)}
+    constexpr Expected(Unexpected<Err> u) : m_data{std::in_place_index<1>, std::move(u).error()}
     {
     }
 
     constexpr bool has_value() const noexcept { return m_data.index() == 0; }
     constexpr explicit operator bool() const noexcept { return has_value(); }
 
-    constexpr const ValueType& value() const LIFETIMEBOUND
+    constexpr const T& value() const& LIFETIMEBOUND
     {
-        assert(has_value());
+        if (!has_value()) {
+            throw BadExpectedAccess{};
+        }
         return std::get<0>(m_data);
     }
-    constexpr ValueType& value() LIFETIMEBOUND
+    constexpr T& value() & LIFETIMEBOUND
     {
-        assert(has_value());
+        if (!has_value()) {
+            throw BadExpectedAccess{};
+        }
         return std::get<0>(m_data);
     }
+    constexpr T&& value() && LIFETIMEBOUND { return std::move(value()); }
 
     template <class U>
-    ValueType value_or(U&& default_value) const&
+    T value_or(U&& default_value) const&
     {
         return has_value() ? value() : std::forward<U>(default_value);
     }
     template <class U>
-    ValueType value_or(U&& default_value) &&
+    T value_or(U&& default_value) &&
     {
         return has_value() ? std::move(value()) : std::forward<U>(default_value);
     }
 
-    constexpr const E& error() const LIFETIMEBOUND
+    constexpr const E& error() const& noexcept LIFETIMEBOUND { return *Assert(std::get_if<1>(&m_data)); }
+    constexpr E& error() & noexcept LIFETIMEBOUND { return *Assert(std::get_if<1>(&m_data)); }
+    constexpr E&& error() && noexcept LIFETIMEBOUND { return std::move(error()); }
+
+    constexpr void swap(Expected& other) noexcept { m_data.swap(other.m_data); }
+
+    constexpr T& operator*() & noexcept LIFETIMEBOUND { return value(); }
+    constexpr const T& operator*() const& noexcept LIFETIMEBOUND { return value(); }
+    constexpr T&& operator*() && noexcept LIFETIMEBOUND { return std::move(value()); }
+
+    constexpr T* operator->() noexcept LIFETIMEBOUND { return &value(); }
+    constexpr const T* operator->() const noexcept LIFETIMEBOUND { return &value(); }
+};
+
+template <class E>
+class Expected<void, E>
+{
+private:
+    std::variant<std::monostate, E> m_data;
+
+public:
+    constexpr Expected() : m_data{std::in_place_index<0>, std::monostate{}} {}
+    template <class Err>
+    constexpr Expected(Unexpected<Err> u) : m_data{std::in_place_index<1>, std::move(u).error()}
     {
-        assert(!has_value());
-        return std::get<1>(m_data);
-    }
-    constexpr E& error() LIFETIMEBOUND
-    {
-        assert(!has_value());
-        return std::get<1>(m_data);
     }
 
-    constexpr ValueType& operator*() LIFETIMEBOUND { return value(); }
-    constexpr const ValueType& operator*() const LIFETIMEBOUND { return value(); }
+    constexpr bool has_value() const noexcept { return m_data.index() == 0; }
+    constexpr explicit operator bool() const noexcept { return has_value(); }
 
-    constexpr ValueType* operator->() LIFETIMEBOUND { return &value(); }
-    constexpr const ValueType* operator->() const LIFETIMEBOUND { return &value(); }
+    constexpr void operator*() const noexcept { return value(); }
+    constexpr void value() const
+    {
+        if (!has_value()) {
+            throw BadExpectedAccess{};
+        }
+    }
+
+    constexpr const E& error() const& noexcept LIFETIMEBOUND { return *Assert(std::get_if<1>(&m_data)); }
+    constexpr E& error() & noexcept LIFETIMEBOUND { return *Assert(std::get_if<1>(&m_data)); }
+    constexpr E&& error() && noexcept LIFETIMEBOUND { return std::move(error()); }
 };
 
 } // namespace util
