@@ -66,6 +66,21 @@ public:
         MAIN //!< Always refers to the main graph, whether staging is present or not.
     };
 
+    /* Datatype that represent a chunk along with it's feerate and all the txs refs in the chunk. */
+    struct Chunk {
+        FeeFrac feerate;
+        std::vector<Ref*> refs;
+        Chunk(const FeeFrac& f, std::vector<Ref*> r) noexcept : feerate{f}, refs{std::move(r)} {}
+        friend bool operator==(const Chunk& a, const Chunk& b) noexcept
+        {
+            return a.feerate == b.feerate;
+        }
+        friend std::strong_ordering operator<=>(const Chunk& a, const Chunk& b) noexcept
+        {
+            return a.feerate <=> b.feerate;
+        }
+    };
+
     /** Virtual destructor, so inheriting is safe. */
     virtual ~TxGraph() = default;
     /** Initialize arg (which must be an empty Ref) to refer to a new transaction in this graph
@@ -167,10 +182,10 @@ public:
      *  not be oversized. */
     virtual GraphIndex CountDistinctClusters(std::span<const Ref* const>, Level level) noexcept = 0;
     /** For both main and staging (which must both exist and not be oversized), return the combined
-     *  respective feerate diagrams, including chunks from all clusters, but excluding clusters
-     *  that appear identically in both. Use FeeFrac rather than FeePerWeight so CompareChunks is
-     *  usable without type-conversion. */
-    virtual std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> GetMainStagingDiagrams() noexcept = 0;
+     *  respective feerate diagrams, including chunks (feerate and refs) from all clusters, but
+     *  excluding clusters that appear identically in both. Use FeeFrac rather than FeePerWeight so
+     *  CompareChunks is usable without type-conversion. */
+    virtual std::pair<std::vector<Chunk>, std::vector<Chunk>> GetMainStagingDiagrams() noexcept = 0;
     /** Remove transactions (including their own descendants) according to a fast but best-effort
      *  strategy such that the TxGraph's cluster and size limits are respected. Applies to staging
      *  if it exists, and to main otherwise. Returns the list of all removed transactions in
