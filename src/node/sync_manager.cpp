@@ -42,7 +42,7 @@ void SyncManager::SendGovernanceObjectSyncRequest(CNode* pnode, const uint256& n
 
     LogPrint(BCLog::GOBJECT, "SyncManager::%s -- nHash %s peer=%d\n", __func__, nHash.ToString(), pnode->GetId());
 
-    CBloomFilter filter = fUseFilter ? m_gov_manager.GetVoteBloomFilter(nHash) : CBloomFilter();
+    CBloomFilter filter = fUseFilter ? m_gov_manager.GetVoteBloomFilter(nHash) : CBloomFilter{};
 
     CNetMsgMaker msgMaker(pnode->GetCommonVersion());
     m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, nHash, filter));

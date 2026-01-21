@@ -751,7 +751,7 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
                                      uint256& hashToRequest)
 {
     AssertLockNotHeld(cs_store);
-    hashToRequest = uint256();
+    hashToRequest = uint256{};
 
     LOCK(cs_store);
     uint256 nHashVote = vote.GetHash();
@@ -875,7 +875,7 @@ CBloomFilter CGovernanceManager::GetVoteBloomFilter(const uint256& nHash) const
 
     auto pObj = FindConstGovernanceObjectInternal(nHash);
     if (!pObj) {
-        return CBloomFilter();
+        return CBloomFilter{};
     }
 
     CBloomFilter filter(Params().GetConsensus().nGovernanceFilterElements, GOVERNANCE_FILTER_FP_RATE,
