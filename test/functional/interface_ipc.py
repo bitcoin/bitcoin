@@ -4,9 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the IPC (multiprocess) interface."""
 import asyncio
-import http.client
 import inspect
-import re
 from contextlib import asynccontextmanager, AsyncExitStack, ExitStack
 from dataclasses import dataclass
 from io import BytesIO
@@ -401,9 +399,9 @@ class IPCInterfaceTest(BitcoinTestFramework):
 
     def run_unclean_disconnect_test(self):
         """Test behavior when disconnecting during an IPC call that later
-        returns a non-null interface pointer. Currently this behavior causes a
-        crash as reported https://github.com/bitcoin/bitcoin/issues/34250, but a
-        followup will change this behavior."""
+        returns a non-null interface pointer. This used to cause a crash as
+        reported https://github.com/bitcoin/bitcoin/issues/34250, but now just
+        results in a cancellation log message"""
         node = self.nodes[0]
         self.log.info("Running disconnect during BlockTemplate.waitNext")
         timeout = self.rpc_timeout * 1000.0
@@ -428,28 +426,22 @@ class IPCInterfaceTest(BitcoinTestFramework):
             with node.assert_debug_log(expected_msgs=["BlockTemplate.waitNext", "IPC server post request"]):
                 promise = template.waitNext(ctx, waitoptions)
                 await asyncio.sleep(0.1)
-            disconnected_log_check.enter_context(node.assert_debug_log(expected_msgs=["IPC server: socket disconnected"]))
+            disconnected_log_check.enter_context(node.assert_debug_log(expected_msgs=["IPC server: socket disconnected", "cancelled while executing"]))
             del promise
 
         asyncio.run(capnp.run(async_routine()))
 
         # Wait for socket disconnected log message, then generate a block to
-        # cause the waitNext() call to return a new template. This will cause a
-        # crash and disconnect with error output.
-        disconnected_log_check.close()
-        try:
+        # cause the waitNext() call to return a new template. Look for a
+        # cancelled IPC log message after waitNext returns.
+        with node.assert_debug_log(expected_msgs=["interrupted (cancelled)"]):
+            disconnected_log_check.close()
             self.generate(node, 1)
-        except (http.client.RemoteDisconnected, BrokenPipeError, ConnectionResetError):
-            pass
-        node.wait_until_stopped(expected_ret_code=(-11, -6, 1, 66), expected_stderr=re.compile(r"\S"))
-        self.start_node(0)
 
     def run_thread_busy_test(self):
         """Test behavior when sending multiple calls to the same server thread
         which used to cause a crash as reported
-        https://github.com/bitcoin/bitcoin/issues/33923 and currently causes a
-        thread busy error. A future change will make this just queue the calls
-        for execution and not trigger any error"""
+        https://github.com/bitcoin/bitcoin/issues/33923."""
         node = self.nodes[0]
         self.log.info("Running thread busy test")
         timeout = self.rpc_timeout * 1000.0
@@ -480,18 +472,15 @@ class IPCInterfaceTest(BitcoinTestFramework):
             with node.assert_debug_log(expected_msgs=["BlockTemplate.waitNext", "IPC server post request"]):
                 promise2 = template.waitNext(ctx, waitoptions)
                 await asyncio.sleep(0.1)
-            try:
-                await template.waitNext(ctx, waitoptions)
-            except capnp.lib.capnp.KjException as e:
-                assert_equal(e.description, "remote exception: std::exception: thread busy")
-                assert_equal(e.type, "FAILED")
-            else:
-                raise AssertionError("Expected thread busy exception")
+            with node.assert_debug_log(expected_msgs=["BlockTemplate.waitNext", "IPC server post request"]):
+                promise3 = template.waitNext(ctx, waitoptions)
+                await asyncio.sleep(0.1)
 
             # Generate a new block to make the active waitNext calls return, then clean up.
             self.generate(node, 1, sync_fun=lambda: None)
             await ((await promise1).result).destroy(ctx)
             await ((await promise2).result).destroy(ctx)
+            await ((await promise3).result).destroy(ctx)
             await template.destroy(ctx)
 
         asyncio.run(capnp.run(async_routine()))
