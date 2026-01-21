@@ -1484,10 +1484,8 @@ void BitcoinGUI::updateGovernanceVisibility()
 
 void BitcoinGUI::updateMasternodesVisibility()
 {
-    const bool fShow = [](){
-        QSettings settings;
-        return settings.value("fShowMasternodesTab").toBool()
-    }();
+    if (!clientModel || !clientModel->getOptionsModel()) return;
+    const bool fShow = clientModel->getOptionsModel()->getShowMasternodesTab();
 
     // Show/hide the underlying QAction, hiding the QToolButton itself doesn't
     // work for the GUI part but is still needed for shortcuts to work properly.

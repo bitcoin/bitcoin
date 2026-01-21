@@ -344,6 +344,10 @@ bool OptionsModel::Init(bilingual_str& error)
         settings.setValue("fKeepChangeAddress", false);
     fKeepChangeAddress = settings.value("fKeepChangeAddress", false).toBool();
 
+    if (!settings.contains("fShowMasternodesTab"))
+        settings.setValue("fShowMasternodesTab", false);
+    m_enable_masternodes = settings.value("fShowMasternodesTab", false).toBool();
+
     if (!settings.contains("fShowGovernanceTab"))
         settings.setValue("fShowGovernanceTab", false);
     m_enable_governance = settings.value("fShowGovernanceTab", false).toBool();
@@ -656,7 +660,7 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
     case SubFeeFromAmount:
         return m_sub_fee_from_amount;
     case ShowMasternodesTab:
-        return settings.value("fShowMasternodesTab");
+        return m_enable_masternodes;
     case ShowGovernanceTab:
         return m_enable_governance;
     case CoinJoinEnabled:
@@ -842,9 +846,10 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         }
         break;
     case ShowMasternodesTab:
-        if (settings.value("fShowMasternodesTab") != value) {
-            settings.setValue("fShowMasternodesTab", value);
-            Q_EMIT showMasternodesChanged(value.toBool());
+        if (changed()) {
+            m_enable_masternodes = value.toBool();
+            settings.setValue("fShowMasternodesTab", m_enable_masternodes);
+            Q_EMIT showMasternodesChanged();
         }
         break;
     case SubFeeFromAmount:
