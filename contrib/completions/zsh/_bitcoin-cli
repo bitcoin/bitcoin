@@ -1,0 +1,27 @@
+﻿#compdef bitcoin-cli
+
+# Minimal zsh completion for bitcoin-cli
+
+local -a commands
+commands=(
+  "getblockchaininfo:Show blockchain state"
+  "getnetworkinfo:Show network state"
+  "getwalletinfo:Show wallet information"
+  "sendtoaddress:Send to address"
+  "getnewaddress:Get new address"
+  "gettransaction:Get transaction"
+  "help:Show help"
+)
+
+_arguments -C \
+  '1:command:->cmd' \
+  '*::arg:->args'
+
+case $state in
+  cmd)
+    _describe -t commands 'bitcoin-cli commands' commands
+    ;;
+  args)
+    _files
+    ;;
+esac
