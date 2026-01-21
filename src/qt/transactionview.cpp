@@ -245,7 +245,7 @@ void TransactionView::setModel(WalletModel *_model)
                 }
             }
 
-            connect(_model->getOptionsModel(), &OptionsModel::coinJoinEnabledChanged, this, &TransactionView::updateCoinJoinVisibility);
+            connect(_model->getOptionsModel(), &OptionsModel::showCoinJoinChanged, this, &TransactionView::updateCoinJoinVisibility);
         }
 
         // show/hide column Watch-only

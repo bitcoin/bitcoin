@@ -174,12 +174,12 @@ private:
 
 Q_SIGNALS:
     void displayUnitChanged(BitcoinUnit unit);
-    void coinJoinEnabledChanged();
     void coinJoinRoundsChanged();
     void coinJoinAmountChanged();
     void AdvancedCJUIChanged(bool);
     void coinControlFeaturesChanged(bool);
     void keepChangeAddressChanged(bool);
+    void showCoinJoinChanged();
     void showTrayIconChanged(bool);
     void fontForMoneyChanged(const QFont&);
 };

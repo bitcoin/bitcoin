@@ -762,7 +762,8 @@ void BitcoinGUI::createToolBars()
             button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
             button->setToolTip(button->statusTip());
             button->setCheckable(true);
-            toolbar->addWidget(button);
+            QAction* action = toolbar->addWidget(button);
+            if (button == coinJoinCoinsButton) { m_coinjoin_action = action; }
         }
 
         overviewButton->setChecked(true);
@@ -877,20 +878,22 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
             walletFrame->setClientModel(_clientModel);
         }
 #endif // ENABLE_WALLET
-        unitDisplayControl->setOptionsModel(_clientModel->getOptionsModel());
 
         OptionsModel* optionsModel = _clientModel->getOptionsModel();
-        if (optionsModel && trayIcon) {
-            // be aware of the tray icon disable state change reported by the OptionsModel object.
-            connect(optionsModel, &OptionsModel::showTrayIconChanged, trayIcon, &QSystemTrayIcon::setVisible);
+        if (optionsModel) {
+            unitDisplayControl->setOptionsModel(optionsModel);
+            m_mask_values_action->setChecked(optionsModel->getOption(OptionsModel::OptionID::MaskValues).toBool());
 
-            // initialize the disable state of the tray icon with the current value in the model.
-            trayIcon->setVisible(optionsModel->getShowTrayIcon());
+            connect(optionsModel, &OptionsModel::showCoinJoinChanged, this, &BitcoinGUI::updateCoinJoinVisibility);
 
-            connect(optionsModel, &OptionsModel::coinJoinEnabledChanged, this, &BitcoinGUI::updateCoinJoinVisibility);
+            if (trayIcon) {
+                // be aware of the tray icon disable state change reported by the OptionsModel object.
+                connect(optionsModel, &OptionsModel::showTrayIconChanged, trayIcon, &QSystemTrayIcon::setVisible);
+
+                // initialize the disable state of the tray icon with the current value in the model.
+                trayIcon->setVisible(optionsModel->getShowTrayIcon());
+            }
         }
-
-        m_mask_values_action->setChecked(_clientModel->getOptionsModel()->getOption(OptionsModel::OptionID::MaskValues).toBool());
     } else {
         if(trayIconMenu)
         {
@@ -1449,21 +1452,22 @@ void BitcoinGUI::updateProgressBarVisibility()
 
 void BitcoinGUI::updateCoinJoinVisibility()
 {
+    const bool fEnabled{
 #ifdef ENABLE_WALLET
-    bool fEnabled = m_node.coinJoinOptions().isEnabled();
+        m_node.coinJoinOptions().isEnabled()
 #else
-    bool fEnabled = false;
-#endif
-    // CoinJoin button is the third QToolButton, show/hide the underlying QAction
-    // Hiding the QToolButton itself doesn't work for the GUI part
-    // but is still needed for shortcuts to work properly.
-    if (appToolBar != nullptr) {
-        appToolBar->actions()[4]->setVisible(fEnabled);
-        coinJoinCoinsButton->setVisible(fEnabled);
-        GUIUtil::updateButtonGroupShortcuts(tabGroup);
-    }
-    coinJoinCoinsAction->setVisible(fEnabled);
-    showCoinJoinHelpAction->setVisible(fEnabled);
+        false
+#endif // ENABLE_WALLET
+    };
+
+    // Show/hide the underlying QAction, hiding the QToolButton itself doesn't
+    // work for the GUI part but is still needed for shortcuts to work properly.
+    if (m_coinjoin_action) m_coinjoin_action->setVisible(fEnabled);
+    if (coinJoinCoinsButton) coinJoinCoinsButton->setVisible(fEnabled);
+    if (coinJoinCoinsAction) coinJoinCoinsAction->setVisible(fEnabled);
+    if (showCoinJoinHelpAction) showCoinJoinHelpAction->setVisible(fEnabled);
+
+    GUIUtil::updateButtonGroupShortcuts(tabGroup);
     updateWidth();
 }
 

@@ -330,7 +330,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
         connect(model->getOptionsModel(), &OptionsModel::coinJoinRoundsChanged, this, &OverviewPage::updateCoinJoinProgress);
         connect(model->getOptionsModel(), &OptionsModel::coinJoinAmountChanged, this, &OverviewPage::updateCoinJoinProgress);
         connect(model->getOptionsModel(), &OptionsModel::AdvancedCJUIChanged, this, &OverviewPage::updateAdvancedCJUI);
-        connect(model->getOptionsModel(), &OptionsModel::coinJoinEnabledChanged, [this]() {
+        connect(model->getOptionsModel(), &OptionsModel::showCoinJoinChanged, [this]() {
             coinJoinStatus(true);
         });
 
