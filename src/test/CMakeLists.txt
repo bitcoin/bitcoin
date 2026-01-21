@@ -163,6 +163,7 @@ target_link_libraries(test_bitcoin
   secp256k1
   Boost::headers
   libevent::extra
+  $<TARGET_NAME_IF_EXISTS:USDT::headers>
 )
 
 if(ENABLE_WALLET)
