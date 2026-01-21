@@ -278,7 +278,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             pdb.set_trace()
 
         self.log.debug('Closing down network thread')
-        self.network_thread.close()
+        self.network_thread.close(timeout=self.options.timeout_factor * 10)
         if self.success == TestStatus.FAILED:
             self.log.info("Not stopping nodes as test failed. The dangling processes will be cleaned up later.")
         else:
