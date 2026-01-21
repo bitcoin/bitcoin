@@ -7,6 +7,7 @@
 
 #include <qt/forms/ui_proposalwizard.h>
 
+#include <QByteArray>
 #include <QCloseEvent>
 #include <QDialog>
 #include <QObject>
@@ -31,25 +32,26 @@ public:
 private Q_SLOTS:
     void onNextFromDetails();
     void onBackToDetails();
-    void onValidateJson();
-    void onNextFromReview();
-    void onBackToReview();
     void onPrepare();
     void onMaybeAdvanceAfterConfirmations();
     void onSubmit();
     void onGoToSubmit();
+    void onViewJson();
+    void onViewPayload();
 
     void updateLabels();
     void updateDisplayUnit();
+    void validateFields();
 
 private:
     WalletModel* m_walletModel;
     Ui::ProposalWizard* m_ui;
 
     // State
-    QString m_hex;
-    QString m_txid;
     QString m_fee_formatted;
+    QString m_hex;
+    QString m_json;
+    QString m_txid;
     qint64 m_prepareTime{0};
     int64_t m_superblock_cycle{0};
     int64_t m_target_spacing{0};
