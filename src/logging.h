@@ -99,13 +99,8 @@ namespace BCLog {
         PRIVBROADCAST = (CategoryMask{1} << 30),
         ALL         = ~NONE,
     };
-    enum class Level {
-        Trace = 0, // High-volume or detailed logging for development/debugging
-        Debug,     // Reasonably noisy logging, but still usable in production
-        Info,      // Default
-        Warning,
-        Error,
-    };
+
+    using Level = util::log::Level;
     constexpr auto DEFAULT_LOG_LEVEL{Level::Debug};
     constexpr size_t DEFAULT_MAX_LOG_BUFFER{1'000'000}; // buffer up to 1MB of log data prior to StartLogging
     constexpr uint64_t RATELIMIT_MAX_BYTES{1024 * 1024}; // maximum number of bytes per source location that can be logged within the RATELIMIT_WINDOW
@@ -184,6 +179,8 @@ namespace BCLog {
             Level level;
         };
 
+        explicit Logger();
+
     private:
         mutable StdMutex m_cs; // Can not use Mutex from sync.h because in debug mode it would cause a deadlock when a potential deadlock was detected
 
@@ -193,6 +190,9 @@ namespace BCLog {
         size_t m_max_buffer_memusage GUARDED_BY(m_cs){DEFAULT_MAX_LOG_BUFFER};
         size_t m_cur_buffer_memusage GUARDED_BY(m_cs){0};
         size_t m_buffer_lines_discarded GUARDED_BY(m_cs){0};
+
+        //! Dispatches log entries to its registered callbacks.
+        std::unique_ptr<util::log::Dispatcher> m_dispatcher;
 
         //! Manages the rate limiting of each log location.
         std::shared_ptr<LogRateLimiter> m_limiter GUARDED_BY(m_cs);
@@ -232,6 +232,9 @@ namespace BCLog {
 
         fs::path m_file_path;
         std::atomic<bool> m_reopen_file{false};
+
+        /** Get the Dispatcher that is used by this Logger to dispatch callbacks. */
+        util::log::Dispatcher* GetDispatcher() { return m_dispatcher.get(); }
 
         /** Send a string to the log output */
         void LogPrintStr(std::string_view str, SourceLocation&& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)

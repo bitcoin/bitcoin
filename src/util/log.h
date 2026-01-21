@@ -151,6 +151,14 @@ private:
     const FilterFunc m_filter{nullptr};
 };
 
+/**
+ * Return a reference to the global dispatcher.
+ *
+ * This function is declared here but implemented differently by different binaries, see e.g.
+ * logging.cpp and bitcoinkernel.cpp.
+ */
+Dispatcher& g_dispatcher();
+
 } // namespace util::log
 
 #endif // BITCOIN_UTIL_LOG_H
