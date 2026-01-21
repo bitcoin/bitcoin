@@ -129,6 +129,7 @@ public:
     bool getSubFeeFromAmount() const { return m_sub_fee_from_amount; }
     bool getEnablePSBTControls() const { return m_enable_psbt_controls; }
     bool getKeepChangeAddress() const { return fKeepChangeAddress; }
+    bool getShowGovernanceTab() const { return m_enable_governance; }
     bool getShowAdvancedCJUI() { return fShowAdvancedCJUI; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
     bool isOptionOverridden(const QString& option) const { return strOverriddenByCommandLine.contains(option); }
@@ -158,6 +159,7 @@ private:
     bool m_enable_psbt_controls;
     bool m_mask_values;
     bool fKeepChangeAddress;
+    bool m_enable_governance;
     bool fShowAdvancedCJUI;
 
     /* settings that were overridden by command-line */
@@ -180,7 +182,7 @@ Q_SIGNALS:
     void coinControlFeaturesChanged(bool);
     void keepChangeAddressChanged(bool);
     void showCoinJoinChanged();
-    void showGovernanceChanged(bool);
+    void showGovernanceChanged();
     void showTrayIconChanged(bool);
     void fontForMoneyChanged(const QFont&);
 };
