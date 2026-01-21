@@ -151,6 +151,7 @@ private:
     QAction* verifyMessageAction = nullptr;
     QAction* m_coinjoin_action = nullptr;
     QAction* m_governance_action = nullptr;
+    QAction* m_masternode_action = nullptr;
     QAction* m_load_psbt_action = nullptr;
     QAction* m_load_psbt_clipboard_action = nullptr;
     QAction* aboutAction = nullptr;
@@ -391,6 +392,7 @@ public Q_SLOTS:
 
     void updateCoinJoinVisibility();
     void updateGovernanceVisibility();
+    void updateMasternodesVisibility();
 
     void updateWidth();
 };

@@ -844,7 +844,7 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
     case ShowMasternodesTab:
         if (settings.value("fShowMasternodesTab") != value) {
             settings.setValue("fShowMasternodesTab", value);
-            setRestartRequired(true);
+            Q_EMIT showMasternodesChanged(value.toBool());
         }
         break;
     case SubFeeFromAmount:

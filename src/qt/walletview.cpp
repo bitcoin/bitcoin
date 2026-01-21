@@ -99,12 +99,9 @@ WalletView::WalletView(WalletModel* wallet_model, QWidget* parent)
     addWidget(sendCoinsPage);
     addWidget(coinJoinCoinsPage);
 
-    QSettings settings;
-    if (settings.value("fShowMasternodesTab").toBool()) {
-        masternodeListPage = new MasternodeList();
-        masternodeListPage->setWalletModel(walletModel);
-        addWidget(masternodeListPage);
-    }
+    masternodeListPage = new MasternodeList();
+    masternodeListPage->setWalletModel(walletModel);
+    addWidget(masternodeListPage);
 
     governanceListPage = new GovernanceList();
     governanceListPage->setWalletModel(walletModel);
@@ -169,8 +166,7 @@ void WalletView::setClientModel(ClientModel *_clientModel)
     if (coinJoinCoinsPage != nullptr) {
         coinJoinCoinsPage->setClientModel(_clientModel);
     }
-    QSettings settings;
-    if (settings.value("fShowMasternodesTab").toBool() && masternodeListPage != nullptr) {
+    if (masternodeListPage != nullptr) {
         masternodeListPage->setClientModel(_clientModel);
     }
     if (governanceListPage != nullptr) {
@@ -226,10 +222,7 @@ void WalletView::gotoHistoryPage()
 
 void WalletView::gotoMasternodePage()
 {
-    QSettings settings;
-    if (settings.value("fShowMasternodesTab").toBool()) {
-        setCurrentWidget(masternodeListPage);
-    }
+    setCurrentWidget(masternodeListPage);
 }
 
 void WalletView::gotoReceiveCoinsPage()

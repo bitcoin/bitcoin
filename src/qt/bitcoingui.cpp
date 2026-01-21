@@ -729,15 +729,10 @@ void BitcoinGUI::createToolBars()
         coinJoinCoinsButton->setStatusTip(coinJoinCoinsAction->statusTip());
         tabGroup->addButton(coinJoinCoinsButton);
 
-        QSettings settings;
-        if (settings.value("fShowMasternodesTab").toBool()) {
-            masternodeButton = new QToolButton(this);
-            masternodeButton->setText(tr("&Masternodes"));
-            masternodeButton->setStatusTip(tr("Browse masternodes"));
-            tabGroup->addButton(masternodeButton);
-            connect(masternodeButton, &QToolButton::clicked, this, &BitcoinGUI::gotoMasternodePage);
-            masternodeButton->setEnabled(true);
-        }
+        masternodeButton = new QToolButton(this);
+        masternodeButton->setText(tr("&Masternodes"));
+        masternodeButton->setStatusTip(tr("Browse masternodes"));
+        tabGroup->addButton(masternodeButton);
 
         governanceButton = new QToolButton(this);
         governanceButton->setText(tr("&Governance"));
@@ -750,6 +745,7 @@ void BitcoinGUI::createToolBars()
         connect(receiveCoinsButton, &QToolButton::clicked, this, &BitcoinGUI::gotoReceiveCoinsPage);
         connect(historyButton, &QToolButton::clicked, this, &BitcoinGUI::gotoHistoryPage);
         connect(governanceButton, &QToolButton::clicked, this, &BitcoinGUI::gotoGovernancePage);
+        connect(masternodeButton, &QToolButton::clicked, this, &BitcoinGUI::gotoMasternodePage);
 
         // Give the selected tab button a bolder font.
         connect(tabGroup, qOverload<QAbstractButton *, bool>(&QButtonGroup::buttonToggled), this, &BitcoinGUI::highlightTabButton);
@@ -762,6 +758,7 @@ void BitcoinGUI::createToolBars()
             QAction* action = toolbar->addWidget(button);
             if (button == coinJoinCoinsButton) { m_coinjoin_action = action; }
             else if (button == governanceButton) { m_governance_action = action; }
+            else if (button == masternodeButton) { m_masternode_action = action; }
         }
 
         overviewButton->setChecked(true);
@@ -884,6 +881,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
 
             connect(optionsModel, &OptionsModel::showCoinJoinChanged, this, &BitcoinGUI::updateCoinJoinVisibility);
             connect(optionsModel, &OptionsModel::showGovernanceChanged, this, &BitcoinGUI::updateGovernanceVisibility);
+            connect(optionsModel, &OptionsModel::showMasternodesChanged, this, &BitcoinGUI::updateMasternodesVisibility);
 
             if (trayIcon) {
                 // be aware of the tray icon disable state change reported by the OptionsModel object.
@@ -920,6 +918,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
 
     updateCoinJoinVisibility();
     updateGovernanceVisibility();
+    updateMasternodesVisibility();
 }
 
 #ifdef ENABLE_WALLET
@@ -1271,8 +1270,7 @@ void BitcoinGUI::gotoHistoryPage()
 
 void BitcoinGUI::gotoMasternodePage()
 {
-    QSettings settings;
-    if (settings.value("fShowMasternodesTab").toBool() && masternodeButton) {
+    if (masternodeButton) {
         masternodeButton->setChecked(true);
         if (walletFrame) walletFrame->gotoMasternodePage();
     }
@@ -1479,6 +1477,22 @@ void BitcoinGUI::updateGovernanceVisibility()
     // work for the GUI part but is still needed for shortcuts to work properly.
     if (m_governance_action) m_governance_action->setVisible(fShow);
     if (governanceButton) governanceButton->setVisible(fShow);
+
+    GUIUtil::updateButtonGroupShortcuts(tabGroup);
+    updateWidth();
+}
+
+void BitcoinGUI::updateMasternodesVisibility()
+{
+    const bool fShow = [](){
+        QSettings settings;
+        return settings.value("fShowMasternodesTab").toBool()
+    }();
+
+    // Show/hide the underlying QAction, hiding the QToolButton itself doesn't
+    // work for the GUI part but is still needed for shortcuts to work properly.
+    if (m_masternode_action) m_masternode_action->setVisible(fShow);
+    if (masternodeButton) masternodeButton->setVisible(fShow);
 
     GUIUtil::updateButtonGroupShortcuts(tabGroup);
     updateWidth();

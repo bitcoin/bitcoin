@@ -183,6 +183,7 @@ Q_SIGNALS:
     void keepChangeAddressChanged(bool);
     void showCoinJoinChanged();
     void showGovernanceChanged();
+    void showMasternodesChanged(bool);
     void showTrayIconChanged(bool);
     void fontForMoneyChanged(const QFont&);
 };
