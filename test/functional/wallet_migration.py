@@ -798,9 +798,18 @@ class WalletMigrationTest(BitcoinTestFramework):
             Path(watch_only_dir / "wallet.dat").unlink()
             Path(watch_only_dir).rmdir()
             Path(master_path / "wallet.dat").unlink()
+            if old_path != master_path:
+                Path(old_path / "wallet.dat").unlink()
+            shutil.rmtree(old_path / "database")
+            Path(old_path / "db.log").unlink(missing_ok=True)
+            Path(old_path / ".walletlock").unlink(missing_ok=True)
             Path(old_path / "wallet.dat").unlink(missing_ok=True)
             try:
                 master_path.rmdir()
+            except Exception:
+                pass
+            try:
+                old_path.rmdir()
             except Exception:
                 pass
 
@@ -1727,6 +1736,7 @@ class WalletMigrationTest(BitcoinTestFramework):
             "",
             ".",
             "./",
+            self.wallet_data_filename,
             "test.dat",
             "..",
             "../",
