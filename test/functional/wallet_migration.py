@@ -669,6 +669,21 @@ class WalletMigrationTest(BitcoinTestFramework):
         shutil.rmtree(self.master_node.wallets_path / "default_wallet_solvables", ignore_errors=True)
         backup_file.unlink()
 
+    def clear_wallet(self, path, is_sqlite, rmdir_fail_ok=False):
+        Path(path / "wallet.dat").unlink()
+        if is_sqlite:
+            Path(path / "wallet.dat-journal").unlink(missing_ok=True)
+        else:
+            if (path / "database").exists():
+                shutil.rmtree(path / "database")
+            Path(path / "db.log").unlink(missing_ok=True)
+            Path(path / ".walletlock").unlink(missing_ok=True)
+        try:
+            path.rmdir()
+        except Exception:
+            if not rmdir_fail_ok:
+                raise
+
     def test_default_wallet(self):
         self.log.info("Test migration of the wallet named as the empty string")
         wallet = self.create_legacy_wallet("")
@@ -792,26 +807,10 @@ class WalletMigrationTest(BitcoinTestFramework):
             self.clear_default_wallet(backup_path)
         else:
             backup_path.unlink()
-            if not fail:
-                Path(watch_only_dir / "wallet.dat-journal").unlink(missing_ok=True)
-                Path(master_path / "wallet.dat-journal").unlink(missing_ok=True)
-            Path(watch_only_dir / "wallet.dat").unlink()
-            Path(watch_only_dir).rmdir()
-            Path(master_path / "wallet.dat").unlink()
+            self.clear_wallet(watch_only_dir, is_sqlite=not fail)
+            self.clear_wallet(master_path, is_sqlite=not fail, rmdir_fail_ok=True)
             if old_path != master_path:
-                Path(old_path / "wallet.dat").unlink()
-            shutil.rmtree(old_path / "database")
-            Path(old_path / "db.log").unlink(missing_ok=True)
-            Path(old_path / ".walletlock").unlink(missing_ok=True)
-            Path(old_path / "wallet.dat").unlink(missing_ok=True)
-            try:
-                master_path.rmdir()
-            except Exception:
-                pass
-            try:
-                old_path.rmdir()
-            except Exception:
-                pass
+                self.clear_wallet(old_path, is_sqlite=False, rmdir_fail_ok=True)
 
     def test_direct_file(self):
         self.log.info("Test migration of a wallet that is not in a wallet directory")
