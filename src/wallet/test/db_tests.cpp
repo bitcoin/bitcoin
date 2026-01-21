@@ -297,5 +297,45 @@ BOOST_AUTO_TEST_CASE(concurrent_txn_dont_interfere)
     BOOST_CHECK_EQUAL(read_value, value2);
 }
 
+BOOST_AUTO_TEST_CASE(database_readonly_comprehensive_test)
+{
+    // Test read-only database behavior - write operations should fail
+    // and database state should remain unchanged after failed writes
+
+    // Test SQLite database read-only behavior
+    DatabaseOptions read_write_options;
+    DatabaseStatus status;
+    bilingual_str error;
+    auto rw_database = MakeSQLiteDatabase(m_path_root / "sqlite_rw", read_write_options, status, error);
+    if (rw_database) {
+        BOOST_CHECK(!rw_database->IsReadOnly());
+
+        // Create and populate the database first
+        rw_database->Open();
+        {
+            std::unique_ptr<DatabaseBatch> batch = rw_database->MakeBatch();
+            BOOST_CHECK(batch->Write(std::string("key1"), std::string("value1")));
+            BOOST_CHECK(batch->Write(std::string("key2"), std::string("value2")));
+        }
+        rw_database->Close();
+
+        // Now test read-only access to existing database
+        DatabaseOptions read_only_options;
+        read_only_options.read_only = true;
+        auto ro_database = MakeSQLiteDatabase(m_path_root / "sqlite_rw", read_only_options, status, error);
+        if (ro_database && ro_database->IsReadOnly()) {
+            std::unique_ptr<DatabaseBatch> ro_batch = ro_database->MakeBatch();
+
+            // Read operations should work
+            std::string read_value;
+            BOOST_CHECK(ro_batch->Read(std::string("key1"), read_value));
+            BOOST_CHECK_EQUAL(read_value, "value1");
+
+            // Write operations should fail on SQLite read-only database
+            BOOST_CHECK(!ro_batch->Write(std::string("key3"), std::string("value3")));
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet

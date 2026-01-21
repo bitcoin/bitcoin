@@ -100,6 +100,9 @@ MockableCursor::MockableCursor(const MockableData& records, bool pass, std::span
     std::tie(m_cursor, m_cursor_end) = records.equal_range(BytePrefix{prefix});
 }
 
+MockableBatch::MockableBatch(MockableData& records, bool pass, const MockableDatabase& database)
+    : m_records(records), m_pass(pass), m_database(database) {}
+
 DatabaseCursor::Status MockableCursor::Next(DataStream& key, DataStream& value)
 {
     if (!m_pass) {
@@ -137,6 +140,9 @@ bool MockableBatch::WriteKey(DataStream&& key, DataStream&& value, bool overwrit
     if (!m_pass) {
         return false;
     }
+    if (m_database.m_read_only) {
+        return false;
+    }
     SerializeData key_data{key.begin(), key.end()};
     SerializeData value_data{value.begin(), value.end()};
     auto [it, inserted] = m_records.emplace(key_data, value_data);
@@ -150,6 +156,9 @@ bool MockableBatch::WriteKey(DataStream&& key, DataStream&& value, bool overwrit
 bool MockableBatch::EraseKey(DataStream&& key)
 {
     if (!m_pass) {
+        return false;
+    }
+    if (m_database.m_read_only) {
         return false;
     }
     SerializeData key_data{key.begin(), key.end()};
@@ -171,6 +180,9 @@ bool MockableBatch::ErasePrefix(std::span<const std::byte> prefix)
     if (!m_pass) {
         return false;
     }
+    if (m_database.m_read_only) {
+        return false;
+    }
     auto it = m_records.begin();
     while (it != m_records.end()) {
         auto& key = it->first;
@@ -183,9 +195,9 @@ bool MockableBatch::ErasePrefix(std::span<const std::byte> prefix)
     return true;
 }
 
-std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase(MockableData records)
+std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase(MockableData records, bool read_only)
 {
-    return std::make_unique<MockableDatabase>(records);
+    return std::make_unique<MockableDatabase>(records, read_only);
 }
 
 MockableDatabase& GetMockableDatabase(CWallet& wallet)
