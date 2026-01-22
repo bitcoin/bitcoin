@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <compat/compat.h>
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>
@@ -502,17 +503,17 @@ BOOST_AUTO_TEST_CASE(netbase_dont_resolve_strings_with_embedded_nul_characters)
 
 static const std::vector<CAddress> fixture_addresses({
     CAddress{
-        CService(CNetAddr(in6_addr(IN6ADDR_LOOPBACK_INIT)), 0 /* port */),
+        CService(CNetAddr(in6_addr(COMPAT_IN6ADDR_LOOPBACK_INIT)), 0 /* port */),
         NODE_NONE,
         NodeSeconds{0x4966bc61s}, /* Fri Jan  9 02:54:25 UTC 2009 */
     },
     CAddress{
-        CService(CNetAddr(in6_addr(IN6ADDR_LOOPBACK_INIT)), 0x00f1 /* port */),
+        CService(CNetAddr(in6_addr(COMPAT_IN6ADDR_LOOPBACK_INIT)), 0x00f1 /* port */),
         NODE_NETWORK,
         NodeSeconds{0x83766279s}, /* Tue Nov 22 11:22:33 UTC 2039 */
     },
     CAddress{
-        CService(CNetAddr(in6_addr(IN6ADDR_LOOPBACK_INIT)), 0xf1f2 /* port */),
+        CService(CNetAddr(in6_addr(COMPAT_IN6ADDR_LOOPBACK_INIT)), 0xf1f2 /* port */),
         static_cast<ServiceFlags>(NODE_WITNESS | NODE_COMPACT_FILTERS | NODE_NETWORK_LIMITED),
         NodeSeconds{0xffffffffs}, /* Sun Feb  7 06:28:15 UTC 2106 */
     },
