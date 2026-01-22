@@ -52,7 +52,6 @@ struct ScriptErrorDesc
 
 static ScriptErrorDesc script_errors[]={
     {SCRIPT_ERR_OK, "OK"},
-    {SCRIPT_ERR_UNKNOWN_ERROR, "UNKNOWN_ERROR"},
     {SCRIPT_ERR_EVAL_FALSE, "EVAL_FALSE"},
     {SCRIPT_ERR_OP_RETURN, "OP_RETURN"},
     {SCRIPT_ERR_SCRIPT_SIZE, "SCRIPT_SIZE"},
