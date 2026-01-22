@@ -4,10 +4,12 @@
 
 #include <qt/proposalmodel.h>
 
+#include <governance/classes.h>
 #include <governance/vote.h>
 
 #include <qt/guiutil_font.h>
 
+#include <chainparams.h>
 #include <interfaces/node.h>
 
 #include <qt/clientmodel.h>
@@ -24,7 +26,10 @@
 Proposal::Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj) :
     clientModel{_clientModel},
     govObj{_govObj},
-    m_hash{QString::fromStdString(govObj.GetHash().ToString())}
+    m_date_collateral{QDateTime::fromSecsSinceEpoch(govObj.GetCreationTime())},
+    m_hash_collateral{QString::fromStdString(govObj.GetCollateralHash().ToString())},
+    m_hash_object{QString::fromStdString(govObj.GetHash().ToString())},
+    m_hash_parent{QString::fromStdString(govObj.Object().hashParent.ToString())}
 {
     UniValue prop_data;
     if (!prop_data.read(govObj.GetDataAsPlainString())) {
@@ -47,6 +52,10 @@ Proposal::Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj) 
         m_endDate = QDateTime::fromSecsSinceEpoch(paymentEndValue.getInt<int64_t>());
     }
 
+    if (const UniValue& addressValue = prop_data.find_value("payment_address"); addressValue.isStr()) {
+        m_address = QString::fromStdString(addressValue.get_str());
+    }
+
     if (const UniValue& amountValue = prop_data.find_value("payment_amount"); amountValue.isNum()) {
         m_paymentAmount = llround(amountValue.get_real() * COIN);
     }
@@ -54,6 +63,17 @@ Proposal::Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj) 
     if (const UniValue& urlValue = prop_data.find_value("url"); urlValue.isStr()) {
         m_url = QString::fromStdString(urlValue.get_str());
     }
+}
+
+int Proposal::paymentsRequested() const
+{
+    if (!m_startDate.isValid() || !m_endDate.isValid()) {
+        return 1;
+    }
+    const auto& consensus_params = Params().GetConsensus();
+    const int64_t superblock_cycle = consensus_params.nPowTargetSpacing * consensus_params.nSuperblockCycle;
+    const int64_t proposal_duration = m_endDate.toSecsSinceEpoch() - m_startDate.toSecsSinceEpoch();
+    return std::max<int>(1, ((proposal_duration + superblock_cycle - 1) / superblock_cycle));
 }
 
 QString Proposal::toHtml(const BitcoinUnit& unit) const
@@ -65,10 +85,15 @@ QString Proposal::toHtml(const BitcoinUnit& unit) const
     if (!m_url.isEmpty()) {
         ret += "<b>" + QObject::tr("URL") + ":</b> " + GUIUtil::HtmlEscape(m_url) + "<br>";
     }
+    ret += "<b>" + QObject::tr("Destination Address") + ":</b> " + GUIUtil::HtmlEscape(m_address) + "<br>";
     ret += "<b>" + QObject::tr("Payment Amount") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, m_paymentAmount) + "<br>";
+    ret += "<b>" + QObject::tr("Payments Requested") + ":</b> " + QString::number(paymentsRequested()) + "<br>";
     ret += "<b>" + QObject::tr("Payment Start") + ":</b> " + GUIUtil::dateTimeStr(m_startDate) + "<br>";
     ret += "<b>" + QObject::tr("Payment End") + ":</b> " + GUIUtil::dateTimeStr(m_endDate) + "<br>";
-    ret += "<b>" + QObject::tr("Object Hash") + ":</b> " + m_hash + "<br>";
+    ret += "<b>" + QObject::tr("Object Hash") + ":</b> " + m_hash_object + "<br>";
+    ret += "<b>" + QObject::tr("Parent Hash") + ":</b> " + m_hash_parent + "<br>";
+    ret += "<b>" + QObject::tr("Collateral Date") + ":</b> " + GUIUtil::dateTimeStr(m_date_collateral) + "<br>";
+    ret += "<b>" + QObject::tr("Collateral Hash") + ":</b> " + m_hash_collateral + "<br>";
     ret += "<br>";
     ret += "</html>";
     return ret;

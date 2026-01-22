@@ -27,9 +27,13 @@ private:
 
     CAmount m_paymentAmount{0};
     interfaces::GOV::Votes m_votes;
+    QDateTime m_date_collateral{};
     QDateTime m_endDate{};
     QDateTime m_startDate{};
-    QString m_hash{};
+    QString m_address{};
+    QString m_hash_collateral{};
+    QString m_hash_object{};
+    QString m_hash_parent{};
     QString m_title{};
     QString m_url{};
 
@@ -38,13 +42,18 @@ public:
 
     bool isActive() const;
     CAmount paymentAmount() const { return m_paymentAmount; }
+    int paymentsRequested() const;
     int32_t getAbsoluteYesCount() const { return m_votes.m_yes - m_votes.m_no; }
     int32_t getAbstainCount() const { return m_votes.m_abs; }
     int32_t getNoCount() const { return m_votes.m_no; }
     int32_t getYesCount() const { return m_votes.m_yes; }
+    QDateTime collateralDate() const { return m_date_collateral; }
     QDateTime endDate() const { return m_endDate; }
     QDateTime startDate() const { return m_startDate; }
-    QString hash() const { return m_hash; }
+    QString collateralHash() const { return m_hash_collateral; }
+    QString hash() const { return m_hash_object; }
+    QString parentHash() const { return m_hash_parent; }
+    QString paymentAddress() const { return m_address; }
     QString title() const { return m_title; }
     QString toHtml(const BitcoinUnit& unit) const;
     QString toJson() const;
