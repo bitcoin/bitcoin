@@ -1024,6 +1024,9 @@ private:
 #ifdef __USING_WINDOWS__
   HANDLE process_handle_;
   std::future<void> cleanup_future_;
+#else
+  // Pid of the child process
+  int child_pid_ = -1;
 #endif
 
   std::string exe_name_;
@@ -1033,9 +1036,6 @@ private:
   // Command provided as sequence
   std::vector<std::string> vargs_;
   std::vector<char*> cargv_;
-
-  // Pid of the child process
-  int child_pid_ = -1;
 
   int retcode_ = -1;
 };
