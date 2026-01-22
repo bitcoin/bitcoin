@@ -243,7 +243,8 @@ BOOST_AUTO_TEST_CASE(merkle_test_BlockWitness)
     uint256 blockWitness = BlockWitnessMerkleRoot(block);
 
     std::vector<uint256> hashes;
-    hashes.resize(vtx_count); // Note: leaving odd count to exercise old behavior
+    hashes.resize(vtx_count); // Odd count exercises leaf duplication in ComputeMerkleRoot (which can append one extra hash).
+    hashes[0] = uint256::ZERO; // The witness hash of the coinbase is 0.
     for (size_t pos{1}; pos < vtx_count; ++pos) {
         hashes[pos] = block.vtx[pos]->GetWitnessHash().ToUint256();
     }
