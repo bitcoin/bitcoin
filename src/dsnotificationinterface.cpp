@@ -72,7 +72,9 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     if (fInitialDownload)
         return;
 
-    m_dstxman.UpdatedBlockTip(pindexNew, m_mn_sync);
+    if (m_mn_sync.IsBlockchainSynced()) {
+        m_dstxman.UpdatedBlockTip(pindexNew);
+    }
 
     m_llmq_ctx->isman->UpdatedBlockTip(pindexNew);
     if (m_govman.IsValid()) {
@@ -117,7 +119,9 @@ void CDSNotificationInterface::NotifyChainLock(const CBlockIndex* pindex,
                                                const std::shared_ptr<const chainlock::ChainLockSig>& clsig)
 {
     Assert(m_llmq_ctx)->isman->NotifyChainLock(pindex);
-    m_dstxman.NotifyChainLock(pindex, m_mn_sync);
+    if (m_mn_sync.IsBlockchainSynced()) {
+        m_dstxman.NotifyChainLock(pindex);
+    }
 }
 
 std::unique_ptr<CDSNotificationInterface> g_ds_notification_interface;
