@@ -277,11 +277,11 @@ inline MutexType* MaybeCheckNotHeld(MutexType* m) LOCKS_EXCLUDED(m) LOCK_RETURNE
 //! Since the return type deduction follows that of decltype(auto), while the
 //! deduced type of:
 //!
-//!   WITH_LOCK(cs, return {int i = 1; return i;});
+//!   WITH_LOCK(cs, int i = 1; return i);
 //!
 //! is int, the deduced type of:
 //!
-//!   WITH_LOCK(cs, return {int j = 1; return (j);});
+//!   WITH_LOCK(cs, int j = 1; return (j));
 //!
 //! is &int, a reference to a local variable
 //!
