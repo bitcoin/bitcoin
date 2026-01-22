@@ -6,9 +6,12 @@
 
 #include <governance/vote.h>
 
+#include <qt/guiutil_font.h>
+
 #include <interfaces/node.h>
 
 #include <qt/clientmodel.h>
+#include <qt/guiutil.h>
 
 #include <QDesktopServices>
 #include <QUrl>
@@ -91,6 +94,14 @@ QVariant ProposalModel::data(const QModelIndex& index, int role) const
 {
     if (!index.isValid() || !isValidRow(index.row())) {
         return {};
+    }
+    if (index.column() == Column::HASH) {
+        if (role == Qt::FontRole) {
+            return GUIUtil::fixedPitchFont();
+        }
+        if (role == Qt::ForegroundRole) {
+            return QVariant::fromValue(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::UNCONFIRMED));
+        }
     }
     if (role != Qt::DisplayRole && role != Qt::EditRole && role != Qt::ToolTipRole) {
         return {};
