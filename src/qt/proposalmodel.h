@@ -13,6 +13,9 @@
 #include <QDateTime>
 #include <QObject>
 
+#include <memory>
+#include <vector>
+
 class ClientModel;
 
 class Proposal : public QObject
@@ -23,35 +26,37 @@ private:
     ClientModel* clientModel;
     const CGovernanceObject govObj;
 
-    QString m_title;
-    QDateTime m_startDate;
-    QDateTime m_endDate;
-    double m_paymentAmount;
-    QString m_url;
+    double m_paymentAmount{0.0};
+    QDateTime m_endDate{};
+    QDateTime m_startDate{};
+    QString m_title{};
+    QString m_url{};
 
 public:
     explicit Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj, QObject* parent = nullptr);
-    QString title() const;
-    QString hash() const;
-    QDateTime startDate() const;
-    QDateTime endDate() const;
-    double paymentAmount() const;
-    QString url() const;
+
     bool isActive() const;
-    QString votingStatus(int nAbsVoteReq) const;
+    double paymentAmount() const { return m_paymentAmount; }
     int GetAbsoluteYesCount() const;
+    QDateTime endDate() const { return m_endDate; }
+    QDateTime startDate() const { return m_startDate; }
+    QString hash() const { return QString::fromStdString(govObj.GetHash().ToString()); }
+    QString title() const { return m_title; }
+    QString toJson() const;
+    QString url() const { return m_url; }
+    QString votingStatus(int nAbsVoteReq) const;
 
     void openUrl() const;
-
-    QString toJson() const;
 };
+
+using ProposalList = std::vector<std::unique_ptr<Proposal>>;
 
 class ProposalModel : public QAbstractTableModel
 {
     Q_OBJECT
 
 private:
-    QList<const Proposal*> m_data;
+    ProposalList m_data;
     int nAbsVoteReq = 0;
     BitcoinUnit m_display_unit{BitcoinUnit::DASH};
 
@@ -74,15 +79,17 @@ public:
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
-    static int columnWidth(int section);
-    void append(const Proposal* proposal);
-    void remove(int row);
-    void reconcile(Span<const Proposal*> proposals);
-    void setVotingParams(int nAbsVoteReq);
 
+    static int columnWidth(int section);
+    void append(std::unique_ptr<Proposal>&& proposal);
+    void remove(int row);
+    void reconcile(ProposalList&& proposals);
+    void setDisplayUnit(const BitcoinUnit& display_unit) { m_display_unit = display_unit; }
+    void setVotingParams(int nAbsVoteReq);
     const Proposal* getProposalAt(const QModelIndex& index) const;
 
-    void setDisplayUnit(BitcoinUnit display_unit);
+private:
+    bool isValidRow(int row) const { return !m_data.empty() && row >= 0 && row < rowCount(); }
 };
 
 #endif // BITCOIN_QT_PROPOSALMODEL_H

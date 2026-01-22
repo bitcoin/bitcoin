@@ -126,17 +126,16 @@ void GovernanceList::updateProposalList()
 
         std::vector<CGovernanceObject> govObjList;
         clientModel->getAllGovernanceObjects(govObjList);
-        std::vector<const Proposal*> newProposals;
+        ProposalList newProposals;
         for (const auto& govObj : govObjList) {
             if (govObj.GetObjectType() != GovernanceObject::PROPOSAL) {
                 continue; // Skip triggers.
             }
-
-            newProposals.emplace_back(new Proposal(this->clientModel, govObj, proposalModel));
+            newProposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, proposalModel));
         }
-        proposalModel->reconcile(newProposals);
-        // Update voting capability if we now have both client and wallet models
+        proposalModel->reconcile(std::move(newProposals));
 
+        // Update voting capability if we now have both client and wallet models
         if (walletModel) {
             updateVotingCapability();
         }

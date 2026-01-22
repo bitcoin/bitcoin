@@ -15,51 +15,54 @@
 
 #include <univalue.h>
 
+#include <algorithm>
+
 Proposal::Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj, QObject* parent) :
-    QObject(parent),
-    clientModel(_clientModel),
-    govObj(_govObj)
+    QObject{parent},
+    clientModel{_clientModel},
+    govObj{_govObj}
 {
     UniValue prop_data;
-    if (prop_data.read(govObj.GetDataAsPlainString())) {
-        if (const UniValue& titleValue = prop_data.find_value("name"); titleValue.isStr()) {
-            m_title = QString::fromStdString(titleValue.get_str());
-        }
+    if (!prop_data.read(govObj.GetDataAsPlainString())) {
+        return;
+    }
 
-        if (const UniValue& paymentStartValue = prop_data.find_value("start_epoch"); paymentStartValue.isNum()) {
-            m_startDate = QDateTime::fromSecsSinceEpoch(paymentStartValue.getInt<int64_t>());
-        }
+    if (const UniValue& titleValue = prop_data.find_value("name"); titleValue.isStr()) {
+        m_title = QString::fromStdString(titleValue.get_str());
+    }
 
-        if (const UniValue& paymentEndValue = prop_data.find_value("end_epoch"); paymentEndValue.isNum()) {
-            m_endDate = QDateTime::fromSecsSinceEpoch(paymentEndValue.getInt<int64_t>());
-        }
+    if (const UniValue& paymentStartValue = prop_data.find_value("start_epoch"); paymentStartValue.isNum()) {
+        m_startDate = QDateTime::fromSecsSinceEpoch(paymentStartValue.getInt<int64_t>());
+    }
 
-        if (const UniValue& amountValue = prop_data.find_value("payment_amount"); amountValue.isNum()) {
-            m_paymentAmount = amountValue.get_real();
-        }
+    if (const UniValue& paymentEndValue = prop_data.find_value("end_epoch"); paymentEndValue.isNum()) {
+        m_endDate = QDateTime::fromSecsSinceEpoch(paymentEndValue.getInt<int64_t>());
+    }
 
-        if (const UniValue& urlValue = prop_data.find_value("url"); urlValue.isStr()) {
-            m_url = QString::fromStdString(urlValue.get_str());
-        }
+    if (const UniValue& amountValue = prop_data.find_value("payment_amount"); amountValue.isNum()) {
+        m_paymentAmount = amountValue.get_real();
+    }
+
+    if (const UniValue& urlValue = prop_data.find_value("url"); urlValue.isStr()) {
+        m_url = QString::fromStdString(urlValue.get_str());
     }
 }
 
-QString Proposal::title() const { return m_title; }
-
-QString Proposal::hash() const { return QString::fromStdString(govObj.GetHash().ToString()); }
-
-QDateTime Proposal::startDate() const { return m_startDate; }
-
-QDateTime Proposal::endDate() const { return m_endDate; }
-
-double Proposal::paymentAmount() const { return m_paymentAmount; }
-
-QString Proposal::url() const { return m_url; }
+QString Proposal::toJson() const
+{
+    const auto json = govObj.GetInnerJson();
+    return QString::fromStdString(json.write(2));
+}
 
 bool Proposal::isActive() const
 {
     std::string strError;
     return clientModel->node().gov().getObjLocalValidity(govObj, strError, false);
+}
+
+int Proposal::GetAbsoluteYesCount() const
+{
+    return clientModel->node().gov().getObjAbsYesCount(govObj, VOTE_SIGNAL_FUNDING);
 }
 
 QString Proposal::votingStatus(const int nAbsVoteReq) const
@@ -77,20 +80,9 @@ QString Proposal::votingStatus(const int nAbsVoteReq) const
     }
 }
 
-int Proposal::GetAbsoluteYesCount() const
-{
-    return clientModel->node().gov().getObjAbsYesCount(govObj, VOTE_SIGNAL_FUNDING);
-}
-
 void Proposal::openUrl() const
 {
     QDesktopServices::openUrl(QUrl(m_url));
-}
-
-QString Proposal::toJson() const
-{
-    const auto json = govObj.GetInnerJson();
-    return QString::fromStdString(json.write(2));
 }
 
 ///
@@ -99,7 +91,7 @@ QString Proposal::toJson() const
 
 int ProposalModel::rowCount(const QModelIndex& index) const
 {
-    return m_data.count();
+    return static_cast<int>(m_data.size());
 }
 
 int ProposalModel::columnCount(const QModelIndex& index) const
@@ -109,8 +101,14 @@ int ProposalModel::columnCount(const QModelIndex& index) const
 
 QVariant ProposalModel::data(const QModelIndex& index, int role) const
 {
-    if (role != Qt::DisplayRole && role != Qt::EditRole) return {};
-    const auto proposal = m_data[index.row()];
+    if (!index.isValid() || !isValidRow(index.row())) {
+        return {};
+    }
+    if (role != Qt::DisplayRole && role != Qt::EditRole) {
+        return {};
+    }
+
+    const auto* proposal = m_data[index.row()].get();
     switch(role) {
     case Qt::DisplayRole:
     {
@@ -165,7 +163,10 @@ QVariant ProposalModel::data(const QModelIndex& index, int role) const
 
 QVariant ProposalModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    if (orientation != Qt::Horizontal || role != Qt::DisplayRole) return {};
+    if (orientation != Qt::Horizontal || role != Qt::DisplayRole) {
+        return {};
+    }
+
     switch (section) {
     case Column::HASH:
         return tr("Hash");
@@ -206,70 +207,75 @@ int ProposalModel::columnWidth(int section)
     }
 }
 
-void ProposalModel::append(const Proposal* proposal)
+void ProposalModel::append(std::unique_ptr<Proposal>&& proposal)
 {
-    beginInsertRows({}, m_data.count(), m_data.count());
-    m_data.append(proposal);
+    beginInsertRows({}, rowCount(), rowCount());
+    m_data.push_back(std::move(proposal));
     endInsertRows();
 }
 
 void ProposalModel::remove(int row)
 {
+    if (!isValidRow(row)) {
+        return;
+    }
     beginRemoveRows({}, row, row);
-    delete m_data.at(row);
-    m_data.removeAt(row);
+    m_data.erase(m_data.begin() + row);
     endRemoveRows();
 }
 
-void ProposalModel::reconcile(Span<const Proposal*> proposals)
+void ProposalModel::reconcile(ProposalList&& proposals)
 {
-    // Vector of m_data.count() false values. Going through new proposals,
-    // set keep_index true for each old proposal found in the new proposals.
-    // After going through new proposals, remove any existing proposals that
-    // weren't found (and are still false).
-    std::vector<bool> keep_index(m_data.count(), false);
-    for (const auto proposal : proposals) {
-        bool found = false;
-        for (int i = 0; i < m_data.count(); ++i) {
-            if (m_data.at(i)->hash() == proposal->hash()) {
-                found = true;
-                keep_index.at(i) = true;
-                if (m_data.at(i)->GetAbsoluteYesCount() != proposal->GetAbsoluteYesCount()) {
-                    // replace proposal to update vote count
-                    delete m_data.at(i);
-                    m_data.replace(i, proposal);
-                    Q_EMIT dataChanged(createIndex(i, Column::VOTING_STATUS), createIndex(i, Column::VOTING_STATUS));
-                } else {
-                    // no changes
-                    delete proposal;
-                }
-                break;
+    // Track which existing proposals to keep. After processing new proposals,
+    // remove any existing proposals that weren't found in the new set.
+    const int original_sz{rowCount()};
+    std::vector<bool> keep_index(original_sz, false);
+
+    for (auto& proposal : proposals) {
+        auto it{std::ranges::find_if(m_data, [&proposal](const auto& existing) {
+            return existing->hash() == proposal->hash();
+        })};
+
+        if (it != m_data.end()) {
+            const auto idx{static_cast<int>(std::distance(m_data.begin(), it))};
+            keep_index[static_cast<size_t>(idx)] = true;
+            if ((*it)->GetAbsoluteYesCount() != proposal->GetAbsoluteYesCount()) {
+                // Replace proposal to update vote count
+                *it = std::move(proposal);
+                Q_EMIT dataChanged(createIndex(idx, Column::VOTING_STATUS), createIndex(idx, Column::VOTING_STATUS));
             }
-        }
-        if (!found) {
-            append(proposal);
+            // else: no changes, proposal unique_ptr goes out of scope and gets deleted
+        } else {
+            append(std::move(proposal));
         }
     }
-    for (unsigned int i = keep_index.size(); i > 0; --i) {
-        if (!keep_index.at(i - 1)) {
-            remove(i - 1);
+
+    // Remove in reverse order to preserve indices during removal
+    for (int idx{original_sz}; idx-- > 0;) {
+        if (!keep_index[static_cast<size_t>(idx)]) {
+            remove(idx);
         }
     }
 }
 
 void ProposalModel::setVotingParams(int newAbsVoteReq)
 {
-    if (this->nAbsVoteReq != newAbsVoteReq) {
-        this->nAbsVoteReq = newAbsVoteReq;
-        // Changing either of the voting params may change the voting status
-        // column. Emit signal to force recalculation.
-        Q_EMIT dataChanged(createIndex(0, Column::VOTING_STATUS), createIndex(rowCount(), Column::VOTING_STATUS));
+    if (this->nAbsVoteReq == newAbsVoteReq) {
+        return;
+    }
+
+    // Changing either of the voting params may change the voting status
+    // column. Emit signal to force recalculation.
+    this->nAbsVoteReq = newAbsVoteReq;
+    if (!m_data.empty()) {
+        Q_EMIT dataChanged(createIndex(0, Column::VOTING_STATUS), createIndex(rowCount() - 1, Column::VOTING_STATUS));
     }
 }
 
 const Proposal* ProposalModel::getProposalAt(const QModelIndex& index) const
 {
-    return m_data[index.row()];
+    if (!index.isValid() || !isValidRow(index.row())) {
+        return nullptr;
+    }
+    return m_data[index.row()].get();
 }
-
-void ProposalModel::setDisplayUnit(BitcoinUnit display_unit) { this->m_display_unit = display_unit; }
