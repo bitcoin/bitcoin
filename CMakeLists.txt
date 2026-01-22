@@ -281,6 +281,21 @@ if(WIN32)
       /Zc:__cplusplus
       /sdl
     )
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+      if(CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64")
+        set(system_arch_suffix x86_64)
+      elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "ARM64")
+        set(system_arch_suffix aarch64)
+      else()
+        message(FATAL_ERROR "Unsupported architecture: ${CMAKE_SYSTEM_PROCESSOR}")
+      endif()
+      # __int128 division when using clang-cl requires the builtins library.
+      # See https://clang.llvm.org/docs/UsersManual.html#finding-clang-runtime-libraries.
+      target_link_libraries(core_interface INTERFACE
+        clang_rt.builtins-${system_arch_suffix}
+      )
+      unset(system_arch_suffix)
+    endif()
     target_link_options(core_interface INTERFACE
       # We embed our own manifests.
       /MANIFEST:NO
