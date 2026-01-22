@@ -63,13 +63,13 @@ public:
         QAbstractTableModel(parent){};
 
     enum Column : int {
-        HASH = 0,
-        TITLE,
+        TITLE = 0,
+        PAYMENT_AMOUNT,
         START_DATE,
         END_DATE,
-        PAYMENT_AMOUNT,
         IS_ACTIVE,
         VOTING_STATUS,
+        HASH,
         _COUNT // for internal use only
     };
 
@@ -78,7 +78,6 @@ public:
     QVariant data(const QModelIndex& index, int role) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 
-    static int columnWidth(int section);
     void append(std::unique_ptr<Proposal>&& proposal);
     void remove(int row);
     void reconcile(ProposalList&& proposals);

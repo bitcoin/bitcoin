@@ -59,6 +59,7 @@ private:
     QSortFilterProxyModel* proposalModelProxy{nullptr};
     QThread* m_thread{nullptr};
     QTimer* m_timer{nullptr};
+    std::atomic<bool> m_col_refresh{false};
     std::atomic<bool> m_in_progress{false};
     Uint256HashMap<CKeyID> votableMasternodes;
     WalletModel* walletModel{nullptr};
@@ -66,13 +67,18 @@ private:
     bool canVote() const { return !votableMasternodes.empty(); }
     CalcProposalList calcProposalList() const;
     void handleProposalListChanged();
+    void refreshColumnWidths();
     void setProposalList(CalcProposalList&& data);
     void voteForProposal(vote_outcome_enum_t outcome);
+
+protected:
+    void showEvent(QShowEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override;
 
 private Q_SLOTS:
     void updateDisplayUnit();
     void updateProposalList();
-    void updateProposalCount() const;
+    void updateProposalCount();
     void updateMasternodeCount() const;
     void showProposalContextMenu(const QPoint& pos);
     void showAdditionalInfo(const QModelIndex& index);

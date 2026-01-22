@@ -187,26 +187,6 @@ QVariant ProposalModel::headerData(int section, Qt::Orientation orientation, int
     }
 }
 
-int ProposalModel::columnWidth(int section)
-{
-    switch (section) {
-    case Column::HASH:
-        return 80;
-    case Column::TITLE:
-        return 220;
-    case Column::START_DATE:
-    case Column::END_DATE:
-    case Column::PAYMENT_AMOUNT:
-        return 110;
-    case Column::IS_ACTIVE:
-        return 80;
-    case Column::VOTING_STATUS:
-        return 220;
-    default:
-        return 80;
-    }
-}
-
 void ProposalModel::append(std::unique_ptr<Proposal>&& proposal)
 {
     beginInsertRows({}, rowCount(), rowCount());

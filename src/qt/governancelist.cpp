@@ -27,6 +27,12 @@
 #include <QAbstractItemView>
 #include <QMessageBox>
 #include <QMetaObject>
+#include <QResizeEvent>
+#include <QShowEvent>
+
+namespace {
+constexpr int TITLE_MIN_WIDTH{220};
+} // anonymous namespace
 
 //
 // Governance Tab main widget.
@@ -47,22 +53,19 @@ GovernanceList::GovernanceList(QWidget* parent) :
                      {GUIUtil::FontWeight::Bold, 14});
     GUIUtil::setFont({ui->label_filter_2}, {GUIUtil::FontWeight::Normal, 15});
 
-    proposalModelProxy->setSourceModel(proposalModel);
+    ui->govTableView->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->govTableView->setModel(proposalModelProxy);
     ui->govTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->govTableView->horizontalHeader()->setStretchLastSection(true);
-    ui->govTableView->verticalHeader()->setVisible(false);
-
-    for (int i = 0; i < proposalModel->columnCount(); ++i) {
-        ui->govTableView->setColumnWidth(i, proposalModel->columnWidth(i));
-    }
-
-    // Set up sorting.
-    proposalModelProxy->setSortRole(Qt::EditRole);
     ui->govTableView->setSortingEnabled(true);
-    ui->govTableView->sortByColumn(ProposalModel::Column::START_DATE, Qt::DescendingOrder);
+    ui->govTableView->sortByColumn(ProposalModel::Column::TITLE, Qt::AscendingOrder);
+    ui->govTableView->verticalHeader()->setVisible(false);
+    connect(ui->govTableView, &QTableView::customContextMenuRequested, this, &GovernanceList::showProposalContextMenu);
+    connect(ui->govTableView, &QTableView::doubleClicked, this, &GovernanceList::showAdditionalInfo);
+    connect(ui->govTableView->horizontalHeader(), &QHeaderView::sectionResized, this, &GovernanceList::refreshColumnWidths);
 
     // Set up filtering.
+    proposalModelProxy->setSourceModel(proposalModel);
+    proposalModelProxy->setSortRole(Qt::EditRole);
     proposalModelProxy->setFilterKeyColumn(ProposalModel::Column::TITLE); // filter by title column...
     connect(ui->filterLineEdit, &QLineEdit::textChanged, proposalModelProxy, &QSortFilterProxyModel::setFilterFixedString);
 
@@ -71,13 +74,8 @@ GovernanceList::GovernanceList(QWidget* parent) :
     connect(proposalModelProxy, &QSortFilterProxyModel::rowsRemoved, this, &GovernanceList::updateProposalCount);
     connect(proposalModelProxy, &QSortFilterProxyModel::layoutChanged, this, &GovernanceList::updateProposalCount);
 
-    // Enable CustomContextMenu on the table to make the view emit customContextMenuRequested signal.
-    ui->govTableView->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->govTableView, &QTableView::customContextMenuRequested, this, &GovernanceList::showProposalContextMenu);
-
     // Create Proposal button
     connect(ui->btnCreateProposal, &QPushButton::clicked, this, &GovernanceList::showCreateProposalDialog);
-    connect(ui->govTableView, &QTableView::doubleClicked, this, &GovernanceList::showAdditionalInfo);
 
     // Initialize masternode count to 0
     ui->mnCountLabel->setText("0");
@@ -217,9 +215,10 @@ void GovernanceList::setProposalList(CalcProposalList&& data)
     updateMasternodeCount();
 }
 
-void GovernanceList::updateProposalCount() const
+void GovernanceList::updateProposalCount()
 {
     ui->countLabel->setText(QString::number(proposalModelProxy->rowCount()));
+    refreshColumnWidths();
 }
 
 void GovernanceList::showCreateProposalDialog()
@@ -394,4 +393,58 @@ void GovernanceList::voteForProposal(vote_outcome_enum_t outcome)
 
     // Update proposal list to show new vote counts
     handleProposalListChanged();
+}
+
+void GovernanceList::showEvent(QShowEvent* event)
+{
+    QWidget::showEvent(event);
+    refreshColumnWidths();
+}
+
+void GovernanceList::resizeEvent(QResizeEvent* event)
+{
+    QWidget::resizeEvent(event);
+    refreshColumnWidths();
+}
+
+void GovernanceList::refreshColumnWidths()
+{
+    // Bail out if resize in progress or viewport is too small
+    const int tableWidth = ui->govTableView->viewport()->width();
+    if (m_col_refresh || tableWidth <= 0) {
+        return;
+    } else {
+        m_col_refresh = true;
+    }
+
+    auto* header = ui->govTableView->horizontalHeader();
+    header->setMinimumSectionSize(0);
+    header->setSectionResizeMode(ProposalModel::Column::PAYMENT_AMOUNT, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(ProposalModel::Column::START_DATE, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(ProposalModel::Column::END_DATE, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(ProposalModel::Column::IS_ACTIVE, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(ProposalModel::Column::VOTING_STATUS, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(ProposalModel::Column::HASH, QHeaderView::ResizeToContents);
+
+    // Calculate width used by ResizeToContents columns
+    const int availableWidth = [&header, &tableWidth](){
+        int fixedWidth = 0;
+        for (int idx = 0; idx < ProposalModel::Column::_COUNT; idx++) {
+            if (idx != ProposalModel::Column::TITLE && idx != ProposalModel::Column::HASH) {
+                fixedWidth += header->sectionSize(idx);
+            }
+        }
+        return std::max(0, tableWidth - fixedWidth);
+    }();
+
+    // Hash gets what's left after Title takes its minimum, clamped to [0, hashContentWidth]
+    const int hashContentWidth = header->sectionSize(ProposalModel::Column::HASH);
+    const int hashWidth = std::clamp<int>(availableWidth - TITLE_MIN_WIDTH, 0, hashContentWidth);
+    const int titleWidth = availableWidth - hashWidth;
+    header->setSectionResizeMode(ProposalModel::Column::TITLE, QHeaderView::Interactive);
+    header->setSectionResizeMode(ProposalModel::Column::HASH, QHeaderView::Interactive);
+    header->resizeSection(ProposalModel::Column::TITLE, titleWidth);
+    header->resizeSection(ProposalModel::Column::HASH, hashWidth);
+
+    m_col_refresh = false;
 }
