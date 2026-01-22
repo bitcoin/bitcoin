@@ -35,8 +35,7 @@ namespace Consensus {
 struct Params;
 } // namespace Consensus
 
-namespace llmq
-{
+namespace llmq {
 class CQuorumManager;
 enum class VerifyRecSigStatus : uint8_t;
 } // namespace llmq
@@ -71,49 +70,46 @@ public:
     ChainlockHandler() = delete;
     ChainlockHandler(const ChainlockHandler&) = delete;
     ChainlockHandler& operator=(const ChainlockHandler&) = delete;
-    explicit ChainlockHandler(chainlock::Chainlocks& chainlocks, ChainstateManager& chainman,
-                                CTxMemPool& _mempool, const CMasternodeSync& mn_sync);
+    explicit ChainlockHandler(chainlock::Chainlocks& chainlocks, ChainstateManager& chainman, CTxMemPool& _mempool,
+                              const CMasternodeSync& mn_sync);
     ~ChainlockHandler();
 
     void Start();
     void Stop();
 
-    bool AlreadyHave(const CInv& inv) const
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool AlreadyHave(const CInv& inv) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void UpdateTxFirstSeenMap(const Uint256HashSet& tx, const int64_t& time) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    [[nodiscard]] MessageProcessingResult ProcessNewChainLock(NodeId from, const chainlock::ChainLockSig& clsig, const llmq::CQuorumManager& qman,
+    [[nodiscard]] MessageProcessingResult ProcessNewChainLock(NodeId from, const chainlock::ChainLockSig& clsig,
+                                                              const llmq::CQuorumManager& qman,
 
-                                                              const uint256& hash)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+                                                              const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
 public:
-    void CheckActiveState()
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    void EnforceBestChainLock()
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void CheckActiveState() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void EnforceBestChainLock() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    bool IsTxSafeForMining(const uint256& txid) const
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool IsTxSafeForMining(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    void CleanupFromSigner(const std::vector<std::shared_ptr<Uint256HashSet>>& cleanup_txes)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void CleanupFromSigner(const std::vector<std::shared_ptr<Uint256HashSet>>& cleanup_txes) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
 protected:
     // CValidationInterface
-    void AcceptedBlockHeader(const CBlockIndex *pindexNew) override EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime, uint64_t mempool_sequence) override EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void AcceptedBlockHeader(const CBlockIndex* pindexNew) override EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime, uint64_t mempool_sequence) override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
 private:
-    void Cleanup()
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
 
-llmq::VerifyRecSigStatus VerifyChainLock(const Consensus::Params& params, const CChain& chain, const llmq::CQuorumManager& qman, const chainlock::ChainLockSig& clsig);
+llmq::VerifyRecSigStatus VerifyChainLock(const Consensus::Params& params, const CChain& chain,
+                                         const llmq::CQuorumManager& qman, const chainlock::ChainLockSig& clsig);
 } // namespace chainlock
 
 #endif // BITCOIN_CHAINLOCK_HANDLER_H

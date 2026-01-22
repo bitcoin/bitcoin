@@ -4,8 +4,8 @@
 
 #include <chainlock/signing.h>
 
-#include <chainlock/handler.h>
 #include <chainlock/clsig.h>
+#include <chainlock/handler.h>
 #include <instantsend/instantsend.h>
 #include <llmq/signing_shares.h>
 #include <masternode/sync.h>
@@ -20,9 +20,10 @@
 using node::ReadBlockFromDisk;
 
 namespace chainlock {
-ChainLockSigner::ChainLockSigner(CChainState& chainstate, const chainlock::Chainlocks& chainlocks, ChainlockHandler& clhandler, const llmq::CInstantSendManager& isman, const llmq::CQuorumManager& qman,
-                                 llmq::CSigningManager& sigman, llmq::CSigSharesManager& shareman,
-                                 const CMasternodeSync& mn_sync) :
+ChainLockSigner::ChainLockSigner(CChainState& chainstate, const chainlock::Chainlocks& chainlocks,
+                                 ChainlockHandler& clhandler, const llmq::CInstantSendManager& isman,
+                                 const llmq::CQuorumManager& qman, llmq::CSigningManager& sigman,
+                                 llmq::CSigSharesManager& shareman, const CMasternodeSync& mn_sync) :
     m_chainstate{chainstate},
     m_chainlocks{chainlocks},
     m_clhandler{clhandler},
@@ -37,10 +38,7 @@ ChainLockSigner::ChainLockSigner(CChainState& chainstate, const chainlock::Chain
 {
 }
 
-ChainLockSigner::~ChainLockSigner()
-{
-    Stop();
-}
+ChainLockSigner::~ChainLockSigner() { Stop(); }
 
 void ChainLockSigner::Start()
 {
@@ -70,7 +68,7 @@ void ChainLockSigner::UnregisterRecoveryInterface()
     m_sigman.UnregisterRecoveredSigsListener(this);
 }
 
-void ChainLockSigner::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
+void ChainLockSigner::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
 {
     TrySignChainTip();
 }
@@ -174,7 +172,7 @@ void ChainLockSigner::TrySignChainTip()
     m_shareman.AsyncSignIfMember(Params().GetConsensus().llmqTypeChainLocks, m_sigman, requestId, msgHash);
 }
 
-void ChainLockSigner::BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex)
+void ChainLockSigner::BlockDisconnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex)
 {
     AssertLockNotHeld(cs_signer);
     LOCK(cs_signer);
@@ -182,7 +180,7 @@ void ChainLockSigner::BlockDisconnected(const std::shared_ptr<const CBlock> &blo
 }
 
 
-void ChainLockSigner::BlockConnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex)
+void ChainLockSigner::BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex)
 {
     // We need this information later when we try to sign a new tip, so that we can determine if all included TXs are safe.
     const uint256& hash = pindex->GetBlockHash();

@@ -36,8 +36,8 @@ static constexpr auto WAIT_FOR_ISLOCK_TIMEOUT{10min};
 } // anonymous namespace
 
 namespace chainlock {
-ChainlockHandler::ChainlockHandler(chainlock::Chainlocks& chainlocks, ChainstateManager& chainman,
-                                       CTxMemPool& _mempool, const CMasternodeSync& mn_sync) :
+ChainlockHandler::ChainlockHandler(chainlock::Chainlocks& chainlocks, ChainstateManager& chainman, CTxMemPool& _mempool,
+                                   const CMasternodeSync& mn_sync) :
     m_chainlocks{chainlocks},
     m_chainman{chainman},
     mempool{_mempool},
@@ -65,10 +65,7 @@ void ChainlockHandler::Start()
         std::chrono::seconds{5});
 }
 
-void ChainlockHandler::Stop()
-{
-    scheduler->stop();
-}
+void ChainlockHandler::Stop() { scheduler->stop(); }
 
 bool ChainlockHandler::AlreadyHave(const CInv& inv) const
 {
@@ -85,8 +82,8 @@ void ChainlockHandler::UpdateTxFirstSeenMap(const Uint256HashSet& tx, const int6
     }
 }
 
-MessageProcessingResult ChainlockHandler::ProcessNewChainLock(const NodeId from, const chainlock::ChainLockSig& clsig, const llmq::CQuorumManager& qman,
-                                                                const uint256& hash)
+MessageProcessingResult ChainlockHandler::ProcessNewChainLock(const NodeId from, const chainlock::ChainLockSig& clsig,
+                                                              const llmq::CQuorumManager& qman, const uint256& hash)
 {
     CheckActiveState();
 
@@ -103,7 +100,8 @@ MessageProcessingResult ChainlockHandler::ProcessNewChainLock(const NodeId from,
         }
     }
 
-    if (const auto ret = chainlock::VerifyChainLock(Params().GetConsensus(), m_chainman.ActiveChain(), qman, clsig); ret != llmq::VerifyRecSigStatus::Valid) {
+    if (const auto ret = chainlock::VerifyChainLock(Params().GetConsensus(), m_chainman.ActiveChain(), qman, clsig);
+        ret != llmq::VerifyRecSigStatus::Valid) {
         LogPrint(BCLog::CHAINLOCKS, "ChainlockHandler::%s -- invalid CLSIG (%s), status=%d peer=%d\n", __func__,
                  clsig.ToString(), ToUnderlying(ret), from);
         if (from != -1) {
@@ -131,15 +129,15 @@ MessageProcessingResult ChainlockHandler::ProcessNewChainLock(const NodeId from,
     return clsig_inv;
 }
 
-void ChainlockHandler::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
+void ChainlockHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
 {
     if (pindexNew == pindexFork) // blocks were disconnected without any new ones
         return;
     if (fInitialDownload) return;
 
-    // TODO: reconsider removing scheduler from here, because UpdatedBlockTip is already async call from notification scheduler
-    // don't call TrySignChainTip directly but instead let the scheduler call it. This way we ensure that cs_main is
-    // never locked and TrySignChainTip is not called twice in parallel. Also avoids recursive calls due to
+    // TODO: reconsider removing scheduler from here, because UpdatedBlockTip is already async call from notification
+    // scheduler don't call TrySignChainTip directly but instead let the scheduler call it. This way we ensure that
+    // cs_main is never locked and TrySignChainTip is not called twice in parallel. Also avoids recursive calls due to
     // EnforceBestChainLock switching chains.
     // atomic[If tryLockChainTipScheduled is false, do (set it to true] and schedule signing).
 
@@ -253,8 +251,7 @@ void ChainlockHandler::EnforceBestChainLock()
             return;
         }
         LOCK(::cs_main);
-        if (m_chainman.ActiveTip()->GetAncestor(currentBestChainLockBlockIndex->nHeight) !=
-            currentBestChainLockBlockIndex) {
+        if (m_chainman.ActiveTip()->GetAncestor(currentBestChainLockBlockIndex->nHeight) != currentBestChainLockBlockIndex) {
             return;
         }
     }
@@ -265,7 +262,8 @@ void ChainlockHandler::EnforceBestChainLock()
         lastNotifyChainLockBlockIndex = currentBestChainLockBlockIndex;
     }
 
-    GetMainSignals().NotifyChainLock(currentBestChainLockBlockIndex, std::make_shared<chainlock::ChainLockSig>(clsig), clsig.ToString());
+    GetMainSignals().NotifyChainLock(currentBestChainLockBlockIndex, std::make_shared<chainlock::ChainLockSig>(clsig),
+                                     clsig.ToString());
     uiInterface.NotifyChainLock(clsig.getBlockHash().ToString(), clsig.getHeight());
     ::g_stats_client->gauge("chainlocks.blockHeight", clsig.getHeight(), 1.0f);
 }
@@ -325,12 +323,13 @@ void ChainlockHandler::Cleanup()
     }
 }
 
-llmq::VerifyRecSigStatus VerifyChainLock(const Consensus::Params& params, const CChain& chain, const llmq::CQuorumManager& qman, const chainlock::ChainLockSig& clsig)
+llmq::VerifyRecSigStatus VerifyChainLock(const Consensus::Params& params, const CChain& chain,
+                                         const llmq::CQuorumManager& qman, const chainlock::ChainLockSig& clsig)
 {
     const auto llmqType = params.llmqTypeChainLocks;
     const uint256 request_id = chainlock::GenSigRequestId(clsig.getHeight());
 
-    return llmq::VerifyRecoveredSig(llmqType, chain, qman, clsig.getHeight(), request_id,
-                                    clsig.getBlockHash(), clsig.getSig());
+    return llmq::VerifyRecoveredSig(llmqType, chain, qman, clsig.getHeight(), request_id, clsig.getBlockHash(),
+                                    clsig.getSig());
 }
 } // namespace chainlock

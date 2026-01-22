@@ -28,8 +28,7 @@
 #include <llmq/quorumsman.h>
 #include <llmq/utils.h>
 
-static bool CheckCbTxBestChainlock(const CCbTx& cbTx, const CBlockIndex* pindex,
-                                   const Consensus::Params& consensus_params,
+static bool CheckCbTxBestChainlock(const CCbTx& cbTx, const CBlockIndex* pindex, const Consensus::Params& consensus_params,
                                    const CChain& chain, const llmq::CQuorumManager& qman,
                                    const chainlock::Chainlocks& chainlocks, BlockValidationState& state)
 {
@@ -660,7 +659,8 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
             LogPrint(BCLog::BENCHMARK, "      - CalcCbTxMerkleRootQuorums: %.2fms [%.2fs]\n",
                      0.001 * (nTime6_2 - nTime6_1), nTimeMerkleQuorums * 0.000001);
 
-            if (!CheckCbTxBestChainlock(*opt_cbTx, pindex, m_consensus_params, m_chainman.ActiveChain(), m_qman, m_chainlocks, state)) {
+            if (!CheckCbTxBestChainlock(*opt_cbTx, pindex, m_consensus_params, m_chainman.ActiveChain(), m_qman,
+                                        m_chainlocks, state)) {
                 // pass the state returned by the function above
                 return false;
             }

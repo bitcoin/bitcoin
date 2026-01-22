@@ -12,9 +12,10 @@
 #include <llmq/snapshot.h>
 #include <validation.h>
 
-LLMQContext::LLMQContext(CDeterministicMNManager& dmnman, CEvoDB& evo_db, CSporkManager& sporkman, chainlock::Chainlocks& chainlocks, CTxMemPool& mempool,
-                         ChainstateManager& chainman, const CMasternodeSync& mn_sync,
-                         const util::DbWrapperParams& db_params, int8_t bls_threads, int64_t max_recsigs_age) :
+LLMQContext::LLMQContext(CDeterministicMNManager& dmnman, CEvoDB& evo_db, CSporkManager& sporkman,
+                         chainlock::Chainlocks& chainlocks, CTxMemPool& mempool, ChainstateManager& chainman,
+                         const CMasternodeSync& mn_sync, const util::DbWrapperParams& db_params, int8_t bls_threads,
+                         int64_t max_recsigs_age) :
     bls_worker{std::make_shared<CBLSWorker>()},
     qsnapman{std::make_unique<llmq::CQuorumSnapshotManager>(evo_db)},
     quorum_block_processor{std::make_unique<llmq::CQuorumBlockProcessor>(chainman.ActiveChainstate(), dmnman, evo_db,

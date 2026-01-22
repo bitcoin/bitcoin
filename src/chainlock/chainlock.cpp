@@ -5,23 +5,19 @@
 #include <chainlock/chainlock.h>
 
 #include <chainlock/clsig.h>
-#include <spork.h>
 #include <logging.h>
+#include <spork.h>
 
-namespace chainlock
+namespace chainlock {
+
+Chainlocks::Chainlocks(const CSporkManager& sporkman) :
+    m_sporks(sporkman)
 {
-
-Chainlocks::Chainlocks(const CSporkManager& sporkman) : m_sporks(sporkman) {}
-
-bool Chainlocks::IsEnabled() const
-{
-    return m_sporks.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED);
 }
 
-bool Chainlocks::IsSigningEnabled() const
-{
-    return m_sporks.GetSporkValue(SPORK_19_CHAINLOCKS_ENABLED) == 0;
-}
+bool Chainlocks::IsEnabled() const { return m_sporks.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED); }
+
+bool Chainlocks::IsSigningEnabled() const { return m_sporks.GetSporkValue(SPORK_19_CHAINLOCKS_ENABLED) == 0; }
 
 chainlock::ChainLockSig Chainlocks::GetBestChainLock() const
 {
@@ -160,4 +156,4 @@ void Chainlocks::AcceptedBlockHeader(gsl::not_null<const CBlockIndex*> pindexNew
         bestChainLockBlockIndex = pindexNew;
     }
 }
-} // namespace chainlock::
+} // namespace chainlock

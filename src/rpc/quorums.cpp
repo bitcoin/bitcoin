@@ -1115,7 +1115,8 @@ static RPCHelpMan verifychainlock()
     }
 
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
-    return chainlock::VerifyChainLock(Params().GetConsensus(), chainman.ActiveChain(), *CHECK_NONFATAL(llmq_ctx.qman), chainlock::ChainLockSig{nBlockHeight, nBlockHash, sig}) ==
+    return chainlock::VerifyChainLock(Params().GetConsensus(), chainman.ActiveChain(), *CHECK_NONFATAL(llmq_ctx.qman),
+                                      chainlock::ChainLockSig{nBlockHeight, nBlockHash, sig}) ==
            llmq::VerifyRecSigStatus::Valid;
 },
     };
@@ -1229,7 +1230,8 @@ static RPCHelpMan submitchainlock()
 
     const ChainstateManager& chainman = EnsureChainman(node);
     const auto clsig{chainlock::ChainLockSig(nBlockHeight, nBlockHash, sig)};
-    const llmq::VerifyRecSigStatus ret{chainlock::VerifyChainLock(Params().GetConsensus(), chainman.ActiveChain(), *llmq_ctx.qman, clsig)};
+    const llmq::VerifyRecSigStatus ret{
+        chainlock::VerifyChainLock(Params().GetConsensus(), chainman.ActiveChain(), *llmq_ctx.qman, clsig)};
     if (ret == llmq::VerifyRecSigStatus::NoQuorum) {
         LOCK(cs_main);
         const CBlockIndex* pIndex{chainman.ActiveChain().Tip()};

@@ -25,7 +25,9 @@ class CMNHFManager;
 class TxValidationState;
 struct MNListUpdates;
 
-namespace chainlock { class Chainlocks; }
+namespace chainlock {
+class Chainlocks;
+}
 namespace Consensus { struct Params; }
 namespace llmq {
 class CQuorumBlockProcessor;

@@ -24,14 +24,14 @@
 #include <validationinterface.h>
 
 ActiveContext::ActiveContext(CBLSWorker& bls_worker, ChainstateManager& chainman, CConnman& connman,
-                             CDeterministicMNManager& dmnman, CGovernanceManager& govman,
-                             CMasternodeMetaMan& mn_metaman, CMNHFManager& mnhfman, CSporkManager& sporkman, const chainlock::Chainlocks& chainlocks,
-                             CTxMemPool& mempool, chainlock::ChainlockHandler& clhandler, llmq::CInstantSendManager& isman,
-                             llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumManager& qman,
-                             llmq::CQuorumSnapshotManager& qsnapman, llmq::CSigningManager& sigman,
-                             PeerManager& peerman, const CMasternodeSync& mn_sync, const CBLSSecretKey& operator_sk,
-                             const llmq::QvvecSyncModeMap& sync_map, const util::DbWrapperParams& db_params,
-                             bool quorums_recovery, bool quorums_watch) :
+                             CDeterministicMNManager& dmnman, CGovernanceManager& govman, CMasternodeMetaMan& mn_metaman,
+                             CMNHFManager& mnhfman, CSporkManager& sporkman, const chainlock::Chainlocks& chainlocks,
+                             CTxMemPool& mempool, chainlock::ChainlockHandler& clhandler,
+                             llmq::CInstantSendManager& isman, llmq::CQuorumBlockProcessor& qblockman,
+                             llmq::CQuorumManager& qman, llmq::CQuorumSnapshotManager& qsnapman,
+                             llmq::CSigningManager& sigman, PeerManager& peerman, const CMasternodeSync& mn_sync,
+                             const CBLSSecretKey& operator_sk, const llmq::QvvecSyncModeMap& sync_map,
+                             const util::DbWrapperParams& db_params, bool quorums_recovery, bool quorums_watch) :
     m_isman{isman},
     m_qman{qman},
     nodeman{std::make_unique<CActiveMasternodeManager>(connman, dmnman, operator_sk)},
@@ -43,8 +43,8 @@ ActiveContext::ActiveContext(CBLSWorker& bls_worker, ChainstateManager& chainman
     ehf_sighandler{std::make_unique<llmq::CEHFSignalsHandler>(chainman, mnhfman, sigman, *shareman, qman)},
     qman_handler{std::make_unique<llmq::QuorumParticipant>(bls_worker, connman, dmnman, qman, qsnapman, *nodeman, chainman,
                                                            mn_sync, sporkman, sync_map, quorums_recovery, quorums_watch)},
-    cl_signer{std::make_unique<chainlock::ChainLockSigner>(chainman.ActiveChainstate(), chainlocks, clhandler, isman, qman, sigman, *shareman,
-                                                           mn_sync)},
+    cl_signer{std::make_unique<chainlock::ChainLockSigner>(chainman.ActiveChainstate(), chainlocks, clhandler, isman,
+                                                           qman, sigman, *shareman, mn_sync)},
     is_signer{std::make_unique<instantsend::InstantSendSigner>(chainman.ActiveChainstate(), chainlocks, isman, sigman,
                                                                *shareman, qman, sporkman, mempool, mn_sync)}
 {

@@ -59,7 +59,9 @@ public:
     ChainLockSigner() = delete;
     ChainLockSigner(const ChainLockSigner&) = delete;
     ChainLockSigner& operator=(const ChainLockSigner&) = delete;
-    explicit ChainLockSigner(CChainState& chainstate, const chainlock::Chainlocks& chainlocks, ChainlockHandler& clhandler, const llmq::CInstantSendManager& isman, const llmq::CQuorumManager& qman, llmq::CSigningManager& sigman,
+    explicit ChainLockSigner(CChainState& chainstate, const chainlock::Chainlocks& chainlocks,
+                             ChainlockHandler& clhandler, const llmq::CInstantSendManager& isman,
+                             const llmq::CQuorumManager& qman, llmq::CSigningManager& sigman,
                              llmq::CSigSharesManager& shareman, const CMasternodeSync& mn_sync);
     ~ChainLockSigner();
 
@@ -70,10 +72,12 @@ public:
     void UnregisterRecoveryInterface();
 
     // implements validation interface:
-    void BlockConnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex) override
+    void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
-    void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex) override EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
-    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
+    void BlockDisconnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
+    void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
 
     [[nodiscard]] MessageProcessingResult HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);

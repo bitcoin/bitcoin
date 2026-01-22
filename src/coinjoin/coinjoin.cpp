@@ -389,7 +389,10 @@ bilingual_str CoinJoin::GetMessageByID(PoolMessage nMessageID)
     }
 }
 
-CDSTXManager::CDSTXManager(const chainlock::Chainlocks& chainlocks) : m_chainlocks{chainlocks} {}
+CDSTXManager::CDSTXManager(const chainlock::Chainlocks& chainlocks) :
+    m_chainlocks{chainlocks}
+{
+}
 CDSTXManager::~CDSTXManager() = default;
 
 void CDSTXManager::AddDSTX(const CCoinJoinBroadcastTx& dstx)

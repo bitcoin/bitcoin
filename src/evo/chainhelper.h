@@ -20,7 +20,9 @@ class CSporkManager;
 class CTransaction;
 class uint256;
 
-namespace chainlock { class Chainlocks; }
+namespace chainlock {
+class Chainlocks;
+}
 namespace Consensus { struct Params; }
 namespace llmq {
 class CInstantSendManager;

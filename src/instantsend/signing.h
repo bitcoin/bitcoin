@@ -18,7 +18,9 @@ struct MessageProcessingResult;
 namespace Consensus {
 struct Params;
 } // namespace Consensus
-namespace chainlock { class Chainlocks; }
+namespace chainlock {
+class Chainlocks;
+}
 namespace llmq {
 class CInstantSendManager;
 class CSigningManager;

@@ -37,7 +37,9 @@ namespace util {
 struct DbWrapperParams;
 } // namespace util
 
-namespace chainlock { class Chainlocks; }
+namespace chainlock {
+class Chainlocks;
+}
 
 namespace instantsend {
 class InstantSendSigner;
@@ -106,9 +108,9 @@ public:
     CInstantSendManager() = delete;
     CInstantSendManager(const CInstantSendManager&) = delete;
     CInstantSendManager& operator=(const CInstantSendManager&) = delete;
-    explicit CInstantSendManager(const chainlock::Chainlocks& chainlocks, CChainState& chainstate, CSigningManager& _sigman,
-                                 CSporkManager& sporkman, CTxMemPool& _mempool, const CMasternodeSync& mn_sync,
-                                 const util::DbWrapperParams& db_params);
+    explicit CInstantSendManager(const chainlock::Chainlocks& chainlocks, CChainState& chainstate,
+                                 CSigningManager& _sigman, CSporkManager& sporkman, CTxMemPool& _mempool,
+                                 const CMasternodeSync& mn_sync, const util::DbWrapperParams& db_params);
     ~CInstantSendManager();
 
     void ConnectSigner(gsl::not_null<instantsend::InstantSendSigner*> signer)
