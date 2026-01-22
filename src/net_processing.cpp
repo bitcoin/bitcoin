@@ -5523,11 +5523,13 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
                 // Send the initial self-announcement in its own message. This makes sure
                 // rate-limiting with limited start-tokens doesn't ignore it if the first
                 // message ends up containing multiple addresses.
-                std::vector<CAddress> self_announcement {local_addr};
-                if (peer.m_wants_addrv2) {
-                    MakeAndPushMessage(node, NetMsgType::ADDRV2, CAddress::V2_NETWORK(self_announcement));
-                } else {
-                    MakeAndPushMessage(node, NetMsgType::ADDR, CAddress::V1_NETWORK(self_announcement));
+                if (IsAddrCompatible(peer, local_addr)) {
+                    std::vector<CAddress> self_announcement{local_addr};
+                    if (peer.m_wants_addrv2) {
+                        MakeAndPushMessage(node, NetMsgType::ADDRV2, CAddress::V2_NETWORK(self_announcement));
+                    } else {
+                        MakeAndPushMessage(node, NetMsgType::ADDR, CAddress::V1_NETWORK(self_announcement));
+                    }
                 }
             } else {
                 // All later self-announcements are sent together with the other addresses.
