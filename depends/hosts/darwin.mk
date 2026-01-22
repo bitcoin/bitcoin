@@ -1,4 +1,4 @@
-OSX_MIN_VERSION=13.0
+OSX_MIN_VERSION=14.0
 OSX_SDK_VERSION=14.0
 XCODE_VERSION=15.0
 XCODE_BUILD_ID=15A240d
@@ -79,4 +79,4 @@ darwin_debug_CXXFLAGS=$(darwin_debug_CFLAGS)
 darwin_cmake_system_name=Darwin
 # Darwin version, which corresponds to OSX_MIN_VERSION.
 # See https://en.wikipedia.org/wiki/Darwin_(operating_system)
-darwin_cmake_system_version=22.1
+darwin_cmake_system_version=23.0

@@ -1,6 +1,6 @@
 # macOS Build Guide
 
-**Updated for MacOS [14](https://www.apple.com/macos/macos-sequoia/)**
+**Updated for macOS [14](https://developer.apple.com/documentation/macos-release-notes/macos-14-release-notes/)**
 
 This guide describes how to build dashd, command-line utilities, and GUI on macOS.
 
