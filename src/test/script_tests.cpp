@@ -95,6 +95,7 @@ static ScriptErrorDesc script_errors[]={
     {SCRIPT_ERR_TAPSCRIPT_EMPTY_PUBKEY, "TAPSCRIPT_EMPTY_PUBKEY"},
     {SCRIPT_ERR_OP_CODESEPARATOR, "OP_CODESEPARATOR"},
     {SCRIPT_ERR_SIG_FINDANDDELETE, "SIG_FINDANDDELETE"},
+    {SCRIPT_ERR_SCRIPTNUM, "SCRIPTNUM"}
 };
 
 static std::string FormatScriptFlags(script_verify_flags flags)
