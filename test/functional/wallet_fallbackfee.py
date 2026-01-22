@@ -61,6 +61,15 @@ class WalletFallbackFeeTest(BitcoinTestFramework):
         self.sending_succeeds(node)
         self.stop_node(0, expected_stderr='')
 
+        # Starting a node with a large fallback fee set...
+        excessive_fallback = HIGH_TX_FEE_PER_KB + Decimal('0.00000001')
+        self.start_node(0, extra_args=[f"-fallbackfee={excessive_fallback}"])
+        # ...works...
+        self.sending_succeeds(node)
+        # ...but results in a warning message.
+        expected_error = "Warning: -fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available."
+        self.stop_node(0, expected_stderr=expected_error)
+
 
 if __name__ == '__main__':
     WalletFallbackFeeTest(__file__).main()
