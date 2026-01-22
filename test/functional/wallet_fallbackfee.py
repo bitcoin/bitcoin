@@ -47,5 +47,16 @@ class WalletRBFTest(BitcoinTestFramework):
         self.nodes[0].fundrawtransaction(self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1}))
         self.nodes[0].sendmany("", {self.nodes[0].getnewaddress(): 1})
 
+        # Starting a node with a large fallback fee set...
+        excessive_fallback = HIGH_TX_FEE_PER_KB + Decimal('0.00000001')
+        self.restart_node(0, extra_args=[f"-fallbackfee={excessive_fallback}"])
+        # Works...
+        self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
+        self.nodes[0].fundrawtransaction(self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1}))
+        self.nodes[0].sendmany("", {self.nodes[0].getnewaddress(): 1})
+        # But results in a warning message.
+        expected_error = "Warning: -fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available."
+        self.stop_node(0, expected_stderr=expected_error)
+
 if __name__ == '__main__':
     WalletRBFTest(__file__).main()
