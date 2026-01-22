@@ -47,8 +47,8 @@
 #include <span>
 #include <stdexcept>
 #include <string>
-#include <tuple>
 #include <utility>
+#include <variant>
 #include <vector>
 
 using kernel::ChainstateRole;
