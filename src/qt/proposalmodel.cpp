@@ -17,10 +17,10 @@
 
 #include <algorithm>
 
-Proposal::Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj, QObject* parent) :
-    QObject{parent},
+Proposal::Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj) :
     clientModel{_clientModel},
-    govObj{_govObj}
+    govObj{_govObj},
+    m_hash{QString::fromStdString(govObj.GetHash().ToString())}
 {
     UniValue prop_data;
     if (!prop_data.read(govObj.GetDataAsPlainString())) {
@@ -71,12 +71,11 @@ QString Proposal::votingStatus(const int nAbsVoteReq) const
     // TODO: determine if voting is in progress vs. funded or not funded for past proposals.
     // see CSuperblock::GetNearestSuperblocksHeights(nBlockHeight, nLastSuperblock, nNextSuperblock);
     const int absYesCount = clientModel->node().gov().getObjAbsYesCount(govObj, VOTE_SIGNAL_FUNDING);
-    QString qStatusString;
     if (absYesCount >= nAbsVoteReq) {
         // Could use govObj.IsSetCachedFunding here, but need nAbsVoteReq to display numbers anyway.
-        return tr("Passing +%1").arg(absYesCount - nAbsVoteReq);
+        return QObject::tr("Passing +%1").arg(absYesCount - nAbsVoteReq);
     } else {
-        return tr("Needs additional %1 votes").arg(nAbsVoteReq - absYesCount);
+        return QObject::tr("Needs additional %1 votes").arg(nAbsVoteReq - absYesCount);
     }
 }
 

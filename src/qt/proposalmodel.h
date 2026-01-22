@@ -11,36 +11,34 @@
 
 #include <QAbstractTableModel>
 #include <QDateTime>
-#include <QObject>
 
 #include <memory>
 #include <vector>
 
 class ClientModel;
 
-class Proposal : public QObject
+class Proposal
 {
 private:
-    Q_OBJECT
-
     ClientModel* clientModel;
     const CGovernanceObject govObj;
 
     double m_paymentAmount{0.0};
     QDateTime m_endDate{};
     QDateTime m_startDate{};
+    QString m_hash{};
     QString m_title{};
     QString m_url{};
 
 public:
-    explicit Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj, QObject* parent = nullptr);
+    explicit Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj);
 
     bool isActive() const;
     double paymentAmount() const { return m_paymentAmount; }
     int GetAbsoluteYesCount() const;
     QDateTime endDate() const { return m_endDate; }
     QDateTime startDate() const { return m_startDate; }
-    QString hash() const { return QString::fromStdString(govObj.GetHash().ToString()); }
+    QString hash() const { return m_hash; }
     QString title() const { return m_title; }
     QString toJson() const;
     QString url() const { return m_url; }

@@ -131,7 +131,7 @@ void GovernanceList::updateProposalList()
             if (govObj.GetObjectType() != GovernanceObject::PROPOSAL) {
                 continue; // Skip triggers.
             }
-            newProposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, proposalModel));
+            newProposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj));
         }
         proposalModel->reconcile(std::move(newProposals));
 
@@ -184,7 +184,7 @@ void GovernanceList::showProposalContextMenu(const QPoint& pos)
     proposal_url.replace(QChar('&'), QString("&&"));
 
     proposalContextMenu->clear();
-    proposalContextMenu->addAction(proposal_url, proposal, &Proposal::openUrl);
+    proposalContextMenu->addAction(proposal_url, [proposal]() { proposal->openUrl(); });
 
     // Add voting options if wallet is available and has voting capability
     if (walletModel && canVote()) {
