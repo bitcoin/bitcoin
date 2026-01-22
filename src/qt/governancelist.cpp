@@ -69,6 +69,9 @@ GovernanceList::GovernanceList(QWidget* parent) :
     connect(ui->govTableView, &QTableView::doubleClicked, this, &GovernanceList::showAdditionalInfo);
     connect(ui->govTableView->horizontalHeader(), &QHeaderView::sectionResized, this, &GovernanceList::refreshColumnWidths);
 
+    ui->emptyPage->setAutoFillBackground(true);
+    updateEmptyPagePalette();
+
     ui->proposalSourceCombo->addItem(tr("Active Proposals"), ToUnderlying(ProposalSource::Active));
     ui->proposalSourceCombo->setMinimumWidth(250);
     connect(ui->proposalSourceCombo, qOverload<int>(&QComboBox::activated), this, &GovernanceList::setProposalSource);
@@ -116,7 +119,15 @@ void GovernanceList::changeEvent(QEvent* event)
     QWidget::changeEvent(event);
     if (event->type() == QEvent::StyleChange) {
         QTimer::singleShot(0, proposalModel, &ProposalModel::refreshIcons);
+        QTimer::singleShot(0, this, &GovernanceList::updateEmptyPagePalette);
     }
+}
+
+void GovernanceList::updateEmptyPagePalette()
+{
+    QPalette emptyPalette = ui->emptyPage->palette();
+    emptyPalette.setColor(QPalette::Window, ui->govTableView->palette().color(QPalette::Base));
+    ui->emptyPage->setPalette(emptyPalette);
 }
 
 void GovernanceList::setClientModel(ClientModel* model)
@@ -302,6 +313,25 @@ void GovernanceList::updateProposalCount()
 {
     ui->countLabel->setText(QString::number(proposalModelProxy->rowCount()));
     refreshColumnWidths();
+    updateEmptyState();
+}
+
+void GovernanceList::updateEmptyState()
+{
+    const bool hasProposals = proposalModelProxy->rowCount() > 0;
+    if (hasProposals) {
+        ui->proposalStack->setCurrentWidget(ui->govTableView);
+    } else {
+        switch (m_proposal_source) {
+        case ProposalSource::Active:
+            ui->emptyLabel->setText(tr("No active proposals on the network."));
+            break;
+        case ProposalSource::Local:
+            ui->emptyLabel->setText(tr("No proposals recorded in wallet file."));
+            break;
+        } // no default case, so the compiler can warn about missing cases
+        ui->proposalStack->setCurrentWidget(ui->emptyPage);
+    }
 }
 
 void GovernanceList::showCreateProposalDialog()

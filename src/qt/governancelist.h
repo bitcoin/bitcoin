@@ -83,6 +83,8 @@ private:
     void handleProposalListChanged();
     void refreshColumnWidths();
     void setProposalList(CalcProposalList&& data);
+    void updateEmptyPagePalette();
+    void updateEmptyState();
     void voteForProposal(vote_outcome_enum_t outcome);
 
 protected:
