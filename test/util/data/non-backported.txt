@@ -28,6 +28,7 @@ src/masternode/*.cpp
 src/masternode/*.h
 src/messagesigner.*
 src/netfulfilledman.*
+src/qt/descriptiondialog.*
 src/qt/governancelist.*
 src/qt/guiutil_font.*
 src/qt/masternodelist.*

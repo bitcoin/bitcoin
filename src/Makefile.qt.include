@@ -21,6 +21,7 @@ QT_FORMS_UI = \
   qt/forms/coincontroldialog.ui \
   qt/forms/createwalletdialog.ui \
   qt/forms/debugwindow.ui \
+  qt/forms/descriptiondialog.ui \
   qt/forms/editaddressdialog.ui \
   qt/forms/governancelist.ui \
   qt/forms/helpmessagedialog.ui \
@@ -38,8 +39,7 @@ QT_FORMS_UI = \
   qt/forms/receiverequestdialog.ui \
   qt/forms/sendcoinsdialog.ui \
   qt/forms/sendcoinsentry.ui \
-  qt/forms/signverifymessagedialog.ui \
-  qt/forms/transactiondescdialog.ui
+  qt/forms/signverifymessagedialog.ui
 
 QT_MOC_CPP = \
   qt/moc_addressbookpage.cpp \
@@ -57,6 +57,7 @@ QT_MOC_CPP = \
   qt/moc_coincontroltreewidget.cpp \
   qt/moc_createwalletdialog.cpp \
   qt/moc_csvmodelwriter.cpp \
+  qt/moc_descriptiondialog.cpp \
   qt/moc_editaddressdialog.cpp \
   qt/moc_governancelist.cpp \
   qt/moc_guiutil.cpp \
@@ -92,7 +93,6 @@ QT_MOC_CPP = \
   qt/moc_splashscreen.cpp \
   qt/moc_trafficgraphwidget.cpp \
   qt/moc_transactiondesc.cpp \
-  qt/moc_transactiondescdialog.cpp \
   qt/moc_transactionfilterproxy.cpp \
   qt/moc_transactionoverviewwidget.cpp \
   qt/moc_transactiontablemodel.cpp \
@@ -135,6 +135,7 @@ BITCOIN_QT_H = \
   qt/coincontroltreewidget.h \
   qt/createwalletdialog.h \
   qt/csvmodelwriter.h \
+  qt/descriptiondialog.h \
   qt/editaddressdialog.h \
   qt/governancelist.h \
   qt/guiconstants.h \
@@ -176,7 +177,6 @@ BITCOIN_QT_H = \
   qt/trafficgraphdata.h \
   qt/trafficgraphwidget.h \
   qt/transactiondesc.h \
-  qt/transactiondescdialog.h \
   qt/transactionfilterproxy.h \
   qt/transactionoverviewwidget.h \
   qt/transactionrecord.h \
@@ -260,6 +260,7 @@ BITCOIN_QT_WALLET_CPP = \
   qt/coincontroldialog.cpp \
   qt/coincontroltreewidget.cpp \
   qt/createwalletdialog.cpp \
+  qt/descriptiondialog.cpp \
   qt/editaddressdialog.cpp \
   qt/governancelist.cpp \
   qt/masternodelist.cpp \
@@ -279,7 +280,6 @@ BITCOIN_QT_WALLET_CPP = \
   qt/sendcoinsentry.cpp \
   qt/signverifymessagedialog.cpp \
   qt/transactiondesc.cpp \
-  qt/transactiondescdialog.cpp \
   qt/transactionfilterproxy.cpp \
   qt/transactionoverviewwidget.cpp \
   qt/transactionrecord.cpp \

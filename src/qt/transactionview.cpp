@@ -7,11 +7,11 @@
 #include <qt/addresstablemodel.h>
 #include <qt/bitcoinunits.h>
 #include <qt/csvmodelwriter.h>
+#include <qt/descriptiondialog.h>
 #include <qt/editaddressdialog.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 #include <qt/qrdialog.h>
-#include <qt/transactiondescdialog.h>
 #include <qt/transactionfilterproxy.h>
 #include <qt/transactionrecord.h>
 #include <qt/transactiontablemodel.h>
@@ -538,7 +538,11 @@ void TransactionView::showDetails()
     QModelIndexList selection = transactionView->selectionModel()->selectedRows();
     if(!selection.isEmpty())
     {
-        TransactionDescDialog* dlg = new TransactionDescDialog(selection.at(0), this);
+        const QModelIndex& idx{selection.at(0)};
+        DescriptionDialog* dlg = new DescriptionDialog(
+            tr("Details for %1").arg(idx.data(TransactionTableModel::TxHashRole).toString()),
+            idx.data(TransactionTableModel::LongDescriptionRole).toString(),
+            /*parent=*/this);
         dlg->setAttribute(Qt::WA_DeleteOnClose);
         dlg->show();
     }

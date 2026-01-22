@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>TransactionDescDialog</class>
- <widget class="QDialog" name="TransactionDescDialog">
+ <class>DescriptionDialog</class>
+ <widget class="QDialog" name="DescriptionDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,13 +11,13 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string notr="true">Transaction details</string>
+   <string notr="true">Details</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QTextEdit" name="detailText">
      <property name="toolTip">
-      <string>This pane shows a detailed description of the transaction</string>
+      <string>This pane shows detailed information</string>
      </property>
      <property name="readOnly">
       <bool>true</bool>
@@ -41,7 +41,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>TransactionDescDialog</receiver>
+   <receiver>DescriptionDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -57,7 +57,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>TransactionDescDialog</receiver>
+   <receiver>DescriptionDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
