@@ -2,10 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_PROPOSALWIZARD_H
-#define BITCOIN_QT_PROPOSALWIZARD_H
-
-#include <qt/forms/ui_proposalwizard.h>
+#ifndef BITCOIN_QT_PROPOSALCREATE_H
+#define BITCOIN_QT_PROPOSALCREATE_H
 
 #include <QByteArray>
 #include <QDialog>
@@ -13,12 +11,16 @@
 
 class WalletModel;
 
-class ProposalWizard : public QDialog
+namespace Ui {
+class ProposalCreate;
+} // namespace Ui
+
+class ProposalCreate : public QDialog
 {
     Q_OBJECT
 public:
-    explicit ProposalWizard(WalletModel* walletModel, QWidget* parent = nullptr);
-    ~ProposalWizard();
+    explicit ProposalCreate(WalletModel* walletModel, QWidget* parent = nullptr);
+    ~ProposalCreate();
 
 private Q_SLOTS:
     void onCreate();
@@ -31,7 +33,7 @@ private Q_SLOTS:
 
 private:
     WalletModel* m_walletModel;
-    Ui::ProposalWizard* m_ui;
+    Ui::ProposalCreate* m_ui;
 
     // State
     int m_relay_confs{0};
@@ -44,4 +46,4 @@ private:
     void buildJsonAndHex();
 };
 
-#endif // BITCOIN_QT_PROPOSALWIZARD_H
+#endif // BITCOIN_QT_PROPOSALCREATE_H

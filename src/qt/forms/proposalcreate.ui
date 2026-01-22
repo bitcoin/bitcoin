@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ProposalWizard</class>
- <widget class="QDialog" name="ProposalWizard">
+ <class>ProposalCreate</class>
+ <widget class="QDialog" name="ProposalCreate">
   <property name="geometry">
      <rect>
       <x>0</x>
@@ -447,5 +447,3 @@
  <resources/>
  <connections/>
 </ui>
-
-

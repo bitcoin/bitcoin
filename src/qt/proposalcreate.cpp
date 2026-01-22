@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/proposalwizard.h>
-#include <qt/forms/ui_proposalwizard.h>
+#include <qt/proposalcreate.h>
+#include <qt/forms/ui_proposalcreate.h>
 
 #include <governance/object.h>
 #include <governance/validators.h>
@@ -31,10 +31,10 @@
 
 #include <algorithm>
 
-ProposalWizard::ProposalWizard(WalletModel* walletModel, QWidget* parent) :
+ProposalCreate::ProposalCreate(WalletModel* walletModel, QWidget* parent) :
     QDialog(parent),
     m_walletModel(walletModel),
-    m_ui(new Ui::ProposalWizard)
+    m_ui(new Ui::ProposalCreate)
 {
     m_ui->setupUi(this);
     m_ui->labelError->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR));
@@ -70,20 +70,20 @@ ProposalWizard::ProposalWizard(WalletModel* walletModel, QWidget* parent) :
     // Initialize total amount display (formatted with current unit)
     updateDisplayUnit();
 
-    connect(m_ui->btnViewJson, &QPushButton::clicked, this, &ProposalWizard::onViewJson);
-    connect(m_ui->btnViewPayload, &QPushButton::clicked, this, &ProposalWizard::onViewPayload);
-    connect(m_ui->editName, &QLineEdit::textChanged, this, &ProposalWizard::validateFields);
-    connect(m_ui->editUrl, &QLineEdit::textChanged, this, &ProposalWizard::validateFields);
-    connect(m_ui->editPayAddr, &QLineEdit::textChanged, this, &ProposalWizard::validateFields);
-    connect(m_ui->spinPayments, QOverload<int>::of(&QSpinBox::valueChanged), this, &ProposalWizard::updateLabels);
-    connect(m_ui->paymentAmount, &BitcoinAmountField::valueChanged, this, &ProposalWizard::updateLabels);
-    connect(m_ui->paymentAmount, &BitcoinAmountField::valueChanged, this, &ProposalWizard::validateFields);
-    connect(m_ui->btnCreate, &QPushButton::clicked, this, &ProposalWizard::onCreate);
+    connect(m_ui->btnViewJson, &QPushButton::clicked, this, &ProposalCreate::onViewJson);
+    connect(m_ui->btnViewPayload, &QPushButton::clicked, this, &ProposalCreate::onViewPayload);
+    connect(m_ui->editName, &QLineEdit::textChanged, this, &ProposalCreate::validateFields);
+    connect(m_ui->editUrl, &QLineEdit::textChanged, this, &ProposalCreate::validateFields);
+    connect(m_ui->editPayAddr, &QLineEdit::textChanged, this, &ProposalCreate::validateFields);
+    connect(m_ui->spinPayments, QOverload<int>::of(&QSpinBox::valueChanged), this, &ProposalCreate::updateLabels);
+    connect(m_ui->paymentAmount, &BitcoinAmountField::valueChanged, this, &ProposalCreate::updateLabels);
+    connect(m_ui->paymentAmount, &BitcoinAmountField::valueChanged, this, &ProposalCreate::validateFields);
+    connect(m_ui->btnCreate, &QPushButton::clicked, this, &ProposalCreate::onCreate);
 
     // Update fee labels on display unit change
     if (m_walletModel && m_walletModel->getOptionsModel()) {
         connect(m_walletModel->getOptionsModel(), &OptionsModel::displayUnitChanged, this,
-                &ProposalWizard::updateDisplayUnit);
+                &ProposalCreate::updateDisplayUnit);
     }
 
     GUIUtil::disableMacFocusRect(this);
@@ -91,12 +91,12 @@ ProposalWizard::ProposalWizard(WalletModel* walletModel, QWidget* parent) :
     setFixedSize(size());
 }
 
-ProposalWizard::~ProposalWizard()
+ProposalCreate::~ProposalCreate()
 {
     delete m_ui;
 }
 
-void ProposalWizard::buildJsonAndHex()
+void ProposalCreate::buildJsonAndHex()
 {
     const int64_t multiplier = std::numeric_limits<int64_t>::max() / std::max<int64_t>(1, m_target_spacing);
 
@@ -139,7 +139,7 @@ void ProposalWizard::buildJsonAndHex()
     m_hex = QString::fromStdString(HexStr(json));
 }
 
-void ProposalWizard::onViewJson()
+void ProposalCreate::onViewJson()
 {
     buildJsonAndHex();
     const QString html = QString("<code style=\"white-space: pre-wrap;\">%1</code>").arg(m_json.toHtmlEscaped());
@@ -150,7 +150,7 @@ void ProposalWizard::onViewJson()
     dlg->show();
 }
 
-void ProposalWizard::onViewPayload()
+void ProposalCreate::onViewPayload()
 {
     buildJsonAndHex();
     const QString html = QString("<code style=\"word-wrap: break-word;\">%1</code>").arg(m_hex.toHtmlEscaped());
@@ -161,7 +161,7 @@ void ProposalWizard::onViewPayload()
     dlg->show();
 }
 
-void ProposalWizard::onCreate()
+void ProposalCreate::onCreate()
 {
     // Validate fields first
     if (m_ui->editName->text().trimmed().isEmpty() || m_ui->editUrl->text().trimmed().isEmpty() ||
@@ -216,7 +216,7 @@ void ProposalWizard::onCreate()
     accept(); // Close the wizard
 }
 
-void ProposalWizard::updateLabels()
+void ProposalCreate::updateLabels()
 {
     if (m_walletModel && m_walletModel->getOptionsModel()) {
         const auto unit = m_walletModel->getOptionsModel()->getDisplayUnit();
@@ -235,7 +235,7 @@ void ProposalWizard::updateLabels()
     }
 }
 
-void ProposalWizard::updateDisplayUnit()
+void ProposalCreate::updateDisplayUnit()
 {
     if (m_walletModel && m_walletModel->getOptionsModel()) {
         m_ui->paymentAmount->setDisplayUnit(m_walletModel->getOptionsModel()->getDisplayUnit());
@@ -243,7 +243,7 @@ void ProposalWizard::updateDisplayUnit()
     updateLabels();
 }
 
-void ProposalWizard::validateFields()
+void ProposalCreate::validateFields()
 {
     if (m_ui->editName->text().trimmed().isEmpty() && m_ui->editUrl->text().trimmed().isEmpty() &&
         m_ui->editPayAddr->text().trimmed().isEmpty() && m_ui->paymentAmount->value() == 0)

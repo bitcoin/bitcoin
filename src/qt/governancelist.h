@@ -28,7 +28,7 @@ inline constexpr int GOVERNANCELIST_UPDATE_SECONDS = 10;
 class ClientModel;
 class ProposalModel;
 class WalletModel;
-class ProposalWizard;
+class ProposalCreate;
 class CDeterministicMNList;
 enum vote_outcome_enum_t : int;
 namespace Governance {
