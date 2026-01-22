@@ -96,7 +96,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(n3.pruneblockchain(FINAL_HEIGHT), 298)  # 298 is the height of the last block pruned (pruneheight 299)
         error_message = "Wallet loading failed. Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of a pruned node)"
         # This backup (backup_w2.dat) was created at height 199, so it can't be restored in a node with a pruneheight of 299
-        assert_raises_rpc_error(-4, error_message, n3.restorewallet, "w2", "backup_w2.dat")
+        assert_raises_rpc_error(-4, error_message, n3.restorewallet, "w2_pruneheight", "backup_w2.dat")
 
         self.log.info("Ensuring wallet can be restored from a backup that was created at the pruneheight (pruned node)")
         # This backup (backup_w.dat) was created at height 299, so it can be restored in a node with a pruneheight of 299
