@@ -13,7 +13,7 @@ import sys
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
+    assert_gt,
     assert_raises_rpc_error,
 )
 
@@ -202,7 +202,7 @@ class WalletSignerTest(BitcoinTestFramework):
 
         # Bump fee
         res = hww.bumpfee(orig_tx_id)
-        assert_greater_than(res["fee"], res["origfee"])
+        assert_gt(res["fee"], res["origfee"])
         assert_equal(res["errors"], [])
 
 

@@ -22,8 +22,8 @@ from test_framework.util import (
     assert_approx,
     assert_equal,
     assert_fee_amount,
-    assert_greater_than,
-    assert_greater_than_or_equal,
+    assert_gt,
+    assert_ge,
     assert_raises_rpc_error,
     count_bytes,
     get_fee,
@@ -738,7 +738,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
 
-        assert_greater_than(len(dec_tx['vin']), 0) # at least one vin
+        assert_gt(len(dec_tx['vin']), 0) # at least one vin
         assert_equal(len(dec_tx['vout']), 2) # one change output added
 
     def test_watchonly(self):
@@ -769,7 +769,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(res_dec["vin"][0]["txid"], self.watchonly_utxo['txid'])
 
         assert "fee" in result.keys()
-        assert_greater_than(result["changepos"], -1)
+        assert_gt(result["changepos"], -1)
 
         wwatch.unloadwallet()
 
@@ -788,7 +788,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(len(res_dec["vin"]), 1)
         assert res_dec["vin"][0]["txid"] == self.watchonly_utxo['txid']
 
-        assert_greater_than(result["fee"], 0)
+        assert_gt(result["fee"], 0)
         assert_equal(result["changepos"], -1)
         assert_equal(result["fee"] + res_dec["vout"][0]["value"], self.watchonly_amount)
 
@@ -976,17 +976,17 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(share[1], 0)
 
         # The other 3 outputs are smaller as a result of subtractFeeFromOutputs.
-        assert_greater_than(share[0], 0)
-        assert_greater_than(share[2], 0)
-        assert_greater_than(share[3], 0)
+        assert_gt(share[0], 0)
+        assert_gt(share[2], 0)
+        assert_gt(share[3], 0)
 
         # Outputs 2 and 3 take the same share of the fee.
         assert_equal(share[2], share[3])
 
         # Output 0 takes at least as much share of the fee, and no more than 2
         # satoshis more, than outputs 2 and 3.
-        assert_greater_than_or_equal(share[0], share[2])
-        assert_greater_than_or_equal(share[2] + Decimal(2e-8), share[0])
+        assert_ge(share[0], share[2])
+        assert_ge(share[2] + Decimal(2e-8), share[0])
 
         # The fee is the same in both transactions.
         assert_equal(result[0]['fee'], result[1]['fee'])
@@ -1092,10 +1092,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(signed_tx["complete"], True)
         # Reducing the weight should have a lower fee
         funded_tx2 = wallet.fundrawtransaction(raw_tx, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": low_input_weight}], fee_rate=2)
-        assert_greater_than(funded_tx["fee"], funded_tx2["fee"])
+        assert_gt(funded_tx["fee"], funded_tx2["fee"])
         # Increasing the weight should have a higher fee
         funded_tx2 = wallet.fundrawtransaction(raw_tx, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": high_input_weight}], fee_rate=2)
-        assert_greater_than(funded_tx2["fee"], funded_tx["fee"])
+        assert_gt(funded_tx2["fee"], funded_tx["fee"])
         # The provided weight should override the calculated weight when solving data is provided
         funded_tx3 = wallet.fundrawtransaction(raw_tx, solving_data={"descriptors": [desc]}, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": high_input_weight}], fee_rate=2)
         assert_equal(funded_tx2["fee"], funded_tx3["fee"])
@@ -1409,7 +1409,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         overhead_fees = feerate * len(tx) / 2 / 1000
         cost_of_change = change_tx["fee"] - no_change_tx["fee"]
         fees = no_change_tx["fee"]
-        assert_greater_than(fees, 0.01)
+        assert_gt(fees, 0.01)
 
         def do_fund_send(target):
             create_tx = tester.createrawtransaction([], [{funds.getnewaddress(): target}])
@@ -1427,7 +1427,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # The target value must be at most 2 - cost_of_change - not_input_fees - min_change (these are all
         # included in the target before ApproximateBestSubset).
         upper_bound = Decimal("2.0") - cost_of_change - overhead_fees - Decimal("0.01")
-        assert_greater_than_or_equal(upper_bound, lower_bound)
+        assert_ge(upper_bound, lower_bound)
         do_fund_send(lower_bound)
         do_fund_send(upper_bound)
 
@@ -1505,10 +1505,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.log.info("Craft a replacement adding inputs with highest depth possible")
         funded_tx2 = wallet.fundrawtransaction(raw_tx2, {'add_inputs': True, 'minconf': 2, 'fee_rate': 10})['hex']
         tx2_inputs = self.nodes[0].decoderawtransaction(funded_tx2)['vin']
-        assert_greater_than_or_equal(len(tx2_inputs), 2)
+        assert_ge(len(tx2_inputs), 2)
         for vin in tx2_inputs:
             if vin['txid'] != unconfirmed_txid:
-                assert_greater_than_or_equal(self.nodes[0].gettxout(vin['txid'], vin['vout'])['confirmations'], 2)
+                assert_ge(self.nodes[0].gettxout(vin['txid'], vin['vout'])['confirmations'], 2)
 
         final_tx2 = wallet.signrawtransactionwithwallet(funded_tx2)['hex']
         txid2 = self.nodes[0].sendrawtransaction(final_tx2)
@@ -1540,7 +1540,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         funded = wallet.fundrawtransaction(hexstring=tx, fee_rate=10)
 
         watchonly_funded = watchonly.fundrawtransaction(hexstring=tx, fee_rate=10)
-        assert_greater_than(watchonly_funded["fee"], funded["fee"])
+        assert_gt(watchonly_funded["fee"], funded["fee"])
 
 if __name__ == '__main__':
     RawTransactionsTest(__file__).main()

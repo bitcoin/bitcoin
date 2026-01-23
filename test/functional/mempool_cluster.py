@@ -19,8 +19,8 @@ from test_framework.wallet import (
 )
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
-    assert_greater_than_or_equal,
+    assert_gt,
+    assert_ge,
     assert_raises_rpc_error,
 )
 
@@ -83,7 +83,7 @@ class MempoolClusterTest(BitcoinTestFramework):
             # The weight is always positive, except for the first iteration
             assert x['weight'] > 0 or x['fee'] == 0
             # Monotonically decreasing fee per weight
-            assert_greater_than_or_equal(last_val['fee'] * x['weight'], x['fee'] * last_val['weight'])
+            assert_ge(last_val['fee'] * x['weight'], x['fee'] * last_val['weight'])
             last_val = x
 
     def test_limit_enforcement(self, cluster_submitted, target_vsize_per_tx=None):
@@ -91,7 +91,7 @@ class MempoolClusterTest(BitcoinTestFramework):
         the cluster may change as a result of these transactions, so cluster_submitted is mutated accordingly
         """
         # Cluster has already been submitted and has at least 3 transactions, otherwise this test won't work.
-        assert_greater_than_or_equal(len(cluster_submitted), 3)
+        assert_ge(len(cluster_submitted), 3)
         node = self.nodes[0]
         last_result = cluster_submitted[-1]
 
@@ -195,7 +195,7 @@ class MempoolClusterTest(BitcoinTestFramework):
             utxo_from_cluster1 = cluster1[-1]["new_utxo"]
 
             # Make the next cluster, which contains the remaining transactions
-            assert_greater_than(max_cluster_count, num_txns_cluster1)
+            assert_gt(max_cluster_count, num_txns_cluster1)
             num_txns_cluster2 = max_cluster_count - num_txns_cluster1
             cluster2 = self.add_chain_cluster(node, num_txns_cluster2)
             for result in cluster2:
@@ -246,7 +246,7 @@ class MempoolClusterTest(BitcoinTestFramework):
             utxos_to_merge.append(singleton["new_utxo"])
             vsize_remaining -= singleton["tx"].get_vsize()
 
-        assert_greater_than_or_equal(vsize_remaining, 500)
+        assert_ge(vsize_remaining, 500)
 
         # Create a transaction spending from all clusters that exceeds the cluster size limit.
         tx_merger_too_big = self.wallet.create_self_transfer_multi(utxos_to_spend=utxos_to_merge, target_vsize=vsize_remaining + 4, fee_per_output=10000)

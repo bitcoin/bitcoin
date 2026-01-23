@@ -16,7 +16,7 @@ from test_framework.p2p import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
+    assert_gt,
     check_node_connections,
 )
 from test_framework.crypto.chacha20 import REKEY_INTERVAL
@@ -82,8 +82,8 @@ class P2PEncrypted(BitcoinTestFramework):
         self.log.info("Check if version is sent and verack is received in inbound/outbound connections")
         assert_equal(len(node0.getpeerinfo()), 5)  # check if above 5 connections are present in node0's getpeerinfo()
         for peer in node0.getpeerinfo():
-            assert_greater_than(peer['bytessent_per_msg']['version'], 0)
-            assert_greater_than(peer['bytesrecv_per_msg']['verack'], 0)
+            assert_gt(peer['bytessent_per_msg']['version'], 0)
+            assert_gt(peer['bytesrecv_per_msg']['verack'], 0)
 
         self.log.info("Testing whether blocks propagate - check if tips sync when number of blocks >= REKEY_INTERVAL")
         # tests whether rekeying (which happens every REKEY_INTERVAL packets) works correctly

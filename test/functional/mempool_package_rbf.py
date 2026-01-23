@@ -12,7 +12,7 @@ from test_framework.messages import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.mempool_util import fill_mempool
 from test_framework.util import (
-    assert_greater_than_or_equal,
+    assert_ge,
     assert_equal,
 )
 from test_framework.wallet import (
@@ -143,7 +143,7 @@ class PackageRBFTest(BitcoinTestFramework):
         coin = self.coins.pop()
 
         package_hex1, package_txns1 = self.create_simple_package(coin, parent_fee=DEFAULT_FEE, child_fee=DEFAULT_CHILD_FEE, heavy_child=True)
-        assert_greater_than_or_equal(1000, package_txns1[-1].get_vsize())
+        assert_ge(1000, package_txns1[-1].get_vsize())
         node.submitpackage(package_hex1)
         self.assert_mempool_contents(expected=package_txns1)
 

@@ -16,8 +16,8 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
     assert_equal,
-    assert_greater_than,
-    assert_greater_than_or_equal,
+    assert_gt,
+    assert_ge,
     assert_raises_rpc_error,
     satoshi_round,
 )
@@ -78,7 +78,7 @@ def check_raw_estimates(node, fees_seen):
     for i in range(1, 26):
         for _, e in node.estimaterawfee(i).items():
             feerate = float(e["feerate"])
-            assert_greater_than(feerate, 0)
+            assert_gt(feerate, 0)
 
             if feerate + delta < min(fees_seen) or feerate - delta > max(fees_seen):
                 raise AssertionError(
@@ -97,9 +97,9 @@ def check_smart_estimates(node, fees_seen):
     last_feerate = feerate_ceiling
     for i, e in enumerate(all_smart_estimates):  # estimate is for i+1
         feerate = float(e["feerate"])
-        assert_greater_than(feerate, 0)
-        assert_greater_than_or_equal(feerate, float(mempoolMinFee))
-        assert_greater_than_or_equal(feerate, float(minRelaytxFee))
+        assert_gt(feerate, 0)
+        assert_ge(feerate, float(mempoolMinFee))
+        assert_ge(feerate, float(minRelaytxFee))
 
         if feerate + delta < min(fees_seen) or feerate - delta > feerate_ceiling:
             raise AssertionError(
@@ -114,7 +114,7 @@ def check_smart_estimates(node, fees_seen):
         if i == 0:
             assert_equal(e["blocks"], 2)
         else:
-            assert_greater_than_or_equal(i + 1, e["blocks"])
+            assert_ge(i + 1, e["blocks"])
 
 
 def check_estimates(node, fees_seen):
@@ -261,7 +261,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         utxos_to_respend = []
         txids_to_replace = []
 
-        assert_greater_than_or_equal(len(utxos), 250)
+        assert_ge(len(utxos), 250)
         for _ in range(5):
             # Broadcast 45 low fee transactions that will need to be RBF'd
             txs = []

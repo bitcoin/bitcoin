@@ -45,8 +45,8 @@ from test_framework.util import (
     assert_not_equal,
     assert_approx,
     assert_equal,
-    assert_greater_than,
-    assert_greater_than_or_equal,
+    assert_gt,
+    assert_ge,
     assert_raises_rpc_error,
     find_vout_for_address,
     wallet_importprivkey,
@@ -191,10 +191,10 @@ class PSBTTest(BitcoinTestFramework):
         self.log.info("Craft a replacement adding inputs with highest confs possible")
         psbtx2 = wallet.walletcreatefundedpsbt([{'txid': utxo1['txid'], 'vout': utxo1['vout']}], {target_address: 1}, 0, {'add_inputs': True, 'minconf': 2, 'fee_rate': 10})['psbt']
         tx2_inputs = self.nodes[0].decodepsbt(psbtx2)['tx']['vin']
-        assert_greater_than_or_equal(len(tx2_inputs), 2)
+        assert_ge(len(tx2_inputs), 2)
         for vin in tx2_inputs:
             if vin['txid'] != unconfirmed_txid:
-                assert_greater_than_or_equal(self.nodes[0].gettxout(vin['txid'], vin['vout'])['confirmations'], 2)
+                assert_ge(self.nodes[0].gettxout(vin['txid'], vin['vout'])['confirmations'], 2)
 
         signed_tx2 = wallet.walletprocesspsbt(psbtx2)
         txid2 = self.nodes[0].sendrawtransaction(signed_tx2['hex'])
@@ -425,14 +425,14 @@ class PSBTTest(BitcoinTestFramework):
         output_count = 1
         tx_weight_without_inputs = (base_tx_vsize + output_count + p2wpkh_output_vsize) * WITNESS_SCALE_FACTOR
         # min_tx_weight is greater than transaction weight without inputs
-        assert_greater_than(min_tx_weight, tx_weight_without_inputs)
+        assert_gt(min_tx_weight, tx_weight_without_inputs)
 
         # In order to test for when the passed max weight is less than the transaction weight without inputs
         # Define destination with two outputs.
         dest_arg_large = [{self.nodes[0].getnewaddress(): 1}, {self.nodes[0].getnewaddress(): 1}]
         large_tx_vsize_without_inputs = base_tx_vsize + output_count + (p2wpkh_output_vsize * 2)
         large_tx_weight_without_inputs = large_tx_vsize_without_inputs * WITNESS_SCALE_FACTOR
-        assert_greater_than(large_tx_weight_without_inputs, min_tx_weight)
+        assert_gt(large_tx_weight_without_inputs, min_tx_weight)
         # Test for max_tx_weight less than Transaction weight without inputs
         assert_raises_rpc_error(-4, "Maximum transaction weight is less than transaction weight without inputs", self.nodes[0].walletcreatefundedpsbt, [], dest_arg_large, 0, {"max_tx_weight": min_tx_weight})
         assert_raises_rpc_error(-4, "Maximum transaction weight is less than transaction weight without inputs", self.nodes[0].walletcreatefundedpsbt, [], dest_arg_large, 0, {"max_tx_weight": large_tx_weight_without_inputs})
@@ -448,7 +448,7 @@ class PSBTTest(BitcoinTestFramework):
         psbt = self.nodes[0].walletcreatefundedpsbt(outputs=dest_arg,locktime=0, options={"max_tx_weight": max_tx_weight_sufficient})["psbt"]
         weight = self.nodes[0].decodepsbt(psbt)["tx"]["weight"]
         # ensure the transaction's weight is below the specified max_tx_weight.
-        assert_greater_than_or_equal(max_tx_weight_sufficient, weight)
+        assert_ge(max_tx_weight_sufficient, weight)
 
         # If inputs are specified, do not automatically add more:
         utxo1 = self.nodes[0].listunspent()[0]
@@ -728,7 +728,7 @@ class PSBTTest(BitcoinTestFramework):
         psbtx_info = self.nodes[0].walletcreatefundedpsbt([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["amount"]+1}], block_height+2, {"replaceable": False, "add_inputs": True}, False)
         decoded_psbt = self.nodes[0].decodepsbt(psbtx_info["psbt"])
         for tx_in, psbt_in in zip(decoded_psbt["tx"]["vin"], decoded_psbt["inputs"]):
-            assert_greater_than(tx_in["sequence"], MAX_BIP125_RBF_SEQUENCE)
+            assert_gt(tx_in["sequence"], MAX_BIP125_RBF_SEQUENCE)
             assert "bip32_derivs" not in psbt_in
         assert_equal(decoded_psbt["tx"]["locktime"], block_height+2)
 
@@ -753,7 +753,7 @@ class PSBTTest(BitcoinTestFramework):
         psbtx_info = self.nodes[1].walletcreatefundedpsbt([{"txid":unspent1["txid"], "vout":unspent1["vout"]}], [{self.nodes[2].getnewaddress():unspent1["amount"]+1}], block_height, {"add_inputs": True})
         decoded_psbt = self.nodes[1].decodepsbt(psbtx_info["psbt"])
         for tx_in, psbt_in in zip(decoded_psbt["tx"]["vin"], decoded_psbt["inputs"]):
-            assert_greater_than(tx_in["sequence"], MAX_BIP125_RBF_SEQUENCE)
+            assert_gt(tx_in["sequence"], MAX_BIP125_RBF_SEQUENCE)
             assert "bip32_derivs" in psbt_in
 
         # Make sure change address wallet does not have P2SH innerscript access to results in success
@@ -1048,14 +1048,14 @@ class PSBTTest(BitcoinTestFramework):
             outputs={self.nodes[0].getnewaddress(): 15},
             add_inputs=True,
         )
-        assert_greater_than(psbt["fee"], psbt2["fee"])
+        assert_gt(psbt["fee"], psbt2["fee"])
         # Increasing the weight should have a higher fee
         psbt2 = wallet.walletcreatefundedpsbt(
             inputs=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": high_input_weight}],
             outputs={self.nodes[0].getnewaddress(): 15},
             add_inputs=True,
         )
-        assert_greater_than(psbt2["fee"], psbt["fee"])
+        assert_gt(psbt2["fee"], psbt["fee"])
         # The provided weight should override the calculated weight when solving data is provided
         psbt3 = wallet.walletcreatefundedpsbt(
             inputs=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": high_input_weight}],
@@ -1111,7 +1111,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Make sure tap tree is in psbt
         parsed_psbt = PSBT.from_base64(psbt)
-        assert_greater_than(len(parsed_psbt.o[vout].map[PSBT_OUT_TAP_TREE]), 0)
+        assert_gt(len(parsed_psbt.o[vout].map[PSBT_OUT_TAP_TREE]), 0)
         assert "taproot_tree" in self.nodes[0].decodepsbt(psbt)["outputs"][vout]
         parsed_psbt.make_blank()
         comb_psbt = self.nodes[0].combinepsbt([psbt, parsed_psbt.to_base64()])

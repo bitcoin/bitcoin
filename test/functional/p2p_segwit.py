@@ -82,7 +82,7 @@ from test_framework.script_util import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
-    assert_greater_than_or_equal,
+    assert_ge,
     assert_equal,
     assert_raises_rpc_error,
     ensure_for,
@@ -844,7 +844,7 @@ class SegWitTest(BitcoinTestFramework):
         relayable_block.vtx[0].wit.vtxinwit[0].scriptWitness.stack.append(b'a' * 100_000)
 
         # Ensure it's relayable by weight
-        assert_greater_than_or_equal(MAX_BLOCK_WEIGHT, relayable_block.get_weight())
+        assert_ge(MAX_BLOCK_WEIGHT, relayable_block.get_weight())
 
         # Send over P2P and expect rejection for the same reason
         test_witness_block(self.nodes[0], self.test_node, relayable_block,

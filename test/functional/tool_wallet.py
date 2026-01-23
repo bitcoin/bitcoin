@@ -14,7 +14,7 @@ from collections import OrderedDict
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
+    assert_gt,
     sha256sum_file,
 )
 
@@ -401,7 +401,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1)
         assert_equal(send_res["complete"], True)
         tx = wallet.gettransaction(txid=send_res["txid"], verbose=True)
-        assert_greater_than(tx["decoded"]["size"], 70000)
+        assert_gt(tx["decoded"]["size"], 70000)
 
         self.stop_node(0)
 

@@ -43,7 +43,7 @@ from test_framework.p2p import P2PTxInvStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than_or_equal,
+    assert_ge,
     assert_raises_rpc_error,
 )
 from test_framework.wallet import MiniWallet, COIN
@@ -95,8 +95,8 @@ class MempoolPersistTest(BitcoinTestFramework):
 
         last_entry = self.nodes[0].getmempoolentry(txid=last_txid)
         tx_creation_time = last_entry['time']
-        assert_greater_than_or_equal(tx_creation_time, tx_creation_time_lower)
-        assert_greater_than_or_equal(tx_creation_time_higher, tx_creation_time)
+        assert_ge(tx_creation_time, tx_creation_time_lower)
+        assert_ge(tx_creation_time_higher, tx_creation_time)
 
         # disconnect nodes & make a txn that remains in the unbroadcast set.
         self.disconnect_nodes(0, 1)

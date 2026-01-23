@@ -53,7 +53,7 @@ from test_framework.script_util import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
+    assert_gt,
     assert_raises_rpc_error,
 )
 from test_framework.wallet_util import generate_keypair
@@ -895,7 +895,7 @@ class FullBlockTest(BitcoinTestFramework):
         tx.nLockTime = 0xffffffff  # this locktime is non-final
         tx.vin.append(CTxIn(COutPoint(out[18].txid_int, 0)))  # don't set nSequence
         tx.vout.append(CTxOut(0, CScript([OP_TRUE])))
-        assert_greater_than(SEQUENCE_FINAL, tx.vin[0].nSequence)
+        assert_gt(SEQUENCE_FINAL, tx.vin[0].nSequence)
         b62 = self.update_block(62, [tx])
         self.send_blocks([b62], success=False, reject_reason='bad-txns-nonfinal', reconnect=True)
 

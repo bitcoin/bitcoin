@@ -20,7 +20,7 @@ from test_framework.messages import (
 )
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_greater_than
+from test_framework.util import assert_equal, assert_gt
 
 IP_TO_ANNOUNCE = "42.42.42.42"
 ONE_DAY = 60 * 60 * 24
@@ -83,7 +83,7 @@ class AddrSelfAnnouncementTest(BitcoinTestFramework):
         # and an addr message containing the GETADDR response.
         assert_equal(addr_receiver.self_announcements_received, 1)
         assert_equal(addr_receiver.addr_messages_received, 2)
-        assert_greater_than(addr_receiver.addresses_received, 1)
+        assert_gt(addr_receiver.addresses_received, 1)
 
     def outbound_connection_open_assertions(self, addr_receiver):
         # We expect only the self-announcement.

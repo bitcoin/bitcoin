@@ -26,7 +26,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_fee_amount,
-    assert_greater_than,
+    assert_gt,
     assert_raises_rpc_error,
     get_fee,
     find_vout_for_address,
@@ -265,7 +265,7 @@ class BumpFeeTest(BitcoinTestFramework):
         new_change_pos = find_vout_for_address(rbf_node, new_txid, change_addr)
         new_change_value = new_tx["decoded"]["vout"][new_change_pos]["value"]
 
-        assert_greater_than(change_value, new_change_value)
+        assert_gt(change_value, new_change_value)
 
 
     def test_single_output(self):
@@ -408,7 +408,7 @@ def test_notmine_bumpfee(self, rbf_node, peer_node, dest_address):
         psbt = peer_node.walletprocesspsbt(psbt["psbt"])
         res = rbf_node.testmempoolaccept([psbt["hex"]])
         assert res[0]["allowed"]
-        assert_greater_than(res[0]["fees"]["base"], old_fee)
+        assert_gt(res[0]["fees"]["base"], old_fee)
 
     self.log.info("Test that psbtbumpfee works for non-owned inputs")
     psbt = rbf_node.psbtbumpfee(txid=rbfid)
@@ -499,7 +499,7 @@ def test_small_output_with_feerate_succeeds(self, rbf_node, dest_address):
 
     # input(s) have been added
     final_input_list = rbf_node.getrawtransaction(rbfid, 1)["vin"]
-    assert_greater_than(len(final_input_list), 1)
+    assert_gt(len(final_input_list), 1)
     # Original input is in final set
     assert [txin for txin in final_input_list
             if txin["txid"] == original_txin["txid"]
@@ -545,7 +545,7 @@ def test_settxfee(self, rbf_node, dest_address):
     actual_feerate = bumped_tx["fee"] * 1000 / rbf_node.getrawtransaction(bumped_tx["txid"], True)["vsize"]
     # Assert that the difference between the requested feerate and the actual
     # feerate of the bumped transaction is small.
-    assert_greater_than(Decimal("0.00001000"), abs(requested_feerate - actual_feerate))
+    assert_gt(Decimal("0.00001000"), abs(requested_feerate - actual_feerate))
     rbf_node.settxfee(Decimal("0.00000000"))  # unset paytxfee
 
     # check that settxfee respects -maxtxfee
@@ -642,7 +642,7 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
 
     # Bump fee, obnoxiously high to add additional watchonly input
     bumped_psbt = watcher.psbtbumpfee(original_txid, fee_rate=HIGH)
-    assert_greater_than(len(watcher.decodepsbt(bumped_psbt['psbt'])["tx"]["vin"]), 1)
+    assert_gt(len(watcher.decodepsbt(bumped_psbt['psbt'])["tx"]["vin"]), 1)
     assert "txid" not in bumped_psbt
     assert_equal(bumped_psbt["origfee"], -watcher.gettransaction(original_txid)["fee"])
     assert not watcher.finalizepsbt(bumped_psbt["psbt"])["complete"]

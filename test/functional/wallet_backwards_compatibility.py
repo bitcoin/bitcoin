@@ -25,7 +25,7 @@ from test_framework.messages import ser_string
 
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
+    assert_gt,
     assert_raises_rpc_error,
 )
 
@@ -393,7 +393,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                     self.log.debug("Checking descriptor cache was upgraded")
                     # Fetch all records with the walletdescriptorlhcache prefix
                     lh_cache_recs = conn.execute(f"SELECT value FROM main where key >= x'{ser_string(b'walletdescriptorlhcache').hex()}' AND key < x'{ser_string(b'walletdescriptorlhcachf').hex()}'").fetchall()
-                    assert_greater_than(len(lh_cache_recs), 0)
+                    assert_gt(len(lh_cache_recs), 0)
 
             self.inspect_sqlite_db(down_backup_path, check_upgraded_records, old_flags)
 

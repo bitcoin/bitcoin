@@ -23,7 +23,7 @@ from test_framework.script import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
+    assert_gt,
     assert_raises_rpc_error,
     try_rpc,
 )
@@ -151,7 +151,7 @@ class PruneTest(BitcoinTestFramework):
         self.log.info("Success")
         usage = calc_usage(self.prunedir)
         self.log.info(f"Usage should be below target: {usage}")
-        assert_greater_than(550, usage)
+        assert_gt(550, usage)
 
     def create_chain_with_staleblocks(self):
         # Create stale blocks in manageable sized chunks
@@ -220,7 +220,7 @@ class PruneTest(BitcoinTestFramework):
 
         usage = calc_usage(self.prunedir)
         self.log.info(f"Usage should be below target: {usage}")
-        assert_greater_than(550, usage)
+        assert_gt(550, usage)
 
     def reorg_back(self):
         # Verify that a block on the old main chain fork has been pruned away

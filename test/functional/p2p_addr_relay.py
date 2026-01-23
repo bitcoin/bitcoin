@@ -23,8 +23,8 @@ from test_framework.p2p import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
-    assert_greater_than_or_equal
+    assert_gt,
+    assert_ge
 )
 
 ONE_MINUTE  = 60
@@ -235,7 +235,7 @@ class AddrTest(BitcoinTestFramework):
         peerinfo = self.nodes[0].getpeerinfo()
 
         # Confirm node received addr-related messages from receiver peer
-        assert_greater_than(self.sum_addr_messages(peerinfo[1]['bytesrecv_per_msg']), 0)
+        assert_gt(self.sum_addr_messages(peerinfo[1]['bytesrecv_per_msg']), 0)
         # And that peer received addresses
         assert_equal(receiver_peer.num_ipv4_received - initial_addrs_received, 2)
 
@@ -248,7 +248,7 @@ class AddrTest(BitcoinTestFramework):
         blackhole_peer.send_and_ping(msg_addr())
 
         # Confirm node has now received addr-related messages from blackhole peer
-        assert_greater_than(self.sum_addr_messages(peerinfo[1]['bytesrecv_per_msg']), 0)
+        assert_gt(self.sum_addr_messages(peerinfo[1]['bytesrecv_per_msg']), 0)
         assert_equal(self.nodes[0].getpeerinfo()[2]['addr_relay_enabled'], True)
 
         msg = self.setup_addr_msg(2)
@@ -421,7 +421,7 @@ class AddrTest(BitcoinTestFramework):
         nodes_received_addr = self.get_nodes_that_received_addr(peer, receiver_peer, addr_receivers, 0, TWO_HOURS)  # 10 intervals of 2 hours
         # Per RelayAddress, we would announce these addrs to 2 destinations per day.
         # Since it's at most one rotation, at most 4 nodes can receive ADDR.
-        assert_greater_than_or_equal(ADDR_DESTINATIONS_THRESHOLD, len(nodes_received_addr))
+        assert_ge(ADDR_DESTINATIONS_THRESHOLD, len(nodes_received_addr))
         self.nodes[0].disconnect_p2ps()
 
     def destination_rotates_more_than_once_over_several_days_test(self):
@@ -436,7 +436,7 @@ class AddrTest(BitcoinTestFramework):
         nodes_received_addr = self.get_nodes_that_received_addr(peer, receiver_peer, addr_receivers, ONE_DAY, ONE_HOUR)
         # Now that there should have been more than one rotation, more than
         # ADDR_DESTINATIONS_THRESHOLD nodes should have received ADDR.
-        assert_greater_than(len(nodes_received_addr), ADDR_DESTINATIONS_THRESHOLD)
+        assert_gt(len(nodes_received_addr), ADDR_DESTINATIONS_THRESHOLD)
         self.nodes[0].disconnect_p2ps()
 
 

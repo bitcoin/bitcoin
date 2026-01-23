@@ -13,7 +13,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.mempool_util import assert_mempool_contents
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
+    assert_gt,
     assert_raises_rpc_error,
     assert_not_equal,
 )
@@ -152,7 +152,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         sats_fee = 1
         dusty_tx, sweep_tx = self.create_ephemeral_dust_package(tx_version=3, dust_tx_fee=sats_fee)
         assert_equal(int(COIN * dusty_tx["fee"]), sats_fee) # has fees
-        assert_greater_than(dusty_tx["tx"].vout[0].nValue, 330) # main output is not dust
+        assert_gt(dusty_tx["tx"].vout[0].nValue, 330) # main output is not dust
         assert_equal(dusty_tx["tx"].vout[1].nValue, 0) # added one is dust
 
         # When base fee is non-0, we report dust like usual
@@ -239,7 +239,7 @@ class EphemeralDustTest(BitcoinTestFramework):
 
         # Doesn't spend in-mempool dust output from parent
         unspent_sweep_tx = self.wallet.create_self_transfer_multi(fee_per_output=2000, utxos_to_spend=[dusty_tx["new_utxos"][0]], version=3)
-        assert_greater_than(unspent_sweep_tx["fee"], sweep_tx["fee"])
+        assert_gt(unspent_sweep_tx["fee"], sweep_tx["fee"])
         res = self.nodes[0].submitpackage([dusty_tx["hex"], unspent_sweep_tx["hex"]])
         assert_equal(res["tx-results"][unspent_sweep_tx["wtxid"]]["error"], f"missing-ephemeral-spends, tx {unspent_sweep_tx['txid']} (wtxid={unspent_sweep_tx['wtxid']}) did not spend parent's ephemeral dust")
         assert_raises_rpc_error(-26, f"missing-ephemeral-spends, tx {unspent_sweep_tx['txid']} (wtxid={unspent_sweep_tx['wtxid']}) did not spend parent's ephemeral dust", self.nodes[0].sendrawtransaction, unspent_sweep_tx["hex"])

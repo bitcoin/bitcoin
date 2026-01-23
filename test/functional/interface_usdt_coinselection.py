@@ -15,7 +15,7 @@ except ImportError:
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
+    assert_gt,
     assert_raises_rpc_error,
     bpf_cflags,
 )
@@ -191,7 +191,7 @@ class CoinSelectionTracepointTest(BitcoinTestFramework):
         events = self.get_tracepoints([1, 2, 3, 1, 4])
         success, use_aps, _algo, _waste, change_pos = self.determine_selection_from_usdt(events)
         assert_equal(success, True)
-        assert_greater_than(change_pos, -1)
+        assert_gt(change_pos, -1)
 
         self.log.info("Failing to fund results in 1 tracepoint")
         # We should have 1 tracepoints in the order

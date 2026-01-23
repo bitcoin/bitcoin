@@ -8,7 +8,7 @@ import json
 import os
 from dataclasses import dataclass
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_greater_than_or_equal
+from test_framework.util import assert_equal, assert_ge
 from threading import Thread
 from typing import Optional
 import subprocess
@@ -102,7 +102,7 @@ class RPCInterfaceTest(BitcoinTestFramework):
 
         command = info['active_commands'][0]
         assert_equal(command['method'], 'getrpcinfo')
-        assert_greater_than_or_equal(command['duration'], 0)
+        assert_ge(command['duration'], 0)
         assert_equal(info['logpath'], os.path.join(self.nodes[0].chain_path, 'debug.log'))
 
     def test_batch_request(self, call_options):

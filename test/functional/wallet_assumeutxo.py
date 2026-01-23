@@ -11,7 +11,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import COIN
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
+    assert_gt,
     assert_raises_rpc_error,
     ensure_for,
 )
@@ -78,7 +78,7 @@ class AssumeutxoTest(BitcoinTestFramework):
     def test_backup_during_background_sync_pruned_node(self, n3, dump_output, expected_error_message):
         self.log.info("Backup from the snapshot height can be loaded during background sync (pruned node)")
         loaded = n3.loadtxoutset(dump_output['path'])
-        assert_greater_than(n3.pruneblockchain(START_HEIGHT), 0)
+        assert_gt(n3.pruneblockchain(START_HEIGHT), 0)
         self.validate_snapshot_import(n3, loaded, dump_output['base_hash'])
         n3.restorewallet("w", "backup_w.dat")
         # Balance of w wallet is still 0 because n3 has not synced yet

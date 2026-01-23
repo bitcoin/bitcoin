@@ -21,7 +21,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_approx,
     assert_equal,
-    assert_greater_than,
+    assert_gt,
     assert_raises_rpc_error,
     p2p_port,
 )
@@ -311,10 +311,10 @@ class NetTest(BitcoinTestFramework):
         # Maximum possible addresses in AddrMan is 10000. The actual number will
         # usually be less due to bucket and bucket position collisions.
         node_addresses = self.nodes[0].getnodeaddresses(0, "ipv4")
-        assert_greater_than(len(node_addresses), 5000)
-        assert_greater_than(10000, len(node_addresses))
+        assert_gt(len(node_addresses), 5000)
+        assert_gt(10000, len(node_addresses))
         for a in node_addresses:
-            assert_greater_than(a["time"], 1527811200)  # 1st June 2018
+            assert_gt(a["time"], 1527811200)  # 1st June 2018
             assert_equal(a["services"], P2P_SERVICES)
             assert a["address"] in imported_addrs
             assert_equal(a["port"], 8333)

@@ -38,7 +38,7 @@ from test_framework.script_util import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than_or_equal,
+    assert_ge,
     assert_is_hex_string,
     assert_raises_rpc_error,
 )
@@ -229,7 +229,7 @@ class SegWitTest(BitcoinTestFramework):
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         raw_tx = self.nodes[0].getrawtransaction(txid, True)
         tmpl = self.nodes[0].getblocktemplate({'rules': ['segwit']})
-        assert_greater_than_or_equal(tmpl['sizelimit'], 3999577)  # actual maximum size is lower due to minimum mandatory non-witness data
+        assert_ge(tmpl['sizelimit'], 3999577)  # actual maximum size is lower due to minimum mandatory non-witness data
         assert_equal(tmpl['weightlimit'], 4000000)
         assert_equal(tmpl['sigoplimit'], 80000)
         assert_equal(tmpl['transactions'][0]['txid'], txid)

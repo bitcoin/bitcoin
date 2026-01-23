@@ -33,7 +33,7 @@ from test_framework.script import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
+    assert_gt,
     assert_raises_rpc_error,
     softfork_active,
 )
@@ -389,7 +389,7 @@ class BIP68Test(BitcoinTestFramework):
         # getblockchaininfo will show CSV as active at block 431 (144 * 3 -1) since it's returning whether CSV is active for the next block.
         min_activation_height = 432
         height = self.nodes[0].getblockcount()
-        assert_greater_than(min_activation_height - height, 2)
+        assert_gt(min_activation_height - height, 2)
         self.generate(self.wallet, min_activation_height - height - 2, sync_fun=self.no_op)
         assert not softfork_active(self.nodes[0], 'csv')
         self.generate(self.wallet, 1, sync_fun=self.no_op)

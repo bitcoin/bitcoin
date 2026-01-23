@@ -13,8 +13,8 @@ from test_framework.messages import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
-    assert_greater_than_or_equal,
+    assert_gt,
+    assert_ge,
     assert_raises_rpc_error,
     get_fee,
 )
@@ -340,7 +340,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # These two transactions are approximately the same size. The replacement tx pays twice the fee.
         tx_to_replace = self.wallet.create_self_transfer_multi(utxos_to_spend=[confirmed_utxos[1], confirmed_utxos[2]], fee_per_output=2000)
         tx_replacement = self.wallet.create_self_transfer_multi(utxos_to_spend=[confirmed_utxos[1], unconfirmed_utxo], fee_per_output=4000)
-        assert_greater_than(tx_replacement['fee']*tx_to_replace['tx'].get_vsize(), tx_to_replace['fee']*tx_replacement['tx'].get_vsize())
+        assert_gt(tx_replacement['fee']*tx_to_replace['tx'].get_vsize(), tx_to_replace['fee']*tx_replacement['tx'].get_vsize())
 
         self.nodes[0].sendrawtransaction(tx_to_replace['hex'])
         assert_raises_rpc_error(-26, "insufficient feerate: does not improve feerate diagram", self.nodes[0].sendrawtransaction, tx_replacement['hex'])
@@ -504,7 +504,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
             # When incremental relay feerate is higher than min relay feerate, min relay feerate is automatically increased.
             min_relay_feerate = node.getmempoolinfo()["minrelaytxfee"]
-            assert_greater_than_or_equal(min_relay_feerate, incremental_setting_decimal)
+            assert_ge(min_relay_feerate, incremental_setting_decimal)
 
             low_feerate = min_relay_feerate * 2
             confirmed_utxo = self.wallet.get_utxo(confirmed_only=True)

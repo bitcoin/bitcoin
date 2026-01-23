@@ -84,12 +84,12 @@ def assert_not_equal(thing1, thing2, *, error_message=""):
         raise AssertionError(f"Both values are {thing1}{f', {error_message}' if error_message else ''}")
 
 
-def assert_greater_than(thing1, thing2):
+def assert_gt(thing1, thing2):
     if thing1 <= thing2:
         raise AssertionError("%s <= %s" % (str(thing1), str(thing2)))
 
 
-def assert_greater_than_or_equal(thing1, thing2):
+def assert_ge(thing1, thing2):
     if thing1 < thing2:
         raise AssertionError("%s < %s" % (str(thing1), str(thing2)))
 

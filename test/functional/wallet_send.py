@@ -14,8 +14,8 @@ from test_framework.util import (
     assert_not_equal,
     assert_equal,
     assert_fee_amount,
-    assert_greater_than,
-    assert_greater_than_or_equal,
+    assert_gt,
+    assert_ge,
     assert_raises_rpc_error,
     count_bytes,
 )
@@ -152,7 +152,7 @@ class WalletSendTest(BitcoinTestFramework):
                 decoded_tx = from_wallet.gettransaction(txid=res["txid"], verbose=True)["decoded"]
                 # the locktime should be within 100 blocks of the
                 # block height
-                assert_greater_than_or_equal(decoded_tx["locktime"], from_wallet.getblockcount() - 100)
+                assert_ge(decoded_tx["locktime"], from_wallet.getblockcount() - 100)
 
         if expect_sign:
             assert_equal(res["complete"], True)
@@ -178,7 +178,7 @@ class WalletSendTest(BitcoinTestFramework):
                 if subtract_fee_from_outputs:
                     assert_equal(from_balance_before - from_balance, amount)
                 else:
-                    assert_greater_than(from_balance_before - from_balance, amount)
+                    assert_gt(from_balance_before - from_balance, amount)
             else:
                 assert next((out for out in tx["vout"] if out["scriptPubKey"]["asm"] == "OP_RETURN 35"), None)
         else:
@@ -418,7 +418,7 @@ class WalletSendTest(BitcoinTestFramework):
 
         self.log.info("Lock unspents...")
         utxo1 = w0.listunspent()[0]
-        assert_greater_than(utxo1["amount"], 1)
+        assert_gt(utxo1["amount"], 1)
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, inputs=[utxo1], add_to_wallet=False, lock_unspents=True)
         assert res["complete"]
         locked_coins = w0.listlockunspent()

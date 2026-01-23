@@ -48,7 +48,7 @@ from test_framework.script_util import (
 )
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
+    assert_gt,
     assert_raises_rpc_error,
     sync_txindex,
 )
@@ -381,7 +381,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
             rawtxs=[tx.serialize().hex()],
         )
         tx.vout[0].scriptPubKey = CScript([OP_RETURN, b"\xff" * (data_len + 1)])
-        assert_greater_than(tx.get_vsize(), int(MAX_STANDARD_TX_WEIGHT / 4))
+        assert_gt(tx.get_vsize(), int(MAX_STANDARD_TX_WEIGHT / 4))
         self.check_mempool_result(
             result_expected=[{"txid": tx.txid_hex, "allowed": False, "reject-reason": "tx-size"}],
             rawtxs=[tx.serialize().hex()],
@@ -418,7 +418,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         # Note it's only non-witness size that matters!
         assert_equal(len(tx.serialize_without_witness()), 64)
         assert_equal(MIN_STANDARD_TX_NONWITNESS_SIZE - 1, 64)
-        assert_greater_than(len(tx.serialize()), 64)
+        assert_gt(len(tx.serialize()), 64)
 
         self.check_mempool_result(
             result_expected=[{'txid': tx.txid_hex, 'allowed': False, 'reject-reason': 'tx-size-small'}],

@@ -51,8 +51,8 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
     assert_equal,
-    assert_greater_than,
-    assert_greater_than_or_equal,
+    assert_gt,
+    assert_ge,
     assert_raises,
     assert_raises_rpc_error,
     assert_is_hex_string,
@@ -161,10 +161,10 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(sorted(res.keys()), sorted(['pruneheight', 'automatic_pruning'] + keys))
 
         # size_on_disk should be > 0
-        assert_greater_than(res['size_on_disk'], 0)
+        assert_gt(res['size_on_disk'], 0)
 
         # pruneheight should be greater or equal to 0
-        assert_greater_than_or_equal(res['pruneheight'], 0)
+        assert_ge(res['pruneheight'], 0)
 
         # check other pruning fields given that prune=1
         assert res['pruned']
@@ -202,7 +202,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res['pruneheight'], 0)
         assert res['automatic_pruning']
         assert_equal(res['prune_target_size'], 576716800)
-        assert_greater_than(res['size_on_disk'], 0)
+        assert_gt(res['size_on_disk'], 0)
 
         assert_equal(res['bits'], nbits_str(REGTEST_N_BITS))
         assert_equal(res['target'], target_str(REGTEST_TARGET))
@@ -286,7 +286,7 @@ class BlockchainTest(BitcoinTestFramework):
         self.log.info("Check that verificationprogress is less than 1 when the block tip is old")
         future = 2 * 60 * 60
         self.nodes[0].setmocktime(self.nodes[0].getblockchaininfo()["time"] + future + 1)
-        assert_greater_than(1, self.nodes[0].getblockchaininfo()["verificationprogress"])
+        assert_gt(1, self.nodes[0].getblockchaininfo()["verificationprogress"])
 
         self.log.info("Check that verificationprogress is exactly 1 for a recent block tip")
         self.nodes[0].setmocktime(self.nodes[0].getblockchaininfo()["time"] + future)
@@ -294,7 +294,7 @@ class BlockchainTest(BitcoinTestFramework):
 
         self.log.info("Check that verificationprogress is less than 1 as soon as a new header comes in")
         self.nodes[0].submitheader(self.generateblock(self.nodes[0], output="raw(55)", transactions=[], submit=False, sync_fun=self.no_op)["hex"])
-        assert_greater_than(1, self.nodes[0].getblockchaininfo()["verificationprogress"])
+        assert_gt(1, self.nodes[0].getblockchaininfo()["verificationprogress"])
 
     def _test_y2106(self):
         self.log.info("Check that block timestamps work until year 2106")

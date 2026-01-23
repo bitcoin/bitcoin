@@ -51,7 +51,7 @@ from test_framework.script_util import (
 )
 from test_framework.util import (
     assert_equal,
-    assert_greater_than_or_equal,
+    assert_ge,
     get_fee,
 )
 from test_framework.wallet_util import generate_keypair
@@ -271,7 +271,7 @@ class MiniWallet:
         (the utxo with the largest value is taken).
         """
         tx = self.create_self_transfer(fee_rate=0)["tx"]
-        assert_greater_than_or_equal(tx.vout[0].nValue, amount + fee)
+        assert_ge(tx.vout[0].nValue, amount + fee)
         tx.vout[0].nValue -= (amount + fee)           # change output -> MiniWallet
         tx.vout.append(CTxOut(amount, scriptPubKey))  # arbitrary output -> to be returned
         txid = self.sendrawtransaction(from_node=from_node, tx_hex=tx.serialize().hex())

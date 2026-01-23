@@ -43,8 +43,8 @@ from test_framework.script import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
-    assert_greater_than_or_equal,
+    assert_gt,
+    assert_ge,
 )
 from test_framework.wallet import (
     MiniWallet,
@@ -85,7 +85,7 @@ class PackageRelayTest(BitcoinTestFramework):
         self.sequence so that subsequent calls to this function result in unique transactions."""
 
         self.sequence -= 1
-        assert_greater_than(self.nodes[0].getmempoolinfo()["mempoolminfee"], Decimal(DEFAULT_MIN_RELAY_TX_FEE) / COIN)
+        assert_gt(self.nodes[0].getmempoolinfo()["mempoolminfee"], Decimal(DEFAULT_MIN_RELAY_TX_FEE) / COIN)
 
         return wallet.create_self_transfer(fee_rate=Decimal(DEFAULT_MIN_RELAY_TX_FEE) / COIN, sequence=self.sequence, utxo_to_spend=utxo_to_spend, confirmed_only=True)
 
@@ -438,9 +438,9 @@ class PackageRelayTest(BitcoinTestFramework):
         large_orphans = [create_large_orphan() for _ in range(50)]
         # Check to make sure these are orphans, within max standard size (to be accepted into the orphanage)
         for large_orphan in large_orphans:
-            assert_greater_than_or_equal(100000, large_orphan.get_vsize())
-            assert_greater_than(MAX_STANDARD_TX_WEIGHT, large_orphan.get_weight())
-            assert_greater_than_or_equal(3 * large_orphan.get_vsize(), 2 * 100000)
+            assert_ge(100000, large_orphan.get_vsize())
+            assert_gt(MAX_STANDARD_TX_WEIGHT, large_orphan.get_weight())
+            assert_ge(3 * large_orphan.get_vsize(), 2 * 100000)
             testres = node.testmempoolaccept([large_orphan.serialize().hex()])
             assert not testres[0]["allowed"]
             assert_equal(testres[0]["reject-reason"], "missing-inputs")
@@ -507,7 +507,7 @@ class PackageRelayTest(BitcoinTestFramework):
         batch_size = 51
         num_peers_shared = 60
         batch_single_doser = 100
-        assert_greater_than(num_peers_shared * batch_size + batch_single_doser, 3000)
+        assert_gt(num_peers_shared * batch_size + batch_single_doser, 3000)
         # 60 peers * 51 orphans = 3060 announcements
         shared_orphans = [self.create_small_orphan() for _ in range(batch_size)]
         self.log.info(f"Send the same {batch_size} orphans from {num_peers_shared} DoSy peers (may take a while)")

@@ -11,7 +11,7 @@ from test_framework.test_node import (
 )
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
+    assert_gt,
     util_xor,
 )
 from test_framework.wallet import MiniWallet
@@ -36,7 +36,7 @@ class BlocksXORTest(BitcoinTestFramework):
         block_files = list(node.blocks_path.glob('blk[0-9][0-9][0-9][0-9][0-9].dat'))
         undo_files  = list(node.blocks_path.glob('rev[0-9][0-9][0-9][0-9][0-9].dat'))
         assert_equal(len(block_files), len(undo_files))
-        assert_greater_than(len(block_files), 1)  # we want at least one full block file
+        assert_gt(len(block_files), 1)  # we want at least one full block file
 
         self.log.info("Shut down node and un-XOR block/undo files manually")
         self.stop_node(0)

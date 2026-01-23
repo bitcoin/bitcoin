@@ -61,7 +61,7 @@ from test_framework.descriptors import (
 )
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
+    assert_gt,
     assert_raises_rpc_error,
 )
 
@@ -308,8 +308,8 @@ class AddressTypeTest(BitcoinTestFramework):
             new_balances = self.get_balances()
             self.log.debug("Check new balances: {}".format(new_balances))
             # We don't know what fee was set, so we can only check bounds on the balance of the sending node
-            assert_greater_than(new_balances[from_node], to_send * 10)
-            assert_greater_than(to_send * 11, new_balances[from_node])
+            assert_gt(new_balances[from_node], to_send * 10)
+            assert_gt(to_send * 11, new_balances[from_node])
             for n, to_node in enumerate(range(from_node + 1, from_node + 4)):
                 to_node %= 4
                 assert_equal(new_balances[to_node], old_balances[to_node] + to_send * 10 * (2 + n))

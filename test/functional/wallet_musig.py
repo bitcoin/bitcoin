@@ -10,7 +10,7 @@ from test_framework.key import H_POINT
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
+    assert_gt,
 )
 
 PRIVKEY_RE = re.compile(r"^tr\((.+?)/.+\)#.{8}$")
@@ -303,7 +303,7 @@ class WalletMuSigTest(BitcoinTestFramework):
         assert_equal(finalized["complete"], True)
         witness = self.nodes[0].decodepsbt(finalized["psbt"])["inputs"][0]["final_scriptwitness"]
         if scriptpath:
-            assert_greater_than(len(witness), 1)
+            assert_gt(len(witness), 1)
         else:
             assert_equal(len(witness), 1)
         finalized = self.nodes[0].finalizepsbt(comb_psig_psbt)

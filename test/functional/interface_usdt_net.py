@@ -19,7 +19,7 @@ from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
+    assert_gt,
     bpf_cflags,
 )
 
@@ -369,8 +369,8 @@ class NetTracepointTest(BitcoinTestFramework):
 
         assert_equal(EXPECTED_INBOUND_CONNECTIONS, len(inbound_connections))
         for inbound_connection in inbound_connections:
-            assert_greater_than(inbound_connection.conn.id, 0)
-            assert_greater_than(inbound_connection.existing, 0)
+            assert_gt(inbound_connection.conn.id, 0)
+            assert_gt(inbound_connection.existing, 0)
             assert_equal(b'inbound', inbound_connection.conn.conn_type)
             assert_equal(NETWORK_TYPE_UNROUTABLE, inbound_connection.conn.network)
 
@@ -410,8 +410,8 @@ class NetTracepointTest(BitcoinTestFramework):
 
         assert_equal(EXPECTED_OUTBOUND_CONNECTIONS, len(outbound_connections))
         for outbound_connection in outbound_connections:
-            assert_greater_than(outbound_connection.conn.id, 0)
-            assert_greater_than(outbound_connection.existing, 0)
+            assert_gt(outbound_connection.conn.id, 0)
+            assert_gt(outbound_connection.existing, 0)
             assert_equal(EXPECTED_CONNECTION_TYPE, outbound_connection.conn.conn_type.decode('utf-8'))
             assert_equal(NETWORK_TYPE_UNROUTABLE, outbound_connection.conn.network)
 
@@ -447,8 +447,8 @@ class NetTracepointTest(BitcoinTestFramework):
 
         assert_equal(EXPECTED_EVICTED_CONNECTIONS, len(evicted_connections))
         for evicted_connection in evicted_connections:
-            assert_greater_than(evicted_connection.conn.id, 0)
-            assert_greater_than(evicted_connection.time_established, 0)
+            assert_gt(evicted_connection.conn.id, 0)
+            assert_gt(evicted_connection.time_established, 0)
             assert_equal("inbound", evicted_connection.conn.conn_type.decode('utf-8'))
             assert_equal(NETWORK_TYPE_UNROUTABLE, evicted_connection.conn.network)
 
@@ -484,8 +484,8 @@ class NetTracepointTest(BitcoinTestFramework):
 
         assert_equal(EXPECTED_MISBEHAVING_CONNECTIONS, len(misbehaving_connections))
         for misbehaving_connection in misbehaving_connections:
-            assert_greater_than(misbehaving_connection.id, 0)
-            assert_greater_than(len(misbehaving_connection.message), 0)
+            assert_gt(misbehaving_connection.id, 0)
+            assert_gt(len(misbehaving_connection.message), 0)
             assert_equal(misbehaving_connection.message, b"headers message size = 2001")
 
         bpf.cleanup()
@@ -521,10 +521,10 @@ class NetTracepointTest(BitcoinTestFramework):
 
         assert_equal(EXPECTED_CLOSED_CONNECTIONS, len(closed_connections))
         for closed_connection in closed_connections:
-            assert_greater_than(closed_connection.conn.id, 0)
+            assert_gt(closed_connection.conn.id, 0)
             assert_equal("inbound", closed_connection.conn.conn_type.decode('utf-8'))
             assert_equal(0, closed_connection.conn.network)
-            assert_greater_than(closed_connection.time_established, 0)
+            assert_gt(closed_connection.time_established, 0)
 
         bpf.cleanup()
 

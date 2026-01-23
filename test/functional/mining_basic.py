@@ -39,8 +39,8 @@ from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
-    assert_greater_than_or_equal,
+    assert_gt,
+    assert_ge,
     assert_raises_rpc_error,
     get_fee,
 )
@@ -159,8 +159,8 @@ class MiningTest(BitcoinTestFramework):
             assert_equal(tx_with_min_feerate["fee"], get_fee(tx_with_min_feerate["tx"].get_vsize(), blockmintxfee_btc_kvb))
             if blockmintxfee_sat_kvb >= 10:
                 lowerfee_btc_kvb = blockmintxfee_btc_kvb - Decimal(10)/COIN  # 0.01 sat/vbyte lower
-                assert_greater_than(blockmintxfee_btc_kvb, lowerfee_btc_kvb)
-                assert_greater_than_or_equal(lowerfee_btc_kvb, 0)
+                assert_gt(blockmintxfee_btc_kvb, lowerfee_btc_kvb)
+                assert_ge(lowerfee_btc_kvb, 0)
                 tx_below_min_feerate = self.wallet.send_self_transfer(from_node=node, fee_rate=lowerfee_btc_kvb, confirmed_only=True)
                 assert_equal(tx_below_min_feerate["fee"], get_fee(tx_below_min_feerate["tx"].get_vsize(), lowerfee_btc_kvb))
             else:  # go below zero fee by using modified fees
@@ -176,7 +176,7 @@ class MiningTest(BitcoinTestFramework):
             if blockmintxfee_btc_kvb > 0:
                 for txid in block_template_txids:
                     tx = node.getmempoolentry(txid)
-                    assert_greater_than(tx['fees']['base'], 0)
+                    assert_gt(tx['fees']['base'], 0)
 
             self.generate(self.wallet, 1, sync_fun=self.no_op)
             block = node.getblock(node.getbestblockhash(), verbosity=2)
@@ -214,7 +214,7 @@ class MiningTest(BitcoinTestFramework):
         self.nodes[0].setmocktime(t)
         # The template will have an adjusted timestamp, which we then modify
         tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
-        assert_greater_than_or_equal(tmpl['curtime'], t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP)
+        assert_ge(tmpl['curtime'], t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP)
         # mintime and curtime should match
         assert_equal(tmpl['mintime'], tmpl['curtime'])
 
@@ -253,7 +253,7 @@ class MiningTest(BitcoinTestFramework):
         self.generate(prune_node, 400, sync_fun=self.no_op)
         pruned_block = prune_node.getblock(prune_node.getblockhash(2), verbosity=0)
         pruned_height = prune_node.pruneblockchain(400)
-        assert_greater_than_or_equal(pruned_height, 2)
+        assert_ge(pruned_height, 2)
         pruned_blockhash = prune_node.getblockhash(2)
 
         assert_raises_rpc_error(-1, 'Block not available (pruned data)', prune_node.getblock, pruned_blockhash)
@@ -283,7 +283,7 @@ class MiningTest(BitcoinTestFramework):
         self.log.info(f"Testing block template: contains {expected_tx_count} transactions, and total weight <= {expected_weight}")
         assert_equal(len(response["transactions"]), expected_tx_count)
         total_weight = sum(transaction["weight"] for transaction in response["transactions"])
-        assert_greater_than_or_equal(expected_weight, total_weight)
+        assert_ge(expected_weight, total_weight)
 
     def test_block_max_weight(self):
         self.log.info("Testing default and custom -blockmaxweight startup options.")

@@ -26,7 +26,7 @@ from test_framework.blocktools import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
+    assert_gt,
     assert_raises_rpc_error,
 )
 
@@ -140,7 +140,7 @@ class WalletV3Test(BitcoinTestFramework):
         self.send_tx(self.charlie, [], outputs, version_a)
 
         assert_equal(self.bob.getbalances()["mine"]["trusted"], 0)
-        assert_greater_than(self.bob.getbalances()["mine"]["untrusted_pending"], 0)
+        assert_gt(self.bob.getbalances()["mine"]["untrusted_pending"], 0)
 
         outputs = {self.alice.getnewaddress() : 1.0}
 
@@ -161,7 +161,7 @@ class WalletV3Test(BitcoinTestFramework):
         self.send_tx(self.charlie, [], outputs, version_a)
 
         assert_equal(self.bob.getbalances()["mine"]["trusted"], 0)
-        assert_greater_than(self.bob.getbalances()["mine"]["untrusted_pending"], 0)
+        assert_gt(self.bob.getbalances()["mine"]["untrusted_pending"], 0)
 
         outputs = {self.alice.getnewaddress() : 1.0}
 
@@ -566,7 +566,7 @@ class WalletV3Test(BitcoinTestFramework):
         self.send_tx(self.charlie, [], outputs, 1)
 
         assert_equal(self.bob.getbalances()["mine"]["trusted"], 0)
-        assert_greater_than(self.bob.getbalances()["mine"]["untrusted_pending"], 0)
+        assert_gt(self.bob.getbalances()["mine"]["untrusted_pending"], 0)
 
         outputs = {self.alice.getnewaddress() : 1.0}
 

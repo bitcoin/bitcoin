@@ -24,7 +24,7 @@ from test_framework.script import hash160
 from test_framework.script_util import key_to_p2pkh_script, key_to_p2pk_script, script_to_p2sh_script, script_to_p2wsh_script
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
+    assert_gt,
     assert_raises_rpc_error,
     find_vout_for_address,
     sha256sum_file,
@@ -170,7 +170,7 @@ class WalletMigrationTest(BitcoinTestFramework):
             # if the wallet has private keys and is not blank
             if wallet_info["private_keys_enabled"] and not wallet_info["blank"]:
                 lh_cache_recs = conn.execute(f"SELECT value FROM main where key >= x'{ser_string(b'walletdescriptorlhcache').hex()}' AND key < x'{ser_string(b'walletdescriptorlhcachf').hex()}'").fetchall()
-                assert_greater_than(len(lh_cache_recs), 0)
+                assert_gt(len(lh_cache_recs), 0)
 
         inspect_path = os.path.join(self.options.tmpdir, os.path.basename(f"{migrated_wallet_name}_inspect.dat"))
         wallet.backupwallet(inspect_path)

@@ -10,8 +10,8 @@ from test_framework.messages import SEQUENCE_FINAL
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
-    assert_greater_than_or_equal,
+    assert_gt,
+    assert_ge,
     assert_raises_rpc_error,
 )
 
@@ -55,7 +55,7 @@ class SendallTest(BitcoinTestFramework):
         for a in amounts:
             self.def_wallet.sendtoaddress(self.wallet.getnewaddress(), a)
         self.generate(self.nodes[0], 1)
-        assert_greater_than(self.wallet.getbalances()["mine"]["trusted"], 0)
+        assert_gt(self.wallet.getbalances()["mine"]["trusted"], 0)
         return self.wallet.getbalances()["mine"]["trusted"]
 
     # Helper schema for success cases
@@ -174,7 +174,7 @@ class SendallTest(BitcoinTestFramework):
         self.def_wallet.sendtoaddress(dust_wallet.getnewaddress(), 0.00000400)
         self.def_wallet.sendtoaddress(dust_wallet.getnewaddress(), 0.00000300)
         self.generate(self.nodes[0], 1)
-        assert_greater_than(dust_wallet.getbalances()["mine"]["trusted"], 0)
+        assert_gt(dust_wallet.getbalances()["mine"]["trusted"], 0)
 
         assert_raises_rpc_error(-6, "Total value of UTXO pool too low to pay for transaction."
                 + " Try using lower feerate or excluding uneconomic UTXOs with 'send_max' option.",
@@ -213,7 +213,7 @@ class SendallTest(BitcoinTestFramework):
         self.assert_tx_has_output(tx_from_wallet, self.remainder_target)
 
         self.generate(self.nodes[0], 1)
-        assert_greater_than(self.wallet.getbalances()["mine"]["trusted"], 0)
+        assert_gt(self.wallet.getbalances()["mine"]["trusted"], 0)
 
     @cleanup
     def sendall_fails_on_missing_input(self):
@@ -379,7 +379,7 @@ class SendallTest(BitcoinTestFramework):
         self.log.info("Test that sendall spends unconfirmed change")
         self.add_utxos([17])
         self.wallet.sendtoaddress(self.remainder_target, 10)
-        assert_greater_than(self.wallet.getbalances()["mine"]["trusted"], 6)
+        assert_gt(self.wallet.getbalances()["mine"]["trusted"], 6)
         self.test_sendall_success(sendall_args = [self.remainder_target])
 
         assert_equal(self.wallet.getbalance(), 0)
@@ -430,7 +430,7 @@ class SendallTest(BitcoinTestFramework):
         child_tx = self.wallet.decoderawtransaction(child_hex)
         lower_parent_feerate_amount = child_tx["vout"][0]["value"]
 
-        assert_greater_than(higher_parent_feerate_amount, lower_parent_feerate_amount)
+        assert_gt(higher_parent_feerate_amount, lower_parent_feerate_amount)
 
     @cleanup
     def sendall_anti_fee_sniping(self):
@@ -440,7 +440,7 @@ class SendallTest(BitcoinTestFramework):
 
         # the locktime should be within 100 blocks of the
         # block height
-        assert_greater_than_or_equal(tx_from_wallet["decoded"]["locktime"], tx_from_wallet["blockheight"] - 100)
+        assert_ge(tx_from_wallet["decoded"]["locktime"], tx_from_wallet["blockheight"] - 100)
 
         self.log.info("Testing sendall does not do anti-fee-sniping when locktime is specified")
         self.add_utxos([10,11])

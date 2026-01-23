@@ -14,7 +14,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_fee_amount,
-    assert_greater_than,
+    assert_gt,
     assert_raises_rpc_error,
 )
 from test_framework.wallet import (
@@ -55,7 +55,7 @@ class MempoolLimitTest(BitcoinTestFramework):
 
         # There is a gap, our parents will be minrate, with child bringing up descendant fee sufficiently to avoid
         # eviction even though parents cause eviction on their own
-        assert_greater_than(mempool_entry_minrate, mempoolmin_feerate)
+        assert_gt(mempool_entry_minrate, mempoolmin_feerate)
 
         package_hex = []
         # UTXOs to be spent by the ultimate child transaction
@@ -68,7 +68,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         num_big_parents = 3
         # Need to be large enough to trigger eviction
         # (note that the mempool usage of a tx is about three times its vsize)
-        assert_greater_than(parent_vsize * num_big_parents * 3, current_info["maxmempool"] - current_info["bytes"])
+        assert_gt(parent_vsize * num_big_parents * 3, current_info["maxmempool"] - current_info["bytes"])
 
         big_parent_txids = []
         big_parent_wtxids = []
@@ -106,7 +106,7 @@ class MempoolLimitTest(BitcoinTestFramework):
             assert_equal(len(package_res["tx-results"][wtxid]["fees"]["effective-includes"]), 1)
 
         # Maximum size must never be exceeded.
-        assert_greater_than(node.getmempoolinfo()["maxmempool"], node.getmempoolinfo()["bytes"])
+        assert_gt(node.getmempoolinfo()["maxmempool"], node.getmempoolinfo()["bytes"])
 
         # Package found in mempool still
         resulting_mempool_txids = node.getrawmempool()
@@ -123,7 +123,7 @@ class MempoolLimitTest(BitcoinTestFramework):
             for txid, entry in zip(mempool_txids, mempool_entries):
                 if txid == eviction:
                     evicted_feerate_btc_per_kvb = entry["fees"]["modified"] / (Decimal(entry["vsize"]) / 1000)
-                    assert_greater_than(evicted_feerate_btc_per_kvb, max_parent_feerate)
+                    assert_gt(evicted_feerate_btc_per_kvb, max_parent_feerate)
 
     def test_mid_package_replacement(self):
         node = self.nodes[0]
@@ -182,7 +182,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         assert len([tx_res for _, tx_res in res["tx-results"].items() if "error" in tx_res and tx_res["error"] == "bad-txns-inputs-missingorspent"])
 
         # Maximum size must never be exceeded.
-        assert_greater_than(node.getmempoolinfo()["maxmempool"], node.getmempoolinfo()["bytes"])
+        assert_gt(node.getmempoolinfo()["maxmempool"], node.getmempoolinfo()["bytes"])
 
         resulting_mempool_txids = node.getrawmempool()
         # The replacement should be successful.
@@ -259,7 +259,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         # Needs to be large enough to trigger eviction
         # (note that the mempool usage of a tx is about three times its vsize)
         target_vsize_each = 50000
-        assert_greater_than(target_vsize_each * 2 * 3, node.getmempoolinfo()["maxmempool"] - node.getmempoolinfo()["bytes"])
+        assert_gt(target_vsize_each * 2 * 3, node.getmempoolinfo()["maxmempool"] - node.getmempoolinfo()["bytes"])
         # Should be a true CPFP: parent's feerate is just below mempool min feerate
         parent_feerate = mempoolmin_feerate - Decimal("0.0000001")  # 0.01 sats/vbyte below min feerate
         # Parent + child is above mempool minimum feerate
@@ -272,9 +272,9 @@ class MempoolLimitTest(BitcoinTestFramework):
         # This package ranks below the lowest descendant package in the mempool
         package_fee = tx_parent_just_below["fee"] + tx_child_just_above["fee"]
         package_vsize = tx_parent_just_below["tx"].get_vsize() + tx_child_just_above["tx"].get_vsize()
-        assert_greater_than(worst_feerate_btcvb, package_fee / package_vsize)
-        assert_greater_than(mempoolmin_feerate, tx_parent_just_below["fee"] / (tx_parent_just_below["tx"].get_vsize()))
-        assert_greater_than(package_fee / package_vsize, mempoolmin_feerate / 1000)
+        assert_gt(worst_feerate_btcvb, package_fee / package_vsize)
+        assert_gt(mempoolmin_feerate, tx_parent_just_below["fee"] / (tx_parent_just_below["tx"].get_vsize()))
+        assert_gt(package_fee / package_vsize, mempoolmin_feerate / 1000)
         res = node.submitpackage([tx_parent_just_below["hex"], tx_child_just_above["hex"]])
         for wtxid in [tx_parent_just_below["wtxid"], tx_child_just_above["wtxid"]]:
             assert_equal(res["tx-results"][wtxid]["error"], "mempool full")

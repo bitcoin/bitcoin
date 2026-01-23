@@ -39,8 +39,8 @@ from test_framework.script_util import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
-    assert_greater_than_or_equal,
+    assert_gt,
+    assert_ge,
     assert_raises_rpc_error,
 )
 from test_framework.wallet import MiniWallet
@@ -91,7 +91,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         tx = self.create_p2wsh_spending_tx(witness_script, CScript([OP_RETURN, b'X'*256]))
 
         # bump the tx to reach the sigop-limit equivalent size by padding the datacarrier output
-        assert_greater_than_or_equal(sigop_equivalent_vsize, tx.get_vsize())
+        assert_ge(sigop_equivalent_vsize, tx.get_vsize())
         vsize_to_pad = sigop_equivalent_vsize - tx.get_vsize()
         tx.vout[0].scriptPubKey = CScript([OP_RETURN, b'X'*(256+vsize_to_pad)])
         assert_equal(sigop_equivalent_vsize, tx.get_vsize())
@@ -122,7 +122,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         # is much larger than the serialized vsize, i.e. we create a small child
         # tx by getting rid of the large padding output)
         tx.vout[0].scriptPubKey = CScript([OP_RETURN, b'test123'])
-        assert_greater_than(sigop_equivalent_vsize, tx.get_vsize())
+        assert_gt(sigop_equivalent_vsize, tx.get_vsize())
         self.nodes[0].sendrawtransaction(hexstring=tx.serialize().hex(), maxburnamount='1.0')
 
         # fetch parent tx, which doesn't contain any sigops
@@ -180,7 +180,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         assert tx_parent.txid_hex in self.nodes[0].getrawmempool()
 
         # Transactions are tiny in weight
-        assert_greater_than(2000, tx_parent.get_weight() + tx_child.get_weight())
+        assert_gt(2000, tx_parent.get_weight() + tx_child.get_weight())
 
     def test_legacy_sigops_stdness(self):
         self.log.info("Test a transaction with too many legacy sigops in its inputs is non-standard.")

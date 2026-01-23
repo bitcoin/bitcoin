@@ -13,7 +13,7 @@ import time
 
 from test_framework.blocktools import create_empty_fork
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_greater_than_or_equal, assert_raises_rpc_error
+from test_framework.util import assert_equal, assert_ge, assert_raises_rpc_error
 from test_framework.wallet import MiniWallet
 from test_framework.mempool_util import DEFAULT_CLUSTER_LIMIT
 
@@ -164,7 +164,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
         # At least one parent must be dropped, but more may be dropped,
         # depending on the dynamic cost overhead.
         expected_parent_count = len(large_std_txs) - 1
-        assert_greater_than_or_equal(expected_parent_count * 2, len(mempool))
+        assert_ge(expected_parent_count * 2, len(mempool))
         expected_parent_count = len(mempool) // 2
 
         parent_presence = [tx["txid"] in mempool for tx in large_std_txs]

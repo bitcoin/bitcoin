@@ -26,7 +26,7 @@ from test_framework.p2p import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than_or_equal,
+    assert_ge,
 )
 
 PEER_TIMEOUT = 3
@@ -163,8 +163,8 @@ class P2PLeakTest(BitcoinTestFramework):
         p2p_version_store = self.nodes[0].add_p2p_connection(P2PVersionStore())
         ver = p2p_version_store.version_received
         # Check that received time is within one hour of now
-        assert_greater_than_or_equal(ver.nTime, time.time() - 3600)
-        assert_greater_than_or_equal(time.time() + 3600, ver.nTime)
+        assert_ge(ver.nTime, time.time() - 3600)
+        assert_ge(time.time() + 3600, ver.nTime)
         assert_equal(ver.addrFrom.port, 0)
         assert_equal(ver.addrFrom.ip, '0.0.0.0')
         assert_equal(ver.nStartingHeight, 201)

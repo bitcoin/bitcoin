@@ -21,8 +21,8 @@ from test_framework.messages import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
-    assert_greater_than_or_equal,
+    assert_gt,
+    assert_ge,
 )
 from test_framework.wallet import (
     MiniWallet,
@@ -110,7 +110,7 @@ class RESTTest (BitcoinTestFramework):
 
         # Check hex format response
         hex_response = self.test_rest_request(f"/tx/{txid}", req_type=ReqType.HEX, ret_type=RetType.OBJ)
-        assert_greater_than_or_equal(int(hex_response.getheader('content-length')),
+        assert_ge(int(hex_response.getheader('content-length')),
                                      json_obj['size']*2)
 
         spent = (json_obj['vin'][0]['txid'], json_obj['vin'][0]['vout'])  # get the vin to later check for utxo (should be spent by then)
@@ -239,7 +239,7 @@ class RESTTest (BitcoinTestFramework):
 
         # Check binary format
         response = self.test_rest_request(f"/block/{bb_hash}", req_type=ReqType.BIN, ret_type=RetType.OBJ)
-        assert_greater_than(int(response.getheader('content-length')), BLOCK_HEADER_SIZE)
+        assert_gt(int(response.getheader('content-length')), BLOCK_HEADER_SIZE)
         response_bytes = response.read()
 
         # Compare with block header
@@ -250,13 +250,13 @@ class RESTTest (BitcoinTestFramework):
 
         # Check block hex format
         response_hex = self.test_rest_request(f"/block/{bb_hash}", req_type=ReqType.HEX, ret_type=RetType.OBJ)
-        assert_greater_than(int(response_hex.getheader('content-length')), BLOCK_HEADER_SIZE*2)
+        assert_gt(int(response_hex.getheader('content-length')), BLOCK_HEADER_SIZE*2)
         response_hex_bytes = response_hex.read().strip(b'\n')
         assert_equal(response_bytes.hex().encode(), response_hex_bytes)
 
         # Compare with hex block header
         response_header_hex = self.test_rest_request(f"/headers/{bb_hash}", req_type=ReqType.HEX, ret_type=RetType.OBJ, query_params={"count": 1})
-        assert_greater_than(int(response_header_hex.getheader('content-length')), BLOCK_HEADER_SIZE*2)
+        assert_gt(int(response_header_hex.getheader('content-length')), BLOCK_HEADER_SIZE*2)
         response_header_hex_bytes = response_header_hex.read(BLOCK_HEADER_SIZE*2)
         assert_equal(response_bytes[:BLOCK_HEADER_SIZE].hex().encode(), response_header_hex_bytes)
 
@@ -344,7 +344,7 @@ class RESTTest (BitcoinTestFramework):
         json_obj = self.test_rest_request("/mempool/info")
         assert_equal(json_obj['size'], 3)
         # the size of the memory pool should be greater than 3x ~100 bytes
-        assert_greater_than(json_obj['bytes'], 300)
+        assert_gt(json_obj['bytes'], 300)
 
         mempool_info = self.nodes[0].getmempoolinfo()
         # pop unstable unbroadcastcount before check

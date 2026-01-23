@@ -21,7 +21,7 @@ from .script import (
 )
 from .util import (
     assert_equal,
-    assert_greater_than,
+    assert_gt,
     create_lots_of_big_transactions,
     gen_return_txouts,
 )
@@ -109,13 +109,13 @@ def fill_mempool(test_framework, node, *, tx_sync_fun=None):
 
     test_framework.log.debug("The tx should be evicted by now")
     # The number of transactions created should be greater than the ones present in the mempool
-    assert_greater_than(tx_batch_size * num_of_batches, len(node.getrawmempool()))
+    assert_gt(tx_batch_size * num_of_batches, len(node.getrawmempool()))
     # Initial tx created should not be present in the mempool anymore as it had a lower fee rate
     assert tx_to_be_evicted_id not in node.getrawmempool()
 
     test_framework.log.debug("Check that mempoolminfee is larger than minrelaytxfee")
     assert_equal(node.getmempoolinfo()['minrelaytxfee'], minrelayfee)
-    assert_greater_than(node.getmempoolinfo()['mempoolminfee'], minrelayfee)
+    assert_gt(node.getmempoolinfo()['mempoolminfee'], minrelayfee)
 
 def tx_in_orphanage(node, tx: CTransaction) -> bool:
     """Returns true if the transaction is in the orphanage."""

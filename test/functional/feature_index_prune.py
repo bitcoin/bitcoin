@@ -8,7 +8,7 @@ import os
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
+    assert_gt,
     assert_raises_rpc_error,
 )
 
@@ -65,7 +65,7 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
         self.sync_index(height=200)
         tip = self.nodes[0].getbestblockhash()
         for node in filter_nodes:
-            assert_greater_than(len(node.getblockfilter(tip)['filter']), 0)
+            assert_gt(len(node.getblockfilter(tip)['filter']), 0)
         for node in stats_nodes:
             assert node.gettxoutsetinfo(hash_type="muhash", hash_or_height=tip)['muhash']
 
@@ -83,14 +83,14 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
         self.log.info("check if we can access the tips blockfilter and coinstats when we have pruned some blocks")
         tip = self.nodes[0].getbestblockhash()
         for node in filter_nodes:
-            assert_greater_than(len(node.getblockfilter(tip)['filter']), 0)
+            assert_gt(len(node.getblockfilter(tip)['filter']), 0)
         for node in stats_nodes:
             assert node.gettxoutsetinfo(hash_type="muhash", hash_or_height=tip)['muhash']
 
         self.log.info("check if we can access the blockfilter and coinstats of a pruned block")
         height_hash = self.nodes[0].getblockhash(2)
         for node in filter_nodes:
-            assert_greater_than(len(node.getblockfilter(height_hash)['filter']), 0)
+            assert_gt(len(node.getblockfilter(height_hash)['filter']), 0)
         for node in stats_nodes:
             assert node.gettxoutsetinfo(hash_type="muhash", hash_or_height=height_hash)['muhash']
 
@@ -126,7 +126,7 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
 
         for i in range(3):
             pruneheight_3 = self.nodes[i].pruneblockchain(2000)
-            assert_greater_than(pruneheight_3, pruneheight_2)
+            assert_gt(pruneheight_3, pruneheight_2)
             self.stop_node(i)
 
         self.log.info("make sure we get an init error when starting the nodes again with the indices")
