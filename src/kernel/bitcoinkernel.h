@@ -292,7 +292,17 @@ typedef struct btck_TransactionOutPoint btck_TransactionOutPoint;
  */
 typedef struct btck_PrecomputedTransactionData btck_PrecomputedTransactionData;
 
+/**
+ * Opaque data structure for holding a btck_Txid.
+ *
+ * This is a type-safe identifier for a transaction.
+ */
 typedef struct btck_Txid btck_Txid;
+
+/**
+ * Opaque data structure for holding a btck_BlockHeader.
+ */
+typedef struct btck_BlockHeader btck_BlockHeader;
 
 /** Current sync state passed to tip changed callbacks. */
 typedef uint8_t btck_SynchronizationState;
@@ -959,6 +969,15 @@ BITCOINKERNEL_API const btck_BlockTreeEntry* BITCOINKERNEL_WARN_UNUSED_RESULT bt
     const btck_BlockTreeEntry* block_tree_entry) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
+ * @brief Return the btck_BlockHeader associated with this entry.
+ *
+ * @param[in] block_tree_entry Non-null.
+ * @return                     btck_BlockHeader.
+ */
+BITCOINKERNEL_API btck_BlockHeader* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_tree_entry_get_block_header(
+    const btck_BlockTreeEntry* block_tree_entry) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
  * @brief Return the height of a certain block tree entry.
  *
  * @param[in] block_tree_entry Non-null.
@@ -1082,6 +1101,29 @@ BITCOINKERNEL_API void btck_chainstate_manager_options_destroy(btck_ChainstateMa
  */
 BITCOINKERNEL_API btck_ChainstateManager* BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_create(
     const btck_ChainstateManagerOptions* chainstate_manager_options) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the btck_BlockTreeEntry whose associated btck_BlockHeader has the most
+ * known cumulative proof of work.
+ *
+ * @param[in] chainstate_manager Non-null.
+ * @return                       The btck_BlockTreeEntry.
+ */
+BITCOINKERNEL_API const btck_BlockTreeEntry* BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_get_best_entry(
+    const btck_ChainstateManager* chainstate_manager) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Processes and validates the provided btck_BlockHeader.
+ *
+ * @param[in] chainstate_manager        Non-null.
+ * @param[in] header                    Non-null btck_BlockHeader to be validated.
+ * @param[out] block_validation_state   The result of the btck_BlockHeader validation.
+ * @return                              0 if btck_BlockHeader processing completed successfully, non-zero on error.
+ */
+BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_process_block_header(
+    btck_ChainstateManager* chainstate_manager,
+    const btck_BlockHeader* header,
+    btck_BlockValidationState* block_validation_state) BITCOINKERNEL_ARG_NONNULL(1, 2, 3);
 
 /**
  * @brief Triggers the start of a reindex if the wipe options were previously
@@ -1215,6 +1257,17 @@ BITCOINKERNEL_API const btck_Transaction* BITCOINKERNEL_WARN_UNUSED_RESULT btck_
     const btck_Block* block, size_t transaction_index) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
+ * @brief Get the btck_BlockHeader from the block.
+ *
+ * Creates a new btck_BlockHeader object from the block's header data.
+ *
+ * @param[in] block Non-null btck_Block
+ * @return          btck_BlockHeader.
+ */
+BITCOINKERNEL_API btck_BlockHeader* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_get_header(
+    const btck_Block* block) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
  * @brief Calculate and return the hash of a block.
  *
  * @param[in] block Non-null.
@@ -1251,16 +1304,36 @@ BITCOINKERNEL_API void btck_block_destroy(btck_Block* block);
 ///@{
 
 /**
- * Returns the validation mode from an opaque block validation state pointer.
+ * Create a new btck_BlockValidationState.
+ */
+BITCOINKERNEL_API btck_BlockValidationState* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_validation_state_create();
+
+/**
+ * Returns the validation mode from an opaque btck_BlockValidationState pointer.
  */
 BITCOINKERNEL_API btck_ValidationMode btck_block_validation_state_get_validation_mode(
     const btck_BlockValidationState* block_validation_state) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
- * Returns the validation result from an opaque block validation state pointer.
+ * Returns the validation result from an opaque btck_BlockValidationState pointer.
  */
 BITCOINKERNEL_API btck_BlockValidationResult btck_block_validation_state_get_block_validation_result(
     const btck_BlockValidationState* block_validation_state) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Copies the btck_BlockValidationState.
+ *
+ * @param[in] block_validation_state Non-null.
+ * @return                           The copied btck_BlockValidationState.
+ */
+BITCOINKERNEL_API btck_BlockValidationState* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_validation_state_copy(
+    const btck_BlockValidationState* block_validation_state) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * Destroy the btck_BlockValidationState.
+ */
+BITCOINKERNEL_API void btck_block_validation_state_destroy(
+    btck_BlockValidationState* block_validation_state) BITCOINKERNEL_ARG_NONNULL(1);
 
 ///@}
 
@@ -1612,6 +1685,93 @@ BITCOINKERNEL_API void btck_block_hash_to_bytes(
  * Destroy the block hash.
  */
 BITCOINKERNEL_API void btck_block_hash_destroy(btck_BlockHash* block_hash);
+
+///@}
+
+/**
+ * @name Block Header
+ * Functions for working with block headers.
+ */
+///@{
+
+/**
+ * @brief Create a btck_BlockHeader from serialized data.
+ *
+ * @param[in] raw_block_header      Non-null, serialized header data (80 bytes)
+ * @param[in] raw_block_header_len  Length of serialized header (must be 80)
+ * @return                          btck_BlockHeader, or null on error.
+ */
+BITCOINKERNEL_API btck_BlockHeader* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_header_create(
+    const void* raw_block_header, size_t raw_block_header_len);
+
+/**
+ * @brief Copy a btck_BlockHeader.
+ *
+ * @param[in] header    Non-null btck_BlockHeader.
+ * @return              Copied btck_BlockHeader.
+ */
+BITCOINKERNEL_API btck_BlockHeader* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_header_copy(
+    const btck_BlockHeader* header) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the btck_BlockHash.
+ *
+ * @param[in] header    Non-null header
+ * @return              btck_BlockHash.
+ */
+BITCOINKERNEL_API btck_BlockHash* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_header_get_hash(
+    const btck_BlockHeader* header) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the previous btck_BlockHash from btck_BlockHeader. The returned hash
+ * is unowned and only valid for the lifetime of the btck_BlockHeader.
+ *
+ * @param[in] header    Non-null btck_BlockHeader
+ * @return              Previous btck_BlockHash
+ */
+BITCOINKERNEL_API const btck_BlockHash* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_header_get_prev_hash(
+    const btck_BlockHeader* header) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the timestamp from btck_BlockHeader.
+ *
+ * @param[in] header    Non-null btck_BlockHeader
+ * @return              Block timestamp (Unix epoch seconds)
+ */
+BITCOINKERNEL_API uint32_t BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_header_get_timestamp(
+    const btck_BlockHeader* header) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the nBits difficulty target from btck_BlockHeader.
+ *
+ * @param[in] header    Non-null btck_BlockHeader
+ * @return              Difficulty target (compact format)
+ */
+BITCOINKERNEL_API uint32_t BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_header_get_bits(
+    const btck_BlockHeader* header) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the version from btck_BlockHeader.
+ *
+ * @param[in] header    Non-null btck_BlockHeader
+ * @return              Block version
+ */
+BITCOINKERNEL_API int32_t BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_header_get_version(
+    const btck_BlockHeader* header) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the nonce from btck_BlockHeader.
+ *
+ * @param[in] header    Non-null btck_BlockHeader
+ * @return              Nonce
+ */
+BITCOINKERNEL_API uint32_t BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_header_get_nonce(
+    const btck_BlockHeader* header) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * Destroy the btck_BlockHeader.
+ */
+BITCOINKERNEL_API void btck_block_header_destroy(btck_BlockHeader* header);
 
 ///@}
 
