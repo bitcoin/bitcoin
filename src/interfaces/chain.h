@@ -7,6 +7,7 @@
 
 #include <blockfilter.h>
 #include <common/settings.h>
+#include <interfaces/types.h>
 #include <kernel/chain.h> // IWYU pragma: export
 #include <node/types.h>
 #include <primitives/transaction.h>
