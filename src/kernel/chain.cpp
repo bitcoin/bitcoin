@@ -4,32 +4,11 @@
 
 #include <kernel/chain.h>
 
-#include <chain.h>
-#include <kernel/cs_main.h>
 #include <kernel/types.h>
-#include <sync.h>
-#include <uint256.h>
-
-class CBlock;
 
 using kernel::ChainstateRole;
 
 namespace kernel {
-interfaces::BlockInfo MakeBlockInfo(const CBlockIndex* index, const CBlock* data)
-{
-    interfaces::BlockInfo info{index ? *index->phashBlock : uint256::ZERO};
-    if (index) {
-        info.prev_hash = index->pprev ? index->pprev->phashBlock : nullptr;
-        info.height = index->nHeight;
-        info.chain_time_max = index->GetBlockTimeMax();
-        LOCK(::cs_main);
-        info.file_number = index->nFile;
-        info.data_pos = index->nDataPos;
-    }
-    info.data = data;
-    return info;
-}
-
 std::ostream& operator<<(std::ostream& os, const ChainstateRole& role) {
     if (!role.validated) {
         os << "assumedvalid";
