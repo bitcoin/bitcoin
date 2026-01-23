@@ -407,6 +407,8 @@ def main():
                                      epilog='''
     Help text and arguments for individual test script:''',
                                      formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("--ignore-self-check-warnings", dest="ignore_warnings", default=False, action="store_true",
+                        help="Ignore test runner warnings about self-checks before running the tests")
     parser.add_argument('--ansi', action='store_true', default=sys.stdout.isatty(), help="Use ANSI colors and dots in output (enabled by default when standard output is a TTY)")
     parser.add_argument('--combinedlogslen', '-c', type=int, default=0, metavar='n', help='On failure, print a log (of length n lines) to the console, combined from the test framework and all test nodes.')
     parser.add_argument('--coverage', action='store_true', help='generate a basic coverage report for the RPC interface')
@@ -424,8 +426,7 @@ def main():
     parser.add_argument('--resultsfile', '-r', help='store test results (as CSV) to the provided file')
 
     args, unknown_args = parser.parse_known_args()
-    # Fail on self-check warnings before running the tests.
-    fail_on_warn = True
+    fail_on_warn = not args.ignore_warnings
     if not args.ansi:
         global DEFAULT, BOLD, GREEN, RED
         DEFAULT = ("", "")
@@ -879,7 +880,7 @@ def check_script_list(*, src_dir, fail_on_warn):
     python_files = set([test_file for test_file in os.listdir(script_dir) if test_file.endswith(".py")])
     missed_tests = list(python_files - set(map(lambda x: x.split()[0], ALL_SCRIPTS + NON_SCRIPTS)))
     if len(missed_tests) != 0:
-        print("%sWARNING!%s The following scripts are not being run: %s. Check the test lists in test_runner.py." % (BOLD[1], BOLD[0], str(missed_tests)))
+        print("{}WARNING!{} The following scripts are not being run: {}. Check the test lists in test_runner.py, or use {} to ignore the error.".format(BOLD[1], BOLD[0], str(missed_tests), "--ignore-self-check-warnings"))
         if fail_on_warn:
             sys.exit(1)
 
