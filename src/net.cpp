@@ -3456,7 +3456,7 @@ bool CConnman::InitBinds(const Options& options)
         // Don't consider errors to bind on IPv6 "::" fatal because the host OS
         // may not have IPv6 support and the user did not explicitly ask us to
         // bind on that.
-        const CService ipv6_any{in6_addr(IN6ADDR_ANY_INIT), GetListenPort()}; // ::
+        const CService ipv6_any{in6_addr(COMPAT_IN6ADDR_ANY_INIT), GetListenPort()}; // ::
         Bind(ipv6_any, BF_NONE, NetPermissionFlags::None);
 
         struct in_addr inaddr_any;

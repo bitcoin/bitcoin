@@ -743,7 +743,7 @@ class NetworkThread(threading.Thread):
         """Start the network thread."""
         self.network_event_loop.run_forever()
 
-    def close(self, *, timeout=10):
+    def close(self, *, timeout):
         """Close the connections and network event loop."""
         self.network_event_loop.call_soon_threadsafe(self.network_event_loop.stop)
         wait_until_helper_internal(lambda: not self.network_event_loop.is_running(), timeout=timeout)

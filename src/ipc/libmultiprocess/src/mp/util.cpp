@@ -14,6 +14,7 @@
 #include <pthread.h>
 #include <sstream>
 #include <string>
+#include <sys/types.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
@@ -35,6 +36,17 @@ namespace fs = std::filesystem;
 
 namespace mp {
 namespace {
+
+std::vector<char*> MakeArgv(const std::vector<std::string>& args)
+{
+    std::vector<char*> argv;
+    argv.reserve(args.size() + 1);
+    for (const auto& arg : args) {
+        argv.push_back(const_cast<char*>(arg.c_str()));
+    }
+    argv.push_back(nullptr);
+    return argv;
+}
 
 //! Return highest possible file descriptor.
 size_t MaxFd()
@@ -111,35 +123,57 @@ int SpawnProcess(int& pid, FdToArgsFn&& fd_to_args)
         throw std::system_error(errno, std::system_category(), "socketpair");
     }
 
+    // Evaluate the callback and build the argv array before forking.
+    //
+    // The parent process may be multi-threaded and holding internal library
+    // locks at fork time. In that case, running code that allocates memory or
+    // takes locks in the child between fork() and exec() can deadlock
+    // indefinitely. Precomputing arguments in the parent avoids this.
+    const std::vector<std::string> args{fd_to_args(fds[0])};
+    const std::vector<char*> argv{MakeArgv(args)};
+
     pid = fork();
     if (pid == -1) {
         throw std::system_error(errno, std::system_category(), "fork");
     }
-    // Parent process closes the descriptor for socket 0, child closes the descriptor for socket 1.
+    // Parent process closes the descriptor for socket 0, child closes the
+    // descriptor for socket 1. On failure, the parent throws, but the child
+    // must _exit(126) (post-fork child must not throw).
     if (close(fds[pid ? 0 : 1]) != 0) {
-        throw std::system_error(errno, std::system_category(), "close");
+        if (pid) {
+            (void)close(fds[1]);
+            throw std::system_error(errno, std::system_category(), "close");
+        }
+        static constexpr char msg[] = "SpawnProcess(child): close(fds[1]) failed\n";
+        const ssize_t writeResult = ::write(STDERR_FILENO, msg, sizeof(msg) - 1);
+        (void)writeResult;
+        _exit(126);
     }
+
     if (!pid) {
-        // Child process must close all potentially open descriptors, except socket 0.
+        // Child process must close all potentially open descriptors, except
+        // socket 0. Do not throw, allocate, or do non-fork-safe work here.
         const int maxFd = MaxFd();
         for (int fd = 3; fd < maxFd; ++fd) {
             if (fd != fds[0]) {
                 close(fd);
             }
         }
-        ExecProcess(fd_to_args(fds[0]));
+
+        execvp(argv[0], argv.data());
+        // NOTE: perror() is not async-signal-safe; calling it here in a
+        // post-fork child may deadlock in multithreaded parents.
+        // TODO: Report errors to the parent via a pipe (e.g. write errno)
+        // so callers can get diagnostics without relying on perror().
+        perror("execvp failed");
+        _exit(127);
     }
     return fds[1];
 }
 
 void ExecProcess(const std::vector<std::string>& args)
 {
-    std::vector<char*> argv;
-    argv.reserve(args.size());
-    for (const auto& arg : args) {
-        argv.push_back(const_cast<char*>(arg.c_str()));
-    }
-    argv.push_back(nullptr);
+    const std::vector<char*> argv{MakeArgv(args)};
     if (execvp(argv[0], argv.data()) != 0) {
         perror("execvp failed");
         if (errno == ENOENT && !args.empty()) {
@@ -152,7 +186,7 @@ void ExecProcess(const std::vector<std::string>& args)
 int WaitProcess(int pid)
 {
     int status;
-    if (::waitpid(pid, &status, 0 /* options */) != pid) {
+    if (::waitpid(pid, &status, /*options=*/0) != pid) {
         throw std::system_error(errno, std::system_category(), "waitpid");
     }
     return status;

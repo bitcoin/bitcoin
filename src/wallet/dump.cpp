@@ -121,6 +121,11 @@ static void WalletToolReleaseWallet(CWallet* wallet)
 
 bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::path& wallet_path, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
+    if (name.empty()) {
+        tfm::format(std::cerr, "Wallet name cannot be empty\n");
+        return false;
+    }
+
     // Get the dumpfile
     std::string dump_filename = args.GetArg("-dumpfile", "");
     if (dump_filename.empty()) {
