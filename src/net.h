@@ -42,7 +42,6 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <queue>
 #include <string_view>
 #include <thread>
 #include <unordered_set>
@@ -1187,7 +1186,7 @@ public:
                                ConnectionType conn_type,
                                bool use_v2transport,
                                const std::optional<Proxy>& proxy_override = std::nullopt)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_transient_session_mutex);
 
     /// Group of private broadcast related members.
     class PrivateBroadcast
@@ -1348,7 +1347,7 @@ public:
      *                          - Max total outbound connection capacity filled
      *                          - Max connection capacity for type is filled
      */
-    bool AddConnection(const std::string& address, ConnectionType conn_type, bool use_v2transport) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
+    bool AddConnection(const std::string& address, ConnectionType conn_type, bool use_v2transport) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_transient_session_mutex);
 
     size_t GetNodeCount(ConnectionDirection) const;
     std::map<CNetAddr, LocalServiceInfo> getNetLocalAddresses() const;
@@ -1421,13 +1420,13 @@ private:
     bool Bind(const CService& addr, unsigned int flags, NetPermissionFlags permissions);
     bool InitBinds(const Options& options);
 
-    void ThreadOpenAddedConnections() EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_unused_i2p_sessions_mutex, !m_reconnections_mutex);
+    void ThreadOpenAddedConnections() EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_unused_i2p_transient_session_mutex, !m_reconnections_mutex);
     void AddAddrFetch(const std::string& strDest) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex);
-    void ProcessAddrFetch() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_unused_i2p_sessions_mutex);
-    void ThreadOpenConnections(std::vector<std::string> connect, std::span<const std::string> seed_nodes) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex, !m_unused_i2p_sessions_mutex, !m_reconnections_mutex);
+    void ProcessAddrFetch() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_unused_i2p_transient_session_mutex);
+    void ThreadOpenConnections(std::vector<std::string> connect, std::span<const std::string> seed_nodes) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex, !m_unused_i2p_transient_session_mutex, !m_reconnections_mutex);
     void ThreadMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
     void ThreadI2PAcceptIncoming();
-    void ThreadPrivateBroadcast() EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
+    void ThreadPrivateBroadcast() EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_transient_session_mutex);
     void AcceptConnection(const ListenSocket& hListenSocket);
 
     /**
@@ -1521,7 +1520,7 @@ private:
                        ConnectionType conn_type,
                        bool use_v2transport,
                        const std::optional<Proxy>& proxy_override)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_transient_session_mutex);
 
     void AddWhitelistPermissionFlags(NetPermissionFlags& flags, std::optional<CNetAddr> addr, const std::vector<NetWhitelistPermissions>& ranges) const;
 
@@ -1755,18 +1754,23 @@ private:
     bool m_capture_messages{false};
 
     /**
-     * Mutex protecting m_i2p_sam_sessions.
+     * Mutex protecting `m_unused_i2p_transient_session`.
      */
-    Mutex m_unused_i2p_sessions_mutex;
+    Mutex m_unused_i2p_transient_session_mutex;
 
     /**
-     * A pool of created I2P SAM transient sessions that should be used instead
-     * of creating new ones in order to reduce the load on the I2P network.
-     * Creating a session in I2P is not cheap, thus if this is not empty, then
-     * pick an entry from it instead of creating a new session. If connecting to
-     * a host fails, then the created session is put to this pool for reuse.
+     * A pre-created I2P SAM transient session that should be used instead
+     * of creating new one. This has two purposes:
+     * 1. If we create a session, try to connect to a peer, but the connection
+     *    fails then we store the session here to be used by the next connection
+     *    attempt. Creating a session in I2P is not cheap, so this reduces the
+     *    load on the I2P network by avoiding useless session creation and
+     *    destruction.
+     * 2. Pre-creating a session some time before using it makes it harder to
+     *    correlate session creation and session usage.
      */
-    std::queue<std::unique_ptr<i2p::sam::Session>> m_unused_i2p_sessions GUARDED_BY(m_unused_i2p_sessions_mutex);
+    std::unique_ptr<i2p::sam::Session> m_unused_i2p_transient_session
+        GUARDED_BY(m_unused_i2p_transient_session_mutex);
 
     /**
      * Mutex protecting m_reconnections.
@@ -1789,13 +1793,7 @@ private:
     std::list<ReconnectionInfo> m_reconnections GUARDED_BY(m_reconnections_mutex);
 
     /** Attempt reconnections, if m_reconnections non-empty. */
-    void PerformReconnections() EXCLUSIVE_LOCKS_REQUIRED(!m_reconnections_mutex, !m_unused_i2p_sessions_mutex);
-
-    /**
-     * Cap on the size of `m_unused_i2p_sessions`, to ensure it does not
-     * unexpectedly use too much memory.
-     */
-    static constexpr size_t MAX_UNUSED_I2P_SESSIONS_SIZE{10};
+    void PerformReconnections() EXCLUSIVE_LOCKS_REQUIRED(!m_reconnections_mutex, !m_unused_i2p_transient_session_mutex);
 
     /**
      * RAII helper to atomically create a copy of `m_nodes` and add a reference
