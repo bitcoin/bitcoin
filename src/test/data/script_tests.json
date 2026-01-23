@@ -1826,7 +1826,7 @@
 [
     "0x47 0x304402203e4516da7253cf068effec6b95c41221c0cf3a8e6ccb8cbf1725b562e9afde2c022054e1c258c2981cdfba5df1f46661fb6541c44f77ca0092f3600331abfffb125101 NOP8",
     "0x21 0x03363d90d447b00c9c99ceac05b6262ee053441c7e55552ffe526bad8f83ff4640 CHECKSIG",
-    "",
+    "P2SH",
     "OK",
     "P2PK with non-push scriptSig but with P2SH validation"
 ],
