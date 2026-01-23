@@ -381,7 +381,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                              bool use_v2transport,
                              const std::optional<Proxy>& proxy_override)
 {
-    AssertLockNotHeld(m_unused_i2p_sessions_mutex);
+    AssertLockNotHeld(m_unused_i2p_transient_session_mutex);
     assert(conn_type != ConnectionType::INBOUND);
 
     if (pszDest == nullptr) {
@@ -461,20 +461,19 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                     connected = m_i2p_sam_session->Connect(target_addr, conn, proxyConnectionFailed);
                 } else {
                     {
-                        LOCK(m_unused_i2p_sessions_mutex);
-                        if (m_unused_i2p_sessions.empty()) {
+                        LOCK(m_unused_i2p_transient_session_mutex);
+                        if (!m_unused_i2p_transient_session) {
                             i2p_transient_session =
                                 std::make_unique<i2p::sam::Session>(*use_proxy, m_interrupt_net);
                         } else {
-                            i2p_transient_session.swap(m_unused_i2p_sessions.front());
-                            m_unused_i2p_sessions.pop();
+                            i2p_transient_session.swap(m_unused_i2p_transient_session);
                         }
                     }
                     connected = i2p_transient_session->Connect(target_addr, conn, proxyConnectionFailed);
                     if (!connected) {
-                        LOCK(m_unused_i2p_sessions_mutex);
-                        if (m_unused_i2p_sessions.size() < MAX_UNUSED_I2P_SESSIONS_SIZE) {
-                            m_unused_i2p_sessions.emplace(i2p_transient_session.release());
+                        LOCK(m_unused_i2p_transient_session_mutex);
+                        if (!m_unused_i2p_transient_session) {
+                            m_unused_i2p_transient_session.swap(i2p_transient_session);
                         }
                     }
                 }
@@ -1875,7 +1874,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
 
 bool CConnman::AddConnection(const std::string& address, ConnectionType conn_type, bool use_v2transport = false)
 {
-    AssertLockNotHeld(m_unused_i2p_sessions_mutex);
+    AssertLockNotHeld(m_unused_i2p_transient_session_mutex);
     std::optional<int> max_connections;
     switch (conn_type) {
     case ConnectionType::INBOUND:
@@ -2409,7 +2408,7 @@ void CConnman::DumpAddresses()
 
 void CConnman::ProcessAddrFetch()
 {
-    AssertLockNotHeld(m_unused_i2p_sessions_mutex);
+    AssertLockNotHeld(m_unused_i2p_transient_session_mutex);
     std::string strDest;
     {
         LOCK(m_addr_fetches_mutex);
@@ -2529,7 +2528,7 @@ bool CConnman::MaybePickPreferredNetwork(std::optional<Network>& network)
 
 void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std::span<const std::string> seed_nodes)
 {
-    AssertLockNotHeld(m_unused_i2p_sessions_mutex);
+    AssertLockNotHeld(m_unused_i2p_transient_session_mutex);
     AssertLockNotHeld(m_reconnections_mutex);
     FastRandomContext rng;
     // Connect to specific addresses
@@ -2973,7 +2972,7 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo(bool include_connected) co
 
 void CConnman::ThreadOpenAddedConnections()
 {
-    AssertLockNotHeld(m_unused_i2p_sessions_mutex);
+    AssertLockNotHeld(m_unused_i2p_transient_session_mutex);
     AssertLockNotHeld(m_reconnections_mutex);
     while (true)
     {
@@ -3010,7 +3009,7 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect,
                                      bool use_v2transport,
                                      const std::optional<Proxy>& proxy_override)
 {
-    AssertLockNotHeld(m_unused_i2p_sessions_mutex);
+    AssertLockNotHeld(m_unused_i2p_transient_session_mutex);
     assert(conn_type != ConnectionType::INBOUND);
 
     //
@@ -3211,7 +3210,7 @@ void CConnman::ThreadI2PAcceptIncoming()
 
 void CConnman::ThreadPrivateBroadcast()
 {
-    AssertLockNotHeld(m_unused_i2p_sessions_mutex);
+    AssertLockNotHeld(m_unused_i2p_transient_session_mutex);
 
     size_t addrman_num_bad_addresses{0};
     while (!m_interrupt_net->interrupted()) {
@@ -4151,7 +4150,7 @@ uint64_t CConnman::CalculateKeyedNetGroup(const CNetAddr& address) const
 void CConnman::PerformReconnections()
 {
     AssertLockNotHeld(m_reconnections_mutex);
-    AssertLockNotHeld(m_unused_i2p_sessions_mutex);
+    AssertLockNotHeld(m_unused_i2p_transient_session_mutex);
     while (true) {
         // Move first element of m_reconnections to todo (avoiding an allocation inside the lock).
         decltype(m_reconnections) todo;
