@@ -10,6 +10,7 @@
 #include <index/base.h>
 #include <index/disktxpos.h>
 #include <interfaces/chain.h>
+#include <interfaces/types.h>
 #include <logging.h>
 #include <node/blockstorage.h>
 #include <primitives/block.h>

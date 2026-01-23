@@ -7,12 +7,34 @@
 
 #include <uint256.h>
 
+#include <attributes.h>
+
+class CBlock;
+class CBlockUndo;
+class uint256;
+
 namespace interfaces {
 
 //! Hash/height pair to help track and identify blocks.
 struct BlockRef {
     uint256 hash;
     int height = -1;
+};
+
+//! Block data sent with blockConnected, blockDisconnected notifications.
+struct BlockInfo {
+    const uint256& hash;
+    const uint256* prev_hash = nullptr;
+    int height = -1;
+    int file_number = -1;
+    unsigned data_pos = 0;
+    const CBlock* data = nullptr;
+    const CBlockUndo* undo_data = nullptr;
+    // The maximum time in the chain up to and including this block.
+    // A timestamp that can only move forward.
+    unsigned int chain_time_max{0};
+
+    BlockInfo(const uint256& hash LIFETIMEBOUND) : hash(hash) {}
 };
 
 } // namespace interfaces

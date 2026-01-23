@@ -10,9 +10,9 @@
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <interfaces/chain.h>
-#include <kernel/chain.h>
 #include <kernel/types.h>
 #include <node/blockstorage.h>
+#include <node/chain.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <primitives/block.h>
@@ -103,7 +103,7 @@ void generateFakeBlock(const CChainParams& params,
 
     // notify wallet
     const auto& pindex = WITH_LOCK(::cs_main, return context.chainman->ActiveChain().Tip());
-    wallet.blockConnected(ChainstateRole{}, kernel::MakeBlockInfo(pindex, &block));
+    wallet.blockConnected(ChainstateRole{}, node::MakeBlockInfo(pindex, &block));
 }
 
 struct PreSelectInputs {

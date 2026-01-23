@@ -8,6 +8,7 @@
 #include <attributes.h>
 #include <dbwrapper.h>
 #include <interfaces/chain.h>
+#include <interfaces/types.h>
 #include <kernel/cs_main.h>
 #include <threadsafety.h>
 #include <uint256.h>
@@ -33,9 +34,6 @@ struct IndexSummary {
     int best_block_height{0};
     uint256 best_block_hash;
 };
-namespace interfaces {
-struct BlockRef;
-}
 namespace util {
 template <unsigned int num_params>
 struct ConstevalFormatString;

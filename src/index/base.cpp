@@ -13,6 +13,7 @@
 #include <logging.h>
 #include <node/abort.h>
 #include <node/blockstorage.h>
+#include <node/chain.h>
 #include <node/context.h>
 #include <node/database_args.h>
 #include <node/interface_ui.h>
@@ -167,7 +168,7 @@ static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& 
 
 bool BaseIndex::ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data)
 {
-    interfaces::BlockInfo block_info = kernel::MakeBlockInfo(pindex, block_data);
+    interfaces::BlockInfo block_info = node::MakeBlockInfo(pindex, block_data);
 
     CBlock block;
     if (!block_data) { // disk lookup if block data wasn't provided
@@ -295,7 +296,7 @@ bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_ti
     CBlockUndo block_undo;
 
     for (const CBlockIndex* iter_tip = current_tip; iter_tip != new_tip; iter_tip = iter_tip->pprev) {
-        interfaces::BlockInfo block_info = kernel::MakeBlockInfo(iter_tip);
+        interfaces::BlockInfo block_info = node::MakeBlockInfo(iter_tip);
         if (CustomOptions().disconnect_data) {
             if (!m_chainstate->m_blockman.ReadBlock(block, *iter_tip)) {
                 LogError("Failed to read block %s from disk",
