@@ -50,23 +50,12 @@ void initialize_spkm()
     MOCKED_DESC_CONVERTER.Init();
 }
 
-/**
- * Deriving "expensive" descriptors will consume useful fuzz compute. The
- * compute is better spent on a smaller subset of descriptors, which still
- * covers all real end-user settings.
- */
-static bool IsTooExpensive(std::span<const uint8_t> desc)
-{
-    return HasDeepDerivPath(desc) || HasTooManySubFrag(desc) || HasTooManyWrappers(desc);
-}
-
 static std::optional<std::pair<WalletDescriptor, FlatSigningProvider>> CreateWalletDescriptor(FuzzedDataProvider& fuzzed_data_provider)
 {
     const std::string mocked_descriptor{fuzzed_data_provider.ConsumeRandomLengthString()};
-    if (IsTooExpensive(MakeUCharSpan(mocked_descriptor))) return {};
     const auto desc_str{MOCKED_DESC_CONVERTER.GetDescriptor(mocked_descriptor)};
     if (!desc_str.has_value()) return std::nullopt;
-    if (HasTooLargeLeafSize(MakeUCharSpan(*desc_str))) return {};
+    if (IsTooExpensive(MakeUCharSpan(*desc_str))) return {};
 
     FlatSigningProvider keys;
     std::string error;
