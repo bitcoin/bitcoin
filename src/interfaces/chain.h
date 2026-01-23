@@ -8,6 +8,7 @@
 #include <blockfilter.h>
 #include <common/settings.h>
 #include <consensus/amount.h>
+#include <interfaces/types.h>
 #include <kernel/chain.h> // IWYU pragma: export
 #include <primitives/transaction.h>
 #include <util/expected.h>
