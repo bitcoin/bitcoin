@@ -667,6 +667,8 @@ void CNode::CopyStats(CNodeStats& stats)
     stats.addrLocal = addrLocalUnlocked.IsValid() ? addrLocalUnlocked.ToStringAddrPort() : "";
 
     X(m_conn_type);
+
+    X(m_cpu_time);
 }
 #undef X
 
@@ -3151,6 +3153,8 @@ void CConnman::ThreadMessageHandler()
             for (CNode* pnode : snap.Nodes()) {
                 if (pnode->fDisconnect)
                     continue;
+
+                CpuTimer timer{[&pnode](std::chrono::nanoseconds elapsed) { pnode->m_cpu_time += elapsed; }};
 
                 // Receive messages
                 bool fMoreNodeWork = m_msgproc->ProcessMessages(pnode, flagInterruptMsgProc);
