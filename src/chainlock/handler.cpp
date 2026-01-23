@@ -162,8 +162,8 @@ void ChainlockHandler::CheckActiveState()
         // ChainLocks got activated just recently, but it's possible that it was already running before, leaving
         // us with some stale values which we should not try to enforce anymore (there probably was a good reason
         // to disable spork19)
-        m_chainlocks.ResetChainlock();
         LOCK(cs);
+        m_chainlocks.ResetChainlock();
         lastNotifyChainLockBlockIndex = nullptr;
     }
 }
