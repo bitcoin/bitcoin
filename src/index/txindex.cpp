@@ -13,6 +13,8 @@
 #include <index/disktxpos.h>
 #include <index/txindex_key.h>
 #include <interfaces/chain.h>
+#include <interfaces/types.h>
+#include <kernel/cs_main.h>
 #include <node/blockstorage.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>

@@ -10,6 +10,7 @@
 #include <crypto/muhash.h>
 #include <index/base.h>
 #include <interfaces/chain.h>
+#include <interfaces/types.h>
 #include <uint256.h>
 
 #include <cstddef>
