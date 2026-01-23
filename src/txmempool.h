@@ -20,7 +20,6 @@
 #include <primitives/transaction_identifier.h>
 #include <sync.h>
 #include <txgraph.h>
-#include <util/epochguard.h>
 #include <util/feefrac.h>
 #include <util/hasher.h>
 #include <util/result.h>
@@ -197,7 +196,6 @@ protected:
     mutable int64_t lastRollingFeeUpdate GUARDED_BY(cs){GetTime()};
     mutable bool blockSinceLastRollingFeeBump GUARDED_BY(cs){false};
     mutable double rollingMinimumFeeRate GUARDED_BY(cs){0}; //!< minimum fee to get into the pool, decreases exponentially
-    mutable Epoch m_epoch GUARDED_BY(cs){};
 
     // In-memory counter for external mempool tracking purposes.
     // This number is incremented once every time a transaction
@@ -394,7 +392,7 @@ public:
      * @param[in] vHashesToUpdate          The set of txids from the
      *     disconnected block that have been accepted back into the mempool.
      */
-    void UpdateTransactionsFromBlock(const std::vector<Txid>& vHashesToUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main) LOCKS_EXCLUDED(m_epoch);
+    void UpdateTransactionsFromBlock(const std::vector<Txid>& vHashesToUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
 
     std::vector<FeePerWeight> GetFeerateDiagram() const EXCLUSIVE_LOCKS_REQUIRED(cs);
     FeePerWeight GetMainChunkFeerate(const CTxMemPoolEntry& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
@@ -592,25 +590,6 @@ private:
     /* Removal from the mempool also triggers removal of the entry's Ref from txgraph. */
     void removeUnchecked(txiter entry, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
 public:
-    /** visited marks a CTxMemPoolEntry as having been traversed
-     * during the lifetime of the most recently created Epoch::Guard
-     * and returns false if we are the first visitor, true otherwise.
-     *
-     * An Epoch::Guard must be held when visited is called or an assert will be
-     * triggered.
-     *
-     */
-    bool visited(const txiter it) const EXCLUSIVE_LOCKS_REQUIRED(cs, m_epoch)
-    {
-        return m_epoch.visited(it->m_epoch_marker);
-    }
-
-    bool visited(std::optional<txiter> it) const EXCLUSIVE_LOCKS_REQUIRED(cs, m_epoch)
-    {
-        assert(m_epoch.guarded()); // verify guard even when it==nullopt
-        return !it || visited(*it);
-    }
-
     /*
      * CTxMemPool::ChangeSet:
      *
