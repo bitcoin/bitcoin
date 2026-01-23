@@ -103,8 +103,7 @@ bool BuildChainTestingSetup::BuildChain(const CBlockIndex* pindex,
     for (auto& block : chain) {
         block = std::make_shared<CBlock>(CreateBlock(pindex, no_txns, coinbase_script_pub_key));
 
-        BlockValidationState state;
-        if (!Assert(m_node.chainman)->ProcessNewBlockHeaders({{*block}}, true, state, &pindex)) {
+        if (!Assert(m_node.chainman)->ProcessNewBlockHeaders({{*block}}, true, &pindex).IsValid()) {
             return false;
         }
     }
