@@ -335,29 +335,6 @@ QVariant MasternodeModel::headerData(int section, Qt::Orientation orientation, i
     }
 }
 
-int MasternodeModel::columnWidth(int section)
-{
-    switch (section) {
-    case Column::SERVICE:
-        return 200;
-    case Column::TYPE:
-        return 160;
-    case Column::STATUS:
-        return 0;
-    case Column::POSE:
-    case Column::REGISTERED:
-    case Column::LAST_PAYMENT:
-        return 80;
-    case Column::NEXT_PAYMENT:
-        return 100;
-    case Column::OPERATOR_REWARD:
-        return 130;
-    case Column::PROTX_HASH:
-    default:
-        return 80;
-    }
-}
-
 void MasternodeModel::append(std::unique_ptr<MasternodeEntry>&& entry)
 {
     beginInsertRows({}, rowCount(), rowCount());

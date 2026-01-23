@@ -87,14 +87,15 @@ MasternodeList::MasternodeList(QWidget* parent) :
     ui->tableViewMasternodes->setModel(m_proxy_model);
     ui->tableViewMasternodes->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->tableViewMasternodes->verticalHeader()->setVisible(false);
-    ui->tableViewMasternodes->horizontalHeader()->setStretchLastSection(true);
 
     // Set column widths
+    auto* header = ui->tableViewMasternodes->horizontalHeader();
+    header->setStretchLastSection(false);
     for (int col = 0; col < MasternodeModel::COUNT; ++col) {
-        if (col == MasternodeModel::STATUS) {
-            ui->tableViewMasternodes->horizontalHeader()->setSectionResizeMode(col, QHeaderView::ResizeToContents);
+        if (col == MasternodeModel::SERVICE) {
+            header->setSectionResizeMode(col, QHeaderView::Stretch);
         } else {
-            ui->tableViewMasternodes->setColumnWidth(col, MasternodeModel::columnWidth(col));
+            header->setSectionResizeMode(col, QHeaderView::ResizeToContents);
         }
     }
 

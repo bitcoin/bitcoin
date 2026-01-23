@@ -124,8 +124,6 @@ public:
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
-    static int columnWidth(int section);
-
     void append(std::unique_ptr<MasternodeEntry>&& entry);
     void remove(int row);
     void reconcile(MasternodeEntryList&& entries);
