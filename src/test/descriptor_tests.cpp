@@ -1326,4 +1326,47 @@ BOOST_AUTO_TEST_CASE(descriptor_older_warnings)
     }
 }
 
+BOOST_AUTO_TEST_CASE(descriptor_tr_max_satisfaction_weight)
+{
+    FlatSigningProvider provider;
+    std::string error;
+
+    // A Taproot descriptor with a script path heavier than the key path.
+    // Key path: 1 + 65 = 66 weight units.
+    // Script path: pk(key)
+    // - Satisfaction: MaxSatSize returns 1 + 65 = 66 (1 push opcode + 65 byte sig with sighash).
+    //   Weight with compact size: GetSizeOfCompactSize(66) + 66 = 1 + 66 = 67.
+    // - Script (pk): 34 bytes. Weight: GetSizeOfCompactSize(34) + 34 = 1 + 34 = 35.
+    // - Control Block: 33 bytes (1 version + 32 internal key). Weight: GetSizeOfCompactSize(33) + 33 = 1 + 33 = 34.
+    // Total script path weight: 67 + 35 + 34 = 136.
+
+    // We use a valid x-only pubkey for internal key and script key.
+    std::string desc_str = "tr(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5,pk(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5))";
+    auto parsed = Parse(desc_str, provider, error);
+    BOOST_CHECK_EQUAL(parsed.size(), 1U);
+    const auto& desc = parsed[0];
+    BOOST_CHECK(desc->IsSolvable());
+
+    auto max_weight = desc->MaxSatisfactionWeight(true);
+    BOOST_CHECK(max_weight.has_value());
+    BOOST_CHECK_EQUAL(*max_weight, 136);
+
+    // sortedmulti_a example
+    // tr(KEY, sortedmulti_a(2, K1, K2))
+    std::string desc_multi = "tr(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5,sortedmulti_a(2,c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5,f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9))";
+    parsed = Parse(desc_multi, provider, error);
+    BOOST_CHECK_EQUAL(parsed.size(), 1U);
+    const auto& desc2 = parsed[0];
+    auto max_weight2 = desc2->MaxSatisfactionWeight(true);
+    BOOST_CHECK(max_weight2.has_value());
+
+    // Script: (33+1)+(33+1)+1+1 = 70. Weight: GetSizeOfCompactSize(70) + 70 = 1 + 70 = 71.
+    // Each key is 33 bytes (0x20 push + 32 bytes x-only key) + 1 byte opcode.
+    // Sat: MaxSatSize = (1 + 65) * 2 = 132 (two sigs with push opcodes, each sig is 65 bytes with sighash).
+    //      Weight: GetSizeOfCompactSize(132) + 132 = 1 + 132 = 133.
+    // CB: 33 bytes (1 version + 32 internal key). Weight: GetSizeOfCompactSize(33) + 33 = 1 + 33 = 34.
+    // Total: 71 + 133 + 34 = 238.
+    BOOST_CHECK_EQUAL(*max_weight2, 238);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

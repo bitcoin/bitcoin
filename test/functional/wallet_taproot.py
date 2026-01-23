@@ -11,7 +11,7 @@ from decimal import Decimal
 from test_framework.address import output_key_to_p2tr
 from test_framework.key import H_POINT
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_greater_than
 from test_framework.descriptors import descsum_create
 from test_framework.script import (
     CScript,
@@ -190,7 +190,8 @@ class WalletTaprootTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
-        self.extra_args = [['-keypool=100'], ['-keypool=100']]
+        # Increase -maxtxfee to allow high fees for large Taproot script path spends
+        self.extra_args = [['-keypool=100', '-maxtxfee=1'], ['-keypool=100', '-maxtxfee=1']]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -264,7 +265,7 @@ class WalletTaprootTest(BitcoinTestFramework):
         pubs_tr_enabled.unloadwallet()
         addr_gen.unloadwallet()
 
-    def do_test_sendtoaddress(self, comment, pattern, privmap, treefn, keys_pay, keys_change):
+    def do_test_sendtoaddress(self, comment, pattern, privmap, treefn, keys_pay, keys_change, fee_rate=200):
         self.log.info("Testing %s through sendtoaddress" % comment)
 
         # Create wallets
@@ -295,17 +296,17 @@ class WalletTaprootTest(BitcoinTestFramework):
             test_balance = int(rpc_online.getbalance() * 100000000)
             ret_amnt = random.randrange(100000, test_balance)
             # Increase fee_rate to compensate for the wallet's inability to estimate fees for script path spends.
-            res = rpc_online.sendtoaddress(address=self.boring.getnewaddress(), amount=Decimal(ret_amnt) / 100000000, subtractfeefromamount=True, fee_rate=200)
+            res = rpc_online.sendtoaddress(address=self.boring.getnewaddress(), amount=Decimal(ret_amnt) / 100000000, subtractfeefromamount=True, fee_rate=fee_rate)
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
-            assert rpc_online.gettransaction(res)["confirmations"] > 0
+            assert_greater_than(rpc_online.gettransaction(res)["confirmations"], 0)
 
         # Cleanup
         txid = rpc_online.sendall(recipients=[self.boring.getnewaddress()])["txid"]
         self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
-        assert rpc_online.gettransaction(txid)["confirmations"] > 0
+        assert_greater_than(rpc_online.gettransaction(txid)["confirmations"], 0)
         rpc_online.unloadwallet()
 
-    def do_test_psbt(self, comment, pattern, privmap, treefn, keys_pay, keys_change):
+    def do_test_psbt(self, comment, pattern, privmap, treefn, keys_pay, keys_change, fee_rate=200):
         self.log.info("Testing %s through PSBT" % comment)
 
         # Create wallets
@@ -347,7 +348,7 @@ class WalletTaprootTest(BitcoinTestFramework):
             test_balance = int(psbt_online.getbalance() * 100000000)
             ret_amnt = random.randrange(100000, test_balance)
             # Increase fee_rate to compensate for the wallet's inability to estimate fees for script path spends.
-            psbt = psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0], "fee_rate": 200, "change_type": address_type})['psbt']
+            psbt = psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0], "fee_rate": fee_rate, "change_type": address_type})['psbt']
             res = psbt_offline.walletprocesspsbt(psbt=psbt, finalize=False)
             for wallet in [psbt_offline, key_only_wallet]:
                 res = wallet.walletprocesspsbt(psbt=psbt, finalize=False)
@@ -370,7 +371,7 @@ class WalletTaprootTest(BitcoinTestFramework):
 
             txid = self.nodes[0].sendrawtransaction(rawtx)
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
-            assert psbt_online.gettransaction(txid)['confirmations'] > 0
+            assert_greater_than(psbt_online.gettransaction(txid)['confirmations'], 0)
 
         # Cleanup
         psbt = psbt_online.sendall(recipients=[self.boring.getnewaddress()], psbt=True)["psbt"]
@@ -378,16 +379,16 @@ class WalletTaprootTest(BitcoinTestFramework):
         rawtx = self.nodes[0].finalizepsbt(res['psbt'])['hex']
         txid = self.nodes[0].sendrawtransaction(rawtx)
         self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
-        assert psbt_online.gettransaction(txid)['confirmations'] > 0
+        assert_greater_than(psbt_online.gettransaction(txid)['confirmations'], 0)
         psbt_online.unloadwallet()
         psbt_offline.unloadwallet()
 
-    def do_test(self, comment, pattern, privmap, treefn):
+    def do_test(self, comment, pattern, privmap, treefn, fee_rate=200):
         nkeys = len(privmap)
         keys = random.sample(KEYS, nkeys * 4)
         self.do_test_addr(comment, pattern, privmap, treefn, keys[0:nkeys])
-        self.do_test_sendtoaddress(comment, pattern, privmap, treefn, keys[0:nkeys], keys[nkeys:2*nkeys])
-        self.do_test_psbt(comment, pattern, privmap, treefn, keys[2*nkeys:3*nkeys], keys[3*nkeys:4*nkeys])
+        self.do_test_sendtoaddress(comment, pattern, privmap, treefn, keys[0:nkeys], keys[nkeys:2*nkeys], fee_rate)
+        self.do_test_psbt(comment, pattern, privmap, treefn, keys[2*nkeys:3*nkeys], keys[3*nkeys:4*nkeys], fee_rate)
 
     def run_test(self):
         self.nodes[0].createwallet(wallet_name="boring")
@@ -488,11 +489,14 @@ class WalletTaprootTest(BitcoinTestFramework):
             lambda k1, k2, k3: (key(k2), [pk(k2), [pk(k2), multi_a(2, [k1, k2, k3], True)]])
         )
         rnd_pos = random.randrange(MAX_PUBKEYS_PER_MULTI_A)
+        # This edge case with MAX_PUBKEYS_PER_MULTI_A - 1 H_POINTs creates a ~34KB script
+        # which requires a much higher fee rate due to the correct weight calculation
         self.do_test(
             "tr(XPUB,multi_a(1,H...,XPRV,H...))",
             "tr($2/*,multi_a(1" + (",$H" * rnd_pos) + ",$1/*" + (",$H" * (MAX_PUBKEYS_PER_MULTI_A - 1 - rnd_pos)) + "))",
             [True, False],
-            lambda k1, k2: (key(k2), [multi_a(1, ([H_POINT] * rnd_pos) + [k1] + ([H_POINT] * (MAX_PUBKEYS_PER_MULTI_A - 1 - rnd_pos)))])
+            lambda k1, k2: (key(k2), [multi_a(1, ([H_POINT] * rnd_pos) + [k1] + ([H_POINT] * (MAX_PUBKEYS_PER_MULTI_A - 1 - rnd_pos)))]),
+            fee_rate=2000
         )
         self.do_test(
             "rawtr(XPRV)",
