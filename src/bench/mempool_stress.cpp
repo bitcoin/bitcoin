@@ -106,7 +106,7 @@ static void MemPoolAddTransactions(benchmark::Bench& bench)
     std::vector<CTransactionRef> transactions;
     // Create 1000 clusters of 100 transactions each
     for (int i=0; i<100; i++) {
-        auto new_txs = CreateCoinCluster(det_rand, childTxs, /*min_ancestors*/ 1);
+        auto new_txs = CreateCoinCluster(det_rand, childTxs, /*min_ancestors=*/ 1);
         transactions.insert(transactions.end(), new_txs.begin(), new_txs.end());
     }
 
@@ -156,7 +156,7 @@ static void ComplexMemPool(benchmark::Bench& bench)
     // in the same state at the end of the function, so we benchmark both
     // mining a block and reorging the block's contents back into the mempool.
     bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
-        pool.removeForBlock(tx_remove_for_block, /*nBlockHeight*/100);
+        pool.removeForBlock(tx_remove_for_block, /*nBlockHeight=*/100);
         for (auto& tx: tx_remove_for_block) {
             AddTx(tx, pool, det_rand);
         }
