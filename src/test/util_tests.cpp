@@ -385,6 +385,21 @@ BOOST_AUTO_TEST_CASE(util_FormatISO8601Date)
     BOOST_CHECK_EQUAL(FormatISO8601Date(1317425777), "2011-09-30");
 }
 
+
+BOOST_AUTO_TEST_CASE(util_FormatRFC1123DateTime)
+{
+    BOOST_CHECK_EQUAL(FormatRFC1123DateTime(std::numeric_limits<int64_t>::max()), "");
+    BOOST_CHECK_EQUAL(FormatRFC1123DateTime(253402300800), "");
+    BOOST_CHECK_EQUAL(FormatRFC1123DateTime(253402300799), "Fri, 31 Dec 9999 23:59:59 GMT");
+    BOOST_CHECK_EQUAL(FormatRFC1123DateTime(253402214400), "Fri, 31 Dec 9999 00:00:00 GMT");
+    BOOST_CHECK_EQUAL(FormatRFC1123DateTime(1717429609), "Mon, 03 Jun 2024 15:46:49 GMT");
+    BOOST_CHECK_EQUAL(FormatRFC1123DateTime(0), "Thu, 01 Jan 1970 00:00:00 GMT");
+    BOOST_CHECK_EQUAL(FormatRFC1123DateTime(-1), "Wed, 31 Dec 1969 23:59:59 GMT");
+    BOOST_CHECK_EQUAL(FormatRFC1123DateTime(-1717429609), "Sat, 31 Jul 1915 08:13:11 GMT");
+    BOOST_CHECK_EQUAL(FormatRFC1123DateTime(-62167219200), "Sat, 01 Jan 0000 00:00:00 GMT");
+    BOOST_CHECK_EQUAL(FormatRFC1123DateTime(-62167219201), "");
+}
+
 BOOST_AUTO_TEST_CASE(util_FormatMoney)
 {
     BOOST_CHECK_EQUAL(FormatMoney(0), "0.00");
@@ -833,6 +848,39 @@ BOOST_AUTO_TEST_CASE(test_LocaleIndependentAtoi)
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint8_t>("0"), 0U);
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint8_t>("255"), 255U);
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint8_t>("256"), 255U);
+}
+
+BOOST_AUTO_TEST_CASE(test_ToIntegralHex)
+{
+    std::optional<uint64_t> n;
+    // Valid values
+    n = ToIntegral<uint64_t>("1234", 16);
+    BOOST_CHECK_EQUAL(*n, 0x1234);
+    n = ToIntegral<uint64_t>("a", 16);
+    BOOST_CHECK_EQUAL(*n, 0xA);
+    n = ToIntegral<uint64_t>("0000000a", 16);
+    BOOST_CHECK_EQUAL(*n, 0xA);
+    n = ToIntegral<uint64_t>("100", 16);
+    BOOST_CHECK_EQUAL(*n, 0x100);
+    n = ToIntegral<uint64_t>("DEADbeef", 16);
+    BOOST_CHECK_EQUAL(*n, 0xDEADbeef);
+    n = ToIntegral<uint64_t>("FfFfFfFf", 16);
+    BOOST_CHECK_EQUAL(*n, 0xFfFfFfFf);
+    n = ToIntegral<uint64_t>("123456789", 16);
+    BOOST_CHECK_EQUAL(*n, 0x123456789ULL);
+    n = ToIntegral<uint64_t>("0", 16);
+    BOOST_CHECK_EQUAL(*n, 0);
+    n = ToIntegral<uint64_t>("FfFfFfFfFfFfFfFf", 16);
+    BOOST_CHECK_EQUAL(*n, 0xFfFfFfFfFfFfFfFfULL);
+    n = ToIntegral<int64_t>("-1", 16);
+    BOOST_CHECK_EQUAL(*n, -1);
+    // Invalid values
+    BOOST_CHECK(!ToIntegral<uint64_t>("", 16));
+    BOOST_CHECK(!ToIntegral<uint64_t>("-1", 16));
+    BOOST_CHECK(!ToIntegral<uint64_t>("10 00", 16));
+    BOOST_CHECK(!ToIntegral<uint64_t>("1 ", 16));
+    BOOST_CHECK(!ToIntegral<uint64_t>("0xAB", 16));
+    BOOST_CHECK(!ToIntegral<uint64_t>("FfFfFfFfFfFfFfFf0", 16));
 }
 
 BOOST_AUTO_TEST_CASE(test_FormatParagraph)
