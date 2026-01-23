@@ -35,6 +35,7 @@
 #include <netbase.h>
 #include <node/block_template_manager.h>
 #include <node/blockstorage.h>
+#include <node/chain.h>
 #include <node/coin.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
@@ -475,11 +476,11 @@ public:
     }
     void BlockConnected(const ChainstateRole& role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {
-        m_notifications->blockConnected(role, kernel::MakeBlockInfo(index, block.get()));
+        m_notifications->blockConnected(role, MakeBlockInfo(index, block.get()));
     }
     void BlockDisconnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {
-        m_notifications->blockDisconnected(kernel::MakeBlockInfo(index, block.get()));
+        m_notifications->blockDisconnected(MakeBlockInfo(index, block.get()));
     }
     void UpdatedBlockTip(const CBlockIndex* index, const CBlockIndex* fork_index, bool is_ibd) override
     {
