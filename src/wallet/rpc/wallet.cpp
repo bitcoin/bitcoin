@@ -660,7 +660,7 @@ RPCHelpMan gethdkeys()
                     {RPCResult::Type::ARR, "descriptors", "Array of descriptor objects that use this HD key",
                     {
                         {RPCResult::Type::OBJ, "", "", {
-                            {RPCResult::Type::STR, "desc", "Descriptor string representation"},
+                            {RPCResult::Type::STR, "desc", "Descriptor string public representation"},
                             {RPCResult::Type::BOOL, "active", "Whether this descriptor is currently used to generate new addresses"},
                         }},
                     }},
@@ -707,7 +707,7 @@ RPCHelpMan gethdkeys()
                 w_desc.descriptor->GetPubKeys(desc_pubkeys, desc_xpubs);
                 for (const CExtPubKey& xpub : desc_xpubs) {
                     std::string desc_str;
-                    bool ok = desc_spkm->GetDescriptorString(desc_str, false);
+                    bool ok = desc_spkm->GetDescriptorString(desc_str, /*priv=*/false);
                     CHECK_NONFATAL(ok);
                     wallet_xpubs[xpub].emplace(desc_str, wallet->IsActiveScriptPubKeyMan(*spkm), desc_spkm->HasPrivKey(xpub.pubkey.GetID()));
                     if (std::optional<CKey> key = priv ? desc_spkm->GetKey(xpub.pubkey.GetID()) : std::nullopt) {
@@ -731,7 +731,7 @@ RPCHelpMan gethdkeys()
                 UniValue xpub_info(UniValue::VOBJ);
                 xpub_info.pushKV("xpub", EncodeExtPubKey(xpub));
                 xpub_info.pushKV("has_private", has_xprv);
-                if (priv) {
+                if (priv && has_xprv) {
                     xpub_info.pushKV("xprv", EncodeExtKey(wallet_xprvs.at(xpub)));
                 }
                 xpub_info.pushKV("descriptors", std::move(descriptors));
