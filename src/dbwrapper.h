@@ -193,7 +193,6 @@ private:
     inline static const std::string OBFUSCATION_KEY{"\000obfuscate_key", 14}; // explicit size to avoid truncation at leading \0
 
     std::optional<std::string> ReadImpl(std::span<const std::byte> key) const;
-    bool ExistsImpl(std::span<const std::byte> key) const;
     size_t EstimateSizeImpl(std::span<const std::byte> key1, std::span<const std::byte> key2) const;
     auto& DBContext() const LIFETIMEBOUND { return *Assert(m_db_context); }
 
@@ -231,10 +230,7 @@ public:
     template <typename K>
     bool Exists(const K& key) const
     {
-        DataStream ssKey{};
-        ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
-        ssKey << key;
-        return ExistsImpl(ssKey);
+        return !!ReadRaw(key);
     }
 
     template <typename K, typename V>
