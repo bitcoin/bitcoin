@@ -145,6 +145,11 @@ bilingual_str TransactionErrorString(const TransactionError err)
             return Untranslated("Unspendable output exceeds maximum configured by user (maxburnamount)");
         case TransactionError::INVALID_PACKAGE:
             return Untranslated("Transaction rejected due to invalid package");
+        case TransactionError::PRIVATE_BROADCAST_UNAVAILABLE:
+            return Untranslated("-privatebroadcast is enabled, but none of the Tor or I2P networks is "
+                                "reachable. Maybe the location of the Tor proxy couldn't be retrieved "
+                                "from the Tor daemon at startup. Check whether the Tor daemon is running "
+                                "and that -torcontrol, -torpassword and -i2psam are configured properly.");
         // no default case, so the compiler can warn about missing cases
     }
     assert(false);
