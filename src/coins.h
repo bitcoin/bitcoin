@@ -453,6 +453,12 @@ public:
     void Sync();
 
     /**
+     * Discard all modifications made to this cache without flushing to the base view.
+     * This can be used to efficiently reuse a cache instance across multiple operations.
+     */
+    void Reset() noexcept;
+
+    /**
      * Removes the UTXO with the given outpoint from the cache, if it is
      * not modified.
      */
