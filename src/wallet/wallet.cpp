@@ -27,6 +27,7 @@
 #include <key.h>
 #include <key_io.h>
 #include <logging.h>
+#include <net.h>
 #include <node/types.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
@@ -2098,9 +2099,10 @@ NodeClock::time_point CWallet::GetDefaultNextResend() { return FastRandomContext
 // The `force` option results in all unconfirmed transactions being submitted to
 // the mempool. This does not necessarily result in those transactions being relayed,
 // that depends on the `broadcast_method` option. Periodic rebroadcast uses the pattern
-// broadcast_method=TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL force=false, while loading into
-// the mempool (on start, or after import) uses
-// broadcast_method=TxBroadcast::MEMPOOL_NO_BROADCAST force=true.
+// broadcast_method=TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL force=false (or
+// broadcast_method=TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST force=false when
+// -privatebroadcast is enabled), while loading into the mempool (on start, or after
+// import) uses broadcast_method=TxBroadcast::MEMPOOL_NO_BROADCAST force=true.
 void CWallet::ResubmitWalletTransactions(node::TxBroadcast broadcast_method, bool force)
 {
     // Don't attempt to resubmit if the wallet is configured to not broadcast,
@@ -2122,12 +2124,25 @@ void CWallet::ResubmitWalletTransactions(node::TxBroadcast broadcast_method, boo
             // Attempt to rebroadcast all txes more than 5 minutes older than
             // the last block, or all txs if forcing.
             if (!force && wtx.nTimeReceived > m_best_block_time - 5 * 60) continue;
+
+            // Don't rebroadcast privately-sent txs publicly (would leak tx origin).
+            // The reverse (public tx rebroadcast privately) is fine - provides plausible deniability.
+            const bool was_private = wtx.mapValue.contains("private_broadcast") && wtx.mapValue.at("private_broadcast") == "1";
+            if (broadcast_method == node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL && was_private) {
+                WalletLogPrintf("%s: skipping tx %s originally sent via private broadcast\n",
+                                __func__, wtx.GetHash().ToString());
+                continue;
+            }
             to_submit.insert(&wtx);
         }
         // Now try submitting the transactions to the memory pool and (optionally) relay them.
         for (auto wtx : to_submit) {
-            std::string unused_err_string;
-            if (SubmitTxMemoryPoolAndRelay(*wtx, unused_err_string, broadcast_method)) ++submitted_tx_count;
+            std::string err_string;
+            if (SubmitTxMemoryPoolAndRelay(*wtx, err_string, broadcast_method)) {
+                ++submitted_tx_count;
+            } else if (!err_string.empty()) {
+                WalletLogPrintf("%s: failed to resubmit %s: %s\n", __func__, wtx->GetHash().ToString(), err_string);
+            }
         }
     } // cs_wallet
 
@@ -2142,7 +2157,12 @@ void MaybeResendWalletTxs(WalletContext& context)
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
         if (!pwallet->ShouldResend()) continue;
-        pwallet->ResubmitWalletTransactions(node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL, /*force=*/false);
+        // Use private broadcast if configured, to preserve privacy for transactions
+        // that were originally sent via private broadcast.
+        const bool private_broadcast{gArgs.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)};
+        const auto method = private_broadcast ? node::TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST
+                                              : node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL;
+        pwallet->ResubmitWalletTransactions(method, /*force=*/false);
         pwallet->SetNextResend();
     }
 }
@@ -2315,6 +2335,14 @@ void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
     LOCK(cs_wallet);
     WalletLogPrintf("CommitTransaction:\n%s\n", util::RemoveSuffixView(tx->ToString(), "\n"));
 
+    // Mark the transaction if it will be sent via private broadcast, so that
+    // rebroadcast logic can preserve privacy even if the node restarts without
+    // -privatebroadcast enabled.
+    const bool private_broadcast{gArgs.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)};
+    if (private_broadcast) {
+        mapValue["private_broadcast"] = "1";
+    }
+
     // Add tx to wallet, because if it has change it's also ours,
     // otherwise just for transaction history.
     CWalletTx* wtx = AddToWallet(tx, TxStateInactive{}, [&](CWalletTx& wtx, bool new_tx) {
@@ -2343,8 +2371,15 @@ void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
     }
 
     std::string err_string;
-    if (!SubmitTxMemoryPoolAndRelay(*wtx, err_string, node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL)) {
+    const auto method = private_broadcast ? node::TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST
+                                          : node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL;
+    if (!SubmitTxMemoryPoolAndRelay(*wtx, err_string, method)) {
         WalletLogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", err_string);
+        // For private broadcast failures with an error (e.g., Tor/I2P not reachable), this is a
+        // permanent failure that the user should know about. Throw instead of silently continuing.
+        if (private_broadcast && !err_string.empty()) {
+            throw std::runtime_error(std::string(__func__) + ": " + err_string);
+        }
         // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
     }
 }
