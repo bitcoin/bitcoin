@@ -51,7 +51,6 @@ GovernanceList::GovernanceList(QWidget* parent) :
 
     GUIUtil::setFont({ui->label_count_2, ui->countLabel, ui->label_mn_count, ui->mnCountLabel},
                      {GUIUtil::FontWeight::Bold, 14});
-    GUIUtil::setFont({ui->label_filter_2}, {GUIUtil::FontWeight::Normal, 15});
 
     ui->govTableView->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->govTableView->setModel(proposalModelProxy);
