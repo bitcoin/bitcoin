@@ -315,21 +315,6 @@ std::optional<std::string> CDBWrapper::ReadImpl(std::span<const std::byte> key) 
     return strValue;
 }
 
-bool CDBWrapper::ExistsImpl(std::span<const std::byte> key) const
-{
-    leveldb::Slice slKey(CharCast(key.data()), key.size());
-
-    std::string strValue;
-    leveldb::Status status = DBContext().pdb->Get(DBContext().readoptions, slKey, &strValue);
-    if (!status.ok()) {
-        if (status.IsNotFound())
-            return false;
-        LogError("LevelDB read failure: %s", status.ToString());
-        HandleError(status);
-    }
-    return true;
-}
-
 size_t CDBWrapper::EstimateSizeImpl(std::span<const std::byte> key1, std::span<const std::byte> key2) const
 {
     leveldb::Slice slKey1(CharCast(key1.data()), key1.size());
