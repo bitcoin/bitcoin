@@ -376,6 +376,12 @@ protected:
     /* Cached dynamic memory usage for the inner Coin objects. */
     mutable size_t cachedCoinsUsage{0};
 
+    /**
+     * Discard all modifications made to this cache without flushing to the base view.
+     * This can be used to efficiently reuse a cache instance across multiple operations.
+     */
+    void Reset() noexcept;
+
 public:
     CCoinsViewCache(CCoinsView *baseIn, bool deterministic = false);
 
