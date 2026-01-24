@@ -371,7 +371,7 @@ std::optional<Coin> CCoinsViewErrorCatcher::GetCoin(const COutPoint& outpoint) c
     try {
         return CCoinsViewBacked::GetCoin(outpoint);
     } catch (const std::runtime_error& e) {
-        for (const auto& f : m_err_callbacks) f();
+        m_read_error_cb();
         LogError("Database error in GetCoin: %s", e.what());
         std::abort();
     }

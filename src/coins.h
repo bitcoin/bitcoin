@@ -530,17 +530,13 @@ class CCoinsViewErrorCatcher final : public CCoinsViewBacked
 public:
     explicit CCoinsViewErrorCatcher(CCoinsView* view) : CCoinsViewBacked(view) {}
 
-    void AddReadErrCallback(std::function<void()> f) {
-        m_err_callbacks.emplace_back(std::move(f));
-    }
+    void SetReadErrCallback(std::function<void()> f) { m_read_error_cb = std::move(f); }
 
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;
 
 private:
-    /** A list of callbacks to execute upon leveldb read error. */
-    std::vector<std::function<void()>> m_err_callbacks;
-
+    mutable std::function<void()> m_read_error_cb{[]{}};
 };
 
 #endif // BITCOIN_COINS_H
