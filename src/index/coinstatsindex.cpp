@@ -122,6 +122,7 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 
         // Add the new utxos created from the block
         assert(block.data);
+        assert(block.undo_data);
         for (size_t i = 0; i < block.data->vtx.size(); ++i) {
             const auto& tx{block.data->vtx.at(i)};
             const bool is_coinbase{tx->IsCoinBase()};

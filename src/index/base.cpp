@@ -54,6 +54,7 @@ constexpr auto SYNC_LOCATOR_WRITE_INTERVAL{30s};
 template <typename... Args>
 void BaseIndex::FatalErrorf(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
+    Interrupt(); // Cancel the sync thread
     auto message = tfm::format(fmt, args...);
     node::AbortNode(m_chain->context()->shutdown_request, m_chain->context()->exit_status, Untranslated(message), m_chain->context()->warnings.get());
 }
@@ -79,6 +80,7 @@ public:
     void blockConnected(const kernel::ChainstateRole& role, const interfaces::BlockInfo& block) override;
     void chainStateFlushed(const kernel::ChainstateRole& role, const CBlockLocator& locator) override;
     BaseIndex& m_index;
+    interfaces::Chain::NotifyOptions m_options = m_index.CustomOptions();
 };
 
 void BaseIndexNotifications::blockConnected(const kernel::ChainstateRole& role, const interfaces::BlockInfo& block)
@@ -87,7 +89,7 @@ void BaseIndexNotifications::blockConnected(const kernel::ChainstateRole& role, 
 
     const CBlockIndex* pindex = &m_index.BlockIndex(block.hash);
     const CBlockIndex* best_block_index = m_index.m_best_block_index.load();
-    if (best_block_index && best_block_index != pindex->pprev && !m_index.Rewind(best_block_index, pindex->pprev)) {
+    if (!block.background_sync && best_block_index && best_block_index != pindex->pprev && !m_index.Rewind(best_block_index, pindex->pprev)) {
         m_index.FatalErrorf("Failed to rewind %s to a previous chain tip",
                    m_index.GetName());
         return;
@@ -95,6 +97,14 @@ void BaseIndexNotifications::blockConnected(const kernel::ChainstateRole& role, 
 
     // Dispatch block to child class; errors are logged internally and abort the node.
     if (!m_index.Append(block)) return;
+
+    if (block.background_sync) {
+        // Only update index best block between flushes if fully synced.
+        // Decision to let the best block pointer lag during sync seems a
+        // little arbitrary, but has been behavior since syncing was introduced
+        // in #13033, so preserving it in case anything depends on it.
+        return;
+    }
 
     // Setting the best block index is intentionally the last step of this
     // function, so BlockUntilSyncedToCurrentChain callers waiting for the
@@ -158,6 +168,7 @@ BaseIndex::~BaseIndex()
     //! handlers call pure virtual methods like GetName(), so if they are still
     //! being called at this point, they would segfault.
     LOCK(m_mutex);
+    assert(!m_notifications);
     assert(!m_handler);
 }
 
@@ -293,6 +304,11 @@ bool BaseIndex::Append(const interfaces::BlockInfo& new_block)
 
 void BaseIndex::Sync()
 {
+    auto notifications = WITH_LOCK(m_mutex, return m_notifications);
+    // If m_notifications is null, it means Stop() was called before the Sync
+    // thread was started, so just return without doing anything.
+    if (!notifications) return;
+
     const CBlockIndex* pindex = m_best_block_index.load();
     if (m_state == State::SYNCING) {
         auto last_log_time{NodeClock::now()};
@@ -350,7 +366,9 @@ void BaseIndex::Sync()
             }
             pindex = pindex_next;
 
-            if (!Append(node::MakeBlockInfo(pindex))) return; // error logged internally
+            interfaces::BlockInfo block_info = node::MakeBlockInfo(pindex);
+            block_info.background_sync = true;
+            notifications->blockConnected(ChainstateRole{}, block_info); // error logged internally
 
             auto current_time{NodeClock::now()};
             if (current_time - last_log_time >= SYNC_LOG_INTERVAL) {
@@ -442,6 +460,10 @@ bool BaseIndex::IgnoreBlockConnected(const ChainstateRole& role, const interface
         return true;
     }
 
+    if (block.background_sync) {
+        return false;
+    }
+
     const CBlockIndex* pindex = &BlockIndex(block.hash);
     const CBlockIndex* best_block_index = m_best_block_index.load();
     if (!best_block_index) {
@@ -531,6 +553,8 @@ bool BaseIndex::BlockUntilSyncedToCurrentChain() const
 void BaseIndex::Interrupt()
 {
     m_interrupt();
+    LOCK(m_mutex);
+    m_notifications.reset();
 }
 
 bool BaseIndex::StartBackgroundSync()
@@ -543,7 +567,12 @@ bool BaseIndex::StartBackgroundSync()
 
 void BaseIndex::Stop()
 {
-    WITH_LOCK(m_mutex, m_handler.reset());
+    {
+        m_interrupt();
+        LOCK(m_mutex);
+        m_notifications.reset();
+        m_handler.reset();
+    }
 
     if (m_thread_sync.joinable()) {
         m_thread_sync.join();

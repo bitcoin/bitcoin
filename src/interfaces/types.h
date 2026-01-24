@@ -33,6 +33,10 @@ struct BlockInfo {
     // The maximum time in the chain up to and including this block.
     // A timestamp that can only move forward.
     unsigned int chain_time_max{0};
+    // True if notification comes from a background sync thread while initially
+    // attaching to the chain. False if notification comes from the validation
+    // interface queue.
+    bool background_sync{false};
 
     BlockInfo(const uint256& hash LIFETIMEBOUND) : hash(hash) {}
 };
