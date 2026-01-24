@@ -97,7 +97,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         }
 
         if (options.read_error_cb) {
-            chainstate->CoinsErrorCatcher().SetReadErrCallback(options.read_error_cb);
+            chainstate->CoinsDB().SetReadErrCallback(options.read_error_cb);
         }
 
         // Refuse to load unsupported database format.

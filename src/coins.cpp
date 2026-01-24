@@ -365,19 +365,3 @@ const Coin& AccessByTxid(const CCoinsViewCache& view, const Txid& txid)
     }
     return coinEmpty;
 }
-
-std::optional<Coin> CCoinsViewErrorCatcher::GetCoin(const COutPoint& outpoint) const
-{
-    try {
-        return CCoinsViewBacked::GetCoin(outpoint);
-    } catch (const std::runtime_error& e) {
-        m_read_error_cb();
-        LogError("Database error in GetCoin: %s", e.what());
-        std::abort();
-    }
-}
-
-bool CCoinsViewErrorCatcher::HaveCoin(const COutPoint& outpoint) const
-{
-    return !!CCoinsViewErrorCatcher::GetCoin(outpoint);
-}
