@@ -6,6 +6,7 @@
 #ifndef BITCOIN_COINS_H
 #define BITCOIN_COINS_H
 
+#include <attributes.h>
 #include <compressor.h>
 #include <core_memusage.h>
 #include <memusage.h>
@@ -482,6 +483,25 @@ public:
 
     //! Run an internal sanity check on the cache data structure. */
     void SanityCheck() const;
+
+    class ResetGuard
+    {
+    private:
+        friend CCoinsViewCache;
+        CCoinsViewCache& m_cache;
+        explicit ResetGuard(CCoinsViewCache& cache LIFETIMEBOUND) noexcept : m_cache{cache} {}
+
+    public:
+        ResetGuard(const ResetGuard&) = delete;
+        ResetGuard& operator=(const ResetGuard&) = delete;
+        ResetGuard(ResetGuard&&) = delete;
+        ResetGuard& operator=(ResetGuard&&) = delete;
+
+        ~ResetGuard() { m_cache.Reset(); }
+    };
+
+    //! Create a scoped guard that will call `Reset()` on this cache when it goes out of scope.
+    [[nodiscard]] ResetGuard CreateResetGuard() noexcept { return ResetGuard{*this}; }
 
 private:
     /**
