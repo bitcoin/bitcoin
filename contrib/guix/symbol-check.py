@@ -8,7 +8,7 @@ certain symbols and are only linked against allowed libraries.
 
 Example usage:
 
-    find ../path/to/binaries -type f -executable | xargs python3 contrib/devtools/symbol-check.py
+    find ../path/to/guix/binaries -type f -executable | xargs python3 contrib/guix/symbol-check.py
 '''
 import sys
 from typing import Dict, List
@@ -17,23 +17,18 @@ import lief
 
 # Debian 11 (Bullseye) EOL: 2026. https://wiki.debian.org/LTS
 #
-# - libgcc version 10.2.1 (https://packages.debian.org/bullseye/libgcc-s1)
 # - libc version 2.31 (https://packages.debian.org/source/bullseye/glibc)
 #
 # Ubuntu 20.04 (Focal) EOL: 2030. https://wiki.ubuntu.com/ReleaseTeam
 #
-# - libgcc version 10.5.0 (https://packages.ubuntu.com/focal/libgcc1)
 # - libc version 2.31 (https://packages.ubuntu.com/focal/libc6)
 #
 # CentOS Stream 9 EOL: 2027. https://www.centos.org/cl-vs-cs/#end-of-life
 #
-# - libgcc version 12.2.1 (https://mirror.stream.centos.org/9-stream/AppStream/x86_64/os/Packages/)
 # - libc version 2.34 (https://mirror.stream.centos.org/9-stream/AppStream/x86_64/os/Packages/)
 #
-# See https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html for more info.
 
 MAX_VERSIONS = {
-'GCC':       (4,3,0),
 'GLIBC': {
     lief.ELF.ARCH.x86_64: (2,31),
     lief.ELF.ARCH.ARM:    (2,31),
@@ -41,7 +36,6 @@ MAX_VERSIONS = {
     lief.ELF.ARCH.PPC64:  (2,31),
     lief.ELF.ARCH.RISCV:  (2,31),
 },
-'LIBATOMIC': (1,0),
 'V':         (0,5,0),  # xkb (bitcoin-qt only)
 }
 
@@ -97,11 +91,9 @@ ELF_ABIS: Dict[lief.ELF.ARCH, Dict[lief.ENDIANNESS, List[int]]] = {
 # Allowed NEEDED libraries
 ELF_ALLOWED_LIBRARIES = {
 # dashd and dash-qt
-'libgcc_s.so.1', # GCC base support
 'libc.so.6', # C library
 'libpthread.so.0', # threading
 'libm.so.6', # math library
-'libatomic.so.1',
 'ld-linux-x86-64.so.2', # 64-bit dynamic linker
 'ld-linux.so.2', # 32-bit dynamic linker
 'ld-linux-aarch64.so.1', # 64-bit ARM dynamic linker
@@ -157,13 +149,13 @@ MACHO_ALLOWED_LIBRARIES = {
 }
 
 PE_ALLOWED_LIBRARIES = {
-'ADVAPI32.dll', # security & registry
+'ADVAPI32.dll', # legacy security & registry
+'bcrypt.dll', # newer security and identity API
 'IPHLPAPI.DLL', # IP helper API
 'KERNEL32.dll', # win32 base APIs
 'msvcrt.dll', # C standard library for MSVC
 'SHELL32.dll', # shell API
 'WS2_32.dll', # sockets
-'bcrypt.dll', # crypto API
 'dbghelp.dll', # debugging routines
 # bitcoin-qt only
 'dwmapi.dll', # desktop window manager
@@ -243,7 +235,7 @@ def check_MACHO_libraries(binary) -> bool:
     return ok
 
 def check_MACHO_min_os(binary) -> bool:
-    if binary.build_version.minos == [11,0,0]:
+    if binary.build_version.minos == [14,0,0]:
         return True
     return False
 
@@ -268,7 +260,7 @@ def check_PE_libraries(binary) -> bool:
 def check_PE_subsystem_version(binary) -> bool:
     major: int = binary.optional_header.major_subsystem_version
     minor: int = binary.optional_header.minor_subsystem_version
-    if major == 6 and minor == 1:
+    if major == 6 and minor == 2:
         return True
     return False
 
@@ -308,22 +300,14 @@ lief.EXE_FORMATS.PE: [
 if __name__ == '__main__':
     retval: int = 0
     for filename in sys.argv[1:]:
-        try:
-            binary = lief.parse(filename)
-            etype = binary.format
-            if etype == lief.EXE_FORMATS.UNKNOWN:
-                print(f'{filename}: unknown executable format')
-                retval = 1
-                continue
+        binary = lief.parse(filename)
+        etype = binary.format
 
-            failed: List[str] = []
-            for (name, func) in CHECKS[etype]:
-                if not func(binary):
-                    failed.append(name)
-            if failed:
-                print(f'{filename}: failed {" ".join(failed)}')
-                retval = 1
-        except IOError:
-            print(f'{filename}: cannot open')
+        failed: List[str] = []
+        for (name, func) in CHECKS[etype]:
+            if not func(binary):
+                failed.append(name)
+        if failed:
+            print(f'{filename}: failed {" ".join(failed)}')
             retval = 1
     sys.exit(retval)

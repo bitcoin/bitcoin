@@ -57,7 +57,3 @@ fi
 if [ "${RUN_TIDY}" = "true" ] && [ "${GITHUB_ACTIONS}" != "true" ]; then
   "${BASE_ROOT_DIR}/ci/dash/lint-tidy.sh"
 fi
-
-if [ "$RUN_SECURITY_TESTS" = "true" ]; then
-  make test-security-check
-fi

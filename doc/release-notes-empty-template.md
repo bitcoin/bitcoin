@@ -29,6 +29,14 @@ installer (on Windows) or just copy over `/Applications/Dash-Qt` (on macOS) or
 Downgrading to a version older than *version* may not be supported, and will
 likely require a reindex.
 
+# Compatibility
+
+Dash Core is supported and tested on operating systems using the
+Linux Kernel 3.17+, macOS 14+, and Windows 10+. Dash Core
+should also work on most other Unix-like systems but is not as
+frequently tested on them. It is not recommended to use Dash Core on
+unsupported systems.
+
 # Release Notes
 
 Notable changes

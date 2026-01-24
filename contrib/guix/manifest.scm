@@ -93,16 +93,16 @@ chain for " target " development."))
       (home-page (package-home-page xgcc))
       (license (package-license xgcc)))))
 
-(define base-gcc gcc-12) ;; 12.4.0
+(define base-gcc gcc-13) ;; 13.3.0
 
 (define base-linux-kernel-headers linux-libre-headers-6.1)
 
 (define* (make-bitcoin-cross-toolchain target
                                        #:key
-                                       (base-gcc-for-libc linux-base-gcc)
+                                       (base-gcc-for-libc (gcc-libgcc-patches linux-base-gcc))
                                        (base-kernel-headers base-linux-kernel-headers)
                                        (base-libc glibc-2.31)
-                                       (base-gcc linux-base-gcc))
+                                       (base-gcc (gcc-libgcc-patches linux-base-gcc)))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Dash Core release binaries."
   (make-cross-toolchain target
@@ -111,7 +111,7 @@ desirable for building Dash Core release binaries."
                         base-libc
                         base-gcc))
 
-(define (gcc-mingw-patches gcc)
+(define (gcc-libgcc-patches gcc)
   (package-with-extra-patches gcc
     (search-our-patches "gcc-remap-guix-store.patch")))
 
@@ -128,10 +128,10 @@ desirable for building Dash Core release binaries."
   (let* ((xbinutils (binutils-mingw-patches (cross-binutils target)))
          (machine (substring target 0 (string-index target #\-)))
          (pthreads-xlibc (winpthreads-patches (make-mingw-w64 machine
-                                         #:xgcc (cross-gcc target #:xgcc (gcc-mingw-patches base-gcc))
+                                         #:xgcc (cross-gcc target #:xgcc (gcc-libgcc-patches base-gcc))
                                          #:with-winpthreads? #t)))
          (pthreads-xgcc (cross-gcc target
-                                    #:xgcc (gcc-mingw-patches mingw-w64-base-gcc)
+                                    #:xgcc (gcc-libgcc-patches mingw-w64-base-gcc)
                                     #:xbinutils xbinutils
                                     #:libc pthreads-xlibc)))
     ;; Define a meta-package that propagates the resulting XBINUTILS, XLIBC, and
@@ -433,6 +433,7 @@ inspecting signatures in Mach-O binaries.")
             ;; https://gcc.gnu.org/install/configure.html
             (list "--enable-threads=posix",
                   "--enable-default-ssp=yes",
+                  "--disable-gcov",
                   building-on)))))))
 
 (define-public linux-base-gcc
@@ -448,6 +449,8 @@ inspecting signatures in Mach-O binaries.")
                   "--enable-default-pie=yes",
                   "--enable-standard-branch-protection=yes",
                   "--enable-cet=yes",
+                  "--disable-gcov",
+                  "--disable-libsanitizer",
                   building-on)))
         ((#:phases phases)
           `(modify-phases ,phases
@@ -524,7 +527,7 @@ inspecting signatures in Mach-O binaries.")
         gzip
         xz
         ;; Build tools
-        gcc-toolchain-12
+        gcc-toolchain-13
         cmake-minimal
         gnu-make
         libtool
@@ -546,7 +549,7 @@ inspecting signatures in Mach-O binaries.")
                  osslsigncode))
           ((string-contains target "-linux-")
            (list bison
-                 (list gcc-toolchain-12 "static")
+                 (list gcc-toolchain-13 "static")
                  (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
            (list clang-toolchain-19

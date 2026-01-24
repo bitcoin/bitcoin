@@ -234,8 +234,13 @@ esac
 
 # LDFLAGS
 case "$HOST" in
-    *linux*)  HOST_LDFLAGS="-Wl,--as-needed -Wl,--dynamic-linker=$glibc_dynamic_linker -static-libstdc++ -Wl,-O2" ;;
+    *linux*)  HOST_LDFLAGS="-Wl,--as-needed -Wl,--dynamic-linker=$glibc_dynamic_linker -Wl,-O2" ;;
     *mingw*)  HOST_LDFLAGS="-Wl,--no-insert-timestamp" ;;
+esac
+
+# EXE FLAGS
+case "$HOST" in
+    *linux*)  HOST_LDFLAGS+=" -static-libstdc++ -static-libgcc" ;;
 esac
 
 mkdir -p "$DISTSRC"
@@ -272,8 +277,6 @@ mkdir -p "$DISTSRC"
             ;;
     esac
 
-    # Check that symbol/security checks tools are sane.
-    make test-security-check ${V:+V=1}
     # Perform basic security checks on a series of executables.
     make -C src --jobs=1 check-security ${V:+V=1}
     # Check that executables only contain allowed version symbols.
