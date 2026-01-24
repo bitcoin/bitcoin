@@ -112,6 +112,12 @@ struct Params {
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;
     /**
+     * Block height at which the min difficulty blocks feature is disabled via hard fork.
+     * Set to 0 to never disable (default behavior for testnet3, regtest).
+     * For testnet4, this is set to 151200 to fix the difficulty reset exploit.
+     */
+    int nMinDifficultyBlocksForkHeight{0};
+    /**
       * Enforce BIP94 timewarp attack mitigation. On testnet4 this also enforces
       * the block storm mitigation.
       */
