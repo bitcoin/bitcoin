@@ -1389,6 +1389,17 @@ uint32_t btck_block_header_get_nonce(const btck_BlockHeader* header)
     return btck_BlockHeader::get(header).nNonce;
 }
 
+int btck_block_header_to_bytes(const btck_BlockHeader* header, btck_WriteBytes writer, void* user_data)
+{
+    try {
+        WriterStream ws{writer, user_data};
+        ws << btck_BlockHeader::get(header);
+        return 0;
+    } catch (...) {
+        return -1;
+    }
+}
+
 void btck_block_header_destroy(btck_BlockHeader* header)
 {
     delete header;

@@ -746,6 +746,11 @@ public:
     {
         return btck_block_header_get_nonce(impl());
     }
+
+    std::vector<std::byte> ToBytes() const
+    {
+        return write_bytes(impl(), btck_block_header_to_bytes);
+    }
 };
 
 class BlockHeaderView : public View<btck_BlockHeader>, public BlockHeaderApi<BlockHeaderView>
