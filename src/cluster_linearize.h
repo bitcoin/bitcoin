@@ -968,6 +968,54 @@ private:
         MergeSequence<true>(child_idx);
     }
 
+    /** Determine the next chunk to optimize, or INVALID_SET_IDX if none. */
+    SetIdx PickChunkToOptimize() noexcept
+    {
+        while (!m_suboptimal_chunks.empty()) {
+            // Pop an entry from the potentially-suboptimal chunk queue.
+            SetIdx chunk_idx = m_suboptimal_chunks.front();
+            m_suboptimal_chunks.pop_front();
+            if (m_chunk_idxs[chunk_idx]) return chunk_idx;
+            // If what was popped is not currently a chunk, continue. This may
+            // happen when a split chunk merges in Improve() with one or more existing chunks that
+            // are themselves on the suboptimal queue already.
+        }
+        return INVALID_SET_IDX;
+    }
+
+    /** Find a (parent, child) dependency to deactivate in chunk_idx, or (-1, -1) if none. */
+    std::pair<TxIdx, TxIdx> PickDependencyToSplit(SetIdx chunk_idx) noexcept
+    {
+        auto& chunk_info = m_set_info[chunk_idx];
+
+        // Remember the best dependency {par, chl} seen so far.
+        std::pair<TxIdx, TxIdx> candidate_dep = {TxIdx(-1), TxIdx(-1)};
+        uint64_t candidate_tiebreak = 0;
+        // Iterate over all transactions.
+        for (auto tx_idx : chunk_info.transactions) {
+            const auto& tx_data = m_tx_data[tx_idx];
+            // Iterate over all active child dependencies of the transaction.
+            for (auto child_idx : tx_data.children) {
+                // Skip inactive child dependencies.
+                if (tx_data.dep_top_idx[child_idx] == INVALID_SET_IDX) continue;
+                auto& dep_top_info = m_set_info[tx_data.dep_top_idx[child_idx]];
+                // Skip if this dependency is ineligible (the top chunk that would be created
+                // does not have higher feerate than the chunk it is currently part of).
+                auto cmp = FeeRateCompare(dep_top_info.feerate, chunk_info.feerate);
+                if (cmp <= 0) continue;
+                // Generate a random tiebreak for this dependency, and reject it if its tiebreak
+                // is worse than the best so far. This means that among all eligible
+                // dependencies, a uniformly random one will be chosen.
+                uint64_t tiebreak = m_rng.rand64();
+                if (tiebreak < candidate_tiebreak) continue;
+                // Remember this as our (new) candidate dependency.
+                candidate_dep = {tx_idx, child_idx};
+                candidate_tiebreak = tiebreak;
+            }
+        }
+        return candidate_dep;
+    }
+
 public:
     /** Construct a spanning forest for the given DepGraph, with every transaction in its own chunk
      *  (not topological). */
@@ -1069,51 +1117,20 @@ public:
     /** Try to improve the forest. Returns false if it is optimal, true otherwise. */
     bool OptimizeStep() noexcept
     {
-        while (!m_suboptimal_chunks.empty()) {
-            // Pop an entry from the potentially-suboptimal chunk queue.
-            SetIdx chunk_idx = m_suboptimal_chunks.front();
-            m_suboptimal_chunks.pop_front();
-            auto& chunk_info = m_set_info[chunk_idx];
-            // If what was popped is not currently a chunk, continue. This may
-            // happen when a split chunk merges in Improve() with one or more existing chunks that
-            // are themselves on the suboptimal queue already.
-            if (!m_chunk_idxs[chunk_idx]) continue;
-            // Remember the best dependency {par, chl} seen so far.
-            std::pair<TxIdx, TxIdx> candidate_dep = {TxIdx(-1), TxIdx(-1)};
-            uint64_t candidate_tiebreak = 0;
-            // Iterate over all transactions.
-            for (auto tx_idx : chunk_info.transactions) {
-                const auto& tx_data = m_tx_data[tx_idx];
-                // Iterate over all active child dependencies of the transaction.
-                for (auto child_idx : tx_data.children) {
-                    // Skip inactive child dependencies.
-                    if (tx_data.dep_top_idx[child_idx] == INVALID_SET_IDX) continue;
-                    auto& dep_top_info = m_set_info[tx_data.dep_top_idx[child_idx]];
-                    // Skip if this dependency is ineligible (the top chunk that would be created
-                    // does not have higher feerate than the chunk it is currently part of).
-                    auto cmp = FeeRateCompare(dep_top_info.feerate, chunk_info.feerate);
-                    if (cmp <= 0) continue;
-                    // Generate a random tiebreak for this dependency, and reject it if its tiebreak
-                    // is worse than the best so far. This means that among all eligible
-                    // dependencies, a uniformly random one will be chosen.
-                    uint64_t tiebreak = m_rng.rand64();
-                    if (tiebreak < candidate_tiebreak) continue;
-                    // Remember this as our (new) candidate dependency.
-                    candidate_dep = {tx_idx, child_idx};
-                    candidate_tiebreak = tiebreak;
-                }
-            }
-            // If a candidate with positive gain was found, deactivate it and then make the state
-            // topological again with a sequence of merges.
-            if (candidate_dep.first != TxIdx(-1)) {
-                Improve(candidate_dep.first, candidate_dep.second);
-            }
-            // Stop processing for now, even if nothing was activated, as the loop above may have
-            // had a nontrivial cost.
+        auto chunk_idx = PickChunkToOptimize();
+        if (chunk_idx == INVALID_SET_IDX) {
+            // No improvable chunk was found, we are done.
+            return false;
+        }
+        auto [parent_idx, child_idx] = PickDependencyToSplit(chunk_idx);
+        if (parent_idx == TxIdx(-1)) {
+            // Nothing to improve in chunk_idx. Need to continue with other chunks, if any.
             return !m_suboptimal_chunks.empty();
         }
-        // No improvable chunk was found, we are done.
-        return false;
+        // Deactivate the found dependency and then make the state topological again with a
+        // sequence of merges.
+        Improve(parent_idx, child_idx);
+        return true;
     }
 
     /** Initialize data structure for minimizing the chunks. Can only be called if state is known
