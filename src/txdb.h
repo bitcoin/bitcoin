@@ -15,6 +15,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -37,6 +38,7 @@ protected:
     DBParams m_db_params;
     CoinsViewOptions m_options;
     std::unique_ptr<CDBWrapper> m_db;
+    mutable std::function<void()> m_read_error_cb{[]{}};
 public:
     explicit CCoinsViewDB(DBParams db_params, CoinsViewOptions options);
 
@@ -46,6 +48,8 @@ public:
     std::vector<uint256> GetHeadBlocks() const override;
     void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override;
+
+    void SetReadErrCallback(std::function<void()> f) { m_read_error_cb = std::move(f); }
 
     //! Whether an unsupported database format is used.
     bool NeedsUpgrade();
