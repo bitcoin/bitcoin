@@ -8,6 +8,10 @@ a single style, which is specified below. When writing patches, favor the new
 style over attempting to mimic the surrounding style, except for move-only
 commits.
 
+Move-only commits are changes that only relocate existing code without
+modifying semantics or formatting, and should preserve the original style 
+to keep diffs minimal.
+
 Do not submit patches solely to modify the style of existing code.
 
 ## Coding Style (C++)
