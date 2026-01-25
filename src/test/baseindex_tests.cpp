@@ -27,7 +27,8 @@ BOOST_FIXTURE_TEST_CASE(baseindex_no_commit_ahead_of_flush, TestChain100Setup)
     auto sync_index = [&](bool do_flush, int expected_sync_height, int expected_commit_height) {
         CoinStatsIndex index{interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB};
         BOOST_REQUIRE(index.Init());
-        index.Sync();
+        BOOST_CHECK(index.StartBackgroundSync());
+        index.WaitForBackgroundSync();
         if (do_flush) {
             chainstate.ForceFlushStateToDisk();
             m_node.chain->context()->validation_signals->SyncWithValidationInterfaceQueue();
