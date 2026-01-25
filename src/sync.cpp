@@ -88,7 +88,7 @@ LockData& GetLockData() {
     return lock_data;
 }
 
-static void potential_deadlock_detected(const LockPair& mismatch, const LockStack& s1, const LockStack& s2)
+[[noreturn]] static void potential_deadlock_detected(const LockPair& mismatch, const LockStack& s1, const LockStack& s2)
 {
     LogError("POTENTIAL DEADLOCK DETECTED");
     LogError("Previous lock order was:");
@@ -124,7 +124,7 @@ static void potential_deadlock_detected(const LockPair& mismatch, const LockStac
     throw std::logic_error(strprintf("potential deadlock detected: %s -> %s -> %s", mutex_b, mutex_a, mutex_b));
 }
 
-static void double_lock_detected(const void* mutex, const LockStack& lock_stack)
+[[noreturn]] static void double_lock_detected(const void* mutex, const LockStack& lock_stack)
 {
     LogError("DOUBLE LOCK DETECTED");
     LogError("Lock order:");
@@ -142,6 +142,20 @@ static void double_lock_detected(const void* mutex, const LockStack& lock_stack)
         abort();
     }
     throw std::logic_error("double lock detected");
+}
+
+[[noreturn]] static void inconsistent_lock_order_detected(const LockStack& lock_stack, const char* guardname, const char* file, int line)
+{
+    LogError("INCONSISTENT LOCK ORDER DETECTED");
+    LogError("Current lock order (least recent first) is:");
+    for (const LockStackItem& i : lock_stack) {
+        LogError(" %s", i.second.ToString());
+    }
+    if (g_debug_lockorder_abort) {
+        tfm::format(std::cerr, "%s:%s %s was not most recent critical section locked, details in debug log.\n", file, line, guardname);
+        abort();
+    }
+    throw std::logic_error(strprintf("%s was not most recent critical section locked", guardname));
 }
 
 template <typename MutexType>
@@ -223,16 +237,8 @@ void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, c
         }
     }
 
-    LogError("INCONSISTENT LOCK ORDER DETECTED");
-    LogError("Current lock order (least recent first) is:");
-    for (const LockStackItem& i : lock_stack) {
-        LogError(" %s", i.second.ToString());
-    }
-    if (g_debug_lockorder_abort) {
-        tfm::format(std::cerr, "%s:%s %s was not most recent critical section locked, details in debug log.\n", file, line, guardname);
-        abort();
-    }
-    throw std::logic_error(strprintf("%s was not most recent critical section locked", guardname));
+    inconsistent_lock_order_detected(lock_stack, guardname, file, line);
+    // inconsistent_lock_order_detected() does not return.
 }
 
 void LeaveCritical()
