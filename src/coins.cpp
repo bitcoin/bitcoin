@@ -7,6 +7,7 @@
 #include <consensus/consensus.h>
 #include <logging.h>
 #include <random.h>
+#include <uint256.h>
 #include <util/trace.h>
 
 TRACEPOINT_SEMAPHORE(utxocache, add);
@@ -244,7 +245,7 @@ bool CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &ha
             }
         }
     }
-    hashBlock = hashBlockIn;
+    SetBestBlock(hashBlockIn);
     return true;
 }
 
@@ -276,7 +277,7 @@ void CCoinsViewCache::Reset() noexcept
 {
     cacheCoins.clear();
     cachedCoinsUsage = 0;
-    hashBlock.SetNull();
+    SetBestBlock(uint256::ZERO);
 }
 
 void CCoinsViewCache::Uncache(const COutPoint& hash)
