@@ -14,6 +14,7 @@
 #include <sync.h>
 #include <test/util/blockfilter.h>
 #include <test/util/common.h>
+#include <test/util/index.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
@@ -99,8 +100,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
 
     // BlockUntilSyncedToCurrentChain should return false before index is started.
     BOOST_CHECK(!filter_index.BlockUntilSyncedToCurrentChain());
-
-    filter_index.Sync();
+    IndexTester{filter_index}.Sync();
 
     // Check that filter index has all blocks that were in the chain before it started.
     {

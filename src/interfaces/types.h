@@ -33,10 +33,6 @@ struct BlockInfo {
     // The maximum time in the chain up to and including this block.
     // A timestamp that can only move forward.
     unsigned int chain_time_max{0};
-    // True if notification comes from a background sync thread while initially
-    // attaching to the chain. False if notification comes from the validation
-    // interface queue.
-    bool background_sync{false};
     // Whether block data has been flushed and saved to disk yet. FLUSHED_TIP
     // and FLUSHED both indicate that block data has been flushed, but
     // FLUSHED_TIP additionally means this block is the *latest* block that's
@@ -44,6 +40,12 @@ struct BlockInfo {
     // with the node and want to flush their state at the same points as the
     // node, without flushing too frequently.
     enum { UNFLUSHED, FLUSHED, FLUSHED_TIP } status{UNFLUSHED};
+    // Sync state. SYNCING or SYNCED if notification comes from a background
+    // sync thread while initially attaching to the chain, UPDATING if
+    // notification comes from the validation interface queue.
+    enum State { SYNCING, SYNCED, UPDATING } state{UPDATING};
+    //! Error string. If non-empty it indicates some block data could not be read and may be missing.
+    std::string error;
 
     BlockInfo(const uint256& hash LIFETIMEBOUND) : hash(hash) {}
 };
