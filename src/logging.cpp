@@ -53,7 +53,7 @@ static int FileWriteStr(std::string_view str, FILE *fp)
 
 bool BCLog::Logger::StartLogging()
 {
-    StdLockGuard scoped_lock(m_cs);
+    LOCK(m_cs);
 
     assert(m_buffering);
     assert(m_fileout == nullptr);
@@ -97,7 +97,7 @@ bool BCLog::Logger::StartLogging()
 
 void BCLog::Logger::DisconnectTestLogger()
 {
-    StdLockGuard scoped_lock(m_cs);
+    LOCK(m_cs);
     m_buffering = true;
     if (m_fileout != nullptr) fclose(m_fileout);
     m_fileout = nullptr;
@@ -111,7 +111,7 @@ void BCLog::Logger::DisconnectTestLogger()
 void BCLog::Logger::DisableLogging()
 {
     {
-        StdLockGuard scoped_lock(m_cs);
+        LOCK(m_cs);
         assert(m_buffering);
         assert(m_print_callbacks.empty());
     }
@@ -159,7 +159,7 @@ bool BCLog::Logger::WillLogCategoryLevel(BCLog::LogFlags category, BCLog::Level 
 
     if (!WillLogCategory(category)) return false;
 
-    StdLockGuard scoped_lock(m_cs);
+    LOCK(m_cs);
     const auto it{m_category_log_levels.find(category)};
     return level >= (it == m_category_log_levels.end() ? LogLevel() : it->second);
 }
@@ -423,7 +423,7 @@ void BCLog::Logger::FormatLogStrInPlace(std::string& str, BCLog::LogFlags catego
 
 void BCLog::Logger::LogPrintStr(std::string_view str, SourceLocation&& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
 {
-    StdLockGuard scoped_lock(m_cs);
+    LOCK(m_cs);
     return LogPrintStr_(str, std::move(source_loc), category, level, should_ratelimit);
 }
 
@@ -598,7 +598,7 @@ bool BCLog::Logger::SetCategoryLogLevel(std::string_view category_str, std::stri
     const auto level = GetLogLevel(level_str);
     if (!level.has_value() || level.value() > MAX_USER_SETABLE_SEVERITY_LEVEL) return false;
 
-    StdLockGuard scoped_lock(m_cs);
+    LOCK(m_cs);
     m_category_log_levels[flag] = level.value();
     return true;
 }

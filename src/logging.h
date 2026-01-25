@@ -7,6 +7,7 @@
 #define BITCOIN_LOGGING_H
 
 #include <crypto/siphash.h>
+#include <sync.h>
 #include <threadsafety.h>
 #include <tinyformat.h>
 #include <util/check.h>
@@ -205,7 +206,7 @@ namespace BCLog {
         };
 
     private:
-        mutable StdMutex m_cs; // Can not use Mutex from sync.h because in debug mode it would cause a deadlock when a potential deadlock was detected
+        mutable Mutex m_cs;
 
         FILE* m_fileout GUARDED_BY(m_cs) = nullptr;
         std::list<BufferedLog> m_msgs_before_open GUARDED_BY(m_cs);
@@ -260,14 +261,14 @@ namespace BCLog {
         /** Returns whether logs will be written to any output */
         bool Enabled() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
-            StdLockGuard scoped_lock(m_cs);
+            LOCK(m_cs);
             return m_buffering || m_print_to_console || m_print_to_file || !m_print_callbacks.empty();
         }
 
         /** Connect a slot to the print signal and return the connection */
         std::list<std::function<void(const std::string&)>>::iterator PushBackCallback(std::function<void(const std::string&)> fun) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
-            StdLockGuard scoped_lock(m_cs);
+            LOCK(m_cs);
             m_print_callbacks.push_back(std::move(fun));
             return --m_print_callbacks.end();
         }
@@ -275,13 +276,13 @@ namespace BCLog {
         /** Delete a connection */
         void DeleteCallback(std::list<std::function<void(const std::string&)>>::iterator it) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
-            StdLockGuard scoped_lock(m_cs);
+            LOCK(m_cs);
             m_print_callbacks.erase(it);
         }
 
-        size_t NumConnections()
+        size_t NumConnections() EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
-            StdLockGuard scoped_lock(m_cs);
+            LOCK(m_cs);
             return m_print_callbacks.size();
         }
 
@@ -292,7 +293,7 @@ namespace BCLog {
 
         void SetRateLimiting(std::shared_ptr<LogRateLimiter> limiter) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
-            StdLockGuard scoped_lock(m_cs);
+            LOCK(m_cs);
             m_limiter = std::move(limiter);
         }
 
@@ -308,17 +309,17 @@ namespace BCLog {
 
         std::unordered_map<LogFlags, Level> CategoryLevels() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
-            StdLockGuard scoped_lock(m_cs);
+            LOCK(m_cs);
             return m_category_log_levels;
         }
         void SetCategoryLogLevel(const std::unordered_map<LogFlags, Level>& levels) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
-            StdLockGuard scoped_lock(m_cs);
+            LOCK(m_cs);
             m_category_log_levels = levels;
         }
-        void AddCategoryLogLevel(LogFlags category, Level level)
+        void AddCategoryLogLevel(LogFlags category, Level level) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
-            StdLockGuard scoped_lock(m_cs);
+            LOCK(m_cs);
             m_category_log_levels[category] = level;
         }
         bool SetCategoryLogLevel(std::string_view category_str, std::string_view level_str) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
