@@ -21,6 +21,7 @@
 #include <primitives/block.h>
 #include <script/script.h>
 #include <sync.h>
+#include <test/util/index.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
@@ -95,7 +96,7 @@ BOOST_FIXTURE_TEST_CASE(baseindex_no_commit_ahead_of_flush, TestChain100Setup)
         auto sync_index = [&](bool do_flush, int expected_sync_height, int expected_commit_height) {
             auto index{make_index(m_node)};
             BOOST_REQUIRE(index->Init());
-            index->Sync();
+            IndexTester{*index}.Sync();
             if (do_flush) {
                 chainstate.ForceFlushStateToDisk();
                 m_node.chain->context()->validation_signals->SyncWithValidationInterfaceQueue();
@@ -151,7 +152,7 @@ BOOST_FIXTURE_TEST_CASE(index_unclean_shutdown, TestChain100Setup)
         {
             auto index{make_index(m_node)};
             BOOST_REQUIRE(index->Init());
-            index->Sync();
+            IndexTester{*index}.Sync();
             std::shared_ptr<const CBlock> new_block;
             CBlockIndex* new_block_index = nullptr;
             {
@@ -179,7 +180,7 @@ BOOST_FIXTURE_TEST_CASE(index_unclean_shutdown, TestChain100Setup)
             auto index{make_index(m_node)};
             BOOST_REQUIRE(index->Init());
             // Make sure the index can be loaded.
-            BOOST_REQUIRE(index->StartBackgroundSync());
+            IndexTester{*index}.Sync();
             index->Stop();
         }
     }
@@ -227,6 +228,10 @@ BOOST_FIXTURE_TEST_CASE(index_reorg_crash, TestChain100Setup)
 
     IndexReorgCrash index{interfaces::MakeChain(m_node), blocker, blocking_height, m_clock};
     BOOST_REQUIRE(index.Init());
+    // This test drives the background sync directly (StartBackgroundSync without an
+    // immediate WaitForBackgroundSync) instead of IndexTester::Sync(): it needs the
+    // sync running concurrently so it can trigger a reorg while the index is still
+    // mid-sync, whereas IndexTester::Sync() blocks until the sync has finished.
     BOOST_REQUIRE(index.StartBackgroundSync());
 
     auto func_wait_until = [&](int height, std::chrono::milliseconds timeout) {
