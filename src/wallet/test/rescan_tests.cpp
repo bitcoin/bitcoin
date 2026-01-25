@@ -8,6 +8,7 @@
 #include <interfaces/chain.h>
 #include <node/blockstorage.h>
 #include <test/util/common.h>
+#include <test/util/index.h>
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
@@ -166,7 +167,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_reorged_block, TestChain100
     BOOST_REQUIRE(InitBlockFilterIndex([&]{ return interfaces::MakeChain(m_node); }, BlockFilterType::BASIC, 1_MiB, /*f_memory=*/true));
     BlockFilterIndex& filter_index{*Assert(GetBlockFilterIndex(BlockFilterType::BASIC))};
     BOOST_REQUIRE(filter_index.Init());
-    filter_index.Sync();
+    IndexTester{filter_index}.Sync();
 
     // Reorg the tip out of the active chain: invalidate it, then mine a
     // longer replacement branch paying a script unrelated to the wallets

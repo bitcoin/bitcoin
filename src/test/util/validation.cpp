@@ -13,6 +13,7 @@
 #include <node/blockstorage.h>
 #include <node/context.h>
 #include <node/mining_types.h>
+#include <test/util/index.h>
 #include <test/util/mining.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
@@ -137,7 +138,7 @@ std::vector<std::pair<COutPoint, CAmount>> ResetChainmanAndMempool(TestingSetup&
         Assert(InitBlockFilterIndex([&] { return interfaces::MakeChain(setup.m_node); }, BlockFilterType::BASIC, 1_MiB, /*f_memory=*/true, /*f_wipe=*/true));
         auto& index = *Assert(GetBlockFilterIndex(BlockFilterType::BASIC));
         Assert(index.Init());
-        index.Sync();
+        IndexTester{index}.Sync();
         // The index serves the static setup chain only. Leaving it registered
         // deadlocks with ImmediateBackgroundTaskRunner when a fuzzed block
         // connects under cs_main.
