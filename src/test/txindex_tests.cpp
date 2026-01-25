@@ -28,8 +28,8 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
 
     // BlockUntilSyncedToCurrentChain should return false before txindex is started.
     BOOST_CHECK(!txindex.BlockUntilSyncedToCurrentChain());
-
-    txindex.Sync();
+    BOOST_CHECK(txindex.StartBackgroundSync());
+    txindex.WaitForBackgroundSync();
 
     // Check that txindex excludes genesis block transactions.
     const CBlock& genesis_block = Params().GenesisBlock();
