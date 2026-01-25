@@ -139,7 +139,7 @@ about Git.
 ### Creating the Pull Request
 
 The title of the pull request should be prefixed by the component or area that
-the pull request affects. Valid areas as:
+the pull request affects. Valid areas are:
 
   - `consensus` for changes to consensus critical code
   - `doc` for changes to the documentation
