@@ -3,10 +3,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 #include <chainparams.h>
+#include <consensus/amount.h>
 #include <consensus/validation.h>
 #include <node/kernel_notifications.h>
 #include <random.h>
 #include <rpc/blockchain.h>
+#include <script/script.h>
 #include <sync.h>
 #include <test/util/chainstate.h>
 #include <test/util/coins.h>
@@ -61,6 +63,30 @@ BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
         // The view cache should be empty since we had to destruct to downsize.
         BOOST_CHECK(!c1.CoinsTip().HaveCoinInCache(outpoint));
     }
+}
+
+BOOST_FIXTURE_TEST_CASE(connect_tip_does_not_cache_inputs_on_failed_connect, TestChain100Setup)
+{
+    Chainstate& chainstate{Assert(m_node.chainman)->ActiveChainstate()};
+
+    COutPoint outpoint;
+    {
+        LOCK(cs_main);
+        outpoint = AddTestCoin(m_rng, chainstate.CoinsTip());
+        chainstate.CoinsTip().Flush(/*reallocate_cache=*/false);
+    }
+
+    CMutableTransaction tx;
+    tx.vin.emplace_back(outpoint);
+    tx.vout.emplace_back(MAX_MONEY, CScript{} << OP_TRUE);
+
+    const auto tip{WITH_LOCK(cs_main, return chainstate.m_chain.Tip()->GetBlockHash())};
+    const CBlock block{CreateBlock({tx}, CScript{} << OP_TRUE, chainstate)};
+    BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlock(std::make_shared<CBlock>(block), true, true, nullptr));
+
+    LOCK(cs_main);
+    BOOST_CHECK_EQUAL(tip, chainstate.m_chain.Tip()->GetBlockHash()); // block rejected
+    BOOST_CHECK(!chainstate.CoinsTip().HaveCoinInCache(outpoint));    // input not cached
 }
 
 //! Test UpdateTip behavior for both active and background chainstates.
