@@ -27,7 +27,7 @@ Bitcoin Core requires one of the following compilers.
 
 | Dependency | Releases | Minimum required |
 | --- | --- | --- |
-| glibc | [link](https://www.gnu.org/software/libc/) | [2.31](https://github.com/bitcoin/bitcoin/pull/29987)
+| glibc | [link](https://www.gnu.org/software/libc/) | [2.31](https://github.com/bitcoin/bitcoin/pull/29987) |
 
 ## Optional
 
