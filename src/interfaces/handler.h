@@ -17,8 +17,7 @@ class connection;
 namespace interfaces {
 
 //! Generic interface for managing an event handler or callback function
-//! registered with another interface. Has a single disconnect method to cancel
-//! the registration and prevent any future notifications.
+//! registered with another interface.
 class Handler
 {
 public:
@@ -29,6 +28,17 @@ public:
 
     //! Disconnect the handler, stop receiving notifications.
     virtual void disconnect() = 0;
+
+    //! Return whether handler is currently connected.
+    virtual bool connected() = 0;
+
+    //! Interrupt the handler, allowing it to disconnect more quickly. (Useful
+    //! to disconnect multiple handlers in parallel when disconnect is
+    //! blocking.)
+    virtual void interrupt() {};
+
+    //! Block until all current notifications are received.
+    virtual void sync() {};
 };
 
 //! Return handler wrapping a boost signal connection.

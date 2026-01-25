@@ -110,12 +110,9 @@ private:
     ///   value, which can be updated at other times.
     std::atomic<const CBlockIndex*> m_best_block_index{nullptr};
 
-    std::thread m_thread_sync;
-    CThreadInterrupt m_interrupt;
-
     /// Mutex to let m_notifications and m_handler be accessed from multiple
     /// threads (the sync thread and the init thread).
-    Mutex m_mutex;
+    mutable Mutex m_mutex;
     friend class BaseIndexNotifications;
     std::shared_ptr<BaseIndexNotifications> m_notifications GUARDED_BY(m_mutex);
     std::unique_ptr<interfaces::Handler> m_handler GUARDED_BY(m_mutex);
@@ -143,6 +140,11 @@ private:
     /// while index code is being migrated to use interfaces::Chain methods
     /// instead of index pointers.
     const CBlockIndex& BlockIndex(const uint256& hash);
+
+    /// Get chain notification handler.
+    std::shared_ptr<interfaces::Chain::Notifications> Notifications() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    friend class IndexTester;
 
 protected:
     std::unique_ptr<interfaces::Chain> m_chain;
@@ -199,12 +201,8 @@ public:
     /// Starts the initial sync process on a background thread.
     [[nodiscard]] bool StartBackgroundSync() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
-    /// Sync the index with the block index starting from the current best block.
-    /// Intended to be run in its own thread, m_thread_sync, and can be
-    /// interrupted with m_interrupt. Once the index gets in sync, the UPDATING
-    /// state is set and the BlockConnected ValidationInterface callback takes
-    /// over and the sync thread exits.
-    void Sync() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    /// Wait for background sync to complete.
+    void WaitForBackgroundSync() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /// Stops the instance from staying in sync with blockchain updates.
     void Stop() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);

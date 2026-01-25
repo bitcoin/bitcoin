@@ -15,6 +15,7 @@
 #include <script/script.h>
 #include <span.h>
 #include <sync.h>
+#include <test/util/index.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
 #include <util/strencodings.h>
@@ -48,8 +49,7 @@ static void BlockFilterIndexSync(benchmark::Bench& bench)
                                       /*n_cache_size=*/0, /*f_memory=*/false, /*f_wipe=*/true);
         assert(filter_index.Init());
         assert(!filter_index.BlockUntilSyncedToCurrentChain());
-        filter_index.Sync();
-        assert(filter_index.BlockUntilSyncedToCurrentChain());
+        IndexTester{filter_index}.Sync();
         filter_index.Interrupt();
         filter_index.Stop();
 

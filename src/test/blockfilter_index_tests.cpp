@@ -141,8 +141,8 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
 
     // BlockUntilSyncedToCurrentChain should return false before index is started.
     BOOST_CHECK(!filter_index.BlockUntilSyncedToCurrentChain());
-
-    filter_index.Sync();
+    BOOST_CHECK(filter_index.StartBackgroundSync());
+    filter_index.WaitForBackgroundSync();
 
     // Check that filter index has all blocks that were in the chain before it started.
     {

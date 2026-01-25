@@ -324,12 +324,18 @@ public:
         bool disconnect_data = false;
         //! Include undo data with block disconnected notifications.
         bool disconnect_undo_data = false;
+        //! Name to use for attachChain sync thread.
+        std::string thread_name;
     };
 
     //! Register handler for notifications. This is similar to
-    //! handleNotifications method below, but it accepts more options and delays
-    //! sending notifications until connect() is called on the returned handler.
-    virtual std::unique_ptr<Handler> attachChain(std::shared_ptr<Notifications> notifications, const NotifyOptions& options) = 0;
+    //! handleNotifications below, but it sends block connected and disconnected
+    //! notifications starting at a specified block instead of the chain tip. If
+    //! a starting block is not provided, this sends block connected
+    //! notifications starting from genesis. This also more accepts more options
+    //! than handleNotifications and, if not synced, delays sending
+    //! notifications until connect() is called on the returned handler.
+    virtual std::unique_ptr<Handler> attachChain(std::shared_ptr<Notifications> notifications, std::optional<uint256> start_block, const NotifyOptions& options) = 0;
 
     //! Register handler for notifications.
     virtual std::unique_ptr<Handler> handleNotifications(std::shared_ptr<Notifications> notifications) = 0;
