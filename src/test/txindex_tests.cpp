@@ -21,6 +21,7 @@
 #include <script/script.h>
 #include <streams.h>
 #include <sync.h>
+#include <test/util/index.h>
 #include <test/util/setup_common.h>
 #include <util/byte_units.h>
 #include <util/check.h>
@@ -145,8 +146,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
 
     // BlockUntilSyncedToCurrentChain should return false before txindex is started.
     BOOST_CHECK(!txindex.BlockUntilSyncedToCurrentChain());
-
-    txindex.Sync();
+    IndexTester{txindex}.Sync();
 
     // Check that txindex excludes genesis block transactions.
     const CBlock& genesis_block = Params().GenesisBlock();
@@ -180,7 +180,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_collision_scan_path, TestChain100Setup)
     // database, as it would on a node whose index was created by this version.
     TxIndex txindex(interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB, /*f_memory=*/false);
     BOOST_REQUIRE(txindex.Init());
-    txindex.Sync();
+    IndexTester{txindex}.Sync();
 
     CDBWrapper& db{TxIndexTest::GetDB(txindex)};
     const SipHasher13UJ hasher{ReadHasher(db)};
@@ -241,7 +241,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_legacy_fallback, TestChain100Setup)
 
     TxIndex txindex(interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB, /*f_memory=*/false);
     BOOST_REQUIRE(txindex.Init());
-    txindex.Sync();
+    IndexTester{txindex}.Sync();
 
     // Drop the hashed entries so only the legacy row remains, then confirm the
     // lookup succeeds through the fallback.
@@ -282,7 +282,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_reorg_keeps_stale_entries, TestChain100Setup)
 {
     TxIndex txindex(interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB, /*f_memory=*/true);
     BOOST_REQUIRE(txindex.Init());
-    txindex.Sync();
+    IndexTester{txindex}.Sync();
 
     const CScript coinbase_script{CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG};
 

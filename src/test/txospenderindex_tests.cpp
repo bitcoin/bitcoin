@@ -4,8 +4,10 @@
 
 #include <index/txospenderindex.h>
 #include <test/util/common.h>
+#include <test/util/index.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
+#include <validationinterface.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -59,7 +61,7 @@ BOOST_FIXTURE_TEST_CASE(txospenderindex_initial_sync, TestChain100Setup)
         BOOST_CHECK(!txospenderindex.FindSpender(outpoint).value());
     }
 
-    txospenderindex.Sync();
+    IndexTester{txospenderindex}.Sync();
     BOOST_CHECK_EQUAL(txospenderindex.GetSummary().best_block_hash, tip_hash);
 
     for (size_t i = 0; i < spent.size(); i++) {

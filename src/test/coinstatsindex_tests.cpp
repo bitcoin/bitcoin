@@ -11,6 +11,7 @@
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <sync.h>
+#include <test/util/index.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
 #include <validation.h>
@@ -42,7 +43,7 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_initial_sync, TestChain100Setup)
     // is started.
     BOOST_CHECK(!coin_stats_index.BlockUntilSyncedToCurrentChain());
 
-    coin_stats_index.Sync();
+    IndexTester{coin_stats_index}.Sync();
 
     // Check that CoinStatsIndex works for genesis block.
     const CBlockIndex* genesis_block_index;
