@@ -150,7 +150,7 @@ namespace BCLog {
         };
 
     private:
-        mutable StdMutex m_mutex;
+        mutable Mutex m_mutex;
 
         //! Stats for each source location that has attempted to log something.
         std::unordered_map<SourceLocation, Stats, SourceLocationHasher, SourceLocationEqual> m_source_locations GUARDED_BY(m_mutex);

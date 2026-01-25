@@ -392,7 +392,7 @@ BCLog::LogRateLimiter::Status BCLog::LogRateLimiter::Consume(
     const SourceLocation& source_loc,
     const std::string& str)
 {
-    StdLockGuard scoped_lock(m_mutex);
+    LOCK(m_mutex);
     auto& stats{m_source_locations.try_emplace(source_loc, m_max_bytes).first->second};
     Status status{stats.m_dropped_bytes > 0 ? Status::STILL_SUPPRESSED : Status::UNSUPPRESSED};
 
@@ -556,7 +556,7 @@ void BCLog::LogRateLimiter::Reset()
 {
     decltype(m_source_locations) source_locations;
     {
-        StdLockGuard scoped_lock(m_mutex);
+        LOCK(m_mutex);
         source_locations.swap(m_source_locations);
         m_suppression_active = false;
     }
