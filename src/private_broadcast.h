@@ -54,9 +54,11 @@ public:
      * and oldest send/confirm times.
      * @param[in] will_send_to_nodeid Will remember that the returned transaction
      * was picked for sending to this node.
+     * @param[in] will_send_to_address Address of the peer to which this transaction
+     * will be sent.
      * @return Most urgent transaction or nullopt if there are no transactions.
      */
-    std::optional<CTransactionRef> PickTxForSend(const NodeId& will_send_to_nodeid)
+    std::optional<CTransactionRef> PickTxForSend(const NodeId& will_send_to_nodeid, const CService& will_send_to_address)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
@@ -99,10 +101,11 @@ private:
     /// Status of a transaction sent to a given node.
     struct SendStatus {
         const NodeId nodeid; /// Node to which the transaction will be sent (or was sent).
+        const CService address; /// Address of the node.
         const NodeClock::time_point picked; ///< When was the transaction picked for sending to the node.
         std::optional<NodeClock::time_point> confirmed; ///< When was the transaction reception confirmed by the node (by PONG).
 
-        SendStatus(const NodeId& nodeid, const NodeClock::time_point& picked) : nodeid{nodeid}, picked{picked} {}
+        SendStatus(const NodeId& nodeid, const CService& address, const NodeClock::time_point& picked) : nodeid{nodeid}, address{address}, picked{picked} {}
     };
 
     /// Cumulative stats from all the send attempts for a transaction. Used to prioritize transactions.

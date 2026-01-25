@@ -31,7 +31,7 @@ std::optional<size_t> PrivateBroadcast::Remove(const CTransactionRef& tx)
     return std::nullopt;
 }
 
-std::optional<CTransactionRef> PrivateBroadcast::PickTxForSend(const NodeId& will_send_to_nodeid)
+std::optional<CTransactionRef> PrivateBroadcast::PickTxForSend(const NodeId& will_send_to_nodeid, const CService& will_send_to_address)
     EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
 {
     LOCK(m_mutex);
@@ -43,7 +43,7 @@ std::optional<CTransactionRef> PrivateBroadcast::PickTxForSend(const NodeId& wil
 
     if (it != m_transactions.end()) {
         auto& [tx, sent_to]{*it};
-        sent_to.emplace_back(will_send_to_nodeid, NodeClock::now());
+        sent_to.emplace_back(will_send_to_nodeid, will_send_to_address, NodeClock::now());
         return tx;
     }
 

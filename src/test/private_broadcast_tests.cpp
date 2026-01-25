@@ -29,9 +29,10 @@ BOOST_AUTO_TEST_CASE(basic)
 
     PrivateBroadcast pb;
     const NodeId recipient1{1};
+    const CService addr1{};
 
     // No transactions initially.
-    BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/recipient1).has_value());
+    BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/recipient1, /*will_send_to_address=*/addr1).has_value());
     BOOST_CHECK_EQUAL(pb.GetStale().size(), 0);
     BOOST_CHECK(!pb.HavePendingTransactions());
 
@@ -48,12 +49,13 @@ BOOST_AUTO_TEST_CASE(basic)
 
     BOOST_CHECK(pb.Add(tx2));
 
-    const auto tx_for_recipient1{pb.PickTxForSend(/*will_send_to_nodeid=*/recipient1).value()};
+    const auto tx_for_recipient1{pb.PickTxForSend(/*will_send_to_nodeid=*/recipient1, /*will_send_to_address=*/addr1).value()};
     BOOST_CHECK(tx_for_recipient1 == tx1 || tx_for_recipient1 == tx2);
 
     // A second pick must return the other transaction.
     const NodeId recipient2{2};
-    const auto tx_for_recipient2{pb.PickTxForSend(/*will_send_to_nodeid=*/recipient2).value()};
+    const CService addr2{};
+    const auto tx_for_recipient2{pb.PickTxForSend(/*will_send_to_nodeid=*/recipient2, /*will_send_to_address=*/addr2).value()};
     BOOST_CHECK(tx_for_recipient2 == tx1 || tx_for_recipient2 == tx2);
     BOOST_CHECK_NE(tx_for_recipient1, tx_for_recipient2);
 
@@ -90,7 +92,7 @@ BOOST_AUTO_TEST_CASE(basic)
     BOOST_CHECK_EQUAL(pb.Remove(tx_for_recipient2).value(), 0);
     BOOST_CHECK(!pb.Remove(tx_for_recipient2).has_value());
 
-    BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/nonexistent_recipient).has_value());
+    BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/nonexistent_recipient, /*will_send_to_address=*/CService{}).has_value());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

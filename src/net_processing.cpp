@@ -3528,7 +3528,7 @@ void PeerManagerImpl::PushPrivateBroadcastTx(CNode& node)
 {
     Assume(node.IsPrivateBroadcastConn());
 
-    const auto opt_tx{m_tx_for_private_broadcast.PickTxForSend(node.GetId())};
+    const auto opt_tx{m_tx_for_private_broadcast.PickTxForSend(node.GetId(), CService{node.addr})};
     if (!opt_tx) {
         LogDebug(BCLog::PRIVBROADCAST, "Disconnecting: no more transactions for private broadcast (connected in vain), peer=%d%s", node.GetId(), node.LogIP(fLogIPs));
         node.fDisconnect = true;
