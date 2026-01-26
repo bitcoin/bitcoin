@@ -339,6 +339,12 @@ public:
     //! notifications starting from genesis. This also more accepts more options
     //! than handleNotifications and, if not synced, delays sending
     //! notifications until connect() is called on the returned handler.
+    //!
+    //! When the sync reaches the chain tip, a final blockConnected notification
+    //! with state SYNCED is queued while cs_main is held, and it can be
+    //! delivered on another thread before cs_main is released (for example by
+    //! test task runners that run queued callbacks immediately), so
+    //! notification handlers should not lock cs_main when handling it.
     virtual std::unique_ptr<Handler> attachChain(std::shared_ptr<Notifications> notifications, std::optional<uint256> start_block, const NotifyOptions& options) = 0;
 
     //! Register handler for notifications.
