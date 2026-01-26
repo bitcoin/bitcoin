@@ -405,8 +405,8 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                     if (wtx.truc_child_in_mempool.has_value()) continue;
 
                     // this unconfirmed v3 transaction has a parent: spending would create a third generation
-                    size_t ancestors, descendants;
-                    wallet.chain().getTransactionAncestry(wtx.tx->GetHash(), ancestors, descendants);
+                    size_t ancestors, unused_cluster_count;
+                    wallet.chain().getTransactionAncestry(wtx.tx->GetHash(), ancestors, unused_cluster_count);
                     if (ancestors > 1) continue;
                 } else {
                     if (wtx.tx->version == TRUC_VERSION) continue;
@@ -582,12 +582,12 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
         for (const auto& [type, outputs] : coins.coins) {
             for (const COutput& output : outputs) {
                 // Get mempool info
-                size_t ancestors, descendants;
-                wallet.chain().getTransactionAncestry(output.outpoint.hash, ancestors, descendants);
+                size_t ancestors, cluster_count;
+                wallet.chain().getTransactionAncestry(output.outpoint.hash, ancestors, cluster_count);
 
                 // Create a new group per output and add it to the all groups vector
                 OutputGroup group(coin_sel_params);
-                group.Insert(std::make_shared<COutput>(output), ancestors, descendants);
+                group.Insert(std::make_shared<COutput>(output), ancestors, cluster_count);
 
                 // Each filter maps to a different set of groups
                 bool accepted = false;
@@ -611,7 +611,7 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
     // OUTPUT_GROUP_MAX_ENTRIES COutputs, a new OutputGroup is added to the end of the vector.
     typedef std::map<std::pair<CScript, OutputType>, std::vector<OutputGroup>> ScriptPubKeyToOutgroup;
     const auto& insert_output = [&](
-            const std::shared_ptr<COutput>& output, OutputType type, size_t ancestors, size_t descendants,
+            const std::shared_ptr<COutput>& output, OutputType type, size_t ancestors, size_t cluster_count,
             ScriptPubKeyToOutgroup& groups_map) {
         std::vector<OutputGroup>& groups = groups_map[std::make_pair(output->txout.scriptPubKey,type)];
 
@@ -632,24 +632,24 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
             group = &groups.back();
         }
 
-        group->Insert(output, ancestors, descendants);
+        group->Insert(output, ancestors, cluster_count);
     };
 
     ScriptPubKeyToOutgroup spk_to_groups_map;
     ScriptPubKeyToOutgroup spk_to_positive_groups_map;
     for (const auto& [type, outs] : coins.coins) {
         for (const COutput& output : outs) {
-            size_t ancestors, descendants;
-            wallet.chain().getTransactionAncestry(output.outpoint.hash, ancestors, descendants);
+            size_t ancestors, cluster_count;
+            wallet.chain().getTransactionAncestry(output.outpoint.hash, ancestors, cluster_count);
 
             const auto& shared_output = std::make_shared<COutput>(output);
             // Filter for positive only before adding the output
             if (output.GetEffectiveValue() > 0) {
-                insert_output(shared_output, type, ancestors, descendants, spk_to_positive_groups_map);
+                insert_output(shared_output, type, ancestors, cluster_count, spk_to_positive_groups_map);
             }
 
             // 'All' groups
-            insert_output(shared_output, type, ancestors, descendants, spk_to_groups_map);
+            insert_output(shared_output, type, ancestors, cluster_count, spk_to_groups_map);
         }
     }
 
@@ -865,11 +865,16 @@ util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& av
 
 util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, CoinsResult& available_coins, const CAmount& value_to_select, const CoinSelectionParams& coin_selection_params)
 {
+    // Try to enforce a mixture of cluster limits and ancestor/descendant limits on transactions we create by limiting
+    // the ancestors and the maximum cluster count of any UTXO we use. We use the ancestor/descendant limits, which are
+    // lower than the cluster limits, to avoid exceeding any ancestor/descendant limits of legacy nodes. This filter is safe
+    // because a transaction's ancestor or descendant count cannot be larger than its cluster count.
+    // TODO: these limits can be relaxed in the future, and we can replace the ancestor filter with a cluster equivalent.
     unsigned int limit_ancestor_count = 0;
     unsigned int limit_descendant_count = 0;
     wallet.chain().getPackageLimits(limit_ancestor_count, limit_descendant_count);
     const size_t max_ancestors = (size_t)std::max<int64_t>(1, limit_ancestor_count);
-    const size_t max_descendants = (size_t)std::max<int64_t>(1, limit_descendant_count);
+    const size_t max_cluster_count = (size_t)std::max<int64_t>(1, limit_descendant_count);
     const bool fRejectLongChains = gArgs.GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS);
 
     // Cases where we have 101+ outputs all pointing to the same destination may result in
@@ -894,20 +899,21 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
         // possible) if we cannot fund the transaction otherwise.
         if (wallet.m_spend_zero_conf_change) {
             ordered_filters.push_back({CoinEligibilityFilter(0, 1, 2)});
-            ordered_filters.push_back({CoinEligibilityFilter(0, 1, std::min(size_t{4}, max_ancestors/3), std::min(size_t{4}, max_descendants/3))});
-            ordered_filters.push_back({CoinEligibilityFilter(0, 1, max_ancestors/2, max_descendants/2)});
+            ordered_filters.push_back({CoinEligibilityFilter(0, 1, std::min(size_t{4}, max_ancestors/3), std::min(size_t{4}, max_cluster_count/3))});
+            ordered_filters.push_back({CoinEligibilityFilter(0, 1, max_ancestors/2, max_cluster_count/2)});
             // If partial groups are allowed, relax the requirement of spending OutputGroups (groups
             // of UTXOs sent to the same address, which are obviously controlled by a single wallet)
             // in their entirety.
-            ordered_filters.push_back({CoinEligibilityFilter(0, 1, max_ancestors-1, max_descendants-1, /*include_partial=*/true)});
+            ordered_filters.push_back({CoinEligibilityFilter(0, 1, max_ancestors-1, max_cluster_count-1, /*include_partial=*/true)});
             // Try with unsafe inputs if they are allowed. This may spend unconfirmed outputs
             // received from other wallets.
             if (coin_selection_params.m_include_unsafe_inputs) {
-                ordered_filters.push_back({CoinEligibilityFilter(/*conf_mine=*/0, /*conf_theirs*/0, max_ancestors-1, max_descendants-1, /*include_partial=*/true)});
+                ordered_filters.push_back({CoinEligibilityFilter(/*conf_mine=*/0, /*conf_theirs*/0, max_ancestors-1, max_cluster_count-1, /*include_partial=*/true)});
             }
-            // Try with unlimited ancestors/descendants. The transaction will still need to meet
-            // mempool ancestor/descendant policy to be accepted to mempool and broadcasted, but
-            // OutputGroups use heuristics that may overestimate ancestor/descendant counts.
+            // Try with unlimited ancestors/clusters. The transaction will still need to meet
+            // local mempool policy (i.e. cluster limits) to be accepted to mempool and broadcasted, and
+            // limits of other nodes (e.g. ancestor/descendant limits) to propagate, but OutputGroups
+            // use heuristics that may overestimate.
             if (!fRejectLongChains) {
                 ordered_filters.push_back({CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max(),
                                                                    std::numeric_limits<uint64_t>::max(),
@@ -924,7 +930,7 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
         CAmount total_unconf_long_chain = 0;
         for (const auto& group : discarded_groups) {
             total_discarded += group.GetSelectionAmount();
-            if (group.m_ancestors >= max_ancestors || group.m_descendants >= max_descendants) total_unconf_long_chain += group.GetSelectionAmount();
+            if (group.m_ancestors >= max_ancestors || group.m_max_cluster_count >= max_cluster_count) total_unconf_long_chain += group.GetSelectionAmount();
         }
 
         if (CAmount total_amount = available_coins.GetTotalAmount() - total_discarded < value_to_select) {

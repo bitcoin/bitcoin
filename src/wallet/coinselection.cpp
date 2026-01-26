@@ -752,7 +752,7 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
 
  ******************************************************************************/
 
-void OutputGroup::Insert(const std::shared_ptr<COutput>& output, size_t ancestors, size_t descendants) {
+void OutputGroup::Insert(const std::shared_ptr<COutput>& output, size_t ancestors, size_t cluster_count) {
     m_outputs.push_back(output);
     auto& coin = *m_outputs.back();
 
@@ -770,9 +770,9 @@ void OutputGroup::Insert(const std::shared_ptr<COutput>& output, size_t ancestor
     // the sum, rather than the max; this will overestimate in the cases where multiple inputs
     // have common ancestors
     m_ancestors += ancestors;
-    // descendants is the count as seen from the top ancestor, not the descendants as seen from the
-    // coin itself; thus, this value is counted as the max, not the sum
-    m_descendants = std::max(m_descendants, descendants);
+    // This is the maximum cluster count among all outputs. If these outputs are from distinct clusters but spent in the
+    // same transaction, their clusters will be merged, potentially exceeding the mempool's max cluster count.
+    m_max_cluster_count = std::max(m_max_cluster_count, cluster_count);
 
     if (output->input_bytes > 0) {
         m_weight += output->input_bytes * WITNESS_SCALE_FACTOR;
@@ -783,7 +783,7 @@ bool OutputGroup::EligibleForSpending(const CoinEligibilityFilter& eligibility_f
 {
     return m_depth >= (m_from_me ? eligibility_filter.conf_mine : eligibility_filter.conf_theirs)
         && m_ancestors <= eligibility_filter.max_ancestors
-        && m_descendants <= eligibility_filter.max_descendants;
+        && m_max_cluster_count <= eligibility_filter.max_cluster_count;
 }
 
 CAmount OutputGroup::GetSelectionAmount() const
