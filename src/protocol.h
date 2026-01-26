@@ -264,6 +264,10 @@ inline constexpr const char* WTXIDRELAY{"wtxidrelay"};
  * txreconciliation, as described by BIP 330.
  */
 inline constexpr const char* SENDTXRCNCL{"sendtxrcncl"};
+/**
+ * BIP 434 Peer feature negotiation
+ */
+inline constexpr const char* FEATURE{"feature"};
 }; // namespace NetMsgType
 
 /** All known message types (see above). Keep this in the same order as the list of messages above. */
@@ -303,7 +307,15 @@ inline const std::array ALL_NET_MESSAGE_TYPES{std::to_array<std::string>({
     NetMsgType::CFCHECKPT,
     NetMsgType::WTXIDRELAY,
     NetMsgType::SENDTXRCNCL,
+    NetMsgType::FEATURE,
 })};
+
+static constexpr size_t MAX_FEATUREID_LENGTH{80};
+static constexpr size_t MAX_FEATUREDATA_LENGTH{512};
+
+namespace NetMsgFeature {
+//inline constexpr std::string_view FOO{"BIP-FOO"};
+}
 
 /** nServices flags */
 enum ServiceFlags : uint64_t {

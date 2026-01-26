@@ -79,3 +79,4 @@ BIPs that are implemented by Bitcoin Core:
 * [`BIP 390`](https://github.com/bitcoin/bips/blob/master/bip-0390.mediawiki): MuSig2 Descriptor parsing is implemented in **v30.0** ([PR 31244](https://github.com/bitcoin/bitcoin/pull/31244)) and signing in **v31.0** ([PR 29675](https://github.com/bitcoin/bitcoin/pull/29675))
 * [`BIP 431`](https://github.com/bitcoin/bips/blob/master/bip-0431.mediawiki): transactions with nVersion=3 are standard and treated as Topologically Restricted Until Confirmation as of **v28.0** ([PR 29496](https://github.com/bitcoin/bitcoin/pull/29496)).
 * [`BIP 433`](https://github.com/bitcoin/bips/blob/master/bip-0433.mediawiki): Spending of Pay to Anchor (P2A) outputs is standard as of **v28.0** ([PR 30352](https://github.com/bitcoin/bitcoin/pull/30352)).
+* [`BIP 434`](https://github.com/bitcoin/bips/blob/master/bip-0434.md): Peer Feature Negotiation as of **v32.0** ([PR 35221](https://github.com/bitcoin/bitcoin/pull/35221)).
