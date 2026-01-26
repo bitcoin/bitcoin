@@ -99,6 +99,104 @@ BOOST_AUTO_TEST_CASE(cchain_basic_tests)
     }
 }
 
+BOOST_AUTO_TEST_CASE(cchain_findfork_tests)
+{
+    // Create a forking chain
+    // Common section
+    std::vector<std::unique_ptr<CBlockIndex>> b_common;
+    for(auto i{0}; i < 10; ++i) {
+        auto b = std::make_unique<CBlockIndex>();
+        if (i > 0) {
+            b->pprev = b_common[i - 1].get();
+        }
+        b->nHeight = i;
+        b_common.push_back(std::move(b));
+    }
+    // First fork, longer
+    std::vector<std::unique_ptr<CBlockIndex>> b_longer;
+    for(auto i{0}; i < 10; ++i) {
+        auto b = std::make_unique<CBlockIndex>();
+        if (i > 0) {
+            b->pprev = b_longer[i - 1].get();
+        } else {
+            // connect to fork point -- last element of the common section
+            b->pprev = b_common.back().get();
+        }
+        b->nHeight = i + b_common.size();
+        b_longer.push_back(std::move(b));
+    }
+    // Second fork, shorter
+    std::vector<std::unique_ptr<CBlockIndex>> b_shorter;
+    for(auto i{0}; i < 5; ++i) {
+        auto b = std::make_unique<CBlockIndex>();
+        if (i > 0) {
+            b->pprev = b_shorter[i - 1].get();
+        } else {
+            // connect to fork point -- last element of the common section
+            b->pprev = b_common.back().get();
+        }
+        b->nHeight = i + b_common.size();
+        b_shorter.push_back(std::move(b));
+    }
+
+    {
+        // Create a chain with the longer fork
+        auto cl = CChain{};
+        for(auto& b : b_common) {
+            cl.SetTip(*b.get());
+        }
+        BOOST_CHECK_EQUAL(cl.Height(), 10 - 1);
+        for(auto& b : b_longer) {
+            cl.SetTip(*b.get());
+        }
+        BOOST_CHECK_EQUAL(cl.Height(), 10 + 10 - 1);
+
+        // Test the blocks in the common part -> result should be the same
+        for(auto& b : b_common) {
+            auto fork{cl.FindFork(b.get())};
+            BOOST_CHECK_EQUAL(fork, b.get());
+        }
+        // Test the blocks on the longer fork -> result should be the same
+        for(auto& b : b_longer) {
+            auto fork{cl.FindFork(b.get())};
+            BOOST_CHECK_EQUAL(fork, b.get());
+        }
+        // Test the blocks on the other shorter fork -> result should be the fork point
+        for(auto& b : b_shorter) {
+            auto fork{cl.FindFork(b.get())};
+            BOOST_CHECK_EQUAL(fork, b_common.back().get());
+        }
+    }
+    {
+        // Create a chain with the shorter fork
+        auto cs = CChain{};
+        for(auto& b : b_common) {
+            cs.SetTip(*b.get());
+        }
+        BOOST_CHECK_EQUAL(cs.Height(), 10 - 1);
+        for(auto& b : b_shorter) {
+            cs.SetTip(*b.get());
+        }
+        BOOST_CHECK_EQUAL(cs.Height(), 10 + 5 - 1);
+
+        // Test the blocks in the common part -> result should be the same
+        for(auto& b : b_common) {
+            auto fork{cs.FindFork(b.get())};
+            BOOST_CHECK_EQUAL(fork, b.get());
+        }
+        // Test the blocks on the shorter fork -> result should be the same
+        for(auto& b : b_shorter) {
+            auto fork{cs.FindFork(b.get())};
+            BOOST_CHECK_EQUAL(fork, b.get());
+        }
+        // Test the blocks on the other longer fork -> result should be the fork point
+        for(auto& b : b_longer) {
+            auto fork{cs.FindFork(b.get())};
+            BOOST_CHECK_EQUAL(fork, b_common.back().get());
+        }
+    }
+}
+
 BOOST_AUTO_TEST_CASE(chain_test)
 {
     FastRandomContext ctx;
