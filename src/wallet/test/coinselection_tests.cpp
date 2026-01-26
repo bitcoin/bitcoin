@@ -24,7 +24,7 @@ static const int P2WPKH_OUTPUT_VSIZE = 31;
 static CoinSelectionParams init_default_params()
 {
     CoinSelectionParams dcsp{
-        /*rng_fast*/default_rand,
+        /*rng_fast=*/default_rand,
         /*change_output_size=*/P2WPKH_OUTPUT_VSIZE,
         /*change_spend_size=*/P2WPKH_INPUT_VSIZE,
         /*min_change_target=*/50'000,

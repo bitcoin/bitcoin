@@ -221,7 +221,7 @@ BOOST_FIXTURE_TEST_CASE(rbf_conflicts_calculator, TestChain100Setup)
     dummy.clear();
 
     // If we mine the parent_tx's, then the clusters split (102 clusters).
-    pool.removeForBlock({parent_tx_1, parent_tx_2}, /* dummy */ 1);
+    pool.removeForBlock({parent_tx_1, parent_tx_2}, /*nBlockHeight=*/ 1);
 
     // Add some descendants now to each of the direct children (we can do this now that the clusters have split).
     for (const auto& child : direct_children) {
