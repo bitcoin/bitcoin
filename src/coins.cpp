@@ -25,7 +25,7 @@ CoinsViewEmpty& CoinsViewEmpty::Get()
     return instance;
 }
 
-std::optional<Coin> CCoinsViewCache::PeekCoin(const COutPoint& outpoint) const
+std::optional<Coin> CCoinsViewCache::PeekCoin(const COutPoint& outpoint) const noexcept
 {
     if (auto it{cacheCoins.find(outpoint)}; it != cacheCoins.end()) {
         return it->second.coin.IsSpent() ? std::nullopt : std::optional{it->second.coin};
@@ -49,7 +49,7 @@ std::optional<Coin> CCoinsViewCache::FetchCoinFromBase(const COutPoint& outpoint
     return base->GetCoin(outpoint);
 }
 
-CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const {
+CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const noexcept {
     const auto [ret, inserted] = cacheCoins.try_emplace(outpoint);
     if (inserted) {
         if (auto coin{FetchCoinFromBase(outpoint)}) {
@@ -64,7 +64,7 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const 
     return ret;
 }
 
-std::optional<Coin> CCoinsViewCache::GetCoin(const COutPoint& outpoint) const
+std::optional<Coin> CCoinsViewCache::GetCoin(const COutPoint& outpoint) const noexcept
 {
     if (auto it{FetchCoin(outpoint)}; it != cacheCoins.end() && !it->second.coin.IsSpent()) return it->second.coin;
     return std::nullopt;
@@ -160,7 +160,7 @@ bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout) {
 
 static const Coin coinEmpty;
 
-const Coin& CCoinsViewCache::AccessCoin(const COutPoint &outpoint) const {
+const Coin& CCoinsViewCache::AccessCoin(const COutPoint &outpoint) const noexcept {
     CCoinsMap::const_iterator it = FetchCoin(outpoint);
     if (it == cacheCoins.end()) {
         return coinEmpty;
@@ -169,13 +169,13 @@ const Coin& CCoinsViewCache::AccessCoin(const COutPoint &outpoint) const {
     }
 }
 
-bool CCoinsViewCache::HaveCoin(const COutPoint& outpoint) const
+bool CCoinsViewCache::HaveCoin(const COutPoint& outpoint) const noexcept
 {
     CCoinsMap::const_iterator it = FetchCoin(outpoint);
     return (it != cacheCoins.end() && !it->second.coin.IsSpent());
 }
 
-bool CCoinsViewCache::HaveCoinInCache(const COutPoint &outpoint) const {
+bool CCoinsViewCache::HaveCoinInCache(const COutPoint &outpoint) const noexcept {
     CCoinsMap::const_iterator it = cacheCoins.find(outpoint);
     return (it != cacheCoins.end() && !it->second.coin.IsSpent());
 }
