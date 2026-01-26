@@ -392,28 +392,6 @@ bool BaseIndex::IgnoreBlockConnected(const ChainstateRole& role, const interface
     if (!role.validated) {
         return true;
     }
-
-    if (block.state == BlockInfo::SYNCING) {
-        return false;
-    }
-
-    const CBlockIndex* pindex = &BlockIndex(block.hash);
-    const CBlockIndex* best_block_index = m_best_block_index.load();
-    if (!best_block_index) {
-        if (pindex->nHeight != 0) {
-            FatalErrorf("First block connected is not the genesis block (height=%d)",
-                       pindex->nHeight);
-            return true;
-        }
-    } else {
-        // Ensure block connects to an ancestor of the current best block.
-        // To allow handling reorgs, this only checks that the new block
-        // connects to ancestor of the current best block, instead of checking
-        // that it connects to directly to the current block. If there is a
-        // reorg, blockDisconnected calls will have removed existing blocks from
-        // the index, but best_block_index will not have been updated yet.
-        assert(best_block_index->GetAncestor(pindex->nHeight - 1) == pindex->pprev);
-    }
     return false;
 }
 
@@ -448,7 +426,7 @@ bool BaseIndex::IgnoreChainStateFlushed(const ChainstateRole& role, const CBlock
     // are connected quickly. Ignore the flush event in this case since it's
     // probably better not to commit when blocks are still in flight.
     const CBlockIndex* best_block_index = m_best_block_index.load();
-    if (best_block_index->GetAncestor(locator_tip_index->nHeight) != locator_tip_index) {
+    if (!best_block_index || best_block_index->GetAncestor(locator_tip_index->nHeight) != locator_tip_index) {
         LogWarning("Locator contains block (hash=%s) not on known best "
                   "chain (tip=%s); not writing index locator",
                   locator_tip_hash.ToString(),

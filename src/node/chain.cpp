@@ -69,71 +69,58 @@ bool ReadBlockData(node::BlockManager& blockman, const CBlockIndex& block, CBloc
     return true;
 }
 
-static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, const CChain& chain) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool SyncChain(const Chainstate& chainstate, const CBlockIndex* block, const interfaces::Chain::NotifyOptions& options, std::shared_ptr<interfaces::Chain::Notifications> notifications, const CThreadInterrupt& interrupt, std::function<void(const CBlockIndex*)> on_sync)
 {
-    AssertLockHeld(cs_main);
-
-    if (!pindex_prev) {
-        return chain.Genesis();
-    }
-
-    const CBlockIndex* pindex = chain.Next(pindex_prev);
-    if (pindex) {
-        return pindex;
-    }
-
-    // Since block is not in the chain, return the next block in the chain AFTER the last common ancestor.
-    // Caller will be responsible for rewinding back to the common ancestor.
-    return chain.Next(chain.FindFork(pindex_prev));
-}
-
-void SyncChain(const Chainstate& chainstate, const CBlockIndex* block, const interfaces::Chain::NotifyOptions& options, std::shared_ptr<interfaces::Chain::Notifications> notifications, const CThreadInterrupt& interrupt, std::function<void(const CBlockIndex*)> on_sync)
-{
-    assert(chainstate.m_chain.Tip());
-    const CBlockIndex* pindex = block;
-    std::optional<kernel::ChainstateRole> role;
     while (true) {
-        if (interrupt) {
-            LogInfo("%s: interrupt set; exiting sync", options.thread_name);
-            // Call blockConnected with no data to commit latest state.
-            if (role) notifications->blockConnected(*role, MakeBlockInfo(pindex, nullptr, &chainstate)); // error logged internally
-            return;
+        AssertLockNotHeld(::cs_main);
+        WAIT_LOCK(::cs_main, main_lock);
+
+        bool rewind = false;
+        if (!block) {
+            block = chainstate.m_chain.Genesis();
+        } else if (chainstate.m_chain.Contains(block)) {
+            block = chainstate.m_chain.Next(block);
+        } else {
+            rewind = true;
         }
 
-        const CBlockIndex* pindex_next = WITH_LOCK(cs_main,
-            role = chainstate.GetRole();
-            return NextSyncBlock(pindex, chainstate.m_chain));
-        // If pindex_next is null, it means pindex is the chain tip, so
-        // commit data indexed so far.
-        if (!pindex_next) {
-            // Call blockConnected with no data to commit latest state.
-            notifications->blockConnected(*role, MakeBlockInfo(pindex, nullptr, &chainstate)); // error logged internally
-            // If pindex is still the chain tip after committing, exit the sync
-            // loop. Call on_sync with cs_main so caller can handle it before
-            // new blocks are connected.
-            LOCK(::cs_main);
-            pindex_next = NextSyncBlock(pindex, chainstate.m_chain);
-            if (!pindex_next) {
-                if (on_sync) on_sync(pindex);
-                break;
+        auto role{chainstate.GetRole()};
+        if (block) {
+            // Read block data and send notifications.
+            BlockInfo block_info = MakeBlockInfo(block, nullptr, &chainstate);
+            REVERSE_LOCK(main_lock, ::cs_main);
+            CBlock data;
+            CBlockUndo undo_data;
+            ReadBlockData(chainstate.m_blockman, *block,
+                          !rewind || options.disconnect_data ? &data : nullptr,
+                          (!rewind && options.connect_undo_data) || (rewind && options.disconnect_undo_data) ? &undo_data : nullptr,
+                          block_info);
+            if (rewind) {
+                notifications->blockDisconnected(block_info);
+                block = Assert(block->pprev);
+            } else {
+                notifications->blockConnected(role, block_info);
+            }
+        } else {
+            block = chainstate.m_chain.Tip();
+        }
+
+        if (interrupt) return false;
+
+        if (block == chainstate.m_chain.Tip()) {
+            // Sent an extra notification when reaching the tip to signal that
+            // sync is likely finished, and allow the app to flush data.
+            {
+                BlockInfo block_info = MakeBlockInfo(block, nullptr, &chainstate);
+                REVERSE_LOCK(main_lock, ::cs_main);
+                notifications->blockConnected(role, block_info);
+            }
+            // If tip did not change, the sync is done.
+            if (block == chainstate.m_chain.Tip()) {
+                if (on_sync) on_sync(block);
+                return true;
             }
         }
-        if (pindex_next->pprev != pindex) {
-            for (const CBlockIndex* new_tip = pindex_next->pprev; pindex != new_tip && !interrupt; pindex = pindex->pprev) {
-                CBlock data;
-                CBlockUndo undo_data;
-                BlockInfo block = MakeBlockInfo(pindex, nullptr, &chainstate);
-                ReadBlockData(chainstate.m_blockman, *pindex, options.disconnect_data ? &data : nullptr, options.disconnect_undo_data ? &undo_data : nullptr, block);
-                notifications->blockDisconnected(block);
-            }
-            if (interrupt) continue;
-        }
-        pindex = pindex_next;
-        CBlock data;
-        CBlockUndo undo_data;
-        BlockInfo block = MakeBlockInfo(pindex, nullptr, &chainstate);
-        ReadBlockData(chainstate.m_blockman, *pindex, &data, options.connect_undo_data ? &undo_data : nullptr, block);
-        notifications->blockConnected(*role, block); // error logged internally
     }
 }
 } // namespace node
