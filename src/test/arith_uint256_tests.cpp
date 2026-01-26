@@ -65,6 +65,14 @@ static std::string ArrayToString(const unsigned char A[], unsigned int width)
 
 BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
 {
+    BOOST_CHECK((ZeroL << 0) == ZeroL);
+    BOOST_CHECK((ZeroL >> 0) == ZeroL);
+    BOOST_CHECK((OneL << 0) == OneL);
+    BOOST_CHECK((OneL >> 0) == OneL);
+    BOOST_CHECK((R1L << 0) == R1L);
+    BOOST_CHECK((R1L >> 0) == R1L);
+    BOOST_CHECK((MaxL << 0) == MaxL);
+    BOOST_CHECK((MaxL >> 0) == MaxL);
     BOOST_CHECK(1 == 0+1);
     // constructor arith_uint256(vector<char>):
     BOOST_CHECK(R1L.ToString() == ArrayToString(R1Array,32));
