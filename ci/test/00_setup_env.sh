@@ -62,7 +62,7 @@ export PREVIOUS_RELEASES_DIR=${PREVIOUS_RELEASES_DIR:-$BASE_ROOT_DIR/prev_releas
 export CI_BASE_PACKAGES=${CI_BASE_PACKAGES:-build-essential pkgconf curl ca-certificates ccache python3-dev rsync git procps bison e2fsprogs cmake ninja-build}
 export GOAL=${GOAL:-install}
 export DIR_QA_ASSETS=${DIR_QA_ASSETS:-${BASE_SCRATCH_DIR}/qa-assets}
-export CI_RETRY_EXE=${CI_RETRY_EXE:-"retry --"}
+export CI_RETRY_EXE=${CI_RETRY_EXE:-"retry"}
 
 # The --platform argument used with `docker build` and `docker run`.
 export CI_IMAGE_PLATFORM=${CI_IMAGE_PLATFORM:-"linux"} # Force linux, but use native arch by default
