@@ -154,10 +154,6 @@ class MultiWalletTest(BitcoinTestFramework):
 
         assert_equal(set(node.listwallets()), set(wallet_names))
 
-        # should raise rpc error if wallet path can't be created
-        err_code = -4
-        assert_raises_rpc_error(err_code, "filesystem error:" if platform.system() != 'Windows' else "create_directories:", node.createwallet, "w8/bad")
-
         # check that all requested wallets were created
         self.stop_node(0)
         for wallet_name in wallet_names:
@@ -311,6 +307,10 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-18, "Wallet file verification failed. Failed to load database path '{}'. Data is not in recognized format.".format(path), node.loadwallet, 'empty_wallet_dir')
 
         self.log.info("Test dynamic wallet creation.")
+
+        # should raise rpc error if wallet path can't be created
+        err_code = -4
+        assert_raises_rpc_error(err_code, "filesystem error:" if platform.system() != 'Windows' else "create_directories:", node.createwallet, "w8/bad")
 
         # Fail to create a wallet if it already exists.
         path = wallet_dir(node, "w2")
