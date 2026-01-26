@@ -335,7 +335,7 @@ class MultiWalletTest(BitcoinTestFramework):
 
         # should raise rpc error if wallet path can't be created
         err_code = -4
-        assert_raises_rpc_error(err_code, "filesystem error:" if platform.system() != 'Windows' else "create_directories:", node.createwallet, "w8/bad")
+        assert_raises_rpc_error(err_code, "Wallet file verification failed. ", node.createwallet, "w8/bad")
 
         # Fail to create a wallet if it already exists.
         path = wallet_dir(node, "w2")
