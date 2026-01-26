@@ -615,15 +615,10 @@ BOOST_AUTO_TEST_CASE(btck_script_verify_tests)
 
 BOOST_AUTO_TEST_CASE(logging_tests)
 {
-    logging_set_level_category(LogCategory::BENCH, LogLevel::TRACE_LEVEL);
-    logging_disable_category(LogCategory::BENCH);
-    logging_enable_category(LogCategory::VALIDATION);
-    logging_disable_category(LogCategory::VALIDATION);
+    logging_set_min_level(LogLevel::TRACE_LEVEL);
 
     // Check that connecting, connecting another, and then disconnecting and connecting a logger again works.
     {
-        logging_set_level_category(LogCategory::KERNEL, LogLevel::TRACE_LEVEL);
-        logging_enable_category(LogCategory::KERNEL);
         Logger logger{std::make_unique<TestLog>()};
         Logger logger_2{std::make_unique<TestLog>()};
     }

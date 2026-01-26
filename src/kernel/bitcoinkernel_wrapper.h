@@ -810,16 +810,6 @@ public:
     }
 };
 
-inline void logging_set_level_category(LogCategory category, LogLevel level)
-{
-    btck_logging_set_level_category(static_cast<btck_LogCategory>(category), static_cast<btck_LogLevel>(level));
-}
-
-inline void logging_enable_category(LogCategory category)
-{
-    btck_logging_enable_category(static_cast<btck_LogCategory>(category));
-}
-
 class LogEntry
 {
 private:
@@ -838,9 +828,9 @@ public:
     LogCategory Category() const { return static_cast<LogCategory>(m_entry->category); }
 };
 
-inline void logging_disable_category(LogCategory category)
+inline void logging_set_min_level(LogLevel level)
 {
-    btck_logging_disable_category(static_cast<btck_LogCategory>(category));
+    btck_logging_set_min_level(static_cast<btck_LogLevel>(level));
 }
 
 inline std::string_view log_level_get_name(LogLevel level)
