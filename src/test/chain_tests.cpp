@@ -57,9 +57,9 @@ BOOST_AUTO_TEST_CASE(cchain_basic_tests)
         BOOST_CHECK_EQUAL(chain_0.Tip(), nullptr);
         BOOST_CHECK_EQUAL(chain_0[0], nullptr);
         BOOST_CHECK_EQUAL(chain_0.Contains(&genesis), false);
-        // BOOST_CHECK_EQUAL(chain_0.Contains(nullptr), false); // fail with memory access violation
+        BOOST_CHECK_EQUAL(chain_0.Contains(nullptr), false);
         BOOST_CHECK_EQUAL(chain_0.Next(&genesis), nullptr);
-        // BOOST_CHECK_EQUAL(chain_0.Next(nullptr), nullptr); // fail with memory access violation
+        BOOST_CHECK_EQUAL(chain_0.Next(nullptr), nullptr);
     }
 
     // Chain with 1 block
