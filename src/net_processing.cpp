@@ -1499,7 +1499,7 @@ void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, c
                 return;
             }
 
-            if (pindex->nStatus & BLOCK_HAVE_DATA || (activeChain && activeChain->Contains(pindex))) {
+            if (pindex->nStatus & BLOCK_HAVE_DATA || (activeChain && activeChain->Contains(*pindex))) {
                 if (activeChain && pindex->HaveNumChainTxs()) {
                     state->pindexLastCommonBlock = pindex;
                 }
@@ -1923,7 +1923,8 @@ void PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidati
 bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex)
 {
     AssertLockHeld(cs_main);
-    if (m_chainman.ActiveChain().Contains(pindex)) return true;
+    if (!pindex) return false;
+    if (m_chainman.ActiveChain().Contains(*pindex)) return true;
     return pindex->IsValid(BLOCK_VALID_SCRIPTS) && (m_chainman.m_best_header != nullptr) &&
            (m_chainman.m_best_header->GetBlockTime() - pindex->GetBlockTime() < STALE_RELAY_AGE_LIMIT) &&
            (GetBlockProofEquivalentTime(*m_chainman.m_best_header, *pindex, *m_chainman.m_best_header, m_chainparams.GetConsensus()) < STALE_RELAY_AGE_LIMIT);
@@ -2786,7 +2787,7 @@ bool PeerManagerImpl::IsAncestorOfBestHeaderOrTip(const CBlockIndex* header)
         return false;
     } else if (m_chainman.m_best_header != nullptr && header == m_chainman.m_best_header->GetAncestor(header->nHeight)) {
         return true;
-    } else if (m_chainman.ActiveChain().Contains(header)) {
+    } else if (m_chainman.ActiveChain().Contains(*header)) {
         return true;
     }
     return false;
@@ -2820,7 +2821,7 @@ void PeerManagerImpl::HeadersDirectFetchBlocks(CNode& pfrom, const Peer& peer, c
         std::vector<const CBlockIndex*> vToFetch;
         const CBlockIndex* pindexWalk{&last_header};
         // Calculate all the blocks we'd need to switch to last_header, up to a limit.
-        while (pindexWalk && !m_chainman.ActiveChain().Contains(pindexWalk) && vToFetch.size() <= MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+        while (pindexWalk && !m_chainman.ActiveChain().Contains(*pindexWalk) && vToFetch.size() <= MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             if (!(pindexWalk->nStatus & BLOCK_HAVE_DATA) &&
                     !IsBlockRequested(pindexWalk->GetBlockHash()) &&
                     (!DeploymentActiveAt(*pindexWalk, m_chainman, Consensus::DEPLOYMENT_SEGWIT) || CanServeWitnesses(peer))) {
@@ -2833,7 +2834,7 @@ void PeerManagerImpl::HeadersDirectFetchBlocks(CNode& pfrom, const Peer& peer, c
         // very large reorg at a time we think we're close to caught up to
         // the main chain -- this shouldn't really happen.  Bail out on the
         // direct fetch and rely on parallel download instead.
-        if (!m_chainman.ActiveChain().Contains(pindexWalk)) {
+        if (!m_chainman.ActiveChain().Contains(*pindexWalk)) {
             LogDebug(BCLog::NET, "Large reorg, won't direct fetch to %s (%d)\n",
                      last_header.GetBlockHash().ToString(),
                      last_header.nHeight);
