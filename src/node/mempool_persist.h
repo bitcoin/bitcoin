@@ -5,6 +5,8 @@
 #ifndef BITCOIN_NODE_MEMPOOL_PERSIST_H
 #define BITCOIN_NODE_MEMPOOL_PERSIST_H
 
+#include <node/blockstorage.h>
+#include <kernel/result.h>
 #include <util/fs.h>
 
 class Chainstate;
@@ -24,7 +26,7 @@ struct ImportMempoolOptions {
     bool apply_unbroadcast_set{true};
 };
 /** Import the file and attempt to add its contents to the mempool. */
-bool LoadMempool(CTxMemPool& pool, const fs::path& load_path,
+kernel::FlushResult<kernel::InterruptResult> LoadMempool(CTxMemPool& pool, const fs::path& load_path,
                  Chainstate& active_chainstate,
                  ImportMempoolOptions&& opts);
 

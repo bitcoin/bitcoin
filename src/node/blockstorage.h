@@ -13,6 +13,8 @@
 #include <kernel/chainparams.h>
 #include <kernel/cs_main.h>
 #include <kernel/messagestartchars.h>
+#include <kernel/result.h>
+#include <kernel/notifications_interface.h>
 #include <primitives/block.h>
 #include <serialize.h>
 #include <streams.h>
@@ -22,6 +24,7 @@
 #include <util/fs.h>
 #include <util/hasher.h>
 #include <util/obfuscation.h>
+#include <util/result.h>
 
 #include <algorithm>
 #include <array>
@@ -200,14 +203,14 @@ private:
      * per index entry (nStatus, nChainWork, nTimeMax, etc.) as well as peripheral
      * collections like m_dirty_blockindex.
      */
-    bool LoadBlockIndex(const std::optional<uint256>& snapshot_blockhash)
+    [[nodiscard]] util::Result<kernel::InterruptResult, kernel::AbortFailure> LoadBlockIndexData(const std::optional<uint256>& snapshot_blockhash)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Return false if block file or undo file flushing fails. */
-    [[nodiscard]] bool FlushBlockFile(int blockfile_num, bool fFinalize, bool finalize_undo);
+    [[nodiscard]] kernel::FlushResult<> FlushBlockFile(int blockfile_num, bool fFinalize, bool finalize_undo);
 
     /** Return false if undo file flushing fails. */
-    [[nodiscard]] bool FlushUndoFile(int block_file, bool finalize = false);
+    [[nodiscard]] kernel::FlushResult<> FlushUndoFile(int block_file, bool finalize = false);
 
     /**
      * Helper function performing various preparations before a block can be saved to disk:
@@ -218,9 +221,9 @@ private:
      * The nAddSize argument passed to this function should include not just the size of the serialized CBlock, but also the size of
      * separator fields (STORAGE_HEADER_BYTES).
      */
-    [[nodiscard]] FlatFilePos FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime);
-    [[nodiscard]] bool FlushChainstateBlockFile(int tip_height);
-    bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
+    [[nodiscard]] kernel::FlushResult<FlatFilePos, kernel::AbortFailure> FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime);
+    [[nodiscard]] kernel::FlushResult<> FlushChainstateBlockFile(int tip_height);
+    [[nodiscard]] util::Result<void, kernel::AbortFailure> FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
 
     AutoFile OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false) const;
 
@@ -355,7 +358,7 @@ public:
     std::unique_ptr<BlockTreeDB> m_block_tree_db GUARDED_BY(::cs_main);
 
     void WriteBlockIndexDB() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    bool LoadBlockIndexDB(const std::optional<uint256>& snapshot_blockhash)
+    [[nodiscard]] util::Result<kernel::InterruptResult, kernel::AbortFailure> LoadBlockIndexDB(const std::optional<uint256>& snapshot_blockhash)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /**
@@ -378,7 +381,7 @@ public:
     /** Get block file info entry for one block file */
     CBlockFileInfo* GetBlockFileInfo(size_t n);
 
-    bool WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
+    [[nodiscard]] kernel::FlushResult<void, kernel::AbortFailure> WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Store block on disk and update block file statistics.
@@ -389,7 +392,7 @@ public:
      * @returns in case of success, the position to which the block was written to
      *          in case of an error, an empty FlatFilePos
      */
-    FlatFilePos WriteBlock(const CBlock& block, int nHeight);
+    [[nodiscard]] kernel::FlushResult<FlatFilePos, kernel::AbortFailure> WriteBlock(const CBlock& block, int nHeight);
 
     /** Update blockfile info while processing a block during reindex. The block must be available on disk.
      *
@@ -475,7 +478,7 @@ public:
 };
 
 // Calls ActivateBestChain() even if no blocks are imported.
-void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_paths);
+[[nodiscard]] kernel::FlushResult<kernel::InterruptResult, kernel::AbortFailure> ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_paths);
 } // namespace node
 
 #endif // BITCOIN_NODE_BLOCKSTORAGE_H
