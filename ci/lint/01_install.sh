@@ -30,13 +30,13 @@ if [ ! -d "${PYTHON_PATH}/bin" ]; then
   )
   # For dependencies see https://github.com/pyenv/pyenv/wiki#suggested-build-environment
   ${CI_RETRY_EXE} apt-get install -y build-essential libssl-dev zlib1g-dev \
-    libbz2-dev libreadline-dev libsqlite3-dev curl llvm \
-    libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev \
+    libbz2-dev libreadline-dev libsqlite3-dev llvm \
+    libncursesw5-dev tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev \
     clang
   env CC=clang python-build "$(cat "/.python-version")" "${PYTHON_PATH}"
 fi
 export PATH="${PYTHON_PATH}/bin:${PATH}"
-command -v python3
+command -v python3 >/dev/null
 python3 --version
 
 ${CI_RETRY_EXE} pip3 install \
