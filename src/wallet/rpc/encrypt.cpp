@@ -60,8 +60,8 @@ RPCMethod walletpassphrase()
         if (nSleepTime < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Timeout cannot be negative.");
         }
-        // Clamp timeout
-        constexpr int64_t MAX_SLEEP_TIME = 100000000; // larger values trigger a macos/libevent bug?
+        // Clamp timeout to ~3 years to avoid overflow when computing the relock time
+        constexpr int64_t MAX_SLEEP_TIME = 100000000;
         if (nSleepTime > MAX_SLEEP_TIME) {
             nSleepTime = MAX_SLEEP_TIME;
         }

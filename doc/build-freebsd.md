@@ -10,7 +10,7 @@ This guide describes how to build bitcoind, command-line utilities, and GUI on F
 Run the following as root to install the base dependencies for building.
 
 ```bash
-pkg install boost-libs cmake git libevent pkgconf
+pkg install boost-libs cmake git pkgconf
 ```
 
 SQLite is required for the wallet:
