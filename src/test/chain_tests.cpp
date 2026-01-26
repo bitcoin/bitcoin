@@ -66,11 +66,10 @@ BOOST_AUTO_TEST_CASE(cchain_basic_tests)
     BOOST_CHECK_EQUAL(chain_2[-1], nullptr);
     BOOST_CHECK_EQUAL(chain_2[2], nullptr);
 
-    // Contains: call with contained & non-contained blocks, and with nullptr
-    BOOST_CHECK(chain_2.Contains(&genesis));
-    BOOST_CHECK(chain_2.Contains(&bi1));
-    BOOST_CHECK(!chain_0.Contains(&bi1));
-    // BOOST_CHECK(!chain_0.Contains(nullptr)); // fail with memory access violation
+    // Contains: call with contained & non-contained blocks
+    BOOST_CHECK(chain_2.Contains(genesis));
+    BOOST_CHECK(chain_2.Contains(bi1));
+    BOOST_CHECK(!chain_0.Contains(bi1));
 
     // Call with non-tip & tip blocks, and with nullptr
     BOOST_CHECK_EQUAL(chain_2.Next(&genesis), &bi1);

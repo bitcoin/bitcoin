@@ -126,7 +126,7 @@ const CBlockIndex* Chainstate::FindForkInGlobalIndex(const CBlockLocator& locato
     for (const uint256& hash : locator.vHave) {
         const CBlockIndex* pindex{m_blockman.LookupBlockIndex(hash)};
         if (pindex) {
-            if (m_chain.Contains(pindex)) {
+            if (m_chain.Contains(*pindex)) {
                 return pindex;
             }
             if (pindex->GetAncestor(m_chain.Height()) == m_chain.Tip()) {
@@ -3129,7 +3129,7 @@ CBlockIndex* Chainstate::FindMostWorkChain()
         // Just going until the active chain is an optimization, as we know all blocks in it are valid already.
         CBlockIndex *pindexTest = pindexNew;
         bool fInvalidAncestor = false;
-        while (pindexTest && !m_chain.Contains(pindexTest)) {
+        while (pindexTest && !m_chain.Contains(*pindexTest)) {
             assert(pindexTest->HaveNumChainTxs() || pindexTest->nHeight == 0);
 
             // Pruned nodes may have entries in setBlockIndexCandidates for
@@ -3518,7 +3518,7 @@ bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
     return ActivateBestChain(state, std::shared_ptr<const CBlock>());
 }
 
-bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pindex)
+bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* const pindex)
 {
     AssertLockNotHeld(m_chainstate_mutex);
     AssertLockNotHeld(::cs_main);
@@ -3544,16 +3544,16 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
     {
         LOCK(cs_main);
         for (auto& entry : m_blockman.m_block_index) {
-            CBlockIndex* candidate = &entry.second;
+            CBlockIndex& candidate = entry.second;
             // We don't need to put anything in our active chain into the
             // multimap, because those candidates will be found and considered
             // as we disconnect.
             // Instead, consider only non-active-chain blocks that score
             // at least as good with CBlockIndexWorkComparator as the new tip.
             if (!m_chain.Contains(candidate) &&
-                !CBlockIndexWorkComparator()(candidate, pindex->pprev) &&
-                !(candidate->nStatus & BLOCK_FAILED_VALID)) {
-                highpow_outofchain_headers.insert({candidate->nChainWork, candidate});
+                !CBlockIndexWorkComparator()(&candidate, pindex->pprev) &&
+                !(candidate.nStatus & BLOCK_FAILED_VALID)) {
+                highpow_outofchain_headers.insert({candidate.nChainWork, &candidate});
             }
         }
     }
@@ -3573,9 +3573,9 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
         // Lock for as long as disconnectpool is in scope to make sure MaybeUpdateMempoolForReorg is
         // called after DisconnectTip without unlocking in between
         LOCK(MempoolMutex());
-        if (!m_chain.Contains(pindex)) break;
+        if (!m_chain.Contains(*pindex)) break;
         pindex_was_in_chain = true;
-        CBlockIndex* disconnected_tip{m_chain.Tip()};
+        CBlockIndex* const disconnected_tip{m_chain.Tip()};
 
         // ActivateBestChain considers blocks already in m_chain
         // unconditionally valid already, so force disconnect away from it.
@@ -3645,7 +3645,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
 
     {
         LOCK(cs_main);
-        if (m_chain.Contains(to_mark_failed)) {
+        if (m_chain.Contains(*to_mark_failed)) {
             // If the to-be-marked invalid block is in the active chain, something is interfering and we can't proceed.
             return false;
         }
@@ -5159,7 +5159,7 @@ void ChainstateManager::CheckBlockIndex() const
     std::multimap<const CBlockIndex*, const CBlockIndex*> forward;
     for (auto& [_, block_index] : m_blockman.m_block_index) {
         // Only save indexes in forward that are not part of the best header chain.
-        if (!best_hdr_chain.Contains(&block_index)) {
+        if (!best_hdr_chain.Contains(block_index)) {
             // Only genesis, which must be part of the best header chain, can have a nullptr parent.
             assert(block_index.pprev);
             forward.emplace(block_index.pprev, &block_index);
@@ -5394,7 +5394,8 @@ void ChainstateManager::CheckBlockIndex() const
             pindex = range.first->second;
             nHeight++;
             continue;
-        } else if (best_hdr_chain.Contains(pindex)) {
+        }
+        if (best_hdr_chain.Contains(*pindex)) {
             // Descend further into best header chain.
             nHeight++;
             pindex = best_hdr_chain[nHeight];
