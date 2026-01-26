@@ -3,12 +3,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <stdexcept>
-
 #include <flatfile.h>
-#include <logging.h>
+
 #include <tinyformat.h>
 #include <util/fs_helpers.h>
+#include <util/log.h>
+
+#include <stdexcept>
 
 FlatFileSeq::FlatFileSeq(fs::path dir, const char* prefix, size_t chunk_size) :
     m_dir(std::move(dir)),
