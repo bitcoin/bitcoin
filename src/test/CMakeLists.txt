@@ -82,7 +82,6 @@ add_executable(test_bitcoin
   prevector_tests.cpp
   private_broadcast_tests.cpp
   psbt_tests.cpp
-  raii_event_tests.cpp
   random_tests.cpp
   rbf_tests.cpp
   rest_tests.cpp
@@ -168,7 +167,6 @@ target_link_libraries(test_bitcoin
   minisketch
   secp256k1
   Boost::headers
-  libevent::extra
   $<TARGET_NAME_IF_EXISTS:USDT::headers>
 )
 
