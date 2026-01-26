@@ -70,12 +70,12 @@ BOOST_AUTO_TEST_CASE(cchain_basic_tests)
     BOOST_CHECK_EQUAL(chain_2.Contains(&genesis), true);
     BOOST_CHECK_EQUAL(chain_2.Contains(&bi1), true);
     BOOST_CHECK_EQUAL(chain_0.Contains(&bi1), false);
-    // BOOST_CHECK_EQUAL(chain_0.Contains(nullptr), false); // fail with memory access violation
+    BOOST_CHECK_EQUAL(chain_0.Contains(nullptr), false);
 
     // Call with non-tip & tip blocks, and with nulltr
     BOOST_CHECK_EQUAL(chain_2.Next(&genesis), &bi1);
     BOOST_CHECK_EQUAL(chain_2.Next(&bi1), nullptr);
-    // BOOST_CHECK_EQUAL(chain_0.Next(nullptr), nullptr); // fail with memory access violation
+    BOOST_CHECK_EQUAL(chain_0.Next(nullptr), nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(chain_test)

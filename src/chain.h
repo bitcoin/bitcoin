@@ -409,6 +409,7 @@ public:
     /** Efficiently check whether a block is present in this chain. */
     bool Contains(const CBlockIndex* pindex) const
     {
+        if (!pindex) return false;
         return (*this)[pindex->nHeight] == pindex;
     }
 
