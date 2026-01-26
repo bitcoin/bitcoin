@@ -11,13 +11,13 @@
 #include <consensus/consensus.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
-#include <logging.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <random.h>
 #include <tinyformat.h>
 #include <util/check.h>
 #include <util/feefrac.h>
+#include <util/log.h>
 #include <util/moneystr.h>
 #include <util/overflow.h>
 #include <util/result.h>

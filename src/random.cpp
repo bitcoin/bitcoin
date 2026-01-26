@@ -12,12 +12,12 @@
 #include <crypto/chacha20.h>
 #include <crypto/sha256.h>
 #include <crypto/sha512.h>
-#include <logging.h>
 #include <randomenv.h>
 #include <span.h>
 #include <support/allocators/secure.h>
 #include <support/cleanse.h>
 #include <sync.h>
+#include <util/log.h>
 #include <util/time.h>
 
 #include <array>

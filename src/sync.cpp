@@ -4,8 +4,8 @@
 
 #include <sync.h>
 
-#include <logging.h>
 #include <tinyformat.h>
+#include <util/log.h>
 #include <util/strencodings.h>
 #include <util/threadnames.h>
 

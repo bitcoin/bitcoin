@@ -28,7 +28,6 @@
 #include <sync.h>
 #include <uint256.h>
 #include <undo.h>
-#include <util/check.h>
 #include <util/fs.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>

@@ -4,8 +4,8 @@
 
 #include <util/thread.h>
 
-#include <logging.h>
 #include <util/exception.h>
+#include <util/log.h>
 #include <util/threadnames.h>
 
 #include <exception>
