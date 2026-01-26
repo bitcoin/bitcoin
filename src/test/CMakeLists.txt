@@ -161,7 +161,6 @@ target_link_libraries(test_bitcoin
   minisketch
   secp256k1
   Boost::headers
-  libevent::extra
 )
 
 if(ENABLE_WALLET)
