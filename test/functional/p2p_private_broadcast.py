@@ -355,7 +355,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
 
         # Fill tx_originator's addrman.
         for addr in ADDRMAN_ADDRESSES:
-            res = tx_originator.addpeeraddress(address=addr, port=8333, tried=False)
+            res = tx_originator.addpeeraddress(address=addr, port=0 if addr.endswith(".i2p") else 8333, tried=False)
             if not res["success"]:
                 self.log.debug(f"Could not add {addr} to tx_originator's addrman (collision?)")
 
