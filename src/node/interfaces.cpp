@@ -490,6 +490,22 @@ public:
     {
         m_notifications->chainStateFlushed(role, locator);
     }
+    static void connect(std::shared_ptr<NotificationsProxy> self, ValidationSignals& signals) EXCLUSIVE_LOCKS_REQUIRED(!self->m_mutex)
+    {
+        LOCK(self->m_mutex);
+        if (self->m_state == INIT || self->m_state == CONNECTING) {
+            signals.RegisterSharedValidationInterface(self);
+            self->m_state = CONNECTED;
+        }
+    }
+    static void disconnect(std::shared_ptr<NotificationsProxy> self, ValidationSignals& signals) EXCLUSIVE_LOCKS_REQUIRED(!self->m_mutex)
+    {
+        LOCK(self->m_mutex);
+        if (self->m_state == CONNECTED) {
+            signals.UnregisterSharedValidationInterface(self);
+        }
+        self->m_state = DISCONNECTED;
+    }
     static void RegisterSynced(std::shared_ptr<NotificationsProxy> self, ValidationSignals& signals, const CBlockIndex* sync_block) EXCLUSIVE_LOCKS_REQUIRED (::cs_main)
     {
         AssertLockHeld(::cs_main);
@@ -505,10 +521,7 @@ public:
             BlockInfo block = MakeBlockInfo(sync_block, nullptr, &self->m_chainstate);
             block.state = BlockInfo::SYNCED;
             self->m_notifications->blockConnected(WITH_LOCK(::cs_main, return self->m_chainstate.GetRole()), block);
-            // Register for new notifications unless disconnect() has been called.
-            if (WITH_LOCK(self->m_mutex, return self->m_connected)) {
-                signals.RegisterSharedValidationInterface(self);
-            }
+            self->connect(self, signals);
         });
     }
 
@@ -516,10 +529,20 @@ public:
     std::shared_ptr<Chain::Notifications> m_notifications;
     Chain::NotifyOptions m_options;
     Mutex m_mutex;
-    bool m_connected GUARDED_BY(m_mutex) {false};
+    //! State reflecting whether proxy is registered to receive notifications
+    //! from validationinterface, and whether the handler is connected to
+    //! receive notifications from the proxy. The implementation needs to avoid
+    //! registering the proxy if the handler is disconnected first, and avoid
+    //! unregistering the proxy if it wasn't registered first. State needs to be
+    //! guarded by mutex because connect() is called from a
+    //! CallFunctionInValidationInterfaceQueue callback in validationinterface
+    //! thread, and disconnect() is called from the application thread which
+    //! owns the handler, and the two calls could happen at any time in any
+    //! order.
+    enum State { INIT, CONNECTING, CONNECTED, DISCONNECTED } m_state GUARDED_BY(m_mutex) = INIT;
 };
 
-using SyncFn = std::function<void(const CThreadInterrupt& interrupt, std::function<void(const CBlockIndex*)> on_sync)>;
+using SyncFn = std::function<void(std::shared_ptr<NotificationsProxy>, const CThreadInterrupt& interrupt)>;
 
 class NotificationsHandlerImpl : public Handler
 {
@@ -527,7 +550,7 @@ public:
     explicit NotificationsHandlerImpl(ValidationSignals& signals, Chainstate& chainstate, std::shared_ptr<Chain::Notifications> notifications, const Chain::NotifyOptions& options = {}, BlockInfo::State state = BlockInfo::UPDATING, const CBlockIndex* start_block = nullptr)
         : m_signals{signals}, m_chainstate{chainstate}, m_proxy{std::make_shared<NotificationsProxy>(chainstate, std::move(notifications), std::move(options))}, m_start_block{start_block}
     {
-        // If syncing is not needed, set connected=true and register for
+        // If syncing is not needed, set connecting or connecting state and register for
         // notifications right away. If syncing is needed (state == SYNCING), do
         // not do anything until connect() is called. It would be simpler to
         // just always connect, but indexes rely on being able to call connect()
@@ -538,7 +561,7 @@ public:
         // == SYNCED), and connect here to start receiving notifications and be
         // updated in parallel with chainstate.
         if (state == BlockInfo::SYNCED || state == BlockInfo::UPDATING) {
-            WITH_LOCK(m_proxy->m_mutex, m_proxy->m_connected = true);
+            WITH_LOCK(m_proxy->m_mutex, m_proxy->m_state = NotificationsProxy::CONNECTING);
             if (state == BlockInfo::SYNCED) {
                 // If synced at a particular block send a notification and
                 // register via the queue to make sure stale notications from
@@ -547,7 +570,7 @@ public:
             } else {
                 // If not synced at any block just register now.
                 assert(!m_start_block);
-                signals.RegisterSharedValidationInterface(m_proxy);
+                m_proxy->connect(m_proxy, signals);
             }
         }
     }
@@ -556,8 +579,8 @@ public:
     {
         assert(m_proxy);
         LOCK(m_proxy->m_mutex);
-        if (!m_proxy->m_connected) {
-            m_proxy->m_connected = true;
+        if (m_proxy->m_state == NotificationsProxy::INIT) {
+            m_proxy->m_state = NotificationsProxy::CONNECTING;
             assert(!m_sync_thread.joinable());
             m_sync_thread = std::thread(&util::TraceThread, m_proxy->m_options.thread_name, [proxy = m_proxy, signals = &m_signals, chainstate = &m_chainstate, start_block = m_start_block, interrupt = &m_interrupt] {
                 SyncChain(*chainstate, start_block, proxy->m_options, proxy->m_notifications, *interrupt, [proxy, signals](const CBlockIndex* end_block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
@@ -571,15 +594,14 @@ public:
     {
         m_interrupt();
         if (m_proxy) {
-            WITH_LOCK(m_proxy->m_mutex, m_proxy->m_connected = false);
-            m_signals.UnregisterSharedValidationInterface(m_proxy);
+            m_proxy->disconnect(m_proxy, m_signals);
             m_proxy.reset();
         }
         if (m_sync_thread.joinable()) m_sync_thread.join();
     }
     bool connected() override
     {
-        return m_proxy && WITH_LOCK(m_proxy->m_mutex, return m_proxy->m_connected);
+        return m_proxy && WITH_LOCK(m_proxy->m_mutex, return m_proxy->m_state == NotificationsProxy::CONNECTING || m_proxy->m_state == NotificationsProxy::CONNECTED);
     }
     void interrupt() override { m_interrupt(); }
     void sync() override
@@ -878,6 +900,22 @@ public:
     }
     std::unique_ptr<Handler> attachChain(std::shared_ptr<Notifications> notifications, std::optional<uint256> start_block, const NotifyOptions& options) override
     {
+        // Lock cs_main while finding forks and determining which blocks to
+        // rescan. Release cs_main while processing blocks and while calling
+        // RegisterSharedValidationInterface in the notifications thread.
+        //
+        // To prevent older, stale notifications currently in the validation
+        // queue from being received, it is important to not to register for
+        // notifications immediately, but to delay registration with
+        // CallFunctionInValidationInterfaceQueue, registering the notification
+        // proxy inside the queue, so older notifications in the queue before it
+        // get processed before the proxy is registered.
+        //
+        // To prevent new notifications that may be happening in the background
+        // from being lost, it is important to keep cs_main locked while calling
+        // CallFunctionInValidationInterfaceQueue, so the new notifications will
+        // be added to the queue after the queue entry which connects the proxy.
+        AssertLockNotHeld(::cs_main);
         LOCK(cs_main);
         Chainstate& chainstate{chainman().ValidatedChainstate()};
         const CBlockIndex* start_index{start_block ? Assert(chainman().m_blockman.LookupBlockIndex(*start_block)) : nullptr};
