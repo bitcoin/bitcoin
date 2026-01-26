@@ -55,13 +55,11 @@ FUZZ_TARGET(headers_sync_state, .init = initialize_headers_sync_state_fuzz)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    auto mock_time{ConsumeTime(fuzzed_data_provider)};
 
     CBlockHeader genesis_header{Params().GenesisBlock()};
     CBlockIndex start_index(genesis_header);
 
-    if (mock_time < start_index.GetMedianTimePast()) return;
-    SetMockTime(mock_time);
+    SetMockTime(ConsumeTime(fuzzed_data_provider, /*min=*/start_index.GetMedianTimePast()));
 
     const uint256 genesis_hash = genesis_header.GetHash();
     start_index.phashBlock = &genesis_hash;

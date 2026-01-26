@@ -121,7 +121,7 @@ CBlockHeader ConsumeHeader(FuzzedDataProvider& fuzzed_data_provider, const uint2
         arith_uint256 target = ConsumeArithUInt256InRange(fuzzed_data_provider, lower_target, upper_target);
         header.nBits = target.GetCompact();
     }
-    header.nTime = ConsumeTime(fuzzed_data_provider);
+    header.nTime = TicksSinceEpoch<std::chrono::seconds>(ConsumeTime(fuzzed_data_provider));
     header.hashPrevBlock = prev_hash;
     header.nVersion = fuzzed_data_provider.ConsumeIntegral<int32_t>();
     return header;
