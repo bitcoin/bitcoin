@@ -46,7 +46,7 @@ class CCoinsViewTest : public CCoinsView
 public:
     CCoinsViewTest(FastRandomContext& rng) : m_rng{rng} {}
 
-    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override
+    std::optional<Coin> GetCoin(const COutPoint& outpoint) const noexcept override
     {
         if (auto it{map_.find(outpoint)}; it != map_.end() && !it->second.IsSpent()) return it->second;
         return std::nullopt;
