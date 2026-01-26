@@ -311,11 +311,11 @@ public:
 
     //! Retrieve the Coin (unspent transaction output) for a given outpoint.
     //! May populate the cache unless peek_only is true.
-    virtual std::optional<Coin> GetCoin(const COutPoint& outpoint, bool peek_only = false) const = 0;
+    virtual std::optional<Coin> GetCoin(const COutPoint& outpoint, bool peek_only = false) const noexcept = 0;
 
     //! Just check whether a given outpoint is unspent.
     //! May populate the cache. Use GetCoin(outpoint, true) to avoid caching.
-    virtual bool HaveCoin(const COutPoint& outpoint) const = 0;
+    virtual bool HaveCoin(const COutPoint& outpoint) const noexcept = 0;
 
     //! Retrieve the block hash whose state this CCoinsView currently represents
     virtual uint256 GetBestBlock() const = 0;
@@ -349,8 +349,8 @@ public:
     CoinsViewEmpty(const CoinsViewEmpty&) = delete;
     CoinsViewEmpty& operator=(const CoinsViewEmpty&) = delete;
 
-    std::optional<Coin> GetCoin(const COutPoint&, bool = false) const override { return {}; }
-    bool HaveCoin(const COutPoint& outpoint) const override { return !!GetCoin(outpoint); }
+    std::optional<Coin> GetCoin(const COutPoint&, bool = false) const noexcept override { return {}; }
+    bool HaveCoin(const COutPoint& outpoint) const noexcept override { return !!GetCoin(outpoint); }
     uint256 GetBestBlock() const override { return {}; }
     std::vector<uint256> GetHeadBlocks() const override { return {}; }
     void BatchWrite(CoinsViewCacheCursor& cursor, const uint256&) override
@@ -372,8 +372,8 @@ public:
 
     void SetBackend(CCoinsView& in_view) { base = &in_view; }
 
-    std::optional<Coin> GetCoin(const COutPoint& outpoint, bool peek_only) const override { return base->GetCoin(outpoint, peek_only); }
-    bool HaveCoin(const COutPoint& outpoint) const override { return base->HaveCoin(outpoint); }
+    std::optional<Coin> GetCoin(const COutPoint& outpoint, bool peek_only) const noexcept override { return base->GetCoin(outpoint, peek_only); }
+    bool HaveCoin(const COutPoint& outpoint) const noexcept override { return base->HaveCoin(outpoint); }
     uint256 GetBestBlock() const override { return base->GetBestBlock(); }
     std::vector<uint256> GetHeadBlocks() const override { return base->GetHeadBlocks(); }
     void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block_hash) override { base->BatchWrite(cursor, block_hash); }
@@ -422,8 +422,8 @@ public:
     CCoinsViewCache(const CCoinsViewCache &) = delete;
 
     // Standard CCoinsView methods
-    std::optional<Coin> GetCoin(const COutPoint& outpoint, bool peek_only = false) const override;
-    bool HaveCoin(const COutPoint& outpoint) const override;
+    std::optional<Coin> GetCoin(const COutPoint& outpoint, bool peek_only = false) const noexcept override;
+    bool HaveCoin(const COutPoint& outpoint) const noexcept override;
     uint256 GetBestBlock() const override;
     void SetBestBlock(const uint256& block_hash);
     void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block_hash) override;
@@ -436,7 +436,7 @@ public:
      * The semantics are the same as HaveCoin(), but no calls to
      * the backing CCoinsView are made.
      */
-    bool HaveCoinInCache(const COutPoint &outpoint) const;
+    bool HaveCoinInCache(const COutPoint &outpoint) const noexcept;
 
     /**
      * Return a reference to Coin in the cache, or coinEmpty if not found. This is
@@ -448,7 +448,7 @@ public:
      * on! To be safe, best to not hold the returned reference through any other
      * calls to this cache.
      */
-    const Coin& AccessCoin(const COutPoint &output) const;
+    const Coin& AccessCoin(const COutPoint &output) const noexcept;
 
     /**
      * Add a coin. Set possible_overwrite to true if an unspent version may
@@ -541,7 +541,7 @@ private:
      * @note this is marked const, but may actually append to `cacheCoins`, increasing
      * memory usage.
      */
-    CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
+    CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const noexcept;
 };
 
 /**
