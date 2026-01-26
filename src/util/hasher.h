@@ -76,10 +76,6 @@ public:
     }
 };
 
-struct FilterHeaderHasher {
-    size_t operator()(const uint256& hash) const { return ReadLE64(hash.begin()); }
-};
-
 /**
  * We're hashing a nonce into the entries themselves, so we don't need extra
  * blinding in the set hash computation.

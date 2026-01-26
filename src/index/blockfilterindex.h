@@ -51,7 +51,7 @@ private:
 
     Mutex m_cs_headers_cache;
     /** cache of block hash to filter header, to avoid disk access when responding to getcfcheckpt. */
-    std::unordered_map<uint256, uint256, FilterHeaderHasher> m_headers_cache GUARDED_BY(m_cs_headers_cache);
+    std::unordered_map<uint256, uint256, BlockHasher> m_headers_cache GUARDED_BY(m_cs_headers_cache);
 
     // Last computed header to avoid disk reads on every new block.
     uint256 m_last_header{};
