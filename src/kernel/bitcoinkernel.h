@@ -764,39 +764,15 @@ BITCOINKERNEL_API void btck_transaction_output_destroy(btck_TransactionOutput* t
 ///@{
 
 /**
- * @brief Set the log level of the global internal logger. This does not
- * enable the selected categories. Use @ref btck_logging_enable_category to
- * start logging from a specific, or all categories. This changes a global
- * setting and will override settings for all existing
- * @ref btck_LoggingConnection instances.
+ * @brief Set the minimum log level. Messages below this level are discarded
+ * before formatting to avoid overhead.
  *
- * @param[in] category If btck_LogCategory_ALL is chosen, sets both the global fallback log level
- *                     used by all categories that don't have a specific level set, and also
- *                     sets the log level for messages logged with the btck_LogCategory_ALL category itself.
- *                     For any other category, sets a category-specific log level that overrides
- *                     the global fallback for that category only.
-
- * @param[in] level    Log level at which the log category is set.
- */
-BITCOINKERNEL_API void btck_logging_set_level_category(btck_LogCategory category, btck_LogLevel level);
-
-/**
- * @brief Enable a specific log category for the global internal logger. This
- * changes a global setting and will override settings for all existing @ref
+ * This changes a global setting and will affect all existing @ref
  * btck_LoggingConnection instances.
  *
- * @param[in] category If btck_LogCategory_ALL is chosen, all categories will be enabled.
+ * @param[in] level Minimum log level. Messages below this level are not logged.
  */
-BITCOINKERNEL_API void btck_logging_enable_category(btck_LogCategory category);
-
-/**
- * @brief Disable a specific log category for the global internal logger. This
- * changes a global setting and will override settings for all existing @ref
- * btck_LoggingConnection instances.
- *
- * @param[in] category If btck_LogCategory_ALL is chosen, all categories will be disabled.
- */
-BITCOINKERNEL_API void btck_logging_disable_category(btck_LogCategory category);
+BITCOINKERNEL_API void btck_logging_set_min_level(btck_LogLevel level);
 
 /**
  * @brief Start logging messages through the provided callback.
