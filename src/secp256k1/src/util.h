@@ -212,6 +212,7 @@ static SECP256K1_INLINE void secp256k1_memczero(void *s, size_t len, int flag) {
        take only be 0 or 1, which leads to variable time code. */
     volatile int vflag = flag;
     unsigned char mask = -(unsigned char) vflag;
+    VERIFY_CHECK(flag == 0 || flag == 1);
     while (len) {
         *p &= ~mask;
         p++;
@@ -294,7 +295,8 @@ static SECP256K1_INLINE int secp256k1_is_zero_array(const unsigned char *s, size
     return ret;
 }
 
-/** If flag is true, set *r equal to *a; otherwise leave it. Constant-time.  Both *r and *a must be initialized and non-negative.*/
+/** If flag is 1, set *r equal to *a; if flag is 0, leave it. Constant-time.
+ * Both *r and *a must be initialized and non-negative. Flag must be 0 or 1. */
 static SECP256K1_INLINE void secp256k1_int_cmov(int *r, const int *a, int flag) {
     unsigned int mask0, mask1, r_masked, a_masked;
     /* Access flag with a volatile-qualified lvalue.
@@ -302,6 +304,7 @@ static SECP256K1_INLINE void secp256k1_int_cmov(int *r, const int *a, int flag) 
        take only be 0 or 1, which leads to variable time code. */
     volatile int vflag = flag;
 
+    VERIFY_CHECK(flag == 0 || flag == 1);
     /* Casting a negative int to unsigned and back to int is implementation defined behavior */
     VERIFY_CHECK(*r >= 0 && *a >= 0);
 

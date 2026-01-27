@@ -169,10 +169,12 @@ static void secp256k1_ge_to_storage(secp256k1_ge_storage *r, const secp256k1_ge 
 /** Convert a group element back from the storage type. */
 static void secp256k1_ge_from_storage(secp256k1_ge *r, const secp256k1_ge_storage *a);
 
-/** If flag is true, set *r equal to *a; otherwise leave it. Constant-time.  Both *r and *a must be initialized.*/
+/** If flag is 1, set *r equal to *a; if flag is 0, leave it. Constant-time.
+ * Both *r and *a must be initialized. Flag must be 0 or 1. */
 static void secp256k1_gej_cmov(secp256k1_gej *r, const secp256k1_gej *a, int flag);
 
-/** If flag is true, set *r equal to *a; otherwise leave it. Constant-time.  Both *r and *a must be initialized.*/
+/** If flag is 1, set *r equal to *a; if flag is 0, leave it. Constant-time.
+ * Both *r and *a must be initialized. Flag must be 0 or 1. */
 static void secp256k1_ge_storage_cmov(secp256k1_ge_storage *r, const secp256k1_ge_storage *a, int flag);
 
 /** Rescale a jacobian point by b which must be non-zero. Constant-time. */

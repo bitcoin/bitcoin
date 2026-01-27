@@ -19,8 +19,11 @@
 
 #define POINTS 32768
 
-static void help(char **argv) {
+static void help(char **argv, int default_iters) {
     printf("Benchmark EC multiplication algorithms\n");
+    printf("\n");
+    printf("The default number of iterations for each benchmark is %d. This can be\n", default_iters);
+    printf("customized using the SECP256K1_BENCH_ITERS environment variable.\n");
     printf("\n");
     printf("Usage: %s <help|pippenger_wnaf|strauss_wnaf|simple>\n", argv[0]);
     printf("The output shows the number of multiplied and summed points right after the\n");
@@ -308,7 +311,12 @@ int main(int argc, char **argv) {
     int i, p;
     size_t scratch_size;
 
-    int iters = get_iters(10000);
+    int default_iters = 10000;
+    int iters = get_iters(default_iters);
+    if (iters == 0) {
+        help(argv, default_iters);
+        return EXIT_FAILURE;
+    }
 
     data.ecmult_multi = secp256k1_ecmult_multi_var;
 
@@ -316,7 +324,7 @@ int main(int argc, char **argv) {
         if(have_flag(argc, argv, "-h")
            || have_flag(argc, argv, "--help")
            || have_flag(argc, argv, "help")) {
-            help(argv);
+            help(argv, default_iters);
             return EXIT_SUCCESS;
         } else if(have_flag(argc, argv, "pippenger_wnaf")) {
             printf("Using pippenger_wnaf:\n");
@@ -328,13 +336,13 @@ int main(int argc, char **argv) {
             printf("Using simple algorithm:\n");
         } else {
             fprintf(stderr, "%s: unrecognized argument '%s'.\n\n", argv[0], argv[1]);
-            help(argv);
+            help(argv, default_iters);
             return EXIT_FAILURE;
         }
     }
 
     data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
-    scratch_size = secp256k1_strauss_scratch_size(POINTS) + STRAUSS_SCRATCH_OBJECTS*16;
+    scratch_size = secp256k1_strauss_scratch_size(POINTS) + STRAUSS_SCRATCH_OBJECTS*ALIGNMENT;
     if (!have_flag(argc, argv, "simple")) {
         data.scratch = secp256k1_scratch_space_create(data.ctx, scratch_size);
     } else {
@@ -381,6 +389,8 @@ int main(int argc, char **argv) {
                 run_ecmult_multi_bench(&data, i << p, 1, iters);
             }
         }
+    } else {
+        printf("Skipping some benchmarks due to SECP256K1_BENCH_ITERS <= 2\n");
     }
 
     if (data.scratch != NULL) {

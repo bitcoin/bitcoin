@@ -406,19 +406,12 @@ int secp256k1_ellswift_encode(const secp256k1_context *ctx, unsigned char *ell64
     if (secp256k1_pubkey_load(ctx, &p, pubkey)) {
         secp256k1_fe t;
         unsigned char p64[64] = {0};
-        size_t ser_size;
-        int ser_ret;
         secp256k1_sha256 hash;
 
         /* Set up hasher state; the used RNG is H(pubkey || "\x00"*31 || rnd32 || cnt++), using
          * BIP340 tagged hash with tag "secp256k1_ellswift_encode". */
         secp256k1_ellswift_sha256_init_encode(&hash);
-        ser_ret = secp256k1_eckey_pubkey_serialize(&p, p64, &ser_size, 1);
-#ifdef VERIFY
-        VERIFY_CHECK(ser_ret && ser_size == 33);
-#else
-        (void)ser_ret;
-#endif
+        secp256k1_eckey_pubkey_serialize33(&p, p64);
         secp256k1_sha256_write(&hash, p64, sizeof(p64));
         secp256k1_sha256_write(&hash, rnd32, 32);
 
