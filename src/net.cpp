@@ -3225,7 +3225,7 @@ void CConnman::ThreadPrivateBroadcast()
         std::optional<Proxy> proxy;
         const std::optional<Network> net{m_private_broadcast.PickNetwork(proxy)};
         if (!net.has_value()) {
-            LogWarning("[privatebroadcast] Connections needed but none of the Tor or I2P networks is reachable");
+            LogWarning("Unable to open -privatebroadcast connections: neither Tor nor I2P is reachable");
             m_interrupt_net->sleep_for(5s);
             continue;
         }

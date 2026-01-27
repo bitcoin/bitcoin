@@ -1653,9 +1653,9 @@ void PeerManagerImpl::ReattemptPrivateBroadcast(CScheduler& scheduler)
                          stale_tx->GetHash().ToString(), stale_tx->GetWitnessHash().ToString());
                 ++num_for_rebroadcast;
             } else {
-                LogInfo("[privatebroadcast] Giving up broadcast attempts for txid=%s wtxid=%s: %s",
-                        stale_tx->GetHash().ToString(), stale_tx->GetWitnessHash().ToString(),
-                        mempool_acceptable.m_state.ToString());
+                LogDebug(BCLog::PRIVBROADCAST, "Giving up broadcast attempts for txid=%s wtxid=%s: %s",
+                         stale_tx->GetHash().ToString(), stale_tx->GetWitnessHash().ToString(),
+                         mempool_acceptable.m_state.ToString());
                 m_tx_for_private_broadcast.Remove(stale_tx);
             }
         }
@@ -3536,9 +3536,9 @@ void PeerManagerImpl::PushPrivateBroadcastTx(CNode& node)
     }
     const CTransactionRef& tx{*opt_tx};
 
-    LogInfo("[privatebroadcast] P2P handshake completed, sending INV for txid=%s%s, peer=%d%s",
-            tx->GetHash().ToString(), tx->HasWitness() ? strprintf(", wtxid=%s", tx->GetWitnessHash().ToString()) : "",
-            node.GetId(), node.LogIP(fLogIPs));
+    LogDebug(BCLog::PRIVBROADCAST, "P2P handshake completed, sending INV for txid=%s%s, peer=%d%s",
+             tx->GetHash().ToString(), tx->HasWitness() ? strprintf(", wtxid=%s", tx->GetWitnessHash().ToString()) : "",
+             node.GetId(), node.LogIP(fLogIPs));
 
     MakeAndPushMessage(node, NetMsgType::INV, std::vector<CInv>{{CInv{MSG_TX, tx->GetHash().ToUint256()}}});
 }
@@ -3677,8 +3677,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             if (fRelay) {
                 MakeAndPushMessage(pfrom, NetMsgType::VERACK);
             } else {
-                LogInfo("[privatebroadcast] Disconnecting: does not support transactions relay (connected in vain), peer=%d%s",
-                        pfrom.GetId(), pfrom.LogIP(fLogIPs));
+                LogDebug(BCLog::PRIVBROADCAST, "Disconnecting: does not support transaction relay (connected in vain), peer=%d%s",
+                         pfrom.GetId(), pfrom.LogIP(fLogIPs));
                 pfrom.fDisconnect = true;
             }
             return;
@@ -4203,8 +4203,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         if (pfrom.IsPrivateBroadcastConn()) {
             const auto pushed_tx_opt{m_tx_for_private_broadcast.GetTxForNode(pfrom.GetId())};
             if (!pushed_tx_opt) {
-                LogInfo("[privatebroadcast] Disconnecting: got GETDATA without sending an INV, peer=%d%s",
-                        pfrom.GetId(), fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : "");
+                LogDebug(BCLog::PRIVBROADCAST, "Disconnecting: got GETDATA without sending an INV, peer=%d%s",
+                         pfrom.GetId(), fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : "");
                 pfrom.fDisconnect = true;
                 return;
             }
@@ -4220,8 +4220,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 peer->m_ping_queued = true; // Ensure a ping will be sent: mimic a request via RPC.
                 MaybeSendPing(pfrom, *peer, GetTime<std::chrono::microseconds>());
             } else {
-                LogInfo("[privatebroadcast] Disconnecting: got an unexpected GETDATA message, peer=%d%s",
-                        pfrom.GetId(), fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : "");
+                LogDebug(BCLog::PRIVBROADCAST, "Disconnecting: got an unexpected GETDATA message, peer=%d%s",
+                         pfrom.GetId(), fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : "");
                 pfrom.fDisconnect = true;
             }
             return;
@@ -4465,9 +4465,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         AddKnownTx(*peer, hash);
 
         if (const auto num_broadcasted{m_tx_for_private_broadcast.Remove(ptx)}) {
-            LogInfo("[privatebroadcast] Received our privately broadcast transaction (txid=%s) from the "
-                    "network from peer=%d%s; stopping private broadcast attempts",
-                    txid.ToString(), pfrom.GetId(), pfrom.LogIP(fLogIPs));
+            LogDebug(BCLog::PRIVBROADCAST, "Received our privately broadcast transaction (txid=%s) from the "
+                                           "network from peer=%d%s; stopping private broadcast attempts",
+                     txid.ToString(), pfrom.GetId(), pfrom.LogIP(fLogIPs));
             if (NUM_PRIVATE_BROADCAST_PER_TX > num_broadcasted.value()) {
                 // Not all of the initial NUM_PRIVATE_BROADCAST_PER_TX connections were needed.
                 // Tell CConnman it does not need to start the remaining ones.
@@ -4981,8 +4981,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                         pfrom.PongReceived(ping_time);
                         if (pfrom.IsPrivateBroadcastConn()) {
                             m_tx_for_private_broadcast.NodeConfirmedReception(pfrom.GetId());
-                            LogInfo("[privatebroadcast] Got a PONG (the transaction will probably reach the network), marking for disconnect, peer=%d%s",
-                                    pfrom.GetId(), pfrom.LogIP(fLogIPs));
+                            LogDebug(BCLog::PRIVBROADCAST, "Got a PONG (the transaction will probably reach the network), marking for disconnect, peer=%d%s",
+                                     pfrom.GetId(), pfrom.LogIP(fLogIPs));
                             pfrom.fDisconnect = true;
                         }
                     } else {
@@ -5712,8 +5712,8 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
     // not sent. This here is just an optimization.
     if (pto->IsPrivateBroadcastConn()) {
         if (pto->m_connected + PRIVATE_BROADCAST_MAX_CONNECTION_LIFETIME < current_time) {
-            LogInfo("[privatebroadcast] Disconnecting: did not complete the transaction send within %d seconds, peer=%d%s",
-                    count_seconds(PRIVATE_BROADCAST_MAX_CONNECTION_LIFETIME), pto->GetId(), pto->LogIP(fLogIPs));
+            LogDebug(BCLog::PRIVBROADCAST, "Disconnecting: did not complete the transaction send within %d seconds, peer=%d%s",
+                     count_seconds(PRIVATE_BROADCAST_MAX_CONNECTION_LIFETIME), pto->GetId(), pto->LogIP(fLogIPs));
             pto->fDisconnect = true;
         }
         return true;
