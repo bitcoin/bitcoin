@@ -600,6 +600,15 @@ BOOST_AUTO_TEST_CASE(util_mocktime)
     SetMockTime(0s);
 }
 
+BOOST_AUTO_TEST_CASE(util_ticksseconds)
+{
+    BOOST_CHECK_EQUAL(TicksSeconds(0s), 0);
+    BOOST_CHECK_EQUAL(TicksSeconds(1s), 1);
+    BOOST_CHECK_EQUAL(TicksSeconds(999ms), 0);
+    BOOST_CHECK_EQUAL(TicksSeconds(1000ms), 1);
+    BOOST_CHECK_EQUAL(TicksSeconds(1500ms), 1);
+}
+
 BOOST_AUTO_TEST_CASE(test_IsDigit)
 {
     BOOST_CHECK_EQUAL(IsDigit('0'), true);

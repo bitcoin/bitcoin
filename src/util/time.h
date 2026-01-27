@@ -74,6 +74,12 @@ constexpr auto Ticks(Dur2 d)
 {
     return std::chrono::duration_cast<Dur1>(d).count();
 }
+
+template <typename Duration>
+constexpr int64_t TicksSeconds(Duration d)
+{
+    return int64_t{Ticks<std::chrono::seconds>(d)};
+}
 template <typename Duration, typename Timepoint>
 constexpr auto TicksSinceEpoch(Timepoint t)
 {
