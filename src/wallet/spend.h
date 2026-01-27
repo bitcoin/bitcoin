@@ -155,7 +155,7 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
 // User manually selected inputs that must be part of the transaction
 struct PreSelectedInputs
 {
-    std::set<std::shared_ptr<COutput>> coins;
+    COutputSet coins;
     // If subtract fee from outputs is disabled, the 'total_amount'
     // will be the sum of each output effective value
     // instead of the sum of the outputs amount

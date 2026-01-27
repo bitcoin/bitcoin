@@ -30,8 +30,6 @@ BOOST_FIXTURE_TEST_SUITE(coinselector_tests, WalletTestingSetup)
 // we repeat those tests this many times and only complain if all iterations of the test fail
 #define RANDOM_REPEATS 5
 
-typedef std::set<std::shared_ptr<COutput>> CoinSet;
-
 static const CoinEligibilityFilter filter_standard(1, 6, 0);
 static const CoinEligibilityFilter filter_confirmed(1, 1, 0);
 static const CoinEligibilityFilter filter_standard_extra(6, 6, 0);
@@ -117,7 +115,7 @@ static bool EquivalentResult(const SelectionResult& a, const SelectionResult& b)
 /** Check if this selection is equal to another one. Equal means same inputs (i.e same value and prevout) */
 static bool EqualResult(const SelectionResult& a, const SelectionResult& b)
 {
-    std::pair<CoinSet::iterator, CoinSet::iterator> ret = std::mismatch(a.GetInputSet().begin(), a.GetInputSet().end(), b.GetInputSet().begin(),
+    std::pair<COutputSet::iterator, COutputSet::iterator> ret = std::mismatch(a.GetInputSet().begin(), a.GetInputSet().end(), b.GetInputSet().begin(),
         [](const std::shared_ptr<COutput>& a, const std::shared_ptr<COutput>& b) {
             return a->outpoint == b->outpoint;
         });
@@ -1257,7 +1255,7 @@ static util::Result<SelectionResult> select_coins(const CAmount& target, const C
     return result;
 }
 
-static bool has_coin(const CoinSet& set, CAmount amount)
+static bool has_coin(const COutputSet& set, CAmount amount)
 {
     return std::any_of(set.begin(), set.end(), [&](const auto& coin) { return coin->GetEffectiveValue() == amount; });
 }

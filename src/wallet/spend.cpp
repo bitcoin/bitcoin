@@ -789,7 +789,7 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
     // If the chosen input set has unconfirmed inputs, check for synergies from overlapping ancestry
     for (auto& result : results) {
         std::vector<COutPoint> outpoints;
-        std::set<std::shared_ptr<COutput>> coins = result.GetInputSet();
+        COutputSet coins = result.GetInputSet();
         CAmount summed_bump_fees = 0;
         for (auto& coin : coins) {
             if (coin->depth > 0) continue; // Bump fees only exist for unconfirmed inputs
