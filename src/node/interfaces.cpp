@@ -970,7 +970,13 @@ public:
     std::unique_ptr<BlockTemplate> createNewBlock(const BlockCreateOptions& options) override
     {
         // Ensure m_tip_block is set so consumers of BlockTemplate can rely on that.
-        if (!waitTipChanged(uint256::ZERO, MillisecondsDouble::max())) return {};
+        const std::optional<BlockRef> maybe_tip{waitTipChanged(uint256::ZERO, MillisecondsDouble::max())};
+        if (!maybe_tip) return {};
+
+        // Avoid generating a new template immediately after connecting a block while
+        // our best known header chain still has more work. This prevents a burst of
+        // block templates during the final catch-up moments after IBD.
+        if (!CooldownIfHeadersAhead(chainman(), notifications(), *maybe_tip)) return {};
 
         BlockAssembler::Options assemble_options{options};
         ApplyArgsManOptions(*Assert(m_node.args), assemble_options);
