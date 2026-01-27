@@ -6,6 +6,7 @@
 
 #include <wallet/wallettool.h>
 
+#include <bitcoin-wallet_settings.h>
 #include <common/args.h>
 #include <util/check.h>
 #include <util/fs.h>
@@ -107,15 +108,15 @@ static void WalletShowInfo(CWallet* wallet_instance)
 
 bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
 {
-    if (args.IsArgSet("-dumpfile") && command != "dump" && command != "createfromdump") {
+    if (!DumpFileSetting::Value(args).isNull() && command != "dump" && command != "createfromdump") {
         tfm::format(std::cerr, "The -dumpfile option can only be used with the \"dump\" and \"createfromdump\" commands.\n");
         return false;
     }
-    if ((command == "create" || command == "createfromdump") && !args.IsArgSet("-wallet")) {
+    if ((command == "create" || command == "createfromdump") && WalletSetting::Value(args).isNull()) {
         tfm::format(std::cerr, "Wallet name must be provided when creating a new wallet.\n");
         return false;
     }
-    const std::string name = args.GetArg("-wallet", "");
+    const std::string name = WalletSetting::Get(args);
     const fs::path path = fsbridge::AbsPathJoin(GetWalletDir(), fs::PathFromString(name));
 
     if (command == "create") {

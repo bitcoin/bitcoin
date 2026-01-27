@@ -5,6 +5,7 @@
 
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
+#include <bitcoin-cli_settings.h>
 #include <chainparamsbase.h>
 #include <clientversion.h>
 #include <common/args.h>
@@ -52,23 +53,12 @@ using CliClock = std::chrono::system_clock;
 
 const TranslateFn G_TRANSLATION_FUN{nullptr};
 
-static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
-static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
-static constexpr int DEFAULT_WAIT_CLIENT_TIMEOUT = 0;
-static const bool DEFAULT_NAMED=false;
 static const int CONTINUE_EXECUTION=-1;
-static constexpr uint8_t NETINFO_MAX_LEVEL{4};
 static constexpr int8_t UNKNOWN_NETWORK{-1};
 // See GetNetworkName() in netbase.cpp
 static constexpr std::array NETWORKS{"not_publicly_routable", "ipv4", "ipv6", "onion", "i2p", "cjdns", "internal"};
 static constexpr std::array NETWORK_SHORT_NAMES{"npr", "ipv4", "ipv6", "onion", "i2p", "cjdns", "int"};
 static constexpr std::array UNREACHABLE_NETWORK_IDS{/*not_publicly_routable*/0, /*internal*/6};
-
-/** Default number of blocks to generate for RPC generatetoaddress. */
-static const std::string DEFAULT_NBLOCKS = "1";
-
-/** Default -color setting. */
-static const std::string DEFAULT_COLOR_SETTING{"auto"};
 
 static void SetupCliArgs(ArgsManager& argsman)
 {
@@ -80,41 +70,36 @@ static void SetupCliArgs(ArgsManager& argsman)
     const auto signetBaseParams = CreateBaseChainParams(ChainType::SIGNET);
     const auto regtestBaseParams = CreateBaseChainParams(ChainType::REGTEST);
 
-    argsman.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-conf=<file>", strprintf("Specify configuration file. Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
-    argsman.AddArg("-generate",
-                   strprintf("Generate blocks, equivalent to RPC getnewaddress followed by RPC generatetoaddress. Optional positional integer "
-                             "arguments are number of blocks to generate (default: %s) and maximum iterations to try (default: %s), equivalent to "
-                             "RPC generatetoaddress nblocks and maxtries arguments. Example: bitcoin-cli -generate 4 1000",
-                             DEFAULT_NBLOCKS, DEFAULT_MAX_TRIES),
-                   ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
-    argsman.AddArg("-addrinfo", "Get the number of addresses known to the node, per network and total, after filtering for quality and recency. The total number of addresses known to the node may be higher.", ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
-    argsman.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the output of -getinfo is the result of multiple non-atomic requests. Some entries in the output may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
-    argsman.AddArg("-netinfo", strprintf("Get network peer connection information from the remote server. An optional argument from 0 to %d can be passed for different peers listings (default: 0). If a non-zero value is passed, an additional \"outonly\" (or \"o\") argument can be passed to see outbound peers only. Pass \"help\" (or \"h\") for detailed help documentation.", NETINFO_MAX_LEVEL), ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
+    VersionSetting::Register(argsman);
+    ConfSetting::Register(argsman);
+    DataDirSetting::Register(argsman);
+    GenerateSetting::Register(argsman);
+    AddrInfoSetting::Register(argsman);
+    GetInfoSetting::Register(argsman);
+    NetInfoSetting::Register(argsman);
 
     SetupChainParamsBaseOptions(argsman);
-    argsman.AddArg("-color=<when>", strprintf("Color setting for CLI output (default: %s). Valid values: always, auto (add color codes when standard output is connected to a terminal and OS is not WIN32), never. Only applies to the output of -getinfo.", DEFAULT_COLOR_SETTING), ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
-    argsman.AddArg("-named", strprintf("Pass named instead of positional arguments (default: %s)", DEFAULT_NAMED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-rpcclienttimeout=<n>", strprintf("Timeout in seconds during HTTP requests, or 0 for no timeout. (default: %d)", DEFAULT_HTTP_CLIENT_TIMEOUT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-rpcconnect=<ip>", strprintf("Send commands to node running on <ip> (default: %s)", DEFAULT_RPCCONNECT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-rpccookiefile=<loc>", "Location of the auth cookie. Relative paths will be prefixed by a net-specific datadir location. (default: data dir)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-rpcpassword=<pw>", "Password for JSON-RPC connections", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-rpcport=<port>", strprintf("Connect to JSON-RPC on <port> (default: %u, testnet: %u, testnet4: %u, signet: %u, regtest: %u)", defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort(), testnet4BaseParams->RPCPort(), signetBaseParams->RPCPort(), regtestBaseParams->RPCPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-rpcuser=<user>", "Username for JSON-RPC connections", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-rpcwait", "Wait for RPC server to start", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-rpcwaittimeout=<n>", strprintf("Timeout in seconds to wait for the RPC server to start, or 0 for no timeout. (default: %d)", DEFAULT_WAIT_CLIENT_TIMEOUT), ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
-    argsman.AddArg("-rpcwallet=<walletname>", "Send RPC for non-default wallet on RPC server (needs to exactly match corresponding -wallet option passed to bitcoind). This changes the RPC endpoint used, e.g. http://127.0.0.1:8332/wallet/<walletname>", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-stdin", "Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases). When combined with -stdinrpcpass, the first line from standard input is used for the RPC password.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-stdinrpcpass", "Read RPC password from standard input as a single line. When combined with -stdin, the first line from standard input is used for the RPC password. When combined with -stdinwalletpassphrase, -stdinrpcpass consumes the first line, and -stdinwalletpassphrase consumes the second.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-stdinwalletpassphrase", "Read wallet passphrase from standard input as a single line. When combined with -stdin, the first line from standard input is used for the wallet passphrase.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    ColorSetting::Register(argsman);
+    NamedSetting::Register(argsman);
+    RpcClientTimeoutSetting::Register(argsman);
+    RpcConnectSetting::Register(argsman);
+    RpcCookieFileSetting::Register(argsman);
+    RpcPasswordSetting::Register(argsman);
+    RpcPortSetting::Register(argsman, defaultBaseParams, testnetBaseParams, testnet4BaseParams, signetBaseParams, regtestBaseParams);
+    RpcUserSetting::Register(argsman);
+    RpcWaitSetting::Register(argsman);
+    RpcWaitTimeoutSetting::Register(argsman);
+    RpcWalletSetting::Register(argsman);
+    StdinSetting::Register(argsman);
+    StdinRpcPassSetting::Register(argsman);
+    StdinWalletPassphraseSetting::Register(argsman);
 }
 
 std::optional<std::string> RpcWalletName(const ArgsManager& args)
 {
     // Check IsArgNegated to return nullopt instead of "0" if -norpcwallet is specified
-    if (args.IsArgNegated("-rpcwallet")) return std::nullopt;
-    return args.GetArg("-rpcwallet");
+    if (RpcWalletSetting::Value(args).isFalse()) return std::nullopt;
+    return RpcWalletSetting::Get(args);
 }
 
 /** libevent event log callback */
@@ -148,10 +133,10 @@ static int AppInitRPC(int argc, char* argv[])
         tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);
         return EXIT_FAILURE;
     }
-    if (argc < 2 || HelpRequested(gArgs) || gArgs.GetBoolArg("-version", false)) {
+    if (argc < 2 || HelpRequested(gArgs) || VersionSetting::Get(gArgs)) {
         std::string strUsage = CLIENT_NAME " RPC client version " + FormatFullVersion() + "\n";
 
-        if (gArgs.GetBoolArg("-version", false)) {
+        if (VersionSetting::Get(gArgs)) {
             strUsage += FormatParagraph(LicenseInfo());
         } else {
             strUsage += "\n"
@@ -176,7 +161,7 @@ static int AppInitRPC(int argc, char* argv[])
         return EXIT_SUCCESS;
     }
     if (!CheckDataDirOption(gArgs)) {
-        tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", ""));
+        tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", DataDirSetting::Get(gArgs));
         return EXIT_FAILURE;
     }
     if (!gArgs.ReadConfigFiles(error, true)) {
@@ -779,7 +764,7 @@ struct DefaultRequestHandler : BaseRequestHandler {
     UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
     {
         UniValue params;
-        if(gArgs.GetBoolArg("-named", DEFAULT_NAMED)) {
+        if(NamedSetting::Get(gArgs)) {
             params = RPCConvertNamedValues(method, args);
         } else {
             params = RPCConvertValues(method, args);
@@ -803,7 +788,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
     uint16_t port{BaseParams().RPCPort()};
     {
         uint16_t rpcconnect_port{0};
-        const std::string rpcconnect_str = gArgs.GetArg("-rpcconnect", DEFAULT_RPCCONNECT);
+        const std::string rpcconnect_str = RpcConnectSetting::Get(gArgs);
         if (!SplitHostPort(rpcconnect_str, rpcconnect_port, host)) {
             // Uses argument provided as-is
             // (rather than value parsed)
@@ -816,7 +801,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
             } // else, no port was provided in rpcconnect (continue using default one)
         }
 
-        if (std::optional<std::string> rpcport_arg = gArgs.GetArg("-rpcport")) {
+        if (std::optional<std::string> rpcport_arg = RpcPortSetting::Get(gArgs)) {
             // -rpcport was specified
             const uint16_t rpcport_int{ToIntegral<uint16_t>(rpcport_arg.value()).value_or(0)};
             if (rpcport_int == 0) {
@@ -845,7 +830,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
 
     // Set connection timeout
     {
-        const int timeout = gArgs.GetIntArg("-rpcclienttimeout", DEFAULT_HTTP_CLIENT_TIMEOUT);
+        const int timeout = RpcClientTimeoutSetting::Get(gArgs);
         if (timeout > 0) {
             evhttp_connection_set_timeout(evcon.get(), timeout);
         } else {
@@ -868,13 +853,13 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
     // Get credentials
     std::string strRPCUserColonPass;
     bool failedToGetAuthCookie = false;
-    if (gArgs.GetArg("-rpcpassword", "") == "") {
+    if (RpcPasswordSetting::Get(gArgs) == "") {
         // Try fall back to cookie-based authentication if no password is provided
         if (!GetAuthCookie(&strRPCUserColonPass)) {
             failedToGetAuthCookie = true;
         }
     } else {
-        strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
+        strRPCUserColonPass = RpcUserSetting::Get(gArgs) + ":" + RpcPasswordSetting::Get(gArgs);
     }
 
     struct evkeyvalq* output_headers = evhttp_request_get_output_headers(req.get());
@@ -956,8 +941,8 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
 {
     UniValue response(UniValue::VOBJ);
     // Execute and handle connection failures with -rpcwait.
-    const bool fWait = gArgs.GetBoolArg("-rpcwait", false);
-    const int timeout = gArgs.GetIntArg("-rpcwaittimeout", DEFAULT_WAIT_CLIENT_TIMEOUT);
+    const bool fWait = RpcWaitSetting::Get(gArgs);
+    const int timeout = RpcWaitTimeoutSetting::Get(gArgs);
     const auto deadline{std::chrono::steady_clock::now() + 1s * timeout};
 
     do {
@@ -1077,7 +1062,7 @@ static void ParseGetInfoResult(UniValue& result)
 #endif
 
     {
-        const std::string color{gArgs.GetArg("-color", DEFAULT_COLOR_SETTING)};
+        const std::string color{ColorSetting::Get(gArgs)};
         if (color == "always") {
             should_colorize = true;
         } else if (color == "never") {
@@ -1203,7 +1188,7 @@ static void SetGenerateToAddressArgs(const std::string& address, std::vector<std
     if (args.size() == 0) {
         args.emplace_back(DEFAULT_NBLOCKS);
     } else if (args.at(0) == "0") {
-        throw std::runtime_error("the first argument (number of blocks to generate, default: " + DEFAULT_NBLOCKS + ") must be an integer value greater than zero");
+        throw std::runtime_error("the first argument (number of blocks to generate, default: " + std::string{DEFAULT_NBLOCKS} + ") must be an integer value greater than zero");
     }
     args.emplace(args.begin() + 1, address);
 }
@@ -1219,7 +1204,7 @@ static int CommandLineRPC(int argc, char *argv[])
             argv++;
         }
         std::string rpcPass;
-        if (gArgs.GetBoolArg("-stdinrpcpass", false)) {
+        if (StdinRpcPassSetting::Get(gArgs)) {
             NO_STDIN_ECHO();
             if (!StdinReady()) {
                 fputs("RPC password> ", stderr);
@@ -1234,7 +1219,7 @@ static int CommandLineRPC(int argc, char *argv[])
             gArgs.ForceSetArg("-rpcpassword", rpcPass);
         }
         std::vector<std::string> args = std::vector<std::string>(&argv[1], &argv[argc]);
-        if (gArgs.GetBoolArg("-stdinwalletpassphrase", false)) {
+        if (StdinWalletPassphraseSetting::Get(gArgs)) {
             NO_STDIN_ECHO();
             std::string walletPass;
             if (args.size() < 1 || !args[0].starts_with("walletpassphrase")) {
@@ -1252,7 +1237,7 @@ static int CommandLineRPC(int argc, char *argv[])
             }
             args.insert(args.begin() + 1, walletPass);
         }
-        if (gArgs.GetBoolArg("-stdin", false)) {
+        if (StdinSetting::Get(gArgs)) {
             // Read one arg per line from stdin and append
             std::string line;
             while (std::getline(std::cin, line)) {
@@ -1265,15 +1250,15 @@ static int CommandLineRPC(int argc, char *argv[])
         gArgs.CheckMultipleCLIArgs();
         std::unique_ptr<BaseRequestHandler> rh;
         std::string method;
-        if (gArgs.GetBoolArg("-getinfo", false)) {
+        if (GetInfoSetting::Get(gArgs)) {
             rh.reset(new GetinfoRequestHandler());
-        } else if (gArgs.GetBoolArg("-netinfo", false)) {
+        } else if (NetInfoSetting::Get(gArgs)) {
             if (!args.empty() && (args.at(0) == "h" || args.at(0) == "help")) {
                 tfm::format(std::cout, "%s\n", NetinfoRequestHandler().m_help_doc);
                 return 0;
             }
             rh.reset(new NetinfoRequestHandler());
-        } else if (gArgs.GetBoolArg("-generate", false)) {
+        } else if (GenerateSetting::Get(gArgs)) {
             const UniValue getnewaddress{GetNewAddress()};
             const UniValue& error{getnewaddress.find_value("error")};
             if (error.isNull()) {
@@ -1282,7 +1267,7 @@ static int CommandLineRPC(int argc, char *argv[])
             } else {
                 ParseError(error, strPrint, nRet);
             }
-        } else if (gArgs.GetBoolArg("-addrinfo", false)) {
+        } else if (AddrInfoSetting::Get(gArgs)) {
             rh.reset(new AddrinfoRequestHandler());
         } else {
             rh.reset(new DefaultRequestHandler());
@@ -1301,7 +1286,7 @@ static int CommandLineRPC(int argc, char *argv[])
             UniValue result = reply.find_value("result");
             const UniValue& error = reply.find_value("error");
             if (error.isNull()) {
-                if (gArgs.GetBoolArg("-getinfo", false)) {
+                if (GetInfoSetting::Get(gArgs)) {
                     if (!wallet_name) {
                         GetWalletBalances(result); // fetch multiwallet balances and append to result
                     }

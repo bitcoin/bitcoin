@@ -7,6 +7,7 @@
 #include <common/args.h>
 #include <crypto/hmac_sha256.h>
 #include <httpserver.h>
+#include <init_settings.h>
 #include <logging.h>
 #include <netaddress.h>
 #include <rpc/protocol.h>
@@ -242,10 +243,10 @@ static bool InitRPCAuthentication()
     std::string user;
     std::string pass;
 
-    if (gArgs.GetArg("-rpcpassword", "") == "")
+    if (RpcPasswordSetting::Get(gArgs) == "")
     {
         std::optional<fs::perms> cookie_perms{std::nullopt};
-        auto cookie_perms_arg{gArgs.GetArg("-rpccookieperms")};
+        auto cookie_perms_arg{RpcCookiePermsSetting::Get(gArgs)};
         if (cookie_perms_arg) {
             auto perm_opt = InterpretPermString(*cookie_perms_arg);
             if (!perm_opt) {
@@ -268,8 +269,8 @@ static bool InitRPCAuthentication()
     } else {
         LogInfo("Using rpcuser/rpcpassword authentication.");
         LogWarning("The use of rpcuser/rpcpassword is less secure, because credentials are configured in plain text. It is recommended that locally-run instances switch to cookie-based auth, or otherwise to use hashed rpcauth credentials. See share/rpcauth in the source directory for more information.");
-        user = gArgs.GetArg("-rpcuser", "");
-        pass = gArgs.GetArg("-rpcpassword", "");
+        user = RpcUserSetting::Get(gArgs);
+        pass = RpcPasswordSetting::Get(gArgs);
     }
 
     // If there is a plaintext credential, hash it with a random salt before storage.
@@ -287,9 +288,9 @@ static bool InitRPCAuthentication()
         g_rpcauth.push_back({user, salt, hash});
     }
 
-    if (!gArgs.GetArgs("-rpcauth").empty()) {
+    if (!RpcAuthSetting::Get(gArgs).empty()) {
         LogInfo("Using rpcauth authentication.\n");
-        for (const std::string& rpcauth : gArgs.GetArgs("-rpcauth")) {
+        for (const std::string& rpcauth : RpcAuthSetting::Get(gArgs)) {
             std::vector<std::string> fields{SplitString(rpcauth, ':')};
             const std::vector<std::string> salt_hmac{SplitString(fields.back(), '$')};
             if (fields.size() == 2 && salt_hmac.size() == 2) {
@@ -303,8 +304,8 @@ static bool InitRPCAuthentication()
         }
     }
 
-    g_rpc_whitelist_default = gArgs.GetBoolArg("-rpcwhitelistdefault", !gArgs.GetArgs("-rpcwhitelist").empty());
-    for (const std::string& strRPCWhitelist : gArgs.GetArgs("-rpcwhitelist")) {
+    g_rpc_whitelist_default = RpcWhitelistDefaultSetting::Get(gArgs, !RpcWhitelistSetting::Get(gArgs).empty());
+    for (const std::string& strRPCWhitelist : RpcWhitelistSetting::Get(gArgs)) {
         auto pos = strRPCWhitelist.find(':');
         std::string strUser = strRPCWhitelist.substr(0, pos);
         bool intersect = g_rpc_whitelist.contains(strUser);

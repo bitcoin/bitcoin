@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <init_settings.h>
 #include <rpc/blockchain.h>
 
 #include <node/mempool_persist.h>
@@ -110,7 +111,7 @@ static RPCHelpMan sendrawtransaction()
             std::string err_string;
             AssertLockNotHeld(cs_main);
             NodeContext& node = EnsureAnyNodeContext(request.context);
-            const bool private_broadcast_enabled{gArgs.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)};
+            const bool private_broadcast_enabled{PrivatebroadcastSetting::Get(gArgs, DEFAULT_PRIVATE_BROADCAST)};
             if (private_broadcast_enabled &&
                 !g_reachable_nets.Contains(NET_ONION) &&
                 !g_reachable_nets.Contains(NET_I2P)) {

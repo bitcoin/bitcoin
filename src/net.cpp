@@ -17,6 +17,7 @@
 #include <consensus/consensus.h>
 #include <crypto/sha256.h>
 #include <i2p.h>
+#include <init_settings.h>
 #include <key.h>
 #include <logging.h>
 #include <memusage.h>
@@ -138,7 +139,7 @@ void CConnman::AddAddrFetch(const std::string& strDest)
 uint16_t GetListenPort()
 {
     // If -bind= is provided with ":port" part, use that (first one if multiple are provided).
-    for (const std::string& bind_arg : gArgs.GetArgs("-bind")) {
+    for (const std::string& bind_arg : BindSetting::Get(gArgs)) {
         constexpr uint16_t dummy_port = 0;
 
         const std::optional<CService> bind_addr{Lookup(bind_arg, dummy_port, /*fAllowLookup=*/false)};
@@ -147,7 +148,7 @@ uint16_t GetListenPort()
 
     // Otherwise, if -whitebind= without NetPermissionFlags::NoBan is provided, use that
     // (-whitebind= is required to have ":port").
-    for (const std::string& whitebind_arg : gArgs.GetArgs("-whitebind")) {
+    for (const std::string& whitebind_arg : WhiteBindSetting::Get(gArgs)) {
         NetWhitebindPermissions whitebind;
         bilingual_str error;
         if (NetWhitebindPermissions::TryParse(whitebind_arg, whitebind, error)) {
@@ -158,7 +159,7 @@ uint16_t GetListenPort()
     }
 
     // Otherwise, if -port= is provided, use that. Otherwise use the default port.
-    return static_cast<uint16_t>(gArgs.GetIntArg("-port", Params().GetDefaultPort()));
+    return static_cast<uint16_t>(PortSetting::Get(gArgs, Params().GetDefaultPort()));
 }
 
 // Determine the "best" local address for a particular peer.
@@ -2255,7 +2256,7 @@ void CConnman::ThreadDNSAddressSeed()
 {
     int outbound_connection_count = 0;
 
-    if (!gArgs.GetArgs("-seednode").empty()) {
+    if (!SeedNodeSetting::Get(gArgs).empty()) {
         auto start = NodeClock::now();
         constexpr std::chrono::seconds SEEDNODE_TIMEOUT = 30s;
         LogInfo("-seednode enabled. Trying the provided seeds for %d seconds before defaulting to the dnsseeds.\n", SEEDNODE_TIMEOUT.count());
@@ -2284,7 +2285,7 @@ void CConnman::ThreadDNSAddressSeed()
     std::shuffle(seeds.begin(), seeds.end(), rng);
     int seeds_right_now = 0; // Number of seeds left before testing if we have enough connections
 
-    if (gArgs.GetBoolArg("-forcednsseed", DEFAULT_FORCEDNSSEED)) {
+    if (ForceDnsSeedSetting::Get(gArgs)) {
         // When -forcednsseed is provided, query all.
         seeds_right_now = seeds.size();
     } else if (addrman.get().Size() == 0) {
@@ -2559,9 +2560,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
     auto next_feeler = start + rng.rand_exp_duration(FEELER_INTERVAL);
     auto next_extra_block_relay = start + rng.rand_exp_duration(EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL);
     auto next_extra_network_peer{start + rng.rand_exp_duration(EXTRA_NETWORK_PEER_INTERVAL)};
-    const bool dnsseed = gArgs.GetBoolArg("-dnsseed", DEFAULT_DNSSEED);
-    bool add_fixed_seeds = gArgs.GetBoolArg("-fixedseeds", DEFAULT_FIXEDSEEDS);
-    const bool use_seednodes{!gArgs.GetArgs("-seednode").empty()};
+    const bool dnsseed = DnsSeedSetting::Get(gArgs, DEFAULT_DNSSEED);
+    bool add_fixed_seeds = FixedSeedsSetting::Get(gArgs);
+    const bool use_seednodes{!SeedNodeSetting::Get(gArgs).empty()};
 
     auto seed_node_timer = NodeClock::now();
     bool add_addr_fetch{addrman.get().Size() == 0 && !seed_nodes.empty()};
@@ -3520,7 +3521,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     // Send and receive from sockets, accept connections
     threadSocketHandler = std::thread(&util::TraceThread, "net", [this] { ThreadSocketHandler(); });
 
-    if (!gArgs.GetBoolArg("-dnsseed", DEFAULT_DNSSEED))
+    if (!DnsSeedSetting::Get(gArgs, DEFAULT_DNSSEED))
         LogInfo("DNS seeding disabled\n");
     else
         threadDNSAddressSeed = std::thread(&util::TraceThread, "dnsseed", [this] { ThreadDNSAddressSeed(); });
@@ -3550,7 +3551,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
             std::thread(&util::TraceThread, "i2paccept", [this] { ThreadI2PAcceptIncoming(); });
     }
 
-    if (gArgs.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)) {
+    if (PrivatebroadcastSetting::Get(gArgs, DEFAULT_PRIVATE_BROADCAST)) {
         threadPrivateBroadcast =
             std::thread(&util::TraceThread, "privbcast", [this] { ThreadPrivateBroadcast(); });
     }
