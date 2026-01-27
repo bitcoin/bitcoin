@@ -16,7 +16,7 @@
 static void secp256k1_ecmult_compute_table(secp256k1_ge_storage* table, int window_g, const secp256k1_gej* gen) {
     secp256k1_gej gj;
     secp256k1_ge ge, dgen;
-    int j;
+    size_t j;
 
     gj = *gen;
     secp256k1_ge_set_gej_var(&ge, &gj);

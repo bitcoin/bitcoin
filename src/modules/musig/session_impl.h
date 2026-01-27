@@ -25,15 +25,8 @@ static void secp256k1_musig_ge_serialize_ext(unsigned char *out33, secp256k1_ge*
     if (secp256k1_ge_is_infinity(ge)) {
         memset(out33, 0, 33);
     } else {
-        int ret;
-        size_t size = 33;
-        ret = secp256k1_eckey_pubkey_serialize(ge, out33, &size, 1);
-#ifdef VERIFY
         /* Serialize must succeed because the point is not at infinity */
-        VERIFY_CHECK(ret && size == 33);
-#else
-        (void) ret;
-#endif
+        secp256k1_eckey_pubkey_serialize33(ge, out33);
     }
 }
 
@@ -76,7 +69,8 @@ static int secp256k1_musig_secnonce_load(const secp256k1_context* ctx, secp256k1
     return 1;
 }
 
-/* If flag is true, invalidate the secnonce; otherwise leave it. Constant-time. */
+/* If flag is 1, invalidate the secnonce; if flag is 0, leave it.
+ * Constant-time. Flag must be 0 or 1. */
 static void secp256k1_musig_secnonce_invalidate(const secp256k1_context* ctx, secp256k1_musig_secnonce *secnonce, int flag) {
     secp256k1_memczero(secnonce->data, sizeof(secnonce->data), flag);
     /* The flag argument is usually classified. So, the line above makes the
@@ -224,15 +218,8 @@ int secp256k1_musig_pubnonce_serialize(const secp256k1_context* ctx, unsigned ch
         return 0;
     }
     for (i = 0; i < 2; i++) {
-        int ret;
-        size_t size = 33;
-        ret = secp256k1_eckey_pubkey_serialize(&ges[i], &out66[33*i], &size, 1);
-#ifdef VERIFY
         /* serialize must succeed because the point was just loaded */
-        VERIFY_CHECK(ret && size == 33);
-#else
-        (void) ret;
-#endif
+        secp256k1_eckey_pubkey_serialize33(&ges[i], &out66[33*i]);
     }
     return 1;
 }
@@ -398,11 +385,9 @@ static int secp256k1_musig_nonce_gen_internal(const secp256k1_context* ctx, secp
     secp256k1_gej nonce_ptj[2];
     int i;
     unsigned char pk_ser[33];
-    size_t pk_ser_len = sizeof(pk_ser);
     unsigned char aggpk_ser[32];
     unsigned char *aggpk_ser_ptr = NULL;
     secp256k1_ge pk;
-    int pk_serialize_success;
     int ret = 1;
 
     ARG_CHECK(pubnonce != NULL);
@@ -429,15 +414,8 @@ static int secp256k1_musig_nonce_gen_internal(const secp256k1_context* ctx, secp
     if (!secp256k1_pubkey_load(ctx, &pk, pubkey)) {
         return 0;
     }
-    pk_serialize_success = secp256k1_eckey_pubkey_serialize(&pk, pk_ser, &pk_ser_len, 1);
-
-#ifdef VERIFY
     /* A pubkey cannot be the point at infinity */
-    VERIFY_CHECK(pk_serialize_success);
-    VERIFY_CHECK(pk_ser_len == sizeof(pk_ser));
-#else
-    (void) pk_serialize_success;
-#endif
+    secp256k1_eckey_pubkey_serialize33(&pk, pk_ser);
 
     secp256k1_nonce_function_musig(k, input_nonce, msg32, seckey, pk_ser, aggpk_ser_ptr, extra_input32);
     VERIFY_CHECK(!secp256k1_scalar_is_zero(&k[0]));
@@ -544,10 +522,15 @@ static int secp256k1_musig_sum_pubnonces(const secp256k1_context* ctx, secp256k1
 int secp256k1_musig_nonce_agg(const secp256k1_context* ctx, secp256k1_musig_aggnonce  *aggnonce, const secp256k1_musig_pubnonce * const* pubnonces, size_t n_pubnonces) {
     secp256k1_gej aggnonce_ptsj[2];
     secp256k1_ge aggnonce_pts[2];
+    size_t i;
+
     VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(aggnonce != NULL);
     ARG_CHECK(pubnonces != NULL);
     ARG_CHECK(n_pubnonces > 0);
+    for (i = 0; i < n_pubnonces; i++) {
+        ARG_CHECK(pubnonces[i] != NULL);
+    }
 
     if (!secp256k1_musig_sum_pubnonces(ctx, aggnonce_ptsj, pubnonces, n_pubnonces)) {
         return 0;
@@ -805,6 +788,9 @@ int secp256k1_musig_partial_sig_agg(const secp256k1_context* ctx, unsigned char 
     ARG_CHECK(session != NULL);
     ARG_CHECK(partial_sigs != NULL);
     ARG_CHECK(n_sigs > 0);
+    for (i = 0; i < n_sigs; i++) {
+        ARG_CHECK(partial_sigs[i] != NULL);
+    }
 
     if (!secp256k1_musig_session_load(ctx, &session_i, session)) {
         return 0;

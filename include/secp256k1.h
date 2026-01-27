@@ -349,7 +349,8 @@ SECP256K1_API void secp256k1_context_destroy(
  *  writes the message to stderr and calls abort. This default callback can be
  *  replaced at link time if the preprocessor macro
  *  USE_EXTERNAL_DEFAULT_CALLBACKS is defined, which is the case if the build
- *  has been configured with --enable-external-default-callbacks. Then the
+ *  has been configured with --enable-external-default-callbacks (GNU Autotools) or 
+ *  -DSECP256K1_USE_EXTERNAL_DEFAULT_CALLBACKS=ON (CMake). Then the
  *  following two symbols must be provided to link against:
  *   - void secp256k1_default_illegal_callback_fn(const char *message, void *data);
  *   - void secp256k1_default_error_callback_fn(const char *message, void *data);

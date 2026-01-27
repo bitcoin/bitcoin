@@ -201,6 +201,13 @@ static void musig_api_tests(void) {
     CHECK(secp256k1_musig_pubkey_agg(CTX, &agg_pk, &keyagg_cache, pk_ptr, 2) == 1);
     CHECK(secp256k1_musig_pubkey_agg(CTX, NULL, &keyagg_cache, pk_ptr, 2) == 1);
     CHECK(secp256k1_musig_pubkey_agg(CTX, &agg_pk, NULL, pk_ptr, 2) == 1);
+    /* check that NULL in array of public key pointers is not allowed */
+    for (i = 0; i < 2; i++) {
+        const secp256k1_pubkey *original_ptr = pk_ptr[i];
+        pk_ptr[i] = NULL;
+        CHECK_ILLEGAL(CTX, secp256k1_musig_pubkey_agg(CTX, &agg_pk, NULL, pk_ptr, 2));
+        pk_ptr[i] = original_ptr;
+    }
     CHECK_ILLEGAL(CTX, secp256k1_musig_pubkey_agg(CTX, &agg_pk, &keyagg_cache, NULL, 2));
     CHECK(memcmp_and_randomize(agg_pk.data, zeros132, sizeof(agg_pk.data)) == 0);
     CHECK_ILLEGAL(CTX, secp256k1_musig_pubkey_agg(CTX, &agg_pk, &keyagg_cache, invalid_pk_ptr2, 2));
@@ -350,6 +357,13 @@ static void musig_api_tests(void) {
 
     /** Receive nonces and aggregate **/
     CHECK(secp256k1_musig_nonce_agg(CTX, &aggnonce, pubnonce_ptr, 2) == 1);
+    /* check that NULL in array of public nonce pointers is not allowed */
+    for (i = 0; i < 2; i++) {
+        const secp256k1_musig_pubnonce *original_ptr = pubnonce_ptr[i];
+        pubnonce_ptr[i] = NULL;
+        CHECK_ILLEGAL(CTX, secp256k1_musig_nonce_agg(CTX, &aggnonce, pubnonce_ptr, 2));
+        pubnonce_ptr[i] = original_ptr;
+    }
     CHECK_ILLEGAL(CTX, secp256k1_musig_nonce_agg(CTX, NULL, pubnonce_ptr, 2));
     CHECK_ILLEGAL(CTX, secp256k1_musig_nonce_agg(CTX, &aggnonce, NULL, 2));
     CHECK_ILLEGAL(CTX, secp256k1_musig_nonce_agg(CTX, &aggnonce, pubnonce_ptr, 0));
@@ -474,6 +488,13 @@ static void musig_api_tests(void) {
 
     /** Signature aggregation and verification */
     CHECK(secp256k1_musig_partial_sig_agg(CTX, pre_sig, &session, partial_sig_ptr, 2) == 1);
+    /* check that NULL in array of partial signature pointers is not allowed */
+    for (i = 0; i < 2; i++) {
+        const secp256k1_musig_partial_sig *original_ptr = partial_sig_ptr[i];
+        partial_sig_ptr[i] = NULL;
+        CHECK_ILLEGAL(CTX, secp256k1_musig_partial_sig_agg(CTX, pre_sig, &session, partial_sig_ptr, 2));
+        partial_sig_ptr[i] = original_ptr;
+    }
     CHECK_ILLEGAL(CTX, secp256k1_musig_partial_sig_agg(CTX, NULL, &session, partial_sig_ptr, 2));
     CHECK_ILLEGAL(CTX, secp256k1_musig_partial_sig_agg(CTX, pre_sig, NULL, partial_sig_ptr, 2));
     CHECK_ILLEGAL(CTX, secp256k1_musig_partial_sig_agg(CTX, pre_sig, &invalid_session, partial_sig_ptr, 2));

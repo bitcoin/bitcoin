@@ -429,9 +429,8 @@ jobs:
       - *PRINT_LOGS
 
   x86_64-macos-native:
-    name: "x86_64: macOS Ventura, Valgrind"
-    # See: https://github.com/actions/runner-images#available-images.
-    runs-on: macos-13
+    name: "x86_64: macOS Sequoia, Valgrind"
+    runs-on: macos-15-intel
 
     env:
       CC: 'clang'
@@ -470,9 +469,14 @@ jobs:
         env: ${{ matrix.env_vars }}
         run: ./ci/ci.sh
 
-      - name: Symbol check
+      - &SYMBOL_CHECK_MACOS
+        name: Symbol check
+        env:
+          VIRTUAL_ENV: '${{ github.workspace }}/venv'
         run: |
           python3 --version
+          python3 -m venv $VIRTUAL_ENV
+          export PATH="$VIRTUAL_ENV/bin:$PATH"
           python3 -m pip install lief
           python3 ./tools/symbol-check.py .libs/libsecp256k1.dylib
 
@@ -513,17 +517,7 @@ jobs:
           ln -s $(brew --prefix gcc)/bin/gcc-?? /usr/local/bin/gcc
 
       - *CI_SCRIPT_ON_HOST
-
-      - name: Symbol check
-        env:
-          VIRTUAL_ENV: '${{ github.workspace }}/venv'
-        run: |
-          python3 --version
-          python3 -m venv $VIRTUAL_ENV
-          export PATH="$VIRTUAL_ENV/bin:$PATH"
-          python3 -m pip install lief
-          python3 ./tools/symbol-check.py .libs/libsecp256k1.dylib
-
+      - *SYMBOL_CHECK_MACOS
       - *PRINT_LOGS
 
   win64-native:

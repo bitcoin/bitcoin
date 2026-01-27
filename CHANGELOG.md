@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-01-26
+
+#### Changed
+ - Tests: Introduced a unit test framework with support for parallel test execution, selective test running, and named command-line arguments. Run `./tests -help` for usage information.
+
+#### Fixed
+ - Increased the number of cases where the library attempts to clear secrets from the stack.
+ - build: Fixed x86_64 assembly feature check that could fail when user-provided `CFLAGS` included `-Werror`. This would cause the build to fall back to the slower C implementation instead of using the optimized x86_64 assembly.
+
+#### ABI Compatibility
+The ABI is backward compatible with version 0.7.0.
+
 ## [0.7.0] - 2025-07-21
 
 #### Added
@@ -187,7 +199,8 @@ This version was in fact never released.
 The number was given by the build system since the introduction of autotools in Jan 2014 (ea0fe5a5bf0c04f9cc955b2966b614f5f378c6f6).
 Therefore, this version number does not uniquely identify a set of source files.
 
-[unreleased]: https://github.com/bitcoin-core/secp256k1/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/bitcoin-core/secp256k1/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/bitcoin-core/secp256k1/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/bitcoin-core/secp256k1/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/bitcoin-core/secp256k1/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/bitcoin-core/secp256k1/compare/v0.5.0...v0.5.1

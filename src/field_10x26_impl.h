@@ -1014,6 +1014,7 @@ SECP256K1_INLINE static void secp256k1_fe_impl_sqr(secp256k1_fe *r, const secp25
 SECP256K1_INLINE static void secp256k1_fe_impl_cmov(secp256k1_fe *r, const secp256k1_fe *a, int flag) {
     uint32_t mask0, mask1;
     volatile int vflag = flag;
+    VERIFY_CHECK(flag == 0 || flag == 1);
     SECP256K1_CHECKMEM_CHECK_VERIFY(r->n, sizeof(r->n));
     mask0 = vflag + ~((uint32_t)0);
     mask1 = ~mask0;
@@ -1097,6 +1098,7 @@ static SECP256K1_INLINE void secp256k1_fe_impl_half(secp256k1_fe *r) {
 static SECP256K1_INLINE void secp256k1_fe_storage_cmov(secp256k1_fe_storage *r, const secp256k1_fe_storage *a, int flag) {
     uint32_t mask0, mask1;
     volatile int vflag = flag;
+    VERIFY_CHECK(flag == 0 || flag == 1);
     SECP256K1_CHECKMEM_CHECK_VERIFY(r->n, sizeof(r->n));
     mask0 = vflag + ~((uint32_t)0);
     mask1 = ~mask0;
