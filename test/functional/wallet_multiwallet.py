@@ -68,6 +68,22 @@ class MultiWalletTest(BitcoinTestFramework):
         return wallet_dir(node, name)
 
     def run_test(self):
+        self.check_chmod = True
+        self.check_symlinks = True
+        if platform.system() == 'Windows':
+            # Additional context:
+            # - chmod: Posix has one user per file while Windows has an ACL approach
+            # - symlinks: GCC 13 has FIXME notes for symlinks under Windows:
+            #   https://gcc.gnu.org/git/?p=gcc.git;a=blob;f=libstdc%2B%2B-v3/src/filesystem/ops-common.h;h=ba377905a2e90f7baf30c900b090f1f732397e08;hb=refs/heads/releases/gcc-13#l124
+            self.log.warning('Skipping chmod+symlink checks on Windows: '
+                             'chmod works differently due to how access rights work and '
+                             'symlink behavior with regard to the standard library is non-standard on cross-built binaries.')
+            self.check_chmod = False
+            self.check_symlinks = False
+        elif os.geteuid() == 0:
+            self.log.warning('Skipping checks involving chmod as they require non-root permissions.')
+            self.check_chmod = False
+
         node = self.nodes[0]
 
         assert_equal(node.listwalletdir(), {'wallets': [{'name': self.default_wallet_name, "warnings": []}]})
@@ -89,23 +105,21 @@ class MultiWalletTest(BitcoinTestFramework):
         self.test_lock_file_closed(node)
 
     def test_scanning_main_dir_access(self, node):
+        if not self.check_chmod:
+            return
+
         self.log.info("Verify warning is emitted when failing to scan the wallets directory")
-        if platform.system() == 'Windows':
-            self.log.warning('Skipping test involving chmod as Windows does not support it.')
-        elif os.geteuid() == 0:
-            self.log.warning('Skipping test involving chmod as it requires a non-root user.')
-        else:
-            self.start_node(0)
-            with node.assert_debug_log(unexpected_msgs=['Error scanning directory entries under'], expected_msgs=[]):
-                result = node.listwalletdir()
-                assert_equal(result, {'wallets': [{'name': 'default_wallet', 'warnings': []}]})
-            os.chmod(data_dir(node, 'wallets'), 0)
-            with node.assert_debug_log(expected_msgs=['Error scanning directory entries under']):
-                result = node.listwalletdir()
-                assert_equal(result, {'wallets': []})
-            self.stop_node(0)
-            # Restore permissions
-            os.chmod(data_dir(node, 'wallets'), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+        self.start_node(0)
+        with node.assert_debug_log(unexpected_msgs=['Error scanning directory entries under'], expected_msgs=[]):
+            result = node.listwalletdir()
+            assert_equal(result, {'wallets': [{'name': 'default_wallet', 'warnings': []}]})
+        os.chmod(data_dir(node, 'wallets'), 0)
+        with node.assert_debug_log(expected_msgs=['Error scanning directory entries under']):
+            result = node.listwalletdir()
+            assert_equal(result, {'wallets': []})
+        self.stop_node(0)
+        # Restore permissions
+        os.chmod(data_dir(node, 'wallets'), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
     def test_mixed_wallets(self, node):
         self.log.info("Test mixed wallets")
@@ -114,7 +128,8 @@ class MultiWalletTest(BitcoinTestFramework):
         os.mkdir(wallet_dir(node, 'w7'))
         os.symlink('w7', wallet_dir(node, 'w7_symlink'))
 
-        os.symlink('..', wallet_dir(node, 'recursive_dir_symlink'))
+        if self.check_symlinks:
+            os.symlink('..', wallet_dir(node, 'recursive_dir_symlink'))
 
         # rename wallet.dat to make sure plain wallet file paths (as opposed to
         # directory paths) can be loaded
@@ -157,6 +172,9 @@ class MultiWalletTest(BitcoinTestFramework):
         return empty_wallet, empty_created_wallet, wallet_names, in_wallet_dir
 
     def test_scanning_sub_dir(self, node, in_wallet_dir):
+        if not self.check_chmod:
+            return
+
         self.log.info("Test scanning for sub directories")
         # Baseline, no errors.
         with node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Error while scanning wallet dir"]):
@@ -166,12 +184,10 @@ class MultiWalletTest(BitcoinTestFramework):
         # "Permission denied" error.
         os.mkdir(wallet_dir(node, 'no_access'))
         os.chmod(wallet_dir(node, 'no_access'), 0)
-        try:
-            with node.assert_debug_log(expected_msgs=["Error while scanning wallet dir"]):
-                walletlist = node.listwalletdir()['wallets']
-        finally:
-            # Need to ensure access is restored for cleanup
-            os.chmod(wallet_dir(node, 'no_access'), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+        with node.assert_debug_log(expected_msgs=["Error while scanning wallet dir"]):
+            walletlist = node.listwalletdir()['wallets']
+        # Need to ensure access is restored for cleanup
+        os.chmod(wallet_dir(node, 'no_access'), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
         # Verify that we no longer emit errors after restoring permissions
         with node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Error while scanning wallet dir"]):
@@ -179,6 +195,9 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_equal(sorted(map(lambda w: w['name'], walletlist)), sorted(in_wallet_dir))
 
     def test_scanning_symlink_levels(self, node, in_wallet_dir):
+        if not self.check_symlinks:
+            return
+
         self.log.info("Test for errors from too many levels of symbolic links")
         os.mkdir(wallet_dir(node, 'self_walletdat_symlink'))
         os.symlink('wallet.dat', wallet_dir(node, 'self_walletdat_symlink/wallet.dat'))
@@ -202,8 +221,9 @@ class MultiWalletTest(BitcoinTestFramework):
         self.stop_node(0, 'Warning: Ignoring duplicate -wallet w1.')
 
         # should not initialize if wallet file is a symlink
-        os.symlink('w8', wallet_dir(node, 'w8_symlink'))
-        node.assert_start_raises_init_error(['-wallet=w8_symlink'], r'Error: Invalid -wallet path \'w8_symlink\'\. .*', match=ErrorMatch.FULL_REGEX)
+        if self.check_symlinks:
+            os.symlink('w8', wallet_dir(node, 'w8_symlink'))
+            node.assert_start_raises_init_error(['-wallet=w8_symlink'], r'Error: Invalid -wallet path \'w8_symlink\'\. .*', match=ErrorMatch.FULL_REGEX)
 
         # should not initialize if the specified walletdir does not exist
         node.assert_start_raises_init_error(['-walletdir=bad'], 'Error: Specified -walletdir "bad" does not exist')
@@ -337,7 +357,8 @@ class MultiWalletTest(BitcoinTestFramework):
         # Fail to load duplicate wallets
         assert_raises_rpc_error(-35, "Wallet \"w1\" is already loaded.", node.loadwallet, wallet_names[0])
         # Fail to load if wallet file is a symlink
-        assert_raises_rpc_error(-4, "Wallet file verification failed. Invalid -wallet path 'w8_symlink'", node.loadwallet, 'w8_symlink')
+        if self.check_symlinks:
+            assert_raises_rpc_error(-4, "Wallet file verification failed. Invalid -wallet path 'w8_symlink'", node.loadwallet, 'w8_symlink')
 
         # Fail to load if a directory is specified that doesn't contain a wallet
         os.mkdir(wallet_dir(node, 'empty_wallet_dir'))
