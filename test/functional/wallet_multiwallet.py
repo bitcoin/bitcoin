@@ -79,6 +79,7 @@ class MultiWalletTest(BitcoinTestFramework):
         self.test_scanning_main_dir_access(node)
         empty_wallet, empty_created_wallet, wallet_names, in_wallet_dir = self.test_mixed_wallets(node)
         self.test_scanning_sub_dir(node, in_wallet_dir)
+        self.test_scanning_symlink_levels(node, in_wallet_dir)
         self.test_init(node, wallet_names)
         self.test_balances_and_fees(node, wallet_names, in_wallet_dir)
         w1, w2 = self.test_loading(node, wallet_names)
@@ -114,9 +115,6 @@ class MultiWalletTest(BitcoinTestFramework):
         os.symlink('w7', wallet_dir(node, 'w7_symlink'))
 
         os.symlink('..', wallet_dir(node, 'recursive_dir_symlink'))
-
-        os.mkdir(wallet_dir(node, 'self_walletdat_symlink'))
-        os.symlink('wallet.dat', wallet_dir(node, 'self_walletdat_symlink/wallet.dat'))
 
         # rename wallet.dat to make sure plain wallet file paths (as opposed to
         # directory paths) can be loaded
@@ -160,6 +158,12 @@ class MultiWalletTest(BitcoinTestFramework):
 
     def test_scanning_sub_dir(self, node, in_wallet_dir):
         self.log.info("Test scanning for sub directories")
+        # Baseline, no errors.
+        with node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Error while scanning wallet dir"]):
+            walletlist = node.listwalletdir()['wallets']
+        assert_equal(sorted(map(lambda w: w['name'], walletlist)), sorted(in_wallet_dir))
+
+        # "Permission denied" error.
         os.mkdir(wallet_dir(node, 'no_access'))
         os.chmod(wallet_dir(node, 'no_access'), 0)
         try:
@@ -168,6 +172,18 @@ class MultiWalletTest(BitcoinTestFramework):
         finally:
             # Need to ensure access is restored for cleanup
             os.chmod(wallet_dir(node, 'no_access'), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+
+        # Verify that we no longer emit errors after restoring permissions
+        with node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Error while scanning wallet dir"]):
+            walletlist = node.listwalletdir()['wallets']
+        assert_equal(sorted(map(lambda w: w['name'], walletlist)), sorted(in_wallet_dir))
+
+    def test_scanning_symlink_levels(self, node, in_wallet_dir):
+        self.log.info("Test for errors from too many levels of symbolic links")
+        os.mkdir(wallet_dir(node, 'self_walletdat_symlink'))
+        os.symlink('wallet.dat', wallet_dir(node, 'self_walletdat_symlink/wallet.dat'))
+        with node.assert_debug_log(expected_msgs=["Error while scanning wallet dir"]):
+            walletlist = node.listwalletdir()['wallets']
         assert_equal(sorted(map(lambda w: w['name'], walletlist)), sorted(in_wallet_dir))
 
     def test_init(self, node, wallet_names):
