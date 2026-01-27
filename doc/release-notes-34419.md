@@ -5,3 +5,6 @@ Updated RPCs
   response to prepare for a possible BIP54 deployment in the future. There is
   no corresponding change for IPC clients, since `getCoinbaseTx()` already
   includes these fields.
+- Added `coinbase_version` to the `getblocktemplate` response to expose the
+  coinbase transaction version. There is no corresponding change for IPC
+  clients, since `getCoinbaseTx()` already includes this field.
