@@ -558,6 +558,17 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """
         from_connection = self.nodes[a]
         to_connection = self.nodes[b]
+
+        # Use subversion as peer id. Test nodes have their node number appended to the user agent string
+        from_connection_subver = from_connection.getnetworkinfo()['subversion']
+        to_connection_subver = to_connection.getnetworkinfo()['subversion']
+
+        def find_conn(node, peer_subversion, inbound):
+            return next(filter(lambda peer: peer['subver'] == peer_subversion and peer['inbound'] == inbound, node.getpeerinfo()), None)
+
+        self.wait_until(lambda: not find_conn(from_connection, to_connection_subver, inbound=False))
+        self.wait_until(lambda: not find_conn(to_connection, from_connection_subver, inbound=True))
+
         ip_port = "127.0.0.1:" + str(p2p_port(b))
 
         if peer_advertises_v2 is None:
@@ -572,13 +583,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         if not wait_for_connect:
             return
-
-        # Use subversion as peer id. Test nodes have their node number appended to the user agent string
-        from_connection_subver = from_connection.getnetworkinfo()['subversion']
-        to_connection_subver = to_connection.getnetworkinfo()['subversion']
-
-        def find_conn(node, peer_subversion, inbound):
-            return next(filter(lambda peer: peer['subver'] == peer_subversion and peer['inbound'] == inbound, node.getpeerinfo()), None)
 
         self.wait_until(lambda: find_conn(from_connection, to_connection_subver, inbound=False) is not None)
         self.wait_until(lambda: find_conn(to_connection, from_connection_subver, inbound=True) is not None)
