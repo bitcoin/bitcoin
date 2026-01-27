@@ -630,6 +630,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         self.log.info("Restarted node before snapshot validation completed, reloading...")
         self.restart_node(1, extra_args=self.extra_args[1])
+        self.wait_until(lambda: not self.nodes[0].is_connected_to(self.nodes[1]))
 
         # Upon restart, the node must remain in 'limited' mode
         self.assert_only_network_limited_service(n1)

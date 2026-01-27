@@ -72,6 +72,7 @@ class KeypoolRestoreTest(BitcoinTestFramework):
             self.stop_node(idx)
             shutil.copyfile(wallet_backup_path, wallet_path)
             self.start_node(idx, self.extra_args[idx])
+            self.wait_until(lambda: not self.nodes[0].is_connected_to(self.nodes[idx]))
             self.connect_nodes(0, idx)
             self.sync_all()
 

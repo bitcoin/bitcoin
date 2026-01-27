@@ -310,6 +310,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
 
         # Restart without index
         self.restart_node(1, extra_args=[])
+        self.wait_until(lambda: not self.nodes[0].is_connected_to(self.nodes[1]))
         self.connect_nodes(0, 1)
         index_node.invalidateblock(block)
         self.generatetoaddress(index_node, 5, getnewdestination()[2])
