@@ -78,19 +78,19 @@ util::Result<void> SetLoggingLevel(const ArgsManager& args)
 
 util::Result<void> SetLoggingCategories(const ArgsManager& args)
 {
-        const std::vector<std::string> categories = args.GetArgs("-debug");
+    const std::vector<std::string> categories = args.GetArgs("-debug");
 
-        // Special-case: Disregard any debugging categories appearing before -debug=0/none
-        const auto last_negated = std::find_if(categories.rbegin(), categories.rend(),
-                                               [](const std::string& cat) { return cat == "0" || cat == "none"; });
+    // Special-case: Disregard any debugging categories appearing before -debug=0/none
+    const auto last_negated = std::find_if(categories.rbegin(), categories.rend(),
+                                           [](const std::string& cat) { return cat == "0" || cat == "none"; });
 
-        const auto categories_to_process = (last_negated == categories.rend()) ? categories : std::ranges::subrange(last_negated.base(), categories.end());
+    const auto categories_to_process = (last_negated == categories.rend()) ? categories : std::ranges::subrange(last_negated.base(), categories.end());
 
-        for (const auto& cat : categories_to_process) {
-            if (!LogInstance().EnableCategory(cat)) {
-                return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debug", cat)};
-            }
+    for (const auto& cat : categories_to_process) {
+        if (!LogInstance().EnableCategory(cat)) {
+            return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debug", cat)};
         }
+    }
 
     // Now remove the logging categories which were explicitly excluded
     for (const std::string& cat : args.GetArgs("-debugexclude")) {
@@ -99,9 +99,7 @@ util::Result<void> SetLoggingCategories(const ArgsManager& args)
         }
     }
 
-    if (LogInstance().GetCategoryMask() != BCLog::NONE) {
-        LogInfo("Debug logging is enabled (-debug). Additional log output may contain privacy-sensitive information. Be cautious when sharing logs.");
-    }
+    LogInfo("Log output may contain privacy-sensitive information. Be cautious when sharing logs.");
 
     return {};
 }
