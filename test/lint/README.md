@@ -10,6 +10,13 @@ the _lint.py_ helper script which runs checks inside the CI container:
 ./ci/lint.py
 ```
 
+Extra arguments are passed to `cargo run -- ...` in the container so you can do:
+
+```sh
+./ci/lint.py --help
+./ci/lint.py --lint=py_lint
+```
+
 test runner
 ===========
 
