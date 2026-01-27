@@ -1090,7 +1090,7 @@ private:
     void LogBlockHeader(const CBlockIndex& index, const CNode& peer, bool via_compact_block);
 
     /// The transactions to be broadcast privately.
-    PrivateBroadcast m_tx_for_private_broadcast;
+    std::optional<PrivateBroadcast> m_tx_for_private_broadcast;
 };
 
 const CNodeState* PeerManagerImpl::State(NodeId pnode) const
@@ -1641,27 +1641,29 @@ void PeerManagerImpl::ReattemptPrivateBroadcast(CScheduler& scheduler)
 {
     // Remove stale transactions that are no longer relevant (e.g. already in
     // the mempool or mined) and count the remaining ones.
-    size_t num_for_rebroadcast{0};
-    const auto stale_txs = m_tx_for_private_broadcast.GetStale();
-    if (!stale_txs.empty()) {
-        LOCK(cs_main);
-        for (const auto& stale_tx : stale_txs) {
-            auto mempool_acceptable = m_chainman.ProcessTransaction(stale_tx, /*test_accept=*/true);
-            if (mempool_acceptable.m_result_type == MempoolAcceptResult::ResultType::VALID) {
-                LogDebug(BCLog::PRIVBROADCAST,
-                         "Reattempting broadcast of stale txid=%s wtxid=%s",
-                         stale_tx->GetHash().ToString(), stale_tx->GetWitnessHash().ToString());
-                ++num_for_rebroadcast;
-            } else {
-                LogInfo("[privatebroadcast] Giving up broadcast attempts for txid=%s wtxid=%s: %s",
-                        stale_tx->GetHash().ToString(), stale_tx->GetWitnessHash().ToString(),
-                        mempool_acceptable.m_state.ToString());
-                m_tx_for_private_broadcast.Remove(stale_tx);
+    if (m_tx_for_private_broadcast.has_value()) {
+        size_t num_for_rebroadcast{0};
+        const auto stale_txs = m_tx_for_private_broadcast->GetStale();
+        if (!stale_txs.empty()) {
+            LOCK(cs_main);
+            for (const auto& stale_tx : stale_txs) {
+                auto mempool_acceptable = m_chainman.ProcessTransaction(stale_tx, /*test_accept=*/true);
+                if (mempool_acceptable.m_result_type == MempoolAcceptResult::ResultType::VALID) {
+                    LogDebug(BCLog::PRIVBROADCAST,
+                             "Reattempting broadcast of stale txid=%s wtxid=%s",
+                             stale_tx->GetHash().ToString(), stale_tx->GetWitnessHash().ToString());
+                    ++num_for_rebroadcast;
+                } else {
+                    LogInfo("[privatebroadcast] Giving up broadcast attempts for txid=%s wtxid=%s: %s",
+                            stale_tx->GetHash().ToString(), stale_tx->GetWitnessHash().ToString(),
+                            mempool_acceptable.m_state.ToString());
+                    m_tx_for_private_broadcast->Remove(stale_tx);
+                }
             }
-        }
 
-        // This could overshoot, but that is ok - we will open some private connections in vain.
-        m_connman.m_private_broadcast.NumToOpenAdd(num_for_rebroadcast);
+            // This could overshoot, but that is ok - we will open some private connections in vain.
+            m_connman.m_private_broadcast.NumToOpenAdd(num_for_rebroadcast);
+        }
     }
 
     const auto delta{2min + FastRandomContext().randrange<std::chrono::milliseconds>(1min)};
@@ -1737,8 +1739,9 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         m_headers_presync_stats.erase(nodeid);
     }
     if (node.IsPrivateBroadcastConn() &&
-        !m_tx_for_private_broadcast.DidNodeConfirmReception(nodeid) &&
-        m_tx_for_private_broadcast.HavePendingTransactions()) {
+        m_tx_for_private_broadcast.has_value() &&
+        !m_tx_for_private_broadcast->DidNodeConfirmReception(nodeid) &&
+        m_tx_for_private_broadcast->HavePendingTransactions()) {
 
         m_connman.m_private_broadcast.NumToOpenAdd(1);
     }
@@ -2237,8 +2240,12 @@ void PeerManagerImpl::InitiateTxBroadcastToAll(const Txid& txid, const Wtxid& wt
 
 void PeerManagerImpl::InitiateTxBroadcastPrivate(const CTransactionRef& tx)
 {
+    // Lazily initialize `m_tx_for_private_broadcast` the first time it is needed.
+    if (!m_tx_for_private_broadcast.has_value()) {
+        m_tx_for_private_broadcast.emplace();
+    }
     const auto txstr{strprintf("txid=%s, wtxid=%s", tx->GetHash().ToString(), tx->GetWitnessHash().ToString())};
-    if (m_tx_for_private_broadcast.Add(tx)) {
+    if (m_tx_for_private_broadcast->Add(tx)) {
         LogDebug(BCLog::PRIVBROADCAST, "Requesting %d new connections due to %s", NUM_PRIVATE_BROADCAST_PER_TX, txstr);
         m_connman.m_private_broadcast.NumToOpenAdd(NUM_PRIVATE_BROADCAST_PER_TX);
     } else {
@@ -3528,7 +3535,15 @@ void PeerManagerImpl::PushPrivateBroadcastTx(CNode& node)
 {
     Assume(node.IsPrivateBroadcastConn());
 
-    const auto opt_tx{m_tx_for_private_broadcast.PickTxForSend(node.GetId())};
+    if (!m_tx_for_private_broadcast.has_value()) {
+        LogWarning("[privatebroadcast] Disconnecting: private broadcast storage is "
+                   "not initialized while attempting to push a transaction to peer=%d%s",
+                   node.GetId(), node.LogIP(fLogIPs));
+        node.fDisconnect = true;
+        return;
+    }
+
+    const auto opt_tx{m_tx_for_private_broadcast->PickTxForSend(node.GetId())};
     if (!opt_tx) {
         LogDebug(BCLog::PRIVBROADCAST, "Disconnecting: no more transactions for private broadcast (connected in vain), peer=%d%s", node.GetId(), node.LogIP(fLogIPs));
         node.fDisconnect = true;
@@ -4201,7 +4216,14 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
 
         if (pfrom.IsPrivateBroadcastConn()) {
-            const auto pushed_tx_opt{m_tx_for_private_broadcast.GetTxForNode(pfrom.GetId())};
+            if (!m_tx_for_private_broadcast.has_value()) {
+                LogWarning("[privatebroadcast] Disconnecting: private broadcast storage is "
+                           "not initialized while receiving GETDATA from peer=%d%s",
+                           pfrom.GetId(), pfrom.LogIP(fLogIPs));
+                pfrom.fDisconnect = true;
+                return;
+            }
+            const auto pushed_tx_opt{m_tx_for_private_broadcast->GetTxForNode(pfrom.GetId())};
             if (!pushed_tx_opt) {
                 LogInfo("[privatebroadcast] Disconnecting: got GETDATA without sending an INV, peer=%d%s",
                         pfrom.GetId(), fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : "");
@@ -4464,14 +4486,16 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         const uint256& hash = peer->m_wtxid_relay ? wtxid.ToUint256() : txid.ToUint256();
         AddKnownTx(*peer, hash);
 
-        if (const auto num_broadcasted{m_tx_for_private_broadcast.Remove(ptx)}) {
-            LogInfo("[privatebroadcast] Received our privately broadcast transaction (txid=%s) from the "
-                    "network from peer=%d%s; stopping private broadcast attempts",
-                    txid.ToString(), pfrom.GetId(), pfrom.LogIP(fLogIPs));
-            if (NUM_PRIVATE_BROADCAST_PER_TX > num_broadcasted.value()) {
-                // Not all of the initial NUM_PRIVATE_BROADCAST_PER_TX connections were needed.
-                // Tell CConnman it does not need to start the remaining ones.
-                m_connman.m_private_broadcast.NumToOpenSub(NUM_PRIVATE_BROADCAST_PER_TX - num_broadcasted.value());
+        if (m_tx_for_private_broadcast.has_value()) {
+            if (const auto num_broadcasted{m_tx_for_private_broadcast->Remove(ptx)}) {
+                LogInfo("[privatebroadcast] Received our privately broadcast transaction (txid=%s) from the "
+                        "network from peer=%d%s; stopping private broadcast attempts",
+                        txid.ToString(), pfrom.GetId(), pfrom.LogIP(fLogIPs));
+                if (NUM_PRIVATE_BROADCAST_PER_TX > num_broadcasted.value()) {
+                    // Not all of the initial NUM_PRIVATE_BROADCAST_PER_TX connections were needed.
+                    // Tell CConnman it does not need to start the remaining ones.
+                    m_connman.m_private_broadcast.NumToOpenSub(NUM_PRIVATE_BROADCAST_PER_TX - num_broadcasted.value());
+                }
             }
         }
 
@@ -4980,10 +5004,18 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                         // Let connman know about this successful ping-pong
                         pfrom.PongReceived(ping_time);
                         if (pfrom.IsPrivateBroadcastConn()) {
-                            m_tx_for_private_broadcast.NodeConfirmedReception(pfrom.GetId());
-                            LogInfo("[privatebroadcast] Got a PONG (the transaction will probably reach the network), marking for disconnect, peer=%d%s",
-                                    pfrom.GetId(), pfrom.LogIP(fLogIPs));
-                            pfrom.fDisconnect = true;
+                            if (!m_tx_for_private_broadcast.has_value()) {
+                                LogWarning("[privatebroadcast] Disconnecting: private broadcast storage is "
+                                           "not initialized while receiving PONG from peer=%d%s",
+                                           pfrom.GetId(), pfrom.LogIP(fLogIPs));
+                                pfrom.fDisconnect = true;
+                            } else {
+                                m_tx_for_private_broadcast->NodeConfirmedReception(pfrom.GetId());
+                                LogInfo("[privatebroadcast] Got a PONG (the transaction will probably "
+                                        "reach the network), marking for disconnect, peer=%d%s",
+                                        pfrom.GetId(), pfrom.LogIP(fLogIPs));
+                                pfrom.fDisconnect = true;
+                            }
                         }
                     } else {
                         // This should never happen
