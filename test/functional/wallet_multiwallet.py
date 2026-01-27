@@ -75,6 +75,18 @@ class MultiWalletTest(BitcoinTestFramework):
         self.stop_nodes()
         assert_equal(os.path.isfile(wallet_dir(node, self.default_wallet_name, self.wallet_data_filename)), True)
 
+        self.test_scanning_main_dir_access(node)
+        empty_wallet, empty_created_wallet, wallet_names, in_wallet_dir = self.test_mixed_wallets(node)
+        self.test_scanning_sub_dir(node, in_wallet_dir)
+        self.test_init(node, wallet_names)
+        self.test_balances_and_fees(node, wallet_names, in_wallet_dir)
+        w1, w2 = self.test_loading(node, wallet_names)
+        self.test_creation(node, in_wallet_dir)
+        self.test_unloading(node, in_wallet_dir, w1, w2)
+        self.test_backup_and_restore(node, wallet_names, empty_wallet, empty_created_wallet)
+        self.test_lock_file_closed(node)
+
+    def test_scanning_main_dir_access(self, node):
         self.log.info("Verify warning is emitted when failing to scan the wallets directory")
         if platform.system() == 'Windows':
             self.log.warning('Skipping test involving chmod as Windows does not support it.')
@@ -93,6 +105,8 @@ class MultiWalletTest(BitcoinTestFramework):
             # Restore permissions
             os.chmod(data_dir(node, 'wallets'), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
+    def test_mixed_wallets(self, node):
+        self.log.info("Test mixed wallets")
         # create symlink to verify wallet directory path can be referenced
         # through symlink
         os.mkdir(wallet_dir(node, 'w7'))
@@ -141,6 +155,10 @@ class MultiWalletTest(BitcoinTestFramework):
         for wallet_name in to_load:
             node.loadwallet(wallet_name)
 
+        return empty_wallet, empty_created_wallet, wallet_names, in_wallet_dir
+
+    def test_scanning_sub_dir(self, node, in_wallet_dir):
+        self.log.info("Test scanning for sub directories")
         os.mkdir(wallet_dir(node, 'no_access'))
         os.chmod(wallet_dir(node, 'no_access'), 0)
         try:
@@ -151,8 +169,9 @@ class MultiWalletTest(BitcoinTestFramework):
             os.chmod(wallet_dir(node, 'no_access'), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
         assert_equal(sorted(map(lambda w: w['name'], walletlist)), sorted(in_wallet_dir))
 
+    def test_init(self, node, wallet_names):
+        self.log.info("Test initialization")
         assert_equal(set(node.listwallets()), set(wallet_names))
-
         # check that all requested wallets were created
         self.stop_node(0)
         for wallet_name in wallet_names:
@@ -202,6 +221,8 @@ class MultiWalletTest(BitcoinTestFramework):
         exp_stderr = f"Error: SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of {self.config['environment']['CLIENT_NAME']}?"
         self.nodes[1].assert_start_raises_init_error(['-walletdir=' + competing_wallet_dir], exp_stderr, match=ErrorMatch.PARTIAL_REGEX)
 
+    def test_balances_and_fees(self, node, wallet_names, in_wallet_dir):
+        self.log.info("Test balances and fees")
         self.restart_node(0)
         for wallet_name in wallet_names:
             node.loadwallet(wallet_name)
@@ -243,6 +264,7 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_equal(batch[0]["result"]["chain"], self.chain)
         assert_equal(batch[1]["result"]["walletname"], "w1")
 
+    def test_loading(self, node, wallet_names):
         self.log.info("Test dynamic wallet loading")
 
         self.restart_node(0, ['-nowallet'])
@@ -298,7 +320,10 @@ class MultiWalletTest(BitcoinTestFramework):
         path = wallet_dir(node, "empty_wallet_dir")
         assert_raises_rpc_error(-18, "Wallet file verification failed. Failed to load database path '{}'. Data is not in recognized format.".format(path), node.loadwallet, 'empty_wallet_dir')
 
-        self.log.info("Test dynamic wallet creation.")
+        return w1, w2
+
+    def test_creation(self, node, in_wallet_dir):
+        self.log.info("Test dynamic wallet creation")
 
         # should raise rpc error if wallet path can't be created
         err_code = -4
@@ -327,6 +352,7 @@ class MultiWalletTest(BitcoinTestFramework):
 
         assert new_wallet_name in node.listwallets()
 
+    def test_unloading(self, node, in_wallet_dir, w1, w2):
         self.log.info("Test dynamic wallet unloading")
 
         # Test `unloadwallet` errors
@@ -365,8 +391,8 @@ class MultiWalletTest(BitcoinTestFramework):
 
         assert_equal(sorted(map(lambda w: w['name'], node.listwalletdir()['wallets'])), sorted(in_wallet_dir))
 
-        # Test backing up and restoring wallets
-        self.log.info("Test wallet backup")
+    def test_backup_and_restore(self, node, wallet_names, empty_wallet, empty_created_wallet):
+        self.log.info("Test wallet backup and restore")
         self.restart_node(0, ['-nowallet'])
         for wallet_name in wallet_names:
             node.loadwallet(wallet_name)
@@ -386,7 +412,8 @@ class MultiWalletTest(BitcoinTestFramework):
             node.loadwallet(wallet_name)
             assert_equal(rpc.getaddressinfo(addr)['ismine'], True)
 
-        # Test .walletlock file is closed
+    def test_lock_file_closed(self, node):
+        self.log.info("Test wallet lock file is closed")
         self.start_node(1)
         wallet = os.path.join(self.options.tmpdir, 'my_wallet')
         node.createwallet(wallet)
