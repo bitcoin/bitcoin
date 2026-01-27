@@ -163,6 +163,22 @@ std::optional<BlockRef> GetTip(ChainstateManager& chainman);
  * Returns the current tip, or nullopt if the node is shutting down. */
 std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const uint256& current_tip, MillisecondsDouble& timeout);
 
+/**
+ * Wait while the best known header extends the current chain tip AND at least
+ * one block per second is being added to the tip.
+ *
+ * It’s not safe to keep waiting, because a malicious miner could announce a
+ * header and delay revealing the block, causing all other miners using this
+ * software to stall.
+ *
+ * The cooldown only applies to createNewBlock(), which is typically called
+ * once per connected client. Subsequent templates are provided by waitNext().
+ *
+ * @param last_tip tip at the start of the cooldown window.
+ *
+ * @returns false if interrupted.
+ */
+bool CooldownIfHeadersAhead(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const BlockRef& last_tip);
 } // namespace node
 
 #endif // BITCOIN_NODE_MINER_H

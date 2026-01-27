@@ -445,6 +445,35 @@ std::optional<BlockRef> GetTip(ChainstateManager& chainman)
     return BlockRef{tip->GetBlockHash(), tip->nHeight};
 }
 
+bool CooldownIfHeadersAhead(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const BlockRef& last_tip)
+{
+    constexpr auto COOLDOWN{1s};
+    // Use a steady clock so cooldown is independent of mocktime.
+    auto cooldown_deadline{SteadyClock::now() + COOLDOWN};
+    uint256 last_tip_hash{last_tip.hash};
+    while (chainman.BestHeaderAheadOfCurrentTip()) {
+        WAIT_LOCK(kernel_notifications.m_tip_block_mutex, lock);
+        kernel_notifications.m_tip_block_cv.wait_until(lock, cooldown_deadline, [&]() EXCLUSIVE_LOCKS_REQUIRED(kernel_notifications.m_tip_block_mutex) {
+            const auto tip_block = kernel_notifications.TipBlock();
+            return chainman.m_interrupt || (tip_block && *tip_block != last_tip_hash);
+        });
+        if (chainman.m_interrupt) return false;
+
+        // If the tip changed during the wait, extend the deadline
+        const auto tip_block = kernel_notifications.TipBlock();
+        if (tip_block && *tip_block != last_tip_hash) {
+            last_tip_hash = *tip_block;
+            cooldown_deadline = SteadyClock::now() + COOLDOWN;
+            continue;
+        }
+
+        // No tip change and the cooldown window has expired.
+        if (SteadyClock::now() >= cooldown_deadline) break;
+    }
+
+    return true;
+}
+
 std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const uint256& current_tip, MillisecondsDouble& timeout)
 {
     Assume(timeout >= 0ms); // No internal callers should use a negative timeout

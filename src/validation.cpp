@@ -6310,6 +6310,16 @@ void ChainstateManager::RecalculateBestHeader()
     }
 }
 
+bool ChainstateManager::BestHeaderAheadOfCurrentTip() const
+{
+    LOCK(::cs_main);
+    const CBlockIndex* best_header{m_best_header};
+    const CBlockIndex* tip{ActiveChain().Tip()};
+    // Only consider headers that extend the active tip; ignore competing branches.
+    return best_header && tip && best_header->nChainWork > tip->nChainWork &&
+           best_header->GetAncestor(tip->nHeight) == tip;
+}
+
 bool ChainstateManager::ValidatedSnapshotCleanup(Chainstate& validated_cs, Chainstate& unvalidated_cs)
 {
     AssertLockHeld(::cs_main);
