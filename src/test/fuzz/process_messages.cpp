@@ -47,7 +47,7 @@ void initialize_process_messages()
     static const auto testing_setup{
         MakeNoLogFileContext<TestingSetup>(
             /*chain_type=*/ChainType::REGTEST,
-            {}),
+            {.mock_steady_clock = true}),
     };
     g_setup = testing_setup.get();
     ResetChainman(*g_setup);

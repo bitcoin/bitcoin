@@ -12,6 +12,7 @@
 #include <primitives/block.h>
 #include <txmempool.h>
 #include <util/feefrac.h>
+#include <util/time.h>
 
 #include <cstdint>
 #include <memory>
@@ -55,6 +56,11 @@ struct CBlockTemplate
      * miner code.
      */
     CoinbaseTx m_coinbase_tx;
+
+    /* Uses steady clock because it is monotonic and unaffected by rare system clock changes.
+     * It Uses the mockable version to allow for testing.
+     * Used to decide whether a cached template is eligible for reuse based on its age.*/
+    MockableSteadyClock::time_point m_creation_time;
 };
 
 /** Generate a new block, without valid proof-of-work */

@@ -32,6 +32,7 @@ FUZZ_TARGET(utxo_total_supply)
             .extra_args = {
                 "-testactivationheight=bip34@2",
             },
+            .mock_steady_clock = true,
         },
     };
     // Create chainstate

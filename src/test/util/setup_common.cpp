@@ -40,6 +40,7 @@
 #include <test/util/coverage.h>
 #include <test/util/net.h>
 #include <test/util/random.h>
+#include <test/util/time.h>
 #include <test/util/transaction_utils.h>
 #include <test/util/txmempool.h>
 #include <txdb.h>
@@ -61,8 +62,8 @@
 #include <walletinitinterface.h>
 
 #include <algorithm>
-#include <future>
 #include <functional>
+#include <future>
 #include <stdexcept>
 
 using namespace util::hex_literals;
@@ -115,6 +116,9 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
 {
     if (!EnableFuzzDeterminism()) {
         SeedRandomForTest(SeedRand::FIXED_SEED);
+    }
+    if (opts.mock_steady_clock) {
+        elapse_steady = ElapseSteady();
     }
 
     // Reset globals
@@ -215,6 +219,7 @@ BasicTestingSetup::~BasicTestingSetup()
     if (!EnableFuzzDeterminism()) {
         SetMockTime(0s); // Reset mocktime for following tests
     }
+    if (elapse_steady) MockableSteadyClock::ClearMockTime();
     LogInstance().DisconnectTestLogger();
     if (m_has_custom_datadir) {
         // Only remove the lock file, preserve the data directory.

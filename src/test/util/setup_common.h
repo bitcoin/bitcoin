@@ -17,6 +17,7 @@
 #include <pubkey.h>
 #include <stdexcept>
 #include <test/util/random.h>
+#include <test/util/time.h>
 #include <util/chaintype.h> // IWYU pragma: export
 #include <util/check.h>
 #include <util/fs.h>
@@ -56,6 +57,7 @@ struct TestOpts {
     bool setup_net{true};
     bool setup_validation_interface{true};
     bool min_validation_cache{false}; // Equivalent of -maxsigcachebytes=0
+    bool mock_steady_clock{false};
 };
 
 /** Basic testing setup.
@@ -97,6 +99,7 @@ struct BasicTestingSetup {
      * @see https://github.com/bitcoin/bitcoin/issues/25055 for additional context.
      */
     ArgsManager m_args;
+    std::optional<ElapseSteady> elapse_steady;
 };
 
 /** Testing setup that performs all steps up until right before
