@@ -681,6 +681,8 @@ static RPCHelpMan getblocktemplate()
                     {RPCResult::Type::STR_HEX, "key", "values must be in the coinbase (keys may be ignored)"},
                 }},
                 {RPCResult::Type::NUM, "coinbasevalue", "maximum allowable input to coinbase transaction, including the generation award and transaction fees (in satoshis)"},
+                {RPCResult::Type::NUM, "coinbase_locktime", "locktime for the coinbase transaction"},
+                {RPCResult::Type::NUM, "coinbase_sequence", "sequence for the coinbase input"},
                 {RPCResult::Type::STR, "longpollid", "an id to include with a request to longpoll on an update to this template"},
                 {RPCResult::Type::STR, "target", "The hash target"},
                 {RPCResult::Type::NUM_TIME, "mintime", "The minimum timestamp appropriate for the next block time, expressed in " + UNIX_EPOCH_TIME + ". Adjusted for the proposed BIP94 timewarp rule."},
@@ -990,6 +992,8 @@ static RPCHelpMan getblocktemplate()
     result.pushKV("coinbaseaux", std::move(aux));
     const node::CoinbaseTx coinbase_tx{block_template->getCoinbaseTx()};
     result.pushKV("coinbasevalue", coinbase_tx.block_reward_remaining);
+    result.pushKV("coinbase_locktime", coinbase_tx.lock_time);
+    result.pushKV("coinbase_sequence", coinbase_tx.sequence);
     result.pushKV("longpollid", tip.GetHex() + ToString(nTransactionsUpdatedLast));
     result.pushKV("target", hashTarget.GetHex());
     result.pushKV("mintime", GetMinimumTime(pindexPrev, consensusParams.DifficultyAdjustmentInterval()));
