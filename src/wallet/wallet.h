@@ -363,7 +363,7 @@ private:
     bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, const SyncTxState& state, bool fUpdate, bool rescanning_old_block) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** Mark a transaction (and its in-wallet descendants) as conflicting with a particular block. */
-    void MarkConflicted(const uint256& hashBlock, int conflicting_height, const Txid& hashTx);
+    void MarkConflicted(const uint256& hash_block, int conflicting_height, const Txid& hashTx);
 
     enum class TxUpdate { UNCHANGED, CHANGED, NOTIFY_CHANGED };
 

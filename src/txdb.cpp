@@ -93,32 +93,32 @@ std::vector<uint256> CCoinsViewDB::GetHeadBlocks() const {
     return vhashHeadBlocks;
 }
 
-void CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock)
+void CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hash_block)
 {
     CDBBatch batch(*m_db);
     size_t count = 0;
     size_t changed = 0;
-    assert(!hashBlock.IsNull());
+    assert(!hash_block.IsNull());
 
     uint256 old_tip = GetBestBlock();
     if (old_tip.IsNull()) {
         // We may be in the middle of replaying.
         std::vector<uint256> old_heads = GetHeadBlocks();
         if (old_heads.size() == 2) {
-            if (old_heads[0] != hashBlock) {
+            if (old_heads[0] != hash_block) {
                 LogError("The coins database detected an inconsistent state, likely due to a previous crash or shutdown. You will need to restart bitcoind with the -reindex-chainstate or -reindex configuration option.\n");
             }
-            assert(old_heads[0] == hashBlock);
+            assert(old_heads[0] == hash_block);
             old_tip = old_heads[1];
         }
     }
 
     // In the first batch, mark the database as being in the middle of a
-    // transition from old_tip to hashBlock.
+    // transition from old_tip to hash_block.
     // A vector is used for future extensibility, as we may want to support
     // interrupting after partial writes from multiple independent reorgs.
     batch.Erase(DB_BEST_BLOCK);
-    batch.Write(DB_HEAD_BLOCKS, Vector(hashBlock, old_tip));
+    batch.Write(DB_HEAD_BLOCKS, Vector(hash_block, old_tip));
 
     for (auto it{cursor.Begin()}; it != cursor.End();) {
         if (it->second.IsDirty()) {
@@ -148,9 +148,9 @@ void CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashB
         }
     }
 
-    // In the last batch, mark the database as consistent with hashBlock again.
+    // In the last batch, mark the database as consistent with hash_block again.
     batch.Erase(DB_HEAD_BLOCKS);
-    batch.Write(DB_BEST_BLOCK, hashBlock);
+    batch.Write(DB_BEST_BLOCK, hash_block);
 
     LogDebug(BCLog::COINDB, "Writing final batch of %.2f MiB\n", batch.ApproximateSize() * (1.0 / 1048576.0));
     m_db->WriteBatch(batch);
