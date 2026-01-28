@@ -21,7 +21,9 @@
 #include <util/check.h>
 #include <util/time.h>
 #include <util/translation.h>
+#include <util/string.h>
 #include <validation.h>
+#include <wallet/context.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/test/util.h>
 #include <wallet/types.h>
@@ -46,8 +48,13 @@ void initialize_spkm()
 {
     static const auto testing_setup{MakeNoLogFileContext<const TestingSetup>()};
     g_setup = testing_setup.get();
-    SelectParams(ChainType::MAIN);
     MOCKED_DESC_CONVERTER.Init();
+}
+
+void initialize_spkm_migration()
+{
+    static const auto testing_setup{MakeNoLogFileContext<const TestingSetup>()};
+    g_setup = testing_setup.get();
 }
 
 static std::optional<std::pair<WalletDescriptor, FlatSigningProvider>> CreateWalletDescriptor(FuzzedDataProvider& fuzzed_data_provider)
@@ -191,6 +198,143 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
     (void)spk_manager->GetDescriptorString(descriptor, /*priv=*/fuzzed_data_provider.ConsumeBool());
     (void)spk_manager->GetEndRange();
     (void)spk_manager->GetKeyPoolSize();
+}
+
+
+FUZZ_TARGET(spkm_migration, .init = initialize_spkm_migration)
+{
+    SeedRandomStateForTest(SeedRand::ZEROS);
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    const auto& node{g_setup->m_node};
+    Chainstate& chainstate{node.chainman->ActiveChainstate()};
+
+    std::unique_ptr<CWallet> wallet_ptr{std::make_unique<CWallet>(node.chain.get(), "", CreateMockableWalletDatabase())};
+    CWallet& wallet{*wallet_ptr};
+    wallet.m_keypool_size = 1;
+    {
+        LOCK(wallet.cs_wallet);
+        wallet.UnsetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+        wallet.SetLastBlockProcessed(chainstate.m_chain.Height(), chainstate.m_chain.Tip()->GetBlockHash());
+    }
+
+    auto& legacy_data{*wallet.GetOrCreateLegacyDataSPKM()};
+
+    std::vector<CKey> keys;
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 30) {
+        const auto key{ConsumePrivateKey(fuzzed_data_provider)};
+        if (!key.IsValid()) return;
+        auto pub_key{key.GetPubKey()};
+        if (!pub_key.IsFullyValid()) return;
+        if (legacy_data.LoadKey(key, pub_key) && std::find(keys.begin(), keys.end(), key) == keys.end()) keys.push_back(key);
+    }
+
+    bool add_hd_chain{fuzzed_data_provider.ConsumeBool() && !keys.empty()};
+    CHDChain hd_chain;
+    auto version{fuzzed_data_provider.ConsumeBool() ? CHDChain::VERSION_HD_CHAIN_SPLIT : CHDChain::VERSION_HD_BASE};
+    CKey hd_key;
+    if (add_hd_chain) {
+        hd_key = PickValue(fuzzed_data_provider, keys);
+        hd_chain.nVersion = version;
+        hd_chain.seed_id = hd_key.GetPubKey().GetID();
+        legacy_data.LoadHDChain(hd_chain);
+    }
+
+    bool add_inactive_hd_chain{fuzzed_data_provider.ConsumeBool() && !keys.empty()};
+    if (add_inactive_hd_chain) {
+        hd_key = PickValue(fuzzed_data_provider, keys);
+        hd_chain.nVersion = fuzzed_data_provider.ConsumeBool() ? CHDChain::VERSION_HD_CHAIN_SPLIT : CHDChain::VERSION_HD_BASE;
+        hd_chain.seed_id = hd_key.GetPubKey().GetID();
+        legacy_data.AddInactiveHDChain(hd_chain);
+    }
+
+    bool watch_only = false;
+    const auto pub_key = ConsumeDeserializable<CPubKey>(fuzzed_data_provider);
+    if (!pub_key || !pub_key->IsFullyValid()) return;
+    auto script_dest{GetScriptForDestination(WitnessV0KeyHash{*pub_key})};
+    if (fuzzed_data_provider.ConsumeBool()) {
+        script_dest = GetScriptForDestination(CTxDestination{PKHash(*pub_key)});
+    }
+    if (legacy_data.LoadWatchOnly(script_dest)) watch_only = true;
+
+    size_t added_script{0};
+    bool good_data{true};
+    LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 30) {
+        CallOneOf(
+            fuzzed_data_provider,
+            [&] {
+                CKey key;
+                if (!keys.empty()) {
+                    key = PickValue(fuzzed_data_provider, keys);
+                } else {
+                    key = ConsumePrivateKey(fuzzed_data_provider, /*compressed=*/fuzzed_data_provider.ConsumeBool());
+                }
+                if (!key.IsValid()) return;
+                auto pub_key{key.GetPubKey()};
+                CScript script;
+                CallOneOf(
+                    fuzzed_data_provider,
+                    [&] {
+                        script = GetScriptForDestination(CTxDestination{PKHash(pub_key)});
+                    },
+                    [&] {
+                        script = GetScriptForDestination(WitnessV0KeyHash(pub_key));
+                    },
+                    [&] {
+                        std::optional<CScript> script_opt{ConsumeDeserializable<CScript>(fuzzed_data_provider)};
+                        if (!script_opt) {
+                            good_data = false;
+                            return;
+                        }
+                        script = script_opt.value();
+                    }
+                );
+                if (fuzzed_data_provider.ConsumeBool()) script = GetScriptForDestination(ScriptHash(script));
+                if (!legacy_data.HaveCScript(CScriptID(script)) && legacy_data.AddCScript(script)) added_script++;
+            },
+            [&] {
+                CKey key;
+                if (!keys.empty()) {
+                    key = PickValue(fuzzed_data_provider, keys);
+                } else {
+                    key = ConsumePrivateKey(fuzzed_data_provider, /*compressed=*/fuzzed_data_provider.ConsumeBool());
+                }
+                if (!key.IsValid()) return;
+                const auto num_keys{fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, MAX_PUBKEYS_PER_MULTISIG)};
+                std::vector<CPubKey> pubkeys;
+                pubkeys.emplace_back(key.GetPubKey());
+                for (size_t i = 1; i < num_keys; i++) {
+                    if (fuzzed_data_provider.ConsumeBool()) {
+                        pubkeys.emplace_back(key.GetPubKey());
+                    } else {
+                        CKey private_key{ConsumePrivateKey(fuzzed_data_provider, /*compressed=*/fuzzed_data_provider.ConsumeBool())};
+                        if (!private_key.IsValid()) return;
+                        pubkeys.emplace_back(private_key.GetPubKey());
+                    }
+                }
+                if (pubkeys.size() < num_keys) return;
+                CScript multisig_script{GetScriptForMultisig(num_keys, pubkeys)};
+                if (!legacy_data.HaveCScript(CScriptID(multisig_script)) && legacy_data.AddCScript(multisig_script)) {
+                    added_script++;
+                }
+            }
+        );
+    }
+
+    auto result{legacy_data.MigrateToDescriptor()};
+    assert(result);
+    size_t added_chains{static_cast<size_t>(add_hd_chain) + static_cast<size_t>(add_inactive_hd_chain)};
+    if ((add_hd_chain && version >= CHDChain::VERSION_HD_CHAIN_SPLIT) || (!add_hd_chain && add_inactive_hd_chain)) {
+        added_chains *= 2;
+    }
+    size_t added_size{keys.size() + added_chains};
+    if (added_script > 0) {
+        assert(result->desc_spkms.size() >= added_size);
+    } else {
+        assert(result->desc_spkms.size() == added_size);
+    }
+    if (watch_only) assert(!result->watch_descs.empty());
+    if (!result->solvable_descs.empty()) assert(added_script > 0);
 }
 
 } // namespace
