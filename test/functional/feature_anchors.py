@@ -5,6 +5,7 @@
 """Test block-relay-only anchors functionality"""
 
 import os
+import shutil
 
 from test_framework.p2p import P2PInterface, P2P_SERVICES
 from test_framework.socks5 import Socks5Configuration, Socks5Server
@@ -137,9 +138,20 @@ class AnchorsTest(BitcoinTestFramework):
             new_data_hash = hash256(new_data)
             file_handler.write(new_data + new_data_hash)
 
+        anchors_backup = self.nodes[0].chain_path / "anchors_backup.dat"
+        shutil.copy2(node_anchors_path, anchors_backup)
+
         self.log.info("Restarting node attempts to reconnect to anchors")
         with self.nodes[0].assert_debug_log([f"Trying to make an anchor connection to {ONION_ADDR}"]):
             self.start_node(0, extra_args=[f"-onion={onion_conf.addr[0]}:{onion_conf.addr[1]}"])
+
+        self.stop_node(0)
+        shutil.move(anchors_backup, node_anchors_path)
+
+        self.log.info("Check node will not attempt to connect to anchors from unreachable networks")
+        with self.nodes[0].assert_debug_log(timeout=60, expected_msgs=["Loaded 1 addresses from \"anchors.dat\""],
+            unexpected_msgs=[f"Trying to make an anchor connection to {ONION_ADDR}"]):
+            self.start_node(0)
 
 
 if __name__ == "__main__":
