@@ -12,7 +12,10 @@
 #include <net_types.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <interfaces/snapshot.h>
+#include <node/utxo_snapshot.h>
 #include <support/allocators/secure.h>
+#include <util/fs.h>
 #include <util/translation.h>
 
 #include <cstddef>
@@ -204,6 +207,9 @@ public:
     //! List rpc commands.
     virtual std::vector<std::string> listRpcCommands() = 0;
 
+    //! UTXO Snapshot interface.
+    virtual std::unique_ptr<Snapshot> snapshot(const fs::path& path) = 0;
+
     //! Get unspent output associated with a transaction.
     virtual std::optional<Coin> getUnspentOutput(const COutPoint& output) = 0;
 
@@ -231,6 +237,10 @@ public:
     //! Register handler for progress messages.
     using ShowProgressFn = std::function<void(const std::string& title, int progress, bool resume_possible)>;
     virtual std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) = 0;
+
+    //! Register handler for snapshot load progress.
+    using SnapshotLoadProgressFn = std::function<void(double progress)>;
+    virtual std::unique_ptr<Handler> handleSnapshotLoadProgress(SnapshotLoadProgressFn fn) = 0;
 
     //! Register handler for wallet loader constructed messages.
     using InitWalletFn = std::function<void()>;
