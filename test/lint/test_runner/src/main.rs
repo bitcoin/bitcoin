@@ -17,7 +17,7 @@ use lint_cpp::{
     lint_boost_assert, lint_includes_build_config, lint_remove_all, lint_rpc_assert, lint_std_filesystem,
 };
 use lint_docs::{lint_doc_args, lint_doc_release_note_snippets, lint_markdown};
-use lint_py::lint_py_lint;
+use lint_py::{lint_py_lint, lint_rmtree};
 use lint_repo_hygiene::{lint_scripted_diff, lint_subtree};
 use lint_text_format::{
     lint_commit_msg, lint_tabs_whitespace, lint_trailing_newline, lint_trailing_whitespace,
@@ -51,6 +51,11 @@ fn get_linter_list() -> Vec<&'static Linter> {
             description: "Lint Python code",
             name: "py_lint",
             lint_fn: lint_py_lint,
+        },
+        &Linter {
+            description: "Check that shutil.rmtree is not used",
+            name: "rmtree",
+            lint_fn: lint_rmtree,
         },
         &Linter {
             description: "Check that std::filesystem is not used directly",

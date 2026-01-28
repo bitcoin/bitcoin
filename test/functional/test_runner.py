@@ -588,9 +588,6 @@ def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, ar
         # pgrep not supported
         pass
 
-    # Warn if there is a cache directory
-    cache_tmp_dir = tempfile.TemporaryDirectory(prefix="functional_test_cache")
-
     # Warn if there is not enough space on the testing dir
     min_space = MIN_FREE_SPACE + (jobs - 1) * ADDITIONAL_SPACE_PER_JOB
     if shutil.disk_usage(tmpdir).free < min_space:
@@ -602,6 +599,7 @@ def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, ar
     # a hard link or a copy on any platform. See https://github.com/bitcoin/bitcoin/pull/27561.
     sys.path.append(tests_dir)
 
+    cache_tmp_dir = tempfile.TemporaryDirectory(prefix="functional_test_cache")
     flags = [f"--cachedir={cache_tmp_dir.name}"] + args
 
     if enable_coverage:
@@ -619,7 +617,7 @@ def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, ar
             sys.stdout.buffer.write(e.output)
             raise
 
-    #Run Tests
+    # Run Tests
     job_queue = TestHandler(
         num_tests_parallel=jobs,
         tests_dir=tests_dir,
@@ -677,9 +675,6 @@ def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, ar
 
     if coverage:
         coverage_passed = coverage.report_rpc_coverage()
-
-        logging.debug("Cleaning up coverage data")
-        coverage.cleanup()
     else:
         coverage_passed = True
 
@@ -894,7 +889,8 @@ class RPCCoverage():
 
     """
     def __init__(self):
-        self.dir = tempfile.mkdtemp(prefix="coverage")
+        self.temp_dir = tempfile.TemporaryDirectory(prefix="coverage")
+        self.dir = self.temp_dir.name
         self.flag = '--coveragedir=%s' % self.dir
 
     def report_rpc_coverage(self):
@@ -911,9 +907,6 @@ class RPCCoverage():
         else:
             print("All RPC commands covered.")
             return True
-
-    def cleanup(self):
-        return shutil.rmtree(self.dir)
 
     def _get_uncovered_rpc_commands(self):
         """

@@ -5,7 +5,6 @@
 """Test the blocksdir option.
 """
 
-import shutil
 from pathlib import Path
 
 from test_framework.test_framework import BitcoinTestFramework, initialize_datadir
@@ -20,7 +19,7 @@ class BlocksdirTest(BitcoinTestFramework):
         self.stop_node(0)
         assert self.nodes[0].blocks_path.is_dir()
         assert not (self.nodes[0].datadir_path / "blocks").is_dir()
-        shutil.rmtree(self.nodes[0].datadir_path)
+        self.cleanup_folder(self.nodes[0].datadir_path)
         initialize_datadir(self.options.tmpdir, 0, self.chain)
         self.log.info("Starting with nonexistent blocksdir ...")
         blocksdir_path = Path(self.options.tmpdir) / 'blocksdir'
