@@ -154,10 +154,9 @@ struct ParserContext {
         return {h.begin(), h.end()};
     }
 
-    template<typename I>
-    std::optional<Key> FromString(I first, I last) const {
-        if (last - first != 2) return {};
-        auto idx = ParseHex(std::string(first, last));
+    std::optional<Key> FromString(std::span<const char>& in) const {
+        if (in.size() != 2) return {};
+        auto idx = ParseHex(std::string(in.begin(), in.end()));
         if (idx.size() != 1) return {};
         return TEST_DATA.dummy_keys[idx[0]];
     }
