@@ -3481,7 +3481,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         std::shuffle(seed_nodes.begin(), seed_nodes.end(), FastRandomContext{});
     }
 
-    if (m_use_addrman_outgoing) {
+    if (m_use_addrman_outgoing && fNetworkActive) {
         // Load addresses from anchors.dat
         m_anchors = ReadAnchors(gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME);
         if (m_anchors.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
@@ -3637,7 +3637,7 @@ void CConnman::StopNodes()
         DumpAddresses();
         fAddressesInitialized = false;
 
-        if (m_use_addrman_outgoing) {
+        if (m_use_addrman_outgoing && fNetworkActive) {
             // Anchor connections are only dumped during clean shutdown.
             std::vector<CAddress> anchors_to_dump = GetCurrentBlockRelayOnlyConns();
             if (anchors_to_dump.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
