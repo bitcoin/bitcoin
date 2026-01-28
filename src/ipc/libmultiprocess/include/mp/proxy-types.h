@@ -469,6 +469,16 @@ struct ServerRet : Parent
     void invoke(ServerContext& server_context, TypeList<>, Args&&... args) const
     {
         auto&& result = Parent::invoke(server_context, TypeList<>(), std::forward<Args>(args)...);
+        // If IPC request was cancelled, there is no point continuing to execute.
+        // It's also important to stop executing because the connection may have
+        // been destroyed as described in
+        // https://github.com/bitcoin/bitcoin/issues/34250 and there would be a
+        // crash if execution continued.
+        // TODO: Note this detection is racy because cancellation could happen
+        // after this check. However, fixing this would require changing the
+        // definition of the InvokeContext struct and updating a lot of code, so
+        // this can be done in a followup.
+        if (server_context.cancelled) throw InterruptException{"cancelled"};
         auto&& results = server_context.call_context.getResults();
         InvokeContext& invoke_context = server_context;
         BuildField(TypeList<decltype(result)>(), invoke_context, Make<StructField, Accessor>(results),

@@ -153,6 +153,7 @@ public:
     ProxyServerBase(std::shared_ptr<Impl> impl, Connection& connection);
     virtual ~ProxyServerBase();
     void invokeDestroy();
+    using Interface_::Server::thisCap;
 
     /**
      * Implementation pointer that may or may not be owned and deleted when this

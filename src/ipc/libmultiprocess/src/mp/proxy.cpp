@@ -87,6 +87,10 @@ Connection::~Connection()
     // event loop thread, and if there was a remote disconnect, this is called
     // by an onDisconnect callback directly from the event loop thread.
     assert(std::this_thread::get_id() == m_loop->m_thread_id);
+
+    // Try to cancel any calls that may be executing.
+    m_canceler.cancel("Interrupted by disconnect");
+
     // Shut down RPC system first, since this will garbage collect any
     // ProxyServer objects that were not freed before the connection was closed.
     // Typically all ProxyServer objects associated with this connection will be
@@ -362,8 +366,8 @@ ProxyClient<Thread>::~ProxyClient()
     }
 }
 
-ProxyServer<Thread>::ProxyServer(ThreadContext& thread_context, std::thread&& thread)
-    : m_thread_context(thread_context), m_thread(std::move(thread))
+ProxyServer<Thread>::ProxyServer(Connection& connection, ThreadContext& thread_context, std::thread&& thread)
+    : m_loop{*connection.m_loop}, m_thread_context(thread_context), m_thread(std::move(thread))
 {
     assert(m_thread_context.waiter.get() != nullptr);
 }
@@ -418,7 +422,7 @@ kj::Promise<void> ProxyServer<ThreadMap>::makeThread(MakeThreadContext context)
         // is just waiter getting set to null.)
         g_thread_context.waiter->wait(lock, [] { return !g_thread_context.waiter; });
     });
-    auto thread_server = kj::heap<ProxyServer<Thread>>(*thread_context.get_future().get(), std::move(thread));
+    auto thread_server = kj::heap<ProxyServer<Thread>>(m_connection, *thread_context.get_future().get(), std::move(thread));
     auto thread_client = m_connection.m_threads.add(kj::mv(thread_server));
     context.getResults().setResult(kj::mv(thread_client));
     return kj::READY_NOW;
