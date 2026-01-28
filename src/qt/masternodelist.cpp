@@ -172,7 +172,7 @@ void MasternodeList::showContextMenuDIP3(const QPoint& point)
 
 void MasternodeList::handleMasternodeListChanged()
 {
-    mnListChanged = true;
+    m_mn_list_changed.store(true, std::memory_order_relaxed);
 }
 
 void MasternodeList::updateDIP3ListScheduled()
@@ -181,13 +181,13 @@ void MasternodeList::updateDIP3ListScheduled()
         return;
     }
 
-    if (mnListChanged) {
+    if (m_mn_list_changed.load(std::memory_order_relaxed)) {
         int64_t nMnListUpdateSecods = clientModel->masternodeSync().isBlockchainSynced() ? MASTERNODELIST_UPDATE_SECONDS : MASTERNODELIST_UPDATE_SECONDS * 10;
         int64_t nSecondsToWait = nTimeUpdatedDIP3 - GetTime() + nMnListUpdateSecods;
 
         if (nSecondsToWait <= 0) {
             updateDIP3List();
-            mnListChanged = false;
+            m_mn_list_changed.store(false, std::memory_order_relaxed);
         }
     }
 }

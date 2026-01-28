@@ -13,6 +13,7 @@
 #include <QTimer>
 #include <QWidget>
 
+#include <atomic>
 #include <set>
 
 namespace Ui {
@@ -86,7 +87,7 @@ private:
     MasternodeModel* m_model{nullptr};
     MasternodeListSortFilterProxyModel* m_proxy_model{nullptr};
 
-    bool mnListChanged{true};
+    std::atomic<bool> m_mn_list_changed{true};
 
     const MasternodeEntry* GetSelectedEntry();
 
