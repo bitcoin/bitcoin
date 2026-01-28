@@ -576,8 +576,9 @@ class TestNode():
             while remaining_expected and remaining_expected[-1] in log:
                 remaining_expected.pop()
             if not remaining_expected:
-                return
-            if time.time() >= time_end:
+                if time.time() >= time_end:
+                    return
+            elif time.time() >= time_end:
                 break
             time.sleep(0.05)
         remaining_expected = [e for e in remaining_expected if e not in log]
