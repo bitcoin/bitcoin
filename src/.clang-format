@@ -108,6 +108,9 @@ IncludeCategories:
   - Regex:           '^<Q'
     Priority:        2
     CaseSensitive:   true
+  - Regex:           '^<zmq.h>$'
+    Priority:        2
+    CaseSensitive:   true
   - Regex:           '^<[^>.]*>'
     Priority:        3
     CaseSensitive:   false
