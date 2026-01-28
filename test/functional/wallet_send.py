@@ -32,8 +32,8 @@ class WalletSendTest(BitcoinTestFramework):
         self.noban_tx_relay = True
         self.supports_cli = False
         self.extra_args = [
-            ["-walletrbf=1"],
-            ["-walletrbf=1"]
+            ["-walletrbf=1", "-datacarriersize=16"],
+            ["-walletrbf=1", "-datacarriersize=16"]
         ]
         getcontext().prec = 8 # Satoshi precision for Decimal
 
@@ -45,7 +45,7 @@ class WalletSendTest(BitcoinTestFramework):
                   conf_target=None, estimate_mode=None, fee_rate=None, add_to_wallet=None, psbt=None,
                   inputs=None, add_inputs=None, include_unsafe=None, change_address=None, change_position=None, change_type=None,
                   locktime=None, lock_unspents=None, replaceable=None, subtract_fee_from_outputs=None,
-                  expect_error=None, solving_data=None, minconf=None):
+                  expect_error=None, solving_data=None, minconf=None, nonmempool=False):
         assert_not_equal((amount is None), (data is None))
 
         from_balance_before = from_wallet.getbalances()["mine"]["trusted"]
@@ -171,16 +171,20 @@ class WalletSendTest(BitcoinTestFramework):
             tx = from_wallet.gettransaction(res["txid"])
             assert tx
             assert_equal(tx["bip125-replaceable"], "yes" if replaceable else "no")
-            # Ensure transaction exists in the mempool:
-            tx = from_wallet.getrawtransaction(res["txid"], True)
-            assert tx
-            if amount:
-                if subtract_fee_from_outputs:
-                    assert_equal(from_balance_before - from_balance, amount)
-                else:
-                    assert_greater_than(from_balance_before - from_balance, amount)
+            if nonmempool:
+                assert_raises_rpc_error(-5, "No such mempool transaction", from_wallet.getrawtransaction, res["txid"])
+                assert from_wallet.getbalances()["mine"]["nonmempool"] < 0
             else:
-                assert next((out for out in tx["vout"] if out["scriptPubKey"]["asm"] == "OP_RETURN 35"), None)
+                # Ensure transaction exists in the mempool:
+                tx = from_wallet.getrawtransaction(res["txid"], True)
+                assert tx
+                if amount:
+                    if subtract_fee_from_outputs:
+                        assert_equal(from_balance_before - from_balance, amount)
+                    else:
+                        assert_greater_than(from_balance_before - from_balance, amount)
+                else:
+                    assert next((out for out in tx["vout"] if out["scriptPubKey"]["asm"] == "OP_RETURN 35"), None)
         else:
             assert_equal(from_balance_before, from_balance)
 
@@ -279,6 +283,9 @@ class WalletSendTest(BitcoinTestFramework):
         res = self.test_send(from_wallet=w3, data="23")
         res = w2.walletprocesspsbt(res["psbt"])
         assert res["complete"]
+
+        self.log.info("Create mempool-invalid tx (due to large OP_RETURN)...")
+        self.test_send(from_wallet=w0, data=b"The quick brown fox jumps over the lazy dog".hex(), nonmempool=True)
 
         self.log.info("Test setting explicit fee rate")
         res1 = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate="1", add_to_wallet=False)

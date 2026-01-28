@@ -9,6 +9,7 @@ import random
 import shutil
 import struct
 import time
+from decimal import Decimal
 
 from test_framework.address import (
     key_to_p2pkh,
@@ -523,6 +524,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.generatetodescriptor(self.master_node, 1, desc)
 
         bals = wallet.getbalances()
+        bals["mine"]["nonmempool"] = Decimal('0.0')
 
         _, wallet = self.migrate_and_get_rpc("pkcb")
 
@@ -538,6 +540,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         txid = default.sendtoaddress(addr, 1)
         self.generate(self.master_node, 1)
         bals = wallet.getbalances()
+        bals["mine"]["nonmempool"] = Decimal('0.0')
 
         # Use self.migrate_and_get_rpc to test this error to get everything copied over to the master node
         assert_raises_rpc_error(-4, "Error: Wallet decryption failed, the wallet passphrase was not provided or was incorrect", self.migrate_and_get_rpc, "encrypted")
@@ -578,6 +581,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         txid = default.sendtoaddress(addr, 1)
         self.generate(self.master_node, 1)
         bals = wallet.getbalances()
+        bals["mine"]["nonmempool"] = Decimal('0.0')
 
         wallet.unloadwallet()
 
@@ -617,6 +621,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         txid = default.sendtoaddress(addr, 1)
         self.generate(self.master_node, 1)
         bals = wallet.getbalances()
+        bals["mine"]["nonmempool"] = Decimal('0.0')
 
         migrate_res, wallet = self.migrate_and_get_rpc(relative_name)
 
@@ -637,6 +642,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.old_node.restorewallet("relative_restored", migrate_res['backup_path'])
         wallet = self.old_node.get_wallet_rpc("relative_restored")
         assert wallet.gettransaction(txid)
+        del bals["mine"]["nonmempool"]
         assert_equal(bals, wallet.getbalances())
 
         info = wallet.getwalletinfo()
@@ -653,6 +659,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         txid = default.sendtoaddress(addr, 1)
         self.generate(self.master_node, 1)
         bals = wallet.getbalances()
+        bals["mine"]["nonmempool"] = Decimal('0.0')
 
         _, wallet = self.migrate_and_get_rpc(wallet_path)
 
@@ -1510,14 +1517,14 @@ class WalletMigrationTest(BitcoinTestFramework):
         _, wallet = self.migrate_and_get_rpc("miniscript")
 
         # The miniscript with all keys should be in the migrated wallet
-        assert_equal(wallet.getbalances()["mine"], {"trusted": 0.75, "untrusted_pending": 0, "immature": 0})
+        assert_equal(wallet.getbalances()["mine"], {"trusted": 0.75, "untrusted_pending": 0, "immature": 0, "nonmempool": 0})
         assert_equal(wallet.getaddressinfo(all_keys_addr)["ismine"], True)
         assert_equal(wallet.getaddressinfo(some_keys_addr)["ismine"], False)
 
         # The miniscript with some keys should be in the watchonly wallet
         assert "miniscript_watchonly" in self.master_node.listwallets()
         watchonly = self.master_node.get_wallet_rpc("miniscript_watchonly")
-        assert_equal(watchonly.getbalances()["mine"], {"trusted": 1, "untrusted_pending": 0, "immature": 0})
+        assert_equal(watchonly.getbalances()["mine"], {"trusted": 1, "untrusted_pending": 0, "immature": 0, "nonmempool": 0})
         assert_equal(watchonly.getaddressinfo(some_keys_addr)["ismine"], True)
         assert_equal(watchonly.getaddressinfo(all_keys_addr)["ismine"], False)
 
@@ -1566,7 +1573,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         res, wallet = self.migrate_and_get_rpc("taproot")
 
         # The rawtr should be migrated
-        assert_equal(wallet.getbalances()["mine"], {"trusted": 0.5, "untrusted_pending": 0, "immature": 0})
+        assert_equal(wallet.getbalances()["mine"], {"trusted": 0.5, "untrusted_pending": 0, "immature": 0, "nonmempool": 0})
         assert_equal(wallet.getaddressinfo(rawtr_addr)["ismine"], True)
         assert_equal(wallet.getaddressinfo(tr_addr)["ismine"], False)
         assert_equal(wallet.getaddressinfo(tr_script_addr)["ismine"], False)
@@ -1574,7 +1581,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         # The tr() with some keys should be in the watchonly wallet
         assert "taproot_watchonly" in self.master_node.listwallets()
         watchonly = self.master_node.get_wallet_rpc("taproot_watchonly")
-        assert_equal(watchonly.getbalances()["mine"], {"trusted": 5, "untrusted_pending": 0, "immature": 0})
+        assert_equal(watchonly.getbalances()["mine"], {"trusted": 5, "untrusted_pending": 0, "immature": 0, "nonmempool": 0})
         assert_equal(watchonly.getaddressinfo(rawtr_addr)["ismine"], False)
         assert_equal(watchonly.getaddressinfo(tr_addr)["ismine"], True)
         assert_equal(watchonly.getaddressinfo(tr_script_addr)["ismine"], True)
