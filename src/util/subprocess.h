@@ -920,8 +920,6 @@ private:
  * API's provided by the class:
  * Popen({"cmd"}, output{..}, error{..}, ....)
  *    Command provided as a sequence.
- * Popen("cmd arg1", output{..}, error{..}, ....)
- *    Command provided in a single string.
  * wait()             - Wait for the child to exit.
  * retcode()          - The return code of the exited child.
  * send(...)          - Send input to the input channel of the child.
@@ -933,19 +931,6 @@ class Popen
 public:
   friend struct detail::ArgumentDeducer;
   friend class detail::Child;
-
-  template <typename... Args>
-  Popen(const std::string& cmd_args, Args&& ...args):
-    args_(cmd_args)
-  {
-    vargs_ = util::split(cmd_args);
-    init_args(std::forward<Args>(args)...);
-
-    // Setup the communication channels of the Popen class
-    stream_.setup_comm_channels();
-
-    execute_process();
-  }
 
   template <typename... Args>
   Popen(std::initializer_list<const char*> cmd_args, Args&& ...args)
