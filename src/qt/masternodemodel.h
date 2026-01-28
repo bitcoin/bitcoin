@@ -7,10 +7,12 @@
 
 #include <evo/dmn_types.h>
 
+#include <QAbstractTableModel>
 #include <QByteArray>
 #include <QString>
 
 #include <memory>
+#include <tuple>
 #include <vector>
 
 namespace interfaces {
@@ -49,6 +51,8 @@ public:
     int posePenalty() const { return m_pose_penalty; }
     int registeredHeight() const { return m_registered_height; }
     MnType type() const { return m_type; }
+    uint16_t operatorRewardPct() const { return m_operator_reward_pct; }
+
     const QByteArray& serviceKey() const { return m_service_key; }
     const QString& collateralAddress() const { return m_collateral_address; }
     const QString& collateralOutpoint() const { return m_collateral_outpoint; }
@@ -60,7 +64,56 @@ public:
     const QString& toJson() const { return m_json; }
     const QString& typeDescription() const { return m_type_description; }
     const QString& votingAddress() const { return m_voting_address; }
-    uint16_t operatorRewardPct() const { return m_operator_reward_pct; }
+
+    auto toTie() const
+    {
+        return std::tie(m_banned, m_last_paid_height, m_next_payment_height, m_pose_penalty, m_service, m_operator_reward_pct);
+    }
+};
+
+using MasternodeEntryList = std::vector<std::unique_ptr<MasternodeEntry>>;
+
+class MasternodeModel : public QAbstractTableModel
+{
+    Q_OBJECT
+
+private:
+    MasternodeEntryList m_data;
+
+    bool isValidRow(int row) const { return row >= 0 && row < static_cast<int>(m_data.size()); }
+
+public:
+    enum Column : uint8_t {
+        SERVICE,
+        TYPE,
+        STATUS,
+        POSE,
+        REGISTERED,
+        LAST_PAYMENT,
+        NEXT_PAYMENT,
+        PAYOUT_ADDRESS,
+        OPERATOR_REWARD,
+        COLLATERAL_ADDRESS,
+        OWNER_ADDRESS,
+        VOTING_ADDRESS,
+        PROTX_HASH,
+        COUNT
+    };
+
+    explicit MasternodeModel(QObject* parent = nullptr);
+    ~MasternodeModel();
+
+    int rowCount(const QModelIndex& parent = {}) const override;
+    int columnCount(const QModelIndex& parent = {}) const override;
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
+    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+
+    static int columnWidth(int section);
+
+    void append(std::unique_ptr<MasternodeEntry>&& entry);
+    void remove(int row);
+    void reconcile(MasternodeEntryList&& entries);
+    const MasternodeEntry* getEntryAt(const QModelIndex& index) const;
 };
 
 #endif // BITCOIN_QT_MASTERNODEMODEL_H

@@ -828,7 +828,9 @@ HelpMessageDialog QWidget#scrollAreaWidgetContents {
 MasternodeList
 ******************************************************/
 
-/***** No light.css specific coloring here yet *****/
+MasternodeList QTableView {
+    color: #555;
+}
 
 /******************************************************
 MnemonicVerificationDialog

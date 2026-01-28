@@ -66,6 +66,7 @@ QT_MOC_CPP = \
   qt/moc_macdockiconhandler.cpp \
   qt/moc_macnotificationhandler.cpp \
   qt/moc_masternodelist.cpp \
+  qt/moc_masternodemodel.cpp \
   qt/moc_mnemonicverificationdialog.cpp \
   qt/moc_modaloverlay.cpp \
   qt/moc_notificator.cpp \

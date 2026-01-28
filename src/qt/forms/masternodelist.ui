@@ -108,7 +108,7 @@
         </layout>
        </item>
        <item row="1" column="0">
-        <widget class="QTableWidget" name="tableWidgetMasternodesDIP3">
+        <widget class="QTableView" name="tableViewMasternodes">
          <property name="editTriggers">
           <set>QAbstractItemView::NoEditTriggers</set>
          </property>
@@ -124,69 +124,6 @@
          <property name="sortingEnabled">
           <bool>true</bool>
          </property>
-         <attribute name="horizontalHeaderStretchLastSection">
-          <bool>true</bool>
-         </attribute>
-         <column>
-          <property name="text">
-           <string>Service</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Type</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Status</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>PoSe Score</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Registered</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Last Paid</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Next Payment</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Payout Address</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Operator Reward</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Collateral Address</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Owner Address</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Voting Address</string>
-          </property>
-         </column>
         </widget>
        </item>
       </layout>
