@@ -385,9 +385,13 @@ static void bench_context(void* arg, int iters) {
 
 int main(int argc, char **argv) {
     bench_inv data;
+    int d = argc == 1; /* default */
     int default_iters = 20000;
     int iters = get_iters(default_iters);
-    int d = argc == 1; /* default */
+    if (iters == 0) {
+        help(default_iters);
+        return EXIT_FAILURE;
+    }
 
     if (argc > 1) {
         if (have_flag(argc, argv, "-h")

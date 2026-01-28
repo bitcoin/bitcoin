@@ -96,17 +96,13 @@ static void testutil_random_ge_test(secp256k1_ge *ge) {
             break;
         }
     } while(1);
-    ge->infinity = 0;
 }
 
 static void testutil_random_ge_jacobian_test(secp256k1_gej *gej, const secp256k1_ge *ge) {
-    secp256k1_fe z2, z3;
-    testutil_random_fe_non_zero_test(&gej->z);
-    secp256k1_fe_sqr(&z2, &gej->z);
-    secp256k1_fe_mul(&z3, &z2, &gej->z);
-    secp256k1_fe_mul(&gej->x, &ge->x, &z2);
-    secp256k1_fe_mul(&gej->y, &ge->y, &z3);
-    gej->infinity = ge->infinity;
+    secp256k1_fe z;
+    testutil_random_fe_non_zero_test(&z);
+    secp256k1_gej_set_ge(gej, ge);
+    secp256k1_gej_rescale(gej, &z);
 }
 
 static void testutil_random_gej_test(secp256k1_gej *gej) {
