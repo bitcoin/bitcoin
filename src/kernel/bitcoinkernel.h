@@ -131,14 +131,6 @@ typedef struct btck_TransactionOutput btck_TransactionOutput;
 
 /**
  * Opaque data structure for holding a logging connection.
- *
- * The logging connection can be used to manually stop logging.
- *
- * Messages that were logged before a connection is created are buffered in a
- * 1MB buffer. Logging can alternatively be permanently disabled by calling
- * @ref btck_logging_disable. Functions changing the logging settings are
- * global and change the settings for all existing btck_LoggingConnection
- * instances.
  */
 typedef struct btck_LoggingConnection btck_LoggingConnection;
 
@@ -754,31 +746,23 @@ BITCOINKERNEL_API void btck_transaction_output_destroy(btck_TransactionOutput* t
 ///@{
 
 /**
- * @brief This disables the global internal logger. No log messages will be
- * buffered internally anymore once this is called and the buffer is cleared.
- * This function should only be called once and is not thread or re-entry safe.
- * Log messages will be buffered until this function is called, or a logging
- * connection is created. This must not be called while a logging connection
- * already exists.
- */
-BITCOINKERNEL_API void btck_logging_disable();
-
-/**
- * @brief Set some options for the global internal logger. This changes global
+ * @brief Set some options for the logger. Currently, this changes global
  * settings and will override settings for all existing @ref
  * btck_LoggingConnection instances.
  *
+ * @param[in] logger  Non-null.
  * @param[in] options Sets formatting options of the log messages.
  */
-BITCOINKERNEL_API void btck_logging_set_options(btck_LoggingOptions options);
+BITCOINKERNEL_API void btck_logging_set_options(btck_LoggingConnection* logger, btck_LoggingOptions options) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
- * @brief Set the log level of the global internal logger. This does not
+ * @brief Set the log level of the logger. This does not
  * enable the selected categories. Use @ref btck_logging_enable_category to
- * start logging from a specific, or all categories. This changes a global
+ * start logging from a specific, or all categories. Currently, this changes a global
  * setting and will override settings for all existing
  * @ref btck_LoggingConnection instances.
  *
+ * @param[in] logger   Non-null.
  * @param[in] category If btck_LogCategory_ALL is chosen, sets both the global fallback log level
  *                     used by all categories that don't have a specific level set, and also
  *                     sets the log level for messages logged with the btck_LogCategory_ALL category itself.
@@ -787,30 +771,38 @@ BITCOINKERNEL_API void btck_logging_set_options(btck_LoggingOptions options);
 
  * @param[in] level    Log level at which the log category is set.
  */
-BITCOINKERNEL_API void btck_logging_set_level_category(btck_LogCategory category, btck_LogLevel level);
+BITCOINKERNEL_API void btck_logging_set_level_category(btck_LoggingConnection* logger, btck_LogCategory category, btck_LogLevel level) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
- * @brief Enable a specific log category for the global internal logger. This
+ * @brief Enable a specific log category for the logger. Currently, this
  * changes a global setting and will override settings for all existing @ref
  * btck_LoggingConnection instances.
  *
+ * @param[in] logger   Non-null.
  * @param[in] category If btck_LogCategory_ALL is chosen, all categories will be enabled.
  */
-BITCOINKERNEL_API void btck_logging_enable_category(btck_LogCategory category);
+BITCOINKERNEL_API void btck_logging_enable_category(btck_LoggingConnection* logger, btck_LogCategory category) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
- * @brief Disable a specific log category for the global internal logger. This
+ * @brief Disable a specific log category for the logger. Currently, this
  * changes a global setting and will override settings for all existing @ref
  * btck_LoggingConnection instances.
  *
+ * @param[in] logger   Non-null.
  * @param[in] category If btck_LogCategory_ALL is chosen, all categories will be disabled.
  */
-BITCOINKERNEL_API void btck_logging_disable_category(btck_LogCategory category);
+BITCOINKERNEL_API void btck_logging_disable_category(btck_LoggingConnection* logger, btck_LogCategory category) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
- * @brief Start logging messages through the provided callback. Log messages
- * produced before this function is first called are buffered and on calling this
- * function are logged immediately.
+ * @brief Register logging callback that can receive log messages and return new
+ * @ref btck_LoggingConnection instance representing a log stream. The returned
+ * handle can be passed to functions like @ref btck_logging_set_options to set
+ * log options and @ref btck_context_options_set_logger to receive log messages
+ * generated in a particular context.
+ *
+ * Currently, most log state is global, so log options applied to other streams
+ * may effect this stream, and if there are multiple contexts, log messages from
+ * other contexts may be received. These behaviors can be improved internally.
  *
  * @param[in] log_callback               Non-null, function through which messages will be logged.
  * @param[in] user_data                  Nullable, holds a user-defined opaque structure. Is passed back
@@ -869,6 +861,16 @@ BITCOINKERNEL_API void btck_chain_parameters_destroy(btck_ChainParameters* chain
  * Creates an empty context options.
  */
 BITCOINKERNEL_API btck_ContextOptions* BITCOINKERNEL_WARN_UNUSED_RESULT btck_context_options_create();
+
+/**
+ * @brief Sets log instance for the kernel context to use.
+ *
+ * @param[in] context_options  Non-null, previously created by @ref btck_context_options_create.
+ * @param[in] logger           Is set to the context options.
+ */
+BITCOINKERNEL_API void btck_context_options_set_logger(
+    btck_ContextOptions* context_options,
+    btck_LoggingConnection* logger) BITCOINKERNEL_ARG_NONNULL(1, 2);
 
 /**
  * @brief Sets the chain params for the context options. The context created
