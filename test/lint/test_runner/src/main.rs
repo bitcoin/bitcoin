@@ -14,7 +14,7 @@ use std::fs;
 use std::process::{Command, ExitCode};
 
 use lint_cpp::{
-    lint_boost_assert, lint_includes_build_config, lint_rpc_assert, lint_std_filesystem,
+    lint_boost_assert, lint_includes_build_config, lint_remove_all, lint_rpc_assert, lint_std_filesystem,
 };
 use lint_docs::{lint_doc_args, lint_doc_release_note_snippets, lint_markdown};
 use lint_py::lint_py_lint;
@@ -56,6 +56,11 @@ fn get_linter_list() -> Vec<&'static Linter> {
             description: "Check that std::filesystem is not used directly",
             name: "std_filesystem",
             lint_fn: lint_std_filesystem
+        },
+        &Linter {
+            description: "Check that remove_all is not used",
+            name: "remove_all",
+            lint_fn: lint_remove_all
         },
         &Linter {
             description: "Check that fatal assertions are not used in RPC code",
