@@ -725,7 +725,7 @@ bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const
 
 CCoinsViewMemPool::CCoinsViewMemPool(CCoinsView* baseIn, const CTxMemPool& mempoolIn) : CCoinsViewBacked(baseIn), mempool(mempoolIn) { }
 
-std::optional<Coin> CCoinsViewMemPool::GetCoin(const COutPoint& outpoint) const
+std::optional<Coin> CCoinsViewMemPool::GetCoin(const COutPoint& outpoint) const noexcept
 {
     // Check to see if the inputs are made available by another tx in the package.
     // These Coins would not be available in the underlying CoinsView.
