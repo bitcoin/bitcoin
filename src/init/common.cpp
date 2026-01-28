@@ -68,7 +68,7 @@ util::Result<void> SetLoggingCategories(const ArgsManager& args)
 
     const auto categories_to_process = (last_negated == categories.rend()) ? categories : std::ranges::subrange(last_negated.base(), categories.end());
     for (const auto& cat : categories_to_process) {
-        if (!LogInstance().EnableCategory(cat)) {
+        if (!LogInstance().SetCategoryLogLevel(cat, BCLog::Level::Debug)) {
             return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debug", cat)};
         }
     }
@@ -80,14 +80,14 @@ util::Result<void> SetLoggingCategories(const ArgsManager& args)
 
     const auto trace_categories_to_process = (trace_negated == trace_categories.rend()) ? trace_categories : std::ranges::subrange(trace_negated.base(), trace_categories.end());
     for (const auto& cat : trace_categories_to_process) {
-        if (!LogInstance().TraceCategory(cat)) {
+        if (!LogInstance().SetCategoryLogLevel(cat, BCLog::Level::Trace)) {
             return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-trace", cat)};
         }
     }
 
     // Now remove the logging categories which were explicitly excluded
     for (const std::string& cat : args.GetArgs("-debugexclude")) {
-        if (!LogInstance().DisableCategory(cat)) {
+        if (!LogInstance().SetCategoryLogLevel(cat, BCLog::Level::Info)) {
             return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat)};
         }
     }

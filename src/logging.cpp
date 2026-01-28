@@ -126,33 +126,6 @@ void BCLog::Logger::DisableLogging()
     StartLogging();
 }
 
-bool BCLog::Logger::EnableCategory(std::string_view str)
-{
-    if (const auto flag{GetLogCategory(str)}) {
-        EnableCategory(*flag);
-        return true;
-    }
-    return false;
-}
-
-bool BCLog::Logger::TraceCategory(std::string_view str)
-{
-    if (const auto flag{GetLogCategory(str)}) {
-        TraceCategory(*flag);
-        return true;
-    }
-    return false;
-}
-
-bool BCLog::Logger::DisableCategory(std::string_view str)
-{
-    if (const auto flag{GetLogCategory(str)}) {
-        DisableCategory(*flag);
-        return true;
-    }
-    return false;
-}
-
 bool BCLog::Logger::DefaultShrinkDebugFile() const
 {
     return m_categories == BCLog::NONE;
@@ -588,6 +561,15 @@ void BCLog::Logger::SetCategoryLogLevel(BCLog::LogFlags flag, BCLog::Level level
         m_trace_categories |= flag;
         break;
     }
+}
+
+bool BCLog::Logger::SetCategoryLogLevel(std::string_view str, BCLog::Level level)
+{
+    if (const auto flag{GetLogCategory(str)}) {
+        SetCategoryLogLevel(*flag, level);
+        return true;
+    }
+    return false;
 }
 
 bool util::log::ShouldDebugLog(Category category)
