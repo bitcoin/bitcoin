@@ -203,7 +203,7 @@ size_t CoinsResult::Size() const
 std::vector<COutput> CoinsResult::All() const
 {
     std::vector<COutput> all;
-    all.reserve(coins.size());
+    all.reserve(Size());
     for (const auto& it : coins) {
         all.insert(all.end(), it.second.begin(), it.second.end());
     }
