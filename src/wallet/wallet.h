@@ -27,6 +27,7 @@
 #include <util/hasher.h>
 #include <util/result.h>
 #include <util/string.h>
+#include <util/threadpool.h>
 #include <util/time.h>
 #include <util/ui_change_type.h>
 #include <wallet/crypter.h>
@@ -135,6 +136,9 @@ static const bool DEFAULT_WALLET_RBF = true;
 static const bool DEFAULT_WALLETBROADCAST = true;
 static const bool DEFAULT_DISABLE_WALLET = false;
 static const bool DEFAULT_WALLETCROSSCHAIN = false;
+//! Default for -walletpar
+static const int DEFAULT_WALLETPAR = 0;
+static const int MAX_WALLETPAR = 16;
 //! -maxtxfee default
 constexpr CAmount DEFAULT_TRANSACTION_MAXFEE{COIN / 10};
 //! Discourage users to set fees higher than this amount (in satoshis) per kB
@@ -304,7 +308,11 @@ struct CRecipient
     bool fSubtractFeeFromAmount;
 };
 
-class WalletRescanReserver; //forward declarations for ScanForWalletTransactions/RescanFromTime
+//forward declarations for ScanForWalletTransactions/RescanFromTime
+class WalletRescanReserver;
+class ChainScanner;
+struct ScanResult;
+
 /**
  * A CWallet maintains a set of transactions and balances, and provides the ability to create new transactions.
  */
@@ -321,6 +329,7 @@ private:
     std::atomic<SteadyClock::time_point> m_scanning_start{SteadyClock::time_point{}};
     std::atomic<double> m_scanning_progress{0};
     friend class WalletRescanReserver;
+    friend class ChainScanner;
 
     /** The next scheduled rebroadcast of wallet transactions. */
     NodeClock::time_point m_next_resend{GetDefaultNextResend()};
@@ -400,6 +409,9 @@ private:
     /** Internal database handle. */
     std::unique_ptr<WalletDatabase> m_database;
 
+    /** Thread pool for wallet operations. */
+    ThreadPool* m_thread_pool;
+
     /**
      * The following is used to keep track of how far behind the wallet is
      * from the chain sync, and to allow clients to block on us being caught up.
@@ -476,10 +488,11 @@ public:
     unsigned int nMasterKeyMaxID = 0;
 
     /** Construct wallet with specified name and database implementation. */
-    CWallet(interfaces::Chain* chain, const std::string& name, std::unique_ptr<WalletDatabase> database)
+    CWallet(interfaces::Chain* chain, const std::string& name, std::unique_ptr<WalletDatabase> database, ThreadPool* thread_pool = nullptr)
         : m_chain(chain),
           m_name(name),
-          m_database(std::move(database))
+          m_database(std::move(database)),
+          m_thread_pool(thread_pool)
     {
     }
 
@@ -633,21 +646,6 @@ public:
     void updatedBlockTip() override;
     int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update);
 
-    struct ScanResult {
-        enum { SUCCESS, FAILURE, USER_ABORT } status = SUCCESS;
-
-        //! Hash and height of most recent block that was successfully scanned.
-        //! Unset if no blocks were scanned due to read errors or the chain
-        //! being empty.
-        uint256 last_scanned_block;
-        std::optional<int> last_scanned_height;
-
-        //! Height of the most recent block that could not be scanned due to
-        //! read errors or pruning. Will be set if status is FAILURE, unset if
-        //! status is SUCCESS, and may or may not be set if status is
-        //! USER_ABORT.
-        uint256 last_failed_block;
-    };
     ScanResult ScanForWalletTransactions(const uint256& start_block, int start_height, std::optional<int> max_height, const WalletRescanReserver& reserver, bool fUpdate, bool save_progress);
     void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) override;
     /** Set the next time this wallet should resend transactions to 12-36 hours from now, ~1 day on average. */
@@ -1069,6 +1067,22 @@ public:
  * their transactions. Actual rebroadcast schedule is managed by the wallets themselves.
  */
 void MaybeResendWalletTxs(WalletContext& context);
+
+struct ScanResult {
+    enum { SUCCESS, FAILURE, USER_ABORT } status = SUCCESS;
+
+    //! Hash and height of most recent block that was successfully scanned.
+    //! Unset if no blocks were scanned due to read errors or the chain
+    //! being empty.
+    uint256 last_scanned_block;
+    std::optional<int> last_scanned_height;
+
+    //! Height of the most recent block that could not be scanned due to
+    //! read errors or pruning. Will be set if status is FAILURE, unset if
+    //! status is SUCCESS, and may or may not be set if status is
+    //! USER_ABORT.
+    uint256 last_failed_block;
+};
 
 /** RAII object to check and reserve a wallet rescan */
 class WalletRescanReserver

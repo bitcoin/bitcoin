@@ -5,6 +5,7 @@
 #include <interfaces/wallet.h>
 
 #include <common/args.h>
+#include <common/system.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
@@ -29,6 +30,7 @@
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
@@ -540,6 +542,14 @@ public:
     {
         m_context.chain = &chain;
         m_context.args = &args;
+        int num_threads = args.GetIntArg("-walletpar", DEFAULT_WALLETPAR);
+        if (num_threads <= 0) {
+            // '0' means 'autodetect'
+            // '<0' means leave that many cores free
+            num_threads += GetNumCores();
+        }
+        num_threads = std::clamp(num_threads, 1, MAX_WALLETPAR);
+        m_context.thread_pool.Start(num_threads);
     }
     ~WalletLoaderImpl() override { stop(); }
 
