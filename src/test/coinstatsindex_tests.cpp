@@ -90,7 +90,7 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_unclean_shutdown, TestChain100Setup)
         CBlockIndex* new_block_index = nullptr;
         {
             const CScript script_pub_key{CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG};
-            const CBlock block = this->CreateBlock({}, script_pub_key, chainstate);
+            const CBlock block = this->CreateBlock({}, script_pub_key);
 
             new_block = std::make_shared<CBlock>(block);
 

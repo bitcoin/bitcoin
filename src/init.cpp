@@ -56,8 +56,10 @@
 #include <node/mempool_persist.h>
 #include <node/mempool_persist_args.h>
 #include <node/miner.h>
+#include <node/mining_args.h>
 #include <node/peerman_args.h>
 #include <policy/feerate.h>
+#include <node/mining.h>
 #include <policy/fees/block_policy_estimator.h>
 #include <policy/fees/block_policy_estimator_args.h>
 #include <policy/policy.h>
@@ -118,7 +120,6 @@
 #include <zmq/zmqrpc.h>
 #endif
 
-using common::AmountErrMsg;
 using common::InvalidPortErrMsg;
 using common::ResolveErrMsg;
 
@@ -684,7 +685,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
 
 
     argsman.AddArg("-blockmaxweight=<n>", strprintf("Set maximum BIP141 block weight (default: %d)", DEFAULT_BLOCK_MAX_WEIGHT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::BLOCK_CREATION);
-    argsman.AddArg("-blockreservedweight=<n>", strprintf("Reserve space for the fixed-size block header plus the largest coinbase transaction the mining software may add to the block. (default: %d).", DEFAULT_BLOCK_RESERVED_WEIGHT), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
+    argsman.AddArg("-blockreservedweight=<n>", strprintf("Reserve space for the fixed-size block header plus the largest coinbase transaction the mining software may add to the block. Only affects mining RPC clients, not IPC clients. (default: %d).", DEFAULT_BLOCK_RESERVED_WEIGHT), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-blockmintxfee=<amt>", strprintf("Set lowest fee rate (in %s/kvB) for transactions to be included in block creation. (default: %s)", CURRENCY_UNIT, FormatMoney(DEFAULT_BLOCK_MIN_TX_FEE)), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-blockversion=<n>", "Override block version to test forking scenarios", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::BLOCK_CREATION);
 
@@ -1053,27 +1054,10 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         return InitError(Untranslated("peertimeout must be a positive integer."));
     }
 
-    if (const auto arg{args.GetArg("-blockmintxfee")}) {
-        if (!ParseMoney(*arg)) {
-            return InitError(AmountErrMsg("blockmintxfee", *arg));
-        }
-    }
-
-    {
-        const auto max_block_weight = args.GetIntArg("-blockmaxweight", DEFAULT_BLOCK_MAX_WEIGHT);
-        if (max_block_weight > MAX_BLOCK_WEIGHT) {
-            return InitError(strprintf(_("Specified -blockmaxweight (%d) exceeds consensus maximum block weight (%d)"), max_block_weight, MAX_BLOCK_WEIGHT));
-        }
-    }
-
-    {
-        const auto block_reserved_weight = args.GetIntArg("-blockreservedweight", DEFAULT_BLOCK_RESERVED_WEIGHT);
-        if (block_reserved_weight > MAX_BLOCK_WEIGHT) {
-            return InitError(strprintf(_("Specified -blockreservedweight (%d) exceeds consensus maximum block weight (%d)"), block_reserved_weight, MAX_BLOCK_WEIGHT));
-        }
-        if (block_reserved_weight < MINIMUM_BLOCK_RESERVED_WEIGHT) {
-            return InitError(strprintf(_("Specified -blockreservedweight (%d) is lower than minimum safety value of (%d)"), block_reserved_weight, MINIMUM_BLOCK_RESERVED_WEIGHT));
-        }
+    node::MiningArgs mining_args_dummy;
+    auto mining_result{node::ApplyArgsManOptions(args, mining_args_dummy)};
+    if (!mining_result) {
+        return InitError(util::ErrorString(mining_result));
     }
 
     nBytesPerSigOp = args.GetIntArg("-bytespersigop", nBytesPerSigOp);
@@ -1309,6 +1293,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
     if (!mempool_error.empty()) {
         return {ChainstateLoadStatus::FAILURE_FATAL, mempool_error};
     }
+    Assert(ApplyArgsManOptions(args, node.mining_args)); // no error can happen, already checked in AppInitParameterInteraction
     LogInfo("* Using %.1f MiB for in-memory UTXO set (plus up to %.1f MiB of unused mempool space)",
             cache_sizes.coins * (1.0 / 1024 / 1024),
             mempool_opts.max_size_bytes * (1.0 / 1024 / 1024));

@@ -462,7 +462,7 @@ static RPCHelpMan getmininginfo()
     CBlockIndex& tip{*CHECK_NONFATAL(active_chain.Tip())};
 
     UniValue obj(UniValue::VOBJ);
-    obj.pushKV("blocks",           active_chain.Height());
+    obj.pushKV("blocks", active_chain.Height());
     if (BlockAssembler::m_last_block_weight) obj.pushKV("currentblockweight", *BlockAssembler::m_last_block_weight);
     if (BlockAssembler::m_last_block_num_txs) obj.pushKV("currentblocktx", *BlockAssembler::m_last_block_num_txs);
     obj.pushKV("bits", strprintf("%08x", tip.nBits));
@@ -470,9 +470,7 @@ static RPCHelpMan getmininginfo()
     obj.pushKV("target", GetTarget(tip, chainman.GetConsensus().powLimit).GetHex());
     obj.pushKV("networkhashps",    getnetworkhashps().HandleRequest(request));
     obj.pushKV("pooledtx", mempool.size());
-    BlockAssembler::Options assembler_options;
-    ApplyArgsManOptions(*node.args, assembler_options);
-    obj.pushKV("blockmintxfee", ValueFromAmount(assembler_options.blockMinFeeRate.GetFeePerK()));
+    obj.pushKV("blockmintxfee", ValueFromAmount(node.mining_args.blockMinFeeRate.GetFeePerK()));
     obj.pushKV("chain", chainman.GetParams().GetChainTypeString());
 
     UniValue next(UniValue::VOBJ);

@@ -5,6 +5,8 @@
 #ifndef BITCOIN_NODE_CONTEXT_H
 #define BITCOIN_NODE_CONTEXT_H
 
+#include <node/mining_args.h>
+
 #include <atomic>
 #include <cstdlib>
 #include <functional>
@@ -79,6 +81,7 @@ struct NodeContext {
     //! Reference to chain client that should used to load or create wallets
     //! opened by the gui.
     std::unique_ptr<interfaces::Mining> mining;
+    MiningArgs mining_args;
     interfaces::WalletLoader* wallet_loader{nullptr};
     std::unique_ptr<CScheduler> scheduler;
     std::function<void()> rpc_interruption_point = [] {};

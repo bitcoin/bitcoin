@@ -7,7 +7,7 @@
 #include <chainparams.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
-#include <node/miner.h>
+#include <interfaces/mining.h>
 #include <pow.h>
 #include <random.h>
 #include <test/util/random.h>
@@ -20,7 +20,6 @@
 #include <thread>
 
 using kernel::ChainstateRole;
-using node::BlockAssembler;
 
 namespace validation_block_tests {
 struct MinerTestingSetup : public RegTestingSetup {
@@ -66,10 +65,10 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
     static int i = 0;
     static uint64_t time = Params().GenesisBlock().nTime;
 
-    BlockAssembler::Options options;
-    options.coinbase_output_script = CScript{} << i++ << OP_TRUE;
-    auto ptemplate = BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get(), options}.CreateNewBlock();
-    auto pblock = std::make_shared<CBlock>(ptemplate->block);
+    auto mining{interfaces::MakeMining(m_node)};
+    auto block_template{mining->createNewBlock({.coinbase_output_script = CScript{} << i++ << OP_TRUE})};
+    BOOST_REQUIRE(block_template);
+    auto pblock = std::make_shared<CBlock>(block_template->getBlock());
     pblock->hashPrevBlock = prev_hash;
     pblock->nTime = ++time;
 
@@ -334,10 +333,10 @@ BOOST_AUTO_TEST_CASE(witness_commitment_index)
     LOCK(Assert(m_node.chainman)->GetMutex());
     CScript pubKey;
     pubKey << 1 << OP_TRUE;
-    BlockAssembler::Options options;
-    options.coinbase_output_script = pubKey;
-    auto ptemplate = BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get(), options}.CreateNewBlock();
-    CBlock pblock = ptemplate->block;
+    auto mining{interfaces::MakeMining(m_node)};
+    auto block_template{mining->createNewBlock({.coinbase_output_script = pubKey})};
+    BOOST_REQUIRE(block_template);
+    CBlock pblock{block_template->getBlock()};
 
     CTxOut witness;
     witness.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
