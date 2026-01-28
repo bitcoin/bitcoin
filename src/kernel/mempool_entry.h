@@ -84,12 +84,11 @@ private:
 
 public:
     virtual ~CTxMemPoolEntry() = default;
-    CTxMemPoolEntry(TxGraph::Ref&& ref, const CTransactionRef& tx, CAmount fee,
+    CTxMemPoolEntry(const CTransactionRef& tx, CAmount fee,
                     int64_t time, unsigned int entry_height, uint64_t entry_sequence,
                     bool spends_coinbase,
                     int64_t sigops_cost, LockPoints lp)
-        : TxGraph::Ref(std::move(ref)),
-          tx{tx},
+        : tx{tx},
           nFee{fee},
           nTxWeight{GetTransactionWeight(*tx)},
           nUsageSize{RecursiveDynamicUsage(tx)},
