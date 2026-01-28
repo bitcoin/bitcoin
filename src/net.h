@@ -102,6 +102,9 @@ static constexpr bool DEFAULT_V2_TRANSPORT{true};
 
 typedef int64_t NodeId;
 
+/** Get the score of a local address. */
+int GetnScore(const CService& addr);
+
 struct AddedNodeParams {
     std::string m_added_node;
     bool m_use_v2transport;
