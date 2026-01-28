@@ -463,4 +463,26 @@ BOOST_FIXTURE_TEST_CASE(logging_filesize_rate_limit, LogSetup)
     }
 }
 
+BOOST_FIXTURE_TEST_CASE(logging_arg_evaluation, LogSetup)
+{
+    size_t counter{0};
+    auto side_effect = [&counter]() {
+        return ++counter;
+    };
+
+    // Even when logging is disabled, Info or higher should still evaluate its arguments
+    LogInstance().DisconnectTestLogger();
+    LogInstance().DisableLogging();
+    BOOST_CHECK(!LogInstance().Enabled());
+    LogError("error (%i)", side_effect());
+    LogWarning("warning (%i)", side_effect());
+    LogInfo("info (%i)", side_effect());
+    BOOST_CHECK_EQUAL(counter, 3);
+
+    // Skip argument evaluation when category is disabled
+    LogDebug(BCLog::NET, "debug (%i)", side_effect());
+    LogTrace(BCLog::NET, "trace (%i)", side_effect());
+    BOOST_CHECK_EQUAL(counter, 3);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
