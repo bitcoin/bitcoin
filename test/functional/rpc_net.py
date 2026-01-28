@@ -93,6 +93,7 @@ class NetTest(BitcoinTestFramework):
         self.test_sendmsgtopeer()
         self.test_getaddrmaninfo()
         self.test_getrawaddrman()
+        self.test_getnodeaddresses_with_banned()
 
     def test_connection_count(self):
         self.log.info("Test getconnectioncount")
@@ -582,6 +583,35 @@ class NetTest(BitcoinTestFramework):
 
         self.log.debug("Test that getrawaddrman contains information about newly added addresses in each addrman table")
         check_getrawaddrman_entries(expected)
+
+    def test_getnodeaddresses_with_banned(self):
+        self.log.info("Test that getnodeaddresses returns max count even with banned addresses")
+        self.restart_node(0, extra_args=[], clear_addrman=True)
+        node = self.nodes[0]
+
+        # Add addresses, taking into account some possible failures
+        added = []
+        for i in range(20):
+            if node.addpeeraddress(address=f"1.2.3.{i}", port=8333)["success"]:
+                added.append(f"1.2.3.{i}")
+
+        # Ban half of the added addresses
+        banned = set(added[:len(added)//2])
+        for b in banned:
+            node.setban(b, "add")
+
+        # Request all unbanned addresses by count
+        count = len(added) - len(banned)
+        addresses = node.getnodeaddresses(count=count)
+        assert_equal(len(addresses), count)
+
+        # Verify none of the returned addresses are banned
+        for addr in addresses:
+            assert addr["address"] not in banned
+
+        # Clean up
+        for b in banned:
+            node.setban(b, "remove")
 
 
 if __name__ == '__main__':
