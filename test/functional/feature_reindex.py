@@ -8,14 +8,31 @@
 - Stop the node and restart it with -reindex. Verify that the node has reindexed up to block 3.
 - Stop the node and restart it with -reindex-chainstate. Verify that the node has reindexed up to block 3.
 - Verify that out-of-order blocks are correctly processed, see LoadExternalBlockFile()
+- Verify that -reindex does not attempt to connect blocks when best_header chainwork is below MinimumChainWork
 """
 
+from test_framework.blocktools import (
+    create_block,
+    create_coinbase,
+)
+from test_framework.messages import (
+    CBlockHeader,
+    msg_block,
+    msg_headers,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import MAGIC_BYTES
+from test_framework.p2p import P2PInterface
 from test_framework.util import (
     assert_equal,
     util_xor,
 )
+
+class BaseNode(P2PInterface):
+    def send_header_for_blocks(self, new_blocks):
+        headers_message = msg_headers()
+        headers_message.headers = [CBlockHeader(b) for b in new_blocks]
+        self.send_without_ping(headers_message)
 
 
 class ReindexTest(BitcoinTestFramework):
@@ -70,7 +87,7 @@ class ReindexTest(BitcoinTestFramework):
         # The reindexing code should detect and accommodate out of order blocks.
         with self.nodes[0].assert_debug_log([
             'LoadExternalBlockFile: Out of order block',
-            'LoadExternalBlockFile: Processing out of order child',
+            'LoadOutOfOrderBlocks: Processing out of order child',
         ]):
             extra_args = [["-reindex"]]
             self.start_nodes(extra_args)
@@ -97,6 +114,45 @@ class ReindexTest(BitcoinTestFramework):
             node.wait_for_rpc_connection(wait_for_import=False)
         node.stop_node()
 
+    def only_connect_minchainwork_chain(self):
+        self.start_node(0)
+        node = self.nodes[0]
+        self.generatetoaddress(self.nodes[0], 3, self.nodes[0].get_deterministic_priv_key().address)
+        blockcount = node.getblockcount()
+        best_header_target = int(node.getblock(node.getbestblockhash())['target'], 16)
+        chainwork = (100 + blockcount) * (2**256) // (best_header_target + 1)
+        chainwork = format(chainwork, '064x')
+
+        tip = int(node.getbestblockhash(), 16)
+        block_time = node.getblock(node.getbestblockhash())['time'] + 1
+        height = node.getblock(node.getbestblockhash())['height'] + 1
+
+        blocks = []
+        for _ in range(100):
+            block = create_block(tip, create_coinbase(height), block_time)
+            block.solve()
+            blocks.append(block)
+            tip = block.hash_int
+            block_time += 1
+            height += 1
+
+        self.stop_node(0)
+        extra_args = ["-reindex", "-minimumchainwork=" + chainwork]
+        with node.assert_debug_log(expected_msgs=["Waiting for header sync to finish before activating chain..."]):
+            # No blocks are connected because chainwork of best_header is too low
+            self.start_node(0, extra_args)
+
+        p2p = node.add_p2p_connection(BaseNode())
+        p2p.send_header_for_blocks(blocks)
+
+        # Reindexed blocks are connected after headers sync
+        self.wait_until(lambda: node.getblockcount() == blockcount)
+
+        # Send headers again to ensure that the block is requested
+        p2p.send_header_for_blocks(blocks)
+        p2p.send_without_ping(msg_block(blocks[0]))
+        self.wait_until(lambda: node.getblockcount() == blockcount + 1)
+
     def run_test(self):
         self.reindex(False)
         self.reindex(True)
@@ -105,6 +161,7 @@ class ReindexTest(BitcoinTestFramework):
 
         self.out_of_order()
         self.continue_reindex_after_shutdown()
+        self.only_connect_minchainwork_chain()
 
 
 if __name__ == '__main__':

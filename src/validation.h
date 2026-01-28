@@ -1175,6 +1175,16 @@ public:
     double GuessVerificationProgress(const CBlockIndex* pindex) const EXCLUSIVE_LOCKS_REQUIRED(GetMutex());
 
     /**
+     * Recursively process earlier encountered successors of this block
+     *
+     * @param[in]     hash                         hash of the ancestor block
+     * @param[in,out] blocks_with_unknown_parent   Map of disk positions for blocks with
+     *                                             unknown parent, key is parent block hash
+     */
+    int LoadOutOfOrderBlocks(const uint256& hash, std::multimap<uint256, FlatFilePos>* blocks_with_unknown_parent);
+
+
+    /**
      * Import blocks from an external file
      *
      * During reindexing, this function is called for each block file (datadir/blocks/blk?????.dat).
@@ -1189,6 +1199,9 @@ public:
      * blocks_with_unknown_parent map must be passed in and out with each call. It's a multimap,
      * rather than just a map, because multiple blocks may have the same parent (when chain splits
      * or stale blocks exist). It maps from parent-hash to child-disk-position.
+     *
+     * This function will call ActivateBestChain when the Genesis Block is added to the Block Index
+     * so normal node progress can continue.
      *
      * This function can also be used to read blocks from user-specified block files using the
      * -loadblock= option. There's no unknown-parent tracking, so the last two arguments are omitted.

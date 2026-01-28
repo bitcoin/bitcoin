@@ -132,6 +132,7 @@ using node::DEFAULT_PRINT_MODIFIED_FEE;
 using node::DEFAULT_STOPATHEIGHT;
 using node::DumpMempool;
 using node::ImportBlocks;
+using node::ImportingNow;
 using node::KernelNotifications;
 using node::LoadChainstate;
 using node::LoadMempool;
@@ -265,7 +266,10 @@ void Interrupt(NodeContext& node)
     ShutdownNotify(*node.args);
 #endif
     // Wake any threads that may be waiting for the tip to change.
-    if (node.notifications) WITH_LOCK(node.notifications->m_tip_block_mutex, node.notifications->m_tip_block_cv.notify_all());
+    if (node.notifications) {
+        WITH_LOCK(node.notifications->m_tip_block_mutex, node.notifications->m_tip_block_cv.notify_all());
+        WITH_LOCK(node.notifications->m_header_tip_mutex, node.notifications->m_header_tip_cv.notify_all());
+    }
     InterruptHTTPServer();
     InterruptHTTPRPC();
     InterruptRPC();
@@ -1977,7 +1981,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     node.background_init_thread = std::thread(&util::TraceThread, "initload", [=, &chainman, &args, &node] {
         ScheduleBatchPriority();
         // Import blocks and ActivateBestChain()
-        ImportBlocks(chainman, vImportFiles);
+        ImportingNow imp{chainman.m_blockman.m_importing};
+        bool force_activation = false;
+        ImportBlocks(chainman, vImportFiles, force_activation);
         if (args.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
             LogInfo("Stopping after block import");
             if (!(Assert(node.shutdown_request))()) {
@@ -1986,16 +1992,36 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             return;
         }
 
+        // Load mempool from disk
+        if (auto* pool{chainman.ActiveChainstate().GetMempool()}) {
+            LoadMempool(*pool, ShouldPersistMempool(args) ? MempoolPath(args) : fs::path{}, chainman.ActiveChainstate(), {});
+            pool->SetLoadTried(!chainman.m_interrupt);
+        }
+
+        bool wait_for_headers_sync = !force_activation && WITH_LOCK(::cs_main,
+            return chainman.m_best_header->nChainWork.CompareTo(chainman.MinimumChainWork()) < 0;);
+        if (wait_for_headers_sync) {
+            LogInfo("Waiting for header sync to finish before activating chain...");
+            auto& kernel_notifications{*Assert(node.notifications)};
+            WAIT_LOCK(kernel_notifications.m_header_tip_mutex, lock);
+            kernel_notifications.m_header_tip_cv.wait(lock, [&] () EXCLUSIVE_LOCKS_REQUIRED(kernel_notifications.m_header_tip_mutex) {
+                return ShutdownRequested(node) || WITH_LOCK(::cs_main,
+                    return chainman.m_best_header->nChainWork.CompareTo(chainman.MinimumChainWork()) > -1);
+            });
+            if (ShutdownRequested(node)) return;
+            {
+                REVERSE_LOCK(lock, kernel_notifications.m_header_tip_mutex);
+                if (auto result = chainman.ActivateBestChains(); !result) {
+                    chainman.GetNotifications().fatalError(util::ErrorString(result));
+                }
+            }
+        }
+
         // Start indexes initial sync
         if (!StartIndexBackgroundSync(node)) {
             bilingual_str err_str = _("Failed to start indexes, shutting down…");
             chainman.GetNotifications().fatalError(err_str);
             return;
-        }
-        // Load mempool from disk
-        if (auto* pool{chainman.ActiveChainstate().GetMempool()}) {
-            LoadMempool(*pool, ShouldPersistMempool(args) ? MempoolPath(args) : fs::path{}, chainman.ActiveChainstate(), {});
-            pool->SetLoadTried(!chainman.m_interrupt);
         }
     });
 
