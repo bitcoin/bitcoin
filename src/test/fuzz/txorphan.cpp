@@ -15,6 +15,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/feefrac.h>
@@ -40,7 +41,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     FastRandomContext orphanage_rng{ConsumeUInt256(fuzzed_data_provider)};
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    ElapseTime elapse_time{ConsumeTime(fuzzed_data_provider)};
 
     auto orphanage = node::MakeTxOrphanage();
     std::vector<COutPoint> outpoints; // Duplicates are tolerated
@@ -227,7 +228,7 @@ FUZZ_TARGET(txorphan_protected, .init = initialize_orphanage)
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     FastRandomContext orphanage_rng{ConsumeUInt256(fuzzed_data_provider)};
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    ElapseTime elapse_time{ConsumeTime(fuzzed_data_provider)};
 
     // We have num_peers peers. Some subset of them will never exceed their reserved weight or announcement count, and
     // should therefore never have any orphans evicted.

@@ -16,6 +16,7 @@
 #include <test/util/net.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <util/string.h>
 #include <util/time.h>
 #include <validation.h>
@@ -90,17 +91,17 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     }
     connman.FlushSendBuffer(dummyNode1);
 
-    int64_t nStartTime = GetTime();
-    // Wait 21 minutes
-    SetMockTime(nStartTime+21*60);
+    ElapseTime elapse_time{};
+    elapse_time(21min);
+
     BOOST_CHECK(peerman.SendMessages(&dummyNode1)); // should result in getheaders
     {
         LOCK(dummyNode1.cs_vSend);
         const auto& [to_send, _more, _msg_type] = dummyNode1.m_transport->GetBytesToSend(false);
         BOOST_CHECK(!to_send.empty());
     }
-    // Wait 3 more minutes
-    SetMockTime(nStartTime+24*60);
+
+    elapse_time(3min);
     BOOST_CHECK(peerman.SendMessages(&dummyNode1)); // should result in disconnect
     BOOST_CHECK(dummyNode1.fDisconnect == true);
 
@@ -151,9 +152,9 @@ BOOST_FIXTURE_TEST_CASE(stale_tip_peer_management, OutboundTest)
     CConnman::Options options;
     options.m_max_automatic_connections = DEFAULT_MAX_PEER_CONNECTIONS;
 
-    const auto time_init{GetTime<std::chrono::seconds>()};
-    SetMockTime(time_init);
-    const auto time_later{time_init + 3 * std::chrono::seconds{m_node.chainman->GetConsensus().nPowTargetSpacing} + 1s};
+    const auto time_init{Now<NodeSeconds>()};
+    ElapseTime elapse_time{time_init};
+    const auto delta{3 * std::chrono::seconds{m_node.chainman->GetConsensus().nPowTargetSpacing} + 1s};
     connman->Init(options);
     std::vector<CNode *> vNodes;
 
@@ -169,7 +170,7 @@ BOOST_FIXTURE_TEST_CASE(stale_tip_peer_management, OutboundTest)
         BOOST_CHECK(node->fDisconnect == false);
     }
 
-    SetMockTime(time_later);
+    elapse_time(delta);
 
     // Now tip should definitely be stale, and we should look for an extra
     // outbound peer
@@ -184,9 +185,9 @@ BOOST_FIXTURE_TEST_CASE(stale_tip_peer_management, OutboundTest)
     // If we add one more peer, something should get marked for eviction
     // on the next check (since we're mocking the time to be in the future, the
     // required time connected check should be satisfied).
-    SetMockTime(time_init);
+    elapse_time.set(time_init);
     AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY);
-    SetMockTime(time_later);
+    elapse_time(delta);
 
     peerLogic->CheckForStaleTipAndEvictPeers();
     for (int i = 0; i < max_outbound_full_relay; ++i) {
@@ -212,9 +213,9 @@ BOOST_FIXTURE_TEST_CASE(stale_tip_peer_management, OutboundTest)
 
     // Add an onion peer, that will be protected because it is the only one for
     // its network, so another peer gets disconnected instead.
-    SetMockTime(time_init);
+    elapse_time.set(time_init);
     AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY, /*onion_peer=*/true);
-    SetMockTime(time_later);
+    elapse_time(delta);
     peerLogic->CheckForStaleTipAndEvictPeers();
 
     for (int i = 0; i < max_outbound_full_relay - 2; ++i) {
@@ -225,9 +226,9 @@ BOOST_FIXTURE_TEST_CASE(stale_tip_peer_management, OutboundTest)
     BOOST_CHECK(vNodes[max_outbound_full_relay]->fDisconnect == false);
 
     // Add a second onion peer which won't be protected
-    SetMockTime(time_init);
+    elapse_time.set(time_init);
     AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY, /*onion_peer=*/true);
-    SetMockTime(time_later);
+    elapse_time(delta);
     peerLogic->CheckForStaleTipAndEvictPeers();
 
     BOOST_CHECK(vNodes.back()->fDisconnect == true);
@@ -246,7 +247,7 @@ BOOST_FIXTURE_TEST_CASE(block_relay_only_eviction, OutboundTest)
     auto peerLogic = PeerManager::make(*connman, *m_node.addrman, nullptr, *m_node.chainman, *m_node.mempool, *m_node.warnings, {});
 
     constexpr int max_outbound_block_relay{MAX_BLOCK_RELAY_ONLY_CONNECTIONS};
-    constexpr int64_t MINIMUM_CONNECT_TIME{30};
+    constexpr auto MINIMUM_CONNECT_TIME{30s};
     CConnman::Options options;
     options.m_max_automatic_connections = DEFAULT_MAX_PEER_CONNECTIONS;
 
@@ -273,7 +274,8 @@ BOOST_FIXTURE_TEST_CASE(block_relay_only_eviction, OutboundTest)
     }
     BOOST_CHECK(vNodes.back()->fDisconnect == false);
 
-    SetMockTime(GetTime() + MINIMUM_CONNECT_TIME + 1);
+    ElapseTime elapse_time{};
+    elapse_time(MINIMUM_CONNECT_TIME);
     peerLogic->CheckForStaleTipAndEvictPeers();
     for (int i = 0; i < max_outbound_block_relay; ++i) {
         BOOST_CHECK(vNodes[i]->fDisconnect == false);
@@ -411,8 +413,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     auto peerLogic = PeerManager::make(*connman, *m_node.addrman, banman.get(), *m_node.chainman, *m_node.mempool, *m_node.warnings, {});
 
     banman->ClearBanned();
-    int64_t nStartTime = GetTime();
-    SetMockTime(nStartTime); // Overrides future calls to GetTime()
+    const ElapseTime elapse_time{}; // keep mocktime constant
 
     CAddress addr(ip(0xa0b0c001), NODE_NONE);
     NodeId id{0};

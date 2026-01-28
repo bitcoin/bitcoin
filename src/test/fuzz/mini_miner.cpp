@@ -6,10 +6,11 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/mempool.h>
+#include <test/util/mining.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <test/util/txmempool.h>
-#include <test/util/mining.h>
 
 #include <node/miner.h>
 #include <node/mini_miner.h>
@@ -42,7 +43,7 @@ FUZZ_TARGET(mini_miner, .init = initialize_miner)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    ElapseTime elapse_time{ConsumeTime(fuzzed_data_provider)};
     bilingual_str error;
     CTxMemPool pool{CTxMemPool::Options{}, error};
     Assert(error.empty());

@@ -12,6 +12,7 @@
 #include <random.h>
 #include <test/data/asmap.raw.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <util/asmap.h>
 #include <util/string.h>
 
@@ -1011,7 +1012,8 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     BOOST_CHECK_EQUAL(addrman->SelectTriedCollision().first.ToStringAddrPort(), "250.1.1.36:0");
 
     // Eviction is also successful if too much time has passed since last try
-    SetMockTime(GetTime() + 4 * 60 *60);
+    ElapseTime elapse_time{};
+    elapse_time(4h);
     addrman->ResolveCollisions();
     BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
     //Now 19 is in tried again, and 36 back to new

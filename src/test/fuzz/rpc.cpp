@@ -17,6 +17,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <tinyformat.h>
 #include <uint256.h>
 #include <univalue.h>
@@ -368,7 +369,7 @@ FUZZ_TARGET(rpc, .init = initialize_rpc)
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     bool good_data{true};
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    ElapseTime elapse_time{ConsumeTime(fuzzed_data_provider)};
     const std::string rpc_command = fuzzed_data_provider.ConsumeRandomLengthString(64);
     if (!g_limit_to_rpc_command.empty() && rpc_command != g_limit_to_rpc_command) {
         return;

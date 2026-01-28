@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-
+#include <test/util/time.h>
 #include <util/time.h>
 
 static void BenchTimeDeprecated(benchmark::Bench& bench)
@@ -15,11 +15,10 @@ static void BenchTimeDeprecated(benchmark::Bench& bench)
 
 static void BenchTimeMock(benchmark::Bench& bench)
 {
-    SetMockTime(111);
+    ElapseTime elapse_time{111s};
     bench.run([&] {
         (void)GetTime<std::chrono::seconds>();
     });
-    SetMockTime(0);
 }
 
 static void BenchTimeMillis(benchmark::Bench& bench)

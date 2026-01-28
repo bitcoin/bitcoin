@@ -12,6 +12,7 @@
 #include <script/signingprovider.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <test/util/transaction_utils.h>
 
 #include <array>
@@ -430,9 +431,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     FillableSigningProvider keystore;
     BOOST_CHECK(keystore.AddKey(key));
 
-    // Freeze time for length of test
-    auto now{GetTime<std::chrono::seconds>()};
-    SetMockTime(now);
+    ElapseTime elapse_time{};
 
     std::vector<CTransactionRef> orphans_added;
 

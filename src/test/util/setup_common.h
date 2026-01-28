@@ -275,6 +275,12 @@ inline std::ostream& operator<<(std::ostream& os, const std::optional<T>& v)
     return v ? os << *v
              : os << "std::nullopt";
 }
+
+template <typename Clock, typename Duration>
+inline std::ostream& operator<<(std::ostream& os, const std::chrono::time_point<Clock, Duration>& tp)
+{
+    return os << tp.time_since_epoch().count();
+}
 } // namespace std
 
 std::ostream& operator<<(std::ostream& os, const arith_uint256& num);

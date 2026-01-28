@@ -10,6 +10,7 @@
 #include <sync.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <uint256.h>
 #include <util/time.h>
 #include <validation.h>
@@ -32,7 +33,7 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
 
     // Set clock to genesis block, so the descriptors/keys creation time don't interfere with the blocks scanning process.
     // The reason is 'generatetoaddress', which creates a chain with deterministic timestamps in the past.
-    SetMockTime(test_setup->m_node.chainman->GetParams().GenesisBlock().nTime);
+    ElapseTime elapse_time{test_setup->m_node.chainman->GetParams().GenesisBlock().Time()};
     CWallet wallet{test_setup->m_node.chain.get(), "", CreateMockableWalletDatabase()};
     {
         LOCK(wallet.cs_wallet);

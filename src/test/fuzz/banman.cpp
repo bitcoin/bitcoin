@@ -10,6 +10,7 @@
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <util/fs.h>
 #include <util/readwritefile.h>
 
@@ -44,7 +45,7 @@ FUZZ_TARGET(banman, .init = initialize_banman)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    ElapseTime elapse_time{ConsumeTime(fuzzed_data_provider)};
     fs::path banlist_file = gArgs.GetDataDirNet() / "fuzzed_banlist";
 
     const bool start_with_corrupted_banlist{fuzzed_data_provider.ConsumeBool()};
@@ -124,7 +125,7 @@ FUZZ_TARGET(banman, .init = initialize_banman)
         }
         if (!force_read_and_write_to_err) {
             ban_man.DumpBanlist();
-            SetMockTime(ConsumeTime(fuzzed_data_provider));
+            elapse_time.set(ConsumeTime(fuzzed_data_provider));
             banmap_t banmap;
             ban_man.GetBanned(banmap);
             BanMan ban_man_read{banlist_file, /*client_interface=*/nullptr, /*default_ban_time=*/0};
