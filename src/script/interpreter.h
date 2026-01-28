@@ -364,13 +364,15 @@ public:
     }
 };
 
+/** Verify that the control block has a valid length (33 + k*32, with k in {0,1,..,128}). */
+bool VerifyTaprootControlBlockSize(std::span<const unsigned char> control);
 /** Compute the BIP341 tapleaf hash from leaf version & script. */
 uint256 ComputeTapleafHash(uint8_t leaf_version, std::span<const unsigned char> script);
 /** Compute the BIP341 tapbranch hash from two branches.
   * Spans must be 32 bytes each. */
 uint256 ComputeTapbranchHash(std::span<const unsigned char> a, std::span<const unsigned char> b);
 /** Compute the BIP341 taproot script tree Merkle root from control block and leaf hash.
- *  Requires control block to have valid length (33 + k*32, with k in {0,1,..,128}). */
+ *  Requires control block to have valid length. */
 uint256 ComputeTaprootMerkleRoot(std::span<const unsigned char> control, const uint256& tapleaf_hash);
 
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, script_verify_flags flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* error = nullptr);
