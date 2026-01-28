@@ -9,7 +9,7 @@
 #include <consensus/amount.h>
 
 class CFeeRate;
-struct FeeCalculation;
+enum class FeeSource;
 
 namespace wallet {
 class CCoinControl;
@@ -25,7 +25,7 @@ CAmount GetRequiredFee(const CWallet& wallet, unsigned int nTxBytes);
  * Estimate the minimum fee considering user set parameters
  * and the required fee
  */
-CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const CCoinControl& coin_control, FeeCalculation* feeCalc);
+CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const CCoinControl& coin_control, FeeSource* fee_source, int* returned_target);
 
 /**
  * Return the minimum required feerate taking into account the
@@ -37,7 +37,7 @@ CFeeRate GetRequiredFeeRate(const CWallet& wallet);
  * Estimate the minimum fee rate considering user set parameters
  * and the required fee
  */
-CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_control, FeeCalculation* feeCalc);
+CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_control, FeeSource* fee_source, int* returned_target);
 
 /**
  * Return the maximum feerate for discarding change.

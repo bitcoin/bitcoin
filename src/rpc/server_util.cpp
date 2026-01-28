@@ -2,17 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <rpc/server_util.h>
-
 #include <chain.h>
 #include <common/args.h>
 #include <net_processing.h>
 #include <node/context.h>
 #include <node/miner.h>
-#include <policy/fees/block_policy_estimator.h>
+#include <policy/fees/estimator_man.h>
 #include <pow.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
+#include <rpc/server_util.h>
 #include <txmempool.h>
 #include <util/any.h>
 #include <validation.h>
@@ -84,17 +83,17 @@ ChainstateManager& EnsureAnyChainman(const std::any& context)
     return EnsureChainman(EnsureAnyNodeContext(context));
 }
 
-CBlockPolicyEstimator& EnsureFeeEstimator(const NodeContext& node)
+FeeRateEstimatorManager& EnsureFeeEstimatorMan(const NodeContext& node)
 {
-    if (!node.fee_estimator) {
+    if (!node.fee_estimator_man) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Fee estimation disabled");
     }
-    return *node.fee_estimator;
+    return *node.fee_estimator_man;
 }
 
-CBlockPolicyEstimator& EnsureAnyFeeEstimator(const std::any& context)
+FeeRateEstimatorManager& EnsureAnyFeeEstimatorMan(const std::any& context)
 {
-    return EnsureFeeEstimator(EnsureAnyNodeContext(context));
+    return EnsureFeeEstimatorMan(EnsureAnyNodeContext(context));
 }
 
 CConnman& EnsureConnman(const NodeContext& node)
