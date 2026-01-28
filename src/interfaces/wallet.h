@@ -57,9 +57,6 @@ struct WalletTxOut;
 struct WalletTxStatus;
 struct WalletMigrationResult;
 
-using WalletOrderForm = std::vector<std::pair<std::string, std::string>>;
-using WalletValueMap = std::map<std::string, std::string>;
-
 //! Interface for accessing a wallet.
 class Wallet
 {
@@ -149,9 +146,7 @@ public:
         CAmount& fee) = 0;
 
     //! Commit transaction.
-    virtual void commitTransaction(CTransactionRef tx,
-        WalletValueMap value_map,
-        WalletOrderForm order_form) = 0;
+    virtual void commitTransaction(CTransactionRef tx, const std::vector<std::string>& messages) = 0;
 
     //! Return whether transaction can be abandoned.
     virtual bool transactionCanBeAbandoned(const Txid& txid) = 0;
@@ -197,7 +192,8 @@ public:
     //! Get transaction details.
     virtual WalletTx getWalletTxDetails(const Txid& txid,
         WalletTxStatus& tx_status,
-        WalletOrderForm& order_form,
+        std::vector<std::string>& messages,
+        std::vector<std::string>& payment_requests,
         bool& in_mempool,
         int& num_blocks) = 0;
 
@@ -390,7 +386,10 @@ struct WalletTx
     CAmount debit;
     CAmount change;
     int64_t time;
-    std::map<std::string, std::string> value_map;
+    std::optional<std::string> from; // Deprecated
+    std::optional<std::string> message; // Deprecated
+    std::optional<std::string> comment;
+    std::optional<std::string> comment_to;
     bool is_coinbase;
 
     bool operator<(const WalletTx& a) const { return tx->GetHash() < a.tx->GetHash(); }
