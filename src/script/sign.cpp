@@ -119,7 +119,7 @@ std::vector<uint8_t> MutableTransactionSignatureCreator::CreateMuSig2Nonce(const
     if (!sighash.has_value()) return {};
 
     MuSig2SecNonce secnonce;
-    std::vector<uint8_t> out = key.CreateMuSig2Nonce(secnonce, *sighash, aggregate_pubkey, pubkeys);
+    std::vector<uint8_t> out = ::CreateMuSig2Nonce(secnonce, *sighash, key, aggregate_pubkey, pubkeys);
     if (out.empty()) return {};
 
     // Store the secnonce in the SigningProvider
@@ -161,7 +161,7 @@ bool MutableTransactionSignatureCreator::CreateMuSig2PartialSig(const SigningPro
     if (!secnonce || !secnonce->get().IsValid()) return false;
 
     // Compute the sig
-    std::optional<uint256> sig = key.CreateMuSig2PartialSig(*sighash, aggregate_pubkey, pubkeys, pubnonces, *secnonce, tweaks);
+    std::optional<uint256> sig = ::CreateMuSig2PartialSig(*sighash, key, aggregate_pubkey, pubkeys, pubnonces, *secnonce, tweaks);
     if (!sig) return false;
     partial_sig = std::move(*sig);
 
