@@ -8,6 +8,7 @@
 #include <QFont>
 #include <QString>
 #include <QStringView>
+#include <QTextEdit>
 #include <QWidget>
 
 #include <cmath>
@@ -135,13 +136,18 @@ struct FontAttrib {
 
 /** Convert weight value from args (0-8) to QFont::Weight */
 bool weightFromArg(int nArg, QFont::Weight& weight);
+
 /** Convert QFont::Weight to an arg value (0-8) */
 int weightToArg(const QFont::Weight weight);
 
 /** Load dash specific application fonts */
 bool loadFonts();
+
 /** Check if the fonts have been loaded successfully */
 bool fontsLoaded();
+
+/** Register a QTextEdit for font styling. Applies immediately and updates when fonts change. */
+void registerWidget(QTextEdit* widget, const QString& html);
 
 /** Set an application wide default font, depends on the selected theme */
 void setApplicationFont();

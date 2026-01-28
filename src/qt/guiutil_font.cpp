@@ -14,6 +14,9 @@
 #include <QFontDatabase>
 #include <QFontMetrics>
 #include <QPointer>
+#include <QTextBlock>
+#include <QTextCharFormat>
+#include <QTextCursor>
 #include <QWidget>
 
 #include <cmath>
@@ -37,6 +40,13 @@ std::map<std::string, int> mapClassFontUpdates{
 
 //! Contains all widgets and its font attributes (weight, italic, size) with font changes due to GUIUtil::setFont
 std::map<QPointer<QWidget>, GUIUtil::FontAttrib> mapFontUpdates;
+
+//! Contains QTextEdit widgets with the original base font size and HTML
+struct TextEditStyleData {
+    QString html;
+    double base_size;
+};
+std::map<QPointer<QTextEdit>, TextEditStyleData> mapTextEditStyleUpdates;
 
 //! Map between font weights, Montserrat's convention and italic availability
 const std::map<QFont::Weight, std::pair<std::string, /*can_italic=*/bool>> mapMontserrat{{
@@ -196,6 +206,60 @@ size_t pruneStaleEntities(T& map)
         }
     }
     return removed;
+}
+
+//! Initializes QTextEdit with HTML and applies font styling
+void setFontBodyHTML(QTextEdit* widget, const QString& src, double base_size)
+{
+    if (!GUIUtil::fontsLoaded() || !widget) return;
+
+    QFont font{GUIUtil::getScaledFont(base_size, /*bold=*/false)};
+    widget->setFont(font);
+    widget->setHtml(src);
+
+    QFont font_bold{GUIUtil::getScaledFont(base_size, /*bold=*/true)};
+    QTextDocument* doc{widget->document()};
+    for (QTextBlock block{doc->begin()}; block.isValid(); block = block.next()) {
+        const int heading_level{block.blockFormat().headingLevel()};
+        double scale_add{0};
+        switch (heading_level) {
+        case 1:
+            scale_add = 0.10;
+            break;
+        case 2:
+            scale_add = 0.04;
+            break;
+        case 3:
+            scale_add = 0.02;
+            break;
+        default:
+            break;
+        }
+        for (auto it = block.begin(); !it.atEnd(); ++it) {
+            QTextFragment fragment{it.fragment()};
+            if (!fragment.isValid()) {
+                continue;
+            }
+            if (fragment.charFormat().fontWeight() >= QFont::Bold || scale_add > 0) {
+                QTextCursor cursor(doc);
+                cursor.setPosition(fragment.position());
+                cursor.setPosition(fragment.position() + fragment.length(), QTextCursor::KeepAnchor);
+
+                QTextCharFormat fmt;
+                fmt.setFontFamily(font_bold.family());
+                fmt.setFontWeight(font_bold.weight());
+#ifdef Q_OS_MACOS
+                if (!font_bold.styleName().isEmpty()) {
+                    fmt.setFontStyleName(font_bold.styleName());
+                }
+#endif // Q_OS_MACOS
+                if (scale_add > 0) {
+                    fmt.setFontPointSize(GUIUtil::g_font_registry.GetScaledFontSize(base_size * (1 + scale_add)));
+                }
+                cursor.mergeCharFormat(fmt);
+            }
+        }
+    }
 }
 } // anonymous namespace
 
@@ -495,13 +559,18 @@ void updateFonts()
     // before proceeding any further.
     const size_t nRemovedDefaultFonts{pruneStaleEntities(mapWidgetDefaultFontSizes)};
     const size_t nRemovedFontUpdates{pruneStaleEntities(mapFontUpdates)};
+    const size_t nRemovedTextEditUpdates{pruneStaleEntities(mapTextEditStyleUpdates)};
 
     size_t nUpdatable{0}, nUpdated{0};
     std::map<QWidget*, QFont> mapWidgetFonts;
     // Loop through all widgets
     for (QWidget* w : qApp->allWidgets()) {
-        if (std::find(vecIgnoreClasses.begin(), vecIgnoreClasses.end(), w->metaObject()->className()) != vecIgnoreClasses.end() ||
-            std::find(vecIgnoreObjects.begin(), vecIgnoreObjects.end(), w->objectName().toStdString()) != vecIgnoreObjects.end()) {
+        if (auto* wt{qobject_cast<QTextEdit*>(w)};
+            std::find(vecIgnoreClasses.begin(), vecIgnoreClasses.end(), w->metaObject()->className()) != vecIgnoreClasses.end() ||
+            std::find(vecIgnoreObjects.begin(), vecIgnoreObjects.end(), w->objectName().toStdString()) != vecIgnoreObjects.end() ||
+            (wt && mapTextEditStyleUpdates.count(wt)))
+        {
+            // Do not apply styling logic if ignored or handled separately
             continue;
         }
         ++nUpdatable;
@@ -534,9 +603,9 @@ void updateFonts()
         }
     }
     qDebug().nospace() << qstrprintf("%s - widget counts: updated/updatable/total(%d/%d/%d), removed items: "
-                                     "mapWidgetDefaultFontSizes/mapFontUpdates(%d/%d)",
+                                     "mapWidgetDefaultFontSizes/mapFontUpdates/mapTextEditStyleUpdates(%d/%d/%d)",
                                      __func__, nUpdated, nUpdatable, qApp->allWidgets().size(), nRemovedDefaultFonts,
-                                     nRemovedFontUpdates);
+                                     nRemovedFontUpdates, nRemovedTextEditUpdates);
 
     // Perform the required font updates
     // NOTE: This is done as separate step to avoid scaling issues due to font inheritance
@@ -556,6 +625,11 @@ void updateFonts()
             fontClass.setPointSizeF(dSize);
             qApp->setFont(fontClass, it.first.c_str());
         }
+    }
+
+    // Update registered QTextEdit widgets
+    for (const auto& [widget, data] : mapTextEditStyleUpdates) {
+        setFontBodyHTML(widget, data.html, data.base_size);
     }
 }
 
@@ -610,5 +684,25 @@ QFont fixedPitchFont(bool use_embedded_font)
         use_embedded_font ? ROBOTO_MONO_FONT_STR.toUtf8() : OS_MONO_FONT_STR.toUtf8(),
         FontWeight::Normal
     });
+}
+
+void registerWidget(QTextEdit* widget, const QString& html)
+{
+    if (!widget) return;
+    double base_size{FontRegistry::DEFAULT_FONT_SIZE};
+    auto it{mapTextEditStyleUpdates.find(widget)};
+    if (it != mapTextEditStyleUpdates.end()) {
+        // Widget already registered, preserve stored base_size and update HTML
+        base_size = it->second.base_size;
+        it->second.html = html;
+    } else {
+        // First registration, capture the widget's native font size
+        double widget_size{widget->font().pointSizeF()};
+        if (widget_size > 0) {
+            base_size = widget_size;
+        }
+        mapTextEditStyleUpdates[widget] = {html, base_size};
+    }
+    setFontBodyHTML(widget, html, base_size);
 }
 } // namespace GUIUtil

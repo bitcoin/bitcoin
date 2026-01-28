@@ -353,6 +353,6 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
         strHTML += "</ul>";
     }
 
-    strHTML += "</font></html>";
+    strHTML += "</html>";
     return strHTML;
 }

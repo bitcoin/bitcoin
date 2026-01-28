@@ -17,11 +17,9 @@ TransactionDescDialog::TransactionDescDialog(const QModelIndex &idx, QWidget *pa
     ui(new Ui::TransactionDescDialog)
 {
     ui->setupUi(this);
-    GUIUtil::updateFonts();
     setWindowTitle(tr("Details for %1").arg(idx.data(TransactionTableModel::TxHashRole).toString()));
-    QString desc = idx.data(TransactionTableModel::LongDescriptionRole).toString();
-    ui->detailText->setHtml(desc);
-
+    GUIUtil::registerWidget(ui->detailText, idx.data(TransactionTableModel::LongDescriptionRole).toString());
+    GUIUtil::updateFonts();
     GUIUtil::handleCloseWindowShortcut(this);
 }
 
