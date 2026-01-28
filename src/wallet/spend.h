@@ -180,7 +180,7 @@ struct PreSelectedInputs
  * Fetch and validate coin control selected inputs.
  * Coins could be internal (from the wallet) or external.
 */
-util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const CCoinControl& coin_control,
+util::Result<CoinsResult> FetchSelectedInputs(const CWallet& wallet, const CCoinControl& coin_control,
                                                     const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /**
@@ -202,7 +202,7 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
  * Select all coins from coin_control, and if coin_control 'm_allow_other_inputs=true', call 'AutomaticCoinSelection' to
  * select a set of coins such that nTargetValue - pre_set_inputs.total_amount is met.
  */
-util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& available_coins, const PreSelectedInputs& pre_set_inputs,
+util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& available_coins, const CoinsResult& pre_set_inputs,
                                           const CAmount& nTargetValue, const CCoinControl& coin_control,
                                           const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 

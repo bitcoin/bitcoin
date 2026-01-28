@@ -222,8 +222,8 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         coin_control.m_allow_other_inputs = true;
         COutput select_coin = available_coins.All().at(0);
         coin_control.Select(select_coin.outpoint);
-        PreSelectedInputs selected_input;
-        selected_input.Insert(select_coin, coin_selection_params_bnb.m_subtract_fee_outputs);
+        CoinsResult selected_input;
+        selected_input.Add(OutputType::BECH32, select_coin);
         available_coins.Erase({available_coins.coins[OutputType::BECH32].begin()->outpoint});
 
         LOCK(wallet->cs_wallet);
@@ -253,8 +253,8 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         coin_control.m_allow_other_inputs = true;
         COutput select_coin = available_coins.All().at(1); // pre select 9 coin
         coin_control.Select(select_coin.outpoint);
-        PreSelectedInputs selected_input;
-        selected_input.Insert(select_coin, coin_selection_params_bnb.m_subtract_fee_outputs);
+        CoinsResult selected_input;
+        selected_input.Add(OutputType::BECH32, select_coin);
         available_coins.Erase({(++available_coins.coins[OutputType::BECH32].begin())->outpoint});
         const auto result13 = SelectCoins(*wallet, available_coins, selected_input, 10 * CENT, coin_control, coin_selection_params_bnb);
         BOOST_CHECK(EquivalentResult(expected_result, *result13));
