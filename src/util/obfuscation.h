@@ -30,6 +30,14 @@ public:
 
     operator bool() const { return m_rotations[0] != 0; }
 
+    static Obfuscation Delta(const Obfuscation& old_obfuscation, const Obfuscation& new_obfuscation)
+    {
+        std::array<std::byte, KEY_SIZE> delta_bytes{};
+        old_obfuscation(delta_bytes);
+        new_obfuscation(delta_bytes);
+        return Obfuscation{delta_bytes};
+    }
+
     void operator()(std::span<std::byte> target, size_t key_offset = 0) const
     {
         if (!*this) return;
@@ -62,6 +70,7 @@ public:
     void Serialize(Stream& s) const
     {
         // Use vector serialization for convenient compact size prefix.
+        // Note that the `xor.dat` file uses array serialization instead.
         std::vector<std::byte> bytes{KEY_SIZE};
         std::memcpy(bytes.data(), &m_rotations[0], KEY_SIZE);
         s << bytes;
