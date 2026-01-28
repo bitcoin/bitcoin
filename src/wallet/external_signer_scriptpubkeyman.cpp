@@ -79,10 +79,10 @@ util::Result<void> ExternalSignerScriptPubKeyMan::DisplayAddress(const CTxDestin
 }
 
 // If sign is true, transaction must previously have been filled
-std::optional<PSBTError> ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, std::optional<int> sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
+std::optional<PSBTError> ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, common::PSBTFillOptions options, int* n_signed) const
 {
-    if (!sign) {
-        return DescriptorScriptPubKeyMan::FillPSBT(psbt, txdata, sighash_type, false, bip32derivs, n_signed, finalize);
+    if (!options.sign) {
+        return DescriptorScriptPubKeyMan::FillPSBT(psbt, txdata, options, n_signed);
     }
 
     // Already complete if every input is now signed
@@ -104,7 +104,7 @@ std::optional<PSBTError> ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySigned
         LogWarning("Failed to sign: %s\n", failure_reason);
         return PSBTError::EXTERNAL_SIGNER_FAILED;
     }
-    if (finalize) FinalizePSBT(psbt); // This won't work in a multisig setup
+    if (options.finalize) FinalizePSBT(psbt); // This won't work in a multisig setup
     return {};
 }
 } // namespace wallet
