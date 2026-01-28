@@ -486,7 +486,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
             // topologically and by mining score. All parents must have been
             // checked before their children and their coins added to the
             // mempoolDuplicate coins cache.
-            assert(mempoolDuplicate.HaveCoin(txin.prevout));
+            assert(mempoolDuplicate.GetCoin(txin.prevout));
             // Check whether its inputs are marked in mapNextTx.
             auto it3 = mapNextTx.find(txin.prevout);
             assert(it3 != mapNextTx.end());

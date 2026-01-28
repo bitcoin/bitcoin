@@ -19,6 +19,7 @@ add_executable(bench_bitcoin
   checkblockindex.cpp
   checkqueue.cpp
   cluster_linearize.cpp
+  coins_haveinputs.cpp
   connectblock.cpp
   crypto_hash.cpp
   descriptors.cpp

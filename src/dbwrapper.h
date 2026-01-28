@@ -192,7 +192,6 @@ private:
     inline static const std::string OBFUSCATION_KEY{"\000obfuscate_key", 14}; // explicit size to avoid truncation at leading \0
 
     std::optional<std::string> ReadImpl(std::span<const std::byte> key) const;
-    bool ExistsImpl(std::span<const std::byte> key) const;
     size_t EstimateSizeImpl(std::span<const std::byte> key1, std::span<const std::byte> key2) const;
     auto& DBContext() const LIFETIMEBOUND { return *Assert(m_db_context); }
 
@@ -203,24 +202,30 @@ public:
     CDBWrapper(const CDBWrapper&) = delete;
     CDBWrapper& operator=(const CDBWrapper&) = delete;
 
-    template <typename K, typename V>
-    bool Read(const K& key, V& value) const
+    template <typename K>
+    std::optional<std::string> ReadRaw(const K& key) const
     {
         DataStream ssKey{};
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
-        std::optional<std::string> strValue{ReadImpl(ssKey)};
-        if (!strValue) {
-            return false;
-        }
-        try {
-            DataStream ssValue{MakeByteSpan(*strValue)};
-            m_obfuscation(ssValue);
-            ssValue >> value;
-        } catch (const std::exception&) {
-            return false;
-        }
+        return ReadImpl(ssKey);
+    }
+
+    template <typename K, typename V>
+    bool Read(const K& key, V& value) const
+    {
+        const auto strValue{ReadRaw(key)};
+        if (!strValue) return false;
+        DataStream ssValue{MakeByteSpan(*strValue)};
+        m_obfuscation(ssValue);
+        ssValue >> value;
         return true;
+    }
+
+    template <typename K>
+    bool Exists(const K& key) const
+    {
+        return !!ReadRaw(key);
     }
 
     template <typename K, typename V>
@@ -229,15 +234,6 @@ public:
         CDBBatch batch(*this);
         batch.Write(key, value);
         WriteBatch(batch, fSync);
-    }
-
-    template <typename K>
-    bool Exists(const K& key) const
-    {
-        DataStream ssKey{};
-        ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
-        ssKey << key;
-        return ExistsImpl(ssKey);
     }
 
     template <typename K>

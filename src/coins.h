@@ -303,9 +303,6 @@ public:
     //! Retrieve the Coin (unspent transaction output) for a given outpoint.
     virtual std::optional<Coin> GetCoin(const COutPoint& outpoint) const;
 
-    //! Just check whether a given outpoint is unspent.
-    virtual bool HaveCoin(const COutPoint &outpoint) const;
-
     //! Retrieve the block hash whose state this CCoinsView currently represents
     virtual uint256 GetBestBlock() const;
 
@@ -339,7 +336,6 @@ protected:
 public:
     CCoinsViewBacked(CCoinsView *viewIn);
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
-    bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     std::vector<uint256> GetHeadBlocks() const override;
     void SetBackend(CCoinsView &viewIn);
@@ -379,7 +375,6 @@ public:
 
     // Standard CCoinsView methods
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
-    bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     void SetBestBlock(const uint256 &hashBlock);
     void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) override;
@@ -389,8 +384,7 @@ public:
 
     /**
      * Check if we have the given utxo already loaded in this cache.
-     * The semantics are the same as HaveCoin(), but no calls to
-     * the backing CCoinsView are made.
+     * No calls to the backing CCoinsView are made.
      */
     bool HaveCoinInCache(const COutPoint &outpoint) const;
 
@@ -509,7 +503,6 @@ public:
     }
 
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
-    bool HaveCoin(const COutPoint &outpoint) const override;
 
 private:
     /** A list of callbacks to execute upon leveldb read error. */
