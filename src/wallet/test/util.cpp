@@ -14,6 +14,8 @@
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
 
+#include <sqlite3.h>
+
 #include <memory>
 
 namespace wallet {
@@ -80,7 +82,47 @@ void TestUnloadWallet(std::shared_ptr<CWallet>&& wallet)
 
 std::unique_ptr<WalletDatabase> DuplicateMockDatabase(WalletDatabase& database)
 {
-    return std::make_unique<MockableDatabase>(dynamic_cast<MockableDatabase&>(database).m_records);
+    std::unique_ptr<DatabaseBatch> batch_orig = database.MakeBatch();
+    std::unique_ptr<DatabaseCursor> cursor_orig = batch_orig->GetNewCursor();
+
+    std::unique_ptr<WalletDatabase> new_db = CreateMockableWalletDatabase();
+    std::unique_ptr<DatabaseBatch> new_db_batch = new_db->MakeBatch();
+    MockableSQLiteBatch* batch_new = dynamic_cast<MockableSQLiteBatch*>(new_db_batch.get());
+    Assert(batch_new);
+
+    while (true) {
+        DataStream key, value;
+        DatabaseCursor::Status status = cursor_orig->Next(key, value);
+        Assert(status != DatabaseCursor::Status::FAIL);
+        if (status != DatabaseCursor::Status::MORE) break;
+        batch_new->WriteKey(std::move(key), std::move(value));
+    }
+
+    std::unique_ptr<DatabaseCursor> txs_cursor_orig = batch_orig->GetNewTransactionsCursor();
+    SQLiteCursor* txs_cursor = dynamic_cast<SQLiteCursor*>(txs_cursor_orig.get());
+    while (true) {
+        Txid txid;
+        DataStream ser_tx;
+        std::optional<std::string> comment;
+        std::optional<std::string> comment_to;
+        std::optional<Txid> replaces;
+        std::optional<Txid> replaced_by;
+        uint32_t timesmart;
+        uint32_t timereceived;
+        int64_t order_pos;
+        std::vector<std::string> messages;
+        std::vector<std::string> payment_requests;
+        int32_t state_type;
+        std::vector<unsigned char> state_data;
+
+        DatabaseCursor::Status status = txs_cursor->NextTx(txid, ser_tx, comment, comment_to, replaces, replaced_by, timesmart, timereceived, order_pos, messages, payment_requests, state_type, state_data);
+        Assert(status != DatabaseCursor::Status::FAIL);
+        if (status == DatabaseCursor::Status::DONE) break;
+
+        batch_new->WriteTx(txid, ser_tx, comment, comment_to, replaces, replaced_by, timesmart, timereceived, order_pos, messages, payment_requests, state_type, state_data);
+    }
+
+    return new_db;
 }
 
 std::string getnewaddress(CWallet& w)
@@ -94,103 +136,13 @@ CTxDestination getNewDestination(CWallet& w, OutputType output_type)
     return *Assert(w.GetNewDestination(output_type, ""));
 }
 
-MockableCursor::MockableCursor(const MockableData& records, bool pass, std::span<const std::byte> prefix)
-{
-    m_pass = pass;
-    std::tie(m_cursor, m_cursor_end) = records.equal_range(BytePrefix{prefix});
-}
+MockableSQLiteDatabase::MockableSQLiteDatabase()
+    : SQLiteDatabase(fs::PathFromString("mock/"), fs::PathFromString("mock/wallet.dat"), DatabaseOptions(), SQLITE_OPEN_MEMORY)
+{}
 
-DatabaseCursor::Status MockableCursor::Next(DataStream& key, DataStream& value)
+std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase()
 {
-    if (!m_pass) {
-        return Status::FAIL;
-    }
-    if (m_cursor == m_cursor_end) {
-        return Status::DONE;
-    }
-    key.clear();
-    value.clear();
-    const auto& [key_data, value_data] = *m_cursor;
-    key.write(key_data);
-    value.write(value_data);
-    m_cursor++;
-    return Status::MORE;
-}
-
-bool MockableBatch::ReadKey(DataStream&& key, DataStream& value)
-{
-    if (!m_pass) {
-        return false;
-    }
-    SerializeData key_data{key.begin(), key.end()};
-    const auto& it = m_records.find(key_data);
-    if (it == m_records.end()) {
-        return false;
-    }
-    value.clear();
-    value.write(it->second);
-    return true;
-}
-
-bool MockableBatch::WriteKey(DataStream&& key, DataStream&& value, bool overwrite)
-{
-    if (!m_pass) {
-        return false;
-    }
-    SerializeData key_data{key.begin(), key.end()};
-    SerializeData value_data{value.begin(), value.end()};
-    auto [it, inserted] = m_records.emplace(key_data, value_data);
-    if (!inserted && overwrite) { // Overwrite if requested
-        it->second = value_data;
-        inserted = true;
-    }
-    return inserted;
-}
-
-bool MockableBatch::EraseKey(DataStream&& key)
-{
-    if (!m_pass) {
-        return false;
-    }
-    SerializeData key_data{key.begin(), key.end()};
-    m_records.erase(key_data);
-    return true;
-}
-
-bool MockableBatch::HasKey(DataStream&& key)
-{
-    if (!m_pass) {
-        return false;
-    }
-    SerializeData key_data{key.begin(), key.end()};
-    return m_records.contains(key_data);
-}
-
-bool MockableBatch::ErasePrefix(std::span<const std::byte> prefix)
-{
-    if (!m_pass) {
-        return false;
-    }
-    auto it = m_records.begin();
-    while (it != m_records.end()) {
-        auto& key = it->first;
-        if (key.size() < prefix.size() || std::search(key.begin(), key.end(), prefix.begin(), prefix.end()) != key.begin()) {
-            it++;
-            continue;
-        }
-        it = m_records.erase(it);
-    }
-    return true;
-}
-
-std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase(MockableData records)
-{
-    return std::make_unique<MockableDatabase>(records);
-}
-
-MockableDatabase& GetMockableDatabase(CWallet& wallet)
-{
-    return dynamic_cast<MockableDatabase&>(wallet.GetDatabase());
+    return std::make_unique<MockableSQLiteDatabase>();
 }
 
 wallet::DescriptorScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std::string& desc_str, const bool success)
