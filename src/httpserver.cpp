@@ -327,7 +327,24 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
 
     // Dispatch to worker thread
     if (i != iend) {
-        std::unique_ptr<HTTPWorkItem> item(new HTTPWorkItem(std::move(hreq), path, i->handler));
+        auto item = std::make_unique<HTTPWorkItem>(std::move(hreq), path, [fn = i->handler](HTTPRequest* req, const std::string& path_inner) {
+            std::string err_msg;
+            try {
+                return fn(req, path_inner);
+            } catch (const std::exception& e) {
+                LogWarning("Unexpected error while processing request for '%s'. Error msg: '%s'", req->GetURI(), e.what());
+                err_msg = e.what();
+            } catch (...) {
+                LogWarning("Unknown error while processing request for '%s'", req->GetURI());
+                err_msg = "unknown error";
+            }
+            // Reply so the client doesn't hang waiting for the response.
+            req->WriteHeader("Connection", "close");
+            // TODO: Implement specific error formatting for the REST and JSON-RPC servers responses.
+            req->WriteReply(HTTP_INTERNAL_SERVER_ERROR, err_msg);
+            return false;
+        });
+
         assert(g_work_queue);
         if (g_work_queue->Enqueue(item.get())) {
             (void)item.release(); /* if true, queue took ownership */
