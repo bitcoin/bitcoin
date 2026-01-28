@@ -28,6 +28,7 @@
 #include <undo.h>
 #include <util/any.h>
 #include <util/check.h>
+#include <util/overflow.h>
 #include <util/strencodings.h>
 #include <validation.h>
 
@@ -994,7 +995,7 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
     std::vector<CCoin> outs;
     std::string bitmapStringRepresentation;
     std::vector<bool> hits;
-    bitmap.resize((vOutPoints.size() + 7) / 8);
+    bitmap.resize(CeilDiv(vOutPoints.size(), 8));
     ChainstateManager* maybe_chainman = GetChainman(context, req);
     if (!maybe_chainman) return false;
     ChainstateManager& chainman = *maybe_chainman;

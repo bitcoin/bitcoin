@@ -5,8 +5,9 @@
 
 #include <arith_uint256.h>
 
-#include <uint256.h>
 #include <crypto/common.h>
+#include <uint256.h>
+#include <util/overflow.h>
 
 #include <cassert>
 
@@ -194,7 +195,7 @@ arith_uint256& arith_uint256::SetCompact(uint32_t nCompact, bool* pfNegative, bo
 
 uint32_t arith_uint256::GetCompact(bool fNegative) const
 {
-    int nSize = (bits() + 7) / 8;
+    int nSize = CeilDiv(bits(), 8);
     uint32_t nCompact = 0;
     if (nSize <= 3) {
         nCompact = GetLow64() << 8 * (3 - nSize);

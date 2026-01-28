@@ -5,13 +5,14 @@
 
 #include <merkleblock.h>
 
-#include <hash.h>
 #include <consensus/consensus.h>
+#include <hash.h>
+#include <util/overflow.h>
 
 
 std::vector<unsigned char> BitsToBytes(const std::vector<bool>& bits)
 {
-    std::vector<unsigned char> ret((bits.size() + 7) / 8);
+    std::vector<unsigned char> ret(CeilDiv(bits.size(), 8));
     for (unsigned int p = 0; p < bits.size(); p++) {
         ret[p / 8] |= bits[p] << (p % 8);
     }
