@@ -1659,6 +1659,37 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         self.clear_default_wallet(backup_path)
 
+    @staticmethod
+    def erase_bdb_record(wallet_dat_path, key):
+        data = bytearray(wallet_dat_path.read_bytes())
+        idx = data.find(key)
+        assert idx != -1, f"{key!r} not found in wallet.dat"
+
+        # Zero the byte immediately after the key (CompactSize vector length)
+        for i in range(idx, idx + len(key)):
+            data[i] = 0
+
+        wallet_dat_path.write_bytes(data)
+
+    def test_missing_bestblock(self):
+        self.log.info("Test migrating legacy BDB wallet without bestblock record")
+        wallet_name = "nobestblock"
+        wallet = self.create_legacy_wallet(wallet_name)
+        wallet.unloadwallet()
+
+        # Erase block locator records like if this would be a pre-#152 wallet
+        self.erase_bdb_record(self.old_node.wallets_path / wallet_name / "wallet.dat", b"bestblock_nomerkle")
+        self.erase_bdb_record(self.old_node.wallets_path / wallet_name / "wallet.dat", b"bestblock")
+
+        shutil.copytree(self.old_node.wallets_path / wallet_name, self.master_node.wallets_path / wallet_name, dirs_exist_ok=True)
+        # Migrate, checking that rescan occurs
+        with self.master_node.assert_debug_log(expected_msgs=["Rescanning"], unexpected_msgs=[]):
+            self.master_node.migratewallet(wallet_name)
+
+        wallet = self.master_node.get_wallet_rpc(wallet_name)
+        info = wallet.getwalletinfo()
+        assert_equal(info["descriptors"], True)
+        assert_equal(info["format"], "sqlite")
 
     def run_test(self):
         self.master_node = self.nodes[0]
@@ -1708,6 +1739,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_taproot()
         self.test_solvable_no_privs()
         self.test_loading_failure_after_migration()
+        self.test_missing_bestblock()
 
         # Note: After this test the first 250 blocks of 'master_node' are pruned
         self.unsynced_wallet_on_pruned_node_fails()
