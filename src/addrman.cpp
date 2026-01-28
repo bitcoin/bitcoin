@@ -12,6 +12,7 @@
 #include <logging.h>
 #include <logging/timer.h>
 #include <netaddress.h>
+#include <netbase.h>
 #include <protocol.h>
 #include <random.h>
 #include <serialize.h>
@@ -809,7 +810,7 @@ nid_type AddrManImpl::GetEntry(bool use_tried, size_t bucket, size_t position) c
     return -1;
 }
 
-std::vector<CAddress> AddrManImpl::GetAddr_(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered) const
+std::vector<CAddress> AddrManImpl::GetAddr_(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered, const AddrMan::AddrPolicy& policy) const
 {
     AssertLockHeld(cs);
     Assume(max_pct <= 100);
@@ -827,6 +828,7 @@ std::vector<CAddress> AddrManImpl::GetAddr_(size_t max_addresses, size_t max_pct
     const auto now{Now<NodeSeconds>()};
     std::vector<CAddress> addresses;
     addresses.reserve(nNodes);
+    size_t filtered_addr_net = 0, filtered_addr_quality = 0, filtered_addr_policy = 0;
     for (unsigned int n = 0; n < vRandom.size(); n++) {
         if (addresses.size() >= nNodes)
             break;
@@ -839,14 +841,31 @@ std::vector<CAddress> AddrManImpl::GetAddr_(size_t max_addresses, size_t max_pct
         const AddrInfo& ai{it->second};
 
         // Filter by network (optional)
-        if (network != std::nullopt && ai.GetNetClass() != network) continue;
+        if (network != std::nullopt && ai.GetNetClass() != network) {
+            ++filtered_addr_net;
+            continue;
+        }
 
         // Filter for quality
-        if (ai.IsTerrible(now) && filtered) continue;
+        if (ai.IsTerrible(now) && filtered) {
+            ++filtered_addr_quality;
+            continue;
+        }
+
+        // Filter by policy
+        if (policy && policy(ai)) {
+            ++filtered_addr_policy;
+            continue;
+        }
 
         addresses.push_back(ai);
     }
-    LogDebug(BCLog::ADDRMAN, "GetAddr returned %d random addresses\n", addresses.size());
+    LogDebug(BCLog::ADDRMAN, "GetAddr returned %zu random addresses from %s; %zu filtered "
+                             "(%zu network, %zu quality, %zu policy)\n",
+                             addresses.size(),
+                             network == std::nullopt ? "all networks" : GetNetworkName(network.value()),
+                             (filtered_addr_net+filtered_addr_quality+filtered_addr_policy),
+                             filtered_addr_net, filtered_addr_quality, filtered_addr_policy);
     return addresses;
 }
 
@@ -1226,11 +1245,11 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::Select(bool new_only, const std::u
     return addrRet;
 }
 
-std::vector<CAddress> AddrManImpl::GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered) const
+std::vector<CAddress> AddrManImpl::GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered, const AddrMan::AddrPolicy& policy) const
 {
     LOCK(cs);
     Check();
-    auto addresses = GetAddr_(max_addresses, max_pct, network, filtered);
+    auto addresses = GetAddr_(max_addresses, max_pct, network, filtered, policy);
     Check();
     return addresses;
 }
@@ -1329,9 +1348,9 @@ std::pair<CAddress, NodeSeconds> AddrMan::Select(bool new_only, const std::unord
     return m_impl->Select(new_only, networks);
 }
 
-std::vector<CAddress> AddrMan::GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered) const
+std::vector<CAddress> AddrMan::GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered, const AddrPolicy& policy) const
 {
-    return m_impl->GetAddr(max_addresses, max_pct, network, filtered);
+    return m_impl->GetAddr(max_addresses, max_pct, network, filtered, policy);
 }
 
 std::vector<std::pair<AddrInfo, AddressPosition>> AddrMan::GetEntries(bool use_tried) const

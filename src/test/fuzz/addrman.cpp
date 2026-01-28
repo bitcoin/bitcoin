@@ -179,6 +179,24 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
     auto filtered = fuzzed_data_provider.ConsumeBool();
     (void)const_addr_man.GetAddr(max_addresses, max_pct, network, filtered);
 
+    CallOneOf(
+        fuzzed_data_provider,
+        [&] {
+            const AddrMan::AddrPolicy policyNoSkip = [](const CAddress&) { return false; };
+            (void)const_addr_man.GetAddr(max_addresses, max_pct, network, filtered, policyNoSkip);
+        },
+        [&] {
+            const AddrMan::AddrPolicy policySkipAll = [](const CAddress&) { return true; };
+            (void)const_addr_man.GetAddr(max_addresses, max_pct, network, filtered, policySkipAll);
+        },
+        [&] {
+            const AddrMan::AddrPolicy policyPortPolicy = [](const CAddress& addr) {
+                return addr.GetPort() != 8333;
+            };
+            (void)const_addr_man.GetAddr(max_addresses, max_pct, network, filtered, policyPortPolicy);
+        }
+    );
+
     std::unordered_set<Network> nets;
     for (const auto& net : ALL_NETWORKS) {
         if (fuzzed_data_provider.ConsumeBool()) {

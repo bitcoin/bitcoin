@@ -13,6 +13,7 @@
 #include <util/time.h>
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <unordered_set>
@@ -91,6 +92,15 @@ protected:
     const std::unique_ptr<AddrManImpl> m_impl;
 
 public:
+    /** Predicate used to exclude addresses during selection.
+     *  Return true to skip the given address.
+     *
+     *  Runs while holding AddrMan::cs, so it must be non-blocking, must not
+     *  attempt to reacquire AddrMan::cs, and must preserve lock ordering to
+     *  avoid deadlocks.
+     */
+    using AddrPolicy = std::function<bool(const CAddress&)>;
+
     explicit AddrMan(const NetGroupManager& netgroupman, bool deterministic, int32_t consistency_check_ratio);
 
     ~AddrMan();
@@ -169,10 +179,11 @@ public:
      * @param[in] max_pct        Maximum percentage of addresses to return (0 = all). Value must be from 0 to 100.
      * @param[in] network        Select only addresses of this network (nullopt = all).
      * @param[in] filtered       Select only addresses that are considered good quality (false = all).
+     * @param[in] policy         Optional predicate to exclude candidates during selection (return true to skip).
      *
      * @return                   A vector of randomly selected addresses from vRandom.
      */
-    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network, bool filtered = true) const;
+    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network, bool filtered = true, const AddrPolicy& policy = {}) const;
 
     /**
      * Returns an information-location pair for all addresses in the selected addrman table.
