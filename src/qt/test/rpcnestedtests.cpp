@@ -16,9 +16,9 @@
 #include <string>
 #include <stdexcept>
 
-static RPCHelpMan rpcNestedTest_rpc()
+static RPCMethod rpcNestedTest_rpc()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "rpcNestedTest",
         "echo the passed string(s)",
         {
@@ -28,7 +28,7 @@ static RPCHelpMan rpcNestedTest_rpc()
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{""},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
             return request.params.write(0, 0);
         },
     };
