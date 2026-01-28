@@ -157,7 +157,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
         LogInfo("Block pruning enabled. Use RPC call pruneblockchain(height) to manually prune block and undo files.");
     } else if (chainman.m_blockman.GetPruneTarget()) {
         LogInfo("Prune configured to target %u MiB on disk for block and undo files.",
-                chainman.m_blockman.GetPruneTarget() / 1024 / 1024);
+                chainman.m_blockman.GetPruneTarget() / 1_MiB);
     }
 
     LOCK(cs_main);

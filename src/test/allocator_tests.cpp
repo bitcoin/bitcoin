@@ -8,6 +8,7 @@
 #include <limits>
 #include <memory>
 #include <stdexcept>
+#include <util/byte_units.h>
 #include <utility>
 #include <vector>
 
@@ -20,7 +21,7 @@ BOOST_AUTO_TEST_CASE(arena_tests)
     // Fake memory base address for testing
     // without actually using memory.
     void *synth_base = reinterpret_cast<void*>(0x08000000);
-    const size_t synth_size = 1024*1024;
+    const size_t synth_size = 1_MiB;
     Arena b(synth_base, synth_size, 16);
     void *chunk = b.alloc(1000);
 #ifdef ARENA_DEBUG
