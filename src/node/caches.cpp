@@ -20,17 +20,17 @@
 // Unlike for the UTXO database, for the txindex scenario the leveldb cache make
 // a meaningful difference: https://github.com/bitcoin/bitcoin/pull/8273#issuecomment-229601991
 //! Max memory allocated to tx index DB specific cache in bytes.
-static constexpr size_t MAX_TX_INDEX_CACHE{1024_MiB};
+static constexpr size_t MAX_TX_INDEX_CACHE{1_GiB};
 //! Max memory allocated to all block filter index caches combined in bytes.
-static constexpr size_t MAX_FILTER_INDEX_CACHE{1024_MiB};
+static constexpr size_t MAX_FILTER_INDEX_CACHE{1_GiB};
 //! Max memory allocated to tx spenderindex DB specific cache in bytes.
-static constexpr size_t MAX_TXOSPENDER_INDEX_CACHE{1024_MiB};
+static constexpr size_t MAX_TXOSPENDER_INDEX_CACHE{1_GiB};
 //! Maximum dbcache size on 32-bit systems.
-static constexpr size_t MAX_32BIT_DBCACHE{1024_MiB};
+static constexpr size_t MAX_32BIT_DBCACHE{1_GiB};
 //! Larger default dbcache on 64-bit systems with enough RAM.
-static constexpr size_t HIGH_DEFAULT_DBCACHE{1024_MiB};
+static constexpr size_t HIGH_DEFAULT_DBCACHE{1_GiB};
 //! Minimum detected RAM required for HIGH_DEFAULT_DBCACHE.
-static constexpr uint64_t HIGH_DEFAULT_DBCACHE_MIN_TOTAL_RAM{4096ULL << 20};
+static constexpr uint64_t HIGH_DEFAULT_DBCACHE_MIN_TOTAL_RAM{uint64_t{4} * 1_GiB};
 
 namespace node {
 size_t GetDefaultDBCache()
