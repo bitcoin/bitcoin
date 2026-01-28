@@ -87,10 +87,10 @@ BOOST_AUTO_TEST_CASE(basic)
 
     BOOST_CHECK_EQUAL(pb.GetStale().size(), 2);
 
-    BOOST_CHECK_EQUAL(pb.Remove(tx_for_recipient1).value(), 1);
-    BOOST_CHECK(!pb.Remove(tx_for_recipient1).has_value());
-    BOOST_CHECK_EQUAL(pb.Remove(tx_for_recipient2).value(), 0);
-    BOOST_CHECK(!pb.Remove(tx_for_recipient2).has_value());
+    BOOST_CHECK_EQUAL(pb.StopBroadcasting(tx_for_recipient1, "test").value(), 1);
+    BOOST_CHECK(!pb.StopBroadcasting(tx_for_recipient1, "test").has_value());
+    BOOST_CHECK_EQUAL(pb.StopBroadcasting(tx_for_recipient2, "test").value(), 0);
+    BOOST_CHECK(!pb.StopBroadcasting(tx_for_recipient2, "test").has_value());
 
     BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/nonexistent_recipient, /*will_send_to_address=*/CService{}).has_value());
 }

@@ -10,9 +10,11 @@
 #include <primitives/transaction_identifier.h>
 #include <sync.h>
 #include <threadsafety.h>
+#include <util/expected.h>
 #include <util/time.h>
 
 #include <optional>
+#include <string>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
@@ -20,7 +22,7 @@
 /**
  * Store a list of transactions to be broadcast privately. Supports the following operations:
  * - Add a new transaction
- * - Remove a transaction
+ * - Stop broadcasting a transaction
  * - Pick a transaction for sending to one recipient
  * - Query which transaction has been picked for sending to a given recipient node
  * - Mark that a given recipient node has confirmed receipt of a transaction
@@ -40,14 +42,34 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
-     * Forget a transaction.
-     * @param[in] tx Transaction to forget.
+     * Stop broadcasting a transaction and mark as received back from the network.
+     *
+     * @param[in] tx Transaction to stop broadcasting.
+     * @param[in] received_from The peer address from which the transaction was received.
      * @retval !nullopt The number of times the transaction was sent and confirmed
-     * by the recipient (if the transaction existed and was removed).
-     * @retval nullopt The transaction was not in the storage.
+     * by the recipient (if the transaction existed and broadcasting was stopped).
+     * @retval nullopt The transaction was not in the storage, or was already stopped.
      */
-    std::optional<size_t> Remove(const CTransactionRef& tx)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    std::optional<size_t> StopBroadcasting(const CTransactionRef& tx, const CService& received_from)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        return StopBroadcasting(tx, util::Expected<CService, std::string>{received_from});
+    }
+
+    /**
+     * Stop broadcasting a transaction and mark as aborted.
+     *
+     * @param[in] tx Transaction to stop broadcasting.
+     * @param[in] aborted Message describing why private broadcasting was aborted.
+     * @retval !nullopt The number of times the transaction was sent and confirmed
+     * by the recipient (if the transaction existed and broadcasting was stopped).
+     * @retval nullopt The transaction was not in the storage, or was already stopped.
+     */
+    std::optional<size_t> StopBroadcasting(const CTransactionRef& tx, std::string aborted)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        return StopBroadcasting(tx, util::Unexpected<std::string>{std::move(aborted)});
+    }
 
     /**
      * Pick the transaction with the fewest send attempts, and confirmations,
@@ -98,6 +120,21 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
 private:
+    /**
+     * Stop broadcasting a transaction. Shared implementation for the public overloads.
+     *
+     * @param[in] tx Transaction to stop broadcasting.
+     * @param[in] final_state The final state of the transaction. If it has a value, the
+     *                        transaction was received back from the network (and this is the
+     *                        peer address it was received from). Otherwise it was aborted and
+     *                        the error contains the details.
+     * @retval !nullopt The number of times the transaction was sent and confirmed
+     * by the recipient (if the transaction existed and broadcasting was stopped).
+     * @retval nullopt The transaction was not in the storage, or was already stopped.
+     */
+    std::optional<size_t> StopBroadcasting(const CTransactionRef& tx, util::Expected<CService, std::string> final_state)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
     /// Status of a transaction sent to a given node.
     struct SendStatus {
         const NodeId nodeid; /// Node to which the transaction will be sent (or was sent).

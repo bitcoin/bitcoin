@@ -1656,7 +1656,7 @@ void PeerManagerImpl::ReattemptPrivateBroadcast(CScheduler& scheduler)
                 LogDebug(BCLog::PRIVBROADCAST, "Giving up broadcast attempts for txid=%s wtxid=%s: %s",
                          stale_tx->GetHash().ToString(), stale_tx->GetWitnessHash().ToString(),
                          mempool_acceptable.m_state.ToString());
-                m_tx_for_private_broadcast.Remove(stale_tx);
+                m_tx_for_private_broadcast.StopBroadcasting(stale_tx, mempool_acceptable.m_state.ToString());
             }
         }
 
@@ -4464,7 +4464,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         const uint256& hash = peer->m_wtxid_relay ? wtxid.ToUint256() : txid.ToUint256();
         AddKnownTx(*peer, hash);
 
-        if (const auto num_broadcasted{m_tx_for_private_broadcast.Remove(ptx)}) {
+        if (const auto num_broadcasted{m_tx_for_private_broadcast.StopBroadcasting(ptx, CService{pfrom.addr})}) {
             LogDebug(BCLog::PRIVBROADCAST, "Received our privately broadcast transaction (txid=%s) from the "
                                            "network from peer=%d%s; stopping private broadcast attempts",
                      txid.ToString(), pfrom.GetId(), pfrom.LogIP(fLogIPs));

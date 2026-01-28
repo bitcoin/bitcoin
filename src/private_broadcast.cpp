@@ -19,7 +19,7 @@ bool PrivateBroadcast::Add(const CTransactionRef& tx)
     return inserted;
 }
 
-std::optional<size_t> PrivateBroadcast::Remove(const CTransactionRef& tx)
+std::optional<size_t> PrivateBroadcast::StopBroadcasting(const CTransactionRef& tx, util::Expected<CService, std::string> final_state)
     EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
 {
     LOCK(m_mutex);
