@@ -208,9 +208,11 @@ struct CreatedTransactionResult
     CAmount fee;
     FeeCalculation fee_calc;
     std::optional<unsigned int> change_pos;
+    /** Whether the selection spends only some UTXOs from any scriptPubKey (relevant for APS) */
+    bool has_partial_spend{false};
 
-    CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, std::optional<unsigned int> _change_pos, const FeeCalculation& _fee_calc)
-        : tx(_tx), fee(_fee), fee_calc(_fee_calc), change_pos(_change_pos) {}
+    CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, std::optional<unsigned int> _change_pos, const FeeCalculation& _fee_calc, bool _has_partial_spend = false)
+        : tx(_tx), fee(_fee), fee_calc(_fee_calc), change_pos(_change_pos), has_partial_spend(_has_partial_spend) {}
 };
 
 /**
