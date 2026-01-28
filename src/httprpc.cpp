@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 
+using http_bitcoin::HTTPRequest;
 using util::SplitString;
 using util::TrimStringView;
 
@@ -44,7 +45,7 @@ static void JSONErrorReply(HTTPRequest* req, UniValue objError, const JSONRPCReq
     Assume(jreq.m_json_version != JSONRPCVersion::V2);
 
     // Send error reply from json-rpc error object
-    int nStatus = HTTP_INTERNAL_SERVER_ERROR;
+    HTTPStatusCode nStatus = HTTP_INTERNAL_SERVER_ERROR;
     int code = objError.find_value("code").getInt<int>();
 
     if (code == RPC_INVALID_REQUEST)
@@ -104,7 +105,7 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
 static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
 {
     // JSONRPC handles only POST
-    if (req->GetRequestMethod() != HTTPRequest::POST) {
+    if (req->GetRequestMethod() != HTTPRequestMethod::POST) {
         req->WriteReply(HTTP_BAD_METHOD, "JSONRPC server handles only POST requests");
         return false;
     }
@@ -339,8 +340,6 @@ bool StartHTTPRPC(const std::any& context)
     if (g_wallet_init_interface.HasWalletSupport()) {
         RegisterHTTPHandler("/wallet/", false, handle_rpc);
     }
-    struct event_base* eventBase = EventBase();
-    assert(eventBase);
     return true;
 }
 
