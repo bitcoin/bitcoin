@@ -34,6 +34,32 @@ public:
     }
 };
 
+int MasternodeList::columnWidth(int column)
+{
+    switch (column) {
+    case Column::SERVICE:
+        return 200;
+    case Column::TYPE:
+        return 160;
+    case Column::STATUS:
+    case Column::POSE:
+    case Column::REGISTERED:
+    case Column::LAST_PAYMENT:
+        return 80;
+    case Column::NEXT_PAYMENT:
+        return 100;
+    case Column::PAYOUT_ADDRESS:
+    case Column::OPERATOR_REWARD:
+    case Column::COLLATERAL_ADDRESS:
+    case Column::OWNER_ADDRESS:
+    case Column::VOTING_ADDRESS:
+        return 130;
+    case Column::PROTX_HASH:
+    default:
+        return 80;
+    }
+}
+
 MasternodeList::MasternodeList(QWidget* parent) :
     QWidget(parent),
     ui(new Ui::MasternodeList)
@@ -43,35 +69,13 @@ MasternodeList::MasternodeList(QWidget* parent) :
     GUIUtil::setFont({ui->label_count_2, ui->countLabelDIP3}, {GUIUtil::FontWeight::Bold, 14});
     GUIUtil::setFont({ui->label_filter_2}, {GUIUtil::FontWeight::Normal, 15});
 
-    int columnAddressWidth = 200;
-    int columnTypeWidth = 160;
-    int columnStatusWidth = 80;
-    int columnPoSeScoreWidth = 80;
-    int columnRegisteredWidth = 80;
-    int columnLastPaidWidth = 80;
-    int columnNextPaymentWidth = 100;
-    int columnPayeeWidth = 130;
-    int columnOperatorRewardWidth = 130;
-    int columnCollateralWidth = 130;
-    int columnOwnerWidth = 130;
-    int columnVotingWidth = 130;
-
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_SERVICE, columnAddressWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_TYPE, columnTypeWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_STATUS, columnStatusWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_POSE, columnPoSeScoreWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_REGISTERED, columnRegisteredWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_LAST_PAYMENT, columnLastPaidWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_NEXT_PAYMENT, columnNextPaymentWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_PAYOUT_ADDRESS, columnPayeeWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_OPERATOR_REWARD, columnOperatorRewardWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_COLLATERAL_ADDRESS, columnCollateralWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_OWNER_ADDRESS, columnOwnerWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_VOTING_ADDRESS, columnVotingWidth);
+    for (int col = 0; col <= Column::COUNT; col++) {
+        ui->tableWidgetMasternodesDIP3->setColumnWidth(col, columnWidth(col));
+    }
 
     // dummy column for proTxHash
-    ui->tableWidgetMasternodesDIP3->insertColumn(COLUMN_PROTX_HASH);
-    ui->tableWidgetMasternodesDIP3->setColumnHidden(COLUMN_PROTX_HASH, true);
+    ui->tableWidgetMasternodesDIP3->insertColumn(Column::PROTX_HASH);
+    ui->tableWidgetMasternodesDIP3->setColumnHidden(Column::PROTX_HASH, true);
 
     ui->tableWidgetMasternodesDIP3->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->tableWidgetMasternodesDIP3->verticalHeader()->setVisible(false);
@@ -299,19 +303,19 @@ void MasternodeList::updateDIP3List()
         }
 
         ui->tableWidgetMasternodesDIP3->insertRow(0);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_SERVICE, addressItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_TYPE, typeItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_STATUS, statusItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_POSE, PoSeScoreItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_REGISTERED, registeredItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_LAST_PAYMENT, lastPaidItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_NEXT_PAYMENT, nextPaymentItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_PAYOUT_ADDRESS, payeeItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_OPERATOR_REWARD, operatorRewardItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_COLLATERAL_ADDRESS, collateralItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_OWNER_ADDRESS, ownerItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_VOTING_ADDRESS, votingItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_PROTX_HASH, proTxHashItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, Column::SERVICE, addressItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, Column::TYPE, typeItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, Column::STATUS, statusItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, Column::POSE, PoSeScoreItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, Column::REGISTERED, registeredItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, Column::LAST_PAYMENT, lastPaidItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, Column::NEXT_PAYMENT, nextPaymentItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, Column::PAYOUT_ADDRESS, payeeItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, Column::OPERATOR_REWARD, operatorRewardItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, Column::COLLATERAL_ADDRESS, collateralItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, Column::OWNER_ADDRESS, ownerItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, Column::VOTING_ADDRESS, votingItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, Column::PROTX_HASH, proTxHashItem);
     });
 
     ui->countLabelDIP3->setText(QString::number(ui->tableWidgetMasternodesDIP3->rowCount()));
@@ -350,7 +354,7 @@ std::unique_ptr<const interfaces::MnEntry> MasternodeList::GetSelectedDIP3MN()
 
         QModelIndex index = selected.at(0);
         int nSelectedRow = index.row();
-        strProTxHash = ui->tableWidgetMasternodesDIP3->item(nSelectedRow, COLUMN_PROTX_HASH)->text().toStdString();
+        strProTxHash = ui->tableWidgetMasternodesDIP3->item(nSelectedRow, Column::PROTX_HASH)->text().toStdString();
     }
 
     uint256 proTxHash;
