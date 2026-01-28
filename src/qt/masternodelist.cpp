@@ -7,6 +7,7 @@
 
 #include <coins.h>
 #include <evo/deterministicmns.h>
+#include <evo/dmn_types.h>
 
 #include <qt/clientmodel.h>
 #include <qt/descriptiondialog.h>
@@ -24,6 +25,18 @@ constexpr int MASTERNODELIST_UPDATE_SECONDS{3};
 
 bool MasternodeListSortFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
 {
+    // "Type" filter
+    if (m_type_filter != TypeFilter::All) {
+        QModelIndex idx = sourceModel()->index(source_row, MasternodeModel::TYPE, source_parent);
+        int type = sourceModel()->data(idx, Qt::EditRole).toInt();
+        if (m_type_filter == TypeFilter::Regular && type != static_cast<int>(MnType::Regular)) {
+            return false;
+        }
+        if (m_type_filter == TypeFilter::Evo && type != static_cast<int>(MnType::Evo)) {
+            return false;
+        }
+    }
+
     // Text-matching filter
     if (const auto& regex = filterRegularExpression(); !regex.pattern().isEmpty()) {
         QModelIndex idx = sourceModel()->index(source_row, 0, source_parent);
@@ -255,6 +268,18 @@ void MasternodeList::on_filterText_textChanged(const QString& strFilterIn)
 {
     m_proxy_model->setFilterRegularExpression(
         QRegularExpression(QRegularExpression::escape(strFilterIn), QRegularExpression::CaseInsensitiveOption));
+    updateFilteredCount();
+}
+
+void MasternodeList::on_comboBoxType_currentIndexChanged(int index)
+{
+    if (index < 0 || index >= static_cast<int>(MasternodeListSortFilterProxyModel::TypeFilter::COUNT)) {
+        return;
+    }
+    const auto index_enum{static_cast<MasternodeListSortFilterProxyModel::TypeFilter>(index)};
+    ui->tableViewMasternodes->setColumnHidden(MasternodeModel::TYPE, index_enum != MasternodeListSortFilterProxyModel::TypeFilter::All);
+    m_proxy_model->setTypeFilter(index_enum);
+    m_proxy_model->forceInvalidateFilter();
     updateFilteredCount();
 }
 

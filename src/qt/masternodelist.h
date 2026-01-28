@@ -33,12 +33,20 @@ class MasternodeListSortFilterProxyModel : public QSortFilterProxyModel
     Q_OBJECT
 
 public:
+    enum class TypeFilter : uint8_t {
+        All,
+        Regular,
+        Evo,
+        COUNT
+    };
+
     explicit MasternodeListSortFilterProxyModel(QObject* parent = nullptr) :
         QSortFilterProxyModel(parent) {}
 
-    void setShowOwnedOnly(bool show) { m_show_owned_only = show; }
-    void setMyMasternodeHashes(std::set<QString> hashes) { m_my_mn_hashes = std::move(hashes); }
     void forceInvalidateFilter() { invalidateFilter(); }
+    void setMyMasternodeHashes(std::set<QString> hashes) { m_my_mn_hashes = std::move(hashes); }
+    void setShowOwnedOnly(bool show) { m_show_owned_only = show; }
+    void setTypeFilter(TypeFilter type) { m_type_filter = type; }
 
 protected:
     bool filterAcceptsRow(int source_row, const QModelIndex& source_parent) const override;
@@ -46,6 +54,7 @@ protected:
 private:
     bool m_show_owned_only{false};
     std::set<QString> m_my_mn_hashes;
+    TypeFilter m_type_filter{TypeFilter::All};
 };
 
 /** Masternode Manager page widget */
@@ -83,15 +92,14 @@ Q_SIGNALS:
     void doubleClicked(const QModelIndex&);
 
 private Q_SLOTS:
-    void showContextMenuDIP3(const QPoint&);
-    void on_filterText_textChanged(const QString& strFilterIn);
-    void on_checkBoxOwned_stateChanged(int state);
-
-    void extraInfoDIP3_clicked();
-    void copyProTxHash_clicked();
     void copyCollateralOutpoint_clicked();
-
+    void copyProTxHash_clicked();
+    void extraInfoDIP3_clicked();
     void handleMasternodeListChanged();
+    void on_checkBoxOwned_stateChanged(int state);
+    void on_comboBoxType_currentIndexChanged(int index);
+    void on_filterText_textChanged(const QString& strFilterIn);
+    void showContextMenuDIP3(const QPoint&);
     void updateDIP3ListScheduled();
     void updateFilteredCount();
 };

@@ -39,6 +39,28 @@
           <number>0</number>
          </property>
          <item>
+          <widget class="QComboBox" name="comboBoxType">
+           <property name="toolTip">
+            <string>Filter by masternode type</string>
+           </property>
+           <item>
+            <property name="text">
+             <string>All</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Regular</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Evo</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
           <widget class="QLineEdit" name="filterText">
            <property name="toolTip">
             <string>Filter masternode list</string>
