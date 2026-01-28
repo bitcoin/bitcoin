@@ -143,11 +143,11 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
         /*cache_size_bytes=*/1 << 23, /*in_memory=*/true, /*should_wipe=*/false);
 
     // Reset IBD state so IsInitialBlockDownload() returns true and causes
-    // MaybeRebalancesCaches() to prioritize the snapshot chainstate, giving it
+    // MaybeRebalanceCaches() to prioritize the snapshot chainstate, giving it
     // more cache space than the snapshot chainstate. Calling ResetIbd() is
-    // necessary because m_cached_finished_ibd is already latched to true before
-    // the test starts due to the test setup. After ResetIbd() is called.
-    // IsInitialBlockDownload will return true because at this point the active
+    // necessary because m_cached_is_ibd is already latched to false before
+    // the test starts due to the test setup. After ResetIbd() is called,
+    // IsInitialBlockDownload() will return true because at this point the active
     // chainstate has a null chain tip.
     static_cast<TestChainstateManager&>(manager).ResetIbd();
 
@@ -161,6 +161,44 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
     BOOST_CHECK_CLOSE(double(c1.m_coinsdb_cache_size_bytes), max_cache * 0.05, 1);
     BOOST_CHECK_CLOSE(double(c2.m_coinstip_cache_size_bytes), max_cache * 0.95, 1);
     BOOST_CHECK_CLOSE(double(c2.m_coinsdb_cache_size_bytes), max_cache * 0.95, 1);
+}
+
+BOOST_FIXTURE_TEST_CASE(chainstatemanager_ibd_exit_after_loading_blocks, ChainTestingSetup)
+{
+    CBlockIndex tip;
+    ChainstateManager& chainman{*Assert(m_node.chainman)};
+    auto apply{[&](bool cached_is_ibd, bool loading_blocks, bool tip_exists, bool enough_work, bool tip_recent) {
+        LOCK(::cs_main);
+        chainman.ResetChainstates();
+        chainman.InitializeChainstate(m_node.mempool.get());
+
+        const auto recent_time{Now<NodeSeconds>() - chainman.m_options.max_tip_age};
+
+        chainman.m_cached_is_ibd.store(cached_is_ibd, std::memory_order_relaxed);
+        chainman.m_blockman.m_importing = loading_blocks;
+        if (tip_exists) {
+            tip.nChainWork = chainman.MinimumChainWork() - (enough_work ? 0 : 1);
+            tip.nTime = (recent_time - (tip_recent ? 0h : 100h)).time_since_epoch().count();
+            chainman.ActiveChain().SetTip(tip);
+        } else {
+            assert(!chainman.ActiveChain().Tip());
+        }
+        chainman.UpdateIBDStatus();
+    }};
+
+    for (const bool cached_is_ibd : {false, true}) {
+        for (const bool loading_blocks : {false, true}) {
+            for (const bool tip_exists : {false, true}) {
+                for (const bool enough_work : {false, true}) {
+                    for (const bool tip_recent : {false, true}) {
+                        apply(cached_is_ibd, loading_blocks, tip_exists, enough_work, tip_recent);
+                        const bool expected_ibd = cached_is_ibd && (loading_blocks || !tip_exists || !enough_work || !tip_recent);
+                        BOOST_CHECK_EQUAL(chainman.IsInitialBlockDownload(), expected_ibd);
+                    }
+                }
+            }
+        }
+    }
 }
 
 struct SnapshotTestSetup : TestChain100Setup {
