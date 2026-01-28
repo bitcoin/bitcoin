@@ -136,6 +136,7 @@ using BlockMap = std::unordered_map<uint256, CBlockIndex, BlockHasher>;
 
 struct CBlockIndexWorkComparator {
     bool operator()(const CBlockIndex* pa, const CBlockIndex* pb) const;
+    using is_transparent = void;
 };
 
 struct CBlockIndexHeightOnlyComparator {
