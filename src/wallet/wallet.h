@@ -942,6 +942,9 @@ public:
     std::set<ScriptPubKeyMan*> GetActiveScriptPubKeyMans() const;
     bool IsActiveScriptPubKeyMan(const ScriptPubKeyMan& spkm) const;
 
+    //! Returns all unused(key) SPKMs
+    std::set<DescriptorScriptPubKeyMan*> GetScriptlessSPKMs() const;
+
     //! Returns all unique ScriptPubKeyMans
     std::set<ScriptPubKeyMan*> GetAllScriptPubKeyMans() const;
 
