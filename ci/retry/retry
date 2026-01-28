@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-GETOPT_BIN=$IN_GETOPT_BIN
-GETOPT_BIN=${GETOPT_BIN:-getopt}
-
 __sleep_amount() {
   if [ -n "$constant_sleep" ]; then
     sleep_time=$constant_sleep
@@ -71,93 +68,10 @@ retry()
   exit $return_code
 }
 
-# If we're being sourced, don't worry about such things
-if [ "$BASH_SOURCE" == "$0" ]; then
-  # Prints the help text
-  help()
-  {
-    local retry=$(basename $0)
-    cat <<EOF
-Usage: $retry [options] -- execute command
-    -h, -?, --help
-    -v, --verbose                    Verbose output
-    -t, --tries=#                    Set max retries: Default 10
-    -s, --sleep=secs                 Constant sleep amount (seconds)
-    -m, --min=secs                   Exponential Backoff: minimum sleep amount (seconds): Default 0.3
-    -x, --max=secs                   Exponential Backoff: maximum sleep amount (seconds): Default 60
-    -f, --fail="script +cmds"        Fail Script: run in case of final failure
-EOF
-  }
-
-  # show help for no arguments if stdin is a terminal
-  if { [ -z "$1" ] && [ -t 0 ] ; } || [ "$1" == '-h' ] || [ "$1" == '-?' ] || [ "$1" == '--help' ]
-  then
-    help
-    exit 0
-  fi
-
-  $GETOPT_BIN --test > /dev/null
-  if [[ $? -ne 4 ]]; then
-      echo "I’m sorry, 'getopt --test' failed in this environment. Please load GNU getopt."
-      exit 1
-  fi
-
-  OPTIONS=vt:s:m:x:f:
-  LONGOPTIONS=verbose,tries:,sleep:,min:,max:,fail:
-
-  PARSED=$($GETOPT_BIN --options="$OPTIONS" --longoptions="$LONGOPTIONS" --name "$0" -- "$@")
-  if [[ $? -ne 0 ]]; then
-    # e.g. $? == 1
-    #  then getopt has complained about wrong arguments to stdout
-    exit 2
-  fi
-  # read getopt’s output this way to handle the quoting right:
-  eval set -- "$PARSED"
-
   max_tries=10
   min_sleep=0.3
   max_sleep=60.0
   constant_sleep=
   fail_script=
 
-  # now enjoy the options in order and nicely split until we see --
-  while true; do
-      case "$1" in
-          -v|--verbose)
-              VERBOSE=true
-              shift
-              ;;
-          -t|--tries)
-              max_tries="$2"
-              shift 2
-              ;;
-          -s|--sleep)
-              constant_sleep="$2"
-              shift 2
-              ;;
-          -m|--min)
-              min_sleep="$2"
-              shift 2
-              ;;
-          -x|--max)
-              max_sleep="$2"
-              shift 2
-              ;;
-          -f|--fail)
-              fail_script="$2"
-              shift 2
-              ;;
-          --)
-              shift
-              break
-              ;;
-          *)
-              echo "Programming error"
-              exit 3
-              ;;
-      esac
-  done
-
   retry "$max_tries" "$min_sleep" "$max_sleep" "$constant_sleep" "$fail_script" "$@"
-
-fi
