@@ -31,7 +31,7 @@ def get_worktree_mounts(repo_root):
     main_gitdir = gitdir.parent.parent
     return [
         f"--volume={gitdir}:{gitdir}",
-        f"--volume={main_gitdir}:{main_gitdir}:ro",
+        f"--volume={main_gitdir}:{main_gitdir}",
     ]
 
 
