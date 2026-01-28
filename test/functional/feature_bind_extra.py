@@ -32,8 +32,7 @@ class BindExtraTest(BitcoinTestFramework):
         self.num_nodes = 3
 
     def skip_test_if_missing_module(self):
-        # Due to OS-specific network stats queries, we only run on Linux.
-        self.skip_if_platform_not_linux()
+        self.skip_if_platform_not_linux_or_mac()
 
     def setup_network(self):
         loopback_ipv4 = addr_to_hex("127.0.0.1")

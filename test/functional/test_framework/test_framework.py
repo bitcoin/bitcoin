@@ -907,6 +907,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if platform.system() != "Linux":
             raise SkipTest("not on a Linux system")
 
+    def skip_if_platform_not_linux_or_mac(self):
+        """Skip the running test if we are not on a Linux or macOS platform"""
+        if platform.system() not in ("Linux", "Darwin"):
+            raise SkipTest("not on a Linux or macOS system")
+
     def skip_if_platform_not_posix(self):
         """Skip the running test if we are not on a POSIX platform"""
         if os.name != 'posix':
