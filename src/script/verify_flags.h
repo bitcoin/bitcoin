@@ -46,13 +46,7 @@ public:
 
     // tests
     constexpr explicit operator bool() const { return m_value != 0; }
-    constexpr bool operator==(script_verify_flags other) const { return m_value == other.m_value; }
-
-    /** Compare two script_verify_flags. <, >, <=, and >= are auto-generated from this. */
-    friend constexpr std::strong_ordering operator<=>(const script_verify_flags& a, const script_verify_flags& b) noexcept
-    {
-        return a.m_value <=> b.m_value;
-    }
+    constexpr std::strong_ordering operator<=>(const script_verify_flags& other) const = default;
 
 private:
     value_type m_value{0}; // default value is SCRIPT_VERIFY_NONE
