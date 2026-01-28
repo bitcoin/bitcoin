@@ -12,27 +12,26 @@
 
 struct bilingual_str;
 
-struct sqlite3_stmt;
 struct sqlite3;
 
 namespace wallet {
 class SQLiteDatabase;
+class SQLiteStatement;
 
 /** RAII class that provides a database cursor */
 class SQLiteCursor : public DatabaseCursor
 {
+private:
+    std::unique_ptr<SQLiteStatement> m_cursor_stmt{nullptr};
 public:
-    sqlite3_stmt* m_cursor_stmt{nullptr};
     // Copies of the prefix things for the prefix cursor.
     // Prevents SQLite from accessing temp variables for the prefix things.
     std::vector<std::byte> m_prefix_range_start;
     std::vector<std::byte> m_prefix_range_end;
 
-    explicit SQLiteCursor() = default;
-    explicit SQLiteCursor(std::vector<std::byte> start_range, std::vector<std::byte> end_range)
-        : m_prefix_range_start(std::move(start_range)),
-        m_prefix_range_end(std::move(end_range))
-    {}
+    explicit SQLiteCursor(sqlite3& db, const std::string& stmt_text);
+    explicit SQLiteCursor(sqlite3& db, const std::string& stmt_text, std::vector<std::byte> start_range, std::vector<std::byte> end_range);
+
     ~SQLiteCursor() override;
 
     Status Next(DataStream& key, DataStream& value) override;
@@ -54,11 +53,11 @@ private:
     SQLiteDatabase& m_database;
     std::unique_ptr<SQliteExecHandler> m_exec_handler{std::make_unique<SQliteExecHandler>()};
 
-    sqlite3_stmt* m_read_stmt{nullptr};
-    sqlite3_stmt* m_insert_stmt{nullptr};
-    sqlite3_stmt* m_overwrite_stmt{nullptr};
-    sqlite3_stmt* m_delete_stmt{nullptr};
-    sqlite3_stmt* m_delete_prefix_stmt{nullptr};
+    std::unique_ptr<SQLiteStatement> m_read_stmt{nullptr};
+    std::unique_ptr<SQLiteStatement> m_insert_stmt{nullptr};
+    std::unique_ptr<SQLiteStatement> m_overwrite_stmt{nullptr};
+    std::unique_ptr<SQLiteStatement> m_delete_stmt{nullptr};
+    std::unique_ptr<SQLiteStatement> m_delete_prefix_stmt{nullptr};
 
     /** Whether this batch has started a database transaction and whether it owns SQLiteDatabase::m_write_semaphore.
      * If the batch starts a db tx, it acquires the semaphore and sets this to true, keeping the semaphore
@@ -72,8 +71,18 @@ private:
      */
     bool m_txn{false};
 
-    void SetupSQLStatements();
-    bool ExecStatement(sqlite3_stmt* stmt, std::span<const std::byte> blob);
+    enum SQLiteStatementType
+    {
+        READ,
+        INSERT,
+        OVERWRITE,
+        ERASE,
+        ERASE_PREFIX,
+    };
+
+    void MaybeSetupSQLStatement(SQLiteStatementType type);
+    bool ExecStatement(SQLiteStatement* stmt);
+    bool ExecEraseStatement(SQLiteStatement* stmt, std::span<const std::byte> blob);
 
     bool ReadKey(DataStream&& key, DataStream& value) override;
     bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite = true) override;
@@ -83,7 +92,7 @@ private:
 
 public:
     explicit SQLiteBatch(SQLiteDatabase& database);
-    ~SQLiteBatch() override { Close(); }
+    ~SQLiteBatch() override;
 
     void SetExecHandler(std::unique_ptr<SQliteExecHandler>&& handler) { m_exec_handler = std::move(handler); }
 
