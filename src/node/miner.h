@@ -14,6 +14,7 @@
 #include <util/feefrac.h>
 
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <optional>
 
@@ -163,6 +164,14 @@ std::optional<BlockRef> GetTip(ChainstateManager& chainman);
  * Returns the current tip, or nullopt if the node is shutting down. */
 std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const uint256& current_tip, MillisecondsDouble& timeout);
 
+/**
+ * Estimate non-mempool memory footprint of transaction data referenced by block
+ * templates.
+ *
+ * Result is not guaranteed to be an accurate snapshot, because it does not
+ * lock mempool.cs while iterating over transaction references.
+ */
+size_t GetTemplateMemoryUsage(const CTxMemPool& mempool, const TxTemplateMap& tx_refs);
 } // namespace node
 
 #endif // BITCOIN_NODE_MINER_H

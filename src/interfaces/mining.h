@@ -113,6 +113,12 @@ public:
     virtual void interruptWait() = 0;
 };
 
+//! Tracks memory usage for template-bound transactions.
+struct MemoryLoad
+{
+    uint64_t usage{0};
+};
+
 //! Interface giving clients (RPC, Stratum v2 Template Provider in the future)
 //! ability to create block templates.
 class Mining
@@ -167,6 +173,12 @@ public:
      * For signets the challenge verification is skipped when check_pow is false.
      */
     virtual bool checkBlock(const CBlock& block, const node::BlockCheckOptions& options, std::string& reason, std::string& debug) = 0;
+
+    /**
+     * Returns the current memory load for template transactions outside the
+     * mempool.
+     */
+    virtual MemoryLoad getMemoryLoad() = 0;
 
     //! Get internal node context. Useful for RPC and testing,
     //! but not accessible across processes.

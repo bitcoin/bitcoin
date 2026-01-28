@@ -16,12 +16,15 @@
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <logging.h>
+#include <logging/timer.h>
+#include <memusage.h>
 #include <node/context.h>
 #include <node/kernel_notifications.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
 #include <primitives/transaction.h>
+#include <util/check.h>
 #include <util/moneystr.h>
 #include <util/signalinterrupt.h>
 #include <util/time.h>
@@ -474,4 +477,24 @@ std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifi
     return GetTip(chainman);
 }
 
+size_t GetTemplateMemoryUsage(const CTxMemPool& mempool, const TxTemplateMap& tx_refs)
+{
+    size_t usage_bytes{0};
+    {
+        LOG_TIME_MILLIS_WITH_CATEGORY("Calculate template transaction reference memory footprint", BCLog::BENCH);
+        for (const auto& [tx_ref, _] : tx_refs) {
+            if (!Assume(tx_ref)) continue;
+            // mempool.exists() locks mempool.cs each time, which slows down
+            // our calculation. This is preferable to potentially blocking
+            // the node from processing new transactions while this
+            // (non-urgent) calculation is in progress.
+            //
+            // As a side-effect the result is not an accurate snapshot, because
+            // the mempool may change during the loop.
+            if (mempool.exists(tx_ref->GetWitnessHash())) continue;
+            usage_bytes += RecursiveDynamicUsage(*tx_ref);
+        }
+    }
+    return usage_bytes;
+}
 } // namespace node

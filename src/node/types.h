@@ -16,6 +16,7 @@
 #include <consensus/amount.h>
 #include <cstddef>
 #include <cstdint>
+#include <map>
 #include <optional>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
@@ -162,6 +163,11 @@ enum class TxBroadcast : uint8_t {
     /// peers on privacy networks.
     NO_MEMPOOL_PRIVATE_BROADCAST,
 };
+
+/*
+ * Map how many templates refer to each transaction reference.
+ */
+using TxTemplateMap = std::map<CTransactionRef, size_t>;
 
 } // namespace node
 
