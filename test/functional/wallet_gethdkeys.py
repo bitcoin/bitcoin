@@ -10,6 +10,7 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
     assert_not_equal,
+    assert_greater_than,
 )
 from test_framework.wallet_util import WalletUnlock
 
@@ -130,31 +131,46 @@ class WalletGetHDKeyTest(BitcoinTestFramework):
 
     def test_ranged_multisig(self):
         self.log.info("HD keys of a multisig appear in gethdkeys")
+
         def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+        outside_wallet_xpub = def_wallet.gethdkeys()[0]["xpub"]
+
         self.nodes[0].createwallet("ranged_multisig")
         wallet = self.nodes[0].get_wallet_rpc("ranged_multisig")
 
-        xpub1 = wallet.gethdkeys()[0]["xpub"]
-        xprv1 = wallet.gethdkeys(private=True)[0]["xprv"]
-        xpub2 = def_wallet.gethdkeys()[0]["xpub"]
+        hdkeys_info = wallet.gethdkeys(private=True)
+        assert_equal(len(hdkeys_info), 1)
+        within_wallet_xprv = hdkeys_info[0]["xprv"]
+        within_wallet_xpub = hdkeys_info[0]["xpub"]
 
-        prv_multi_desc = descsum_create(f"wsh(multi(2,{xprv1}/*,{xpub2}/*))")
-        pub_multi_desc = descsum_create(f"wsh(multi(2,{xpub1}/*,{xpub2}/*))")
+        prv_multi_desc = descsum_create(f"wsh(multi(2,{within_wallet_xprv}/*,{outside_wallet_xpub}/*))")
+        pub_multi_desc = descsum_create(f"wsh(multi(2,{within_wallet_xpub}/*,{outside_wallet_xpub}/*))")
         assert_equal(wallet.importdescriptors([{"desc": prv_multi_desc, "timestamp": "now"}])[0]["success"], True)
 
-        xpub_info = wallet.gethdkeys()
-        assert_equal(len(xpub_info), 2)
-        for x in xpub_info:
-            if x["xpub"] == xpub1:
-                found_desc = next((d for d in xpub_info[0]["descriptors"] if d["desc"] == pub_multi_desc), None)
-                assert found_desc is not None
+        rpcs_req_resp = [[False, wallet.gethdkeys()], [True, wallet.gethdkeys(private=True)]]
+        for rpc_req_resp in rpcs_req_resp:
+            requested_private, hdkeys_response = rpc_req_resp
+            assert_equal(len(hdkeys_response), 2)
+
+            for hdkeys_info in hdkeys_response:
+                if hdkeys_info["xpub"] == within_wallet_xpub:
+                    assert_equal(hdkeys_info["has_private"], True)
+                    if requested_private:
+                        assert_equal(hdkeys_info["xprv"], within_wallet_xprv)
+                    else:
+                        assert_equal("xprv" not in hdkeys_info, True)
+                    assert_greater_than(len(hdkeys_info["descriptors"]), 1) # within wallet xpub by default is part of multiple descriptors
+                    found_desc = next((d for d in hdkeys_info["descriptors"] if d["desc"] == pub_multi_desc), None)
+                elif hdkeys_info["xpub"] == outside_wallet_xpub:
+                    assert_equal(hdkeys_info["has_private"], False)
+                    assert_equal("xprv" not in hdkeys_info, True)
+                    assert_equal(len(hdkeys_info["descriptors"]), 1) # outside wallet xpub is part of only the imported descriptor
+                    found_desc = hdkeys_info["descriptors"][0]
+                else:
+                    assert False
+
+                assert_equal(found_desc["desc"], pub_multi_desc)
                 assert_equal(found_desc["active"], False)
-            elif x["xpub"] == xpub2:
-                assert_equal(len(x["descriptors"]), 1)
-                assert_equal(x["descriptors"][0]["desc"], pub_multi_desc)
-                assert_equal(x["descriptors"][0]["active"], False)
-            else:
-                assert False
 
     def test_mixed_multisig(self):
         self.log.info("Non-HD keys of a multisig do not appear in gethdkeys")
