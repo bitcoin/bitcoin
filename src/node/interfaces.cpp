@@ -367,7 +367,7 @@ private:
 public:
     size_t getInstantSentLockCount() override
     {
-        if (context().llmq_ctx->isman != nullptr) {
+        if (context().llmq_ctx && context().llmq_ctx->isman != nullptr) {
             return context().llmq_ctx->isman->GetInstantSendLockCount();
         }
         return 0;
