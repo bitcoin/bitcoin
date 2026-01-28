@@ -9,6 +9,7 @@
 #include <script/interpreter.h>
 #include <script/solver.h>
 #include <tinyformat.h>
+#include <util/overflow.h>
 #include <util/strencodings.h>
 
 #include <algorithm>
@@ -72,7 +73,7 @@ public:
             return {};
         }
         std::vector<unsigned char> data = {(unsigned char)id.GetWitnessVersion()};
-        data.reserve(1 + (program.size() * 8 + 4) / 5);
+        data.reserve(1 + CeilDiv(program.size() * 8, 5));
         ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, program.begin(), program.end());
         return bech32::Encode(bech32::Encoding::BECH32M, m_params.Bech32HRP(), data);
     }
