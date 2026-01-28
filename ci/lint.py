@@ -44,6 +44,7 @@ def main():
         "docker",
         "buildx",
         "build",
+        "--platform=linux",
         f"--tag={container}",
         *shlex.split(os.environ.get("DOCKER_BUILD_CACHE_ARG", "")),
         f"--file={repo_root}/ci/lint_imagefile",
