@@ -291,7 +291,7 @@ BOOST_FIXTURE_TEST_SUITE(coins_tests_dbbase, BasicTestingSetup)
 
 BOOST_FIXTURE_TEST_CASE(coins_cache_dbbase_simulation_test, CacheTest)
 {
-    CCoinsViewDB db_base{{.path = "test", .cache_bytes = 1 << 23, .memory_only = true}, {}};
+    CCoinsViewDB db_base{{.path = "test", .cache_bytes = 8_MiB, .memory_only = true}, {}};
     SimulationTest(&db_base, true);
 }
 
@@ -1044,7 +1044,7 @@ void TestFlushBehavior(
 BOOST_FIXTURE_TEST_CASE(ccoins_flush_behavior, FlushTest)
 {
     // Create two in-memory caches atop a leveldb view.
-    CCoinsViewDB base{{.path = "test", .cache_bytes = 1 << 23, .memory_only = true}, {}};
+    CCoinsViewDB base{{.path = "test", .cache_bytes = 8_MiB, .memory_only = true}, {}};
     std::vector<std::unique_ptr<CCoinsViewCacheTest>> caches;
     caches.push_back(std::make_unique<CCoinsViewCacheTest>(&base));
     caches.push_back(std::make_unique<CCoinsViewCacheTest>(caches.back().get()));
