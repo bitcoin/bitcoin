@@ -74,6 +74,23 @@ using node::LoadChainstate;
 using node::RegenerateCommitments;
 using node::VerifyLoadedChainstate;
 
+#if defined(_MSC_VER)
+// By default, when an app is built with the debug runtime library, the `abort()`
+// routine displays an error message in a message box before `SIGABRT` is raised.
+// When running test or fuzz executables unattended—for example, in CI—the message
+// box may cause timeouts.
+// To suppress it, define the `SUPPRESS_ABORT_MESSAGE` environment variable.
+// See: https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/abort
+#include <stdlib.h>
+static const bool g_ci_environment_setup = []() {
+    if (std::getenv("SUPPRESS_ABORT_MESSAGE")) {
+        _set_abort_behavior(0, _WRITE_ABORT_MSG);
+        return true;
+    }
+    return false;
+}();
+#endif // _MSC_VER
+
 const TranslateFn G_TRANSLATION_FUN{nullptr};
 
 constexpr inline auto TEST_DIR_PATH_ELEMENT{"test_common bitcoin"}; // Includes a space to catch possible path escape issues.
