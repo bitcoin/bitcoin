@@ -6,7 +6,6 @@
 
 #include <coins.h>
 #include <consensus/amount.h>
-#include <logging.h>
 #include <tinyformat.h>
 #include <util/check.h>
 

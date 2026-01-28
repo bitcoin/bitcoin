@@ -8,6 +8,7 @@
 #include <kernel/bitcoinkernel.h>
 
 #include <array>
+#include <chrono>
 #include <exception>
 #include <functional>
 #include <memory>
@@ -27,19 +28,23 @@ enum class LogCategory : btck_LogCategory {
     BENCH = btck_LogCategory_BENCH,
     BLOCKSTORAGE = btck_LogCategory_BLOCKSTORAGE,
     COINDB = btck_LogCategory_COINDB,
+    ESTIMATEFEE = btck_LogCategory_ESTIMATEFEE,
+    KERNEL = btck_LogCategory_KERNEL,
     LEVELDB = btck_LogCategory_LEVELDB,
     MEMPOOL = btck_LogCategory_MEMPOOL,
     PRUNE = btck_LogCategory_PRUNE,
     RAND = btck_LogCategory_RAND,
     REINDEX = btck_LogCategory_REINDEX,
+    TXPACKAGES = btck_LogCategory_TXPACKAGES,
     VALIDATION = btck_LogCategory_VALIDATION,
-    KERNEL = btck_LogCategory_KERNEL
 };
 
 enum class LogLevel : btck_LogLevel {
     TRACE_LEVEL = btck_LogLevel_TRACE,
     DEBUG_LEVEL = btck_LogLevel_DEBUG,
-    INFO_LEVEL = btck_LogLevel_INFO
+    INFO_LEVEL = btck_LogLevel_INFO,
+    WARNING_LEVEL = btck_LogLevel_WARNING,
+    ERROR_LEVEL = btck_LogLevel_ERROR,
 };
 
 enum class ChainType : btck_ChainType {
@@ -805,34 +810,44 @@ public:
     }
 };
 
-inline void logging_disable()
+class LogEntry
 {
-    btck_logging_disable();
+private:
+    const btck_LogEntry* m_entry;
+
+public:
+    LogEntry(const btck_LogEntry& e) : m_entry{&e} {}
+
+    std::string_view Message() const { return {m_entry->message.data, m_entry->message.size}; }
+    std::string_view FileName() const { return {m_entry->file_name.data, m_entry->file_name.size}; }
+    std::string_view FunctionName() const { return {m_entry->function_name.data, m_entry->function_name.size}; }
+    std::string_view ThreadName() const { return {m_entry->thread_name.data, m_entry->thread_name.size}; }
+    std::chrono::sys_time<std::chrono::nanoseconds> Timestamp() const { return std::chrono::sys_time<std::chrono::nanoseconds>{std::chrono::nanoseconds{m_entry->timestamp_ns}}; }
+    uint32_t Line() const { return m_entry->line; }
+    LogLevel Level() const { return static_cast<LogLevel>(m_entry->level); }
+    LogCategory Category() const { return static_cast<LogCategory>(m_entry->category); }
+};
+
+inline void logging_set_min_level(LogLevel level)
+{
+    btck_logging_set_min_level(static_cast<btck_LogLevel>(level));
 }
 
-inline void logging_set_options(const btck_LoggingOptions& logging_options)
+inline std::string_view log_level_get_name(LogLevel level)
 {
-    btck_logging_set_options(logging_options);
+    auto name{btck_log_level_get_name(static_cast<btck_LogLevel>(level))};
+    return {name.data, name.size};
 }
 
-inline void logging_set_level_category(LogCategory category, LogLevel level)
+inline std::string_view log_category_get_name(LogCategory category)
 {
-    btck_logging_set_level_category(static_cast<btck_LogCategory>(category), static_cast<btck_LogLevel>(level));
-}
-
-inline void logging_enable_category(LogCategory category)
-{
-    btck_logging_enable_category(static_cast<btck_LogCategory>(category));
-}
-
-inline void logging_disable_category(LogCategory category)
-{
-    btck_logging_disable_category(static_cast<btck_LogCategory>(category));
+    auto name{btck_log_category_get_name(static_cast<btck_LogCategory>(category))};
+    return {name.data, name.size};
 }
 
 template <typename T>
-concept Log = requires(T a, std::string_view message) {
-    { a.LogMessage(message) } -> std::same_as<void>;
+concept Log = requires(T a, const LogEntry& entry) {
+    { a.LogMessage(entry) } -> std::same_as<void>;
 };
 
 template <Log T>
@@ -841,7 +856,7 @@ class Logger : UniqueHandle<btck_LoggingConnection, btck_logging_connection_dest
 public:
     Logger(std::unique_ptr<T> log)
         : UniqueHandle{btck_logging_connection_create(
-              +[](void* user_data, const char* message, size_t message_len) { static_cast<T*>(user_data)->LogMessage({message, message_len}); },
+              +[](void* user_data, const btck_LogEntry* entry) { static_cast<T*>(user_data)->LogMessage(LogEntry{*entry}); },
               log.release(),
               +[](void* user_data) { delete static_cast<T*>(user_data); })}
     {

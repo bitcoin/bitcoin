@@ -133,7 +133,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
     std::vector<std::string> expected;
     for (auto& [msg, category, level, prefix, loc] : cases) {
         expected.push_back(tfm::format("[%s:%s] [%s] %s%s", util::RemovePrefix(loc.file_name(), "./"), loc.line(), loc.function_name_short(), prefix, msg));
-        LogInstance().LogPrintStr(msg, std::move(loc), category, level, /*should_ratelimit=*/false);
+        LogInstance().LogPrintStr({.category = category, .message = msg, .source_loc = std::move(loc), .level = level, .should_ratelimit = false});
     }
     std::vector<std::string> log_lines{ReadDebugLogLines()};
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
@@ -461,6 +461,28 @@ BOOST_FIXTURE_TEST_CASE(logging_filesize_rate_limit, LogSetup)
             TestLogFromLocation(location, log_message, Status::UNSUPPRESSED, /*suppressions_active=*/false);
         }
     }
+}
+
+BOOST_FIXTURE_TEST_CASE(logging_arg_evaluation, LogSetup)
+{
+    size_t counter{0};
+    auto side_effect = [&counter]() {
+        return ++counter;
+    };
+
+    // Even when logging is disabled, Info or higher should still evaluate its arguments
+    LogInstance().DisconnectTestLogger();
+    LogInstance().DisableLogging();
+    BOOST_CHECK(!LogInstance().Enabled());
+    LogError("error (%i)", side_effect());
+    LogWarning("warning (%i)", side_effect());
+    LogInfo("info (%i)", side_effect());
+    BOOST_CHECK_EQUAL(counter, 3);
+
+    // Skip argument evaluation when category is disabled
+    LogDebug(BCLog::NET, "debug (%i)", side_effect());
+    LogTrace(BCLog::NET, "trace (%i)", side_effect());
+    BOOST_CHECK_EQUAL(counter, 3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

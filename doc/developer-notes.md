@@ -754,6 +754,11 @@ logging messages. They should be used as follows:
   options `-debug=category -loglevel=category:trace` or `-debug=1
   -loglevel=trace` are selected.
 
+Be conservative when using `LogInfo`, `LogWarning` or `LogError` as they will
+always write to debug.log, unless basic rate limiting quotas are exceeded. It
+should not be the case that an inbound peer can fill up a user's storage with
+debug.log entries.
+
 Note that the format strings and parameters of `LogDebug` and `LogTrace`
 are only evaluated if the logging category is enabled, so you must be
 careful to avoid side-effects in those expressions.

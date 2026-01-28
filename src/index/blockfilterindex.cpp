@@ -14,7 +14,6 @@
 #include <index/db_key.h>
 #include <interfaces/chain.h>
 #include <interfaces/types.h>
-#include <logging.h>
 #include <serialize.h>
 #include <streams.h>
 #include <sync.h>
@@ -22,6 +21,7 @@
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/hasher.h>
+#include <util/log.h>
 #include <util/syserror.h>
 
 #include <cerrno>
