@@ -5,7 +5,6 @@
 #include <index/coinstatsindex.h>
 
 #include <arith_uint256.h>
-#include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
 #include <common/args.h>
@@ -122,6 +121,7 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 
         // Add the new utxos created from the block
         assert(block.data);
+        assert(block.undo_data);
         for (size_t i = 0; i < block.data->vtx.size(); ++i) {
             const auto& tx{block.data->vtx.at(i)};
             const bool is_coinbase{tx->IsCoinBase()};
@@ -234,13 +234,13 @@ bool CoinStatsIndex::CustomRemove(const interfaces::BlockInfo& block)
     return true;
 }
 
-std::optional<CCoinsStats> CoinStatsIndex::LookUpStats(const CBlockIndex& block_index) const
+std::optional<CCoinsStats> CoinStatsIndex::LookUpStats(const interfaces::BlockRef& block) const
 {
-    CCoinsStats stats{block_index.nHeight, block_index.GetBlockHash()};
+    CCoinsStats stats{block.height, block.hash};
     stats.index_used = true;
 
     DBVal entry;
-    if (!index_util::LookUpOne(*m_db, {block_index.GetBlockHash(), block_index.nHeight}, entry)) {
+    if (!index_util::LookUpOne(*m_db, block, entry)) {
         return std::nullopt;
     }
 

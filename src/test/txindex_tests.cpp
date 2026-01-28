@@ -6,8 +6,10 @@
 #include <chainparams.h>
 #include <index/txindex.h>
 #include <interfaces/chain.h>
+#include <node/context.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
+#include <validationinterface.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -15,7 +17,7 @@ BOOST_AUTO_TEST_SUITE(txindex_tests)
 
 BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
 {
-    TxIndex txindex(interfaces::MakeChain(m_node), 1 << 20, true);
+    TxIndex txindex(interfaces::MakeChain(m_node), m_node.chainman->m_blockman, 1 << 20, true);
     BOOST_REQUIRE(txindex.Init());
 
     CTransactionRef tx_disk;
@@ -28,8 +30,8 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
 
     // BlockUntilSyncedToCurrentChain should return false before txindex is started.
     BOOST_CHECK(!txindex.BlockUntilSyncedToCurrentChain());
-
-    txindex.Sync();
+    BOOST_CHECK(txindex.StartBackgroundSync());
+    txindex.WaitForBackgroundSync();
 
     // Check that txindex excludes genesis block transactions.
     const CBlock& genesis_block = Params().GenesisBlock();
