@@ -10,6 +10,7 @@ import argparse
 from datetime import datetime, timezone
 import logging
 import os
+from pathlib import Path
 import platform
 import pdb
 import random
@@ -331,7 +332,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             h.flush()
             rpc_logger.removeHandler(h)
         if cleanup_tree_on_exit:
-            shutil.rmtree(self.options.tmpdir)
+            self.cleanup_folder(self.options.tmpdir)
 
         self.nodes.clear()
         return exit_code
@@ -1031,3 +1032,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             return result
         except ImportError:
             self.log.warning("sqlite3 module not available, skipping tests that inspect the database")
+
+    def cleanup_folder(self, _path):
+        path = Path(_path)
+        if not path.is_relative_to(self.options.tmpdir):
+            raise AssertionError(f"Trying to delete #{path} outside of #{self.options.tmpdir}")
+        shutil.rmtree(path)

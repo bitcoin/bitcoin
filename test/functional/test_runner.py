@@ -681,9 +681,6 @@ def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, ar
 
     if coverage:
         coverage_passed = coverage.report_rpc_coverage()
-
-        logging.debug("Cleaning up coverage data")
-        coverage.cleanup()
     else:
         coverage_passed = True
 
@@ -898,7 +895,8 @@ class RPCCoverage():
 
     """
     def __init__(self):
-        self.dir = tempfile.mkdtemp(prefix="coverage")
+        self.temp_dir = tempfile.TemporaryDirectory(prefix="coverage")
+        self.dir = self.temp_dir.name
         self.flag = '--coveragedir=%s' % self.dir
 
     def report_rpc_coverage(self):
@@ -915,9 +913,6 @@ class RPCCoverage():
         else:
             print("All RPC commands covered.")
             return True
-
-    def cleanup(self):
-        return shutil.rmtree(self.dir)
 
     def _get_uncovered_rpc_commands(self):
         """
