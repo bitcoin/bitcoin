@@ -47,7 +47,8 @@ from test_framework.wallet import (
 
 MAX_OUTBOUND_FULL_RELAY_CONNECTIONS = 8
 MAX_BLOCK_RELAY_ONLY_CONNECTIONS = 2
-NUM_INITIAL_CONNECTIONS = MAX_OUTBOUND_FULL_RELAY_CONNECTIONS + MAX_BLOCK_RELAY_ONLY_CONNECTIONS
+NUM_MANUAL_CONNECTIONS = 4 # one to each of ipv4, ipv6, onion, cjdns
+NUM_INITIAL_CONNECTIONS = MAX_OUTBOUND_FULL_RELAY_CONNECTIONS + MAX_BLOCK_RELAY_ONLY_CONNECTIONS + NUM_MANUAL_CONNECTIONS
 NUM_PRIVATE_BROADCAST_PER_TX = 3
 
 # Fill addrman with these addresses. Must have enough Tor addresses, so that even
@@ -308,9 +309,17 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
 
         wallet = MiniWallet(tx_originator)
 
+        # Add connections to all networks which we can connect to in order to avoid
+        # more, unpredictable, connections being opened by the network-specific logic
+        # (which aims to have at least one connection to each network).
+        tx_originator.addnode(node="20.0.0.1:8333", command="onetry")
+        tx_originator.addnode(node="[20::1]:8333", command="onetry")
+        tx_originator.addnode(node="testonlyad777777777777777777777777777777777777777775b6qd.onion:8333", command="onetry")
+        tx_originator.addnode(node="[fc00::1]:8333", command="onetry")
+
         # Fill tx_originator's addrman.
         for addr in ADDRMAN_ADDRESSES:
-            res = tx_originator.addpeeraddress(address=addr, port=8333, tried=False)
+            res = tx_originator.addpeeraddress(address=addr, port=0 if addr.endswith(".i2p") else 8333, tried=False)
             if not res["success"]:
                 self.log.debug(f"Could not add {addr} to tx_originator's addrman (collision?)")
 
