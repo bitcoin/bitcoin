@@ -62,7 +62,6 @@ public:
     ~PCPTestingSetup()
     {
         CreateSock = m_create_sock_orig;
-        MockableSteadyClock::ClearMockTime();
     }
 
     // Default testing nonce.

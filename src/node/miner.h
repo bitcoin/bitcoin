@@ -7,15 +7,15 @@
 #define BITCOIN_NODE_MINER_H
 
 #include <interfaces/types.h>
+#include <kernel/types.h>
 #include <node/types.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
 #include <txmempool.h>
 #include <util/feefrac.h>
-
-#include <cstdint>
-#include <memory>
-#include <optional>
+#include <util/time.h>
+#include <validation.h>
+#include <validationinterface.h>
 
 #include <boost/multi_index/identity.hpp>
 #include <boost/multi_index/indexed_by.hpp>
@@ -23,21 +23,36 @@
 #include <boost/multi_index/tag.hpp>
 #include <boost/multi_index_container.hpp>
 
+#include <chrono>
+#include <cstdint>
+#include <deque>
+#include <memory>
+#include <optional>
+#include <utility>
+
 class ArgsManager;
 class CBlockIndex;
 class CChainParams;
 class CScript;
-class Chainstate;
-class ChainstateManager;
 
 namespace Consensus { struct Params; };
 
 using interfaces::BlockRef;
+using kernel::ChainstateRole;
 
 namespace node {
 class KernelNotifications;
 
 static const bool DEFAULT_PRINT_MODIFIED_FEE = false;
+static constexpr size_t DEFAULT_BLOCK_TEMPLATE_CACHE_SIZE{10};
+
+// Return true if current time is greater or equal to `prev_time + time_interval`, or if
+// `prev_time` is greater than the current time (indicating clock moved backward; only possible in test).
+static inline bool TimeIntervalElapsed(const MockableSteadyClock::time_point& prev_time, MillisecondsDouble time_interval)
+{
+    const auto now = MockableSteadyClock::now();
+    return now < prev_time || MillisecondsDouble{now - prev_time} >= time_interval;
+}
 
 struct CBlockTemplate
 {
@@ -55,7 +70,14 @@ struct CBlockTemplate
      * miner code.
      */
     CoinbaseTx m_coinbase_tx;
+
+    /* Uses steady clock because it is monotonic and unaffected by rare system clock changes.
+     * Intended for checking template staleness with respect to fee increases.
+     * Uses the mockable version to allow for testing. */
+    MockableSteadyClock::time_point m_creation_time;
 };
+
+using BlockTemplateRef = std::shared_ptr<const CBlockTemplate>;
 
 /** Generate a new block, without valid proof-of-work */
 class BlockAssembler
@@ -86,6 +108,7 @@ public:
         // Whether to call TestBlockValidity() at the end of CreateNewBlock().
         bool test_block_validity{true};
         bool print_modified_fee{DEFAULT_PRINT_MODIFIED_FEE};
+        bool operator==(const Options&) const = default;
     };
 
     explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options);
@@ -123,6 +146,56 @@ private:
     bool TestChunkTransactions(const std::vector<CTxMemPoolEntryRef>& txs) const;
 };
 
+/*
+ * BlockTemplateCache provides a thread-safe interface for creating and reusing
+ * block templates with configurable cache size.
+ *
+ * The cache stores block templates along with their respective block creation options.
+ * When a block template is requested with a specific block creation option and a desired maximum age:
+ * - Return the most recent cached template whose block creation option matches the request block creation option
+ *   and age (the time elapsed since its creation) does not exceed the specified maximum.
+ * - If no such cached template exists, create a new block template, store it in the cache along with
+ *   its block creation option, and return it.
+ * - When the cache exceeds the configured maximum cache size after an insertion, the oldest template
+ *   is evicted.
+
+ * The cache inherits from CValidationInterface to receive notifications
+ * about connected and disconnected blocks, which triggers cache invalidation,
+ * ensuring stale templates are not returned.
+ */
+class BlockTemplateCache : public CValidationInterface
+{
+private:
+    std::deque<std::pair<BlockAssembler::Options, BlockTemplateRef>> m_block_templates;
+    CTxMemPool& m_mempool;
+    ChainstateManager& m_chainman;
+    size_t m_block_template_cache_size;
+    mutable Mutex m_mutex;
+
+    BlockTemplateRef CreateBlockTemplateInternal(const BlockAssembler::Options& options) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_mutex);
+
+public:
+    BlockTemplateCache(CTxMemPool& mempool, ChainstateManager& chainman, size_t block_template_cache_size = DEFAULT_BLOCK_TEMPLATE_CACHE_SIZE);
+    virtual ~BlockTemplateCache() = default;
+
+    /**
+     * If a cached template exists with identical options and its age is less than
+     * the specified interval, the cached template is returned.
+     * Otherwise, a new template is created and stored in the cache.
+     *
+     * @param options The block assembly options to use.
+     * @param max_template_age This indicate the maximum age of the desired block template in milliseconds (Default 0).
+     * @return a BlockTemplateRef.
+     */
+    BlockTemplateRef GetBlockTemplate(const BlockAssembler::Options& options, MillisecondsDouble max_template_age = MillisecondsDouble{0}) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Overridden from CValidationInterface. */
+    void BlockConnected(const ChainstateRole& role, const std::shared_ptr<const CBlock>& /*unused*/, const CBlockIndex* /*unused*/)
+        override EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    void BlockDisconnected(const std::shared_ptr<const CBlock>& /*unused*/, const CBlockIndex* /*unused*/)
+        override EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+};
+
 /**
  * Get the minimum time a miner should use in the next block. This always
  * accounts for the BIP94 timewarp rule, so does not necessarily reflect the
@@ -148,13 +221,13 @@ void InterruptWait(KernelNotifications& kernel_notifications, bool& interrupt_wa
  * Return a new block template when fees rise to a certain threshold or after a
  * new tip; return nullopt if timeout is reached.
  */
-std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainman,
-                                                      KernelNotifications& kernel_notifications,
-                                                      CTxMemPool* mempool,
-                                                      const std::unique_ptr<CBlockTemplate>& block_template,
-                                                      const BlockWaitOptions& options,
-                                                      const BlockAssembler::Options& assemble_options,
-                                                      bool& interrupt_wait);
+BlockTemplateRef WaitAndCreateNewBlock(BlockTemplateCache* block_template_cache,
+                                       ChainstateManager& chainman,
+                                       KernelNotifications& kernel_notifications,
+                                       std::unique_ptr<CBlockTemplate>& block_template,
+                                       const BlockWaitOptions& options,
+                                       const BlockAssembler::Options& assemble_options,
+                                       bool& interrupt_wait);
 
 /* Locks cs_main and returns the block hash and block height of the active chain if it exists; otherwise, returns nullopt.*/
 std::optional<BlockRef> GetTip(ChainstateManager& chainman);

@@ -3,8 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <node/miner.h>
-
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
@@ -15,20 +13,22 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
+#include <kernel/chain.h>
 #include <logging.h>
-#include <node/context.h>
 #include <node/kernel_notifications.h>
+#include <node/miner.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <sync.h>
 #include <util/moneystr.h>
 #include <util/signalinterrupt.h>
 #include <util/time.h>
 #include <validation.h>
 
 #include <algorithm>
-#include <utility>
 #include <numeric>
 
 namespace node {
@@ -216,6 +216,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
             throw std::runtime_error(strprintf("TestBlockValidity failed: %s", state.ToString()));
         }
     }
+    pblocktemplate->m_creation_time = MockableSteadyClock::now();
     const auto time_2{SteadyClock::now()};
 
     LogDebug(BCLog::BENCH, "CreateNewBlock() chunks: %.2fms, validity: %.2fms (total %.2fms)\n",
@@ -323,6 +324,61 @@ void BlockAssembler::addChunks()
     }
 }
 
+BlockTemplateCache::BlockTemplateCache(CTxMemPool& mempool, ChainstateManager& chainman, size_t block_template_cache_size)
+    : m_mempool(mempool), m_chainman(chainman), m_block_template_cache_size(block_template_cache_size)
+{
+}
+
+void BlockTemplateCache::BlockConnected(
+    const ChainstateRole& role,
+    const std::shared_ptr<const CBlock>& /*unused*/,
+    const CBlockIndex* /*unused*/)
+{
+    LOCK(m_mutex);
+    // Clear the cached blocks when the newly connected block
+    // is not connecting to a historical chain that is used to validate
+    // the current active chain.
+    if (!role.historical) {
+        m_block_templates.clear();
+    }
+}
+
+void BlockTemplateCache::BlockDisconnected(
+    const std::shared_ptr<const CBlock>& /*unused*/,
+    const CBlockIndex* /*unused*/)
+{
+    LOCK(m_mutex);
+    m_block_templates.clear();
+}
+
+BlockTemplateRef BlockTemplateCache::CreateBlockTemplateInternal(const BlockAssembler::Options& options)
+{
+    Chainstate& current_chainstate = m_chainman.CurrentChainstate();
+    BlockAssembler assembler{current_chainstate, &m_mempool, options};
+    auto block_template = std::make_shared<const CBlockTemplate>(*assembler.CreateNewBlock());
+    Assume(m_block_templates.size() <= m_block_template_cache_size);
+    m_block_templates.emplace_back(options, block_template);
+    if (m_block_templates.size() > m_block_template_cache_size) m_block_templates.pop_front();
+    return block_template;
+}
+
+BlockTemplateRef BlockTemplateCache::GetBlockTemplate(const BlockAssembler::Options& options, MillisecondsDouble max_template_age)
+{
+    LOCK2(cs_main, m_mutex);
+    // Cache lookup compares all block creation option fields for an exact match. Note that differences
+    // in test_block_validity, print_modified_fee, and coinbase_output_script only affect
+    // tests and benchmarks, not production usage.
+    // This implies that these fields can differ in test scenarios without impacting real-world block template
+    // functionality. Discrepancies in the above fields will still cause cache misses, but since they are fixed
+    // in non-test and benchmark environments, it is okay to compare for an exact match.
+    for (auto it = m_block_templates.rbegin(); it != m_block_templates.rend(); it++) {
+        if (it->first == options && !TimeIntervalElapsed(it->second->m_creation_time, max_template_age)) {
+            return it->second;
+        }
+    }
+    return CreateBlockTemplateInternal(options);
+}
+
 void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t version, uint32_t timestamp, uint32_t nonce)
 {
     if (block.vtx.size() == 0) {
@@ -348,13 +404,13 @@ void InterruptWait(KernelNotifications& kernel_notifications, bool& interrupt_wa
     kernel_notifications.m_tip_block_cv.notify_all();
 }
 
-std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainman,
-                                                      KernelNotifications& kernel_notifications,
-                                                      CTxMemPool* mempool,
-                                                      const std::unique_ptr<CBlockTemplate>& block_template,
-                                                      const BlockWaitOptions& options,
-                                                      const BlockAssembler::Options& assemble_options,
-                                                      bool& interrupt_wait)
+BlockTemplateRef WaitAndCreateNewBlock(BlockTemplateCache* block_template_cache,
+                                       ChainstateManager& chainman,
+                                       KernelNotifications& kernel_notifications,
+                                       std::unique_ptr<CBlockTemplate>& block_template,
+                                       const BlockWaitOptions& options,
+                                       const BlockAssembler::Options& assemble_options,
+                                       bool& interrupt_wait)
 {
     // Delay calculating the current template fees, just in case a new block
     // comes in before the next tick.
@@ -411,11 +467,7 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
          * We'll also create a new template if the tip changed during this iteration.
          */
         if (options.fee_threshold < MAX_MONEY || tip_changed) {
-            auto new_tmpl{BlockAssembler{
-                chainman.ActiveChainstate(),
-                mempool,
-                assemble_options}
-                              .CreateNewBlock()};
+            auto new_tmpl{block_template_cache->GetBlockTemplate(assemble_options)};
 
             // If the tip changed, return the new template regardless of its fees.
             if (tip_changed) return new_tmpl;

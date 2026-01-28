@@ -67,6 +67,8 @@ struct BlockCreateOptions {
      * coinbase_max_additional_weight and coinbase_output_max_additional_sigops.
      */
     CScript coinbase_output_script{CScript() << OP_TRUE};
+
+    bool operator==(const BlockCreateOptions&) const = default;
 };
 
 struct BlockWaitOptions {
