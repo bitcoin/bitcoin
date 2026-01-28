@@ -75,6 +75,7 @@ QT_MOC_CPP = \
   qt/moc_paymentserver.cpp \
   qt/moc_peertablemodel.cpp \
   qt/moc_peertablesortproxy.cpp \
+  qt/moc_proposalmodel.cpp \
   qt/moc_proposalwizard.cpp \
   qt/moc_psbtoperationsdialog.cpp \
   qt/moc_qrdialog.cpp \
@@ -156,6 +157,7 @@ BITCOIN_QT_H = \
   qt/paymentserver.h \
   qt/peertablemodel.h \
   qt/peertablesortproxy.h \
+  qt/proposalmodel.h \
   qt/proposalwizard.h \
   qt/psbtoperationsdialog.h \
   qt/qrdialog.h \
@@ -265,6 +267,7 @@ BITCOIN_QT_WALLET_CPP = \
   qt/openuridialog.cpp \
   qt/overviewpage.cpp \
   qt/paymentserver.cpp \
+  qt/proposalmodel.cpp \
   qt/proposalwizard.cpp \
   qt/psbtoperationsdialog.cpp \
   qt/qrdialog.cpp \
