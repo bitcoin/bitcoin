@@ -134,13 +134,41 @@ desirable for building Bitcoin Core release binaries."
   (package-with-extra-patches mingw-w64-x86_64-winpthreads
     (search-our-patches "winpthreads-remap-guix-store.patch")))
 
+(define (mingw-force-ucrt mingw)
+  (package
+    (inherit mingw)
+    (name (string-append (package-name mingw) "-ucrt"))
+    (arguments
+     (substitute-keyword-arguments (package-arguments mingw)
+       ((#:configure-flags flags)
+        #~(map (lambda (flag)
+                 (if (string-prefix? "--with-default-msvcrt" flag)
+                     "--with-default-msvcrt=ucrt"
+                     flag))
+               #$flags))))))
+
+(define (make-mingw-w64-ucrt machine xgcc)
+  "Return a UCRT variant of mingw-w64 for targeting MACHINE using XGCC cross-compiler."
+  (let ((base-mingw-winpthreads
+         (make-mingw-w64 machine
+                         #:xgcc xgcc
+                         #:with-winpthreads? #t))
+        (base-mingw-sans-winpthreads
+         (make-mingw-w64 machine
+                         #:xgcc xgcc)))
+    (mingw-force-ucrt
+     (package
+       (inherit base-mingw-winpthreads)
+       (native-inputs
+        (modify-inputs (package-native-inputs base-mingw-winpthreads)
+          (replace "xlibc" (mingw-force-ucrt base-mingw-sans-winpthreads))))))))
+
 (define (make-mingw-pthreads-cross-toolchain target)
   "Create a cross-compilation toolchain package for TARGET"
   (let* ((xbinutils (binutils-mingw-patches (cross-binutils target)))
          (machine (substring target 0 (string-index target #\-)))
-         (pthreads-xlibc (winpthreads-patches (make-mingw-w64 machine
-                                         #:xgcc (cross-gcc target #:xgcc (gcc-libgcc-patches base-gcc))
-                                         #:with-winpthreads? #t)))
+         (pthreads-xlibc (winpthreads-patches (make-mingw-w64-ucrt machine
+                                                                   (cross-gcc target #:xgcc (gcc-libgcc-patches base-gcc)))))
          (pthreads-xgcc (cross-gcc target
                                     #:xgcc (gcc-libgcc-patches mingw-w64-base-gcc)
                                     #:xbinutils xbinutils

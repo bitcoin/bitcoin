@@ -1179,13 +1179,7 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
         xor_key_file >> obfuscation;
     } else {
         // Create initial or missing xor key file
-        AutoFile xor_key_file{fsbridge::fopen(xor_key_path,
-#ifdef __MINGW64__
-            "wb" // Temporary workaround for https://github.com/bitcoin/bitcoin/issues/30210
-#else
-            "wbx"
-#endif
-        )};
+        AutoFile xor_key_file{fsbridge::fopen(xor_key_path, "wbx")};
         xor_key_file << obfuscation;
         if (xor_key_file.fclose() != 0) {
             throw std::runtime_error{strprintf("Error closing XOR key file %s: %s",
