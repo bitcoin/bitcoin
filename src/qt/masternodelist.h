@@ -14,8 +14,13 @@
 #include <QWidget>
 
 #include <atomic>
+#include <memory>
 #include <set>
 
+namespace interfaces {
+class MnList;
+using MnListPtr = std::shared_ptr<MnList>;
+} // namespace interfaces
 namespace Ui {
 class MasternodeList;
 } // namespace Ui
@@ -92,7 +97,7 @@ private:
     const MasternodeEntry* GetSelectedEntry();
 
     void updateDIP3List();
-    void updateMyMasternodeHashes();
+    void updateMyMasternodeHashes(const interfaces::MnListPtr& mnList);
 
 Q_SIGNALS:
     void doubleClicked(const QModelIndex&);

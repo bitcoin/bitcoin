@@ -256,20 +256,17 @@ void MasternodeList::updateDIP3List()
 
     // Update filters
     if (walletModel && ui->checkBoxOwned->isChecked()) {
-        updateMyMasternodeHashes();
+        updateMyMasternodeHashes(mnList);
     }
 
     updateFilteredCount();
 }
 
-void MasternodeList::updateMyMasternodeHashes()
+void MasternodeList::updateMyMasternodeHashes(const interfaces::MnListPtr& mnList)
 {
-    if (!clientModel || !walletModel) {
+    if (!walletModel || !mnList) {
         return;
     }
-
-    auto [mnList, pindex] = clientModel->getMasternodeList();
-    if (!pindex) return;
 
     std::set<COutPoint> setOutpts;
     for (const auto& outpt : walletModel->wallet().listProTxCoins()) {
@@ -319,8 +316,11 @@ void MasternodeList::on_comboBoxType_currentIndexChanged(int index)
 void MasternodeList::on_checkBoxOwned_stateChanged(int state)
 {
     m_proxy_model->setShowOwnedOnly(state == Qt::Checked);
-    if (state == Qt::Checked) {
-        updateMyMasternodeHashes();
+    if (clientModel && state == Qt::Checked) {
+        auto [mnList, pindex] = clientModel->getMasternodeList();
+        if (mnList) {
+            updateMyMasternodeHashes(mnList);
+        }
     } else {
         m_proxy_model->forceInvalidateFilter();
     }
