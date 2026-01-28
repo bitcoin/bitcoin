@@ -161,8 +161,17 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
         // tests, such as the fuzz tests to run in several processes at the
         // same time, add a random element to the path. Keep it small enough to
         // avoid a MAX_PATH violation on Windows.
-        const auto rand{HexStr(g_rng_temp_path.randbytes(10))};
-        m_path_root = fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / test_name / rand;
+        //
+        // When fuzzing with AFL++, use the shared memory ID for a deterministic
+        // path. This allows for cleanup of leftover directories from timed-out
+        // or crashed iterations, preventing accumulation of stale datadirs.
+        if (const char* shm_id = std::getenv("__AFL_SHM_ID"); shm_id && *shm_id) {
+            m_path_root = fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / test_name / shm_id;
+            fs::remove_all(m_path_root);
+        } else {
+            const auto rand{HexStr(g_rng_temp_path.randbytes(10))};
+            m_path_root = fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / test_name / rand;
+        }
         TryCreateDirectories(m_path_root);
     } else {
         // Custom data directory
