@@ -8,6 +8,10 @@
 #include <hash.h>
 #include <tinyformat.h>
 
+#include <memory>
+#include <span>
+#include <sstream>
+
 uint256 CBlockHeader::GetHash() const
 {
     return (HashWriter{} << *this).GetHash();

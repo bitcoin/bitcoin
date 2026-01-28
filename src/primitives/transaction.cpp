@@ -12,10 +12,10 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <tinyformat.h>
-#include <uint256.h>
 
 #include <algorithm>
 #include <cassert>
+#include <span>
 #include <stdexcept>
 
 std::string COutPoint::ToString() const

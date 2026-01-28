@@ -9,9 +9,12 @@
 #include <uint256.h>
 #include <util/types.h>
 
-#include <compare>
-#include <concepts>
+#include <cstddef>
+#include <optional>
+#include <string>
+#include <string_view>
 #include <tuple>
+#include <type_traits>
 #include <variant>
 
 /** transaction_identifier represents the two canonical transaction identifier
