@@ -12,6 +12,7 @@
 #include <QString>
 
 #include <memory>
+#include <optional>
 #include <tuple>
 #include <vector>
 
@@ -39,6 +40,16 @@ private:
     QString m_service{};
     QString m_type_description{};
     QString m_voting_address{};
+    std::optional<int32_t> m_collateral_index{std::nullopt};
+    std::optional<int32_t> m_consecutive_payments{std::nullopt};
+    std::optional<int32_t> m_pose_ban_height{std::nullopt};
+    std::optional<int32_t> m_pose_revived_height{std::nullopt};
+    std::optional<QString> m_collateral_hash{std::nullopt};
+    std::optional<QString> m_network_addresses{std::nullopt};
+    std::optional<QString> m_platform_https_addresses{std::nullopt};
+    std::optional<QString> m_platform_node_id{std::nullopt};
+    std::optional<QString> m_platform_p2p_addresses{std::nullopt};
+    std::optional<QString> m_pub_key_operator{std::nullopt};
     uint16_t m_operator_reward_pct{0};
 
 public:
@@ -69,6 +80,7 @@ public:
     {
         return std::tie(m_banned, m_last_paid_height, m_next_payment_height, m_pose_penalty, m_service, m_operator_reward_pct);
     }
+    QString toHtml() const;
 };
 
 using MasternodeEntryList = std::vector<std::unique_ptr<MasternodeEntry>>;

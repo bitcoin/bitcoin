@@ -11,11 +11,26 @@
 #include <script/standard.h>
 
 #include <QObject>
+#include <QStringList>
 
 #include <univalue.h>
 
 #include <map>
 #include <set>
+
+namespace {
+std::optional<QString> JoinArray(const UniValue& arr)
+{
+    if (!arr.isArray() || arr.empty()) return std::nullopt;
+    QStringList list;
+    for (size_t i = 0; i < arr.size(); ++i) {
+        if (arr[i].isStr()) {
+            list << QString::fromStdString(arr[i].get_str());
+        }
+    }
+    return list.isEmpty() ? std::nullopt : std::optional<QString>(list.join(", "));
+}
+} // anonymous namespace
 
 MasternodeEntry::MasternodeEntry(const interfaces::MnEntry& dmn, const QString& collateral_address, int next_payment_height) :
     m_banned{dmn.isBanned()},
@@ -26,7 +41,6 @@ MasternodeEntry::MasternodeEntry(const interfaces::MnEntry& dmn, const QString& 
     m_type{dmn.getType()},
     m_collateral_address{collateral_address},
     m_collateral_outpoint{QString::fromStdString(dmn.getCollateralOutpoint().ToStringShort())},
-    m_json{QString::fromStdString(dmn.toJson().write(2))},
     m_owner_address{QString::fromStdString(EncodeDestination(PKHash(dmn.getKeyIdOwner())))},
     m_protx_hash{QString::fromStdString(dmn.getProTxHash().ToString())},
     m_service{QString::fromStdString(dmn.getNetInfoPrimary().ToStringAddrPort())},
@@ -58,9 +72,96 @@ MasternodeEntry::MasternodeEntry(const interfaces::MnEntry& dmn, const QString& 
     } else {
         m_operator_reward = QObject::tr("NONE");
     }
+
+    const auto json{dmn.toJson()};
+    m_json = QString::fromStdString(json.write(2));
+    if (const auto& val = json.find_value("collateralHash"); val.isStr()) {
+        m_collateral_hash = QString::fromStdString(val.get_str());
+    }
+    if (const auto& val = json.find_value("collateralIndex"); val.isNum()) {
+        m_collateral_index = val.getInt<int32_t>();
+    }
+    if (const auto& state = json.find_value("state"); state.isObject()) {
+        if (const auto& val = state.find_value("consecutivePayments"); val.isNum()) {
+            m_consecutive_payments = val.getInt<int32_t>();
+        }
+        if (const auto& val = state.find_value("PoSeBanHeight"); val.isNum()) {
+            m_pose_ban_height = val.getInt<int32_t>();
+        }
+        if (const auto& val = state.find_value("PoSeRevivedHeight"); val.isNum()) {
+            m_pose_revived_height = val.getInt<int32_t>();
+        }
+        if (const auto& val = state.find_value("pubKeyOperator"); val.isStr()) {
+            m_pub_key_operator = QString::fromStdString(val.get_str());
+        }
+        if (const auto& val = state.find_value("addresses"); val.isObject()) {
+            m_network_addresses = JoinArray(val.find_value("core_p2p"));
+            m_platform_p2p_addresses = JoinArray(val.find_value("platform_p2p"));
+            m_platform_https_addresses = JoinArray(val.find_value("platform_https"));
+        }
+        if (const auto& val = state.find_value("platformNodeID"); val.isStr()) {
+            m_platform_node_id = QString::fromStdString(val.get_str());
+        }
+    }
 }
 
 MasternodeEntry::~MasternodeEntry() = default;
+
+QString MasternodeEntry::toHtml() const
+{
+    QString ret;
+    ret.reserve(4000);
+    ret += "<html>";
+
+    ret += "<b>" + QObject::tr("ProTx Hash") + ":</b> " + m_protx_hash.toHtmlEscaped() + "<br>";
+    if (m_pub_key_operator) {
+        ret += "<b>" + QObject::tr("Public Key Operator") + ":</b> " + m_pub_key_operator->toHtmlEscaped() + "<br>";
+    }
+    ret += "<b>" + QObject::tr("Owner Address") + ":</b> " + m_owner_address.toHtmlEscaped() + "<br>";
+    ret += "<b>" + QObject::tr("Payout Address") + ":</b> " + m_payout_address.toHtmlEscaped() + "<br>";
+    ret += "<b>" + QObject::tr("Voting Address") + ":</b> " + m_voting_address.toHtmlEscaped() + "<br>";
+    ret += "<b>" + QObject::tr("Collateral Address") + ":</b> " + m_collateral_address.toHtmlEscaped() + "<br>";
+    if (m_collateral_hash) {
+        ret += "<b>" + QObject::tr("Collateral Hash") + ":</b> " + m_collateral_hash->toHtmlEscaped() + "<br>";
+    }
+    if (m_collateral_index) {
+        ret += "<b>" + QObject::tr("Collateral Index") + ":</b> " + QString::number(*m_collateral_index) + "<br>";
+    }
+    ret += "<br>";
+
+    ret += "<b>" + QObject::tr("Masternode Type") + ":</b> " + m_type_description.toHtmlEscaped() + "<br>";
+    ret += "<b>" + QObject::tr("Registered Height") + ":</b> " + QString::number(m_registered_height) + "<br>";
+    ret += "<b>" + QObject::tr("Last Paid Height") + ":</b> " + QString::number(m_last_paid_height) + "<br>";
+    if (m_consecutive_payments) {
+        ret += "<b>" + QObject::tr("Consecutive Payments") + ":</b> " + QString::number(*m_consecutive_payments) + "<br>";
+    }
+    ret += "<b>" + QObject::tr("Operator Reward") + ":</b> " + QString::number(m_operator_reward_pct / 100.0, 'f', 2) + "%<br>";
+    if (m_network_addresses) {
+        ret += "<b>" + QObject::tr("Network Addresses") + ":</b> " + m_network_addresses->toHtmlEscaped() + "<br>";
+    }
+
+    if (m_platform_https_addresses) {
+        ret += "<b>" + QObject::tr("Platform HTTPS Addresses") + ":</b> " + m_platform_https_addresses->toHtmlEscaped() + "<br>";
+    }
+    if (m_platform_p2p_addresses) {
+        ret += "<b>" + QObject::tr("Platform P2P Addresses") + ":</b> " + m_platform_p2p_addresses->toHtmlEscaped() + "<br>";
+    }
+    if (m_platform_node_id) {
+        ret += "<b>" + QObject::tr("Platform Node ID") + ":</b> " + m_platform_node_id->toHtmlEscaped() + "<br>";
+    }
+    ret += "<br>";
+
+    ret += "<b>" + QObject::tr("PoSe Penalty") + ":</b> " + QString::number(m_pose_penalty) + "<br>";
+    if (m_pose_ban_height && *m_pose_ban_height != -1) {
+        ret += "<b>" + QObject::tr("PoSe Ban Height") + ":</b> " + QString::number(*m_pose_ban_height) + "<br>";
+    }
+    if (m_pose_revived_height && *m_pose_revived_height != -1) {
+        ret += "<b>" + QObject::tr("PoSe Revived Height") + ":</b> " + QString::number(*m_pose_revived_height) + "<br>";
+    }
+
+    ret += "</html>";
+    return ret;
+}
 
 MasternodeModel::MasternodeModel(QObject* parent) :
     QAbstractTableModel(parent)
