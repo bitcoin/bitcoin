@@ -464,4 +464,30 @@ BOOST_FIXTURE_TEST_CASE(logging_filesize_rate_limit, LogSetup)
     }
 }
 
+BOOST_FIXTURE_TEST_CASE(logging_arg_evaluation, LogSetup)
+{
+    for (bool enable_logger : {true, false}) {
+        LogInstance().DisconnectTestLogger();
+        if (enable_logger) {
+            BOOST_REQUIRE(LogInstance().StartLogging());
+        } else {
+            LogInstance().DisableLogging();
+        }
+        BOOST_REQUIRE_EQUAL(enable_logger, LogInstance().Enabled());
+
+        // Info or higher should always evaluate the arguments.
+        int counter = 0;
+        LogError("error (%s)", ++counter);
+        LogWarning("warning (%s)", ++counter);
+        LogInfo("info (%s)", ++counter);
+        BOOST_CHECK_EQUAL(counter, 3);
+
+        // Debug/Trace should skip argument evaluation when category is disabled.
+        counter = 0;
+        LogDebug(BCLog::NET, "debug (%s)", ++counter);
+        LogTrace(BCLog::NET, "trace (%s)", ++counter);
+        BOOST_CHECK_EQUAL(counter, 0);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
