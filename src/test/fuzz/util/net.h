@@ -21,6 +21,7 @@
 #include <util/sock.h>
 
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -234,9 +235,11 @@ public:
 
 [[nodiscard]] inline NetGroupManager ConsumeNetGroupManager(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
-    std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
-    if (!SanityCheckASMap(asmap, 128)) asmap.clear();
-    return NetGroupManager(asmap);
+    std::vector<std::byte> asmap{ConsumeRandomLengthByteVector<std::byte>(fuzzed_data_provider)};
+    if (!CheckStandardAsmap(asmap)) {
+        return NetGroupManager::NoAsmap();
+    }
+    return NetGroupManager::WithLoadedAsmap(std::move(asmap));
 }
 
 inline CSubNet ConsumeSubNet(FuzzedDataProvider& fuzzed_data_provider) noexcept

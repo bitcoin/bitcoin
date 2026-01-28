@@ -18,7 +18,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
 ASMAP = 'src/test/data/asmap.raw' # path to unit test skeleton asmap
-VERSION = 'fec61fa21a9f46f3b17bdcd660d7f4cd90b966aad3aec593c99b35f0aca15853'
+VERSION = 'bafc9da308f45179443bd1d22325400ac9104f741522d003e3fac86700f68895'
 
 def expected_messages(filename):
     return [f'Opened asmap file "{filename}" (59 bytes) from disk',
