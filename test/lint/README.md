@@ -3,20 +3,24 @@ This folder contains lint scripts.
 Running locally
 ===============
 
-To run linters locally with the same versions as the CI environment, use the included
-Dockerfile:
+To run linters locally with the same versions as the CI environment use
+the _lint.py_ helper script which runs checks inside the CI container:
 
 ```sh
-DOCKER_BUILDKIT=1 docker build --platform=linux --tag=bitcoin-linter --file="./ci/lint_imagefile" ./ && docker run --rm -v $(pwd):/bitcoin -it bitcoin-linter
+./ci/lint.py
 ```
 
-Building the container can be done every time, because it is fast when the
-result is cached and it prevents issues when the image changes.
+Extra arguments are passed to `cargo run -- ...` in the container so you can do:
+
+```sh
+./ci/lint.py --help
+./ci/lint.py --lint=py_lint
+```
 
 test runner
 ===========
 
-To run all the lint checks in the test runner outside the docker you first need
+To run all the lint checks in the test runner outside the container you first need
 to install the rust toolchain using your package manager of choice or
 [rustup](https://www.rust-lang.org/tools/install).
 
