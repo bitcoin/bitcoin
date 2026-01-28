@@ -411,7 +411,7 @@ public:
             CoinSelectionParams params(rng);
             // Note: for now, swallow any error.
             if (auto res = FetchSelectedInputs(*m_wallet, coin_control, params)) {
-                total_amount += res->total_amount;
+                total_amount += res->GetTotal(params.m_subtract_fee_outputs);
             }
         }
 

@@ -59,13 +59,13 @@ struct CoinsResult {
     void Add(OutputType type, const COutput& out);
 
     CAmount GetTotalAmount() { return total_amount; }
-    std::optional<CAmount> GetEffectiveTotalAmount() {return total_effective_amount; }
+    std::optional<CAmount> GetEffectiveTotalAmount() { return total_effective_amount; }
 
 private:
     /** Sum of all available coins raw value */
     CAmount total_amount{0};
     /** Sum of all available coins effective value (each output value minus fees required to spend it) */
-    std::optional<CAmount> total_effective_amount{0};
+    std::optional<CAmount> total_effective_amount;
 };
 
 struct CoinFilterParams {
@@ -156,19 +156,19 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
 struct PreSelectedInputs
 {
     std::set<std::shared_ptr<COutput>> coins;
-    // If subtract fee from outputs is disabled, the 'total_amount'
-    // will be the sum of each output effective value
-    // instead of the sum of the outputs amount
     CAmount total_amount{0};
+    CAmount total_effective_amount{0};
 
-    void Insert(const COutput& output, bool subtract_fee_outputs)
+    void Insert(const COutput& output)
     {
-        if (subtract_fee_outputs) {
-            total_amount += output.txout.nValue;
-        } else {
-            total_amount += output.GetEffectiveValue();
-        }
+        total_amount += output.txout.nValue;
+        total_effective_amount += output.GetEffectiveValue();
         coins.insert(std::make_shared<COutput>(output));
+    }
+
+    // Returns the appropriate total based on whether fees are being subtracted from outputs
+    CAmount GetTotal(bool subtract_fee_outputs) const {
+        return subtract_fee_outputs ? total_amount : total_effective_amount;
     }
 };
 

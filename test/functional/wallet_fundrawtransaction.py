@@ -155,6 +155,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_input_confs_control()
         self.test_duplicate_outputs()
         self.test_watchonly_cannot_grind_r()
+        self.test_cannot_cover_fees()
 
     def test_duplicate_outputs(self):
         self.log.info("Test deserializing and funding a transaction with duplicate outputs")
@@ -1456,7 +1457,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         # To test this does not happen, we subtract 202 sats from the input value. If working correctly, this should
         # fail with insufficient funds rather than bitcoind asserting.
         rawtx = w.createrawtransaction(inputs=[], outputs=[{self.nodes[0].getnewaddress(address_type="bech32"): 1 - 0.00000202}])
-        assert_raises_rpc_error(-4, "Insufficient funds", w.fundrawtransaction, rawtx, fee_rate=1.85)
+        expected_err_msg = "The total exceeds your balance when the 0.00000078 transaction fee is included."
+        assert_raises_rpc_error(-4, expected_err_msg, w.fundrawtransaction, rawtx, fee_rate=1.85)
 
     def test_input_confs_control(self):
         self.nodes[0].createwallet("minconf")
@@ -1541,6 +1543,42 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         watchonly_funded = watchonly.fundrawtransaction(hexstring=tx, fee_rate=10)
         assert_greater_than(watchonly_funded["fee"], funded["fee"])
+
+    def test_cannot_cover_fees(self):
+        self.log.info("Test error message when transaction amount exceeds available balance when fees are included")
+        default_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        self.nodes[1].createwallet("cannot_cover_fees")
+        wallet = self.nodes[1].get_wallet_rpc("cannot_cover_fees")
+
+        # Set up wallet with 2 utxos: 0.3 BTC and 0.15 BTC
+        default_wallet.sendtoaddress(wallet.getnewaddress(), 0.3)
+        txid2 = default_wallet.sendtoaddress(wallet.getnewaddress(), 0.15)
+        self.generate(self.nodes[0], 1)
+        utxos = wallet.listunspent(1)
+        vout2 = next((u["vout"] for u in utxos if u["txid"] == txid2), 0)
+
+        amount_with_fee_err_msg = "The total exceeds your balance when the {} transaction fee is included."
+
+        self.log.info("Test without preselected inputs")
+        self.log.info("Attempt to send 0.45 BTC without SFFO")
+        rawtx = wallet.createrawtransaction(inputs=[], outputs=[{default_wallet.getnewaddress(): 0.45}])
+        assert_raises_rpc_error(-4, amount_with_fee_err_msg.format("0.00000042"), wallet.fundrawtransaction, rawtx, options={"fee_rate":1})
+
+        self.log.info("Send 0.45 BTC with SFFO")
+        wallet.fundrawtransaction(rawtx, options={"subtractFeeFromOutputs":[0]})
+
+        self.log.info("Attempt to send 0.45 BTC by restricting coin selection with minconf=6")
+        assert_raises_rpc_error(-4, "Insufficient funds", wallet.fundrawtransaction, rawtx, options={"minconf":6})
+
+        self.log.info("Test with preselected inputs")
+        self.log.info("Attempt to send 0.45 BTC preselecting 0.15 BTC utxo")
+        rawtx = wallet.createrawtransaction(inputs=[{"txid": txid2, "vout": vout2}], outputs=[{default_wallet.getnewaddress(): 0.45}])
+        assert_raises_rpc_error(-4, amount_with_fee_err_msg.format("0.00000042"), wallet.fundrawtransaction, rawtx, options={"fee_rate":1})
+
+        self.log.info("Send 0.45 BTC preselecting 0.15 BTC utxo with SFFO")
+        wallet.fundrawtransaction(hexstring=rawtx, options={"subtractFeeFromOutputs":[0]})
+
 
 if __name__ == '__main__':
     RawTransactionsTest(__file__).main()
