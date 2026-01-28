@@ -44,6 +44,7 @@ public:
         QSortFilterProxyModel(parent) {}
 
     void forceInvalidateFilter() { invalidateFilter(); }
+    void setHideBanned(bool hide) { m_hide_banned = hide; }
     void setMyMasternodeHashes(std::set<QString> hashes) { m_my_mn_hashes = std::move(hashes); }
     void setShowOwnedOnly(bool show) { m_show_owned_only = show; }
     void setTypeFilter(TypeFilter type) { m_type_filter = type; }
@@ -52,6 +53,7 @@ protected:
     bool filterAcceptsRow(int source_row, const QModelIndex& source_parent) const override;
 
 private:
+    bool m_hide_banned{true};
     bool m_show_owned_only{false};
     std::set<QString> m_my_mn_hashes;
     TypeFilter m_type_filter{TypeFilter::All};
@@ -96,6 +98,7 @@ private Q_SLOTS:
     void copyProTxHash_clicked();
     void extraInfoDIP3_clicked();
     void handleMasternodeListChanged();
+    void on_checkBoxHideBanned_stateChanged(int state);
     void on_checkBoxOwned_stateChanged(int state);
     void on_comboBoxType_currentIndexChanged(int index);
     void on_filterText_textChanged(const QString& strFilterIn);

@@ -37,6 +37,15 @@ bool MasternodeListSortFilterProxyModel::filterAcceptsRow(int source_row, const 
         }
     }
 
+    // Banned filter
+    if (m_hide_banned) {
+        QModelIndex idx = sourceModel()->index(source_row, MasternodeModel::STATUS, source_parent);
+        int banned = sourceModel()->data(idx, Qt::EditRole).toInt();
+        if (banned != 0) {
+            return false;
+        }
+    }
+
     // Text-matching filter
     if (const auto& regex = filterRegularExpression(); !regex.pattern().isEmpty()) {
         QModelIndex idx = sourceModel()->index(source_row, 0, source_parent);
@@ -86,6 +95,9 @@ MasternodeList::MasternodeList(QWidget* parent) :
 
     // Hide ProTx Hash column (used for internal lookup)
     ui->tableViewMasternodes->setColumnHidden(MasternodeModel::PROTX_HASH, true);
+
+    // Hide PoSe column by default (since "Hide banned" is checked by default)
+    ui->tableViewMasternodes->setColumnHidden(MasternodeModel::POSE, true);
 
     ui->checkBoxOwned->setEnabled(false);
 
@@ -291,6 +303,15 @@ void MasternodeList::on_checkBoxOwned_stateChanged(int state)
     } else {
         m_proxy_model->forceInvalidateFilter();
     }
+    updateFilteredCount();
+}
+
+void MasternodeList::on_checkBoxHideBanned_stateChanged(int state)
+{
+    const bool hide_banned{state == Qt::Checked};
+    ui->tableViewMasternodes->setColumnHidden(MasternodeModel::POSE, hide_banned);
+    m_proxy_model->setHideBanned(hide_banned);
+    m_proxy_model->forceInvalidateFilter();
     updateFilteredCount();
 }
 

@@ -80,6 +80,19 @@
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QCheckBox" name="checkBoxHideBanned">
+           <property name="toolTip">
+            <string>Hide masternodes that are currently PoSe banned.</string>
+           </property>
+           <property name="text">
+            <string>Hide banned</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
        <item row="1" column="0">
