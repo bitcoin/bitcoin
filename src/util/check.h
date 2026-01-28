@@ -71,8 +71,9 @@ T&& inline_check_non_fatal(LIFETIMEBOUND T&& val, const std::source_location& lo
     if (!val) {
         if constexpr (G_ABORT_ON_FAILED_ASSUME) {
             assertion_fail(loc, assertion);
+        } else {
+            throw NonFatalCheckError{assertion, loc};
         }
-        throw NonFatalCheckError{assertion, loc};
     }
     return std::forward<T>(val);
 }
