@@ -8,6 +8,12 @@ export LC_ALL=C
 
 set -o errexit -o pipefail -o xtrace
 
+# Fixes permission issues when there is a container UID/GID mismatch with the owner
+# of the mounted bitcoin src dir.
+git config --global --add safe.directory /bitcoin
+
+export PATH="/python_build/bin:${PATH}"
+
 if [ -n "${LINT_CI_IS_PR}" ]; then
   export COMMIT_RANGE="HEAD~..HEAD"
   if [ "$(git rev-list -1 HEAD)" != "$(git rev-list -1 --merges HEAD)" ]; then
