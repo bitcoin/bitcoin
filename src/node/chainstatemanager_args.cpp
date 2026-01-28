@@ -12,6 +12,7 @@
 #include <node/database_args.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <util/byte_units.h>
 #include <util/result.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
@@ -64,7 +65,7 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
         //    script execution cache create the minimum possible cache (2
         //    elements). Therefore, we can use 0 as a floor here.
         // 2. Multiply first, divide after to avoid integer truncation.
-        size_t clamped_size_each = std::max<int64_t>(*max_size, 0) * (1 << 20) / 2;
+        size_t clamped_size_each = std::max<int64_t>(*max_size, 0) * 1_MiB / 2;
         opts.script_execution_cache_bytes = clamped_size_each;
         opts.signature_cache_bytes = clamped_size_each;
     }

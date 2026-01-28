@@ -9,6 +9,7 @@
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
+#include <util/byte_units.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/obfuscation.h>
@@ -279,12 +280,12 @@ void CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
     const bool log_memory = LogAcceptCategory(BCLog::LEVELDB, BCLog::Level::Debug);
     double mem_before = 0;
     if (log_memory) {
-        mem_before = DynamicMemoryUsage() / 1024.0 / 1024;
+        mem_before = DynamicMemoryUsage() / double(1_MiB);
     }
     leveldb::Status status = DBContext().pdb->Write(fSync ? DBContext().syncoptions : DBContext().writeoptions, &batch.m_impl_batch->batch);
     HandleError(status);
     if (log_memory) {
-        double mem_after = DynamicMemoryUsage() / 1024.0 / 1024;
+        double mem_after = DynamicMemoryUsage() / double(1_MiB);
         LogDebug(BCLog::LEVELDB, "WriteBatch memory usage: db=%s, before=%.1fMiB, after=%.1fMiB\n",
                  m_name, mem_before, mem_after);
     }

@@ -39,8 +39,7 @@ BOOST_AUTO_TEST_CASE(test_cuckoocache_no_fakes)
 {
     SeedRandomForTest(SeedRand::ZEROS);
     CuckooCache::cache<uint256, SignatureCacheHasher> cc{};
-    size_t megabytes = 4;
-    cc.setup_bytes(megabytes << 20);
+    cc.setup_bytes(4_MiB);
     for (int x = 0; x < 100000; ++x) {
         cc.insert(m_rng.rand256());
     }
@@ -59,7 +58,7 @@ double test_cache(size_t megabytes, double load)
     SeedRandomForTest(SeedRand::ZEROS);
     std::vector<uint256> hashes;
     Cache set{};
-    size_t bytes = megabytes * (1 << 20);
+    size_t bytes = megabytes * 1_MiB;
     set.setup_bytes(bytes);
     uint32_t n_insert = static_cast<uint32_t>(load * (bytes / sizeof(uint256)));
     hashes.resize(n_insert);
@@ -132,7 +131,7 @@ void test_cache_erase(size_t megabytes)
     SeedRandomForTest(SeedRand::ZEROS);
     std::vector<uint256> hashes;
     Cache set{};
-    size_t bytes = megabytes * (1 << 20);
+    size_t bytes = megabytes * 1_MiB;
     set.setup_bytes(bytes);
     uint32_t n_insert = static_cast<uint32_t>(load * (bytes / sizeof(uint256)));
     hashes.resize(n_insert);
@@ -197,7 +196,7 @@ void test_cache_erase_parallel(size_t megabytes)
     SeedRandomForTest(SeedRand::ZEROS);
     std::vector<uint256> hashes;
     Cache set{};
-    size_t bytes = megabytes * (1 << 20);
+    size_t bytes = megabytes * 1_MiB;
     set.setup_bytes(bytes);
     uint32_t n_insert = static_cast<uint32_t>(load * (bytes / sizeof(uint256)));
     hashes.resize(n_insert);
@@ -335,8 +334,7 @@ void test_cache_generations()
     const uint32_t WINDOW_SIZE = 60;
     const uint32_t POP_AMOUNT = (BLOCK_SIZE / WINDOW_SIZE) / 2;
     const double load = 10;
-    const size_t megabytes = 4;
-    const size_t bytes = megabytes * (1 << 20);
+    const size_t bytes = 4_MiB;
     const uint32_t n_insert = static_cast<uint32_t>(load * (bytes / sizeof(uint256)));
 
     std::vector<block_activity> hashes;
