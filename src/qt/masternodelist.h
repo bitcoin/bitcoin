@@ -36,7 +36,7 @@ public:
     explicit MasternodeListSortFilterProxyModel(QObject* parent = nullptr) :
         QSortFilterProxyModel(parent) {}
 
-    void setShowMyMasternodesOnly(bool show) { m_show_my_only = show; }
+    void setShowOwnedOnly(bool show) { m_show_owned_only = show; }
     void setMyMasternodeHashes(std::set<QString> hashes) { m_my_mn_hashes = std::move(hashes); }
     void forceInvalidateFilter() { invalidateFilter(); }
 
@@ -44,7 +44,7 @@ protected:
     bool filterAcceptsRow(int source_row, const QModelIndex& source_parent) const override;
 
 private:
-    bool m_show_my_only{false};
+    bool m_show_owned_only{false};
     std::set<QString> m_my_mn_hashes;
 };
 
@@ -84,8 +84,8 @@ Q_SIGNALS:
 
 private Q_SLOTS:
     void showContextMenuDIP3(const QPoint&);
-    void on_filterLineEditDIP3_textChanged(const QString& strFilterIn);
-    void on_checkBoxMyMasternodesOnly_stateChanged(int state);
+    void on_filterText_textChanged(const QString& strFilterIn);
+    void on_checkBoxOwned_stateChanged(int state);
 
     void extraInfoDIP3_clicked();
     void copyProTxHash_clicked();

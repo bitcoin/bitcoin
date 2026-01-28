@@ -32,19 +32,6 @@
       <number>0</number>
      </property>
      <item>
-      <spacer name="horizontalSpacer0">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
       <layout class="QGridLayout" name="gridLayout_3">
        <item row="0" column="0">
         <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -52,14 +39,7 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QLabel" name="label_filter_2">
-           <property name="text">
-            <string>Filter List:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="filterLineEditDIP3">
+          <widget class="QLineEdit" name="filterText">
            <property name="toolTip">
             <string>Filter masternode list</string>
            </property>
@@ -69,39 +49,12 @@
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="checkBoxMyMasternodesOnly">
+          <widget class="QCheckBox" name="checkBoxOwned">
            <property name="toolTip">
             <string>Show only masternodes this wallet has keys for.</string>
            </property>
            <property name="text">
-            <string>My masternodes only</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_4">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>10</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QLabel" name="label_count_2">
-           <property name="text">
-            <string>Node Count:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="countLabelDIP3">
-           <property name="text">
-            <string notr="true">0</string>
+            <string>Owned</string>
            </property>
           </widget>
          </item>
@@ -125,6 +78,40 @@
           <bool>true</bool>
          </property>
         </widget>
+       </item>
+       <item row="2" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout_count">
+         <property name="spacing">
+          <number>3</number>
+         </property>
+         <item>
+          <spacer name="horizontalSpacer_count">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_count">
+           <property name="text">
+            <string>Node Count:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="countLabel">
+           <property name="text">
+            <string notr="true">0</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </item>

@@ -33,8 +33,8 @@ bool MasternodeListSortFilterProxyModel::filterAcceptsRow(int source_row, const 
         }
     }
 
-    // "My masternodes only" filter
-    if (m_show_my_only) {
+    // "Owned" filter
+    if (m_show_owned_only) {
         QModelIndex idx = sourceModel()->index(source_row, MasternodeModel::PROTX_HASH, source_parent);
         QString proTxHash = sourceModel()->data(idx, Qt::DisplayRole).toString();
         if (m_my_mn_hashes.find(proTxHash) == m_my_mn_hashes.end()) {
@@ -53,8 +53,7 @@ MasternodeList::MasternodeList(QWidget* parent) :
 {
     ui->setupUi(this);
 
-    GUIUtil::setFont({ui->label_count_2, ui->countLabelDIP3}, {GUIUtil::FontWeight::Bold, 14});
-    GUIUtil::setFont({ui->label_filter_2}, {GUIUtil::FontWeight::Normal, 15});
+    GUIUtil::setFont({ui->label_count, ui->countLabel}, {GUIUtil::FontWeight::Bold, 14});
 
     // Set up proxy model
     m_proxy_model->setSourceModel(m_model);
@@ -75,7 +74,7 @@ MasternodeList::MasternodeList(QWidget* parent) :
     // Hide ProTx Hash column (used for internal lookup)
     ui->tableViewMasternodes->setColumnHidden(MasternodeModel::PROTX_HASH, true);
 
-    ui->checkBoxMyMasternodesOnly->setEnabled(false);
+    ui->checkBoxOwned->setEnabled(false);
 
     contextMenuDIP3 = new QMenu(this);
     contextMenuDIP3->addAction(tr("Copy ProTx Hash"), this, &MasternodeList::copyProTxHash_clicked);
@@ -115,7 +114,7 @@ void MasternodeList::setClientModel(ClientModel* model)
 void MasternodeList::setWalletModel(WalletModel* model)
 {
     this->walletModel = model;
-    ui->checkBoxMyMasternodesOnly->setEnabled(model != nullptr);
+    ui->checkBoxOwned->setEnabled(model != nullptr);
 }
 
 void MasternodeList::showContextMenuDIP3(const QPoint& point)
@@ -179,7 +178,7 @@ void MasternodeList::updateDIP3List()
         });
     }
 
-    ui->countLabelDIP3->setText(tr("Updating…"));
+    ui->countLabel->setText(tr("Updating…"));
 
     nTimeUpdatedDIP3 = GetTime();
 
@@ -210,7 +209,7 @@ void MasternodeList::updateDIP3List()
     m_model->reconcile(std::move(entries));
 
     // Update filters
-    if (walletModel && ui->checkBoxMyMasternodesOnly->isChecked()) {
+    if (walletModel && ui->checkBoxOwned->isChecked()) {
         updateMyMasternodeHashes();
     }
 
@@ -249,19 +248,19 @@ void MasternodeList::updateMyMasternodeHashes()
 
 void MasternodeList::updateFilteredCount()
 {
-    ui->countLabelDIP3->setText(QString::number(m_proxy_model->rowCount()));
+    ui->countLabel->setText(QString::number(m_proxy_model->rowCount()));
 }
 
-void MasternodeList::on_filterLineEditDIP3_textChanged(const QString& strFilterIn)
+void MasternodeList::on_filterText_textChanged(const QString& strFilterIn)
 {
     m_proxy_model->setFilterRegularExpression(
         QRegularExpression(QRegularExpression::escape(strFilterIn), QRegularExpression::CaseInsensitiveOption));
     updateFilteredCount();
 }
 
-void MasternodeList::on_checkBoxMyMasternodesOnly_stateChanged(int state)
+void MasternodeList::on_checkBoxOwned_stateChanged(int state)
 {
-    m_proxy_model->setShowMyMasternodesOnly(state == Qt::Checked);
+    m_proxy_model->setShowOwnedOnly(state == Qt::Checked);
     if (state == Qt::Checked) {
         updateMyMasternodeHashes();
     } else {
