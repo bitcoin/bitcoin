@@ -131,9 +131,15 @@ uint64_t GetRdRand() noexcept
         __asm__ volatile (".byte 0x0f, 0xc7, 0xf0; setc %1" : "=a"(r1), "=q"(ok) :: "cc"); // rdrand %eax
         if (ok) break;
     }
+    if (!ok) {
+        RandFailure();
+    }
     for (int i = 0; i < 10; ++i) {
         __asm__ volatile (".byte 0x0f, 0xc7, 0xf0; setc %1" : "=a"(r2), "=q"(ok) :: "cc"); // rdrand %eax
         if (ok) break;
+    }
+    if (!ok) {
+        RandFailure();
     }
     return (((uint64_t)r2) << 32) | r1;
 #elif defined(__x86_64__) || defined(__amd64__)
@@ -142,6 +148,9 @@ uint64_t GetRdRand() noexcept
     for (int i = 0; i < 10; ++i) {
         __asm__ volatile (".byte 0x48, 0x0f, 0xc7, 0xf0; setc %1" : "=a"(r1), "=q"(ok) :: "cc"); // rdrand %rax
         if (ok) break;
+    }
+    if (!ok) {
+        RandFailure();
     }
     return r1;
 #else
