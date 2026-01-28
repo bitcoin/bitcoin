@@ -36,6 +36,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_approx,
     assert_equal,
+    assert_greater_than,
     assert_not_equal,
     assert_raises_rpc_error,
     ensure_for,
@@ -517,6 +518,28 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(utxo_info['txouts'], snapshot_num_coins)
         assert_equal(utxo_info['height'], SNAPSHOT_BASE_HEIGHT)
         assert_equal(utxo_info['bestblock'], snapshot_hash)
+
+        self.log.info("Check that getblockchaininfo returns information about the background validation process")
+        expected_keys = [
+            "snapshotheight",
+            "blocks",
+            "bestblockhash",
+            "mediantime",
+            "chainwork",
+            "verificationprogress"
+        ]
+        res = n1.getblockchaininfo()
+        assert "background" in res.keys()
+        assert_equal(sorted(expected_keys), sorted(res["background"].keys()))
+        assert_equal(res["background"]["snapshotheight"], SNAPSHOT_BASE_HEIGHT)
+        assert_equal(res["background"]["blocks"], START_HEIGHT)
+        assert_equal(res["background"]["bestblockhash"], n1.getblockhash(START_HEIGHT))
+        block = n1.getblockheader(res["background"]["bestblockhash"])
+        assert_equal(res["background"]["mediantime"], block["mediantime"])
+        assert_equal(res["background"]["chainwork"], block["chainwork"])
+        assert_greater_than(res["background"]["verificationprogress"], 0)
+        assert_greater_than(1, res["background"]["verificationprogress"])
+
 
         # find coinbase output at snapshot height on node0 and scan for it on node1,
         # where the block is not available, but the snapshot was loaded successfully

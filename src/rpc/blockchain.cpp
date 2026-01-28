@@ -1345,12 +1345,22 @@ RPCHelpMan getblockchaininfo()
                 {RPCResult::Type::NUM, "headers", "the current number of headers we have validated"},
                 {RPCResult::Type::STR, "bestblockhash", "the hash of the currently best block"},
                 {RPCResult::Type::STR_HEX, "bits", "nBits: compact representation of the block difficulty target"},
-                {RPCResult::Type::STR_HEX, "target", "The difficulty target"},
+                {RPCResult::Type::STR_HEX, "target", "the difficulty target"},
                 {RPCResult::Type::NUM, "difficulty", "the current difficulty"},
-                {RPCResult::Type::NUM_TIME, "time", "The block time expressed in " + UNIX_EPOCH_TIME},
-                {RPCResult::Type::NUM_TIME, "mediantime", "The median block time expressed in " + UNIX_EPOCH_TIME},
+                {RPCResult::Type::NUM_TIME, "time", "the block time expressed in " + UNIX_EPOCH_TIME},
+                {RPCResult::Type::NUM_TIME, "mediantime", "the median block time expressed in " + UNIX_EPOCH_TIME},
                 {RPCResult::Type::NUM, "verificationprogress", "estimate of verification progress [0..1]"},
                 {RPCResult::Type::BOOL, "initialblockdownload", "(debug information) estimate of whether this node is in Initial Block Download mode"},
+                {RPCResult::Type::BOOL, "backgroundvalidation", "(debug information) whether this node is doing background validation"},
+                {RPCResult::Type::OBJ, "background", /*optional=*/true, "state info regarding background validation process",
+                {
+                    {RPCResult::Type::NUM, "snapshotheight", /*optional=*/true, "the height of the snapshot block"},
+                    {RPCResult::Type::NUM, "blocks", /*optional=*/true, "the height of the most-work fully-background validated chain. The genesis block has height 0"},
+                    {RPCResult::Type::STR, "bestblockhash", /*optional=*/true, "the hash of the currently best block validated in background"},
+                    {RPCResult::Type::NUM_TIME, "mediantime", /*optional=*/true, "the median block time expressed in " + UNIX_EPOCH_TIME},
+                    {RPCResult::Type::NUM, "verificationprogress", /*optional=*/true, "estimate of background validation progress [0..1]"},
+                    {RPCResult::Type::STR_HEX, "chainwork", /*optional=*/true, "total amount of work in background validated chain, in hexadecimal"},
+                }},
                 {RPCResult::Type::STR_HEX, "chainwork", "total amount of work in active chain, in hexadecimal"},
                 {RPCResult::Type::NUM, "size_on_disk", "the estimated size of the block and undo files on disk"},
                 {RPCResult::Type::BOOL, "pruned", "if the blocks are subject to pruning"},
@@ -1391,6 +1401,21 @@ RPCHelpMan getblockchaininfo()
     obj.pushKV("mediantime", tip.GetMedianTimePast());
     obj.pushKV("verificationprogress", chainman.GuessVerificationProgress(&tip));
     obj.pushKV("initialblockdownload", chainman.IsInitialBlockDownload());
+    auto historical_blocks{chainman.GetHistoricalBlockRange()};
+    bool background_sync = historical_blocks.has_value();
+    obj.pushKV("backgroundvalidation", background_sync);
+    if (historical_blocks) {
+        UniValue bValidation(UniValue::VOBJ);
+        const CBlockIndex& btip{*CHECK_NONFATAL(historical_blocks->first)};
+        const std::optional<int> bHeight{active_chainstate.SnapshotBase()->nHeight};
+        if (bHeight) bValidation.pushKV("snapshotheight", *bHeight);
+        bValidation.pushKV("blocks", btip.nHeight);
+        bValidation.pushKV("bestblockhash", btip.GetBlockHash().GetHex());
+        bValidation.pushKV("mediantime", btip.GetMedianTimePast());
+        bValidation.pushKV("chainwork", btip.nChainWork.GetHex());
+        bValidation.pushKV("verificationprogress", chainman.GetBackgroundVerificationProgress(btip));
+        obj.pushKV("background", std::move(bValidation));
+    }
     obj.pushKV("chainwork", tip.nChainWork.GetHex());
     obj.pushKV("size_on_disk", chainman.m_blockman.CalculateCurrentUsage());
     obj.pushKV("pruned", chainman.m_blockman.IsPruneMode());
