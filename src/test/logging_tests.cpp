@@ -303,7 +303,7 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
     // Removed categories (like "libevent") should not store a category-specific level
     {
         ResetLogger();
-        BOOST_CHECK(LogInstance().SetCategoryLogLevel(/*category_str=*/"libevent", /*level_str=*/"trace"));
+        BOOST_CHECK(LogInstance().SetCategoryLogLevel("libevent", BCLog::Level::Trace));
         BOOST_CHECK_EQUAL(LogInstance().GetCategoryMask(), BCLog::LogFlags::NONE);
         BOOST_CHECK_EQUAL(LogInstance().GetCategoryTraceMask(), BCLog::LogFlags::NONE);
     }

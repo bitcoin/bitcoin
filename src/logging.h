@@ -244,6 +244,7 @@ namespace BCLog {
         void ShrinkDebugFile() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         void SetCategoryLogLevel(LogFlags flag, Level level);
+        bool SetCategoryLogLevel(std::string_view flag, Level level);
         bool SetCategoryLogLevel(std::string_view category_str, std::string_view level_str) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         CategoryMask GetCategoryMask() const { return m_categories.load(); }
@@ -254,11 +255,8 @@ namespace BCLog {
         }
 
         void EnableCategory(LogFlags flag) { SetCategoryLogLevel(flag, Level::Debug); }
-        bool EnableCategory(std::string_view str);
         void TraceCategory(LogFlags flag) { SetCategoryLogLevel(flag, Level::Trace); }
-        bool TraceCategory(std::string_view str);
         void DisableCategory(LogFlags flag) { SetCategoryLogLevel(flag, Level::Info); }
-        bool DisableCategory(std::string_view str);
 
         bool WillLogCategory(LogFlags category) const { return WillLogCategoryLevel(category, BCLog::Level::Debug); }
         bool WillLogCategoryLevel(LogFlags category, Level level) const
