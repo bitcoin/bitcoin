@@ -10,7 +10,7 @@ This guide describes how to build bitcoind, command-line utilities, and GUI on O
 Run the following as root to install the base dependencies for building.
 
 ```bash
-pkg_add git cmake boost libevent
+pkg_add git cmake boost
 ```
 
 SQLite is required for the wallet:

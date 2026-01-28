@@ -19,3 +19,9 @@ bool CaseInsensitiveEqual(const std::string& s1, const std::string& s2)
     }
     return true;
 }
+
+std::vector<std::byte> StringToBuffer(const std::string& str)
+{
+    auto span = std::as_bytes(std::span(str));
+    return {span.begin(), span.end()};
+}
