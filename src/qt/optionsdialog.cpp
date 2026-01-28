@@ -287,13 +287,8 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->thirdPartyTxUrls, &QLineEdit::textChanged, [this]{ showRestartWarning(); });
 
     connect(ui->coinJoinEnabled, &QCheckBox::clicked, [this](bool fChecked) {
-#ifdef ENABLE_WALLET
-        model->node().coinJoinOptions().setEnabled(fChecked);
-#endif
+        model->setOption(OptionsModel::CoinJoinEnabled, fChecked);
         updateCoinJoinVisibility();
-        if (this->model != nullptr) {
-            this->model->emitCoinJoinEnabledChanged();
-        }
         updateWidth();
     });
 

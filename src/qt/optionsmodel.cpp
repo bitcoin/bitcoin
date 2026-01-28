@@ -855,6 +855,7 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         break;
     case CoinJoinEnabled:
         if (changed()) {
+            node().coinJoinOptions().setEnabled(value.toBool());
             update(value.toBool());
             Q_EMIT coinJoinEnabledChanged();
         }
@@ -1043,11 +1044,6 @@ void OptionsModel::setDisplayUnit(const QVariant& new_unit)
     QSettings settings;
     settings.setValue("DisplayDashUnit", QVariant::fromValue(m_display_bitcoin_unit));
     Q_EMIT displayUnitChanged(m_display_bitcoin_unit);
-}
-
-void OptionsModel::emitCoinJoinEnabledChanged()
-{
-    Q_EMIT coinJoinEnabledChanged();
 }
 
 void OptionsModel::setRestartRequired(bool fRequired)

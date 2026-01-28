@@ -132,7 +132,6 @@ public:
     bool getShowAdvancedCJUI() { return fShowAdvancedCJUI; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
     bool isOptionOverridden(const QString& option) const { return strOverriddenByCommandLine.contains(option); }
-    void emitCoinJoinEnabledChanged();
 
     /* Explicit setters */
     void SetPruneTargetGB(int prune_target_gb);
