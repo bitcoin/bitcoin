@@ -260,10 +260,6 @@ namespace BCLog {
             m_trace_categories = tracemask;
         }
 
-        void EnableCategory(LogFlags flag) { SetCategoryLogLevel(flag, Level::Debug); }
-        void TraceCategory(LogFlags flag) { SetCategoryLogLevel(flag, Level::Trace); }
-        void DisableCategory(LogFlags flag) { SetCategoryLogLevel(flag, Level::Info); }
-
         bool WillLogCategory(LogFlags category) const { return WillLogCategoryLevel(category, BCLog::Level::Debug); }
         bool WillLogCategoryLevel(LogFlags category, Level level) const
         {

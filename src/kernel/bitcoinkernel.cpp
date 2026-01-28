@@ -773,12 +773,12 @@ void btck_logging_set_level_category(btck_LogCategory category, btck_LogLevel le
 
 void btck_logging_enable_category(btck_LogCategory category)
 {
-    LogInstance().EnableCategory(get_bclog_flag(category));
+    LogInstance().SetCategoryLogLevel(get_bclog_flag(category), BCLog::Level::Debug);
 }
 
 void btck_logging_disable_category(btck_LogCategory category)
 {
-    LogInstance().DisableCategory(get_bclog_flag(category));
+    LogInstance().SetCategoryLogLevel(get_bclog_flag(category), BCLog::Level::Info);
 }
 
 void btck_logging_disable()

@@ -30,7 +30,7 @@ public:
           m_prev_log_trace_mask{LogInstance().GetCategoryTraceMask()},
           m_create_sock_orig{CreateSock}
     {
-        LogInstance().TraceCategory(BCLog::LogFlags::ALL);
+        LogInstance().SetCategoryLogLevel(BCLog::LogFlags::ALL, BCLog::Level::Trace);
     }
 
     ~EnvTestingSetup()
