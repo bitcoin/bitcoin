@@ -1769,6 +1769,20 @@ BITCOINKERNEL_API uint32_t BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_header_ge
     const btck_BlockHeader* header) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
+ * @brief Serializes the btck_BlockHeader through the passed in callback to bytes.
+ *
+ * @param[in] header    Non-null.
+ * @param[in] writer    Non-null, callback to a write bytes function.
+ * @param[in] user_data Holds a user-defined opaque structure that will be
+ *                      passed back through the writer callback.
+ * @return              0 on success.
+ */
+BITCOINKERNEL_API int btck_block_header_to_bytes(
+    const btck_BlockHeader* header,
+    btck_WriteBytes writer,
+    void* user_data) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
+/**
  * Destroy the btck_BlockHeader.
  */
 BITCOINKERNEL_API void btck_block_header_destroy(btck_BlockHeader* header);
