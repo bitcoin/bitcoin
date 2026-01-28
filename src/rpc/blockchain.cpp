@@ -1342,7 +1342,7 @@ RPCHelpMan getblockchaininfo()
             {
                 {RPCResult::Type::STR, "chain", "current network name (" LIST_CHAIN_NAMES ")"},
                 {RPCResult::Type::NUM, "blocks", "the height of the most-work fully-validated chain. The genesis block has height 0"},
-                {RPCResult::Type::NUM, "headers", "the current number of headers we have validated"},
+                {RPCResult::Type::NUM, "headers", "height of the best known header"},
                 {RPCResult::Type::STR, "bestblockhash", "the hash of the currently best block"},
                 {RPCResult::Type::STR_HEX, "bits", "nBits: compact representation of the block difficulty target"},
                 {RPCResult::Type::STR_HEX, "target", "The difficulty target"},
