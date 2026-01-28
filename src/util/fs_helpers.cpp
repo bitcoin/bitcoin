@@ -8,6 +8,7 @@
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <logging.h>
+#include <random.h>
 #include <sync.h>
 #include <util/fs.h>
 #include <util/syserror.h>
@@ -302,6 +303,29 @@ std::optional<fs::perms> InterpretPermString(const std::string& s)
     } else {
         return std::nullopt;
     }
+}
+
+bool IsDirWritable(const fs::path& dir_path)
+{
+    // Attempt to create a tmp file in the directory
+    if (!fs::is_directory(dir_path)) throw std::runtime_error(strprintf("Path %s is not a directory", fs::PathToString(dir_path)));
+    FastRandomContext rng;
+    const auto tmp = dir_path / fs::PathFromString(strprintf(".tmp_%d", rng.rand64()));
+
+    const char* mode;
+#ifdef __MINGW64__
+    mode = "w"; // Temporary workaround for https://github.com/bitcoin/bitcoin/issues/30210
+#else
+    mode = "wx";
+#endif
+
+    if (const auto created{fsbridge::fopen(tmp, mode)}) {
+        std::fclose(created);
+        std::error_code ec;
+        fs::remove(tmp, ec); // clean up, ignore errors
+        return true;
+    }
+    return false;
 }
 
 #ifdef __APPLE__
