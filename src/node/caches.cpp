@@ -19,11 +19,11 @@
 // Unlike for the UTXO database, for the txindex scenario the leveldb cache make
 // a meaningful difference: https://github.com/bitcoin/bitcoin/pull/8273#issuecomment-229601991
 //! Max memory allocated to tx index DB specific cache in bytes.
-static constexpr size_t MAX_TX_INDEX_CACHE{1024_MiB};
+static constexpr size_t MAX_TX_INDEX_CACHE{1_GiB};
 //! Max memory allocated to all block filter index caches combined in bytes.
-static constexpr size_t MAX_FILTER_INDEX_CACHE{1024_MiB};
+static constexpr size_t MAX_FILTER_INDEX_CACHE{1_GiB};
 //! Maximum dbcache size on 32-bit systems.
-static constexpr size_t MAX_32BIT_DBCACHE{1024_MiB};
+static constexpr size_t MAX_32BIT_DBCACHE{1_GiB};
 
 namespace node {
 size_t CalculateDbCacheBytes(const ArgsManager& args)
