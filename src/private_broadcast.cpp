@@ -104,6 +104,31 @@ std::vector<CTransactionRef> PrivateBroadcast::GetStale() const
     return stale;
 }
 
+std::vector<PrivateBroadcast::TxBroadcastInfo> PrivateBroadcast::GetBroadcastInfo() const
+    EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+{
+    LOCK(m_mutex);
+    std::vector<TxBroadcastInfo> entries;
+    entries.reserve(m_transactions.size());
+
+    for (const auto& [tx, sent_to] : m_transactions) {
+        TxBroadcastInfo info;
+        info.tx = tx;
+        const Priority p{DerivePriority(sent_to)};
+        info.num_sent = p.num_picked;
+        if (p.num_picked > 0) info.last_sent = p.last_picked;
+        info.num_peer_reception_acks = p.num_confirmed;
+        if (p.num_confirmed > 0) info.last_peer_reception_ack = p.last_confirmed;
+        entries.push_back(std::move(info));
+    }
+
+    // Ensure stable output order (m_transactions is an unordered_map).
+    std::sort(entries.begin(), entries.end(), [](const TxBroadcastInfo& a, const TxBroadcastInfo& b) {
+        return std::tie(a.tx->GetHash(), a.tx->GetWitnessHash()) < std::tie(b.tx->GetHash(), b.tx->GetWitnessHash());
+    });
+    return entries;
+}
+
 PrivateBroadcast::Priority PrivateBroadcast::DerivePriority(const std::vector<SendStatus>& sent_to)
 {
     Priority p;

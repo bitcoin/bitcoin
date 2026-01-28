@@ -8,6 +8,7 @@ Test how locally submitted transactions are sent to the network when private bro
 
 import time
 import threading
+import os
 
 from test_framework.p2p import (
     P2PDataStore,
@@ -417,6 +418,35 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         self.log.info("  - sent sibling1: ok")
         tx_originator.sendrawtransaction(hexstring=sibling2.serialize_with_witness().hex(), maxfeerate=0.1)
         self.log.info("  - sent sibling2: ok")
+
+        self.log.info("Testing privatebroadcast.dat persistence + rebroadcast after restart")
+        # Ensure there are no other pending private-broadcast transactions before persisting.
+        received_back_msgs = [
+            f"Received our privately broadcast transaction (txid={txs[1]['txid']})".encode(),
+            f"Received our privately broadcast transaction (txid={sibling1.txid_hex})".encode(),
+            f"Received our privately broadcast transaction (txid={sibling2.txid_hex})".encode(),
+        ]
+        with tx_originator.busy_wait_for_debug_log(expected_msgs=received_back_msgs):
+            tx_returner.send_without_ping(msg_tx(txs[1]["tx"]))
+            tx_returner.send_without_ping(msg_tx(sibling1))
+            tx_returner.send_without_ping(msg_tx(sibling2))
+
+        privatebroadcast_dat = os.path.join(tx_originator.chain_path, "privatebroadcast.dat")
+        assert not os.path.exists(privatebroadcast_dat)
+
+        tx_persist = wallet.create_self_transfer()
+        self.log.info(f"Created txid={tx_persist['txid']}: for persistence-rebroadcast test")
+        tx_originator.sendrawtransaction(hexstring=tx_persist['hex'], maxfeerate=0.1)
+
+        self.stop_node(0)
+        assert os.path.isfile(privatebroadcast_dat)
+        self.start_node(0)
+        self.wait_until(lambda: not os.path.exists(privatebroadcast_dat))
+
+        assert tx_persist["txid"] not in tx_originator.getrawmempool()
+        tx_originator.mockscheduler(5 * 60) # 5min
+        skip_destinations = len(self.destinations)
+        self.check_broadcasts("Persisted tx after restart", tx_persist, 1, skip_destinations)
 
         # Stop the SOCKS5 proxy server to avoid it being upset by the bitcoin
         # node disconnecting in the middle of the SOCKS5 handshake when we

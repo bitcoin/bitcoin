@@ -57,6 +57,7 @@
 #include <node/mempool_persist_args.h>
 #include <node/miner.h>
 #include <node/peerman_args.h>
+#include <node/private_broadcast_persist_args.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
 #include <policy/fees/block_policy_estimator_args.h>
@@ -320,6 +321,10 @@ void Shutdown(NodeContext& node)
     // the scheduler. After this point, SyncWithValidationInterfaceQueue() should not be called anymore
     // as this would prevent the shutdown from completing.
     if (node.scheduler) node.scheduler->stop();
+
+    if (node.peerman && node.args && node.args->GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)) {
+        node.peerman->DumpPrivateBroadcast(node::PrivateBroadcastPath(*node.args));
+    }
 
     // After the threads that potentially access these pointers have been stopped,
     // destruct and reset all to nullptr.
@@ -1996,6 +2001,16 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (auto* pool{chainman.ActiveChainstate().GetMempool()}) {
             LoadMempool(*pool, ShouldPersistMempool(args) ? MempoolPath(args) : fs::path{}, chainman.ActiveChainstate(), {});
             pool->SetLoadTried(!chainman.m_interrupt);
+        }
+
+        if (args.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST) && node.peerman) {
+            const fs::path path{node::PrivateBroadcastPath(args)};
+            node.peerman->LoadPrivateBroadcast(path);
+            std::error_code ec;
+            fs::remove(path, ec);
+            if (ec) {
+                LogWarning("Failed to remove private broadcast persistence file: %s\n", ec.message());
+            }
         }
     });
 
