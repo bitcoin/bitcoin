@@ -2356,15 +2356,6 @@ DBErrors CWallet::LoadWallet()
     Assert(m_spk_managers.empty());
     Assert(m_wallet_flags == 0);
     DBErrors nLoadWalletRet = WalletBatch(GetDatabase()).LoadWallet(this);
-    if (nLoadWalletRet == DBErrors::NEED_REWRITE)
-    {
-        if (GetDatabase().Rewrite())
-        {
-            for (const auto& spk_man_pair : m_spk_managers) {
-                spk_man_pair.second->RewriteDB();
-            }
-        }
-    }
 
     if (m_spk_managers.empty()) {
         assert(m_external_spk_managers.empty());
@@ -2941,11 +2932,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
             error = strprintf(_("Error loading %s: External signer wallet being loaded without external signer support compiled"), walletFile);
             return nullptr;
         }
-        else if (nLoadWalletRet == DBErrors::NEED_REWRITE)
-        {
-            error = strprintf(_("Wallet needed to be rewritten: restart %s to complete"), CLIENT_NAME);
-            return nullptr;
-        } else if (nLoadWalletRet == DBErrors::NEED_RESCAN) {
+        else if (nLoadWalletRet == DBErrors::NEED_RESCAN) {
             warnings.push_back(strprintf(_("Error reading %s! Transaction data may be missing or incorrect."
                                            " Rescanning wallet."), walletFile));
             rescan_required = true;
