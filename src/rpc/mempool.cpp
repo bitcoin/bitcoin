@@ -137,6 +137,143 @@ static RPCHelpMan sendrawtransaction()
     };
 }
 
+static RPCHelpMan getprivatebroadcastinfo()
+{
+    return RPCHelpMan{
+        "getprivatebroadcastinfo",
+        "Returns information about transactions that are currently being privately broadcast.\n",
+        {},
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::ARR, "transactions", "",
+                    {
+                        {RPCResult::Type::OBJ, "", "",
+                            {
+                                {RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
+                                {RPCResult::Type::STR_HEX, "wtxid", "The transaction witness hash in hex"},
+                                {RPCResult::Type::STR_HEX, "hex", "The serialized, hex-encoded transaction data"},
+                                {RPCResult::Type::ARR, "peers", "Per-peer send and acknowledgment information for this transaction",
+                                    {
+                                        {RPCResult::Type::OBJ, "", "",
+                                            {
+                                                {RPCResult::Type::STR, "address", "The address of the peer to which the transaction was sent"},
+                                                {RPCResult::Type::NUM_TIME, "sent", "The time this transaction was picked for sending to this peer via private broadcast (seconds since epoch)"},
+                                                {RPCResult::Type::NUM_TIME, "received", /*optional=*/true, "The time this peer acknowledged reception of the transaction (seconds since epoch)"},
+                                            }},
+                                    }},
+                                {RPCResult::Type::OBJ, "final_state", /*optional=*/true,
+                                    "The final state of the transaction if private broadcasting has stopped. Note: a transaction with an aborted final state may be updated to received at a later time if the node receives the transaction.",
+                                    {
+                                        {RPCResult::Type::NUM_TIME, "time", "The time private broadcasting for this transaction stopped (seconds since epoch)"},
+                                        {RPCResult::Type::STR, "received_from", /*optional=*/true, "The address of the peer from which the transaction was received back from the network"},
+                                        {RPCResult::Type::STR, "aborted", /*optional=*/true, "A message describing why private broadcasting was aborted"},
+                                    }},
+                            }},
+                    }},
+            }},
+        RPCExamples{
+            HelpExampleCli("getprivatebroadcastinfo", "")
+            + HelpExampleRpc("getprivatebroadcastinfo", "")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            const NodeContext& node{EnsureAnyNodeContext(request.context)};
+            const PeerManager& peerman{EnsurePeerman(node)};
+            const auto txs{peerman.GetPrivateBroadcastInfo()};
+
+            UniValue transactions(UniValue::VARR);
+            for (const auto& tx_info : txs) {
+                UniValue o(UniValue::VOBJ);
+                o.pushKV("txid", tx_info.tx->GetHash().ToString());
+                o.pushKV("wtxid", tx_info.tx->GetWitnessHash().ToString());
+                o.pushKV("hex", EncodeHexTx(*tx_info.tx));
+                UniValue peers(UniValue::VARR);
+                for (const auto& peer : tx_info.peers) {
+                    UniValue p(UniValue::VOBJ);
+                    p.pushKV("address", peer.address.ToStringAddrPort());
+                    p.pushKV("sent", TicksSinceEpoch<std::chrono::seconds>(peer.sent));
+                    if (peer.received.has_value()) {
+                        p.pushKV("received", TicksSinceEpoch<std::chrono::seconds>(*peer.received));
+                    }
+                    peers.push_back(std::move(p));
+                }
+                o.pushKV("peers", std::move(peers));
+                if (const auto final_state{tx_info.final_state}) {
+                    UniValue s(UniValue::VOBJ);
+                    s.pushKV("time", TicksSinceEpoch<std::chrono::seconds>(final_state->time));
+                    if (final_state->result.has_value()) {
+                        s.pushKV("received_from", final_state->result.value().ToStringAddrPort());
+                    } else {
+                        s.pushKV("aborted", final_state->result.error());
+                    }
+                    o.pushKV("final_state", std::move(s));
+                }
+                transactions.push_back(std::move(o));
+            }
+
+            UniValue ret(UniValue::VOBJ);
+            ret.pushKV("transactions", std::move(transactions));
+            return ret;
+        },
+    };
+}
+
+static RPCHelpMan abortprivatebroadcast()
+{
+    return RPCHelpMan{
+        "abortprivatebroadcast",
+        "Abort private broadcast attempts for a transaction currently being privately broadcast.\n"
+        "The transaction will be removed from the private broadcast queue.\n",
+        {
+            {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A transaction identifier to abort. It will be matched against both txid and wtxid for all transactions in the private broadcast queue.\n"
+                                                                "If the provided id matches a txid that corresponds to multiple transactions with different wtxids, multiple transactions will be removed and returned."},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::ARR, "removed_transactions", "Transactions removed from the private broadcast queue",
+                    {
+                        {RPCResult::Type::OBJ, "", "",
+                            {
+                                {RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
+                                {RPCResult::Type::STR_HEX, "wtxid", "The transaction witness hash in hex"},
+                                {RPCResult::Type::STR_HEX, "hex", "The serialized, hex-encoded transaction data"},
+                            }},
+                    }},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("abortprivatebroadcast", "\"id\"")
+            + HelpExampleRpc("abortprivatebroadcast", "\"id\"")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            const uint256 id{ParseHashV(self.Arg<UniValue>("id"), "id")};
+
+            const NodeContext& node{EnsureAnyNodeContext(request.context)};
+            PeerManager& peerman{EnsurePeerman(node)};
+
+            const auto removed_txs{peerman.AbortPrivateBroadcast(id)};
+            if (removed_txs.empty()) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in private broadcast queue. Check getprivatebroadcastinfo.");
+            }
+
+            UniValue removed_transactions(UniValue::VARR);
+            for (const auto& tx : removed_txs) {
+                UniValue o(UniValue::VOBJ);
+                o.pushKV("txid", tx->GetHash().ToString());
+                o.pushKV("wtxid", tx->GetWitnessHash().ToString());
+                o.pushKV("hex", EncodeHexTx(*tx));
+                removed_transactions.push_back(std::move(o));
+            }
+            UniValue ret(UniValue::VOBJ);
+            ret.pushKV("removed_transactions", std::move(removed_transactions));
+            return ret;
+        },
+    };
+}
+
 static RPCHelpMan testmempoolaccept()
 {
     return RPCHelpMan{
@@ -1329,6 +1466,8 @@ void RegisterMempoolRPCCommands(CRPCTable& t)
 {
     static const CRPCCommand commands[]{
         {"rawtransactions", &sendrawtransaction},
+        {"rawtransactions", &getprivatebroadcastinfo},
+        {"rawtransactions", &abortprivatebroadcast},
         {"rawtransactions", &testmempoolaccept},
         {"blockchain", &getmempoolancestors},
         {"blockchain", &getmempooldescendants},

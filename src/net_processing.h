@@ -9,8 +9,10 @@
 #include <consensus/amount.h>
 #include <net.h>
 #include <node/txorphanage.h>
+#include <private_broadcast.h>
 #include <protocol.h>
 #include <threadsafety.h>
+#include <uint256.h>
 #include <util/expected.h>
 #include <validationinterface.h>
 
@@ -117,6 +119,21 @@ public:
 
     /** Get peer manager info. */
     virtual PeerManagerInfo GetInfo() const = 0;
+
+    /** Get info about transactions currently being privately broadcast. */
+    virtual std::vector<PrivateBroadcast::TxBroadcastInfo> GetPrivateBroadcastInfo() const = 0;
+
+    /**
+     * Abort private broadcast attempts for transactions currently being privately broadcast.
+     *
+     * @param[in] id A transaction identifier. It will be matched against both txid and wtxid for
+     *               all transactions in the private broadcast queue.
+     *
+     * @return Transactions removed from the private broadcast queue. If the provided id matches a
+     *         txid that corresponds to multiple transactions with different wtxids, multiple
+     *         transactions may be returned.
+     */
+    virtual std::vector<CTransactionRef> AbortPrivateBroadcast(const uint256& id) = 0;
 
     /**
      * Initiate a transaction broadcast to eligible peers.
