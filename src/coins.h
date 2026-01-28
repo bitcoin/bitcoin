@@ -303,6 +303,11 @@ public:
     //! Retrieve the Coin (unspent transaction output) for a given outpoint.
     virtual std::optional<Coin> GetCoin(const COutPoint& outpoint) const;
 
+    //! Retrieve the Coin (unspent transaction output) for a given outpoint, without caching results.
+    //!
+    //! Unlike CCoinsViewCache::GetCoin(), this method does not populate intermediate CCoinsViewCache layers.
+    virtual std::optional<Coin> PeekCoin(const COutPoint& outpoint) const;
+
     //! Just check whether a given outpoint is unspent.
     virtual bool HaveCoin(const COutPoint &outpoint) const;
 
@@ -339,10 +344,11 @@ protected:
 public:
     CCoinsViewBacked(CCoinsView *viewIn);
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
+    std::optional<Coin> PeekCoin(const COutPoint& outpoint) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     std::vector<uint256> GetHeadBlocks() const override;
-    void SetBackend(CCoinsView &viewIn);
+    virtual void SetBackend(CCoinsView &viewIn);
     void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override;
     size_t EstimateSize() const override;
@@ -369,6 +375,8 @@ protected:
     /* Cached dynamic memory usage for the inner Coin objects. */
     mutable size_t cachedCoinsUsage{0};
 
+    /* Get the coin from base. Used for cache misses in FetchCoin. */
+    virtual std::optional<Coin> GetCoinFromBase(const COutPoint& outpoint) const;
 public:
     CCoinsViewCache(CCoinsView *baseIn, bool deterministic = false);
 
@@ -379,6 +387,7 @@ public:
 
     // Standard CCoinsView methods
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
+    std::optional<Coin> PeekCoin(const COutPoint& outpoint) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     void SetBestBlock(const uint256 &hashBlock);
@@ -435,7 +444,7 @@ public:
      * If will_reuse_cache is false, the cache will retain the same memory footprint
      * after flushing and should be destroyed to deallocate.
      */
-    void Flush(bool will_reuse_cache = true);
+    virtual void Flush(bool will_reuse_cache = true);
 
     /**
      * Push the modifications applied to this cache to its base while retaining
@@ -443,7 +452,10 @@ public:
      * Failure to call this method or Flush() before destruction will cause the changes
      * to be forgotten.
      */
-    void Sync();
+    virtual void Sync();
+
+    //! Wipe local state.
+    virtual void Reset() noexcept;
 
     /**
      * Removes the UTXO with the given outpoint from the cache, if it is
