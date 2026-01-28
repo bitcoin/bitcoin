@@ -1919,7 +1919,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // On first startup, warn on low block storage space
     if (!do_reindex && !do_reindex_chainstate && chain_active_height <= 1) {
-        uint64_t assumed_chain_bytes{chainparams.AssumedBlockchainSize() * 1024 * 1024 * 1024};
+        uint64_t assumed_chain_bytes{chainparams.AssumedBlockchainSize() * 1_GiB};
         uint64_t additional_bytes_needed{
             chainman.m_blockman.IsPruneMode() ?
                 std::min(chainman.m_blockman.GetPruneTarget(), assumed_chain_bytes) :

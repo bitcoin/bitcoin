@@ -90,7 +90,7 @@ using node::CBlockIndexWorkComparator;
 using node::SnapshotMetadata;
 
 /** Size threshold for warning about slow UTXO set flush to disk. */
-static constexpr size_t WARN_FLUSH_COINS_SIZE = 1 << 30; // 1 GiB
+static constexpr size_t WARN_FLUSH_COINS_SIZE{1_GiB};
 /** Time window to wait between writing blocks/block index and chainstate to disk.
  *  Randomize writing time inside the window to prevent a situation where the
  *  network over time settles into a few cohorts of synchronized writers.
@@ -2805,7 +2805,7 @@ bool Chainstate::FlushStateToDisk(
             }
 
             if (!CoinsTip().GetBestBlock().IsNull()) {
-                if (coins_mem_usage >= WARN_FLUSH_COINS_SIZE) LogWarning("Flushing large (%d GiB) UTXO set to disk, it may take several minutes", coins_mem_usage >> 30);
+                if (coins_mem_usage >= WARN_FLUSH_COINS_SIZE) LogWarning("Flushing large (%d GiB) UTXO set to disk, it may take several minutes", coins_mem_usage / 1_GiB);
                 LOG_TIME_MILLIS_WITH_CATEGORY(strprintf("write coins cache to disk (%d coins, %.2fKiB)",
                     coins_count, coins_mem_usage >> 10), BCLog::BENCH);
 
