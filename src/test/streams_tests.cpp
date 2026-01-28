@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     for (uint8_t j = 0; j < 40; ++j) {
         file << j;
     }
-    file.seek(0, SEEK_SET);
+    file.seek(0, SeekFrom::Set);
 
     // The buffer size (second arg) must be greater than the rewind
     // amount (third arg).
@@ -462,7 +462,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_skip)
     for (uint8_t j = 0; j < 40; ++j) {
         file << j;
     }
-    file.seek(0, SEEK_SET);
+    file.seek(0, SeekFrom::Set);
 
     // The buffer is 25 bytes, allow rewinding 10 bytes.
     BufferedFile bf{file, 25, 10};
@@ -515,7 +515,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
         for (uint8_t i = 0; i < fileSize; ++i) {
             file << i;
         }
-        file.seek(0, SEEK_SET);
+        file.seek(0, SeekFrom::Set);
 
         size_t bufSize = m_rng.randrange(300) + 1;
         size_t rewindSize = m_rng.randrange(bufSize);
@@ -797,14 +797,14 @@ BOOST_AUTO_TEST_CASE(size_preserves_position)
     // Test that usage of size() does not change the current position
     //
     // Case: Pos at beginning of the file
-    f.seek(0, SEEK_SET);
+    f.seek(0, SeekFrom::Set);
     (void)f.size();
     uint8_t first{};
     f >> first;
     BOOST_CHECK_EQUAL(first, 0);
 
     // Case: Pos at middle of the file
-    f.seek(0, SEEK_SET);
+    f.seek(0, SeekFrom::Set);
     // Move pos to middle
     f.ignore(4);
     (void)f.size();
@@ -814,7 +814,7 @@ BOOST_AUTO_TEST_CASE(size_preserves_position)
     BOOST_CHECK_EQUAL(middle, 4);
 
     // Case: Pos at EOF
-    f.seek(0, SEEK_END);
+    f.seek(0, SeekFrom::End);
     (void)f.size();
     uint8_t end{};
     BOOST_CHECK_EXCEPTION(f >> end, std::ios_base::failure, HasReason{"AutoFile::read: end of file"});
