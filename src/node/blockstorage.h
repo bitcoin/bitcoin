@@ -13,6 +13,7 @@
 #include <kernel/chainparams.h>
 #include <kernel/cs_main.h>
 #include <kernel/messagestartchars.h>
+#include <logging.h>
 #include <primitives/block.h>
 #include <serialize.h>
 #include <streams.h>
@@ -315,8 +316,9 @@ public:
     using Options = kernel::BlockManagerOpts;
     using ReadRawBlockResult = util::Expected<std::vector<std::byte>, ReadRawError>;
 
-    explicit BlockManager(const util::SignalInterrupt& interrupt, Options opts);
+    explicit BlockManager(BCLog::Logger& logger, const util::SignalInterrupt& interrupt, Options opts);
 
+    const BCLog::Context m_log;
     const util::SignalInterrupt& m_interrupt;
     std::atomic<bool> m_importing{false};
 

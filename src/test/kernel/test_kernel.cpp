@@ -619,20 +619,19 @@ BOOST_AUTO_TEST_CASE(logging_tests)
         .always_print_category_levels = true,
     };
 
-    logging_set_options(logging_options);
-    logging_set_level_category(LogCategory::BENCH, LogLevel::TRACE_LEVEL);
-    logging_disable_category(LogCategory::BENCH);
-    logging_enable_category(LogCategory::VALIDATION);
-    logging_disable_category(LogCategory::VALIDATION);
-
-    // Check that connecting, connecting another, and then disconnecting and connecting a logger again works.
-    {
-        logging_set_level_category(LogCategory::KERNEL, LogLevel::TRACE_LEVEL);
-        logging_enable_category(LogCategory::KERNEL);
-        Logger logger{std::make_unique<TestLog>()};
-        Logger logger_2{std::make_unique<TestLog>()};
-    }
     Logger logger{std::make_unique<TestLog>()};
+    logging_set_options(logger, logging_options);
+    logging_set_level_category(logger, LogCategory::BENCH, LogLevel::TRACE_LEVEL);
+    logging_disable_category(logger, LogCategory::BENCH);
+    logging_enable_category(logger, LogCategory::VALIDATION);
+    logging_disable_category(logger, LogCategory::VALIDATION);
+
+    // Check that setting options on a different logger works.
+    {
+        Logger logger_2{std::make_unique<TestLog>()};
+        logging_set_level_category(logger_2, LogCategory::KERNEL, LogLevel::TRACE_LEVEL);
+        logging_enable_category(logger_2, LogCategory::KERNEL);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(btck_context_tests)
@@ -694,6 +693,7 @@ BOOST_AUTO_TEST_CASE(btck_block_header_tests)
 
 BOOST_AUTO_TEST_CASE(btck_block)
 {
+    Logger logger{std::make_unique<TestLog>()};
     Block block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[0])};
     Block block_100{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[100])};
     CheckHandle(block, block_100);

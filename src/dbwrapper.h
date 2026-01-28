@@ -6,6 +6,7 @@
 #define BITCOIN_DBWRAPPER_H
 
 #include <attributes.h>
+#include <logging.h>
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
@@ -179,6 +180,9 @@ class CDBWrapper
 {
     friend const Obfuscation& dbwrapper_private::GetObfuscation(const CDBWrapper&);
 private:
+    //! log object
+    BCLog::Context m_log;
+
     //! holds all leveldb-specific fields of this class
     std::unique_ptr<LevelDBContext> m_db_context;
 
@@ -197,7 +201,7 @@ private:
     auto& DBContext() const LIFETIMEBOUND { return *Assert(m_db_context); }
 
 public:
-    CDBWrapper(const DBParams& params);
+    CDBWrapper(BCLog::Logger& logger, const DBParams& params);
     ~CDBWrapper();
 
     CDBWrapper(const CDBWrapper&) = delete;

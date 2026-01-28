@@ -174,7 +174,7 @@ static CTxMemPool::Options&& Flatten(CTxMemPool::Options&& opts, bilingual_str& 
 }
 
 CTxMemPool::CTxMemPool(Options opts, bilingual_str& error)
-    : m_opts{Flatten(std::move(opts), error)}
+    : m_opts{Flatten(std::move(opts), error)}, m_log{*Assert(m_opts.logger), BCLog::MEMPOOL}
 {
     m_txgraph = MakeTxGraph(m_opts.limits.cluster_count, m_opts.limits.cluster_size_vbytes * WITNESS_SCALE_FACTOR, ACCEPTABLE_ITERS);
 }
@@ -424,7 +424,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
 
     AssertLockHeld(::cs_main);
     LOCK(cs);
-    LogDebug(BCLog::MEMPOOL, "Checking mempool with %u transactions and %u inputs\n", (unsigned int)mapTx.size(), (unsigned int)mapNextTx.size());
+    LogDebug(m_log, "Checking mempool with %u transactions and %u inputs\n", (unsigned int)mapTx.size(), (unsigned int)mapNextTx.size());
 
     uint64_t checkTotal = 0;
     CAmount check_total_fee{0};
@@ -629,9 +629,9 @@ void CTxMemPool::PrioritiseTransaction(const Txid& hash, const CAmount& nFeeDelt
         }
         if (delta == 0) {
             mapDeltas.erase(hash);
-            LogInfo("PrioritiseTransaction: %s (%sin mempool) delta cleared\n", hash.ToString(), it == mapTx.end() ? "not " : "");
+            LogInfo(m_log, "PrioritiseTransaction: %s (%sin mempool) delta cleared\n", hash.ToString(), it == mapTx.end() ? "not " : "");
         } else {
-            LogInfo("PrioritiseTransaction: %s (%sin mempool) fee += %s, new delta=%s\n",
+            LogInfo(m_log, "PrioritiseTransaction: %s (%sin mempool) fee += %s, new delta=%s\n",
                       hash.ToString(),
                       it == mapTx.end() ? "not " : "",
                       FormatMoney(nFeeDelta),
@@ -772,7 +772,7 @@ void CTxMemPool::RemoveUnbroadcastTx(const Txid& txid, const bool unchecked) {
 
     if (m_unbroadcast_txids.erase(txid))
     {
-        LogDebug(BCLog::MEMPOOL, "Removed %i from set of unbroadcast txns%s\n", txid.GetHex(), (unchecked ? " before confirmation that txn was sent out" : ""));
+        LogDebug(m_log, "Removed %i from set of unbroadcast txns%s\n", txid.GetHex(), (unchecked ? " before confirmation that txn was sent out" : ""));
     }
 }
 
@@ -892,7 +892,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
     }
 
     if (maxFeeRateRemoved > CFeeRate(0)) {
-        LogDebug(BCLog::MEMPOOL, "Removed %u txn, rolling minimum fee bumped to %s\n", nTxnRemoved, maxFeeRateRemoved.ToString());
+        LogDebug(m_log, "Removed %u txn, rolling minimum fee bumped to %s\n", nTxnRemoved, maxFeeRateRemoved.ToString());
     }
 }
 
