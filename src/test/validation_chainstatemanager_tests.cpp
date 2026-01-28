@@ -18,6 +18,7 @@
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
 #include <uint256.h>
+#include <util/byte_units.h>
 #include <util/result.h>
 #include <util/vector.h>
 #include <validation.h>
@@ -72,10 +73,10 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager, TestChain100Setup)
     const uint256 snapshot_blockhash = active_tip->GetBlockHash();
     Chainstate& c2{WITH_LOCK(::cs_main, return manager.AddChainstate(std::make_unique<Chainstate>(nullptr, manager.m_blockman, manager, snapshot_blockhash)))};
     c2.InitCoinsDB(
-        /*cache_size_bytes=*/1 << 23, /*in_memory=*/true, /*should_wipe=*/false);
+        /*cache_size_bytes=*/8_MiB, /*in_memory=*/true, /*should_wipe=*/false);
     {
         LOCK(::cs_main);
-        c2.InitCoinsCache(1 << 23);
+        c2.InitCoinsCache(8_MiB);
         c2.CoinsTip().SetBestBlock(active_tip->GetBlockHash());
         for (const auto& cs : manager.m_chainstates) {
             cs->ClearBlockIndexCandidates();
@@ -133,7 +134,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
     chainstates.push_back(&c1);
     {
         LOCK(::cs_main);
-        c1.InitCoinsCache(1 << 23);
+        c1.InitCoinsCache(8_MiB);
         manager.MaybeRebalanceCaches();
     }
 
@@ -146,7 +147,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
     Chainstate& c2{WITH_LOCK(::cs_main, return manager.AddChainstate(std::make_unique<Chainstate>(nullptr, manager.m_blockman, manager, *snapshot_base->phashBlock)))};
     chainstates.push_back(&c2);
     c2.InitCoinsDB(
-        /*cache_size_bytes=*/1 << 23, /*in_memory=*/true, /*should_wipe=*/false);
+        /*cache_size_bytes=*/8_MiB, /*in_memory=*/true, /*should_wipe=*/false);
 
     // Reset IBD state so IsInitialBlockDownload() returns true and causes
     // MaybeRebalanceCaches() to prioritize the snapshot chainstate, giving it
@@ -159,7 +160,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
 
     {
         LOCK(::cs_main);
-        c2.InitCoinsCache(1 << 23);
+        c2.InitCoinsCache(8_MiB);
         manager.MaybeRebalanceCaches();
     }
 

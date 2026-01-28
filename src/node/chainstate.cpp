@@ -14,6 +14,7 @@
 #include <tinyformat.h>
 #include <txdb.h>
 #include <uint256.h>
+#include <util/byte_units.h>
 #include <util/fs.h>
 #include <util/log.h>
 #include <util/signalinterrupt.h>
@@ -163,7 +164,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
         LogInfo("Block pruning enabled. Use RPC call pruneblockchain(height) to manually prune block and undo files.");
     } else if (chainman.m_blockman.GetPruneTarget()) {
         LogInfo("Prune configured to target %u MiB on disk for block and undo files.",
-                chainman.m_blockman.GetPruneTarget() / 1024 / 1024);
+                chainman.m_blockman.GetPruneTarget() / 1_MiB);
     }
 
     LOCK(cs_main);
