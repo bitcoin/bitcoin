@@ -28,13 +28,32 @@
 #include <util/tokenpipe.h>
 #include <util/translation.h>
 
+#ifdef WIN32
+#include <debugapi.h>
+#include <windows.h>
+#elif defined(__APPLE__)
+#include <sys/sysctl.h>
+#elif defined(__linux__)
+#include <sys/prctl.h>
+#endif
+
 #include <any>
+#include <cstdlib>
+#include <fstream>
 #include <functional>
 #include <optional>
 
 using node::NodeContext;
 
 const TranslateFn G_TRANSLATION_FUN{nullptr};
+
+// Using the constexpr instead of the #define enables infrequently enabled code
+// further down to be regularly compiled.
+#ifdef ENABLE_WAIT_FOR_DEBUGGER
+constexpr bool WAIT_FOR_DEBUGGER_SUPPORT{true};
+#else
+constexpr bool WAIT_FOR_DEBUGGER_SUPPORT{false};
+#endif
 
 #if HAVE_DECL_FORK
 
@@ -164,6 +183,59 @@ static bool ProcessInitCommands(interfaces::Init& init, ArgsManager& args)
     return false;
 }
 
+[[maybe_unused]] static int WaitForDebugger()
+{
+    if constexpr (!WAIT_FOR_DEBUGGER_SUPPORT) {
+        return EXIT_SUCCESS;
+    }
+
+#if defined(__linux__)
+    // Allow any process to attach to us.
+    if (int ret{prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY)}; ret != EXIT_SUCCESS) {
+        fputs("Failed to automatically allow any process to attach.\n", stderr);
+    }
+#endif
+
+    while (true) {
+        bool attached{false};
+        // With C++26 we will get std::is_debugger_present(), but until then...
+#if defined(__linux__)
+        std::ifstream status{"/proc/self/status", std::ios::in};
+        if (!status.good()) {
+            fputs("Could not detect debugger, failed to read: /proc/self/status\n", stderr);
+            return EXIT_FAILURE;
+        }
+
+        for (std::string line; std::getline(status, line);) {
+            if (line.starts_with("TracerPid:")) {
+                attached = line.find_first_of("123456789") != std::string::npos;
+                break;
+            }
+        }
+#elif defined(__APPLE__)
+        std::array mib{CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid()};
+        kinfo_proc info{};
+        size_t info_size{sizeof(info)};
+        if (int ret{sysctl(/*name=*/mib.data(), /*namelen=*/mib.size(), /*oldp=*/&info, /*oldlenp=*/&info_size, /*newp=*/nullptr, /*newlen=*/0)};
+            ret != EXIT_SUCCESS) {
+            fputs("Could not detect debugger, sysctl() for fetching traced-status failed.\n", stderr);
+            return ret;
+        }
+        attached = info.kp_proc.p_flag & P_TRACED;
+#elif defined(WIN32)
+        attached = IsDebuggerPresent();
+#else
+        fputs("Platform doesn't implement ENABLE_WAIT_FOR_DEBUGGER/-waitfordebugger.\n", stderr);
+        return EXIT_FAILURE;
+#endif // platform
+        if (attached) {
+            return EXIT_SUCCESS;
+        }
+
+        std::this_thread::sleep_for(100ms);
+    }
+}
+
 static bool AppInit(NodeContext& node)
 {
     bool fRet = false;
@@ -259,6 +331,14 @@ static bool AppInit(NodeContext& node)
 
 MAIN_FUNCTION
 {
+    if constexpr (WAIT_FOR_DEBUGGER_SUPPORT) {
+        if (std::any_of(argv, argv + argc, [] (char* arg) { return strcmp(arg, "-waitfordebugger") == 0; })) {
+            if (int ret{WaitForDebugger()}; ret != EXIT_SUCCESS) {
+                return ret;
+            }
+        }
+    }
+
     NodeContext node;
     int exit_status;
     std::unique_ptr<interfaces::Init> init = interfaces::MakeNodeInit(node, argc, argv, exit_status);
