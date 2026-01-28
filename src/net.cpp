@@ -3409,7 +3409,7 @@ bool CConnman::Bind(const CService& addr_, unsigned int flags, NetPermissionFlag
     bilingual_str strError;
     if (!BindListenPort(addr, strError, permissions)) {
         if ((flags & BF_REPORT_ERROR) && m_client_interface) {
-            m_client_interface->ThreadSafeMessageBox(strError, "", CClientUIInterface::MSG_ERROR);
+            m_client_interface->ThreadSafeMessageBox(strError, CClientUIInterface::MSG_ERROR);
         }
         return false;
     }
@@ -3464,7 +3464,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         if (m_client_interface) {
             m_client_interface->ThreadSafeMessageBox(
                 _("Failed to listen on any port. Use -listen=0 if you want this."),
-                "", CClientUIInterface::MSG_ERROR);
+                CClientUIInterface::MSG_ERROR);
         }
         return false;
     }
@@ -3532,7 +3532,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         if (m_client_interface) {
             m_client_interface->ThreadSafeMessageBox(
                 _("Cannot provide specific connections and have addrman find outgoing connections at the same time."),
-                "", CClientUIInterface::MSG_ERROR);
+                CClientUIInterface::MSG_ERROR);
         }
         return false;
     }

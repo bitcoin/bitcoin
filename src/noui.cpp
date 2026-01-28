@@ -19,7 +19,7 @@ boost::signals2::connection noui_ThreadSafeMessageBoxConn;
 boost::signals2::connection noui_ThreadSafeQuestionConn;
 boost::signals2::connection noui_InitMessageConn;
 
-bool noui_ThreadSafeMessageBox(const bilingual_str& message, const std::string& caption, unsigned int style)
+bool noui_ThreadSafeMessageBox(const bilingual_str& message, unsigned int style)
 {
     bool fSecure = style & CClientUIInterface::SECURE;
     style &= ~CClientUIInterface::SECURE;
@@ -39,7 +39,6 @@ bool noui_ThreadSafeMessageBox(const bilingual_str& message, const std::string& 
         if (!fSecure) LogInfo("%s\n", message.original);
         break;
     default:
-        strCaption = caption + ": "; // Use supplied caption (can be empty)
         if (!fSecure) LogInfo("%s%s\n", strCaption, message.original);
     }
 
@@ -47,9 +46,9 @@ bool noui_ThreadSafeMessageBox(const bilingual_str& message, const std::string& 
     return false;
 }
 
-bool noui_ThreadSafeQuestion(const bilingual_str& /* ignored interactive message */, const std::string& message, const std::string& caption, unsigned int style)
+bool noui_ThreadSafeQuestion(const bilingual_str& /* ignored interactive message */, const std::string& message, unsigned int style)
 {
-    return noui_ThreadSafeMessageBox(Untranslated(message), caption, style);
+    return noui_ThreadSafeMessageBox(Untranslated(message), style);
 }
 
 void noui_InitMessage(const std::string& message)
@@ -64,15 +63,15 @@ void noui_connect()
     noui_InitMessageConn = uiInterface.InitMessage_connect(noui_InitMessage);
 }
 
-bool noui_ThreadSafeMessageBoxRedirect(const bilingual_str& message, const std::string& caption, unsigned int style)
+bool noui_ThreadSafeMessageBoxRedirect(const bilingual_str& message, unsigned int style)
 {
-    LogInfo("%s: %s", caption, message.original);
+    LogInfo("%s", message.original);
     return false;
 }
 
-bool noui_ThreadSafeQuestionRedirect(const bilingual_str& /* ignored interactive message */, const std::string& message, const std::string& caption, unsigned int style)
+bool noui_ThreadSafeQuestionRedirect(const bilingual_str& /* ignored interactive message */, const std::string& message, unsigned int style)
 {
-    LogInfo("%s: %s", caption, message);
+    LogInfo("%s", message);
     return false;
 }
 

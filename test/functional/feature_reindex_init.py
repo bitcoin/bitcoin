@@ -21,7 +21,7 @@ class ReindexInitTest(BitcoinTestFramework):
         self.log.info("Removing the block index leads to init error")
         shutil.rmtree(node.blocks_path / "index")
         node.assert_start_raises_init_error(
-            expected_msg=f": Error initializing block database.{os.linesep}"
+            expected_msg=f"Error initializing block database.{os.linesep}"
             "Please restart with -reindex or -reindex-chainstate to recover.",
         )
 
