@@ -37,6 +37,10 @@
 
 using util::ReplaceAll;
 
+namespace {
+    const auto g_startup_time{SteadyClock::now()};
+} // namespace
+
 #ifndef WIN32
 std::string ShellEscape(const std::string& arg)
 {
@@ -127,8 +131,4 @@ std::optional<size_t> GetTotalRAM()
     return std::nullopt;
 }
 
-SteadyClock::duration GetUptime()
-{
-    static const auto g_startup_time{SteadyClock::now()};
-    return SteadyClock::now() - g_startup_time;
-}
+SteadyClock::duration GetUptime() { return SteadyClock::now() - g_startup_time; }
