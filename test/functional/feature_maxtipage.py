@@ -27,6 +27,7 @@ class MaxTipAgeTest(BitcoinTestFramework):
         node_ibd = self.nodes[1]
 
         self.restart_node(1, [f'-maxtipage={maxtipage}'] if set_parameter else None)
+        self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 0)
         self.connect_nodes(0, 1)
         cur_time = int(time.time())
 

@@ -146,6 +146,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
 
     def checkpermission(self, args, expectedPermissions):
         self.restart_node(1, args)
+        self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 0)
         self.connect_nodes(0, 1)
         peerinfo = self.nodes[1].getpeerinfo()[0]
         assert_equal(len(expectedPermissions), len(peerinfo['permissions']))

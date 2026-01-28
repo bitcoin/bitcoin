@@ -1201,6 +1201,8 @@ class PSBTTest(BitcoinTestFramework):
 
         # Disable the wallet for node 2 since `descriptorprocesspsbt` does not use the wallet
         self.restart_node(2, extra_args=["-disablewallet"])
+        self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 1)
+        self.wait_until(lambda: len(self.nodes[1].getpeerinfo()) == 1)
         self.connect_nodes(0, 2)
         self.connect_nodes(1, 2)
 
