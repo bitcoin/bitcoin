@@ -155,8 +155,11 @@ static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& 
         return chain.Genesis();
     }
 
-    const CBlockIndex* pindex = chain.Next(pindex_prev);
-    if (pindex) {
+    if (pindex_prev == chain.Tip()) {
+        return nullptr;
+    }
+
+    if (const CBlockIndex* pindex = chain.Next(pindex_prev); pindex) {
         return pindex;
     }
 
