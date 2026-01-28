@@ -32,17 +32,23 @@
 class PrivateBroadcast
 {
 public:
+    struct FinalState {
+        util::Expected<CService, std::string> result;
+        NodeClock::time_point time;
+    };
+
     /**
      * Add a transaction to the storage.
      * @param[in] tx The transaction to add.
-     * @retval true The transaction was added.
-     * @retval false The transaction was already present.
+     * @retval true The transaction was added, or was previously stopped and is now scheduled again.
+     * @retval false The transaction was already present and pending.
      */
     bool Add(const CTransactionRef& tx)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
      * Stop broadcasting a transaction and mark as received back from the network.
+     * Updates a previously aborted transaction with the received_from address.
      *
      * @param[in] tx Transaction to stop broadcasting.
      * @param[in] received_from The peer address from which the transaction was received.
@@ -145,6 +151,11 @@ private:
         SendStatus(const NodeId& nodeid, const CService& address, const NodeClock::time_point& picked) : nodeid{nodeid}, address{address}, picked{picked} {}
     };
 
+    struct TxState {
+        std::optional<FinalState> final_state;
+        std::vector<SendStatus> sent_to;
+    };
+
     /// Cumulative stats from all the send attempts for a transaction. Used to prioritize transactions.
     struct Priority {
         size_t num_picked{0}; ///< Number of times the transaction was picked for sending.
@@ -199,7 +210,7 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
 
     mutable Mutex m_mutex;
-    std::unordered_map<CTransactionRef, std::vector<SendStatus>, CTransactionRefHash, CTransactionRefComp>
+    std::unordered_map<CTransactionRef, TxState, CTransactionRefHash, CTransactionRefComp>
         m_transactions GUARDED_BY(m_mutex);
 };
 
