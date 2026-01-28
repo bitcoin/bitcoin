@@ -110,6 +110,12 @@ MasternodeList::MasternodeList(QWidget* parent) :
     contextMenuDIP3->addAction(tr("Copy ProTx Hash"), this, &MasternodeList::copyProTxHash_clicked);
     contextMenuDIP3->addAction(tr("Copy Collateral Outpoint"), this, &MasternodeList::copyCollateralOutpoint_clicked);
 
+    QMenu* filterMenu = contextMenuDIP3->addMenu(tr("Filter by"));
+    filterMenu->addAction(tr("Collateral Address"), this, &MasternodeList::filterByCollateralAddress);
+    filterMenu->addAction(tr("Payout Address"), this, &MasternodeList::filterByPayoutAddress);
+    filterMenu->addAction(tr("Owner Address"), this, &MasternodeList::filterByOwnerAddress);
+    filterMenu->addAction(tr("Voting Address"), this, &MasternodeList::filterByVotingAddress);
+
     connect(ui->tableViewMasternodes, &QTableView::customContextMenuRequested, this, &MasternodeList::showContextMenuDIP3);
     connect(ui->tableViewMasternodes, &QTableView::doubleClicked, this, &MasternodeList::extraInfoDIP3_clicked);
     connect(m_proxy_model, &QSortFilterProxyModel::rowsInserted, this, &MasternodeList::updateFilteredCount);
@@ -380,4 +386,36 @@ void MasternodeList::copyCollateralOutpoint_clicked()
     }
 
     QApplication::clipboard()->setText(entry->collateralOutpoint());
+}
+
+void MasternodeList::filterByCollateralAddress()
+{
+    const auto* entry = GetSelectedEntry();
+    if (entry) {
+        ui->filterText->setText(entry->collateralAddress());
+    }
+}
+
+void MasternodeList::filterByPayoutAddress()
+{
+    const auto* entry = GetSelectedEntry();
+    if (entry) {
+        ui->filterText->setText(entry->payoutAddress());
+    }
+}
+
+void MasternodeList::filterByOwnerAddress()
+{
+    const auto* entry = GetSelectedEntry();
+    if (entry) {
+        ui->filterText->setText(entry->ownerAddress());
+    }
+}
+
+void MasternodeList::filterByVotingAddress()
+{
+    const auto* entry = GetSelectedEntry();
+    if (entry) {
+        ui->filterText->setText(entry->votingAddress());
+    }
 }

@@ -270,16 +270,8 @@ QVariant MasternodeModel::data(const QModelIndex& index, int role) const
             return QString::number(entry->lastPaidHeight());
         case Column::NEXT_PAYMENT:
             return entry->nextPaymentHeight() > 0 ? QString::number(entry->nextPaymentHeight()) : tr("UNKNOWN");
-        case Column::PAYOUT_ADDRESS:
-            return entry->payoutAddress();
         case Column::OPERATOR_REWARD:
             return entry->operatorReward();
-        case Column::COLLATERAL_ADDRESS:
-            return entry->collateralAddress();
-        case Column::OWNER_ADDRESS:
-            return entry->ownerAddress();
-        case Column::VOTING_ADDRESS:
-            return entry->votingAddress();
         case Column::PROTX_HASH:
             return entry->proTxHash();
         default:
@@ -302,16 +294,8 @@ QVariant MasternodeModel::data(const QModelIndex& index, int role) const
             return entry->lastPaidHeight();
         case Column::NEXT_PAYMENT:
             return entry->nextPaymentHeight();
-        case Column::PAYOUT_ADDRESS:
-            return entry->payoutAddress();
         case Column::OPERATOR_REWARD:
             return entry->operatorRewardPct();
-        case Column::COLLATERAL_ADDRESS:
-            return entry->collateralAddress();
-        case Column::OWNER_ADDRESS:
-            return entry->ownerAddress();
-        case Column::VOTING_ADDRESS:
-            return entry->votingAddress();
         case Column::PROTX_HASH:
             return entry->proTxHash();
         default:
@@ -342,16 +326,8 @@ QVariant MasternodeModel::headerData(int section, Qt::Orientation orientation, i
         return tr("Last Paid");
     case Column::NEXT_PAYMENT:
         return tr("Next Payment");
-    case Column::PAYOUT_ADDRESS:
-        return tr("Payout Address");
     case Column::OPERATOR_REWARD:
         return tr("Operator Reward");
-    case Column::COLLATERAL_ADDRESS:
-        return tr("Collateral Address");
-    case Column::OWNER_ADDRESS:
-        return tr("Owner Address");
-    case Column::VOTING_ADDRESS:
-        return tr("Voting Address");
     case Column::PROTX_HASH:
         return tr("ProTx Hash");
     default:
@@ -374,11 +350,7 @@ int MasternodeModel::columnWidth(int section)
         return 80;
     case Column::NEXT_PAYMENT:
         return 100;
-    case Column::PAYOUT_ADDRESS:
     case Column::OPERATOR_REWARD:
-    case Column::COLLATERAL_ADDRESS:
-    case Column::OWNER_ADDRESS:
-    case Column::VOTING_ADDRESS:
         return 130;
     case Column::PROTX_HASH:
     default:

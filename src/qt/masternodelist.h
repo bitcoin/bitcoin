@@ -100,6 +100,10 @@ private Q_SLOTS:
     void copyCollateralOutpoint_clicked();
     void copyProTxHash_clicked();
     void extraInfoDIP3_clicked();
+    void filterByCollateralAddress();
+    void filterByPayoutAddress();
+    void filterByOwnerAddress();
+    void filterByVotingAddress();
     void handleMasternodeListChanged();
     void on_checkBoxHideBanned_stateChanged(int state);
     void on_checkBoxOwned_stateChanged(int state);
