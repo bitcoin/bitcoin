@@ -5,6 +5,7 @@
 add_executable(bench_bitcoin
   bench_bitcoin.cpp
   bench.cpp
+  block_generator.cpp
   nanobench.cpp
 # Benchmarks:
   addrman.cpp
@@ -57,11 +58,6 @@ add_executable(bench_bitcoin
 )
 
 add_windows_application_manifest(bench_bitcoin)
-
-include(TargetDataSources)
-target_raw_data_sources(bench_bitcoin NAMESPACE benchmark::data
-  data/block413567.raw
-)
 
 target_link_libraries(bench_bitcoin
   core_interface

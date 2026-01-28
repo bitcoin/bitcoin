@@ -3,14 +3,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <bench/data/block413567.raw.h>
+#include <bench/block_generator.h>
 #include <chainparams.h>
 #include <common/args.h>
 #include <consensus/validation.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <serialize.h>
-#include <span.h>
 #include <streams.h>
 #include <util/chaintype.h>
 #include <validation.h>
@@ -18,7 +16,6 @@
 #include <cassert>
 #include <cstddef>
 #include <memory>
-#include <optional>
 #include <vector>
 
 // These are the two major time-sinks which happen after we have fully received
@@ -27,35 +24,32 @@
 
 static void DeserializeBlockTest(benchmark::Bench& bench)
 {
-    DataStream stream(benchmark::data::block413567);
+    auto stream{benchmark::GetBlockData()};
     std::byte a{0};
     stream.write({&a, 1}); // Prevent compaction
 
     bench.unit("block").run([&] {
         CBlock block;
         stream >> TX_WITH_WITNESS(block);
-        bool rewound = stream.Rewind(benchmark::data::block413567.size());
-        assert(rewound);
+        assert(stream.Rewind());
     });
 }
 
 static void DeserializeAndCheckBlockTest(benchmark::Bench& bench)
 {
-    DataStream stream(benchmark::data::block413567);
+    const auto& chain_params{CChainParams::RegTest(CChainParams::RegTestOptions{})};
+    auto stream{benchmark::GetBlockData(*chain_params)};
     std::byte a{0};
     stream.write({&a, 1}); // Prevent compaction
 
-    ArgsManager bench_args;
-    const auto chainParams = CreateChainParams(bench_args, ChainType::MAIN);
 
     bench.unit("block").run([&] {
         CBlock block; // Note that CBlock caches its checked state, so we need to recreate it here
         stream >> TX_WITH_WITNESS(block);
-        bool rewound = stream.Rewind(benchmark::data::block413567.size());
-        assert(rewound);
+        assert(stream.Rewind());
 
         BlockValidationState validationState;
-        bool checked = CheckBlock(block, validationState, chainParams->GetConsensus());
+        const bool checked{CheckBlock(block, validationState, chain_params->GetConsensus())};
         assert(checked);
     });
 }
