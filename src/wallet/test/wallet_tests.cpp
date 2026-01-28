@@ -307,7 +307,7 @@ void TestLoadWallet(const std::string& name, DatabaseFormat format, std::functio
     std::vector<bilingual_str> warnings;
     auto database{MakeWalletDatabase(name, options, status, error)};
     auto wallet{std::make_shared<CWallet>(chain.get(), "", std::move(database))};
-    BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::LOAD_OK);
+    BOOST_CHECK_EQUAL(wallet->PopulateWalletFromDB(error, warnings), DBErrors::LOAD_OK);
     WITH_LOCK(wallet->cs_wallet, f(wallet));
 }
 
@@ -560,7 +560,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_descriptor_test, BasicTestingSetup)
     BOOST_CHECK_EXCEPTION(vr >> w_desc, std::ios_base::failure, malformed_descriptor);
 }
 
-//! Test CWallet::Create() and its behavior handling potential race
+//! Test CWallet::CreateNew() and its behavior handling potential race
 //! conditions if it's called the same time an incoming transaction shows up in
 //! the mempool or a new block.
 //!
@@ -585,7 +585,7 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
     WalletContext context;
     context.args = &m_args;
     context.chain = m_node.chain.get();
-    auto wallet = TestLoadWallet(context);
+    auto wallet = TestCreateWallet(context);
     CKey key = GenerateRandomKey();
     AddKey(*wallet, key);
     TestUnloadWallet(std::move(wallet));
@@ -682,7 +682,7 @@ BOOST_FIXTURE_TEST_CASE(CreateWalletWithoutChain, BasicTestingSetup)
 {
     WalletContext context;
     context.args = &m_args;
-    auto wallet = TestLoadWallet(context);
+    auto wallet = TestCreateWallet(context);
     BOOST_CHECK(wallet);
     WaitForDeleteWallet(std::move(wallet));
 }
@@ -693,7 +693,7 @@ BOOST_FIXTURE_TEST_CASE(RemoveTxs, TestChain100Setup)
     WalletContext context;
     context.args = &m_args;
     context.chain = m_node.chain.get();
-    auto wallet = TestLoadWallet(context);
+    auto wallet = TestCreateWallet(context);
     CKey key = GenerateRandomKey();
     AddKey(*wallet, key);
 

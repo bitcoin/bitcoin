@@ -1175,7 +1175,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         return result;
 
     if (!has_last_client || last_client != CLIENT_VERSION) // Update
-        m_batch->Write(DBKeys::VERSION, CLIENT_VERSION);
+        this->WriteVersion(CLIENT_VERSION);
 
     if (any_unordered)
         result = pwallet->ReorderTransactions();

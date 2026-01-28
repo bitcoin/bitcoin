@@ -41,6 +41,8 @@ public:
 
 BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)
 {
+    bilingual_str _error;
+    std::vector<bilingual_str> _warnings;
     std::unique_ptr<WalletDatabase> database = CreateMockableWalletDatabase();
     {
         // Write unknown active descriptor
@@ -54,7 +56,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)
     {
         // Now try to load the wallet and verify the error.
         const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(database)));
-        BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::UNKNOWN_DESCRIPTOR);
+        BOOST_CHECK_EQUAL(wallet->PopulateWalletFromDB(_error, _warnings), DBErrors::UNKNOWN_DESCRIPTOR);
     }
 
     // Test 2
@@ -80,7 +82,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)
     {
         // Now try to load the wallet and verify the error.
         const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(database)));
-        BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::CORRUPT);
+        BOOST_CHECK_EQUAL(wallet->PopulateWalletFromDB(_error, _warnings), DBErrors::CORRUPT);
         BOOST_CHECK(found); // The error must be logged
     }
 }
