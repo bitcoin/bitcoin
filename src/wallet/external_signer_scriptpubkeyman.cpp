@@ -7,6 +7,7 @@
 #include <common/system.h>
 #include <external_signer.h>
 #include <node/types.h>
+#include <util/strencodings.h>
 #include <wallet/external_signer_scriptpubkeyman.h>
 
 #include <iostream>
@@ -107,4 +108,23 @@ std::optional<PSBTError> ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySigned
     if (finalize) FinalizePSBT(psbt); // This won't work in a multisig setup
     return {};
 }
+
+util::Result<std::string> ExternalSignerScriptPubKeyMan::RegisterPolicy(const ExternalSigner& signer,
+                                                                        const std::string& name,
+                                                                        const std::string& descriptor_template,
+                                                                        const std::vector<std::string>& keys_info) const
+{
+    const UniValue& result{signer.RegisterPolicy(name, descriptor_template, keys_info)};
+
+    const UniValue& error = result.find_value("error");
+    if (error.isStr()) return util::Error{strprintf(_("Signer returned error: %s"), error.getValStr())};
+
+    const UniValue& ret_hmac = result.find_value("hmac");
+    if (!ret_hmac.isStr()) return util::Error{_("Signer did not return hmac")};
+    const std::string hmac{ret_hmac.getValStr()};
+    if (!IsHex(hmac)) return util::Error{strprintf(_("Signer return invalid hmac: %s"), hmac)};
+
+    return util::Result<std::string>(hmac);
+}
+
 } // namespace wallet
