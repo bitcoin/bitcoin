@@ -680,18 +680,19 @@
 ["0 0x02 0x0000 0", "CHECKMULTISIGVERIFY 1", "", "OK"],
 
 ["While not really correctly DER encoded, the empty signature is allowed by"],
-["STRICTENC to provide a compact way to provide a deliberately invalid signature."],
+["STRICTENC/DERSIG to provide a compact way to provide a deliberately invalid signature."],
 ["0", "0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 CHECKSIG NOT", "STRICTENC", "OK"],
+["0", "0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 CHECKSIG NOT", "DERSIG", "OK"],
 ["0 0", "1 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 1 CHECKMULTISIG NOT", "STRICTENC", "OK"],
+["0 0", "1 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 1 CHECKMULTISIG NOT", "DERSIG", "OK"],
 
 ["CHECKMULTISIG evaluation order tests. CHECKMULTISIG evaluates signatures and"],
 ["pubkeys in a specific order, and will exit early if the number of signatures"],
-["left to check is greater than the number of keys left. As STRICTENC fails the"],
+["left to check is greater than the number of keys left. As STRICTENC/DERSIG fails the"],
 ["script when it reaches an invalidly encoded signature or pubkey, we can use it"],
 ["to test the exact order in which signatures and pubkeys are evaluated by"],
 ["distinguishing CHECKMULTISIG returning false on the stack and the script as a"],
 ["whole failing."],
-["See also the corresponding inverted versions of these tests in script_invalid.json"],
 [
     "0 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501",
     "2 0 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 2 CHECKMULTISIG NOT",
@@ -699,10 +700,16 @@
     "2-of-2 CHECKMULTISIG NOT with the second pubkey invalid, and both signatures validly encoded. Valid pubkey fails, and CHECKMULTISIG exits early, prior to evaluation of second invalid pubkey."
 ],
 [
-    "0 0 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501",
+    "0 1 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501",
     "2 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 2 CHECKMULTISIG NOT",
     "STRICTENC", "OK",
-    "2-of-2 CHECKMULTISIG NOT with both pubkeys valid, but second signature invalid. Valid pubkey fails, and CHECKMULTISIG exits early, prior to evaluation of second invalid signature."
+    "2-of-2 CHECKMULTISIG NOT with both pubkeys valid, but second signature invalid. Valid pubkey fails, and CHECKMULTISIG exits early, prior to evaluation of second invalid signature (STRICTENC enabled)."
+],
+[
+    "0 1 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501",
+    "2 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 2 CHECKMULTISIG NOT",
+    "DERSIG", "OK",
+    "2-of-2 CHECKMULTISIG NOT with both pubkeys valid, but second signature invalid. Valid pubkey fails, and CHECKMULTISIG exits early, prior to evaluation of second invalid signature (DERSIG enabled)."
 ],
 
 ["Increase test coverage for DERSIG"],
@@ -1232,7 +1239,7 @@
 
 
 ["Order of CHECKMULTISIG evaluation tests, inverted by swapping the order of"],
-["pubkeys/signatures so they fail due to the STRICTENC rules on validly encoded"],
+["pubkeys/signatures so they fail due to the STRICTENC/DERSIG rules on validly encoded"],
 ["signatures and pubkeys."],
 [
     "0 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501",
@@ -1246,14 +1253,28 @@
     "2 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 2 CHECKMULTISIG NOT",
     "STRICTENC",
     "SIG_DER",
-    "2-of-2 CHECKMULTISIG NOT with both pubkeys valid, but first signature invalid."
+    "2-of-2 CHECKMULTISIG NOT with both pubkeys valid, but first signature invalid (STRICTENC enabled)."
+],
+[
+    "0 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501 1",
+    "2 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 2 CHECKMULTISIG NOT",
+    "DERSIG",
+    "SIG_DER",
+    "2-of-2 CHECKMULTISIG NOT with both pubkeys valid, but first signature invalid (DERSIG enabled)."
 ],
 [
     "0 0x47 0x304402205451ce65ad844dbb978b8bdedf5082e33b43cae8279c30f2c74d9e9ee49a94f802203fe95a7ccf74da7a232ee523ef4a53cb4d14bdd16289680cdb97a63819b8f42f01 0x46 0x304402205451ce65ad844dbb978b8bdedf5082e33b43cae8279c30f2c74d9e9ee49a94f802203fe95a7ccf74da7a232ee523ef4a53cb4d14bdd16289680cdb97a63819b8f42f",
     "2 0x21 0x02a673638cb9587cb68ea08dbef685c6f2d2a751a8b3c6f2a7e9a4999e6e4bfaf5 0x21 0x02a673638cb9587cb68ea08dbef685c6f2d2a751a8b3c6f2a7e9a4999e6e4bfaf5 0x21 0x02a673638cb9587cb68ea08dbef685c6f2d2a751a8b3c6f2a7e9a4999e6e4bfaf5 3 CHECKMULTISIG",
     "P2SH,STRICTENC",
     "SIG_DER",
-    "2-of-3 with one valid and one invalid signature due to parse error, nSigs > validSigs"
+    "2-of-3 with one valid and one invalid signature due to parse error, nSigs > validSigs (STRICTENC enabled)."
+],
+[
+    "0 0x47 0x304402205451ce65ad844dbb978b8bdedf5082e33b43cae8279c30f2c74d9e9ee49a94f802203fe95a7ccf74da7a232ee523ef4a53cb4d14bdd16289680cdb97a63819b8f42f01 0x46 0x304402205451ce65ad844dbb978b8bdedf5082e33b43cae8279c30f2c74d9e9ee49a94f802203fe95a7ccf74da7a232ee523ef4a53cb4d14bdd16289680cdb97a63819b8f42f",
+    "2 0x21 0x02a673638cb9587cb68ea08dbef685c6f2d2a751a8b3c6f2a7e9a4999e6e4bfaf5 0x21 0x02a673638cb9587cb68ea08dbef685c6f2d2a751a8b3c6f2a7e9a4999e6e4bfaf5 0x21 0x02a673638cb9587cb68ea08dbef685c6f2d2a751a8b3c6f2a7e9a4999e6e4bfaf5 3 CHECKMULTISIG",
+    "P2SH,DERSIG",
+    "SIG_DER",
+    "2-of-3 with one valid and one invalid signature due to parse error, nSigs > validSigs (DERSIG enabled)."
 ],
 
 ["Increase DERSIG test coverage"],
