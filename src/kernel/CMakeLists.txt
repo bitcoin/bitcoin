@@ -55,6 +55,7 @@ add_library(bitcoinkernel
   ../signet.cpp
   ../streams.cpp
   ../support/lockedpool.cpp
+  ../swiftsync.cpp
   ../sync.cpp
   ../txdb.cpp
   ../txgraph.cpp

@@ -39,6 +39,7 @@
 #include <script/descriptor.h>
 #include <serialize.h>
 #include <streams.h>
+#include <swiftsync.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <txdb.h>
@@ -3392,6 +3393,124 @@ static RPCHelpMan loadtxoutset()
     };
 }
 
+static RPCHelpMan generatetxohints()
+{
+    return RPCHelpMan{
+        "generatetxohints",
+        "Build a file of hints for the state of the UTXO set at a particular height.\n"
+        "The purpose of said hints is to allow clients performing initial block download\n"
+        "to omit unnecessary disk I/O and CPU usage.\n"
+        "The hint file is constructed by reading in blocks sequentially and determining what outputs\n"
+        "will remain in the UTXO set. Network activity will be suspended during this process, and the\n"
+        "hint file may take a few hours to build."
+        "Make sure to use no RPC timeout (bitcoin-cli -rpcclienttimeout=0)",
+        {
+            {"path",
+                RPCArg::Type::STR,
+                RPCArg::Optional::NO,
+                "Path to the hint file. If relative, will be prefixed by datadir."},
+            {"rollback",
+                RPCArg::Type::NUM,
+                RPCArg::Optional::OMITTED,
+                "The block hash or height to build the hint file up to. If none is provided, the file will be built from the current block tip.",
+                RPCArgOptions{
+                    .skip_type_check = true,
+                    .type_str = {"", "string or numeric"},}},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::NUM, "height", "The stopping height encoded by the hint file."},
+                    {RPCResult::Type::STR, "path", "Absolute path where the file was written."},
+                    {RPCResult::Type::STR, "duration", "Time taken to build the file."},
+                }
+        },
+        RPCExamples{
+            HelpExampleCli("--rpcclienttimeout=0 generatetxohints", "signet.hints 270000"),
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const auto start{SteadyClock::now()};
+    NodeContext& node{EnsureAnyNodeContext(request.context)};
+    if (node.chainman->m_blockman.IsPruneMode()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Creating a hint file in pruned mode is not possible.");
+    }
+    const ArgsManager& args{EnsureAnyArgsman(request.context)};
+    const fs::path path = fsbridge::AbsPathJoin(args.GetDataDirNet(), fs::u8path(self.Arg<std::string_view>("path")));
+    const fs::path temppath = path + ".incomplete";
+    if (fs::exists(path)) {
+        throw JSONRPCError(
+            RPC_INVALID_PARAMETER,
+            path.utf8string() + " already exists. If you are sure this is what you want, "
+            "move it out of the way first");
+    }
+    FILE* file{fsbridge::fopen(temppath, "wb")};
+    AutoFile afile{file};
+    if (afile.IsNull()) {
+        throw JSONRPCError(
+            RPC_INVALID_PARAMETER,
+            "Couldn't open file " + temppath.utf8string() + " for writing.");
+    }
+    CConnman& connman{EnsureConnman(node)};
+    NetworkDisable disable_net{NetworkDisable(connman)};
+    std::optional<TemporaryRollback> rollback;
+    if (!request.params[1].isNull()) {
+        const CBlockIndex* invalidate_index = ParseHashOrHeight(request.params[1], *node.chainman);
+        invalidate_index = WITH_LOCK(::cs_main, return node.chainman->ActiveChain().Next(invalidate_index));
+        rollback.emplace(*node.chainman, *invalidate_index);
+    }
+    node.rpc_interruption_point();
+    LOCK(node.chainman->GetMutex());
+    CChain& active_chain{node.chainman->ActiveChain()};
+    Chainstate& active_state{node.chainman->ActiveChainstate()};
+    active_state.ForceFlushStateToDisk();
+    const CBlockIndex* end_index{active_chain.Tip()};
+    const auto tip_height{end_index->nHeight};
+    LogDebug(BCLog::RPC, "Active chain best tip %d", tip_height);
+    swiftsync::HintsfileWriter writer{swiftsync::HintsfileWriter(afile, tip_height)};
+    CBlockIndex* curr{active_chain.Next(active_chain.Genesis())};
+    while (curr) {
+        auto height{curr->nHeight};
+        if (height % 10000 == 0) {
+            LogDebug(BCLog::RPC, "Wrote hints up to height (%s)", height);
+        }
+        FlatFilePos file_pos = curr->GetBlockPos();
+        std::unique_ptr<CBlock> pblock = std::make_unique<CBlock>();
+        bool read = node.chainman->m_blockman.ReadBlock(*pblock, file_pos, curr->GetBlockHash());
+        if (!read) {
+            throw JSONRPCError(RPC_DATABASE_ERROR, "Block could not be read from disk.");
+        }
+        swiftsync::BlockHintsWriter hints{};
+        for (const auto& tx: pblock->vtx) {
+            const Txid& txid = tx->GetHash();
+            for (size_t vout{}; vout < tx->vout.size(); ++vout) {
+                const COutPoint outpoint = COutPoint(txid, vout);
+                if (active_state.CoinsDB().HaveCoin(outpoint)) {
+                    hints.PushHighBit();
+                } else {
+                    hints.PushLowBit();
+                }
+            }
+        }
+        if (!writer.WriteNextUnspents(hints, uint32_t(height))) {
+            throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to commit changes to hint file.");
+        }
+        node.rpc_interruption_point();
+        curr = active_chain.Next(curr);
+    }
+    writer.Close();
+    fs::rename(temppath, path);
+    const auto end{SteadyClock::now()};
+    const auto duration = std::chrono::duration_cast<std::chrono::minutes>(end - start).count();
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("height", tip_height);
+    result.pushKV("path", path.utf8string());
+    result.pushKV("duration", tfm::format("%d minutes", duration));
+    return result;
+},
+    };
+}
+
 const std::vector<RPCResult> RPCHelpForChainstate{
     {RPCResult::Type::NUM, "blocks", "number of blocks in this chainstate"},
     {RPCResult::Type::STR_HEX, "bestblockhash", "blockhash of the tip"},
@@ -3491,6 +3610,7 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"blockchain", &getblockfilter},
         {"blockchain", &dumptxoutset},
         {"blockchain", &loadtxoutset},
+        {"blockchain", &generatetxohints},
         {"blockchain", &getchainstates},
         {"hidden", &invalidateblock},
         {"hidden", &reconsiderblock},
