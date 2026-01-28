@@ -11,6 +11,7 @@
 /// If a transaction is not received back from the network for this duration
 /// after it is broadcast, then we consider it stale / for rebroadcasting.
 static constexpr auto STALE_DURATION{1min};
+static constexpr size_t MAX_STORED_TRANSACTIONS{1'000};
 
 bool PrivateBroadcast::Add(const CTransactionRef& tx)
     EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
@@ -22,6 +23,30 @@ bool PrivateBroadcast::Add(const CTransactionRef& tx)
         it->second.final_state.reset();
         it->second.sent_to.clear();
         inserted = true;
+    }
+
+    // Bound memory usage by pruning oldest finished transactions. If we still exceed the cap
+    // but all transactions are unfinished, that's ok.
+    if (m_transactions.size() > MAX_STORED_TRANSACTIONS) {
+        struct FinishedEntry {
+            NodeClock::time_point time;
+            CTransactionRef tx;
+        };
+        std::vector<FinishedEntry> finished;
+        finished.reserve(m_transactions.size());
+        for (const auto& [txref, state] : m_transactions) {
+            if (const auto final_state{state.final_state}) {
+                finished.push_back(FinishedEntry{.time = state.final_state->time, .tx = txref});
+            }
+        }
+        std::ranges::sort(finished, [](const FinishedEntry& a, const FinishedEntry& b) {
+            return a.time < b.time;
+        });
+
+        for (const auto& entry : finished) {
+            m_transactions.erase(entry.tx);
+            if (m_transactions.size() <= MAX_STORED_TRANSACTIONS) break;
+        }
     }
     return inserted;
 }
