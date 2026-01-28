@@ -2048,10 +2048,12 @@ RPCHelpMan descriptorprocesspsbt()
         sighash_type,
         finalize);
 
-    // Check whether or not all of the inputs are now signed
+    // Check whether or not all of the inputs are now correctly signed
     bool complete = true;
-    for (const auto& input : psbtx.inputs) {
-        complete &= PSBTInputSigned(input);
+    const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
+    for (unsigned int i = 0; i < psbtx.inputs.size(); ++i) {
+        const bool verified = PSBTInputSignedAndVerified(psbtx, i, &txdata);
+        complete = complete && verified;
     }
 
     DataStream ssTx{};
