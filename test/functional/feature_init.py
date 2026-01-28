@@ -30,10 +30,17 @@ class InitTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.uses_wallet = None
 
-    def init_stress_test(self):
+    def check_clean_start(self, node, extra_args):
+        """Ensure that node restarts successfully after various interrupts."""
+        node.start(extra_args)
+        node.wait_for_rpc_connection()
+        height = node.getblockcount()
+        assert_equal(200, height)
+        self.wait_until(lambda: all(i["synced"] and i["best_block_height"] == height for i in node.getindexinfo().values()))
+
+    def init_stress_test_interrupt(self):
         """
         - test terminating initialization after seeing a certain log line.
-        - test removing certain essential files to test startup error paths.
         """
         self.stop_node(0)
         node = self.nodes[0]
@@ -46,22 +53,7 @@ class InitTest(BitcoinTestFramework):
                 os.kill(node.process.pid, signal.CTRL_BREAK_EVENT)
             else:
                 node.process.terminate()
-            node.process.wait()
-
-        def start_expecting_error(err_fragment, args):
-            node.assert_start_raises_init_error(
-                extra_args=args,
-                expected_msg=err_fragment,
-                match=ErrorMatch.PARTIAL_REGEX,
-            )
-
-        def check_clean_start(extra_args):
-            """Ensure that node restarts successfully after various interrupts."""
-            node.start(extra_args)
-            node.wait_for_rpc_connection()
-            height = node.getblockcount()
-            assert_equal(200, height)
-            self.wait_until(lambda: all(i["synced"] and i["best_block_height"] == height for i in node.getindexinfo().values()))
+            assert_equal(0, node.process.wait())
 
         lines_to_terminate_after = [
             b'Validating signatures for all blocks',
@@ -102,10 +94,23 @@ class InitTest(BitcoinTestFramework):
 
         # Prior to deleting/perturbing index files, start node with all indexes enabled.
         # 'check_clean_start' will ensure indexes are synchronized (i.e., data exists to modify)
-        check_clean_start(args)
+        self.check_clean_start(node, args)
         self.stop_node(0)
 
+    def init_stress_test_removals(self):
+        """
+        - test removing certain essential files to test startup error paths.
+        """
         self.log.info("Test startup errors after removing certain essential files")
+        node = self.nodes[0]
+        args = ['-txindex=1', '-blockfilterindex=1', '-coinstatsindex=1']
+
+        def start_expecting_error(err_fragment, args):
+            node.assert_start_raises_init_error(
+                extra_args=args,
+                expected_msg=err_fragment,
+                match=ErrorMatch.PARTIAL_REGEX,
+            )
 
         deletion_rounds = [
             {
@@ -191,7 +196,7 @@ class InitTest(BitcoinTestFramework):
                 self.log.debug(f"Restoring file from {bak_path} and restarting")
                 Path(bak_path).rename(target_file)
 
-            check_clean_start(args)
+            self.check_clean_start(node, args)
             self.stop_node(0)
 
         self.log.info("Test startup errors after perturbing certain essential files")
@@ -292,7 +297,8 @@ class InitTest(BitcoinTestFramework):
 
     def run_test(self):
         self.init_pid_test()
-        self.init_stress_test()
+        self.init_stress_test_interrupt()
+        self.init_stress_test_removals()
         self.break_wait_test()
 
 
