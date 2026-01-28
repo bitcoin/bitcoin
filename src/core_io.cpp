@@ -28,6 +28,7 @@
 #include <undo.h>
 #include <univalue.h>
 #include <util/check.h>
+#include <util/overflow.h>
 #include <util/result.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -437,7 +438,7 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
     entry.pushKV("hash", tx.GetWitnessHash().GetHex());
     entry.pushKV("version", tx.version);
     entry.pushKV("size", tx.ComputeTotalSize());
-    entry.pushKV("vsize", (GetTransactionWeight(tx) + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR);
+    entry.pushKV("vsize", CeilDiv(GetTransactionWeight(tx), WITNESS_SCALE_FACTOR));
     entry.pushKV("weight", GetTransactionWeight(tx));
     entry.pushKV("locktime", (int64_t)tx.nLockTime);
 

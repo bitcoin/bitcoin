@@ -18,6 +18,7 @@
 #include <tinyformat.h>
 #include <uint256.h>
 #include <util/fs.h>
+#include <util/overflow.h>
 #include <util/serfloat.h>
 #include <util/syserror.h>
 #include <util/time.h>
@@ -219,7 +220,7 @@ void TxConfirmStats::Record(int blocksToConfirm, double feerate)
     // blocksToConfirm is 1-based
     if (blocksToConfirm < 1)
         return;
-    int periodsToConfirm = (blocksToConfirm + scale - 1) / scale;
+    int periodsToConfirm = CeilDiv(blocksToConfirm, scale);
     unsigned int bucketindex = bucketMap.lower_bound(feerate)->second;
     for (size_t i = periodsToConfirm; i <= confAvg.size(); i++) {
         confAvg[i - 1][bucketindex]++;
@@ -251,7 +252,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
     double totalNum = 0; // Total number of tx's that were ever confirmed
     int extraNum = 0;  // Number of tx's still in mempool for confTarget or longer
     double failNum = 0; // Number of tx's that were never confirmed but removed from the mempool after confTarget
-    const int periodTarget = (confTarget + scale - 1) / scale;
+    const int periodTarget = CeilDiv(confTarget, scale);
     const int maxbucketindex = buckets.size() - 1;
 
     // We'll combine buckets until we have enough samples.
