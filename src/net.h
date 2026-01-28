@@ -1261,8 +1261,8 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !m_added_nodes_mutex, !m_addr_fetches_mutex, !mutexMsgProc);
 
     void StopThreads();
-    void StopNodes() EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex, !cs_mapSocketToNode, !cs_sendable_receivable_nodes);
-    void Stop() EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex, !cs_mapSocketToNode, !cs_sendable_receivable_nodes)
+    void StopNodes() EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex, !cs_mapSocketToNode, !cs_sendable_receivable_nodes, !m_reconnections_mutex);
+    void Stop() EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex, !cs_mapSocketToNode, !cs_sendable_receivable_nodes, !m_reconnections_mutex)
     {
         StopThreads();
         StopNodes();
