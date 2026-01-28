@@ -177,12 +177,14 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
                 }
                 auto psbt{*opt_psbt};
                 const PrecomputedTransactionData txdata{PrecomputePSBTData(psbt)};
-                std::optional<int> sighash_type{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 151)};
-                if (sighash_type == 151) sighash_type = std::nullopt;
-                auto sign  = fuzzed_data_provider.ConsumeBool();
-                auto bip32derivs = fuzzed_data_provider.ConsumeBool();
-                auto finalize = fuzzed_data_provider.ConsumeBool();
-                (void)spk_manager->FillPSBT(psbt, txdata, sighash_type, sign, bip32derivs, nullptr, finalize);
+                common::PSBTFillOptions options{
+                    .sign = fuzzed_data_provider.ConsumeBool(),
+                    .sighash_type = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 151),
+                    .finalize = fuzzed_data_provider.ConsumeBool(),
+                    .bip32_derivs = fuzzed_data_provider.ConsumeBool()
+                };
+                if (options.sighash_type == 151) options.sighash_type = std::nullopt;
+                (void)spk_manager->FillPSBT(psbt, txdata, options);
             }
         );
     }
