@@ -20,10 +20,14 @@ from test_framework.messages import (
     ser_uint256,
     COIN,
 )
+from test_framework.script import (
+    CScript,
+    CScriptNum,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_not_equal
+    assert_not_equal,
 )
 from test_framework.wallet import MiniWallet
 from typing import Optional
@@ -144,7 +148,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
         block.deserialize(block_data)
         return block
 
-    async def parse_and_deserialize_coinbase_tx(self, block_template, ctx):
+    async def get_coinbase_raw_tx(self, block_template, ctx):
         assert block_template is not None
         coinbase_data = BytesIO((await block_template.getCoinbaseRawTx(ctx)).result)
         tx = CTransaction()
@@ -194,6 +198,12 @@ class IPCInterfaceTest(BitcoinTestFramework):
         coinbase_tx.vin = [CTxIn()]
         coinbase_tx.vin[0].prevout = NULL_OUTPOINT
         coinbase_tx.vin[0].nSequence = coinbase_res.sequence
+
+        # Verify there's no dummy extraNonce in the coinbase scriptSig
+        current_block_height = self.nodes[0].getchaintips()[0]["height"]
+        expected_scriptsig = CScript([CScriptNum(current_block_height + 1)])
+        assert_equal(coinbase_res.scriptSigPrefix.hex(), expected_scriptsig.hex())
+
         # Typically a mining pool appends its name and an extraNonce
         coinbase_tx.vin[0].scriptSig = coinbase_res.scriptSigPrefix
 
@@ -224,8 +234,9 @@ class IPCInterfaceTest(BitcoinTestFramework):
 
         coinbase_tx.nLockTime = coinbase_res.lockTime
 
-        # Compare to dummy coinbase provided by the deprecated getCoinbaseTx()
-        coinbase_legacy = await self.parse_and_deserialize_coinbase_tx(template, ctx)
+        # Compare to dummy coinbase transaction provided by the deprecated
+        # getCoinbaseRawTx()
+        coinbase_legacy = await self.get_coinbase_raw_tx(template, ctx)
         assert_equal(coinbase_legacy.vout[0].nValue, coinbase_res.blockRewardRemaining)
         # Swap dummy output for our own
         coinbase_legacy.vout[0].scriptPubKey = coinbase_tx.vout[0].scriptPubKey
@@ -282,10 +293,6 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 assert_equal(len(txfees.result), 0)
                 txsigops = await template.getTxSigops(ctx)
                 assert_equal(len(txsigops.result), 0)
-                coinbase_data = BytesIO((await template.getCoinbaseRawTx(ctx)).result)
-                coinbase = CTransaction()
-                coinbase.deserialize(coinbase_data)
-                assert_equal(coinbase.vin[0].prevout.hash, 0)
 
                 self.log.debug("Wait for a new template")
                 waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
