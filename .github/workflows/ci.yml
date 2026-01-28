@@ -241,7 +241,7 @@ jobs:
           }
 
       - name: Get tool information
-        shell: pwsh
+        shell: pwsh -Command "$PSVersionTable; $PSNativeCommandUseErrorActionPreference = $true; $ErrorActionPreference = 'Stop'; & '{0}'"
         run: |
           cmake -version | Tee-Object -FilePath "cmake_version"
           Write-Output "---"
@@ -487,7 +487,7 @@ jobs:
           ./src/univalue/unitester.exe
 
       - name: Adjust paths in test/config.ini
-        shell: pwsh
+        shell: pwsh -Command "$PSVersionTable; $PSNativeCommandUseErrorActionPreference = $true; $ErrorActionPreference = 'Stop'; & '{0}'"
         run: |
           (Get-Content "test/config.ini") -replace '(?<=^SRCDIR=).*', '${{ github.workspace }}' -replace '(?<=^BUILDDIR=).*', '${{ github.workspace }}' -replace '(?<=^RPCAUTH=).*', '${{ github.workspace }}/share/rpcauth/rpcauth.py' | Set-Content "test/config.ini"
           Get-Content "test/config.ini"
