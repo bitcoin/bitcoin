@@ -2806,7 +2806,7 @@ bool Chainstate::FlushStateToDisk(
             }
 
             if (!CoinsTip().GetBestBlock().IsNull()) {
-                if (coins_mem_usage >= WARN_FLUSH_COINS_SIZE) LogWarning("Flushing large (%d GiB) UTXO set to disk, it may take several minutes", coins_mem_usage >> 30);
+                if (coins_mem_usage >= WARN_FLUSH_COINS_SIZE) LogWarning("Flushing large (%d GiB) UTXO set to disk, it may take several minutes", CeilDiv(coins_mem_usage, 1024_MiB));
                 LOG_TIME_MILLIS_WITH_CATEGORY(strprintf("write coins cache to disk (%d coins, %.2fKiB)",
                     coins_count, coins_mem_usage >> 10), BCLog::BENCH);
 
