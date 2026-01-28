@@ -95,6 +95,7 @@ public:
     CCoinsMap& map() const { return cacheCoins; }
     CoinsCachePair& sentinel() const { return m_sentinel; }
     size_t& usage() const { return cachedCoinsUsage; }
+    size_t& dirty() const { return m_dirty_count; }
 };
 
 } // namespace
@@ -189,8 +190,11 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
                     (coin.IsSpent() ? added_an_entry : updated_an_entry) = true;
                     coin = newcoin;
                 }
-                bool is_overwrite = !coin.IsSpent() || m_rng.rand32() & 1;
-                stack.back()->AddCoin(COutPoint(txid, 0), std::move(newcoin), is_overwrite);
+                if (COutPoint op(txid, 0); !stack.back()->map().contains(op) && !newcoin.out.scriptPubKey.IsUnspendable() && m_rng.randbool()) {
+                    stack.back()->EmplaceCoinInternalDANGER(std::move(op), std::move(newcoin));
+                } else {
+                    stack.back()->AddCoin(op, std::move(newcoin), /*possible_overwrite=*/!coin.IsSpent() || m_rng.randbool());
+                }
             } else {
                 // Spend the coin.
                 removed_an_entry = true;
@@ -658,8 +662,10 @@ static void WriteCoinsViewEntry(CCoinsView& view, const MaybeCoin& cache_coin)
     CCoinsMapMemoryResource resource;
     CCoinsMap map{0, CCoinsMap::hasher{}, CCoinsMap::key_equal{}, &resource};
     if (cache_coin) InsertCoinsMapEntry(map, sentinel, *cache_coin);
-    auto cursor{CoinsViewCacheCursor(sentinel, map, /*will_erase=*/true)};
+    size_t dirty_count{cache_coin && cache_coin->IsDirty()};
+    auto cursor{CoinsViewCacheCursor(dirty_count, sentinel, map, /*will_erase=*/true)};
     view.BatchWrite(cursor, {});
+    BOOST_CHECK_EQUAL(dirty_count, 0U);
 }
 
 class SingleEntryCacheTest
@@ -669,7 +675,10 @@ public:
     {
         auto base_cache_coin{base_value == ABSENT ? MISSING : CoinEntry{base_value, CoinEntry::State::DIRTY}};
         WriteCoinsViewEntry(base, base_cache_coin);
-        if (cache_coin) cache.usage() += InsertCoinsMapEntry(cache.map(), cache.sentinel(), *cache_coin);
+        if (cache_coin) {
+            cache.usage() += InsertCoinsMapEntry(cache.map(), cache.sentinel(), *cache_coin);
+            cache.dirty() += cache_coin->IsDirty();
+        }
     }
 
     CCoinsView root;
