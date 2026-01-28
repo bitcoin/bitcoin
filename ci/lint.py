@@ -73,6 +73,7 @@ def main():
             *get_worktree_mounts(repo_root),
             *([] if is_ci else ["-it"]),
             container,
+            "./ci/lint/06_script.sh",
             *sys.argv[1:],
         ]
     )
