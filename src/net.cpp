@@ -287,7 +287,9 @@ bool AddLocal(const CService& addr_, int nScore)
     if (!g_reachable_nets.Contains(addr))
         return false;
 
-    LogInfo("AddLocal(%s,%i)\n", addr.ToStringAddrPort(), nScore);
+    if (fLogIPs) {
+        LogInfo("AddLocal(%s,%i)\n", addr.ToStringAddrPort(), nScore);
+    }
 
     {
         LOCK(g_maplocalhost_mutex);
@@ -3345,8 +3347,9 @@ void Discover()
         return;
 
     for (const CNetAddr &addr: GetLocalAddresses()) {
-        if (AddLocal(addr, LOCAL_IF))
+        if (AddLocal(addr, LOCAL_IF) && fLogIPs) {
             LogInfo("%s: %s\n", __func__, addr.ToStringAddr());
+        }
     }
 }
 
