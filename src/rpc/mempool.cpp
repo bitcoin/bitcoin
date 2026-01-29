@@ -11,6 +11,7 @@
 #include <common/args.h>
 #include <consensus/validation.h>
 #include <core_io.h>
+#include <index/txospenderindex.h>
 #include <kernel/mempool_entry.h>
 #include <net_processing.h>
 #include <netbase.h>
@@ -775,7 +776,7 @@ static RPCHelpMan getmempoolentry()
 static RPCHelpMan gettxspendingprevout()
 {
     return RPCHelpMan{"gettxspendingprevout",
-        "Scans the mempool to find transactions spending any of the given outputs",
+        "Scans the mempool (and the txospenderindex, if available) to find transactions spending any of the given outputs",
         {
             {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The transaction outputs that we want to check, and within each, the txid (string) vout (numeric).",
                 {
@@ -787,6 +788,12 @@ static RPCHelpMan gettxspendingprevout()
                     },
                 },
             },
+            {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
+                {
+                    {"mempool_only", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true if txospenderindex unavailable, otherwise false"}, "If false and mempool lacks a relevant spend, use txospenderindex (throws an exception if not available)."},
+                    {"return_spending_tx", RPCArg::Type::BOOL, RPCArg::DefaultHint{"false"}, "If true, return the full spending tx."},
+                },
+            },
         },
         RPCResult{
             RPCResult::Type::ARR, "", "",
@@ -796,18 +803,43 @@ static RPCHelpMan gettxspendingprevout()
                     {RPCResult::Type::STR_HEX, "txid", "the transaction id of the checked output"},
                     {RPCResult::Type::NUM, "vout", "the vout value of the checked output"},
                     {RPCResult::Type::STR_HEX, "spendingtxid", /*optional=*/true, "the transaction id of the mempool transaction spending this output (omitted if unspent)"},
+                    {RPCResult::Type::STR_HEX, "spendingtx", /*optional=*/true, "the transaction spending this output (only if return_spending_tx is set, omitted if unspent)"},
+                    {RPCResult::Type::STR_HEX, "blockhash", /*optional=*/true, "the hash of the spending block (omitted if unspent or the spending tx is not confirmed)"},
+                    {RPCResult::Type::ARR, "warnings", /* optional */ true, "If spendingtxid isn't found in the mempool, and the mempool_only option isn't set explicitly, this will advise of issues using the txospenderindex.",
+                    {
+                        {RPCResult::Type::STR, "", ""},
+                    }},
                 }},
             }
         },
         RPCExamples{
             HelpExampleCli("gettxspendingprevout", "\"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":3}]\"")
             + HelpExampleRpc("gettxspendingprevout", "\"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":3}]\"")
+            + HelpExampleCliNamed("gettxspendingprevout", {{"outputs", "[{\"txid\":\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\",\"vout\":3}]"}, {"return_spending_tx", true}})
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
             const UniValue& output_params = request.params[0].get_array();
             if (output_params.empty()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, outputs are missing");
+            }
+
+            std::optional<bool> mempool_only;
+            std::optional<bool> return_spending_tx;
+            if (!request.params[1].isNull()) {
+                const UniValue& options = request.params[1];
+                RPCTypeCheckObj(options,
+                    {
+                        {"mempool_only", UniValueType(UniValue::VBOOL)},
+                        {"return_spending_tx", UniValueType(UniValue::VBOOL)},
+                    },
+                    /*fAllowNull=*/true, /*fStrict=*/true);
+                if (options.exists("mempool_only")) {
+                    mempool_only = options["mempool_only"].get_bool();
+                }
+                if (options.exists("return_spending_tx")) {
+                    return_spending_tx = options["return_spending_tx"].get_bool();
+                }
             }
 
             std::vector<COutPoint> prevouts;
@@ -831,6 +863,8 @@ static RPCHelpMan gettxspendingprevout()
                 prevouts.emplace_back(txid, nOutput);
             }
 
+            const bool txospenderindex_ready = !mempool_only.value_or(false) && g_txospenderindex && g_txospenderindex->BlockUntilSyncedToCurrentChain();
+
             const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
             LOCK(mempool.cs);
 
@@ -844,8 +878,27 @@ static RPCHelpMan gettxspendingprevout()
                 const CTransaction* spendingTx = mempool.GetConflictTx(prevout);
                 if (spendingTx != nullptr) {
                     o.pushKV("spendingtxid", spendingTx->GetHash().ToString());
+                    if (return_spending_tx.value_or(false)) {
+                        o.pushKV("spendingtx", EncodeHexTx(*spendingTx));
+                    }
+                } else if (mempool_only.value_or(false)) {
+                    // do nothing, caller has selected to only query the mempool
+                } else if (!txospenderindex_ready) {
+                    throw JSONRPCError(RPC_MISC_ERROR, strprintf("No spending tx for the outpoint %s:%d in mempool, and txospenderindex is unavailable.", prevout.hash.GetHex(), prevout.n));
+                } else {
+                    // no spending tx in mempool, query txospender index
+                    const auto spender{g_txospenderindex->FindSpender(prevout)};
+                    if (!spender) {
+                        throw JSONRPCError(RPC_MISC_ERROR, spender.error());
+                    }
+                    if (spender.value()) {
+                        o.pushKV("spendingtxid", spender.value()->tx->GetHash().GetHex());
+                        o.pushKV("blockhash", spender.value()->block_hash.GetHex());
+                        if (return_spending_tx.value_or(false)) {
+                            o.pushKV("spendingtx", EncodeHexTx(*spender.value()->tx));
+                        }
+                    }
                 }
-
                 result.push_back(std::move(o));
             }
 
