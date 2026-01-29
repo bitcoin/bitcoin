@@ -413,11 +413,10 @@ public:
     }
 
     /** Find the successor of a block in this chain, or nullptr if the given index is not found or is the tip. */
-    CBlockIndex* Next(const CBlockIndex* pindex) const
+    CBlockIndex* Next(const CBlockIndex& index) const
     {
-        // Note: the next commit makes sure that the input parameter of Next() cannot be nullptr
-        if (Contains(*pindex))
-            return (*this)[pindex->nHeight + 1];
+        if (Contains(index))
+            return (*this)[index.nHeight + 1];
         else
             return nullptr;
     }
