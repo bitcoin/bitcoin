@@ -8,16 +8,15 @@
 #include <primitives/transaction.h>
 #include <validationinterface.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <list>
 #include <memory>
 #include <vector>
 
-class CBlock;
 class CBlockIndex;
 class CZMQAbstractNotifier;
-struct NewMempoolTransactionInfo;
 
 class CZMQNotificationInterface final : public CValidationInterface
 {

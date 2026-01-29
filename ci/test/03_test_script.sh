@@ -215,7 +215,7 @@ fi
 
 if [[ "${RUN_IWYU}" == true ]]; then
   # TODO: Consider enforcing IWYU across the entire codebase.
-  FILES_WITH_ENFORCED_IWYU="/src/((crypto|index|kernel|primitives)/.*\\.cpp|node/blockstorage.cpp|node/utxo_snapshot.cpp|core_io.cpp|signet.cpp)"
+  FILES_WITH_ENFORCED_IWYU="/src/((crypto|index|kernel|primitives|zmq)/.*\\.cpp|node/blockstorage.cpp|node/utxo_snapshot.cpp|core_io.cpp|signet.cpp)"
   jq --arg patterns "$FILES_WITH_ENFORCED_IWYU" 'map(select(.file | test($patterns)))' "${BASE_BUILD_DIR}/compile_commands.json" > "${BASE_BUILD_DIR}/compile_commands_iwyu_errors.json"
   jq --arg patterns "$FILES_WITH_ENFORCED_IWYU" 'map(select(.file | test($patterns) | not))' "${BASE_BUILD_DIR}/compile_commands.json" > "${BASE_BUILD_DIR}/compile_commands_iwyu_warnings.json"
 
