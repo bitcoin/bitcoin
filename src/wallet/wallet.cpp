@@ -3079,27 +3079,6 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         walletInstance->m_discard_rate = CFeeRate{discard_fee.value()};
     }
 
-    if (const auto arg{args.GetArg("-paytxfee")}) {
-        warnings.push_back(_("-paytxfee is deprecated and will be fully removed in v31.0."));
-
-        std::optional<CAmount> pay_tx_fee = ParseMoney(*arg);
-        if (!pay_tx_fee) {
-            error = AmountErrMsg("paytxfee", *arg);
-            return nullptr;
-        } else if (pay_tx_fee.value() > HIGH_TX_FEE_PER_KB) {
-            warnings.push_back(AmountHighWarn("-paytxfee") + Untranslated(" ") +
-                               _("This is the transaction fee you will pay if you send a transaction."));
-        }
-
-        walletInstance->m_pay_tx_fee = CFeeRate{pay_tx_fee.value(), 1000};
-
-        if (chain && walletInstance->m_pay_tx_fee < chain->relayMinFee()) {
-            error = strprintf(_("Invalid amount for %s=<amount>: '%s' (must be at least %s)"),
-                "-paytxfee", *arg, chain->relayMinFee().ToString());
-            return nullptr;
-        }
-    }
-
     if (const auto arg{args.GetArg("-maxtxfee")}) {
         std::optional<CAmount> max_fee = ParseMoney(*arg);
         if (!max_fee) {
