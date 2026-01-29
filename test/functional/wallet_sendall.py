@@ -454,6 +454,22 @@ class SendallTest(BitcoinTestFramework):
         txid = self.wallet.sendall(recipients=[self.remainder_target], inputs=utxos)["txid"]
         assert_equal(self.wallet.gettransaction(txid=txid, verbose=True)["decoded"]["locktime"], 0)
 
+        self.log.info("Test sendall sets locktime >= unconfirmed input locktime")
+        self.add_utxos([10])
+        # Create parent tx with anti-fee-sniping nlocktime
+        unconfirmed_parent_txid = self.wallet.sendtoaddress(self.wallet.getnewaddress(), 9)
+        unconfirmed_parent_nlocktime = self.wallet.gettransaction(txid=unconfirmed_parent_txid, verbose=True)["decoded"]["locktime"]
+        # Parent nlocktime should be within 100 blocks of tip
+        assert_greater_than_or_equal(unconfirmed_parent_nlocktime, self.nodes[0].getblockcount() - 100)
+        # Create child tx spending the unconfirmed parent
+        utxos = self.wallet.listunspent(0, 0)
+        child_txid = self.wallet.sendall(recipients=[self.remainder_target], inputs=utxos)["txid"]
+        child_nlocktime = self.wallet.gettransaction(txid=child_txid, verbose=True)["decoded"]["locktime"]
+        # Child nlocktime should be within 100 blocks of tip
+        assert_greater_than_or_equal(child_nlocktime, self.nodes[0].getblockcount() - 100)
+        # Child nlocktime should be >= parent nlocktime
+        assert_greater_than_or_equal(child_nlocktime, unconfirmed_parent_nlocktime)
+
     # This tests needs to be the last one otherwise @cleanup will fail with "Transaction too large" error
     def sendall_fails_with_transaction_too_large(self):
         self.log.info("Test that sendall fails if resulting transaction is too large")
