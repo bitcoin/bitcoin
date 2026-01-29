@@ -73,8 +73,10 @@ Notable changes
 
 ### Misc
 
+- #32513 ci: remove 3rd party js from windows dll gha job
 - #33508 ci: fix buildx gha cache authentication on forks
 - #33581 ci: Properly include $FILE_ENV in DEPENDS_HASH
+- #34344 ci: update GitHub Actions versions
 
 Credits
 =======
@@ -90,6 +92,8 @@ Thanks to everyone who directly contributed to this release:
 - furszy
 - Hennadii Stepanov
 - ismaelsadeeq
+- m3dwards
+- Padraic Slattery
 - Pieter Wuille
 - SatsAndSports
 - willcl-ark
