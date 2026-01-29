@@ -4213,10 +4213,10 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
 
         // Send the rest of the chain
         if (pindex)
-            pindex = m_chainman.ActiveChain().Next(pindex);
+            pindex = m_chainman.ActiveChain().Next(*pindex);
         int nLimit = 500;
         LogDebug(BCLog::NET, "getblocks %d to %s limit %d from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), nLimit, pfrom.GetId());
-        for (; pindex; pindex = m_chainman.ActiveChain().Next(pindex))
+        for (; pindex; pindex = m_chainman.ActiveChain().Next(*pindex))
         {
             if (pindex->GetBlockHash() == hashStop)
             {
@@ -4352,14 +4352,14 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             // Find the last block the caller has in the main chain
             pindex = m_chainman.ActiveChainstate().FindForkInGlobalIndex(locator);
             if (pindex)
-                pindex = m_chainman.ActiveChain().Next(pindex);
+                pindex = m_chainman.ActiveChain().Next(*pindex);
         }
 
         // we must use CBlocks, as CBlockHeaders won't include the 0x00 nTx count at the end
         std::vector<CBlock> vHeaders;
         int nLimit = m_opts.max_headers_result;
         LogDebug(BCLog::NET, "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom.GetId());
-        for (; pindex; pindex = m_chainman.ActiveChain().Next(pindex))
+        for (; pindex; pindex = m_chainman.ActiveChain().Next(*pindex))
         {
             vHeaders.emplace_back(pindex->GetBlockHeader());
             if (--nLimit <= 0 || pindex->GetBlockHash() == hashStop)
