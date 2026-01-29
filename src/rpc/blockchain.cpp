@@ -3102,7 +3102,6 @@ static RPCHelpMan dumptxoutset()
     }
 
     CConnman& connman = EnsureConnman(node);
-    const CBlockIndex* invalidate_index{nullptr};
     std::optional<NetworkDisable> disable_network;
     std::optional<TemporaryRollback> temporary_rollback;
 
@@ -3132,7 +3131,8 @@ static RPCHelpMan dumptxoutset()
             disable_network.emplace(connman);
         }
 
-        invalidate_index = WITH_LOCK(::cs_main, return node.chainman->ActiveChain().Next(target_index));
+        const CBlockIndex* invalidate_index{WITH_LOCK(::cs_main, return node.chainman->ActiveChain().Next(*target_index))};
+        Assume(invalidate_index);
         temporary_rollback.emplace(*node.chainman, *invalidate_index);
     }
 

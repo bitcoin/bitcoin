@@ -4784,7 +4784,8 @@ VerifyDBResult CVerifyDB::VerifyDB(
                 reportDone = percentageDone / 10;
             }
             m_notifications.progress(_("Verifying blocks…"), percentageDone, false);
-            pindex = chainstate.m_chain.Next(pindex);
+            pindex = chainstate.m_chain.Next(*pindex);
+            Assume(pindex);
             CBlock block;
             if (!chainstate.m_blockman.ReadBlock(block, *pindex)) {
                 LogError("Verification error: ReadBlock failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());

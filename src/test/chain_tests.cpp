@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(cchain_basic_tests)
         BOOST_CHECK_EQUAL(chain_0.Tip(), nullptr);
         BOOST_CHECK_EQUAL(chain_0[0], nullptr);
         BOOST_CHECK_EQUAL(chain_0.Contains(genesis), false);
-        BOOST_CHECK_EQUAL(chain_0.Next(&genesis), nullptr);
+        BOOST_CHECK_EQUAL(chain_0.Next(genesis), nullptr);
     }
 
     // Chain with 1 block
@@ -73,8 +73,8 @@ BOOST_AUTO_TEST_CASE(cchain_basic_tests)
         BOOST_CHECK_EQUAL(chain_1[1], nullptr);
         BOOST_CHECK_EQUAL(chain_1.Contains(genesis), true);
         BOOST_CHECK_EQUAL(chain_1.Contains(bi1), false);
-        BOOST_CHECK_EQUAL(chain_1.Next(&genesis), nullptr);
-        BOOST_CHECK_EQUAL(chain_1.Next(&bi1), nullptr);
+        BOOST_CHECK_EQUAL(chain_1.Next(genesis), nullptr);
+        BOOST_CHECK_EQUAL(chain_1.Next(bi1), nullptr);
     }
 
     // Chain with 2 blocks
@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_CASE(cchain_basic_tests)
         BOOST_CHECK_EQUAL(chain_2[2], nullptr);
         BOOST_CHECK_EQUAL(chain_2.Contains(genesis), true);
         BOOST_CHECK_EQUAL(chain_2.Contains(bi1), true);
-        BOOST_CHECK_EQUAL(chain_2.Next(&genesis), &bi1);
-        BOOST_CHECK_EQUAL(chain_2.Next(&bi1), nullptr);
+        BOOST_CHECK_EQUAL(chain_2.Next(genesis), &bi1);
+        BOOST_CHECK_EQUAL(chain_2.Next(bi1), nullptr);
     }
 }
 

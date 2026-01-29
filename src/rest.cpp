@@ -229,7 +229,7 @@ static bool rest_headers(const std::any& context,
             if (headers.size() == *parsed_count) {
                 break;
             }
-            pindex = active_chain.Next(pindex);
+            pindex = active_chain.Next(*pindex);
         }
     }
 
@@ -556,7 +556,7 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
             headers.push_back(pindex);
             if (headers.size() == *parsed_count)
                 break;
-            pindex = active_chain.Next(pindex);
+            pindex = active_chain.Next(*pindex);
         }
     }
 
