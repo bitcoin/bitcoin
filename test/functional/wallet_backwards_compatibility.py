@@ -303,7 +303,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                     # Copy back to master
                     wallet.unloadwallet()
                     if n == node:
-                        shutil.rmtree(node_master.wallets_path / wallet_name)
+                        (node_master.wallets_path / wallet_name / "wallet.dat").unlink()
+                        (node_master.wallets_path / wallet_name).rmdir()
                         shutil.copytree(
                             n.wallets_path / wallet_name,
                             node_master.wallets_path / wallet_name,

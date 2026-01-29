@@ -60,7 +60,7 @@ FUZZ_TARGET(i2p, .init = initialize_i2p)
         }
     }
 
-    fs::remove_all(private_key_path);
+    fs::remove(private_key_path);
 
     CreateSock = CreateSockOrig;
 }

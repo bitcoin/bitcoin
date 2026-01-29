@@ -36,7 +36,7 @@ class WalletStartupTest(BitcoinTestFramework):
         self.nodes[0].createwallet(wallet_name=wallet_name, **kwargs)
         self.nodes[0].unloadwallet(wallet_name)
         shutil.move(self.nodes[0].wallets_path / wallet_name / "wallet.dat", self.nodes[0].wallets_path / "wallet.dat")
-        shutil.rmtree(self.nodes[0].wallets_path / wallet_name)
+        (self.nodes[0].wallets_path / wallet_name).rmdir()
 
     def run_test(self):
         self.log.info('Should start without any wallets')

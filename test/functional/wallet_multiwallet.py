@@ -116,12 +116,12 @@ class MultiWalletTest(BitcoinTestFramework):
         self.stop_nodes()
         empty_wallet = os.path.join(self.options.tmpdir, 'empty.dat')
         os.rename(wallet_file("empty"), empty_wallet)
-        shutil.rmtree(wallet_dir("empty"))
+        os.rmdir(wallet_dir("empty"))
         empty_created_wallet = os.path.join(self.options.tmpdir, 'empty.created.dat')
         os.rename(wallet_dir("created", self.wallet_data_filename), empty_created_wallet)
-        shutil.rmtree(wallet_dir("created"))
+        os.rmdir(wallet_dir("created"))
         os.rename(wallet_file("plain"), wallet_dir("w8"))
-        shutil.rmtree(wallet_dir("plain"))
+        os.rmdir(wallet_dir("plain"))
 
         # restart node with a mix of wallet names:
         #   w1, w2, w3 - to verify new wallets created when non-existing paths specified

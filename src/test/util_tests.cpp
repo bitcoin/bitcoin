@@ -1137,7 +1137,8 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
 #endif
     // Clean up
     ReleaseDirectoryLocks();
-    fs::remove_all(dirname);
+    fs::remove(dirname / lockname);
+    fs::remove(dirname);
 }
 
 BOOST_AUTO_TEST_CASE(test_ToLower)

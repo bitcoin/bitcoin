@@ -217,7 +217,7 @@ class InitTest(BitcoinTestFramework):
             start_expecting_error(err_fragment, startup_args)
 
             for dir in dirs:
-                shutil.rmtree(node.chain_path / dir)
+                self.cleanup_folder(node.chain_path / dir)
                 shutil.move(node.chain_path / f"{dir}_bak", node.chain_path / dir)
 
     def init_pid_test(self):
