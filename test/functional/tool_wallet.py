@@ -410,17 +410,30 @@ class ToolWalletTest(BitcoinTestFramework):
         self.assert_raises_tool_error('Error: Checksum is not the correct size', '-wallet=badload', '-dumpfile={}'.format(bad_sum_wallet_dump), 'createfromdump')
         assert not (self.nodes[0].wallets_path / "badload").is_dir()
         if not self.options.descriptors:
-            os.rename(self.nodes[0].wallets_path / "wallet.dat", self.nodes[0].wallets_path / "default.wallet.dat")
+            os.rename(self.nodes[0].wallets_path / "wallet.dat", self.nodes[0].wallets_path / "../default.wallet.dat")
+            (self.nodes[0].wallets_path / "db.log").unlink(missing_ok=True)
         self.assert_raises_tool_error('Error: Checksum is not the correct size', '-wallet=', '-dumpfile={}'.format(bad_sum_wallet_dump), 'createfromdump')
         assert self.nodes[0].wallets_path.exists()
         assert not (self.nodes[0].wallets_path / "wallet.dat").exists()
+        if not self.options.descriptors:
+            assert not (self.nodes[0].wallets_path / "db.log").exists()
 
         self.log.info('Checking createfromdump with an unnamed wallet')
         self.do_tool_createfromdump("", "wallet.dump")
         assert (self.nodes[0].wallets_path / "wallet.dat").exists()
         os.unlink(self.nodes[0].wallets_path / "wallet.dat")
         if not self.options.descriptors:
-            os.rename(self.nodes[0].wallets_path / "default.wallet.dat", self.nodes[0].wallets_path / "wallet.dat")
+            os.rename(self.nodes[0].wallets_path / "../default.wallet.dat", self.nodes[0].wallets_path / "wallet.dat")
+
+            self.log.info('Checking createfromdump with multiple non-directory wallets')
+            assert not (self.nodes[0].wallets_path / "wallet.dat").is_dir()
+            assert (self.nodes[0].wallets_path / "db.log").exists()
+            os.rename(self.nodes[0].wallets_path / "wallet.dat", self.nodes[0].wallets_path / "test.dat")
+            self.assert_raises_tool_error('Error: Checksum is not the correct size', '-wallet=', '-dumpfile={}'.format(bad_sum_wallet_dump), 'createfromdump')
+            assert not (self.nodes[0].wallets_path / "wallet.dat").exists()
+            assert (self.nodes[0].wallets_path / "test.dat").exists()
+            assert (self.nodes[0].wallets_path / "db.log").exists()
+            os.rename(self.nodes[0].wallets_path / "test.dat", self.nodes[0].wallets_path / "wallet.dat")
 
     def test_chainless_conflicts(self):
         self.log.info("Test wallet tool when wallet contains conflicting transactions")

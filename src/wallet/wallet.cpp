@@ -4532,7 +4532,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
         to_reload = LoadWallet(context, name, /*load_on_start=*/std::nullopt, options, status, error, warnings);
         if (!to_reload) {
             LogError("Failed to load wallet '%s' after migration. Rolling back migration to preserve consistency. "
-                     "Error cause: %s\n", wallet_name, error.original);
+                     "Error cause: %s\n", name, error.original);
             return false;
         }
         return true;
@@ -4580,6 +4580,12 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
         LOCK(local_wallet->cs_wallet);
         // First change to using SQLite
         if (!local_wallet->MigrateToSQLite(error)) return util::Error{error};
+
+        // In case we're migrating from file to directory, move the backup into it
+        this_wallet_dir = fs::absolute(fs::PathFromString(local_wallet->GetDatabase().Filename())).parent_path();
+        backup_path = this_wallet_dir / backup_filename;
+        fs::rename(res.backup_path, backup_path);
+        res.backup_path = backup_path;
 
         // Do the migration of keys and scripts for non-blank wallets, and cleanup if it fails
         success = local_wallet->IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET);
@@ -4634,9 +4640,6 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
     }
     if (!success) {
         // Migration failed, cleanup
-        // Before deleting the wallet's directory, copy the backup file to the top-level wallets dir
-        fs::path temp_backup_location = fsbridge::AbsPathJoin(GetWalletDir(), backup_filename);
-        fs::rename(backup_path, temp_backup_location);
 
         // Make list of wallets to cleanup
         std::vector<std::shared_ptr<CWallet>> created_wallets;
@@ -4680,14 +4683,11 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
         // Convert the backup file to the wallet db file by renaming it and moving it into the wallet's directory.
         // Reload it into memory if the wallet was previously loaded.
         bilingual_str restore_error;
-        const auto& ptr_wallet = RestoreWallet(context, temp_backup_location, wallet_name, /*load_on_start=*/std::nullopt, status, restore_error, warnings, /*load_after_restore=*/was_loaded);
+        const auto& ptr_wallet = RestoreWallet(context, backup_path, wallet_name, /*load_on_start=*/std::nullopt, status, restore_error, warnings, /*load_after_restore=*/was_loaded);
         if (!restore_error.empty()) {
             error += restore_error + _("\nUnable to restore backup of wallet.");
             return util::Error{error};
         }
-
-        // The wallet directory has been restored, but just in case, copy the previously created backup to the wallet dir
-        fs::rename(temp_backup_location, backup_path);
 
         // Verify that there is no dangling wallet: when the wallet wasn't loaded before, expect null.
         // This check is performed after restoration to avoid an early error before saving the backup.

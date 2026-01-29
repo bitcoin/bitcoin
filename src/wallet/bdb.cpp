@@ -16,6 +16,7 @@
 #include <util/strencodings.h>
 #include <util/translation.h>
 
+#include <set>
 #include <stdint.h>
 
 #include <db_cxx.h>
@@ -338,6 +339,53 @@ bool BerkeleyDatabase::Verify(bilingual_str& errorStr)
     }
     // also return true if files does not exists
     return true;
+}
+
+std::vector<fs::path> BerkeleyDatabase::Files()
+{
+    std::vector<fs::path> files;
+    // If the wallet is the *only* file, clean up the entire BDB environment
+    constexpr auto build_files_list = [](std::vector<fs::path>& files, const std::shared_ptr<BerkeleyEnvironment>& env, const fs::path& filename) {
+        if (env->m_databases.size() != 1) return false;
+
+        const auto env_dir = env->Directory();
+        const auto db_subdir = env_dir / "database";
+        if (fs::exists(db_subdir)) {
+            if (!fs::is_directory(db_subdir)) return false;
+            for (const auto& entry : fs::directory_iterator(db_subdir)) {
+                const auto& path = entry.path().filename();
+                if (!fs::PathToString(path).starts_with("log.")) {
+                    return false;
+                }
+                files.emplace_back(entry.path());
+            }
+        }
+        const std::set<fs::path> allowed_paths = {
+            filename,
+            "db.log",
+            ".walletlock",
+            "database"
+        };
+        for (const auto& entry : fs::directory_iterator(env_dir)) {
+            const auto& path = entry.path().filename();
+            if (allowed_paths.contains(path)) {
+                files.emplace_back(entry.path());
+            } else if (fs::is_directory(entry.path())) {
+                // Subdirectories can't possibly be using this db env, and is expected if this is a non-directory wallet
+                // Do not include them in Files, but still allow the env cleanup
+            } else {
+                return false;
+            }
+        }
+        return true;
+    };
+    try {
+        if (build_files_list(files, env, m_filename)) return files;
+    } catch (...) {
+        // Give up building the comprehensive file list if any error occurs
+    }
+    // Otherwise, it's only really safe to delete the one wallet file
+    return {env->Directory() / m_filename};
 }
 
 void BerkeleyEnvironment::CheckpointLSN(const std::string& strFile)
