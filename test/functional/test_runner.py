@@ -299,6 +299,7 @@ BASE_SCRIPTS = [
     'wallet_simulaterawtx.py',
     'wallet_listsinceblock.py',
     'wallet_listdescriptors.py',
+    'wallet_gethdkey.py',
     'p2p_leak.py',
     'wallet_encryption.py',
     'feature_dersig.py',

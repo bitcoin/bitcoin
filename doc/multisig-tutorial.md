@@ -12,9 +12,7 @@ Before starting this tutorial, start the bitcoin node on the signet network.
 ./build/bin/bitcoind -signet -daemon
 ```
 
-This tutorial also uses the default WPKH derivation path to get the xpubs and does not conform to [BIP 45](https://github.com/bitcoin/bips/blob/master/bip-0045.mediawiki) or [BIP 87](https://github.com/bitcoin/bips/blob/master/bip-0087.mediawiki).
-
-At the time of writing, there is no way to extract a specific path from wallets in Bitcoin Core. For this, an external signer/xpub can be used.
+This tutorial uses the [BIP 87](https://github.com/bitcoin/bips/blob/master/bip-0087.mediawiki) derivation path `m/87'/1'/0'` for multisig, which is the standard for multi-signature wallets.
 
 ## 1.1 Basic Multisig Workflow
 
@@ -31,37 +29,39 @@ do
 done
 ```
 
-Extract the xpub of each wallet. To do this, the `listdescriptors` RPC is used. By default, Bitcoin Core single-sig wallets are created using path `m/44'/1'/0'` for PKH, `m/84'/1'/0'` for WPKH, `m/49'/1'/0'` for P2WPKH-nested-in-P2SH and `m/86'/1'/0'` for P2TR based accounts. Each of them uses the chain 0 for external addresses and chain 1 for internal ones, as shown in the example below.
-
-```
-wpkh([1004658e/84'/1'/0']tpubDCBEcmVKbfC9KfdydyLbJ2gfNL88grZu1XcWSW9ytTM6fitvaRmVyr8Ddf7SjZ2ZfMx9RicjYAXhuh3fmLiVLPodPEqnQQURUfrBKiiVZc8/0/*)#g8l47ngv
-
-wpkh([1004658e/84'/1'/0']tpubDCBEcmVKbfC9KfdydyLbJ2gfNL88grZu1XcWSW9ytTM6fitvaRmVyr8Ddf7SjZ2ZfMx9RicjYAXhuh3fmLiVLPodPEqnQQURUfrBKiiVZc8/1/*)#en65rxc5
-```
-
-The suffix (after #) is the checksum. Descriptors can optionally be suffixed with a checksum to protect against typos or copy-paste errors.
-All RPCs in Bitcoin Core will include the checksum in their output.
-
-Note that previously at least two descriptors were usually used, one for external derivation paths and one for internal ones. Since https://github.com/bitcoin/bitcoin/pull/22838 this redundancy has been eliminated by a multipath descriptor with <code><0;1></code> at the [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki#change) change level expanding to external and internal descriptors when imported.
+Extract the xpub of each wallet at the BIP 87 multisig path using the `gethdkey` RPC. This RPC derives an extended key at any BIP 32 path and returns the xpub along with origin information (fingerprint and path) in descriptor format.
 
 ```bash
 declare -A xpubs
 
 for ((n=1;n<=3;n++))
 do
- xpubs["xpub_${n}"]=$(./build/bin/bitcoin rpc -signet -rpcwallet="participant_${n}" listdescriptors | jq '.descriptors | [.[] | select(.desc | startswith("wpkh") and contains("/0/*") )][0] | .desc' | grep -Po '(?<=\().*(?=\))' | sed 's /0/\* /<0;1>/* ')
+  result=$(./build/bin/bitcoin rpc -signet -rpcwallet="participant_${n}" gethdkey "m/87'/1'/0'")
+  origin=$(echo $result | jq -r '.origin')
+  xpub=$(echo $result | jq -r '.xpub')
+  xpubs["xpub_${n}"]="${origin}${xpub}/<0;1>/*"
 done
 ```
 
-`jq` is used to extract the xpub from the `wpkh` descriptor.
+The `gethdkey` RPC returns:
+* `xpub`: The extended public key at the specified path
+* `fingerprint`: The master key fingerprint (4 bytes, hex-encoded)
+* `origin`: The fingerprint and path in descriptor format, e.g., `[1004658e/87'/1'/0']`
 
-The following command can be used to verify if the xpub was generated correctly.
+The multipath notation `<0;1>` is used at the change level, which expands to external (0) and internal (1) descriptors when imported, as defined in [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki#change).
+
+The following command can be used to verify if the xpubs were generated correctly.
 
 ```bash
 for x in "${!xpubs[@]}"; do printf "[%s]=%s\n" "$x" "${xpubs[$x]}" ; done
 ```
 
-As previously mentioned, this step extracts the `m/84'/1'/0'` account instead of the path defined in [BIP 45](https://github.com/bitcoin/bips/blob/master/bip-0045.mediawiki) or [BIP 87](https://github.com/bitcoin/bips/blob/master/bip-0087.mediawiki), since there is no way to extract a specific path in Bitcoin Core at the time of writing.
+Example output:
+```
+[xpub_1]=[1004658e/87'/1'/0']tpubDCBE.../<0;1>/*
+[xpub_2]=[20548c23/87'/1'/0']tpubDDRo.../<0;1>/*
+[xpub_3]=[b2f54e8c/87'/1'/0']tpubDApX.../<0;1>/*
+```
 
 ### 1.2 Define the Multisig Descriptor
 
@@ -116,7 +116,47 @@ for ((n=1;n<=3;n++)); do ./build/bin/bitcoin rpc -signet loadwallet "participant
 ./build/bin/bitcoin rpc -signet loadwallet "multisig_wallet_01"
 ```
 
-### 1.4 Fund the wallet
+### 1.4 Import Multisig Descriptor for Signing
+
+Since we derived keys at the BIP 87 path (`m/87'/1'/0'`), the participant wallets need to import the multisig descriptor to enable signing. Each participant imports the same descriptor but with their own private key (xprv).
+
+Use `gethdkey` with `private: true` to get the xprv, then construct and import the descriptor:
+
+```bash
+for ((n=1;n<=3;n++))
+do
+  result=$(./build/bin/bitcoin rpc -signet -rpcwallet="participant_${n}" gethdkey "m/87'/1'/0'" '{"private": true}')
+  origin=$(echo $result | jq -r '.origin')
+  xprv=$(echo $result | jq -r '.xprv')
+
+  # Build descriptor with this participant's xprv and other participants' xpubs
+  if [ $n -eq 1 ]; then
+    key1="${origin}${xprv}/<0;1>/*"
+  else
+    key1="${xpubs["xpub_1"]}"
+  fi
+  if [ $n -eq 2 ]; then
+    key2="${origin}${xprv}/<0;1>/*"
+  else
+    key2="${xpubs["xpub_2"]}"
+  fi
+  if [ $n -eq 3 ]; then
+    key3="${origin}${xprv}/<0;1>/*"
+  else
+    key3="${xpubs["xpub_3"]}"
+  fi
+
+  priv_desc="wsh(sortedmulti(2,${key1},${key2},${key3}))"
+  priv_checksum=$(./build/bin/bitcoin rpc -signet getdescriptorinfo "$priv_desc" | jq -r '.checksum')
+  import_desc="[{\"desc\": \"${priv_desc}#${priv_checksum}\", \"timestamp\": \"now\"}]"
+
+  ./build/bin/bitcoin rpc -signet -rpcwallet="participant_${n}" importdescriptors "$import_desc"
+done
+```
+
+Each participant's wallet now has the multisig descriptor with their private key, enabling them to sign PSBTs for this multisig.
+
+### 1.5 Fund the wallet
 
 The wallet can receive signet coins by generating a new address and passing it as parameters to `getcoins.py` script.
 
@@ -144,7 +184,7 @@ The `getbalances` RPC may be used to check the balance. Coins with `trusted` sta
 ./build/bin/bitcoin rpc -signet -rpcwallet="multisig_wallet_01" getbalances
 ```
 
-### 1.5 Create a PSBT
+### 1.6 Create a PSBT
 
 Unlike singlesig wallets, multisig wallets cannot create and sign transactions directly because they require the signatures of the co-signers. Instead they create a Partially Signed Bitcoin Transaction (PSBT).
 
@@ -170,7 +210,7 @@ There is also the `createpsbt` RPC, which serves the same purpose, but it has no
 
 The `send` RPC can also return a PSBT if more signatures are needed to sign the transaction.
 
-### 1.6 Decode or Analyze the PSBT
+### 1.7 Decode or Analyze the PSBT
 
 Optionally, the PSBT can be decoded to a JSON format using `decodepsbt` RPC.
 
@@ -182,7 +222,7 @@ The `analyzepsbt` RPC analyzes and provides information about the current status
 ./build/bin/bitcoin rpc -signet analyzepsbt $funded_psbt
 ```
 
-### 1.7 Update the PSBT
+### 1.8 Update the PSBT
 
 In the code above, two PSBTs are created. One signed by `participant_1` wallet and other, by the `participant_2` wallet.
 
@@ -194,7 +234,7 @@ psbt_1=$(./build/bin/bitcoin rpc -signet -rpcwallet="participant_1" walletproces
 psbt_2=$(./build/bin/bitcoin rpc -signet -rpcwallet="participant_2" walletprocesspsbt $funded_psbt | jq '.psbt')
 ```
 
-### 1.8 Combine the PSBT
+### 1.9 Combine the PSBT
 
 The PSBT, if signed separately by the co-signers, must be combined into one transaction before being finalized. This is done by `combinepsbt` RPC.
 
@@ -206,7 +246,7 @@ There is an RPC called `joinpsbts`, but it has a different purpose than `combine
 
 In the example above, the PSBTs are the same, but signed by different participants. If the user tries to merge them using `joinpsbts`, the error `Input txid:pos exists in multiple PSBTs` is returned. To be able to merge different PSBTs into one, they must have different inputs and outputs.
 
-### 1.9 Finalize and Broadcast the PSBT
+### 1.10 Finalize and Broadcast the PSBT
 
 The `finalizepsbt` RPC is used to produce a network serialized transaction which can be broadcast with `sendrawtransaction`.
 
@@ -218,7 +258,7 @@ finalized_psbt_hex=$(./build/bin/bitcoin rpc -signet finalizepsbt $combined_psbt
 ./build/bin/bitcoin rpc -signet sendrawtransaction $finalized_psbt_hex
 ```
 
-### 1.10 Alternative Workflow (PSBT sequential signatures)
+### 1.11 Alternative Workflow (PSBT sequential signatures)
 
 Instead of each wallet signing the original PSBT and combining them later, the wallets can also sign the PSBTs sequentially. This is less scalable than the previously presented parallel workflow, but it works.
 
