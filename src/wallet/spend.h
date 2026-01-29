@@ -58,8 +58,12 @@ struct CoinsResult {
     void Shuffle(FastRandomContext& rng_fast);
     void Add(OutputType type, const COutput& out);
 
-    CAmount GetTotalAmount() { return total_amount; }
-    std::optional<CAmount> GetEffectiveTotalAmount() { return total_effective_amount; }
+    CAmount GetTotalAmount() const { return total_amount; }
+    std::optional<CAmount> GetEffectiveTotalAmount() const { return total_effective_amount; }
+    // Returns the appropriate total based on whether fees are being subtracted from outputs
+    std::optional<CAmount> GetAppropriateTotal(bool subtract_fee_outputs) const {
+        return subtract_fee_outputs ? total_amount : total_effective_amount;
+    }
 
 private:
     /** Sum of all available coins raw value */
