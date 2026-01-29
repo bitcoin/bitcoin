@@ -131,7 +131,7 @@ class TestNode():
             "-debugexclude=libevent",
             "-debugexclude=leveldb",
             "-debugexclude=rand",
-            "-uacomment=testnode%d" % i,  # required for subversion uniqueness across peers
+            "-uacomment=testnode%d" % i,  # required for user agent uniqueness across peers
         ]
         if uses_wallet is not None and not uses_wallet:
             self.args.append("-disablewallet")

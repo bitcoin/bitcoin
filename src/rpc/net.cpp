@@ -157,7 +157,7 @@ static RPCHelpMan getpeerinfo()
                     {RPCResult::Type::NUM, "minping", /*optional=*/true, "The minimum observed ping time in seconds, if any"},
                     {RPCResult::Type::NUM, "pingwait", /*optional=*/true, "The duration in seconds of an outstanding ping (if non-zero)"},
                     {RPCResult::Type::NUM, "version", "The peer version, such as 70001"},
-                    {RPCResult::Type::STR, "subver", "The string version"},
+                    {RPCResult::Type::STR, "subver", "The peer user agent string"},
                     {RPCResult::Type::BOOL, "inbound", "Inbound (true) or Outbound (false)"},
                     {RPCResult::Type::BOOL, "bip152_hb_to", "Whether we selected peer as (compact blocks) high-bandwidth peer"},
                     {RPCResult::Type::BOOL, "bip152_hb_from", "Whether peer selected us as (compact blocks) high-bandwidth peer"},
@@ -261,7 +261,7 @@ static RPCHelpMan getpeerinfo()
             obj.pushKV("pingwait", Ticks<SecondsDouble>(statestats.m_ping_wait));
         }
         obj.pushKV("version", stats.nVersion);
-        // Use the sanitized form of subver here, to avoid tricksy remote peers from
+        // Use the sanitized form of the user agent string here, to avoid tricksy remote peers from
         // corrupting or modifying the JSON output by putting special characters in
         // their ver message.
         obj.pushKV("subver", stats.cleanUserAgent);
@@ -639,7 +639,7 @@ static RPCHelpMan getnetworkinfo()
                     RPCResult::Type::OBJ, "", "",
                     {
                         {RPCResult::Type::NUM, "version", "the server version"},
-                        {RPCResult::Type::STR, "subversion", "the server subversion string"},
+                        {RPCResult::Type::STR, "subversion", "the server user agent string"},
                         {RPCResult::Type::NUM, "protocolversion", "the protocol version"},
                         {RPCResult::Type::STR_HEX, "localservices", "the services we offer to the network"},
                         {RPCResult::Type::ARR, "localservicesnames", "the services we offer to the network, in human-readable form",

@@ -584,15 +584,15 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if not wait_for_connect:
             return
 
-        # Use subversion as peer id. Test nodes have their node number appended to the user agent string
-        from_connection_subver = from_connection.getnetworkinfo()['subversion']
-        to_connection_subver = to_connection.getnetworkinfo()['subversion']
+        # Use the user agent string as peer id. Test nodes have their node number appended to it.
+        from_connection_user_agent = from_connection.getnetworkinfo()['subversion']
+        to_connection_user_agent = to_connection.getnetworkinfo()['subversion']
 
-        def find_conn(node, peer_subversion, inbound):
-            return next(filter(lambda peer: peer['subver'] == peer_subversion and peer['inbound'] == inbound, node.getpeerinfo()), None)
+        def find_conn(node, peer_user_agent, inbound):
+            return next(filter(lambda peer: peer['subver'] == peer_user_agent and peer['inbound'] == inbound, node.getpeerinfo()), None)
 
-        self.wait_until(lambda: find_conn(from_connection, to_connection_subver, inbound=False) is not None)
-        self.wait_until(lambda: find_conn(to_connection, from_connection_subver, inbound=True) is not None)
+        self.wait_until(lambda: find_conn(from_connection, to_connection_user_agent, inbound=False) is not None)
+        self.wait_until(lambda: find_conn(to_connection, from_connection_user_agent, inbound=True) is not None)
 
         def check_bytesrecv(peer, msg_type, min_bytes_recv):
             assert peer is not None, "Error: peer disconnected"
@@ -604,8 +604,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         #
         # As the flag fSuccessfullyConnected is not exposed, check it by
         # waiting for a pong, which can only happen after the flag was set.
-        self.wait_until(lambda: check_bytesrecv(find_conn(from_connection, to_connection_subver, inbound=False), 'pong', 29))
-        self.wait_until(lambda: check_bytesrecv(find_conn(to_connection, from_connection_subver, inbound=True), 'pong', 29))
+        self.wait_until(lambda: check_bytesrecv(find_conn(from_connection, to_connection_user_agent, inbound=False), 'pong', 29))
+        self.wait_until(lambda: check_bytesrecv(find_conn(to_connection, from_connection_user_agent, inbound=True), 'pong', 29))
 
     def disconnect_nodes(self, a, b):
         def disconnect_nodes_helper(node_a, node_b):
