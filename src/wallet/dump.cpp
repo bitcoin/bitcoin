@@ -21,37 +21,36 @@ namespace wallet {
 static const std::string DUMP_MAGIC = "BITCOIN_CORE_WALLET_DUMP";
 uint32_t DUMP_VERSION = 1;
 
-bool DumpWallet(const ArgsManager& args, WalletDatabase& db, bilingual_str& error)
+util::Result<void> DumpWallet(const ArgsManager& args, WalletDatabase& db)
 {
+    util::Result<void> result;
     // Get the dumpfile
     std::string dump_filename = args.GetArg("-dumpfile", "");
     if (dump_filename.empty()) {
-        error = _("No dump file provided. To use dump, -dumpfile=<filename> must be provided.");
-        return false;
+        result.update(util::Error{_("No dump file provided. To use dump, -dumpfile=<filename> must be provided.")});
+        return result;
     }
 
     fs::path path = fs::PathFromString(dump_filename);
     path = fs::absolute(path);
     if (fs::exists(path)) {
-        error = strprintf(_("File %s already exists. If you are sure this is what you want, move it out of the way first."), fs::PathToString(path));
-        return false;
+        result.update(util::Error{strprintf(_("File %s already exists. If you are sure this is what you want, move it out of the way first."), fs::PathToString(path))});
+        return result;
     }
     std::ofstream dump_file;
     dump_file.open(path.std_path());
     if (dump_file.fail()) {
-        error = strprintf(_("Unable to open %s for writing"), fs::PathToString(path));
-        return false;
+        result.update(util::Error{strprintf(_("Unable to open %s for writing"), fs::PathToString(path))});
+        return result;
     }
 
     HashWriter hasher{};
 
     std::unique_ptr<DatabaseBatch> batch = db.MakeBatch();
 
-    bool ret = true;
     std::unique_ptr<DatabaseCursor> cursor = batch->GetNewCursor();
     if (!cursor) {
-        error = _("Error: Couldn't create cursor into database");
-        ret = false;
+        result.update(util::Error{_("Error: Couldn't create cursor into database")});
     }
 
     // Write out a magic string with version
@@ -70,7 +69,7 @@ bool DumpWallet(const ArgsManager& args, WalletDatabase& db, bilingual_str& erro
     dump_file.write(line.data(), line.size());
     hasher << std::span{line};
 
-    if (ret) {
+    if (result) {
 
         // Read the records
         while (true) {
@@ -78,11 +77,10 @@ bool DumpWallet(const ArgsManager& args, WalletDatabase& db, bilingual_str& erro
             DataStream ss_value{};
             DatabaseCursor::Status status = cursor->Next(ss_key, ss_value);
             if (status == DatabaseCursor::Status::DONE) {
-                ret = true;
+                result.update({});
                 break;
             } else if (status == DatabaseCursor::Status::FAIL) {
-                error = _("Error reading next record from wallet database");
-                ret = false;
+                result.update(util::Error{_("Error reading next record from wallet database")});
                 break;
             }
             std::string key_str = HexStr(ss_key);
@@ -96,7 +94,7 @@ bool DumpWallet(const ArgsManager& args, WalletDatabase& db, bilingual_str& erro
     cursor.reset();
     batch.reset();
 
-    if (ret) {
+    if (result) {
         // Write the hash
         tfm::format(dump_file, "checksum,%s\n", HexStr(hasher.GetHash()));
         dump_file.close();
@@ -106,7 +104,7 @@ bool DumpWallet(const ArgsManager& args, WalletDatabase& db, bilingual_str& erro
         fs::remove(path);
     }
 
-    return ret;
+    return result;
 }
 
 // The standard wallet deleter function blocks on the validation interface
@@ -119,25 +117,27 @@ static void WalletToolReleaseWallet(CWallet* wallet)
     delete wallet;
 }
 
-bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::path& wallet_path, bilingual_str& error, std::vector<bilingual_str>& warnings)
+util::Result<void> CreateFromDump(const ArgsManager& args, const std::string& name, const fs::path& wallet_path)
 {
+    util::Result<void> result;
+
     if (name.empty()) {
-        tfm::format(std::cerr, "Wallet name cannot be empty\n");
-        return false;
+        result.update(util::Error{_("Wallet name cannot be empty")});
+        return result;
     }
 
     // Get the dumpfile
     std::string dump_filename = args.GetArg("-dumpfile", "");
     if (dump_filename.empty()) {
-        error = _("No dump file provided. To use createfromdump, -dumpfile=<filename> must be provided.");
-        return false;
+        result.update(util::Error{_("No dump file provided. To use createfromdump, -dumpfile=<filename> must be provided.")});
+        return result;
     }
 
     fs::path dump_path = fs::PathFromString(dump_filename);
     dump_path = fs::absolute(dump_path);
     if (!fs::exists(dump_path)) {
-        error = strprintf(_("Dump file %s does not exist."), fs::PathToString(dump_path));
-        return false;
+        result.update(util::Error{strprintf(_("Dump file %s does not exist."), fs::PathToString(dump_path))});
+        return result;
     }
     std::ifstream dump_file{dump_path.std_path()};
 
@@ -151,21 +151,21 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
     std::string version_value;
     std::getline(dump_file, version_value, '\n');
     if (magic_key != DUMP_MAGIC) {
-        error = strprintf(_("Error: Dumpfile identifier record is incorrect. Got \"%s\", expected \"%s\"."), magic_key, DUMP_MAGIC);
         dump_file.close();
-        return false;
+        result.update(util::Error{strprintf(_("Error: Dumpfile identifier record is incorrect. Got \"%s\", expected \"%s\"."), magic_key, DUMP_MAGIC)});
+        return result;
     }
     // Check the version number (value of first record)
     const auto ver{ToIntegral<uint32_t>(version_value)};
     if (!ver) {
-        error = strprintf(_("Error: Unable to parse version %u as a uint32_t"), version_value);
         dump_file.close();
-        return false;
+        result.update(util::Error{strprintf(_("Error: Unable to parse version %u as a uint32_t"), version_value)});
+        return result;
     }
     if (*ver != DUMP_VERSION) {
-        error = strprintf(_("Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s"), version_value);
         dump_file.close();
-        return false;
+        result.update(util::Error{strprintf(_("Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s"), version_value)});
+        return result;
     }
     std::string magic_hasher_line = strprintf("%s,%s\n", magic_key, version_value);
     hasher << std::span{magic_hasher_line};
@@ -176,38 +176,39 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
     std::string format_value;
     std::getline(dump_file, format_value, '\n');
     if (format_key != "format") {
-        error = strprintf(_("Error: Dumpfile format record is incorrect. Got \"%s\", expected \"format\"."), format_key);
         dump_file.close();
-        return false;
+        result.update(util::Error{strprintf(_("Error: Dumpfile format record is incorrect. Got \"%s\", expected \"format\"."), format_key)});
+        return result;
     }
     // Make sure that the dump was created from a sqlite database only as that is the only
     // type of database that we still support.
     // Other formats such as BDB should not be loaded into a sqlite database since they also
     // use a different type of wallet entirely which is no longer compatible with this software.
     if (format_value != "sqlite") {
-        error = strprintf(_("Error: Dumpfile specifies an unsupported database format (%s). Only sqlite database dumps are supported"), format_value);
-        return false;
+        result.update(util::Error{strprintf(_("Error: Dumpfile specifies an unsupported database format (%s). Only sqlite database dumps are supported"), format_value)});
+        return result;
     }
     std::string format_hasher_line = strprintf("%s,%s\n", format_key, format_value);
     hasher << std::span{format_hasher_line};
 
     DatabaseOptions options;
-    DatabaseStatus status;
     ReadDatabaseArgs(args, options);
     options.require_create = true;
     options.require_format = DatabaseFormat::SQLITE;
-    std::unique_ptr<WalletDatabase> database = MakeDatabase(wallet_path, options, status, error);
-    if (!database) return false;
+    auto database{MakeDatabase(wallet_path, options) >> result};
+    if (!database) {
+        result.update(util::Error{});
+        return result;
+    }
 
     // dummy chain interface
-    bool ret = true;
-    std::shared_ptr<CWallet> wallet(new CWallet(/*chain=*/nullptr, name, std::move(database)), WalletToolReleaseWallet);
+    std::shared_ptr<CWallet> wallet(new CWallet(/*chain=*/nullptr, name, std::move(database.value())), WalletToolReleaseWallet);
     {
         LOCK(wallet->cs_wallet);
         DBErrors load_wallet_ret = wallet->LoadWallet();
         if (load_wallet_ret != DBErrors::LOAD_OK) {
-            error = strprintf(_("Error creating %s"), name);
-            return false;
+            result.update(util::Error{strprintf(_("Error creating %s"), name)});
+            return result;
         }
 
         // Get the database handle
@@ -225,8 +226,7 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
             if (key == "checksum") {
                 std::vector<unsigned char> parsed_checksum = ParseHex(value);
                 if (parsed_checksum.size() != checksum.size()) {
-                    error = Untranslated("Error: Checksum is not the correct size");
-                    ret = false;
+                    result.update(util::Error{Untranslated("Error: Checksum is not the correct size")});
                     break;
                 }
                 std::copy(parsed_checksum.begin(), parsed_checksum.end(), checksum.begin());
@@ -241,37 +241,32 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
             }
 
             if (!IsHex(key)) {
-                error = strprintf(_("Error: Got key that was not hex: %s"), key);
-                ret = false;
+                result.update(util::Error{strprintf(_("Error: Got key that was not hex: %s"), key)});
                 break;
             }
             if (!IsHex(value)) {
-                error = strprintf(_("Error: Got value that was not hex: %s"), value);
-                ret = false;
+                result.update(util::Error{strprintf(_("Error: Got value that was not hex: %s"), value)});
                 break;
             }
 
             std::vector<unsigned char> k = ParseHex(key);
             std::vector<unsigned char> v = ParseHex(value);
             if (!batch->Write(std::span{k}, std::span{v})) {
-                error = strprintf(_("Error: Unable to write record to new wallet"));
-                ret = false;
+                result.update(util::Error{strprintf(_("Error: Unable to write record to new wallet"))});
                 break;
             }
         }
 
-        if (ret) {
+        if (result) {
             uint256 comp_checksum = hasher.GetHash();
             if (checksum.IsNull()) {
-                error = _("Error: Missing checksum");
-                ret = false;
+                result.update(util::Error{_("Error: Missing checksum")});
             } else if (checksum != comp_checksum) {
-                error = strprintf(_("Error: Dumpfile checksum does not match. Computed %s, expected %s"), HexStr(comp_checksum), HexStr(checksum));
-                ret = false;
+                result.update(util::Error{strprintf(_("Error: Dumpfile checksum does not match. Computed %s, expected %s"), HexStr(comp_checksum), HexStr(checksum))});
             }
         }
 
-        if (ret) {
+        if (result) {
             batch->TxnCommit();
         } else {
             batch->TxnAbort();
@@ -288,12 +283,12 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
     wallet.reset(); // The pointer deleter will close the wallet for us.
 
     // Remove the wallet dir if we have a failure
-    if (!ret) {
+    if (!result) {
         for (const auto& p : paths_to_remove) {
             fs::remove(p);
         }
     }
 
-    return ret;
+    return result;
 }
 } // namespace wallet
