@@ -28,6 +28,7 @@
 #include <vector>
 
 namespace {
+BasicTestingSetup* g_setup;
 const Coin EMPTY_COIN{};
 
 bool operator==(const Coin& a, const Coin& b)
@@ -39,7 +40,8 @@ bool operator==(const Coin& a, const Coin& b)
 
 void initialize_coins_view()
 {
-    static const auto testing_setup = MakeNoLogFileContext<>();
+    static const auto testing_setup = MakeNoLogFileContext<BasicTestingSetup>();
+    g_setup = testing_setup.get();
 }
 
 void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend_coins_view, bool is_db)
@@ -309,6 +311,6 @@ FUZZ_TARGET(coins_view_db, .init = initialize_coins_view)
         .cache_bytes = 1_MiB,
         .memory_only = true,
     };
-    CCoinsViewDB coins_db{std::move(db_params), CoinsViewOptions{}};
+    CCoinsViewDB coins_db{g_setup->m_logger, std::move(db_params), CoinsViewOptions{}};
     TestCoinsView(fuzzed_data_provider, coins_db, /*is_db=*/true);
 }

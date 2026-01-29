@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(blockmanager_find_block_pos)
             .cache_bytes = 0,
         },
     };
-    BlockManager blockman{*Assert(m_node.shutdown_signal), blockman_opts};
+    BlockManager blockman{m_logger, *Assert(m_node.shutdown_signal), blockman_opts};
     // simulate adding a genesis block normally
     BOOST_CHECK_EQUAL(blockman.WriteBlock(params->GenesisBlock(), 0).nPos, STORAGE_HEADER_BYTES);
     // simulate what happens during reindex
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(blockmanager_flush_block_file)
             .cache_bytes = 0,
         },
     };
-    BlockManager blockman{*Assert(m_node.shutdown_signal), blockman_opts};
+    BlockManager blockman{m_logger, *Assert(m_node.shutdown_signal), blockman_opts};
 
     // Test blocks with no transactions, not even a coinbase
     CBlock block1;

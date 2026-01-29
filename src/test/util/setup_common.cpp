@@ -80,6 +80,8 @@ constexpr inline auto TEST_DIR_PATH_ELEMENT{"test_common bitcoin"}; // Includes 
 /** Random context to get unique temp data dirs. Separate from m_rng, which can be seeded from a const env var */
 static FastRandomContext g_rng_temp_path;
 static const bool g_rng_temp_path_init{[] {
+    // Make sure there is a global logger SeedStartup() can use.
+    BCLog::Logger logger;
     // Must be initialized before any SeedRandomForTest
     Assert(!g_used_g_prng);
     (void)g_rng_temp_path.rand64();
@@ -285,7 +287,7 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
                 .wipe_data = m_args.GetBoolArg("-reindex", false),
             },
         };
-        m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown_signal), chainman_opts, blockman_opts);
+        m_node.chainman = std::make_unique<ChainstateManager>(m_logger, *Assert(m_node.shutdown_signal), chainman_opts, blockman_opts);
     };
     m_make_chainman();
 }

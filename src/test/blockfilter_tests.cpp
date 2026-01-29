@@ -16,7 +16,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_AUTO_TEST_SUITE(blockfilter_tests)
+BOOST_FIXTURE_TEST_SUITE(blockfilter_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(gcsfilter_test)
 {

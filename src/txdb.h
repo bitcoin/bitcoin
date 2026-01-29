@@ -10,6 +10,7 @@
 #include <dbwrapper.h>
 #include <kernel/caches.h>
 #include <kernel/cs_main.h>
+#include <logging.h>
 #include <sync.h>
 #include <util/fs.h>
 
@@ -34,11 +35,12 @@ struct CoinsViewOptions {
 class CCoinsViewDB final : public CCoinsView
 {
 protected:
+    const BCLog::Context m_log;
     DBParams m_db_params;
     CoinsViewOptions m_options;
     std::unique_ptr<CDBWrapper> m_db;
 public:
-    explicit CCoinsViewDB(DBParams db_params, CoinsViewOptions options);
+    explicit CCoinsViewDB(BCLog::Logger& logger, DBParams db_params, CoinsViewOptions options);
 
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;

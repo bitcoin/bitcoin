@@ -14,7 +14,6 @@
 #include <script/script.h>
 #include <streams.h>
 #include <uint256.h>
-#include <util/check.h>
 
 #include <algorithm>
 #include <cstddef>
