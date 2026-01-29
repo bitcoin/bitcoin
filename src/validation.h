@@ -705,9 +705,6 @@ public:
         return Assert(m_coins_views)->m_catcherview;
     }
 
-    //! Destructs all objects related to accessing the UTXO set.
-    void ResetCoinsViews() { m_coins_views.reset(); }
-
     //! The cache size of the on-disk coins view.
     size_t m_coinsdb_cache_size_bytes{0};
 
