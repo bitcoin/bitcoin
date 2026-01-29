@@ -323,6 +323,48 @@ typedef uint8_t btck_Warning;
 #define btck_Warning_UNKNOWN_NEW_RULES_ACTIVATED ((btck_Warning)(0))
 #define btck_Warning_LARGE_WORK_INVALID_CHAIN ((btck_Warning)(1))
 
+/**
+ * A collection of logging categories that may be encountered by kernel code.
+ */
+typedef uint8_t btck_LogCategory;
+#define btck_LogCategory_ALL ((btck_LogCategory)(0))
+#define btck_LogCategory_BENCH ((btck_LogCategory)(1))
+#define btck_LogCategory_BLOCKSTORAGE ((btck_LogCategory)(2))
+#define btck_LogCategory_COINDB ((btck_LogCategory)(3))
+#define btck_LogCategory_ESTIMATEFEE ((btck_LogCategory)(4))
+#define btck_LogCategory_KERNEL ((btck_LogCategory)(5))
+#define btck_LogCategory_LEVELDB ((btck_LogCategory)(6))
+#define btck_LogCategory_MEMPOOL ((btck_LogCategory)(7))
+#define btck_LogCategory_PRUNE ((btck_LogCategory)(8))
+#define btck_LogCategory_RAND ((btck_LogCategory)(9))
+#define btck_LogCategory_REINDEX ((btck_LogCategory)(10))
+#define btck_LogCategory_TXPACKAGES ((btck_LogCategory)(11))
+#define btck_LogCategory_VALIDATION ((btck_LogCategory)(12))
+
+/**
+ * The level at which logs should be produced.
+ */
+typedef uint8_t btck_LogLevel;
+#define btck_LogLevel_TRACE ((btck_LogLevel)(0))
+#define btck_LogLevel_DEBUG ((btck_LogLevel)(1))
+#define btck_LogLevel_INFO ((btck_LogLevel)(2))
+#define btck_LogLevel_WARNING ((btck_LogLevel)(3))
+#define btck_LogLevel_ERROR ((btck_LogLevel)(4))
+
+/**
+ * A log entry passed to the logging callback.
+ */
+typedef struct {
+    btck_StringView message;       //!< Log message.
+    btck_StringView file_name;     //!< Source file name.
+    btck_StringView function_name; //!< Source function name.
+    btck_StringView thread_name;   //!< Thread name.
+    int64_t timestamp_ns;          //!< Timestamp in nanoseconds since epoch.
+    uint32_t line;                 //!< Source line number.
+    btck_LogLevel level;           //!< Log level.
+    btck_LogCategory category;     //!< Log category.
+} btck_LogEntry;
+
 /** Callback function types */
 
 /**
@@ -427,34 +469,6 @@ typedef struct {
     btck_NotifyFlushError flush_error;      //!< An error encountered when flushing data to disk.
     btck_NotifyFatalError fatal_error;      //!< An unrecoverable system error encountered by the library.
 } btck_NotificationInterfaceCallbacks;
-
-/**
- * A collection of logging categories that may be encountered by kernel code.
- */
-typedef uint8_t btck_LogCategory;
-#define btck_LogCategory_ALL ((btck_LogCategory)(0))
-#define btck_LogCategory_BENCH ((btck_LogCategory)(1))
-#define btck_LogCategory_BLOCKSTORAGE ((btck_LogCategory)(2))
-#define btck_LogCategory_COINDB ((btck_LogCategory)(3))
-#define btck_LogCategory_ESTIMATEFEE ((btck_LogCategory)(4))
-#define btck_LogCategory_KERNEL ((btck_LogCategory)(5))
-#define btck_LogCategory_LEVELDB ((btck_LogCategory)(6))
-#define btck_LogCategory_MEMPOOL ((btck_LogCategory)(7))
-#define btck_LogCategory_PRUNE ((btck_LogCategory)(8))
-#define btck_LogCategory_RAND ((btck_LogCategory)(9))
-#define btck_LogCategory_REINDEX ((btck_LogCategory)(10))
-#define btck_LogCategory_TXPACKAGES ((btck_LogCategory)(11))
-#define btck_LogCategory_VALIDATION ((btck_LogCategory)(12))
-
-/**
- * The level at which logs should be produced.
- */
-typedef uint8_t btck_LogLevel;
-#define btck_LogLevel_TRACE ((btck_LogLevel)(0))
-#define btck_LogLevel_DEBUG ((btck_LogLevel)(1))
-#define btck_LogLevel_INFO ((btck_LogLevel)(2))
-#define btck_LogLevel_WARNING ((btck_LogLevel)(3))
-#define btck_LogLevel_ERROR ((btck_LogLevel)(4))
 
 /**
  * Options controlling the format of log messages.

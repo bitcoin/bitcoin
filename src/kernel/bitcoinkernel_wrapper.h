@@ -8,6 +8,7 @@
 #include <kernel/bitcoinkernel.h>
 
 #include <array>
+#include <chrono>
 #include <exception>
 #include <functional>
 #include <memory>
@@ -828,6 +829,24 @@ inline void logging_enable_category(LogCategory category)
 {
     btck_logging_enable_category(static_cast<btck_LogCategory>(category));
 }
+
+class LogEntry
+{
+private:
+    const btck_LogEntry* m_entry;
+
+public:
+    LogEntry(const btck_LogEntry& e) : m_entry{&e} {}
+
+    std::string_view Message() const { return {m_entry->message.data, m_entry->message.size}; }
+    std::string_view FileName() const { return {m_entry->file_name.data, m_entry->file_name.size}; }
+    std::string_view FunctionName() const { return {m_entry->function_name.data, m_entry->function_name.size}; }
+    std::string_view ThreadName() const { return {m_entry->thread_name.data, m_entry->thread_name.size}; }
+    std::chrono::sys_time<std::chrono::nanoseconds> Timestamp() const { return std::chrono::sys_time<std::chrono::nanoseconds>{std::chrono::nanoseconds{m_entry->timestamp_ns}}; }
+    uint32_t Line() const { return m_entry->line; }
+    LogLevel Level() const { return static_cast<LogLevel>(m_entry->level); }
+    LogCategory Category() const { return static_cast<LogCategory>(m_entry->category); }
+};
 
 inline void logging_disable_category(LogCategory category)
 {
