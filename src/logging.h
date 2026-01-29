@@ -11,6 +11,7 @@
 #include <tinyformat.h>
 #include <util/check.h>
 #include <util/fs.h>
+#include <util/source.h>
 #include <util/string.h>
 #include <util/time.h>
 
@@ -21,7 +22,6 @@
 #include <list>
 #include <memory>
 #include <mutex>
-#include <source_location>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -36,26 +36,6 @@ static constexpr bool DEFAULT_LOGLEVELALWAYS = false;
 extern const char * const DEFAULT_DEBUGLOGFILE;
 
 extern bool fLogIPs;
-
-/// Like std::source_location, but allowing to override the function name.
-class SourceLocation
-{
-public:
-    /// The func argument must be constructed from the C++11 __func__ macro.
-    /// Ref: https://en.cppreference.com/w/cpp/language/function.html#func
-    /// Non-static string literals are not supported.
-    SourceLocation(const char* func,
-                   std::source_location loc = std::source_location::current())
-        : m_func{func}, m_loc{loc} {}
-
-    std::string_view file_name() const { return m_loc.file_name(); }
-    std::uint_least32_t line() const { return m_loc.line(); }
-    std::string_view function_name_short() const { return m_func; }
-
-private:
-    std::string_view m_func;
-    std::source_location m_loc;
-};
 
 struct SourceLocationEqual {
     bool operator()(const SourceLocation& lhs, const SourceLocation& rhs) const noexcept
