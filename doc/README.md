@@ -3,7 +3,7 @@ Bitcoin Core
 
 Setup
 ---------------------
-Bitcoin Core is the original Bitcoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Bitcoin transactions, which requires several hundred gigabytes or more of disk space. Depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to several days or more.
+Bitcoin Core is the original Bitcoin client and it builds the backbone of the network. By default, Bitcoin Core operates as a full node, storing and validating the entire blockchain, which requires several hundred gigabytes of disk space. Synchronization time varies based on system resources and network speed. Bitcoin Core also offers a pruned mode that significantly reduces disk usage by removing older block data after verification, with some functional limitations.
 
 To download Bitcoin Core, visit [bitcoincore.org](https://bitcoincore.org/en/download/).
 
