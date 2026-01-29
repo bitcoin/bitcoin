@@ -10,7 +10,9 @@
 #include <common/args.h>
 #include <common/system.h>
 #include <compat/compat.h>
+#include <interfaces/chain.h>
 #include <interfaces/init.h>
+#include <interfaces/ipc.h>
 #include <key.h>
 #include <logging.h>
 #include <pubkey.h>
@@ -28,7 +30,7 @@ using util::Join;
 
 const TranslateFn G_TRANSLATION_FUN{nullptr};
 
-static void SetupWalletToolArgs(ArgsManager& argsman)
+static void SetupWalletToolArgs(ArgsManager& argsman, bool can_connect_ipc)
 {
     SetupHelpOptions(argsman);
     SetupChainParamsBaseOptions(argsman);
@@ -39,6 +41,9 @@ static void SetupWalletToolArgs(ArgsManager& argsman)
     argsman.AddArg("-dumpfile=<file name>", "When used with 'dump', writes out the records to this file. When used with 'createfromdump', loads the records into a new wallet.", ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
     argsman.AddArg("-debug=<category>", "Output debugging information (default: 0).", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-printtoconsole", "Send trace/debug info to console (default: 1 when no -debug is true, 0 otherwise).", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+    if (can_connect_ipc) {
+        argsman.AddArg("-ipcconnect=<address>", "Connect to bitcoin-node process in the background to perform online operations. Valid <address> values are 'auto' to try connecting to default socket in <datadir>/sockets/node.sock, but proceed offline if it isn't available, 'unix' to connect to the default socket and fail if it isn't available, 'unix:<socket path>' to connect to a socket at a nonstandard path, and -noipcconnect to not connect. Default value: auto", ArgsManager::ALLOW_ANY, OptionsCategory::IPC);
+    }
 
     argsman.AddCommand("info", "Get wallet info");
     argsman.AddCommand("create", "Create a new descriptor wallet file");
@@ -48,7 +53,6 @@ static void SetupWalletToolArgs(ArgsManager& argsman)
 
 static std::optional<int> WalletAppInit(ArgsManager& args, int argc, char* argv[])
 {
-    SetupWalletToolArgs(args);
     std::string error_message;
     if (!args.ParseParameters(argc, argv, error_message)) {
         tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error_message);
@@ -104,6 +108,7 @@ MAIN_FUNCTION
     SetupEnvironment();
     RandomInit();
     try {
+        SetupWalletToolArgs(args, init->canConnectIpc());
         if (const auto maybe_exit{WalletAppInit(args, argc, argv)}) return *maybe_exit;
     } catch (const std::exception& e) {
         PrintExceptionContinue(&e, "WalletAppInit()");
@@ -124,7 +129,18 @@ MAIN_FUNCTION
     }
 
     ECC_Context ecc_context{};
-    if (!wallet::WalletTool::ExecuteWalletToolFunc(args, command->command)) {
+
+    std::unique_ptr<interfaces::Chain> chain;
+    if (interfaces::Ipc* ipc = init->ipc()) {
+        std::string address = args.GetArg("-ipcconnect", "auto");
+        if (auto init = ipc->connectAddress(address)) {
+            tfm::format(std::cout, "Connected to IPC address %s\n", address);
+            chain = init->makeChain();
+            ipc->addCleanup(*chain, [init = init.release()] { delete init; });
+        }
+    }
+
+    if (!wallet::WalletTool::ExecuteWalletToolFunc(args, chain.get(), command->command)) {
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
