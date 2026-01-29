@@ -4,9 +4,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <logging.h>
+
 #include <memusage.h>
 #include <util/check.h>
 #include <util/fs.h>
+#include <util/log.h>
 #include <util/string.h>
 #include <util/threadnames.h>
 #include <util/time.h>
@@ -42,6 +44,11 @@ BCLog::Logger& LogInstance()
  */
     static BCLog::Logger* g_logger{new BCLog::Logger()};
     return *g_logger;
+}
+
+util::log::Dispatcher& util::log::g_dispatcher()
+{
+    return LogInstance().GetDispatcher();
 }
 
 bool fLogIPs = DEFAULT_LOGIPS;

@@ -189,6 +189,9 @@ namespace BCLog {
         size_t m_cur_buffer_memusage GUARDED_BY(m_cs){0};
         size_t m_buffer_lines_discarded GUARDED_BY(m_cs){0};
 
+        //! Dispatches log entries to its registered callbacks.
+        util::log::Dispatcher m_dispatcher{};
+
         //! Manages the rate limiting of each log location.
         std::shared_ptr<LogRateLimiter> m_limiter GUARDED_BY(m_cs);
 
@@ -227,6 +230,9 @@ namespace BCLog {
 
         fs::path m_file_path;
         std::atomic<bool> m_reopen_file{false};
+
+        /** Get the Dispatcher that is used by this Logger to dispatch callbacks. */
+        util::log::Dispatcher& GetDispatcher() { return m_dispatcher; }
 
         /** Send a string to the log output */
         void LogPrintStr(std::string_view str, SourceLocation&& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
