@@ -810,16 +810,6 @@ public:
     }
 };
 
-inline void logging_disable()
-{
-    btck_logging_disable();
-}
-
-inline void logging_set_options(const btck_LoggingOptions& logging_options)
-{
-    btck_logging_set_options(logging_options);
-}
-
 inline void logging_set_level_category(LogCategory category, LogLevel level)
 {
     btck_logging_set_level_category(static_cast<btck_LogCategory>(category), static_cast<btck_LogLevel>(level));

@@ -615,15 +615,6 @@ BOOST_AUTO_TEST_CASE(btck_script_verify_tests)
 
 BOOST_AUTO_TEST_CASE(logging_tests)
 {
-    btck_LoggingOptions logging_options = {
-        .log_timestamps = true,
-        .log_time_micros = true,
-        .log_threadnames = false,
-        .log_sourcelocations = false,
-        .always_print_category_levels = true,
-    };
-
-    logging_set_options(logging_options);
     logging_set_level_category(LogCategory::BENCH, LogLevel::TRACE_LEVEL);
     logging_disable_category(LogCategory::BENCH);
     logging_enable_category(LogCategory::VALIDATION);

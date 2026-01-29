@@ -468,19 +468,6 @@ typedef struct {
 } btck_NotificationInterfaceCallbacks;
 
 /**
- * Options controlling the format of log messages.
- *
- * Set fields as non-zero to indicate true.
- */
-typedef struct {
-    int log_timestamps;               //!< Prepend a timestamp to log messages.
-    int log_time_micros;              //!< Log timestamps in microsecond precision.
-    int log_threadnames;              //!< Prepend the name of the thread to log messages.
-    int log_sourcelocations;          //!< Prepend the source location to log messages.
-    int always_print_category_levels; //!< Prepend the log category and level to log messages.
-} btck_LoggingOptions;
-
-/**
  * A collection of status codes that may be issued by the script verify function.
  */
 typedef uint8_t btck_ScriptVerifyStatus;
@@ -775,25 +762,6 @@ BITCOINKERNEL_API void btck_transaction_output_destroy(btck_TransactionOutput* t
  * Logging-related functions.
  */
 ///@{
-
-/**
- * @brief This disables the global internal logger. No log messages will be
- * buffered internally anymore once this is called and the buffer is cleared.
- * This function should only be called once and is not thread or re-entry safe.
- * Log messages will be buffered until this function is called, or a logging
- * connection is created. This must not be called while a logging connection
- * already exists.
- */
-BITCOINKERNEL_API void btck_logging_disable();
-
-/**
- * @brief Set some options for the global internal logger. This changes global
- * settings and will override settings for all existing @ref
- * btck_LoggingConnection instances.
- *
- * @param[in] options Sets formatting options of the log messages.
- */
-BITCOINKERNEL_API void btck_logging_set_options(btck_LoggingOptions options);
 
 /**
  * @brief Set the log level of the global internal logger. This does not

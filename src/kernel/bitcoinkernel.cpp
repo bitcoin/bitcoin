@@ -751,16 +751,6 @@ void btck_txid_destroy(btck_Txid* txid)
     delete txid;
 }
 
-void btck_logging_set_options(const btck_LoggingOptions options)
-{
-    LOCK(cs_main);
-    LogInstance().m_log_timestamps = options.log_timestamps;
-    LogInstance().m_log_time_micros = options.log_time_micros;
-    LogInstance().m_log_threadnames = options.log_threadnames;
-    LogInstance().m_log_sourcelocations = options.log_sourcelocations;
-    LogInstance().m_always_print_category_level = options.always_print_category_levels;
-}
-
 void btck_logging_set_level_category(btck_LogCategory category, btck_LogLevel level)
 {
     LOCK(cs_main);
@@ -779,11 +769,6 @@ void btck_logging_enable_category(btck_LogCategory category)
 void btck_logging_disable_category(btck_LogCategory category)
 {
     LogInstance().DisableCategory(get_bclog_flag(category));
-}
-
-void btck_logging_disable()
-{
-    LogInstance().DisableLogging();
 }
 
 btck_LoggingConnection* btck_logging_connection_create(btck_LogCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback)
