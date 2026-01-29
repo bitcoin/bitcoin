@@ -54,25 +54,47 @@ struct {
  * set that can pay for the spending target and does not exceed the spending target by more than the
  * cost of creating and spending a change output. The algorithm uses a depth-first search on a binary
  * tree. In the binary tree, each node corresponds to the inclusion or the omission of a UTXO. UTXOs
- * are sorted by their effective values and the tree is explored deterministically per the inclusion
- * branch first. At each node, the algorithm checks whether the selection is within the target range.
+ * are sorted by their effective values, tie-broken by their waste score, and the tree is explored deterministically per the inclusion
+ * branch first. For each new input set candidate, the algorithm checks whether the selection is within the target range.
  * While the selection has not reached the target range, more UTXOs are included. When a selection's
- * value exceeds the target range, the complete subtree deriving from this selection can be omitted.
+ * value exceeds the target range, the complete subtree deriving from this selection prefix can be omitted.
  * At that point, the last included UTXO is deselected and the corresponding omission branch explored
- * instead. The search ends after the complete tree has been searched or after a limited number of tries.
+ * instead starting by adding the subsequent UTXO. The search ends after the complete tree has been searched or after a limited number of tries.
  *
  * The search continues to search for better solutions after one solution has been found. The best
- * solution is chosen by minimizing the waste metric. The waste metric is defined as the cost to
+ * solution is chosen by minimal waste score. The waste metric is defined as the cost to
  * spend the current inputs at the given fee rate minus the long term expected cost to spend the
- * inputs, plus the amount by which the selection exceeds the spending target:
+ * inputs, plus the amount by which the selection exceeds the spending target (the "excess"):
  *
- * waste = selectionTotal - target + inputs × (currentFeeRate - longTermFeeRate)
+ *    excess = selected_amount - target
+ *    waste = inputs × (currentFeeRate - longTermFeeRate) + excess
  *
- * The algorithm uses two additional optimizations. A lookahead keeps track of the total value of
- * the unexplored UTXOs. A subtree is not explored if the lookahead indicates that the target range
- * cannot be reached. Further, it is unnecessary to test equivalent combinations. This allows us
- * to skip testing the inclusion of UTXOs that match the effective value and waste of an omitted
- * predecessor.
+ * Note that this means that at fee rates higher than longTermFeeRate additional inputs increase the
+ * waste score, while at fee rates lower than longTermFeeRate additional inputs decrease the waste
+ * score.
+ *
+ * The algorithm uses the following optimizations:
+ * 1. Lookahead: The lookahead stores the total remaining effective value of the undecided UTXOs for
+ *    every depth of the search tree. Whenever the currently selected amount plus the potential
+ *    amount from the lookahead falls short of the target, we can immediately stop searching the
+ *    subtree as no more input set candidates can be found in it.
+ * 2. Skip clones: When two UTXOs match in weight and effective value ("are clones"), naive
+ *    exploration would cause redundant work: e.g., given the UTXOs A, A', and B, where A and A' are
+ *    clones, naive exploration would combine (read underscore to as omission):
+ *    [{}, {A}, {A, A'}, {A, A', B}, {A, _, B}, {_, A'}, {_, A', B}, {_, _, B}].
+ *    In this case the input set candidates {A} and {A'} als well as {A, B} and {A', B} are
+ *    equivalent. It is sufficient to explore combinations that select either both UTXOs or the
+ *    first UTXO. Whenever the first UTXO is omitted, we can also skip the clone as we have already
+ *    explored a set of equivalent combination as the one we could generate with the second clone.
+ *    Concretely, we skip a UTXO when its predecessor is omitted and the UTXO matches the
+ *    the effective value and the waste of the predecessor.
+ * 3. Skip similar UTXOs that are more wasteful: This search algorithm operates on the list of UTXOs
+ *    sorted by effective value, tie-broken to prefer lower waste. This means that among two
+ *    subsequent UTXOs with the same effective value, the second UTXO’s waste score will either be
+ *    equal _or higher_ than the first UTXO’s. This allows us to apply the clone skipping idea more
+ *    broadly: any combination with the second UTXO is equivalent _or worse_ than what we already
+ *    combined with the first UTXO. We skip a UTXO if its predecessor is omitted and the predecessor
+ *    matches in effective value.
  *
  * The Branch and Bound algorithm is described in detail in Murch's Master Thesis:
  * https://murch.one/wp-content/uploads/2016/11/erhardt2016coinselection.pdf
@@ -93,112 +115,162 @@ static const size_t TOTAL_TRIES = 100000;
 util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change,
                                              int max_selection_weight)
 {
-    SelectionResult result(selection_target, SelectionAlgorithm::BNB);
-    CAmount curr_value = 0;
-    std::vector<size_t> curr_selection; // selected utxo indexes
-    int curr_selection_weight = 0; // sum of selected utxo weight
+    std::sort(utxo_pool.begin(), utxo_pool.end(), descending);
+    // The sum of UTXO amounts after this UTXO index, e.g. lookahead[5] = Σ(UTXO[6+].amount)
+    std::vector<CAmount> lookahead(utxo_pool.size());
 
-    // Calculate curr_available_value
-    CAmount curr_available_value = 0;
-    for (const OutputGroup& utxo : utxo_pool) {
-        // Assert that this utxo is not negative. It should never be negative,
-        // effective value calculation should have removed it
-        assert(utxo.GetSelectionAmount() > 0);
-        curr_available_value += utxo.GetSelectionAmount();
+    // Calculate lookahead values, and check that there are sufficient funds
+    CAmount total_available = 0;
+    for (int index = static_cast<int>(utxo_pool.size()) - 1; index >= 0; --index) {
+        lookahead[index] = total_available;
+        // UTXOs with non-positive effective value must have been filtered
+        Assume(utxo_pool[index].GetSelectionAmount() > 0);
+        total_available += utxo_pool[index].GetSelectionAmount();
     }
-    if (curr_available_value < selection_target) {
+
+    if (total_available < selection_target) {
+        // Insufficient funds
         return util::Error();
     }
 
-    // Sort the utxo_pool
-    std::sort(utxo_pool.begin(), utxo_pool.end(), descending);
 
-    CAmount curr_waste = 0;
+    // The current selection and the best input set found so far, stored as the utxo_pool indices of the UTXOs forming them
+    std::vector<size_t> curr_selection;
     std::vector<size_t> best_selection;
+
+    // The currently selected effective amount
+    CAmount curr_amount = 0;
+
+    // The waste score of the current selection, and the best waste score so far
+    CAmount curr_selection_waste = 0;
     CAmount best_waste = MAX_MONEY;
 
-    bool is_feerate_high = utxo_pool.at(0).fee > utxo_pool.at(0).long_term_fee;
+    // The weight of the currently selected input set
+    int curr_weight = 0;
+
+    // Whether the input sets generated during this search have exceeded the maximum transaction weight at any point
     bool max_tx_weight_exceeded = false;
 
-    // Depth First search loop for choosing the UTXOs
-    for (size_t curr_try = 0, utxo_pool_index = 0; curr_try < TOTAL_TRIES; ++curr_try, ++utxo_pool_index) {
-        // Conditions for starting a backtrack
-        bool backtrack = false;
-        if (curr_value + curr_available_value < selection_target || // Cannot possibly reach target with the amount remaining in the curr_available_value.
-            curr_value > selection_target + cost_of_change || // Selected value is out of range, go back and try other branch
-            (curr_waste > best_waste && is_feerate_high)) { // Don't select things which we know will be more wasteful if the waste is increasing
-            backtrack = true;
-        } else if (curr_selection_weight > max_selection_weight) { // Selected UTXOs weight exceeds the maximum weight allowed, cannot find more solutions by adding more inputs
-            max_tx_weight_exceeded = true; // at least one selection attempt exceeded the max weight
-            backtrack = true;
-        } else if (curr_value >= selection_target) {       // Selected value is within range
-            curr_waste += (curr_value - selection_target); // This is the excess value which is added to the waste for the below comparison
-            // Adding another UTXO after this check could bring the waste down if the long term fee is higher than the current fee.
-            // However we are not going to explore that because this optimization for the waste is only done when we have hit our target
-            // value. Adding any more UTXOs will be just burning the UTXO; it will go entirely to fees. Thus we aren't going to
-            // explore any more UTXOs to avoid burning money like that.
+    // Index of the next UTXO to consider in utxo_pool
+    size_t next_utxo = 0;
+
+    auto deselect_last = [&]() {
+        OutputGroup& utxo = utxo_pool[curr_selection.back()];
+        curr_amount -= utxo.GetSelectionAmount();
+        curr_weight -= utxo.m_weight;
+        curr_selection_waste -= utxo.fee - utxo.long_term_fee;
+        curr_selection.pop_back();
+    };
+
+    size_t curr_try = 0;
+    SelectionResult result(selection_target, SelectionAlgorithm::BNB);
+    bool is_done = false;
+    bool is_feerate_high = utxo_pool.at(0).fee > utxo_pool.at(0).long_term_fee;
+    while (!is_done) {
+        bool should_shift{false}, should_cut{false};
+        // Select `next_utxo`
+        OutputGroup& utxo = utxo_pool[next_utxo];
+        curr_amount += utxo.GetSelectionAmount();
+        curr_weight += utxo.m_weight;
+        curr_selection_waste += utxo.fee - utxo.long_term_fee;
+        curr_selection.push_back(next_utxo);
+        ++next_utxo;
+        ++curr_try;
+
+        // EVALUATE current selection: check for solutions and see whether we can CUT or SHIFT before EXPLORING further
+        if (curr_amount + lookahead[curr_selection.back()] < selection_target) {
+            // Insufficient funds with lookahead: CUT
+            should_cut = true;
+        } else if (curr_weight > max_selection_weight) {
+            // max_weight exceeded: SHIFT
+            max_tx_weight_exceeded = true;
+            should_shift  = true;
+        } else if (curr_amount > selection_target + cost_of_change) {
+            // Overshot target range: SHIFT
+            should_shift = true;
+        } else if (is_feerate_high && curr_selection_waste > best_waste) {
+            // At high feerates adding more inputs will increase the waste score. If the current waste is already worse
+            // than the best selection’s while we have insufficient funds, it is impossible for this partial selection
+            // to beat the best selection by adding more inputs: SHIFT
+            // At low feerates, additional inputs lower the waste score, and using this would cause us to skip exploring
+            // combinations with more inputs of lower amounts.
+            should_shift = true;
+        } else if (curr_amount >= selection_target) {
+            // Selection is within target window: potential solution
+            // Adding more UTXOs only increases fees and cannot be better: SHIFT
+            should_shift  = true;
+            // The amount exceeding the selection_target (the "excess"), would be dropped to the fees: it is waste.
+            CAmount curr_excess = curr_amount - selection_target;
+            CAmount curr_waste = curr_selection_waste + curr_excess;
             if (curr_waste <= best_waste) {
+                // New best solution
                 best_selection = curr_selection;
                 best_waste = curr_waste;
             }
-            curr_waste -= (curr_value - selection_target); // Remove the excess value as we will be selecting different coins now
-            backtrack = true;
         }
 
-        if (backtrack) { // Backtracking, moving backwards
-            if (curr_selection.empty()) { // We have walked back to the first utxo and no branch is untraversed. All solutions searched
+        if (curr_try >= TOTAL_TRIES) {
+            // Solution is not guaranteed to be optimal if `curr_try` hit TOTAL_TRIES
+            result.SetAlgoCompleted(false);
+            break;
+        }
+
+        if (next_utxo == utxo_pool.size()) {
+            // Last added UTXO was end of UTXO pool, nothing left to add on inclusion or omission branch: CUT
+            should_cut = true;
+        }
+
+        if (should_cut) {
+            // Neither adding to the current selection nor exploring the omission branch of the last selected UTXO can
+            // find any solutions. Redirect to exploring the Omission branch of the penultimate selected UTXO (i.e.
+            // set `next_utxo` to one after the penultimate selected, then deselect the last two selected UTXOs)
+            deselect_last();
+            should_shift  = true;
+        }
+
+        while (should_shift) {
+            if (curr_selection.empty()) {
+                // Exhausted search space before running into attempt limit
+                is_done = true;
+                result.SetAlgoCompleted(true);
                 break;
             }
+            // Set `next_utxo` to one after last selected, then deselect last selected UTXO
+            next_utxo = curr_selection.back() + 1;
+            deselect_last();
+            should_shift  = false;
 
-            // Add omitted UTXOs back to lookahead before traversing the omission branch of last included UTXO.
-            for (--utxo_pool_index; utxo_pool_index > curr_selection.back(); --utxo_pool_index) {
-                curr_available_value += utxo_pool.at(utxo_pool_index).GetSelectionAmount();
-            }
-
-            // Output was included on previous iterations, try excluding now.
-            assert(utxo_pool_index == curr_selection.back());
-            OutputGroup& utxo = utxo_pool.at(utxo_pool_index);
-            curr_value -= utxo.GetSelectionAmount();
-            curr_waste -= utxo.fee - utxo.long_term_fee;
-            curr_selection_weight -= utxo.m_weight;
-            curr_selection.pop_back();
-        } else { // Moving forwards, continuing down this branch
-            OutputGroup& utxo = utxo_pool.at(utxo_pool_index);
-
-            // Remove this utxo from the curr_available_value utxo amount
-            curr_available_value -= utxo.GetSelectionAmount();
-
-            if (curr_selection.empty() ||
-                // The previous index is included and therefore not relevant for exclusion shortcut
-                (utxo_pool_index - 1) == curr_selection.back() ||
-                // Avoid searching a branch if the previous UTXO has the same value and same waste and was excluded.
-                // Since the ratio of fee to long term fee is the same, we only need to check if one of those values match in order to know that the waste is the same.
-                utxo.GetSelectionAmount() != utxo_pool.at(utxo_pool_index - 1).GetSelectionAmount() ||
-                utxo.fee != utxo_pool.at(utxo_pool_index - 1).fee)
-            {
-                // Inclusion branch first (Largest First Exploration)
-                curr_selection.push_back(utxo_pool_index);
-                curr_value += utxo.GetSelectionAmount();
-                curr_waste += utxo.fee - utxo.long_term_fee;
-                curr_selection_weight += utxo.m_weight;
+            // After SHIFTing to an omission branch, the `next_utxo` might have the same effective value as the
+            // UTXO we just omitted. Since lower waste is our tiebreaker on UTXOs with equal effective value for sorting, if it
+            // ties on the effective value, it _must_ have the same waste (i.e. be a "clone" of the prior UTXO) or a
+            // higher waste.  If so, selecting `next_utxo` would produce an equivalent or worse
+            // selection as one we previously evaluated. In that case, increment `next_utxo` until we find a UTXO with a
+            // differing amount.
+            while (utxo_pool[next_utxo - 1].GetSelectionAmount() == utxo_pool[next_utxo].GetSelectionAmount()) {
+                if (next_utxo >= utxo_pool.size() - 1) {
+                    // Reached end of UTXO pool skipping clones: SHIFT instead
+                    should_shift = true;
+                    break;
+                }
+                // Skip clone: previous UTXO is equivalent and unselected
+                ++next_utxo;
             }
         }
     }
 
-    // Check for solution
+    result.SetSelectionsEvaluated(curr_try);
+
     if (best_selection.empty()) {
         return max_tx_weight_exceeded ? ErrorMaxWeightExceeded() : util::Error();
     }
 
-    // Set output set
     for (const size_t& i : best_selection) {
         result.AddInput(utxo_pool.at(i));
     }
-    result.RecalculateWaste(cost_of_change, cost_of_change, CAmount{0});
-    assert(best_waste == result.GetWaste());
 
     return result;
 }
+
 
 /*
  * TL;DR: Coin Grinder is a DFS-based algorithm that deterministically searches for the minimum-weight input set to fund
