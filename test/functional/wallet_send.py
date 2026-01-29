@@ -532,6 +532,7 @@ class WalletSendTest(BitcoinTestFramework):
 
         # Check tx creation size limits
         self.test_weight_limits()
+        self.test_unconfirmed_input_fee_sniping()
 
     def test_weight_limits(self):
         self.log.info("Test weight limits")
@@ -563,6 +564,25 @@ class WalletSendTest(BitcoinTestFramework):
 
         self.nodes[1].unloadwallet("test_weight_limits")
 
+    def test_unconfirmed_input_fee_sniping(self):
+        self.log.info("Test that send sets the transaction locktime no lower than any unconfirmed input locktime")
+        self.nodes[1].createwallet("test_fee_sniping")
+        # Create parent tx with anti-fee-sniping nlocktime
+        wallet = self.nodes[1].get_wallet_rpc("test_fee_sniping")
+        unconfirmed_parent_txid = self.nodes[0].sendtoaddress(wallet.getnewaddress(), 10)
+        unconfirmed_parent_nlocktime = self.nodes[0].gettransaction(txid=unconfirmed_parent_txid, verbose=True)["decoded"]["locktime"]
+        # Parent nlocktime should be within 100 blocks of tip
+        assert_greater_than_or_equal(unconfirmed_parent_nlocktime, self.nodes[0].getblockcount() - 100)
+        self.sync_mempools()
+        # Create child tx spending the unconfirmed parent
+        utxos = wallet.listunspent(0, 0)
+        child_txid = wallet.send([{wallet.getnewaddress(): 8}], inputs=utxos)["txid"]
+        child_nlocktime = wallet.gettransaction(txid=child_txid, verbose=True)["decoded"]["locktime"]
+        # Child nlocktime should be within 100 blocks of tip
+        assert_greater_than_or_equal(child_nlocktime, self.nodes[0].getblockcount() - 100)
+        # Child nlocktime should be >= parent nlocktime
+        assert_greater_than_or_equal(child_nlocktime, unconfirmed_parent_nlocktime)
+        self.nodes[1].unloadwallet("test_fee_sniping")
 
 if __name__ == '__main__':
     WalletSendTest(__file__).main()
