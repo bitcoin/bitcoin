@@ -65,6 +65,17 @@ public:
         }
         nPos += src.size();
     }
+    void write(std::span<const std::byte, 1> src)
+    {
+        assert(nPos <= vchData.size());
+        const auto byte{*UCharCast(&src[0])};
+        if (nPos < vchData.size()) {
+            vchData[nPos] = byte;
+        } else {
+            vchData.push_back(byte);
+        }
+        nPos += 1;
+    }
     template <typename T>
     VectorWriter& operator<<(const T& obj)
     {
@@ -145,6 +156,7 @@ public:
     typedef vector_type::reverse_iterator reverse_iterator;
 
     explicit DataStream() = default;
+    explicit DataStream(size_type n) { reserve(n); }
     explicit DataStream(std::span<const uint8_t> sp) : DataStream{std::as_bytes(sp)} {}
     explicit DataStream(std::span<const value_type> sp) : vch(sp.data(), sp.data() + sp.size()) {}
 
@@ -235,6 +247,10 @@ public:
     {
         // Write to the end of the buffer
         vch.insert(vch.end(), src.begin(), src.end());
+    }
+    void write(std::span<const value_type, 1> src)
+    {
+        vch.push_back(src[0]);
     }
 
     template<typename T>
@@ -451,8 +467,10 @@ public:
     // Stream subset
     //
     void read(std::span<std::byte> dst);
+    void read(std::span<std::byte, 1> dst);
     void ignore(size_t nSize);
     void write(std::span<const std::byte> src);
+    void write(std::span<const std::byte, 1> src);
 
     template <typename T>
     AutoFile& operator<<(const T& obj)

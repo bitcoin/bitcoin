@@ -78,6 +78,13 @@ void AutoFile::read(std::span<std::byte> dst)
     }
 }
 
+void AutoFile::read(std::span<std::byte, 1> dst)
+{
+    if (detail_fread(dst) != 1) {
+        throw std::ios_base::failure(feof() ? "AutoFile::read: end of file" : "AutoFile::read: fread failed");
+    }
+}
+
 void AutoFile::ignore(size_t nSize)
 {
     if (!m_file) throw std::ios_base::failure("AutoFile::ignore: file handle is nullptr");
@@ -110,6 +117,12 @@ void AutoFile::write(std::span<const std::byte> src)
             src = src.subspan(buf_now.size());
         }
     }
+}
+
+void AutoFile::write(std::span<const std::byte, 1> src)
+{
+    std::byte temp_byte = src[0];
+    write_buffer(std::span(&temp_byte, 1));
 }
 
 void AutoFile::write_buffer(std::span<std::byte> src)
