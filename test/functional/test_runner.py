@@ -196,6 +196,7 @@ BASE_SCRIPTS = [
     'mempool_reorg.py',
     'p2p_block_sync.py --v1transport',
     'p2p_block_sync.py --v2transport',
+    'p2p_block_times.py',
     'wallet_createwallet.py --usecli',
     'wallet_createwallet.py',
     'wallet_reindex.py',

@@ -64,6 +64,7 @@ struct CNodeStateStats {
     ServiceFlags their_services;
     int64_t presync_height{-1};
     std::chrono::seconds time_offset{0};
+    NodeSeconds m_last_block_announcement;
 };
 
 struct PeerManagerInfo {
@@ -152,7 +153,7 @@ public:
                                 std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
 
     /** This function is used for testing the stale tip eviction logic, see denialofservice_tests.cpp */
-    virtual void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) = 0;
+    virtual void UpdateLastBlockAnnounceTime(NodeId node, NodeSeconds time_in_seconds) = 0;
 
     /**
      * Gets the set of service flags which are "desirable" for a given peer.
