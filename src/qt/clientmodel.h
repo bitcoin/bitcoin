@@ -83,7 +83,7 @@ public:
     QString getStatusBarWarnings() const;
 
     QString formatFullVersion() const;
-    QString formatSubVersion() const;
+    QString formatUserAgent() const;
     bool isReleaseVersion() const;
     QString formatClientStartupTime() const;
     QString dataDir() const;

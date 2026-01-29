@@ -19,7 +19,7 @@ from test_framework.messages import (
 )
 from test_framework.p2p import (
     P2PInterface,
-    P2P_SUBVERSION,
+    P2P_USER_AGENT,
     P2P_SERVICES,
     P2P_VERSION_RELAY,
 )
@@ -105,7 +105,7 @@ class P2PLeakTest(BitcoinTestFramework):
     def create_old_version(self, nversion):
         old_version_msg = msg_version()
         old_version_msg.nVersion = nversion
-        old_version_msg.strSubVer = P2P_SUBVERSION
+        old_version_msg.user_agent = P2P_USER_AGENT
         old_version_msg.nServices = P2P_SERVICES
         old_version_msg.relay = P2P_VERSION_RELAY
         return old_version_msg

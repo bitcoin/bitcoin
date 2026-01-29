@@ -1140,7 +1140,7 @@ class CMerkleBlock:
 # Objects that correspond to messages on the wire
 class msg_version:
     __slots__ = ("addrFrom", "addrTo", "nNonce", "relay", "nServices",
-                 "nStartingHeight", "nTime", "nVersion", "strSubVer")
+                 "nStartingHeight", "nTime", "nVersion", "user_agent")
     msgtype = b"version"
 
     def __init__(self):
@@ -1150,7 +1150,7 @@ class msg_version:
         self.addrTo = CAddress()
         self.addrFrom = CAddress()
         self.nNonce = random.getrandbits(64)
-        self.strSubVer = ''
+        self.user_agent = ''
         self.nStartingHeight = -1
         self.relay = 0
 
@@ -1164,7 +1164,7 @@ class msg_version:
         self.addrFrom = CAddress()
         self.addrFrom.deserialize(f, with_time=False)
         self.nNonce = int.from_bytes(f.read(8), "little")
-        self.strSubVer = deser_string(f).decode('utf-8')
+        self.user_agent = deser_string(f).decode('utf-8')
 
         self.nStartingHeight = int.from_bytes(f.read(4), "little", signed=True)
 
@@ -1180,16 +1180,16 @@ class msg_version:
         r += self.addrTo.serialize(with_time=False)
         r += self.addrFrom.serialize(with_time=False)
         r += self.nNonce.to_bytes(8, "little")
-        r += ser_string(self.strSubVer.encode('utf-8'))
+        r += ser_string(self.user_agent.encode('utf-8'))
         r += self.nStartingHeight.to_bytes(4, "little", signed=True)
         r += self.relay.to_bytes(1, "little")
         return r
 
     def __repr__(self):
-        return 'msg_version(nVersion=%i nServices=%i nTime=%s addrTo=%s addrFrom=%s nNonce=0x%016X strSubVer=%s nStartingHeight=%i relay=%i)' \
+        return 'msg_version(nVersion=%i nServices=%i nTime=%s addrTo=%s addrFrom=%s nNonce=0x%016X user_agent=%s nStartingHeight=%i relay=%i)' \
             % (self.nVersion, self.nServices, time.ctime(self.nTime),
                repr(self.addrTo), repr(self.addrFrom), self.nNonce,
-               self.strSubVer, self.nStartingHeight, self.relay)
+               self.user_agent, self.nStartingHeight, self.relay)
 
 
 class msg_verack:

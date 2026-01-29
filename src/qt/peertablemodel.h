@@ -55,7 +55,7 @@ public:
         Ping,
         Sent,
         Received,
-        Subversion
+        UserAgent
     };
 
     enum {

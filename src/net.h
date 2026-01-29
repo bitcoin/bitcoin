@@ -64,7 +64,7 @@ static constexpr auto EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL = 5min;
 /** Maximum length of incoming protocol messages (no message over 4 MB is currently acceptable). */
 static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 4 * 1000 * 1000;
 /** Maximum length of the user agent string in `version` message */
-static const unsigned int MAX_SUBVERSION_LENGTH = 256;
+static const unsigned int MAX_USER_AGENT_LENGTH = 256;
 /** Maximum number of automatic outgoing nodes over which we'll relay everything (blocks, tx, addrs, etc) */
 static const int MAX_OUTBOUND_FULL_RELAY_CONNECTIONS = 8;
 /** Maximum number of addnode outgoing nodes */
@@ -174,8 +174,8 @@ CService GetLocalAddress(const CNode& peer);
 extern bool fDiscover;
 extern bool fListen;
 
-/** Subversion as sent to the P2P network in `version` messages */
-extern std::string strSubVersion;
+/** UserAgent as sent to the P2P network in `version` messages */
+extern std::string strUserAgent;
 
 struct LocalServiceInfo {
     int nScore;
@@ -199,7 +199,7 @@ public:
     std::chrono::seconds m_connected;
     std::string m_addr_name;
     int nVersion;
-    std::string cleanSubVer;
+    std::string cleanUserAgent;
     bool fInbound;
     // We requested high bandwidth connection to peer
     bool m_bip152_highbandwidth_to;
@@ -721,12 +721,12 @@ public:
     //! Whether this peer is an inbound onion, i.e. connected via our Tor onion service.
     const bool m_inbound_onion;
     std::atomic<int> nVersion{0};
-    Mutex m_subver_mutex;
+    Mutex m_user_agent_mutex;
     /**
-     * cleanSubVer is a sanitized string of the user agent byte array we read
+     * cleanUserAgent is a sanitized string of the user agent byte array we read
      * from the wire. This cleaned string can safely be logged or displayed.
      */
-    std::string cleanSubVer GUARDED_BY(m_subver_mutex){};
+    std::string cleanUserAgent GUARDED_BY(m_user_agent_mutex){};
     const bool m_prefer_evict{false}; // This peer is preferred for eviction.
     bool HasPermission(NetPermissionFlags permission) const {
         return NetPermissions::HasFlag(m_permission_flags, permission);
@@ -963,7 +963,7 @@ public:
 
     void CloseSocketDisconnect() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex);
 
-    void CopyStats(CNodeStats& stats) EXCLUSIVE_LOCKS_REQUIRED(!m_subver_mutex, !m_addr_local_mutex, !cs_vSend, !cs_vRecv);
+    void CopyStats(CNodeStats& stats) EXCLUSIVE_LOCKS_REQUIRED(!m_user_agent_mutex, !m_addr_local_mutex, !cs_vSend, !cs_vRecv);
 
     std::string ConnectionTypeAsString() const { return ::ConnectionTypeAsString(m_conn_type); }
 

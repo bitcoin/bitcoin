@@ -1563,7 +1563,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
         my_time = count_seconds(GetTime<std::chrono::seconds>());
         your_services = addr.nServices;
         your_addr = addr.IsRoutable() && !IsProxy(addr) && addr.IsAddrV1Compatible() ? CService{addr} : CService{};
-        my_user_agent = strSubVersion;
+        my_user_agent = strUserAgent;
         my_height = m_best_height;
         my_tx_relay = !RejectIncomingTxs(pnode);
     }
@@ -3565,7 +3565,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         uint64_t nNonce = 1;
         ServiceFlags nServices;
         int nVersion;
-        std::string cleanSubVer;
+        std::string cleanUserAgent;
         int starting_height = -1;
         bool fRelay = true;
 
@@ -3608,9 +3608,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             vRecv >> nNonce;
         }
         if (!vRecv.empty()) {
-            std::string strSubVer;
-            vRecv >> LIMITED_STRING(strSubVer, MAX_SUBVERSION_LENGTH);
-            cleanSubVer = SanitizeString(strSubVer);
+            std::string user_agent;
+            vRecv >> LIMITED_STRING(user_agent, MAX_USER_AGENT_LENGTH);
+            cleanUserAgent = SanitizeString(user_agent);
         }
         if (!vRecv.empty()) {
             vRecv >> starting_height;
@@ -3645,8 +3645,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         peer->m_their_services = nServices;
         pfrom.SetAddrLocal(addrMe);
         {
-            LOCK(pfrom.m_subver_mutex);
-            pfrom.cleanSubVer = cleanSubVer;
+            LOCK(pfrom.m_user_agent_mutex);
+            pfrom.cleanUserAgent = cleanUserAgent;
         }
         peer->m_starting_height = starting_height;
 
@@ -3669,7 +3669,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         const auto mapped_as{m_connman.GetMappedAS(pfrom.addr)};
         LogDebug(BCLog::NET, "receive version message: %s: version %d, blocks=%d, us=%s, txrelay=%d, peer=%d%s%s\n",
-                  cleanSubVer, pfrom.nVersion,
+                  cleanUserAgent, pfrom.nVersion,
                   peer->m_starting_height, addrMe.ToStringAddrPort(), fRelay, pfrom.GetId(),
                   pfrom.LogIP(fLogIPs), (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
 

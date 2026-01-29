@@ -29,7 +29,7 @@ from .authproxy import (
     serialization_fallback,
 )
 from .messages import NODE_P2P_V2
-from .p2p import P2P_SERVICES, P2P_SUBVERSION
+from .p2p import P2P_SERVICES, P2P_USER_AGENT
 from .util import (
     MAX_NODES,
     assert_equal,
@@ -816,7 +816,7 @@ class TestNode():
             dst_addr_and_port = f"{p2p_conn.dstaddr}:{p2p_conn.dstport}"
             info = [peer for peer in self.getpeerinfo() if peer["addr"] == our_addr_and_port and peer["addrbind"] == dst_addr_and_port]
             assert_equal(len(info), 1)
-            assert_equal(info[0]["subver"], P2P_SUBVERSION)
+            assert_equal(info[0]["subver"], P2P_USER_AGENT)
 
         return p2p_conn
 
@@ -885,7 +885,7 @@ class TestNode():
 
     def num_test_p2p_connections(self):
         """Return number of test framework p2p connections to the node."""
-        return len([peer for peer in self.getpeerinfo() if peer['subver'] == P2P_SUBVERSION])
+        return len([peer for peer in self.getpeerinfo() if peer['subver'] == P2P_USER_AGENT])
 
     def disconnect_p2ps(self):
         """Close all p2p connections to the node.

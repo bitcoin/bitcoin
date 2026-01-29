@@ -32,7 +32,7 @@ extern const std::string UA_NAME;
 
 
 std::string FormatFullVersion();
-std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments);
+std::string FormatUserAgent(const std::string& name, int nClientVersion, const std::vector<std::string>& comments);
 
 std::string CopyrightHolders(const std::string& strPrefix);
 

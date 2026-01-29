@@ -15,7 +15,7 @@ from test_framework.messages import (
 from test_framework.p2p import (
     P2PInterface,
     P2P_SERVICES,
-    P2P_SUBVERSION,
+    P2P_USER_AGENT,
     P2P_VERSION,
 )
 from test_framework.test_framework import BitcoinTestFramework
@@ -92,7 +92,7 @@ class SendTxRcnclTest(BitcoinTestFramework):
         peer = self.nodes[0].add_p2p_connection(SendTxrcnclReceiver(), send_version=False, wait_for_verack=False)
         pre_wtxid_version_msg = msg_version()
         pre_wtxid_version_msg.nVersion = 70015
-        pre_wtxid_version_msg.strSubVer = P2P_SUBVERSION
+        pre_wtxid_version_msg.user_agent = P2P_USER_AGENT
         pre_wtxid_version_msg.nServices = P2P_SERVICES
         pre_wtxid_version_msg.relay = 1
         peer.send_without_ping(pre_wtxid_version_msg)
@@ -104,7 +104,7 @@ class SendTxRcnclTest(BitcoinTestFramework):
         peer = self.nodes[0].add_p2p_connection(SendTxrcnclReceiver(), send_version=False, wait_for_verack=False)
         no_txrelay_version_msg = msg_version()
         no_txrelay_version_msg.nVersion = P2P_VERSION
-        no_txrelay_version_msg.strSubVer = P2P_SUBVERSION
+        no_txrelay_version_msg.user_agent = P2P_USER_AGENT
         no_txrelay_version_msg.nServices = P2P_SERVICES
         no_txrelay_version_msg.relay = 0
         peer.send_without_ping(no_txrelay_version_msg)
@@ -117,7 +117,7 @@ class SendTxRcnclTest(BitcoinTestFramework):
         peer = self.nodes[0].add_p2p_connection(SendTxrcnclReceiver(), send_version=False, wait_for_verack=False)
         no_txrelay_version_msg = msg_version()
         no_txrelay_version_msg.nVersion = P2P_VERSION
-        no_txrelay_version_msg.strSubVer = P2P_SUBVERSION
+        no_txrelay_version_msg.user_agent = P2P_USER_AGENT
         no_txrelay_version_msg.nServices = P2P_SERVICES
         no_txrelay_version_msg.relay = 0
         peer.send_without_ping(no_txrelay_version_msg)
@@ -204,7 +204,7 @@ class SendTxRcnclTest(BitcoinTestFramework):
         peer = self.nodes[0].add_p2p_connection(PeerNoVerack(), send_version=False, wait_for_verack=False)
         old_version_msg = msg_version()
         old_version_msg.nVersion = 70015
-        old_version_msg.strSubVer = P2P_SUBVERSION
+        old_version_msg.user_agent = P2P_USER_AGENT
         old_version_msg.nServices = P2P_SERVICES
         old_version_msg.relay = 1
         peer.send_without_ping(old_version_msg)
