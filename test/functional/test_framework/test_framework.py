@@ -147,6 +147,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         except subprocess.CalledProcessError as e:
             self.log.exception(f"Called Process failed with stdout='{e.stdout}'; stderr='{e.stderr}';")
             self.success = TestStatus.FAILED
+        except JSONRPCException as e:
+            self.log.exception(f"Failure during setup: error={e.error}, http_status={e.http_status}")
+            self.success = TestStatus.FAILED
         except BaseException:
             self.log.exception("Unexpected exception")
             self.success = TestStatus.FAILED
