@@ -1225,27 +1225,9 @@ BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
     }
 }
 
-class ImportingNow
+void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_paths, bool force_activation)
 {
-    std::atomic<bool>& m_importing;
-
-public:
-    ImportingNow(std::atomic<bool>& importing) : m_importing{importing}
-    {
-        assert(m_importing == false);
-        m_importing = true;
-    }
-    ~ImportingNow()
-    {
-        assert(m_importing == true);
-        m_importing = false;
-    }
-};
-
-void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_paths)
-{
-    ImportingNow imp{chainman.m_blockman.m_importing};
-
+    bool reindexed = false;
     // -reindex
     if (!chainman.m_blockman.m_blockfiles_indexed) {
         int total_files{0};
@@ -1264,17 +1246,35 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
                 break; // This error is logged in OpenBlockFile
             }
             LogInfo("Reindexing block file blk%05u.dat (%d%% complete)...", (unsigned int)nFile, nFile * 100 / total_files);
+            // LoadExternalBlockFile will immediately call ABC when it finds
+            // the Genesis block
             chainman.LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent);
             if (chainman.m_interrupt) {
                 LogInfo("Interrupt requested. Exit reindexing.");
                 return;
             }
         }
+
+        auto genesisHash{chainman.GetParams().GenesisBlock().GetHash()};
+        if (WITH_LOCK(::cs_main, return !chainman.m_blockman.m_block_index.contains(genesisHash))) {
+            // Genesis Block wasn't added to the index.
+            // This means that no block was added to the index, and
+            // all of the blocks are in `blocks_with_unknown_parent`.
+            // To avoid ending up in a situation without genesis block,
+            // re-try initializing:
+            chainman.ActiveChainstate().LoadGenesisBlock();
+            // Attempt to Activate the Genesis Block
+            if (auto result = chainman.ActivateBestChains(); !result) {
+                chainman.GetNotifications().fatalError(util::ErrorString(result));
+                return;
+            }
+            chainman.LoadOutOfOrderBlocks(genesisHash, &blocks_with_unknown_parent);
+        }
+
         WITH_LOCK(::cs_main, chainman.m_blockman.m_block_tree_db->WriteReindexing(false));
         chainman.m_blockman.m_blockfiles_indexed = true;
         LogInfo("Reindexing finished");
-        // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
-        chainman.ActiveChainstate().LoadGenesisBlock();
+        reindexed = true;
     }
 
     // -loadblock=
@@ -1292,11 +1292,18 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
         }
     }
 
+    // If started with -reindex, only connect blocks if there is high enough work chain,
+    // else allow normal node operation to sync headers before connecting blocks.
+    // This prevents unnecessary script verification work if assumevalid is enabled.
+    bool has_enough_work = WITH_LOCK(::cs_main, return chainman.m_best_header &&
+        chainman.m_best_header->nChainWork.CompareTo(chainman.MinimumChainWork()) >= 0);
+    bool activate_chains = !reindexed || force_activation || has_enough_work;
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
-    if (auto result = chainman.ActivateBestChains(); !result) {
-        chainman.GetNotifications().fatalError(util::ErrorString(result));
+    if (activate_chains) {
+        if (auto result = chainman.ActivateBestChains(); !result) {
+            chainman.GetNotifications().fatalError(util::ErrorString(result));
+        }
     }
-    // End scope of ImportingNow
 }
 
 std::ostream& operator<<(std::ostream& os, const BlockfileType& type) {

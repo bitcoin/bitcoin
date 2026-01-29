@@ -33,6 +33,9 @@ Start a few nodes:
       block #1 that is not part of the assumevalid chain.
     - node5 starts with no -assumevalid parameter. Reindex to hit
       "assumevalid hash not in headers" and "below minimum chainwork".
+    - node6 has -assumevalid set to the hash of block 102. Reindex
+      with assumevalid to check that script verification is skipped during
+      reindexing.
 """
 
 from test_framework.blocktools import (
@@ -69,7 +72,7 @@ class BaseNode(P2PInterface):
 class AssumeValidTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 6
+        self.num_nodes = 7
         self.rpc_timeout = 120
 
     def setup_network(self):
@@ -148,6 +151,7 @@ class AssumeValidTest(BitcoinTestFramework):
         self.start_node(3, extra_args=[f"-assumevalid={block102.hash_hex}"])
         self.start_node(4, extra_args=[f"-assumevalid={block102.hash_hex}"])
         self.start_node(5)
+        self.start_node(6, extra_args=[f"-assumevalid={block102.hash_hex}"])
 
 
         # nodes[0]
@@ -253,6 +257,27 @@ class AssumeValidTest(BitcoinTestFramework):
             self.restart_node(5, extra_args=["-reindex-chainstate", f"-assumevalid={block102.hash_hex}", "-minimumchainwork=0xffff"])
             assert_equal(self.nodes[5].getblockcount(), 1)
 
+        # nodes[6]
+        # Reindex with assumevalid set to block102. Should skip script verification
+        p2p6 = self.nodes[6].add_p2p_connection(BaseNode())
+        p2p6.send_header_for_blocks(self.blocks[0:2000])
+        p2p6.send_header_for_blocks(self.blocks[2000:])
+        for block in self.blocks[0:101]:
+            p2p6.send_without_ping(msg_block(block))
+        self.wait_until(lambda: self.nodes[6].getblockcount() == 101)
+        # Set minimumchainwork > 2000 blocks to force background init thread
+        # to wait for best_header to reach 2 weeks before connecting blocks.
+        self.restart_node(6, extra_args=["-reindex", f"-assumevalid={block102.hash_hex}", "-minimumchainwork=0x0fd2"])
+        p2p6 = self.nodes[6].add_p2p_connection(BaseNode())
+        with self.nodes[6].assert_debug_log(expected_msgs=[
+            f"Disabling script verification at block #1 ({self.blocks[0].hash_hex}).",
+        ]):
+            p2p6.send_header_for_blocks(self.blocks[0:2000])
+            p2p6.send_header_for_blocks(self.blocks[2000:])
+            # Resend headers because HeadersSync m_download_state will be in REDOWNLOAD
+            p2p6.send_header_for_blocks(self.blocks[0:2000])
+            p2p6.send_header_for_blocks(self.blocks[2000:])
+        self.wait_until(lambda: self.nodes[6].getblockcount() == 101)
 
 if __name__ == '__main__':
     AssumeValidTest(__file__).main()

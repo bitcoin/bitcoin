@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -474,8 +475,28 @@ public:
     void CleanupBlockRevFiles() const;
 };
 
+class ImportingNow
+{
+    std::atomic<bool>& m_importing;
+
+public:
+    ImportingNow(std::atomic<bool>& importing) : m_importing{importing}
+    {
+        assert(m_importing == false);
+        m_importing = true;
+    }
+    ~ImportingNow()
+    {
+        assert(m_importing == true);
+        m_importing = false;
+    }
+};
+
 // Calls ActivateBestChain() even if no blocks are imported.
-void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_paths);
+// When force_activation is `false`, ActivateBestChain will not
+// be called on reindexed blocks if best_header chainwork is below
+// minchainwork.
+void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_paths,  bool force_activation = true);
 } // namespace node
 
 #endif // BITCOIN_NODE_BLOCKSTORAGE_H
