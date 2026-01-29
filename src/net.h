@@ -77,6 +77,8 @@ static const int MAX_FEELER_CONNECTIONS = 1;
 static constexpr size_t MAX_PRIVATE_BROADCAST_CONNECTIONS{64};
 /** -listen default */
 static const bool DEFAULT_LISTEN = true;
+/** -v2onlyclearnet default */
+static const bool DEFAULT_V2_ONLY_CLEARNET = false;
 /** The maximum number of peer connections to maintain. */
 static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 /** The default for -maxuploadtarget. 0 = Unlimited */
@@ -1099,6 +1101,7 @@ public:
         bool whitelist_forcerelay = DEFAULT_WHITELISTFORCERELAY;
         bool whitelist_relay = DEFAULT_WHITELISTRELAY;
         bool m_capture_messages = false;
+        bool m_v2only_clearnet = DEFAULT_V2_ONLY_CLEARNET;
     };
 
     void Init(const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_total_bytes_sent_mutex)
@@ -1137,6 +1140,7 @@ public:
         whitelist_forcerelay = connOptions.whitelist_forcerelay;
         whitelist_relay = connOptions.whitelist_relay;
         m_capture_messages = connOptions.m_capture_messages;
+        m_v2only_clearnet = connOptions.m_v2only_clearnet;
     }
 
     // test only
@@ -1398,6 +1402,9 @@ public:
     bool ShouldRunInactivityChecks(const CNode& node, std::chrono::microseconds now) const;
 
     bool MultipleManualOrFullOutboundConns(Network net) const EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
+
+    /** Returns true if outbound IPv4/IPv6 connections must be v2 only. */
+    bool RequiresV2ForOutbound(const CNetAddr &addr) const;
 
 private:
     struct ListenSocket {
@@ -1753,6 +1760,13 @@ private:
      * flag for whether messages are captured
      */
     bool m_capture_messages{false};
+
+    /**
+     * option for restricting outbound clearnet connections (IPv4/IPv6) to v2 only.
+     * outbound connections on IPV4/IPV6 need to be v2 connections.
+     * outbound connections on Tor/I2P/CJDNS can be v1 or v2 connections.
+     */
+    bool m_v2only_clearnet;
 
     /**
      * Mutex protecting m_i2p_sam_sessions.
