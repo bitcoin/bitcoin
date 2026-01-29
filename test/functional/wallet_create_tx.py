@@ -47,7 +47,8 @@ class CreateTxWalletTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1)
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         tx = self.nodes[0].gettransaction(txid=txid, verbose=True)['decoded']
-        assert 0 < tx['locktime'] <= 201
+        # The nlocktime should be within 100 blocks of the block height
+        assert 101 <= tx['locktime'] <= 201
 
     def test_tx_size_too_large(self):
         # More than 10kB of outputs, so that we hit -maxtxfee with a high feerate
