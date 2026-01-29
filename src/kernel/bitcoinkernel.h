@@ -133,12 +133,6 @@ typedef struct btck_TransactionOutput btck_TransactionOutput;
  * Opaque data structure for holding a logging connection.
  *
  * The logging connection can be used to manually stop logging.
- *
- * Messages that were logged before a connection is created are buffered in a
- * 1MB buffer. Logging can alternatively be permanently disabled by calling
- * @ref btck_logging_disable. Functions changing the logging settings are
- * global and change the settings for all existing btck_LoggingConnection
- * instances.
  */
 typedef struct btck_LoggingConnection btck_LoggingConnection;
 
@@ -370,8 +364,11 @@ typedef struct {
 /**
  * Function signature for the global logging callback. All bitcoin kernel
  * internal logs will pass through this callback.
+ *
+ * @param[in] user_data User-defined data passed to btck_logging_connection_create.
+ * @param[in] entry     Log entry. Valid only for the duration of the callback.
  */
-typedef void (*btck_LogCallback)(void* user_data, const char* message, size_t message_len);
+typedef void (*btck_LogCallback)(void* user_data, const btck_LogEntry* entry);
 
 /**
  * Function signature for freeing user data.
@@ -834,11 +831,9 @@ BITCOINKERNEL_API void btck_logging_enable_category(btck_LogCategory category);
 BITCOINKERNEL_API void btck_logging_disable_category(btck_LogCategory category);
 
 /**
- * @brief Start logging messages through the provided callback. Log messages
- * produced before this function is first called are buffered and on calling this
- * function are logged immediately.
+ * @brief Start logging messages through the provided callback.
  *
- * @param[in] log_callback               Non-null, function through which messages will be logged.
+ * @param[in] log_callback               Non-null, function through which log entries will be delivered.
  * @param[in] user_data                  Nullable, holds a user-defined opaque structure. Is passed back
  *                                       to the user through the callback. If the user_data_destroy_callback
  *                                       is also defined it is assumed that ownership of the user_data is passed

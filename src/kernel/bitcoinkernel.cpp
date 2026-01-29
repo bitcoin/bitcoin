@@ -32,7 +32,9 @@
 #include <util/fs.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
+#include <util/string.h>
 #include <util/task_runner.h>
+#include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -44,7 +46,6 @@
 #include <exception>
 #include <functional>
 #include <iterator>
-#include <list>
 #include <memory>
 #include <span>
 #include <stdexcept>
@@ -171,6 +172,14 @@ constexpr util::log::Level get_bclog_level(btck_LogLevel level)
     return LOG_LEVELS[level].bclog;
 }
 
+btck_LogLevel get_btck_level(util::log::Level level)
+{
+    for (size_t i = 0; i < LOG_LEVELS.size(); ++i) {
+        if (LOG_LEVELS[i].bclog == level) return static_cast<btck_LogLevel>(i);
+    }
+    assert(false);
+}
+
 struct LogCategoryMapping {
     BCLog::LogFlags bclog;
     std::string_view name;
@@ -200,6 +209,14 @@ constexpr BCLog::LogFlags get_bclog_flag(btck_LogCategory category)
     return LOG_CATEGORIES[category].bclog;
 }
 
+btck_LogCategory get_btck_category(BCLog::LogFlags flag)
+{
+    for (size_t i = 0; i < LOG_CATEGORIES.size(); ++i) {
+        if (LOG_CATEGORIES[i].bclog == flag) return static_cast<btck_LogCategory>(i);
+    }
+    assert(false);
+}
+
 btck_SynchronizationState cast_state(SynchronizationState state)
 {
     switch (state) {
@@ -225,47 +242,45 @@ btck_Warning cast_btck_warning(kernel::Warning warning)
 }
 
 struct LoggingConnection {
-    std::unique_ptr<std::list<std::function<void(const std::string&)>>::iterator> m_connection;
+    util::log::Dispatcher::CallbackHandle m_callback_handle;
     void* m_user_data;
     std::function<void(void* user_data)> m_deleter;
 
     LoggingConnection(btck_LogCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback)
+        : m_user_data{user_data}, m_deleter{user_data_destroy_callback}
     {
-        LOCK(cs_main);
+        m_callback_handle = util::log::g_dispatcher().RegisterCallback([callback, user_data](const util::log::Entry& entry) {
+            const auto timestamp_ns{Ticks<std::chrono::nanoseconds>(entry.timestamp.time_since_epoch())};
+            std::string_view file_name{entry.source_loc.file_name()};
+            std::string_view function_name{entry.source_loc.function_name_short()};
+            // Some log statements are manually suffixed with a newline.
+            std::string_view message{util::RemoveSuffixView(entry.message, "\n")};
 
-        auto connection{LogInstance().PushBackCallback([callback, user_data](const std::string& str) { callback(user_data, str.c_str(), str.length()); })};
-
-        // Only start logging if we just added the connection.
-        if (LogInstance().NumConnections() == 1 && !LogInstance().StartLogging()) {
-            LogError("Logger start failed.");
-            LogInstance().DeleteCallback(connection);
-            if (user_data && user_data_destroy_callback) {
-                user_data_destroy_callback(user_data);
+            btck_LogEntry btck_entry{
+                .message = {message.data(), message.size()},
+                .file_name = {file_name.data(), file_name.size()},
+                .function_name = {function_name.data(), function_name.size()},
+                .thread_name = {entry.thread_name.data(), entry.thread_name.size()},
+                .timestamp_ns = timestamp_ns,
+                .line = entry.source_loc.line(),
+                .level = get_btck_level(entry.level),
+                .category = get_btck_category(static_cast<BCLog::LogFlags>(entry.category)),
+            };
+            try {
+                callback(user_data, &btck_entry);
+            } catch (const std::exception& e) {
+                LogError("Logging callback threw unexpected exception: %s", e.what());
             }
-            throw std::runtime_error("Failed to start logging");
-        }
-
-        m_connection = std::make_unique<std::list<std::function<void(const std::string&)>>::iterator>(connection);
-        m_user_data = user_data;
-        m_deleter = user_data_destroy_callback;
+        });
 
         LogDebug(BCLog::KERNEL, "Logger connected.");
     }
 
     ~LoggingConnection()
     {
-        LOCK(cs_main);
         LogDebug(BCLog::KERNEL, "Logger disconnecting.");
+        util::log::g_dispatcher().UnregisterCallback(m_callback_handle);
 
-        // Switch back to buffering by calling DisconnectTestLogger if the
-        // connection that we are about to remove is the last one.
-        if (LogInstance().NumConnections() == 1) {
-            LogInstance().DisconnectTestLogger();
-        } else {
-            LogInstance().DeleteCallback(*m_connection);
-        }
-
-        m_connection.reset();
         if (m_user_data && m_deleter) {
             m_deleter(m_user_data);
         }
@@ -773,6 +788,7 @@ void btck_logging_disable()
 
 btck_LoggingConnection* btck_logging_connection_create(btck_LogCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback)
 {
+    assert(callback);
     try {
         return btck_LoggingConnection::create(callback, user_data, user_data_destroy_callback);
     } catch (const std::exception&) {
