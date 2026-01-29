@@ -7,6 +7,7 @@
 #include <consensus/consensus.h>
 #include <logging.h>
 #include <random.h>
+#include <uint256.h>
 #include <util/trace.h>
 
 TRACEPOINT_SEMAPHORE(utxocache, add);
@@ -247,15 +248,15 @@ void CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& ha
             }
         }
     }
-    hashBlock = hashBlockIn;
+    SetBestBlock(hashBlockIn);
 }
 
-void CCoinsViewCache::Flush(bool will_reuse_cache)
+void CCoinsViewCache::Flush(bool reallocate_cache)
 {
     auto cursor{CoinsViewCacheCursor(m_sentinel, cacheCoins, /*will_erase=*/true)};
     base->BatchWrite(cursor, hashBlock);
     cacheCoins.clear();
-    if (will_reuse_cache) {
+    if (reallocate_cache) {
         ReallocateCache();
     }
     cachedCoinsUsage = 0;
@@ -269,6 +270,13 @@ void CCoinsViewCache::Sync()
         /* BatchWrite must clear flags of all entries */
         throw std::logic_error("Not all unspent flagged entries were cleared");
     }
+}
+
+void CCoinsViewCache::Reset() noexcept
+{
+    cacheCoins.clear();
+    cachedCoinsUsage = 0;
+    SetBestBlock(uint256::ZERO);
 }
 
 void CCoinsViewCache::Uncache(const COutPoint& hash)
