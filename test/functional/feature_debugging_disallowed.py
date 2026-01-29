@@ -10,6 +10,8 @@ For Windows there doesn't seem to be much to do once user has SeDebugPrivilege.
 
 For MacOS, it depends on the com.apple.security.get-task-allow entitlement which
 is set during development.
+
+Also verifies that debugging becomes allowed when using -waitfordebugger.
 """
 from test_framework.test_framework import SkipTest
 from test_framework.util import assert_equal
@@ -49,7 +51,19 @@ class DebuggingDisallowedTest(DebuggingTest):
                     tracer = int(line.split()[1])
         assert_equal(tracer, 0)
 
-        self.attempt_attaching(node_pid, expect_success=False)
+        self.attempt_attaching(node_pid, expect_success=False, test_waitfordebugger=False)
+        self.stop_node(0)
+
+        if self.is_wait_for_debugger_compiled():
+            self.log.info("Verifying that -waitfordebugger *changes process permissions* so that we can attach.")
+            # Using TestNode.start() over BitcoinTestFramework.start_node() here
+            # as the former does not block waiting for the RPC connection.
+            # -waitfordebugger means we will not have an RPC connection until
+            # a debugger has been attached.
+            node.start(['-waitfordebugger'])
+            self.attempt_attaching(self.nodes[0].process.pid, expect_success=True, test_waitfordebugger=True)
+            self.log.debug("Ensure node is fully connected before teardown")
+            node.wait_for_rpc_connection()
 
 
 if __name__ == '__main__':

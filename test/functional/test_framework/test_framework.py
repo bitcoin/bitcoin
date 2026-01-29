@@ -993,6 +993,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Checks whether external signer support was compiled."""
         return self.config["components"].getboolean("ENABLE_EXTERNAL_SIGNER")
 
+    def is_wait_for_debugger_compiled(self):
+        """Checks whether wait for debugger support was compiled."""
+        return self.config["components"].getboolean("ENABLE_WAIT_FOR_DEBUGGER")
+
     def is_wallet_compiled(self):
         """Checks whether the wallet module was compiled."""
         return self.config["components"].getboolean("ENABLE_WALLET")
