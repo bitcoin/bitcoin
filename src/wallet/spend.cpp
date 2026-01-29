@@ -983,7 +983,8 @@ static bool IsCurrentForAntiFeeSniping(interfaces::Chain& chain, const uint256& 
 }
 
 void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
-                                 interfaces::Chain& chain, const uint256& block_hash, int block_height)
+                                 interfaces::Chain& chain, const uint256& block_hash, int block_height,
+                                 unsigned int min_locktime)
 {
     // All inputs must be added by now
     assert(!tx.vin.empty());
@@ -1014,8 +1015,14 @@ void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
         // that transactions that are delayed after signing for whatever reason,
         // e.g. high-latency mix networks and some CoinJoin implementations, have
         // better privacy.
-        if (rng_fast.randrange(10) == 0) {
-            tx.nLockTime = std::max(0, int(tx.nLockTime) - int(rng_fast.randrange(100)));
+        // Only pick an nLockTime further back if min_locktime is lower than the
+        // current block height; otherwise, we already picked the earliest possible nLockTime.
+        if (static_cast<int>(min_locktime) < block_height && rng_fast.randrange(10) == 0) {
+            // Calculate how far back we can set nLockTime: at most 100 blocks, but constrained
+            // by min_locktime to make sure we don't go below the minimum value
+            int locktime_range = std::min(100, int(block_height - min_locktime));
+            tx.nLockTime = std::max(int(min_locktime), int(tx.nLockTime) - int(rng_fast.randrange(locktime_range)));
+            Assert(tx.nLockTime >= min_locktime);
         }
     } else {
         // If our chain is lagging behind, we can't discourage fee sniping nor help
@@ -1286,7 +1293,19 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         use_anti_fee_sniping = false;
     }
     if (use_anti_fee_sniping) {
-        DiscourageFeeSniping(txNew, rng_fast, wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight());
+        // Find the highest nLockTime of all unconfirmed inputs so that
+        // this transaction does not use a lower value.
+        // Setting a lower nLockTime would make the "signed earlier but broadcast later"
+        // explanation unrealistic, and may act as a wallet fingerprint.
+        unsigned int max_unconfirmed_input_locktime{0}; // If there aren't any unconfirmed inputs, the minimum locktime is 0
+        for (const auto& coin: selected_coins) {
+            if (coin->depth == 0) {
+                if (const CWalletTx* coin_wtx{wallet.GetWalletTx(coin->outpoint.hash)}) {
+                    max_unconfirmed_input_locktime = std::max(max_unconfirmed_input_locktime, coin_wtx->tx->nLockTime);
+                }
+            }
+        }
+        DiscourageFeeSniping(txNew, rng_fast, wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight(), /*min_locktime=*/max_unconfirmed_input_locktime);
     }
 
     // Calculate the transaction fee

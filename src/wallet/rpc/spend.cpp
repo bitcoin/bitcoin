@@ -104,8 +104,20 @@ static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const 
 
     if (can_anti_fee_snipe) {
         LOCK(pwallet->cs_wallet);
+        // Find the highest nLockTime of all unconfirmed inputs so that
+        // this transaction does not use a lower value.
+        // Setting a lower nLockTime would make the "signed earlier but broadcast later"
+        // explanation unrealistic, and may act as a wallet fingerprint.
+        unsigned int max_unconfirmed_input_locktime{0}; // If there aren't any unconfirmed inputs, the minimum locktime is 0
+        for (const CTxIn& tx_in : rawTx.vin) {
+            if (const CWalletTx* wtx{pwallet->GetWalletTx(tx_in.prevout.hash)}) {
+                if (wtx->isUnconfirmed()) {
+                    max_unconfirmed_input_locktime = std::max(max_unconfirmed_input_locktime, wtx->tx->nLockTime);
+                }
+            }
+        }
         FastRandomContext rng_fast;
-        DiscourageFeeSniping(rawTx, rng_fast, pwallet->chain(), pwallet->GetLastBlockHash(), pwallet->GetLastBlockHeight());
+        DiscourageFeeSniping(rawTx, rng_fast, pwallet->chain(), pwallet->GetLastBlockHash(), pwallet->GetLastBlockHeight(), max_unconfirmed_input_locktime);
     }
 
     // Make a blank psbt

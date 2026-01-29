@@ -217,7 +217,7 @@ struct CreatedTransactionResult
  * Set a height-based locktime for new transactions (uses the height of the
  * current chain tip unless we are not synced with the current chain
  */
-void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, interfaces::Chain& chain, const uint256& block_hash, int block_height);
+void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, interfaces::Chain& chain, const uint256& block_hash, int block_height, unsigned int min_locktime);
 
 /**
  * Create a new transaction paying the recipients with a set of coins
