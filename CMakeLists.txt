@@ -195,10 +195,10 @@ check_linker_supports_pie(configure_warnings)
 # It is a usage requirement for all targets except for secp256k1, which
 # gets its flags by other means.
 add_library(core_interface INTERFACE)
-add_library(core_interface_relwithdebinfo INTERFACE)
+add_library(core_interface_depends INTERFACE)
 add_library(core_interface_debug INTERFACE)
 target_link_libraries(core_interface INTERFACE
-  $<$<CONFIG:RelWithDebInfo>:core_interface_relwithdebinfo>
+  $<$<CONFIG:Depends>:core_interface_depends>
   $<$<CONFIG:Debug>:core_interface_debug>
 )
 
@@ -596,8 +596,7 @@ if(NOT TARGET Python3::Interpreter)
 endif()
 
 target_compile_definitions(core_interface INTERFACE ${DEPENDS_COMPILE_DEFINITIONS})
-target_compile_definitions(core_interface_relwithdebinfo INTERFACE ${DEPENDS_COMPILE_DEFINITIONS_RELWITHDEBINFO})
-target_compile_definitions(core_interface_debug INTERFACE ${DEPENDS_COMPILE_DEFINITIONS_DEBUG})
+target_compile_definitions(core_interface_depends INTERFACE ${DEPENDS_CONFIG_COMPILE_DEFINITIONS})
 
 # If the {CXX,LD}FLAGS environment variables are defined during building depends
 # and configuring this build system, their content might be duplicated.
