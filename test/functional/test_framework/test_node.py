@@ -91,6 +91,10 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
+    run = 0
+    debug_runs = None
+    debug_cmd = ""
+
     def __init__(self, i, datadir_path, *, chain, rpchost, timewait, timeout_factor, binaries, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None, v2transport=False, uses_wallet=False, ipcbind=False):
         """
         Kwargs:
@@ -249,7 +253,7 @@ class TestNode():
             assert self.rpc_connected and self._rpc is not None, self._node_msg("Error: no RPC connection")
             return getattr(self._rpc, name)
 
-    def start(self, extra_args=None, *, cwd=None, stdout=None, stderr=None, env=None, **kwargs):
+    def start(self, extra_args=None, *, cwd=None, stdout=None, stderr=None, env=None, wait_for_debugger=False, **kwargs):
         """Start the node."""
         if extra_args is None:
             extra_args = self.extra_args
@@ -287,10 +291,24 @@ class TestNode():
         if env is not None:
             subp_env.update(env)
 
+        wait_for_debugger = wait_for_debugger or TestNode.run in TestNode.debug_runs
+        if wait_for_debugger:
+            extra_args.append("-waitfordebugger")
+            # Allow human to context switch away, take time to attach debugger and/or debug init phase for 2 hours
+            self.rpc_timeout = max(self.rpc_timeout, 2 * 60 * 60)
+
         self.process = subprocess.Popen(self.args + extra_args, env=subp_env, stdout=stdout, stderr=stderr, cwd=cwd, **kwargs)
 
         self.running = True
-        self.log.debug("bitcoind started, waiting for RPC to come up")
+        if wait_for_debugger:
+            # Note that it is the bitcoind process which is waiting, while the functional test
+            # will continue executing, but probably spin at wait_for_rpc_connection().
+            self.log.info(f"bitcoind started (run #{TestNode.run}, node #{self.index}), {'attaching debugger' if TestNode.debug_cmd else 'waiting for debugger'}, PID: {self.process.pid}")
+            if TestNode.debug_cmd:
+                subprocess.Popen(shlex.split(TestNode.debug_cmd.replace("$PID$", str(self.process.pid))), cwd=cwd)
+        else:
+            self.log.debug(f"bitcoind started (run #{TestNode.run}, node #{self.index}), waiting for RPC to come up")
+        TestNode.run += 1
 
         if self.start_perf:
             self._start_perf()
