@@ -370,6 +370,18 @@ std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc, bool walle
                 {
                     {RPCResult::Type::STR_HEX, "hex", "hex-encoded witness data (if any)"},
                 }},
+                {RPCResult::Type::OBJ, "redeemScript", /*optional=*/true, "The decoded redeem script",
+                {
+                    {RPCResult::Type::STR, "asm", "Human readable disassembly of the redeem script"},
+                    {RPCResult::Type::STR, "desc", "Descriptor of the redeem script"},
+                    {RPCResult::Type::STR, "type", "Type of the redeem script"},
+                }},
+                {RPCResult::Type::OBJ, "witnessScript", /*optional=*/true, "The decoded witness script",
+                {
+                    {RPCResult::Type::STR, "asm", "Human readable disassembly of the witness script"},
+                    {RPCResult::Type::STR, "desc", "Descriptor of the witness script"},
+                    {RPCResult::Type::STR, "type", "Type of the witness script"},
+                }},
                 {RPCResult::Type::NUM, "sequence", "The script sequence number"},
             }},
         }},
