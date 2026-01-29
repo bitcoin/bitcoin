@@ -156,26 +156,6 @@ util::Result<SelectionResult> AttemptSelection(interfaces::Chain& chain, const C
  */
 util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, const CAmount& nTargetValue, Groups& groups, const CoinSelectionParams& coin_selection_params);
 
-// User manually selected inputs that must be part of the transaction
-struct PreSelectedInputs
-{
-    COutputSet coins;
-    // If subtract fee from outputs is disabled, the 'total_amount'
-    // will be the sum of each output effective value
-    // instead of the sum of the outputs amount
-    CAmount total_amount{0};
-
-    void Insert(const COutput& output, bool subtract_fee_outputs)
-    {
-        if (subtract_fee_outputs) {
-            total_amount += output.txout.nValue;
-        } else {
-            total_amount += output.GetEffectiveValue();
-        }
-        coins.insert(std::make_shared<COutput>(output));
-    }
-};
-
 /**
  * Fetch and validate coin control selected inputs.
  * Coins could be internal (from the wallet) or external.
