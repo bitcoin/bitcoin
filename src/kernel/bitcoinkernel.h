@@ -436,13 +436,15 @@ typedef uint8_t btck_LogCategory;
 #define btck_LogCategory_BENCH ((btck_LogCategory)(1))
 #define btck_LogCategory_BLOCKSTORAGE ((btck_LogCategory)(2))
 #define btck_LogCategory_COINDB ((btck_LogCategory)(3))
-#define btck_LogCategory_LEVELDB ((btck_LogCategory)(4))
-#define btck_LogCategory_MEMPOOL ((btck_LogCategory)(5))
-#define btck_LogCategory_PRUNE ((btck_LogCategory)(6))
-#define btck_LogCategory_RAND ((btck_LogCategory)(7))
-#define btck_LogCategory_REINDEX ((btck_LogCategory)(8))
-#define btck_LogCategory_VALIDATION ((btck_LogCategory)(9))
-#define btck_LogCategory_KERNEL ((btck_LogCategory)(10))
+#define btck_LogCategory_ESTIMATEFEE ((btck_LogCategory)(4))
+#define btck_LogCategory_KERNEL ((btck_LogCategory)(5))
+#define btck_LogCategory_LEVELDB ((btck_LogCategory)(6))
+#define btck_LogCategory_MEMPOOL ((btck_LogCategory)(7))
+#define btck_LogCategory_PRUNE ((btck_LogCategory)(8))
+#define btck_LogCategory_RAND ((btck_LogCategory)(9))
+#define btck_LogCategory_REINDEX ((btck_LogCategory)(10))
+#define btck_LogCategory_TXPACKAGES ((btck_LogCategory)(11))
+#define btck_LogCategory_VALIDATION ((btck_LogCategory)(12))
 
 /**
  * The level at which logs should be produced.
@@ -451,6 +453,8 @@ typedef uint8_t btck_LogLevel;
 #define btck_LogLevel_TRACE ((btck_LogLevel)(0))
 #define btck_LogLevel_DEBUG ((btck_LogLevel)(1))
 #define btck_LogLevel_INFO ((btck_LogLevel)(2))
+#define btck_LogLevel_WARNING ((btck_LogLevel)(3))
+#define btck_LogLevel_ERROR ((btck_LogLevel)(4))
 
 /**
  * Options controlling the format of log messages.

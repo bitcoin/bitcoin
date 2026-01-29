@@ -149,7 +149,6 @@ struct btck_BlockValidationState : Handle<btck_BlockValidationState, BlockValida
 
 namespace {
 
-
 struct LogLevelMapping {
     util::log::Level bclog;
     std::string_view name;
@@ -157,10 +156,12 @@ struct LogLevelMapping {
 
 // Single source of truth for log level mappings (indexed by btck_LogLevel)
 constexpr auto LOG_LEVELS = [] {
-    std::array<LogLevelMapping, 3> a{};
+    std::array<LogLevelMapping, 5> a{};
     a[btck_LogLevel_TRACE] = {util::log::Level::Trace, "trace"};
     a[btck_LogLevel_DEBUG] = {util::log::Level::Debug, "debug"};
     a[btck_LogLevel_INFO] = {util::log::Level::Info, "info"};
+    a[btck_LogLevel_WARNING] = {util::log::Level::Warning, "warning"};
+    a[btck_LogLevel_ERROR] = {util::log::Level::Error, "error"};
     return a;
 }();
 
@@ -177,18 +178,20 @@ struct LogCategoryMapping {
 
 // Single source of truth for log category mappings (indexed by btck_LogCategory)
 constexpr auto LOG_CATEGORIES = [] {
-    std::array<LogCategoryMapping, 11> a{};
+    std::array<LogCategoryMapping, 13> a{};
     a[btck_LogCategory_ALL] = {BCLog::LogFlags::ALL, "all"};
     a[btck_LogCategory_BENCH] = {BCLog::LogFlags::BENCH, "bench"};
     a[btck_LogCategory_BLOCKSTORAGE] = {BCLog::LogFlags::BLOCKSTORAGE, "blockstorage"};
     a[btck_LogCategory_COINDB] = {BCLog::LogFlags::COINDB, "coindb"};
+    a[btck_LogCategory_ESTIMATEFEE] = {BCLog::LogFlags::ESTIMATEFEE, "estimatefee"};
+    a[btck_LogCategory_KERNEL] = {BCLog::LogFlags::KERNEL, "kernel"};
     a[btck_LogCategory_LEVELDB] = {BCLog::LogFlags::LEVELDB, "leveldb"};
     a[btck_LogCategory_MEMPOOL] = {BCLog::LogFlags::MEMPOOL, "mempool"};
     a[btck_LogCategory_PRUNE] = {BCLog::LogFlags::PRUNE, "prune"};
     a[btck_LogCategory_RAND] = {BCLog::LogFlags::RAND, "rand"};
     a[btck_LogCategory_REINDEX] = {BCLog::LogFlags::REINDEX, "reindex"};
+    a[btck_LogCategory_TXPACKAGES] = {BCLog::LogFlags::TXPACKAGES, "txpackages"};
     a[btck_LogCategory_VALIDATION] = {BCLog::LogFlags::VALIDATION, "validation"};
-    a[btck_LogCategory_KERNEL] = {BCLog::LogFlags::KERNEL, "kernel"};
     return a;
 }();
 
