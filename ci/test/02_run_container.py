@@ -134,6 +134,7 @@ def main():
         cmd_run = ["docker", "run", "--rm", "--interactive", "--detach", "--tty"]
         cmd_run += [
             "--cap-add=LINUX_IMMUTABLE",
+            "--cap-add=NET_RAW",
             *shlex.split(os.getenv("CI_CONTAINER_CAP", "")),
             f"--mount=type=bind,src={os.environ['BASE_READ_ONLY_DIR']},dst={os.environ['BASE_READ_ONLY_DIR']},readonly",
             f"--mount={CI_CCACHE_MOUNT}",
