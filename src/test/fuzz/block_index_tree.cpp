@@ -207,7 +207,7 @@ FUZZ_TARGET(block_index_tree, .init = initialize_block_index_tree)
         chainman.nBlockSequenceId = 2;
         chainman.ActiveChain().SetTip(*genesis);
         chainman.ActiveChainstate().setBlockIndexCandidates.clear();
-        chainman.m_cached_finished_ibd = false;
+        chainman.m_cached_is_ibd = true;
         blockman.m_blocks_unlinked.clear();
         blockman.m_have_pruned = false;
         blockman.CleanupForFuzzing();
