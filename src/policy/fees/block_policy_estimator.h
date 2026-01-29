@@ -96,6 +96,8 @@ struct FeeCalculation
     int desiredTarget = 0;
     int returnedTarget = 0;
     unsigned int best_height{0};
+    // Note: If you add fields to this struct, you should also consider updating
+    // the FeeCalculation struct in ipc/capnp/chain.capnp.
 };
 
 /** \class CBlockPolicyEstimator
