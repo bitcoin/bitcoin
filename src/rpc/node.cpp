@@ -196,18 +196,27 @@ static RPCHelpMan getmemoryinfo()
     };
 }
 
-static void EnableOrDisableLogCategories(UniValue cats, bool enable) {
+static void EnableOrDisableLogCategories(UniValue cats, BCLog::Level new_level)
+{
     cats = cats.get_array();
     for (unsigned int i = 0; i < cats.size(); ++i) {
         std::string cat = cats[i].get_str();
 
-        bool success;
-        if (enable) {
+        bool success{false};
+        switch (new_level) {
+        case BCLog::Level::Trace:
+            success = LogInstance().TraceCategory(cat);
+            break;
+        case BCLog::Level::Debug:
             success = LogInstance().EnableCategory(cat);
-        } else {
+            break;
+        case BCLog::Level::Info:
             success = LogInstance().DisableCategory(cat);
+            break;
+        default:
+            NONFATAL_UNREACHABLE();
+            break;
         }
-
         if (!success) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "unknown logging category " + cat);
         }
@@ -218,29 +227,44 @@ static RPCHelpMan logging()
 {
     return RPCHelpMan{"logging",
             "Gets and sets the logging configuration.\n"
-            "When called without an argument, returns the list of categories with status that are currently being debug logged or not.\n"
-            "When called with arguments, adds or removes categories from debug logging and return the lists above.\n"
-            "The arguments are evaluated in order \"include\", \"exclude\".\n"
-            "If an item is both included and excluded, it will thus end up being excluded.\n"
+            "When called without an argument, returns the status of the supported logging categories.\n"
+            "When called with arguments, adds or removes categories from debug or trace logging,\n"
+            "then returns the status of the supported logging categories.\n"
+            "The arguments are evaluated in order \"debug\", \"trace\", \"exclude\".\n"
+            "If an item is excluded, it will thus end up being excluded, even if also included for debug or trace.\n"
             "The valid logging categories are: " + LogInstance().LogCategoriesString() + "\n"
             "In addition, the following are available as category names with special meanings:\n"
             "  - \"all\",  \"1\" : represent all logging categories.\n"
             ,
                 {
-                    {"include", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "The categories to add to debug logging",
+                    {"debug|include", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "The categories to add to debug logging",
                         {
-                            {"include_category", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the valid logging category"},
+                            {"debug_category", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the valid logging category"},
                         }},
                     {"exclude", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "The categories to remove from debug logging",
                         {
                             {"exclude_category", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the valid logging category"},
                         }},
+                    {"trace", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "The categories to add to trace logging",
+                        {
+                            {"trace_category", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the valid logging category"},
+                        }},
                 },
-                RPCResult{
-                    RPCResult::Type::OBJ_DYN, "", "keys are the logging categories, and values indicates its status",
-                    {
-                        {RPCResult::Type::BOOL, "category", "if being debug logged or not. false:inactive, true:active"},
-                    }
+                {
+                    RPCResult{"If -deprecatedrpc=logging is set",
+                        RPCResult::Type::OBJ_DYN, "", "keys are the logging categories, and values indicates its status",
+                        {
+                            {RPCResult::Type::BOOL, "category", "if being debug logged or not. false:inactive, true:active"},
+                        }
+                    },
+                    RPCResult{"Otherwise",
+                        RPCResult::Type::OBJ, "", "",
+                        {{
+                            {RPCResult::Type::ARR, "excluded", "excluded categories", {{RPCResult::Type::STR, "", ""}}},
+                            {RPCResult::Type::ARR, "debug", "debug categories", {{RPCResult::Type::STR, "", ""}}},
+                            {RPCResult::Type::ARR, "trace", "trace categories", {{RPCResult::Type::STR, "", ""}}},
+                        }}
+                    },
                 },
                 RPCExamples{
                     HelpExampleCli("logging", "\"[\\\"all\\\"]\" \"[\\\"http\\\"]\"")
@@ -250,10 +274,13 @@ static RPCHelpMan logging()
 {
     BCLog::CategoryMask original_log_categories = LogInstance().GetCategoryMask();
     if (request.params[0].isArray()) {
-        EnableOrDisableLogCategories(request.params[0], true);
+        EnableOrDisableLogCategories(request.params[0], BCLog::Level::Debug);
+    }
+    if (request.params[2].isArray()) {
+        EnableOrDisableLogCategories(request.params[2], BCLog::Level::Trace);
     }
     if (request.params[1].isArray()) {
-        EnableOrDisableLogCategories(request.params[1], false);
+        EnableOrDisableLogCategories(request.params[1], BCLog::Level::Info);
     }
     BCLog::CategoryMask updated_log_categories = LogInstance().GetCategoryMask();
     BCLog::CategoryMask changed_log_categories = original_log_categories ^ updated_log_categories;
@@ -263,9 +290,35 @@ static RPCHelpMan logging()
         UpdateHTTPServerLogging(LogInstance().WillLogCategory(BCLog::LIBEVENT));
     }
 
+    bool use_deprecated = IsDeprecatedRPCEnabled("logging");
     UniValue result(UniValue::VOBJ);
-    for (const auto& logCatActive : LogInstance().LogCategoriesList()) {
-        result.pushKV(logCatActive.category, logCatActive.active);
+    if (use_deprecated) {
+        for (const auto& info : LogInstance().LogCategoriesInfo()) {
+            bool enabled = (info.level == BCLog::Level::Debug || info.level == BCLog::Level::Trace);
+            result.pushKV(info.category, enabled);
+        }
+    } else {
+        UniValue exc(UniValue::VARR);
+        UniValue debug(UniValue::VARR);
+        UniValue trace(UniValue::VARR);
+        for (const auto& info : LogInstance().LogCategoriesInfo()) {
+            switch (info.level) {
+            case BCLog::Level::Trace:
+                trace.push_back(info.category);
+                break;
+            case BCLog::Level::Debug:
+                debug.push_back(info.category);
+                break;
+            case BCLog::Level::Info:
+                exc.push_back(info.category);
+                break;
+            default:
+                break;
+            }
+        }
+        result.pushKV("excluded", exc);
+        result.pushKV("debug", debug);
+        result.pushKV("trace", trace);
     }
 
     return result;

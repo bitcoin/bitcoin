@@ -75,11 +75,6 @@ struct SourceLocationHasher {
     }
 };
 
-struct LogCategory {
-    std::string category;
-    bool active;
-};
-
 namespace BCLog {
     using CategoryMask = uint64_t;
     enum LogFlags : CategoryMask {
@@ -126,7 +121,11 @@ namespace BCLog {
         Warning,
         Error,
     };
-    constexpr auto DEFAULT_LOG_LEVEL{Level::Debug};
+
+    struct CategoryInfo {
+        std::string category;
+        Level level;
+    };
     constexpr size_t DEFAULT_MAX_LOG_BUFFER{1'000'000}; // buffer up to 1MB of log data prior to StartLogging
     constexpr uint64_t RATELIMIT_MAX_BYTES{1024 * 1024}; // maximum number of bytes per source location that can be logged within the RATELIMIT_WINDOW
     constexpr auto RATELIMIT_WINDOW{1h}; // time window after which log ratelimit stats are reset
@@ -158,6 +157,9 @@ namespace BCLog {
         LogRateLimiter(uint64_t max_bytes, std::chrono::seconds reset_window);
 
     public:
+        //! Structure for tagging not to rate limit
+        struct NoRateLimitTag { explicit NoRateLimitTag() = default; };
+
         using SchedulerFunction = std::function<void(std::function<void()>, std::chrono::milliseconds)>;
         /**
          * @param scheduler_func    Callable object used to schedule resetting the window. The first
@@ -192,6 +194,8 @@ namespace BCLog {
         bool SuppressionsActive() const { return m_suppression_active; }
     };
 
+    inline constexpr LogRateLimiter::NoRateLimitTag NO_RATE_LIMIT{};
+
     class Logger
     {
     public:
@@ -222,7 +226,7 @@ namespace BCLog {
 
         //! If there is no category-specific log level, all logs with a severity
         //! level lower than `m_log_level` will be ignored.
-        std::atomic<Level> m_log_level{DEFAULT_LOG_LEVEL};
+        std::atomic<Level> m_log_level{Level::Debug};
 
         /** Log categories bitfield. */
         std::atomic<CategoryMask> m_categories{BCLog::NONE};
@@ -260,14 +264,14 @@ namespace BCLog {
         /** Returns whether logs will be written to any output */
         bool Enabled() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
-            StdLockGuard scoped_lock(m_cs);
+            STDLOCK(m_cs);
             return m_buffering || m_print_to_console || m_print_to_file || !m_print_callbacks.empty();
         }
 
         /** Connect a slot to the print signal and return the connection */
         std::list<std::function<void(const std::string&)>>::iterator PushBackCallback(std::function<void(const std::string&)> fun) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
-            StdLockGuard scoped_lock(m_cs);
+            STDLOCK(m_cs);
             m_print_callbacks.push_back(std::move(fun));
             return --m_print_callbacks.end();
         }
@@ -275,13 +279,13 @@ namespace BCLog {
         /** Delete a connection */
         void DeleteCallback(std::list<std::function<void(const std::string&)>>::iterator it) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
-            StdLockGuard scoped_lock(m_cs);
+            STDLOCK(m_cs);
             m_print_callbacks.erase(it);
         }
 
-        size_t NumConnections()
+        size_t NumConnections() EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
-            StdLockGuard scoped_lock(m_cs);
+            STDLOCK(m_cs);
             return m_print_callbacks.size();
         }
 
@@ -292,7 +296,7 @@ namespace BCLog {
 
         void SetRateLimiting(std::shared_ptr<LogRateLimiter> limiter) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
-            StdLockGuard scoped_lock(m_cs);
+            STDLOCK(m_cs);
             m_limiter = std::move(limiter);
         }
 
@@ -304,23 +308,24 @@ namespace BCLog {
          */
         void DisableLogging() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
-        void ShrinkDebugFile();
+        void ShrinkDebugFile() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         std::unordered_map<LogFlags, Level> CategoryLevels() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
-            StdLockGuard scoped_lock(m_cs);
+            STDLOCK(m_cs);
             return m_category_log_levels;
         }
         void SetCategoryLogLevel(const std::unordered_map<LogFlags, Level>& levels) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
-            StdLockGuard scoped_lock(m_cs);
+            STDLOCK(m_cs);
             m_category_log_levels = levels;
         }
-        void AddCategoryLogLevel(LogFlags category, Level level)
+        void AddCategoryLogLevel(LogFlags category, Level level) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
-            StdLockGuard scoped_lock(m_cs);
+            STDLOCK(m_cs);
             m_category_log_levels[category] = level;
         }
+        void SetCategoryLogLevel(LogFlags flag, Level level) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
         bool SetCategoryLogLevel(std::string_view category_str, std::string_view level_str) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         Level LogLevel() const { return m_log_level.load(); }
@@ -329,21 +334,20 @@ namespace BCLog {
 
         CategoryMask GetCategoryMask() const { return m_categories.load(); }
 
-        void EnableCategory(LogFlags flag);
-        bool EnableCategory(std::string_view str);
-        void DisableCategory(LogFlags flag);
-        bool DisableCategory(std::string_view str);
+        void EnableCategory(LogFlags flag) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+        bool EnableCategory(std::string_view str) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+        void TraceCategory(LogFlags flag) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+        bool TraceCategory(std::string_view str) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+        void DisableCategory(LogFlags flag) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+        bool DisableCategory(std::string_view str) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         bool WillLogCategory(LogFlags category) const;
         bool WillLogCategoryLevel(LogFlags category, Level level) const EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         /** Returns a vector of the log categories in alphabetical order. */
-        std::vector<LogCategory> LogCategoriesList() const;
+        std::vector<CategoryInfo> LogCategoriesInfo() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
         /** Returns a string with the log categories in alphabetical order. */
-        std::string LogCategoriesString() const
-        {
-            return util::Join(LogCategoriesList(), ", ", [&](const LogCategory& i) { return i.category; });
-        };
+        std::string LogCategoriesString() const;
 
         //! Returns a string with all user-selectable log levels.
         std::string LogLevelsString() const;
@@ -352,8 +356,32 @@ namespace BCLog {
         static std::string LogLevelToStr(BCLog::Level level);
 
         bool DefaultShrinkDebugFile() const;
-    };
 
+        template <bool should_ratelimit=true, typename... Args>
+        inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags flag, BCLog::Level level, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+             EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
+        {
+            if (Enabled()) {
+                std::string log_msg;
+                try {
+                    log_msg = tfm::format(fmt, args...);
+                } catch (tinyformat::format_error& fmterr) {
+                    log_msg = "Error \"" + std::string{fmterr.what()} + "\" while formatting log message: " + fmt.fmt;
+                }
+                LogPrintStr(log_msg, std::move(source_loc), flag, level, should_ratelimit);
+            }
+        }
+
+        template <typename... Args>
+        inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags flag, BCLog::Level level, const LogRateLimiter::NoRateLimitTag&, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+             EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
+        {
+            LogPrintFormatInternal<false>(std::move(source_loc), flag, level, std::move(fmt), args...);
+        }
+
+        /** Return true if str parses as a log category and set the flag */
+        static bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
+    };
 } // namespace BCLog
 
 BCLog::Logger& LogInstance();
@@ -364,34 +392,17 @@ static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level leve
     return LogInstance().WillLogCategoryLevel(category, level);
 }
 
-/** Return true if str parses as a log category and set the flag */
-bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
-
-template <typename... Args>
-inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags flag, BCLog::Level level, bool should_ratelimit, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
-{
-    if (LogInstance().Enabled()) {
-        std::string log_msg;
-        try {
-            log_msg = tfm::format(fmt, args...);
-        } catch (tinyformat::format_error& fmterr) {
-            log_msg = "Error \"" + std::string{fmterr.what()} + "\" while formatting log message: " + fmt.fmt;
-        }
-        LogInstance().LogPrintStr(log_msg, std::move(source_loc), flag, level, should_ratelimit);
-    }
-}
-
 // Allow __func__ to be used in any context without warnings:
 // NOLINTNEXTLINE(bugprone-lambda-function-name)
-#define LogPrintLevel_(category, level, should_ratelimit, ...) LogPrintFormatInternal(SourceLocation{__func__}, category, level, should_ratelimit, __VA_ARGS__)
+#define detail_LogPrintLevel(category, level, ...) LogInstance().LogPrintFormatInternal(SourceLocation{__func__}, category, level, __VA_ARGS__)
 
 // Log unconditionally. Uses basic rate limiting to mitigate disk filling attacks.
 // Be conservative when using functions that unconditionally log to debug.log!
 // It should not be the case that an inbound peer can fill up a user's storage
 // with debug.log entries.
-#define LogInfo(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, /*should_ratelimit=*/true, __VA_ARGS__)
-#define LogWarning(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Warning, /*should_ratelimit=*/true, __VA_ARGS__)
-#define LogError(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Error, /*should_ratelimit=*/true, __VA_ARGS__)
+#define LogInfo(...) detail_LogPrintLevel(BCLog::LogFlags::ALL, BCLog::Level::Info, __VA_ARGS__)
+#define LogWarning(...) detail_LogPrintLevel(BCLog::LogFlags::ALL, BCLog::Level::Warning, __VA_ARGS__)
+#define LogError(...) detail_LogPrintLevel(BCLog::LogFlags::ALL, BCLog::Level::Error, __VA_ARGS__)
 
 // Use a macro instead of a function for conditional logging to prevent
 // evaluating arguments when logging for the category is not enabled.
@@ -402,9 +413,8 @@ inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags 
 #define detail_LogIfCategoryAndLevelEnabled(category, level, ...)     \
     do {                                                              \
         if (LogAcceptCategory((category), (level))) {                 \
-            bool rate_limit{level >= BCLog::Level::Info};             \
-            Assume(!rate_limit);/*Only called with the levels below*/ \
-            LogPrintLevel_(category, level, rate_limit, __VA_ARGS__); \
+            Assume(level < BCLog::Level::Info);/*Only called with the levels below*/ \
+            detail_LogPrintLevel(category, level, BCLog::NO_RATE_LIMIT, __VA_ARGS__); \
         }                                                             \
     } while (0)
 

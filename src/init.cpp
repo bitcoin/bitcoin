@@ -1041,7 +1041,6 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 
     // ********************************************************* Step 3: parameter-to-internal-flags
     if (auto result{init::SetLoggingCategories(args)}; !result) return InitError(util::ErrorString(result));
-    if (auto result{init::SetLoggingLevel(args)}; !result) return InitError(util::ErrorString(result));
 
     nConnectTimeout = args.GetIntArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
     if (nConnectTimeout <= 0) {

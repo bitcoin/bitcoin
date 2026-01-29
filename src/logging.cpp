@@ -53,7 +53,7 @@ static int FileWriteStr(std::string_view str, FILE *fp)
 
 bool BCLog::Logger::StartLogging()
 {
-    StdLockGuard scoped_lock(m_cs);
+    STDLOCK(m_cs);
 
     assert(m_buffering);
     assert(m_fileout == nullptr);
@@ -97,7 +97,7 @@ bool BCLog::Logger::StartLogging()
 
 void BCLog::Logger::DisconnectTestLogger()
 {
-    StdLockGuard scoped_lock(m_cs);
+    STDLOCK(m_cs);
     m_buffering = true;
     if (m_fileout != nullptr) fclose(m_fileout);
     m_fileout = nullptr;
@@ -111,7 +111,7 @@ void BCLog::Logger::DisconnectTestLogger()
 void BCLog::Logger::DisableLogging()
 {
     {
-        StdLockGuard scoped_lock(m_cs);
+        STDLOCK(m_cs);
         assert(m_buffering);
         assert(m_print_callbacks.empty());
     }
@@ -123,6 +123,7 @@ void BCLog::Logger::DisableLogging()
 void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
 {
     m_categories |= flag;
+    SetCategoryLogLevel(flag, Level::Debug);
 }
 
 bool BCLog::Logger::EnableCategory(std::string_view str)
@@ -130,6 +131,20 @@ bool BCLog::Logger::EnableCategory(std::string_view str)
     BCLog::LogFlags flag;
     if (!GetLogCategory(flag, str)) return false;
     EnableCategory(flag);
+    return true;
+}
+
+void BCLog::Logger::TraceCategory(BCLog::LogFlags flag)
+{
+    m_categories |= flag;
+    SetCategoryLogLevel(flag, Level::Trace);
+}
+
+bool BCLog::Logger::TraceCategory(std::string_view str)
+{
+    BCLog::LogFlags flag;
+    if (!GetLogCategory(flag, str)) return false;
+    TraceCategory(flag);
     return true;
 }
 
@@ -159,7 +174,7 @@ bool BCLog::Logger::WillLogCategoryLevel(BCLog::LogFlags category, BCLog::Level 
 
     if (!WillLogCategory(category)) return false;
 
-    StdLockGuard scoped_lock(m_cs);
+    STDLOCK(m_cs);
     const auto it{m_category_log_levels.find(category)};
     return level >= (it == m_category_log_levels.end() ? LogLevel() : it->second);
 }
@@ -217,7 +232,7 @@ static const std::unordered_map<BCLog::LogFlags, std::string> LOG_CATEGORIES_BY_
     }(LOG_CATEGORIES_BY_STR)
 };
 
-bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str)
+bool BCLog::Logger::GetLogCategory(BCLog::LogFlags& flag, std::string_view str)
 {
     if (str.empty() || str == "1" || str == "all") {
         flag = BCLog::ALL;
@@ -275,14 +290,31 @@ static std::optional<BCLog::Level> GetLogLevel(std::string_view level_str)
     }
 }
 
-std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
+std::vector<BCLog::CategoryInfo> BCLog::Logger::LogCategoriesInfo() const
 {
-    std::vector<LogCategory> ret;
+    STDLOCK(m_cs);
+    std::vector<CategoryInfo> ret;
     ret.reserve(LOG_CATEGORIES_BY_STR.size());
+
+    const BCLog::Level base = LogLevel();
     for (const auto& [category, flag] : LOG_CATEGORIES_BY_STR) {
-        ret.push_back(LogCategory{.category = category, .active = WillLogCategory(flag)});
+        BCLog::Level level = base;
+        if (!WillLogCategory(flag)) {
+            level = BCLog::Level::Info;
+        } else {
+            const auto it{m_category_log_levels.find(flag)};
+            if (it != m_category_log_levels.end()) {
+                level = it->second;
+            }
+        }
+        ret.push_back(CategoryInfo{.category = category, .level = level});
     }
     return ret;
+}
+
+std::string BCLog::Logger::LogCategoriesString() const
+{
+    return util::Join(LOG_CATEGORIES_BY_STR, ", ", [&](const auto& i) { return i.first; });
 }
 
 /** Log severity levels that can be selected by the user. */
@@ -392,7 +424,7 @@ BCLog::LogRateLimiter::Status BCLog::LogRateLimiter::Consume(
     const SourceLocation& source_loc,
     const std::string& str)
 {
-    StdLockGuard scoped_lock(m_mutex);
+    STDLOCK(m_mutex);
     auto& stats{m_source_locations.try_emplace(source_loc, m_max_bytes).first->second};
     Status status{stats.m_dropped_bytes > 0 ? Status::STILL_SUPPRESSED : Status::UNSUPPRESSED};
 
@@ -423,7 +455,7 @@ void BCLog::Logger::FormatLogStrInPlace(std::string& str, BCLog::LogFlags catego
 
 void BCLog::Logger::LogPrintStr(std::string_view str, SourceLocation&& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
 {
-    StdLockGuard scoped_lock(m_cs);
+    STDLOCK(m_cs);
     return LogPrintStr_(str, std::move(source_loc), category, level, should_ratelimit);
 }
 
@@ -513,6 +545,8 @@ void BCLog::Logger::LogPrintStr_(std::string_view str, SourceLocation&& source_l
 
 void BCLog::Logger::ShrinkDebugFile()
 {
+    STDLOCK(m_cs);
+
     // Amount of debug.log to save at end when shrinking (must fit in memory)
     constexpr size_t RECENT_DEBUG_HISTORY_SIZE = 10 * 1000000;
 
@@ -534,7 +568,8 @@ void BCLog::Logger::ShrinkDebugFile()
         // Restart the file with some of the end
         std::vector<char> vch(RECENT_DEBUG_HISTORY_SIZE, 0);
         if (fseek(file, -((long)vch.size()), SEEK_END)) {
-            LogWarning("Failed to shrink debug log file: fseek(...) failed");
+            // LogWarning, except with m_cs held
+            LogPrintStr_("Failed to shrink debug log file: fseek(...) failed", SourceLocation{__func__}, BCLog::ALL, BCLog::Level::Warning, /*should_ratelimit=*/true);
             fclose(file);
             return;
         }
@@ -556,15 +591,13 @@ void BCLog::LogRateLimiter::Reset()
 {
     decltype(m_source_locations) source_locations;
     {
-        StdLockGuard scoped_lock(m_mutex);
+        STDLOCK(m_mutex);
         source_locations.swap(m_source_locations);
         m_suppression_active = false;
     }
     for (const auto& [source_loc, stats] : source_locations) {
         if (stats.m_dropped_bytes == 0) continue;
-        LogPrintLevel_(
-            LogFlags::ALL, Level::Warning, /*should_ratelimit=*/false,
-            "Restarting logging from %s:%d (%s): %d bytes were dropped during the last %ss.",
+        LogWarning(BCLog::NO_RATE_LIMIT, "Restarting logging from %s:%d (%s): %d bytes were dropped during the last %ss.",
             source_loc.file_name(), source_loc.line(), source_loc.function_name_short(),
             stats.m_dropped_bytes, Ticks<std::chrono::seconds>(m_reset_window));
     }
@@ -590,6 +623,17 @@ bool BCLog::Logger::SetLogLevel(std::string_view level_str)
     return true;
 }
 
+void BCLog::Logger::SetCategoryLogLevel(BCLog::LogFlags flag, BCLog::Level level)
+{
+    STDLOCK(m_cs);
+    if (flag == LogFlags::ALL) {
+        SetLogLevel(level);
+        m_category_log_levels.clear();
+    } else {
+        m_category_log_levels[flag] = level;
+    }
+}
+
 bool BCLog::Logger::SetCategoryLogLevel(std::string_view category_str, std::string_view level_str)
 {
     BCLog::LogFlags flag;
@@ -598,7 +642,6 @@ bool BCLog::Logger::SetCategoryLogLevel(std::string_view category_str, std::stri
     const auto level = GetLogLevel(level_str);
     if (!level.has_value() || level.value() > MAX_USER_SETABLE_SEVERITY_LEVEL) return false;
 
-    StdLockGuard scoped_lock(m_cs);
-    m_category_log_levels[flag] = level.value();
+    SetCategoryLogLevel(flag, level.value());
     return true;
 }
