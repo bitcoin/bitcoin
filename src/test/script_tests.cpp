@@ -95,6 +95,7 @@ static ScriptErrorDesc script_errors[]={
     {SCRIPT_ERR_TAPSCRIPT_EMPTY_PUBKEY, "TAPSCRIPT_EMPTY_PUBKEY"},
     {SCRIPT_ERR_OP_CODESEPARATOR, "OP_CODESEPARATOR"},
     {SCRIPT_ERR_SIG_FINDANDDELETE, "SIG_FINDANDDELETE"},
+    {SCRIPT_ERR_DISCOURAGE_OP_CAT, "DISCOURAGE_OP_CAT"},
 };
 
 static std::string FormatScriptFlags(script_verify_flags flags)
@@ -1722,6 +1723,83 @@ BOOST_AUTO_TEST_CASE(formatscriptflags)
     BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_TAPROOT | script_verify_flags::from_int(1u<<27)), "TAPROOT,0x08000000");
     BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_TAPROOT | script_verify_flags::from_int((1u<<28) | (1ull<<58))), "TAPROOT,0x400000010000000");
     BOOST_CHECK_EQUAL(FormatScriptFlags(script_verify_flags::from_int(1u<<26)), "0x04000000");
+}
+
+std::tuple<CScript, CScriptWitness> ConstructWitnessForTaprootLeafSpend(std::vector<unsigned char> witVerifyScript, std::vector<std::vector<unsigned char>> witData) {
+    const KeyData keys;
+    TaprootBuilder builder;
+    builder.Add(/*depth=*/0, witVerifyScript, TAPROOT_LEAF_TAPSCRIPT, /*track=*/true);
+    builder.Finalize(XOnlyPubKey(keys.key0.GetPubKey()));
+
+    CScriptWitness witness;
+    witness.stack.insert(witness.stack.begin(), witData.begin(), witData.end());
+    witness.stack.push_back(witVerifyScript);
+    auto controlblock = *(builder.GetSpendData().scripts[{witVerifyScript, TAPROOT_LEAF_TAPSCRIPT}].begin());
+    witness.stack.push_back(controlblock);
+
+    CScript scriptPubKey = CScript() << OP_1 << ToByteVector(builder.GetOutput());
+    return std::make_tuple(scriptPubKey, witness);
+}
+
+BOOST_AUTO_TEST_CASE(cat_simple)
+{
+    std::vector<std::vector<unsigned char>> witData;
+    witData.emplace_back(ParseHex("aa"));
+    witData.emplace_back(ParseHex("bbbb"));
+
+    std::vector<unsigned char> witVerifyScript = {OP_CAT, OP_PUSHDATA1, 0x03, 0xaa, 0xbb, 0xbb, OP_EQUAL};
+    auto [scriptPubKey, wit] = ConstructWitnessForTaprootLeafSpend(witVerifyScript, witData);
+    CScript scriptSig = CScript(); // Script sig is always size 0 and empty in tapscript
+    script_verify_flags flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_TAPROOT | SCRIPT_VERIFY_OP_CAT;
+    DoTest(scriptPubKey, scriptSig, wit, flags, "Simple CAT", SCRIPT_ERR_OK, /*nValue=*/1);
+}
+
+BOOST_AUTO_TEST_CASE(cat_empty_stack)
+{
+    // Ensures that OP_CAT successfully handles concatenating two empty stack elements
+    std::vector<std::vector<unsigned char>> witData;
+    witData.emplace_back();
+    witData.emplace_back();
+    std::vector<unsigned char> witVerifyScript = {OP_CAT, OP_PUSHDATA1, 0x00, OP_EQUAL};
+    auto [scriptPubKey, wit] = ConstructWitnessForTaprootLeafSpend(witVerifyScript, witData);
+    CScript scriptSig = CScript(); // Script sig is always size 0 and empty in tapscript
+    script_verify_flags flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_TAPROOT | SCRIPT_VERIFY_OP_CAT;
+    DoTest(scriptPubKey, scriptSig, wit, flags, "CAT empty stack", SCRIPT_ERR_OK, /*nValue=*/1);
+}
+
+BOOST_AUTO_TEST_CASE(cat_dup_test)
+{
+    // CAT DUP exhaustion attacks using all element sizes from 1 to 522
+    // with CAT DUP repetitions up to 10. Ensures the correct error is thrown
+    // or not thrown, as appropriate.
+    unsigned int maxElementSize = 522;
+    unsigned int maxDupsToCheck = 10;
+
+    CScript scriptSig = CScript(); // Script sig is always size 0 and empty in tapscript
+    script_verify_flags flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_TAPROOT | SCRIPT_VERIFY_OP_CAT;
+
+    std::vector<std::vector<unsigned char>> witData;
+    witData.emplace_back();
+    for (unsigned int elementSize = 1; elementSize <= maxElementSize; elementSize++) {
+        std::vector<unsigned char> witVerifyScript;
+        // increase the size of stack element by one byte
+        witData.at(0).emplace_back(0x1A);
+        for (unsigned int dups = 1; dups <= maxDupsToCheck; dups++) {
+            witVerifyScript.emplace_back(OP_DUP);
+            witVerifyScript.emplace_back(OP_CAT);
+            int expectedErr = SCRIPT_ERR_OK;
+            unsigned int catedStackElementSize = witData.at(0).size()<<dups;
+            if (catedStackElementSize > MAX_SCRIPT_ELEMENT_SIZE || elementSize > MAX_SCRIPT_ELEMENT_SIZE){
+                expectedErr = SCRIPT_ERR_PUSH_SIZE;
+                break;
+            }
+            auto [scriptPubKey, wit] = ConstructWitnessForTaprootLeafSpend(witVerifyScript, witData);
+            DoTest(scriptPubKey, scriptSig, wit, flags, "CAT DUP test", expectedErr, /*nValue=*/1);
+            // Once we hit the stack element size limit, break
+            if (expectedErr == SCRIPT_ERR_OK)
+                break;
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
