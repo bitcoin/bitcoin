@@ -414,7 +414,6 @@ def main():
     parser.add_argument('--extended', action='store_true', help='run the extended test suite in addition to the basic tests')
     parser.add_argument('--help', '-h', '-?', action='store_true', help='print help text and exit')
     parser.add_argument('--jobs', '-j', type=int, default=4, help='how many test scripts to run in parallel. Default=4.')
-    parser.add_argument('--keepcache', '-k', action='store_true', help='the default behavior is to flush the cache directory on startup. --keepcache retains the cache from the previous testrun.')
     parser.add_argument('--quiet', '-q', action='store_true', help='only print dots, results summary and failure logs')
     parser.add_argument('--tmpdirprefix', '-t', default=tempfile.gettempdir(), help="Root directory for datadirs")
     parser.add_argument('--failfast', '-F', action='store_true', help='stop execution after the first test failure')
@@ -564,9 +563,6 @@ def main():
     check_script_list(src_dir=config["environment"]["SRCDIR"], fail_on_warn=fail_on_warn)
     check_script_prefixes()
 
-    if not args.keepcache:
-        shutil.rmtree("%s/test/cache" % config["environment"]["BUILDDIR"], ignore_errors=True)
-
     run_tests(
         test_list=test_list,
         build_dir=config["environment"]["BUILDDIR"],
@@ -593,9 +589,7 @@ def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, ar
         pass
 
     # Warn if there is a cache directory
-    cache_dir = "%s/test/cache" % build_dir
-    if os.path.isdir(cache_dir):
-        print("%sWARNING!%s There is a cache directory here: %s. If tests fail unexpectedly, try deleting the cache directory." % (BOLD[1], BOLD[0], cache_dir))
+    cache_tmp_dir = tempfile.TemporaryDirectory(prefix="functional_test_cache")
 
     # Warn if there is not enough space on the testing dir
     min_space = MIN_FREE_SPACE + (jobs - 1) * ADDITIONAL_SPACE_PER_JOB
@@ -608,7 +602,7 @@ def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, ar
     # a hard link or a copy on any platform. See https://github.com/bitcoin/bitcoin/pull/27561.
     sys.path.append(tests_dir)
 
-    flags = ['--cachedir={}'.format(cache_dir)] + args
+    flags = [f"--cachedir={cache_tmp_dir.name}"] + args
 
     if enable_coverage:
         coverage = RPCCoverage()
