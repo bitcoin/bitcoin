@@ -495,7 +495,7 @@ public:
         return spk_man != nullptr;
     }
     OutputType getDefaultAddressType() override { return m_wallet->m_default_address_type; }
-    CAmount getDefaultMaxTxFee() override { return m_wallet->m_default_max_tx_fee; }
+    CAmount getMaxTxFee() override { return m_wallet->m_max_tx_fee; }
     void remove() override
     {
         RemoveWallet(m_context, m_wallet, /*load_on_start=*/false);
