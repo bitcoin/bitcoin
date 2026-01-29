@@ -765,7 +765,7 @@ class TestHandler:
                         status = "Passed"
                     elif proc.returncode == TEST_EXIT_SKIPPED:
                         status = "Skipped"
-                        skip_reason = re.search(r"Test Skipped: (.*)", stdout).group(1)
+                        skip_reason = re.search(r"Test Skipped: (.*)", stdout).group(1).strip()
                     else:
                         status = "Failed"
                     self.jobs.remove(job)

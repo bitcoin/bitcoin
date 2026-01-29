@@ -305,37 +305,6 @@ If you need to build exclusively for debugging, set the `-DCMAKE_BUILD_TYPE`
 to `Debug` (i.e. `-DCMAKE_BUILD_TYPE=Debug`). You can always check the cmake
 build options of an existing build with `ccmake build`.
 
-### Show sources in debugging
-
-If you have ccache enabled, absolute paths are stripped from debug information
-with the `-fdebug-prefix-map` and `-fmacro-prefix-map` options (if supported by the
-compiler). This might break source file detection in case you move binaries
-after compilation, debug from the directory other than the project root or use
-an IDE that only supports absolute paths for debugging (e.g. it won't stop at breakpoints).
-
-There are a few possible fixes:
-
-1. Configure source file mapping.
-
-For `gdb` create or append to [`.gdbinit` file](https://sourceware.org/gdb/current/onlinedocs/gdb#gdbinit-man):
-```
-set substitute-path ./src /path/to/project/root/src
-```
-
-For `lldb` create or append to [`.lldbinit` file](https://lldb.llvm.org/man/lldb.html#configuration-files):
-```
-settings set target.source-map ./src /path/to/project/root/src
-```
-
-2. Add a symlink to the `./src` directory:
-```
-ln -s /path/to/project/root/src src
-```
-
-3. Use `debugedit` to modify debug information in the binary.
-
-4. If your IDE has an option for this, change your breakpoints to use the file name only.
-
 ### debug.log
 
 If the code is behaving strangely, take a look in the `debug.log` file in the data directory;
