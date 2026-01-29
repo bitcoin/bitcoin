@@ -487,7 +487,6 @@ typedef uint32_t btck_ScriptVerificationFlags;
 
 typedef uint8_t btck_ChainType;
 #define btck_ChainType_MAINNET ((btck_ChainType)(0))
-#define btck_ChainType_TESTNET ((btck_ChainType)(1))
 #define btck_ChainType_TESTNET_4 ((btck_ChainType)(2))
 #define btck_ChainType_SIGNET ((btck_ChainType)(3))
 #define btck_ChainType_REGTEST ((btck_ChainType)(4))
