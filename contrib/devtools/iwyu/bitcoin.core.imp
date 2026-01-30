@@ -6,6 +6,7 @@
   { "include": [ "<tmmintrin.h>", "private", "<immintrin.h>", "public" ] },
 
   # libc symbols.
+  # See: https://github.com/include-what-you-use/include-what-you-use/issues/1809.
   { "symbol": ["AT_HWCAP", "private", "<sys/auxv.h>", "public"] },
   { "symbol": ["AT_HWCAP2", "private", "<sys/auxv.h>", "public"] },
 
