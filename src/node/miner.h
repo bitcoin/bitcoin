@@ -142,7 +142,7 @@ void ApplyArgsManOptions(const ArgsManager& gArgs, BlockAssembler::Options& opti
 void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t version, uint32_t timestamp, uint32_t nonce);
 
 
-/* Interrupt the current wait for the next block template. */
+/* Interrupt a blocking call. */
 void InterruptWait(KernelNotifications& kernel_notifications, bool& interrupt_wait);
 /**
  * Return a new block template when fees rise to a certain threshold or after a
@@ -160,8 +160,10 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
 std::optional<BlockRef> GetTip(ChainstateManager& chainman);
 
 /* Waits for the connected tip to change until timeout has elapsed. During node initialization, this will wait until the tip is connected (regardless of `timeout`).
- * Returns the current tip, or nullopt if the node is shutting down. */
-std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const uint256& current_tip, MillisecondsDouble& timeout);
+ * Returns the current tip, or nullopt if the node is shutting down or interrupt()
+ * is called.
+ */
+std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const uint256& current_tip, MillisecondsDouble& timeout, bool& interrupt);
 
 /**
  * Wait while the best known header extends the current chain tip AND at least
@@ -175,10 +177,11 @@ std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifi
  * once per connected client. Subsequent templates are provided by waitNext().
  *
  * @param last_tip tip at the start of the cooldown window.
+ * @param interrupt set to true to interrupt the cooldown.
  *
  * @returns false if interrupted.
  */
-bool CooldownIfHeadersAhead(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const BlockRef& last_tip);
+bool CooldownIfHeadersAhead(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const BlockRef& last_tip, bool& interrupt);
 } // namespace node
 
 #endif // BITCOIN_NODE_MINER_H

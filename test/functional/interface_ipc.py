@@ -270,6 +270,14 @@ class IPCInterfaceTest(BitcoinTestFramework):
             assert_equal(oldblockref.hash, newblockref.hash)
             assert_equal(oldblockref.height, newblockref.height)
 
+            self.log.debug("interrupt() should abort waitTipChanged()")
+            async def wait_for_tip():
+                long_timeout = 60000.0  # 1 minute
+                result = (await mining.waitTipChanged(ctx, newblockref.hash, long_timeout)).result
+                # Unlike a timeout, interrupt() returns an empty BlockRef.
+                assert_equal(len(result.hash), 0)
+            await wait_and_do(wait_for_tip(), mining.interrupt())
+
             async with AsyncExitStack() as stack:
                 opts = self.capnp_modules['mining'].BlockCreateOptions()
                 opts.useMempool = True
@@ -289,6 +297,15 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 # even without the cooldown, so this can miss regressions but avoids
                 # spurious failures.
                 assert_greater_than_or_equal(time.time() - start, 0.9)
+
+                self.log.debug("interrupt() should abort createNewBlock() during cooldown")
+                async def create_block():
+                    result = await mining.createNewBlock(opts)
+                    # interrupt() causes createNewBlock to return nullptr
+                    assert_equal(result._has("result"), False)
+
+                await wait_and_do(create_block(), mining.interrupt())
+
                 header_only_peer.peer_disconnect()
                 self.connect_nodes(0, 1)
                 self.sync_all()
