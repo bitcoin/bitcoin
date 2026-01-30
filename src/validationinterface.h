@@ -223,7 +223,7 @@ public:
     void TransactionAddedToMempool(const NewMempoolTransactionInfo&, uint64_t mempool_sequence);
     void TransactionRemovedFromMempool(const CTransactionRef&, MemPoolRemovalReason, uint64_t mempool_sequence);
     void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>&, unsigned int nBlockHeight);
-    void BlockConnected(const kernel::ChainstateRole&, const std::shared_ptr<const CBlock>&, const CBlockIndex* pindex);
+    void BlockConnected(const kernel::ChainstateRole&, std::shared_ptr<const CBlock>, const CBlockIndex* pindex);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &, const CBlockIndex* pindex);
     void ChainStateFlushed(const kernel::ChainstateRole&, const CBlockLocator&);
     void BlockChecked(const std::shared_ptr<const CBlock>&, const BlockValidationState&);
