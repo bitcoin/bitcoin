@@ -5,13 +5,14 @@
 #ifndef BITCOIN_UTIL_STRING_H
 #define BITCOIN_UTIL_STRING_H
 
-#include <span.h>
-
+#include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cstdint>
-#include <cstring>
+#include <initializer_list>
 #include <locale>
 #include <optional>
+#include <span>
 #include <sstream>
 #include <string>
 #include <string_view>

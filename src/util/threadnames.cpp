@@ -2,17 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/threadnames.h>
+
+#include <algorithm>
 #include <cstring>
 #include <string>
-#include <thread>
-#include <utility>
 
 #if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
 #include <pthread.h>
 #include <pthread_np.h>
 #endif
-
-#include <util/threadnames.h>
 
 #if __has_include(<sys/prctl.h>)
 #include <sys/prctl.h>

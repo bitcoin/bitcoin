@@ -7,6 +7,7 @@
 #define BITCOIN_LOGGING_H
 
 #include <crypto/siphash.h>
+#include <span.h>
 #include <threadsafety.h>
 #include <tinyformat.h>
 #include <util/check.h>

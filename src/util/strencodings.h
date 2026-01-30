@@ -9,11 +9,9 @@
 #ifndef BITCOIN_UTIL_STRENCODINGS_H
 #define BITCOIN_UTIL_STRENCODINGS_H
 
-#include <crypto/hex_base.h>
 #include <span.h>
 #include <util/string.h>
 
-#include <algorithm>
 #include <array>
 #include <bit>
 #include <charconv>
@@ -21,6 +19,7 @@
 #include <cstdint>
 #include <limits>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <system_error>

@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/hasher.h>
+
 #include <crypto/siphash.h>
 #include <random.h>
-#include <span.h>
-#include <util/hasher.h>
 
 SaltedUint256Hasher::SaltedUint256Hasher() : m_hasher{
     FastRandomContext().rand64(),

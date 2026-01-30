@@ -5,12 +5,17 @@
 #include <util/exec.h>
 
 #include <util/fs.h>
+#ifdef WIN32
 #include <util/subprocess.h>
+#endif
 
+#include <cstdlib>
 #include <string>
-#include <vector>
+#include <system_error>
 
 #ifdef WIN32
+#include <codecvt>
+#include <locale>
 #include <process.h>
 #include <windows.h>
 #else

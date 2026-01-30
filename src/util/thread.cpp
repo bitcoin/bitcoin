@@ -11,7 +11,6 @@
 #include <exception>
 #include <functional>
 #include <string>
-#include <utility>
 
 void util::TraceThread(std::string_view thread_name, std::function<void()> thread_func)
 {

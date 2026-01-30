@@ -3,9 +3,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/fs_helpers.h>
-
 #include <bitcoin-build-config.h> // IWYU pragma: keep
+
+#include <util/fs_helpers.h>
 
 #include <logging.h>
 #include <sync.h>
@@ -24,6 +24,7 @@
 #ifndef WIN32
 #include <fcntl.h>
 #include <sys/resource.h>
+#include <sys/types.h>
 #include <unistd.h>
 #else
 #include <io.h>

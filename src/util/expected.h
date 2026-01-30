@@ -8,7 +8,6 @@
 #include <attributes.h>
 #include <util/check.h>
 
-#include <cassert>
 #include <exception>
 #include <utility>
 #include <variant>

@@ -12,8 +12,9 @@
 
 #include <array>
 #include <atomic>
-#include <chrono>
+#include <compare>
 #include <optional>
+#include <ratio>
 #include <string>
 #include <string_view>
 #include <thread>

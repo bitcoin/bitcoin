@@ -6,13 +6,18 @@
 #define BITCOIN_UTIL_SOCK_H
 
 #include <compat/compat.h>
-#include <util/threadinterrupt.h>
-#include <util/time.h>
 
 #include <chrono>
+#include <cstdint>
+#include <limits>
 #include <memory>
+#include <span>
 #include <string>
 #include <unordered_map>
+
+class CThreadInterrupt;
+
+using namespace std::chrono_literals;
 
 /**
  * Maximum time to wait for I/O readiness.

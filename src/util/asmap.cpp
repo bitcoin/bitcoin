@@ -4,16 +4,14 @@
 
 #include <util/asmap.h>
 
-#include <clientversion.h>
 #include <logging.h>
-#include <serialize.h>
 #include <streams.h>
 #include <util/fs.h>
 
-#include <algorithm>
 #include <bit>
 #include <cassert>
 #include <cstdio>
+#include <string>
 #include <utility>
 #include <vector>
 
