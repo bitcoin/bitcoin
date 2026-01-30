@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
@@ -47,10 +47,13 @@ CreateAndActivateUTXOSnapshot(
     FILE* outfile{fsbridge::fopen(snapshot_path, "wb")};
     AutoFile auto_outfile{outfile};
 
-    UniValue result = CreateUTXOSnapshot(
-        node, node.chainman->ActiveChainstate(), auto_outfile, snapshot_path, snapshot_path);
-    LogPrintf(
-        "Wrote UTXO snapshot to %s: %s\n", fs::PathToString(snapshot_path.make_preferred()), result.write());
+    UniValue result = CreateUTXOSnapshot(node,
+                                         node.chainman->ActiveChainstate(),
+                                         std::move(auto_outfile), // Will close auto_outfile.
+                                         snapshot_path,
+                                         snapshot_path);
+    LogInfo("Wrote UTXO snapshot to %s: %s",
+            fs::PathToString(snapshot_path.make_preferred()), result.write());
 
     // Read the written snapshot in and then activate it.
     //
@@ -78,7 +81,7 @@ CreateAndActivateUTXOSnapshot(
             Chainstate& chain = node.chainman->ActiveChainstate();
             Assert(chain.LoadGenesisBlock());
             // These cache values will be corrected shortly in `MaybeRebalanceCaches`.
-            chain.InitCoinsDB(1 << 20, true, false, "");
+            chain.InitCoinsDB(1 << 20, /*in_memory=*/true, /*should_wipe=*/false);
             chain.InitCoinsCache(1 << 20);
             chain.CoinsTip().SetBestBlock(gen_hash);
             chain.setBlockIndexCandidates.insert(node.chainman->m_blockman.LookupBlockIndex(gen_hash));

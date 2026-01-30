@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -71,7 +71,7 @@ class TxPrivacyTest(BitcoinTestFramework):
 
         # Spy should only get an inv for the second transaction as the first
         # one was received pre-verack with the spy
-        spy.wait_for_inv_match(CInv(MSG_WTX, tx2.calc_sha256(True)))
+        spy.wait_for_inv_match(CInv(MSG_WTX, tx2.wtxid_int))
 
 if __name__ == '__main__':
     TxPrivacyTest(__file__).main()

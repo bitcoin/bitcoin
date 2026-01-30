@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2025 The Bitcoin Core developers
+# Copyright (c) 2025-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mining on an alternate mainnet
@@ -30,6 +30,7 @@ from test_framework.blocktools import (
 
 from test_framework.messages import (
     CBlock,
+    SEQUENCE_FINAL,
 )
 
 import json
@@ -52,24 +53,24 @@ class MiningMainnetTest(BitcoinTestFramework):
             help='Block data file (default: %(default)s)',
         )
 
-        self.add_wallet_options(parser)
-
-    def mine(self, height, prev_hash, blocks, node, fees=0):
+    def mine(self, height, prev_hash, blocks, node):
         self.log.debug(f"height={height}")
         block = CBlock()
         block.nVersion = 0x20000000
         block.hashPrevBlock = int(prev_hash, 16)
         block.nTime = blocks['timestamps'][height - 1]
-        block.nBits = DIFF_1_N_BITS
+        block.nBits = DIFF_1_N_BITS if height < 2016 else DIFF_4_N_BITS
         block.nNonce = blocks['nonces'][height - 1]
-        block.vtx = [create_coinbase(height=height, script_pubkey=bytes.fromhex(COINBASE_SCRIPT_PUBKEY), retarget_period=2016)]
+        block.vtx = [create_coinbase(height=height, script_pubkey=bytes.fromhex(COINBASE_SCRIPT_PUBKEY), halving_period=210000)]
+        # The alternate mainnet chain was mined with non-timelocked coinbase txs.
+        block.vtx[0].nLockTime = 0
+        block.vtx[0].vin[0].nSequence = SEQUENCE_FINAL
         block.hashMerkleRoot = block.calc_merkle_root()
-        block.rehash()
         block_hex = block.serialize(with_witness=False).hex()
         self.log.debug(block_hex)
         assert_equal(node.submitblock(block_hex), None)
         prev_hash = node.getbestblockhash()
-        assert_equal(prev_hash, block.hash)
+        assert_equal(prev_hash, block.hash_hex)
         return prev_hash
 
 
@@ -81,12 +82,15 @@ class MiningMainnetTest(BitcoinTestFramework):
         self.log.info("Load alternative mainnet blocks")
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), self.options.datafile)
         prev_hash = node.getbestblockhash()
-        with open(path, encoding='utf-8') as f:
+        blocks = None
+        with open(path) as f:
             blocks = json.load(f)
             n_blocks = len(blocks['timestamps'])
-            assert_equal(n_blocks, 2015)
-            for i in range(2015):
-                prev_hash = self.mine(i + 1, prev_hash, blocks, node)
+            assert_equal(n_blocks, 2016)
+
+        # Mine up to the last block of the first retarget period
+        for i in range(2015):
+            prev_hash = self.mine(i + 1, prev_hash, blocks, node)
 
         assert_equal(node.getblockcount(), 2015)
 
@@ -100,6 +104,22 @@ class MiningMainnetTest(BitcoinTestFramework):
         assert_equal(mining_info['next']['difficulty'], 4)
         assert_equal(mining_info['next']['bits'], nbits_str(DIFF_4_N_BITS))
         assert_equal(mining_info['next']['target'], target_str(DIFF_4_TARGET))
+
+        # Mine first block of the second retarget period
+        height = 2016
+        prev_hash = self.mine(height, prev_hash, blocks, node)
+        assert_equal(node.getblockcount(), height)
+
+        mining_info = node.getmininginfo()
+        assert_equal(mining_info['difficulty'], 4)
+
+        self.log.info("getblock RPC should show historical target")
+        block_info = node.getblock(node.getblockhash(1))
+
+        assert_equal(block_info['difficulty'], 1)
+        assert_equal(block_info['bits'], nbits_str(DIFF_1_N_BITS))
+        assert_equal(block_info['target'], target_str(DIFF_1_TARGET))
+
 
 if __name__ == '__main__':
     MiningMainnetTest(__file__).main()

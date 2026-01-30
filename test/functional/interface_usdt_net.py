@@ -254,6 +254,7 @@ class NetTracepointTest(BitcoinTestFramework):
         self.skip_if_no_bitcoind_tracepoints()
         self.skip_if_no_python_bcc()
         self.skip_if_no_bpf_permissions()
+        self.skip_if_running_under_valgrind()
 
     def run_test(self):
         self.p2p_message_tracepoint_test()

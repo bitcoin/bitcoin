@@ -115,12 +115,12 @@ MINISKETCH_API void minisketch_serialize(const minisketch* sketch, unsigned char
 MINISKETCH_API void minisketch_deserialize(minisketch* sketch, const unsigned char* input);
 
 /** Add an element to a sketch.
- * 
+ *
  * If the element to be added is too large for the sketch, the most significant
  * bits of the element are dropped. More precisely, if the element size of
  * `sketch` is b bits, then this function adds the unsigned integer represented
  * by the b least significant bits of `element` to `sketch`.
- * 
+ *
  * If the element to be added is 0 (after potentially dropping the most significant
  * bits), then this function is a no-op. Sketches cannot contain an element with
  * the value 0.
@@ -248,8 +248,8 @@ public:
     /** Check whether this Minisketch object is valid. */
     explicit operator bool() const noexcept { return bool{m_minisketch}; }
 
-    /** Construct an (invalid) Minisketch object. */
-    Minisketch() noexcept = default;
+    /** Default constructor is deleted. */
+    Minisketch() noexcept = delete;
 
     /** Move constructor. */
     Minisketch(Minisketch&&) noexcept = default;

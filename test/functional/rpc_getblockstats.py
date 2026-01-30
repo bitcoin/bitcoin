@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2021 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,6 +12,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    wallet_importprivkey,
 )
 import json
 import os
@@ -35,7 +36,6 @@ class GetblockstatsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
-        self.supports_cli = False
 
     def get_stats(self):
         return [self.nodes[0].getblockstats(hash_or_height=self.start_height + i) for i in range(self.max_stat_pos+1)]
@@ -45,7 +45,7 @@ class GetblockstatsTest(BitcoinTestFramework):
         self.nodes[0].setmocktime(mocktime)
         self.nodes[0].createwallet(wallet_name='test')
         privkey = self.nodes[0].get_deterministic_priv_key().key
-        self.nodes[0].importprivkey(privkey)
+        wallet_importprivkey(self.nodes[0], privkey, 0)
 
         self.generate(self.nodes[0], COINBASE_MATURITY + 1)
 
@@ -78,11 +78,11 @@ class GetblockstatsTest(BitcoinTestFramework):
             'mocktime': int(mocktime),
             'stats': self.expected_stats,
         }
-        with open(filename, 'w', encoding="utf8") as f:
+        with open(filename, 'w') as f:
             json.dump(to_dump, f, sort_keys=True, indent=2)
 
     def load_test_data(self, filename):
-        with open(filename, 'r', encoding="utf8") as f:
+        with open(filename, 'r') as f:
             d = json.load(f)
             blocks = d['blocks']
             mocktime = d['mocktime']

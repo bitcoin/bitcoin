@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
@@ -21,8 +21,8 @@ struct Error {
 //!
 //! It is intended for high-level functions that need to report error strings to
 //! end users. Lower-level functions that don't need this error-reporting and
-//! only need error-handling should avoid util::Result and instead use standard
-//! classes like std::optional, std::variant, and std::tuple, or custom structs
+//! that only need error-handling should avoid util::Result and instead use
+//! util::Expected, std::optional, std::variant, or custom structs
 //! and enum types to return function results.
 //!
 //! Usage examples can be found in \example ../test/result_tests.cpp, but in

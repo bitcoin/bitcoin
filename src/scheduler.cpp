@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2022 The Bitcoin Core developers
+// Copyright (c) 2015-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -56,7 +56,7 @@ void CScheduler::serviceQueue()
             {
                 // Unlock before calling f, so it can reschedule itself or another task
                 // without deadlocking:
-                REVERSE_LOCK(lock);
+                REVERSE_LOCK(lock, newTaskMutex);
                 f();
             }
         } catch (...) {

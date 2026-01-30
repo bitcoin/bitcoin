@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -117,6 +117,9 @@ FUZZ_TARGET(banman, .init = initialize_banman)
                 },
                 [&] {
                     ban_man.Discourage(ConsumeNetAddr(fuzzed_data_provider));
+                },
+                [&] {
+                    ban_man.IsDiscouraged(ConsumeNetAddr(fuzzed_data_provider));
                 });
         }
         if (!force_read_and_write_to_err) {

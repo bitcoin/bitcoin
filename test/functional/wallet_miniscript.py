@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Miniscript descriptors integration in the wallet."""
@@ -203,9 +203,6 @@ DESCS_PRIV = [
 
 
 class WalletMiniscriptTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser, legacy=False)
-
     def set_test_params(self):
         self.num_nodes = 1
         self.rpc_timeout = 180
@@ -300,14 +297,14 @@ class WalletMiniscriptTest(BitcoinTestFramework):
                 psbt.i[0].map[k] = bytes.fromhex(preimage)
             psbt = psbt.to_base64()
         res = self.ms_sig_wallet.walletprocesspsbt(psbt=psbt, finalize=False)
-        psbtin = self.nodes[0].rpc.decodepsbt(res["psbt"])["inputs"][0]
+        psbtin = self.nodes[0].decodepsbt(res["psbt"])["inputs"][0]
         sigs_field_name = "taproot_script_path_sigs" if is_taproot else "partial_signatures"
         assert len(psbtin[sigs_field_name]) == sigs_count
         res = self.ms_sig_wallet.finalizepsbt(res["psbt"])
         assert res["complete"] == (stack_size is not None)
 
         if stack_size is not None:
-            txin = self.nodes[0].rpc.decoderawtransaction(res["hex"])["vin"][0]
+            txin = self.nodes[0].decoderawtransaction(res["hex"])["vin"][0]
             assert len(txin["txinwitness"]) == stack_size, txin["txinwitness"]
             self.log.info("Broadcasting the transaction.")
             # If necessary, satisfy a relative timelock
@@ -325,10 +322,10 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         self.log.info("Making a descriptor wallet")
         self.funder = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
         self.nodes[0].createwallet(
-            wallet_name="ms_wo", descriptors=True, disable_private_keys=True
+            wallet_name="ms_wo", disable_private_keys=True
         )
         self.ms_wo_wallet = self.nodes[0].get_wallet_rpc("ms_wo")
-        self.nodes[0].createwallet(wallet_name="ms_sig", descriptors=True)
+        self.nodes[0].createwallet(wallet_name="ms_sig")
         self.ms_sig_wallet = self.nodes[0].get_wallet_rpc("ms_sig")
 
         # Sanity check we wouldn't let an insane Miniscript descriptor in

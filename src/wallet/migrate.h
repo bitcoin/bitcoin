@@ -35,41 +35,27 @@ public:
     /** Open the database if it is not already opened. */
     void Open() override;
 
-    /** Indicate the a new database user has began using the database. Increments m_refcount */
-    void AddRef() override {}
-    /** Indicate that database user has stopped using the database and that it could be flushed or closed. Decrement m_refcount */
-    void RemoveRef() override {}
-
-    /** Rewrite the entire database on disk, with the exception of key pszSkip if non-zero
+    /** Rewrite the entire database on disk
      */
-    bool Rewrite(const char* pszSkip = nullptr) override { return false; }
+    bool Rewrite() override { return false; }
 
     /** Back up the entire database to a file.
      */
     bool Backup(const std::string& strDest) const override;
 
-    /** Make sure all changes are flushed to database file.
-     */
-    void Flush() override {}
     /** Flush to the database file and close the database.
      *  Also close the environment if no other databases are open in it.
      */
     void Close() override {}
-    /* flush the wallet passively (TRY_LOCK)
-       ideal to be called periodically */
-    bool PeriodicFlush() override { return false; }
-
-    void IncrementUpdateCounter() override {}
-
-    void ReloadDbEnv() override {}
 
     /** Return path to main database file for logs and error messages. */
     std::string Filename() override { return fs::PathToString(m_filepath); }
+    std::vector<fs::path> Files() override { return {m_filepath}; }
 
     std::string Format() override { return "bdb_ro"; }
 
     /** Make a DatabaseBatch connected to this database */
-    std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override;
+    std::unique_ptr<DatabaseBatch> MakeBatch() override;
 };
 
 class BerkeleyROCursor : public DatabaseCursor
@@ -107,7 +93,6 @@ public:
     BerkeleyROBatch(const BerkeleyROBatch&) = delete;
     BerkeleyROBatch& operator=(const BerkeleyROBatch&) = delete;
 
-    void Flush() override {}
     void Close() override {}
 
     std::unique_ptr<DatabaseCursor> GetNewCursor() override { return std::make_unique<BerkeleyROCursor>(m_database); }

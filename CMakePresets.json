@@ -1,6 +1,5 @@
 {
   "version": 3,
-  "cmakeMinimumRequired": {"major": 3, "minor": 21, "patch": 0},
   "configurePresets": [
     {
       "name": "vs2022",
@@ -15,7 +14,8 @@
       "toolchainFile": "$env{VCPKG_ROOT}\\scripts\\buildsystems\\vcpkg.cmake",
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "x64-windows",
-        "BUILD_GUI": "ON"
+        "BUILD_GUI": "ON",
+        "WITH_ZMQ": "ON"
       }
     },
     {
@@ -31,7 +31,8 @@
       "toolchainFile": "$env{VCPKG_ROOT}\\scripts\\buildsystems\\vcpkg.cmake",
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "x64-windows-static",
-        "BUILD_GUI": "ON"
+        "BUILD_GUI": "ON",
+        "WITH_ZMQ": "ON"
       }
     },
     {
@@ -62,6 +63,7 @@
       "name": "dev-mode",
       "displayName": "Developer mode, with all features/dependencies enabled",
       "binaryDir": "${sourceDir}/build_dev_mode",
+      "errors": {"dev": true},
       "cacheVariables": {
         "BUILD_BENCH": "ON",
         "BUILD_CLI": "ON",
@@ -77,10 +79,7 @@
         "BUILD_UTIL_CHAINSTATE": "ON",
         "BUILD_WALLET_TOOL": "ON",
         "ENABLE_EXTERNAL_SIGNER": "ON",
-        "ENABLE_HARDENING": "ON",
         "ENABLE_WALLET": "ON",
-        "WARN_INCOMPATIBLE_BDB": "OFF",
-        "WITH_BDB": "ON",
         "ENABLE_IPC": "ON",
         "WITH_QRENCODE": "ON",
         "WITH_USDT": "ON",

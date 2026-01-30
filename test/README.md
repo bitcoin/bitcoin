@@ -10,10 +10,9 @@ This directory contains the following sets of tests:
 - [functional](/test/functional) which test the functionality of
 bitcoind and bitcoin-qt by interacting with them through the RPC and P2P
 interfaces.
-- [util](/test/util) which tests the utilities (bitcoin-util, bitcoin-tx, ...).
 - [lint](/test/lint/) which perform various static analysis checks.
 
-The util tests are run as part of `ctest` invocation. The fuzz tests, functional
+The fuzz tests, functional
 tests and lint scripts can be run as explained in the sections below.
 
 # Running tests locally
@@ -35,7 +34,25 @@ The ZMQ functional test requires a python ZMQ library. To install it:
 - on Unix, run `sudo apt-get install python3-zmq`
 - on mac OS, run `pip3 install pyzmq`
 
+The IPC functional test requires a python IPC library. `pip3 install pycapnp` may work, but if not, install it from source:
 
+```sh
+git clone -b v2.2.1 https://github.com/capnproto/pycapnp
+pip3 install ./pycapnp
+```
+
+If that does not work, try adding `-C force-bundled-libcapnp=True` to the `pip` command.
+Depending on the system, it may be necessary to install and run in a venv:
+
+```sh
+python -m venv venv
+git clone -b v2.2.1 https://github.com/capnproto/pycapnp
+venv/bin/pip3 install ./pycapnp -C force-bundled-libcapnp=True
+venv/bin/python3 build/test/functional/interface_ipc.py
+```
+
+The functional tests assume Python UTF-8 Mode, which is the default on most
+systems.
 On Windows the `PYTHONUTF8` environment variable must be set to 1:
 
 ```cmd
@@ -100,7 +117,7 @@ build/test/functional/test_runner.py --extended
 In order to run backwards compatibility tests, first run:
 
 ```
-test/get_previous_releases.py -b
+test/get_previous_releases.py
 ```
 
 to download the necessary previous release binaries.
@@ -320,11 +337,6 @@ perf report -i /path/to/datadir/send-big-msgs.perf.data.xxxx --stdio | c++filt |
 
 For ways to generate more granular profiles, see the README in
 [test/functional](/test/functional).
-
-### Util tests
-
-Util tests can be run locally by running `build/test/util/test_runner.py`.
-Use the `-v` option for verbose output.
 
 ### Lint tests
 

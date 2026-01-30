@@ -1,0 +1,63 @@
+name: 'Configure Docker'
+description: 'Set up Docker build driver and configure build cache args'
+inputs:
+  cache-provider:
+    description: 'gha or cirrus cache provider'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Check inputs
+      shell: python
+      run: |
+        # We expect only gha or cirrus as inputs to cache-provider
+        if "${{ inputs.cache-provider }}" not in ("gha", "cirrus"):
+          print("::warning title=Unknown input to configure docker action::Provided value was ${{ inputs.cache-provider }}")
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      with:
+        # Use host network to allow access to cirrus gha cache running on the host
+        driver-opts: |
+          network=host
+
+    # This is required to allow buildkit to access the actions cache
+    - name: Expose actions cache variables
+      uses: actions/github-script@v6
+      with:
+        script: |
+          Object.keys(process.env).forEach(function (key) {
+            if (key.startsWith('ACTIONS_')) {
+              core.info(`Exporting ${key}`);
+              core.exportVariable(key, process.env[key]);
+            }
+          });
+
+    - name: Construct docker build cache args
+      shell: bash
+      run: |
+        # Configure docker build cache backend
+        #
+        # On forks the gha cache will work but will use Github's cache backend.
+        # Docker will check for variables $ACTIONS_CACHE_URL, $ACTIONS_RESULTS_URL and $ACTIONS_RUNTIME_TOKEN
+        # which are set automatically when running on GitHub infra: https://docs.docker.com/build/cache/backends/gha/#synopsis
+
+        # Use cirrus cache host
+        if [[ ${{ inputs.cache-provider }} == 'cirrus' ]]; then
+          url_args="url=${CIRRUS_CACHE_HOST},url_v2=${CIRRUS_CACHE_HOST}"
+        else
+          url_args=""
+        fi
+
+        # Always optimistically --cache‑from in case a cache blob exists
+        args=(--cache-from "type=gha${url_args:+,${url_args}},scope=${CONTAINER_NAME}")
+
+        # Only add --cache-to when using the Cirrus cache provider and pushing to the default branch.
+        if [[ ${{ inputs.cache-provider }} == 'cirrus' && ${{ github.event_name }} == "push" && ${{ github.ref_name }} == ${{ github.event.repository.default_branch }} ]]; then
+          args+=(--cache-to "type=gha${url_args:+,${url_args}},mode=max,ignore-error=true,scope=${CONTAINER_NAME}")
+        fi
+
+        # Always `--load` into docker images (needed when using the `docker-container` build driver).
+        args+=(--load)
+
+        echo "DOCKER_BUILD_CACHE_ARG=${args[*]}" >> $GITHUB_ENV

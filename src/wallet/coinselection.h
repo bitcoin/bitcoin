@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -50,9 +50,6 @@ public:
     /** Pre-computed estimated size of this output as a fully-signed input in a transaction. Can be -1 if it could not be calculated */
     int input_bytes;
 
-    /** Whether we have the private keys to spend this output */
-    bool spendable;
-
     /** Whether we know how to spend this output, ignoring the lack of keys */
     bool solvable;
 
@@ -75,12 +72,11 @@ public:
     /** The fee necessary to bump this UTXO's ancestor transactions to the target feerate */
     CAmount ancestor_bump_fees{0};
 
-    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, const std::optional<CFeeRate> feerate = std::nullopt)
+    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool solvable, bool safe, int64_t time, bool from_me, const std::optional<CFeeRate> feerate = std::nullopt)
         : outpoint{outpoint},
           txout{txout},
           depth{depth},
           input_bytes{input_bytes},
-          spendable{spendable},
           solvable{solvable},
           safe{safe},
           time{time},
@@ -93,8 +89,8 @@ public:
         }
     }
 
-    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, const CAmount fees)
-        : COutput(outpoint, txout, depth, input_bytes, spendable, solvable, safe, time, from_me)
+    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool solvable, bool safe, int64_t time, bool from_me, const CAmount fees)
+        : COutput(outpoint, txout, depth, input_bytes, solvable, safe, time, from_me)
     {
         // if input_bytes is unknown, then fees should be 0, if input_bytes is known, then the fees should be a positive integer or 0 (input_bytes known and fees = 0 only happens in the tests)
         assert((input_bytes < 0 && fees == 0) || (input_bytes > 0 && fees >= 0));
@@ -174,6 +170,8 @@ struct CoinSelectionParams {
      * 1) Received from other wallets, 2) replacing other txs, 3) that have been replaced.
      */
     bool m_include_unsafe_inputs = false;
+    /** The version of the transaction we are trying to create. */
+    uint32_t m_version{CTransaction::CURRENT_VERSION};
     /** The maximum weight for this transaction. */
     std::optional<int> m_max_tx_weight{std::nullopt};
 
@@ -308,7 +306,7 @@ typedef std::map<CoinEligibilityFilter, OutputGroupTypeMap> FilteredOutputGroups
  * @param[in]   payment_value   Average payment value of the transaction output(s).
  * @param[in]   change_fee      Fee for creating a change output.
  */
-[[nodiscard]] CAmount GenerateChangeTarget(const CAmount payment_value, const CAmount change_fee, FastRandomContext& rng);
+[[nodiscard]] CAmount GenerateChangeTarget(CAmount payment_value, CAmount change_fee, FastRandomContext& rng);
 
 enum class SelectionAlgorithm : uint8_t
 {
@@ -319,7 +317,7 @@ enum class SelectionAlgorithm : uint8_t
     MANUAL = 4,
 };
 
-std::string GetAlgorithmName(const SelectionAlgorithm algo);
+std::string GetAlgorithmName(SelectionAlgorithm algo);
 
 struct SelectionResult
 {
@@ -373,7 +371,7 @@ public:
     void AddInputs(const std::set<std::shared_ptr<COutput>>& inputs, bool subtract_fee_outputs);
 
     /** How much individual inputs overestimated the bump fees for shared ancestries */
-    void SetBumpFeeDiscount(const CAmount discount);
+    void SetBumpFeeDiscount(CAmount discount);
 
     /** Calculates and stores the waste for this result given the cost of change
      * and the opportunity cost of spending these inputs now vs in the future.
@@ -387,7 +385,7 @@ public:
      *                              used if there is change, in which case it must be non-negative.
      * @param[in] change_fee        The fee for creating a change output
      */
-    void RecalculateWaste(const CAmount min_viable_change, const CAmount change_cost, const CAmount change_fee);
+    void RecalculateWaste(CAmount min_viable_change, CAmount change_cost, CAmount change_fee);
     [[nodiscard]] CAmount GetWaste() const;
 
     /** Tracks that algorithm was able to exhaustively search the entire combination space before hitting limit of tries */
@@ -434,7 +432,7 @@ public:
      * @returns Amount for change output, 0 when there is no change.
      *
      */
-    CAmount GetChange(const CAmount min_viable_change, const CAmount change_fee) const;
+    CAmount GetChange(CAmount min_viable_change, CAmount change_fee) const;
 
     CAmount GetTarget() const { return m_target; }
 
@@ -448,11 +446,16 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
 
 util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, CAmount change_target, int max_selection_weight);
 
-/** Select coins by Single Random Draw. OutputGroups are selected randomly from the eligible
- * outputs until the target is satisfied
+/** Select coins by Single Random Draw (SRD). SRD selects eligible OutputGroups from a shuffled
+ * ordering until the effective value of the input set suffices to create the recipient outputs and a
+ * change output with an amount of at least CHANGE_LOWER. While the maximum selection
+ * weight is exceeded during selection, the OutputGroup with the lowest effective value is dropped
+ * from the selection before additional OutputGroups are selected. Due to this greedy approach,
+ * SRD can fail to discover possible solutions in pathological cases.
  *
  * @param[in]  utxo_pool    The positive effective value OutputGroups eligible for selection
  * @param[in]  target_value The target value to select for
+ * @param[in]  change_fee The cost of adding the change output to the transaction at the transaction’s feerate.
  * @param[in]  rng The randomness source to shuffle coins
  * @param[in]  max_selection_weight The maximum allowed weight for a selection result to be valid
  * @returns If successful, a valid SelectionResult, otherwise, util::Error

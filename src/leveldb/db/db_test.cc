@@ -139,7 +139,7 @@ class SpecialEnv : public EnvWrapper {
      public:
       DataFile(SpecialEnv* env, WritableFile* base) : env_(env), base_(base) {}
       ~DataFile() { delete base_; }
-      Status Append(const Slice& data) {
+      Status Append(const Slice& data) override {
         if (env_->no_space_.load(std::memory_order_acquire)) {
           // Drop writes on the floor
           return Status::OK();
@@ -147,9 +147,9 @@ class SpecialEnv : public EnvWrapper {
           return base_->Append(data);
         }
       }
-      Status Close() { return base_->Close(); }
-      Status Flush() { return base_->Flush(); }
-      Status Sync() {
+      Status Close() override { return base_->Close(); }
+      Status Flush() override { return base_->Flush(); }
+      Status Sync() override {
         if (env_->data_sync_error_.load(std::memory_order_acquire)) {
           return Status::IOError("simulated data sync error");
         }
@@ -168,16 +168,16 @@ class SpecialEnv : public EnvWrapper {
      public:
       ManifestFile(SpecialEnv* env, WritableFile* b) : env_(env), base_(b) {}
       ~ManifestFile() { delete base_; }
-      Status Append(const Slice& data) {
+      Status Append(const Slice& data) override {
         if (env_->manifest_write_error_.load(std::memory_order_acquire)) {
           return Status::IOError("simulated writer error");
         } else {
           return base_->Append(data);
         }
       }
-      Status Close() { return base_->Close(); }
-      Status Flush() { return base_->Flush(); }
-      Status Sync() {
+      Status Close() override { return base_->Close(); }
+      Status Flush() override { return base_->Flush(); }
+      Status Sync() override {
         if (env_->manifest_sync_error_.load(std::memory_order_acquire)) {
           return Status::IOError("simulated sync error");
         } else {
@@ -2194,7 +2194,7 @@ TEST(DBTest, Randomized) {
           if (i == 0 || !rnd.OneIn(10)) {
             k = RandomKey(&rnd);
           } else {
-            // Periodically re-use the same key from the previous iter, so
+            // Periodically reuse the same key from the previous iter, so
             // we have multiple entries in the write batch for the same key
           }
           if (rnd.OneIn(2)) {

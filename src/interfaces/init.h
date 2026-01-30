@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -38,6 +38,7 @@ public:
     virtual std::unique_ptr<Echo> makeEcho() { return nullptr; }
     virtual Ipc* ipc() { return nullptr; }
     virtual bool canListenIpc() { return false; }
+    virtual const char* exeName() { return nullptr; }
 };
 
 //! Return implementation of Init interface for the node process. If the argv

@@ -147,6 +147,7 @@ static int secp256k1_scalar_add(secp256k1_scalar *r, const secp256k1_scalar *a, 
 static void secp256k1_scalar_cadd_bit(secp256k1_scalar *r, unsigned int bit, int flag) {
     uint64_t t;
     volatile int vflag = flag;
+    VERIFY_CHECK(flag == 0 || flag == 1);
     SECP256K1_SCALAR_VERIFY(r);
     VERIFY_CHECK(bit < 256);
 
@@ -314,6 +315,7 @@ static int secp256k1_scalar_cond_negate(secp256k1_scalar *r, int flag) {
     uint32_t mask = -vflag;
     uint32_t nonzero = 0xFFFFFFFFUL * (secp256k1_scalar_is_zero(r) == 0);
     uint64_t t = (uint64_t)(r->d[0] ^ mask) + ((SECP256K1_N_0 + 1) & mask);
+    VERIFY_CHECK(flag == 0 || flag == 1);
     SECP256K1_SCALAR_VERIFY(r);
 
     r->d[0] = t & nonzero; t >>= 32;
@@ -709,6 +711,7 @@ SECP256K1_INLINE static void secp256k1_scalar_mul_shift_var(secp256k1_scalar *r,
 static SECP256K1_INLINE void secp256k1_scalar_cmov(secp256k1_scalar *r, const secp256k1_scalar *a, int flag) {
     uint32_t mask0, mask1;
     volatile int vflag = flag;
+    VERIFY_CHECK(flag == 0 || flag == 1);
     SECP256K1_SCALAR_VERIFY(a);
     SECP256K1_CHECKMEM_CHECK_VERIFY(r->d, sizeof(r->d));
 

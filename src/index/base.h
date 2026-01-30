@@ -5,29 +5,41 @@
 #ifndef BITCOIN_INDEX_BASE_H
 #define BITCOIN_INDEX_BASE_H
 
+#include <attributes.h>
 #include <dbwrapper.h>
 #include <interfaces/chain.h>
-#include <interfaces/types.h>
-#include <util/string.h>
+#include <kernel/cs_main.h>
+#include <threadsafety.h>
+#include <uint256.h>
+#include <util/fs.h>
 #include <util/threadinterrupt.h>
 #include <validationinterface.h>
 
+#include <atomic>
+#include <cstddef>
+#include <memory>
+#include <optional>
 #include <string>
+#include <thread>
 
 class CBlock;
 class CBlockIndex;
 class Chainstate;
-class ChainstateManager;
-namespace interfaces {
-class Chain;
-} // namespace interfaces
 
+struct CBlockLocator;
 struct IndexSummary {
     std::string name;
     bool synced{false};
     int best_block_height{0};
     uint256 best_block_hash;
 };
+namespace interfaces {
+struct BlockRef;
+}
+namespace util {
+template <unsigned int num_params>
+struct ConstevalFormatString;
+}
 
 /**
  * Base class for indices of blockchain data. This implements
@@ -56,7 +68,8 @@ protected:
            bool f_memory = false, bool f_wipe = false, bool f_obfuscate = false);
 
         /// Read block locator of the chain that the index is in sync with.
-        bool ReadBestBlock(CBlockLocator& locator) const;
+        /// Note, the returned locator will be empty if no record exists.
+        CBlockLocator ReadBestBlock() const;
 
         /// Write block locator of the chain that the index is in sync with.
         void WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator);
@@ -90,8 +103,10 @@ private:
     /// getting corrupted.
     bool Commit();
 
-    /// Loop over disconnected blocks and call CustomRewind.
+    /// Loop over disconnected blocks and call CustomRemove.
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
+
+    bool ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data = nullptr);
 
     virtual bool AllowPrune() const = 0;
 
@@ -103,9 +118,12 @@ protected:
     Chainstate* m_chainstate{nullptr};
     const std::string m_name;
 
-    void BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override;
+    void BlockConnected(const kernel::ChainstateRole& role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override;
 
-    void ChainStateFlushed(ChainstateRole role, const CBlockLocator& locator) override;
+    void ChainStateFlushed(const kernel::ChainstateRole& role, const CBlockLocator& locator) override;
+
+    /// Return custom notification options for index.
+    [[nodiscard]] virtual interfaces::Chain::NotifyOptions CustomOptions() { return {}; }
 
     /// Initialize internal state from the database and block index.
     [[nodiscard]] virtual bool CustomInit(const std::optional<interfaces::BlockRef>& block) { return true; }
@@ -117,9 +135,8 @@ protected:
     /// commit more index state.
     virtual bool CustomCommit(CDBBatch& batch) { return true; }
 
-    /// Rewind index to an earlier chain tip during a chain reorg. The tip must
-    /// be an ancestor of the current best block.
-    [[nodiscard]] virtual bool CustomRewind(const interfaces::BlockRef& current_tip, const interfaces::BlockRef& new_tip) { return true; }
+    /// Rewind index by one block during a chain reorg.
+    [[nodiscard]] virtual bool CustomRemove(const interfaces::BlockInfo& block) { return true; }
 
     virtual DB& GetDB() const = 0;
 

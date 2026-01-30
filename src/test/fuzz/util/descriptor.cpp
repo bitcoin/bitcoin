@@ -4,10 +4,18 @@
 
 #include <test/fuzz/util/descriptor.h>
 
+#include <key.h>
+#include <key_io.h>
+#include <pubkey.h>
+#include <span.h>
+#include <util/strencodings.h>
+
 #include <ranges>
 #include <stack>
+#include <vector>
 
-void MockedDescriptorConverter::Init() {
+void MockedDescriptorConverter::Init()
+{
     // The data to use as a private key or a seed for an xprv.
     std::array<std::byte, 32> key_data{std::byte{1}};
     // Generate keys of all kinds and store them in the keys array.
@@ -74,7 +82,7 @@ std::optional<std::string> MockedDescriptorConverter::GetDescriptor(std::string_
     return desc;
 }
 
-bool HasDeepDerivPath(const FuzzBufferType& buff, const int max_depth)
+bool HasDeepDerivPath(std::span<const uint8_t> buff, const int max_depth)
 {
     auto depth{0};
     for (const auto& ch: buff) {
@@ -88,7 +96,7 @@ bool HasDeepDerivPath(const FuzzBufferType& buff, const int max_depth)
     return false;
 }
 
-bool HasTooManySubFrag(const FuzzBufferType& buff, const int max_subs, const size_t max_nested_subs)
+bool HasTooManySubFrag(std::span<const uint8_t> buff, const int max_subs, const size_t max_nested_subs)
 {
     // We use a stack because there may be many nested sub-frags.
     std::stack<int> counts;
@@ -112,7 +120,7 @@ bool HasTooManySubFrag(const FuzzBufferType& buff, const int max_subs, const siz
     return false;
 }
 
-bool HasTooManyWrappers(const FuzzBufferType& buff, const int max_wrappers)
+bool HasTooManyWrappers(std::span<const uint8_t> buff, const int max_wrappers)
 {
     // The number of nested wrappers. Nested wrappers are always characters which follow each other so we don't have to
     // use a stack as we do above when counting the number of sub-fragments.
@@ -141,5 +149,25 @@ bool HasTooManyWrappers(const FuzzBufferType& buff, const int max_wrappers)
         }
     }
 
+    return false;
+}
+
+bool HasTooLargeLeafSize(std::span<const uint8_t> buff, const uint32_t max_leaf_size)
+{
+    uint32_t leaf_len{0};
+    for (auto c : buff) {
+        if (c == '(' || c == ')' || c == ',' || c == '{' || c == '}') {
+            // Possibly start a fresh leaf, or a fresh function name (with
+            // wrappers), or terminate a prior leaf.
+            leaf_len = 0;
+        } else {
+            // Just treat everything else as a leaf. This will also reject long
+            // function names, but this should be fine if the max_leaf_size is
+            // set large enough.
+            if (++leaf_len > max_leaf_size) {
+                return true;
+            }
+        }
+    }
     return false;
 }

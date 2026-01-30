@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2020-2022 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -21,6 +21,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     "qt/transactiontablemodel -> qt/walletmodel -> qt/transactiontablemodel",
     "wallet/wallet -> wallet/walletdb -> wallet/wallet",
     "kernel/coinstats -> validation -> kernel/coinstats",
+    "versionbits -> versionbits_impl -> versionbits",
 
     # Temporary, removed in followup https://github.com/bitcoin/bitcoin/pull/24230
     "index/base -> node/context -> net_processing -> index/blockfilterindex -> index/base",

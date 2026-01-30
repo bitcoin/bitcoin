@@ -6,7 +6,6 @@ $(package)_file_name=$(qt_details_qtbase_file_name)
 $(package)_sha256_hash=$(qt_details_qtbase_sha256_hash)
 $(package)_patches_path := $(qt_details_patches_path)
 $(package)_patches := dont_hardcode_pwd.patch
-$(package)_patches += qtbase-moc-ignore-gcc-macro.patch
 $(package)_patches += qtbase_skip_tools.patch
 $(package)_patches += rcc_hardcode_timestamp.patch
 $(package)_patches += qttools_skip_dependencies.patch
@@ -88,6 +87,10 @@ $(package)_config_opts += -no-feature-qtplugininfo
 
 $(package)_config_env := CC="$$(build_CC)"
 $(package)_config_env += CXX="$$(build_CXX)"
+ifeq ($(build_os),darwin)
+$(package)_config_env += OBJC="$$(build_CC)"
+$(package)_config_env += OBJCXX="$$(build_CXX)"
+endif
 
 $(package)_cmake_opts := -DCMAKE_EXE_LINKER_FLAGS="$$(build_LDFLAGS)"
 ifneq ($(V),)
@@ -127,7 +130,6 @@ endef
 
 define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/dont_hardcode_pwd.patch && \
-  patch -p1 -i $($(package)_patch_dir)/qtbase-moc-ignore-gcc-macro.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase_skip_tools.patch && \
   patch -p1 -i $($(package)_patch_dir)/rcc_hardcode_timestamp.patch && \
   patch -p1 -i $($(package)_patch_dir)/qttools_skip_dependencies.patch
@@ -143,10 +145,10 @@ define $(package)_build_cmds
 endef
 
 define $(package)_stage_cmds
-  cmake --install . --prefix $($(package)_staging_prefix_dir)
+  cmake --install . --prefix $($(package)_staging_prefix_dir) --strip
 endef
 
 define $(package)_postprocess_cmds
   rm -rf doc/ && \
-  mv -t .. translations/
+  mv translations/ ..
 endef

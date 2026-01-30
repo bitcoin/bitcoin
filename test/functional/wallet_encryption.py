@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2022 The Bitcoin Core developers
+# Copyright (c) 2016-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Wallet encryption"""
@@ -17,9 +17,6 @@ from test_framework.wallet_util import WalletUnlock
 
 
 class WalletEncryptionTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
@@ -93,14 +90,18 @@ class WalletEncryptionTest(BitcoinTestFramework):
         assert_equal(actual_time, expected_time)
         self.nodes[0].walletlock()
 
-        # Test passphrase with null characters
-        passphrase_with_nulls = "Phrase\0With\0Nulls"
-        self.nodes[0].walletpassphrasechange(passphrase2, passphrase_with_nulls)
-        # walletpassphrasechange should not stop at null characters
-        assert_raises_rpc_error(-14, "wallet passphrase entered was incorrect", self.nodes[0].walletpassphrase, passphrase_with_nulls.partition("\0")[0], 10)
-        with WalletUnlock(self.nodes[0], passphrase_with_nulls):
-            sig = self.nodes[0].signmessage(address, msg)
-            assert self.nodes[0].verifymessage(address, sig, msg)
+        if not self.options.usecli: # can't be done with the test framework for cli since subprocess.Popen doesn't allow null characters
+            # Test passphrase with null characters
+            passphrase_with_nulls = "Phrase\0With\0Nulls"
+            self.nodes[0].walletpassphrasechange(passphrase2, passphrase_with_nulls)
+            # walletpassphrasechange should not stop at null characters
+            assert_raises_rpc_error(-14, "wallet passphrase entered was incorrect", self.nodes[0].walletpassphrase, passphrase_with_nulls.partition("\0")[0], 10)
+            assert_raises_rpc_error(-14, "The wallet passphrase entered was incorrect", self.nodes[0].walletpassphrasechange, passphrase_with_nulls.partition("\0")[0], "abc")
+            assert_raises_rpc_error(-14, "wallet passphrase entered is incorrect. It contains a null character (ie - a zero byte)", self.nodes[0].walletpassphrase, passphrase_with_nulls + "\0", 10)
+            assert_raises_rpc_error(-14, "The old wallet passphrase entered is incorrect. It contains a null character (ie - a zero byte)", self.nodes[0].walletpassphrasechange, passphrase_with_nulls + "\0", "abc")
+            with WalletUnlock(self.nodes[0], passphrase_with_nulls):
+                sig = self.nodes[0].signmessage(address, msg)
+                assert self.nodes[0].verifymessage(address, sig, msg)
 
         self.log.info("Test that wallets without private keys cannot be encrypted")
         self.nodes[0].createwallet(wallet_name="noprivs", disable_private_keys=True)
@@ -133,13 +134,13 @@ class WalletEncryptionTest(BitcoinTestFramework):
             do_wallet_tool("-wallet=noprivs", f"-dumpfile={dumpfile_path}", "dump")
 
             # Modify the dump
-            with open(dumpfile_path, "r", encoding="utf-8") as f:
+            with open(dumpfile_path, "r") as f:
                 dump_content = f.readlines()
             # Drop the checksum line
             dump_content = dump_content[:-1]
             # Insert a valid mkey line. This corresponds to a passphrase of "pass".
             dump_content.append("046d6b657901000000,300dc926f3b3887aad3d5d5f5a0fc1b1a4a1722f9284bd5c6ff93b64a83902765953939c58fe144013c8b819f42cf698b208e9911e5f0c544fa300000000cc52050000\n")
-            with open(dumpfile_path, "w", encoding="utf-8") as f:
+            with open(dumpfile_path, "w") as f:
                 contents = "".join(dump_content)
                 f.write(contents)
                 checksum = hash256(contents.encode())
@@ -157,7 +158,7 @@ class WalletEncryptionTest(BitcoinTestFramework):
             # Make a new dump and check that there are no mkeys
             dumpfile_path = self.nodes[0].datadir_path / "noprivs_enc.dump"
             do_wallet_tool("-wallet=noprivs_enc", f"-dumpfile={dumpfile_path}", "dump")
-            with open(dumpfile_path, "r", encoding="utf-8") as f:
+            with open(dumpfile_path, "r") as f:
                 # Check there's nothing with an 'mkey' prefix
                 assert_equal(all([not line.startswith("046d6b6579") for line in f]), True)
 

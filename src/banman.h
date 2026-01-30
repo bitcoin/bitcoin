@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_BANMAN_H
@@ -7,7 +7,7 @@
 
 #include <addrdb.h>
 #include <common/bloom.h>
-#include <net_types.h> // For banmap_t
+#include <net_types.h>
 #include <sync.h>
 #include <util/fs.h>
 

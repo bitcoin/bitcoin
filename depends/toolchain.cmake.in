@@ -92,6 +92,22 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 set(QT_TRANSLATIONS_DIR "${CMAKE_CURRENT_LIST_DIR}/translations")
 
+# The following is only necessary when using cmake from Nix or NixOS, because
+# Nix patches cmake to remove the root directory `/` from
+# CMAKE_SYSTEM_PREFIX_PATH. Adding it back is harmless on other platforms and
+# necessary on Nix because without it cmake find_path, find_package, etc
+# functions do not know where to look in CMAKE_FIND_ROOT_PATH for dependencies
+# (https://github.com/bitcoin/bitcoin/issues/32428).
+#
+# TODO: longer term, it may be possible to use a dependency provider, which
+# would bring the find_package calls completely under our control, making this
+# patch unnecessary.
+#
+# Make sure we only append once, as this file may be called repeatedly.
+if(NOT "/" IN_LIST CMAKE_PREFIX_PATH)
+  list(APPEND CMAKE_PREFIX_PATH "/")
+endif()
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NOT CMAKE_HOST_APPLE)
   # The find_package(Qt ...) function internally uses find_library()
   # calls for all dependencies to ensure their availability.
@@ -101,7 +117,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NOT CMAKE_HOST_APPLE)
 endif()
 
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+if(CMAKE_SYSTEM_NAME MATCHES "^(Linux|FreeBSD)$")
   # Customize pkg-config behavior for finding dependencies
   # of the xcb QPA platform plugin:
   # 1. Restrict search paths to the depends.
@@ -115,54 +131,46 @@ endif()
 
 
 # Set configuration options for the main build system.
-set(qt_packages @qt_packages@)
-if("${qt_packages}" STREQUAL "")
+# The depends/Makefile can generate values with "not-set"
+# semantics as empty strings or strings containing only spaces.
+# Therefore, MATCHES must be used rather than STREQUAL.
+if("@qt_packages@" MATCHES "^[ ]*$")
   set(BUILD_GUI OFF CACHE BOOL "")
 else()
   set(BUILD_GUI ON CACHE BOOL "")
   set(Qt6_ROOT "${CMAKE_CURRENT_LIST_DIR}" CACHE PATH "")
 endif()
 
-set(qrencode_packages @qrencode_packages@)
-if("${qrencode_packages}" STREQUAL "")
+if("@qrencode_packages@" MATCHES "^[ ]*$")
   set(WITH_QRENCODE OFF CACHE BOOL "")
 else()
   set(WITH_QRENCODE ON CACHE BOOL "")
 endif()
 
-set(zmq_packages @zmq_packages@)
-if("${zmq_packages}" STREQUAL "")
+if("@zmq_packages@" MATCHES "^[ ]*$")
   set(WITH_ZMQ OFF CACHE BOOL "")
 else()
   set(WITH_ZMQ ON CACHE BOOL "")
 endif()
 
-set(wallet_packages @wallet_packages@)
-if("${wallet_packages}" STREQUAL "")
+if("@wallet_packages@" MATCHES "^[ ]*$")
   set(ENABLE_WALLET OFF CACHE BOOL "")
 else()
   set(ENABLE_WALLET ON CACHE BOOL "")
 endif()
 
-set(bdb_packages @bdb_packages@)
-if("${wallet_packages}" STREQUAL "" OR "${bdb_packages}" STREQUAL "")
-  set(WITH_BDB OFF CACHE BOOL "")
-else()
-  set(WITH_BDB ON CACHE BOOL "")
-endif()
-
-set(usdt_packages @usdt_packages@)
-if("${usdt_packages}" STREQUAL "")
+if("@usdt_packages@" MATCHES "^[ ]*$")
   set(WITH_USDT OFF CACHE BOOL "")
 else()
   set(WITH_USDT ON CACHE BOOL "")
 endif()
 
-if("@multiprocess@" STREQUAL "1")
+set(ipc_packages @ipc_packages@)
+if("${ipc_packages}" STREQUAL "")
+  set(ENABLE_IPC OFF CACHE BOOL "")
+else()
   set(ENABLE_IPC ON CACHE BOOL "")
   set(MPGEN_EXECUTABLE "${CMAKE_CURRENT_LIST_DIR}/native/bin/mpgen" CACHE FILEPATH "")
   set(CAPNP_EXECUTABLE "${CMAKE_CURRENT_LIST_DIR}/native/bin/capnp" CACHE FILEPATH "")
   set(CAPNPC_CXX_EXECUTABLE "${CMAKE_CURRENT_LIST_DIR}/native/bin/capnpc-c++" CACHE FILEPATH "")
-else()
-  set(ENABLE_IPC OFF CACHE BOOL "")
 endif()

@@ -1,0 +1,102 @@
+# Copyright 2021 The CRC32C Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file. See the AUTHORS file for names of contributors.
+
+name: ci
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: >-
+      CI
+      ${{ matrix.os }}
+      ${{ matrix.compiler }}
+      ${{ matrix.optimized && 'release' || 'debug' }}
+      ${{ matrix.shared_lib && 'shared' || 'static' }}
+      ${{ matrix.use_glog && 'glog' || 'no-glog' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [clang, gcc, msvc]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        optimized: [true, false]
+        shared_lib: [true, false]
+        use_glog: [true, false]
+        exclude:
+        # Our glog config doesn't work with shared libraries.
+        - use_glog: true
+          shared_lib: true
+        # MSVC only works on Windows.
+        - os: ubuntu-latest
+          compiler: msvc
+        - os: macos-latest
+          compiler: msvc
+        # Not testing with GCC on macOS.
+        - os: macos-latest
+          compiler: gcc
+        # Only testing with MSVC on Windows.
+        - os: windows-latest
+          compiler: clang
+        - os: windows-latest
+          compiler: gcc
+        # Not testing fringe configurations (glog, shared libraries) on Windows.
+        - os: windows-latest
+          use_glog: true
+        - os: windows-latest
+          shared_lib: true
+        include:
+        - compiler: clang
+          CC: clang
+          CXX: clang++
+        - compiler: gcc
+          CC: gcc
+          CXX: g++
+        - compiler: msvc
+          CC:
+          CXX:
+
+    env:
+      CMAKE_BUILD_DIR: ${{ github.workspace }}/build
+      CMAKE_BUILD_TYPE: ${{ matrix.optimized && 'RelWithDebInfo' || 'Debug' }}
+      CC: ${{ matrix.CC }}
+      CXX: ${{ matrix.CXX }}
+      BINARY_SUFFIX: ${{ startsWith(matrix.os, 'windows') && '.exe' || '' }}
+      BINARY_PATH: >-
+        ${{ format(
+        startsWith(matrix.os, 'windows') && '{0}\build\{1}\' || '{0}/build/',
+        github.workspace,
+        matrix.optimized && 'RelWithDebInfo' || 'Debug') }}
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Generate build config
+      run: >-
+        cmake -S "${{ github.workspace }}" -B "${{ env.CMAKE_BUILD_DIR }}"
+        -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }}
+        -DCMAKE_INSTALL_PREFIX=${{ runner.temp }}/install_test/
+        -DBUILD_SHARED_LIBS=${{ matrix.shared_lib && '1' || '0' }}
+        -DCRC32C_USE_GLOG=${{ matrix.use_glog && '1' || '0' }}
+
+    - name: Build
+      run: >-
+        cmake --build "${{ env.CMAKE_BUILD_DIR }}"
+        --config "${{ env.CMAKE_BUILD_TYPE }}"
+
+    - name: Run C++ API Tests
+      run: ${{ env.BINARY_PATH }}crc32c_tests${{ env.BINARY_SUFFIX }}
+
+    - name: Run C API Tests
+      run: ${{ env.BINARY_PATH }}crc32c_capi_tests${{ env.BINARY_SUFFIX }}
+
+    - name: Run Benchmarks
+      run: ${{ env.BINARY_PATH }}crc32c_bench${{ env.BINARY_SUFFIX }}
+
+    - name: Test CMake installation
+      run: cmake --build "${{ env.CMAKE_BUILD_DIR }}" --target install

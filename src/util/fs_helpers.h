@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2023 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +13,23 @@
 #include <iosfwd>
 #include <limits>
 #include <optional>
+
+#ifdef __APPLE__
+enum class FSType {
+    EXFAT,
+    OTHER,
+    ERROR
+};
+
+/**
+ * Detect filesystem type for a given path.
+ * Currently identifies exFAT filesystems which cause issues on macOS.
+ *
+ * @param[in] path The directory path to check
+ * @return FSType enum indicating the filesystem type
+ */
+FSType GetFilesystemType(const fs::path& path);
+#endif
 
 /**
  * Ensure file contents are fully committed to disk, using a platform-specific

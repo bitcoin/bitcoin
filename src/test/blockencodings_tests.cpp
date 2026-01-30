@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,7 +14,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-const std::vector<CTransactionRef> empty_extra_txn;
+const std::vector<std::pair<Wtxid, CTransactionRef>> empty_extra_txn;
 
 BOOST_FIXTURE_TEST_SUITE(blockencodings_tests, RegTestingSetup)
 
@@ -56,8 +56,8 @@ static CBlock BuildBlockTestCase(FastRandomContext& ctx) {
 }
 
 // Number of shared use_counts we expect for a tx we haven't touched
-// (block + mempool entry + mempool txns_randomized + our copy from the GetSharedTx call)
-constexpr long SHARED_TX_OFFSET{4};
+// (block + mempool entry + our copy from the GetSharedTx call)
+constexpr long SHARED_TX_OFFSET{3};
 
 BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
 {
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
     CBlock block(BuildBlockTestCase(rand_ctx));
 
     LOCK2(cs_main, pool.cs);
-    AddToMempool(pool, entry.FromTx(block.vtx[2]));
+    TryAddToMempool(pool, entry.FromTx(block.vtx[2]));
     BOOST_CHECK_EQUAL(pool.get(block.vtx[2]->GetHash()).use_count(), SHARED_TX_OFFSET + 0);
 
     // Do a simple ShortTxIDs RT
@@ -95,21 +95,21 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
         CBlock block2;
         {
             PartiallyDownloadedBlock tmp = partialBlock;
-            BOOST_CHECK(partialBlock.FillBlock(block2, {}) == READ_STATUS_INVALID); // No transactions
+            BOOST_CHECK(partialBlock.FillBlock(block2, {}, /*segwit_active=*/true) == READ_STATUS_INVALID); // No transactions
             partialBlock = tmp;
         }
 
         // Wrong transaction
         {
             PartiallyDownloadedBlock tmp = partialBlock;
-            partialBlock.FillBlock(block2, {block.vtx[2]}); // Current implementation doesn't check txn here, but don't require that
+            partialBlock.FillBlock(block2, {block.vtx[2]}, /*segwit_active=*/true); // Current implementation doesn't check txn here, but don't require that
             partialBlock = tmp;
         }
         bool mutated;
         BOOST_CHECK(block.hashMerkleRoot != BlockMerkleRoot(block2, &mutated));
 
         CBlock block3;
-        BOOST_CHECK(partialBlock.FillBlock(block3, {block.vtx[1]}) == READ_STATUS_OK);
+        BOOST_CHECK(partialBlock.FillBlock(block3, {block.vtx[1]}, /*segwit_active=*/true) == READ_STATUS_OK);
         BOOST_CHECK_EQUAL(block.GetHash().ToString(), block3.GetHash().ToString());
         BOOST_CHECK_EQUAL(block.hashMerkleRoot.ToString(), BlockMerkleRoot(block3, &mutated).ToString());
         BOOST_CHECK(!mutated);
@@ -151,10 +151,10 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
     CBlock block(BuildBlockTestCase(rand_ctx));
 
     LOCK2(cs_main, pool.cs);
-    AddToMempool(pool, entry.FromTx(block.vtx[2]));
+    TryAddToMempool(pool, entry.FromTx(block.vtx[2]));
     BOOST_CHECK_EQUAL(pool.get(block.vtx[2]->GetHash()).use_count(), SHARED_TX_OFFSET + 0);
 
-    uint256 txhash;
+    Txid txhash;
 
     // Test with pre-forwarding tx 1, but not coinbase
     {
@@ -182,14 +182,14 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
         CBlock block2;
         {
             PartiallyDownloadedBlock tmp = partialBlock;
-            BOOST_CHECK(partialBlock.FillBlock(block2, {}) == READ_STATUS_INVALID); // No transactions
+            BOOST_CHECK(partialBlock.FillBlock(block2, {}, /*segwit_active=*/true) == READ_STATUS_INVALID); // No transactions
             partialBlock = tmp;
         }
 
         // Wrong transaction
         {
             PartiallyDownloadedBlock tmp = partialBlock;
-            partialBlock.FillBlock(block2, {block.vtx[1]}); // Current implementation doesn't check txn here, but don't require that
+            partialBlock.FillBlock(block2, {block.vtx[1]}, /*segwit_active=*/true); // Current implementation doesn't check txn here, but don't require that
             partialBlock = tmp;
         }
         BOOST_CHECK_EQUAL(pool.get(block.vtx[2]->GetHash()).use_count(), SHARED_TX_OFFSET + 2); // +2 because of partialBlock and block2
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
 
         CBlock block3;
         PartiallyDownloadedBlock partialBlockCopy = partialBlock;
-        BOOST_CHECK(partialBlock.FillBlock(block3, {block.vtx[0]}) == READ_STATUS_OK);
+        BOOST_CHECK(partialBlock.FillBlock(block3, {block.vtx[0]}, /*segwit_active=*/true) == READ_STATUS_OK);
         BOOST_CHECK_EQUAL(block.GetHash().ToString(), block3.GetHash().ToString());
         BOOST_CHECK_EQUAL(block.hashMerkleRoot.ToString(), BlockMerkleRoot(block3, &mutated).ToString());
         BOOST_CHECK(!mutated);
@@ -222,10 +222,10 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
     CBlock block(BuildBlockTestCase(rand_ctx));
 
     LOCK2(cs_main, pool.cs);
-    AddToMempool(pool, entry.FromTx(block.vtx[1]));
+    TryAddToMempool(pool, entry.FromTx(block.vtx[1]));
     BOOST_CHECK_EQUAL(pool.get(block.vtx[1]->GetHash()).use_count(), SHARED_TX_OFFSET + 0);
 
-    uint256 txhash;
+    Txid txhash;
 
     // Test with pre-forwarding coinbase + tx 2 with tx 1 in mempool
     {
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
 
         CBlock block2;
         PartiallyDownloadedBlock partialBlockCopy = partialBlock;
-        BOOST_CHECK(partialBlock.FillBlock(block2, {}) == READ_STATUS_OK);
+        BOOST_CHECK(partialBlock.FillBlock(block2, {}, /*segwit_active=*/true) == READ_STATUS_OK);
         BOOST_CHECK_EQUAL(block.GetHash().ToString(), block2.GetHash().ToString());
         bool mutated;
         BOOST_CHECK_EQUAL(block.hashMerkleRoot.ToString(), BlockMerkleRoot(block2, &mutated).ToString());
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
 
         CBlock block2;
         std::vector<CTransactionRef> vtx_missing;
-        BOOST_CHECK(partialBlock.FillBlock(block2, vtx_missing) == READ_STATUS_OK);
+        BOOST_CHECK(partialBlock.FillBlock(block2, vtx_missing, /*segwit_active=*/true) == READ_STATUS_OK);
         BOOST_CHECK_EQUAL(block.GetHash().ToString(), block2.GetHash().ToString());
         BOOST_CHECK_EQUAL(block.hashMerkleRoot.ToString(), BlockMerkleRoot(block2, &mutated).ToString());
         BOOST_CHECK(!mutated);
@@ -318,11 +318,11 @@ BOOST_AUTO_TEST_CASE(ReceiveWithExtraTransactions) {
     const CTransactionRef non_block_tx = MakeTransactionRef(std::move(mtx));
 
     CBlock block(BuildBlockTestCase(rand_ctx));
-    std::vector<CTransactionRef> extra_txn;
+    std::vector<std::pair<Wtxid, CTransactionRef>> extra_txn;
     extra_txn.resize(10);
 
     LOCK2(cs_main, pool.cs);
-    AddToMempool(pool, entry.FromTx(block.vtx[2]));
+    TryAddToMempool(pool, entry.FromTx(block.vtx[2]));
     BOOST_CHECK_EQUAL(pool.get(block.vtx[2]->GetHash()).use_count(), SHARED_TX_OFFSET + 0);
     // Ensure the non_block_tx is actually not in the block
     for (const auto &block_tx : block.vtx) {
@@ -342,9 +342,9 @@ BOOST_AUTO_TEST_CASE(ReceiveWithExtraTransactions) {
         BOOST_CHECK( partial_block.IsTxAvailable(2));
 
         // Add an unrelated tx to extra_txn:
-        extra_txn[0] = non_block_tx;
+        extra_txn[0] = {non_block_tx->GetWitnessHash(), non_block_tx};
         // and a tx from the block that's not in the mempool:
-        extra_txn[1] = block.vtx[1];
+        extra_txn[1] = {block.vtx[1]->GetWitnessHash(), block.vtx[1]};
 
         BOOST_CHECK(partial_block_with_extra.InitData(cmpctblock, extra_txn) == READ_STATUS_OK);
         BOOST_CHECK(partial_block_with_extra.IsTxAvailable(0));

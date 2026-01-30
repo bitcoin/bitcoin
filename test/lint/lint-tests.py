@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2018-2022 The Bitcoin Core developers
+# Copyright (c) 2018-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,21 +23,21 @@ def grep_boost_fixture_test_suite():
         "src/test/**.cpp",
         "src/wallet/test/**.cpp",
     ]
-    return subprocess.check_output(command, text=True, encoding="utf8")
+    return subprocess.check_output(command, text=True)
 
 
 def check_matching_test_names(test_suite_list):
     not_matching = [
         x
         for x in test_suite_list
-        if re.search(r"/(.*?)\.cpp:BOOST_FIXTURE_TEST_SUITE\(\1, .*\)", x) is None
+        if re.search(r"/(.*?)\.cpp:BOOST_FIXTURE_TEST_SUITE\(\1(_[a-z0-9]+)?, .*\)", x) is None
     ]
     if len(not_matching) > 0:
         not_matching = "\n".join(not_matching)
         error_msg = (
             "The test suite in file src/test/foo_tests.cpp should be named\n"
-            '"foo_tests". Please make sure the following test suites follow\n'
-            "that convention:\n\n"
+            '`foo_tests`, or if there are multiple test suites, `foo_tests_bar`.\n'
+            'Please make sure the following test suites follow that convention:\n\n'
             f"{not_matching}\n"
         )
         print(error_msg)

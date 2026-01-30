@@ -1,14 +1,18 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chain.h>
-#include <interfaces/chain.h>
 #include <kernel/chain.h>
+
+#include <chain.h>
+#include <kernel/cs_main.h>
+#include <kernel/types.h>
 #include <sync.h>
 #include <uint256.h>
 
 class CBlock;
+
+using kernel::ChainstateRole;
 
 namespace kernel {
 interfaces::BlockInfo MakeBlockInfo(const CBlockIndex* index, const CBlock* data)
@@ -25,14 +29,15 @@ interfaces::BlockInfo MakeBlockInfo(const CBlockIndex* index, const CBlock* data
     info.data = data;
     return info;
 }
-} // namespace kernel
 
 std::ostream& operator<<(std::ostream& os, const ChainstateRole& role) {
-    switch(role) {
-        case ChainstateRole::NORMAL: os << "normal"; break;
-        case ChainstateRole::ASSUMEDVALID: os << "assumedvalid"; break;
-        case ChainstateRole::BACKGROUND: os << "background"; break;
-        default: os.setstate(std::ios_base::failbit);
+    if (!role.validated) {
+        os << "assumedvalid";
+    } else if (role.historical) {
+        os << "background";
+    } else {
+        os << "normal";
     }
     return os;
 }
+} // namespace kernel

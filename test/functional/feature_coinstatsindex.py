@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2022 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test coinstatsindex across nodes.
@@ -41,7 +41,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.supports_cli = False
         self.extra_args = [
             [],
             ["-coinstatsindex"]
@@ -191,7 +190,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         # has two outputs
         cb = create_coinbase(109, nValue=35)
         cb.vout.append(CTxOut(5 * COIN, CScript([OP_FALSE])))
-        cb.rehash()
 
         # Generate a block that includes previous coinbase
         tip = self.nodes[0].getbestblockhash()
@@ -322,6 +320,21 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self.sync_index_node()
         res1 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=None, use_index=True)
         assert_equal(res["muhash"], res1["muhash"])
+
+        self.log.info("Test index with an unclean restart after a reorg")
+        self.restart_node(1, extra_args=self.extra_args[1])
+        committed_height = index_node.getblockcount()
+        self.generate(index_node, 2, sync_fun=self.no_op)
+        self.sync_index_node()
+        block2 = index_node.getbestblockhash()
+        index_node.invalidateblock(block2)
+        self.generatetoaddress(index_node, 1, getnewdestination()[2], sync_fun=self.no_op)
+        self.sync_index_node()
+        index_node.kill_process()
+        self.start_node(1, extra_args=self.extra_args[1])
+        self.sync_index_node()
+        # Because of the unclean shutdown above, indexes reset to the point we last committed them to disk.
+        assert_equal(index_node.getindexinfo()['coinstatsindex']['best_block_height'], committed_height)
 
 
 if __name__ == '__main__':

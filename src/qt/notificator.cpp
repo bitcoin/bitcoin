@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,7 +18,7 @@
 #ifdef USE_DBUS
 #include <QDBusMetaType>
 #include <QtDBus>
-#include <stdint.h>
+#include <cstdint>
 #endif
 #ifdef Q_OS_MACOS
 #include <qt/macnotificationhandler.h>
@@ -141,7 +141,6 @@ QVariant FreedesktopImage::toVariant(const QImage &img)
 
 void Notificator::notifyDBus(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout)
 {
-    // https://developer.gnome.org/notification-spec/
     // Arguments for DBus "Notify" call:
     QList<QVariant> args;
 

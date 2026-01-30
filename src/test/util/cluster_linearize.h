@@ -12,10 +12,10 @@
 #include <util/bitset.h>
 #include <util/feefrac.h>
 
-#include <stdint.h>
+#include <cstdint>
 #include <numeric>
-#include <vector>
 #include <utility>
+#include <vector>
 
 namespace {
 
@@ -331,7 +331,7 @@ void SanityCheck(const DepGraph<SetType>& depgraph)
         VectorWriter writer(ser, 0);
         writer << Using<DepGraphFormatter>(depgraph);
         SpanReader reader(ser);
-        DepGraph<TestBitSet> decoded_depgraph;
+        DepGraph<SetType> decoded_depgraph;
         reader >> Using<DepGraphFormatter>(decoded_depgraph);
         assert(depgraph == decoded_depgraph);
         assert(reader.empty());
@@ -384,14 +384,36 @@ void SanityCheck(const DepGraph<SetType>& depgraph, std::span<const DepGraphInde
 {
     // Check completeness.
     assert(linearization.size() == depgraph.TxCount());
-    TestBitSet done;
+    SetType done;
     for (auto i : linearization) {
         // Check transaction position is in range.
         assert(depgraph.Positions()[i]);
         // Check topology and lack of duplicates.
-        assert((depgraph.Ancestors(i) - done) == TestBitSet::Singleton(i));
+        assert((depgraph.Ancestors(i) - done) == SetType::Singleton(i));
         done.Set(i);
     }
+}
+
+inline uint64_t MaxOptimalLinearizationIters(DepGraphIndex cluster_count)
+{
+    // These are the largest numbers seen returned as cost by Linearize(), in a large randomized
+    // trial. There exist almost certainly far worse cases, but they are unlikely to be
+    // encountered in randomized tests. The purpose of these numbers is guaranteeing that for
+    // *some* reasonable cost bound, optimal linearizations are always found.
+    static constexpr uint64_t ITERS[65] = {
+        0,
+        0, 4, 10, 34, 76, 118, 184, 225,
+        320, 376, 464, 573, 830, 868, 1019, 1468,
+        1375, 1785, 1880, 1854, 2551, 2559, 4336, 4784,
+        5547, 5807, 6157, 6075, 6961, 7403, 7756, 8001,
+        8041, 7579, 8483, 10077, 9015, 9388, 9626, 12371,
+        12847, 12102, 15173, 15800, 20319, 22190, 23183, 24361,
+        24909, 19225, 27419, 23789, 25909, 21993, 25596, 24130,
+        26349, 31823, 31855, 31250, 32688, 34825, 41710, 45478
+    };
+    assert(cluster_count < std::size(ITERS));
+    // Multiply the table number by two, to account for the fact that they are not absolutes.
+    return ITERS[cluster_count] * 2;
 }
 
 } // namespace

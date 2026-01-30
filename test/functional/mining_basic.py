@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mining RPCs
 
 - getmininginfo
-- getblocktemplate proposal mode
-- submitblock"""
+- getblocktemplate
+- submitblock
+
+mining_template_verification.py tests getblocktemplate in proposal mode"""
 
 import copy
 from decimal import Decimal
@@ -28,14 +30,16 @@ from test_framework.messages import (
     COIN,
     DEFAULT_BLOCK_RESERVED_WEIGHT,
     MAX_BLOCK_WEIGHT,
+    MAX_SEQUENCE_NONFINAL,
     MINIMUM_BLOCK_RESERVED_WEIGHT,
     ser_uint256,
-    WITNESS_SCALE_FACTOR
+    WITNESS_SCALE_FACTOR,
 )
 from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
     get_fee,
@@ -51,19 +55,7 @@ MAX_FUTURE_BLOCK_TIME = 2 * 3600
 MAX_TIMEWARP = 600
 VERSIONBITS_TOP_BITS = 0x20000000
 VERSIONBITS_DEPLOYMENT_TESTDUMMY_BIT = 28
-DEFAULT_BLOCK_MIN_TX_FEE = 1000  # default `-blockmintxfee` setting [sat/kvB]
-
-
-def assert_template(node, block, expect, rehash=True):
-    if rehash:
-        block.hashMerkleRoot = block.calc_merkle_root()
-    rsp = node.getblocktemplate(template_request={
-        'data': block.serialize().hex(),
-        'mode': 'proposal',
-        'rules': ['segwit'],
-    })
-    assert_equal(rsp, expect)
-
+DEFAULT_BLOCK_MIN_TX_FEE = 1 # default `-blockmintxfee` setting [sat/kvB]
 
 class MiningTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -74,7 +66,6 @@ class MiningTest(BitcoinTestFramework):
             ["-fastprune", "-prune=1"]
         ]
         self.setup_clean_chain = True
-        self.supports_cli = False
 
     def mine_chain(self):
         self.log.info('Create some old blocks')
@@ -104,7 +95,7 @@ class MiningTest(BitcoinTestFramework):
         wallet_sigops = MiniWallet(node, mode=MiniWalletMode.RAW_P2PK)
         self.generate(wallet_sigops, 1, sync_fun=self.no_op)
 
-        # Mature with regular coinbases to prevent inteference with other tests
+        # Mature with regular coinbases to prevent interference with other tests
         self.generate(self.wallet, 100, sync_fun=self.no_op)
 
         # Generate three transactions that must be mined in sequence
@@ -153,7 +144,7 @@ class MiningTest(BitcoinTestFramework):
         node = self.nodes[0]
 
         # test default (no parameter), zero and a bunch of arbitrary blockmintxfee rates [sat/kvB]
-        for blockmintxfee_sat_kvb in (DEFAULT_BLOCK_MIN_TX_FEE, 0, 50, 100, 500, 2500, 5000, 21000, 333333, 2500000):
+        for blockmintxfee_sat_kvb in (DEFAULT_BLOCK_MIN_TX_FEE, 0, 5, 10, 50, 100, 500, 1000, 2500, 5000, 21000, 333333, 2500000):
             blockmintxfee_btc_kvb = blockmintxfee_sat_kvb / Decimal(COIN)
             if blockmintxfee_sat_kvb == DEFAULT_BLOCK_MIN_TX_FEE:
                 self.log.info(f"-> Default -blockmintxfee setting ({blockmintxfee_sat_kvb} sat/kvB)...")
@@ -161,22 +152,32 @@ class MiningTest(BitcoinTestFramework):
                 blockmintxfee_parameter = f"-blockmintxfee={blockmintxfee_btc_kvb:.8f}"
                 self.log.info(f"-> Test {blockmintxfee_parameter} ({blockmintxfee_sat_kvb} sat/kvB)...")
                 self.restart_node(0, extra_args=[blockmintxfee_parameter, '-minrelaytxfee=0', '-persistmempool=0'])
-                self.wallet.rescan_utxos()  # to avoid spending outputs of txs that are not in mempool anymore after restart
+            assert_equal(node.getmininginfo()['blockmintxfee'], blockmintxfee_btc_kvb)
 
             # submit one tx with exactly the blockmintxfee rate, and one slightly below
-            tx_with_min_feerate = self.wallet.send_self_transfer(from_node=node, fee_rate=blockmintxfee_btc_kvb)
+            tx_with_min_feerate = self.wallet.send_self_transfer(from_node=node, fee_rate=blockmintxfee_btc_kvb, confirmed_only=True)
             assert_equal(tx_with_min_feerate["fee"], get_fee(tx_with_min_feerate["tx"].get_vsize(), blockmintxfee_btc_kvb))
-            if blockmintxfee_btc_kvb > 0:
+            if blockmintxfee_sat_kvb >= 10:
                 lowerfee_btc_kvb = blockmintxfee_btc_kvb - Decimal(10)/COIN  # 0.01 sat/vbyte lower
-                tx_below_min_feerate = self.wallet.send_self_transfer(from_node=node, fee_rate=lowerfee_btc_kvb)
+                assert_greater_than(blockmintxfee_btc_kvb, lowerfee_btc_kvb)
+                assert_greater_than_or_equal(lowerfee_btc_kvb, 0)
+                tx_below_min_feerate = self.wallet.send_self_transfer(from_node=node, fee_rate=lowerfee_btc_kvb, confirmed_only=True)
                 assert_equal(tx_below_min_feerate["fee"], get_fee(tx_below_min_feerate["tx"].get_vsize(), lowerfee_btc_kvb))
             else:  # go below zero fee by using modified fees
-                tx_below_min_feerate = self.wallet.send_self_transfer(from_node=node, fee_rate=blockmintxfee_btc_kvb)
-                node.prioritisetransaction(tx_below_min_feerate["txid"], 0, -1)
+                tx_below_min_feerate = self.wallet.send_self_transfer(from_node=node, fee_rate=blockmintxfee_btc_kvb, confirmed_only=True)
+                node.prioritisetransaction(tx_below_min_feerate["txid"], 0, -11)
 
             # check that tx below specified fee-rate is neither in template nor in the actual block
             block_template = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
             block_template_txids = [tx['txid'] for tx in block_template['transactions']]
+
+            # Unless blockmintxfee is 0, the template shouldn't contain free transactions.
+            # Note that the real block assembler uses package feerates, but we didn't create dependent transactions so it's ok to use base feerate.
+            if blockmintxfee_btc_kvb > 0:
+                for txid in block_template_txids:
+                    tx = node.getmempoolentry(txid)
+                    assert_greater_than(tx['fees']['base'], 0)
+
             self.generate(self.wallet, 1, sync_fun=self.no_op)
             block = node.getblock(node.getbestblockhash(), verbosity=2)
             block_txids = [tx['txid'] for tx in block['tx']]
@@ -185,6 +186,9 @@ class MiningTest(BitcoinTestFramework):
             assert tx_with_min_feerate['txid'] in block_txids
             assert tx_below_min_feerate['txid'] not in block_template_txids
             assert tx_below_min_feerate['txid'] not in block_txids
+
+            # Restart node to clear mempool for the next test
+            self.restart_node(0)
 
     def test_timewarp(self):
         self.log.info("Test timewarp attack mitigation (BIP94)")
@@ -221,8 +225,13 @@ class MiningTest(BitcoinTestFramework):
         block.nBits = int(tmpl["bits"], 16)
         block.nNonce = 0
         block.vtx = [create_coinbase(height=int(tmpl["height"]))]
+        block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
-        assert_template(node, block, None)
+        assert_equal(node.getblocktemplate(template_request={
+            'data': block.serialize().hex(),
+            'mode': 'proposal',
+            'rules': ['segwit'],
+        }), None)
 
         bad_block = copy.deepcopy(block)
         bad_block.nTime = t
@@ -279,11 +288,9 @@ class MiningTest(BitcoinTestFramework):
     def test_block_max_weight(self):
         self.log.info("Testing default and custom -blockmaxweight startup options.")
 
-        # Restart the node to allow large transactions
         LARGE_TXS_COUNT = 10
         LARGE_VSIZE = int(((MAX_BLOCK_WEIGHT - DEFAULT_BLOCK_RESERVED_WEIGHT) / WITNESS_SCALE_FACTOR) / LARGE_TXS_COUNT)
         HIGH_FEERATE = Decimal("0.0003")
-        self.restart_node(0, extra_args=[f"-datacarriersize={LARGE_VSIZE}"])
 
         # Ensure the mempool is empty
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
@@ -311,7 +318,7 @@ class MiningTest(BitcoinTestFramework):
         # Test block template creation with custom -blockmaxweight
         custom_block_weight = MAX_BLOCK_WEIGHT - 2000
         # Reducing the weight by 2000 units will prevent 1 large transaction from fitting into the block.
-        self.restart_node(0, extra_args=[f"-datacarriersize={LARGE_VSIZE}", f"-blockmaxweight={custom_block_weight}"])
+        self.restart_node(0, extra_args=[f"-blockmaxweight={custom_block_weight}"])
 
         self.log.info("Testing the block template with custom -blockmaxweight to include 9 large and 2 normal transactions.")
         self.verify_block_template(
@@ -321,7 +328,7 @@ class MiningTest(BitcoinTestFramework):
 
         # Ensure the block weight does not exceed the maximum
         self.log.info(f"Testing that the block weight will never exceed {MAX_BLOCK_WEIGHT - DEFAULT_BLOCK_RESERVED_WEIGHT}.")
-        self.restart_node(0, extra_args=[f"-datacarriersize={LARGE_VSIZE}", f"-blockmaxweight={MAX_BLOCK_WEIGHT}"])
+        self.restart_node(0, extra_args=[f"-blockmaxweight={MAX_BLOCK_WEIGHT}"])
         self.log.info("Sending 2 additional normal transactions to fill the mempool to the maximum block weight.")
         self.send_transactions(utxos[LARGE_TXS_COUNT + 2:], NORMAL_FEERATE, NORMAL_VSIZE)
         self.log.info(f"Testing that the mempool's weight matches the maximum block weight: {MAX_BLOCK_WEIGHT}.")
@@ -335,7 +342,7 @@ class MiningTest(BitcoinTestFramework):
 
         self.log.info("Test -blockreservedweight startup option.")
         # Lowering the -blockreservedweight by 4000 will allow for two more transactions.
-        self.restart_node(0, extra_args=[f"-datacarriersize={LARGE_VSIZE}", "-blockreservedweight=4000"])
+        self.restart_node(0, extra_args=["-blockreservedweight=4000"])
         self.verify_block_template(
             expected_tx_count=12,
             expected_weight=MAX_BLOCK_WEIGHT - 4000,
@@ -362,17 +369,17 @@ class MiningTest(BitcoinTestFramework):
             expected_msg=f"Error: Specified -blockmaxweight ({MAX_BLOCK_WEIGHT + 1}) exceeds consensus maximum block weight ({MAX_BLOCK_WEIGHT})",
         )
 
+    def test_height_in_locktime(self):
+        self.log.info("Sanity check generated blocks have their coinbase timelocked to their height.")
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        block = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)
+        assert_equal(block["tx"][0]["locktime"], block["height"] - 1)
+        assert_equal(block["tx"][0]["vin"][0]["sequence"], MAX_SEQUENCE_NONFINAL)
 
     def run_test(self):
         node = self.nodes[0]
         self.wallet = MiniWallet(node)
         self.mine_chain()
-
-        def assert_submitblock(block, result_str_1, result_str_2=None):
-            block.solve()
-            result_str_2 = result_str_2 or 'duplicate-invalid'
-            assert_equal(result_str_1, node.submitblock(hexdata=block.serialize().hex()))
-            assert_equal(result_str_2, node.submitblock(hexdata=block.serialize().hex()))
 
         self.log.info('getmininginfo')
         mining_info = node.getmininginfo()
@@ -382,14 +389,13 @@ class MiningTest(BitcoinTestFramework):
         assert 'currentblockweight' not in mining_info
         assert_equal(mining_info['bits'], nbits_str(REGTEST_N_BITS))
         assert_equal(mining_info['target'], target_str(REGTEST_TARGET))
-        assert_equal(mining_info['difficulty'], Decimal('4.656542373906925E-10'))
-        assert_equal(mining_info['next'], {
-            'height': 201,
-            'target': target_str(REGTEST_TARGET),
-            'bits': nbits_str(REGTEST_N_BITS),
-            'difficulty': Decimal('4.656542373906925E-10')
-        })
-        assert_equal(mining_info['networkhashps'], Decimal('0.003333333333333334'))
+        # We don't care about precision, round to avoid mismatch under Valgrind:
+        assert_equal(round(mining_info['difficulty'], 10), Decimal('0.0000000005'))
+        assert_equal(mining_info['next']['height'], 201)
+        assert_equal(mining_info['next']['target'], target_str(REGTEST_TARGET))
+        assert_equal(mining_info['next']['bits'], nbits_str(REGTEST_N_BITS))
+        assert_equal(round(mining_info['next']['difficulty'], 10), Decimal('0.0000000005'))
+        assert_equal(round(mining_info['networkhashps'], 5), Decimal('0.00333'))
         assert_equal(mining_info['pooledtx'], 0)
 
         self.log.info("getblocktemplate: Test default witness commitment")
@@ -417,7 +423,6 @@ class MiningTest(BitcoinTestFramework):
         coinbase_tx = create_coinbase(height=next_height)
         # sequence numbers must not be max for nLockTime to have effect
         coinbase_tx.vin[0].nSequence = 2**32 - 2
-        coinbase_tx.rehash()
 
         block = CBlock()
         block.nVersion = tmpl["version"]
@@ -426,106 +431,24 @@ class MiningTest(BitcoinTestFramework):
         block.nBits = int(tmpl["bits"], 16)
         block.nNonce = 0
         block.vtx = [coinbase_tx]
+        block.hashMerkleRoot = block.calc_merkle_root()
 
         self.log.info("getblocktemplate: segwit rule must be set")
         assert_raises_rpc_error(-8, "getblocktemplate must be called with the segwit rule set", node.getblocktemplate, {})
 
-        self.log.info("getblocktemplate: Test valid block")
-        assert_template(node, block, None)
-
         self.log.info("submitblock: Test block decode failure")
         assert_raises_rpc_error(-22, "Block decode failed", node.submitblock, block.serialize()[:-15].hex())
-
-        self.log.info("getblocktemplate: Test bad input hash for coinbase transaction")
-        bad_block = copy.deepcopy(block)
-        bad_block.vtx[0].vin[0].prevout.hash += 1
-        bad_block.vtx[0].rehash()
-        assert_template(node, bad_block, 'bad-cb-missing')
-
-        self.log.info("submitblock: Test bad input hash for coinbase transaction")
-        bad_block.solve()
-        assert_equal("bad-cb-missing", node.submitblock(hexdata=bad_block.serialize().hex()))
-
-        self.log.info("submitblock: Test block with no transactions")
-        no_tx_block = copy.deepcopy(block)
-        no_tx_block.vtx.clear()
-        no_tx_block.hashMerkleRoot = 0
-        no_tx_block.solve()
-        assert_equal("bad-blk-length", node.submitblock(hexdata=no_tx_block.serialize().hex()))
 
         self.log.info("submitblock: Test empty block")
         assert_equal('high-hash', node.submitblock(hexdata=CBlock().serialize().hex()))
 
-        self.log.info("getblocktemplate: Test truncated final transaction")
-        assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate, {
-            'data': block.serialize()[:-1].hex(),
-            'mode': 'proposal',
-            'rules': ['segwit'],
-        })
-
-        self.log.info("getblocktemplate: Test duplicate transaction")
-        bad_block = copy.deepcopy(block)
-        bad_block.vtx.append(bad_block.vtx[0])
-        assert_template(node, bad_block, 'bad-txns-duplicate')
-        assert_submitblock(bad_block, 'bad-txns-duplicate', 'bad-txns-duplicate')
-
-        self.log.info("getblocktemplate: Test invalid transaction")
-        bad_block = copy.deepcopy(block)
-        bad_tx = copy.deepcopy(bad_block.vtx[0])
-        bad_tx.vin[0].prevout.hash = 255
-        bad_tx.rehash()
-        bad_block.vtx.append(bad_tx)
-        assert_template(node, bad_block, 'bad-txns-inputs-missingorspent')
-        assert_submitblock(bad_block, 'bad-txns-inputs-missingorspent')
-
-        self.log.info("getblocktemplate: Test nonfinal transaction")
-        bad_block = copy.deepcopy(block)
-        bad_block.vtx[0].nLockTime = 2**32 - 1
-        bad_block.vtx[0].rehash()
-        assert_template(node, bad_block, 'bad-txns-nonfinal')
-        assert_submitblock(bad_block, 'bad-txns-nonfinal')
-
-        self.log.info("getblocktemplate: Test bad tx count")
-        # The tx count is immediately after the block header
-        bad_block_sn = bytearray(block.serialize())
-        assert_equal(bad_block_sn[BLOCK_HEADER_SIZE], 1)
-        bad_block_sn[BLOCK_HEADER_SIZE] += 1
-        assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate, {
-            'data': bad_block_sn.hex(),
-            'mode': 'proposal',
-            'rules': ['segwit'],
-        })
-
-        self.log.info("getblocktemplate: Test bad bits")
-        bad_block = copy.deepcopy(block)
-        bad_block.nBits = 469762303  # impossible in the real world
-        assert_template(node, bad_block, 'bad-diffbits')
-
-        self.log.info("getblocktemplate: Test bad merkle root")
-        bad_block = copy.deepcopy(block)
-        bad_block.hashMerkleRoot += 1
-        assert_template(node, bad_block, 'bad-txnmrklroot', False)
-        assert_submitblock(bad_block, 'bad-txnmrklroot', 'bad-txnmrklroot')
-
-        self.log.info("getblocktemplate: Test bad timestamps")
-        bad_block = copy.deepcopy(block)
-        bad_block.nTime = 2**32 - 1
-        assert_template(node, bad_block, 'time-too-new')
-        assert_submitblock(bad_block, 'time-too-new', 'time-too-new')
-        bad_block.nTime = 0
-        assert_template(node, bad_block, 'time-too-old')
-        assert_submitblock(bad_block, 'time-too-old', 'time-too-old')
-
-        self.log.info("getblocktemplate: Test not best block")
-        bad_block = copy.deepcopy(block)
-        bad_block.hashPrevBlock = 123
-        assert_template(node, bad_block, 'inconclusive-not-best-prevblk')
-        assert_submitblock(bad_block, 'prev-blk-not-found', 'prev-blk-not-found')
-
         self.log.info('submitheader tests')
         assert_raises_rpc_error(-22, 'Block header decode failed', lambda: node.submitheader(hexdata='xx' * BLOCK_HEADER_SIZE))
         assert_raises_rpc_error(-22, 'Block header decode failed', lambda: node.submitheader(hexdata='ff' * (BLOCK_HEADER_SIZE-2)))
-        assert_raises_rpc_error(-25, 'Must submit previous header', lambda: node.submitheader(hexdata=super(CBlock, bad_block).serialize().hex()))
+
+        missing_ancestor_block = copy.deepcopy(block)
+        missing_ancestor_block.hashPrevBlock = 123
+        assert_raises_rpc_error(-25, 'Must submit previous header', lambda: node.submitheader(hexdata=super(CBlock, missing_ancestor_block).serialize().hex()))
 
         block.nTime += 1
         block.solve()
@@ -533,36 +456,35 @@ class MiningTest(BitcoinTestFramework):
         def chain_tip(b_hash, *, status='headers-only', branchlen=1):
             return {'hash': b_hash, 'height': 202, 'branchlen': branchlen, 'status': status}
 
-        assert chain_tip(block.hash) not in node.getchaintips()
+        assert chain_tip(block.hash_hex) not in node.getchaintips()
         node.submitheader(hexdata=block.serialize().hex())
-        assert chain_tip(block.hash) in node.getchaintips()
+        assert chain_tip(block.hash_hex) in node.getchaintips()
         node.submitheader(hexdata=CBlockHeader(block).serialize().hex())  # Noop
-        assert chain_tip(block.hash) in node.getchaintips()
+        assert chain_tip(block.hash_hex) in node.getchaintips()
 
         bad_block_root = copy.deepcopy(block)
         bad_block_root.hashMerkleRoot += 2
         bad_block_root.solve()
-        assert chain_tip(bad_block_root.hash) not in node.getchaintips()
+        assert chain_tip(bad_block_root.hash_hex) not in node.getchaintips()
         node.submitheader(hexdata=CBlockHeader(bad_block_root).serialize().hex())
-        assert chain_tip(bad_block_root.hash) in node.getchaintips()
+        assert chain_tip(bad_block_root.hash_hex) in node.getchaintips()
         # Should still reject invalid blocks, even if we have the header:
         assert_equal(node.submitblock(hexdata=bad_block_root.serialize().hex()), 'bad-txnmrklroot')
         assert_equal(node.submitblock(hexdata=bad_block_root.serialize().hex()), 'bad-txnmrklroot')
-        assert chain_tip(bad_block_root.hash) in node.getchaintips()
+        assert chain_tip(bad_block_root.hash_hex) in node.getchaintips()
         # We know the header for this invalid block, so should just return early without error:
         node.submitheader(hexdata=CBlockHeader(bad_block_root).serialize().hex())
-        assert chain_tip(bad_block_root.hash) in node.getchaintips()
+        assert chain_tip(bad_block_root.hash_hex) in node.getchaintips()
 
         bad_block_lock = copy.deepcopy(block)
         bad_block_lock.vtx[0].nLockTime = 2**32 - 1
-        bad_block_lock.vtx[0].rehash()
         bad_block_lock.hashMerkleRoot = bad_block_lock.calc_merkle_root()
         bad_block_lock.solve()
         assert_equal(node.submitblock(hexdata=bad_block_lock.serialize().hex()), 'bad-txns-nonfinal')
         assert_equal(node.submitblock(hexdata=bad_block_lock.serialize().hex()), 'duplicate-invalid')
         # Build a "good" block on top of the submitted bad block
         bad_block2 = copy.deepcopy(block)
-        bad_block2.hashPrevBlock = bad_block_lock.sha256
+        bad_block2.hashPrevBlock = bad_block_lock.hash_int
         bad_block2.solve()
         assert_raises_rpc_error(-25, 'bad-prevblk', lambda: node.submitheader(hexdata=CBlockHeader(bad_block2).serialize().hex()))
 
@@ -577,7 +499,7 @@ class MiningTest(BitcoinTestFramework):
         peer.wait_for_getheaders(timeout=5, block_hash=block.hashPrevBlock)
         peer.send_blocks_and_test(blocks=[block], node=node)
         # Must be active now:
-        assert chain_tip(block.hash, status='active', branchlen=0) in node.getchaintips()
+        assert chain_tip(block.hash_hex, status='active', branchlen=0) in node.getchaintips()
 
         # Building a few blocks should give the same results
         self.generatetoaddress(node, 10, node.get_deterministic_priv_key().address)
@@ -592,6 +514,7 @@ class MiningTest(BitcoinTestFramework):
         self.test_block_max_weight()
         self.test_timewarp()
         self.test_pruning()
+        self.test_height_in_locktime()
 
 
 if __name__ == '__main__':

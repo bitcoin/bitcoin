@@ -11,6 +11,7 @@
 #include <wallet/context.h>
 #include <wallet/wallet.h>
 
+#include <optional>
 #include <string_view>
 #include <univalue.h>
 
@@ -29,19 +30,25 @@ bool GetAvoidReuseFlag(const CWallet& wallet, const UniValue& param) {
     return avoid_reuse;
 }
 
-/** Used by RPC commands that have an include_watchonly parameter.
- *  We default to true for watchonly wallets if include_watchonly isn't
- *  explicitly set.
- */
-bool ParseIncludeWatchonly(const UniValue& include_watchonly, const CWallet& wallet)
+std::string EnsureUniqueWalletName(const JSONRPCRequest& request, std::optional<std::string_view> wallet_name)
 {
-    if (include_watchonly.isNull()) {
-        // if include_watchonly isn't explicitly set, then check if we have a watchonly wallet
-        return wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
+    std::string endpoint_wallet;
+    if (GetWalletNameFromJSONRPCRequest(request, endpoint_wallet)) {
+        // wallet endpoint was used
+        if (wallet_name && *wallet_name != endpoint_wallet) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                "The RPC endpoint wallet and the wallet name parameter specify different wallets");
+        }
+        return endpoint_wallet;
     }
 
-    // otherwise return whatever include_watchonly was set to
-    return include_watchonly.get_bool();
+    // Not a wallet endpoint; parameter must be provided
+    if (!wallet_name) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+            "Either the RPC endpoint wallet or the wallet name parameter must be provided");
+    }
+
+    return std::string{*wallet_name};
 }
 
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
@@ -94,28 +101,6 @@ WalletContext& EnsureWalletContext(const std::any& context)
     return *wallet_context;
 }
 
-// also_create should only be set to true only when the RPC is expected to add things to a blank wallet and make it no longer blank
-LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet, bool also_create)
-{
-    LegacyScriptPubKeyMan* spk_man = wallet.GetLegacyScriptPubKeyMan();
-    if (!spk_man && also_create) {
-        spk_man = wallet.GetOrCreateLegacyScriptPubKeyMan();
-    }
-    if (!spk_man) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Only legacy wallets are supported by this command");
-    }
-    return *spk_man;
-}
-
-const LegacyScriptPubKeyMan& EnsureConstLegacyScriptPubKeyMan(const CWallet& wallet)
-{
-    const LegacyScriptPubKeyMan* spk_man = wallet.GetLegacyScriptPubKeyMan();
-    if (!spk_man) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Only legacy wallets are supported by this command");
-    }
-    return *spk_man;
-}
-
 std::string LabelFromValue(const UniValue& value)
 {
     static const std::string empty_string;
@@ -131,12 +116,15 @@ void PushParentDescriptors(const CWallet& wallet, const CScript& script_pubkey, 
 {
     UniValue parent_descs(UniValue::VARR);
     for (const auto& desc: wallet.GetWalletDescriptors(script_pubkey)) {
-        parent_descs.push_back(desc.descriptor->ToString());
+        std::string desc_str;
+        FlatSigningProvider dummy_provider;
+        if (!CHECK_NONFATAL(desc.descriptor->ToNormalizedString(dummy_provider, desc_str, &desc.cache))) continue;
+        parent_descs.push_back(desc_str);
     }
     entry.pushKV("parent_descs", std::move(parent_descs));
 }
 
-void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& status, bilingual_str& error)
+void HandleWalletError(const std::shared_ptr<CWallet>& wallet, DatabaseStatus& status, bilingual_str& error)
 {
     if (!wallet) {
         // Map bad format to not found, since bad format is returned when the
@@ -145,6 +133,7 @@ void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& st
         switch (status) {
             case DatabaseStatus::FAILED_NOT_FOUND:
             case DatabaseStatus::FAILED_BAD_FORMAT:
+            case DatabaseStatus::FAILED_LEGACY_DISABLED:
                 code = RPC_WALLET_NOT_FOUND;
                 break;
             case DatabaseStatus::FAILED_ALREADY_LOADED:
@@ -153,8 +142,12 @@ void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& st
             case DatabaseStatus::FAILED_ALREADY_EXISTS:
                 code = RPC_WALLET_ALREADY_EXISTS;
                 break;
+            case DatabaseStatus::FAILED_NEW_UNNAMED:
             case DatabaseStatus::FAILED_INVALID_BACKUP_FILE:
                 code = RPC_INVALID_PARAMETER;
+                break;
+            case DatabaseStatus::FAILED_ENCRYPT:
+                code = RPC_WALLET_ENCRYPTION_FAILED;
                 break;
             default: // RPC_WALLET_ERROR is returned for all other cases.
                 break;

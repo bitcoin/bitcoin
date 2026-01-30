@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,12 +11,12 @@
 #include <util/chaintype.h>
 #include <util/fs.h>
 
+#include <cstdint>
 #include <iosfwd>
 #include <list>
 #include <map>
 #include <optional>
 #include <set>
-#include <stdint.h>
 #include <string>
 #include <variant>
 #include <vector>
@@ -137,6 +137,7 @@ protected:
     std::string m_network GUARDED_BY(cs_args);
     std::set<std::string> m_network_only_args GUARDED_BY(cs_args);
     std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args GUARDED_BY(cs_args);
+    std::optional<unsigned int> m_default_flags GUARDED_BY(cs_args){};
     bool m_accept_any_command GUARDED_BY(cs_args){true};
     std::list<SectionInfo> m_config_sections GUARDED_BY(cs_args);
     std::optional<fs::path> m_config_path GUARDED_BY(cs_args);
@@ -359,11 +360,7 @@ protected:
     /**
      * Clear available arguments
      */
-    void ClearArgs() {
-        LOCK(cs_args);
-        m_available_args.clear();
-        m_network_only_args.clear();
-    }
+    void ClearArgs();
 
     /**
      * Check CLI command args
@@ -379,9 +376,14 @@ protected:
 
     /**
      * Return Flags for known arg.
-     * Return nullopt for unknown arg.
+     * Return default flags for unknown arg.
      */
     std::optional<unsigned int> GetArgFlags(const std::string& name) const;
+
+    /**
+     * Set default flags to return for an unknown arg.
+     */
+    void SetDefaultFlags(std::optional<unsigned int>);
 
     /**
      * Get settings file path, or return false if read-write settings were
@@ -477,22 +479,5 @@ std::string HelpMessageGroup(const std::string& message);
  * @return the formatted string
  */
 std::string HelpMessageOpt(const std::string& option, const std::string& message);
-
-namespace common {
-#ifdef WIN32
-class WinCmdLineArgs
-{
-public:
-    WinCmdLineArgs();
-    ~WinCmdLineArgs();
-    std::pair<int, char**> get();
-
-private:
-    int argc;
-    char** argv;
-    std::vector<std::string> args;
-};
-#endif
-} // namespace common
 
 #endif // BITCOIN_COMMON_ARGS_H

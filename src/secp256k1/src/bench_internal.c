@@ -4,6 +4,7 @@
  * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
  ***********************************************************************/
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "secp256k1.c"
 #include "../include/secp256k1.h"
@@ -384,16 +385,20 @@ static void bench_context(void* arg, int iters) {
 
 int main(int argc, char **argv) {
     bench_inv data;
+    int d = argc == 1; /* default */
     int default_iters = 20000;
     int iters = get_iters(default_iters);
-    int d = argc == 1; /* default */
+    if (iters == 0) {
+        help(default_iters);
+        return EXIT_FAILURE;
+    }
 
     if (argc > 1) {
         if (have_flag(argc, argv, "-h")
            || have_flag(argc, argv, "--help")
            || have_flag(argc, argv, "help")) {
             help(default_iters);
-            return 0;
+            return EXIT_SUCCESS;
         }
     }
 
@@ -432,5 +437,5 @@ int main(int argc, char **argv) {
 
     if (d || have_flag(argc, argv, "context")) run_benchmark("context_create", bench_context, bench_setup, NULL, &data, 10, iters);
 
-    return 0;
+    return EXIT_SUCCESS;
 }

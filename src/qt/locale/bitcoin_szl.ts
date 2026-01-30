@@ -7,15 +7,18 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Zrychtuj nowõ adresã</translation>
+        <translation type="unfinished">[dependencies]
+reqwest = { version = "0.11", features = ["json"] }
+tokio = { version = "1", features = ["full"] }
+serde_json = "1.0"</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;Nowy</translation>
-    </message>
-    <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Skopiyruj aktualnie ôbranõ adresã do skrytki</translation>
+        <translation type="unfinished">[dependencies]
+reqwest = { version = "0.11", features = ["json"] }
+tokio = { version = "1", features = ["full"] }
+serde_json = "1.0"
+once_cell = "1.18"</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -60,10 +63,6 @@
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Tukej sōm adresy Bitcoin na kere posyłŏsz płaty. Dycki wybaduj wielość i adresã ôdbiyrŏcza przed posłaniym mōnet.</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation type="unfinished">&amp;Kopiyruj Adresã</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -703,7 +702,50 @@
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">wersyjŏ</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">Ô %1</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">Ôpcyje piski nakŏzań</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Witej</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">Witej w %1.</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation type="unfinished">Pōniywŏż je to piyrsze sztartniyńcie programu, możesz ôbrać kaj %1 bydzie spamiyntować swoje daty.</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation type="unfinished">Wstympnŏ synchrōnizacyjŏ je barzo wymŏgajōncŏ i może wyzdradzić wczaśnij niyzaôbserwowane niyprzileżytości sprzyntowe. Za kożdym sztartniyńciym %1 sebiyranie bydzie kōntynuowane ôd placu w kerym ôstało zastawiōne.</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation type="unfinished">Jeźli ôbrołś ôpcyjõ ukrōcyniŏ spamiyntowaniŏ kety blokōw (przicinanie) daty historyczne cołki czas bydōm musiały być sebrane i przetworzōne, jednak po tym ôstanõ wychrōniōne coby ôgraniczyć użycie dysku.</translation>
+    </message>
+    <message>
+        <source>Use the default data directory</source>
+        <translation type="unfinished">Użyj wychodnego folderu datōw</translation>
+    </message>
+    <message>
+        <source>Use a custom data directory:</source>
+        <translation type="unfinished">Użyj ôbranego folderu datōw</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
@@ -752,49 +794,6 @@
     <message>
         <source>Error</source>
         <translation type="unfinished">Feler</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Witej</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation type="unfinished">Witej w %1.</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation type="unfinished">Pōniywŏż je to piyrsze sztartniyńcie programu, możesz ôbrać kaj %1 bydzie spamiyntować swoje daty.</translation>
-    </message>
-    <message>
-        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation type="unfinished">Wstympnŏ synchrōnizacyjŏ je barzo wymŏgajōncŏ i może wyzdradzić wczaśnij niyzaôbserwowane niyprzileżytości sprzyntowe. Za kożdym sztartniyńciym %1 sebiyranie bydzie kōntynuowane ôd placu w kerym ôstało zastawiōne.</translation>
-    </message>
-    <message>
-        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation type="unfinished">Jeźli ôbrołś ôpcyjõ ukrōcyniŏ spamiyntowaniŏ kety blokōw (przicinanie) daty historyczne cołki czas bydōm musiały być sebrane i przetworzōne, jednak po tym ôstanõ wychrōniōne coby ôgraniczyć użycie dysku.</translation>
-    </message>
-    <message>
-        <source>Use the default data directory</source>
-        <translation type="unfinished">Użyj wychodnego folderu datōw</translation>
-    </message>
-    <message>
-        <source>Use a custom data directory:</source>
-        <translation type="unfinished">Użyj ôbranego folderu datōw</translation>
-    </message>
-</context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">wersyjŏ</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation type="unfinished">Ô %1</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">Ôpcyje piski nakŏzań</translation>
     </message>
 </context>
 <context>
@@ -1611,6 +1610,10 @@
     <message>
         <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
         <translation type="unfinished">Pozōr: Wykryto było klucze prywatne w portmanyju {%s} kery mŏ zastawiōne klucze prywatne</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">wychodny portmanyj</translation>
     </message>
     <message>
         <source>Done loading</source>

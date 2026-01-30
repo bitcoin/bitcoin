@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -41,6 +41,6 @@ static void POLY1305_1MB(benchmark::Bench& bench)
     POLY1305(bench, BUFFER_SIZE_LARGE);
 }
 
-BENCHMARK(POLY1305_64BYTES, benchmark::PriorityLevel::HIGH);
-BENCHMARK(POLY1305_256BYTES, benchmark::PriorityLevel::HIGH);
-BENCHMARK(POLY1305_1MB, benchmark::PriorityLevel::HIGH);
+BENCHMARK(POLY1305_64BYTES);
+BENCHMARK(POLY1305_256BYTES);
+BENCHMARK(POLY1305_1MB);

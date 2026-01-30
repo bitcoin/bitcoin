@@ -45,8 +45,12 @@ noinst_HEADERS += src/precomputed_ecmult.h
 noinst_HEADERS += src/precomputed_ecmult_gen.h
 noinst_HEADERS += src/assumptions.h
 noinst_HEADERS += src/checkmem.h
+noinst_HEADERS += src/tests_common.h
 noinst_HEADERS += src/testutil.h
+noinst_HEADERS += src/unit_test.h
+noinst_HEADERS += src/unit_test.c
 noinst_HEADERS += src/util.h
+noinst_HEADERS += src/util_local_visibility.h
 noinst_HEADERS += src/int128.h
 noinst_HEADERS += src/int128_impl.h
 noinst_HEADERS += src/int128_native.h
@@ -119,7 +123,7 @@ if USE_TESTS
 TESTS += noverify_tests
 noinst_PROGRAMS += noverify_tests
 noverify_tests_SOURCES = src/tests.c
-noverify_tests_CPPFLAGS = $(SECP_CONFIG_DEFINES)
+noverify_tests_CPPFLAGS = $(SECP_CONFIG_DEFINES) $(TEST_DEFINES)
 noverify_tests_LDADD = $(COMMON_LIB) $(PRECOMPUTED_LIB)
 noverify_tests_LDFLAGS = -static
 if !ENABLE_COVERAGE
@@ -249,9 +253,17 @@ maintainer-clean-local: clean-precomp
 ### (see the comments in the previous section for detailed rationale)
 TESTVECTORS = src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.h
 
+if ENABLE_MODULE_ECDH
+TESTVECTORS += src/wycheproof/ecdh_secp256k1_test.h
+endif
+
 src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.h:
 	mkdir -p $(@D)
-	python3 $(top_srcdir)/tools/tests_wycheproof_generate.py $(top_srcdir)/src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.json > $@
+	python3 $(top_srcdir)/tools/tests_wycheproof_generate_ecdsa.py $(top_srcdir)/src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.json > $@
+
+src/wycheproof/ecdh_secp256k1_test.h:
+	mkdir -p $(@D)
+	python3 $(top_srcdir)/tools/tests_wycheproof_generate_ecdh.py $(top_srcdir)/src/wycheproof/ecdh_secp256k1_test.json > $@
 
 testvectors: $(TESTVECTORS)
 
@@ -275,7 +287,9 @@ EXTRA_DIST += sage/secp256k1_params.sage
 EXTRA_DIST += sage/weierstrass_prover.sage
 EXTRA_DIST += src/wycheproof/WYCHEPROOF_COPYING
 EXTRA_DIST += src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.json
-EXTRA_DIST += tools/tests_wycheproof_generate.py
+EXTRA_DIST += src/wycheproof/ecdh_secp256k1_test.json
+EXTRA_DIST += tools/tests_wycheproof_generate_ecdsa.py
+EXTRA_DIST += tools/tests_wycheproof_generate_ecdh.py
 
 if ENABLE_MODULE_ECDH
 include src/modules/ecdh/Makefile.am.include

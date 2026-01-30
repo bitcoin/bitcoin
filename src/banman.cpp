@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -39,7 +39,7 @@ void BanMan::LoadBanlist()
         LogDebug(BCLog::NET, "Loaded %d banned node addresses/subnets  %dms\n", m_banned.size(),
                  Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
     } else {
-        LogPrintf("Recreating the banlist database\n");
+        LogInfo("Recreating the banlist database");
         m_banned = {};
         m_is_dirty = true;
     }

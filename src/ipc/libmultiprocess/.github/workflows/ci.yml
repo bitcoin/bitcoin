@@ -1,0 +1,159 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-netbsd:
+    runs-on: ubuntu-latest
+    name: build • netbsd ${{ matrix.release }}
+    defaults:
+      run:
+        shell: netbsd {0}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Test all supported releases.
+        # See https://www.netbsd.org/releases/.
+        include:
+          - release: 9.4
+            capnproto-cppflags: 'CPPFLAGS="-DKJ_NO_EXCEPTIONS=0 -DKJ_USE_KQUEUE=0"'
+          - release: 10.1
+            capnproto-cppflags: 'CPPFLAGS="-DKJ_NO_EXCEPTIONS=0"'
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Start NetBSD VM
+        uses: vmactions/netbsd-vm@v1
+        with:
+          release: ${{ matrix.release }}
+          # The installed compiler version must match the CXX variable
+          # defined in `ci/configs/netbsd.bash`.
+          prepare: |
+            pkg_add cmake ninja-build gcc14
+          # capnproto prerequisites.
+          # See the following "Install capnproto" step.
+          run: |
+            set -e
+            pkg_add digest libtool-base mktools pkgconf cwrappers
+            pkg_admin -K /usr/pkg/pkgdb fetch-pkg-vulnerabilities
+            cd /usr
+            cvs -danoncvs@anoncvs.NetBSD.org:/cvsroot checkout -P \
+              pkgsrc/devel/capnproto \
+              pkgsrc/devel/libtool-base \
+              pkgsrc/devel/pkgconf \
+              pkgsrc/devel/zlib \
+              `# gcc15 is referenced here because the pkgsrc framework requires lang/gcc15/version.mk to exist` \
+              `# during the "make install" step below, even though we compile our project with gcc14.` \
+              pkgsrc/lang/gcc15 \
+              pkgsrc/mk \
+              pkgsrc/pkgtools \
+              pkgsrc/security/openssl \
+              pkgsrc/sysutils/install-sh/files
+          sync: 'rsync'
+          copyback: false
+
+      - name: Install capnproto
+        run: |
+          cd /usr/pkgsrc/devel/capnproto/
+          unset PKG_PATH
+          make ${{ matrix.capnproto-cppflags }} install
+
+      - name: Run CI script
+        run: |
+          cd ${{ github.workspace }}
+          CI_CONFIG="ci/configs/netbsd.bash" bash ci/scripts/ci.sh
+
+  build-openbsd:
+    runs-on: ubuntu-latest
+    name: build • openbsd
+    defaults:
+      run:
+        shell: openbsd {0}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Start OpenBSD VM
+        uses: vmactions/openbsd-vm@v1
+        with:
+          prepare: |
+            pkg_add -v cmake ninja bash capnproto
+          sync: 'rsync'
+          copyback: false
+
+      - name: Run CI script
+        run: |
+          cd ${{ github.workspace }}
+          CI_CONFIG="ci/configs/openbsd.bash" bash ci/scripts/ci.sh
+
+  build-freebsd:
+    runs-on: ubuntu-latest
+    name: build • freebsd
+    defaults:
+      run:
+        shell: freebsd {0}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Start FreeBSD VM
+        uses: vmactions/freebsd-vm@v1
+        with:
+          prepare: |
+            pkg install -y cmake ninja bash capnproto
+          sync: 'rsync'
+          copyback: false
+
+      - name: Run CI script
+        run: |
+          cd ${{ github.workspace }}
+          CI_CONFIG="ci/configs/freebsd.bash" bash ci/scripts/ci.sh
+
+  build-macos:
+    runs-on: macos-latest
+    name: build • macos
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install dependencies
+        env:
+          HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+        run: |
+          brew install --quiet ninja capnp
+
+      - name: Run CI script
+        run: |
+          CI_CONFIG="ci/configs/macos.bash" bash ci/scripts/ci.sh
+
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      NIX_EXTRA_CONFIG_ACT: |
+        sandbox = false
+        filter-syscalls = false
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [default, llvm, gnu32, sanitize, olddeps]
+
+    name: build • ${{ matrix.config }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31       # 2025-05-27, from https://github.com/cachix/install-nix-action/tags
+        with:
+          nix_path: nixpkgs=channel:nixos-25.05   # latest release
+          # Act executes inside an unprivileged container (Docker or Podman),
+          # so KVM support isn't available.
+          enable_kvm: "${{ github.actor != 'nektos/act' }}"
+          extra_nix_config: ${{ github.actor == 'nektos/act' && env.NIX_EXTRA_CONFIG_ACT || '' }}
+
+      - name: Run CI script
+        env:
+          CI_CONFIG: ci/configs/${{ matrix.config }}.bash
+        run: ci/scripts/run.sh

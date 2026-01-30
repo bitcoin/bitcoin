@@ -1,5 +1,5 @@
 // Copyright (c) 2012 Pieter Wuille
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -172,7 +172,7 @@ public:
      *
      * @return                   A vector of randomly selected addresses from vRandom.
      */
-    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered = true) const;
+    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network, bool filtered = true) const;
 
     /**
      * Returns an information-location pair for all addresses in the selected addrman table.

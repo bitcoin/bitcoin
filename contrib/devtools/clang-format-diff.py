@@ -169,7 +169,7 @@ def main():
             sys.exit(p.returncode)
 
         if not args.i:
-            with open(filename, encoding="utf8") as f:
+            with open(filename) as f:
                 code = f.readlines()
             formatted_code = StringIO(stdout).readlines()
             diff = difflib.unified_diff(

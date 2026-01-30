@@ -1,15 +1,20 @@
+// Copyright (c) 2024-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <compat/byteswap.h>
-#include <crypto/common.h> // For ReadBE32
+#include <crypto/common.h>
 #include <logging.h>
 #include <streams.h>
 #include <util/translation.h>
 #include <wallet/migrate.h>
 
+#include <array>
+#include <cstddef>
 #include <optional>
+#include <stdexcept>
 #include <variant>
+#include <vector>
 
 namespace wallet {
 // Magic bytes in both endianness's
@@ -539,8 +544,7 @@ void BerkeleyRODatabase::Open()
     page_size = outer_meta.pagesize;
 
     // Verify the size of the file is a multiple of the page size
-    db_file.seek(0, SEEK_END);
-    int64_t size = db_file.tell();
+    const int64_t size{db_file.size()};
 
     // Since BDB stores everything in a page, the file size should be a multiple of the page size;
     // However, BDB doesn't actually check that this is the case, and enforcing this check results
@@ -699,7 +703,7 @@ void BerkeleyRODatabase::Open()
     }
 }
 
-std::unique_ptr<DatabaseBatch> BerkeleyRODatabase::MakeBatch(bool flush_on_close)
+std::unique_ptr<DatabaseBatch> BerkeleyRODatabase::MakeBatch()
 {
     return std::make_unique<BerkeleyROBatch>(*this);
 }
@@ -714,15 +718,15 @@ bool BerkeleyRODatabase::Backup(const std::string& dest) const
     }
     try {
         if (fs::exists(dst) && fs::equivalent(src, dst)) {
-            LogPrintf("cannot backup to wallet source file %s\n", fs::PathToString(dst));
+            LogWarning("cannot backup to wallet source file %s", fs::PathToString(dst));
             return false;
         }
 
         fs::copy_file(src, dst, fs::copy_options::overwrite_existing);
-        LogPrintf("copied %s to %s\n", fs::PathToString(m_filepath), fs::PathToString(dst));
+        LogInfo("copied %s to %s\n", fs::PathToString(m_filepath), fs::PathToString(dst));
         return true;
     } catch (const fs::filesystem_error& e) {
-        LogPrintf("error copying %s to %s - %s\n", fs::PathToString(m_filepath), fs::PathToString(dst), fsbridge::get_filesystem_error_message(e));
+        LogWarning("error copying %s to %s - %s\n", fs::PathToString(m_filepath), fs::PathToString(dst), e.code().message());
         return false;
     }
 }
@@ -743,7 +747,7 @@ bool BerkeleyROBatch::ReadKey(DataStream&& key, DataStream& value)
 bool BerkeleyROBatch::HasKey(DataStream&& key)
 {
     SerializeData key_data{key.begin(), key.end()};
-    return m_database.m_records.count(key_data) > 0;
+    return m_database.m_records.contains(key_data);
 }
 
 BerkeleyROCursor::BerkeleyROCursor(const BerkeleyRODatabase& database, std::span<const std::byte> prefix)

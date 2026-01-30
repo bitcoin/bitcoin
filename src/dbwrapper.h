@@ -18,7 +18,6 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 static const size_t DBWRAPPER_PREALLOC_KEY_SIZE = 64;
 static const size_t DBWRAPPER_PREALLOC_VALUE_SIZE = 1024;
@@ -63,8 +62,7 @@ namespace dbwrapper_private {
  * Database obfuscation should be considered an implementation detail of the
  * specific database.
  */
-const std::vector<unsigned char>& GetObfuscateKey(const CDBWrapper &w);
-
+const Obfuscation& GetObfuscation(const CDBWrapper&);
 }; // namespace dbwrapper_private
 
 bool DestroyDB(const std::string& path_str);
@@ -166,7 +164,7 @@ public:
     template<typename V> bool GetValue(V& value) {
         try {
             DataStream ssValue{GetValueImpl()};
-            ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
+            dbwrapper_private::GetObfuscation(parent)(ssValue);
             ssValue >> value;
         } catch (const std::exception&) {
             return false;
@@ -179,7 +177,7 @@ struct LevelDBContext;
 
 class CDBWrapper
 {
-    friend const std::vector<unsigned char>& dbwrapper_private::GetObfuscateKey(const CDBWrapper &w);
+    friend const Obfuscation& dbwrapper_private::GetObfuscation(const CDBWrapper&);
 private:
     //! holds all leveldb-specific fields of this class
     std::unique_ptr<LevelDBContext> m_db_context;
@@ -187,22 +185,11 @@ private:
     //! the name of this database
     std::string m_name;
 
-    //! a key used for optional XOR-obfuscation of the database
-    std::vector<unsigned char> obfuscate_key;
+    //! optional XOR-obfuscation of the database
+    Obfuscation m_obfuscation;
 
-    //! the key under which the obfuscation key is stored
-    static const std::string OBFUSCATE_KEY_KEY;
-
-    //! the length of the obfuscate key in number of bytes
-    static const unsigned int OBFUSCATE_KEY_NUM_BYTES;
-
-    std::vector<unsigned char> CreateObfuscateKey() const;
-
-    //! path to filesystem storage
-    const fs::path m_path;
-
-    //! whether or not the database resides in memory
-    bool m_is_memory;
+    //! obfuscation key storage key, null-prefixed to avoid collisions
+    inline static const std::string OBFUSCATION_KEY{"\000obfuscate_key", 14}; // explicit size to avoid truncation at leading \0
 
     std::optional<std::string> ReadImpl(std::span<const std::byte> key) const;
     bool ExistsImpl(std::span<const std::byte> key) const;
@@ -228,7 +215,7 @@ public:
         }
         try {
             DataStream ssValue{MakeByteSpan(*strValue)};
-            ssValue.Xor(obfuscate_key);
+            m_obfuscation(ssValue);
             ssValue >> value;
         } catch (const std::exception&) {
             return false;
@@ -237,19 +224,11 @@ public:
     }
 
     template <typename K, typename V>
-    bool Write(const K& key, const V& value, bool fSync = false)
+    void Write(const K& key, const V& value, bool fSync = false)
     {
         CDBBatch batch(*this);
         batch.Write(key, value);
-        return WriteBatch(batch, fSync);
-    }
-
-    //! @returns filesystem path to the on-disk data.
-    std::optional<fs::path> StoragePath() {
-        if (m_is_memory) {
-            return {};
-        }
-        return m_path;
+        WriteBatch(batch, fSync);
     }
 
     template <typename K>
@@ -262,14 +241,14 @@ public:
     }
 
     template <typename K>
-    bool Erase(const K& key, bool fSync = false)
+    void Erase(const K& key, bool fSync = false)
     {
         CDBBatch batch(*this);
         batch.Erase(key);
-        return WriteBatch(batch, fSync);
+        WriteBatch(batch, fSync);
     }
 
-    bool WriteBatch(CDBBatch& batch, bool fSync = false);
+    void WriteBatch(CDBBatch& batch, bool fSync = false);
 
     // Get an estimate of LevelDB memory usage (in bytes).
     size_t DynamicMemoryUsage() const;

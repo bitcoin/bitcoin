@@ -95,7 +95,7 @@ void RandAddPeriodic() noexcept;
  *
  * Thread-safe.
  */
-void RandAddEvent(const uint32_t event_info) noexcept;
+void RandAddEvent(uint32_t event_info) noexcept;
 
 
 /* =========================== BASE RANDOMNESS GENERATION FUNCTIONS ===========================
@@ -297,6 +297,15 @@ public:
     std::vector<B> randbytes(size_t len) noexcept
     {
         std::vector<B> ret(len);
+        Impl().fillrand(MakeWritableByteSpan(ret));
+        return ret;
+    }
+
+    /** Generate fixed-size random bytes. */
+    template <size_t N, BasicByte B = std::byte>
+    std::array<B, N> randbytes() noexcept
+    {
+        std::array<B, N> ret;
         Impl().fillrand(MakeWritableByteSpan(ret));
         return ret;
     }

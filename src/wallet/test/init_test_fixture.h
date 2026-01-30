@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2021 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,7 +14,7 @@
 
 namespace wallet {
 struct InitWalletDirTestingSetup: public BasicTestingSetup {
-    explicit InitWalletDirTestingSetup(const ChainType chain_type = ChainType::MAIN);
+    explicit InitWalletDirTestingSetup(ChainType chain_type = ChainType::MAIN);
     ~InitWalletDirTestingSetup();
     void SetWalletDir(const fs::path& walletdir_path);
 

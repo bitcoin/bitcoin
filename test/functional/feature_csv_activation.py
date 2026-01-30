@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2022 The Bitcoin Core developers
+# Copyright (c) 2015-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test CSV soft fork activation.
@@ -100,10 +100,9 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.extra_args = [[
             f'-testactivationheight=csv@{CSV_ACTIVATION_HEIGHT}',
         ]]
-        self.supports_cli = False
 
     def create_self_transfer_from_utxo(self, input_tx):
-        utxo = self.miniwallet.get_utxo(txid=input_tx.rehash(), mark_as_spent=False)
+        utxo = self.miniwallet.get_utxo(txid=input_tx.txid_hex, mark_as_spent=False)
         tx = self.miniwallet.create_self_transfer(utxo_to_spend=utxo)['tx']
         return tx
 
@@ -112,7 +111,6 @@ class BIP68_112_113Test(BitcoinTestFramework):
         tx.version = txversion
         self.miniwallet.sign_tx(tx)
         tx.vin[0].scriptSig = CScript([-1, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
-        tx.rehash()
         return tx
 
     def create_bip112emptystack(self, input, txversion):
@@ -120,7 +118,6 @@ class BIP68_112_113Test(BitcoinTestFramework):
         tx.version = txversion
         self.miniwallet.sign_tx(tx)
         tx.vin[0].scriptSig = CScript([OP_CHECKSEQUENCEVERIFY] + list(CScript(tx.vin[0].scriptSig)))
-        tx.rehash()
         return tx
 
     def send_generic_input_tx(self, coinbases):
@@ -159,7 +156,6 @@ class BIP68_112_113Test(BitcoinTestFramework):
                 tx.vin[0].scriptSig = CScript([locktime, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
             else:
                 tx.vin[0].scriptSig = CScript([BASE_RELATIVE_LOCKTIME, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
-            tx.rehash()
             txs.append({'tx': tx, 'sdf': sdf, 'stf': stf})
         return txs
 
@@ -169,7 +165,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
             block = self.create_test_block([])
             test_blocks.append(block)
             self.last_block_time += 600
-            self.tip = block.sha256
+            self.tip = block.hash_int
             self.tipheight += 1
         return test_blocks
 
@@ -407,9 +403,9 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
         # -1 OP_CSV tx and (empty stack) OP_CSV tx should fail
         self.send_blocks([self.create_test_block([bip112tx_special_v1])], success=False,
-                         reject_reason='mandatory-script-verify-flag-failed (Negative locktime)')
+                         reject_reason='block-script-verify-flag-failed (Negative locktime)')
         self.send_blocks([self.create_test_block([bip112tx_emptystack_v1])], success=False,
-                         reject_reason='mandatory-script-verify-flag-failed (Operation not valid with the current stack size)')
+                         reject_reason='block-script-verify-flag-failed (Operation not valid with the current stack size)')
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is set in argument to OP_CSV, version 1 txs should still pass
 
         success_txs = [tx['tx'] for tx in bip112txs_vary_OP_CSV_v1 if tx['sdf']]
@@ -424,15 +420,15 @@ class BIP68_112_113Test(BitcoinTestFramework):
         fail_txs += [tx['tx'] for tx in bip112txs_vary_OP_CSV_9_v1 if not tx['sdf']]
         for tx in fail_txs:
             self.send_blocks([self.create_test_block([tx])], success=False,
-                             reject_reason='mandatory-script-verify-flag-failed (Locktime requirement not satisfied)')
+                             reject_reason='block-script-verify-flag-failed (Locktime requirement not satisfied)')
 
         self.log.info("Test version 2 txs")
 
         # -1 OP_CSV tx and (empty stack) OP_CSV tx should fail
         self.send_blocks([self.create_test_block([bip112tx_special_v2])], success=False,
-                         reject_reason='mandatory-script-verify-flag-failed (Negative locktime)')
+                         reject_reason='block-script-verify-flag-failed (Negative locktime)')
         self.send_blocks([self.create_test_block([bip112tx_emptystack_v2])], success=False,
-                         reject_reason='mandatory-script-verify-flag-failed (Operation not valid with the current stack size)')
+                         reject_reason='block-script-verify-flag-failed (Operation not valid with the current stack size)')
 
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is set in argument to OP_CSV, version 2 txs should pass (all sequence locks are met)
         success_txs = [tx['tx'] for tx in bip112txs_vary_OP_CSV_v2 if tx['sdf']]
@@ -448,20 +444,20 @@ class BIP68_112_113Test(BitcoinTestFramework):
         fail_txs += [tx['tx'] for tx in bip112txs_vary_OP_CSV_9_v2 if not tx['sdf']]
         for tx in fail_txs:
             self.send_blocks([self.create_test_block([tx])], success=False,
-                             reject_reason='mandatory-script-verify-flag-failed (Locktime requirement not satisfied)')
+                             reject_reason='block-script-verify-flag-failed (Locktime requirement not satisfied)')
 
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is set in nSequence, tx should fail
         fail_txs = [tx['tx'] for tx in bip112txs_vary_nSequence_v2 if tx['sdf']]
         for tx in fail_txs:
             self.send_blocks([self.create_test_block([tx])], success=False,
-                             reject_reason='mandatory-script-verify-flag-failed (Locktime requirement not satisfied)')
+                             reject_reason='block-script-verify-flag-failed (Locktime requirement not satisfied)')
 
         # If sequencelock types mismatch, tx should fail
         fail_txs = [tx['tx'] for tx in bip112txs_vary_nSequence_v2 if not tx['sdf'] and tx['stf']]
         fail_txs += [tx['tx'] for tx in bip112txs_vary_OP_CSV_v2 if not tx['sdf'] and tx['stf']]
         for tx in fail_txs:
             self.send_blocks([self.create_test_block([tx])], success=False,
-                             reject_reason='mandatory-script-verify-flag-failed (Locktime requirement not satisfied)')
+                             reject_reason='block-script-verify-flag-failed (Locktime requirement not satisfied)')
 
         # Remaining txs should pass, just test masking works properly
         success_txs = [tx['tx'] for tx in bip112txs_vary_nSequence_v2 if not tx['sdf'] and not tx['stf']]

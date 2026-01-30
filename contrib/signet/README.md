@@ -80,3 +80,4 @@ These steps can instead be done explicitly:
 
 This is intended to allow you to replace part of the pipeline for further experimentation (eg, to sign the block with a hardware wallet).
 
+For custom signets with a trivial challenge such as `OP_TRUE` and `OP_2` the walletprocesspsbt step can be skipped.

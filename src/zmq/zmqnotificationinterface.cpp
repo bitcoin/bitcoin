@@ -1,12 +1,12 @@
-// Copyright (c) 2015-2022 The Bitcoin Core developers
+// Copyright (c) 2015-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <zmq/zmqnotificationinterface.h>
 
 #include <common/args.h>
-#include <kernel/chain.h>
 #include <kernel/mempool_entry.h>
+#include <kernel/types.h>
 #include <logging.h>
 #include <netbase.h>
 #include <primitives/block.h>
@@ -24,6 +24,8 @@
 #include <utility>
 #include <vector>
 
+using kernel::ChainstateRole;
+
 CZMQNotificationInterface::CZMQNotificationInterface() = default;
 
 CZMQNotificationInterface::~CZMQNotificationInterface()
@@ -40,7 +42,7 @@ std::list<const CZMQAbstractNotifier*> CZMQNotificationInterface::GetActiveNotif
     return result;
 }
 
-std::unique_ptr<CZMQNotificationInterface> CZMQNotificationInterface::Create(std::function<bool(std::vector<uint8_t>&, const CBlockIndex&)> get_block_by_index)
+std::unique_ptr<CZMQNotificationInterface> CZMQNotificationInterface::Create(std::function<bool(std::vector<std::byte>&, const CBlockIndex&)> get_block_by_index)
 {
     std::map<std::string, CZMQNotifierFactory> factories;
     factories["pubhashblock"] = CZMQAbstractNotifier::Create<CZMQPublishHashBlockNotifier>;
@@ -176,9 +178,9 @@ void CZMQNotificationInterface::TransactionRemovedFromMempool(const CTransaction
     });
 }
 
-void CZMQNotificationInterface::BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected)
+void CZMQNotificationInterface::BlockConnected(const ChainstateRole& role, const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected)
 {
-    if (role == ChainstateRole::BACKGROUND) {
+    if (role.historical) {
         return;
     }
     for (const CTransactionRef& ptx : pblock->vtx) {

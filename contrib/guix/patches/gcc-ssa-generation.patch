@@ -1,0 +1,49 @@
+commit b46614ebfc57ccca8a050668ad0e8ba5968c5943
+Author: Jakub Jelinek <jakub@redhat.com>
+Date:   Tue Jan 6 08:36:20 2026 +0100
+
+    tree-object-size: Deterministic SSA generation [PR123351]
+    
+    The order of evaluation of function arguments is unspecified in C++.
+    The function object_sizes_set_temp called object_sizes_set with two
+    calls to make_ssa_name() as arguments.  Since make_ssa_name() has the
+    side effect of incrementing the global SSA version counter, different
+    architectures of the same compiler evaluated these calls in different
+    orders.
+    
+    This resulted in non-deterministic SSA version numbering between
+    x86_64 and aarch64 hosts during cross-compilation, leading to
+    divergent object files.
+    
+    Sequencing the calls into separate statements ensures deterministic
+    evaluation order.
+
+    https://gcc.gnu.org/bugzilla/show_bug.cgi?id=123351
+    https://gcc.gnu.org/pipermail/gcc-patches/2026-January/704817.html
+    
+    2026-01-06  Jakub Jelinek  <jakub@redhat.com>
+                Marco Falke  <falke.marco@gmail.com>
+    
+            PR tree-optimization/123351
+            * tree-object-size.cc (object_sizes_set_temp): Separate calls to
+            make_ssa_name to ensure deterministic execution order.
+
+diff --git a/gcc/tree-object-size.cc b/gcc/tree-object-size.cc
+index 018fbc30cbb..24e7d710371 100644
+--- a/gcc/tree-object-size.cc
++++ b/gcc/tree-object-size.cc
+@@ -319,9 +319,11 @@ object_sizes_set_temp (struct object_size_info *osi, unsigned varno)
+   tree val = object_sizes_get (osi, varno);
+ 
+   if (size_initval_p (val, osi->object_size_type))
+-    object_sizes_set (osi, varno,
+-		      make_ssa_name (sizetype),
+-		      make_ssa_name (sizetype));
++    {
++      val = make_ssa_name (sizetype);
++      tree wholeval = make_ssa_name (sizetype);
++      object_sizes_set (osi, varno, val, wholeval);
++    }
+ }
+ 
+ /* Initialize OFFSET_LIMIT variable.  */

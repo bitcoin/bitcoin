@@ -81,6 +81,15 @@ assert (A1 + A2)/2 < sqrt(N)
 assert B1 < sqrt(N)
 assert B2 < sqrt(N)
 
+# Verify connection to Eisenstein integers Z[w] where w = (-1 + sqrt(-3))/2.
+# The group order N factors as N = pi * conj(pi) in Z[w], where pi = A - B*w
+# is an Eisenstein prime with norm A^2 + A*B + B^2. The GLV endomorphism
+# eigenvalue LAMBDA equals B/A mod N, which is the image of w^2 under the
+# isomorphism Z[w]/(pi) -> Z/NZ (since w -> A/B and (A/B)^2 = B/A in Z/NZ).
+A_EIS, B_EIS = -B1, A1
+assert A_EIS**2 + A_EIS*B_EIS + B_EIS**2 == N
+assert Z(B_EIS / A_EIS) == LAMBDA
+
 G1 = round((2**384)*B2/N)
 G2 = round((2**384)*(-B1)/N)
 

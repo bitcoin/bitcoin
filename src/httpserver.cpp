@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2022 The Bitcoin Core developers
+// Copyright (c) 2015-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,7 +11,7 @@
 #include <logging.h>
 #include <netbase.h>
 #include <node/interface_ui.h>
-#include <rpc/protocol.h> // For HTTP status codes
+#include <rpc/protocol.h>
 #include <sync.h>
 #include <util/check.h>
 #include <util/signalinterrupt.h>
@@ -27,7 +27,9 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <thread>
 #include <unordered_map>
+#include <vector>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -227,8 +229,8 @@ static bool InitHTTPAllowList()
         const CSubNet subnet{LookupSubNet(strAllow)};
         if (!subnet.IsValid()) {
             uiInterface.ThreadSafeMessageBox(
-                Untranslated(strprintf("Invalid -rpcallowip subnet specification: %s. Valid are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24).", strAllow)),
-                "", CClientUIInterface::MSG_ERROR);
+                Untranslated(strprintf("Invalid -rpcallowip subnet specification: %s. Valid values are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0), a network/CIDR (e.g. 1.2.3.4/24), all ipv4 (0.0.0.0/0), or all ipv6 (::/0). RFC4193 is allowed only if -cjdnsreachable=0.", strAllow)),
+                CClientUIInterface::MSG_ERROR);
             return false;
         }
         rpc_allow_subnets.push_back(subnet);
@@ -328,9 +330,9 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
         std::unique_ptr<HTTPWorkItem> item(new HTTPWorkItem(std::move(hreq), path, i->handler));
         assert(g_work_queue);
         if (g_work_queue->Enqueue(item.get())) {
-            item.release(); /* if true, queue took ownership */
+            (void)item.release(); /* if true, queue took ownership */
         } else {
-            LogPrintf("WARNING: request rejected because http work queue depth exceeded, it can be increased with the -rpcworkqueue= setting\n");
+            LogWarning("Request rejected because http work queue depth exceeded, it can be increased with the -rpcworkqueue= setting");
             item->req->WriteReply(HTTP_SERVICE_UNAVAILABLE, "Work queue depth exceeded");
         }
     } else {
@@ -370,10 +372,10 @@ static bool HTTPBindAddresses(struct evhttp* http)
         endpoints.emplace_back("::1", http_port);
         endpoints.emplace_back("127.0.0.1", http_port);
         if (!gArgs.GetArgs("-rpcallowip").empty()) {
-            LogPrintf("WARNING: option -rpcallowip was specified without -rpcbind; this doesn't usually make sense\n");
+            LogWarning("Option -rpcallowip was specified without -rpcbind; this doesn't usually make sense");
         }
         if (!gArgs.GetArgs("-rpcbind").empty()) {
-            LogPrintf("WARNING: option -rpcbind was ignored because -rpcallowip was not specified, refusing to allow everyone to connect\n");
+            LogWarning("Option -rpcbind was ignored because -rpcallowip was not specified, refusing to allow everyone to connect");
         }
     } else { // Specific bind addresses
         for (const std::string& strRPCBind : gArgs.GetArgs("-rpcbind")) {
@@ -389,22 +391,22 @@ static bool HTTPBindAddresses(struct evhttp* http)
 
     // Bind addresses
     for (std::vector<std::pair<std::string, uint16_t> >::iterator i = endpoints.begin(); i != endpoints.end(); ++i) {
-        LogPrintf("Binding RPC on address %s port %i\n", i->first, i->second);
+        LogInfo("Binding RPC on address %s port %i", i->first, i->second);
         evhttp_bound_socket *bind_handle = evhttp_bind_socket_with_handle(http, i->first.empty() ? nullptr : i->first.c_str(), i->second);
         if (bind_handle) {
             const std::optional<CNetAddr> addr{LookupHost(i->first, false)};
             if (i->first.empty() || (addr.has_value() && addr->IsBindAny())) {
-                LogPrintf("WARNING: the RPC server is not safe to expose to untrusted networks such as the public internet\n");
+                LogWarning("The RPC server is not safe to expose to untrusted networks such as the public internet");
             }
             // Set the no-delay option (disable Nagle's algorithm) on the TCP socket.
             evutil_socket_t fd = evhttp_bound_socket_get_fd(bind_handle);
             int one = 1;
-            if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (sockopt_arg_type)&one, sizeof(one)) == SOCKET_ERROR) {
+            if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char*>(&one), sizeof(one)) == SOCKET_ERROR) {
                 LogInfo("WARNING: Unable to set TCP_NODELAY on RPC server socket, continuing anyway\n");
             }
             boundSockets.push_back(bind_handle);
         } else {
-            LogPrintf("Binding RPC on address %s port %i failed.\n", i->first, i->second);
+            LogWarning("Binding RPC on address %s port %i failed.", i->first, i->second);
         }
     }
     return !boundSockets.empty();
@@ -420,22 +422,20 @@ static void HTTPWorkQueueRun(WorkQueue<HTTPClosure>* queue, int worker_num)
 /** libevent event log callback */
 static void libevent_log_cb(int severity, const char *msg)
 {
-    BCLog::Level level;
     switch (severity) {
     case EVENT_LOG_DEBUG:
-        level = BCLog::Level::Debug;
+        LogDebug(BCLog::LIBEVENT, "%s", msg);
         break;
     case EVENT_LOG_MSG:
-        level = BCLog::Level::Info;
+        LogInfo("libevent: %s", msg);
         break;
     case EVENT_LOG_WARN:
-        level = BCLog::Level::Warning;
+        LogWarning("libevent: %s", msg);
         break;
     default: // EVENT_LOG_ERR and others are mapped to error
-        level = BCLog::Level::Error;
+        LogError("libevent: %s", msg);
         break;
     }
-    LogPrintLevel(BCLog::LIBEVENT, level, "%s\n", msg);
 }
 
 bool InitHTTPServer(const util::SignalInterrupt& interrupt)
@@ -460,7 +460,7 @@ bool InitHTTPServer(const util::SignalInterrupt& interrupt)
     raii_evhttp http_ctr = obtain_evhttp(base_ctr.get());
     struct evhttp* http = http_ctr.get();
     if (!http) {
-        LogPrintf("couldn't create evhttp. Exiting.\n");
+        LogError("Couldn't create evhttp. Exiting.");
         return false;
     }
 
@@ -470,7 +470,7 @@ bool InitHTTPServer(const util::SignalInterrupt& interrupt)
     evhttp_set_gencb(http, http_request_cb, (void*)&interrupt);
 
     if (!HTTPBindAddresses(http)) {
-        LogPrintf("Unable to bind any endpoint for RPC server\n");
+        LogError("Unable to bind any endpoint for RPC server");
         return false;
     }
 
@@ -600,7 +600,7 @@ HTTPRequest::~HTTPRequest()
 {
     if (!replySent) {
         // Keep track of whether reply was sent to avoid request leaks
-        LogPrintf("%s: Unhandled request\n", __func__);
+        LogWarning("Unhandled HTTP request");
         WriteReply(HTTP_INTERNAL_SERVER_ERROR, "Unhandled request");
     }
     // evhttpd cleans up the request, as long as a reply was sent.

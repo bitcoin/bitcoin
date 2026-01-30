@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;Bayu</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Kopyan me ing makalage address king system clipboard</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Kopyan</translation>
     </message>
@@ -386,7 +382,22 @@
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">bersion</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">Pipamilian command-line</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Malaus ka</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
@@ -415,21 +426,6 @@
     <message>
         <source>Error</source>
         <translation type="unfinished">Mali</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Malaus ka</translation>
-    </message>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">bersion</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">Pipamilian command-line</translation>
     </message>
 </context>
 <context>
@@ -745,10 +741,6 @@
     <message>
         <source>Signature</source>
         <translation type="unfinished">Pirma</translation>
-    </message>
-    <message>
-        <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished">Kopyan ing kasalungsungan pirma king system clipboard</translation>
     </message>
     <message>
         <source>Sign the message to prove you own this Bitcoin address</source>

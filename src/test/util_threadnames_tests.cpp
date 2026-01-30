@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2021 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(util_threadnames_test_rename_threaded)
 
     // Names "test_thread.[n]" should exist for n = [0, 99]
     for (int i = 0; i < 100; ++i) {
-        BOOST_CHECK(names.find(TEST_THREAD_NAME_BASE + ToString(i)) != names.end());
+        BOOST_CHECK(names.contains(TEST_THREAD_NAME_BASE + ToString(i)));
     }
 
 }

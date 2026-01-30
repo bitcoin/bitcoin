@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the invalidateblock RPC."""
@@ -84,6 +84,31 @@ class InvalidateTest(BitcoinTestFramework):
         self.wait_until(lambda: self.nodes[2].getblockcount() == 3, timeout=5)
         self.wait_until(lambda: self.nodes[0].getblockcount() == 4, timeout=5)
         self.wait_until(lambda: self.nodes[1].getblockcount() == 4, timeout=5)
+
+        self.log.info("Verify that ancestors can become chain tip candidates when we reconsider blocks")
+        # Invalidate node0's current chain (1' -> 2' -> 3' -> 4') so that we don't reorg back to it in this test
+        badhash = self.nodes[0].getblockhash(1)
+        self.nodes[0].invalidateblock(badhash)
+        # Reconsider the tip so that node0's chain becomes this chain again : 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> header 7
+        self.nodes[0].reconsiderblock(tip)
+        blockhash_3 = self.nodes[0].getblockhash(3)
+        blockhash_4 = self.nodes[0].getblockhash(4)
+        blockhash_6 = self.nodes[0].getblockhash(6)
+        assert_equal(self.nodes[0].getbestblockhash(), blockhash_6)
+
+        # Invalidate block 4 so that chain becomes : 1 -> 2 -> 3
+        self.nodes[0].invalidateblock(blockhash_4)
+        assert_equal(self.nodes[0].getbestblockhash(), blockhash_3)
+        assert_equal(self.nodes[0].getblockchaininfo()['blocks'], 3)
+        assert_equal(self.nodes[0].getblockchaininfo()['headers'], 3)
+
+        # Reconsider the header
+        self.nodes[0].reconsiderblock(block.hash_hex)
+        # Since header doesn't have block data, it can't be chain tip
+        # Check if it's possible for an ancestor (with block data) to be the chain tip
+        assert_equal(self.nodes[0].getbestblockhash(), blockhash_6)
+        assert_equal(self.nodes[0].getblockchaininfo()['blocks'], 6)
+        assert_equal(self.nodes[0].getblockchaininfo()['headers'], 7)
 
         self.log.info("Verify that we reconsider all ancestors as well")
         blocks = self.generatetodescriptor(self.nodes[1], 10, ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR, sync_fun=self.no_op)

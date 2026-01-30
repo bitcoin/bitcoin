@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <kernel/mempool_entry.h>
-#include <policy/fees.h>
-#include <policy/fees_args.h>
+#include <policy/fees/block_policy_estimator.h>
+#include <policy/fees/block_policy_estimator_args.h>
 #include <primitives/transaction.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -74,7 +74,7 @@ FUZZ_TARGET(policy_estimator, .init = initialize_policy_estimator)
                         break;
                     }
                     const CTransaction tx{*mtx};
-                    mempool_entries.emplace_back(CTxMemPoolEntry::ExplicitCopy, ConsumeTxMemPoolEntry(fuzzed_data_provider, tx, current_height));
+                    mempool_entries.push_back(ConsumeTxMemPoolEntry(fuzzed_data_provider, tx, current_height));
                 }
                 std::vector<RemovedMempoolTransactionInfo> txs;
                 txs.reserve(mempool_entries.size());
@@ -85,7 +85,7 @@ FUZZ_TARGET(policy_estimator, .init = initialize_policy_estimator)
                 block_policy_estimator.processBlock(txs, current_height);
             },
             [&] {
-                (void)block_policy_estimator.removeTx(ConsumeUInt256(fuzzed_data_provider));
+                (void)block_policy_estimator.removeTx(Txid::FromUint256(ConsumeUInt256(fuzzed_data_provider)));
             },
             [&] {
                 block_policy_estimator.FlushUnconfirmed();
@@ -111,5 +111,6 @@ FUZZ_TARGET(policy_estimator, .init = initialize_policy_estimator)
         AutoFile fuzzed_auto_file{fuzzed_file_provider.open()};
         block_policy_estimator.Write(fuzzed_auto_file);
         block_policy_estimator.Read(fuzzed_auto_file);
+        (void)fuzzed_auto_file.fclose();
     }
 }

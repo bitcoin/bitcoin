@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -80,7 +80,7 @@ static bool CheckOrphanBehavior(node::TxDownloadManagerImpl& txdownload_impl, co
         return false;
     }
 
-    if (expect_orphan != txdownload_impl.m_orphanage.HaveTx(tx->GetWitnessHash())) {
+    if (expect_orphan != txdownload_impl.m_orphanage->HaveTx(tx->GetWitnessHash())) {
         err_msg = strprintf("unexpectedly %s tx in orphanage", expect_orphan ? "did not find" : "found");
         return false;
     }
@@ -114,7 +114,7 @@ BOOST_FIXTURE_TEST_CASE(tx_rejection_types, TestChain100Setup)
 {
     CTxMemPool& pool = *Assert(m_node.mempool);
     FastRandomContext det_rand{true};
-    node::TxDownloadOptions DEFAULT_OPTS{pool, det_rand, DEFAULT_MAX_ORPHAN_TRANSACTIONS, true};
+    node::TxDownloadOptions DEFAULT_OPTS{pool, det_rand, true};
 
     // A new TxDownloadManagerImpl is created for each tx so we can just reuse the same one.
     TxValidationState state;
@@ -126,10 +126,10 @@ BOOST_FIXTURE_TEST_CASE(tx_rejection_types, TestChain100Setup)
         for (const auto segwit_child : {true, false}) {
             const auto ptx_parent = CreatePlaceholderTx(segwit_parent);
             const auto ptx_child = CreatePlaceholderTx(segwit_child);
-            const auto& parent_txid = ptx_parent->GetHash().ToUint256();
-            const auto& parent_wtxid = ptx_parent->GetWitnessHash().ToUint256();
-            const auto& child_txid = ptx_child->GetHash().ToUint256();
-            const auto& child_wtxid = ptx_child->GetWitnessHash().ToUint256();
+            const auto& parent_txid = ptx_parent->GetHash();
+            const auto& parent_wtxid = ptx_parent->GetWitnessHash();
+            const auto& child_txid = ptx_child->GetHash();
+            const auto& child_wtxid = ptx_child->GetWitnessHash();
 
             for (const auto& [result, expected_behavior] : expected_behaviors) {
                 node::TxDownloadManagerImpl txdownload_impl{DEFAULT_OPTS};
@@ -141,13 +141,13 @@ BOOST_FIXTURE_TEST_CASE(tx_rejection_types, TestChain100Setup)
                 // No distinction between txid and wtxid caching for nonsegwit transactions, so only test these specific
                 // behaviors for segwit transactions.
                 Behaviors actual_behavior{
-                    /*txid_rejects=*/txdownload_impl.RecentRejectsFilter().contains(parent_txid),
-                    /*wtxid_rejects=*/txdownload_impl.RecentRejectsFilter().contains(parent_wtxid),
-                    /*txid_recon=*/txdownload_impl.RecentRejectsReconsiderableFilter().contains(parent_txid),
-                    /*wtxid_recon=*/txdownload_impl.RecentRejectsReconsiderableFilter().contains(parent_wtxid),
+                    /*txid_rejects=*/txdownload_impl.RecentRejectsFilter().contains(parent_txid.ToUint256()),
+                    /*wtxid_rejects=*/txdownload_impl.RecentRejectsFilter().contains(parent_wtxid.ToUint256()),
+                    /*txid_recon=*/txdownload_impl.RecentRejectsReconsiderableFilter().contains(parent_txid.ToUint256()),
+                    /*wtxid_recon=*/txdownload_impl.RecentRejectsReconsiderableFilter().contains(parent_wtxid.ToUint256()),
                     /*keep=*/keep,
-                    /*txid_inv=*/txdownload_impl.AddTxAnnouncement(nodeid, GenTxid::Txid(parent_txid), now),
-                    /*wtxid_inv=*/txdownload_impl.AddTxAnnouncement(nodeid, GenTxid::Wtxid(parent_wtxid), now),
+                    /*txid_inv=*/txdownload_impl.AddTxAnnouncement(nodeid, parent_txid, now),
+                    /*wtxid_inv=*/txdownload_impl.AddTxAnnouncement(nodeid, parent_wtxid, now),
                 };
                 BOOST_TEST_MESSAGE("Testing behavior for " << result << (segwit_parent ? " segwit " : " nonsegwit"));
                 actual_behavior.CheckEqual(expected_behavior, /*segwit=*/segwit_parent);
@@ -158,11 +158,11 @@ BOOST_FIXTURE_TEST_CASE(tx_rejection_types, TestChain100Setup)
 
                 // If parent (by txid) was rejected, child is too.
                 const bool parent_txid_rejected{segwit_parent ? expected_behavior.m_txid_in_rejects : expected_behavior.m_wtxid_in_rejects};
-                BOOST_CHECK_EQUAL(parent_txid_rejected, txdownload_impl.RecentRejectsFilter().contains(child_txid));
-                BOOST_CHECK_EQUAL(parent_txid_rejected, txdownload_impl.RecentRejectsFilter().contains(child_wtxid));
+                BOOST_CHECK_EQUAL(parent_txid_rejected, txdownload_impl.RecentRejectsFilter().contains(child_txid.ToUint256()));
+                BOOST_CHECK_EQUAL(parent_txid_rejected, txdownload_impl.RecentRejectsFilter().contains(child_wtxid.ToUint256()));
 
                 // Unless rejected, the child should be in orphanage.
-                BOOST_CHECK_EQUAL(!parent_txid_rejected, txdownload_impl.m_orphanage.HaveTx(ptx_child->GetWitnessHash()));
+                BOOST_CHECK_EQUAL(!parent_txid_rejected, txdownload_impl.m_orphanage->HaveTx(ptx_child->GetWitnessHash()));
             }
         }
     }
@@ -172,7 +172,7 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
 {
     CTxMemPool& pool = *Assert(m_node.mempool);
     FastRandomContext det_rand{true};
-    node::TxDownloadOptions DEFAULT_OPTS{pool, det_rand, DEFAULT_MAX_ORPHAN_TRANSACTIONS, true};
+    node::TxDownloadOptions DEFAULT_OPTS{pool, det_rand, true};
     NodeId nodeid{1};
     node::TxDownloadConnectionInfo DEFAULT_CONN{/*m_preferred=*/false, /*m_relay_permissions=*/false, /*m_wtxid_relay=*/true};
 

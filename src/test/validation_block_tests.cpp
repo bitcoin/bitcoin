@@ -19,6 +19,7 @@
 
 #include <thread>
 
+using kernel::ChainstateRole;
 using node::BlockAssembler;
 
 namespace validation_block_tests {
@@ -27,7 +28,7 @@ struct MinerTestingSetup : public RegTestingSetup {
     std::shared_ptr<const CBlock> GoodBlock(const uint256& prev_hash);
     std::shared_ptr<const CBlock> BadBlock(const uint256& prev_hash);
     std::shared_ptr<CBlock> FinalizeBlock(std::shared_ptr<CBlock> pblock);
-    void BuildChain(const uint256& root, int height, const unsigned int invalid_rate, const unsigned int branch_rate, const unsigned int max_size, std::vector<std::shared_ptr<const CBlock>>& blocks);
+    void BuildChain(const uint256& root, int height, unsigned int invalid_rate, unsigned int branch_rate, unsigned int max_size, std::vector<std::shared_ptr<const CBlock>>& blocks);
 };
 } // namespace validation_block_tests
 
@@ -43,7 +44,7 @@ struct TestSubscriber final : public CValidationInterface {
         BOOST_CHECK_EQUAL(m_expected_tip, pindexNew->GetBlockHash());
     }
 
-    void BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override
+    void BlockConnected(const ChainstateRole& role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override
     {
         BOOST_CHECK_EQUAL(m_expected_tip, block->hashPrevBlock);
         BOOST_CHECK_EQUAL(m_expected_tip, pindex->pprev->GetBlockHash());
@@ -82,7 +83,9 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
     txCoinbase.vout[0].nValue = 0;
     txCoinbase.vin[0].scriptWitness.SetNull();
     // Always pad with OP_0 at the end to avoid bad-cb-length error
-    txCoinbase.vin[0].scriptSig = CScript{} << WITH_LOCK(::cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(prev_hash)->nHeight + 1) << OP_0;
+    const int prev_height{WITH_LOCK(::cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(prev_hash)->nHeight)};
+    txCoinbase.vin[0].scriptSig = CScript{} << prev_height + 1 << OP_0;
+    txCoinbase.nLockTime = static_cast<uint32_t>(prev_height);
     pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
 
     return pblock;
@@ -102,7 +105,7 @@ std::shared_ptr<CBlock> MinerTestingSetup::FinalizeBlock(std::shared_ptr<CBlock>
     // submit block header, so that miner can get the block height from the
     // global state and the node has the topology of the chain
     BlockValidationState ignored;
-    BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlockHeaders({{pblock->GetBlockHeader()}}, true, ignored));
+    BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlockHeaders({{*pblock}}, true, ignored));
 
     return pblock;
 }

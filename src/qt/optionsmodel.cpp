@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,17 +17,16 @@
 #include <netbase.h>
 #include <node/caches.h>
 #include <node/chainstatemanager_args.h>
+#include <univalue.h>
 #include <util/string.h>
-#include <validation.h>    // For DEFAULT_SCRIPTCHECK_THREADS
-#include <wallet/wallet.h> // For DEFAULT_SPEND_ZEROCONF_CHANGE
+#include <validation.h>
+#include <wallet/wallet.h>
 
 #include <QDebug>
 #include <QLatin1Char>
 #include <QSettings>
 #include <QStringList>
 #include <QVariant>
-
-#include <univalue.h>
 
 const char *DEFAULT_GUI_PROXY_HOST = "127.0.0.1";
 

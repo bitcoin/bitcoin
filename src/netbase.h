@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,9 +11,9 @@
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
 
+#include <cstdint>
 #include <functional>
 #include <memory>
-#include <stdint.h>
 #include <string>
 #include <type_traits>
 #include <unordered_set>
@@ -60,7 +60,8 @@ class Proxy
 public:
     Proxy() : m_is_unix_socket(false), m_tor_stream_isolation(false) {}
     explicit Proxy(const CService& _proxy, bool tor_stream_isolation = false) : proxy(_proxy), m_is_unix_socket(false), m_tor_stream_isolation(tor_stream_isolation) {}
-    explicit Proxy(const std::string path, bool tor_stream_isolation = false) : m_unix_socket_path(path), m_is_unix_socket(true), m_tor_stream_isolation(tor_stream_isolation) {}
+    explicit Proxy(std::string path, bool tor_stream_isolation = false)
+        : m_unix_socket_path(std::move(path)), m_is_unix_socket(true), m_tor_stream_isolation(tor_stream_isolation) {}
 
     CService proxy;
     std::string m_unix_socket_path;
@@ -121,11 +122,18 @@ public:
         m_reachable.clear();
     }
 
+    void Reset() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        AssertLockNotHeld(m_mutex);
+        LOCK(m_mutex);
+        m_reachable = DefaultNets();
+    }
+
     [[nodiscard]] bool Contains(Network net) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         AssertLockNotHeld(m_mutex);
         LOCK(m_mutex);
-        return m_reachable.count(net) > 0;
+        return m_reachable.contains(net);
     }
 
     [[nodiscard]] bool Contains(const CNetAddr& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
@@ -142,17 +150,21 @@ public:
     }
 
 private:
-    mutable Mutex m_mutex;
-
-    std::unordered_set<Network> m_reachable GUARDED_BY(m_mutex){
-        NET_UNROUTABLE,
-        NET_IPV4,
-        NET_IPV6,
-        NET_ONION,
-        NET_I2P,
-        NET_CJDNS,
-        NET_INTERNAL
+    static std::unordered_set<Network> DefaultNets()
+    {
+        return {
+            NET_UNROUTABLE,
+            NET_IPV4,
+            NET_IPV6,
+            NET_ONION,
+            NET_I2P,
+            NET_CJDNS,
+            NET_INTERNAL
+        };
     };
+
+    mutable Mutex m_mutex;
+    std::unordered_set<Network> m_reachable GUARDED_BY(m_mutex){DefaultNets()};
 };
 
 extern ReachableNets g_reachable_nets;
@@ -350,5 +362,8 @@ bool IsBadPort(uint16_t port);
  * @return a copy of `service` either unmodified or changed to CJDNS.
  */
 CService MaybeFlipIPv6toCJDNS(const CService& service);
+
+/** Get the bind address for a socket as CService. */
+CService GetBindAddress(const Sock& sock);
 
 #endif // BITCOIN_NETBASE_H

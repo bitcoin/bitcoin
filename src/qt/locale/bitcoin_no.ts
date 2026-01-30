@@ -14,24 +14,20 @@
         <translation type="unfinished">&amp;Ny</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Kopier den valgte adressen til systemets utklippstavle</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Kopier</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">L&amp;ukk</translation>
+        <translation type="unfinished">C&amp;Tap</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">Slett den valgte adressen fra listen</translation>
+        <translation type="unfinished">Slett den valgte adressen fra listen </translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">Skriv inn adresse eller etikett for å søke</translation>
+        <translation type="unfinished">Tast inn adressen eller etiketten for å søke</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -91,6 +87,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
         <translation type="unfinished">Det oppstod en feil under forsøk på å lagre adresselisten til %1. Vennligst prøv igjen.</translation>
+    </message>
+    <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">Sender adresser - %1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">Mottaksadresser - %1</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -734,14 +738,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Forhåndssynkroniserer overskrifter (%1%)…</translation>
     </message>
     <message>
-        <source>Error creating wallet</source>
-        <translation type="unfinished">Feil ved opprettelse av lommebok</translation>
-    </message>
-    <message>
-        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Kan ikke opprette ny lommebok, programvaren er kompilert uten sqlite-støtte (påkrevd for deskriptolommebøker)</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
         <translation type="unfinished">Feil: %1</translation>
     </message>
@@ -1013,7 +1009,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Error</source>
         <translation type="unfinished">Feil</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -1035,7 +1031,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Address</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">Adresse</translation>
+        <translation type="unfinished">Adresse </translation>
     </message>
     </context>
 <context>
@@ -1251,6 +1247,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Wallet Data</source>
         <extracomment>Name of the wallet data file format.</extracomment>
         <translation type="unfinished">Lommebokdata</translation>
+    </message>
+    </context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">standard lommebok</translation>
     </message>
     </context>
 </TS>

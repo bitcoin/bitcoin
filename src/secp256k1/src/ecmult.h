@@ -38,7 +38,7 @@
 #endif
 
 /** The number of entries a table with precomputed multiples needs to have. */
-#define ECMULT_TABLE_SIZE(w) (1L << ((w)-2))
+#define ECMULT_TABLE_SIZE(w) ((size_t)1 << ((w)-2))
 
 /** Double multiply: R = na*A + ng*G */
 static void secp256k1_ecmult(secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_scalar *na, const secp256k1_scalar *ng);

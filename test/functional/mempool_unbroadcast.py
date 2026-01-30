@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2022 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that the mempool ensures transaction delivery by periodically sending
@@ -16,11 +16,9 @@ from test_framework.wallet import MiniWallet
 MAX_INITIAL_BROADCAST_DELAY = 15 * 60 # 15 minutes in seconds
 
 class MempoolUnbroadcastTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 2
+        self.uses_wallet = None
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])

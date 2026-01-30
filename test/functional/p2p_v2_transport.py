@@ -165,7 +165,7 @@ class V2TransportTest(BitcoinTestFramework):
                 peer_id = self.nodes[0].getpeerinfo()[-1]["id"]
                 s.sendall(b'\x00')  # send out last byte
                 # should disconnect immediately
-                self.wait_until(lambda: not peer_id in [p["id"] for p in self.nodes[0].getpeerinfo()])
+                self.wait_until(lambda: peer_id not in [p["id"] for p in self.nodes[0].getpeerinfo()])
 
 
 if __name__ == '__main__':

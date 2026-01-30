@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,7 +21,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include <assert.h>
+#include <cassert>
 
 namespace {
 
@@ -60,7 +60,7 @@ using SequenceNumber = uint64_t;
 /** An announcement. This is the data we track for each txid or wtxid that is announced to us by each peer. */
 struct Announcement {
     /** Txid or wtxid that was announced. */
-    const uint256 m_txhash;
+    const GenTxid m_gtxid;
     /** For CANDIDATE_{DELAYED,BEST,READY} the reqtime; for REQUESTED the expiry. */
     std::chrono::microseconds m_time;
     /** What peer the request was from. */
@@ -69,9 +69,6 @@ struct Announcement {
     const SequenceNumber m_sequence : 59;
     /** Whether the request is preferred. */
     const bool m_preferred : 1;
-    /** Whether this is a wtxid request. */
-    const bool m_is_wtxid : 1;
-
     /** What state this announcement is in. */
     State m_state : 3 {State::CANDIDATE_DELAYED};
     State GetState() const { return m_state; }
@@ -98,8 +95,7 @@ struct Announcement {
     /** Construct a new announcement from scratch, initially in CANDIDATE_DELAYED state. */
     Announcement(const GenTxid& gtxid, NodeId peer, bool preferred, std::chrono::microseconds reqtime,
                  SequenceNumber sequence)
-        : m_txhash(gtxid.GetHash()), m_time(reqtime), m_peer(peer), m_sequence(sequence), m_preferred(preferred),
-          m_is_wtxid{gtxid.IsWtxid()} {}
+        : m_gtxid(gtxid), m_time(reqtime), m_peer(peer), m_sequence(sequence), m_preferred(preferred) {}
 };
 
 //! Type alias for priorities.
@@ -124,7 +120,7 @@ public:
 
     Priority operator()(const Announcement& ann) const
     {
-        return operator()(ann.m_txhash, ann.m_peer, ann.m_preferred);
+        return operator()(ann.m_gtxid.ToUint256(), ann.m_peer, ann.m_preferred);
     }
 };
 
@@ -148,7 +144,7 @@ struct ByPeerViewExtractor
     using result_type = ByPeerView;
     result_type operator()(const Announcement& ann) const
     {
-        return ByPeerView{ann.m_peer, ann.GetState() == State::CANDIDATE_BEST, ann.m_txhash};
+        return ByPeerView{ann.m_peer, ann.GetState() == State::CANDIDATE_BEST, ann.m_gtxid.ToUint256()};
     }
 };
 
@@ -172,7 +168,7 @@ public:
     result_type operator()(const Announcement& ann) const
     {
         const Priority prio = (ann.GetState() == State::CANDIDATE_READY) ? m_computer(ann) : 0;
-        return ByTxHashView{ann.m_txhash, ann.GetState(), prio};
+        return ByTxHashView{ann.m_gtxid.ToUint256(), ann.GetState(), prio};
     }
 };
 
@@ -280,7 +276,7 @@ std::map<uint256, TxHashInfo> ComputeTxHashInfo(const Index& index, const Priori
 {
     std::map<uint256, TxHashInfo> ret;
     for (const Announcement& ann : index) {
-        TxHashInfo& info = ret[ann.m_txhash];
+        TxHashInfo& info = ret[ann.m_gtxid.ToUint256()];
         // Classify how many announcements of each state we have for this txhash.
         info.m_candidate_delayed += (ann.GetState() == State::CANDIDATE_DELAYED);
         info.m_candidate_ready += (ann.GetState() == State::CANDIDATE_READY);
@@ -297,11 +293,6 @@ std::map<uint256, TxHashInfo> ComputeTxHashInfo(const Index& index, const Priori
         info.m_peers.push_back(ann.m_peer);
     }
     return ret;
-}
-
-GenTxid ToGenTxid(const Announcement& ann)
-{
-    return ann.m_is_wtxid ? GenTxid::Wtxid(ann.m_txhash) : GenTxid::Txid(ann.m_txhash);
 }
 
 }  // namespace
@@ -409,7 +400,7 @@ private:
         // priority) comes last. Thus, if an existing _BEST exists for the same txhash that this announcement may
         // be preferred over, it must immediately follow the newly created _READY.
         auto it_next = std::next(it);
-        if (it_next == m_index.get<ByTxHash>().end() || it_next->m_txhash != it->m_txhash ||
+        if (it_next == m_index.get<ByTxHash>().end() || it_next->m_gtxid.ToUint256() != it->m_gtxid.ToUint256() ||
             it_next->GetState() == State::COMPLETED) {
             // This is the new best CANDIDATE_READY, and there is no IsSelected() announcement for this txhash
             // already.
@@ -435,7 +426,7 @@ private:
             auto it_prev = std::prev(it);
             // The next best CANDIDATE_READY, if any, immediately precedes the REQUESTED or CANDIDATE_BEST
             // announcement in the ByTxHash index.
-            if (it_prev->m_txhash == it->m_txhash && it_prev->GetState() == State::CANDIDATE_READY) {
+            if (it_prev->m_gtxid.ToUint256() == it->m_gtxid.ToUint256() && it_prev->GetState() == State::CANDIDATE_READY) {
                 // If one such CANDIDATE_READY exists (for this txhash), convert it to CANDIDATE_BEST.
                 Modify<ByTxHash>(it_prev, [](Announcement& ann){ ann.SetState(State::CANDIDATE_BEST); });
             }
@@ -451,10 +442,10 @@ private:
 
         // This announcement has a predecessor that belongs to the same txhash. Due to ordering, and the
         // fact that 'it' is not COMPLETED, its predecessor cannot be COMPLETED here.
-        if (it != m_index.get<ByTxHash>().begin() && std::prev(it)->m_txhash == it->m_txhash) return false;
+        if (it != m_index.get<ByTxHash>().begin() && std::prev(it)->m_gtxid.ToUint256() == it->m_gtxid.ToUint256()) return false;
 
         // This announcement has a successor that belongs to the same txhash, and is not COMPLETED.
-        if (std::next(it) != m_index.get<ByTxHash>().end() && std::next(it)->m_txhash == it->m_txhash &&
+        if (std::next(it) != m_index.get<ByTxHash>().end() && std::next(it)->m_gtxid.ToUint256() == it->m_gtxid.ToUint256() &&
             std::next(it)->GetState() != State::COMPLETED) return false;
 
         return true;
@@ -472,10 +463,10 @@ private:
 
         if (IsOnlyNonCompleted(it)) {
             // This is the last non-COMPLETED announcement for this txhash. Delete all.
-            uint256 txhash = it->m_txhash;
+            uint256 txhash = it->m_gtxid.ToUint256();
             do {
                 it = Erase<ByTxHash>(it);
-            } while (it != m_index.get<ByTxHash>().end() && it->m_txhash == txhash);
+            } while (it != m_index.get<ByTxHash>().end() && it->m_gtxid.ToUint256() == txhash);
             return false;
         }
 
@@ -501,7 +492,7 @@ private:
             if (it->GetState() == State::CANDIDATE_DELAYED && it->m_time <= now) {
                 PromoteCandidateReady(m_index.project<ByTxHash>(it));
             } else if (it->GetState() == State::REQUESTED && it->m_time <= now) {
-                if (expired) expired->emplace_back(it->m_peer, ToGenTxid(*it));
+                if (expired) expired->emplace_back(it->m_peer, it->m_gtxid);
                 MakeCompleted(m_index.project<ByTxHash>(it));
             } else {
                 break;
@@ -569,7 +560,7 @@ public:
     void ForgetTxHash(const uint256& txhash)
     {
         auto it = m_index.get<ByTxHash>().lower_bound(ByTxHashView{txhash, State::CANDIDATE_DELAYED, 0});
-        while (it != m_index.get<ByTxHash>().end() && it->m_txhash == txhash) {
+        while (it != m_index.get<ByTxHash>().end() && it->m_gtxid.ToUint256() == txhash) {
             it = Erase<ByTxHash>(it);
         }
     }
@@ -577,19 +568,19 @@ public:
     void GetCandidatePeers(const uint256& txhash, std::vector<NodeId>& result_peers) const
     {
         auto it = m_index.get<ByTxHash>().lower_bound(ByTxHashView{txhash, State::CANDIDATE_DELAYED, 0});
-        while (it != m_index.get<ByTxHash>().end() && it->m_txhash == txhash && it->GetState() != State::COMPLETED) {
+        while (it != m_index.get<ByTxHash>().end() && it->m_gtxid.ToUint256() == txhash && it->GetState() != State::COMPLETED) {
             result_peers.push_back(it->m_peer);
             ++it;
         }
     }
 
     void ReceivedInv(NodeId peer, const GenTxid& gtxid, bool preferred,
-        std::chrono::microseconds reqtime)
+                     std::chrono::microseconds reqtime)
     {
         // Bail out if we already have a CANDIDATE_BEST announcement for this (txhash, peer) combination. The case
         // where there is a non-CANDIDATE_BEST announcement already will be caught by the uniqueness property of the
         // ByPeer index when we try to emplace the new object below.
-        if (m_index.get<ByPeer>().count(ByPeerView{peer, true, gtxid.GetHash()})) return;
+        if (m_index.get<ByPeer>().count(ByPeerView{peer, true, gtxid.ToUint256()})) return;
 
         // Try creating the announcement with CANDIDATE_DELAYED state (which will fail due to the uniqueness
         // of the ByPeer index if a non-CANDIDATE_BEST announcement already exists with the same txhash and peer).
@@ -604,7 +595,7 @@ public:
 
     //! Find the GenTxids to request now from peer.
     std::vector<GenTxid> GetRequestable(NodeId peer, std::chrono::microseconds now,
-        std::vector<std::pair<NodeId, GenTxid>>* expired)
+                                        std::vector<std::pair<NodeId, GenTxid>>* expired)
     {
         // Move time.
         SetTimePoint(now, expired);
@@ -627,7 +618,7 @@ public:
         std::vector<GenTxid> ret;
         ret.reserve(selected.size());
         std::transform(selected.begin(), selected.end(), std::back_inserter(ret), [](const Announcement* ann) {
-            return ToGenTxid(*ann);
+            return ann->m_gtxid;
         });
         return ret;
     }
@@ -654,7 +645,7 @@ public:
             // found announcement had a different state than CANDIDATE_BEST. If it did, invariants guarantee that no
             // other CANDIDATE_BEST or REQUESTED can exist.
             auto it_old = m_index.get<ByTxHash>().lower_bound(ByTxHashView{txhash, State::CANDIDATE_BEST, 0});
-            if (it_old != m_index.get<ByTxHash>().end() && it_old->m_txhash == txhash) {
+            if (it_old != m_index.get<ByTxHash>().end() && it_old->m_gtxid.ToUint256() == txhash) {
                 if (it_old->GetState() == State::CANDIDATE_BEST) {
                     // The data structure's invariants require that there can be at most one CANDIDATE_BEST or one
                     // REQUESTED announcement per txhash (but not both simultaneously), so we have to convert any
@@ -739,7 +730,7 @@ void TxRequestTracker::PostGetRequestableSanityCheck(std::chrono::microseconds n
 }
 
 void TxRequestTracker::ReceivedInv(NodeId peer, const GenTxid& gtxid, bool preferred,
-    std::chrono::microseconds reqtime)
+                                   std::chrono::microseconds reqtime)
 {
     m_impl->ReceivedInv(peer, gtxid, preferred, reqtime);
 }
@@ -755,7 +746,7 @@ void TxRequestTracker::ReceivedResponse(NodeId peer, const uint256& txhash)
 }
 
 std::vector<GenTxid> TxRequestTracker::GetRequestable(NodeId peer, std::chrono::microseconds now,
-    std::vector<std::pair<NodeId, GenTxid>>* expired)
+                                                      std::vector<std::pair<NodeId, GenTxid>>* expired)
 {
     return m_impl->GetRequestable(peer, now, expired);
 }

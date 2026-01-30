@@ -15,6 +15,8 @@ The following command, for example, creates a descriptor wallet. More informatio
 $ bitcoin-cli createwallet "wallet-01"
 ```
 
+`bitcoin rpc` can also be substituted for `bitcoin-cli`.
+
 By default, wallets are created in the `wallets` folder of the data directory, which varies by operating system, as shown below. The user can change the default by using the `-datadir` or `-walletdir` initialization parameters.
 
 | Operating System | Default wallet directory                                    |
@@ -82,7 +84,7 @@ In the GUI, there is no specific menu item to unlock the wallet. When the user s
 
 To backup the wallet, the `backupwallet` RPC or the `Backup Wallet` GUI menu item must be used to ensure the file is in a safe state when the copy is made.
 
-In the RPC, the destination parameter must include the name of the file. Otherwise, the command will return an error message like "Error: Wallet backup failed!" for descriptor wallets. If it is a legacy wallet, it will be copied and a file will be created with the default file name `wallet.dat`.
+In the RPC, the destination parameter must include the name of the file. Otherwise, the command will return an error message like "Error: Wallet backup failed!".
 
 ```
 $ bitcoin-cli -rpcwallet="wallet-01" backupwallet /home/node01/Backups/backup-01.dat
@@ -142,12 +144,15 @@ If the wallet passphrase is too complex and is subsequently forgotten or lost, t
 
 Legacy wallets (traditional non-descriptor wallets) can be migrated to become Descriptor wallets
 through the use of the `migratewallet` RPC. Migrated wallets will have all of their addresses and private keys added to
-a newly created Descriptor wallet that has the same name as the original wallet. Because Descriptor
-wallets do not support having private keys and watch-only scripts, there may be up to two
+a newly created Descriptor wallet that has the same name as the original wallet. As Descriptor
+wallets do not support having both private keys and watch-only scripts, there may be up to two
 additional wallets created after migration. In addition to a descriptor wallet of the same name,
 there may also be a wallet named `<name>_watchonly` and `<name>_solvables`. `<name>_watchonly`
-contains all of the watchonly scripts. `<name>_solvables` contains any scripts which the wallet
-knows but is not watching the corresponding P2(W)SH scripts.
+contains all of the watchonly scripts. `<name>_solvables` contains any scripts that the wallet
+knows but for which it is not watching the corresponding P2(W)SH scripts. If the legacy wallet
+contains only watch-only scripts and no private keys, then only the `<name>_watchonly` wallet
+will be created and the descriptor wallet with the same name will not be created. Additionally,
+the created watch-only descriptor wallet will not have private keys enabled.
 
 Migrated wallets will also generate new addresses differently. While the same BIP 32 seed will be
 used, the BIP 44, 49, 84, and 86 standard derivation paths will be used. After migrating, a new

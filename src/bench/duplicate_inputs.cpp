@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -58,7 +58,7 @@ static void DuplicateInputs(benchmark::Bench& bench)
     naughtyTx.vout[0].nValue = 0;
     naughtyTx.vout[0].scriptPubKey = SCRIPT_PUB;
 
-    uint64_t n_inputs = (((MAX_BLOCK_SERIALIZED_SIZE / WITNESS_SCALE_FACTOR) - (CTransaction(coinbaseTx).GetTotalSize() + CTransaction(naughtyTx).GetTotalSize())) / 41) - 100;
+    uint64_t n_inputs = (((MAX_BLOCK_SERIALIZED_SIZE / WITNESS_SCALE_FACTOR) - (CTransaction(coinbaseTx).ComputeTotalSize() + CTransaction(naughtyTx).ComputeTotalSize())) / 41) - 100;
     for (uint64_t x = 0; x < (n_inputs - 1); ++x) {
         naughtyTx.vin.emplace_back(Txid::FromUint256(GetRandHash()), 0, CScript(), 0);
     }
@@ -76,4 +76,4 @@ static void DuplicateInputs(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(DuplicateInputs, benchmark::PriorityLevel::HIGH);
+BENCHMARK(DuplicateInputs);

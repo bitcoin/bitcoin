@@ -30,7 +30,7 @@ MEMPOOL_TRACEPOINTS_PROGRAM = """
 # include <uapi/linux/ptrace.h>
 
 // The longest rejection reason is 118 chars and is generated in case of SCRIPT_ERR_EVAL_FALSE by
-// strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError()))
+// strprintf("block-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError()))
 #define MAX_REJECT_REASON_LENGTH        118
 // The longest string returned by RemovalReasonToString() is 'sizelimit'
 #define MAX_REMOVAL_REASON_LENGTH       9
@@ -158,6 +158,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
         self.skip_if_no_bitcoind_tracepoints()
         self.skip_if_no_python_bcc()
         self.skip_if_no_bpf_permissions()
+        self.skip_if_running_under_valgrind()
 
     def added_test(self):
         """Add a transaction to the mempool and make sure the tracepoint returns
@@ -322,7 +323,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
         self.log.info("Ensuring mempool:rejected event was handled successfully...")
         assert_equal(1, len(events))
         event = events[0]
-        assert_equal(bytes(event.hash)[::-1].hex(), tx["tx"].hash)
+        assert_equal(bytes(event.hash)[::-1].hex(), tx["tx"].txid_hex)
         assert_equal(event.reason.decode("UTF-8"), "min relay fee not met")
 
         bpf.cleanup()

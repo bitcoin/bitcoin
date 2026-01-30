@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2022 The Bitcoin Core developers
+# Copyright (c) 2019-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test RPC misc output."""
@@ -15,21 +15,41 @@ from test_framework.util import (
 
 from test_framework.authproxy import JSONRPCException
 
+import http
+import subprocess
+
 
 class RpcMiscTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.supports_cli = False
 
     def run_test(self):
         node = self.nodes[0]
 
         self.log.info("test CHECK_NONFATAL")
-        assert_raises_rpc_error(
-            -1,
-            'Internal bug detected: request.params[9].get_str() != "trigger_internal_bug"',
-            lambda: node.echo(arg9='trigger_internal_bug'),
-        )
+        msg_internal_bug = 'request.params[9].get_str() != "trigger_internal_bug"'
+        self.restart_node(0)  # Required to flush the chainstate
+        try:
+            node.echo(arg9="trigger_internal_bug")
+            assert False  # Must hit one of the exceptions below
+        except (
+                subprocess.CalledProcessError,
+                http.client.CannotSendRequest,
+                http.client.RemoteDisconnected,
+        ):
+            self.log.info("Restart node after crash")
+            assert_equal(-6, node.process.wait(timeout=10))
+            self.start_node(0)
+        except JSONRPCException as e:
+            assert_equal(e.error["code"], -1)
+            assert f"Internal bug detected: {msg_internal_bug}" in e.error["message"]
+
+        self.log.info("test max arg size")
+        ARG_SZ_COMMON = 131071  # Common limit, used previously in the test framework, serves as a regression test
+        ARG_SZ_LARGE = 8 * 1024 * 1024  # A large size, which should be rare to hit in practice
+        for arg_sz in [0, 1, 100, ARG_SZ_COMMON, ARG_SZ_LARGE]:
+            arg_string = 'a' * arg_sz
+            assert_equal([arg_string, arg_string], node.echo(arg_string, arg_string))
 
         self.log.info("test getmemoryinfo")
         memory = node.getmemoryinfo()['locked']

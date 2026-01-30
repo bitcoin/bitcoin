@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;Nû</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">کۆپیکردنی ناونیشانی هەڵبژێردراوی ئێستا بۆ کلیپ بۆردی سیستەم</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Kopi bike</translation>
     </message>
@@ -301,7 +297,9 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(etîket tune)</translation>
+        <translation type="unfinished">(بێ ناونیشان)
+
+</translation>
     </message>
     </context>
 <context>
@@ -327,7 +325,30 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">وەشان</translation>
+    </message>
+    </context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">بەخێربێن</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation type="unfinished">دووبارە کردنەوەی ئەم ڕێکخستنە پێویستی بە دووبارە داگرتنی تەواوی بەربەستەکە هەیە. خێراترە بۆ داگرتنی زنجیرەی تەواو سەرەتا و داگرتنی دواتر. هەندێک تایبەتمەندی پێشکەوتوو لە کار دەهێنێت.</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation type="unfinished">ئەم هاوکاتکردنە سەرەتاییە زۆر داوای دەکات، و لەوانەیە کێشەکانی رەقەواڵە لەگەڵ کۆمپیوتەرەکەت دابخات کە پێشتر تێبینی نەکراو بوو. هەر جارێک کە %1 رادەدەیت، بەردەوام دەبێت لە داگرتن لەو شوێنەی کە بەجێی هێشت.</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation type="unfinished">ئەگەر تۆ دیاریت کردووە بۆ سنووردارکردنی کۆگە زنجیرەی بلۆک (کێڵکردن)، هێشتا داتای مێژووی دەبێت دابەزێنرێت و پرۆسەی بۆ بکرێت، بەڵام دواتر دەسڕدرێتەوە بۆ ئەوەی بەکارهێنانی دیسکەکەت کەم بێت.</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
@@ -365,30 +386,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Error</source>
         <translation type="unfinished">هەڵە</translation>
     </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">بەخێربێن</translation>
-    </message>
-    <message>
-        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
-        <translation type="unfinished">دووبارە کردنەوەی ئەم ڕێکخستنە پێویستی بە دووبارە داگرتنی تەواوی بەربەستەکە هەیە. خێراترە بۆ داگرتنی زنجیرەی تەواو سەرەتا و داگرتنی دواتر. هەندێک تایبەتمەندی پێشکەوتوو لە کار دەهێنێت.</translation>
-    </message>
-    <message>
-        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation type="unfinished">ئەم هاوکاتکردنە سەرەتاییە زۆر داوای دەکات، و لەوانەیە کێشەکانی رەقەواڵە لەگەڵ کۆمپیوتەرەکەت دابخات کە پێشتر تێبینی نەکراو بوو. هەر جارێک کە %1 رادەدەیت، بەردەوام دەبێت لە داگرتن لەو شوێنەی کە بەجێی هێشت.</translation>
-    </message>
-    <message>
-        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation type="unfinished">ئەگەر تۆ دیاریت کردووە بۆ سنووردارکردنی کۆگە زنجیرەی بلۆک (کێڵکردن)، هێشتا داتای مێژووی دەبێت دابەزێنرێت و پرۆسەی بۆ بکرێت، بەڵام دواتر دەسڕدرێتەوە بۆ ئەوەی بەکارهێنانی دیسکەکەت کەم بێت.</translation>
-    </message>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">وەشان</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -826,14 +824,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
         <translation type="unfinished">پڕە لە خوارەوەی کەمترین %d MiB شێوەبەند کراوە.  تکایە ژمارەیەکی بەرزتر بەکاربێنە.</translation>
-    </message>
-    <message>
-        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation type="unfinished">پرە: دوایین هاودەمکردنی جزدان لە داتای بەپێز دەچێت. پێویستە دووبارە -ئیندێکس بکەیتەوە (هەموو بەربەستەکە دابەزێنە دووبارە لە حاڵەتی گرێی هەڵکراو)</translation>
-    </message>
-    <message>
-        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
-        <translation type="unfinished">ئەم هەڵەیە لەوانەیە ڕووبدات ئەگەر ئەم جزدانە بە خاوێنی دانەبەزێنرابێت و دواجار بارکرا بێت بە بەکارهێنانی بنیاتێک بە وەشانێکی نوێتری بێرکلی DB. ئەگەر وایە، تکایە ئەو سۆفتوێرە بەکاربهێنە کە دواجار ئەم جزدانە بارکرا بوو</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>

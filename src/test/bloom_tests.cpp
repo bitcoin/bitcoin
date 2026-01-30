@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -140,11 +140,11 @@ BOOST_AUTO_TEST_CASE(bloom_match)
     BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(tx), "Simple Bloom filter didn't match output address");
 
     filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
-    filter.insert(COutPoint(Txid::FromHex("90c122d70786e899529d71dbeba91ba216982fb6ba58f3bdaab65e73b7e9260b").value(), 0));
+    filter.insert(COutPoint{Txid{"90c122d70786e899529d71dbeba91ba216982fb6ba58f3bdaab65e73b7e9260b"}, 0});
     BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(tx), "Simple Bloom filter didn't match COutPoint");
 
     filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
-    COutPoint prevOutPoint(Txid::FromHex("90c122d70786e899529d71dbeba91ba216982fb6ba58f3bdaab65e73b7e9260b").value(), 0);
+    COutPoint prevOutPoint{Txid{"90c122d70786e899529d71dbeba91ba216982fb6ba58f3bdaab65e73b7e9260b"}, 0};
     {
         std::vector<unsigned char> data(32 + sizeof(unsigned int));
         memcpy(data.data(), prevOutPoint.hash.begin(), 32);
@@ -162,11 +162,11 @@ BOOST_AUTO_TEST_CASE(bloom_match)
     BOOST_CHECK_MESSAGE(!filter.IsRelevantAndUpdate(tx), "Simple Bloom filter matched random address");
 
     filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
-    filter.insert(COutPoint(Txid::FromHex("90c122d70786e899529d71dbeba91ba216982fb6ba58f3bdaab65e73b7e9260b").value(), 1));
+    filter.insert(COutPoint{Txid{"90c122d70786e899529d71dbeba91ba216982fb6ba58f3bdaab65e73b7e9260b"}, 1});
     BOOST_CHECK_MESSAGE(!filter.IsRelevantAndUpdate(tx), "Simple Bloom filter matched COutPoint for an output we didn't care about");
 
     filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
-    filter.insert(COutPoint(Txid::FromHex("000000d70786e899529d71dbeba91ba216982fb6ba58f3bdaab65e73b7e9260b").value(), 0));
+    filter.insert(COutPoint{Txid{"000000d70786e899529d71dbeba91ba216982fb6ba58f3bdaab65e73b7e9260b"}, 0});
     BOOST_CHECK_MESSAGE(!filter.IsRelevantAndUpdate(tx), "Simple Bloom filter matched COutPoint for an output we didn't care about");
 }
 
@@ -181,12 +181,12 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
     BOOST_CHECK_EQUAL(merkleBlock.header.GetHash().GetHex(), block.GetHash().GetHex());
 
     BOOST_CHECK_EQUAL(merkleBlock.vMatchedTxn.size(), 1U);
-    std::pair<unsigned int, uint256> pair = merkleBlock.vMatchedTxn[0];
+    std::pair<unsigned int, Txid> pair = merkleBlock.vMatchedTxn[0];
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256{"74d681e0e03bafa802c8aa084379aa98d9fcd632ddc2ed9782b586ec87451f20"});
+    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == Txid::FromUint256(uint256{"74d681e0e03bafa802c8aa084379aa98d9fcd632ddc2ed9782b586ec87451f20"}));
     BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 8);
 
-    std::vector<uint256> vMatched;
+    std::vector<Txid> vMatched;
     std::vector<unsigned int> vIndex;
     BOOST_CHECK(merkleBlock.txn.ExtractMatches(vMatched, vIndex) == block.hashMerkleRoot);
     BOOST_CHECK(vMatched.size() == merkleBlock.vMatchedTxn.size());
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
 
     BOOST_CHECK(merkleBlock.vMatchedTxn[1] == pair);
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256{"dd1fd2a6fc16404faf339881a90adbde7f4f728691ac62e8f168809cdfae1053"});
+    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == Txid::FromUint256(uint256{"dd1fd2a6fc16404faf339881a90adbde7f4f728691ac62e8f168809cdfae1053"}));
     BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 7);
 
     BOOST_CHECK(merkleBlock.txn.ExtractMatches(vMatched, vIndex) == block.hashMerkleRoot);
@@ -229,12 +229,12 @@ BOOST_AUTO_TEST_CASE(merkle_block_2)
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
 
     BOOST_CHECK(merkleBlock.vMatchedTxn.size() == 1);
-    std::pair<unsigned int, uint256> pair = merkleBlock.vMatchedTxn[0];
+    std::pair<unsigned int, Txid> pair = merkleBlock.vMatchedTxn[0];
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256{"e980fe9f792d014e73b95203dc1335c5f9ce19ac537a419e6df5b47aecb93b70"});
+    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == Txid::FromUint256(uint256{"e980fe9f792d014e73b95203dc1335c5f9ce19ac537a419e6df5b47aecb93b70"}));
     BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 0);
 
-    std::vector<uint256> vMatched;
+    std::vector<Txid> vMatched;
     std::vector<unsigned int> vIndex;
     BOOST_CHECK(merkleBlock.txn.ExtractMatches(vMatched, vIndex) == block.hashMerkleRoot);
     BOOST_CHECK(vMatched.size() == merkleBlock.vMatchedTxn.size());
@@ -253,13 +253,13 @@ BOOST_AUTO_TEST_CASE(merkle_block_2)
 
     BOOST_CHECK(pair == merkleBlock.vMatchedTxn[0]);
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[1].second == uint256{"28204cad1d7fc1d199e8ef4fa22f182de6258a3eaafe1bbe56ebdcacd3069a5f"});
+    BOOST_CHECK(merkleBlock.vMatchedTxn[1].second == Txid::FromUint256(uint256{"28204cad1d7fc1d199e8ef4fa22f182de6258a3eaafe1bbe56ebdcacd3069a5f"}));
     BOOST_CHECK(merkleBlock.vMatchedTxn[1].first == 1);
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[2].second == uint256{"6b0f8a73a56c04b519f1883e8aafda643ba61a30bd1439969df21bea5f4e27e2"});
+    BOOST_CHECK(merkleBlock.vMatchedTxn[2].second == Txid::FromUint256(uint256{"6b0f8a73a56c04b519f1883e8aafda643ba61a30bd1439969df21bea5f4e27e2"}));
     BOOST_CHECK(merkleBlock.vMatchedTxn[2].first == 2);
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[3].second == uint256{"3c1d7e82342158e4109df2e0b6348b6e84e403d8b4046d7007663ace63cddb23"});
+    BOOST_CHECK(merkleBlock.vMatchedTxn[3].second == Txid::FromUint256(uint256{"3c1d7e82342158e4109df2e0b6348b6e84e403d8b4046d7007663ace63cddb23"}));
     BOOST_CHECK(merkleBlock.vMatchedTxn[3].first == 3);
 
     BOOST_CHECK(merkleBlock.txn.ExtractMatches(vMatched, vIndex) == block.hashMerkleRoot);
@@ -286,12 +286,12 @@ BOOST_AUTO_TEST_CASE(merkle_block_2_with_update_none)
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
 
     BOOST_CHECK(merkleBlock.vMatchedTxn.size() == 1);
-    std::pair<unsigned int, uint256> pair = merkleBlock.vMatchedTxn[0];
+    std::pair<unsigned int, Txid> pair = merkleBlock.vMatchedTxn[0];
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256{"e980fe9f792d014e73b95203dc1335c5f9ce19ac537a419e6df5b47aecb93b70"});
+    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == Txid::FromUint256(uint256{"e980fe9f792d014e73b95203dc1335c5f9ce19ac537a419e6df5b47aecb93b70"}));
     BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 0);
 
-    std::vector<uint256> vMatched;
+    std::vector<Txid> vMatched;
     std::vector<unsigned int> vIndex;
     BOOST_CHECK(merkleBlock.txn.ExtractMatches(vMatched, vIndex) == block.hashMerkleRoot);
     BOOST_CHECK(vMatched.size() == merkleBlock.vMatchedTxn.size());
@@ -310,10 +310,10 @@ BOOST_AUTO_TEST_CASE(merkle_block_2_with_update_none)
 
     BOOST_CHECK(pair == merkleBlock.vMatchedTxn[0]);
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[1].second == uint256{"28204cad1d7fc1d199e8ef4fa22f182de6258a3eaafe1bbe56ebdcacd3069a5f"});
+    BOOST_CHECK(merkleBlock.vMatchedTxn[1].second == Txid::FromUint256(uint256{"28204cad1d7fc1d199e8ef4fa22f182de6258a3eaafe1bbe56ebdcacd3069a5f"}));
     BOOST_CHECK(merkleBlock.vMatchedTxn[1].first == 1);
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[2].second == uint256{"3c1d7e82342158e4109df2e0b6348b6e84e403d8b4046d7007663ace63cddb23"});
+    BOOST_CHECK(merkleBlock.vMatchedTxn[2].second == Txid::FromUint256(uint256{"3c1d7e82342158e4109df2e0b6348b6e84e403d8b4046d7007663ace63cddb23"}));
     BOOST_CHECK(merkleBlock.vMatchedTxn[2].first == 3);
 
     BOOST_CHECK(merkleBlock.txn.ExtractMatches(vMatched, vIndex) == block.hashMerkleRoot);
@@ -341,10 +341,10 @@ BOOST_AUTO_TEST_CASE(merkle_block_3_and_serialize)
 
     BOOST_CHECK(merkleBlock.vMatchedTxn.size() == 1);
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256{"63194f18be0af63f2c6bc9dc0f777cbefed3d9415c4af83f3ee3a3d669c00cb5"});
+    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == Txid::FromUint256(uint256{"63194f18be0af63f2c6bc9dc0f777cbefed3d9415c4af83f3ee3a3d669c00cb5"}));
     BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 0);
 
-    std::vector<uint256> vMatched;
+    std::vector<Txid> vMatched;
     std::vector<unsigned int> vIndex;
     BOOST_CHECK(merkleBlock.txn.ExtractMatches(vMatched, vIndex) == block.hashMerkleRoot);
     BOOST_CHECK(vMatched.size() == merkleBlock.vMatchedTxn.size());
@@ -376,12 +376,12 @@ BOOST_AUTO_TEST_CASE(merkle_block_4)
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
 
     BOOST_CHECK(merkleBlock.vMatchedTxn.size() == 1);
-    std::pair<unsigned int, uint256> pair = merkleBlock.vMatchedTxn[0];
+    std::pair<unsigned int, Txid> pair = merkleBlock.vMatchedTxn[0];
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256{"0a2a92f0bda4727d0a13eaddf4dd9ac6b5c61a1429e6b2b818f19b15df0ac154"});
+    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == Txid::FromUint256(uint256{"0a2a92f0bda4727d0a13eaddf4dd9ac6b5c61a1429e6b2b818f19b15df0ac154"}));
     BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 6);
 
-    std::vector<uint256> vMatched;
+    std::vector<Txid> vMatched;
     std::vector<unsigned int> vIndex;
     BOOST_CHECK(merkleBlock.txn.ExtractMatches(vMatched, vIndex) == block.hashMerkleRoot);
     BOOST_CHECK(vMatched.size() == merkleBlock.vMatchedTxn.size());
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4)
 
     BOOST_CHECK(merkleBlock.vMatchedTxn.size() == 2);
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256{"02981fa052f0481dbc5868f4fc2166035a10f27a03cfd2de67326471df5bc041"});
+    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == Txid::FromUint256(uint256{"02981fa052f0481dbc5868f4fc2166035a10f27a03cfd2de67326471df5bc041"}));
     BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 3);
 
     BOOST_CHECK(merkleBlock.vMatchedTxn[1] == pair);
@@ -426,9 +426,9 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_p2pubkey_only)
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
 
     // We should match the generation outpoint
-    BOOST_CHECK(filter.contains(COutPoint(Txid::FromHex("147caa76786596590baa4e98f5d9f48b86c7765e489f7a6ff3360fe5c674360b").value(), 0)));
+    BOOST_CHECK(filter.contains(COutPoint{Txid{"147caa76786596590baa4e98f5d9f48b86c7765e489f7a6ff3360fe5c674360b"}, 0}));
     // ... but not the 4th transaction's output (its not pay-2-pubkey)
-    BOOST_CHECK(!filter.contains(COutPoint(Txid::FromHex("02981fa052f0481dbc5868f4fc2166035a10f27a03cfd2de67326471df5bc041").value(), 0)));
+    BOOST_CHECK(!filter.contains(COutPoint{Txid{"02981fa052f0481dbc5868f4fc2166035a10f27a03cfd2de67326471df5bc041"}, 0}));
 }
 
 BOOST_AUTO_TEST_CASE(merkle_block_4_test_update_none)
@@ -451,8 +451,8 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_update_none)
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
 
     // We shouldn't match any outpoints (UPDATE_NONE)
-    BOOST_CHECK(!filter.contains(COutPoint(Txid::FromHex("147caa76786596590baa4e98f5d9f48b86c7765e489f7a6ff3360fe5c674360b").value(), 0)));
-    BOOST_CHECK(!filter.contains(COutPoint(Txid::FromHex("02981fa052f0481dbc5868f4fc2166035a10f27a03cfd2de67326471df5bc041").value(), 0)));
+    BOOST_CHECK(!filter.contains(COutPoint{Txid{"147caa76786596590baa4e98f5d9f48b86c7765e489f7a6ff3360fe5c674360b"}, 0}));
+    BOOST_CHECK(!filter.contains(COutPoint{Txid{"02981fa052f0481dbc5868f4fc2166035a10f27a03cfd2de67326471df5bc041"}, 0}));
 }
 
 std::vector<unsigned char> BloomTest::RandomData()

@@ -188,7 +188,7 @@ struct KeyConverter {
         return g_testdata->pkmap.at(keyid);
     }
 
-    std::optional<std::string> ToString(const Key& key) const {
+    std::optional<std::string> ToString(const Key& key, bool&) const {
         return HexStr(ToPKBytes(key));
     }
 
@@ -207,17 +207,17 @@ struct Satisfier : public KeyConverter {
 
     //! Implement simplified CLTV logic: stack value must exactly match an entry in `supported`.
     bool CheckAfter(uint32_t value) const {
-        return supported.count(Challenge(ChallengeType::AFTER, value));
+        return supported.contains(Challenge(ChallengeType::AFTER, value));
     }
 
     //! Implement simplified CSV logic: stack value must exactly match an entry in `supported`.
     bool CheckOlder(uint32_t value) const {
-        return supported.count(Challenge(ChallengeType::OLDER, value));
+        return supported.contains(Challenge(ChallengeType::OLDER, value));
     }
 
     //! Produce a signature for the given key.
     miniscript::Availability Sign(const CPubKey& key, std::vector<unsigned char>& sig) const {
-        if (supported.count(Challenge(ChallengeType::PK, ChallengeNumber(key)))) {
+        if (supported.contains(Challenge(ChallengeType::PK, ChallengeNumber(key)))) {
             if (!miniscript::IsTapscript(m_script_ctx)) {
                 auto it = g_testdata->signatures.find(key);
                 if (it == g_testdata->signatures.end()) return miniscript::Availability::NO;
@@ -234,7 +234,7 @@ struct Satisfier : public KeyConverter {
 
     //! Helper function for the various hash based satisfactions.
     miniscript::Availability SatHash(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage, ChallengeType chtype) const {
-        if (!supported.count(Challenge(chtype, ChallengeNumber(hash)))) return miniscript::Availability::NO;
+        if (!supported.contains(Challenge(chtype, ChallengeNumber(hash)))) return miniscript::Availability::NO;
         const auto& m =
             chtype == ChallengeType::SHA256 ? g_testdata->sha256_preimages :
             chtype == ChallengeType::HASH256 ? g_testdata->hash256_preimages :
@@ -297,28 +297,29 @@ using miniscript::operator""_mst;
 using Node = miniscript::Node<CPubKey>;
 
 /** Compute all challenges (pubkeys, hashes, timelocks) that occur in a given Miniscript. */
-// NOLINTNEXTLINE(misc-no-recursion)
-std::set<Challenge> FindChallenges(const NodeRef& ref) {
+std::set<Challenge> FindChallenges(const Node* root)
+{
     std::set<Challenge> chal;
-    for (const auto& key : ref->keys) {
-        chal.emplace(ChallengeType::PK, ChallengeNumber(key));
-    }
-    if (ref->fragment == miniscript::Fragment::OLDER) {
-        chal.emplace(ChallengeType::OLDER, ref->k);
-    } else if (ref->fragment == miniscript::Fragment::AFTER) {
-        chal.emplace(ChallengeType::AFTER, ref->k);
-    } else if (ref->fragment == miniscript::Fragment::SHA256) {
-        chal.emplace(ChallengeType::SHA256, ChallengeNumber(ref->data));
-    } else if (ref->fragment == miniscript::Fragment::RIPEMD160) {
-        chal.emplace(ChallengeType::RIPEMD160, ChallengeNumber(ref->data));
-    } else if (ref->fragment == miniscript::Fragment::HASH256) {
-        chal.emplace(ChallengeType::HASH256, ChallengeNumber(ref->data));
-    } else if (ref->fragment == miniscript::Fragment::HASH160) {
-        chal.emplace(ChallengeType::HASH160, ChallengeNumber(ref->data));
-    }
-    for (const auto& sub : ref->subs) {
-        auto sub_chal = FindChallenges(sub);
-        chal.insert(sub_chal.begin(), sub_chal.end());
+
+    for (std::vector stack{root}; !stack.empty();) {
+        const auto* ref{stack.back()};
+        stack.pop_back();
+
+        for (const auto& key : ref->keys) {
+            chal.emplace(ChallengeType::PK, ChallengeNumber(key));
+        }
+        switch (ref->fragment) {
+        case Fragment::OLDER: chal.emplace(ChallengeType::OLDER, ref->k); break;
+        case Fragment::AFTER: chal.emplace(ChallengeType::AFTER, ref->k); break;
+        case Fragment::SHA256: chal.emplace(ChallengeType::SHA256, ChallengeNumber(ref->data)); break;
+        case Fragment::RIPEMD160: chal.emplace(ChallengeType::RIPEMD160, ChallengeNumber(ref->data)); break;
+        case Fragment::HASH256: chal.emplace(ChallengeType::HASH256, ChallengeNumber(ref->data)); break;
+        case Fragment::HASH160: chal.emplace(ChallengeType::HASH160, ChallengeNumber(ref->data)); break;
+        default: break;
+        }
+        for (const auto& sub : ref->subs) {
+            stack.push_back(sub.get());
+        }
     }
     return chal;
 }
@@ -347,7 +348,7 @@ struct MiniScriptTest : BasicTestingSetup {
 /** Run random satisfaction tests. */
 void TestSatisfy(const KeyConverter& converter, const std::string& testcase, const NodeRef& node) {
     auto script = node->ToScript(converter);
-    auto challenges = FindChallenges(node); // Find all challenges in the generated miniscript.
+    const auto challenges{FindChallenges(node.get())}; // Find all challenges in the generated miniscript.
     std::vector<Challenge> challist(challenges.begin(), challenges.end());
     for (int iter = 0; iter < 3; ++iter) {
         std::shuffle(challist.begin(), challist.end(), m_rng);
@@ -371,7 +372,7 @@ void TestSatisfy(const KeyConverter& converter, const std::string& testcase, con
             CScriptWitness witness_nonmal;
             const bool nonmal_success = node->Satisfy(satisfier, witness_nonmal.stack, true) == miniscript::Availability::YES;
             // Compute witness size (excluding script push, control block, and witness count encoding).
-            const size_t wit_size = GetSerializeSize(witness_nonmal.stack) - GetSizeOfCompactSize(witness_nonmal.stack.size());
+            const uint64_t wit_size{GetSerializeSize(witness_nonmal.stack) - GetSizeOfCompactSize(witness_nonmal.stack.size())};
             SatisfactionToWitness(converter.MsContext(), witness_nonmal, script, builder);
 
             if (nonmal_success) {

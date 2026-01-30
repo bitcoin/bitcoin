@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;amp;नयाँ</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">भर्खरै चयन गरेको ठेगाना प्रणाली क्लिपबोर्डमा कपी गर्नुहोस्</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;amp;कपी गर्नुहोस्</translation>
     </message>
@@ -185,6 +181,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">वालेटको लागि पुरानो पासफ्रेज र नयाँ पासफ्रेज प्रविष्ट गर्नुहोस्।</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">जारी राख्नुहोस्</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished">फिर्ता जानुहोस्</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">याद गर्नुहोस् कि तपाईको वालेट इन्क्रिप्ट गर्नाले तपाईको बिटकोइनलाई तपाईको कम्प्युटरमा मालवेयरले चोरी हुनबाट पूर्णतया सुरक्षित गर्न सक्दैन।</translation>
     </message>
@@ -281,6 +285,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Do you want to reset settings to default values, or to abort without making changes?</source>
         <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
         <translation type="unfinished">के तपाइँ पूर्वनिर्धारित मानहरूमा सेटिङहरू रिसेट गर्न चाहनुहुन्छ, वा परिवर्तन नगरी रद्द गर्न चाहनुहुन्छ?</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
+        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
+        <translation type="unfinished">एउटा ठूलो त्रुटि भयो। सेटिङ फाइल लेख्न मिल्छ कि मिल्दैन जाँच गर्नुहोस्, वा -nosettings लेखेर चलाउने प्रयास गर्नुहोस्।</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -586,6 +595,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>Intro</name>
     <message>
+        <source>Welcome</source>
+        <translation type="unfinished">स्वागत छ</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">स्वागत छ %1 .</translation>
+    </message>
+    <message>
         <source>Bitcoin</source>
         <translation type="unfinished">बिटकोइन</translation>
     </message>
@@ -617,14 +634,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
             <numerusform />
         </translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">स्वागत छ</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation type="unfinished">स्वागत छ %1 .</translation>
     </message>
     </context>
 <context>
@@ -684,6 +693,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>&amp;OK</source>
         <translation type="unfinished">&amp;ठिक छ</translation>
     </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">जारी राख्नुहोस्</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -694,10 +707,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
         <translation type="unfinished">देखाइएको सूचना पूरानो हुन सक्छ । कनेक्सन स्थापित भएपछि, तपाईंको वालेट बिटकोइन नेटवर्कमा स्वचालित रूपमा समिकरण हुन्छ , तर यो प्रक्रिया अहिले सम्म पूरा भएको छैन ।</translation>
-    </message>
-    <message>
-        <source>Watch-only:</source>
-        <translation type="unfinished">हेर्ने-मात्र:</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -736,20 +745,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">तपाईंको हालको सम्पूर्ण ब्यालेन्स</translation>
     </message>
     <message>
-        <source>Spendable:</source>
-        <translation type="unfinished">खर्च उपलब्ध:</translation>
-    </message>
-    <message>
         <source>Recent transactions</source>
         <translation type="unfinished">भर्खरको ट्राजेक्शनहरू</translation>
-    </message>
-    <message>
-        <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation type="unfinished">अहिलेसम्म परिपक्व नभएको खनन गरिएको, हेर्ने-मात्र ठेगानामा रहेको ब्यालेन्स</translation>
-    </message>
-    <message>
-        <source>Current total balance in watch-only addresses</source>
-        <translation type="unfinished">हेर्ने-मात्र ठेगानामा रहेको हालको जम्मा ब्यालेन्स</translation>
     </message>
     </context>
 <context>
@@ -901,10 +898,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Choose previously used address</source>
         <translation type="unfinished">पहिला प्रयोग गरिएको ठेगाना प्रयोग गर्नुहोस्</translation>
-    </message>
-    <message>
-        <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished">वर्तमान हस्ताक्षरलाई प्रणाली क्लिपबोर्डमा कपी गर्नुहोस्</translation>
     </message>
     <message>
         <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>

@@ -4,27 +4,6 @@ Guide to the design and architecture of the Bitcoin Core multiprocess feature
 
 _This document describes the design of the multiprocess feature. For usage information, see the top-level [multiprocess.md](../multiprocess.md) file._
 
-## Table of contents
-
-- [Introduction](#introduction)
-- [Current Architecture](#current-architecture)
-- [Proposed Architecture](#proposed-architecture)
-- [Component Overview: Navigating the IPC Framework](#component-overview-navigating-the-ipc-framework)
-- [Design Considerations](#design-considerations)
-  - [Selection of Cap’n Proto](#selection-of-capn-proto)
-  - [Hiding IPC](#hiding-ipc)
-  - [Interface Definition Maintenance](#interface-definition-maintenance)
-  - [Interface Stability](#interface-stability)
-- [Security Considerations](#security-considerations)
-- [Example Use Cases and Flows](#example-use-cases-and-flows)
-  - [Retrieving a Block Hash](#retrieving-a-block-hash)
-- [Future Enhancements](#future-enhancements)
-- [Conclusion](#conclusion)
-- [Appendices](#appendices)
-  - [Glossary of Terms](#glossary-of-terms)
-  - [References](#references)
-- [Acknowledgements](#acknowledgements)
-
 ## Introduction
 
 The Bitcoin Core software has historically employed a monolithic architecture. The existing design has integrated functionality like P2P network operations, wallet management, and a GUI into a single executable. While effective, it has limitations in flexibility, security, and scalability. This project introduces changes that transition Bitcoin Core to a more modular architecture. It aims to enhance security, improve usability, and facilitate maintenance and development of the software in the long run.
@@ -136,7 +115,7 @@ The libmultiprocess runtime is designed to place as few constraints as possible 
 
 ### Interface Definition Maintenance
 
-The choice to maintain interface definitions and C++ type mappings as `.capnp` files in the [`src/ipc/capnp/`](../../src/ipc/capnp/) was mostly done for convenience, and probably something that could be improved in the future.
+The choice to maintain interface definitions and C++ type mappings as `.capnp` files in the [`src/ipc/capnp/`](../../src/ipc/capnp/) was mostly done for convenience, and is probably something that could be improved in the future.
 
 In the current design, class names, method names, and parameter names are duplicated between C++ interfaces in [`src/interfaces/`](../../src/interfaces/) and Cap’n Proto files in [`src/ipc/capnp/`](../../src/ipc/capnp/). While this keeps C++ interface headers simple and free of references to IPC, it is a maintenance burden because it means inconsistencies between C++ declarations and Cap’n Proto declarations will result in compile errors. (Static type checking ensures these are not runtime errors.)
 

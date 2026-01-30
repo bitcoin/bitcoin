@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2019 The Bitcoin Core developers
+# Copyright (c) 2015-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Dummy Socks5 server for testing."""
@@ -11,7 +11,8 @@ import queue
 import logging
 
 from .netutil import (
-    format_addr_port
+    format_addr_port,
+    set_ephemeral_port_range,
 )
 
 logger = logging.getLogger("TestFramework.socks5")
@@ -202,7 +203,14 @@ class Socks5Server():
         self.conf = conf
         self.s = socket.socket(conf.af)
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # When using dynamic port allocation (port=0), ensure we don't get a
+        # port that conflicts with the test framework's static port range.
+        if conf.addr[1] == 0:
+            set_ephemeral_port_range(self.s)
         self.s.bind(conf.addr)
+        # When port=0, the OS assigns an available port. Update conf.addr
+        # to reflect the actual bound address so callers can use it.
+        self.conf.addr = self.s.getsockname()
         self.s.listen(5)
         self.running = False
         self.thread = None

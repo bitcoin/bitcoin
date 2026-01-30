@@ -42,7 +42,7 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     if (txout.scriptPubKey.IsUnspendable())
         return 0;
 
-    size_t nSize = GetSerializeSize(txout);
+    uint64_t nSize{GetSerializeSize(txout)};
     int witnessversion = 0;
     std::vector<unsigned char> witnessprogram;
 
@@ -76,7 +76,7 @@ std::vector<uint32_t> GetDust(const CTransaction& tx, CFeeRate dust_relay_rate)
     return dust_outputs;
 }
 
-bool IsStandard(const CScript& scriptPubKey, const std::optional<unsigned>& max_datacarrier_bytes, TxoutType& whichType)
+bool IsStandard(const CScript& scriptPubKey, TxoutType& whichType)
 {
     std::vector<std::vector<unsigned char> > vSolutions;
     whichType = Solver(scriptPubKey, vSolutions);
@@ -91,10 +91,6 @@ bool IsStandard(const CScript& scriptPubKey, const std::optional<unsigned>& max_
             return false;
         if (m < 1 || m > n)
             return false;
-    } else if (whichType == TxoutType::NULL_DATA) {
-        if (!max_datacarrier_bytes || scriptPubKey.size() > *max_datacarrier_bytes) {
-            return false;
-        }
     }
 
     return true;
@@ -102,7 +98,7 @@ bool IsStandard(const CScript& scriptPubKey, const std::optional<unsigned>& max_
 
 bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_datacarrier_bytes, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
 {
-    if (tx.version > TX_MAX_STANDARD_VERSION || tx.version < 1) {
+    if (tx.version > TX_MAX_STANDARD_VERSION || tx.version < TX_MIN_STANDARD_VERSION) {
         reason = "version";
         return false;
     }
@@ -137,17 +133,22 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
         }
     }
 
-    unsigned int nDataOut = 0;
+    unsigned int datacarrier_bytes_left = max_datacarrier_bytes.value_or(0);
     TxoutType whichType;
     for (const CTxOut& txout : tx.vout) {
-        if (!::IsStandard(txout.scriptPubKey, max_datacarrier_bytes, whichType)) {
+        if (!::IsStandard(txout.scriptPubKey, whichType)) {
             reason = "scriptpubkey";
             return false;
         }
 
-        if (whichType == TxoutType::NULL_DATA)
-            nDataOut++;
-        else if ((whichType == TxoutType::MULTISIG) && (!permit_bare_multisig)) {
+        if (whichType == TxoutType::NULL_DATA) {
+            unsigned int size = txout.scriptPubKey.size();
+            if (size > datacarrier_bytes_left) {
+                reason = "datacarrier";
+                return false;
+            }
+            datacarrier_bytes_left -= size;
+        } else if ((whichType == TxoutType::MULTISIG) && (!permit_bare_multisig)) {
             reason = "bare-multisig";
             return false;
         }
@@ -159,10 +160,33 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
         return false;
     }
 
-    // only one OP_RETURN txout is permitted
-    if (nDataOut > 1) {
-        reason = "multi-op-return";
-        return false;
+    return true;
+}
+
+/**
+ * Check the total number of non-witness sigops across the whole transaction, as per BIP54.
+ */
+static bool CheckSigopsBIP54(const CTransaction& tx, const CCoinsViewCache& inputs)
+{
+    Assert(!tx.IsCoinBase());
+
+    unsigned int sigops{0};
+    for (const auto& txin: tx.vin) {
+        const auto& prev_txo{inputs.AccessCoin(txin.prevout).out};
+
+        // Unlike the existing block wide sigop limit which counts sigops present in the block
+        // itself (including the scriptPubKey which is not executed until spending later), BIP54
+        // counts sigops in the block where they are potentially executed (only).
+        // This means sigops in the spent scriptPubKey count toward the limit.
+        // `fAccurate` means correctly accounting sigops for CHECKMULTISIGs(VERIFY) with 16 pubkeys
+        // or fewer. This method of accounting was introduced by BIP16, and BIP54 reuses it.
+        // The GetSigOpCount call on the previous scriptPubKey counts both bare and P2SH sigops.
+        sigops += txin.scriptSig.GetSigOpCount(/*fAccurate=*/true);
+        sigops += prev_txo.scriptPubKey.GetSigOpCount(txin.scriptSig);
+
+        if (sigops > MAX_TX_LEGACY_SIGOPS) {
+            return false;
+        }
     }
 
     return true;
@@ -183,11 +207,17 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
  *    as potential new upgrade hooks.
  *
  * Note that only the non-witness portion of the transaction is checked here.
+ *
+ * We also check the total number of non-witness sigops across the whole transaction, as per BIP54.
  */
 bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 {
     if (tx.IsCoinBase()) {
         return true; // Coinbases don't use vin normally
+    }
+
+    if (!CheckSigopsBIP54(tx, mapInputs)) {
+        return false;
     }
 
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
@@ -307,9 +337,50 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
     return true;
 }
 
+bool SpendsNonAnchorWitnessProg(const CTransaction& tx, const CCoinsViewCache& prevouts)
+{
+    if (tx.IsCoinBase()) {
+        return false;
+    }
+
+    int version;
+    std::vector<uint8_t> program;
+    for (const auto& txin: tx.vin) {
+        const auto& prev_spk{prevouts.AccessCoin(txin.prevout).out.scriptPubKey};
+
+        // Note this includes not-yet-defined witness programs.
+        if (prev_spk.IsWitnessProgram(version, program) && !prev_spk.IsPayToAnchor(version, program)) {
+            return true;
+        }
+
+        // For P2SH extract the redeem script and check if it spends a non-Taproot witness program. Note
+        // this is fine to call EvalScript (as done in AreInputsStandard/IsWitnessStandard) because this
+        // function is only ever called after IsStandardTx, which checks the scriptsig is pushonly.
+        if (prev_spk.IsPayToScriptHash()) {
+            // If EvalScript fails or results in an empty stack, the transaction is invalid by consensus.
+            std::vector <std::vector<uint8_t>> stack;
+            if (!EvalScript(stack, txin.scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker{}, SigVersion::BASE)
+                || stack.empty()) {
+                continue;
+            }
+            const CScript redeem_script{stack.back().begin(), stack.back().end()};
+            if (redeem_script.IsWitnessProgram(version, program)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+int64_t GetSigOpsAdjustedWeight(int64_t weight, int64_t sigop_cost, unsigned int bytes_per_sigop)
+{
+    return std::max(weight, sigop_cost * bytes_per_sigop);
+}
+
 int64_t GetVirtualTransactionSize(int64_t nWeight, int64_t nSigOpCost, unsigned int bytes_per_sigop)
 {
-    return (std::max(nWeight, nSigOpCost * bytes_per_sigop) + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR;
+    return (GetSigOpsAdjustedWeight(nWeight, nSigOpCost, bytes_per_sigop) + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR;
 }
 
 int64_t GetVirtualTransactionSize(const CTransaction& tx, int64_t nSigOpCost, unsigned int bytes_per_sigop)

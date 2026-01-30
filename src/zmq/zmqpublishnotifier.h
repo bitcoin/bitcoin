@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2022 The Bitcoin Core developers
+// Copyright (c) 2015-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -49,10 +49,10 @@ public:
 class CZMQPublishRawBlockNotifier : public CZMQAbstractPublishNotifier
 {
 private:
-    const std::function<bool(std::vector<uint8_t>&, const CBlockIndex&)> m_get_block_by_index;
+    const std::function<bool(std::vector<std::byte>&, const CBlockIndex&)> m_get_block_by_index;
 
 public:
-    CZMQPublishRawBlockNotifier(std::function<bool(std::vector<uint8_t>&, const CBlockIndex&)> get_block_by_index)
+    CZMQPublishRawBlockNotifier(std::function<bool(std::vector<std::byte>&, const CBlockIndex&)> get_block_by_index)
         : m_get_block_by_index{std::move(get_block_by_index)} {}
     bool NotifyBlock(const CBlockIndex *pindex) override;
 };

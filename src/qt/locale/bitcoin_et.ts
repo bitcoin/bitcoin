@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;Uus</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Kopeeri märgistatud aadress vahemällu</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Kopeeri</translation>
     </message>
@@ -407,8 +403,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;Muuda Salasõna...</translation>
     </message>
     <message>
+        <source>Sign &amp;message…</source>
+        <translation type="unfinished">Allkirjuta &amp;sõnum...</translation>
+    </message>
+    <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
         <translation type="unfinished">Omandi tõestamiseks allkirjasta sõnumid oma Bitcoini aadressiga</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message…</source>
+        <translation type="unfinished">&amp;Kinnita sõnum...</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
@@ -490,12 +494,46 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Ava Rahakott</translation>
     </message>
     <message>
+        <source>Open a wallet</source>
+        <translation type="unfinished">Ava Rahakott</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation type="unfinished">Sulge rahakott</translation>
+    </message>
+    <message>
+        <source>Restore Wallet…</source>
+        <extracomment>Name of the menu item that restores wallet from a backup file.</extracomment>
+        <translation type="unfinished">Taasta Rahakoti...</translation>
+    </message>
+    <message>
+        <source>Restore a wallet from a backup file</source>
+        <extracomment>Status tip for Restore Wallet menu item</extracomment>
+        <translation type="unfinished">Taasta rahakoti varukoopiafailist</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation type="unfinished">Sulge kõik rahakotid</translation>
+    </message>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">Migreeri rahakott</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation type="unfinished">&amp;Aken</translation>
     </message>
     <message>
+        <source>Main Window</source>
+        <translation type="unfinished">Pea Aken</translation>
+    </message>
+    <message>
         <source>%1 client</source>
         <translation type="unfinished">%1 klient</translation>
+    </message>
+    <message>
+        <source>&amp;Hide</source>
+        <translation type="unfinished">&amp;Peida</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
@@ -648,11 +686,29 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">Migreeri rahakott</translation>
+    </message>
+    </context>
+<context>
     <name>OpenWalletActivity</name>
     <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
         <translation type="unfinished">Ava Rahakott</translation>
+    </message>
+    </context>
+<context>
+    <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation type="unfinished">Sulge rahakott</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation type="unfinished">Sulge kõik rahakotid</translation>
     </message>
     </context>
 <context>
@@ -709,7 +765,29 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">versioon</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">Käsurea valikud</translation>
+    </message>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">Ära lülita arvutit välja ennem kui see aken on kadunud.</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Tere tulemast</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
@@ -742,28 +820,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error</source>
         <translation type="unfinished">Viga</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Tere tulemast</translation>
-    </message>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">versioon</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">Käsurea valikud</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">Ära lülita arvutit välja ennem kui see aken on kadunud.</translation>
     </message>
 </context>
 <context>
@@ -1408,10 +1464,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Allkiri</translation>
     </message>
     <message>
-        <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished">Kopeeri praegune signatuur vahemällu</translation>
-    </message>
-    <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
         <translation type="unfinished">Allkirjasta sõnum Bitcoini aadressi sulle kuulumise tõestamiseks</translation>
     </message>
@@ -1824,10 +1876,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error initializing block database</source>
         <translation type="unfinished">Tõrge bloki andmebaasi käivitamisel</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished">Tõrge rahakoti keskkonna %s käivitamisel!</translation>
     </message>
     <message>
         <source>Error loading block database</source>

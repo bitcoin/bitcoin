@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -132,11 +132,16 @@ static bool ParseArgs(NodeContext& node, int argc, char* argv[])
     return true;
 }
 
-static bool ProcessInitCommands(ArgsManager& args)
+static bool ProcessInitCommands(interfaces::Init& init, ArgsManager& args)
 {
     // Process help and version before taking care about datadir
     if (HelpRequested(args) || args.GetBoolArg("-version", false)) {
-        std::string strUsage = CLIENT_NAME " daemon version " + FormatFullVersion() + "\n";
+        std::string strUsage = CLIENT_NAME " daemon version " + FormatFullVersion();
+        if (const char* exe_name{init.exeName()}) {
+            strUsage += " ";
+            strUsage += exe_name;
+        }
+        strUsage += "\n";
 
         if (args.GetBoolArg("-version", false)) {
             strUsage += FormatParagraph(LicenseInfo());
@@ -254,11 +259,6 @@ static bool AppInit(NodeContext& node)
 
 MAIN_FUNCTION
 {
-#ifdef WIN32
-    common::WinCmdLineArgs winArgs;
-    std::tie(argc, argv) = winArgs.get();
-#endif
-
     NodeContext node;
     int exit_status;
     std::unique_ptr<interfaces::Init> init = interfaces::MakeNodeInit(node, argc, argv, exit_status);
@@ -277,7 +277,7 @@ MAIN_FUNCTION
     ArgsManager& args = *Assert(node.args);
     if (!ParseArgs(node, argc, argv)) return EXIT_FAILURE;
     // Process early info return commands such as -help or -version
-    if (ProcessInitCommands(args)) return EXIT_SUCCESS;
+    if (ProcessInitCommands(*init, args)) return EXIT_SUCCESS;
 
     // Start application
     if (!AppInit(node) || !Assert(node.shutdown_signal)->wait()) {

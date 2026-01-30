@@ -1,4 +1,4 @@
-# Copyright (c) 2025 The Bitcoin Core developers
+# Copyright (c) 2025-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
@@ -27,7 +27,7 @@ function(add_libmultiprocess subdir)
   mark_as_advanced(CapnProto_kj-tls_IMPORTED_LOCATION)
   if(BUILD_TESTS)
     # Add tests to "all" target so ctest can run them
-    set_target_properties(mptests PROPERTIES EXCLUDE_FROM_ALL OFF)
+    set_target_properties(mptest PROPERTIES EXCLUDE_FROM_ALL OFF)
   endif()
   # Exclude examples from compilation database, because the examples are not
   # built by default, and they contain generated c++ code. Without this

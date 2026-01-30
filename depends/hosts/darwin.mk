@@ -1,4 +1,4 @@
-OSX_MIN_VERSION=13.0
+OSX_MIN_VERSION=14.0
 OSX_SDK_VERSION=14.0
 XCODE_VERSION=15.0
 XCODE_BUILD_ID=15A240d
@@ -60,8 +60,8 @@ darwin_CXX=$(clangxx_prog) --target=$(host) \
                -iwithsysroot/usr/include/c++/v1 \
                -iwithsysroot/usr/include -iframeworkwithsysroot/System/Library/Frameworks
 
-darwin_CFLAGS=-pipe -std=$(C_STANDARD) -mmacos-version-min=$(OSX_MIN_VERSION)
-darwin_CXXFLAGS=-pipe -std=$(CXX_STANDARD) -mmacos-version-min=$(OSX_MIN_VERSION)
+darwin_CFLAGS=-mmacos-version-min=$(OSX_MIN_VERSION)
+darwin_CXXFLAGS=-mmacos-version-min=$(OSX_MIN_VERSION)
 darwin_LDFLAGS=-Wl,-platform_version,macos,$(OSX_MIN_VERSION),$(OSX_SDK_VERSION)
 
 ifneq ($(build_os),darwin)

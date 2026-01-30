@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(ForgetPeerTest)
     TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
     NodeId peer_id0 = 0;
 
-    // Removing peer after pre-registring works and does not let to register the peer.
+    // Removing peer after pre-registering works and does not let to register the peer.
     tracker.PreRegisterPeer(peer_id0);
     tracker.ForgetPeer(peer_id0);
     BOOST_CHECK_EQUAL(tracker.RegisterPeer(peer_id0, true, 1, 1), ReconciliationRegisterResult::NOT_FOUND);

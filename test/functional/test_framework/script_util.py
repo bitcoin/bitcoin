@@ -1,10 +1,21 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2022 The Bitcoin Core developers
+# Copyright (c) 2019-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Useful Script constants and utils."""
 import unittest
 
+from copy import deepcopy
+
+from test_framework.messages import (
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxInWitness,
+    CTxOut,
+    ser_compact_size,
+    sha256,
+)
 from test_framework.script import (
     CScript,
     OP_0,
@@ -14,13 +25,27 @@ from test_framework.script import (
     OP_CHECKMULTISIG,
     OP_CHECKSIG,
     OP_DUP,
+    OP_ELSE,
+    OP_ENDIF,
     OP_EQUAL,
     OP_EQUALVERIFY,
     OP_HASH160,
+    OP_IF,
     OP_RETURN,
+    OP_TRUE,
     hash160,
-    sha256,
 )
+
+from test_framework.util import (
+    assert_greater_than_or_equal,
+    assert_equal,
+)
+
+# Maximum number of potentially executed legacy signature operations in validating a transaction.
+MAX_STD_LEGACY_SIGOPS = 2_500
+
+# Maximum number of sigops per standard P2SH redeemScript.
+MAX_STD_P2SH_SIGOPS = 15
 
 # To prevent a "tx-size-small" policy rule error, a transaction has to have a
 # non-witness size of at least 65 bytes (MIN_STANDARD_TX_NONWITNESS_SIZE in
@@ -44,6 +69,7 @@ DUMMY_MIN_OP_RETURN_SCRIPT = CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 1)))
 assert len(DUMMY_MIN_OP_RETURN_SCRIPT) == MIN_PADDING
 
 PAY_TO_ANCHOR = CScript([OP_1, bytes.fromhex("4e73")])
+ANCHOR_ADDRESS = "bcrt1pfeesnyr2tx"
 
 def key_to_p2pk_script(key):
     key = check_key(key)
@@ -109,6 +135,16 @@ def script_to_p2sh_p2wsh_script(script):
     p2shscript = CScript([OP_0, sha256(script)])
     return script_to_p2sh_script(p2shscript)
 
+def bulk_vout(tx, target_vsize):
+    if target_vsize < tx.get_vsize():
+        raise RuntimeError(f"target_vsize {target_vsize} is less than transaction virtual size {tx.get_vsize()}")
+    # determine number of needed padding bytes
+    dummy_vbytes = target_vsize - tx.get_vsize()
+    # compensate for the increase of the compact-size encoded script length
+    # (note that the length encoding of the unpadded output script needs one byte)
+    dummy_vbytes -= len(ser_compact_size(dummy_vbytes)) - 1
+    tx.vout[-1].scriptPubKey = CScript([OP_RETURN] + [OP_1] * dummy_vbytes)
+    assert_equal(tx.get_vsize(), target_vsize)
 
 def output_key_to_p2tr_script(key):
     assert len(key) == 32
@@ -129,6 +165,46 @@ def check_script(script):
     if isinstance(script, bytes) or isinstance(script, CScript):
         return script
     assert False
+
+
+def build_malleated_tx_package(*, parent: CTransaction, rebalance_parent_output_amount, child_amount):
+    """
+    Returns a transaction package with valid witness:
+    - Parent transaction whose last output contains a script that has two spending conditions
+    - Two malleated child transactions with same txid but different wtxids because of different witnesses
+
+    Args:
+        parent: Transaction with modifiable outputs. Either unsigned (sign after
+        calling this function) or anyone-can-spend (e.g., MiniWallet's OP_TRUE).
+    """
+    hashlock = hash160(b'Preimage')
+    witness_script = CScript([OP_IF, OP_HASH160, hashlock, OP_EQUAL, OP_ELSE, OP_TRUE, OP_ENDIF])
+    witness_program = sha256(witness_script)
+    script_pubkey = CScript([OP_0, witness_program])
+
+    # Append to the transaction the vout containing the script supporting 2 spending conditions
+    assert_greater_than_or_equal(len(parent.vout), 1)
+    last_output = parent.vout[len(parent.vout) - 1]
+    assert_greater_than_or_equal(last_output.nValue, rebalance_parent_output_amount)
+    last_output.nValue -= rebalance_parent_output_amount
+    parent.vout.append(CTxOut(rebalance_parent_output_amount, script_pubkey))
+
+
+    # Create 2 valid children that differ only in witness data.
+    # 1. Create a new transaction with witness solving first branch
+    child_witness_script = CScript([OP_TRUE])
+    child_witness_program = sha256(child_witness_script)
+    child_script_pubkey = CScript([OP_0, child_witness_program])
+    child_one = CTransaction()
+
+    child_one.vin.append(CTxIn(COutPoint(int(parent.txid_hex, 16), len(parent.vout) - 1), b""))
+    child_one.vout.append(CTxOut(child_amount, child_script_pubkey))
+    child_one.wit.vtxinwit.append(CTxInWitness())
+    child_one.wit.vtxinwit[0].scriptWitness.stack = [b'Preimage', b'\x01', witness_script]
+    # 2. Create another identical transaction with witness solving second branch
+    child_two = deepcopy(child_one)
+    child_two.wit.vtxinwit[0].scriptWitness.stack = [b'', witness_script]
+    return parent, child_one, child_two
 
 
 class TestFrameworkScriptUtil(unittest.TestCase):

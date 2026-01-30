@@ -60,7 +60,7 @@ static void WalletCreate(benchmark::Bench& bench, bool encrypted)
 static void WalletCreatePlain(benchmark::Bench& bench) { WalletCreate(bench, /*encrypted=*/false); }
 static void WalletCreateEncrypted(benchmark::Bench& bench) { WalletCreate(bench, /*encrypted=*/true); }
 
-BENCHMARK(WalletCreatePlain, benchmark::PriorityLevel::LOW);
-BENCHMARK(WalletCreateEncrypted, benchmark::PriorityLevel::LOW);
+BENCHMARK(WalletCreatePlain);
+BENCHMARK(WalletCreateEncrypted);
 
 } // namespace wallet

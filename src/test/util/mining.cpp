@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,6 +17,9 @@
 #include <validationinterface.h>
 #include <versionbits.h>
 
+#include <algorithm>
+#include <memory>
+
 using node::BlockAssembler;
 using node::NodeContext;
 
@@ -34,12 +37,15 @@ std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const
 {
     std::vector<std::shared_ptr<CBlock>> ret{total_height};
     auto time{params.GenesisBlock().nTime};
+    // NOTE: here `height` does not correspond to the block height but the block height - 1.
     for (size_t height{0}; height < total_height; ++height) {
         CBlock& block{*(ret.at(height) = std::make_shared<CBlock>())};
 
         CMutableTransaction coinbase_tx;
+        coinbase_tx.nLockTime = static_cast<uint32_t>(height);
         coinbase_tx.vin.resize(1);
         coinbase_tx.vin[0].prevout.SetNull();
+        coinbase_tx.vin[0].nSequence = CTxIn::MAX_SEQUENCE_NONFINAL; // Make sure timelock is enforced.
         coinbase_tx.vout.resize(1);
         coinbase_tx.vout[0].scriptPubKey = P2WSH_OP_TRUE;
         coinbase_tx.vout[0].nValue = GetBlockSubsidy(height + 1, params.GetConsensus());
@@ -78,9 +84,9 @@ struct BlockValidationStateCatcher : public CValidationInterface {
           m_state{} {}
 
 protected:
-    void BlockChecked(const CBlock& block, const BlockValidationState& state) override
+    void BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& state) override
     {
-        if (block.GetHash() != m_hash) return;
+        if (block->GetHash() != m_hash) return;
         m_state = state;
     }
 };

@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -124,7 +124,7 @@ void NetGroupManager::ASMapHealthCheck(const std::vector<CNetAddr>& clearnet_add
         clearnet_asns.insert(asn);
     }
 
-    LogPrintf("ASMap Health Check: %i clearnet peers are mapped to %i ASNs with %i peers being unmapped\n", clearnet_addrs.size(), clearnet_asns.size(), unmapped_count);
+    LogInfo("ASMap Health Check: %i clearnet peers are mapped to %i ASNs with %i peers being unmapped\n", clearnet_addrs.size(), clearnet_asns.size(), unmapped_count);
 }
 
 bool NetGroupManager::UsingASMap() const {

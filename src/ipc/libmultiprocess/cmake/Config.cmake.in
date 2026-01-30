@@ -17,7 +17,7 @@ if ("Bin" IN_LIST ${CMAKE_FIND_PACKAGE_NAME}_FIND_COMPONENTS)
 endif()
 
 if ("Lib" IN_LIST ${CMAKE_FIND_PACKAGE_NAME}_FIND_COMPONENTS)
-  # Setting FOUND_LIBATOMIC is needed on debian & ubuntu systems to work around bug in
+  # Setting FOUND_LIBATOMIC is needed on Debian & Ubuntu systems to work around bug in
   # their capnproto packages. See compat_find.cmake for a more complete explanation.
   set(FOUND_LIBATOMIC TRUE)
   include(CMakeFindDependencyMacro)
