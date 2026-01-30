@@ -1411,9 +1411,9 @@ communication:
   using TipChangedFn = std::function<void(int block_height, int64_t block_time)>;
   virtual std::unique_ptr<interfaces::Handler> handleTipChanged(TipChangedFn fn) = 0;
 
-  // Bad: returns boost connection specific to local process
+  // Bad: returns btcsignals connection specific to local process
   using TipChangedFn = std::function<void(int block_height, int64_t block_time)>;
-  virtual boost::signals2::scoped_connection connectTipChanged(TipChangedFn fn) = 0;
+  virtual btcsignals::scoped_connection connectTipChanged(TipChangedFn fn) = 0;
   ```
 
 - Interface methods should not be overloaded.
