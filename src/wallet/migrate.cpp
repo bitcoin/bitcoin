@@ -50,7 +50,7 @@ enum class RecordType : uint8_t {
     KEYDATA = 1,
     // DUPLICATE = 2,       Unused as our databases do not support duplicate records
     OVERFLOW_DATA = 3,
-    DELETE = 0x80, // Indicate this record is deleted. This is OR'd with the real type.
+    DELETE_FLAG = 0x80, // Indicate this record is deleted. This is OR'd with the real type.
 };
 
 enum class BTreeFlags : uint32_t {
@@ -208,8 +208,8 @@ class RecordHeader
 {
 public:
     uint16_t len;    // Key/data item length
-    RecordType type; // Page type (BDB has this include a DELETE FLAG that we track separately)
-    bool deleted;    // Whether the DELETE flag was set on type
+    RecordType type; // Page type (BDB has this; includes a DELETE_FLAG that we track separately)
+    bool deleted;    // Whether the DELETE_FLAG was set on type
 
     static constexpr size_t SIZE = 3; // The record header is 3 bytes
 
@@ -225,8 +225,8 @@ public:
 
         uint8_t uint8_type;
         s >> uint8_type;
-        type = static_cast<RecordType>(uint8_type & ~static_cast<uint8_t>(RecordType::DELETE));
-        deleted = uint8_type & static_cast<uint8_t>(RecordType::DELETE);
+        type = static_cast<RecordType>(uint8_type & ~static_cast<uint8_t>(RecordType::DELETE_FLAG));
+        deleted = uint8_type & static_cast<uint8_t>(RecordType::DELETE_FLAG);
 
         if (other_endian) {
             len = internal_bswap_16(len);
