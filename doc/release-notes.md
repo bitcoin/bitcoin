@@ -45,12 +45,25 @@ Notable changes
 
 - #34227 guix: Fix `osslsigncode` tests
 
+### CI
+
+- #32513 ci: remove 3rd party js from windows dll gha job
+- #34344 ci: update GitHub Actions versions
+- #34463 ci: use macos-14 image
+
+### Misc
+
+- #34174 doc: update copyright year to 2026
+
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
+- fanquake
 - Hennadii Stepanov
+- m3dwards
+- Padraic Slattery
 - SatsAndSports
 
 As well as to everyone that helped with translations on
