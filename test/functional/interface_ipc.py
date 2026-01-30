@@ -4,15 +4,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the IPC (multiprocess) interface."""
 import asyncio
-import inspect
-from contextlib import asynccontextmanager, AsyncExitStack
-from dataclasses import dataclass
+from contextlib import AsyncExitStack
 from io import BytesIO
 from pathlib import Path
-import shutil
 from test_framework.blocktools import NULL_OUTPOINT
 from test_framework.messages import (
-    CBlock,
     CTransaction,
     CTxIn,
     CTxOut,
@@ -26,18 +22,18 @@ from test_framework.util import (
     assert_not_equal
 )
 from test_framework.wallet import MiniWallet
-from typing import Optional
-
-# Stores the result of getCoinbaseTx()
-@dataclass
-class CoinbaseTxData:
-    version: int
-    sequence: int
-    scriptSigPrefix: bytes
-    witness: Optional[bytes]
-    blockRewardRemaining: int
-    requiredOutputs: list[bytes]
-    lockTime: int
+from test_framework.ipc_util import (
+    CoinbaseTxData,
+    destroying,
+    create_block_template,
+    load_capnp_modules,
+    make_capnp_init_ctx,
+    get_block,
+    get_coinbase_tx,
+    get_coinbase_raw_tx,
+    wait_next_template,
+    wait_and_do,
+)
 
 # Test may be skipped and not have capnp installed
 try:
@@ -45,74 +41,12 @@ try:
 except ModuleNotFoundError:
     pass
 
-@asynccontextmanager
-async def destroying(obj, ctx):
-    """Call obj.destroy(ctx) at end of with: block. Similar to contextlib.closing."""
-    try:
-        yield obj
-    finally:
-        await obj.destroy(ctx)
-
-async def create_block_template(mining, stack, ctx, opts):
-    """Call mining.createNewBlock() and return template, then call template.destroy() when stack exits."""
-    return await stack.enter_async_context(destroying((await mining.createNewBlock(opts)).result, ctx))
-
-async def wait_next_template(template, stack, ctx, opts):
-    """Call template.waitNext() and return template, then call template.destroy() when stack exits."""
-    return await stack.enter_async_context(destroying((await template.waitNext(ctx, opts)).result, ctx))
-
-async def wait_and_do(wait_fn, do_fn):
-    """Call wait_fn, then sleep, then call do_fn in a parallel task. Wait for
-    both tasks to complete."""
-    wait_started = asyncio.Event()
-    result = None
-
-    async def wait():
-        nonlocal result
-        wait_started.set()
-        result = await wait_fn
-
-    async def do():
-        await wait_started.wait()
-        await asyncio.sleep(0.1)
-        # Let do_fn be either a callable or an awaitable object
-        if inspect.isawaitable(do_fn):
-            await do_fn
-        else:
-            do_fn()
-
-    await asyncio.gather(wait(), do())
-    return result
 
 class IPCInterfaceTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_ipc()
         self.skip_if_no_py_capnp()
-
-    def load_capnp_modules(self):
-        if capnp_bin := shutil.which("capnp"):
-            # Add the system cap'nproto path so include/capnp/c++.capnp can be found.
-            capnp_dir = Path(capnp_bin).resolve().parent.parent / "include"
-        else:
-            # If there is no system cap'nproto, the pycapnp module should have its own "bundled"
-            # includes at this location. If pycapnp was installed with bundled capnp,
-            # capnp/c++.capnp can be found here.
-            capnp_dir = Path(capnp.__path__[0]).parent
-        src_dir = Path(self.config['environment']['SRCDIR']) / "src"
-        mp_dir = src_dir / "ipc" / "libmultiprocess" / "include"
-        # List of import directories. Note: it is important for mp_dir to be
-        # listed first, in case there are other libmultiprocess installations on
-        # the system, to ensure that `import "/mp/proxy.capnp"` lines load the
-        # same file as capnp.load() loads directly below, and there are not
-        # "failed: Duplicate ID @0xcc316e3f71a040fb" errors.
-        imports = [str(mp_dir), str(capnp_dir), str(src_dir)]
-        return {
-            "proxy": capnp.load(str(mp_dir / "mp" / "proxy.capnp"), imports=imports),
-            "init": capnp.load(str(src_dir / "ipc" / "capnp" / "init.capnp"), imports=imports),
-            "echo": capnp.load(str(src_dir / "ipc" / "capnp" / "echo.capnp"), imports=imports),
-            "mining": capnp.load(str(src_dir / "ipc" / "capnp" / "mining.capnp"), imports=imports),
-        }
 
     def set_test_params(self):
         self.num_nodes = 2
@@ -122,59 +56,13 @@ class IPCInterfaceTest(BitcoinTestFramework):
         super().setup_nodes()
         # Use this function to also load the capnp modules (we cannot use set_test_params for this,
         # as it is being called before knowing whether capnp is available).
-        self.capnp_modules = self.load_capnp_modules()
-
-    async def make_capnp_init_ctx(self):
-        node = self.nodes[0]
-        # Establish a connection, and create Init proxy object.
-        connection = await capnp.AsyncIoStream.create_unix_connection(node.ipc_socket_path)
-        client = capnp.TwoPartyClient(connection)
-        init = client.bootstrap().cast_as(self.capnp_modules['init'].Init)
-        # Create a remote thread on the server for the IPC calls to be executed in.
-        threadmap = init.construct().threadMap
-        thread = threadmap.makeThread("pythread").result
-        ctx = self.capnp_modules['proxy'].Context()
-        ctx.thread = thread
-        # Return both.
-        return ctx, init
-
-    async def parse_and_deserialize_block(self, block_template, ctx):
-        block_data = BytesIO((await block_template.getBlock(ctx)).result)
-        block = CBlock()
-        block.deserialize(block_data)
-        return block
-
-    async def parse_and_deserialize_coinbase_tx(self, block_template, ctx):
-        assert block_template is not None
-        coinbase_data = BytesIO((await block_template.getCoinbaseRawTx(ctx)).result)
-        tx = CTransaction()
-        tx.deserialize(coinbase_data)
-        return tx
-
-    async def parse_and_deserialize_coinbase(self, block_template, ctx) -> CoinbaseTxData:
-        assert block_template is not None
-        # Note: the template_capnp struct will be garbage-collected when this
-        # method returns, so it is important to copy any Data fields from it
-        # which need to be accessed later using the bytes() cast. Starting with
-        # pycapnp v2.2.0, Data fields have type `memoryview` and are ephemeral.
-        template_capnp = (await block_template.getCoinbaseTx(ctx)).result
-        witness: Optional[bytes] = None
-        if template_capnp._has("witness"):
-            witness = bytes(template_capnp.witness)
-        return CoinbaseTxData(
-            version=int(template_capnp.version),
-            sequence=int(template_capnp.sequence),
-            scriptSigPrefix=bytes(template_capnp.scriptSigPrefix),
-            witness=witness,
-            blockRewardRemaining=int(template_capnp.blockRewardRemaining),
-            requiredOutputs=[bytes(output) for output in template_capnp.requiredOutputs],
-            lockTime=int(template_capnp.lockTime),
-        )
+        src_dir = Path(self.config['environment']['SRCDIR']) / "src"
+        self.capnp_modules = load_capnp_modules(src_dir, ["proxy", "init", "echo", "mining"])
 
     def run_echo_test(self):
         self.log.info("Running echo test")
         async def async_routine():
-            ctx, init = await self.make_capnp_init_ctx()
+            ctx, init = await make_capnp_init_ctx(self.nodes[0], self.capnp_modules)
             self.log.debug("Create Echo proxy object")
             echo = init.makeEcho(ctx).result
             self.log.debug("Test a few invocations of echo")
@@ -188,7 +76,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
     async def build_coinbase_test(self, template, ctx, miniwallet):
         self.log.debug("Build coinbase transaction using getCoinbaseTx()")
         assert template is not None
-        coinbase_res = await self.parse_and_deserialize_coinbase(template, ctx)
+        coinbase_res = await get_coinbase_tx(template, ctx)
         coinbase_tx = CTransaction()
         coinbase_tx.version = coinbase_res.version
         coinbase_tx.vin = [CTxIn()]
@@ -225,7 +113,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
         coinbase_tx.nLockTime = coinbase_res.lockTime
 
         # Compare to dummy coinbase provided by the deprecated getCoinbaseTx()
-        coinbase_legacy = await self.parse_and_deserialize_coinbase_tx(template, ctx)
+        coinbase_legacy = await get_coinbase_raw_tx(template, ctx)
         assert_equal(coinbase_legacy.vout[0].nValue, coinbase_res.blockRewardRemaining)
         # Swap dummy output for our own
         coinbase_legacy.vout[0].scriptPubKey = coinbase_tx.vout[0].scriptPubKey
@@ -241,7 +129,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
         miniwallet = MiniWallet(self.nodes[0])
 
         async def async_routine():
-            ctx, init = await self.make_capnp_init_ctx()
+            ctx, init = await make_capnp_init_ctx(self.nodes[0], self.capnp_modules)
             self.log.debug("Create Mining proxy object")
             mining = init.makeMining(ctx).result
             self.log.debug("Test simple inspectors")
@@ -275,7 +163,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 self.log.debug("Test some inspectors of Template")
                 header = (await template.getBlockHeader(ctx)).result
                 assert_equal(len(header), block_header_size)
-                block = await self.parse_and_deserialize_block(template, ctx)
+                block = await get_block(template, ctx)
                 assert_equal(ser_uint256(block.hashPrevBlock), newblockref.hash)
                 assert len(block.vtx) >= 1
                 txfees = await template.getTxFees(ctx)
@@ -294,7 +182,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 template2 = await wait_and_do(
                     wait_next_template(template, stack, ctx, waitoptions),
                     lambda: self.generate(self.nodes[0], 1))
-                block2 = await self.parse_and_deserialize_block(template2, ctx)
+                block2 = await get_block(template2, ctx)
                 assert_equal(len(block2.vtx), 1)
 
                 self.log.debug("Wait for another, but time out")
@@ -305,13 +193,13 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 template4 = await wait_and_do(
                     wait_next_template(template2, stack, ctx, waitoptions),
                     lambda: miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0]))
-                block3 = await self.parse_and_deserialize_block(template4, ctx)
+                block3 = await get_block(template4, ctx)
                 assert_equal(len(block3.vtx), 2)
 
                 self.log.debug("Wait again, this should return the same template, since the fee threshold is zero")
                 waitoptions.feeThreshold = 0
                 template5 = await wait_next_template(template4, stack, ctx, waitoptions)
-                block4 = await self.parse_and_deserialize_block(template5, ctx)
+                block4 = await get_block(template5, ctx)
                 assert_equal(len(block4.vtx), 2)
                 waitoptions.feeThreshold = 1
 
@@ -319,7 +207,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 template6 = await wait_and_do(
                     wait_next_template(template5, stack, ctx, waitoptions),
                     lambda: miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0]))
-                block4 = await self.parse_and_deserialize_block(template6, ctx)
+                block4 = await get_block(template6, ctx)
                 assert_equal(len(block4.vtx), 3)
 
                 self.log.debug("Wait for another, but time out, since the fee threshold is set now")
@@ -338,7 +226,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
             current_block_height = self.nodes[0].getchaintips()[0]["height"]
             check_opts = self.capnp_modules['mining'].BlockCheckOptions()
             async with destroying((await mining.createNewBlock(opts)).result, ctx) as template:
-                block = await self.parse_and_deserialize_block(template, ctx)
+                block = await get_block(template, ctx)
                 balance = miniwallet.get_balance()
                 coinbase = await self.build_coinbase_test(template, ctx, miniwallet)
                 # Reduce payout for balance comparison simplicity
@@ -363,7 +251,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 assert_equal(block_valid, True)
 
                 # The remote template block will be mutated, capture the original:
-                remote_block_before = await self.parse_and_deserialize_block(template, ctx)
+                remote_block_before = await get_block(template, ctx)
 
                 self.log.debug("Submitted coinbase must include witness")
                 assert_not_equal(coinbase.serialize_without_witness().hex(), coinbase.serialize().hex())
@@ -373,7 +261,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 self.log.debug("Even a rejected submitBlock() mutates the template's block")
                 # Can be used by clients to download and inspect the (rejected)
                 # reconstructed block.
-                remote_block_after = await self.parse_and_deserialize_block(template, ctx)
+                remote_block_after = await get_block(template, ctx)
                 assert_not_equal(remote_block_before.serialize().hex(), remote_block_after.serialize().hex())
 
                 self.log.debug("Submit again, with the witness")
