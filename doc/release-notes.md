@@ -48,6 +48,10 @@ Notable changes
 
 - #34272 psbt: Fix PSBTInputSignedAndVerified bounds assert
 
+### Miniscript
+
+- #34434 miniscript: correct and_v() properties
+
 ### Build
 
 - #34281 build: Temporarily remove confusing and brittle -fdebug-prefix-map
@@ -57,6 +61,8 @@ Notable changes
 - #34185 test: fix feature_pruning when built without wallet
 - #34282 qa: Fix Windows logging bug
 - #34390 test: allow overriding tar in get_previous_releases.py
+- #34409 test: use ModuleNotFoundError in interface_ipc.py
+- #34445 fuzz: Use AFL_SHM_ID for naming test directories
 
 ### Doc
 
@@ -67,6 +73,7 @@ Notable changes
 
 - #32513 ci: remove 3rd party js from windows dll gha job
 - #34344 ci: update GitHub Actions versions
+- #34453 ci: Always print low ccache hit rate notice
 
 Credits
 =======
@@ -74,10 +81,12 @@ Credits
 Thanks to everyone who directly contributed to this release:
 
 - brunoerg
+- darosior
 - fanquake
 - Hennadii Stepanov
 - Lőrinc
 - m3dwards
+- marcofleon
 - MarcoFalke
 - mzumsande
 - Padraic Slattery
