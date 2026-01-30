@@ -14,7 +14,7 @@ from test_framework.wallet import MiniWallet
 # Test may be skipped and not have capnp installed
 try:
     import capnp  # type: ignore[import] # noqa: F401
-except ImportError:
+except ModuleNotFoundError:
     pass
 
 
