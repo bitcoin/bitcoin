@@ -307,7 +307,6 @@ if(BUILD_DAEMON)
   target_link_libraries(bitcoind
     core_interface
     bitcoin_node
-    Boost::headers
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
   )
   install_binary_component(bitcoind HAS_MANPAGE)
@@ -321,7 +320,6 @@ if(ENABLE_IPC AND BUILD_DAEMON)
     core_interface
     bitcoin_node
     bitcoin_ipc
-    Boost::headers
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
   )
   install_binary_component(bitcoin-node INTERNAL)
