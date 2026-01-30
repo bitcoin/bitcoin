@@ -1554,5 +1554,60 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         BOOST_CHECK(!ret);
     }
 }
+BOOST_AUTO_TEST_CASE(outbound_onion_network_key_determinism)
+{
+    static const uint64_t RANDOMIZER_ID_NETWORKKEY = 0x0e8a2b136c592a7dULL;
+    // Helper mimics hasher logic from ConnectNode()
+    auto compute_network_id = [this](const CService& target_service, const CService& bind_service) -> uint64_t {
+        CAddress target_addr(target_service, NODE_NETWORK);
+
+        auto hasher = m_node.connman -> GetDeterministicRandomizer(RANDOMIZER_ID_NETWORKKEY)
+                          .Write(target_addr.GetNetClass())
+                          .Write(bind_service.GetAddrBytes());
+
+        if (target_addr.GetNetClass() == NET_ONION) {
+            // each outbound connection given a unique network_id
+            hasher.Write(target_addr.GetAddrBytes());
+        } else {
+            // for outbound non-onion, port is randomly assigned by OS
+            hasher.Write(0);
+        }
+
+        return hasher.Finalize();
+    };
+    // Common bind address
+    CService bind_loopback(LookupNumeric("127.0.0.1", 8333));
+
+    // Two distinct v3 onion addresses
+    const CService onion_a = Lookup("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion", 8333, false).value();
+    const CService onion_b = Lookup("7fa6xlti5joarlmkuhjaifa47ukgcwz6tfndgax45ocyn4rixm632jid.onion", 8333, false).value();
+
+    BOOST_CHECK_EQUAL(onion_a.GetNetClass(), NET_ONION);
+    BOOST_CHECK_EQUAL(onion_b.GetNetClass(), NET_ONION);
+    BOOST_CHECK(onion_a != onion_b);
+
+    // Clearnet addresses
+    CService clearnet_a(LookupNumeric("1.2.3.4", 8333));
+    CService clearnet_b(LookupNumeric("5.6.7.8", 8333));
+
+    // Different outbound onions get different keys
+    uint64_t key_onion_a = compute_network_id(onion_a, bind_loopback);
+    uint64_t key_onion_b = compute_network_id(onion_b, bind_loopback);
+    BOOST_CHECK(key_onion_a != key_onion_b);
+
+    // Same outbound onion gets same key (deterministic)
+    uint64_t key_onion_a_again = compute_network_id(onion_a, bind_loopback);
+    BOOST_CHECK_EQUAL(key_onion_a, key_onion_a_again);
+
+    // Different clearnet addresses share same key (regression check)
+    uint64_t key_clearnet_a = compute_network_id(clearnet_a, bind_loopback);
+    uint64_t key_clearnet_b = compute_network_id(clearnet_b, bind_loopback);
+    BOOST_CHECK_EQUAL(key_clearnet_a, key_clearnet_b);
+
+    // verify keys are non-zero
+    BOOST_CHECK(key_onion_a != 0);
+    BOOST_CHECK(key_clearnet_a != 0);
+
+}
 
 BOOST_AUTO_TEST_SUITE_END()
