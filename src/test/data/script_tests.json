@@ -2568,6 +2568,50 @@
     "WITNESS_PUBKEYTYPE",
     "P2SH(P2WSH) CHECKMULTISIG with second key uncompressed and signing with the second key"
 ],
+[
+    [
+        "c4f715c414799e051c59941ad923c456131421ba72fe0789f02e84f925333494e30c28a2e6487e609f9e78cd2b6ea860945f68f6c78a746dcc2ddd5426187ac5",
+        0.00000001
+    ],
+    "",
+    "1 0x20 0xda4710964f7852695de2da025290e24af6d8c281de5a0b902b7135fd9fd74d21",
+    "P2SH,TAPROOT,WITNESS",
+    "OK",
+    "Taproot key path spending"
+],
+[
+    [
+        "f391599cac981fbb7d932c23e06a624bb6c87bada5f10a2d7b626960118b6ac6fb0ed456c767b4f534e594cd8100c9d4e595ecee1b1a967c80bc61939a88007d04",
+        0.00000001
+    ],
+    "",
+    "1 0x20 0xda4710964f7852695de2da025290e24af6d8c281de5a0b902b7135fd9fd74d21",
+    "P2SH,TAPROOT,WITNESS",
+    "SCHNORR_SIG_HASHTYPE",
+    "Taproot key path spending with unknown sighash 0x04"
+],
+[
+    [
+        "f391599cac981fbb7d932c23e06a624bb6c87bada5f10a2d7b626960118b6ac6fb0ed456c767b4f534e594cd8100c9d4e595ecee1b1a967c80bc61939a88007d80",
+        0.00000001
+    ],
+    "",
+    "1 0x20 0xda4710964f7852695de2da025290e24af6d8c281de5a0b902b7135fd9fd74d21",
+    "P2SH,TAPROOT,WITNESS",
+    "SCHNORR_SIG_HASHTYPE",
+    "Taproot key path spending with unknown sighash 0x80"
+],
+[
+    [
+        "f391599cac981fbb7d932c23e06a624bb6c87bada5f10a2d7b626960118b6ac6fb0ed456c767b4f534e594cd8100c9d4e595ecee1b1a967c80bc61939a88007d84",
+        0.00000001
+    ],
+    "",
+    "1 0x20 0xda4710964f7852695de2da025290e24af6d8c281de5a0b902b7135fd9fd74d21",
+    "P2SH,TAPROOT,WITNESS",
+    "SCHNORR_SIG_HASHTYPE",
+    "Taproot key path spending with unknown sighash 0x84"
+],
 
 ["CHECKSEQUENCEVERIFY tests"],
 ["", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "INVALID_STACK_OPERATION", "CSV automatically fails on an empty stack"],

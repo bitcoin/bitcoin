@@ -95,6 +95,7 @@ static ScriptErrorDesc script_errors[]={
     {SCRIPT_ERR_OP_CODESEPARATOR, "OP_CODESEPARATOR"},
     {SCRIPT_ERR_SIG_FINDANDDELETE, "SIG_FINDANDDELETE"},
     {SCRIPT_ERR_SCRIPTNUM, "SCRIPTNUM"}
+    {SCRIPT_ERR_SCHNORR_SIG_HASHTYPE, "SCHNORR_SIG_HASHTYPE"},
 };
 
 static std::string FormatScriptFlags(script_verify_flags flags)
@@ -131,7 +132,15 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
     ScriptError err;
     const CTransaction txCredit{BuildCreditingTransaction(scriptPubKey, nValue)};
     CMutableTransaction tx = BuildSpendingTransaction(scriptSig, scriptWitness, txCredit);
-    BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err) == expect, message);
+
+    PrecomputedTransactionData txdata;
+    if (flags & SCRIPT_VERIFY_TAPROOT) {
+        std::vector<CTxOut> spent_outputs;
+        spent_outputs.emplace_back(txCredit.vout[0]);
+        txdata.Init(tx, std::move(spent_outputs));
+    }
+
+    BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue, txdata, MissingDataBehavior::ASSERT_FAIL), &err) == expect, message);
     BOOST_CHECK_MESSAGE(err == scriptError, FormatScriptError(err) + " where " + FormatScriptError((ScriptError_t)scriptError) + " expected: " + message);
 
     // Verify that removing flags from a passing test or adding flags to a failing test does not change the result.
@@ -141,7 +150,7 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
         // Weed out some invalid flag combinations.
         if (combined_flags & SCRIPT_VERIFY_CLEANSTACK && ~combined_flags & (SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS)) continue;
         if (combined_flags & SCRIPT_VERIFY_WITNESS && ~combined_flags & SCRIPT_VERIFY_P2SH) continue;
-        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, combined_flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err) == expect, message + strprintf(" (with flags %x)", combined_flags.as_int()));
+        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, combined_flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue, txdata, MissingDataBehavior::ASSERT_FAIL), &err) == expect, message + strprintf(" (with flags %x)", combined_flags.as_int()));
     }
 }
 }; // struct ScriptTest
@@ -190,6 +199,8 @@ struct KeyData
     CPubKey pubkey0, pubkey0C, pubkey0H;
     CPubKey pubkey1, pubkey1C;
     CPubKey pubkey2, pubkey2C;
+    XOnlyPubKey internalPubkey0;
+    std::pair<XOnlyPubKey, bool> outputPubkey0;
 
     KeyData()
     {
@@ -199,6 +210,8 @@ struct KeyData
         pubkey0H = key0.GetPubKey();
         pubkey0C = key0C.GetPubKey();
         *const_cast<unsigned char*>(pubkey0H.data()) = 0x06 | (pubkey0H[64] & 1);
+        internalPubkey0 = XOnlyPubKey(pubkey0);
+        outputPubkey0 = internalPubkey0.CreateTapTweak(nullptr).value();
 
         key1.Set(vchKey1, vchKey1 + 32, false);
         key1C.Set(vchKey1, vchKey1 + 32, true);
@@ -215,7 +228,8 @@ struct KeyData
 enum class WitnessMode {
     NONE,
     PKH,
-    SH
+    SH,
+    TAPROOT
 };
 
 class TestBuilder
@@ -266,6 +280,8 @@ public:
             uint256 hash;
             CSHA256().Write(witscript.data(), witscript.size()).Finalize(hash.begin());
             scriptPubKey = CScript() << witnessversion << ToByteVector(hash);
+        } else if (wm == WitnessMode::TAPROOT) {
+            scriptPubKey = BuildScript(witnessversion, script);
         }
         if (P2SH) {
             redeemscript = scriptPubKey;
@@ -330,6 +346,34 @@ public:
         if (amount == -1)
             amount = nValue;
         return PushSig(key, nHashType, lenR, lenS, sigversion, amount).AsWit();
+    }
+
+    TestBuilder& PushSchnorrSig(const CKey& key, int nHashType = SIGHASH_DEFAULT)
+    {
+        uint256 hash;
+        std::vector<CTxOut> spent_outputs;
+        PrecomputedTransactionData txdata;
+        ScriptExecutionData execdata;
+        spent_outputs.emplace_back(nValue, creditTx->vout[0].scriptPubKey);
+        txdata.Init(spendTx, std::move(spent_outputs), /*force=*/true);
+        execdata.m_annex_init = true;
+        execdata.m_annex_present = false;
+        bool ok = SignatureHashSchnorr(hash, execdata, spendTx, /*in_pos=*/0, nHashType, SigVersion::TAPROOT, txdata, MissingDataBehavior::ASSERT_FAIL);
+        assert(ok);
+
+        std::vector<unsigned char> vchSig(64);
+        uint256 aux;
+        aux.SetNull();
+        uint256 merkle_root;
+        merkle_root.SetNull();
+        ok = key.SignSchnorr(hash, vchSig, &merkle_root, aux);
+        assert(ok);
+
+        if (nHashType != SIGHASH_DEFAULT) {
+            vchSig.push_back(static_cast<unsigned char>(nHashType));
+        }
+        DoPush(vchSig);
+        return *this;
     }
 
     TestBuilder& Push(const CPubKey& pubkey)
@@ -871,6 +915,15 @@ BOOST_AUTO_TEST_CASE(script_build)
     tests.push_back(TestBuilder(CScript() << OP_1 << ToByteVector(keys.pubkey1) << ToByteVector(keys.pubkey0C) << OP_2 << OP_CHECKMULTISIG,
                                 "P2SH(P2WSH) CHECKMULTISIG with second key uncompressed and signing with the second key", SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS_PUBKEYTYPE, true, WitnessMode::SH,
                                 0, 1).Push(CScript()).AsWit().PushWitSig(keys.key1).PushWitRedeem().PushRedeem().ScriptError(SCRIPT_ERR_WITNESS_PUBKEYTYPE));
+
+    tests.push_back(TestBuilder(CScript() << ToByteVector(keys.outputPubkey0.first),
+                                "Taproot key path spending", SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_TAPROOT, false, WitnessMode::TAPROOT, 1, 1).PushSchnorrSig(keys.key0C).AsWit());
+    tests.push_back(TestBuilder(CScript() << ToByteVector(keys.outputPubkey0.first),
+                                "Taproot key path spending with unknown sighash 0x04", SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_TAPROOT, false, WitnessMode::TAPROOT, 1, 1).PushSchnorrSig(keys.key0C, SIGHASH_ALL).EditPush(64, "01", "04").AsWit().ScriptError(SCRIPT_ERR_SCHNORR_SIG_HASHTYPE));
+    tests.push_back(TestBuilder(CScript() << ToByteVector(keys.outputPubkey0.first),
+                                "Taproot key path spending with unknown sighash 0x80", SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_TAPROOT, false, WitnessMode::TAPROOT, 1, 1).PushSchnorrSig(keys.key0C, SIGHASH_ALL).EditPush(64, "01", "80").AsWit().ScriptError(SCRIPT_ERR_SCHNORR_SIG_HASHTYPE));
+    tests.push_back(TestBuilder(CScript() << ToByteVector(keys.outputPubkey0.first),
+                                "Taproot key path spending with unknown sighash 0x84", SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_TAPROOT, false, WitnessMode::TAPROOT, 1, 1).PushSchnorrSig(keys.key0C, SIGHASH_ALL).EditPush(64, "01", "84").AsWit().ScriptError(SCRIPT_ERR_SCHNORR_SIG_HASHTYPE));
 
     std::set<std::string> tests_set;
 
