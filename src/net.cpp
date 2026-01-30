@@ -530,13 +530,21 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
         if (!addr_bind.IsValid()) {
             addr_bind = GetBindAddress(*sock);
         }
-        uint64_t network_id = GetDeterministicRandomizer(RANDOMIZER_ID_NETWORKKEY)
+        uint64_t network_id;
+        auto hasher = GetDeterministicRandomizer(RANDOMIZER_ID_NETWORKKEY)
                             .Write(target_addr.GetNetClass())
-                            .Write(addr_bind.GetAddrBytes())
-                            // For outbound connections, the port of the bound address is randomly
-                            // assigned by the OS and would therefore not be useful for seeding.
-                            .Write(0)
-                            .Finalize();
+                            .Write(addr_bind.GetAddrBytes());
+        if (target_addr.GetNetClass() == NET_ONION) {
+            // Each outbound onion connection gets a unique network_id to help prevent
+            // fingerprinting, since they use distinct circuits and appear unrelated externally.
+            hasher.Write(target_addr.GetAddrBytes());
+        } else {
+            // For outbound non-onion connections, the port is randomly assigned by the OS.
+            // Use 0 to group all connections of the same network type together (unless they are onion).
+            hasher.Write(0);
+        }
+        network_id = hasher.Finalize();
+
         CNode* pnode = new CNode(id,
                                 std::move(sock),
                                 target_addr,
