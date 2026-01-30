@@ -24,7 +24,6 @@
 #include <cstdint>
 #include <cstdio>
 #include <exception>
-#include <iterator>
 #include <span>
 #include <string>
 #include <utility>
