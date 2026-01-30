@@ -15,11 +15,11 @@
 #include <util/strencodings.h>
 
 #include <algorithm>
+#include <optional>
 
 namespace {
 
 using Fragment = miniscript::Fragment;
-using NodeRef = miniscript::NodeRef<CPubKey>;
 using Node = miniscript::Node<CPubKey>;
 using Type = miniscript::Type;
 using MsCtx = miniscript::MiniscriptContext;
@@ -315,11 +315,6 @@ const struct KeyComparator {
 
 // A dummy scriptsig to pass to VerifyScript (we always use Segwit v0).
 const CScript DUMMY_SCRIPTSIG;
-
-//! Construct a miniscript node as a shared_ptr.
-template<typename... Args> NodeRef MakeNodeRef(Args&&... args) {
-    return miniscript::MakeNodeRef<CPubKey>(miniscript::internal::NoDupCheck{}, std::forward<Args>(args)...);
-}
 
 /** Information about a yet to be constructed Miniscript node. */
 struct NodeInfo {
@@ -852,14 +847,15 @@ std::optional<NodeInfo> ConsumeNodeSmart(MsCtx script_ctx, FuzzedDataProvider& p
  * Generate a Miniscript node based on the fuzzer's input.
  *
  * - ConsumeNode is a function object taking a Type, and returning an std::optional<NodeInfo>.
- * - root_type is the required type properties of the constructed NodeRef.
+ * - root_type is the required type properties of the constructed Node.
  * - strict_valid sets whether ConsumeNode is expected to guarantee a NodeInfo that results in
- *   a NodeRef whose Type() matches the type fed to ConsumeNode.
+ *   a Node whose Type() matches the type fed to ConsumeNode.
  */
-template<typename F>
-NodeRef GenNode(MsCtx script_ctx, F ConsumeNode, Type root_type, bool strict_valid = false) {
+template <typename F>
+std::optional<Node> GenNode(MsCtx script_ctx, F ConsumeNode, Type root_type, bool strict_valid = false)
+{
     /** A stack of miniscript Nodes being built up. */
-    std::vector<NodeRef> stack;
+    std::vector<Node> stack;
     /** The queue of instructions. */
     std::vector<std::pair<Type, std::optional<NodeInfo>>> todo{{root_type, {}}};
     /** Predict the number of (static) script ops. */
@@ -962,36 +958,36 @@ NodeRef GenNode(MsCtx script_ctx, F ConsumeNode, Type root_type, bool strict_val
         } else {
             // The back of todo has fragment and number of children decided, and
             // those children have been constructed at the back of stack. Pop
-            // that entry off todo, and use it to construct a new NodeRef on
+            // that entry off todo, and use it to construct a new Node on
             // stack.
             NodeInfo& info = *todo.back().second;
             // Gather children from the back of stack.
-            std::vector<NodeRef> sub;
+            std::vector<Node> sub;
             sub.reserve(info.subtypes.size());
             for (size_t i = 0; i < info.subtypes.size(); ++i) {
                 sub.push_back(std::move(*(stack.end() - info.subtypes.size() + i)));
             }
             stack.erase(stack.end() - info.subtypes.size(), stack.end());
-            // Construct new NodeRef.
-            NodeRef node;
-            if (info.keys.empty()) {
-                node = MakeNodeRef(script_ctx, info.fragment, std::move(sub), std::move(info.hash), info.k);
-            } else {
+            // Construct new Node.
+            Node node{[&] {
+                if (info.keys.empty()) {
+                    return Node{miniscript::internal::NoDupCheck{}, script_ctx, info.fragment, std::move(sub), std::move(info.hash), info.k};
+                }
                 assert(sub.empty());
                 assert(info.hash.empty());
-                node = MakeNodeRef(script_ctx, info.fragment, std::move(info.keys), info.k);
-            }
+                return Node{miniscript::internal::NoDupCheck{}, script_ctx, info.fragment, std::move(info.keys), info.k};
+            }()};
             // Verify acceptability.
-            if (!node || (node->GetType() & "KVWB"_mst) == ""_mst) {
+            if ((node.GetType() & "KVWB"_mst) == ""_mst) {
                 assert(!strict_valid);
                 return {};
             }
             if (!(type_needed == ""_mst)) {
-                assert(node->GetType() << type_needed);
+                assert(node.GetType() << type_needed);
             }
-            if (!node->IsValid()) return {};
+            if (!node.IsValid()) return {};
             // Update resource predictions.
-            if (node->fragment == Fragment::WRAP_V && node->subs[0]->GetType() << "x"_mst) {
+            if (node.Fragment() == Fragment::WRAP_V && node.Subs()[0].GetType() << "x"_mst) {
                 ops += 1;
                 scriptsize += 1;
             }
@@ -1005,9 +1001,9 @@ NodeRef GenNode(MsCtx script_ctx, F ConsumeNode, Type root_type, bool strict_val
         }
     }
     assert(stack.size() == 1);
-    assert(stack[0]->GetStaticOps() == ops);
-    assert(stack[0]->ScriptSize() == scriptsize);
-    stack[0]->DuplicateKeyCheck(KEY_COMP);
+    assert(stack[0].GetStaticOps() == ops);
+    assert(stack[0].ScriptSize() == scriptsize);
+    stack[0].DuplicateKeyCheck(KEY_COMP);
     return std::move(stack[0]);
 }
 
@@ -1032,7 +1028,7 @@ void SatisfactionToWitness(MsCtx ctx, CScriptWitness& witness, const CScript& sc
 }
 
 /** Perform various applicable tests on a miniscript Node. */
-void TestNode(const MsCtx script_ctx, const NodeRef& node, FuzzedDataProvider& provider)
+void TestNode(const MsCtx script_ctx, const std::optional<Node>& node, FuzzedDataProvider& provider)
 {
     if (!node) return;
 
@@ -1167,28 +1163,28 @@ void TestNode(const MsCtx script_ctx, const NodeRef& node, FuzzedDataProvider& p
         return sig_ptr != nullptr && sig_ptr->second;
     };
     bool satisfiable = node->IsSatisfiable([&](const Node& node) -> bool {
-        switch (node.fragment) {
+        switch (node.Fragment()) {
         case Fragment::PK_K:
         case Fragment::PK_H:
-            return is_key_satisfiable(node.keys[0]);
+            return is_key_satisfiable(node.Keys()[0]);
         case Fragment::MULTI:
         case Fragment::MULTI_A: {
-            size_t sats = std::count_if(node.keys.begin(), node.keys.end(), [&](const auto& key) {
+            size_t sats = std::ranges::count_if(node.Keys(), [&](const auto& key) {
                 return size_t(is_key_satisfiable(key));
             });
-            return sats >= node.k;
+            return sats >= node.K();
         }
         case Fragment::OLDER:
         case Fragment::AFTER:
-            return node.k & 1;
+            return node.K() & 1;
         case Fragment::SHA256:
-            return TEST_DATA.sha256_preimages.contains(node.data);
+            return TEST_DATA.sha256_preimages.contains(node.Data());
         case Fragment::HASH256:
-            return TEST_DATA.hash256_preimages.contains(node.data);
+            return TEST_DATA.hash256_preimages.contains(node.Data());
         case Fragment::RIPEMD160:
-            return TEST_DATA.ripemd160_preimages.contains(node.data);
+            return TEST_DATA.ripemd160_preimages.contains(node.Data());
         case Fragment::HASH160:
-            return TEST_DATA.hash160_preimages.contains(node.data);
+            return TEST_DATA.hash160_preimages.contains(node.Data());
         default:
             assert(false);
         }
