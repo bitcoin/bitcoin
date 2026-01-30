@@ -58,7 +58,7 @@ CoinControlDialog::CoinControlDialog(CCoinControl& coin_control, WalletModel* _m
                       ui->labelCoinControlFeeText,
                       ui->labelCoinControlAfterFeeText,
                       ui->labelCoinControlChangeText
-                     }, {GUIUtil::g_font_registry.GetWeightBold()});
+                     }, {GUIUtil::FontWeight::Bold});
 
     GUIUtil::updateFonts();
 

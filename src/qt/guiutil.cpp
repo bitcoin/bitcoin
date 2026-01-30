@@ -289,8 +289,8 @@ void setupAppearance(QWidget* parent, OptionsModel* model)
         layout.addWidget(&buttonBox);
         dlg.setLayout(&layout);
         // Adjust the headings
-        setFont({&lblHeading}, {GUIUtil::g_font_registry.GetWeightBold(), 16});
-        setFont({&lblSubHeading}, {GUIUtil::g_font_registry.GetWeightNormal(), 14, true});
+        setFont({&lblHeading}, {GUIUtil::FontWeight::Bold, 16});
+        setFont({&lblSubHeading}, {GUIUtil::FontWeight::Normal, 14, true});
         // Make sure the dialog closes and accepts the settings if save has been pressed
         QObject::connect(&buttonBox, &QDialogButtonBox::accepted, [&]() {
             QSettings().setValue("fAppearanceSetupDone", true);
