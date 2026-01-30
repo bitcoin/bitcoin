@@ -376,6 +376,7 @@ BASE_SCRIPTS = [
     'rpc_help.py',
     'feature_framework_testshell.py',
     'tool_rpcauth.py',
+    'feature_opcat.py',
     'p2p_handshake.py',
     'p2p_handshake.py --v2transport',
     'feature_dirsymlinks.py',
