@@ -67,7 +67,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
             assert blockref.hasResult
             assert_equal(len(blockref.result.hash), block_hash_size)
             current_block_height = self.nodes[0].getchaintips()[0]["height"]
-            assert blockref.result.height == current_block_height
+            assert_equal(blockref.result.height, current_block_height)
 
         asyncio.run(capnp.run(async_routine()))
 
