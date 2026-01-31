@@ -414,6 +414,23 @@ public:
     const Coin& AccessCoin(const COutPoint &output) const;
 
     /**
+     * Return a vector of references to Coins in the cache in order they get
+     * consumed by the tx's inputs, or coinEmpty if the Coin is not
+     * found.
+     *
+     * Generally, this should only be held for a short scope. The coins should
+     * generally not be held through any other calls to this cache.
+     */
+    std::vector<std::reference_wrapper<const Coin>> AccessCoins(const CTransaction& tx) const;
+
+    /**
+     * Return a vector of unspent outputs of coins in the cache that are spent
+     * by the provided transaction. The coins they belong to must be unspent in
+     * the cache.
+     */
+    std::vector<CTxOut> GetUnspentOutputs(const CTransaction& tx) const;
+
+    /**
      * Add a coin. Set possible_overwrite to true if an unspent version may
      * already exist in the cache.
      */

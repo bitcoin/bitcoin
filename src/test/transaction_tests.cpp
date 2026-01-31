@@ -1051,7 +1051,8 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
     AddCoins(coins, CTransaction(tx_create), 0, false);
 
     // 2490 sigops is below the limit.
-    BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(tx_max_sigops), coins), 2490);
+    auto coins_tx_max_sigops{coins.AccessCoins(CTransaction(tx_max_sigops))};
+    BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(tx_max_sigops), std::span{coins_tx_max_sigops}), 2490);
     BOOST_CHECK(::AreInputsStandard(CTransaction(tx_max_sigops), coins));
 
     // Adding one more input will bump this to 2505, hitting the limit.
@@ -1062,8 +1063,9 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
     }
     tx_max_sigops.vin.emplace_back(prev_txid, p2sh_inputs_count, CScript() << ToByteVector(max_sigops_redeem_script));
     AddCoins(coins, CTransaction(tx_create), 0, false);
+    coins_tx_max_sigops = coins.AccessCoins(CTransaction(tx_max_sigops));
     BOOST_CHECK_GT((p2sh_inputs_count + 1) * MAX_P2SH_SIGOPS, MAX_TX_LEGACY_SIGOPS);
-    BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(tx_max_sigops), coins), 2505);
+    BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(tx_max_sigops), std::span{coins_tx_max_sigops}), 2505);
     BOOST_CHECK(!::AreInputsStandard(CTransaction(tx_max_sigops), coins));
 
     // Now, check the limit can be reached with regular P2PK outputs too. Use a separate
