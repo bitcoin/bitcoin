@@ -521,6 +521,55 @@ inspecting signatures in Mach-O binaries.")
                    (("^install-others =.*$")
                     (string-append "install-others = " out "/etc/rpc\n")))))))))))))
 
+;; This can be dropped after commit 2877c75dc5db0dbf664fb6170d5754068e941d91.
+(define-public libcxx-19 ;; 19.1.4
+  (package
+    (inherit libcxx) ;; 15.0.7
+    (version (package-version llvm-19))
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://github.com/llvm/llvm-project")
+                    (commit (string-append "llvmorg-" version))))
+              (file-name (git-file-name "llvm-project" version))
+              (sha256 (base32 "0y5kavrx13ylpzhci520hm7fgnzyj46mbz7dw3z9h5xi0py5lbda"))
+              (patches (map search-patch '("clang-18.0-libc-search-path.patch"
+                                           "clang-17.0-link-dsymutil-latomic.patch")))))
+
+    (version (package-version llvm-19))
+    (arguments
+     (list
+      #:tests? #f                       ;prohibitively expensive to run
+      #:configure-flags
+      #~(list "-DLLVM_ENABLE_RUNTIMES=libcxx;libcxxabi;libunwind"
+              "-DCMAKE_C_COMPILER=clang"
+              "-DCMAKE_CXX_COMPILER=clang++"
+              ;; libc++.so is actually a GNU ld style linker script, however,
+              ;; CMake still tries to fix the RUNPATH of it during the install
+              ;; step. This argument tells CMake to use the install directory
+              ;; as RUNPATH and don't attempt to patch it.
+              ;; See also: https://gitlab.kitware.com/cmake/cmake/-/issues/22963
+              "-DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE")
+      #:modules '((guix build cmake-build-system)
+                  ((guix build gnu-build-system) #:prefix gnu:)
+                  (guix build utils))
+      #:phases
+      #~(modify-phases %standard-phases
+          (add-after 'unpack 'enter-subdirectory
+            (lambda _
+              (chdir "runtimes")))
+          (replace 'check
+            (lambda* (#:rest args)
+              (apply (assoc-ref gnu:%standard-phases 'check)
+                     #:test-target "check-cxx" args))))))
+    (native-inputs
+     (modify-inputs (standard-packages)
+       ;; Remove GCC from the build environment, to avoid its C++
+       ;; headers (include/c++), which would interfere and cause build
+       ;; failures.
+       (delete "gcc")
+       (prepend clang-19 python-minimal)))))
+
 ;; The sponge tool from moreutils.
 (define-public sponge
   (package
@@ -571,7 +620,6 @@ inspecting signatures in Mach-O binaries.")
         gzip
         xz
         ;; Build tools
-        gcc-toolchain-14
         cmake-minimal
         gnu-make
         ninja
@@ -584,6 +632,7 @@ inspecting signatures in Mach-O binaries.")
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            (list zip
+                 gcc-toolchain-14
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
                  nsis-x86_64
                  nss-certs
@@ -591,10 +640,12 @@ inspecting signatures in Mach-O binaries.")
           ((string-contains target "-linux-")
            (list bison
                  pkg-config
+                 gcc-toolchain-14
                  (list gcc-toolchain-14 "static")
                  (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
            (list clang-toolchain-19
+                 libcxx-19
                  lld-19
                  (make-lld-wrapper lld-19 #:lld-as-ld? #t)
                  python-signapple

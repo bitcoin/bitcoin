@@ -58,10 +58,6 @@ store_path() {
 }
 
 
-# Set environment variables to point the NATIVE toolchain to the right
-# includes/libs
-NATIVE_GCC="$(store_path gcc-toolchain)"
-
 unset LIBRARY_PATH
 unset CPATH
 unset C_INCLUDE_PATH
@@ -70,12 +66,37 @@ unset OBJC_INCLUDE_PATH
 unset OBJCPLUS_INCLUDE_PATH
 
 # Set native toolchain
-build_CC="${NATIVE_GCC}/bin/gcc -isystem ${NATIVE_GCC}/include"
-build_CXX="${NATIVE_GCC}/bin/g++ -isystem ${NATIVE_GCC}/include/c++ -isystem ${NATIVE_GCC}/include"
+case "$HOST" in
+    *darwin*)
+        CLANG_TOOLCHAIN="$(store_path clang-toolchain)"
+        LIBCXX="$(store_path libcxx)"
+        build_CC="${CLANG_TOOLCHAIN}/bin/clang \
+            -isystem ${CLANG_TOOLCHAIN}/include"
+        build_CXX="${CLANG_TOOLCHAIN}/bin/clang++ \
+            --stdlib=libc++ \
+            -isystem ${LIBCXX}/include/c++/v1 \
+            -isystem ${CLANG_TOOLCHAIN}/include"
+        build_LDFLAGS="-L${LIBCXX}/lib"
+        build_AR="${CLANG_TOOLCHAIN}/bin/llvm-ar"
+        build_RANLIB="${CLANG_TOOLCHAIN}/bin/llvm-ranlib"
+        build_OBJDUMP="${CLANG_TOOLCHAIN}/bin/llvm-objdump"
+        build_NM="${CLANG_TOOLCHAIN}/bin/llvm-nm"
+        build_STRIP="${CLANG_TOOLCHAIN}/bin/llvm-strip"
+        ;;
+    *)
+        NATIVE_GCC="$(store_path gcc-toolchain)"
+        build_CC="${NATIVE_GCC}/bin/gcc \
+            -isystem ${NATIVE_GCC}/include"
+        build_CXX="${NATIVE_GCC}/bin/g++ \
+            -isystem ${NATIVE_GCC}/include/c++ \
+            -isystem ${NATIVE_GCC}/include"
+        ;;
+esac
 
 case "$HOST" in
-    *darwin*) export LIBRARY_PATH="${NATIVE_GCC}/lib" ;; # Required for native packages
-    *mingw*) export LIBRARY_PATH="${NATIVE_GCC}/lib" ;;
+    *darwin*)
+        ;;
+    *mingw*) export LIBRARY_PATH="${NATIVE_GCC}/lib" ;; # Required for native packages
     *)
         NATIVE_GCC_STATIC="$(store_path gcc-toolchain static)"
         export LIBRARY_PATH="${NATIVE_GCC}/lib:${NATIVE_GCC_STATIC}/lib"
@@ -132,7 +153,16 @@ for p in "${PATHS[@]}"; do
 done
 
 # Disable Guix ld auto-rpath behavior
-export GUIX_LD_WRAPPER_DISABLE_RPATH=yes
+case "$HOST" in
+    *darwin*)
+        # The auto-rpath behavior is necessary for darwin builds as some native
+        # tools built by depends refer to and depend on Guix-built native
+        # libraries.
+        # After the native packages in depends are built, the ld wrapper should
+        # no longer affect our build.
+        ;;
+    *) export GUIX_LD_WRAPPER_DISABLE_RPATH=yes ;;
+esac
 
 # Make /usr/bin if it doesn't exist
 [ -e /usr/bin ] || mkdir -p /usr/bin
@@ -173,19 +203,18 @@ make -C depends --jobs="$JOBS" HOST="$HOST" \
                                    ${SDK_PATH+SDK_PATH="$SDK_PATH"} \
                                    ${build_CC+build_CC="$build_CC"} \
                                    ${build_CXX+build_CXX="$build_CXX"} \
+                                   ${build_LDFLAGS+build_LDFLAGS="$build_LDFLAGS"} \
+                                   ${build_AR+build_AR="$build_AR"} \
+                                   ${build_RANLIB+build_RANLIB="$build_RANLIB"} \
+                                   ${build_OBJDUMP+build_OBJDUMP="$build_OBJDUMP"} \
+                                   ${build_NM+build_NM="$build_NM"} \
+                                   ${build_STRIP+build_STRIP="$build_STRIP"} \
                                    x86_64_linux_CC=x86_64-linux-gnu-gcc \
                                    x86_64_linux_CXX=x86_64-linux-gnu-g++ \
                                    x86_64_linux_AR=x86_64-linux-gnu-gcc-ar \
                                    x86_64_linux_RANLIB=x86_64-linux-gnu-gcc-ranlib \
                                    x86_64_linux_NM=x86_64-linux-gnu-gcc-nm \
                                    x86_64_linux_STRIP=x86_64-linux-gnu-strip
-
-case "$HOST" in
-    *darwin*)
-        # Unset now that Qt is built
-        unset LIBRARY_PATH
-        ;;
-esac
 
 ###########################
 # Source Tarball Building #
