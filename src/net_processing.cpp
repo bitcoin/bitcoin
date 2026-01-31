@@ -32,6 +32,7 @@
 #include <netmessagemaker.h>
 #include <node/blockstorage.h>
 #include <node/connection_types.h>
+#include <node/private_broadcast_persist.h>
 #include <node/protocol_version.h>
 #include <node/timeoffsets.h>
 #include <node/txdownloadman.h>
@@ -545,6 +546,8 @@ public:
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void InitiateTxBroadcastToAll(const Txid& txid, const Wtxid& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void InitiateTxBroadcastPrivate(const CTransactionRef& tx) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void DumpPrivateBroadcast(const fs::path& dump_path) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void LoadPrivateBroadcast(const fs::path& load_path) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SetBestBlock(int height, std::chrono::seconds time) override
     {
         m_best_height = height;
@@ -2246,6 +2249,16 @@ void PeerManagerImpl::InitiateTxBroadcastPrivate(const CTransactionRef& tx)
     } else {
         LogDebug(BCLog::PRIVBROADCAST, "Ignoring unnecessary request to schedule an already scheduled transaction: %s", txstr);
     }
+}
+
+void PeerManagerImpl::DumpPrivateBroadcast(const fs::path& dump_path) const
+{
+    node::DumpPrivateBroadcast(m_tx_for_private_broadcast, dump_path);
+}
+
+void PeerManagerImpl::LoadPrivateBroadcast(const fs::path& load_path)
+{
+    node::LoadPrivateBroadcast(m_tx_for_private_broadcast, load_path);
 }
 
 void PeerManagerImpl::RelayAddress(NodeId originator,
