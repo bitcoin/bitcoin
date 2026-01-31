@@ -4,9 +4,10 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Migrating a wallet from legacy to descriptor."""
 from pathlib import Path
-import os.path
+import os
 import random
 import shutil
+import stat
 import struct
 import time
 
@@ -27,6 +28,7 @@ from test_framework.util import (
     assert_greater_than,
     assert_raises_rpc_error,
     find_vout_for_address,
+    is_dir_writable,
     sha256sum_file,
 )
 from test_framework.wallet_util import (
@@ -177,6 +179,27 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.inspect_sqlite_db(inspect_path, check_last_hardened)
 
         return migrate_info, wallet
+
+    def test_unwritable_dir_failure(self):
+        self.log.info("Test migration failure due to non-writable directory")
+        wallet_name = "bad_permissions"
+        wallet = self.create_legacy_wallet(wallet_name)
+        wallet.unloadwallet()
+        shutil.copytree(self.old_node.wallets_path / wallet_name, self.master_node.wallets_path / wallet_name, dirs_exist_ok=True)
+
+        # Change dir perms and migrate
+        wallet_path = self.master_node.wallets_path / wallet_name
+        original_dir_perms = wallet_path.stat().st_mode
+        os.chmod(wallet_path, original_dir_perms & ~(stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH))
+        if is_dir_writable(wallet_path):
+            self.log.warning("Skipping migration non-writable directory test: unable to enforce read-only permissions")
+        else:
+            assert_raises_rpc_error(-4, "Error: Wallet db cannot be updated. Adjust directory or file permissions to proceed with migration.", self.master_node.migratewallet, wallet_name)
+        # Reset directory permissions
+        wallet_path.chmod(original_dir_perms)
+
+        # Check the wallet we tried to migrate is still BDB
+        self.assert_is_bdb(wallet_name)
 
     def test_basic(self):
         default = self.master_node.get_wallet_rpc(self.default_wallet_name)
@@ -1667,6 +1690,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.generate(self.master_node, 101)
 
         # TODO: Test the actual records in the wallet for these tests too. The behavior may be correct, but the data written may not be what we actually want
+        self.test_unwritable_dir_failure()
         self.test_basic()
         self.test_multisig()
         self.test_other_watchonly()

@@ -3809,6 +3809,36 @@ util::Result<std::reference_wrapper<DescriptorScriptPubKeyMan>> CWallet::AddWall
     return std::reference_wrapper(*spk_man);
 }
 
+// Move files from `src` into `dst`.
+// Note: This function doesn't recurse: `src` must not contain subdirectories.
+util::Result<void> MoveDirContent(const fs::path& src, const fs::path& dst)
+{
+    Assert(fs::is_directory(src));
+    TryCreateDirectories(dst);
+
+    // Validate all dst paths up front to avoid partial moves
+    std::vector<std::pair<fs::path, fs::path>> files_to_move;
+    for (const auto& entry : fs::directory_iterator(src)) {
+        const fs::path target = dst / fs::path(entry.path().filename());
+        if (fs::exists(target)) {
+            return util::Error{strprintf(_("Error: destination already exists '%s'"), fs::PathToString(target))};
+        }
+        files_to_move.emplace_back(entry.path(), target);
+    }
+    // Paths are available, move entries
+    for (const auto& [from, to] : files_to_move) fs::rename(from, to);
+    return {};
+}
+
+// Returns wallet prefix for migration.
+// Used to name the backup file and newly created wallets.
+// E.g. a watch-only wallet is named "<prefix>_watchonly".
+static std::string MigrationPrefixName(CWallet& wallet)
+{
+    const std::string& name{wallet.GetName()};
+    return name.empty() ? "default_wallet" : name;
+}
+
 bool CWallet::MigrateToSQLite(bilingual_str& error)
 {
     AssertLockHeld(cs_wallet);
@@ -3847,39 +3877,79 @@ bool CWallet::MigrateToSQLite(bilingual_str& error)
         return false;
     }
 
-    // Close this database and delete the file
-    fs::path db_path = fs::PathFromString(m_database->Filename());
+    // Close this database and delete the files.
+    fs::path origin_db_path = fs::PathFromString(m_database->Filename());
     m_database->Close();
-    fs::remove(db_path);
 
-    // Generate the path for the location of the migrated wallet
-    // Wallets that are plain files rather than wallet directories will be migrated to be wallet directories.
-    const fs::path wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), fs::PathFromString(m_name));
+    // Create a temporary SQLite database.
+    // Once all records are imported, this new DB will replace the original one.
+    const std::string name_prefix = m_name.empty() ? MigrationPrefixName(*this) : [&] {
+        const auto legacy_wallet_path = fs::weakly_canonical(GetWalletDir() / fs::PathFromString(m_name));
+        return fs::PathToString(legacy_wallet_path.filename());
+    }();
+    const std::string new_db_name = strprintf("%s_sqlite_%d.tmp", name_prefix, GetTime());
+    const fs::path tmp_wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), fs::PathFromString(new_db_name));
 
     // Make new DB
     DatabaseOptions opts;
     opts.require_create = true;
     opts.require_format = DatabaseFormat::SQLITE;
     DatabaseStatus db_status;
-    std::unique_ptr<WalletDatabase> new_db = MakeDatabase(wallet_path, opts, db_status, error);
-    assert(new_db); // This is to prevent doing anything further with this wallet. The original file was deleted, but a backup exists.
+    std::unique_ptr<WalletDatabase> new_db = MakeDatabase(tmp_wallet_path, opts, db_status, error);
+    if (!new_db) return false; // error msg appended internally
     m_database.reset();
     m_database = std::move(new_db);
+
+    auto tmp_files_to_remove = m_database->Files();
+    tmp_files_to_remove.emplace_back(tmp_wallet_path);
 
     // Write existing records into the new DB
     batch = m_database->MakeBatch();
     bool began = batch->TxnBegin();
-    assert(began); // This is a critical error, the new db could not be written to. The original db exists as a backup, but we should not continue execution.
+    assert(began); // This is a critical error, the new db could not be written to. The original db is untouched, so we can abort safely.
     for (const auto& [key, value] : records) {
         if (!batch->Write(std::span{key}, std::span{value})) {
             batch->TxnAbort();
             m_database->Close();
             fs::remove(m_database->Filename());
-            assert(false); // This is a critical error, the new db could not be written to. The original db exists as a backup, but we should not continue execution.
+            assert(false); // This is a critical error, the new db could not be written to. The original db is untouched, so we can abort safely.
         }
     }
     bool committed = batch->TxnCommit();
     assert(committed); // This is a critical error, the new db could not be written to. The original db exists as a backup, but we should not continue execution.
+    batch.reset();
+
+    // ######################################################################
+    // At this point, the new database has all records.                     #
+    // We can remove the old db file and move the new db inside the wallet  #
+    // ######################################################################
+    std::error_code err_db;
+    fs::remove(origin_db_path, err_db);
+    if (err_db) {
+        std::string err_help;
+        const bool perm_issue = err_db.value() == EACCES || err_db.value() == EPERM  || err_db.value() == EROFS;
+        if (perm_issue) err_help = "Adjust directory or file permissions to proceed with migration.";
+        error = strprintf(_("Error: Wallet db cannot be updated. %s"), err_help);
+        return false;
+    }
+    m_database.reset(); // reset sqlite connection so it can be moved to the new folder
+
+    // Move the new sqlite database into the original location
+    // Wallets that are plain files rather than wallet directories will be migrated to be wallet directories.
+    const fs::path dst_wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), fs::PathFromString(m_name));
+    if (auto ret = MoveDirContent(tmp_wallet_path, dst_wallet_path); !ret) {
+        error = util::ErrorString(ret);
+        return false;
+    }
+    Assert(fs::is_empty(tmp_wallet_path));
+    for (const auto& file : tmp_files_to_remove) {
+        fs::remove(file);
+    }
+
+    // Reload sqlite connection
+    opts.require_create = false;
+    m_database = Assert(MakeDatabase(dst_wallet_path, opts, db_status, error));
+
     return true;
 }
 
@@ -4118,15 +4188,6 @@ bool CWallet::CanGrindR() const
     return !IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
 }
 
-// Returns wallet prefix for migration.
-// Used to name the backup file and newly created wallets.
-// E.g. a watch-only wallet is named "<prefix>_watchonly".
-static std::string MigrationPrefixName(CWallet& wallet)
-{
-    const std::string& name{wallet.GetName()};
-    return name.empty() ? "default_wallet" : name;
-}
-
 bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, MigrationResult& res) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     AssertLockHeld(wallet.cs_wallet);
@@ -4153,83 +4214,62 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
         if (wallet.IsWalletFlagSet(WALLET_FLAG_KEY_ORIGIN_METADATA)) {
             options.create_flags |= WALLET_FLAG_KEY_ORIGIN_METADATA;
         }
+
+        const auto fn_create_wallet = [&context, &options, &empty_context](const std::string& wallet_name,
+                                                                           const std::vector<std::pair<std::string, int64_t>>& descs_to_import,
+                                                                           std::shared_ptr<CWallet>& out_wallet, bilingual_str& error) {
+            try {
+                DatabaseStatus status;
+                std::vector<bilingual_str> warnings;
+                std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(wallet_name, options, status, error);
+                if (!database) {
+                    error = strprintf(_("Wallet file creation failed: %s"), error);
+                    return false;
+                }
+
+                out_wallet = CWallet::Create(empty_context, wallet_name, std::move(database), options.create_flags, error, warnings);
+                if (!out_wallet) {
+                    error = _("Error: Failed to create new watchonly wallet");
+                    return false;
+                }
+                LOCK(out_wallet->cs_wallet);
+
+                // Parse the descriptors and add them to the new wallet
+                for (const auto& [desc_str, creation_time] : descs_to_import) {
+                    // Parse the descriptor
+                    FlatSigningProvider keys;
+                    std::string parse_err;
+                    std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, parse_err, /*require_checksum=*/ true);
+                    assert(descs.size() == 1); // It shouldn't be possible to have the LegacyScriptPubKeyMan make an invalid descriptor or a multipath descriptors
+                    assert(!descs.at(0)->IsRange()); // It shouldn't be possible to have LegacyScriptPubKeyMan make a ranged watchonly descriptor
+
+                    // Add to the wallet
+                    WalletDescriptor w_desc(std::move(descs.at(0)), creation_time, 0, 0, 0);
+                    if (auto spkm_res = out_wallet->AddWalletDescriptor(w_desc, keys, "", false); !spkm_res) {
+                        throw std::runtime_error(util::ErrorString(spkm_res).original);
+                    }
+                }
+
+                // Add the wallet to settings
+                UpdateWalletSetting(*context.chain, wallet_name, /*load_on_startup=*/true, warnings);
+                return true;
+            } catch (std::exception& e) {
+                error = strprintf(_("Failed to create new wallet '%s'. Error: %s"), wallet_name, e.what());
+                return false;
+            }
+        };
+
         if (data->watch_descs.size() > 0) {
             wallet.WalletLogPrintf("Making a new watchonly wallet containing the watched scripts\n");
-
-            DatabaseStatus status;
-            std::vector<bilingual_str> warnings;
-            std::string wallet_name = MigrationPrefixName(wallet) + "_watchonly";
-            std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(wallet_name, options, status, error);
-            if (!database) {
-                error = strprintf(_("Wallet file creation failed: %s"), error);
-                return false;
-            }
-
-            data->watchonly_wallet = CWallet::Create(empty_context, wallet_name, std::move(database), options.create_flags, error, warnings);
-            if (!data->watchonly_wallet) {
-                error = _("Error: Failed to create new watchonly wallet");
-                return false;
-            }
-            res.watchonly_wallet = data->watchonly_wallet;
-            LOCK(data->watchonly_wallet->cs_wallet);
-
-            // Parse the descriptors and add them to the new wallet
-            for (const auto& [desc_str, creation_time] : data->watch_descs) {
-                // Parse the descriptor
-                FlatSigningProvider keys;
-                std::string parse_err;
-                std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, parse_err, /*require_checksum=*/ true);
-                assert(descs.size() == 1); // It shouldn't be possible to have the LegacyScriptPubKeyMan make an invalid descriptor or a multipath descriptors
-                assert(!descs.at(0)->IsRange()); // It shouldn't be possible to have LegacyScriptPubKeyMan make a ranged watchonly descriptor
-
-                // Add to the wallet
-                WalletDescriptor w_desc(std::move(descs.at(0)), creation_time, 0, 0, 0);
-                if (auto spkm_res = data->watchonly_wallet->AddWalletDescriptor(w_desc, keys, "", false); !spkm_res) {
-                    throw std::runtime_error(util::ErrorString(spkm_res).original);
-                }
-            }
-
-            // Add the wallet to settings
-            UpdateWalletSetting(*context.chain, wallet_name, /*load_on_startup=*/true, warnings);
+            bool ret = fn_create_wallet(/*wallet_name=*/MigrationPrefixName(wallet) + "_watchonly", data->watch_descs, /*out_wallet=*/data->watchonly_wallet, error);
+            res.watchonly_wallet = data->watchonly_wallet; // always set just so it can be cleaned up later
+            if (!ret) return false;
         }
         if (data->solvable_descs.size() > 0) {
             wallet.WalletLogPrintf("Making a new watchonly wallet containing the unwatched solvable scripts\n");
-
-            DatabaseStatus status;
-            std::vector<bilingual_str> warnings;
-            std::string wallet_name = MigrationPrefixName(wallet) + "_solvables";
-            std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(wallet_name, options, status, error);
-            if (!database) {
-                error = strprintf(_("Wallet file creation failed: %s"), error);
-                return false;
-            }
-
-            data->solvable_wallet = CWallet::Create(empty_context, wallet_name, std::move(database), options.create_flags, error, warnings);
-            if (!data->solvable_wallet) {
-                error = _("Error: Failed to create new watchonly wallet");
-                return false;
-            }
-            res.solvables_wallet = data->solvable_wallet;
-            LOCK(data->solvable_wallet->cs_wallet);
-
-            // Parse the descriptors and add them to the new wallet
-            for (const auto& [desc_str, creation_time] : data->solvable_descs) {
-                // Parse the descriptor
-                FlatSigningProvider keys;
-                std::string parse_err;
-                std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, parse_err, /*require_checksum=*/ true);
-                assert(descs.size() == 1); // It shouldn't be possible to have the LegacyScriptPubKeyMan make an invalid descriptor or a multipath descriptors
-                assert(!descs.at(0)->IsRange()); // It shouldn't be possible to have LegacyScriptPubKeyMan make a ranged watchonly descriptor
-
-                // Add to the wallet
-                WalletDescriptor w_desc(std::move(descs.at(0)), creation_time, 0, 0, 0);
-                if (auto spkm_res = data->solvable_wallet->AddWalletDescriptor(w_desc, keys, "", false); !spkm_res) {
-                    throw std::runtime_error(util::ErrorString(spkm_res).original);
-                }
-            }
-
-            // Add the wallet to settings
-            UpdateWalletSetting(*context.chain, wallet_name, /*load_on_startup=*/true, warnings);
+            bool ret = fn_create_wallet(/*wallet_name=*/MigrationPrefixName(wallet) + "_solvables", data->solvable_descs, /*out_wallet=*/data->solvable_wallet, error);
+            res.solvables_wallet = data->solvable_wallet;  // always set just so it can be cleaned up later
+            if (!ret) return false;
         }
     }
 
