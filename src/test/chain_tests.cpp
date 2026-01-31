@@ -41,6 +41,64 @@ const CBlockIndex* NaiveLastCommonAncestor(const CBlockIndex* a, const CBlockInd
 
 } // namespace
 
+BOOST_AUTO_TEST_CASE(cchain_basic_tests)
+{
+    auto genesis = CBlockIndex{};
+    genesis.nHeight = 0;
+    auto bi1 = CBlockIndex{};
+    bi1.nHeight = 1;
+
+    // Empty chain
+    {
+        auto chain_0 = CChain{};
+
+        BOOST_CHECK_EQUAL(chain_0.Height(), -1);
+        BOOST_CHECK_EQUAL(chain_0.Genesis(), nullptr);
+        BOOST_CHECK_EQUAL(chain_0.Tip(), nullptr);
+        BOOST_CHECK_EQUAL(chain_0[0], nullptr);
+        BOOST_CHECK_EQUAL(chain_0.Contains(&genesis), false);
+        BOOST_CHECK_EQUAL(chain_0.Contains(nullptr), false);
+        BOOST_CHECK_EQUAL(chain_0.Next(&genesis), nullptr);
+        BOOST_CHECK_EQUAL(chain_0.Next(nullptr), nullptr);
+    }
+
+    // Chain with 1 block
+    {
+        auto chain_1 = CChain{};
+        chain_1.SetTip(genesis);
+
+        BOOST_CHECK_EQUAL(chain_1.Height(), 0);
+        BOOST_CHECK_EQUAL(chain_1.Genesis(), &genesis);
+        BOOST_CHECK_EQUAL(chain_1.Tip(), &genesis);
+        BOOST_CHECK_EQUAL(chain_1[-1], nullptr);
+        BOOST_CHECK_EQUAL(chain_1[0], &genesis);
+        BOOST_CHECK_EQUAL(chain_1[1], nullptr);
+        BOOST_CHECK_EQUAL(chain_1.Contains(&genesis), true);
+        BOOST_CHECK_EQUAL(chain_1.Contains(&bi1), false);
+        BOOST_CHECK_EQUAL(chain_1.Next(&genesis), nullptr);
+        BOOST_CHECK_EQUAL(chain_1.Next(&bi1), nullptr);
+    }
+
+    // Chain with 2 blocks
+    {
+        auto chain_2 = CChain{};
+        chain_2.SetTip(genesis);
+        chain_2.SetTip(bi1);
+
+        BOOST_CHECK_EQUAL(chain_2.Height(), 1);
+        BOOST_CHECK_EQUAL(chain_2.Genesis(), &genesis);
+        BOOST_CHECK_EQUAL(chain_2.Tip(), &bi1);
+        BOOST_CHECK_EQUAL(chain_2[-1], nullptr);
+        BOOST_CHECK_EQUAL(chain_2[0], &genesis);
+        BOOST_CHECK_EQUAL(chain_2[1], &bi1);
+        BOOST_CHECK_EQUAL(chain_2[2], nullptr);
+        BOOST_CHECK_EQUAL(chain_2.Contains(&genesis), true);
+        BOOST_CHECK_EQUAL(chain_2.Contains(&bi1), true);
+        BOOST_CHECK_EQUAL(chain_2.Next(&genesis), &bi1);
+        BOOST_CHECK_EQUAL(chain_2.Next(&bi1), nullptr);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(chain_test)
 {
     FastRandomContext ctx;
