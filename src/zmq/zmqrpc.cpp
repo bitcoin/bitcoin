@@ -6,13 +6,15 @@
 
 #include <rpc/server.h>
 #include <rpc/util.h>
+#include <univalue.h>
 #include <zmq/zmqabstractnotifier.h>
 #include <zmq/zmqnotificationinterface.h>
 
-#include <univalue.h>
-
 #include <list>
+#include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 class JSONRPCRequest;
 
