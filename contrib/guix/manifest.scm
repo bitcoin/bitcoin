@@ -2,7 +2,6 @@
              ((gnu packages bash) #:select (bash-minimal))
              (gnu packages bison)
              ((gnu packages certs) #:select (nss-certs))
-             ((gnu packages check) #:select (libfaketime))
              ((gnu packages cmake) #:select (cmake-minimal))
              (gnu packages commencement)
              (gnu packages compression)
@@ -209,7 +208,7 @@ and abstract ELF, PE and MachO formats.")
 (define osslsigncode
   (package
     (name "osslsigncode")
-    (version "2.5")
+    (version "2.11")
     (source (origin
               (method git-fetch)
               (uri (git-reference
@@ -217,19 +216,9 @@ and abstract ELF, PE and MachO formats.")
                     (commit version)))
               (sha256
                (base32
-                "1j47vwq4caxfv0xw68kw5yh00qcpbd56d7rq6c483ma3y7s96yyz"))))
+                "17vzkrv4qzjrjinjlgk8fbimkzd5b5akkpangkpn8cdficxgibxr"))))
     (build-system cmake-build-system)
-    (arguments
-     (list
-      #:phases
-      #~(modify-phases %standard-phases
-          (replace 'check
-            (lambda* (#:key tests? #:allow-other-keys)
-              (if tests?
-                  (invoke "faketime" "-f" "@2025-01-01 00:00:00" ;; Tests fail after 2025.
-                          "ctest" "--output-on-failure" "--no-tests=error")
-                  (format #t "test suite not run~%")))))))
-    (inputs (list libfaketime openssl))
+    (inputs (list openssl zlib))
     (home-page "https://github.com/mtrojnar/osslsigncode")
     (synopsis "Authenticode signing and timestamping tool")
     (description "osslsigncode is a small tool that implements part of the
