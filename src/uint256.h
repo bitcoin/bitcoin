@@ -59,7 +59,7 @@ public:
 
     /** Lexicographic ordering
      * @note Does NOT match the ordering on the corresponding \ref
-     *       base_uint::CompareTo, which starts comparing from the end.
+     *       base_uint::operator<=>, which starts comparing from the end.
      */
     constexpr int Compare(const base_blob& other) const { return std::memcmp(m_data.data(), other.m_data.data(), WIDTH); }
 
