@@ -101,6 +101,11 @@ public:
     {
         CBlockHeader::SetNull();
         vtx.clear();
+        ResetChecked();
+    }
+
+    void ResetChecked()
+    {
         fChecked = false;
         m_checked_witness_commitment = false;
         m_checked_merkle_root = false;
