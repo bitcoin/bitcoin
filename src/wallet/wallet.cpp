@@ -1324,7 +1324,7 @@ bool CWallet::AbandonTransaction(CWalletTx& tx)
     return true;
 }
 
-void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, const Txid& hashTx)
+void CWallet::MarkConflicted(const uint256& hash_block, int conflicting_height, const Txid& hashTx)
 {
     LOCK(cs_wallet);
 
@@ -1343,7 +1343,7 @@ void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, c
         if (conflictconfirms < GetTxDepthInMainChain(wtx)) {
             // Block is 'more conflicted' than current confirm; update.
             // Mark transaction as conflicted with this block.
-            wtx.m_state = TxStateBlockConflicted{hashBlock, conflicting_height};
+            wtx.m_state = TxStateBlockConflicted{hash_block, conflicting_height};
             return TxUpdate::CHANGED;
         }
         return TxUpdate::UNCHANGED;
