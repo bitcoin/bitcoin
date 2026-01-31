@@ -44,6 +44,7 @@ def main():
         "docker",
         "buildx",
         "build",
+        "--platform=linux",
         f"--tag={container}",
         *shlex.split(os.environ.get("DOCKER_BUILD_CACHE_ARG", "")),
         f"--file={repo_root}/ci/lint_imagefile",
@@ -72,6 +73,7 @@ def main():
             *get_worktree_mounts(repo_root),
             *([] if is_ci else ["-it"]),
             container,
+            "./ci/lint/06_script.sh",
             *sys.argv[1:],
         ]
     )
