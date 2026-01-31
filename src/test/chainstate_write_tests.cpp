@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -30,6 +31,7 @@ BOOST_FIXTURE_TEST_CASE(chainstate_write_interval, TestingSetup)
     m_node.validation_signals->RegisterSharedValidationInterface(sub);
     auto& chainstate{Assert(m_node.chainman)->ActiveChainstate()};
     BlockValidationState state_dummy{};
+    ElapseTime elapse_time{};
 
     // The first periodic flush sets m_next_write and does not flush
     chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC);
@@ -37,12 +39,12 @@ BOOST_FIXTURE_TEST_CASE(chainstate_write_interval, TestingSetup)
     BOOST_CHECK(!sub->m_did_flush);
 
     // The periodic flush interval is between 50 and 70 minutes (inclusive)
-    SetMockTime(GetTime<std::chrono::minutes>() + DATABASE_WRITE_INTERVAL_MIN - 1min);
+    elapse_time(DATABASE_WRITE_INTERVAL_MIN - 1min);
     chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC);
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
     BOOST_CHECK(!sub->m_did_flush);
 
-    SetMockTime(GetTime<std::chrono::minutes>() + DATABASE_WRITE_INTERVAL_MAX);
+    elapse_time(DATABASE_WRITE_INTERVAL_MAX);
     chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC);
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
     BOOST_CHECK(sub->m_did_flush);
