@@ -8,7 +8,6 @@
 #include <cassert>
 #include <cstdint>
 #include <map>
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <string_view>
