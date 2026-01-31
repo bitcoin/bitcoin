@@ -2381,7 +2381,7 @@ util::Result<void> CWallet::RemoveTxs(std::vector<Txid>& txs_to_remove)
     bool was_txn_committed = RunWithinTxn(GetDatabase(), /*process_desc=*/"remove transactions", [&](WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
         util::Result<void> result{RemoveTxs(batch, txs_to_remove)};
         if (!result) str_err = util::ErrorString(result);
-        return result.has_value();
+        return bool{result};
     });
     if (!str_err.empty()) return util::Error{str_err};
     if (!was_txn_committed) return util::Error{_("Error starting/committing db txn for wallet transactions removal process")};
@@ -2881,7 +2881,7 @@ static util::Result<fs::path> GetWalletPath(const std::string& name)
     // 2. Path to an existing directory.
     // 3. Path to a symlink to a directory.
     // 4. For backwards compatibility, the name of a data file in -walletdir.
-    const fs::path wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), fs::PathFromString(name));
+    fs::path wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), fs::PathFromString(name));
     fs::file_type path_type = fs::symlink_status(wallet_path).type();
     if (!(path_type == fs::file_type::not_found || path_type == fs::file_type::directory ||
           (path_type == fs::file_type::symlink && fs::is_directory(wallet_path)) ||
