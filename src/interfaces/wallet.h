@@ -29,7 +29,7 @@
 
 class CFeeRate;
 class CKey;
-enum class FeeReason;
+enum class FeeSource;
 enum class OutputType;
 struct PartiallySignedTransaction;
 struct bilingual_str;
@@ -246,9 +246,9 @@ public:
 
     //! Get minimum fee.
     virtual CAmount getMinimumFee(unsigned int tx_bytes,
-        const wallet::CCoinControl& coin_control,
-        int* returned_target,
-        FeeReason* reason) = 0;
+                                  const wallet::CCoinControl& coin_control,
+                                  int* returned_target,
+                                  FeeSource* fee_source) = 0;
 
     //! Get tx confirm target.
     virtual unsigned int getConfirmTarget() = 0;

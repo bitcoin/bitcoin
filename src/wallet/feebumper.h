@@ -10,7 +10,6 @@
 #include <primitives/transaction.h>
 
 class uint256;
-enum class FeeEstimateMode;
 struct bilingual_str;
 
 namespace wallet {

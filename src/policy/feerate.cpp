@@ -26,11 +26,11 @@ CAmount CFeeRate::GetFee(int32_t virtual_bytes) const
     return nFee;
 }
 
-std::string CFeeRate::ToString(const FeeEstimateMode& fee_estimate_mode) const
+std::string CFeeRate::ToString(const FeeRateFormat& feerate_format) const
 {
     const CAmount feerate_per_kvb = GetFeePerK();
-    switch (fee_estimate_mode) {
-    case FeeEstimateMode::SAT_VB: return strprintf("%d.%03d %s/vB", feerate_per_kvb / 1000, feerate_per_kvb % 1000, CURRENCY_ATOM);
+    switch (feerate_format) {
+    case FeeRateFormat::SAT_VB: return strprintf("%d.%03d %s/vB", feerate_per_kvb / 1000, feerate_per_kvb % 1000, CURRENCY_ATOM);
     default:                      return strprintf("%d.%08d %s/kvB", feerate_per_kvb / COIN, feerate_per_kvb % COIN, CURRENCY_UNIT);
     }
 }

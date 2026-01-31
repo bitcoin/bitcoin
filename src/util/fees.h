@@ -1,0 +1,129 @@
+// Copyright (c) 2026-present The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#ifndef BITCOIN_UTIL_FEES_H
+#define BITCOIN_UTIL_FEES_H
+
+#include <util/feefrac.h>
+#include <util/serfloat.h>
+
+#include <compare>
+#include <string>
+#include <vector>
+
+/* Used to determine type of fee estimation requested */
+enum class FeeEstimateMode {
+    UNSET,        //!< Use default settings based on other criteria
+    ECONOMICAL,   //!< Force FeeRateEstimator to use non-conservative estimates
+    CONSERVATIVE, //!< Force FeeRateEstimator to use conservative estimates
+};
+
+enum class FeeSource {
+    FEE_RATE_ESTIMATOR,
+    MEMPOOL_MIN,
+    PAYTXFEE,
+    FALLBACK,
+    REQUIRED,
+};
+
+/**
+ * @enum FeeRateEstimatorType
+ * Identifier for fee rate estimator.
+ */
+enum class FeeRateEstimatorType {
+    BLOCK_POLICY,
+    MEMPOOL_POLICY,
+};
+
+// Block percentiles fee rate (in BTC/vB).
+struct Percentiles {
+    FeePerVSize p25;
+    FeePerVSize p50;
+    FeePerVSize p75;
+    FeePerVSize p95;
+
+    Percentiles() = default;
+
+    bool empty() const
+    {
+        return p25.IsEmpty() && p50.IsEmpty() && p75.IsEmpty() && p95.IsEmpty();
+    }
+};
+
+//! Structure to track the health of mined blocks.
+struct BlockData {
+    size_t m_height;                      //!< Block height.
+    double m_removed_block_txs_weight{0}; //!< Removed mempool transactions weight excluding coinbase (default empty).
+    double m_block_weight{0};             //!< Weight of the block excluding coinbase (default empty).
+};
+
+struct EncodedBlockDataFormatter {
+    template <typename Stream>
+    void Ser(Stream& s, const BlockData& b)
+    {
+        s << static_cast<uint64_t>(b.m_height);
+        s << EncodeDouble(b.m_block_weight);
+        s << EncodeDouble(b.m_removed_block_txs_weight);
+    }
+
+    template <typename Stream>
+    void Unser(Stream& s, BlockData& b)
+    {
+        uint64_t block_height, block_txs_weight, mempool_txs_weight;
+        s >> block_height;
+        s >> block_txs_weight;
+        s >> mempool_txs_weight;
+        b.m_height = block_height;
+        b.m_block_weight = DecodeDouble(block_txs_weight);
+        b.m_removed_block_txs_weight = DecodeDouble(mempool_txs_weight);
+    }
+};
+
+/**
+ * Calculates the percentile fee rates from a given block template chunks.
+ *
+ * This function assumes that the chunk fee rates in the input vector are sorted in descending order
+ * based on mining score priority.
+ *
+ * @param[in] chunk_feerates A vector block_template chunk fee rates.
+ * @param[in] total_weight The total weight units to use for percentile fee rate calculations.
+ * @return Percentiles object containing the calculated percentile fee rates.
+ */
+Percentiles CalculatePercentiles(const std::vector<FeePerVSize>& chunk_feerates, const int32_t total_weight);
+
+/**
+ * @struct FeeRateEstimatorResult
+ * Represents the response returned by a fee rate estimator.
+ */
+struct FeeRateEstimatorResult {
+    //! This identifies which fee rate estimator is providing this feerate estimate
+    FeeRateEstimatorType feerate_estimator;
+
+    //! Fee rate sufficient to confirm a package within target
+    FeePerVSize feerate{0, 0};
+
+    //! The block height at which the fee rate estimator was made
+    unsigned int current_block_height{0};
+
+    //! The returned target at which the package is likely to confirm within
+    int returned_target{0};
+
+    std::vector<std::string> errors{}; // error messages encountered
+
+    /**
+     * Compare two FeeRateEstimatorResult objects based on fee rate
+     * @param other The other FeeRateEstimatorResult object to compare with
+     * @return strong ordering of either less, greater or equal; based on strict feerate comparison.
+     */
+    auto operator<=>(const FeeRateEstimatorResult& other) const
+    {
+        if (feerate << other.feerate) return std::strong_ordering::less;
+        if (feerate >> other.feerate) return std::strong_ordering::greater;
+        return std::strong_ordering::equal;
+    }
+};
+
+std::string FeeRateEstimatorTypeToString(FeeRateEstimatorType feerate_estimator_type);
+
+#endif // BITCOIN_UTIL_FEES_H

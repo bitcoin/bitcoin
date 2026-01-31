@@ -2,14 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <interfaces/wallet.h>
-
 #include <common/args.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
+#include <interfaces/wallet.h>
 #include <node/types.h>
-#include <policy/fees/block_policy_estimator.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
 #include <scheduler.h>
@@ -17,6 +15,7 @@
 #include <sync.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/fees.h>
 #include <util/translation.h>
 #include <util/ui_change_type.h>
 #include <wallet/coincontrol.h>
@@ -474,16 +473,11 @@ public:
     }
     CAmount getRequiredFee(unsigned int tx_bytes) override { return GetRequiredFee(*m_wallet, tx_bytes); }
     CAmount getMinimumFee(unsigned int tx_bytes,
-        const CCoinControl& coin_control,
-        int* returned_target,
-        FeeReason* reason) override
+                          const CCoinControl& coin_control,
+                          int* returned_target,
+                          FeeSource* fee_source) override
     {
-        FeeCalculation fee_calc;
-        CAmount result;
-        result = GetMinimumFee(*m_wallet, tx_bytes, coin_control, &fee_calc);
-        if (returned_target) *returned_target = fee_calc.returnedTarget;
-        if (reason) *reason = fee_calc.reason;
-        return result;
+        return GetMinimumFee(*m_wallet, tx_bytes, coin_control, fee_source, returned_target);
     }
     unsigned int getConfirmTarget() override { return m_wallet->m_confirm_target; }
     bool hdEnabled() override { return m_wallet->IsHDEnabled(); }

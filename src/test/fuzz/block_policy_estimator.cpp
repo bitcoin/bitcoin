@@ -4,7 +4,7 @@
 
 #include <kernel/mempool_entry.h>
 #include <policy/fees/block_policy_estimator.h>
-#include <policy/fees/block_policy_estimator_args.h>
+#include <policy/fees/estimator_args.h>
 #include <primitives/transaction.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -21,18 +21,18 @@ namespace {
 const BasicTestingSetup* g_setup;
 } // namespace
 
-void initialize_policy_estimator()
+void initialize_block_policy_estimator()
 {
     static const auto testing_setup = MakeNoLogFileContext<>();
     g_setup = testing_setup.get();
 }
 
-FUZZ_TARGET(policy_estimator, .init = initialize_policy_estimator)
+FUZZ_TARGET(block_policy_estimator, .init = initialize_block_policy_estimator)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     bool good_data{true};
 
-    CBlockPolicyEstimator block_policy_estimator{FeeestPath(*g_setup->m_node.args), DEFAULT_ACCEPT_STALE_FEE_ESTIMATES};
+    CBlockPolicyEstimator block_policy_estimator{BlockPolicyFeeestPath(*g_setup->m_node.args), DEFAULT_ACCEPT_STALE_FEE_ESTIMATES};
 
     uint32_t current_height{0};
     const auto advance_height{

@@ -4,11 +4,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <common/messages.h>
-
 #include <common/types.h>
-#include <policy/fees/block_policy_estimator.h>
 #include <node/types.h>
+#include <policy/fees/block_policy_estimator.h>
 #include <tinyformat.h>
+#include <util/fees.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/translation.h>
@@ -24,24 +24,22 @@ using node::TransactionError;
 using util::Join;
 
 namespace common {
-std::string StringForFeeReason(FeeReason reason)
+
+std::string StringForFeeSource(FeeSource source)
 {
-    static const std::map<FeeReason, std::string> fee_reason_strings = {
-        {FeeReason::NONE, "None"},
-        {FeeReason::HALF_ESTIMATE, "Half Target 60% Threshold"},
-        {FeeReason::FULL_ESTIMATE, "Target 85% Threshold"},
-        {FeeReason::DOUBLE_ESTIMATE, "Double Target 95% Threshold"},
-        {FeeReason::CONSERVATIVE, "Conservative Double Target longer horizon"},
-        {FeeReason::MEMPOOL_MIN, "Mempool Min Fee"},
-        {FeeReason::PAYTXFEE, "PayTxFee set"},
-        {FeeReason::FALLBACK, "Fallback fee"},
-        {FeeReason::REQUIRED, "Minimum Required Fee"},
-    };
-    auto reason_string = fee_reason_strings.find(reason);
-
-    if (reason_string == fee_reason_strings.end()) return "Unknown";
-
-    return reason_string->second;
+    switch (source) {
+    case FeeSource::FEE_RATE_ESTIMATOR:
+        return "Fee Rate Estimator";
+    case FeeSource::MEMPOOL_MIN:
+        return "Mempool Min Fee";
+    case FeeSource::PAYTXFEE:
+        return "PayTxFee set";
+    case FeeSource::FALLBACK:
+        return "Fallback fee";
+    case FeeSource::REQUIRED:
+        return "Minimum Required Fee";
+    default: return "Unknown Fee Source";
+    }
 }
 
 const std::vector<std::pair<std::string, FeeEstimateMode>>& FeeModeMap()
@@ -60,15 +58,10 @@ std::string FeeModeInfo(const std::pair<std::string, FeeEstimateMode>& mode, std
         case FeeEstimateMode::UNSET:
             return strprintf("%s means no mode set (%s). \n", mode.first, default_info);
         case FeeEstimateMode::ECONOMICAL:
-            return strprintf("%s estimates use a shorter time horizon, making them more\n"
-                   "responsive to short-term drops in the prevailing fee market. This mode\n"
-                   "potentially returns a lower fee rate estimate.\n", mode.first);
+            return strprintf("%s mode potentially returns a lower fee rate estimate.\n", mode.first);
         case FeeEstimateMode::CONSERVATIVE:
-            return strprintf("%s estimates use a longer time horizon, making them\n"
-                   "less responsive to short-term drops in the prevailing fee market. This mode\n"
-                   "potentially returns a higher fee rate estimate.\n", mode.first);
+            return strprintf("%s potentially returns a higher fee rate estimate.\n", mode.first);
         default:
-            // Other modes apart from the ones handled are fee rate units; they should not be clarified.
             assert(false);
     }
 }

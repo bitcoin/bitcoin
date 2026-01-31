@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <bitcoin-build-config.h> // IWYU pragma: keep
+
 #include <addrdb.h>
 #include <banman.h>
 #include <blockfilter.h>
@@ -33,14 +35,14 @@
 #include <node/coin.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
-#include <node/mini_miner.h>
-#include <node/miner.h>
 #include <node/kernel_notifications.h>
+#include <node/miner.h>
+#include <node/mini_miner.h>
 #include <node/transaction.h>
 #include <node/types.h>
 #include <node/warnings.h>
 #include <policy/feerate.h>
-#include <policy/fees/block_policy_estimator.h>
+#include <policy/fees/estimator_man.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <policy/settings.h>
@@ -55,6 +57,7 @@
 #include <uint256.h>
 #include <univalue.h>
 #include <util/check.h>
+#include <util/fees.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/string.h>
@@ -62,14 +65,12 @@
 #include <validation.h>
 #include <validationinterface.h>
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
+#include <boost/signals2/signal.hpp>
 
 #include <any>
 #include <memory>
 #include <optional>
 #include <utility>
-
-#include <boost/signals2/signal.hpp>
 
 using interfaces::BlockRef;
 using interfaces::BlockTemplate;
@@ -722,15 +723,15 @@ public:
         }
         return {};
     }
-    CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc) override
+    FeeRateEstimatorResult getFeeRateEstimate(int num_blocks, bool conservative) override
     {
-        if (!m_node.fee_estimator) return {};
-        return m_node.fee_estimator->estimateSmartFee(num_blocks, calc, conservative);
+        if (!m_node.fee_estimator_man) return {};
+        return m_node.fee_estimator_man->GetFeeRateEstimate(num_blocks, conservative);
     }
-    unsigned int estimateMaxBlocks() override
+    unsigned int maximumFeeEstimationTargetBlocks() override
     {
-        if (!m_node.fee_estimator) return 0;
-        return m_node.fee_estimator->HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
+        if (!m_node.fee_estimator_man) return 0;
+        return m_node.fee_estimator_man->MaximumTarget();
     }
     CFeeRate mempoolMinFee() override
     {
