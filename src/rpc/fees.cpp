@@ -28,9 +28,9 @@ using common::FeeModesDetail;
 using common::InvalidEstimateModeErrorMessage;
 using node::NodeContext;
 
-static RPCHelpMan estimatesmartfee()
+static RPCMethod estimatesmartfee()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "estimatesmartfee",
         "Estimates the approximate fee per kilobyte needed for a transaction to begin\n"
         "confirmation within conf_target blocks if possible and return the number of blocks\n"
@@ -59,7 +59,7 @@ static RPCHelpMan estimatesmartfee()
             HelpExampleCli("estimatesmartfee", "6") +
             HelpExampleRpc("estimatesmartfee", "6")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             CBlockPolicyEstimator& fee_estimator = EnsureAnyFeeEstimator(request.context);
             const NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -93,9 +93,9 @@ static RPCHelpMan estimatesmartfee()
     };
 }
 
-static RPCHelpMan estimaterawfee()
+static RPCMethod estimaterawfee()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "estimaterawfee",
         "WARNING: This interface is unstable and may disappear or change!\n"
         "\nWARNING: This is an advanced API call that is tightly coupled to the specific\n"
@@ -148,7 +148,7 @@ static RPCHelpMan estimaterawfee()
         RPCExamples{
             HelpExampleCli("estimaterawfee", "6 0.9")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             CBlockPolicyEstimator& fee_estimator = EnsureAnyFeeEstimator(request.context);
             const NodeContext& node = EnsureAnyNodeContext(request.context);

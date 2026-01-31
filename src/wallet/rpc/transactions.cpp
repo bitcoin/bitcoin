@@ -187,9 +187,9 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
     return ret;
 }
 
-RPCHelpMan listreceivedbyaddress()
+RPCMethod listreceivedbyaddress()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "listreceivedbyaddress",
         "List balances by receiving address.\n",
                 {
@@ -222,7 +222,7 @@ RPCHelpMan listreceivedbyaddress()
             + HelpExampleRpc("listreceivedbyaddress", "6, true, true")
             + HelpExampleRpc("listreceivedbyaddress", "6, true, true, \"" + EXAMPLE_ADDRESS[0] + "\", true")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -240,9 +240,9 @@ RPCHelpMan listreceivedbyaddress()
     };
 }
 
-RPCHelpMan listreceivedbylabel()
+RPCMethod listreceivedbylabel()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "listreceivedbylabel",
         "List received transactions by label.\n",
                 {
@@ -267,7 +267,7 @@ RPCHelpMan listreceivedbylabel()
             + HelpExampleCli("listreceivedbylabel", "6 true")
             + HelpExampleRpc("listreceivedbylabel", "6, true, true, true")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -413,9 +413,9 @@ static std::vector<RPCResult> TransactionDescriptionString()
            };
 }
 
-RPCHelpMan listtransactions()
+RPCMethod listtransactions()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "listtransactions",
         "If a label name is provided, this will return only incoming transactions paying to addresses with the specified label.\n"
                 "Returns up to 'count' most recent transactions ordered from oldest to newest while skipping the first number of \n"
@@ -463,7 +463,7 @@ RPCHelpMan listtransactions()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("listtransactions", "\"*\", 20, 100")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -521,9 +521,9 @@ RPCHelpMan listtransactions()
     };
 }
 
-RPCHelpMan listsinceblock()
+RPCMethod listsinceblock()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "listsinceblock",
         "Get all transactions in blocks since block [blockhash], or all transactions if omitted.\n"
                 "If \"blockhash\" is no longer a part of the main chain, transactions from the fork point onward are included.\n"
@@ -574,7 +574,7 @@ RPCHelpMan listsinceblock()
             + HelpExampleCli("listsinceblock", "\"000000000000000bacf66f7497b7dc45ef753ee9a7d38571037cdb1a57f663ad\" 6")
             + HelpExampleRpc("listsinceblock", "\"000000000000000bacf66f7497b7dc45ef753ee9a7d38571037cdb1a57f663ad\", 6")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -660,9 +660,9 @@ RPCHelpMan listsinceblock()
     };
 }
 
-RPCHelpMan gettransaction()
+RPCMethod gettransaction()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "gettransaction",
         "Get detailed information about in-wallet transaction <txid>\n",
                 {
@@ -716,7 +716,7 @@ RPCHelpMan gettransaction()
             + HelpExampleCli("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\" false true")
             + HelpExampleRpc("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -776,9 +776,9 @@ RPCHelpMan gettransaction()
     };
 }
 
-RPCHelpMan abandontransaction()
+RPCMethod abandontransaction()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "abandontransaction",
         "Mark in-wallet transaction <txid> as abandoned\n"
                 "This will mark this transaction and all its in-wallet descendants as abandoned which will allow\n"
@@ -793,7 +793,7 @@ RPCHelpMan abandontransaction()
                     HelpExampleCli("abandontransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
             + HelpExampleRpc("abandontransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -818,9 +818,9 @@ RPCHelpMan abandontransaction()
     };
 }
 
-RPCHelpMan rescanblockchain()
+RPCMethod rescanblockchain()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "rescanblockchain",
         "Rescan the local blockchain for wallet related transactions.\n"
                 "Note: Use \"getwalletinfo\" to query the scanning progress.\n"
@@ -841,7 +841,7 @@ RPCHelpMan rescanblockchain()
                     HelpExampleCli("rescanblockchain", "100000 120000")
             + HelpExampleRpc("rescanblockchain", "100000, 120000")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -915,9 +915,9 @@ RPCHelpMan rescanblockchain()
     };
 }
 
-RPCHelpMan abortrescan()
+RPCMethod abortrescan()
 {
-    return RPCHelpMan{"abortrescan",
+    return RPCMethod{"abortrescan",
                 "Stops current wallet rescan triggered by an RPC call, e.g. by a rescanblockchain call.\n"
                 "Note: Use \"getwalletinfo\" to query the scanning progress.\n",
                 {},
@@ -930,7 +930,7 @@ RPCHelpMan abortrescan()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("abortrescan", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;

@@ -31,9 +31,9 @@ static const std::map<uint64_t, std::string> WALLET_FLAG_CAVEATS{
      "be considered unused, even if the opposite is the case."},
 };
 
-static RPCHelpMan getwalletinfo()
+static RPCMethod getwalletinfo()
 {
-    return RPCHelpMan{"getwalletinfo",
+    return RPCMethod{"getwalletinfo",
                 "Returns an object containing various wallet state info.\n",
                 {},
                 RPCResult{
@@ -70,7 +70,7 @@ static RPCHelpMan getwalletinfo()
                     HelpExampleCli("getwalletinfo", "")
             + HelpExampleRpc("getwalletinfo", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -135,9 +135,9 @@ static RPCHelpMan getwalletinfo()
     };
 }
 
-static RPCHelpMan listwalletdir()
+static RPCMethod listwalletdir()
 {
-    return RPCHelpMan{"listwalletdir",
+    return RPCMethod{"listwalletdir",
                 "Returns a list of wallets in the wallet directory.\n",
                 {},
                 RPCResult{
@@ -160,7 +160,7 @@ static RPCHelpMan listwalletdir()
                     HelpExampleCli("listwalletdir", "")
             + HelpExampleRpc("listwalletdir", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue wallets(UniValue::VARR);
     for (const auto& [path, db_type] : ListDatabases(GetWalletDir())) {
@@ -181,9 +181,9 @@ static RPCHelpMan listwalletdir()
     };
 }
 
-static RPCHelpMan listwallets()
+static RPCMethod listwallets()
 {
-    return RPCHelpMan{"listwallets",
+    return RPCMethod{"listwallets",
                 "Returns a list of currently loaded wallets.\n"
                 "For full information on the wallet, use \"getwalletinfo\"\n",
                 {},
@@ -197,7 +197,7 @@ static RPCHelpMan listwallets()
                     HelpExampleCli("listwallets", "")
             + HelpExampleRpc("listwallets", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue obj(UniValue::VARR);
 
@@ -212,9 +212,9 @@ static RPCHelpMan listwallets()
     };
 }
 
-static RPCHelpMan loadwallet()
+static RPCMethod loadwallet()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "loadwallet",
         "Loads a wallet from a wallet file or directory."
                 "\nNote that all wallet command-line options used when starting bitcoind will be"
@@ -244,7 +244,7 @@ static RPCHelpMan loadwallet()
                     + HelpExampleCli("loadwallet", "\"DriveLetter:\\path\\to\\walletname\\\"")
                     + HelpExampleRpc("loadwallet", "\"DriveLetter:\\path\\to\\walletname\\\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     WalletContext& context = EnsureWalletContext(request.context);
     const std::string name(request.params[0].get_str());
@@ -277,14 +277,14 @@ static RPCHelpMan loadwallet()
     };
 }
 
-static RPCHelpMan setwalletflag()
+static RPCMethod setwalletflag()
 {
             std::string flags;
             for (auto& it : STRING_TO_WALLET_FLAG)
                 if (it.second & MUTABLE_WALLET_FLAGS)
                     flags += (flags == "" ? "" : ", ") + it.first;
 
-    return RPCHelpMan{
+    return RPCMethod{
         "setwalletflag",
         "Change the state of the given wallet flag for a wallet.\n",
                 {
@@ -303,7 +303,7 @@ static RPCHelpMan setwalletflag()
                     HelpExampleCli("setwalletflag", "avoid_reuse")
                   + HelpExampleRpc("setwalletflag", "\"avoid_reuse\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -345,9 +345,9 @@ static RPCHelpMan setwalletflag()
     };
 }
 
-static RPCHelpMan createwallet()
+static RPCMethod createwallet()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "createwallet",
         "Creates and loads a new wallet.\n",
         {
@@ -376,7 +376,7 @@ static RPCHelpMan createwallet()
             + HelpExampleCliNamed("createwallet", {{"wallet_name", "descriptors"}, {"avoid_reuse", true}, {"load_on_startup", true}})
             + HelpExampleRpcNamed("createwallet", {{"wallet_name", "descriptors"}, {"avoid_reuse", true}, {"load_on_startup", true}})
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     WalletContext& context = EnsureWalletContext(request.context);
     uint64_t flags = 0;
@@ -433,9 +433,9 @@ static RPCHelpMan createwallet()
     };
 }
 
-static RPCHelpMan unloadwallet()
+static RPCMethod unloadwallet()
 {
-    return RPCHelpMan{"unloadwallet",
+    return RPCMethod{"unloadwallet",
                 "Unloads the wallet referenced by the request endpoint or the wallet_name argument.\n"
                 "If both are specified, they must be identical.",
                 {
@@ -452,7 +452,7 @@ static RPCHelpMan unloadwallet()
                     HelpExampleCli("unloadwallet", "wallet_name")
             + HelpExampleRpc("unloadwallet", "wallet_name")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::string wallet_name{EnsureUniqueWalletName(request, self.MaybeArg<std::string_view>("wallet_name"))};
 
@@ -488,9 +488,9 @@ static RPCHelpMan unloadwallet()
     };
 }
 
-RPCHelpMan simulaterawtransaction()
+RPCMethod simulaterawtransaction()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "simulaterawtransaction",
         "Calculate the balance change resulting in the signing and broadcasting of the given transaction(s).\n",
         {
@@ -515,7 +515,7 @@ RPCHelpMan simulaterawtransaction()
             HelpExampleCli("simulaterawtransaction", "[\"myhex\"]")
             + HelpExampleRpc("simulaterawtransaction", "[\"myhex\"]")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> rpc_wallet = GetWalletForJSONRPCRequest(request);
     if (!rpc_wallet) return UniValue::VNULL;
@@ -581,9 +581,9 @@ RPCHelpMan simulaterawtransaction()
     };
 }
 
-static RPCHelpMan migratewallet()
+static RPCMethod migratewallet()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "migratewallet",
         "Migrate the wallet to a descriptor wallet.\n"
         "A new wallet backup will need to be made.\n"
@@ -609,7 +609,7 @@ static RPCHelpMan migratewallet()
             HelpExampleCli("migratewallet", "")
             + HelpExampleRpc("migratewallet", "")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             const std::string wallet_name{EnsureUniqueWalletName(request, self.MaybeArg<std::string_view>("wallet_name"))};
 
@@ -640,9 +640,9 @@ static RPCHelpMan migratewallet()
     };
 }
 
-RPCHelpMan gethdkeys()
+RPCMethod gethdkeys()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "gethdkeys",
         "List all BIP 32 HD keys in the wallet and which descriptors use them.\n",
         {
@@ -671,7 +671,7 @@ RPCHelpMan gethdkeys()
             HelpExampleCli("gethdkeys", "") + HelpExampleRpc("gethdkeys", "")
             + HelpExampleCliNamed("gethdkeys", {{"active_only", "true"}, {"private", "true"}}) + HelpExampleRpcNamed("gethdkeys", {{"active_only", "true"}, {"private", "true"}})
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
             if (!wallet) return UniValue::VNULL;
@@ -744,9 +744,9 @@ RPCHelpMan gethdkeys()
     };
 }
 
-static RPCHelpMan createwalletdescriptor()
+static RPCMethod createwalletdescriptor()
 {
-    return RPCHelpMan{"createwalletdescriptor",
+    return RPCMethod{"createwalletdescriptor",
         "Creates the wallet's descriptor for the given address type. "
         "The address type must be one that the wallet does not already have a descriptor for."
         + HELP_REQUIRING_PASSPHRASE,
@@ -769,7 +769,7 @@ static RPCHelpMan createwalletdescriptor()
             HelpExampleCli("createwalletdescriptor", "bech32m")
             + HelpExampleRpc("createwalletdescriptor", "bech32m")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
             if (!pwallet) return UniValue::VNULL;
@@ -843,66 +843,66 @@ static RPCHelpMan createwalletdescriptor()
 }
 
 // addresses
-RPCHelpMan getaddressinfo();
-RPCHelpMan getnewaddress();
-RPCHelpMan getrawchangeaddress();
-RPCHelpMan setlabel();
-RPCHelpMan listaddressgroupings();
-RPCHelpMan keypoolrefill();
-RPCHelpMan getaddressesbylabel();
-RPCHelpMan listlabels();
+RPCMethod getaddressinfo();
+RPCMethod getnewaddress();
+RPCMethod getrawchangeaddress();
+RPCMethod setlabel();
+RPCMethod listaddressgroupings();
+RPCMethod keypoolrefill();
+RPCMethod getaddressesbylabel();
+RPCMethod listlabels();
 #ifdef ENABLE_EXTERNAL_SIGNER
-RPCHelpMan walletdisplayaddress();
+RPCMethod walletdisplayaddress();
 #endif // ENABLE_EXTERNAL_SIGNER
 
 // backup
-RPCHelpMan importprunedfunds();
-RPCHelpMan removeprunedfunds();
-RPCHelpMan importdescriptors();
-RPCHelpMan listdescriptors();
-RPCHelpMan backupwallet();
-RPCHelpMan restorewallet();
+RPCMethod importprunedfunds();
+RPCMethod removeprunedfunds();
+RPCMethod importdescriptors();
+RPCMethod listdescriptors();
+RPCMethod backupwallet();
+RPCMethod restorewallet();
 
 // coins
-RPCHelpMan getreceivedbyaddress();
-RPCHelpMan getreceivedbylabel();
-RPCHelpMan getbalance();
-RPCHelpMan lockunspent();
-RPCHelpMan listlockunspent();
-RPCHelpMan getbalances();
-RPCHelpMan listunspent();
+RPCMethod getreceivedbyaddress();
+RPCMethod getreceivedbylabel();
+RPCMethod getbalance();
+RPCMethod lockunspent();
+RPCMethod listlockunspent();
+RPCMethod getbalances();
+RPCMethod listunspent();
 
 // encryption
-RPCHelpMan walletpassphrase();
-RPCHelpMan walletpassphrasechange();
-RPCHelpMan walletlock();
-RPCHelpMan encryptwallet();
+RPCMethod walletpassphrase();
+RPCMethod walletpassphrasechange();
+RPCMethod walletlock();
+RPCMethod encryptwallet();
 
 // spend
-RPCHelpMan sendtoaddress();
-RPCHelpMan sendmany();
-RPCHelpMan settxfee();
-RPCHelpMan fundrawtransaction();
-RPCHelpMan bumpfee();
-RPCHelpMan psbtbumpfee();
-RPCHelpMan send();
-RPCHelpMan sendall();
-RPCHelpMan walletprocesspsbt();
-RPCHelpMan walletcreatefundedpsbt();
-RPCHelpMan signrawtransactionwithwallet();
+RPCMethod sendtoaddress();
+RPCMethod sendmany();
+RPCMethod settxfee();
+RPCMethod fundrawtransaction();
+RPCMethod bumpfee();
+RPCMethod psbtbumpfee();
+RPCMethod send();
+RPCMethod sendall();
+RPCMethod walletprocesspsbt();
+RPCMethod walletcreatefundedpsbt();
+RPCMethod signrawtransactionwithwallet();
 
 // signmessage
-RPCHelpMan signmessage();
+RPCMethod signmessage();
 
 // transactions
-RPCHelpMan listreceivedbyaddress();
-RPCHelpMan listreceivedbylabel();
-RPCHelpMan listtransactions();
-RPCHelpMan listsinceblock();
-RPCHelpMan gettransaction();
-RPCHelpMan abandontransaction();
-RPCHelpMan rescanblockchain();
-RPCHelpMan abortrescan();
+RPCMethod listreceivedbyaddress();
+RPCMethod listreceivedbylabel();
+RPCMethod listtransactions();
+RPCMethod listsinceblock();
+RPCMethod gettransaction();
+RPCMethod abandontransaction();
+RPCMethod rescanblockchain();
+RPCMethod abortrescan();
 
 std::span<const CRPCCommand> GetWalletRPCCommands()
 {
