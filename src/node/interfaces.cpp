@@ -67,6 +67,7 @@
 #include <any>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <utility>
 
 #include <boost/signals2/signal.hpp>
@@ -78,6 +79,7 @@ using interfaces::Chain;
 using interfaces::FoundBlock;
 using interfaces::Handler;
 using interfaces::MakeSignalHandler;
+using interfaces::MemoryLoad;
 using interfaces::Mining;
 using interfaces::Node;
 using interfaces::WalletLoader;
@@ -866,7 +868,24 @@ public:
                                                     m_block_template(std::move(block_template)),
                                                     m_node(node)
     {
-        assert(m_block_template);
+        // Don't track the dummy coinbase, because it can be modified in-place
+        // by submitSolution()
+        LOCK(m_node.template_state_mutex);
+        for (const CTransactionRef& tx : Assert(m_block_template)->block.vtx | std::views::drop(1)) {
+            m_node.template_tx_refs[tx]++;
+        }
+    }
+
+    ~BlockTemplateImpl()
+    {
+        LOCK(m_node.template_state_mutex);
+        for (const CTransactionRef& tx : m_block_template->block.vtx | std::views::drop(1)) {
+            auto ref_count{m_node.template_tx_refs.find(tx)};
+            if (!Assume(ref_count != m_node.template_tx_refs.end())) break;
+            if (--ref_count->second == 0) {
+                m_node.template_tx_refs.erase(ref_count);
+            }
+        }
     }
 
     CBlockHeader getBlockHeader() override
@@ -984,6 +1003,13 @@ public:
         reason = state.GetRejectReason();
         debug = state.GetDebugMessage();
         return state.IsValid();
+    }
+
+    MemoryLoad getMemoryLoad() override
+    {
+        LOCK(m_node.template_state_mutex);
+        CTxMemPool& mempool{*Assert(m_node.mempool)};
+        return {.usage = GetTemplateMemoryUsage(mempool, m_node.template_tx_refs)};
     }
 
     NodeContext* context() override { return &m_node; }
