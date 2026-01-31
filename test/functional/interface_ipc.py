@@ -13,12 +13,13 @@ import shutil
 from test_framework.blocktools import NULL_OUTPOINT
 from test_framework.messages import (
     CBlock,
+    COIN,
     CTransaction,
     CTxIn,
     CTxOut,
     CTxInWitness,
+    MAX_BLOCK_WEIGHT,
     ser_uint256,
-    COIN,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -55,11 +56,17 @@ async def destroying(obj, ctx):
 
 async def create_block_template(mining, stack, ctx, opts):
     """Call mining.createNewBlock() and return template, then call template.destroy() when stack exits."""
-    return await stack.enter_async_context(destroying((await mining.createNewBlock(opts)).result, ctx))
+    response = await mining.createNewBlock(opts)
+    if not response._has("result"):
+        return None
+    return await stack.enter_async_context(destroying(response.result, ctx))
 
 async def wait_next_template(template, stack, ctx, opts):
     """Call template.waitNext() and return template, then call template.destroy() when stack exits."""
-    return await stack.enter_async_context(destroying((await template.waitNext(ctx, opts)).result, ctx))
+    response = await template.waitNext(ctx, opts)
+    if not response._has("result"):
+        return None
+    return await stack.enter_async_context(destroying(response.result, ctx))
 
 async def wait_and_do(wait_fn, do_fn):
     """Call wait_fn, then sleep, then call do_fn in a parallel task. Wait for
@@ -119,6 +126,11 @@ class IPCInterfaceTest(BitcoinTestFramework):
 
     def setup_nodes(self):
         self.extra_init = [{"ipcbind": True}, {}]
+        # Set an absurd reserved weight. `-blockreservedweight` is RPC-only, so
+        # with this setting RPC templates would be empty. IPC clients set
+        # blockReservedWeight per template request and are unaffected; later in
+        # the test the IPC template includes a mempool transaction.
+        self.extra_args =[{f"-blockreservedweight={MAX_BLOCK_WEIGHT}"}, {}]
         super().setup_nodes()
         # Use this function to also load the capnp modules (we cannot use set_test_params for this,
         # as it is being called before knowing whether capnp is available).
@@ -271,6 +283,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 opts.blockReservedWeight = 4000
                 opts.coinbaseOutputMaxAdditionalSigops = 0
                 template = await create_block_template(mining, stack, ctx, opts)
+                assert template is not None
 
                 self.log.debug("Test some inspectors of Template")
                 header = (await template.getBlockHeader(ctx)).result
@@ -294,23 +307,26 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 template2 = await wait_and_do(
                     wait_next_template(template, stack, ctx, waitoptions),
                     lambda: self.generate(self.nodes[0], 1))
+                assert template2 is not None
                 block2 = await self.parse_and_deserialize_block(template2, ctx)
                 assert_equal(len(block2.vtx), 1)
 
                 self.log.debug("Wait for another, but time out")
-                template3 = await template2.waitNext(ctx, waitoptions)
-                assert_equal(template3._has("result"), False)
+                template3 = await wait_next_template(template2, stack, ctx, waitoptions)
+                assert template3 is None
 
                 self.log.debug("Wait for another, get one after increase in fees in the mempool")
                 template4 = await wait_and_do(
                     wait_next_template(template2, stack, ctx, waitoptions),
                     lambda: miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0]))
+                assert template4 is not None
                 block3 = await self.parse_and_deserialize_block(template4, ctx)
                 assert_equal(len(block3.vtx), 2)
 
                 self.log.debug("Wait again, this should return the same template, since the fee threshold is zero")
                 waitoptions.feeThreshold = 0
                 template5 = await wait_next_template(template4, stack, ctx, waitoptions)
+                assert template5 is not None
                 block4 = await self.parse_and_deserialize_block(template5, ctx)
                 assert_equal(len(block4.vtx), 2)
                 waitoptions.feeThreshold = 1
@@ -319,21 +335,41 @@ class IPCInterfaceTest(BitcoinTestFramework):
                 template6 = await wait_and_do(
                     wait_next_template(template5, stack, ctx, waitoptions),
                     lambda: miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0]))
+                assert template6 is not None
                 block4 = await self.parse_and_deserialize_block(template6, ctx)
                 assert_equal(len(block4.vtx), 3)
 
                 self.log.debug("Wait for another, but time out, since the fee threshold is set now")
-                template7 = await template6.waitNext(ctx, waitoptions)
-                assert_equal(template7._has("result"), False)
+                template7 = await wait_next_template(template6, stack, ctx, waitoptions)
+                assert template7 is None
 
                 self.log.debug("interruptWait should abort the current wait")
                 async def wait_for_block():
                     new_waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
                     new_waitoptions.timeout = waitoptions.timeout * 60 # 1 minute wait
                     new_waitoptions.feeThreshold = 1
-                    template7 = await template6.waitNext(ctx, new_waitoptions)
-                    assert_equal(template7._has("result"), False)
+                    template7 = await wait_next_template(template6, stack, ctx, new_waitoptions)
+                    assert template7 is None
                 await wait_and_do(wait_for_block(), template6.interruptWait())
+
+                self.log.debug("Use absurdly large reserved weight to force an empty template")
+                opts.blockReservedWeight = MAX_BLOCK_WEIGHT
+                empty_template = await create_block_template(mining, stack, ctx, opts)
+                assert empty_template is not None
+                block = await self.parse_and_deserialize_block(empty_template, ctx)
+                assert_equal(len(block.vtx), 1)
+
+                self.log.debug("Enforce minimum reserved weight for IPC clients too")
+                opts.blockReservedWeight = 0
+                try:
+                    await mining.createNewBlock(opts)
+                    raise AssertionError("createNewBlock unexpectedly succeeded")
+                except capnp.lib.capnp.KjException as e:
+                    assert_equal(e.description, "remote exception: std::exception: block_reserved_weight (0) must be at least 2000 weight units")
+                    assert_equal(e.type, "FAILED")
+
+                # Restore opts
+                opts.blockReservedWeight = 4000
 
             current_block_height = self.nodes[0].getchaintips()[0]["height"]
             check_opts = self.capnp_modules['mining'].BlockCheckOptions()
