@@ -28,8 +28,10 @@ from test_framework.netutil import (
 )
 from test_framework.script_util import build_malleated_tx_package
 from test_framework.socks5 import (
+    FAKE_ONION_ADDRESSES,
     Socks5Configuration,
     Socks5Server,
+    add_addresses_to_addrman,
 )
 from test_framework.test_framework import (
     BitcoinTestFramework,
@@ -38,7 +40,6 @@ from test_framework.util import (
     assert_equal,
     assert_not_equal,
     assert_raises_rpc_error,
-    p2p_port,
     tor_port,
 )
 from test_framework.wallet import (
@@ -96,26 +97,7 @@ ADDRMAN_ADDRESSES = [
     "[200::1]",
     "[210::1]",
 
-    "testonlyad777777777777777777777777777777777777777775b6qd.onion",
-    "testonlyah77777777777777777777777777777777777777777z7ayd.onion",
-    "testonlyal77777777777777777777777777777777777777777vp6qd.onion",
-    "testonlyap77777777777777777777777777777777777777777r5qad.onion",
-    "testonlyat77777777777777777777777777777777777777777udsid.onion",
-    "testonlyax77777777777777777777777777777777777777777yciid.onion",
-    "testonlya777777777777777777777777777777777777777777rhgyd.onion",
-    "testonlybd77777777777777777777777777777777777777777rs4ad.onion",
-    "testonlybp77777777777777777777777777777777777777777zs2ad.onion",
-    "testonlybt777777777777777777777777777777777777777777x6id.onion",
-    "testonlybx777777777777777777777777777777777777777775styd.onion",
-    "testonlyb3777777777777777777777777777777777777777774ckid.onion",
-    "testonlycd77777777777777777777777777777777777777777733id.onion",
-    "testonlych77777777777777777777777777777777777777777t6kid.onion",
-    "testonlycl77777777777777777777777777777777777777777tt3ad.onion",
-    "testonlyct77777777777777777777777777777777777777777wvhyd.onion",
-    "testonlycx7777777777777777777777777777777777777777774bad.onion",
-    "testonlyc377777777777777777777777777777777777777777u6aid.onion",
-    "testonlydd777777777777777777777777777777777777777777u5ad.onion",
-    "testonlydh77777777777777777777777777777777777777777wgnyd.onion",
+    *FAKE_ONION_ADDRESSES,
 
     "testonlyad77777777777777777777777777777777777777777q.b32.i2p",
     "testonlyah77777777777777777777777777777777777777777q.b32.i2p",
@@ -167,12 +149,9 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         self.num_nodes = 2
 
     def setup_nodes(self):
-        # Start a SOCKS5 proxy server.
+        # Start a SOCKS5 proxy server with ephemeral port.
         socks5_server_config = Socks5Configuration()
-        # self.nodes[0] listens on p2p_port(0),
-        # self.nodes[1] listens on p2p_port(1),
-        # thus we tell the SOCKS5 server to listen on p2p_port(self.num_nodes) (self.num_nodes is 2)
-        socks5_server_config.addr = ("127.0.0.1", p2p_port(self.num_nodes))
+        socks5_server_config.addr = ("127.0.0.1", 0)  # Let OS assign port
         socks5_server_config.unauth = True
         socks5_server_config.auth = True
 
@@ -309,10 +288,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         wallet = MiniWallet(tx_originator)
 
         # Fill tx_originator's addrman.
-        for addr in ADDRMAN_ADDRESSES:
-            res = tx_originator.addpeeraddress(address=addr, port=8333, tried=False)
-            if not res["success"]:
-                self.log.debug(f"Could not add {addr} to tx_originator's addrman (collision?)")
+        add_addresses_to_addrman(tx_originator, ADDRMAN_ADDRESSES, self.log)
 
         self.wait_until(lambda: len(self.destinations) == NUM_INITIAL_CONNECTIONS)
 

@@ -3,10 +3,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/messages.h>
 #include <consensus/validation.h>
 #include <index/txindex.h>
 #include <net.h>
 #include <net_processing.h>
+#include <netbase.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
 #include <node/types.h>
@@ -42,6 +44,13 @@ TransactionError BroadcastTransaction(NodeContext& node,
     assert(node.chainman);
     assert(node.mempool);
     assert(node.peerman);
+
+    if (broadcast_method == TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST &&
+        !g_reachable_nets.Contains(NET_ONION) &&
+        !g_reachable_nets.Contains(NET_I2P)) {
+        err_string = common::TransactionErrorString(TransactionError::PRIVATE_BROADCAST_UNAVAILABLE).original;
+        return TransactionError::PRIVATE_BROADCAST_UNAVAILABLE;
+    }
 
     Txid txid = tx->GetHash();
     Wtxid wtxid = tx->GetWitnessHash();
