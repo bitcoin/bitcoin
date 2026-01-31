@@ -4,11 +4,11 @@
 
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <vector>
 
 #include <boost/test/unit_test.hpp>
 #include <test/util/common.h>
 #include <tinyformat.h>
+#include <test/util/str.h>
 
 using namespace util;
 using util::detail::CheckNumFormatSpecifiers;
@@ -155,38 +155,27 @@ BOOST_AUTO_TEST_CASE(ConstevalFormatString_NumSpec)
         HasReason{"tinyformat: Too many conversion specifiers in format string"});
 }
 
-BOOST_AUTO_TEST_CASE(ascii_case_insensitive_key_equal_test)
+BOOST_AUTO_TEST_CASE(case_insensitive_equal_test)
 {
-    AsciiCaseInsensitiveKeyEqual cmp;
-    BOOST_CHECK(!cmp("A", "B"));
-    BOOST_CHECK(!cmp("A", "b"));
-    BOOST_CHECK(!cmp("a", "B"));
-    BOOST_CHECK(!cmp("B", "A"));
-    BOOST_CHECK(!cmp("B", "a"));
-    BOOST_CHECK(!cmp("b", "A"));
-    BOOST_CHECK(!cmp("A", "AA"));
-    BOOST_CHECK(cmp("A-A", "a-a"));
-    BOOST_CHECK(cmp("A", "A"));
-    BOOST_CHECK(cmp("A", "a"));
-    BOOST_CHECK(cmp("a", "a"));
-    BOOST_CHECK(cmp("B", "b"));
-    BOOST_CHECK(cmp("ab", "aB"));
-    BOOST_CHECK(cmp("Ab", "aB"));
-    BOOST_CHECK(cmp("AB", "ab"));
+    BOOST_CHECK(!CaseInsensitiveEqual("A", "B"));
+    BOOST_CHECK(!CaseInsensitiveEqual("A", "b"));
+    BOOST_CHECK(!CaseInsensitiveEqual("a", "B"));
+    BOOST_CHECK(!CaseInsensitiveEqual("B", "A"));
+    BOOST_CHECK(!CaseInsensitiveEqual("B", "a"));
+    BOOST_CHECK(!CaseInsensitiveEqual("b", "A"));
+    BOOST_CHECK(!CaseInsensitiveEqual("A", "AA"));
+    BOOST_CHECK(CaseInsensitiveEqual("A-A", "a-a"));
+    BOOST_CHECK(CaseInsensitiveEqual("A", "A"));
+    BOOST_CHECK(CaseInsensitiveEqual("A", "a"));
+    BOOST_CHECK(CaseInsensitiveEqual("a", "a"));
+    BOOST_CHECK(CaseInsensitiveEqual("B", "b"));
+    BOOST_CHECK(CaseInsensitiveEqual("ab", "aB"));
+    BOOST_CHECK(CaseInsensitiveEqual("Ab", "aB"));
+    BOOST_CHECK(CaseInsensitiveEqual("AB", "ab"));
 
     // Use a character with value > 127
     // to ensure we don't trigger implicit-integer-sign-change
-    BOOST_CHECK(!cmp("a", "\xe4"));
-}
-
-BOOST_AUTO_TEST_CASE(ascii_case_insensitive_hash_test)
-{
-    AsciiCaseInsensitiveHash hsh;
-    BOOST_CHECK_NE(hsh("A"), hsh("B"));
-    BOOST_CHECK_NE(hsh("AA"), hsh("A"));
-    BOOST_CHECK_EQUAL(hsh("A"), hsh("a"));
-    BOOST_CHECK_EQUAL(hsh("Ab"), hsh("aB"));
-    BOOST_CHECK_EQUAL(hsh("A\xfe"), hsh("a\xfe"));
+    BOOST_CHECK(!CaseInsensitiveEqual("a", "\xe4"));
 }
 
 BOOST_AUTO_TEST_CASE(line_reader_test)
