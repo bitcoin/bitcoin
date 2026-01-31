@@ -14,6 +14,7 @@
 #include <node/miner.h>
 #include <node/mini_miner.h>
 #include <node/types.h>
+#include <node/mining.h>
 #include <primitives/transaction.h>
 #include <random.h>
 #include <txmempool.h>

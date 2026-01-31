@@ -15,6 +15,7 @@
 #include <init.h>
 #include <init/common.h>
 #include <interfaces/chain.h>
+#include <interfaces/mining.h>
 #include <kernel/mempool_entry.h>
 #include <logging.h>
 #include <net.h>
@@ -24,6 +25,7 @@
 #include <node/context.h>
 #include <node/kernel_notifications.h>
 #include <node/mempool_args.h>
+#include <node/mining_args.h>
 #include <node/miner.h>
 #include <node/peerman_args.h>
 #include <node/warnings.h>
@@ -67,7 +69,6 @@
 
 using namespace util::hex_literals;
 using node::ApplyArgsManOptions;
-using node::BlockAssembler;
 using node::BlockManager;
 using node::KernelNotifications;
 using node::LoadChainstate;
@@ -359,6 +360,7 @@ TestingSetup::TestingSetup(
                                                m_node.args->GetIntArg("-checkaddrman", 0));
     m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params()); // Deterministic randomness for tests.
+    Assert(ApplyArgsManOptions(*m_node.args, m_node.mining_args));
     PeerManager::Options peerman_opts;
     ApplyArgsManOptions(*m_node.args, peerman_opts);
     peerman_opts.deterministic_rng = true;
@@ -408,12 +410,15 @@ void TestChain100Setup::mineBlocks(int num_blocks)
 
 CBlock TestChain100Setup::CreateBlock(
     const std::vector<CMutableTransaction>& txns,
-    const CScript& scriptPubKey,
-    Chainstate& chainstate)
+    const CScript& scriptPubKey)
 {
-    BlockAssembler::Options options;
-    options.coinbase_output_script = scriptPubKey;
-    CBlock block = BlockAssembler{chainstate, nullptr, options}.CreateNewBlock()->block;
+    auto mining{interfaces::MakeMining(m_node)};
+    auto block_template{mining->createNewBlock({
+        .use_mempool = false,
+        .coinbase_output_script = scriptPubKey
+    })};
+    Assert(block_template);
+    CBlock block{block_template->getBlock()};
 
     Assert(block.vtx.size() == 1);
     for (const CMutableTransaction& tx : txns) {
@@ -428,14 +433,9 @@ CBlock TestChain100Setup::CreateBlock(
 
 CBlock TestChain100Setup::CreateAndProcessBlock(
     const std::vector<CMutableTransaction>& txns,
-    const CScript& scriptPubKey,
-    Chainstate* chainstate)
+    const CScript& scriptPubKey)
 {
-    if (!chainstate) {
-        chainstate = &Assert(m_node.chainman)->ActiveChainstate();
-    }
-
-    CBlock block = this->CreateBlock(txns, scriptPubKey, *chainstate);
+    CBlock block = this->CreateBlock(txns, scriptPubKey);
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
     Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr);
 
