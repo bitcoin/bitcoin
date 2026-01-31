@@ -555,7 +555,7 @@ void CNode::CloseSocketDisconnect()
     fDisconnect = true;
     LOCK(m_sock_mutex);
     if (m_sock) {
-        LogDebug(BCLog::NET, "Resetting socket for peer=%d%s", GetId(), LogIP(fLogIPs));
+        LogDebug(BCLog::NET, "Resetting socket for %s", LogPeer(fLogIPs));
         m_sock.reset();
 
         TRACEPOINT(net, closed_connection,
@@ -700,16 +700,19 @@ bool CNode::ReceiveMsgBytes(std::span<const uint8_t> msg_bytes, bool& complete)
     return true;
 }
 
-std::string CNode::LogIP(bool log_ip) const
+std::string CNode::LogPeer(bool log_ip) const
 {
-    return log_ip ? strprintf(" peeraddr=%s", addr.ToStringAddrPort()) : "";
+    auto peer_info{strprintf("peer=%d", GetId())};
+    if (log_ip) {
+        return strprintf("%s, peeraddr=%s", peer_info, addr.ToStringAddrPort());
+    } else {
+        return peer_info;
+    }
 }
 
 std::string CNode::DisconnectMsg(bool log_ip) const
 {
-    return strprintf("disconnecting peer=%d%s",
-                     GetId(),
-                     LogIP(log_ip));
+    return strprintf("disconnecting %s", LogPeer(log_ip));
 }
 
 V1Transport::V1Transport(const NodeId node_id) noexcept
@@ -2397,7 +2400,7 @@ void CConnman::DumpAddresses()
 
     DumpPeerAddresses(::gArgs, addrman);
 
-    LogDebug(BCLog::NET, "Flushed %d addresses to peers.dat  %dms\n",
+    LogDebug(BCLog::NET, "Flushed %d addresses to peers.dat %dms\n",
              addrman.get().Size(), Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
 }
 
@@ -4059,7 +4062,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
     AssertLockNotHeld(m_total_bytes_sent_mutex);
 
     if (pnode->IsPrivateBroadcastConn() && !IsOutboundMessageAllowedInPrivateBroadcast(msg.m_type)) {
-        LogDebug(BCLog::PRIVBROADCAST, "Omitting send of message '%s', peer=%d%s", msg.m_type, pnode->GetId(), pnode->LogIP(fLogIPs));
+        LogDebug(BCLog::PRIVBROADCAST, "Omitting send of message '%s', %s", msg.m_type, pnode->LogPeer(fLogIPs));
         return;
     }
 
