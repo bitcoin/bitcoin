@@ -1,7 +1,7 @@
 OSX_MIN_VERSION=14.0
 OSX_SDK_VERSION=14.0
-XCODE_VERSION=15.0
-XCODE_BUILD_ID=15A240d
+XCODE_VERSION=26.1.1
+XCODE_BUILD_ID=17B100
 LLD_VERSION=711
 
 OSX_SDK=$(SDK_PATH)/Xcode-$(XCODE_VERSION)-$(XCODE_BUILD_ID)-extracted-SDK-with-libcxx-headers
@@ -50,6 +50,12 @@ darwin_STRIP=$(shell $(SHELL) $(.SHELLFLAGS) "command -v llvm-strip")
 #
 #         Disable adhoc codesigning (for now) when using LLVM tooling, to avoid
 #         non-determinism issues with the Identifier field.
+#
+#     -Xclang -fno-cxx-modules
+#
+#         Disable C++ modules. We don't use these, and modules cause definition issues
+#         in the SDK, where __has_feature(modules) is used to define USE_CLANG_TYPES,
+#         which is in turn used as an include guard.
 
 darwin_CC=$(clang_prog) --target=$(host) \
               -isysroot$(OSX_SDK) -nostdlibinc \
@@ -61,7 +67,7 @@ darwin_CXX=$(clangxx_prog) --target=$(host) \
                -iwithsysroot/usr/include -iframeworkwithsysroot/System/Library/Frameworks
 
 darwin_CFLAGS=-mmacos-version-min=$(OSX_MIN_VERSION)
-darwin_CXXFLAGS=-mmacos-version-min=$(OSX_MIN_VERSION)
+darwin_CXXFLAGS=-mmacos-version-min=$(OSX_MIN_VERSION) -Xclang -fno-cxx-modules
 darwin_LDFLAGS=-Wl,-platform_version,macos,$(OSX_MIN_VERSION),$(OSX_SDK_VERSION)
 
 ifneq ($(build_os),darwin)
