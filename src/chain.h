@@ -14,12 +14,15 @@
 #include <serialize.h>
 #include <sync.h>
 #include <uint256.h>
+#include <util/copy_on_write.h>
 #include <util/time.h>
 
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 
 /**
@@ -376,35 +379,149 @@ public:
     std::string ToString() = delete;
 };
 
-/** An in-memory indexed chain of blocks. */
+/** An in-memory indexed chain of blocks.
+ *
+ * CChain is a regular type supporting copy construction and assignment with
+ * value semantics. Copies share underlying data through copy-on-write, making
+ * them efficient to snapshot.
+ *
+ * THREAD SAFETY:
+ * CChain itself provides NO thread safety guarantees. Concurrent access to the
+ * same CChain object required external synchronization. However, once copied,
+ * each CChain instance is independent and can be safely used by different
+ * threads without coordination.
+ *
+ * PERFORMANCE CHARACTERISTICS:
+ * - Copying: O(1) - increment a reference count, no data duplication
+ * - Reading: (Height, Tip, operator[]): O(1) - direct access to shared data
+ * - SetTip:
+ *   Unique:
+ *      AppendToTail O(1), MergeTailIntoBase O(n) every MAX_TAIL_SIZE ops,
+ *      HandleReorg O(n)
+ *   Shared:
+ *      AppendToTail O(MAX_TAIL_SIZE), MergeTailIntoBase O(n) every
+ *      MAX_TAIL_SIZE ops, HandleReorg O(n)
+ *   Amortized: O(n) per operation in both cases
+ *
+ * COPY-ON-WRITE BEHAVIOR:
+ * When you copy a CChain, both instances share the same underlying data. A
+ * physical copy only occurs when one instance is modified via SetTip. Even
+ * then, under normal operations, only the tail of the chain is copied, not the
+ * entire history.
+ *
+ * TYPICAL USAGE PATTERN:
+ *      // Get a snapshot with O(1) copy
+ *      CChain snapshot = original_chain;
+ *      // Use snapshot without holding locks
+ *      int height = snapshot.Height();
+ *      // Meanwhile, original_chain can be modified independently without
+ *      // affecting the snapshot
+ *
+ * EXAMPLE - Safe concurrent access:
+ *      CChain snapshot;
+ *      {
+ *          LOCK(cs_main);
+ *          snapshot = chainstate.m_chain; // O(1) copy
+ *      }
+ *      // Lock released
+ *      ProcessBlocks(snapshot); // Safe to use without locks
+ * */
 class CChain
 {
 private:
-    std::vector<CBlockIndex*> vChain;
+    struct Impl {
+        stlab::copy_on_write<std::vector<CBlockIndex*>> base;
+        std::vector<CBlockIndex*> tail;
+
+        Impl() = default;
+
+        Impl(std::vector<CBlockIndex*> base_vec, std::vector<CBlockIndex*> tail_vec)
+            : base(std::move(base_vec)), tail(std::move(tail_vec)) {}
+    };
+
+    stlab::copy_on_write<Impl> m_impl;
+
+    static constexpr size_t MAX_TAIL_SIZE = 1000;
+
+    void HandleReorg(Impl& impl,
+                     CBlockIndex& block)
+    {
+        auto& new_base = impl.base.write();
+        new_base.resize(block.nHeight + 1);
+
+        CBlockIndex* index = &block;
+        while (index && new_base[index->nHeight] != index) {
+            new_base[index->nHeight] = index;
+            index = index->pprev;
+        }
+
+        impl.tail.clear();
+    }
+
+    void MergeTailIntoBase(Impl& impl, CBlockIndex& block)
+    {
+        auto& mutable_base = impl.base.write();
+        mutable_base.reserve(mutable_base.size() + impl.tail.size() + 1);
+        mutable_base.insert(mutable_base.end(), impl.tail.begin(), impl.tail.end());
+        mutable_base.push_back(&block);
+
+        impl.tail.clear();
+    }
+
+    void AppendToTail(Impl& impl, CBlockIndex& block)
+    {
+        impl.tail.push_back(&block);
+    }
 
 public:
     CChain() = default;
-    CChain(const CChain&) = delete;
-    CChain& operator=(const CChain&) = delete;
+
+    CChain(const CChain& other) = default;
+    CChain& operator=(const CChain& other) = default;
+    CChain(CChain&&) noexcept = default;
+    CChain& operator=(CChain&&) noexcept = default;
 
     /** Returns the index entry for the genesis block of this chain, or nullptr if none. */
     CBlockIndex* Genesis() const
     {
-        return vChain.size() > 0 ? vChain[0] : nullptr;
+        const auto& impl = m_impl.read();
+        const auto& base = impl.base.read();
+        if (!base.empty()) return base[0];
+        const auto& tail = impl.tail;
+        if (!tail.empty()) return tail[0];
+        return nullptr;
     }
 
     /** Returns the index entry for the tip of this chain, or nullptr if none. */
     CBlockIndex* Tip() const
     {
-        return vChain.size() > 0 ? vChain[vChain.size() - 1] : nullptr;
+        const auto& impl = m_impl.read();
+        const auto& tail = impl.tail;
+        if (!tail.empty()) return tail.back();
+        const auto& base = impl.base.read();
+        if (!base.empty()) return base.back();
+        return nullptr;
     }
 
     /** Returns the index entry at a particular height in this chain, or nullptr if no such height exists. */
     CBlockIndex* operator[](int nHeight) const
     {
-        if (nHeight < 0 || nHeight >= (int)vChain.size())
-            return nullptr;
-        return vChain[nHeight];
+        if (nHeight < 0) return nullptr;
+
+        const auto& impl = m_impl.read();
+        const auto& base = impl.base.read();
+
+        if (nHeight < (int)base.size()) {
+            return base[nHeight];
+        }
+
+        size_t tail_idx = nHeight - base.size();
+        const auto& tail = impl.tail;
+        if (tail_idx < tail.size()) {
+            return tail[tail_idx];
+        }
+
+        return nullptr;
     }
 
     /** Efficiently check whether a block is present in this chain. */
@@ -425,7 +542,10 @@ public:
     /** Return the maximal height in the chain. Is equal to chain.Tip() ? chain.Tip()->nHeight : -1. */
     int Height() const
     {
-        return int(vChain.size()) - 1;
+        const auto& impl = m_impl.read();
+        const auto& base = impl.base.read();
+        const auto& tail = impl.tail;
+        return int(base.size() + tail.size()) - 1;
     }
 
     /** Check whether this chain's tip exists, has enough work, and is recent. */
