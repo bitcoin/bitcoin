@@ -69,6 +69,8 @@ extern const std::string FLAGS;
 extern const std::string HDCHAIN;
 extern const std::string KEY;
 extern const std::string KEYMETA;
+extern const std::string LAST_DECRYPTED_FEATURES;
+extern const std::string LAST_OPENED_FEATURES;
 extern const std::string LOCKED_UTXO;
 extern const std::string MASTER_KEY;
 extern const std::string MINVERSION;
@@ -227,6 +229,13 @@ public:
     bool WriteTx(const CWalletTx& wtx);
     bool EraseTx(Txid hash);
 
+    bool SQLWriteTx(const CWalletTx& wtx);
+    bool SQLUpdateFullTx(const CWalletTx& wtx);
+    bool SQLUpdateTxReplacedBy(const CWalletTx& wtx);
+    bool SQLUpdateTxState(const CWalletTx& wtx);
+    bool HasTxsTable() const;
+    bool CreateTxsTable();
+
     bool WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, bool overwrite);
     bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta);
     bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta);
@@ -263,12 +272,18 @@ public:
     bool WriteActiveScriptPubKeyMan(uint8_t type, const uint256& id, bool internal);
     bool EraseActiveScriptPubKeyMan(uint8_t type, bool internal);
 
+    bool WriteLastOpenedVersion();
+    bool WriteLastOpenedFeatures();
+    // Write the current wallet client features to the LAST_DECRYPTED_FEATURES record
+    bool WriteLastDecryptedFeatures();
+
     DBErrors LoadWallet(CWallet* pwallet);
 
     //! Delete records of the given types
     bool EraseRecords(const std::unordered_set<std::string>& types);
 
     bool WriteWalletFlags(uint64_t flags);
+
     //! Begin a new transaction
     bool TxnBegin();
     //! Commit current transaction
@@ -279,6 +294,8 @@ public:
 
     //! Registers db txn callback functions
     void RegisterTxnListener(const DbTxnListener& l);
+
+    DatabaseBatch& GetDatabaseBatch() { return *m_batch; }
 
 private:
     std::unique_ptr<DatabaseBatch> m_batch;

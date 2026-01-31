@@ -39,8 +39,8 @@ static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWallet
         return feebumper::Result::WALLET_ERROR;
     }
 
-    if (wtx.mapValue.contains("replaced_by_txid")) {
-        errors.push_back(Untranslated(strprintf("Cannot bump transaction %s which was already bumped by transaction %s", wtx.GetHash().ToString(), wtx.mapValue.at("replaced_by_txid"))));
+    if (wtx.m_replaced_by_txid) {
+        errors.push_back(Untranslated(strprintf("Cannot bump transaction %s which was already bumped by transaction %s", wtx.GetHash().ToString(), wtx.m_replaced_by_txid->ToString())));
         return feebumper::Result::WALLET_ERROR;
     }
 
@@ -367,10 +367,7 @@ Result CommitTransaction(CWallet& wallet, const Txid& txid, CMutableTransaction&
 
     // commit/broadcast the tx
     CTransactionRef tx = MakeTransactionRef(std::move(mtx));
-    mapValue_t mapValue = oldWtx.mapValue;
-    mapValue["replaces_txid"] = oldWtx.GetHash().ToString();
-
-    wallet.CommitTransaction(tx, std::move(mapValue), oldWtx.vOrderForm);
+    wallet.CommitTransaction(tx, oldWtx.GetHash(), oldWtx.m_comment, oldWtx.m_comment_to, oldWtx.m_messages, oldWtx.m_payment_requests);
 
     // mark the original tx as bumped
     bumped_txid = tx->GetHash();

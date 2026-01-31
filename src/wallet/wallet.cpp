@@ -630,6 +630,16 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase)
             if (Unlock(plain_master_key)) {
                 // Now that we've unlocked, upgrade the descriptor cache
                 UpgradeDescriptorCache();
+
+                if (!m_last_decrypted_features || *m_last_decrypted_features != WALLET_CLIENT_FEATURES) {
+                    // Write the current wallet client features to LAST_DECRYPTED_FEATURES.
+                    // This must be done after all automatic upgrades so that those upgrades can be
+                    // performed in an upgrade-downgrade-upgrade scenario.
+                    WalletBatch batch(GetDatabase());
+                    batch.WriteLastDecryptedFeatures();
+                    SetLastDecryptedFeatures(WALLET_CLIENT_FEATURES);
+                }
+
                 return true;
             }
         }
@@ -753,8 +763,12 @@ void CWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> ran
         if (copyFrom == copyTo) continue;
         assert(copyFrom && "Oldest wallet transaction in range assumed to have been found.");
         if (!copyFrom->IsEquivalentTo(*copyTo)) continue;
-        copyTo->mapValue = copyFrom->mapValue;
-        copyTo->vOrderForm = copyFrom->vOrderForm;
+        copyTo->m_comment = copyFrom->m_comment;
+        copyTo->m_comment_to = copyFrom->m_comment_to;
+        copyTo->m_replaces_txid = copyFrom->m_replaces_txid;
+        copyTo->m_replaced_by_txid = copyFrom->m_replaced_by_txid;
+        copyTo->m_messages = copyFrom->m_messages;
+        copyTo->m_payment_requests = copyFrom->m_payment_requests;
         // nTimeReceived not copied on purpose
         copyTo->nTimeSmart = copyFrom->nTimeSmart;
         // nOrderPos not copied on purpose
@@ -911,6 +925,7 @@ DBErrors CWallet::ReorderTransactions()
 
             if (!batch.WriteTx(*pwtx))
                 return DBErrors::LOAD_FAIL;
+            if (!batch.SQLUpdateFullTx(*pwtx)) return DBErrors::LOAD_FAIL;
         }
         else
         {
@@ -929,6 +944,7 @@ DBErrors CWallet::ReorderTransactions()
             // Since we're changing the order, write it back
             if (!batch.WriteTx(*pwtx))
                 return DBErrors::LOAD_FAIL;
+            if (!batch.SQLUpdateFullTx(*pwtx)) return DBErrors::LOAD_FAIL;
         }
     }
     batch.WriteOrderPosNext(nOrderPosNext);
@@ -969,9 +985,9 @@ bool CWallet::MarkReplaced(const Txid& originalHash, const Txid& newHash)
     CWalletTx& wtx = (*mi).second;
 
     // Ensure for now that we're not overwriting data
-    assert(!wtx.mapValue.contains("replaced_by_txid"));
+    Assert(!wtx.m_replaced_by_txid);
 
-    wtx.mapValue["replaced_by_txid"] = newHash.ToString();
+    wtx.m_replaced_by_txid = newHash;
 
     // Refresh mempool status without waiting for transactionRemovedFromMempool or transactionAddedToMempool
     RefreshMempoolStatus(wtx, chain());
@@ -980,6 +996,10 @@ bool CWallet::MarkReplaced(const Txid& originalHash, const Txid& newHash)
 
     bool success = true;
     if (!batch.WriteTx(wtx)) {
+        WalletLogPrintf("%s: Updating batch tx %s failed\n", __func__, wtx.GetHash().ToString());
+        success = false;
+    }
+    if (!batch.SQLUpdateTxReplacedBy(wtx)) {
         WalletLogPrintf("%s: Updating batch tx %s failed\n", __func__, wtx.GetHash().ToString());
         success = false;
     }
@@ -1090,6 +1110,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
             // Break caches since we have changed the state
             desc_tx->MarkDirty();
             batch.WriteTx(*desc_tx);
+            batch.SQLUpdateTxState(*desc_tx);
             MarkInputsDirty(desc_tx->tx);
             for (unsigned int i = 0; i < desc_tx->tx->vout.size(); ++i) {
                 COutPoint outpoint(desc_tx->GetHash(), i);
@@ -1108,9 +1129,14 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
     WalletLogPrintf("AddToWallet %s  %s%s %s\n", hash.ToString(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""), TxStateString(state));
 
     // Write to disk
-    if (fInsertedNew || fUpdated)
-        if (!batch.WriteTx(wtx))
-            return nullptr;
+    if (fInsertedNew) {
+        if (!batch.WriteTx(wtx)) return nullptr;
+        if (!batch.SQLWriteTx(wtx)) return nullptr;
+    }
+    if (fUpdated) {
+        if (!batch.WriteTx(wtx)) return nullptr;
+        if (!batch.SQLUpdateTxState(wtx)) return nullptr;
+    }
 
     // Break debit/credit balance caches:
     wtx.MarkDirty();
@@ -1376,7 +1402,10 @@ void CWallet::RecursiveUpdateTxState(WalletBatch* batch, const Txid& tx_hash, co
         TxUpdate update_state = try_updating_state(wtx);
         if (update_state != TxUpdate::UNCHANGED) {
             wtx.MarkDirty();
-            if (batch) batch->WriteTx(wtx);
+            if (batch) {
+                batch->WriteTx(wtx);
+                batch->SQLUpdateTxState(wtx);
+            }
             // Iterate over all its outputs, and update those tx states as well (if applicable)
             for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
                 std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(COutPoint(now, i));
@@ -2310,7 +2339,14 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
     return m_default_address_type;
 }
 
-void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm)
+void CWallet::CommitTransaction(
+    CTransactionRef tx,
+    std::optional<Txid> replaces_txid,
+    std::optional<std::string> comment,
+    std::optional<std::string> comment_to,
+    const std::vector<std::string>& messages,
+    const std::vector<std::string>& payment_requests
+)
 {
     LOCK(cs_wallet);
     WalletLogPrintf("CommitTransaction:\n%s\n", util::RemoveSuffixView(tx->ToString(), "\n"));
@@ -2318,10 +2354,11 @@ void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
     // Add tx to wallet, because if it has change it's also ours,
     // otherwise just for transaction history.
     CWalletTx* wtx = AddToWallet(tx, TxStateInactive{}, [&](CWalletTx& wtx, bool new_tx) {
-        CHECK_NONFATAL(wtx.mapValue.empty());
-        CHECK_NONFATAL(wtx.vOrderForm.empty());
-        wtx.mapValue = std::move(mapValue);
-        wtx.vOrderForm = std::move(orderForm);
+        if (replaces_txid) wtx.m_replaces_txid = replaces_txid;
+        if (comment) wtx.m_comment = comment;
+        if (comment_to) wtx.m_comment_to = comment_to;
+        if (!messages.empty()) wtx.m_messages = messages;
+        if (!payment_requests.empty()) wtx.m_payment_requests = payment_requests;
         return true;
     });
 
@@ -3516,7 +3553,7 @@ void CWallet::SetupLegacyScriptPubKeyMan()
         return;
     }
 
-    Assert(m_database->Format() == "bdb_ro" || m_database->Format() == "mock");
+    Assert(m_database->Format() == "bdb_ro" || m_database->Format() == "sqlite-mock");
     std::unique_ptr<ScriptPubKeyMan> spk_manager = std::make_unique<LegacyDataSPKM>(*this);
 
     for (const auto& type : LEGACY_OUTPUT_TYPES) {
@@ -3958,6 +3995,13 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         }
     }
 
+    // Set the client features
+    local_wallet_batch.WriteLastOpenedVersion();
+    local_wallet_batch.WriteLastOpenedFeatures();
+    if (HasEncryptionKeys()) {
+        local_wallet_batch.WriteLastDecryptedFeatures();
+    }
+
     // Get best block locator so that we can copy it to the watchonly and solvables
     CBlockLocator best_block_locator;
     if (!local_wallet_batch.ReadBestBlock(best_block_locator)) {
@@ -4012,17 +4056,21 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
                     return util::Error{strprintf(_("Error: Could not add watchonly tx %s to watchonly wallet"), wtx->GetHash().GetHex())};
                 }
                 watchonly_batch->WriteTx(data.watchonly_wallet->mapWallet.at(hash));
+                watchonly_batch->SQLWriteTx(data.watchonly_wallet->mapWallet.at(hash));
                 // Mark as to remove from the migrated wallet only if it does not also belong to it
                 if (!is_mine) {
                     txids_to_delete.push_back(hash);
+                    continue;
                 }
-                continue;
             }
         }
         if (!is_mine) {
             // Both not ours and not in the watchonly wallet
             return util::Error{strprintf(_("Error: Transaction %s in wallet cannot be identified to belong to migrated wallets"), wtx->GetHash().GetHex())};
         }
+        // Rewrite the transaction so that anything that may have changed about it in memory also persists to disk
+        local_wallet_batch.WriteTx(*wtx);
+        local_wallet_batch.SQLWriteTx(*wtx);
     }
 
     // Do the removes
@@ -4573,5 +4621,10 @@ std::optional<WalletTXO> CWallet::GetTXO(const COutPoint& outpoint) const
         return std::nullopt;
     }
     return it->second;
+}
+
+void CWallet::SetLastDecryptedFeatures(uint64_t features)
+{
+    m_last_decrypted_features = features;
 }
 } // namespace wallet

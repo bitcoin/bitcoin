@@ -26,12 +26,6 @@
 namespace wallet {
 static constexpr int32_t WALLET_SCHEMA_VERSION = 0;
 
-static std::span<const std::byte> SpanFromBlob(sqlite3_stmt* stmt, int col)
-{
-    return {reinterpret_cast<const std::byte*>(sqlite3_column_blob(stmt, col)),
-            static_cast<size_t>(sqlite3_column_bytes(stmt, col))};
-}
-
 static void ErrorLogCallback(void* arg, int code, const char* msg)
 {
     // From sqlite3_config() documentation for the SQLITE_CONFIG_LOG option:
@@ -58,45 +52,144 @@ static int TraceSqlCallback(unsigned code, void* context, void* param1, void* pa
     return SQLITE_OK;
 }
 
-static bool BindBlobToStatement(sqlite3_stmt* stmt,
-                                int index,
-                                std::span<const std::byte> blob,
-                                const std::string& description)
+template <typename T>
+concept BindBlob = requires(T a)
 {
-    // Pass a pointer to the empty string "" below instead of passing the
-    // blob.data() pointer if the blob.data() pointer is null. Passing a null
-    // data pointer to bind_blob would cause sqlite to bind the SQL NULL value
-    // instead of the empty blob value X'', which would mess up SQL comparisons.
-    int res = sqlite3_bind_blob(stmt, index, blob.data() ? static_cast<const void*>(blob.data()) : "", blob.size(), SQLITE_STATIC);
-    if (res != SQLITE_OK) {
-        LogWarning("Unable to bind %s to statement: %s", description, sqlite3_errstr(res));
-        sqlite3_clear_bindings(stmt);
-        sqlite3_reset(stmt);
-        return false;
+    { a.data() } -> std::convertible_to<const void*>;
+    { a.size() } -> std::convertible_to<size_t>;
+};
+
+template <typename T>
+concept ColumnBlob = requires(T a, T::element_type* data, size_t size)
+{
+    T(data, size);
+};
+
+template <typename T>
+concept ColumnSpanBlob = requires(T a, std::span<const std::byte> s)
+{
+    T(s);
+};
+
+/** RAII class that encapsulates a sqlite3_stmt */
+class SQLiteStatement
+{
+private:
+    sqlite3& m_db;
+    sqlite3_stmt* m_stmt{nullptr};
+
+public:
+    explicit SQLiteStatement(sqlite3& db, const std::string& stmt_text)
+        : m_db(db)
+    {
+        int res = sqlite3_prepare_v2(&m_db, stmt_text.c_str(), -1, &m_stmt, nullptr);
+        if (res != SQLITE_OK) {
+            throw std::runtime_error(strprintf(
+                "SQLiteStatement: Failed to prepare SQL statement '%s': %s\n", stmt_text, sqlite3_errstr(res)));
+        }
     }
 
-    return true;
-}
+    ~SQLiteStatement()
+    {
+        sqlite3_finalize(m_stmt);
+    }
 
-static std::optional<int> ReadPragmaInteger(sqlite3* db, const std::string& key, const std::string& description, bilingual_str& error)
+    int Step()
+    {
+        return sqlite3_step(m_stmt);
+    }
+
+    void Reset()
+    {
+        sqlite3_clear_bindings(m_stmt);
+        sqlite3_reset(m_stmt);
+    }
+
+    template<typename T>
+    bool Bind(int index, T& data, const std::string& description)
+    {
+        int res = SQLITE_ERROR;
+        if constexpr (std::is_same_v<T, std::string>) { // Check for string first since strings also satisfy BindBlob
+            res = sqlite3_bind_text(m_stmt, index, data.data(), data.size(), SQLITE_STATIC);
+        } else if constexpr (BindBlob<T>) {
+            // Pass a pointer to the empty string "" below instead of passing the
+            // blob.data() pointer if the blob.data() pointer is null. Passing a null
+            // data pointer to bind_blob would cause sqlite to bind the SQL NULL value
+            // instead of the empty blob value X'', which would mess up SQL comparisons.
+            res = sqlite3_bind_blob(m_stmt, index, data.data() ? static_cast<const void*>(data.data()) : "", data.size(), SQLITE_STATIC);
+        } else if constexpr (std::integral<T> ) {
+            res = sqlite3_bind_int64(m_stmt, index, static_cast<sqlite3_int64>(data));
+        } else {
+            static_assert(ALWAYS_FALSE<T>);
+        }
+
+        if (res != SQLITE_OK) {
+            LogWarning("Unable to bind %s to statement: %s", description, sqlite3_errstr(res));
+            Reset();
+            return false;
+        }
+
+        return true;
+    }
+
+    template<typename T>
+    std::optional<T> Column(int col)
+    {
+        Assert(col < sqlite3_column_count(m_stmt));
+        int column_type = sqlite3_column_type(m_stmt, col);
+        if (column_type == SQLITE_NULL) {
+            return std::nullopt;
+        }
+
+        if constexpr (std::integral<T> && sizeof(T) <= 4) {
+            return sqlite3_column_int(m_stmt, col);
+        } else if constexpr (std::integral<T> && std::is_signed_v<T> && sizeof(T) <= 8) {
+            return static_cast<int64_t>(sqlite3_column_int64(m_stmt, col));
+        } else if constexpr (std::is_same_v<T, std::string>) {
+            const char* text = (const char*)sqlite3_column_text(m_stmt, col);
+            if (!text) {
+                return "";
+            }
+            size_t size = sqlite3_column_bytes(m_stmt, col);
+            std::string str_text(text, size);
+            return str_text;
+        } else if constexpr (ColumnBlob<T>) {
+            return T(
+                reinterpret_cast<T::element_type*>(sqlite3_column_blob(m_stmt, col)),
+                static_cast<size_t>(sqlite3_column_bytes(m_stmt, col))
+            );
+        } else if constexpr (ColumnSpanBlob<T>) {
+            const std::byte* data = reinterpret_cast<const std::byte*>(sqlite3_column_blob(m_stmt, col));
+            size_t size = static_cast<size_t>(sqlite3_column_bytes(m_stmt, col));
+            if (!data || !size) return std::nullopt;
+            return T({data, size});
+        } else if constexpr (std::is_same_v<T, std::vector<unsigned char>>) {
+            const unsigned char* data = reinterpret_cast<const unsigned char*>(sqlite3_column_blob(m_stmt, col));
+            size_t size = static_cast<size_t>(sqlite3_column_bytes(m_stmt, col));
+            if (!data || !size) return std::nullopt;
+            return T(data, data + size);
+        } else {
+            static_assert(ALWAYS_FALSE<T>);
+        }
+    }
+};
+
+static std::optional<int> ReadPragmaInteger(sqlite3& db, const std::string& key, const std::string& description, bilingual_str& error)
 {
     std::string stmt_text = strprintf("PRAGMA %s", key);
-    sqlite3_stmt* pragma_read_stmt{nullptr};
-    int ret = sqlite3_prepare_v2(db, stmt_text.c_str(), -1, &pragma_read_stmt, nullptr);
-    if (ret != SQLITE_OK) {
-        sqlite3_finalize(pragma_read_stmt);
-        error = Untranslated(strprintf("SQLiteDatabase: Failed to prepare the statement to fetch %s: %s", description, sqlite3_errstr(ret)));
+    try {
+        SQLiteStatement pragma_read_stmt(db, stmt_text);
+        int ret = pragma_read_stmt.Step();
+        if (ret != SQLITE_ROW) {
+            error = Untranslated(strprintf("SQLiteDatabase: Failed to fetch %s: %s", description, sqlite3_errstr(ret)));
+            return std::nullopt;
+        }
+        int result = *pragma_read_stmt.Column<int>(0);
+        return result;
+    } catch (std::runtime_error& e) {
+        error = Untranslated(e.what());
         return std::nullopt;
     }
-    ret = sqlite3_step(pragma_read_stmt);
-    if (ret != SQLITE_ROW) {
-        sqlite3_finalize(pragma_read_stmt);
-        error = Untranslated(strprintf("SQLiteDatabase: Failed to fetch %s: %s", description, sqlite3_errstr(ret)));
-        return std::nullopt;
-    }
-    int result = sqlite3_column_int(pragma_read_stmt, 0);
-    sqlite3_finalize(pragma_read_stmt);
-    return result;
 }
 
 static void SetPragma(sqlite3* db, const std::string& key, const std::string& value, const std::string& err_msg)
@@ -111,8 +204,12 @@ static void SetPragma(sqlite3* db, const std::string& key, const std::string& va
 Mutex SQLiteDatabase::g_sqlite_mutex;
 int SQLiteDatabase::g_sqlite_count = 0;
 
-SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, const DatabaseOptions& options, bool mock)
-    : WalletDatabase(), m_mock(mock), m_dir_path(dir_path), m_file_path(fs::PathToString(file_path)), m_write_semaphore(1), m_use_unsafe_sync(options.use_unsafe_sync)
+SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, const DatabaseOptions& options)
+    : SQLiteDatabase(dir_path, file_path, options, /*additional_flags=*/0)
+{}
+
+SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, const DatabaseOptions& options, int additional_flags)
+    : WalletDatabase(), m_dir_path(dir_path), m_file_path(fs::PathToString(file_path)), m_write_semaphore(1), m_use_unsafe_sync(options.use_unsafe_sync)
 {
     {
         LOCK(g_sqlite_mutex);
@@ -135,7 +232,7 @@ SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_pa
     }
 
     try {
-        Open();
+        Open(additional_flags);
     } catch (const std::runtime_error&) {
         // If open fails, cleanup this object and rethrow the exception
         Cleanup();
@@ -145,22 +242,17 @@ SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_pa
 
 void SQLiteBatch::SetupSQLStatements()
 {
-    const std::vector<std::pair<sqlite3_stmt**, const char*>> statements{
-        {&m_read_stmt, "SELECT value FROM main WHERE key = ?"},
-        {&m_insert_stmt, "INSERT INTO main VALUES(?, ?)"},
-        {&m_overwrite_stmt, "INSERT or REPLACE into main values(?, ?)"},
-        {&m_delete_stmt, "DELETE FROM main WHERE key = ?"},
-        {&m_delete_prefix_stmt, "DELETE FROM main WHERE instr(key, ?) = 1"},
-    };
+    m_read_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "SELECT value FROM main WHERE key = ?");
+    m_insert_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "INSERT INTO main VALUES(?, ?)");
+    m_overwrite_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "INSERT or REPLACE into main values(?, ?)");
+    m_delete_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "DELETE FROM main WHERE key = ?");
+    m_delete_prefix_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "DELETE FROM main WHERE instr(key, ?) = 1");
 
-    for (const auto& [stmt_prepared, stmt_text] : statements) {
-        if (*stmt_prepared == nullptr) {
-            int res = sqlite3_prepare_v2(m_database.m_db, stmt_text, -1, stmt_prepared, nullptr);
-            if (res != SQLITE_OK) {
-                throw std::runtime_error(strprintf(
-                    "SQLiteDatabase: Failed to setup SQL statements: %s\n", sqlite3_errstr(res)));
-            }
-        }
+    if (m_database.HasTxsTable()) {
+        m_insert_tx_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "INSERT or REPLACE INTO transactions (txid, tx, comment, comment_to, replaces, replaced_by, timesmart, timereceived, order_pos, messages, payment_requests, state_type, state_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        m_update_full_tx_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "UPDATE transactions SET comment = ?, comment_to = ?, replaces = ?, replaced_by = ? , timesmart = ?, timereceived = ?, order_pos = ?, messages= ?, payment_requests = ?, state_type =?, state_data = ? WHERE txid = ?");
+        m_update_tx_replaced_by_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "UPDATE transactions SET replaced_by = ? WHERE txid = ?");
+        m_update_tx_state_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "UPDATE transactions SET state_type = ?, state_data = ? WHERE txid = ?");
     }
 }
 
@@ -189,7 +281,7 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
     assert(m_db);
 
     // Check the application ID matches our network magic
-    auto read_result = ReadPragmaInteger(m_db, "application_id", "the application id", error);
+    auto read_result = ReadPragmaInteger(*m_db, "application_id", "the application id", error);
     if (!read_result.has_value()) return false;
     uint32_t app_id = static_cast<uint32_t>(read_result.value());
     uint32_t net_magic = ReadBE32(Params().MessageStart().data());
@@ -199,7 +291,7 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
     }
 
     // Check our schema version
-    read_result = ReadPragmaInteger(m_db, "user_version", "sqlite wallet schema version", error);
+    read_result = ReadPragmaInteger(*m_db, "user_version", "sqlite wallet schema version", error);
     if (!read_result.has_value()) return false;
     int32_t user_ver = read_result.value();
     if (user_ver != WALLET_SCHEMA_VERSION) {
@@ -207,49 +299,43 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
         return false;
     }
 
-    sqlite3_stmt* stmt{nullptr};
-    int ret = sqlite3_prepare_v2(m_db, "PRAGMA integrity_check", -1, &stmt, nullptr);
-    if (ret != SQLITE_OK) {
-        sqlite3_finalize(stmt);
-        error = strprintf(_("SQLiteDatabase: Failed to prepare statement to verify database: %s"), sqlite3_errstr(ret));
-        return false;
+    try {
+        SQLiteStatement integrity_check_stmt(*m_db, "PRAGMA integrity_check");
+        while (true) {
+            int ret = integrity_check_stmt.Step();
+            if (ret == SQLITE_DONE) {
+                break;
+            }
+            if (ret != SQLITE_ROW) {
+                error = strprintf(_("SQLiteDatabase: Failed to execute statement to verify database: %s"), sqlite3_errstr(ret));
+                break;
+            }
+            std::string str_msg(*integrity_check_stmt.Column<std::string>(0));
+            if (str_msg == "ok") {
+                continue;
+            }
+            if (error.empty()) {
+                error = _("Failed to verify database") + Untranslated("\n");
+            }
+            error += Untranslated(strprintf("%s\n", str_msg));
+        }
+    } catch (std::runtime_error& e) {
+        error = Untranslated(e.what());
     }
-    while (true) {
-        ret = sqlite3_step(stmt);
-        if (ret == SQLITE_DONE) {
-            break;
-        }
-        if (ret != SQLITE_ROW) {
-            error = strprintf(_("SQLiteDatabase: Failed to execute statement to verify database: %s"), sqlite3_errstr(ret));
-            break;
-        }
-        const char* msg = (const char*)sqlite3_column_text(stmt, 0);
-        if (!msg) {
-            error = strprintf(_("SQLiteDatabase: Failed to read database verification error: %s"), sqlite3_errstr(ret));
-            break;
-        }
-        std::string str_msg(msg);
-        if (str_msg == "ok") {
-            continue;
-        }
-        if (error.empty()) {
-            error = _("Failed to verify database") + Untranslated("\n");
-        }
-        error += Untranslated(strprintf("%s\n", str_msg));
-    }
-    sqlite3_finalize(stmt);
     return error.empty();
 }
 
 void SQLiteDatabase::Open()
 {
-    int flags = SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
-    if (m_mock) {
-        flags |= SQLITE_OPEN_MEMORY; // In memory database for mock db
-    }
+    Open(/*additional_flags*/0);
+}
+
+void SQLiteDatabase::Open(int additional_flags)
+{
+    int flags = SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | additional_flags;
 
     if (m_db == nullptr) {
-        if (!m_mock) {
+        if (!(flags & SQLITE_OPEN_MEMORY)) {
             TryCreateDirectories(m_dir_path);
         }
         int ret = sqlite3_open_v2(m_file_path.c_str(), &m_db, flags, nullptr);
@@ -297,22 +383,26 @@ void SQLiteDatabase::Open()
 
     // Make the table for our key-value pairs
     // First check that the main table exists
-    sqlite3_stmt* check_main_stmt{nullptr};
-    ret = sqlite3_prepare_v2(m_db, "SELECT name FROM sqlite_master WHERE type='table' AND name='main'", -1, &check_main_stmt, nullptr);
-    if (ret != SQLITE_OK) {
-        throw std::runtime_error(strprintf("SQLiteDatabase: Failed to prepare statement to check table existence: %s\n", sqlite3_errstr(ret)));
-    }
-    ret = sqlite3_step(check_main_stmt);
-    if (sqlite3_finalize(check_main_stmt) != SQLITE_OK) {
-        throw std::runtime_error(strprintf("SQLiteDatabase: Failed to finalize statement checking table existence: %s\n", sqlite3_errstr(ret)));
-    }
+    SQLiteStatement check_main_stmt(*m_db, "SELECT name FROM sqlite_master WHERE type='table' AND name='main'");
+    ret = check_main_stmt.Step();
     bool table_exists;
     if (ret == SQLITE_DONE) {
         table_exists = false;
     } else if (ret == SQLITE_ROW) {
         table_exists = true;
     } else {
-        throw std::runtime_error(strprintf("SQLiteDatabase: Failed to execute statement to check table existence: %s\n", sqlite3_errstr(ret)));
+        throw std::runtime_error(strprintf("SQLiteDatabase: Failed to execute statement to check main table existence: %s\n", sqlite3_errstr(ret)));
+    }
+
+    // Then check that the transactions table exists
+    SQLiteStatement check_txs_stmt(*m_db, "SELECT name FROM sqlite_master WHERE type='table' AND name='transactions'");
+    ret = check_txs_stmt.Step();
+    if (ret == SQLITE_DONE) {
+        m_has_txs_table = false;
+    } else if (ret == SQLITE_ROW) {
+        m_has_txs_table = true;
+    } else {
+        throw std::runtime_error(strprintf("SQLiteDatabase: Failed to execute statement to check transactions table existence: %s\n", sqlite3_errstr(ret)));
     }
 
     // Do the db setup things because the table doesn't exist only when we are creating a new wallet
@@ -330,6 +420,12 @@ void SQLiteDatabase::Open()
         // Set the user version
         SetPragma(m_db, "user_version", strprintf("%d", WALLET_SCHEMA_VERSION),
                   "Failed to set the wallet schema version");
+    }
+
+    if (!m_has_txs_table) {
+        if (!CreateTxsTable()) {
+            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to create new transactions database: %s\n", sqlite3_errstr(ret)));
+        }
     }
 }
 
@@ -393,6 +489,21 @@ std::unique_ptr<DatabaseBatch> SQLiteDatabase::MakeBatch()
     return std::make_unique<SQLiteBatch>(*this);
 }
 
+bool SQLiteDatabase::HasTxsTable() const
+{
+    return m_has_txs_table;
+}
+
+bool SQLiteDatabase::CreateTxsTable()
+{
+    int ret = sqlite3_exec(m_db, "CREATE TABLE transactions(txid BLOB PRIMARY KEY NOT NULL, tx BLOB NOT NULL, comment STRING, comment_to STRING, replaces BLOB, replaced_by BLOB, timesmart INTEGER, timereceived INTEGER, order_pos INTEGER, messages BLOB, payment_requests BLOB, state_type INTEGER, state_data BLOB)", nullptr, nullptr, nullptr);
+    if (ret != SQLITE_OK) {
+        return false;
+    }
+    m_has_txs_table = true;
+    return true;
+}
+
 SQLiteBatch::SQLiteBatch(SQLiteDatabase& database)
     : m_database(database)
 {
@@ -400,6 +511,11 @@ SQLiteBatch::SQLiteBatch(SQLiteDatabase& database)
     assert(m_database.m_db);
 
     SetupSQLStatements();
+}
+
+SQLiteBatch::~SQLiteBatch()
+{
+    Close();
 }
 
 void SQLiteBatch::Close()
@@ -420,22 +536,15 @@ void SQLiteBatch::Close()
     }
 
     // Free all of the prepared statements
-    const std::vector<std::pair<sqlite3_stmt**, const char*>> statements{
-        {&m_read_stmt, "read"},
-        {&m_insert_stmt, "insert"},
-        {&m_overwrite_stmt, "overwrite"},
-        {&m_delete_stmt, "delete"},
-        {&m_delete_prefix_stmt, "delete prefix"},
-    };
-
-    for (const auto& [stmt_prepared, stmt_description] : statements) {
-        int res = sqlite3_finalize(*stmt_prepared);
-        if (res != SQLITE_OK) {
-            LogWarning("SQLiteBatch: Batch closed but could not finalize %s statement: %s",
-                      stmt_description, sqlite3_errstr(res));
-        }
-        *stmt_prepared = nullptr;
-    }
+    m_read_stmt.reset();
+    m_insert_stmt.reset();
+    m_overwrite_stmt.reset();
+    m_delete_stmt.reset();
+    m_delete_prefix_stmt.reset();
+    m_insert_tx_stmt.reset();
+    m_update_full_tx_stmt.reset();
+    m_update_tx_replaced_by_stmt.reset();
+    m_update_tx_state_stmt.reset();
 
     if (force_conn_refresh) {
         m_database.Close();
@@ -457,24 +566,42 @@ bool SQLiteBatch::ReadKey(DataStream&& key, DataStream& value)
     assert(m_read_stmt);
 
     // Bind: leftmost parameter in statement is index 1
-    if (!BindBlobToStatement(m_read_stmt, 1, key, "key")) return false;
-    int res = sqlite3_step(m_read_stmt);
+    if (!m_read_stmt->Bind(1, key, "key")) return false;
+    int res = m_read_stmt->Step();
     if (res != SQLITE_ROW) {
         if (res != SQLITE_DONE) {
             // SQLITE_DONE means "not found", don't log an error in that case.
             LogWarning("Unable to execute read statement: %s", sqlite3_errstr(res));
         }
-        sqlite3_clear_bindings(m_read_stmt);
-        sqlite3_reset(m_read_stmt);
+        m_read_stmt->Reset();
         return false;
     }
     // Leftmost column in result is index 0
     value.clear();
-    value.write(SpanFromBlob(m_read_stmt, 0));
+    value.write(*m_read_stmt->Column<std::span<const std::byte>>(0));
 
-    sqlite3_clear_bindings(m_read_stmt);
-    sqlite3_reset(m_read_stmt);
+    m_read_stmt->Reset();
     return true;
+}
+
+bool SQLiteBatch::ExecStatement(SQLiteStatement* stmt)
+{
+    if (!m_database.m_db) return false;
+    assert(stmt);
+
+    // Acquire semaphore if not previously acquired when creating a transaction.
+    if (!m_txn) m_database.m_write_semaphore.acquire();
+
+    // Execute
+    int res = stmt->Step();
+    stmt->Reset();
+    if (res != SQLITE_DONE) {
+        LogError("Unable to execute statement: %s\n", sqlite3_errstr(res));
+    }
+
+    if (!m_txn) m_database.m_write_semaphore.release();
+
+    return res == SQLITE_DONE;
 }
 
 bool SQLiteBatch::WriteKey(DataStream&& key, DataStream&& value, bool overwrite)
@@ -482,66 +609,38 @@ bool SQLiteBatch::WriteKey(DataStream&& key, DataStream&& value, bool overwrite)
     if (!m_database.m_db) return false;
     assert(m_insert_stmt && m_overwrite_stmt);
 
-    sqlite3_stmt* stmt;
+    SQLiteStatement* stmt;
     if (overwrite) {
-        stmt = m_overwrite_stmt;
+        stmt = m_overwrite_stmt.get();
     } else {
-        stmt = m_insert_stmt;
+        stmt = m_insert_stmt.get();
     }
 
     // Bind: leftmost parameter in statement is index 1
     // Insert index 1 is key, 2 is value
-    if (!BindBlobToStatement(stmt, 1, key, "key")) return false;
-    if (!BindBlobToStatement(stmt, 2, value, "value")) return false;
-
-    // Acquire semaphore if not previously acquired when creating a transaction.
-    if (!m_txn) m_database.m_write_semaphore.acquire();
-
-    // Execute
-    int res = sqlite3_step(stmt);
-    sqlite3_clear_bindings(stmt);
-    sqlite3_reset(stmt);
-    if (res != SQLITE_DONE) {
-        LogWarning("Unable to execute write statement: %s", sqlite3_errstr(res));
-    }
-
-    if (!m_txn) m_database.m_write_semaphore.release();
-
-    return res == SQLITE_DONE;
+    if (!stmt->Bind(1, key, "key")) return false;
+    if (!stmt->Bind(2, value, "value")) return false;
+    return ExecStatement(stmt);
 }
 
-bool SQLiteBatch::ExecStatement(sqlite3_stmt* stmt, std::span<const std::byte> blob)
+bool SQLiteBatch::ExecEraseStatement(SQLiteStatement* stmt, std::span<const std::byte> blob)
 {
     if (!m_database.m_db) return false;
     assert(stmt);
 
     // Bind: leftmost parameter in statement is index 1
-    if (!BindBlobToStatement(stmt, 1, blob, "key")) return false;
-
-    // Acquire semaphore if not previously acquired when creating a transaction.
-    if (!m_txn) m_database.m_write_semaphore.acquire();
-
-    // Execute
-    int res = sqlite3_step(stmt);
-    sqlite3_clear_bindings(stmt);
-    sqlite3_reset(stmt);
-    if (res != SQLITE_DONE) {
-        LogWarning("Unable to execute exec statement: %s", sqlite3_errstr(res));
-    }
-
-    if (!m_txn) m_database.m_write_semaphore.release();
-
-    return res == SQLITE_DONE;
+    if (!stmt->Bind(1, blob, "key")) return false;
+    return ExecStatement(stmt);
 }
 
 bool SQLiteBatch::EraseKey(DataStream&& key)
 {
-    return ExecStatement(m_delete_stmt, key);
+    return ExecEraseStatement(m_delete_stmt.get(), key);
 }
 
 bool SQLiteBatch::ErasePrefix(std::span<const std::byte> prefix)
 {
-    return ExecStatement(m_delete_prefix_stmt, prefix);
+    return ExecEraseStatement(m_delete_prefix_stmt.get(), prefix);
 }
 
 bool SQLiteBatch::HasKey(DataStream&& key)
@@ -550,16 +649,131 @@ bool SQLiteBatch::HasKey(DataStream&& key)
     assert(m_read_stmt);
 
     // Bind: leftmost parameter in statement is index 1
-    if (!BindBlobToStatement(m_read_stmt, 1, key, "key")) return false;
-    int res = sqlite3_step(m_read_stmt);
-    sqlite3_clear_bindings(m_read_stmt);
-    sqlite3_reset(m_read_stmt);
+    if (!m_read_stmt->Bind(1, key, "key")) return false;
+    int res = m_read_stmt->Step();
+    m_read_stmt->Reset();
     return res == SQLITE_ROW;
+}
+
+bool SQLiteBatch::CreateTxsTable()
+{
+    if (m_database.HasTxsTable()) return true;
+    if (!m_database.CreateTxsTable()) return false;
+    SetupSQLStatements();
+    return true;
+}
+
+bool SQLiteBatch::WriteTx(
+    const Txid& txid,
+    const std::span<std::byte>& serialized_tx,
+    const std::optional<std::string>& comment,
+    const std::optional<std::string>& comment_to,
+    const std::optional<Txid>& replaces,
+    const std::optional<Txid>& replaced_by,
+    uint32_t timesmart,
+    uint32_t timereceived,
+    int64_t order_pos,
+    const std::vector<std::string>& messages,
+    const std::vector<std::string>& payment_requests,
+    int32_t state_type,
+    const std::vector<unsigned char>& state_data
+)
+{
+    if (!m_database.HasTxsTable()) return true;
+
+    // Lifetime of DataStream needs to be until the statement is executed.
+    DataStream ser_messages, ser_payment_reqs;
+
+    if (!m_insert_tx_stmt->Bind(1, txid, "txid")) return false;
+    if (!m_insert_tx_stmt->Bind(2, serialized_tx, "tx")) return false;
+    if (comment && !m_insert_tx_stmt->Bind(3, *comment, "comment")) return false;
+    if (comment_to && !m_insert_tx_stmt->Bind(4, *comment_to, "comment_to")) return false;
+    if (replaces && !m_insert_tx_stmt->Bind(5, *replaces, "replaces")) return false;
+    if (replaced_by && !m_insert_tx_stmt->Bind(6, *replaced_by, "replaced_by")) return false;
+    if (!m_insert_tx_stmt->Bind(7, timesmart, "timesmart")) return false;
+    if (!m_insert_tx_stmt->Bind(8, timereceived, "timereceived")) return false;
+    if (!m_insert_tx_stmt->Bind(9, order_pos, "order_pos")) return false;
+    if (!messages.empty()) {
+        ser_messages << messages;
+        if (!m_insert_tx_stmt->Bind(10, ser_messages, "messages")) return false;
+    }
+    if (!payment_requests.empty()) {
+        ser_payment_reqs << payment_requests;
+        if (!m_insert_tx_stmt->Bind(11, ser_payment_reqs, "payment_requests")) return false;
+    }
+    if (!m_insert_tx_stmt->Bind(12, state_type, "state_type")) return false;
+    if (!m_insert_tx_stmt->Bind(13, state_data, "state_data")) return false;
+    return ExecStatement(m_insert_tx_stmt.get());
+}
+
+bool SQLiteBatch::UpdateFullTx(
+    const Txid& txid,
+    const std::optional<std::string>& comment,
+    const std::optional<std::string>& comment_to,
+    const std::optional<Txid>& replaces,
+    const std::optional<Txid>& replaced_by,
+    uint32_t timesmart,
+    uint32_t timereceived,
+    int64_t order_pos,
+    const std::vector<std::string>& messages,
+    const std::vector<std::string>& payment_requests,
+    int32_t state_type,
+    const std::vector<unsigned char>& state_data
+)
+{
+    if (!m_database.HasTxsTable()) return true;
+
+    // Lifetime of DataStream needs to be until the statement is executed.
+    DataStream ser_messages, ser_payment_reqs;
+
+    if (comment && !m_update_full_tx_stmt->Bind(1, *comment, "comment")) return false;
+    if (comment_to && !m_update_full_tx_stmt->Bind(2, *comment_to, "comment_to")) return false;
+    if (replaces && !m_update_full_tx_stmt->Bind(3, *replaces, "replaces")) return false;
+    if (replaced_by && !m_update_full_tx_stmt->Bind(4, *replaced_by, "replaced_by")) return false;
+    if (!m_update_full_tx_stmt->Bind(5, timesmart, "timesmart")) return false;
+    if (!m_update_full_tx_stmt->Bind(6, timereceived, "timereceived")) return false;
+    if (!m_update_full_tx_stmt->Bind(7, order_pos, "order_pos")) return false;
+    if (!messages.empty()) {
+        ser_messages << messages;
+        if (!m_update_full_tx_stmt->Bind(8, ser_messages, "messages")) return false;
+    }
+    if (!payment_requests.empty()) {
+        ser_payment_reqs << payment_requests;
+        if (!m_update_full_tx_stmt->Bind(9, ser_payment_reqs, "payment_requests")) return false;
+    }
+    if (!m_update_full_tx_stmt->Bind(10, state_type, "state_type")) return false;
+    if (!m_update_full_tx_stmt->Bind(11, state_data, "state_data")) return false;
+    if (!m_update_full_tx_stmt->Bind(12, txid, "txid")) return false;
+    return ExecStatement(m_update_full_tx_stmt.get());
+}
+
+bool SQLiteBatch::UpdateTxReplacedBy(const Txid& txid, const Txid& replaced_by)
+{
+    if (!m_database.HasTxsTable()) return true;
+
+    if (!m_update_tx_replaced_by_stmt->Bind(1, replaced_by, "replaced_by")) return false;
+    if (!m_update_tx_replaced_by_stmt->Bind(2, txid, "txid")) return false;
+    return ExecStatement(m_update_tx_replaced_by_stmt.get());
+}
+
+bool SQLiteBatch::UpdateTxState(const Txid& txid, int32_t state_type, const std::vector<unsigned char>& state_data)
+{
+    if (!m_database.HasTxsTable()) return true;
+
+    if (!m_update_tx_state_stmt->Bind(1, state_type, "state_type")) return false;
+    if (!m_update_tx_state_stmt->Bind(2, state_data, "state_data")) return false;
+    if (!m_update_tx_state_stmt->Bind(3, txid, "txid")) return false;
+    return ExecStatement(m_update_tx_state_stmt.get());
+}
+
+bool SQLiteBatch::HasTxsTable() const
+{
+    return m_database.HasTxsTable();
 }
 
 DatabaseCursor::Status SQLiteCursor::Next(DataStream& key, DataStream& value)
 {
-    int res = sqlite3_step(m_cursor_stmt);
+    int res = m_cursor_stmt->Step();
     if (res == SQLITE_DONE) {
         return Status::DONE;
     }
@@ -572,35 +786,85 @@ DatabaseCursor::Status SQLiteCursor::Next(DataStream& key, DataStream& value)
     value.clear();
 
     // Leftmost column in result is index 0
-    key.write(SpanFromBlob(m_cursor_stmt, 0));
-    value.write(SpanFromBlob(m_cursor_stmt, 1));
+    key.write(*m_cursor_stmt->Column<std::span<const std::byte>>(0));
+    value.write(*m_cursor_stmt->Column<std::span<const std::byte>>(1));
     return Status::MORE;
 }
 
-SQLiteCursor::~SQLiteCursor()
+DatabaseCursor::Status SQLiteCursor::NextTx(
+    Txid& txid,
+    DataStream& ser_tx,
+    std::optional<std::string>& comment,
+    std::optional<std::string>& comment_to,
+    std::optional<Txid>& replaces,
+    std::optional<Txid>& replaced_by,
+    uint32_t& timesmart,
+    uint32_t& timereceived,
+    int64_t& order_pos,
+    std::vector<std::string>& messages,
+    std::vector<std::string>& payment_requests,
+    int32_t& state_type,
+    std::vector<unsigned char>& state_data
+)
 {
-    sqlite3_clear_bindings(m_cursor_stmt);
-    sqlite3_reset(m_cursor_stmt);
-    int res = sqlite3_finalize(m_cursor_stmt);
-    if (res != SQLITE_OK) {
-        LogWarning("Cursor closed but could not finalize cursor statement: %s",
-                   sqlite3_errstr(res));
+    int res = m_cursor_stmt->Step();
+    if (res == SQLITE_DONE) {
+        return Status::DONE;
+    }
+    if (res != SQLITE_ROW) {
+        LogWarning("Unable to execute cursor step: %s", sqlite3_errstr(res));
+        return Status::FAIL;
+    }
+
+    // Leftmost column in result is index 0
+    txid = *m_cursor_stmt->Column<Txid>(0);
+    ser_tx.write(*m_cursor_stmt->Column<std::span<const std::byte>>(1));
+    comment = m_cursor_stmt->Column<std::string>(2);
+    comment_to = m_cursor_stmt->Column<std::string>(3);
+    replaces = m_cursor_stmt->Column<Txid>(4);
+    replaced_by = m_cursor_stmt->Column<Txid>(5);
+    timesmart = *m_cursor_stmt->Column<uint32_t>(6);
+    timereceived = *m_cursor_stmt->Column<uint32_t>(7);
+    order_pos = *m_cursor_stmt->Column<int64_t>(8);
+
+    std::optional<DataStream> messages_data = m_cursor_stmt->Column<DataStream>(9);
+    if (messages_data) {
+        *messages_data >> messages;
+    }
+    std::optional<DataStream> pay_reqs_data = m_cursor_stmt->Column<DataStream>(10);
+    if (pay_reqs_data) {
+        *pay_reqs_data >> payment_requests;
+    }
+
+    state_type = *m_cursor_stmt->Column<int32_t>(11);
+    state_data = *m_cursor_stmt->Column<std::vector<unsigned char>>(12);
+    return Status::MORE;
+}
+
+SQLiteCursor::SQLiteCursor(sqlite3& db, const std::string& stmt_text)
+{
+    m_cursor_stmt = std::make_unique<SQLiteStatement>(db, stmt_text);
+}
+
+SQLiteCursor::SQLiteCursor(sqlite3& db, const std::string& stmt_text, std::vector<std::byte> start_range, std::vector<std::byte> end_range)
+    : m_cursor_stmt{std::make_unique<SQLiteStatement>(db, stmt_text)},
+    m_prefix_range_start(std::move(start_range)),
+    m_prefix_range_end(std::move(end_range))
+{
+    if (!m_cursor_stmt->Bind(1, m_prefix_range_start, "prefix_start")) {
+        throw std::runtime_error("Unable to bind prefix start to prefix cursor");
+    }
+    if (!m_prefix_range_end.empty() && !m_cursor_stmt->Bind(2, m_prefix_range_end, "prefix_end")) {
+        throw std::runtime_error("Unable to bind prefix end to prefix cursor");
     }
 }
+
+SQLiteCursor::~SQLiteCursor() = default;
 
 std::unique_ptr<DatabaseCursor> SQLiteBatch::GetNewCursor()
 {
     if (!m_database.m_db) return nullptr;
-    auto cursor = std::make_unique<SQLiteCursor>();
-
-    const char* stmt_text = "SELECT key, value FROM main";
-    int res = sqlite3_prepare_v2(m_database.m_db, stmt_text, -1, &cursor->m_cursor_stmt, nullptr);
-    if (res != SQLITE_OK) {
-        throw std::runtime_error(strprintf(
-            "%s: Failed to setup cursor SQL statement: %s\n", __func__, sqlite3_errstr(res)));
-    }
-
-    return cursor;
+    return std::make_unique<SQLiteCursor>(*m_database.m_db, "SELECT key, value FROM main");
 }
 
 std::unique_ptr<DatabaseCursor> SQLiteBatch::GetNewPrefixCursor(std::span<const std::byte> prefix)
@@ -626,23 +890,16 @@ std::unique_ptr<DatabaseCursor> SQLiteBatch::GetNewPrefixCursor(std::span<const 
         end_range.clear();
     }
 
-    auto cursor = std::make_unique<SQLiteCursor>(start_range, end_range);
-    if (!cursor) return nullptr;
-
     const char* stmt_text = end_range.empty() ? "SELECT key, value FROM main WHERE key >= ?" :
                             "SELECT key, value FROM main WHERE key >= ? AND key < ?";
-    int res = sqlite3_prepare_v2(m_database.m_db, stmt_text, -1, &cursor->m_cursor_stmt, nullptr);
-    if (res != SQLITE_OK) {
-        throw std::runtime_error(strprintf(
-            "SQLiteDatabase: Failed to setup cursor SQL statement: %s\n", sqlite3_errstr(res)));
-    }
+    return std::make_unique<SQLiteCursor>(*m_database.m_db, stmt_text, start_range, end_range);
+}
 
-    if (!BindBlobToStatement(cursor->m_cursor_stmt, 1, cursor->m_prefix_range_start, "prefix_start")) return nullptr;
-    if (!end_range.empty()) {
-        if (!BindBlobToStatement(cursor->m_cursor_stmt, 2, cursor->m_prefix_range_end, "prefix_end")) return nullptr;
-    }
-
-    return cursor;
+std::unique_ptr<DatabaseCursor> SQLiteBatch::GetNewTransactionsCursor()
+{
+    if (!m_database.m_db) return nullptr;
+    const char* stmt_text = "SELECT txid, tx, comment, comment_to, replaces, replaced_by, timesmart, timereceived, order_pos, messages, payment_requests, state_type, state_data FROM transactions ORDER BY order_pos";
+    return std::make_unique<SQLiteCursor>(*m_database.m_db, stmt_text);
 }
 
 bool SQLiteBatch::TxnBegin()

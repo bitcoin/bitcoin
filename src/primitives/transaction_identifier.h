@@ -38,6 +38,7 @@ class transaction_identifier
 public:
     transaction_identifier() : m_wrapped{} {}
     consteval explicit transaction_identifier(std::string_view hex_str) : m_wrapped{uint256{hex_str}} {}
+    explicit transaction_identifier(std::span<const std::byte> sp) : m_wrapped(UCharSpanCast(sp)) {}
 
     template <typename Other>
     bool operator==(const Other& other) const { return Compare(other) == 0; }
