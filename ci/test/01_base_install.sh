@@ -32,7 +32,7 @@ if [ -n "${APT_LLVM_V}" ]; then
   )
 fi
 
-if [[ $CI_IMAGE_NAME_TAG == *alpine* ]]; then
+if command -v apk >/dev/null 2>&1; then
   ${CI_RETRY_EXE} apk update
   # shellcheck disable=SC2086
   ${CI_RETRY_EXE} apk add --no-cache $CI_BASE_PACKAGES $PACKAGES
