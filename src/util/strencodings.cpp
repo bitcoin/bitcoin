@@ -7,6 +7,7 @@
 
 #include <crypto/hex_base.h>
 #include <span.h>
+#include <util/overflow.h>
 
 #include <array>
 #include <cassert>
@@ -100,7 +101,7 @@ std::string EncodeBase64(std::span<const unsigned char> input)
     static const char *pbase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     std::string str;
-    str.reserve(((input.size() + 2) / 3) * 4);
+    str.reserve(CeilDiv(input.size(), 3) * 4);
     ConvertBits<8, 6, true>([&](int v) { str += pbase64[v]; }, input.begin(), input.end());
     while (str.size() % 4) str += '=';
     return str;
@@ -146,7 +147,7 @@ std::string EncodeBase32(std::span<const unsigned char> input, bool pad)
     static const char *pbase32 = "abcdefghijklmnopqrstuvwxyz234567";
 
     std::string str;
-    str.reserve(((input.size() + 4) / 5) * 8);
+    str.reserve(CeilDiv(input.size(), 5) * 8);
     ConvertBits<8, 5, true>([&](int v) { str += pbase32[v]; }, input.begin(), input.end());
     if (pad) {
         while (str.size() % 8) {

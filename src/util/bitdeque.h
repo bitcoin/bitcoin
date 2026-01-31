@@ -11,6 +11,7 @@
 #include <limits>
 #include <stdexcept>
 #include <tuple>
+#include <util/overflow.h>
 
 /** Class that mimics std::deque<bool>, but with std::vector<bool>'s bit packing.
  *
@@ -211,7 +212,7 @@ public:
     void assign(size_type count, bool val)
     {
         m_deque.clear();
-        m_deque.resize((count + BITS_PER_WORD - 1) / BITS_PER_WORD);
+        m_deque.resize(CeilDiv(count, BITS_PER_WORD));
         m_pad_begin = 0;
         m_pad_end = 0;
         if (val) {

@@ -6,6 +6,7 @@
 #define BITCOIN_CUCKOOCACHE_H
 
 #include <util/fastrange.h>
+#include <util/overflow.h>
 
 #include <algorithm>
 #include <array>
@@ -63,7 +64,7 @@ public:
     explicit bit_packed_atomic_flags(uint32_t size)
     {
         // pad out the size if needed
-        size = (size + 7) / 8;
+        size = CeilDiv(size, 8);
         mem.reset(new std::atomic<uint8_t>[size]);
         for (uint32_t i = 0; i < size; ++i)
             mem[i].store(0xFF);
