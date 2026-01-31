@@ -1935,13 +1935,8 @@ void Chainstate::InitCoinsCache(size_t cache_size_bytes)
     m_coins_views->InitCache();
 }
 
-// This function must be marked `const` so that `CValidationInterface` clients
-// (which are given a `const Chainstate*`) can call it.
-//
-// It is lock-free and depends on `m_cached_is_ibd`, which is latched by
-// `UpdateIBDStatus()`.
-//
-bool ChainstateManager::IsInitialBlockDownload() const
+// Lock-free: depends on `m_cached_is_ibd`, which is latched by `UpdateIBDStatus()`.
+bool ChainstateManager::IsInitialBlockDownload() const noexcept
 {
     return m_cached_is_ibd.load(std::memory_order_relaxed);
 }
@@ -3324,6 +3319,7 @@ static SynchronizationState GetSynchronizationState(bool init, bool blockfiles_i
 
 void ChainstateManager::UpdateIBDStatus()
 {
+    AssertLockHeld(cs_main);
     if (!m_cached_is_ibd.load(std::memory_order_relaxed)) return;
     if (m_blockman.LoadingBlocks()) return;
     if (!CurrentChainstate().m_chain.IsTipRecent(MinimumChainWork(), m_options.max_tip_age)) return;
