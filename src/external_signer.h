@@ -21,7 +21,7 @@ private:
     //! The command which handles interaction with the external signer.
     std::string m_command;
 
-    //! Bitcoin mainnet, testnet, etc
+    //! Bitcoin mainnet or a test network
     std::string m_chain;
 
     std::string NetworkArg() const;
@@ -29,7 +29,7 @@ private:
 public:
     //! @param[in] command      the command which handles interaction with the external signer
     //! @param[in] fingerprint  master key fingerprint of the signer
-    //! @param[in] chain        "main", "test", "regtest" or "signet"
+    //! @param[in] chain        "main" or a test network
     //! @param[in] name         device name
     ExternalSigner(std::string command, std::string chain, std::string fingerprint, std::string name);
 
@@ -42,7 +42,7 @@ public:
     //! Obtain a list of signers. Calls `<command> enumerate`.
     //! @param[in]              command the command which handles interaction with the external signer
     //! @param[in,out] signers  vector to which new signers (with a unique master key fingerprint) are added
-    //! @param chain            "main", "test", "regtest" or "signet"
+    //! @param chain            "main" or a test network
     //! @returns success
     static bool Enumerate(const std::string& command, std::vector<ExternalSigner>& signers, const std::string& chain);
 
