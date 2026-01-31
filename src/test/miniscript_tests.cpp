@@ -159,9 +159,8 @@ struct KeyConverter {
     }
 
     //! Parse a public key from a range of hex characters.
-    template<typename I>
-    std::optional<Key> FromString(I first, I last) const {
-        auto bytes = ParseHex(std::string(first, last));
+    std::optional<Key> FromString(std::span<const char>& in) const {
+        auto bytes = ParseHex(std::string(in.begin(), in.end()));
         Key key{bytes.begin(), bytes.end()};
         if (key.IsValid()) return key;
         return {};

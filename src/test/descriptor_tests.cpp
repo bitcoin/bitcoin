@@ -283,6 +283,14 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     BOOST_CHECK_EQUAL(parse_pub->IsRange(), (flags & RANGE) != 0);
     BOOST_CHECK_EQUAL(parse_priv->IsRange(), (flags & RANGE) != 0);
 
+    // Check that the highest key expression index matches the number of keys in the descriptor
+    BOOST_TEST_INFO("Pub desc: " + pub);
+    uint32_t key_exprs = parse_pub->GetMaxKeyExpr();
+    BOOST_CHECK_EQUAL(key_exprs + 1, parse_pub->GetKeyCount());
+    BOOST_TEST_INFO("Priv desc: " + prv);
+    BOOST_CHECK_EQUAL(key_exprs, parse_priv->GetMaxKeyExpr());
+    BOOST_CHECK_EQUAL(key_exprs + 1, parse_priv->GetKeyCount());
+
     // * For ranged descriptors,  the `scripts` parameter is a list of expected result outputs, for subsequent
     //   positions to evaluate the descriptors on (so the first element of `scripts` is for evaluating the
     //   descriptor at 0; the second at 1; and so on). To verify this, we evaluate the descriptors once for
@@ -1267,7 +1275,7 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     CheckUnparsable("tr(musig(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/*,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/*)/0)","tr(musig(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/*,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/*)/0)", "tr(): musig(): Cannot have ranged participant keys if musig() also has derivation");
 
     // Fuzzer crash test cases
-    CheckUnparsable("pk(musig(dd}uue/00/)k(", "pk(musig(dd}uue/00/)k(", "Invalid musig() expression");
+    CheckUnparsable("pk(musig(dd}uue/00/)k(", "pk(musig(dd}uue/00/)k(", "'pk(musig(dd}uue/00/)k(' is not a valid descriptor function");
     CheckUnparsable("tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)", "tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)","tr(): Too many ')' in musig() expression");
 }
 
