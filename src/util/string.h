@@ -95,7 +95,7 @@ struct ConstevalFormatString {
     consteval ConstevalFormatString(const char* str) : fmt{str} { detail::CheckNumFormatSpecifiers<num_params>(fmt); }
 };
 
-void ReplaceAll(std::string& in_out, const std::string& search, const std::string& substitute);
+void ReplaceAll(std::string& in_out, const std::string& search, const std::string& substitute, bool regex = true);
 
 /** Split a string on any char found in separators, returning a vector.
  *
