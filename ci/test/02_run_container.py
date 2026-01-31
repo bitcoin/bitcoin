@@ -17,7 +17,7 @@ def run(cmd, **kwargs):
     try:
         return subprocess.run(cmd, **kwargs)
     except Exception as e:
-        sys.exit(e)
+        sys.exit(str(e))
 
 
 def main():
