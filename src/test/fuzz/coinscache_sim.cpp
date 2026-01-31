@@ -270,16 +270,6 @@ FUZZ_TARGET(coinscache_sim)
                 }
             },
 
-            [&]() { // HaveCoin
-                uint32_t outpointidx = provider.ConsumeIntegralInRange<uint32_t>(0, NUM_OUTPOINTS - 1);
-                // Look up in simulation data.
-                auto sim = lookup(outpointidx);
-                // Look up in real caches.
-                auto real = caches.back()->HaveCoin(data.outpoints[outpointidx]);
-                // Compare results.
-                assert(sim.has_value() == real);
-            },
-
             [&]() { // HaveCoinInCache
                 uint32_t outpointidx = provider.ConsumeIntegralInRange<uint32_t>(0, NUM_OUTPOINTS - 1);
                 // Invoke on real cache (there is no equivalent in simulation, so nothing to compare result with).

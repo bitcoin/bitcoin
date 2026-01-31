@@ -856,7 +856,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // Note: this call may add txin.prevout to the coins cache
         // (coins_cache.cacheCoins) by way of FetchCoin(). It should be removed
         // later (via coins_to_uncache) if this tx turns out to be invalid.
-        if (!m_view.HaveCoin(txin.prevout)) {
+        if (m_view.AccessCoin(txin.prevout).IsSpent()) {
             // Are inputs missing because we already have the tx?
             for (size_t out = 0; out < tx.vout.size(); out++) {
                 // Optimistically just do efficient check of cache for outputs
@@ -2154,7 +2154,7 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
 {
     bool fClean = true;
 
-    if (view.HaveCoin(out)) fClean = false; // overwriting transaction output
+    if (view.GetCoin(out)) fClean = false; // overwriting transaction output
 
     if (undo.nHeight == 0) {
         // Missing undo metadata (height and coinbase). Older versions included this
@@ -2170,7 +2170,7 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
     }
     // If the coin already exists as an unspent coin in the cache, then the
     // possible_overwrite parameter to AddCoin must be set to true. We have
-    // already checked whether an unspent coin exists above using HaveCoin, so
+    // already checked whether an unspent coin exists above, so
     // we don't need to guess. When fClean is false, an unspent coin already
     // existed and it is an overwrite.
     view.AddCoin(out, std::move(undo), !fClean);
@@ -2471,7 +2471,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     if (fEnforceBIP30 || pindex->nHeight >= BIP34_IMPLIES_BIP30_LIMIT) {
         for (const auto& tx : block.vtx) {
             for (size_t o = 0; o < tx->vout.size(); o++) {
-                if (view.HaveCoin(COutPoint(tx->GetHash(), o))) {
+                if (view.GetCoin(COutPoint(tx->GetHash(), o))) {
                     state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-BIP30",
                                   "tried to overwrite transaction");
                 }
