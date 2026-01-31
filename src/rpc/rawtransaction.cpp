@@ -73,7 +73,7 @@ static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& 
         entry.pushKV("blockhash", hashBlock.GetHex());
         const CBlockIndex* pindex = active_chainstate.m_blockman.LookupBlockIndex(hashBlock);
         if (pindex) {
-            if (active_chainstate.m_chain.Contains(pindex)) {
+            if (active_chainstate.m_chain.Contains(*pindex)) {
                 entry.pushKV("confirmations", 1 + active_chainstate.m_chain.Height() - pindex->nHeight);
                 entry.pushKV("time", pindex->GetBlockTime());
                 entry.pushKV("blocktime", pindex->GetBlockTime());
@@ -336,7 +336,7 @@ static RPCHelpMan getrawtransaction()
     UniValue result(UniValue::VOBJ);
     if (blockindex) {
         LOCK(cs_main);
-        result.pushKV("in_active_chain", chainman.ActiveChain().Contains(blockindex));
+        result.pushKV("in_active_chain", chainman.ActiveChain().Contains(*blockindex));
     }
     // If request is verbosity >= 1 but no blockhash was given, then look up the blockindex
     if (request.params[2].isNull()) {

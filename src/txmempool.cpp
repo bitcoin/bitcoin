@@ -45,7 +45,7 @@ bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp)
     if (lp.maxInputBlock) {
         // Check whether active_chain is an extension of the block at which the LockPoints
         // calculation was valid.  If not LockPoints are no longer valid
-        if (!active_chain.Contains(lp.maxInputBlock)) {
+        if (!active_chain.Contains(*lp.maxInputBlock)) {
             return false;
         }
     }

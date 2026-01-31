@@ -408,16 +408,16 @@ public:
     }
 
     /** Efficiently check whether a block is present in this chain. */
-    bool Contains(const CBlockIndex* pindex) const
+    bool Contains(const CBlockIndex& pindex) const
     {
-        return (*this)[pindex->nHeight] == pindex;
+        return (*this)[pindex.nHeight] == &pindex;
     }
 
     /** Find the successor of a block in this chain, or nullptr if the given index is not found or is the tip. */
-    CBlockIndex* Next(const CBlockIndex* pindex) const
+    CBlockIndex* Next(const CBlockIndex& pindex) const
     {
         if (Contains(pindex))
-            return (*this)[pindex->nHeight + 1];
+            return (*this)[pindex.nHeight + 1];
         else
             return nullptr;
     }

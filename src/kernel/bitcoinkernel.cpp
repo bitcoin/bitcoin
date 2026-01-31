@@ -1335,7 +1335,7 @@ const btck_BlockTreeEntry* btck_chain_get_by_height(const btck_Chain* chain, int
 int btck_chain_contains(const btck_Chain* chain, const btck_BlockTreeEntry* entry)
 {
     LOCK(::cs_main);
-    return btck_Chain::get(chain).Contains(&btck_BlockTreeEntry::get(entry)) ? 1 : 0;
+    return btck_Chain::get(chain).Contains(btck_BlockTreeEntry::get(entry)) ? 1 : 0;
 }
 
 btck_BlockHeader* btck_block_header_create(const void* raw_block_header, size_t raw_block_header_len)
