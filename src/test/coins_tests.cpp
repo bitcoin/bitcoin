@@ -1159,4 +1159,25 @@ BOOST_AUTO_TEST_CASE(ccoins_reset_guard)
     BOOST_CHECK(!root_cache.HaveCoinInCache(outpoint));
 }
 
+BOOST_AUTO_TEST_CASE(ccoins_peekcoin)
+{
+    CCoinsViewTest base{m_rng};
+
+    // Populate the base view with a coin.
+    const COutPoint outpoint{Txid::FromUint256(m_rng.rand256()), m_rng.rand32()};
+    const Coin coin{CTxOut{m_rng.randrange(10), CScript{}}, 1, false};
+    {
+        CCoinsViewCache cache{&base};
+        cache.AddCoin(outpoint, Coin{coin}, /*possible_overwrite=*/false);
+        cache.Flush();
+    }
+
+    // Verify PeekCoin can read through the cache stack without mutating the intermediate cache.
+    CCoinsViewCacheTest main_cache{&base};
+    const auto fetched{main_cache.PeekCoin(outpoint)};
+    BOOST_CHECK(fetched.has_value());
+    BOOST_CHECK(*fetched == coin);
+    BOOST_CHECK(!main_cache.HaveCoinInCache(outpoint));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
