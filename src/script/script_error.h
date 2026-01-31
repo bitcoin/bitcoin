@@ -87,8 +87,6 @@ typedef enum ScriptError_t
     SCRIPT_ERR_ERROR_COUNT
 } ScriptError;
 
-#define SCRIPT_ERR_LAST SCRIPT_ERR_ERROR_COUNT
-
 std::string ScriptErrorString(ScriptError error);
 
 #endif // BITCOIN_SCRIPT_SCRIPT_ERROR_H
