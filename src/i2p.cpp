@@ -132,6 +132,13 @@ Session::Session(const Proxy& control_host, std::shared_ptr<CThreadInterrupt> in
       m_interrupt{interrupt},
       m_transient{true}
 {
+    try {
+        LOCK(m_mutex);
+        CreateIfNotCreatedAlready();
+    } catch (const std::runtime_error&) {
+        // This was just an eager optimistic attempt to create the session.
+        // If it fails, then it will be reattempted again when `Connect()` is called.
+    }
 }
 
 Session::~Session()
