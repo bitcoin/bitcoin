@@ -1391,6 +1391,13 @@ uint32_t btck_block_header_get_nonce(const btck_BlockHeader* header)
     return btck_BlockHeader::get(header).nNonce;
 }
 
+void btck_block_header_to_bytes(const btck_BlockHeader* header, unsigned char output[80])
+{
+    DataStream stream{};
+    stream << btck_BlockHeader::get(header);
+    std::memcpy(output, stream.data(), 80);
+}
+
 void btck_block_header_destroy(btck_BlockHeader* header)
 {
     delete header;

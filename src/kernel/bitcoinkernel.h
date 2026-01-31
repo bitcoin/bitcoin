@@ -1769,6 +1769,16 @@ BITCOINKERNEL_API uint32_t BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_header_ge
     const btck_BlockHeader* header) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
+ * @brief Serializes the btck_BlockHeader through the passed in callback to bytes.
+ * This is consensus serialization that is also used for the P2P network.
+ *
+ * @param[in] header    Non-null.
+ * @param[out] output   The serialized block header (80 bytes).
+ */
+BITCOINKERNEL_API void btck_block_header_to_bytes(
+    const btck_BlockHeader* header, unsigned char output[80]) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
+/**
  * Destroy the btck_BlockHeader.
  */
 BITCOINKERNEL_API void btck_block_header_destroy(btck_BlockHeader* header);

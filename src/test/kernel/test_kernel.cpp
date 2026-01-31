@@ -266,7 +266,7 @@ void run_verify_test(
 
 template <typename T>
 concept HasToBytes = requires(T t) {
-    { t.ToBytes() } -> std::convertible_to<std::vector<std::byte>>;
+    { t.ToBytes() } -> std::convertible_to<std::span<const std::byte>>;
 };
 
 template <typename T>
@@ -277,7 +277,7 @@ void CheckHandle(T object, T distinct_object)
     BOOST_CHECK(object.get() != distinct_object.get());
 
     if constexpr (HasToBytes<T>) {
-        BOOST_CHECK_NE(object.ToBytes().size(), distinct_object.ToBytes().size());
+        BOOST_CHECK(object.ToBytes() != distinct_object.ToBytes());
     }
 
     // Copy constructor
@@ -682,6 +682,10 @@ BOOST_AUTO_TEST_CASE(btck_block_header_tests)
     auto prev_hash = header.PrevHash();
     BOOST_CHECK_EQUAL(byte_span_to_hex_string_reversed(prev_hash.ToBytes()), "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
 
+    // Test round-trip serialization of block header
+    auto header_roundtrip{BlockHeader{header.ToBytes()}};
+    check_equal(header_roundtrip.ToBytes(), mainnet_block_1_header);
+
     auto raw_block = hex_string_to_byte_vec("010000006fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000982051fd1e4ba744bbbe680e1fee14677ba1a3c3540bf7b1cdb606e857233e0e61bc6649ffff001d01e362990101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0704ffff001d0104ffffffff0100f2052a0100000043410496b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52da7589379515d4e0a604f8141781e62294721166bf621e73a82cbf2342c858eeac00000000");
     Block block{raw_block};
     BlockHeader block_header{block.GetHeader()};
@@ -690,6 +694,11 @@ BOOST_AUTO_TEST_CASE(btck_block_header_tests)
     BOOST_CHECK_EQUAL(block_header.Bits(), 0x1d00ffff);
     BOOST_CHECK_EQUAL(block_header.Nonce(), 2573394689);
     BOOST_CHECK_EQUAL(byte_span_to_hex_string_reversed(block_header.Hash().ToBytes()), "00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048");
+
+    // Verify header from block serializes to first 80 bytes of raw block
+    auto block_header_bytes = block_header.ToBytes();
+    BOOST_CHECK_EQUAL(block_header_bytes.size(), 80);
+    check_equal(block_header_bytes, std::span<const std::byte>(raw_block.data(), 80));
 }
 
 BOOST_AUTO_TEST_CASE(btck_block)
