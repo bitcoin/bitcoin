@@ -897,6 +897,11 @@ class TestNode():
 
         self.wait_until(lambda: self.num_test_p2p_connections() == 0)
 
+    def is_connected_to(self, other):
+        assert isinstance(other, TestNode)
+        other_subver = other.getnetworkinfo()["subversion"]
+        return any(peer["subver"] == other_subver for peer in self.getpeerinfo())
+
     def bumpmocktime(self, seconds):
         """Fast forward using setmocktime to self.mocktime + seconds. Requires setmocktime to have
         been called at some point in the past."""

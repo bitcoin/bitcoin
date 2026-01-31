@@ -86,6 +86,7 @@ class WalletHDTest(BitcoinTestFramework):
             assert_equal(hd_info_2["hdkeypath"], "m/84h/1h/0h/0/" + str(i))
             assert_equal(hd_info_2["hdmasterfingerprint"], hd_fingerprint)
         assert_equal(hd_add, hd_add_2)
+        self.wait_until(lambda: not self.nodes[0].is_connected_to(self.nodes[1]))
         self.connect_nodes(0, 1)
         self.sync_all()
 
@@ -102,6 +103,7 @@ class WalletHDTest(BitcoinTestFramework):
             self.nodes[1].wallets_path / self.default_wallet_name / self.wallet_data_filename
         )
         self.start_node(1, extra_args=self.extra_args[1])
+        self.wait_until(lambda: not self.nodes[0].is_connected_to(self.nodes[1]))
         self.connect_nodes(0, 1)
         self.sync_all()
         # Wallet automatically scans blocks older than key on startup

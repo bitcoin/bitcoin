@@ -26,10 +26,12 @@ class SetBanTests(BitcoinTestFramework):
         peerinfo = self.nodes[1].getpeerinfo()[0]
         assert "noban" not in peerinfo["permissions"]
 
-        # Node 0 get banned by Node 1
+        # Node 0 gets banned by Node 1
         self.nodes[1].setban("127.0.0.1", "add")
+        self.wait_until(lambda: not self.nodes[0].is_connected_to(self.nodes[1]))
 
         # Node 0 should not be able to reconnect
+        self.restart_node(1, [])
         context = ExitStack()
         context.enter_context(self.nodes[1].assert_debug_log(expected_msgs=['dropped (banned)\n'], timeout=50))
         # When disconnected right after connecting, a v2 node will attempt to reconnect with v1.
@@ -37,8 +39,8 @@ class SetBanTests(BitcoinTestFramework):
         if self.options.v2transport:
             context.enter_context(self.nodes[0].assert_debug_log(expected_msgs=['trying v1 connection'], timeout=50))
         with context:
-            self.restart_node(1, [])
             self.nodes[0].addnode("127.0.0.1:" + str(p2p_port(1)), "onetry")
+        self.wait_until(lambda: not self.nodes[0].is_connected_to(self.nodes[1]))
 
         # However, node 0 should be able to reconnect if it has noban permission
         self.restart_node(1, ['-whitelist=127.0.0.1'])
@@ -49,6 +51,7 @@ class SetBanTests(BitcoinTestFramework):
         # If we remove the ban, Node 0 should be able to reconnect even without noban permission
         self.nodes[1].setban("127.0.0.1", "remove")
         self.restart_node(1, [])
+        self.wait_until(lambda: not self.nodes[0].is_connected_to(self.nodes[1]))
         self.connect_nodes(0, 1)
         peerinfo = self.nodes[1].getpeerinfo()[0]
         assert "noban" not in peerinfo["permissions"]
