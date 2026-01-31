@@ -2056,8 +2056,9 @@ void PeerManagerImpl::BlockConnected(
     }
 
     // The following task can be skipped since we don't maintain a mempool for
-    // the historical chainstate.
-    if (role.historical) {
+    // the historical chainstate, or during ibd since we don't receive incoming
+    // transactions from peers into the mempool.
+    if (role.historical || m_chainman.IsInitialBlockDownload()) {
         return;
     }
     LOCK(m_tx_download_mutex);
