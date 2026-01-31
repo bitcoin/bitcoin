@@ -8,6 +8,10 @@
 #define SECP256K1_MODULE_SCHNORRSIG_TESTS_H
 
 #include "../../../include/secp256k1_schnorrsig.h"
+#ifdef ENABLE_MODULE_BATCH
+# include "../../../include/secp256k1_batch.h"
+# include "../../../include/secp256k1_schnorrsig_batch.h"
+#endif
 #include "../../unit_test.h"
 
 /* Checks that a bit flip in the n_flip-th argument (that has n_bytes many
@@ -194,12 +198,34 @@ static void test_schnorrsig_bip_vectors_check_signing(const unsigned char *sk, c
 }
 
 /* Helper function for schnorrsig_bip_vectors
- * Checks that both verify and verify_batch (TODO) return the same value as expected. */
+ * Checks that schnorrsig_verify return the same value as expected. */
 static void test_schnorrsig_bip_vectors_check_verify(const unsigned char *pk_serialized, const unsigned char *msg, size_t msglen, const unsigned char *sig, int expected) {
     secp256k1_xonly_pubkey pk;
 
     CHECK(secp256k1_xonly_pubkey_parse(CTX, &pk, pk_serialized));
     CHECK(expected == secp256k1_schnorrsig_verify(CTX, sig, msg, msglen, &pk));
+}
+
+/* Helper function for schnorrsig_bip_vectors
+ * Checks that batch_verify return the same value as expected. */
+static void test_schnorrsig_bip_vectors_check_batch_verify(const unsigned char *pk_serialized, const unsigned char *msg, size_t msglen, const unsigned char *sig, int expected) {
+#ifdef ENABLE_MODULE_BATCH
+    secp256k1_xonly_pubkey pk;
+    secp256k1_batch *batch;
+
+    CHECK(secp256k1_xonly_pubkey_parse(CTX, &pk, pk_serialized));
+    batch = secp256k1_batch_create(CTX, 2, NULL);
+    CHECK(batch != NULL);
+    secp256k1_batch_add_schnorrsig(CTX, batch, sig, msg, msglen, &pk);
+    CHECK(expected == secp256k1_batch_verify(CTX, batch));
+    secp256k1_batch_destroy(CTX, batch);
+#else
+    (void)pk_serialized;
+    (void)msg;
+    (void)msglen;
+    (void)sig;
+    (void)expected;
+#endif
 }
 
 /* Test vectors according to BIP-340 ("Schnorr Signatures for secp256k1"). See
@@ -243,6 +269,7 @@ static void test_schnorrsig_bip_vectors(void) {
         };
         test_schnorrsig_bip_vectors_check_signing(sk, pk, aux_rand, msg, sizeof(msg), sig);
         test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 1);
+        test_schnorrsig_bip_vectors_check_batch_verify(pk, msg, sizeof(msg), sig, 1);
     }
     {
         /* Test vector 1 */
@@ -282,6 +309,7 @@ static void test_schnorrsig_bip_vectors(void) {
         };
         test_schnorrsig_bip_vectors_check_signing(sk, pk, aux_rand, msg, sizeof(msg), sig);
         test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 1);
+        test_schnorrsig_bip_vectors_check_batch_verify(pk, msg, sizeof(msg), sig, 1);
     }
     {
         /* Test vector 2 */
@@ -321,6 +349,7 @@ static void test_schnorrsig_bip_vectors(void) {
         };
         test_schnorrsig_bip_vectors_check_signing(sk, pk, aux_rand, msg, sizeof(msg), sig);
         test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 1);
+        test_schnorrsig_bip_vectors_check_batch_verify(pk, msg, sizeof(msg), sig, 1);
     }
     {
         /* Test vector 3 */
@@ -360,6 +389,7 @@ static void test_schnorrsig_bip_vectors(void) {
         };
         test_schnorrsig_bip_vectors_check_signing(sk, pk, aux_rand, msg, sizeof(msg), sig);
         test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 1);
+        test_schnorrsig_bip_vectors_check_batch_verify(pk, msg, sizeof(msg), sig, 1);
     }
     {
         /* Test vector 4 */
@@ -386,6 +416,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0x06, 0x0B, 0x07, 0xD2, 0x83, 0x08, 0xD7, 0xF4
         };
         test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 1);
+        test_schnorrsig_bip_vectors_check_batch_verify(pk, msg, sizeof(msg), sig, 1);
     }
     {
         /* Test vector 5 */
@@ -424,6 +455,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0xBE, 0xAF, 0xA3, 0x4B, 0x1A, 0xC5, 0x53, 0xE2
         };
         test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 0);
+        test_schnorrsig_bip_vectors_check_batch_verify(pk, msg, sizeof(msg), sig, 0);
     }
     {
         /* Test vector 7 */
@@ -450,6 +482,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0xAA, 0xEA, 0x51, 0x34, 0xFC, 0xCD, 0xB2, 0xBD
         };
         test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 0);
+        test_schnorrsig_bip_vectors_check_batch_verify(pk, msg, sizeof(msg), sig, 0);
     }
     {
         /* Test vector 8 */
@@ -476,6 +509,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0x18, 0x34, 0xFF, 0x0D, 0x0C, 0x2E, 0x6D, 0xA6
         };
         test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 0);
+        test_schnorrsig_bip_vectors_check_batch_verify(pk, msg, sizeof(msg), sig, 0);
     }
     {
         /* Test vector 9 */
@@ -502,6 +536,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0xB6, 0x5C, 0x64, 0x25, 0xBD, 0x18, 0x60, 0x51
         };
         test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 0);
+        test_schnorrsig_bip_vectors_check_batch_verify(pk, msg, sizeof(msg), sig, 0);
     }
     {
         /* Test vector 10 */
@@ -528,6 +563,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0x37, 0x80, 0xD5, 0xA1, 0x83, 0x7C, 0xF1, 0x97
         };
         test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 0);
+        test_schnorrsig_bip_vectors_check_batch_verify(pk, msg, sizeof(msg), sig, 0);
     }
     {
         /* Test vector 11 */
@@ -554,6 +590,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0xA7, 0x9D, 0x5F, 0x7F, 0xC4, 0x07, 0xD3, 0x9B
         };
         test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 0);
+        test_schnorrsig_bip_vectors_check_batch_verify(pk, msg, sizeof(msg), sig, 0);
     }
     {
         /* Test vector 12 */
@@ -580,6 +617,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0xA7, 0x9D, 0x5F, 0x7F, 0xC4, 0x07, 0xD3, 0x9B
         };
         test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 0);
+        test_schnorrsig_bip_vectors_check_batch_verify(pk, msg, sizeof(msg), sig, 0);
     }
     {
         /* Test vector 13 */
@@ -606,6 +644,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0xBF, 0xD2, 0x5E, 0x8C, 0xD0, 0x36, 0x41, 0x41
         };
         test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 0);
+        test_schnorrsig_bip_vectors_check_batch_verify(pk, msg, sizeof(msg), sig, 0);
     }
     {
         /* Test vector 14 */
@@ -652,6 +691,7 @@ static void test_schnorrsig_bip_vectors(void) {
         };
         test_schnorrsig_bip_vectors_check_signing(sk, pk, aux_rand, NULL, 0, sig);
         test_schnorrsig_bip_vectors_check_verify(pk, NULL, 0, sig, 1);
+        test_schnorrsig_bip_vectors_check_batch_verify(pk, NULL, 0, sig, 1);
     }
     {
         /* Test vector 16 */
@@ -686,6 +726,7 @@ static void test_schnorrsig_bip_vectors(void) {
         };
         test_schnorrsig_bip_vectors_check_signing(sk, pk, aux_rand, msg, sizeof(msg), sig);
         test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 1);
+        test_schnorrsig_bip_vectors_check_batch_verify(pk, msg, sizeof(msg), sig, 1);
     }
     {
         /* Test vector 17 */
@@ -724,6 +765,7 @@ static void test_schnorrsig_bip_vectors(void) {
         };
         test_schnorrsig_bip_vectors_check_signing(sk, pk, aux_rand, msg, sizeof(msg), sig);
         test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 1);
+        test_schnorrsig_bip_vectors_check_batch_verify(pk, msg, sizeof(msg), sig, 1);
     }
     {
         /* Test vector 18 */
@@ -759,6 +801,7 @@ static void test_schnorrsig_bip_vectors(void) {
         memset(msg, 0x99, sizeof(msg));
         test_schnorrsig_bip_vectors_check_signing(sk, pk, aux_rand, msg, sizeof(msg), sig);
         test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 1);
+        test_schnorrsig_bip_vectors_check_batch_verify(pk, msg, sizeof(msg), sig, 1);
     }
 }
 
@@ -851,8 +894,9 @@ static void test_schnorrsig_sign_internal(void) {
 
 #define N_SIGS 3
 /* Creates N_SIGS valid signatures and verifies them with verify and
- * verify_batch (TODO). Then flips some bits and checks that verification now
- * fails. */
+ * batch_verify. Then flips some bits and checks that verification now
+ * fails. The batch_verify variation of this test is implemented as
+ * test_schnorrsig_sign_batch_verify (in schnorrsig/batch_add_tests_impl.h) */
 static void test_schnorrsig_sign_verify_internal(void) {
     unsigned char sk[32];
     unsigned char msg[N_SIGS][32];

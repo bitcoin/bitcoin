@@ -5,6 +5,7 @@
 
 #include <script/sigcache.h>
 
+#include <batchverify.h>
 #include <crypto/sha256.h>
 #include <logging.h>
 #include <pubkey.h>
@@ -80,5 +81,23 @@ bool CachingTransactionSignatureChecker::VerifySchnorrSignature(std::span<const 
     if (m_signature_cache.Get(entry, !store)) return true;
     if (!TransactionSignatureChecker::VerifySchnorrSignature(sig, pubkey, sighash)) return false;
     if (store) m_signature_cache.Set(entry);
+    return true;
+}
+
+CollectingSignatureChecker::CollectingSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn,
+                                                       bool storeIn, SignatureCache& signature_cache, PrecomputedTransactionData& txdataIn)
+    : CachingTransactionSignatureChecker(txToIn, nInIn, amountIn, storeIn, signature_cache, txdataIn) {}
+
+bool CollectingSignatureChecker::VerifySchnorrSignature(std::span<const unsigned char> sig, const XOnlyPubKey& pubkey, const uint256& sighash) const {
+    uint256 entry;
+    SignatureCache& signature_cache{GetSigCache()};
+    signature_cache.ComputeEntrySchnorr(entry, sighash, sig, pubkey);
+    if (signature_cache.Get(entry, !GetStore())) return true;
+
+    m_collected_signatures.emplace_back(
+        std::vector<unsigned char>(sig.begin(), sig.end()),
+        pubkey,
+        sighash
+    );
     return true;
 }

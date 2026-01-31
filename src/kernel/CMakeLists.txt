@@ -19,6 +19,7 @@ add_library(bitcoinkernel
   disconnected_transactions.cpp
   mempool_removal_reason.cpp
   ../arith_uint256.cpp
+  ../batchverify.cpp
   ../chain.cpp
   ../coins.cpp
   ../compressor.cpp
