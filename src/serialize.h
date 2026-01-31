@@ -48,66 +48,74 @@ static const unsigned int MAX_VECTOR_ALLOCATE = 5000000;
 struct deserialize_type {};
 constexpr deserialize_type deserialize {};
 
+class SizeComputer;
+
+//! Check if type contains a stream by seeing if it has a GetStream() method.
+template<typename T>
+concept ContainsStream = requires(T t) { t.GetStream(); };
+
+template<typename T>
+concept ContainsSizeComputer = ContainsStream<T> &&
+    std::is_same_v<std::remove_reference_t<decltype(std::declval<T>().GetStream())>, SizeComputer>;
+
 /*
  * Lowest-level serialization and conversion.
  */
 template<typename Stream> inline void ser_writedata8(Stream &s, uint8_t obj)
 {
-    s.write(std::as_bytes(std::span{&obj, 1}));
+    s.write(std::as_bytes(std::span<uint8_t, 1>{&obj, 1}));
 }
 template<typename Stream> inline void ser_writedata16(Stream &s, uint16_t obj)
 {
     obj = htole16_internal(obj);
-    s.write(std::as_bytes(std::span{&obj, 1}));
+    s.write(std::as_bytes(std::span<uint16_t, 1>{&obj, 1}));
 }
 template<typename Stream> inline void ser_writedata32(Stream &s, uint32_t obj)
 {
     obj = htole32_internal(obj);
-    s.write(std::as_bytes(std::span{&obj, 1}));
+    s.write(std::as_bytes(std::span<uint32_t, 1>{&obj, 1}));
 }
 template<typename Stream> inline void ser_writedata32be(Stream &s, uint32_t obj)
 {
     obj = htobe32_internal(obj);
-    s.write(std::as_bytes(std::span{&obj, 1}));
+    s.write(std::as_bytes(std::span<uint32_t, 1>{&obj, 1}));
 }
 template<typename Stream> inline void ser_writedata64(Stream &s, uint64_t obj)
 {
     obj = htole64_internal(obj);
-    s.write(std::as_bytes(std::span{&obj, 1}));
+    s.write(std::as_bytes(std::span<uint64_t, 1>{&obj, 1}));
 }
 template<typename Stream> inline uint8_t ser_readdata8(Stream &s)
 {
     uint8_t obj;
-    s.read(std::as_writable_bytes(std::span{&obj, 1}));
+    s.read(std::as_writable_bytes(std::span<uint8_t, 1>{&obj, 1}));
     return obj;
 }
 template<typename Stream> inline uint16_t ser_readdata16(Stream &s)
 {
     uint16_t obj;
-    s.read(std::as_writable_bytes(std::span{&obj, 1}));
+    s.read(std::as_writable_bytes(std::span<uint16_t, 1>{&obj, 1}));
     return le16toh_internal(obj);
 }
 template<typename Stream> inline uint32_t ser_readdata32(Stream &s)
 {
     uint32_t obj;
-    s.read(std::as_writable_bytes(std::span{&obj, 1}));
+    s.read(std::as_writable_bytes(std::span<uint32_t, 1>{&obj, 1}));
     return le32toh_internal(obj);
 }
 template<typename Stream> inline uint32_t ser_readdata32be(Stream &s)
 {
     uint32_t obj;
-    s.read(std::as_writable_bytes(std::span{&obj, 1}));
+    s.read(std::as_writable_bytes(std::span<uint32_t, 1>{&obj, 1}));
     return be32toh_internal(obj);
 }
 template<typename Stream> inline uint64_t ser_readdata64(Stream &s)
 {
     uint64_t obj;
-    s.read(std::as_writable_bytes(std::span{&obj, 1}));
+    s.read(std::as_writable_bytes(std::span<uint64_t, 1>{&obj, 1}));
     return le64toh_internal(obj);
 }
 
-
-class SizeComputer;
 
 /**
  * Convert any argument to a reference to X, maintaining constness.
@@ -240,41 +248,76 @@ const Out& AsBase(const In& x)
 template<class T>
 concept CharNotInt8 = std::same_as<T, char> && !std::same_as<T, int8_t>;
 
-// clang-format off
-template <typename Stream, CharNotInt8 V> void Serialize(Stream&, V) = delete; // char serialization forbidden. Use uint8_t or int8_t
-template <typename Stream> void Serialize(Stream& s, std::byte a) { ser_writedata8(s, uint8_t(a)); }
-template <typename Stream> void Serialize(Stream& s, int8_t a)    { ser_writedata8(s, uint8_t(a)); }
-template <typename Stream> void Serialize(Stream& s, uint8_t a)   { ser_writedata8(s, a); }
-template <typename Stream> void Serialize(Stream& s, int16_t a)   { ser_writedata16(s, uint16_t(a)); }
-template <typename Stream> void Serialize(Stream& s, uint16_t a)  { ser_writedata16(s, a); }
-template <typename Stream> void Serialize(Stream& s, int32_t a)   { ser_writedata32(s, uint32_t(a)); }
-template <typename Stream> void Serialize(Stream& s, uint32_t a)  { ser_writedata32(s, a); }
-template <typename Stream> void Serialize(Stream& s, int64_t a)   { ser_writedata64(s, uint64_t(a)); }
-template <typename Stream> void Serialize(Stream& s, uint64_t a)  { ser_writedata64(s, a); }
+template <typename T>
+concept ByteOrIntegral = std::is_same_v<T, std::byte> ||
+    (std::is_integral_v<T> && !std::is_same_v<T, char>);
 
-template <typename Stream, BasicByte B, size_t N> void Serialize(Stream& s, const B (&a)[N])           { s.write(MakeByteSpan(a)); }
-template <typename Stream, BasicByte B, size_t N> void Serialize(Stream& s, const std::array<B, N>& a) { s.write(MakeByteSpan(a)); }
-template <typename Stream, BasicByte B, size_t N> void Serialize(Stream& s, std::span<B, N> span)      { s.write(std::as_bytes(span)); }
-template <typename Stream, BasicByte B>           void Serialize(Stream& s, std::span<B> span)         { s.write(std::as_bytes(span)); }
+template <typename Stream, CharNotInt8 V> void Serialize(Stream&, V) = delete; // char serialization forbidden. Use uint8_t or int8_t
+template <typename Stream, ByteOrIntegral T> void Serialize(Stream& s, T a)
+{
+    if constexpr (ContainsSizeComputer<Stream>) {
+        s.GetStream().seek(sizeof(T));
+    } else if constexpr (sizeof(T) == 1) {
+        ser_writedata8(s, static_cast<uint8_t>(a));   // (u)int8_t or std::byte or bool
+    } else if constexpr (sizeof(T) == 2) {
+        ser_writedata16(s, static_cast<uint16_t>(a)); // (u)int16_t
+    } else if constexpr (sizeof(T) == 4) {
+        ser_writedata32(s, static_cast<uint32_t>(a)); // (u)int32_t
+    } else {
+        static_assert(sizeof(T) == 8);
+        ser_writedata64(s, static_cast<uint64_t>(a)); // (u)int64_t
+    }
+}
+template <typename Stream, BasicByte B, int N> void Serialize(Stream& s, const B (&a)[N])
+{
+    if constexpr (ContainsSizeComputer<Stream>) {
+        s.GetStream().seek(N);
+    } else {
+        s.write(MakeByteSpan(a));
+    }
+}
+template <typename Stream, BasicByte B, std::size_t N> void Serialize(Stream& s, const std::array<B, N>& a)
+{
+    if constexpr (ContainsSizeComputer<Stream>) {
+        s.GetStream().seek(N);
+    } else {
+        s.write(MakeByteSpan(a));
+    }
+}
+template <typename Stream, BasicByte B, std::size_t N> void Serialize(Stream& s, std::span<B, N> span)
+{
+    if constexpr (ContainsSizeComputer<Stream>) {
+        s.GetStream().seek(N);
+    } else {
+        s.write(std::as_bytes(span));
+    }
+}
+template <typename Stream, BasicByte B> void Serialize(Stream& s, std::span<B> span)
+{
+    if constexpr (ContainsSizeComputer<Stream>) {
+        s.GetStream().seek(span.size());
+    } else {
+        s.write(std::as_bytes(span));
+    }
+}
 
 template <typename Stream, CharNotInt8 V> void Unserialize(Stream&, V) = delete; // char serialization forbidden. Use uint8_t or int8_t
-template <typename Stream> void Unserialize(Stream& s, std::byte& a) { a = std::byte(ser_readdata8(s)); }
-template <typename Stream> void Unserialize(Stream& s, int8_t& a)    { a = int8_t(ser_readdata8(s)); }
-template <typename Stream> void Unserialize(Stream& s, uint8_t& a)   { a = ser_readdata8(s); }
-template <typename Stream> void Unserialize(Stream& s, int16_t& a)   { a = int16_t(ser_readdata16(s)); }
-template <typename Stream> void Unserialize(Stream& s, uint16_t& a)  { a = ser_readdata16(s); }
-template <typename Stream> void Unserialize(Stream& s, int32_t& a)   { a = int32_t(ser_readdata32(s)); }
-template <typename Stream> void Unserialize(Stream& s, uint32_t& a)  { a = ser_readdata32(s); }
-template <typename Stream> void Unserialize(Stream& s, int64_t& a)   { a = int64_t(ser_readdata64(s)); }
-template <typename Stream> void Unserialize(Stream& s, uint64_t& a)  { a = ser_readdata64(s); }
-
-template <typename Stream, BasicByte B, size_t N> void Unserialize(Stream& s, B (&a)[N])            { s.read(MakeWritableByteSpan(a)); }
-template <typename Stream, BasicByte B, size_t N> void Unserialize(Stream& s, std::array<B, N>& a)  { s.read(MakeWritableByteSpan(a)); }
-template <typename Stream, BasicByte B, size_t N> void Unserialize(Stream& s, std::span<B, N> span) { s.read(std::as_writable_bytes(span)); }
-template <typename Stream, BasicByte B>           void Unserialize(Stream& s, std::span<B> span)    { s.read(std::as_writable_bytes(span)); }
-
-template <typename Stream> void Serialize(Stream& s, bool a)    { uint8_t f = a; ser_writedata8(s, f); }
-template <typename Stream> void Unserialize(Stream& s, bool& a) { uint8_t f = ser_readdata8(s); a = f; }
+template <typename Stream, ByteOrIntegral T> void Unserialize(Stream& s, T& a)
+{
+    if constexpr (sizeof(T) == 1) {
+        a = static_cast<T>(ser_readdata8(s));  // (u)int8_t or std::byte or bool
+    } else if constexpr (sizeof(T) == 2) {
+        a = static_cast<T>(ser_readdata16(s)); // (u)int16_t
+    } else if constexpr (sizeof(T) == 4) {
+        a = static_cast<T>(ser_readdata32(s)); // (u)int32_t
+    } else {
+        static_assert(sizeof(T) == 8);
+        a = static_cast<T>(ser_readdata64(s)); // (u)int64_t
+    }
+}
+template <typename Stream, BasicByte B, int N> void Unserialize(Stream& s, B (&a)[N]) { s.read(MakeWritableByteSpan(a)); }
+template <typename Stream, BasicByte B, std::size_t N> void Unserialize(Stream& s, std::array<B, N>& a) { s.read(MakeWritableByteSpan(a)); }
+template <typename Stream, BasicByte B, std::size_t N> void Unserialize(Stream& s, std::span<B, N> span) { s.read(std::as_writable_bytes(span)); }
 // clang-format on
 
 
@@ -293,12 +336,14 @@ constexpr inline unsigned int GetSizeOfCompactSize(uint64_t nSize)
     else                         return sizeof(unsigned char) + sizeof(uint64_t);
 }
 
-inline void WriteCompactSize(SizeComputer& os, uint64_t nSize);
-
 template<typename Stream>
 void WriteCompactSize(Stream& os, uint64_t nSize)
 {
-    if (nSize < 253)
+    if constexpr (ContainsSizeComputer<Stream>)
+    {
+        os.GetStream().seek(GetSizeOfCompactSize(nSize));
+    }
+    else if (nSize < 253)
     {
         ser_writedata8(os, nSize);
     }
@@ -405,7 +450,7 @@ struct CheckVarIntMode {
 };
 
 template<VarIntMode Mode, typename I>
-inline unsigned int GetSizeOfVarInt(I n)
+constexpr unsigned int GetSizeOfVarInt(I n)
 {
     CheckVarIntMode<Mode, I>();
     int nRet = 0;
@@ -418,25 +463,26 @@ inline unsigned int GetSizeOfVarInt(I n)
     return nRet;
 }
 
-template<typename I>
-inline void WriteVarInt(SizeComputer& os, I n);
-
 template<typename Stream, VarIntMode Mode, typename I>
 void WriteVarInt(Stream& os, I n)
 {
-    CheckVarIntMode<Mode, I>();
-    unsigned char tmp[(sizeof(n)*8+6)/7];
-    int len=0;
-    while(true) {
-        tmp[len] = (n & 0x7F) | (len ? 0x80 : 0x00);
-        if (n <= 0x7F)
-            break;
-        n = (n >> 7) - 1;
-        len++;
+    if constexpr (ContainsSizeComputer<Stream>) {
+        os.GetStream().seek(GetSizeOfVarInt<Mode, I>(n));
+    } else {
+        CheckVarIntMode<Mode, I>();
+        unsigned char tmp[(sizeof(n)*8+6)/7];
+        int len=0;
+        while(true) {
+            tmp[len] = (n & 0x7F) | (len ? 0x80 : 0x00);
+            if (n <= 0x7F)
+                break;
+            n = (n >> 7) - 1;
+            len++;
+        }
+        do {
+            ser_writedata8(os, tmp[len]);
+        } while(len--);
     }
-    do {
-        ser_writedata8(os, tmp[len]);
-    } while(len--);
 }
 
 template<typename Stream, VarIntMode Mode, typename I>
@@ -480,7 +526,7 @@ public:
  * serialization, and Unser(stream, object&) for deserialization. Serialization routines (inside
  * READWRITE, or directly with << and >> operators), can then use Using<Formatter>(object).
  *
- * This works by constructing a Wrapper<Formatter, T>-wrapped version of object, where T is
+ * This works by constructing a Wrapper<Formatter, T&>-wrapped version of object, where T is
  * const during serialization, and non-const during deserialization, which maintains const
  * correctness.
  */
@@ -525,12 +571,14 @@ struct CustomUintFormatter
     template <typename Stream, typename I> void Ser(Stream& s, I v)
     {
         if (v < 0 || v > MAX) throw std::ios_base::failure("CustomUintFormatter value out of range");
-        if (BigEndian) {
+        if constexpr (ContainsSizeComputer<Stream>) {
+            s.GetStream().seek(Bytes);
+        } else if (BigEndian) {
             uint64_t raw = htobe64_internal(v);
-            s.write(std::as_bytes(std::span{&raw, 1}).last(Bytes));
+            s.write(std::as_bytes(std::span{&raw, 1}).template last<Bytes>());
         } else {
             uint64_t raw = htole64_internal(v);
-            s.write(std::as_bytes(std::span{&raw, 1}).first(Bytes));
+            s.write(std::as_bytes(std::span{&raw, 1}).template first<Bytes>());
         }
     }
 
@@ -540,10 +588,10 @@ struct CustomUintFormatter
         static_assert(std::numeric_limits<U>::max() >= MAX && std::numeric_limits<U>::min() <= 0, "Assigned type too small");
         uint64_t raw = 0;
         if (BigEndian) {
-            s.read(std::as_writable_bytes(std::span{&raw, 1}).last(Bytes));
+            s.read(std::as_writable_bytes(std::span{&raw, 1}).last<Bytes>());
             v = static_cast<I>(be64toh_internal(raw));
         } else {
-            s.read(std::as_writable_bytes(std::span{&raw, 1}).first(Bytes));
+            s.read(std::as_writable_bytes(std::span{&raw, 1}).first<Bytes>());
             v = static_cast<I>(le64toh_internal(raw));
         }
     }
@@ -1056,9 +1104,16 @@ protected:
 public:
     SizeComputer() = default;
 
+    SizeComputer& GetStream() { return *this; }
+    const SizeComputer& GetStream() const { return *this; };
+
     void write(std::span<const std::byte> src)
     {
         m_size += src.size();
+    }
+    void write(std::span<const std::byte, 1>)
+    {
+        this->m_size += 1;
     }
 
     /** Pretend this many bytes are written, without specifying them. */
@@ -1080,26 +1135,11 @@ public:
     }
 };
 
-template<typename I>
-inline void WriteVarInt(SizeComputer &s, I n)
-{
-    s.seek(GetSizeOfVarInt<I>(n));
-}
-
-inline void WriteCompactSize(SizeComputer &s, uint64_t nSize)
-{
-    s.seek(GetSizeOfCompactSize(nSize));
-}
-
 template <typename T>
 uint64_t GetSerializeSize(const T& t)
 {
     return (SizeComputer() << t).size();
 }
-
-//! Check if type contains a stream by seeing if has a GetStream() method.
-template<typename T>
-concept ContainsStream = requires(T t) { t.GetStream(); };
 
 /** Wrapper that overrides the GetParams() function of a stream. */
 template <typename SubStream, typename Params>
@@ -1125,7 +1165,9 @@ public:
     template <typename U> ParamsStream& operator<<(const U& obj) { ::Serialize(*this, obj); return *this; }
     template <typename U> ParamsStream& operator>>(U&& obj) { ::Unserialize(*this, obj); return *this; }
     void write(std::span<const std::byte> src) { GetStream().write(src); }
+    void write(std::span<const std::byte, 1> src) { GetStream().write(src); }
     void read(std::span<std::byte> dst) { GetStream().read(dst); }
+    void read(std::span<std::byte, 1> dst) { GetStream().read(dst); }
     void ignore(size_t num) { GetStream().ignore(num); }
     bool eof() const { return GetStream().eof(); }
     size_t size() const { return GetStream().size(); }
