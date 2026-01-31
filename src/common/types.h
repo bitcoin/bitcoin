@@ -13,6 +13,8 @@
 #ifndef BITCOIN_COMMON_TYPES_H
 #define BITCOIN_COMMON_TYPES_H
 
+#include <optional>
+
 namespace common {
 enum class PSBTError {
     MISSING_INPUTS,
@@ -23,6 +25,36 @@ enum class PSBTError {
     INCOMPLETE,
     OK,
 };
+/**
+ * Instructions for how a PSBT should be signed or filled with information.
+ */
+struct PSBTFillOptions {
+    /**
+     * Whether to sign or not.
+     */
+    bool sign{true};
+
+    /**
+     * The sighash type to use when signing (if PSBT does not specify).
+     */
+    std::optional<int> sighash_type{std::nullopt};
+
+    /**
+     * Whether to create the final scriptSig or scriptWitness if possible.
+     */
+    bool finalize{true};
+
+    /**
+     * Whether to fill in bip32 derivation information if available.
+     */
+    bool bip32_derivs{true};
+
+    /**
+     * Only sign the key path (for taproot inputs).
+     */
+    bool avoid_script_path{false};
+};
+
 } // namespace common
 
 #endif // BITCOIN_COMMON_TYPES_H
