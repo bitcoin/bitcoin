@@ -65,7 +65,7 @@ static void SignTransactionSingleInput(benchmark::Bench& bench, InputType input_
         const CScript& prev_spk = prev_spks[(iter++) % prev_spks.size()];
         coins[prevout] = Coin(CTxOut(10000, prev_spk), /*nHeightIn=*/100, /*fCoinBaseIn=*/false);
         std::map<int, bilingual_str> input_errors;
-        bool complete = SignTransaction(tx, &keystore, coins, SIGHASH_ALL, input_errors);
+        bool complete = SignTransaction(tx, &keystore, coins, {.sighash_type = SIGHASH_ALL}, input_errors);
         assert(complete);
     });
 }
