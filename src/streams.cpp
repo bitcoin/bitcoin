@@ -30,7 +30,7 @@ std::size_t AutoFile::detail_fread(std::span<std::byte> dst)
     return ret;
 }
 
-void AutoFile::seek(int64_t offset, int origin)
+void AutoFile::seek(int64_t offset, SeekFrom origin)
 {
     if (IsNull()) {
         throw std::ios_base::failure("AutoFile::seek: file handle is nullptr");
@@ -38,9 +38,9 @@ void AutoFile::seek(int64_t offset, int origin)
     if (std::fseek(m_file, offset, origin) != 0) {
         throw std::ios_base::failure(feof() ? "AutoFile::seek: end of file" : "AutoFile::seek: fseek failed");
     }
-    if (origin == SEEK_SET) {
+    if (origin == SeekFrom::Set) {
         m_position = offset;
-    } else if (origin == SEEK_CUR && m_position.has_value()) {
+    } else if (origin == SeekFrom::Curr && m_position.has_value()) {
         *m_position += offset;
     } else {
         int64_t r{std::ftell(m_file)};
@@ -64,10 +64,10 @@ int64_t AutoFile::size()
     }
     // Temporarily save the current position
     int64_t current_pos = tell();
-    seek(0, SEEK_END);
+    seek(0, SeekFrom::End);
     int64_t file_size = tell();
     // Restore the original position
-    seek(current_pos, SEEK_SET);
+    seek(current_pos, SeekFrom::Set);
     return file_size;
 }
 
