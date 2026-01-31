@@ -95,6 +95,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   common/args.cpp
   common/bloom.cpp
   common/config.cpp
+  common/http.cpp
   common/init.cpp
   common/interfaces.cpp
   common/messages.cpp
@@ -281,9 +282,6 @@ target_link_libraries(bitcoin_node
     minisketch
     univalue
     Boost::headers
-    $<TARGET_NAME_IF_EXISTS:libevent::core>
-    $<TARGET_NAME_IF_EXISTS:libevent::extra>
-    $<TARGET_NAME_IF_EXISTS:libevent::pthreads>
     $<TARGET_NAME_IF_EXISTS:USDT::headers>
 )
 
@@ -347,8 +345,6 @@ if(BUILD_CLI)
     bitcoin_cli
     bitcoin_common
     bitcoin_util
-    libevent::core
-    libevent::extra
   )
   install_binary_component(bitcoin-cli HAS_MANPAGE)
 endif()

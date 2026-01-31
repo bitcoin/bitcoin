@@ -606,6 +606,43 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
     return mempool_transactions;
 }
 
+SocketTestingSetup::SocketTestingSetup()
+{
+    // "back up" the current CreateSock() so we can restore it after the test
+    m_create_sock_orig = CreateSock;
+
+    CreateSock = [this](int, int, int) {
+        // This is a mock Listening Socket that a server can "bind" to and
+        // listen to for incoming connections. We won't need to access its I/O
+        // pipes because we don't read or write directly to it. It will return
+        // Connected Sockets from the queue via its Accept() method.
+        return std::make_unique<DynSock>(std::make_shared<DynSock::Pipes>(), m_accepted_sockets);
+    };
+};
+
+SocketTestingSetup::~SocketTestingSetup()
+{
+    CreateSock = m_create_sock_orig;
+}
+
+std::shared_ptr<DynSock::Pipes> SocketTestingSetup::ConnectClient(std::span<const std::byte> data) const
+{
+    // I/O pipes for a mock Connected Socket we can read and write to.
+    auto connected_socket_pipes(std::make_shared<DynSock::Pipes>());
+
+    // Insert the payload
+    connected_socket_pipes->recv.PushBytes(data.data(), data.size());
+
+    // Create the Mock Connected Socket that represents a client.
+    // It needs I/O pipes but its queue can remain empty
+    std::unique_ptr<DynSock> connected_socket{std::make_unique<DynSock>(connected_socket_pipes, std::make_shared<DynSock::Queue>())};
+
+    // Push into the queue of Accepted Sockets returned by the local CreateSock()
+    m_accepted_sockets->Push(std::move(connected_socket));
+
+    return connected_socket_pipes;
+}
+
 /**
  * @returns a real block (0000000000013b8ab2cd513b0261a14096412195a72a0c4827d229dcc7e0f7af)
  *      with 9 txs.
