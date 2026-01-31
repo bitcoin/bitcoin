@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <coins.h>
+#include <coinsviewoverlay.h>
 #include <consensus/amount.h>
 #include <consensus/tx_check.h>
 #include <consensus/tx_verify.h>
@@ -42,11 +43,10 @@ void initialize_coins_view()
     static const auto testing_setup = MakeNoLogFileContext<>();
 }
 
-void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend_coins_view, bool is_db)
+void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& coins_view_cache, CCoinsView& backend_coins_view, bool is_db)
 {
     bool good_data{true};
 
-    CCoinsViewCache coins_view_cache{&backend_coins_view, /*deterministic=*/true};
     if (is_db) coins_view_cache.SetBestBlock(uint256::ONE);
     COutPoint random_out_point;
     Coin random_coin;
@@ -312,7 +312,8 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     CCoinsView backend_coins_view;
-    TestCoinsView(fuzzed_data_provider, backend_coins_view, /*is_db=*/false);
+    CCoinsViewCache coins_view_cache{&backend_coins_view, /*deterministic=*/true};
+    TestCoinsView(fuzzed_data_provider, coins_view_cache, backend_coins_view, /*is_db=*/false);
 }
 
 FUZZ_TARGET(coins_view_db, .init = initialize_coins_view)
@@ -323,6 +324,15 @@ FUZZ_TARGET(coins_view_db, .init = initialize_coins_view)
         .cache_bytes = 1_MiB,
         .memory_only = true,
     };
-    CCoinsViewDB coins_db{std::move(db_params), CoinsViewOptions{}};
-    TestCoinsView(fuzzed_data_provider, coins_db, /*is_db=*/true);
+    CCoinsViewDB backend_coins_view{std::move(db_params), CoinsViewOptions{}};
+    CCoinsViewCache coins_view_cache{&backend_coins_view, /*deterministic=*/true};
+    TestCoinsView(fuzzed_data_provider, coins_view_cache, backend_coins_view, /*is_db=*/true);
+}
+
+FUZZ_TARGET(coins_view_async, .init = initialize_coins_view)
+{
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    CCoinsView backend_coins_view;
+    CoinsViewOverlay coins_view_cache{&backend_coins_view, /*determinsistic=*/true};
+    TestCoinsView(fuzzed_data_provider, coins_view_cache, backend_coins_view, /*is_db=*/false);
 }
