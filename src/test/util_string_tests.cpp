@@ -4,10 +4,10 @@
 
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <vector>
 
 #include <boost/test/unit_test.hpp>
 #include <test/util/setup_common.h>
+#include <test/util/str.h>
 
 using namespace util;
 using util::detail::CheckNumFormatSpecifiers;
@@ -40,12 +40,6 @@ template <unsigned WrongNumArgs>
 void FailFmtWithError(const char* wrong_fmt, std::string_view error)
 {
     BOOST_CHECK_EXCEPTION(CheckNumFormatSpecifiers<WrongNumArgs>(wrong_fmt), const char*, HasReason{error});
-}
-
-std::vector<std::byte> StringToBuffer(const std::string& str)
-{
-    auto span = std::as_bytes(std::span(str));
-    return {span.begin(), span.end()};
 }
 
 BOOST_AUTO_TEST_CASE(ConstevalFormatString_NumSpec)
