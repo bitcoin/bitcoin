@@ -144,7 +144,7 @@ class CoinsViewBottom final : public CCoinsView
     std::map<COutPoint, Coin> m_data;
 
 public:
-    std::optional<Coin> GetCoin(const COutPoint& outpoint) const final
+    std::optional<Coin> GetCoin(const COutPoint& outpoint) const noexcept final
     {
         if (auto it{m_data.find(outpoint)}; it != m_data.end()) {
             assert(!it->second.IsSpent());

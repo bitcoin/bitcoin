@@ -20,7 +20,6 @@
 #include <cassert>
 #include <cstdint>
 
-#include <functional>
 #include <unordered_map>
 
 /**
@@ -302,10 +301,10 @@ class CCoinsView
 {
 public:
     //! Retrieve the Coin (unspent transaction output) for a given outpoint.
-    virtual std::optional<Coin> GetCoin(const COutPoint& outpoint) const;
+    virtual std::optional<Coin> GetCoin(const COutPoint& outpoint) const noexcept;
 
     //! Just check whether a given outpoint is unspent.
-    virtual bool HaveCoin(const COutPoint &outpoint) const;
+    virtual bool HaveCoin(const COutPoint &outpoint) const noexcept;
 
     //! Retrieve the block hash whose state this CCoinsView currently represents
     virtual uint256 GetBestBlock() const;
@@ -339,8 +338,8 @@ protected:
 
 public:
     CCoinsViewBacked(CCoinsView *viewIn);
-    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
-    bool HaveCoin(const COutPoint &outpoint) const override;
+    std::optional<Coin> GetCoin(const COutPoint& outpoint) const noexcept override;
+    bool HaveCoin(const COutPoint &outpoint) const noexcept override;
     uint256 GetBestBlock() const override;
     std::vector<uint256> GetHeadBlocks() const override;
     void SetBackend(CCoinsView &viewIn);
@@ -385,8 +384,8 @@ public:
     CCoinsViewCache(const CCoinsViewCache &) = delete;
 
     // Standard CCoinsView methods
-    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
-    bool HaveCoin(const COutPoint &outpoint) const override;
+    std::optional<Coin> GetCoin(const COutPoint& outpoint) const noexcept override;
+    bool HaveCoin(const COutPoint &outpoint) const noexcept override;
     uint256 GetBestBlock() const override;
     void SetBestBlock(const uint256 &hashBlock);
     void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) override;
@@ -399,7 +398,7 @@ public:
      * The semantics are the same as HaveCoin(), but no calls to
      * the backing CCoinsView are made.
      */
-    bool HaveCoinInCache(const COutPoint &outpoint) const;
+    bool HaveCoinInCache(const COutPoint &outpoint) const noexcept;
 
     /**
      * Return a reference to Coin in the cache, or coinEmpty if not found. This is
@@ -411,7 +410,7 @@ public:
      * on! To be safe, best to not hold the returned reference through any other
      * calls to this cache.
      */
-    const Coin& AccessCoin(const COutPoint &output) const;
+    const Coin& AccessCoin(const COutPoint &output) const noexcept;
 
     /**
      * Add a coin. Set possible_overwrite to true if an unspent version may
@@ -501,7 +500,7 @@ private:
      * @note this is marked const, but may actually append to `cacheCoins`, increasing
      * memory usage.
      */
-    CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
+    CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const noexcept;
 };
 
 //! Utility function to add all of a transaction's outputs to a cache.
@@ -517,30 +516,5 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction& tx, int nHeight, bool 
 //! which is not found in the cache, it can cause up to MAX_OUTPUTS_PER_BLOCK
 //! lookups to database, so it should be used with care.
 const Coin& AccessByTxid(const CCoinsViewCache& cache, const Txid& txid);
-
-/**
- * This is a minimally invasive approach to shutdown on LevelDB read errors from the
- * chainstate, while keeping user interface out of the common library, which is shared
- * between bitcoind, and bitcoin-qt and non-server tools.
- *
- * Writes do not need similar protection, as failure to write is handled by the caller.
-*/
-class CCoinsViewErrorCatcher final : public CCoinsViewBacked
-{
-public:
-    explicit CCoinsViewErrorCatcher(CCoinsView* view) : CCoinsViewBacked(view) {}
-
-    void AddReadErrCallback(std::function<void()> f) {
-        m_err_callbacks.emplace_back(std::move(f));
-    }
-
-    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
-    bool HaveCoin(const COutPoint &outpoint) const override;
-
-private:
-    /** A list of callbacks to execute upon leveldb read error. */
-    std::vector<std::function<void()>> m_err_callbacks;
-
-};
 
 #endif // BITCOIN_COINS_H

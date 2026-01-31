@@ -1374,9 +1374,9 @@ static ChainstateLoadResult InitAndLoadChainstate(
     options.check_blocks = args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
     options.check_level = args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL);
     options.require_full_verification = args.IsArgSet("-checkblocks") || args.IsArgSet("-checklevel");
-    options.coins_error_cb = [] {
+    options.read_error_cb = [] {
         uiInterface.ThreadSafeMessageBox(
-            _("Error reading from database, shutting down."),
+            _("Cannot read from database, shutting down."),
             CClientUIInterface::MSG_ERROR);
     };
     uiInterface.InitMessage(_("Loading block index…"));

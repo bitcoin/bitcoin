@@ -46,10 +46,11 @@ struct CoinEntry {
 
 } // namespace
 
-CCoinsViewDB::CCoinsViewDB(DBParams db_params, CoinsViewOptions options) :
+CCoinsViewDB::CCoinsViewDB(DBParams db_params, CoinsViewOptions options, std::function<void()> read_error_cb) :
     m_db_params{std::move(db_params)},
     m_options{std::move(options)},
-    m_db{std::make_unique<CDBWrapper>(m_db_params)} { }
+    m_db{std::make_unique<CDBWrapper>(m_db_params)},
+    m_read_error_cb{std::move(read_error_cb)} { }
 
 void CCoinsViewDB::ResizeCache(size_t new_cache_size)
 {
@@ -65,17 +66,24 @@ void CCoinsViewDB::ResizeCache(size_t new_cache_size)
     }
 }
 
-std::optional<Coin> CCoinsViewDB::GetCoin(const COutPoint& outpoint) const
+std::optional<Coin> CCoinsViewDB::GetCoin(const COutPoint& outpoint) const noexcept
 {
-    if (Coin coin; m_db->Read(CoinEntry(&outpoint), coin)) {
-        Assert(!coin.IsSpent()); // The UTXO database should never contain spent coins
-        return coin;
+    try {
+        if (Coin coin; m_db->Read(CoinEntry(&outpoint), coin)) {
+            Assert(!coin.IsSpent()); // The UTXO database should never contain spent coins
+            return coin;
+        }
+        return std::nullopt;
+    } catch (const std::runtime_error& e) {
+        m_read_error_cb();
+        LogError("Database error in GetCoin: %s", e.what());
+        std::abort();
     }
-    return std::nullopt;
 }
 
-bool CCoinsViewDB::HaveCoin(const COutPoint &outpoint) const {
-    return m_db->Exists(CoinEntry(&outpoint));
+bool CCoinsViewDB::HaveCoin(const COutPoint& outpoint) const noexcept
+{
+    return !!CCoinsViewDB::GetCoin(outpoint);
 }
 
 uint256 CCoinsViewDB::GetBestBlock() const {

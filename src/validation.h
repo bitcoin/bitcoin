@@ -482,9 +482,6 @@ public:
     //! All unspent coins reside in this store.
     CCoinsViewDB m_dbview GUARDED_BY(cs_main);
 
-    //! This view wraps access to the leveldb instance and handles read errors gracefully.
-    CCoinsViewErrorCatcher m_catcherview GUARDED_BY(cs_main);
-
     //! This is the top layer of the cache hierarchy - it keeps as many coins in memory as
     //! can fit per the dbcache setting.
     std::unique_ptr<CCoinsViewCache> m_cacheview GUARDED_BY(cs_main);
@@ -493,13 +490,13 @@ public:
     //! Reset between calls and flushed only on success, so invalid blocks don't pollute the underlying cache.
     std::unique_ptr<CCoinsViewCache> m_connect_block_view GUARDED_BY(cs_main);
 
-    //! This constructor initializes CCoinsViewDB and CCoinsViewErrorCatcher instances, but it
-    //! *does not* create a CCoinsViewCache instance by default. This is done separately because the
+    //! This constructor initializes CCoinsViewDB, but it *does not* create a
+    //! CCoinsViewCache instance by default. This is done separately because the
     //! presence of the cache has implications on whether or not we're allowed to flush the cache's
     //! state to disk, which should not be done until the health of the database is verified.
     //!
     //! All arguments forwarded onto CCoinsViewDB.
-    CoinsViews(DBParams db_params, CoinsViewOptions options);
+    CoinsViews(DBParams db_params, CoinsViewOptions options, std::function<void()> read_error_cb = [] {});
 
     //! Initialize the CCoinsViewCache member.
     void InitCache() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -605,7 +602,8 @@ public:
     void InitCoinsDB(
         size_t cache_size_bytes,
         bool in_memory,
-        bool should_wipe);
+        bool should_wipe,
+        std::function<void()> read_error_cb = [] {});
 
     //! Initialize the in-memory coins cache (to be done after the health of the on-disk database
     //! is verified).
@@ -700,14 +698,6 @@ public:
     CTxMemPool* GetMempool()
     {
         return m_mempool;
-    }
-
-    //! @returns A reference to a wrapped view of the in-memory UTXO set that
-    //!     handles disk read errors gracefully.
-    CCoinsViewErrorCatcher& CoinsErrorCatcher() EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
-    {
-        AssertLockHeld(::cs_main);
-        return Assert(m_coins_views)->m_catcherview;
     }
 
     //! Destructs all objects related to accessing the UTXO set.

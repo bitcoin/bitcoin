@@ -15,6 +15,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -37,11 +38,12 @@ protected:
     DBParams m_db_params;
     CoinsViewOptions m_options;
     std::unique_ptr<CDBWrapper> m_db;
+    std::function<void()> m_read_error_cb;
 public:
-    explicit CCoinsViewDB(DBParams db_params, CoinsViewOptions options);
+    explicit CCoinsViewDB(DBParams db_params, CoinsViewOptions options, std::function<void()> read_error_cb = [] {});
 
-    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
-    bool HaveCoin(const COutPoint &outpoint) const override;
+    std::optional<Coin> GetCoin(const COutPoint& outpoint) const noexcept override;
+    bool HaveCoin(const COutPoint &outpoint) const noexcept override;
     uint256 GetBestBlock() const override;
     std::vector<uint256> GetHeadBlocks() const override;
     void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) override;
