@@ -26,6 +26,7 @@ from test_framework.script import SEQUENCE_LOCKTIME_TYPE_FLAG
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    assert_greater_than,
 )
 from test_framework.wallet_util import (
     get_generate_key,
@@ -54,7 +55,9 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         if wallet is not None:
             wrpc = wallet
 
-        result = wrpc.importdescriptors([req])
+        if not isinstance(req, list):
+            req = [req]
+        result = wrpc.importdescriptors(req)
         observed_warnings = []
         if 'warnings' in result[0]:
             observed_warnings = result[0]['warnings']
@@ -64,6 +67,74 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         if error_code is not None:
             assert_equal(result[0]['error']['code'], error_code)
             assert_equal(result[0]['error']['message'], error_message)
+
+    def test_importdescriptor_never_timestamp(self, *, node, funding_wallet):
+        self.log.info("Test importing descriptors with timestamp as never")
+        assert_greater_than(funding_wallet.getbalance(), 0)
+
+        key = get_generate_key()
+        funding_amount = 1 # BTC
+        funding_tx_id = funding_wallet.send(outputs=[{key.p2wpkh_addr: funding_amount}])["txid"]
+        self.generate(node, 1, sync_fun=self.no_op)
+
+        wpkh_desc = descsum_create("wpkh(" + key.pubkey + ")")
+        spare_pkh_desc = descsum_create("pkh(" + key.pubkey + ")")
+
+        wallet_configs = [
+            {
+                "name": "never_wallet",
+                "request": [{"desc": wpkh_desc, "timestamp": "never"}],
+                "expected_balance": 0,
+                "expected_msgs": [],
+                "unexpected_msgs": ["Rescanning last"],
+                "expected_txid": None
+            },
+            {
+                "name": "now_wallet",
+                "request": [{"desc": wpkh_desc, "timestamp": "now"}],
+                "expected_balance": funding_amount,
+                "expected_msgs": ["Rescanning last"],
+                "unexpected_msgs": [],
+                "expected_txid": funding_tx_id
+            },
+            {
+                "name": "never_now_wallet",
+                "request": [
+                    {"desc": wpkh_desc, "timestamp": "never"},
+                    {"desc": spare_pkh_desc, "timestamp": "now"},
+                ],
+                "expected_balance": funding_amount,
+                "expected_msgs": ["Rescanning last"],
+                "unexpected_msgs": [],
+                "expected_txid": funding_tx_id
+            }
+        ]
+
+        for config in wallet_configs:
+            # Create and open wallet
+            node.createwallet(wallet_name=config["name"], disable_private_keys=True, blank=True)
+            wallet = node.get_wallet_rpc(config["name"])
+
+            # Initial balance check
+            assert_equal(wallet.getbalance(), 0)
+
+            # Debug log validation and descriptor import
+            with node.assert_debug_log(expected_msgs=config["expected_msgs"],
+                                    unexpected_msgs=config["unexpected_msgs"]):
+                self.test_importdesc(config["request"], success=True, wallet=wallet)
+
+            # Validate resulting balance
+            assert_equal(wallet.getbalance(), config["expected_balance"])
+
+            if config["expected_txid"]:
+                for tx in wallet.listtransactions():
+                    assert_equal(tx["txid"], config["expected_txid"])
+            else:
+                assert_equal(wallet.listtransactions(), [])
+
+            # Unload wallet after processing
+            node.unloadwallet(config["name"])
+
 
     def run_test(self):
         self.log.info('Setting up wallets')
@@ -692,6 +763,12 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               success=True,
                               warnings=["Unknown output type, cannot set descriptor to active."])
 
+        self.log.info("Test importing a descriptor with negative timestamp")
+        assert_raises_rpc_error(-3, "timestamp should be greater than zero", w1.importdescriptors, [{"desc": descsum_create("pk(tpubDCJtdt5dgJpdhW4MtaVYDhG4T4tF6jcLR1PxL43q9pq1mxvXgMS9Mzw1HnXG15vxUGQJMMSqCQHMTy3F1eW5VkgVroWzchsPD5BUojrcWs8/*)"),
+                                "active": True,
+                                "range": 1,
+                                "timestamp": -2}])
+
         self.log.info("Test importing a descriptor to an encrypted wallet")
 
         descriptor = {"desc": descsum_create("pkh(" + xpriv + "/1h/*h)"),
@@ -785,6 +862,8 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             assert_equal(w_multipath.getrawchangeaddress(address_type="bech32"), w_multisplit.getrawchangeaddress(address_type="bech32"))
         assert_equal(sorted(w_multipath.listdescriptors()["descriptors"], key=lambda x: x["desc"]), sorted(w_multisplit.listdescriptors()["descriptors"], key=lambda x: x["desc"]))
 
+        self.test_importdescriptor_never_timestamp(node=self.nodes[0], funding_wallet=w0)
+
         self.log.info("Test older() safety")
 
         for flag in [0, SEQUENCE_LOCKTIME_TYPE_FLAG]:
@@ -818,7 +897,6 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                 success=True,
                 warnings=[expected_warning],
             )
-
 
 if __name__ == '__main__':
     ImportDescriptorsTest(__file__).main()
