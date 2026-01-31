@@ -40,7 +40,7 @@ class PCPTestingSetup : public BasicTestingSetup
 {
 public:
     explicit PCPTestingSetup(const ChainType chainType = ChainType::MAIN,
-                             TestOpts opts = {})
+                             TestOpts opts = {.mock_steady_clock = true})
         : BasicTestingSetup{chainType, opts},
           m_create_sock_orig{CreateSock}
     {
@@ -62,7 +62,6 @@ public:
     ~PCPTestingSetup()
     {
         CreateSock = m_create_sock_orig;
-        MockableSteadyClock::ClearMockTime();
     }
 
     // Default testing nonce.

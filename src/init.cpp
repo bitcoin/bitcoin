@@ -342,6 +342,12 @@ void Shutdown(NodeContext& node)
         }
     }
 
+    if (node.block_template_cache) {
+        if (node.validation_signals) {
+            node.validation_signals->UnregisterValidationInterface(node.block_template_cache.get());
+        }
+    }
+
     // FlushStateToDisk generates a ChainStateFlushed callback, which we should avoid missing
     if (node.chainman) {
         LOCK(cs_main);
@@ -398,6 +404,7 @@ void Shutdown(NodeContext& node)
     }
     node.mempool.reset();
     node.fee_estimator.reset();
+    node.block_template_cache.reset();
     node.chainman.reset();
     node.validation_signals.reset();
     node.scheduler.reset();
@@ -1847,6 +1854,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     ChainstateManager& chainman = *Assert(node.chainman);
     auto& kernel_notifications{*Assert(node.notifications)};
+
+    node.block_template_cache = std::make_unique<node::BlockTemplateCache>(*node.mempool.get(), chainman);
+    validation_signals.RegisterValidationInterface(node.block_template_cache.get());
 
     assert(!node.peerman);
     node.peerman = PeerManager::make(*node.connman, *node.addrman,
