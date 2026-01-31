@@ -6,16 +6,17 @@
 #define BITCOIN_COMMON_RUN_COMMAND_H
 
 #include <string>
+#include <vector>
 
 class UniValue;
 
 /**
  * Execute a command which returns JSON, and parse the result.
  *
- * @param str_command The command to execute, including any arguments
+ * @param cmd_args The command and arguments
  * @param str_std_in string to pass to stdin
  * @return parsed JSON
  */
-UniValue RunCommandParseJSON(const std::string& str_command, const std::string& str_std_in="");
+UniValue RunCommandParseJSON(const std::vector<std::string>& cmd_args, const std::string& str_std_in = "");
 
 #endif // BITCOIN_COMMON_RUN_COMMAND_H
