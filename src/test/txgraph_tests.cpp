@@ -291,4 +291,159 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_big_singletons)
     }
 }
 
+BOOST_AUTO_TEST_CASE(txgraph_chunk_chain)
+{
+    /** The maximum cluster count used in this test. */
+    static constexpr int MAX_CLUSTER_COUNT = 50;
+    /** The total number of transactions in the test. */
+    static constexpr int NUM_TOTAL_TX = 4;
+    /** Set a very large cluster size limit so that only the count limit is triggered. */
+    static constexpr int32_t MAX_CLUSTER_SIZE = 100'000 * 100;
+
+    // Create a new graph for the test.
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, NUM_ACCEPTABLE_ITERS);
+
+    auto worst_chunk_checker = [&graph](const std::vector<FeePerWeight>& expected_chunk_txs_feerates, FeePerWeight expected_chunk_feerate) {
+        auto chunk = graph->GetWorstMainChunk();
+        BOOST_CHECK_EQUAL(chunk.first.size(), expected_chunk_txs_feerates.size());
+        for (size_t i = 0; i  < expected_chunk_txs_feerates.size(); i++)
+            BOOST_CHECK(graph->GetIndividualFeerate(*chunk.first[i]) == expected_chunk_txs_feerates[i]);
+
+        BOOST_CHECK(chunk.second == expected_chunk_feerate);
+    };
+
+    auto block_builder_checker = [&graph](std::vector<std::vector<TxGraph::Ref*>> expected_chunks) {
+        std::vector<std::vector<TxGraph::Ref*>> chunks;
+        auto builder = graph->GetBlockBuilder();
+        FeePerWeight last_chunk_feerate;
+        while (auto chunk = builder->GetCurrentChunk()) {
+            FeePerWeight sum;
+            for (TxGraph::Ref* ref : chunk->first) {
+                // The reported chunk feerate must match the chunk feerate obtained by asking
+                // it for each of the chunk's transactions individually.
+                BOOST_CHECK(graph->GetMainChunkFeerate(*ref) == chunk->second);
+                // Verify the chunk feerate matches the sum of the reported individual feerates.
+                sum += graph->GetIndividualFeerate(*ref);
+            }
+            BOOST_CHECK(sum == chunk->second);
+            chunks.push_back(std::move(chunk->first));
+            last_chunk_feerate = chunk->second;
+            builder->Include();
+        }
+
+        BOOST_CHECK(chunks == expected_chunks);
+        auto& last_chunk = chunks.back();
+        // The last chunk returned by the BlockBuilder must match GetWorstMainChunk, in reverse.
+        std::reverse(last_chunk.begin(), last_chunk.end());
+        auto [worst_chunk, worst_chunk_feerate] = graph->GetWorstMainChunk();
+        BOOST_CHECK(last_chunk == worst_chunk);
+        BOOST_CHECK(last_chunk_feerate == worst_chunk_feerate);
+    };
+
+    std::vector<TxGraph::Ref> refs;
+    refs.reserve(NUM_TOTAL_TX);
+
+    FeePerWeight feerateA{2, 10};
+    FeePerWeight feerateB{1, 10};
+    FeePerWeight feerateC{2, 10};
+    FeePerWeight feerateD{4, 10};
+
+    // everytime adding a transaction, test the chunk status
+    // [A]
+    refs.push_back(graph->AddTransaction(feerateA));
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 1);
+    worst_chunk_checker({feerateA}, feerateA);
+    block_builder_checker({{&refs[0]}});
+    // [A, B]
+    refs.push_back(graph->AddTransaction(feerateB));
+    graph->AddDependency(/*parent=*/refs[0], /*child=*/refs[1]);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 2);
+    worst_chunk_checker({feerateB}, feerateB);
+    block_builder_checker({{&refs[0]}, {&refs[1]}});
+
+    // [A, BC]
+    refs.push_back(graph->AddTransaction(feerateC));
+    graph->AddDependency(/*parent=*/refs[1], /*child=*/refs[2]);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 3);
+    worst_chunk_checker({feerateC, feerateB}, FeePerWeight{3, 20});
+    block_builder_checker({{&refs[0]}, {&refs[1], &refs[2]}});
+
+    // [ABCD]
+    refs.push_back(graph->AddTransaction(feerateD));
+    graph->AddDependency(/*parent=*/refs[2], /*child=*/refs[3]);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 4);
+    worst_chunk_checker({feerateD, feerateC, feerateB, feerateA}, FeePerWeight{9, 40});
+    block_builder_checker({{&refs[0], &refs[1], &refs[2], &refs[3]}});
+
+    graph->SanityCheck();
+
+    // D->C->A
+    graph->RemoveTransaction(refs[1]);
+    // txgraph is not responsible for removing the descendants or ancestors
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 3);
+    // only A remains there
+    graph->RemoveTransaction(refs[2]);
+    graph->RemoveTransaction(refs[3]);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 1);
+    worst_chunk_checker({feerateA}, feerateA);
+}
+
+BOOST_AUTO_TEST_CASE(txgraph_staging)
+{
+    /** The maximum cluster count used in this test. */
+    static constexpr int MAX_CLUSTER_COUNT = 50;
+    /** The total number of transactions in the test. */
+    static constexpr int NUM_TOTAL_TX = 2;
+    /** Set a very large cluster size limit so that only the count limit is triggered. */
+    static constexpr int32_t MAX_CLUSTER_SIZE = 100'000 * 100;
+
+    // Create a new graph for the test.
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, NUM_ACCEPTABLE_ITERS);
+
+    std::vector<TxGraph::Ref> refs;
+    refs.reserve(NUM_TOTAL_TX);
+
+    FeePerWeight feerateA{2, 10};
+    FeePerWeight feerateB{1, 10};
+
+    // everytime adding a transaction, test the chunk status
+    // [A]
+    refs.push_back(graph->AddTransaction(feerateA));
+    BOOST_CHECK_EQUAL(graph->HaveStaging(), false);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 1);
+
+    graph->StartStaging();
+    BOOST_CHECK_EQUAL(graph->HaveStaging(), true);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 1);
+
+    // [A, B]
+    refs.push_back(graph->AddTransaction(feerateB));
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::MAIN), 1);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 2);
+    BOOST_CHECK_EQUAL(graph->Exists(refs[0], TxGraph::Level::TOP), true);
+    BOOST_CHECK_EQUAL(graph->Exists(refs[1], TxGraph::Level::TOP), true);
+
+    graph->AddDependency(/*parent=*/refs[0], /*child=*/refs[1]);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::MAIN), 1);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 2);
+
+    graph->CommitStaging();
+    BOOST_CHECK_EQUAL(graph->HaveStaging(), false);
+
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::MAIN), 2);
+
+    graph->StartStaging();
+
+    // [A]
+    graph->RemoveTransaction(refs[1]);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::MAIN), 2);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 1);
+
+    graph->CommitStaging();
+
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::MAIN), 1);
+
+    graph->SanityCheck();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
