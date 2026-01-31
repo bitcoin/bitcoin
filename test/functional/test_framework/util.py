@@ -720,3 +720,7 @@ def wallet_importprivkey(wallet_rpc, privkey, timestamp, *, label=""):
     }]
     import_res = wallet_rpc.importdescriptors(req)
     assert_equal(import_res[0]["success"], True)
+
+def bitflipper(input):
+   assert isinstance(input, bytes)
+   return (int.from_bytes(input, 'little') ^ (1 << random.randrange(len(input) * 8))).to_bytes(len(input), 'little')
