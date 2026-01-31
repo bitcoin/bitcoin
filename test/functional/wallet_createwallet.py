@@ -174,7 +174,8 @@ class CreateWalletTest(BitcoinTestFramework):
         client_version = node.getnetworkinfo()["version"]
         wallet.unloadwallet()
         with node.assert_debug_log(
-            expected_msgs=[f"Last client version = {client_version}"]
+            expected_msgs=[f"Last client version = {client_version}"],
+            wallet=True,
         ):
             node.loadwallet("version_check")
 

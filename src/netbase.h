@@ -67,6 +67,8 @@ public:
     std::string m_unix_socket_path;
     bool m_is_unix_socket;
     bool m_tor_stream_isolation;
+    // Note: If you add fields to this class, you should also update the
+    // ProxyInfo struct in ipc/capnp/node.capnp.
 
     bool IsValid() const
     {
