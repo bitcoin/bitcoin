@@ -352,8 +352,13 @@ void Shutdown(NodeContext& node)
         }
     }
 
-    // After there are no more peers/RPC left to give us new data which may generate
-    // CValidationInterface callbacks, flush them...
+    // After there are no more peers/RPC left to give us new data which may
+    // generate CValidationInterface callbacks, flush them. Any future
+    // callbacks will be dropped. This should absolutely be safe - if missing a
+    // callback results in an unrecoverable situation, unclean shutdown would
+    // too. The only reason to do the above flushes is to let the wallet and
+    // indexes catch up with our current chain to avoid any strange pruning
+    // edge cases and make next startup faster by avoiding rescan.
     if (node.validation_signals) node.validation_signals->FlushBackgroundCallbacks();
 
     // Stop and delete all indexes only after flushing background callbacks.
@@ -362,22 +367,6 @@ void Shutdown(NodeContext& node)
     if (g_coin_stats_index) g_coin_stats_index.reset();
     DestroyAllBlockFilterIndexes();
     node.indexes.clear(); // all instances are nullptr now
-
-    // Any future callbacks will be dropped. This should absolutely be safe - if
-    // missing a callback results in an unrecoverable situation, unclean shutdown
-    // would too. The only reason to do the above flushes is to let the wallet catch
-    // up with our current chain to avoid any strange pruning edge cases and make
-    // next startup faster by avoiding rescan.
-
-    if (node.chainman) {
-        LOCK(cs_main);
-        for (const auto& chainstate : node.chainman->m_chainstates) {
-            if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
-                chainstate->ResetCoinsViews();
-            }
-        }
-    }
 
     // If any -ipcbind clients are still connected, disconnect them now so they
     // do not block shutdown.
@@ -396,9 +385,9 @@ void Shutdown(NodeContext& node)
     if (node.validation_signals) {
         node.validation_signals->UnregisterAllValidationInterfaces();
     }
+    node.chainman.reset();
     node.mempool.reset();
     node.fee_estimator.reset();
-    node.chainman.reset();
     node.validation_signals.reset();
     node.scheduler.reset();
     node.ecc_context.reset();
@@ -1289,8 +1278,8 @@ static ChainstateLoadResult InitAndLoadChainstate(
 {
     // This function may be called twice, so any dirty state must be reset.
     node.notifications.reset(); // Drop state, such as a cached tip block
-    node.mempool.reset();
     node.chainman.reset(); // Drop state, such as an initialized m_block_tree_db
+    node.mempool.reset();
 
     const CChainParams& chainparams = Params();
 

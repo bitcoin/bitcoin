@@ -73,6 +73,8 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
         .dust_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000)}
     };
     node.mempool = std::make_unique<CTxMemPool>(mempool_opts, error);
+    auto& dummy_chainstate{static_cast<DummyChainState&>(node.chainman->ActiveChainstate())};
+    dummy_chainstate.SetMempool(node.mempool.get());
     std::unique_ptr<CBlockPolicyEstimator> fee_estimator = std::make_unique<FuzzedBlockPolicyEstimator>(fuzzed_data_provider);
     g_setup->SetFeeEstimator(std::move(fee_estimator));
     auto target_feerate{CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/1'000'000)}};
