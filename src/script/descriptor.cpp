@@ -1032,6 +1032,8 @@ public:
 
     virtual std::unique_ptr<DescriptorImpl> Clone() const = 0;
 
+    bool HasScripts() const override { return true; }
+
     // NOLINTNEXTLINE(misc-no-recursion)
     std::vector<std::string> Warnings() const override {
         std::vector<std::string> all = m_warnings;
@@ -1697,6 +1699,23 @@ public:
         return std::make_unique<RawTRDescriptor>(m_pubkey_args.at(0)->Clone());
     }
 };
+
+/** A parsed unused(KEY) descriptor */
+class UnusedDescriptor final : public DescriptorImpl
+{
+protected:
+    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> scripts, FlatSigningProvider& out) const override { return {}; }
+public:
+    UnusedDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), "unused") {}
+    bool IsSingleType() const final { return true; }
+    bool HasScripts() const override { return false; }
+
+    std::unique_ptr<DescriptorImpl> Clone() const override
+    {
+        return std::make_unique<UnusedDescriptor>(m_pubkey_args.at(0)->Clone());
+    }
+};
+
 
 ////////////////////////////////////////////////////////////////////////////
 // Parser                                                                 //
@@ -2537,6 +2556,27 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         return ret;
     } else if (Func("rawtr", expr)) {
         error = "Can only have rawtr at top level";
+        return {};
+    }
+    if (ctx == ParseScriptContext::TOP && Func("unused", expr)) {
+        // Check for only one expression, should not find commas, brackets, or parentheses
+        auto arg = Expr(expr);
+        if (expr.size()) {
+            error = strprintf("unused(): only one key expected");
+            return {};
+        }
+        auto keys = ParsePubkey(key_exp_index, arg, ctx, out, error);
+        if (keys.empty()) return {};
+        for (auto& pubkey : keys) {
+            if (pubkey->IsRange()) {
+                error = "unused(): key cannot be ranged";
+                return {};
+            }
+            ret.emplace_back(std::make_unique<UnusedDescriptor>(std::move(pubkey)));
+        }
+        return ret;
+    } else if (Func("unused", expr)) {
+        error = "Can only have unused at top level";
         return {};
     }
     if (ctx == ParseScriptContext::TOP && Func("raw", expr)) {
