@@ -15,7 +15,7 @@ bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypa
     std::stringstream ss(keypath_str);
     std::string item;
     bool first = true;
-    while (std::getline(ss, item, '/')) {
+    while (std::getline(ss, item, '/') || std::getline(ss, item, 'h')) {
         if (item.compare("m") == 0) {
             if (first) {
                 first = false;
@@ -26,6 +26,9 @@ bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypa
         // Finds whether it is hardened
         uint32_t path = 0;
         size_t pos = item.find('\'');
+        if (pos == std::string::npos) {
+            pos = item.find('h');
+        }
         if (pos != std::string::npos) {
             // The hardened tick can only be in the last index of the string
             if (pos != item.size() - 1) {
