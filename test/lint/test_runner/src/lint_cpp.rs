@@ -123,6 +123,32 @@ fs:: namespace, which has unsafe filesystem functions marked as deleted.
     }
 }
 
+pub fn lint_remove_all() -> LintResult {
+    let found = git()
+        .args([
+            "grep",
+            "--line-number",
+            "remove_all(.*)",
+            "--",
+            "./src/",
+            // These are likely not avoidable.
+            ":(exclude)src/test/kernel/test_kernel.cpp",
+            ":(exclude)src/test/util/setup_common.cpp",
+        ])
+        .status()
+        .expect("command error")
+        .success();
+    if found {
+        Err(r#"
+Use of fs::remove_all or std::filesystem::remove_all is dangerous and should be avoided.
+            "#
+        .trim()
+        .to_string())
+    } else {
+        Ok(())
+    }
+}
+
 pub fn lint_rpc_assert() -> LintResult {
     let found = git()
         .args([

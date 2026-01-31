@@ -72,7 +72,7 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         # Stop both nodes and replace node0 chain entirely for the node1 chain
         self.stop_nodes()
         for path in ["chainstate", "blocks"]:
-            shutil.rmtree(self.nodes[0].chain_path / path)
+            self.cleanup_folder(self.nodes[0].chain_path / path)
             shutil.copytree(self.nodes[1].chain_path / path, self.nodes[0].chain_path / path)
 
         # Start node0 and verify that now it has node1 chain and no info about its previous best block

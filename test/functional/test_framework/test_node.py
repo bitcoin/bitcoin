@@ -11,7 +11,6 @@ from enum import Enum
 import json
 import logging
 import os
-import pathlib
 import platform
 import re
 import subprocess
@@ -20,7 +19,6 @@ import time
 import urllib.parse
 import collections
 import shlex
-import shutil
 import sys
 from pathlib import Path
 
@@ -143,8 +141,8 @@ class TestNode():
                 self.args.append("-ipcbind=unix")
             else:
                 # Work around default CI path exceeding maximum socket path length.
-                self.ipc_tmp_dir = pathlib.Path(tempfile.mkdtemp(prefix="test-ipc-"))
-                self.ipc_socket_path = self.ipc_tmp_dir / "node.sock"
+                self.ipc_tmp_dir = tempfile.TemporaryDirectory(prefix="test-ipc-")
+                self.ipc_socket_path = Path(self.ipc_tmp_dir.name) / "node.sock"
                 self.args.append(f"-ipcbind=unix:{self.ipc_socket_path}")
 
         # Use valgrind, expect for previous release binaries
@@ -237,9 +235,6 @@ class TestNode():
             # this destructor is called.
             print(self._node_msg("Cleaning up leftover process"), file=sys.stderr)
             self.process.kill()
-        if self.ipc_tmp_dir:
-            print(self._node_msg(f"Cleaning up ipc directory {str(self.ipc_tmp_dir)!r}"))
-            shutil.rmtree(self.ipc_tmp_dir)
 
     def __getattr__(self, name):
         """Dispatches any unrecognised messages to the RPC connection or a CLI instance."""

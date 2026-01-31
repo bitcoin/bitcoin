@@ -49,7 +49,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
 
         self.log.info("Test that gettxoutsetinfo() output is consistent for the new index running on a datadir with the old version")
         self.stop_nodes()
-        shutil.rmtree(node.chain_path / "indexes" / "coinstatsindex")
+        self.cleanup_folder(node.chain_path / "indexes" / "coinstatsindex")
         shutil.copytree(legacy_node.chain_path / "indexes" / "coinstats", node.chain_path / "indexes" / "coinstats")
         old_version_path = node.chain_path / "indexes" / "coinstats"
         msg = f'[warning] Old version of coinstatsindex found at {old_version_path}. This folder can be safely deleted unless you plan to downgrade your node to version 29 or lower.'

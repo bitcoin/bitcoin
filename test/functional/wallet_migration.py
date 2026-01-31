@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Migrating a wallet from legacy to descriptor."""
+from contextlib import suppress
 from pathlib import Path
 import os.path
 import random
@@ -664,8 +665,12 @@ class WalletMigrationTest(BitcoinTestFramework):
         # Test cleanup: Clear unnamed default wallet for subsequent tests
         (self.old_node.wallets_path / "wallet.dat").unlink()
         (self.master_node.wallets_path / "wallet.dat").unlink(missing_ok=True)
-        shutil.rmtree(self.master_node.wallets_path / "default_wallet_watchonly", ignore_errors=True)
-        shutil.rmtree(self.master_node.wallets_path / "default_wallet_solvables", ignore_errors=True)
+        with suppress(FileNotFoundError):
+            (self.master_node.wallets_path / "default_wallet_watchonly" / "wallet.dat").unlink()
+            (self.master_node.wallets_path / "default_wallet_watchonly").rmdir()
+
+            (self.master_node.wallets_path / "default_wallet_solvables" / "wallet.dat").unlink()
+            (self.master_node.wallets_path / "default_wallet_solvables").rmdir()
         backup_file.unlink()
 
     def test_default_wallet(self):

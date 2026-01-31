@@ -10,7 +10,6 @@ The assumeutxo value generated and used here is committed to in
 `CRegTestParams::m_assumeutxo_data` in `src/kernel/chainparams.cpp`.
 """
 import contextlib
-from shutil import rmtree
 
 from dataclasses import dataclass
 from test_framework.blocktools import (
@@ -191,7 +190,8 @@ class AssumeutxoTest(BitcoinTestFramework):
         expected_error(log_msg=error_details, error_msg=expected_error_msg)
 
         # resurrect node again
-        rmtree(chainstate_snapshot_path)
+        (chainstate_snapshot_path / "base_blockhash").unlink()
+        chainstate_snapshot_path.rmdir()
         self.start_node(0)
 
     def test_invalid_mempool_state(self, dump_output_path):
@@ -303,7 +303,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         # Start test fresh by cleaning up node directories
         for node in (snapshot_node, ibd_node):
             self.stop_node(node.index)
-            rmtree(node.chain_path)
+            self.cleanup_folder(node.chain_path)
             self.start_node(node.index, extra_args=self.extra_args[node.index])
 
         # Sync-up headers chain on snapshot_node to load snapshot
