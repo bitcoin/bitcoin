@@ -50,6 +50,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
             for output_type in ["bech32", "p2sh-segwit", "legacy"]:
                 self.do_multisig(keys, sigs, output_type)
 
+        self.test_combinerawtransaction_preconditions()
         self.test_multisig_script_limit()
         self.test_mixing_uncompressed_and_compressed_keys(node0)
         self.test_sortedmulti_descriptors_bip67()
@@ -82,7 +83,12 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Number of keys involved in the multisignature address creation > 20", node1.createmultisig, 16, self.pub, 'p2sh-segwit')
         assert_raises_rpc_error(-8, "Number of keys involved in the multisignature address creation > 20", node1.createmultisig, 16, self.pub, 'bech32')
 
-    def do_multisig(self, nkeys, nsigs, output_type):
+    def test_combinerawtransaction_preconditions(self):
+        self.log.info('Test combinerawtransaction preconditions')
+        # Note that preconditions don't depend on the output type, choosing bech32
+        self.do_multisig(nkeys=3, nsigs=2, output_type="bech32", assert_mergeability=True)
+
+    def do_multisig(self, nkeys, nsigs, output_type, assert_mergeability=False):
         node0, _node1, node2 = self.nodes
         pub_keys = self.pub[0: nkeys]
         priv_keys = self.priv[0: nkeys]
@@ -146,10 +152,32 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         assert_equal(rawtx2["complete"], False)
         rawtx3 = node2.signrawtransactionwithkey(rawtx, [priv_keys[-1]], prevtxs)
         assert_equal(rawtx3["complete"], False)
-        assert_raises_rpc_error(-22, "TX decode failed", node2.combinerawtransaction, [rawtx2['hex'], rawtx3['hex'] + "00"])
-        assert_raises_rpc_error(-22, "Missing transactions", node2.combinerawtransaction, [])
-        combined_rawtx = node2.combinerawtransaction([rawtx2["hex"], rawtx3["hex"]])
 
+        if assert_mergeability:
+            # Test boundary conditions
+            assert_raises_rpc_error(-22, "TX decode failed", node2.combinerawtransaction, [rawtx2['hex'], rawtx3['hex'] + "00"])
+            assert_raises_rpc_error(-22, "Missing transactions. At least two transactions required.", node2.combinerawtransaction, [])
+            assert_raises_rpc_error(-22, "Missing transactions. At least two transactions required.", node2.combinerawtransaction, [rawtx2['hex']])
+
+            out_addr2 = getnewdestination('bech32')[2]
+            unmergeable_transaction_args = [
+                ([[{"txid": tx["txid"], "vout": tx["sent_vout"]}], [{out_addr: outval * 2}]], {}), # similar transaction but with different amount to send
+                ([[{"txid": tx["txid"], "vout": tx["sent_vout"]}], [{out_addr: outval}]], {"locktime": 0, "replaceable": True, "version": 1}), # similar transaction but with different version
+                ([[{"txid": tx["txid"], "vout": tx["sent_vout"]}], [{out_addr: outval}]], {"locktime": 1}), # similar transaction but with different locktime
+                ([[{"txid": tx["txid"], "vout": tx["sent_vout"]}], [{out_addr2: outval}]], {}), # similar transaction but with different output address (scriptPubKey)
+                ([[{"txid": tx["txid"], "vout": tx["sent_vout"], "sequence": 1}], [{out_addr: outval}]], {}), # similar transaction but with different sequence number
+                ([[{"txid": tx["txid"], "vout": tx["sent_vout"] + 1}], [{out_addr: outval}]], {}) # similar transaction but with different input vout index
+            ]
+
+            for rpc_args, rpc_kwargs in unmergeable_transaction_args:
+                unrelated_tx = node2.createrawtransaction(*rpc_args, **rpc_kwargs)
+                assert_raises_rpc_error(-8, "Transaction number 2 not compatible with first transaction", node0.combinerawtransaction, [rawtx2['hex'], unrelated_tx])
+
+            # Accept duplicate transactions in combinerawtransaction
+            dupe_merged_tx = node2.combinerawtransaction([rawtx2['hex'], rawtx2['hex']])
+            assert_equal(rawtx2['hex'], dupe_merged_tx)
+
+        combined_rawtx = node2.combinerawtransaction([rawtx2["hex"], rawtx3["hex"]])
         tx = node0.sendrawtransaction(combined_rawtx, 0)
         blk = self.generate(node0, 1)[0]
         assert tx in node0.getblock(blk)["tx"]
