@@ -23,6 +23,8 @@
 #include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
 #include <interfaces/mining.h>
+#include <interfaces/node.h>
+#include <interfaces/snapshot.h>
 #include <kernel/coinstats.h>
 #include <logging/timer.h>
 #include <net.h>
@@ -3350,27 +3352,37 @@ static RPCHelpMan loadtxoutset()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
-    ChainstateManager& chainman = EnsureChainman(node);
     const fs::path path{AbsPathForConfigVal(EnsureArgsman(node), fs::u8path(self.Arg<std::string_view>("path")))};
+    auto node_interface = interfaces::MakeNode(node);
+    auto snapshot = node_interface->snapshot(path);
+    if (!snapshot) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Unable to load UTXO snapshot: %s", path.utf8string()));
+    }
+    if (!snapshot->activate()) {
+        std::string error_msg = snapshot->getLastError();
+        if (error_msg.empty()) {
+            error_msg = path.utf8string();
+        }
+        if (error_msg.find("Unable to parse metadata") != std::string::npos) {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, error_msg);
+        }
+        if (error_msg.find("Snapshot file does not exist") != std::string::npos) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Couldn't open file " + path.utf8string() + " for reading.");
+        }
 
-    FILE* file{fsbridge::fopen(path, "rb")};
-    AutoFile afile{file};
-    if (afile.IsNull()) {
-        throw JSONRPCError(
-            RPC_INVALID_PARAMETER,
-            "Couldn't open file " + path.utf8string() + " for reading.");
+        throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Unable to load UTXO snapshot: %s. (%s)", error_msg, path.utf8string()));
     }
 
-    SnapshotMetadata metadata{chainman.GetParams().MessageStart()};
+    const node::SnapshotMetadata* metadata;
     try {
-        afile >> metadata;
+        metadata = &snapshot->getMetadata();
     } catch (const std::ios_base::failure& e) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Unable to parse metadata: %s", e.what()));
     }
 
-    auto activation_result{chainman.ActivateSnapshot(afile, metadata, false)};
+    auto activation_result = snapshot->getActivationResult();
     if (!activation_result) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Unable to load UTXO snapshot: %s. (%s)", util::ErrorString(activation_result).original, path.utf8string()));
+        throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Unable to load UTXO snapshot: %s", path.utf8string()));
     }
 
     // Because we can't provide historical blocks during tip or background sync.
@@ -3380,10 +3392,10 @@ static RPCHelpMan loadtxoutset()
     // provide the last 288 blocks, but it doesn't hurt to set it.
     node.connman->AddLocalServices(NODE_NETWORK_LIMITED);
 
-    CBlockIndex& snapshot_index{*CHECK_NONFATAL(*activation_result)};
+    const CBlockIndex& snapshot_index{*CHECK_NONFATAL(*activation_result)};
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("coins_loaded", metadata.m_coins_count);
+    result.pushKV("coins_loaded", metadata->m_coins_count);
     result.pushKV("tip_hash", snapshot_index.GetBlockHash().ToString());
     result.pushKV("base_height", snapshot_index.nHeight);
     result.pushKV("path", fs::PathToString(path));
