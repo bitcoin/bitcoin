@@ -191,9 +191,27 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         # Reset settings for any subsequent test
         os.remove(settings_path)
 
+    def test_txs_out_of_order(self, old_node, master_node):
+        self.log.info("Test m_from_me upgrade")
+        wallet_name = "from_me_upgrade"
+        old_node.createwallet(wallet_name)
+        wallet = old_node.get_wallet_rpc(wallet_name)
+
+        for _ in range(2):
+            self.nodes[0].sendtoaddress(wallet.getnewaddress(), 1)
+            self.generate(self.nodes[0], 1)
+
+        backup_path = os.path.join(self.options.tmpdir, f"{wallet_name}.dat")
+        wallet.backupwallet(backup_path)
+        wallet.unloadwallet()
+
+        # The wallet should load onto master
+        master_node.restorewallet(wallet_name, backup_path)
+
     def run_test(self):
         node_miner = self.nodes[0]
         node_master = self.nodes[1]
+        node_v25 = self.nodes[self.num_nodes - 5]
         node_v21 = self.nodes[self.num_nodes - 2]
         node_v20 = self.nodes[self.num_nodes - 1] # bdb only
 
@@ -432,6 +450,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             # Legacy wallets are no longer supported. Trying to load these should result in an error
             assert_raises_rpc_error(-18, "The wallet appears to be a Legacy wallet, please use the wallet migration tool (migratewallet RPC or the GUI option)", node_master.restorewallet, wallet_name, backup_path)
 
+        self.test_txs_out_of_order(node_v25, node_master)
         self.test_v22_inactivehdchain_path()
         self.test_ignore_legacy_during_startup(legacy_nodes, node_master)
 
